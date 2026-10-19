@@ -313,10 +313,14 @@ def live_dashboard():
         if show_reasons and result.get("reasons") and result.get("score") is not None:
             st.subheader(f"Score Breakdown — {title}")
             color = "green" if result["score"] >= 60 else "orange" if result["score"] >= 45 else "red"
+            conf = result.get("confluence")
+            conf_text = f" · Confluence {conf:+d}" if conf is not None else ""
             st.markdown(
-                f"<span style='color:{color};font-weight:bold;font-size:1.1em'>{result['score']}/100 ({result['label']})</span>",
+                f"<span style='color:{color};font-weight:bold;font-size:1.1em'>{result['score']}/100 ({result['label']}){conf_text}</span>",
                 unsafe_allow_html=True,
             )
+            if result.get("adx"):
+                st.caption(f"ADX (trend strength): {result['adx']}")
             for reason in result["reasons"]:
                 st.caption(f"• {reason}")
 
