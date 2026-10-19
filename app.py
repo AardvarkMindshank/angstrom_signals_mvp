@@ -162,24 +162,64 @@ if "selected_key" not in st.session_state:
 crypto_event, crypto_df_sorted = style_and_show_table(crypto_results, "Crypto Scores", "crypto")
 stock_event, stock_df_sorted = style_and_show_table(stock_results, "Equity Scores", "stock")
 
-# Update selection from table clicks (whichever table has a selection this run)
-def update_selection_from_event(event, df_sorted, asset_type):
+# Robust selection handling — only one table can have a selection
+def get_selected_key(event, df_sorted):
     if (event and hasattr(event, "selection") and event.selection
             and event.selection.rows and len(event.selection.rows) > 0):
         idx = event.selection.rows[0]
         if idx < len(df_sorted):
-            key = df_sorted.iloc[idx]["key"]
-            st.session_state.selected_type = asset_type
-            st.session_state.selected_key = key
-            return True
-    return False
+            return df_sorted.iloc[idx]["key"]
+    return None
 
-update_selection_from_event(crypto_event, crypto_df_sorted, "Crypto")
-update_selection_from_event(stock_event, stock_df_sorted, "Stock")
+crypto_key = get_selected_key(crypto_event, crypto_df_sorted)
+stock_key = get_selected_key(stock_event, stock_df_sorted)
+
+# Clear the other table's selection when one is chosen
+if crypto_key and not stock_key:
+    st.session_state.selected_type = "Crypto"
+    st.session_state.selected_key = crypto_key
+    # Clear stock table selection
+    if "table_stock" in st.session_state:
+        st.session_state["table_stock"] = {"selection": {"rows": [], "columns": []}}
+elif stock_key and not crypto_key:
+    st.session_state.selected_type = "Stock"
+    st.session_state.selected_key = stock_key
+    # Clear crypto table selection
+    if "table_crypto" in st.session_state:
+        st.session_state["table_crypto"] = {"selection": {"rows": [], "columns": []}}
+elif crypto_key and stock_key:
+    # Both selected — prefer the one that differs from current (or last click)
+    if st.session_state.selected_type != "Crypto" or st.session_state.selected_key != crypto_key:
+        st.session_state.selected_type = "Crypto"
+        st.session_state.selected_key = crypto_key
+        if "table_stock" in st.session_state:
+            st.session_state["table_stock"] = {"selection": {"rows": [], "columns": []}}
+    else:
+        st.session_state.selected_type = "Stock"
+        st.session_state.selected_key = stock_key
+        if "table_crypto" in st.session_state:
+            st.session_state["table_crypto"] = {"selection": {"rows": [], "columns": []}}
 
 # --- Interactive Chart ---
 st.subheader("Interactive Chart")
 st.caption(f"Currently showing: **{st.session_state.selected_type}** — click a row in either table above to change")
+
+# Reliable backup selector (always works)
+col1, col2 = st.columns([1, 3])
+with col1:
+    backup_type = st.selectbox("Type", ["Crypto", "Stock"], index=0 if st.session_state.selected_type == "Crypto" else 1, key="backup_type")
+with col2:
+    if backup_type == "Crypto":
+        options = list(CRYPTO_WATCHLIST.keys())
+        backup_key = st.selectbox("Asset", options, index=options.index(st.session_state.selected_key) if st.session_state.selected_key in options else 0, format_func=lambda x: CRYPTO_WATCHLIST[x], key="backup_crypto")
+    else:
+        options = list(STOCK_WATCHLIST.keys())
+        backup_key = st.selectbox("Asset", options, index=options.index(st.session_state.selected_key) if st.session_state.selected_key in options else 0, format_func=lambda x: f"{STOCK_WATCHLIST[x]} ({x})", key="backup_stock")
+
+if backup_type != st.session_state.selected_type or backup_key != st.session_state.selected_key:
+    st.session_state.selected_type = backup_type
+    st.session_state.selected_key = backup_key
+    st.rerun()
 
 # Load data based on current selection
 if st.session_state.selected_type == "Crypto":
