@@ -87,6 +87,8 @@ def live_dashboard():
                         "atr_pct": None,
                         "volume_ratio": None,
                         "bb_position": None,
+                        "adx": None,
+                        "confluence": None,
                         "type": "Crypto" if is_crypto else "Stock",
                         "key": key,
                     })
@@ -156,11 +158,11 @@ def live_dashboard():
 
         # Column widths — everything on one row
         if show_extra_metrics:
-            widths = [2.0, 2.2, 1.4, 1.2, 0.8, 0.9, 0.9, 1.0]
-            headers = ["Asset", "Score", "Signal", "Price", "RSI", "7d %", "ATR %", "Vol"]
+            widths = [1.8, 2.0, 1.3, 1.1, 0.7, 0.8, 0.8, 0.8, 0.7, 0.9]
+            headers = ["Asset", "Score", "Signal", "Price", "RSI", "7d %", "ATR %", "Vol", "ADX", "Conf"]
         else:
-            widths = [2.4, 2.6, 1.6, 1.4, 1.0]
-            headers = ["Asset", "Score", "Signal", "Price", "RSI"]
+            widths = [2.2, 2.4, 1.5, 1.3, 0.9, 0.8, 0.9]
+            headers = ["Asset", "Score", "Signal", "Price", "RSI", "ADX", "Conf"]
 
         # Header
         h = st.columns(widths)
@@ -185,6 +187,15 @@ def live_dashboard():
                 c[5].write(f"{chg:+.1f}%" if pd.notna(chg) else "—")
                 c[6].write(f"{atr:.2f}" if pd.notna(atr) else "—")
                 c[7].write(f"{vol:.2f}" if pd.notna(vol) else "—")
+                adx = row.get("adx")
+                conf = row.get("confluence")
+                c[8].write(f"{adx:.0f}" if pd.notna(adx) else "—")
+                c[9].write(f"{conf:+d}" if pd.notna(conf) else "—")
+            else:
+                adx = row.get("adx")
+                conf = row.get("confluence")
+                c[5].write(f"{adx:.0f}" if pd.notna(adx) else "—")
+                c[6].write(f"{conf:+d}" if pd.notna(conf) else "—")
 
             st.markdown("<hr style='margin:2px 0;border:none;border-top:1px solid #f0f0f0;'>", unsafe_allow_html=True)
 
