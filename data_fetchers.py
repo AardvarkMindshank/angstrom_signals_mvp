@@ -12,7 +12,8 @@ from datetime import datetime, timedelta
 def fetch_crypto_data(coin_id: str, days: int = 90) -> pd.DataFrame:
     """
     Fetch OHLCV-like data for a crypto from CoinGecko.
-    coin_id examples: 'bitcoin', 'ethereum', 'solana'
+    coin_id examples: 'bitcoin', 'ethereum', 'solana', 'cardano', 'ripple'
+    Includes simple retry for rate limits.
     """
     url = f"https://api.coingecko.com/api/v3/coins/{coin_id}/market_chart"
     params = {
@@ -20,39 +21,49 @@ def fetch_crypto_data(coin_id: str, days: int = 90) -> pd.DataFrame:
         "days": days,
         "interval": "daily"
     }
-    try:
-        response = requests.get(url, params=params, timeout=10)
-        response.raise_for_status()
-        data = response.json()
-        
-        prices = data.get("prices", [])
-        volumes = data.get("total_volumes", [])
-        
-        if not prices:
-            return pd.DataFrame()
-        
-        df = pd.DataFrame(prices, columns=["timestamp", "close"])
-        df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
-        df.set_index("timestamp", inplace=True)
-        
-        # Approximate OHLC from close (CoinGecko market_chart is limited)
-        # For MVP we use close as the main series; more advanced sources can be added later
-        df["open"] = df["close"].shift(1).fillna(df["close"])
-        df["high"] = df["close"]
-        df["low"] = df["close"]
-        if volumes:
-            vol_df = pd.DataFrame(volumes, columns=["timestamp", "volume"])
-            vol_df["timestamp"] = pd.to_datetime(vol_df["timestamp"], unit="ms")
-            vol_df.set_index("timestamp", inplace=True)
-            df = df.join(vol_df["volume"], how="left")
-        else:
-            df["volume"] = 0
-        
-        df = df[["open", "high", "low", "close", "volume"]].dropna()
-        return df
-    except Exception as e:
-        print(f"Error fetching crypto {coin_id}: {e}")
-        return pd.DataFrame()
+    headers = {"User-Agent": "Mozilla/5.0 (compatible; SignalsDashboard/1.0)"}
+
+    for attempt in range(3):
+        try:
+            response = requests.get(url, params=params, headers=headers, timeout=15)
+            if response.status_code == 429:
+                # Rate limited — wait and retry
+                import time
+                time.sleep(2 ** attempt)
+                continue
+            response.raise_for_status()
+            data = response.json()
+
+            prices = data.get("prices", [])
+            volumes = data.get("total_volumes", [])
+
+            if not prices:
+                return pd.DataFrame()
+
+            df = pd.DataFrame(prices, columns=["timestamp", "close"])
+            df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
+            df.set_index("timestamp", inplace=True)
+
+            df["open"] = df["close"].shift(1).fillna(df["close"])
+            df["high"] = df["close"]
+            df["low"] = df["close"]
+            if volumes:
+                vol_df = pd.DataFrame(volumes, columns=["timestamp", "volume"])
+                vol_df["timestamp"] = pd.to_datetime(vol_df["timestamp"], unit="ms")
+                vol_df.set_index("timestamp", inplace=True)
+                df = df.join(vol_df["volume"], how="left")
+            else:
+                df["volume"] = 0
+
+            df = df[["open", "high", "low", "close", "volume"]].dropna()
+            return df
+        except Exception as e:
+            print(f"Error fetching crypto {coin_id} (attempt {attempt+1}): {e}")
+            if attempt == 2:
+                return pd.DataFrame()
+            import time
+            time.sleep(1)
+    return pd.DataFrame()
 
 
 def fetch_stock_data(ticker: str, period: str = "3mo") -> pd.DataFrame:

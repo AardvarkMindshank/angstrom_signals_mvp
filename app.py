@@ -124,6 +124,16 @@ def style_and_show_table(results, title):
         display_cols += ["change_7d", "atr_pct", "volume_ratio"]
 
     st.subheader(title)
+
+    def score_color(score):
+        if score is None or pd.isna(score):
+            return "#888888"
+        if score >= 60:
+            return "#22c55e"  # green
+        if score >= 45:
+            return "#f59e0b"  # orange
+        return "#ef4444"      # red
+
     column_config = {
         "symbol": st.column_config.TextColumn("Asset"),
         "score": st.column_config.ProgressColumn(
@@ -141,8 +151,14 @@ def style_and_show_table(results, title):
         "volume_ratio": st.column_config.NumberColumn("Vol Ratio", help="Current volume vs 20-day average", format="%.2f"),
     }
 
+    def color_score_cell(val):
+        color = score_color(val)
+        return f"background-color: {color}; color: white; font-weight: bold; text-align: center"
+
+    styled = df[display_cols].style.map(color_score_cell, subset=["score"])
+
     st.dataframe(
-        df[display_cols],
+        styled,
         column_config=column_config,
         use_container_width=True,
         hide_index=True,
