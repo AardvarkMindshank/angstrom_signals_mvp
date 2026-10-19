@@ -18,7 +18,8 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-st.title("📈 Crypto & Equity Signals Dashboard")
+st.title("angstrom signals - level 1")
+st.markdown("### Crypto & Equity Signals Dashboard")
 st.caption("Research prototype • Multi-factor technical scoring • Not financial advice")
 
 # --- Watchlist (easy to edit) ---
@@ -114,7 +115,7 @@ if stock_bot:
 # --- Tables with graphical scores ---
 def style_and_show_table(results, title, key_prefix):
     if not results:
-        return None
+        return None, None
     df = pd.DataFrame(results)
     df = df.sort_values("score", ascending=False, na_position="last")
 
@@ -161,66 +162,70 @@ if "selected_key" not in st.session_state:
 crypto_event, crypto_df_sorted = style_and_show_table(crypto_results, "Crypto Scores", "crypto")
 stock_event, stock_df_sorted = style_and_show_table(stock_results, "Equity Scores", "stock")
 
-# Handle table row selection to update the active asset
-def update_from_selection(event, df_sorted, is_crypto):
-    if event and hasattr(event, "selection") and event.selection and event.selection.rows:
+# Handle table row clicks — only update if a row was actually selected
+def apply_table_selection(event, df_sorted, asset_type):
+    if (event and hasattr(event, "selection") and event.selection
+            and event.selection.rows and len(event.selection.rows) > 0):
         idx = event.selection.rows[0]
         if idx < len(df_sorted):
             key = df_sorted.iloc[idx]["key"]
-            st.session_state.selected_type = "Crypto" if is_crypto else "Stock"
-            st.session_state.selected_key = key
+            if (st.session_state.selected_type != asset_type or
+                    st.session_state.selected_key != key):
+                st.session_state.selected_type = asset_type
+                st.session_state.selected_key = key
+                st.rerun()
 
-if crypto_event:
-    update_from_selection(crypto_event, crypto_df_sorted, True)
-if stock_event:
-    update_from_selection(stock_event, stock_df_sorted, False)
+apply_table_selection(crypto_event, crypto_df_sorted, "Crypto")
+apply_table_selection(stock_event, stock_df_sorted, "Stock")
 
 # --- Interactive Chart (directly under tables) ---
 st.subheader("Interactive Chart")
 
-col_type, col_asset = st.columns([1, 3])
-with col_type:
-    chart_asset_type = st.radio(
-        "Asset type",
-        ["Crypto", "Stock"],
-        horizontal=True,
-        index=0 if st.session_state.selected_type == "Crypto" else 1,
-        key="radio_type",
-    )
-    if chart_asset_type != st.session_state.selected_type:
-        st.session_state.selected_type = chart_asset_type
-        if chart_asset_type == "Crypto":
-            st.session_state.selected_key = list(CRYPTO_WATCHLIST.keys())[0]
-        else:
-            st.session_state.selected_key = list(STOCK_WATCHLIST.keys())[0]
+# Radio is the primary type selector
+chart_asset_type = st.radio(
+    "Asset type",
+    ["Crypto", "Stock"],
+    horizontal=True,
+    index=0 if st.session_state.selected_type == "Crypto" else 1,
+    key="radio_type",
+)
 
-with col_asset:
-    if st.session_state.selected_type == "Crypto":
-        options = list(CRYPTO_WATCHLIST.keys())
-        selected = st.selectbox(
-            "Select crypto",
-            options,
-            index=options.index(st.session_state.selected_key) if st.session_state.selected_key in options else 0,
-            format_func=lambda x: CRYPTO_WATCHLIST[x],
-            key="select_crypto",
-        )
-        if selected != st.session_state.selected_key:
-            st.session_state.selected_key = selected
-        df_chart = load_crypto(st.session_state.selected_key, days_history)
-        title = CRYPTO_WATCHLIST[st.session_state.selected_key]
+# Sync radio → session state (and reset asset when type changes)
+if chart_asset_type != st.session_state.selected_type:
+    st.session_state.selected_type = chart_asset_type
+    if chart_asset_type == "Crypto":
+        st.session_state.selected_key = list(CRYPTO_WATCHLIST.keys())[0]
     else:
-        options = list(STOCK_WATCHLIST.keys())
-        selected = st.selectbox(
-            "Select stock",
-            options,
-            index=options.index(st.session_state.selected_key) if st.session_state.selected_key in options else 0,
-            format_func=lambda x: f"{STOCK_WATCHLIST[x]} ({x})",
-            key="select_stock",
-        )
-        if selected != st.session_state.selected_key:
-            st.session_state.selected_key = selected
-        df_chart = load_stock(st.session_state.selected_key)
-        title = f"{STOCK_WATCHLIST[st.session_state.selected_key]} ({st.session_state.selected_key})"
+        st.session_state.selected_key = list(STOCK_WATCHLIST.keys())[0]
+    st.rerun()
+
+# Asset selector that follows the current type
+if st.session_state.selected_type == "Crypto":
+    options = list(CRYPTO_WATCHLIST.keys())
+    selected = st.selectbox(
+        "Select crypto",
+        options,
+        index=options.index(st.session_state.selected_key) if st.session_state.selected_key in options else 0,
+        format_func=lambda x: CRYPTO_WATCHLIST[x],
+        key="select_crypto",
+    )
+    if selected != st.session_state.selected_key:
+        st.session_state.selected_key = selected
+    df_chart = load_crypto(st.session_state.selected_key, days_history)
+    title = CRYPTO_WATCHLIST[st.session_state.selected_key]
+else:
+    options = list(STOCK_WATCHLIST.keys())
+    selected = st.selectbox(
+        "Select stock",
+        options,
+        index=options.index(st.session_state.selected_key) if st.session_state.selected_key in options else 0,
+        format_func=lambda x: f"{STOCK_WATCHLIST[x]} ({x})",
+        key="select_stock",
+    )
+    if selected != st.session_state.selected_key:
+        st.session_state.selected_key = selected
+    df_chart = load_stock(st.session_state.selected_key)
+    title = f"{STOCK_WATCHLIST[st.session_state.selected_key]} ({st.session_state.selected_key})"
 
 if not df_chart.empty:
     df_chart = calculate_indicators(df_chart)
@@ -328,4 +333,4 @@ else:
 st.sidebar.markdown("---")
 st.sidebar.info("Data is cached for 5 minutes. Refresh the page to update.")
 st.sidebar.caption("Edit the watchlists at the top of `app.py` to add or remove assets.")
-st.sidebar.caption("Tip: Click a row in a table to select it for the chart (requires a recent Streamlit version).")
+st.sidebar.caption("Tip: Use the radio and dropdown under the chart, or click a table row.")
