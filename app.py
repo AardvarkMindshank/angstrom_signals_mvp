@@ -64,7 +64,8 @@ def live_dashboard():
                 if is_crypto:
                     df = load_crypto(key, days_history)
                 else:
-                    df = load_stock(key)                if not df.empty:
+                    df = load_stock(key)
+                if not df.empty:
                     df = calculate_indicators(df)
                     result = compute_score(df)
                     result["symbol"] = name if is_crypto else f"{name} ({key})"
