@@ -11,62 +11,65 @@ from datetime import datetime, timedelta
 
 import time
 
-def fetch_crypto_data(coin_id: str, days: int = 90) -> pd.DataFrame:
+def fetch_crypto_data(coin_id: str, days: int = 200) -> pd.DataFrame:
     """
-    Fetch OHLCV-like data for a crypto from CoinGecko.
-    Includes stronger retry/backoff for rate limits.
+    Fetch crypto data. Tries yfinance first (more reliable), falls back to CoinGecko.
+    coin_id examples: 'bitcoin', 'ethereum', 'solana', 'cardano', 'ripple'
     """
-    url = f"https://api.coingecko.com/api/v3/coins/{coin_id}/market_chart"
-    params = {
-        "vs_currency": "usd",
-        "days": days,
-        "interval": "daily"
+    # Map CoinGecko-style ids to yfinance tickers
+    yf_map = {
+        "bitcoin": "BTC-USD",
+        "ethereum": "ETH-USD",
+        "solana": "SOL-USD",
+        "cardano": "ADA-USD",
+        "ripple": "XRP-USD",
     }
+    yf_ticker = yf_map.get(coin_id.lower(), f"{coin_id.upper()}-USD")
+
+    # Try yfinance first
+    try:
+        period = "1y" if days > 180 else "6mo"
+        df = yf.Ticker(yf_ticker).history(period=period)
+        if not df.empty and len(df) > 30:
+            df = df.rename(columns={
+                "Open": "open",
+                "High": "high",
+                "Low": "low",
+                "Close": "close",
+                "Volume": "volume"
+            })
+            return df[["open", "high", "low", "close", "volume"]].dropna()
+    except Exception as e:
+        print(f"yfinance failed for {coin_id}: {e}")
+
+    # Fallback to CoinGecko
+    url = f"https://api.coingecko.com/api/v3/coins/{coin_id}/market_chart"
+    params = {"vs_currency": "usd", "days": days, "interval": "daily"}
     headers = {"User-Agent": "Mozilla/5.0 (compatible; SignalsDashboard/1.0)"}
-
-    for attempt in range(4):
-        try:
-            response = requests.get(url, params=params, headers=headers, timeout=20)
-            if response.status_code == 429:
-                wait = 3 * (attempt + 1)
-                print(f"Rate limited on {coin_id}, waiting {wait}s...")
-                time.sleep(wait)
-                continue
-            response.raise_for_status()
+    try:
+        response = requests.get(url, params=params, headers=headers, timeout=15)
+        if response.status_code == 200:
             data = response.json()
-
             prices = data.get("prices", [])
             volumes = data.get("total_volumes", [])
+            if prices:
+                df = pd.DataFrame(prices, columns=["timestamp", "close"])
+                df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
+                df.set_index("timestamp", inplace=True)
+                df["open"] = df["close"].shift(1).fillna(df["close"])
+                df["high"] = df["close"]
+                df["low"] = df["close"]
+                if volumes:
+                    vol_df = pd.DataFrame(volumes, columns=["timestamp", "volume"])
+                    vol_df["timestamp"] = pd.to_datetime(vol_df["timestamp"], unit="ms")
+                    vol_df.set_index("timestamp", inplace=True)
+                    df = df.join(vol_df["volume"], how="left")
+                else:
+                    df["volume"] = 0
+                return df[["open", "high", "low", "close", "volume"]].dropna()
+    except Exception as e:
+        print(f"CoinGecko fallback failed for {coin_id}: {e}")
 
-            if not prices:
-                # Try once more after a short pause
-                if attempt < 3:
-                    time.sleep(2)
-                    continue
-                return pd.DataFrame()
-
-            df = pd.DataFrame(prices, columns=["timestamp", "close"])
-            df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
-            df.set_index("timestamp", inplace=True)
-
-            df["open"] = df["close"].shift(1).fillna(df["close"])
-            df["high"] = df["close"]
-            df["low"] = df["close"]
-            if volumes:
-                vol_df = pd.DataFrame(volumes, columns=["timestamp", "volume"])
-                vol_df["timestamp"] = pd.to_datetime(vol_df["timestamp"], unit="ms")
-                vol_df.set_index("timestamp", inplace=True)
-                df = df.join(vol_df["volume"], how="left")
-            else:
-                df["volume"] = 0
-
-            df = df[["open", "high", "low", "close", "volume"]].dropna()
-            return df
-        except Exception as e:
-            print(f"Error fetching crypto {coin_id} (attempt {attempt+1}): {e}")
-            if attempt == 3:
-                return pd.DataFrame()
-            time.sleep(2)
     return pd.DataFrame()
 
 

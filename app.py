@@ -63,11 +63,8 @@ def live_dashboard():
             with st.spinner(f"Loading {name}..."):
                 if is_crypto:
                     df = load_crypto(key, days_history)
-                    import time
-                    time.sleep(0.8)
                 else:
-                    df = load_stock(key)
-                if not df.empty:
+                    df = load_stock(key)                if not df.empty:
                     df = calculate_indicators(df)
                     result = compute_score(df)
                     result["symbol"] = name if is_crypto else f"{name} ({key})"
