@@ -12,7 +12,7 @@ from scoring import calculate_indicators, compute_score
 
 # Page config
 st.set_page_config(
-    page_title="Signals Dashboard",
+    page_title="angstrom signals - level 1",
     page_icon="📈",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -113,9 +113,9 @@ if stock_bot:
     c4.metric("Weakest Stock", stock_bot["symbol"], f"{stock_bot['score']}/100")
 
 # --- Tables with graphical scores ---
-def style_and_show_table(results, title, key_prefix):
+def style_and_show_table(results, title):
     if not results:
-        return None, None
+        return None
     df = pd.DataFrame(results)
     df = df.sort_values("score", ascending=False, na_position="last")
 
@@ -141,17 +141,14 @@ def style_and_show_table(results, title, key_prefix):
         "volume_ratio": st.column_config.NumberColumn("Vol Ratio", help="Current volume vs 20-day average", format="%.2f"),
     }
 
-    event = st.dataframe(
+    st.dataframe(
         df[display_cols],
         column_config=column_config,
         use_container_width=True,
         hide_index=True,
         height=min(400, 40 + len(df) * 35),
-        on_select="rerun",
-        selection_mode="single-row",
-        key=f"table_{key_prefix}",
     )
-    return event, df
+    return df
 
 # Initialize session state for selection
 if "selected_type" not in st.session_state:
@@ -159,38 +156,21 @@ if "selected_type" not in st.session_state:
 if "selected_key" not in st.session_state:
     st.session_state.selected_key = list(CRYPTO_WATCHLIST.keys())[0]
 
-crypto_event, crypto_df_sorted = style_and_show_table(crypto_results, "Crypto Scores", "crypto")
-stock_event, stock_df_sorted = style_and_show_table(stock_results, "Equity Scores", "stock")
-
-# Handle table row clicks — only update if a row was actually selected
-def apply_table_selection(event, df_sorted, asset_type):
-    if (event and hasattr(event, "selection") and event.selection
-            and event.selection.rows and len(event.selection.rows) > 0):
-        idx = event.selection.rows[0]
-        if idx < len(df_sorted):
-            key = df_sorted.iloc[idx]["key"]
-            if (st.session_state.selected_type != asset_type or
-                    st.session_state.selected_key != key):
-                st.session_state.selected_type = asset_type
-                st.session_state.selected_key = key
-                st.rerun()
-
-apply_table_selection(crypto_event, crypto_df_sorted, "Crypto")
-apply_table_selection(stock_event, stock_df_sorted, "Stock")
+style_and_show_table(crypto_results, "Crypto Scores")
+style_and_show_table(stock_results, "Equity Scores")
 
 # --- Interactive Chart (directly under tables) ---
 st.subheader("Interactive Chart")
 
-# Radio is the primary type selector
+# Radio drives the type
 chart_asset_type = st.radio(
     "Asset type",
     ["Crypto", "Stock"],
     horizontal=True,
     index=0 if st.session_state.selected_type == "Crypto" else 1,
-    key="radio_type",
 )
 
-# Sync radio → session state (and reset asset when type changes)
+# When radio changes, update session state and reset the asset
 if chart_asset_type != st.session_state.selected_type:
     st.session_state.selected_type = chart_asset_type
     if chart_asset_type == "Crypto":
@@ -199,7 +179,7 @@ if chart_asset_type != st.session_state.selected_type:
         st.session_state.selected_key = list(STOCK_WATCHLIST.keys())[0]
     st.rerun()
 
-# Asset selector that follows the current type
+# Asset selector follows the current type
 if st.session_state.selected_type == "Crypto":
     options = list(CRYPTO_WATCHLIST.keys())
     selected = st.selectbox(
@@ -207,12 +187,10 @@ if st.session_state.selected_type == "Crypto":
         options,
         index=options.index(st.session_state.selected_key) if st.session_state.selected_key in options else 0,
         format_func=lambda x: CRYPTO_WATCHLIST[x],
-        key="select_crypto",
     )
-    if selected != st.session_state.selected_key:
-        st.session_state.selected_key = selected
-    df_chart = load_crypto(st.session_state.selected_key, days_history)
-    title = CRYPTO_WATCHLIST[st.session_state.selected_key]
+    st.session_state.selected_key = selected
+    df_chart = load_crypto(selected, days_history)
+    title = CRYPTO_WATCHLIST[selected]
 else:
     options = list(STOCK_WATCHLIST.keys())
     selected = st.selectbox(
@@ -220,12 +198,10 @@ else:
         options,
         index=options.index(st.session_state.selected_key) if st.session_state.selected_key in options else 0,
         format_func=lambda x: f"{STOCK_WATCHLIST[x]} ({x})",
-        key="select_stock",
     )
-    if selected != st.session_state.selected_key:
-        st.session_state.selected_key = selected
-    df_chart = load_stock(st.session_state.selected_key)
-    title = f"{STOCK_WATCHLIST[st.session_state.selected_key]} ({st.session_state.selected_key})"
+    st.session_state.selected_key = selected
+    df_chart = load_stock(selected)
+    title = f"{STOCK_WATCHLIST[selected]} ({selected})"
 
 if not df_chart.empty:
     df_chart = calculate_indicators(df_chart)
@@ -333,4 +309,4 @@ else:
 st.sidebar.markdown("---")
 st.sidebar.info("Data is cached for 5 minutes. Refresh the page to update.")
 st.sidebar.caption("Edit the watchlists at the top of `app.py` to add or remove assets.")
-st.sidebar.caption("Tip: Use the radio and dropdown under the chart, or click a table row.")
+st.sidebar.caption("Use the radio and dropdown under the chart to select an asset.")
