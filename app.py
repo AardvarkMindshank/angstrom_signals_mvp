@@ -66,6 +66,7 @@ def process_watchlist(watchlist, is_crypto=True):
                 result = compute_score(df)
                 result["symbol"] = name if is_crypto else f"{name} ({key})"
                 result["type"] = "Crypto" if is_crypto else "Stock"
+                result["key"] = key
                 results.append(result)
             else:
                 results.append({
@@ -81,6 +82,7 @@ def process_watchlist(watchlist, is_crypto=True):
                     "volume_ratio": None,
                     "bb_position": None,
                     "type": "Crypto" if is_crypto else "Stock",
+                    "key": key,
                 })
     return results
 
@@ -110,9 +112,9 @@ if stock_bot:
     c4.metric("Weakest Stock", stock_bot["symbol"], f"{stock_bot['score']}/100")
 
 # --- Tables with graphical scores ---
-def style_and_show_table(results, title):
+def style_and_show_table(results, title, key_prefix):
     if not results:
-        return
+        return None
     df = pd.DataFrame(results)
     df = df.sort_values("score", ascending=False, na_position="last")
 
@@ -138,58 +140,91 @@ def style_and_show_table(results, title):
         "volume_ratio": st.column_config.NumberColumn("Vol Ratio", help="Current volume vs 20-day average", format="%.2f"),
     }
 
-    st.dataframe(
+    event = st.dataframe(
         df[display_cols],
         column_config=column_config,
         use_container_width=True,
         hide_index=True,
         height=min(400, 40 + len(df) * 35),
+        on_select="rerun",
+        selection_mode="single-row",
+        key=f"table_{key_prefix}",
     )
+    return event, df
 
-style_and_show_table(crypto_results, "Crypto Scores")
-style_and_show_table(stock_results, "Equity Scores")
+# Initialize session state for selection
+if "selected_type" not in st.session_state:
+    st.session_state.selected_type = "Crypto"
+if "selected_key" not in st.session_state:
+    st.session_state.selected_key = list(CRYPTO_WATCHLIST.keys())[0]
 
-# --- Score details ---
-if show_reasons:
-    st.subheader("Score Breakdown")
-    all_results = crypto_results + stock_results
-    for result in all_results:
-        if result.get("reasons") and result.get("score") is not None:
-            color = "green" if result["score"] >= 60 else "orange" if result["score"] >= 45 else "red"
-            st.markdown(
-                f"**{result['symbol']}** — "
-                f"<span style='color:{color};font-weight:bold'>{result['score']}/100 ({result['label']})</span>",
-                unsafe_allow_html=True,
-            )
-            for reason in result["reasons"]:
-                st.caption(f"• {reason}")
-            st.divider()
+crypto_event, crypto_df_sorted = style_and_show_table(crypto_results, "Crypto Scores", "crypto")
+stock_event, stock_df_sorted = style_and_show_table(stock_results, "Equity Scores", "stock")
 
-# --- Enhanced Chart ---
+# Handle table row selection to update the active asset
+def update_from_selection(event, df_sorted, is_crypto):
+    if event and hasattr(event, "selection") and event.selection and event.selection.rows:
+        idx = event.selection.rows[0]
+        if idx < len(df_sorted):
+            key = df_sorted.iloc[idx]["key"]
+            st.session_state.selected_type = "Crypto" if is_crypto else "Stock"
+            st.session_state.selected_key = key
+
+if crypto_event:
+    update_from_selection(crypto_event, crypto_df_sorted, True)
+if stock_event:
+    update_from_selection(stock_event, stock_df_sorted, False)
+
+# --- Interactive Chart (directly under tables) ---
 st.subheader("Interactive Chart")
-chart_asset_type = st.radio("Asset type", ["Crypto", "Stock"], horizontal=True)
 
-if chart_asset_type == "Crypto":
-    selected = st.selectbox(
-        "Select crypto",
-        list(CRYPTO_WATCHLIST.keys()),
-        format_func=lambda x: CRYPTO_WATCHLIST[x],
+col_type, col_asset = st.columns([1, 3])
+with col_type:
+    chart_asset_type = st.radio(
+        "Asset type",
+        ["Crypto", "Stock"],
+        horizontal=True,
+        index=0 if st.session_state.selected_type == "Crypto" else 1,
+        key="radio_type",
     )
-    df_chart = load_crypto(selected, days_history)
-    title = CRYPTO_WATCHLIST[selected]
-else:
-    selected = st.selectbox(
-        "Select stock",
-        list(STOCK_WATCHLIST.keys()),
-        format_func=lambda x: f"{STOCK_WATCHLIST[x]} ({x})",
-    )
-    df_chart = load_stock(selected)
-    title = f"{STOCK_WATCHLIST[selected]} ({selected})"
+    if chart_asset_type != st.session_state.selected_type:
+        st.session_state.selected_type = chart_asset_type
+        if chart_asset_type == "Crypto":
+            st.session_state.selected_key = list(CRYPTO_WATCHLIST.keys())[0]
+        else:
+            st.session_state.selected_key = list(STOCK_WATCHLIST.keys())[0]
+
+with col_asset:
+    if st.session_state.selected_type == "Crypto":
+        options = list(CRYPTO_WATCHLIST.keys())
+        selected = st.selectbox(
+            "Select crypto",
+            options,
+            index=options.index(st.session_state.selected_key) if st.session_state.selected_key in options else 0,
+            format_func=lambda x: CRYPTO_WATCHLIST[x],
+            key="select_crypto",
+        )
+        if selected != st.session_state.selected_key:
+            st.session_state.selected_key = selected
+        df_chart = load_crypto(st.session_state.selected_key, days_history)
+        title = CRYPTO_WATCHLIST[st.session_state.selected_key]
+    else:
+        options = list(STOCK_WATCHLIST.keys())
+        selected = st.selectbox(
+            "Select stock",
+            options,
+            index=options.index(st.session_state.selected_key) if st.session_state.selected_key in options else 0,
+            format_func=lambda x: f"{STOCK_WATCHLIST[x]} ({x})",
+            key="select_stock",
+        )
+        if selected != st.session_state.selected_key:
+            st.session_state.selected_key = selected
+        df_chart = load_stock(st.session_state.selected_key)
+        title = f"{STOCK_WATCHLIST[st.session_state.selected_key]} ({st.session_state.selected_key})"
 
 if not df_chart.empty:
     df_chart = calculate_indicators(df_chart)
 
-    # Create subplot chart: Price + Volume + RSI
     fig = make_subplots(
         rows=3,
         cols=1,
@@ -199,7 +234,6 @@ if not df_chart.empty:
         subplot_titles=(f"{title} Price", "Volume", "RSI (14)"),
     )
 
-    # Candlestick
     fig.add_trace(
         go.Candlestick(
             x=df_chart.index,
@@ -212,7 +246,6 @@ if not df_chart.empty:
         row=1, col=1,
     )
 
-    # Moving averages
     if "sma_20" in df_chart.columns:
         fig.add_trace(
             go.Scatter(x=df_chart.index, y=df_chart["sma_20"], name="SMA 20",
@@ -226,7 +259,6 @@ if not df_chart.empty:
             row=1, col=1,
         )
 
-    # Bollinger Bands if available
     if "BBU_20_2.0" in df_chart.columns:
         fig.add_trace(
             go.Scatter(x=df_chart.index, y=df_chart["BBU_20_2.0"], name="BB Upper",
@@ -240,7 +272,6 @@ if not df_chart.empty:
             row=1, col=1,
         )
 
-    # Volume
     colors = ["green" if df_chart["close"].iloc[i] >= df_chart["open"].iloc[i] else "red"
               for i in range(len(df_chart))]
     fig.add_trace(
@@ -248,7 +279,6 @@ if not df_chart.empty:
         row=2, col=1,
     )
 
-    # RSI
     if "rsi" in df_chart.columns:
         fig.add_trace(
             go.Scatter(x=df_chart.index, y=df_chart["rsi"], name="RSI",
@@ -272,7 +302,7 @@ if not df_chart.empty:
 
     st.plotly_chart(fig, use_container_width=True)
 
-    # Current score for selected asset
+    # Current score metrics for selected asset
     result = compute_score(df_chart)
     col_a, col_b, col_c = st.columns(3)
     col_a.metric("Current Score", f"{result['score']}/100", result["label"])
@@ -281,9 +311,21 @@ if not df_chart.empty:
     if result.get("atr_pct") is not None:
         col_c.metric("Volatility (ATR%)", f"{result['atr_pct']:.2f}%")
 
+    # Score breakdown ONLY for the selected asset
+    if show_reasons and result.get("reasons") and result.get("score") is not None:
+        st.subheader(f"Score Breakdown — {title}")
+        color = "green" if result["score"] >= 60 else "orange" if result["score"] >= 45 else "red"
+        st.markdown(
+            f"<span style='color:{color};font-weight:bold;font-size:1.1em'>{result['score']}/100 ({result['label']})</span>",
+            unsafe_allow_html=True,
+        )
+        for reason in result["reasons"]:
+            st.caption(f"• {reason}")
+
 else:
     st.warning("Could not load chart data. Check your internet connection.")
 
 st.sidebar.markdown("---")
 st.sidebar.info("Data is cached for 5 minutes. Refresh the page to update.")
 st.sidebar.caption("Edit the watchlists at the top of `app.py` to add or remove assets.")
+st.sidebar.caption("Tip: Click a row in a table to select it for the chart (requires a recent Streamlit version).")
