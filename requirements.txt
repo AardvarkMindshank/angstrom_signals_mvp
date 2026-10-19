@@ -5,5 +5,3 @@ pandas-ta
 yfinance
 requests
 python-dotenv
-# Optional but useful for nicer tables
-st-aggrid
