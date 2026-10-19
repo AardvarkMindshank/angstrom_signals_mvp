@@ -22,6 +22,44 @@ st.title("angstrom signals - level 1")
 st.markdown("### Crypto & Equity Signals Dashboard")
 st.caption("Research prototype • Multi-factor technical scoring • Not financial advice")
 
+# Help popover
+with st.popover("❓ Help", use_container_width=False):
+    st.markdown("""
+    ### What this dashboard does
+    It scores a watchlist of cryptos and stocks using technical indicators and shows the results in tables and an interactive chart.  
+    **Higher score = more bullish setup** according to the rules below. This is a research tool, not financial advice.
+
+    ### How the score is calculated (0–100)
+    Starts at 50 and adjusts based on:
+
+    - **RSI (14)** — oversold (<30) adds points, overbought (>70) subtracts
+    - **Stochastic** — similar momentum check
+    - **Price vs SMAs** — above SMA 20 / 50 / 200 is bullish, below is bearish
+    - **MACD** — above signal line and positive histogram add points
+    - **Bollinger Bands** — near the lower band is more bullish, near the upper band is more bearish
+    - **Volume** — elevated volume can strengthen the existing direction
+    - **ADX / trend strength** — strong trends amplify the current bias
+    - **Recent performance** — large 7-day moves have a mild effect
+
+    ### Column meanings
+    - **Score** — the composite 0–100 number (bar color: green ≥60, amber 45–59, red <45)
+    - **Signal** — text label (Strong Bullish → Strong Bearish)
+    - **RSI** — Relative Strength Index
+    - **7d %** — price change over the last 7 days
+    - **ATR %** — Average True Range as a percentage of price (volatility)
+    - **Vol** — current volume vs 20-day average
+    - **ADX** — trend strength (higher = stronger trend)
+    - **Conf** — confluence (bullish reasons minus bearish reasons)
+
+    ### How to use it
+    1. Check the tables for the highest/lowest scores.
+    2. Use the **Type** and **Asset** dropdowns under the chart to inspect any symbol.
+    3. Read the **Score Breakdown** to see exactly why the score is what it is.
+    4. Edit your watchlists from the sidebar (changes are saved).
+
+    Data refreshes automatically every 5 minutes.
+    """)
+
 import json
 import os
 
