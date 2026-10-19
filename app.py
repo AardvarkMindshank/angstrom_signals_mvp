@@ -22,21 +22,84 @@ st.title("angstrom signals - level 1")
 st.markdown("### Crypto & Equity Signals Dashboard")
 st.caption("Research prototype • Multi-factor technical scoring • Not financial advice")
 
-# --- Watchlist (easy to edit) ---
-CRYPTO_WATCHLIST = {
-    "bitcoin": "Bitcoin (BTC)",
-    "ethereum": "Ethereum (ETH)",
-    "solana": "Solana (SOL)",
-    "cardano": "Cardano (ADA)",
-    "ripple": "XRP",
-}
+import json
+import os
 
-STOCK_WATCHLIST = {
-    "AAPL": "Apple",
-    "MSFT": "Microsoft",
-    "NVDA": "NVIDIA",
-    "TSLA": "Tesla",
-}
+WATCHLIST_FILE = "watchlists.json"
+
+def load_watchlists():
+    if os.path.exists(WATCHLIST_FILE):
+        try:
+            with open(WATCHLIST_FILE, "r") as f:
+                data = json.load(f)
+                return data.get("crypto", {}), data.get("stock", {})
+        except Exception:
+            pass
+    # Defaults
+    return {
+        "bitcoin": "Bitcoin (BTC)",
+        "ethereum": "Ethereum (ETH)",
+        "solana": "Solana (SOL)",
+        "cardano": "Cardano (ADA)",
+        "ripple": "XRP",
+    }, {
+        "AAPL": "Apple",
+        "MSFT": "Microsoft",
+        "NVDA": "NVIDIA",
+        "TSLA": "Tesla",
+    }
+
+def save_watchlists(crypto, stock):
+    try:
+        with open(WATCHLIST_FILE, "w") as f:
+            json.dump({"crypto": crypto, "stock": stock}, f)
+    except Exception:
+        pass
+
+# --- Watchlist (persisted to file) ---
+if "crypto_watchlist" not in st.session_state or "stock_watchlist" not in st.session_state:
+    c, s = load_watchlists()
+    st.session_state.crypto_watchlist = c
+    st.session_state.stock_watchlist = s
+
+# Sidebar watchlist editor
+st.sidebar.header("Watchlists")
+
+with st.sidebar.expander("Edit Crypto", expanded=False):
+    st.caption("Add by CoinGecko-style id (bitcoin, ethereum, solana, cardano, ripple, dogecoin, etc.)")
+    new_crypto = st.text_input("Add crypto id", key="new_crypto", placeholder="e.g. dogecoin")
+    if st.button("Add Crypto") and new_crypto:
+        cid = new_crypto.strip().lower()
+        if cid and cid not in st.session_state.crypto_watchlist:
+            st.session_state.crypto_watchlist[cid] = cid.replace("-", " ").title()
+            save_watchlists(st.session_state.crypto_watchlist, st.session_state.stock_watchlist)
+            st.rerun()
+    if st.session_state.crypto_watchlist:
+        to_remove = st.selectbox("Remove crypto", [""] + list(st.session_state.crypto_watchlist.keys()), key="rm_crypto")
+        if st.button("Remove Crypto") and to_remove:
+            st.session_state.crypto_watchlist.pop(to_remove, None)
+            save_watchlists(st.session_state.crypto_watchlist, st.session_state.stock_watchlist)
+            st.rerun()
+
+with st.sidebar.expander("Edit Stocks", expanded=False):
+    st.caption("Add by ticker (AAPL, MSFT, GOOGL, AMZN, etc.)")
+    new_stock = st.text_input("Add stock ticker", key="new_stock", placeholder="e.g. GOOGL")
+    if st.button("Add Stock") and new_stock:
+        tic = new_stock.strip().upper()
+        if tic and tic not in st.session_state.stock_watchlist:
+            st.session_state.stock_watchlist[tic] = tic
+            save_watchlists(st.session_state.crypto_watchlist, st.session_state.stock_watchlist)
+            st.rerun()
+    if st.session_state.stock_watchlist:
+        to_remove = st.selectbox("Remove stock", [""] + list(st.session_state.stock_watchlist.keys()), key="rm_stock")
+        if st.button("Remove Stock") and to_remove:
+            st.session_state.stock_watchlist.pop(to_remove, None)
+            save_watchlists(st.session_state.crypto_watchlist, st.session_state.stock_watchlist)
+            st.rerun()
+
+# Use the session-state watchlists
+CRYPTO_WATCHLIST = st.session_state.crypto_watchlist
+STOCK_WATCHLIST = st.session_state.stock_watchlist
 
 # Sidebar
 st.sidebar.header("Settings")
@@ -347,5 +410,5 @@ live_dashboard()
 
 st.sidebar.markdown("---")
 st.sidebar.info("Dashboard and data auto-refresh every 5 minutes.")
-st.sidebar.caption("Edit the watchlists at the top of `app.py` to add or remove assets.")
+st.sidebar.caption("Watchlists are saved and survive page refreshes.")
 st.sidebar.caption("Use the Type and Asset dropdowns under the chart to select what to view.")
