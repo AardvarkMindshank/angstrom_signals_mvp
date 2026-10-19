@@ -162,7 +162,7 @@ if "selected_key" not in st.session_state:
 crypto_event, crypto_df_sorted = style_and_show_table(crypto_results, "Crypto Scores", "crypto")
 stock_event, stock_df_sorted = style_and_show_table(stock_results, "Equity Scores", "stock")
 
-# Robust selection handling — only one table can have a selection
+# Robust selection handling
 def get_selected_key(event, df_sorted):
     if (event and hasattr(event, "selection") and event.selection
             and event.selection.rows and len(event.selection.rows) > 0):
@@ -174,31 +174,19 @@ def get_selected_key(event, df_sorted):
 crypto_key = get_selected_key(crypto_event, crypto_df_sorted)
 stock_key = get_selected_key(stock_event, stock_df_sorted)
 
-# Clear the other table's selection when one is chosen
-if crypto_key and not stock_key:
+# Prefer the selection that differs from current (so a new click wins)
+if crypto_key and (st.session_state.selected_type != "Crypto" or st.session_state.selected_key != crypto_key):
     st.session_state.selected_type = "Crypto"
     st.session_state.selected_key = crypto_key
-    # Clear stock table selection
-    if "table_stock" in st.session_state:
-        st.session_state["table_stock"] = {"selection": {"rows": [], "columns": []}}
-elif stock_key and not crypto_key:
+elif stock_key and (st.session_state.selected_type != "Stock" or st.session_state.selected_key != stock_key):
     st.session_state.selected_type = "Stock"
     st.session_state.selected_key = stock_key
-    # Clear crypto table selection
-    if "table_crypto" in st.session_state:
-        st.session_state["table_crypto"] = {"selection": {"rows": [], "columns": []}}
-elif crypto_key and stock_key:
-    # Both selected — prefer the one that differs from current (or last click)
-    if st.session_state.selected_type != "Crypto" or st.session_state.selected_key != crypto_key:
-        st.session_state.selected_type = "Crypto"
-        st.session_state.selected_key = crypto_key
-        if "table_stock" in st.session_state:
-            st.session_state["table_stock"] = {"selection": {"rows": [], "columns": []}}
-    else:
-        st.session_state.selected_type = "Stock"
-        st.session_state.selected_key = stock_key
-        if "table_crypto" in st.session_state:
-            st.session_state["table_crypto"] = {"selection": {"rows": [], "columns": []}}
+elif crypto_key:
+    st.session_state.selected_type = "Crypto"
+    st.session_state.selected_key = crypto_key
+elif stock_key:
+    st.session_state.selected_type = "Stock"
+    st.session_state.selected_key = stock_key
 
 # --- Interactive Chart ---
 st.subheader("Interactive Chart")
