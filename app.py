@@ -40,7 +40,7 @@ STOCK_WATCHLIST = {
 
 # Sidebar
 st.sidebar.header("Settings")
-days_history = st.sidebar.slider("Days of history", 30, 180, 90)
+days_history = st.sidebar.slider("Days of history", 90, 365, 200)
 show_reasons = st.sidebar.checkbox("Show score breakdown", value=True)
 show_extra_metrics = st.sidebar.checkbox("Show extra metrics (7d, ATR, volume)", value=True)
 
@@ -51,7 +51,7 @@ def load_crypto(coin_id, days):
 
 @st.cache_data(ttl=300)
 def load_stock(ticker):
-    return fetch_stock_data(ticker, period="6mo")
+    return fetch_stock_data(ticker, period="1y")
 
 # Auto-refresh the dashboard every 5 minutes
 @st.fragment(run_every=300)
