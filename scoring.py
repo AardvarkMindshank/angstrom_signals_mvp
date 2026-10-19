@@ -26,8 +26,21 @@ def calculate_indicators(df: pd.DataFrame) -> pd.DataFrame:
     # Trend
     df["sma_20"] = ta.sma(close, length=20)
     df["sma_50"] = ta.sma(close, length=50)
+    df["sma_200"] = ta.sma(close, length=200)
     df["ema_12"] = ta.ema(close, length=12)
     df["ema_26"] = ta.ema(close, length=26)
+
+    # Trend strength — try pandas_ta first, fall back to a simple version
+    try:
+        adx_df = ta.adx(high, low, close, length=14)
+        if adx_df is not None and not adx_df.empty:
+            df = pd.concat([df, adx_df], axis=1)
+    except Exception:
+        pass
+
+    # Simple fallback ADX-like strength (average true range relative to price)
+    if "atr" in df.columns:
+        df["adx_fallback"] = (df["atr"] / close * 100).rolling(14).mean()
 
     # MACD
     macd = ta.macd(close)
@@ -62,6 +75,7 @@ def compute_score(df: pd.DataFrame) -> dict:
             "score": 50,
             "label": "Insufficient data",
             "reasons": ["Not enough history"],
+            "confluence": 0,
             "latest_price": None,
             "rsi": None,
             "change_7d": None,
@@ -69,6 +83,7 @@ def compute_score(df: pd.DataFrame) -> dict:
             "atr_pct": None,
             "volume_ratio": None,
             "bb_position": None,
+            "adx": None,
         }
 
     latest = df.iloc[-1]
@@ -108,6 +123,7 @@ def compute_score(df: pd.DataFrame) -> dict:
     # --- Price vs Moving Averages ---
     sma20 = latest.get("sma_20")
     sma50 = latest.get("sma_50")
+    sma200 = latest.get("sma_200")
     if pd.notna(sma20):
         if close > sma20:
             score += 8
@@ -122,6 +138,29 @@ def compute_score(df: pd.DataFrame) -> dict:
         else:
             score -= 7
             reasons.append("Price below SMA 50")
+    if pd.notna(sma200):
+        if close > sma200:
+            score += 6
+            reasons.append("Price above SMA 200 (long-term uptrend)")
+        else:
+            score -= 6
+            reasons.append("Price below SMA 200 (long-term downtrend)")
+
+    # --- ADX trend strength ---
+    adx_val = latest.get("ADX_14")
+    if not pd.notna(adx_val):
+        adx_val = latest.get("adx_fallback")
+    if pd.notna(adx_val):
+        if adx_val > 25:
+            reasons.append(f"Strong trend (ADX {adx_val:.1f})")
+            if score > 55:
+                score += 4
+            elif score < 45:
+                score -= 4
+        elif adx_val < 20:
+            reasons.append(f"Weak/ranging trend (ADX {adx_val:.1f})")
+    else:
+        adx_val = None
 
     # --- MACD ---
     if "MACD_12_26_9" in df.columns and pd.notna(latest.get("MACD_12_26_9")):
@@ -178,6 +217,11 @@ def compute_score(df: pd.DataFrame) -> dict:
     # Clamp
     score = max(0, min(100, score))
 
+    # Simple confluence count (how many bullish vs bearish reasons)
+    bullish = sum(1 for r in reasons if any(w in r.lower() for w in ["above", "oversold", "positive", "strong 7d", "elevated volume ("]) and "weakness" not in r.lower())
+    bearish = sum(1 for r in reasons if any(w in r.lower() for w in ["below", "overbought", "weak", "elevated volume on weakness"]))
+    confluence = int(bullish - bearish)
+
     # Label
     if score >= 72:
         label = "Strong Bullish"
@@ -202,6 +246,7 @@ def compute_score(df: pd.DataFrame) -> dict:
         "score": round(score, 1),
         "label": label,
         "reasons": reasons,
+        "confluence": confluence,
         "latest_price": round(close, 4) if close < 1 else round(close, 2),
         "rsi": round(rsi, 1) if pd.notna(rsi) else None,
         "change_7d": round(change_7d, 1) if pd.notna(change_7d) else None,
@@ -209,4 +254,5 @@ def compute_score(df: pd.DataFrame) -> dict:
         "atr_pct": round(atr_pct, 2) if atr_pct else None,
         "volume_ratio": round(vol_ratio, 2) if pd.notna(vol_ratio) else None,
         "bb_position": round(bb_position, 2) if bb_position is not None else None,
+        "adx": round(adx_val, 1) if pd.notna(adx_val) else None,
     }
