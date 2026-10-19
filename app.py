@@ -190,12 +190,18 @@ def live_dashboard():
                 adx = row.get("adx")
                 conf = row.get("confluence")
                 c[8].write(f"{adx:.0f}" if pd.notna(adx) else "—")
-                c[9].write(f"{conf:+d}" if pd.notna(conf) else "—")
+                try:
+                    c[9].write(f"{int(conf):+d}" if pd.notna(conf) else "—")
+                except (TypeError, ValueError):
+                    c[9].write("—")
             else:
                 adx = row.get("adx")
                 conf = row.get("confluence")
                 c[5].write(f"{adx:.0f}" if pd.notna(adx) else "—")
-                c[6].write(f"{conf:+d}" if pd.notna(conf) else "—")
+                try:
+                    c[6].write(f"{int(conf):+d}" if pd.notna(conf) else "—")
+                except (TypeError, ValueError):
+                    c[6].write("—")
 
             st.markdown("<hr style='margin:2px 0;border:none;border-top:1px solid #f0f0f0;'>", unsafe_allow_html=True)
 
