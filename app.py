@@ -1,23 +1,25 @@
 """
-Phase 1 MVP – Crypto & Equity Signals Dashboard
+Crypto & Equity Signals Dashboard
 Run with: streamlit run app.py
 """
 
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
-from data_fetchers import fetch_crypto_data, fetch_stock_data, get_current_price_crypto, get_current_price_stock
+from plotly.subplots import make_subplots
+from data_fetchers import fetch_crypto_data, fetch_stock_data
 from scoring import calculate_indicators, compute_score
 
 # Page config
 st.set_page_config(
-    page_title="Signals MVP",
+    page_title="Signals Dashboard",
     page_icon="📈",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded",
 )
 
-st.title("📈 Crypto & Equity Signals Dashboard – Phase 1")
-st.caption("Simple research prototype. Edit the watchlist below or in the code to add more assets.")
+st.title("📈 Crypto & Equity Signals Dashboard")
+st.caption("Research prototype • Multi-factor technical scoring • Not financial advice")
 
 # --- Watchlist (easy to edit) ---
 CRYPTO_WATCHLIST = {
@@ -35,13 +37,14 @@ STOCK_WATCHLIST = {
     "TSLA": "Tesla",
 }
 
-# Sidebar controls
+# Sidebar
 st.sidebar.header("Settings")
 days_history = st.sidebar.slider("Days of history", 30, 180, 90)
-show_reasons = st.sidebar.checkbox("Show score reasons", value=True)
+show_reasons = st.sidebar.checkbox("Show score breakdown", value=True)
+show_extra_metrics = st.sidebar.checkbox("Show extra metrics (7d, ATR, volume)", value=True)
 
-# Cache data fetching so it doesn't re-download every interaction
-@st.cache_data(ttl=300)  # cache for 5 minutes
+# Caching
+@st.cache_data(ttl=300)
 def load_crypto(coin_id, days):
     return fetch_crypto_data(coin_id, days)
 
@@ -49,128 +52,238 @@ def load_crypto(coin_id, days):
 def load_stock(ticker):
     return fetch_stock_data(ticker, period="6mo")
 
-# --- Main dashboard ---
-col1, col2 = st.columns(2)
-
-with col1:
-    st.subheader("Crypto Scores")
-    crypto_results = []
-    for coin_id, name in CRYPTO_WATCHLIST.items():
+# --- Load & score data ---
+def process_watchlist(watchlist, is_crypto=True):
+    results = []
+    for key, name in watchlist.items():
         with st.spinner(f"Loading {name}..."):
-            df = load_crypto(coin_id, days_history)
+            if is_crypto:
+                df = load_crypto(key, days_history)
+            else:
+                df = load_stock(key)
             if not df.empty:
                 df = calculate_indicators(df)
                 result = compute_score(df)
-                result["symbol"] = name
-                result["type"] = "Crypto"
-                crypto_results.append(result)
+                result["symbol"] = name if is_crypto else f"{name} ({key})"
+                result["type"] = "Crypto" if is_crypto else "Stock"
+                results.append(result)
             else:
-                crypto_results.append({
-                    "symbol": name, "score": None, "label": "No data",
-                    "reasons": [], "latest_price": None, "rsi": None, "type": "Crypto"
+                results.append({
+                    "symbol": name if is_crypto else f"{name} ({key})",
+                    "score": None,
+                    "label": "No data",
+                    "reasons": [],
+                    "latest_price": None,
+                    "rsi": None,
+                    "change_7d": None,
+                    "change_30d": None,
+                    "atr_pct": None,
+                    "volume_ratio": None,
+                    "bb_position": None,
+                    "type": "Crypto" if is_crypto else "Stock",
                 })
+    return results
 
-with col2:
-    st.subheader("Equity Scores")
-    stock_results = []
-    for ticker, name in STOCK_WATCHLIST.items():
-        with st.spinner(f"Loading {name}..."):
-            df = load_stock(ticker)
-            if not df.empty:
-                df = calculate_indicators(df)
-                result = compute_score(df)
-                result["symbol"] = f"{name} ({ticker})"
-                result["type"] = "Stock"
-                stock_results.append(result)
-            else:
-                stock_results.append({
-                    "symbol": f"{name} ({ticker})", "score": None, "label": "No data",
-                    "reasons": [], "latest_price": None, "rsi": None, "type": "Stock"
-                })
+crypto_results = process_watchlist(CRYPTO_WATCHLIST, is_crypto=True)
+stock_results = process_watchlist(STOCK_WATCHLIST, is_crypto=False)
 
-# Display separate tables
-display_cols = ["symbol", "score", "label", "latest_price", "rsi"]
+# --- Summary metrics ---
+def get_top_bottom(results):
+    valid = [r for r in results if r.get("score") is not None]
+    if not valid:
+        return None, None
+    sorted_r = sorted(valid, key=lambda x: x["score"], reverse=True)
+    return sorted_r[0], sorted_r[-1]
 
-st.subheader("Crypto Scores")
-crypto_df = pd.DataFrame(crypto_results)
-if not crypto_df.empty:
+crypto_top, crypto_bot = get_top_bottom(crypto_results)
+stock_top, stock_bot = get_top_bottom(stock_results)
+
+st.subheader("Quick Snapshot")
+c1, c2, c3, c4 = st.columns(4)
+if crypto_top:
+    c1.metric("Top Crypto", crypto_top["symbol"], f"{crypto_top['score']}/100")
+if crypto_bot:
+    c2.metric("Weakest Crypto", crypto_bot["symbol"], f"{crypto_bot['score']}/100")
+if stock_top:
+    c3.metric("Top Stock", stock_top["symbol"], f"{stock_top['score']}/100")
+if stock_bot:
+    c4.metric("Weakest Stock", stock_bot["symbol"], f"{stock_bot['score']}/100")
+
+# --- Tables with graphical scores ---
+def style_and_show_table(results, title):
+    if not results:
+        return
+    df = pd.DataFrame(results)
+    df = df.sort_values("score", ascending=False, na_position="last")
+
+    display_cols = ["symbol", "score", "label", "latest_price", "rsi"]
+    if show_extra_metrics:
+        display_cols += ["change_7d", "atr_pct", "volume_ratio"]
+
+    st.subheader(title)
+    column_config = {
+        "symbol": st.column_config.TextColumn("Asset"),
+        "score": st.column_config.ProgressColumn(
+            "Score",
+            help="Composite technical score (0–100, higher = more bullish)",
+            min_value=0,
+            max_value=100,
+            format="%d",
+        ),
+        "label": st.column_config.TextColumn("Signal"),
+        "latest_price": st.column_config.NumberColumn("Price", format="$%.2f"),
+        "rsi": st.column_config.NumberColumn("RSI", format="%.1f"),
+        "change_7d": st.column_config.NumberColumn("7d %", format="%.1f%%"),
+        "atr_pct": st.column_config.NumberColumn("ATR %", help="Average True Range as % of price (volatility)", format="%.2f"),
+        "volume_ratio": st.column_config.NumberColumn("Vol Ratio", help="Current volume vs 20-day average", format="%.2f"),
+    }
+
     st.dataframe(
-        crypto_df[display_cols].sort_values("score", ascending=False, na_position="last"),
+        df[display_cols],
+        column_config=column_config,
         use_container_width=True,
-        hide_index=True
+        hide_index=True,
+        height=min(400, 40 + len(df) * 35),
     )
 
-st.subheader("Equity Scores")
-stock_df = pd.DataFrame(stock_results)
-if not stock_df.empty:
-    st.dataframe(
-        stock_df[display_cols].sort_values("score", ascending=False, na_position="last"),
-        use_container_width=True,
-        hide_index=True
-    )
+style_and_show_table(crypto_results, "Crypto Scores")
+style_and_show_table(stock_results, "Equity Scores")
 
+# --- Score details ---
 if show_reasons:
-    st.subheader("Score Details")
+    st.subheader("Score Breakdown")
     all_results = crypto_results + stock_results
     for result in all_results:
-        if result.get("reasons"):
-            st.write(f"**{result['symbol']}** ({result['score']}/100 – {result['label']})")
+        if result.get("reasons") and result.get("score") is not None:
+            color = "green" if result["score"] >= 60 else "orange" if result["score"] >= 45 else "red"
+            st.markdown(
+                f"**{result['symbol']}** — "
+                f"<span style='color:{color};font-weight:bold'>{result['score']}/100 ({result['label']})</span>",
+                unsafe_allow_html=True,
+            )
             for reason in result["reasons"]:
-                st.write(f"- {reason}")
+                st.caption(f"• {reason}")
             st.divider()
 
-# Chart section
-st.subheader("Price Chart")
+# --- Enhanced Chart ---
+st.subheader("Interactive Chart")
 chart_asset_type = st.radio("Asset type", ["Crypto", "Stock"], horizontal=True)
 
 if chart_asset_type == "Crypto":
-    selected = st.selectbox("Select crypto", list(CRYPTO_WATCHLIST.keys()), 
-                            format_func=lambda x: CRYPTO_WATCHLIST[x])
+    selected = st.selectbox(
+        "Select crypto",
+        list(CRYPTO_WATCHLIST.keys()),
+        format_func=lambda x: CRYPTO_WATCHLIST[x],
+    )
     df_chart = load_crypto(selected, days_history)
     title = CRYPTO_WATCHLIST[selected]
 else:
-    selected = st.selectbox("Select stock", list(STOCK_WATCHLIST.keys()),
-                            format_func=lambda x: f"{STOCK_WATCHLIST[x]} ({x})")
+    selected = st.selectbox(
+        "Select stock",
+        list(STOCK_WATCHLIST.keys()),
+        format_func=lambda x: f"{STOCK_WATCHLIST[x]} ({x})",
+    )
     df_chart = load_stock(selected)
     title = f"{STOCK_WATCHLIST[selected]} ({selected})"
 
 if not df_chart.empty:
     df_chart = calculate_indicators(df_chart)
-    
-    fig = go.Figure()
-    fig.add_trace(go.Candlestick(
-        x=df_chart.index,
-        open=df_chart["open"],
-        high=df_chart["high"],
-        low=df_chart["low"],
-        close=df_chart["close"],
-        name="Price"
-    ))
-    
-    if "sma_20" in df_chart.columns:
-        fig.add_trace(go.Scatter(x=df_chart.index, y=df_chart["sma_20"], 
-                                 name="SMA 20", line=dict(color="orange", width=1)))
-    if "sma_50" in df_chart.columns:
-        fig.add_trace(go.Scatter(x=df_chart.index, y=df_chart["sma_50"], 
-                                 name="SMA 50", line=dict(color="blue", width=1)))
-    
-    fig.update_layout(
-        title=f"{title} – Price & Moving Averages",
-        xaxis_title="Date",
-        yaxis_title="Price (USD)",
-        height=500,
-        xaxis_rangeslider_visible=False
+
+    # Create subplot chart: Price + Volume + RSI
+    fig = make_subplots(
+        rows=3,
+        cols=1,
+        shared_xaxes=True,
+        vertical_spacing=0.05,
+        row_heights=[0.55, 0.2, 0.25],
+        subplot_titles=(f"{title} Price", "Volume", "RSI (14)"),
     )
+
+    # Candlestick
+    fig.add_trace(
+        go.Candlestick(
+            x=df_chart.index,
+            open=df_chart["open"],
+            high=df_chart["high"],
+            low=df_chart["low"],
+            close=df_chart["close"],
+            name="Price",
+        ),
+        row=1, col=1,
+    )
+
+    # Moving averages
+    if "sma_20" in df_chart.columns:
+        fig.add_trace(
+            go.Scatter(x=df_chart.index, y=df_chart["sma_20"], name="SMA 20",
+                       line=dict(color="orange", width=1.5)),
+            row=1, col=1,
+        )
+    if "sma_50" in df_chart.columns:
+        fig.add_trace(
+            go.Scatter(x=df_chart.index, y=df_chart["sma_50"], name="SMA 50",
+                       line=dict(color="royalblue", width=1.5)),
+            row=1, col=1,
+        )
+
+    # Bollinger Bands if available
+    if "BBU_20_2.0" in df_chart.columns:
+        fig.add_trace(
+            go.Scatter(x=df_chart.index, y=df_chart["BBU_20_2.0"], name="BB Upper",
+                       line=dict(color="gray", width=1, dash="dot"), showlegend=False),
+            row=1, col=1,
+        )
+        fig.add_trace(
+            go.Scatter(x=df_chart.index, y=df_chart["BBL_20_2.0"], name="BB Lower",
+                       line=dict(color="gray", width=1, dash="dot"), fill="tonexty",
+                       fillcolor="rgba(128,128,128,0.08)", showlegend=False),
+            row=1, col=1,
+        )
+
+    # Volume
+    colors = ["green" if df_chart["close"].iloc[i] >= df_chart["open"].iloc[i] else "red"
+              for i in range(len(df_chart))]
+    fig.add_trace(
+        go.Bar(x=df_chart.index, y=df_chart["volume"], name="Volume", marker_color=colors, opacity=0.6),
+        row=2, col=1,
+    )
+
+    # RSI
+    if "rsi" in df_chart.columns:
+        fig.add_trace(
+            go.Scatter(x=df_chart.index, y=df_chart["rsi"], name="RSI",
+                       line=dict(color="purple", width=1.5)),
+            row=3, col=1,
+        )
+        fig.add_hline(y=70, line_dash="dash", line_color="red", opacity=0.5, row=3, col=1)
+        fig.add_hline(y=30, line_dash="dash", line_color="green", opacity=0.5, row=3, col=1)
+        fig.add_hline(y=50, line_dash="dot", line_color="gray", opacity=0.3, row=3, col=1)
+
+    fig.update_layout(
+        height=750,
+        xaxis_rangeslider_visible=False,
+        showlegend=True,
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        margin=dict(t=60, b=20),
+    )
+    fig.update_yaxes(title_text="Price", row=1, col=1)
+    fig.update_yaxes(title_text="Volume", row=2, col=1)
+    fig.update_yaxes(title_text="RSI", range=[0, 100], row=3, col=1)
+
     st.plotly_chart(fig, use_container_width=True)
-    
-    # Show latest score for the selected asset
+
+    # Current score for selected asset
     result = compute_score(df_chart)
-    st.metric(label=f"Current Score for {title}", 
-              value=f"{result['score']}/100", 
-              delta=result["label"])
+    col_a, col_b, col_c = st.columns(3)
+    col_a.metric("Current Score", f"{result['score']}/100", result["label"])
+    if result.get("change_7d") is not None:
+        col_b.metric("7-Day Change", f"{result['change_7d']:+.1f}%")
+    if result.get("atr_pct") is not None:
+        col_c.metric("Volatility (ATR%)", f"{result['atr_pct']:.2f}%")
+
 else:
     st.warning("Could not load chart data. Check your internet connection.")
 
-st.sidebar.info("Tip: Data is cached for 5 minutes. Refresh the page or wait to update prices.")
 st.sidebar.markdown("---")
-st.sidebar.markdown("**Phase 1 MVP** – Edit `app.py` to change the watchlist.")
+st.sidebar.info("Data is cached for 5 minutes. Refresh the page to update.")
+st.sidebar.caption("Edit the watchlists at the top of `app.py` to add or remove assets.")

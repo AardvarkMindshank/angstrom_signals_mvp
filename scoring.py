@@ -1,104 +1,212 @@
 """
-Simple scoring logic for Phase 1 MVP.
-Easy to understand and extend.
+Enhanced scoring logic for the Signals Dashboard.
+Adds more technical indicators and a richer multi-factor score.
 """
 
 import pandas as pd
 import pandas_ta as ta
+import numpy as np
+
 
 def calculate_indicators(df: pd.DataFrame) -> pd.DataFrame:
-    """Add basic technical indicators to a price DataFrame."""
-    if df.empty or len(df) < 20:
+    """Add a richer set of technical indicators."""
+    if df.empty or len(df) < 30:
         return df
-    
-    # RSI
-    df["rsi"] = ta.rsi(df["close"], length=14)
-    
-    # Moving averages
-    df["sma_20"] = ta.sma(df["close"], length=20)
-    df["sma_50"] = ta.sma(df["close"], length=50)
-    
+
+    close = df["close"]
+    high = df["high"]
+    low = df["low"]
+    volume = df.get("volume", pd.Series(0, index=df.index))
+
+    # Momentum
+    df["rsi"] = ta.rsi(close, length=14)
+    df["stoch_k"] = ta.stoch(high, low, close, k=14, d=3)["STOCHk_14_3_3"]
+    df["stoch_d"] = ta.stoch(high, low, close, k=14, d=3)["STOCHd_14_3_3"]
+
+    # Trend
+    df["sma_20"] = ta.sma(close, length=20)
+    df["sma_50"] = ta.sma(close, length=50)
+    df["ema_12"] = ta.ema(close, length=12)
+    df["ema_26"] = ta.ema(close, length=26)
+
     # MACD
-    macd = ta.macd(df["close"])
+    macd = ta.macd(close)
     if macd is not None:
         df = pd.concat([df, macd], axis=1)
-    
+
+    # Volatility
+    df["atr"] = ta.atr(high, low, close, length=14)
+    bb = ta.bbands(close, length=20, std=2)
+    if bb is not None:
+        df = pd.concat([df, bb], axis=1)
+
+    # Volume
+    df["vol_sma_20"] = ta.sma(volume, length=20)
+    df["volume_ratio"] = volume / df["vol_sma_20"].replace(0, np.nan)
+
+    # Recent performance
+    df["change_7d"] = close.pct_change(7) * 100
+    df["change_30d"] = close.pct_change(30) * 100
+
     return df
 
 
 def compute_score(df: pd.DataFrame) -> dict:
     """
-    Compute a simple 0-100 composite score based on a few rules.
-    Higher score = more bullish.
-    Returns a dictionary with score and reasons.
+    Multi-factor 0-100 score.
+    Higher = more bullish.
+    Returns score, label, reasons, and extra metrics useful for traders.
     """
-    if df.empty or len(df) < 20:
-        return {"score": 50, "label": "Insufficient data", "reasons": ["Not enough history"]}
-    
+    if df.empty or len(df) < 30:
+        return {
+            "score": 50,
+            "label": "Insufficient data",
+            "reasons": ["Not enough history"],
+            "latest_price": None,
+            "rsi": None,
+            "change_7d": None,
+            "change_30d": None,
+            "atr_pct": None,
+            "volume_ratio": None,
+            "bb_position": None,
+        }
+
     latest = df.iloc[-1]
-    score = 50  # neutral starting point
+    score = 50.0
     reasons = []
-    
-    # RSI contribution
+
+    close = latest["close"]
+
+    # --- RSI ---
     rsi = latest.get("rsi")
     if pd.notna(rsi):
         if rsi < 30:
-            score += 15
+            score += 12
             reasons.append(f"RSI oversold ({rsi:.1f})")
+        elif rsi < 40:
+            score += 5
+            reasons.append(f"RSI approaching oversold ({rsi:.1f})")
         elif rsi > 70:
-            score -= 15
+            score -= 12
             reasons.append(f"RSI overbought ({rsi:.1f})")
+        elif rsi > 60:
+            score -= 5
+            reasons.append(f"RSI elevated ({rsi:.1f})")
         else:
             reasons.append(f"RSI neutral ({rsi:.1f})")
-    
-    # Price vs moving averages
-    close = latest["close"]
+
+    # --- Stochastic ---
+    stoch_k = latest.get("stoch_k")
+    if pd.notna(stoch_k):
+        if stoch_k < 20:
+            score += 6
+            reasons.append(f"Stochastic oversold ({stoch_k:.1f})")
+        elif stoch_k > 80:
+            score -= 6
+            reasons.append(f"Stochastic overbought ({stoch_k:.1f})")
+
+    # --- Price vs Moving Averages ---
     sma20 = latest.get("sma_20")
     sma50 = latest.get("sma_50")
-    
-    if pd.notna(sma20) and close > sma20:
-        score += 10
-        reasons.append("Price above 20-day SMA")
-    elif pd.notna(sma20):
-        score -= 10
-        reasons.append("Price below 20-day SMA")
-    
-    if pd.notna(sma50) and close > sma50:
-        score += 10
-        reasons.append("Price above 50-day SMA")
-    elif pd.notna(sma50):
-        score -= 10
-        reasons.append("Price below 50-day SMA")
-    
-    # MACD (if available)
+    if pd.notna(sma20):
+        if close > sma20:
+            score += 8
+            reasons.append("Price above SMA 20")
+        else:
+            score -= 8
+            reasons.append("Price below SMA 20")
+    if pd.notna(sma50):
+        if close > sma50:
+            score += 7
+            reasons.append("Price above SMA 50")
+        else:
+            score -= 7
+            reasons.append("Price below SMA 50")
+
+    # --- MACD ---
     if "MACD_12_26_9" in df.columns and pd.notna(latest.get("MACD_12_26_9")):
         macd_line = latest["MACD_12_26_9"]
-        signal_line = latest.get("MACDs_12_26_9")
-        if pd.notna(signal_line) and macd_line > signal_line:
-            score += 8
-            reasons.append("MACD bullish crossover")
-        elif pd.notna(signal_line):
-            score -= 8
-            reasons.append("MACD bearish")
-    
-    # Clamp score between 0 and 100
+        signal = latest.get("MACDs_12_26_9")
+        hist = latest.get("MACDh_12_26_9")
+        if pd.notna(signal) and macd_line > signal:
+            score += 6
+            reasons.append("MACD above signal")
+        elif pd.notna(signal):
+            score -= 6
+            reasons.append("MACD below signal")
+        if pd.notna(hist) and hist > 0:
+            score += 3
+            reasons.append("MACD histogram positive")
+        elif pd.notna(hist):
+            score -= 3
+
+    # --- Bollinger Bands position ---
+    bb_upper = latest.get("BBU_20_2.0")
+    bb_lower = latest.get("BBL_20_2.0")
+    bb_mid = latest.get("BBM_20_2.0")
+    bb_position = None
+    if pd.notna(bb_upper) and pd.notna(bb_lower) and (bb_upper - bb_lower) > 0:
+        bb_position = (close - bb_lower) / (bb_upper - bb_lower)
+        if bb_position < 0.2:
+            score += 7
+            reasons.append("Near lower Bollinger Band")
+        elif bb_position > 0.8:
+            score -= 7
+            reasons.append("Near upper Bollinger Band")
+
+    # --- Volume confirmation ---
+    vol_ratio = latest.get("volume_ratio")
+    if pd.notna(vol_ratio) and vol_ratio > 1.3:
+        # Boost the existing direction slightly if volume is elevated
+        if score > 55:
+            score += 4
+            reasons.append(f"Elevated volume ({vol_ratio:.1f}x avg)")
+        elif score < 45:
+            score -= 4
+            reasons.append(f"Elevated volume on weakness ({vol_ratio:.1f}x)")
+
+    # --- Recent performance context (mild influence) ---
+    change_7d = latest.get("change_7d")
+    change_30d = latest.get("change_30d")
+    if pd.notna(change_7d) and change_7d > 8:
+        score += 3
+        reasons.append(f"Strong 7d move (+{change_7d:.1f}%)")
+    elif pd.notna(change_7d) and change_7d < -8:
+        score -= 3
+        reasons.append(f"Weak 7d move ({change_7d:.1f}%)")
+
+    # Clamp
     score = max(0, min(100, score))
-    
-    if score >= 70:
+
+    # Label
+    if score >= 72:
+        label = "Strong Bullish"
+    elif score >= 60:
         label = "Bullish"
-    elif score >= 55:
+    elif score >= 52:
         label = "Mildly Bullish"
-    elif score >= 45:
+    elif score >= 48:
         label = "Neutral"
-    elif score >= 30:
+    elif score >= 40:
         label = "Mildly Bearish"
-    else:
+    elif score >= 28:
         label = "Bearish"
-    
+    else:
+        label = "Strong Bearish"
+
+    # Extra trader metrics
+    atr = latest.get("atr")
+    atr_pct = (atr / close * 100) if pd.notna(atr) and close else None
+
     return {
         "score": round(score, 1),
         "label": label,
         "reasons": reasons,
-        "latest_price": close,
-        "rsi": rsi
+        "latest_price": round(close, 4) if close < 1 else round(close, 2),
+        "rsi": round(rsi, 1) if pd.notna(rsi) else None,
+        "change_7d": round(change_7d, 1) if pd.notna(change_7d) else None,
+        "change_30d": round(change_30d, 1) if pd.notna(change_30d) else None,
+        "atr_pct": round(atr_pct, 2) if atr_pct else None,
+        "volume_ratio": round(vol_ratio, 2) if pd.notna(vol_ratio) else None,
+        "bb_position": round(bb_position, 2) if bb_position is not None else None,
     }
