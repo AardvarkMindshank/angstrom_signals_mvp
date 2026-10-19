@@ -9,11 +9,12 @@ import pandas as pd
 import yfinance as yf
 from datetime import datetime, timedelta
 
+import time
+
 def fetch_crypto_data(coin_id: str, days: int = 90) -> pd.DataFrame:
     """
     Fetch OHLCV-like data for a crypto from CoinGecko.
-    coin_id examples: 'bitcoin', 'ethereum', 'solana', 'cardano', 'ripple'
-    Includes simple retry for rate limits.
+    Includes stronger retry/backoff for rate limits.
     """
     url = f"https://api.coingecko.com/api/v3/coins/{coin_id}/market_chart"
     params = {
@@ -23,13 +24,13 @@ def fetch_crypto_data(coin_id: str, days: int = 90) -> pd.DataFrame:
     }
     headers = {"User-Agent": "Mozilla/5.0 (compatible; SignalsDashboard/1.0)"}
 
-    for attempt in range(3):
+    for attempt in range(4):
         try:
-            response = requests.get(url, params=params, headers=headers, timeout=15)
+            response = requests.get(url, params=params, headers=headers, timeout=20)
             if response.status_code == 429:
-                # Rate limited — wait and retry
-                import time
-                time.sleep(2 ** attempt)
+                wait = 3 * (attempt + 1)
+                print(f"Rate limited on {coin_id}, waiting {wait}s...")
+                time.sleep(wait)
                 continue
             response.raise_for_status()
             data = response.json()
@@ -38,6 +39,10 @@ def fetch_crypto_data(coin_id: str, days: int = 90) -> pd.DataFrame:
             volumes = data.get("total_volumes", [])
 
             if not prices:
+                # Try once more after a short pause
+                if attempt < 3:
+                    time.sleep(2)
+                    continue
                 return pd.DataFrame()
 
             df = pd.DataFrame(prices, columns=["timestamp", "close"])
@@ -59,10 +64,9 @@ def fetch_crypto_data(coin_id: str, days: int = 90) -> pd.DataFrame:
             return df
         except Exception as e:
             print(f"Error fetching crypto {coin_id} (attempt {attempt+1}): {e}")
-            if attempt == 2:
+            if attempt == 3:
                 return pd.DataFrame()
-            import time
-            time.sleep(1)
+            time.sleep(2)
     return pd.DataFrame()
 
 
