@@ -112,58 +112,71 @@ if stock_top:
 if stock_bot:
     c4.metric("Weakest Stock", stock_bot["symbol"], f"{stock_bot['score']}/100")
 
-# --- Tables with graphical scores (no selection) ---
+# --- Tables with graphical scores (custom colored bars) ---
+def score_bar_color(score):
+    if score is None or pd.isna(score):
+        return "#6b7280"
+    if score >= 60:
+        return "#22c55e"  # green
+    if score >= 45:
+        return "#f59e0b"  # amber
+    return "#ef4444"      # red
+
+def render_score_bar(score):
+    """HTML colored progress bar."""
+    if score is None or pd.isna(score):
+        pct = 0
+        color = "#6b7280"
+        label = "—"
+    else:
+        pct = max(0, min(100, float(score)))
+        color = score_bar_color(score)
+        label = f"{int(score)}"
+    return f'''
+    <div style="display:flex;align-items:center;gap:8px;width:100%;">
+        <div style="flex:1;background:#e5e7eb;border-radius:6px;height:16px;overflow:hidden;">
+            <div style="width:{pct}%;background:{color};height:100%;border-radius:6px;"></div>
+        </div>
+        <span style="min-width:32px;font-weight:600;font-size:0.95em;">{label}</span>
+    </div>
+    '''
+
 def style_and_show_table(results, title):
     if not results:
         return
     df = pd.DataFrame(results)
     df = df.sort_values("score", ascending=False, na_position="last")
 
-    display_cols = ["symbol", "score", "label", "latest_price", "rsi"]
-    if show_extra_metrics:
-        display_cols += ["change_7d", "atr_pct", "volume_ratio"]
-
     st.subheader(title)
 
-    def score_color(score):
-        if score is None or pd.isna(score):
-            return "#888888"
-        if score >= 60:
-            return "#22c55e"  # green
-        if score >= 45:
-            return "#f59e0b"  # orange
-        return "#ef4444"      # red
+    # Header row
+    h = st.columns([2.4, 2.8, 1.5, 1.3, 1.0])
+    h[0].markdown("**Asset**")
+    h[1].markdown("**Score**")
+    h[2].markdown("**Signal**")
+    h[3].markdown("**Price**")
+    h[4].markdown("**RSI**")
 
-    column_config = {
-        "symbol": st.column_config.TextColumn("Asset"),
-        "score": st.column_config.ProgressColumn(
-            "Score",
-            help="Composite technical score (0–100, higher = more bullish)",
-            min_value=0,
-            max_value=100,
-            format="%d",
-        ),
-        "label": st.column_config.TextColumn("Signal"),
-        "latest_price": st.column_config.NumberColumn("Price", format="$%.2f"),
-        "rsi": st.column_config.NumberColumn("RSI", format="%.1f"),
-        "change_7d": st.column_config.NumberColumn("7d %", format="%.1f%%"),
-        "atr_pct": st.column_config.NumberColumn("ATR %", help="Average True Range as % of price (volatility)", format="%.2f"),
-        "volume_ratio": st.column_config.NumberColumn("Vol Ratio", help="Current volume vs 20-day average", format="%.2f"),
-    }
+    # Data rows
+    for _, row in df.iterrows():
+        c = st.columns([2.4, 2.8, 1.5, 1.3, 1.0])
+        c[0].write(row["symbol"])
+        c[1].markdown(render_score_bar(row["score"]), unsafe_allow_html=True)
+        c[2].write(row.get("label") or "—")
+        price = row.get("latest_price")
+        c[3].write(f"${price:,.2f}" if pd.notna(price) else "—")
+        rsi = row.get("rsi")
+        c[4].write(f"{rsi:.1f}" if pd.notna(rsi) else "—")
 
-    def color_score_cell(val):
-        color = score_color(val)
-        return f"background-color: {color}; color: white; font-weight: bold; text-align: center"
-
-    styled = df[display_cols].style.map(color_score_cell, subset=["score"])
-
-    st.dataframe(
-        styled,
-        column_config=column_config,
-        use_container_width=True,
-        hide_index=True,
-        height=min(400, 40 + len(df) * 35),
-    )
+        if show_extra_metrics:
+            ex = st.columns([1, 1, 1])
+            chg = row.get("change_7d")
+            atr = row.get("atr_pct")
+            vol = row.get("volume_ratio")
+            ex[0].caption(f"7d: {chg:+.1f}%" if pd.notna(chg) else "7d: —")
+            ex[1].caption(f"ATR%: {atr:.2f}" if pd.notna(atr) else "ATR%: —")
+            ex[2].caption(f"Vol ratio: {vol:.2f}" if pd.notna(vol) else "Vol ratio: —")
+        st.markdown("<hr style='margin:4px 0;border:none;border-top:1px solid #eee;'>", unsafe_allow_html=True)
 
 style_and_show_table(crypto_results, "Crypto Scores")
 style_and_show_table(stock_results, "Equity Scores")
