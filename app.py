@@ -149,17 +149,22 @@ def style_and_show_table(results, title):
 
     st.subheader(title)
 
-    # Header row
-    h = st.columns([2.4, 2.8, 1.5, 1.3, 1.0])
-    h[0].markdown("**Asset**")
-    h[1].markdown("**Score**")
-    h[2].markdown("**Signal**")
-    h[3].markdown("**Price**")
-    h[4].markdown("**RSI**")
+    # Column widths — everything on one row
+    if show_extra_metrics:
+        widths = [2.0, 2.2, 1.4, 1.2, 0.8, 0.9, 0.9, 1.0]
+        headers = ["Asset", "Score", "Signal", "Price", "RSI", "7d %", "ATR %", "Vol"]
+    else:
+        widths = [2.4, 2.6, 1.6, 1.4, 1.0]
+        headers = ["Asset", "Score", "Signal", "Price", "RSI"]
+
+    # Header
+    h = st.columns(widths)
+    for i, header in enumerate(headers):
+        h[i].markdown(f"**{header}**")
 
     # Data rows
     for _, row in df.iterrows():
-        c = st.columns([2.4, 2.8, 1.5, 1.3, 1.0])
+        c = st.columns(widths)
         c[0].write(row["symbol"])
         c[1].markdown(render_score_bar(row["score"]), unsafe_allow_html=True)
         c[2].write(row.get("label") or "—")
@@ -169,14 +174,14 @@ def style_and_show_table(results, title):
         c[4].write(f"{rsi:.1f}" if pd.notna(rsi) else "—")
 
         if show_extra_metrics:
-            ex = st.columns([1, 1, 1])
             chg = row.get("change_7d")
             atr = row.get("atr_pct")
             vol = row.get("volume_ratio")
-            ex[0].caption(f"7d: {chg:+.1f}%" if pd.notna(chg) else "7d: —")
-            ex[1].caption(f"ATR%: {atr:.2f}" if pd.notna(atr) else "ATR%: —")
-            ex[2].caption(f"Vol ratio: {vol:.2f}" if pd.notna(vol) else "Vol ratio: —")
-        st.markdown("<hr style='margin:4px 0;border:none;border-top:1px solid #eee;'>", unsafe_allow_html=True)
+            c[5].write(f"{chg:+.1f}%" if pd.notna(chg) else "—")
+            c[6].write(f"{atr:.2f}" if pd.notna(atr) else "—")
+            c[7].write(f"{vol:.2f}" if pd.notna(vol) else "—")
+
+        st.markdown("<hr style='margin:2px 0;border:none;border-top:1px solid #f0f0f0;'>", unsafe_allow_html=True)
 
 style_and_show_table(crypto_results, "Crypto Scores")
 style_and_show_table(stock_results, "Equity Scores")
