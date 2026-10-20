@@ -344,9 +344,12 @@ with st.sidebar.expander("Customize Indicator Weights", expanded=False):
     with st.popover("💡 Help & Guide", width="stretch"):
         st.markdown("""
         ### Scoring Weights Guide
-        - **Sliders**: Adjust the relative importance of each technical indicator in the composite score.
-        - **Reset to Default**: Instantly snap all weights back to their central position (`1.0`).
-        - **Named Weight Sets**: Save your current custom weight configuration under a custom name, instantly load any saved profile from the dropdown, or delete unwanted sets.
+	- **Indicator Sliders**: Adjust how heavily each technical indicator influences the final 0–100 score (from `0.0` to `2.0`). Setting a weight to `0.0` completely disables that indicator.
+	- **Reset to Default**: Instantly snaps all indicator weights back to their central balanced baseline (`1.0`).
+	- **Named Weight Sets**: 
+  	- *Save Current as New Set*: Store your custom configuration under a custom name (e.g., "Volatility Focus").
+  	- *Load Saved Set*: Instantly switch between built-in profiles (Trend Following, Mean Reversion, Momentum Heavy) or your own custom saved sets.
+  	- *Delete Set*: Clean up and remove any unwanted custom profiles.
         """)
 
 
