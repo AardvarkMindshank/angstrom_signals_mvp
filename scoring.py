@@ -1,6 +1,6 @@
 """
-Enhanced scoring logic for the Signals Dashboard.
-Supports dynamic indicator weighting for custom balance.
+Balanced scoring logic for the Signals Dashboard.
+Calibrated to prevent a blanket bearish bias during normal consolidation.
 """
 
 import pandas as pd
@@ -9,7 +9,7 @@ import numpy as np
 
 
 def calculate_indicators(df: pd.DataFrame) -> pd.DataFrame:
-    """Add a richer set of technical indicators with robust error guarding."""
+    """Add technical indicators with robust error guarding."""
     if df.empty or len(df) < 15:
         return df
 
@@ -86,7 +86,7 @@ def calculate_indicators(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def compute_score(df: pd.DataFrame, weights: dict = None) -> dict:
-    """Multi-factor 0-100 score with safe scalar extraction."""
+    """Multi-factor 0-100 score calibrated for balanced sentiment."""
     if weights is None:
         weights = {
             "rsi": 1.0, "stochastic": 1.0, "sma": 1.0, "adx": 1.0,
@@ -134,24 +134,18 @@ def compute_score(df: pd.DataFrame, weights: dict = None) -> dict:
 
     close = float(latest["close"])
 
-    # RSI
+    # RSI (Neutral zone 35-65 yields 0 points)
     rsi = latest.get("rsi")
     rsi_val = None
     if pd.notna(rsi):
         rsi_val = float(rsi.iloc[-1] if isinstance(rsi, pd.Series) else rsi)
         pts = 0.0
         if rsi_val < 30:
-            pts = 12 * w_rsi
+            pts = 10 * w_rsi
             reasons.append(f"RSI oversold ({rsi_val:.1f})")
-        elif rsi_val < 40:
-            pts = 5 * w_rsi
-            reasons.append(f"RSI approaching oversold ({rsi_val:.1f})")
         elif rsi_val > 70:
-            pts = -12 * w_rsi
+            pts = -10 * w_rsi
             reasons.append(f"RSI overbought ({rsi_val:.1f})")
-        elif rsi_val > 60:
-            pts = -5 * w_rsi
-            reasons.append(f"RSI elevated ({rsi_val:.1f})")
         else:
             reasons.append(f"RSI neutral ({rsi_val:.1f})")
         score += pts
@@ -163,10 +157,10 @@ def compute_score(df: pd.DataFrame, weights: dict = None) -> dict:
         sk_val = float(stoch_k.iloc[-1] if isinstance(stoch_k, pd.Series) else stoch_k)
         pts = 0.0
         if sk_val < 20:
-            pts = 6 * w_stoch
+            pts = 5 * w_stoch
             reasons.append(f"Stochastic oversold ({sk_val:.1f})")
         elif sk_val > 80:
-            pts = -6 * w_stoch
+            pts = -5 * w_stoch
             reasons.append(f"Stochastic overbought ({sk_val:.1f})")
         score += pts
         contributions["Stochastic"] = pts
@@ -179,18 +173,18 @@ def compute_score(df: pd.DataFrame, weights: dict = None) -> dict:
     if pd.notna(sma20):
         s20 = float(sma20.iloc[-1] if isinstance(sma20, pd.Series) else sma20)
         if close > s20:
-            sma_pts += 8 * w_sma
+            sma_pts += 5 * w_sma
             reasons.append("Price above SMA 20")
         else:
-            sma_pts -= 8 * w_sma
+            sma_pts -= 5 * w_sma
             reasons.append("Price below SMA 20")
     if pd.notna(sma50):
         s50 = float(sma50.iloc[-1] if isinstance(sma50, pd.Series) else sma50)
         if close > s50:
-            sma_pts += 7 * w_sma
+            sma_pts += 5 * w_sma
             reasons.append("Price above SMA 50")
         else:
-            sma_pts -= 7 * w_sma
+            sma_pts -= 5 * w_sma
             reasons.append("Price below SMA 50")
     if pd.notna(sma200):
         s200 = float(sma200.iloc[-1] if isinstance(sma200, pd.Series) else sma200)
@@ -203,7 +197,7 @@ def compute_score(df: pd.DataFrame, weights: dict = None) -> dict:
     score += sma_pts
     contributions["Moving Averages"] = sma_pts
 
-    # ADX
+    # ADX (Only reward strong trends > 25)
     adx_val = latest.get("ADX_14")
     adx_num = None
     if pd.notna(adx_val):
@@ -211,9 +205,9 @@ def compute_score(df: pd.DataFrame, weights: dict = None) -> dict:
         adx_pts = 0.0
         if adx_num > 25:
             reasons.append(f"Strong trend (ADX {adx_num:.1f})")
-            adx_pts = (4 * w_adx) if score > 55 else (-4 * w_adx if score < 45 else 0)
-        score += adx_pts
-        contributions["ADX Trend"] = adx_pts
+            adx_pts = (4 * w_adx) if score >= 50 else (-4 * w_adx)
+            score += adx_pts
+            contributions["ADX Trend"] = adx_pts
 
     # MACD
     macd_cols = [c for c in df.columns if c.startswith("MACD_")]
@@ -225,34 +219,26 @@ def compute_score(df: pd.DataFrame, weights: dict = None) -> dict:
             ml = float(m_line.iloc[-1] if isinstance(m_line, pd.Series) else m_line) if pd.notna(m_line) else 0.0
             ms = float(m_sig.iloc[-1] if isinstance(m_sig, pd.Series) else m_sig) if pd.notna(m_sig) else 0.0
             mh = float(m_hist.iloc[-1] if isinstance(m_hist, pd.Series) else m_hist) if pd.notna(m_hist) else 0.0
-            
-            prev = df.iloc[-2] if len(df) > 1 else latest
-            prev_h = prev.get("MACDh_12_26_9", mh)
-            ph = float(prev_h.iloc[-1] if isinstance(prev_h, pd.Series) else prev_h) if pd.notna(prev_h) else mh
 
             macd_pts = 0.0
             if ml > ms:
-                macd_pts += 5 * w_macd
+                macd_pts += 4 * w_macd
                 reasons.append("MACD above signal")
             else:
-                macd_pts -= 5 * w_macd
+                macd_pts -= 4 * w_macd
                 reasons.append("MACD below signal")
+            
             if mh > 0:
-                macd_pts += 3 * w_macd
-                if mh > ph:
-                    macd_pts += 2 * w_macd
-                    reasons.append("MACD histogram expanding (bullish)")
+                macd_pts += 2 * w_macd
             else:
-                macd_pts -= 3 * w_macd
-                if mh < ph:
-                    macd_pts -= 2 * w_macd
-                    reasons.append("MACD histogram expanding (bearish)")
+                macd_pts -= 2 * w_macd
+
             score += macd_pts
             contributions["MACD & Hist"] = macd_pts
         except Exception:
             pass
 
-    # Ichimoku
+    # Ichimoku Cloud (Only trigger if cleanly outside the cloud bounds)
     isa_cols = [c for c in df.columns if c.startswith("ISA_")]
     isb_cols = [c for c in df.columns if c.startswith("ISB_")]
     if isa_cols and isb_cols:
@@ -267,11 +253,13 @@ def compute_score(df: pd.DataFrame, weights: dict = None) -> dict:
                     cloud_bottom = min(sa, sb)
                     ichi_pts = 0.0
                     if close > cloud_top:
-                        ichi_pts = 7 * w_ichi
+                        ichi_pts = 5 * w_ichi
                         reasons.append("Price above Ichimoku Cloud")
                     elif close < cloud_bottom:
-                        ichi_pts = -7 * w_ichi
+                        ichi_pts = -5 * w_ichi
                         reasons.append("Price below Ichimoku Cloud")
+                    else:
+                        reasons.append("Price inside Ichimoku Cloud")
                     score += ichi_pts
                     contributions["Ichimoku Cloud"] = ichi_pts
         except Exception:
@@ -287,11 +275,11 @@ def compute_score(df: pd.DataFrame, weights: dict = None) -> dict:
         if (bbu - bbl) > 0:
             bb_position = (close - bbl) / (bbu - bbl)
             bb_pts = 0.0
-            if bb_position < 0.2:
-                bb_pts = 7 * w_bb
+            if bb_position < 0.15:
+                bb_pts = 5 * w_bb
                 reasons.append("Near lower Bollinger Band")
-            elif bb_position > 0.8:
-                bb_pts = -7 * w_bb
+            elif bb_position > 0.85:
+                bb_pts = -5 * w_bb
                 reasons.append("Near upper Bollinger Band")
             score += bb_pts
             contributions["Bollinger Bands"] = bb_pts
@@ -300,8 +288,8 @@ def compute_score(df: pd.DataFrame, weights: dict = None) -> dict:
     vol_ratio = latest.get("volume_ratio")
     if pd.notna(vol_ratio):
         vr = float(vol_ratio.iloc[-1] if isinstance(vol_ratio, pd.Series) else vol_ratio)
-        if vr > 1.3:
-            vol_pts = (4 * w_vol) if score > 55 else (-4 * w_vol if score < 45 else 0)
+        if vr > 1.4:
+            vol_pts = (3 * w_vol) if score >= 50 else (-3 * w_vol)
             reasons.append(f"Elevated volume ({vr:.1f}x)")
             score += vol_pts
             contributions["Volume"] = vol_pts
@@ -311,7 +299,7 @@ def compute_score(df: pd.DataFrame, weights: dict = None) -> dict:
     if pd.notna(obv_val) and pd.notna(obv_sma):
         ov = float(obv_val.iloc[-1] if isinstance(obv_val, pd.Series) else obv_val)
         os_val = float(obv_sma.iloc[-1] if isinstance(obv_sma, pd.Series) else obv_sma)
-        obv_pts = (5 * w_obv) if ov > os_val else (-5 * w_obv)
+        obv_pts = (4 * w_obv) if ov > os_val else (-4 * w_obv)
         reasons.append("OBV accumulation" if ov > os_val else "OBV distribution")
         score += obv_pts
         contributions["OBV"] = obv_pts
@@ -322,22 +310,22 @@ def compute_score(df: pd.DataFrame, weights: dict = None) -> dict:
     c7_val = None
     if pd.notna(change_7d):
         c7_val = float(change_7d.iloc[-1] if isinstance(change_7d, pd.Series) else change_7d)
-        perf_pts = (3 * w_perf) if c7_val > 8 else (-3 * w_perf if c7_val < -8 else 0)
+        perf_pts = (3 * w_perf) if c7_val > 10 else (-3 * w_perf if c7_val < -10 else 0)
         score += perf_pts
         contributions["Performance"] = perf_pts
 
     score = max(0, min(100, score))
 
-    bullish = sum(1 for r in reasons if any(w in r.lower() for w in ["above", "oversold", "positive", "accumulation", "expanding", "bullish"]) and "weakness" not in r.lower())
+    bullish = sum(1 for r in reasons if any(w in r.lower() for w in ["above", "oversold", "positive", "accumulation", "bullish"]) and "weakness" not in r.lower())
     bearish = sum(1 for r in reasons if any(w in r.lower() for w in ["below", "overbought", "distribution", "bearish"]))
     confluence = int(bullish - bearish)
 
-    if score >= 72: label = "Strong Bullish"
-    elif score >= 60: label = "Bullish"
-    elif score >= 52: label = "Mildly Bullish"
-    elif score >= 48: label = "Neutral"
-    elif score >= 40: label = "Mildly Bearish"
-    elif score >= 28: label = "Bearish"
+    if score >= 65: label = "Strong Bullish"
+    elif score >= 56: label = "Bullish"
+    elif score >= 51: label = "Mildly Bullish"
+    elif score >= 49: label = "Neutral"
+    elif score >= 44: label = "Mildly Bearish"
+    elif score >= 35: label = "Bearish"
     else: label = "Strong Bearish"
 
     atr = latest.get("atr")
