@@ -72,6 +72,7 @@ st.caption("Research prototype • Multi-factor technical scoring • Not financ
 
 WATCHLIST_FILE = "watchlists.json"
 CONFIG_FILE = "scoring_config.json"
+PROFILES_FILE = "weight_profiles.json"
 
 def load_watchlists():
     if os.path.exists(WATCHLIST_FILE):
@@ -127,6 +128,22 @@ def save_scoring_weights(weights):
     except Exception:
         pass
 
+def load_weight_profiles():
+    if os.path.exists(PROFILES_FILE):
+        try:
+            with open(PROFILES_FILE, "r") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {}
+
+def save_weight_profiles(profiles):
+    try:
+        with open(PROFILES_FILE, "w") as f:
+            json.dump(profiles, f)
+    except Exception:
+        pass
+
 # --- Watchlist (persisted to file) ---
 if "crypto_watchlist" not in st.session_state or "stock_watchlist" not in st.session_state:
     c, s = load_watchlists()
@@ -172,8 +189,18 @@ with st.sidebar.expander("Edit Stocks", expanded=False):
 CRYPTO_WATCHLIST = st.session_state.crypto_watchlist
 STOCK_WATCHLIST = st.session_state.stock_watchlist
 
-# Load scoring weights
+# Load scoring weights and profiles
 current_weights = load_scoring_weights()
+weight_profiles = load_weight_profiles()
+
+# Handle reset trigger in session state if requested
+if "reset_weights" in st.session_state and st.session_state.reset_weights:
+    current_weights = {
+        "rsi": 1.0, "stochastic": 1.0, "sma": 1.0, "adx": 1.0, 
+        "macd": 1.0, "bb": 1.0, "volume": 1.0, "performance": 1.0
+    }
+    save_scoring_weights(current_weights)
+    st.session_state.reset_weights = False
 
 # Sidebar Settings
 st.sidebar.header("Settings")
@@ -184,14 +211,50 @@ show_extra_metrics = st.sidebar.checkbox("Show extra metrics (7d, ATR, volume)",
 st.sidebar.header("Scoring Balance Weights")
 with st.sidebar.expander("Customize Indicator Weights", expanded=False):
     st.caption("Adjust relative importance of indicators (saved automatically).")
-    w_rsi = st.slider("RSI Weight", 0.0, 2.0, current_weights.get("rsi", 1.0), 0.1)
-    w_stoch = st.slider("Stochastic Weight", 0.0, 2.0, current_weights.get("stochastic", 1.0), 0.1)
-    w_sma = st.slider("Moving Averages Weight", 0.0, 2.0, current_weights.get("sma", 1.0), 0.1)
-    w_adx = st.slider("ADX Trend Weight", 0.0, 2.0, current_weights.get("adx", 1.0), 0.1)
-    w_macd = st.slider("MACD Weight", 0.0, 2.0, current_weights.get("macd", 1.0), 0.1)
-    w_bb = st.slider("Bollinger Bands Weight", 0.0, 2.0, current_weights.get("bb", 1.0), 0.1)
-    w_vol = st.slider("Volume Weight", 0.0, 2.0, current_weights.get("volume", 1.0), 0.1)
-    w_perf = st.slider("Performance Weight", 0.0, 2.0, current_weights.get("performance", 1.0), 0.1)
+
+    # --- Named Weight Sets Manager ---
+    st.markdown("**Named Weight Sets**")
+    
+    # Load profile selection if present
+    profile_names = ["Select saved set..."] + list(weight_profiles.keys())
+    selected_profile = st.selectbox("Load Saved Set", profile_names, key="load_profile_sb")
+    
+    col_p1, col_p2 = st.columns(2)
+    with col_p1:
+        if st.button("Load Set") and selected_profile != "Select saved set...":
+            if selected_profile in weight_profiles:
+                current_weights = weight_profiles[selected_profile]
+                save_scoring_weights(current_weights)
+                st.success(f"Loaded '{selected_profile}'!")
+                st.rerun()
+    with col_p2:
+        if st.button("Delete Set") and selected_profile != "Select saved set...":
+            if selected_profile in weight_profiles:
+                weight_profiles.pop(selected_profile)
+                save_weight_profiles(weight_profiles)
+                st.success(f"Deleted '{selected_profile}'!")
+                st.rerun()
+
+    new_profile_name = st.text_input("New set name", placeholder="e.g. Trend Heavy")
+    if st.button("Save Current as New Set") and new_profile_name:
+        pname = new_profile_name.strip()
+        if pname:
+            weight_profiles[pname] = current_weights
+            save_weight_profiles(weight_profiles)
+            st.success(f"Saved set '{pname}'!")
+            st.rerun()
+
+    st.markdown("---")
+
+    # Sliders for individual indicator weights
+    w_rsi = st.slider("RSI Weight", 0.0, 2.0, float(current_weights.get("rsi", 1.0)), 0.1)
+    w_stoch = st.slider("Stochastic Weight", 0.0, 2.0, float(current_weights.get("stochastic", 1.0)), 0.1)
+    w_sma = st.slider("Moving Averages Weight", 0.0, 2.0, float(current_weights.get("sma", 1.0)), 0.1)
+    w_adx = st.slider("ADX Trend Weight", 0.0, 2.0, float(current_weights.get("adx", 1.0)), 0.1)
+    w_macd = st.slider("MACD Weight", 0.0, 2.0, float(current_weights.get("macd", 1.0)), 0.1)
+    w_bb = st.slider("Bollinger Bands Weight", 0.0, 2.0, float(current_weights.get("bb", 1.0)), 0.1)
+    w_vol = st.slider("Volume Weight", 0.0, 2.0, float(current_weights.get("volume", 1.0)), 0.1)
+    w_perf = st.slider("Performance Weight", 0.0, 2.0, float(current_weights.get("performance", 1.0)), 0.1)
     
     new_weights = {
         "rsi": w_rsi, "stochastic": w_stoch, "sma": w_sma, "adx": w_adx,
@@ -201,6 +264,11 @@ with st.sidebar.expander("Customize Indicator Weights", expanded=False):
     if new_weights != current_weights:
         save_scoring_weights(new_weights)
         current_weights = new_weights
+
+    # Reset to Default Button
+    if st.button("🔄 Reset to Default (1.0)"):
+        st.session_state.reset_weights = True
+        st.rerun()
 
 # Caching — data refreshes every 5 minutes
 @st.cache_data(ttl=300)
