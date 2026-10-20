@@ -448,4 +448,62 @@ def live_dashboard():
 
         fig.update_layout(
             height=750,
-            xaxis_rangeslider_visible=False
+            xaxis_rangeslider_visible=False,
+            showlegend=True,
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            margin=dict(t=60, b=20),
+        )
+        fig.update_yaxes(title_text="Price", row=1, col=1)
+        fig.update_yaxes(title_text="Volume", row=2, col=1)
+        fig.update_yaxes(title_text="RSI", range=[0, 100], row=3, col=1)
+
+        st.plotly_chart(fig, use_container_width=True)
+
+        # Current score metrics for selected asset
+        result = compute_score(df_chart, weights=current_weights)
+        col_a, col_b, col_c = st.columns(3)
+        
+        score_val = result['score']
+        if score_val >= 60:
+            delta_color = "normal"
+            arrow = "↑"
+        elif score_val >= 45:
+            delta_color = "off"
+            arrow = "→"
+        else:
+            delta_color = "inverse"
+            arrow = "↓"
+
+        with col_a:
+            st.metric("Current Score", f"{score_val}/100", f"{arrow} {result['label']}", delta_color=delta_color)
+
+        if result.get("change_7d") is not None:
+            col_b.metric("7-Day Change", f"{result['change_7d']:+.1f}%")
+        if result.get("atr_pct") is not None:
+            col_c.metric("Volatility (ATR%)", f"{result['atr_pct']:.2f}%")
+
+        # Score breakdown ONLY for the selected asset
+        if show_reasons and result.get("reasons") and result.get("score") is not None:
+            st.subheader(f"Score Breakdown — {title}")
+            color = "green" if result["score"] >= 60 else "orange" if result["score"] >= 45 else "red"
+            conf = result.get("confluence")
+            conf_text = f" · Confluence {conf:+d}" if conf is not None else ""
+            st.markdown(
+                f"<span style='color:{color};font-weight:bold;font-size:1.1em'>{result['score']}/100 ({result['label']}){conf_text}</span>",
+                unsafe_allow_html=True,
+            )
+            if result.get("adx"):
+                st.caption(f"ADX (trend strength): {result['adx']}")
+            for reason in result["reasons"]:
+                st.caption(f"• {reason}")
+
+    else:
+        st.warning("Could not load chart data. Check your internet connection.")
+
+# Run the auto-refreshing dashboard
+live_dashboard()
+
+st.sidebar.markdown("---")
+st.sidebar.info("Dashboard and data auto-refresh every 5 minutes.")
+st.sidebar.caption("Watchlists are saved and survive page refreshes.")
+st.sidebar.caption("Use the Type and Asset dropdowns under the chart to select what to view.")
