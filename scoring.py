@@ -1,5 +1,6 @@
 """
-Clean and functional scoring logic for the Signals Dashboard.
+Balanced, neutral-first scoring logic for the Signals Dashboard.
+Normal market consolidation rests cleanly around 50.
 """
 
 import pandas as pd
@@ -78,7 +79,7 @@ def calculate_indicators(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def compute_score(df: pd.DataFrame, weights: dict = None) -> dict:
-    """Multi-factor 0-100 score."""
+    """Multi-factor 0-100 score calibrated around a true 50 neutral center."""
     if weights is None:
         weights = {
             "rsi": 1.0, "stochastic": 1.0, "sma": 1.0, "adx": 1.0,
@@ -114,57 +115,60 @@ def compute_score(df: pd.DataFrame, weights: dict = None) -> dict:
     }
 
     w_rsi = weights.get("rsi", 1.0)
-    w_stoch = weights.get("stochastic", 1.0)
     w_sma = weights.get("sma", 1.0)
-    w_adx = weights.get("adx", 1.0)
     w_macd = weights.get("macd", 1.0)
     w_bb = weights.get("bb", 1.0)
-    w_vol = weights.get("volume", 1.0)
-    w_obv = weights.get("obv", 1.0)
     w_perf = weights.get("performance", 1.0)
 
     close = float(latest["close"])
 
-    # RSI
+    # RSI (Only rewards extremes, neutral 35-65 adds 0)
     rsi = latest.get("rsi")
     rsi_val = None
     if pd.notna(rsi):
         rsi_val = float(rsi.iloc[-1] if isinstance(rsi, pd.Series) else rsi)
-        if rsi_val < 35:
-            score += 8 * w_rsi
+        if rsi_val < 32:
+            pts = 6 * w_rsi
+            score += pts
             reasons.append(f"RSI oversold ({rsi_val:.1f})")
-            contributions["RSI"] = 8 * w_rsi
-        elif rsi_val > 65:
-            score -= 8 * w_rsi
+            contributions["RSI"] = pts
+        elif rsi_val > 68:
+            pts = -6 * w_rsi
+            score += pts
             reasons.append(f"RSI overbought ({rsi_val:.1f})")
-            contributions["RSI"] = -8 * w_rsi
+            contributions["RSI"] = pts
         else:
             reasons.append(f"RSI neutral ({rsi_val:.1f})")
 
-    # Moving Averages
+    # Moving Averages (SMA 20)
     sma20 = latest.get("sma_20")
-    sma50 = latest.get("sma_50")
     if pd.notna(sma20):
         s20 = float(sma20.iloc[-1] if isinstance(sma20, pd.Series) else sma20)
         if close > s20:
-            score += 6 * w_sma
+            pts = 5 * w_sma
+            score += pts
             reasons.append("Price above SMA 20")
-            contributions["Moving Averages"] += 6 * w_sma
+            contributions["Moving Averages"] += pts
         else:
-            score -= 6 * w_sma
+            pts = -5 * w_sma
+            score += pts
             reasons.append("Price below SMA 20")
-            contributions["Moving Averages"] -= 6 * w_sma
+            contributions["Moving Averages"] += pts
 
+    # Moving Averages (SMA 50)
+    sma50 = latest.get("sma_50")
     if pd.notna(sma50):
         s50 = float(sma50.iloc[-1] if isinstance(sma50, pd.Series) else sma50)
         if close > s50:
-            score += 6 * w_sma
+            pts = 5 * w_sma
+            score += pts
             reasons.append("Price above SMA 50")
-            contributions["Moving Averages"] += 6 * w_sma
+            contributions["Moving Averages"] += pts
         else:
-            score -= 6 * w_sma
+            pts = -5 * w_sma
+            score += pts
             reasons.append("Price below SMA 50")
-            contributions["Moving Averages"] -= 6 * w_sma
+            contributions["Moving Averages"] += pts
 
     # MACD
     if "MACD_12_26_9" in df.columns and pd.notna(latest.get("MACD_12_26_9")) and w_macd > 0:
@@ -173,15 +177,17 @@ def compute_score(df: pd.DataFrame, weights: dict = None) -> dict:
         ml = float(m_line.iloc[-1] if isinstance(m_line, pd.Series) else m_line)
         ms = float(m_sig.iloc[-1] if isinstance(m_sig, pd.Series) else m_sig) if pd.notna(m_sig) else 0.0
         if ml > ms:
-            score += 6 * w_macd
+            pts = 5 * w_macd
+            score += pts
             reasons.append("MACD above signal")
-            contributions["MACD & Hist"] = 6 * w_macd
+            contributions["MACD & Hist"] = pts
         else:
-            score -= 6 * w_macd
+            pts = -5 * w_macd
+            score += pts
             reasons.append("MACD below signal")
-            contributions["MACD & Hist"] = -6 * w_macd
+            contributions["MACD & Hist"] = pts
 
-    # Bollinger Bands
+    # Bollinger Bands (Only trigger near the actual outer bands)
     bb_upper = latest.get("BBU_20_2.0")
     bb_lower = latest.get("BBL_20_2.0")
     bb_position = None
@@ -190,37 +196,42 @@ def compute_score(df: pd.DataFrame, weights: dict = None) -> dict:
         bbl = float(bb_lower.iloc[-1] if isinstance(bb_lower, pd.Series) else bb_lower)
         if (bbu - bbl) > 0:
             bb_position = (close - bbl) / (bbu - bbl)
-            if bb_position < 0.2:
-                score += 5 * w_bb
+            if bb_position < 0.1:
+                pts = 5 * w_bb
+                score += pts
                 reasons.append("Near lower Bollinger Band")
-                contributions["Bollinger Bands"] = 5 * w_bb
-            elif bb_position > 0.8:
-                score -= 5 * w_bb
+                contributions["Bollinger Bands"] = pts
+            elif bb_position > 0.9:
+                pts = -5 * w_bb
+                score += pts
                 reasons.append("Near upper Bollinger Band")
-                contributions["Bollinger Bands"] = -5 * w_bb
+                contributions["Bollinger Bands"] = pts
 
-    # Performance
+    # Performance (7-day trend)
     change_7d = latest.get("change_7d")
     c7_val = None
     if pd.notna(change_7d) and w_perf > 0:
         c7_val = float(change_7d.iloc[-1] if isinstance(change_7d, pd.Series) else change_7d)
-        if c7_val > 3:
-            score += 5 * w_perf
+        if c7_val > 4:
+            pts = 5 * w_perf
+            score += pts
             reasons.append(f"Strong 7d move (+{c7_val:.1f}%)")
-            contributions["Performance"] = 5 * w_perf
-        elif c7_val < -3:
-            score -= 5 * w_perf
+            contributions["Performance"] = pts
+        elif c7_val < -4:
+            pts = -5 * w_perf
+            score += pts
             reasons.append(f"Weak 7d move ({c7_val:.1f}%)")
-            contributions["Performance"] = -5 * w_perf
+            contributions["Performance"] = pts
 
     score = max(0, min(100, score))
 
+    # Clean label thresholds centered around 50
     if score >= 65: label = "Strong Bullish"
     elif score >= 56: label = "Bullish"
     elif score >= 52: label = "Mildly Bullish"
     elif score >= 48: label = "Neutral"
-    elif score >= 42: label = "Mildly Bearish"
-    elif score >= 32: label = "Bearish"
+    elif score >= 40: label = "Mildly Bearish"
+    elif score >= 30: label = "Bearish"
     else: label = "Strong Bearish"
 
     atr = latest.get("atr")
