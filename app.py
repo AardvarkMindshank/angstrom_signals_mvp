@@ -124,14 +124,22 @@ def save_scoring_weights(weights):
     except Exception:
         pass
 
+def get_builtin_profiles():
+    return {
+        "📊 Trend Following": {"rsi": 0.8, "stochastic": 0.8, "sma": 1.5, "adx": 1.5, "macd": 1.0, "bb": 0.8, "volume": 1.0, "performance": 1.0},
+        "📉 Mean Reversion": {"rsi": 1.5, "stochastic": 1.2, "sma": 0.8, "adx": 0.5, "macd": 0.8, "bb": 1.5, "volume": 0.8, "performance": 1.0},
+        "🚀 Momentum Heavy": {"rsi": 1.0, "stochastic": 1.5, "sma": 1.0, "adx": 1.0, "macd": 1.5, "bb": 1.0, "volume": 1.5, "performance": 1.2},
+    }
+
 def load_weight_profiles():
+    saved = {}
     if os.path.exists(PROFILES_FILE):
         try:
             with open(PROFILES_FILE, "r") as f:
-                return json.load(f)
+                saved = json.load(f)
         except Exception:
             pass
-    return {}
+    return saved
 
 def save_weight_profiles(profiles):
     try:
@@ -184,7 +192,11 @@ CRYPTO_WATCHLIST = st.session_state.crypto_watchlist
 STOCK_WATCHLIST = st.session_state.stock_watchlist
 
 current_weights = load_scoring_weights()
-weight_profiles = load_weight_profiles()
+built_in_profiles = get_builtin_profiles()
+custom_profiles = load_weight_profiles()
+# Combine dictionaries so built-ins and custom sets show together
+all_profiles = {**built_in_profiles, **custom_profiles}
+
 indicators = ["rsi", "stochastic", "sma", "adx", "macd", "bb", "volume", "performance"]
 
 # Initialize session state keys for the sliders if not already present
@@ -212,14 +224,14 @@ with st.sidebar.expander("Customize Indicator Weights", expanded=False):
 
     # --- Named Weight Sets logic handles updating session state keys FIRST ---
     st.markdown("**Named Weight Sets**")
-    profile_names = ["Select saved set..."] + list(weight_profiles.keys())
+    profile_names = ["Select saved set..."] + list(all_profiles.keys())
     selected_profile = st.selectbox("Load Saved Set", profile_names, key="load_profile_sb")
     
     col_p1, col_p2 = st.columns(2)
     with col_p1:
         if st.button("Load Set") and selected_profile != "Select saved set...":
-            if selected_profile in weight_profiles:
-                loaded = weight_profiles[selected_profile]
+            if selected_profile in all_profiles:
+                loaded = all_profiles[selected_profile]
                 for ind in indicators:
                     st.session_state[f"weight_{ind}"] = float(loaded.get(ind, 1.0))
                 current_weights = loaded
@@ -228,20 +240,25 @@ with st.sidebar.expander("Customize Indicator Weights", expanded=False):
                 st.rerun()
     with col_p2:
         if st.button("Delete Set") and selected_profile != "Select saved set...":
-            if selected_profile in weight_profiles:
-                weight_profiles.pop(selected_profile)
-                save_weight_profiles(weight_profiles)
+            if selected_profile in built_in_profiles:
+                st.error("Built-in profiles cannot be deleted!")
+            elif selected_profile in custom_profiles:
+                custom_profiles.pop(selected_profile)
+                save_weight_profiles(custom_profiles)
                 st.success(f"Deleted '{selected_profile}'!")
                 st.rerun()
 
-    new_profile_name = st.text_input("New set name", placeholder="e.g. Trend Heavy")
+    new_profile_name = st.text_input("New set name", placeholder="e.g. Volatility Focus")
     if st.button("Save Current as New Set") and new_profile_name:
         pname = new_profile_name.strip()
         if pname:
-            weight_profiles[pname] = current_weights
-            save_weight_profiles(weight_profiles)
-            st.success(f"Saved set '{pname}'!")
-            st.rerun()
+            if pname in built_in_profiles:
+                st.error("Cannot overwrite built-in profile names!")
+            else:
+                custom_profiles[pname] = current_weights
+                save_weight_profiles(custom_profiles)
+                st.success(f"Saved set '{pname}'!")
+                st.rerun()
 
     st.markdown("---")
 
@@ -543,69 +560,4 @@ def live_dashboard():
             st.markdown(
                 f"""
                 <div style="font-size: 0.85rem; color: #6b7280; margin-bottom: 2px;">Current Score</div>
-                <div style="font-size: 2.2rem; font-weight: 600; line-height: 1.1; margin-bottom: 4px;">{score_val}/100</div>
-                <div style="font-size: 0.95rem; font-weight: 500; color: {score_color};">{arrow} {result['label']}</div>
-                """,
-                unsafe_allow_html=True
-            )
-
-        if result.get("change_7d") is not None:
-            col_b.metric("7-Day Change", f"{result['change_7d']:+.1f}%")
-        if result.get("atr_pct") is not None:
-            col_c.metric("Volatility (ATR%)", f"{result['atr_pct']:.2f}%")
-
-        if show_reasons and result.get("reasons") and result.get("score") is not None:
-            st.subheader(f"Score Breakdown — {title}")
-            color = "green" if result["score"] >= 60 else "orange" if result["score"] >= 45 else "red"
-            conf = result.get("confluence")
-            conf_text = f" · Confluence {conf:+d}" if conf is not None else ""
-            st.markdown(
-                f"<span style='color:{color};font-weight:bold;font-size:1.1em'>{result['score']}/100 ({result['label']}){conf_text}</span>",
-                unsafe_allow_html=True,
-            )
-            if result.get("adx"):
-                st.caption(f"ADX (trend strength): {result['adx']}")
-
-            # Side-by-side view: contribution chart + reasons list
-            breakdown_col1, breakdown_col2 = st.columns(2)
-
-            with breakdown_col1:
-                contributions = result.get("contributions", {})
-                if contributions:
-                    indicators_list = list(contributions.keys())
-                    points_list = list(contributions.values())
-                    bar_colors = ['#22c55e' if p >= 0 else '#ef4444' for p in points_list]
-
-                    fig_contrib = go.Figure(go.Bar(
-                        x=points_list,
-                        y=indicators_list,
-                        orientation='h',
-                        marker_color=bar_colors
-                    ))
-                    fig_contrib.update_layout(
-                        title="Indicator Point Contributions",
-                        xaxis_title="Points Added/Subtracted",
-                        yaxis=dict(autorange="reversed"),
-                        height=280,
-                        margin=dict(t=30, b=20, l=10, r=10)
-                    )
-                    
-                    # Add a clear vertical reference line at zero for neutral indicators
-                    fig_contrib.add_vline(x=0, line_width=1.5, line_dash="dash", line_color="gray", opacity=0.7)
-
-                    st.plotly_chart(fig_contrib, width="stretch")
-
-            with breakdown_col2:
-                st.markdown("**Detailed Reasons**")
-                for reason in result["reasons"]:
-                    st.caption(f"• {reason}")
-
-    else:
-        st.warning("Could not load chart data. Check your internet connection.")
-
-live_dashboard()
-
-st.sidebar.markdown("---")
-st.sidebar.info("Dashboard and data auto-refresh every 5 minutes.")
-st.sidebar.caption("Watchlists are saved and survive page refreshes.")
-st.sidebar.caption("Use the Type and Asset dropdowns under the chart to select what to view.")
+                <div style="font-size: 2.2rem; font
