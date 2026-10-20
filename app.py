@@ -216,4 +216,8 @@ with st.sidebar.expander("Customize Indicator Weights", expanded=False):
     w_adx = st.slider("ADX Trend Weight", 0.0, 2.0, key="weight_adx", step=0.1)
     w_macd = st.slider("MACD Weight", 0.0, 2.0, key="weight_macd", step=0.1)
     w_bb = st.slider("Bollinger Bands Weight", 0.0, 2.0, key="weight_bb", step=0.1)
-    w_vol = st.slider("Volume Weight", 0.0, 2.0, key="weight_volume", step=0.1
+    w_vol = st.slider("Volume Weight", 0.0, 2.0, key="weight_volume", step=0.1)
+    w_perf = st.slider("Performance Weight", 0.0, 2.0, key="weight_performance", step=0.1)
+    
+    new_weights = {
+        "rsi": w_rsi, "st
