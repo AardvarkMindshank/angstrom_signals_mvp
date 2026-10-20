@@ -492,4 +492,4 @@ live_dashboard()
 st.sidebar.markdown("---")
 st.sidebar.info("Dashboard and data auto-refresh every 5 minutes.")
 st.sidebar.caption("Watchlists are saved and survive page refreshes.")
-st.sidebar.caption
+st.sidebar.caption("Use the Type and Asset dropdowns under the chart to select what to view.")
