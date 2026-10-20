@@ -502,10 +502,149 @@ def live_dashboard():
 
         if "sma_20" in df_chart.columns:
             fig.add_trace(
-                go.Scatter(x=df_chart.index, y=df_chart["sma_20"], name="SMA 20",
-                           line=dict(color="orange", width=1.5)),
+                go.Scatter(
+                    x=df_chart.index, y=df_chart["sma_20"], name="SMA 20",
+                    line=dict(color="orange", width=1.5)
+                ),
                 row=1, col=1,
             )
         if "sma_50" in df_chart.columns:
             fig.add_trace(
-                go.Scatter(x=df_
+                go.Scatter(
+                    x=df_chart.index, y=df_chart["sma_50"], name="SMA 50",
+                    line=dict(color="royalblue", width=1.5)
+                ),
+                row=1, col=1,
+            )
+
+        if "BBU_20_2.0" in df_chart.columns:
+            fig.add_trace(
+                go.Scatter(
+                    x=df_chart.index, y=df_chart["BBU_20_2.0"], name="BB Upper",
+                    line=dict(color="gray", width=1, dash="dot"), showlegend=False
+                ),
+                row=1, col=1,
+            )
+            fig.add_trace(
+                go.Scatter(
+                    x=df_chart.index, y=df_chart["BBL_20_2.0"], name="BB Lower",
+                    line=dict(color="gray", width=1, dash="dot"), fill="tonexty",
+                    fillcolor="rgba(128,128,128,0.08)", showlegend=False
+                ),
+                row=1, col=1,
+            )
+
+        colors = ["green" if df_chart["close"].iloc[i] >= df_chart["open"].iloc[i] else "red"
+                  for i in range(len(df_chart))]
+        fig.add_trace(
+            go.Bar(x=df_chart.index, y=df_chart["volume"], name="Volume", marker_color=colors, opacity=0.6),
+            row=2, col=1,
+        )
+
+        if "rsi" in df_chart.columns:
+            fig.add_trace(
+                go.Scatter(
+                    x=df_chart.index, y=df_chart["rsi"], name="RSI",
+                    line=dict(color="purple", width=1.5)
+                ),
+                row=3, col=1,
+            )
+            fig.add_hline(y=70, line_dash="dash", line_color="red", opacity=0.5, row=3, col=1)
+            fig.add_hline(y=30, line_dash="dash", line_color="green", opacity=0.5, row=3, col=1)
+            fig.add_hline(y=50, line_dash="dot", line_color="gray", opacity=0.3, row=3, col=1)
+
+        fig.update_layout(
+            height=750,
+            xaxis_rangeslider_visible=False,
+            showlegend=True,
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            margin=dict(t=60, b=20),
+        )
+        fig.update_yaxes(title_text="Price", row=1, col=1)
+        fig.update_yaxes(title_text="Volume", row=2, col=1)
+        fig.update_yaxes(title_text="RSI", range=[0, 100], row=3, col=1)
+
+        st.plotly_chart(fig, width="stretch")
+
+        result = compute_score(df_chart, weights=current_weights)
+        col_a, col_b, col_c = st.columns(3)
+        
+        score_val = result['score']
+        if score_val >= 60:
+            score_color = "green"
+            arrow = "↑"
+        elif score_val >= 45:
+            score_color = "orange"
+            arrow = "→"
+        else:
+            score_color = "red"
+            arrow = "↓"
+
+        with col_a:
+            score_card_html = (
+                f"<div style='font-size: 0.85rem; color: #6b7280; margin-bottom: 2px;'>Current Score</div>"
+                f"<div style='font-size: 2.2rem; font-weight: 600; line-height: 1.1; margin-bottom: 4px;'>{score_val}/100</div>"
+                f"<div style='font-size: 0.95rem; font-weight: 500; color: {score_color};'>{arrow} {result['label']}</div>"
+            )
+            st.markdown(score_card_html, unsafe_allow_html=True)
+
+        if result.get("change_7d") is not None:
+            col_b.metric("7-Day Change", f"{result['change_7d']:+.1f}%")
+        if result.get("atr_pct") is not None:
+            col_c.metric("Volatility (ATR%)", f"{result['atr_pct']:.2f}%")
+
+        if show_reasons and result.get("reasons") and result.get("score") is not None:
+            st.subheader(f"Score Breakdown — {title}")
+            color = "green" if result["score"] >= 60 else "orange" if result["score"] >= 45 else "red"
+            conf = result.get("confluence")
+            conf_text = f" · Confluence {conf:+d}" if conf is not None else ""
+            st.markdown(
+                f"<span style='color:{color};font-weight:bold;font-size:1.1em'>{result['score']}/100 ({result['label']}){conf_text}</span>",
+                unsafe_allow_html=True,
+            )
+            if result.get("adx"):
+                st.caption(f"ADX (trend strength): {result['adx']}")
+
+            # Side-by-side view: contribution chart + reasons list
+            breakdown_col1, breakdown_col2 = st.columns(2)
+
+            with breakdown_col1:
+                contributions = result.get("contributions", {})
+                if contributions:
+                    indicators_list = list(contributions.keys())
+                    points_list = list(contributions.values())
+                    bar_colors = ['#22c55e' if p >= 0 else '#ef4444' for p in points_list]
+
+                    fig_contrib = go.Figure(go.Bar(
+                        x=points_list,
+                        y=indicators_list,
+                        orientation='h',
+                        marker_color=bar_colors
+                    ))
+                    fig_contrib.update_layout(
+                        title="Indicator Point Contributions",
+                        xaxis_title="Points Added/Subtracted",
+                        yaxis=dict(autorange="reversed"),
+                        height=280,
+                        margin=dict(t=30, b=20, l=10, r=10)
+                    )
+                    
+                    # Add a clear vertical reference line at zero for neutral indicators
+                    fig_contrib.add_vline(x=0, line_width=1.5, line_dash="dash", line_color="gray", opacity=0.7)
+
+                    st.plotly_chart(fig_contrib, width="stretch")
+
+            with breakdown_col2:
+                st.markdown("**Detailed Reasons**")
+                for reason in result["reasons"]:
+                    st.caption(f"• {reason}")
+
+    else:
+        st.warning("Could not load chart data. Check your internet connection.")
+
+live_dashboard()
+
+st.sidebar.markdown("---")
+st.sidebar.info("Dashboard and data auto-refresh every 5 minutes.")
+st.sidebar.caption("Watchlists are saved and survive page refreshes.")
+st.sidebar.caption("Use the Type and Asset dropdowns under the chart to select what to view.")
