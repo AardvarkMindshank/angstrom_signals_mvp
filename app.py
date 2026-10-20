@@ -123,4 +123,136 @@ def get_builtin_profiles():
             "macd": 1.2, 
             "ichimoku": 1.0, 
             "bb": 0.8, 
-            "volume":
+            "volume": 1.0, 
+            "obv": 1.0, 
+            "performance": 1.2
+        },
+        "📉 Mean Reversion": {
+            "rsi": 1.5, 
+            "stochastic": 1.2, 
+            "sma": 0.8, 
+            "adx": 1.0, 
+            "macd": 0.8, 
+            "ichimoku": 1.0, 
+            "bb": 1.5, 
+            "volume": 0.8, 
+            "obv": 0.8, 
+            "performance": 0.8
+        },
+        "🚀 Momentum Heavy": {
+            "rsi": 1.0, 
+            "stochastic": 1.2, 
+            "sma": 1.0, 
+            "adx": 1.0, 
+            "macd": 1.5, 
+            "ichimoku": 1.0, 
+            "bb": 1.0, 
+            "volume": 1.2, 
+            "obv": 1.2, 
+            "performance": 1.5
+        }
+    }
+
+def load_weight_profiles():
+    saved = {}
+    if os.path.exists(PROFILES_FILE):
+        try:
+            with open(PROFILES_FILE, "r") as f:
+                saved = json.load(f)
+        except Exception:
+            pass
+    return saved
+
+def save_weight_profiles(profiles):
+    try:
+        with open(PROFILES_FILE, "w") as f:
+            json.dump(profiles, f)
+    except Exception:
+        pass
+
+@st.cache_data(ttl=300)
+def load_crypto(coin_id, days):
+    return fetch_crypto_data(coin_id, days)
+
+@st.cache_data(ttl=300)
+def load_stock(ticker):
+    return fetch_stock_data(ticker, period="1y")
+
+# --- Watchlist setup ---
+if "crypto_watchlist" not in st.session_state or "stock_watchlist" not in st.session_state:
+    c, s = load_watchlists()
+    st.session_state.crypto_watchlist = c
+    st.session_state.stock_watchlist = s
+
+st.sidebar.header("Watchlists")
+
+with st.sidebar.expander("Edit Crypto", expanded=False):
+    st.caption("Add by CoinGecko-style id (bitcoin, ethereum, solana, etc.)")
+    new_crypto = st.text_input("Add crypto id", key="new_crypto", placeholder="e.g. dogecoin")
+    if st.button("Add Crypto") and new_crypto:
+        cid = new_crypto.strip().lower()
+        if cid and cid not in st.session_state.crypto_watchlist:
+            st.session_state.crypto_watchlist[cid] = cid.replace("-", " ").title()
+            save_watchlists(st.session_state.crypto_watchlist, st.session_state.stock_watchlist)
+            st.rerun()
+    if st.session_state.crypto_watchlist:
+        to_remove = st.selectbox("Remove crypto", [""] + list(st.session_state.crypto_watchlist.keys()), key="rm_crypto")
+        if to_remove:
+            if st.button("Remove Crypto"):
+                st.session_state.crypto_watchlist.pop(to_remove, None)
+                save_watchlists(st.session_state.crypto_watchlist, st.session_state.stock_watchlist)
+                st.rerun()
+
+with st.sidebar.expander("Edit Stocks", expanded=False):
+    st.caption("Add by ticker (AAPL, MSFT, etc.)")
+    new_stock = st.text_input("Add stock ticker", key="new_stock", placeholder="e.g. GOOGL")
+    if st.button("Add Stock") and new_stock:
+        tic = new_stock.strip().upper()
+        if tic and tic not in st.session_state.stock_watchlist:
+            st.session_state.stock_watchlist[tic] = tic
+            save_watchlists(st.session_state.crypto_watchlist, st.session_state.stock_watchlist)
+            st.rerun()
+    if st.session_state.stock_watchlist:
+        to_remove = st.selectbox("Remove stock", [""] + list(st.session_state.stock_watchlist.keys()), key="rm_stock")
+        if to_remove:
+            if st.button("Remove Stock"):
+                st.session_state.stock_watchlist.pop(to_remove, None)
+                save_watchlists(st.session_state.crypto_watchlist, st.session_state.stock_watchlist)
+                st.rerun()
+
+CRYPTO_WATCHLIST = st.session_state.crypto_watchlist
+STOCK_WATCHLIST = st.session_state.stock_watchlist
+
+current_weights = load_scoring_weights()
+built_in_profiles = get_builtin_profiles()
+custom_profiles = load_weight_profiles()
+all_profiles = {**built_in_profiles, **custom_profiles}
+
+indicators = ["rsi", "stochastic", "sma", "adx", "macd", "ichimoku", "bb", "volume", "obv", "performance"]
+
+for ind in indicators:
+    key_name = f"weight_{ind}"
+    if key_name not in st.session_state:
+        st.session_state[key_name] = float(current_weights.get(ind, 1.0))
+
+if "reset_weights" in st.session_state and st.session_state.reset_weights:
+    for ind in indicators:
+        st.session_state[f"weight_{ind}"] = 1.0
+    current_weights = {ind: 1.0 for ind in indicators}
+    save_scoring_weights(current_weights)
+    st.session_state.reset_weights = False
+
+# Sidebar Settings
+st.sidebar.header("Settings")
+days_history = st.sidebar.slider("Days of history", 90, 365, 200)
+show_reasons = st.sidebar.checkbox("Show score breakdown", value=True)
+show_extra_metrics = st.sidebar.checkbox("Show extra metrics (7d, ATR, volume)", value=True)
+
+st.sidebar.header("Scoring Balance Weights")
+
+with st.sidebar.expander("Customize Indicator Weights", expanded=False):
+    st.caption("Adjust relative importance of indicators (saved automatically).")
+
+    st.markdown("**Named Weight Sets**")
+    profile_names = ["Select saved set..."] + list(all_profiles.keys())
+    selected_profile = st.
