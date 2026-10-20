@@ -185,12 +185,18 @@ STOCK_WATCHLIST = st.session_state.stock_watchlist
 
 current_weights = load_scoring_weights()
 weight_profiles = load_weight_profiles()
+indicators = ["rsi", "stochastic", "sma", "adx", "macd", "bb", "volume", "performance"]
+
+# Initialize session state keys for the sliders if not already present
+for ind in indicators:
+    key_name = f"weight_{ind}"
+    if key_name not in st.session_state:
+        st.session_state[key_name] = float(current_weights.get(ind, 1.0))
 
 if "reset_weights" in st.session_state and st.session_state.reset_weights:
-    current_weights = {
-        "rsi": 1.0, "stochastic": 1.0, "sma": 1.0, "adx": 1.0, 
-        "macd": 1.0, "bb": 1.0, "volume": 1.0, "performance": 1.0
-    }
+    for ind in indicators:
+        st.session_state[f"weight_{ind}"] = 1.0
+    current_weights = {ind: 1.0 for ind in indicators}
     save_scoring_weights(current_weights)
     st.session_state.reset_weights = False
 
@@ -204,14 +210,14 @@ st.sidebar.header("Scoring Balance Weights")
 with st.sidebar.expander("Customize Indicator Weights", expanded=False):
     st.caption("Adjust relative importance of indicators (saved automatically).")
 
-    w_rsi = st.slider("RSI Weight", 0.0, 2.0, float(current_weights.get("rsi", 1.0)), 0.1)
-    w_stoch = st.slider("Stochastic Weight", 0.0, 2.0, float(current_weights.get("stochastic", 1.0)), 0.1)
-    w_sma = st.slider("Moving Averages Weight", 0.0, 2.0, float(current_weights.get("sma", 1.0)), 0.1)
-    w_adx = st.slider("ADX Trend Weight", 0.0, 2.0, float(current_weights.get("adx", 1.0)), 0.1)
-    w_macd = st.slider("MACD Weight", 0.0, 2.0, float(current_weights.get("macd", 1.0)), 0.1)
-    w_bb = st.slider("Bollinger Bands Weight", 0.0, 2.0, float(current_weights.get("bb", 1.0)), 0.1)
-    w_vol = st.slider("Volume Weight", 0.0, 2.0, float(current_weights.get("volume", 1.0)), 0.1)
-    w_perf = st.slider("Performance Weight", 0.0, 2.0, float(current_weights.get("performance", 1.0)), 0.1)
+    w_rsi = st.slider("RSI Weight", 0.0, 2.0, key="weight_rsi", step=0.1)
+    w_stoch = st.slider("Stochastic Weight", 0.0, 2.0, key="weight_stochastic", step=0.1)
+    w_sma = st.slider("Moving Averages Weight", 0.0, 2.0, key="weight_sma", step=0.1)
+    w_adx = st.slider("ADX Trend Weight", 0.0, 2.0, key="weight_adx", step=0.1)
+    w_macd = st.slider("MACD Weight", 0.0, 2.0, key="weight_macd", step=0.1)
+    w_bb = st.slider("Bollinger Bands Weight", 0.0, 2.0, key="weight_bb", step=0.1)
+    w_vol = st.slider("Volume Weight", 0.0, 2.0, key="weight_volume", step=0.1)
+    w_perf = st.slider("Performance Weight", 0.0, 2.0, key="weight_performance", step=0.1)
     
     new_weights = {
         "rsi": w_rsi, "stochastic": w_stoch, "sma": w_sma, "adx": w_adx,
@@ -236,7 +242,10 @@ with st.sidebar.expander("Customize Indicator Weights", expanded=False):
     with col_p1:
         if st.button("Load Set") and selected_profile != "Select saved set...":
             if selected_profile in weight_profiles:
-                current_weights = weight_profiles[selected_profile]
+                loaded = weight_profiles[selected_profile]
+                for ind in indicators:
+                    st.session_state[f"weight_{ind}"] = float(loaded.get(ind, 1.0))
+                current_weights = loaded
                 save_scoring_weights(current_weights)
                 st.success(f"Loaded '{selected_profile}'!")
                 st.rerun()
@@ -433,129 +442,3 @@ def live_dashboard():
         fig = make_subplots(
             rows=3,
             cols=1,
-            shared_xaxes=True,
-            vertical_spacing=0.05,
-            row_heights=[0.55, 0.2, 0.25],
-            subplot_titles=(f"{title} Price", "Volume", "RSI (14)"),
-        )
-
-        fig.add_trace(
-            go.Candlestick(
-                x=df_chart.index,
-                open=df_chart["open"],
-                high=df_chart["high"],
-                low=df_chart["low"],
-                close=df_chart["close"],
-                name="Price",
-            ),
-            row=1, col=1,
-        )
-
-        if "sma_20" in df_chart.columns:
-            fig.add_trace(
-                go.Scatter(x=df_chart.index, y=df_chart["sma_20"], name="SMA 20",
-                           line=dict(color="orange", width=1.5)),
-                row=1, col=1,
-            )
-        if "sma_50" in df_chart.columns:
-            fig.add_trace(
-                go.Scatter(x=df_chart.index, y=df_chart["sma_50"], name="SMA 50",
-                           line=dict(color="royalblue", width=1.5)),
-                row=1, col=1,
-            )
-
-        if "BBU_20_2.0" in df_chart.columns:
-            fig.add_trace(
-                go.Scatter(x=df_chart.index, y=df_chart["BBU_20_2.0"], name="BB Upper",
-                           line=dict(color="gray", width=1, dash="dot"), showlegend=False),
-                row=1, col=1,
-            )
-            fig.add_trace(
-                go.Scatter(x=df_chart.index, y=df_chart["BBL_20_2.0"], name="BB Lower",
-                           line=dict(color="gray", width=1, dash="dot"), fill="tonexty",
-                           fillcolor="rgba(128,128,128,0.08)", showlegend=False),
-                row=1, col=1,
-            )
-
-        colors = ["green" if df_chart["close"].iloc[i] >= df_chart["open"].iloc[i] else "red"
-                  for i in range(len(df_chart))]
-        fig.add_trace(
-            go.Bar(x=df_chart.index, y=df_chart["volume"], name="Volume", marker_color=colors, opacity=0.6),
-            row=2, col=1,
-        )
-
-        if "rsi" in df_chart.columns:
-            fig.add_trace(
-                go.Scatter(x=df_chart.index, y=df_chart["rsi"], name="RSI",
-                           line=dict(color="purple", width=1.5)),
-                row=3, col=1,
-            )
-            fig.add_hline(y=70, line_dash="dash", line_color="red", opacity=0.5, row=3, col=1)
-            fig.add_hline(y=30, line_dash="dash", line_color="green", opacity=0.5, row=3, col=1)
-            fig.add_hline(y=50, line_dash="dot", line_color="gray", opacity=0.3, row=3, col=1)
-
-        fig.update_layout(
-            height=750,
-            xaxis_rangeslider_visible=False,
-            showlegend=True,
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-            margin=dict(t=60, b=20),
-        )
-        fig.update_yaxes(title_text="Price", row=1, col=1)
-        fig.update_yaxes(title_text="Volume", row=2, col=1)
-        fig.update_yaxes(title_text="RSI", range=[0, 100], row=3, col=1)
-
-        st.plotly_chart(fig, use_container_width=True)
-
-        result = compute_score(df_chart, weights=current_weights)
-        col_a, col_b, col_c = st.columns(3)
-        
-        score_val = result['score']
-        if score_val >= 60:
-            score_color = "green"
-            arrow = "↑"
-        elif score_val >= 45:
-            score_color = "orange"
-            arrow = "→"
-        else:
-            score_color = "red"
-            arrow = "↓"
-
-        with col_a:
-            st.markdown(
-                f"""
-                <div style="font-size: 0.85rem; color: #6b7280; margin-bottom: 2px;">Current Score</div>
-                <div style="font-size: 2.2rem; font-weight: 600; line-height: 1.1; margin-bottom: 4px;">{score_val}/100</div>
-                <div style="font-size: 0.95rem; font-weight: 500; color: {score_color};">{arrow} {result['label']}</div>
-                """,
-                unsafe_allow_html=True
-            )
-
-        if result.get("change_7d") is not None:
-            col_b.metric("7-Day Change", f"{result['change_7d']:+.1f}%")
-        if result.get("atr_pct") is not None:
-            col_c.metric("Volatility (ATR%)", f"{result['atr_pct']:.2f}%")
-
-        if show_reasons and result.get("reasons") and result.get("score") is not None:
-            st.subheader(f"Score Breakdown — {title}")
-            color = "green" if result["score"] >= 60 else "orange" if result["score"] >= 45 else "red"
-            conf = result.get("confluence")
-            conf_text = f" · Confluence {conf:+d}" if conf is not None else ""
-            st.markdown(
-                f"<span style='color:{color};font-weight:bold;font-size:1.1em'>{result['score']}/100 ({result['label']}){conf_text}</span>",
-                unsafe_allow_html=True,
-            )
-            if result.get("adx"):
-                st.caption(f"ADX (trend strength): {result['adx']}")
-            for reason in result["reasons"]:
-                st.caption(f"• {reason}")
-
-    else:
-        st.warning("Could not load chart data. Check your internet connection.")
-
-live_dashboard()
-
-st.sidebar.markdown("---")
-st.sidebar.info("Dashboard and data auto-refresh every 5 minutes.")
-st.sidebar.caption("Watchlists are saved and survive page refreshes.")
-st.sidebar.caption("Use the Type and Asset dropdowns under the chart to select what to view.")
