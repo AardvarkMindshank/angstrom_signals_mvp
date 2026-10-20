@@ -293,7 +293,17 @@ with st.sidebar.expander("Customize Indicator Weights", expanded=False):
 
     st.markdown("---")
     with st.popover("💡 How Scoring Works", width="stretch"):
-        st.markdown("""
-        ### Understanding the Scores & Weights
-        - **Baseline**: Every asset starts at a neutral **50 points**.
-        - **Active Drivers**: Bullish signals add points (+
+        st.markdown(
+            """
+            ### Understanding the Scores & Weights
+            - **Baseline**: Every asset starts at a neutral **50 points**.
+            - **Active Drivers**: Bullish signals add points (+), bearish signals subtract points (-). Sliders multiply these points directly.
+            - **Neutral Zones (Blank Bars)**: If an indicator is in a normal/neutral zone (e.g., RSI between 40–60), it contributes **0 points**. This is why its bar looks blank on the contribution chart—it's active in calculation, but currently neutral!
+            """
+        )
+
+@st.cache_data(ttl=300)
+def load_crypto(coin_id, days):
+    return fetch_crypto_data(coin_id, days)
+
+@st.
