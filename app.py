@@ -192,9 +192,6 @@ if "reset_weights" in st.session_state and st.session_state.reset_weights:
         "macd": 1.0, "bb": 1.0, "volume": 1.0, "performance": 1.0
     }
     save_scoring_weights(current_weights)
-    # Clear explicit widget states so sliders snap back visually
-    for k in ["slider_rsi", "slider_stoch", "slider_sma", "slider_adx", "slider_macd", "slider_bb", "slider_vol", "slider_perf"]:
-        st.session_state.pop(k, None)
     st.session_state.reset_weights = False
 
 # Sidebar Settings
@@ -207,14 +204,14 @@ st.sidebar.header("Scoring Balance Weights")
 with st.sidebar.expander("Customize Indicator Weights", expanded=False):
     st.caption("Adjust relative importance of indicators (saved automatically).")
 
-    w_rsi = st.slider("RSI Weight", 0.0, 2.0, float(current_weights.get("rsi", 1.0)), 0.1, key="slider_rsi")
-    w_stoch = st.slider("Stochastic Weight", 0.0, 2.0, float(current_weights.get("stochastic", 1.0)), 0.1, key="slider_stoch")
-    w_sma = st.slider("Moving Averages Weight", 0.0, 2.0, float(current_weights.get("sma", 1.0)), 0.1, key="slider_sma")
-    w_adx = st.slider("ADX Trend Weight", 0.0, 2.0, float(current_weights.get("adx", 1.0)), 0.1, key="slider_adx")
-    w_macd = st.slider("MACD Weight", 0.0, 2.0, float(current_weights.get("macd", 1.0)), 0.1, key="slider_macd")
-    w_bb = st.slider("Bollinger Bands Weight", 0.0, 2.0, float(current_weights.get("bb", 1.0)), 0.1, key="slider_bb")
-    w_vol = st.slider("Volume Weight", 0.0, 2.0, float(current_weights.get("volume", 1.0)), 0.1, key="slider_vol")
-    w_perf = st.slider("Performance Weight", 0.0, 2.0, float(current_weights.get("performance", 1.0)), 0.1, key="slider_perf")
+    w_rsi = st.slider("RSI Weight", 0.0, 2.0, float(current_weights.get("rsi", 1.0)), 0.1)
+    w_stoch = st.slider("Stochastic Weight", 0.0, 2.0, float(current_weights.get("stochastic", 1.0)), 0.1)
+    w_sma = st.slider("Moving Averages Weight", 0.0, 2.0, float(current_weights.get("sma", 1.0)), 0.1)
+    w_adx = st.slider("ADX Trend Weight", 0.0, 2.0, float(current_weights.get("adx", 1.0)), 0.1)
+    w_macd = st.slider("MACD Weight", 0.0, 2.0, float(current_weights.get("macd", 1.0)), 0.1)
+    w_bb = st.slider("Bollinger Bands Weight", 0.0, 2.0, float(current_weights.get("bb", 1.0)), 0.1)
+    w_vol = st.slider("Volume Weight", 0.0, 2.0, float(current_weights.get("volume", 1.0)), 0.1)
+    w_perf = st.slider("Performance Weight", 0.0, 2.0, float(current_weights.get("performance", 1.0)), 0.1)
     
     new_weights = {
         "rsi": w_rsi, "stochastic": w_stoch, "sma": w_sma, "adx": w_adx,
@@ -241,9 +238,6 @@ with st.sidebar.expander("Customize Indicator Weights", expanded=False):
             if selected_profile in weight_profiles:
                 current_weights = weight_profiles[selected_profile]
                 save_scoring_weights(current_weights)
-                # Clear slider keys so they update to loaded values visually
-                for k in ["slider_rsi", "slider_stoch", "slider_sma", "slider_adx", "slider_macd", "slider_bb", "slider_vol", "slider_perf"]:
-                    st.session_state.pop(k, None)
                 st.success(f"Loaded '{selected_profile}'!")
                 st.rerun()
     with col_p2:
