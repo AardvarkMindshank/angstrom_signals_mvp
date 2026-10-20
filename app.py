@@ -219,4 +219,9 @@ with st.sidebar.expander("Edit Stocks", expanded=False):
             save_watchlists(st.session_state.crypto_watchlist, st.session_state.stock_watchlist)
             st.rerun()
 
-CRYPTO_WATCHLIST = st.session_state.
+CRYPTO_WATCHLIST = st.session_state.crypto_watchlist
+STOCK_WATCHLIST = st.session_state.stock_watchlist
+
+current_weights = load_scoring_weights()
+built_in_profiles = get_builtin_profiles()
+custom_profiles = load_weight_profiles()
