@@ -329,32 +329,39 @@ def live_dashboard():
                     df = load_crypto(key, days_history)
                 else:
                     df = load_stock(key)
-                if not df.empty:
-                    df = calculate_indicators(df)
-                    result = compute_score(df, weights=current_weights)
-                    result["symbol"] = name if is_crypto else f"{name} ({key})"
-                    result["type"] = "Crypto" if is_crypto else "Stock"
-                    result["key"] = key
-                    results.append(result)
-                else:
-                    results.append({
-                        "symbol": name if is_crypto else f"{name} ({key})",
-                        "score": None,
-                        "label": "No data",
-                        "reasons": [],
-                        "latest_price": None,
-                        "rsi": None,
-                        "change_7d": None,
-                        "change_30d": None,
-                        "atr_pct": None,
-                        "volume_ratio": None,
-                        "bb_position": None,
-                        "adx": None,
-                        "confluence": None,
-                        "contributions": {},
-                        "type": "Crypto" if is_crypto else "Stock",
-                        "key": key,
-                    })
+                
+                result = {
+                    "symbol": name if is_crypto else f"{name} ({key})",
+                    "score": None,
+                    "label": "No data",
+                    "reasons": [],
+                    "latest_price": None,
+                    "rsi": None,
+                    "change_7d": None,
+                    "change_30d": None,
+                    "atr_pct": None,
+                    "volume_ratio": None,
+                    "bb_position": None,
+                    "adx": None,
+                    "confluence": None,
+                    "contributions": {},
+                    "type": "Crypto" if is_crypto else "Stock",
+                    "key": key,
+                }
+
+                if not df.empty and len(df) >= 30:
+                    try:
+                        df = calculate_indicators(df)
+                        res = compute_score(df, weights=current_weights)
+                        if isinstance(res, dict):
+                            result.update(res)
+                            result["symbol"] = name if is_crypto else f"{name} ({key})"
+                            result["type"] = "Crypto" if is_crypto else "Stock"
+                            result["key"] = key
+                    except Exception:
+                        pass
+                
+                results.append(result)
         return results
 
     crypto_results = process_watchlist(CRYPTO_WATCHLIST, is_crypto=True)
