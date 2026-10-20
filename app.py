@@ -103,27 +103,49 @@ st.sidebar.markdown("---")
 # Main Title Header
 st.title("angstrom signals - level 1")
 
-# Clean, mobile-friendly Help & Guide Expander placed cleanly in the sidebar so it doesn't clutter main view
-with st.sidebar.expander("📖 Platform Guide & Help", expanded=False):
+# Full, comprehensive guide placed at the top of the main screen with plenty of reading space
+with st.expander("📖 Comprehensive Platform Guide & Help Manual", expanded=False):
     st.markdown("""
     ### What this dashboard does
-    It scores a watchlist of cryptos and stocks using multi-factor technical indicators and displays results in structured tables and an interactive chart. **Higher score = more bullish setup**.
+    It scores a watchlist of cryptos and stocks using multi-factor technical indicators and displays results in structured tables and an interactive chart. **Higher score = more bullish setup** according to the scoring rules below. This is a research tool, not financial advice.
 
     ### Comprehensive Scoring Model (0–100 Scale)
-    - **RSI (14)**: Oversold (<40) adds bullish points; overbought (>60) subtracts points.
-    - **Stochastic**: Oversold adds points; overbought subtracts points.
-    - **Moving Averages (SMA 20 & 50)**: Trading above both adds major trend points; below subtracts.
-    - **ADX**: Strong trends amplify active directions.
-    - **MACD**: Bullish crossovers add momentum points.
-    - **Ichimoku Cloud**: Price above cloud adds trend support.
-    - **Bollinger Bands**: Lower band dips add support; upper band presses subtract.
-    - **Volume & OBV**: High relative volume adds conviction.
-    - **Performance (7-Day)**: Trailing momentum boosts scores.
+    The composite score starts at a baseline neutral value of **50** and adjusts dynamically based on weighted technical factors:
+    - **RSI (14)**: Oversold (<40) adds bullish points for potential mean-reversion bounces; overbought (>60) subtracts points due to pullback risks.
+    - **Stochastic Oscillator**: Oversold levels add support points; overbought levels subtract points.
+    - **Moving Averages (SMA 20 & SMA 50)**: Trading above both short- and medium-term SMAs adds major trend points; trading below both subtracts points.
+    - **ADX (Trend Strength)**: Strong trends (high ADX values) amplify the weight of active moving average and momentum directions.
+    - **MACD & Histogram**: Bullish MACD crossovers and positive histogram expansion add upward momentum points; bearish crosses subtract points.
+    - **Ichimoku Cloud**: Price trading cleanly above the cloud adds bullish trend support; trading below the cloud subtracts points.
+    - **Bollinger Bands (20, 2.0)**: Price hugging or dipping below the lower band adds support/reversion points; pressing against the upper band subtracts resistance points.
+    - **Volume & OBV (On-Balance Volume)**: High relative volume supporting an upward move adds conviction points; negative volume trends weigh the score down.
+    - **Performance (7-Day)**: Positive 7-day trailing price momentum boosts the score; sharp trailing declines weigh it down.
 
-    ### Signal Zones
-    - **Strong Bullish / Bullish (≥ 60)**: Green
-    - **Neutral / Transition (45–59)**: Amber
-    - **Bearish / Strong Bearish (< 45)**: Red
+    ### Signal Zones & Color Coding
+    - **Strong Bullish / Bullish (Score ≥ 60) [Green]**: Clear upward technical alignment across multiple indicators.
+    - **Neutral / Transition (Score 45–59) [Amber]**: Mixed signals, consolidation, or conflicting indicator readings.
+    - **Bearish / Strong Bearish (Score < 45) [Red]**: Downward momentum, trading below key moving averages, or overbought exhaustion.
+
+    ### Customizing Indicator Weights & Weight Sets
+    In the sidebar under **Scoring Balance Weights**:
+    - **Sliders**: Tailor the relative importance (multiplier from `0.0` to `2.0`) of individual technical indicators to fit your trading style.
+    - **Named Weight Sets**: Save your custom weight profiles, instantly load built-in or saved profiles from the dropdown, or delete unwanted sets. Changes persist automatically.
+
+    ### Column meanings
+    - **Score** — the composite 0–100 number (bar color: green ≥60, amber 45–59, red <45)
+    - **Signal** — text label (Strong Bullish → Strong Bearish)
+    - **RSI** — Relative Strength Index
+    - **7d %** — price change over the last 7 days
+    - **ATR %** — Average True Range as a percentage of price (volatility)
+    - **Vol** — current volume vs 20-day average
+
+    ### How to use it
+    1. Check the tables for the highest/lowest scores.
+    2. Use the **Type** and **Asset** dropdowns under the chart to inspect any symbol.
+    3. Read the **Score Breakdown** to see exactly why the score is what it is.
+    4. Edit your watchlists or indicator weights from the sidebar (changes are saved).
+
+    Data refreshes automatically every 5 minutes.
     """)
 
 st.markdown("### Crypto & Equity Signals Dashboard")
@@ -365,6 +387,17 @@ with st.sidebar.expander("Customize Indicator Weights", expanded=False):
     if st.button("🔄 Reset to Default (1.0)"):
         st.session_state.reset_weights = True
         st.rerun()
+
+    st.markdown("---")
+    with st.expander("💡 Scoring Weights Guide", expanded=False):
+        st.markdown("""
+        - **Indicator Sliders**: Adjust how heavily each technical indicator influences the final 0–100 score (from `0.0` to `2.0`). Setting a weight to `0.0` completely disables that indicator.
+        - **Reset to Default**: Instantly snaps all indicator weights back to their central balanced baseline (`1.0`).
+        - **Named Weight Sets**: 
+          - *Save Current as New Set*: Store your custom configuration under a custom name (e.g., "Volatility Focus").
+          - *Load Saved Set*: Instantly switch between built-in profiles (Trend Following, Mean Reversion, Momentum Heavy) or your own custom saved sets.
+          - *Delete Set*: Clean up and remove any unwanted custom profiles.
+        """)
 
 
 @st.fragment(run_every=300)
@@ -618,58 +651,4 @@ def live_dashboard():
 
         with col_a:
             score_card_html = (
-                f"<div style='font-size: 0.85rem; color: #6b7280; margin-bottom: 2px;'>Current Score</div>"
-                f"<div style='font-size: 2.2rem; font-weight: 600; line-height: 1.1; margin-bottom: 4px;'>{score_val}/100</div>"
-                f"<div style='font-size: 0.95rem; font-weight: 500; color: {score_color};'>{arrow} {result['label']}</div>"
-            )
-            st.markdown(score_card_html, unsafe_allow_html=True)
-
-        if result.get("change_7d") is not None:
-            col_b.metric("7-Day Change", f"{result['change_7d']:+.1f}%")
-        if result.get("atr_pct") is not None:
-            col_c.metric("Volatility (ATR%)", f"{result['atr_pct']:.2f}%")
-
-        if show_reasons and result.get("reasons") and result.get("score") is not None:
-            st.subheader(f"Score Breakdown — {title}")
-            color = "green" if result["score"] >= 60 else "orange" if result["score"] >= 45 else "red"
-            st.markdown(
-                f"<span style='color:{color};font-weight:bold;font-size:1.1em'>{result['score']}/100 ({result['label']})</span>",
-                unsafe_allow_html=True,
-            )
-
-            breakdown_col1, breakdown_col2 = st.columns(2)
-
-            with breakdown_col1:
-                contributions = result.get("contributions", {})
-                if contributions:
-                    indicators_list = list(contributions.keys())
-                    points_list = list(contributions.values())
-                    bar_colors = ['#22c55e' if p >= 0 else '#ef4444' for p in points_list]
-
-                    fig_contrib = go.Figure(go.Bar(
-                        x=points_list, y=indicators_list,
-                        orientation='h', marker_color=bar_colors
-                    ))
-                    fig_contrib.update_layout(
-                        title="Indicator Point Contributions",
-                        xaxis_title="Points Added/Subtracted",
-                        yaxis=dict(autorange="reversed"),
-                        height=280,
-                        margin=dict(t=30, b=20, l=10, r=10)
-                    )
-                    fig_contrib.add_vline(x=0, line_width=1.5, line_dash="dash", line_color="gray", opacity=0.7)
-                    st.plotly_chart(fig_contrib, width="stretch")
-
-            with breakdown_col2:
-                st.markdown("**Detailed Reasons**")
-                for reason in result["reasons"]:
-                    st.caption(f"• {reason}")
-
-    else:
-        st.warning("Could not load chart data. Check your internet connection.")
-
-live_dashboard()
-
-st.sidebar.markdown("---")
-st.sidebar.info("Dashboard and data auto-refresh every 5 minutes.")
-st.sidebar.caption("Watchlists are saved and survive page refreshes.")
+                f"<div style='font-size: 0.85rem; color:
