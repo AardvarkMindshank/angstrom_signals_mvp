@@ -192,7 +192,6 @@ if "reset_weights" in st.session_state and st.session_state.reset_weights:
         "macd": 1.0, "bb": 1.0, "volume": 1.0, "performance": 1.0
     }
     save_scoring_weights(current_weights)
-    # Clear explicit widget states so sliders snap back visually
     for k in ["slider_rsi", "slider_stoch", "slider_sma", "slider_adx", "slider_macd", "slider_bb", "slider_vol", "slider_perf"]:
         st.session_state.pop(k, None)
     st.session_state.reset_weights = False
@@ -238,4 +237,136 @@ with st.sidebar.expander("Customize Indicator Weights", expanded=False):
     col_p1, col_p2 = st.columns(2)
     with col_p1:
         if st.button("Load Set") and selected_profile != "Select saved set...":
-            if selected_
+            if selected_profile in weight_profiles:
+                current_weights = weight_profiles[selected_profile]
+                save_scoring_weights(current_weights)
+                for k in ["slider_rsi", "slider_stoch", "slider_sma", "slider_adx", "slider_macd", "slider_bb", "slider_vol", "slider_perf"]:
+                    st.session_state.pop(k, None)
+                st.success(f"Loaded '{selected_profile}'!")
+                st.rerun()
+    with col_p2:
+        if st.button("Delete Set") and selected_profile != "Select saved set...":
+            if selected_profile in weight_profiles:
+                weight_profiles.pop(selected_profile)
+                save_weight_profiles(weight_profiles)
+                st.success(f"Deleted '{selected_profile}'!")
+                st.rerun()
+
+    new_profile_name = st.text_input("New set name", placeholder="e.g. Trend Heavy")
+    if st.button("Save Current as New Set") and new_profile_name:
+        pname = new_profile_name.strip()
+        if pname:
+            weight_profiles[pname] = current_weights
+            save_weight_profiles(weight_profiles)
+            st.success(f"Saved set '{pname}'!")
+            st.rerun()
+
+@st.cache_data(ttl=300)
+def load_crypto(coin_id, days):
+    return fetch_crypto_data(coin_id, days)
+
+@st.cache_data(ttl=300)
+def load_stock(ticker):
+    return fetch_stock_data(ticker, period="1y")
+
+@st.fragment(run_every=300)
+def live_dashboard():
+    def process_watchlist(watchlist, is_crypto=True):
+        results = []
+        for key, name in watchlist.items():
+            with st.spinner(f"Loading {name}..."):
+                if is_crypto:
+                    df = load_crypto(key, days_history)
+                else:
+                    df = load_stock(key)
+                if not df.empty:
+                    df = calculate_indicators(df)
+                    result = compute_score(df, weights=current_weights)
+                    result["symbol"] = name if is_crypto else f"{name} ({key})"
+                    result["type"] = "Crypto" if is_crypto else "Stock"
+                    result["key"] = key
+                    results.append(result)
+                else:
+                    results.append({
+                        "symbol": name if is_crypto else f"{name} ({key})",
+                        "score": None,
+                        "label": "No data",
+                        "reasons": [],
+                        "latest_price": None,
+                        "rsi": None,
+                        "change_7d": None,
+                        "change_30d": None,
+                        "atr_pct": None,
+                        "volume_ratio": None,
+                        "bb_position": None,
+                        "adx": None,
+                        "confluence": None,
+                        "type": "Crypto" if is_crypto else "Stock",
+                        "key": key,
+                    })
+        return results
+
+    crypto_results = process_watchlist(CRYPTO_WATCHLIST, is_crypto=True)
+    stock_results = process_watchlist(STOCK_WATCHLIST, is_crypto=False)
+
+    def get_top_bottom(results):
+        valid = [r for r in results if r.get("score") is not None]
+        if not valid:
+            return None, None
+        sorted_r = sorted(valid, key=lambda x: x["score"], reverse=True)
+        return sorted_r[0], sorted_r[-1]
+
+    crypto_top, crypto_bot = get_top_bottom(crypto_results)
+    stock_top, stock_bot = get_top_bottom(stock_results)
+
+    st.subheader("Quick Snapshot")
+    c1, c2, c3, c4 = st.columns(4)
+    if crypto_top:
+        c1.metric("Top Crypto", crypto_top["symbol"], f"{crypto_top['score']}/100")
+    if crypto_bot:
+        c2.metric("Weakest Crypto", crypto_bot["symbol"], f"{crypto_bot['score']}/100")
+    if stock_top:
+        c3.metric("Top Stock", stock_top["symbol"], f"{stock_top['score']}/100")
+    if stock_bot:
+        c4.metric("Weakest Stock", stock_bot["symbol"], f"{stock_bot['score']}/100")
+
+    def score_bar_color(score):
+        if score is None or pd.isna(score):
+            return "#6b7280"
+        if score >= 60:
+            return "#22c55e"
+        if score >= 45:
+            return "#f59e0b"
+        return "#ef4444"
+
+    def render_score_bar(score):
+        if score is None or pd.isna(score):
+            pct = 0
+            color = "#6b7280"
+            label = "—"
+        else:
+            pct = max(0, min(100, float(score)))
+            color = score_bar_color(score)
+            label = f"{int(score)}"
+        return f'''<div style="display:flex;align-items:center;gap:8px;width:100%;min-width:100px;"><div style="flex:1;background:#e5e7eb;border-radius:6px;height:14px;overflow:hidden;"><div style="width:{pct}%;background:{color};height:100%;border-radius:6px;"></div></div><span style="min-width:28px;font-weight:600;font-size:0.9em;">{label}</span></div>'''
+
+    def style_and_show_table(results, title):
+        if not results:
+            return
+        df = pd.DataFrame(results)
+        df = df.sort_values("score", ascending=False, na_position="last")
+
+        st.subheader(title)
+
+        if show_extra_metrics:
+            headers = ["Asset", "Score", "Signal", "Price", "RSI", "7d %", "ATR %", "Vol", "ADX", "Conf"]
+        else:
+            headers = ["Asset", "Score", "Signal", "Price", "RSI", "ADX", "Conf"]
+
+        header_html = "".join([f"<th style='padding: 8px 10px; text-align: left; white-space: nowrap;'>{h}</th>" for h in headers])
+        
+        rows_html = ""
+        for _, row in df.iterrows():
+            symbol = row["symbol"]
+            score_bar_markup = render_score_bar(row["score"])
+            signal_label = row.get("label") or "—"
