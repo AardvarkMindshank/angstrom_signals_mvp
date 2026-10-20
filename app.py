@@ -226,7 +226,7 @@ def live_dashboard():
     if stock_bot:
         c4.metric("Weakest Stock", stock_bot["symbol"], f"{stock_bot['score']}/100")
 
-    # --- Tables with graphical scores (custom colored bars) ---
+    # --- Responsive HTML Tables with Color-Coded Score Bars ---
     def score_bar_color(score):
         if score is None or pd.isna(score):
             return "#6b7280"
@@ -247,11 +247,11 @@ def live_dashboard():
             color = score_bar_color(score)
             label = f"{int(score)}"
         return f'''
-        <div style="display:flex;align-items:center;gap:8px;width:100%;">
-            <div style="flex:1;background:#e5e7eb;border-radius:6px;height:16px;overflow:hidden;">
+        <div style="display:flex;align-items:center;gap:8px;width:100%;min-width:100px;">
+            <div style="flex:1;background:#e5e7eb;border-radius:6px;height:14px;overflow:hidden;">
                 <div style="width:{pct}%;background:{color};height:100%;border-radius:6px;"></div>
             </div>
-            <span style="min-width:32px;font-weight:600;font-size:0.95em;">{label}</span>
+            <span style="min-width:28px;font-weight:600;font-size:0.9em;">{label}</span>
         </div>
         '''
 
@@ -263,54 +263,86 @@ def live_dashboard():
 
         st.subheader(title)
 
-        # Column widths — everything on one row
+        # Build table headers based on toggle settings
         if show_extra_metrics:
-            widths = [1.8, 2.0, 1.3, 1.1, 0.7, 0.8, 0.8, 0.8, 0.7, 0.9]
             headers = ["Asset", "Score", "Signal", "Price", "RSI", "7d %", "ATR %", "Vol", "ADX", "Conf"]
         else:
-            widths = [2.2, 2.4, 1.5, 1.3, 0.9, 0.8, 0.9]
             headers = ["Asset", "Score", "Signal", "Price", "RSI", "ADX", "Conf"]
 
-        # Header
-        h = st.columns(widths)
-        for i, header in enumerate(headers):
-            h[i].markdown(f"**{header}**")
-
-        # Data rows
+        header_html = "".join([f"<th style='padding: 8px 10px; text-align: left; white-space: nowrap;'>{h}</th>" for h in headers])
+        
+        rows_html = ""
         for _, row in df.iterrows():
-            c = st.columns(widths)
-            c[0].write(row["symbol"])
-            c[1].markdown(render_score_bar(row["score"]), unsafe_allow_html=True)
-            c[2].write(row.get("label") or "—")
+            symbol = row["symbol"]
+            score_bar_markup = render_score_bar(row["score"])
+            signal_label = row.get("label") or "—"
+            
             price = row.get("latest_price")
-            c[3].write(f"${price:,.2f}" if pd.notna(price) else "—")
+            price_str = f"${price:,.2f}" if pd.notna(price) else "—"
+            
             rsi = row.get("rsi")
-            c[4].write(f"{rsi:.1f}" if pd.notna(rsi) else "—")
+            rsi_str = f"{rsi:.1f}" if pd.notna(rsi) else "—"
+
+            adx = row.get("adx")
+            adx_str = f"{adx:.0f}" if pd.notna(adx) else "—"
+
+            conf = row.get("confluence")
+            try:
+                conf_str = f"{int(conf):+d}" if pd.notna(conf) else "—"
+            except (TypeError, ValueError):
+                conf_str = "—"
 
             if show_extra_metrics:
                 chg = row.get("change_7d")
                 atr = row.get("atr_pct")
                 vol = row.get("volume_ratio")
-                c[5].write(f"{chg:+.1f}%" if pd.notna(chg) else "—")
-                c[6].write(f"{atr:.2f}" if pd.notna(atr) else "—")
-                c[7].write(f"{vol:.2f}" if pd.notna(vol) else "—")
-                adx = row.get("adx")
-                conf = row.get("confluence")
-                c[8].write(f"{adx:.0f}" if pd.notna(adx) else "—")
-                try:
-                    c[9].write(f"{int(conf):+d}" if pd.notna(conf) else "—")
-                except (TypeError, ValueError):
-                    c[9].write("—")
-            else:
-                adx = row.get("adx")
-                conf = row.get("confluence")
-                c[5].write(f"{adx:.0f}" if pd.notna(adx) else "—")
-                try:
-                    c[6].write(f"{int(conf):+d}" if pd.notna(conf) else "—")
-                except (TypeError, ValueError):
-                    c[6].write("—")
+                chg_str = f"{chg:+.1f}%" if pd.notna(chg) else "—"
+                atr_str = f"{atr:.2f}" if pd.notna(atr) else "—"
+                vol_str = f"{vol:.2f}" if pd.notna(vol) else "—"
 
-            st.markdown("<hr style='margin:2px 0;border:none;border-top:1px solid #f0f0f0;'>", unsafe_allow_html=True)
+                rows_html += f"""
+                <tr style="border-bottom: 1px solid #f0f0f0;">
+                    <td style="padding: 10px; white-space: nowrap; font-weight: 500;">{symbol}</td>
+                    <td style="padding: 10px; min-width: 130px;">{score_bar_markup}</td>
+                    <td style="padding: 10px; white-space: nowrap;">{signal_label}</td>
+                    <td style="padding: 10px; white-space: nowrap;">{price_str}</td>
+                    <td style="padding: 10px; white-space: nowrap;">{rsi_str}</td>
+                    <td style="padding: 10px; white-space: nowrap;">{chg_str}</td>
+                    <td style="padding: 10px; white-space: nowrap;">{atr_str}</td>
+                    <td style="padding: 10px; white-space: nowrap;">{vol_str}</td>
+                    <td style="padding: 10px; white-space: nowrap;">{adx_str}</td>
+                    <td style="padding: 10px; white-space: nowrap;">{conf_str}</td>
+                </tr>
+                """
+            else:
+                rows_html += f"""
+                <tr style="border-bottom: 1px solid #f0f0f0;">
+                    <td style="padding: 10px; white-space: nowrap; font-weight: 500;">{symbol}</td>
+                    <td style="padding: 10px; min-width: 130px;">{score_bar_markup}</td>
+                    <td style="padding: 10px; white-space: nowrap;">{signal_label}</td>
+                    <td style="padding: 10px; white-space: nowrap;">{price_str}</td>
+                    <td style="padding: 10px; white-space: nowrap;">{rsi_str}</td>
+                    <td style="padding: 10px; white-space: nowrap;">{adx_str}</td>
+                    <td style="padding: 10px; white-space: nowrap;">{conf_str}</td>
+                </tr>
+                """
+
+        # Wrap in a horizontally scrollable container for mobile responsiveness
+        complete_table_html = f"""
+        <div style="width: 100%; overflow-x: auto; margin-bottom: 20px;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
+                <thead>
+                    <tr style="border-bottom: 2px solid #e5e7eb;">
+                        {header_html}
+                    </tr>
+                </thead>
+                <tbody>
+                    {rows_html}
+                </tbody>
+            </table>
+        </div>
+        """
+        st.markdown(complete_table_html, unsafe_allow_html=True)
 
     style_and_show_table(crypto_results, "Crypto Scores")
     style_and_show_table(stock_results, "Equity Scores")
