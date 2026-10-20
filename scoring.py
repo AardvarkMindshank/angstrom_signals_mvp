@@ -9,7 +9,7 @@ import numpy as np
 
 
 def calculate_indicators(df: pd.DataFrame) -> pd.DataFrame:
-    """Add a richer set of technical indicators including OBV."""
+    """Add a richer set of technical indicators including Ichimoku and MACD details."""
     if df.empty or len(df) < 30:
         return df
 
@@ -46,6 +46,14 @@ def calculate_indicators(df: pd.DataFrame) -> pd.DataFrame:
     if macd is not None:
         df = pd.concat([df, macd], axis=1)
 
+    # Ichimoku Cloud (returns a tuple of DataFrames)
+    try:
+        ichimoku = ta.ichimoku(high, low, close)
+        if ichimoku is not None and len(ichimoku) >= 2:
+            df = pd.concat([df, ichimoku[0], ichimoku[1]], axis=1)
+    except Exception:
+        pass
+
     # Volatility
     df["atr"] = ta.atr(high, low, close, length=14)
     bb = ta.bbands(close, length=20, std=2)
@@ -80,6 +88,7 @@ def compute_score(df: pd.DataFrame, weights: dict = None) -> dict:
             "sma": 1.0,
             "adx": 1.0,
             "macd": 1.0,
+            "ichimoku": 1.0,
             "bb": 1.0,
             "volume": 1.0,
             "obv": 1.0,
@@ -100,7 +109,6 @@ def compute_score(df: pd.DataFrame, weights: dict = None) -> dict:
             "volume_ratio": None,
             "bb_position": None,
             "adx": None,
-            "obv_trend": None,
             "contributions": {},
         }
 
@@ -113,7 +121,8 @@ def compute_score(df: pd.DataFrame, weights: dict = None) -> dict:
         "Stochastic": 0.0,
         "Moving Averages": 0.0,
         "ADX Trend": 0.0,
-        "MACD": 0.0,
+        "MACD & Hist": 0.0,
+        "Ichimoku Cloud": 0.0,
         "Bollinger Bands": 0.0,
         "Volume": 0.0,
         "OBV": 0.0,
@@ -125,6 +134,7 @@ def compute_score(df: pd.DataFrame, weights: dict = None) -> dict:
     w_sma = weights.get("sma", 1.0)
     w_adx = weights.get("adx", 1.0)
     w_macd = weights.get("macd", 1.0)
+    w_ichi = weights.get("ichimoku", 1.0)
     w_bb = weights.get("bb", 1.0)
     w_vol = weights.get("volume", 1.0)
     w_obv = weights.get("obv", 1.0)
@@ -214,25 +224,62 @@ def compute_score(df: pd.DataFrame, weights: dict = None) -> dict:
     else:
         adx_val = None
 
-    # --- MACD ---
+    # --- MACD & Histogram Crossover Strength ---
     if "MACD_12_26_9" in df.columns and pd.notna(latest.get("MACD_12_26_9")):
         macd_line = latest["MACD_12_26_9"]
         signal = latest.get("MACDs_12_26_9")
         hist = latest.get("MACDh_12_26_9")
+        
+        prev = df.iloc[-2] if len(df) > 1 else latest
+        prev_hist = prev.get("MACDh_12_26_9", hist)
+        
         macd_pts = 0.0
         if pd.notna(signal) and macd_line > signal:
-            macd_pts += 6 * w_macd
+            macd_pts += 5 * w_macd
             reasons.append("MACD above signal")
         elif pd.notna(signal):
-            macd_pts -= 6 * w_macd
+            macd_pts -= 5 * w_macd
             reasons.append("MACD below signal")
-        if pd.notna(hist) and hist > 0:
-            macd_pts += 3 * w_macd
-            reasons.append("MACD histogram positive")
-        elif pd.notna(hist):
-            macd_pts -= 3 * w_macd
+            
+        if pd.notna(hist) and pd.notna(prev_hist):
+            if hist > 0:
+                macd_pts += 3 * w_macd
+                if hist > prev_hist:
+                    macd_pts += 2 * w_macd
+                    reasons.append("MACD histogram positive & expanding (bullish momentum)")
+                else:
+                    reasons.append("MACD histogram positive")
+            else:
+                macd_pts -= 3 * w_macd
+                if hist < prev_hist:
+                    macd_pts -= 2 * w_macd
+                    reasons.append("MACD histogram negative & expanding (bearish momentum)")
+                else:
+                    reasons.append("MACD histogram negative")
+                    
         score += macd_pts
-        contributions["MACD"] = macd_pts
+        contributions["MACD & Hist"] = macd_pts
+
+    # --- Ichimoku Cloud Status ---
+    isa_cols = [c for c in df.columns if c.startswith("ISA_")]
+    isb_cols = [c for c in df.columns if c.startswith("ISB_")]
+    if isa_cols and isb_cols:
+        span_a = latest.get(isa_cols[0])
+        span_b = latest.get(isb_cols[0])
+        if pd.notna(span_a) and pd.notna(span_b):
+            cloud_top = max(span_a, span_b)
+            cloud_bottom = min(span_a, span_b)
+            ichi_pts = 0.0
+            if close > cloud_top:
+                ichi_pts = 7 * w_ichi
+                reasons.append("Price above Ichimoku Cloud (bullish Kumo break)")
+            elif close < cloud_bottom:
+                ichi_pts = -7 * w_ichi
+                reasons.append("Price below Ichimoku Cloud (bearish Kumo break)")
+            else:
+                reasons.append("Price inside Ichimoku Cloud (neutral/range)")
+            score += ichi_pts
+            contributions["Ichimoku Cloud"] = ichi_pts
 
     # --- Bollinger Bands position ---
     bb_upper = latest.get("BBU_20_2.0")
@@ -266,16 +313,13 @@ def compute_score(df: pd.DataFrame, weights: dict = None) -> dict:
     # --- On-Balance Volume (OBV) trend ---
     obv_val = latest.get("obv")
     obv_sma = latest.get("obv_sma_20")
-    obv_trend = "Neutral"
     if pd.notna(obv_val) and pd.notna(obv_sma):
         obv_pts = 0.0
         if obv_val > obv_sma:
             obv_pts = 5 * w_obv
-            obv_trend = "Bullish"
             reasons.append("OBV above 20-day OBV SMA (accumulation)")
         else:
             obv_pts = -5 * w_obv
-            obv_trend = "Bearish"
             reasons.append("OBV below 20-day OBV SMA (distribution)")
         score += obv_pts
         contributions["OBV"] = obv_pts
@@ -296,8 +340,8 @@ def compute_score(df: pd.DataFrame, weights: dict = None) -> dict:
     # Clamp
     score = max(0, min(100, score))
 
-    bullish = sum(1 for r in reasons if any(w in r.lower() for w in ["above", "oversold", "positive", "strong 7d", "elevated volume (", "accumulation"]) and "weakness" not in r.lower())
-    bearish = sum(1 for r in reasons if any(w in r.lower() for w in ["below", "overbought", "weak", "elevated volume on weakness", "distribution"]))
+    bullish = sum(1 for r in reasons if any(w in r.lower() for w in ["above", "oversold", "positive", "strong 7d", "elevated volume (", "accumulation", "expanding", "bullish"]) and "weakness" not in r.lower())
+    bearish = sum(1 for r in reasons if any(w in r.lower() for w in ["below", "overbought", "weak", "elevated volume on weakness", "distribution", "bearish"]))
     confluence = int(bullish - bearish)
 
     if score >= 72:
@@ -316,23 +360,4 @@ def compute_score(df: pd.DataFrame, weights: dict = None) -> dict:
         label = "Strong Bearish"
 
     atr = latest.get("atr")
-    atr_pct = (atr / close * 100) if pd.notna(atr) and close else None
-
-    contributions = {k: round(v, 1) for k, v in contributions.items()}
-
-    return {
-        "score": round(score, 1),
-        "label": label,
-        "reasons": reasons,
-        "confluence": confluence,
-        "latest_price": round(close, 4) if close < 1 else round(close, 2),
-        "rsi": round(rsi, 1) if pd.notna(rsi) else None,
-        "change_7d": round(change_7d, 1) if pd.notna(change_7d) else None,
-        "change_30d": round(change_30d, 1) if pd.notna(change_30d) else None,
-        "atr_pct": round(atr_pct, 2) if atr_pct else None,
-        "volume_ratio": round(vol_ratio, 2) if pd.notna(vol_ratio) else None,
-        "bb_position": round(bb_position, 2) if bb_position is not None else None,
-        "adx": round(adx_val, 1) if pd.notna(adx_val) else None,
-        "obv_trend": obv_trend,
-        "contributions": contributions,
-    }
+    atr_pct = (atr / close * 100)

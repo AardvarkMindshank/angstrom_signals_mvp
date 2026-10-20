@@ -39,10 +39,10 @@ with help_col:
         - **RSI (14)** — oversold (<30) adds points, overbought (>70) subtracts
         - **Stochastic** — similar momentum check
         - **Price vs SMAs** — above SMA 20 / 50 / 200 is bullish, below is bearish
-        - **MACD** — above signal line and positive histogram add points
+        - **MACD & Histogram Momentum** — line position plus expanding/contracting histogram strength
+        - **Ichimoku Cloud (Kumo)** — price position relative to the cloud (above = bullish break, below = bearish break)
         - **Bollinger Bands** — near the lower band is more bullish, near the upper band is more bearish
-        - **Volume** — elevated volume can strengthen the existing direction
-        - **OBV (On-Balance Volume)** — accumulation (above 20-day SMA) adds points, distribution subtracts
+        - **Volume & OBV** — elevated volume and On-Balance Volume accumulation strengthen the score
         - **ADX / trend strength** — strong trends amplify the current bias
         - **Recent performance** — large 7-day moves have a mild effect
 
@@ -115,7 +115,7 @@ def load_scoring_weights():
             pass
     return {
         "rsi": 1.0, "stochastic": 1.0, "sma": 1.0, "adx": 1.0, 
-        "macd": 1.0, "bb": 1.0, "volume": 1.0, "obv": 1.0, "performance": 1.0
+        "macd": 1.0, "ichimoku": 1.0, "bb": 1.0, "volume": 1.0, "obv": 1.0, "performance": 1.0
     }
 
 def save_scoring_weights(weights):
@@ -127,9 +127,9 @@ def save_scoring_weights(weights):
 
 def get_builtin_profiles():
     return {
-        "📊 Trend Following": {"rsi": 0.8, "stochastic": 0.8, "sma": 1.5, "adx": 1.5, "macd": 1.0, "bb": 0.8, "volume": 1.0, "obv": 1.2, "performance": 1.0},
-        "📉 Mean Reversion": {"rsi": 1.5, "stochastic": 1.2, "sma": 0.8, "adx": 0.5, "macd": 0.8, "bb": 1.5, "volume": 0.8, "obv": 0.8, "performance": 1.0},
-        "🚀 Momentum Heavy": {"rsi": 1.0, "stochastic": 1.5, "sma": 1.0, "adx": 1.0, "macd": 1.5, "bb": 1.0, "volume": 1.5, "obv": 1.5, "performance": 1.2},
+        "📊 Trend Following": {"rsi": 0.8, "stochastic": 0.8, "sma": 1.5, "adx": 1.5, "macd": 1.0, "ichimoku": 1.5, "bb": 0.8, "volume": 1.0, "obv": 1.2, "performance": 1.0},
+        "📉 Mean Reversion": {"rsi": 1.5, "stochastic": 1.2, "sma": 0.8, "adx": 0.5, "macd": 0.8, "ichimoku": 0.5, "bb": 1.5, "volume": 0.8, "obv": 0.8, "performance": 1.0},
+        "🚀 Momentum Heavy": {"rsi": 1.0, "stochastic": 1.5, "sma": 1.0, "adx": 1.0, "macd": 1.5, "ichimoku": 1.2, "bb": 1.0, "volume": 1.5, "obv": 1.5, "performance": 1.2},
     }
 
 def load_weight_profiles():
@@ -197,7 +197,7 @@ built_in_profiles = get_builtin_profiles()
 custom_profiles = load_weight_profiles()
 all_profiles = {**built_in_profiles, **custom_profiles}
 
-indicators = ["rsi", "stochastic", "sma", "adx", "macd", "bb", "volume", "obv", "performance"]
+indicators = ["rsi", "stochastic", "sma", "adx", "macd", "ichimoku", "bb", "volume", "obv", "performance"]
 
 # Initialize session state keys for the sliders if not already present
 for ind in indicators:
@@ -268,7 +268,8 @@ with st.sidebar.expander("Customize Indicator Weights", expanded=False):
     w_stoch = st.slider("Stochastic Weight", 0.0, 2.0, key="weight_stochastic", step=0.1)
     w_sma = st.slider("Moving Averages Weight", 0.0, 2.0, key="weight_sma", step=0.1)
     w_adx = st.slider("ADX Trend Weight", 0.0, 2.0, key="weight_adx", step=0.1)
-    w_macd = st.slider("MACD Weight", 0.0, 2.0, key="weight_macd", step=0.1)
+    w_macd = st.slider("MACD & Hist Weight", 0.0, 2.0, key="weight_macd", step=0.1)
+    w_ichi = st.slider("Ichimoku Cloud Weight", 0.0, 2.0, key="weight_ichimoku", step=0.1)
     w_bb = st.slider("Bollinger Bands Weight", 0.0, 2.0, key="weight_bb", step=0.1)
     w_vol = st.slider("Volume Weight", 0.0, 2.0, key="weight_volume", step=0.1)
     w_obv = st.slider("OBV Weight", 0.0, 2.0, key="weight_obv", step=0.1)
@@ -280,6 +281,7 @@ with st.sidebar.expander("Customize Indicator Weights", expanded=False):
         "sma": w_sma,
         "adx": w_adx,
         "macd": w_macd,
+        "ichimoku": w_ichi,
         "bb": w_bb,
         "volume": w_vol,
         "obv": w_obv,
@@ -301,7 +303,8 @@ with st.sidebar.expander("Customize Indicator Weights", expanded=False):
             ### Understanding the Scores & Weights
             - **Baseline**: Every asset starts at a neutral **50 points**.
             - **Active Drivers**: Bullish signals add points (+), bearish signals subtract points (-). Sliders multiply these points directly.
-            - **Neutral Zones (Blank Bars)**: If an indicator is in a normal/neutral zone (e.g., RSI between 40–60), it contributes **0 points**. This is why its bar looks blank on the contribution chart—it's active in calculation, but currently neutral!
+            - **New Additions**: MACD histogram momentum tracks accelerating/decelerating cross-strength, while Ichimoku Cloud analysis checks macro trend breaks (above/below the Kumo cloud).
+            - **Neutral Zones (Blank Bars)**: If an indicator is in a normal/neutral zone (e.g., RSI between 40–60, or price inside the cloud), it contributes **0 points**. This is why its bar looks blank on the contribution chart—it's active in calculation, but currently neutral!
             """
         )
 
