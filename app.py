@@ -208,40 +208,19 @@ def save_scoring_weights(weights):
 def get_builtin_profiles():
     return {
         "📊 Trend Following": {
-            "rsi": 0.8, 
-            "stochastic": 0.8, 
-            "sma": 1.5, 
-            "adx": 1.0, 
-            "macd": 1.2, 
-            "ichimoku": 1.0, 
-            "bb": 0.8, 
-            "volume": 1.0, 
-            "obv": 1.0, 
-            "performance": 1.2
+            "rsi": 0.8, "stochastic": 0.8, "sma": 1.5, "adx": 1.0, 
+            "macd": 1.2, "ichimoku": 1.0, "bb": 0.8, "volume": 1.0, 
+            "obv": 1.0, "performance": 1.2
         },
         "📉 Mean Reversion": {
-            "rsi": 1.5, 
-            "stochastic": 1.2, 
-            "sma": 0.8, 
-            "adx": 1.0, 
-            "macd": 0.8, 
-            "ichimoku": 1.0, 
-            "bb": 1.5, 
-            "volume": 0.8, 
-            "obv": 0.8, 
-            "performance": 0.8
+            "rsi": 1.5, "stochastic": 1.2, "sma": 0.8, "adx": 1.0, 
+            "macd": 0.8, "ichimoku": 1.0, "bb": 1.5, "volume": 0.8, 
+            "obv": 0.8, "performance": 0.8
         },
         "🚀 Momentum Heavy": {
-            "rsi": 1.0, 
-            "stochastic": 1.2, 
-            "sma": 1.0, 
-            "adx": 1.0, 
-            "macd": 1.5, 
-            "ichimoku": 1.0, 
-            "bb": 1.0, 
-            "volume": 1.2, 
-            "obv": 1.2, 
-            "performance": 1.5
+            "rsi": 1.0, "stochastic": 1.2, "sma": 1.0, "adx": 1.0, 
+            "macd": 1.5, "ichimoku": 1.0, "bb": 1.0, "volume": 1.2, 
+            "obv": 1.2, "performance": 1.5
         }
     }
 
@@ -267,37 +246,4 @@ def load_crypto(coin_id, days):
     return fetch_crypto_data(coin_id, days)
 
 @st.cache_data(ttl=300)
-def load_stock(ticker):
-    return fetch_stock_data(ticker, period="1y")
-
-# --- Watchlist setup ---
-if "crypto_watchlist" not in st.session_state or "stock_watchlist" not in st.session_state:
-    c, s = load_watchlists()
-    st.session_state.crypto_watchlist = c
-    st.session_state.stock_watchlist = s
-
-st.sidebar.header("Watchlists")
-
-with st.sidebar.expander("Edit Crypto", expanded=False):
-    st.caption("Add by CoinGecko-style id (bitcoin, ethereum, solana, etc.)")
-    new_crypto = st.text_input("Add crypto id", key="new_crypto", placeholder="e.g. dogecoin")
-    if st.button("Add Crypto") and new_crypto:
-        cid = new_crypto.strip().lower()
-        if cid and cid not in st.session_state.crypto_watchlist:
-            st.session_state.crypto_watchlist[cid] = cid.replace("-", " ").title()
-            save_watchlists(st.session_state.crypto_watchlist, st.session_state.stock_watchlist)
-            st.rerun()
-    if st.session_state.crypto_watchlist:
-        to_remove = st.selectbox("Remove crypto", [""] + list(st.session_state.crypto_watchlist.keys()), key="rm_crypto")
-        if to_remove:
-            if st.button("Remove Crypto"):
-                st.session_state.crypto_watchlist.pop(to_remove, None)
-                save_watchlists(st.session_state.crypto_watchlist, st.session_state.stock_watchlist)
-                st.rerun()
-
-with st.sidebar.expander("Edit Stocks", expanded=False):
-    st.caption("Add by ticker (AAPL, MSFT, etc.)")
-    new_stock = st.text_input("Add stock ticker", key="new_stock", placeholder="e.g. GOOGL")
-    if st.button("Add Stock") and new_stock:
-        tic = new_stock.strip().upper()
-        if tic and tic not in st.session
+def
