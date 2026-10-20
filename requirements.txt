@@ -5,3 +5,4 @@ pandas-ta
 yfinance
 requests
 python-dotenv
+supabase
