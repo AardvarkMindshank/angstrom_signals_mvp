@@ -280,4 +280,14 @@ with st.sidebar.expander("Customize Indicator Weights", expanded=False):
 
     new_profile_name = st.text_input("New set name", placeholder="e.g. Volatility Focus")
     if st.button("Save Current as New Set") and new_profile_name:
-        pname = new_profile
+        pname = new_profile_name.strip()
+        if pname:
+            if pname in built_in_profiles:
+                st.error("Cannot overwrite built-in profile names!")
+            else:
+                custom_profiles[pname] = current_weights
+                save_weight_profiles(custom_profiles)
+                st.success(f"Saved set '{pname}'!")
+                st.rerun()
+
+    st.markdown("---")
