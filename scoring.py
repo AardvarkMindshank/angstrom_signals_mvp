@@ -276,22 +276,28 @@ def compute_score(df: pd.DataFrame, weights: dict = None) -> dict:
     if isa_cols and isb_cols:
         sa_raw = latest.get(isa_cols[0])
         sb_raw = latest.get(isb_cols[0])
-        if pd.notna(sa_raw) and pd.notna(sb_raw):
-            sa = float(sa_raw.iloc[-1] if isinstance(sa_raw, pd.Series) else sa_raw)
-            sb = float(sb_raw.iloc[-1] if isinstance(sb_raw, pd.Series) else sb_raw)
-            cloud_top = max(sa, sb)
-            cloud_bottom = min(sa, sb)
-            ichi_pts = 0.0
-            if close > cloud_top:
-                ichi_pts = 7 * w_ichi
-                reasons.append("Price above Ichimoku Cloud (bullish Kumo break)")
-            elif close < cloud_bottom:
-                ichi_pts = -7 * w_ichi
-                reasons.append("Price below Ichimoku Cloud (bearish Kumo break)")
-            else:
-                reasons.append("Price inside Ichimoku Cloud (neutral/range)")
-            score += ichi_pts
-            contributions["Ichimoku Cloud"] = ichi_pts
+        if sa_raw is not None and sb_raw is not None:
+            try:
+                sa_val = sa_raw.iloc[-1] if isinstance(sa_raw, pd.Series) else sa_raw
+                sb_val = sb_raw.iloc[-1] if isinstance(sb_raw, pd.Series) else sb_raw
+                if pd.notna(sa_val) and pd.notna(sb_val):
+                    sa = float(sa_val)
+                    sb = float(sb_val)
+                    cloud_top = max(sa, sb)
+                    cloud_bottom = min(sa, sb)
+                    ichi_pts = 0.0
+                    if close > cloud_top:
+                        ichi_pts = 7 * w_ichi
+                        reasons.append("Price above Ichimoku Cloud (bullish Kumo break)")
+                    elif close < cloud_bottom:
+                        ichi_pts = -7 * w_ichi
+                        reasons.append("Price below Ichimoku Cloud (bearish Kumo break)")
+                    else:
+                        reasons.append("Price inside Ichimoku Cloud (neutral/range)")
+                    score += ichi_pts
+                    contributions["Ichimoku Cloud"] = ichi_pts
+            except Exception:
+                pass
 
     # --- Bollinger Bands position ---
     bb_upper = latest.get("BBU_20_2.0")
@@ -341,70 +347,3 @@ def compute_score(df: pd.DataFrame, weights: dict = None) -> dict:
             obv_pts = -5 * w_obv
             reasons.append("OBV below 20-day OBV SMA (distribution)")
         score += obv_pts
-        contributions["OBV"] = obv_pts
-
-    # --- Recent performance context ---
-    change_7d = latest.get("change_7d")
-    change_30d = latest.get("change_30d")
-    perf_pts = 0.0
-    if pd.notna(change_7d):
-        c7 = float(change_7d.iloc[-1] if isinstance(change_7d, pd.Series) else change_7d)
-        if c7 > 8:
-            perf_pts = 3 * w_perf
-            reasons.append(f"Strong 7d move (+{c7:.1f}%)")
-        elif c7 < -8:
-            perf_pts = -3 * w_perf
-            reasons.append(f"Weak 7d move ({c7:.1f}%)")
-    score += perf_pts
-    contributions["Performance"] = perf_pts
-
-    # Clamp
-    score = max(0, min(100, score))
-
-    bullish = sum(1 for r in reasons if any(w in r.lower() for w in ["above", "oversold", "positive", "strong 7d", "elevated volume (", "accumulation", "expanding", "bullish"]) and "weakness" not in r.lower())
-    bearish = sum(1 for r in reasons if any(w in r.lower() for w in ["below", "overbought", "weak", "elevated volume on weakness", "distribution", "bearish"]))
-    confluence = int(bullish - bearish)
-
-    if score >= 72:
-        label = "Strong Bullish"
-    elif score >= 60:
-        label = "Bullish"
-    elif score >= 52:
-        label = "Mildly Bullish"
-    elif score >= 48:
-        label = "Neutral"
-    elif score >= 40:
-        label = "Mildly Bearish"
-    elif score >= 28:
-        label = "Bearish"
-    else:
-        label = "Strong Bearish"
-
-    atr = latest.get("atr")
-    atr_val = float(atr.iloc[-1] if isinstance(atr, pd.Series) else atr) if pd.notna(atr) else None
-    atr_pct = (atr_val / close * 100) if atr_val and close else None
-
-    contributions = {k: round(v, 1) for k, v in contributions.items()}
-
-    c7_final = float(change_7d.iloc[-1] if isinstance(change_7d, pd.Series) else change_7d) if pd.notna(change_7d) else None
-    c30_final = float(change_30d.iloc[-1] if isinstance(change_30d, pd.Series) else change_30d) if pd.notna(change_30d) else None
-    vr_final = float(vol_ratio.iloc[-1] if isinstance(vol_ratio, pd.Series) else vol_ratio) if pd.notna(vol_ratio) else None
-    bb_final = float(bb_position) if bb_position is not None else None
-    adx_final = float(adx_num) if 'adx_num' in locals() and adx_num is not None else None
-    rsi_final = float(rsi_val) if 'rsi_val' in locals() and rsi_val is not None else None
-
-    return {
-        "score": round(score, 1),
-        "label": label,
-        "reasons": reasons,
-        "confluence": confluence,
-        "latest_price": round(close, 4) if close < 1 else round(close, 2),
-        "rsi": round(rsi_final, 1) if rsi_final is not None else None,
-        "change_7d": round(c7_final, 1) if c7_final is not None else None,
-        "change_30d": round(c30_final, 1) if c30_final is not None else None,
-        "atr_pct": round(atr_pct, 2) if atr_pct else None,
-        "volume_ratio": round(vr_final, 2) if vr_final is not None else None,
-        "bb_position": round(bb_final, 2) if bb_final is not None else None,
-        "adx": round(adx_final, 1) if adx_final is not None else None,
-        "contributions": contributions,
-    }
