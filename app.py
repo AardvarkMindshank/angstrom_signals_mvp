@@ -228,4 +228,70 @@ def load_weight_profiles():
     saved = {}
     if os.path.exists(PROFILES_FILE):
         try:
-            with open(PROFILES_
+            with open(PROFILES_FILE, "r") as f:
+                saved = json.load(f)
+        except Exception:
+            pass
+    return saved
+
+def save_weight_profiles(profiles):
+    try:
+        with open(PROFILES_FILE, "w") as f:
+            json.dump(profiles, f)
+    except Exception:
+        pass
+
+@st.cache_data(ttl=300)
+def load_crypto(coin_id, days):
+    return fetch_crypto_data(coin_id, days)
+
+@st.cache_data(ttl=300)
+def load_stock(ticker):
+    return fetch_stock_data(ticker, period="1y")
+
+# --- Watchlist setup ---
+if "crypto_watchlist" not in st.session_state or "stock_watchlist" not in st.session_state:
+    c, s = load_watchlists()
+    st.session_state.crypto_watchlist = c
+    st.session_state.stock_watchlist = s
+
+st.sidebar.header("Watchlists")
+
+with st.sidebar.expander("Edit Crypto", expanded=False):
+    st.caption("Add by CoinGecko-style id (bitcoin, ethereum, solana, etc.)")
+    new_crypto = st.text_input("Add crypto id", key="new_crypto", placeholder="e.g. dogecoin")
+    if st.button("Add Crypto") and new_crypto:
+        cid = new_crypto.strip().lower()
+        if cid and cid not in st.session_state.crypto_watchlist:
+            st.session_state.crypto_watchlist[cid] = cid.replace("-", " ").title()
+            save_watchlists(st.session_state.crypto_watchlist, st.session_state.stock_watchlist)
+            st.rerun()
+    if st.session_state.crypto_watchlist:
+        to_remove = st.selectbox("Remove crypto", [""] + list(st.session_state.crypto_watchlist.keys()), key="rm_crypto")
+        if to_remove:
+            if st.button("Remove Crypto"):
+                st.session_state.crypto_watchlist.pop(to_remove, None)
+                save_watchlists(st.session_state.crypto_watchlist, st.session_state.stock_watchlist)
+                st.rerun()
+
+with st.sidebar.expander("Edit Stocks", expanded=False):
+    st.caption("Add by ticker (AAPL, MSFT, etc.)")
+    new_stock = st.text_input("Add stock ticker", key="new_stock", placeholder="e.g. GOOGL")
+    if st.button("Add Stock") and new_stock:
+        tic = new_stock.strip().upper()
+        if tic and tic not in st.session_state.stock_watchlist:
+            st.session_state.stock_watchlist[tic] = tic
+            save_watchlists(st.session_state.crypto_watchlist, st.session_state.stock_watchlist)
+            st.rerun()
+    if st.session_state.stock_watchlist:
+        to_remove = st.selectbox("Remove stock", [""] + list(st.session_state.stock_watchlist.keys()), key="rm_stock")
+        if to_remove:
+            if st.button("Remove Stock"):
+                st.session_state.stock_watchlist.pop(to_remove, None)
+                save_watchlists(st.session_state.crypto_watchlist, st.session_state.stock_watchlist)
+                st.rerun()
+
+CRYPTO_WATCHLIST = st.session_state.crypto_watchlist
+STOCK_WATCHLIST = st.session_state.stock_watchlist
+
+current_weights = load_scoring
