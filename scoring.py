@@ -102,7 +102,6 @@ def compute_score(df: pd.DataFrame, weights: dict = None) -> dict:
     score = 50.0
     reasons = []
     
-    # Track point contributions per indicator category
     contributions = {
         "RSI": 0.0,
         "Stochastic": 0.0,
@@ -144,7 +143,7 @@ def compute_score(df: pd.DataFrame, weights: dict = None) -> dict:
         else:
             reasons.append(f"RSI neutral ({rsi:.1f})")
         score += pts
-        contributions["RSI"] += pts
+        contributions["RSI"] = pts
 
     # --- Stochastic ---
     stoch_k = latest.get("stoch_k")
@@ -157,7 +156,7 @@ def compute_score(df: pd.DataFrame, weights: dict = None) -> dict:
             pts = -6 * w_stoch
             reasons.append(f"Stochastic overbought ({stoch_k:.1f})")
         score += pts
-        contributions["Stochastic"] += pts
+        contributions["Stochastic"] = pts
 
     # --- Price vs Moving Averages ---
     sma20 = latest.get("sma_20")
@@ -186,24 +185,24 @@ def compute_score(df: pd.DataFrame, weights: dict = None) -> dict:
             sma_pts -= 6 * w_sma
             reasons.append("Price below SMA 200 (long-term downtrend)")
     score += sma_pts
-    contributions["Moving Averages"] += sma_pts
+    contributions["Moving Averages"] = sma_pts
 
     # --- ADX trend strength ---
     adx_val = latest.get("ADX_14")
     if not pd.notna(adx_val):
         adx_val = latest.get("adx_fallback")
     if pd.notna(adx_val):
+        adx_pts = 0.0
         if adx_val > 25:
             reasons.append(f"Strong trend (ADX {adx_val:.1f})")
-            adx_pts = 0.0
             if score > 55:
                 adx_pts = 4 * w_adx
             elif score < 45:
                 adx_pts = -4 * w_adx
-            score += adx_pts
-            contributions["ADX Trend"] += adx_pts
         elif adx_val < 20:
             reasons.append(f"Weak/ranging trend (ADX {adx_val:.1f})")
+        score += adx_pts
+        contributions["ADX Trend"] = adx_pts
     else:
         adx_val = None
 
@@ -225,7 +224,7 @@ def compute_score(df: pd.DataFrame, weights: dict = None) -> dict:
         elif pd.notna(hist):
             macd_pts -= 3 * w_macd
         score += macd_pts
-        contributions["MACD"] += macd_pts
+        contributions["MACD"] = macd_pts
 
     # --- Bollinger Bands position ---
     bb_upper = latest.get("BBU_20_2.0")
@@ -241,7 +240,7 @@ def compute_score(df: pd.DataFrame, weights: dict = None) -> dict:
             bb_pts = -7 * w_bb
             reasons.append("Near upper Bollinger Band")
         score += bb_pts
-        contributions["Bollinger Bands"] += bb_pts
+        contributions["Bollinger Bands"] = bb_pts
 
     # --- Volume confirmation ---
     vol_ratio = latest.get("volume_ratio")
@@ -254,21 +253,20 @@ def compute_score(df: pd.DataFrame, weights: dict = None) -> dict:
             vol_pts = -4 * w_vol
             reasons.append(f"Elevated volume on weakness ({vol_ratio:.1f}x)")
         score += vol_pts
-        contributions["Volume"] += vol_pts
+        contributions["Volume"] = vol_pts
 
     # --- Recent performance context ---
     change_7d = latest.get("change_7d")
     change_30d = latest.get("change_30d")
+    perf_pts = 0.0
     if pd.notna(change_7d) and change_7d > 8:
         perf_pts = 3 * w_perf
-        score += perf_pts
-        contributions["Performance"] += perf_pts
         reasons.append(f"Strong 7d move (+{change_7d:.1f}%)")
     elif pd.notna(change_7d) and change_7d < -8:
         perf_pts = -3 * w_perf
-        score += perf_pts
-        contributions["Performance"] += perf_pts
         reasons.append(f"Weak 7d move ({change_7d:.1f}%)")
+    score += perf_pts
+    contributions["Performance"] = perf_pts
 
     # Clamp
     score = max(0, min(100, score))
@@ -295,7 +293,6 @@ def compute_score(df: pd.DataFrame, weights: dict = None) -> dict:
     atr = latest.get("atr")
     atr_pct = (atr / close * 100) if pd.notna(atr) and close else None
 
-    # Round contributions
     contributions = {k: round(v, 1) for k, v in contributions.items()}
 
     return {
