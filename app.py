@@ -314,6 +314,7 @@ def live_dashboard():
                         "bb_position": None,
                         "adx": None,
                         "confluence": None,
+                        "contributions": {},
                         "type": "Crypto" if is_crypto else "Stock",
                         "key": key,
                     })
@@ -564,8 +565,36 @@ def live_dashboard():
             )
             if result.get("adx"):
                 st.caption(f"ADX (trend strength): {result['adx']}")
-            for reason in result["reasons"]:
-                st.caption(f"• {reason}")
+
+            # Side-by-side view: contribution chart + reasons list
+            breakdown_col1, breakdown_col2 = st.columns(2)
+
+            with breakdown_col1:
+                contributions = result.get("contributions", {})
+                if contributions:
+                    indicators_list = list(contributions.keys())
+                    points_list = list(contributions.values())
+                    bar_colors = ['#22c55e' if p >= 0 else '#ef4444' for p in points_list]
+
+                    fig_contrib = go.Figure(go.Bar(
+                        x=points_list,
+                        y=indicators_list,
+                        orientation='h',
+                        marker_color=bar_colors
+                    ))
+                    fig_contrib.update_layout(
+                        title="Indicator Point Contributions",
+                        xaxis_title="Points Added/Subtracted",
+                        yaxis=dict(autorange="reversed"),
+                        height=280,
+                        margin=dict(t=30, b=20, l=10, r=10)
+                    )
+                    st.plotly_chart(fig_contrib, use_container_width=True)
+
+            with breakdown_col2:
+                st.markdown("**Detailed Reasons**")
+                for reason in result["reasons"]:
+                    st.caption(f"• {reason}")
 
     else:
         st.warning("Could not load chart data. Check your internet connection.")
