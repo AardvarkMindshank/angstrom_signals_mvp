@@ -11,6 +11,7 @@ from data_fetchers import fetch_crypto_data, fetch_stock_data
 from scoring import calculate_indicators, compute_score
 import json
 import os
+from supabase import create_client, Client
 
 # Page config
 st.set_page_config(
@@ -19,6 +20,37 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+# Initialize Supabase client using Streamlit Secrets
+@st.cache_resource
+def init_supabase() -> Client:
+    url = st.secrets["supabase"]["url"]
+    key = st.secrets["supabase"]["key"]
+    return create_client(url, key)
+
+supabase = init_supabase()
+
+# Manage user session state
+if "user" not in st.session_state:
+    st.session_state.user = None
+
+# Custom CSS for popover text wrapping
+st.markdown("""
+<style>
+/* Force text wrapping inside all Streamlit popovers and expanders */
+[data-testid="stPopoverBody"] {
+    max-width: 450px !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+}
+[data-testid="stPopoverBody"] p, 
+[data-testid="stPopoverBody"] li,
+[data-testid="stPopoverBody"] span {
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+}
+</style>
+""", unsafe_allow_html=True)
 
 # Top row layout: Title on the left, Help button aligned to the right
 title_col, help_col = st.columns([5, 1])
@@ -30,30 +62,46 @@ with help_col:
     st.markdown("<div style='height: 14px;'></div>", unsafe_allow_html=True)
     with st.popover("❓ Help", width="stretch"):
         st.markdown("""
-        ### What this dashboard does
-        It scores a watchlist of cryptos and stocks using multi-factor technical indicators and displays results in structured tables and an interactive chart. **Higher score = more bullish setup** according to the scoring rules below. This is a research tool, not financial advice.
+	### What this dashboard does
+	It scores a watchlist of cryptos and stocks using multi-factor technical indicators and displays results in structured tables and an interactive chart. **Higher score = more bullish setup** according to the scoring rules below. This is a research tool, not financial advice.
 
-        ### Comprehensive Scoring Model (0–100 Scale)
-        The composite score starts at a baseline neutral value of **50** and adjusts dynamically based on weighted technical factors:
-        - **RSI (14)**: Oversold (<40) adds bullish points for potential mean-reversion bounces; overbought (>60) subtracts points due to pullback risks.
-        - **Stochastic Oscillator**: Oversold levels add support points; overbought levels subtract points.
-        - **Moving Averages (SMA 20 & SMA 50)**: Trading above both short- and medium-term SMAs adds major trend points; trading below both subtracts points.
-        - **ADX (Trend Strength)**: Strong trends (high ADX values) amplify the weight of active moving average and momentum directions.
-        - **MACD & Histogram**: Bullish MACD crossovers and positive histogram expansion add upward momentum points; bearish crosses subtract points.
-        - **Ichimoku Cloud**: Price trading cleanly above the cloud adds bullish trend support; trading below the cloud subtracts points.
-        - **Bollinger Bands (20, 2.0)**: Price hugging or dipping below the lower band adds support/reversion points; pressing against the upper band subtracts resistance points.
-        - **Volume & OBV (On-Balance Volume)**: High relative volume supporting an upward move adds conviction points; negative volume trends weigh the score down.
-        - **Performance (7-Day)**: Positive 7-day trailing price momentum boosts the score; sharp trailing declines weigh it down.
+	### Comprehensive Scoring Model (0–100 Scale)
+	The composite score starts at a baseline neutral value of **50** and adjusts dynamically based on weighted technical factors:
+	- **RSI (14)**: Oversold (<40) adds bullish points for potential mean-reversion bounces; overbought (>60) subtracts points due to pullback risks.
+	- **Stochastic Oscillator**: Oversold levels add support points; overbought levels subtract points.
+	- **Moving Averages (SMA 20 & SMA 50)**: Trading above both short- and medium-term SMAs adds major trend points; trading below both subtracts points.
+	- **ADX (Trend Strength)**: Strong trends (high ADX values) amplify the weight of active moving average and momentum directions.
+	- **MACD & Histogram**: Bullish MACD crossovers and positive histogram expansion add upward momentum points; bearish crosses subtract points.
+	- **Ichimoku Cloud**: Price trading cleanly above the cloud adds bullish trend support; trading below the cloud subtracts points.
+	- **Bollinger Bands (20, 2.0)**: Price hugging or dipping below the lower band adds support/reversion points; pressing against the upper band subtracts resistance points.
+	- **Volume & OBV (On-Balance Volume)**: High relative volume supporting an upward move adds conviction points; negative volume trends weigh the score down.
+	- **Performance (7-Day)**: Positive 7-day trailing price momentum boosts the score; sharp trailing declines weigh it down.
 
-        ### Signal Zones & Color Coding
-        - **Strong Bullish / Bullish (Score ≥ 60) [Green]**: Clear upward technical alignment across multiple indicators.
-        - **Neutral / Transition (Score 45–59) [Amber]**: Mixed signals, consolidation, or conflicting indicator readings.
-        - **Bearish / Strong Bearish (Score < 45) [Red]**: Downward momentum, trading below key moving averages, or overbought exhaustion.
+	### Signal Zones & Color Coding
+	- **Strong Bullish / Bullish (Score ≥ 60) [Green]**: Clear upward technical alignment across multiple indicators.
+	- **Neutral / Transition (Score 45–59) [Amber]**: Mixed signals, consolidation, or conflicting indicator readings.
+	- **Bearish / Strong Bearish (Score < 45) [Red]**: Downward momentum, trading below key moving averages, or overbought exhaustion.
 
-        ### Customizing Indicator Weights & Weight Sets
-        In the sidebar under **Scoring Balance Weights**:
-        - **Sliders**: Tailor the relative importance (multiplier from `0.0` to `2.0`) of individual technical indicators to fit your trading style.
-        - **Named Weight Sets**: Save your custom weight profiles, instantly load built-in or saved profiles from the dropdown, or delete unwanted sets. Changes persist automatically.
+	### Customizing Indicator Weights & Weight Sets
+	In the sidebar under **Scoring Balance Weights**:
+	- **Sliders**: Tailor the relative importance (multiplier from `0.0` to `2.0`) of individual technical indicators to fit your trading style.
+	- **Named Weight Sets**: Save your custom weight profiles, instantly load built-in or saved profiles from the dropdown, or delete unwanted sets. Changes persist automatically.
+
+        ### Column meanings
+        - **Score** — the composite 0–100 number (bar color: green ≥60, amber 45–59, red <45)
+        - **Signal** — text label (Strong Bullish → Strong Bearish)
+        - **RSI** — Relative Strength Index
+        - **7d %** — price change over the last 7 days
+        - **ATR %** — Average True Range as a percentage of price (volatility)
+        - **Vol** — current volume vs 20-day average
+
+        ### How to use it
+        1. Check the tables for the highest/lowest scores.
+        2. Use the **Type** and **Asset** dropdowns under the chart to inspect any symbol.
+        3. Read the **Score Breakdown** to see exactly why the score is what it is.
+        4. Edit your watchlists or indicator weights from the sidebar (changes are saved).
+
+        Data refreshes automatically every 5 minutes.
         """)
 
 st.markdown("### Crypto & Equity Signals Dashboard")
@@ -177,6 +225,51 @@ def load_crypto(coin_id, days):
 @st.cache_data(ttl=300)
 def load_stock(ticker):
     return fetch_stock_data(ticker, period="1y")
+
+# --- Account & Auth Sidebar Component ---
+st.sidebar.header("Account & Access")
+
+if st.session_state.user is None:
+    auth_tab1, auth_tab2 = st.sidebar.tabs(["Login", "Sign Up"])
+    
+    with auth_tab1:
+        login_email = st.text_input("Email", key="login_email")
+        login_password = st.text_input("Password", type="password", key="login_password")
+        if st.button("Log In"):
+            try:
+                response = supabase.auth.sign_in_with_password({
+                    "email": login_email, 
+                    "password": login_password
+                })
+                st.session_state.user = response.user
+                st.success("Logged in successfully!")
+                st.rerun()
+            except Exception as e:
+                st.error(f"Login failed: {e}")
+                
+    with auth_tab2:
+        signup_email = st.text_input("Email", key="signup_email")
+        signup_password = st.text_input("Password", type="password", key="signup_password")
+        if st.button("Create Account"):
+            try:
+                response = supabase.auth.sign_up({
+                    "email": signup_email, 
+                    "password": signup_password
+                })
+                st.success("Account created! Check your email to confirm if required, or try logging in.")
+            except Exception as e:
+                st.error(f"Sign up failed: {e}")
+else:
+    st.sidebar.success(f"Logged in as: {st.session_state.user.email}")
+    if st.sidebar.button("Log Out"):
+        try:
+            supabase.auth.sign_out()
+        except Exception:
+            pass
+        st.session_state.user = None
+        st.rerun()
+
+st.sidebar.markdown("---")
 
 # --- Watchlist setup ---
 if "crypto_watchlist" not in st.session_state or "stock_watchlist" not in st.session_state:
@@ -328,12 +421,12 @@ with st.sidebar.expander("Customize Indicator Weights", expanded=False):
     with st.popover("💡 Help & Guide", width="stretch"):
         st.markdown("""
         ### Scoring Weights Guide
-        - **Indicator Sliders**: Adjust how heavily each technical indicator influences the final 0–100 score (from `0.0` to `2.0`). Setting a weight to `0.0` completely disables that indicator.
-        - **Reset to Default**: Instantly snaps all indicator weights back to their central balanced baseline (`1.0`).
-        - **Named Weight Sets**: 
-          - *Save Current as New Set*: Store your custom configuration under a custom name (e.g., "Volatility Focus").
-          - *Load Saved Set*: Instantly switch between built-in profiles (Trend Following, Mean Reversion, Momentum Heavy) or your own custom saved sets.
-          - *Delete Set*: Clean up and remove any unwanted custom profiles.
+	- **Indicator Sliders**: Adjust how heavily each technical indicator influences the final 0–100 score (from `0.0` to `2.0`). Setting a weight to `0.0` completely disables that indicator.
+	- **Reset to Default**: Instantly snaps all indicator weights back to their central balanced baseline (`1.0`).
+	- **Named Weight Sets**: 
+  	- *Save Current as New Set*: Store your custom configuration under a custom name (e.g., "Volatility Focus").
+  	- *Load Saved Set*: Instantly switch between built-in profiles (Trend Following, Mean Reversion, Momentum Heavy) or your own custom saved sets.
+  	- *Delete Set*: Clean up and remove any unwanted custom profiles.
         """)
 
 
@@ -434,230 +527,4 @@ def live_dashboard():
 
         st.subheader(title)
 
-        if show_extra_metrics:
-            headers = ["Asset", "Score", "Signal", "Price", "RSI", "7d %", "ATR %", "Vol"]
-        else:
-            headers = ["Asset", "Score", "Signal", "Price", "RSI"]
-
-        header_html = "".join([f"<th style='padding: 8px 10px; text-align: left; white-space: nowrap;'>{h}</th>" for h in headers])
-        
-        rows_html = ""
-        for _, row in df.iterrows():
-            symbol = row["symbol"]
-            score_bar_markup = render_score_bar(row["score"])
-            signal_label = row.get("label") or "—"
-            
-            price = row.get("latest_price")
-            price_str = f"${price:,.2f}" if pd.notna(price) else "—"
-            
-            rsi = row.get("rsi")
-            rsi_str = f"{rsi:.1f}" if pd.notna(rsi) else "—"
-
-            if show_extra_metrics:
-                chg = row.get("change_7d")
-                atr = row.get("atr_pct")
-                vol = row.get("volume_ratio")
-                chg_str = f"{chg:+.1f}%" if pd.notna(chg) else "—"
-                atr_str = f"{atr:.2f}" if pd.notna(atr) else "—"
-                vol_str = f"{vol:.2f}" if pd.notna(vol) else "—"
-
-                rows_html += f'<tr style="border-bottom: 1px solid #f0f0f0;"><td style="padding: 10px; white-space: nowrap; font-weight: 500;">{symbol}</td><td style="padding: 10px; min-width: 130px;">{score_bar_markup}</td><td style="padding: 10px; white-space: nowrap;">{signal_label}</td><td style="padding: 10px; white-space: nowrap;">{price_str}</td><td style="padding: 10px; white-space: nowrap;">{rsi_str}</td><td style="padding: 10px; white-space: nowrap;">{chg_str}</td><td style="padding: 10px; white-space: nowrap;">{atr_str}</td><td style="padding: 10px; white-space: nowrap;">{vol_str}</td></tr>'
-            else:
-                rows_html += f'<tr style="border-bottom: 1px solid #f0f0f0;"><td style="padding: 10px; white-space: nowrap; font-weight: 500;">{symbol}</td><td style="padding: 10px; min-width: 130px;">{score_bar_markup}</td><td style="padding: 10px; white-space: nowrap;">{signal_label}</td><td style="padding: 10px; white-space: nowrap;">{price_str}</td><td style="padding: 10px; white-space: nowrap;">{rsi_str}</td></tr>'
-
-        complete_table_html = f'<div style="width: 100%; overflow-x: auto; margin-bottom: 20px;"><table style="width: 100%; border-collapse: collapse; font-size: 0.95rem;"><thead><tr style="border-bottom: 2px solid #e5e7eb;">{header_html}</tr></thead><tbody>{rows_html}</tbody></table></div>'
-        st.html(complete_table_html)
-
-    style_and_show_table(crypto_results, "Crypto Scores")
-    style_and_show_table(stock_results, "Equity Scores")
-
-    st.subheader("Interactive Chart")
-
-    col1, col2 = st.columns([1, 3])
-    with col1:
-        asset_type = st.selectbox("Type", ["Crypto", "Stock"], key="asset_type")
-    with col2:
-        if asset_type == "Crypto":
-            options = list(CRYPTO_WATCHLIST.keys())
-            asset_key = st.selectbox(
-                "Asset",
-                options,
-                format_func=lambda x: CRYPTO_WATCHLIST[x],
-                key="asset_crypto",
-            )
-            df_chart = load_crypto(asset_key, days_history)
-            title = CRYPTO_WATCHLIST[asset_key]
-        else:
-            options = list(STOCK_WATCHLIST.keys())
-            asset_key = st.selectbox(
-                "Asset",
-                options,
-                format_func=lambda x: f"{STOCK_WATCHLIST[x]} ({x})",
-                key="asset_stock",
-            )
-            df_chart = load_stock(asset_key)
-            title = f"{STOCK_WATCHLIST[asset_key]} ({asset_key})"
-
-    if not df_chart.empty:
-        df_chart = calculate_indicators(df_chart)
-
-        fig = make_subplots(
-            rows=3,
-            cols=1,
-            shared_xaxes=True,
-            vertical_spacing=0.05,
-            row_heights=[0.55, 0.2, 0.25],
-            subplot_titles=(f"{title} Price", "Volume", "RSI (14)"),
-        )
-
-        fig.add_trace(
-            go.Candlestick(
-                x=df_chart.index,
-                open=df_chart["open"],
-                high=df_chart["high"],
-                low=df_chart["low"],
-                close=df_chart["close"],
-                name="Price",
-            ),
-            row=1, col=1,
-        )
-
-        if "sma_20" in df_chart.columns:
-            fig.add_trace(
-                go.Scatter(
-                    x=df_chart.index, y=df_chart["sma_20"], name="SMA 20",
-                    line=dict(color="orange", width=1.5)
-                ),
-                row=1, col=1,
-            )
-        if "sma_50" in df_chart.columns:
-            fig.add_trace(
-                go.Scatter(
-                    x=df_chart.index, y=df_chart["sma_50"], name="SMA 50",
-                    line=dict(color="royalblue", width=1.5)
-                ),
-                row=1, col=1,
-            )
-
-        if "BBU_20_2.0" in df_chart.columns:
-            fig.add_trace(
-                go.Scatter(
-                    x=df_chart.index, y=df_chart["BBU_20_2.0"], name="BB Upper",
-                    line=dict(color="gray", width=1, dash="dot"), showlegend=False
-                ),
-                row=1, col=1,
-            )
-            fig.add_trace(
-                go.Scatter(
-                    x=df_chart.index, y=df_chart["BBL_20_2.0"], name="BB Lower",
-                    line=dict(color="gray", width=1, dash="dot"), fill="tonexty",
-                    fillcolor="rgba(128,128,128,0.08)", showlegend=False
-                ),
-                row=1, col=1,
-            )
-
-        colors = ["green" if df_chart["close"].iloc[i] >= df_chart["open"].iloc[i] else "red"
-                  for i in range(len(df_chart))]
-        fig.add_trace(
-            go.Bar(x=df_chart.index, y=df_chart["volume"], name="Volume", marker_color=colors, opacity=0.6),
-            row=2, col=1,
-        )
-
-        if "rsi" in df_chart.columns:
-            fig.add_trace(
-                go.Scatter(
-                    x=df_chart.index, y=df_chart["rsi"], name="RSI",
-                    line=dict(color="purple", width=1.5)
-                ),
-                row=3, col=1,
-            )
-            fig.add_hline(y=70, line_dash="dash", line_color="red", opacity=0.5, row=3, col=1)
-            fig.add_hline(y=30, line_dash="dash", line_color="green", opacity=0.5, row=3, col=1)
-            fig.add_hline(y=50, line_dash="dot", line_color="gray", opacity=0.3, row=3, col=1)
-
-        fig.update_layout(
-            height=750,
-            xaxis_rangeslider_visible=False,
-            showlegend=True,
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-            margin=dict(t=60, b=20),
-        )
-        fig.update_yaxes(title_text="Price", row=1, col=1)
-        fig.update_yaxes(title_text="Volume", row=2, col=1)
-        fig.update_yaxes(title_text="RSI", range=[0, 100], row=3, col=1)
-
-        st.plotly_chart(fig, width="stretch")
-
-        result = compute_score(df_chart, weights=current_weights)
-        col_a, col_b, col_c = st.columns(3)
-        
-        score_val = result['score']
-        if score_val >= 60:
-            score_color = "green"
-            arrow = "↑"
-        elif score_val >= 45:
-            score_color = "orange"
-            arrow = "→"
-        else:
-            score_color = "red"
-            arrow = "↓"
-
-        with col_a:
-            score_card_html = (
-                f"<div style='font-size: 0.85rem; color: #6b7280; margin-bottom: 2px;'>Current Score</div>"
-                f"<div style='font-size: 2.2rem; font-weight: 600; line-height: 1.1; margin-bottom: 4px;'>{score_val}/100</div>"
-                f"<div style='font-size: 0.95rem; font-weight: 500; color: {score_color};'>{arrow} {result['label']}</div>"
-            )
-            st.markdown(score_card_html, unsafe_allow_html=True)
-
-        if result.get("change_7d") is not None:
-            col_b.metric("7-Day Change", f"{result['change_7d']:+.1f}%")
-        if result.get("atr_pct") is not None:
-            col_c.metric("Volatility (ATR%)", f"{result['atr_pct']:.2f}%")
-
-        if show_reasons and result.get("reasons") and result.get("score") is not None:
-            st.subheader(f"Score Breakdown — {title}")
-            color = "green" if result["score"] >= 60 else "orange" if result["score"] >= 45 else "red"
-            st.markdown(
-                f"<span style='color:{color};font-weight:bold;font-size:1.1em'>{result['score']}/100 ({result['label']})</span>",
-                unsafe_allow_html=True,
-            )
-
-            breakdown_col1, breakdown_col2 = st.columns(2)
-
-            with breakdown_col1:
-                contributions = result.get("contributions", {})
-                if contributions:
-                    indicators_list = list(contributions.keys())
-                    points_list = list(contributions.values())
-                    bar_colors = ['#22c55e' if p >= 0 else '#ef4444' for p in points_list]
-
-                    fig_contrib = go.Figure(go.Bar(
-                        x=points_list,
-                        y=indicators_list,
-                        orientation='h',
-                        marker_color=bar_colors
-                    ))
-                    fig_contrib.update_layout(
-                        title="Indicator Point Contributions",
-                        xaxis_title="Points Added/Subtracted",
-                        yaxis=dict(autorange="reversed"),
-                        height=280,
-                        margin=dict(t=30, b=20, l=10, r=10)
-                    )
-                    fig_contrib.add_vline(x=0, line_width=1.5, line_dash="dash", line_color="gray", opacity=0.7)
-                    st.plotly_chart(fig_contrib, width="stretch")
-
-            with breakdown_col2:
-                st.markdown("**Detailed Reasons**")
-                for reason in result["reasons"]:
-                    st.caption(f"• {reason}")
-
-    else:
-        st.warning("Could not load chart data. Check your internet connection.")
-
-live_dashboard()
-
-st.sidebar.markdown("---")
-st.sidebar.info("Dashboard and data auto-refresh every 5 minutes.")
-st.sidebar.caption("Watchlists are saved and survive page refreshes.")
+        if
