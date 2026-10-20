@@ -220,4 +220,108 @@ with st.sidebar.expander("Customize Indicator Weights", expanded=False):
     w_perf = st.slider("Performance Weight", 0.0, 2.0, key="weight_performance", step=0.1)
     
     new_weights = {
-        "rsi": w_rsi, "st
+        "rsi": w_rsi,
+        "stochastic": w_stoch,
+        "sma": w_sma,
+        "adx": w_adx,
+        "macd": w_macd,
+        "bb": w_bb,
+        "volume": w_vol,
+        "performance": w_perf
+    }
+    
+    if new_weights != current_weights:
+        save_scoring_weights(new_weights)
+        current_weights = new_weights
+
+    if st.button("🔄 Reset to Default (1.0)"):
+        st.session_state.reset_weights = True
+        st.rerun()
+
+    st.markdown("---")
+
+    st.markdown("**Named Weight Sets**")
+    profile_names = ["Select saved set..."] + list(weight_profiles.keys())
+    selected_profile = st.selectbox("Load Saved Set", profile_names, key="load_profile_sb")
+    
+    col_p1, col_p2 = st.columns(2)
+    with col_p1:
+        if st.button("Load Set") and selected_profile != "Select saved set...":
+            if selected_profile in weight_profiles:
+                loaded = weight_profiles[selected_profile]
+                for ind in indicators:
+                    st.session_state[f"weight_{ind}"] = float(loaded.get(ind, 1.0))
+                current_weights = loaded
+                save_scoring_weights(current_weights)
+                st.success(f"Loaded '{selected_profile}'!")
+                st.rerun()
+    with col_p2:
+        if st.button("Delete Set") and selected_profile != "Select saved set...":
+            if selected_profile in weight_profiles:
+                weight_profiles.pop(selected_profile)
+                save_weight_profiles(weight_profiles)
+                st.success(f"Deleted '{selected_profile}'!")
+                st.rerun()
+
+    new_profile_name = st.text_input("New set name", placeholder="e.g. Trend Heavy")
+    if st.button("Save Current as New Set") and new_profile_name:
+        pname = new_profile_name.strip()
+        if pname:
+            weight_profiles[pname] = current_weights
+            save_weight_profiles(weight_profiles)
+            st.success(f"Saved set '{pname}'!")
+            st.rerun()
+
+@st.cache_data(ttl=300)
+def load_crypto(coin_id, days):
+    return fetch_crypto_data(coin_id, days)
+
+@st.cache_data(ttl=300)
+def load_stock(ticker):
+    return fetch_stock_data(ticker, period="1y")
+
+@st.fragment(run_every=300)
+def live_dashboard():
+    def process_watchlist(watchlist, is_crypto=True):
+        results = []
+        for key, name in watchlist.items():
+            with st.spinner(f"Loading {name}..."):
+                if is_crypto:
+                    df = load_crypto(key, days_history)
+                else:
+                    df = load_stock(key)
+                if not df.empty:
+                    df = calculate_indicators(df)
+                    result = compute_score(df, weights=current_weights)
+                    result["symbol"] = name if is_crypto else f"{name} ({key})"
+                    result["type"] = "Crypto" if is_crypto else "Stock"
+                    result["key"] = key
+                    results.append(result)
+                else:
+                    results.append({
+                        "symbol": name if is_crypto else f"{name} ({key})",
+                        "score": None,
+                        "label": "No data",
+                        "reasons": [],
+                        "latest_price": None,
+                        "rsi": None,
+                        "change_7d": None,
+                        "change_30d": None,
+                        "atr_pct": None,
+                        "volume_ratio": None,
+                        "bb_position": None,
+                        "adx": None,
+                        "confluence": None,
+                        "type": "Crypto" if is_crypto else "Stock",
+                        "key": key,
+                    })
+        return results
+
+    crypto_results = process_watchlist(CRYPTO_WATCHLIST, is_crypto=True)
+    stock_results = process_watchlist(STOCK_WATCHLIST, is_crypto=False)
+
+    def get_top_bottom(results):
+        valid = [r for r in results if r.get("score") is not None]
+        if not valid:
+            return None, None
+        sorted_r = sorted(
