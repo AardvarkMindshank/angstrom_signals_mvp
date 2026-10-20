@@ -246,14 +246,7 @@ def live_dashboard():
             pct = max(0, min(100, float(score)))
             color = score_bar_color(score)
             label = f"{int(score)}"
-        return f'''
-        <div style="display:flex;align-items:center;gap:8px;width:100%;min-width:100px;">
-            <div style="flex:1;background:#e5e7eb;border-radius:6px;height:14px;overflow:hidden;">
-                <div style="width:{pct}%;background:{color};height:100%;border-radius:6px;"></div>
-            </div>
-            <span style="min-width:28px;font-weight:600;font-size:0.9em;">{label}</span>
-        </div>
-        '''
+        return f'''<div style="display:flex;align-items:center;gap:8px;width:100%;min-width:100px;"><div style="flex:1;background:#e5e7eb;border-radius:6px;height:14px;overflow:hidden;"><div style="width:{pct}%;background:{color};height:100%;border-radius:6px;"></div></div><span style="min-width:28px;font-weight:600;font-size:0.9em;">{label}</span></div>'''
 
     def style_and_show_table(results, title):
         if not results:
@@ -263,7 +256,6 @@ def live_dashboard():
 
         st.subheader(title)
 
-        # Build table headers based on toggle settings
         if show_extra_metrics:
             headers = ["Asset", "Score", "Signal", "Price", "RSI", "7d %", "ATR %", "Vol", "ADX", "Conf"]
         else:
@@ -300,49 +292,13 @@ def live_dashboard():
                 atr_str = f"{atr:.2f}" if pd.notna(atr) else "—"
                 vol_str = f"{vol:.2f}" if pd.notna(vol) else "—"
 
-                rows_html += f"""
-                <tr style="border-bottom: 1px solid #f0f0f0;">
-                    <td style="padding: 10px; white-space: nowrap; font-weight: 500;">{symbol}</td>
-                    <td style="padding: 10px; min-width: 130px;">{score_bar_markup}</td>
-                    <td style="padding: 10px; white-space: nowrap;">{signal_label}</td>
-                    <td style="padding: 10px; white-space: nowrap;">{price_str}</td>
-                    <td style="padding: 10px; white-space: nowrap;">{rsi_str}</td>
-                    <td style="padding: 10px; white-space: nowrap;">{chg_str}</td>
-                    <td style="padding: 10px; white-space: nowrap;">{atr_str}</td>
-                    <td style="padding: 10px; white-space: nowrap;">{vol_str}</td>
-                    <td style="padding: 10px; white-space: nowrap;">{adx_str}</td>
-                    <td style="padding: 10px; white-space: nowrap;">{conf_str}</td>
-                </tr>
-                """
+                rows_html += f"""<tr style="border-bottom: 1px solid #f0f0f0;"><td style="padding: 10px; white-space: nowrap; font-weight: 500;">{symbol}</td><td style="padding: 10px; min-width: 130px;">{score_bar_markup}</td><td style="padding: 10px; white-space: nowrap;">{signal_label}</td><td style="padding: 10px; white-space: nowrap;">{price_str}</td><td style="padding: 10px; white-space: nowrap;">{rsi_str}</td><td style="padding: 10px; white-space: nowrap;">{chg_str}</td><td style="padding: 10px; white-space: nowrap;">{atr_str}</td><td style="padding: 10px; white-space: nowrap;">{vol_str}</td><td style="padding: 10px; white-space: nowrap;">{adx_str}</td><td style="padding: 10px; white-space: nowrap;">{conf_str}</td></tr>"""
             else:
-                rows_html += f"""
-                <tr style="border-bottom: 1px solid #f0f0f0;">
-                    <td style="padding: 10px; white-space: nowrap; font-weight: 500;">{symbol}</td>
-                    <td style="padding: 10px; min-width: 130px;">{score_bar_markup}</td>
-                    <td style="padding: 10px; white-space: nowrap;">{signal_label}</td>
-                    <td style="padding: 10px; white-space: nowrap;">{price_str}</td>
-                    <td style="padding: 10px; white-space: nowrap;">{rsi_str}</td>
-                    <td style="padding: 10px; white-space: nowrap;">{adx_str}</td>
-                    <td style="padding: 10px; white-space: nowrap;">{conf_str}</td>
-                </tr>
-                """
+                rows_html += f"""<tr style="border-bottom: 1px solid #f0f0f0;"><td style="padding: 10px; white-space: nowrap; font-weight: 500;">{symbol}</td><td style="padding: 10px; min-width: 130px;">{score_bar_markup}</td><td style="padding: 10px; white-space: nowrap;">{signal_label}</td><td style="padding: 10px; white-space: nowrap;">{price_str}</td><td style="padding: 10px; white-space: nowrap;">{rsi_str}</td><td style="padding: 10px; white-space: nowrap;">{adx_str}</td><td style="padding: 10px; white-space: nowrap;">{conf_str}</td></tr>"""
 
-        # Wrap in a horizontally scrollable container for mobile responsiveness
-        complete_table_html = f"""
-        <div style="width: 100%; overflow-x: auto; margin-bottom: 20px;">
-            <table style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
-                <thead>
-                    <tr style="border-bottom: 2px solid #e5e7eb;">
-                        {header_html}
-                    </tr>
-                </thead>
-                <tbody>
-                    {rows_html}
-                </tbody>
-            </table>
-        </div>
-        """
-        st.markdown(complete_table_html, unsafe_allow_html=True)
+        # Use st.html instead of st.markdown to reliably render the complete block of raw HTML without parsing bugs
+        complete_table_html = f"""<div style="width: 100%; overflow-x: auto; margin-bottom: 20px;"><table style="width: 100%; border-collapse: collapse; font-size: 0.95rem;"><thead><tr style="border-bottom: 2px solid #e5e7eb;">{header_html}</tr></thead><tbody>{rows_html}</tbody></table></div>"""
+        st.html(complete_table_html)
 
     style_and_show_table(crypto_results, "Crypto Scores")
     style_and_show_table(stock_results, "Equity Scores")
