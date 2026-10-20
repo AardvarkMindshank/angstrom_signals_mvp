@@ -203,4 +203,120 @@ with st.sidebar.expander("Customize Indicator Weights", expanded=False):
         current_weights = new_weights
 
 # Caching — data refreshes every 5 minutes
-@st.cache
+@st.cache_data(ttl=300)
+def load_crypto(coin_id, days):
+    return fetch_crypto_data(coin_id, days)
+
+@st.cache_data(ttl=300)
+def load_stock(ticker):
+    return fetch_stock_data(ticker, period="1y")
+
+# Auto-refresh the dashboard every 5 minutes
+@st.fragment(run_every=300)
+def live_dashboard():
+    # --- Load & score data ---
+    def process_watchlist(watchlist, is_crypto=True):
+        results = []
+        for key, name in watchlist.items():
+            with st.spinner(f"Loading {name}..."):
+                if is_crypto:
+                    df = load_crypto(key, days_history)
+                else:
+                    df = load_stock(key)
+                if not df.empty:
+                    df = calculate_indicators(df)
+                    result = compute_score(df, weights=current_weights)
+                    result["symbol"] = name if is_crypto else f"{name} ({key})"
+                    result["type"] = "Crypto" if is_crypto else "Stock"
+                    result["key"] = key
+                    results.append(result)
+                else:
+                    results.append({
+                        "symbol": name if is_crypto else f"{name} ({key})",
+                        "score": None,
+                        "label": "No data",
+                        "reasons": [],
+                        "latest_price": None,
+                        "rsi": None,
+                        "change_7d": None,
+                        "change_30d": None,
+                        "atr_pct": None,
+                        "volume_ratio": None,
+                        "bb_position": None,
+                        "adx": None,
+                        "confluence": None,
+                        "type": "Crypto" if is_crypto else "Stock",
+                        "key": key,
+                    })
+        return results
+
+    crypto_results = process_watchlist(CRYPTO_WATCHLIST, is_crypto=True)
+    stock_results = process_watchlist(STOCK_WATCHLIST, is_crypto=False)
+
+    # --- Summary metrics ---
+    def get_top_bottom(results):
+        valid = [r for r in results if r.get("score") is not None]
+        if not valid:
+            return None, None
+        sorted_r = sorted(valid, key=lambda x: x["score"], reverse=True)
+        return sorted_r[0], sorted_r[-1]
+
+    crypto_top, crypto_bot = get_top_bottom(crypto_results)
+    stock_top, stock_bot = get_top_bottom(stock_results)
+
+    st.subheader("Quick Snapshot")
+    c1, c2, c3, c4 = st.columns(4)
+    if crypto_top:
+        c1.metric("Top Crypto", crypto_top["symbol"], f"{crypto_top['score']}/100")
+    if crypto_bot:
+        c2.metric("Weakest Crypto", crypto_bot["symbol"], f"{crypto_bot['score']}/100")
+    if stock_top:
+        c3.metric("Top Stock", stock_top["symbol"], f"{stock_top['score']}/100")
+    if stock_bot:
+        c4.metric("Weakest Stock", stock_bot["symbol"], f"{stock_bot['score']}/100")
+
+    # --- Responsive HTML Tables with Color-Coded Score Bars ---
+    def score_bar_color(score):
+        if score is None or pd.isna(score):
+            return "#6b7280"
+        if score >= 60:
+            return "#22c55e"  # green
+        if score >= 45:
+            return "#f59e0b"  # amber
+        return "#ef4444"      # red
+
+    def render_score_bar(score):
+        """HTML colored progress bar."""
+        if score is None or pd.isna(score):
+            pct = 0
+            color = "#6b7280"
+            label = "—"
+        else:
+            pct = max(0, min(100, float(score)))
+            color = score_bar_color(score)
+            label = f"{int(score)}"
+        return f'''<div style="display:flex;align-items:center;gap:8px;width:100%;min-width:100px;"><div style="flex:1;background:#e5e7eb;border-radius:6px;height:14px;overflow:hidden;"><div style="width:{pct}%;background:{color};height:100%;border-radius:6px;"></div></div><span style="min-width:28px;font-weight:600;font-size:0.9em;">{label}</span></div>'''
+
+    def style_and_show_table(results, title):
+        if not results:
+            return
+        df = pd.DataFrame(results)
+        df = df.sort_values("score", ascending=False, na_position="last")
+
+        st.subheader(title)
+
+        if show_extra_metrics:
+            headers = ["Asset", "Score", "Signal", "Price", "RSI", "7d %", "ATR %", "Vol", "ADX", "Conf"]
+        else:
+            headers = ["Asset", "Score", "Signal", "Price", "RSI", "ADX", "Conf"]
+
+        header_html = "".join([f"<th style='padding: 8px 10px; text-align: left; white-space: nowrap;'>{h}</th>" for h in headers])
+        
+        rows_html = ""
+        for _, row in df.iterrows():
+            symbol = row["symbol"]
+            score_bar_markup = render_score_bar(row["score"])
+            signal_label = row.get("label") or "—"
+            
+            price = row.get("latest_price")
+            price_str
