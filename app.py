@@ -30,46 +30,30 @@ with help_col:
     st.markdown("<div style='height: 14px;'></div>", unsafe_allow_html=True)
     with st.popover("❓ Help", width="stretch"):
         st.markdown("""
-	### What this dashboard does
-	It scores a watchlist of cryptos and stocks using multi-factor technical indicators and displays results in structured tables and an interactive chart. **Higher score = more bullish setup** according to the scoring rules below. This is a research tool, not financial advice.
+        ### What this dashboard does
+        It scores a watchlist of cryptos and stocks using multi-factor technical indicators and displays results in structured tables and an interactive chart. **Higher score = more bullish setup** according to the scoring rules below. This is a research tool, not financial advice.
 
-	### Comprehensive Scoring Model (0–100 Scale)
-	The composite score starts at a baseline neutral value of **50** and adjusts dynamically based on weighted technical factors:
-	- **RSI (14)**: Oversold (<40) adds bullish points for potential mean-reversion bounces; overbought (>60) subtracts points due to pullback risks.
-	- **Stochastic Oscillator**: Oversold levels add support points; overbought levels subtract points.
-	- **Moving Averages (SMA 20 & SMA 50)**: Trading above both short- and medium-term SMAs adds major trend points; trading below both subtracts points.
-	- **ADX (Trend Strength)**: Strong trends (high ADX values) amplify the weight of active moving average and momentum directions.
-	- **MACD & Histogram**: Bullish MACD crossovers and positive histogram expansion add upward momentum points; bearish crosses subtract points.
-	- **Ichimoku Cloud**: Price trading cleanly above the cloud adds bullish trend support; trading below the cloud subtracts points.
-	- **Bollinger Bands (20, 2.0)**: Price hugging or dipping below the lower band adds support/reversion points; pressing against the upper band subtracts resistance points.
-	- **Volume & OBV (On-Balance Volume)**: High relative volume supporting an upward move adds conviction points; negative volume trends weigh the score down.
-	- **Performance (7-Day)**: Positive 7-day trailing price momentum boosts the score; sharp trailing declines weigh it down.
+        ### Comprehensive Scoring Model (0–100 Scale)
+        The composite score starts at a baseline neutral value of **50** and adjusts dynamically based on weighted technical factors:
+        - **RSI (14)**: Oversold (<40) adds bullish points for potential mean-reversion bounces; overbought (>60) subtracts points due to pullback risks.
+        - **Stochastic Oscillator**: Oversold levels add support points; overbought levels subtract points.
+        - **Moving Averages (SMA 20 & SMA 50)**: Trading above both short- and medium-term SMAs adds major trend points; trading below both subtracts points.
+        - **ADX (Trend Strength)**: Strong trends (high ADX values) amplify the weight of active moving average and momentum directions.
+        - **MACD & Histogram**: Bullish MACD crossovers and positive histogram expansion add upward momentum points; bearish crosses subtract points.
+        - **Ichimoku Cloud**: Price trading cleanly above the cloud adds bullish trend support; trading below the cloud subtracts points.
+        - **Bollinger Bands (20, 2.0)**: Price hugging or dipping below the lower band adds support/reversion points; pressing against the upper band subtracts resistance points.
+        - **Volume & OBV (On-Balance Volume)**: High relative volume supporting an upward move adds conviction points; negative volume trends weigh the score down.
+        - **Performance (7-Day)**: Positive 7-day trailing price momentum boosts the score; sharp trailing declines weigh it down.
 
-	### Signal Zones & Color Coding
-	- **Strong Bullish / Bullish (Score ≥ 60) [Green]**: Clear upward technical alignment across multiple indicators.
-	- **Neutral / Transition (Score 45–59) [Amber]**: Mixed signals, consolidation, or conflicting indicator readings.
-	- **Bearish / Strong Bearish (Score < 45) [Red]**: Downward momentum, trading below key moving averages, or overbought exhaustion.
+        ### Signal Zones & Color Coding
+        - **Strong Bullish / Bullish (Score ≥ 60) [Green]**: Clear upward technical alignment across multiple indicators.
+        - **Neutral / Transition (Score 45–59) [Amber]**: Mixed signals, consolidation, or conflicting indicator readings.
+        - **Bearish / Strong Bearish (Score < 45) [Red]**: Downward momentum, trading below key moving averages, or overbought exhaustion.
 
-	### Customizing Indicator Weights & Weight Sets
-	In the sidebar under **Scoring Balance Weights**:
-	- **Sliders**: Tailor the relative importance (multiplier from `0.0` to `2.0`) of individual technical indicators to fit your trading style.
-	- **Named Weight Sets**: Save your custom weight profiles, instantly load built-in or saved profiles from the dropdown, or delete unwanted sets. Changes persist automatically.
-
-        ### Column meanings
-        - **Score** — the composite 0–100 number (bar color: green ≥60, amber 45–59, red <45)
-        - **Signal** — text label (Strong Bullish → Strong Bearish)
-        - **RSI** — Relative Strength Index
-        - **7d %** — price change over the last 7 days
-        - **ATR %** — Average True Range as a percentage of price (volatility)
-        - **Vol** — current volume vs 20-day average
-
-        ### How to use it
-        1. Check the tables for the highest/lowest scores.
-        2. Use the **Type** and **Asset** dropdowns under the chart to inspect any symbol.
-        3. Read the **Score Breakdown** to see exactly why the score is what it is.
-        4. Edit your watchlists or indicator weights from the sidebar (changes are saved).
-
-        Data refreshes automatically every 5 minutes.
+        ### Customizing Indicator Weights & Weight Sets
+        In the sidebar under **Scoring Balance Weights**:
+        - **Sliders**: Tailor the relative importance (multiplier from `0.0` to `2.0`) of individual technical indicators to fit your trading style.
+        - **Named Weight Sets**: Save your custom weight profiles, instantly load built-in or saved profiles from the dropdown, or delete unwanted sets. Changes persist automatically.
         """)
 
 st.markdown("### Crypto & Equity Signals Dashboard")
@@ -344,12 +328,12 @@ with st.sidebar.expander("Customize Indicator Weights", expanded=False):
     with st.popover("💡 Help & Guide", width="stretch"):
         st.markdown("""
         ### Scoring Weights Guide
-	- **Indicator Sliders**: Adjust how heavily each technical indicator influences the final 0–100 score (from `0.0` to `2.0`). Setting a weight to `0.0` completely disables that indicator.
-	- **Reset to Default**: Instantly snaps all indicator weights back to their central balanced baseline (`1.0`).
-	- **Named Weight Sets**: 
-  	- *Save Current as New Set*: Store your custom configuration under a custom name (e.g., "Volatility Focus").
-  	- *Load Saved Set*: Instantly switch between built-in profiles (Trend Following, Mean Reversion, Momentum Heavy) or your own custom saved sets.
-  	- *Delete Set*: Clean up and remove any unwanted custom profiles.
+        - **Indicator Sliders**: Adjust how heavily each technical indicator influences the final 0–100 score (from `0.0` to `2.0`). Setting a weight to `0.0` completely disables that indicator.
+        - **Reset to Default**: Instantly snaps all indicator weights back to their central balanced baseline (`1.0`).
+        - **Named Weight Sets**: 
+          - *Save Current as New Set*: Store your custom configuration under a custom name (e.g., "Volatility Focus").
+          - *Load Saved Set*: Instantly switch between built-in profiles (Trend Following, Mean Reversion, Momentum Heavy) or your own custom saved sets.
+          - *Delete Set*: Clean up and remove any unwanted custom profiles.
         """)
 
 
