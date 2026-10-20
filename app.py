@@ -79,15 +79,96 @@ if st.session_state.user is None:
                 except Exception as e:
                     st.error(f"Sign up failed: {e}")
                     
-    # Halt execution here so dashboard elements don't render behind the login screen
     st.stop()
 
 
 # =========================================================================
-# LOGGED-IN DASHBOARD VIEW (Everything below only runs when authenticated)
+# CLOUD PREFERENCES SYNC FUNCTIONS (Per-User Isolation)
 # =========================================================================
 
-# Sidebar Account Management & Logout
+user_id = st.session_state.user.id
+
+def load_user_preferences():
+    default_crypto = {
+        "bitcoin": "Bitcoin (BTC)",
+        "ethereum": "Ethereum (ETH)",
+        "solana": "Solana (SOL)",
+        "cardano": "Cardano (ADA)",
+        "ripple": "XRP",
+        "polkadot": "Dot",
+        "sui": "Sui",
+    }
+    default_stock = {
+        "AAPL": "Apple",
+        "MSFT": "Microsoft",
+        "NVDA": "NVIDIA",
+        "TSLA": "Tesla",
+        "GOOGL": "GOOGL",
+    }
+    default_weights = {
+        "rsi": 1.0, "stochastic": 1.0, "sma": 1.0, "adx": 1.0, 
+        "macd": 1.0, "ichimoku": 1.0, "bb": 1.0, "volume": 1.0, "obv": 1.0, "performance": 1.0
+    }
+    default_settings = {
+        "days_history": 200,
+        "show_reasons": True,
+        "show_extra_metrics": True
+    }
+
+    try:
+        response = supabase.table("user_preferences").select("*").eq("user_id", user_id).execute()
+        data = response.data
+        
+        if data and len(data) > 0:
+            row = data[0]
+            return {
+                "crypto": row.get("crypto_watchlist") or default_crypto,
+                "stock": row.get("stock_watchlist") or default_stock,
+                "weights": row.get("scoring_weights") or default_weights,
+                "profiles": row.get("weight_profiles") or {},
+                "settings": row.get("settings") or default_settings
+            }
+        else:
+            initial_row = {
+                "user_id": user_id,
+                "crypto_watchlist": default_crypto,
+                "stock_watchlist": default_stock,
+                "scoring_weights": default_weights,
+                "weight_profiles": {},
+                "settings": default_settings
+            }
+            supabase.table("user_preferences").insert(initial_row).execute()
+            return {
+                "crypto": default_crypto,
+                "stock": default_stock,
+                "weights": default_weights,
+                "profiles": {},
+                "settings": default_settings
+            }
+    except Exception as e:
+        st.error(f"Error loading cloud preferences: {e}")
+        return {
+            "crypto": default_crypto, "stock": default_stock, 
+            "weights": default_weights, "profiles": {}, "settings": default_settings
+        }
+
+def save_preferences_to_cloud(updates: dict):
+    try:
+        supabase.table("user_preferences").update(updates).eq("user_id", user_id).execute()
+    except Exception as e:
+        st.error(f"Error saving preferences to cloud: {e}")
+
+
+# Load user data into session state
+if "cloud_prefs" not in st.session_state:
+    st.session_state.cloud_prefs = load_user_preferences()
+
+prefs = st.session_state.cloud_prefs
+
+# =========================================================================
+# LOGGED-IN DASHBOARD VIEW
+# =========================================================================
+
 st.sidebar.header("Account")
 st.sidebar.success(f"Logged in as:\n**{st.session_state.user.email}**")
 if st.sidebar.button("Log Out", use_container_width=True):
@@ -96,14 +177,13 @@ if st.sidebar.button("Log Out", use_container_width=True):
     except Exception:
         pass
     st.session_state.user = None
+    st.session_state.pop("cloud_prefs", None)
     st.rerun()
 
 st.sidebar.markdown("---")
 
-# Main Title Header
 st.title("angstrom signals - level 1")
 
-# Full, comprehensive guide placed at the top of the main screen with plenty of reading space
 with st.expander("📖 Comprehensive Platform Guide & Help Manual", expanded=False):
     st.markdown("""
     ### What this dashboard does
@@ -143,7 +223,7 @@ with st.expander("📖 Comprehensive Platform Guide & Help Manual", expanded=Fal
     1. Check the tables for the highest/lowest scores.
     2. Use the **Type** and **Asset** dropdowns under the chart to inspect any symbol.
     3. Read the **Score Breakdown** to see exactly why the score is what it is.
-    4. Edit your watchlists or indicator weights from the sidebar (changes are saved).
+    4. Edit your watchlists or indicator weights from the sidebar (changes are saved to your account).
 
     Data refreshes automatically every 5 minutes.
     """)
@@ -151,59 +231,11 @@ with st.expander("📖 Comprehensive Platform Guide & Help Manual", expanded=Fal
 st.markdown("### Crypto & Equity Signals Dashboard")
 st.caption("Research prototype • Multi-factor technical scoring • Not financial advice")
 
-WATCHLIST_FILE = "watchlists.json"
-CONFIG_FILE = "scoring_config.json"
-PROFILES_FILE = "weight_profiles.json"
-
-def load_watchlists():
-    if os.path.exists(WATCHLIST_FILE):
-        try:
-            with open(WATCHLIST_FILE, "r") as f:
-                data = json.load(f)
-                return data.get("crypto", {}), data.get("stock", {})
-        except Exception:
-            pass
-    return {
-        "bitcoin": "Bitcoin (BTC)",
-        "ethereum": "Ethereum (ETH)",
-        "solana": "Solana (SOL)",
-        "cardano": "Cardano (ADA)",
-        "ripple": "XRP",
-        "polkadot": "Dot",
-        "sui": "Sui",
-    }, {
-        "AAPL": "Apple",
-        "MSFT": "Microsoft",
-        "NVDA": "NVIDIA",
-        "TSLA": "Tesla",
-        "GOOGL": "GOOGL",
-    }
-
-def save_watchlists(crypto, stock):
-    try:
-        with open(WATCHLIST_FILE, "w") as f:
-            json.dump({"crypto": crypto, "stock": stock}, f)
-    except Exception:
-        pass
-
-def load_scoring_weights():
-    if os.path.exists(CONFIG_FILE):
-        try:
-            with open(CONFIG_FILE, "r") as f:
-                return json.load(f)
-        except Exception:
-            pass
-    return {
-        "rsi": 1.0, "stochastic": 1.0, "sma": 1.0, "adx": 1.0, 
-        "macd": 1.0, "ichimoku": 1.0, "bb": 1.0, "volume": 1.0, "obv": 1.0, "performance": 1.0
-    }
-
-def save_scoring_weights(weights):
-    try:
-        with open(CONFIG_FILE, "w") as f:
-            json.dump(weights, f)
-    except Exception:
-        pass
+CRYPTO_WATCHLIST = prefs["crypto"]
+STOCK_WATCHLIST = prefs["stock"]
+current_weights = prefs["weights"]
+custom_profiles = prefs["profiles"]
+settings = prefs["settings"]
 
 def get_builtin_profiles():
     return {
@@ -224,79 +256,7 @@ def get_builtin_profiles():
         }
     }
 
-def load_weight_profiles():
-    saved = {}
-    if os.path.exists(PROFILES_FILE):
-        try:
-            with open(PROFILES_FILE, "r") as f:
-                saved = json.load(f)
-        except Exception:
-            pass
-    return saved
-
-def save_weight_profiles(profiles):
-    try:
-        with open(PROFILES_FILE, "w") as f:
-            json.dump(profiles, f)
-    except Exception:
-        pass
-
-@st.cache_data(ttl=300)
-def load_crypto(coin_id, days):
-    return fetch_crypto_data(coin_id, days)
-
-@st.cache_data(ttl=300)
-def load_stock(ticker):
-    return fetch_stock_data(ticker, period="1y")
-
-# --- Watchlist setup ---
-if "crypto_watchlist" not in st.session_state or "stock_watchlist" not in st.session_state:
-    c, s = load_watchlists()
-    st.session_state.crypto_watchlist = c
-    st.session_state.stock_watchlist = s
-
-st.sidebar.header("Watchlists")
-
-with st.sidebar.expander("Edit Crypto", expanded=False):
-    st.caption("Add by CoinGecko-style id (bitcoin, ethereum, solana, etc.)")
-    new_crypto = st.text_input("Add crypto id", key="new_crypto", placeholder="e.g. dogecoin")
-    if st.button("Add Crypto") and new_crypto:
-        cid = new_crypto.strip().lower()
-        if cid and cid not in st.session_state.crypto_watchlist:
-            st.session_state.crypto_watchlist[cid] = cid.replace("-", " ").title()
-            save_watchlists(st.session_state.crypto_watchlist, st.session_state.stock_watchlist)
-            st.rerun()
-    if st.session_state.crypto_watchlist:
-        to_remove = st.selectbox("Remove crypto", [""] + list(st.session_state.crypto_watchlist.keys()), key="rm_crypto")
-        if to_remove:
-            if st.button("Remove Crypto"):
-                st.session_state.crypto_watchlist.pop(to_remove, None)
-                save_watchlists(st.session_state.crypto_watchlist, st.session_state.stock_watchlist)
-                st.rerun()
-
-with st.sidebar.expander("Edit Stocks", expanded=False):
-    st.caption("Add by ticker (AAPL, MSFT, etc.)")
-    new_stock = st.text_input("Add stock ticker", key="new_stock", placeholder="e.g. GOOGL")
-    if st.button("Add Stock") and new_stock:
-        tic = new_stock.strip().upper()
-        if tic and tic not in st.session_state.stock_watchlist:
-            st.session_state.stock_watchlist[tic] = tic
-            save_watchlists(st.session_state.crypto_watchlist, st.session_state.stock_watchlist)
-            st.rerun()
-    if st.session_state.stock_watchlist:
-        to_remove = st.selectbox("Remove stock", [""] + list(st.session_state.stock_watchlist.keys()), key="rm_stock")
-        if to_remove:
-            if st.button("Remove Stock"):
-                st.session_state.stock_watchlist.pop(to_remove, None)
-                save_watchlists(st.session_state.crypto_watchlist, st.session_state.stock_watchlist)
-                st.rerun()
-
-CRYPTO_WATCHLIST = st.session_state.crypto_watchlist
-STOCK_WATCHLIST = st.session_state.stock_watchlist
-
-current_weights = load_scoring_weights()
 built_in_profiles = get_builtin_profiles()
-custom_profiles = load_weight_profiles()
 all_profiles = {**built_in_profiles, **custom_profiles}
 
 indicators = ["rsi", "stochastic", "sma", "adx", "macd", "ichimoku", "bb", "volume", "obv", "performance"]
@@ -310,19 +270,68 @@ if "reset_weights" in st.session_state and st.session_state.reset_weights:
     for ind in indicators:
         st.session_state[f"weight_{ind}"] = 1.0
     current_weights = {ind: 1.0 for ind in indicators}
-    save_scoring_weights(current_weights)
+    prefs["weights"] = current_weights
+    save_preferences_to_cloud({"scoring_weights": current_weights})
     st.session_state.reset_weights = False
+
+# Sidebar Watchlists Management
+st.sidebar.header("Watchlists")
+
+with st.sidebar.expander("Edit Crypto", expanded=False):
+    st.caption("Add by CoinGecko-style id (bitcoin, ethereum, solana, etc.)")
+    new_crypto = st.text_input("Add crypto id", key="new_crypto", placeholder="e.g. dogecoin")
+    if st.button("Add Crypto") and new_crypto:
+        cid = new_crypto.strip().lower()
+        if cid and cid not in CRYPTO_WATCHLIST:
+            CRYPTO_WATCHLIST[cid] = cid.replace("-", " ").title()
+            prefs["crypto"] = CRYPTO_WATCHLIST
+            save_preferences_to_cloud({"crypto_watchlist": CRYPTO_WATCHLIST})
+            st.rerun()
+    if CRYPTO_WATCHLIST:
+        to_remove = st.selectbox("Remove crypto", [""] + list(CRYPTO_WATCHLIST.keys()), key="rm_crypto")
+        if to_remove:
+            if st.button("Remove Crypto"):
+                CRYPTO_WATCHLIST.pop(to_remove, None)
+                prefs["crypto"] = CRYPTO_WATCHLIST
+                save_preferences_to_cloud({"crypto_watchlist": CRYPTO_WATCHLIST})
+                st.rerun()
+
+with st.sidebar.expander("Edit Stocks", expanded=False):
+    st.caption("Add by ticker (AAPL, MSFT, etc.)")
+    new_stock = st.text_input("Add stock ticker", key="new_stock", placeholder="e.g. GOOGL")
+    if st.button("Add Stock") and new_stock:
+        tic = new_stock.strip().upper()
+        if tic and tic not in STOCK_WATCHLIST:
+            STOCK_WATCHLIST[tic] = tic
+            prefs["stock"] = STOCK_WATCHLIST
+            save_preferences_to_cloud({"stock_watchlist": STOCK_WATCHLIST})
+            st.rerun()
+    if STOCK_WATCHLIST:
+        to_remove = st.selectbox("Remove stock", [""] + list(STOCK_WATCHLIST.keys()), key="rm_stock")
+        if to_remove:
+            if st.button("Remove Stock"):
+                STOCK_WATCHLIST.pop(to_remove, None)
+                prefs["stock"] = STOCK_WATCHLIST
+                save_preferences_to_cloud({"stock_watchlist": STOCK_WATCHLIST})
+                st.rerun()
 
 # Sidebar Settings
 st.sidebar.header("Settings")
-days_history = st.sidebar.slider("Days of history", 90, 365, 200)
-show_reasons = st.sidebar.checkbox("Show score breakdown", value=True)
-show_extra_metrics = st.sidebar.checkbox("Show extra metrics (7d, ATR, volume)", value=True)
+days_history = st.sidebar.slider("Days of history", 90, 365, settings.get("days_history", 200))
+show_reasons = st.sidebar.checkbox("Show score breakdown", value=settings.get("show_reasons", True))
+show_extra_metrics = st.sidebar.checkbox("Show extra metrics (7d, ATR, volume)", value=settings.get("show_extra_metrics", True))
+
+# Save settings if changed
+new_settings = {"days_history": days_history, "show_reasons": show_reasons, "show_extra_metrics": show_extra_metrics}
+if new_settings != settings:
+    settings = new_settings
+    prefs["settings"] = settings
+    save_preferences_to_cloud({"settings": settings})
 
 st.sidebar.header("Scoring Balance Weights")
 
 with st.sidebar.expander("Customize Indicator Weights", expanded=False):
-    st.caption("Adjust relative importance of indicators (saved automatically).")
+    st.caption("Adjust relative importance of indicators (saved to your account).")
 
     st.markdown("**Named Weight Sets**")
     profile_names = ["Select saved set..."] + list(all_profiles.keys())
@@ -336,7 +345,8 @@ with st.sidebar.expander("Customize Indicator Weights", expanded=False):
                 for ind in indicators:
                     st.session_state[f"weight_{ind}"] = float(loaded.get(ind, 1.0))
                 current_weights = loaded
-                save_scoring_weights(current_weights)
+                prefs["weights"] = current_weights
+                save_preferences_to_cloud({"scoring_weights": current_weights})
                 st.success(f"Loaded '{selected_profile}'!")
                 st.rerun()
     with col_p2:
@@ -345,7 +355,8 @@ with st.sidebar.expander("Customize Indicator Weights", expanded=False):
                 st.error("Built-in profiles cannot be deleted!")
             elif selected_profile in custom_profiles:
                 custom_profiles.pop(selected_profile)
-                save_weight_profiles(custom_profiles)
+                prefs["profiles"] = custom_profiles
+                save_preferences_to_cloud({"weight_profiles": custom_profiles})
                 st.success(f"Deleted '{selected_profile}'!")
                 st.rerun()
 
@@ -354,10 +365,11 @@ with st.sidebar.expander("Customize Indicator Weights", expanded=False):
         pname = new_profile_name.strip()
         if pname:
             if pname in built_in_profiles:
-                st.error("Cannot overwrite built-in profile names!")
+                st.error("Cannot overwrite built-인 profile names!")
             else:
                 custom_profiles[pname] = current_weights
-                save_weight_profiles(custom_profiles)
+                prefs["profiles"] = custom_profiles
+                save_preferences_to_cloud({"weight_profiles": custom_profiles})
                 st.success(f"Saved set '{pname}'!")
                 st.rerun()
 
@@ -381,23 +393,22 @@ with st.sidebar.expander("Customize Indicator Weights", expanded=False):
     }
     
     if new_weights != current_weights:
-        save_scoring_weights(new_weights)
+        save_preferences_to_cloud({"scoring_weights": new_weights})
         current_weights = new_weights
+        prefs["weights"] = current_weights
 
     if st.button("🔄 Reset to Default (1.0)"):
         st.session_state.reset_weights = True
         st.rerun()
 
-    st.markdown("---")
-    with st.expander("💡 Scoring Weights Guide", expanded=False):
-        st.markdown("""
-        - **Indicator Sliders**: Adjust how heavily each technical indicator influences the final 0–100 score (from `0.0` to `2.0`). Setting a weight to `0.0` completely disables that indicator.
-        - **Reset to Default**: Instantly snaps all indicator weights back to their central balanced baseline (`1.0`).
-        - **Named Weight Sets**: 
-          - *Save Current as New Set*: Store your custom configuration under a custom name (e.g., "Volatility Focus").
-          - *Load Saved Set*: Instantly switch between built-in profiles (Trend Following, Mean Reversion, Momentum Heavy) or your own custom saved sets.
-          - *Delete Set*: Clean up and remove any unwanted custom profiles.
-        """)
+
+@st.cache_data(ttl=300)
+def load_crypto(coin_id, days):
+    return fetch_crypto_data(coin_id, days)
+
+@st.cache_data(ttl=300)
+def load_stock(ticker):
+    return fetch_stock_data(ticker, period="1y")
 
 
 def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, show_reasons_flag, show_extra_metrics_flag):
@@ -714,4 +725,4 @@ render_dashboard(CRYPTO_WATCHLIST, STOCK_WATCHLIST, days_history, current_weight
 
 st.sidebar.markdown("---")
 st.sidebar.info("Dashboard and data auto-refresh every 5 minutes.")
-st.sidebar.caption("Watchlists are saved and survive page refreshes.")
+st.sidebar.caption("Watchlists and settings are securely stored in your account.")
