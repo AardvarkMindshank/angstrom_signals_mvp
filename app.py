@@ -42,6 +42,7 @@ with help_col:
         - **MACD** — above signal line and positive histogram add points
         - **Bollinger Bands** — near the lower band is more bullish, near the upper band is more bearish
         - **Volume** — elevated volume can strengthen the existing direction
+        - **OBV (On-Balance Volume)** — accumulation (above 20-day SMA) adds points, distribution subtracts
         - **ADX / trend strength** — strong trends amplify the current bias
         - **Recent performance** — large 7-day moves have a mild effect
 
@@ -114,7 +115,7 @@ def load_scoring_weights():
             pass
     return {
         "rsi": 1.0, "stochastic": 1.0, "sma": 1.0, "adx": 1.0, 
-        "macd": 1.0, "bb": 1.0, "volume": 1.0, "performance": 1.0
+        "macd": 1.0, "bb": 1.0, "volume": 1.0, "obv": 1.0, "performance": 1.0
     }
 
 def save_scoring_weights(weights):
@@ -126,9 +127,9 @@ def save_scoring_weights(weights):
 
 def get_builtin_profiles():
     return {
-        "📊 Trend Following": {"rsi": 0.8, "stochastic": 0.8, "sma": 1.5, "adx": 1.5, "macd": 1.0, "bb": 0.8, "volume": 1.0, "performance": 1.0},
-        "📉 Mean Reversion": {"rsi": 1.5, "stochastic": 1.2, "sma": 0.8, "adx": 0.5, "macd": 0.8, "bb": 1.5, "volume": 0.8, "performance": 1.0},
-        "🚀 Momentum Heavy": {"rsi": 1.0, "stochastic": 1.5, "sma": 1.0, "adx": 1.0, "macd": 1.5, "bb": 1.0, "volume": 1.5, "performance": 1.2},
+        "📊 Trend Following": {"rsi": 0.8, "stochastic": 0.8, "sma": 1.5, "adx": 1.5, "macd": 1.0, "bb": 0.8, "volume": 1.0, "obv": 1.2, "performance": 1.0},
+        "📉 Mean Reversion": {"rsi": 1.5, "stochastic": 1.2, "sma": 0.8, "adx": 0.5, "macd": 0.8, "bb": 1.5, "volume": 0.8, "obv": 0.8, "performance": 1.0},
+        "🚀 Momentum Heavy": {"rsi": 1.0, "stochastic": 1.5, "sma": 1.0, "adx": 1.0, "macd": 1.5, "bb": 1.0, "volume": 1.5, "obv": 1.5, "performance": 1.2},
     }
 
 def load_weight_profiles():
@@ -196,7 +197,7 @@ built_in_profiles = get_builtin_profiles()
 custom_profiles = load_weight_profiles()
 all_profiles = {**built_in_profiles, **custom_profiles}
 
-indicators = ["rsi", "stochastic", "sma", "adx", "macd", "bb", "volume", "performance"]
+indicators = ["rsi", "stochastic", "sma", "adx", "macd", "bb", "volume", "obv", "performance"]
 
 # Initialize session state keys for the sliders if not already present
 for ind in indicators:
@@ -270,6 +271,7 @@ with st.sidebar.expander("Customize Indicator Weights", expanded=False):
     w_macd = st.slider("MACD Weight", 0.0, 2.0, key="weight_macd", step=0.1)
     w_bb = st.slider("Bollinger Bands Weight", 0.0, 2.0, key="weight_bb", step=0.1)
     w_vol = st.slider("Volume Weight", 0.0, 2.0, key="weight_volume", step=0.1)
+    w_obv = st.slider("OBV Weight", 0.0, 2.0, key="weight_obv", step=0.1)
     w_perf = st.slider("Performance Weight", 0.0, 2.0, key="weight_performance", step=0.1)
     
     new_weights = {
@@ -280,6 +282,7 @@ with st.sidebar.expander("Customize Indicator Weights", expanded=False):
         "macd": w_macd,
         "bb": w_bb,
         "volume": w_vol,
+        "obv": w_obv,
         "performance": w_perf
     }
     

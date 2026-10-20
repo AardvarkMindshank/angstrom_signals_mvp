@@ -9,7 +9,7 @@ import numpy as np
 
 
 def calculate_indicators(df: pd.DataFrame) -> pd.DataFrame:
-    """Add a richer set of technical indicators."""
+    """Add a richer set of technical indicators including OBV."""
     if df.empty or len(df) < 30:
         return df
 
@@ -38,7 +38,6 @@ def calculate_indicators(df: pd.DataFrame) -> pd.DataFrame:
     except Exception:
         pass
 
-    # Simple fallback ADX-like strength (average true range relative to price)
     if "atr" in df.columns:
         df["adx_fallback"] = (df["atr"] / close * 100).rolling(14).mean()
 
@@ -53,9 +52,14 @@ def calculate_indicators(df: pd.DataFrame) -> pd.DataFrame:
     if bb is not None:
         df = pd.concat([df, bb], axis=1)
 
-    # Volume
+    # Volume & OBV
     df["vol_sma_20"] = ta.sma(volume, length=20)
     df["volume_ratio"] = volume / df["vol_sma_20"].replace(0, np.nan)
+    
+    obv = ta.obv(close, volume)
+    if obv is not None:
+        df["obv"] = obv
+        df["obv_sma_20"] = ta.sma(obv, length=20)
 
     # Recent performance
     df["change_7d"] = close.pct_change(7) * 100
@@ -78,6 +82,7 @@ def compute_score(df: pd.DataFrame, weights: dict = None) -> dict:
             "macd": 1.0,
             "bb": 1.0,
             "volume": 1.0,
+            "obv": 1.0,
             "performance": 1.0,
         }
 
@@ -95,6 +100,7 @@ def compute_score(df: pd.DataFrame, weights: dict = None) -> dict:
             "volume_ratio": None,
             "bb_position": None,
             "adx": None,
+            "obv_trend": None,
             "contributions": {},
         }
 
@@ -110,6 +116,7 @@ def compute_score(df: pd.DataFrame, weights: dict = None) -> dict:
         "MACD": 0.0,
         "Bollinger Bands": 0.0,
         "Volume": 0.0,
+        "OBV": 0.0,
         "Performance": 0.0,
     }
 
@@ -120,6 +127,7 @@ def compute_score(df: pd.DataFrame, weights: dict = None) -> dict:
     w_macd = weights.get("macd", 1.0)
     w_bb = weights.get("bb", 1.0)
     w_vol = weights.get("volume", 1.0)
+    w_obv = weights.get("obv", 1.0)
     w_perf = weights.get("performance", 1.0)
 
     close = latest["close"]
@@ -255,6 +263,23 @@ def compute_score(df: pd.DataFrame, weights: dict = None) -> dict:
         score += vol_pts
         contributions["Volume"] = vol_pts
 
+    # --- On-Balance Volume (OBV) trend ---
+    obv_val = latest.get("obv")
+    obv_sma = latest.get("obv_sma_20")
+    obv_trend = "Neutral"
+    if pd.notna(obv_val) and pd.notna(obv_sma):
+        obv_pts = 0.0
+        if obv_val > obv_sma:
+            obv_pts = 5 * w_obv
+            obv_trend = "Bullish"
+            reasons.append("OBV above 20-day OBV SMA (accumulation)")
+        else:
+            obv_pts = -5 * w_obv
+            obv_trend = "Bearish"
+            reasons.append("OBV below 20-day OBV SMA (distribution)")
+        score += obv_pts
+        contributions["OBV"] = obv_pts
+
     # --- Recent performance context ---
     change_7d = latest.get("change_7d")
     change_30d = latest.get("change_30d")
@@ -271,8 +296,8 @@ def compute_score(df: pd.DataFrame, weights: dict = None) -> dict:
     # Clamp
     score = max(0, min(100, score))
 
-    bullish = sum(1 for r in reasons if any(w in r.lower() for w in ["above", "oversold", "positive", "strong 7d", "elevated volume ("]) and "weakness" not in r.lower())
-    bearish = sum(1 for r in reasons if any(w in r.lower() for w in ["below", "overbought", "weak", "elevated volume on weakness"]))
+    bullish = sum(1 for r in reasons if any(w in r.lower() for w in ["above", "oversold", "positive", "strong 7d", "elevated volume (", "accumulation"]) and "weakness" not in r.lower())
+    bearish = sum(1 for r in reasons if any(w in r.lower() for w in ["below", "overbought", "weak", "elevated volume on weakness", "distribution"]))
     confluence = int(bullish - bearish)
 
     if score >= 72:
@@ -308,5 +333,6 @@ def compute_score(df: pd.DataFrame, weights: dict = None) -> dict:
         "volume_ratio": round(vol_ratio, 2) if pd.notna(vol_ratio) else None,
         "bb_position": round(bb_position, 2) if bb_position is not None else None,
         "adx": round(adx_val, 1) if pd.notna(adx_val) else None,
+        "obv_trend": obv_trend,
         "contributions": contributions,
     }
