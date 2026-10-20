@@ -210,36 +210,7 @@ st.sidebar.header("Scoring Balance Weights")
 with st.sidebar.expander("Customize Indicator Weights", expanded=False):
     st.caption("Adjust relative importance of indicators (saved automatically).")
 
-    w_rsi = st.slider("RSI Weight", 0.0, 2.0, key="weight_rsi", step=0.1)
-    w_stoch = st.slider("Stochastic Weight", 0.0, 2.0, key="weight_stochastic", step=0.1)
-    w_sma = st.slider("Moving Averages Weight", 0.0, 2.0, key="weight_sma", step=0.1)
-    w_adx = st.slider("ADX Trend Weight", 0.0, 2.0, key="weight_adx", step=0.1)
-    w_macd = st.slider("MACD Weight", 0.0, 2.0, key="weight_macd", step=0.1)
-    w_bb = st.slider("Bollinger Bands Weight", 0.0, 2.0, key="weight_bb", step=0.1)
-    w_vol = st.slider("Volume Weight", 0.0, 2.0, key="weight_volume", step=0.1)
-    w_perf = st.slider("Performance Weight", 0.0, 2.0, key="weight_performance", step=0.1)
-    
-    new_weights = {
-        "rsi": w_rsi,
-        "stochastic": w_stoch,
-        "sma": w_sma,
-        "adx": w_adx,
-        "macd": w_macd,
-        "bb": w_bb,
-        "volume": w_vol,
-        "performance": w_perf
-    }
-    
-    if new_weights != current_weights:
-        save_scoring_weights(new_weights)
-        current_weights = new_weights
-
-    if st.button("🔄 Reset to Default (1.0)"):
-        st.session_state.reset_weights = True
-        st.rerun()
-
-    st.markdown("---")
-
+    # --- Named Weight Sets logic handles updating session state keys FIRST ---
     st.markdown("**Named Weight Sets**")
     profile_names = ["Select saved set..."] + list(weight_profiles.keys())
     selected_profile = st.selectbox("Load Saved Set", profile_names, key="load_profile_sb")
@@ -271,6 +242,37 @@ with st.sidebar.expander("Customize Indicator Weights", expanded=False):
             save_weight_profiles(weight_profiles)
             st.success(f"Saved set '{pname}'!")
             st.rerun()
+
+    st.markdown("---")
+
+    # --- Sliders rendered AFTER state keys are modified by Load/Reset ---
+    w_rsi = st.slider("RSI Weight", 0.0, 2.0, key="weight_rsi", step=0.1)
+    w_stoch = st.slider("Stochastic Weight", 0.0, 2.0, key="weight_stochastic", step=0.1)
+    w_sma = st.slider("Moving Averages Weight", 0.0, 2.0, key="weight_sma", step=0.1)
+    w_adx = st.slider("ADX Trend Weight", 0.0, 2.0, key="weight_adx", step=0.1)
+    w_macd = st.slider("MACD Weight", 0.0, 2.0, key="weight_macd", step=0.1)
+    w_bb = st.slider("Bollinger Bands Weight", 0.0, 2.0, key="weight_bb", step=0.1)
+    w_vol = st.slider("Volume Weight", 0.0, 2.0, key="weight_volume", step=0.1)
+    w_perf = st.slider("Performance Weight", 0.0, 2.0, key="weight_performance", step=0.1)
+    
+    new_weights = {
+        "rsi": w_rsi,
+        "stochastic": w_stoch,
+        "sma": w_sma,
+        "adx": w_adx,
+        "macd": w_macd,
+        "bb": w_bb,
+        "volume": w_vol,
+        "performance": w_perf
+    }
+    
+    if new_weights != current_weights:
+        save_scoring_weights(new_weights)
+        current_weights = new_weights
+
+    if st.button("🔄 Reset to Default (1.0)"):
+        st.session_state.reset_weights = True
+        st.rerun()
 
 @st.cache_data(ttl=300)
 def load_crypto(coin_id, days):
