@@ -1,6 +1,5 @@
 """
-Balanced, neutral-first scoring logic for the Signals Dashboard.
-Normal market consolidation rests cleanly around 50.
+Balanced, non-punitive scoring logic for the Signals Dashboard.
 """
 
 import pandas as pd
@@ -79,7 +78,7 @@ def calculate_indicators(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def compute_score(df: pd.DataFrame, weights: dict = None) -> dict:
-    """Multi-factor 0-100 score calibrated around a true 50 neutral center."""
+    """Multi-factor 0-100 score with non-punitive baseline."""
     if weights is None:
         weights = {
             "rsi": 1.0, "stochastic": 1.0, "sma": 1.0, "adx": 1.0,
@@ -122,72 +121,60 @@ def compute_score(df: pd.DataFrame, weights: dict = None) -> dict:
 
     close = float(latest["close"])
 
-    # RSI (Only rewards extremes, neutral 35-65 adds 0)
+    # RSI (Balanced thresholds)
     rsi = latest.get("rsi")
     rsi_val = None
     if pd.notna(rsi):
         rsi_val = float(rsi.iloc[-1] if isinstance(rsi, pd.Series) else rsi)
-        if rsi_val < 32:
+        if rsi_val < 40:
             pts = 6 * w_rsi
             score += pts
-            reasons.append(f"RSI oversold ({rsi_val:.1f})")
+            reasons.append(f"RSI bullish support ({rsi_val:.1f})")
             contributions["RSI"] = pts
-        elif rsi_val > 68:
+        elif rsi_val > 60:
             pts = -6 * w_rsi
             score += pts
-            reasons.append(f"RSI overbought ({rsi_val:.1f})")
+            reasons.append(f"RSI elevated ({rsi_val:.1f})")
             contributions["RSI"] = pts
         else:
             reasons.append(f"RSI neutral ({rsi_val:.1f})")
 
-    # Moving Averages (SMA 20)
+    # Moving Averages (Reward when above, neutral 0 when below instead of harsh penalty)
     sma20 = latest.get("sma_20")
+    sma50 = latest.get("sma_50")
+    sma_pts = 0.0
     if pd.notna(sma20):
         s20 = float(sma20.iloc[-1] if isinstance(sma20, pd.Series) else sma20)
         if close > s20:
-            pts = 5 * w_sma
-            score += pts
+            sma_pts += 5 * w_sma
             reasons.append("Price above SMA 20")
-            contributions["Moving Averages"] += pts
         else:
-            pts = -5 * w_sma
-            score += pts
             reasons.append("Price below SMA 20")
-            contributions["Moving Averages"] += pts
-
-    # Moving Averages (SMA 50)
-    sma50 = latest.get("sma_50")
     if pd.notna(sma50):
         s50 = float(sma50.iloc[-1] if isinstance(sma50, pd.Series) else sma50)
         if close > s50:
-            pts = 5 * w_sma
-            score += pts
+            sma_pts += 5 * w_sma
             reasons.append("Price above SMA 50")
-            contributions["Moving Averages"] += pts
         else:
-            pts = -5 * w_sma
-            score += pts
             reasons.append("Price below SMA 50")
-            contributions["Moving Averages"] += pts
+    score += sma_pts
+    contributions["Moving Averages"] = sma_pts
 
-    # MACD
+    # MACD (Only reward positive crossover, neutral otherwise)
     if "MACD_12_26_9" in df.columns and pd.notna(latest.get("MACD_12_26_9")) and w_macd > 0:
         m_line = latest.get("MACD_12_26_9")
         m_sig = latest.get("MACDs_12_26_9")
         ml = float(m_line.iloc[-1] if isinstance(m_line, pd.Series) else m_line)
         ms = float(m_sig.iloc[-1] if isinstance(m_sig, pd.Series) else m_sig) if pd.notna(m_sig) else 0.0
         if ml > ms:
-            pts = 5 * w_macd
+            pts = 6 * w_macd
             score += pts
-            reasons.append("MACD above signal")
+            reasons.append("MACD bullish cross")
             contributions["MACD & Hist"] = pts
         else:
-            pts = -5 * w_macd
-            score += pts
-            reasons.append("MACD below signal")
-            contributions["MACD & Hist"] = pts
+            reasons.append("MACD bearish cross")
 
-    # Bollinger Bands (Only trigger near the actual outer bands)
+    # Bollinger Bands
     bb_upper = latest.get("BBU_20_2.0")
     bb_lower = latest.get("BBL_20_2.0")
     bb_position = None
@@ -196,36 +183,35 @@ def compute_score(df: pd.DataFrame, weights: dict = None) -> dict:
         bbl = float(bb_lower.iloc[-1] if isinstance(bb_lower, pd.Series) else bb_lower)
         if (bbu - bbl) > 0:
             bb_position = (close - bbl) / (bbu - bbl)
-            if bb_position < 0.1:
+            if bb_position < 0.2:
                 pts = 5 * w_bb
                 score += pts
-                reasons.append("Near lower Bollinger Band")
+                reasons.append("Near lower Bollinger Band (support)")
                 contributions["Bollinger Bands"] = pts
-            elif bb_position > 0.9:
+            elif bb_position > 0.8:
                 pts = -5 * w_bb
                 score += pts
-                reasons.append("Near upper Bollinger Band")
+                reasons.append("Near upper Bollinger Band (resistance)")
                 contributions["Bollinger Bands"] = pts
 
-    # Performance (7-day trend)
+    # Performance
     change_7d = latest.get("change_7d")
     c7_val = None
     if pd.notna(change_7d) and w_perf > 0:
         c7_val = float(change_7d.iloc[-1] if isinstance(change_7d, pd.Series) else change_7d)
-        if c7_val > 4:
-            pts = 5 * w_perf
+        if c7_val > 0:
+            pts = min(6, c7_val * 0.5) * w_perf
             score += pts
-            reasons.append(f"Strong 7d move (+{c7_val:.1f}%)")
+            reasons.append(f"Positive 7d momentum (+{c7_val:.1f}%)")
             contributions["Performance"] = pts
-        elif c7_val < -4:
-            pts = -5 * w_perf
+        else:
+            pts = max(-6, c7_val * 0.5) * w_perf
             score += pts
-            reasons.append(f"Weak 7d move ({c7_val:.1f}%)")
+            reasons.append(f"Negative 7d momentum ({c7_val:.1f}%)")
             contributions["Performance"] = pts
 
     score = max(0, min(100, score))
 
-    # Clean label thresholds centered around 50
     if score >= 65: label = "Strong Bullish"
     elif score >= 56: label = "Bullish"
     elif score >= 52: label = "Mildly Bullish"
