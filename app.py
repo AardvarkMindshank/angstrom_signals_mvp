@@ -268,8 +268,18 @@ with st.sidebar.expander("Configure Alert Rules", expanded=False):
 
 st.sidebar.markdown("---")
 
-st.title("angstrom signals - level 1")
-st.info("Multi-factor technical scoring research platform • Higher score = more bullish setup.")
+# --- Manual Refresh Header Block ---
+header_col1, header_col2 = st.columns([5, 1])
+with header_col1:
+    st.title("angstrom signals - level 1")
+with header_col2:
+    st.write("") # Quick vertical nudge to align neatly with the title
+    if st.button("🔄 Refresh", use_container_width=True, help="Clear cache and pull fresh data now"):
+        st.cache_data.clear()
+        st.success("Refreshed!")
+        st.rerun()
+
+st.info("Multi-factor technical scoring research platform • Higher score = more bullish setup!")
 
 CRYPTO_WATCHLIST = prefs["crypto"]
 STOCK_WATCHLIST = prefs["stock"]
