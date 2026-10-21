@@ -580,8 +580,16 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
 1. Read the snapshot and the tables. The top row is the strongest score, the bottom is the weakest.
 2. Open a name in the chart. The score breakdown shows which factors added or removed points.
 3. **7d %** is the seven-day price change. **ATR %** is volatility. **Vol** is volume versus its 20-day average.
-4. Alerts fire at 70 and 30 unless you move those sliders. An alert re-arms after the score leaves that zone.
-5. While this page is open, prices and scores refresh every 5 minutes. Email checks run separately, about every 15 minutes, even if the page is closed.
+4. Alerts fire at 70 and 30 unless you move those sliders. One email goes to the address on your account when a score crosses a boundary. It is not sent again until the score leaves that boundary and crosses it later.
+
+**Alerts keep running in the background**
+
+You do not need this page open, and you do not need to stay logged in. About every 15 minutes, your saved watchlist and thresholds are checked on their own.
+
+- A crossing is saved on your account. It shows up under Notifications the next time you log in.
+- The email goes only to you.
+
+While this page is open, the prices and scores on screen refresh about every 5 minutes. That refresh is separate from the background check.
 """)
 
 CRYPTO_WATCHLIST = prefs["crypto"]
