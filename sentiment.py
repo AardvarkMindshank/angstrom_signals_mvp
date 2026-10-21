@@ -424,6 +424,23 @@ def sentiment_cached_at(query: str) -> float | None:
     return cached[0]
 
 
+def cached_sentiment_score(query: str) -> float | None:
+    """The saved headline score, while it is still inside the one-hour window."""
+    cached = _SCORE_CACHE.get(query)
+    if not cached or time.time() - cached[0] >= 3600:
+        return None
+    stored = cached[1]
+    if not stored.get("ok"):
+        return None
+    try:
+        score = float(stored.get("score"))
+    except (TypeError, ValueError):
+        return None
+    if score != score:
+        return None
+    return score
+
+
 def analyze_market_sentiment(query: str, enabled: bool, force: bool = False) -> dict:
     """Headlines plus a score when an xAI key is configured.
 

@@ -172,6 +172,7 @@ try:
     from scoring import calculate_indicators, compute_score, find_column
     from sentiment import (
         analyze_market_sentiment,
+        cached_sentiment_score,
         newest_first,
         sentiment_cached_at,
         sentiment_query,
@@ -558,6 +559,17 @@ def tone(score):
     if score >= 47:
         return "#b45309", "#fef3c7", "→", "#f59e0b"
     return "#b91c1c", "#fee2e2", "↓", "#ef4444"
+
+
+def sentiment_badge(score) -> str:
+    """Colored number box used for a headline score. A dash when there is no score yet."""
+    if score is None or pd.isna(score):
+        return "<span style='color:#6b7280;'>—</span>"
+    color, background, _arrow, _bar = tone(score)
+    return (
+        f"<span style='display:inline-block;min-width:52px;text-align:center;background:{background};"
+        f"color:{color};border-radius:4px;padding:2px 8px;font-weight:600;'>{float(score):.0f}</span>"
+    )
 
 
 def score_from_alert(note: dict):
@@ -1181,13 +1193,15 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             return
         frame = pd.DataFrame(results).sort_values("score", ascending=False, na_position="last")
         st.subheader(title)
-        st.caption("Click a name to show that asset on the chart.")
+        st.caption("Click a name to show that asset on the chart. Sentiment is the headline score, once that asset has one.")
 
         headers = ["Asset", "Score", "Signal", "Price", "RSI"]
         if show_extra_metrics_flag:
             headers += ["7d %", "ATR %", "Vol"]
+        headers.append("Sentiment")
         header_html = "".join(
-            f"<th style='padding:8px 10px;text-align:left;white-space:nowrap;'>{html.escape(name)}</th>"
+            f"<th style='padding:8px 10px;text-align:{'right' if name == 'Sentiment' else 'left'};"
+            f"white-space:nowrap;'>{html.escape(name)}</th>"
             for name in headers
         )
 
@@ -1224,7 +1238,16 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                     f"{cell(f'{atr:.2f}' if pd.notna(atr) else '—')}"
                     f"{cell(f'{volume:.2f}' if pd.notna(volume) else '—')}"
                 )
-            rows_html += "</tr>"
+            watchlist = crypto_watchlist if kind == "Crypto" else stock_watchlist
+            label = watchlist.get(asset_id)
+            headline_score = None
+            if label:
+                ticker = crypto_ticker(asset_id) if kind == "Crypto" else asset_id
+                headline_score = cached_sentiment_score(sentiment_query(kind, str(label), ticker))
+            rows_html += (
+                f"<td style='padding:10px;text-align:right;white-space:nowrap;'>"
+                f"{sentiment_badge(headline_score)}</td></tr>"
+            )
 
         table_html = (
             "<div style='width:100%;overflow-x:auto;margin-bottom:8px;-webkit-overflow-scrolling:touch;'>"
@@ -1527,8 +1550,12 @@ def show_market_sentiment(kind: str, label: str, ticker: str | None):
     force_sentiment = st.session_state.get("sentiment_force") == query
     if force_sentiment:
         st.session_state.sentiment_force = None
+    cached_before = sentiment_cached_at(query)
     with st.spinner("Reading recent headlines..."):
         report = load_market_sentiment(query, sentiment_ready(), force=force_sentiment)
+    cached_after = sentiment_cached_at(query)
+    if report.get("ok") and cached_after and cached_after != cached_before:
+        st.rerun(scope="app")
 
     headlines = newest_first(report.get("headlines") or [])
     score = report.get("score")
@@ -1596,16 +1623,7 @@ def show_market_sentiment(kind: str, label: str, ticker: str | None):
                 if published
                 else "<span style='color:#6b7280;'>—</span>"
             )
-            article_score = item.get("score")
-            if article_score is None:
-                badge = "<span style='color:#6b7280;'>—</span>"
-            else:
-                color, background, _arrow, _bar = tone(article_score)
-                badge = (
-                    f"<span style='display:inline-block;min-width:52px;text-align:center;background:{background};"
-                    f"color:{color};border-radius:4px;padding:2px 8px;font-weight:600;'>"
-                    f"{article_score:.0f}</span>"
-                )
+            badge = sentiment_badge(item.get("score"))
             rows.append(
                 "<div style='display:flex;align-items:center;gap:16px;padding:8px 0;border-top:1px solid #f3f4f6;'>"
                 "<div style='flex:1;min-width:0;'>"
