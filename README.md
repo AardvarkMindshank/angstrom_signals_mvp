@@ -43,7 +43,7 @@ The app opens at `http://localhost:8501`.
 
 ## Alerts
 
-The dashboard records an in-app alert when you load it. Email is sent by `run_alerts.py`, which is meant to run on a schedule.
+The dashboard records an in-app alert when a score crosses a boundary. `run_alerts.py` emails that crossing once, including when the dashboard recorded it first. It does not email again while the score stays past the boundary.
 
 For a local run, set:
 

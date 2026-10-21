@@ -7,6 +7,8 @@ after the score leaves that threshold, so the same asset can alert again later.
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 BULLISH = "BULLISH_THRESHOLD"
 BEARISH = "BEARISH_THRESHOLD"
 
@@ -68,7 +70,9 @@ def evaluate_alerts(supabase, user_id, results, alerts_config, notify_email=None
     """
     Apply plan_alert_actions for one user.
 
-    send_email(to_email, asset_name, message) runs only for newly opened alerts.
+    send_email(to_email, asset_name, message) runs once for each open crossing
+    that has not been emailed yet. It does not run again while the score stays
+    past the threshold.
     Returns the opened alert rows.
     """
     if not alerts_config or not alerts_config.get("enabled", True):
@@ -120,7 +124,48 @@ def evaluate_alerts(supabase, user_id, results, alerts_config, notify_email=None
             "alert_type": alert_type,
             "message": message,
         })
-        if notify_email and send_email:
-            send_email(notify_email, name, message)
+
+    if notify_email and send_email:
+        _email_open_crossings(supabase, user_id, notify_email, send_email)
 
     return opened
+
+
+def _email_open_crossings(supabase, user_id, notify_email, send_email) -> None:
+    """Email each unresolved crossing once. A later run skips rows already marked."""
+    try:
+        pending = (
+            supabase.table("user_notifications")
+            .select("id, asset_name, message")
+            .eq("user_id", user_id)
+            .in_("alert_type", [BULLISH, BEARISH])
+            .is_("emailed_at", "null")
+            .execute()
+            .data
+            or []
+        )
+    except Exception as exc:
+        print(
+            "Could not look for unsent alert emails. Run the latest supabase_rls.sql "
+            f"in the Supabase SQL editor. {exc}"
+        )
+        return
+
+    for note in pending:
+        name = note.get("asset_name") or "Asset"
+        try:
+            sent = bool(send_email(notify_email, name, note.get("message") or ""))
+        except Exception as exc:
+            print(f"Email failed for {name}: {exc}")
+            continue
+        if not sent:
+            continue
+        try:
+            (
+                supabase.table("user_notifications")
+                .update({"emailed_at": datetime.now(timezone.utc).isoformat()})
+                .eq("id", note["id"])
+                .execute()
+            )
+        except Exception as exc:
+            print(f"Email was accepted for {name} but could not be marked sent. {exc}")

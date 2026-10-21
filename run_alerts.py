@@ -88,12 +88,22 @@ def user_email(supabase, user_id: str) -> str | None:
         return None
 
 
-def send_alert_email(to_email: str, asset_name: str, message: str) -> None:
-    api_key = os.getenv("RESEND_API_KEY")
-    if not api_key or not to_email:
-        return
+def send_alert_email(to_email: str, asset_name: str, message: str) -> bool:
+    api_key = (os.getenv("RESEND_API_KEY") or "").strip()
+    if not api_key:
+        print(f"Email skipped for {asset_name}: RESEND_API_KEY is not set.")
+        return False
+    if not to_email:
+        print(f"Email skipped for {asset_name}: this account has no email address.")
+        return False
 
-    sender = os.getenv("RESEND_FROM") or "onboarding@resend.dev"
+    sender = (os.getenv("RESEND_FROM") or "").strip() or "Angstrom Signals <onboarding@resend.dev>"
+    if "onboarding@resend.dev" in sender and not getattr(send_alert_email, "_warned_test_sender", False):
+        print(
+            "Sending from onboarding@resend.dev. Resend only delivers that test "
+            "address to the inbox that owns the Resend account."
+        )
+        send_alert_email._warned_test_sender = True
     safe_name = html.escape(str(asset_name))
     safe_message = html.escape(str(message))
     subject = "Angstrom alert: " + " ".join(str(asset_name).split())
@@ -104,7 +114,12 @@ def send_alert_email(to_email: str, asset_name: str, message: str) -> None:
                 "from": sender,
                 "to": [to_email],
                 "subject": subject,
-                "html": f"<p><strong>{safe_name}</strong> triggered an alert.</p><p>{safe_message}</p>",
+                "html": (
+                    f"<p><strong>{safe_name}</strong> crossed an alert boundary.</p>"
+                    f"<p>{safe_message}</p>"
+                    "<p>This email is sent once for that crossing. "
+                    "It is sent again only after the score leaves the boundary and crosses it later.</p>"
+                ),
             },
             headers={
                 "Authorization": f"Bearer {api_key}",
@@ -114,11 +129,13 @@ def send_alert_email(to_email: str, asset_name: str, message: str) -> None:
         )
     except Exception as exc:
         print(f"Email failed for {asset_name}: {exc}")
-        return
+        return False
     if response.status_code in (200, 201):
         print(f"Email sent for {asset_name}")
-    else:
-        print(f"Email failed for {asset_name}: HTTP {response.status_code}")
+        return True
+    detail = " ".join((response.text or "").split())[:300]
+    print(f"Email failed for {asset_name}: HTTP {response.status_code} {detail}")
+    return False
 
 
 def _score_asset(df, weights):

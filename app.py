@@ -495,7 +495,10 @@ with st.sidebar.expander(notifications_label, expanded=False):
                         st.error(f"Could not clear alerts: {exc}")
 
     with st.expander("Configure Alert Rules", expanded=False):
-        st.caption("70 is a strong bullish setup. 30 is a strong bearish setup. An alert re-arms after the score leaves the threshold.")
+        st.caption(
+            "70 is a strong bullish setup. 30 is a strong bearish setup. "
+            "An email is sent once when a score crosses a boundary, and again only after it leaves and crosses later."
+        )
         alert_enabled = st.checkbox("Enable Alerts", value=alert_prefs.get("enabled", True), key="alert_enabled_cb")
         min_score = st.slider(
             "Bullish Alert Threshold (Score ≥)",

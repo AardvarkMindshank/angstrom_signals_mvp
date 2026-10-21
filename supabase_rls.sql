@@ -27,8 +27,12 @@ create table if not exists public.user_notifications (
     alert_type text,
     message text,
     is_read boolean default false,
-    created_at timestamptz default now()
+    created_at timestamptz default now(),
+    emailed_at timestamptz
 );
+
+alter table public.user_notifications
+    add column if not exists emailed_at timestamptz;
 
 alter table public.user_preferences enable row level security;
 alter table public.alert_preferences enable row level security;
