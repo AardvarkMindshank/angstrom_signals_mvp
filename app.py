@@ -250,15 +250,132 @@ st.sidebar.markdown("---")
 st.title("angstrom signals - level 1")
 
 with st.expander("📖 Comprehensive Platform Guide & Help Manual", expanded=False):
-    st.markdown("""
-    ### What this dashboard does
-    It scores a watchlist of cryptos and stocks using multi-factor technical indicators and displays results in structured tables and an interactive chart. **Higher score = more bullish setup** according to the scoring rules below. This is a research tool, not financial advice.
+    st.markdown("### What this dashboard does\nIt scores a watchlist of cryptos and stocks using multi-factor technical indicators and displays results in structured tables and an interactive chart. **Higher score = more bullish setup** according to the scoring rules below. This is a research tool, not financial advice.")
 
-    ### Comprehensive Scoring Model (0–100 Scale)
-    The composite score starts at a baseline neutral value of **50** and adjusts dynamically based on weighted technical factors:
-    - **RSI (14)**: Oversold (<40) adds bullish points for potential mean-reversion bounces; overbought (>60) subtracts points due to pullback risks.
-    - **Stochastic Oscillator**: Oversold levels add support points; overbought levels subtract points.
-    - **Moving Averages (SMA 20 & SMA 50)**: Trading above both short- and medium-term SMAs adds major trend points; trading below both subtracts points.
-    - **ADX (Trend Strength)**: Strong trends (high ADX values) amplify the weight of active moving average and momentum directions.
-    - **MACD & Histogram**: Bullish MACD crossovers and positive histogram expansion add upward momentum points; bearish crosses subtract points.
-    -
+st.markdown("### Crypto & Equity Signals Dashboard")
+st.caption("Research prototype • Multi-factor technical scoring • Not financial advice")
+
+CRYPTO_WATCHLIST = prefs["crypto"]
+STOCK_WATCHLIST = prefs["stock"]
+current_weights = prefs["weights"]
+custom_profiles = prefs["profiles"]
+settings = prefs["settings"]
+
+def get_builtin_profiles():
+    return {
+        "📊 Trend Following": {
+            "rsi": 0.8, "stochastic": 0.8, "sma": 1.5, "adx": 1.0, 
+            "macd": 1.2, "ichimoku": 1.0, "bb": 0.8, "volume": 1.0, 
+            "obv": 1.0, "performance": 1.2
+        },
+        "📉 Mean Reversion": {
+            "rsi": 1.5, "stochastic": 1.2, "sma": 0.8, "adx": 1.0, 
+            "macd": 0.8, "ichimoku": 1.0, "bb": 1.5, "volume": 0.8, 
+            "obv": 0.8, "performance": 0.8
+        },
+        "🚀 Momentum Heavy": {
+            "rsi": 1.0, "stochastic": 1.2, "sma": 1.0, "adx": 1.0, 
+            "macd": 1.5, "ichimoku": 1.0, "bb": 1.0, "volume": 1.2, 
+            "obv": 1.2, "performance": 1.5
+        }
+    }
+
+built_in_profiles = get_builtin_profiles()
+all_profiles = {**built_in_profiles, **custom_profiles}
+
+indicators = ["rsi", "stochastic", "sma", "adx", "macd", "ichimoku", "bb", "volume", "obv", "performance"]
+
+for ind in indicators:
+    key_name = f"weight_{ind}"
+    if key_name not in st.session_state:
+        st.session_state[key_name] = float(current_weights.get(ind, 1.0))
+
+if "reset_weights" in st.session_state and st.session_state.reset_weights:
+    for ind in indicators:
+        st.session_state[f"weight_{ind}"] = 1.0
+    current_weights = {ind: 1.0 for ind in indicators}
+    prefs["weights"] = current_weights
+    save_preferences_to_cloud({"scoring_weights": current_weights})
+    st.session_state.reset_weights = False
+
+# Sidebar Watchlists Management
+st.sidebar.header("Watchlists")
+
+with st.sidebar.expander("Edit Crypto", expanded=False):
+    st.caption("Add by CoinGecko-style id (bitcoin, ethereum, solana, etc.)")
+    new_crypto = st.text_input("Add crypto id", key="new_crypto", placeholder="e.g. dogecoin")
+    if st.button("Add Crypto") and new_crypto:
+        cid = new_crypto.strip().lower()
+        if cid and cid not in CRYPTO_WATCHLIST:
+            CRYPTO_WATCHLIST[cid] = cid.replace("-", " ").title()
+            prefs["crypto"] = CRYPTO_WATCHLIST
+            save_preferences_to_cloud({"crypto_watchlist": CRYPTO_WATCHLIST})
+            st.rerun()
+    if CRYPTO_WATCHLIST:
+        to_remove = st.selectbox("Remove crypto", [""] + list(CRYPTO_WATCHLIST.keys()), key="rm_crypto")
+        if to_remove:
+            if st.button("Remove Crypto"):
+                CRYPTO_WATCHLIST.pop(to_remove, None)
+                prefs["crypto"] = CRYPTO_WATCHLIST
+                save_preferences_to_cloud({"crypto_watchlist": CRYPTO_WATCHLIST})
+                st.rerun()
+
+with st.sidebar.expander("Edit Stocks", expanded=False):
+    st.caption("Add by ticker (AAPL, MSFT, etc.)")
+    new_stock = st.text_input("Add stock ticker", key="new_stock", placeholder="e.g. GOOGL")
+    if st.button("Add Stock") and new_stock:
+        tic = new_stock.strip().upper()
+        if tic and tic not in STOCK_WATCHLIST:
+            STOCK_WATCHLIST[tic] = tic
+            prefs["stock"] = STOCK_WATCHLIST
+            save_preferences_to_cloud({"stock_watchlist": STOCK_WATCHLIST})
+            st.rerun()
+    if STOCK_WATCHLIST:
+        to_remove = st.selectbox("Remove stock", [""] + list(STOCK_WATCHLIST.keys()), key="rm_stock")
+        if to_remove:
+            if st.button("Remove Stock"):
+                STOCK_WATCHLIST.pop(to_remove, None)
+                prefs["stock"] = STOCK_WATCHLIST
+                save_preferences_to_cloud({"stock_watchlist": STOCK_WATCHLIST})
+                st.rerun()
+
+# Sidebar Settings
+st.sidebar.header("Settings")
+days_history = st.sidebar.slider("Days of history", 90, 365, settings.get("days_history", 200))
+show_reasons = st.sidebar.checkbox("Show score breakdown", value=settings.get("show_reasons", True))
+show_extra_metrics = st.sidebar.checkbox("Show extra metrics (7d, ATR, volume)", value=settings.get("show_extra_metrics", True))
+
+new_settings = {"days_history": days_history, "show_reasons": show_reasons, "show_extra_metrics": show_extra_metrics}
+if new_settings != settings:
+    settings = new_settings
+    prefs["settings"] = settings
+    save_preferences_to_cloud({"settings": settings})
+
+st.sidebar.header("Scoring Balance Weights")
+
+with st.sidebar.expander("Customize Indicator Weights", expanded=False):
+    st.caption("Adjust relative importance of indicators (saved to your account).")
+
+    st.markdown("**Named Weight Sets**")
+    profile_names = ["Select saved set..."] + list(all_profiles.keys())
+    selected_profile = st.selectbox("Load Saved Set", profile_names, key="load_profile_sb")
+    
+    col_p1, col_p2 = st.columns(2)
+    with col_p1:
+        if st.button("Load Set") and selected_profile != "Select saved set...":
+            if selected_profile in all_profiles:
+                loaded = all_profiles[selected_profile]
+                for ind in indicators:
+                    st.session_state[f"weight_{ind}"] = float(loaded.get(ind, 1.0))
+                current_weights = loaded
+                prefs["weights"] = current_weights
+                save_preferences_to_cloud({"scoring_weights": current_weights})
+                st.success(f"Loaded '{selected_profile}'!")
+                st.rerun()
+    with col_p2:
+        if st.button("Delete Set") and selected_profile != "Select saved set...":
+            if selected_profile in built_in_profiles:
+                st.error("Built-in profiles cannot be deleted!")
+            elif selected_profile in custom_profiles:
+                custom_profiles.pop(selected_profile)
+                prefs["profiles"] = custom
