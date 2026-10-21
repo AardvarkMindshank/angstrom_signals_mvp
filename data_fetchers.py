@@ -8,6 +8,8 @@ Both functions return (dataframe, error_message). error_message is None on succe
 
 from __future__ import annotations
 
+import re
+
 import requests
 import pandas as pd
 
@@ -74,15 +76,123 @@ COINGECKO_ID_BY_SYMBOL = {
     for coin_id, ticker in YF_BY_COINGECKO_ID.items()
 }
 
+# Common names whose CoinGecko id is not just the name with spaces turned into hyphens.
+COINGECKO_ID_BY_NAME = {
+    "avalanche": "avalanche-2",
+    "binance": "binancecoin",
+    "binance-coin": "binancecoin",
+    "dogwifhat": "dogwifcoin",
+    "fetch": "fetch-ai",
+    "hedera": "hedera-hashgraph",
+    "immutable": "immutable-x",
+    "injective": "injective-protocol",
+    "jupiter": "jupiter-exchange-solana",
+    "lido": "lido-dao",
+    "near-protocol": "near",
+    "ondo": "ondo-finance",
+    "polygon": "polygon-ecosystem-token",
+    "render": "render-token",
+    "sei": "sei-network",
+    "shiba": "shiba-inu",
+    "ton": "the-open-network",
+    "toncoin": "the-open-network",
+    "worldcoin": "worldcoin-wld",
+}
+
 _HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; SignalsDashboard/1.0)"}
 
 
+def _normalize_name(raw: str) -> str:
+    text = (raw or "").strip().lower()
+    text = text.replace("&", " and ")
+    text = re.sub(r"[.']", "", text)
+    text = re.sub(r"[\s_]+", "-", text)
+    text = re.sub(r"[^a-z0-9-]", "", text)
+    return re.sub(r"-+", "-", text).strip("-")
+
+
+def _pretty_name(raw: str) -> str:
+    return " ".join(part.capitalize() for part in re.split(r"[\s_-]+", (raw or "").strip()) if part)
+
+
 def resolve_crypto_id(raw: str) -> str:
-    """Accept a CoinGecko id (stellar) or a ticker (XLM)."""
+    """Accept a CoinGecko id (stellar), a ticker (XLM), or a name (Stellar)."""
     coin_id = (raw or "").strip().lower()
     if coin_id in YF_BY_COINGECKO_ID:
         return coin_id
-    return COINGECKO_ID_BY_SYMBOL.get(coin_id.upper(), coin_id)
+    compact = re.sub(r"[^A-Za-z0-9]", "", coin_id).upper()
+    if compact in COINGECKO_ID_BY_SYMBOL:
+        return COINGECKO_ID_BY_SYMBOL[compact]
+    name = _normalize_name(raw)
+    if name in YF_BY_COINGECKO_ID:
+        return name
+    if name in COINGECKO_ID_BY_NAME:
+        return COINGECKO_ID_BY_NAME[name]
+    return coin_id
+
+
+def find_crypto(raw: str) -> tuple[str, str] | None:
+    """Resolve a ticker or name to (coin_id, label). None when nothing matches."""
+    text = (raw or "").strip()
+    if not text:
+        return None
+    coin_id = resolve_crypto_id(text)
+    if coin_id in YF_BY_COINGECKO_ID:
+        ticker = crypto_ticker(coin_id)
+        if ticker and text.upper() == ticker:
+            return coin_id, ticker
+        return coin_id, _pretty_name(text)
+    match = _search_coingecko(text)
+    if not match:
+        return None
+    found_id, found_name, found_symbol = match
+    if found_symbol and text.upper() == found_symbol.upper():
+        return found_id, found_symbol.upper()
+    return found_id, found_name or _pretty_name(text)
+
+
+def _search_coingecko(query: str) -> tuple[str, str, str] | None:
+    """Exact ticker, name, or id from CoinGecko search. Prefers the largest coin."""
+    try:
+        response = requests.get(
+            "https://api.coingecko.com/api/v3/search",
+            params={"query": query.strip()},
+            headers=_HEADERS,
+            timeout=15,
+        )
+    except requests.RequestException:
+        return None
+    if response.status_code != 200:
+        return None
+    coins = (response.json() or {}).get("coins") or []
+    wanted_name = _normalize_name(query)
+    wanted_symbol = re.sub(r"[^A-Za-z0-9]", "", query).upper()
+    wanted_id = query.strip().lower()
+
+    def rank(coin: dict) -> int:
+        value = coin.get("market_cap_rank")
+        return value if isinstance(value, int) else 10**9
+
+    by_symbol = []
+    by_name = []
+    by_id = []
+    for coin in coins:
+        if not isinstance(coin, dict) or not coin.get("id"):
+            continue
+        symbol = str(coin.get("symbol") or "").upper()
+        name = _normalize_name(str(coin.get("name") or ""))
+        coin_id = str(coin.get("id") or "").lower()
+        if wanted_symbol and symbol == wanted_symbol:
+            by_symbol.append(coin)
+        if wanted_name and name == wanted_name:
+            by_name.append(coin)
+        if coin_id in {wanted_id, wanted_name}:
+            by_id.append(coin)
+    pool = by_symbol or by_name or by_id
+    if not pool:
+        return None
+    best = min(pool, key=rank)
+    return str(best["id"]), str(best.get("name") or ""), str(best.get("symbol") or "").upper()
 
 
 def crypto_ticker(raw: str) -> str | None:

@@ -30,6 +30,7 @@ try:
         crypto_ticker,
         fetch_crypto_data,
         fetch_stock_data,
+        find_crypto,
         period_for_days,
         resolve_crypto_id,
     )
@@ -597,25 +598,27 @@ if st.session_state.get("reset_weights"):
 st.sidebar.header("⭐ Watchlists")
 
 with st.sidebar.expander("Edit Crypto", expanded=False):
-    st.caption("Add a ticker (XLM, SOL) or a CoinGecko id (stellar, solana).")
-    new_crypto = st.text_input("Add crypto", key="new_crypto", placeholder="e.g. XLM or solana")
+    st.caption("Add a ticker (XLM) or a name (Stellar).")
+    new_crypto = st.text_input("Add crypto", key="new_crypto", placeholder="e.g. XLM or Stellar")
     if st.button("Add Crypto") and new_crypto:
-        cid = resolve_crypto_id(new_crypto)
-        ticker = crypto_ticker(cid)
-        typed_ticker = bool(ticker) and new_crypto.strip().upper() == ticker
-        label = ticker if typed_ticker else cid.replace("-", " ").title()
-        alias = (ticker or "").lower()
-        changed = False
-        if alias and alias != cid and alias in CRYPTO_WATCHLIST:
-            CRYPTO_WATCHLIST.pop(alias, None)
-            changed = True
-        if cid and cid not in CRYPTO_WATCHLIST:
-            CRYPTO_WATCHLIST[cid] = label
-            changed = True
-        if changed:
-            prefs["crypto"] = CRYPTO_WATCHLIST
-            save_preferences_to_cloud({"crypto_watchlist": CRYPTO_WATCHLIST})
-            st.rerun()
+        found = find_crypto(new_crypto)
+        if not found:
+            st.warning(f"No coin found for '{new_crypto.strip()}'. Try the ticker, such as XLM, or the name, such as Stellar.")
+        else:
+            cid, label = found
+            ticker = crypto_ticker(cid)
+            alias = (ticker or "").lower()
+            changed = False
+            if alias and alias != cid and alias in CRYPTO_WATCHLIST:
+                CRYPTO_WATCHLIST.pop(alias, None)
+                changed = True
+            if cid and cid not in CRYPTO_WATCHLIST:
+                CRYPTO_WATCHLIST[cid] = label
+                changed = True
+            if changed:
+                prefs["crypto"] = CRYPTO_WATCHLIST
+                save_preferences_to_cloud({"crypto_watchlist": CRYPTO_WATCHLIST})
+                st.rerun()
     if CRYPTO_WATCHLIST:
         to_remove = st.selectbox("Remove crypto", [""] + list(CRYPTO_WATCHLIST.keys()), key="rm_crypto")
         if to_remove and st.button("Remove Crypto"):
