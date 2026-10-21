@@ -98,6 +98,37 @@ _scroll_chart = st.components.v2.component(
     isolate_styles=False,
 )
 
+_BACK_TO_TOP_JS = """
+export default function(component) {
+  const { parentElement } = component;
+  let host = parentElement.querySelector("[data-top-host]");
+  Array.from(parentElement.children).forEach((child) => {
+    if (child !== host) child.remove();
+  });
+  if (!host) {
+    host = document.createElement("div");
+    host.setAttribute("data-top-host", "");
+    parentElement.appendChild(host);
+  }
+  host.style.textAlign = "right";
+  host.innerHTML = "<button type='button' data-back-to-top "
+    + "style='background:none;border:none;padding:4px 0;margin:0;color:#6b7280;"
+    + "font:inherit;font-weight:600;cursor:pointer;white-space:nowrap;'>↑ Top</button>";
+  host.querySelector("button").addEventListener("click", (event) => {
+    event.preventDefault();
+    const scroller = document.querySelector('[data-testid="stMain"]')
+      || document.querySelector("section.main");
+    if (scroller) scroller.scrollTop = 0;
+    window.scrollTo({top: 0, behavior: "auto"});
+  });
+}
+"""
+_back_to_top = st.components.v2.component(
+    "back_to_top",
+    js=_BACK_TO_TOP_JS,
+    isolate_styles=False,
+)
+
 _TECHNICAL_REFRESH_SECONDS = 300
 _COUNTDOWN_JS = """
 export default function(component) {
@@ -1345,7 +1376,11 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
         return f"{watchlist[asset_id]} ({asset_id})"
 
     chart_name = selected_chart_name()
-    st.subheader(f"Interactive Chart - {chart_name}" if chart_name else "Interactive Chart")
+    chart_heading, chart_top = st.columns([5.2, 0.9], vertical_alignment="center")
+    with chart_heading:
+        st.subheader(f"Interactive Chart - {chart_name}" if chart_name else "Interactive Chart")
+    with chart_top:
+        _back_to_top(key="chart_back_to_top")
     _scroll_chart(
         key="scroll_to_chart",
         data={
@@ -1547,9 +1582,11 @@ def show_market_sentiment(kind: str, label: str, ticker: str | None):
     if kind == "Stock" and ticker and ticker.upper() not in shown_name.upper():
         shown_name = f"{shown_name} ({ticker})" if shown_name else ticker
     sentiment_heading = f"Market sentiment - {shown_name}" if shown_name else "Market sentiment"
-    sentiment_title, sentiment_refresh = st.columns([4, 2.05], vertical_alignment="center")
+    sentiment_title, sentiment_top, sentiment_refresh = st.columns([3.5, 0.9, 2.05], vertical_alignment="center")
     with sentiment_title:
         st.subheader(sentiment_heading)
+    with sentiment_top:
+        _back_to_top(key="sentiment_back_to_top")
     query = sentiment_query(kind, label, ticker)
     sentiment_deadlines = st.session_state.setdefault("sentiment_due", {})
     if query not in sentiment_deadlines:
