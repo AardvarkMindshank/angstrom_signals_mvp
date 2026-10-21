@@ -10,12 +10,20 @@ from __future__ import annotations
 import html
 import json
 import os
+import time
 import xml.etree.ElementTree as ET
 
 import requests
 
-_MODEL = "gemini-3.8-flash"
+# Flash-lite first. The larger flash model often returns 503 when demand spikes.
+_MODELS = (
+    "gemini-3.5-flash-lite",
+    "gemini-3.1-flash-lite",
+    "gemini-3.8-flash",
+)
 _HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; SignalsDashboard/1.0)"}
+_BUSY_UNTIL: dict[str, float] = {}
+_SCORE_CACHE: dict[str, tuple[float, dict]] = {}
 
 
 def sentiment_query(kind: str, label: str, ticker: str | None) -> str:
@@ -103,17 +111,13 @@ def _parse_model_json(text: str) -> dict:
     return data
 
 
-def _summarize(query: str, headlines: list[dict]) -> dict:
-    key = (os.getenv("GEMINI_API_KEY") or "").strip()
-    if not key:
-        return {"ok": False, "reason": "missing_key"}
-
+def _prompt(query: str, headlines: list[dict]) -> str:
     lines = []
     for index, item in enumerate(headlines, start=1):
         source = item.get("source") or "Unknown source"
         published = item.get("published") or ""
         lines.append(f"{index}. {item['title']} — {source} {published}".strip())
-    prompt = (
+    return (
         "Score market sentiment from these headlines only. "
         "This is research context, not a forecast or advice. "
         f"Asset search: {query}\n"
@@ -126,35 +130,20 @@ def _summarize(query: str, headlines: list[dict]) -> dict:
         "drivers is up to 3 short phrases. "
         "Do not add facts that are not in the headlines. Stay near 50 when coverage is mixed."
     )
-    body = {
-        "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {
-            "temperature": 0.2,
-            "maxOutputTokens": 512,
-            "responseMimeType": "application/json",
-        },
-    }
-    response = requests.post(
-        f"https://generativelanguage.googleapis.com/v1beta/models/{_MODEL}:generateContent",
-        headers={"x-goog-api-key": key, "Content-Type": "application/json"},
-        json=body,
-        timeout=30,
-    )
-    if response.status_code != 200:
-        detail = " ".join((response.text or "").split())[:240]
-        return {"ok": False, "reason": "model_error", "detail": f"HTTP {response.status_code} {detail}"}
 
+
+def _read_model_text(response: requests.Response) -> dict:
     parts = (
         ((response.json().get("candidates") or [{}])[0].get("content") or {}).get("parts")
         or []
     )
     texts = [part.get("text") for part in parts if isinstance(part, dict) and part.get("text")]
     if not texts:
-        return {"ok": False, "reason": "model_error", "detail": "The model returned no text."}
+        return {"ok": False, "reason": "model_error"}
     parsed = _parse_model_json(texts[-1])
     score = _clamp_score(parsed.get("score"))
     if score is None:
-        return {"ok": False, "reason": "model_error", "detail": "The model did not return a score."}
+        return {"ok": False, "reason": "model_error"}
     summary = " ".join(str(parsed.get("summary") or "").split())
     drivers = []
     for item in parsed.get("drivers") or []:
@@ -166,19 +155,79 @@ def _summarize(query: str, headlines: list[dict]) -> dict:
     return {"ok": True, "score": score, "summary": summary, "drivers": drivers}
 
 
+def _summarize(query: str, headlines: list[dict]) -> dict:
+    key = (os.getenv("GEMINI_API_KEY") or "").strip()
+    if not key:
+        return {"ok": False, "reason": "missing_key"}
+    if time.time() < _BUSY_UNTIL.get(query, 0):
+        return {"ok": False, "reason": "model_busy"}
+
+    body = {
+        "contents": [{"parts": [{"text": _prompt(query, headlines)}]}],
+        "generationConfig": {
+            "temperature": 0.2,
+            "maxOutputTokens": 512,
+            "responseMimeType": "application/json",
+        },
+    }
+    saw_busy = False
+    saw_auth = False
+    for model in _MODELS:
+        try:
+            response = requests.post(
+                f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
+                headers={"x-goog-api-key": key, "Content-Type": "application/json"},
+                json=body,
+                timeout=30,
+            )
+        except requests.RequestException:
+            saw_busy = True
+            continue
+        if response.status_code == 200:
+            try:
+                parsed = _read_model_text(response)
+            except (ValueError, json.JSONDecodeError):
+                continue
+            if parsed.get("ok"):
+                _BUSY_UNTIL.pop(query, None)
+                return parsed
+            continue
+        if response.status_code in (401, 403):
+            saw_auth = True
+            break
+        if response.status_code in (429, 500, 503) or response.status_code == 404:
+            saw_busy = saw_busy or response.status_code in (429, 500, 503)
+            continue
+        saw_busy = True
+
+    if saw_auth:
+        return {"ok": False, "reason": "bad_key"}
+    _BUSY_UNTIL[query] = time.time() + 60
+    return {"ok": False, "reason": "model_busy" if saw_busy else "model_error"}
+
+
 def analyze_market_sentiment(query: str, enabled: bool) -> dict:
-    """Headlines plus a score when a Gemini key is configured."""
+    """Headlines plus a score when a Gemini key is configured.
+
+    A successful score is reused for one hour. A busy model is not cached,
+    so the next look can try again.
+    """
+    cached = _SCORE_CACHE.get(query)
+    if enabled and cached and time.time() - cached[0] < 3600:
+        return cached[1]
     try:
         headlines = fetch_headlines(query)
-    except Exception as exc:
-        return {"ok": False, "reason": "headlines_error", "detail": str(exc), "headlines": []}
+    except Exception:
+        return {"ok": False, "reason": "headlines_error", "headlines": []}
     if not headlines:
         return {"ok": False, "reason": "no_headlines", "headlines": []}
     if not enabled:
         return {"ok": False, "reason": "missing_key", "headlines": headlines}
     try:
         summary = _summarize(query, headlines)
-    except Exception as exc:
-        summary = {"ok": False, "reason": "model_error", "detail": str(exc)}
+    except Exception:
+        summary = {"ok": False, "reason": "model_error"}
     summary["headlines"] = headlines
+    if summary.get("ok"):
+        _SCORE_CACHE[query] = (time.time(), summary)
     return summary

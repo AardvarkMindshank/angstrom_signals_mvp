@@ -788,7 +788,6 @@ def load_stock(ticker, days, nonce):
     return fetch_stock_data(ticker, period=period_for_days(days))
 
 
-@st.cache_data(ttl=3600)
 def load_market_sentiment(query: str, enabled: bool):
     return analyze_market_sentiment(query, enabled)
 
@@ -1253,9 +1252,12 @@ def show_market_sentiment(kind: str, label: str, ticker: str | None):
         st.info("Headlines are in. Add a Gemini API key to score them. See the README under Market sentiment.")
     elif report.get("reason") == "no_headlines":
         st.info("No recent headlines turned up for this asset.")
+    elif report.get("reason") == "model_busy":
+        st.info("The sentiment model is busy right now. The articles are below, and the score will be tried again in about a minute.")
+    elif report.get("reason") == "bad_key":
+        st.warning("The Gemini API key was rejected. Check the key in the Streamlit secrets.")
     else:
-        detail = report.get("detail") or "The sentiment score could not be built."
-        st.warning(detail)
+        st.info("The sentiment score could not be built this time. The articles are below.")
 
     if headlines:
         links = []
