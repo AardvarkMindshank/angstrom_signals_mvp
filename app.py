@@ -65,7 +65,7 @@ try:
         resolve_crypto_id,
     )
     from scoring import calculate_indicators, compute_score, find_column
-    from sentiment import analyze_market_sentiment, gemini_ready, sentiment_query
+    from sentiment import analyze_market_sentiment, sentiment_query, sentiment_ready
 except Exception:
     st.error("The dashboard could not load its scoring code.")
     st.code(traceback.format_exc())
@@ -612,7 +612,7 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
 2. Click a name in either table. That row stays highlighted, and the chart below switches to it. The score breakdown shows which factors added or removed points.
 3. **7d %** is the seven-day price change. **ATR %** is volatility. **Vol** is volume versus its 20-day average.
 4. Alerts fire at 70 and 30 unless you move those sliders. One email goes to the address on your account when a score crosses a boundary. It is not sent again until the score leaves that boundary and crosses it later.
-5. Market sentiment, under the chart, scores each recent headline from 0 to 100. The number at the top of that section is the average of those article scores. It is separate from the technical score.
+5. Market sentiment, under the chart, asks Grok to score each recent headline from 0 to 100. The number at the top of that section is the average of those article scores. It is separate from the technical score.
 
 **Alerts keep running in the background**
 
@@ -1256,7 +1256,7 @@ def show_market_sentiment(kind: str, label: str, ticker: str | None):
     st.subheader("Market sentiment")
     query = sentiment_query(kind, label, ticker)
     with st.spinner("Reading recent headlines..."):
-        report = load_market_sentiment(query, gemini_ready())
+        report = load_market_sentiment(query, sentiment_ready())
 
     headlines = report.get("headlines") or []
     score = report.get("score")
@@ -1292,13 +1292,13 @@ def show_market_sentiment(kind: str, label: str, ticker: str | None):
             unsafe_allow_html=True,
         )
     elif report.get("reason") == "missing_key":
-        st.info("Headlines are in. Add a Gemini API key to score them. See the README under Market sentiment.")
+        st.info("Headlines are in. Add an xAI API key so Grok can score them. See the README under Market sentiment.")
     elif report.get("reason") == "no_headlines":
         st.info("No recent headlines turned up for this asset.")
     elif report.get("reason") == "model_busy":
-        st.info("The sentiment model is busy right now. The articles are below, and the score will be tried again in about a minute.")
+        st.info("Grok is busy right now. The articles are below, and the score will be tried again in about a minute.")
     elif report.get("reason") == "bad_key":
-        st.warning("The Gemini API key was rejected. Check the key in the Streamlit secrets.")
+        st.warning("The xAI API key was rejected. Check the key in the Streamlit secrets.")
     else:
         st.info("The sentiment score could not be built this time. The articles are below.")
 

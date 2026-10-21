@@ -1,7 +1,7 @@
 """
 Market sentiment from recent headlines for the asset open on the chart.
 
-Headlines come from Google News. A Gemini model turns them into a 0–100 score.
+Headlines come from Google News. Grok turns them into a 0–100 score.
 The score is not blended into the technical score.
 """
 
@@ -15,12 +15,14 @@ import xml.etree.ElementTree as ET
 
 import requests
 
-# Flash-lite first. The larger flash model often returns 503 when demand spikes.
+# grok-4.3 can turn reasoning off, so a short headline score returns quickly.
+# grok-4.5 is only used if that model name is rejected.
 _MODELS = (
-    "gemini-3.5-flash-lite",
-    "gemini-3.1-flash-lite",
-    "gemini-3.8-flash",
+    {"model": "grok-4.3", "reasoning_effort": "none"},
+    {"model": "grok-4.3"},
+    {"model": "grok-4.5"},
 )
+_CHAT_URL = "https://api.x.ai/v1/chat/completions"
 _HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; SignalsDashboard/1.0)"}
 _BUSY_UNTIL: dict[str, float] = {}
 _SCORE_CACHE: dict[str, tuple[float, dict]] = {}
@@ -76,18 +78,18 @@ def fetch_headlines(query: str, limit: int = 8) -> list[dict]:
     return headlines
 
 
-def gemini_ready() -> bool:
-    """True when a Gemini key is available. Copies a Streamlit secret into the environment once."""
-    if (os.getenv("GEMINI_API_KEY") or "").strip():
+def sentiment_ready() -> bool:
+    """True when an xAI key is available. Copies a Streamlit secret into the environment once."""
+    if (os.getenv("XAI_API_KEY") or "").strip():
         return True
     try:
         import streamlit as st
-        key = str(st.secrets["ai"]["gemini_api_key"]).strip()
+        key = str(st.secrets["ai"]["xai_api_key"]).strip()
     except Exception:
         return False
     if not key:
         return False
-    os.environ["GEMINI_API_KEY"] = key
+    os.environ["XAI_API_KEY"] = key
     return True
 
 
@@ -133,15 +135,29 @@ def _prompt(query: str, headlines: list[dict]) -> str:
     )
 
 
+def _message_text(payload: dict) -> str:
+    choices = payload.get("choices") or []
+    if not choices or not isinstance(choices[0], dict):
+        return ""
+    content = ((choices[0].get("message") or {}).get("content"))
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        chunks = []
+        for part in content:
+            if isinstance(part, str):
+                chunks.append(part)
+            elif isinstance(part, dict) and part.get("text"):
+                chunks.append(str(part["text"]))
+        return "\n".join(chunks)
+    return ""
+
+
 def _read_model_text(response: requests.Response) -> dict:
-    parts = (
-        ((response.json().get("candidates") or [{}])[0].get("content") or {}).get("parts")
-        or []
-    )
-    texts = [part.get("text") for part in parts if isinstance(part, dict) and part.get("text")]
-    if not texts:
+    text = _message_text(response.json())
+    if not text:
         return {"ok": False, "reason": "model_error"}
-    parsed = _parse_model_json(texts[-1])
+    parsed = _parse_model_json(text)
     scores = {}
     for item in parsed.get("articles") or []:
         if not isinstance(item, dict):
@@ -166,75 +182,97 @@ def _read_model_text(response: requests.Response) -> dict:
     return {"ok": True, "scores": scores, "summary": summary, "drivers": drivers}
 
 
+def _post_grok(key: str, prompt: str, attempt: dict) -> requests.Response:
+    body = {
+        "model": attempt["model"],
+        "messages": [
+            {
+                "role": "system",
+                "content": "You score headlines and reply with one JSON object only.",
+            },
+            {"role": "user", "content": prompt},
+        ],
+        "temperature": 0.2,
+        "max_completion_tokens": 900,
+        "response_format": {"type": "json_object"},
+    }
+    if attempt.get("reasoning_effort"):
+        body["reasoning_effort"] = attempt["reasoning_effort"]
+    return requests.post(
+        _CHAT_URL,
+        headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
+        json=body,
+        timeout=40,
+    )
+
+
+def _scored_report(parsed: dict, headlines: list[dict]) -> dict | None:
+    scored = []
+    values = []
+    for index, item in enumerate(headlines, start=1):
+        row = dict(item)
+        if index in parsed["scores"]:
+            row["score"] = parsed["scores"][index]
+            values.append(row["score"])
+        scored.append(row)
+    if not values:
+        return None
+    return {
+        "ok": True,
+        "score": sum(values) / len(values),
+        "summary": parsed.get("summary") or "",
+        "drivers": parsed.get("drivers") or [],
+        "headlines": scored,
+    }
+
+
 def _summarize(query: str, headlines: list[dict]) -> dict:
-    key = (os.getenv("GEMINI_API_KEY") or "").strip()
+    key = (os.getenv("XAI_API_KEY") or "").strip()
     if not key:
         return {"ok": False, "reason": "missing_key"}
     if time.time() < _BUSY_UNTIL.get(query, 0):
         return {"ok": False, "reason": "model_busy"}
 
-    body = {
-        "contents": [{"parts": [{"text": _prompt(query, headlines)}]}],
-        "generationConfig": {
-            "temperature": 0.2,
-            "maxOutputTokens": 800,
-            "responseMimeType": "application/json",
-        },
-    }
+    prompt = _prompt(query, headlines)
     saw_busy = False
     saw_auth = False
-    for model in _MODELS:
+    for attempt in _MODELS:
         try:
-            response = requests.post(
-                f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
-                headers={"x-goog-api-key": key, "Content-Type": "application/json"},
-                json=body,
-                timeout=30,
-            )
+            response = _post_grok(key, prompt, attempt)
         except requests.RequestException:
             saw_busy = True
-            continue
+            break
         if response.status_code == 200:
             try:
                 parsed = _read_model_text(response)
             except (ValueError, json.JSONDecodeError):
                 continue
             if parsed.get("ok"):
-                _BUSY_UNTIL.pop(query, None)
-                scored = []
-                values = []
-                for index, item in enumerate(headlines, start=1):
-                    row = dict(item)
-                    if index in parsed["scores"]:
-                        row["score"] = parsed["scores"][index]
-                        values.append(row["score"])
-                    scored.append(row)
-                if not values:
-                    continue
-                return {
-                    "ok": True,
-                    "score": sum(values) / len(values),
-                    "summary": parsed.get("summary") or "",
-                    "drivers": parsed.get("drivers") or [],
-                    "headlines": scored,
-                }
+                report = _scored_report(parsed, headlines)
+                if report:
+                    _BUSY_UNTIL.pop(query, None)
+                    return report
             continue
         if response.status_code in (401, 403):
             saw_auth = True
             break
-        if response.status_code in (429, 500, 503) or response.status_code == 404:
-            saw_busy = saw_busy or response.status_code in (429, 500, 503)
+        if response.status_code in (400, 404):
+            continue
+        if response.status_code in (429, 500, 503):
+            saw_busy = True
             continue
         saw_busy = True
 
     if saw_auth:
         return {"ok": False, "reason": "bad_key"}
-    _BUSY_UNTIL[query] = time.time() + 60
-    return {"ok": False, "reason": "model_busy" if saw_busy else "model_error"}
+    if saw_busy:
+        _BUSY_UNTIL[query] = time.time() + 60
+        return {"ok": False, "reason": "model_busy"}
+    return {"ok": False, "reason": "model_error"}
 
 
 def analyze_market_sentiment(query: str, enabled: bool) -> dict:
-    """Headlines plus a score when a Gemini key is configured.
+    """Headlines plus a score when an xAI key is configured.
 
     A successful score is reused for one hour. A busy model is not cached,
     so the next look can try again.

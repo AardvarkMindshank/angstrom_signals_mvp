@@ -62,11 +62,11 @@ GitHub Actions runs the worker from `.github/workflows/alerts.yml` about every 5
 
 Under the chart, the selected asset gets a 0–100 sentiment score from headlines in the last 7 days. Green, amber, and red match the technical score colors. The two scores stay separate.
 
-Headlines come from Google News. The summary uses Gemini. Add a key from [Google AI Studio](https://aistudio.google.com/apikey) to `.streamlit/secrets.toml`:
+Headlines come from Google News. Grok scores them. Add a key from the [xAI console](https://console.x.ai/) to `.streamlit/secrets.toml`:
 
 ```toml
 [ai]
-gemini_api_key = "YOUR_GEMINI_API_KEY"
+xai_api_key = "YOUR_XAI_API_KEY"
 ```
 
 Put the same block in the Streamlit Cloud app secrets. The result is cached for one hour per asset. Without the key, the headlines still show and the score waits.
