@@ -1245,17 +1245,24 @@ def show_market_sentiment(kind: str, label: str, ticker: str | None):
         else:
             coverage = "Bearish coverage"
         summary = html.escape(report.get("summary") or "")
+        driver_items = "".join(
+            f"<li style='margin:4px 0;color:#374151;'>{html.escape(str(driver))}</li>"
+            for driver in (report.get("drivers") or [])
+        )
+        drivers_html = (
+            f"<ul style='margin:10px 0 0;padding-left:1.15rem;'>{driver_items}</ul>"
+            if driver_items else ""
+        )
         st.markdown(
             "<div style='background:#ffffff;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;'>"
             "<div style='font-size:0.8rem;color:#6b7280;margin-bottom:4px;'>Average of the article scores below, from the last 7 days</div>"
             f"<div style='display:inline-flex;align-items:center;gap:6px;background:{background};color:{color};"
             f"padding:2px 8px;border-radius:4px;font-weight:600;'>{arrow} {score:.0f}/100</div>"
             f"<div style='margin-top:8px;font-weight:600;color:{color};'>{html.escape(coverage)}</div>"
-            f"<div style='margin-top:8px;color:#111827;'>{summary}</div></div>",
+            f"<div style='margin-top:8px;color:#111827;'>{summary}</div>"
+            f"{drivers_html}</div>",
             unsafe_allow_html=True,
         )
-        for driver in report.get("drivers") or []:
-            st.caption(f"• {driver}")
     elif report.get("reason") == "missing_key":
         st.info("Headlines are in. Add a Gemini API key to score them. See the README under Market sentiment.")
     elif report.get("reason") == "no_headlines":
