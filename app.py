@@ -1466,7 +1466,13 @@ def show_market_sentiment(kind: str, label: str, ticker: str | None):
         )
         st.markdown(
             "<div style='background:#ffffff;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;'>"
-            "<div style='font-size:0.8rem;color:#6b7280;margin-bottom:4px;'>Average of the article scores below, from the last 7 days</div>"
+            "<div style='font-size:0.8rem;color:#6b7280;margin-bottom:4px;'>"
+            + (
+                "Average of the article scores below, from the last 7 days"
+                if any(item.get("score") is not None for item in headlines)
+                else "Score for these headlines, from the last 7 days"
+            )
+            + "</div>"
             f"<div style='display:inline-flex;align-items:center;gap:6px;background:{background};color:{color};"
             f"padding:2px 8px;border-radius:4px;font-weight:600;'>{arrow} {score:.0f}/100</div>"
             f"<div style='margin-top:8px;font-weight:600;color:{color};'>{html.escape(coverage)}</div>"

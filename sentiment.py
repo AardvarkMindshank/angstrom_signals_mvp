@@ -103,14 +103,26 @@ def _clamp_score(value) -> float | None:
     return max(0.0, min(100.0, score))
 
 
-def _parse_model_json(text: str) -> dict:
-    cleaned = (text or "").strip()
-    if cleaned.startswith("```"):
-        cleaned = cleaned.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
-    data = json.loads(cleaned)
-    if not isinstance(data, dict):
-        raise ValueError("Sentiment response was not a JSON object.")
-    return data
+def _json_objects(text: str) -> list[dict]:
+    """JSON objects in the reply. Grok sometimes wraps the score in words or a code fence."""
+    decoder = json.JSONDecoder()
+    found = []
+    index = 0
+    while True:
+        start = text.find("{", index)
+        if start < 0:
+            break
+        try:
+            data, offset = decoder.raw_decode(text[start:])
+        except json.JSONDecodeError:
+            index = start + 1
+            continue
+        if isinstance(data, dict):
+            found.append(data)
+        elif isinstance(data, list):
+            found.append({"articles": data})
+        index = start + max(offset, 1)
+    return found
 
 
 def _prompt(query: str, headlines: list[dict]) -> str:
@@ -125,9 +137,10 @@ def _prompt(query: str, headlines: list[dict]) -> str:
         f"Asset search: {query}\n"
         "Headlines:\n"
         + "\n".join(lines)
-        + "\n\nReturn JSON with score, summary, and drivers. "
-        "articles is one object per headline, using the same index numbers, "
-        "each with a score from 0 to 100 for that headline alone. "
+        + "\n\nReply with JSON only, in this shape: "
+        '{"articles":[{"index":1,"score":50}],"summary":"...","drivers":["..."]}. '
+        "Use one article object for every headline, with the same index number. "
+        "score is 0 to 100 for that headline alone. "
         "0 is strongly bearish, 50 is mixed or unclear, 100 is strongly bullish. "
         "summary is two sentences about the set of headlines. "
         "drivers is up to 3 short phrases. "
@@ -135,11 +148,7 @@ def _prompt(query: str, headlines: list[dict]) -> str:
     )
 
 
-def _message_text(payload: dict) -> str:
-    choices = payload.get("choices") or []
-    if not choices or not isinstance(choices[0], dict):
-        return ""
-    content = ((choices[0].get("message") or {}).get("content"))
+def _coerce_text(content) -> str:
     if isinstance(content, str):
         return content
     if isinstance(content, list):
@@ -147,39 +156,147 @@ def _message_text(payload: dict) -> str:
         for part in content:
             if isinstance(part, str):
                 chunks.append(part)
-            elif isinstance(part, dict) and part.get("text"):
-                chunks.append(str(part["text"]))
+            elif isinstance(part, dict) and (part.get("text") or part.get("content")):
+                chunks.append(str(part.get("text") or part.get("content")))
         return "\n".join(chunks)
     return ""
 
 
-def _read_model_text(response: requests.Response) -> dict:
-    text = _message_text(response.json())
-    if not text:
-        return {"ok": False, "reason": "model_error"}
-    parsed = _parse_model_json(text)
-    scores = {}
-    for item in parsed.get("articles") or []:
-        if not isinstance(item, dict):
-            continue
+def _reply_texts(payload: dict) -> list[str]:
+    """Visible reply first, then a reasoning trace. Either one may hold the JSON."""
+    texts = []
+    choices = payload.get("choices") or []
+    if choices and isinstance(choices[0], dict):
+        message = choices[0].get("message") or {}
+        for key in ("content", "reasoning_content"):
+            text = _coerce_text(message.get(key))
+            if text.strip():
+                texts.append(text)
+    for item in payload.get("output") or []:
+        if isinstance(item, dict):
+            text = _coerce_text(item.get("content"))
+            if text.strip():
+                texts.append(text)
+    return texts
+
+
+def _field(data: dict, *names):
+    lowered = {str(key).lower(): value for key, value in data.items()}
+    for name in names:
+        if name in lowered:
+            return lowered[name]
+    return None
+
+
+def _first_score(item: dict) -> float | None:
+    for name in ("score", "sentiment", "sentiment_score", "value", "rating"):
+        score = _clamp_score(_field(item, name))
+        if score is not None:
+            return score
+    return None
+
+
+def _first_index(item: dict) -> int | None:
+    for name in ("index", "i", "n", "headline", "article", "id"):
+        raw = _field(item, name)
         try:
-            index = int(item.get("index"))
+            value = int(raw)
         except (TypeError, ValueError):
             continue
-        score = _clamp_score(item.get("score"))
-        if score is not None:
-            scores[index] = score
-    if not scores:
-        return {"ok": False, "reason": "model_error"}
-    summary = " ".join(str(parsed.get("summary") or "").split())
-    drivers = []
-    for item in parsed.get("drivers") or []:
-        text = " ".join(str(item).split())
-        if text:
-            drivers.append(text[:160])
-        if len(drivers) == 3:
+        if 0 <= value <= 50:
+            return value
+    return None
+
+
+def _collect_scores(raw, count: int) -> dict[int, float]:
+    """Map headline numbers to scores. A bare list is read in headline order."""
+    if isinstance(raw, dict):
+        rows = []
+        for key, value in raw.items():
+            if isinstance(value, dict):
+                row = dict(value)
+                row.setdefault("index", key)
+                rows.append(row)
+            else:
+                rows.append({"index": key, "score": value})
+        return _collect_scores(rows, count)
+    if not isinstance(raw, list):
+        return {}
+
+    indexed = {}
+    positional = []
+    saw_index = False
+    for item in raw:
+        if isinstance(item, dict):
+            score = _first_score(item)
+            if score is None:
+                continue
+            index = _first_index(item)
+            if index is None:
+                positional.append(score)
+            else:
+                saw_index = True
+                indexed[index] = score
+        else:
+            score = _clamp_score(item)
+            if score is not None:
+                positional.append(score)
+    if saw_index:
+        if 0 in indexed:
+            indexed = {index + 1: score for index, score in indexed.items() if index >= 0}
+        return {index: score for index, score in indexed.items() if 1 <= index <= max(count, 1)}
+    return {
+        position: score
+        for position, score in enumerate(positional, start=1)
+        if position <= max(count, 1)
+    }
+
+
+def _read_parsed(parsed: dict, headline_count: int) -> dict:
+    articles = _field(parsed, "articles", "article_scores", "headlines", "items")
+    scores = _collect_scores(articles, headline_count)
+    overall = None
+    for name in ("score", "overall", "overall_score", "sentiment", "sentiment_score"):
+        overall = _clamp_score(_field(parsed, name))
+        if overall is not None:
             break
-    return {"ok": True, "scores": scores, "summary": summary, "drivers": drivers}
+    if not scores and overall is None:
+        return {"ok": False, "reason": "model_error"}
+    summary = " ".join(str(_field(parsed, "summary") or "").split())
+    raw_drivers = _field(parsed, "drivers", "driver") or []
+    if isinstance(raw_drivers, str):
+        raw_drivers = [raw_drivers]
+    drivers = []
+    if isinstance(raw_drivers, list):
+        for item in raw_drivers:
+            text = " ".join(str(item).split())
+            if text:
+                drivers.append(text[:160])
+            if len(drivers) == 3:
+                break
+    return {
+        "ok": True,
+        "scores": scores,
+        "overall": overall,
+        "summary": summary,
+        "drivers": drivers,
+    }
+
+
+def _read_model_text(response: requests.Response, headline_count: int) -> dict:
+    try:
+        payload = response.json()
+    except ValueError:
+        return {"ok": False, "reason": "model_error"}
+    if not isinstance(payload, dict):
+        return {"ok": False, "reason": "model_error"}
+    for text in _reply_texts(payload):
+        objects = _json_objects(text)
+        for parsed in reversed(objects):
+            read = _read_parsed(parsed, headline_count)
+            if read.get("ok"):
+                return read
+    return {"ok": False, "reason": "model_error"}
 
 
 def _post_grok(key: str, prompt: str, attempt: dict) -> requests.Response:
@@ -215,11 +332,15 @@ def _scored_report(parsed: dict, headlines: list[dict]) -> dict | None:
             row["score"] = parsed["scores"][index]
             values.append(row["score"])
         scored.append(row)
-    if not values:
+    if values:
+        score = sum(values) / len(values)
+    else:
+        score = parsed.get("overall")
+    if score is None:
         return None
     return {
         "ok": True,
-        "score": sum(values) / len(values),
+        "score": score,
         "summary": parsed.get("summary") or "",
         "drivers": parsed.get("drivers") or [],
         "headlines": scored,
@@ -244,7 +365,7 @@ def _summarize(query: str, headlines: list[dict]) -> dict:
             break
         if response.status_code == 200:
             try:
-                parsed = _read_model_text(response)
+                parsed = _read_model_text(response, len(headlines))
             except (ValueError, json.JSONDecodeError):
                 continue
             if parsed.get("ok"):
@@ -292,7 +413,7 @@ def analyze_market_sentiment(query: str, enabled: bool, force: bool = False) -> 
     if enabled and not force and cached and time.time() - cached[0] < 3600:
         stored = cached[1]
         stored_rows = stored.get("headlines") or []
-        if stored.get("ok") and stored_rows and all(row.get("score") is not None for row in stored_rows):
+        if stored.get("ok") and stored.get("score") is not None and stored_rows:
             return stored
     try:
         headlines = fetch_headlines(query)
