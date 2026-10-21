@@ -58,6 +58,19 @@ RESEND_FROM
 
 GitHub Actions runs the worker from `.github/workflows/alerts.yml` about every 5 minutes, including when the dashboard is closed. Add these repository secrets: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, and `RESEND_FROM`. Scheduled runs can start late, and GitHub pauses them on private repos that stay inactive.
 
+## Market sentiment
+
+Under the chart, the selected asset gets a 0–100 sentiment score from headlines in the last 7 days. Green, amber, and red match the technical score colors. The two scores stay separate.
+
+Headlines come from Google News. The summary uses Gemini. Add a key from [Google AI Studio](https://aistudio.google.com/apikey) to `.streamlit/secrets.toml`:
+
+```toml
+[ai]
+gemini_api_key = "YOUR_GEMINI_API_KEY"
+```
+
+Put the same block in the Streamlit Cloud app secrets. The result is cached for one hour per asset. Without the key, the headlines still show and the score waits.
+
 ## Data notes
 
 Crypto ids are CoinGecko ids (`bitcoin`, `polkadot`, `dogecoin`). The app maps those to Yahoo tickers. If Yahoo has no history, it falls back to CoinGecko candles, which do not include volume, so the volume and OBV factors stay neutral for that asset.

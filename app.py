@@ -35,6 +35,7 @@ try:
         resolve_crypto_id,
     )
     from scoring import calculate_indicators, compute_score, find_column
+    from sentiment import analyze_market_sentiment, gemini_ready, sentiment_query
 except Exception:
     st.error("The dashboard could not load its scoring code.")
     st.code(traceback.format_exc())
@@ -581,6 +582,7 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
 2. Click a name in either table. That row stays highlighted, and the chart below switches to it. The score breakdown shows which factors added or removed points.
 3. **7d %** is the seven-day price change. **ATR %** is volatility. **Vol** is volume versus its 20-day average.
 4. Alerts fire at 70 and 30 unless you move those sliders. One email goes to the address on your account when a score crosses a boundary. It is not sent again until the score leaves that boundary and crosses it later.
+5. Market sentiment, under the chart, reads recent headlines for the selected asset and scores that coverage from 0 to 100. It is separate from the technical score.
 
 **Alerts keep running in the background**
 
@@ -784,6 +786,11 @@ def load_crypto(coin_id, days, nonce):
 def load_stock(ticker, days, nonce):
     del nonce
     return fetch_stock_data(ticker, period=period_for_days(days))
+
+
+@st.cache_data(ttl=3600)
+def load_market_sentiment(query: str, enabled: bool):
+    return analyze_market_sentiment(query, enabled)
 
 
 @st.fragment(run_every=300)
@@ -1200,6 +1207,66 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             st.markdown("**Detailed Reasons**")
             for reason in result["reasons"]:
                 st.caption(f"• {reason}")
+
+    sentiment_label = crypto_watchlist[asset_key] if asset_type == "Crypto" else stock_watchlist[asset_key]
+    show_market_sentiment(
+        asset_type,
+        sentiment_label,
+        crypto_ticker(asset_key) if asset_type == "Crypto" else asset_key,
+    )
+
+
+def show_market_sentiment(kind: str, label: str, ticker: str | None):
+    """Headline sentiment for the asset on the chart. Cached for one hour."""
+    st.subheader("Market sentiment")
+    query = sentiment_query(kind, label, ticker)
+    with st.spinner("Reading recent headlines..."):
+        report = load_market_sentiment(query, gemini_ready())
+
+    headlines = report.get("headlines") or []
+    score = report.get("score")
+    if report.get("ok") and score is not None:
+        color, background, arrow, _bar = tone(score)
+        if score >= 60:
+            coverage = "Bullish coverage"
+        elif score >= 53:
+            coverage = "Mildly bullish coverage"
+        elif score >= 47:
+            coverage = "Mixed coverage"
+        elif score >= 40:
+            coverage = "Mildly bearish coverage"
+        else:
+            coverage = "Bearish coverage"
+        summary = html.escape(report.get("summary") or "")
+        st.markdown(
+            "<div style='background:#ffffff;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;'>"
+            "<div style='font-size:0.8rem;color:#6b7280;margin-bottom:4px;'>From headlines in the last 7 days</div>"
+            f"<div style='display:inline-flex;align-items:center;gap:6px;background:{background};color:{color};"
+            f"padding:2px 8px;border-radius:4px;font-weight:600;'>{arrow} {score:.0f}/100</div>"
+            f"<div style='margin-top:8px;font-weight:600;color:{color};'>{html.escape(coverage)}</div>"
+            f"<div style='margin-top:8px;color:#111827;'>{summary}</div></div>",
+            unsafe_allow_html=True,
+        )
+        for driver in report.get("drivers") or []:
+            st.caption(f"• {driver}")
+    elif report.get("reason") == "missing_key":
+        st.info("Headlines are in. Add a Gemini API key to score them. See the README under Market sentiment.")
+    elif report.get("reason") == "no_headlines":
+        st.info("No recent headlines turned up for this asset.")
+    else:
+        detail = report.get("detail") or "The sentiment score could not be built."
+        st.warning(detail)
+
+    if headlines:
+        with st.expander("Headlines used", expanded=report.get("reason") == "missing_key"):
+            for item in headlines:
+                source = f" — {html.escape(item['source'])}" if item.get("source") else ""
+                st.markdown(
+                    f"<div><a href='{html.escape(item['link'], quote=True)}'>{html.escape(item['title'])}</a>"
+                    f"{source}</div>",
+                    unsafe_allow_html=True,
+                )
+    st.caption("This reads recent coverage. It is not the technical score, and it is not advice.")
 
 
 render_dashboard(
