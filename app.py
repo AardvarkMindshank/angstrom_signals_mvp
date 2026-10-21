@@ -6,6 +6,7 @@ Run with: streamlit run app.py
 import base64
 import html
 import json
+import time
 
 import pandas as pd
 import plotly.graph_objects as go
@@ -563,8 +564,10 @@ def tone(score):
     return "#b91c1c", "#fee2e2", "↓", "#ef4444"
 
 
+@st.fragment(run_every=300)
 def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, show_reasons_flag, show_extra_metrics_flag):
-    nonce = st.session_state.data_nonce
+    # Wall-clock window so a scheduled rerun fetches new prices instead of the 5-minute cache.
+    nonce = (st.session_state.data_nonce, int(time.time() // 300))
 
     def process_watchlist(watchlist, is_crypto=True):
         results = []
@@ -909,5 +912,5 @@ render_dashboard(
 )
 
 st.sidebar.markdown("---")
-st.sidebar.info("Price data is cached for 5 minutes. Refresh reloads it for this session only.")
+st.sidebar.info("While this page is open, prices and scores refresh every 5 minutes.")
 st.sidebar.caption("Watchlists, settings, and alerts are stored on your account.")
