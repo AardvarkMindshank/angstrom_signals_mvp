@@ -248,12 +248,7 @@ with st.sidebar.expander("Configure Alert Rules", expanded=False):
 st.sidebar.markdown("---")
 
 st.title("angstrom signals - level 1")
-
-with st.expander("📖 Comprehensive Platform Guide & Help Manual", expanded=False):
-    st.markdown("### What this dashboard does\nIt scores a watchlist of cryptos and stocks using multi-factor technical indicators and displays results in structured tables and an interactive chart. **Higher score = more bullish setup** according to the scoring rules below. This is a research tool, not financial advice.")
-
-st.markdown("### Crypto & Equity Signals Dashboard")
-st.caption("Research prototype • Multi-factor technical scoring • Not financial advice")
+st.info("Multi-factor technical scoring research platform • Higher score = more bullish setup.")
 
 CRYPTO_WATCHLIST = prefs["crypto"]
 STOCK_WATCHLIST = prefs["stock"]
@@ -378,4 +373,130 @@ with st.sidebar.expander("Customize Indicator Weights", expanded=False):
                 st.error("Built-in profiles cannot be deleted!")
             elif selected_profile in custom_profiles:
                 custom_profiles.pop(selected_profile)
-                prefs["profiles"] = custom
+                prefs["profiles"] = custom_profiles
+                save_preferences_to_cloud({"weight_profiles": custom_profiles})
+                st.success(f"Deleted '{selected_profile}'!")
+                st.rerun()
+
+    new_profile_name = st.text_input("New set name", placeholder="e.g. Volatility Focus")
+    if st.button("Save Current as New Set") and new_profile_name:
+        pname = new_profile_name.strip()
+        if pname:
+            if pname in built_in_profiles:
+                st.error("Cannot overwrite built-in profile names!")
+            else:
+                custom_profiles[pname] = current_weights
+                prefs["profiles"] = custom_profiles
+                save_preferences_to_cloud({"weight_profiles": custom_profiles})
+                st.success(f"Saved set '{pname}'!")
+                st.rerun()
+
+    st.markdown("---")
+
+    w_rsi = st.slider("RSI Weight", 0.0, 2.0, key="weight_rsi", step=0.1)
+    w_stoch = st.slider("Stochastic Weight", 0.0, 2.0, key="weight_stochastic", step=0.1)
+    w_sma = st.slider("Moving Averages Weight", 0.0, 2.0, key="weight_sma", step=0.1)
+    w_adx = st.slider("ADX Trend Weight", 0.0, 2.0, key="weight_adx", step=0.1)
+    w_macd = st.slider("MACD & Hist Weight", 0.0, 2.0, key="weight_macd", step=0.1)
+    w_ichi = st.slider("Ichimoku Cloud Weight", 0.0, 2.0, key="weight_ichimoku", step=0.1)
+    w_bb = st.slider("Bollinger Bands Weight", 0.0, 2.0, key="weight_bb", step=0.1)
+    w_vol = st.slider("Volume Weight", 0.0, 2.0, key="weight_volume", step=0.1)
+    w_obv = st.slider("OBV Weight", 0.0, 2.0, key="weight_obv", step=0.1)
+    w_perf = st.slider("Performance Weight", 0.0, 2.0, key="weight_performance", step=0.1)
+    
+    new_weights = {
+        "rsi": w_rsi, "stochastic": w_stoch, "sma": w_sma, "adx": w_adx,
+        "macd": w_macd, "ichimoku": w_ichi, "bb": w_bb, "volume": w_vol,
+        "obv": w_obv, "performance": w_perf
+    }
+    
+    if new_weights != current_weights:
+        save_preferences_to_cloud({"scoring_weights": new_weights})
+        current_weights = new_weights
+        prefs["weights"] = current_weights
+
+    if st.button("🔄 Reset to Default (1.0)"):
+        st.session_state.reset_weights = True
+        st.rerun()
+
+
+@st.cache_data(ttl=300)
+def load_crypto(coin_id, days):
+    return fetch_crypto_data(coin_id, days)
+
+@st.cache_data(ttl=300)
+def load_stock(ticker):
+    return fetch_stock_data(ticker, period="1y")
+
+
+def check_and_record_alerts(results, alerts_config):
+    """Checks if any asset hits the user's personal threshold and records an alert if new."""
+    if not alerts_config.get("enabled", True):
+        return
+
+    min_thresh = float(alerts_config.get("min_score_alert", 70))
+    max_thresh = float(alerts_config.get("max_score_alert", 30))
+
+    try:
+        existing = supabase.table("user_notifications").select("asset_symbol, alert_type").eq("user_id", user_id).execute().data
+        existing_keys = {(n["asset_symbol"], n["alert_type"]) for n in existing}
+    except Exception:
+        existing_keys = set()
+
+    for r in results:
+        score = r.get("score")
+        if score is None or pd.isna(score):
+            continue
+        
+        symbol = r.get("key")
+        name = r.get("symbol")
+        
+        if score >= min_thresh:
+            alert_type = "BULLISH_THRESHOLD"
+            msg = f"Score reached {score:.1f}/100 (Bullish setup)"
+            if (symbol, alert_type) not in existing_keys:
+                supabase.table("user_notifications").insert({
+                    "user_id": user_id,
+                    "asset_symbol": symbol,
+                    "asset_name": name,
+                    "alert_type": alert_type,
+                    "message": msg
+                }).execute()
+        elif score <= max_thresh:
+            alert_type = "BEARISH_THRESHOLD"
+            msg = f"Score dropped to {score:.1f}/100 (Bearish/Oversold setup)"
+            if (symbol, alert_type) not in existing_keys:
+                supabase.table("user_notifications").insert({
+                    "user_id": user_id,
+                    "asset_symbol": symbol,
+                    "asset_name": name,
+                    "alert_type": alert_type,
+                    "message": msg
+                }).execute()
+
+
+def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, show_reasons_flag, show_extra_metrics_flag):
+    def process_watchlist(watchlist, is_crypto=True):
+        results = []
+        for key, name in watchlist.items():
+            with st.spinner(f"Loading {name}..."):
+                if is_crypto:
+                    df = load_crypto(key, history_days)
+                else:
+                    df = load_stock(key)
+                
+                result = {
+                    "symbol": name if is_crypto else f"{name} ({key})",
+                    "score": None, "label": "No data", "reasons": [],
+                    "latest_price": None, "rsi": None, "change_7d": None,
+                    "change_30d": None, "atr_pct": None, "volume_ratio": None,
+                    "bb_position": None, "adx": None, "confluence": None,
+                    "contributions": {}, "type": "Crypto" if is_crypto else "Stock",
+                    "key": key,
+                }
+
+                if not df.empty and len(df) >= 15:
+                    try:
+                        df = calculate_indicators(df)
+                        res = compute_score(df, weights=weights)
+                        if isinstance(res, dict):
