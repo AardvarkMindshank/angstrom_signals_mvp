@@ -10,7 +10,6 @@ import json
 import time
 import traceback
 from datetime import datetime, timezone
-from urllib.parse import quote
 
 import pandas as pd
 import plotly.graph_objects as go
@@ -23,6 +22,29 @@ st.set_page_config(
     page_icon="📈",
     layout="wide",
     initial_sidebar_state="expanded",
+)
+
+# A normal link starts a new Streamlit session and logs the user out.
+# This stays on the page and reports the clicked name back to Python.
+_SCORE_TABLE_JS = """
+export default function(component) {
+  const { data, setTriggerValue, parentElement } = component;
+  const host = document.createElement("div");
+  host.innerHTML = typeof data === "string" ? data : "";
+  parentElement.appendChild(host);
+  host.querySelectorAll("button[data-pick]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      setTriggerValue("picked", button.getAttribute("data-pick"));
+    });
+  });
+  return () => host.remove();
+}
+"""
+_score_table = st.components.v2.component(
+    "score_table",
+    js=_SCORE_TABLE_JS,
+    isolate_styles=False,
 )
 
 try:
@@ -949,14 +971,17 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             rsi = row.get("rsi")
             price_str = f"${price:,.2f}" if pd.notna(price) else "—"
             rsi_str = f"{rsi:.1f}" if pd.notna(rsi) else "—"
-            href = f"?chart_kind={quote(kind)}&chart_asset={quote(asset_id)}"
-            name_link = (
-                f"<a href='{href}' style='color:inherit;font-weight:600;text-decoration:underline;'>"
-                f"{html.escape(str(row['symbol']))}</a>"
+            pick_value = html.escape(f"{kind}|{asset_id}", quote=True)
+            name_button = (
+                "<button type='button' data-pick='"
+                f"{pick_value}' style='background:none;border:none;padding:0;margin:0;"
+                "color:inherit;font:inherit;font-weight:600;text-decoration:underline;"
+                "cursor:pointer;white-space:nowrap;'>"
+                f"{html.escape(str(row['symbol']))}</button>"
             )
             rows_html += (
                 f"<tr style='border-bottom:1px solid #f0f0f0;{row_style}'>"
-                f"<td style='padding:10px;white-space:nowrap;'>{name_link}</td>"
+                f"<td style='padding:10px;white-space:nowrap;'>{name_button}</td>"
                 f"<td style='padding:10px;min-width:130px;'>{render_score_bar(row['score'])}</td>"
                 f"{cell(row.get('label') or '—')}{cell(price_str)}{cell(rsi_str)}"
             )
@@ -971,12 +996,19 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                 )
             rows_html += "</tr>"
 
-        st.html(
+        table_html = (
             "<div style='width:100%;overflow-x:auto;margin-bottom:8px;-webkit-overflow-scrolling:touch;'>"
             "<table style='width:100%;border-collapse:collapse;font-size:0.95rem;'>"
             f"<thead><tr style='border-bottom:2px solid #e5e7eb;'>{header_html}</tr></thead>"
             f"<tbody>{rows_html}</tbody></table></div>"
         )
+        picked = _score_table(
+            key=f"score_table_{kind}",
+            data=table_html,
+            on_picked_change=lambda: None,
+        ).picked
+        if picked:
+            _select_chart_asset(str(picked))
 
         problems = [
             f"{row['symbol']}: {row['reasons'][0]}"
@@ -985,6 +1017,19 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
         ]
         for problem in problems:
             st.text(problem)
+
+    def _select_chart_asset(raw):
+        kind_name, sep, asset_id = str(raw).partition("|")
+        if not sep:
+            return
+        chosen = crypto_watchlist if kind_name == "Crypto" else stock_watchlist if kind_name == "Stock" else None
+        if not chosen or asset_id not in chosen:
+            return
+        if st.session_state.get("chart_pick") == (kind_name, asset_id):
+            return
+        st.session_state.chart_pick = (kind_name, asset_id)
+        st.session_state.chart_pick_from_row = True
+        st.rerun(scope="fragment")
 
     chosen_kind = st.query_params.get("chart_kind")
     chosen_asset = st.query_params.get("chart_asset")
