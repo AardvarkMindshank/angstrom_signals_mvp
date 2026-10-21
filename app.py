@@ -63,10 +63,12 @@ export default function(component) {
   const shell = parentElement.closest(".stBidiComponent") || parentElement;
   shell.style.display = "none";
   const token = String((data && data.token) || "");
+  const targetId = String((data && data.target) || "interactive-chart");
   if (!token || window.scrollChartToken === token) return;
   window.scrollChartToken = token;
-  const chartOnScreen = () => {
-    const target = document.getElementById("interactive-chart");
+  const alreadyOnScreen = () => {
+    if (targetId !== "interactive-chart") return false;
+    const target = document.getElementById(targetId);
     if (!target) return false;
     const scroller = target.closest('[data-testid="stMain"]') || target.closest("section.main");
     const viewTop = scroller ? scroller.getBoundingClientRect().top : 0;
@@ -75,8 +77,8 @@ export default function(component) {
     return rect.top >= viewTop - 16 && rect.top <= viewTop + (viewBottom - viewTop) * 0.55;
   };
   const go = () => {
-    if (chartOnScreen()) return;
-    const target = document.getElementById("interactive-chart");
+    if (alreadyOnScreen()) return;
+    const target = document.getElementById(targetId);
     if (!target) return;
     target.scrollIntoView({behavior: "auto", block: "start"});
     const scroller = target.closest('[data-testid="stMain"]') || target.closest("section.main");
@@ -561,14 +563,23 @@ def tone(score):
     return "#b91c1c", "#fee2e2", "↓", "#ef4444"
 
 
-def sentiment_badge(score) -> str:
+def sentiment_badge(score, pick: str | None = None) -> str:
     """Colored number box used for a headline score. A dash when there is no score yet."""
     if score is None or pd.isna(score):
         return "<span style='color:#6b7280;'>—</span>"
     color, background, _arrow, _bar = tone(score)
-    return (
+    box = (
         f"<span style='display:inline-block;min-width:52px;text-align:center;background:{background};"
         f"color:{color};border-radius:4px;padding:2px 8px;font-weight:600;'>{float(score):.0f}</span>"
+    )
+    if not pick:
+        return box
+    safe_pick = html.escape(pick, quote=True)
+    return (
+        f"<button type='button' data-pick='{safe_pick}' "
+        "style='display:inline-block;margin:0;padding:0;border:none;background:transparent;"
+        "cursor:pointer;font:inherit;line-height:1;'>"
+        f"{box}</button>"
     )
 
 
@@ -679,6 +690,7 @@ with st.sidebar.expander(notifications_label, expanded=False):
                             st.session_state.notif_handled = signature
                             st.session_state.chart_pick = target
                             st.session_state.chart_pick_from_row = True
+                            st.session_state.scroll_target = "interactive-chart"
                             st.session_state.scroll_token = str(time.time_ns())
                             st.rerun()
                     elif str(st.session_state.get("notif_handled") or "").startswith(f"{note_id}:"):
@@ -769,7 +781,7 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
 **How to use it**
 
 1. Read the snapshot and the tables. The top row is the strongest score, the bottom is the weakest.
-2. Click a name in either table, a Quick Snapshot box, or an alert under Notifications. That asset stays highlighted, the page moves down to the chart when the chart is off screen, and the score breakdown shows which factors added or removed points.
+2. Click a name in either table, a Quick Snapshot box, or an alert under Notifications. That asset stays highlighted, and the page moves down to the chart when the chart is off screen. Click a sentiment score in the table to open that asset's headlines.
 3. **7d %** is the seven-day price change. **ATR %** is volatility. **Vol** is volume versus its 20-day average.
 4. Alerts fire at 70 and 30 unless you move those sliders. One email goes to the address on your account when a score crosses a boundary. It is not sent again until the score leaves that boundary and crosses it later.
 5. Market sentiment, under the chart, asks Grok to score each recent headline from 0 to 100. The number at the top of that section is the average of those article scores. It is separate from the technical score. The time on the Refresh button beside Quick Snapshot reloads prices and technical scores every 5 minutes. The time on the Refresh button beside Market sentiment reloads the headlines and score for the asset on the chart about every hour. Pressing either button refreshes that section now and starts its timer again.
@@ -1110,12 +1122,15 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
     stock_top, stock_bot = get_top_bottom(stock_results)
 
     def _select_chart_asset(raw):
-        kind_name, sep, asset_id = str(raw).partition("|")
-        if not sep:
+        parts = str(raw).split("|")
+        if len(parts) < 2:
             return
+        kind_name, asset_id = parts[0], parts[1]
+        destination = parts[2] if len(parts) > 2 else "chart"
         chosen = crypto_watchlist if kind_name == "Crypto" else stock_watchlist if kind_name == "Stock" else None
         if not chosen or asset_id not in chosen:
             return
+        st.session_state.scroll_target = "market-sentiment" if destination == "sentiment" else "interactive-chart"
         st.session_state.scroll_token = str(time.time_ns())
         if st.session_state.get("chart_pick") != (kind_name, asset_id):
             st.session_state.chart_pick = (kind_name, asset_id)
@@ -1193,7 +1208,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             return
         frame = pd.DataFrame(results).sort_values("score", ascending=False, na_position="last")
         st.subheader(title)
-        st.caption("Click a name to show that asset on the chart. Sentiment is the headline score, once that asset has one.")
+        st.caption("Click a name to show that asset on the chart. Click a sentiment score to open its headlines.")
 
         headers = ["Asset", "Score", "Signal", "Price", "RSI"]
         if show_extra_metrics_flag:
@@ -1244,9 +1259,10 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             if label:
                 ticker = crypto_ticker(asset_id) if kind == "Crypto" else asset_id
                 headline_score = cached_sentiment_score(sentiment_query(kind, str(label), ticker))
+            sentiment_pick = f"{kind}|{asset_id}|sentiment" if headline_score is not None else None
             rows_html += (
                 f"<td style='padding:10px;text-align:right;white-space:nowrap;'>"
-                f"{sentiment_badge(headline_score)}</td></tr>"
+                f"{sentiment_badge(headline_score, sentiment_pick)}</td></tr>"
             )
 
         table_html = (
@@ -1328,7 +1344,10 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
     st.subheader(f"Interactive Chart - {chart_name}" if chart_name else "Interactive Chart")
     _scroll_chart(
         key="scroll_to_chart",
-        data={"token": st.session_state.get("scroll_token") or ""},
+        data={
+            "token": st.session_state.get("scroll_token") or "",
+            "target": st.session_state.get("scroll_target") or "interactive-chart",
+        },
     )
 
     col1, col2 = st.columns([1, 3])
@@ -1515,6 +1534,7 @@ def _published_label(value) -> str:
 @st.fragment
 def show_market_sentiment(kind: str, label: str, ticker: str | None):
     """Headline sentiment for the asset on the chart. Cached for one hour."""
+    st.html("<div id='market-sentiment' style='scroll-margin-top:4.5rem;'></div>")
     st.markdown(
         "<hr style='margin:1.4rem 0 0.6rem;border:none;border-top:1px solid #e5e7eb;'>",
         unsafe_allow_html=True,
