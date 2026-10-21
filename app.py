@@ -1203,10 +1203,6 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
     style_and_show_table(crypto_results, "Crypto Scores", "Crypto")
     style_and_show_table(stock_results, "Equity Scores", "Stock")
 
-    st.markdown(
-        "<hr style='margin:1.4rem 0 0.6rem;border:none;border-top:1px solid #e5e7eb;'>",
-        unsafe_allow_html=True,
-    )
     st.html(
         "<div id='interactive-chart' style='scroll-margin-top:4.5rem;'></div>"
     )
