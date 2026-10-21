@@ -7,6 +7,7 @@ import base64
 import html
 import json
 import time
+import traceback
 
 import pandas as pd
 import plotly.graph_objects as go
@@ -14,16 +15,21 @@ import streamlit as st
 from plotly.subplots import make_subplots
 from supabase import create_client
 
-from alerts import evaluate_alerts
-from data_fetchers import fetch_crypto_data, fetch_stock_data, period_for_days
-from scoring import calculate_indicators, compute_score, find_column
-
 st.set_page_config(
     page_title="angstrom signals - level 1",
     page_icon="📈",
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+try:
+    from alerts import evaluate_alerts
+    from data_fetchers import fetch_crypto_data, fetch_stock_data, period_for_days
+    from scoring import calculate_indicators, compute_score, find_column
+except Exception:
+    st.error("The dashboard could not load its scoring code.")
+    st.code(traceback.format_exc())
+    st.stop()
 
 
 def jwt_role(key: str) -> str | None:

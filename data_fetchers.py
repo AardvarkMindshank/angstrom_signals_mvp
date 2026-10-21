@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import requests
 import pandas as pd
-import yfinance as yf
 
 
 # CoinGecko ids are not Yahoo tickers. "polkadot" must become DOT-USD, not POLKADOT-USD.
@@ -108,8 +107,13 @@ def _ohlcv(df: pd.DataFrame) -> pd.DataFrame:
     return out.dropna(subset=["open", "high", "low", "close"])
 
 
+def _yahoo():
+    import yfinance as yf
+    return yf
+
+
 def _history_from_yahoo(ticker: str, period: str) -> pd.DataFrame:
-    df = yf.Ticker(ticker).history(period=period)
+    df = _yahoo().Ticker(ticker).history(period=period)
     if df is None or df.empty:
         return pd.DataFrame()
     return _ohlcv(df)
@@ -227,7 +231,7 @@ def get_current_price_crypto(coin_id: str) -> float | None:
 
 def get_current_price_stock(ticker: str) -> float | None:
     try:
-        stock = yf.Ticker(ticker)
+        stock = _yahoo().Ticker(ticker)
         return stock.fast_info.get("last_price") or stock.info.get("regularMarketPrice")
     except Exception:
         return None
