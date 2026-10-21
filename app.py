@@ -374,12 +374,21 @@ with st.expander("Help and guides", expanded=False):
     st.markdown("""
 **Higher score = a more bullish setup.** Every score starts at 50 and each indicator adds or subtracts points. The result is kept between 0 and 100. This is a research tool, not financial advice.
 """)
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Strong bullish", "70+")
-    c2.metric("Bullish", "60–69")
-    c3.metric("Neutral", "47–52")
-    c4.metric("Strong bearish", "below 30")
-    st.caption("Green is 53 and above. Amber is 47–52. Red is below 47. Mildly bullish starts at 53, mildly bearish at 40, and bearish at 30.")
+    bands = [
+        ("Strong bullish", "70+", "#15803d", "#dcfce7"),
+        ("Bullish", "60–69", "#15803d", "#dcfce7"),
+        ("Neutral", "47–52", "#b45309", "#fef3c7"),
+        ("Strong bearish", "below 30", "#b91c1c", "#fee2e2"),
+    ]
+    band_cols = st.columns(4)
+    for column, (name, span, color, background) in zip(band_cols, bands):
+        column.markdown(
+            f"<div style='background:{background};color:{color};border-radius:8px;padding:12px 14px;'>"
+            f"<div style='font-size:0.8rem;font-weight:600;'>{name}</div>"
+            f"<div style='font-size:1.6rem;font-weight:700;line-height:1.2;'>{span}</div></div>",
+            unsafe_allow_html=True,
+        )
+    st.caption("The same colors are used on the scores. Green is 53 and above. Amber is 47–52. Red is below 47.")
 
     left, right = st.columns(2)
     with left:
