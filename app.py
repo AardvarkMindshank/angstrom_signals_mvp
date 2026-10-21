@@ -29,9 +29,16 @@ st.set_page_config(
 _SCORE_TABLE_JS = """
 export default function(component) {
   const { data, setTriggerValue, parentElement } = component;
-  const host = document.createElement("div");
+  let host = parentElement.querySelector("[data-score-host]");
+  Array.from(parentElement.children).forEach((child) => {
+    if (child !== host) child.remove();
+  });
+  if (!host) {
+    host = document.createElement("div");
+    host.setAttribute("data-score-host", "");
+    parentElement.appendChild(host);
+  }
   host.innerHTML = typeof data === "string" ? data : "";
-  parentElement.appendChild(host);
   host.querySelectorAll("button[data-pick]").forEach((button) => {
     button.addEventListener("click", (event) => {
       event.preventDefault();
