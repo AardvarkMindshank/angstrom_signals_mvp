@@ -151,6 +151,7 @@ try:
     from scoring import calculate_indicators, compute_score, find_column
     from sentiment import (
         analyze_market_sentiment,
+        newest_first,
         sentiment_cached_at,
         sentiment_query,
         sentiment_ready,
@@ -1441,7 +1442,7 @@ def show_market_sentiment(kind: str, label: str, ticker: str | None):
     with st.spinner("Reading recent headlines..."):
         report = load_market_sentiment(query, sentiment_ready(), force=force_sentiment)
 
-    headlines = report.get("headlines") or []
+    headlines = newest_first(report.get("headlines") or [])
     score = report.get("score")
     if report.get("ok") and score is not None:
         color, background, arrow, _bar = tone(score)

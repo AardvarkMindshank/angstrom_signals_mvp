@@ -12,6 +12,7 @@ import json
 import os
 import time
 import xml.etree.ElementTree as ET
+from email.utils import parsedate_to_datetime
 
 import requests
 
@@ -37,6 +38,31 @@ def sentiment_query(kind: str, label: str, ticker: str | None) -> str:
         parts.append(symbol)
     parts.append("cryptocurrency" if kind == "Crypto" else "stock")
     return " ".join(part for part in parts if part)
+
+
+def _published_timestamp(value) -> float | None:
+    raw = str(value or "").strip()
+    if not raw:
+        return None
+    try:
+        when = parsedate_to_datetime(raw)
+    except (TypeError, ValueError, IndexError, OverflowError):
+        return None
+    try:
+        return when.timestamp()
+    except (OSError, OverflowError, ValueError):
+        return None
+
+
+def newest_first(headlines: list[dict]) -> list[dict]:
+    """Dated headlines first, newest at the top. A missing date stays at the bottom."""
+    def key(item: dict):
+        stamp = _published_timestamp(item.get("published"))
+        if stamp is None:
+            return (1, 0.0)
+        return (0, -stamp)
+
+    return sorted(headlines, key=key)
 
 
 def fetch_headlines(query: str, limit: int = 8) -> list[dict]:
@@ -73,9 +99,7 @@ def fetch_headlines(query: str, limit: int = 8) -> list[dict]:
             "published": (item.findtext("pubDate") or "").strip(),
             "link": link,
         })
-        if len(headlines) >= limit:
-            break
-    return headlines
+    return newest_first(headlines)[:limit]
 
 
 def sentiment_ready() -> bool:
