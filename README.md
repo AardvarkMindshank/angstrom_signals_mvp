@@ -15,7 +15,7 @@ A score of 50 is neutral. 70 and above is a strong bullish setup. 30 and below i
 
 ## Windows setup
 
-1. Install Python 3.11 or 3.12 from https://www.python.org/downloads/ and check **Add python.exe to PATH**.
+1. Install Python 3.12 from https://www.python.org/downloads/ and check **Add python.exe to PATH**. `pandas-ta` does not install on 3.11.
 2. In this folder:
 
 ```
