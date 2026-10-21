@@ -736,10 +736,28 @@ all_profiles = {**built_in_profiles, **custom_profiles}
 
 indicators = ["rsi", "stochastic", "sma", "adx", "macd", "ichimoku", "bb", "volume", "obv", "performance"]
 
+
+def stored_weight(name: str) -> float:
+    raw = current_weights.get(name, 1.0) if isinstance(current_weights, dict) else 1.0
+    try:
+        value = float(raw)
+    except (TypeError, ValueError):
+        value = 1.0
+    return min(2.0, max(0.0, round(value, 1)))
+
+
+# A slider with no starting value mounts at 0. That blank set was saved, and
+# every factor then adds nothing, so every score stays at 50.
+weights_blank = all(stored_weight(name) == 0.0 for name in indicators)
+if weights_blank:
+    current_weights = {name: 1.0 for name in indicators}
+    prefs["weights"] = current_weights
+    save_preferences_to_cloud({"scoring_weights": current_weights})
+
 for indicator in indicators:
     key_name = f"weight_{indicator}"
-    if key_name not in st.session_state:
-        st.session_state[key_name] = float(current_weights.get(indicator, 1.0))
+    if weights_blank or key_name not in st.session_state:
+        st.session_state[key_name] = stored_weight(indicator)
 
 if st.session_state.get("reset_weights"):
     for indicator in indicators:
@@ -843,16 +861,29 @@ with st.sidebar.expander("⚖️ Scoring Balance Weights", expanded=False):
 
     st.markdown("---")
 
-    w_rsi = st.slider("RSI Weight", 0.0, 2.0, key="weight_rsi", step=0.1)
-    w_stoch = st.slider("Stochastic Weight", 0.0, 2.0, key="weight_stochastic", step=0.1)
-    w_sma = st.slider("Moving Averages Weight", 0.0, 2.0, key="weight_sma", step=0.1)
-    w_adx = st.slider("ADX Trend Weight", 0.0, 2.0, key="weight_adx", step=0.1)
-    w_macd = st.slider("MACD & Hist Weight", 0.0, 2.0, key="weight_macd", step=0.1)
-    w_ichi = st.slider("Ichimoku Cloud Weight", 0.0, 2.0, key="weight_ichimoku", step=0.1)
-    w_bb = st.slider("Bollinger Bands Weight", 0.0, 2.0, key="weight_bb", step=0.1)
-    w_vol = st.slider("Volume Weight", 0.0, 2.0, key="weight_volume", step=0.1)
-    w_obv = st.slider("OBV Weight", 0.0, 2.0, key="weight_obv", step=0.1)
-    w_perf = st.slider("Performance Weight", 0.0, 2.0, key="weight_performance", step=0.1)
+    def weight_slider(label: str, name: str):
+        key_name = f"weight_{name}"
+        # Pass the saved weight as the value. Without it, the slider's own
+        # default is the bottom of the range, which is 0.
+        return st.slider(
+            label,
+            0.0,
+            2.0,
+            float(st.session_state[key_name]),
+            step=0.1,
+            key=key_name,
+        )
+
+    w_rsi = weight_slider("RSI Weight", "rsi")
+    w_stoch = weight_slider("Stochastic Weight", "stochastic")
+    w_sma = weight_slider("Moving Averages Weight", "sma")
+    w_adx = weight_slider("ADX Trend Weight", "adx")
+    w_macd = weight_slider("MACD & Hist Weight", "macd")
+    w_ichi = weight_slider("Ichimoku Cloud Weight", "ichimoku")
+    w_bb = weight_slider("Bollinger Bands Weight", "bb")
+    w_vol = weight_slider("Volume Weight", "volume")
+    w_obv = weight_slider("OBV Weight", "obv")
+    w_perf = weight_slider("Performance Weight", "performance")
 
     new_weights = {
         "rsi": w_rsi, "stochastic": w_stoch, "sma": w_sma, "adx": w_adx,
@@ -860,7 +891,9 @@ with st.sidebar.expander("⚖️ Scoring Balance Weights", expanded=False):
         "obv": w_obv, "performance": w_perf,
     }
 
-    if new_weights != current_weights:
+    # Every slider at 0 is the blank mount, not a mix worth keeping.
+    # One slider can still be 0 to turn that single factor off.
+    if new_weights != current_weights and any(float(value) != 0 for value in new_weights.values()):
         save_preferences_to_cloud({"scoring_weights": new_weights})
         current_weights = new_weights
         prefs["weights"] = current_weights
