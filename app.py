@@ -347,7 +347,7 @@ prefs = st.session_state.cloud_prefs
 alert_prefs = prefs.get("alerts", {})
 profile = st.session_state.profile
 
-st.sidebar.header("Account")
+st.sidebar.header("👤 Account")
 if profile is None:
     st.sidebar.warning("Profile storage is not ready yet. Run the latest supabase_rls.sql in the Supabase SQL editor.")
     profile = {}
@@ -588,7 +588,7 @@ if st.session_state.get("reset_weights"):
     save_preferences_to_cloud({"scoring_weights": current_weights})
     st.session_state.reset_weights = False
 
-st.sidebar.header("Watchlists")
+st.sidebar.header("⭐ Watchlists")
 
 with st.sidebar.expander("Edit Crypto", expanded=False):
     st.caption("Add by CoinGecko id (bitcoin, ethereum, polkadot, dogecoin).")
@@ -626,7 +626,7 @@ with st.sidebar.expander("Edit Stocks", expanded=False):
             save_preferences_to_cloud({"stock_watchlist": STOCK_WATCHLIST})
             st.rerun()
 
-st.sidebar.header("Settings")
+st.sidebar.header("⚙️ Settings")
 days_history = st.sidebar.slider("Days of history", 90, 365, int(settings.get("days_history", 200)))
 show_reasons = st.sidebar.checkbox("Show score breakdown", value=settings.get("show_reasons", True))
 show_extra_metrics = st.sidebar.checkbox(
@@ -644,7 +644,7 @@ if new_settings != settings:
     prefs["settings"] = settings
     save_preferences_to_cloud({"settings": settings})
 
-st.sidebar.header("Scoring Balance Weights")
+st.sidebar.header("⚖️ Scoring Balance Weights")
 
 with st.sidebar.expander("Customize Indicator Weights", expanded=False):
     st.caption("Adjust the relative importance of each indicator. Every slider changes the score.")
