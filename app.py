@@ -5,9 +5,11 @@ Run with: streamlit run app.py
 
 import base64
 import html
+import io
 import json
 import time
 import traceback
+from datetime import datetime, timezone
 
 import pandas as pd
 import plotly.graph_objects as go
@@ -87,6 +89,7 @@ def clear_session():
     st.session_state.access_token = None
     st.session_state.refresh_token = None
     st.session_state.pop("cloud_prefs", None)
+    st.session_state.pop("profile", None)
 
 
 if "user" not in st.session_state:
@@ -265,14 +268,130 @@ def fetch_user_notifications():
         return []
 
 
+def load_profile():
+    try:
+        response = supabase.table("profiles").select("*").eq("user_id", user_id).execute()
+        if response.data:
+            return response.data[0]
+    except Exception:
+        return None
+    return {}
+
+
+def save_profile(updates: dict):
+    payload = {
+        "user_id": user_id,
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        **updates,
+    }
+    supabase.table("profiles").upsert(payload).execute()
+
+
+def upload_avatar(uploaded) -> str:
+    if uploaded.size > 5_000_000:
+        raise ValueError("Use a photo smaller than 5 MB.")
+    from PIL import Image
+
+    image = Image.open(io.BytesIO(uploaded.getvalue())).convert("RGB")
+    image.thumbnail((512, 512))
+    buffer = io.BytesIO()
+    image.save(buffer, format="JPEG", quality=85)
+    path = f"{user_id}/avatar.jpg"
+    bucket = supabase.storage.from_("avatars")
+    file_options = {"content-type": "image/jpeg", "upsert": "true"}
+    try:
+        bucket.upload(path, buffer.getvalue(), file_options)
+    except Exception:
+        bucket.update(path, buffer.getvalue(), {"content-type": "image/jpeg"})
+    public_url = bucket.get_public_url(path)
+    return f"{public_url}?v={int(time.time())}"
+
+
+def profile_card(profile: dict, email: str) -> str:
+    name = (profile or {}).get("display_name") or email.split("@")[0]
+    bio = ((profile or {}).get("bio") or "").strip()
+    avatar = (profile or {}).get("avatar_url") or ""
+    safe_name = html.escape(name)
+    safe_email = html.escape(email)
+    if avatar:
+        face = (
+            f"<img src='{html.escape(avatar, quote=True)}' alt='' "
+            "style='width:52px;height:52px;border-radius:50%;object-fit:cover;display:block;'>"
+        )
+    else:
+        initial = html.escape((name[:1] or "?").upper())
+        face = (
+            "<div style='width:52px;height:52px;border-radius:50%;background:#dbeafe;color:#1d4ed8;"
+            "display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.2rem;'>"
+            f"{initial}</div>"
+        )
+    bio_html = (
+        f"<div style='margin-top:8px;font-size:0.85rem;color:#374151;'>{html.escape(bio)}</div>"
+        if bio else ""
+    )
+    return (
+        "<div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:12px;'>"
+        "<div style='display:flex;gap:10px;align-items:center;'>"
+        f"{face}<div><div style='font-weight:600;color:#111827;'>{safe_name}</div>"
+        f"<div style='font-size:0.78rem;color:#6b7280;'>{safe_email}</div></div></div>"
+        f"{bio_html}</div>"
+    )
+
+
 if "cloud_prefs" not in st.session_state:
     st.session_state.cloud_prefs = load_user_preferences()
+if "profile" not in st.session_state:
+    st.session_state.profile = load_profile()
 
 prefs = st.session_state.cloud_prefs
 alert_prefs = prefs.get("alerts", {})
+profile = st.session_state.profile
 
 st.sidebar.header("Account")
-st.sidebar.success(f"Logged in as:\n**{st.session_state.user.email}**")
+if profile is None:
+    st.sidebar.warning("Profile storage is not ready yet. Run the latest supabase_rls.sql in the Supabase SQL editor.")
+    profile = {}
+st.sidebar.markdown(profile_card(profile, st.session_state.user.email or ""), unsafe_allow_html=True)
+with st.sidebar.expander("Edit profile", expanded=False):
+    profile_name = st.text_input(
+        "Display name",
+        value=profile.get("display_name") or "",
+        max_chars=40,
+        key="profile_display_name",
+    )
+    profile_bio = st.text_area(
+        "Short bio",
+        value=profile.get("bio") or "",
+        max_chars=160,
+        height=80,
+        key="profile_bio",
+        placeholder="A line about you, for when social features arrive.",
+    )
+    profile_photo = st.file_uploader(
+        "Profile photo",
+        type=["png", "jpg", "jpeg", "webp"],
+        key="profile_photo",
+    )
+    if profile.get("avatar_url"):
+        st.caption("A new photo replaces the current one.")
+    if st.button("Save profile", use_container_width=True):
+        updates = {
+            "display_name": profile_name.strip() or None,
+            "bio": profile_bio.strip() or None,
+        }
+        try:
+            if profile_photo is not None:
+                updates["avatar_url"] = upload_avatar(profile_photo)
+            save_profile(updates)
+            st.session_state.profile = {**profile, **updates}
+            st.success("Profile saved.")
+            st.rerun()
+        except Exception as exc:
+            st.error(
+                "Could not save the profile. If this is the first time, "
+                f"run the latest supabase_rls.sql in Supabase. {exc}"
+            )
+
 if st.sidebar.button("Log Out", use_container_width=True):
     try:
         supabase.auth.sign_out()
