@@ -354,60 +354,58 @@ prefs = st.session_state.cloud_prefs
 alert_prefs = prefs.get("alerts", {})
 profile = st.session_state.profile
 
-st.sidebar.header("👤 Account")
-if profile is None:
-    st.sidebar.warning("Profile storage is not ready yet. Run the latest supabase_rls.sql in the Supabase SQL editor.")
-    profile = {}
-st.sidebar.markdown(profile_card(profile, st.session_state.user.email or ""), unsafe_allow_html=True)
-with st.sidebar.expander("Edit profile", expanded=False):
-    profile_name = st.text_input(
-        "Display name",
-        value=profile.get("display_name") or "",
-        max_chars=40,
-        key="profile_display_name",
-    )
-    profile_bio = st.text_area(
-        "Short bio",
-        value=profile.get("bio") or "",
-        max_chars=160,
-        height=80,
-        key="profile_bio",
-        placeholder="A line about you, for when social features arrive.",
-    )
-    profile_photo = st.file_uploader(
-        "Profile photo",
-        type=["png", "jpg", "jpeg", "webp"],
-        key="profile_photo",
-    )
-    if profile.get("avatar_url"):
-        st.caption("A new photo replaces the current one.")
-    if st.button("Save profile", use_container_width=True):
-        updates = {
-            "display_name": profile_name.strip() or None,
-            "bio": profile_bio.strip() or None,
-        }
+with st.sidebar.expander("👤 Account", expanded=False):
+    if profile is None:
+        st.warning("Profile storage is not ready yet. Run the latest supabase_rls.sql in the Supabase SQL editor.")
+        profile = {}
+    st.markdown(profile_card(profile, st.session_state.user.email or ""), unsafe_allow_html=True)
+    with st.expander("Edit profile", expanded=False):
+        profile_name = st.text_input(
+            "Display name",
+            value=profile.get("display_name") or "",
+            max_chars=40,
+            key="profile_display_name",
+        )
+        profile_bio = st.text_area(
+            "Short bio",
+            value=profile.get("bio") or "",
+            max_chars=160,
+            height=80,
+            key="profile_bio",
+            placeholder="A line about you, for when social features arrive.",
+        )
+        profile_photo = st.file_uploader(
+            "Profile photo",
+            type=["png", "jpg", "jpeg", "webp"],
+            key="profile_photo",
+        )
+        if profile.get("avatar_url"):
+            st.caption("A new photo replaces the current one.")
+        if st.button("Save profile", use_container_width=True):
+            updates = {
+                "display_name": profile_name.strip() or None,
+                "bio": profile_bio.strip() or None,
+            }
+            try:
+                if profile_photo is not None:
+                    updates["avatar_url"] = upload_avatar(profile_photo)
+                save_profile(updates)
+                st.session_state.profile = {**profile, **updates}
+                st.success("Profile saved.")
+                st.rerun()
+            except Exception as exc:
+                st.error(
+                    "Could not save the profile. If this is the first time, "
+                    f"run the latest supabase_rls.sql in Supabase. {exc}"
+                )
+
+    if st.button("Log Out", use_container_width=True):
         try:
-            if profile_photo is not None:
-                updates["avatar_url"] = upload_avatar(profile_photo)
-            save_profile(updates)
-            st.session_state.profile = {**profile, **updates}
-            st.success("Profile saved.")
-            st.rerun()
-        except Exception as exc:
-            st.error(
-                "Could not save the profile. If this is the first time, "
-                f"run the latest supabase_rls.sql in Supabase. {exc}"
-            )
-
-if st.sidebar.button("Log Out", use_container_width=True):
-    try:
-        supabase.auth.sign_out()
-    except Exception:
-        pass
-    clear_session()
-    st.rerun()
-
-st.sidebar.markdown("---")
+            supabase.auth.sign_out()
+        except Exception:
+            pass
+        clear_session()
+        st.rerun()
 
 def tone(score):
     """Text color, badge background, arrow, and bar color for a score."""
@@ -436,90 +434,89 @@ def score_from_alert(note: dict):
     return None
 
 
-st.sidebar.header("🔔 Notifications")
 notifications_list = fetch_user_notifications()
 unread_count = sum(1 for note in notifications_list if not note.get("is_read", False))
+notifications_label = "🔔 Notifications" + (f" ({unread_count})" if unread_count else "")
 
-with st.sidebar.expander(f"Alert Feed {f'({unread_count} new)' if unread_count > 0 else ''}", expanded=False):
-    if not notifications_list:
-        st.caption("No alerts yet. When a watchlist asset crosses a threshold, it shows up here.")
-    else:
-        f_col1, f_col2 = st.columns(2)
-        with f_col1:
-            feed_filter = st.radio(
-                "Filter",
-                ["Unread", "All"],
-                horizontal=True,
-                label_visibility="collapsed",
-                key="notif_filter_radio",
+with st.sidebar.expander(notifications_label, expanded=False):
+    with st.expander("Alert Feed", expanded=False):
+        if not notifications_list:
+            st.caption("No alerts yet. When a watchlist asset crosses a threshold, it shows up here.")
+        else:
+            f_col1, f_col2 = st.columns(2)
+            with f_col1:
+                feed_filter = st.radio(
+                    "Filter",
+                    ["Unread", "All"],
+                    horizontal=True,
+                    label_visibility="collapsed",
+                    key="notif_filter_radio",
+                )
+            with f_col2:
+                if st.button("Mark read", key="mark_read_btn", use_container_width=True):
+                    try:
+                        supabase.table("user_notifications").update({"is_read": True}).eq("user_id", user_id).execute()
+                        st.rerun()
+                    except Exception:
+                        st.error("Could not mark alerts as read.")
+
+            filtered_notifs = (
+                [note for note in notifications_list if not note.get("is_read", False)]
+                if feed_filter == "Unread"
+                else notifications_list
             )
-        with f_col2:
-            if st.button("Mark read", key="mark_read_btn", use_container_width=True):
-                try:
-                    supabase.table("user_notifications").update({"is_read": True}).eq("user_id", user_id).execute()
-                    st.rerun()
-                except Exception:
-                    st.error("Could not mark alerts as read.")
 
-        filtered_notifs = (
-            [note for note in notifications_list if not note.get("is_read", False)]
-            if feed_filter == "Unread"
-            else notifications_list
+            if not filtered_notifs:
+                st.caption(f"No {feed_filter.lower()} notifications.")
+            else:
+                st.markdown("<div style='height: 4px;'></div>", unsafe_allow_html=True)
+                for note in filtered_notifs:
+                    color, background, arrow, _bar = tone(score_from_alert(note))
+                    name = html.escape(str(note.get("asset_name") or "Asset"))
+                    message = html.escape(str(note.get("message") or ""))
+                    created = html.escape(str(note.get("created_at") or "")[:16].replace("T", " "))
+                    weight = "700" if not note.get("is_read") else "500"
+                    border = color if not note.get("is_read") else "#e5e7eb"
+                    st.markdown(
+                        "<div style='background:"
+                        f"{background};border:1px solid {border};border-radius:8px;padding:8px 10px;margin-bottom:8px;'>"
+                        f"<div style='font-weight:{weight};color:{color};'>{arrow} {name}</div>"
+                        f"<div style='font-size:0.8rem;color:#374151;margin-top:2px;'>{message}</div>"
+                        f"<div style='font-size:0.75rem;color:#6b7280;margin-top:2px;'>{created}</div></div>",
+                        unsafe_allow_html=True,
+                    )
+
+                if st.button("🗑️ Clear Read Alerts", use_container_width=True, key="clear_read_btn"):
+                    try:
+                        supabase.table("user_notifications").delete().eq("user_id", user_id).eq("is_read", True).execute()
+                        st.success("Cleared read alerts.")
+                        st.rerun()
+                    except Exception as exc:
+                        st.error(f"Could not clear alerts: {exc}")
+
+    with st.expander("Configure Alert Rules", expanded=False):
+        st.caption("70 is a strong bullish setup. 30 is a strong bearish setup. An alert re-arms after the score leaves the threshold.")
+        alert_enabled = st.checkbox("Enable Alerts", value=alert_prefs.get("enabled", True), key="alert_enabled_cb")
+        min_score = st.slider(
+            "Bullish Alert Threshold (Score ≥)",
+            50, 95, int(alert_prefs.get("min_score_alert", 70)),
+            key="min_score_slider",
+        )
+        max_score = st.slider(
+            "Bearish Alert Threshold (Score ≤)",
+            5, 50, int(alert_prefs.get("max_score_alert", 30)),
+            key="max_score_slider",
         )
 
-        if not filtered_notifs:
-            st.caption(f"No {feed_filter.lower()} notifications.")
-        else:
-            st.markdown("<div style='height: 4px;'></div>", unsafe_allow_html=True)
-            for note in filtered_notifs:
-                color, background, arrow, _bar = tone(score_from_alert(note))
-                name = html.escape(str(note.get("asset_name") or "Asset"))
-                message = html.escape(str(note.get("message") or ""))
-                created = html.escape(str(note.get("created_at") or "")[:16].replace("T", " "))
-                weight = "700" if not note.get("is_read") else "500"
-                border = color if not note.get("is_read") else "#e5e7eb"
-                st.markdown(
-                    "<div style='background:"
-                    f"{background};border:1px solid {border};border-radius:8px;padding:8px 10px;margin-bottom:8px;'>"
-                    f"<div style='font-weight:{weight};color:{color};'>{arrow} {name}</div>"
-                    f"<div style='font-size:0.8rem;color:#374151;margin-top:2px;'>{message}</div>"
-                    f"<div style='font-size:0.75rem;color:#6b7280;margin-top:2px;'>{created}</div></div>",
-                    unsafe_allow_html=True,
-                )
-
-            if st.button("🗑️ Clear Read Alerts", use_container_width=True, key="clear_read_btn"):
-                try:
-                    supabase.table("user_notifications").delete().eq("user_id", user_id).eq("is_read", True).execute()
-                    st.success("Cleared read alerts.")
-                    st.rerun()
-                except Exception as exc:
-                    st.error(f"Could not clear alerts: {exc}")
-
-with st.sidebar.expander("Configure Alert Rules", expanded=False):
-    st.caption("70 is a strong bullish setup. 30 is a strong bearish setup. An alert re-arms after the score leaves the threshold.")
-    alert_enabled = st.checkbox("Enable Alerts", value=alert_prefs.get("enabled", True), key="alert_enabled_cb")
-    min_score = st.slider(
-        "Bullish Alert Threshold (Score ≥)",
-        50, 95, int(alert_prefs.get("min_score_alert", 70)),
-        key="min_score_slider",
-    )
-    max_score = st.slider(
-        "Bearish Alert Threshold (Score ≤)",
-        5, 50, int(alert_prefs.get("max_score_alert", 30)),
-        key="max_score_slider",
-    )
-
-    new_alert_settings = {
-        "enabled": alert_enabled,
-        "min_score_alert": min_score,
-        "max_score_alert": max_score,
-    }
-    if new_alert_settings != {name: alert_prefs.get(name) for name in new_alert_settings}:
-        alert_prefs.update(new_alert_settings)
-        prefs["alerts"] = alert_prefs
-        save_alert_preferences_to_cloud(new_alert_settings)
-
-st.sidebar.markdown("---")
+        new_alert_settings = {
+            "enabled": alert_enabled,
+            "min_score_alert": min_score,
+            "max_score_alert": max_score,
+        }
+        if new_alert_settings != {name: alert_prefs.get(name) for name in new_alert_settings}:
+            alert_prefs.update(new_alert_settings)
+            prefs["alerts"] = alert_prefs
+            save_alert_preferences_to_cloud(new_alert_settings)
 
 header_col1, header_col2 = st.columns([5, 1])
 with header_col1:
@@ -629,77 +626,56 @@ if st.session_state.get("reset_weights"):
     save_preferences_to_cloud({"scoring_weights": current_weights})
     st.session_state.reset_weights = False
 
-st.sidebar.header("⭐ Watchlists")
-
-with st.sidebar.expander("Edit Crypto", expanded=False):
-    st.caption("Add a ticker (XLM) or a name (Stellar).")
-    new_crypto = st.text_input("Add crypto", key="new_crypto", placeholder="e.g. XLM or Stellar")
-    if st.button("Add Crypto") and new_crypto:
-        found = find_crypto(new_crypto)
-        if not found:
-            st.warning(f"No coin found for '{new_crypto.strip()}'. Try the ticker, such as XLM, or the name, such as Stellar.")
-        else:
-            cid, label = found
-            ticker = crypto_ticker(cid)
-            alias = (ticker or "").lower()
-            changed = False
-            if alias and alias != cid and alias in CRYPTO_WATCHLIST:
-                CRYPTO_WATCHLIST.pop(alias, None)
-                changed = True
-            if cid and cid not in CRYPTO_WATCHLIST:
-                CRYPTO_WATCHLIST[cid] = label
-                changed = True
-            if changed:
+with st.sidebar.expander("⭐ Watchlists", expanded=False):
+    with st.expander("Edit Crypto", expanded=False):
+        st.caption("Add a ticker (XLM) or a name (Stellar).")
+        new_crypto = st.text_input("Add crypto", key="new_crypto", placeholder="e.g. XLM or Stellar")
+        if st.button("Add Crypto") and new_crypto:
+            found = find_crypto(new_crypto)
+            if not found:
+                st.warning(f"No coin found for '{new_crypto.strip()}'. Try the ticker, such as XLM, or the name, such as Stellar.")
+            else:
+                cid, label = found
+                ticker = crypto_ticker(cid)
+                alias = (ticker or "").lower()
+                changed = False
+                if alias and alias != cid and alias in CRYPTO_WATCHLIST:
+                    CRYPTO_WATCHLIST.pop(alias, None)
+                    changed = True
+                if cid and cid not in CRYPTO_WATCHLIST:
+                    CRYPTO_WATCHLIST[cid] = label
+                    changed = True
+                if changed:
+                    prefs["crypto"] = CRYPTO_WATCHLIST
+                    save_preferences_to_cloud({"crypto_watchlist": CRYPTO_WATCHLIST})
+                    st.rerun()
+        if CRYPTO_WATCHLIST:
+            to_remove = st.selectbox("Remove crypto", [""] + list(CRYPTO_WATCHLIST.keys()), key="rm_crypto")
+            if to_remove and st.button("Remove Crypto"):
+                CRYPTO_WATCHLIST.pop(to_remove, None)
                 prefs["crypto"] = CRYPTO_WATCHLIST
                 save_preferences_to_cloud({"crypto_watchlist": CRYPTO_WATCHLIST})
                 st.rerun()
-    if CRYPTO_WATCHLIST:
-        to_remove = st.selectbox("Remove crypto", [""] + list(CRYPTO_WATCHLIST.keys()), key="rm_crypto")
-        if to_remove and st.button("Remove Crypto"):
-            CRYPTO_WATCHLIST.pop(to_remove, None)
-            prefs["crypto"] = CRYPTO_WATCHLIST
-            save_preferences_to_cloud({"crypto_watchlist": CRYPTO_WATCHLIST})
-            st.rerun()
 
-with st.sidebar.expander("Edit Stocks", expanded=False):
-    st.caption("Add by ticker (AAPL, MSFT, etc.)")
-    new_stock = st.text_input("Add stock ticker", key="new_stock", placeholder="e.g. GOOGL")
-    if st.button("Add Stock") and new_stock:
-        tic = new_stock.strip().upper()
-        if tic and tic not in STOCK_WATCHLIST:
-            STOCK_WATCHLIST[tic] = tic
-            prefs["stock"] = STOCK_WATCHLIST
-            save_preferences_to_cloud({"stock_watchlist": STOCK_WATCHLIST})
-            st.rerun()
-    if STOCK_WATCHLIST:
-        to_remove = st.selectbox("Remove stock", [""] + list(STOCK_WATCHLIST.keys()), key="rm_stock")
-        if to_remove and st.button("Remove Stock"):
-            STOCK_WATCHLIST.pop(to_remove, None)
-            prefs["stock"] = STOCK_WATCHLIST
-            save_preferences_to_cloud({"stock_watchlist": STOCK_WATCHLIST})
-            st.rerun()
+    with st.expander("Edit Stocks", expanded=False):
+        st.caption("Add by ticker (AAPL, MSFT, etc.)")
+        new_stock = st.text_input("Add stock ticker", key="new_stock", placeholder="e.g. GOOGL")
+        if st.button("Add Stock") and new_stock:
+            tic = new_stock.strip().upper()
+            if tic and tic not in STOCK_WATCHLIST:
+                STOCK_WATCHLIST[tic] = tic
+                prefs["stock"] = STOCK_WATCHLIST
+                save_preferences_to_cloud({"stock_watchlist": STOCK_WATCHLIST})
+                st.rerun()
+        if STOCK_WATCHLIST:
+            to_remove = st.selectbox("Remove stock", [""] + list(STOCK_WATCHLIST.keys()), key="rm_stock")
+            if to_remove and st.button("Remove Stock"):
+                STOCK_WATCHLIST.pop(to_remove, None)
+                prefs["stock"] = STOCK_WATCHLIST
+                save_preferences_to_cloud({"stock_watchlist": STOCK_WATCHLIST})
+                st.rerun()
 
-st.sidebar.header("⚙️ Settings")
-days_history = st.sidebar.slider("Days of history", 90, 365, int(settings.get("days_history", 200)))
-show_reasons = st.sidebar.checkbox("Show score breakdown", value=settings.get("show_reasons", True))
-show_extra_metrics = st.sidebar.checkbox(
-    "Show extra metrics (7d, ATR, volume)",
-    value=settings.get("show_extra_metrics", True),
-)
-
-new_settings = {
-    "days_history": days_history,
-    "show_reasons": show_reasons,
-    "show_extra_metrics": show_extra_metrics,
-}
-if new_settings != settings:
-    settings = new_settings
-    prefs["settings"] = settings
-    save_preferences_to_cloud({"settings": settings})
-
-st.sidebar.header("⚖️ Scoring Balance Weights")
-
-with st.sidebar.expander("Customize Indicator Weights", expanded=False):
+with st.sidebar.expander("⚖️ Scoring Balance Weights", expanded=False):
     st.caption("Adjust the relative importance of each indicator. Every slider changes the score.")
 
     st.markdown("**Named Weight Sets**")
@@ -769,6 +745,24 @@ with st.sidebar.expander("Customize Indicator Weights", expanded=False):
     if st.button("🔄 Reset to Default (1.0)"):
         st.session_state.reset_weights = True
         st.rerun()
+
+with st.sidebar.expander("⚙️ Settings", expanded=False):
+    days_history = st.slider("Days of history", 90, 365, int(settings.get("days_history", 200)))
+    show_reasons = st.checkbox("Show score breakdown", value=settings.get("show_reasons", True))
+    show_extra_metrics = st.checkbox(
+        "Show extra metrics (7d, ATR, volume)",
+        value=settings.get("show_extra_metrics", True),
+    )
+
+    new_settings = {
+        "days_history": days_history,
+        "show_reasons": show_reasons,
+        "show_extra_metrics": show_extra_metrics,
+    }
+    if new_settings != settings:
+        settings = new_settings
+        prefs["settings"] = settings
+        save_preferences_to_cloud({"settings": settings})
 
 
 @st.cache_data(ttl=300)
