@@ -60,7 +60,9 @@ GitHub Actions runs the worker from `.github/workflows/alerts.yml` about every 5
 
 ## Market sentiment
 
-Under the chart, the selected asset gets a 0–100 sentiment score from headlines in the last 7 days. Green, amber, and red match the technical score colors. The two scores stay separate.
+Under the chart, the selected asset gets a 0–100 sentiment score from headlines in the last 7 days. The newest headline is listed first, and the number at the top is the average of the article scores. Green, amber, and red match the technical score colors. The two scores stay separate, and sentiment does not change the technical score or fire alerts.
+
+After an asset has been opened, that score also appears in the Sentiment column of the tables. A dash means it has not been scored yet. Clicking the colored score highlights the asset and jumps to its headlines. The score stays for 12 hours.
 
 Headlines come from Google News. Grok scores them. Add a key from the [xAI console](https://console.x.ai/) to `.streamlit/secrets.toml`:
 
