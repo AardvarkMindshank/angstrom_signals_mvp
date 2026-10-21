@@ -10,6 +10,7 @@ import json
 import time
 import traceback
 from datetime import datetime, timezone
+from urllib.parse import quote
 
 import pandas as pd
 import plotly.graph_objects as go
@@ -914,11 +915,14 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             color = tone(score)[3]
             label = f"{score:.0f}"
         return (
-            '<div style="display:flex;align-items:center;gap:8px;width:100%;min-width:100px;min-height:1.6rem;">'
-            '<div style="flex:1;background:#e5e7eb;border-radius:6px;height:10px;overflow:hidden;">'
+            '<div style="display:flex;align-items:center;gap:8px;width:100%;min-width:100px;">'
+            '<div style="flex:1;background:#e5e7eb;border-radius:6px;height:14px;overflow:hidden;">'
             f'<div style="width:{pct}%;background:{color};height:100%;border-radius:6px;"></div></div>'
             f'<span style="min-width:28px;font-weight:600;font-size:0.9em;">{label}</span></div>'
         )
+
+    def cell(value):
+        return f"<td style='padding:10px;white-space:nowrap;'>{html.escape(str(value))}</td>"
 
     def style_and_show_table(results, title, kind):
         if not results:
@@ -928,52 +932,51 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
         st.caption("Click a name to show that asset on the chart.")
 
         headers = ["Asset", "Score", "Signal", "Price", "RSI"]
-        widths = [2.4, 2.4, 1.7, 1.3, 1.0]
         if show_extra_metrics_flag:
             headers += ["7d %", "ATR %", "Vol"]
-            widths += [1.0, 1.0, 1.0]
-
-        header_cols = st.columns(widths, vertical_alignment="center")
-        for column, name in zip(header_cols, headers):
-            column.markdown(f"**{name}**")
+        header_html = "".join(
+            f"<th style='padding:8px 10px;text-align:left;white-space:nowrap;'>{html.escape(name)}</th>"
+            for name in headers
+        )
 
         pick = st.session_state.get("chart_pick")
+        rows_html = ""
         for _, row in frame.iterrows():
-            asset_id = row["key"]
+            asset_id = str(row["key"])
             selected = pick == (kind, asset_id)
-            columns = st.columns(widths, vertical_alignment="center")
-            if columns[0].button(
-                str(row["symbol"]),
-                key=f"chart_row_{'on' if selected else 'off'}_{kind}_{asset_id}",
-                type="secondary",
-                use_container_width=True,
-            ):
-                st.session_state.chart_pick = (kind, asset_id)
-                st.session_state.chart_pick_from_row = True
-                st.rerun(scope="fragment")
-            columns[1].markdown(render_score_bar(row["score"]), unsafe_allow_html=True)
+            row_style = "background:#e5e7eb;color:#111827;" if selected else ""
             price = row.get("latest_price")
             rsi = row.get("rsi")
-            row_values = [
-                row.get("label") or "—",
-                f"${price:,.2f}" if pd.notna(price) else "—",
-                f"{rsi:.1f}" if pd.notna(rsi) else "—",
-            ]
+            price_str = f"${price:,.2f}" if pd.notna(price) else "—"
+            rsi_str = f"{rsi:.1f}" if pd.notna(rsi) else "—"
+            href = f"?chart_kind={quote(kind)}&chart_asset={quote(asset_id)}"
+            name_link = (
+                f"<a href='{href}' style='color:inherit;font-weight:600;text-decoration:underline;'>"
+                f"{html.escape(str(row['symbol']))}</a>"
+            )
+            rows_html += (
+                f"<tr style='border-bottom:1px solid #f0f0f0;{row_style}'>"
+                f"<td style='padding:10px;white-space:nowrap;'>{name_link}</td>"
+                f"<td style='padding:10px;min-width:130px;'>{render_score_bar(row['score'])}</td>"
+                f"{cell(row.get('label') or '—')}{cell(price_str)}{cell(rsi_str)}"
+            )
             if show_extra_metrics_flag:
                 change = row.get("change_7d")
                 atr = row.get("atr_pct")
                 volume = row.get("volume_ratio")
-                row_values += [
-                    f"{change:+.1f}%" if pd.notna(change) else "—",
-                    f"{atr:.2f}" if pd.notna(atr) else "—",
-                    f"{volume:.2f}" if pd.notna(volume) else "—",
-                ]
-            for column, value in zip(columns[2:], row_values):
-                column.markdown(
-                    "<div style='display:flex;align-items:center;min-height:1.6rem;margin:0;'>"
-                    f"{html.escape(str(value))}</div>",
-                    unsafe_allow_html=True,
+                rows_html += (
+                    f"{cell(f'{change:+.1f}%' if pd.notna(change) else '—')}"
+                    f"{cell(f'{atr:.2f}' if pd.notna(atr) else '—')}"
+                    f"{cell(f'{volume:.2f}' if pd.notna(volume) else '—')}"
                 )
+            rows_html += "</tr>"
+
+        st.html(
+            "<div style='width:100%;overflow-x:auto;margin-bottom:8px;-webkit-overflow-scrolling:touch;'>"
+            "<table style='width:100%;border-collapse:collapse;font-size:0.95rem;'>"
+            f"<thead><tr style='border-bottom:2px solid #e5e7eb;'>{header_html}</tr></thead>"
+            f"<tbody>{rows_html}</tbody></table></div>"
+        )
 
         problems = [
             f"{row['symbol']}: {row['reasons'][0]}"
@@ -983,44 +986,17 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
         for problem in problems:
             st.text(problem)
 
-    st.html(
-        """
-        <style>
-        [class*="st-key-chart_row_"] button,
-        button[class*="st-key-chart_row_"] {
-            min-height: 1.6rem !important;
-            height: 1.6rem !important;
-            padding: 0 0.6rem !important;
-            background-color: #f9fafb !important;
-            border: 1px solid #e5e7eb !important;
-            color: #111827 !important;
-            font-weight: 500 !important;
-            line-height: 1.2 !important;
-        }
-        [class*="st-key-chart_row_on_"] button,
-        button[class*="st-key-chart_row_on_"] {
-            background-color: #e5e7eb !important;
-            border-color: #9ca3af !important;
-            color: #111827 !important;
-        }
-        [class*="st-key-chart_row_"] button:hover,
-        [class*="st-key-chart_row_"] button:focus,
-        button[class*="st-key-chart_row_"]:hover,
-        button[class*="st-key-chart_row_"]:focus {
-            background-color: #f3f4f6 !important;
-            border-color: #9ca3af !important;
-            color: #111827 !important;
-        }
-        [class*="st-key-chart_row_on_"] button:hover,
-        [class*="st-key-chart_row_on_"] button:focus,
-        button[class*="st-key-chart_row_on_"]:hover,
-        button[class*="st-key-chart_row_on_"]:focus {
-            background-color: #d1d5db !important;
-            color: #111827 !important;
-        }
-        </style>
-        """
-    )
+    chosen_kind = st.query_params.get("chart_kind")
+    chosen_asset = st.query_params.get("chart_asset")
+    if chosen_kind and chosen_asset:
+        chosen_kind = str(chosen_kind)
+        chosen_asset = str(chosen_asset)
+        chosen_list = crypto_watchlist if chosen_kind == "Crypto" else stock_watchlist if chosen_kind == "Stock" else {}
+        if chosen_asset in chosen_list:
+            st.session_state.chart_pick = (chosen_kind, chosen_asset)
+            st.session_state.chart_pick_from_row = True
+        del st.query_params["chart_kind"]
+        del st.query_params["chart_asset"]
 
     if "chart_pick" not in st.session_state:
         if crypto_watchlist:
