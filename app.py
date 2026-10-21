@@ -63,26 +63,30 @@ export default function(component) {
   const timerKey = "cd_" + ((data && data.key) || "x");
   window.clearInterval(window[timerKey]);
   let host = parentElement.querySelector("[data-countdown]");
-  Array.from(parentElement.children).forEach((child) => {
-    if (child !== host) child.remove();
-  });
   if (!host) {
     host = document.createElement("div");
     host.setAttribute("data-countdown", "");
-    host.style.cssText = "text-align:right;font-size:0.8rem;color:#6b7280;font-variant-numeric:tabular-nums;line-height:1.2;margin-top:4px;";
     parentElement.appendChild(host);
   }
+  const shell = parentElement.closest(".stBidiComponent") || parentElement;
+  shell.style.display = "none";
   const end = Number(data && data.deadlineMs);
   const token = String((data && data.token) || "");
+  function buttonLabel() {
+    const column = parentElement.closest('[data-testid="column"]')
+      || parentElement.closest('[data-testid="stColumn"]');
+    const button = column && column.querySelector("button");
+    if (!button) return null;
+    button.style.whiteSpace = "nowrap";
+    return button.querySelector("p") || button.querySelector('[data-testid="stMarkdownContainer"]') || button;
+  }
   function render() {
-    if (!Number.isFinite(end)) {
-      host.textContent = "";
-      return;
-    }
+    if (!Number.isFinite(end)) return;
     const left = Math.max(0, Math.round((end - Date.now()) / 1000));
     const minutes = Math.floor(left / 60);
     const seconds = String(left % 60).padStart(2, "0");
-    host.textContent = "auto " + minutes + ":" + seconds;
+    const label = buttonLabel();
+    if (label) label.textContent = "🔄 Refresh " + minutes + ":" + seconds;
     if (left <= 0 && token && window[timerKey + "_sent"] !== token) {
       window.clearInterval(window[timerKey]);
       window[timerKey + "_sent"] = token;
@@ -670,7 +674,7 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
 2. Click a name in either table. That row stays highlighted, and the chart below switches to it. The score breakdown shows which factors added or removed points.
 3. **7d %** is the seven-day price change. **ATR %** is volatility. **Vol** is volume versus its 20-day average.
 4. Alerts fire at 70 and 30 unless you move those sliders. One email goes to the address on your account when a score crosses a boundary. It is not sent again until the score leaves that boundary and crosses it later.
-5. Market sentiment, under the chart, asks Grok to score each recent headline from 0 to 100. The number at the top of that section is the average of those article scores. It is separate from the technical score. The timer under Refresh beside Quick Snapshot reloads prices and technical scores every 5 minutes. The timer under Refresh beside Market sentiment reloads the headlines and score for the asset on the chart about every hour. Pressing either button refreshes that section now and starts its timer again.
+5. Market sentiment, under the chart, asks Grok to score each recent headline from 0 to 100. The number at the top of that section is the average of those article scores. It is separate from the technical score. The time on the Refresh button beside Quick Snapshot reloads prices and technical scores every 5 minutes. The time on the Refresh button beside Market sentiment reloads the headlines and score for the asset on the chart about every hour. Pressing either button refreshes that section now and starts its timer again.
 
 **Alerts keep running in the background**
 
@@ -885,7 +889,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
     if "technical_due" not in st.session_state:
         st.session_state.technical_due = time.time() + _TECHNICAL_REFRESH_SECONDS
 
-    snap_title, snap_refresh = st.columns([5, 1], vertical_alignment="top")
+    snap_title, snap_refresh = st.columns([4, 1.45], vertical_alignment="center")
     with snap_title:
         st.subheader("Quick Snapshot")
     with snap_refresh:
@@ -1342,7 +1346,7 @@ def show_market_sentiment(kind: str, label: str, ticker: str | None):
         "<hr style='margin:1.4rem 0 0.6rem;border:none;border-top:1px solid #e5e7eb;'>",
         unsafe_allow_html=True,
     )
-    sentiment_title, sentiment_refresh = st.columns([5, 1], vertical_alignment="top")
+    sentiment_title, sentiment_refresh = st.columns([4, 1.45], vertical_alignment="center")
     with sentiment_title:
         st.subheader("Market sentiment")
     query = sentiment_query(kind, label, ticker)
