@@ -55,6 +55,26 @@ _score_table = st.components.v2.component(
     isolate_styles=False,
 )
 
+_SCROLL_JS = """
+export default function() {
+  const go = () => {
+    const target = document.getElementById("interactive-chart");
+    if (target) target.scrollIntoView({behavior: "smooth", block: "start"});
+  };
+  const frame = requestAnimationFrame(() => requestAnimationFrame(go));
+  const timer = setTimeout(go, 150);
+  return () => {
+    cancelAnimationFrame(frame);
+    clearTimeout(timer);
+  };
+}
+"""
+_scroll_chart = st.components.v2.component(
+    "scroll_chart",
+    js=_SCROLL_JS,
+    isolate_styles=False,
+)
+
 _TECHNICAL_REFRESH_SECONDS = 300
 _SENTIMENT_REFRESH_SECONDS = 3600
 _COUNTDOWN_JS = """
@@ -671,7 +691,7 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
 **How to use it**
 
 1. Read the snapshot and the tables. The top row is the strongest score, the bottom is the weakest.
-2. Click a name in either table. That row stays highlighted, and the chart below switches to it. The score breakdown shows which factors added or removed points.
+2. Click a name in either table, or a Quick Snapshot box. That asset stays highlighted, the page moves down to the chart, and the score breakdown shows which factors added or removed points.
 3. **7d %** is the seven-day price change. **ATR %** is volatility. **Vol** is volume versus its 20-day average.
 4. Alerts fire at 70 and 30 unless you move those sliders. One email goes to the address on your account when a score crosses a boundary. It is not sent again until the score leaves that boundary and crosses it later.
 5. Market sentiment, under the chart, asks Grok to score each recent headline from 0 to 100. The number at the top of that section is the average of those article scores. It is separate from the technical score. The time on the Refresh button beside Quick Snapshot reloads prices and technical scores every 5 minutes. The time on the Refresh button beside Market sentiment reloads the headlines and score for the asset on the chart about every hour. Pressing either button refreshes that section now and starts its timer again.
@@ -978,14 +998,27 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
     crypto_top, crypto_bot = get_top_bottom(crypto_results)
     stock_top, stock_bot = get_top_bottom(stock_results)
 
+    def _select_chart_asset(raw):
+        kind_name, sep, asset_id = str(raw).partition("|")
+        if not sep:
+            return
+        chosen = crypto_watchlist if kind_name == "Crypto" else stock_watchlist if kind_name == "Stock" else None
+        if not chosen or asset_id not in chosen:
+            return
+        st.session_state.scroll_to_chart = True
+        if st.session_state.get("chart_pick") != (kind_name, asset_id):
+            st.session_state.chart_pick = (kind_name, asset_id)
+            st.session_state.chart_pick_from_row = True
+        st.rerun(scope="fragment")
+
     c1, c2, c3, c4 = st.columns(4)
 
-    def render_snapshot_card(title, name, score):
+    def render_snapshot_card(title, name, score, pick):
         color, bg, arrow, _bar = tone(score)
         score_str = f"{score:.1f}/100" if score is not None and not pd.isna(score) else "—"
         safe_title = html.escape(str(title))
         safe_name = html.escape(str(name))
-        return (
+        body = (
             "<div style='background: white; padding: 12px 16px; border-radius: 8px; border: 1px solid #e5e7eb;'>"
             f"<div style='font-size: 0.8rem; color: #6b7280; margin-bottom: 4px;'>{safe_title}</div>"
             f"<div style='font-size: 1.1rem; font-weight: 600; color: #111827; margin-bottom: 8px; "
@@ -994,27 +1027,38 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             f"color: {color}; padding: 2px 8px; border-radius: 4px; font-size: 0.85rem; font-weight: 600;'>"
             f"{arrow} {score_str}</div></div>"
         )
+        if not pick:
+            return body
+        safe_pick = html.escape(pick, quote=True)
+        return (
+            f"<button type='button' data-pick='{safe_pick}' "
+            "style='display:block;width:100%;margin:0;padding:0;border:none;background:transparent;"
+            "text-align:left;cursor:pointer;font:inherit;color:inherit;'>"
+            f"{body}</button>"
+        )
 
-    with c1:
-        st.markdown(
-            render_snapshot_card("Top Crypto", crypto_top["symbol"] if crypto_top else "—", crypto_top["score"] if crypto_top else None),
-            unsafe_allow_html=True,
-        )
-    with c2:
-        st.markdown(
-            render_snapshot_card("Weakest Crypto", crypto_bot["symbol"] if crypto_bot else "—", crypto_bot["score"] if crypto_bot else None),
-            unsafe_allow_html=True,
-        )
-    with c3:
-        st.markdown(
-            render_snapshot_card("Top Stock", stock_top["symbol"] if stock_top else "—", stock_top["score"] if stock_top else None),
-            unsafe_allow_html=True,
-        )
-    with c4:
-        st.markdown(
-            render_snapshot_card("Weakest Stock", stock_bot["symbol"] if stock_bot else "—", stock_bot["score"] if stock_bot else None),
-            unsafe_allow_html=True,
-        )
+    def show_snapshot(column, title, row, kind, widget_key):
+        pick = None
+        name = "—"
+        score = None
+        if row and row.get("key"):
+            name = row["symbol"]
+            score = row.get("score")
+            pick = f"{kind}|{row['key']}"
+        with column:
+            picked = _score_table(
+                key=widget_key,
+                data=render_snapshot_card(title, name, score, pick),
+                on_picked_change=lambda: None,
+            ).picked
+            if picked:
+                _select_chart_asset(str(picked))
+
+    show_snapshot(c1, "Top Crypto", crypto_top, "Crypto", "snapshot_crypto_top")
+    show_snapshot(c2, "Weakest Crypto", crypto_bot, "Crypto", "snapshot_crypto_weak")
+    show_snapshot(c3, "Top Stock", stock_top, "Stock", "snapshot_stock_top")
+    show_snapshot(c4, "Weakest Stock", stock_bot, "Stock", "snapshot_stock_weak")
+    st.caption("Click a box to open that asset on the chart.")
 
     def render_score_bar(score):
         if score is None or pd.isna(score):
@@ -1105,19 +1149,6 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
         for problem in problems:
             st.text(problem)
 
-    def _select_chart_asset(raw):
-        kind_name, sep, asset_id = str(raw).partition("|")
-        if not sep:
-            return
-        chosen = crypto_watchlist if kind_name == "Crypto" else stock_watchlist if kind_name == "Stock" else None
-        if not chosen or asset_id not in chosen:
-            return
-        if st.session_state.get("chart_pick") == (kind_name, asset_id):
-            return
-        st.session_state.chart_pick = (kind_name, asset_id)
-        st.session_state.chart_pick_from_row = True
-        st.rerun(scope="fragment")
-
     chosen_kind = st.query_params.get("chart_kind")
     chosen_asset = st.query_params.get("chart_asset")
     if chosen_kind and chosen_asset:
@@ -1143,7 +1174,12 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
         "<hr style='margin:1.4rem 0 0.6rem;border:none;border-top:1px solid #e5e7eb;'>",
         unsafe_allow_html=True,
     )
+    st.html(
+        "<div id='interactive-chart' style='scroll-margin-top:4.5rem;'></div>"
+    )
     st.subheader("Interactive Chart")
+    if st.session_state.pop("scroll_to_chart", False):
+        _scroll_chart(key="scroll_to_chart", data={"target": "interactive-chart"})
     pick = st.session_state.get("chart_pick")
     if pick and (
         st.session_state.pop("chart_pick_from_row", False)
