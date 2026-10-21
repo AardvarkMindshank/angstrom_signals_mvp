@@ -68,7 +68,28 @@ YF_BY_COINGECKO_ID = {
     "worldcoin-wld": "WLD-USD",
 }
 
+# Tickers traders type, such as XLM, mapped back to the CoinGecko id used above.
+COINGECKO_ID_BY_SYMBOL = {
+    ticker.split("-")[0]: coin_id
+    for coin_id, ticker in YF_BY_COINGECKO_ID.items()
+}
+
 _HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; SignalsDashboard/1.0)"}
+
+
+def resolve_crypto_id(raw: str) -> str:
+    """Accept a CoinGecko id (stellar) or a ticker (XLM)."""
+    coin_id = (raw or "").strip().lower()
+    if coin_id in YF_BY_COINGECKO_ID:
+        return coin_id
+    return COINGECKO_ID_BY_SYMBOL.get(coin_id.upper(), coin_id)
+
+
+def crypto_ticker(raw: str) -> str | None:
+    yahoo = YF_BY_COINGECKO_ID.get(resolve_crypto_id(raw))
+    if not yahoo:
+        return None
+    return yahoo.split("-")[0]
 
 
 def period_for_days(days: int) -> str:
@@ -165,7 +186,8 @@ def _coingecko_ohlc(coin_id: str, days: int) -> pd.DataFrame:
 
 
 def fetch_crypto_data(coin_id: str, days: int = 200) -> tuple[pd.DataFrame, str | None]:
-    coin_id = (coin_id or "").strip().lower()
+    entered = (coin_id or "").strip()
+    coin_id = resolve_crypto_id(entered)
     if not coin_id:
         return pd.DataFrame(), "Missing crypto id."
 
@@ -199,7 +221,7 @@ def fetch_crypto_data(coin_id: str, days: int = 200) -> tuple[pd.DataFrame, str 
 
     detail = f" ({yahoo_error})" if yahoo_error else ""
     return pd.DataFrame(), (
-        f"No price history for '{coin_id}'. Use a CoinGecko id such as bitcoin or solana.{detail}"
+        f"No price history for '{entered or coin_id}'. Use a ticker such as XLM or a CoinGecko id such as stellar.{detail}"
     )
 
 
@@ -217,6 +239,7 @@ def fetch_stock_data(ticker: str, period: str = "1y") -> tuple[pd.DataFrame, str
 
 
 def get_current_price_crypto(coin_id: str) -> float | None:
+    coin_id = resolve_crypto_id(coin_id)
     try:
         response = requests.get(
             "https://api.coingecko.com/api/v3/simple/price",

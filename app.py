@@ -26,7 +26,13 @@ st.set_page_config(
 
 try:
     from alerts import evaluate_alerts
-    from data_fetchers import fetch_crypto_data, fetch_stock_data, period_for_days
+    from data_fetchers import (
+        crypto_ticker,
+        fetch_crypto_data,
+        fetch_stock_data,
+        period_for_days,
+        resolve_crypto_id,
+    )
     from scoring import calculate_indicators, compute_score, find_column
 except Exception:
     st.error("The dashboard could not load its scoring code.")
@@ -591,12 +597,22 @@ if st.session_state.get("reset_weights"):
 st.sidebar.header("⭐ Watchlists")
 
 with st.sidebar.expander("Edit Crypto", expanded=False):
-    st.caption("Add by CoinGecko id (bitcoin, ethereum, polkadot, dogecoin).")
-    new_crypto = st.text_input("Add crypto id", key="new_crypto", placeholder="e.g. dogecoin")
+    st.caption("Add a ticker (XLM, SOL) or a CoinGecko id (stellar, solana).")
+    new_crypto = st.text_input("Add crypto", key="new_crypto", placeholder="e.g. XLM or solana")
     if st.button("Add Crypto") and new_crypto:
-        cid = new_crypto.strip().lower()
+        cid = resolve_crypto_id(new_crypto)
+        ticker = crypto_ticker(cid)
+        typed_ticker = bool(ticker) and new_crypto.strip().upper() == ticker
+        label = ticker if typed_ticker else cid.replace("-", " ").title()
+        alias = (ticker or "").lower()
+        changed = False
+        if alias and alias != cid and alias in CRYPTO_WATCHLIST:
+            CRYPTO_WATCHLIST.pop(alias, None)
+            changed = True
         if cid and cid not in CRYPTO_WATCHLIST:
-            CRYPTO_WATCHLIST[cid] = cid.replace("-", " ").title()
+            CRYPTO_WATCHLIST[cid] = label
+            changed = True
+        if changed:
             prefs["crypto"] = CRYPTO_WATCHLIST
             save_preferences_to_cloud({"crypto_watchlist": CRYPTO_WATCHLIST})
             st.rerun()
@@ -749,6 +765,10 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
     def process_watchlist(watchlist, is_crypto=True):
         results = []
         for key, name in watchlist.items():
+            if is_crypto:
+                ticker = crypto_ticker(key)
+                if ticker and str(key).strip().upper() == ticker:
+                    name = ticker
             with st.spinner(f"Loading {name}..."):
                 if is_crypto:
                     df, err = load_crypto(key, history_days, nonce)
