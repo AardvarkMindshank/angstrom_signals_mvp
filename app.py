@@ -582,7 +582,7 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
 2. Click a name in either table. That row stays highlighted, and the chart below switches to it. The score breakdown shows which factors added or removed points.
 3. **7d %** is the seven-day price change. **ATR %** is volatility. **Vol** is volume versus its 20-day average.
 4. Alerts fire at 70 and 30 unless you move those sliders. One email goes to the address on your account when a score crosses a boundary. It is not sent again until the score leaves that boundary and crosses it later.
-5. Market sentiment, under the chart, reads recent headlines for the selected asset and scores that coverage from 0 to 100. It is separate from the technical score.
+5. Market sentiment, under the chart, scores each recent headline from 0 to 100. The number at the top of that section is the average of those article scores. It is separate from the technical score.
 
 **Alerts keep running in the background**
 
@@ -1247,7 +1247,7 @@ def show_market_sentiment(kind: str, label: str, ticker: str | None):
         summary = html.escape(report.get("summary") or "")
         st.markdown(
             "<div style='background:#ffffff;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;'>"
-            "<div style='font-size:0.8rem;color:#6b7280;margin-bottom:4px;'>From headlines in the last 7 days</div>"
+            "<div style='font-size:0.8rem;color:#6b7280;margin-bottom:4px;'>Average of the article scores below, from the last 7 days</div>"
             f"<div style='display:inline-flex;align-items:center;gap:6px;background:{background};color:{color};"
             f"padding:2px 8px;border-radius:4px;font-weight:600;'>{arrow} {score:.0f}/100</div>"
             f"<div style='margin-top:8px;font-weight:600;color:{color};'>{html.escape(coverage)}</div>"
@@ -1268,19 +1268,32 @@ def show_market_sentiment(kind: str, label: str, ticker: str | None):
         st.info("The sentiment score could not be built this time. The articles are below.")
 
     if headlines:
-        links = []
+        rows = [
+            "<div style='display:flex;align-items:center;gap:16px;padding:4px 0 8px;'>"
+            "<div style='flex:1;font-size:0.8rem;font-weight:600;color:#6b7280;'>Article</div>"
+            "<div style='width:76px;flex:none;text-align:right;font-size:0.8rem;font-weight:600;color:#6b7280;'>Score</div>"
+            "</div>"
+        ]
         for item in headlines:
             source = f" — {html.escape(item['source'])}" if item.get("source") else ""
-            links.append(
-                "<li style='margin:6px 0;'>"
+            article_score = item.get("score")
+            if article_score is None:
+                badge = "<span style='color:#6b7280;'>—</span>"
+            else:
+                color, background, _arrow, _bar = tone(article_score)
+                badge = (
+                    f"<span style='display:inline-block;min-width:52px;text-align:center;background:{background};"
+                    f"color:{color};border-radius:4px;padding:2px 8px;font-weight:600;'>"
+                    f"{article_score:.0f}</span>"
+                )
+            rows.append(
+                "<div style='display:flex;align-items:center;gap:16px;padding:8px 0;border-top:1px solid #f3f4f6;'>"
+                "<div style='flex:1;min-width:0;'>"
                 f"<a href='{html.escape(item['link'], quote=True)}' target='_blank' rel='noopener noreferrer'>"
-                f"{html.escape(item['title'])}</a>{source}</li>"
+                f"{html.escape(item['title'])}</a>{source}</div>"
+                f"<div style='width:76px;flex:none;text-align:right;'>{badge}</div></div>"
             )
-        st.html(
-            "<div style='margin-top:8px;'>"
-            "<div style='font-size:0.85rem;font-weight:600;color:#111827;'>Articles</div>"
-            f"<ul style='margin:6px 0 0;padding-left:1.1rem;'>{''.join(links)}</ul></div>"
-        )
+        st.html(f"<div style='margin-top:10px;'>{''.join(rows)}</div>")
     st.caption("This reads recent coverage. It is not the technical score, and it is not advice.")
 
 

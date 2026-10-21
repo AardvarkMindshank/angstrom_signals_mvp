@@ -124,11 +124,12 @@ def _prompt(query: str, headlines: list[dict]) -> str:
         "Headlines:\n"
         + "\n".join(lines)
         + "\n\nReturn JSON with score, summary, and drivers. "
-        "score is 0 to 100: 0 is strongly bearish coverage, 50 is mixed or thin, "
-        "100 is strongly bullish coverage. "
-        "summary is two sentences about what the headlines say. "
+        "articles is one object per headline, using the same index numbers, "
+        "each with a score from 0 to 100 for that headline alone. "
+        "0 is strongly bearish, 50 is mixed or unclear, 100 is strongly bullish. "
+        "summary is two sentences about the set of headlines. "
         "drivers is up to 3 short phrases. "
-        "Do not add facts that are not in the headlines. Stay near 50 when coverage is mixed."
+        "Do not add facts that are not in the headlines."
     )
 
 
@@ -141,8 +142,18 @@ def _read_model_text(response: requests.Response) -> dict:
     if not texts:
         return {"ok": False, "reason": "model_error"}
     parsed = _parse_model_json(texts[-1])
-    score = _clamp_score(parsed.get("score"))
-    if score is None:
+    scores = {}
+    for item in parsed.get("articles") or []:
+        if not isinstance(item, dict):
+            continue
+        try:
+            index = int(item.get("index"))
+        except (TypeError, ValueError):
+            continue
+        score = _clamp_score(item.get("score"))
+        if score is not None:
+            scores[index] = score
+    if not scores:
         return {"ok": False, "reason": "model_error"}
     summary = " ".join(str(parsed.get("summary") or "").split())
     drivers = []
@@ -152,7 +163,7 @@ def _read_model_text(response: requests.Response) -> dict:
             drivers.append(text[:160])
         if len(drivers) == 3:
             break
-    return {"ok": True, "score": score, "summary": summary, "drivers": drivers}
+    return {"ok": True, "scores": scores, "summary": summary, "drivers": drivers}
 
 
 def _summarize(query: str, headlines: list[dict]) -> dict:
@@ -166,7 +177,7 @@ def _summarize(query: str, headlines: list[dict]) -> dict:
         "contents": [{"parts": [{"text": _prompt(query, headlines)}]}],
         "generationConfig": {
             "temperature": 0.2,
-            "maxOutputTokens": 512,
+            "maxOutputTokens": 800,
             "responseMimeType": "application/json",
         },
     }
@@ -190,7 +201,23 @@ def _summarize(query: str, headlines: list[dict]) -> dict:
                 continue
             if parsed.get("ok"):
                 _BUSY_UNTIL.pop(query, None)
-                return parsed
+                scored = []
+                values = []
+                for index, item in enumerate(headlines, start=1):
+                    row = dict(item)
+                    if index in parsed["scores"]:
+                        row["score"] = parsed["scores"][index]
+                        values.append(row["score"])
+                    scored.append(row)
+                if not values:
+                    continue
+                return {
+                    "ok": True,
+                    "score": sum(values) / len(values),
+                    "summary": parsed.get("summary") or "",
+                    "drivers": parsed.get("drivers") or [],
+                    "headlines": scored,
+                }
             continue
         if response.status_code in (401, 403):
             saw_auth = True
@@ -214,7 +241,10 @@ def analyze_market_sentiment(query: str, enabled: bool) -> dict:
     """
     cached = _SCORE_CACHE.get(query)
     if enabled and cached and time.time() - cached[0] < 3600:
-        return cached[1]
+        stored = cached[1]
+        stored_rows = stored.get("headlines") or []
+        if stored.get("ok") and stored_rows and all(row.get("score") is not None for row in stored_rows):
+            return stored
     try:
         headlines = fetch_headlines(query)
     except Exception:
@@ -227,7 +257,8 @@ def analyze_market_sentiment(query: str, enabled: bool) -> dict:
         summary = _summarize(query, headlines)
     except Exception:
         summary = {"ok": False, "reason": "model_error"}
-    summary["headlines"] = headlines
+    if not summary.get("headlines"):
+        summary["headlines"] = headlines
     if summary.get("ok"):
         _SCORE_CACHE[query] = (time.time(), summary)
     return summary
