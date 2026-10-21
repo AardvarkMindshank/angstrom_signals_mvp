@@ -409,6 +409,33 @@ if st.sidebar.button("Log Out", use_container_width=True):
 
 st.sidebar.markdown("---")
 
+def tone(score):
+    """Text color, badge background, arrow, and bar color for a score."""
+    if score is None or pd.isna(score):
+        return "#6b7280", "#f3f4f6", "—", "#6b7280"
+    if score >= 53:
+        return "#15803d", "#dcfce7", "↑", "#22c55e"
+    if score >= 47:
+        return "#b45309", "#fef3c7", "→", "#f59e0b"
+    return "#b91c1c", "#fee2e2", "↓", "#ef4444"
+
+
+def score_from_alert(note: dict):
+    message = str(note.get("message") or "")
+    if "/100" in message:
+        token = message.split("/100", 1)[0].rsplit(None, 1)[-1]
+        try:
+            return float(token)
+        except ValueError:
+            pass
+    kind = str(note.get("alert_type") or "")
+    if kind.startswith("BULLISH"):
+        return 70.0
+    if kind.startswith("BEARISH"):
+        return 30.0
+    return None
+
+
 st.sidebar.header("🔔 Notifications")
 notifications_list = fetch_user_notifications()
 unread_count = sum(1 for note in notifications_list if not note.get("is_read", False))
@@ -445,13 +472,20 @@ with st.sidebar.expander(f"Alert Feed {f'({unread_count} new)' if unread_count >
         else:
             st.markdown("<div style='height: 4px;'></div>", unsafe_allow_html=True)
             for note in filtered_notifs:
-                badge = "🔴" if not note.get("is_read") else "⚪"
-                created = str(note.get("created_at") or "")[:16].replace("T", " ")
-                st.write(f"{badge} {note.get('asset_name') or 'Asset'}")
-                st.caption(note.get("message") or "")
-                if created:
-                    st.caption(created)
-                st.markdown("---")
+                color, background, arrow, _bar = tone(score_from_alert(note))
+                name = html.escape(str(note.get("asset_name") or "Asset"))
+                message = html.escape(str(note.get("message") or ""))
+                created = html.escape(str(note.get("created_at") or "")[:16].replace("T", " "))
+                weight = "700" if not note.get("is_read") else "500"
+                border = color if not note.get("is_read") else "#e5e7eb"
+                st.markdown(
+                    "<div style='background:"
+                    f"{background};border:1px solid {border};border-radius:8px;padding:8px 10px;margin-bottom:8px;'>"
+                    f"<div style='font-weight:{weight};color:{color};'>{arrow} {name}</div>"
+                    f"<div style='font-size:0.8rem;color:#374151;margin-top:2px;'>{message}</div>"
+                    f"<div style='font-size:0.75rem;color:#6b7280;margin-top:2px;'>{created}</div></div>",
+                    unsafe_allow_html=True,
+                )
 
             if st.button("🗑️ Clear Read Alerts", use_container_width=True, key="clear_read_btn"):
                 try:
@@ -747,17 +781,6 @@ def load_crypto(coin_id, days, nonce):
 def load_stock(ticker, days, nonce):
     del nonce
     return fetch_stock_data(ticker, period=period_for_days(days))
-
-
-def tone(score):
-    """Text color, badge background, arrow, and bar color for a score."""
-    if score is None or pd.isna(score):
-        return "#6b7280", "#f3f4f6", "—", "#6b7280"
-    if score >= 53:
-        return "#15803d", "#dcfce7", "↑", "#22c55e"
-    if score >= 47:
-        return "#b45309", "#fef3c7", "→", "#f59e0b"
-    return "#b91c1c", "#fee2e2", "↓", "#ef4444"
 
 
 @st.fragment(run_every=300)
