@@ -271,6 +271,14 @@ def _summarize(query: str, headlines: list[dict]) -> dict:
     return {"ok": False, "reason": "model_error"}
 
 
+def sentiment_cached_at(query: str) -> float | None:
+    """When the current score was stored, or None when this asset has no saved score."""
+    cached = _SCORE_CACHE.get(query)
+    if not cached:
+        return None
+    return cached[0]
+
+
 def analyze_market_sentiment(query: str, enabled: bool, force: bool = False) -> dict:
     """Headlines plus a score when an xAI key is configured.
 

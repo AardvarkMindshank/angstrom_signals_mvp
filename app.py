@@ -55,6 +55,65 @@ _score_table = st.components.v2.component(
     isolate_styles=False,
 )
 
+_TECHNICAL_REFRESH_SECONDS = 300
+_SENTIMENT_REFRESH_SECONDS = 3600
+_COUNTDOWN_JS = """
+export default function(component) {
+  const { data, setTriggerValue, parentElement } = component;
+  const timerKey = "cd_" + ((data && data.key) || "x");
+  window.clearInterval(window[timerKey]);
+  let host = parentElement.querySelector("[data-countdown]");
+  Array.from(parentElement.children).forEach((child) => {
+    if (child !== host) child.remove();
+  });
+  if (!host) {
+    host = document.createElement("div");
+    host.setAttribute("data-countdown", "");
+    host.style.cssText = "text-align:right;font-size:0.8rem;color:#6b7280;font-variant-numeric:tabular-nums;line-height:1.2;margin-top:4px;";
+    parentElement.appendChild(host);
+  }
+  const end = Number(data && data.deadlineMs);
+  const token = String((data && data.token) || "");
+  function render() {
+    if (!Number.isFinite(end)) {
+      host.textContent = "";
+      return;
+    }
+    const left = Math.max(0, Math.round((end - Date.now()) / 1000));
+    const minutes = Math.floor(left / 60);
+    const seconds = String(left % 60).padStart(2, "0");
+    host.textContent = "auto " + minutes + ":" + seconds;
+    if (left <= 0 && token && window[timerKey + "_sent"] !== token) {
+      window.clearInterval(window[timerKey]);
+      window[timerKey + "_sent"] = token;
+      setTriggerValue("due", token);
+    }
+  }
+  render();
+  window[timerKey] = setInterval(render, 1000);
+  return () => {
+    window.clearInterval(window[timerKey]);
+    host.remove();
+  };
+}
+"""
+_countdown = st.components.v2.component(
+    "refresh_countdown",
+    js=_COUNTDOWN_JS,
+    isolate_styles=False,
+)
+
+
+def _countdown_due(deadline: float, widget_key: str) -> bool:
+    """Show the time left and report when this deadline has been reached."""
+    token = str(int(deadline * 1000))
+    result = _countdown(
+        key=widget_key,
+        data={"deadlineMs": int(deadline * 1000), "token": token, "key": widget_key},
+        on_due_change=lambda: None,
+    )
+    return result.due == token
+
 try:
     from alerts import evaluate_alerts
     from data_fetchers import (
@@ -66,7 +125,12 @@ try:
         resolve_crypto_id,
     )
     from scoring import calculate_indicators, compute_score, find_column
-    from sentiment import analyze_market_sentiment, sentiment_query, sentiment_ready
+    from sentiment import (
+        analyze_market_sentiment,
+        sentiment_cached_at,
+        sentiment_query,
+        sentiment_ready,
+    )
 except Exception:
     st.error("The dashboard could not load its scoring code.")
     st.code(traceback.format_exc())
@@ -606,11 +670,11 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
 2. Click a name in either table. That row stays highlighted, and the chart below switches to it. The score breakdown shows which factors added or removed points.
 3. **7d %** is the seven-day price change. **ATR %** is volatility. **Vol** is volume versus its 20-day average.
 4. Alerts fire at 70 and 30 unless you move those sliders. One email goes to the address on your account when a score crosses a boundary. It is not sent again until the score leaves that boundary and crosses it later.
-5. Market sentiment, under the chart, asks Grok to score each recent headline from 0 to 100. The number at the top of that section is the average of those article scores. It is separate from the technical score. Refresh beside Quick Snapshot reloads prices and technical scores. Refresh beside Market sentiment reloads the headlines and score for the asset on the chart.
+5. Market sentiment, under the chart, asks Grok to score each recent headline from 0 to 100. The number at the top of that section is the average of those article scores. It is separate from the technical score. The timer under Refresh beside Quick Snapshot reloads prices and technical scores every 5 minutes. The timer under Refresh beside Market sentiment reloads the headlines and score for the asset on the chart about every hour. Pressing either button refreshes that section now and starts its timer again.
 
 **Alerts keep running in the background**
 
-Prices and scores on this page refresh every 5 minutes while it is open. The same 5-minute check keeps running after you close the page or log out.
+Prices and technical scores on this page refresh every 5 minutes while it is open. Market sentiment refreshes about every hour while it is open. The same 5-minute alert check keeps running after you close the page or log out.
 
 - A crossing is saved on your account. It shows up under Notifications the next time you log in.
 - The email goes only to you.
@@ -816,19 +880,25 @@ def load_market_sentiment(query: str, enabled: bool, force: bool = False):
     return analyze_market_sentiment(query, enabled, force=force)
 
 
-@st.fragment(run_every=300)
+@st.fragment
 def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, show_reasons_flag, show_extra_metrics_flag):
-    snap_title, snap_refresh = st.columns([5, 1], vertical_alignment="center")
+    if "technical_due" not in st.session_state:
+        st.session_state.technical_due = time.time() + _TECHNICAL_REFRESH_SECONDS
+
+    snap_title, snap_refresh = st.columns([5, 1], vertical_alignment="top")
     with snap_title:
         st.subheader("Quick Snapshot")
     with snap_refresh:
-        if st.button(
+        technical_now = st.button(
             "🔄 Refresh",
             key="refresh_technical",
             use_container_width=True,
-            help="Pull fresh prices and technical scores",
-        ):
+            help="Pull fresh prices and technical scores. This also runs on its own when the timer reaches zero.",
+        )
+        technical_due = _countdown_due(st.session_state.technical_due, "technical_countdown")
+        if technical_now or technical_due:
             st.session_state.data_nonce += 1
+            st.session_state.technical_due = time.time() + _TECHNICAL_REFRESH_SECONDS
             st.rerun(scope="fragment")
 
     # Wall-clock window so a scheduled rerun fetches new prices instead of the 5-minute cache.
@@ -1272,17 +1342,33 @@ def show_market_sentiment(kind: str, label: str, ticker: str | None):
         "<hr style='margin:1.4rem 0 0.6rem;border:none;border-top:1px solid #e5e7eb;'>",
         unsafe_allow_html=True,
     )
-    sentiment_title, sentiment_refresh = st.columns([5, 1], vertical_alignment="center")
+    sentiment_title, sentiment_refresh = st.columns([5, 1], vertical_alignment="top")
     with sentiment_title:
         st.subheader("Market sentiment")
+    query = sentiment_query(kind, label, ticker)
+    sentiment_deadlines = st.session_state.setdefault("sentiment_due", {})
+    if query not in sentiment_deadlines:
+        cached_at = sentiment_cached_at(query)
+        sentiment_deadlines[query] = (
+            cached_at + _SENTIMENT_REFRESH_SECONDS
+            if cached_at
+            else time.time() + _SENTIMENT_REFRESH_SECONDS
+        )
     with sentiment_refresh:
-        force_sentiment = st.button(
+        sentiment_now = st.button(
             "🔄 Refresh",
             key="refresh_sentiment",
             use_container_width=True,
-            help="Pull fresh headlines and a new sentiment score for this asset",
+            help="Pull fresh headlines and a new sentiment score for this asset. This also runs on its own when the timer reaches zero.",
         )
-    query = sentiment_query(kind, label, ticker)
+        sentiment_due = _countdown_due(sentiment_deadlines[query], "sentiment_countdown")
+        if sentiment_now or sentiment_due:
+            sentiment_deadlines[query] = time.time() + _SENTIMENT_REFRESH_SECONDS
+            st.session_state.sentiment_force = query
+            st.rerun(scope="fragment")
+    force_sentiment = st.session_state.get("sentiment_force") == query
+    if force_sentiment:
+        st.session_state.sentiment_force = None
     with st.spinner("Reading recent headlines..."):
         report = load_market_sentiment(query, sentiment_ready(), force=force_sentiment)
 
@@ -1378,5 +1464,5 @@ render_dashboard(
 )
 
 st.sidebar.markdown("---")
-st.sidebar.info("Prices and scores refresh every 5 minutes while this page is open. Alert checks continue every 5 minutes after you leave.")
+st.sidebar.info("Prices and technical scores refresh every 5 minutes while this page is open. Market sentiment refreshes about every hour. Alert checks continue every 5 minutes after you leave.")
 st.sidebar.caption("Watchlists, settings, and alerts are stored on your account.")
