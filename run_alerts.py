@@ -35,22 +35,41 @@ def jwt_role(key: str) -> str | None:
         return None
 
 
+def describe_key(key: str) -> str:
+    """Classify a Supabase key without revealing the key itself."""
+    key = key.strip()
+    if key.startswith("sb_secret_"):
+        return "secret"
+    if key.startswith("sb_publishable_"):
+        return "publishable"
+    role = jwt_role(key)
+    if role in ("service_role", "anon"):
+        return role
+    return "unrecognized"
+
+
 def load_credentials() -> tuple[str, str]:
-    url = os.environ.get("SUPABASE_URL")
-    key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ.get("SUPABASE_KEY")
+    url = (os.environ.get("SUPABASE_URL") or "").strip()
+    key = (os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ.get("SUPABASE_KEY") or "").strip()
     if not url or not key:
         try:
             import streamlit as st
-            url = st.secrets["supabase"]["url"]
-            key = st.secrets["supabase"].get("service_role_key") or st.secrets["supabase"].get("key")
+            url = str(st.secrets["supabase"]["url"]).strip()
+            key = str(
+                st.secrets["supabase"].get("service_role_key")
+                or st.secrets["supabase"].get("key")
+                or ""
+            ).strip()
         except Exception as exc:
             raise ValueError(
                 "Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY for the alert worker."
             ) from exc
-    if jwt_role(key) != "service_role":
+    kind = describe_key(key)
+    if kind not in ("secret", "service_role"):
         raise ValueError(
-            "The alert worker needs the Supabase service-role key "
-            "(SUPABASE_SERVICE_ROLE_KEY). The anon key cannot read every account."
+            "SUPABASE_SERVICE_ROLE_KEY is the wrong key. Use the Supabase secret key "
+            "(it starts with sb_secret_) or the legacy service_role key. "
+            f"The saved value looks like: {kind}."
         )
     return url, key
 
