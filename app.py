@@ -43,6 +43,8 @@ export default function(component) {
   host.querySelectorAll("button[data-pick]").forEach((button) => {
     button.addEventListener("click", (event) => {
       event.preventDefault();
+      event.stopPropagation();
+      button.blur();
       setTriggerValue("picked", button.getAttribute("data-pick"));
     });
   });
@@ -56,17 +58,26 @@ _score_table = st.components.v2.component(
 )
 
 _SCROLL_JS = """
-export default function() {
+export default function(component) {
+  const { data, parentElement } = component;
+  const shell = parentElement.closest(".stBidiComponent") || parentElement;
+  shell.style.display = "none";
+  const token = String((data && data.token) || "");
+  if (!token || window.scrollChartToken === token) return;
+  window.scrollChartToken = token;
   const go = () => {
     const target = document.getElementById("interactive-chart");
-    if (target) target.scrollIntoView({behavior: "smooth", block: "start"});
+    if (!target) return;
+    target.scrollIntoView({behavior: "auto", block: "start"});
+    const scroller = target.closest('[data-testid="stMain"]') || target.closest("section.main");
+    if (!scroller) return;
+    const top = target.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop - 72;
+    scroller.scrollTop = Math.max(0, top);
   };
-  const frame = requestAnimationFrame(() => requestAnimationFrame(go));
-  const timer = setTimeout(go, 150);
-  return () => {
-    cancelAnimationFrame(frame);
-    clearTimeout(timer);
-  };
+  go();
+  setTimeout(go, 50);
+  setTimeout(go, 250);
+  setTimeout(go, 700);
 }
 """
 _scroll_chart = st.components.v2.component(
@@ -1039,7 +1050,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
         chosen = crypto_watchlist if kind_name == "Crypto" else stock_watchlist if kind_name == "Stock" else None
         if not chosen or asset_id not in chosen:
             return
-        st.session_state.scroll_to_chart = True
+        st.session_state.scroll_token = str(time.time_ns())
         if st.session_state.get("chart_pick") != (kind_name, asset_id):
             st.session_state.chart_pick = (kind_name, asset_id)
             st.session_state.chart_pick_from_row = True
@@ -1208,8 +1219,10 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
         "<div id='interactive-chart' style='scroll-margin-top:4.5rem;'></div>"
     )
     st.subheader("Interactive Chart")
-    if st.session_state.pop("scroll_to_chart", False):
-        _scroll_chart(key="scroll_to_chart", data={"target": "interactive-chart"})
+    _scroll_chart(
+        key="scroll_to_chart",
+        data={"token": st.session_state.get("scroll_token") or ""},
+    )
     pick = st.session_state.get("chart_pick")
     if pick and (
         st.session_state.pop("chart_pick_from_row", False)
