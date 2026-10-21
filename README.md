@@ -69,7 +69,7 @@ Headlines come from Google News. Grok scores them. Add a key from the [xAI conso
 xai_api_key = "YOUR_XAI_API_KEY"
 ```
 
-Put the same block in the Streamlit Cloud app secrets. The result is cached for one hour per asset. Without the key, the headlines still show and the score waits.
+Put the same block in the Streamlit Cloud app secrets. The result is cached for 12 hours per asset. Without the key, the headlines still show and the score waits.
 
 ## Data notes
 

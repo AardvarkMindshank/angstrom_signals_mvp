@@ -99,7 +99,6 @@ _scroll_chart = st.components.v2.component(
 )
 
 _TECHNICAL_REFRESH_SECONDS = 300
-_SENTIMENT_REFRESH_SECONDS = 3600
 _COUNTDOWN_JS = """
 export default function(component) {
   const { data, setTriggerValue, parentElement } = component;
@@ -126,10 +125,14 @@ export default function(component) {
   function render() {
     if (!Number.isFinite(end)) return;
     const left = Math.max(0, Math.round((end - Date.now()) / 1000));
-    const minutes = Math.floor(left / 60);
+    const hours = Math.floor(left / 3600);
+    const minutes = Math.floor((left % 3600) / 60);
     const seconds = String(left % 60).padStart(2, "0");
+    const clock = hours > 0
+      ? hours + ":" + String(minutes).padStart(2, "0") + ":" + seconds
+      : minutes + ":" + seconds;
     const label = buttonLabel();
-    if (label) label.textContent = "🔄 Refresh " + minutes + ":" + seconds;
+    if (label) label.textContent = "🔄 Refresh " + clock;
     if (left <= 0 && token && window[timerKey + "_sent"] !== token) {
       window.clearInterval(window[timerKey]);
       window[timerKey + "_sent"] = token;
@@ -179,6 +182,7 @@ try:
         sentiment_cached_at,
         sentiment_query,
         sentiment_ready,
+        SENTIMENT_REFRESH_SECONDS,
     )
 except Exception:
     st.error("The dashboard could not load its scoring code.")
@@ -784,11 +788,11 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
 2. Click a name in either table, a Quick Snapshot box, or an alert under Notifications. That asset stays highlighted, and the page moves down to the chart when the chart is off screen. Click a sentiment score in the table to open that asset's headlines.
 3. **7d %** is the seven-day price change. **ATR %** is volatility. **Vol** is volume versus its 20-day average.
 4. Alerts fire at 70 and 30 unless you move those sliders. One email goes to the address on your account when a score crosses a boundary. It is not sent again until the score leaves that boundary and crosses it later.
-5. Market sentiment, under the chart, asks Grok to score each recent headline from 0 to 100. The number at the top of that section is the average of those article scores. It is separate from the technical score. The time on the Refresh button beside Quick Snapshot reloads prices and technical scores every 5 minutes. The time on the Refresh button beside Market sentiment reloads the headlines and score for the asset on the chart about every hour. Pressing either button refreshes that section now and starts its timer again.
+5. Market sentiment, under the chart, asks Grok to score each recent headline from 0 to 100. The number at the top of that section is the average of those article scores. It is separate from the technical score. The time on the Refresh button beside Quick Snapshot reloads prices and technical scores every 5 minutes. The time on the Refresh button beside Market sentiment reloads the headlines and score for the asset on the chart about every 12 hours. Pressing either button refreshes that section now and starts its timer again.
 
 **Alerts keep running in the background**
 
-Prices and technical scores on this page refresh every 5 minutes while it is open. Market sentiment refreshes about every hour while it is open. The same 5-minute alert check keeps running after you close the page or log out.
+Prices and technical scores on this page refresh every 5 minutes while it is open. Market sentiment refreshes about every 12 hours while it is open. The same 5-minute alert check keeps running after you close the page or log out.
 
 - A crossing is saved on your account. It shows up under Notifications the next time you log in.
 - The email goes only to you.
@@ -1533,7 +1537,7 @@ def _published_label(value) -> str:
 
 @st.fragment
 def show_market_sentiment(kind: str, label: str, ticker: str | None):
-    """Headline sentiment for the asset on the chart. Cached for one hour."""
+    """Headline sentiment for the asset on the chart. Cached for 12 hours."""
     st.html("<div id='market-sentiment' style='scroll-margin-top:4.5rem;'></div>")
     st.markdown(
         "<hr style='margin:1.4rem 0 0.6rem;border:none;border-top:1px solid #e5e7eb;'>",
@@ -1543,7 +1547,7 @@ def show_market_sentiment(kind: str, label: str, ticker: str | None):
     if kind == "Stock" and ticker and ticker.upper() not in shown_name.upper():
         shown_name = f"{shown_name} ({ticker})" if shown_name else ticker
     sentiment_heading = f"Market sentiment - {shown_name}" if shown_name else "Market sentiment"
-    sentiment_title, sentiment_refresh = st.columns([4, 1.45], vertical_alignment="center")
+    sentiment_title, sentiment_refresh = st.columns([4, 2.05], vertical_alignment="center")
     with sentiment_title:
         st.subheader(sentiment_heading)
     query = sentiment_query(kind, label, ticker)
@@ -1551,9 +1555,9 @@ def show_market_sentiment(kind: str, label: str, ticker: str | None):
     if query not in sentiment_deadlines:
         cached_at = sentiment_cached_at(query)
         sentiment_deadlines[query] = (
-            cached_at + _SENTIMENT_REFRESH_SECONDS
+            cached_at + SENTIMENT_REFRESH_SECONDS
             if cached_at
-            else time.time() + _SENTIMENT_REFRESH_SECONDS
+            else time.time() + SENTIMENT_REFRESH_SECONDS
         )
     with sentiment_refresh:
         sentiment_now = st.button(
@@ -1564,7 +1568,7 @@ def show_market_sentiment(kind: str, label: str, ticker: str | None):
         )
         sentiment_due = _countdown_due(sentiment_deadlines[query], "sentiment_countdown")
         if sentiment_now or sentiment_due:
-            sentiment_deadlines[query] = time.time() + _SENTIMENT_REFRESH_SECONDS
+            sentiment_deadlines[query] = time.time() + SENTIMENT_REFRESH_SECONDS
             st.session_state.sentiment_force = query
             st.rerun(scope="fragment")
     force_sentiment = st.session_state.get("sentiment_force") == query
@@ -1666,5 +1670,5 @@ render_dashboard(
 )
 
 st.sidebar.markdown("---")
-st.sidebar.info("Prices and technical scores refresh every 5 minutes while this page is open. Market sentiment refreshes about every hour. Alert checks continue every 5 minutes after you leave.")
+st.sidebar.info("Prices and technical scores refresh every 5 minutes while this page is open. Market sentiment refreshes about every 12 hours. Alert checks continue every 5 minutes after you leave.")
 st.sidebar.caption("Watchlists, settings, and alerts are stored on your account.")

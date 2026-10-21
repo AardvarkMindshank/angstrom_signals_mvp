@@ -24,6 +24,7 @@ _MODELS = (
     {"model": "grok-4.5"},
 )
 _CHAT_URL = "https://api.x.ai/v1/chat/completions"
+SENTIMENT_REFRESH_SECONDS = 12 * 60 * 60
 _HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; SignalsDashboard/1.0)"}
 _BUSY_UNTIL: dict[str, float] = {}
 _SCORE_CACHE: dict[str, tuple[float, dict]] = {}
@@ -425,9 +426,9 @@ def sentiment_cached_at(query: str) -> float | None:
 
 
 def cached_sentiment_score(query: str) -> float | None:
-    """The saved headline score, while it is still inside the one-hour window."""
+    """The saved headline score, while it is still inside the 12-hour window."""
     cached = _SCORE_CACHE.get(query)
-    if not cached or time.time() - cached[0] >= 3600:
+    if not cached or time.time() - cached[0] >= SENTIMENT_REFRESH_SECONDS:
         return None
     stored = cached[1]
     if not stored.get("ok"):
@@ -444,14 +445,14 @@ def cached_sentiment_score(query: str) -> float | None:
 def analyze_market_sentiment(query: str, enabled: bool, force: bool = False) -> dict:
     """Headlines plus a score when an xAI key is configured.
 
-    A successful score is reused for one hour. A busy model is not cached,
-    so the next look can try again. force skips that hour and asks again.
+    A successful score is reused for 12 hours. A busy model is not cached,
+    so the next look can try again. force skips that window and asks again.
     """
     if force:
         _SCORE_CACHE.pop(query, None)
         _BUSY_UNTIL.pop(query, None)
     cached = _SCORE_CACHE.get(query)
-    if enabled and not force and cached and time.time() - cached[0] < 3600:
+    if enabled and not force and cached and time.time() - cached[0] < SENTIMENT_REFRESH_SECONDS:
         stored = cached[1]
         stored_rows = stored.get("headlines") or []
         if stored.get("ok") and stored.get("score") is not None and stored_rows:
