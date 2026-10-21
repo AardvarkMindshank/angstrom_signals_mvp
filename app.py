@@ -578,7 +578,7 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
 **How to use it**
 
 1. Read the snapshot and the tables. The top row is the strongest score, the bottom is the weakest.
-2. Open a name in the chart. The score breakdown shows which factors added or removed points.
+2. Click a name in either table. That row stays highlighted, and the chart below switches to it. The score breakdown shows which factors added or removed points.
 3. **7d %** is the seven-day price change. **ATR %** is volatility. **Vol** is volume versus its 20-day average.
 4. Alerts fire at 70 and 30 unless you move those sliders. One email goes to the address on your account when a score crosses a boundary. It is not sent again until the score leaves that boundary and crosses it later.
 
@@ -914,52 +914,50 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             f'<span style="min-width:28px;font-weight:600;font-size:0.9em;">{label}</span></div>'
         )
 
-    def cell(value):
-        return f"<td style='padding: 10px; white-space: nowrap;'>{html.escape(str(value))}</td>"
-
-    def style_and_show_table(results, title):
+    def style_and_show_table(results, title, kind):
         if not results:
             return
         frame = pd.DataFrame(results).sort_values("score", ascending=False, na_position="last")
         st.subheader(title)
+        st.caption("Click a name to show that asset on the chart.")
 
         headers = ["Asset", "Score", "Signal", "Price", "RSI"]
+        widths = [2.4, 2.4, 1.7, 1.3, 1.0]
         if show_extra_metrics_flag:
             headers += ["7d %", "ATR %", "Vol"]
+            widths += [1.0, 1.0, 1.0]
 
-        header_html = "".join(
-            f"<th style='padding: 8px 10px; text-align: left; white-space: nowrap;'>{html.escape(name)}</th>"
-            for name in headers
-        )
+        header_cols = st.columns(widths)
+        for column, name in zip(header_cols, headers):
+            column.markdown(f"**{name}**")
 
-        rows_html = ""
+        pick = st.session_state.get("chart_pick")
         for _, row in frame.iterrows():
+            asset_id = row["key"]
+            selected = pick == (kind, asset_id)
+            columns = st.columns(widths)
+            if columns[0].button(
+                str(row["symbol"]),
+                key=f"chart_row_{kind}_{asset_id}",
+                type="primary" if selected else "secondary",
+                use_container_width=True,
+            ):
+                st.session_state.chart_pick = (kind, asset_id)
+                st.session_state.chart_pick_from_row = True
+                st.rerun(scope="fragment")
+            columns[1].markdown(render_score_bar(row["score"]), unsafe_allow_html=True)
             price = row.get("latest_price")
             rsi = row.get("rsi")
-            price_str = f"${price:,.2f}" if pd.notna(price) else "—"
-            rsi_str = f"{rsi:.1f}" if pd.notna(rsi) else "—"
-            rows_html += (
-                "<tr style='border-bottom: 1px solid #f0f0f0;'>"
-                f"<td style='padding: 10px; white-space: nowrap; font-weight: 500;'>{html.escape(str(row['symbol']))}</td>"
-                f"<td style='padding: 10px; min-width: 130px;'>{render_score_bar(row['score'])}</td>"
-                f"{cell(row.get('label') or '—')}{cell(price_str)}{cell(rsi_str)}"
-            )
+            columns[2].write(row.get("label") or "—")
+            columns[3].write(f"${price:,.2f}" if pd.notna(price) else "—")
+            columns[4].write(f"{rsi:.1f}" if pd.notna(rsi) else "—")
             if show_extra_metrics_flag:
                 change = row.get("change_7d")
                 atr = row.get("atr_pct")
                 volume = row.get("volume_ratio")
-                change_str = f"{change:+.1f}%" if pd.notna(change) else "—"
-                atr_str = f"{atr:.2f}" if pd.notna(atr) else "—"
-                volume_str = f"{volume:.2f}" if pd.notna(volume) else "—"
-                rows_html += f"{cell(change_str)}{cell(atr_str)}{cell(volume_str)}"
-            rows_html += "</tr>"
-
-        st.html(
-            "<div style='width: 100%; overflow-x: auto; margin-bottom: 8px;'>"
-            "<table style='width: 100%; border-collapse: collapse; font-size: 0.95rem;'>"
-            f"<thead><tr style='border-bottom: 2px solid #e5e7eb;'>{header_html}</tr></thead>"
-            f"<tbody>{rows_html}</tbody></table></div>"
-        )
+                columns[5].write(f"{change:+.1f}%" if pd.notna(change) else "—")
+                columns[6].write(f"{atr:.2f}" if pd.notna(atr) else "—")
+                columns[7].write(f"{volume:.2f}" if pd.notna(volume) else "—")
 
         problems = [
             f"{row['symbol']}: {row['reasons'][0]}"
@@ -969,26 +967,53 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
         for problem in problems:
             st.text(problem)
 
-    style_and_show_table(crypto_results, "Crypto Scores")
-    style_and_show_table(stock_results, "Equity Scores")
+    if "chart_pick" not in st.session_state:
+        if crypto_watchlist:
+            st.session_state.chart_pick = ("Crypto", next(iter(crypto_watchlist)))
+        elif stock_watchlist:
+            st.session_state.chart_pick = ("Stock", next(iter(stock_watchlist)))
+
+    style_and_show_table(crypto_results, "Crypto Scores", "Crypto")
+    style_and_show_table(stock_results, "Equity Scores", "Stock")
 
     st.subheader("Interactive Chart")
+    pick = st.session_state.get("chart_pick")
+    if pick and (
+        st.session_state.pop("chart_pick_from_row", False)
+        or "asset_type" not in st.session_state
+    ):
+        pick_kind, pick_key = pick
+        pick_list = crypto_watchlist if pick_kind == "Crypto" else stock_watchlist
+        if pick_key in pick_list:
+            st.session_state.asset_type = pick_kind
+            if pick_kind == "Crypto":
+                st.session_state.asset_crypto = pick_key
+            else:
+                st.session_state.asset_stock = pick_key
+
     col1, col2 = st.columns([1, 3])
     with col1:
         asset_type = st.selectbox("Type", ["Crypto", "Stock"], key="asset_type")
     with col2:
         watchlist = crypto_watchlist if asset_type == "Crypto" else stock_watchlist
         options = list(watchlist.keys())
+        asset_state_key = "asset_crypto" if asset_type == "Crypto" else "asset_stock"
+        if options and st.session_state.get(asset_state_key) not in options:
+            st.session_state[asset_state_key] = options[0]
         if options:
             asset_key = st.selectbox(
                 "Asset",
                 options,
                 format_func=lambda item: watchlist[item] if asset_type == "Crypto" else f"{watchlist[item]} ({item})",
-                key="asset_crypto" if asset_type == "Crypto" else "asset_stock",
+                key=asset_state_key,
             )
         else:
             asset_key = None
             st.caption("This watchlist is empty.")
+
+    if asset_key and st.session_state.get("chart_pick") != (asset_type, asset_key):
+        st.session_state.chart_pick = (asset_type, asset_key)
+        st.rerun(scope="fragment")
 
     if not asset_key:
         st.info("Add an asset to this watchlist to see a chart.")
