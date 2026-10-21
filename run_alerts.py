@@ -4,6 +4,7 @@ Runs independently via cron or GitHub Actions to check thresholds and populate n
 """
 
 import os
+import requests
 import pandas as pd
 from supabase import create_client
 from data_fetchers import fetch_crypto_data, fetch_stock_data
@@ -23,6 +24,35 @@ if not SUPABASE_URL or not SUPABASE_KEY:
         raise ValueError("Supabase URL and Key must be provided via environment variables or Streamlit secrets.")
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+
+def send_alert_email(to_email, asset_name, message):
+    """Sends an email notification via Resend HTTP API (future-proof for any hosting migration)."""
+    api_key = os.getenv("RESEND_API_KEY")
+    if not api_key or not to_email:
+        return
+        
+    url = "https://api.resend.com/emails"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "from": "onboarding@resend.dev",
+        "to": [to_email],
+        "subject": f"🚨 Angstrom Alert: {asset_name}",
+        "html": f"<p><strong>{asset_name}</strong> has triggered an alert:</p><p>{message}</p>"
+    }
+    
+    try:
+        response = requests.post(url, json=payload, headers=headers)
+        if response.status_code == 200:
+            print(f"Email sent successfully for {asset_name}")
+        else:
+            print(f"Failed to send email: {response.text}")
+    except Exception as e:
+        print(f"Error sending email: {e}")
+
 
 def run_background_checks():
     print("Starting background alert check worker...")
@@ -106,6 +136,9 @@ def evaluate_and_store_notifications(user_id, results, alerts_config):
     except Exception:
         existing_keys = set()
 
+    # Target email for notifications (can be swapped to fetch dynamically per user later)
+    user_email = "angus_marshall@hotmail.com"[cite: 1]
+
     for r in results:
         score = r.get("score")
         if score is None or pd.isna(score):
@@ -126,6 +159,9 @@ def evaluate_and_store_notifications(user_id, results, alerts_config):
                     "message": msg
                 }).execute()
                 print(f"Triggered Bullish alert for {name} ({score:.1f})")
+                
+                # 🔥 Fire email notification instantly
+                send_alert_email(user_email, name, msg)
 
         elif score <= max_thresh:
             alert_type = "BEARISH_THRESHOLD"
@@ -139,6 +175,9 @@ def evaluate_and_store_notifications(user_id, results, alerts_config):
                     "message": msg
                 }).execute()
                 print(f"Triggered Bearish alert for {name} ({score:.1f})")
+                
+                # 🔥 Fire email notification instantly
+                send_alert_email(user_email, name, msg)
 
 if __name__ == "__main__":
     run_background_checks()
