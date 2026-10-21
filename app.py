@@ -10,6 +10,7 @@ import json
 import time
 import traceback
 from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 
 import pandas as pd
 import plotly.graph_objects as go
@@ -1247,6 +1248,18 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
     )
 
 
+def _published_label(value) -> str:
+    """Turn an RSS pubDate into a calendar date. Empty when the feed omitted one."""
+    raw = str(value or "").strip()
+    if not raw:
+        return ""
+    try:
+        when = parsedate_to_datetime(raw)
+    except (TypeError, ValueError, IndexError, OverflowError):
+        return ""
+    return f"{when.strftime('%b')} {when.day}, {when.year}"
+
+
 def show_market_sentiment(kind: str, label: str, ticker: str | None):
     """Headline sentiment for the asset on the chart. Cached for one hour."""
     st.markdown(
@@ -1306,11 +1319,18 @@ def show_market_sentiment(kind: str, label: str, ticker: str | None):
         rows = [
             "<div style='display:flex;align-items:center;gap:16px;padding:4px 0 8px;'>"
             "<div style='flex:1;font-size:0.8rem;font-weight:600;color:#6b7280;'>Article</div>"
+            "<div style='width:112px;flex:none;text-align:right;font-size:0.8rem;font-weight:600;color:#6b7280;'>Published</div>"
             "<div style='width:76px;flex:none;text-align:right;font-size:0.8rem;font-weight:600;color:#6b7280;'>Score</div>"
             "</div>"
         ]
         for item in headlines:
             source = f" — {html.escape(item['source'])}" if item.get("source") else ""
+            published = _published_label(item.get("published"))
+            published_html = (
+                html.escape(published)
+                if published
+                else "<span style='color:#6b7280;'>—</span>"
+            )
             article_score = item.get("score")
             if article_score is None:
                 badge = "<span style='color:#6b7280;'>—</span>"
@@ -1326,6 +1346,7 @@ def show_market_sentiment(kind: str, label: str, ticker: str | None):
                 "<div style='flex:1;min-width:0;'>"
                 f"<a href='{html.escape(item['link'], quote=True)}' target='_blank' rel='noopener noreferrer'>"
                 f"{html.escape(item['title'])}</a>{source}</div>"
+                f"<div style='width:112px;flex:none;text-align:right;white-space:nowrap;color:#4b5563;'>{published_html}</div>"
                 f"<div style='width:76px;flex:none;text-align:right;'>{badge}</div></div>"
             )
         st.html(f"<div style='margin-top:10px;'>{''.join(rows)}</div>")
