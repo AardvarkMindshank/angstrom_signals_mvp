@@ -1258,14 +1258,19 @@ def show_market_sentiment(kind: str, label: str, ticker: str | None):
         st.warning(detail)
 
     if headlines:
-        with st.expander("Headlines used", expanded=report.get("reason") == "missing_key"):
-            for item in headlines:
-                source = f" — {html.escape(item['source'])}" if item.get("source") else ""
-                st.markdown(
-                    f"<div><a href='{html.escape(item['link'], quote=True)}'>{html.escape(item['title'])}</a>"
-                    f"{source}</div>",
-                    unsafe_allow_html=True,
-                )
+        links = []
+        for item in headlines:
+            source = f" — {html.escape(item['source'])}" if item.get("source") else ""
+            links.append(
+                "<li style='margin:6px 0;'>"
+                f"<a href='{html.escape(item['link'], quote=True)}' target='_blank' rel='noopener noreferrer'>"
+                f"{html.escape(item['title'])}</a>{source}</li>"
+            )
+        st.html(
+            "<div style='margin-top:8px;'>"
+            "<div style='font-size:0.85rem;font-weight:600;color:#111827;'>Articles</div>"
+            f"<ul style='margin:6px 0 0;padding-left:1.1rem;'>{''.join(links)}</ul></div>"
+        )
     st.caption("This reads recent coverage. It is not the technical score, and it is not advice.")
 
 
