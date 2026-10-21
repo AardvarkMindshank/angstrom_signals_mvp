@@ -217,18 +217,39 @@ with st.sidebar.expander(f"Alert Feed {f'({unread_count} new)' if unread_count >
     if not notifications_list:
         st.caption("No alerts yet. When your watchlisted assets cross your thresholds, they'll show up here.")
     else:
-        if st.button("Mark all as read", key="mark_read_btn"):
-            try:
-                supabase.table("user_notifications").update({"is_read": True}).eq("user_id", user_id).execute()
-                st.rerun()
-            except Exception:
-                pass
-        
-        for notif in notifications_list:
-            badge = "🔴" if not notif.get("is_read") else "⚪"
-            st.markdown(f"**{badge} {notif['asset_name']}**")
-            st.caption(f"{notif['message']}\n\n*{notif['created_at'][:16].replace('T', ' ')}*")
-            st.markdown("---")
+        # Filter and bulk action controls
+        f_col1, f_col2 = st.columns(2)
+        with f_col1:
+            feed_filter = st.radio("Filter", ["Unread", "All"], horizontal=True, label_visibility="collapsed", key="notif_filter_radio")
+        with f_col2:
+            if st.button("Mark read", key="mark_read_btn", use_container_width=True):
+                try:
+                    supabase.table("user_notifications").update({"is_read": True}).eq("user_id", user_id).execute()
+                    st.rerun()
+                except Exception:
+                    pass
+
+        # Apply filter logic
+        filtered_notifs = [n for n in notifications_list if not n.get("is_read", False)] if feed_filter == "Unread" else notifications_list
+
+        if not filtered_notifs:
+            st.caption(f"No {feed_filter.lower()} notifications.")
+        else:
+            st.markdown("<div style='height: 4px;'></div>", unsafe_allow_html=True)
+            for notif in filtered_notifs:
+                badge = "🔴" if not notif.get("is_read") else "⚪"
+                st.markdown(f"**{badge} {notif['asset_name']}**")
+                st.caption(f"{notif['message']}\n\n*{notif['created_at'][:16].replace('T', ' ')}*")
+                st.markdown("---")
+            
+            # Clear read button at the bottom of the feed
+            if st.button("🗑️ Clear Read Alerts", use_container_width=True, key="clear_read_btn"):
+                try:
+                    supabase.table("user_notifications").delete().eq("user_id", user_id).eq("is_read", True).execute()
+                    st.success("Cleared read alerts!")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Could not clear: {e}")
 
 with st.sidebar.expander("Configure Alert Rules", expanded=False):
     alert_enabled = st.checkbox("Enable Alerts", value=alert_prefs.get("enabled", True), key="alert_enabled_cb")
