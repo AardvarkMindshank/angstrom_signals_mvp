@@ -579,4 +579,11 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
         if score is None or pd.isna(score):
             color, bg, arrow = "#6b7280", "#f3f4f6", "—"
         elif score >= 45:  # Aligned with Bullish threshold (green)
-            color, bg
+            color, bg, arrow = "#15803d", "#dcfce7", "↑"
+        elif score >= 35:  # Neutral zone (amber)
+            color, bg, arrow = "#b45309", "#fef3c7", "→"
+        else:              # Bearish zone (red)
+            color, bg, arrow = "#b91c1c", "#fee2e2", "↓"
+            
+        score_str = f"{score:.1f}/100" if score is not None else "—"
+        return f"<div style='background: white; padding: 12px 16px; border-radius: 8px; border: 1px solid #e5e7eb;'><div style='font-size: 0.8rem; color: #6b7280; margin-bottom: 4px;'>{title}</div><div style='font-size: 1.1rem; font-weight: 600; color: #111827; margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;'>{name}</div><div style='display:
