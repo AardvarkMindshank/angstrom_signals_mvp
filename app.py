@@ -34,11 +34,10 @@ supabase = init_supabase()
 if "user" not in st.session_state:
     st.session_state.user = None
 
-# --- OPTION B: Center-Screen Auth Screen if Logged Out ---
+# --- Center-Screen Auth Screen if Logged Out ---
 if st.session_state.user is None:
     st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
     
-    # Center column container for login card
     _, col_center, _ = st.columns([1, 1.2, 1])
     
     with col_center:
@@ -83,7 +82,7 @@ if st.session_state.user is None:
 
 
 # =========================================================================
-# CLOUD PREFERENCES SYNC FUNCTIONS (Per-User Isolation)
+# CLOUD PREFERENCES & NOTIFICATIONS SYNC FUNCTIONS (Per-User Isolation)
 # =========================================================================
 
 user_id = st.session_state.user.id
@@ -121,7 +120,7 @@ def load_user_preferences():
         
         if data and len(data) > 0:
             row = data[0]
-            return {
+            prefs_dict = {
                 "crypto": row.get("crypto_watchlist") or default_crypto,
                 "stock": row.get("stock_watchlist") or default_stock,
                 "weights": row.get("scoring_weights") or default_weights,
@@ -138,18 +137,31 @@ def load_user_preferences():
                 "settings": default_settings
             }
             supabase.table("user_preferences").insert(initial_row).execute()
-            return {
+            prefs_dict = {
                 "crypto": default_crypto,
                 "stock": default_stock,
                 "weights": default_weights,
                 "profiles": {},
                 "settings": default_settings
             }
+            
+        # Also fetch alert preferences
+        alert_res = supabase.table("alert_preferences").select("*").eq("user_id", user_id).execute()
+        if alert_res.data and len(alert_res.data) > 0:
+            prefs_dict["alerts"] = alert_res.data[0]
+        else:
+            default_alerts = {"user_id": user_id, "enabled": True, "min_score_alert": 70, "max_score_alert": 30}
+            supabase.table("alert_preferences").insert(default_alerts).execute()
+            prefs_dict["alerts"] = default_alerts
+
+        return prefs_dict
+
     except Exception as e:
         st.error(f"Error loading cloud preferences: {e}")
         return {
             "crypto": default_crypto, "stock": default_stock, 
-            "weights": default_weights, "profiles": {}, "settings": default_settings
+            "weights": default_weights, "profiles": {}, "settings": default_settings,
+            "alerts": {"enabled": True, "min_score_alert": 70, "max_score_alert": 30}
         }
 
 def save_preferences_to_cloud(updates: dict):
@@ -158,12 +170,26 @@ def save_preferences_to_cloud(updates: dict):
     except Exception as e:
         st.error(f"Error saving preferences to cloud: {e}")
 
+def save_alert_preferences_to_cloud(updates: dict):
+    try:
+        supabase.table("alert_preferences").update(updates).eq("user_id", user_id).execute()
+    except Exception as e:
+        st.error(f"Error saving alert preferences: {e}")
+
+def fetch_user_notifications():
+    try:
+        res = supabase.table("user_notifications").select("*").eq("user_id", user_id).order("created_at", desc=True).limit(10).execute()
+        return res.data or []
+    except Exception:
+        return []
+
 
 # Load user data into session state
 if "cloud_prefs" not in st.session_state:
     st.session_state.cloud_prefs = load_user_preferences()
 
 prefs = st.session_state.cloud_prefs
+alert_prefs = prefs.get("alerts", {})
 
 # =========================================================================
 # LOGGED-IN DASHBOARD VIEW
@@ -179,6 +205,45 @@ if st.sidebar.button("Log Out", use_container_width=True):
     st.session_state.user = None
     st.session_state.pop("cloud_prefs", None)
     st.rerun()
+
+st.sidebar.markdown("---")
+
+# --- NOTIFICATIONS SIDEBAR SECTION ---
+st.sidebar.header("🔔 Notifications")
+notifications_list = fetch_user_notifications()
+unread_count = sum(1 for n in notifications_list if not n.get("is_read", False))
+
+with st.sidebar.expander(f"Alert Feed {f'({unread_count} new)' if unread_count > 0 else ''}", expanded=False):
+    if not notifications_list:
+        st.caption("No alerts yet. When your watchlisted assets cross your thresholds, they'll show up here.")
+    else:
+        if st.button("Mark all as read", key="mark_read_btn"):
+            try:
+                supabase.table("user_notifications").update({"is_read": True}).eq("user_id", user_id).execute()
+                st.rerun()
+            except Exception:
+                pass
+        
+        for notif in notifications_list:
+            badge = "🔴" if not notif.get("is_read") else "⚪"
+            st.markdown(f"**{badge} {notif['asset_name']}**")
+            st.caption(f"{notif['message']}\n\n*{notif['created_at'][:16].replace('T', ' ')}*")
+            st.markdown("---")
+
+with st.sidebar.expander("Configure Alert Rules", expanded=False):
+    alert_enabled = st.checkbox("Enable Alerts", value=alert_prefs.get("enabled", True), key="alert_enabled_cb")
+    min_score = st.slider("Bullish Alert Threshold (Score ≥)", 50, 95, int(alert_prefs.get("min_score_alert", 70)), key="min_score_slider")
+    max_score = st.slider("Bearish Alert Threshold (Score ≤)", 5, 50, int(alert_prefs.get("max_score_alert", 30)), key="max_score_slider")
+    
+    new_alert_settings = {
+        "enabled": alert_enabled,
+        "min_score_alert": min_score,
+        "max_score_alert": max_score
+    }
+    if new_alert_settings != {k: alert_prefs.get(k) for k in new_alert_settings}:
+        alert_prefs.update(new_alert_settings)
+        prefs["alerts"] = alert_prefs
+        save_alert_preferences_to_cloud(new_alert_settings)
 
 st.sidebar.markdown("---")
 
@@ -223,7 +288,7 @@ with st.expander("📖 Comprehensive Platform Guide & Help Manual", expanded=Fal
     1. Check the tables for the highest/lowest scores.
     2. Use the **Type** and **Asset** dropdowns under the chart to inspect any symbol.
     3. Read the **Score Breakdown** to see exactly why the score is what it is.
-    4. Edit your watchlists or indicator weights from the sidebar (changes are saved to your account).
+    4. Edit your watchlists, alerts, or indicator weights from the sidebar (changes are saved to your account).
 
     Data refreshes automatically every 5 minutes.
     """)
@@ -321,7 +386,6 @@ days_history = st.sidebar.slider("Days of history", 90, 365, settings.get("days_
 show_reasons = st.sidebar.checkbox("Show score breakdown", value=settings.get("show_reasons", True))
 show_extra_metrics = st.sidebar.checkbox("Show extra metrics (7d, ATR, volume)", value=settings.get("show_extra_metrics", True))
 
-# Save settings if changed
 new_settings = {"days_history": days_history, "show_reasons": show_reasons, "show_extra_metrics": show_extra_metrics}
 if new_settings != settings:
     settings = new_settings
@@ -365,7 +429,7 @@ with st.sidebar.expander("Customize Indicator Weights", expanded=False):
         pname = new_profile_name.strip()
         if pname:
             if pname in built_in_profiles:
-                st.error("Cannot overwrite built-인 profile names!")
+                st.error("Cannot overwrite built-in profile names!")
             else:
                 custom_profiles[pname] = current_weights
                 prefs["profiles"] = custom_profiles
@@ -411,6 +475,52 @@ def load_stock(ticker):
     return fetch_stock_data(ticker, period="1y")
 
 
+def check_and_record_alerts(results, alerts_config):
+    """Checks if any asset hits the user's personal threshold and records an alert if new."""
+    if not alerts_config.get("enabled", True):
+        return
+
+    min_thresh = float(alerts_config.get("min_score_alert", 70))
+    max_thresh = float(alerts_config.get("max_score_alert", 30))
+
+    try:
+        existing = supabase.table("user_notifications").select("asset_symbol, alert_type").eq("user_id", user_id).execute().data
+        existing_keys = {(n["asset_symbol"], n["alert_type"]) for n in existing}
+    except Exception:
+        existing_keys = set()
+
+    for r in results:
+        score = r.get("score")
+        if score is None or pd.isna(score):
+            continue
+        
+        symbol = r.get("key")
+        name = r.get("symbol")
+        
+        if score >= min_thresh:
+            alert_type = "BULLISH_THRESHOLD"
+            msg = f"Score reached {score:.1f}/100 (Bullish setup)"
+            if (symbol, alert_type) not in existing_keys:
+                supabase.table("user_notifications").insert({
+                    "user_id": user_id,
+                    "asset_symbol": symbol,
+                    "asset_name": name,
+                    "alert_type": alert_type,
+                    "message": msg
+                }).execute()
+        elif score <= max_thresh:
+            alert_type = "BEARISH_THRESHOLD"
+            msg = f"Score dropped to {score:.1f}/100 (Bearish/Oversold setup)"
+            if (symbol, alert_type) not in existing_keys:
+                supabase.table("user_notifications").insert({
+                    "user_id": user_id,
+                    "asset_symbol": symbol,
+                    "asset_name": name,
+                    "alert_type": alert_type,
+                    "message": msg
+                }).execute()
+
+
 def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, show_reasons_flag, show_extra_metrics_flag):
     def process_watchlist(watchlist, is_crypto=True):
         results = []
@@ -448,6 +558,9 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
 
     crypto_results = process_watchlist(crypto_watchlist, is_crypto=True)
     stock_results = process_watchlist(stock_watchlist, is_crypto=False)
+
+    # Check and trigger user alerts automatically based on current scores
+    check_and_record_alerts(crypto_results + stock_results, alert_prefs)
 
     def get_top_bottom(results):
         valid = [r for r in results if r.get("score") is not None]
@@ -725,4 +838,4 @@ render_dashboard(CRYPTO_WATCHLIST, STOCK_WATCHLIST, days_history, current_weight
 
 st.sidebar.markdown("---")
 st.sidebar.info("Dashboard and data auto-refresh every 5 minutes.")
-st.sidebar.caption("Watchlists and settings are securely stored in your account.")
+st.sidebar.caption("Watchlists, settings, and alerts are securely stored in your account.")
