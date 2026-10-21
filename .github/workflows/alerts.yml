@@ -3,7 +3,7 @@ name: Run Background Alerts
 on:
   schedule:
     # GitHub may delay scheduled runs, especially on private free plans.
-    - cron: "*/15 * * * *"
+    - cron: "*/5 * * * *"
   workflow_dispatch:
 
 jobs:

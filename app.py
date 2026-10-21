@@ -584,12 +584,10 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
 
 **Alerts keep running in the background**
 
-You do not need this page open, and you do not need to stay logged in. About every 15 minutes, your saved watchlist and thresholds are checked on their own.
+Prices and scores on this page refresh every 5 minutes while it is open. The same 5-minute check keeps running after you close the page or log out.
 
 - A crossing is saved on your account. It shows up under Notifications the next time you log in.
 - The email goes only to you.
-
-While this page is open, the prices and scores on screen refresh about every 5 minutes. That refresh is separate from the background check.
 """)
 
 CRYPTO_WATCHLIST = prefs["crypto"]
@@ -1140,5 +1138,5 @@ render_dashboard(
 )
 
 st.sidebar.markdown("---")
-st.sidebar.info("While this page is open, prices and scores refresh every 5 minutes.")
+st.sidebar.info("Prices and scores refresh every 5 minutes while this page is open. Alert checks continue every 5 minutes after you leave.")
 st.sidebar.caption("Watchlists, settings, and alerts are stored on your account.")
