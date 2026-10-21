@@ -553,14 +553,7 @@ with st.sidebar.expander(notifications_label, expanded=False):
             prefs["alerts"] = alert_prefs
             save_alert_preferences_to_cloud(new_alert_settings)
 
-header_col1, header_col2 = st.columns([5, 1])
-with header_col1:
-    st.title("angstrom signals - level 1")
-with header_col2:
-    st.write("")
-    if st.button("🔄 Refresh", use_container_width=True, help="Pull fresh data for this session"):
-        st.session_state.data_nonce += 1
-        st.rerun()
+st.title("angstrom signals - level 1")
 
 with st.expander("Help and guides", expanded=False):
     st.markdown("""
@@ -613,7 +606,7 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
 2. Click a name in either table. That row stays highlighted, and the chart below switches to it. The score breakdown shows which factors added or removed points.
 3. **7d %** is the seven-day price change. **ATR %** is volatility. **Vol** is volume versus its 20-day average.
 4. Alerts fire at 70 and 30 unless you move those sliders. One email goes to the address on your account when a score crosses a boundary. It is not sent again until the score leaves that boundary and crosses it later.
-5. Market sentiment, under the chart, asks Grok to score each recent headline from 0 to 100. The number at the top of that section is the average of those article scores. It is separate from the technical score.
+5. Market sentiment, under the chart, asks Grok to score each recent headline from 0 to 100. The number at the top of that section is the average of those article scores. It is separate from the technical score. Refresh beside Quick Snapshot reloads prices and technical scores. Refresh beside Market sentiment reloads the headlines and score for the asset on the chart.
 
 **Alerts keep running in the background**
 
@@ -819,12 +812,25 @@ def load_stock(ticker, days, nonce):
     return fetch_stock_data(ticker, period=period_for_days(days))
 
 
-def load_market_sentiment(query: str, enabled: bool):
-    return analyze_market_sentiment(query, enabled)
+def load_market_sentiment(query: str, enabled: bool, force: bool = False):
+    return analyze_market_sentiment(query, enabled, force=force)
 
 
 @st.fragment(run_every=300)
 def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, show_reasons_flag, show_extra_metrics_flag):
+    snap_title, snap_refresh = st.columns([5, 1], vertical_alignment="center")
+    with snap_title:
+        st.subheader("Quick Snapshot")
+    with snap_refresh:
+        if st.button(
+            "🔄 Refresh",
+            key="refresh_technical",
+            use_container_width=True,
+            help="Pull fresh prices and technical scores",
+        ):
+            st.session_state.data_nonce += 1
+            st.rerun(scope="fragment")
+
     # Wall-clock window so a scheduled rerun fetches new prices instead of the 5-minute cache.
     nonce = (st.session_state.data_nonce, int(time.time() // 300))
 
@@ -898,7 +904,6 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
     crypto_top, crypto_bot = get_top_bottom(crypto_results)
     stock_top, stock_bot = get_top_bottom(stock_results)
 
-    st.subheader("Quick Snapshot")
     c1, c2, c3, c4 = st.columns(4)
 
     def render_snapshot_card(title, name, score):
@@ -1260,16 +1265,26 @@ def _published_label(value) -> str:
     return f"{when.strftime('%b')} {when.day}, {when.year}"
 
 
+@st.fragment
 def show_market_sentiment(kind: str, label: str, ticker: str | None):
     """Headline sentiment for the asset on the chart. Cached for one hour."""
     st.markdown(
         "<hr style='margin:1.4rem 0 0.6rem;border:none;border-top:1px solid #e5e7eb;'>",
         unsafe_allow_html=True,
     )
-    st.subheader("Market sentiment")
+    sentiment_title, sentiment_refresh = st.columns([5, 1], vertical_alignment="center")
+    with sentiment_title:
+        st.subheader("Market sentiment")
+    with sentiment_refresh:
+        force_sentiment = st.button(
+            "🔄 Refresh",
+            key="refresh_sentiment",
+            use_container_width=True,
+            help="Pull fresh headlines and a new sentiment score for this asset",
+        )
     query = sentiment_query(kind, label, ticker)
     with st.spinner("Reading recent headlines..."):
-        report = load_market_sentiment(query, sentiment_ready())
+        report = load_market_sentiment(query, sentiment_ready(), force=force_sentiment)
 
     headlines = report.get("headlines") or []
     score = report.get("score")

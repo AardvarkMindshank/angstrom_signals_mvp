@@ -271,14 +271,17 @@ def _summarize(query: str, headlines: list[dict]) -> dict:
     return {"ok": False, "reason": "model_error"}
 
 
-def analyze_market_sentiment(query: str, enabled: bool) -> dict:
+def analyze_market_sentiment(query: str, enabled: bool, force: bool = False) -> dict:
     """Headlines plus a score when an xAI key is configured.
 
     A successful score is reused for one hour. A busy model is not cached,
-    so the next look can try again.
+    so the next look can try again. force skips that hour and asks again.
     """
+    if force:
+        _SCORE_CACHE.pop(query, None)
+        _BUSY_UNTIL.pop(query, None)
     cached = _SCORE_CACHE.get(query)
-    if enabled and cached and time.time() - cached[0] < 3600:
+    if enabled and not force and cached and time.time() - cached[0] < 3600:
         stored = cached[1]
         stored_rows = stored.get("headlines") or []
         if stored.get("ok") and stored_rows and all(row.get("score") is not None for row in stored_rows):
