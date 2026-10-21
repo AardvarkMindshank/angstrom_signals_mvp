@@ -826,7 +826,7 @@ This sits under the chart. The heading names the open asset, for example **Marke
 
 The **Sentiment** column on the right of each table shows that saved score in the same colored box. A dash means that asset has not been scored yet. Open it on the chart, and the score fills in once Grok finishes. The score stays in the table for about 12 hours.
 
-Click a sentiment score in the table to highlight that asset and jump to its headlines. **↑ Top**, on the right of the chart title and the sentiment title, scrolls back to the top of the page.
+Click a sentiment score in the table to highlight that asset and jump to its headlines. **↑ Top** scrolls back to the top of the page. It sits on the right of the chart title, and on the right of the sentiment Refresh button.
 
 The Refresh button beside Market sentiment pulls fresh headlines and a new score, then starts a 12-hour timer. It also runs on its own when that timer reaches zero. The Refresh button beside Quick Snapshot still reloads prices and technical scores every 5 minutes. Pressing either button refreshes that section now and starts its timer again.
 
@@ -1591,11 +1591,9 @@ def show_market_sentiment(kind: str, label: str, ticker: str | None):
     if kind == "Stock" and ticker and ticker.upper() not in shown_name.upper():
         shown_name = f"{shown_name} ({ticker})" if shown_name else ticker
     sentiment_heading = f"Market sentiment - {shown_name}" if shown_name else "Market sentiment"
-    sentiment_title, sentiment_top, sentiment_refresh = st.columns([3.5, 0.9, 2.05], vertical_alignment="center")
+    sentiment_title, sentiment_refresh, sentiment_top = st.columns([3.15, 1.45, 0.85], vertical_alignment="center")
     with sentiment_title:
         st.subheader(sentiment_heading)
-    with sentiment_top:
-        _back_to_top(key="sentiment_back_to_top")
     query = sentiment_query(kind, label, ticker)
     sentiment_deadlines = st.session_state.setdefault("sentiment_due", {})
     if query not in sentiment_deadlines:
@@ -1617,6 +1615,8 @@ def show_market_sentiment(kind: str, label: str, ticker: str | None):
             sentiment_deadlines[query] = time.time() + SENTIMENT_REFRESH_SECONDS
             st.session_state.sentiment_force = query
             st.rerun(scope="fragment")
+    with sentiment_top:
+        _back_to_top(key="sentiment_back_to_top")
     force_sentiment = st.session_state.get("sentiment_force") == query
     if force_sentiment:
         st.session_state.sentiment_force = None
