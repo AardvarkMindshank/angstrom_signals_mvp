@@ -16,6 +16,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 from plotly.subplots import make_subplots
+from streamlit.errors import StreamlitInvalidLayoutContextError
 from supabase import create_client
 
 st.set_page_config(
@@ -194,6 +195,23 @@ def _countdown_due(deadline: float, widget_key: str) -> bool:
         on_due_change=lambda: None,
     )
     return result.due == token
+
+
+def _rerun_fragment() -> None:
+    """Rerun the current section, or the whole page when that is not allowed.
+
+    A fragment-scoped rerun is rejected while that fragment is only running as
+    part of a full page load. The sentiment timer hits this when its click
+    arrives together with another full-page update.
+    """
+    try:
+        st.rerun(scope="fragment")
+    except StreamlitInvalidLayoutContextError:
+        st.rerun()
+    except RuntimeError as exc:
+        if "current_fragment_id" not in str(exc):
+            raise
+        st.rerun()
 
 try:
     from alerts import evaluate_alerts
@@ -1090,7 +1108,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
         if technical_now or technical_due:
             st.session_state.data_nonce += 1
             st.session_state.technical_due = time.time() + _TECHNICAL_REFRESH_SECONDS
-            st.rerun(scope="fragment")
+            _rerun_fragment()
 
     # Wall-clock window so a scheduled rerun fetches new prices instead of the 5-minute cache.
     nonce = (st.session_state.data_nonce, int(time.time() // 300))
@@ -1179,7 +1197,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
         if st.session_state.get("chart_pick") != (kind_name, asset_id):
             st.session_state.chart_pick = (kind_name, asset_id)
             st.session_state.chart_pick_from_row = True
-        st.rerun(scope="fragment")
+        _rerun_fragment()
 
     c1, c2, c3, c4 = st.columns(4)
 
@@ -1420,7 +1438,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
 
     if asset_key and st.session_state.get("chart_pick") != (asset_type, asset_key):
         st.session_state.chart_pick = (asset_type, asset_key)
-        st.rerun(scope="fragment")
+        _rerun_fragment()
 
     if not asset_key:
         st.info("Add an asset to this watchlist to see a chart.")
@@ -1614,7 +1632,7 @@ def show_market_sentiment(kind: str, label: str, ticker: str | None):
         if sentiment_now or sentiment_due:
             sentiment_deadlines[query] = time.time() + SENTIMENT_REFRESH_SECONDS
             st.session_state.sentiment_force = query
-            st.rerun(scope="fragment")
+            _rerun_fragment()
     with sentiment_top:
         _back_to_top(key="sentiment_back_to_top")
     force_sentiment = st.session_state.get("sentiment_force") == query
