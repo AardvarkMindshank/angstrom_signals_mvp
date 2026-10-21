@@ -65,7 +65,17 @@ export default function(component) {
   const token = String((data && data.token) || "");
   if (!token || window.scrollChartToken === token) return;
   window.scrollChartToken = token;
+  const chartOnScreen = () => {
+    const target = document.getElementById("interactive-chart");
+    if (!target) return false;
+    const scroller = target.closest('[data-testid="stMain"]') || target.closest("section.main");
+    const viewTop = scroller ? scroller.getBoundingClientRect().top : 0;
+    const viewBottom = scroller ? scroller.getBoundingClientRect().bottom : window.innerHeight;
+    const rect = target.getBoundingClientRect();
+    return rect.top >= viewTop - 16 && rect.top <= viewTop + (viewBottom - viewTop) * 0.55;
+  };
   const go = () => {
+    if (chartOnScreen()) return;
     const target = document.getElementById("interactive-chart");
     if (!target) return;
     target.scrollIntoView({behavior: "auto", block: "start"});
@@ -601,7 +611,26 @@ with st.sidebar.expander(notifications_label, expanded=False):
             if not filtered_notifs:
                 st.caption(f"No {feed_filter.lower()} notifications.")
             else:
-                st.markdown("<div style='height: 4px;'></div>", unsafe_allow_html=True)
+                st.caption("Click an alert to highlight that asset and open it on the chart.")
+                crypto_list = prefs.get("crypto") or {}
+                stock_list = prefs.get("stock") or {}
+
+                def notification_target(symbol: str):
+                    raw = str(symbol or "").strip()
+                    if not raw:
+                        return None
+                    if raw in crypto_list:
+                        return "Crypto", raw
+                    if raw in stock_list:
+                        return "Stock", raw
+                    crypto_ids = {str(key).lower(): key for key in crypto_list}
+                    stock_ids = {str(key).upper(): key for key in stock_list}
+                    if raw.lower() in crypto_ids:
+                        return "Crypto", crypto_ids[raw.lower()]
+                    if raw.upper() in stock_ids:
+                        return "Stock", stock_ids[raw.upper()]
+                    return None
+
                 for note in filtered_notifs:
                     color, background, arrow, _bar = tone(score_from_alert(note))
                     name = html.escape(str(note.get("asset_name") or "Asset"))
@@ -609,14 +638,39 @@ with st.sidebar.expander(notifications_label, expanded=False):
                     created = html.escape(str(note.get("created_at") or "")[:16].replace("T", " "))
                     weight = "700" if not note.get("is_read") else "500"
                     border = color if not note.get("is_read") else "#e5e7eb"
-                    st.markdown(
+                    target = notification_target(note.get("asset_symbol"))
+                    card = (
                         "<div style='background:"
                         f"{background};border:1px solid {border};border-radius:8px;padding:8px 10px;margin-bottom:8px;'>"
                         f"<div style='font-weight:{weight};color:{color};'>{arrow} {name}</div>"
                         f"<div style='font-size:0.8rem;color:#374151;margin-top:2px;'>{message}</div>"
-                        f"<div style='font-size:0.75rem;color:#6b7280;margin-top:2px;'>{created}</div></div>",
-                        unsafe_allow_html=True,
+                        f"<div style='font-size:0.75rem;color:#6b7280;margin-top:2px;'>{created}</div></div>"
                     )
+                    note_id = note.get("id") or name
+                    if target:
+                        kind_name, asset_id = target
+                        pick_value = html.escape(f"{kind_name}|{asset_id}", quote=True)
+                        card = (
+                            f"<button type='button' data-pick='{pick_value}' "
+                            "style='display:block;width:100%;margin:0;padding:0;border:none;"
+                            "background:transparent;text-align:left;cursor:pointer;font:inherit;color:inherit;'>"
+                            f"{card}</button>"
+                        )
+                    picked = _score_table(
+                        key=f"notif_{note_id}",
+                        data=card,
+                        on_picked_change=lambda: None,
+                    ).picked
+                    signature = f"{note_id}:{picked}"
+                    if picked and target:
+                        if st.session_state.get("notif_handled") != signature:
+                            st.session_state.notif_handled = signature
+                            st.session_state.chart_pick = target
+                            st.session_state.chart_pick_from_row = True
+                            st.session_state.scroll_token = str(time.time_ns())
+                            st.rerun()
+                    elif str(st.session_state.get("notif_handled") or "").startswith(f"{note_id}:"):
+                        st.session_state.notif_handled = None
 
                 if st.button("🗑️ Clear Read Alerts", use_container_width=True, key="clear_read_btn"):
                     try:
@@ -703,7 +757,7 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
 **How to use it**
 
 1. Read the snapshot and the tables. The top row is the strongest score, the bottom is the weakest.
-2. Click a name in either table, or a Quick Snapshot box. That asset stays highlighted, the page moves down to the chart, and the score breakdown shows which factors added or removed points.
+2. Click a name in either table, a Quick Snapshot box, or an alert under Notifications. That asset stays highlighted, the page moves down to the chart when the chart is off screen, and the score breakdown shows which factors added or removed points.
 3. **7d %** is the seven-day price change. **ATR %** is volatility. **Vol** is volume versus its 20-day average.
 4. Alerts fire at 70 and 30 unless you move those sliders. One email goes to the address on your account when a score crosses a boundary. It is not sent again until the score leaves that boundary and crosses it later.
 5. Market sentiment, under the chart, asks Grok to score each recent headline from 0 to 100. The number at the top of that section is the average of those article scores. It is separate from the technical score. The time on the Refresh button beside Quick Snapshot reloads prices and technical scores every 5 minutes. The time on the Refresh button beside Market sentiment reloads the headlines and score for the asset on the chart about every hour. Pressing either button refreshes that section now and starts its timer again.
