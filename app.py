@@ -370,7 +370,50 @@ with header_col2:
         st.session_state.data_nonce += 1
         st.rerun()
 
-st.info("Multi-factor technical scoring research platform • Higher score = more bullish setup")
+with st.expander("Help and guides", expanded=False):
+    st.markdown("""
+**Higher score = a more bullish setup.** Every score starts at 50 and each indicator adds or subtracts points. The result is kept between 0 and 100. This is a research tool, not financial advice.
+""")
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("Strong bullish", "70+")
+    c2.metric("Bullish", "60–69")
+    c3.metric("Neutral", "47–52")
+    c4.metric("Strong bearish", "below 30")
+    st.caption("Green is 53 and above. Amber is 47–52. Red is below 47. Mildly bullish starts at 53, mildly bearish at 40, and bearish at 30.")
+
+    left, right = st.columns(2)
+    with left:
+        st.markdown("""
+**What moves the score** (at weight 1.0)
+
+- **RSI** — oversold adds up to 8, overbought subtracts up to 8
+- **Stochastic** — below 20 adds 5, above 80 subtracts 5
+- **Moving averages** — 4 points for each of SMA 20, 50, and 200, added when price is above and subtracted when price is below
+- **ADX** — a strong trend adds or subtracts 4, in the direction of the 50-day average
+- **MACD** — up to 4 for the line versus zero, 3 for the signal cross, and 2 for the histogram
+""")
+    with right:
+        st.markdown("""
+**More factors**
+
+- **Ichimoku** — 5 points for price versus the cloud, 3 for Tenkan versus Kijun
+- **Bollinger Bands** — near the lower band adds 4, near the upper band subtracts 4
+- **Volume** — a high-volume up bar adds 3, a high-volume down bar subtracts 3
+- **OBV** — 3 points for whether volume flow is above or below its average
+- **7-day move** — up to 4 points either way
+
+Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a slider mix to your account.
+""")
+
+    st.markdown("""
+**How to use it**
+
+1. Read the snapshot and the tables. The top row is the strongest score, the bottom is the weakest.
+2. Open a name in the chart. The score breakdown shows which factors added or removed points.
+3. **7d %** is the seven-day price change. **ATR %** is volatility. **Vol** is volume versus its 20-day average.
+4. Alerts fire at 70 and 30 unless you move those sliders. An alert re-arms after the score leaves that zone.
+5. While this page is open, prices and scores refresh every 5 minutes. Email checks run separately, about every 15 minutes, even if the page is closed.
+""")
 
 CRYPTO_WATCHLIST = prefs["crypto"]
 STOCK_WATCHLIST = prefs["stock"]
