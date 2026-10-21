@@ -908,8 +908,8 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             color = tone(score)[3]
             label = f"{score:.0f}"
         return (
-            '<div style="display:flex;align-items:center;gap:8px;width:100%;min-width:100px;">'
-            '<div style="flex:1;background:#e5e7eb;border-radius:6px;height:14px;overflow:hidden;">'
+            '<div style="display:flex;align-items:center;gap:8px;width:100%;min-width:100px;min-height:1.6rem;">'
+            '<div style="flex:1;background:#e5e7eb;border-radius:6px;height:10px;overflow:hidden;">'
             f'<div style="width:{pct}%;background:{color};height:100%;border-radius:6px;"></div></div>'
             f'<span style="min-width:28px;font-weight:600;font-size:0.9em;">{label}</span></div>'
         )
@@ -927,7 +927,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             headers += ["7d %", "ATR %", "Vol"]
             widths += [1.0, 1.0, 1.0]
 
-        header_cols = st.columns(widths)
+        header_cols = st.columns(widths, vertical_alignment="center")
         for column, name in zip(header_cols, headers):
             column.markdown(f"**{name}**")
 
@@ -935,11 +935,11 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
         for _, row in frame.iterrows():
             asset_id = row["key"]
             selected = pick == (kind, asset_id)
-            columns = st.columns(widths)
+            columns = st.columns(widths, vertical_alignment="center")
             if columns[0].button(
                 str(row["symbol"]),
-                key=f"chart_row_{kind}_{asset_id}",
-                type="primary" if selected else "secondary",
+                key=f"chart_row_{'on' if selected else 'off'}_{kind}_{asset_id}",
+                type="secondary",
                 use_container_width=True,
             ):
                 st.session_state.chart_pick = (kind, asset_id)
@@ -948,16 +948,26 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             columns[1].markdown(render_score_bar(row["score"]), unsafe_allow_html=True)
             price = row.get("latest_price")
             rsi = row.get("rsi")
-            columns[2].write(row.get("label") or "—")
-            columns[3].write(f"${price:,.2f}" if pd.notna(price) else "—")
-            columns[4].write(f"{rsi:.1f}" if pd.notna(rsi) else "—")
+            row_values = [
+                row.get("label") or "—",
+                f"${price:,.2f}" if pd.notna(price) else "—",
+                f"{rsi:.1f}" if pd.notna(rsi) else "—",
+            ]
             if show_extra_metrics_flag:
                 change = row.get("change_7d")
                 atr = row.get("atr_pct")
                 volume = row.get("volume_ratio")
-                columns[5].write(f"{change:+.1f}%" if pd.notna(change) else "—")
-                columns[6].write(f"{atr:.2f}" if pd.notna(atr) else "—")
-                columns[7].write(f"{volume:.2f}" if pd.notna(volume) else "—")
+                row_values += [
+                    f"{change:+.1f}%" if pd.notna(change) else "—",
+                    f"{atr:.2f}" if pd.notna(atr) else "—",
+                    f"{volume:.2f}" if pd.notna(volume) else "—",
+                ]
+            for column, value in zip(columns[2:], row_values):
+                column.markdown(
+                    "<div style='display:flex;align-items:center;min-height:1.6rem;margin:0;'>"
+                    f"{html.escape(str(value))}</div>",
+                    unsafe_allow_html=True,
+                )
 
         problems = [
             f"{row['symbol']}: {row['reasons'][0]}"
@@ -966,6 +976,45 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
         ]
         for problem in problems:
             st.text(problem)
+
+    st.html(
+        """
+        <style>
+        [class*="st-key-chart_row_"] button,
+        button[class*="st-key-chart_row_"] {
+            min-height: 1.6rem !important;
+            height: 1.6rem !important;
+            padding: 0 0.6rem !important;
+            background-color: #f9fafb !important;
+            border: 1px solid #e5e7eb !important;
+            color: #111827 !important;
+            font-weight: 500 !important;
+            line-height: 1.2 !important;
+        }
+        [class*="st-key-chart_row_on_"] button,
+        button[class*="st-key-chart_row_on_"] {
+            background-color: #e5e7eb !important;
+            border-color: #9ca3af !important;
+            color: #111827 !important;
+        }
+        [class*="st-key-chart_row_"] button:hover,
+        [class*="st-key-chart_row_"] button:focus,
+        button[class*="st-key-chart_row_"]:hover,
+        button[class*="st-key-chart_row_"]:focus {
+            background-color: #f3f4f6 !important;
+            border-color: #9ca3af !important;
+            color: #111827 !important;
+        }
+        [class*="st-key-chart_row_on_"] button:hover,
+        [class*="st-key-chart_row_on_"] button:focus,
+        button[class*="st-key-chart_row_on_"]:hover,
+        button[class*="st-key-chart_row_on_"]:focus {
+            background-color: #d1d5db !important;
+            color: #111827 !important;
+        }
+        </style>
+        """
+    )
 
     if "chart_pick" not in st.session_state:
         if crypto_watchlist:
