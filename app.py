@@ -1218,11 +1218,6 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
     st.html(
         "<div id='interactive-chart' style='scroll-margin-top:4.5rem;'></div>"
     )
-    st.subheader("Interactive Chart")
-    _scroll_chart(
-        key="scroll_to_chart",
-        data={"token": st.session_state.get("scroll_token") or ""},
-    )
     pick = st.session_state.get("chart_pick")
     if pick and (
         st.session_state.pop("chart_pick_from_row", False)
@@ -1236,6 +1231,28 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                 st.session_state.asset_crypto = pick_key
             else:
                 st.session_state.asset_stock = pick_key
+
+    def selected_chart_name():
+        kind = st.session_state.get("asset_type")
+        if kind not in ("Crypto", "Stock"):
+            kind = "Crypto" if crypto_watchlist else "Stock"
+        watchlist = crypto_watchlist if kind == "Crypto" else stock_watchlist
+        state_key = "asset_crypto" if kind == "Crypto" else "asset_stock"
+        asset_id = st.session_state.get(state_key)
+        if asset_id not in watchlist:
+            asset_id = next(iter(watchlist), None)
+        if not asset_id:
+            return ""
+        if kind == "Crypto":
+            return str(watchlist[asset_id])
+        return f"{watchlist[asset_id]} ({asset_id})"
+
+    chart_name = selected_chart_name()
+    st.subheader(f"Interactive Chart - {chart_name}" if chart_name else "Interactive Chart")
+    _scroll_chart(
+        key="scroll_to_chart",
+        data={"token": st.session_state.get("scroll_token") or ""},
+    )
 
     col1, col2 = st.columns([1, 3])
     with col1:
@@ -1425,9 +1442,13 @@ def show_market_sentiment(kind: str, label: str, ticker: str | None):
         "<hr style='margin:1.4rem 0 0.6rem;border:none;border-top:1px solid #e5e7eb;'>",
         unsafe_allow_html=True,
     )
+    shown_name = " ".join((label or "").split())
+    if kind == "Stock" and ticker and ticker.upper() not in shown_name.upper():
+        shown_name = f"{shown_name} ({ticker})" if shown_name else ticker
+    sentiment_heading = f"Market sentiment - {shown_name}" if shown_name else "Market sentiment"
     sentiment_title, sentiment_refresh = st.columns([4, 1.45], vertical_alignment="center")
     with sentiment_title:
-        st.subheader("Market sentiment")
+        st.subheader(sentiment_heading)
     query = sentiment_query(kind, label, ticker)
     sentiment_deadlines = st.session_state.setdefault("sentiment_due", {})
     if query not in sentiment_deadlines:
