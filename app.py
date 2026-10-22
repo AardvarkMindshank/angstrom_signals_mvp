@@ -882,7 +882,7 @@ This sits under the chart. The heading names the open asset, for example **Marke
 
 The **Sentiment** column shows that saved score in the same colored box. A dash means that asset has not been scored yet. Open it on the chart, and the score fills in once Grok finishes. The score is stored once and shown to every account that holds the asset. It stays for about 12 hours.
 
-**Trend**, at the far right of each row, is a small line of the last 30 closes. Green means that stretch rose. Red means it fell. Orange means it finished within about 2% of where it started. The same line is shared by every account.
+**30-day trend**, at the far right of each row, is a small line of the last 30 closes. Green means that stretch rose. Red means it fell. Orange means it finished within about 2% of where it started. The same line is shared by every account.
 
 **Watching**, beside the name, is how many accounts have that asset on a watchlist. The people marks are a count, not the names of those accounts.
 
@@ -1435,7 +1435,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             return
         frame = pd.DataFrame(results).sort_values("score", ascending=False, na_position="last")
         st.subheader(title)
-        st.caption("Click a name to show that asset on the chart. Click a sentiment score to open its headlines. Watching is how many accounts hold that asset. The Crowd box is the average of personal scores. Hover the down thumb for the spread. The Trend line is the last 30 closes.")
+        st.caption("Click a name to show that asset on the chart. Click a sentiment score to open its headlines. Watching is how many accounts hold that asset. The Crowd box is the average of personal scores. Hover the down thumb for the spread. The 30-day trend is the last 30 closes.")
 
         headers = ["Asset", "Watching", "Score", "Signal", "Price", "RSI"]
         if show_period_changes_flag:
@@ -1446,7 +1446,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             headers.append("30d %")
         if show_extra_metrics_flag:
             headers += ["Market Cap", "ATR %", "Vol"]
-        headers += ["Sentiment", "Crowd", "Trend"]
+        headers += ["Sentiment", "Crowd", "30-day trend"]
         header_html = ""
         for name in headers:
             if name == "Crowd":
@@ -1454,7 +1454,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                     "<th colspan='2' style='padding:8px 10px;text-align:center;white-space:nowrap;'>Crowd</th>"
                 )
                 continue
-            align = "right" if name in ("Sentiment", "Trend") else "left"
+            align = "right" if name in ("Sentiment", "30-day trend") else "left"
             header_html += (
                 f"<th style='padding:8px 10px;text-align:{align};white-space:nowrap;'>{html.escape(name)}</th>"
             )

@@ -64,7 +64,7 @@ Under the chart, the selected asset gets a 0–100 sentiment score from headline
 
 After an asset has been opened, that score also appears in the Sentiment column of the tables. A dash means it has not been scored yet. Clicking the colored score highlights the asset and jumps to its headlines. The score is stored once per asset and shown to every account for 12 hours.
 
-The Trend column is a small line of the last 30 closes from the price history already used for the score. Green means that stretch rose, red means it fell, and orange means it finished within about 2% of where it started. Those closes are stored on the same shared row, including by the alert worker. Run `supabase_rls.sql` again so the `asset_market` table exists.
+The 30-day trend column is a small line of the last 30 closes from the price history already used for the score. Green means that stretch rose, red means it fell, and orange means it finished within about 2% of where it started. Those closes are stored on the same shared row, including by the alert worker. Run `supabase_rls.sql` again so the `asset_market` table exists.
 
 The Watching column counts how many accounts have that asset on a watchlist. It shows the count only, not who those accounts are. Run `supabase_rls.sql` again so the `asset_holder_counts` function exists.
 
