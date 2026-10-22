@@ -1471,7 +1471,7 @@ def _rerun_fragment() -> None:
 
 def section_expander(label: str, section_id: str):
     """A main-page section. Open all and Collapse all move every one of these together."""
-    fold = st.session_state.setdefault("section_fold", {"open": True, "nonce": 0})
+    fold = st.session_state.setdefault("section_fold", {"open": True, "nonce": 0, "help_nonce": 0})
     return st.expander(label, expanded=bool(fold["open"]), key=f"{section_id}_{fold['nonce']}")
 
 
@@ -2139,7 +2139,7 @@ with st.sidebar.expander(notifications_label, expanded=False):
             save_alert_preferences_to_cloud(new_alert_settings)
 
 if "section_fold" not in st.session_state:
-    st.session_state.section_fold = {"open": True, "nonce": 0}
+    st.session_state.section_fold = {"open": True, "nonce": 0, "help_nonce": 0}
 
 title_col, open_col, close_col = st.columns([6.2, 1, 1.25], vertical_alignment="center")
 with title_col:
@@ -2158,15 +2158,21 @@ with open_col:
         st.session_state.section_fold = {
             "open": True,
             "nonce": st.session_state.section_fold["nonce"] + 1,
+            "help_nonce": st.session_state.section_fold.get("help_nonce", 0),
         }
 with close_col:
     if st.button("Collapse all", key="collapse_all_sections", use_container_width=True):
         st.session_state.section_fold = {
             "open": False,
             "nonce": st.session_state.section_fold["nonce"] + 1,
+            "help_nonce": st.session_state.section_fold.get("help_nonce", 0) + 1,
         }
 
-with st.expander("Help and guides", expanded=False):
+with st.expander(
+    "Help and guides",
+    expanded=False,
+    key=f"help_guides_{st.session_state.section_fold.get('help_nonce', 0)}",
+):
     st.markdown("""
 **Higher score = a more bullish setup.** Every score starts at 50 and each indicator adds or subtracts points. The result is kept between 0 and 100. This is a research tool, not financial advice.
 """)
@@ -2213,7 +2219,7 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
     st.markdown("""
 **How to use it**
 
-1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest. Market mood for crypto, Market mood for stocks, Quick Snapshot, Crypto Scores, Equity Scores, Interactive Chart, Score Breakdown, and Market sentiment each sit in a section that starts open. Close a header to fold that section away. **Open all** and **Collapse all**, on the right of the page title, do that for every one of those sections. **Feedback**, at the bottom of the sidebar, sends an issue or an idea. It is stored as submitted.
+1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest. Market mood for crypto, Market mood for stocks, Quick Snapshot, Crypto Scores, Equity Scores, Interactive Chart, Score Breakdown, and Market sentiment each sit in a section that starts open. Close a header to fold that section away. **Open all** and **Collapse all**, on the right of the page title, do that for every one of those sections. Collapse all also closes this guide. Open all does not open it. **Feedback**, at the bottom of the sidebar, sends an issue or an idea. It is stored as submitted.
 2. Click a name in either table, a Quick Snapshot box, or an alert under Notifications. That asset stays highlighted, and the page moves down to the chart when the chart is off screen. Click a column title to sort that table. It starts with the strongest score at the top.
 3. Extra metrics add **7d %**, **Market Cap**, **ATR %**, and **Vol**. A separate checkbox adds **1d %** before the seven-day change and **30d %** after it. For **1d %** and **7d %**, green means the price rose and red means it fell. **30d %** uses the same colors as the **30-day trend**: green for a rise of about 2% or more, red for a fall of about 2% or more, and orange when the move stays inside about 2%. For stocks, one day is the previous trading session. **Market Cap** is the latest size of the asset, from CoinGecko for crypto and Yahoo for stocks. **ATR %** is volatility. **Vol** is volume versus its 20-day average.
 4. Alerts fire at 70 and 30 unless you move those sliders. One email goes to the address on your account when a technical score crosses a boundary. It is not sent again until the score leaves that boundary and crosses it later. Sentiment scores do not send alerts.
