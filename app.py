@@ -1738,7 +1738,19 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                 unsafe_allow_html=True,
             )
         if result.get("change_7d") is not None:
-            col_b.metric("7-Day Change", f"{result['change_7d']:+.1f}%")
+            change = result["change_7d"]
+            if change > 0:
+                change_color = "#15803d"
+            elif change < 0:
+                change_color = "#b91c1c"
+            else:
+                change_color = "#6b7280"
+            col_b.markdown(
+                "<div style='font-size: 0.85rem; color: #6b7280; margin-bottom: 2px;'>7-Day Change</div>"
+                f"<div style='font-size: 2.2rem; font-weight: 600; line-height: 1.1; color: {change_color};'>"
+                f"{change:+.1f}%</div>",
+                unsafe_allow_html=True,
+            )
         if result.get("atr_pct") is not None:
             col_c.metric("Volatility (ATR%)", f"{result['atr_pct']:.2f}%")
 
