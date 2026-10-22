@@ -198,12 +198,14 @@ def save_logos(supabase, rows: list[dict]) -> None:
         _warn(exc)
 
 
-def asset_logo(url, label: str) -> str:
+def asset_logo(url, label: str, size: int = 22) -> str:
     """Round logo. A letter shows until the picture loads, and if it never does."""
+    size = min(48, max(16, int(size)))
+    font = max(11, round(size * 0.46))
     letter = next((ch.upper() for ch in str(label or "") if ch.isalnum()), "•")
     mark = (
-        "<span style='width:22px;height:22px;border-radius:999px;background:#eef2ff;"
-        "color:#3730a3;font-size:11px;font-weight:700;display:inline-flex;"
+        f"<span style='width:{size}px;height:{size}px;border-radius:999px;background:#eef2ff;"
+        f"color:#3730a3;font-size:{font}px;font-weight:700;display:inline-flex;"
         "align-items:center;justify-content:center;flex:none;overflow:hidden;'>"
         f"{html.escape(letter)}</span>"
     )
@@ -216,12 +218,23 @@ def asset_logo(url, label: str) -> str:
         return mark
     safe = html.escape(cleaned, quote=True)
     return (
-        "<span style='position:relative;width:22px;height:22px;flex:none;display:inline-flex;'>"
+        f"<span style='position:relative;width:{size}px;height:{size}px;flex:none;display:inline-flex;'>"
         f"{mark}"
-        f"<img src='{safe}' alt='' width='22' height='22' "
-        "style='position:absolute;inset:0;width:22px;height:22px;border-radius:999px;"
+        f"<img src='{safe}' alt='' width='{size}' height='{size}' "
+        f"style='position:absolute;inset:0;width:{size}px;height:{size}px;border-radius:999px;"
         "object-fit:cover;background:#ffffff;' onerror='this.remove()'>"
         "</span>"
+    )
+
+
+def heading_with_logo(text: str, url, label: str) -> str:
+    """A section title with the asset logo at the same height as the heading."""
+    safe = html.escape(text)
+    logo = asset_logo(url, label or text, size=32)
+    return (
+        "<div style='display:flex;align-items:center;gap:12px;margin:0.2rem 0 0.4rem;'>"
+        f"{logo}<h3 style='margin:0;padding:0;line-height:1.2;font-size:1.5rem;font-weight:600;'>"
+        f"{safe}</h3></div>"
     )
 
 

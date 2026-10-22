@@ -228,6 +228,7 @@ try:
     from market_store import (
         asset_logo,
         asset_market_key,
+        heading_with_logo,
         holder_counts,
         holders_mark,
         load_shared_market,
@@ -864,7 +865,7 @@ The **Sentiment** column shows that saved score in the same colored box. A dash 
 
 **Watching**, beside the name, is how many accounts have that asset on a watchlist. The people marks are a count, not the names of those accounts.
 
-The picture on the left of each name is that asset's logo. Crypto logos come from CoinGecko. Stock logos come from Finnhub. A letter shows when a logo is not available. The address is saved once and reused for every account.
+The picture on the left of each name is that asset's logo. The same logo appears beside the Interactive Chart and Market sentiment headings. Crypto logos come from CoinGecko. Stock logos come from Finnhub. A letter shows when a logo is not available. The address is saved once and reused for every account.
 
 Click a sentiment score in the table to highlight that asset and jump to its headlines. **↑ Top** scrolls back to the top of the page. It sits on the right of the chart title, and on the right of the sentiment Refresh button.
 
@@ -1175,6 +1176,7 @@ def _asset_logos(crypto_watchlist, stock_watchlist, shared: dict) -> dict[str, s
         logos[key] = url
         fresh.append({"kind": "Stock", "asset_id": ticker, "logo_url": url})
     save_logos(supabase, fresh)
+    st.session_state["asset_logos"] = logos
     return logos
 
 
@@ -1498,15 +1500,23 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
         if asset_id not in watchlist:
             asset_id = next(iter(watchlist), None)
         if not asset_id:
-            return ""
+            return "", kind, ""
         if kind == "Crypto":
-            return str(watchlist[asset_id])
-        return f"{watchlist[asset_id]} ({asset_id})"
+            return str(watchlist[asset_id]), kind, asset_id
+        return f"{watchlist[asset_id]} ({asset_id})", kind, asset_id
 
-    chart_name = selected_chart_name()
+    chart_name, chart_kind, chart_asset = selected_chart_name()
+    chart_logo = (st.session_state.get("asset_logos") or {}).get(asset_market_key(chart_kind, chart_asset))
     chart_heading, chart_top = st.columns([5.2, 0.9], vertical_alignment="center")
     with chart_heading:
-        st.subheader(f"Interactive Chart - {chart_name}" if chart_name else "Interactive Chart")
+        st.markdown(
+            heading_with_logo(
+                f"Interactive Chart - {chart_name}" if chart_name else "Interactive Chart",
+                chart_logo,
+                chart_name,
+            ),
+            unsafe_allow_html=True,
+        )
     with chart_top:
         _back_to_top(key="chart_back_to_top")
     _scroll_chart(
@@ -1703,10 +1713,10 @@ def _published_label(value) -> str:
 def show_market_sentiment(kind: str, asset_id: str, label: str, ticker: str | None):
     """Headline sentiment for the asset on the chart. Shared for 12 hours."""
     query = sentiment_query(kind, label, ticker)
+    stored = load_shared_market(supabase, [asset_market_key(kind, asset_id)]).get(
+        asset_market_key(kind, asset_id)
+    )
     if st.session_state.get("sentiment_force") != query:
-        stored = load_shared_market(supabase, [asset_market_key(kind, asset_id)]).get(
-            asset_market_key(kind, asset_id)
-        )
         report, stored_at = sentiment_from_row(stored)
         if report and stored_at is not None:
             remember_sentiment(query, report, stored_at)
@@ -1719,9 +1729,15 @@ def show_market_sentiment(kind: str, asset_id: str, label: str, ticker: str | No
     if kind == "Stock" and ticker and ticker.upper() not in shown_name.upper():
         shown_name = f"{shown_name} ({ticker})" if shown_name else ticker
     sentiment_heading = f"Market sentiment - {shown_name}" if shown_name else "Market sentiment"
+    sentiment_logo = (stored or {}).get("logo_url") if isinstance(stored, dict) else ""
+    if not sentiment_logo:
+        sentiment_logo = (st.session_state.get("asset_logos") or {}).get(asset_market_key(kind, asset_id))
     sentiment_title, sentiment_refresh, sentiment_top = st.columns([3.15, 1.45, 0.85], vertical_alignment="center")
     with sentiment_title:
-        st.subheader(sentiment_heading)
+        st.markdown(
+            heading_with_logo(sentiment_heading, sentiment_logo, shown_name),
+            unsafe_allow_html=True,
+        )
     sentiment_deadlines = st.session_state.setdefault("sentiment_due", {})
     if query not in sentiment_deadlines:
         cached_at = sentiment_cached_at(query)
