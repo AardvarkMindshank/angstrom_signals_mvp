@@ -153,24 +153,31 @@ _comment_row = st.components.v2.component(
 
 _SOCIAL_STREAM_JS = """
 export default function(component) {
-  const { data, parentElement } = component;
+  const { data, setTriggerValue, parentElement } = component;
   const shell = parentElement.closest(".stBidiComponent") || parentElement;
   shell.style.display = "none";
   let items = [];
+  let savedAsset = "";
   try {
     const parsed = typeof data === "string" ? JSON.parse(data || "[]") : data;
-    items = Array.isArray(parsed) ? parsed : [];
+    if (Array.isArray(parsed)) {
+      items = parsed;
+    } else if (parsed && typeof parsed === "object") {
+      items = Array.isArray(parsed.items) ? parsed.items : [];
+      savedAsset = parsed.asset === "watchlist" ? "watchlist" : "";
+    }
   } catch (error) {
     items = [];
   }
   window.socialStreamItems = items;
-  installSocialStream();
+  window.socialStreamReport = setTriggerValue;
+  installSocialStream(savedAsset);
   window.renderSocialStream();
   return () => {};
 
-  function installSocialStream() {
+  function installSocialStream(savedAsset) {
     window.socialStreamState = window.socialStreamState || {
-      open: false, side: "", asset: "", person: ""
+      open: false, side: "", asset: savedAsset || "", person: ""
     };
     if (!document.getElementById("social-stream-style")) {
       const style = document.createElement("style");
@@ -224,7 +231,7 @@ export default function(component) {
         "<header class='head'><div>",
         "<div class='kicker'>Social signals</div>",
         "<h2>Social signals stream</h2>",
-        "<p class='hint'>Newest first. Each note shows the sentiment it was answering, and stays for 12 hours.</p>",
+        "<p class='hint'>Newest first. Each note shows the sentiment it was answering, and stays for 12 hours. All assets or My watchlists is saved on your account.</p>",
         "</div><button type='button' class='close'>Close</button></header>",
         "<div class='filters'><div class='chips'>",
         "<button type='button' data-side=''>All</button>",
@@ -253,8 +260,12 @@ export default function(component) {
         });
       });
       root.querySelector("#stream-asset").addEventListener("change", (event) => {
-        window.socialStreamState.asset = event.target.value;
+        const choice = event.target.value;
+        window.socialStreamState.asset = choice;
         window.renderSocialStream();
+        if ((choice === "" || choice === "watchlist") && window.socialStreamReport) {
+          window.socialStreamReport("asset", choice === "watchlist" ? "watchlist" : "all");
+        }
       });
       root.querySelector("#stream-person").addEventListener("change", (event) => {
         window.socialStreamState.person = event.target.value;
@@ -1338,7 +1349,7 @@ The **Sentiment** column shows that saved score in the same colored box. A dash 
 
 The picture on the left of each name is that asset's logo. The same logo appears at the top of the Interactive Chart and Market sentiment sections. Crypto logos come from CoinGecko. Stock logos come from Finnhub. A letter shows when a logo is not available. The address is saved once and reused for every account.
 
-Beside the sentiment score you can press thumbs up if you agree, or thumbs down if you do not. Press the same thumb again to clear your take. Those buttons sit in an outlined box. After you disagree, scores appear in that same box, under the buttons: 0, 20, 40, 60, 80 and 100. The number you pick also fills the type box, and you can type any number from 0 to 100. It saves on its own when you click a score, press Enter, or leave the box. The thumbs and that same colored average sit at the bottom of Your take, and again under **Crowd** on each table row. The box is the average of the personal scores, in the same style as the Sentiment column. It updates when a score is clicked or typed. Hover the down thumb for the spread, which is how far those scores typically sit from the average. One score has no spread yet. A dash means nobody has given a personal score. Under the thumbs you can post one comment of up to 160 characters. A row of faces under the box adds an emoticon. A speech balloon appears beside the thumbs, and in the **Comments** column, once any comment exists. Click it to slide in the **Social signals stream** from the right. That stream lists comments newest first, with each person's picture, name, and the time, and the sentiment they were answering. Narrow it with All, Positive, Negative, or Mixed. Under Asset, All assets is every comment, and My watchlists is only the crypto and equity tables. You can also pick one asset or one person. Close it with Close, the shaded area, or Escape. A refresh of that sentiment clears every thumb and every personal score, because they belonged to the old score. A comment stays for 12 hours from when it was posted, and the stream keeps the sentiment it was answering even after a newer score arrives.
+Beside the sentiment score you can press thumbs up if you agree, or thumbs down if you do not. Press the same thumb again to clear your take. Those buttons sit in an outlined box. After you disagree, scores appear in that same box, under the buttons: 0, 20, 40, 60, 80 and 100. The number you pick also fills the type box, and you can type any number from 0 to 100. It saves on its own when you click a score, press Enter, or leave the box. The thumbs and that same colored average sit at the bottom of Your take, and again under **Crowd** on each table row. The box is the average of the personal scores, in the same style as the Sentiment column. It updates when a score is clicked or typed. Hover the down thumb for the spread, which is how far those scores typically sit from the average. One score has no spread yet. A dash means nobody has given a personal score. Under the thumbs you can post one comment of up to 160 characters. A row of faces under the box adds an emoticon. A speech balloon appears beside the thumbs, and in the **Comments** column, once any comment exists. Click it to slide in the **Social signals stream** from the right. That stream lists comments newest first, with each person's picture, name, and the time, and the sentiment they were answering. Narrow it with All, Positive, Negative, or Mixed. Under Asset, All assets is every comment, and My watchlists is only the crypto and equity tables on your account. That choice is saved for you. You can also pick one asset or one person. Close it with Close, the shaded area, or Escape. A refresh of that sentiment clears every thumb and every personal score, because they belonged to the old score. A comment stays for 12 hours from when it was posted, and the stream keeps the sentiment it was answering even after a newer score arrives.
 
 Click a sentiment score in the table to highlight that asset and jump to its headlines. **↑ Top** scrolls back to the top of the page. It sits at the top right of the Interactive Chart section, and at the top right of Market sentiment.
 
@@ -1568,6 +1579,8 @@ with st.sidebar.expander("⚙️ Settings", expanded=False):
         "show_extra_metrics": show_extra_metrics,
         "show_period_changes": show_period_changes,
     }
+    if settings.get("stream_asset") in ("all", "watchlist"):
+        new_settings["stream_asset"] = settings["stream_asset"]
     if new_settings != settings:
         settings = new_settings
         prefs["settings"] = settings
@@ -1878,7 +1891,24 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             for row in stock_results:
                 row["market_cap"] = (caps.get("stock") or {}).get(str(row.get("key") or "").upper())
         _share_market_rows(crypto_watchlist, stock_watchlist, crypto_results, stock_results)
-        _social_stream(key="social_stream_host", data=st.session_state.get("social_stream") or "[]")
+        saved_scope = (prefs.get("settings") or {}).get("stream_asset")
+        scope = "watchlist" if saved_scope == "watchlist" else ""
+        try:
+            stream_items = json.loads(st.session_state.get("social_stream") or "[]")
+        except (TypeError, json.JSONDecodeError):
+            stream_items = []
+        if not isinstance(stream_items, list):
+            stream_items = []
+        chosen_scope = _social_stream(
+            key="social_stream_host",
+            data=json.dumps({"items": stream_items, "asset": scope}, ensure_ascii=False),
+            on_asset_change=lambda: None,
+        ).asset
+        if chosen_scope in ("all", "watchlist"):
+            stored = prefs.setdefault("settings", {})
+            if stored.get("stream_asset") != chosen_scope:
+                stored["stream_asset"] = chosen_scope
+                save_preferences_to_cloud({"settings": stored})
 
         try:
             evaluate_alerts(supabase, user_id, crypto_results + stock_results, alert_prefs)
