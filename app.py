@@ -1576,7 +1576,7 @@ if st.session_state.user is None:
     with col_center:
         st.markdown(_brand_mark(200), unsafe_allow_html=True)
         st.title("angstrom signals")
-        st.caption("Multi-factor technical scoring research platform • Please log in to continue")
+        st.caption("Market mood and technical signals, with the crowd alongside.")
 
         auth_tab1, auth_tab2 = st.tabs(["🔑 Log In", "📝 Sign Up"])
 
