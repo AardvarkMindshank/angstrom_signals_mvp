@@ -2061,10 +2061,12 @@ if "section_fold" not in st.session_state:
 title_col, open_col, close_col = st.columns([6.2, 1, 1.25], vertical_alignment="center")
 with title_col:
     st.markdown(
-        "<div style='display:flex;align-items:center;gap:0.85rem;margin:0.4rem 0;'>"
+        "<div style='display:flex;align-items:center;flex-wrap:wrap;gap:0.35rem 0.85rem;margin:0.4rem 0;'>"
         f"{_brand_mark(58, align='left')}"
-        "<h1 style='margin:0;padding:0;line-height:1.15;font-size:2.25rem;font-weight:700;'>"
-        "angstrom signals</h1></div>",
+        "<h1 style='margin:0;padding:0;line-height:1.15;font-size:2.25rem;font-weight:700;white-space:nowrap;'>"
+        "angstrom signals</h1>"
+        "<span style='font-size:0.82rem;font-weight:500;line-height:1.3;opacity:0.72;'>"
+        "Market mood and technical signals, with the crowd alongside.</span></div>",
         unsafe_allow_html=True,
     )
 with open_col:
