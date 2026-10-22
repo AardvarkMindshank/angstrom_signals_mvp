@@ -2582,7 +2582,7 @@ with close_col:
         }
 
 with st.expander(
-    "Help and guides",
+    "📖 Help and guides",
     expanded=False,
     key=f"help_guides_{st.session_state.section_fold.get('help_nonce', 0)}",
 ):
@@ -3307,7 +3307,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
 
     show_market_moods()
 
-    with section_expander("Quick Snapshot", "quick_snapshot"):
+    with section_expander("📸 Quick Snapshot", "quick_snapshot"):
         _, snap_refresh = st.columns([4, 1.45], vertical_alignment="center")
         with snap_refresh:
             technical_now = st.button(
@@ -3748,8 +3748,8 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
         elif stock_watchlist:
             st.session_state.chart_pick = ("Stock", next(iter(stock_watchlist)))
 
-    style_and_show_table(crypto_results, "Crypto Scores", "Crypto", "crypto_scores")
-    style_and_show_table(stock_results, "Equity Scores", "Stock", "equity_scores")
+    style_and_show_table(crypto_results, "🪙 Crypto Scores", "Crypto", "crypto_scores")
+    style_and_show_table(stock_results, "📈 Equity Scores", "Stock", "equity_scores")
 
     pick = st.session_state.get("chart_pick")
     if pick and (
@@ -3782,7 +3782,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
 
     chart_name, chart_kind, chart_asset = selected_chart_name()
     chart_logo = (st.session_state.get("asset_logos") or {}).get(asset_market_key(chart_kind, chart_asset))
-    chart_label = f"Interactive Chart - {chart_name}" if chart_name else "Interactive Chart"
+    chart_label = f"📊 Interactive Chart - {chart_name}" if chart_name else "📊 Interactive Chart"
     st.html(
         "<div id='interactive-chart' style='scroll-margin-top:4.5rem;'></div>"
     )
@@ -3944,7 +3944,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             col_c.metric("Volatility (ATR%)", f"{result['atr_pct']:.2f}%")
 
     if show_reasons_flag and result.get("reasons") and result.get("score") is not None:
-        with section_expander(f"Score Breakdown — {title}", "score_breakdown"):
+        with section_expander(f"🔍 Score Breakdown — {title}", "score_breakdown"):
             st.markdown(
                 f"<span style='color:{color};font-weight:bold;font-size:1.1em'>"
                 f"{result['score']}/100 ({html.escape(str(result['label']))})</span>",
@@ -4465,12 +4465,13 @@ def show_market_moods() -> None:
     """Crypto market, then the stock market. Each uses the asset sentiment layout."""
     stored = load_market_moods(supabase)
     if stored is None:
-        with section_expander("Market mood", "market_mood"):
+        with section_expander("🌤️ Market mood", "market_mood"):
             st.info("Market mood storage is not ready yet. Run the latest supabase_rls.sql in the Supabase SQL editor.")
         return
     deadlines = st.session_state.setdefault("mood_due", {})
     for spec in MACRO_MOODS:
-        with section_expander(f"Market mood - {spec['label']}", f"market_mood_{spec['key']}"):
+        mood_icon = "🪙" if spec["key"] == "crypto" else "📈"
+        with section_expander(f"{mood_icon} Market mood - {spec['label']}", f"market_mood_{spec['key']}"):
             _mood_card(spec, stored.get(spec["key"]), deadlines)
 
 
@@ -4488,7 +4489,9 @@ def show_market_sentiment(kind: str, asset_id: str, label: str, ticker: str | No
     shown_name = " ".join((label or "").split())
     if kind == "Stock" and ticker and ticker.upper() not in shown_name.upper():
         shown_name = f"{shown_name} ({ticker})" if shown_name else ticker
-    sentiment_heading = f"Market sentiment - {shown_name}" if shown_name else "Market sentiment"
+    sentiment_heading = (
+        f"📰 Market sentiment - {shown_name}" if shown_name else "📰 Market sentiment"
+    )
     sentiment_logo = (stored or {}).get("logo_url") if isinstance(stored, dict) else ""
     if not sentiment_logo:
         sentiment_logo = (st.session_state.get("asset_logos") or {}).get(asset_market_key(kind, asset_id))
