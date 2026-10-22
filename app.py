@@ -884,7 +884,7 @@ The **Sentiment** column shows that saved score in the same colored box. A dash 
 
 The picture on the left of each name is that asset's logo. The same logo appears beside the Interactive Chart and Market sentiment headings. Crypto logos come from CoinGecko. Stock logos come from Finnhub. A letter shows when a logo is not available. The address is saved once and reused for every account.
 
-Beside the sentiment score you can press thumbs up if you agree, or thumbs down if you do not. Press the same thumb again to clear your take. Those buttons sit in an outlined box. After you disagree, scores appear in that same box, under the buttons: 0, 20, 40, 60, 80 and 100. The number you pick also fills the type box, and you can type any number from 0 to 100. It saves on its own when you click a score, press Enter, or leave the box. **Crowd** on each table row has the thumbs, and a colored box to their right. That box is the average of the personal scores, in the same style as the Sentiment column. Hover the down thumb for the spread, which is how far those scores typically sit from the average. One score has no spread yet. A dash means nobody has given a personal score. A refresh of that sentiment clears every thumb and every score, because they belonged to the old score.
+Beside the sentiment score you can press thumbs up if you agree, or thumbs down if you do not. Press the same thumb again to clear your take. Those buttons sit in an outlined box. After you disagree, scores appear in that same box, under the buttons: 0, 20, 40, 60, 80 and 100. The number you pick also fills the type box, and you can type any number from 0 to 100. It saves on its own when you click a score, press Enter, or leave the box. The thumbs and that same colored average sit at the bottom of Your take, and again under **Crowd** on each table row. The box is the average of the personal scores, in the same style as the Sentiment column. It updates when a score is clicked or typed. Hover the down thumb for the spread, which is how far those scores typically sit from the average. One score has no spread yet. A dash means nobody has given a personal score. A refresh of that sentiment clears every thumb and every score, because they belonged to the old score.
 
 Click a sentiment score in the table to highlight that asset and jump to its headlines. **↑ Top** scrolls back to the top of the page. It sits on the right of the chart title, and on the right of the sentiment Refresh button.
 
@@ -1853,13 +1853,20 @@ def _sentiment_thumbs(kind: str, asset_id: str, sentiment_at) -> None:
         if mine == -1:
             _sentiment_alt_score(kind, asset_id, sentiment_at, mine_score, selected)
         st.markdown(
-            crowd_mark(
+            "<div style='display:flex;align-items:center;gap:8px;white-space:nowrap;'>"
+            + crowd_mark(
                 voice.get("up"),
                 voice.get("down"),
                 alt_count=voice.get("alt_count"),
                 alt_avg=voice.get("alt_avg"),
                 alt_spread=voice.get("alt_spread"),
-            ),
+            )
+            + crowd_average_badge(
+                voice.get("alt_avg"),
+                voice.get("alt_count"),
+                voice.get("alt_spread"),
+            )
+            + "</div>",
             unsafe_allow_html=True,
         )
 
