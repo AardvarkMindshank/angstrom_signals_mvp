@@ -687,10 +687,12 @@ try:
         holder_counts,
         holders_mark,
         load_market_moods,
+        market_mood_crowd,
         load_shared_market,
         recent_closes,
         save_logos,
         save_market_mood,
+        set_market_mood_vote,
         save_price_paths,
         save_sentiment,
         sentiment_comment_lists,
@@ -1367,7 +1369,7 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
 
 **Market mood**
 
-Two sections sit above Quick Snapshot, crypto first and then stocks. Each one uses the same layout as the asset sentiment under the chart: the score on the left, Your take on the right, then the articles. Neither is an asset, and neither is added to the tables or the technical score. Each score is an average of recent headlines, with a short summary, a positive paragraph, and a negative paragraph. Each article row also has a one-sentence AI Summary, after the date. A dash there means that score was saved before summaries, so press Refresh. It is stored once and shown to every account for about 12 hours. Agree, disagree, and comments are not in Your take yet. The search wording can be tightened later.
+Two sections sit above Quick Snapshot, crypto first and then stocks. Each one uses the same layout as the asset sentiment under the chart: the score on the left, Your take on the right, then the articles. Neither is an asset, and neither is added to the tables or the technical score. Each score is an average of recent headlines, with a short summary, a positive paragraph, and a negative paragraph. Each article row also has a one-sentence AI Summary, after the date. A dash there means that score was saved before summaries, so press Refresh. It is stored once and shown to every account for about 12 hours. Your take works the same way as on an asset: agree, disagree, a score from 0 to 100, and one short comment. A refresh of that market clears the thumbs and personal scores. A comment stays for 12 hours. The search wording can be tightened later.
 
 **Market sentiment**
 
@@ -1810,6 +1812,8 @@ def _share_market_rows(crypto_watchlist, stock_watchlist, crypto_results, stock_
                 if ticker and ticker not in shown.upper():
                     shown = f"{shown} ({ticker})" if shown else ticker
             stream_names[market_key] = shown or str(asset_id)
+    stream_names["Mood|crypto"] = "Crypto market"
+    stream_names["Mood|stock"] = "Stock market"
     st.session_state["social_stream"] = json.dumps(
         social_stream_items(feed, shared, stream_names, logos, market_keys),
         ensure_ascii=False,
@@ -2528,6 +2532,15 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
     )
 
 
+def _store_mood_vote(market_key: str, sentiment_at, vote, alt_score=None) -> None:
+    try:
+        set_market_mood_vote(supabase, user_id, market_key, sentiment_at, vote, alt_score)
+    except Exception:
+        st.warning("That thumb could not be saved. Please try again.")
+        return
+    st.rerun()
+
+
 def _store_sentiment_vote(kind: str, asset_id: str, sentiment_at, vote, alt_score=None) -> None:
     try:
         set_sentiment_vote(supabase, user_id, kind, asset_id, sentiment_at, vote, alt_score)
@@ -2552,13 +2565,24 @@ def _store_sentiment_comment(
 
 def _sentiment_thumbs(
     kind: str, asset_id: str, sentiment_at, title: str, responded_score=None, responded_summary: str = "",
+    *, prefix: str = "sentiment", voice: dict | None = None, on_vote=None, on_comment=None,
 ) -> None:
     """Agree or disagree, then one short comment. Disagree opens a score in the same box."""
+    del title
     if not sentiment_at:
         st.caption("Thumbs and comments open once this sentiment is saved.")
         return
     key = asset_market_key(kind, asset_id)
-    voice = sentiment_crowd(supabase, [key]).get(key) or {}
+    if voice is None:
+        voice = sentiment_crowd(supabase, [key]).get(key) or {}
+    if on_vote is None:
+        on_vote = lambda vote, alt_score=None: _store_sentiment_vote(
+            kind, asset_id, sentiment_at, vote, alt_score,
+        )
+    if on_comment is None:
+        on_comment = lambda text: _store_sentiment_comment(
+            kind, asset_id, sentiment_at, text, responded_score, responded_summary,
+        )
     mine = voice.get("mine")
     mine_score = voice.get("alt")
     selected = (
@@ -2570,37 +2594,38 @@ def _sentiment_thumbs(
     if selected is not None:
         color, _background, _arrow, _bar = tone(selected)
         selected_color = f"""
-        .st-key-sentiment_alt_{selected} [data-testid="stBaseButton-primary"],
-        .st-key-sentiment_alt_{selected} [data-testid="stBaseButton-primary"]:hover,
-        .st-key-sentiment_alt_{selected} [data-testid="stBaseButton-primary"]:focus,
-        .st-key-sentiment_alt_{selected} [data-testid="stBaseButton-primary"]:active {{
+        .st-key-{prefix}_alt_{selected} [data-testid="stBaseButton-primary"],
+        .st-key-{prefix}_alt_{selected} [data-testid="stBaseButton-primary"]:hover,
+        .st-key-{prefix}_alt_{selected} [data-testid="stBaseButton-primary"]:focus,
+        .st-key-{prefix}_alt_{selected} [data-testid="stBaseButton-primary"]:active {{
             background-color: {color};
             border-color: {color};
             color: #ffffff;
         }}
-        .st-key-sentiment_alt_{selected} [data-testid="stBaseButton-primary"] p {{
+        .st-key-{prefix}_alt_{selected} [data-testid="stBaseButton-primary"] p {{
             color: #ffffff;
         }}
         """
     st.html(
         f"""
         <style>
-        [class*="st-key-market_sentiment_panel"] details[open] {{
+        [class*="st-key-market_sentiment_panel"] details[open],
+        [class*="st-key-market_mood_"] details[open] {{
             overflow: visible !important;
         }}
-        .st-key-sentiment_take_box {{
+        .st-key-{prefix}_take_box {{
             background: #ffffff;
             border: 1px solid #e5e7eb !important;
             border-radius: 10px !important;
             overflow: visible !important;
         }}
-        .st-key-sentiment_agree,
-        .st-key-sentiment_disagree {{
+        .st-key-{prefix}_agree,
+        .st-key-{prefix}_disagree {{
             position: relative;
             overflow: visible !important;
         }}
-        .st-key-sentiment_agree:hover::after,
-        .st-key-sentiment_disagree:hover::after {{
+        .st-key-{prefix}_agree:hover::after,
+        .st-key-{prefix}_disagree:hover::after {{
             position: absolute;
             z-index: 30;
             left: 0;
@@ -2616,82 +2641,82 @@ def _sentiment_thumbs(
             pointer-events: none;
             white-space: normal;
         }}
-        .st-key-sentiment_agree:hover::after {{
+        .st-key-{prefix}_agree:hover::after {{
             content: "You agree with this sentiment. Press again to clear it.";
         }}
-        .st-key-sentiment_disagree:hover::after {{
+        .st-key-{prefix}_disagree:hover::after {{
             content: "You disagree with this sentiment. Press again to clear it.";
         }}
-        .st-key-sentiment_agree [data-testid="stBaseButton-primary"],
-        .st-key-sentiment_agree [data-testid="stBaseButton-primary"]:hover,
-        .st-key-sentiment_agree [data-testid="stBaseButton-primary"]:focus,
-        .st-key-sentiment_agree [data-testid="stBaseButton-primary"]:active {{
+        .st-key-{prefix}_agree [data-testid="stBaseButton-primary"],
+        .st-key-{prefix}_agree [data-testid="stBaseButton-primary"]:hover,
+        .st-key-{prefix}_agree [data-testid="stBaseButton-primary"]:focus,
+        .st-key-{prefix}_agree [data-testid="stBaseButton-primary"]:active {{
             background-color: #15803d;
             border-color: #15803d;
             color: #ffffff;
         }}
-        .st-key-sentiment_agree [data-testid="stBaseButton-primary"] p {{
+        .st-key-{prefix}_agree [data-testid="stBaseButton-primary"] p {{
             color: #ffffff;
         }}
-        .st-key-sentiment_take_box .stColumn {{
+        .st-key-{prefix}_take_box .stColumn {{
             min-width: 0 !important;
         }}
-        .st-key-sentiment_comment_row {{
+        .st-key-{prefix}_comment_row {{
             margin-top: 6px;
         }}
-        [class*="st-key-sentiment_face_"] button {{
+        [class*="st-key-{prefix}_face_"] button {{
             min-width: 0;
             padding: 0.15rem 0;
         }}
-        [class*="st-key-sentiment_face_"] button p {{
+        [class*="st-key-{prefix}_face_"] button p {{
             font-size: 1rem;
             line-height: 1.1;
         }}
-        .st-key-sentiment_alt_0 button,
-        .st-key-sentiment_alt_20 button,
-        .st-key-sentiment_alt_40 button,
-        .st-key-sentiment_alt_60 button,
-        .st-key-sentiment_alt_80 button,
-        .st-key-sentiment_alt_100 button {{
+        .st-key-{prefix}_alt_0 button,
+        .st-key-{prefix}_alt_20 button,
+        .st-key-{prefix}_alt_40 button,
+        .st-key-{prefix}_alt_60 button,
+        .st-key-{prefix}_alt_80 button,
+        .st-key-{prefix}_alt_100 button {{
             min-width: 0;
             padding: 0.3rem 0;
         }}
-        .st-key-sentiment_alt_0 button p,
-        .st-key-sentiment_alt_20 button p,
-        .st-key-sentiment_alt_40 button p,
-        .st-key-sentiment_alt_60 button p,
-        .st-key-sentiment_alt_80 button p,
-        .st-key-sentiment_alt_100 button p {{
+        .st-key-{prefix}_alt_0 button p,
+        .st-key-{prefix}_alt_20 button p,
+        .st-key-{prefix}_alt_40 button p,
+        .st-key-{prefix}_alt_60 button p,
+        .st-key-{prefix}_alt_80 button p,
+        .st-key-{prefix}_alt_100 button p {{
             font-size: 0.8rem;
         }}
         {selected_color}
         </style>
         """
     )
-    with st.container(border=True, key="sentiment_take_box"):
+    with st.container(border=True, key=f"{prefix}_take_box"):
         st.markdown("**Your take**")
         agree = st.button(
             "👍 Agree",
-            key="sentiment_agree",
+            key=f"{prefix}_agree",
             use_container_width=True,
             type="primary" if mine == 1 else "secondary",
         )
         disagree = st.button(
             "👎 Disagree",
-            key="sentiment_disagree",
+            key=f"{prefix}_disagree",
             use_container_width=True,
             type="primary" if mine == -1 else "secondary",
         )
         if agree:
-            _store_sentiment_vote(kind, asset_id, sentiment_at, None if mine == 1 else 1)
+            on_vote(None if mine == 1 else 1)
         elif disagree:
-            _store_sentiment_vote(kind, asset_id, sentiment_at, None if mine == -1 else -1)
+            on_vote(None if mine == -1 else -1)
         if mine == -1:
-            _sentiment_alt_score(kind, asset_id, sentiment_at, mine_score, selected)
+            _sentiment_alt_score(kind, asset_id, sentiment_at, mine_score, selected, prefix, on_vote)
         notes = sentiment_comment_lists(supabase, [key]).get(key) or []
         mine_text = next((item["text"] for item in notes if item.get("mine")), "")
         _comment_row(
-            key="sentiment_comment_row",
+            key=f"{prefix}_comment_row",
             data=(
                 "<div style='display:flex;align-items:center;gap:8px;flex-wrap:wrap;'>"
                 + crowd_mark(
@@ -2728,7 +2753,7 @@ def _sentiment_thumbs(
             zip(st.columns(len(COMMENT_EMOTICONS), gap="xxsmall", wrap=False), COMMENT_EMOTICONS)
         ):
             with column:
-                if st.button(emoticon, key=f"sentiment_face_{index}", use_container_width=True):
+                if st.button(emoticon, key=f"{prefix}_face_{index}", use_container_width=True):
                     picked_face = emoticon
         if picked_face:
             st.session_state[f"{box_key}_face"] = picked_face
@@ -2737,28 +2762,27 @@ def _sentiment_thumbs(
             f"Up to {COMMENT_LIMIT} characters. Tap one to add it. "
             "Posting again replaces yours. Each comment stays for 12 hours."
         )
-        if st.button("Post comment", key="sentiment_comment_post", use_container_width=True):
+        if st.button("Post comment", key=f"{prefix}_comment_post", use_container_width=True):
             text = " ".join(str(st.session_state.get(box_key) or "").split())
             if text or mine_text:
-                _store_sentiment_comment(
-                    kind, asset_id, sentiment_at, text, responded_score, responded_summary,
-                )
+                on_comment(text)
 
 
-def _sentiment_alt_score(kind: str, asset_id: str, sentiment_at, mine_score, selected) -> None:
+def _sentiment_alt_score(kind: str, asset_id: str, sentiment_at, mine_score, selected, prefix: str, on_vote) -> None:
     """Score controls under Disagree. A clicked or typed number saves on its own."""
+    del kind, asset_id, sentiment_at
     st.markdown("**Your score**")
     picked = None
     for column, value in zip(st.columns(6, gap="xxsmall", wrap=False), (0, 20, 40, 60, 80, 100)):
         with column:
             if st.button(
                 str(value),
-                key=f"sentiment_alt_{value}",
+                key=f"{prefix}_alt_{value}",
                 use_container_width=True,
                 type="primary" if selected == value else "secondary",
             ):
                 picked = value
-    typed_key = f"sentiment_alt_typed_{asset_market_key(kind, asset_id)}"
+    typed_key = f"{prefix}_alt_typed"
     if picked is not None:
         st.session_state[typed_key] = int(picked)
     elif typed_key not in st.session_state and mine_score is not None:
@@ -2775,7 +2799,7 @@ def _sentiment_alt_score(kind: str, asset_id: str, sentiment_at, mine_score, sel
     typed = st.number_input("Your score", label_visibility="collapsed", **number_kwargs)
     stored = None if mine_score is None else int(mine_score)
     if typed is not None and int(typed) != stored:
-        _store_sentiment_vote(kind, asset_id, sentiment_at, -1, int(typed))
+        on_vote(-1, int(typed))
 
 
 def _published_label(value) -> str:
@@ -2919,9 +2943,25 @@ def _mood_card(spec: dict, row: dict | None, deadlines: dict) -> None:
                 unsafe_allow_html=True,
             )
         with vote_card:
-            with st.container(border=True):
-                st.markdown("**Your take**")
-                st.caption("Agree, disagree, and a short comment will sit here.")
+            mood_key = spec["key"]
+            _sentiment_thumbs(
+                "Mood",
+                mood_key,
+                (row or {}).get("sentiment_updated_at") if isinstance(row, dict) else None,
+                label,
+                score,
+                report.get("summary") or "",
+                prefix=f"mood_{mood_key}",
+                voice=market_mood_crowd(supabase, [mood_key]).get(mood_key) or {},
+                on_vote=lambda vote, alt_score=None, market=mood_key, at=(
+                    (row or {}).get("sentiment_updated_at") if isinstance(row, dict) else None
+                ): _store_mood_vote(market, at, vote, alt_score),
+                on_comment=lambda text, market=mood_key, at=(
+                    (row or {}).get("sentiment_updated_at") if isinstance(row, dict) else None
+                ), answered=score, answered_summary=report.get("summary") or "": _store_sentiment_comment(
+                    "Mood", market, at, text, answered, answered_summary,
+                ),
+            )
     elif (report or {}).get("reason") == "missing_key":
         st.info("Headlines are in. Add an xAI API key so Grok can score them.")
     elif (report or {}).get("reason") == "no_headlines":

@@ -99,6 +99,67 @@ def _optional_number(value):
     return number
 
 
+def market_mood_crowd(supabase, keys: list[str]) -> dict[str, dict]:
+    """Agree and disagree counts for the current market mood. Empty if the function is missing."""
+    wanted = [key for key in keys if key in ("crypto", "stock")]
+    if not wanted:
+        return {}
+    try:
+        response = supabase.rpc("market_mood_crowd", {"market_keys": wanted}).execute()
+    except Exception as exc:
+        _warn(exc)
+        return {}
+    counts = {}
+    for row in response.data or []:
+        key = row.get("market_key")
+        if key not in ("crypto", "stock"):
+            continue
+        try:
+            mine = int(row.get("my_vote"))
+        except (TypeError, ValueError):
+            mine = None
+        try:
+            alt_count = int(row.get("alt_count") or 0)
+        except (TypeError, ValueError):
+            alt_count = 0
+        counts[str(key)] = {
+            "up": int(row.get("thumbs_up") or 0),
+            "down": int(row.get("thumbs_down") or 0),
+            "mine": mine,
+            "alt_count": alt_count,
+            "alt_avg": _optional_number(row.get("alt_avg")),
+            "alt_spread": _optional_number(row.get("alt_spread")),
+            "alt": _optional_number(row.get("my_alt")),
+        }
+    return counts
+
+
+def set_market_mood_vote(supabase, user_id, market_key: str, sentiment_at, vote, alt_score=None) -> None:
+    """Save this account's thumb for the current market mood. None clears it."""
+    if market_key not in ("crypto", "stock"):
+        return
+    if vote not in (1, -1):
+        supabase.table("market_mood_votes").delete().eq("user_id", str(user_id)).eq("market_key", market_key).execute()
+        return
+    if not sentiment_at:
+        return
+    score = None
+    if vote == -1 and alt_score is not None:
+        number = _optional_number(alt_score)
+        if number is not None and 0 <= number <= 100:
+            score = int(number)
+    supabase.table("market_mood_votes").upsert(
+        {
+            "user_id": str(user_id),
+            "market_key": market_key,
+            "sentiment_at": sentiment_at,
+            "vote": int(vote),
+            "alt_score": score,
+        },
+        on_conflict="user_id,market_key",
+    ).execute()
+
+
 def set_sentiment_vote(supabase, user_id, kind: str, asset_id: str, sentiment_at, vote, alt_score=None) -> None:
     """Save this account's thumb for the current sentiment. None clears it."""
     key = asset_market_key(kind, asset_id)
