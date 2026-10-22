@@ -4497,7 +4497,7 @@ def _price_text(value: float) -> str:
 
 def show_max_pain(kind: str, asset_id: str, label: str, chart_price: float | None) -> None:
     """Options max pain for the open asset. A positioning chart, not part of the score."""
-    heading = f"Max pain - {label}" if label else "Max pain"
+    heading = f"🎯 Max pain - {label}" if label else "🎯 Max pain"
     with section_expander(heading, "max_pain"):
         market = options_market(kind, asset_id)
         if not market:
