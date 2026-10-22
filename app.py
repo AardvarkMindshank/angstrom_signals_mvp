@@ -869,7 +869,7 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
 
 1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest.
 2. Click a name in either table, a Quick Snapshot box, or an alert under Notifications. That asset stays highlighted, and the page moves down to the chart when the chart is off screen.
-3. **7d %** is the seven-day price change. **ATR %** is volatility. **Vol** is volume versus its 20-day average.
+3. **7d %** is the seven-day price change. Green means the price rose. Red means it fell. **ATR %** is volatility. **Vol** is volume versus its 20-day average.
 4. Alerts fire at 70 and 30 unless you move those sliders. One email goes to the address on your account when a technical score crosses a boundary. It is not sent again until the score leaves that boundary and crosses it later. Sentiment scores do not send alerts.
 
 **Market sentiment**
@@ -1391,6 +1391,20 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
     def cell(value):
         return f"<td style='padding:10px;white-space:nowrap;'>{html.escape(str(value))}</td>"
 
+    def week_change_cell(value):
+        if value is None or pd.isna(value):
+            inner = "<span style='color:#6b7280;'>—</span>"
+        else:
+            number = float(value)
+            if number > 0:
+                color = "#15803d"
+            elif number < 0:
+                color = "#b91c1c"
+            else:
+                color = "#6b7280"
+            inner = f"<span style='color:{color};font-weight:600;'>{number:+.1f}%</span>"
+        return f"<td style='padding:10px;white-space:nowrap;'>{inner}</td>"
+
     def style_and_show_table(results, title, kind):
         if not results:
             return
@@ -1446,7 +1460,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                 atr = row.get("atr_pct")
                 volume = row.get("volume_ratio")
                 rows_html += (
-                    f"{cell(f'{change:+.1f}%' if pd.notna(change) else '—')}"
+                    f"{week_change_cell(change)}"
                     f"{cell(f'{atr:.2f}' if pd.notna(atr) else '—')}"
                     f"{cell(f'{volume:.2f}' if pd.notna(volume) else '—')}"
                 )
