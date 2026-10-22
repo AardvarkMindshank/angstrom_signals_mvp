@@ -2127,7 +2127,7 @@ def show_market_sentiment(kind: str, asset_id: str, label: str, ticker: str | No
                     f"padding:2px 8px;border-radius:4px;font-weight:600;'>{arrow} {score:.0f}/100</div>"
                     f"<div style='margin-top:8px;font-weight:600;color:{color};'>{html.escape(coverage)}</div>"
                     f"<div style='margin-top:8px;color:#111827;'>{summary}</div>"
-                    f"{sides_html}{drivers_html}</div>",
+                    f"{drivers_html}{sides_html}</div>",
                     unsafe_allow_html=True,
                 )
             with vote_card:
