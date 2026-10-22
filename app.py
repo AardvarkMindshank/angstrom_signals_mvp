@@ -232,7 +232,6 @@ try:
         asset_logo,
         asset_market_key,
         crowd_mark,
-        heading_with_logo,
         holder_counts,
         holders_mark,
         load_shared_market,
@@ -872,7 +871,7 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
     st.markdown("""
 **How to use it**
 
-1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest.
+1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest. Quick Snapshot, Crypto Scores, Equity Scores, Interactive Chart, Score Breakdown, and Market sentiment each sit in a section that starts open. Close a header to fold that section away.
 2. Click a name in either table, a Quick Snapshot box, or an alert under Notifications. That asset stays highlighted, and the page moves down to the chart when the chart is off screen.
 3. Extra metrics add **7d %**, **Market Cap**, **ATR %**, and **Vol**. A separate checkbox adds **1d %** before the seven-day change and **30d %** after it. For **1d %** and **7d %**, green means the price rose and red means it fell. **30d %** uses the same colors as the **30-day trend**: green for a rise of about 2% or more, red for a fall of about 2% or more, and orange when the move stays inside about 2%. For stocks, one day is the previous trading session. **Market Cap** is the latest size of the asset, from CoinGecko for crypto and Yahoo for stocks. **ATR %** is volatility. **Vol** is volume versus its 20-day average.
 4. Alerts fire at 70 and 30 unless you move those sliders. One email goes to the address on your account when a technical score crosses a boundary. It is not sent again until the score leaves that boundary and crosses it later. Sentiment scores do not send alerts.
@@ -887,13 +886,13 @@ The **Sentiment** column shows that saved score in the same colored box. A dash 
 
 **Watching**, beside the name, is how many accounts have that asset on a watchlist. The people marks are a count, not the names of those accounts.
 
-The picture on the left of each name is that asset's logo. The same logo appears beside the Interactive Chart and Market sentiment headings. Crypto logos come from CoinGecko. Stock logos come from Finnhub. A letter shows when a logo is not available. The address is saved once and reused for every account.
+The picture on the left of each name is that asset's logo. The same logo appears at the top of the Interactive Chart and Market sentiment sections. Crypto logos come from CoinGecko. Stock logos come from Finnhub. A letter shows when a logo is not available. The address is saved once and reused for every account.
 
 Beside the sentiment score you can press thumbs up if you agree, or thumbs down if you do not. Press the same thumb again to clear your take. Those buttons sit in an outlined box. After you disagree, scores appear in that same box, under the buttons: 0, 20, 40, 60, 80 and 100. The number you pick also fills the type box, and you can type any number from 0 to 100. It saves on its own when you click a score, press Enter, or leave the box. The thumbs and that same colored average sit at the bottom of Your take, and again under **Crowd** on each table row. The box is the average of the personal scores, in the same style as the Sentiment column. It updates when a score is clicked or typed. Hover the down thumb for the spread, which is how far those scores typically sit from the average. One score has no spread yet. A dash means nobody has given a personal score. A refresh of that sentiment clears every thumb and every score, because they belonged to the old score.
 
-Click a sentiment score in the table to highlight that asset and jump to its headlines. **↑ Top** scrolls back to the top of the page. It sits on the right of the chart title, and on the right of the sentiment Refresh button.
+Click a sentiment score in the table to highlight that asset and jump to its headlines. **↑ Top** scrolls back to the top of the page. It sits at the top right of the Interactive Chart section, and at the top right of Market sentiment.
 
-The Refresh button beside Market sentiment pulls fresh headlines and a new score, then starts a 12-hour timer. It also runs on its own when that timer reaches zero. The Refresh button beside Quick Snapshot still reloads prices and technical scores every 5 minutes. Pressing either button refreshes that section now and starts its timer again.
+The Refresh button in Market sentiment pulls fresh headlines and a new score, then starts a 12-hour timer. It also runs on its own when that timer reaches zero. The Refresh button in Quick Snapshot still reloads prices and technical scores every 5 minutes. Pressing either button refreshes that section now and starts its timer again.
 
 **Alerts keep running in the background**
 
@@ -1231,174 +1230,173 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
     if "technical_due" not in st.session_state:
         st.session_state.technical_due = time.time() + _TECHNICAL_REFRESH_SECONDS
 
-    snap_title, snap_refresh = st.columns([4, 1.45], vertical_alignment="center")
-    with snap_title:
-        st.subheader("Quick Snapshot")
-    with snap_refresh:
-        technical_now = st.button(
-            "🔄 Refresh",
-            key="refresh_technical",
-            use_container_width=True,
-            help="Pull fresh prices and technical scores. This also runs on its own when the timer reaches zero.",
-        )
-        technical_due = _countdown_due(st.session_state.technical_due, "technical_countdown")
-        if technical_now or technical_due:
-            st.session_state.data_nonce += 1
-            st.session_state.technical_due = time.time() + _TECHNICAL_REFRESH_SECONDS
+    with st.expander("Quick Snapshot", expanded=True):
+        _, snap_refresh = st.columns([4, 1.45], vertical_alignment="center")
+        with snap_refresh:
+            technical_now = st.button(
+                "🔄 Refresh",
+                key="refresh_technical",
+                use_container_width=True,
+                help="Pull fresh prices and technical scores. This also runs on its own when the timer reaches zero.",
+            )
+            technical_due = _countdown_due(st.session_state.technical_due, "technical_countdown")
+            if technical_now or technical_due:
+                st.session_state.data_nonce += 1
+                st.session_state.technical_due = time.time() + _TECHNICAL_REFRESH_SECONDS
+                _rerun_fragment()
+
+        # Wall-clock window so a scheduled rerun fetches new prices instead of the 5-minute cache.
+        nonce = (st.session_state.data_nonce, int(time.time() // 300))
+
+        def process_watchlist(watchlist, is_crypto=True):
+            results = []
+            for key, name in watchlist.items():
+                if is_crypto:
+                    ticker = crypto_ticker(key)
+                    if ticker and str(key).strip().upper() == ticker:
+                        name = ticker
+                with st.spinner(f"Loading {name}..."):
+                    if is_crypto:
+                        df, err = load_crypto(key, history_days, nonce)
+                    else:
+                        df, err = load_stock(key, history_days, nonce)
+
+                    result = {
+                        "symbol": name if is_crypto else f"{name} ({key})",
+                        "score": None,
+                        "label": "No data",
+                        "reasons": [err] if err else [],
+                        "latest_price": None,
+                        "rsi": None,
+                        "change_1d": None,
+                        "change_7d": None,
+                        "change_30d": None,
+                        "atr_pct": None,
+                        "volume_ratio": None,
+                        "bb_position": None,
+                        "adx": None,
+                        "confluence": None,
+                        "contributions": {},
+                        "type": "Crypto" if is_crypto else "Stock",
+                        "key": key,
+                    }
+
+                    if err:
+                        results.append(result)
+                        continue
+
+                    if df is not None and not df.empty and "close" in df.columns:
+                        result["closes"] = recent_closes(df["close"].tolist())
+
+                    if not df.empty and len(df) >= 15:
+                        try:
+                            df = calculate_indicators(df)
+                            scored = compute_score(df, weights=weights)
+                            if isinstance(scored, dict):
+                                result.update(scored)
+                                result["symbol"] = name if is_crypto else f"{name} ({key})"
+                                result["type"] = "Crypto" if is_crypto else "Stock"
+                                result["key"] = key
+                        except Exception as exc:
+                            result["label"] = "Error"
+                            result["reasons"] = [str(exc)]
+
+                    results.append(result)
+            return results
+
+        crypto_results = process_watchlist(crypto_watchlist, is_crypto=True)
+        stock_results = process_watchlist(stock_watchlist, is_crypto=False)
+        if show_extra_metrics_flag:
+            caps = load_market_caps(tuple(crypto_watchlist), tuple(stock_watchlist), nonce)
+            for row in crypto_results:
+                row["market_cap"] = (caps.get("crypto") or {}).get(str(row.get("key") or "").lower())
+            for row in stock_results:
+                row["market_cap"] = (caps.get("stock") or {}).get(str(row.get("key") or "").upper())
+        _share_market_rows(crypto_watchlist, stock_watchlist, crypto_results, stock_results)
+
+        try:
+            evaluate_alerts(supabase, user_id, crypto_results + stock_results, alert_prefs)
+        except Exception:
+            st.warning("Alerts were not updated on this refresh.")
+
+        def get_top_bottom(results):
+            valid = [row for row in results if row.get("score") is not None and not pd.isna(row.get("score"))]
+            if not valid:
+                return None, None
+            ordered = sorted(valid, key=lambda row: row["score"], reverse=True)
+            return ordered[0], ordered[-1]
+
+        crypto_top, crypto_bot = get_top_bottom(crypto_results)
+        stock_top, stock_bot = get_top_bottom(stock_results)
+
+        def _select_chart_asset(raw):
+            parts = str(raw).split("|")
+            if len(parts) < 2:
+                return
+            kind_name, asset_id = parts[0], parts[1]
+            destination = parts[2] if len(parts) > 2 else "chart"
+            chosen = crypto_watchlist if kind_name == "Crypto" else stock_watchlist if kind_name == "Stock" else None
+            if not chosen or asset_id not in chosen:
+                return
+            st.session_state.scroll_target = "market-sentiment" if destination == "sentiment" else "interactive-chart"
+            st.session_state.scroll_token = str(time.time_ns())
+            if st.session_state.get("chart_pick") != (kind_name, asset_id):
+                st.session_state.chart_pick = (kind_name, asset_id)
+                st.session_state.chart_pick_from_row = True
             _rerun_fragment()
 
-    # Wall-clock window so a scheduled rerun fetches new prices instead of the 5-minute cache.
-    nonce = (st.session_state.data_nonce, int(time.time() // 300))
+        c1, c2, c3, c4 = st.columns(4)
 
-    def process_watchlist(watchlist, is_crypto=True):
-        results = []
-        for key, name in watchlist.items():
-            if is_crypto:
-                ticker = crypto_ticker(key)
-                if ticker and str(key).strip().upper() == ticker:
-                    name = ticker
-            with st.spinner(f"Loading {name}..."):
-                if is_crypto:
-                    df, err = load_crypto(key, history_days, nonce)
-                else:
-                    df, err = load_stock(key, history_days, nonce)
+        def render_snapshot_card(title, name, score, pick, logo_url=None):
+            color, bg, arrow, _bar = tone(score)
+            score_str = f"{score:.1f}/100" if score is not None and not pd.isna(score) else "—"
+            safe_title = html.escape(str(title))
+            safe_name = html.escape(str(name))
+            logo = asset_logo(logo_url, name) if name and name != "—" else ""
+            body = (
+                "<div style='background: white; padding: 12px 16px; border-radius: 8px; border: 1px solid #e5e7eb;'>"
+                f"<div style='font-size: 0.8rem; color: #6b7280; margin-bottom: 4px;'>{safe_title}</div>"
+                "<div style='display:flex;align-items:center;gap:8px;font-size:1.1rem;font-weight:600;"
+                "color:#111827;margin-bottom:8px;white-space:nowrap;overflow:hidden;'>"
+                f"{logo}<span style='overflow:hidden;text-overflow:ellipsis;'>{safe_name}</span></div>"
+                f"<div style='display: inline-flex; align-items: center; gap: 4px; background: {bg}; "
+                f"color: {color}; padding: 2px 8px; border-radius: 4px; font-size: 0.85rem; font-weight: 600;'>"
+                f"{arrow} {score_str}</div></div>"
+            )
+            if not pick:
+                return body
+            safe_pick = html.escape(pick, quote=True)
+            return (
+                f"<button type='button' data-pick='{safe_pick}' "
+                "style='display:block;width:100%;margin:0;padding:0;border:none;background:transparent;"
+                "text-align:left;cursor:pointer;font:inherit;color:inherit;'>"
+                f"{body}</button>"
+            )
 
-                result = {
-                    "symbol": name if is_crypto else f"{name} ({key})",
-                    "score": None,
-                    "label": "No data",
-                    "reasons": [err] if err else [],
-                    "latest_price": None,
-                    "rsi": None,
-                    "change_1d": None,
-                    "change_7d": None,
-                    "change_30d": None,
-                    "atr_pct": None,
-                    "volume_ratio": None,
-                    "bb_position": None,
-                    "adx": None,
-                    "confluence": None,
-                    "contributions": {},
-                    "type": "Crypto" if is_crypto else "Stock",
-                    "key": key,
-                }
+        def show_snapshot(column, title, row, kind, widget_key):
+            pick = None
+            name = "—"
+            score = None
+            logo_url = None
+            if row and row.get("key"):
+                name = row["symbol"]
+                score = row.get("score")
+                pick = f"{kind}|{row['key']}"
+                logo_url = row.get("logo_url")
+            with column:
+                picked = _score_table(
+                    key=widget_key,
+                    data=render_snapshot_card(title, name, score, pick, logo_url),
+                    on_picked_change=lambda: None,
+                ).picked
+                if picked:
+                    _select_chart_asset(str(picked))
 
-                if err:
-                    results.append(result)
-                    continue
-
-                if df is not None and not df.empty and "close" in df.columns:
-                    result["closes"] = recent_closes(df["close"].tolist())
-
-                if not df.empty and len(df) >= 15:
-                    try:
-                        df = calculate_indicators(df)
-                        scored = compute_score(df, weights=weights)
-                        if isinstance(scored, dict):
-                            result.update(scored)
-                            result["symbol"] = name if is_crypto else f"{name} ({key})"
-                            result["type"] = "Crypto" if is_crypto else "Stock"
-                            result["key"] = key
-                    except Exception as exc:
-                        result["label"] = "Error"
-                        result["reasons"] = [str(exc)]
-
-                results.append(result)
-        return results
-
-    crypto_results = process_watchlist(crypto_watchlist, is_crypto=True)
-    stock_results = process_watchlist(stock_watchlist, is_crypto=False)
-    if show_extra_metrics_flag:
-        caps = load_market_caps(tuple(crypto_watchlist), tuple(stock_watchlist), nonce)
-        for row in crypto_results:
-            row["market_cap"] = (caps.get("crypto") or {}).get(str(row.get("key") or "").lower())
-        for row in stock_results:
-            row["market_cap"] = (caps.get("stock") or {}).get(str(row.get("key") or "").upper())
-    _share_market_rows(crypto_watchlist, stock_watchlist, crypto_results, stock_results)
-
-    try:
-        evaluate_alerts(supabase, user_id, crypto_results + stock_results, alert_prefs)
-    except Exception:
-        st.warning("Alerts were not updated on this refresh.")
-
-    def get_top_bottom(results):
-        valid = [row for row in results if row.get("score") is not None and not pd.isna(row.get("score"))]
-        if not valid:
-            return None, None
-        ordered = sorted(valid, key=lambda row: row["score"], reverse=True)
-        return ordered[0], ordered[-1]
-
-    crypto_top, crypto_bot = get_top_bottom(crypto_results)
-    stock_top, stock_bot = get_top_bottom(stock_results)
-
-    def _select_chart_asset(raw):
-        parts = str(raw).split("|")
-        if len(parts) < 2:
-            return
-        kind_name, asset_id = parts[0], parts[1]
-        destination = parts[2] if len(parts) > 2 else "chart"
-        chosen = crypto_watchlist if kind_name == "Crypto" else stock_watchlist if kind_name == "Stock" else None
-        if not chosen or asset_id not in chosen:
-            return
-        st.session_state.scroll_target = "market-sentiment" if destination == "sentiment" else "interactive-chart"
-        st.session_state.scroll_token = str(time.time_ns())
-        if st.session_state.get("chart_pick") != (kind_name, asset_id):
-            st.session_state.chart_pick = (kind_name, asset_id)
-            st.session_state.chart_pick_from_row = True
-        _rerun_fragment()
-
-    c1, c2, c3, c4 = st.columns(4)
-
-    def render_snapshot_card(title, name, score, pick, logo_url=None):
-        color, bg, arrow, _bar = tone(score)
-        score_str = f"{score:.1f}/100" if score is not None and not pd.isna(score) else "—"
-        safe_title = html.escape(str(title))
-        safe_name = html.escape(str(name))
-        logo = asset_logo(logo_url, name) if name and name != "—" else ""
-        body = (
-            "<div style='background: white; padding: 12px 16px; border-radius: 8px; border: 1px solid #e5e7eb;'>"
-            f"<div style='font-size: 0.8rem; color: #6b7280; margin-bottom: 4px;'>{safe_title}</div>"
-            "<div style='display:flex;align-items:center;gap:8px;font-size:1.1rem;font-weight:600;"
-            "color:#111827;margin-bottom:8px;white-space:nowrap;overflow:hidden;'>"
-            f"{logo}<span style='overflow:hidden;text-overflow:ellipsis;'>{safe_name}</span></div>"
-            f"<div style='display: inline-flex; align-items: center; gap: 4px; background: {bg}; "
-            f"color: {color}; padding: 2px 8px; border-radius: 4px; font-size: 0.85rem; font-weight: 600;'>"
-            f"{arrow} {score_str}</div></div>"
-        )
-        if not pick:
-            return body
-        safe_pick = html.escape(pick, quote=True)
-        return (
-            f"<button type='button' data-pick='{safe_pick}' "
-            "style='display:block;width:100%;margin:0;padding:0;border:none;background:transparent;"
-            "text-align:left;cursor:pointer;font:inherit;color:inherit;'>"
-            f"{body}</button>"
-        )
-
-    def show_snapshot(column, title, row, kind, widget_key):
-        pick = None
-        name = "—"
-        score = None
-        logo_url = None
-        if row and row.get("key"):
-            name = row["symbol"]
-            score = row.get("score")
-            pick = f"{kind}|{row['key']}"
-            logo_url = row.get("logo_url")
-        with column:
-            picked = _score_table(
-                key=widget_key,
-                data=render_snapshot_card(title, name, score, pick, logo_url),
-                on_picked_change=lambda: None,
-            ).picked
-            if picked:
-                _select_chart_asset(str(picked))
-
-    show_snapshot(c1, "Top Crypto", crypto_top, "Crypto", "snapshot_crypto_top")
-    show_snapshot(c2, "Weakest Crypto", crypto_bot, "Crypto", "snapshot_crypto_weak")
-    show_snapshot(c3, "Top Stock", stock_top, "Stock", "snapshot_stock_top")
-    show_snapshot(c4, "Weakest Stock", stock_bot, "Stock", "snapshot_stock_weak")
-    st.caption("Click a box to open that asset on the chart.")
+        show_snapshot(c1, "Top Crypto", crypto_top, "Crypto", "snapshot_crypto_top")
+        show_snapshot(c2, "Weakest Crypto", crypto_bot, "Crypto", "snapshot_crypto_weak")
+        show_snapshot(c3, "Top Stock", stock_top, "Stock", "snapshot_stock_top")
+        show_snapshot(c4, "Weakest Stock", stock_bot, "Stock", "snapshot_stock_weak")
+        st.caption("Click a box to open that asset on the chart.")
 
     def render_score_bar(score):
         if score is None or pd.isna(score):
@@ -1434,113 +1432,114 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
         return f"<td style='padding:10px;white-space:nowrap;'>{inner}</td>"
 
     def style_and_show_table(results, title, kind):
-        if not results:
-            return
-        frame = pd.DataFrame(results).sort_values("score", ascending=False, na_position="last")
-        st.subheader(title)
-        st.caption("Click a name to show that asset on the chart. Click a sentiment score to open its headlines. Watching is how many accounts hold that asset. The Crowd box is the average of personal scores. Hover the down thumb for the spread. The 30-day trend uses the same colors as 30d %.")
+        with st.expander(title, expanded=True):
+            if not results:
+                st.caption("This watchlist is empty.")
+                return
+            frame = pd.DataFrame(results).sort_values("score", ascending=False, na_position="last")
+            st.caption("Click a name to show that asset on the chart. Click a sentiment score to open its headlines. Watching is how many accounts hold that asset. The Crowd box is the average of personal scores. Hover the down thumb for the spread. The 30-day trend uses the same colors as 30d %.")
 
-        headers = ["Asset", "Watching", "Score", "Signal", "Price", "RSI"]
-        if show_period_changes_flag:
-            headers.append("1d %")
-        if show_extra_metrics_flag:
-            headers.append("7d %")
-        if show_period_changes_flag:
-            headers.append("30d %")
-        if show_extra_metrics_flag:
-            headers += ["Market Cap", "ATR %", "Vol"]
-        headers += ["Sentiment", "Crowd", "30-day trend"]
-        header_html = ""
-        for name in headers:
-            if name == "Crowd":
+            headers = ["Asset", "Watching", "Score", "Signal", "Price", "RSI"]
+            if show_period_changes_flag:
+                headers.append("1d %")
+            if show_extra_metrics_flag:
+                headers.append("7d %")
+            if show_period_changes_flag:
+                headers.append("30d %")
+            if show_extra_metrics_flag:
+                headers += ["Market Cap", "ATR %", "Vol"]
+            headers += ["Sentiment", "Crowd", "30-day trend"]
+            header_html = ""
+            for name in headers:
+                if name == "Crowd":
+                    header_html += (
+                        "<th colspan='2' style='padding:8px 10px;text-align:center;white-space:nowrap;'>Crowd</th>"
+                    )
+                    continue
+                align = "right" if name in ("Sentiment", "30-day trend") else "left"
                 header_html += (
-                    "<th colspan='2' style='padding:8px 10px;text-align:center;white-space:nowrap;'>Crowd</th>"
+                    f"<th style='padding:8px 10px;text-align:{align};white-space:nowrap;'>{html.escape(name)}</th>"
                 )
-                continue
-            align = "right" if name in ("Sentiment", "30-day trend") else "left"
-            header_html += (
-                f"<th style='padding:8px 10px;text-align:{align};white-space:nowrap;'>{html.escape(name)}</th>"
-            )
 
-        pick = st.session_state.get("chart_pick")
-        rows_html = ""
-        for _, row in frame.iterrows():
-            asset_id = str(row["key"])
-            selected = pick == (kind, asset_id)
-            row_style = "background:#e5e7eb;color:#111827;" if selected else ""
-            price = row.get("latest_price")
-            rsi = row.get("rsi")
-            price_str = f"${price:,.2f}" if pd.notna(price) else "—"
-            rsi_str = f"{rsi:.1f}" if pd.notna(rsi) else "—"
-            pick_value = html.escape(f"{kind}|{asset_id}", quote=True)
-            name_button = (
-                "<button type='button' data-pick='"
-                f"{pick_value}' style='background:none;border:none;padding:0;margin:0;"
-                "color:inherit;font:inherit;font-weight:600;text-decoration:underline;"
-                "cursor:pointer;white-space:nowrap;'>"
-                f"{html.escape(str(row['symbol']))}</button>"
-            )
-            rows_html += (
-                f"<tr style='border-bottom:1px solid #f0f0f0;{row_style}'>"
-                "<td style='padding:10px;white-space:nowrap;'>"
-                "<span style='display:inline-flex;align-items:center;gap:8px;'>"
-                f"{asset_logo(row.get('logo_url'), row.get('symbol'))}{name_button}</span></td>"
-                f"<td style='padding:8px 10px;white-space:nowrap;'>{holders_mark(row.get('holders'))}</td>"
-                f"<td style='padding:10px;min-width:130px;'>{render_score_bar(row['score'])}</td>"
-                f"{cell(row.get('label') or '—')}{cell(price_str)}{cell(rsi_str)}"
-            )
-            if show_period_changes_flag:
-                rows_html += percent_change_cell(row.get("change_1d"))
-            if show_extra_metrics_flag:
-                rows_html += percent_change_cell(row.get("change_7d"))
-            if show_period_changes_flag:
-                rows_html += percent_change_cell(row.get("change_30d"), match_trend=True)
-            if show_extra_metrics_flag:
-                atr = row.get("atr_pct")
-                volume = row.get("volume_ratio")
+            pick = st.session_state.get("chart_pick")
+            rows_html = ""
+            for _, row in frame.iterrows():
+                asset_id = str(row["key"])
+                selected = pick == (kind, asset_id)
+                row_style = "background:#e5e7eb;color:#111827;" if selected else ""
+                price = row.get("latest_price")
+                rsi = row.get("rsi")
+                price_str = f"${price:,.2f}" if pd.notna(price) else "—"
+                rsi_str = f"{rsi:.1f}" if pd.notna(rsi) else "—"
+                pick_value = html.escape(f"{kind}|{asset_id}", quote=True)
+                name_button = (
+                    "<button type='button' data-pick='"
+                    f"{pick_value}' style='background:none;border:none;padding:0;margin:0;"
+                    "color:inherit;font:inherit;font-weight:600;text-decoration:underline;"
+                    "cursor:pointer;white-space:nowrap;'>"
+                    f"{html.escape(str(row['symbol']))}</button>"
+                )
                 rows_html += (
-                    f"{cell(format_market_cap(row.get('market_cap')))}"
-                    f"{cell(f'{atr:.2f}' if pd.notna(atr) else '—')}"
-                    f"{cell(f'{volume:.2f}' if pd.notna(volume) else '—')}"
+                    f"<tr style='border-bottom:1px solid #f0f0f0;{row_style}'>"
+                    "<td style='padding:10px;white-space:nowrap;'>"
+                    "<span style='display:inline-flex;align-items:center;gap:8px;'>"
+                    f"{asset_logo(row.get('logo_url'), row.get('symbol'))}{name_button}</span></td>"
+                    f"<td style='padding:8px 10px;white-space:nowrap;'>{holders_mark(row.get('holders'))}</td>"
+                    f"<td style='padding:10px;min-width:130px;'>{render_score_bar(row['score'])}</td>"
+                    f"{cell(row.get('label') or '—')}{cell(price_str)}{cell(rsi_str)}"
                 )
-            watchlist = crypto_watchlist if kind == "Crypto" else stock_watchlist
-            label = watchlist.get(asset_id)
-            headline_score = None
-            if label:
-                ticker = crypto_ticker(asset_id) if kind == "Crypto" else asset_id
-                headline_score = cached_sentiment_score(sentiment_query(kind, str(label), ticker))
-            sentiment_pick = f"{kind}|{asset_id}|sentiment" if headline_score is not None else None
-            rows_html += (
-                f"<td style='padding:10px;text-align:right;white-space:nowrap;'>"
-                f"{sentiment_badge(headline_score, sentiment_pick)}</td>"
-                f"<td style='padding:10px 4px 10px 10px;text-align:right;white-space:nowrap;'>"
-                f"{crowd_mark(row.get('thumbs_up'), row.get('thumbs_down'), headline_score is not None, row.get('alt_count'), row.get('alt_avg'), row.get('alt_spread'))}</td>"
-                f"<td style='padding:10px 10px 10px 4px;text-align:left;white-space:nowrap;'>"
-                f"{crowd_average_badge(row.get('alt_avg'), row.get('alt_count'), row.get('alt_spread'), headline_score is not None)}</td>"
-                f"<td style='padding:6px 10px;width:84px;'>{sparkline_svg(row.get('closes'), row.get('change_30d'))}</td></tr>"
+                if show_period_changes_flag:
+                    rows_html += percent_change_cell(row.get("change_1d"))
+                if show_extra_metrics_flag:
+                    rows_html += percent_change_cell(row.get("change_7d"))
+                if show_period_changes_flag:
+                    rows_html += percent_change_cell(row.get("change_30d"), match_trend=True)
+                if show_extra_metrics_flag:
+                    atr = row.get("atr_pct")
+                    volume = row.get("volume_ratio")
+                    rows_html += (
+                        f"{cell(format_market_cap(row.get('market_cap')))}"
+                        f"{cell(f'{atr:.2f}' if pd.notna(atr) else '—')}"
+                        f"{cell(f'{volume:.2f}' if pd.notna(volume) else '—')}"
+                    )
+                watchlist = crypto_watchlist if kind == "Crypto" else stock_watchlist
+                label = watchlist.get(asset_id)
+                headline_score = None
+                if label:
+                    ticker = crypto_ticker(asset_id) if kind == "Crypto" else asset_id
+                    headline_score = cached_sentiment_score(sentiment_query(kind, str(label), ticker))
+                sentiment_pick = f"{kind}|{asset_id}|sentiment" if headline_score is not None else None
+                rows_html += (
+                    f"<td style='padding:10px;text-align:right;white-space:nowrap;'>"
+                    f"{sentiment_badge(headline_score, sentiment_pick)}</td>"
+                    f"<td style='padding:10px 4px 10px 10px;text-align:right;white-space:nowrap;'>"
+                    f"{crowd_mark(row.get('thumbs_up'), row.get('thumbs_down'), headline_score is not None, row.get('alt_count'), row.get('alt_avg'), row.get('alt_spread'))}</td>"
+                    f"<td style='padding:10px 10px 10px 4px;text-align:left;white-space:nowrap;'>"
+                    f"{crowd_average_badge(row.get('alt_avg'), row.get('alt_count'), row.get('alt_spread'), headline_score is not None)}</td>"
+                    f"<td style='padding:6px 10px;width:84px;'>{sparkline_svg(row.get('closes'), row.get('change_30d'))}</td></tr>"
+                )
+
+            table_html = (
+                "<div style='width:100%;overflow-x:auto;margin-bottom:8px;-webkit-overflow-scrolling:touch;'>"
+                "<table style='width:100%;border-collapse:collapse;font-size:0.95rem;'>"
+                f"<thead><tr style='border-bottom:2px solid #e5e7eb;'>{header_html}</tr></thead>"
+                f"<tbody>{rows_html}</tbody></table></div>"
             )
+            picked = _score_table(
+                key=f"score_table_{kind}",
+                data=table_html,
+                on_picked_change=lambda: None,
+            ).picked
+            if picked:
+                _select_chart_asset(str(picked))
 
-        table_html = (
-            "<div style='width:100%;overflow-x:auto;margin-bottom:8px;-webkit-overflow-scrolling:touch;'>"
-            "<table style='width:100%;border-collapse:collapse;font-size:0.95rem;'>"
-            f"<thead><tr style='border-bottom:2px solid #e5e7eb;'>{header_html}</tr></thead>"
-            f"<tbody>{rows_html}</tbody></table></div>"
-        )
-        picked = _score_table(
-            key=f"score_table_{kind}",
-            data=table_html,
-            on_picked_change=lambda: None,
-        ).picked
-        if picked:
-            _select_chart_asset(str(picked))
-
-        problems = [
-            f"{row['symbol']}: {row['reasons'][0]}"
-            for row in results
-            if row.get("label") in ("No data", "Error") and row.get("reasons")
-        ]
-        for problem in problems:
-            st.text(problem)
+            problems = [
+                f"{row['symbol']}: {row['reasons'][0]}"
+                for row in results
+                if row.get("label") in ("No data", "Error") and row.get("reasons")
+            ]
+            for problem in problems:
+                st.text(problem)
 
     chosen_kind = st.query_params.get("chart_kind")
     chosen_asset = st.query_params.get("chart_asset")
@@ -1563,9 +1562,6 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
     style_and_show_table(crypto_results, "Crypto Scores", "Crypto")
     style_and_show_table(stock_results, "Equity Scores", "Stock")
 
-    st.html(
-        "<div id='interactive-chart' style='scroll-margin-top:4.5rem;'></div>"
-    )
     pick = st.session_state.get("chart_pick")
     if pick and (
         st.session_state.pop("chart_pick_from_row", False)
@@ -1597,186 +1593,185 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
 
     chart_name, chart_kind, chart_asset = selected_chart_name()
     chart_logo = (st.session_state.get("asset_logos") or {}).get(asset_market_key(chart_kind, chart_asset))
-    chart_heading, chart_top = st.columns([5.2, 0.9], vertical_alignment="center")
-    with chart_heading:
-        st.markdown(
-            heading_with_logo(
-                f"Interactive Chart - {chart_name}" if chart_name else "Interactive Chart",
-                chart_logo,
-                chart_name,
-            ),
-            unsafe_allow_html=True,
-        )
-    with chart_top:
-        _back_to_top(key="chart_back_to_top")
-    _scroll_chart(
-        key="scroll_to_chart",
-        data={
-            "token": st.session_state.get("scroll_token") or "",
-            "target": st.session_state.get("scroll_target") or "interactive-chart",
-        },
+    chart_label = f"Interactive Chart - {chart_name}" if chart_name else "Interactive Chart"
+    st.html(
+        "<div id='interactive-chart' style='scroll-margin-top:4.5rem;'></div>"
     )
+    with st.expander(chart_label, expanded=True):
+        logo_col, _, chart_top = st.columns([0.35, 4.85, 0.9], vertical_alignment="center")
+        with logo_col:
+            if chart_name:
+                st.markdown(asset_logo(chart_logo, chart_name, size=32), unsafe_allow_html=True)
+        with chart_top:
+            _back_to_top(key="chart_back_to_top")
+        _scroll_chart(
+            key="scroll_to_chart",
+            data={
+                "token": st.session_state.get("scroll_token") or "",
+                "target": st.session_state.get("scroll_target") or "interactive-chart",
+            },
+        )
 
-    col1, col2 = st.columns([1, 3])
-    with col1:
-        asset_type = st.selectbox("Type", ["Crypto", "Stock"], key="asset_type")
-    with col2:
-        watchlist = crypto_watchlist if asset_type == "Crypto" else stock_watchlist
-        options = list(watchlist.keys())
-        asset_state_key = "asset_crypto" if asset_type == "Crypto" else "asset_stock"
-        if options and st.session_state.get(asset_state_key) not in options:
-            st.session_state[asset_state_key] = options[0]
-        if options:
-            asset_key = st.selectbox(
-                "Asset",
-                options,
-                format_func=lambda item: watchlist[item] if asset_type == "Crypto" else f"{watchlist[item]} ({item})",
-                key=asset_state_key,
-            )
+        col1, col2 = st.columns([1, 3])
+        with col1:
+            asset_type = st.selectbox("Type", ["Crypto", "Stock"], key="asset_type")
+        with col2:
+            watchlist = crypto_watchlist if asset_type == "Crypto" else stock_watchlist
+            options = list(watchlist.keys())
+            asset_state_key = "asset_crypto" if asset_type == "Crypto" else "asset_stock"
+            if options and st.session_state.get(asset_state_key) not in options:
+                st.session_state[asset_state_key] = options[0]
+            if options:
+                asset_key = st.selectbox(
+                    "Asset",
+                    options,
+                    format_func=lambda item: watchlist[item] if asset_type == "Crypto" else f"{watchlist[item]} ({item})",
+                    key=asset_state_key,
+                )
+            else:
+                asset_key = None
+                st.caption("This watchlist is empty.")
+
+        if asset_key and st.session_state.get("chart_pick") != (asset_type, asset_key):
+            st.session_state.chart_pick = (asset_type, asset_key)
+            _rerun_fragment()
+
+        if not asset_key:
+            st.info("Add an asset to this watchlist to see a chart.")
+            return
+
+        if asset_type == "Crypto":
+            df_chart, chart_err = load_crypto(asset_key, history_days, nonce)
+            title = crypto_watchlist[asset_key]
         else:
-            asset_key = None
-            st.caption("This watchlist is empty.")
+            df_chart, chart_err = load_stock(asset_key, history_days, nonce)
+            title = f"{stock_watchlist[asset_key]} ({asset_key})"
 
-    if asset_key and st.session_state.get("chart_pick") != (asset_type, asset_key):
-        st.session_state.chart_pick = (asset_type, asset_key)
-        _rerun_fragment()
+        if chart_err or df_chart.empty:
+            st.warning(chart_err or "Could not load chart data. Check your internet connection.")
+            return
 
-    if not asset_key:
-        st.info("Add an asset to this watchlist to see a chart.")
-        return
-
-    if asset_type == "Crypto":
-        df_chart, chart_err = load_crypto(asset_key, history_days, nonce)
-        title = crypto_watchlist[asset_key]
-    else:
-        df_chart, chart_err = load_stock(asset_key, history_days, nonce)
-        title = f"{stock_watchlist[asset_key]} ({asset_key})"
-
-    if chart_err or df_chart.empty:
-        st.warning(chart_err or "Could not load chart data. Check your internet connection.")
-        return
-
-    df_chart = calculate_indicators(df_chart)
-    fig = make_subplots(
-        rows=3, cols=1,
-        shared_xaxes=True,
-        vertical_spacing=0.05,
-        row_heights=[0.55, 0.2, 0.25],
-        subplot_titles=(f"{title} Price", "Volume", "RSI (14)"),
-    )
-    fig.add_trace(
-        go.Candlestick(
-            x=df_chart.index, open=df_chart["open"], high=df_chart["high"],
-            low=df_chart["low"], close=df_chart["close"], name="Price",
-        ),
-        row=1, col=1,
-    )
-    if "sma_20" in df_chart.columns:
-        fig.add_trace(
-            go.Scatter(x=df_chart.index, y=df_chart["sma_20"], name="SMA 20", line=dict(color="orange", width=1.5)),
-            row=1, col=1,
+        df_chart = calculate_indicators(df_chart)
+        fig = make_subplots(
+            rows=3, cols=1,
+            shared_xaxes=True,
+            vertical_spacing=0.05,
+            row_heights=[0.55, 0.2, 0.25],
+            subplot_titles=(f"{title} Price", "Volume", "RSI (14)"),
         )
-    if "sma_50" in df_chart.columns:
         fig.add_trace(
-            go.Scatter(x=df_chart.index, y=df_chart["sma_50"], name="SMA 50", line=dict(color="royalblue", width=1.5)),
-            row=1, col=1,
-        )
-
-    upper_name = find_column(df_chart, "BBU_")
-    lower_name = find_column(df_chart, "BBL_")
-    if upper_name and lower_name:
-        fig.add_trace(
-            go.Scatter(
-                x=df_chart.index, y=df_chart[upper_name], name="BB Upper",
-                line=dict(color="gray", width=1, dash="dot"), showlegend=False,
+            go.Candlestick(
+                x=df_chart.index, open=df_chart["open"], high=df_chart["high"],
+                low=df_chart["low"], close=df_chart["close"], name="Price",
             ),
             row=1, col=1,
         )
+        if "sma_20" in df_chart.columns:
+            fig.add_trace(
+                go.Scatter(x=df_chart.index, y=df_chart["sma_20"], name="SMA 20", line=dict(color="orange", width=1.5)),
+                row=1, col=1,
+            )
+        if "sma_50" in df_chart.columns:
+            fig.add_trace(
+                go.Scatter(x=df_chart.index, y=df_chart["sma_50"], name="SMA 50", line=dict(color="royalblue", width=1.5)),
+                row=1, col=1,
+            )
+
+        upper_name = find_column(df_chart, "BBU_")
+        lower_name = find_column(df_chart, "BBL_")
+        if upper_name and lower_name:
+            fig.add_trace(
+                go.Scatter(
+                    x=df_chart.index, y=df_chart[upper_name], name="BB Upper",
+                    line=dict(color="gray", width=1, dash="dot"), showlegend=False,
+                ),
+                row=1, col=1,
+            )
+            fig.add_trace(
+                go.Scatter(
+                    x=df_chart.index, y=df_chart[lower_name], name="BB Lower",
+                    line=dict(color="gray", width=1, dash="dot"), fill="tonexty",
+                    fillcolor="rgba(128,128,128,0.08)", showlegend=False,
+                ),
+                row=1, col=1,
+            )
+
+        colors = [
+            "green" if df_chart["close"].iloc[i] >= df_chart["open"].iloc[i] else "red"
+            for i in range(len(df_chart))
+        ]
         fig.add_trace(
-            go.Scatter(
-                x=df_chart.index, y=df_chart[lower_name], name="BB Lower",
-                line=dict(color="gray", width=1, dash="dot"), fill="tonexty",
-                fillcolor="rgba(128,128,128,0.08)", showlegend=False,
-            ),
-            row=1, col=1,
+            go.Bar(x=df_chart.index, y=df_chart["volume"], name="Volume", marker_color=colors, opacity=0.6),
+            row=2, col=1,
         )
+        if "rsi" in df_chart.columns:
+            fig.add_trace(
+                go.Scatter(x=df_chart.index, y=df_chart["rsi"], name="RSI", line=dict(color="purple", width=1.5)),
+                row=3, col=1,
+            )
+            fig.add_hline(y=70, line_dash="dash", line_color="red", opacity=0.5, row=3, col=1)
+            fig.add_hline(y=30, line_dash="dash", line_color="green", opacity=0.5, row=3, col=1)
+            fig.add_hline(y=50, line_dash="dot", line_color="gray", opacity=0.3, row=3, col=1)
 
-    colors = [
-        "green" if df_chart["close"].iloc[i] >= df_chart["open"].iloc[i] else "red"
-        for i in range(len(df_chart))
-    ]
-    fig.add_trace(
-        go.Bar(x=df_chart.index, y=df_chart["volume"], name="Volume", marker_color=colors, opacity=0.6),
-        row=2, col=1,
-    )
-    if "rsi" in df_chart.columns:
-        fig.add_trace(
-            go.Scatter(x=df_chart.index, y=df_chart["rsi"], name="RSI", line=dict(color="purple", width=1.5)),
-            row=3, col=1,
+        fig.update_layout(
+            height=750,
+            xaxis_rangeslider_visible=False,
+            showlegend=True,
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            margin=dict(t=60, b=20),
         )
-        fig.add_hline(y=70, line_dash="dash", line_color="red", opacity=0.5, row=3, col=1)
-        fig.add_hline(y=30, line_dash="dash", line_color="green", opacity=0.5, row=3, col=1)
-        fig.add_hline(y=50, line_dash="dot", line_color="gray", opacity=0.3, row=3, col=1)
+        fig.update_yaxes(title_text="Price", row=1, col=1)
+        fig.update_yaxes(title_text="Volume", row=2, col=1)
+        fig.update_yaxes(title_text="RSI", range=[0, 100], row=3, col=1)
+        st.plotly_chart(fig, width="stretch")
 
-    fig.update_layout(
-        height=750,
-        xaxis_rangeslider_visible=False,
-        showlegend=True,
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        margin=dict(t=60, b=20),
-    )
-    fig.update_yaxes(title_text="Price", row=1, col=1)
-    fig.update_yaxes(title_text="Volume", row=2, col=1)
-    fig.update_yaxes(title_text="RSI", range=[0, 100], row=3, col=1)
-    st.plotly_chart(fig, width="stretch")
-
-    result = compute_score(df_chart, weights=weights)
-    score_val = result["score"]
-    color, _bg, arrow, _bar = tone(score_val)
-    col_a, col_b, col_c = st.columns(3)
-    with col_a:
-        st.markdown(
-            "<div style='font-size: 0.85rem; color: #6b7280; margin-bottom: 2px;'>Current Score</div>"
-            f"<div style='font-size: 2.2rem; font-weight: 600; line-height: 1.1; margin-bottom: 4px;'>{score_val}/100</div>"
-            f"<div style='font-size: 0.95rem; font-weight: 500; color: {color};'>"
-            f"{arrow} {html.escape(str(result['label']))}</div>",
-            unsafe_allow_html=True,
-        )
-    if result.get("change_7d") is not None:
-        col_b.metric("7-Day Change", f"{result['change_7d']:+.1f}%")
-    if result.get("atr_pct") is not None:
-        col_c.metric("Volatility (ATR%)", f"{result['atr_pct']:.2f}%")
+        result = compute_score(df_chart, weights=weights)
+        score_val = result["score"]
+        color, _bg, arrow, _bar = tone(score_val)
+        col_a, col_b, col_c = st.columns(3)
+        with col_a:
+            st.markdown(
+                "<div style='font-size: 0.85rem; color: #6b7280; margin-bottom: 2px;'>Current Score</div>"
+                f"<div style='font-size: 2.2rem; font-weight: 600; line-height: 1.1; margin-bottom: 4px;'>{score_val}/100</div>"
+                f"<div style='font-size: 0.95rem; font-weight: 500; color: {color};'>"
+                f"{arrow} {html.escape(str(result['label']))}</div>",
+                unsafe_allow_html=True,
+            )
+        if result.get("change_7d") is not None:
+            col_b.metric("7-Day Change", f"{result['change_7d']:+.1f}%")
+        if result.get("atr_pct") is not None:
+            col_c.metric("Volatility (ATR%)", f"{result['atr_pct']:.2f}%")
 
     if show_reasons_flag and result.get("reasons") and result.get("score") is not None:
-        st.subheader(f"Score Breakdown — {title}")
-        st.markdown(
-            f"<span style='color:{color};font-weight:bold;font-size:1.1em'>"
-            f"{result['score']}/100 ({html.escape(str(result['label']))})</span>",
-            unsafe_allow_html=True,
-        )
-        breakdown_col1, breakdown_col2 = st.columns(2)
-        with breakdown_col1:
-            contributions = result.get("contributions") or {}
-            if contributions:
-                fig_contrib = go.Figure(go.Bar(
-                    x=list(contributions.values()),
-                    y=list(contributions.keys()),
-                    orientation="h",
-                    marker_color=["#22c55e" if points >= 0 else "#ef4444" for points in contributions.values()],
-                ))
-                fig_contrib.update_layout(
-                    title="Indicator Point Contributions",
-                    xaxis_title="Points Added or Subtracted",
-                    yaxis=dict(autorange="reversed"),
-                    height=320,
-                    margin=dict(t=30, b=20, l=10, r=10),
-                )
-                fig_contrib.add_vline(x=0, line_width=1.5, line_dash="dash", line_color="gray", opacity=0.7)
-                st.plotly_chart(fig_contrib, width="stretch")
-        with breakdown_col2:
-            st.markdown("**Detailed Reasons**")
-            for reason in result["reasons"]:
-                st.caption(f"• {reason}")
+        with st.expander(f"Score Breakdown — {title}", expanded=True):
+            st.markdown(
+                f"<span style='color:{color};font-weight:bold;font-size:1.1em'>"
+                f"{result['score']}/100 ({html.escape(str(result['label']))})</span>",
+                unsafe_allow_html=True,
+            )
+            breakdown_col1, breakdown_col2 = st.columns(2)
+            with breakdown_col1:
+                contributions = result.get("contributions") or {}
+                if contributions:
+                    fig_contrib = go.Figure(go.Bar(
+                        x=list(contributions.values()),
+                        y=list(contributions.keys()),
+                        orientation="h",
+                        marker_color=["#22c55e" if points >= 0 else "#ef4444" for points in contributions.values()],
+                    ))
+                    fig_contrib.update_layout(
+                        title="Indicator Point Contributions",
+                        xaxis_title="Points Added or Subtracted",
+                        yaxis=dict(autorange="reversed"),
+                        height=320,
+                        margin=dict(t=30, b=20, l=10, r=10),
+                    )
+                    fig_contrib.add_vline(x=0, line_width=1.5, line_dash="dash", line_color="gray", opacity=0.7)
+                    st.plotly_chart(fig_contrib, width="stretch")
+            with breakdown_col2:
+                st.markdown("**Detailed Reasons**")
+                for reason in result["reasons"]:
+                    st.caption(f"• {reason}")
 
     sentiment_label = crypto_watchlist[asset_key] if asset_type == "Crypto" else stock_watchlist[asset_key]
     show_market_sentiment(
@@ -1967,10 +1962,6 @@ def show_market_sentiment(kind: str, asset_id: str, label: str, ticker: str | No
         if report and stored_at is not None:
             remember_sentiment(query, report, stored_at)
     st.html("<div id='market-sentiment' style='scroll-margin-top:4.5rem;'></div>")
-    st.markdown(
-        "<hr style='margin:1.4rem 0 0.6rem;border:none;border-top:1px solid #e5e7eb;'>",
-        unsafe_allow_html=True,
-    )
     shown_name = " ".join((label or "").split())
     if kind == "Stock" and ticker and ticker.upper() not in shown_name.upper():
         shown_name = f"{shown_name} ({ticker})" if shown_name else ticker
@@ -1978,127 +1969,126 @@ def show_market_sentiment(kind: str, asset_id: str, label: str, ticker: str | No
     sentiment_logo = (stored or {}).get("logo_url") if isinstance(stored, dict) else ""
     if not sentiment_logo:
         sentiment_logo = (st.session_state.get("asset_logos") or {}).get(asset_market_key(kind, asset_id))
-    sentiment_title, sentiment_refresh, sentiment_top = st.columns([3.15, 1.45, 0.85], vertical_alignment="center")
-    with sentiment_title:
-        st.markdown(
-            heading_with_logo(sentiment_heading, sentiment_logo, shown_name),
-            unsafe_allow_html=True,
-        )
-    sentiment_deadlines = st.session_state.setdefault("sentiment_due", {})
-    if query not in sentiment_deadlines:
-        cached_at = sentiment_cached_at(query)
-        sentiment_deadlines[query] = (
-            cached_at + SENTIMENT_REFRESH_SECONDS
-            if cached_at
-            else time.time() + SENTIMENT_REFRESH_SECONDS
-        )
-    with sentiment_refresh:
-        sentiment_now = st.button(
-            "🔄 Refresh",
-            key="refresh_sentiment",
-            use_container_width=True,
-            help="Pull fresh headlines and a new sentiment score for this asset. This also runs on its own when the timer reaches zero.",
-        )
-        sentiment_due = _countdown_due(sentiment_deadlines[query], "sentiment_countdown")
-        if sentiment_now or sentiment_due:
-            sentiment_deadlines[query] = time.time() + SENTIMENT_REFRESH_SECONDS
-            st.session_state.sentiment_force = query
-            _rerun_fragment()
-    with sentiment_top:
-        _back_to_top(key="sentiment_back_to_top")
-    force_sentiment = st.session_state.get("sentiment_force") == query
-    if force_sentiment:
-        st.session_state.sentiment_force = None
-    cached_before = sentiment_cached_at(query)
-    with st.spinner("Reading recent headlines..."):
-        report = load_market_sentiment(query, sentiment_ready(), force=force_sentiment)
-    cached_after = sentiment_cached_at(query)
-    if report.get("ok") and cached_after and cached_after != cached_before:
-        save_sentiment(supabase, kind, asset_id, report, cached_after)
-        st.rerun(scope="app")
+    with st.expander(sentiment_heading, expanded=True):
+        logo_col, _, sentiment_refresh, sentiment_top = st.columns([0.35, 2.8, 1.45, 0.85], vertical_alignment="center")
+        with logo_col:
+            if shown_name:
+                st.markdown(asset_logo(sentiment_logo, shown_name, size=32), unsafe_allow_html=True)
+        sentiment_deadlines = st.session_state.setdefault("sentiment_due", {})
+        if query not in sentiment_deadlines:
+            cached_at = sentiment_cached_at(query)
+            sentiment_deadlines[query] = (
+                cached_at + SENTIMENT_REFRESH_SECONDS
+                if cached_at
+                else time.time() + SENTIMENT_REFRESH_SECONDS
+            )
+        with sentiment_refresh:
+            sentiment_now = st.button(
+                "🔄 Refresh",
+                key="refresh_sentiment",
+                use_container_width=True,
+                help="Pull fresh headlines and a new sentiment score for this asset. This also runs on its own when the timer reaches zero.",
+            )
+            sentiment_due = _countdown_due(sentiment_deadlines[query], "sentiment_countdown")
+            if sentiment_now or sentiment_due:
+                sentiment_deadlines[query] = time.time() + SENTIMENT_REFRESH_SECONDS
+                st.session_state.sentiment_force = query
+                _rerun_fragment()
+        with sentiment_top:
+            _back_to_top(key="sentiment_back_to_top")
+        force_sentiment = st.session_state.get("sentiment_force") == query
+        if force_sentiment:
+            st.session_state.sentiment_force = None
+        cached_before = sentiment_cached_at(query)
+        with st.spinner("Reading recent headlines..."):
+            report = load_market_sentiment(query, sentiment_ready(), force=force_sentiment)
+        cached_after = sentiment_cached_at(query)
+        if report.get("ok") and cached_after and cached_after != cached_before:
+            save_sentiment(supabase, kind, asset_id, report, cached_after)
+            st.rerun(scope="app")
 
-    headlines = newest_first(report.get("headlines") or [])
-    score = report.get("score")
-    if report.get("ok") and score is not None:
-        color, background, arrow, _bar = tone(score)
-        if score >= 60:
-            coverage = "Bullish coverage"
-        elif score >= 53:
-            coverage = "Mildly bullish coverage"
-        elif score >= 47:
-            coverage = "Mixed coverage"
-        elif score >= 40:
-            coverage = "Mildly bearish coverage"
-        else:
-            coverage = "Bearish coverage"
-        summary = html.escape(report.get("summary") or "")
-        driver_items = "".join(
-            f"<li style='margin:4px 0;color:#374151;'>{html.escape(str(driver))}</li>"
-            for driver in (report.get("drivers") or [])
-        )
-        drivers_html = (
-            f"<ul style='margin:10px 0 0;padding-left:1.15rem;'>{driver_items}</ul>"
-            if driver_items else ""
-        )
-        sentiment_at = (stored or {}).get("sentiment_updated_at") if isinstance(stored, dict) else None
-        score_card, vote_card = st.columns([3.5, 2.1], vertical_alignment="top")
-        with score_card:
-            st.markdown(
-                "<div style='background:#ffffff;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;'>"
-                "<div style='font-size:0.8rem;color:#6b7280;margin-bottom:4px;'>"
-                + (
-                    "Average of the article scores below, from the last 7 days"
-                    if any(item.get("score") is not None for item in headlines)
-                    else "Score for these headlines, from the last 7 days"
+        headlines = newest_first(report.get("headlines") or [])
+        score = report.get("score")
+        if report.get("ok") and score is not None:
+            color, background, arrow, _bar = tone(score)
+            if score >= 60:
+                coverage = "Bullish coverage"
+            elif score >= 53:
+                coverage = "Mildly bullish coverage"
+            elif score >= 47:
+                coverage = "Mixed coverage"
+            elif score >= 40:
+                coverage = "Mildly bearish coverage"
+            else:
+                coverage = "Bearish coverage"
+            summary = html.escape(report.get("summary") or "")
+            driver_items = "".join(
+                f"<li style='margin:4px 0;color:#374151;'>{html.escape(str(driver))}</li>"
+                for driver in (report.get("drivers") or [])
+            )
+            drivers_html = (
+                f"<ul style='margin:10px 0 0;padding-left:1.15rem;'>{driver_items}</ul>"
+                if driver_items else ""
+            )
+            sentiment_at = (stored or {}).get("sentiment_updated_at") if isinstance(stored, dict) else None
+            score_card, vote_card = st.columns([3.5, 2.1], vertical_alignment="top")
+            with score_card:
+                st.markdown(
+                    "<div style='background:#ffffff;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;'>"
+                    "<div style='font-size:0.8rem;color:#6b7280;margin-bottom:4px;'>"
+                    + (
+                        "Average of the article scores below, from the last 7 days"
+                        if any(item.get("score") is not None for item in headlines)
+                        else "Score for these headlines, from the last 7 days"
+                    )
+                    + "</div>"
+                    f"<div style='display:inline-flex;align-items:center;gap:6px;background:{background};color:{color};"
+                    f"padding:2px 8px;border-radius:4px;font-weight:600;'>{arrow} {score:.0f}/100</div>"
+                    f"<div style='margin-top:8px;font-weight:600;color:{color};'>{html.escape(coverage)}</div>"
+                    f"<div style='margin-top:8px;color:#111827;'>{summary}</div>"
+                    f"{drivers_html}</div>",
+                    unsafe_allow_html=True,
                 )
-                + "</div>"
-                f"<div style='display:inline-flex;align-items:center;gap:6px;background:{background};color:{color};"
-                f"padding:2px 8px;border-radius:4px;font-weight:600;'>{arrow} {score:.0f}/100</div>"
-                f"<div style='margin-top:8px;font-weight:600;color:{color};'>{html.escape(coverage)}</div>"
-                f"<div style='margin-top:8px;color:#111827;'>{summary}</div>"
-                f"{drivers_html}</div>",
-                unsafe_allow_html=True,
-            )
-        with vote_card:
-            _sentiment_thumbs(kind, asset_id, sentiment_at)
-    elif report.get("reason") == "missing_key":
-        st.info("Headlines are in. Add an xAI API key so Grok can score them. See the README under Market sentiment.")
-    elif report.get("reason") == "no_headlines":
-        st.info("No recent headlines turned up for this asset.")
-    elif report.get("reason") == "model_busy":
-        st.info("Grok is busy right now. The articles are below, and the score will be tried again in about a minute.")
-    elif report.get("reason") == "bad_key":
-        st.warning("The xAI API key was rejected. Check the key in the Streamlit secrets.")
-    else:
-        st.info("The sentiment score could not be built this time. The articles are below.")
+            with vote_card:
+                _sentiment_thumbs(kind, asset_id, sentiment_at)
+        elif report.get("reason") == "missing_key":
+            st.info("Headlines are in. Add an xAI API key so Grok can score them. See the README under Market sentiment.")
+        elif report.get("reason") == "no_headlines":
+            st.info("No recent headlines turned up for this asset.")
+        elif report.get("reason") == "model_busy":
+            st.info("Grok is busy right now. The articles are below, and the score will be tried again in about a minute.")
+        elif report.get("reason") == "bad_key":
+            st.warning("The xAI API key was rejected. Check the key in the Streamlit secrets.")
+        else:
+            st.info("The sentiment score could not be built this time. The articles are below.")
 
-    if headlines:
-        rows = [
-            "<div style='display:flex;align-items:center;gap:16px;padding:4px 0 8px;'>"
-            "<div style='flex:1;font-size:0.8rem;font-weight:600;color:#6b7280;'>Article</div>"
-            "<div style='width:112px;flex:none;text-align:right;font-size:0.8rem;font-weight:600;color:#6b7280;'>Published</div>"
-            "<div style='width:76px;flex:none;text-align:right;font-size:0.8rem;font-weight:600;color:#6b7280;'>Score</div>"
-            "</div>"
-        ]
-        for item in headlines:
-            source = f" — {html.escape(item['source'])}" if item.get("source") else ""
-            published = _published_label(item.get("published"))
-            published_html = (
-                html.escape(published)
-                if published
-                else "<span style='color:#6b7280;'>—</span>"
-            )
-            badge = sentiment_badge(item.get("score"))
-            rows.append(
-                "<div style='display:flex;align-items:center;gap:16px;padding:8px 0;border-top:1px solid #f3f4f6;'>"
-                "<div style='flex:1;min-width:0;'>"
-                f"<a href='{html.escape(item['link'], quote=True)}' target='_blank' rel='noopener noreferrer'>"
-                f"{html.escape(item['title'])}</a>{source}</div>"
-                f"<div style='width:112px;flex:none;text-align:right;white-space:nowrap;color:#4b5563;'>{published_html}</div>"
-                f"<div style='width:76px;flex:none;text-align:right;'>{badge}</div></div>"
-            )
-        st.html(f"<div style='margin-top:10px;'>{''.join(rows)}</div>")
-    st.caption("This reads recent coverage. It is not the technical score, and it is not advice.")
+        if headlines:
+            rows = [
+                "<div style='display:flex;align-items:center;gap:16px;padding:4px 0 8px;'>"
+                "<div style='flex:1;font-size:0.8rem;font-weight:600;color:#6b7280;'>Article</div>"
+                "<div style='width:112px;flex:none;text-align:right;font-size:0.8rem;font-weight:600;color:#6b7280;'>Published</div>"
+                "<div style='width:76px;flex:none;text-align:right;font-size:0.8rem;font-weight:600;color:#6b7280;'>Score</div>"
+                "</div>"
+            ]
+            for item in headlines:
+                source = f" — {html.escape(item['source'])}" if item.get("source") else ""
+                published = _published_label(item.get("published"))
+                published_html = (
+                    html.escape(published)
+                    if published
+                    else "<span style='color:#6b7280;'>—</span>"
+                )
+                badge = sentiment_badge(item.get("score"))
+                rows.append(
+                    "<div style='display:flex;align-items:center;gap:16px;padding:8px 0;border-top:1px solid #f3f4f6;'>"
+                    "<div style='flex:1;min-width:0;'>"
+                    f"<a href='{html.escape(item['link'], quote=True)}' target='_blank' rel='noopener noreferrer'>"
+                    f"{html.escape(item['title'])}</a>{source}</div>"
+                    f"<div style='width:112px;flex:none;text-align:right;white-space:nowrap;color:#4b5563;'>{published_html}</div>"
+                    f"<div style='width:76px;flex:none;text-align:right;'>{badge}</div></div>"
+                )
+            st.html(f"<div style='margin-top:10px;'>{''.join(rows)}</div>")
+        st.caption("This reads recent coverage. It is not the technical score, and it is not advice.")
 
 
 render_dashboard(
