@@ -72,14 +72,14 @@ export default function(component) {
   const shell = parentElement.closest(".stBidiComponent") || parentElement;
   shell.style.display = "none";
   let style = document.getElementById("angstrom-brand-style");
-  if (style && style.dataset.layout !== "cards") {
+  if (style && style.dataset.layout !== "headlines") {
     style.remove();
     style = null;
   }
   if (!style) {
     style = document.createElement("style");
     style.id = "angstrom-brand-style";
-    style.dataset.layout = "cards";
+    style.dataset.layout = "headlines";
     style.textContent = [
       ".brand-mark img{display:none;}",
       ".brand-mark.is-light .logo-light,.brand-mark.is-dark .logo-dark{display:inline;}",
@@ -96,7 +96,20 @@ export default function(component) {
       "html.angstrom-night .sentiment-card{background:#0e1117;border-color:#4b5563;color:#fafafa;}",
       "html.angstrom-night .sentiment-kicker{color:#9ca3af;}",
       "html.angstrom-night .sentiment-body,html.angstrom-night .sentiment-drivers li{color:#e5e7eb;}",
-      "html.angstrom-night [class*='_take_box']{background:#0e1117 !important;border-color:#4b5563 !important;}"
+      "html.angstrom-night [class*='_take_box']{background:#0e1117 !important;border-color:#4b5563 !important;}",
+      ".headline-head,.headline-row{display:flex;gap:16px;}",
+      ".headline-head{align-items:center;padding:4px 0 8px;font-size:.8rem;font-weight:600;color:#6b7280;}",
+      ".headline-row{align-items:flex-start;padding:8px 0;border-top:1px solid #f3f4f6;}",
+      ".headline-title{flex:1.1;min-width:0;}",
+      ".headline-date{width:112px;flex:none;white-space:nowrap;color:#4b5563;}",
+      ".headline-note{flex:1.3;min-width:0;color:#374151;font-size:.9rem;line-height:1.35;}",
+      ".headline-score{width:76px;flex:none;text-align:right;}",
+      ".headline-empty{color:#6b7280;}",
+      "html.angstrom-night .headline-head{color:#d1d5db;}",
+      "html.angstrom-night .headline-row{border-top-color:#31333f;}",
+      "html.angstrom-night .headline-title,html.angstrom-night .headline-title a,html.angstrom-night .headline-date,html.angstrom-night .headline-note{color:#e5e7eb !important;}",
+      "html.angstrom-night .headline-title a:hover{color:#f9fafb;}",
+      "html.angstrom-night .headline-source,html.angstrom-night .headline-empty{color:#d1d5db;}"
     ].join("");
     document.head.appendChild(style);
   }
@@ -3867,27 +3880,30 @@ def _published_label(value) -> str:
 def headline_table(headlines: list) -> str:
     """Article, the date, a one-sentence AI summary, then the score. A dash until a summary exists."""
     rows = [
-        "<div style='display:flex;align-items:center;gap:16px;padding:4px 0 8px;'>"
-        "<div style='flex:1.1;min-width:0;font-size:0.8rem;font-weight:600;color:#6b7280;'>Article</div>"
-        "<div style='width:112px;flex:none;font-size:0.8rem;font-weight:600;color:#6b7280;'>Published</div>"
-        "<div style='flex:1.3;min-width:0;font-size:0.8rem;font-weight:600;color:#6b7280;'>AI Summary</div>"
-        "<div style='width:76px;flex:none;text-align:right;font-size:0.8rem;font-weight:600;color:#6b7280;'>Score</div>"
+        "<div class='headline-head'>"
+        "<div class='headline-title'>Article</div>"
+        "<div class='headline-date'>Published</div>"
+        "<div class='headline-note'>AI Summary</div>"
+        "<div class='headline-score'>Score</div>"
         "</div>"
     ]
     for item in headlines:
-        source = f" — {html.escape(item['source'])}" if item.get("source") else ""
+        source = (
+            f"<span class='headline-source'> — {html.escape(item['source'])}</span>"
+            if item.get("source") else ""
+        )
         published = _published_label(item.get("published"))
-        published_html = html.escape(published) if published else "<span style='color:#6b7280;'>—</span>"
+        published_html = html.escape(published) if published else "<span class='headline-empty'>—</span>"
         note = " ".join(str(item.get("note") or "").split())
-        note_html = html.escape(note) if note else "<span style='color:#6b7280;'>—</span>"
+        note_html = html.escape(note) if note else "<span class='headline-empty'>—</span>"
         rows.append(
-            "<div style='display:flex;align-items:flex-start;gap:16px;padding:8px 0;border-top:1px solid #f3f4f6;'>"
-            "<div style='flex:1.1;min-width:0;'>"
+            "<div class='headline-row'>"
+            "<div class='headline-title'>"
             f"<a href='{html.escape(item['link'], quote=True)}' target='_blank' rel='noopener noreferrer'>"
             f"{html.escape(item['title'])}</a>{source}</div>"
-            f"<div style='width:112px;flex:none;white-space:nowrap;color:#4b5563;'>{published_html}</div>"
-            f"<div style='flex:1.3;min-width:0;color:#374151;font-size:0.9rem;line-height:1.35;'>{note_html}</div>"
-            f"<div style='width:76px;flex:none;text-align:right;'>{sentiment_badge(item.get('score'))}</div></div>"
+            f"<div class='headline-date'>{published_html}</div>"
+            f"<div class='headline-note'>{note_html}</div>"
+            f"<div class='headline-score'>{sentiment_badge(item.get('score'))}</div></div>"
         )
     return f"<div style='margin-top:10px;'>{''.join(rows)}</div>"
 
