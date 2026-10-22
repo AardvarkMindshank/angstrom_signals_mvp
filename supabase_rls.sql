@@ -420,7 +420,10 @@ as $$
       on profiles.user_id = comments.user_id
     left join auth.users as users
       on users.id = comments.user_id
-    where comments.asset_key = any(asset_keys)
+    where (
+        cardinality(asset_keys) = 0
+        or comments.asset_key = any(asset_keys)
+      )
       and comments.created_at > now() - interval '12 hours'
     order by comments.created_at desc;
 $$;

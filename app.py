@@ -296,9 +296,15 @@ export default function(component) {
       });
       assets.sort((a, b) => String(a[1]).localeCompare(String(b[1])));
       people.sort((a, b) => a.localeCompare(b));
-      fillStreamSelect(panel.querySelector("#stream-asset"), "All assets", assets, state.asset);
+      fillStreamSelect(
+        panel.querySelector("#stream-asset"),
+        "All assets",
+        assets,
+        state.asset,
+        [["watchlist", "My watchlists"]]
+      );
       fillStreamSelect(panel.querySelector("#stream-person"), "All people", people.map((name) => [name, name]), state.person);
-      if (!seenAssets[state.asset]) state.asset = "";
+      if (state.asset !== "watchlist" && !seenAssets[state.asset]) state.asset = "";
       if (!seenPeople[state.person]) state.person = "";
       panel.querySelector("#stream-asset").value = state.asset;
       panel.querySelector("#stream-person").value = state.person;
@@ -306,7 +312,9 @@ export default function(component) {
         button.classList.toggle("is-on", (button.getAttribute("data-side") || "") === state.side);
       });
       const shown = items.filter((item) => {
-        if (state.asset && item.key !== state.asset) return false;
+        if (state.asset === "watchlist") {
+          if (!item.watchlist) return false;
+        } else if (state.asset && item.key !== state.asset) return false;
         if (state.person && (item.name || "Member") !== state.person) return false;
         if (state.side && item.side !== state.side) return false;
         return true;
@@ -328,13 +336,19 @@ export default function(component) {
     };
   }
 
-  function fillStreamSelect(select, placeholder, pairs, selected) {
+  function fillStreamSelect(select, placeholder, pairs, selected, extras) {
     if (!select) return;
     select.replaceChildren();
     const all = document.createElement("option");
     all.value = "";
     all.textContent = placeholder;
     select.appendChild(all);
+    (extras || []).forEach((pair) => {
+      const option = document.createElement("option");
+      option.value = pair[0];
+      option.textContent = pair[1];
+      select.appendChild(option);
+    });
     pairs.forEach((pair) => {
       const option = document.createElement("option");
       option.value = pair[0];
@@ -342,6 +356,7 @@ export default function(component) {
       select.appendChild(option);
     });
     const allowed = new Set(pairs.map((pair) => pair[0]));
+    (extras || []).forEach((pair) => allowed.add(pair[0]));
     select.value = allowed.has(selected) ? selected : "";
   }
 
@@ -1323,7 +1338,7 @@ The **Sentiment** column shows that saved score in the same colored box. A dash 
 
 The picture on the left of each name is that asset's logo. The same logo appears at the top of the Interactive Chart and Market sentiment sections. Crypto logos come from CoinGecko. Stock logos come from Finnhub. A letter shows when a logo is not available. The address is saved once and reused for every account.
 
-Beside the sentiment score you can press thumbs up if you agree, or thumbs down if you do not. Press the same thumb again to clear your take. Those buttons sit in an outlined box. After you disagree, scores appear in that same box, under the buttons: 0, 20, 40, 60, 80 and 100. The number you pick also fills the type box, and you can type any number from 0 to 100. It saves on its own when you click a score, press Enter, or leave the box. The thumbs and that same colored average sit at the bottom of Your take, and again under **Crowd** on each table row. The box is the average of the personal scores, in the same style as the Sentiment column. It updates when a score is clicked or typed. Hover the down thumb for the spread, which is how far those scores typically sit from the average. One score has no spread yet. A dash means nobody has given a personal score. Under the thumbs you can post one comment of up to 160 characters. A row of faces under the box adds an emoticon. A speech balloon appears beside the thumbs, and in the **Comments** column, once any comment exists. Click it to slide in the **Social signals stream** from the right. That stream lists comments newest first, with each person's picture, name, and the time, and the sentiment they were answering. Narrow it with All, Positive, Negative, or Mixed, or by asset or person. Close it with Close, the shaded area, or Escape. A refresh of that sentiment clears every thumb and every personal score, because they belonged to the old score. A comment stays for 12 hours from when it was posted, and the stream keeps the sentiment it was answering even after a newer score arrives.
+Beside the sentiment score you can press thumbs up if you agree, or thumbs down if you do not. Press the same thumb again to clear your take. Those buttons sit in an outlined box. After you disagree, scores appear in that same box, under the buttons: 0, 20, 40, 60, 80 and 100. The number you pick also fills the type box, and you can type any number from 0 to 100. It saves on its own when you click a score, press Enter, or leave the box. The thumbs and that same colored average sit at the bottom of Your take, and again under **Crowd** on each table row. The box is the average of the personal scores, in the same style as the Sentiment column. It updates when a score is clicked or typed. Hover the down thumb for the spread, which is how far those scores typically sit from the average. One score has no spread yet. A dash means nobody has given a personal score. Under the thumbs you can post one comment of up to 160 characters. A row of faces under the box adds an emoticon. A speech balloon appears beside the thumbs, and in the **Comments** column, once any comment exists. Click it to slide in the **Social signals stream** from the right. That stream lists comments newest first, with each person's picture, name, and the time, and the sentiment they were answering. Narrow it with All, Positive, Negative, or Mixed. Under Asset, All assets is every comment, and My watchlists is only the crypto and equity tables. You can also pick one asset or one person. Close it with Close, the shaded area, or Escape. A refresh of that sentiment clears every thumb and every personal score, because they belonged to the old score. A comment stays for 12 hours from when it was posted, and the stream keeps the sentiment it was answering even after a newer score arrives.
 
 Click a sentiment score in the table to highlight that asset and jump to its headlines. **↑ Top** scrolls back to the top of the page. It sits at the top right of the Interactive Chart section, and at the top right of Market sentiment.
 
@@ -1697,6 +1712,7 @@ def _share_market_rows(crypto_watchlist, stock_watchlist, crypto_results, stock_
     market_keys = [asset_market_key(kind, asset_id) for kind, asset_id in pairs]
     crowd = sentiment_crowd(supabase, market_keys)
     comments = sentiment_comment_lists(supabase, market_keys)
+    feed = sentiment_comment_lists(supabase, market_keys, every=True)
     stream_names = {}
     for kind, watchlist in (("Crypto", crypto_watchlist), ("Stock", stock_watchlist)):
         for asset_id, label in watchlist.items():
@@ -1708,7 +1724,7 @@ def _share_market_rows(crypto_watchlist, stock_watchlist, crypto_results, stock_
                     shown = f"{shown} ({ticker})" if shown else ticker
             stream_names[market_key] = shown or str(asset_id)
     st.session_state["social_stream"] = json.dumps(
-        social_stream_items(comments, shared, stream_names, logos),
+        social_stream_items(feed, shared, stream_names, logos, market_keys),
         ensure_ascii=False,
     )
     for kind, results, watchlist in (

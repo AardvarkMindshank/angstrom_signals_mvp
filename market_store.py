@@ -141,17 +141,13 @@ def _comment_time(value) -> str:
     return str(value or "")
 
 
-def sentiment_comment_lists(supabase, keys: list[str]) -> dict[str, list]:
-    """Comments from the last 12 hours, newest first. Empty when the function is missing."""
-    wanted = [key for key in keys if key]
-    if not wanted:
-        return {}
-    drop_expired_sentiment_comments(supabase)
+def _comment_groups(supabase, keys: list[str]) -> dict[str, list] | None:
+    """Comments for these assets. An empty key list asks for every asset. None when the call fails."""
     try:
-        response = supabase.rpc("sentiment_comments", {"asset_keys": wanted}).execute()
+        response = supabase.rpc("sentiment_comments", {"asset_keys": keys}).execute()
     except Exception as exc:
         _warn(exc)
-        return {}
+        return None
     grouped: dict[str, list] = {}
     for row in response.data or []:
         key = str(row.get("asset_key") or "")
@@ -168,6 +164,20 @@ def sentiment_comment_lists(supabase, keys: list[str]) -> dict[str, list]:
             "summary": _short_summary(row.get("responded_summary")),
         })
     return grouped
+
+
+def sentiment_comment_lists(supabase, keys: list[str], every: bool = False) -> dict[str, list]:
+    """Comments from the last 12 hours, newest first. Empty when the function is missing."""
+    wanted = [key for key in keys if key]
+    drop_expired_sentiment_comments(supabase)
+    if every:
+        grouped = _comment_groups(supabase, [])
+        if grouped:
+            return grouped
+        # An older database treats an empty list as no assets, so fall back to the watchlist.
+    if not wanted:
+        return {}
+    return _comment_groups(supabase, wanted) or {}
 
 
 def with_emoticon(text, face: str, limit: int = COMMENT_LIMIT) -> str:
@@ -270,9 +280,10 @@ def _short_summary(text, limit: int = 220) -> str:
     return (cut or cleaned[:limit]).rstrip(".,;:") + "…"
 
 
-def social_stream_items(comments_by_key, shared, names, logos=None) -> list[dict]:
+def social_stream_items(comments_by_key, shared, names, logos=None, watchlist_keys=None) -> list[dict]:
     """Comments for the slide-in stream, newest first, with the sentiment they answered."""
     items = []
+    on_watchlist = {str(key) for key in (watchlist_keys or []) if key}
     for key, notes in (comments_by_key or {}).items():
         report, _stored_at = sentiment_from_row((shared or {}).get(key))
         current_score = _optional_number((report or {}).get("score")) if report else None
@@ -292,6 +303,7 @@ def social_stream_items(comments_by_key, shared, names, logos=None) -> list[dict
             items.append({
                 "key": str(key),
                 "asset": asset,
+                "watchlist": str(key) in on_watchlist,
                 "logo": logo,
                 "side": _sentiment_side(score),
                 "score": None if score is None else int(round(score)),
