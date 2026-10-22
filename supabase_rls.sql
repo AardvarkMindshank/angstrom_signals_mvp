@@ -106,8 +106,12 @@ create table if not exists public.asset_market (
     closes_updated_at timestamptz,
     sentiment_score numeric,
     sentiment_report jsonb,
-    sentiment_updated_at timestamptz
+    sentiment_updated_at timestamptz,
+    logo_url text
 );
+
+alter table public.asset_market
+    add column if not exists logo_url text;
 
 alter table public.asset_market enable row level security;
 

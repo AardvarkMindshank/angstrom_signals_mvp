@@ -216,19 +216,23 @@ def _rerun_fragment() -> None:
 try:
     from alerts import evaluate_alerts
     from data_fetchers import (
+        crypto_logo_urls,
         crypto_ticker,
         fetch_crypto_data,
         fetch_stock_data,
         find_crypto,
+        stock_logo_url,
         period_for_days,
         resolve_crypto_id,
     )
     from market_store import (
+        asset_logo,
         asset_market_key,
         holder_counts,
         holders_mark,
         load_shared_market,
         recent_closes,
+        save_logos,
         save_price_paths,
         save_sentiment,
         sentiment_from_row,
@@ -860,6 +864,8 @@ The **Sentiment** column shows that saved score in the same colored box. A dash 
 
 **Watching**, beside the name, is how many accounts have that asset on a watchlist. The people marks are a count, not the names of those accounts.
 
+The picture on the left of each name is that asset's logo. Crypto logos come from CoinGecko. Stock logos come from Finnhub. A letter shows when a logo is not available. The address is saved once and reused for every account.
+
 Click a sentiment score in the table to highlight that asset and jump to its headlines. **↑ Top** scrolls back to the top of the page. It sits on the right of the chart title, and on the right of the sentiment Refresh button.
 
 The Refresh button beside Market sentiment pulls fresh headlines and a new score, then starts a 12-hour timer. It also runs on its own when that timer reaches zero. The Refresh button beside Quick Snapshot still reloads prices and technical scores every 5 minutes. Pressing either button refreshes that section now and starts its timer again.
@@ -1117,6 +1123,7 @@ def _share_market_rows(crypto_watchlist, stock_watchlist, crypto_results, stock_
     pairs += [("Stock", asset_id) for asset_id in stock_watchlist]
     shared = load_shared_market(supabase, [asset_market_key(kind, asset_id) for kind, asset_id in pairs])
     counts = holder_counts(supabase)
+    logos = _asset_logos(crypto_watchlist, stock_watchlist, shared)
     for kind, results, watchlist in (
         ("Crypto", crypto_results, crypto_watchlist),
         ("Stock", stock_results, stock_watchlist),
@@ -1124,6 +1131,7 @@ def _share_market_rows(crypto_watchlist, stock_watchlist, crypto_results, stock_
         for row in results:
             asset_id = row.get("key")
             row["holders"] = counts.get(asset_market_key(kind, asset_id), 0)
+            row["logo_url"] = logos.get(asset_market_key(kind, asset_id)) or ""
             stored = shared.get(asset_market_key(kind, asset_id))
             if not row.get("closes") and stored and stored.get("closes"):
                 row["closes"] = stored.get("closes")
@@ -1132,6 +1140,42 @@ def _share_market_rows(crypto_watchlist, stock_watchlist, crypto_results, stock_
             if report and stored_at is not None and label:
                 ticker = crypto_ticker(asset_id) if kind == "Crypto" else asset_id
                 remember_sentiment(sentiment_query(kind, str(label), ticker), report, stored_at)
+
+
+def _stored_logo(row: dict | None) -> str:
+    url = (row or {}).get("logo_url")
+    return url.strip() if isinstance(url, str) and url.strip().startswith("https://") else ""
+
+
+def _asset_logos(crypto_watchlist, stock_watchlist, shared: dict) -> dict[str, str]:
+    """Reuse a saved logo. Ask CoinGecko or Finnhub only when an asset has none yet."""
+    logos = {}
+    missing_crypto = []
+    missing_stock = []
+    fresh = []
+    for kind, watchlist in (("Crypto", crypto_watchlist), ("Stock", stock_watchlist)):
+        for asset_id in watchlist:
+            key = asset_market_key(kind, asset_id)
+            saved = _stored_logo(shared.get(key))
+            if saved:
+                logos[key] = saved
+            elif kind == "Crypto":
+                missing_crypto.append(asset_id)
+            else:
+                missing_stock.append(asset_id)
+    for coin_id, url in crypto_logo_urls(missing_crypto).items():
+        key = asset_market_key("Crypto", coin_id)
+        logos[key] = url
+        fresh.append({"kind": "Crypto", "asset_id": coin_id, "logo_url": url})
+    for ticker in missing_stock:
+        url = stock_logo_url(ticker)
+        if not url:
+            continue
+        key = asset_market_key("Stock", ticker)
+        logos[key] = url
+        fresh.append({"kind": "Stock", "asset_id": ticker, "logo_url": url})
+    save_logos(supabase, fresh)
+    return logos
 
 
 @st.fragment
@@ -1250,16 +1294,18 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
 
     c1, c2, c3, c4 = st.columns(4)
 
-    def render_snapshot_card(title, name, score, pick):
+    def render_snapshot_card(title, name, score, pick, logo_url=None):
         color, bg, arrow, _bar = tone(score)
         score_str = f"{score:.1f}/100" if score is not None and not pd.isna(score) else "—"
         safe_title = html.escape(str(title))
         safe_name = html.escape(str(name))
+        logo = asset_logo(logo_url, name) if name and name != "—" else ""
         body = (
             "<div style='background: white; padding: 12px 16px; border-radius: 8px; border: 1px solid #e5e7eb;'>"
             f"<div style='font-size: 0.8rem; color: #6b7280; margin-bottom: 4px;'>{safe_title}</div>"
-            f"<div style='font-size: 1.1rem; font-weight: 600; color: #111827; margin-bottom: 8px; "
-            f"white-space: nowrap; overflow: hidden; text-overflow: ellipsis;'>{safe_name}</div>"
+            "<div style='display:flex;align-items:center;gap:8px;font-size:1.1rem;font-weight:600;"
+            "color:#111827;margin-bottom:8px;white-space:nowrap;overflow:hidden;'>"
+            f"{logo}<span style='overflow:hidden;text-overflow:ellipsis;'>{safe_name}</span></div>"
             f"<div style='display: inline-flex; align-items: center; gap: 4px; background: {bg}; "
             f"color: {color}; padding: 2px 8px; border-radius: 4px; font-size: 0.85rem; font-weight: 600;'>"
             f"{arrow} {score_str}</div></div>"
@@ -1278,14 +1324,16 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
         pick = None
         name = "—"
         score = None
+        logo_url = None
         if row and row.get("key"):
             name = row["symbol"]
             score = row.get("score")
             pick = f"{kind}|{row['key']}"
+            logo_url = row.get("logo_url")
         with column:
             picked = _score_table(
                 key=widget_key,
-                data=render_snapshot_card(title, name, score, pick),
+                data=render_snapshot_card(title, name, score, pick, logo_url),
                 on_picked_change=lambda: None,
             ).picked
             if picked:
@@ -1351,7 +1399,9 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             )
             rows_html += (
                 f"<tr style='border-bottom:1px solid #f0f0f0;{row_style}'>"
-                f"<td style='padding:10px;white-space:nowrap;'>{name_button}</td>"
+                "<td style='padding:10px;white-space:nowrap;'>"
+                "<span style='display:inline-flex;align-items:center;gap:8px;'>"
+                f"{asset_logo(row.get('logo_url'), row.get('symbol'))}{name_button}</span></td>"
                 f"<td style='padding:8px 10px;white-space:nowrap;'>{holders_mark(row.get('holders'))}</td>"
                 f"<td style='padding:10px;min-width:130px;'>{render_score_bar(row['score'])}</td>"
                 f"{cell(row.get('label') or '—')}{cell(price_str)}{cell(rsi_str)}"

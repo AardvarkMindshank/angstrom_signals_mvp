@@ -77,6 +77,15 @@ xai_api_key = "YOUR_XAI_API_KEY"
 
 Put the same block in the Streamlit Cloud app secrets. The result is cached for 12 hours per asset. Without the key, the headlines still show and the score waits.
 
+Asset logos sit to the left of each name. Crypto logos come from CoinGecko. Stock logos come from Finnhub's company profile. Add a free key from [Finnhub](https://finnhub.io) to the same secrets file:
+
+```toml
+[finnhub]
+api_key = "YOUR_FINNHUB_API_KEY"
+```
+
+The logo address is stored once per asset. Run `supabase_rls.sql` again so `asset_market` has a `logo_url` column. A letter shows when a logo is missing.
+
 ## Data notes
 
 Crypto ids are CoinGecko ids (`bitcoin`, `polkadot`, `dogecoin`). The app maps those to Yahoo tickers. If Yahoo has no history, it falls back to CoinGecko candles, which do not include volume, so the volume and OBV factors stay neutral for that asset.

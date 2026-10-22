@@ -8,6 +8,7 @@ Both functions return (dataframe, error_message). error_message is None on succe
 
 from __future__ import annotations
 
+import os
 import re
 
 import requests
@@ -360,6 +361,96 @@ def get_current_price_crypto(coin_id: str) -> float | None:
         return response.json().get(coin_id, {}).get("usd")
     except Exception:
         return None
+
+
+_LOGO_MISS: set[str] = set()
+
+
+def _https_logo(url) -> str:
+    if not isinstance(url, str):
+        return ""
+    cleaned = url.strip()
+    if not cleaned.startswith("https://") or len(cleaned) > 500:
+        return ""
+    if any(mark in cleaned for mark in (" ", '"', "'", "<", ">", "\\")):
+        return ""
+    return cleaned
+
+
+def finnhub_api_key() -> str:
+    """Finnhub key from the environment, or from the Streamlit secrets."""
+    key = (os.getenv("FINNHUB_API_KEY") or "").strip()
+    if key:
+        return key
+    try:
+        import streamlit as st
+        key = str(st.secrets["finnhub"]["api_key"]).strip()
+    except Exception:
+        return ""
+    if key:
+        os.environ["FINNHUB_API_KEY"] = key
+    return key
+
+
+def crypto_logo_urls(coin_ids) -> dict[str, str]:
+    """Small CoinGecko image for each coin. One request for the whole list."""
+    ids = []
+    for coin_id in coin_ids or []:
+        cleaned = str(coin_id or "").strip().lower()
+        if cleaned and cleaned not in ids:
+            ids.append(cleaned)
+    if not ids:
+        return {}
+    try:
+        response = requests.get(
+            "https://api.coingecko.com/api/v3/coins/markets",
+            params={
+                "vs_currency": "usd",
+                "ids": ",".join(ids),
+                "per_page": min(len(ids), 250),
+                "page": 1,
+                "sparkline": "false",
+            },
+            headers=_HEADERS,
+            timeout=15,
+        )
+    except Exception:
+        return {}
+    if response.status_code != 200:
+        return {}
+    found = {}
+    for item in response.json() or []:
+        if not isinstance(item, dict):
+            continue
+        url = _https_logo(item.get("image"))
+        coin_id = str(item.get("id") or "").strip().lower()
+        if coin_id and url:
+            found[coin_id] = url
+    return found
+
+
+def stock_logo_url(ticker: str) -> str:
+    """Logo address from Finnhub's company profile. Empty when Finnhub has none."""
+    symbol = str(ticker or "").strip().upper()
+    if not symbol or symbol in _LOGO_MISS:
+        return ""
+    key = finnhub_api_key()
+    if not key:
+        return ""
+    try:
+        response = requests.get(
+            "https://finnhub.io/api/v1/stock/profile2",
+            params={"symbol": symbol, "token": key},
+            timeout=10,
+        )
+    except Exception:
+        return ""
+    if response.status_code != 200:
+        return ""
+    logo = _https_logo((response.json() or {}).get("logo"))
+    if not logo:
+        _LOGO_MISS.add(symbol)
+    return logo
 
 
 def get_current_price_stock(ticker: str) -> float | None:

@@ -7,6 +7,7 @@ runs, and later accounts reuse it for 12 hours.
 
 from __future__ import annotations
 
+import html
 import json
 from datetime import datetime, timezone
 
@@ -171,6 +172,59 @@ def save_price_paths(supabase, rows: list[dict]) -> None:
         _warn(exc)
 
 
+def save_logos(supabase, rows: list[dict]) -> None:
+    """Store one logo address per asset. Leaves prices and sentiment in place."""
+    payload = {}
+    for row in rows:
+        url = str(row.get("logo_url") or "").strip()
+        if not url.startswith("https://"):
+            continue
+        kind = row.get("kind") or "Crypto"
+        asset_id = _canonical_id(kind, row.get("asset_id") or "")
+        if not asset_id:
+            continue
+        key = asset_market_key(kind, asset_id)
+        payload[key] = {
+            "asset_key": key,
+            "kind": kind,
+            "asset_id": asset_id,
+            "logo_url": url,
+        }
+    if not payload:
+        return
+    try:
+        supabase.table("asset_market").upsert(list(payload.values()), on_conflict="asset_key").execute()
+    except Exception as exc:
+        _warn(exc)
+
+
+def asset_logo(url, label: str) -> str:
+    """Round logo. A letter shows until the picture loads, and if it never does."""
+    letter = next((ch.upper() for ch in str(label or "") if ch.isalnum()), "•")
+    mark = (
+        "<span style='width:22px;height:22px;border-radius:999px;background:#eef2ff;"
+        "color:#3730a3;font-size:11px;font-weight:700;display:inline-flex;"
+        "align-items:center;justify-content:center;flex:none;overflow:hidden;'>"
+        f"{html.escape(letter)}</span>"
+    )
+    cleaned = str(url or "").strip() if isinstance(url, str) else ""
+    if (
+        not cleaned.startswith("https://")
+        or len(cleaned) > 500
+        or any(mark_char in cleaned for mark_char in (" ", '"', "'", "<", ">", "\\"))
+    ):
+        return mark
+    safe = html.escape(cleaned, quote=True)
+    return (
+        "<span style='position:relative;width:22px;height:22px;flex:none;display:inline-flex;'>"
+        f"{mark}"
+        f"<img src='{safe}' alt='' width='22' height='22' "
+        "style='position:absolute;inset:0;width:22px;height:22px;border-radius:999px;"
+        "object-fit:cover;background:#ffffff;' onerror='this.remove()'>"
+        "</span>"
+    )
+
+
 def save_sentiment(supabase, kind: str, asset_id: str, report: dict, stored_at: float) -> None:
     """Store one headline score so every account can show it."""
     if not isinstance(report, dict) or not report.get("ok"):
@@ -206,7 +260,7 @@ def load_shared_market(supabase, keys: list[str]) -> dict[str, dict]:
     try:
         response = (
             supabase.table("asset_market")
-            .select("asset_key, closes, sentiment_report, sentiment_updated_at")
+            .select("asset_key, closes, logo_url, sentiment_report, sentiment_updated_at")
             .in_("asset_key", wanted)
             .execute()
         )
