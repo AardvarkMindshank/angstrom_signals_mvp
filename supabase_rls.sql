@@ -945,3 +945,71 @@ $$;
 revoke all on function public.sentiment_replies() from public;
 revoke all on function public.sentiment_replies() from anon;
 grant execute on function public.sentiment_replies() to authenticated;
+
+drop policy if exists "delete own sentiment reply" on public.sentiment_replies;
+create policy "delete own sentiment reply" on public.sentiment_replies
+    for delete
+    to authenticated
+    using (auth.uid() = user_id);
+
+grant delete on public.sentiment_replies to authenticated;
+
+-- Deletes one of your notes. A top-level note takes its replies with it.
+-- Runs as the owner so another person's reply can be removed with your comment.
+create or replace function public.delete_own_chat_message(target_id bigint)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    owner uuid;
+begin
+    select user_id into owner
+    from public.chat_messages
+    where id = target_id;
+    if owner is null or owner <> auth.uid() then
+        return;
+    end if;
+    delete from public.chat_messages where parent_id = target_id;
+    delete from public.chat_messages where id = target_id;
+end;
+$$;
+
+revoke all on function public.delete_own_chat_message(bigint) from public;
+revoke all on function public.delete_own_chat_message(bigint) from anon;
+grant execute on function public.delete_own_chat_message(bigint) to authenticated;
+
+create or replace function public.delete_own_signal_message(target_id bigint, target_kind text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    owner uuid;
+begin
+    if target_kind = 'reply' then
+        select user_id into owner
+        from public.sentiment_replies
+        where id = target_id;
+        if owner is null or owner <> auth.uid() then
+            return;
+        end if;
+        delete from public.sentiment_replies where id = target_id;
+        return;
+    end if;
+    select user_id into owner
+    from public.sentiment_comments
+    where id = target_id;
+    if owner is null or owner <> auth.uid() then
+        return;
+    end if;
+    delete from public.sentiment_replies where comment_id = target_id;
+    delete from public.sentiment_comments where id = target_id;
+end;
+$$;
+
+revoke all on function public.delete_own_signal_message(bigint, text) from public;
+revoke all on function public.delete_own_signal_message(bigint, text) from anon;
+grant execute on function public.delete_own_signal_message(bigint, text) to authenticated;

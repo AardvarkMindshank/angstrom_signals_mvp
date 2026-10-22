@@ -187,14 +187,14 @@ export default function(component) {
       open: false, side: "", asset: savedAsset || "", person: ""
     };
     let style = document.getElementById("social-stream-style");
-    if (style && style.dataset.layout !== "counts") {
+    if (style && style.dataset.layout !== "delete") {
       style.remove();
       style = null;
     }
     if (!style) {
       style = document.createElement("style");
       style.id = "social-stream-style";
-      style.dataset.layout = "counts";
+      style.dataset.layout = "delete";
       style.textContent = [
         "#social-stream-root{position:fixed;inset:0;z-index:10000000;pointer-events:none;}",
         "#social-stream-root.is-open{pointer-events:auto;}",
@@ -244,6 +244,7 @@ export default function(component) {
         "#social-stream-root .chat-actions button.thumb-down{color:#b91c1c;}",
         "#social-stream-root .chat-actions button.thumb-up.is-on{background:#dcfce7;border-color:#15803d;color:#15803d;}",
         "#social-stream-root .chat-actions button.thumb-down.is-on{background:#fee2e2;border-color:#b91c1c;color:#b91c1c;}",
+        "#social-stream-root .chat-actions button.delete-note{color:#b91c1c;}",
         "#social-stream-root .chat-notice{color:#b45309;font-size:.8rem;line-height:1.35;margin-bottom:6px;}",
         "#social-stream-root .card{padding:14px 0;border-top:1px solid #e5e7eb;}",
         "#social-stream-root .person{display:flex;gap:10px;align-items:center;}",
@@ -625,6 +626,24 @@ export default function(component) {
     reportChat({ action: "post", text: text, parent: parent });
   }
 
+  function dropMessage(list, messageId) {
+    return (list || []).filter((item) => item.id !== messageId).map((item) => {
+      item.replies = (item.replies || []).filter((reply) => reply.id !== messageId);
+      return item;
+    });
+  }
+
+  function deleteNoteButton(prompt, onDelete) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "delete-note";
+    button.textContent = "Delete";
+    button.addEventListener("click", () => {
+      if (window.confirm(prompt)) onDelete();
+    });
+    return button;
+  }
+
   function thumbButton(direction, count, selected) {
     const button = document.createElement("button");
     button.type = "button";
@@ -697,6 +716,18 @@ export default function(component) {
         if (box) box.focus();
       });
       actions.appendChild(reply);
+    }
+    if (item.mine && !item.pending && Number(item.id) > 0) {
+      const top = item.id === rootId;
+      actions.appendChild(deleteNoteButton(
+        top ? "Delete this comment and its replies?" : "Delete this reply?",
+        () => {
+          window.socialChat = dropMessage(window.socialChat, item.id);
+          const panel = document.getElementById("social-stream-root");
+          if (panel) renderChat(panel);
+          reportChat({ action: "delete", message: item.id });
+        }
+      ));
     }
     card.appendChild(actions);
     (item.replies || []).forEach((reply) => card.appendChild(chatCard(reply, rootId)));
@@ -908,6 +939,16 @@ export default function(component) {
         if (box) box.focus();
       });
       actions.appendChild(reply);
+    }
+    if (item.mine && !item.pending && Number(item.id) > 0) {
+      actions.appendChild(deleteNoteButton(
+        kind === "reply" ? "Delete this reply?" : "Delete this comment and its replies?",
+        () => {
+          window.socialStreamItems = dropMessage(window.socialStreamItems, item.id);
+          if (window.renderSocialStream) window.renderSocialStream();
+          reportSignal({ action: "delete", message: item.id, kind: kind });
+        }
+      ));
     }
     return actions;
   }
@@ -1134,6 +1175,8 @@ try:
         crowd_mark,
         holder_counts,
         holders_mark,
+        delete_chat_message,
+        delete_signal_message,
         load_chat,
         load_market_moods,
         market_mood_crowd,
@@ -1837,7 +1880,7 @@ The **Sentiment** column shows that saved score in the same colored box. A dash 
 
 The picture on the left of each name is that asset's logo. The same logo appears at the top of the Interactive Chart and Market sentiment sections. Crypto logos come from CoinGecko. Stock logos come from Finnhub. A letter shows when a logo is not available. The address is saved once and reused for every account.
 
-Beside the sentiment score you can press thumbs up if you agree, or thumbs down if you do not. Press the same thumb again to clear your take. Those buttons sit in an outlined box. After you disagree, scores appear in that same box, under the buttons: 0, 20, 40, 60, 80 and 100. The number you pick also fills the type box, and you can type any number from 0 to 100. It saves on its own when you click a score, press Enter, or leave the box. The thumbs and that same colored average sit at the bottom of Your take, and again under **Crowd** on each table row. The box is the average of the personal scores, in the same style as the Sentiment column. It updates when a score is clicked or typed. Hover the down thumb for the spread, which is how far those scores typically sit from the average. One score has no spread yet. A dash means nobody has given a personal score. Under the thumbs you can post one comment of up to 160 characters. A row under the box adds an emoticon, including a rocket. A speech balloon appears beside the thumbs, and in the **Comments** column, once any comment exists. Click it, or the arrow on the right edge of the page, to slide in the **Social signals stream**. That stream lists comments newest first, with each person's picture, name, and the time, and the sentiment they were answering. Narrow it with All, Positive, Negative, or Mixed. Under Asset, All assets is every comment, and My watchlists is only the crypto and equity tables on your account. My Crypto Watchlist and My Equities Watchlist each show one of those lists. Crypto market and Stock market sit above the individual assets. That choice of All assets or a watchlist is saved for you. You can also pick one asset or one person. On each note you can reply, or mark any note up or down, including one you posted. A reply stays with that note for the same 12 hours. The lower half of that panel is a general chat. Drag the line between the two halves to give either one more room. Post a comment at the bottom, with the same emoticons. Reply to a comment, or mark someone else's comment up or down. These notes are not tied to an asset, and they stay in the room. Close it with Close, the shaded area, or Escape. A refresh of that sentiment clears every thumb and every personal score, because they belonged to the old score. A comment stays for 12 hours from when it was posted, and the stream keeps the sentiment it was answering even after a newer score arrives.
+Beside the sentiment score you can press thumbs up if you agree, or thumbs down if you do not. Press the same thumb again to clear your take. Those buttons sit in an outlined box. After you disagree, scores appear in that same box, under the buttons: 0, 20, 40, 60, 80 and 100. The number you pick also fills the type box, and you can type any number from 0 to 100. It saves on its own when you click a score, press Enter, or leave the box. The thumbs and that same colored average sit at the bottom of Your take, and again under **Crowd** on each table row. The box is the average of the personal scores, in the same style as the Sentiment column. It updates when a score is clicked or typed. Hover the down thumb for the spread, which is how far those scores typically sit from the average. One score has no spread yet. A dash means nobody has given a personal score. Under the thumbs you can post one comment of up to 160 characters. A row under the box adds an emoticon, including a rocket. A speech balloon appears beside the thumbs, and in the **Comments** column, once any comment exists. Click it, or the arrow on the right edge of the page, to slide in the **Social signals stream**. That stream lists comments newest first, with each person's picture, name, and the time, and the sentiment they were answering. Narrow it with All, Positive, Negative, or Mixed. Under Asset, All assets is every comment, and My watchlists is only the crypto and equity tables on your account. My Crypto Watchlist and My Equities Watchlist each show one of those lists. Crypto market and Stock market sit above the individual assets. That choice of All assets or a watchlist is saved for you. You can also pick one asset or one person. On each note you can reply, or mark any note up or down, including one you posted. A reply stays with that note for the same 12 hours. Delete removes a note you posted, and deleting a comment also removes the replies under it. The lower half of that panel is a general chat. Drag the line between the two halves to give either one more room. Post a comment at the bottom, with the same emoticons. Reply to a comment, or mark someone else's comment up or down. These notes are not tied to an asset, and they stay in the room. Close it with Close, the shaded area, or Escape. A refresh of that sentiment clears every thumb and every personal score, because they belonged to the old score. A comment stays for 12 hours from when it was posted, and the stream keeps the sentiment it was answering even after a newer score arrives.
 
 Click a sentiment score in the table to highlight that asset and jump to its headlines. **↑ Top** scrolls back to the top of the page. It sits at the top right of the Interactive Chart section, and at the top right of Market sentiment.
 
@@ -2259,7 +2302,7 @@ def _chat_action(raw):
         data = json.loads(raw) if isinstance(raw, str) else raw
     except (TypeError, json.JSONDecodeError):
         return None
-    if not isinstance(data, dict) or data.get("action") not in ("post", "vote"):
+    if not isinstance(data, dict) or data.get("action") not in ("post", "vote", "delete"):
         return None
     try:
         token = int(data.get("n") or 0)
@@ -2277,6 +2320,9 @@ def _apply_chat_action(action) -> str:
             parent = int(action.get("parent") or 0)
             post_chat(supabase, user_id, action.get("text") or "", parent or None)
             return ""
+        if action.get("action") == "delete":
+            delete_chat_message(supabase, user_id, int(action.get("message") or 0))
+            return ""
         message_id = int(action.get("message") or 0)
         vote = int(action.get("vote") or 0)
         set_chat_vote(supabase, user_id, message_id, vote)
@@ -2290,6 +2336,14 @@ def _apply_signal_action(action) -> str:
     try:
         if action.get("action") == "post":
             post_signal_reply(supabase, user_id, int(action.get("parent") or 0), action.get("text") or "")
+            return ""
+        if action.get("action") == "delete":
+            delete_signal_message(
+                supabase,
+                user_id,
+                int(action.get("message") or 0),
+                "reply" if action.get("kind") == "reply" else "comment",
+            )
             return ""
         set_signal_vote(
             supabase,
@@ -3285,8 +3339,12 @@ def _sentiment_thumbs(
             ),
         )
         box_key = f"sentiment_comment_box_{key}"
+        posted_key = f"{box_key}_posted"
         if box_key not in st.session_state:
             st.session_state[box_key] = mine_text
+        elif st.session_state.get(posted_key) == st.session_state.get(box_key) and st.session_state.get(box_key) != mine_text:
+            st.session_state[box_key] = mine_text
+        st.session_state[posted_key] = mine_text
         pending_face = st.session_state.pop(f"{box_key}_face", None)
         if pending_face:
             st.session_state[box_key] = with_emoticon(st.session_state.get(box_key), pending_face)

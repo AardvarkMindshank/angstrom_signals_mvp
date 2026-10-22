@@ -435,6 +435,14 @@ def post_chat(supabase, user_id, body: str, parent_id: int | None = None) -> Non
     supabase.table("chat_messages").insert(payload).execute()
 
 
+def delete_chat_message(supabase, user_id, message_id: int) -> None:
+    """Delete one of your chat notes. A top-level note takes its replies with it."""
+    del user_id
+    if not message_id:
+        return
+    supabase.rpc("delete_own_chat_message", {"target_id": int(message_id)}).execute()
+
+
 def set_chat_vote(supabase, user_id, message_id: int, vote) -> None:
     """Thumb a chat comment, including one you posted. The same thumb again clears it."""
     if not message_id:
@@ -519,6 +527,17 @@ def post_signal_reply(supabase, user_id, comment_id: int, body: str) -> None:
         raise ValueError("That comment is no longer here.")
     supabase.table("sentiment_replies").insert(
         {"user_id": str(user_id), "comment_id": int(comment_id), "body": text}
+    ).execute()
+
+
+def delete_signal_message(supabase, user_id, message_id: int, kind: str) -> None:
+    """Delete one of your signal notes. A comment takes its replies with it."""
+    del user_id
+    if not message_id:
+        return
+    supabase.rpc(
+        "delete_own_signal_message",
+        {"target_id": int(message_id), "target_kind": "reply" if kind == "reply" else "comment"},
     ).execute()
 
 
