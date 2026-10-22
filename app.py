@@ -275,7 +275,7 @@ export default function(component) {
         "<header class='head'><div>",
         "<div class='kicker'>Social signals</div>",
         "<h2>Social signals stream</h2>",
-        "<p class='hint'>Newest first. Each note shows the sentiment it was answering, and stays for 12 hours. All assets, My watchlists, or one of your watchlists is saved on your account.</p>",
+        "<p class='hint'>Newest first. Each note shows the sentiment it was answering, and stays for 12 hours. Reply, or mark someone else's note up or down. All assets, My watchlists, or one of your watchlists is saved on your account.</p>",
         "</div><button type='button' class='close'>Close</button></header>",
         "<div class='filters'><div class='chips'>",
         "<button type='button' data-side=''>All</button>",
@@ -518,6 +518,19 @@ export default function(component) {
     }));
   }
 
+  function reportSignal(action) {
+    if (!window.socialStreamReport) return;
+    window.socialStreamReport("signal", JSON.stringify({
+      n: Date.now(),
+      action: action.action,
+      text: action.text || "",
+      parent: action.parent || 0,
+      message: action.message || 0,
+      vote: action.vote || 0,
+      kind: action.kind || "comment"
+    }));
+  }
+
   function updateChatCount(panel) {
     const box = panel.querySelector(".chat-box");
     const chars = panel.querySelector(".chars");
@@ -548,6 +561,8 @@ export default function(component) {
     if (!row || !label) return;
     row.hidden = !reply;
     label.textContent = reply ? "Replying to " + reply.name : "";
+    const composer = panel.querySelector(".composer");
+    if (composer) composer.hidden = window.socialChatReady === false && !(reply && reply.kind === "signal");
   }
 
   function submitChat(panel) {
@@ -557,6 +572,27 @@ export default function(component) {
     if (!text) return;
     const reply = (window.socialStreamState || {}).reply;
     const parent = reply && reply.id ? reply.id : 0;
+    if (reply && reply.kind === "signal") {
+      const note = {
+        id: "local-" + Date.now(),
+        name: (window.socialMe || {}).name || "You",
+        avatar: (window.socialMe || {}).avatar || "",
+        text: text,
+        at: new Date().toISOString(),
+        mine: true,
+        up: 0,
+        down: 0,
+        vote: 0,
+        pending: true
+      };
+      const host = (window.socialStreamItems || []).find((item) => item.id === parent);
+      if (host) host.replies = (host.replies || []).concat([note]);
+      box.value = "";
+      window.socialStreamState.reply = null;
+      if (window.renderSocialStream) window.renderSocialStream();
+      reportSignal({ action: "post", text: text, parent: parent });
+      return;
+    }
     const note = {
       id: "local-" + Date.now(),
       name: (window.socialMe || {}).name || "You",
@@ -815,7 +851,82 @@ export default function(component) {
     }
     card.appendChild(person);
     card.appendChild(saying);
+    if (Number(item.id) > 0 || (item.replies || []).length) {
+      card.appendChild(signalActions(item, item.id, "comment"));
+      (item.replies || []).forEach((reply) => card.appendChild(signalReply(reply, item.id)));
+    }
     card.appendChild(context);
+    return card;
+  }
+
+  function signalVoteButton(item, direction, kind) {
+    const button = document.createElement("button");
+    button.type = "button";
+    const count = direction === 1 ? Number(item.up) || 0 : Number(item.down) || 0;
+    button.textContent = (direction === 1 ? "👍 " : "👎 ") + count;
+    button.classList.toggle("is-on", item.vote === direction);
+    button.addEventListener("click", () => {
+      const next = item.vote === direction ? 0 : direction;
+      if (item.vote === 1) item.up = Math.max(0, (Number(item.up) || 0) - 1);
+      if (item.vote === -1) item.down = Math.max(0, (Number(item.down) || 0) - 1);
+      item.vote = next;
+      if (next === 1) item.up = (Number(item.up) || 0) + 1;
+      if (next === -1) item.down = (Number(item.down) || 0) + 1;
+      if (window.renderSocialStream) window.renderSocialStream();
+      reportSignal({ action: "vote", message: item.id, vote: next, kind: kind });
+    });
+    return button;
+  }
+
+  function signalActions(item, rootId, kind) {
+    const actions = document.createElement("div");
+    actions.className = "chat-actions";
+    if (!item.mine && !item.pending && Number(item.id) > 0) {
+      actions.appendChild(signalVoteButton(item, 1, kind));
+      actions.appendChild(signalVoteButton(item, -1, kind));
+    }
+    if (!item.pending && Number(rootId) > 0) {
+      const reply = document.createElement("button");
+      reply.type = "button";
+      reply.textContent = "Reply";
+      reply.addEventListener("click", () => {
+        window.socialStreamState.reply = { id: rootId, name: String(item.name || "Member"), kind: "signal" };
+        const panel = document.getElementById("social-stream-root");
+        paintReply(panel);
+        const box = panel && panel.querySelector(".chat-box");
+        if (box) box.focus();
+      });
+      actions.appendChild(reply);
+    }
+    return actions;
+  }
+
+  function signalReply(item, rootId) {
+    const card = document.createElement("article");
+    card.className = "reply";
+    const person = document.createElement("div");
+    person.className = "person";
+    const name = String(item.name || "Member");
+    person.appendChild(streamFace(name, item.avatar));
+    const identity = document.createElement("div");
+    const who = document.createElement("div");
+    who.className = "who";
+    who.textContent = name;
+    const when = document.createElement("div");
+    when.className = "when";
+    const parsedAt = new Date(item.at);
+    when.textContent = Number.isNaN(parsedAt.getTime()) ? "" : parsedAt.toLocaleString(undefined, {
+      month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit"
+    });
+    identity.appendChild(who);
+    identity.appendChild(when);
+    person.appendChild(identity);
+    const saying = document.createElement("p");
+    saying.className = "saying";
+    saying.textContent = String(item.text || "");
+    card.appendChild(person);
+    card.appendChild(saying);
+    card.appendChild(signalActions(item, rootId, "reply"));
     return card;
   }
 }
@@ -1020,12 +1131,15 @@ try:
         save_logos,
         save_market_mood,
         set_chat_vote,
+        set_signal_vote,
         set_market_mood_vote,
         post_chat,
         save_price_paths,
+        post_signal_reply,
         save_sentiment,
         sentiment_comment_lists,
         sentiment_crowd,
+        sentiment_replies,
         social_stream_items,
         set_sentiment_comment,
         set_sentiment_vote,
@@ -1712,7 +1826,7 @@ The **Sentiment** column shows that saved score in the same colored box. A dash 
 
 The picture on the left of each name is that asset's logo. The same logo appears at the top of the Interactive Chart and Market sentiment sections. Crypto logos come from CoinGecko. Stock logos come from Finnhub. A letter shows when a logo is not available. The address is saved once and reused for every account.
 
-Beside the sentiment score you can press thumbs up if you agree, or thumbs down if you do not. Press the same thumb again to clear your take. Those buttons sit in an outlined box. After you disagree, scores appear in that same box, under the buttons: 0, 20, 40, 60, 80 and 100. The number you pick also fills the type box, and you can type any number from 0 to 100. It saves on its own when you click a score, press Enter, or leave the box. The thumbs and that same colored average sit at the bottom of Your take, and again under **Crowd** on each table row. The box is the average of the personal scores, in the same style as the Sentiment column. It updates when a score is clicked or typed. Hover the down thumb for the spread, which is how far those scores typically sit from the average. One score has no spread yet. A dash means nobody has given a personal score. Under the thumbs you can post one comment of up to 160 characters. A row under the box adds an emoticon, including a rocket. A speech balloon appears beside the thumbs, and in the **Comments** column, once any comment exists. Click it, or the arrow on the right edge of the page, to slide in the **Social signals stream**. That stream lists comments newest first, with each person's picture, name, and the time, and the sentiment they were answering. Narrow it with All, Positive, Negative, or Mixed. Under Asset, All assets is every comment, and My watchlists is only the crypto and equity tables on your account. My Crypto Watchlist and My Equities Watchlist each show one of those lists. Crypto market and Stock market sit above the individual assets. That choice of All assets or a watchlist is saved for you. You can also pick one asset or one person. The lower half of that panel is a general chat. Drag the line between the two halves to give either one more room. Post a comment at the bottom, with the same emoticons. Reply to a comment, or mark someone else's comment up or down. These notes are not tied to an asset, and they stay in the room. Close it with Close, the shaded area, or Escape. A refresh of that sentiment clears every thumb and every personal score, because they belonged to the old score. A comment stays for 12 hours from when it was posted, and the stream keeps the sentiment it was answering even after a newer score arrives.
+Beside the sentiment score you can press thumbs up if you agree, or thumbs down if you do not. Press the same thumb again to clear your take. Those buttons sit in an outlined box. After you disagree, scores appear in that same box, under the buttons: 0, 20, 40, 60, 80 and 100. The number you pick also fills the type box, and you can type any number from 0 to 100. It saves on its own when you click a score, press Enter, or leave the box. The thumbs and that same colored average sit at the bottom of Your take, and again under **Crowd** on each table row. The box is the average of the personal scores, in the same style as the Sentiment column. It updates when a score is clicked or typed. Hover the down thumb for the spread, which is how far those scores typically sit from the average. One score has no spread yet. A dash means nobody has given a personal score. Under the thumbs you can post one comment of up to 160 characters. A row under the box adds an emoticon, including a rocket. A speech balloon appears beside the thumbs, and in the **Comments** column, once any comment exists. Click it, or the arrow on the right edge of the page, to slide in the **Social signals stream**. That stream lists comments newest first, with each person's picture, name, and the time, and the sentiment they were answering. Narrow it with All, Positive, Negative, or Mixed. Under Asset, All assets is every comment, and My watchlists is only the crypto and equity tables on your account. My Crypto Watchlist and My Equities Watchlist each show one of those lists. Crypto market and Stock market sit above the individual assets. That choice of All assets or a watchlist is saved for you. You can also pick one asset or one person. On each note you can reply, or mark someone else's note up or down. A reply stays with that note for the same 12 hours. The lower half of that panel is a general chat. Drag the line between the two halves to give either one more room. Post a comment at the bottom, with the same emoticons. Reply to a comment, or mark someone else's comment up or down. These notes are not tied to an asset, and they stay in the room. Close it with Close, the shaded area, or Escape. A refresh of that sentiment clears every thumb and every personal score, because they belonged to the old score. A comment stays for 12 hours from when it was posted, and the stream keeps the sentiment it was answering even after a newer score arrives.
 
 Click a sentiment score in the table to highlight that asset and jump to its headlines. **↑ Top** scrolls back to the top of the page. It sits at the top right of the Interactive Chart section, and at the top right of Market sentiment.
 
@@ -2160,6 +2274,24 @@ def _apply_chat_action(action) -> str:
         return "That could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again."
 
 
+def _apply_signal_action(action) -> str:
+    """Save a thumb or a reply on a social signals comment."""
+    try:
+        if action.get("action") == "post":
+            post_signal_reply(supabase, user_id, int(action.get("parent") or 0), action.get("text") or "")
+            return ""
+        set_signal_vote(
+            supabase,
+            user_id,
+            int(action.get("message") or 0),
+            int(action.get("vote") or 0),
+            "reply" if action.get("kind") == "reply" else "comment",
+        )
+        return ""
+    except Exception:
+        return "That could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again."
+
+
 def _share_market_rows(crypto_watchlist, stock_watchlist, crypto_results, stock_results):
     """Save this refresh's closes and reuse any headline score already stored."""
     priced = []
@@ -2195,6 +2327,7 @@ def _share_market_rows(crypto_watchlist, stock_watchlist, crypto_results, stock_
         social_stream_items(
             feed, shared, stream_names, logos, market_keys,
             {"crypto": crypto_keys, "stock": stock_keys},
+            sentiment_replies(supabase),
         ),
         ensure_ascii=False,
     )
@@ -2376,12 +2509,18 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             ),
             on_asset_change=lambda: None,
             on_chat_change=lambda: None,
+            on_signal_change=lambda: None,
         )
         chosen_scope = stream_state.asset
         chat_event = _chat_action(getattr(stream_state, "chat", None))
+        signal_event = _chat_action(getattr(stream_state, "signal", None))
         if chat_event and chat_event.get("n") != st.session_state.get("chat_done"):
             st.session_state["chat_done"] = chat_event.get("n")
             st.session_state["chat_notice"] = _apply_chat_action(chat_event)
+            _rerun_fragment()
+        if signal_event and signal_event.get("n") != st.session_state.get("signal_done"):
+            st.session_state["signal_done"] = signal_event.get("n")
+            st.session_state["chat_notice"] = _apply_signal_action(signal_event)
             _rerun_fragment()
         if chosen_scope in ("all", "watchlist", "crypto", "stock"):
             stored = prefs.setdefault("settings", {})

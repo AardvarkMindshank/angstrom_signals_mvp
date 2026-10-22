@@ -215,12 +215,26 @@ def _comment_groups(supabase, keys: list[str]) -> dict[str, list] | None:
         text = " ".join(str(row.get("body") or "").split())
         if not key or not text:
             continue
+        try:
+            note_id = int(row.get("id"))
+        except (TypeError, ValueError):
+            note_id = None
+        try:
+            vote = int(row.get("my_vote"))
+        except (TypeError, ValueError):
+            vote = 0
+        if vote not in (1, -1):
+            vote = 0
         grouped.setdefault(key, []).append({
+            "id": note_id,
             "name": " ".join(str(row.get("author_name") or "Member").split())[:40] or "Member",
             "avatar": _public_avatar(row.get("avatar_url")),
             "at": _comment_time(row.get("created_at")),
             "text": text[:COMMENT_LIMIT],
             "mine": bool(row.get("mine")),
+            "up": int(row.get("thumbs_up") or 0),
+            "down": int(row.get("thumbs_down") or 0),
+            "vote": vote,
             "score": _optional_number(row.get("responded_score")),
             "summary": _short_summary(row.get("responded_summary")),
         })
@@ -450,7 +464,91 @@ def set_chat_vote(supabase, user_id, message_id: int, vote) -> None:
     ).execute()
 
 
-def social_stream_items(comments_by_key, shared, names, logos=None, watchlist_keys=None, list_keys=None) -> list[dict]:
+def _vote_value(row) -> int:
+    try:
+        vote = int((row or {}).get("my_vote"))
+    except (TypeError, ValueError):
+        return 0
+    return vote if vote in (1, -1) else 0
+
+
+def sentiment_replies(supabase) -> dict[int, list]:
+    """Replies for signal comments that are still in the 12-hour window. Empty when not installed."""
+    try:
+        response = supabase.rpc("sentiment_replies").execute()
+    except Exception:
+        return {}
+    grouped: dict[int, list] = {}
+    for row in response.data or []:
+        text = " ".join(str(row.get("body") or "").split())
+        try:
+            reply_id = int(row.get("id"))
+            comment_id = int(row.get("comment_id"))
+        except (TypeError, ValueError):
+            continue
+        if not text:
+            continue
+        grouped.setdefault(comment_id, []).append({
+            "id": reply_id,
+            "name": " ".join(str(row.get("author_name") or "Member").split())[:40] or "Member",
+            "avatar": _public_avatar(row.get("avatar_url")),
+            "text": text[:COMMENT_LIMIT],
+            "at": _comment_time(row.get("created_at")),
+            "mine": bool(row.get("mine")),
+            "up": int(row.get("thumbs_up") or 0),
+            "down": int(row.get("thumbs_down") or 0),
+            "vote": _vote_value(row),
+        })
+    for notes in grouped.values():
+        notes.sort(key=lambda item: item["at"])
+    return grouped
+
+
+def post_signal_reply(supabase, user_id, comment_id: int, body: str) -> None:
+    """Reply to one signal comment. Blank does nothing."""
+    text = " ".join(str(body or "").split())[:COMMENT_LIMIT]
+    if not text or not comment_id:
+        return
+    found = (
+        supabase.table("sentiment_comments")
+        .select("id")
+        .eq("id", int(comment_id))
+        .limit(1)
+        .execute()
+    )
+    if not (found.data or []):
+        raise ValueError("That comment is no longer here.")
+    supabase.table("sentiment_replies").insert(
+        {"user_id": str(user_id), "comment_id": int(comment_id), "body": text}
+    ).execute()
+
+
+def set_signal_vote(supabase, user_id, message_id: int, vote, kind: str) -> None:
+    """Thumb a signal comment or a reply. The same thumb again clears it. Not on your own note."""
+    if not message_id:
+        return
+    if kind == "reply":
+        table = "sentiment_replies"
+        votes = "sentiment_reply_votes"
+        column = "reply_id"
+    else:
+        table = "sentiment_comments"
+        votes = "sentiment_comment_votes"
+        column = "comment_id"
+    found = supabase.table(table).select("user_id").eq("id", int(message_id)).limit(1).execute()
+    rows = found.data or []
+    if not rows or str(rows[0].get("user_id")) == str(user_id):
+        return
+    if vote not in (1, -1):
+        supabase.table(votes).delete().eq("user_id", str(user_id)).eq(column, int(message_id)).execute()
+        return
+    supabase.table(votes).upsert(
+        {"user_id": str(user_id), column: int(message_id), "vote": int(vote)},
+        on_conflict=f"user_id,{column}",
+    ).execute()
+
+
+def social_stream_items(comments_by_key, shared, names, logos=None, watchlist_keys=None, list_keys=None, replies=None) -> list[dict]:
     """Comments for the slide-in stream, newest first, with the sentiment they answered."""
     items = []
     on_watchlist = {str(key) for key in (watchlist_keys or []) if key}
@@ -475,7 +573,12 @@ def social_stream_items(comments_by_key, shared, names, logos=None, watchlist_ke
             if score is None:
                 score = current_score
                 summary = summary or current_summary
+            note_id = note.get("id")
+            thread = []
+            if note_id is not None:
+                thread = list((replies or {}).get(note_id) or [])
             items.append({
+                "id": note_id,
                 "key": str(key),
                 "asset": asset,
                 "watchlist": str(key) in on_watchlist,
@@ -489,6 +592,11 @@ def social_stream_items(comments_by_key, shared, names, logos=None, watchlist_ke
                 "avatar": _public_avatar((note or {}).get("avatar")),
                 "at": str((note or {}).get("at") or ""),
                 "text": text[:COMMENT_LIMIT],
+                "mine": bool((note or {}).get("mine")),
+                "up": int((note or {}).get("up") or 0),
+                "down": int((note or {}).get("down") or 0),
+                "vote": (note or {}).get("vote") if (note or {}).get("vote") in (1, -1) else 0,
+                "replies": thread,
             })
     items.sort(key=lambda item: item["at"], reverse=True)
     return items
