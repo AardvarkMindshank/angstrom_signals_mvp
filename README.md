@@ -70,6 +70,21 @@ The Watching column counts how many accounts have that asset on a watchlist. It 
 
 Each person can agree or disagree with the current headline sentiment. The buttons sit in an outlined box. Disagreeing opens a score under those buttons: 0, 20, 40, 60, 80, 100, or any number they type from 0 to 100. A picked score also fills the type box, and a typed number saves on its own. The thumbs and a colored box with the average of the personal scores appear at the bottom of Your take, and again under the Crowd heading in each table. That box matches the Sentiment column and updates when a score is clicked or typed. Hovering the down thumb shows the spread around that average. Refreshing the sentiment drops the old thumbs and scores, because they applied to the previous score. Run `supabase_rls.sql` again so `sentiment_votes` and `sentiment_crowd` exist.
 
+## Feedback
+
+The sidebar form takes an issue or an enhancement. Each note is stored in `feedback_notes` with the account, the email, the time, and status `submitted`. Run `supabase_rls.sql` again so that table exists.
+
+The same note is emailed through Resend. Add this block to the Streamlit secrets, using the Resend key and sender already used for alerts, and the inbox that should receive the notes:
+
+```toml
+[resend]
+api_key = "..."
+from_email = "Angstrom Signals <alerts@angstromsignals.com>"
+feedback_to = "you@example.com"
+```
+
+Do not commit that file. Until `feedback_to` and `api_key` are set, the note is still saved and the form says the email is not set up yet.
+
 Headlines come from Google News. Grok scores them. Add a key from the [xAI console](https://console.x.ai/) to `.streamlit/secrets.toml`:
 
 ```toml

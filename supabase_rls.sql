@@ -299,3 +299,32 @@ create policy "users update own avatar" on storage.objects
         bucket_id = 'avatars'
         and (storage.foldername(name))[1] = auth.uid()::text
     );
+
+-- Notes from signed-in accounts. The app always writes status submitted.
+-- A person can read their own notes. Status changes happen later in the table editor.
+create table if not exists public.feedback_notes (
+    id bigint generated always as identity primary key,
+    user_id uuid not null references auth.users (id) on delete cascade,
+    user_email text not null,
+    kind text not null check (kind in ('issue', 'enhancement')),
+    body text not null check (char_length(btrim(body)) between 1 and 4000),
+    status text not null default 'submitted',
+    created_at timestamptz not null default now()
+);
+
+alter table public.feedback_notes enable row level security;
+
+drop policy if exists "insert own feedback" on public.feedback_notes;
+create policy "insert own feedback" on public.feedback_notes
+    for insert
+    to authenticated
+    with check (auth.uid() = user_id and status = 'submitted');
+
+drop policy if exists "read own feedback" on public.feedback_notes;
+create policy "read own feedback" on public.feedback_notes
+    for select
+    to authenticated
+    using (auth.uid() = user_id);
+
+grant select, insert on public.feedback_notes to authenticated;
+grant usage, select on sequence public.feedback_notes_id_seq to authenticated;

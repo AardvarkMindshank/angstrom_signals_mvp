@@ -14,6 +14,7 @@ from email.utils import parsedate_to_datetime
 
 import pandas as pd
 import plotly.graph_objects as go
+import requests
 import streamlit as st
 from plotly.subplots import make_subplots
 from streamlit.errors import StreamlitInvalidLayoutContextError
@@ -283,6 +284,17 @@ def _secret(name: str):
         return st.secrets["supabase"][name]
     except Exception:
         return None
+
+
+def _optional_secret(*names: str) -> str:
+    """One secret value. Empty when that name is not set. The value is never shown."""
+    try:
+        value = st.secrets
+        for name in names:
+            value = value[name]
+        return str(value or "").strip()
+    except Exception:
+        return ""
 
 
 def get_supabase():
@@ -895,7 +907,7 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
     st.markdown("""
 **How to use it**
 
-1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest. Quick Snapshot, Crypto Scores, Equity Scores, Interactive Chart, Score Breakdown, and Market sentiment each sit in a section that starts open. Close a header to fold that section away. **Open all** and **Collapse all**, on the right of the page title, do that for every one of those sections.
+1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest. Quick Snapshot, Crypto Scores, Equity Scores, Interactive Chart, Score Breakdown, and Market sentiment each sit in a section that starts open. Close a header to fold that section away. **Open all** and **Collapse all**, on the right of the page title, do that for every one of those sections. **Feedback**, at the bottom of the sidebar, sends an issue or an idea. It is stored as submitted and emailed.
 2. Click a name in either table, a Quick Snapshot box, or an alert under Notifications. That asset stays highlighted, and the page moves down to the chart when the chart is off screen.
 3. Extra metrics add **7d %**, **Market Cap**, **ATR %**, and **Vol**. A separate checkbox adds **1d %** before the seven-day change and **30d %** after it. For **1d %** and **7d %**, green means the price rose and red means it fell. **30d %** uses the same colors as the **30-day trend**: green for a rise of about 2% or more, red for a fall of about 2% or more, and orange when the move stays inside about 2%. For stocks, one day is the previous trading session. **Market Cap** is the latest size of the asset, from CoinGecko for crypto and Yahoo for stocks. **ATR %** is volatility. **Vol** is volume versus its 20-day average.
 4. Alerts fire at 70 and 30 unless you move those sliders. One email goes to the address on your account when a technical score crosses a boundary. It is not sent again until the score leaves that boundary and crosses it later. Sentiment scores do not send alerts.
@@ -1146,6 +1158,102 @@ with st.sidebar.expander("⚙️ Settings", expanded=False):
         settings = new_settings
         prefs["settings"] = settings
         save_preferences_to_cloud({"settings": settings})
+
+
+def _feedback_mail_settings() -> tuple[str, str, str]:
+    """Resend key, sender, and the inbox that receives feedback. Empty pieces stay empty."""
+    import os
+
+    api_key = (os.getenv("RESEND_API_KEY") or "").strip() or _optional_secret("resend", "api_key")
+    sender = (os.getenv("RESEND_FROM") or "").strip() or _optional_secret("resend", "from_email")
+    inbox = (os.getenv("FEEDBACK_TO") or "").strip() or _optional_secret("resend", "feedback_to")
+    return api_key, sender or "Angstrom Signals <onboarding@resend.dev>", inbox
+
+
+def _email_feedback(kind: str, body: str, user_email: str, user_id: str) -> bool:
+    """Mail one saved note. False when Resend is not configured or the send fails."""
+    api_key, sender, inbox = _feedback_mail_settings()
+    if not api_key or not inbox:
+        return False
+    label = "Enhancement" if kind == "enhancement" else "Issue"
+    safe_body = "<br>".join(html.escape(body).splitlines()) or html.escape(body)
+    payload = {
+        "from": sender,
+        "to": [inbox],
+        "subject": f"Angstrom feedback: {label}",
+        "html": (
+            f"<p><strong>{label}</strong> from {html.escape(user_email or 'unknown account')}</p>"
+            f"<p>User {html.escape(user_id)} · status submitted</p>"
+            f"<p>{safe_body}</p>"
+        ),
+    }
+    if "@" in user_email:
+        payload["reply_to"] = user_email
+    try:
+        response = requests.post(
+            "https://api.resend.com/emails",
+            json=payload,
+            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+            timeout=15,
+        )
+        return response.status_code < 300
+    except Exception:
+        return False
+
+
+def _store_feedback(kind: str, body: str) -> str:
+    """Save one note as submitted and email it. The message says which part worked."""
+    text = body.strip()
+    if not text:
+        return "Write a few words first."
+    user = st.session_state.user
+    user_id = str(getattr(user, "id", "") or "")
+    user_email = str(getattr(user, "email", "") or "")
+    try:
+        supabase.table("feedback_notes").insert({
+            "user_id": user_id,
+            "user_email": user_email or "unknown",
+            "kind": kind,
+            "body": text[:4000],
+        }).execute()
+    except Exception:
+        return "That could not be saved. Run supabase_rls.sql in the Supabase SQL editor again."
+    if _email_feedback(kind, text[:4000], user_email, user_id):
+        return "Saved and emailed. Thank you."
+    return "Saved under your account. The email is not set up yet, so only the stored copy exists."
+
+
+if st.session_state.pop("feedback_clear", False):
+    st.session_state["feedback_body"] = ""
+
+with st.sidebar.expander("📝 Feedback", expanded=False):
+    st.caption("An issue or an idea. It is stored as submitted, with your account and the date, and emailed.")
+    feedback_kind = st.radio(
+        "Type",
+        ["Issue", "Enhancement"],
+        horizontal=True,
+        key="feedback_kind",
+    )
+    feedback_body = st.text_area(
+        "Details",
+        max_chars=4000,
+        height=120,
+        key="feedback_body",
+        placeholder="What happened, or what would you like?",
+    )
+    if st.button("Submit", key="feedback_submit", use_container_width=True):
+        st.session_state.feedback_notice = _store_feedback(
+            "enhancement" if feedback_kind == "Enhancement" else "issue",
+            feedback_body,
+        )
+        if st.session_state.feedback_notice.startswith("Saved"):
+            st.session_state.feedback_clear = True
+        st.rerun()
+    feedback_notice = st.session_state.pop("feedback_notice", "")
+    if feedback_notice.startswith("Saved"):
+        st.success(feedback_notice)
+    elif feedback_notice:
+        st.warning(feedback_notice)
 
 
 @st.cache_data(ttl=300)
