@@ -29,6 +29,86 @@ st.set_page_config(
 
 # A normal link starts a new Streamlit session and logs the user out.
 # This stays on the page and reports the clicked name back to Python.
+# Comment balloons open a separate browser window. They do not navigate this page.
+_COMMENT_BIND_JS = """
+  const openComments = (encoded, title) => {
+    if (!encoded) return;
+    const popup = window.open("", "angstrom-comments", "popup,width=440,height=640,resizable=yes,scrollbars=yes");
+    if (!popup) return;
+    let items = [];
+    try {
+      const bytes = Uint8Array.from(atob(encoded), (ch) => ch.charCodeAt(0));
+      const parsed = JSON.parse(new TextDecoder().decode(bytes));
+      items = Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+      items = [];
+    }
+    const doc = popup.document;
+    doc.open();
+    doc.write("<!DOCTYPE html><html><head><meta charset='utf-8'><title>Comments</title>");
+    doc.write("<style>html,body{margin:0;height:100%;}body{font-family:Segoe UI,sans-serif;color:#111827;background:#ffffff;overflow:auto;}");
+    doc.write("h1{margin:0;padding:16px 18px 10px;font-size:1.05rem;line-height:1.3;}");
+    doc.write("#list{padding:0 18px 24px;}");
+    doc.write(".note{display:flex;gap:10px;padding:12px 0;border-top:1px solid #e5e7eb;}");
+    doc.write(".face{width:36px;height:36px;border-radius:50%;object-fit:cover;background:#dbeafe;color:#1d4ed8;display:flex;align-items:center;justify-content:center;font-weight:700;flex:none;}");
+    doc.write(".who{font-weight:600;font-size:0.92rem;} .when{color:#6b7280;font-size:0.78rem;margin-top:2px;}");
+    doc.write(".text{margin-top:4px;font-size:0.92rem;line-height:1.4;white-space:pre-wrap;word-break:break-word;}");
+    doc.write("</style></head><body><h1></h1><div id='list'></div></body></html>");
+    doc.close();
+    const heading = doc.querySelector("h1");
+    if (heading) heading.textContent = title || "Comments";
+    const list = doc.getElementById("list");
+    items.forEach((item) => {
+      const name = String((item && item.name) || "Member");
+      const row = doc.createElement("div");
+      row.className = "note";
+      let face = doc.createElement(item && item.avatar ? "img" : "div");
+      face.className = "face";
+      if (item && item.avatar) {
+        face.alt = "";
+        face.src = String(item.avatar);
+        face.addEventListener("error", () => {
+          const fallback = doc.createElement("div");
+          fallback.className = "face";
+          fallback.textContent = (name.trim().charAt(0) || "?").toUpperCase();
+          face.replaceWith(fallback);
+        });
+      } else {
+        face.textContent = (name.trim().charAt(0) || "?").toUpperCase();
+      }
+      const body = doc.createElement("div");
+      const who = doc.createElement("div");
+      who.className = "who";
+      who.textContent = name;
+      const when = doc.createElement("div");
+      when.className = "when";
+      const parsedAt = new Date(item && item.at);
+      when.textContent = Number.isNaN(parsedAt.getTime()) ? "" : parsedAt.toLocaleString(undefined, {
+        month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit"
+      });
+      const text = doc.createElement("div");
+      text.className = "text";
+      text.textContent = String((item && item.text) || "");
+      body.appendChild(who);
+      body.appendChild(when);
+      body.appendChild(text);
+      row.appendChild(face);
+      row.appendChild(body);
+      if (list) list.appendChild(row);
+    });
+    popup.focus();
+  };
+  const bindComments = (root) => {
+    root.querySelectorAll("button[data-comments]").forEach((button) => {
+      button.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        button.blur();
+        openComments(button.getAttribute("data-comments"), button.getAttribute("data-comment-title"));
+      });
+    });
+  };
+"""
 _SCORE_TABLE_JS = """
 export default function(component) {
   const { data, setTriggerValue, parentElement } = component;
@@ -102,12 +182,37 @@ export default function(component) {
       applySort(table, col, dir);
     });
   });
+""" + _COMMENT_BIND_JS + """
+  bindComments(host);
   return () => host.remove();
 }
 """
 _score_table = st.components.v2.component(
     "score_table",
     js=_SCORE_TABLE_JS,
+    isolate_styles=False,
+)
+_COMMENT_ROW_JS = """
+export default function(component) {
+  const { data, parentElement } = component;
+  let host = parentElement.querySelector("[data-comment-host]");
+  Array.from(parentElement.children).forEach((child) => {
+    if (child !== host) child.remove();
+  });
+  if (!host) {
+    host = document.createElement("div");
+    host.setAttribute("data-comment-host", "");
+    parentElement.appendChild(host);
+  }
+  host.innerHTML = typeof data === "string" ? data : "";
+""" + _COMMENT_BIND_JS + """
+  bindComments(host);
+  return () => host.remove();
+}
+"""
+_comment_row = st.components.v2.component(
+    "comment_row",
+    js=_COMMENT_ROW_JS,
     isolate_styles=False,
 )
 
@@ -291,6 +396,8 @@ try:
     from market_store import (
         asset_logo,
         asset_market_key,
+        COMMENT_LIMIT,
+        comment_balloon,
         crowd_mark,
         holder_counts,
         holders_mark,
@@ -299,7 +406,9 @@ try:
         save_logos,
         save_price_paths,
         save_sentiment,
+        sentiment_comment_lists,
         sentiment_crowd,
+        set_sentiment_comment,
         set_sentiment_vote,
         sentiment_from_row,
         sparkline_svg,
@@ -732,7 +841,8 @@ def sentiment_badge(score, pick: str | None = None) -> str:
     color, background, _arrow, _bar = tone(score)
     box = (
         f"<span style='display:inline-block;min-width:52px;text-align:center;background:{background};"
-        f"color:{color};border-radius:4px;padding:2px 8px;font-weight:600;'>{float(score):.0f}</span>"
+        f"color:{color};border-radius:4px;padding:2px 8px;font-weight:600;line-height:1;'>"
+        f"{float(score):.0f}</span>"
     )
     if not pick:
         return box
@@ -976,7 +1086,7 @@ The **Sentiment** column shows that saved score in the same colored box. A dash 
 
 The picture on the left of each name is that asset's logo. The same logo appears at the top of the Interactive Chart and Market sentiment sections. Crypto logos come from CoinGecko. Stock logos come from Finnhub. A letter shows when a logo is not available. The address is saved once and reused for every account.
 
-Beside the sentiment score you can press thumbs up if you agree, or thumbs down if you do not. Press the same thumb again to clear your take. Those buttons sit in an outlined box. After you disagree, scores appear in that same box, under the buttons: 0, 20, 40, 60, 80 and 100. The number you pick also fills the type box, and you can type any number from 0 to 100. It saves on its own when you click a score, press Enter, or leave the box. The thumbs and that same colored average sit at the bottom of Your take, and again under **Crowd** on each table row. The box is the average of the personal scores, in the same style as the Sentiment column. It updates when a score is clicked or typed. Hover the down thumb for the spread, which is how far those scores typically sit from the average. One score has no spread yet. A dash means nobody has given a personal score. A refresh of that sentiment clears every thumb and every score, because they belonged to the old score.
+Beside the sentiment score you can press thumbs up if you agree, or thumbs down if you do not. Press the same thumb again to clear your take. Those buttons sit in an outlined box. After you disagree, scores appear in that same box, under the buttons: 0, 20, 40, 60, 80 and 100. The number you pick also fills the type box, and you can type any number from 0 to 100. It saves on its own when you click a score, press Enter, or leave the box. The thumbs and that same colored average sit at the bottom of Your take, and again under **Crowd** on each table row. The box is the average of the personal scores, in the same style as the Sentiment column. It updates when a score is clicked or typed. Hover the down thumb for the spread, which is how far those scores typically sit from the average. One score has no spread yet. A dash means nobody has given a personal score. Under the thumbs you can post one comment of up to 160 characters. A speech balloon appears beside the thumbs, and in the **Comments** column, once any comment exists. Click it to open those comments in a new window, newest first, with each person's picture, name, and the time they wrote it. A refresh of that sentiment clears every thumb, every score, and every comment, because they belonged to the old score.
 
 Click a sentiment score in the table to highlight that asset and jump to its headlines. **↑ Top** scrolls back to the top of the page. It sits at the top right of the Interactive Chart section, and at the top right of Market sentiment.
 
@@ -1346,7 +1456,9 @@ def _share_market_rows(crypto_watchlist, stock_watchlist, crypto_results, stock_
     shared = load_shared_market(supabase, [asset_market_key(kind, asset_id) for kind, asset_id in pairs])
     counts = holder_counts(supabase)
     logos = _asset_logos(crypto_watchlist, stock_watchlist, shared)
-    crowd = sentiment_crowd(supabase, [asset_market_key(kind, asset_id) for kind, asset_id in pairs])
+    market_keys = [asset_market_key(kind, asset_id) for kind, asset_id in pairs]
+    crowd = sentiment_crowd(supabase, market_keys)
+    comments = sentiment_comment_lists(supabase, market_keys)
     for kind, results, watchlist in (
         ("Crypto", crypto_results, crypto_watchlist),
         ("Stock", stock_results, stock_watchlist),
@@ -1362,6 +1474,7 @@ def _share_market_rows(crypto_watchlist, stock_watchlist, crypto_results, stock_
             row["alt_count"] = voices.get("alt_count", 0)
             row["alt_avg"] = voices.get("alt_avg")
             row["alt_spread"] = voices.get("alt_spread")
+            row["comments"] = comments.get(market_key) or []
             stored = shared.get(asset_market_key(kind, asset_id))
             if not row.get("closes") and stored and stored.get("closes"):
                 row["closes"] = stored.get("closes")
@@ -1641,7 +1754,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                 st.caption("This watchlist is empty.")
                 return
             frame = pd.DataFrame(results).sort_values("score", ascending=False, na_position="last")
-            st.caption("Click a column title to sort. The table starts with the strongest score at the top. Click a name to show that asset on the chart. Click a sentiment score to open its headlines. Watching is how many accounts hold that asset. The Crowd box is the average of personal scores. Hover the down thumb for the spread. The 30-day trend uses the same colors as 30d %.")
+            st.caption("Click a column title to sort. The table starts with the strongest score at the top. Click a name to show that asset on the chart. Click a sentiment score to open its headlines. Watching is how many accounts hold that asset. The Crowd box is the average of personal scores. Hover the down thumb for the spread. A comment balloon opens the comments for that sentiment. The 30-day trend uses the same colors as 30d %.")
 
             headers = ["Asset", "Watching", "Score", "Signal", "Price", "RSI"]
             if show_period_changes_flag:
@@ -1652,7 +1765,11 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                 headers.append("30d %")
             if show_extra_metrics_flag:
                 headers += ["Market Cap", "ATR %", "Vol"]
-            headers += ["Sentiment", "Crowd", "30-day trend"]
+            show_comments = any(row.get("comments") for row in results)
+            headers += ["Sentiment", "Crowd"]
+            if show_comments:
+                headers.append("Comments")
+            headers.append("30-day trend")
             sort_at = {"Asset": 0, "Watching": 1, "Score": 2, "Signal": 3, "Price": 4, "RSI": 5}
             column = 6
             for name in ("1d %", "7d %", "30d %", "Market Cap", "ATR %", "Vol"):
@@ -1661,7 +1778,11 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                     column += 1
             sort_at["Sentiment"] = column
             sort_at["Crowd"] = column + 2
-            sort_at["30-day trend"] = column + 3
+            next_column = column + 3
+            if show_comments:
+                sort_at["Comments"] = next_column
+                next_column += 1
+            sort_at["30-day trend"] = next_column
 
             def header_button(name, align="left", colspan=1):
                 mark = " ↓" if name == "Score" else ""
@@ -1679,7 +1800,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                 if name == "Crowd":
                     header_html += header_button(name, "center", 2)
                     continue
-                align = "right" if name in ("Sentiment", "30-day trend") else "left"
+                align = "right" if name in ("Sentiment", "30-day trend") else "center" if name == "Comments" else "left"
                 header_html += header_button(name, align)
 
             pick = st.session_state.get("chart_pick")
@@ -1743,6 +1864,14 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                     f"<td data-sort='{sort_token(row.get('alt_avg'), numeric=True)}' "
                     f"style='padding:10px 10px 10px 4px;text-align:left;white-space:nowrap;'>"
                     f"{crowd_average_badge(row.get('alt_avg'), row.get('alt_count'), row.get('alt_spread'), headline_score is not None)}</td>"
+                )
+                if show_comments:
+                    rows_html += (
+                        f"<td data-sort='{sort_token(len(row.get('comments') or []), numeric=True)}' "
+                        f"style='padding:10px;text-align:center;white-space:nowrap;'>"
+                        f"{comment_balloon(row.get('comments'), row.get('symbol'))}</td>"
+                    )
+                rows_html += (
                     f"<td data-sort='{sort_token(row.get('change_30d'), numeric=True)}' "
                     f"style='padding:6px 10px;width:84px;'>{sparkline_svg(row.get('closes'), row.get('change_30d'))}</td></tr>"
                 )
@@ -2033,10 +2162,19 @@ def _store_sentiment_vote(kind: str, asset_id: str, sentiment_at, vote, alt_scor
     st.rerun()
 
 
-def _sentiment_thumbs(kind: str, asset_id: str, sentiment_at) -> None:
-    """Agree or disagree. Disagree opens a score inside the same outlined box."""
+def _store_sentiment_comment(kind: str, asset_id: str, sentiment_at, body: str) -> None:
+    try:
+        set_sentiment_comment(supabase, user_id, kind, asset_id, sentiment_at, body)
+    except Exception:
+        st.warning("That comment could not be saved. Run supabase_rls.sql in the Supabase SQL editor again.")
+        return
+    st.rerun()
+
+
+def _sentiment_thumbs(kind: str, asset_id: str, sentiment_at, title: str) -> None:
+    """Agree or disagree, then one short comment. Disagree opens a score in the same box."""
     if not sentiment_at:
-        st.caption("Thumbs open once this sentiment is saved.")
+        st.caption("Thumbs and comments open once this sentiment is saved.")
         return
     key = asset_market_key(kind, asset_id)
     voice = sentiment_crowd(supabase, [key]).get(key) or {}
@@ -2117,6 +2255,9 @@ def _sentiment_thumbs(kind: str, asset_id: str, sentiment_at) -> None:
         .st-key-sentiment_take_box .stColumn {{
             min-width: 0 !important;
         }}
+        .st-key-sentiment_comment_row {{
+            margin-top: 6px;
+        }}
         .st-key-sentiment_alt_0 button,
         .st-key-sentiment_alt_20 button,
         .st-key-sentiment_alt_40 button,
@@ -2158,23 +2299,46 @@ def _sentiment_thumbs(kind: str, asset_id: str, sentiment_at) -> None:
             _store_sentiment_vote(kind, asset_id, sentiment_at, None if mine == -1 else -1)
         if mine == -1:
             _sentiment_alt_score(kind, asset_id, sentiment_at, mine_score, selected)
-        st.markdown(
-            "<div style='display:flex;align-items:center;gap:8px;white-space:nowrap;'>"
-            + crowd_mark(
-                voice.get("up"),
-                voice.get("down"),
-                alt_count=voice.get("alt_count"),
-                alt_avg=voice.get("alt_avg"),
-                alt_spread=voice.get("alt_spread"),
-            )
-            + crowd_average_badge(
-                voice.get("alt_avg"),
-                voice.get("alt_count"),
-                voice.get("alt_spread"),
-            )
-            + "</div>",
-            unsafe_allow_html=True,
+        notes = sentiment_comment_lists(supabase, [key]).get(key) or []
+        mine_text = next((item["text"] for item in notes if item.get("mine")), "")
+        _comment_row(
+            key="sentiment_comment_row",
+            data=(
+                "<div style='display:flex;align-items:center;gap:8px;flex-wrap:wrap;'>"
+                + crowd_mark(
+                    voice.get("up"),
+                    voice.get("down"),
+                    alt_count=voice.get("alt_count"),
+                    alt_avg=voice.get("alt_avg"),
+                    alt_spread=voice.get("alt_spread"),
+                )
+                + crowd_average_badge(
+                    voice.get("alt_avg"),
+                    voice.get("alt_count"),
+                    voice.get("alt_spread"),
+                )
+                + comment_balloon(notes, title)
+                + "</div>"
+            ),
         )
+        box_key = f"sentiment_comment_box_{key}"
+        if box_key not in st.session_state:
+            st.session_state[box_key] = mine_text
+        st.text_input(
+            "Comment",
+            max_chars=COMMENT_LIMIT,
+            key=box_key,
+            label_visibility="collapsed",
+            placeholder="Add a short comment",
+        )
+        st.caption(
+            f"Up to {COMMENT_LIMIT} characters. Posting again replaces yours. "
+            "Comments clear when this sentiment refreshes."
+        )
+        if st.button("Post comment", key="sentiment_comment_post", use_container_width=True):
+            text = " ".join(str(st.session_state.get(box_key) or "").split())
+            if text or mine_text:
+                _store_sentiment_comment(kind, asset_id, sentiment_at, text)
 
 
 def _sentiment_alt_score(kind: str, asset_id: str, sentiment_at, mine_score, selected) -> None:
@@ -2337,7 +2501,7 @@ def show_market_sentiment(kind: str, asset_id: str, label: str, ticker: str | No
                     unsafe_allow_html=True,
                 )
             with vote_card:
-                _sentiment_thumbs(kind, asset_id, sentiment_at)
+                _sentiment_thumbs(kind, asset_id, sentiment_at, shown_name or asset_id)
         elif report.get("reason") == "missing_key":
             st.info("Headlines are in. Add an xAI API key so Grok can score them. See the README under Market sentiment.")
         elif report.get("reason") == "no_headlines":

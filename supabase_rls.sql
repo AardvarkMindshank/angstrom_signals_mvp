@@ -328,3 +328,106 @@ create policy "read own feedback" on public.feedback_notes
 
 grant select, insert on public.feedback_notes to authenticated;
 grant usage, select on sequence public.feedback_notes_id_seq to authenticated;
+
+-- One short comment per account per asset. It belongs to the current sentiment.
+-- A refresh writes a new sentiment time, and the old comments are deleted.
+create table if not exists public.sentiment_comments (
+    user_id uuid not null references auth.users (id) on delete cascade,
+    asset_key text not null,
+    sentiment_at timestamptz not null,
+    body text not null check (char_length(btrim(body)) between 1 and 160),
+    created_at timestamptz not null default now(),
+    primary key (user_id, asset_key)
+);
+
+create index if not exists sentiment_comments_asset_idx
+    on public.sentiment_comments (asset_key);
+
+alter table public.sentiment_comments enable row level security;
+
+drop policy if exists "read sentiment comments" on public.sentiment_comments;
+create policy "read sentiment comments" on public.sentiment_comments
+    for select
+    to authenticated
+    using (true);
+
+drop policy if exists "insert own sentiment comment" on public.sentiment_comments;
+create policy "insert own sentiment comment" on public.sentiment_comments
+    for insert
+    to authenticated
+    with check (auth.uid() = user_id);
+
+drop policy if exists "update own sentiment comment" on public.sentiment_comments;
+create policy "update own sentiment comment" on public.sentiment_comments
+    for update
+    to authenticated
+    using (auth.uid() = user_id)
+    with check (auth.uid() = user_id);
+
+drop policy if exists "delete own sentiment comment" on public.sentiment_comments;
+create policy "delete own sentiment comment" on public.sentiment_comments
+    for delete
+    to authenticated
+    using (auth.uid() = user_id);
+
+grant select, insert, update, delete on public.sentiment_comments to authenticated;
+
+-- Comments for the current sentiment only, newest first, with the public name and picture.
+drop function if exists public.sentiment_comments(text[]);
+create function public.sentiment_comments(asset_keys text[])
+returns table (
+    asset_key text,
+    author_name text,
+    avatar_url text,
+    body text,
+    created_at timestamptz,
+    mine boolean
+)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    select
+        comments.asset_key,
+        coalesce(
+            nullif(btrim(profiles.display_name), ''),
+            nullif(split_part(users.email, '@', 1), ''),
+            'Member'
+        ),
+        profiles.avatar_url,
+        comments.body,
+        comments.created_at,
+        comments.user_id = auth.uid()
+    from public.sentiment_comments as comments
+    join public.asset_market as market
+      on market.asset_key = comments.asset_key
+     and market.sentiment_updated_at = comments.sentiment_at
+     and market.sentiment_updated_at > now() - interval '12 hours'
+    left join public.profiles as profiles
+      on profiles.user_id = comments.user_id
+    left join auth.users as users
+      on users.id = comments.user_id
+    where comments.asset_key = any(asset_keys)
+    order by comments.created_at desc;
+$$;
+
+revoke all on function public.sentiment_comments(text[]) from public;
+revoke all on function public.sentiment_comments(text[]) from anon;
+grant execute on function public.sentiment_comments(text[]) to authenticated;
+
+-- Removes every comment on an asset. Called when a new sentiment score is saved.
+drop function if exists public.drop_sentiment_comments(text);
+create function public.drop_sentiment_comments(target_key text)
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+    delete from public.sentiment_comments
+    where asset_key = target_key;
+$$;
+
+revoke all on function public.drop_sentiment_comments(text) from public;
+revoke all on function public.drop_sentiment_comments(text) from anon;
+grant execute on function public.drop_sentiment_comments(text) to authenticated;

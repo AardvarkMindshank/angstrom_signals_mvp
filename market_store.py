@@ -7,6 +7,7 @@ runs, and later accounts reuse it for 12 hours.
 
 from __future__ import annotations
 
+import base64
 import html
 import json
 from datetime import datetime, timezone
@@ -14,6 +15,7 @@ from datetime import datetime, timezone
 from sentiment import SENTIMENT_REFRESH_SECONDS
 
 SPARKLINE_POINTS = 31
+COMMENT_LIMIT = 160
 _SIDEWAYS_PERCENT = 2.0
 _WARNED = False
 
@@ -120,6 +122,109 @@ def set_sentiment_vote(supabase, user_id, kind: str, asset_id: str, sentiment_at
         },
         on_conflict="user_id,asset_key",
     ).execute()
+
+
+def _public_avatar(url) -> str:
+    cleaned = str(url or "").strip()
+    if (
+        not cleaned.startswith("https://")
+        or len(cleaned) > 500
+        or any(mark in cleaned for mark in (" ", '"', "'", "<", ">", "\\"))
+    ):
+        return ""
+    return cleaned
+
+
+def _comment_time(value) -> str:
+    if hasattr(value, "isoformat"):
+        return value.isoformat()
+    return str(value or "")
+
+
+def sentiment_comment_lists(supabase, keys: list[str]) -> dict[str, list]:
+    """Current comments for these assets, newest first. Empty when the function is missing."""
+    wanted = [key for key in keys if key]
+    if not wanted:
+        return {}
+    try:
+        response = supabase.rpc("sentiment_comments", {"asset_keys": wanted}).execute()
+    except Exception as exc:
+        _warn(exc)
+        return {}
+    grouped: dict[str, list] = {}
+    for row in response.data or []:
+        key = str(row.get("asset_key") or "")
+        text = " ".join(str(row.get("body") or "").split())
+        if not key or not text:
+            continue
+        grouped.setdefault(key, []).append({
+            "name": " ".join(str(row.get("author_name") or "Member").split())[:40] or "Member",
+            "avatar": _public_avatar(row.get("avatar_url")),
+            "at": _comment_time(row.get("created_at")),
+            "text": text[:COMMENT_LIMIT],
+            "mine": bool(row.get("mine")),
+        })
+    return grouped
+
+
+def set_sentiment_comment(supabase, user_id, kind: str, asset_id: str, sentiment_at, body: str) -> None:
+    """Save this account's short comment for the current sentiment. Blank removes it."""
+    key = asset_market_key(kind, asset_id)
+    text = " ".join(str(body or "").split())[:COMMENT_LIMIT]
+    if not text:
+        supabase.table("sentiment_comments").delete().eq("user_id", str(user_id)).eq("asset_key", key).execute()
+        return
+    if not sentiment_at:
+        return
+    supabase.table("sentiment_comments").upsert(
+        {
+            "user_id": str(user_id),
+            "asset_key": key,
+            "sentiment_at": sentiment_at,
+            "body": text,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        },
+        on_conflict="user_id,asset_key",
+    ).execute()
+
+
+def drop_sentiment_comments(supabase, kind: str, asset_id: str) -> None:
+    """Delete every comment on this asset. Used when a new sentiment score is stored."""
+    key = asset_market_key(kind, asset_id)
+    if not key or key.endswith("|"):
+        return
+    try:
+        supabase.rpc("drop_sentiment_comments", {"target_key": key}).execute()
+    except Exception as exc:
+        _warn(exc)
+
+
+def comment_balloon(comments, title: str) -> str:
+    """A speech balloon that opens the comments. Empty when nobody has commented."""
+    items = []
+    for note in comments or []:
+        text = " ".join(str((note or {}).get("text") or "").split())
+        if not text:
+            continue
+        items.append({
+            "name": str((note or {}).get("name") or "Member")[:40],
+            "avatar": _public_avatar((note or {}).get("avatar")),
+            "at": str((note or {}).get("at") or ""),
+            "text": text[:COMMENT_LIMIT],
+        })
+    if not items:
+        return ""
+    encoded = base64.b64encode(
+        json.dumps(items, ensure_ascii=False).encode("utf-8")
+    ).decode("ascii")
+    safe_title = html.escape(str(title or "Comments"), quote=True)
+    return (
+        f"<button type='button' data-comments='{encoded}' data-comment-title='{safe_title}' "
+        "title='Read the comments' "
+        "style='background:#f8fafc;border:1px solid #d1d5db;border-radius:999px;"
+        "padding:2px 10px;margin:0;cursor:pointer;font:inherit;font-weight:600;color:#111827;'>"
+        f"💬 {len(items)}</button>"
+    )
 
 
 def crowd_mark(up, down, active: bool = True, alt_count=0, alt_avg=None, alt_spread=None) -> str:
@@ -380,6 +485,8 @@ def save_sentiment(supabase, kind: str, asset_id: str, report: dict, stored_at: 
         supabase.table("asset_market").upsert(payload, on_conflict="asset_key").execute()
     except Exception as exc:
         _warn(exc)
+        return
+    drop_sentiment_comments(supabase, kind, identity)
 
 
 def load_shared_market(supabase, keys: list[str]) -> dict[str, dict]:
