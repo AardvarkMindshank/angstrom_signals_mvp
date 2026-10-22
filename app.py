@@ -1493,9 +1493,29 @@ export default function(component) {
   shell.style.display = "none";
   const search = new URLSearchParams(window.location.search);
   const code = search.get("code") || "";
+  const savePkce = (value) => {
+    try { sessionStorage.setItem("angstrom-pkce", value); } catch (err) {}
+    try { localStorage.setItem("angstrom-pkce", value); } catch (err) {}
+    const secure = location.protocol === "https:" ? "; Secure" : "";
+    document.cookie = "angstrom_pkce=" + encodeURIComponent(value) + "; Path=/; Max-Age=600; SameSite=Lax" + secure;
+  };
+  const readPkce = () => {
+    try {
+      const saved = sessionStorage.getItem("angstrom-pkce");
+      if (saved) return saved;
+    } catch (err) {}
+    const parts = (document.cookie || "").split("; ");
+    for (const part of parts) {
+      if (part.indexOf("angstrom_pkce=") === 0) {
+        return decodeURIComponent(part.slice("angstrom_pkce=".length));
+      }
+    }
+    try { return localStorage.getItem("angstrom-pkce") || ""; } catch (err) {}
+    return "";
+  };
   if (!code && data && data.verifier) {
     window.angstromPkce = String(data.verifier);
-    sessionStorage.setItem("angstrom-pkce", window.angstromPkce);
+    savePkce(window.angstromPkce);
   }
   if (!window.angstromPkceWatch) {
     window.angstromPkceWatch = true;
@@ -1503,15 +1523,15 @@ export default function(component) {
       const link = event.target && event.target.closest ? event.target.closest("a") : null;
       if (!link || !window.angstromPkce) return;
       const href = link.getAttribute("href") || "";
-      if (href.indexOf("provider=google") === -1) return;
-      sessionStorage.setItem("angstrom-pkce", window.angstromPkce);
+      if (href.indexOf("provider=google") === -1 && !link.classList.contains("angstrom-google")) return;
+      savePkce(window.angstromPkce);
     }, true);
   }
   if (code && !window.angstromCodeSent) {
     window.angstromCodeSent = true;
     setTriggerValue("oauth", JSON.stringify({
       code: code,
-      verifier: sessionStorage.getItem("angstrom-pkce") || ""
+      verifier: readPkce()
     }));
     search.delete("code");
     const rest = search.toString();
@@ -1545,6 +1565,51 @@ export default function(component) {
 _recovery_link = st.components.v2.component(
     "password_recovery",
     js=_RECOVERY_JS,
+    isolate_styles=False,
+)
+
+# Streamlit's own link button opens the address in a new tab, which drops the
+# sign-in secret. This link stays in the same tab.
+_GOOGLE_BUTTON_JS = """
+export default function(component) {
+  const { data, parentElement } = component;
+  const shell = parentElement.closest(".stBidiComponent") || parentElement;
+  shell.style.height = "auto";
+  shell.style.width = "100%";
+  if (!document.getElementById("angstrom-google-btn")) {
+    const style = document.createElement("style");
+    style.id = "angstrom-google-btn";
+    style.textContent = [
+      "a.angstrom-google{display:flex;align-items:center;justify-content:center;width:100%;box-sizing:border-box;min-height:2.5rem;padding:0.25rem 0.75rem;border-radius:0.5rem;text-decoration:none;background:#fff;color:#31333f;border:1px solid rgba(49,51,63,0.2);}",
+      "a.angstrom-google:hover{background:#f0f2f6;color:#31333f;}",
+      "html.angstrom-night a.angstrom-google{background:#262730;color:#fafafa;border-color:#4b5563;}",
+      "html.angstrom-night a.angstrom-google:hover{background:#31333f;color:#fafafa;}"
+    ].join("");
+    document.head.appendChild(style);
+  }
+  let link = shell.querySelector("a.angstrom-google");
+  if (!link) {
+    link = document.createElement("a");
+    link.className = "angstrom-google";
+    link.textContent = "Continue with Google";
+    link.target = "_self";
+    shell.appendChild(link);
+  }
+  const url = data && data.url ? String(data.url) : "";
+  const verifier = data && data.verifier ? String(data.verifier) : "";
+  link.href = url || "#";
+  link.onclick = () => {
+    if (!verifier) return;
+    try { sessionStorage.setItem("angstrom-pkce", verifier); } catch (err) {}
+    try { localStorage.setItem("angstrom-pkce", verifier); } catch (err) {}
+    const secure = location.protocol === "https:" ? "; Secure" : "";
+    document.cookie = "angstrom_pkce=" + encodeURIComponent(verifier) + "; Path=/; Max-Age=600; SameSite=Lax" + secure;
+  };
+}
+"""
+_google_button = st.components.v2.component(
+    "google_sign_in",
+    js=_GOOGLE_BUTTON_JS,
     isolate_styles=False,
 )
 
@@ -1815,17 +1880,27 @@ def _take_password_reset(google_verifier: str = "") -> None:
         if "code" in st.query_params:
             del st.query_params["code"]
         if code and verifier:
+            session = None
             try:
                 response = supabase.auth.exchange_code_for_session({
                     "auth_code": code,
                     "code_verifier": verifier,
-                    "redirect_to": _app_url(),
                 })
                 session = response.session
-                if session is None or not session.access_token or not session.refresh_token:
-                    raise RuntimeError("missing session")
-                _sign_in_from_tokens(session.access_token, session.refresh_token)
             except Exception:
+                session = None
+            if session is not None and session.user and session.access_token and session.refresh_token:
+                st.session_state.user = session.user
+                st.session_state.access_token = session.access_token
+                st.session_state.refresh_token = session.refresh_token
+                st.session_state.pop("recovery_access", None)
+                st.session_state.pop("recovery_refresh", None)
+                st.session_state.pop("recovery_error", None)
+                st.session_state.pop("auth_error", None)
+                st.session_state.pop("google_url", None)
+                st.session_state.pop("google_verifier", None)
+                st.rerun()
+            else:
                 st.session_state.auth_error = "Google sign-in did not finish. Please try again."
         elif code:
             st.session_state.auth_error = "Google sign-in did not finish. Please try again."
@@ -2005,10 +2080,9 @@ if st.session_state.user is None:
             if st.session_state.get("auth_error"):
                 st.error(st.session_state.auth_error)
             st.caption("Or continue with")
-            st.link_button(
-                "Continue with Google",
-                google_url,
-                use_container_width=True,
+            _google_button(
+                key="google_sign_in",
+                data={"url": google_url, "verifier": google_verifier},
             )
 
     st.stop()
