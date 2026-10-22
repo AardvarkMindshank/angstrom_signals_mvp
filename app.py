@@ -878,7 +878,7 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
 
 **Market sentiment**
 
-This sits under the chart. The heading names the open asset, for example **Market sentiment - Bitcoin (BTC)**. Grok reads headlines from the last 7 days and gives each one a score from 0 to 100. The newest headline is listed first. The number at the top of the section is the average of those article scores. Green, amber, and red use the same bands as the technical score. The two scores stay separate, and sentiment is not mixed into the technical score.
+This sits under the chart. The heading names the open asset, for example **Market sentiment - Bitcoin (BTC)**. Grok reads headlines from the last 7 days and gives each one a score from 0 to 100. The newest headline is listed first. The number at the top of the section is the average of those article scores. Under the short summary, **Positive** and **Negative** each add a paragraph drawn from those same headlines. Green, amber, and red use the same bands as the technical score. The two scores stay separate, and sentiment is not mixed into the technical score.
 
 The **Sentiment** column shows that saved score in the same colored box. A dash means that asset has not been scored yet. Open it on the chart, and the score fills in once Grok finishes. The score is stored once and shown to every account that holds the asset. It stays for about 12 hours.
 
@@ -2052,6 +2052,21 @@ def show_market_sentiment(kind: str, asset_id: str, label: str, ticker: str | No
             else:
                 coverage = "Bearish coverage"
             summary = html.escape(report.get("summary") or "")
+
+            def side_note(label, text, label_color):
+                cleaned = " ".join(str(text or "").split())
+                if not cleaned:
+                    return ""
+                return (
+                    "<div style='margin-top:12px;'>"
+                    f"<div style='font-size:0.75rem;font-weight:700;color:{label_color};'>{label}</div>"
+                    f"<div style='margin-top:4px;color:#111827;'>{html.escape(cleaned)}</div>"
+                    "</div>"
+                )
+
+            sides_html = side_note("Positive", report.get("positive"), "#15803d") + side_note(
+                "Negative", report.get("negative"), "#b91c1c"
+            )
             driver_items = "".join(
                 f"<li style='margin:4px 0;color:#374151;'>{html.escape(str(driver))}</li>"
                 for driver in (report.get("drivers") or [])
@@ -2076,7 +2091,7 @@ def show_market_sentiment(kind: str, asset_id: str, label: str, ticker: str | No
                     f"padding:2px 8px;border-radius:4px;font-weight:600;'>{arrow} {score:.0f}/100</div>"
                     f"<div style='margin-top:8px;font-weight:600;color:{color};'>{html.escape(coverage)}</div>"
                     f"<div style='margin-top:8px;color:#111827;'>{summary}</div>"
-                    f"{drivers_html}</div>",
+                    f"{sides_html}{drivers_html}</div>",
                     unsafe_allow_html=True,
                 )
             with vote_card:

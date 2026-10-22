@@ -163,11 +163,15 @@ def _prompt(query: str, headlines: list[dict]) -> str:
         "Headlines:\n"
         + "\n".join(lines)
         + "\n\nReply with JSON only, in this shape: "
-        '{"articles":[{"index":1,"score":50}],"summary":"...","drivers":["..."]}. '
+        '{"articles":[{"index":1,"score":50}],"summary":"...","positive":"...","negative":"...","drivers":["..."]}. '
         "Use one article object for every headline, with the same index number. "
         "score is 0 to 100 for that headline alone. "
         "0 is strongly bearish, 50 is mixed or unclear, 100 is strongly bullish. "
         "summary is two sentences about the set of headlines. "
+        "positive is one paragraph on what these headlines treat as favorable. "
+        "negative is one paragraph on what these headlines treat as unfavorable. "
+        "Each of those paragraphs is two or three sentences. "
+        "If the headlines do not support that side, say so in one sentence. "
         "drivers is up to 3 short phrases. "
         "Do not add facts that are not in the headlines."
     )
@@ -203,6 +207,13 @@ def _reply_texts(payload: dict) -> list[str]:
             if text.strip():
                 texts.append(text)
     return texts
+
+
+def _paragraph(value) -> str:
+    """One block of prose. A list of sentences is joined. Empty when there is nothing."""
+    if isinstance(value, list):
+        value = " ".join(str(item) for item in value if str(item).strip())
+    return " ".join(str(value or "").split())[:700]
 
 
 def _field(data: dict, *names):
@@ -304,6 +315,8 @@ def _read_parsed(parsed: dict, headline_count: int) -> dict:
         "scores": scores,
         "overall": overall,
         "summary": summary,
+        "positive": _paragraph(_field(parsed, "positive", "positives", "bullish")),
+        "negative": _paragraph(_field(parsed, "negative", "negatives", "bearish")),
         "drivers": drivers,
     }
 
@@ -335,7 +348,7 @@ def _post_grok(key: str, prompt: str, attempt: dict) -> requests.Response:
             {"role": "user", "content": prompt},
         ],
         "temperature": 0.2,
-        "max_completion_tokens": 900,
+        "max_completion_tokens": 1400,
         "response_format": {"type": "json_object"},
     }
     if attempt.get("reasoning_effort"):
@@ -367,6 +380,8 @@ def _scored_report(parsed: dict, headlines: list[dict]) -> dict | None:
         "ok": True,
         "score": score,
         "summary": parsed.get("summary") or "",
+        "positive": parsed.get("positive") or "",
+        "negative": parsed.get("negative") or "",
         "drivers": parsed.get("drivers") or [],
         "headlines": scored,
     }
