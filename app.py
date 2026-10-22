@@ -407,6 +407,7 @@ def load_user_preferences():
         "days_history": 200,
         "show_reasons": True,
         "show_extra_metrics": True,
+        "show_period_changes": True,
     }
 
     try:
@@ -872,7 +873,7 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
 
 1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest.
 2. Click a name in either table, a Quick Snapshot box, or an alert under Notifications. That asset stays highlighted, and the page moves down to the chart when the chart is off screen.
-3. **1d %**, **7d %**, and **30d %** are the price change over those stretches. Green means the price rose. Red means it fell. For stocks, one day is the previous trading session. **Market Cap** is the latest size of the asset, from CoinGecko for crypto and Yahoo for stocks. **ATR %** is volatility. **Vol** is volume versus its 20-day average.
+3. Extra metrics add **7d %**, **Market Cap**, **ATR %**, and **Vol**. A separate checkbox adds **1d %** before the seven-day change and **30d %** after it. Green means the price rose. Red means it fell. For stocks, one day is the previous trading session. **Market Cap** is the latest size of the asset, from CoinGecko for crypto and Yahoo for stocks. **ATR %** is volatility. **Vol** is volume versus its 20-day average.
 4. Alerts fire at 70 and 30 unless you move those sliders. One email goes to the address on your account when a technical score crosses a boundary. It is not sent again until the score leaves that boundary and crosses it later. Sentiment scores do not send alerts.
 
 **Market sentiment**
@@ -1103,14 +1104,19 @@ with st.sidebar.expander("⚙️ Settings", expanded=False):
     days_history = st.slider("Days of history", 90, 365, int(settings.get("days_history", 200)))
     show_reasons = st.checkbox("Show score breakdown", value=settings.get("show_reasons", True))
     show_extra_metrics = st.checkbox(
-        "Show extra metrics (1d, 7d, 30d, market cap, ATR, volume)",
+        "Show extra metrics (7d, market cap, ATR, volume)",
         value=settings.get("show_extra_metrics", True),
+    )
+    show_period_changes = st.checkbox(
+        "Show 1-day and 30-day changes",
+        value=settings.get("show_period_changes", True),
     )
 
     new_settings = {
         "days_history": days_history,
         "show_reasons": show_reasons,
         "show_extra_metrics": show_extra_metrics,
+        "show_period_changes": show_period_changes,
     }
     if new_settings != settings:
         settings = new_settings
@@ -1220,7 +1226,7 @@ def _asset_logos(crypto_watchlist, stock_watchlist, shared: dict) -> dict[str, s
 
 
 @st.fragment
-def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, show_reasons_flag, show_extra_metrics_flag):
+def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, show_reasons_flag, show_extra_metrics_flag, show_period_changes_flag):
     if "technical_due" not in st.session_state:
         st.session_state.technical_due = time.time() + _TECHNICAL_REFRESH_SECONDS
 
@@ -1432,8 +1438,14 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
         st.caption("Click a name to show that asset on the chart. Click a sentiment score to open its headlines. Watching is how many accounts hold that asset. The Crowd box is the average of personal scores. Hover the down thumb for the spread. The Trend line is the last 30 closes.")
 
         headers = ["Asset", "Watching", "Score", "Signal", "Price", "RSI"]
+        if show_period_changes_flag:
+            headers.append("1d %")
         if show_extra_metrics_flag:
-            headers += ["1d %", "7d %", "30d %", "Market Cap", "ATR %", "Vol"]
+            headers.append("7d %")
+        if show_period_changes_flag:
+            headers.append("30d %")
+        if show_extra_metrics_flag:
+            headers += ["Market Cap", "ATR %", "Vol"]
         headers += ["Sentiment", "Crowd", "Trend"]
         header_html = ""
         for name in headers:
@@ -1474,13 +1486,16 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                 f"<td style='padding:10px;min-width:130px;'>{render_score_bar(row['score'])}</td>"
                 f"{cell(row.get('label') or '—')}{cell(price_str)}{cell(rsi_str)}"
             )
+            if show_period_changes_flag:
+                rows_html += percent_change_cell(row.get("change_1d"))
+            if show_extra_metrics_flag:
+                rows_html += percent_change_cell(row.get("change_7d"))
+            if show_period_changes_flag:
+                rows_html += percent_change_cell(row.get("change_30d"))
             if show_extra_metrics_flag:
                 atr = row.get("atr_pct")
                 volume = row.get("volume_ratio")
                 rows_html += (
-                    f"{percent_change_cell(row.get('change_1d'))}"
-                    f"{percent_change_cell(row.get('change_7d'))}"
-                    f"{percent_change_cell(row.get('change_30d'))}"
                     f"{cell(format_market_cap(row.get('market_cap')))}"
                     f"{cell(f'{atr:.2f}' if pd.notna(atr) else '—')}"
                     f"{cell(f'{volume:.2f}' if pd.notna(volume) else '—')}"
@@ -2090,6 +2105,7 @@ render_dashboard(
     current_weights,
     show_reasons,
     show_extra_metrics,
+    show_period_changes,
 )
 
 st.sidebar.markdown("---")
