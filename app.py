@@ -166,6 +166,12 @@ export default function(component) {
       items = Array.isArray(parsed.items) ? parsed.items : [];
       const savedScopes = { watchlist: "watchlist", crypto: "crypto", stock: "stock" };
       savedAsset = savedScopes[parsed.asset] || "";
+      window.socialChatReady = Array.isArray(parsed.chat);
+      window.socialChat = window.socialChatReady ? parsed.chat : [];
+      window.socialMe = parsed.me && typeof parsed.me === "object" ? parsed.me : {};
+      window.socialChatNotice = typeof parsed.notice === "string" ? parsed.notice : "";
+      window.socialChatFaces = Array.isArray(parsed.faces) ? parsed.faces : [];
+      window.socialChatLimit = Number(parsed.limit) || 160;
     }
   } catch (error) {
     items = [];
@@ -180,15 +186,25 @@ export default function(component) {
     window.socialStreamState = window.socialStreamState || {
       open: false, side: "", asset: savedAsset || "", person: ""
     };
-    if (!document.getElementById("social-stream-style")) {
-      const style = document.createElement("style");
+    let style = document.getElementById("social-stream-style");
+    if (style && style.dataset.layout !== "split") {
+      style.remove();
+      style = null;
+    }
+    if (!style) {
+      style = document.createElement("style");
       style.id = "social-stream-style";
+      style.dataset.layout = "split";
       style.textContent = [
         "#social-stream-root{position:fixed;inset:0;z-index:10000000;pointer-events:none;}",
         "#social-stream-root.is-open{pointer-events:auto;}",
         "#social-stream-root .scrim{position:absolute;inset:0;background:rgba(17,24,39,0.35);opacity:0;transition:opacity .2s ease;}",
         "#social-stream-root.is-open .scrim{opacity:1;}",
-        "#social-stream-root .panel{position:absolute;top:0;right:0;height:100%;width:min(420px,100vw);background:#fff;color:#111827;box-shadow:-12px 0 40px rgba(17,24,39,.18);transform:translateX(100%);transition:transform .22s ease;display:flex;flex-direction:column;pointer-events:auto;}",
+        "#social-stream-root .panel{position:absolute;top:0;right:0;height:100%;width:min(420px,100vw);background:#fff;color:#111827;box-shadow:-12px 0 40px rgba(17,24,39,.18);transform:translateX(100%);transition:transform .22s ease;display:flex;flex-direction:column;overflow:hidden;pointer-events:auto;}",
+        "#social-stream-root .stream-pane,#social-stream-root .chat-pane{display:flex;flex-direction:column;min-height:0;overflow:hidden;}",
+        "#social-stream-root .splitter{flex:none;height:12px;cursor:row-resize;background:#f3f4f6;border-top:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:center;touch-action:none;}",
+        "#social-stream-root .splitter::before{content:'';width:42px;height:3px;border-radius:999px;background:#d1d5db;}",
+        "#social-stream-root .splitter:hover::before{background:#9ca3af;}",
         "#social-stream-root.is-open .panel{transform:none;}",
         "#social-stream-root .head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:18px 18px 4px;}",
         "#social-stream-root h2{margin:0;font-size:1.15rem;line-height:1.25;font-weight:650;}",
@@ -207,7 +223,24 @@ export default function(component) {
         "#social-stream-root .picks label{display:flex;flex-direction:column;gap:4px;font-size:.75rem;font-weight:600;color:#6b7280;}",
         "#social-stream-root select{font:inherit;font-size:.85rem;color:#111827;border:1px solid #d1d5db;border-radius:8px;padding:6px 8px;background:#fff;}",
         "#social-stream-root .count{padding:10px 18px 0;font-size:.78rem;color:#6b7280;}",
-        "#social-stream-root .list{overflow:auto;padding:8px 18px 28px;}",
+        "#social-stream-root .list,#social-stream-root .chat-list{flex:1;overflow:auto;min-height:0;padding:8px 18px 12px;}",
+        "#social-stream-root .chat-head{padding:10px 18px 0;}",
+        "#social-stream-root .composer{padding:8px 18px 14px;border-top:1px solid #f3f4f6;}",
+        "#social-stream-root .chat-box{width:100%;box-sizing:border-box;min-height:58px;max-height:120px;resize:vertical;font:inherit;font-size:.9rem;border:1px solid #d1d5db;border-radius:8px;padding:8px;}",
+        "#social-stream-root .faces{display:flex;gap:4px;margin-top:6px;}",
+        "#social-stream-root .faces button{flex:1;min-width:0;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:2px 0;cursor:pointer;font-size:1rem;line-height:1.2;}",
+        "#social-stream-root .composer-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px;}",
+        "#social-stream-root .chars{color:#6b7280;font-size:.75rem;}",
+        "#social-stream-root .post{background:#111827;color:#fff;border:0;border-radius:999px;padding:6px 14px;font:inherit;font-weight:600;cursor:pointer;}",
+        "#social-stream-root .post:disabled{opacity:.45;cursor:default;}",
+        "#social-stream-root .replying{display:flex;justify-content:space-between;gap:8px;margin-bottom:6px;color:#6b7280;font-size:.78rem;}",
+        "#social-stream-root .replying button{background:none;border:0;padding:0;color:#1d4ed8;cursor:pointer;font:inherit;font-size:.78rem;}",
+        "#social-stream-root .chat-card{padding:12px 0;border-top:1px solid #e5e7eb;}",
+        "#social-stream-root .reply{margin:8px 0 0 28px;padding-left:10px;border-left:2px solid #e5e7eb;}",
+        "#social-stream-root .chat-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}",
+        "#social-stream-root .chat-actions button{background:#fff;border:1px solid #e5e7eb;border-radius:999px;padding:2px 8px;font:inherit;font-size:.78rem;cursor:pointer;color:#374151;}",
+        "#social-stream-root .chat-actions button.is-on{background:#111827;border-color:#111827;color:#fff;}",
+        "#social-stream-root .chat-notice{color:#b45309;font-size:.8rem;line-height:1.35;margin-bottom:6px;}",
         "#social-stream-root .card{padding:14px 0;border-top:1px solid #e5e7eb;}",
         "#social-stream-root .person{display:flex;gap:10px;align-items:center;}",
         "#social-stream-root .face{width:36px;height:36px;border-radius:50%;object-fit:cover;background:#dbeafe;color:#1d4ed8;display:flex;align-items:center;justify-content:center;font-weight:700;flex:none;}",
@@ -227,12 +260,18 @@ export default function(component) {
       document.head.appendChild(style);
     }
     let root = document.getElementById("social-stream-root");
+    if (root && root.dataset.layout !== "split") {
+      root.remove();
+      root = null;
+    }
     if (!root) {
       root = document.createElement("div");
       root.id = "social-stream-root";
+      root.dataset.layout = "split";
       root.innerHTML = [
         "<div class='scrim'></div>",
-        "<aside class='panel' role='dialog' aria-label='Social signals stream'>",
+        "<aside class='panel' role='dialog' aria-label='Social signals and chat'>",
+        "<div class='stream-pane'>",
         "<header class='head'><div>",
         "<div class='kicker'>Social signals</div>",
         "<h2>Social signals stream</h2>",
@@ -247,8 +286,21 @@ export default function(component) {
         "<label>Asset<select id='stream-asset'></select></label>",
         "<label>Person<select id='stream-person'></select></label>",
         "</div></div>",
-        "<div class='count'></div><div class='list'></div></aside>",
-        "<button type='button' class='edge' aria-label='Open the social signals stream' aria-expanded='false'>",
+        "<div class='count'></div><div class='list'></div></div>",
+        "<div class='splitter' role='separator' aria-orientation='horizontal' title='Drag to resize the stream and the chat'></div>",
+        "<div class='chat-pane'>",
+        "<header class='chat-head'><div class='kicker'>Chat</div>",
+        "<h2>General chat</h2>",
+        "<p class='hint'>Newest first. Post a note, reply, or mark someone else's comment up or down. These notes stay in the room.</p></header>",
+        "<div class='chat-list'></div>",
+        "<form class='composer'>",
+        "<div class='replying' hidden><span class='replying-label'></span><button type='button' class='reply-cancel'>Cancel</button></div>",
+        "<div class='chat-notice' hidden></div>",
+        "<textarea class='chat-box' maxlength='160' placeholder='Write a comment'></textarea>",
+        "<div class='faces'></div>",
+        "<div class='composer-row'><span class='chars'>0/160</span><button type='submit' class='post'>Post comment</button></div>",
+        "</form></div></aside>",
+        "<button type='button' class='edge' aria-label='Open social signals and chat' aria-expanded='false'>",
         "<svg viewBox='0 0 24 24' width='22' height='22' aria-hidden='true'>",
         "<path d='M15.2 6.2 9.4 12l5.8 5.8' fill='none' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/>",
         "<path d='M10.2 6.2 4.4 12l5.8 5.8' fill='none' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/>",
@@ -291,8 +343,74 @@ export default function(component) {
         window.renderSocialStream();
       });
       document.addEventListener("keydown", (event) => {
-        if (event.key === "Escape" && window.socialStreamState.open) closeStream();
+        if (event.key !== "Escape" || !window.socialStreamState.open) return;
+        const box = root.querySelector(".chat-box");
+        if (box && document.activeElement === box && window.socialStreamState.reply) {
+          window.socialStreamState.reply = null;
+          paintReply(root);
+          return;
+        }
+        closeStream();
       });
+      const applySplit = (ratio) => {
+        const streamPane = root.querySelector(".stream-pane");
+        const chatPane = root.querySelector(".chat-pane");
+        if (!streamPane || !chatPane) return;
+        const next = Math.min(0.72, Math.max(0.28, Number(ratio) || 0.5));
+        streamPane.style.flex = next + " 1 0";
+        chatPane.style.flex = (1 - next) + " 1 0";
+        try { sessionStorage.setItem("angstrom-stream-split", String(next)); } catch (error) {}
+      };
+      const splitter = root.querySelector(".splitter");
+      if (splitter) {
+        splitter.addEventListener("pointerdown", (event) => {
+          event.preventDefault();
+          const panelBox = root.querySelector(".panel");
+          const move = (moveEvent) => {
+            const rect = panelBox.getBoundingClientRect();
+            if (!rect.height) return;
+            applySplit((moveEvent.clientY - rect.top) / rect.height);
+          };
+          const stop = () => {
+            splitter.removeEventListener("pointermove", move);
+            splitter.removeEventListener("pointerup", stop);
+            splitter.removeEventListener("pointercancel", stop);
+          };
+          splitter.addEventListener("pointermove", move);
+          splitter.addEventListener("pointerup", stop);
+          splitter.addEventListener("pointercancel", stop);
+        });
+      }
+      const composer = root.querySelector(".composer");
+      const box = root.querySelector(".chat-box");
+      if (box) box.addEventListener("input", () => updateChatCount(root));
+      if (composer) {
+        composer.addEventListener("submit", (event) => {
+          event.preventDefault();
+          submitChat(root);
+        });
+      }
+      if (box) {
+        box.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" && !event.shiftKey) {
+            event.preventDefault();
+            submitChat(root);
+          }
+        });
+      }
+      const cancelReply = root.querySelector(".reply-cancel");
+      if (cancelReply) {
+        cancelReply.addEventListener("click", () => {
+          window.socialStreamState.reply = null;
+          paintReply(root);
+        });
+      }
+      let startRatio = 0.5;
+      try {
+        const storedRatio = Number(sessionStorage.getItem("angstrom-stream-split"));
+        if (storedRatio >= 0.28 && storedRatio <= 0.72) startRatio = storedRatio;
+      } catch (error) {}
+      applySplit(startRatio);
     }
     window.openSocialStream = (assetKey) => {
       window.socialStreamState.open = true;
@@ -310,7 +428,7 @@ export default function(component) {
       panel.classList.toggle("is-open", !!state.open);
       const edge = panel.querySelector(".edge");
       if (edge) {
-        const edgeLabel = state.open ? "Close the social signals stream" : "Open the social signals stream";
+        const edgeLabel = state.open ? "Close social signals and chat" : "Open social signals and chat";
         edge.setAttribute("aria-label", edgeLabel);
         edge.setAttribute("title", edgeLabel);
         edge.setAttribute("aria-expanded", state.open ? "true" : "false");
@@ -371,18 +489,212 @@ export default function(component) {
       const count = panel.querySelector(".count");
       count.textContent = shown.length === 1 ? "1 comment" : shown.length + " comments";
       const list = panel.querySelector(".list");
-      list.replaceChildren();
-      if (!shown.length) {
-        const empty = document.createElement("div");
-        empty.className = "empty";
-        empty.textContent = items.length
-          ? "No comments match these filters."
-          : "No comments yet. Each one stays for 12 hours after it is posted.";
-        list.appendChild(empty);
-        return;
+      if (list) {
+        list.replaceChildren();
+        if (!shown.length) {
+          const empty = document.createElement("div");
+          empty.className = "empty";
+          empty.textContent = items.length
+            ? "No comments match these filters."
+            : "No comments yet. Each one stays for 12 hours after it is posted.";
+          list.appendChild(empty);
+        } else {
+          shown.forEach((item) => list.appendChild(streamCard(item)));
+        }
       }
-      shown.forEach((item) => list.appendChild(streamCard(item)));
+      renderChat(panel);
     };
+  }
+
+  function reportChat(action) {
+    if (!window.socialStreamReport) return;
+    window.socialStreamReport("chat", JSON.stringify({
+      n: Date.now(),
+      action: action.action,
+      text: action.text || "",
+      parent: action.parent || 0,
+      message: action.message || 0,
+      vote: action.vote || 0
+    }));
+  }
+
+  function updateChatCount(panel) {
+    const box = panel.querySelector(".chat-box");
+    const chars = panel.querySelector(".chars");
+    const post = panel.querySelector(".post");
+    if (!box || !chars || !post) return;
+    const limit = window.socialChatLimit || 160;
+    box.maxLength = limit;
+    chars.textContent = box.value.length + "/" + limit;
+    post.disabled = !box.value.trim();
+  }
+
+  function addChatFace(panel, face) {
+    const box = panel.querySelector(".chat-box");
+    if (!box) return;
+    const limit = window.socialChatLimit || 160;
+    const current = box.value;
+    const gap = current && !/\\s$/.test(current) ? " " : "";
+    const next = current + gap + face;
+    if (next.length <= limit) box.value = next;
+    updateChatCount(panel);
+    box.focus();
+  }
+
+  function paintReply(panel) {
+    const row = panel.querySelector(".replying");
+    const label = panel.querySelector(".replying-label");
+    const reply = (window.socialStreamState || {}).reply;
+    if (!row || !label) return;
+    row.hidden = !reply;
+    label.textContent = reply ? "Replying to " + reply.name : "";
+  }
+
+  function submitChat(panel) {
+    const box = panel.querySelector(".chat-box");
+    if (!box) return;
+    const text = box.value.replace(/\\s+/g, " ").trim();
+    if (!text) return;
+    const reply = (window.socialStreamState || {}).reply;
+    const parent = reply && reply.id ? reply.id : 0;
+    const note = {
+      id: "local-" + Date.now(),
+      name: (window.socialMe || {}).name || "You",
+      avatar: (window.socialMe || {}).avatar || "",
+      text: text,
+      at: new Date().toISOString(),
+      mine: true,
+      up: 0,
+      down: 0,
+      vote: 0,
+      pending: true,
+      replies: []
+    };
+    const threads = Array.isArray(window.socialChat) ? window.socialChat.slice() : [];
+    if (parent) {
+      const host = threads.find((item) => item.id === parent);
+      if (host) host.replies = (host.replies || []).concat([note]);
+      else threads.unshift(note);
+    } else {
+      threads.unshift(note);
+    }
+    window.socialChat = threads;
+    box.value = "";
+    if (window.socialStreamState) window.socialStreamState.reply = null;
+    renderChat(panel);
+    reportChat({ action: "post", text: text, parent: parent });
+  }
+
+  function chatVoteButton(item, direction) {
+    const button = document.createElement("button");
+    button.type = "button";
+    const count = direction === 1 ? Number(item.up) || 0 : Number(item.down) || 0;
+    button.textContent = (direction === 1 ? "👍 " : "👎 ") + count;
+    button.classList.toggle("is-on", item.vote === direction);
+    button.addEventListener("click", () => {
+      const next = item.vote === direction ? 0 : direction;
+      if (item.vote === 1) item.up = Math.max(0, (Number(item.up) || 0) - 1);
+      if (item.vote === -1) item.down = Math.max(0, (Number(item.down) || 0) - 1);
+      item.vote = next;
+      if (next === 1) item.up = (Number(item.up) || 0) + 1;
+      if (next === -1) item.down = (Number(item.down) || 0) + 1;
+      const panel = document.getElementById("social-stream-root");
+      if (panel) renderChat(panel);
+      reportChat({ action: "vote", message: item.id, vote: next });
+    });
+    return button;
+  }
+
+  function chatCard(item, rootId) {
+    const card = document.createElement("article");
+    card.className = item.id === rootId ? "chat-card" : "reply";
+    const person = document.createElement("div");
+    person.className = "person";
+    const name = String(item.name || "Member");
+    person.appendChild(streamFace(name, item.avatar));
+    const identity = document.createElement("div");
+    const who = document.createElement("div");
+    who.className = "who";
+    who.textContent = name;
+    const when = document.createElement("div");
+    when.className = "when";
+    const parsedAt = new Date(item.at);
+    when.textContent = Number.isNaN(parsedAt.getTime()) ? "" : parsedAt.toLocaleString(undefined, {
+      month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit"
+    });
+    identity.appendChild(who);
+    identity.appendChild(when);
+    person.appendChild(identity);
+    const saying = document.createElement("p");
+    saying.className = "saying";
+    saying.textContent = String(item.text || "");
+    card.appendChild(person);
+    card.appendChild(saying);
+    const actions = document.createElement("div");
+    actions.className = "chat-actions";
+    if (!item.mine && !item.pending) {
+      actions.appendChild(chatVoteButton(item, 1));
+      actions.appendChild(chatVoteButton(item, -1));
+    }
+    if (!item.pending) {
+      const reply = document.createElement("button");
+      reply.type = "button";
+      reply.textContent = "Reply";
+      reply.addEventListener("click", () => {
+        window.socialStreamState.reply = { id: rootId, name: name };
+        paintReply(document.getElementById("social-stream-root"));
+        const box = document.querySelector("#social-stream-root .chat-box");
+        if (box) box.focus();
+      });
+      actions.appendChild(reply);
+    }
+    card.appendChild(actions);
+    (item.replies || []).forEach((reply) => card.appendChild(chatCard(reply, rootId)));
+    return card;
+  }
+
+  function renderChat(panel) {
+    const list = panel.querySelector(".chat-list");
+    const composer = panel.querySelector(".composer");
+    if (!list || !composer) return;
+    const keptScroll = list.scrollTop;
+    const ready = window.socialChatReady !== false;
+    composer.hidden = !ready;
+    list.replaceChildren();
+    if (!ready) {
+      const empty = document.createElement("div");
+      empty.className = "empty";
+      empty.textContent = "Chat storage is not ready yet. Run the latest supabase_rls.sql in the Supabase SQL editor.";
+      list.appendChild(empty);
+      return;
+    }
+    const threads = window.socialChat || [];
+    if (!threads.length) {
+      const empty = document.createElement("div");
+      empty.className = "empty";
+      empty.textContent = "No chat comments yet. Post the first one below.";
+      list.appendChild(empty);
+    } else {
+      threads.forEach((item) => list.appendChild(chatCard(item, item.id)));
+    }
+    const notice = panel.querySelector(".chat-notice");
+    if (notice) {
+      notice.hidden = !window.socialChatNotice;
+      notice.textContent = window.socialChatNotice || "";
+    }
+    const faces = panel.querySelector(".faces");
+    if (faces && !faces.childElementCount) {
+      (window.socialChatFaces || []).forEach((face) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = String(face);
+        button.addEventListener("click", () => addChatFace(panel, String(face)));
+        faces.appendChild(button);
+      });
+    }
+    paintReply(panel);
+    updateChatCount(panel);
+    list.scrollTop = keptScroll;
   }
 
   function fillStreamSelect(select, placeholder, pairs, selected, extras) {
@@ -700,13 +1012,16 @@ try:
         crowd_mark,
         holder_counts,
         holders_mark,
+        load_chat,
         load_market_moods,
         market_mood_crowd,
         load_shared_market,
         recent_closes,
         save_logos,
         save_market_mood,
+        set_chat_vote,
         set_market_mood_vote,
+        post_chat,
         save_price_paths,
         save_sentiment,
         sentiment_comment_lists,
@@ -1397,7 +1712,7 @@ The **Sentiment** column shows that saved score in the same colored box. A dash 
 
 The picture on the left of each name is that asset's logo. The same logo appears at the top of the Interactive Chart and Market sentiment sections. Crypto logos come from CoinGecko. Stock logos come from Finnhub. A letter shows when a logo is not available. The address is saved once and reused for every account.
 
-Beside the sentiment score you can press thumbs up if you agree, or thumbs down if you do not. Press the same thumb again to clear your take. Those buttons sit in an outlined box. After you disagree, scores appear in that same box, under the buttons: 0, 20, 40, 60, 80 and 100. The number you pick also fills the type box, and you can type any number from 0 to 100. It saves on its own when you click a score, press Enter, or leave the box. The thumbs and that same colored average sit at the bottom of Your take, and again under **Crowd** on each table row. The box is the average of the personal scores, in the same style as the Sentiment column. It updates when a score is clicked or typed. Hover the down thumb for the spread, which is how far those scores typically sit from the average. One score has no spread yet. A dash means nobody has given a personal score. Under the thumbs you can post one comment of up to 160 characters. A row under the box adds an emoticon, including a rocket. A speech balloon appears beside the thumbs, and in the **Comments** column, once any comment exists. Click it, or the arrow on the right edge of the page, to slide in the **Social signals stream**. That stream lists comments newest first, with each person's picture, name, and the time, and the sentiment they were answering. Narrow it with All, Positive, Negative, or Mixed. Under Asset, All assets is every comment, and My watchlists is only the crypto and equity tables on your account. My Crypto Watchlist and My Equities Watchlist each show one of those lists. Crypto market and Stock market sit above the individual assets. That choice of All assets or a watchlist is saved for you. You can also pick one asset or one person. Close it with Close, the shaded area, or Escape. A refresh of that sentiment clears every thumb and every personal score, because they belonged to the old score. A comment stays for 12 hours from when it was posted, and the stream keeps the sentiment it was answering even after a newer score arrives.
+Beside the sentiment score you can press thumbs up if you agree, or thumbs down if you do not. Press the same thumb again to clear your take. Those buttons sit in an outlined box. After you disagree, scores appear in that same box, under the buttons: 0, 20, 40, 60, 80 and 100. The number you pick also fills the type box, and you can type any number from 0 to 100. It saves on its own when you click a score, press Enter, or leave the box. The thumbs and that same colored average sit at the bottom of Your take, and again under **Crowd** on each table row. The box is the average of the personal scores, in the same style as the Sentiment column. It updates when a score is clicked or typed. Hover the down thumb for the spread, which is how far those scores typically sit from the average. One score has no spread yet. A dash means nobody has given a personal score. Under the thumbs you can post one comment of up to 160 characters. A row under the box adds an emoticon, including a rocket. A speech balloon appears beside the thumbs, and in the **Comments** column, once any comment exists. Click it, or the arrow on the right edge of the page, to slide in the **Social signals stream**. That stream lists comments newest first, with each person's picture, name, and the time, and the sentiment they were answering. Narrow it with All, Positive, Negative, or Mixed. Under Asset, All assets is every comment, and My watchlists is only the crypto and equity tables on your account. My Crypto Watchlist and My Equities Watchlist each show one of those lists. Crypto market and Stock market sit above the individual assets. That choice of All assets or a watchlist is saved for you. You can also pick one asset or one person. The lower half of that panel is a general chat. Drag the line between the two halves to give either one more room. Post a comment at the bottom, with the same emoticons. Reply to a comment, or mark someone else's comment up or down. These notes are not tied to an asset, and they stay in the room. Close it with Close, the shaded area, or Escape. A refresh of that sentiment clears every thumb and every personal score, because they belonged to the old score. A comment stays for 12 hours from when it was posted, and the stream keeps the sentiment it was answering even after a newer score arrives.
 
 Click a sentiment score in the table to highlight that asset and jump to its headlines. **↑ Top** scrolls back to the top of the page. It sits at the top right of the Interactive Chart section, and at the top right of Market sentiment.
 
@@ -1799,6 +2114,52 @@ def load_market_sentiment(query: str, enabled: bool, force: bool = False):
     return analyze_market_sentiment(query, enabled, force=force)
 
 
+def _chat_viewer() -> dict:
+    """The signed-in name and picture shown on a comment posted from this page."""
+    email = getattr(st.session_state.user, "email", "") or ""
+    name = " ".join(str((profile or {}).get("display_name") or "").split())
+    if not name and "@" in email:
+        name = email.split("@", 1)[0]
+    avatar = str((profile or {}).get("avatar_url") or "").strip()
+    if not avatar.startswith("https://") or any(mark in avatar for mark in (" ", '"', "'", "<", ">", "\\")):
+        avatar = ""
+    return {"name": (name or "Member")[:40], "avatar": avatar}
+
+
+def _chat_action(raw):
+    """One post or thumb from the chat panel. None when this run has nothing new."""
+    if not raw:
+        return None
+    try:
+        data = json.loads(raw) if isinstance(raw, str) else raw
+    except (TypeError, json.JSONDecodeError):
+        return None
+    if not isinstance(data, dict) or data.get("action") not in ("post", "vote"):
+        return None
+    try:
+        token = int(data.get("n") or 0)
+    except (TypeError, ValueError):
+        return None
+    if token <= 0:
+        return None
+    return data
+
+
+def _apply_chat_action(action) -> str:
+    """Save a chat post or thumb. The returned note is shown once in the panel."""
+    try:
+        if action.get("action") == "post":
+            parent = int(action.get("parent") or 0)
+            post_chat(supabase, user_id, action.get("text") or "", parent or None)
+            return ""
+        message_id = int(action.get("message") or 0)
+        vote = int(action.get("vote") or 0)
+        set_chat_vote(supabase, user_id, message_id, vote)
+        return ""
+    except Exception:
+        return "That could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again."
+
+
 def _share_market_rows(crypto_watchlist, stock_watchlist, crypto_results, stock_results):
     """Save this refresh's closes and reuse any headline score already stored."""
     priced = []
@@ -1998,11 +2359,30 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             stream_items = []
         if not isinstance(stream_items, list):
             stream_items = []
-        chosen_scope = _social_stream(
+        chat_notice = st.session_state.pop("chat_notice", "")
+        stream_state = _social_stream(
             key="social_stream_host",
-            data=json.dumps({"items": stream_items, "asset": scope}, ensure_ascii=False),
+            data=json.dumps(
+                {
+                    "items": stream_items,
+                    "asset": scope,
+                    "chat": load_chat(supabase),
+                    "me": _chat_viewer(),
+                    "notice": chat_notice,
+                    "faces": list(COMMENT_EMOTICONS),
+                    "limit": COMMENT_LIMIT,
+                },
+                ensure_ascii=False,
+            ),
             on_asset_change=lambda: None,
-        ).asset
+            on_chat_change=lambda: None,
+        )
+        chosen_scope = stream_state.asset
+        chat_event = _chat_action(getattr(stream_state, "chat", None))
+        if chat_event and chat_event.get("n") != st.session_state.get("chat_done"):
+            st.session_state["chat_done"] = chat_event.get("n")
+            st.session_state["chat_notice"] = _apply_chat_action(chat_event)
+            _rerun_fragment()
         if chosen_scope in ("all", "watchlist", "crypto", "stock"):
             stored = prefs.setdefault("settings", {})
             if stored.get("stream_asset") != chosen_scope:

@@ -340,6 +340,116 @@ def _short_summary(text, limit: int = 220) -> str:
     return (cut or cleaned[:limit]).rstrip(".,;:") + "…"
 
 
+def load_chat(supabase) -> list[dict] | None:
+    """Newest chat threads, replies oldest first. None when the chat tables are missing."""
+    try:
+        response = supabase.rpc("chat_feed").execute()
+    except Exception:
+        return None
+    notes = []
+    for row in response.data or []:
+        text = " ".join(str(row.get("body") or "").split())
+        try:
+            message_id = int(row.get("id"))
+        except (TypeError, ValueError):
+            continue
+        if not text:
+            continue
+        parent = row.get("parent_id")
+        try:
+            parent_id = int(parent) if parent is not None else None
+        except (TypeError, ValueError):
+            parent_id = None
+        try:
+            vote = int(row.get("my_vote"))
+        except (TypeError, ValueError):
+            vote = 0
+        if vote not in (1, -1):
+            vote = 0
+        notes.append({
+            "id": message_id,
+            "parent": parent_id,
+            "name": " ".join(str(row.get("author_name") or "Member").split())[:40] or "Member",
+            "avatar": _public_avatar(row.get("avatar_url")),
+            "text": text[:COMMENT_LIMIT],
+            "at": _comment_time(row.get("created_at")),
+            "mine": bool(row.get("mine")),
+            "up": int(row.get("thumbs_up") or 0),
+            "down": int(row.get("thumbs_down") or 0),
+            "vote": vote,
+        })
+    roots: dict[int, dict] = {}
+    ordered = []
+    for note in notes:
+        if note["parent"] is not None:
+            continue
+        item = {key: note[key] for key in ("id", "name", "avatar", "text", "at", "mine", "up", "down", "vote")}
+        item["replies"] = []
+        roots[note["id"]] = item
+        ordered.append(item)
+    for note in notes:
+        parent = roots.get(note["parent"])
+        if parent is None:
+            continue
+        parent["replies"].append({
+            key: note[key] for key in ("id", "name", "avatar", "text", "at", "mine", "up", "down", "vote")
+        })
+    ordered.sort(key=lambda item: item["at"], reverse=True)
+    for item in ordered:
+        item["replies"].sort(key=lambda reply: reply["at"])
+    return ordered
+
+
+def post_chat(supabase, user_id, body: str, parent_id: int | None = None) -> None:
+    """Add a chat comment, or a reply to a top-level comment. Blank does nothing."""
+    text = " ".join(str(body or "").split())[:COMMENT_LIMIT]
+    if not text:
+        return
+    payload = {"user_id": str(user_id), "body": text}
+    if parent_id:
+        found = (
+            supabase.table("chat_messages")
+            .select("id,parent_id")
+            .eq("id", int(parent_id))
+            .limit(1)
+            .execute()
+        )
+        rows = found.data or []
+        if not rows or rows[0].get("parent_id") is not None:
+            raise ValueError("Reply to a top-level comment.")
+        payload["parent_id"] = int(parent_id)
+    supabase.table("chat_messages").insert(payload).execute()
+
+
+def set_chat_vote(supabase, user_id, message_id: int, vote) -> None:
+    """Thumb a comment someone else posted. The same thumb again clears it."""
+    if not message_id:
+        return
+    found = (
+        supabase.table("chat_messages")
+        .select("user_id")
+        .eq("id", int(message_id))
+        .limit(1)
+        .execute()
+    )
+    rows = found.data or []
+    if not rows or str(rows[0].get("user_id")) == str(user_id):
+        return
+    if vote not in (1, -1):
+        (
+            supabase.table("chat_votes")
+            .delete()
+            .eq("user_id", str(user_id))
+            .eq("message_id", int(message_id))
+            .execute()
+        )
+        return
+    supabase.table("chat_votes").upsert(
+        {"user_id": str(user_id), "message_id": int(message_id), "vote": int(vote)},
+        on_conflict="user_id,message_id",
+    ).execute()
+
+
 def social_stream_items(comments_by_key, shared, names, logos=None, watchlist_keys=None, list_keys=None) -> list[dict]:
     """Comments for the slide-in stream, newest first, with the sentiment they answered."""
     items = []

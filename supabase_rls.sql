@@ -583,3 +583,157 @@ $$;
 revoke all on function public.market_mood_crowd(text[]) from public;
 revoke all on function public.market_mood_crowd(text[]) from anon;
 grant execute on function public.market_mood_crowd(text[]) to authenticated;
+
+-- General chat in the social panel. A reply points at a top-level comment.
+-- These notes are not tied to an asset and do not expire with a sentiment score.
+create table if not exists public.chat_messages (
+    id bigint generated always as identity primary key,
+    user_id uuid not null references auth.users (id) on delete cascade,
+    parent_id bigint references public.chat_messages (id) on delete cascade,
+    body text not null check (char_length(btrim(body)) between 1 and 160),
+    created_at timestamptz not null default now()
+);
+
+create index if not exists chat_messages_parent_idx
+    on public.chat_messages (parent_id, created_at);
+
+create index if not exists chat_messages_created_idx
+    on public.chat_messages (created_at desc);
+
+alter table public.chat_messages enable row level security;
+
+drop policy if exists "read chat messages" on public.chat_messages;
+create policy "read chat messages" on public.chat_messages
+    for select
+    to authenticated
+    using (true);
+
+drop policy if exists "insert own chat message" on public.chat_messages;
+create policy "insert own chat message" on public.chat_messages
+    for insert
+    to authenticated
+    with check (auth.uid() = user_id);
+
+drop policy if exists "delete own chat message" on public.chat_messages;
+create policy "delete own chat message" on public.chat_messages
+    for delete
+    to authenticated
+    using (auth.uid() = user_id);
+
+grant select, insert, delete on public.chat_messages to authenticated;
+grant usage, select on sequence public.chat_messages_id_seq to authenticated;
+
+create or replace function public.chat_message_parent()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+    if new.parent_id is not null then
+        if not exists (
+            select 1
+            from public.chat_messages
+            where id = new.parent_id
+              and parent_id is null
+        ) then
+            raise exception 'Reply to a top-level comment only';
+        end if;
+    end if;
+    return new;
+end;
+$$;
+
+drop trigger if exists chat_message_parent on public.chat_messages;
+create trigger chat_message_parent
+    before insert or update on public.chat_messages
+    for each row
+    execute function public.chat_message_parent();
+
+-- One thumb per account per comment. Pressing the same thumb again clears it.
+create table if not exists public.chat_votes (
+    user_id uuid not null references auth.users (id) on delete cascade,
+    message_id bigint not null references public.chat_messages (id) on delete cascade,
+    vote smallint not null check (vote in (1, -1)),
+    primary key (user_id, message_id)
+);
+
+alter table public.chat_votes enable row level security;
+
+drop policy if exists "own chat votes" on public.chat_votes;
+create policy "own chat votes" on public.chat_votes
+    for all
+    to authenticated
+    using (auth.uid() = user_id)
+    with check (auth.uid() = user_id);
+
+grant select, insert, update, delete on public.chat_votes to authenticated;
+
+-- The newest threads, with their replies and thumb counts.
+drop function if exists public.chat_feed();
+create function public.chat_feed()
+returns table (
+    id bigint,
+    parent_id bigint,
+    author_name text,
+    avatar_url text,
+    body text,
+    created_at timestamptz,
+    mine boolean,
+    thumbs_up integer,
+    thumbs_down integer,
+    my_vote smallint
+)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    with roots as (
+        select chat_messages.id
+        from public.chat_messages
+        where chat_messages.parent_id is null
+        order by chat_messages.created_at desc
+        limit 60
+    )
+    select
+        messages.id,
+        messages.parent_id,
+        coalesce(
+            nullif(btrim(profiles.display_name), ''),
+            nullif(split_part(users.email, '@', 1), ''),
+            'Member'
+        ),
+        profiles.avatar_url,
+        messages.body,
+        messages.created_at,
+        messages.user_id = auth.uid(),
+        (
+            select count(*)::integer
+            from public.chat_votes as votes
+            where votes.message_id = messages.id
+              and votes.vote = 1
+        ),
+        (
+            select count(*)::integer
+            from public.chat_votes as votes
+            where votes.message_id = messages.id
+              and votes.vote = -1
+        ),
+        (
+            select votes.vote
+            from public.chat_votes as votes
+            where votes.message_id = messages.id
+              and votes.user_id = auth.uid()
+        )
+    from public.chat_messages as messages
+    left join public.profiles as profiles
+      on profiles.user_id = messages.user_id
+    left join auth.users as users
+      on users.id = messages.user_id
+    where messages.id in (select roots.id from roots)
+       or messages.parent_id in (select roots.id from roots);
+$$;
+
+revoke all on function public.chat_feed() from public;
+revoke all on function public.chat_feed() from anon;
+grant execute on function public.chat_feed() to authenticated;
