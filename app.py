@@ -1491,6 +1491,32 @@ export default function(component) {
   const { data, setTriggerValue, parentElement } = component;
   const shell = parentElement.closest(".stBidiComponent") || parentElement;
   shell.style.display = "none";
+  const search = new URLSearchParams(window.location.search);
+  const code = search.get("code") || "";
+  if (!code && data && data.verifier) {
+    window.angstromPkce = String(data.verifier);
+    sessionStorage.setItem("angstrom-pkce", window.angstromPkce);
+  }
+  if (!window.angstromPkceWatch) {
+    window.angstromPkceWatch = true;
+    document.addEventListener("click", (event) => {
+      const link = event.target && event.target.closest ? event.target.closest("a") : null;
+      if (!link || !window.angstromPkce) return;
+      const href = link.getAttribute("href") || "";
+      if (href.indexOf("provider=google") === -1) return;
+      sessionStorage.setItem("angstrom-pkce", window.angstromPkce);
+    }, true);
+  }
+  if (code && !window.angstromCodeSent) {
+    window.angstromCodeSent = true;
+    setTriggerValue("oauth", JSON.stringify({
+      code: code,
+      verifier: sessionStorage.getItem("angstrom-pkce") || ""
+    }));
+    search.delete("code");
+    const rest = search.toString();
+    history.replaceState(null, "", window.location.pathname + (rest ? "?" + rest : "") + window.location.hash);
+  }
   if (data && data.clear) {
     if (window.location.hash) {
       history.replaceState(null, "", window.location.pathname + window.location.search);
@@ -1710,11 +1736,14 @@ def _reset_link_error(raw: str) -> str:
     return "That reset link has expired. Request a new one."
 
 
-def _oauth_url(provider: str) -> str:
-    """The Supabase address that sends the browser to Google."""
-    options = {"redirect_to": _app_url(), "scopes": "email profile"}
-    response = supabase.auth.sign_in_with_oauth({"provider": provider, "options": options})
-    return response.url
+def _google_oauth() -> tuple[str, str]:
+    """The Google sign-in address, and the matching secret that finishes it on return."""
+    response = supabase.auth.sign_in_with_oauth({
+        "provider": "google",
+        "options": {"redirect_to": _app_url(), "scopes": "email profile"},
+    })
+    verifier = supabase.auth._storage.get_item(f"{supabase.auth._storage_key}-code-verifier") or ""
+    return response.url, verifier
 
 
 def _sign_in_from_tokens(access: str, refresh: str) -> None:
@@ -1729,6 +1758,8 @@ def _sign_in_from_tokens(access: str, refresh: str) -> None:
     st.session_state.pop("recovery_refresh", None)
     st.session_state.pop("recovery_error", None)
     st.session_state.pop("auth_error", None)
+    st.session_state.pop("google_url", None)
+    st.session_state.pop("google_verifier", None)
     st.rerun()
 
 
@@ -1742,7 +1773,7 @@ def _note_auth_error(raw: str, link_type: str = "") -> None:
     )
 
 
-def _take_password_reset() -> None:
+def _take_password_reset(google_verifier: str = "") -> None:
     """Keep a recovery session from the reset link, then drop it from the address."""
     token_hash = str(st.query_params.get("token_hash") or "")
     link_type = str(st.query_params.get("type") or "")
@@ -1762,16 +1793,42 @@ def _take_password_reset() -> None:
             st.session_state.recovery_error = _reset_link_error("")
     elif query_error:
         _note_auth_error(query_error, link_type)
-    for name in ("token_hash", "type", "code", "error", "error_code", "error_description"):
+    for name in ("token_hash", "type", "error", "error_code", "error_description"):
         if name in st.query_params:
             del st.query_params[name]
 
     ready = bool(st.session_state.get("recovery_access") or st.session_state.get("recovery_error"))
     result = _recovery_link(
         key="password_recovery",
-        data={"clear": ready},
+        data={"clear": ready, "verifier": google_verifier},
         on_recovery_change=lambda: None,
+        on_oauth_change=lambda: None,
     )
+    oauth_payload = getattr(result, "oauth", None)
+    if oauth_payload and not st.session_state.get("recovery_access"):
+        try:
+            oauth_data = json.loads(oauth_payload)
+        except Exception:
+            oauth_data = None
+        code = str((oauth_data or {}).get("code") or "") if isinstance(oauth_data, dict) else ""
+        verifier = str((oauth_data or {}).get("verifier") or "") if isinstance(oauth_data, dict) else ""
+        if "code" in st.query_params:
+            del st.query_params["code"]
+        if code and verifier:
+            try:
+                response = supabase.auth.exchange_code_for_session({
+                    "auth_code": code,
+                    "code_verifier": verifier,
+                    "redirect_to": _app_url(),
+                })
+                session = response.session
+                if session is None or not session.access_token or not session.refresh_token:
+                    raise RuntimeError("missing session")
+                _sign_in_from_tokens(session.access_token, session.refresh_token)
+            except Exception:
+                st.session_state.auth_error = "Google sign-in did not finish. Please try again."
+        elif code:
+            st.session_state.auth_error = "Google sign-in did not finish. Please try again."
     payload = getattr(result, "recovery", None)
     if not payload or st.session_state.get("recovery_access"):
         return
@@ -1812,7 +1869,11 @@ if "data_nonce" not in st.session_state:
 supabase = get_supabase()
 
 if st.session_state.user is None:
-    _take_password_reset()
+    if not st.session_state.get("google_url") or not st.session_state.get("google_verifier"):
+        st.session_state.google_url, st.session_state.google_verifier = _google_oauth()
+    google_url = st.session_state.google_url
+    google_verifier = st.session_state.google_verifier
+    _take_password_reset(google_verifier)
     _brand_watch(key="brand_watch")
     st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
     _, col_center, _ = st.columns([1, 1.2, 1])
@@ -1946,7 +2007,7 @@ if st.session_state.user is None:
             st.caption("Or continue with")
             st.link_button(
                 "Continue with Google",
-                _oauth_url("google"),
+                google_url,
                 use_container_width=True,
             )
 
