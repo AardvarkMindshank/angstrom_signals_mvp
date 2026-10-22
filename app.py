@@ -23,7 +23,7 @@ from streamlit.errors import StreamlitInvalidLayoutContextError
 from supabase import create_client
 
 st.set_page_config(
-    page_title="angstrom signals - level 1",
+    page_title="angstrom signals",
     page_icon="📈",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -39,7 +39,7 @@ def _active_theme() -> str:
     return kind if kind in ("light", "dark") else "light"
 
 
-def _brand_mark(width: int) -> str:
+def _brand_mark(width: int, *, align: str = "center") -> str:
     """Both logos, with the current theme shown first. The page swaps them when the theme changes."""
     folder = Path(__file__).resolve().parent / "assets"
     light = folder / "logo-light.png"
@@ -53,10 +53,11 @@ def _brand_mark(width: int) -> str:
     mode = _active_theme()
     light_hidden = " aria-hidden='true'" if mode == "dark" else ""
     dark_hidden = " aria-hidden='true'" if mode != "dark" else ""
+    margin = "0" if align == "left" else "0.15rem 0 0.35rem"
     return (
         "<style>.brand-mark img{display:none}.brand-mark.is-light .logo-light,"
         ".brand-mark.is-dark .logo-dark{display:inline}</style>"
-        f"<div class='brand-mark is-{mode}' style='text-align:center;margin:0.15rem 0 0.35rem;'>"
+        f"<div class='brand-mark is-{mode}' style='text-align:{align};margin:{margin};line-height:0;'>"
         f"<img class='logo-light' src='{source(light)}' alt='Angstrom Signals'{light_hidden} "
         f"width='{width}' style='width:{width}px;max-width:100%;height:auto;'>"
         f"<img class='logo-dark' src='{source(dark)}' alt=''{dark_hidden} "
@@ -2059,7 +2060,13 @@ if "section_fold" not in st.session_state:
 
 title_col, open_col, close_col = st.columns([6.2, 1, 1.25], vertical_alignment="center")
 with title_col:
-    st.title("angstrom signals - level 1")
+    st.markdown(
+        "<div style='display:flex;align-items:center;gap:0.85rem;margin:0.4rem 0;'>"
+        f"{_brand_mark(58, align='left')}"
+        "<h1 style='margin:0;padding:0;line-height:1.15;font-size:2.25rem;font-weight:700;'>"
+        "angstrom signals</h1></div>",
+        unsafe_allow_html=True,
+    )
 with open_col:
     if st.button("Open all", key="open_all_sections", use_container_width=True):
         st.session_state.section_fold = {
