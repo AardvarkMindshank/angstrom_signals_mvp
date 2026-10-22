@@ -141,6 +141,30 @@ export default function(component) {
   apply();
   if (!window.angstromBrandWatch) {
     window.angstromBrandWatch = true;
+    document.addEventListener("mousedown", (event) => {
+      const button = event.target.closest && event.target.closest(".take-face");
+      if (!button) return;
+      event.preventDefault();
+      const row = button.closest(".take-faces");
+      const box = button.closest("[class*='_take_box']");
+      const input = box && box.querySelector("[data-testid='stTextInputField']");
+      if (!input) return;
+      const face = button.getAttribute("data-face") || "";
+      const limit = Number((row && row.getAttribute("data-limit")) || "160");
+      const current = input.value;
+      const gap = current && !/\\s$/.test(current) ? " " : "";
+      let next = current + gap + face;
+      if (next.length > limit) {
+        next = current + face;
+        if (next.length > limit) return;
+      }
+      const setValue = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+      setValue.call(input, next);
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      input.focus();
+      const end = input.value.length;
+      if (input.setSelectionRange) input.setSelectionRange(end, end);
+    }, true);
     const arm = () => {
       const app = document.querySelector(".stApp");
       if (!app || app.dataset.brandWatch) return;
@@ -1541,7 +1565,6 @@ try:
         social_stream_items,
         set_sentiment_comment,
         set_sentiment_vote,
-        with_emoticon,
         sentiment_from_row,
         sparkline_svg,
         trend_tone,
@@ -3726,17 +3749,35 @@ def _sentiment_thumbs(
         .st-key-{prefix}_comment_row {{
             margin-top: 6px;
         }}
-        [class*="st-key-{prefix}_face_"] button {{
+        .take-faces {{
+            display: flex;
+            gap: 4px;
+            margin-top: 4px;
+        }}
+        .take-face {{
+            flex: 1;
             min-width: 0;
             padding: 0.15rem 0;
-        }}
-        [class*="st-key-{prefix}_face_"] button p {{
+            font: inherit;
             font-size: 1rem;
             line-height: 1.1;
+            cursor: pointer;
+            border-radius: 0.5rem;
+            border: 1px solid rgba(49, 51, 63, 0.2);
+            background: #f0f2f6;
+            color: inherit;
         }}
-        [class*="st-key-{prefix}_face_6"] button p {{
+        .take-face-poop {{
             font-size: 1.45rem;
             line-height: 1;
+        }}
+        .take-face:hover {{
+            border-color: #ff4b4b;
+        }}
+        html.angstrom-night .take-face {{
+            background: #262730;
+            border-color: #4b5563;
+            color: #fafafa;
         }}
         .st-key-{prefix}_alt_0 button,
         .st-key-{prefix}_alt_20 button,
@@ -3808,9 +3849,6 @@ def _sentiment_thumbs(
         elif st.session_state.get(posted_key) == st.session_state.get(box_key) and st.session_state.get(box_key) != mine_text:
             st.session_state[box_key] = mine_text
         st.session_state[posted_key] = mine_text
-        pending_face = st.session_state.pop(f"{box_key}_face", None)
-        if pending_face:
-            st.session_state[box_key] = with_emoticon(st.session_state.get(box_key), pending_face)
         st.text_input(
             "Comment",
             max_chars=COMMENT_LIMIT,
@@ -3818,16 +3856,16 @@ def _sentiment_thumbs(
             label_visibility="collapsed",
             placeholder="Add a short comment",
         )
-        picked_face = None
-        for index, (column, emoticon) in enumerate(
-            zip(st.columns(len(COMMENT_EMOTICONS), gap="xxsmall", wrap=False), COMMENT_EMOTICONS)
-        ):
-            with column:
-                if st.button(emoticon, key=f"{prefix}_face_{index}", use_container_width=True):
-                    picked_face = emoticon
-        if picked_face:
-            st.session_state[f"{box_key}_face"] = picked_face
-            _rerun_fragment()
+        faces = []
+        for index, emoticon in enumerate(COMMENT_EMOTICONS):
+            extra = " take-face-poop" if index == 6 else ""
+            faces.append(
+                f"<button type='button' class='take-face{extra}' "
+                f"data-face='{html.escape(emoticon, quote=True)}'>{html.escape(emoticon)}</button>"
+            )
+        st.html(
+            f"<div class='take-faces' data-limit='{COMMENT_LIMIT}'>{''.join(faces)}</div>"
+        )
         st.caption(
             f"Up to {COMMENT_LIMIT} characters. Tap one to add it. "
             "Posting again replaces yours. Each comment stays for 12 hours."
