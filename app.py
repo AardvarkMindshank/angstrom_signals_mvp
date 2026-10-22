@@ -88,6 +88,8 @@ export default function(component) {
       ? (0.299 * Number(parts[0])) + (0.587 * Number(parts[1])) + (0.114 * Number(parts[2]))
       : 255;
     const dark = shade < 140;
+    const stream = document.getElementById("social-stream-root");
+    if (stream) stream.classList.toggle("is-dark", dark);
     document.querySelectorAll(".brand-mark").forEach((mark) => {
       mark.classList.toggle("is-dark", dark);
       mark.classList.toggle("is-light", !dark);
@@ -289,14 +291,14 @@ export default function(component) {
       window.socialStreamState.pinned = pinned;
     }
     let style = document.getElementById("social-stream-style");
-    if (style && style.dataset.layout !== "pin") {
+    if (style && style.dataset.layout !== "night") {
       style.remove();
       style = null;
     }
     if (!style) {
       style = document.createElement("style");
       style.id = "social-stream-style";
-      style.dataset.layout = "pin";
+      style.dataset.layout = "night";
       style.textContent = [
         "#social-stream-root{position:fixed;inset:0;z-index:10000000;pointer-events:none;}",
         "#social-stream-root.is-open{pointer-events:auto;}",
@@ -379,7 +381,33 @@ export default function(component) {
         "#social-stream-root .badge{font-size:.78rem;font-weight:700;border-radius:4px;padding:1px 6px;}",
         "#social-stream-root .coverage{margin-top:4px;font-size:.8rem;font-weight:600;}",
         "#social-stream-root .summary{margin:4px 0 0;color:#374151;font-size:.82rem;line-height:1.4;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}",
-        "#social-stream-root .empty{color:#6b7280;padding:18px 0;font-size:.9rem;line-height:1.4;}"
+        "#social-stream-root .empty{color:#6b7280;padding:18px 0;font-size:.9rem;line-height:1.4;}",
+        "#social-stream-root.is-dark .panel{background:#0e1117;color:#fafafa;box-shadow:-12px 0 40px rgba(0,0,0,.45);}",
+        "#social-stream-root.is-dark .kicker,#social-stream-root.is-dark .hint,#social-stream-root.is-dark .count,#social-stream-root.is-dark .chars,#social-stream-root.is-dark .when,#social-stream-root.is-dark .empty,#social-stream-root.is-dark .picks label,#social-stream-root.is-dark .context-label,#social-stream-root.is-dark .replying{color:#9ca3af;}",
+        "#social-stream-root.is-dark .finder input,#social-stream-root.is-dark select,#social-stream-root.is-dark .chat-box{background:#262730;color:#fafafa;border-color:#4b5563;color-scheme:dark;}",
+        "#social-stream-root.is-dark .finder input::placeholder,#social-stream-root.is-dark .chat-box::placeholder{color:#9ca3af;}",
+        "#social-stream-root.is-dark .close,#social-stream-root.is-dark .pin{background:#262730;color:#fafafa;}",
+        "#social-stream-root.is-dark .pin.is-on{background:#f3f4f6;color:#111827;}",
+        "#social-stream-root.is-dark .edge{background:#262730;color:#c5c8d0;border-color:#4b5563;}",
+        "#social-stream-root.is-dark .edge:hover{background:#31333f;color:#ff4b4b;}",
+        "#social-stream-root.is-dark .chips button,#social-stream-root.is-dark .faces button,#social-stream-root.is-dark .chat-actions button{background:#262730;border-color:#4b5563;color:#e5e7eb;}",
+        "#social-stream-root.is-dark .chips button.is-on{background:#f3f4f6;border-color:#f3f4f6;color:#111827;}",
+        "#social-stream-root.is-dark .composer{border-top-color:#31333f;}",
+        "#social-stream-root.is-dark .post{background:#f3f4f6;color:#111827;}",
+        "#social-stream-root.is-dark .chat-card,#social-stream-root.is-dark .card{border-top-color:#31333f;}",
+        "#social-stream-root.is-dark .reply{border-left-color:#4b5563;}",
+        "#social-stream-root.is-dark .chat-actions button.thumb-up{color:#4ade80;background:transparent;}",
+        "#social-stream-root.is-dark .chat-actions button.thumb-down,#social-stream-root.is-dark .chat-actions button.delete-note{color:#f87171;background:transparent;}",
+        "#social-stream-root.is-dark .chat-actions button.thumb-up.is-on{background:#14532d;border-color:#4ade80;color:#4ade80;}",
+        "#social-stream-root.is-dark .chat-actions button.thumb-down.is-on{background:#7f1d1d;border-color:#f87171;color:#fca5a5;}",
+        "#social-stream-root.is-dark .chat-actions button.delete-note{background:#262730;}",
+        "#social-stream-root.is-dark .replying button{color:#93c5fd;}",
+        "#social-stream-root.is-dark .context{background:#262730;border-color:#3d4452;}",
+        "#social-stream-root.is-dark .summary{color:#d1d5db;}",
+        "#social-stream-root.is-dark .face{background:#1e3a5f;color:#93c5fd;}",
+        "#social-stream-root.is-dark .favourite{color:#6b7280;}",
+        "#social-stream-root.is-dark .favourite.is-on{color:#fbbf24;}",
+        "#social-stream-root.is-dark .chat-notice{color:#fbbf24;}"
       ].join("");
       document.head.appendChild(style);
     }
@@ -604,6 +632,12 @@ export default function(component) {
       const state = window.socialStreamState;
       panel.classList.toggle("is-open", !!state.open);
       panel.classList.toggle("is-pinned", !!state.pinned);
+      const app = document.querySelector(".stApp");
+      const parts = app ? getComputedStyle(app).backgroundColor.match(/\\d+/g) : null;
+      const shade = parts
+        ? (0.299 * Number(parts[0])) + (0.587 * Number(parts[1])) + (0.114 * Number(parts[2]))
+        : 255;
+      panel.classList.toggle("is-dark", shade < 140);
       const main = document.querySelector("[data-testid='stMain']");
       if (main) main.style.paddingRight = state.open && state.pinned ? "min(420px, 100vw)" : "";
       const pin = panel.querySelector(".pin");
