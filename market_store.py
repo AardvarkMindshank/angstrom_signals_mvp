@@ -138,17 +138,12 @@ def crowd_mark(up, down, active: bool = True, alt_count=0, alt_avg=None, alt_spr
     average = _optional_number(alt_avg)
     spread = _optional_number(alt_spread)
     up_title = html.escape(f"{up_count} agree with this sentiment.")
+    detail = f"{down_count} disagree."
     if scored >= 1 and average is not None:
-        detail = (
-            f"{down_count} disagree. {scored} gave their own score, "
-            f"averaging {round(average)}."
-        )
+        detail = f"{down_count} disagree. {scored} gave their own score."
         if scored >= 2 and spread is not None:
             detail += f" The spread is ±{round(spread)}."
-        down_text = f"👎 {down_count} · avg {round(average)}"
-    else:
-        detail = f"{down_count} disagree."
-        down_text = f"👎 {down_count}"
+    down_text = f"👎 {down_count}"
     detail += " These reset when the sentiment is refreshed."
     return (
         "<span style='display:inline-flex;align-items:center;gap:8px;white-space:nowrap;'>"

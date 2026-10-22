@@ -636,6 +636,20 @@ def tone(score):
     return "#b91c1c", "#fee2e2", "↓", "#ef4444"
 
 
+def crowd_average_badge(average, count, spread, active: bool = True) -> str:
+    """The personal-score average, in the same colored box as the headline sentiment."""
+    try:
+        scored = int(count or 0)
+    except (TypeError, ValueError):
+        scored = 0
+    if not active or scored < 1 or average is None or pd.isna(average):
+        return "<span style='color:#6b7280;'>—</span>"
+    title = f"Average of {scored} personal score" + ("s." if scored != 1 else ".")
+    if scored >= 2 and spread is not None and not pd.isna(spread):
+        title += f" The spread is ±{round(float(spread))}."
+    return f"<span title='{html.escape(title)}'>{sentiment_badge(average)}</span>"
+
+
 def sentiment_badge(score, pick: str | None = None) -> str:
     """Colored number box used for a headline score. A dash when there is no score yet."""
     if score is None or pd.isna(score):
@@ -870,7 +884,7 @@ The **Sentiment** column shows that saved score in the same colored box. A dash 
 
 The picture on the left of each name is that asset's logo. The same logo appears beside the Interactive Chart and Market sentiment headings. Crypto logos come from CoinGecko. Stock logos come from Finnhub. A letter shows when a logo is not available. The address is saved once and reused for every account.
 
-Beside the sentiment score you can press thumbs up if you agree, or thumbs down if you do not. Press the same thumb again to clear your take. Those buttons sit in an outlined box. After you disagree, scores appear in that same box, under the buttons: 0, 20, 40, 60, 80 and 100. The number you pick also fills the type box, and you can type any number from 0 to 100. It saves on its own when you click a score, press Enter, or leave the box. **Crowd** on each table row adds up the thumbs. When people who disagree have given a score, the down thumb also shows their average. Hover that thumb for the spread, which is how far those scores typically sit from the average. One score has no spread yet. A refresh of that sentiment clears every thumb and every score, because they belonged to the old score.
+Beside the sentiment score you can press thumbs up if you agree, or thumbs down if you do not. Press the same thumb again to clear your take. Those buttons sit in an outlined box. After you disagree, scores appear in that same box, under the buttons: 0, 20, 40, 60, 80 and 100. The number you pick also fills the type box, and you can type any number from 0 to 100. It saves on its own when you click a score, press Enter, or leave the box. **Crowd** on each table row has the thumbs, and a colored box to their right. That box is the average of the personal scores, in the same style as the Sentiment column. Hover the down thumb for the spread, which is how far those scores typically sit from the average. One score has no spread yet. A dash means nobody has given a personal score. A refresh of that sentiment clears every thumb and every score, because they belonged to the old score.
 
 Click a sentiment score in the table to highlight that asset and jump to its headlines. **↑ Top** scrolls back to the top of the page. It sits on the right of the chart title, and on the right of the sentiment Refresh button.
 
@@ -1382,17 +1396,23 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             return
         frame = pd.DataFrame(results).sort_values("score", ascending=False, na_position="last")
         st.subheader(title)
-        st.caption("Click a name to show that asset on the chart. Click a sentiment score to open its headlines. Watching is how many accounts hold that asset. Hover the down thumb to see the scores from people who disagree. The Trend line is the last 30 closes.")
+        st.caption("Click a name to show that asset on the chart. Click a sentiment score to open its headlines. Watching is how many accounts hold that asset. The Crowd box is the average of personal scores. Hover the down thumb for the spread. The Trend line is the last 30 closes.")
 
         headers = ["Asset", "Watching", "Score", "Signal", "Price", "RSI"]
         if show_extra_metrics_flag:
             headers += ["7d %", "ATR %", "Vol"]
         headers += ["Sentiment", "Crowd", "Trend"]
-        header_html = "".join(
-            f"<th style='padding:8px 10px;text-align:{'right' if name in ('Sentiment', 'Crowd', 'Trend') else 'left'};"
-            f"white-space:nowrap;'>{html.escape(name)}</th>"
-            for name in headers
-        )
+        header_html = ""
+        for name in headers:
+            if name == "Crowd":
+                header_html += (
+                    "<th colspan='2' style='padding:8px 10px;text-align:center;white-space:nowrap;'>Crowd</th>"
+                )
+                continue
+            align = "right" if name in ("Sentiment", "Trend") else "left"
+            header_html += (
+                f"<th style='padding:8px 10px;text-align:{align};white-space:nowrap;'>{html.escape(name)}</th>"
+            )
 
         pick = st.session_state.get("chart_pick")
         rows_html = ""
@@ -1440,8 +1460,10 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             rows_html += (
                 f"<td style='padding:10px;text-align:right;white-space:nowrap;'>"
                 f"{sentiment_badge(headline_score, sentiment_pick)}</td>"
-                f"<td style='padding:10px;text-align:right;white-space:nowrap;'>"
+                f"<td style='padding:10px 4px 10px 10px;text-align:right;white-space:nowrap;'>"
                 f"{crowd_mark(row.get('thumbs_up'), row.get('thumbs_down'), headline_score is not None, row.get('alt_count'), row.get('alt_avg'), row.get('alt_spread'))}</td>"
+                f"<td style='padding:10px 10px 10px 4px;text-align:left;white-space:nowrap;'>"
+                f"{crowd_average_badge(row.get('alt_avg'), row.get('alt_count'), row.get('alt_spread'), headline_score is not None)}</td>"
                 f"<td style='padding:6px 10px;width:84px;'>{sparkline_svg(row.get('closes'))}</td></tr>"
             )
 
