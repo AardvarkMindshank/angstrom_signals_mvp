@@ -3133,6 +3133,14 @@ render_dashboard(
     show_period_changes,
 )
 
+st.markdown(
+    "<div style='margin-top:2.5rem;padding-top:1rem;border-top:1px solid #e5e7eb;"
+    "text-align:center;color:#6b7280;font-size:0.8rem;'>"
+    "© 2026 Angstrom Signals. All rights reserved."
+    "</div>",
+    unsafe_allow_html=True,
+)
+
 st.sidebar.markdown("---")
 st.sidebar.info("Prices and technical scores refresh every 5 minutes while this page is open. Market sentiment refreshes about every 12 hours. Alert checks continue every 5 minutes after you leave.")
 st.sidebar.caption("Watchlists, settings, and alerts are stored on your account.")
