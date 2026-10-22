@@ -1717,6 +1717,23 @@ def _sentiment_thumbs(kind: str, asset_id: str, sentiment_at) -> None:
     key = asset_market_key(kind, asset_id)
     voice = sentiment_crowd(supabase, [key]).get(key) or {}
     mine = voice.get("mine")
+    st.html(
+        """
+        <style>
+        .st-key-sentiment_agree [data-testid="stBaseButton-primary"],
+        .st-key-sentiment_agree [data-testid="stBaseButton-primary"]:hover,
+        .st-key-sentiment_agree [data-testid="stBaseButton-primary"]:focus,
+        .st-key-sentiment_agree [data-testid="stBaseButton-primary"]:active {
+            background-color: #15803d;
+            border-color: #15803d;
+            color: #ffffff;
+        }
+        .st-key-sentiment_agree [data-testid="stBaseButton-primary"] p {
+            color: #ffffff;
+        }
+        </style>
+        """
+    )
     st.markdown("**Your take**")
     agree = st.button(
         "👍 Agree",
