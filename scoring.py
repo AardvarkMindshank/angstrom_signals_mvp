@@ -119,6 +119,7 @@ def calculate_indicators(df: pd.DataFrame) -> pd.DataFrame:
         df["obv_sma_20"] = ta.sma(obv, length=20)
 
     def performance():
+        df["change_1d"] = close.pct_change(1) * 100
         df["change_7d"] = close.pct_change(7) * 100
         df["change_30d"] = close.pct_change(30) * 100
 
@@ -158,6 +159,7 @@ def _empty_result(reason: str) -> dict:
         "confluence": 0,
         "latest_price": None,
         "rsi": None,
+        "change_1d": None,
         "change_7d": None,
         "change_30d": None,
         "atr_pct": None,
@@ -382,6 +384,7 @@ def compute_score(df: pd.DataFrame, weights: dict | None = None) -> dict:
         add("OBV", points, reason)
 
     w_perf = weight("performance")
+    change_1d = _scalar(latest.get("change_1d"))
     change_7d = _scalar(latest.get("change_7d"))
     change_30d = _scalar(latest.get("change_30d"))
     if w_perf and change_7d is not None and change_7d != 0:
@@ -406,6 +409,7 @@ def compute_score(df: pd.DataFrame, weights: dict | None = None) -> dict:
         "confluence": int(bullish - bearish),
         "latest_price": round(close, 4) if close < 1 else round(close, 2),
         "rsi": round(rsi, 1) if rsi is not None else None,
+        "change_1d": round(change_1d, 1) if change_1d is not None else None,
         "change_7d": round(change_7d, 1) if change_7d is not None else None,
         "change_30d": round(change_30d, 1) if change_30d is not None else None,
         "atr_pct": round(atr_pct, 2) if atr_pct else None,
