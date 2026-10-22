@@ -2456,7 +2456,7 @@ def _store_sentiment_vote(kind: str, asset_id: str, sentiment_at, vote, alt_scor
     try:
         set_sentiment_vote(supabase, user_id, kind, asset_id, sentiment_at, vote, alt_score)
     except Exception:
-        st.warning("That thumb could not be saved. Run supabase_rls.sql in the Supabase SQL editor again.")
+        st.warning("That thumb could not be saved. Please try again.")
         return
     st.rerun()
 
@@ -2469,7 +2469,7 @@ def _store_sentiment_comment(
             supabase, user_id, kind, asset_id, sentiment_at, body, responded_score, responded_summary,
         )
     except Exception:
-        st.warning("That comment could not be saved. Run supabase_rls.sql in the Supabase SQL editor again.")
+        st.warning("That comment could not be saved. Please try again.")
         return
     st.rerun()
 

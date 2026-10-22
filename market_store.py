@@ -172,9 +172,8 @@ def sentiment_comment_lists(supabase, keys: list[str], every: bool = False) -> d
     drop_expired_sentiment_comments(supabase)
     if every:
         grouped = _comment_groups(supabase, [])
-        if grouped:
+        if grouped is not None:
             return grouped
-        # An older database treats an empty list as no assets, so fall back to the watchlist.
     if not wanted:
         return {}
     return _comment_groups(supabase, wanted) or {}
