@@ -71,12 +71,32 @@ export default function(component) {
   const { parentElement } = component;
   const shell = parentElement.closest(".stBidiComponent") || parentElement;
   shell.style.display = "none";
-  if (!document.getElementById("angstrom-brand-style")) {
-    const style = document.createElement("style");
+  let style = document.getElementById("angstrom-brand-style");
+  if (style && style.dataset.layout !== "cards") {
+    style.remove();
+    style = null;
+  }
+  if (!style) {
+    style = document.createElement("style");
     style.id = "angstrom-brand-style";
+    style.dataset.layout = "cards";
     style.textContent = [
       ".brand-mark img{display:none;}",
-      ".brand-mark.is-light .logo-light,.brand-mark.is-dark .logo-dark{display:inline;}"
+      ".brand-mark.is-light .logo-light,.brand-mark.is-dark .logo-dark{display:inline;}",
+      ".sentiment-card{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;}",
+      ".sentiment-kicker{font-size:.8rem;color:#6b7280;margin-bottom:4px;}",
+      ".sentiment-score{display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border-radius:4px;font-weight:600;}",
+      ".sentiment-coverage{margin-top:8px;font-weight:600;}",
+      ".sentiment-body{margin-top:8px;color:#111827;}",
+      ".sentiment-side{margin-top:12px;}",
+      ".sentiment-side .sentiment-body{margin-top:4px;}",
+      ".sentiment-side-label{font-size:.75rem;font-weight:700;}",
+      ".sentiment-drivers{margin:10px 0 0;padding-left:1.15rem;}",
+      ".sentiment-drivers li{margin:4px 0;color:#374151;}",
+      "html.angstrom-night .sentiment-card{background:#0e1117;border-color:#4b5563;color:#fafafa;}",
+      "html.angstrom-night .sentiment-kicker{color:#9ca3af;}",
+      "html.angstrom-night .sentiment-body,html.angstrom-night .sentiment-drivers li{color:#e5e7eb;}",
+      "html.angstrom-night [class*='_take_box']{background:#0e1117 !important;border-color:#4b5563 !important;}"
     ].join("");
     document.head.appendChild(style);
   }
@@ -90,6 +110,7 @@ export default function(component) {
     const dark = shade < 140;
     const stream = document.getElementById("social-stream-root");
     if (stream) stream.classList.toggle("is-dark", dark);
+    document.documentElement.classList.toggle("angstrom-night", dark);
     document.querySelectorAll(".brand-mark").forEach((mark) => {
       mark.classList.toggle("is-dark", dark);
       mark.classList.toggle("is-light", !dark);
@@ -3630,6 +3651,10 @@ def _sentiment_thumbs(
             border-radius: 10px !important;
             overflow: visible !important;
         }}
+        html.angstrom-night .st-key-{prefix}_take_box {{
+            background: #0e1117 !important;
+            border-color: #4b5563 !important;
+        }}
         .st-key-{prefix}_agree,
         .st-key-{prefix}_disagree {{
             position: relative;
@@ -3861,6 +3886,40 @@ def headline_table(headlines: list) -> str:
     return f"<div style='margin-top:10px;'>{''.join(rows)}</div>"
 
 
+def _sentiment_story(report, coverage: str, score, color, background, arrow, note: str) -> str:
+    """The score card shared by an asset and the two market moods."""
+
+    def side_note(name, text, label_color):
+        cleaned = " ".join(str(text or "").split())
+        if not cleaned:
+            return ""
+        return (
+            "<div class='sentiment-side'>"
+            f"<div class='sentiment-side-label' style='color:{label_color};'>{name}</div>"
+            f"<div class='sentiment-body'>{html.escape(cleaned)}</div>"
+            "</div>"
+        )
+
+    drivers = "".join(
+        f"<li>{html.escape(str(driver))}</li>"
+        for driver in (report.get("drivers") or [])
+    )
+    drivers_html = f"<ul class='sentiment-drivers'>{drivers}</ul>" if drivers else ""
+    sides = side_note("Positive", report.get("positive"), "#15803d") + side_note(
+        "Negative", report.get("negative"), "#b91c1c"
+    )
+    summary = html.escape((report or {}).get("summary") or "")
+    return (
+        "<div class='sentiment-card'>"
+        f"<div class='sentiment-kicker'>{html.escape(note)}</div>"
+        f"<div class='sentiment-score' style='background:{background};color:{color};'>"
+        f"{arrow} {score:.0f}/100</div>"
+        f"<div class='sentiment-coverage' style='color:{color};'>{html.escape(coverage)}</div>"
+        f"<div class='sentiment-body'>{summary}</div>"
+        f"{drivers_html}{sides}</div>"
+    )
+
+
 def _mood_coverage(score: float) -> str:
     if score >= 60:
         return "Bullish coverage"
@@ -3919,46 +3978,15 @@ def _mood_card(spec: dict, row: dict | None, deadlines: dict) -> None:
     score = (report or {}).get("score")
     if report and report.get("ok") and score is not None:
         color, background, arrow, _bar = tone(score)
-        summary = html.escape(report.get("summary") or "")
-
-        def side_note(name, text, label_color):
-            cleaned = " ".join(str(text or "").split())
-            if not cleaned:
-                return ""
-            return (
-                "<div style='margin-top:12px;'>"
-                f"<div style='font-size:0.75rem;font-weight:700;color:{label_color};'>{name}</div>"
-                f"<div style='margin-top:4px;color:#111827;'>{html.escape(cleaned)}</div>"
-                "</div>"
-            )
-
-        sides = side_note("Positive", report.get("positive"), "#15803d") + side_note(
-            "Negative", report.get("negative"), "#b91c1c"
-        )
-        drivers = "".join(
-            f"<li style='margin:4px 0;color:#374151;'>{html.escape(str(driver))}</li>"
-            for driver in (report.get("drivers") or [])
-        )
-        drivers_html = (
-            f"<ul style='margin:10px 0 0;padding-left:1.15rem;'>{drivers}</ul>"
-            if drivers else ""
+        note = (
+            "Average of the article scores below, from the last 7 days"
+            if any(item.get("score") is not None for item in headlines)
+            else "Score for these headlines, from the last 7 days"
         )
         score_card, vote_card = st.columns([3.5, 2.1], vertical_alignment="top")
         with score_card:
             st.markdown(
-                "<div style='background:#ffffff;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;'>"
-                "<div style='font-size:0.8rem;color:#6b7280;margin-bottom:4px;'>"
-                + (
-                    "Average of the article scores below, from the last 7 days"
-                    if any(item.get("score") is not None for item in headlines)
-                    else "Score for these headlines, from the last 7 days"
-                )
-                + "</div>"
-                f"<div style='display:inline-flex;align-items:center;gap:6px;background:{background};color:{color};"
-                f"padding:2px 8px;border-radius:4px;font-weight:600;'>{arrow} {score:.0f}/100</div>"
-                f"<div style='margin-top:8px;font-weight:600;color:{color};'>{html.escape(_mood_coverage(score))}</div>"
-                f"<div style='margin-top:8px;color:#111827;'>{summary}</div>"
-                f"{drivers_html}{sides}</div>",
+                _sentiment_story(report, _mood_coverage(score), score, color, background, arrow, note),
                 unsafe_allow_html=True,
             )
         with vote_card:
@@ -4069,57 +4097,16 @@ def show_market_sentiment(kind: str, asset_id: str, label: str, ticker: str | No
         score = report.get("score")
         if report.get("ok") and score is not None:
             color, background, arrow, _bar = tone(score)
-            if score >= 60:
-                coverage = "Bullish coverage"
-            elif score >= 53:
-                coverage = "Mildly bullish coverage"
-            elif score >= 47:
-                coverage = "Mixed coverage"
-            elif score >= 40:
-                coverage = "Mildly bearish coverage"
-            else:
-                coverage = "Bearish coverage"
-            summary = html.escape(report.get("summary") or "")
-
-            def side_note(label, text, label_color):
-                cleaned = " ".join(str(text or "").split())
-                if not cleaned:
-                    return ""
-                return (
-                    "<div style='margin-top:12px;'>"
-                    f"<div style='font-size:0.75rem;font-weight:700;color:{label_color};'>{label}</div>"
-                    f"<div style='margin-top:4px;color:#111827;'>{html.escape(cleaned)}</div>"
-                    "</div>"
-                )
-
-            sides_html = side_note("Positive", report.get("positive"), "#15803d") + side_note(
-                "Negative", report.get("negative"), "#b91c1c"
-            )
-            driver_items = "".join(
-                f"<li style='margin:4px 0;color:#374151;'>{html.escape(str(driver))}</li>"
-                for driver in (report.get("drivers") or [])
-            )
-            drivers_html = (
-                f"<ul style='margin:10px 0 0;padding-left:1.15rem;'>{driver_items}</ul>"
-                if driver_items else ""
+            note = (
+                "Average of the article scores below, from the last 7 days"
+                if any(item.get("score") is not None for item in headlines)
+                else "Score for these headlines, from the last 7 days"
             )
             sentiment_at = (stored or {}).get("sentiment_updated_at") if isinstance(stored, dict) else None
             score_card, vote_card = st.columns([3.5, 2.1], vertical_alignment="top")
             with score_card:
                 st.markdown(
-                    "<div style='background:#ffffff;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;'>"
-                    "<div style='font-size:0.8rem;color:#6b7280;margin-bottom:4px;'>"
-                    + (
-                        "Average of the article scores below, from the last 7 days"
-                        if any(item.get("score") is not None for item in headlines)
-                        else "Score for these headlines, from the last 7 days"
-                    )
-                    + "</div>"
-                    f"<div style='display:inline-flex;align-items:center;gap:6px;background:{background};color:{color};"
-                    f"padding:2px 8px;border-radius:4px;font-weight:600;'>{arrow} {score:.0f}/100</div>"
-                    f"<div style='margin-top:8px;font-weight:600;color:{color};'>{html.escape(coverage)}</div>"
-                    f"<div style='margin-top:8px;color:#111827;'>{summary}</div>"
-                    f"{drivers_html}{sides_html}</div>",
+                    _sentiment_story(report, _mood_coverage(score), score, color, background, arrow, note),
                     unsafe_allow_html=True,
                 )
             with vote_card:
