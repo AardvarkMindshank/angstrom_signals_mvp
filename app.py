@@ -194,6 +194,10 @@ export default function(component) {
         "#social-stream-root .kicker{font-size:.72rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#6b7280;margin-bottom:2px;}",
         "#social-stream-root .hint{margin:6px 0 0;color:#6b7280;font-size:.8rem;line-height:1.35;}",
         "#social-stream-root .close{background:#f3f4f6;border:0;border-radius:999px;padding:6px 12px;font:inherit;font-weight:600;cursor:pointer;color:#111827;}",
+        "#social-stream-root .edge{position:fixed;top:.75rem;right:0;z-index:2;pointer-events:auto;display:flex;align-items:center;justify-content:center;width:2rem;height:2rem;padding:0;border:1px solid rgba(49,51,63,.2);border-right:0;border-radius:.5rem 0 0 .5rem;background:#fff;color:#808495;cursor:pointer;box-shadow:-1px 1px 4px rgba(0,0,0,.08);transition:right .22s ease,background .15s ease,color .15s ease;}",
+        "#social-stream-root .edge:hover{background:#f0f2f6;color:#ff4b4b;}",
+        "#social-stream-root.is-open .edge{right:min(420px,calc(100vw - 2.25rem));}",
+        "#social-stream-root.is-open .edge svg{transform:scaleX(-1);}",
         "#social-stream-root .filters{padding:10px 18px 0;}",
         "#social-stream-root .chips{display:flex;flex-wrap:wrap;gap:6px;}",
         "#social-stream-root .chips button{background:#fff;border:1px solid #d1d5db;border-radius:999px;padding:4px 10px;font:inherit;font-size:.82rem;cursor:pointer;color:#374151;}",
@@ -242,17 +246,30 @@ export default function(component) {
         "<label>Asset<select id='stream-asset'></select></label>",
         "<label>Person<select id='stream-person'></select></label>",
         "</div></div>",
-        "<div class='count'></div><div class='list'></div></aside>"
+        "<div class='count'></div><div class='list'></div></aside>",
+        "<button type='button' class='edge' aria-label='Open the social signals stream' aria-expanded='false'>",
+        "<svg viewBox='0 0 24 24' width='22' height='22' aria-hidden='true'>",
+        "<path d='M15.2 6.2 9.4 12l5.8 5.8' fill='none' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/>",
+        "<path d='M10.2 6.2 4.4 12l5.8 5.8' fill='none' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/>",
+        "</svg></button>"
       ].join("");
       document.body.appendChild(root);
       const font = getComputedStyle(document.body).fontFamily;
       if (font) root.querySelector(".panel").style.fontFamily = font;
       const closeStream = () => {
         window.socialStreamState.open = false;
-        root.classList.remove("is-open");
+        window.renderSocialStream();
       };
       root.querySelector(".scrim").addEventListener("click", closeStream);
       root.querySelector(".close").addEventListener("click", closeStream);
+      root.querySelector(".edge").addEventListener("click", () => {
+        window.socialStreamState.open = !window.socialStreamState.open;
+        window.renderSocialStream();
+        if (window.socialStreamState.open) {
+          const closeButton = root.querySelector(".close");
+          if (closeButton) closeButton.focus();
+        }
+      });
       root.querySelectorAll("[data-side]").forEach((button) => {
         button.addEventListener("click", () => {
           window.socialStreamState.side = button.getAttribute("data-side") || "";
@@ -289,6 +306,13 @@ export default function(component) {
       if (!panel) return;
       const state = window.socialStreamState;
       panel.classList.toggle("is-open", !!state.open);
+      const edge = panel.querySelector(".edge");
+      if (edge) {
+        const edgeLabel = state.open ? "Close the social signals stream" : "Open the social signals stream";
+        edge.setAttribute("aria-label", edgeLabel);
+        edge.setAttribute("title", edgeLabel);
+        edge.setAttribute("aria-expanded", state.open ? "true" : "false");
+      }
       const items = window.socialStreamItems || [];
       const assets = [];
       const seenAssets = {};
@@ -1349,7 +1373,7 @@ The **Sentiment** column shows that saved score in the same colored box. A dash 
 
 The picture on the left of each name is that asset's logo. The same logo appears at the top of the Interactive Chart and Market sentiment sections. Crypto logos come from CoinGecko. Stock logos come from Finnhub. A letter shows when a logo is not available. The address is saved once and reused for every account.
 
-Beside the sentiment score you can press thumbs up if you agree, or thumbs down if you do not. Press the same thumb again to clear your take. Those buttons sit in an outlined box. After you disagree, scores appear in that same box, under the buttons: 0, 20, 40, 60, 80 and 100. The number you pick also fills the type box, and you can type any number from 0 to 100. It saves on its own when you click a score, press Enter, or leave the box. The thumbs and that same colored average sit at the bottom of Your take, and again under **Crowd** on each table row. The box is the average of the personal scores, in the same style as the Sentiment column. It updates when a score is clicked or typed. Hover the down thumb for the spread, which is how far those scores typically sit from the average. One score has no spread yet. A dash means nobody has given a personal score. Under the thumbs you can post one comment of up to 160 characters. A row of faces under the box adds an emoticon. A speech balloon appears beside the thumbs, and in the **Comments** column, once any comment exists. Click it to slide in the **Social signals stream** from the right. That stream lists comments newest first, with each person's picture, name, and the time, and the sentiment they were answering. Narrow it with All, Positive, Negative, or Mixed. Under Asset, All assets is every comment, and My watchlists is only the crypto and equity tables on your account. That choice is saved for you. You can also pick one asset or one person. Close it with Close, the shaded area, or Escape. A refresh of that sentiment clears every thumb and every personal score, because they belonged to the old score. A comment stays for 12 hours from when it was posted, and the stream keeps the sentiment it was answering even after a newer score arrives.
+Beside the sentiment score you can press thumbs up if you agree, or thumbs down if you do not. Press the same thumb again to clear your take. Those buttons sit in an outlined box. After you disagree, scores appear in that same box, under the buttons: 0, 20, 40, 60, 80 and 100. The number you pick also fills the type box, and you can type any number from 0 to 100. It saves on its own when you click a score, press Enter, or leave the box. The thumbs and that same colored average sit at the bottom of Your take, and again under **Crowd** on each table row. The box is the average of the personal scores, in the same style as the Sentiment column. It updates when a score is clicked or typed. Hover the down thumb for the spread, which is how far those scores typically sit from the average. One score has no spread yet. A dash means nobody has given a personal score. Under the thumbs you can post one comment of up to 160 characters. A row of faces under the box adds an emoticon. A speech balloon appears beside the thumbs, and in the **Comments** column, once any comment exists. Click it, or the arrow on the right edge of the page, to slide in the **Social signals stream**. That stream lists comments newest first, with each person's picture, name, and the time, and the sentiment they were answering. Narrow it with All, Positive, Negative, or Mixed. Under Asset, All assets is every comment, and My watchlists is only the crypto and equity tables on your account. That choice is saved for you. You can also pick one asset or one person. Close it with Close, the shaded area, or Escape. A refresh of that sentiment clears every thumb and every personal score, because they belonged to the old score. A comment stays for 12 hours from when it was posted, and the stream keeps the sentiment it was answering even after a newer score arrives.
 
 Click a sentiment score in the table to highlight that asset and jump to its headlines. **↑ Top** scrolls back to the top of the page. It sits at the top right of the Interactive Chart section, and at the top right of Market sentiment.
 
@@ -2053,7 +2077,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                 st.caption("This watchlist is empty.")
                 return
             frame = pd.DataFrame(results).sort_values("score", ascending=False, na_position="last")
-            st.caption("Click a column title to sort. The table starts with the strongest score at the top. Click a name to show that asset on the chart. Click a sentiment score to open its headlines. Watching is how many accounts hold that asset. The Crowd box is the average of personal scores. Hover the down thumb for the spread. A comment balloon opens the social signals stream. The 30-day trend uses the same colors as 30d %.")
+            st.caption("Click a column title to sort. The table starts with the strongest score at the top. Click a name to show that asset on the chart. Click a sentiment score to open its headlines. Watching is how many accounts hold that asset. The Crowd box is the average of personal scores. Hover the down thumb for the spread. A comment balloon, or the arrow on the right edge, opens the social signals stream. The 30-day trend uses the same colors as 30d %.")
 
             headers = ["Asset", "Watching", "Score", "Signal", "Price", "RSI"]
             if show_period_changes_flag:
