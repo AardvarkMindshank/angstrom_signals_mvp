@@ -7,7 +7,6 @@ runs, and later accounts reuse it for 12 hours.
 
 from __future__ import annotations
 
-import base64
 import html
 import json
 from datetime import datetime, timezone
@@ -199,32 +198,87 @@ def drop_sentiment_comments(supabase, kind: str, asset_id: str) -> None:
         _warn(exc)
 
 
-def comment_balloon(comments, title: str) -> str:
-    """A speech balloon that opens the comments. Empty when nobody has commented."""
-    items = []
+def comment_balloon(comments, asset_key: str) -> str:
+    """A speech balloon that opens the social signals stream. Empty when nobody has commented."""
+    count = 0
     for note in comments or []:
-        text = " ".join(str((note or {}).get("text") or "").split())
-        if not text:
-            continue
-        items.append({
-            "name": str((note or {}).get("name") or "Member")[:40],
-            "avatar": _public_avatar((note or {}).get("avatar")),
-            "at": str((note or {}).get("at") or ""),
-            "text": text[:COMMENT_LIMIT],
-        })
-    if not items:
+        if " ".join(str((note or {}).get("text") or "").split()):
+            count += 1
+    if not count or not asset_key:
         return ""
-    encoded = base64.b64encode(
-        json.dumps(items, ensure_ascii=False).encode("utf-8")
-    ).decode("ascii")
-    safe_title = html.escape(str(title or "Comments"), quote=True)
+    safe_key = html.escape(str(asset_key), quote=True)
     return (
-        f"<button type='button' data-comments='{encoded}' data-comment-title='{safe_title}' "
-        "title='Read the comments' "
+        f"<button type='button' data-stream-key='{safe_key}' "
+        "title='Open the social signals stream' "
         "style='background:#f8fafc;border:1px solid #d1d5db;border-radius:999px;"
         "padding:2px 10px;margin:0;cursor:pointer;font:inherit;font-weight:600;color:#111827;'>"
-        f"💬 {len(items)}</button>"
+        f"💬 {count}</button>"
     )
+
+
+def _sentiment_side(score) -> str:
+    number = _optional_number(score)
+    if number is None:
+        return ""
+    if number >= 53:
+        return "positive"
+    if number < 47:
+        return "negative"
+    return "mixed"
+
+
+def _coverage_label(score) -> str:
+    number = _optional_number(score)
+    if number is None:
+        return ""
+    if number >= 60:
+        return "Bullish coverage"
+    if number >= 53:
+        return "Mildly bullish coverage"
+    if number >= 47:
+        return "Mixed coverage"
+    if number >= 40:
+        return "Mildly bearish coverage"
+    return "Bearish coverage"
+
+
+def _short_summary(text, limit: int = 220) -> str:
+    cleaned = " ".join(str(text or "").split())
+    if len(cleaned) <= limit:
+        return cleaned
+    cut = cleaned[:limit].rsplit(" ", 1)[0]
+    return (cut or cleaned[:limit]).rstrip(".,;:") + "…"
+
+
+def social_stream_items(comments_by_key, shared, names, logos=None) -> list[dict]:
+    """Comments for the slide-in stream, newest first, with the sentiment they answered."""
+    items = []
+    for key, notes in (comments_by_key or {}).items():
+        report, _stored_at = sentiment_from_row((shared or {}).get(key))
+        score = _optional_number((report or {}).get("score")) if report else None
+        summary = _short_summary((report or {}).get("summary")) if report else ""
+        _kind, _bar, asset_id = str(key).partition("|")
+        asset = str((names or {}).get(key) or asset_id or key)
+        logo = _public_avatar((logos or {}).get(key))
+        for note in notes or []:
+            text = " ".join(str((note or {}).get("text") or "").split())
+            if not text:
+                continue
+            items.append({
+                "key": str(key),
+                "asset": asset,
+                "logo": logo,
+                "side": _sentiment_side(score),
+                "score": None if score is None else int(round(score)),
+                "coverage": _coverage_label(score),
+                "summary": summary,
+                "name": str((note or {}).get("name") or "Member")[:40] or "Member",
+                "avatar": _public_avatar((note or {}).get("avatar")),
+                "at": str((note or {}).get("at") or ""),
+                "text": text[:COMMENT_LIMIT],
+            })
+    items.sort(key=lambda item: item["at"], reverse=True)
+    return items
 
 
 def crowd_mark(up, down, active: bool = True, alt_count=0, alt_avg=None, alt_spread=None) -> str:

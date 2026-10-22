@@ -29,82 +29,17 @@ st.set_page_config(
 
 # A normal link starts a new Streamlit session and logs the user out.
 # This stays on the page and reports the clicked name back to Python.
-# Comment balloons open a separate browser window. They do not navigate this page.
+# Comment balloons open the social signals stream on this page. They do not navigate away.
 _COMMENT_BIND_JS = """
-  const openComments = (encoded, title) => {
-    if (!encoded) return;
-    const popup = window.open("", "angstrom-comments", "popup,width=440,height=640,resizable=yes,scrollbars=yes");
-    if (!popup) return;
-    let items = [];
-    try {
-      const bytes = Uint8Array.from(atob(encoded), (ch) => ch.charCodeAt(0));
-      const parsed = JSON.parse(new TextDecoder().decode(bytes));
-      items = Array.isArray(parsed) ? parsed : [];
-    } catch (error) {
-      items = [];
-    }
-    const doc = popup.document;
-    doc.open();
-    doc.write("<!DOCTYPE html><html><head><meta charset='utf-8'><title>Comments</title>");
-    doc.write("<style>html,body{margin:0;height:100%;}body{font-family:Segoe UI,sans-serif;color:#111827;background:#ffffff;overflow:auto;}");
-    doc.write("h1{margin:0;padding:16px 18px 10px;font-size:1.05rem;line-height:1.3;}");
-    doc.write("#list{padding:0 18px 24px;}");
-    doc.write(".note{display:flex;gap:10px;padding:12px 0;border-top:1px solid #e5e7eb;}");
-    doc.write(".face{width:36px;height:36px;border-radius:50%;object-fit:cover;background:#dbeafe;color:#1d4ed8;display:flex;align-items:center;justify-content:center;font-weight:700;flex:none;}");
-    doc.write(".who{font-weight:600;font-size:0.92rem;} .when{color:#6b7280;font-size:0.78rem;margin-top:2px;}");
-    doc.write(".text{margin-top:4px;font-size:0.92rem;line-height:1.4;white-space:pre-wrap;word-break:break-word;}");
-    doc.write("</style></head><body><h1></h1><div id='list'></div></body></html>");
-    doc.close();
-    const heading = doc.querySelector("h1");
-    if (heading) heading.textContent = title || "Comments";
-    const list = doc.getElementById("list");
-    items.forEach((item) => {
-      const name = String((item && item.name) || "Member");
-      const row = doc.createElement("div");
-      row.className = "note";
-      let face = doc.createElement(item && item.avatar ? "img" : "div");
-      face.className = "face";
-      if (item && item.avatar) {
-        face.alt = "";
-        face.src = String(item.avatar);
-        face.addEventListener("error", () => {
-          const fallback = doc.createElement("div");
-          fallback.className = "face";
-          fallback.textContent = (name.trim().charAt(0) || "?").toUpperCase();
-          face.replaceWith(fallback);
-        });
-      } else {
-        face.textContent = (name.trim().charAt(0) || "?").toUpperCase();
-      }
-      const body = doc.createElement("div");
-      const who = doc.createElement("div");
-      who.className = "who";
-      who.textContent = name;
-      const when = doc.createElement("div");
-      when.className = "when";
-      const parsedAt = new Date(item && item.at);
-      when.textContent = Number.isNaN(parsedAt.getTime()) ? "" : parsedAt.toLocaleString(undefined, {
-        month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit"
-      });
-      const text = doc.createElement("div");
-      text.className = "text";
-      text.textContent = String((item && item.text) || "");
-      body.appendChild(who);
-      body.appendChild(when);
-      body.appendChild(text);
-      row.appendChild(face);
-      row.appendChild(body);
-      if (list) list.appendChild(row);
-    });
-    popup.focus();
-  };
   const bindComments = (root) => {
-    root.querySelectorAll("button[data-comments]").forEach((button) => {
+    root.querySelectorAll("button[data-stream-key]").forEach((button) => {
       button.addEventListener("click", (event) => {
         event.preventDefault();
         event.stopPropagation();
         button.blur();
-        openComments(button.getAttribute("data-comments"), button.getAttribute("data-comment-title"));
+        if (window.openSocialStream) {
+          window.openSocialStream(button.getAttribute("data-stream-key") || "");
+        }
       });
     });
   };
@@ -213,6 +148,305 @@ export default function(component) {
 _comment_row = st.components.v2.component(
     "comment_row",
     js=_COMMENT_ROW_JS,
+    isolate_styles=False,
+)
+
+_SOCIAL_STREAM_JS = """
+export default function(component) {
+  const { data, parentElement } = component;
+  const shell = parentElement.closest(".stBidiComponent") || parentElement;
+  shell.style.display = "none";
+  let items = [];
+  try {
+    const parsed = typeof data === "string" ? JSON.parse(data || "[]") : data;
+    items = Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    items = [];
+  }
+  window.socialStreamItems = items;
+  installSocialStream();
+  window.renderSocialStream();
+  return () => {};
+
+  function installSocialStream() {
+    window.socialStreamState = window.socialStreamState || {
+      open: false, side: "", asset: "", person: ""
+    };
+    if (!document.getElementById("social-stream-style")) {
+      const style = document.createElement("style");
+      style.id = "social-stream-style";
+      style.textContent = [
+        "#social-stream-root{position:fixed;inset:0;z-index:10000000;pointer-events:none;}",
+        "#social-stream-root.is-open{pointer-events:auto;}",
+        "#social-stream-root .scrim{position:absolute;inset:0;background:rgba(17,24,39,0.35);opacity:0;transition:opacity .2s ease;}",
+        "#social-stream-root.is-open .scrim{opacity:1;}",
+        "#social-stream-root .panel{position:absolute;top:0;right:0;height:100%;width:min(420px,100vw);background:#fff;color:#111827;box-shadow:-12px 0 40px rgba(17,24,39,.18);transform:translateX(100%);transition:transform .22s ease;display:flex;flex-direction:column;pointer-events:auto;}",
+        "#social-stream-root.is-open .panel{transform:none;}",
+        "#social-stream-root .head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:18px 18px 4px;}",
+        "#social-stream-root h2{margin:0;font-size:1.15rem;line-height:1.25;font-weight:650;}",
+        "#social-stream-root .kicker{font-size:.72rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#6b7280;margin-bottom:2px;}",
+        "#social-stream-root .hint{margin:6px 0 0;color:#6b7280;font-size:.8rem;line-height:1.35;}",
+        "#social-stream-root .close{background:#f3f4f6;border:0;border-radius:999px;padding:6px 12px;font:inherit;font-weight:600;cursor:pointer;color:#111827;}",
+        "#social-stream-root .filters{padding:10px 18px 0;}",
+        "#social-stream-root .chips{display:flex;flex-wrap:wrap;gap:6px;}",
+        "#social-stream-root .chips button{background:#fff;border:1px solid #d1d5db;border-radius:999px;padding:4px 10px;font:inherit;font-size:.82rem;cursor:pointer;color:#374151;}",
+        "#social-stream-root .chips button.is-on{background:#111827;border-color:#111827;color:#fff;}",
+        "#social-stream-root .picks{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}",
+        "#social-stream-root .picks label{display:flex;flex-direction:column;gap:4px;font-size:.75rem;font-weight:600;color:#6b7280;}",
+        "#social-stream-root select{font:inherit;font-size:.85rem;color:#111827;border:1px solid #d1d5db;border-radius:8px;padding:6px 8px;background:#fff;}",
+        "#social-stream-root .count{padding:10px 18px 0;font-size:.78rem;color:#6b7280;}",
+        "#social-stream-root .list{overflow:auto;padding:8px 18px 28px;}",
+        "#social-stream-root .card{padding:14px 0;border-top:1px solid #e5e7eb;}",
+        "#social-stream-root .person{display:flex;gap:10px;align-items:center;}",
+        "#social-stream-root .face{width:36px;height:36px;border-radius:50%;object-fit:cover;background:#dbeafe;color:#1d4ed8;display:flex;align-items:center;justify-content:center;font-weight:700;flex:none;}",
+        "#social-stream-root .who{font-weight:600;font-size:.92rem;}",
+        "#social-stream-root .when{color:#6b7280;font-size:.78rem;margin-top:1px;}",
+        "#social-stream-root .saying{margin:8px 0 0;font-size:.95rem;line-height:1.4;white-space:pre-wrap;word-break:break-word;}",
+        "#social-stream-root .context{margin-top:10px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:10px 12px;}",
+        "#social-stream-root .context-label{font-size:.72rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:#6b7280;}",
+        "#social-stream-root .context-head{display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap;}",
+        "#social-stream-root .asset{font-weight:600;}",
+        "#social-stream-root .logo{width:18px;height:18px;border-radius:50%;object-fit:cover;flex:none;}",
+        "#social-stream-root .badge{font-size:.78rem;font-weight:700;border-radius:4px;padding:1px 6px;}",
+        "#social-stream-root .coverage{margin-top:4px;font-size:.8rem;font-weight:600;}",
+        "#social-stream-root .summary{margin:4px 0 0;color:#374151;font-size:.82rem;line-height:1.4;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}",
+        "#social-stream-root .empty{color:#6b7280;padding:18px 0;font-size:.9rem;line-height:1.4;}"
+      ].join("");
+      document.head.appendChild(style);
+    }
+    let root = document.getElementById("social-stream-root");
+    if (!root) {
+      root = document.createElement("div");
+      root.id = "social-stream-root";
+      root.innerHTML = [
+        "<div class='scrim'></div>",
+        "<aside class='panel' role='dialog' aria-label='Social signals stream'>",
+        "<header class='head'><div>",
+        "<div class='kicker'>Social signals</div>",
+        "<h2>Social signals stream</h2>",
+        "<p class='hint'>Newest first. Each note shows the sentiment it was answering. These clear when that sentiment refreshes.</p>",
+        "</div><button type='button' class='close'>Close</button></header>",
+        "<div class='filters'><div class='chips'>",
+        "<button type='button' data-side=''>All</button>",
+        "<button type='button' data-side='positive'>Positive</button>",
+        "<button type='button' data-side='negative'>Negative</button>",
+        "<button type='button' data-side='mixed'>Mixed</button>",
+        "</div><div class='picks'>",
+        "<label>Asset<select id='stream-asset'></select></label>",
+        "<label>Person<select id='stream-person'></select></label>",
+        "</div></div>",
+        "<div class='count'></div><div class='list'></div></aside>"
+      ].join("");
+      document.body.appendChild(root);
+      const font = getComputedStyle(document.body).fontFamily;
+      if (font) root.querySelector(".panel").style.fontFamily = font;
+      const closeStream = () => {
+        window.socialStreamState.open = false;
+        root.classList.remove("is-open");
+      };
+      root.querySelector(".scrim").addEventListener("click", closeStream);
+      root.querySelector(".close").addEventListener("click", closeStream);
+      root.querySelectorAll("[data-side]").forEach((button) => {
+        button.addEventListener("click", () => {
+          window.socialStreamState.side = button.getAttribute("data-side") || "";
+          window.renderSocialStream();
+        });
+      });
+      root.querySelector("#stream-asset").addEventListener("change", (event) => {
+        window.socialStreamState.asset = event.target.value;
+        window.renderSocialStream();
+      });
+      root.querySelector("#stream-person").addEventListener("change", (event) => {
+        window.socialStreamState.person = event.target.value;
+        window.renderSocialStream();
+      });
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && window.socialStreamState.open) closeStream();
+      });
+    }
+    window.openSocialStream = (assetKey) => {
+      window.socialStreamState.open = true;
+      window.socialStreamState.asset = assetKey || "";
+      window.socialStreamState.side = "";
+      window.socialStreamState.person = "";
+      window.renderSocialStream();
+      const closeButton = document.querySelector("#social-stream-root .close");
+      if (closeButton) closeButton.focus();
+    };
+    window.renderSocialStream = () => {
+      const panel = document.getElementById("social-stream-root");
+      if (!panel) return;
+      const state = window.socialStreamState;
+      panel.classList.toggle("is-open", !!state.open);
+      const items = window.socialStreamItems || [];
+      const assets = [];
+      const seenAssets = {};
+      const people = [];
+      const seenPeople = {};
+      items.forEach((item) => {
+        if (item.key && !seenAssets[item.key]) {
+          seenAssets[item.key] = true;
+          assets.push([item.key, item.asset || item.key]);
+        }
+        const person = item.name || "Member";
+        if (!seenPeople[person]) {
+          seenPeople[person] = true;
+          people.push(person);
+        }
+      });
+      assets.sort((a, b) => String(a[1]).localeCompare(String(b[1])));
+      people.sort((a, b) => a.localeCompare(b));
+      fillStreamSelect(panel.querySelector("#stream-asset"), "All assets", assets, state.asset);
+      fillStreamSelect(panel.querySelector("#stream-person"), "All people", people.map((name) => [name, name]), state.person);
+      if (!seenAssets[state.asset]) state.asset = "";
+      if (!seenPeople[state.person]) state.person = "";
+      panel.querySelector("#stream-asset").value = state.asset;
+      panel.querySelector("#stream-person").value = state.person;
+      panel.querySelectorAll("[data-side]").forEach((button) => {
+        button.classList.toggle("is-on", (button.getAttribute("data-side") || "") === state.side);
+      });
+      const shown = items.filter((item) => {
+        if (state.asset && item.key !== state.asset) return false;
+        if (state.person && (item.name || "Member") !== state.person) return false;
+        if (state.side && item.side !== state.side) return false;
+        return true;
+      });
+      const count = panel.querySelector(".count");
+      count.textContent = shown.length === 1 ? "1 comment" : shown.length + " comments";
+      const list = panel.querySelector(".list");
+      list.replaceChildren();
+      if (!shown.length) {
+        const empty = document.createElement("div");
+        empty.className = "empty";
+        empty.textContent = items.length
+          ? "No comments match these filters."
+          : "No comments yet. They show up here while a sentiment score is current.";
+        list.appendChild(empty);
+        return;
+      }
+      shown.forEach((item) => list.appendChild(streamCard(item)));
+    };
+  }
+
+  function fillStreamSelect(select, placeholder, pairs, selected) {
+    if (!select) return;
+    select.replaceChildren();
+    const all = document.createElement("option");
+    all.value = "";
+    all.textContent = placeholder;
+    select.appendChild(all);
+    pairs.forEach((pair) => {
+      const option = document.createElement("option");
+      option.value = pair[0];
+      option.textContent = pair[1];
+      select.appendChild(option);
+    });
+    const allowed = new Set(pairs.map((pair) => pair[0]));
+    select.value = allowed.has(selected) ? selected : "";
+  }
+
+  function streamTone(score) {
+    const number = Number(score);
+    if (!Number.isFinite(number)) return null;
+    if (number >= 53) return { bg: "#dcfce7", fg: "#15803d", arrow: "↑" };
+    if (number >= 47) return { bg: "#fef3c7", fg: "#b45309", arrow: "→" };
+    return { bg: "#fee2e2", fg: "#b91c1c", arrow: "↓" };
+  }
+
+  function streamFace(name, avatar) {
+    const face = document.createElement(avatar ? "img" : "div");
+    face.className = "face";
+    if (avatar) {
+      face.alt = "";
+      face.src = avatar;
+      face.addEventListener("error", () => {
+        const fallback = document.createElement("div");
+        fallback.className = "face";
+        fallback.textContent = (String(name).trim().charAt(0) || "?").toUpperCase();
+        face.replaceWith(fallback);
+      });
+    } else {
+      face.textContent = (String(name).trim().charAt(0) || "?").toUpperCase();
+    }
+    return face;
+  }
+
+  function streamCard(item) {
+    const card = document.createElement("article");
+    card.className = "card";
+    const person = document.createElement("div");
+    person.className = "person";
+    const name = String(item.name || "Member");
+    person.appendChild(streamFace(name, item.avatar));
+    const identity = document.createElement("div");
+    const who = document.createElement("div");
+    who.className = "who";
+    who.textContent = name;
+    const when = document.createElement("div");
+    when.className = "when";
+    const parsedAt = new Date(item.at);
+    when.textContent = Number.isNaN(parsedAt.getTime()) ? "" : parsedAt.toLocaleString(undefined, {
+      month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit"
+    });
+    identity.appendChild(who);
+    identity.appendChild(when);
+    person.appendChild(identity);
+    const saying = document.createElement("p");
+    saying.className = "saying";
+    saying.textContent = String(item.text || "");
+    const context = document.createElement("div");
+    context.className = "context";
+    const label = document.createElement("div");
+    label.className = "context-label";
+    label.textContent = "Responding to";
+    const head = document.createElement("div");
+    head.className = "context-head";
+    if (item.logo) {
+      const logo = document.createElement("img");
+      logo.className = "logo";
+      logo.alt = "";
+      logo.src = item.logo;
+      logo.addEventListener("error", () => logo.remove());
+      head.appendChild(logo);
+    }
+    const asset = document.createElement("span");
+    asset.className = "asset";
+    asset.textContent = String(item.asset || "This asset");
+    head.appendChild(asset);
+    const tone = streamTone(item.score);
+    if (tone) {
+      const badge = document.createElement("span");
+      badge.className = "badge";
+      badge.style.background = tone.bg;
+      badge.style.color = tone.fg;
+      badge.textContent = tone.arrow + " " + item.score;
+      head.appendChild(badge);
+    }
+    context.appendChild(label);
+    context.appendChild(head);
+    if (item.coverage) {
+      const coverage = document.createElement("div");
+      coverage.className = "coverage";
+      if (tone) coverage.style.color = tone.fg;
+      coverage.textContent = String(item.coverage);
+      context.appendChild(coverage);
+    }
+    if (item.summary) {
+      const summary = document.createElement("p");
+      summary.className = "summary";
+      summary.textContent = String(item.summary);
+      context.appendChild(summary);
+    }
+    card.appendChild(person);
+    card.appendChild(saying);
+    card.appendChild(context);
+    return card;
+  }
+}
+"""
+_social_stream = st.components.v2.component(
+    "social_stream",
+    js=_SOCIAL_STREAM_JS,
     isolate_styles=False,
 )
 
@@ -408,6 +642,7 @@ try:
         save_sentiment,
         sentiment_comment_lists,
         sentiment_crowd,
+        social_stream_items,
         set_sentiment_comment,
         set_sentiment_vote,
         sentiment_from_row,
@@ -1086,7 +1321,7 @@ The **Sentiment** column shows that saved score in the same colored box. A dash 
 
 The picture on the left of each name is that asset's logo. The same logo appears at the top of the Interactive Chart and Market sentiment sections. Crypto logos come from CoinGecko. Stock logos come from Finnhub. A letter shows when a logo is not available. The address is saved once and reused for every account.
 
-Beside the sentiment score you can press thumbs up if you agree, or thumbs down if you do not. Press the same thumb again to clear your take. Those buttons sit in an outlined box. After you disagree, scores appear in that same box, under the buttons: 0, 20, 40, 60, 80 and 100. The number you pick also fills the type box, and you can type any number from 0 to 100. It saves on its own when you click a score, press Enter, or leave the box. The thumbs and that same colored average sit at the bottom of Your take, and again under **Crowd** on each table row. The box is the average of the personal scores, in the same style as the Sentiment column. It updates when a score is clicked or typed. Hover the down thumb for the spread, which is how far those scores typically sit from the average. One score has no spread yet. A dash means nobody has given a personal score. Under the thumbs you can post one comment of up to 160 characters. A speech balloon appears beside the thumbs, and in the **Comments** column, once any comment exists. Click it to open those comments in a new window, newest first, with each person's picture, name, and the time they wrote it. A refresh of that sentiment clears every thumb, every score, and every comment, because they belonged to the old score.
+Beside the sentiment score you can press thumbs up if you agree, or thumbs down if you do not. Press the same thumb again to clear your take. Those buttons sit in an outlined box. After you disagree, scores appear in that same box, under the buttons: 0, 20, 40, 60, 80 and 100. The number you pick also fills the type box, and you can type any number from 0 to 100. It saves on its own when you click a score, press Enter, or leave the box. The thumbs and that same colored average sit at the bottom of Your take, and again under **Crowd** on each table row. The box is the average of the personal scores, in the same style as the Sentiment column. It updates when a score is clicked or typed. Hover the down thumb for the spread, which is how far those scores typically sit from the average. One score has no spread yet. A dash means nobody has given a personal score. Under the thumbs you can post one comment of up to 160 characters. A speech balloon appears beside the thumbs, and in the **Comments** column, once any comment exists. Click it to slide in the **Social signals stream** from the right. That stream lists comments newest first, with each person's picture, name, and the time, and the sentiment they were answering. Narrow it with All, Positive, Negative, or Mixed, or by asset or person. Close it with Close, the shaded area, or Escape. A refresh of that sentiment clears every thumb, every score, and every comment, because they belonged to the old score.
 
 Click a sentiment score in the table to highlight that asset and jump to its headlines. **↑ Top** scrolls back to the top of the page. It sits at the top right of the Interactive Chart section, and at the top right of Market sentiment.
 
@@ -1459,6 +1694,20 @@ def _share_market_rows(crypto_watchlist, stock_watchlist, crypto_results, stock_
     market_keys = [asset_market_key(kind, asset_id) for kind, asset_id in pairs]
     crowd = sentiment_crowd(supabase, market_keys)
     comments = sentiment_comment_lists(supabase, market_keys)
+    stream_names = {}
+    for kind, watchlist in (("Crypto", crypto_watchlist), ("Stock", stock_watchlist)):
+        for asset_id, label in watchlist.items():
+            market_key = asset_market_key(kind, asset_id)
+            shown = " ".join(str(label or "").split())
+            if kind == "Stock":
+                ticker = str(asset_id).upper()
+                if ticker and ticker not in shown.upper():
+                    shown = f"{shown} ({ticker})" if shown else ticker
+            stream_names[market_key] = shown or str(asset_id)
+    st.session_state["social_stream"] = json.dumps(
+        social_stream_items(comments, shared, stream_names, logos),
+        ensure_ascii=False,
+    )
     for kind, results, watchlist in (
         ("Crypto", crypto_results, crypto_watchlist),
         ("Stock", stock_results, stock_watchlist),
@@ -1610,6 +1859,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             for row in stock_results:
                 row["market_cap"] = (caps.get("stock") or {}).get(str(row.get("key") or "").upper())
         _share_market_rows(crypto_watchlist, stock_watchlist, crypto_results, stock_results)
+        _social_stream(key="social_stream_host", data=st.session_state.get("social_stream") or "[]")
 
         try:
             evaluate_alerts(supabase, user_id, crypto_results + stock_results, alert_prefs)
@@ -1754,7 +2004,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                 st.caption("This watchlist is empty.")
                 return
             frame = pd.DataFrame(results).sort_values("score", ascending=False, na_position="last")
-            st.caption("Click a column title to sort. The table starts with the strongest score at the top. Click a name to show that asset on the chart. Click a sentiment score to open its headlines. Watching is how many accounts hold that asset. The Crowd box is the average of personal scores. Hover the down thumb for the spread. A comment balloon opens the comments for that sentiment. The 30-day trend uses the same colors as 30d %.")
+            st.caption("Click a column title to sort. The table starts with the strongest score at the top. Click a name to show that asset on the chart. Click a sentiment score to open its headlines. Watching is how many accounts hold that asset. The Crowd box is the average of personal scores. Hover the down thumb for the spread. A comment balloon opens the social signals stream. The 30-day trend uses the same colors as 30d %.")
 
             headers = ["Asset", "Watching", "Score", "Signal", "Price", "RSI"]
             if show_period_changes_flag:
@@ -1869,7 +2119,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                     rows_html += (
                         f"<td data-sort='{sort_token(len(row.get('comments') or []), numeric=True)}' "
                         f"style='padding:10px;text-align:center;white-space:nowrap;'>"
-                        f"{comment_balloon(row.get('comments'), row.get('symbol'))}</td>"
+                        f"{comment_balloon(row.get('comments'), asset_market_key(kind, asset_id))}</td>"
                     )
                 rows_html += (
                     f"<td data-sort='{sort_token(row.get('change_30d'), numeric=True)}' "
@@ -2317,7 +2567,7 @@ def _sentiment_thumbs(kind: str, asset_id: str, sentiment_at, title: str) -> Non
                     voice.get("alt_count"),
                     voice.get("alt_spread"),
                 )
-                + comment_balloon(notes, title)
+                + comment_balloon(notes, key)
                 + "</div>"
             ),
         )
