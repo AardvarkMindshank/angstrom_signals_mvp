@@ -189,14 +189,14 @@ export default function(component) {
       open: false, side: "", asset: savedAsset || "", person: ""
     };
     let style = document.getElementById("social-stream-style");
-    if (style && style.dataset.layout !== "stars") {
+    if (style && style.dataset.layout !== "search") {
       style.remove();
       style = null;
     }
     if (!style) {
       style = document.createElement("style");
       style.id = "social-stream-style";
-      style.dataset.layout = "stars";
+      style.dataset.layout = "search";
       style.textContent = [
         "#social-stream-root{position:fixed;inset:0;z-index:10000000;pointer-events:none;}",
         "#social-stream-root.is-open{pointer-events:auto;}",
@@ -211,6 +211,8 @@ export default function(component) {
         "#social-stream-root .splitter:hover::before,#social-stream-root .splitter.is-dragging::before{background:#111827;}",
         "#social-stream-root.is-dragging,#social-stream-root.is-dragging *{cursor:row-resize !important;user-select:none !important;}",
         "#social-stream-root.is-open .panel{transform:none;}",
+        "#social-stream-root .finder{flex:none;padding:14px 18px 0;}",
+        "#social-stream-root .finder input{width:100%;box-sizing:border-box;font:inherit;font-size:.9rem;color:#111827;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px;background:#fff;}",
         "#social-stream-root .head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:18px 18px 4px;}",
         "#social-stream-root h2{margin:0;font-size:1.15rem;line-height:1.25;font-weight:650;}",
         "#social-stream-root .kicker{font-size:.72rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#6b7280;margin-bottom:2px;}",
@@ -277,17 +279,18 @@ export default function(component) {
       document.head.appendChild(style);
     }
     let root = document.getElementById("social-stream-root");
-    if (root && root.dataset.layout !== "stars") {
+    if (root && root.dataset.layout !== "search") {
       root.remove();
       root = null;
     }
     if (!root) {
       root = document.createElement("div");
       root.id = "social-stream-root";
-      root.dataset.layout = "stars";
+      root.dataset.layout = "search";
       root.innerHTML = [
         "<div class='scrim'></div>",
         "<aside class='panel' role='dialog' aria-label='Social signals and chat'>",
+        "<div class='finder'><input id='panel-search' type='search' placeholder='Search the stream and the chat' aria-label='Search the stream and the chat'></div>",
         "<div class='stream-pane'>",
         "<header class='head'><div>",
         "<div class='kicker'>Social signals</div>",
@@ -308,7 +311,7 @@ export default function(component) {
         "<div class='chat-pane'>",
         "<header class='chat-head'><div class='kicker'>Chat</div>",
         "<h2>General chat</h2>",
-        "<p class='hint'>Newest first. Post a note, reply, or mark any comment up or down, including one you posted. These notes stay in the room.</p>",
+        "<p class='hint'>Newest first. Post a note, reply, or mark any comment up or down, including one you posted. These notes stay in the room. The search at the top covers this chat too.</p>",
         "<div class='chat-filters'><div class='picks'>",
         "<label>Person<select id='chat-person'></select></label>",
         "</div></div></header>",
@@ -366,6 +369,13 @@ export default function(component) {
         window.socialStreamState.chatPerson = event.target.value;
         window.renderSocialStream();
       });
+      const finder = root.querySelector("#panel-search");
+      if (finder) {
+        finder.addEventListener("input", () => {
+          window.socialStreamState.query = finder.value;
+          window.renderSocialStream();
+        });
+      }
       document.addEventListener("keydown", (event) => {
         if (event.key !== "Escape" || !window.socialStreamState.open) return;
         const box = root.querySelector(".chat-box");
@@ -383,7 +393,8 @@ export default function(component) {
         const streamPane = root.querySelector(".stream-pane");
         const chatPane = root.querySelector(".chat-pane");
         if (!panelBox || !streamPane || !chatPane || !splitter) return;
-        const available = panelBox.clientHeight - splitter.offsetHeight;
+        const finderBox = root.querySelector(".finder");
+        const available = panelBox.clientHeight - splitter.offsetHeight - (finderBox ? finderBox.offsetHeight : 0);
         if (available < 80) return;
         let streamFloor = 120;
         let chatFloor = 150;
@@ -455,7 +466,9 @@ export default function(component) {
       } catch (error) {}
       const panelBox = root.querySelector(".panel");
       const fitSplit = () => {
-        const height = panelBox ? panelBox.clientHeight - (splitter ? splitter.offsetHeight : 0) : 0;
+        const finderBox = root.querySelector(".finder");
+        const chrome = (splitter ? splitter.offsetHeight : 0) + (finderBox ? finderBox.offsetHeight : 0);
+        const height = panelBox ? panelBox.clientHeight - chrome : 0;
         applySplit(height ? heldRatio * height : 0);
       };
       fitSplit();
@@ -466,6 +479,7 @@ export default function(component) {
       window.socialStreamState.asset = assetKey || "";
       window.socialStreamState.side = "";
       window.socialStreamState.person = "";
+      window.socialStreamState.query = "";
       window.renderSocialStream();
       const closeButton = document.querySelector("#social-stream-root .close");
       if (closeButton) closeButton.focus();
@@ -537,6 +551,8 @@ export default function(component) {
       panel.querySelector("#stream-person").value = state.person;
       const chatPerson = panel.querySelector("#chat-person");
       if (chatPerson) chatPerson.value = state.chatPerson || "";
+      const finder = panel.querySelector("#panel-search");
+      if (finder && document.activeElement !== finder) finder.value = state.query || "";
       panel.querySelectorAll("[data-side]").forEach((button) => {
         button.classList.toggle("is-on", (button.getAttribute("data-side") || "") === state.side);
       });
@@ -547,6 +563,7 @@ export default function(component) {
           if (item.list !== state.asset) return false;
         } else if (state.asset && item.key !== state.asset) return false;
         if (!matchesPerson(item, state.person)) return false;
+        if (!matchesQuery(item, state.query)) return false;
         if (state.side && item.side !== state.side) return false;
         return true;
       });
@@ -554,6 +571,7 @@ export default function(component) {
       count.textContent = shown.length === 1 ? "1 comment" : shown.length + " comments";
       const list = panel.querySelector(".list");
       if (list) {
+        const keptScroll = list.scrollTop;
         list.replaceChildren();
         if (!shown.length) {
           const empty = document.createElement("div");
@@ -567,6 +585,7 @@ export default function(component) {
         } else {
           shown.forEach((item) => list.appendChild(streamCard(item)));
         }
+        list.scrollTop = keptScroll;
       }
       renderChat(panel);
     };
@@ -821,6 +840,16 @@ export default function(component) {
     return notes.some((note) => (note.name || "Member") === person);
   }
 
+  function matchesQuery(item, query) {
+    const needle = String(query || "").trim().toLowerCase();
+    if (!needle) return true;
+    const notes = [item].concat(item.replies || []);
+    return notes.some((note) => {
+      const hay = [note.text, note.name, item.asset].join(" ").toLowerCase();
+      return hay.indexOf(needle) !== -1;
+    });
+  }
+
   function chatCard(item, rootId) {
     const card = document.createElement("article");
     card.className = item.id === rootId ? "chat-card" : "reply";
@@ -885,7 +914,8 @@ export default function(component) {
     }
     const threads = window.socialChat || [];
     const chatPerson = (window.socialStreamState || {}).chatPerson || "";
-    const shownThreads = threads.filter((item) => matchesPerson(item, chatPerson));
+    const query = (window.socialStreamState || {}).query || "";
+    const shownThreads = threads.filter((item) => matchesPerson(item, chatPerson) && matchesQuery(item, query));
     if (!threads.length) {
       const empty = document.createElement("div");
       empty.className = "empty";
@@ -894,9 +924,9 @@ export default function(component) {
     } else if (!shownThreads.length) {
       const empty = document.createElement("div");
       empty.className = "empty";
-      empty.textContent = chatPerson === "favourites" && !favouriteSet().size
+      empty.textContent = chatPerson === "favourites" && !favouriteSet().size && !String(query).trim()
         ? "No favourites yet. Press the star beside a name."
-        : "No chat comments match this person.";
+        : "No chat comments match.";
       list.appendChild(empty);
     } else {
       shownThreads.forEach((item) => list.appendChild(chatCard(item, item.id)));
@@ -2012,7 +2042,7 @@ The **Sentiment** column shows that saved score in the same colored box. A dash 
 
 The picture on the left of each name is that asset's logo. The same logo appears at the top of the Interactive Chart and Market sentiment sections. Crypto logos come from CoinGecko. Stock logos come from Finnhub. A letter shows when a logo is not available. The address is saved once and reused for every account.
 
-Beside the sentiment score you can press thumbs up if you agree, or thumbs down if you do not. Press the same thumb again to clear your take. Those buttons sit in an outlined box. After you disagree, scores appear in that same box, under the buttons: 0, 20, 40, 60, 80 and 100. The number you pick also fills the type box, and you can type any number from 0 to 100. It saves on its own when you click a score, press Enter, or leave the box. The thumbs and that same colored average sit at the bottom of Your take, and again under **Crowd** on each table row. The box is the average of the personal scores, in the same style as the Sentiment column. It updates when a score is clicked or typed. Hover the down thumb for the spread, which is how far those scores typically sit from the average. One score has no spread yet. A dash means nobody has given a personal score. Under the thumbs you can post one comment of up to 160 characters. A row under the box adds an emoticon, including a rocket. A speech balloon appears beside the thumbs, and in the **Comments** column, once any comment exists. Click it, or the arrow on the right edge of the page, to slide in the **Social signals stream**. That stream lists comments newest first, with each person's picture, name, and the time, and the sentiment they were answering. Narrow it with All, Positive, Negative, or Mixed. Under Asset, All assets is every comment, and My watchlists is only the crypto and equity tables on your account. My Crypto Watchlist and My Equities Watchlist each show one of those lists. Crypto market and Stock market sit above the individual assets. That choice of All assets or a watchlist is saved for you. You can also pick one asset or one person. Favourites, in that Person list, shows notes from people you have starred. The chat has the same Person list. A star beside another person's name adds them, and pressing it again removes them. That list is saved on your account. On each note you can reply, or mark any note up or down, including one you posted. A reply stays with that note for the same 12 hours. Delete removes a note you posted, and deleting a comment also removes the replies under it. The lower half of that panel is a general chat. Drag the line between the two halves to give either one more room. Post a comment at the bottom, with the same emoticons. Reply to a comment, or mark someone else's comment up or down. These notes are not tied to an asset, and they stay in the room. Close it with Close, the shaded area, or Escape. A refresh of that sentiment clears every thumb and every personal score, because they belonged to the old score. A comment stays for 12 hours from when it was posted, and the stream keeps the sentiment it was answering even after a newer score arrives.
+Beside the sentiment score you can press thumbs up if you agree, or thumbs down if you do not. Press the same thumb again to clear your take. Those buttons sit in an outlined box. After you disagree, scores appear in that same box, under the buttons: 0, 20, 40, 60, 80 and 100. The number you pick also fills the type box, and you can type any number from 0 to 100. It saves on its own when you click a score, press Enter, or leave the box. The thumbs and that same colored average sit at the bottom of Your take, and again under **Crowd** on each table row. The box is the average of the personal scores, in the same style as the Sentiment column. It updates when a score is clicked or typed. Hover the down thumb for the spread, which is how far those scores typically sit from the average. One score has no spread yet. A dash means nobody has given a personal score. Under the thumbs you can post one comment of up to 160 characters. A row under the box adds an emoticon, including a rocket. A speech balloon appears beside the thumbs, and in the **Comments** column, once any comment exists. Click it, or the arrow on the right edge of the page, to slide in the **Social signals stream**. That stream lists comments newest first, with each person's picture, name, and the time, and the sentiment they were answering. Narrow it with All, Positive, Negative, or Mixed. Under Asset, All assets is every comment, and My watchlists is only the crypto and equity tables on your account. My Crypto Watchlist and My Equities Watchlist each show one of those lists. Crypto market and Stock market sit above the individual assets. That choice of All assets or a watchlist is saved for you. You can also pick one asset or one person. Favourites, in that Person list, shows notes from people you have starred. The chat has the same Person list. A star beside another person's name adds them, and pressing it again removes them. That list is saved on your account. One search box at the top filters both the stream and the chat. It matches a note, a reply, a person's name, or, on the stream, the asset. On each note you can reply, or mark any note up or down, including one you posted. A reply stays with that note for the same 12 hours. Delete removes a note you posted, and deleting a comment also removes the replies under it. The lower half of that panel is a general chat. Drag the line between the two halves to give either one more room. Post a comment at the bottom, with the same emoticons. Reply to a comment, or mark someone else's comment up or down. These notes are not tied to an asset, and they stay in the room. Close it with Close, the shaded area, or Escape. A refresh of that sentiment clears every thumb and every personal score, because they belonged to the old score. A comment stays for 12 hours from when it was posted, and the stream keeps the sentiment it was answering even after a newer score arrives.
 
 Click a sentiment score in the table to highlight that asset and jump to its headlines. **↑ Top** scrolls back to the top of the page. It sits at the top right of the Interactive Chart section, and at the top right of Market sentiment.
 
