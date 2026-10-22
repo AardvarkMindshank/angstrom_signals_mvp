@@ -721,7 +721,8 @@ export default function(component) {
           ["stock", "My Equities Watchlist"],
           ["Mood|crypto", "Crypto market"],
           ["Mood|stock", "Stock market"]
-        ]
+        ],
+        true
       );
       fillStreamSelect(
         panel.querySelector("#stream-person"),
@@ -1149,7 +1150,7 @@ export default function(component) {
     list.scrollTop = keptScroll;
   }
 
-  function fillStreamSelect(select, placeholder, pairs, selected, extras) {
+  function fillStreamSelect(select, placeholder, pairs, selected, extras, divide) {
     if (!select) return;
     select.replaceChildren();
     const all = document.createElement("option");
@@ -1162,6 +1163,7 @@ export default function(component) {
       option.textContent = pair[1];
       select.appendChild(option);
     });
+    if (divide && pairs.length) select.appendChild(document.createElement("hr"));
     pairs.forEach((pair) => {
       const option = document.createElement("option");
       option.value = pair[0];
