@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import html
 import json
+import re
 from datetime import datetime, timezone
 
 from sentiment import SENTIMENT_REFRESH_SECONDS
@@ -18,6 +19,9 @@ COMMENT_LIMIT = 160
 COMMENT_EMOTICONS = ("😀", "🙂", "😐", "🙁", "😮", "🔥", "💩", "🚀", "📈", "📉")
 _SIDEWAYS_PERCENT = 2.0
 _WARNED = False
+_AUTHOR_ID = re.compile(
+    r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+)
 
 
 def asset_market_key(kind: str, asset_id: str) -> str:
@@ -185,6 +189,12 @@ def set_sentiment_vote(supabase, user_id, kind: str, asset_id: str, sentiment_at
     ).execute()
 
 
+def _author_id(row) -> str:
+    """The account behind a note. Empty until the feed returns an id."""
+    text = str((row or {}).get("author_id") or "").strip().lower()
+    return text if _AUTHOR_ID.fullmatch(text) else ""
+
+
 def _public_avatar(url) -> str:
     cleaned = str(url or "").strip()
     if (
@@ -227,6 +237,7 @@ def _comment_groups(supabase, keys: list[str]) -> dict[str, list] | None:
             vote = 0
         grouped.setdefault(key, []).append({
             "id": note_id,
+            "user": _author_id(row),
             "name": " ".join(str(row.get("author_name") or "Member").split())[:40] or "Member",
             "avatar": _public_avatar(row.get("avatar_url")),
             "at": _comment_time(row.get("created_at")),
@@ -383,6 +394,7 @@ def load_chat(supabase) -> list[dict] | None:
         notes.append({
             "id": message_id,
             "parent": parent_id,
+            "user": _author_id(row),
             "name": " ".join(str(row.get("author_name") or "Member").split())[:40] or "Member",
             "avatar": _public_avatar(row.get("avatar_url")),
             "text": text[:COMMENT_LIMIT],
@@ -397,7 +409,7 @@ def load_chat(supabase) -> list[dict] | None:
     for note in notes:
         if note["parent"] is not None:
             continue
-        item = {key: note[key] for key in ("id", "name", "avatar", "text", "at", "mine", "up", "down", "vote")}
+        item = {key: note[key] for key in ("id", "user", "name", "avatar", "text", "at", "mine", "up", "down", "vote")}
         item["replies"] = []
         roots[note["id"]] = item
         ordered.append(item)
@@ -406,7 +418,7 @@ def load_chat(supabase) -> list[dict] | None:
         if parent is None:
             continue
         parent["replies"].append({
-            key: note[key] for key in ("id", "name", "avatar", "text", "at", "mine", "up", "down", "vote")
+            key: note[key] for key in ("id", "user", "name", "avatar", "text", "at", "mine", "up", "down", "vote")
         })
     ordered.sort(key=lambda item: item["at"], reverse=True)
     for item in ordered:
@@ -497,6 +509,7 @@ def sentiment_replies(supabase) -> dict[int, list]:
             continue
         grouped.setdefault(comment_id, []).append({
             "id": reply_id,
+            "user": _author_id(row),
             "name": " ".join(str(row.get("author_name") or "Member").split())[:40] or "Member",
             "avatar": _public_avatar(row.get("avatar_url")),
             "text": text[:COMMENT_LIMIT],
@@ -605,6 +618,7 @@ def social_stream_items(comments_by_key, shared, names, logos=None, watchlist_ke
                 "score": None if score is None else int(round(score)),
                 "coverage": _coverage_label(score),
                 "summary": summary,
+                "user": str((note or {}).get("user") or ""),
                 "name": str((note or {}).get("name") or "Member")[:40] or "Member",
                 "avatar": _public_avatar((note or {}).get("avatar")),
                 "at": str((note or {}).get("at") or ""),

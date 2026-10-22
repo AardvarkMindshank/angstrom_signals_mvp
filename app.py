@@ -7,6 +7,7 @@ import base64
 import html
 import io
 import json
+import re
 import time
 import traceback
 from datetime import datetime, timezone
@@ -169,6 +170,7 @@ export default function(component) {
       window.socialChatReady = Array.isArray(parsed.chat);
       window.socialChat = window.socialChatReady ? parsed.chat : [];
       window.socialMe = parsed.me && typeof parsed.me === "object" ? parsed.me : {};
+      window.socialFavourites = Array.isArray(parsed.favourites) ? parsed.favourites.map(String) : [];
       window.socialChatNotice = typeof parsed.notice === "string" ? parsed.notice : "";
       window.socialChatFaces = Array.isArray(parsed.faces) ? parsed.faces : [];
       window.socialChatLimit = Number(parsed.limit) || 160;
@@ -187,14 +189,14 @@ export default function(component) {
       open: false, side: "", asset: savedAsset || "", person: ""
     };
     let style = document.getElementById("social-stream-style");
-    if (style && style.dataset.layout !== "split3") {
+    if (style && style.dataset.layout !== "stars") {
       style.remove();
       style = null;
     }
     if (!style) {
       style = document.createElement("style");
       style.id = "social-stream-style";
-      style.dataset.layout = "split3";
+      style.dataset.layout = "stars";
       style.textContent = [
         "#social-stream-root{position:fixed;inset:0;z-index:10000000;pointer-events:none;}",
         "#social-stream-root.is-open{pointer-events:auto;}",
@@ -252,7 +254,12 @@ export default function(component) {
         "#social-stream-root .chat-actions button.delete-note{color:#b91c1c;}",
         "#social-stream-root .chat-notice{color:#b45309;font-size:.8rem;line-height:1.35;margin-bottom:6px;}",
         "#social-stream-root .card{padding:14px 0;border-top:1px solid #e5e7eb;}",
+        "#social-stream-root .chat-filters{padding:8px 18px 0;}",
+        "#social-stream-root .chat-filters .picks{grid-template-columns:1fr;margin-top:0;}",
         "#social-stream-root .person{display:flex;gap:10px;align-items:center;}",
+        "#social-stream-root .person .identity{flex:1;min-width:0;}",
+        "#social-stream-root .favourite{flex:none;margin-left:auto;background:none;border:0;padding:0 2px;cursor:pointer;font-size:1.2rem;line-height:1;color:#9ca3af;}",
+        "#social-stream-root .favourite.is-on{color:#d97706;}",
         "#social-stream-root .face{width:36px;height:36px;border-radius:50%;object-fit:cover;background:#dbeafe;color:#1d4ed8;display:flex;align-items:center;justify-content:center;font-weight:700;flex:none;}",
         "#social-stream-root .who{font-weight:600;font-size:.92rem;}",
         "#social-stream-root .when{color:#6b7280;font-size:.78rem;margin-top:1px;}",
@@ -270,14 +277,14 @@ export default function(component) {
       document.head.appendChild(style);
     }
     let root = document.getElementById("social-stream-root");
-    if (root && root.dataset.layout !== "split2") {
+    if (root && root.dataset.layout !== "stars") {
       root.remove();
       root = null;
     }
     if (!root) {
       root = document.createElement("div");
       root.id = "social-stream-root";
-      root.dataset.layout = "split2";
+      root.dataset.layout = "stars";
       root.innerHTML = [
         "<div class='scrim'></div>",
         "<aside class='panel' role='dialog' aria-label='Social signals and chat'>",
@@ -285,7 +292,7 @@ export default function(component) {
         "<header class='head'><div>",
         "<div class='kicker'>Social signals</div>",
         "<h2>Social signals stream</h2>",
-        "<p class='hint'>Newest first. Each note shows the sentiment it was answering, and stays for 12 hours. Reply, or mark any note up or down, including one you posted. All assets, My watchlists, or one of your watchlists is saved on your account.</p>",
+        "<p class='hint'>Newest first. Each note shows the sentiment it was answering, and stays for 12 hours. Reply, or mark any note up or down, including one you posted. Star another person to keep them under Favourites. All assets, My watchlists, or one of your watchlists is saved on your account.</p>",
         "</div><button type='button' class='close'>Close</button></header>",
         "<div class='filters'><div class='chips'>",
         "<button type='button' data-side=''>All</button>",
@@ -301,7 +308,10 @@ export default function(component) {
         "<div class='chat-pane'>",
         "<header class='chat-head'><div class='kicker'>Chat</div>",
         "<h2>General chat</h2>",
-        "<p class='hint'>Newest first. Post a note, reply, or mark any comment up or down, including one you posted. These notes stay in the room.</p></header>",
+        "<p class='hint'>Newest first. Post a note, reply, or mark any comment up or down, including one you posted. These notes stay in the room.</p>",
+        "<div class='chat-filters'><div class='picks'>",
+        "<label>Person<select id='chat-person'></select></label>",
+        "</div></div></header>",
         "<div class='chat-list'></div>",
         "<form class='composer'>",
         "<div class='replying' hidden><span class='replying-label'></span><button type='button' class='reply-cancel'>Cancel</button></div>",
@@ -350,6 +360,10 @@ export default function(component) {
       });
       root.querySelector("#stream-person").addEventListener("change", (event) => {
         window.socialStreamState.person = event.target.value;
+        window.renderSocialStream();
+      });
+      root.querySelector("#chat-person").addEventListener("change", (event) => {
+        window.socialStreamState.chatPerson = event.target.value;
         window.renderSocialStream();
       });
       document.addEventListener("keydown", (event) => {
@@ -471,20 +485,19 @@ export default function(component) {
       const items = window.socialStreamItems || [];
       const assets = [];
       const seenAssets = {};
-      const people = [];
-      const seenPeople = {};
       const marketKeys = { "Mood|crypto": true, "Mood|stock": true };
       items.forEach((item) => {
         if (item.key && !seenAssets[item.key] && !marketKeys[item.key]) {
           seenAssets[item.key] = true;
           assets.push([item.key, item.asset || item.key]);
         }
-        const person = item.name || "Member";
-        if (!seenPeople[person]) {
-          seenPeople[person] = true;
-          people.push(person);
-        }
       });
+      const people = collectPeople(items);
+      const seenPeople = {};
+      people.forEach((name) => { seenPeople[name] = true; });
+      const chatPeople = collectPeople(window.socialChat || []);
+      const seenChatPeople = {};
+      chatPeople.forEach((name) => { seenChatPeople[name] = true; });
       assets.sort((a, b) => String(a[1]).localeCompare(String(b[1])));
       people.sort((a, b) => a.localeCompare(b));
       fillStreamSelect(
@@ -500,14 +513,30 @@ export default function(component) {
           ["Mood|stock", "Stock market"]
         ]
       );
-      fillStreamSelect(panel.querySelector("#stream-person"), "All people", people.map((name) => [name, name]), state.person);
+      fillStreamSelect(
+        panel.querySelector("#stream-person"),
+        "All people",
+        people.map((name) => [name, name]),
+        state.person,
+        [["favourites", "Favourites"]]
+      );
+      fillStreamSelect(
+        panel.querySelector("#chat-person"),
+        "All people",
+        chatPeople.map((name) => [name, name]),
+        state.chatPerson || "",
+        [["favourites", "Favourites"]]
+      );
       const streamScopes = {
         watchlist: true, crypto: true, stock: true, "Mood|crypto": true, "Mood|stock": true
       };
       if (!streamScopes[state.asset] && !seenAssets[state.asset]) state.asset = "";
-      if (!seenPeople[state.person]) state.person = "";
+      if (state.person !== "favourites" && !seenPeople[state.person]) state.person = "";
+      if ((state.chatPerson || "") !== "favourites" && !seenChatPeople[state.chatPerson || ""]) state.chatPerson = "";
       panel.querySelector("#stream-asset").value = state.asset;
       panel.querySelector("#stream-person").value = state.person;
+      const chatPerson = panel.querySelector("#chat-person");
+      if (chatPerson) chatPerson.value = state.chatPerson || "";
       panel.querySelectorAll("[data-side]").forEach((button) => {
         button.classList.toggle("is-on", (button.getAttribute("data-side") || "") === state.side);
       });
@@ -517,7 +546,7 @@ export default function(component) {
         } else if (state.asset === "crypto" || state.asset === "stock") {
           if (item.list !== state.asset) return false;
         } else if (state.asset && item.key !== state.asset) return false;
-        if (state.person && (item.name || "Member") !== state.person) return false;
+        if (!matchesPerson(item, state.person)) return false;
         if (state.side && item.side !== state.side) return false;
         return true;
       });
@@ -529,7 +558,9 @@ export default function(component) {
         if (!shown.length) {
           const empty = document.createElement("div");
           empty.className = "empty";
-          empty.textContent = items.length
+          empty.textContent = state.person === "favourites" && !favouriteSet().size
+            ? "No favourites yet. Press the star beside a name."
+            : items.length
             ? "No comments match these filters."
             : "No comments yet. Each one stays for 12 hours after it is posted.";
           list.appendChild(empty);
@@ -610,6 +641,7 @@ export default function(component) {
     if (reply && reply.kind === "signal") {
       const note = {
         id: "local-" + Date.now(),
+        user: (window.socialMe || {}).id || "",
         name: (window.socialMe || {}).name || "You",
         avatar: (window.socialMe || {}).avatar || "",
         text: text,
@@ -630,6 +662,7 @@ export default function(component) {
     }
     const note = {
       id: "local-" + Date.now(),
+      user: (window.socialMe || {}).id || "",
       name: (window.socialMe || {}).name || "You",
       avatar: (window.socialMe || {}).avatar || "",
       text: text,
@@ -706,14 +739,45 @@ export default function(component) {
     return button;
   }
 
-  function chatCard(item, rootId) {
-    const card = document.createElement("article");
-    card.className = item.id === rootId ? "chat-card" : "reply";
+  function favouriteSet() {
+    return new Set((window.socialFavourites || []).map((id) => String(id)));
+  }
+
+  function toggleFavourite(userId) {
+    const id = String(userId || "");
+    const mine = String((window.socialMe || {}).id || "");
+    if (!id || id === mine) return;
+    const current = (window.socialFavourites || []).map(String);
+    const on = current.indexOf(id) === -1;
+    window.socialFavourites = on ? current.concat([id]) : current.filter((item) => item !== id);
+    if (window.renderSocialStream) window.renderSocialStream();
+    if (!window.socialStreamReport) return;
+    window.socialStreamReport("favourite", JSON.stringify({ n: Date.now(), user: id, on: on }));
+  }
+
+  function favouriteButton(item) {
+    const id = String(item.user || "");
+    const mine = String((window.socialMe || {}).id || "");
+    if (!id || item.mine || id === mine) return null;
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "favourite";
+    const on = favouriteSet().has(id);
+    button.classList.toggle("is-on", on);
+    button.textContent = on ? "★" : "☆";
+    button.title = on ? "Remove from favourites" : "Add to favourites";
+    button.setAttribute("aria-label", button.title);
+    button.addEventListener("click", () => toggleFavourite(id));
+    return button;
+  }
+
+  function personRow(item) {
     const person = document.createElement("div");
     person.className = "person";
     const name = String(item.name || "Member");
     person.appendChild(streamFace(name, item.avatar));
     const identity = document.createElement("div");
+    identity.className = "identity";
     const who = document.createElement("div");
     who.className = "who";
     who.textContent = name;
@@ -726,6 +790,41 @@ export default function(component) {
     identity.appendChild(who);
     identity.appendChild(when);
     person.appendChild(identity);
+    const star = favouriteButton(item);
+    if (star) person.appendChild(star);
+    return person;
+  }
+
+  function collectPeople(rows) {
+    const people = [];
+    const seen = {};
+    const visit = (item) => {
+      const person = item.name || "Member";
+      if (!seen[person]) {
+        seen[person] = true;
+        people.push(person);
+      }
+      (item.replies || []).forEach(visit);
+    };
+    (rows || []).forEach(visit);
+    people.sort((a, b) => a.localeCompare(b));
+    return people;
+  }
+
+  function matchesPerson(item, person) {
+    if (!person) return true;
+    const notes = [item].concat(item.replies || []);
+    if (person === "favourites") {
+      const stars = favouriteSet();
+      return notes.some((note) => stars.has(String(note.user || "")));
+    }
+    return notes.some((note) => (note.name || "Member") === person);
+  }
+
+  function chatCard(item, rootId) {
+    const card = document.createElement("article");
+    card.className = item.id === rootId ? "chat-card" : "reply";
+    const person = personRow(item);
     const saying = document.createElement("p");
     saying.className = "saying";
     saying.textContent = String(item.text || "");
@@ -745,7 +844,7 @@ export default function(component) {
       reply.title = "Reply";
       reply.setAttribute("aria-label", "Reply");
       reply.addEventListener("click", () => {
-        window.socialStreamState.reply = { id: rootId, name: name };
+        window.socialStreamState.reply = { id: rootId, name: String(item.name || "Member") };
         paintReply(document.getElementById("social-stream-root"));
         const box = document.querySelector("#social-stream-root .chat-box");
         if (box) box.focus();
@@ -785,13 +884,22 @@ export default function(component) {
       return;
     }
     const threads = window.socialChat || [];
+    const chatPerson = (window.socialStreamState || {}).chatPerson || "";
+    const shownThreads = threads.filter((item) => matchesPerson(item, chatPerson));
     if (!threads.length) {
       const empty = document.createElement("div");
       empty.className = "empty";
       empty.textContent = "No chat comments yet. Post the first one below.";
       list.appendChild(empty);
+    } else if (!shownThreads.length) {
+      const empty = document.createElement("div");
+      empty.className = "empty";
+      empty.textContent = chatPerson === "favourites" && !favouriteSet().size
+        ? "No favourites yet. Press the star beside a name."
+        : "No chat comments match this person.";
+      list.appendChild(empty);
     } else {
-      threads.forEach((item) => list.appendChild(chatCard(item, item.id)));
+      shownThreads.forEach((item) => list.appendChild(chatCard(item, item.id)));
     }
     const notice = panel.querySelector(".chat-notice");
     if (notice) {
@@ -868,23 +976,7 @@ export default function(component) {
   function streamCard(item) {
     const card = document.createElement("article");
     card.className = "card";
-    const person = document.createElement("div");
-    person.className = "person";
-    const name = String(item.name || "Member");
-    person.appendChild(streamFace(name, item.avatar));
-    const identity = document.createElement("div");
-    const who = document.createElement("div");
-    who.className = "who";
-    who.textContent = name;
-    const when = document.createElement("div");
-    when.className = "when";
-    const parsedAt = new Date(item.at);
-    when.textContent = Number.isNaN(parsedAt.getTime()) ? "" : parsedAt.toLocaleString(undefined, {
-      month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit"
-    });
-    identity.appendChild(who);
-    identity.appendChild(when);
-    person.appendChild(identity);
+    const person = personRow(item);
     const saying = document.createElement("p");
     saying.className = "saying";
     saying.textContent = String(item.text || "");
@@ -996,23 +1088,7 @@ export default function(component) {
   function signalReply(item, rootId) {
     const card = document.createElement("article");
     card.className = "reply";
-    const person = document.createElement("div");
-    person.className = "person";
-    const name = String(item.name || "Member");
-    person.appendChild(streamFace(name, item.avatar));
-    const identity = document.createElement("div");
-    const who = document.createElement("div");
-    who.className = "who";
-    who.textContent = name;
-    const when = document.createElement("div");
-    when.className = "when";
-    const parsedAt = new Date(item.at);
-    when.textContent = Number.isNaN(parsedAt.getTime()) ? "" : parsedAt.toLocaleString(undefined, {
-      month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit"
-    });
-    identity.appendChild(who);
-    identity.appendChild(when);
-    person.appendChild(identity);
+    const person = personRow(item);
     const saying = document.createElement("p");
     saying.className = "saying";
     saying.textContent = String(item.text || "");
@@ -1390,6 +1466,22 @@ if st.session_state.user is None:
 
 
 user_id = st.session_state.user.id
+
+
+def _favourite_ids(raw) -> list[str]:
+    """Account ids saved as favourites. Blank, your own id, and anything else are left out."""
+    if not isinstance(raw, list):
+        return []
+    own = str(user_id or "").strip().lower()
+    seen = []
+    for item in raw:
+        text = str(item or "").strip().lower()
+        if not re.fullmatch(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", text):
+            continue
+        if text == own or text in seen:
+            continue
+        seen.append(text)
+    return seen[:100]
 
 
 def load_user_preferences():
@@ -1920,7 +2012,7 @@ The **Sentiment** column shows that saved score in the same colored box. A dash 
 
 The picture on the left of each name is that asset's logo. The same logo appears at the top of the Interactive Chart and Market sentiment sections. Crypto logos come from CoinGecko. Stock logos come from Finnhub. A letter shows when a logo is not available. The address is saved once and reused for every account.
 
-Beside the sentiment score you can press thumbs up if you agree, or thumbs down if you do not. Press the same thumb again to clear your take. Those buttons sit in an outlined box. After you disagree, scores appear in that same box, under the buttons: 0, 20, 40, 60, 80 and 100. The number you pick also fills the type box, and you can type any number from 0 to 100. It saves on its own when you click a score, press Enter, or leave the box. The thumbs and that same colored average sit at the bottom of Your take, and again under **Crowd** on each table row. The box is the average of the personal scores, in the same style as the Sentiment column. It updates when a score is clicked or typed. Hover the down thumb for the spread, which is how far those scores typically sit from the average. One score has no spread yet. A dash means nobody has given a personal score. Under the thumbs you can post one comment of up to 160 characters. A row under the box adds an emoticon, including a rocket. A speech balloon appears beside the thumbs, and in the **Comments** column, once any comment exists. Click it, or the arrow on the right edge of the page, to slide in the **Social signals stream**. That stream lists comments newest first, with each person's picture, name, and the time, and the sentiment they were answering. Narrow it with All, Positive, Negative, or Mixed. Under Asset, All assets is every comment, and My watchlists is only the crypto and equity tables on your account. My Crypto Watchlist and My Equities Watchlist each show one of those lists. Crypto market and Stock market sit above the individual assets. That choice of All assets or a watchlist is saved for you. You can also pick one asset or one person. On each note you can reply, or mark any note up or down, including one you posted. A reply stays with that note for the same 12 hours. Delete removes a note you posted, and deleting a comment also removes the replies under it. The lower half of that panel is a general chat. Drag the line between the two halves to give either one more room. Post a comment at the bottom, with the same emoticons. Reply to a comment, or mark someone else's comment up or down. These notes are not tied to an asset, and they stay in the room. Close it with Close, the shaded area, or Escape. A refresh of that sentiment clears every thumb and every personal score, because they belonged to the old score. A comment stays for 12 hours from when it was posted, and the stream keeps the sentiment it was answering even after a newer score arrives.
+Beside the sentiment score you can press thumbs up if you agree, or thumbs down if you do not. Press the same thumb again to clear your take. Those buttons sit in an outlined box. After you disagree, scores appear in that same box, under the buttons: 0, 20, 40, 60, 80 and 100. The number you pick also fills the type box, and you can type any number from 0 to 100. It saves on its own when you click a score, press Enter, or leave the box. The thumbs and that same colored average sit at the bottom of Your take, and again under **Crowd** on each table row. The box is the average of the personal scores, in the same style as the Sentiment column. It updates when a score is clicked or typed. Hover the down thumb for the spread, which is how far those scores typically sit from the average. One score has no spread yet. A dash means nobody has given a personal score. Under the thumbs you can post one comment of up to 160 characters. A row under the box adds an emoticon, including a rocket. A speech balloon appears beside the thumbs, and in the **Comments** column, once any comment exists. Click it, or the arrow on the right edge of the page, to slide in the **Social signals stream**. That stream lists comments newest first, with each person's picture, name, and the time, and the sentiment they were answering. Narrow it with All, Positive, Negative, or Mixed. Under Asset, All assets is every comment, and My watchlists is only the crypto and equity tables on your account. My Crypto Watchlist and My Equities Watchlist each show one of those lists. Crypto market and Stock market sit above the individual assets. That choice of All assets or a watchlist is saved for you. You can also pick one asset or one person. Favourites, in that Person list, shows notes from people you have starred. The chat has the same Person list. A star beside another person's name adds them, and pressing it again removes them. That list is saved on your account. On each note you can reply, or mark any note up or down, including one you posted. A reply stays with that note for the same 12 hours. Delete removes a note you posted, and deleting a comment also removes the replies under it. The lower half of that panel is a general chat. Drag the line between the two halves to give either one more room. Post a comment at the bottom, with the same emoticons. Reply to a comment, or mark someone else's comment up or down. These notes are not tied to an asset, and they stay in the room. Close it with Close, the shaded area, or Escape. A refresh of that sentiment clears every thumb and every personal score, because they belonged to the old score. A comment stays for 12 hours from when it was posted, and the stream keeps the sentiment it was answering even after a newer score arrives.
 
 Click a sentiment score in the table to highlight that asset and jump to its headlines. **↑ Top** scrolls back to the top of the page. It sits at the top right of the Interactive Chart section, and at the top right of Market sentiment.
 
@@ -2152,6 +2244,8 @@ with st.sidebar.expander("⚙️ Settings", expanded=False):
     }
     if settings.get("stream_asset") in ("all", "watchlist", "crypto", "stock"):
         new_settings["stream_asset"] = settings["stream_asset"]
+    if isinstance(settings.get("favourites"), list):
+        new_settings["favourites"] = _favourite_ids(settings.get("favourites"))
     if new_settings != settings:
         settings = new_settings
         prefs["settings"] = settings
@@ -2331,7 +2425,49 @@ def _chat_viewer() -> dict:
     avatar = str((profile or {}).get("avatar_url") or "").strip()
     if not avatar.startswith("https://") or any(mark in avatar for mark in (" ", '"', "'", "<", ">", "\\")):
         avatar = ""
-    return {"name": (name or "Member")[:40], "avatar": avatar}
+    return {"id": str(user_id or ""), "name": (name or "Member")[:40], "avatar": avatar}
+
+
+def _favourite_event(raw):
+    """One star press from the panel. None when this run has nothing new."""
+    if not raw:
+        return None
+    try:
+        data = json.loads(raw) if isinstance(raw, str) else raw
+    except (TypeError, json.JSONDecodeError):
+        return None
+    if not isinstance(data, dict):
+        return None
+    try:
+        token = int(data.get("n") or 0)
+    except (TypeError, ValueError):
+        return None
+    if token <= 0:
+        return None
+    return data
+
+
+def _apply_favourite(data) -> str:
+    """Save or remove one person on this account. The returned note is shown once."""
+    target = str(data.get("user") or "").strip().lower()
+    allowed = _favourite_ids([target])
+    if not allowed:
+        return ""
+    try:
+        stored = prefs.setdefault("settings", {})
+        current = _favourite_ids(stored.get("favourites"))
+        person = allowed[0]
+        if data.get("on"):
+            if person not in current:
+                current.append(person)
+        else:
+            current = [item for item in current if item != person]
+        if current != _favourite_ids(stored.get("favourites")):
+            stored["favourites"] = current
+            save_preferences_to_cloud({"settings": stored})
+        return ""
+    except Exception:
+        return "That favourite could not be saved. Try again."
 
 
 def _chat_action(raw):
@@ -2606,6 +2742,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                     "asset": scope,
                     "chat": load_chat(supabase),
                     "me": _chat_viewer(),
+                    "favourites": _favourite_ids((prefs.get("settings") or {}).get("favourites")),
                     "notice": chat_notice,
                     "faces": list(COMMENT_EMOTICONS),
                     "limit": COMMENT_LIMIT,
@@ -2615,10 +2752,12 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             on_asset_change=lambda: None,
             on_chat_change=lambda: None,
             on_signal_change=lambda: None,
+            on_favourite_change=lambda: None,
         )
         chosen_scope = stream_state.asset
         chat_event = _chat_action(getattr(stream_state, "chat", None))
         signal_event = _chat_action(getattr(stream_state, "signal", None))
+        favourite_event = _favourite_event(getattr(stream_state, "favourite", None))
         if chat_event and chat_event.get("n") != st.session_state.get("chat_done"):
             st.session_state["chat_done"] = chat_event.get("n")
             st.session_state["chat_notice"] = _apply_chat_action(chat_event)
@@ -2626,6 +2765,10 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
         if signal_event and signal_event.get("n") != st.session_state.get("signal_done"):
             st.session_state["signal_done"] = signal_event.get("n")
             st.session_state["chat_notice"] = _apply_signal_action(signal_event)
+            _rerun_fragment()
+        if favourite_event and favourite_event.get("n") != st.session_state.get("favourite_done"):
+            st.session_state["favourite_done"] = favourite_event.get("n")
+            st.session_state["chat_notice"] = _apply_favourite(favourite_event)
             _rerun_fragment()
         if chosen_scope in ("all", "watchlist", "crypto", "stock"):
             stored = prefs.setdefault("settings", {})
