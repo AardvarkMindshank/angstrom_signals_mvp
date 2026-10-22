@@ -50,6 +50,58 @@ export default function(component) {
       setTriggerValue("picked", button.getAttribute("data-pick"));
     });
   });
+  const valueOf = (row, col) => {
+    const cell = row.cells[col];
+    if (!cell) return null;
+    const raw = cell.getAttribute("data-sort");
+    if (raw === null || raw === "") return null;
+    const num = Number(raw);
+    return Number.isFinite(num) ? num : raw.toLowerCase();
+  };
+  const applySort = (table, col, dir) => {
+    const body = table.querySelector("tbody");
+    if (!body) return;
+    const rows = Array.from(body.querySelectorAll("tr"));
+    const numeric = rows.some((row) => typeof valueOf(row, col) === "number");
+    rows.sort((a, b) => {
+      const av = valueOf(a, col);
+      const bv = valueOf(b, col);
+      if (av === null && bv === null) return 0;
+      if (av === null) return 1;
+      if (bv === null) return -1;
+      const cmp = numeric ? av - bv : String(av).localeCompare(String(bv));
+      return cmp * dir;
+    });
+    rows.forEach((row) => body.appendChild(row));
+    table.querySelectorAll("[data-sort-mark]").forEach((mark) => {
+      mark.textContent = "";
+    });
+    const active = table.querySelector('button[data-sort-col="' + col + '"] [data-sort-mark]');
+    if (active) active.textContent = dir < 0 ? " ↓" : " ↑";
+  };
+  host.querySelectorAll("table[data-table]").forEach((table) => {
+    const key = table.getAttribute("data-table");
+    const saved = window.scoreTableSort && window.scoreTableSort[key];
+    if (saved) applySort(table, saved.col, saved.dir);
+  });
+  host.querySelectorAll("button[data-sort-col]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const table = button.closest("table");
+      const col = Number(button.getAttribute("data-sort-col"));
+      const key = table.getAttribute("data-table") || "table";
+      const state = window.scoreTableSort || (window.scoreTableSort = {});
+      const prev = state[key];
+      const rows = Array.from(table.querySelectorAll("tbody tr"));
+      const numeric = rows.some((row) => typeof valueOf(row, col) === "number");
+      let dir = numeric ? -1 : 1;
+      if (prev && prev.col === col) dir = prev.dir * -1;
+      else if (!prev && col === 2) dir = 1;
+      state[key] = {col: col, dir: dir};
+      applySort(table, col, dir);
+    });
+  });
   return () => host.remove();
 }
 """
@@ -908,7 +960,7 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
 **How to use it**
 
 1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest. Quick Snapshot, Crypto Scores, Equity Scores, Interactive Chart, Score Breakdown, and Market sentiment each sit in a section that starts open. Close a header to fold that section away. **Open all** and **Collapse all**, on the right of the page title, do that for every one of those sections. **Feedback**, at the bottom of the sidebar, sends an issue or an idea. It is stored as submitted and emailed.
-2. Click a name in either table, a Quick Snapshot box, or an alert under Notifications. That asset stays highlighted, and the page moves down to the chart when the chart is off screen.
+2. Click a name in either table, a Quick Snapshot box, or an alert under Notifications. That asset stays highlighted, and the page moves down to the chart when the chart is off screen. Click a column title to sort that table. It starts with the strongest score at the top.
 3. Extra metrics add **7d %**, **Market Cap**, **ATR %**, and **Vol**. A separate checkbox adds **1d %** before the seven-day change and **30d %** after it. For **1d %** and **7d %**, green means the price rose and red means it fell. **30d %** uses the same colors as the **30-day trend**: green for a rise of about 2% or more, red for a fall of about 2% or more, and orange when the move stays inside about 2%. For stocks, one day is the previous trading session. **Market Cap** is the latest size of the asset, from CoinGecko for crypto and Yahoo for stocks. **ATR %** is volatility. **Vol** is volume versus its 20-day average.
 4. Alerts fire at 70 and 30 unless you move those sliders. One email goes to the address on your account when a technical score crosses a boundary. It is not sent again until the score leaves that boundary and crosses it later. Sentiment scores do not send alerts.
 
@@ -1544,12 +1596,31 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             f'<span style="min-width:28px;font-weight:600;font-size:0.9em;">{label}</span></div>'
         )
 
-    def cell(value):
-        return f"<td style='padding:10px;white-space:nowrap;'>{html.escape(str(value))}</td>"
+    def sort_token(value, numeric=False):
+        try:
+            missing = value is None or pd.isna(value)
+        except TypeError:
+            missing = value is None
+        if missing:
+            return ""
+        if numeric:
+            try:
+                return f"{float(value):.8f}"
+            except (TypeError, ValueError):
+                return ""
+        return html.escape(str(value), quote=True)
+
+    def cell(value, sort_value=None, numeric=False):
+        token = sort_token(value if sort_value is None else sort_value, numeric)
+        return (
+            f"<td data-sort='{token}' style='padding:10px;white-space:nowrap;'>"
+            f"{html.escape(str(value))}</td>"
+        )
 
     def percent_change_cell(value, match_trend=False):
         if value is None or pd.isna(value):
             inner = "<span style='color:#6b7280;'>—</span>"
+            token = ""
         else:
             number = float(value)
             if match_trend:
@@ -1561,7 +1632,8 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             else:
                 color = "#6b7280"
             inner = f"<span style='color:{color};font-weight:600;'>{number:+.1f}%</span>"
-        return f"<td style='padding:10px;white-space:nowrap;'>{inner}</td>"
+            token = sort_token(number, numeric=True)
+        return f"<td data-sort='{token}' style='padding:10px;white-space:nowrap;'>{inner}</td>"
 
     def style_and_show_table(results, title, kind, section_id):
         with section_expander(title, section_id):
@@ -1569,7 +1641,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                 st.caption("This watchlist is empty.")
                 return
             frame = pd.DataFrame(results).sort_values("score", ascending=False, na_position="last")
-            st.caption("Click a name to show that asset on the chart. Click a sentiment score to open its headlines. Watching is how many accounts hold that asset. The Crowd box is the average of personal scores. Hover the down thumb for the spread. The 30-day trend uses the same colors as 30d %.")
+            st.caption("Click a column title to sort. The table starts with the strongest score at the top. Click a name to show that asset on the chart. Click a sentiment score to open its headlines. Watching is how many accounts hold that asset. The Crowd box is the average of personal scores. Hover the down thumb for the spread. The 30-day trend uses the same colors as 30d %.")
 
             headers = ["Asset", "Watching", "Score", "Signal", "Price", "RSI"]
             if show_period_changes_flag:
@@ -1581,17 +1653,34 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             if show_extra_metrics_flag:
                 headers += ["Market Cap", "ATR %", "Vol"]
             headers += ["Sentiment", "Crowd", "30-day trend"]
+            sort_at = {"Asset": 0, "Watching": 1, "Score": 2, "Signal": 3, "Price": 4, "RSI": 5}
+            column = 6
+            for name in ("1d %", "7d %", "30d %", "Market Cap", "ATR %", "Vol"):
+                if name in headers:
+                    sort_at[name] = column
+                    column += 1
+            sort_at["Sentiment"] = column
+            sort_at["Crowd"] = column + 2
+            sort_at["30-day trend"] = column + 3
+
+            def header_button(name, align="left", colspan=1):
+                mark = " ↓" if name == "Score" else ""
+                span = f" colspan='{colspan}'" if colspan > 1 else ""
+                return (
+                    f"<th{span} style='padding:8px 10px;text-align:{align};white-space:nowrap;'>"
+                    f"<button type='button' data-sort-col='{sort_at[name]}' "
+                    "style='background:none;border:none;padding:0;margin:0;color:inherit;"
+                    "font:inherit;font-weight:600;cursor:pointer;white-space:nowrap;'>"
+                    f"{html.escape(name)}<span data-sort-mark>{mark}</span></button></th>"
+                )
+
             header_html = ""
             for name in headers:
                 if name == "Crowd":
-                    header_html += (
-                        "<th colspan='2' style='padding:8px 10px;text-align:center;white-space:nowrap;'>Crowd</th>"
-                    )
+                    header_html += header_button(name, "center", 2)
                     continue
                 align = "right" if name in ("Sentiment", "30-day trend") else "left"
-                header_html += (
-                    f"<th style='padding:8px 10px;text-align:{align};white-space:nowrap;'>{html.escape(name)}</th>"
-                )
+                header_html += header_button(name, align)
 
             pick = st.session_state.get("chart_pick")
             rows_html = ""
@@ -1613,12 +1702,15 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                 )
                 rows_html += (
                     f"<tr style='border-bottom:1px solid #f0f0f0;{row_style}'>"
-                    "<td style='padding:10px;white-space:nowrap;'>"
+                    f"<td data-sort='{sort_token(row.get('symbol'))}' style='padding:10px;white-space:nowrap;'>"
                     "<span style='display:inline-flex;align-items:center;gap:8px;'>"
                     f"{asset_logo(row.get('logo_url'), row.get('symbol'))}{name_button}</span></td>"
-                    f"<td style='padding:8px 10px;white-space:nowrap;'>{holders_mark(row.get('holders'))}</td>"
-                    f"<td style='padding:10px;min-width:130px;'>{render_score_bar(row['score'])}</td>"
-                    f"{cell(row.get('label') or '—')}{cell(price_str)}{cell(rsi_str)}"
+                    f"<td data-sort='{sort_token(row.get('holders'), numeric=True)}' "
+                    f"style='padding:8px 10px;white-space:nowrap;'>{holders_mark(row.get('holders'))}</td>"
+                    f"<td data-sort='{sort_token(row.get('score'), numeric=True)}' "
+                    f"style='padding:10px;min-width:130px;'>{render_score_bar(row['score'])}</td>"
+                    f"{cell(row.get('label') or '—', row.get('label') or '')}"
+                    f"{cell(price_str, price, numeric=True)}{cell(rsi_str, rsi, numeric=True)}"
                 )
                 if show_period_changes_flag:
                     rows_html += percent_change_cell(row.get("change_1d"))
@@ -1630,9 +1722,9 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                     atr = row.get("atr_pct")
                     volume = row.get("volume_ratio")
                     rows_html += (
-                        f"{cell(format_market_cap(row.get('market_cap')))}"
-                        f"{cell(f'{atr:.2f}' if pd.notna(atr) else '—')}"
-                        f"{cell(f'{volume:.2f}' if pd.notna(volume) else '—')}"
+                        f"{cell(format_market_cap(row.get('market_cap')), row.get('market_cap'), numeric=True)}"
+                        f"{cell(f'{atr:.2f}' if pd.notna(atr) else '—', atr, numeric=True)}"
+                        f"{cell(f'{volume:.2f}' if pd.notna(volume) else '—', volume, numeric=True)}"
                     )
                 watchlist = crypto_watchlist if kind == "Crypto" else stock_watchlist
                 label = watchlist.get(asset_id)
@@ -1642,18 +1734,24 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                     headline_score = cached_sentiment_score(sentiment_query(kind, str(label), ticker))
                 sentiment_pick = f"{kind}|{asset_id}|sentiment" if headline_score is not None else None
                 rows_html += (
-                    f"<td style='padding:10px;text-align:right;white-space:nowrap;'>"
+                    f"<td data-sort='{sort_token(headline_score, numeric=True)}' "
+                    f"style='padding:10px;text-align:right;white-space:nowrap;'>"
                     f"{sentiment_badge(headline_score, sentiment_pick)}</td>"
-                    f"<td style='padding:10px 4px 10px 10px;text-align:right;white-space:nowrap;'>"
+                    f"<td data-sort='{sort_token((row.get('thumbs_up') or 0) - (row.get('thumbs_down') or 0), numeric=True)}' "
+                    f"style='padding:10px 4px 10px 10px;text-align:right;white-space:nowrap;'>"
                     f"{crowd_mark(row.get('thumbs_up'), row.get('thumbs_down'), headline_score is not None, row.get('alt_count'), row.get('alt_avg'), row.get('alt_spread'))}</td>"
-                    f"<td style='padding:10px 10px 10px 4px;text-align:left;white-space:nowrap;'>"
+                    f"<td data-sort='{sort_token(row.get('alt_avg'), numeric=True)}' "
+                    f"style='padding:10px 10px 10px 4px;text-align:left;white-space:nowrap;'>"
                     f"{crowd_average_badge(row.get('alt_avg'), row.get('alt_count'), row.get('alt_spread'), headline_score is not None)}</td>"
-                    f"<td style='padding:6px 10px;width:84px;'>{sparkline_svg(row.get('closes'), row.get('change_30d'))}</td></tr>"
+                    f"<td data-sort='{sort_token(row.get('change_30d'), numeric=True)}' "
+                    f"style='padding:6px 10px;width:84px;'>{sparkline_svg(row.get('closes'), row.get('change_30d'))}</td></tr>"
                 )
 
+            table_key = html.escape(kind + "|" + "|".join(headers), quote=True)
             table_html = (
                 "<div style='width:100%;overflow-x:auto;margin-bottom:8px;-webkit-overflow-scrolling:touch;'>"
-                "<table style='width:100%;border-collapse:collapse;font-size:0.95rem;'>"
+                "<table data-table='"
+                f"{table_key}' style='width:100%;border-collapse:collapse;font-size:0.95rem;'>"
                 f"<thead><tr style='border-bottom:2px solid #e5e7eb;'>{header_html}</tr></thead>"
                 f"<tbody>{rows_html}</tbody></table></div>"
             )
