@@ -1770,6 +1770,26 @@ def _sentiment_thumbs(kind: str, asset_id: str, sentiment_at) -> None:
         .st-key-sentiment_agree [data-testid="stBaseButton-primary"] p {{
             color: #ffffff;
         }}
+        .st-key-sentiment_take_box .stColumn {{
+            min-width: 0 !important;
+        }}
+        .st-key-sentiment_alt_0 button,
+        .st-key-sentiment_alt_20 button,
+        .st-key-sentiment_alt_40 button,
+        .st-key-sentiment_alt_60 button,
+        .st-key-sentiment_alt_80 button,
+        .st-key-sentiment_alt_100 button {{
+            min-width: 0;
+            padding: 0.3rem 0;
+        }}
+        .st-key-sentiment_alt_0 button p,
+        .st-key-sentiment_alt_20 button p,
+        .st-key-sentiment_alt_40 button p,
+        .st-key-sentiment_alt_60 button p,
+        .st-key-sentiment_alt_80 button p,
+        .st-key-sentiment_alt_100 button p {{
+            font-size: 0.8rem;
+        }}
         {selected_color}
         </style>
         """
@@ -1812,16 +1832,15 @@ def _sentiment_alt_score(kind: str, asset_id: str, sentiment_at, mine_score, sel
     """Score controls under Disagree. A picked number also fills the type box."""
     st.markdown("**Your score**")
     picked = None
-    for row in ((0, 20, 40), (60, 80, 100)):
-        for column, value in zip(st.columns(3), row):
-            with column:
-                if st.button(
-                    str(value),
-                    key=f"sentiment_alt_{value}",
-                    use_container_width=True,
-                    type="primary" if selected == value else "secondary",
-                ):
-                    picked = value
+    for column, value in zip(st.columns(6, gap="xxsmall", wrap=False), (0, 20, 40, 60, 80, 100)):
+        with column:
+            if st.button(
+                str(value),
+                key=f"sentiment_alt_{value}",
+                use_container_width=True,
+                type="primary" if selected == value else "secondary",
+            ):
+                picked = value
     typed_key = f"sentiment_alt_typed_{asset_market_key(kind, asset_id)}"
     if picked is not None:
         st.session_state[typed_key] = int(picked)
