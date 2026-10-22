@@ -864,7 +864,7 @@ This sits under the chart. The heading names the open asset, for example **Marke
 
 The **Sentiment** column shows that saved score in the same colored box. A dash means that asset has not been scored yet. Open it on the chart, and the score fills in once Grok finishes. The score is stored once and shown to every account that holds the asset. It stays for about 12 hours.
 
-**Trend**, at the far right of each row, is a small line of the last 30 closes. Green means that stretch rose. Red means it fell. The same line is shared by every account.
+**Trend**, at the far right of each row, is a small line of the last 30 closes. Green means that stretch rose. Red means it fell. Orange means it finished within about 2% of where it started. The same line is shared by every account.
 
 **Watching**, beside the name, is how many accounts have that asset on a watchlist. The people marks are a count, not the names of those accounts.
 

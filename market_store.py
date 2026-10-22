@@ -165,7 +165,7 @@ def holders_mark(count) -> str:
 
 
 def sparkline_svg(closes) -> str:
-    """A short line for one table row. Green when the stretch rose, red when it fell."""
+    """A short line for one table row. Green up, red down, orange when it barely moved."""
     values = recent_closes(closes, SPARKLINE_POINTS)
     if len(values) < 2:
         return "<span style='color:#6b7280;'>—</span>"
@@ -178,12 +178,14 @@ def sparkline_svg(closes) -> str:
         x = pad + (width - 2 * pad) * (index / last)
         y = pad + (height - 2 * pad) * (1 - (value - low) / span)
         points.append(f"{x:.1f},{y:.1f}")
-    if values[-1] > values[0]:
+    start = values[0]
+    change = abs(values[-1] - start) / abs(start) if start else 0.0
+    if change < 0.02:
+        color = "#d97706"
+    elif values[-1] > start:
         color = "#15803d"
-    elif values[-1] < values[0]:
-        color = "#b91c1c"
     else:
-        color = "#6b7280"
+        color = "#b91c1c"
     return (
         f"<svg width='{width}' height='{height}' viewBox='0 0 {width} {height}' "
         "aria-hidden='true' style='display:block;margin-left:auto;'>"
