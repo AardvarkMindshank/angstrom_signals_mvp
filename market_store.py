@@ -15,7 +15,7 @@ from sentiment import SENTIMENT_REFRESH_SECONDS
 
 SPARKLINE_POINTS = 31
 COMMENT_LIMIT = 160
-COMMENT_EMOTICONS = ("😀", "🙂", "😐", "🙁", "😮", "🔥", "🚀", "📈", "📉")
+COMMENT_EMOTICONS = ("😀", "🙂", "😐", "🙁", "😮", "🔥", "💩", "🚀", "📈", "📉")
 _SIDEWAYS_PERCENT = 2.0
 _WARNED = False
 
