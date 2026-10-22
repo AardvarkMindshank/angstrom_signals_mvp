@@ -213,6 +213,13 @@ def _rerun_fragment() -> None:
             raise
         st.rerun()
 
+
+def section_expander(label: str, section_id: str):
+    """A main-page section. Open all and Collapse all move every one of these together."""
+    fold = st.session_state.setdefault("section_fold", {"open": True, "nonce": 0})
+    return st.expander(label, expanded=bool(fold["open"]), key=f"{section_id}_{fold['nonce']}")
+
+
 try:
     from alerts import evaluate_alerts
     from data_fetchers import (
@@ -822,7 +829,24 @@ with st.sidebar.expander(notifications_label, expanded=False):
             prefs["alerts"] = alert_prefs
             save_alert_preferences_to_cloud(new_alert_settings)
 
-st.title("angstrom signals - level 1")
+if "section_fold" not in st.session_state:
+    st.session_state.section_fold = {"open": True, "nonce": 0}
+
+title_col, open_col, close_col = st.columns([6.2, 1, 1.25], vertical_alignment="center")
+with title_col:
+    st.title("angstrom signals - level 1")
+with open_col:
+    if st.button("Open all", key="open_all_sections", use_container_width=True):
+        st.session_state.section_fold = {
+            "open": True,
+            "nonce": st.session_state.section_fold["nonce"] + 1,
+        }
+with close_col:
+    if st.button("Collapse all", key="collapse_all_sections", use_container_width=True):
+        st.session_state.section_fold = {
+            "open": False,
+            "nonce": st.session_state.section_fold["nonce"] + 1,
+        }
 
 with st.expander("Help and guides", expanded=False):
     st.markdown("""
@@ -871,7 +895,7 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
     st.markdown("""
 **How to use it**
 
-1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest. Quick Snapshot, Crypto Scores, Equity Scores, Interactive Chart, Score Breakdown, and Market sentiment each sit in a section that starts open. Close a header to fold that section away.
+1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest. Quick Snapshot, Crypto Scores, Equity Scores, Interactive Chart, Score Breakdown, and Market sentiment each sit in a section that starts open. Close a header to fold that section away. **Open all** and **Collapse all**, on the right of the page title, do that for every one of those sections.
 2. Click a name in either table, a Quick Snapshot box, or an alert under Notifications. That asset stays highlighted, and the page moves down to the chart when the chart is off screen.
 3. Extra metrics add **7d %**, **Market Cap**, **ATR %**, and **Vol**. A separate checkbox adds **1d %** before the seven-day change and **30d %** after it. For **1d %** and **7d %**, green means the price rose and red means it fell. **30d %** uses the same colors as the **30-day trend**: green for a rise of about 2% or more, red for a fall of about 2% or more, and orange when the move stays inside about 2%. For stocks, one day is the previous trading session. **Market Cap** is the latest size of the asset, from CoinGecko for crypto and Yahoo for stocks. **ATR %** is volatility. **Vol** is volume versus its 20-day average.
 4. Alerts fire at 70 and 30 unless you move those sliders. One email goes to the address on your account when a technical score crosses a boundary. It is not sent again until the score leaves that boundary and crosses it later. Sentiment scores do not send alerts.
@@ -1230,7 +1254,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
     if "technical_due" not in st.session_state:
         st.session_state.technical_due = time.time() + _TECHNICAL_REFRESH_SECONDS
 
-    with st.expander("Quick Snapshot", expanded=True):
+    with section_expander("Quick Snapshot", "quick_snapshot"):
         _, snap_refresh = st.columns([4, 1.45], vertical_alignment="center")
         with snap_refresh:
             technical_now = st.button(
@@ -1431,8 +1455,8 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             inner = f"<span style='color:{color};font-weight:600;'>{number:+.1f}%</span>"
         return f"<td style='padding:10px;white-space:nowrap;'>{inner}</td>"
 
-    def style_and_show_table(results, title, kind):
-        with st.expander(title, expanded=True):
+    def style_and_show_table(results, title, kind, section_id):
+        with section_expander(title, section_id):
             if not results:
                 st.caption("This watchlist is empty.")
                 return
@@ -1559,8 +1583,8 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
         elif stock_watchlist:
             st.session_state.chart_pick = ("Stock", next(iter(stock_watchlist)))
 
-    style_and_show_table(crypto_results, "Crypto Scores", "Crypto")
-    style_and_show_table(stock_results, "Equity Scores", "Stock")
+    style_and_show_table(crypto_results, "Crypto Scores", "Crypto", "crypto_scores")
+    style_and_show_table(stock_results, "Equity Scores", "Stock", "equity_scores")
 
     pick = st.session_state.get("chart_pick")
     if pick and (
@@ -1597,7 +1621,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
     st.html(
         "<div id='interactive-chart' style='scroll-margin-top:4.5rem;'></div>"
     )
-    with st.expander(chart_label, expanded=True):
+    with section_expander(chart_label, "interactive_chart"):
         logo_col, _, chart_top = st.columns([0.35, 4.85, 0.9], vertical_alignment="center")
         with logo_col:
             if chart_name:
@@ -1755,7 +1779,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             col_c.metric("Volatility (ATR%)", f"{result['atr_pct']:.2f}%")
 
     if show_reasons_flag and result.get("reasons") and result.get("score") is not None:
-        with st.expander(f"Score Breakdown — {title}", expanded=True):
+        with section_expander(f"Score Breakdown — {title}", "score_breakdown"):
             st.markdown(
                 f"<span style='color:{color};font-weight:bold;font-size:1.1em'>"
                 f"{result['score']}/100 ({html.escape(str(result['label']))})</span>",
@@ -1836,7 +1860,7 @@ def _sentiment_thumbs(kind: str, asset_id: str, sentiment_at) -> None:
     st.html(
         f"""
         <style>
-        .st-key-market_sentiment_panel details[open] {{
+        [class*="st-key-market_sentiment_panel"] details[open] {{
             overflow: visible !important;
         }}
         .st-key-sentiment_take_box {{
@@ -2011,7 +2035,7 @@ def show_market_sentiment(kind: str, asset_id: str, label: str, ticker: str | No
     sentiment_logo = (stored or {}).get("logo_url") if isinstance(stored, dict) else ""
     if not sentiment_logo:
         sentiment_logo = (st.session_state.get("asset_logos") or {}).get(asset_market_key(kind, asset_id))
-    with st.expander(sentiment_heading, expanded=True, key="market_sentiment_panel"):
+    with section_expander(sentiment_heading, "market_sentiment_panel"):
         logo_col, _, sentiment_refresh, sentiment_top = st.columns([0.35, 2.8, 1.45, 0.85], vertical_alignment="center")
         with logo_col:
             if shown_name:
