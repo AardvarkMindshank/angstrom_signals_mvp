@@ -1824,10 +1824,42 @@ def _sentiment_thumbs(kind: str, asset_id: str, sentiment_at) -> None:
     st.html(
         f"""
         <style>
+        .st-key-market_sentiment_panel details[open] {{
+            overflow: visible !important;
+        }}
         .st-key-sentiment_take_box {{
             background: #ffffff;
             border: 1px solid #e5e7eb !important;
             border-radius: 10px !important;
+            overflow: visible !important;
+        }}
+        .st-key-sentiment_agree,
+        .st-key-sentiment_disagree {{
+            position: relative;
+            overflow: visible !important;
+        }}
+        .st-key-sentiment_agree:hover::after,
+        .st-key-sentiment_disagree:hover::after {{
+            position: absolute;
+            z-index: 30;
+            left: 0;
+            right: 0;
+            bottom: calc(100% + 6px);
+            background: #31333f;
+            color: #ffffff;
+            font-size: 0.8rem;
+            font-weight: 400;
+            line-height: 1.35;
+            padding: 8px 10px;
+            border-radius: 4px;
+            pointer-events: none;
+            white-space: normal;
+        }}
+        .st-key-sentiment_agree:hover::after {{
+            content: "You agree with this sentiment. Press again to clear it.";
+        }}
+        .st-key-sentiment_disagree:hover::after {{
+            content: "You disagree with this sentiment. Press again to clear it.";
         }}
         .st-key-sentiment_agree [data-testid="stBaseButton-primary"],
         .st-key-sentiment_agree [data-testid="stBaseButton-primary"]:hover,
@@ -1871,14 +1903,12 @@ def _sentiment_thumbs(kind: str, asset_id: str, sentiment_at) -> None:
             key="sentiment_agree",
             use_container_width=True,
             type="primary" if mine == 1 else "secondary",
-            help="You agree with this sentiment. Press again to clear it.",
         )
         disagree = st.button(
             "👎 Disagree",
             key="sentiment_disagree",
             use_container_width=True,
             type="primary" if mine == -1 else "secondary",
-            help="You disagree with this sentiment. Press again to clear it.",
         )
         if agree:
             _store_sentiment_vote(kind, asset_id, sentiment_at, None if mine == 1 else 1)
@@ -1969,7 +1999,7 @@ def show_market_sentiment(kind: str, asset_id: str, label: str, ticker: str | No
     sentiment_logo = (stored or {}).get("logo_url") if isinstance(stored, dict) else ""
     if not sentiment_logo:
         sentiment_logo = (st.session_state.get("asset_logos") or {}).get(asset_market_key(kind, asset_id))
-    with st.expander(sentiment_heading, expanded=True):
+    with st.expander(sentiment_heading, expanded=True, key="market_sentiment_panel"):
         logo_col, _, sentiment_refresh, sentiment_top = st.columns([0.35, 2.8, 1.45, 0.85], vertical_alignment="center")
         with logo_col:
             if shown_name:
