@@ -340,10 +340,15 @@ def _short_summary(text, limit: int = 220) -> str:
     return (cut or cleaned[:limit]).rstrip(".,;:") + "…"
 
 
-def social_stream_items(comments_by_key, shared, names, logos=None, watchlist_keys=None) -> list[dict]:
+def social_stream_items(comments_by_key, shared, names, logos=None, watchlist_keys=None, list_keys=None) -> list[dict]:
     """Comments for the slide-in stream, newest first, with the sentiment they answered."""
     items = []
     on_watchlist = {str(key) for key in (watchlist_keys or []) if key}
+    lists = {}
+    for name, keys in (list_keys or {}).items():
+        for key in keys or []:
+            if key:
+                lists[str(key)] = name
     for key, notes in (comments_by_key or {}).items():
         report, _stored_at = sentiment_from_row((shared or {}).get(key))
         current_score = _optional_number((report or {}).get("score")) if report else None
@@ -364,6 +369,7 @@ def social_stream_items(comments_by_key, shared, names, logos=None, watchlist_ke
                 "key": str(key),
                 "asset": asset,
                 "watchlist": str(key) in on_watchlist,
+                "list": lists.get(str(key), ""),
                 "logo": logo,
                 "side": _sentiment_side(score),
                 "score": None if score is None else int(round(score)),
