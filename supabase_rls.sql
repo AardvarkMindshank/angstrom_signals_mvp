@@ -329,19 +329,31 @@ create policy "read own feedback" on public.feedback_notes
 grant select, insert on public.feedback_notes to authenticated;
 grant usage, select on sequence public.feedback_notes_id_seq to authenticated;
 
--- One short comment per account per asset. It belongs to the current sentiment.
--- A refresh writes a new sentiment time, and the old comments are deleted.
+-- One short comment per account per asset.
+-- It keeps the sentiment it was answering, and lasts 12 hours from created_at.
+-- A newer sentiment score does not delete it.
 create table if not exists public.sentiment_comments (
     user_id uuid not null references auth.users (id) on delete cascade,
     asset_key text not null,
     sentiment_at timestamptz not null,
     body text not null check (char_length(btrim(body)) between 1 and 160),
     created_at timestamptz not null default now(),
+    responded_score numeric,
+    responded_summary text,
     primary key (user_id, asset_key)
 );
 
+alter table public.sentiment_comments
+    add column if not exists responded_score numeric;
+
+alter table public.sentiment_comments
+    add column if not exists responded_summary text;
+
 create index if not exists sentiment_comments_asset_idx
     on public.sentiment_comments (asset_key);
+
+create index if not exists sentiment_comments_created_idx
+    on public.sentiment_comments (created_at);
 
 alter table public.sentiment_comments enable row level security;
 
@@ -372,7 +384,7 @@ create policy "delete own sentiment comment" on public.sentiment_comments
 
 grant select, insert, update, delete on public.sentiment_comments to authenticated;
 
--- Comments for the current sentiment only, newest first, with the public name and picture.
+-- Comments from the last 12 hours, newest first, with the sentiment they answered.
 drop function if exists public.sentiment_comments(text[]);
 create function public.sentiment_comments(asset_keys text[])
 returns table (
@@ -381,7 +393,9 @@ returns table (
     avatar_url text,
     body text,
     created_at timestamptz,
-    mine boolean
+    mine boolean,
+    responded_score numeric,
+    responded_summary text
 )
 language sql
 stable
@@ -398,17 +412,16 @@ as $$
         profiles.avatar_url,
         comments.body,
         comments.created_at,
-        comments.user_id = auth.uid()
+        comments.user_id = auth.uid(),
+        comments.responded_score,
+        comments.responded_summary
     from public.sentiment_comments as comments
-    join public.asset_market as market
-      on market.asset_key = comments.asset_key
-     and market.sentiment_updated_at = comments.sentiment_at
-     and market.sentiment_updated_at > now() - interval '12 hours'
     left join public.profiles as profiles
       on profiles.user_id = comments.user_id
     left join auth.users as users
       on users.id = comments.user_id
     where comments.asset_key = any(asset_keys)
+      and comments.created_at > now() - interval '12 hours'
     order by comments.created_at desc;
 $$;
 
@@ -416,18 +429,19 @@ revoke all on function public.sentiment_comments(text[]) from public;
 revoke all on function public.sentiment_comments(text[]) from anon;
 grant execute on function public.sentiment_comments(text[]) to authenticated;
 
--- Removes every comment on an asset. Called when a new sentiment score is saved.
+-- Removes comments older than 12 hours. A new sentiment score does not do this.
 drop function if exists public.drop_sentiment_comments(text);
-create function public.drop_sentiment_comments(target_key text)
+drop function if exists public.drop_expired_sentiment_comments();
+create function public.drop_expired_sentiment_comments()
 returns void
 language sql
 security definer
 set search_path = public
 as $$
     delete from public.sentiment_comments
-    where asset_key = target_key;
+    where created_at < now() - interval '12 hours';
 $$;
 
-revoke all on function public.drop_sentiment_comments(text) from public;
-revoke all on function public.drop_sentiment_comments(text) from anon;
-grant execute on function public.drop_sentiment_comments(text) to authenticated;
+revoke all on function public.drop_expired_sentiment_comments() from public;
+revoke all on function public.drop_expired_sentiment_comments() from anon;
+grant execute on function public.drop_expired_sentiment_comments() to authenticated;

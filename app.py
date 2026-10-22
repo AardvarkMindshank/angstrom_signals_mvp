@@ -224,7 +224,7 @@ export default function(component) {
         "<header class='head'><div>",
         "<div class='kicker'>Social signals</div>",
         "<h2>Social signals stream</h2>",
-        "<p class='hint'>Newest first. Each note shows the sentiment it was answering. These clear when that sentiment refreshes.</p>",
+        "<p class='hint'>Newest first. Each note shows the sentiment it was answering, and stays for 12 hours.</p>",
         "</div><button type='button' class='close'>Close</button></header>",
         "<div class='filters'><div class='chips'>",
         "<button type='button' data-side=''>All</button>",
@@ -320,7 +320,7 @@ export default function(component) {
         empty.className = "empty";
         empty.textContent = items.length
           ? "No comments match these filters."
-          : "No comments yet. They show up here while a sentiment score is current.";
+          : "No comments yet. Each one stays for 12 hours after it is posted.";
         list.appendChild(empty);
         return;
       }
@@ -1323,7 +1323,7 @@ The **Sentiment** column shows that saved score in the same colored box. A dash 
 
 The picture on the left of each name is that asset's logo. The same logo appears at the top of the Interactive Chart and Market sentiment sections. Crypto logos come from CoinGecko. Stock logos come from Finnhub. A letter shows when a logo is not available. The address is saved once and reused for every account.
 
-Beside the sentiment score you can press thumbs up if you agree, or thumbs down if you do not. Press the same thumb again to clear your take. Those buttons sit in an outlined box. After you disagree, scores appear in that same box, under the buttons: 0, 20, 40, 60, 80 and 100. The number you pick also fills the type box, and you can type any number from 0 to 100. It saves on its own when you click a score, press Enter, or leave the box. The thumbs and that same colored average sit at the bottom of Your take, and again under **Crowd** on each table row. The box is the average of the personal scores, in the same style as the Sentiment column. It updates when a score is clicked or typed. Hover the down thumb for the spread, which is how far those scores typically sit from the average. One score has no spread yet. A dash means nobody has given a personal score. Under the thumbs you can post one comment of up to 160 characters. A row of faces under the box adds an emoticon. A speech balloon appears beside the thumbs, and in the **Comments** column, once any comment exists. Click it to slide in the **Social signals stream** from the right. That stream lists comments newest first, with each person's picture, name, and the time, and the sentiment they were answering. Narrow it with All, Positive, Negative, or Mixed, or by asset or person. Close it with Close, the shaded area, or Escape. A refresh of that sentiment clears every thumb, every score, and every comment, because they belonged to the old score.
+Beside the sentiment score you can press thumbs up if you agree, or thumbs down if you do not. Press the same thumb again to clear your take. Those buttons sit in an outlined box. After you disagree, scores appear in that same box, under the buttons: 0, 20, 40, 60, 80 and 100. The number you pick also fills the type box, and you can type any number from 0 to 100. It saves on its own when you click a score, press Enter, or leave the box. The thumbs and that same colored average sit at the bottom of Your take, and again under **Crowd** on each table row. The box is the average of the personal scores, in the same style as the Sentiment column. It updates when a score is clicked or typed. Hover the down thumb for the spread, which is how far those scores typically sit from the average. One score has no spread yet. A dash means nobody has given a personal score. Under the thumbs you can post one comment of up to 160 characters. A row of faces under the box adds an emoticon. A speech balloon appears beside the thumbs, and in the **Comments** column, once any comment exists. Click it to slide in the **Social signals stream** from the right. That stream lists comments newest first, with each person's picture, name, and the time, and the sentiment they were answering. Narrow it with All, Positive, Negative, or Mixed, or by asset or person. Close it with Close, the shaded area, or Escape. A refresh of that sentiment clears every thumb and every personal score, because they belonged to the old score. A comment stays for 12 hours from when it was posted, and the stream keeps the sentiment it was answering even after a newer score arrives.
 
 Click a sentiment score in the table to highlight that asset and jump to its headlines. **↑ Top** scrolls back to the top of the page. It sits at the top right of the Interactive Chart section, and at the top right of Market sentiment.
 
@@ -2414,16 +2414,22 @@ def _store_sentiment_vote(kind: str, asset_id: str, sentiment_at, vote, alt_scor
     st.rerun()
 
 
-def _store_sentiment_comment(kind: str, asset_id: str, sentiment_at, body: str) -> None:
+def _store_sentiment_comment(
+    kind: str, asset_id: str, sentiment_at, body: str, responded_score=None, responded_summary: str = "",
+) -> None:
     try:
-        set_sentiment_comment(supabase, user_id, kind, asset_id, sentiment_at, body)
+        set_sentiment_comment(
+            supabase, user_id, kind, asset_id, sentiment_at, body, responded_score, responded_summary,
+        )
     except Exception:
         st.warning("That comment could not be saved. Run supabase_rls.sql in the Supabase SQL editor again.")
         return
     st.rerun()
 
 
-def _sentiment_thumbs(kind: str, asset_id: str, sentiment_at, title: str) -> None:
+def _sentiment_thumbs(
+    kind: str, asset_id: str, sentiment_at, title: str, responded_score=None, responded_summary: str = "",
+) -> None:
     """Agree or disagree, then one short comment. Disagree opens a score in the same box."""
     if not sentiment_at:
         st.caption("Thumbs and comments open once this sentiment is saved.")
@@ -2606,12 +2612,14 @@ def _sentiment_thumbs(kind: str, asset_id: str, sentiment_at, title: str) -> Non
             _rerun_fragment()
         st.caption(
             f"Up to {COMMENT_LIMIT} characters. Tap a face to add it. "
-            "Posting again replaces yours. Comments clear when this sentiment refreshes."
+            "Posting again replaces yours. Each comment stays for 12 hours."
         )
         if st.button("Post comment", key="sentiment_comment_post", use_container_width=True):
             text = " ".join(str(st.session_state.get(box_key) or "").split())
             if text or mine_text:
-                _store_sentiment_comment(kind, asset_id, sentiment_at, text)
+                _store_sentiment_comment(
+                    kind, asset_id, sentiment_at, text, responded_score, responded_summary,
+                )
 
 
 def _sentiment_alt_score(kind: str, asset_id: str, sentiment_at, mine_score, selected) -> None:
@@ -2774,7 +2782,9 @@ def show_market_sentiment(kind: str, asset_id: str, label: str, ticker: str | No
                     unsafe_allow_html=True,
                 )
             with vote_card:
-                _sentiment_thumbs(kind, asset_id, sentiment_at, shown_name or asset_id)
+                _sentiment_thumbs(
+                    kind, asset_id, sentiment_at, shown_name or asset_id, score, report.get("summary") or "",
+                )
         elif report.get("reason") == "missing_key":
             st.info("Headlines are in. Add an xAI API key so Grok can score them. See the README under Market sentiment.")
         elif report.get("reason") == "no_headlines":

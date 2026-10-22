@@ -142,10 +142,11 @@ def _comment_time(value) -> str:
 
 
 def sentiment_comment_lists(supabase, keys: list[str]) -> dict[str, list]:
-    """Current comments for these assets, newest first. Empty when the function is missing."""
+    """Comments from the last 12 hours, newest first. Empty when the function is missing."""
     wanted = [key for key in keys if key]
     if not wanted:
         return {}
+    drop_expired_sentiment_comments(supabase)
     try:
         response = supabase.rpc("sentiment_comments", {"asset_keys": wanted}).execute()
     except Exception as exc:
@@ -163,6 +164,8 @@ def sentiment_comment_lists(supabase, keys: list[str]) -> dict[str, list]:
             "at": _comment_time(row.get("created_at")),
             "text": text[:COMMENT_LIMIT],
             "mine": bool(row.get("mine")),
+            "score": _optional_number(row.get("responded_score")),
+            "summary": _short_summary(row.get("responded_summary")),
         })
     return grouped
 
@@ -180,8 +183,11 @@ def with_emoticon(text, face: str, limit: int = COMMENT_LIMIT) -> str:
     return current
 
 
-def set_sentiment_comment(supabase, user_id, kind: str, asset_id: str, sentiment_at, body: str) -> None:
-    """Save this account's short comment for the current sentiment. Blank removes it."""
+def set_sentiment_comment(
+    supabase, user_id, kind: str, asset_id: str, sentiment_at, body: str,
+    responded_score=None, responded_summary: str = "",
+) -> None:
+    """Save this account's short comment and the sentiment it was answering. Blank removes it."""
     key = asset_market_key(kind, asset_id)
     text = " ".join(str(body or "").split())[:COMMENT_LIMIT]
     if not text:
@@ -189,6 +195,7 @@ def set_sentiment_comment(supabase, user_id, kind: str, asset_id: str, sentiment
         return
     if not sentiment_at:
         return
+    summary = _short_summary(responded_summary)
     supabase.table("sentiment_comments").upsert(
         {
             "user_id": str(user_id),
@@ -196,18 +203,17 @@ def set_sentiment_comment(supabase, user_id, kind: str, asset_id: str, sentiment
             "sentiment_at": sentiment_at,
             "body": text,
             "created_at": datetime.now(timezone.utc).isoformat(),
+            "responded_score": _optional_number(responded_score),
+            "responded_summary": summary or None,
         },
         on_conflict="user_id,asset_key",
     ).execute()
 
 
-def drop_sentiment_comments(supabase, kind: str, asset_id: str) -> None:
-    """Delete every comment on this asset. Used when a new sentiment score is stored."""
-    key = asset_market_key(kind, asset_id)
-    if not key or key.endswith("|"):
-        return
+def drop_expired_sentiment_comments(supabase) -> None:
+    """Delete comments older than 12 hours. Leaves newer notes when a score refreshes."""
     try:
-        supabase.rpc("drop_sentiment_comments", {"target_key": key}).execute()
+        supabase.rpc("drop_expired_sentiment_comments").execute()
     except Exception as exc:
         _warn(exc)
 
@@ -269,8 +275,8 @@ def social_stream_items(comments_by_key, shared, names, logos=None) -> list[dict
     items = []
     for key, notes in (comments_by_key or {}).items():
         report, _stored_at = sentiment_from_row((shared or {}).get(key))
-        score = _optional_number((report or {}).get("score")) if report else None
-        summary = _short_summary((report or {}).get("summary")) if report else ""
+        current_score = _optional_number((report or {}).get("score")) if report else None
+        current_summary = _short_summary((report or {}).get("summary")) if report else ""
         _kind, _bar, asset_id = str(key).partition("|")
         asset = str((names or {}).get(key) or asset_id or key)
         logo = _public_avatar((logos or {}).get(key))
@@ -278,6 +284,11 @@ def social_stream_items(comments_by_key, shared, names, logos=None) -> list[dict
             text = " ".join(str((note or {}).get("text") or "").split())
             if not text:
                 continue
+            score = _optional_number((note or {}).get("score"))
+            summary = _short_summary((note or {}).get("summary"))
+            if score is None:
+                score = current_score
+                summary = summary or current_summary
             items.append({
                 "key": str(key),
                 "asset": asset,
@@ -554,7 +565,7 @@ def save_sentiment(supabase, kind: str, asset_id: str, report: dict, stored_at: 
     except Exception as exc:
         _warn(exc)
         return
-    drop_sentiment_comments(supabase, kind, identity)
+    drop_expired_sentiment_comments(supabase)
 
 
 def load_shared_market(supabase, keys: list[str]) -> dict[str, dict]:
