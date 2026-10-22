@@ -187,14 +187,14 @@ export default function(component) {
       open: false, side: "", asset: savedAsset || "", person: ""
     };
     let style = document.getElementById("social-stream-style");
-    if (style && style.dataset.layout !== "delete") {
+    if (style && style.dataset.layout !== "poop") {
       style.remove();
       style = null;
     }
     if (!style) {
       style = document.createElement("style");
       style.id = "social-stream-style";
-      style.dataset.layout = "delete";
+      style.dataset.layout = "poop";
       style.textContent = [
         "#social-stream-root{position:fixed;inset:0;z-index:10000000;pointer-events:none;}",
         "#social-stream-root.is-open{pointer-events:auto;}",
@@ -229,6 +229,7 @@ export default function(component) {
         "#social-stream-root .chat-box{width:100%;box-sizing:border-box;min-height:58px;max-height:120px;resize:vertical;font:inherit;font-size:.9rem;border:1px solid #d1d5db;border-radius:8px;padding:8px;}",
         "#social-stream-root .faces{display:flex;gap:4px;margin-top:6px;}",
         "#social-stream-root .faces button{flex:1;min-width:0;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:2px 0;cursor:pointer;font-size:1rem;line-height:1.2;}",
+        "#social-stream-root .faces button.face-poop{font-size:1.45rem;line-height:1;}",
         "#social-stream-root .composer-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px;}",
         "#social-stream-root .chars{color:#6b7280;font-size:.75rem;}",
         "#social-stream-root .post{background:#111827;color:#fff;border:0;border-radius:999px;padding:6px 14px;font:inherit;font-weight:600;cursor:pointer;}",
@@ -764,11 +765,13 @@ export default function(component) {
       notice.textContent = window.socialChatNotice || "";
     }
     const faces = panel.querySelector(".faces");
-    if (faces && !faces.childElementCount) {
+    if (faces && (!faces.childElementCount || !faces.querySelector(".face-poop"))) {
+      faces.replaceChildren();
       (window.socialChatFaces || []).forEach((face) => {
         const button = document.createElement("button");
         button.type = "button";
         button.textContent = String(face);
+        if (face === "💩") button.className = "face-poop";
         button.addEventListener("click", () => addChatFace(panel, String(face)));
         faces.appendChild(button);
       });
@@ -3274,6 +3277,10 @@ def _sentiment_thumbs(
         [class*="st-key-{prefix}_face_"] button p {{
             font-size: 1rem;
             line-height: 1.1;
+        }}
+        [class*="st-key-{prefix}_face_6"] button p {{
+            font-size: 1.45rem;
+            line-height: 1;
         }}
         .st-key-{prefix}_alt_0 button,
         .st-key-{prefix}_alt_20 button,
