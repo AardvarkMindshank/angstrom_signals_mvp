@@ -686,9 +686,11 @@ try:
         crowd_mark,
         holder_counts,
         holders_mark,
+        load_market_moods,
         load_shared_market,
         recent_closes,
         save_logos,
+        save_market_mood,
         save_price_paths,
         save_sentiment,
         sentiment_comment_lists,
@@ -703,7 +705,9 @@ try:
     )
     from scoring import calculate_indicators, compute_score, find_column
     from sentiment import (
+        analyze_market_mood,
         analyze_market_sentiment,
+        MACRO_MOODS,
         cached_sentiment_score,
         newest_first,
         remember_sentiment,
@@ -1356,10 +1360,14 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
     st.markdown("""
 **How to use it**
 
-1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest. Quick Snapshot, Crypto Scores, Equity Scores, Interactive Chart, Score Breakdown, and Market sentiment each sit in a section that starts open. Close a header to fold that section away. **Open all** and **Collapse all**, on the right of the page title, do that for every one of those sections. **Feedback**, at the bottom of the sidebar, sends an issue or an idea. It is stored as submitted.
+1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest. Market mood, Quick Snapshot, Crypto Scores, Equity Scores, Interactive Chart, Score Breakdown, and Market sentiment each sit in a section that starts open. Close a header to fold that section away. **Open all** and **Collapse all**, on the right of the page title, do that for every one of those sections. **Feedback**, at the bottom of the sidebar, sends an issue or an idea. It is stored as submitted.
 2. Click a name in either table, a Quick Snapshot box, or an alert under Notifications. That asset stays highlighted, and the page moves down to the chart when the chart is off screen. Click a column title to sort that table. It starts with the strongest score at the top.
 3. Extra metrics add **7d %**, **Market Cap**, **ATR %**, and **Vol**. A separate checkbox adds **1d %** before the seven-day change and **30d %** after it. For **1d %** and **7d %**, green means the price rose and red means it fell. **30d %** uses the same colors as the **30-day trend**: green for a rise of about 2% or more, red for a fall of about 2% or more, and orange when the move stays inside about 2%. For stocks, one day is the previous trading session. **Market Cap** is the latest size of the asset, from CoinGecko for crypto and Yahoo for stocks. **ATR %** is volatility. **Vol** is volume versus its 20-day average.
 4. Alerts fire at 70 and 30 unless you move those sliders. One email goes to the address on your account when a technical score crosses a boundary. It is not sent again until the score leaves that boundary and crosses it later. Sentiment scores do not send alerts.
+
+**Market mood**
+
+This sits above Quick Snapshot. One card is the whole crypto market. The other is the whole stock market. Neither is an asset, and neither is added to the tables or the technical score. Each card is an average of recent headlines, with a short summary, a positive paragraph, and a negative paragraph. It is stored once and shown to every account for about 12 hours. The search wording can be tightened later.
 
 **Market sentiment**
 
@@ -1873,6 +1881,8 @@ def _asset_logos(crypto_watchlist, stock_watchlist, shared: dict) -> dict[str, s
 def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, show_reasons_flag, show_extra_metrics_flag, show_period_changes_flag):
     if "technical_due" not in st.session_state:
         st.session_state.technical_due = time.time() + _TECHNICAL_REFRESH_SECONDS
+
+    show_market_moods()
 
     with section_expander("Quick Snapshot", "quick_snapshot"):
         _, snap_refresh = st.columns([4, 1.45], vertical_alignment="center")
@@ -2781,6 +2791,141 @@ def _published_label(value) -> str:
 
 
 @st.fragment
+def _mood_coverage(score: float) -> str:
+    if score >= 60:
+        return "Bullish coverage"
+    if score >= 53:
+        return "Mildly bullish coverage"
+    if score >= 47:
+        return "Mixed coverage"
+    if score >= 40:
+        return "Mildly bearish coverage"
+    return "Bearish coverage"
+
+
+def _mood_card(spec: dict, row: dict | None, deadlines: dict) -> None:
+    """One whole-market card. A refresh asks for a new score and restarts 12 hours."""
+    key = spec["key"]
+    label = spec["label"]
+    query = spec["query"]
+    cache_key = f"mood:{key}"
+    force = st.session_state.get("mood_force") == key
+    if force:
+        st.session_state.mood_force = None
+    report, stored_at = (None, None) if force else sentiment_from_row(row)
+    if report and stored_at is not None:
+        remember_sentiment(cache_key, report, stored_at)
+    if cache_key not in deadlines:
+        cached_at = sentiment_cached_at(cache_key)
+        deadlines[cache_key] = (
+            cached_at + SENTIMENT_REFRESH_SECONDS
+            if cached_at
+            else time.time() + SENTIMENT_REFRESH_SECONDS
+        )
+    refresh_col, _spacer = st.columns([1.35, 1])
+    with refresh_col:
+        refresh_now = st.button(
+            "🔄 Refresh",
+            key=f"refresh_mood_{key}",
+            use_container_width=True,
+            help=f"Pull a new score for the {label.lower()}. This also runs when the timer reaches zero.",
+        )
+        refresh_due = _countdown_due(deadlines[cache_key], f"mood_countdown_{key}")
+    if refresh_now or refresh_due:
+        deadlines[cache_key] = time.time() + SENTIMENT_REFRESH_SECONDS
+        st.session_state.mood_force = key
+        _rerun_fragment()
+    if force or not (report and report.get("ok")):
+        cached_before = sentiment_cached_at(cache_key)
+        with st.spinner(f"Reading the {label.lower()}..."):
+            report = analyze_market_mood(key, label, query, sentiment_ready(), force=True)
+        cached_after = sentiment_cached_at(cache_key)
+        if report.get("ok") and cached_after and cached_after != cached_before:
+            if save_market_mood(supabase, key, query, report, cached_after):
+                st.rerun(scope="app")
+    st.markdown(f"**{label}**")
+    st.caption(query)
+    headlines = newest_first((report or {}).get("headlines") or [])
+    score = (report or {}).get("score")
+    if report and report.get("ok") and score is not None:
+        color, background, arrow, _bar = tone(score)
+        summary = html.escape(report.get("summary") or "")
+
+        def side_note(name, text, label_color):
+            cleaned = " ".join(str(text or "").split())
+            if not cleaned:
+                return ""
+            return (
+                "<div style='margin-top:12px;'>"
+                f"<div style='font-size:0.75rem;font-weight:700;color:{label_color};'>{name}</div>"
+                f"<div style='margin-top:4px;color:#111827;'>{html.escape(cleaned)}</div>"
+                "</div>"
+            )
+
+        sides = side_note("Positive", report.get("positive"), "#15803d") + side_note(
+            "Negative", report.get("negative"), "#b91c1c"
+        )
+        drivers = "".join(
+            f"<li style='margin:4px 0;color:#374151;'>{html.escape(str(driver))}</li>"
+            for driver in (report.get("drivers") or [])
+        )
+        drivers_html = f"<ul style='margin:10px 0 0;padding-left:1.15rem;'>{drivers}</ul>" if drivers else ""
+        st.markdown(
+            "<div style='background:#ffffff;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;'>"
+            "<div style='font-size:0.8rem;color:#6b7280;margin-bottom:4px;'>"
+            "Average of the article scores below, from the last 7 days</div>"
+            f"<div style='display:inline-flex;align-items:center;gap:6px;background:{background};color:{color};"
+            f"padding:2px 8px;border-radius:4px;font-weight:600;'>{arrow} {score:.0f}/100</div>"
+            f"<div style='margin-top:8px;font-weight:600;color:{color};'>{html.escape(_mood_coverage(score))}</div>"
+            f"<div style='margin-top:8px;color:#111827;'>{summary}</div>"
+            f"{drivers_html}{sides}</div>",
+            unsafe_allow_html=True,
+        )
+    elif (report or {}).get("reason") == "missing_key":
+        st.info("Headlines are in. Add an xAI API key so Grok can score them.")
+    elif (report or {}).get("reason") == "no_headlines":
+        st.info("No recent headlines turned up for this market.")
+    elif (report or {}).get("reason") == "model_busy":
+        st.info("Grok is busy right now. The score will be tried again in about a minute.")
+    elif (report or {}).get("reason") == "bad_key":
+        st.warning("The xAI API key was rejected. Check the key in the Streamlit secrets.")
+    else:
+        st.info("The market score could not be built this time.")
+    if headlines:
+        rows = []
+        for item in headlines:
+            source = f" — {html.escape(item['source'])}" if item.get("source") else ""
+            published = _published_label(item.get("published"))
+            published_html = html.escape(published) if published else "<span style='color:#6b7280;'>—</span>"
+            rows.append(
+                "<div style='display:flex;align-items:flex-start;gap:12px;padding:8px 0;border-top:1px solid #f3f4f6;'>"
+                "<div style='flex:1;min-width:0;'>"
+                f"<a href='{html.escape(item['link'], quote=True)}' target='_blank' rel='noopener noreferrer'>"
+                f"{html.escape(item['title'])}</a>{source}</div>"
+                f"<div style='width:92px;flex:none;text-align:right;'>{sentiment_badge(item.get('score'))}</div>"
+                f"<div style='width:96px;flex:none;text-align:right;color:#4b5563;'>{published_html}</div></div>"
+            )
+        st.html(f"<div style='margin-top:10px;'>{''.join(rows)}</div>")
+
+
+def show_market_moods() -> None:
+    """Two whole-market scores above Quick Snapshot. No votes yet."""
+    with section_expander("Market mood", "market_mood"):
+        st.caption(
+            "The whole crypto market and the whole stock market. "
+            "Not an asset, and not the technical score."
+        )
+        stored = load_market_moods(supabase)
+        if stored is None:
+            st.info("Market mood storage is not ready yet. Run the latest supabase_rls.sql in the Supabase SQL editor.")
+            return
+        deadlines = st.session_state.setdefault("mood_due", {})
+        cards = st.columns(2)
+        for column, spec in zip(cards, MACRO_MOODS):
+            with column:
+                _mood_card(spec, stored.get(spec["key"]), deadlines)
+
+
 def show_market_sentiment(kind: str, asset_id: str, label: str, ticker: str | None):
     """Headline sentiment for the asset on the chart. Shared for 12 hours."""
     query = sentiment_query(kind, label, ticker)

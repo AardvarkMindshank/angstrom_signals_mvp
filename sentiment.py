@@ -66,6 +66,22 @@ def newest_first(headlines: list[dict]) -> list[dict]:
     return sorted(headlines, key=key)
 
 
+# Whole-market searches. The wording can change later without a new table.
+MACRO_MOODS = (
+    {
+        "key": "crypto",
+        "label": "Crypto market",
+        "query": "crypto market outlook regulation ETF liquidity",
+    },
+    {
+        "key": "stock",
+        "label": "Stock market",
+        "query": "stock market outlook inflation interest rates earnings",
+    },
+)
+_MOOD_SKIP = ("presale", "airdrop", "openpr", "price prediction", "what will", "be worth")
+
+
 def fetch_headlines(query: str, limit: int = 8) -> list[dict]:
     """Recent headline, source, time, and link. Empty when the feed has nothing."""
     response = requests.get(
@@ -101,6 +117,19 @@ def fetch_headlines(query: str, limit: int = 8) -> list[dict]:
             "link": link,
         })
     return newest_first(headlines)[:limit]
+
+
+def fetch_market_headlines(query: str, limit: int = 8) -> list[dict]:
+    """Market headlines, without presales and price-prediction repeats."""
+    kept = []
+    for item in fetch_headlines(query, limit=24):
+        blob = f"{item.get('title') or ''} {item.get('source') or ''}".lower()
+        if any(word in blob for word in _MOOD_SKIP):
+            continue
+        kept.append(item)
+        if len(kept) >= limit:
+            break
+    return kept
 
 
 def sentiment_ready() -> bool:
@@ -160,6 +189,34 @@ def _prompt(query: str, headlines: list[dict]) -> str:
         "Score market sentiment from these headlines only. "
         "This is research context, not a forecast or advice. "
         f"Asset search: {query}\n"
+        "Headlines:\n"
+        + "\n".join(lines)
+        + "\n\nReply with JSON only, in this shape: "
+        '{"articles":[{"index":1,"score":50}],"summary":"...","positive":"...","negative":"...","drivers":["..."]}. '
+        "Use one article object for every headline, with the same index number. "
+        "score is 0 to 100 for that headline alone. "
+        "0 is strongly bearish, 50 is mixed or unclear, 100 is strongly bullish. "
+        "summary is two sentences about the set of headlines. "
+        "positive is one paragraph on what these headlines treat as favorable. "
+        "negative is one paragraph on what these headlines treat as unfavorable. "
+        "Each of those paragraphs is two or three sentences. "
+        "If the headlines do not support that side, say so in one sentence. "
+        "drivers is up to 3 short phrases. "
+        "Do not add facts that are not in the headlines."
+    )
+
+
+def _market_prompt(label: str, query: str, headlines: list[dict]) -> str:
+    """Same JSON shape as an asset score. The wording can be tightened later."""
+    lines = []
+    for index, item in enumerate(headlines, start=1):
+        source = item.get("source") or "Unknown source"
+        published = item.get("published") or ""
+        lines.append(f"{index}. {item['title']} — {source} {published}".strip())
+    return (
+        "Score market sentiment from these headlines only. "
+        "This is research context, not a forecast or advice. "
+        f"This is the {label} as a whole, not one asset. Search: {query}\n"
         "Headlines:\n"
         + "\n".join(lines)
         + "\n\nReply with JSON only, in this shape: "
@@ -387,14 +444,14 @@ def _scored_report(parsed: dict, headlines: list[dict]) -> dict | None:
     }
 
 
-def _summarize(query: str, headlines: list[dict]) -> dict:
+def _summarize(query: str, headlines: list[dict], prompt: str | None = None) -> dict:
     key = (os.getenv("XAI_API_KEY") or "").strip()
     if not key:
         return {"ok": False, "reason": "missing_key"}
     if time.time() < _BUSY_UNTIL.get(query, 0):
         return {"ok": False, "reason": "model_busy"}
 
-    prompt = _prompt(query, headlines)
+    prompt = prompt or _prompt(query, headlines)
     saw_busy = False
     saw_auth = False
     for attempt in _MODELS:
@@ -495,4 +552,34 @@ def analyze_market_sentiment(query: str, enabled: bool, force: bool = False) -> 
         summary["headlines"] = headlines
     if summary.get("ok"):
         _SCORE_CACHE[query] = (time.time(), summary)
+    return summary
+
+
+def analyze_market_mood(market_key: str, label: str, query: str, enabled: bool, force: bool = False) -> dict:
+    """One whole-market score. Reused for 12 hours. Separate from any asset score."""
+    cache_key = f"mood:{market_key}"
+    if force:
+        _SCORE_CACHE.pop(cache_key, None)
+        _BUSY_UNTIL.pop(cache_key, None)
+    cached = _SCORE_CACHE.get(cache_key)
+    if enabled and not force and cached and time.time() - cached[0] < SENTIMENT_REFRESH_SECONDS:
+        stored = cached[1]
+        if stored.get("ok") and stored.get("score") is not None and stored.get("headlines"):
+            return stored
+    try:
+        headlines = fetch_market_headlines(query)
+    except Exception:
+        return {"ok": False, "reason": "headlines_error", "headlines": []}
+    if not headlines:
+        return {"ok": False, "reason": "no_headlines", "headlines": []}
+    if not enabled:
+        return {"ok": False, "reason": "missing_key", "headlines": headlines}
+    try:
+        summary = _summarize(cache_key, headlines, _market_prompt(label, query, headlines))
+    except Exception:
+        summary = {"ok": False, "reason": "model_error"}
+    if not summary.get("headlines"):
+        summary["headlines"] = headlines
+    if summary.get("ok"):
+        _SCORE_CACHE[cache_key] = (time.time(), summary)
     return summary

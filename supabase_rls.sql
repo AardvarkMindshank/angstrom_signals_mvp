@@ -448,3 +448,138 @@ $$;
 revoke all on function public.drop_expired_sentiment_comments() from public;
 revoke all on function public.drop_expired_sentiment_comments() from anon;
 grant execute on function public.drop_expired_sentiment_comments() to authenticated;
+
+-- One shared score for the crypto market and one for the stock market.
+-- These are not assets. A later agree or disagree uses market_mood_votes.
+create table if not exists public.market_mood (
+    market_key text primary key check (market_key in ('crypto', 'stock')),
+    query text not null,
+    sentiment_score numeric,
+    sentiment_report jsonb,
+    sentiment_updated_at timestamptz
+);
+
+alter table public.market_mood enable row level security;
+
+drop policy if exists "signed-in users read market mood" on public.market_mood;
+create policy "signed-in users read market mood" on public.market_mood
+    for select
+    to authenticated
+    using (true);
+
+drop policy if exists "signed-in users add market mood" on public.market_mood;
+create policy "signed-in users add market mood" on public.market_mood
+    for insert
+    to authenticated
+    with check (market_key in ('crypto', 'stock'));
+
+drop policy if exists "signed-in users update market mood" on public.market_mood;
+create policy "signed-in users update market mood" on public.market_mood
+    for update
+    to authenticated
+    using (true)
+    with check (market_key in ('crypto', 'stock'));
+
+grant select, insert, update on public.market_mood to authenticated;
+
+-- One take per account per market. sentiment_at is the mood it belongs to.
+create table if not exists public.market_mood_votes (
+    user_id uuid not null references auth.users (id) on delete cascade,
+    market_key text not null check (market_key in ('crypto', 'stock')),
+    sentiment_at timestamptz not null,
+    vote smallint not null check (vote in (1, -1)),
+    alt_score smallint check (alt_score is null or alt_score between 0 and 100),
+    primary key (user_id, market_key)
+);
+
+alter table public.market_mood_votes enable row level security;
+
+drop policy if exists "own market mood votes" on public.market_mood_votes;
+create policy "own market mood votes" on public.market_mood_votes
+    for all
+    to authenticated
+    using (auth.uid() = user_id)
+    with check (auth.uid() = user_id and market_key in ('crypto', 'stock'));
+
+grant select, insert, update, delete on public.market_mood_votes to authenticated;
+
+-- Counts for the current mood only. Prepared now so voting does not need new SQL.
+drop function if exists public.market_mood_crowd(text[]);
+create function public.market_mood_crowd(market_keys text[])
+returns table (
+    market_key text,
+    thumbs_up integer,
+    thumbs_down integer,
+    my_vote smallint,
+    alt_count integer,
+    alt_avg numeric,
+    alt_spread numeric,
+    my_alt smallint
+)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    select
+        mood.market_key,
+        (
+            select count(*)::integer
+            from public.market_mood_votes as votes
+            where votes.market_key = mood.market_key
+              and votes.sentiment_at = mood.sentiment_updated_at
+              and votes.vote = 1
+        ),
+        (
+            select count(*)::integer
+            from public.market_mood_votes as votes
+            where votes.market_key = mood.market_key
+              and votes.sentiment_at = mood.sentiment_updated_at
+              and votes.vote = -1
+        ),
+        (
+            select mine.vote
+            from public.market_mood_votes as mine
+            where mine.market_key = mood.market_key
+              and mine.user_id = auth.uid()
+              and mine.sentiment_at = mood.sentiment_updated_at
+        ),
+        (
+            select count(*)::integer
+            from public.market_mood_votes as votes
+            where votes.market_key = mood.market_key
+              and votes.sentiment_at = mood.sentiment_updated_at
+              and votes.vote = -1
+              and votes.alt_score is not null
+        ),
+        (
+            select round(avg(votes.alt_score), 1)
+            from public.market_mood_votes as votes
+            where votes.market_key = mood.market_key
+              and votes.sentiment_at = mood.sentiment_updated_at
+              and votes.vote = -1
+              and votes.alt_score is not null
+        ),
+        (
+            select round(stddev_samp(votes.alt_score), 1)
+            from public.market_mood_votes as votes
+            where votes.market_key = mood.market_key
+              and votes.sentiment_at = mood.sentiment_updated_at
+              and votes.vote = -1
+              and votes.alt_score is not null
+        ),
+        (
+            select mine.alt_score
+            from public.market_mood_votes as mine
+            where mine.market_key = mood.market_key
+              and mine.user_id = auth.uid()
+              and mine.sentiment_at = mood.sentiment_updated_at
+        )
+    from public.market_mood as mood
+    where cardinality(market_keys) = 0
+       or mood.market_key = any(market_keys);
+$$;
+
+revoke all on function public.market_mood_crowd(text[]) from public;
+revoke all on function public.market_mood_crowd(text[]) from anon;
+grant execute on function public.market_mood_crowd(text[]) to authenticated;

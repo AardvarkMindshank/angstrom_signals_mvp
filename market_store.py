@@ -550,6 +550,49 @@ def heading_with_logo(text: str, url, label: str) -> str:
     )
 
 
+def load_market_moods(supabase) -> dict[str, dict] | None:
+    """The crypto and stock mood rows. None when the table is not there yet."""
+    try:
+        response = (
+            supabase.table("market_mood")
+            .select("market_key, query, sentiment_report, sentiment_updated_at")
+            .execute()
+        )
+    except Exception as exc:
+        _warn(exc)
+        return None
+    return {
+        str(row.get("market_key")): row
+        for row in (response.data or [])
+        if row.get("market_key")
+    }
+
+
+def save_market_mood(supabase, market_key: str, query: str, report: dict, stored_at: float) -> bool:
+    """Store one whole-market score so every account can show it."""
+    if market_key not in ("crypto", "stock") or not isinstance(report, dict) or not report.get("ok"):
+        return False
+    try:
+        score = float(report.get("score"))
+    except (TypeError, ValueError):
+        return False
+    if score != score:
+        return False
+    payload = {
+        "market_key": market_key,
+        "query": query,
+        "sentiment_score": score,
+        "sentiment_report": report,
+        "sentiment_updated_at": datetime.fromtimestamp(stored_at, timezone.utc).isoformat(),
+    }
+    try:
+        supabase.table("market_mood").upsert(payload, on_conflict="market_key").execute()
+    except Exception as exc:
+        _warn(exc)
+        return False
+    return True
+
+
 def save_sentiment(supabase, kind: str, asset_id: str, report: dict, stored_at: float) -> None:
     """Store one headline score so every account can show it."""
     if not isinstance(report, dict) or not report.get("ok"):
