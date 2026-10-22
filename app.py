@@ -187,14 +187,14 @@ export default function(component) {
       open: false, side: "", asset: savedAsset || "", person: ""
     };
     let style = document.getElementById("social-stream-style");
-    if (style && style.dataset.layout !== "poop") {
+    if (style && style.dataset.layout !== "icons") {
       style.remove();
       style = null;
     }
     if (!style) {
       style = document.createElement("style");
       style.id = "social-stream-style";
-      style.dataset.layout = "poop";
+      style.dataset.layout = "icons";
       style.textContent = [
         "#social-stream-root{position:fixed;inset:0;z-index:10000000;pointer-events:none;}",
         "#social-stream-root.is-open{pointer-events:auto;}",
@@ -245,6 +245,7 @@ export default function(component) {
         "#social-stream-root .chat-actions button.thumb-down{color:#b91c1c;}",
         "#social-stream-root .chat-actions button.thumb-up.is-on{background:#dcfce7;border-color:#15803d;color:#15803d;}",
         "#social-stream-root .chat-actions button.thumb-down.is-on{background:#fee2e2;border-color:#b91c1c;color:#b91c1c;}",
+        "#social-stream-root .chat-actions button.reply-note,#social-stream-root .chat-actions button.delete-note{font-size:1rem;line-height:1;padding:2px 7px;}",
         "#social-stream-root .chat-actions button.delete-note{color:#b91c1c;}",
         "#social-stream-root .chat-notice{color:#b45309;font-size:.8rem;line-height:1.35;margin-bottom:6px;}",
         "#social-stream-root .card{padding:14px 0;border-top:1px solid #e5e7eb;}",
@@ -638,7 +639,9 @@ export default function(component) {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "delete-note";
-    button.textContent = "Delete";
+    button.textContent = "🗑️";
+    button.title = "Delete";
+    button.setAttribute("aria-label", "Delete");
     button.addEventListener("click", () => {
       if (window.confirm(prompt)) onDelete();
     });
@@ -709,7 +712,10 @@ export default function(component) {
     if (!item.pending) {
       const reply = document.createElement("button");
       reply.type = "button";
-      reply.textContent = "Reply";
+      reply.className = "reply-note";
+      reply.textContent = "↩️";
+      reply.title = "Reply";
+      reply.setAttribute("aria-label", "Reply");
       reply.addEventListener("click", () => {
         window.socialStreamState.reply = { id: rootId, name: name };
         paintReply(document.getElementById("social-stream-root"));
@@ -933,7 +939,10 @@ export default function(component) {
     if (!item.pending && Number(rootId) > 0) {
       const reply = document.createElement("button");
       reply.type = "button";
-      reply.textContent = "Reply";
+      reply.className = "reply-note";
+      reply.textContent = "↩️";
+      reply.title = "Reply";
+      reply.setAttribute("aria-label", "Reply");
       reply.addEventListener("click", () => {
         window.socialStreamState.reply = { id: rootId, name: String(item.name || "Member"), kind: "signal" };
         const panel = document.getElementById("social-stream-root");
