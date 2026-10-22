@@ -71,6 +71,20 @@ YF_BY_COINGECKO_ID = {
     "worldcoin-wld": "WLD-USD",
 }
 
+# Yahoo retired the plain ticker for these. The number is Yahoo's own id.
+YAHOO_TICKER_BY_ID = {
+    "sui": "SUI20947-USD",
+    "uniswap": "UNI7083-USD",
+    "aptos": "APT21794-USD",
+    "pepe": "PEPE24478-USD",
+    "matic-network": "POL28321-USD",
+    "polygon-ecosystem-token": "POL28321-USD",
+    "hyperliquid": "HYPE32196-USD",
+    "the-graph": "GRT6719-USD",
+    "immutable-x": "IMX10603-USD",
+    "bittensor": "TAO22974-USD",
+}
+
 # Tickers traders type, such as XLM, mapped back to the CoinGecko id used above.
 COINGECKO_ID_BY_SYMBOL = {
     ticker.split("-")[0]: coin_id
@@ -303,7 +317,7 @@ def fetch_crypto_data(coin_id: str, days: int = 200) -> tuple[pd.DataFrame, str 
         return pd.DataFrame(), "Missing crypto id."
 
     period = period_for_days(days)
-    ticker = YF_BY_COINGECKO_ID.get(coin_id)
+    ticker = YAHOO_TICKER_BY_ID.get(coin_id) or YF_BY_COINGECKO_ID.get(coin_id)
     yahoo_error = None
 
     if ticker is None:
