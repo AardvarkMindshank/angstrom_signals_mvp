@@ -436,18 +436,17 @@ def post_chat(supabase, user_id, body: str, parent_id: int | None = None) -> Non
 
 
 def set_chat_vote(supabase, user_id, message_id: int, vote) -> None:
-    """Thumb a comment someone else posted. The same thumb again clears it."""
+    """Thumb a chat comment, including one you posted. The same thumb again clears it."""
     if not message_id:
         return
     found = (
         supabase.table("chat_messages")
-        .select("user_id")
+        .select("id")
         .eq("id", int(message_id))
         .limit(1)
         .execute()
     )
-    rows = found.data or []
-    if not rows or str(rows[0].get("user_id")) == str(user_id):
+    if not (found.data or []):
         return
     if vote not in (1, -1):
         (
@@ -524,7 +523,7 @@ def post_signal_reply(supabase, user_id, comment_id: int, body: str) -> None:
 
 
 def set_signal_vote(supabase, user_id, message_id: int, vote, kind: str) -> None:
-    """Thumb a signal comment or a reply. The same thumb again clears it. Not on your own note."""
+    """Thumb a signal comment or a reply, including one you posted. The same thumb again clears it."""
     if not message_id:
         return
     if kind == "reply":
@@ -535,9 +534,8 @@ def set_signal_vote(supabase, user_id, message_id: int, vote, kind: str) -> None
         table = "sentiment_comments"
         votes = "sentiment_comment_votes"
         column = "comment_id"
-    found = supabase.table(table).select("user_id").eq("id", int(message_id)).limit(1).execute()
-    rows = found.data or []
-    if not rows or str(rows[0].get("user_id")) == str(user_id):
+    found = supabase.table(table).select("id").eq("id", int(message_id)).limit(1).execute()
+    if not (found.data or []):
         return
     if vote not in (1, -1):
         supabase.table(votes).delete().eq("user_id", str(user_id)).eq(column, int(message_id)).execute()

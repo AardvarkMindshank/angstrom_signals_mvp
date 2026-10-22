@@ -275,7 +275,7 @@ export default function(component) {
         "<header class='head'><div>",
         "<div class='kicker'>Social signals</div>",
         "<h2>Social signals stream</h2>",
-        "<p class='hint'>Newest first. Each note shows the sentiment it was answering, and stays for 12 hours. Reply, or mark someone else's note up or down. All assets, My watchlists, or one of your watchlists is saved on your account.</p>",
+        "<p class='hint'>Newest first. Each note shows the sentiment it was answering, and stays for 12 hours. Reply, or mark any note up or down, including one you posted. All assets, My watchlists, or one of your watchlists is saved on your account.</p>",
         "</div><button type='button' class='close'>Close</button></header>",
         "<div class='filters'><div class='chips'>",
         "<button type='button' data-side=''>All</button>",
@@ -291,7 +291,7 @@ export default function(component) {
         "<div class='chat-pane'>",
         "<header class='chat-head'><div class='kicker'>Chat</div>",
         "<h2>General chat</h2>",
-        "<p class='hint'>Newest first. Post a note, reply, or mark someone else's comment up or down. These notes stay in the room.</p></header>",
+        "<p class='hint'>Newest first. Post a note, reply, or mark any comment up or down, including one you posted. These notes stay in the room.</p></header>",
         "<div class='chat-list'></div>",
         "<form class='composer'>",
         "<div class='replying' hidden><span class='replying-label'></span><button type='button' class='reply-cancel'>Cancel</button></div>",
@@ -668,7 +668,7 @@ export default function(component) {
     card.appendChild(saying);
     const actions = document.createElement("div");
     actions.className = "chat-actions";
-    if (!item.mine && !item.pending) {
+    if (!item.pending) {
       actions.appendChild(chatVoteButton(item, 1));
       actions.appendChild(chatVoteButton(item, -1));
     }
@@ -881,7 +881,7 @@ export default function(component) {
   function signalActions(item, rootId, kind) {
     const actions = document.createElement("div");
     actions.className = "chat-actions";
-    if (!item.mine && !item.pending && Number(item.id) > 0) {
+    if (!item.pending && Number(item.id) > 0) {
       actions.appendChild(signalVoteButton(item, 1, kind));
       actions.appendChild(signalVoteButton(item, -1, kind));
     }
@@ -1826,7 +1826,7 @@ The **Sentiment** column shows that saved score in the same colored box. A dash 
 
 The picture on the left of each name is that asset's logo. The same logo appears at the top of the Interactive Chart and Market sentiment sections. Crypto logos come from CoinGecko. Stock logos come from Finnhub. A letter shows when a logo is not available. The address is saved once and reused for every account.
 
-Beside the sentiment score you can press thumbs up if you agree, or thumbs down if you do not. Press the same thumb again to clear your take. Those buttons sit in an outlined box. After you disagree, scores appear in that same box, under the buttons: 0, 20, 40, 60, 80 and 100. The number you pick also fills the type box, and you can type any number from 0 to 100. It saves on its own when you click a score, press Enter, or leave the box. The thumbs and that same colored average sit at the bottom of Your take, and again under **Crowd** on each table row. The box is the average of the personal scores, in the same style as the Sentiment column. It updates when a score is clicked or typed. Hover the down thumb for the spread, which is how far those scores typically sit from the average. One score has no spread yet. A dash means nobody has given a personal score. Under the thumbs you can post one comment of up to 160 characters. A row under the box adds an emoticon, including a rocket. A speech balloon appears beside the thumbs, and in the **Comments** column, once any comment exists. Click it, or the arrow on the right edge of the page, to slide in the **Social signals stream**. That stream lists comments newest first, with each person's picture, name, and the time, and the sentiment they were answering. Narrow it with All, Positive, Negative, or Mixed. Under Asset, All assets is every comment, and My watchlists is only the crypto and equity tables on your account. My Crypto Watchlist and My Equities Watchlist each show one of those lists. Crypto market and Stock market sit above the individual assets. That choice of All assets or a watchlist is saved for you. You can also pick one asset or one person. On each note you can reply, or mark someone else's note up or down. A reply stays with that note for the same 12 hours. The lower half of that panel is a general chat. Drag the line between the two halves to give either one more room. Post a comment at the bottom, with the same emoticons. Reply to a comment, or mark someone else's comment up or down. These notes are not tied to an asset, and they stay in the room. Close it with Close, the shaded area, or Escape. A refresh of that sentiment clears every thumb and every personal score, because they belonged to the old score. A comment stays for 12 hours from when it was posted, and the stream keeps the sentiment it was answering even after a newer score arrives.
+Beside the sentiment score you can press thumbs up if you agree, or thumbs down if you do not. Press the same thumb again to clear your take. Those buttons sit in an outlined box. After you disagree, scores appear in that same box, under the buttons: 0, 20, 40, 60, 80 and 100. The number you pick also fills the type box, and you can type any number from 0 to 100. It saves on its own when you click a score, press Enter, or leave the box. The thumbs and that same colored average sit at the bottom of Your take, and again under **Crowd** on each table row. The box is the average of the personal scores, in the same style as the Sentiment column. It updates when a score is clicked or typed. Hover the down thumb for the spread, which is how far those scores typically sit from the average. One score has no spread yet. A dash means nobody has given a personal score. Under the thumbs you can post one comment of up to 160 characters. A row under the box adds an emoticon, including a rocket. A speech balloon appears beside the thumbs, and in the **Comments** column, once any comment exists. Click it, or the arrow on the right edge of the page, to slide in the **Social signals stream**. That stream lists comments newest first, with each person's picture, name, and the time, and the sentiment they were answering. Narrow it with All, Positive, Negative, or Mixed. Under Asset, All assets is every comment, and My watchlists is only the crypto and equity tables on your account. My Crypto Watchlist and My Equities Watchlist each show one of those lists. Crypto market and Stock market sit above the individual assets. That choice of All assets or a watchlist is saved for you. You can also pick one asset or one person. On each note you can reply, or mark any note up or down, including one you posted. A reply stays with that note for the same 12 hours. The lower half of that panel is a general chat. Drag the line between the two halves to give either one more room. Post a comment at the bottom, with the same emoticons. Reply to a comment, or mark someone else's comment up or down. These notes are not tied to an asset, and they stay in the room. Close it with Close, the shaded area, or Escape. A refresh of that sentiment clears every thumb and every personal score, because they belonged to the old score. A comment stays for 12 hours from when it was posted, and the stream keeps the sentiment it was answering even after a newer score arrives.
 
 Click a sentiment score in the table to highlight that asset and jump to its headlines. **↑ Top** scrolls back to the top of the page. It sits at the top right of the Interactive Chart section, and at the top right of Market sentiment.
 
