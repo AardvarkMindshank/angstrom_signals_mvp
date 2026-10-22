@@ -1360,14 +1360,14 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
     st.markdown("""
 **How to use it**
 
-1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest. Market mood, Quick Snapshot, Crypto Scores, Equity Scores, Interactive Chart, Score Breakdown, and Market sentiment each sit in a section that starts open. Close a header to fold that section away. **Open all** and **Collapse all**, on the right of the page title, do that for every one of those sections. **Feedback**, at the bottom of the sidebar, sends an issue or an idea. It is stored as submitted.
+1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest. Market mood for crypto, Market mood for stocks, Quick Snapshot, Crypto Scores, Equity Scores, Interactive Chart, Score Breakdown, and Market sentiment each sit in a section that starts open. Close a header to fold that section away. **Open all** and **Collapse all**, on the right of the page title, do that for every one of those sections. **Feedback**, at the bottom of the sidebar, sends an issue or an idea. It is stored as submitted.
 2. Click a name in either table, a Quick Snapshot box, or an alert under Notifications. That asset stays highlighted, and the page moves down to the chart when the chart is off screen. Click a column title to sort that table. It starts with the strongest score at the top.
 3. Extra metrics add **7d %**, **Market Cap**, **ATR %**, and **Vol**. A separate checkbox adds **1d %** before the seven-day change and **30d %** after it. For **1d %** and **7d %**, green means the price rose and red means it fell. **30d %** uses the same colors as the **30-day trend**: green for a rise of about 2% or more, red for a fall of about 2% or more, and orange when the move stays inside about 2%. For stocks, one day is the previous trading session. **Market Cap** is the latest size of the asset, from CoinGecko for crypto and Yahoo for stocks. **ATR %** is volatility. **Vol** is volume versus its 20-day average.
 4. Alerts fire at 70 and 30 unless you move those sliders. One email goes to the address on your account when a technical score crosses a boundary. It is not sent again until the score leaves that boundary and crosses it later. Sentiment scores do not send alerts.
 
 **Market mood**
 
-This sits above Quick Snapshot. One card is the whole crypto market. The other is the whole stock market. Neither is an asset, and neither is added to the tables or the technical score. Each card is an average of recent headlines, with a short summary, a positive paragraph, and a negative paragraph. It is stored once and shown to every account for about 12 hours. The search wording can be tightened later.
+Two sections sit above Quick Snapshot, crypto first and then stocks. Each one uses the same layout as the asset sentiment under the chart: the score on the left, Your take on the right, then the articles. Neither is an asset, and neither is added to the tables or the technical score. Each score is an average of recent headlines, with a short summary, a positive paragraph, and a negative paragraph. It is stored once and shown to every account for about 12 hours. Agree, disagree, and comments are not in Your take yet. The search wording can be tightened later.
 
 **Market sentiment**
 
@@ -2790,7 +2790,6 @@ def _published_label(value) -> str:
     return f"{when.strftime('%b')} {when.day}, {when.year}"
 
 
-@st.fragment
 def _mood_coverage(score: float) -> str:
     if score >= 60:
         return "Bullish coverage"
@@ -2822,19 +2821,21 @@ def _mood_card(spec: dict, row: dict | None, deadlines: dict) -> None:
             if cached_at
             else time.time() + SENTIMENT_REFRESH_SECONDS
         )
-    refresh_col, _spacer = st.columns([1.35, 1])
+    _logo, _spacer, refresh_col, top_col = st.columns([0.35, 2.8, 1.45, 0.85], vertical_alignment="center")
     with refresh_col:
         refresh_now = st.button(
             "🔄 Refresh",
             key=f"refresh_mood_{key}",
             use_container_width=True,
-            help=f"Pull a new score for the {label.lower()}. This also runs when the timer reaches zero.",
+            help=f"Pull fresh headlines and a new score for the {label.lower()}. This also runs when the timer reaches zero.",
         )
         refresh_due = _countdown_due(deadlines[cache_key], f"mood_countdown_{key}")
     if refresh_now or refresh_due:
         deadlines[cache_key] = time.time() + SENTIMENT_REFRESH_SECONDS
         st.session_state.mood_force = key
         _rerun_fragment()
+    with top_col:
+        _back_to_top(key=f"mood_top_{key}")
     if force or not (report and report.get("ok")):
         cached_before = sentiment_cached_at(cache_key)
         with st.spinner(f"Reading the {label.lower()}..."):
@@ -2843,8 +2844,6 @@ def _mood_card(spec: dict, row: dict | None, deadlines: dict) -> None:
         if report.get("ok") and cached_after and cached_after != cached_before:
             if save_market_mood(supabase, key, query, report, cached_after):
                 st.rerun(scope="app")
-    st.markdown(f"**{label}**")
-    st.caption(query)
     headlines = newest_first((report or {}).get("headlines") or [])
     score = (report or {}).get("score")
     if report and report.get("ok") and score is not None:
@@ -2869,18 +2868,32 @@ def _mood_card(spec: dict, row: dict | None, deadlines: dict) -> None:
             f"<li style='margin:4px 0;color:#374151;'>{html.escape(str(driver))}</li>"
             for driver in (report.get("drivers") or [])
         )
-        drivers_html = f"<ul style='margin:10px 0 0;padding-left:1.15rem;'>{drivers}</ul>" if drivers else ""
-        st.markdown(
-            "<div style='background:#ffffff;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;'>"
-            "<div style='font-size:0.8rem;color:#6b7280;margin-bottom:4px;'>"
-            "Average of the article scores below, from the last 7 days</div>"
-            f"<div style='display:inline-flex;align-items:center;gap:6px;background:{background};color:{color};"
-            f"padding:2px 8px;border-radius:4px;font-weight:600;'>{arrow} {score:.0f}/100</div>"
-            f"<div style='margin-top:8px;font-weight:600;color:{color};'>{html.escape(_mood_coverage(score))}</div>"
-            f"<div style='margin-top:8px;color:#111827;'>{summary}</div>"
-            f"{drivers_html}{sides}</div>",
-            unsafe_allow_html=True,
+        drivers_html = (
+            f"<ul style='margin:10px 0 0;padding-left:1.15rem;'>{drivers}</ul>"
+            if drivers else ""
         )
+        score_card, vote_card = st.columns([3.5, 2.1], vertical_alignment="top")
+        with score_card:
+            st.markdown(
+                "<div style='background:#ffffff;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;'>"
+                "<div style='font-size:0.8rem;color:#6b7280;margin-bottom:4px;'>"
+                + (
+                    "Average of the article scores below, from the last 7 days"
+                    if any(item.get("score") is not None for item in headlines)
+                    else "Score for these headlines, from the last 7 days"
+                )
+                + "</div>"
+                f"<div style='display:inline-flex;align-items:center;gap:6px;background:{background};color:{color};"
+                f"padding:2px 8px;border-radius:4px;font-weight:600;'>{arrow} {score:.0f}/100</div>"
+                f"<div style='margin-top:8px;font-weight:600;color:{color};'>{html.escape(_mood_coverage(score))}</div>"
+                f"<div style='margin-top:8px;color:#111827;'>{summary}</div>"
+                f"{drivers_html}{sides}</div>",
+                unsafe_allow_html=True,
+            )
+        with vote_card:
+            with st.container(border=True):
+                st.markdown("**Your take**")
+                st.caption("Agree, disagree, and a short comment will sit here.")
     elif (report or {}).get("reason") == "missing_key":
         st.info("Headlines are in. Add an xAI API key so Grok can score them.")
     elif (report or {}).get("reason") == "no_headlines":
@@ -2892,38 +2905,44 @@ def _mood_card(spec: dict, row: dict | None, deadlines: dict) -> None:
     else:
         st.info("The market score could not be built this time.")
     if headlines:
-        rows = []
+        rows = [
+            "<div style='display:flex;align-items:center;gap:16px;padding:4px 0 8px;'>"
+            "<div style='flex:1;font-size:0.8rem;font-weight:600;color:#6b7280;'>Article</div>"
+            "<div style='width:112px;flex:none;text-align:right;font-size:0.8rem;font-weight:600;color:#6b7280;'>Published</div>"
+            "<div style='width:76px;flex:none;text-align:right;font-size:0.8rem;font-weight:600;color:#6b7280;'>Score</div>"
+            "</div>"
+        ]
         for item in headlines:
             source = f" — {html.escape(item['source'])}" if item.get("source") else ""
             published = _published_label(item.get("published"))
-            published_html = html.escape(published) if published else "<span style='color:#6b7280;'>—</span>"
+            published_html = (
+                html.escape(published)
+                if published
+                else "<span style='color:#6b7280;'>—</span>"
+            )
             rows.append(
-                "<div style='display:flex;align-items:flex-start;gap:12px;padding:8px 0;border-top:1px solid #f3f4f6;'>"
+                "<div style='display:flex;align-items:center;gap:16px;padding:8px 0;border-top:1px solid #f3f4f6;'>"
                 "<div style='flex:1;min-width:0;'>"
                 f"<a href='{html.escape(item['link'], quote=True)}' target='_blank' rel='noopener noreferrer'>"
                 f"{html.escape(item['title'])}</a>{source}</div>"
-                f"<div style='width:92px;flex:none;text-align:right;'>{sentiment_badge(item.get('score'))}</div>"
-                f"<div style='width:96px;flex:none;text-align:right;color:#4b5563;'>{published_html}</div></div>"
+                f"<div style='width:112px;flex:none;text-align:right;white-space:nowrap;color:#4b5563;'>{published_html}</div>"
+                f"<div style='width:76px;flex:none;text-align:right;'>{sentiment_badge(item.get('score'))}</div></div>"
             )
         st.html(f"<div style='margin-top:10px;'>{''.join(rows)}</div>")
+    st.caption("This reads recent coverage. It is not the technical score, and it is not advice.")
 
 
 def show_market_moods() -> None:
-    """Two whole-market scores above Quick Snapshot. No votes yet."""
-    with section_expander("Market mood", "market_mood"):
-        st.caption(
-            "The whole crypto market and the whole stock market. "
-            "Not an asset, and not the technical score."
-        )
-        stored = load_market_moods(supabase)
-        if stored is None:
+    """Crypto market, then the stock market. Each uses the asset sentiment layout."""
+    stored = load_market_moods(supabase)
+    if stored is None:
+        with section_expander("Market mood", "market_mood"):
             st.info("Market mood storage is not ready yet. Run the latest supabase_rls.sql in the Supabase SQL editor.")
-            return
-        deadlines = st.session_state.setdefault("mood_due", {})
-        cards = st.columns(2)
-        for column, spec in zip(cards, MACRO_MOODS):
-            with column:
-                _mood_card(spec, stored.get(spec["key"]), deadlines)
+        return
+    deadlines = st.session_state.setdefault("mood_due", {})
+    for spec in MACRO_MOODS:
+        with section_expander(f"Market mood - {spec['label']}", f"market_mood_{spec['key']}"):
+            _mood_card(spec, stored.get(spec["key"]), deadlines)
 
 
 def show_market_sentiment(kind: str, asset_id: str, label: str, ticker: str | None):

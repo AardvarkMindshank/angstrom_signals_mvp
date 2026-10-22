@@ -72,7 +72,7 @@ Each person can agree or disagree with the current headline sentiment. The butto
 
 ## Market mood
 
-Above Quick Snapshot, one card scores the crypto market and one scores the stock market. Both use the same headline score as an asset, including the positive and negative paragraphs. They are stored in `market_mood`, shared by every account for 12 hours, and they do not change a technical score or send an alert. Agree and disagree are prepared in `market_mood_votes` and are not on the page yet. Run `supabase_rls.sql` again so those tables exist. The search wording can be tightened later.
+Above Quick Snapshot, the crypto market is one section and the stock market is the next. Each uses the same layout as an asset's sentiment: score on the left, Your take on the right, then the articles. Agree, disagree, and comments are not in Your take yet. Both use the same headline score as an asset, including the positive and negative paragraphs. They are stored in `market_mood`, shared by every account for 12 hours, and they do not change a technical score or send an alert. Agree and disagree are prepared in `market_mood_votes` and are not on the page yet. Run `supabase_rls.sql` again so those tables exist. The search wording can be tightened later.
 
 ## Feedback
 
