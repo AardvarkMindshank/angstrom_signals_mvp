@@ -72,14 +72,14 @@ export default function(component) {
   const shell = parentElement.closest(".stBidiComponent") || parentElement;
   shell.style.display = "none";
   let style = document.getElementById("angstrom-brand-style");
-  if (style && style.dataset.layout !== "headlines") {
+  if (style && style.dataset.layout !== "links") {
     style.remove();
     style = null;
   }
   if (!style) {
     style = document.createElement("style");
     style.id = "angstrom-brand-style";
-    style.dataset.layout = "headlines";
+    style.dataset.layout = "links";
     style.textContent = [
       ".brand-mark img{display:none;}",
       ".brand-mark.is-light .logo-light,.brand-mark.is-dark .logo-dark{display:inline;}",
@@ -105,10 +105,15 @@ export default function(component) {
       ".headline-note{flex:1.3;min-width:0;color:#374151;font-size:.9rem;line-height:1.35;}",
       ".headline-score{width:76px;flex:none;text-align:right;}",
       ".headline-empty{color:#6b7280;}",
+      ".headline-title a:link{color:#15803d;}",
+      ".headline-title a:visited{color:#6d28d9;}",
+      ".headline-title a:hover{color:#166534;}",
       "html.angstrom-night .headline-head{color:#d1d5db;}",
       "html.angstrom-night .headline-row{border-top-color:#31333f;}",
-      "html.angstrom-night .headline-title,html.angstrom-night .headline-title a,html.angstrom-night .headline-date,html.angstrom-night .headline-note{color:#e5e7eb !important;}",
-      "html.angstrom-night .headline-title a:hover{color:#f9fafb;}",
+      "html.angstrom-night .headline-date,html.angstrom-night .headline-note{color:#e5e7eb !important;}",
+      "html.angstrom-night .headline-title a:link{color:#5ce488 !important;}",
+      "html.angstrom-night .headline-title a:visited{color:#d8b4fe !important;}",
+      "html.angstrom-night .headline-title a:hover{color:#bbf7d0 !important;}",
       "html.angstrom-night .headline-source,html.angstrom-night .headline-empty{color:#d1d5db;}"
     ].join("");
     document.head.appendChild(style);
