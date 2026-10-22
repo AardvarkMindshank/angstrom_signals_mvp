@@ -72,7 +72,7 @@ Each person can agree or disagree with the current headline sentiment. The butto
 
 ## Social signals and chat
 
-The arrow on the right edge, or a speech balloon, opens a panel. The top half is the social signals stream. The bottom half is a general chat. The gray bar between them can be dragged. Close, the shaded area, or Escape closes the panel.
+The arrow on the right edge, or a speech balloon, opens a panel. The top half is the social signals stream. The bottom half is a general chat. The gray bar between them can be dragged. Close, the shaded area, or Escape closes the panel. Pin, beside Close, keeps the panel open and leaves the rest of the page free to use. The shaded area and Escape no longer close it while it is pinned.
 
 Signal comments are newest first. Each one shows the person's picture, name, time, and the sentiment they were answering. A note stays for 12 hours, and a reply stays with it for the same 12 hours. All, Positive, Negative, and Mixed narrow the list by that coverage. Under Asset, All assets is every comment. My watchlists is that account's crypto and equity tables. My Crypto Watchlist and My Equities Watchlist each show one list. Crypto market and Stock market sit above the individual assets. All assets or a watchlist is saved on the account. One asset can be chosen too.
 

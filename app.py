@@ -283,20 +283,28 @@ export default function(component) {
     window.socialStreamState = window.socialStreamState || {
       open: false, side: "", asset: savedAsset || "", person: ""
     };
+    if (typeof window.socialStreamState.pinned !== "boolean") {
+      let pinned = false;
+      try { pinned = sessionStorage.getItem("angstrom-stream-pin") === "1"; } catch (error) {}
+      window.socialStreamState.pinned = pinned;
+    }
     let style = document.getElementById("social-stream-style");
-    if (style && style.dataset.layout !== "search") {
+    if (style && style.dataset.layout !== "pin") {
       style.remove();
       style = null;
     }
     if (!style) {
       style = document.createElement("style");
       style.id = "social-stream-style";
-      style.dataset.layout = "search";
+      style.dataset.layout = "pin";
       style.textContent = [
         "#social-stream-root{position:fixed;inset:0;z-index:10000000;pointer-events:none;}",
         "#social-stream-root.is-open{pointer-events:auto;}",
+        "#social-stream-root.is-open.is-pinned{pointer-events:none;}",
         "#social-stream-root .scrim{position:absolute;inset:0;background:rgba(17,24,39,0.35);opacity:0;transition:opacity .2s ease;}",
         "#social-stream-root.is-open .scrim{opacity:1;}",
+        "#social-stream-root.is-open.is-pinned .scrim{opacity:0;pointer-events:none;}",
+        "#social-stream-root.is-open.is-pinned .panel,#social-stream-root.is-open.is-pinned .edge{pointer-events:auto;}",
         "#social-stream-root .panel{position:absolute;top:0;right:0;height:100%;width:min(420px,100vw);background:#fff;color:#111827;box-shadow:-12px 0 40px rgba(17,24,39,.18);transform:translateX(100%);transition:transform .22s ease;display:flex;flex-direction:column;overflow:hidden;pointer-events:auto;}",
         "#social-stream-root .stream-pane,#social-stream-root .chat-pane{display:flex;flex-direction:column;min-height:0;overflow:hidden;}",
         "#social-stream-root .splitter{position:relative;flex:none;height:16px;cursor:row-resize;background:#9ca3af;border-top:1px solid #4b5563;border-bottom:1px solid #4b5563;display:flex;align-items:center;justify-content:center;touch-action:none;user-select:none;}",
@@ -312,7 +320,9 @@ export default function(component) {
         "#social-stream-root h2{margin:0;font-size:1.15rem;line-height:1.25;font-weight:650;}",
         "#social-stream-root .kicker{font-size:.72rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#6b7280;margin-bottom:2px;}",
         "#social-stream-root .hint{margin:6px 0 0;color:#6b7280;font-size:.8rem;line-height:1.35;}",
-        "#social-stream-root .close{background:#f3f4f6;border:0;border-radius:999px;padding:6px 12px;font:inherit;font-weight:600;cursor:pointer;color:#111827;}",
+        "#social-stream-root .head-actions{display:flex;gap:6px;flex:none;}",
+        "#social-stream-root .close,#social-stream-root .pin{background:#f3f4f6;border:0;border-radius:999px;padding:6px 12px;font:inherit;font-weight:600;cursor:pointer;color:#111827;}",
+        "#social-stream-root .pin.is-on{background:#111827;color:#fff;}",
         "#social-stream-root .edge{position:fixed;top:4.75rem;right:0;z-index:2;pointer-events:auto;display:flex;align-items:center;justify-content:center;width:2rem;height:2rem;padding:0;border:1px solid rgba(49,51,63,.2);border-right:0;border-radius:.5rem 0 0 .5rem;background:#fff;color:#808495;cursor:pointer;box-shadow:-1px 1px 4px rgba(0,0,0,.08);transition:right .22s ease,background .15s ease,color .15s ease;}",
         "#social-stream-root .edge:hover{background:#f0f2f6;color:#ff4b4b;}",
         "#social-stream-root.is-open .edge{right:min(420px,calc(100vw - 2.25rem));}",
@@ -374,14 +384,14 @@ export default function(component) {
       document.head.appendChild(style);
     }
     let root = document.getElementById("social-stream-root");
-    if (root && root.dataset.layout !== "search") {
+    if (root && root.dataset.layout !== "pin") {
       root.remove();
       root = null;
     }
     if (!root) {
       root = document.createElement("div");
       root.id = "social-stream-root";
-      root.dataset.layout = "search";
+      root.dataset.layout = "pin";
       root.innerHTML = [
         "<div class='scrim'></div>",
         "<aside class='panel' role='dialog' aria-label='Social signals and chat'>",
@@ -391,7 +401,7 @@ export default function(component) {
         "<div class='kicker'>Social signals</div>",
         "<h2>Social signals stream</h2>",
         "<p class='hint'>Newest first. Each note shows the sentiment it was answering, and stays for 12 hours. Reply, or mark any note up or down, including one you posted. Star another person to keep them under Favourites. All assets, My watchlists, or one of your watchlists is saved on your account.</p>",
-        "</div><button type='button' class='close'>Close</button></header>",
+        "</div><div class='head-actions'><button type='button' class='pin' title='Pin the panel'>Pin</button><button type='button' class='close'>Close</button></div></header>",
         "<div class='filters'><div class='chips'>",
         "<button type='button' data-side=''>All</button>",
         "<button type='button' data-side='positive'>Positive</button>",
@@ -433,6 +443,13 @@ export default function(component) {
       };
       root.querySelector(".scrim").addEventListener("click", closeStream);
       root.querySelector(".close").addEventListener("click", closeStream);
+      root.querySelector(".pin").addEventListener("click", () => {
+        window.socialStreamState.pinned = !window.socialStreamState.pinned;
+        try {
+          sessionStorage.setItem("angstrom-stream-pin", window.socialStreamState.pinned ? "1" : "0");
+        } catch (error) {}
+        window.renderSocialStream();
+      });
       root.querySelector(".edge").addEventListener("click", () => {
         window.socialStreamState.open = !window.socialStreamState.open;
         window.renderSocialStream();
@@ -473,6 +490,8 @@ export default function(component) {
       }
       document.addEventListener("keydown", (event) => {
         if (event.key !== "Escape" || !window.socialStreamState.open) return;
+        const sheet = root.querySelector(".panel");
+        if (window.socialStreamState.pinned && sheet && !sheet.contains(document.activeElement)) return;
         const box = root.querySelector(".chat-box");
         if (box && document.activeElement === box && window.socialStreamState.reply) {
           window.socialStreamState.reply = null;
@@ -584,6 +603,15 @@ export default function(component) {
       if (!panel) return;
       const state = window.socialStreamState;
       panel.classList.toggle("is-open", !!state.open);
+      panel.classList.toggle("is-pinned", !!state.pinned);
+      const main = document.querySelector("[data-testid='stMain']");
+      if (main) main.style.paddingRight = state.open && state.pinned ? "min(420px, 100vw)" : "";
+      const pin = panel.querySelector(".pin");
+      if (pin) {
+        pin.classList.toggle("is-on", !!state.pinned);
+        pin.title = state.pinned ? "Unpin the panel" : "Pin the panel";
+        pin.setAttribute("aria-pressed", state.pinned ? "true" : "false");
+      }
       const edge = panel.querySelector(".edge");
       if (edge) {
         const edgeLabel = state.open ? "Close social signals and chat" : "Open social signals and chat";
@@ -2159,7 +2187,7 @@ The Refresh button in Market sentiment pulls fresh headlines and a new score, th
 
 **Social signals and chat**
 
-The arrow on the right edge of the page, or a speech balloon, opens a panel. The top half is the social signals stream. The bottom half is a general chat. Drag the gray bar between them to give either half more room. Close the panel with Close, the shaded area, or Escape.
+The arrow on the right edge of the page, or a speech balloon, opens a panel. The top half is the social signals stream. The bottom half is a general chat. Drag the gray bar between them to give either half more room. Close the panel with Close, the shaded area, or Escape. Pin, beside Close, keeps the panel open and leaves the rest of the page free to use. The shaded area and Escape no longer close it while it is pinned.
 
 **Social signals stream**
 
