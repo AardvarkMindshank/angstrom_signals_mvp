@@ -187,14 +187,14 @@ export default function(component) {
       open: false, side: "", asset: savedAsset || "", person: ""
     };
     let style = document.getElementById("social-stream-style");
-    if (style && style.dataset.layout !== "split") {
+    if (style && style.dataset.layout !== "counts") {
       style.remove();
       style = null;
     }
     if (!style) {
       style = document.createElement("style");
       style.id = "social-stream-style";
-      style.dataset.layout = "split";
+      style.dataset.layout = "counts";
       style.textContent = [
         "#social-stream-root{position:fixed;inset:0;z-index:10000000;pointer-events:none;}",
         "#social-stream-root.is-open{pointer-events:auto;}",
@@ -239,7 +239,11 @@ export default function(component) {
         "#social-stream-root .reply{margin:8px 0 0 28px;padding-left:10px;border-left:2px solid #e5e7eb;}",
         "#social-stream-root .chat-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}",
         "#social-stream-root .chat-actions button{background:#fff;border:1px solid #e5e7eb;border-radius:999px;padding:2px 8px;font:inherit;font-size:.78rem;cursor:pointer;color:#374151;}",
-        "#social-stream-root .chat-actions button.is-on{background:#111827;border-color:#111827;color:#fff;}",
+        "#social-stream-root .chat-actions button.thumb-up,#social-stream-root .chat-actions button.thumb-down{display:inline-flex;align-items:center;gap:4px;font-weight:700;background:transparent;}",
+        "#social-stream-root .chat-actions button.thumb-up{color:#15803d;}",
+        "#social-stream-root .chat-actions button.thumb-down{color:#b91c1c;}",
+        "#social-stream-root .chat-actions button.thumb-up.is-on{background:#dcfce7;border-color:#15803d;color:#15803d;}",
+        "#social-stream-root .chat-actions button.thumb-down.is-on{background:#fee2e2;border-color:#b91c1c;color:#b91c1c;}",
         "#social-stream-root .chat-notice{color:#b45309;font-size:.8rem;line-height:1.35;margin-bottom:6px;}",
         "#social-stream-root .card{padding:14px 0;border-top:1px solid #e5e7eb;}",
         "#social-stream-root .person{display:flex;gap:10px;align-items:center;}",
@@ -621,12 +625,22 @@ export default function(component) {
     reportChat({ action: "post", text: text, parent: parent });
   }
 
-  function chatVoteButton(item, direction) {
+  function thumbButton(direction, count, selected) {
     const button = document.createElement("button");
     button.type = "button";
-    const count = direction === 1 ? Number(item.up) || 0 : Number(item.down) || 0;
-    button.textContent = (direction === 1 ? "👍 " : "👎 ") + count;
-    button.classList.toggle("is-on", item.vote === direction);
+    button.className = direction === 1 ? "thumb-up" : "thumb-down";
+    button.classList.toggle("is-on", !!selected);
+    const mark = document.createElement("span");
+    mark.textContent = direction === 1 ? "👍" : "👎";
+    const total = document.createElement("span");
+    total.textContent = String(Number(count) || 0);
+    button.append(mark, total);
+    return button;
+  }
+
+  function chatVoteButton(item, direction) {
+    const count = direction === 1 ? item.up : item.down;
+    const button = thumbButton(direction, count, item.vote === direction);
     button.addEventListener("click", () => {
       const next = item.vote === direction ? 0 : direction;
       if (item.vote === 1) item.up = Math.max(0, (Number(item.up) || 0) - 1);
@@ -860,11 +874,8 @@ export default function(component) {
   }
 
   function signalVoteButton(item, direction, kind) {
-    const button = document.createElement("button");
-    button.type = "button";
-    const count = direction === 1 ? Number(item.up) || 0 : Number(item.down) || 0;
-    button.textContent = (direction === 1 ? "👍 " : "👎 ") + count;
-    button.classList.toggle("is-on", item.vote === direction);
+    const count = direction === 1 ? item.up : item.down;
+    const button = thumbButton(direction, count, item.vote === direction);
     button.addEventListener("click", () => {
       const next = item.vote === direction ? 0 : direction;
       if (item.vote === 1) item.up = Math.max(0, (Number(item.up) || 0) - 1);
