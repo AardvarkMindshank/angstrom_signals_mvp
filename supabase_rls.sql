@@ -162,6 +162,67 @@ revoke all on function public.asset_holder_counts() from public;
 revoke all on function public.asset_holder_counts() from anon;
 grant execute on function public.asset_holder_counts() to authenticated;
 
+-- One take per account per asset. sentiment_at is the score it belongs to.
+-- A refresh writes a new sentiment time, so older thumbs no longer count.
+create table if not exists public.sentiment_votes (
+    user_id uuid not null references auth.users (id) on delete cascade,
+    asset_key text not null,
+    sentiment_at timestamptz not null,
+    vote smallint not null check (vote in (1, -1)),
+    primary key (user_id, asset_key)
+);
+
+alter table public.sentiment_votes enable row level security;
+
+drop policy if exists "own sentiment votes" on public.sentiment_votes;
+create policy "own sentiment votes" on public.sentiment_votes
+    for all
+    to authenticated
+    using (auth.uid() = user_id)
+    with check (auth.uid() = user_id);
+
+grant select, insert, update, delete on public.sentiment_votes to authenticated;
+
+-- Counts for the current sentiment only. my_vote is the caller's thumb, or null.
+create or replace function public.sentiment_crowd(asset_keys text[])
+returns table (asset_key text, thumbs_up integer, thumbs_down integer, my_vote smallint)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    select
+        market.asset_key,
+        (
+            select count(*)::integer
+            from public.sentiment_votes as votes
+            where votes.asset_key = market.asset_key
+              and votes.sentiment_at = market.sentiment_updated_at
+              and votes.vote = 1
+        ),
+        (
+            select count(*)::integer
+            from public.sentiment_votes as votes
+            where votes.asset_key = market.asset_key
+              and votes.sentiment_at = market.sentiment_updated_at
+              and votes.vote = -1
+        ),
+        (
+            select mine.vote
+            from public.sentiment_votes as mine
+            where mine.asset_key = market.asset_key
+              and mine.user_id = auth.uid()
+              and mine.sentiment_at = market.sentiment_updated_at
+        )
+    from public.asset_market as market
+    where market.asset_key = any(asset_keys)
+      and market.sentiment_updated_at is not null;
+$$;
+
+revoke all on function public.sentiment_crowd(text[]) from public;
+revoke all on function public.sentiment_crowd(text[]) from anon;
+grant execute on function public.sentiment_crowd(text[]) to authenticated;
+
 insert into storage.buckets (id, name, public)
 values ('avatars', 'avatars', true)
 on conflict (id) do update set public = true;

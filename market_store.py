@@ -49,6 +49,72 @@ def recent_closes(values, limit: int = SPARKLINE_POINTS) -> list[float]:
     return cleaned[-limit:]
 
 
+def sentiment_crowd(supabase, keys: list[str]) -> dict[str, dict]:
+    """Agree and disagree counts for the current sentiment. Empty if the function is missing."""
+    wanted = [key for key in keys if key]
+    if not wanted:
+        return {}
+    try:
+        response = supabase.rpc("sentiment_crowd", {"asset_keys": wanted}).execute()
+    except Exception as exc:
+        _warn(exc)
+        return {}
+    counts = {}
+    for row in response.data or []:
+        key = row.get("asset_key")
+        if not key:
+            continue
+        try:
+            mine = int(row.get("my_vote"))
+        except (TypeError, ValueError):
+            mine = None
+        counts[str(key)] = {
+            "up": int(row.get("thumbs_up") or 0),
+            "down": int(row.get("thumbs_down") or 0),
+            "mine": mine,
+        }
+    return counts
+
+
+def set_sentiment_vote(supabase, user_id, kind: str, asset_id: str, sentiment_at, vote) -> None:
+    """Save this account's thumb for the current sentiment. None clears it."""
+    key = asset_market_key(kind, asset_id)
+    if vote not in (1, -1):
+        supabase.table("sentiment_votes").delete().eq("user_id", str(user_id)).eq("asset_key", key).execute()
+        return
+    if not sentiment_at:
+        return
+    supabase.table("sentiment_votes").upsert(
+        {
+            "user_id": str(user_id),
+            "asset_key": key,
+            "sentiment_at": sentiment_at,
+            "vote": int(vote),
+        },
+        on_conflict="user_id,asset_key",
+    ).execute()
+
+
+def crowd_mark(up, down, active: bool = True) -> str:
+    """Agree and disagree counts. The tooltip has the exact numbers."""
+    try:
+        up_count = int(up or 0)
+        down_count = int(down or 0)
+    except (TypeError, ValueError):
+        up_count = down_count = 0
+    if not active:
+        return "<span style='color:#6b7280;' title='No sentiment to react to yet.'>—</span>"
+    title = html.escape(
+        f"{up_count} agree with this sentiment, {down_count} disagree. "
+        "These reset when the sentiment is refreshed."
+    )
+    return (
+        f"<span title='{title}' style='display:inline-flex;align-items:center;gap:8px;white-space:nowrap;'>"
+        f"<span style='color:#15803d;font-weight:700;'>👍 {up_count}</span>"
+        f"<span style='color:#b91c1c;font-weight:700;'>👎 {down_count}</span></span>"
+    )
+
+
 def holder_counts(supabase) -> dict[str, int]:
     """Accounts holding each asset. Empty when the count function is not installed yet."""
     try:

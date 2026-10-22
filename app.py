@@ -228,6 +228,7 @@ try:
     from market_store import (
         asset_logo,
         asset_market_key,
+        crowd_mark,
         heading_with_logo,
         holder_counts,
         holders_mark,
@@ -236,6 +237,8 @@ try:
         save_logos,
         save_price_paths,
         save_sentiment,
+        sentiment_crowd,
+        set_sentiment_vote,
         sentiment_from_row,
         sparkline_svg,
     )
@@ -867,6 +870,8 @@ The **Sentiment** column shows that saved score in the same colored box. A dash 
 
 The picture on the left of each name is that asset's logo. The same logo appears beside the Interactive Chart and Market sentiment headings. Crypto logos come from CoinGecko. Stock logos come from Finnhub. A letter shows when a logo is not available. The address is saved once and reused for every account.
 
+Beside the sentiment score you can press thumbs up if you agree, or thumbs down if you do not. Press the same thumb again to clear your take. **Crowd** on each table row adds those up. Hover it to see how many agree and how many disagree. A refresh of that sentiment clears every thumb, because they belonged to the old score.
+
 Click a sentiment score in the table to highlight that asset and jump to its headlines. **↑ Top** scrolls back to the top of the page. It sits on the right of the chart title, and on the right of the sentiment Refresh button.
 
 The Refresh button beside Market sentiment pulls fresh headlines and a new score, then starts a 12-hour timer. It also runs on its own when that timer reaches zero. The Refresh button beside Quick Snapshot still reloads prices and technical scores every 5 minutes. Pressing either button refreshes that section now and starts its timer again.
@@ -1125,14 +1130,19 @@ def _share_market_rows(crypto_watchlist, stock_watchlist, crypto_results, stock_
     shared = load_shared_market(supabase, [asset_market_key(kind, asset_id) for kind, asset_id in pairs])
     counts = holder_counts(supabase)
     logos = _asset_logos(crypto_watchlist, stock_watchlist, shared)
+    crowd = sentiment_crowd(supabase, [asset_market_key(kind, asset_id) for kind, asset_id in pairs])
     for kind, results, watchlist in (
         ("Crypto", crypto_results, crypto_watchlist),
         ("Stock", stock_results, stock_watchlist),
     ):
         for row in results:
             asset_id = row.get("key")
-            row["holders"] = counts.get(asset_market_key(kind, asset_id), 0)
-            row["logo_url"] = logos.get(asset_market_key(kind, asset_id)) or ""
+            market_key = asset_market_key(kind, asset_id)
+            row["holders"] = counts.get(market_key, 0)
+            row["logo_url"] = logos.get(market_key) or ""
+            voices = crowd.get(market_key) or {}
+            row["thumbs_up"] = voices.get("up", 0)
+            row["thumbs_down"] = voices.get("down", 0)
             stored = shared.get(asset_market_key(kind, asset_id))
             if not row.get("closes") and stored and stored.get("closes"):
                 row["closes"] = stored.get("closes")
@@ -1369,14 +1379,14 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             return
         frame = pd.DataFrame(results).sort_values("score", ascending=False, na_position="last")
         st.subheader(title)
-        st.caption("Click a name to show that asset on the chart. Click a sentiment score to open its headlines. Watching is how many accounts hold that asset. The Trend line is the last 30 closes.")
+        st.caption("Click a name to show that asset on the chart. Click a sentiment score to open its headlines. Watching is how many accounts hold that asset. Hover Crowd to see how many agree or disagree. The Trend line is the last 30 closes.")
 
         headers = ["Asset", "Watching", "Score", "Signal", "Price", "RSI"]
         if show_extra_metrics_flag:
             headers += ["7d %", "ATR %", "Vol"]
-        headers += ["Sentiment", "Trend"]
+        headers += ["Sentiment", "Crowd", "Trend"]
         header_html = "".join(
-            f"<th style='padding:8px 10px;text-align:{'right' if name in ('Sentiment', 'Trend') else 'left'};"
+            f"<th style='padding:8px 10px;text-align:{'right' if name in ('Sentiment', 'Crowd', 'Trend') else 'left'};"
             f"white-space:nowrap;'>{html.escape(name)}</th>"
             for name in headers
         )
@@ -1427,6 +1437,8 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             rows_html += (
                 f"<td style='padding:10px;text-align:right;white-space:nowrap;'>"
                 f"{sentiment_badge(headline_score, sentiment_pick)}</td>"
+                f"<td style='padding:10px;text-align:right;white-space:nowrap;'>"
+                f"{crowd_mark(row.get('thumbs_up'), row.get('thumbs_down'), headline_score is not None)}</td>"
                 f"<td style='padding:6px 10px;width:84px;'>{sparkline_svg(row.get('closes'))}</td></tr>"
             )
 
@@ -1697,6 +1709,45 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
     )
 
 
+def _sentiment_thumbs(kind: str, asset_id: str, sentiment_at) -> None:
+    """Agree or disagree with the current sentiment. A second press on the same thumb clears it."""
+    if not sentiment_at:
+        st.caption("Thumbs open once this sentiment is saved.")
+        return
+    key = asset_market_key(kind, asset_id)
+    voice = sentiment_crowd(supabase, [key]).get(key) or {}
+    mine = voice.get("mine")
+    st.markdown("**Your take**")
+    agree = st.button(
+        "👍 Agree",
+        key="sentiment_agree",
+        use_container_width=True,
+        type="primary" if mine == 1 else "secondary",
+        help="You agree with this sentiment. Press again to clear it.",
+    )
+    disagree = st.button(
+        "👎 Disagree",
+        key="sentiment_disagree",
+        use_container_width=True,
+        type="primary" if mine == -1 else "secondary",
+        help="You disagree with this sentiment. Press again to clear it.",
+    )
+    st.markdown(crowd_mark(voice.get("up"), voice.get("down")), unsafe_allow_html=True)
+    chosen = None
+    if agree:
+        chosen = None if mine == 1 else 1
+    elif disagree:
+        chosen = None if mine == -1 else -1
+    if not agree and not disagree:
+        return
+    try:
+        set_sentiment_vote(supabase, user_id, kind, asset_id, sentiment_at, chosen)
+    except Exception:
+        st.warning("That thumb could not be saved. Run supabase_rls.sql in the Supabase SQL editor again.")
+        return
+    st.rerun()
+
+
 def _published_label(value) -> str:
     """Turn an RSS pubDate into a calendar date. Empty when the feed omitted one."""
     raw = str(value or "").strip()
@@ -1794,22 +1845,26 @@ def show_market_sentiment(kind: str, asset_id: str, label: str, ticker: str | No
             f"<ul style='margin:10px 0 0;padding-left:1.15rem;'>{driver_items}</ul>"
             if driver_items else ""
         )
-        st.markdown(
-            "<div style='background:#ffffff;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;'>"
-            "<div style='font-size:0.8rem;color:#6b7280;margin-bottom:4px;'>"
-            + (
-                "Average of the article scores below, from the last 7 days"
-                if any(item.get("score") is not None for item in headlines)
-                else "Score for these headlines, from the last 7 days"
+        score_card, vote_card = st.columns([4.2, 1.5], vertical_alignment="top")
+        with score_card:
+            st.markdown(
+                "<div style='background:#ffffff;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;'>"
+                "<div style='font-size:0.8rem;color:#6b7280;margin-bottom:4px;'>"
+                + (
+                    "Average of the article scores below, from the last 7 days"
+                    if any(item.get("score") is not None for item in headlines)
+                    else "Score for these headlines, from the last 7 days"
+                )
+                + "</div>"
+                f"<div style='display:inline-flex;align-items:center;gap:6px;background:{background};color:{color};"
+                f"padding:2px 8px;border-radius:4px;font-weight:600;'>{arrow} {score:.0f}/100</div>"
+                f"<div style='margin-top:8px;font-weight:600;color:{color};'>{html.escape(coverage)}</div>"
+                f"<div style='margin-top:8px;color:#111827;'>{summary}</div>"
+                f"{drivers_html}</div>",
+                unsafe_allow_html=True,
             )
-            + "</div>"
-            f"<div style='display:inline-flex;align-items:center;gap:6px;background:{background};color:{color};"
-            f"padding:2px 8px;border-radius:4px;font-weight:600;'>{arrow} {score:.0f}/100</div>"
-            f"<div style='margin-top:8px;font-weight:600;color:{color};'>{html.escape(coverage)}</div>"
-            f"<div style='margin-top:8px;color:#111827;'>{summary}</div>"
-            f"{drivers_html}</div>",
-            unsafe_allow_html=True,
-        )
+        with vote_card:
+            _sentiment_thumbs(kind, asset_id, (stored or {}).get("sentiment_updated_at") if isinstance(stored, dict) else None)
     elif report.get("reason") == "missing_key":
         st.info("Headlines are in. Add an xAI API key so Grok can score them. See the README under Market sentiment.")
     elif report.get("reason") == "no_headlines":

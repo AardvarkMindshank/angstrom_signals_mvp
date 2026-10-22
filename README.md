@@ -68,6 +68,8 @@ The Trend column is a small line of the last 30 closes from the price history al
 
 The Watching column counts how many accounts have that asset on a watchlist. It shows the count only, not who those accounts are. Run `supabase_rls.sql` again so the `asset_holder_counts` function exists.
 
+Each person can agree or disagree with the current headline sentiment. The Crowd column totals those thumbs. Hover it for the split. Refreshing the sentiment drops the old thumbs, because they applied to the previous score. Run `supabase_rls.sql` again so `sentiment_votes` and `sentiment_crowd` exist.
+
 Headlines come from Google News. Grok scores them. Add a key from the [xAI console](https://console.x.ai/) to `.streamlit/secrets.toml`:
 
 ```toml
