@@ -187,14 +187,14 @@ export default function(component) {
       open: false, side: "", asset: savedAsset || "", person: ""
     };
     let style = document.getElementById("social-stream-style");
-    if (style && style.dataset.layout !== "icons") {
+    if (style && style.dataset.layout !== "split2") {
       style.remove();
       style = null;
     }
     if (!style) {
       style = document.createElement("style");
       style.id = "social-stream-style";
-      style.dataset.layout = "icons";
+      style.dataset.layout = "split2";
       style.textContent = [
         "#social-stream-root{position:fixed;inset:0;z-index:10000000;pointer-events:none;}",
         "#social-stream-root.is-open{pointer-events:auto;}",
@@ -202,9 +202,11 @@ export default function(component) {
         "#social-stream-root.is-open .scrim{opacity:1;}",
         "#social-stream-root .panel{position:absolute;top:0;right:0;height:100%;width:min(420px,100vw);background:#fff;color:#111827;box-shadow:-12px 0 40px rgba(17,24,39,.18);transform:translateX(100%);transition:transform .22s ease;display:flex;flex-direction:column;overflow:hidden;pointer-events:auto;}",
         "#social-stream-root .stream-pane,#social-stream-root .chat-pane{display:flex;flex-direction:column;min-height:0;overflow:hidden;}",
-        "#social-stream-root .splitter{flex:none;height:12px;cursor:row-resize;background:#f3f4f6;border-top:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:center;touch-action:none;}",
-        "#social-stream-root .splitter::before{content:'';width:42px;height:3px;border-radius:999px;background:#d1d5db;}",
-        "#social-stream-root .splitter:hover::before{background:#9ca3af;}",
+        "#social-stream-root .splitter{position:relative;flex:none;height:14px;cursor:row-resize;background:#f3f4f6;border-top:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:center;touch-action:none;user-select:none;}",
+        "#social-stream-root .splitter::before{content:'';width:42px;height:4px;border-radius:999px;background:#d1d5db;}",
+        "#social-stream-root .splitter::after{content:'';position:absolute;left:0;right:0;top:-10px;bottom:-10px;}",
+        "#social-stream-root .splitter:hover::before,#social-stream-root .splitter.is-dragging::before{background:#6b7280;}",
+        "#social-stream-root.is-dragging,#social-stream-root.is-dragging *{cursor:row-resize !important;user-select:none !important;}",
         "#social-stream-root.is-open .panel{transform:none;}",
         "#social-stream-root .head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:18px 18px 4px;}",
         "#social-stream-root h2{margin:0;font-size:1.15rem;line-height:1.25;font-weight:650;}",
@@ -267,14 +269,14 @@ export default function(component) {
       document.head.appendChild(style);
     }
     let root = document.getElementById("social-stream-root");
-    if (root && root.dataset.layout !== "split") {
+    if (root && root.dataset.layout !== "split2") {
       root.remove();
       root = null;
     }
     if (!root) {
       root = document.createElement("div");
       root.id = "social-stream-root";
-      root.dataset.layout = "split";
+      root.dataset.layout = "split2";
       root.innerHTML = [
         "<div class='scrim'></div>",
         "<aside class='panel' role='dialog' aria-label='Social signals and chat'>",
@@ -359,33 +361,53 @@ export default function(component) {
         }
         closeStream();
       });
-      const applySplit = (ratio) => {
+      const splitter = root.querySelector(".splitter");
+      let heldRatio = 0.5;
+      const applySplit = (streamHeight) => {
+        const panelBox = root.querySelector(".panel");
         const streamPane = root.querySelector(".stream-pane");
         const chatPane = root.querySelector(".chat-pane");
-        if (!streamPane || !chatPane) return;
-        const next = Math.min(0.72, Math.max(0.28, Number(ratio) || 0.5));
-        streamPane.style.flex = next + " 1 0";
-        chatPane.style.flex = (1 - next) + " 1 0";
-        try { sessionStorage.setItem("angstrom-stream-split", String(next)); } catch (error) {}
+        if (!panelBox || !streamPane || !chatPane || !splitter) return;
+        const available = panelBox.clientHeight - splitter.offsetHeight;
+        if (available < 80) return;
+        let streamFloor = 120;
+        let chatFloor = 150;
+        if (streamFloor + chatFloor > available) {
+          streamFloor = Math.max(72, Math.floor(available * 0.4));
+          chatFloor = available - streamFloor;
+        }
+        const next = Math.min(available - chatFloor, Math.max(streamFloor, streamHeight));
+        streamPane.style.flex = "none";
+        streamPane.style.height = next + "px";
+        chatPane.style.flex = "1 1 auto";
+        chatPane.style.height = "auto";
+        heldRatio = next / available;
+        try { sessionStorage.setItem("angstrom-stream-split", String(heldRatio)); } catch (error) {}
       };
-      const splitter = root.querySelector(".splitter");
       if (splitter) {
         splitter.addEventListener("pointerdown", (event) => {
+          if (event.button !== 0) return;
           event.preventDefault();
-          const panelBox = root.querySelector(".panel");
+          root.classList.add("is-dragging");
+          splitter.classList.add("is-dragging");
+          try { splitter.setPointerCapture(event.pointerId); } catch (error) {}
           const move = (moveEvent) => {
-            const rect = panelBox.getBoundingClientRect();
-            if (!rect.height) return;
-            applySplit((moveEvent.clientY - rect.top) / rect.height);
+            const panelBox = root.querySelector(".panel");
+            if (!panelBox) return;
+            applySplit(moveEvent.clientY - panelBox.getBoundingClientRect().top);
           };
-          const stop = () => {
-            splitter.removeEventListener("pointermove", move);
-            splitter.removeEventListener("pointerup", stop);
-            splitter.removeEventListener("pointercancel", stop);
+          const stop = (endEvent) => {
+            root.classList.remove("is-dragging");
+            splitter.classList.remove("is-dragging");
+            window.removeEventListener("pointermove", move);
+            window.removeEventListener("pointerup", stop);
+            window.removeEventListener("pointercancel", stop);
+            try { splitter.releasePointerCapture(endEvent.pointerId); } catch (error) {}
           };
-          splitter.addEventListener("pointermove", move);
-          splitter.addEventListener("pointerup", stop);
-          splitter.addEventListener("pointercancel", stop);
+          window.addEventListener("pointermove", move);
+          window.addEventListener("pointerup", stop);
+          window.addEventListener("pointercancel", stop);
+          move(event);
         });
       }
       const composer = root.querySelector(".composer");
@@ -412,12 +434,17 @@ export default function(component) {
           paintReply(root);
         });
       }
-      let startRatio = 0.5;
       try {
         const storedRatio = Number(sessionStorage.getItem("angstrom-stream-split"));
-        if (storedRatio >= 0.28 && storedRatio <= 0.72) startRatio = storedRatio;
+        if (storedRatio > 0.08 && storedRatio < 0.92) heldRatio = storedRatio;
       } catch (error) {}
-      applySplit(startRatio);
+      const panelBox = root.querySelector(".panel");
+      const fitSplit = () => {
+        const height = panelBox ? panelBox.clientHeight - (splitter ? splitter.offsetHeight : 0) : 0;
+        applySplit(height ? heldRatio * height : 0);
+      };
+      fitSplit();
+      window.addEventListener("resize", fitSplit);
     }
     window.openSocialStream = (assetKey) => {
       window.socialStreamState.open = true;
