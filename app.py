@@ -1699,6 +1699,13 @@ try:
         trend_tone,
     )
     from scoring import calculate_indicators, compute_score, find_column
+    from max_pain import (
+        list_expiries,
+        load_open_interest,
+        options_market,
+        pain_strike,
+        window_strikes,
+    )
     from sentiment import (
         analyze_market_mood,
         analyze_market_sentiment,
@@ -2632,7 +2639,7 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
     st.markdown("""
 **How to use it**
 
-1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest. Market mood for crypto, Market mood for stocks, Quick Snapshot, Crypto Scores, Equity Scores, Interactive Chart, Score Breakdown, and Market sentiment each sit in a section that starts open. Close a header to fold that section away. **Open all** and **Collapse all**, on the right of the page title, do that for every one of those sections. Collapse all also closes this guide. Open all does not open it. **Feedback**, at the bottom of the sidebar, sends an issue or an idea. It is stored as submitted.
+1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest. Market mood for crypto, Market mood for stocks, Quick Snapshot, Crypto Scores, Equity Scores, Interactive Chart, Score Breakdown, Max pain, and Market sentiment each sit in a section that starts open. Close a header to fold that section away. **Open all** and **Collapse all**, on the right of the page title, do that for every one of those sections. Collapse all also closes this guide. Open all does not open it. **Feedback**, at the bottom of the sidebar, sends an issue or an idea. It is stored as submitted.
 2. Click a name in either table, a Quick Snapshot box, or an alert under Notifications. That asset stays highlighted, and the page moves down to the chart when the chart is off screen. Click a column title to sort that table. It starts with the strongest score at the top.
 3. Extra metrics add **7d %**, **Market Cap**, **ATR %**, and **Vol**. A separate checkbox adds **1d %** before the seven-day change and **30d %** after it. For **1d %** and **7d %**, green means the price rose and red means it fell. **30d %** uses the same colors as the **30-day trend**: green for a rise of about 2% or more, red for a fall of about 2% or more, and orange when the move stays inside about 2%. For stocks, one day is the previous trading session. **Market Cap** is the latest size of the asset, from CoinGecko for crypto and Yahoo for stocks. **ATR %** is volatility. **Vol** is volume versus its 20-day average.
 4. Alerts fire at 70 and 30 unless you move those sliders. One email goes to the address on your account when a technical score crosses a boundary. It is not sent again until the score leaves that boundary and crosses it later. Sentiment scores do not send alerts.
@@ -2640,6 +2647,10 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
 **Market mood**
 
 Two sections sit above Quick Snapshot, crypto first and then stocks. Each one uses the same layout as the asset sentiment under the chart: the score on the left, Your take on the right, then the articles. Neither is an asset, and neither is added to the tables or the technical score. Each score is an average of recent headlines, with a short summary, a positive paragraph, and a negative paragraph. Each article row also has a one-sentence AI Summary, after the date. A dash there means that score was saved before summaries, so press Refresh. It is stored once and shown to every account for about 12 hours. Your take works the same way as on an asset: agree, disagree, a score from 0 to 100, and one short comment. A refresh of that market clears the thumbs and personal scores. A comment stays for 12 hours. The search wording can be tightened later.
+
+**Max pain**
+
+This sits under the chart, above Market sentiment, for the same open asset. It is the options strike where the open calls and puts would be worth the least at that expiry. Green bars are call open interest and red bars are put open interest. The violet line is that strike. The orange line is the price. It describes where contracts are parked. It is not a price target, it is not mixed into the technical score, and it does not send an alert. Stocks use the Yahoo options chain. Bitcoin and Ethereum use Deribit's public options book. Other coins have no chain here, so the section says so. The nearest expiry is selected, and another can be chosen. Refresh uses the same 12-hour rhythm as sentiment.
 
 **Market sentiment**
 
@@ -3975,6 +3986,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                     st.caption(f"• {reason}")
 
     sentiment_label = crypto_watchlist[asset_key] if asset_type == "Crypto" else stock_watchlist[asset_key]
+    show_max_pain(asset_type, asset_key, title, float(df_chart["close"].iloc[-1]))
     show_market_sentiment(
         asset_type,
         asset_key,
@@ -4473,6 +4485,118 @@ def show_market_moods() -> None:
         mood_icon = "🪙" if spec["key"] == "crypto" else "📈"
         with section_expander(f"{mood_icon} Market mood - {spec['label']}", f"market_mood_{spec['key']}"):
             _mood_card(spec, stored.get(spec["key"]), deadlines)
+
+
+def _price_text(value: float) -> str:
+    if value >= 1000:
+        return f"{value:,.0f}"
+    if value >= 1:
+        return f"{value:,.2f}"
+    return f"{value:.4f}"
+
+
+def show_max_pain(kind: str, asset_id: str, label: str, chart_price: float | None) -> None:
+    """Options max pain for the open asset. A positioning chart, not part of the score."""
+    heading = f"Max pain - {label}" if label else "Max pain"
+    with section_expander(heading, "max_pain"):
+        market = options_market(kind, asset_id)
+        if not market:
+            st.caption(
+                "This asset has no listed options chain here. "
+                "Max pain is available for stocks, Bitcoin, and Ethereum."
+            )
+            return
+        left, right = st.columns([3, 1.15], vertical_alignment="bottom")
+        with right:
+            force = st.button(
+                "🔄 Refresh",
+                key=f"max_pain_refresh_{market}",
+                use_container_width=True,
+                help="Load the options chain again. Otherwise it stays for about 12 hours.",
+            )
+        expiries, error = list_expiries(market, force=force)
+        labels = dict(expiries)
+        with left:
+            if labels:
+                expiry_key = f"max_pain_expiry_{market}"
+                if st.session_state.get(expiry_key) not in labels:
+                    st.session_state[expiry_key] = next(iter(labels))
+                expiry = st.selectbox(
+                    "Expiry",
+                    list(labels),
+                    format_func=lambda item: labels[item],
+                    key=f"max_pain_expiry_{market}",
+                )
+            else:
+                expiry = None
+        if error:
+            st.warning(error)
+            return
+        if not expiry:
+            st.caption("No listed expiries for this asset right now.")
+            return
+        calls, puts, underlying, chain_error = load_open_interest(
+            market, expiry, force=force and market.startswith("stock:"),
+        )
+        if chain_error:
+            st.warning(chain_error)
+            return
+        if not calls and not puts:
+            st.caption("This expiry has no open interest yet.")
+            return
+        level = pain_strike(calls, puts)
+        spot = underlying if underlying else chart_price
+        spot_name = "Index" if underlying else "Latest price"
+        price_col, pain_col, expiry_col = st.columns(3)
+        price_col.metric(spot_name, _price_text(spot) if spot else "—")
+        pain_col.metric("Max pain", _price_text(level) if level is not None else "—")
+        expiry_col.metric("Expiry", labels.get(expiry, expiry))
+        shown = window_strikes(list(calls) + list(puts), spot, level)
+        full_count = len(set(calls) | set(puts))
+        fig = go.Figure()
+        fig.add_bar(
+            x=shown,
+            y=[calls.get(strike, 0.0) for strike in shown],
+            name="Calls",
+            marker_color="#15803d",
+        )
+        fig.add_bar(
+            x=shown,
+            y=[puts.get(strike, 0.0) for strike in shown],
+            name="Puts",
+            marker_color="#b91c1c",
+        )
+        if level is not None:
+            fig.add_vline(x=level, line_dash="dash", line_color="#7c3aed", line_width=2)
+        if spot:
+            fig.add_vline(x=spot, line_dash="dot", line_color="#f59e0b", line_width=2)
+        whole = all(float(strike).is_integer() for strike in shown)
+        fig.update_layout(
+            barmode="group",
+            height=460,
+            margin=dict(t=30, b=20),
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            yaxis_title="Open interest",
+            xaxis_title="Strike",
+        )
+        fig.update_xaxes(tickformat="," if whole else ",.2f")
+        st.plotly_chart(fig, width="stretch")
+        if spot and level is not None and spot != 0:
+            gap = (level - spot) / spot * 100
+            side = "above" if gap > 0 else "below"
+            st.caption(
+                f"Max pain is {abs(gap):.1f}% {side} the {spot_name.lower()}. "
+                "The violet line is that strike. The orange line is the price."
+            )
+        else:
+            st.caption("The violet line is max pain. The orange line is the price.")
+        if len(shown) < full_count:
+            st.caption("The bars are the strikes nearest the price. Max pain is calculated from the full chain.")
+        st.caption(
+            "This is where open contracts would be worth the least at expiry. "
+            "It is not a price target, and it is not part of the technical score. "
+            "Open interest is contracts for stocks, and coin amount for Bitcoin and Ethereum."
+        )
 
 
 def show_market_sentiment(kind: str, asset_id: str, label: str, ticker: str | None):
