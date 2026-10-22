@@ -132,6 +132,32 @@ create policy "signed-in users update shared market data" on public.asset_market
 
 grant select, insert, update on public.asset_market to authenticated;
 
+-- How many accounts hold each asset. Returns counts only, never account names.
+-- security definer reads every watchlist; signed-in users cannot do that directly.
+create or replace function public.asset_holder_counts()
+returns table (asset_key text, holders integer)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    select 'Crypto|' || lower(item.key), count(distinct prefs.user_id)::integer
+    from public.user_preferences as prefs
+    cross join lateral jsonb_each(prefs.crypto_watchlist) as item(key, value)
+    where jsonb_typeof(prefs.crypto_watchlist) = 'object'
+    group by lower(item.key)
+    union all
+    select 'Stock|' || upper(item.key), count(distinct prefs.user_id)::integer
+    from public.user_preferences as prefs
+    cross join lateral jsonb_each(prefs.stock_watchlist) as item(key, value)
+    where jsonb_typeof(prefs.stock_watchlist) = 'object'
+    group by upper(item.key);
+$$;
+
+revoke all on function public.asset_holder_counts() from public;
+revoke all on function public.asset_holder_counts() from anon;
+grant execute on function public.asset_holder_counts() to authenticated;
+
 insert into storage.buckets (id, name, public)
 values ('avatars', 'avatars', true)
 on conflict (id) do update set public = true;

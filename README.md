@@ -66,6 +66,8 @@ After an asset has been opened, that score also appears in the Sentiment column 
 
 The Trend column is a small line of the last 30 closes from the price history already used for the score. Green means that stretch rose, and red means it fell. Those closes are stored on the same shared row, including by the alert worker. Run `supabase_rls.sql` again so the `asset_market` table exists.
 
+The Watching column counts how many accounts have that asset on a watchlist. It shows the count only, not who those accounts are. Run `supabase_rls.sql` again so the `asset_holder_counts` function exists.
+
 Headlines come from Google News. Grok scores them. Add a key from the [xAI console](https://console.x.ai/) to `.streamlit/secrets.toml`:
 
 ```toml

@@ -225,6 +225,8 @@ try:
     )
     from market_store import (
         asset_market_key,
+        holder_counts,
+        holders_mark,
         load_shared_market,
         recent_closes,
         save_price_paths,
@@ -856,6 +858,8 @@ The **Sentiment** column shows that saved score in the same colored box. A dash 
 
 **Trend**, at the far right of each row, is a small line of the last 30 closes. Green means that stretch rose. Red means it fell. The same line is shared by every account.
 
+**Watching**, beside the name, is how many accounts have that asset on a watchlist. The people marks are a count, not the names of those accounts.
+
 Click a sentiment score in the table to highlight that asset and jump to its headlines. **↑ Top** scrolls back to the top of the page. It sits on the right of the chart title, and on the right of the sentiment Refresh button.
 
 The Refresh button beside Market sentiment pulls fresh headlines and a new score, then starts a 12-hour timer. It also runs on its own when that timer reaches zero. The Refresh button beside Quick Snapshot still reloads prices and technical scores every 5 minutes. Pressing either button refreshes that section now and starts its timer again.
@@ -1112,12 +1116,14 @@ def _share_market_rows(crypto_watchlist, stock_watchlist, crypto_results, stock_
     pairs = [("Crypto", asset_id) for asset_id in crypto_watchlist]
     pairs += [("Stock", asset_id) for asset_id in stock_watchlist]
     shared = load_shared_market(supabase, [asset_market_key(kind, asset_id) for kind, asset_id in pairs])
+    counts = holder_counts(supabase)
     for kind, results, watchlist in (
         ("Crypto", crypto_results, crypto_watchlist),
         ("Stock", stock_results, stock_watchlist),
     ):
         for row in results:
             asset_id = row.get("key")
+            row["holders"] = counts.get(asset_market_key(kind, asset_id), 0)
             stored = shared.get(asset_market_key(kind, asset_id))
             if not row.get("closes") and stored and stored.get("closes"):
                 row["closes"] = stored.get("closes")
@@ -1313,9 +1319,9 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             return
         frame = pd.DataFrame(results).sort_values("score", ascending=False, na_position="last")
         st.subheader(title)
-        st.caption("Click a name to show that asset on the chart. Click a sentiment score to open its headlines. The Trend line is the last 30 closes.")
+        st.caption("Click a name to show that asset on the chart. Click a sentiment score to open its headlines. Watching is how many accounts hold that asset. The Trend line is the last 30 closes.")
 
-        headers = ["Asset", "Score", "Signal", "Price", "RSI"]
+        headers = ["Asset", "Watching", "Score", "Signal", "Price", "RSI"]
         if show_extra_metrics_flag:
             headers += ["7d %", "ATR %", "Vol"]
         headers += ["Sentiment", "Trend"]
@@ -1346,6 +1352,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             rows_html += (
                 f"<tr style='border-bottom:1px solid #f0f0f0;{row_style}'>"
                 f"<td style='padding:10px;white-space:nowrap;'>{name_button}</td>"
+                f"<td style='padding:8px 10px;white-space:nowrap;'>{holders_mark(row.get('holders'))}</td>"
                 f"<td style='padding:10px;min-width:130px;'>{render_score_bar(row['score'])}</td>"
                 f"{cell(row.get('label') or '—')}{cell(price_str)}{cell(rsi_str)}"
             )

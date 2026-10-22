@@ -48,6 +48,55 @@ def recent_closes(values, limit: int = SPARKLINE_POINTS) -> list[float]:
     return cleaned[-limit:]
 
 
+def holder_counts(supabase) -> dict[str, int]:
+    """Accounts holding each asset. Empty when the count function is not installed yet."""
+    try:
+        response = supabase.rpc("asset_holder_counts").execute()
+    except Exception as exc:
+        _warn(exc)
+        return {}
+    counts = {}
+    for row in response.data or []:
+        key = row.get("asset_key")
+        try:
+            number = int(row.get("holders") or 0)
+        except (TypeError, ValueError):
+            continue
+        if key and number > 0:
+            counts[str(key)] = number
+    return counts
+
+
+def holders_mark(count) -> str:
+    """Overlapping people and a number. A dash when the count is unknown."""
+    try:
+        number = int(count)
+    except (TypeError, ValueError):
+        number = 0
+    if number <= 0:
+        return "<span style='color:#6b7280;'>—</span>"
+    person = (
+        "<svg width='14' height='14' viewBox='0 0 16 16' aria-hidden='true'>"
+        "<circle cx='8' cy='5' r='2.3' fill='#4338ca'/>"
+        "<path d='M3.2 13.4c.7-2.5 2.4-3.7 4.8-3.7s4.1 1.2 4.8 3.7' fill='#4338ca'/>"
+        "</svg>"
+    )
+    faces = []
+    for index in range(min(number, 3)):
+        shift = "margin-left:-7px;" if index else ""
+        faces.append(
+            "<span style='width:18px;height:18px;border-radius:999px;background:#e0e7ff;"
+            "display:inline-flex;align-items:center;justify-content:center;"
+            f"border:1.5px solid #ffffff;{shift}'>{person}</span>"
+        )
+    label = "1 account holds this" if number == 1 else f"{number} accounts hold this"
+    return (
+        f"<span title='{label}' style='display:inline-flex;align-items:center;gap:6px;'>"
+        f"<span style='display:inline-flex;align-items:center;'>{''.join(faces)}</span>"
+        f"<span style='font-weight:650;color:#312e81;'>{number}</span></span>"
+    )
+
+
 def sparkline_svg(closes) -> str:
     """A short line for one table row. Green when the stretch rose, red when it fell."""
     values = recent_closes(closes, SPARKLINE_POINTS)
