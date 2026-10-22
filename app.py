@@ -630,6 +630,7 @@ try:
     from market_store import (
         asset_logo,
         asset_market_key,
+        COMMENT_EMOTICONS,
         COMMENT_LIMIT,
         comment_balloon,
         crowd_mark,
@@ -645,6 +646,7 @@ try:
         social_stream_items,
         set_sentiment_comment,
         set_sentiment_vote,
+        with_emoticon,
         sentiment_from_row,
         sparkline_svg,
         trend_tone,
@@ -1321,7 +1323,7 @@ The **Sentiment** column shows that saved score in the same colored box. A dash 
 
 The picture on the left of each name is that asset's logo. The same logo appears at the top of the Interactive Chart and Market sentiment sections. Crypto logos come from CoinGecko. Stock logos come from Finnhub. A letter shows when a logo is not available. The address is saved once and reused for every account.
 
-Beside the sentiment score you can press thumbs up if you agree, or thumbs down if you do not. Press the same thumb again to clear your take. Those buttons sit in an outlined box. After you disagree, scores appear in that same box, under the buttons: 0, 20, 40, 60, 80 and 100. The number you pick also fills the type box, and you can type any number from 0 to 100. It saves on its own when you click a score, press Enter, or leave the box. The thumbs and that same colored average sit at the bottom of Your take, and again under **Crowd** on each table row. The box is the average of the personal scores, in the same style as the Sentiment column. It updates when a score is clicked or typed. Hover the down thumb for the spread, which is how far those scores typically sit from the average. One score has no spread yet. A dash means nobody has given a personal score. Under the thumbs you can post one comment of up to 160 characters. A speech balloon appears beside the thumbs, and in the **Comments** column, once any comment exists. Click it to slide in the **Social signals stream** from the right. That stream lists comments newest first, with each person's picture, name, and the time, and the sentiment they were answering. Narrow it with All, Positive, Negative, or Mixed, or by asset or person. Close it with Close, the shaded area, or Escape. A refresh of that sentiment clears every thumb, every score, and every comment, because they belonged to the old score.
+Beside the sentiment score you can press thumbs up if you agree, or thumbs down if you do not. Press the same thumb again to clear your take. Those buttons sit in an outlined box. After you disagree, scores appear in that same box, under the buttons: 0, 20, 40, 60, 80 and 100. The number you pick also fills the type box, and you can type any number from 0 to 100. It saves on its own when you click a score, press Enter, or leave the box. The thumbs and that same colored average sit at the bottom of Your take, and again under **Crowd** on each table row. The box is the average of the personal scores, in the same style as the Sentiment column. It updates when a score is clicked or typed. Hover the down thumb for the spread, which is how far those scores typically sit from the average. One score has no spread yet. A dash means nobody has given a personal score. Under the thumbs you can post one comment of up to 160 characters. A row of faces under the box adds an emoticon. A speech balloon appears beside the thumbs, and in the **Comments** column, once any comment exists. Click it to slide in the **Social signals stream** from the right. That stream lists comments newest first, with each person's picture, name, and the time, and the sentiment they were answering. Narrow it with All, Positive, Negative, or Mixed, or by asset or person. Close it with Close, the shaded area, or Escape. A refresh of that sentiment clears every thumb, every score, and every comment, because they belonged to the old score.
 
 Click a sentiment score in the table to highlight that asset and jump to its headlines. **↑ Top** scrolls back to the top of the page. It sits at the top right of the Interactive Chart section, and at the top right of Market sentiment.
 
@@ -2508,6 +2510,14 @@ def _sentiment_thumbs(kind: str, asset_id: str, sentiment_at, title: str) -> Non
         .st-key-sentiment_comment_row {{
             margin-top: 6px;
         }}
+        [class*="st-key-sentiment_face_"] button {{
+            min-width: 0;
+            padding: 0.15rem 0;
+        }}
+        [class*="st-key-sentiment_face_"] button p {{
+            font-size: 1rem;
+            line-height: 1.1;
+        }}
         .st-key-sentiment_alt_0 button,
         .st-key-sentiment_alt_20 button,
         .st-key-sentiment_alt_40 button,
@@ -2574,6 +2584,9 @@ def _sentiment_thumbs(kind: str, asset_id: str, sentiment_at, title: str) -> Non
         box_key = f"sentiment_comment_box_{key}"
         if box_key not in st.session_state:
             st.session_state[box_key] = mine_text
+        pending_face = st.session_state.pop(f"{box_key}_face", None)
+        if pending_face:
+            st.session_state[box_key] = with_emoticon(st.session_state.get(box_key), pending_face)
         st.text_input(
             "Comment",
             max_chars=COMMENT_LIMIT,
@@ -2581,9 +2594,19 @@ def _sentiment_thumbs(kind: str, asset_id: str, sentiment_at, title: str) -> Non
             label_visibility="collapsed",
             placeholder="Add a short comment",
         )
+        picked_face = None
+        for index, (column, emoticon) in enumerate(
+            zip(st.columns(len(COMMENT_EMOTICONS), gap="xxsmall", wrap=False), COMMENT_EMOTICONS)
+        ):
+            with column:
+                if st.button(emoticon, key=f"sentiment_face_{index}", use_container_width=True):
+                    picked_face = emoticon
+        if picked_face:
+            st.session_state[f"{box_key}_face"] = picked_face
+            _rerun_fragment()
         st.caption(
-            f"Up to {COMMENT_LIMIT} characters. Posting again replaces yours. "
-            "Comments clear when this sentiment refreshes."
+            f"Up to {COMMENT_LIMIT} characters. Tap a face to add it. "
+            "Posting again replaces yours. Comments clear when this sentiment refreshes."
         )
         if st.button("Post comment", key="sentiment_comment_post", use_container_width=True):
             text = " ".join(str(st.session_state.get(box_key) or "").split())

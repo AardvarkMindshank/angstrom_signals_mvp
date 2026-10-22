@@ -15,6 +15,7 @@ from sentiment import SENTIMENT_REFRESH_SECONDS
 
 SPARKLINE_POINTS = 31
 COMMENT_LIMIT = 160
+COMMENT_EMOTICONS = ("😀", "🙂", "😐", "🙁", "😮", "🔥", "📈", "📉")
 _SIDEWAYS_PERCENT = 2.0
 _WARNED = False
 
@@ -164,6 +165,19 @@ def sentiment_comment_lists(supabase, keys: list[str]) -> dict[str, list]:
             "mine": bool(row.get("mine")),
         })
     return grouped
+
+
+def with_emoticon(text, face: str, limit: int = COMMENT_LIMIT) -> str:
+    """Add one of the simple faces, with a space before it when the note already has words."""
+    current = str(text or "")
+    if face not in COMMENT_EMOTICONS:
+        return current
+    gap = "" if (not current or current[-1].isspace()) else " "
+    if len(current) + len(gap) + len(face) <= limit:
+        return current + gap + face
+    if len(current) + len(face) <= limit:
+        return current + face
+    return current
 
 
 def set_sentiment_comment(supabase, user_id, kind: str, asset_id: str, sentiment_at, body: str) -> None:
