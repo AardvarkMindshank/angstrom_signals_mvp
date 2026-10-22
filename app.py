@@ -12,6 +12,7 @@ import time
 import traceback
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
+from pathlib import Path
 
 import pandas as pd
 import plotly.graph_objects as go
@@ -26,6 +27,99 @@ st.set_page_config(
     page_icon="📈",
     layout="wide",
     initial_sidebar_state="expanded",
+)
+
+
+def _active_theme() -> str:
+    """The theme this browser is using. Light when Streamlit has not reported one yet."""
+    try:
+        kind = st.context.theme.type
+    except Exception:
+        kind = None
+    return kind if kind in ("light", "dark") else "light"
+
+
+def _brand_mark(width: int) -> str:
+    """Both logos, with the current theme shown first. The page swaps them when the theme changes."""
+    folder = Path(__file__).resolve().parent / "assets"
+    light = folder / "logo-light.png"
+    dark = folder / "logo-dark.png"
+    if not light.is_file() or not dark.is_file():
+        return ""
+
+    def source(path: Path) -> str:
+        return "data:image/png;base64," + base64.b64encode(path.read_bytes()).decode("ascii")
+
+    mode = _active_theme()
+    light_hidden = " aria-hidden='true'" if mode == "dark" else ""
+    dark_hidden = " aria-hidden='true'" if mode != "dark" else ""
+    return (
+        "<style>.brand-mark img{display:none}.brand-mark.is-light .logo-light,"
+        ".brand-mark.is-dark .logo-dark{display:inline}</style>"
+        f"<div class='brand-mark is-{mode}' style='text-align:center;margin:0.15rem 0 0.35rem;'>"
+        f"<img class='logo-light' src='{source(light)}' alt='Angstrom Signals'{light_hidden} "
+        f"width='{width}' style='width:{width}px;max-width:100%;height:auto;'>"
+        f"<img class='logo-dark' src='{source(dark)}' alt=''{dark_hidden} "
+        f"width='{width}' style='width:{width}px;max-width:100%;height:auto;'>"
+        "</div>"
+    )
+
+
+_BRAND_JS = """
+export default function(component) {
+  const { parentElement } = component;
+  const shell = parentElement.closest(".stBidiComponent") || parentElement;
+  shell.style.display = "none";
+  if (!document.getElementById("angstrom-brand-style")) {
+    const style = document.createElement("style");
+    style.id = "angstrom-brand-style";
+    style.textContent = [
+      ".brand-mark img{display:none;}",
+      ".brand-mark.is-light .logo-light,.brand-mark.is-dark .logo-dark{display:inline;}"
+    ].join("");
+    document.head.appendChild(style);
+  }
+  const apply = () => {
+    const app = document.querySelector(".stApp");
+    if (!app) return;
+    const parts = getComputedStyle(app).backgroundColor.match(/\\d+/g);
+    const shade = parts
+      ? (0.299 * Number(parts[0])) + (0.587 * Number(parts[1])) + (0.114 * Number(parts[2]))
+      : 255;
+    const dark = shade < 140;
+    document.querySelectorAll(".brand-mark").forEach((mark) => {
+      mark.classList.toggle("is-dark", dark);
+      mark.classList.toggle("is-light", !dark);
+      const light = mark.querySelector(".logo-light");
+      const night = mark.querySelector(".logo-dark");
+      if (light) light.toggleAttribute("aria-hidden", dark);
+      if (night) night.toggleAttribute("aria-hidden", !dark);
+    });
+  };
+  apply();
+  if (!window.angstromBrandWatch) {
+    window.angstromBrandWatch = true;
+    const arm = () => {
+      const app = document.querySelector(".stApp");
+      if (!app || app.dataset.brandWatch) return;
+      app.dataset.brandWatch = "1";
+      new MutationObserver(apply).observe(app, { attributes: true });
+    };
+    arm();
+    document.addEventListener("click", () => {
+      setTimeout(apply, 60);
+      setTimeout(apply, 350);
+    });
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    if (media.addEventListener) media.addEventListener("change", apply);
+  }
+  return () => {};
+}
+"""
+_brand_watch = st.components.v2.component(
+    "brand_watch",
+    js=_BRAND_JS,
+    isolate_styles=False,
 )
 
 # A normal link starts a new Streamlit session and logs the user out.
@@ -1446,11 +1540,13 @@ if "data_nonce" not in st.session_state:
 supabase = get_supabase()
 
 if st.session_state.user is None:
+    _brand_watch(key="brand_watch")
     st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
     _, col_center, _ = st.columns([1, 1.2, 1])
 
     with col_center:
-        st.title("📈 angstrom signals")
+        st.markdown(_brand_mark(200), unsafe_allow_html=True)
+        st.title("angstrom signals")
         st.caption("Multi-factor technical scoring research platform • Please log in to continue")
 
         auth_tab1, auth_tab2 = st.tabs(["🔑 Log In", "📝 Sign Up"])
@@ -1707,6 +1803,9 @@ if "profile" not in st.session_state:
 prefs = st.session_state.cloud_prefs
 alert_prefs = prefs.get("alerts", {})
 profile = st.session_state.profile
+
+_brand_watch(key="brand_watch")
+st.sidebar.markdown(_brand_mark(150), unsafe_allow_html=True)
 
 with st.sidebar.expander("👤 Account", expanded=False):
     if profile is None:
