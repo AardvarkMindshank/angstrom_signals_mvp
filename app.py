@@ -1711,12 +1711,8 @@ def _reset_link_error(raw: str) -> str:
 
 
 def _oauth_url(provider: str) -> str:
-    """The Supabase address that sends the browser to Google, Apple, or Facebook."""
-    options = {"redirect_to": _app_url()}
-    if provider == "google":
-        options["scopes"] = "email profile"
-    elif provider == "facebook":
-        options["scopes"] = "email"
+    """The Supabase address that sends the browser to Google."""
+    options = {"redirect_to": _app_url(), "scopes": "email profile"}
     response = supabase.auth.sign_in_with_oauth({"provider": provider, "options": options})
     return response.url
 
@@ -1948,12 +1944,11 @@ if st.session_state.user is None:
             if st.session_state.get("auth_error"):
                 st.error(st.session_state.auth_error)
             st.caption("Or continue with")
-            for provider, label in (
-                ("google", "Continue with Google"),
-                ("apple", "Continue with Apple"),
-                ("facebook", "Continue with Facebook"),
-            ):
-                st.link_button(label, _oauth_url(provider), use_container_width=True)
+            st.link_button(
+                "Continue with Google",
+                _oauth_url("google"),
+                use_container_width=True,
+            )
 
     st.stop()
 
