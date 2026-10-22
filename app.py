@@ -1611,21 +1611,58 @@ with st.sidebar.expander("⚙️ Settings", expanded=False):
         save_preferences_to_cloud({"settings": settings})
 
 
-def _feedback_mail_settings() -> tuple[str, str, str]:
-    """Resend key, sender, and the inbox that receives feedback. Empty pieces stay empty."""
+def _feedback_setting(env_name: str, *secret_paths: tuple[str, ...]) -> str:
+    """A mail setting from the environment, then from Streamlit secrets. Empty when unset."""
     import os
 
-    api_key = (os.getenv("RESEND_API_KEY") or "").strip() or _optional_secret("resend", "api_key")
-    sender = (os.getenv("RESEND_FROM") or "").strip() or _optional_secret("resend", "from_email")
-    inbox = (os.getenv("FEEDBACK_TO") or "").strip() or _optional_secret("resend", "feedback_to")
-    return api_key, sender or "Angstrom Signals <onboarding@resend.dev>", inbox
+    found = (os.getenv(env_name) or "").strip()
+    if found:
+        return found
+    for path in ((env_name,), *secret_paths):
+        found = _optional_secret(*path)
+        if found:
+            return found
+    return ""
 
 
-def _email_feedback(kind: str, body: str, user_email: str, user_id: str) -> bool:
-    """Mail one saved note. False when Resend is not configured or the send fails."""
+def _mailbox(value: str) -> str:
+    """The address inside Name <email>, or the text itself."""
+    text = " ".join(str(value or "").split())
+    if "<" in text and text.endswith(">"):
+        text = text.rsplit("<", 1)[-1][:-1].strip()
+    return text
+
+
+def _feedback_mail_settings() -> tuple[str, str, str]:
+    """Resend key, sender, and the inbox that receives feedback. Empty pieces stay empty."""
+    api_key = _feedback_setting("RESEND_API_KEY", ("resend", "api_key"))
+    sender = _feedback_setting("RESEND_FROM", ("resend", "from_email"), ("resend", "from"))
+    inbox = _feedback_setting("FEEDBACK_TO", ("resend", "feedback_to"), ("resend", "to"))
+    return api_key, sender or "Angstrom Signals <onboarding@resend.dev>", _mailbox(inbox)
+
+
+def _resend_reason(response) -> str:
+    """A short Resend error, with no key or address list."""
+    message = ""
+    try:
+        message = str((response.json() or {}).get("message") or "")
+    except Exception:
+        message = ""
+    message = " ".join(message.split())
+    if not message or "re_" in message.lower():
+        return f"Resend returned status {response.status_code}"
+    return message[:180]
+
+
+def _email_feedback(kind: str, body: str, user_email: str, user_id: str) -> tuple[bool, str]:
+    """Mail one saved note. The reason is empty when the send is accepted."""
     api_key, sender, inbox = _feedback_mail_settings()
-    if not api_key or not inbox:
-        return False
+    if not api_key and not inbox:
+        return False, "the Resend key and feedback inbox are missing from the Streamlit secrets"
+    if not api_key:
+        return False, "the Resend key is missing from the Streamlit secrets"
+    if not inbox:
+        return False, "the feedback inbox is missing from the Streamlit secrets"
     label = "Enhancement" if kind == "enhancement" else "Issue"
     safe_body = "<br>".join(html.escape(body).splitlines()) or html.escape(body)
     payload = {
@@ -1647,9 +1684,11 @@ def _email_feedback(kind: str, body: str, user_email: str, user_id: str) -> bool
             headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
             timeout=15,
         )
-        return response.status_code < 300
     except Exception:
-        return False
+        return False, "Resend could not be reached"
+    if response.status_code < 300:
+        return True, ""
+    return False, _resend_reason(response)
 
 
 def _store_feedback(kind: str, body: str) -> str:
@@ -1670,9 +1709,10 @@ def _store_feedback(kind: str, body: str) -> str:
         }).execute()
     except Exception:
         return "That could not be saved. Please try again."
-    if _email_feedback(kind, text[:4000], user_email, user_id):
+    sent, reason = _email_feedback(kind, text[:4000], user_email, user_id)
+    if sent:
         return "Saved and emailed. Thank you."
-    return "Saved. Thank you."
+    return f"Saved. The email was not sent: {reason}."
 
 
 if st.session_state.pop("feedback_clear", False):
@@ -1702,8 +1742,10 @@ with st.sidebar.expander("📝 Feedback", expanded=False):
             st.session_state.feedback_clear = True
         st.rerun()
     feedback_notice = st.session_state.pop("feedback_notice", "")
-    if feedback_notice.startswith("Saved"):
+    if feedback_notice.startswith("Saved and emailed"):
         st.success(feedback_notice)
+    elif feedback_notice.startswith("Saved"):
+        st.warning(feedback_notice)
     elif feedback_notice:
         st.warning(feedback_notice)
 

@@ -83,7 +83,7 @@ from_email = "Angstrom Signals <alerts@angstromsignals.com>"
 feedback_to = "you@example.com"
 ```
 
-Do not commit that file. Until `feedback_to` and `api_key` are set, the note is still saved.
+Do not commit that file. GitHub secrets are not visible to this app. The same names can also sit at the top of the Streamlit secrets as `RESEND_API_KEY`, `RESEND_FROM`, and `FEEDBACK_TO`. The note is still saved when the email is not sent, and the form says why.
 
 Headlines come from Google News. Grok scores them. Add a key from the [xAI console](https://console.x.ai/) to `.streamlit/secrets.toml`:
 
