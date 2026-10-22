@@ -1484,6 +1484,41 @@ _countdown = st.components.v2.component(
     isolate_styles=False,
 )
 
+# The reset link comes back in the address hash, which Streamlit does not send
+# to Python. This reads it once and hands the session to the password form.
+_RECOVERY_JS = """
+export default function(component) {
+  const { data, setTriggerValue, parentElement } = component;
+  const shell = parentElement.closest(".stBidiComponent") || parentElement;
+  shell.style.display = "none";
+  if (data && data.clear) {
+    if (window.location.hash) {
+      history.replaceState(null, "", window.location.pathname + window.location.search);
+    }
+    return;
+  }
+  if (window.angstromRecoverySent) return;
+  const params = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+  const type = params.get("type") || "";
+  const access = params.get("access_token") || "";
+  const refresh = params.get("refresh_token") || "";
+  const error = params.get("error_description") || params.get("error_code") || "";
+  if (type !== "recovery" && !error) return;
+  window.angstromRecoverySent = true;
+  setTriggerValue("recovery", JSON.stringify({
+    type: type,
+    access: access,
+    refresh: refresh,
+    error: error
+  }));
+}
+"""
+_recovery_link = st.components.v2.component(
+    "password_recovery",
+    js=_RECOVERY_JS,
+    isolate_styles=False,
+)
+
 
 def _countdown_due(deadline: float, widget_key: str) -> bool:
     """Show the time left and report when this deadline has been reached."""
@@ -1657,6 +1692,71 @@ def clear_session():
     st.session_state.pop("profile", None)
 
 
+def _app_url() -> str:
+    """The address in the browser, without a query or hash. Used in the reset mail."""
+    try:
+        url = str(st.context.url or "").strip()
+    except Exception:
+        url = ""
+    if url.startswith("http"):
+        return url.split("#", 1)[0].split("?", 1)[0]
+    return "https://angstromsignalsmvp.streamlit.app"
+
+
+def _reset_link_error(raw: str) -> str:
+    return "That reset link has expired. Request a new one."
+
+
+def _take_password_reset() -> None:
+    """Keep a recovery session from the reset link, then drop it from the address."""
+    token_hash = str(st.query_params.get("token_hash") or "")
+    link_type = str(st.query_params.get("type") or "")
+    query_error = str(
+        st.query_params.get("error_description") or st.query_params.get("error_code") or ""
+    )
+    if token_hash and link_type == "recovery":
+        try:
+            response = supabase.auth.verify_otp({"token_hash": token_hash, "type": "recovery"})
+            session = response.session
+            if session is not None:
+                st.session_state.recovery_access = session.access_token
+                st.session_state.recovery_refresh = session.refresh_token
+            else:
+                st.session_state.recovery_error = _reset_link_error("")
+        except Exception:
+            st.session_state.recovery_error = _reset_link_error("")
+    elif query_error:
+        st.session_state.recovery_error = _reset_link_error(query_error)
+    for name in ("token_hash", "type", "error", "error_code", "error_description"):
+        if name in st.query_params:
+            del st.query_params[name]
+
+    ready = bool(st.session_state.get("recovery_access") or st.session_state.get("recovery_error"))
+    result = _recovery_link(
+        key="password_recovery",
+        data={"clear": ready},
+        on_recovery_change=lambda: None,
+    )
+    payload = getattr(result, "recovery", None)
+    if not payload or st.session_state.get("recovery_access"):
+        return
+    try:
+        data = json.loads(payload)
+    except Exception:
+        return
+    if not isinstance(data, dict):
+        return
+    if data.get("error"):
+        st.session_state.recovery_error = _reset_link_error(str(data.get("error")))
+        return
+    access = str(data.get("access") or "")
+    refresh = str(data.get("refresh") or "")
+    if data.get("type") == "recovery" and access and refresh:
+        st.session_state.recovery_access = access
+        st.session_state.recovery_refresh = refresh
+        st.session_state.pop("recovery_error", None)
+
+
 if "user" not in st.session_state:
     st.session_state.user = None
 if st.session_state.user is not None and not st.session_state.get("access_token"):
@@ -1667,6 +1767,7 @@ if "data_nonce" not in st.session_state:
 supabase = get_supabase()
 
 if st.session_state.user is None:
+    _take_password_reset()
     _brand_watch(key="brand_watch")
     st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
     _, col_center, _ = st.columns([1, 1.2, 1])
@@ -1676,44 +1777,124 @@ if st.session_state.user is None:
         st.title("angstrom signals")
         st.caption("Market mood and technical signals, with the crowd alongside.")
 
-        auth_tab1, auth_tab2 = st.tabs(["🔑 Log In", "📝 Sign Up"])
-
-        with auth_tab1:
-            st.markdown("### Welcome Back")
-            login_email = st.text_input("Email", key="login_email")
-            login_password = st.text_input("Password", type="password", key="login_password")
+        if st.session_state.get("recovery_access"):
+            st.markdown("### Choose a new password")
+            new_password = st.text_input("New password", type="password", key="recover_password")
+            new_password_again = st.text_input(
+                "Repeat the new password", type="password", key="recover_password_again",
+            )
             st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
-            if st.button("Log In", type="primary", use_container_width=True):
-                try:
-                    response = supabase.auth.sign_in_with_password({
-                        "email": login_email,
-                        "password": login_password,
-                    })
-                    session = response.session
-                    if session is None:
-                        st.error("Login did not return a session. Confirm your email, then try again.")
-                    else:
-                        st.session_state.user = response.user
+            if st.button("Save password", type="primary", use_container_width=True, key="recover_save"):
+                if len(new_password) < 6:
+                    st.error("Use at least 6 characters.")
+                elif new_password != new_password_again:
+                    st.error("Those passwords do not match.")
+                else:
+                    try:
+                        supabase.auth.set_session(
+                            st.session_state.recovery_access,
+                            st.session_state.recovery_refresh,
+                        )
+                        supabase.auth.update_user({"password": new_password})
+                        session = supabase.auth.get_session()
+                        if session is None:
+                            raise RuntimeError("missing session")
+                        st.session_state.user = session.user
                         st.session_state.access_token = session.access_token
                         st.session_state.refresh_token = session.refresh_token
+                        st.session_state.pop("recovery_access", None)
+                        st.session_state.pop("recovery_refresh", None)
+                        st.session_state.pop("recovery_error", None)
+                        st.session_state.show_recover = False
                         st.rerun()
-                except Exception:
-                    st.error("Login failed. Check your email and password.")
+                    except Exception as exc:
+                        code = str(getattr(exc, "code", "") or "")
+                        if code == "weak_password":
+                            st.error("Choose a longer password.")
+                        elif code == "same_password":
+                            st.session_state.pop("recovery_access", None)
+                            st.session_state.pop("recovery_refresh", None)
+                            st.session_state.recovery_error = "That is already the password. Log in with it."
+                            st.rerun()
+                        else:
+                            st.session_state.pop("recovery_access", None)
+                            st.session_state.pop("recovery_refresh", None)
+                            st.session_state.recovery_error = _reset_link_error("")
+                            st.rerun()
+        else:
+            auth_tab1, auth_tab2 = st.tabs(["🔑 Log In", "📝 Sign Up"])
 
-        with auth_tab2:
-            st.markdown("### Create New Account")
-            signup_email = st.text_input("Email", key="signup_email")
-            signup_password = st.text_input("Password", type="password", key="signup_password")
-            st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
-            if st.button("Create Account", type="primary", use_container_width=True):
-                try:
-                    supabase.auth.sign_up({
-                        "email": signup_email,
-                        "password": signup_password,
-                    })
-                    st.success("Account created. Confirm the email if required, then log in.")
-                except Exception:
-                    st.error("Sign up failed. Try a different email, or a longer password.")
+        if not st.session_state.get("recovery_access"):
+            with auth_tab1:
+                if st.session_state.get("recovery_error") and not st.session_state.get("show_recover"):
+                    st.error(st.session_state.recovery_error)
+                if st.session_state.get("show_recover"):
+                    st.markdown("### Reset password")
+                    st.caption("We'll email a link. Check junk mail if it does not arrive.")
+                    recover_email = st.text_input("Email", key="recover_email")
+                    st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
+                    if st.button("Send reset link", type="primary", use_container_width=True, key="recover_send"):
+                        email = " ".join(str(recover_email or "").split())
+                        if not email:
+                            st.error("Enter the email on the account.")
+                        else:
+                            try:
+                                supabase.auth.reset_password_for_email(email, {"redirect_to": _app_url()})
+                                st.session_state.recover_sent = True
+                            except Exception as exc:
+                                code = str(getattr(exc, "code", "") or "")
+                                if code == "over_email_send_rate_limit":
+                                    st.error("The reset mail is limited for a while. Wait a few minutes and try again.")
+                                else:
+                                    st.error("The reset mail could not be sent. Try again in a few minutes.")
+                    if st.session_state.get("recover_sent"):
+                        st.success("If that email has an account, the reset link is on its way.")
+                    if st.button("Back to log in", use_container_width=True, key="recover_back"):
+                        st.session_state.show_recover = False
+                        st.session_state.recover_sent = False
+                        st.rerun()
+                else:
+                    st.markdown("### Welcome Back")
+                    login_email = st.text_input("Email", key="login_email")
+                    login_password = st.text_input("Password", type="password", key="login_password")
+                    st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
+                    if st.button("Log In", type="primary", use_container_width=True):
+                        try:
+                            response = supabase.auth.sign_in_with_password({
+                                "email": login_email,
+                                "password": login_password,
+                            })
+                            session = response.session
+                            if session is None:
+                                st.error("Login did not return a session. Confirm your email, then try again.")
+                            else:
+                                st.session_state.user = response.user
+                                st.session_state.access_token = session.access_token
+                                st.session_state.refresh_token = session.refresh_token
+                                st.rerun()
+                        except Exception:
+                            st.error("Login failed. Check your email and password.")
+                    if st.button("Forgot password?", use_container_width=True, key="forgot_password"):
+                        st.session_state.recover_email = st.session_state.get("login_email", "")
+                        st.session_state.show_recover = True
+                        st.session_state.recover_sent = False
+                        st.session_state.pop("recovery_error", None)
+                        st.rerun()
+
+            with auth_tab2:
+                st.markdown("### Create New Account")
+                signup_email = st.text_input("Email", key="signup_email")
+                signup_password = st.text_input("Password", type="password", key="signup_password")
+                st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
+                if st.button("Create Account", type="primary", use_container_width=True):
+                    try:
+                        supabase.auth.sign_up({
+                            "email": signup_email,
+                            "password": signup_password,
+                        })
+                        st.success("Account created. Confirm the email if required, then log in.")
+                    except Exception:
+                        st.error("Sign up failed. Try a different email, or a longer password.")
 
     st.stop()
 
