@@ -3748,7 +3748,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
         elif stock_watchlist:
             st.session_state.chart_pick = ("Stock", next(iter(stock_watchlist)))
 
-    style_and_show_table(crypto_results, "🪙 Crypto Scores", "Crypto", "crypto_scores")
+    style_and_show_table(crypto_results, "₿ Crypto Scores", "Crypto", "crypto_scores")
     style_and_show_table(stock_results, "📈 Equity Scores", "Stock", "equity_scores")
 
     pick = st.session_state.get("chart_pick")
