@@ -192,10 +192,11 @@ def _prompt(query: str, headlines: list[dict]) -> str:
         "Headlines:\n"
         + "\n".join(lines)
         + "\n\nReply with JSON only, in this shape: "
-        '{"articles":[{"index":1,"score":50}],"summary":"...","positive":"...","negative":"...","drivers":["..."]}. '
+        '{"articles":[{"index":1,"score":50,"note":"one sentence"}],"summary":"...","positive":"...","negative":"...","drivers":["..."]}. '
         "Use one article object for every headline, with the same index number. "
         "score is 0 to 100 for that headline alone. "
         "0 is strongly bearish, 50 is mixed or unclear, 100 is strongly bullish. "
+        "note is one sentence about that headline only. "
         "summary is two sentences about the set of headlines. "
         "positive is one paragraph on what these headlines treat as favorable. "
         "negative is one paragraph on what these headlines treat as unfavorable. "
@@ -220,10 +221,11 @@ def _market_prompt(label: str, query: str, headlines: list[dict]) -> str:
         "Headlines:\n"
         + "\n".join(lines)
         + "\n\nReply with JSON only, in this shape: "
-        '{"articles":[{"index":1,"score":50}],"summary":"...","positive":"...","negative":"...","drivers":["..."]}. '
+        '{"articles":[{"index":1,"score":50,"note":"one sentence"}],"summary":"...","positive":"...","negative":"...","drivers":["..."]}. '
         "Use one article object for every headline, with the same index number. "
         "score is 0 to 100 for that headline alone. "
         "0 is strongly bearish, 50 is mixed or unclear, 100 is strongly bullish. "
+        "note is one sentence about that headline only. "
         "summary is two sentences about the set of headlines. "
         "positive is one paragraph on what these headlines treat as favorable. "
         "negative is one paragraph on what these headlines treat as unfavorable. "
@@ -301,6 +303,20 @@ def _first_index(item: dict) -> int | None:
     return None
 
 
+def _short_note(value) -> str:
+    """One sentence for a headline. Empty when the model did not write one."""
+    if isinstance(value, list):
+        value = " ".join(str(item) for item in value if str(item).strip())
+    return " ".join(str(value or "").split())[:240]
+
+
+def _first_note(item: dict) -> str:
+    raw = _field(item, "note", "blurb", "line")
+    if raw is None:
+        raw = _field(item, "summary")
+    return _short_note(raw)
+
+
 def _collect_scores(raw, count: int) -> dict[int, float]:
     """Map headline numbers to scores. A bare list is read in headline order."""
     if isinstance(raw, dict):
@@ -345,9 +361,53 @@ def _collect_scores(raw, count: int) -> dict[int, float]:
     }
 
 
+def _collect_notes(raw, count: int) -> dict[int, str]:
+    """Map headline numbers to the one-sentence note. A bare list is read in order."""
+    if isinstance(raw, dict):
+        rows = []
+        for key, value in raw.items():
+            if isinstance(value, dict):
+                row = dict(value)
+                row.setdefault("index", key)
+                rows.append(row)
+            elif isinstance(value, str):
+                rows.append({"index": key, "note": value})
+        return _collect_notes(rows, count)
+    if not isinstance(raw, list):
+        return {}
+    indexed = {}
+    positional = []
+    saw_index = False
+    for item in raw:
+        if not isinstance(item, dict):
+            note = _short_note(item)
+            if note:
+                positional.append(note)
+            continue
+        note = _first_note(item)
+        if not note:
+            continue
+        index = _first_index(item)
+        if index is None:
+            positional.append(note)
+        else:
+            saw_index = True
+            indexed[index] = note
+    if saw_index:
+        if 0 in indexed:
+            indexed = {index + 1: note for index, note in indexed.items() if index >= 0}
+        return {index: note for index, note in indexed.items() if 1 <= index <= max(count, 1)}
+    return {
+        position: note
+        for position, note in enumerate(positional, start=1)
+        if position <= max(count, 1)
+    }
+
+
 def _read_parsed(parsed: dict, headline_count: int) -> dict:
     articles = _field(parsed, "articles", "article_scores", "headlines", "items")
     scores = _collect_scores(articles, headline_count)
+    notes = _collect_notes(articles, headline_count)
     overall = None
     for name in ("score", "overall", "overall_score", "sentiment", "sentiment_score"):
         overall = _clamp_score(_field(parsed, name))
@@ -370,6 +430,7 @@ def _read_parsed(parsed: dict, headline_count: int) -> dict:
     return {
         "ok": True,
         "scores": scores,
+        "notes": notes,
         "overall": overall,
         "summary": summary,
         "positive": _paragraph(_field(parsed, "positive", "positives", "bullish")),
@@ -405,7 +466,7 @@ def _post_grok(key: str, prompt: str, attempt: dict) -> requests.Response:
             {"role": "user", "content": prompt},
         ],
         "temperature": 0.2,
-        "max_completion_tokens": 1400,
+        "max_completion_tokens": 1800,
         "response_format": {"type": "json_object"},
     }
     if attempt.get("reasoning_effort"):
@@ -426,6 +487,9 @@ def _scored_report(parsed: dict, headlines: list[dict]) -> dict | None:
         if index in parsed["scores"]:
             row["score"] = parsed["scores"][index]
             values.append(row["score"])
+        note = (parsed.get("notes") or {}).get(index) or ""
+        if note:
+            row["note"] = note
         scored.append(row)
     if values:
         score = sum(values) / len(values)

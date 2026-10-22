@@ -1367,11 +1367,11 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
 
 **Market mood**
 
-Two sections sit above Quick Snapshot, crypto first and then stocks. Each one uses the same layout as the asset sentiment under the chart: the score on the left, Your take on the right, then the articles. Neither is an asset, and neither is added to the tables or the technical score. Each score is an average of recent headlines, with a short summary, a positive paragraph, and a negative paragraph. It is stored once and shown to every account for about 12 hours. Agree, disagree, and comments are not in Your take yet. The search wording can be tightened later.
+Two sections sit above Quick Snapshot, crypto first and then stocks. Each one uses the same layout as the asset sentiment under the chart: the score on the left, Your take on the right, then the articles. Neither is an asset, and neither is added to the tables or the technical score. Each score is an average of recent headlines, with a short summary, a positive paragraph, and a negative paragraph. Each article row also has a one-sentence summary. A dash there means that score was saved before summaries, so press Refresh. It is stored once and shown to every account for about 12 hours. Agree, disagree, and comments are not in Your take yet. The search wording can be tightened later.
 
 **Market sentiment**
 
-This sits under the chart. The heading names the open asset, for example **Market sentiment - Bitcoin (BTC)**. Grok reads headlines from the last 7 days and gives each one a score from 0 to 100. The newest headline is listed first. The number at the top of the section is the average of those article scores. Under the short summary, **Positive** and **Negative** each add a paragraph drawn from those same headlines. Green, amber, and red use the same bands as the technical score. The two scores stay separate, and sentiment is not mixed into the technical score.
+This sits under the chart. The heading names the open asset, for example **Market sentiment - Bitcoin (BTC)**. Grok reads headlines from the last 7 days and gives each one a score from 0 to 100. The newest headline is listed first. Beside each link is a one-sentence summary of that article, then the date and the score. A dash in Summary means that score was saved before summaries, so press Refresh. The number at the top of the section is the average of those article scores. Under the short summary, **Positive** and **Negative** each add a paragraph drawn from those same headlines. Green, amber, and red use the same bands as the technical score. The two scores stay separate, and sentiment is not mixed into the technical score.
 
 The **Sentiment** column shows that saved score in the same colored box. A dash means that asset has not been scored yet. Open it on the chart, and the score fills in once Grok finishes. The score is stored once and shown to every account that holds the asset. It stays for about 12 hours.
 
@@ -2790,6 +2790,34 @@ def _published_label(value) -> str:
     return f"{when.strftime('%b')} {when.day}, {when.year}"
 
 
+def headline_table(headlines: list) -> str:
+    """Article, a one-sentence summary, the date, then the score. A dash until a summary exists."""
+    rows = [
+        "<div style='display:flex;align-items:center;gap:16px;padding:4px 0 8px;'>"
+        "<div style='flex:1.1;min-width:0;font-size:0.8rem;font-weight:600;color:#6b7280;'>Article</div>"
+        "<div style='flex:1.3;min-width:0;font-size:0.8rem;font-weight:600;color:#6b7280;'>Summary</div>"
+        "<div style='width:112px;flex:none;text-align:right;font-size:0.8rem;font-weight:600;color:#6b7280;'>Published</div>"
+        "<div style='width:76px;flex:none;text-align:right;font-size:0.8rem;font-weight:600;color:#6b7280;'>Score</div>"
+        "</div>"
+    ]
+    for item in headlines:
+        source = f" — {html.escape(item['source'])}" if item.get("source") else ""
+        published = _published_label(item.get("published"))
+        published_html = html.escape(published) if published else "<span style='color:#6b7280;'>—</span>"
+        note = " ".join(str(item.get("note") or "").split())
+        note_html = html.escape(note) if note else "<span style='color:#6b7280;'>—</span>"
+        rows.append(
+            "<div style='display:flex;align-items:flex-start;gap:16px;padding:8px 0;border-top:1px solid #f3f4f6;'>"
+            "<div style='flex:1.1;min-width:0;'>"
+            f"<a href='{html.escape(item['link'], quote=True)}' target='_blank' rel='noopener noreferrer'>"
+            f"{html.escape(item['title'])}</a>{source}</div>"
+            f"<div style='flex:1.3;min-width:0;color:#374151;font-size:0.9rem;line-height:1.35;'>{note_html}</div>"
+            f"<div style='width:112px;flex:none;text-align:right;white-space:nowrap;color:#4b5563;'>{published_html}</div>"
+            f"<div style='width:76px;flex:none;text-align:right;'>{sentiment_badge(item.get('score'))}</div></div>"
+        )
+    return f"<div style='margin-top:10px;'>{''.join(rows)}</div>"
+
+
 def _mood_coverage(score: float) -> str:
     if score >= 60:
         return "Bullish coverage"
@@ -2905,30 +2933,7 @@ def _mood_card(spec: dict, row: dict | None, deadlines: dict) -> None:
     else:
         st.info("The market score could not be built this time.")
     if headlines:
-        rows = [
-            "<div style='display:flex;align-items:center;gap:16px;padding:4px 0 8px;'>"
-            "<div style='flex:1;font-size:0.8rem;font-weight:600;color:#6b7280;'>Article</div>"
-            "<div style='width:112px;flex:none;text-align:right;font-size:0.8rem;font-weight:600;color:#6b7280;'>Published</div>"
-            "<div style='width:76px;flex:none;text-align:right;font-size:0.8rem;font-weight:600;color:#6b7280;'>Score</div>"
-            "</div>"
-        ]
-        for item in headlines:
-            source = f" — {html.escape(item['source'])}" if item.get("source") else ""
-            published = _published_label(item.get("published"))
-            published_html = (
-                html.escape(published)
-                if published
-                else "<span style='color:#6b7280;'>—</span>"
-            )
-            rows.append(
-                "<div style='display:flex;align-items:center;gap:16px;padding:8px 0;border-top:1px solid #f3f4f6;'>"
-                "<div style='flex:1;min-width:0;'>"
-                f"<a href='{html.escape(item['link'], quote=True)}' target='_blank' rel='noopener noreferrer'>"
-                f"{html.escape(item['title'])}</a>{source}</div>"
-                f"<div style='width:112px;flex:none;text-align:right;white-space:nowrap;color:#4b5563;'>{published_html}</div>"
-                f"<div style='width:76px;flex:none;text-align:right;'>{sentiment_badge(item.get('score'))}</div></div>"
-            )
-        st.html(f"<div style='margin-top:10px;'>{''.join(rows)}</div>")
+        st.html(headline_table(headlines))
     st.caption("This reads recent coverage. It is not the technical score, and it is not advice.")
 
 
@@ -3074,31 +3079,7 @@ def show_market_sentiment(kind: str, asset_id: str, label: str, ticker: str | No
             st.info("The sentiment score could not be built this time. The articles are below.")
 
         if headlines:
-            rows = [
-                "<div style='display:flex;align-items:center;gap:16px;padding:4px 0 8px;'>"
-                "<div style='flex:1;font-size:0.8rem;font-weight:600;color:#6b7280;'>Article</div>"
-                "<div style='width:112px;flex:none;text-align:right;font-size:0.8rem;font-weight:600;color:#6b7280;'>Published</div>"
-                "<div style='width:76px;flex:none;text-align:right;font-size:0.8rem;font-weight:600;color:#6b7280;'>Score</div>"
-                "</div>"
-            ]
-            for item in headlines:
-                source = f" — {html.escape(item['source'])}" if item.get("source") else ""
-                published = _published_label(item.get("published"))
-                published_html = (
-                    html.escape(published)
-                    if published
-                    else "<span style='color:#6b7280;'>—</span>"
-                )
-                badge = sentiment_badge(item.get("score"))
-                rows.append(
-                    "<div style='display:flex;align-items:center;gap:16px;padding:8px 0;border-top:1px solid #f3f4f6;'>"
-                    "<div style='flex:1;min-width:0;'>"
-                    f"<a href='{html.escape(item['link'], quote=True)}' target='_blank' rel='noopener noreferrer'>"
-                    f"{html.escape(item['title'])}</a>{source}</div>"
-                    f"<div style='width:112px;flex:none;text-align:right;white-space:nowrap;color:#4b5563;'>{published_html}</div>"
-                    f"<div style='width:76px;flex:none;text-align:right;'>{badge}</div></div>"
-                )
-            st.html(f"<div style='margin-top:10px;'>{''.join(rows)}</div>")
+            st.html(headline_table(headlines))
         st.caption("This reads recent coverage. It is not the technical score, and it is not advice.")
 
 

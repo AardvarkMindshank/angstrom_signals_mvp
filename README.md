@@ -60,7 +60,7 @@ GitHub Actions runs the worker from `.github/workflows/alerts.yml` about every 5
 
 ## Market sentiment
 
-Under the chart, the selected asset gets a 0–100 sentiment score from headlines in the last 7 days. The newest headline is listed first, and the number at the top is the average of the article scores. Under the short summary, Positive and Negative each add a paragraph drawn from those same headlines. Green, amber, and red match the technical score colors. The two scores stay separate, and sentiment does not change the technical score or fire alerts.
+Under the chart, the selected asset gets a 0–100 sentiment score from headlines in the last 7 days. The newest headline is listed first. Each row has the link, a one-sentence summary, the date, and that article's score. A dash in the summary means the score was saved earlier, so Refresh fills it in. The number at the top is the average of the article scores. Under the short summary, Positive and Negative each add a paragraph drawn from those same headlines. Green, amber, and red match the technical score colors. The two scores stay separate, and sentiment does not change the technical score or fire alerts.
 
 After an asset has been opened, that score also appears in the Sentiment column of the tables. A dash means it has not been scored yet. Clicking the colored score highlights the asset and jumps to its headlines. The score is stored once per asset and shown to every account for 12 hours. Click a column title to sort that table. It starts with the strongest score at the top.
 
@@ -72,7 +72,7 @@ Each person can agree or disagree with the current headline sentiment. The butto
 
 ## Market mood
 
-Above Quick Snapshot, the crypto market is one section and the stock market is the next. Each uses the same layout as an asset's sentiment: score on the left, Your take on the right, then the articles. Agree, disagree, and comments are not in Your take yet. Both use the same headline score as an asset, including the positive and negative paragraphs. They are stored in `market_mood`, shared by every account for 12 hours, and they do not change a technical score or send an alert. Agree and disagree are prepared in `market_mood_votes` and are not on the page yet. Run `supabase_rls.sql` again so those tables exist. The search wording can be tightened later.
+Above Quick Snapshot, the crypto market is one section and the stock market is the next. Each uses the same layout as an asset's sentiment: score on the left, Your take on the right, then the articles. Agree, disagree, and comments are not in Your take yet. Both use the same headline score as an asset, including the positive and negative paragraphs and a one-sentence summary on each article. They are stored in `market_mood`, shared by every account for 12 hours, and they do not change a technical score or send an alert. Agree and disagree are prepared in `market_mood_votes` and are not on the page yet. Run `supabase_rls.sql` again so those tables exist. The search wording can be tightened later.
 
 ## Feedback
 
