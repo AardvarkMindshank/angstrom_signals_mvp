@@ -13,7 +13,8 @@ from datetime import datetime, timezone
 
 from sentiment import SENTIMENT_REFRESH_SECONDS
 
-SPARKLINE_POINTS = 30
+SPARKLINE_POINTS = 31
+_SIDEWAYS_PERCENT = 2.0
 _WARNED = False
 
 
@@ -201,8 +202,23 @@ def holders_mark(count) -> str:
     )
 
 
-def sparkline_svg(closes) -> str:
-    """A short line for one table row. Green up, red down, orange when it barely moved."""
+def trend_tone(percent) -> str:
+    """Same colors as the 30-day column. Orange inside ±2%, else green or red."""
+    try:
+        number = float(percent)
+    except (TypeError, ValueError):
+        return "#6b7280"
+    if number != number:
+        return "#6b7280"
+    if abs(number) < _SIDEWAYS_PERCENT:
+        return "#d97706"
+    if number > 0:
+        return "#15803d"
+    return "#b91c1c"
+
+
+def sparkline_svg(closes, change_percent=None) -> str:
+    """A short line for one table row. Color matches the 30-day percent."""
     values = recent_closes(closes, SPARKLINE_POINTS)
     if len(values) < 2:
         return "<span style='color:#6b7280;'>—</span>"
@@ -215,14 +231,10 @@ def sparkline_svg(closes) -> str:
         x = pad + (width - 2 * pad) * (index / last)
         y = pad + (height - 2 * pad) * (1 - (value - low) / span)
         points.append(f"{x:.1f},{y:.1f}")
-    start = values[0]
-    change = abs(values[-1] - start) / abs(start) if start else 0.0
-    if change < 0.02:
-        color = "#d97706"
-    elif values[-1] > start:
-        color = "#15803d"
-    else:
-        color = "#b91c1c"
+    if change_percent is None:
+        start = values[0]
+        change_percent = ((values[-1] - start) / abs(start) * 100) if start else 0.0
+    color = trend_tone(change_percent)
     return (
         f"<svg width='{width}' height='{height}' viewBox='0 0 {width} {height}' "
         "aria-hidden='true' style='display:block;margin-left:auto;'>"

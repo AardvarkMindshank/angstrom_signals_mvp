@@ -244,6 +244,7 @@ try:
         set_sentiment_vote,
         sentiment_from_row,
         sparkline_svg,
+        trend_tone,
     )
     from scoring import calculate_indicators, compute_score, find_column
     from sentiment import (
@@ -873,7 +874,7 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
 
 1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest.
 2. Click a name in either table, a Quick Snapshot box, or an alert under Notifications. That asset stays highlighted, and the page moves down to the chart when the chart is off screen.
-3. Extra metrics add **7d %**, **Market Cap**, **ATR %**, and **Vol**. A separate checkbox adds **1d %** before the seven-day change and **30d %** after it. Green means the price rose. Red means it fell. For stocks, one day is the previous trading session. **Market Cap** is the latest size of the asset, from CoinGecko for crypto and Yahoo for stocks. **ATR %** is volatility. **Vol** is volume versus its 20-day average.
+3. Extra metrics add **7d %**, **Market Cap**, **ATR %**, and **Vol**. A separate checkbox adds **1d %** before the seven-day change and **30d %** after it. For **1d %** and **7d %**, green means the price rose and red means it fell. **30d %** uses the same colors as the **30-day trend**: green for a rise of about 2% or more, red for a fall of about 2% or more, and orange when the move stays inside about 2%. For stocks, one day is the previous trading session. **Market Cap** is the latest size of the asset, from CoinGecko for crypto and Yahoo for stocks. **ATR %** is volatility. **Vol** is volume versus its 20-day average.
 4. Alerts fire at 70 and 30 unless you move those sliders. One email goes to the address on your account when a technical score crosses a boundary. It is not sent again until the score leaves that boundary and crosses it later. Sentiment scores do not send alerts.
 
 **Market sentiment**
@@ -882,7 +883,7 @@ This sits under the chart. The heading names the open asset, for example **Marke
 
 The **Sentiment** column shows that saved score in the same colored box. A dash means that asset has not been scored yet. Open it on the chart, and the score fills in once Grok finishes. The score is stored once and shown to every account that holds the asset. It stays for about 12 hours.
 
-**30-day trend**, at the far right of each row, is a small line of the last 30 closes. Green means that stretch rose. Red means it fell. Orange means it finished within about 2% of where it started. The same line is shared by every account.
+**30-day trend**, at the far right of each row, is a small line of that same 30-day move. Its color matches the **30d %** column: green for a rise of about 2% or more, red for a fall of about 2% or more, and orange when the move stays inside about 2%. The same line is shared by every account.
 
 **Watching**, beside the name, is how many accounts have that asset on a watchlist. The people marks are a count, not the names of those accounts.
 
@@ -1416,12 +1417,14 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
     def cell(value):
         return f"<td style='padding:10px;white-space:nowrap;'>{html.escape(str(value))}</td>"
 
-    def percent_change_cell(value):
+    def percent_change_cell(value, match_trend=False):
         if value is None or pd.isna(value):
             inner = "<span style='color:#6b7280;'>—</span>"
         else:
             number = float(value)
-            if number > 0:
+            if match_trend:
+                color = trend_tone(number)
+            elif number > 0:
                 color = "#15803d"
             elif number < 0:
                 color = "#b91c1c"
@@ -1435,7 +1438,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             return
         frame = pd.DataFrame(results).sort_values("score", ascending=False, na_position="last")
         st.subheader(title)
-        st.caption("Click a name to show that asset on the chart. Click a sentiment score to open its headlines. Watching is how many accounts hold that asset. The Crowd box is the average of personal scores. Hover the down thumb for the spread. The 30-day trend is the last 30 closes.")
+        st.caption("Click a name to show that asset on the chart. Click a sentiment score to open its headlines. Watching is how many accounts hold that asset. The Crowd box is the average of personal scores. Hover the down thumb for the spread. The 30-day trend uses the same colors as 30d %.")
 
         headers = ["Asset", "Watching", "Score", "Signal", "Price", "RSI"]
         if show_period_changes_flag:
@@ -1491,7 +1494,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             if show_extra_metrics_flag:
                 rows_html += percent_change_cell(row.get("change_7d"))
             if show_period_changes_flag:
-                rows_html += percent_change_cell(row.get("change_30d"))
+                rows_html += percent_change_cell(row.get("change_30d"), match_trend=True)
             if show_extra_metrics_flag:
                 atr = row.get("atr_pct")
                 volume = row.get("volume_ratio")
@@ -1514,7 +1517,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                 f"{crowd_mark(row.get('thumbs_up'), row.get('thumbs_down'), headline_score is not None, row.get('alt_count'), row.get('alt_avg'), row.get('alt_spread'))}</td>"
                 f"<td style='padding:10px 10px 10px 4px;text-align:left;white-space:nowrap;'>"
                 f"{crowd_average_badge(row.get('alt_avg'), row.get('alt_count'), row.get('alt_spread'), headline_score is not None)}</td>"
-                f"<td style='padding:6px 10px;width:84px;'>{sparkline_svg(row.get('closes'))}</td></tr>"
+                f"<td style='padding:6px 10px;width:84px;'>{sparkline_svg(row.get('closes'), row.get('change_30d'))}</td></tr>"
             )
 
         table_html = (
