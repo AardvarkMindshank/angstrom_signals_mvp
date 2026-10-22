@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import os
 import re
+from concurrent.futures import ThreadPoolExecutor
 
 import requests
 import pandas as pd
@@ -404,6 +405,97 @@ def finnhub_api_key() -> str:
     if key:
         os.environ["FINNHUB_API_KEY"] = key
     return key
+
+
+def _finite_cap(value) -> float | None:
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    if number != number or number <= 0:
+        return None
+    return number
+
+
+def format_market_cap(value) -> str:
+    """Compact dollar size, such as $1.65T or $4.10B. A dash when unknown."""
+    number = _finite_cap(value)
+    if number is None:
+        return "—"
+    for suffix, scale in (("T", 1e12), ("B", 1e9), ("M", 1e6), ("K", 1e3)):
+        if number >= scale:
+            shown = number / scale
+            if shown >= 100:
+                text = f"{shown:.0f}"
+            elif shown >= 10:
+                text = f"{shown:.1f}"
+            else:
+                text = f"{shown:.2f}"
+            return f"${text}{suffix}"
+    return f"${number:,.0f}"
+
+
+def crypto_market_caps(coin_ids) -> dict[str, float]:
+    """Latest USD market cap from CoinGecko. One request for the whole list."""
+    ids = []
+    for coin_id in coin_ids or []:
+        cleaned = str(coin_id or "").strip().lower()
+        if cleaned and cleaned not in ids:
+            ids.append(cleaned)
+    if not ids:
+        return {}
+    try:
+        response = requests.get(
+            "https://api.coingecko.com/api/v3/coins/markets",
+            params={
+                "vs_currency": "usd",
+                "ids": ",".join(ids),
+                "per_page": min(len(ids), 250),
+                "page": 1,
+                "sparkline": "false",
+            },
+            headers=_HEADERS,
+            timeout=15,
+        )
+    except Exception:
+        return {}
+    if response.status_code != 200:
+        return {}
+    found = {}
+    for item in response.json() or []:
+        if not isinstance(item, dict):
+            continue
+        coin_id = str(item.get("id") or "").strip().lower()
+        cap = _finite_cap(item.get("market_cap"))
+        if coin_id and cap is not None:
+            found[coin_id] = cap
+    return found
+
+
+def _stock_market_cap(symbol: str) -> float | None:
+    try:
+        value = _yahoo().Ticker(symbol).fast_info.market_cap
+    except Exception:
+        return None
+    return _finite_cap(value)
+
+
+def stock_market_caps(tickers) -> dict[str, float]:
+    """Latest USD market cap from Yahoo. Missing tickers are left out."""
+    symbols = []
+    for ticker in tickers or []:
+        symbol = str(ticker or "").strip().upper()
+        if symbol and symbol not in symbols:
+            symbols.append(symbol)
+    if not symbols:
+        return {}
+    found = {}
+    workers = min(6, len(symbols))
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        for symbol, cap in zip(symbols, pool.map(_stock_market_cap, symbols)):
+            if cap is not None:
+                found[symbol] = cap
+    return found
 
 
 def crypto_logo_urls(coin_ids) -> dict[str, str]:
