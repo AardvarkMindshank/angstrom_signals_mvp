@@ -1306,7 +1306,7 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
     st.markdown("""
 **How to use it**
 
-1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest. Quick Snapshot, Crypto Scores, Equity Scores, Interactive Chart, Score Breakdown, and Market sentiment each sit in a section that starts open. Close a header to fold that section away. **Open all** and **Collapse all**, on the right of the page title, do that for every one of those sections. **Feedback**, at the bottom of the sidebar, sends an issue or an idea. It is stored as submitted and emailed.
+1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest. Quick Snapshot, Crypto Scores, Equity Scores, Interactive Chart, Score Breakdown, and Market sentiment each sit in a section that starts open. Close a header to fold that section away. **Open all** and **Collapse all**, on the right of the page title, do that for every one of those sections. **Feedback**, at the bottom of the sidebar, sends an issue or an idea. It is stored as submitted.
 2. Click a name in either table, a Quick Snapshot box, or an alert under Notifications. That asset stays highlighted, and the page moves down to the chart when the chart is off screen. Click a column title to sort that table. It starts with the strongest score at the top.
 3. Extra metrics add **7d %**, **Market Cap**, **ATR %**, and **Vol**. A separate checkbox adds **1d %** before the seven-day change and **30d %** after it. For **1d %** and **7d %**, green means the price rose and red means it fell. **30d %** uses the same colors as the **30-day trend**: green for a rise of about 2% or more, red for a fall of about 2% or more, and orange when the move stays inside about 2%. For stocks, one day is the previous trading session. **Market Cap** is the latest size of the asset, from CoinGecko for crypto and Yahoo for stocks. **ATR %** is volatility. **Vol** is volume versus its 20-day average.
 4. Alerts fire at 70 and 30 unless you move those sliders. One email goes to the address on your account when a technical score crosses a boundary. It is not sent again until the score leaves that boundary and crosses it later. Sentiment scores do not send alerts.
@@ -1614,19 +1614,20 @@ def _store_feedback(kind: str, body: str) -> str:
             "user_email": user_email or "unknown",
             "kind": kind,
             "body": text[:4000],
+            "status": "submitted",
         }).execute()
     except Exception:
-        return "That could not be saved. Run supabase_rls.sql in the Supabase SQL editor again."
+        return "That could not be saved. Please try again."
     if _email_feedback(kind, text[:4000], user_email, user_id):
         return "Saved and emailed. Thank you."
-    return "Saved under your account. The email is not set up yet, so only the stored copy exists."
+    return "Saved. Thank you."
 
 
 if st.session_state.pop("feedback_clear", False):
     st.session_state["feedback_body"] = ""
 
 with st.sidebar.expander("📝 Feedback", expanded=False):
-    st.caption("An issue or an idea. It is stored as submitted, with your account and the date, and emailed.")
+    st.caption("An issue or an idea. It is stored as submitted, with your account and the date.")
     feedback_kind = st.radio(
         "Type",
         ["Issue", "Enhancement"],

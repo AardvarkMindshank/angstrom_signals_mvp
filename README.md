@@ -72,9 +72,9 @@ Each person can agree or disagree with the current headline sentiment. The butto
 
 ## Feedback
 
-The sidebar form takes an issue or an enhancement. Each note is stored in `feedback_notes` with the account, the email, the time, and status `submitted`. Run `supabase_rls.sql` again so that table exists.
+The sidebar form takes an issue or an enhancement. Each note is stored in `feedback_notes` with the account, the email, the time, and status `submitted`.
 
-The same note is emailed through Resend. Add this block to the Streamlit secrets, using the Resend key and sender already used for alerts, and the inbox that should receive the notes:
+The same note is emailed through Resend when this block is in the Streamlit secrets. Use the Resend key and sender already used for alerts, and the inbox that should receive the notes:
 
 ```toml
 [resend]
@@ -83,7 +83,7 @@ from_email = "Angstrom Signals <alerts@angstromsignals.com>"
 feedback_to = "you@example.com"
 ```
 
-Do not commit that file. Until `feedback_to` and `api_key` are set, the note is still saved and the form says the email is not set up yet.
+Do not commit that file. Until `feedback_to` and `api_key` are set, the note is still saved.
 
 Headlines come from Google News. Grok scores them. Add a key from the [xAI console](https://console.x.ai/) to `.streamlit/secrets.toml`:
 
