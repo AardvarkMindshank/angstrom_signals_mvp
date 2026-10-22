@@ -870,7 +870,7 @@ The **Sentiment** column shows that saved score in the same colored box. A dash 
 
 The picture on the left of each name is that asset's logo. The same logo appears beside the Interactive Chart and Market sentiment headings. Crypto logos come from CoinGecko. Stock logos come from Finnhub. A letter shows when a logo is not available. The address is saved once and reused for every account.
 
-Beside the sentiment score you can press thumbs up if you agree, or thumbs down if you do not. Press the same thumb again to clear your take. Those buttons sit in an outlined box. After you disagree, scores appear in that same box, under the buttons: 0, 20, 40, 60, 80 and 100. The number you pick also fills the type box, and you can type any number from 0 to 100. **Crowd** on each table row adds up the thumbs. When people who disagree have given a score, the down thumb also shows their average. Hover that thumb for the spread, which is how far those scores typically sit from the average. One score has no spread yet. A refresh of that sentiment clears every thumb and every score, because they belonged to the old score.
+Beside the sentiment score you can press thumbs up if you agree, or thumbs down if you do not. Press the same thumb again to clear your take. Those buttons sit in an outlined box. After you disagree, scores appear in that same box, under the buttons: 0, 20, 40, 60, 80 and 100. The number you pick also fills the type box, and you can type any number from 0 to 100. It saves on its own when you click a score, press Enter, or leave the box. **Crowd** on each table row adds up the thumbs. When people who disagree have given a score, the down thumb also shows their average. Hover that thumb for the spread, which is how far those scores typically sit from the average. One score has no spread yet. A refresh of that sentiment clears every thumb and every score, because they belonged to the old score.
 
 Click a sentiment score in the table to highlight that asset and jump to its headlines. **↑ Top** scrolls back to the top of the page. It sits on the right of the chart title, and on the right of the sentiment Refresh button.
 
@@ -1829,7 +1829,7 @@ def _sentiment_thumbs(kind: str, asset_id: str, sentiment_at) -> None:
 
 
 def _sentiment_alt_score(kind: str, asset_id: str, sentiment_at, mine_score, selected) -> None:
-    """Score controls under Disagree. A picked number also fills the type box."""
+    """Score controls under Disagree. A clicked or typed number saves on its own."""
     st.markdown("**Your score**")
     picked = None
     for column, value in zip(st.columns(6, gap="xxsmall", wrap=False), (0, 20, 40, 60, 80, 100)):
@@ -1856,10 +1856,8 @@ def _sentiment_alt_score(kind: str, asset_id: str, sentiment_at, mine_score, sel
     if typed_key not in st.session_state:
         number_kwargs["value"] = None
     typed = st.number_input("Your score", label_visibility="collapsed", **number_kwargs)
-    save = st.button("Save score", key="sentiment_alt_save", use_container_width=True)
-    if picked is not None:
-        _store_sentiment_vote(kind, asset_id, sentiment_at, -1, picked)
-    elif save and typed is not None:
+    stored = None if mine_score is None else int(mine_score)
+    if typed is not None and int(typed) != stored:
         _store_sentiment_vote(kind, asset_id, sentiment_at, -1, int(typed))
 
 
