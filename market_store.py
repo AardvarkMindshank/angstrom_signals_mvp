@@ -1,0 +1,202 @@
+"""Shared prices and headline scores, one row per asset.
+
+Every account reads the same row. The dashboard and the alert worker both
+write the recent closes. The dashboard writes the sentiment score after Grok
+runs, and later accounts reuse it for 12 hours.
+"""
+
+from __future__ import annotations
+
+import json
+from datetime import datetime, timezone
+
+from sentiment import SENTIMENT_REFRESH_SECONDS
+
+SPARKLINE_POINTS = 30
+_WARNED = False
+
+
+def asset_market_key(kind: str, asset_id: str) -> str:
+    """Stable id for one crypto or stock, shared by every account."""
+    identity = str(asset_id or "").strip()
+    if str(kind) == "Stock":
+        identity = identity.upper()
+    else:
+        identity = identity.lower()
+    return f"{kind}|{identity}"
+
+
+def recent_closes(values, limit: int = SPARKLINE_POINTS) -> list[float]:
+    """Last daily closes, oldest first. Skips blanks."""
+    if isinstance(values, str):
+        try:
+            values = json.loads(values)
+        except json.JSONDecodeError:
+            return []
+    try:
+        sequence = list(values or [])
+    except TypeError:
+        return []
+    cleaned = []
+    for value in sequence:
+        try:
+            number = float(value)
+        except (TypeError, ValueError):
+            continue
+        if number == number:
+            cleaned.append(round(number, 6))
+    return cleaned[-limit:]
+
+
+def sparkline_svg(closes) -> str:
+    """A short line for one table row. Green when the stretch rose, red when it fell."""
+    values = recent_closes(closes, SPARKLINE_POINTS)
+    if len(values) < 2:
+        return "<span style='color:#6b7280;'>—</span>"
+    width, height, pad = 76, 26, 2
+    low, high = min(values), max(values)
+    span = high - low or 1.0
+    last = len(values) - 1
+    points = []
+    for index, value in enumerate(values):
+        x = pad + (width - 2 * pad) * (index / last)
+        y = pad + (height - 2 * pad) * (1 - (value - low) / span)
+        points.append(f"{x:.1f},{y:.1f}")
+    if values[-1] > values[0]:
+        color = "#15803d"
+    elif values[-1] < values[0]:
+        color = "#b91c1c"
+    else:
+        color = "#6b7280"
+    return (
+        f"<svg width='{width}' height='{height}' viewBox='0 0 {width} {height}' "
+        "aria-hidden='true' style='display:block;margin-left:auto;'>"
+        f"<polyline fill='none' stroke='{color}' stroke-width='1.6' "
+        f"stroke-linejoin='round' stroke-linecap='round' points='{' '.join(points)}'/>"
+        "</svg>"
+    )
+
+
+def _warn(exc: Exception) -> None:
+    global _WARNED
+    if _WARNED:
+        return
+    _WARNED = True
+    print(
+        "Shared market data was not stored. Run supabase_rls.sql in the Supabase "
+        f"SQL editor. {exc}"
+    )
+
+
+def _canonical_id(kind: str, asset_id: str) -> str:
+    identity = str(asset_id or "").strip()
+    return identity.upper() if str(kind) == "Stock" else identity.lower()
+
+
+def save_price_paths(supabase, rows: list[dict]) -> None:
+    """Store the recent closes for each asset. Leaves a saved sentiment score in place."""
+    now = datetime.now(timezone.utc).isoformat()
+    payload = {}
+    for row in rows:
+        closes = recent_closes(row.get("closes") or [])
+        if len(closes) < 2:
+            continue
+        kind = row.get("kind") or "Crypto"
+        asset_id = _canonical_id(kind, row.get("asset_id") or "")
+        if not asset_id:
+            continue
+        key = asset_market_key(kind, asset_id)
+        payload[key] = {
+            "asset_key": key,
+            "kind": kind,
+            "asset_id": asset_id,
+            "closes": closes,
+            "closes_updated_at": now,
+        }
+    if not payload:
+        return
+    payload = list(payload.values())
+    try:
+        supabase.table("asset_market").upsert(payload, on_conflict="asset_key").execute()
+    except Exception as exc:
+        _warn(exc)
+
+
+def save_sentiment(supabase, kind: str, asset_id: str, report: dict, stored_at: float) -> None:
+    """Store one headline score so every account can show it."""
+    if not isinstance(report, dict) or not report.get("ok"):
+        return
+    try:
+        score = float(report.get("score"))
+    except (TypeError, ValueError):
+        return
+    if score != score:
+        return
+    identity = _canonical_id(kind, asset_id)
+    if not identity:
+        return
+    payload = {
+        "asset_key": asset_market_key(kind, identity),
+        "kind": kind,
+        "asset_id": identity,
+        "sentiment_score": score,
+        "sentiment_report": report,
+        "sentiment_updated_at": datetime.fromtimestamp(stored_at, timezone.utc).isoformat(),
+    }
+    try:
+        supabase.table("asset_market").upsert(payload, on_conflict="asset_key").execute()
+    except Exception as exc:
+        _warn(exc)
+
+
+def load_shared_market(supabase, keys: list[str]) -> dict[str, dict]:
+    """Rows already stored for these assets. Empty when the table is not there yet."""
+    wanted = [key for key in keys if key]
+    if not wanted:
+        return {}
+    try:
+        response = (
+            supabase.table("asset_market")
+            .select("asset_key, closes, sentiment_report, sentiment_updated_at")
+            .in_("asset_key", wanted)
+            .execute()
+        )
+    except Exception as exc:
+        _warn(exc)
+        return {}
+    return {row["asset_key"]: row for row in (response.data or []) if row.get("asset_key")}
+
+
+def _stored_at(value) -> float | None:
+    raw = str(value or "").strip()
+    if not raw:
+        return None
+    try:
+        when = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if when.tzinfo is None:
+        when = when.replace(tzinfo=timezone.utc)
+    return when.timestamp()
+
+
+def sentiment_from_row(row: dict | None) -> tuple[dict | None, float | None]:
+    """The shared headline report, while it is still inside the 12-hour window."""
+    if not row:
+        return None, None
+    stored_at = _stored_at(row.get("sentiment_updated_at"))
+    if stored_at is None or _age_expired(stored_at):
+        return None, None
+    report = row.get("sentiment_report")
+    if isinstance(report, str):
+        try:
+            report = json.loads(report)
+        except json.JSONDecodeError:
+            return None, None
+    if not isinstance(report, dict) or not report.get("ok"):
+        return None, None
+    return report, stored_at
+
+
+def _age_expired(stored_at: float) -> bool:
+    return datetime.now(timezone.utc).timestamp() - stored_at >= SENTIMENT_REFRESH_SECONDS

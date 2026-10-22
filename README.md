@@ -62,7 +62,9 @@ GitHub Actions runs the worker from `.github/workflows/alerts.yml` about every 5
 
 Under the chart, the selected asset gets a 0–100 sentiment score from headlines in the last 7 days. The newest headline is listed first, and the number at the top is the average of the article scores. Green, amber, and red match the technical score colors. The two scores stay separate, and sentiment does not change the technical score or fire alerts.
 
-After an asset has been opened, that score also appears in the Sentiment column of the tables. A dash means it has not been scored yet. Clicking the colored score highlights the asset and jumps to its headlines. The score stays for 12 hours.
+After an asset has been opened, that score also appears in the Sentiment column of the tables. A dash means it has not been scored yet. Clicking the colored score highlights the asset and jumps to its headlines. The score is stored once per asset and shown to every account for 12 hours.
+
+The Trend column is a small line of the last 30 closes from the price history already used for the score. Green means that stretch rose, and red means it fell. Those closes are stored on the same shared row, including by the alert worker. Run `supabase_rls.sql` again so the `asset_market` table exists.
 
 Headlines come from Google News. Grok scores them. Add a key from the [xAI console](https://console.x.ai/) to `.streamlit/secrets.toml`:
 

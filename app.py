@@ -223,11 +223,21 @@ try:
         period_for_days,
         resolve_crypto_id,
     )
+    from market_store import (
+        asset_market_key,
+        load_shared_market,
+        recent_closes,
+        save_price_paths,
+        save_sentiment,
+        sentiment_from_row,
+        sparkline_svg,
+    )
     from scoring import calculate_indicators, compute_score, find_column
     from sentiment import (
         analyze_market_sentiment,
         cached_sentiment_score,
         newest_first,
+        remember_sentiment,
         sentiment_cached_at,
         sentiment_query,
         sentiment_ready,
@@ -842,7 +852,9 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
 
 This sits under the chart. The heading names the open asset, for example **Market sentiment - Bitcoin (BTC)**. Grok reads headlines from the last 7 days and gives each one a score from 0 to 100. The newest headline is listed first. The number at the top of the section is the average of those article scores. Green, amber, and red use the same bands as the technical score. The two scores stay separate, and sentiment is not mixed into the technical score.
 
-The **Sentiment** column on the right of each table shows that saved score in the same colored box. A dash means that asset has not been scored yet. Open it on the chart, and the score fills in once Grok finishes. The score stays in the table for about 12 hours.
+The **Sentiment** column shows that saved score in the same colored box. A dash means that asset has not been scored yet. Open it on the chart, and the score fills in once Grok finishes. The score is stored once and shown to every account that holds the asset. It stays for about 12 hours.
+
+**Trend**, at the far right of each row, is a small line of the last 30 closes. Green means that stretch rose. Red means it fell. The same line is shared by every account.
 
 Click a sentiment score in the table to highlight that asset and jump to its headlines. **↑ Top** scrolls back to the top of the page. It sits on the right of the chart title, and on the right of the sentiment Refresh button.
 
@@ -1089,6 +1101,33 @@ def load_market_sentiment(query: str, enabled: bool, force: bool = False):
     return analyze_market_sentiment(query, enabled, force=force)
 
 
+def _share_market_rows(crypto_watchlist, stock_watchlist, crypto_results, stock_results):
+    """Save this refresh's closes and reuse any headline score already stored."""
+    priced = []
+    for kind, results in (("Crypto", crypto_results), ("Stock", stock_results)):
+        for row in results:
+            priced.append({"kind": kind, "asset_id": row.get("key"), "closes": row.get("closes")})
+    save_price_paths(supabase, priced)
+
+    pairs = [("Crypto", asset_id) for asset_id in crypto_watchlist]
+    pairs += [("Stock", asset_id) for asset_id in stock_watchlist]
+    shared = load_shared_market(supabase, [asset_market_key(kind, asset_id) for kind, asset_id in pairs])
+    for kind, results, watchlist in (
+        ("Crypto", crypto_results, crypto_watchlist),
+        ("Stock", stock_results, stock_watchlist),
+    ):
+        for row in results:
+            asset_id = row.get("key")
+            stored = shared.get(asset_market_key(kind, asset_id))
+            if not row.get("closes") and stored and stored.get("closes"):
+                row["closes"] = stored.get("closes")
+            report, stored_at = sentiment_from_row(stored)
+            label = watchlist.get(asset_id)
+            if report and stored_at is not None and label:
+                ticker = crypto_ticker(asset_id) if kind == "Crypto" else asset_id
+                remember_sentiment(sentiment_query(kind, str(label), ticker), report, stored_at)
+
+
 @st.fragment
 def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, show_reasons_flag, show_extra_metrics_flag):
     if "technical_due" not in st.session_state:
@@ -1149,6 +1188,9 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                     results.append(result)
                     continue
 
+                if df is not None and not df.empty and "close" in df.columns:
+                    result["closes"] = recent_closes(df["close"].tolist())
+
                 if not df.empty and len(df) >= 15:
                     try:
                         df = calculate_indicators(df)
@@ -1167,6 +1209,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
 
     crypto_results = process_watchlist(crypto_watchlist, is_crypto=True)
     stock_results = process_watchlist(stock_watchlist, is_crypto=False)
+    _share_market_rows(crypto_watchlist, stock_watchlist, crypto_results, stock_results)
 
     try:
         evaluate_alerts(supabase, user_id, crypto_results + stock_results, alert_prefs)
@@ -1270,14 +1313,14 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             return
         frame = pd.DataFrame(results).sort_values("score", ascending=False, na_position="last")
         st.subheader(title)
-        st.caption("Click a name to show that asset on the chart. Click a sentiment score to open its headlines.")
+        st.caption("Click a name to show that asset on the chart. Click a sentiment score to open its headlines. The Trend line is the last 30 closes.")
 
         headers = ["Asset", "Score", "Signal", "Price", "RSI"]
         if show_extra_metrics_flag:
             headers += ["7d %", "ATR %", "Vol"]
-        headers.append("Sentiment")
+        headers += ["Sentiment", "Trend"]
         header_html = "".join(
-            f"<th style='padding:8px 10px;text-align:{'right' if name == 'Sentiment' else 'left'};"
+            f"<th style='padding:8px 10px;text-align:{'right' if name in ('Sentiment', 'Trend') else 'left'};"
             f"white-space:nowrap;'>{html.escape(name)}</th>"
             for name in headers
         )
@@ -1324,7 +1367,8 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             sentiment_pick = f"{kind}|{asset_id}|sentiment" if headline_score is not None else None
             rows_html += (
                 f"<td style='padding:10px;text-align:right;white-space:nowrap;'>"
-                f"{sentiment_badge(headline_score, sentiment_pick)}</td></tr>"
+                f"{sentiment_badge(headline_score, sentiment_pick)}</td>"
+                f"<td style='padding:6px 10px;width:84px;'>{sparkline_svg(row.get('closes'))}</td></tr>"
             )
 
         table_html = (
@@ -1580,6 +1624,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
     sentiment_label = crypto_watchlist[asset_key] if asset_type == "Crypto" else stock_watchlist[asset_key]
     show_market_sentiment(
         asset_type,
+        asset_key,
         sentiment_label,
         crypto_ticker(asset_key) if asset_type == "Crypto" else asset_key,
     )
@@ -1598,8 +1643,16 @@ def _published_label(value) -> str:
 
 
 @st.fragment
-def show_market_sentiment(kind: str, label: str, ticker: str | None):
-    """Headline sentiment for the asset on the chart. Cached for 12 hours."""
+def show_market_sentiment(kind: str, asset_id: str, label: str, ticker: str | None):
+    """Headline sentiment for the asset on the chart. Shared for 12 hours."""
+    query = sentiment_query(kind, label, ticker)
+    if st.session_state.get("sentiment_force") != query:
+        stored = load_shared_market(supabase, [asset_market_key(kind, asset_id)]).get(
+            asset_market_key(kind, asset_id)
+        )
+        report, stored_at = sentiment_from_row(stored)
+        if report and stored_at is not None:
+            remember_sentiment(query, report, stored_at)
     st.html("<div id='market-sentiment' style='scroll-margin-top:4.5rem;'></div>")
     st.markdown(
         "<hr style='margin:1.4rem 0 0.6rem;border:none;border-top:1px solid #e5e7eb;'>",
@@ -1612,7 +1665,6 @@ def show_market_sentiment(kind: str, label: str, ticker: str | None):
     sentiment_title, sentiment_refresh, sentiment_top = st.columns([3.15, 1.45, 0.85], vertical_alignment="center")
     with sentiment_title:
         st.subheader(sentiment_heading)
-    query = sentiment_query(kind, label, ticker)
     sentiment_deadlines = st.session_state.setdefault("sentiment_due", {})
     if query not in sentiment_deadlines:
         cached_at = sentiment_cached_at(query)
@@ -1643,6 +1695,7 @@ def show_market_sentiment(kind: str, label: str, ticker: str | None):
         report = load_market_sentiment(query, sentiment_ready(), force=force_sentiment)
     cached_after = sentiment_cached_at(query)
     if report.get("ok") and cached_after and cached_after != cached_before:
+        save_sentiment(supabase, kind, asset_id, report, cached_after)
         st.rerun(scope="app")
 
     headlines = newest_first(report.get("headlines") or [])

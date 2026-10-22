@@ -425,6 +425,13 @@ def sentiment_cached_at(query: str) -> float | None:
     return cached[0]
 
 
+def remember_sentiment(query: str, report: dict, stored_at: float) -> None:
+    """Keep a shared headline score in this process so the table can show it."""
+    if not query or not isinstance(report, dict) or not report.get("ok"):
+        return
+    _SCORE_CACHE[query] = (float(stored_at), report)
+
+
 def cached_sentiment_score(query: str) -> float | None:
     """The saved headline score, while it is still inside the 12-hour window."""
     cached = _SCORE_CACHE.get(query)

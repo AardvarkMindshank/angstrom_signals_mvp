@@ -17,6 +17,7 @@ from supabase import create_client
 
 from alerts import evaluate_alerts
 from data_fetchers import fetch_crypto_data, fetch_stock_data, period_for_days
+from market_store import recent_closes, save_price_paths
 from scoring import calculate_indicators, compute_score
 
 try:
@@ -167,6 +168,7 @@ def run_background_checks() -> None:
 
     crypto_cache = {}
     stock_cache = {}
+    shared_prices = []
 
     for user_pref in all_user_prefs:
         user_id = user_pref["user_id"]
@@ -200,6 +202,7 @@ def run_background_checks() -> None:
             if err:
                 print(err)
                 continue
+            _keep_closes(shared_prices, "Crypto", coin_id, df)
             try:
                 score = _score_asset(df, weights)
             except Exception as exc:
@@ -217,6 +220,7 @@ def run_background_checks() -> None:
             if err:
                 print(err)
                 continue
+            _keep_closes(shared_prices, "Stock", ticker, df)
             try:
                 score = _score_asset(df, weights)
             except Exception as exc:
@@ -241,7 +245,16 @@ def run_background_checks() -> None:
         for alert in opened:
             print(f"Opened {alert['alert_type']} for {alert['asset_name']}")
 
+    save_price_paths(supabase, shared_prices)
     print("Background alert check finished.")
+
+
+def _keep_closes(shared_prices: list, kind: str, asset_id: str, df) -> None:
+    if df is None or getattr(df, "empty", True) or "close" not in getattr(df, "columns", []):
+        return
+    closes = recent_closes(df["close"].tolist())
+    if len(closes) >= 2:
+        shared_prices.append({"kind": kind, "asset_id": asset_id, "closes": closes})
 
 
 if __name__ == "__main__":

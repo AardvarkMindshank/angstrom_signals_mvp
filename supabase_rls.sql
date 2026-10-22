@@ -94,6 +94,44 @@ create policy "users update own profile" on public.profiles
 
 grant select, insert, update on public.profiles to authenticated;
 
+-- One row per asset, shared by every signed-in account.
+-- Closes feed the Trend line. The sentiment columns are the headline score.
+-- The alert worker writes closes with the service-role key. A signed-in
+-- session can read the row and can save a new score after Grok runs.
+create table if not exists public.asset_market (
+    asset_key text primary key,
+    kind text not null,
+    asset_id text not null,
+    closes jsonb,
+    closes_updated_at timestamptz,
+    sentiment_score numeric,
+    sentiment_report jsonb,
+    sentiment_updated_at timestamptz
+);
+
+alter table public.asset_market enable row level security;
+
+drop policy if exists "signed-in users read shared market data" on public.asset_market;
+create policy "signed-in users read shared market data" on public.asset_market
+    for select
+    to authenticated
+    using (true);
+
+drop policy if exists "signed-in users add shared market data" on public.asset_market;
+create policy "signed-in users add shared market data" on public.asset_market
+    for insert
+    to authenticated
+    with check (true);
+
+drop policy if exists "signed-in users update shared market data" on public.asset_market;
+create policy "signed-in users update shared market data" on public.asset_market
+    for update
+    to authenticated
+    using (true)
+    with check (true);
+
+grant select, insert, update on public.asset_market to authenticated;
+
 insert into storage.buckets (id, name, public)
 values ('avatars', 'avatars', true)
 on conflict (id) do update set public = true;
