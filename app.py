@@ -1503,7 +1503,7 @@ export default function(component) {
   const access = params.get("access_token") || "";
   const refresh = params.get("refresh_token") || "";
   const error = params.get("error_description") || params.get("error_code") || "";
-  if (type !== "recovery" && !error) return;
+  if (!(access && refresh) && !error) return;
   window.angstromRecoverySent = true;
   setTriggerValue("recovery", JSON.stringify({
     type: type,
@@ -1511,6 +1511,9 @@ export default function(component) {
     refresh: refresh,
     error: error
   }));
+  if (type !== "recovery") {
+    history.replaceState(null, "", window.location.pathname + window.location.search);
+  }
 }
 """
 _recovery_link = st.components.v2.component(
@@ -1707,6 +1710,42 @@ def _reset_link_error(raw: str) -> str:
     return "That reset link has expired. Request a new one."
 
 
+def _oauth_url(provider: str) -> str:
+    """The Supabase address that sends the browser to Google, Apple, or Facebook."""
+    options = {"redirect_to": _app_url()}
+    if provider == "google":
+        options["scopes"] = "email profile"
+    elif provider == "facebook":
+        options["scopes"] = "email"
+    response = supabase.auth.sign_in_with_oauth({"provider": provider, "options": options})
+    return response.url
+
+
+def _sign_in_from_tokens(access: str, refresh: str) -> None:
+    supabase.auth.set_session(access, refresh)
+    session = supabase.auth.get_session()
+    if session is None:
+        raise RuntimeError("missing session")
+    st.session_state.user = session.user
+    st.session_state.access_token = session.access_token
+    st.session_state.refresh_token = session.refresh_token
+    st.session_state.pop("recovery_access", None)
+    st.session_state.pop("recovery_refresh", None)
+    st.session_state.pop("recovery_error", None)
+    st.session_state.pop("auth_error", None)
+    st.rerun()
+
+
+def _note_auth_error(raw: str, link_type: str = "") -> None:
+    text = " ".join(str(raw or "").replace("+", " ").split()).lower()
+    if link_type == "recovery" or "otp" in text:
+        st.session_state.recovery_error = _reset_link_error(raw)
+        return
+    st.session_state.auth_error = (
+        "That sign-in did not finish. Switch this provider on in Supabase, then try again."
+    )
+
+
 def _take_password_reset() -> None:
     """Keep a recovery session from the reset link, then drop it from the address."""
     token_hash = str(st.query_params.get("token_hash") or "")
@@ -1726,8 +1765,8 @@ def _take_password_reset() -> None:
         except Exception:
             st.session_state.recovery_error = _reset_link_error("")
     elif query_error:
-        st.session_state.recovery_error = _reset_link_error(query_error)
-    for name in ("token_hash", "type", "error", "error_code", "error_description"):
+        _note_auth_error(query_error, link_type)
+    for name in ("token_hash", "type", "code", "error", "error_code", "error_description"):
         if name in st.query_params:
             del st.query_params[name]
 
@@ -1746,15 +1785,25 @@ def _take_password_reset() -> None:
         return
     if not isinstance(data, dict):
         return
-    if data.get("error"):
-        st.session_state.recovery_error = _reset_link_error(str(data.get("error")))
-        return
     access = str(data.get("access") or "")
     refresh = str(data.get("refresh") or "")
-    if data.get("type") == "recovery" and access and refresh:
+    link_type = str(data.get("type") or "")
+    if data.get("error") and not (access and refresh):
+        _note_auth_error(str(data.get("error")), link_type)
+        return
+    if link_type == "recovery" and access and refresh:
         st.session_state.recovery_access = access
         st.session_state.recovery_refresh = refresh
         st.session_state.pop("recovery_error", None)
+        st.session_state.pop("auth_error", None)
+        return
+    if access and refresh:
+        try:
+            _sign_in_from_tokens(access, refresh)
+        except Exception:
+            st.session_state.auth_error = (
+                "That sign-in did not finish. Switch this provider on in Supabase, then try again."
+            )
 
 
 if "user" not in st.session_state:
@@ -1895,6 +1944,16 @@ if st.session_state.user is None:
                         st.success("Account created. Confirm the email if required, then log in.")
                     except Exception:
                         st.error("Sign up failed. Try a different email, or a longer password.")
+
+            if st.session_state.get("auth_error"):
+                st.error(st.session_state.auth_error)
+            st.caption("Or continue with")
+            for provider, label in (
+                ("google", "Continue with Google"),
+                ("apple", "Continue with Apple"),
+                ("facebook", "Continue with Facebook"),
+            ):
+                st.link_button(label, _oauth_url(provider), use_container_width=True)
 
     st.stop()
 
