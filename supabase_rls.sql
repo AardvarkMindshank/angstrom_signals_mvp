@@ -169,8 +169,12 @@ create table if not exists public.sentiment_votes (
     asset_key text not null,
     sentiment_at timestamptz not null,
     vote smallint not null check (vote in (1, -1)),
+    alt_score smallint check (alt_score is null or alt_score between 0 and 100),
     primary key (user_id, asset_key)
 );
+
+alter table public.sentiment_votes
+    add column if not exists alt_score smallint check (alt_score is null or alt_score between 0 and 100);
 
 alter table public.sentiment_votes enable row level security;
 
@@ -184,8 +188,19 @@ create policy "own sentiment votes" on public.sentiment_votes
 grant select, insert, update, delete on public.sentiment_votes to authenticated;
 
 -- Counts for the current sentiment only. my_vote is the caller's thumb, or null.
-create or replace function public.sentiment_crowd(asset_keys text[])
-returns table (asset_key text, thumbs_up integer, thumbs_down integer, my_vote smallint)
+-- alt_avg and alt_spread cover only the scores typed by people who disagree.
+drop function if exists public.sentiment_crowd(text[]);
+create function public.sentiment_crowd(asset_keys text[])
+returns table (
+    asset_key text,
+    thumbs_up integer,
+    thumbs_down integer,
+    my_vote smallint,
+    alt_count integer,
+    alt_avg numeric,
+    alt_spread numeric,
+    my_alt smallint
+)
 language sql
 stable
 security definer
@@ -209,6 +224,37 @@ as $$
         ),
         (
             select mine.vote
+            from public.sentiment_votes as mine
+            where mine.asset_key = market.asset_key
+              and mine.user_id = auth.uid()
+              and mine.sentiment_at = market.sentiment_updated_at
+        ),
+        (
+            select count(*)::integer
+            from public.sentiment_votes as votes
+            where votes.asset_key = market.asset_key
+              and votes.sentiment_at = market.sentiment_updated_at
+              and votes.vote = -1
+              and votes.alt_score is not null
+        ),
+        (
+            select round(avg(votes.alt_score), 1)
+            from public.sentiment_votes as votes
+            where votes.asset_key = market.asset_key
+              and votes.sentiment_at = market.sentiment_updated_at
+              and votes.vote = -1
+              and votes.alt_score is not null
+        ),
+        (
+            select round(stddev_samp(votes.alt_score), 1)
+            from public.sentiment_votes as votes
+            where votes.asset_key = market.asset_key
+              and votes.sentiment_at = market.sentiment_updated_at
+              and votes.vote = -1
+              and votes.alt_score is not null
+        ),
+        (
+            select mine.alt_score
             from public.sentiment_votes as mine
             where mine.asset_key = market.asset_key
               and mine.user_id = auth.uid()

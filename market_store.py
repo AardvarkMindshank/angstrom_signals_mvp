@@ -68,15 +68,35 @@ def sentiment_crowd(supabase, keys: list[str]) -> dict[str, dict]:
             mine = int(row.get("my_vote"))
         except (TypeError, ValueError):
             mine = None
+        try:
+            alt_count = int(row.get("alt_count") or 0)
+        except (TypeError, ValueError):
+            alt_count = 0
         counts[str(key)] = {
             "up": int(row.get("thumbs_up") or 0),
             "down": int(row.get("thumbs_down") or 0),
             "mine": mine,
+            "alt_count": alt_count,
+            "alt_avg": _optional_number(row.get("alt_avg")),
+            "alt_spread": _optional_number(row.get("alt_spread")),
+            "alt": _optional_number(row.get("my_alt")),
         }
     return counts
 
 
-def set_sentiment_vote(supabase, user_id, kind: str, asset_id: str, sentiment_at, vote) -> None:
+def _optional_number(value):
+    try:
+        if value is None or value == "":
+            return None
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    if number != number:
+        return None
+    return number
+
+
+def set_sentiment_vote(supabase, user_id, kind: str, asset_id: str, sentiment_at, vote, alt_score=None) -> None:
     """Save this account's thumb for the current sentiment. None clears it."""
     key = asset_market_key(kind, asset_id)
     if vote not in (1, -1):
@@ -84,19 +104,25 @@ def set_sentiment_vote(supabase, user_id, kind: str, asset_id: str, sentiment_at
         return
     if not sentiment_at:
         return
+    score = None
+    if vote == -1 and alt_score is not None:
+        number = _optional_number(alt_score)
+        if number is not None and 0 <= number <= 100:
+            score = int(number)
     supabase.table("sentiment_votes").upsert(
         {
             "user_id": str(user_id),
             "asset_key": key,
             "sentiment_at": sentiment_at,
             "vote": int(vote),
+            "alt_score": score,
         },
         on_conflict="user_id,asset_key",
     ).execute()
 
 
-def crowd_mark(up, down, active: bool = True) -> str:
-    """Agree and disagree counts. The tooltip has the exact numbers."""
+def crowd_mark(up, down, active: bool = True, alt_count=0, alt_avg=None, alt_spread=None) -> str:
+    """Agree and disagree counts. Hover the down thumb for the crowd's own scores."""
     try:
         up_count = int(up or 0)
         down_count = int(down or 0)
@@ -104,14 +130,30 @@ def crowd_mark(up, down, active: bool = True) -> str:
         up_count = down_count = 0
     if not active:
         return "<span style='color:#6b7280;' title='No sentiment to react to yet.'>—</span>"
-    title = html.escape(
-        f"{up_count} agree with this sentiment, {down_count} disagree. "
-        "These reset when the sentiment is refreshed."
-    )
+    scored = 0
+    try:
+        scored = int(alt_count or 0)
+    except (TypeError, ValueError):
+        scored = 0
+    average = _optional_number(alt_avg)
+    spread = _optional_number(alt_spread)
+    up_title = html.escape(f"{up_count} agree with this sentiment.")
+    if scored >= 1 and average is not None:
+        detail = (
+            f"{down_count} disagree. {scored} gave their own score, "
+            f"averaging {round(average)}."
+        )
+        if scored >= 2 and spread is not None:
+            detail += f" The spread is ±{round(spread)}."
+        down_text = f"👎 {down_count} · avg {round(average)}"
+    else:
+        detail = f"{down_count} disagree."
+        down_text = f"👎 {down_count}"
+    detail += " These reset when the sentiment is refreshed."
     return (
-        f"<span title='{title}' style='display:inline-flex;align-items:center;gap:8px;white-space:nowrap;'>"
-        f"<span style='color:#15803d;font-weight:700;'>👍 {up_count}</span>"
-        f"<span style='color:#b91c1c;font-weight:700;'>👎 {down_count}</span></span>"
+        "<span style='display:inline-flex;align-items:center;gap:8px;white-space:nowrap;'>"
+        f"<span title='{up_title}' style='color:#15803d;font-weight:700;'>👍 {up_count}</span>"
+        f"<span title='{html.escape(detail)}' style='color:#b91c1c;font-weight:700;'>{down_text}</span></span>"
     )
 
 

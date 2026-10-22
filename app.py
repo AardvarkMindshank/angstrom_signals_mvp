@@ -870,7 +870,7 @@ The **Sentiment** column shows that saved score in the same colored box. A dash 
 
 The picture on the left of each name is that asset's logo. The same logo appears beside the Interactive Chart and Market sentiment headings. Crypto logos come from CoinGecko. Stock logos come from Finnhub. A letter shows when a logo is not available. The address is saved once and reused for every account.
 
-Beside the sentiment score you can press thumbs up if you agree, or thumbs down if you do not. Press the same thumb again to clear your take. **Crowd** on each table row adds those up. Hover it to see how many agree and how many disagree. A refresh of that sentiment clears every thumb, because they belonged to the old score.
+Beside the sentiment score you can press thumbs up if you agree, or thumbs down if you do not. Press the same thumb again to clear your take. After you disagree, a row of scores appears: 0, 20, 40, 60, 80 and 100. You can also type any number from 0 to 100. **Crowd** on each table row adds up the thumbs. When people who disagree have given a score, the down thumb also shows their average. Hover that thumb for the spread, which is how far those scores typically sit from the average. One score has no spread yet. A refresh of that sentiment clears every thumb and every score, because they belonged to the old score.
 
 Click a sentiment score in the table to highlight that asset and jump to its headlines. **↑ Top** scrolls back to the top of the page. It sits on the right of the chart title, and on the right of the sentiment Refresh button.
 
@@ -1143,6 +1143,9 @@ def _share_market_rows(crypto_watchlist, stock_watchlist, crypto_results, stock_
             voices = crowd.get(market_key) or {}
             row["thumbs_up"] = voices.get("up", 0)
             row["thumbs_down"] = voices.get("down", 0)
+            row["alt_count"] = voices.get("alt_count", 0)
+            row["alt_avg"] = voices.get("alt_avg")
+            row["alt_spread"] = voices.get("alt_spread")
             stored = shared.get(asset_market_key(kind, asset_id))
             if not row.get("closes") and stored and stored.get("closes"):
                 row["closes"] = stored.get("closes")
@@ -1379,7 +1382,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             return
         frame = pd.DataFrame(results).sort_values("score", ascending=False, na_position="last")
         st.subheader(title)
-        st.caption("Click a name to show that asset on the chart. Click a sentiment score to open its headlines. Watching is how many accounts hold that asset. Hover Crowd to see how many agree or disagree. The Trend line is the last 30 closes.")
+        st.caption("Click a name to show that asset on the chart. Click a sentiment score to open its headlines. Watching is how many accounts hold that asset. Hover the down thumb to see the scores from people who disagree. The Trend line is the last 30 closes.")
 
         headers = ["Asset", "Watching", "Score", "Signal", "Price", "RSI"]
         if show_extra_metrics_flag:
@@ -1438,7 +1441,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                 f"<td style='padding:10px;text-align:right;white-space:nowrap;'>"
                 f"{sentiment_badge(headline_score, sentiment_pick)}</td>"
                 f"<td style='padding:10px;text-align:right;white-space:nowrap;'>"
-                f"{crowd_mark(row.get('thumbs_up'), row.get('thumbs_down'), headline_score is not None)}</td>"
+                f"{crowd_mark(row.get('thumbs_up'), row.get('thumbs_down'), headline_score is not None, row.get('alt_count'), row.get('alt_avg'), row.get('alt_spread'))}</td>"
                 f"<td style='padding:6px 10px;width:84px;'>{sparkline_svg(row.get('closes'))}</td></tr>"
             )
 
@@ -1709,6 +1712,15 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
     )
 
 
+def _store_sentiment_vote(kind: str, asset_id: str, sentiment_at, vote, alt_score=None) -> None:
+    try:
+        set_sentiment_vote(supabase, user_id, kind, asset_id, sentiment_at, vote, alt_score)
+    except Exception:
+        st.warning("That thumb could not be saved. Run supabase_rls.sql in the Supabase SQL editor again.")
+        return
+    st.rerun()
+
+
 def _sentiment_thumbs(kind: str, asset_id: str, sentiment_at) -> None:
     """Agree or disagree with the current sentiment. A second press on the same thumb clears it."""
     if not sentiment_at:
@@ -1749,20 +1761,81 @@ def _sentiment_thumbs(kind: str, asset_id: str, sentiment_at) -> None:
         type="primary" if mine == -1 else "secondary",
         help="You disagree with this sentiment. Press again to clear it.",
     )
-    st.markdown(crowd_mark(voice.get("up"), voice.get("down")), unsafe_allow_html=True)
-    chosen = None
+    st.markdown(
+        crowd_mark(
+            voice.get("up"),
+            voice.get("down"),
+            alt_count=voice.get("alt_count"),
+            alt_avg=voice.get("alt_avg"),
+            alt_spread=voice.get("alt_spread"),
+        ),
+        unsafe_allow_html=True,
+    )
     if agree:
-        chosen = None if mine == 1 else 1
+        _store_sentiment_vote(kind, asset_id, sentiment_at, None if mine == 1 else 1)
     elif disagree:
-        chosen = None if mine == -1 else -1
-    if not agree and not disagree:
+        _store_sentiment_vote(kind, asset_id, sentiment_at, None if mine == -1 else -1)
+
+
+def _sentiment_alt_score(kind: str, asset_id: str, sentiment_at) -> None:
+    """After a disagree vote, let this account offer its own 0–100 score."""
+    if not sentiment_at:
         return
-    try:
-        set_sentiment_vote(supabase, user_id, kind, asset_id, sentiment_at, chosen)
-    except Exception:
-        st.warning("That thumb could not be saved. Run supabase_rls.sql in the Supabase SQL editor again.")
+    key = asset_market_key(kind, asset_id)
+    voice = sentiment_crowd(supabase, [key]).get(key) or {}
+    if voice.get("mine") != -1:
         return
-    st.rerun()
+    mine_score = voice.get("alt")
+    selected = int(mine_score) if mine_score is not None and float(mine_score) in (0, 20, 40, 60, 80, 100) else None
+    if selected is not None:
+        color, _background, _arrow, _bar = tone(selected)
+        st.html(
+            f"""
+            <style>
+            .st-key-sentiment_alt_{selected} [data-testid="stBaseButton-primary"],
+            .st-key-sentiment_alt_{selected} [data-testid="stBaseButton-primary"]:hover,
+            .st-key-sentiment_alt_{selected} [data-testid="stBaseButton-primary"]:focus,
+            .st-key-sentiment_alt_{selected} [data-testid="stBaseButton-primary"]:active {{
+                background-color: {color};
+                border-color: {color};
+                color: #ffffff;
+            }}
+            .st-key-sentiment_alt_{selected} [data-testid="stBaseButton-primary"] p {{
+                color: #ffffff;
+            }}
+            </style>
+            """
+        )
+    st.markdown("**Your score**")
+    st.caption("You disagree. Pick the score you would give this coverage, or type one.")
+    picked = None
+    for column, value in zip(st.columns(6), (0, 20, 40, 60, 80, 100)):
+        with column:
+            if st.button(
+                str(value),
+                key=f"sentiment_alt_{value}",
+                use_container_width=True,
+                type="primary" if selected == value else "secondary",
+            ):
+                picked = value
+    typed_key = f"sentiment_alt_typed_{key}"
+    if typed_key not in st.session_state and mine_score is not None:
+        st.session_state[typed_key] = int(mine_score)
+    custom_col, save_col = st.columns([4, 1], vertical_alignment="bottom")
+    with custom_col:
+        typed = st.number_input(
+            "Or type a score from 0 to 100",
+            min_value=0,
+            max_value=100,
+            step=1,
+            key=typed_key,
+        )
+    with save_col:
+        save = st.button("Save score", key="sentiment_alt_save", use_container_width=True)
+    if picked is not None:
+        _store_sentiment_vote(kind, asset_id, sentiment_at, -1, picked)
+    elif save:
+        _store_sentiment_vote(kind, asset_id, sentiment_at, -1, int(typed))
 
 
 def _published_label(value) -> str:
@@ -1862,6 +1935,7 @@ def show_market_sentiment(kind: str, asset_id: str, label: str, ticker: str | No
             f"<ul style='margin:10px 0 0;padding-left:1.15rem;'>{driver_items}</ul>"
             if driver_items else ""
         )
+        sentiment_at = (stored or {}).get("sentiment_updated_at") if isinstance(stored, dict) else None
         score_card, vote_card = st.columns([4.2, 1.5], vertical_alignment="top")
         with score_card:
             st.markdown(
@@ -1881,7 +1955,8 @@ def show_market_sentiment(kind: str, asset_id: str, label: str, ticker: str | No
                 unsafe_allow_html=True,
             )
         with vote_card:
-            _sentiment_thumbs(kind, asset_id, (stored or {}).get("sentiment_updated_at") if isinstance(stored, dict) else None)
+            _sentiment_thumbs(kind, asset_id, sentiment_at)
+        _sentiment_alt_score(kind, asset_id, sentiment_at)
     elif report.get("reason") == "missing_key":
         st.info("Headlines are in. Add an xAI API key so Grok can score them. See the README under Market sentiment.")
     elif report.get("reason") == "no_headlines":
