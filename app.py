@@ -2740,15 +2740,13 @@ with st.container(horizontal=True, vertical_alignment="center", horizontal_align
         unsafe_allow_html=True,
     )
     with st.container(horizontal=True, vertical_alignment="center", gap="xsmall", width="content"):
-        if st.button(
+        single_layout = st.button(
             "Single column",
             key="layout_single",
             type="primary" if not wide_on else "secondary",
             help="Stack every section in one column, with market sentiment first.",
-        ):
-            st.session_state.section_layout = "Single column"
-            st.rerun()
-        if st.button(
+        )
+        wide_layout_click = st.button(
             "Wide",
             key="layout_wide",
             type="primary" if wide_on else "secondary",
@@ -2756,21 +2754,27 @@ with st.container(horizontal=True, vertical_alignment="center", horizontal_align
                 "Snapshot and score tables across the top, market sentiment on the left, "
                 "and the chart sections on the right."
             ),
-        ):
+        )
+        open_sections = st.button("Open all", key="open_all_sections", width="content")
+        collapse_sections = st.button("Collapse all", key="collapse_all_sections", width="content")
+        # A layout button on this same run must not win. Collapse all only folds
+        # the sections, and the wide or single choice stays as it was.
+        if open_sections or collapse_sections:
+            closing = bool(collapse_sections)
+            fold = st.session_state.section_fold
+            layout_now = st.session_state.section_layout
+            st.session_state.section_fold = {
+                "open": not closing,
+                "nonce": fold["nonce"] + 1,
+                "help_nonce": fold.get("help_nonce", 0) + (1 if closing else 0),
+            }
+            st.session_state.section_layout = layout_now
+        elif single_layout:
+            st.session_state.section_layout = "Single column"
+            st.rerun()
+        elif wide_layout_click:
             st.session_state.section_layout = "Wide"
             st.rerun()
-        if st.button("Open all", key="open_all_sections", width="content"):
-            st.session_state.section_fold = {
-                "open": True,
-                "nonce": st.session_state.section_fold["nonce"] + 1,
-                "help_nonce": st.session_state.section_fold.get("help_nonce", 0),
-            }
-        if st.button("Collapse all", key="collapse_all_sections", width="content"):
-            st.session_state.section_fold = {
-                "open": False,
-                "nonce": st.session_state.section_fold["nonce"] + 1,
-                "help_nonce": st.session_state.section_fold.get("help_nonce", 0) + 1,
-            }
 
 with st.expander(
     "📖 Help and guides",
