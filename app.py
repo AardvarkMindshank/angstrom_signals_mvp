@@ -4,6 +4,7 @@ Run with: streamlit run app.py
 """
 
 import base64
+from contextlib import nullcontext
 import html
 import io
 import json
@@ -2693,7 +2694,9 @@ with st.sidebar.expander(notifications_label, expanded=False):
 if "section_fold" not in st.session_state:
     st.session_state.section_fold = {"open": True, "nonce": 0, "help_nonce": 0}
 
-title_col, open_col, close_col = st.columns([6.2, 1, 1.25], vertical_alignment="center")
+title_col, layout_col, open_col, close_col = st.columns(
+    [4.3, 2.2, 1, 1.25], vertical_alignment="center",
+)
 with title_col:
     st.markdown(
         "<div style='display:flex;align-items:center;gap:0.85rem;margin:0.4rem 0;'>"
@@ -2704,6 +2707,22 @@ with title_col:
         "<span style='font-size:0.82rem;font-weight:500;line-height:1;opacity:0.72;'>"
         "Market mood and technical signals, with the crowd alongside.</span></div></div>",
         unsafe_allow_html=True,
+    )
+with layout_col:
+    st.segmented_control(
+        "Layout",
+        ["Single column", "Wide"],
+        default="Single column",
+        key="section_layout",
+        required=True,
+        label_visibility="collapsed",
+        width="stretch",
+        help=(
+            "Single column lists every section down the page, with market mood first. "
+            "Wide puts Quick Snapshot and the score tables across the top, market mood "
+            "on the left, and the chart, score breakdown, max pain, and market sentiment "
+            "on the right. On a narrow screen those two sides stack."
+        ),
     )
 with open_col:
     if st.button("Open all", key="open_all_sections", use_container_width=True):
@@ -2771,7 +2790,7 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
     st.markdown("""
 **How to use it**
 
-1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest. Market mood for crypto, Market mood for stocks, Quick Snapshot, Crypto Scores, Equity Scores, Interactive Chart, Score Breakdown, Max pain, and Market sentiment each sit in a section that starts open. Close a header to fold that section away. **Open all** and **Collapse all**, on the right of the page title, do that for every one of those sections. Collapse all also closes this guide. Open all does not open it. **Feedback**, at the bottom of the sidebar, sends an issue or an idea. It is stored as submitted. The arrow on the left edge of the page closes the sidebar. It stays on that edge when the sidebar is closed, so the sidebar can be opened again. Hover the arrow to see which action it will take.
+1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest. Market mood for crypto, Market mood for stocks, Quick Snapshot, Crypto Scores, Equity Scores, Interactive Chart, Score Breakdown, Max pain, and Market sentiment each sit in a section that starts open. Close a header to fold that section away. **Open all** and **Collapse all**, on the right of the page title, do that for every one of those sections. **Wide**, beside them, puts Quick Snapshot and both score tables across the top, market mood on the left, and Interactive Chart, Score Breakdown, Max pain, and Market sentiment on the right. **Single column** is the list the page opens with, market mood first. On a narrow screen the wide layout stacks the left and right parts. Collapse all also closes this guide. Open all does not open it. **Feedback**, at the bottom of the sidebar, sends an issue or an idea. It is stored as submitted. The arrow on the left edge of the page closes the sidebar. It stays on that edge when the sidebar is closed, so the sidebar can be opened again. Hover the arrow to see which action it will take.
 2. Click a name in either table, a Quick Snapshot box, or an alert under Notifications. That asset stays highlighted, and the page moves down to the chart when the chart is off screen. Click a column title to sort that table. It starts with the strongest score at the top.
 3. Extra metrics add **7d %**, **Market Cap**, **ATR %**, and **Vol**. A separate checkbox adds **1d %** before the seven-day change and **30d %** after it. For **1d %** and **7d %**, green means the price rose and red means it fell. **30d %** uses the same colors as the **30-day trend**: green for a rise of about 2% or more, red for a fall of about 2% or more, and orange when the move stays inside about 2%. For stocks, one day is the previous trading session. **Market Cap** is the latest size of the asset, from CoinGecko for crypto and Yahoo for stocks. **ATR %** is volatility. **Vol** is volume versus its 20-day average.
 4. Alerts fire at 70 and 30 unless you move those sliders. One email goes to the address on your account when a technical score crosses a boundary. It is not sent again until the score leaves that boundary and crosses it later. Sentiment scores do not send alerts.
@@ -3448,7 +3467,9 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
     if "technical_due" not in st.session_state:
         st.session_state.technical_due = time.time() + _TECHNICAL_REFRESH_SECONDS
 
-    show_market_moods()
+    wide_layout = st.session_state.get("section_layout") == "Wide"
+    if not wide_layout:
+        show_market_moods()
 
     with section_expander("📸 Quick Snapshot", "quick_snapshot"):
         _, snap_refresh = st.columns([4, 1.45], vertical_alignment="center")
@@ -3926,205 +3947,213 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
     chart_name, chart_kind, chart_asset = selected_chart_name()
     chart_logo = (st.session_state.get("asset_logos") or {}).get(asset_market_key(chart_kind, chart_asset))
     chart_label = f"📊 Interactive Chart - {chart_name}" if chart_name else "📊 Interactive Chart"
-    st.html(
-        "<div id='interactive-chart' style='scroll-margin-top:4.5rem;'></div>"
-    )
-    with section_expander(chart_label, "interactive_chart"):
-        logo_col, _, chart_top = st.columns([0.35, 4.85, 0.9], vertical_alignment="center")
-        with logo_col:
-            if chart_name:
-                st.markdown(asset_logo(chart_logo, chart_name, size=32), unsafe_allow_html=True)
-        with chart_top:
-            _back_to_top(key="chart_back_to_top")
-        _scroll_chart(
-            key="scroll_to_chart",
-            data={
-                "token": st.session_state.get("scroll_token") or "",
-                "target": st.session_state.get("scroll_target") or "interactive-chart",
-            },
+    if wide_layout:
+        mood_col, asset_col = st.columns([2, 3], gap="medium")
+        with mood_col:
+            show_market_moods()
+        asset_area = asset_col
+    else:
+        asset_area = nullcontext()
+    with asset_area:
+        st.html(
+            "<div id='interactive-chart' style='scroll-margin-top:4.5rem;'></div>"
         )
-
-        col1, col2 = st.columns([1, 3])
-        with col1:
-            asset_type = st.selectbox("Type", ["Crypto", "Stock"], key="asset_type")
-        with col2:
-            watchlist = crypto_watchlist if asset_type == "Crypto" else stock_watchlist
-            options = list(watchlist.keys())
-            asset_state_key = "asset_crypto" if asset_type == "Crypto" else "asset_stock"
-            if options and st.session_state.get(asset_state_key) not in options:
-                st.session_state[asset_state_key] = options[0]
-            if options:
-                asset_key = st.selectbox(
-                    "Asset",
-                    options,
-                    format_func=lambda item: watchlist[item] if asset_type == "Crypto" else f"{watchlist[item]} ({item})",
-                    key=asset_state_key,
-                )
-            else:
-                asset_key = None
-                st.caption("This watchlist is empty.")
-
-        if asset_key and st.session_state.get("chart_pick") != (asset_type, asset_key):
-            st.session_state.chart_pick = (asset_type, asset_key)
-            _rerun_fragment()
-
-        if not asset_key:
-            st.info("Add an asset to this watchlist to see a chart.")
-            return
-
-        if asset_type == "Crypto":
-            df_chart, chart_err = load_crypto(asset_key, history_days, nonce)
-            title = crypto_watchlist[asset_key]
-        else:
-            df_chart, chart_err = load_stock(asset_key, history_days, nonce)
-            title = f"{stock_watchlist[asset_key]} ({asset_key})"
-
-        if chart_err or df_chart.empty:
-            st.warning(chart_err or "Could not load chart data. Check your internet connection.")
-            return
-
-        df_chart = calculate_indicators(df_chart)
-        fig = make_subplots(
-            rows=3, cols=1,
-            shared_xaxes=True,
-            vertical_spacing=0.05,
-            row_heights=[0.55, 0.2, 0.25],
-            subplot_titles=(f"{title} Price", "Volume", "RSI (14)"),
-        )
-        fig.add_trace(
-            go.Candlestick(
-                x=df_chart.index, open=df_chart["open"], high=df_chart["high"],
-                low=df_chart["low"], close=df_chart["close"], name="Price",
-            ),
-            row=1, col=1,
-        )
-        if "sma_20" in df_chart.columns:
-            fig.add_trace(
-                go.Scatter(x=df_chart.index, y=df_chart["sma_20"], name="SMA 20", line=dict(color="orange", width=1.5)),
-                row=1, col=1,
-            )
-        if "sma_50" in df_chart.columns:
-            fig.add_trace(
-                go.Scatter(x=df_chart.index, y=df_chart["sma_50"], name="SMA 50", line=dict(color="royalblue", width=1.5)),
-                row=1, col=1,
+        with section_expander(chart_label, "interactive_chart"):
+            logo_col, _, chart_top = st.columns([0.35, 4.85, 0.9], vertical_alignment="center")
+            with logo_col:
+                if chart_name:
+                    st.markdown(asset_logo(chart_logo, chart_name, size=32), unsafe_allow_html=True)
+            with chart_top:
+                _back_to_top(key="chart_back_to_top")
+            _scroll_chart(
+                key="scroll_to_chart",
+                data={
+                    "token": st.session_state.get("scroll_token") or "",
+                    "target": st.session_state.get("scroll_target") or "interactive-chart",
+                },
             )
 
-        upper_name = find_column(df_chart, "BBU_")
-        lower_name = find_column(df_chart, "BBL_")
-        if upper_name and lower_name:
-            fig.add_trace(
-                go.Scatter(
-                    x=df_chart.index, y=df_chart[upper_name], name="BB Upper",
-                    line=dict(color="gray", width=1, dash="dot"), showlegend=False,
-                ),
-                row=1, col=1,
-            )
-            fig.add_trace(
-                go.Scatter(
-                    x=df_chart.index, y=df_chart[lower_name], name="BB Lower",
-                    line=dict(color="gray", width=1, dash="dot"), fill="tonexty",
-                    fillcolor="rgba(128,128,128,0.08)", showlegend=False,
-                ),
-                row=1, col=1,
-            )
-
-        colors = [
-            "green" if df_chart["close"].iloc[i] >= df_chart["open"].iloc[i] else "red"
-            for i in range(len(df_chart))
-        ]
-        fig.add_trace(
-            go.Bar(x=df_chart.index, y=df_chart["volume"], name="Volume", marker_color=colors, opacity=0.6),
-            row=2, col=1,
-        )
-        if "rsi" in df_chart.columns:
-            fig.add_trace(
-                go.Scatter(x=df_chart.index, y=df_chart["rsi"], name="RSI", line=dict(color="purple", width=1.5)),
-                row=3, col=1,
-            )
-            fig.add_hline(y=70, line_dash="dash", line_color="red", opacity=0.5, row=3, col=1)
-            fig.add_hline(y=30, line_dash="dash", line_color="green", opacity=0.5, row=3, col=1)
-            fig.add_hline(y=50, line_dash="dot", line_color="gray", opacity=0.3, row=3, col=1)
-
-        fig.update_layout(
-            height=750,
-            xaxis_rangeslider_visible=False,
-            showlegend=True,
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-            margin=dict(t=60, b=20),
-        )
-        fig.update_yaxes(title_text="Price", row=1, col=1)
-        fig.update_yaxes(title_text="Volume", row=2, col=1)
-        fig.update_yaxes(title_text="RSI", range=[0, 100], row=3, col=1)
-        st.plotly_chart(fig, width="stretch")
-
-        result = compute_score(df_chart, weights=weights)
-        score_val = result["score"]
-        color, _bg, arrow, _bar = tone(score_val)
-        col_a, col_b, col_c = st.columns(3)
-        with col_a:
-            st.markdown(
-                "<div style='font-size: 0.85rem; color: #6b7280; margin-bottom: 2px;'>Current Score</div>"
-                f"<div style='font-size: 2.2rem; font-weight: 600; line-height: 1.1; margin-bottom: 4px;'>{score_val}/100</div>"
-                f"<div style='font-size: 0.95rem; font-weight: 500; color: {color};'>"
-                f"{arrow} {html.escape(str(result['label']))}</div>",
-                unsafe_allow_html=True,
-            )
-        if result.get("change_7d") is not None:
-            change = result["change_7d"]
-            if change > 0:
-                change_color = "#15803d"
-            elif change < 0:
-                change_color = "#b91c1c"
-            else:
-                change_color = "#6b7280"
-            col_b.markdown(
-                "<div style='font-size: 0.85rem; color: #6b7280; margin-bottom: 2px;'>7-Day Change</div>"
-                f"<div style='font-size: 2.2rem; font-weight: 600; line-height: 1.1; color: {change_color};'>"
-                f"{change:+.1f}%</div>",
-                unsafe_allow_html=True,
-            )
-        if result.get("atr_pct") is not None:
-            col_c.metric("Volatility (ATR%)", f"{result['atr_pct']:.2f}%")
-
-    if show_reasons_flag and result.get("reasons") and result.get("score") is not None:
-        with section_expander(f"🔍 Score Breakdown — {title}", "score_breakdown"):
-            st.markdown(
-                f"<span style='color:{color};font-weight:bold;font-size:1.1em'>"
-                f"{result['score']}/100 ({html.escape(str(result['label']))})</span>",
-                unsafe_allow_html=True,
-            )
-            breakdown_col1, breakdown_col2 = st.columns(2)
-            with breakdown_col1:
-                contributions = result.get("contributions") or {}
-                if contributions:
-                    fig_contrib = go.Figure(go.Bar(
-                        x=list(contributions.values()),
-                        y=list(contributions.keys()),
-                        orientation="h",
-                        marker_color=["#22c55e" if points >= 0 else "#ef4444" for points in contributions.values()],
-                    ))
-                    fig_contrib.update_layout(
-                        title="Indicator Point Contributions",
-                        xaxis_title="Points Added or Subtracted",
-                        yaxis=dict(autorange="reversed"),
-                        height=320,
-                        margin=dict(t=30, b=20, l=10, r=10),
+            col1, col2 = st.columns([1, 3])
+            with col1:
+                asset_type = st.selectbox("Type", ["Crypto", "Stock"], key="asset_type")
+            with col2:
+                watchlist = crypto_watchlist if asset_type == "Crypto" else stock_watchlist
+                options = list(watchlist.keys())
+                asset_state_key = "asset_crypto" if asset_type == "Crypto" else "asset_stock"
+                if options and st.session_state.get(asset_state_key) not in options:
+                    st.session_state[asset_state_key] = options[0]
+                if options:
+                    asset_key = st.selectbox(
+                        "Asset",
+                        options,
+                        format_func=lambda item: watchlist[item] if asset_type == "Crypto" else f"{watchlist[item]} ({item})",
+                        key=asset_state_key,
                     )
-                    fig_contrib.add_vline(x=0, line_width=1.5, line_dash="dash", line_color="gray", opacity=0.7)
-                    st.plotly_chart(fig_contrib, width="stretch")
-            with breakdown_col2:
-                st.markdown("**Detailed Reasons**")
-                for reason in result["reasons"]:
-                    st.caption(f"• {reason}")
+                else:
+                    asset_key = None
+                    st.caption("This watchlist is empty.")
 
-    sentiment_label = crypto_watchlist[asset_key] if asset_type == "Crypto" else stock_watchlist[asset_key]
-    show_max_pain(asset_type, asset_key, title, float(df_chart["close"].iloc[-1]))
-    show_market_sentiment(
-        asset_type,
-        asset_key,
-        sentiment_label,
-        crypto_ticker(asset_key) if asset_type == "Crypto" else asset_key,
-    )
+            if asset_key and st.session_state.get("chart_pick") != (asset_type, asset_key):
+                st.session_state.chart_pick = (asset_type, asset_key)
+                _rerun_fragment()
+
+            if not asset_key:
+                st.info("Add an asset to this watchlist to see a chart.")
+                return
+
+            if asset_type == "Crypto":
+                df_chart, chart_err = load_crypto(asset_key, history_days, nonce)
+                title = crypto_watchlist[asset_key]
+            else:
+                df_chart, chart_err = load_stock(asset_key, history_days, nonce)
+                title = f"{stock_watchlist[asset_key]} ({asset_key})"
+
+            if chart_err or df_chart.empty:
+                st.warning(chart_err or "Could not load chart data. Check your internet connection.")
+                return
+
+            df_chart = calculate_indicators(df_chart)
+            fig = make_subplots(
+                rows=3, cols=1,
+                shared_xaxes=True,
+                vertical_spacing=0.05,
+                row_heights=[0.55, 0.2, 0.25],
+                subplot_titles=(f"{title} Price", "Volume", "RSI (14)"),
+            )
+            fig.add_trace(
+                go.Candlestick(
+                    x=df_chart.index, open=df_chart["open"], high=df_chart["high"],
+                    low=df_chart["low"], close=df_chart["close"], name="Price",
+                ),
+                row=1, col=1,
+            )
+            if "sma_20" in df_chart.columns:
+                fig.add_trace(
+                    go.Scatter(x=df_chart.index, y=df_chart["sma_20"], name="SMA 20", line=dict(color="orange", width=1.5)),
+                    row=1, col=1,
+                )
+            if "sma_50" in df_chart.columns:
+                fig.add_trace(
+                    go.Scatter(x=df_chart.index, y=df_chart["sma_50"], name="SMA 50", line=dict(color="royalblue", width=1.5)),
+                    row=1, col=1,
+                )
+
+            upper_name = find_column(df_chart, "BBU_")
+            lower_name = find_column(df_chart, "BBL_")
+            if upper_name and lower_name:
+                fig.add_trace(
+                    go.Scatter(
+                        x=df_chart.index, y=df_chart[upper_name], name="BB Upper",
+                        line=dict(color="gray", width=1, dash="dot"), showlegend=False,
+                    ),
+                    row=1, col=1,
+                )
+                fig.add_trace(
+                    go.Scatter(
+                        x=df_chart.index, y=df_chart[lower_name], name="BB Lower",
+                        line=dict(color="gray", width=1, dash="dot"), fill="tonexty",
+                        fillcolor="rgba(128,128,128,0.08)", showlegend=False,
+                    ),
+                    row=1, col=1,
+                )
+
+            colors = [
+                "green" if df_chart["close"].iloc[i] >= df_chart["open"].iloc[i] else "red"
+                for i in range(len(df_chart))
+            ]
+            fig.add_trace(
+                go.Bar(x=df_chart.index, y=df_chart["volume"], name="Volume", marker_color=colors, opacity=0.6),
+                row=2, col=1,
+            )
+            if "rsi" in df_chart.columns:
+                fig.add_trace(
+                    go.Scatter(x=df_chart.index, y=df_chart["rsi"], name="RSI", line=dict(color="purple", width=1.5)),
+                    row=3, col=1,
+                )
+                fig.add_hline(y=70, line_dash="dash", line_color="red", opacity=0.5, row=3, col=1)
+                fig.add_hline(y=30, line_dash="dash", line_color="green", opacity=0.5, row=3, col=1)
+                fig.add_hline(y=50, line_dash="dot", line_color="gray", opacity=0.3, row=3, col=1)
+
+            fig.update_layout(
+                height=750,
+                xaxis_rangeslider_visible=False,
+                showlegend=True,
+                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+                margin=dict(t=60, b=20),
+            )
+            fig.update_yaxes(title_text="Price", row=1, col=1)
+            fig.update_yaxes(title_text="Volume", row=2, col=1)
+            fig.update_yaxes(title_text="RSI", range=[0, 100], row=3, col=1)
+            st.plotly_chart(fig, width="stretch")
+
+            result = compute_score(df_chart, weights=weights)
+            score_val = result["score"]
+            color, _bg, arrow, _bar = tone(score_val)
+            col_a, col_b, col_c = st.columns(3)
+            with col_a:
+                st.markdown(
+                    "<div style='font-size: 0.85rem; color: #6b7280; margin-bottom: 2px;'>Current Score</div>"
+                    f"<div style='font-size: 2.2rem; font-weight: 600; line-height: 1.1; margin-bottom: 4px;'>{score_val}/100</div>"
+                    f"<div style='font-size: 0.95rem; font-weight: 500; color: {color};'>"
+                    f"{arrow} {html.escape(str(result['label']))}</div>",
+                    unsafe_allow_html=True,
+                )
+            if result.get("change_7d") is not None:
+                change = result["change_7d"]
+                if change > 0:
+                    change_color = "#15803d"
+                elif change < 0:
+                    change_color = "#b91c1c"
+                else:
+                    change_color = "#6b7280"
+                col_b.markdown(
+                    "<div style='font-size: 0.85rem; color: #6b7280; margin-bottom: 2px;'>7-Day Change</div>"
+                    f"<div style='font-size: 2.2rem; font-weight: 600; line-height: 1.1; color: {change_color};'>"
+                    f"{change:+.1f}%</div>",
+                    unsafe_allow_html=True,
+                )
+            if result.get("atr_pct") is not None:
+                col_c.metric("Volatility (ATR%)", f"{result['atr_pct']:.2f}%")
+
+        if show_reasons_flag and result.get("reasons") and result.get("score") is not None:
+            with section_expander(f"🔍 Score Breakdown — {title}", "score_breakdown"):
+                st.markdown(
+                    f"<span style='color:{color};font-weight:bold;font-size:1.1em'>"
+                    f"{result['score']}/100 ({html.escape(str(result['label']))})</span>",
+                    unsafe_allow_html=True,
+                )
+                breakdown_col1, breakdown_col2 = st.columns(2)
+                with breakdown_col1:
+                    contributions = result.get("contributions") or {}
+                    if contributions:
+                        fig_contrib = go.Figure(go.Bar(
+                            x=list(contributions.values()),
+                            y=list(contributions.keys()),
+                            orientation="h",
+                            marker_color=["#22c55e" if points >= 0 else "#ef4444" for points in contributions.values()],
+                        ))
+                        fig_contrib.update_layout(
+                            title="Indicator Point Contributions",
+                            xaxis_title="Points Added or Subtracted",
+                            yaxis=dict(autorange="reversed"),
+                            height=320,
+                            margin=dict(t=30, b=20, l=10, r=10),
+                        )
+                        fig_contrib.add_vline(x=0, line_width=1.5, line_dash="dash", line_color="gray", opacity=0.7)
+                        st.plotly_chart(fig_contrib, width="stretch")
+                with breakdown_col2:
+                    st.markdown("**Detailed Reasons**")
+                    for reason in result["reasons"]:
+                        st.caption(f"• {reason}")
+
+        sentiment_label = crypto_watchlist[asset_key] if asset_type == "Crypto" else stock_watchlist[asset_key]
+        show_max_pain(asset_type, asset_key, title, float(df_chart["close"].iloc[-1]))
+        show_market_sentiment(
+            asset_type,
+            asset_key,
+            sentiment_label,
+            crypto_ticker(asset_key) if asset_type == "Crypto" else asset_key,
+        )
 
 
 def _store_mood_vote(market_key: str, sentiment_at, vote, alt_score=None) -> None:
