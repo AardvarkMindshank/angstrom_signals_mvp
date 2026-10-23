@@ -2918,7 +2918,7 @@ Beside the sentiment score you can press thumbs up if you agree, or thumbs down 
 
 Click a sentiment score in the table to highlight that asset and jump to its headlines. **↑ Top** scrolls back to the top of the page. It sits at the top right of the Interactive Chart section, and at the top right of Market sentiment.
 
-The update buttons sit at the top of Quick Snapshot. Each one shows the time left and runs on its own when that timer reaches zero. Update Market Sentiment - Crypto and Update Market Sentiment - Equities pull fresh headlines and a new score for that whole market, then start a 12-hour timer. A market you do not trade is left out. Update Market Sentiment - Selected Asset does the same for the asset open on the chart. Update Asset Technical Data reloads prices and technical scores and starts a 5-minute timer. Pressing a button refreshes that part now and starts its timer again.
+The update buttons sit at the top of Quick Snapshot. Each one shows the time left and runs on its own when that timer reaches zero. Update Market Sentiment - Crypto and Update Market Sentiment - Equities pull fresh headlines and a new score for that whole market, then start a 12-hour timer. A market you do not trade is left out. Update Market Sentiment - Selected Asset does the same for the asset open on the chart. Update Technical Data - Selected Asset reloads prices and technical scores and starts a 5-minute timer. Pressing a button refreshes that part now and starts its timer again.
 
 **Social signals and chat**
 
@@ -3678,7 +3678,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
         updates.append((
             "technical",
             None,
-            "Update Asset Technical Data",
+            "Update Technical Data - Selected Asset",
             "refresh_technical",
             "technical_countdown",
             "Pull fresh prices and technical scores. This also runs on its own when the timer reaches zero.",
