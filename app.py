@@ -73,14 +73,14 @@ export default function(component) {
   const shell = parentElement.closest(".stBidiComponent") || parentElement;
   shell.style.display = "none";
   let style = document.getElementById("angstrom-brand-style");
-  if (style && style.dataset.layout !== "gauges") {
+  if (style && style.dataset.layout !== "readings") {
     style.remove();
     style = null;
   }
   if (!style) {
     style = document.createElement("style");
     style.id = "angstrom-brand-style";
-    style.dataset.layout = "gauges";
+    style.dataset.layout = "readings";
     style.textContent = [
       ".brand-mark img{display:none;}",
       ".brand-mark.is-light .logo-light,.brand-mark.is-dark .logo-dark{display:inline;}",
@@ -94,27 +94,13 @@ export default function(component) {
       ".sentiment-side-label{font-size:.75rem;font-weight:700;}",
       ".sentiment-drivers{margin:10px 0 0;padding-left:1.15rem;}",
       ".sentiment-drivers li{margin:4px 0;color:#374151;}",
-      ".mood-gauge-title{margin:16px 0 0;font-weight:700;font-size:.95rem;color:#111827;}",
-      ".mood-gauge-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;}",
-      ".mood-gauge{flex:1 1 180px;max-width:280px;display:block;text-decoration:none;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;color:#111827;}",
-      ".mood-gauge-name{font-size:.75rem;color:#6b7280;font-weight:600;}",
-      ".mood-gauge-value{font-size:1.25rem;font-weight:700;margin-top:2px;}",
-      ".mood-gauge-value.is-greed{color:#15803d;}",
-      ".mood-gauge-value.is-fear{color:#b91c1c;}",
-      ".mood-gauge-value.is-neutral{color:#b45309;}",
-      ".mood-gauge-detail{font-size:.8rem;color:#374151;margin-top:4px;line-height:1.35;}",
-      ".mood-gauge-source{font-size:.72rem;color:#6b7280;margin-top:6px;}",
-      ".mood-gauge-note{margin:6px 0 0;font-size:.8rem;color:#6b7280;line-height:1.35;}",
+      ".headline-group{margin:14px 0 0;font-weight:700;font-size:.95rem;color:#111827;}",
+      ".headline-aside{margin:4px 0 8px;font-size:.8rem;color:#6b7280;line-height:1.35;}",
       "html.angstrom-night .sentiment-card{background:#0e1117;border-color:#4b5563;color:#fafafa;}",
       "html.angstrom-night .sentiment-kicker{color:#9ca3af;}",
       "html.angstrom-night .sentiment-body,html.angstrom-night .sentiment-drivers li{color:#e5e7eb;}",
-      "html.angstrom-night .mood-gauge{background:#0e1117;border-color:#4b5563;color:#fafafa;}",
-      "html.angstrom-night .mood-gauge-title{color:#fafafa;}",
-      "html.angstrom-night .mood-gauge-name,html.angstrom-night .mood-gauge-source,html.angstrom-night .mood-gauge-note{color:#9ca3af;}",
-      "html.angstrom-night .mood-gauge-detail{color:#e5e7eb;}",
-      "html.angstrom-night .mood-gauge-value.is-greed{color:#4ade80;}",
-      "html.angstrom-night .mood-gauge-value.is-fear{color:#f87171;}",
-      "html.angstrom-night .mood-gauge-value.is-neutral{color:#fbbf24;}",
+      "html.angstrom-night .headline-group{color:#fafafa;}",
+      "html.angstrom-night .headline-aside{color:#9ca3af;}",
       "html.angstrom-night [class*='_take_box']{background:#0e1117 !important;border-color:#4b5563 !important;}",
       ".headline-head,.headline-row{display:flex;gap:16px;}",
       ".headline-head{align-items:center;padding:4px 0 8px;font-size:.8rem;font-weight:600;color:#6b7280;}",
@@ -1925,6 +1911,7 @@ try:
     from sentiment import (
         analyze_market_mood,
         analyze_market_sentiment,
+        score_market_readings,
         MACRO_MOODS,
         cached_sentiment_score,
         newest_first,
@@ -2909,7 +2896,7 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
 
 **Market sentiment for crypto and stocks**
 
-In the single column these two sections sit under Quick Snapshot, crypto first and then stocks. Quick Snapshot shows each one as the colored score box, the status, such as Mildly bullish coverage, and the short summary to the right of the score, for the markets you trade. Click the score or the colored status to open that market's section. Under the score, three groups list public readings: liquidity and central banks, the dollar and yields, and crypto sentiment for crypto; policy and inflation, market breadth, and institutional feeds for stocks. The Google headlines still follow. Each one uses the same layout as the asset sentiment under the chart: the score on the left, Your take on the right, then the three reading groups, then the articles. Neither is an asset, and neither is added to the tables or the technical score. Each score is an average of recent headlines. The summary, the positive paragraph, and the negative paragraph can also use those public readings. Each article row also has a one-sentence AI Summary, after the date. A dash there means that score was saved before summaries, so use Update Market Sentiment for that market in Quick Snapshot. It is stored once and shown to every account for about 12 hours. Your take works the same way as on an asset: agree, disagree, a score from 0 to 100, and one short comment. A refresh of that market clears the thumbs and personal scores. A comment stays for 12 hours. The search wording can be tightened later.
+In the single column these two sections sit under Quick Snapshot, crypto first and then stocks. Quick Snapshot shows each one as the colored score box, the status, such as Mildly bullish coverage, and the short summary to the right of the score, for the markets you trade. Click the score or the colored status to open that market's section. Directly above the Google articles, the same article layout lists the public readings in three groups, each with a one-sentence summary and its own score: liquidity and central banks, the dollar and yields, and crypto sentiment for crypto; policy and inflation, market breadth, and institutional feeds for stocks. The Google headlines follow. Each one uses the same layout as the asset sentiment under the chart: the score on the left, Your take on the right, then those reading rows, then the articles. Neither is an asset, and neither is added to the tables or the technical score. Each score is an average of recent headlines. The summary, the positive paragraph, and the negative paragraph can also use those public readings. Each article row also has a one-sentence AI Summary, after the date. A dash there means that score was saved before summaries, so use Update Market Sentiment for that market in Quick Snapshot. It is stored once and shown to every account for about 12 hours. Your take works the same way as on an asset: agree, disagree, a score from 0 to 100, and one short comment. A refresh of that market clears the thumbs and personal scores. A comment stays for 12 hours. The search wording can be tightened later.
 
 **Max pain**
 
@@ -4797,9 +4784,17 @@ def _published_label(value) -> str:
     raw = str(value or "").strip()
     if not raw:
         return ""
+    when = None
     try:
         when = parsedate_to_datetime(raw)
     except (TypeError, ValueError, IndexError, OverflowError):
+        when = None
+    if when is None and len(raw) >= 10:
+        try:
+            when = datetime.strptime(raw[:10], "%Y-%m-%d")
+        except ValueError:
+            when = None
+    if when is None:
         return ""
     return f"{when.strftime('%b')} {when.day}, {when.year}"
 
@@ -4881,54 +4876,59 @@ def _mood_coverage(score: float) -> str:
     return "Bearish coverage"
 
 
-def _mood_gauge_html(groups: list[dict]) -> str:
-    """The three reading groups under one whole-market score."""
-    blocks = []
-    for group in groups or []:
-        items = group.get("items") or []
-        note = str(group.get("note") or "").strip()
-        if not items and not note:
+def _reading_articles(group: dict) -> list[dict]:
+    """One public reading in the same shape as a news headline row."""
+    articles = []
+    for item in group.get("items") or []:
+        link = str(item.get("href") or "")
+        if not link.startswith("https://"):
             continue
-        cards = []
-        for item in items:
-            tone_name = str(item.get("tone") or "")
-            tone_class = f" is-{tone_name}" if tone_name in {"greed", "fear", "neutral"} else ""
-            href = str(item.get("href") or "")
-            body = (
-                f"<div class='mood-gauge-name'>{html.escape(str(item.get('name') or ''))}</div>"
-                f"<div class='mood-gauge-value{tone_class}'>{html.escape(str(item.get('value') or ''))}</div>"
-                f"<div class='mood-gauge-detail'>{html.escape(str(item.get('detail') or ''))}</div>"
-                f"<div class='mood-gauge-source'>{html.escape(str(item.get('source') or ''))}</div>"
-            )
-            if href.startswith("https://"):
-                cards.append(
-                    f"<a class='mood-gauge' href='{html.escape(href, quote=True)}' "
-                    "target='_blank' rel='noopener noreferrer'>"
-                    f"{body}</a>"
-                )
-            else:
-                cards.append(f"<div class='mood-gauge'>{body}</div>")
-        note_html = f"<p class='mood-gauge-note'>{html.escape(note)}</p>" if note else ""
-        blocks.append(
-            "<div class='mood-gauge-group'>"
-            f"<div class='mood-gauge-title'>{html.escape(str(group.get('title') or ''))}</div>"
-            f"<div class='mood-gauge-row'>{''.join(cards)}</div>"
-            f"{note_html}</div>"
-        )
-    return "".join(blocks)
+        name = str(item.get("name") or "Reading")
+        value = str(item.get("value") or "").strip()
+        articles.append({
+            "title": f"{name}, {value}" if value else name,
+            "source": item.get("source") or "",
+            "published": item.get("published") or "",
+            "link": link,
+            "note": item.get("note") or item.get("detail") or "",
+            "score": item.get("score"),
+        })
+    return articles
 
 
-def _mood_gauge_board(market_key: str, report: dict | None) -> None:
+def _readings_scored(groups: list[dict]) -> bool:
+    items = [item for group in groups for item in (group.get("items") or [])]
+    if not items:
+        return True
+    return all(item.get("score") is not None for item in items)
+
+
+def _mood_reading_board(market_key: str, label: str, report: dict | None) -> None:
+    """The three reading groups, as article rows, above the Google headlines."""
     groups = (report or {}).get("gauges") if isinstance(report, dict) else None
     if not groups:
-        with st.spinner("Reading public market gauges..."):
+        try:
+            groups = market_gauge_groups(market_key)
+        except Exception:
+            groups = []
+    if groups and not _readings_scored(groups):
+        with st.spinner("Scoring the public readings..."):
             try:
-                groups = market_gauge_groups(market_key)
+                groups = score_market_readings(market_key, label, groups)
             except Exception:
-                groups = []
-    board = _mood_gauge_html(groups)
-    if board:
-        st.html(board)
+                pass
+    blocks = []
+    for group in groups or []:
+        articles = _reading_articles(group)
+        note = str(group.get("note") or "").strip()
+        if not articles and not note:
+            continue
+        title = f"<div class='headline-group'>{html.escape(str(group.get('title') or ''))}</div>"
+        table = headline_table(articles) if articles else ""
+        aside = f"<div class='headline-aside'>{html.escape(note)}</div>" if note else ""
+        blocks.append(title + table + aside)
+    if blocks:
+        st.html("".join(blocks))
 
 
 def _mood_card(spec: dict, row: dict | None, deadlines: dict) -> None:
@@ -4961,7 +4961,7 @@ def _mood_card(spec: dict, row: dict | None, deadlines: dict) -> None:
     if report and report.get("ok") and score is not None:
         color, background, arrow, _bar = tone(score)
         note = (
-            "Average of the article scores below, from the last 7 days"
+            "Average of the news article scores below, from the last 7 days"
             if any(item.get("score") is not None for item in headlines)
             else "Score for these headlines, from the last 7 days"
         )
@@ -5001,11 +5001,12 @@ def _mood_card(spec: dict, row: dict | None, deadlines: dict) -> None:
         st.warning("The xAI API key was rejected. Check the key in the Streamlit secrets.")
     else:
         st.info("The market score could not be built this time.")
-    _mood_gauge_board(key, report if isinstance(report, dict) else None)
+    _mood_reading_board(key, label, report if isinstance(report, dict) else None)
     if headlines:
         st.html(headline_table(headlines))
     st.caption(
-        "The groups above are public readings. The score is the average of the article scores. "
+        "The rows above the Google headlines are public readings, each scored on its own. "
+        "The score at the top is the average of the news article scores. "
         "This is not the technical score, and it is not advice."
     )
 

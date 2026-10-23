@@ -7,6 +7,7 @@ The score is not blended into the technical score.
 
 from __future__ import annotations
 
+import copy
 import html
 import json
 import os
@@ -630,12 +631,98 @@ def analyze_market_sentiment(query: str, enabled: bool, force: bool = False) -> 
     return summary
 
 
+def _reading_fingerprint(groups: list[dict]) -> str:
+    parts = []
+    for group in groups or []:
+        for item in group.get("items") or []:
+            parts.append("|".join((
+                str(item.get("name") or ""),
+                str(item.get("value") or ""),
+                str(item.get("detail") or ""),
+            )))
+    return "\n".join(parts)
+
+
+def _readings_prompt(label: str, groups: list[dict]) -> str:
+    lines = []
+    index = 1
+    for group in groups or []:
+        items = group.get("items") or []
+        if not items:
+            continue
+        lines.append(str(group.get("title") or "Readings"))
+        for item in items:
+            detail = str(item.get("detail") or "").strip()
+            source = str(item.get("source") or "").strip()
+            lines.append(
+                f"{index}. {item.get('name')}: {item.get('value')}. {detail} ({source})".strip()
+            )
+            index += 1
+    return (
+        f"Score each reading for the {label} as a whole. "
+        "This is research context, not a forecast or advice. "
+        "A higher score means the reading is more supportive for this market. "
+        "0 is strongly bearish, 50 is mixed or unclear, 100 is strongly bullish. "
+        "note is one sentence on what this reading implies for the market. "
+        "Use only the figures listed. Do not invent a number or a source.\n"
+        + "\n".join(lines)
+        + "\n\nReply with JSON only, in this shape: "
+        '{"articles":[{"index":1,"score":50,"note":"one sentence"}],"summary":"","positive":"","negative":"","drivers":[]}. '
+        "Use one article object for every reading, with the same index number."
+    )
+
+
+_READING_CACHE: dict[str, tuple[float, str, list]] = {}
+
+
+def score_market_readings(market_key: str, label: str, groups: list[dict]) -> list[dict]:
+    """Add a 0–100 score and one sentence to each public reading. Reused for 12 hours."""
+    if not groups or not any(group.get("items") for group in groups):
+        return groups
+    fingerprint = _reading_fingerprint(groups)
+    cached = _READING_CACHE.get(market_key)
+    if cached and cached[1] == fingerprint and time.time() - cached[0] < SENTIMENT_REFRESH_SECONDS:
+        return cached[2]
+    if not sentiment_ready():
+        return groups
+    headlines = []
+    for group in groups:
+        for item in group.get("items") or []:
+            headlines.append({
+                "title": f"{item.get('name')}: {item.get('value')}",
+                "source": item.get("source") or "",
+                "published": item.get("published") or "",
+                "link": item.get("href") or "https://fred.stlouisfed.org/",
+            })
+    try:
+        report = _summarize(f"readings:{market_key}", headlines, _readings_prompt(label, groups))
+    except Exception:
+        return groups
+    scored_rows = report.get("headlines") or []
+    if not report.get("ok") or len(scored_rows) != len(headlines):
+        return groups
+    scored = copy.deepcopy(groups)
+    flat = [item for group in scored for item in (group.get("items") or [])]
+    for item, row in zip(flat, scored_rows):
+        if row.get("score") is not None:
+            item["score"] = row["score"]
+        note = " ".join(str(row.get("note") or "").split())
+        if note:
+            item["note"] = note
+    if any(item.get("score") is not None for item in flat):
+        _READING_CACHE[market_key] = (time.time(), fingerprint, scored)
+        return scored
+    return groups
+
+
 def analyze_market_mood(market_key: str, label: str, query: str, enabled: bool, force: bool = False) -> dict:
     """One whole-market score. Reused for 12 hours. Separate from any asset score."""
     cache_key = f"mood:{market_key}"
     if force:
         _SCORE_CACHE.pop(cache_key, None)
         _BUSY_UNTIL.pop(cache_key, None)
+        _READING_CACHE.pop(market_key, None)
+        _BUSY_UNTIL.pop(f"readings:{market_key}", None)
     cached = _SCORE_CACHE.get(cache_key)
     if enabled and not force and cached and time.time() - cached[0] < SENTIMENT_REFRESH_SECONDS:
         stored = cached[1]
@@ -654,6 +741,7 @@ def analyze_market_mood(market_key: str, label: str, query: str, enabled: bool, 
     try:
         from market_gauges import gauge_brief, market_gauge_groups
         gauges = market_gauge_groups(market_key)
+        gauges = score_market_readings(market_key, label, gauges)
         brief = gauge_brief(gauges)
     except Exception:
         gauges = []

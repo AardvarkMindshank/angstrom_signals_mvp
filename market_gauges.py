@@ -328,7 +328,7 @@ def _move_item(name, pair, period, formatter, kind, source, href, tone):
     stamp = _stamp(date)
     if stamp:
         detail = f"{detail} · {stamp}" if detail else stamp
-    return _reading(name, formatter(value), detail, source, href, tone)
+    return _reading(name, formatter(value), detail, source, href, tone, date[:10] if date else "")
 
 
 def _fear_item(rows):
@@ -347,10 +347,12 @@ def _fear_item(rows):
         except (TypeError, ValueError):
             previous = None
     detail = _move_phrase(value, previous, "day", "points")
+    iso = ""
     try:
-        stamp = _stamp(datetime.fromtimestamp(int(latest.get("timestamp")), timezone.utc).strftime("%Y-%m-%d"))
+        iso = datetime.fromtimestamp(int(latest.get("timestamp")), timezone.utc).strftime("%Y-%m-%d")
     except (TypeError, ValueError, OSError):
-        stamp = ""
+        iso = ""
+    stamp = _stamp(iso) if iso else ""
     if stamp:
         detail = f"{detail} · {stamp}" if detail else stamp
     shown = f"{value:.0f}" + (f" · {label}" if label else "")
@@ -361,6 +363,7 @@ def _fear_item(rows):
         "Alternative.me",
         "https://alternative.me/crypto/fear-and-greed-index/",
         _tone(label),
+        iso,
     )
 
 
@@ -414,6 +417,9 @@ def _cnn_item(block):
         previous = None
     detail = _move_phrase(score, previous, "close", "points")
     shown = f"{score:.0f}" + (f" · {rating.title()}" if rating else "")
+    iso = str(block.get("timestamp") or "")[:10]
+    if len(iso) < 10 or iso[4] != "-" or iso[7] != "-":
+        iso = ""
     return _reading(
         "CNN Fear & Greed",
         shown,
@@ -421,10 +427,11 @@ def _cnn_item(block):
         "CNN",
         "https://edition.cnn.com/markets/fear-and-greed",
         _tone(rating),
+        iso,
     )
 
 
-def _reading(name, value, detail, source, href, tone) -> dict:
+def _reading(name, value, detail, source, href, tone, published: str = "") -> dict:
     return {
         "name": name,
         "value": value,
@@ -432,6 +439,7 @@ def _reading(name, value, detail, source, href, tone) -> dict:
         "source": source,
         "href": href,
         "tone": tone,
+        "published": published,
     }
 
 
