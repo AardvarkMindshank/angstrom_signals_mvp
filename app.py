@@ -3121,7 +3121,6 @@ with st.sidebar.expander("⚖️ Scoring Balance Weights", expanded=False):
 
 with st.sidebar.expander("⚙️ Settings", expanded=False):
     st.radio("Markets you trade", _TRADE_CHOICES, key="trade_markets")
-    st.caption("Saved on your account. A market you leave out is hidden, including its Quick Snapshot boxes.")
     days_history = st.slider("Days of history", 90, 365, int(settings.get("days_history", 200)))
     show_reasons = st.checkbox("Show score breakdown", value=settings.get("show_reasons", True))
     show_extra_metrics = st.checkbox(
@@ -4984,4 +4983,3 @@ st.markdown(
 
 st.sidebar.markdown("---")
 st.sidebar.info("Prices and technical scores refresh every 5 minutes while this page is open. Market sentiment refreshes about every 12 hours. Alert checks continue every 5 minutes after you leave.")
-st.sidebar.caption("Watchlists, settings, and alerts are stored on your account.")
