@@ -207,18 +207,29 @@ def _prompt(query: str, headlines: list[dict]) -> str:
     )
 
 
-def _market_prompt(label: str, query: str, headlines: list[dict]) -> str:
-    """Same JSON shape as an asset score. The wording can be tightened later."""
+def _market_prompt(label: str, query: str, headlines: list[dict], readings: str = "") -> str:
+    """Same JSON shape as an asset score. Article scores stay on the headlines."""
     lines = []
     for index, item in enumerate(headlines, start=1):
         source = item.get("source") or "Unknown source"
         published = item.get("published") or ""
         lines.append(f"{index}. {item['title']} — {source} {published}".strip())
+    reading_block = ""
+    if readings.strip():
+        reading_block = (
+            "\nCurrent readings. These are measurements, not headlines. "
+            "summary, positive, and negative may use them. "
+            "Each article score and note must stay about that headline only. "
+            "Do not invent a reading that is not listed.\n"
+            + readings.strip()
+            + "\n"
+        )
     return (
-        "Score market sentiment from these headlines only. "
+        "Score market sentiment from these headlines and, where listed, the current readings. "
         "This is research context, not a forecast or advice. "
         f"This is the {label} as a whole, not one asset. Search: {query}\n"
-        "Headlines:\n"
+        + reading_block
+        + "Headlines:\n"
         + "\n".join(lines)
         + "\n\nReply with JSON only, in this shape: "
         '{"articles":[{"index":1,"score":50,"note":"one sentence"}],"summary":"...","positive":"...","negative":"...","drivers":["..."]}. '
@@ -226,13 +237,13 @@ def _market_prompt(label: str, query: str, headlines: list[dict]) -> str:
         "score is 0 to 100 for that headline alone. "
         "0 is strongly bearish, 50 is mixed or unclear, 100 is strongly bullish. "
         "note is one sentence about that headline only. "
-        "summary is two sentences about the set of headlines. "
-        "positive is one paragraph on what these headlines treat as favorable. "
-        "negative is one paragraph on what these headlines treat as unfavorable. "
+        "summary is two sentences about the headlines and the current readings. "
+        "positive is one paragraph on what these treat as favorable. "
+        "negative is one paragraph on what these treat as unfavorable. "
         "Each of those paragraphs is two or three sentences. "
-        "If the headlines do not support that side, say so in one sentence. "
+        "If the material does not support that side, say so in one sentence. "
         "drivers is up to 3 short phrases. "
-        "Do not add facts that are not in the headlines."
+        "Do not add facts that are not in the headlines or the current readings."
     )
 
 
@@ -638,10 +649,25 @@ def analyze_market_mood(market_key: str, label: str, query: str, enabled: bool, 
         return {"ok": False, "reason": "no_headlines", "headlines": []}
     if not enabled:
         return {"ok": False, "reason": "missing_key", "headlines": headlines}
+    gauges = []
+    brief = ""
     try:
-        summary = _summarize(cache_key, headlines, _market_prompt(label, query, headlines))
+        from market_gauges import gauge_brief, market_gauge_groups
+        gauges = market_gauge_groups(market_key)
+        brief = gauge_brief(gauges)
+    except Exception:
+        gauges = []
+        brief = ""
+    try:
+        summary = _summarize(
+            cache_key,
+            headlines,
+            _market_prompt(label, query, headlines, brief),
+        )
     except Exception:
         summary = {"ok": False, "reason": "model_error"}
+    if isinstance(summary, dict) and gauges:
+        summary["gauges"] = gauges
     if not summary.get("headlines"):
         summary["headlines"] = headlines
     if summary.get("ok"):
