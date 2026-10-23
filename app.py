@@ -2125,7 +2125,7 @@ if st.session_state.user is None:
     with col_center:
         st.markdown(_brand_mark(200), unsafe_allow_html=True)
         st.title("angstrom signals")
-        st.caption("Market mood and technical signals, with the crowd alongside.")
+        st.caption("Market sentiment and technical signals, with the crowd alongside.")
 
         if st.session_state.get("recovery_access"):
             st.markdown("### Choose a new password")
@@ -2736,7 +2736,7 @@ with st.container(horizontal=True, vertical_alignment="center", horizontal_align
         "<h1 style='margin:0;padding:0;line-height:1.15;font-size:2.25rem;font-weight:700;white-space:nowrap;'>"
         "angstrom signals</h1>"
         "<span style='font-size:0.82rem;font-weight:500;line-height:1;opacity:0.72;'>"
-        "Market mood and technical signals, with the crowd alongside.</span></div></div>",
+        "Market sentiment and technical signals, with the crowd alongside.</span></div></div>",
         unsafe_allow_html=True,
     )
     with st.container(horizontal=True, vertical_alignment="center", gap="xsmall", width="content"):
@@ -2744,7 +2744,7 @@ with st.container(horizontal=True, vertical_alignment="center", horizontal_align
             "Single column",
             key="layout_single",
             type="primary" if not wide_on else "secondary",
-            help="Stack every section in one column, with market mood first.",
+            help="Stack every section in one column, with market sentiment first.",
         ):
             st.session_state.section_layout = "Single column"
             st.rerun()
@@ -2753,7 +2753,7 @@ with st.container(horizontal=True, vertical_alignment="center", horizontal_align
             key="layout_wide",
             type="primary" if wide_on else "secondary",
             help=(
-                "Snapshot and score tables across the top, market mood on the left, "
+                "Snapshot and score tables across the top, market sentiment on the left, "
                 "and the chart sections on the right."
             ),
         ):
@@ -2823,12 +2823,12 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
     st.markdown("""
 **How to use it**
 
-1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest. Market mood for crypto, Market mood for stocks, Quick Snapshot, Crypto Scores, Equity Scores, Interactive Chart, Score Breakdown, Max pain, and Market sentiment each sit in a section that starts open. Close a header to fold that section away. **Open all** and **Collapse all**, on the right of the page title, do that for every one of those sections. The square beside them stacks every section in one column, with market mood first. The mark with a wide top and two panes underneath puts Quick Snapshot and both score tables across the top, market mood on the left, and Interactive Chart, Score Breakdown, Max pain, and Market sentiment on the right. On a narrow screen the wide layout stacks the left and right parts. **I trade crypto** and **I trade equities**, in Settings, are saved on your account. Turning one off hides that market's mood, its score table, and its Quick Snapshot boxes. The chart follows the markets left on. At least one stays on. Collapse all also closes this guide. Open all does not open it. **Feedback**, at the bottom of the sidebar, sends an issue or an idea. It is stored as submitted. The arrow on the left edge of the page closes the sidebar. It stays on that edge when the sidebar is closed, so the sidebar can be opened again. Hover the arrow to see which action it will take.
+1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest. Market sentiment for crypto, Market sentiment for stocks, Quick Snapshot, Crypto Scores, Equity Scores, Interactive Chart, Score Breakdown, Max pain, and Market sentiment each sit in a section that starts open. Close a header to fold that section away. **Open all** and **Collapse all**, on the right of the page title, do that for every one of those sections. The square beside them stacks every section in one column, with market sentiment first. The mark with a wide top and two panes underneath puts Quick Snapshot and both score tables across the top, market sentiment on the left, and Interactive Chart, Score Breakdown, Max pain, and Market sentiment on the right. On a narrow screen the wide layout stacks the left and right parts. **I trade crypto** and **I trade equities**, in Settings, are saved on your account. Turning one off hides that market's sentiment, its score table, and its Quick Snapshot boxes. The chart follows the markets left on. At least one stays on. Collapse all also closes this guide. Open all does not open it. **Feedback**, at the bottom of the sidebar, sends an issue or an idea. It is stored as submitted. The arrow on the left edge of the page closes the sidebar. It stays on that edge when the sidebar is closed, so the sidebar can be opened again. Hover the arrow to see which action it will take.
 2. Click a name in either table, a Quick Snapshot box, or an alert under Notifications. That asset stays highlighted, and the page moves down to the chart when the chart is off screen. Click a column title to sort that table. It starts with the strongest score at the top.
 3. Extra metrics add **7d %**, **Market Cap**, **ATR %**, and **Vol**. A separate checkbox adds **1d %** before the seven-day change and **30d %** after it. For **1d %** and **7d %**, green means the price rose and red means it fell. **30d %** uses the same colors as the **30-day trend**: green for a rise of about 2% or more, red for a fall of about 2% or more, and orange when the move stays inside about 2%. For stocks, one day is the previous trading session. **Market Cap** is the latest size of the asset, from CoinGecko for crypto and Yahoo for stocks. **ATR %** is volatility. **Vol** is volume versus its 20-day average.
 4. Alerts fire at 70 and 30 unless you move those sliders. One email goes to the address on your account when a technical score crosses a boundary. It is not sent again until the score leaves that boundary and crosses it later. Sentiment scores do not send alerts.
 
-**Market mood**
+**Market sentiment for crypto and stocks**
 
 Two sections sit above Quick Snapshot, crypto first and then stocks. Each one uses the same layout as the asset sentiment under the chart: the score on the left, Your take on the right, then the articles. Neither is an asset, and neither is added to the tables or the technical score. Each score is an average of recent headlines, with a short summary, a positive paragraph, and a negative paragraph. Each article row also has a one-sentence AI Summary, after the date. A dash there means that score was saved before summaries, so press Refresh. It is stored once and shown to every account for about 12 hours. Your take works the same way as on an asset: agree, disagree, a score from 0 to 100, and one short comment. A refresh of that market clears the thumbs and personal scores. A comment stays for 12 hours. The search wording can be tightened later.
 
@@ -4584,7 +4584,7 @@ def headline_table(headlines: list) -> str:
 
 
 def _sentiment_story(report, coverage: str, score, color, background, arrow, note: str) -> str:
-    """The score card shared by an asset and the two market moods."""
+    """The score card shared by an asset and the two market sentiments."""
 
     def side_note(name, text, label_color):
         cleaned = " ".join(str(text or "").split())
@@ -4725,8 +4725,8 @@ def show_market_moods(trade_crypto: bool = True, trade_equities: bool = True) ->
     """Crypto market, then the stock market. Each uses the asset sentiment layout."""
     stored = load_market_moods(supabase)
     if stored is None:
-        with section_expander("🌤️ Market mood", "market_mood"):
-            st.info("Market mood storage is not ready yet. Run the latest supabase_rls.sql in the Supabase SQL editor.")
+        with section_expander("🌤️ Market sentiment", "market_mood"):
+            st.info("Market sentiment storage is not ready yet. Run the latest supabase_rls.sql in the Supabase SQL editor.")
         return
     deadlines = st.session_state.setdefault("mood_due", {})
     for spec in MACRO_MOODS:
@@ -4735,7 +4735,7 @@ def show_market_moods(trade_crypto: bool = True, trade_equities: bool = True) ->
         if spec["key"] == "stock" and not trade_equities:
             continue
         mood_icon = "🪙" if spec["key"] == "crypto" else "📈"
-        with section_expander(f"{mood_icon} Market mood - {spec['label']}", f"market_mood_{spec['key']}"):
+        with section_expander(f"{mood_icon} Market sentiment - {spec['label']}", f"market_mood_{spec['key']}"):
             _mood_card(spec, stored.get(spec["key"]), deadlines)
 
 

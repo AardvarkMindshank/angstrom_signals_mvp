@@ -86,7 +86,7 @@ One search box at the top filters the stream and the chat together. It matches a
 
 Run `supabase_rls.sql` again so the chat, replies, votes, deletes, and the person id behind each star are installed.
 
-## Market mood
+## Market sentiment
 
 Above Quick Snapshot, the crypto market is one section and the stock market is the next. Each uses the same layout as an asset's sentiment: score on the left, Your take on the right, then the articles. Your take matches an asset: agree, disagree, a score from 0 to 100, and one short comment. Thumbs and personal scores are stored in `market_mood_votes` and clear when that market is refreshed. Comments use the same 12-hour comment store, labeled Crypto market or Stock market. Both use the same headline score as an asset, including the positive and negative paragraphs and a one-sentence AI Summary on each article, after the date. They are stored in `market_mood`, shared by every account for 12 hours, and they do not change a technical score or send an alert. Run `supabase_rls.sql` again so those tables exist. The search wording can be tightened later.
 

@@ -104,7 +104,7 @@ def _optional_number(value):
 
 
 def market_mood_crowd(supabase, keys: list[str]) -> dict[str, dict]:
-    """Agree and disagree counts for the current market mood. Empty if the function is missing."""
+    """Agree and disagree counts for the current market sentiment. Empty if the function is missing."""
     wanted = [key for key in keys if key in ("crypto", "stock")]
     if not wanted:
         return {}
@@ -139,7 +139,7 @@ def market_mood_crowd(supabase, keys: list[str]) -> dict[str, dict]:
 
 
 def set_market_mood_vote(supabase, user_id, market_key: str, sentiment_at, vote, alt_score=None) -> None:
-    """Save this account's thumb for the current market mood. None clears it."""
+    """Save this account's thumb for the current market sentiment. None clears it."""
     if market_key not in ("crypto", "stock"):
         return
     if vote not in (1, -1):
@@ -867,7 +867,7 @@ def heading_with_logo(text: str, url, label: str) -> str:
 
 
 def load_market_moods(supabase) -> dict[str, dict] | None:
-    """The crypto and stock mood rows. None when the table is not there yet."""
+    """The crypto and stock sentiment rows. None when the table is not there yet."""
     try:
         response = (
             supabase.table("market_mood")
