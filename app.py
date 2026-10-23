@@ -2728,6 +2728,24 @@ if "section_fold" not in st.session_state:
 if st.session_state.get("section_layout") not in ("Single column", "Wide"):
     st.session_state.section_layout = "Single column"
 wide_on = st.session_state.section_layout == "Wide"
+# A market or settings change rebuilds sections and can arrive as a click on
+# Single column. Extra metrics only changes the score table, so it never does.
+# Either way, that rerun must leave the wide or single choice alone.
+_layout_watched = (
+    ("_seen_trade_markets", "trade_markets"),
+    ("_seen_show_reasons", "show_reasons"),
+    ("_seen_show_extra_metrics", "show_extra_metrics"),
+    ("_seen_show_period_changes", "show_period_changes"),
+    ("_seen_days_history", "days_history"),
+)
+hold_layout = False
+for _seen_name, _state_name in _layout_watched:
+    if _state_name not in st.session_state:
+        continue
+    _seen_value = st.session_state.get(_seen_name)
+    if _seen_value is not None and st.session_state[_state_name] != _seen_value:
+        hold_layout = True
+        break
 with st.container(horizontal=True, vertical_alignment="center", horizontal_alignment="distribute"):
     st.markdown(
         "<div style='display:flex;align-items:center;gap:0.85rem;margin:0.4rem 0;'>"
@@ -2769,6 +2787,8 @@ with st.container(horizontal=True, vertical_alignment="center", horizontal_align
                 "help_nonce": fold.get("help_nonce", 0) + (1 if closing else 0),
             }
             st.session_state.section_layout = layout_now
+        elif hold_layout:
+            st.session_state.section_layout = "Wide" if wide_on else "Single column"
         elif single_layout:
             st.session_state.section_layout = "Single column"
             st.rerun()
@@ -3120,16 +3140,28 @@ with st.sidebar.expander("⚖️ Scoring Balance Weights", expanded=False):
         st.rerun()
 
 with st.sidebar.expander("⚙️ Settings", expanded=False):
+    if "show_reasons" not in st.session_state:
+        st.session_state.show_reasons = bool(settings.get("show_reasons", True))
+    if "show_extra_metrics" not in st.session_state:
+        st.session_state.show_extra_metrics = bool(settings.get("show_extra_metrics", True))
+    if "show_period_changes" not in st.session_state:
+        st.session_state.show_period_changes = bool(settings.get("show_period_changes", True))
+    if "days_history" not in st.session_state:
+        try:
+            saved_days = int(settings.get("days_history", 200))
+        except (TypeError, ValueError):
+            saved_days = 200
+        st.session_state.days_history = min(365, max(90, saved_days))
     st.radio("Markets you trade", _TRADE_CHOICES, key="trade_markets")
-    days_history = st.slider("Days of history", 90, 365, int(settings.get("days_history", 200)))
-    show_reasons = st.checkbox("Show score breakdown", value=settings.get("show_reasons", True))
+    days_history = st.slider("Days of history", 90, 365, key="days_history")
+    show_reasons = st.checkbox("Show score breakdown", key="show_reasons")
     show_extra_metrics = st.checkbox(
         "Show extra metrics (7d, market cap, ATR, volume)",
-        value=settings.get("show_extra_metrics", True),
+        key="show_extra_metrics",
     )
     show_period_changes = st.checkbox(
         "Show 1-day and 30-day changes",
-        value=settings.get("show_period_changes", True),
+        key="show_period_changes",
     )
 
     new_settings = {
@@ -3148,6 +3180,11 @@ with st.sidebar.expander("⚙️ Settings", expanded=False):
         settings = new_settings
         prefs["settings"] = settings
         save_preferences_to_cloud({"settings": settings})
+    st.session_state._seen_trade_markets = st.session_state.get("trade_markets")
+    st.session_state._seen_show_reasons = bool(show_reasons)
+    st.session_state._seen_show_extra_metrics = bool(show_extra_metrics)
+    st.session_state._seen_show_period_changes = bool(show_period_changes)
+    st.session_state._seen_days_history = int(days_history)
 
 
 def _feedback_setting(env_name: str, *secret_paths: tuple[str, ...]) -> str:
