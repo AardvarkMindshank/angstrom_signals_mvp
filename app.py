@@ -2744,7 +2744,7 @@ with st.container(horizontal=True, vertical_alignment="center", horizontal_align
             "Single column",
             key="layout_single",
             type="primary" if not wide_on else "secondary",
-            help="Stack every section in one column, with market sentiment first.",
+            help="Stack every section in one column, with Quick Snapshot first.",
         )
         wide_layout_click = st.button(
             "Wide",
@@ -2827,14 +2827,14 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
     st.markdown("""
 **How to use it**
 
-1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest. Market sentiment for crypto, Market sentiment for stocks, Quick Snapshot, Crypto Scores, Equity Scores, Interactive Chart, Score Breakdown, Max pain, and Market sentiment each sit in a section that starts open. Close a header to fold that section away. **Open all** and **Collapse all**, on the right of the page title, do that for every one of those sections. The square beside them stacks every section in one column, with market sentiment first. The mark with a wide top and two panes underneath puts Quick Snapshot and both score tables across the top, market sentiment on the left, and Interactive Chart, Score Breakdown, Max pain, and Market sentiment on the right. On a narrow screen the wide layout stacks the left and right parts. **I trade cryptos**, **I trade equities**, and **I trade both**, in Settings, are saved on your account. A market you leave out is hidden, including its sentiment, its score table, and its Quick Snapshot boxes. The chart follows the markets you trade. Collapse all also closes this guide. Open all does not open it. **Feedback**, at the bottom of the sidebar, sends an issue or an idea. It is stored as submitted. The arrow on the left edge of the page closes the sidebar. It stays on that edge when the sidebar is closed, so the sidebar can be opened again. Hover the arrow to see which action it will take.
+1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest. Quick Snapshot, Market sentiment for crypto, Market sentiment for stocks, Crypto Scores, Equity Scores, Interactive Chart, Score Breakdown, Max pain, and Market sentiment each sit in a section that starts open. Close a header to fold that section away. **Open all** and **Collapse all**, on the right of the page title, do that for every one of those sections. The square beside them stacks every section in one column, with Quick Snapshot first. The mark with a wide top and two panes underneath puts Quick Snapshot and both score tables across the top, market sentiment on the left, and Interactive Chart, Score Breakdown, Max pain, and Market sentiment on the right. On a narrow screen the wide layout stacks the left and right parts. **I trade cryptos**, **I trade equities**, and **I trade both**, in Settings, are saved on your account. A market you leave out is hidden, including its sentiment, its score table, and its Quick Snapshot boxes. The chart follows the markets you trade. Collapse all also closes this guide. Open all does not open it. **Feedback**, at the bottom of the sidebar, sends an issue or an idea. It is stored as submitted. The arrow on the left edge of the page closes the sidebar. It stays on that edge when the sidebar is closed, so the sidebar can be opened again. Hover the arrow to see which action it will take.
 2. Click a name in either table, a Quick Snapshot box, or an alert under Notifications. That asset stays highlighted, and the page moves down to the chart when the chart is off screen. Click a column title to sort that table. It starts with the strongest score at the top.
 3. Extra metrics add **7d %**, **Market Cap**, **ATR %**, and **Vol**. A separate checkbox adds **1d %** before the seven-day change and **30d %** after it. For **1d %** and **7d %**, green means the price rose and red means it fell. **30d %** uses the same colors as the **30-day trend**: green for a rise of about 2% or more, red for a fall of about 2% or more, and orange when the move stays inside about 2%. For stocks, one day is the previous trading session. **Market Cap** is the latest size of the asset, from CoinGecko for crypto and Yahoo for stocks. **ATR %** is volatility. **Vol** is volume versus its 20-day average.
 4. Alerts fire at 70 and 30 unless you move those sliders. One email goes to the address on your account when a technical score crosses a boundary. It is not sent again until the score leaves that boundary and crosses it later. Sentiment scores do not send alerts.
 
 **Market sentiment for crypto and stocks**
 
-Two sections sit above Quick Snapshot, crypto first and then stocks. Each one uses the same layout as the asset sentiment under the chart: the score on the left, Your take on the right, then the articles. Neither is an asset, and neither is added to the tables or the technical score. Each score is an average of recent headlines, with a short summary, a positive paragraph, and a negative paragraph. Each article row also has a one-sentence AI Summary, after the date. A dash there means that score was saved before summaries, so press Refresh. It is stored once and shown to every account for about 12 hours. Your take works the same way as on an asset: agree, disagree, a score from 0 to 100, and one short comment. A refresh of that market clears the thumbs and personal scores. A comment stays for 12 hours. The search wording can be tightened later.
+In the single column these two sections sit under Quick Snapshot, crypto first and then stocks. Each one uses the same layout as the asset sentiment under the chart: the score on the left, Your take on the right, then the articles. Neither is an asset, and neither is added to the tables or the technical score. Each score is an average of recent headlines, with a short summary, a positive paragraph, and a negative paragraph. Each article row also has a one-sentence AI Summary, after the date. A dash there means that score was saved before summaries, so press Refresh. It is stored once and shown to every account for about 12 hours. Your take works the same way as on an asset: agree, disagree, a score from 0 to 100, and one short comment. A refresh of that market clears the thumbs and personal scores. A comment stays for 12 hours. The search wording can be tightened later.
 
 **Max pain**
 
@@ -3544,9 +3544,6 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
         allowed_kinds.append("Crypto")
     if trade_equities:
         allowed_kinds.append("Stock")
-    if not wide_layout:
-        show_market_moods(trade_crypto, trade_equities)
-
     with section_expander("📸 Quick Snapshot", "quick_snapshot"):
         _, snap_refresh = st.columns([4, 1.45], vertical_alignment="center")
         with snap_refresh:
@@ -3773,6 +3770,9 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
         for column, (card_title, card_row, card_kind, card_key) in zip(snapshot_columns, snapshot_cards):
             show_snapshot(column, card_title, card_row, card_kind, card_key)
         st.caption("Click a box to open that asset on the chart.")
+
+    if not wide_layout:
+        show_market_moods(trade_crypto, trade_equities)
 
     def render_score_bar(score):
         if score is None or pd.isna(score):
