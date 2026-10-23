@@ -140,14 +140,14 @@ export default function(component) {
     document.head.appendChild(sideStyle);
   }
   let layoutStyle = document.getElementById("angstrom-layout-controls");
-  if (layoutStyle && layoutStyle.dataset.layout !== "align") {
+  if (layoutStyle && layoutStyle.dataset.layout !== "jump") {
     layoutStyle.remove();
     layoutStyle = null;
   }
   if (!layoutStyle) {
     layoutStyle = document.createElement("style");
     layoutStyle.id = "angstrom-layout-controls";
-    layoutStyle.dataset.layout = "align";
+    layoutStyle.dataset.layout = "jump";
     const singleMark = "url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Crect x=%272.4%27 y=%272.4%27 width=%2719.2%27 height=%2719.2%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3C/svg%3E')";
     const wideMark = "url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Crect x=%272.4%27 y=%272.4%27 width=%2719.2%27 height=%2719.2%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3Cpath d=%27M2.4 9.1H21.6M12 9.1V21.6%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3C/svg%3E')";
     layoutStyle.textContent = [
@@ -163,8 +163,8 @@ export default function(component) {
       "html.angstrom-night .st-key-layout_single button:hover,html.angstrom-night .st-key-layout_wide button:hover{border-color:#e5e7eb !important;}",
       "html.angstrom-night .st-key-layout_single button[data-testid='stBaseButton-primary'],html.angstrom-night .st-key-layout_wide button[data-testid='stBaseButton-primary']{background:#f3f4f6 !important;color:#111827 !important;border-color:#f3f4f6 !important;}",
       ".st-key-open_all_sections button,.st-key-collapse_all_sections button{width:auto !important;min-width:0 !important;max-width:max-content !important;height:2.05rem !important;min-height:2.05rem !important;padding:0 .7rem !important;white-space:nowrap;font-size:.85rem !important;}",
-      "[data-testid='stElementContainer']:has(#interactive-chart){position:absolute !important;width:0 !important;height:0 !important;min-height:0 !important;margin:0 !important;padding:0 !important;overflow:visible !important;}",
-      "#interactive-chart{height:0;margin:0;padding:0;scroll-margin-top:4.5rem;}"
+      "[data-testid='stElementContainer']:has(#interactive-chart),[data-testid='stElementContainer']:has(#market-mood-crypto),[data-testid='stElementContainer']:has(#market-mood-stock){position:absolute !important;width:0 !important;height:0 !important;min-height:0 !important;margin:0 !important;padding:0 !important;overflow:visible !important;}",
+      "#interactive-chart,#market-mood-crypto,#market-mood-stock{height:0;margin:0;padding:0;scroll-margin-top:4.5rem;}"
     ].join("");
     document.head.appendChild(layoutStyle);
   }
@@ -1828,7 +1828,21 @@ def _rerun_fragment() -> None:
 def section_expander(label: str, section_id: str):
     """A main-page section. Open all and Collapse all move every one of these together."""
     fold = st.session_state.setdefault("section_fold", {"open": True, "nonce": 0, "help_nonce": 0})
+    pin = (st.session_state.get("section_pins") or {}).get(section_id)
+    if isinstance(pin, int):
+        return st.expander(label, expanded=True, key=f"{section_id}_pin{pin}")
     return st.expander(label, expanded=bool(fold["open"]), key=f"{section_id}_{fold['nonce']}")
+
+
+def _reveal_section(section_id: str, anchor: str) -> None:
+    """Open one section and scroll to it, without folding the others."""
+    nonce = int(st.session_state.get("section_pin_nonce") or 0) + 1
+    st.session_state.section_pin_nonce = nonce
+    pins = dict(st.session_state.get("section_pins") or {})
+    pins[section_id] = nonce
+    st.session_state.section_pins = pins
+    st.session_state.scroll_target = anchor
+    st.session_state.scroll_token = str(time.time_ns())
 
 
 try:
@@ -2808,6 +2822,7 @@ with st.container(horizontal=True, vertical_alignment="center", horizontal_align
                 "help_nonce": fold.get("help_nonce", 0) + (1 if closing else 0),
             }
             st.session_state.section_layout = layout_now
+            st.session_state.section_pins = {}
         elif hold_layout:
             st.session_state.section_layout = "Wide" if wide_on else "Single column"
         elif single_layout:
@@ -2875,7 +2890,7 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
 
 **Market sentiment for crypto and stocks**
 
-In the single column these two sections sit under Quick Snapshot, crypto first and then stocks. Quick Snapshot shows each one as the colored score box, the status, such as Mildly bullish coverage, and the short summary to the right of the score, for the markets you trade. Each one uses the same layout as the asset sentiment under the chart: the score on the left, Your take on the right, then the articles. Neither is an asset, and neither is added to the tables or the technical score. Each score is an average of recent headlines, with a short summary, a positive paragraph, and a negative paragraph. Each article row also has a one-sentence AI Summary, after the date. A dash there means that score was saved before summaries, so use Update Market Sentiment for that market in Quick Snapshot. It is stored once and shown to every account for about 12 hours. Your take works the same way as on an asset: agree, disagree, a score from 0 to 100, and one short comment. A refresh of that market clears the thumbs and personal scores. A comment stays for 12 hours. The search wording can be tightened later.
+In the single column these two sections sit under Quick Snapshot, crypto first and then stocks. Quick Snapshot shows each one as the colored score box, the status, such as Mildly bullish coverage, and the short summary to the right of the score, for the markets you trade. Click the score or the colored status to open that market's section. Each one uses the same layout as the asset sentiment under the chart: the score on the left, Your take on the right, then the articles. Neither is an asset, and neither is added to the tables or the technical score. Each score is an average of recent headlines, with a short summary, a positive paragraph, and a negative paragraph. Each article row also has a one-sentence AI Summary, after the date. A dash there means that score was saved before summaries, so use Update Market Sentiment for that market in Quick Snapshot. It is stored once and shown to every account for about 12 hours. Your take works the same way as on an asset: agree, disagree, a score from 0 to 100, and one short comment. A refresh of that market clears the thumbs and personal scores. A comment stays for 12 hours. The search wording can be tightened later.
 
 **Max pain**
 
@@ -3857,7 +3872,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             snapshot_cards.append(("Top Stock", stock_top, "Stock", "snapshot_stock_top"))
             snapshot_cards.append(("Weakest Stock", stock_bot, "Stock", "snapshot_stock_weak"))
 
-        def render_mood_snapshot(label, score, summary):
+        def render_mood_snapshot(label, score, summary, mood_key):
             safe_label = html.escape(label)
             if score is None or pd.isna(score):
                 badge = sentiment_badge(None)
@@ -3876,11 +3891,19 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                     "<div style='flex:1;min-width:0;color:#111827;font-size:0.95rem;line-height:1.4;'>"
                     f"{html.escape(text)}</div>"
                 )
+            jump = html.escape(f"mood|{mood_key}", quote=True)
+            jump_title = html.escape(f"Open {label} sentiment", quote=True)
+            score_block = (
+                f"<button type='button' data-pick='{jump}' title='{jump_title}' "
+                "style='display:block;margin:0;padding:0;border:none;background:transparent;"
+                "text-align:left;cursor:pointer;font:inherit;color:inherit;'>"
+                f"{badge}{status}</button>"
+            )
             return (
                 "<div style='background: white; padding: 12px 16px; border-radius: 8px; border: 1px solid #e5e7eb;'>"
                 f"<div style='font-size: 0.8rem; color: #6b7280; margin-bottom: 8px;'>{safe_label}</div>"
                 "<div style='display:flex;align-items:flex-start;gap:16px;'>"
-                f"<div style='flex:none;'>{badge}{status}</div>"
+                f"<div style='flex:none;'>{score_block}</div>"
                 f"{summary_html}</div></div>"
             )
 
@@ -3902,10 +3925,17 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                 if mood_score is not None and pd.isna(mood_score):
                     mood_score = None
                 with column:
-                    st.markdown(
-                        render_mood_snapshot(mood_label, mood_score, (report or {}).get("summary")),
-                        unsafe_allow_html=True,
-                    )
+                    picked = _score_table(
+                        key=f"snapshot_mood_{mood_key}",
+                        data=render_mood_snapshot(
+                            mood_label, mood_score, (report or {}).get("summary"), mood_key,
+                        ),
+                        on_picked_change=lambda: None,
+                    ).picked
+                    if picked and str(picked).startswith("mood|"):
+                        market = str(picked).split("|", 1)[1]
+                        if market in ("crypto", "stock"):
+                            _reveal_section(f"market_mood_{market}", f"market-mood-{market}")
 
         snapshot_columns = st.columns(len(snapshot_cards))
 
@@ -4243,6 +4273,13 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
         st.html(
             "<div id='interactive-chart' style='scroll-margin-top:4.5rem;'></div>"
         )
+        _scroll_chart(
+            key="scroll_to_chart",
+            data={
+                "token": st.session_state.get("scroll_token") or "",
+                "target": st.session_state.get("scroll_target") or "interactive-chart",
+            },
+        )
         with section_expander(chart_label, "interactive_chart"):
             logo_col, _, chart_top = st.columns([0.35, 4.85, 0.9], vertical_alignment="center")
             with logo_col:
@@ -4250,13 +4287,6 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                     st.markdown(asset_logo(chart_logo, chart_name, size=32), unsafe_allow_html=True)
             with chart_top:
                 _back_to_top(key="chart_back_to_top")
-            _scroll_chart(
-                key="scroll_to_chart",
-                data={
-                    "token": st.session_state.get("scroll_token") or "",
-                    "target": st.session_state.get("scroll_target") or "interactive-chart",
-                },
-            )
 
             if len(allowed_kinds) > 1:
                 col1, col2 = st.columns([1, 3])
@@ -4921,6 +4951,9 @@ def show_market_moods(trade_crypto: bool = True, trade_equities: bool = True) ->
         if spec["key"] == "stock" and not trade_equities:
             continue
         mood_icon = "🪙" if spec["key"] == "crypto" else "📈"
+        st.html(
+            f"<div id='market-mood-{spec['key']}' style='scroll-margin-top:4.5rem;'></div>"
+        )
         with section_expander(f"{mood_icon} Market sentiment - {spec['label']}", f"market_mood_{spec['key']}"):
             _mood_card(spec, stored.get(spec["key"]), deadlines)
 
