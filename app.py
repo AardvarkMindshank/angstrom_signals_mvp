@@ -2827,7 +2827,7 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
     st.markdown("""
 **How to use it**
 
-1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest. Market sentiment for crypto, Market sentiment for stocks, Quick Snapshot, Crypto Scores, Equity Scores, Interactive Chart, Score Breakdown, Max pain, and Market sentiment each sit in a section that starts open. Close a header to fold that section away. **Open all** and **Collapse all**, on the right of the page title, do that for every one of those sections. The square beside them stacks every section in one column, with market sentiment first. The mark with a wide top and two panes underneath puts Quick Snapshot and both score tables across the top, market sentiment on the left, and Interactive Chart, Score Breakdown, Max pain, and Market sentiment on the right. On a narrow screen the wide layout stacks the left and right parts. **I trade crypto** and **I trade equities**, in Settings, are saved on your account. Turning one off hides that market's sentiment, its score table, and its Quick Snapshot boxes. The chart follows the markets left on. At least one stays on. Collapse all also closes this guide. Open all does not open it. **Feedback**, at the bottom of the sidebar, sends an issue or an idea. It is stored as submitted. The arrow on the left edge of the page closes the sidebar. It stays on that edge when the sidebar is closed, so the sidebar can be opened again. Hover the arrow to see which action it will take.
+1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest. Market sentiment for crypto, Market sentiment for stocks, Quick Snapshot, Crypto Scores, Equity Scores, Interactive Chart, Score Breakdown, Max pain, and Market sentiment each sit in a section that starts open. Close a header to fold that section away. **Open all** and **Collapse all**, on the right of the page title, do that for every one of those sections. The square beside them stacks every section in one column, with market sentiment first. The mark with a wide top and two panes underneath puts Quick Snapshot and both score tables across the top, market sentiment on the left, and Interactive Chart, Score Breakdown, Max pain, and Market sentiment on the right. On a narrow screen the wide layout stacks the left and right parts. **I trade cryptos**, **I trade equities**, and **I trade both**, in Settings, are saved on your account. A market you leave out is hidden, including its sentiment, its score table, and its Quick Snapshot boxes. The chart follows the markets you trade. Collapse all also closes this guide. Open all does not open it. **Feedback**, at the bottom of the sidebar, sends an issue or an idea. It is stored as submitted. The arrow on the left edge of the page closes the sidebar. It stays on that edge when the sidebar is closed, so the sidebar can be opened again. Hover the arrow to see which action it will take.
 2. Click a name in either table, a Quick Snapshot box, or an alert under Notifications. That asset stays highlighted, and the page moves down to the chart when the chart is off screen. Click a column title to sort that table. It starts with the strongest score at the top.
 3. Extra metrics add **7d %**, **Market Cap**, **ATR %**, and **Vol**. A separate checkbox adds **1d %** before the seven-day change and **30d %** after it. For **1d %** and **7d %**, green means the price rose and red means it fell. **30d %** uses the same colors as the **30-day trend**: green for a rise of about 2% or more, red for a fall of about 2% or more, and orange when the move stays inside about 2%. For stocks, one day is the previous trading session. **Market Cap** is the latest size of the asset, from CoinGecko for crypto and Yahoo for stocks. **ATR %** is volatility. **Vol** is volume versus its 20-day average.
 4. Alerts fire at 70 and 30 unless you move those sliders. One email goes to the address on your account when a technical score crosses a boundary. It is not sent again until the score leaves that boundary and crosses it later. Sentiment scores do not send alerts.
@@ -2895,19 +2895,35 @@ STOCK_WATCHLIST = prefs["stock"]
 current_weights = prefs["weights"]
 custom_profiles = prefs["profiles"]
 settings = prefs["settings"]
-if "trade_crypto" not in st.session_state:
-    st.session_state.trade_crypto = bool(settings.get("trade_crypto", True))
-if "trade_equities" not in st.session_state:
-    st.session_state.trade_equities = bool(settings.get("trade_equities", True))
-if not st.session_state.trade_crypto and not st.session_state.trade_equities:
-    st.session_state.trade_crypto = bool(settings.get("trade_crypto", True))
-    st.session_state.trade_equities = bool(settings.get("trade_equities", True))
-    if not st.session_state.trade_crypto and not st.session_state.trade_equities:
-        st.session_state.trade_crypto = True
-    st.session_state.market_choice_note = True
-    st.rerun()
-trade_crypto = bool(st.session_state.trade_crypto)
-trade_equities = bool(st.session_state.trade_equities)
+_TRADE_CRYPTOS = "I trade cryptos"
+_TRADE_EQUITIES = "I trade equities"
+_TRADE_BOTH = "I trade both"
+_TRADE_CHOICES = (_TRADE_CRYPTOS, _TRADE_EQUITIES, _TRADE_BOTH)
+
+
+def _trade_choice(crypto: bool, equities: bool) -> str:
+    """The radio label for a saved pair. Both off is not a choice, so it reads as both."""
+    if crypto and not equities:
+        return _TRADE_CRYPTOS
+    if equities and not crypto:
+        return _TRADE_EQUITIES
+    return _TRADE_BOTH
+
+
+def _trade_flags(choice: str) -> tuple[bool, bool]:
+    if choice == _TRADE_CRYPTOS:
+        return True, False
+    if choice == _TRADE_EQUITIES:
+        return False, True
+    return True, True
+
+
+if st.session_state.get("trade_markets") not in _TRADE_CHOICES:
+    st.session_state.trade_markets = _trade_choice(
+        bool(settings.get("trade_crypto", True)),
+        bool(settings.get("trade_equities", True)),
+    )
+trade_crypto, trade_equities = _trade_flags(st.session_state.trade_markets)
 
 
 def get_builtin_profiles():
@@ -3104,11 +3120,8 @@ with st.sidebar.expander("⚖️ Scoring Balance Weights", expanded=False):
         st.rerun()
 
 with st.sidebar.expander("⚙️ Settings", expanded=False):
-    trade_crypto = st.checkbox("I trade crypto", key="trade_crypto")
-    trade_equities = st.checkbox("I trade equities", key="trade_equities")
-    st.caption("Saved on your account. A market you turn off is hidden, including its Quick Snapshot boxes. At least one stays on.")
-    if st.session_state.pop("market_choice_note", False):
-        st.caption("At least one market stays on.")
+    st.radio("Markets you trade", _TRADE_CHOICES, key="trade_markets")
+    st.caption("Saved on your account. A market you leave out is hidden, including its Quick Snapshot boxes.")
     days_history = st.slider("Days of history", 90, 365, int(settings.get("days_history", 200)))
     show_reasons = st.checkbox("Show score breakdown", value=settings.get("show_reasons", True))
     show_extra_metrics = st.checkbox(
