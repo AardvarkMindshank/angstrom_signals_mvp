@@ -2854,7 +2854,7 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
 
 **Market sentiment for crypto and stocks**
 
-In the single column these two sections sit under Quick Snapshot, crypto first and then stocks. Quick Snapshot shows each one as the colored score box and the status, such as Mildly bullish coverage, for the markets you trade. Each one uses the same layout as the asset sentiment under the chart: the score on the left, Your take on the right, then the articles. Neither is an asset, and neither is added to the tables or the technical score. Each score is an average of recent headlines, with a short summary, a positive paragraph, and a negative paragraph. Each article row also has a one-sentence AI Summary, after the date. A dash there means that score was saved before summaries, so press Refresh. It is stored once and shown to every account for about 12 hours. Your take works the same way as on an asset: agree, disagree, a score from 0 to 100, and one short comment. A refresh of that market clears the thumbs and personal scores. A comment stays for 12 hours. The search wording can be tightened later.
+In the single column these two sections sit under Quick Snapshot, crypto first and then stocks. Quick Snapshot shows each one as the colored score box, the status, such as Mildly bullish coverage, and the short summary to the right of the score, for the markets you trade. Each one uses the same layout as the asset sentiment under the chart: the score on the left, Your take on the right, then the articles. Neither is an asset, and neither is added to the tables or the technical score. Each score is an average of recent headlines, with a short summary, a positive paragraph, and a negative paragraph. Each article row also has a one-sentence AI Summary, after the date. A dash there means that score was saved before summaries, so press Refresh. It is stored once and shown to every account for about 12 hours. Your take works the same way as on an asset: agree, disagree, a score from 0 to 100, and one short comment. A refresh of that market clears the thumbs and personal scores. A comment stays for 12 hours. The search wording can be tightened later.
 
 **Max pain**
 
@@ -3758,7 +3758,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             snapshot_cards.append(("Top Stock", stock_top, "Stock", "snapshot_stock_top"))
             snapshot_cards.append(("Weakest Stock", stock_bot, "Stock", "snapshot_stock_weak"))
 
-        def render_mood_snapshot(label, score):
+        def render_mood_snapshot(label, score, summary):
             safe_label = html.escape(label)
             if score is None or pd.isna(score):
                 badge = sentiment_badge(None)
@@ -3770,10 +3770,19 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                     f"<div style='margin-top:8px;color:{color};font-weight:600;'>"
                     f"{html.escape(_mood_coverage(float(score)))}</div>"
                 )
+            text = " ".join(str(summary or "").split())
+            summary_html = ""
+            if text:
+                summary_html = (
+                    "<div style='flex:1;min-width:0;color:#111827;font-size:0.95rem;line-height:1.4;'>"
+                    f"{html.escape(text)}</div>"
+                )
             return (
                 "<div style='background: white; padding: 12px 16px; border-radius: 8px; border: 1px solid #e5e7eb;'>"
                 f"<div style='font-size: 0.8rem; color: #6b7280; margin-bottom: 8px;'>{safe_label}</div>"
-                f"{badge}{status}</div>"
+                "<div style='display:flex;align-items:flex-start;gap:16px;'>"
+                f"<div style='flex:none;'>{badge}{status}</div>"
+                f"{summary_html}</div></div>"
             )
 
         mood_specs = []
@@ -3794,7 +3803,10 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                 if mood_score is not None and pd.isna(mood_score):
                     mood_score = None
                 with column:
-                    st.markdown(render_mood_snapshot(mood_label, mood_score), unsafe_allow_html=True)
+                    st.markdown(
+                        render_mood_snapshot(mood_label, mood_score, (report or {}).get("summary")),
+                        unsafe_allow_html=True,
+                    )
 
         snapshot_columns = st.columns(len(snapshot_cards))
 
