@@ -139,6 +139,33 @@ export default function(component) {
     ].join("");
     document.head.appendChild(sideStyle);
   }
+  let layoutStyle = document.getElementById("angstrom-layout-controls");
+  if (layoutStyle && layoutStyle.dataset.layout !== "icons") {
+    layoutStyle.remove();
+    layoutStyle = null;
+  }
+  if (!layoutStyle) {
+    layoutStyle = document.createElement("style");
+    layoutStyle.id = "angstrom-layout-controls";
+    layoutStyle.dataset.layout = "icons";
+    const singleMark = "url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Crect x=%272.4%27 y=%272.4%27 width=%2719.2%27 height=%2719.2%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3C/svg%3E')";
+    const wideMark = "url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Crect x=%272.4%27 y=%272.4%27 width=%2719.2%27 height=%2719.2%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3Cpath d=%27M2.4 9.1H21.6M12 9.1V21.6%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3C/svg%3E')";
+    layoutStyle.textContent = [
+      "[class*='st-key-layout_single'],[class*='st-key-layout_wide'],[class*='st-key-open_all_sections'],[class*='st-key-collapse_all_sections']{width:fit-content !important;max-width:max-content !important;flex:0 0 auto !important;}",
+      ".st-key-layout_single button,.st-key-layout_wide button{position:relative;width:2.05rem !important;height:2.05rem !important;min-height:2.05rem !important;padding:0 !important;border-radius:.4rem !important;display:inline-flex !important;align-items:center;justify-content:center;font-size:0 !important;line-height:0 !important;color:#111827 !important;background:#fff !important;border:1px solid rgba(49,51,63,.28) !important;box-shadow:none !important;}",
+      ".st-key-layout_single button > *,.st-key-layout_wide button > *{position:absolute !important;width:1px !important;height:1px !important;overflow:hidden !important;clip:rect(0,0,0,0) !important;}",
+      ".st-key-layout_single button::before,.st-key-layout_wide button::before{content:'';position:absolute;left:50%;top:50%;width:15px;height:15px;transform:translate(-50%,-50%);background:currentColor;-webkit-mask:var(--mark) center / contain no-repeat;mask:var(--mark) center / contain no-repeat;}",
+      ".st-key-layout_single button{--mark:" + singleMark + ";}",
+      ".st-key-layout_wide button{--mark:" + wideMark + ";}",
+      ".st-key-layout_single button:hover,.st-key-layout_wide button:hover{border-color:#111827 !important;}",
+      ".st-key-layout_single button[data-testid='stBaseButton-primary'],.st-key-layout_wide button[data-testid='stBaseButton-primary']{background:#111827 !important;color:#fff !important;border-color:#111827 !important;}",
+      "html.angstrom-night .st-key-layout_single button,html.angstrom-night .st-key-layout_wide button{background:#262730 !important;color:#fafafa !important;border-color:#4b5563 !important;}",
+      "html.angstrom-night .st-key-layout_single button:hover,html.angstrom-night .st-key-layout_wide button:hover{border-color:#e5e7eb !important;}",
+      "html.angstrom-night .st-key-layout_single button[data-testid='stBaseButton-primary'],html.angstrom-night .st-key-layout_wide button[data-testid='stBaseButton-primary']{background:#f3f4f6 !important;color:#111827 !important;border-color:#f3f4f6 !important;}",
+      ".st-key-open_all_sections button,.st-key-collapse_all_sections button{width:auto !important;min-width:0 !important;max-width:max-content !important;height:2.05rem !important;min-height:2.05rem !important;padding:0 .7rem !important;white-space:nowrap;font-size:.85rem !important;}"
+    ].join("");
+    document.head.appendChild(layoutStyle);
+  }
   const apply = () => {
     const app = document.querySelector(".stApp");
     if (!app) return;
@@ -2696,10 +2723,10 @@ with st.sidebar.expander(notifications_label, expanded=False):
 if "section_fold" not in st.session_state:
     st.session_state.section_fold = {"open": True, "nonce": 0, "help_nonce": 0}
 
-title_col, layout_col, open_col, close_col = st.columns(
-    [4.3, 2.2, 1, 1.25], vertical_alignment="center",
-)
-with title_col:
+if st.session_state.get("section_layout") not in ("Single column", "Wide"):
+    st.session_state.section_layout = "Single column"
+wide_on = st.session_state.section_layout == "Wide"
+with st.container(horizontal=True, vertical_alignment="center", horizontal_alignment="distribute"):
     st.markdown(
         "<div style='display:flex;align-items:center;gap:0.85rem;margin:0.4rem 0;'>"
         f"{_brand_mark(58, align='left')}"
@@ -2710,36 +2737,38 @@ with title_col:
         "Market mood and technical signals, with the crowd alongside.</span></div></div>",
         unsafe_allow_html=True,
     )
-with layout_col:
-    st.segmented_control(
-        "Layout",
-        ["Single column", "Wide"],
-        default="Single column",
-        key="section_layout",
-        required=True,
-        label_visibility="collapsed",
-        width="stretch",
-        help=(
-            "Single column lists every section down the page, with market mood first. "
-            "Wide puts Quick Snapshot and the score tables across the top, market mood "
-            "on the left, and the chart, score breakdown, max pain, and market sentiment "
-            "on the right. On a narrow screen those two sides stack."
-        ),
-    )
-with open_col:
-    if st.button("Open all", key="open_all_sections", use_container_width=True):
-        st.session_state.section_fold = {
-            "open": True,
-            "nonce": st.session_state.section_fold["nonce"] + 1,
-            "help_nonce": st.session_state.section_fold.get("help_nonce", 0),
-        }
-with close_col:
-    if st.button("Collapse all", key="collapse_all_sections", use_container_width=True):
-        st.session_state.section_fold = {
-            "open": False,
-            "nonce": st.session_state.section_fold["nonce"] + 1,
-            "help_nonce": st.session_state.section_fold.get("help_nonce", 0) + 1,
-        }
+    with st.container(horizontal=True, vertical_alignment="center", gap="xsmall", width="content"):
+        if st.button(
+            "Single column",
+            key="layout_single",
+            type="primary" if not wide_on else "secondary",
+            help="Stack every section in one column, with market mood first.",
+        ):
+            st.session_state.section_layout = "Single column"
+            st.rerun()
+        if st.button(
+            "Wide",
+            key="layout_wide",
+            type="primary" if wide_on else "secondary",
+            help=(
+                "Snapshot and score tables across the top, market mood on the left, "
+                "and the chart sections on the right."
+            ),
+        ):
+            st.session_state.section_layout = "Wide"
+            st.rerun()
+        if st.button("Open all", key="open_all_sections", width="content"):
+            st.session_state.section_fold = {
+                "open": True,
+                "nonce": st.session_state.section_fold["nonce"] + 1,
+                "help_nonce": st.session_state.section_fold.get("help_nonce", 0),
+            }
+        if st.button("Collapse all", key="collapse_all_sections", width="content"):
+            st.session_state.section_fold = {
+                "open": False,
+                "nonce": st.session_state.section_fold["nonce"] + 1,
+                "help_nonce": st.session_state.section_fold.get("help_nonce", 0) + 1,
+            }
 
 with st.expander(
     "📖 Help and guides",
@@ -2792,7 +2821,7 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
     st.markdown("""
 **How to use it**
 
-1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest. Market mood for crypto, Market mood for stocks, Quick Snapshot, Crypto Scores, Equity Scores, Interactive Chart, Score Breakdown, Max pain, and Market sentiment each sit in a section that starts open. Close a header to fold that section away. **Open all** and **Collapse all**, on the right of the page title, do that for every one of those sections. **Wide**, beside them, puts Quick Snapshot and both score tables across the top, market mood on the left, and Interactive Chart, Score Breakdown, Max pain, and Market sentiment on the right. **Single column** is the list the page opens with, market mood first. On a narrow screen the wide layout stacks the left and right parts. **I trade crypto** and **I trade equities**, in Settings, are saved on your account. Turning one off hides that market's mood, its score table, and its Quick Snapshot boxes. The chart follows the markets left on. At least one stays on. Collapse all also closes this guide. Open all does not open it. **Feedback**, at the bottom of the sidebar, sends an issue or an idea. It is stored as submitted. The arrow on the left edge of the page closes the sidebar. It stays on that edge when the sidebar is closed, so the sidebar can be opened again. Hover the arrow to see which action it will take.
+1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest. Market mood for crypto, Market mood for stocks, Quick Snapshot, Crypto Scores, Equity Scores, Interactive Chart, Score Breakdown, Max pain, and Market sentiment each sit in a section that starts open. Close a header to fold that section away. **Open all** and **Collapse all**, on the right of the page title, do that for every one of those sections. The square beside them stacks every section in one column, with market mood first. The mark with a wide top and two panes underneath puts Quick Snapshot and both score tables across the top, market mood on the left, and Interactive Chart, Score Breakdown, Max pain, and Market sentiment on the right. On a narrow screen the wide layout stacks the left and right parts. **I trade crypto** and **I trade equities**, in Settings, are saved on your account. Turning one off hides that market's mood, its score table, and its Quick Snapshot boxes. The chart follows the markets left on. At least one stays on. Collapse all also closes this guide. Open all does not open it. **Feedback**, at the bottom of the sidebar, sends an issue or an idea. It is stored as submitted. The arrow on the left edge of the page closes the sidebar. It stays on that edge when the sidebar is closed, so the sidebar can be opened again. Hover the arrow to see which action it will take.
 2. Click a name in either table, a Quick Snapshot box, or an alert under Notifications. That asset stays highlighted, and the page moves down to the chart when the chart is off screen. Click a column title to sort that table. It starts with the strongest score at the top.
 3. Extra metrics add **7d %**, **Market Cap**, **ATR %**, and **Vol**. A separate checkbox adds **1d %** before the seven-day change and **30d %** after it. For **1d %** and **7d %**, green means the price rose and red means it fell. **30d %** uses the same colors as the **30-day trend**: green for a rise of about 2% or more, red for a fall of about 2% or more, and orange when the move stays inside about 2%. For stocks, one day is the previous trading session. **Market Cap** is the latest size of the asset, from CoinGecko for crypto and Yahoo for stocks. **ATR %** is volatility. **Vol** is volume versus its 20-day average.
 4. Alerts fire at 70 and 30 unless you move those sliders. One email goes to the address on your account when a technical score crosses a boundary. It is not sent again until the score leaves that boundary and crosses it later. Sentiment scores do not send alerts.
