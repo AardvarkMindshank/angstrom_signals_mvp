@@ -118,6 +118,26 @@ export default function(component) {
     ].join("");
     document.head.appendChild(style);
   }
+  let sideStyle = document.getElementById("angstrom-sidebar-tab-style");
+  if (sideStyle && sideStyle.dataset.layout !== "match") {
+    sideStyle.remove();
+    sideStyle = null;
+  }
+  if (!sideStyle) {
+    sideStyle = document.createElement("style");
+    sideStyle.id = "angstrom-sidebar-tab-style";
+    sideStyle.dataset.layout = "match";
+    sideStyle.textContent = [
+      ".angstrom-sidebar-tab{position:fixed;top:4.75rem;left:0;z-index:10000001;display:flex;align-items:center;justify-content:center;width:2rem;height:2rem;padding:0;border:1px solid rgba(49,51,63,.2);border-left:0;border-radius:0 .5rem .5rem 0;background:#fff;color:#808495;cursor:pointer;box-shadow:1px 1px 4px rgba(0,0,0,.08);transition:background .15s ease,color .15s ease;}",
+      ".angstrom-sidebar-tab:hover{background:#f0f2f6;color:#ff4b4b;}",
+      ".angstrom-sidebar-tab.is-closed svg{transform:scaleX(-1);}",
+      "html.angstrom-night .angstrom-sidebar-tab{background:#262730;color:#c5c8d0;border-color:#4b5563;}",
+      "html.angstrom-night .angstrom-sidebar-tab:hover{background:#31333f;color:#ff4b4b;}",
+      "[data-testid='stSidebarCollapseButton'],[data-testid='stExpandSidebarButton']{visibility:hidden !important;pointer-events:none !important;position:absolute !important;width:0 !important;min-width:0 !important;height:0 !important;margin:0 !important;overflow:hidden !important;}",
+      "@media print{.angstrom-sidebar-tab{display:none !important;}}"
+    ].join("");
+    document.head.appendChild(sideStyle);
+  }
   const apply = () => {
     const app = document.querySelector(".stApp");
     if (!app) return;
@@ -178,6 +198,71 @@ export default function(component) {
     });
     const media = window.matchMedia("(prefers-color-scheme: dark)");
     if (media.addEventListener) media.addEventListener("change", apply);
+    const tab = document.createElement("button");
+    tab.type = "button";
+    tab.id = "angstrom-sidebar-tab";
+    tab.className = "angstrom-sidebar-tab";
+    tab.setAttribute("aria-controls", "stSidebar");
+    tab.innerHTML = "<svg viewBox='0 0 24 24' width='22' height='22' aria-hidden='true'><path d='M15.2 6.2 9.4 12l5.8 5.8' fill='none' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/><path d='M10.2 6.2 4.4 12l5.8 5.8' fill='none' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/></svg>";
+    document.body.appendChild(tab);
+    const placeSidebarTab = () => {
+      const sidebar = document.querySelector("[data-testid='stSidebar']");
+      if (!sidebar) {
+        tab.hidden = true;
+        return;
+      }
+      tab.hidden = false;
+      const collapsed = sidebar.getAttribute("data-collapsed") === "true";
+      tab.classList.toggle("is-closed", collapsed);
+      const label = collapsed ? "Expand sidebar" : "Collapse sidebar";
+      tab.title = label;
+      tab.setAttribute("aria-label", label);
+      tab.setAttribute("aria-expanded", collapsed ? "false" : "true");
+      if (collapsed) {
+        tab.style.left = "0px";
+        return;
+      }
+      const edge = Math.max(0, Math.round(sidebar.getBoundingClientRect().right));
+      tab.style.left = edge + "px";
+    };
+    let tracking = 0;
+    const followSidebarTab = (ms) => {
+      cancelAnimationFrame(tracking);
+      const stop = performance.now() + ms;
+      const step = (now) => {
+        placeSidebarTab();
+        if (now < stop) tracking = requestAnimationFrame(step);
+      };
+      tracking = requestAnimationFrame(step);
+    };
+    tab.addEventListener("click", () => {
+      const sidebar = document.querySelector("[data-testid='stSidebar']");
+      const collapsed = sidebar && sidebar.getAttribute("data-collapsed") === "true";
+      const target = collapsed
+        ? document.querySelector("[data-testid='stExpandSidebarButton']")
+        : document.querySelector("[data-testid='stSidebarCollapseButton'] button");
+      if (target) target.click();
+      followSidebarTab(400);
+    });
+    const watchSidebar = () => {
+      const sidebar = document.querySelector("[data-testid='stSidebar']");
+      if (!sidebar || sidebar.dataset.tabWatch) return;
+      sidebar.dataset.tabWatch = "1";
+      new ResizeObserver(() => placeSidebarTab()).observe(sidebar);
+    };
+    watchSidebar();
+    placeSidebarTab();
+    const shell = document.querySelector(".stApp") || document.body;
+    new MutationObserver(() => {
+      watchSidebar();
+      placeSidebarTab();
+    }).observe(shell, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["data-collapsed", "style", "class"]
+    });
+    window.addEventListener("resize", () => placeSidebarTab());
   }
   return () => {};
 }
@@ -2689,7 +2774,7 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
     st.markdown("""
 **How to use it**
 
-1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest. Market mood for crypto, Market mood for stocks, Quick Snapshot, Crypto Scores, Equity Scores, Interactive Chart, Score Breakdown, Max pain, and Market sentiment each sit in a section that starts open. Close a header to fold that section away. **Open all** and **Collapse all**, on the right of the page title, do that for every one of those sections. Collapse all also closes this guide. Open all does not open it. **Feedback**, at the bottom of the sidebar, sends an issue or an idea. It is stored as submitted.
+1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest. Market mood for crypto, Market mood for stocks, Quick Snapshot, Crypto Scores, Equity Scores, Interactive Chart, Score Breakdown, Max pain, and Market sentiment each sit in a section that starts open. Close a header to fold that section away. **Open all** and **Collapse all**, on the right of the page title, do that for every one of those sections. Collapse all also closes this guide. Open all does not open it. **Feedback**, at the bottom of the sidebar, sends an issue or an idea. It is stored as submitted. The arrow on the left edge of the page closes the sidebar. It stays on that edge when the sidebar is closed, so the sidebar can be opened again. Hover the arrow to see which action it will take.
 2. Click a name in either table, a Quick Snapshot box, or an alert under Notifications. That asset stays highlighted, and the page moves down to the chart when the chart is off screen. Click a column title to sort that table. It starts with the strongest score at the top.
 3. Extra metrics add **7d %**, **Market Cap**, **ATR %**, and **Vol**. A separate checkbox adds **1d %** before the seven-day change and **30d %** after it. For **1d %** and **7d %**, green means the price rose and red means it fell. **30d %** uses the same colors as the **30-day trend**: green for a rise of about 2% or more, red for a fall of about 2% or more, and orange when the move stays inside about 2%. For stocks, one day is the previous trading session. **Market Cap** is the latest size of the asset, from CoinGecko for crypto and Yahoo for stocks. **ATR %** is volatility. **Vol** is volume versus its 20-day average.
 4. Alerts fire at 70 and 30 unless you move those sliders. One email goes to the address on your account when a technical score crosses a boundary. It is not sent again until the score leaves that boundary and crosses it later. Sentiment scores do not send alerts.
