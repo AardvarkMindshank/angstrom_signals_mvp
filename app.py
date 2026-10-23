@@ -439,14 +439,14 @@ export default function(component) {
       window.socialStreamState.pinned = pinned;
     }
     let style = document.getElementById("social-stream-style");
-    if (style && style.dataset.layout !== "width") {
+    if (style && style.dataset.layout !== "titles") {
       style.remove();
       style = null;
     }
     if (!style) {
       style = document.createElement("style");
       style.id = "social-stream-style";
-      style.dataset.layout = "width";
+      style.dataset.layout = "titles";
       style.textContent = [
         "#social-stream-root{position:fixed;inset:0;z-index:10000000;pointer-events:none;}",
         "#social-stream-root.is-open{pointer-events:auto;}",
@@ -474,7 +474,6 @@ export default function(component) {
         "#social-stream-root .head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:18px 18px 4px;}",
         "#social-stream-root h2{margin:0;font-size:1.15rem;line-height:1.25;font-weight:650;}",
         "#social-stream-root .kicker{font-size:.72rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#6b7280;margin-bottom:2px;}",
-        "#social-stream-root .hint{margin:6px 0 0;color:#6b7280;font-size:.8rem;line-height:1.35;}",
         "#social-stream-root .head-actions{display:flex;gap:6px;flex:none;}",
         "#social-stream-root .close,#social-stream-root .pin{background:#f3f4f6;border:0;border-radius:999px;padding:6px 12px;font:inherit;font-weight:600;cursor:pointer;color:#111827;}",
         "#social-stream-root .pin.is-on{background:#111827;color:#fff;}",
@@ -538,7 +537,7 @@ export default function(component) {
         "#social-stream-root.is-dark .panel{background:#0e1117;color:#fafafa;box-shadow:-12px 0 40px rgba(0,0,0,.45);}",
         "#social-stream-root.is-dark .width-grip::before{background:#6b7280;}",
         "#social-stream-root.is-dark .width-grip:hover::before,#social-stream-root.is-dark .width-grip.is-dragging::before{background:#e5e7eb;}",
-        "#social-stream-root.is-dark .kicker,#social-stream-root.is-dark .hint,#social-stream-root.is-dark .count,#social-stream-root.is-dark .chars,#social-stream-root.is-dark .when,#social-stream-root.is-dark .empty,#social-stream-root.is-dark .picks label,#social-stream-root.is-dark .context-label,#social-stream-root.is-dark .replying{color:#9ca3af;}",
+        "#social-stream-root.is-dark .kicker,#social-stream-root.is-dark .count,#social-stream-root.is-dark .chars,#social-stream-root.is-dark .when,#social-stream-root.is-dark .empty,#social-stream-root.is-dark .picks label,#social-stream-root.is-dark .context-label,#social-stream-root.is-dark .replying{color:#9ca3af;}",
         "#social-stream-root.is-dark .finder input,#social-stream-root.is-dark select,#social-stream-root.is-dark .chat-box{background:#262730;color:#fafafa;border-color:#4b5563;color-scheme:dark;}",
         "#social-stream-root.is-dark .finder input::placeholder,#social-stream-root.is-dark .chat-box::placeholder{color:#9ca3af;}",
         "#social-stream-root.is-dark .close,#social-stream-root.is-dark .pin{background:#262730;color:#fafafa;}",
@@ -567,14 +566,14 @@ export default function(component) {
       document.head.appendChild(style);
     }
     let root = document.getElementById("social-stream-root");
-    if (root && root.dataset.layout !== "width") {
+    if (root && root.dataset.layout !== "titles") {
       root.remove();
       root = null;
     }
     if (!root) {
       root = document.createElement("div");
       root.id = "social-stream-root";
-      root.dataset.layout = "width";
+      root.dataset.layout = "titles";
       root.innerHTML = [
         "<div class='scrim'></div>",
         "<aside class='panel' role='dialog' aria-label='Social signals and chat'>",
@@ -584,7 +583,6 @@ export default function(component) {
         "<header class='head'><div>",
         "<div class='kicker'>Social signals</div>",
         "<h2>Social signals stream</h2>",
-        "<p class='hint'>Newest first. Each note shows the sentiment it was answering, and stays for 12 hours. Reply, or mark any note up or down, including one you posted. Star another person to keep them under Favourites. All assets, My watchlists, or one of your watchlists is saved on your account.</p>",
         "</div><div class='head-actions'><button type='button' class='pin' title='Pin the panel'>Pin</button><button type='button' class='close'>Close</button></div></header>",
         "<div class='filters'><div class='chips'>",
         "<button type='button' data-side=''>All</button>",
@@ -600,7 +598,6 @@ export default function(component) {
         "<div class='chat-pane'>",
         "<header class='chat-head'><div class='kicker'>Chat</div>",
         "<h2>General chat</h2>",
-        "<p class='hint'>Newest first. Post a note, reply, or mark any comment up or down, including one you posted. These notes stay in the room. The search at the top covers this chat too.</p>",
         "<div class='chat-filters'><div class='picks'>",
         "<label>Person<select id='chat-person'></select></label>",
         "</div></div></header>",
