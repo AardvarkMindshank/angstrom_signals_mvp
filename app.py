@@ -2273,6 +2273,8 @@ def load_user_preferences():
         "show_reasons": True,
         "show_extra_metrics": True,
         "show_period_changes": True,
+        "trade_crypto": True,
+        "trade_equities": True,
     }
 
     try:
@@ -2790,7 +2792,7 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
     st.markdown("""
 **How to use it**
 
-1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest. Market mood for crypto, Market mood for stocks, Quick Snapshot, Crypto Scores, Equity Scores, Interactive Chart, Score Breakdown, Max pain, and Market sentiment each sit in a section that starts open. Close a header to fold that section away. **Open all** and **Collapse all**, on the right of the page title, do that for every one of those sections. **Wide**, beside them, puts Quick Snapshot and both score tables across the top, market mood on the left, and Interactive Chart, Score Breakdown, Max pain, and Market sentiment on the right. **Single column** is the list the page opens with, market mood first. On a narrow screen the wide layout stacks the left and right parts. Collapse all also closes this guide. Open all does not open it. **Feedback**, at the bottom of the sidebar, sends an issue or an idea. It is stored as submitted. The arrow on the left edge of the page closes the sidebar. It stays on that edge when the sidebar is closed, so the sidebar can be opened again. Hover the arrow to see which action it will take.
+1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest. Market mood for crypto, Market mood for stocks, Quick Snapshot, Crypto Scores, Equity Scores, Interactive Chart, Score Breakdown, Max pain, and Market sentiment each sit in a section that starts open. Close a header to fold that section away. **Open all** and **Collapse all**, on the right of the page title, do that for every one of those sections. **Wide**, beside them, puts Quick Snapshot and both score tables across the top, market mood on the left, and Interactive Chart, Score Breakdown, Max pain, and Market sentiment on the right. **Single column** is the list the page opens with, market mood first. On a narrow screen the wide layout stacks the left and right parts. **I trade crypto** and **I trade equities**, in Settings, are saved on your account. Turning one off hides that market's mood, its score table, and its Quick Snapshot boxes. The chart follows the markets left on. At least one stays on. Collapse all also closes this guide. Open all does not open it. **Feedback**, at the bottom of the sidebar, sends an issue or an idea. It is stored as submitted. The arrow on the left edge of the page closes the sidebar. It stays on that edge when the sidebar is closed, so the sidebar can be opened again. Hover the arrow to see which action it will take.
 2. Click a name in either table, a Quick Snapshot box, or an alert under Notifications. That asset stays highlighted, and the page moves down to the chart when the chart is off screen. Click a column title to sort that table. It starts with the strongest score at the top.
 3. Extra metrics add **7d %**, **Market Cap**, **ATR %**, and **Vol**. A separate checkbox adds **1d %** before the seven-day change and **30d %** after it. For **1d %** and **7d %**, green means the price rose and red means it fell. **30d %** uses the same colors as the **30-day trend**: green for a rise of about 2% or more, red for a fall of about 2% or more, and orange when the move stays inside about 2%. For stocks, one day is the previous trading session. **Market Cap** is the latest size of the asset, from CoinGecko for crypto and Yahoo for stocks. **ATR %** is volatility. **Vol** is volume versus its 20-day average.
 4. Alerts fire at 70 and 30 unless you move those sliders. One email goes to the address on your account when a technical score crosses a boundary. It is not sent again until the score leaves that boundary and crosses it later. Sentiment scores do not send alerts.
@@ -2858,6 +2860,19 @@ STOCK_WATCHLIST = prefs["stock"]
 current_weights = prefs["weights"]
 custom_profiles = prefs["profiles"]
 settings = prefs["settings"]
+if "trade_crypto" not in st.session_state:
+    st.session_state.trade_crypto = bool(settings.get("trade_crypto", True))
+if "trade_equities" not in st.session_state:
+    st.session_state.trade_equities = bool(settings.get("trade_equities", True))
+if not st.session_state.trade_crypto and not st.session_state.trade_equities:
+    st.session_state.trade_crypto = bool(settings.get("trade_crypto", True))
+    st.session_state.trade_equities = bool(settings.get("trade_equities", True))
+    if not st.session_state.trade_crypto and not st.session_state.trade_equities:
+        st.session_state.trade_crypto = True
+    st.session_state.market_choice_note = True
+    st.rerun()
+trade_crypto = bool(st.session_state.trade_crypto)
+trade_equities = bool(st.session_state.trade_equities)
 
 
 def get_builtin_profiles():
@@ -2917,53 +2932,55 @@ if st.session_state.get("reset_weights"):
     st.session_state.reset_weights = False
 
 with st.sidebar.expander("⭐ Watchlists", expanded=False):
-    with st.expander("Edit Crypto", expanded=False):
-        st.caption("Add a ticker (XLM) or a name (Stellar).")
-        new_crypto = st.text_input("Add crypto", key="new_crypto", placeholder="e.g. XLM or Stellar")
-        if st.button("Add Crypto") and new_crypto:
-            found = find_crypto(new_crypto)
-            if not found:
-                st.warning(f"No coin found for '{new_crypto.strip()}'. Try the ticker, such as XLM, or the name, such as Stellar.")
-            else:
-                cid, label = found
-                ticker = crypto_ticker(cid)
-                alias = (ticker or "").lower()
-                changed = False
-                if alias and alias != cid and alias in CRYPTO_WATCHLIST:
-                    CRYPTO_WATCHLIST.pop(alias, None)
-                    changed = True
-                if cid and cid not in CRYPTO_WATCHLIST:
-                    CRYPTO_WATCHLIST[cid] = label
-                    changed = True
-                if changed:
+    if trade_crypto:
+        with st.expander("Edit Crypto", expanded=False):
+            st.caption("Add a ticker (XLM) or a name (Stellar).")
+            new_crypto = st.text_input("Add crypto", key="new_crypto", placeholder="e.g. XLM or Stellar")
+            if st.button("Add Crypto") and new_crypto:
+                found = find_crypto(new_crypto)
+                if not found:
+                    st.warning(f"No coin found for '{new_crypto.strip()}'. Try the ticker, such as XLM, or the name, such as Stellar.")
+                else:
+                    cid, label = found
+                    ticker = crypto_ticker(cid)
+                    alias = (ticker or "").lower()
+                    changed = False
+                    if alias and alias != cid and alias in CRYPTO_WATCHLIST:
+                        CRYPTO_WATCHLIST.pop(alias, None)
+                        changed = True
+                    if cid and cid not in CRYPTO_WATCHLIST:
+                        CRYPTO_WATCHLIST[cid] = label
+                        changed = True
+                    if changed:
+                        prefs["crypto"] = CRYPTO_WATCHLIST
+                        save_preferences_to_cloud({"crypto_watchlist": CRYPTO_WATCHLIST})
+                        st.rerun()
+            if CRYPTO_WATCHLIST:
+                to_remove = st.selectbox("Remove crypto", [""] + list(CRYPTO_WATCHLIST.keys()), key="rm_crypto")
+                if to_remove and st.button("Remove Crypto"):
+                    CRYPTO_WATCHLIST.pop(to_remove, None)
                     prefs["crypto"] = CRYPTO_WATCHLIST
                     save_preferences_to_cloud({"crypto_watchlist": CRYPTO_WATCHLIST})
                     st.rerun()
-        if CRYPTO_WATCHLIST:
-            to_remove = st.selectbox("Remove crypto", [""] + list(CRYPTO_WATCHLIST.keys()), key="rm_crypto")
-            if to_remove and st.button("Remove Crypto"):
-                CRYPTO_WATCHLIST.pop(to_remove, None)
-                prefs["crypto"] = CRYPTO_WATCHLIST
-                save_preferences_to_cloud({"crypto_watchlist": CRYPTO_WATCHLIST})
-                st.rerun()
 
-    with st.expander("Edit Stocks", expanded=False):
-        st.caption("Add by ticker (AAPL, MSFT, etc.)")
-        new_stock = st.text_input("Add stock ticker", key="new_stock", placeholder="e.g. GOOGL")
-        if st.button("Add Stock") and new_stock:
-            tic = new_stock.strip().upper()
-            if tic and tic not in STOCK_WATCHLIST:
-                STOCK_WATCHLIST[tic] = tic
-                prefs["stock"] = STOCK_WATCHLIST
-                save_preferences_to_cloud({"stock_watchlist": STOCK_WATCHLIST})
-                st.rerun()
-        if STOCK_WATCHLIST:
-            to_remove = st.selectbox("Remove stock", [""] + list(STOCK_WATCHLIST.keys()), key="rm_stock")
-            if to_remove and st.button("Remove Stock"):
-                STOCK_WATCHLIST.pop(to_remove, None)
-                prefs["stock"] = STOCK_WATCHLIST
-                save_preferences_to_cloud({"stock_watchlist": STOCK_WATCHLIST})
-                st.rerun()
+    if trade_equities:
+        with st.expander("Edit Stocks", expanded=False):
+            st.caption("Add by ticker (AAPL, MSFT, etc.)")
+            new_stock = st.text_input("Add stock ticker", key="new_stock", placeholder="e.g. GOOGL")
+            if st.button("Add Stock") and new_stock:
+                tic = new_stock.strip().upper()
+                if tic and tic not in STOCK_WATCHLIST:
+                    STOCK_WATCHLIST[tic] = tic
+                    prefs["stock"] = STOCK_WATCHLIST
+                    save_preferences_to_cloud({"stock_watchlist": STOCK_WATCHLIST})
+                    st.rerun()
+            if STOCK_WATCHLIST:
+                to_remove = st.selectbox("Remove stock", [""] + list(STOCK_WATCHLIST.keys()), key="rm_stock")
+                if to_remove and st.button("Remove Stock"):
+                    STOCK_WATCHLIST.pop(to_remove, None)
+                    prefs["stock"] = STOCK_WATCHLIST
+                    save_preferences_to_cloud({"stock_watchlist": STOCK_WATCHLIST})
+                    st.rerun()
 
 with st.sidebar.expander("⚖️ Scoring Balance Weights", expanded=False):
     st.caption("Adjust the relative importance of each indicator. Every slider changes the score.")
@@ -3052,6 +3069,11 @@ with st.sidebar.expander("⚖️ Scoring Balance Weights", expanded=False):
         st.rerun()
 
 with st.sidebar.expander("⚙️ Settings", expanded=False):
+    trade_crypto = st.checkbox("I trade crypto", key="trade_crypto")
+    trade_equities = st.checkbox("I trade equities", key="trade_equities")
+    st.caption("Saved on your account. A market you turn off is hidden, including its Quick Snapshot boxes. At least one stays on.")
+    if st.session_state.pop("market_choice_note", False):
+        st.caption("At least one market stays on.")
     days_history = st.slider("Days of history", 90, 365, int(settings.get("days_history", 200)))
     show_reasons = st.checkbox("Show score breakdown", value=settings.get("show_reasons", True))
     show_extra_metrics = st.checkbox(
@@ -3068,6 +3090,8 @@ with st.sidebar.expander("⚙️ Settings", expanded=False):
         "show_reasons": show_reasons,
         "show_extra_metrics": show_extra_metrics,
         "show_period_changes": show_period_changes,
+        "trade_crypto": trade_crypto,
+        "trade_equities": trade_equities,
     }
     if settings.get("stream_asset") in ("all", "watchlist", "crypto", "stock"):
         new_settings["stream_asset"] = settings["stream_asset"]
@@ -3463,13 +3487,18 @@ def _asset_logos(crypto_watchlist, stock_watchlist, shared: dict) -> dict[str, s
 
 
 @st.fragment
-def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, show_reasons_flag, show_extra_metrics_flag, show_period_changes_flag):
+def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, show_reasons_flag, show_extra_metrics_flag, show_period_changes_flag, trade_crypto, trade_equities):
     if "technical_due" not in st.session_state:
         st.session_state.technical_due = time.time() + _TECHNICAL_REFRESH_SECONDS
 
     wide_layout = st.session_state.get("section_layout") == "Wide"
+    allowed_kinds = []
+    if trade_crypto:
+        allowed_kinds.append("Crypto")
+    if trade_equities:
+        allowed_kinds.append("Stock")
     if not wide_layout:
-        show_market_moods()
+        show_market_moods(trade_crypto, trade_equities)
 
     with section_expander("📸 Quick Snapshot", "quick_snapshot"):
         _, snap_refresh = st.columns([4, 1.45], vertical_alignment="center")
@@ -3545,10 +3574,14 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                     results.append(result)
             return results
 
-        crypto_results = process_watchlist(crypto_watchlist, is_crypto=True)
-        stock_results = process_watchlist(stock_watchlist, is_crypto=False)
+        crypto_results = process_watchlist(crypto_watchlist, is_crypto=True) if trade_crypto else []
+        stock_results = process_watchlist(stock_watchlist, is_crypto=False) if trade_equities else []
         if show_extra_metrics_flag:
-            caps = load_market_caps(tuple(crypto_watchlist), tuple(stock_watchlist), nonce)
+            caps = load_market_caps(
+                tuple(crypto_watchlist) if trade_crypto else (),
+                tuple(stock_watchlist) if trade_equities else (),
+                nonce,
+            )
             for row in crypto_results:
                 row["market_cap"] = (caps.get("crypto") or {}).get(str(row.get("key") or "").lower())
             for row in stock_results:
@@ -3636,7 +3669,14 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                 st.session_state.chart_pick_from_row = True
             _rerun_fragment()
 
-        c1, c2, c3, c4 = st.columns(4)
+        snapshot_cards = []
+        if trade_crypto:
+            snapshot_cards.append(("Top Crypto", crypto_top, "Crypto", "snapshot_crypto_top"))
+            snapshot_cards.append(("Weakest Crypto", crypto_bot, "Crypto", "snapshot_crypto_weak"))
+        if trade_equities:
+            snapshot_cards.append(("Top Stock", stock_top, "Stock", "snapshot_stock_top"))
+            snapshot_cards.append(("Weakest Stock", stock_bot, "Stock", "snapshot_stock_weak"))
+        snapshot_columns = st.columns(len(snapshot_cards))
 
         def render_snapshot_card(title, name, score, pick, logo_url=None):
             color, bg, arrow, _bar = tone(score)
@@ -3683,10 +3723,8 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                 if picked:
                     _select_chart_asset(str(picked))
 
-        show_snapshot(c1, "Top Crypto", crypto_top, "Crypto", "snapshot_crypto_top")
-        show_snapshot(c2, "Weakest Crypto", crypto_bot, "Crypto", "snapshot_crypto_weak")
-        show_snapshot(c3, "Top Stock", stock_top, "Stock", "snapshot_stock_top")
-        show_snapshot(c4, "Weakest Stock", stock_bot, "Stock", "snapshot_stock_weak")
+        for column, (card_title, card_row, card_kind, card_key) in zip(snapshot_columns, snapshot_cards):
+            show_snapshot(column, card_title, card_row, card_kind, card_key)
         st.caption("Click a box to open that asset on the chart.")
 
     def render_score_bar(score):
@@ -3900,23 +3938,36 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
         chosen_kind = str(chosen_kind)
         chosen_asset = str(chosen_asset)
         chosen_list = crypto_watchlist if chosen_kind == "Crypto" else stock_watchlist if chosen_kind == "Stock" else {}
-        if chosen_asset in chosen_list:
+        if chosen_kind in allowed_kinds and chosen_asset in chosen_list:
             st.session_state.chart_pick = (chosen_kind, chosen_asset)
             st.session_state.chart_pick_from_row = True
         del st.query_params["chart_kind"]
         del st.query_params["chart_asset"]
 
-    if "chart_pick" not in st.session_state:
-        if crypto_watchlist:
-            st.session_state.chart_pick = ("Crypto", next(iter(crypto_watchlist)))
-        elif stock_watchlist:
-            st.session_state.chart_pick = ("Stock", next(iter(stock_watchlist)))
+    pick = st.session_state.get("chart_pick")
+    if not pick or pick[0] not in allowed_kinds:
+        if "Crypto" in allowed_kinds and crypto_watchlist:
+            asset_id = next(iter(crypto_watchlist))
+            st.session_state.chart_pick = ("Crypto", asset_id)
+            st.session_state.asset_type = "Crypto"
+            st.session_state.asset_crypto = asset_id
+        elif "Stock" in allowed_kinds and stock_watchlist:
+            asset_id = next(iter(stock_watchlist))
+            st.session_state.chart_pick = ("Stock", asset_id)
+            st.session_state.asset_type = "Stock"
+            st.session_state.asset_stock = asset_id
+        else:
+            st.session_state.pop("chart_pick", None)
+    elif st.session_state.get("asset_type") not in allowed_kinds:
+        st.session_state.asset_type = pick[0]
 
-    style_and_show_table(crypto_results, "₿ Crypto Scores", "Crypto", "crypto_scores")
-    style_and_show_table(stock_results, "📈 Equity Scores", "Stock", "equity_scores")
+    if trade_crypto:
+        style_and_show_table(crypto_results, "₿ Crypto Scores", "Crypto", "crypto_scores")
+    if trade_equities:
+        style_and_show_table(stock_results, "📈 Equity Scores", "Stock", "equity_scores")
 
     pick = st.session_state.get("chart_pick")
-    if pick and (
+    if pick and pick[0] in allowed_kinds and (
         st.session_state.pop("chart_pick_from_row", False)
         or "asset_type" not in st.session_state
     ):
@@ -3931,8 +3982,8 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
 
     def selected_chart_name():
         kind = st.session_state.get("asset_type")
-        if kind not in ("Crypto", "Stock"):
-            kind = "Crypto" if crypto_watchlist else "Stock"
+        if kind not in allowed_kinds:
+            kind = allowed_kinds[0] if allowed_kinds else "Crypto"
         watchlist = crypto_watchlist if kind == "Crypto" else stock_watchlist
         state_key = "asset_crypto" if kind == "Crypto" else "asset_stock"
         asset_id = st.session_state.get(state_key)
@@ -3950,7 +4001,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
     if wide_layout:
         mood_col, asset_col = st.columns([2, 3], gap="medium")
         with mood_col:
-            show_market_moods()
+            show_market_moods(trade_crypto, trade_equities)
         asset_area = asset_col
     else:
         asset_area = nullcontext()
@@ -3973,10 +4024,15 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                 },
             )
 
-            col1, col2 = st.columns([1, 3])
-            with col1:
-                asset_type = st.selectbox("Type", ["Crypto", "Stock"], key="asset_type")
-            with col2:
+            if len(allowed_kinds) > 1:
+                col1, col2 = st.columns([1, 3])
+                with col1:
+                    asset_type = st.selectbox("Type", allowed_kinds, key="asset_type")
+                asset_box = col2
+            else:
+                asset_type = allowed_kinds[0]
+                asset_box = st.container()
+            with asset_box:
                 watchlist = crypto_watchlist if asset_type == "Crypto" else stock_watchlist
                 options = list(watchlist.keys())
                 asset_state_key = "asset_crypto" if asset_type == "Crypto" else "asset_stock"
@@ -4634,7 +4690,7 @@ def _mood_card(spec: dict, row: dict | None, deadlines: dict) -> None:
     st.caption("This reads recent coverage. It is not the technical score, and it is not advice.")
 
 
-def show_market_moods() -> None:
+def show_market_moods(trade_crypto: bool = True, trade_equities: bool = True) -> None:
     """Crypto market, then the stock market. Each uses the asset sentiment layout."""
     stored = load_market_moods(supabase)
     if stored is None:
@@ -4643,6 +4699,10 @@ def show_market_moods() -> None:
         return
     deadlines = st.session_state.setdefault("mood_due", {})
     for spec in MACRO_MOODS:
+        if spec["key"] == "crypto" and not trade_crypto:
+            continue
+        if spec["key"] == "stock" and not trade_equities:
+            continue
         mood_icon = "🪙" if spec["key"] == "crypto" else "📈"
         with section_expander(f"{mood_icon} Market mood - {spec['label']}", f"market_mood_{spec['key']}"):
             _mood_card(spec, stored.get(spec["key"]), deadlines)
@@ -4862,6 +4922,8 @@ render_dashboard(
     show_reasons,
     show_extra_metrics,
     show_period_changes,
+    trade_crypto,
+    trade_equities,
 )
 
 st.markdown(

@@ -189,46 +189,50 @@ def run_background_checks() -> None:
 
         settings = user_pref.get("settings") or {}
         days_history = int(settings.get("days_history", 200) or 200)
+        trade_crypto = settings.get("trade_crypto", True) is not False
+        trade_equities = settings.get("trade_equities", True) is not False
         weights = user_pref.get("scoring_weights") or None
         results = []
 
         print(f"Checking assets for user {user_id}")
 
-        for coin_id, name in crypto_list.items():
-            cache_key = (str(coin_id).lower(), days_history)
-            if cache_key not in crypto_cache:
-                crypto_cache[cache_key] = fetch_crypto_data(coin_id, days_history)
-            df, err = crypto_cache[cache_key]
-            if err:
-                print(err)
-                continue
-            _keep_closes(shared_prices, "Crypto", coin_id, df)
-            try:
-                score = _score_asset(df, weights)
-            except Exception as exc:
-                print(f"Scoring failed for {coin_id}: {exc}")
-                continue
-            if score is None:
-                continue
-            results.append({"key": coin_id, "symbol": name, "score": score})
+        if trade_crypto:
+            for coin_id, name in crypto_list.items():
+                cache_key = (str(coin_id).lower(), days_history)
+                if cache_key not in crypto_cache:
+                    crypto_cache[cache_key] = fetch_crypto_data(coin_id, days_history)
+                df, err = crypto_cache[cache_key]
+                if err:
+                    print(err)
+                    continue
+                _keep_closes(shared_prices, "Crypto", coin_id, df)
+                try:
+                    score = _score_asset(df, weights)
+                except Exception as exc:
+                    print(f"Scoring failed for {coin_id}: {exc}")
+                    continue
+                if score is None:
+                    continue
+                results.append({"key": coin_id, "symbol": name, "score": score})
 
-        for ticker, name in stock_list.items():
-            cache_key = (str(ticker).upper(), days_history)
-            if cache_key not in stock_cache:
-                stock_cache[cache_key] = fetch_stock_data(ticker, period=period_for_days(days_history))
-            df, err = stock_cache[cache_key]
-            if err:
-                print(err)
-                continue
-            _keep_closes(shared_prices, "Stock", ticker, df)
-            try:
-                score = _score_asset(df, weights)
-            except Exception as exc:
-                print(f"Scoring failed for {ticker}: {exc}")
-                continue
-            if score is None:
-                continue
-            results.append({"key": ticker, "symbol": f"{name} ({ticker})", "score": score})
+        if trade_equities:
+            for ticker, name in stock_list.items():
+                cache_key = (str(ticker).upper(), days_history)
+                if cache_key not in stock_cache:
+                    stock_cache[cache_key] = fetch_stock_data(ticker, period=period_for_days(days_history))
+                df, err = stock_cache[cache_key]
+                if err:
+                    print(err)
+                    continue
+                _keep_closes(shared_prices, "Stock", ticker, df)
+                try:
+                    score = _score_asset(df, weights)
+                except Exception as exc:
+                    print(f"Scoring failed for {ticker}: {exc}")
+                    continue
+                if score is None:
+                    continue
+                results.append({"key": ticker, "symbol": f"{name} ({ticker})", "score": score})
 
         try:
             opened = evaluate_alerts(
