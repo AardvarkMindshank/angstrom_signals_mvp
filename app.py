@@ -354,14 +354,14 @@ export default function(component) {
       window.socialStreamState.pinned = pinned;
     }
     let style = document.getElementById("social-stream-style");
-    if (style && style.dataset.layout !== "night") {
+    if (style && style.dataset.layout !== "width") {
       style.remove();
       style = null;
     }
     if (!style) {
       style = document.createElement("style");
       style.id = "social-stream-style";
-      style.dataset.layout = "night";
+      style.dataset.layout = "width";
       style.textContent = [
         "#social-stream-root{position:fixed;inset:0;z-index:10000000;pointer-events:none;}",
         "#social-stream-root.is-open{pointer-events:auto;}",
@@ -370,7 +370,12 @@ export default function(component) {
         "#social-stream-root.is-open .scrim{opacity:1;}",
         "#social-stream-root.is-open.is-pinned .scrim{opacity:0;pointer-events:none;}",
         "#social-stream-root.is-open.is-pinned .panel,#social-stream-root.is-open.is-pinned .edge{pointer-events:auto;}",
-        "#social-stream-root .panel{position:absolute;top:0;right:0;height:100%;width:min(420px,100vw);background:#fff;color:#111827;box-shadow:-12px 0 40px rgba(17,24,39,.18);transform:translateX(100%);transition:transform .22s ease;display:flex;flex-direction:column;overflow:hidden;pointer-events:auto;}",
+        "#social-stream-root .panel{position:absolute;top:0;right:0;height:100%;width:min(var(--social-width,420px),100vw);background:#fff;color:#111827;box-shadow:-12px 0 40px rgba(17,24,39,.18);transform:translateX(100%);transition:transform .22s ease;display:flex;flex-direction:column;overflow:hidden;pointer-events:auto;}",
+        "#social-stream-root .width-grip{position:absolute;top:0;bottom:0;left:0;width:12px;z-index:3;cursor:col-resize;touch-action:none;user-select:none;}",
+        "#social-stream-root .width-grip::before{content:'';position:absolute;top:50%;left:3px;width:4px;height:48px;margin-top:-24px;border-radius:999px;background:#9ca3af;}",
+        "#social-stream-root .width-grip:hover::before,#social-stream-root .width-grip.is-dragging::before{background:#111827;}",
+        "#social-stream-root.is-width-dragging,#social-stream-root.is-width-dragging *{cursor:col-resize !important;user-select:none !important;}",
+        "#social-stream-root.is-width-dragging .panel,#social-stream-root.is-width-dragging .edge{transition:none;}",
         "#social-stream-root .stream-pane,#social-stream-root .chat-pane{display:flex;flex-direction:column;min-height:0;overflow:hidden;}",
         "#social-stream-root .splitter{position:relative;flex:none;height:16px;cursor:row-resize;background:#9ca3af;border-top:1px solid #4b5563;border-bottom:1px solid #4b5563;display:flex;align-items:center;justify-content:center;touch-action:none;user-select:none;}",
         "#social-stream-root .splitter::before{content:'';width:64px;height:4px;border-radius:999px;background:#1f2937;}",
@@ -390,7 +395,7 @@ export default function(component) {
         "#social-stream-root .pin.is-on{background:#111827;color:#fff;}",
         "#social-stream-root .edge{position:fixed;top:4.75rem;right:0;z-index:2;pointer-events:auto;display:flex;align-items:center;justify-content:center;width:2rem;height:2rem;padding:0;border:1px solid rgba(49,51,63,.2);border-right:0;border-radius:.5rem 0 0 .5rem;background:#fff;color:#808495;cursor:pointer;box-shadow:-1px 1px 4px rgba(0,0,0,.08);transition:right .22s ease,background .15s ease,color .15s ease;}",
         "#social-stream-root .edge:hover{background:#f0f2f6;color:#ff4b4b;}",
-        "#social-stream-root.is-open .edge{right:min(420px,calc(100vw - 2.25rem));}",
+        "#social-stream-root.is-open .edge{right:min(var(--social-width,420px),calc(100vw - 2.25rem));}",
         "#social-stream-root.is-open .edge svg{transform:scaleX(-1);}",
         "#social-stream-root .filters{padding:10px 18px 0;}",
         "#social-stream-root .chips{display:flex;flex-wrap:wrap;gap:6px;}",
@@ -446,6 +451,8 @@ export default function(component) {
         "#social-stream-root .summary{margin:4px 0 0;color:#374151;font-size:.82rem;line-height:1.4;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}",
         "#social-stream-root .empty{color:#6b7280;padding:18px 0;font-size:.9rem;line-height:1.4;}",
         "#social-stream-root.is-dark .panel{background:#0e1117;color:#fafafa;box-shadow:-12px 0 40px rgba(0,0,0,.45);}",
+        "#social-stream-root.is-dark .width-grip::before{background:#6b7280;}",
+        "#social-stream-root.is-dark .width-grip:hover::before,#social-stream-root.is-dark .width-grip.is-dragging::before{background:#e5e7eb;}",
         "#social-stream-root.is-dark .kicker,#social-stream-root.is-dark .hint,#social-stream-root.is-dark .count,#social-stream-root.is-dark .chars,#social-stream-root.is-dark .when,#social-stream-root.is-dark .empty,#social-stream-root.is-dark .picks label,#social-stream-root.is-dark .context-label,#social-stream-root.is-dark .replying{color:#9ca3af;}",
         "#social-stream-root.is-dark .finder input,#social-stream-root.is-dark select,#social-stream-root.is-dark .chat-box{background:#262730;color:#fafafa;border-color:#4b5563;color-scheme:dark;}",
         "#social-stream-root.is-dark .finder input::placeholder,#social-stream-root.is-dark .chat-box::placeholder{color:#9ca3af;}",
@@ -475,17 +482,18 @@ export default function(component) {
       document.head.appendChild(style);
     }
     let root = document.getElementById("social-stream-root");
-    if (root && root.dataset.layout !== "pin") {
+    if (root && root.dataset.layout !== "width") {
       root.remove();
       root = null;
     }
     if (!root) {
       root = document.createElement("div");
       root.id = "social-stream-root";
-      root.dataset.layout = "pin";
+      root.dataset.layout = "width";
       root.innerHTML = [
         "<div class='scrim'></div>",
         "<aside class='panel' role='dialog' aria-label='Social signals and chat'>",
+        "<div class='width-grip' role='separator' aria-orientation='vertical' title='Drag to resize the panel'></div>",
         "<div class='finder'><input id='panel-search' type='search' placeholder='Search the stream and the chat' aria-label='Search the stream and the chat'></div>",
         "<div class='stream-pane'>",
         "<header class='head'><div>",
@@ -591,6 +599,42 @@ export default function(component) {
         }
         closeStream();
       });
+      const applyWidth = (px) => {
+        const max = Math.max(320, Math.min(900, window.innerWidth - 36));
+        const next = Math.min(max, Math.max(320, Math.round(px)));
+        root.style.setProperty("--social-width", next + "px");
+        try { sessionStorage.setItem("angstrom-stream-width", String(next)); } catch (error) {}
+      };
+      try {
+        const storedWidth = Number(sessionStorage.getItem("angstrom-stream-width"));
+        applyWidth(storedWidth >= 280 ? storedWidth : 420);
+      } catch (error) {
+        applyWidth(420);
+      }
+      const grip = root.querySelector(".width-grip");
+      if (grip) {
+        grip.addEventListener("pointerdown", (event) => {
+          if (event.button !== 0) return;
+          event.preventDefault();
+          event.stopPropagation();
+          root.classList.add("is-width-dragging");
+          grip.classList.add("is-dragging");
+          try { grip.setPointerCapture(event.pointerId); } catch (error) {}
+          const move = (moveEvent) => applyWidth(window.innerWidth - moveEvent.clientX);
+          const stop = (endEvent) => {
+            root.classList.remove("is-width-dragging");
+            grip.classList.remove("is-dragging");
+            window.removeEventListener("pointermove", move);
+            window.removeEventListener("pointerup", stop);
+            window.removeEventListener("pointercancel", stop);
+            try { grip.releasePointerCapture(endEvent.pointerId); } catch (error) {}
+          };
+          window.addEventListener("pointermove", move);
+          window.addEventListener("pointerup", stop);
+          window.addEventListener("pointercancel", stop);
+          move(event);
+        });
+      }
       const splitter = root.querySelector(".splitter");
       let heldRatio = 0.5;
       const applySplit = (streamHeight) => {
@@ -677,7 +721,13 @@ export default function(component) {
         applySplit(height ? heldRatio * height : 0);
       };
       fitSplit();
-      window.addEventListener("resize", fitSplit);
+      window.addEventListener("resize", () => {
+        try {
+          const storedWidth = Number(sessionStorage.getItem("angstrom-stream-width"));
+          applyWidth(storedWidth >= 280 ? storedWidth : 420);
+        } catch (error) {}
+        fitSplit();
+      });
     }
     window.openSocialStream = (assetKey) => {
       window.socialStreamState.open = true;
@@ -2672,7 +2722,7 @@ The Refresh button in Market sentiment pulls fresh headlines and a new score, th
 
 **Social signals and chat**
 
-The arrow on the right edge of the page, or a speech balloon, opens a panel. The top half is the social signals stream. The bottom half is a general chat. Drag the gray bar between them to give either half more room. Close the panel with Close, the shaded area, or Escape. Pin, beside Close, keeps the panel open and leaves the rest of the page free to use. The shaded area and Escape no longer close it while it is pinned.
+The arrow on the right edge of the page, or a speech balloon, opens a panel. The top half is the social signals stream. The bottom half is a general chat. Drag the gray bar between them to give either half more room. Drag the handle on the panel's left edge to make the panel wider or narrower. Close the panel with Close, the shaded area, or Escape. Pin, beside Close, keeps the panel open and leaves the rest of the page free to use. The shaded area and Escape no longer close it while it is pinned.
 
 **Social signals stream**
 
