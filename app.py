@@ -1635,7 +1635,7 @@ export default function(component) {
       : minutes + ":" + seconds;
     const title = (data && data.label) || "🔄 Refresh";
     const label = buttonLabel();
-    if (label) label.textContent = title + "  " + clock;
+    if (label) label.textContent = title + " (" + clock + ")";
     if (left <= 0 && token && window[timerKey + "_sent"] !== token) {
       window.clearInterval(window[timerKey]);
       window[timerKey + "_sent"] = token;
