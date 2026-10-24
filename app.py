@@ -1595,6 +1595,78 @@ _back_to_top = st.components.v2.component(
     isolate_styles=False,
 )
 
+# One floating ↑ Top for the whole page. Hidden until the main page has been scrolled.
+_PAGE_TOP_JS = """
+export default function(component) {
+  const { parentElement } = component;
+  const shell = parentElement.closest(".stBidiComponent") || parentElement;
+  shell.style.display = "none";
+  let style = document.getElementById("angstrom-page-top-style");
+  if (!style) {
+    style = document.createElement("style");
+    style.id = "angstrom-page-top-style";
+    style.textContent = [
+      "#angstrom-page-top{position:fixed;right:1.25rem;bottom:1.25rem;z-index:1000;display:none;",
+      "background:#fff;color:#6b7280;border:1px solid rgba(49,51,63,.2);border-radius:999px;",
+      "padding:8px 14px;margin:0;font:inherit;font-weight:600;line-height:1.2;cursor:pointer;",
+      "box-shadow:0 1px 4px rgba(0,0,0,.08);white-space:nowrap;}",
+      "#angstrom-page-top.is-on{display:inline-block;}",
+      "#angstrom-page-top:hover{color:#111827;border-color:#111827;}",
+      "html.angstrom-night #angstrom-page-top{background:#262730;color:#e5e7eb;border-color:#4b5563;}",
+      "html.angstrom-night #angstrom-page-top:hover{color:#fafafa;border-color:#e5e7eb;}",
+      "@media print{#angstrom-page-top{display:none !important;}}"
+    ].join("");
+    document.head.appendChild(style);
+  }
+  let button = document.getElementById("angstrom-page-top");
+  if (!button) {
+    button = document.createElement("button");
+    button.id = "angstrom-page-top";
+    button.type = "button";
+    button.textContent = "↑ Top";
+    document.body.appendChild(button);
+  }
+  const mainScroller = () => document.querySelector('[data-testid="stMain"]')
+    || document.querySelector("section.main");
+  const scrolled = () => {
+    const main = mainScroller();
+    const mainTop = main ? main.scrollTop : 0;
+    return mainTop > 120 || window.scrollY > 120;
+  };
+  const sync = () => button.classList.toggle("is-on", scrolled());
+  if (!button.dataset.bound) {
+    button.dataset.bound = "1";
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      const main = mainScroller();
+      if (main) main.scrollTop = 0;
+      window.scrollTo({top: 0, behavior: "auto"});
+      sync();
+    });
+  }
+  const watch = (target) => {
+    if (!target || target.dataset.pageTopBound) return;
+    target.dataset.pageTopBound = "1";
+    target.addEventListener("scroll", sync, {passive: true});
+  };
+  watch(mainScroller());
+  if (!window.angstromPageTopBound) {
+    window.angstromPageTopBound = true;
+    window.addEventListener("scroll", sync, {passive: true});
+  }
+  sync();
+  return () => {
+    const current = document.getElementById("angstrom-page-top");
+    if (current) current.remove();
+  };
+}
+"""
+_page_top = st.components.v2.component(
+    "page_top",
+    js=_PAGE_TOP_JS,
+    isolate_styles=False,
+)
+
 _TECHNICAL_REFRESH_SECONDS = 300
 _COUNTDOWN_JS = """
 export default function(component) {
@@ -2916,7 +2988,7 @@ The picture on the left of each name is that asset's logo. The same logo appears
 
 Beside the sentiment score you can press thumbs up if you agree, or thumbs down if you do not. Press the same thumb again to clear your take. Those buttons sit in an outlined box. After you disagree, scores appear in that same box, under the buttons: 0, 20, 40, 60, 80 and 100. The number you pick also fills the type box, and you can type any number from 0 to 100. It saves on its own when you click a score, press Enter, or leave the box. The thumbs and that same colored average sit at the bottom of Your take, and again under **Crowd** on each table row. The box is the average of the personal scores, in the same style as the Sentiment column. It updates when a score is clicked or typed. Hover the down thumb for the spread, which is how far those scores typically sit from the average. One score has no spread yet. A dash means nobody has given a personal score. Under the thumbs you can post one comment of up to 160 characters. A row of faces under the box can be added to the comment. A speech balloon appears beside the thumbs, and in the **Comments** column, once any comment exists. Click it, or the arrow on the right edge of the page, to open **Social signals and chat**, described below. A refresh of that sentiment clears every thumb and every personal score, because they belonged to the old score. A comment stays for 12 hours from when it was posted, and the stream keeps the sentiment it was answering even after a newer score arrives.
 
-Click a sentiment score in the table to highlight that asset and jump to its headlines. **↑ Top** scrolls back to the top of the page. It sits at the top right of the Interactive Chart section, and at the top right of Market sentiment.
+Click a sentiment score in the table to highlight that asset and jump to its headlines. **↑ Top** scrolls back to the top of the page. It sits at the top right of the Interactive Chart section, and at the top right of Market sentiment. Another **↑ Top** sits at the bottom right of the page once you have scrolled down.
 
 The update buttons sit at the top of Quick Snapshot. Each one shows the time left and runs on its own when that timer reaches zero. Update Market Sentiment - Crypto and Update Market Sentiment - Equities pull fresh headlines and a new score for that whole market, then start a 12-hour timer. A market you do not trade is left out. Update Market Sentiment - Selected Asset does the same for the asset open on the chart. Update Technical Data - Selected Asset reloads prices and technical scores and starts a 5-minute timer. Pressing a button refreshes that part now and starts its timer again.
 
@@ -5231,6 +5303,7 @@ render_dashboard(
     trade_crypto,
     trade_equities,
 )
+_page_top(key="page_back_to_top")
 
 st.markdown(
     "<div style='margin-top:2.5rem;padding-top:1rem;border-top:1px solid #e5e7eb;"
