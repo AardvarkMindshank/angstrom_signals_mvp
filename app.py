@@ -2049,22 +2049,80 @@ def _rerun_fragment() -> None:
         st.rerun()
 
 
+# Main sections start open. The guide and the sidebar start closed.
+# Open all and Collapse all move only the main sections. Collapse all also closes the guide.
+_MAIN_SECTION_IDS = (
+    "quick_snapshot",
+    "crypto_scores",
+    "equity_scores",
+    "interactive_chart",
+    "score_breakdown",
+    "market_mood",
+    "market_mood_crypto",
+    "market_mood_stock",
+    "max_pain",
+    "market_sentiment_panel",
+)
+_SECTION_IDS = _MAIN_SECTION_IDS + (
+    "help_guides",
+    "account",
+    "edit_profile",
+    "notifications",
+    "alert_feed",
+    "alert_rules",
+    "watchlists",
+    "edit_crypto",
+    "edit_stocks",
+    "weights",
+    "settings_panel",
+    "feedback",
+    "about",
+)
+
+
+def _section_map() -> dict:
+    """A copy of the open or collapsed choice saved on this account."""
+    stored = (st.session_state.get("cloud_prefs") or {}).get("settings") or {}
+    raw = stored.get("sections") if isinstance(stored, dict) else None
+    if not isinstance(raw, dict):
+        return {}
+    return {str(key): bool(value) for key, value in raw.items() if isinstance(value, bool)}
+
+
+def _section_expanded(section_id: str, default: bool) -> bool:
+    states = _section_map()
+    if section_id in states:
+        return states[section_id]
+    return default
+
+
+def _remember_section(section_id: str, opened: bool) -> None:
+    states = _section_map()
+    opened = bool(opened)
+    if section_id in states and states[section_id] is opened:
+        return
+    states[section_id] = opened
+    save_account_settings({"sections": states})
+
+
+def tracked_expander(label: str, section_id: str, *, default: bool = False, sidebar: bool = False):
+    """One collapsible whose open or collapsed state is saved on the account."""
+    expanded = _section_expanded(section_id, default)
+    opener = st.sidebar.expander if sidebar else st.expander
+    box = opener(label, expanded=expanded, key=f"sec_{section_id}", on_change="rerun")
+    if box.open is not None and box.open != expanded:
+        _remember_section(section_id, bool(box.open))
+    return box
+
+
 def section_expander(label: str, section_id: str):
     """A main-page section. Open all and Collapse all move every one of these together."""
-    fold = st.session_state.setdefault("section_fold", {"open": True, "nonce": 0, "help_nonce": 0})
-    pin = (st.session_state.get("section_pins") or {}).get(section_id)
-    if isinstance(pin, int):
-        return st.expander(label, expanded=True, key=f"{section_id}_pin{pin}")
-    return st.expander(label, expanded=bool(fold["open"]), key=f"{section_id}_{fold['nonce']}")
+    return tracked_expander(label, section_id, default=True)
 
 
 def _reveal_section(section_id: str, anchor: str) -> None:
     """Open one section and scroll to it, without folding the others."""
-    nonce = int(st.session_state.get("section_pin_nonce") or 0) + 1
-    st.session_state.section_pin_nonce = nonce
-    pins = dict(st.session_state.get("section_pins") or {})
-    pins[section_id] = nonce
-    st.session_state.section_pins = pins
+    _remember_section(section_id, True)
     st.session_state.scroll_target = anchor
     st.session_state.scroll_token = str(time.time_ns())
 
@@ -2258,6 +2316,10 @@ def _use_account(account_id: str) -> None:
         st.session_state.pop(key, None)
     for name in _WEIGHT_NAMES:
         st.session_state.pop(f"weight_{name}", None)
+    for section_id in _SECTION_IDS:
+        st.session_state.pop(f"sec_{section_id}", None)
+    st.session_state.pop("section_pins", None)
+    st.session_state.pop("section_fold", None)
     st.session_state.pop("cloud_prefs", None)
     st.session_state.pop("profile", None)
     st.session_state.prefs_user = account_id
@@ -2823,12 +2885,12 @@ profile = st.session_state.profile
 _brand_watch(key="brand_watch")
 st.sidebar.markdown(_brand_mark(150), unsafe_allow_html=True)
 
-with st.sidebar.expander("👤 Account", expanded=False):
+with tracked_expander("👤 Account", "account", sidebar=True):
     if profile is None:
         st.warning("Profile storage is not ready yet. Run the latest supabase_rls.sql in the Supabase SQL editor.")
         profile = {}
     st.markdown(profile_card(profile, st.session_state.user.email or ""), unsafe_allow_html=True)
-    with st.expander("Edit profile", expanded=False):
+    with tracked_expander("Edit profile", "edit_profile"):
         profile_name = st.text_input(
             "Display name",
             value=profile.get("display_name") or "",
@@ -2942,8 +3004,8 @@ notifications_list = fetch_user_notifications()
 unread_count = sum(1 for note in notifications_list if not note.get("is_read", False))
 notifications_label = "🔔 Notifications" + (f" ({unread_count})" if unread_count else "")
 
-with st.sidebar.expander(notifications_label, expanded=False):
-    with st.expander("Alert Feed", expanded=False):
+with tracked_expander(notifications_label, "notifications", sidebar=True):
+    with tracked_expander("Alert Feed", "alert_feed"):
         if not notifications_list:
             st.caption("No alerts yet. When a watchlist asset crosses a threshold, it shows up here.")
         else:
@@ -3043,7 +3105,7 @@ with st.sidebar.expander(notifications_label, expanded=False):
                     except Exception as exc:
                         st.error(f"Could not clear alerts: {exc}")
 
-    with st.expander("Configure Alert Rules", expanded=False):
+    with tracked_expander("Configure Alert Rules", "alert_rules"):
         st.caption(
             "70 is a strong bullish setup. 30 is a strong bearish setup. "
             "An email is sent once when a score crosses a boundary, and again only after it leaves and crosses later."
@@ -3069,9 +3131,6 @@ with st.sidebar.expander(notifications_label, expanded=False):
             alert_prefs.update(new_alert_settings)
             prefs["alerts"] = alert_prefs
             save_alert_preferences_to_cloud(new_alert_settings)
-
-if "section_fold" not in st.session_state:
-    st.session_state.section_fold = {"open": True, "nonce": 0, "help_nonce": 0}
 
 if st.session_state.get("section_layout") not in ("Single column", "Wide"):
     saved_layout = (prefs.get("settings") or {}).get("section_layout")
@@ -3129,15 +3188,13 @@ with st.container(horizontal=True, vertical_alignment="center", horizontal_align
         # the sections, and the wide or single choice stays as it was.
         if open_sections or collapse_sections:
             closing = bool(collapse_sections)
-            fold = st.session_state.section_fold
-            layout_now = st.session_state.section_layout
-            st.session_state.section_fold = {
-                "open": not closing,
-                "nonce": fold["nonce"] + 1,
-                "help_nonce": fold.get("help_nonce", 0) + (1 if closing else 0),
-            }
-            st.session_state.section_layout = layout_now
-            st.session_state.section_pins = {}
+            states = _section_map()
+            for section_id in _MAIN_SECTION_IDS:
+                states[section_id] = not closing
+            if closing:
+                states["help_guides"] = False
+            save_account_settings({"sections": states})
+            st.session_state.section_layout = st.session_state.section_layout
         elif hold_layout:
             st.session_state.section_layout = "Wide" if wide_on else "Single column"
         elif single_layout:
@@ -3148,11 +3205,7 @@ with st.container(horizontal=True, vertical_alignment="center", horizontal_align
             st.rerun()
 save_account_settings({"section_layout": st.session_state.section_layout})
 
-with st.expander(
-    "📖 Help and guides",
-    expanded=False,
-    key=f"help_guides_{st.session_state.section_fold.get('help_nonce', 0)}",
-):
+with tracked_expander("📖 Help and guides", "help_guides", default=False):
     st.markdown("""
 **Higher score = a more bullish setup.** Every score starts at 50 and each indicator adds or subtracts points. The result is kept between 0 and 100. This is a research tool, not financial advice.
 """)
@@ -3199,7 +3252,7 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
     st.markdown("""
 **How to use it**
 
-1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest. Quick Snapshot, Market sentiment for crypto, Market sentiment for stocks, Crypto Scores, Equity Scores, Interactive Chart, Score Breakdown, Max pain, and Market sentiment each sit in a section that starts open. Close a header to fold that section away. **Open all** and **Collapse all**, on the right of the page title, do that for every one of those sections. The square beside them stacks every section in one column, with Quick Snapshot first. The mark with a wide top and two panes underneath puts Quick Snapshot and both score tables across the top, market sentiment on the left, and Interactive Chart, Score Breakdown, Max pain, and Market sentiment on the right. Those two bottom columns start at equal width. Drag the line between them to give either side more room. That line stays inside those two columns. The wide or single choice, that column split, the open asset, and the social panel's width, split, and pin are saved on your account and come back when you log in. On a narrow screen the wide layout stacks the left and right parts. **I trade cryptos**, **I trade equities**, and **I trade both**, in Settings, are saved on your account. A market you leave out is hidden, including its sentiment, its score table, and its Quick Snapshot boxes. The chart follows the markets you trade. Collapse all also closes this guide. Open all does not open it. **Feedback**, at the bottom of the sidebar, sends an issue or an idea. It is stored as submitted. The arrow on the left edge of the page closes the sidebar. It stays on that edge when the sidebar is closed, so the sidebar can be opened again. Hover the arrow to see which action it will take.
+1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest. Quick Snapshot, Market sentiment for crypto, Market sentiment for stocks, Crypto Scores, Equity Scores, Interactive Chart, Score Breakdown, Max pain, and Market sentiment each sit in a section that starts open. Close a header to fold that section away. **Open all** and **Collapse all**, on the right of the page title, do that for every one of those sections. The square beside them stacks every section in one column, with Quick Snapshot first. The mark with a wide top and two panes underneath puts Quick Snapshot and both score tables across the top, market sentiment on the left, and Interactive Chart, Score Breakdown, Max pain, and Market sentiment on the right. Those two bottom columns start at equal width. Drag the line between them to give either side more room. That line stays inside those two columns. The wide or single choice, that column split, the open asset, the social panel's width, split, and pin, and the open or collapsed state of each section are saved on your account and come back when you log in. On a narrow screen the wide layout stacks the left and right parts. **I trade cryptos**, **I trade equities**, and **I trade both**, in Settings, are saved on your account. A market you leave out is hidden, including its sentiment, its score table, and its Quick Snapshot boxes. The chart follows the markets you trade. Collapse all also closes this guide. Open all does not open it. **Feedback**, at the bottom of the sidebar, sends an issue or an idea. It is stored as submitted. The arrow on the left edge of the page closes the sidebar. It stays on that edge when the sidebar is closed, so the sidebar can be opened again. Hover the arrow to see which action it will take.
 2. Click a name in either table, a Quick Snapshot box, or an alert under Notifications. That asset stays highlighted, and the page moves down to the chart when the chart is off screen. Click a column title to sort that table. It starts with the strongest score at the top.
 3. Extra metrics add **7d %**, **Market Cap**, **ATR %**, and **Vol**. A separate checkbox adds **1d %** before the seven-day change and **30d %** after it. For **1d %** and **7d %**, green means the price rose and red means it fell. **30d %** uses the same colors as the **30-day trend**: green for a rise of about 2% or more, red for a fall of about 2% or more, and orange when the move stays inside about 2%. For stocks, one day is the previous trading session. **Market Cap** is the latest size of the asset, from CoinGecko for crypto and Yahoo for stocks. **ATR %** is volatility. **Vol** is volume versus its 20-day average.
 4. Alerts fire at 70 and 30 unless you move those sliders. One email goes to the address on your account when a technical score crosses a boundary. It is not sent again until the score leaves that boundary and crosses it later. Sentiment scores do not send alerts.
@@ -3354,9 +3407,9 @@ if st.session_state.get("reset_weights"):
     save_preferences_to_cloud({"scoring_weights": current_weights})
     st.session_state.reset_weights = False
 
-with st.sidebar.expander("⭐ Watchlists", expanded=False):
+with tracked_expander("⭐ Watchlists", "watchlists", sidebar=True):
     if trade_crypto:
-        with st.expander("Edit Crypto", expanded=False):
+        with tracked_expander("Edit Crypto", "edit_crypto"):
             st.caption("Add a ticker (XLM) or a name (Stellar).")
             new_crypto = st.text_input("Add crypto", key="new_crypto", placeholder="e.g. XLM or Stellar")
             if st.button("Add Crypto") and new_crypto:
@@ -3387,7 +3440,7 @@ with st.sidebar.expander("⭐ Watchlists", expanded=False):
                     st.rerun()
 
     if trade_equities:
-        with st.expander("Edit Stocks", expanded=False):
+        with tracked_expander("Edit Stocks", "edit_stocks"):
             st.caption("Add by ticker (AAPL, MSFT, etc.)")
             new_stock = st.text_input("Add stock ticker", key="new_stock", placeholder="e.g. GOOGL")
             if st.button("Add Stock") and new_stock:
@@ -3405,7 +3458,7 @@ with st.sidebar.expander("⭐ Watchlists", expanded=False):
                     save_preferences_to_cloud({"stock_watchlist": STOCK_WATCHLIST})
                     st.rerun()
 
-with st.sidebar.expander("⚖️ Scoring Balance Weights", expanded=False):
+with tracked_expander("⚖️ Scoring Balance Weights", "weights", sidebar=True):
     st.caption("Adjust the relative importance of each indicator. Every slider changes the score.")
 
     st.markdown("**Named Weight Sets**")
@@ -3491,7 +3544,7 @@ with st.sidebar.expander("⚖️ Scoring Balance Weights", expanded=False):
         st.session_state.reset_weights = True
         st.rerun()
 
-with st.sidebar.expander("⚙️ Settings", expanded=False):
+with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
     if "show_reasons" not in st.session_state:
         st.session_state.show_reasons = bool(settings.get("show_reasons", True))
     if "show_extra_metrics" not in st.session_state:
@@ -3638,7 +3691,7 @@ def _store_feedback(kind: str, body: str) -> str:
 if st.session_state.pop("feedback_clear", False):
     st.session_state["feedback_body"] = ""
 
-with st.sidebar.expander("📝 Feedback", expanded=False):
+with tracked_expander("📝 Feedback", "feedback", sidebar=True):
     st.caption("An issue or an idea. It is stored as submitted, with your account and the date.")
     feedback_kind = st.radio(
         "Type",
@@ -3669,7 +3722,7 @@ with st.sidebar.expander("📝 Feedback", expanded=False):
     elif feedback_notice:
         st.warning(feedback_notice)
 
-with st.sidebar.expander("ℹ️ About", expanded=False):
+with tracked_expander("ℹ️ About", "about", sidebar=True):
     st.markdown(_brand_mark(72), unsafe_allow_html=True)
     st.markdown("**angstrom signals**")
     st.caption("Market sentiment and technical signals, with the crowd alongside.")
