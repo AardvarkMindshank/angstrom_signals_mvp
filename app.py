@@ -443,6 +443,8 @@ export default function(component) {
   shell.style.display = "none";
   let items = [];
   let savedAsset = "";
+  let account = "";
+  let panelPrefs = {};
   try {
     const parsed = typeof data === "string" ? JSON.parse(data || "[]") : data;
     if (Array.isArray(parsed)) {
@@ -458,9 +460,22 @@ export default function(component) {
       window.socialChatNotice = typeof parsed.notice === "string" ? parsed.notice : "";
       window.socialChatFaces = Array.isArray(parsed.faces) ? parsed.faces : [];
       window.socialChatLimit = Number(parsed.limit) || 160;
+      account = String(parsed.account || "");
+      panelPrefs = parsed.panel && typeof parsed.panel === "object" ? parsed.panel : {};
     }
   } catch (error) {
     items = [];
+  }
+  if (window.socialAccount !== account) {
+    window.socialAccount = account;
+    window.socialStreamState = null;
+    const width = Number(panelPrefs.width);
+    const split = Number(panelPrefs.split);
+    window.socialPanelWidth = width >= 320 && width <= 900 ? Math.round(width) : 420;
+    window.socialPanelSplit = split > 0.08 && split < 0.92 ? split : 0.5;
+    window.socialPanelPinned = !!panelPrefs.pinned;
+    const existing = document.getElementById("social-stream-root");
+    if (existing) existing.remove();
   }
   window.socialStreamItems = items;
   window.socialStreamReport = setTriggerValue;
@@ -473,9 +488,7 @@ export default function(component) {
       open: false, side: "", asset: savedAsset || "", person: ""
     };
     if (typeof window.socialStreamState.pinned !== "boolean") {
-      let pinned = false;
-      try { pinned = sessionStorage.getItem("angstrom-stream-pin") === "1"; } catch (error) {}
-      window.socialStreamState.pinned = pinned;
+      window.socialStreamState.pinned = !!window.socialPanelPinned;
     }
     let style = document.getElementById("social-stream-style");
     if (style && style.dataset.layout !== "titles") {
@@ -610,6 +623,9 @@ export default function(component) {
       root = null;
     }
     if (!root) {
+      if (window.socialStreamAbort) window.socialStreamAbort.abort();
+      window.socialStreamAbort = new AbortController();
+      const streamSignal = window.socialStreamAbort.signal;
       root = document.createElement("div");
       root.id = "social-stream-root";
       root.dataset.layout = "titles";
@@ -663,12 +679,18 @@ export default function(component) {
       };
       root.querySelector(".scrim").addEventListener("click", closeStream);
       root.querySelector(".close").addEventListener("click", closeStream);
+      const reportPanel = () => {
+        if (!window.socialStreamReport) return;
+        window.socialStreamReport("panel", JSON.stringify({
+          width: Number(window.socialPanelWidth) || 420,
+          split: Number(window.socialPanelSplit) || 0.5,
+          pinned: !!(window.socialStreamState && window.socialStreamState.pinned)
+        }));
+      };
       root.querySelector(".pin").addEventListener("click", () => {
         window.socialStreamState.pinned = !window.socialStreamState.pinned;
-        try {
-          sessionStorage.setItem("angstrom-stream-pin", window.socialStreamState.pinned ? "1" : "0");
-        } catch (error) {}
         window.renderSocialStream();
+        reportPanel();
       });
       root.querySelector(".edge").addEventListener("click", () => {
         window.socialStreamState.open = !window.socialStreamState.open;
@@ -719,19 +741,14 @@ export default function(component) {
           return;
         }
         closeStream();
-      });
+      }, {signal: streamSignal});
       const applyWidth = (px) => {
         const max = Math.max(320, Math.min(900, window.innerWidth - 36));
         const next = Math.min(max, Math.max(320, Math.round(px)));
         root.style.setProperty("--social-width", next + "px");
-        try { sessionStorage.setItem("angstrom-stream-width", String(next)); } catch (error) {}
+        window.socialPanelWidth = next;
       };
-      try {
-        const storedWidth = Number(sessionStorage.getItem("angstrom-stream-width"));
-        applyWidth(storedWidth >= 280 ? storedWidth : 420);
-      } catch (error) {
-        applyWidth(420);
-      }
+      applyWidth(Number(window.socialPanelWidth) >= 320 ? Number(window.socialPanelWidth) : 420);
       const grip = root.querySelector(".width-grip");
       if (grip) {
         grip.addEventListener("pointerdown", (event) => {
@@ -749,6 +766,7 @@ export default function(component) {
             window.removeEventListener("pointerup", stop);
             window.removeEventListener("pointercancel", stop);
             try { grip.releasePointerCapture(endEvent.pointerId); } catch (error) {}
+            reportPanel();
           };
           window.addEventListener("pointermove", move);
           window.addEventListener("pointerup", stop);
@@ -778,7 +796,7 @@ export default function(component) {
         chatPane.style.flex = "1 1 auto";
         chatPane.style.height = "auto";
         heldRatio = next / available;
-        try { sessionStorage.setItem("angstrom-stream-split", String(heldRatio)); } catch (error) {}
+        window.socialPanelSplit = heldRatio;
       };
       if (splitter) {
         splitter.addEventListener("pointerdown", (event) => {
@@ -799,6 +817,7 @@ export default function(component) {
             window.removeEventListener("pointerup", stop);
             window.removeEventListener("pointercancel", stop);
             try { splitter.releasePointerCapture(endEvent.pointerId); } catch (error) {}
+            reportPanel();
           };
           window.addEventListener("pointermove", move);
           window.addEventListener("pointerup", stop);
@@ -830,10 +849,8 @@ export default function(component) {
           paintReply(root);
         });
       }
-      try {
-        const storedRatio = Number(sessionStorage.getItem("angstrom-stream-split"));
-        if (storedRatio > 0.08 && storedRatio < 0.92) heldRatio = storedRatio;
-      } catch (error) {}
+      const storedRatio = Number(window.socialPanelSplit);
+      if (storedRatio > 0.08 && storedRatio < 0.92) heldRatio = storedRatio;
       const panelBox = root.querySelector(".panel");
       const fitSplit = () => {
         const finderBox = root.querySelector(".finder");
@@ -843,12 +860,9 @@ export default function(component) {
       };
       fitSplit();
       window.addEventListener("resize", () => {
-        try {
-          const storedWidth = Number(sessionStorage.getItem("angstrom-stream-width"));
-          applyWidth(storedWidth >= 280 ? storedWidth : 420);
-        } catch (error) {}
+        applyWidth(Number(window.socialPanelWidth) >= 320 ? Number(window.socialPanelWidth) : 420);
         fitSplit();
-      });
+      }, {signal: streamSignal});
     }
     window.openSocialStream = (assetKey) => {
       window.socialStreamState.open = true;
@@ -2200,6 +2214,53 @@ def clear_session():
     st.session_state.refresh_token = None
     st.session_state.pop("cloud_prefs", None)
     st.session_state.pop("profile", None)
+    st.session_state.pop("prefs_user", None)
+
+
+# Widget values stay in the browser session after logout. The next person to
+# sign in on that same page would otherwise see them and save them as their own.
+_ACCOUNT_STATE_KEYS = (
+    "show_reasons",
+    "show_extra_metrics",
+    "show_period_changes",
+    "days_history",
+    "trade_markets",
+    "section_layout",
+    "wide_split",
+    "reset_weights",
+    "chart_pick",
+    "chart_pick_from_row",
+    "asset_type",
+    "asset_crypto",
+    "asset_stock",
+    "alert_enabled_cb",
+    "min_score_slider",
+    "max_score_slider",
+    "profile_display_name",
+    "profile_bio",
+    "load_profile_sb",
+    "_seen_trade_markets",
+    "_seen_show_reasons",
+    "_seen_show_extra_metrics",
+    "_seen_show_period_changes",
+    "_seen_days_history",
+)
+_WEIGHT_NAMES = (
+    "rsi", "stochastic", "sma", "adx", "macd", "ichimoku", "bb", "volume", "obv", "performance",
+)
+
+
+def _use_account(account_id: str) -> None:
+    """Drop the previous account's choices so this login loads its own."""
+    if st.session_state.get("prefs_user") == account_id:
+        return
+    for key in _ACCOUNT_STATE_KEYS:
+        st.session_state.pop(key, None)
+    for name in _WEIGHT_NAMES:
+        st.session_state.pop(f"weight_{name}", None)
+    st.session_state.pop("cloud_prefs", None)
+    st.session_state.pop("profile", None)
+    st.session_state.prefs_user = account_id
 
 
 def _app_url() -> str:
@@ -2505,6 +2566,7 @@ if st.session_state.user is None:
 
 
 user_id = st.session_state.user.id
+_use_account(user_id)
 
 
 def _favourite_ids(raw) -> list[str]:
@@ -2616,6 +2678,45 @@ def save_preferences_to_cloud(updates: dict):
         supabase.table("user_preferences").update(updates).eq("user_id", user_id).execute()
     except Exception as exc:
         st.error(f"Error saving preferences to cloud: {exc}")
+
+
+def save_account_settings(updates: dict) -> None:
+    """Merge choices into this account's settings. Other keys stay put."""
+    prefs_now = st.session_state.get("cloud_prefs")
+    if not isinstance(prefs_now, dict):
+        return
+    stored = prefs_now.get("settings")
+    if not isinstance(stored, dict):
+        stored = {}
+        prefs_now["settings"] = stored
+    changed = False
+    for key, value in updates.items():
+        if stored.get(key) != value:
+            stored[key] = value
+            changed = True
+    if changed:
+        save_preferences_to_cloud({"settings": stored})
+
+
+def account_panel() -> dict:
+    """The social panel size saved on this account."""
+    stored = (st.session_state.get("cloud_prefs") or {}).get("settings") or {}
+    try:
+        width = int(stored.get("stream_width") or 420)
+    except (TypeError, ValueError):
+        width = 420
+    width = min(900, max(320, width))
+    try:
+        split = float(stored.get("stream_split") or 0.5)
+    except (TypeError, ValueError):
+        split = 0.5
+    if not 0.08 < split < 0.92:
+        split = 0.5
+    return {
+        "width": width,
+        "split": round(split, 3),
+        "pinned": bool(stored.get("stream_pinned", False)),
+    }
 
 
 def save_alert_preferences_to_cloud(updates: dict):
@@ -2973,7 +3074,8 @@ if "section_fold" not in st.session_state:
     st.session_state.section_fold = {"open": True, "nonce": 0, "help_nonce": 0}
 
 if st.session_state.get("section_layout") not in ("Single column", "Wide"):
-    st.session_state.section_layout = "Single column"
+    saved_layout = (prefs.get("settings") or {}).get("section_layout")
+    st.session_state.section_layout = saved_layout if saved_layout in ("Single column", "Wide") else "Single column"
 wide_on = st.session_state.section_layout == "Wide"
 # A market or settings change rebuilds sections and can arrive as a click on
 # Single column. Extra metrics only changes the score table, so it never does.
@@ -3044,6 +3146,7 @@ with st.container(horizontal=True, vertical_alignment="center", horizontal_align
         elif wide_layout_click:
             st.session_state.section_layout = "Wide"
             st.rerun()
+save_account_settings({"section_layout": st.session_state.section_layout})
 
 with st.expander(
     "📖 Help and guides",
@@ -3096,7 +3199,7 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
     st.markdown("""
 **How to use it**
 
-1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest. Quick Snapshot, Market sentiment for crypto, Market sentiment for stocks, Crypto Scores, Equity Scores, Interactive Chart, Score Breakdown, Max pain, and Market sentiment each sit in a section that starts open. Close a header to fold that section away. **Open all** and **Collapse all**, on the right of the page title, do that for every one of those sections. The square beside them stacks every section in one column, with Quick Snapshot first. The mark with a wide top and two panes underneath puts Quick Snapshot and both score tables across the top, market sentiment on the left, and Interactive Chart, Score Breakdown, Max pain, and Market sentiment on the right. Those two bottom columns start at equal width. Drag the line between them to give either side more room. That line stays inside those two columns. On a narrow screen the wide layout stacks the left and right parts. **I trade cryptos**, **I trade equities**, and **I trade both**, in Settings, are saved on your account. A market you leave out is hidden, including its sentiment, its score table, and its Quick Snapshot boxes. The chart follows the markets you trade. Collapse all also closes this guide. Open all does not open it. **Feedback**, at the bottom of the sidebar, sends an issue or an idea. It is stored as submitted. The arrow on the left edge of the page closes the sidebar. It stays on that edge when the sidebar is closed, so the sidebar can be opened again. Hover the arrow to see which action it will take.
+1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest. Quick Snapshot, Market sentiment for crypto, Market sentiment for stocks, Crypto Scores, Equity Scores, Interactive Chart, Score Breakdown, Max pain, and Market sentiment each sit in a section that starts open. Close a header to fold that section away. **Open all** and **Collapse all**, on the right of the page title, do that for every one of those sections. The square beside them stacks every section in one column, with Quick Snapshot first. The mark with a wide top and two panes underneath puts Quick Snapshot and both score tables across the top, market sentiment on the left, and Interactive Chart, Score Breakdown, Max pain, and Market sentiment on the right. Those two bottom columns start at equal width. Drag the line between them to give either side more room. That line stays inside those two columns. The wide or single choice, that column split, the open asset, and the social panel's width, split, and pin are saved on your account and come back when you log in. On a narrow screen the wide layout stacks the left and right parts. **I trade cryptos**, **I trade equities**, and **I trade both**, in Settings, are saved on your account. A market you leave out is hidden, including its sentiment, its score table, and its Quick Snapshot boxes. The chart follows the markets you trade. Collapse all also closes this guide. Open all does not open it. **Feedback**, at the bottom of the sidebar, sends an issue or an idea. It is stored as submitted. The arrow on the left edge of the page closes the sidebar. It stays on that edge when the sidebar is closed, so the sidebar can be opened again. Hover the arrow to see which action it will take.
 2. Click a name in either table, a Quick Snapshot box, or an alert under Notifications. That asset stays highlighted, and the page moves down to the chart when the chart is off screen. Click a column title to sort that table. It starts with the strongest score at the top.
 3. Extra metrics add **7d %**, **Market Cap**, **ATR %**, and **Vol**. A separate checkbox adds **1d %** before the seven-day change and **30d %** after it. For **1d %** and **7d %**, green means the price rose and red means it fell. **30d %** uses the same colors as the **30-day trend**: green for a rise of about 2% or more, red for a fall of about 2% or more, and orange when the move stays inside about 2%. For stocks, one day is the previous trading session. **Market Cap** is the latest size of the asset, from CoinGecko for crypto and Yahoo for stocks. **ATR %** is volatility. **Vol** is volume versus its 20-day average.
 4. Alerts fire at 70 and 30 unless you move those sliders. One email goes to the address on your account when a technical score crosses a boundary. It is not sent again until the score leaves that boundary and crosses it later. Sentiment scores do not send alerts.
@@ -3413,22 +3516,14 @@ with st.sidebar.expander("⚙️ Settings", expanded=False):
         key="show_period_changes",
     )
 
-    new_settings = {
-        "days_history": days_history,
-        "show_reasons": show_reasons,
-        "show_extra_metrics": show_extra_metrics,
-        "show_period_changes": show_period_changes,
-        "trade_crypto": trade_crypto,
-        "trade_equities": trade_equities,
-    }
-    if settings.get("stream_asset") in ("all", "watchlist", "crypto", "stock"):
-        new_settings["stream_asset"] = settings["stream_asset"]
-    if isinstance(settings.get("favourites"), list):
-        new_settings["favourites"] = _favourite_ids(settings.get("favourites"))
-    if new_settings != settings:
-        settings = new_settings
-        prefs["settings"] = settings
-        save_preferences_to_cloud({"settings": settings})
+    save_account_settings({
+        "days_history": int(days_history),
+        "show_reasons": bool(show_reasons),
+        "show_extra_metrics": bool(show_extra_metrics),
+        "show_period_changes": bool(show_period_changes),
+        "trade_crypto": bool(trade_crypto),
+        "trade_equities": bool(trade_equities),
+    })
     st.session_state._seen_trade_markets = st.session_state.get("trade_markets")
     st.session_state._seen_show_reasons = bool(show_reasons)
     st.session_state._seen_show_extra_metrics = bool(show_extra_metrics)
@@ -3663,8 +3758,7 @@ def _apply_favourite(data) -> str:
         else:
             current = [item for item in current if item != person]
         if current != _favourite_ids(stored.get("favourites")):
-            stored["favourites"] = current
-            save_preferences_to_cloud({"settings": stored})
+            save_account_settings({"favourites": current})
         return ""
     except Exception:
         return "That favourite could not be saved. Try again."
@@ -4033,6 +4127,8 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                     "notice": chat_notice,
                     "faces": list(COMMENT_EMOTICONS),
                     "limit": COMMENT_LIMIT,
+                    "account": str(user_id),
+                    "panel": account_panel(),
                 },
                 ensure_ascii=False,
             ),
@@ -4040,6 +4136,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             on_chat_change=lambda: None,
             on_signal_change=lambda: None,
             on_favourite_change=lambda: None,
+            on_panel_change=lambda: None,
         )
         chosen_scope = stream_state.asset
         chat_event = _chat_action(getattr(stream_state, "chat", None))
@@ -4060,8 +4157,31 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
         if chosen_scope in ("all", "watchlist", "crypto", "stock"):
             stored = prefs.setdefault("settings", {})
             if stored.get("stream_asset") != chosen_scope:
-                stored["stream_asset"] = chosen_scope
-                save_preferences_to_cloud({"settings": stored})
+                save_account_settings({"stream_asset": chosen_scope})
+        panel_raw = getattr(stream_state, "panel", None)
+        if panel_raw:
+            try:
+                panel_choice = json.loads(panel_raw) if isinstance(panel_raw, str) else panel_raw
+            except (TypeError, json.JSONDecodeError):
+                panel_choice = None
+            if isinstance(panel_choice, dict):
+                panel_updates = {}
+                try:
+                    panel_width = int(panel_choice.get("width"))
+                except (TypeError, ValueError):
+                    panel_width = 0
+                if 320 <= panel_width <= 900:
+                    panel_updates["stream_width"] = panel_width
+                try:
+                    panel_split = float(panel_choice.get("split"))
+                except (TypeError, ValueError):
+                    panel_split = 0.0
+                if 0.08 < panel_split < 0.92:
+                    panel_updates["stream_split"] = round(panel_split, 3)
+                if isinstance(panel_choice.get("pinned"), bool):
+                    panel_updates["stream_pinned"] = panel_choice["pinned"]
+                if panel_updates:
+                    save_account_settings(panel_updates)
 
         try:
             evaluate_alerts(supabase, user_id, crypto_results + stock_results, alert_prefs)
@@ -4438,6 +4558,13 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
         del st.query_params["chart_kind"]
         del st.query_params["chart_asset"]
 
+    if "chart_pick" not in st.session_state:
+        saved_kind = str((prefs.get("settings") or {}).get("chart_kind") or "")
+        saved_asset = str((prefs.get("settings") or {}).get("chart_asset") or "")
+        saved_list = crypto_watchlist if saved_kind == "Crypto" else stock_watchlist if saved_kind == "Stock" else {}
+        if saved_kind in allowed_kinds and saved_asset in saved_list:
+            st.session_state.chart_pick = (saved_kind, saved_asset)
+
     pick = st.session_state.get("chart_pick")
     if not pick or pick[0] not in allowed_kinds:
         if "Crypto" in allowed_kinds and crypto_watchlist:
@@ -4490,12 +4617,18 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
         return f"{watchlist[asset_id]} ({asset_id})", kind, asset_id
 
     chart_name, chart_kind, chart_asset = selected_chart_name()
+    if chart_kind in ("Crypto", "Stock") and chart_asset:
+        save_account_settings({"chart_kind": chart_kind, "chart_asset": str(chart_asset)})
     chart_logo = (st.session_state.get("asset_logos") or {}).get(asset_market_key(chart_kind, chart_asset))
     chart_label = f"📊 Interactive Chart - {chart_name}" if chart_name else "📊 Interactive Chart"
     if wide_layout:
         # Tops stay level. Do not put a widget above the chart expander in asset_col.
         if "wide_split" not in st.session_state:
-            st.session_state.wide_split = 0.5
+            try:
+                stored_split = float((prefs.get("settings") or {}).get("wide_split", 0.5))
+            except (TypeError, ValueError):
+                stored_split = 0.5
+            st.session_state.wide_split = min(_WIDE_SPLIT_MAX, max(_WIDE_SPLIT_MIN, stored_split))
         reported = _wide_split_handle(
             key="wide_column_split",
             data={"split": f"{float(st.session_state.wide_split):.3f}"},
@@ -4511,6 +4644,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                 next_split = min(_WIDE_SPLIT_MAX, max(_WIDE_SPLIT_MIN, next_split))
                 if abs(next_split - float(st.session_state.wide_split)) > 0.004:
                     st.session_state.wide_split = next_split
+                    save_account_settings({"wide_split": round(next_split, 3)})
                     _rerun_fragment()
         split = min(_WIDE_SPLIT_MAX, max(_WIDE_SPLIT_MIN, float(st.session_state.wide_split)))
         mood_col, asset_col = st.columns([split, 1 - split], gap="medium", vertical_alignment="top")
