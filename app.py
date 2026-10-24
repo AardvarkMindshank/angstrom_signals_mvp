@@ -84,14 +84,14 @@ export default function(component) {
   const shell = parentElement.closest(".stBidiComponent") || parentElement;
   shell.style.display = "none";
   let style = document.getElementById("angstrom-brand-style");
-  if (style && style.dataset.layout !== "panels") {
+  if (style && style.dataset.layout !== "articles") {
     style.remove();
     style = null;
   }
   if (!style) {
     style = document.createElement("style");
     style.id = "angstrom-brand-style";
-    style.dataset.layout = "panels";
+    style.dataset.layout = "articles";
     style.textContent = [
       "html{--ang-surface:#ffffff;--ang-border:#e5e7eb;--ang-text:#111827;--ang-muted:#6b7280;--ang-soft:#374151;--ang-track:#e5e7eb;--ang-line:#f3f4f6;--ang-select:#e5e7eb;--ang-select-text:#111827;}",
       "html.angstrom-night{--ang-surface:#262730;--ang-border:#3f4654;--ang-text:#f3f4f6;--ang-muted:#9ca3af;--ang-soft:#d1d5db;--ang-track:#3f4654;--ang-line:#31333f;--ang-select:#3a4050;--ang-select-text:#f9fafb;}",
@@ -132,6 +132,8 @@ export default function(component) {
       ".sentiment-drivers{margin:10px 0 0;padding-left:1.15rem;}",
       ".sentiment-drivers li{margin:4px 0;color:var(--ang-soft);}",
       ".headline-group{margin:14px 0 0;font-weight:700;font-size:.95rem;color:var(--ang-text);}",
+      "[class*='st-key-article_box_']{background:var(--ang-surface) !important;border:1px solid var(--ang-border) !important;border-radius:10px !important;}",
+      ".article-sheet > .headline-group:first-child,.article-sheet > div:first-child{margin-top:0 !important;}",
       ".headline-aside{margin:4px 0 8px;font-size:.8rem;color:var(--ang-muted);line-height:1.35;}",
       "html.angstrom-night [class*='_take_box']{background:var(--ang-surface) !important;border-color:var(--ang-border) !important;}",
       ".headline-head,.headline-row{display:flex;gap:16px;}",
@@ -3289,7 +3291,7 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
 
 **Market sentiment for crypto and stocks**
 
-In the single column these two sections sit under Quick Snapshot, crypto first and then stocks. Quick Snapshot shows each one as the colored score box, the status, such as Mildly bullish coverage, and the short summary to the right of the score, for the markets you trade. Click the score or the colored status to open that market's section. Directly above the Google articles, the same article layout lists the public readings in three groups, each with a one-sentence summary and its own score: liquidity and central banks, the dollar and yields, and crypto sentiment for crypto; policy and inflation, market breadth, and institutional feeds for stocks. The Google headlines follow. Each one uses the same layout as the asset sentiment under the chart: the score on the left, Your take on the right, then those reading rows, then the articles. Neither is an asset, and neither is added to the tables or the technical score. Each score is an average of recent headlines. The summary, the positive paragraph, and the negative paragraph can also use those public readings. Each article row also has a one-sentence AI Summary, after the date. A dash there means that score was saved before summaries, so use Update Market Sentiment for that market in Quick Snapshot. It is stored once and shown to every account for about 12 hours. Your take works the same way as on an asset: agree, disagree, a score from 0 to 100, and one short comment. A refresh of that market clears the thumbs and personal scores. A comment stays for 12 hours. The search wording can be tightened later.
+In the single column these two sections sit under Quick Snapshot, crypto first and then stocks. Quick Snapshot shows each one as the colored score box, the status, such as Mildly bullish coverage, and the short summary to the right of the score, for the markets you trade. Click the score or the colored status to open that market's section. The public readings sit in a rounded box, in three groups, each with a one-sentence summary and its own score: liquidity and central banks, the dollar and yields, and crypto sentiment for crypto; policy and inflation, market breadth, and institutional feeds for stocks. The Google headlines follow in a second rounded box. On the selected asset, the articles sit in one box of the same kind. Each one uses the same layout as the asset sentiment under the chart: the score on the left, Your take on the right, then those reading rows, then the articles. Neither is an asset, and neither is added to the tables or the technical score. Each score is an average of recent headlines. The summary, the positive paragraph, and the negative paragraph can also use those public readings. Each article row also has a one-sentence AI Summary, after the date. A dash there means that score was saved before summaries, so use Update Market Sentiment for that market in Quick Snapshot. It is stored once and shown to every account for about 12 hours. Your take works the same way as on an asset: agree, disagree, a score from 0 to 100, and one short comment. A refresh of that market clears the thumbs and personal scores. A comment stays for 12 hours. The search wording can be tightened later.
 
 **Max pain**
 
@@ -5418,7 +5420,15 @@ def _readings_scored(groups: list[dict]) -> bool:
     return all(item.get("score") is not None for item in items)
 
 
-def _mood_reading_board(market_key: str, label: str, report: dict | None) -> None:
+def _article_box(box_key: str, body: str) -> None:
+    """Articles, summaries, and scores in the same rounded frame as Your take."""
+    if not str(body or "").strip():
+        return
+    with st.container(border=True, key=f"article_box_{box_key}"):
+        st.html(f"<div class='article-sheet'>{body}</div>")
+
+
+def _mood_reading_board(market_key: str, label: str, report: dict | None) -> str:
     """The three reading groups, as article rows, above the Google headlines."""
     groups = (report or {}).get("gauges") if isinstance(report, dict) else None
     if not groups:
@@ -5442,8 +5452,7 @@ def _mood_reading_board(market_key: str, label: str, report: dict | None) -> Non
         table = headline_table(articles) if articles else ""
         aside = f"<div class='headline-aside'>{html.escape(note)}</div>" if note else ""
         blocks.append(title + table + aside)
-    if blocks:
-        st.html("".join(blocks))
+    return "".join(blocks)
 
 
 def _mood_card(spec: dict, row: dict | None, deadlines: dict) -> None:
@@ -5515,9 +5524,9 @@ def _mood_card(spec: dict, row: dict | None, deadlines: dict) -> None:
         st.warning("The xAI API key was rejected. Check the key in the Streamlit secrets.")
     else:
         st.info("The market score could not be built this time.")
-    _mood_reading_board(key, label, report if isinstance(report, dict) else None)
+    _article_box(f"mood_{key}_readings", _mood_reading_board(key, label, report if isinstance(report, dict) else None))
     if headlines:
-        st.html(headline_table(headlines))
+        _article_box(f"mood_{key}_news", headline_table(headlines))
     st.caption(
         "The rows above the Google headlines are public readings, each scored on its own. "
         "The score at the top is the average of the news article scores. "
@@ -5723,7 +5732,8 @@ def show_market_sentiment(kind: str, asset_id: str, label: str, ticker: str | No
             st.info("The sentiment score could not be built this time. The articles are below.")
 
         if headlines:
-            st.html(headline_table(headlines))
+            asset_key = "".join(ch if ch.isalnum() else "_" for ch in f"{kind}_{asset_id}").strip("_") or "asset"
+            _article_box(f"asset_{asset_key}", headline_table(headlines))
         st.caption("This reads recent coverage. It is not the technical score, and it is not advice.")
 
 
