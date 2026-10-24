@@ -467,6 +467,50 @@ _comment_row = st.components.v2.component(
     js=_COMMENT_ROW_JS,
     isolate_styles=False,
 )
+_CROWD_SYNC_JS = """
+export default function(component) {
+  const { data, parentElement } = component;
+  const shell = parentElement.closest(".stBidiComponent") || parentElement;
+  shell.style.display = "none";
+  let payload = data;
+  if (typeof data === "string") {
+    try { payload = JSON.parse(data); } catch (error) { payload = null; }
+  }
+  if (!payload || !payload.asset) return () => {};
+  const cells = (attr) => {
+    const found = [];
+    const scan = (root) => {
+      if (!root || !root.querySelectorAll) return;
+      root.querySelectorAll("[" + attr + "]").forEach((cell) => {
+        if (cell.getAttribute(attr) === payload.asset) found.push(cell);
+      });
+      root.querySelectorAll("*").forEach((el) => {
+        if (el.shadowRoot) scan(el.shadowRoot);
+      });
+    };
+    scan(document);
+    return found;
+  };
+  const paint = () => {
+    cells("data-crowd-mark").forEach((cell) => {
+      cell.innerHTML = payload.mark || "";
+      cell.setAttribute("data-sort", payload.markSort || "");
+    });
+    cells("data-crowd-avg").forEach((cell) => {
+      cell.innerHTML = payload.average || "";
+      cell.setAttribute("data-sort", payload.averageSort || "");
+    });
+  };
+  paint();
+  const timers = [40, 180, 500].map((wait) => setTimeout(paint, wait));
+  return () => timers.forEach((timer) => clearTimeout(timer));
+}
+"""
+_crowd_sync = st.components.v2.component(
+    "crowd_sync",
+    js=_CROWD_SYNC_JS,
+    isolate_styles=False,
+)
 
 _SOCIAL_STREAM_JS = """
 export default function(component) {
@@ -2981,6 +3025,40 @@ def tone(score):
     return "#b91c1c", "#fee2e2", "↓", "#ef4444"
 
 
+def _sync_table_crowd(kind: str, asset_id: str, voice: dict) -> None:
+    """Write this asset's fresh crowd numbers into the scores table already on the page."""
+    if str(kind) not in ("Crypto", "Stock"):
+        return
+    try:
+        balance = int(voice.get("up") or 0) - int(voice.get("down") or 0)
+    except (TypeError, ValueError):
+        balance = 0
+    average = voice.get("alt_avg")
+    try:
+        average_sort = "" if average is None or pd.isna(average) else f"{float(average):.8f}"
+    except (TypeError, ValueError):
+        average_sort = ""
+    _crowd_sync(
+        key=f"crowd_sync_{kind}",
+        data={
+            "asset": f"{kind}|{asset_id}",
+            "mark": crowd_mark(
+                voice.get("up"),
+                voice.get("down"),
+                True,
+                voice.get("alt_count"),
+                average,
+                voice.get("alt_spread"),
+            ),
+            "markSort": f"{float(balance):.8f}",
+            "average": crowd_average_badge(
+                average, voice.get("alt_count"), voice.get("alt_spread"), True,
+            ),
+            "averageSort": average_sort,
+        },
+    )
+
+
 def crowd_average_badge(average, count, spread, active: bool = True) -> str:
     """The personal-score average, in the same colored box as the headline sentiment."""
     try:
@@ -4620,10 +4698,12 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                     f"<td data-sort='{sort_token(headline_score, numeric=True)}' "
                     f"style='padding:10px;text-align:right;white-space:nowrap;'>"
                     f"{sentiment_badge(headline_score, sentiment_pick)}</td>"
-                    f"<td data-sort='{sort_token((row.get('thumbs_up') or 0) - (row.get('thumbs_down') or 0), numeric=True)}' "
+                    f"<td data-crowd-mark='{pick_value}' "
+                    f"data-sort='{sort_token((row.get('thumbs_up') or 0) - (row.get('thumbs_down') or 0), numeric=True)}' "
                     f"style='padding:10px 4px 10px 10px;text-align:right;white-space:nowrap;'>"
                     f"{crowd_mark(row.get('thumbs_up'), row.get('thumbs_down'), headline_score is not None, row.get('alt_count'), row.get('alt_avg'), row.get('alt_spread'))}</td>"
-                    f"<td data-sort='{sort_token(row.get('alt_avg'), numeric=True)}' "
+                    f"<td data-crowd-avg='{pick_value}' "
+                    f"data-sort='{sort_token(row.get('alt_avg'), numeric=True)}' "
                     f"style='padding:10px 10px 10px 4px;text-align:left;white-space:nowrap;'>"
                     f"{crowd_average_badge(row.get('alt_avg'), row.get('alt_count'), row.get('alt_spread'), headline_score is not None)}</td>"
                 )
@@ -5246,6 +5326,8 @@ def _sentiment_thumbs(
                 + "</div>"
             ),
         )
+        if str(kind) in ("Crypto", "Stock"):
+            _sync_table_crowd(kind, asset_id, voice)
         box_key = f"sentiment_comment_box_{key}"
         posted_key = f"{box_key}_posted"
         st.session_state[f"{prefix}_saved_comment"] = mine_text
