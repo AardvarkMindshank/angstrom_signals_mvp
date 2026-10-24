@@ -2972,7 +2972,7 @@ In the single column these two sections sit under Quick Snapshot, crypto first a
 
 **Max pain**
 
-This sits under the chart, above Market sentiment, for the same open asset. It is the options strike where the open calls and puts would be worth the least at that expiry. Green bars are call open interest and red bars are put open interest. The violet line is that strike. The orange line is the price. It describes where contracts are parked. It is not a price target, it is not mixed into the technical score, and it does not send an alert. Stocks use the Yahoo options chain. Bitcoin and Ethereum use Deribit's public options book. Other coins have no chain here, so the section says so. The nearest expiry is selected, and another can be chosen. Refresh uses the same 12-hour rhythm as sentiment.
+This sits under the chart, above Market sentiment, for the same open asset. It is the options strike where the open calls and puts would be worth the least at that expiry. Green bars are call open interest and red bars are put open interest. The violet line is that strike. The orange line is the price. It describes where contracts are parked. It is not a price target, it is not mixed into the technical score, and it does not send an alert. Stocks use the Yahoo options chain. Bitcoin and Ethereum use Deribit's public options book. Other coins have no chain here, so the section says so. The nearest expiry is selected, and another can be chosen. It reloads with Update Technical Data - Selected Asset in Quick Snapshot.
 
 **Market sentiment**
 
@@ -2990,7 +2990,7 @@ Beside the sentiment score you can press thumbs up if you agree, or thumbs down 
 
 Click a sentiment score in the table to highlight that asset and jump to its headlines. **↑ Top** scrolls back to the top of the page. It sits at the top right of the Interactive Chart section, and at the top right of Market sentiment. Another **↑ Top** sits at the bottom right of the page once you have scrolled down.
 
-The update buttons sit at the top of Quick Snapshot. Each one shows the time left and runs on its own when that timer reaches zero. Update Market Sentiment - Crypto and Update Market Sentiment - Equities pull fresh headlines and a new score for that whole market, then start a 12-hour timer. A market you do not trade is left out. Update Market Sentiment - Selected Asset does the same for the asset open on the chart. Update Technical Data - Selected Asset reloads prices and technical scores and starts a 5-minute timer. Pressing a button refreshes that part now and starts its timer again.
+The update buttons sit at the top of Quick Snapshot. Each one shows the time left and runs on its own when that timer reaches zero. Update Market Sentiment - Crypto and Update Market Sentiment - Equities pull fresh headlines and a new score for that whole market, then start a 12-hour timer. A market you do not trade is left out. Update Market Sentiment - Selected Asset does the same for the asset open on the chart. Update Technical Data - Selected Asset reloads prices, technical scores, and max pain, and starts a 5-minute timer. Pressing a button refreshes that part now and starts its timer again.
 
 **Social signals and chat**
 
@@ -3753,7 +3753,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             "Update Technical Data - Selected Asset",
             "refresh_technical",
             "technical_countdown",
-            "Pull fresh prices and technical scores. This also runs on its own when the timer reaches zero.",
+            "Pull fresh prices, technical scores, and max pain. This also runs on its own when the timer reaches zero.",
         ))
         # One button per column, so each timer writes onto its own button.
         update_columns = st.columns(len(updates))
@@ -3772,6 +3772,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                     due = _countdown_due(st.session_state.technical_due, timer_key, title)
                     if pressed or due:
                         st.session_state.data_nonce += 1
+                        st.session_state.max_pain_force = True
                         st.session_state.technical_due = time.time() + _TECHNICAL_REFRESH_SECONDS
                         _rerun_fragment()
                 elif update_kind == "mood":
@@ -5114,6 +5115,7 @@ def _price_text(value: float) -> str:
 
 def show_max_pain(kind: str, asset_id: str, label: str, chart_price: float | None) -> None:
     """Options max pain for the open asset. A positioning chart, not part of the score."""
+    force = bool(st.session_state.pop("max_pain_force", False))
     heading = f"🎯 Max pain - {label}" if label else "🎯 Max pain"
     with section_expander(heading, "max_pain"):
         market = options_market(kind, asset_id)
@@ -5123,29 +5125,20 @@ def show_max_pain(kind: str, asset_id: str, label: str, chart_price: float | Non
                 "Max pain is available for stocks, Bitcoin, and Ethereum."
             )
             return
-        left, right = st.columns([3, 1.15], vertical_alignment="bottom")
-        with right:
-            force = st.button(
-                "🔄 Refresh",
-                key=f"max_pain_refresh_{market}",
-                use_container_width=True,
-                help="Load the options chain again. Otherwise it stays for about 12 hours.",
-            )
         expiries, error = list_expiries(market, force=force)
         labels = dict(expiries)
-        with left:
-            if labels:
-                expiry_key = f"max_pain_expiry_{market}"
-                if st.session_state.get(expiry_key) not in labels:
-                    st.session_state[expiry_key] = next(iter(labels))
-                expiry = st.selectbox(
-                    "Expiry",
-                    list(labels),
-                    format_func=lambda item: labels[item],
-                    key=f"max_pain_expiry_{market}",
-                )
-            else:
-                expiry = None
+        if labels:
+            expiry_key = f"max_pain_expiry_{market}"
+            if st.session_state.get(expiry_key) not in labels:
+                st.session_state[expiry_key] = next(iter(labels))
+            expiry = st.selectbox(
+                "Expiry",
+                list(labels),
+                format_func=lambda item: labels[item],
+                key=f"max_pain_expiry_{market}",
+            )
+        else:
+            expiry = None
         if error:
             st.warning(error)
             return
