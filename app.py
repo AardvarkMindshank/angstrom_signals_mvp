@@ -144,14 +144,14 @@ export default function(component) {
     document.head.appendChild(sideStyle);
   }
   let layoutStyle = document.getElementById("angstrom-layout-controls");
-  if (layoutStyle && layoutStyle.dataset.layout !== "gap") {
+  if (layoutStyle && layoutStyle.dataset.layout !== "grip") {
     layoutStyle.remove();
     layoutStyle = null;
   }
   if (!layoutStyle) {
     layoutStyle = document.createElement("style");
     layoutStyle.id = "angstrom-layout-controls";
-    layoutStyle.dataset.layout = "gap";
+    layoutStyle.dataset.layout = "grip";
     const singleMark = "url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Crect x=%272.4%27 y=%272.4%27 width=%2719.2%27 height=%2719.2%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3C/svg%3E')";
     const wideMark = "url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Crect x=%272.4%27 y=%272.4%27 width=%2719.2%27 height=%2719.2%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3Cpath d=%27M2.4 9.1H21.6M12 9.1V21.6%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3C/svg%3E')";
     layoutStyle.textContent = [
@@ -168,14 +168,13 @@ export default function(component) {
       "html.angstrom-night .st-key-layout_single button[data-testid='stBaseButton-primary'],html.angstrom-night .st-key-layout_wide button[data-testid='stBaseButton-primary']{background:#f3f4f6 !important;color:#111827 !important;border-color:#f3f4f6 !important;}",
       ".st-key-open_all_sections button,.st-key-collapse_all_sections button{width:auto !important;min-width:0 !important;max-width:max-content !important;height:2.05rem !important;min-height:2.05rem !important;padding:0 .7rem !important;white-space:nowrap;font-size:.85rem !important;}",
       "[data-testid='stElementContainer']:not(:has([data-testid='stElementContainer'])):is(:has(#interactive-chart),:has(#market-mood-crypto),:has(#market-mood-stock),:has(#market-sentiment)),[class*='st-key-scroll_to_chart'],[class*='st-key-wide_column_split']{position:absolute !important;width:0 !important;height:0 !important;min-height:0 !important;margin:0 !important;padding:0 !important;overflow:visible !important;}",
-      "#angstrom-wide-split{position:absolute;z-index:6;width:16px;margin-left:-8px;top:0;cursor:col-resize;touch-action:none;}",
-      "#angstrom-wide-split::before{content:'';position:absolute;left:7px;top:0;bottom:0;width:2px;background:#d1d5db;}",
-      "#angstrom-wide-split::after{content:'';position:absolute;left:3px;top:50%;width:10px;height:36px;margin-top:-18px;border-radius:999px;background:#9ca3af;}",
-      "#angstrom-wide-split:hover::before,#angstrom-wide-split.is-dragging::before{background:#6b7280;}",
-      "#angstrom-wide-split:hover::after,#angstrom-wide-split.is-dragging::after{background:#4b5563;}",
-      "html.angstrom-night #angstrom-wide-split::before{background:#4b5563;}",
-      "html.angstrom-night #angstrom-wide-split::after{background:#9ca3af;}",
-      "html.angstrom-night #angstrom-wide-split:hover::before,html.angstrom-night #angstrom-wide-split.is-dragging::before{background:#d1d5db;}",
+      "#angstrom-wide-split{position:absolute;z-index:30;width:18px;margin-left:-9px;top:0;cursor:col-resize;touch-action:none;}",
+      "#angstrom-wide-split .bar{position:absolute;left:8px;top:0;bottom:0;width:3px;border-radius:2px;background:#64748b;}",
+      "#angstrom-wide-split .grip{position:absolute;left:2px;top:14px;width:14px;height:28px;border-radius:999px;background:#f8fafc;border:1px solid #334155;box-shadow:0 1px 4px rgba(0,0,0,.25);}",
+      "#angstrom-wide-split:hover .bar,#angstrom-wide-split.is-dragging .bar{background:#0f172a;}",
+      "html.angstrom-night #angstrom-wide-split .bar{background:#e5e7eb;}",
+      "html.angstrom-night #angstrom-wide-split .grip{background:#f8fafc;border-color:#e5e7eb;}",
+      "html.angstrom-night #angstrom-wide-split:hover .bar,html.angstrom-night #angstrom-wide-split.is-dragging .bar{background:#fff;}",
       "#interactive-chart,#market-mood-crypto,#market-mood-stock,#market-sentiment{height:0;margin:0;padding:0;scroll-margin-top:4.5rem;}"
     ].join("");
     document.head.appendChild(layoutStyle);
@@ -1690,17 +1689,30 @@ export default function(component) {
     handle = document.createElement("div");
     handle.id = "angstrom-wide-split";
     handle.title = "Drag to resize these two columns";
+    const bar = document.createElement("div");
+    bar.className = "bar";
+    bar.style.cssText = "position:absolute;left:8px;top:0;bottom:0;width:3px;border-radius:2px;background:#e5e7eb;";
+    const grip = document.createElement("div");
+    grip.className = "grip";
+    grip.style.cssText = "position:absolute;left:2px;top:14px;width:14px;height:28px;border-radius:999px;background:#f8fafc;border:1px solid #334155;box-shadow:0 1px 4px rgba(0,0,0,.28);";
+    handle.appendChild(bar);
+    handle.appendChild(grip);
   }
   let watching = null;
   let observer = null;
   const pair = () => {
     const chart = document.getElementById("interactive-chart");
-    const column = chart && chart.closest('[data-testid="stColumn"]');
-    const block = column && column.parentElement;
-    if (!block || block.getAttribute("data-testid") !== "stHorizontalBlock") return null;
-    const columns = [...block.children].filter((el) => el.getAttribute("data-testid") === "stColumn");
-    if (columns.length < 2) return null;
-    return { block, columns };
+    if (!chart) return null;
+    const mood = document.getElementById("market-mood-crypto") || document.getElementById("market-mood-stock");
+    let node = chart.parentElement;
+    while (node && node !== document.body) {
+      if (node.getAttribute("data-testid") === "stHorizontalBlock" && (!mood || node.contains(mood))) {
+        const columns = [...node.children].filter((el) => el.getAttribute("data-testid") === "stColumn");
+        if (columns.length >= 2 && node.contains(chart)) return { block: node, columns };
+      }
+      node = node.parentElement;
+    }
+    return null;
   };
   const stacked = (columns) => {
     const left = columns[0].getBoundingClientRect();
@@ -1720,6 +1732,12 @@ export default function(component) {
     const left = columns[0].getBoundingClientRect();
     const right = columns[1].getBoundingClientRect();
     handle.style.display = "block";
+    handle.style.position = "absolute";
+    handle.style.zIndex = "30";
+    handle.style.width = "18px";
+    handle.style.marginLeft = "-9px";
+    handle.style.top = "0";
+    handle.style.cursor = "col-resize";
     handle.style.left = ((left.right + right.left) / 2 - blockRect.left) + "px";
     handle.style.height = blockRect.height + "px";
     if (watching !== block) {
@@ -1775,11 +1793,11 @@ export default function(component) {
     });
   }
   place();
-  const soon = window.setTimeout(place, 250);
-  const later = window.setTimeout(place, 700);
+  const retry = window.setInterval(place, 400);
+  const stopRetry = window.setTimeout(() => window.clearInterval(retry), 8000);
   return () => {
-    window.clearTimeout(soon);
-    window.clearTimeout(later);
+    window.clearInterval(retry);
+    window.clearTimeout(stopRetry);
     if (observer) observer.disconnect();
   };
 }
