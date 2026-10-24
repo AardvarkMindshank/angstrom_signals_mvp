@@ -4946,48 +4946,60 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
     )
 
 
-def _store_mood_vote(market_key: str, sentiment_at, vote, alt_score=None) -> None:
+def _store_mood_vote(market_key: str, sentiment_at, vote, alt_score=None) -> bool:
+    """Save a market thumb. The take box reruns on its own, so this does not refresh the page."""
     try:
         set_market_mood_vote(supabase, user_id, market_key, sentiment_at, vote, alt_score)
     except Exception:
-        st.warning("That thumb could not be saved. Please try again.")
-        return
-    st.rerun()
+        return False
+    return True
 
 
-def _store_sentiment_vote(kind: str, asset_id: str, sentiment_at, vote, alt_score=None) -> None:
+def _store_sentiment_vote(kind: str, asset_id: str, sentiment_at, vote, alt_score=None) -> bool:
+    """Save an asset thumb. The take box reruns on its own, so this does not refresh the page."""
     try:
         set_sentiment_vote(supabase, user_id, kind, asset_id, sentiment_at, vote, alt_score)
     except Exception:
-        st.warning("That thumb could not be saved. Please try again.")
-        return
-    st.rerun()
+        return False
+    return True
 
 
 def _store_sentiment_comment(
     kind: str, asset_id: str, sentiment_at, body: str, responded_score=None, responded_summary: str = "",
-) -> None:
+) -> bool:
+    """Save a comment. The take box reruns on its own, so this does not refresh the page."""
     try:
         set_sentiment_comment(
             supabase, user_id, kind, asset_id, sentiment_at, body, responded_score, responded_summary,
         )
     except Exception:
-        st.warning("That comment could not be saved. Please try again.")
-        return
-    st.rerun()
+        return False
+    return True
 
 
+def _take_result(prefix: str, ok: bool, message: str) -> None:
+    """Remember a save failure for the next paint of this take box."""
+    note = f"{prefix}_take_error"
+    if ok:
+        st.session_state.pop(note, None)
+    else:
+        st.session_state[note] = message
+
+
+@st.fragment
 def _sentiment_thumbs(
     kind: str, asset_id: str, sentiment_at, title: str, responded_score=None, responded_summary: str = "",
     *, prefix: str = "sentiment", voice: dict | None = None, on_vote=None, on_comment=None,
 ) -> None:
-    """Agree or disagree, then one short comment. Disagree opens a score in the same box."""
-    del title
+    """Agree or disagree, then one short comment. A click redraws only this box."""
+    del title, voice
     if not sentiment_at:
         st.caption("Thumbs and comments open once this sentiment is saved.")
         return
     key = asset_market_key(kind, asset_id)
-    if voice is None:
+    if str(kind) == "Mood":
+        voice = market_mood_crowd(supabase, [str(asset_id)]).get(str(asset_id)) or {}
+    else:
         voice = sentiment_crowd(supabase, [key]).get(key) or {}
     if on_vote is None:
         on_vote = lambda vote, alt_score=None: _store_sentiment_vote(
@@ -5078,6 +5090,11 @@ def _sentiment_thumbs(
         .st-key-{prefix}_comment_row {{
             margin-top: 6px;
         }}
+        .st-key-{prefix}_comment_form {{
+            border: none;
+            padding: 0;
+            background: transparent;
+        }}
         .take-faces {{
             display: flex;
             gap: 4px;
@@ -5129,24 +5146,43 @@ def _sentiment_thumbs(
         </style>
         """
     )
+    st.session_state[f"{prefix}_saved_vote"] = mine
     with st.container(border=True, key=f"{prefix}_take_box"):
         st.markdown("**Your take**")
-        agree = st.button(
+        problem = st.session_state.get(f"{prefix}_take_error")
+        if problem:
+            st.warning(problem)
+
+        def _click_agree(saver=on_vote, box=prefix) -> None:
+            current = st.session_state.get(f"{box}_saved_vote")
+            _take_result(
+                box,
+                bool(saver(None if current == 1 else 1)),
+                "That thumb could not be saved. Please try again.",
+            )
+
+        def _click_disagree(saver=on_vote, box=prefix) -> None:
+            current = st.session_state.get(f"{box}_saved_vote")
+            _take_result(
+                box,
+                bool(saver(None if current == -1 else -1)),
+                "That thumb could not be saved. Please try again.",
+            )
+
+        st.button(
             "👍 Agree",
             key=f"{prefix}_agree",
             use_container_width=True,
             type="primary" if mine == 1 else "secondary",
+            on_click=_click_agree,
         )
-        disagree = st.button(
+        st.button(
             "👎 Disagree",
             key=f"{prefix}_disagree",
             use_container_width=True,
             type="primary" if mine == -1 else "secondary",
+            on_click=_click_disagree,
         )
-        if agree:
-            on_vote(None if mine == 1 else 1)
-        elif disagree:
-            on_vote(None if mine == -1 else -1)
         if mine == -1:
             _sentiment_alt_score(kind, asset_id, sentiment_at, mine_score, selected, prefix, on_vote)
         notes = sentiment_comment_lists(supabase, [key]).get(key) or []
@@ -5173,56 +5209,77 @@ def _sentiment_thumbs(
         )
         box_key = f"sentiment_comment_box_{key}"
         posted_key = f"{box_key}_posted"
+        st.session_state[f"{prefix}_saved_comment"] = mine_text
         if box_key not in st.session_state:
             st.session_state[box_key] = mine_text
         elif st.session_state.get(posted_key) == st.session_state.get(box_key) and st.session_state.get(box_key) != mine_text:
             st.session_state[box_key] = mine_text
         st.session_state[posted_key] = mine_text
-        st.text_input(
-            "Comment",
-            max_chars=COMMENT_LIMIT,
-            key=box_key,
-            label_visibility="collapsed",
-            placeholder="Add a short comment",
-        )
-        faces = []
-        for index, emoticon in enumerate(COMMENT_EMOTICONS):
-            extra = " take-face-poop" if index == 6 else ""
-            faces.append(
-                f"<button type='button' class='take-face{extra}' "
-                f"data-face='{html.escape(emoticon, quote=True)}'>{html.escape(emoticon)}</button>"
+
+        def _post_comment(saver=on_comment, box=prefix, field=box_key) -> None:
+            text = " ".join(str(st.session_state.get(field) or "").split())
+            previous = str(st.session_state.get(f"{box}_saved_comment") or "")
+            if not text and not previous:
+                return
+            _take_result(box, bool(saver(text)), "That comment could not be saved. Please try again.")
+
+        with st.form(f"{prefix}_comment_form", clear_on_submit=False, border=False):
+            st.text_input(
+                "Comment",
+                max_chars=COMMENT_LIMIT,
+                key=box_key,
+                label_visibility="collapsed",
+                placeholder="Add a short comment",
             )
-        st.html(
-            f"<div class='take-faces' data-limit='{COMMENT_LIMIT}'>{''.join(faces)}</div>"
-        )
-        st.caption(
-            f"Up to {COMMENT_LIMIT} characters. Tap one to add it. "
-            "Posting again replaces yours. Each comment stays for 12 hours."
-        )
-        if st.button("Post comment", key=f"{prefix}_comment_post", use_container_width=True):
-            text = " ".join(str(st.session_state.get(box_key) or "").split())
-            if text or mine_text:
-                on_comment(text)
+            faces = []
+            for index, emoticon in enumerate(COMMENT_EMOTICONS):
+                extra = " take-face-poop" if index == 6 else ""
+                faces.append(
+                    f"<button type='button' class='take-face{extra}' "
+                    f"data-face='{html.escape(emoticon, quote=True)}'>{html.escape(emoticon)}</button>"
+                )
+            st.html(
+                f"<div class='take-faces' data-limit='{COMMENT_LIMIT}'>{''.join(faces)}</div>"
+            )
+            st.caption(
+                f"Up to {COMMENT_LIMIT} characters. Tap one to add it. "
+                "Posting again replaces yours. Each comment stays for 12 hours."
+            )
+            st.form_submit_button(
+                "Post comment",
+                key=f"{prefix}_comment_post",
+                use_container_width=True,
+                on_click=_post_comment,
+            )
 
 
 def _sentiment_alt_score(kind: str, asset_id: str, sentiment_at, mine_score, selected, prefix: str, on_vote) -> None:
-    """Score controls under Disagree. A clicked or typed number saves on its own."""
+    """Score controls under Disagree. A click saves, then only this box redraws."""
     del kind, asset_id, sentiment_at
     st.markdown("**Your score**")
-    picked = None
+    typed_key = f"{prefix}_alt_typed"
+
+    def _pick(value: int, saver=on_vote, box=prefix, typed=typed_key) -> None:
+        st.session_state[typed] = int(value)
+        _take_result(box, bool(saver(-1, int(value))), "That thumb could not be saved. Please try again.")
+
+    def _typed(saver=on_vote, box=prefix, typed=typed_key) -> None:
+        raw = st.session_state.get(typed)
+        if raw is None:
+            return
+        _take_result(box, bool(saver(-1, int(raw))), "That thumb could not be saved. Please try again.")
+
     for column, value in zip(st.columns(6, gap="xxsmall", wrap=False), (0, 20, 40, 60, 80, 100)):
         with column:
-            if st.button(
+            st.button(
                 str(value),
                 key=f"{prefix}_alt_{value}",
                 use_container_width=True,
                 type="primary" if selected == value else "secondary",
-            ):
-                picked = value
-    typed_key = f"{prefix}_alt_typed"
-    if picked is not None:
-        st.session_state[typed_key] = int(picked)
-    elif typed_key not in st.session_state and mine_score is not None:
+                on_click=_pick,
+                args=(value,),
+            )
+    if typed_key not in st.session_state and mine_score is not None:
         st.session_state[typed_key] = int(mine_score)
     number_kwargs = {
         "min_value": 0,
@@ -5230,13 +5287,11 @@ def _sentiment_alt_score(kind: str, asset_id: str, sentiment_at, mine_score, sel
         "step": 1,
         "key": typed_key,
         "placeholder": "0–100",
+        "on_change": _typed,
     }
     if typed_key not in st.session_state:
         number_kwargs["value"] = None
-    typed = st.number_input("Your score", label_visibility="collapsed", **number_kwargs)
-    stored = None if mine_score is None else int(mine_score)
-    if typed is not None and int(typed) != stored:
-        on_vote(-1, int(typed))
+    st.number_input("Your score", label_visibility="collapsed", **number_kwargs)
 
 
 def _published_label(value) -> str:
@@ -5441,7 +5496,6 @@ def _mood_card(spec: dict, row: dict | None, deadlines: dict) -> None:
                 score,
                 report.get("summary") or "",
                 prefix=f"mood_{mood_key}",
-                voice=market_mood_crowd(supabase, [mood_key]).get(mood_key) or {},
                 on_vote=lambda vote, alt_score=None, market=mood_key, at=(
                     (row or {}).get("sentiment_updated_at") if isinstance(row, dict) else None
                 ): _store_mood_vote(market, at, vote, alt_score),
