@@ -144,14 +144,14 @@ export default function(component) {
     document.head.appendChild(sideStyle);
   }
   let layoutStyle = document.getElementById("angstrom-layout-controls");
-  if (layoutStyle && layoutStyle.dataset.layout !== "jump") {
+  if (layoutStyle && layoutStyle.dataset.layout !== "split") {
     layoutStyle.remove();
     layoutStyle = null;
   }
   if (!layoutStyle) {
     layoutStyle = document.createElement("style");
     layoutStyle.id = "angstrom-layout-controls";
-    layoutStyle.dataset.layout = "jump";
+    layoutStyle.dataset.layout = "split";
     const singleMark = "url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Crect x=%272.4%27 y=%272.4%27 width=%2719.2%27 height=%2719.2%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3C/svg%3E')";
     const wideMark = "url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Crect x=%272.4%27 y=%272.4%27 width=%2719.2%27 height=%2719.2%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3Cpath d=%27M2.4 9.1H21.6M12 9.1V21.6%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3C/svg%3E')";
     layoutStyle.textContent = [
@@ -167,7 +167,15 @@ export default function(component) {
       "html.angstrom-night .st-key-layout_single button:hover,html.angstrom-night .st-key-layout_wide button:hover{border-color:#e5e7eb !important;}",
       "html.angstrom-night .st-key-layout_single button[data-testid='stBaseButton-primary'],html.angstrom-night .st-key-layout_wide button[data-testid='stBaseButton-primary']{background:#f3f4f6 !important;color:#111827 !important;border-color:#f3f4f6 !important;}",
       ".st-key-open_all_sections button,.st-key-collapse_all_sections button{width:auto !important;min-width:0 !important;max-width:max-content !important;height:2.05rem !important;min-height:2.05rem !important;padding:0 .7rem !important;white-space:nowrap;font-size:.85rem !important;}",
-      "[data-testid='stElementContainer']:has(#interactive-chart),[data-testid='stElementContainer']:has(#market-mood-crypto),[data-testid='stElementContainer']:has(#market-mood-stock){position:absolute !important;width:0 !important;height:0 !important;min-height:0 !important;margin:0 !important;padding:0 !important;overflow:visible !important;}",
+      "[data-testid='stElementContainer']:not(:has([data-testid='stElementContainer'])):is(:has(#interactive-chart),:has(#market-mood-crypto),:has(#market-mood-stock)),[class*='st-key-scroll_to_chart'],[class*='st-key-wide_column_split']{position:absolute !important;width:0 !important;height:0 !important;min-height:0 !important;margin:0 !important;padding:0 !important;overflow:visible !important;}",
+      "#angstrom-wide-split{position:absolute;z-index:6;width:16px;margin-left:-8px;top:0;cursor:col-resize;touch-action:none;}",
+      "#angstrom-wide-split::before{content:'';position:absolute;left:7px;top:0;bottom:0;width:2px;background:#d1d5db;}",
+      "#angstrom-wide-split::after{content:'';position:absolute;left:3px;top:50%;width:10px;height:36px;margin-top:-18px;border-radius:999px;background:#9ca3af;}",
+      "#angstrom-wide-split:hover::before,#angstrom-wide-split.is-dragging::before{background:#6b7280;}",
+      "#angstrom-wide-split:hover::after,#angstrom-wide-split.is-dragging::after{background:#4b5563;}",
+      "html.angstrom-night #angstrom-wide-split::before{background:#4b5563;}",
+      "html.angstrom-night #angstrom-wide-split::after{background:#9ca3af;}",
+      "html.angstrom-night #angstrom-wide-split:hover::before,html.angstrom-night #angstrom-wide-split.is-dragging::before{background:#d1d5db;}",
       "#interactive-chart,#market-mood-crypto,#market-mood-stock{height:0;margin:0;padding:0;scroll-margin-top:4.5rem;}"
     ].join("");
     document.head.appendChild(layoutStyle);
@@ -1667,6 +1675,121 @@ _page_top = st.components.v2.component(
     isolate_styles=False,
 )
 
+# The wide layout's two bottom columns. 0.5 is an even split of that pair only.
+_WIDE_SPLIT_MIN = 0.2
+_WIDE_SPLIT_MAX = 0.8
+_WIDE_SPLIT_JS = """
+export default function(component) {
+  const { parentElement, setTriggerValue } = component;
+  const shell = parentElement.closest(".stBidiComponent") || parentElement;
+  shell.style.display = "none";
+  const minSplit = 0.2;
+  const maxSplit = 0.8;
+  let handle = document.getElementById("angstrom-wide-split");
+  if (!handle) {
+    handle = document.createElement("div");
+    handle.id = "angstrom-wide-split";
+    handle.title = "Drag to resize these two columns";
+  }
+  let watching = null;
+  let observer = null;
+  const pair = () => {
+    const chart = document.getElementById("interactive-chart");
+    const column = chart && chart.closest('[data-testid="stColumn"]');
+    const block = column && column.parentElement;
+    if (!block || block.getAttribute("data-testid") !== "stHorizontalBlock") return null;
+    const columns = [...block.children].filter((el) => el.getAttribute("data-testid") === "stColumn");
+    if (columns.length < 2) return null;
+    return { block, columns };
+  };
+  const stacked = (columns) => {
+    const left = columns[0].getBoundingClientRect();
+    const right = columns[1].getBoundingClientRect();
+    return right.top > left.bottom - 8;
+  };
+  const place = () => {
+    const found = pair();
+    if (!found || stacked(found.columns)) {
+      handle.style.display = "none";
+      return;
+    }
+    const { block, columns } = found;
+    if (handle.parentElement !== block) block.appendChild(handle);
+    block.style.position = "relative";
+    const blockRect = block.getBoundingClientRect();
+    const left = columns[0].getBoundingClientRect();
+    const right = columns[1].getBoundingClientRect();
+    handle.style.display = "block";
+    handle.style.left = ((left.right + right.left) / 2 - blockRect.left) + "px";
+    handle.style.height = blockRect.height + "px";
+    if (watching !== block) {
+      if (observer) observer.disconnect();
+      watching = block;
+      observer = new ResizeObserver(() => place());
+      observer.observe(block);
+    }
+  };
+  const ratioFor = (clientX, block, columns) => {
+    const rect = block.getBoundingClientRect();
+    const width = rect.width || 1;
+    const gap = Math.max(0, columns[1].getBoundingClientRect().left - columns[0].getBoundingClientRect().right);
+    const pointer = Math.min(Math.max(clientX - rect.left, 0), width);
+    const ratio = (pointer - gap / 2) / Math.max(width - gap, 1);
+    return Math.min(maxSplit, Math.max(minSplit, ratio));
+  };
+  const applyRatio = (ratio, columns) => {
+    columns[0].style.flex = ratio + " 1 0px";
+    columns[1].style.flex = (1 - ratio) + " 1 0px";
+    columns[0].style.minWidth = "0";
+    columns[1].style.minWidth = "0";
+  };
+  if (!handle.dataset.bound) {
+    handle.dataset.bound = "1";
+    handle.addEventListener("pointerdown", (event) => {
+      const found = pair();
+      if (!found || stacked(found.columns) || event.button !== 0) return;
+      event.preventDefault();
+      handle.classList.add("is-dragging");
+      handle.setPointerCapture(event.pointerId);
+      const move = (ev) => {
+        const current = pair();
+        if (!current) return;
+        applyRatio(ratioFor(ev.clientX, current.block, current.columns), current.columns);
+        place();
+      };
+      const stop = (ev) => {
+        handle.classList.remove("is-dragging");
+        handle.removeEventListener("pointermove", move);
+        handle.removeEventListener("pointerup", stop);
+        handle.removeEventListener("pointercancel", stop);
+        const current = pair();
+        if (!current) return;
+        const ratio = ratioFor(ev.clientX, current.block, current.columns);
+        applyRatio(ratio, current.columns);
+        place();
+        setTriggerValue("split", ratio.toFixed(3));
+      };
+      handle.addEventListener("pointermove", move);
+      handle.addEventListener("pointerup", stop);
+      handle.addEventListener("pointercancel", stop);
+    });
+  }
+  place();
+  const soon = window.setTimeout(place, 250);
+  const later = window.setTimeout(place, 700);
+  return () => {
+    window.clearTimeout(soon);
+    window.clearTimeout(later);
+    if (observer) observer.disconnect();
+  };
+}
+"""
+_wide_split_handle = st.components.v2.component(
+    "wide_split",
+    js=_WIDE_SPLIT_JS,
+    isolate_styles=False,
+)
+
 _TECHNICAL_REFRESH_SECONDS = 300
 _COUNTDOWN_JS = """
 export default function(component) {
@@ -2883,7 +3006,8 @@ with st.container(horizontal=True, vertical_alignment="center", horizontal_align
             type="primary" if wide_on else "secondary",
             help=(
                 "Snapshot and score tables across the top, market sentiment on the left, "
-                "and the chart sections on the right."
+                "and the chart sections on the right. The two bottom columns start equal. "
+                "Drag the line between them to resize."
             ),
         )
         open_sections = st.button("Open all", key="open_all_sections", width="content")
@@ -2961,7 +3085,7 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
     st.markdown("""
 **How to use it**
 
-1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest. Quick Snapshot, Market sentiment for crypto, Market sentiment for stocks, Crypto Scores, Equity Scores, Interactive Chart, Score Breakdown, Max pain, and Market sentiment each sit in a section that starts open. Close a header to fold that section away. **Open all** and **Collapse all**, on the right of the page title, do that for every one of those sections. The square beside them stacks every section in one column, with Quick Snapshot first. The mark with a wide top and two panes underneath puts Quick Snapshot and both score tables across the top, market sentiment on the left, and Interactive Chart, Score Breakdown, Max pain, and Market sentiment on the right. On a narrow screen the wide layout stacks the left and right parts. **I trade cryptos**, **I trade equities**, and **I trade both**, in Settings, are saved on your account. A market you leave out is hidden, including its sentiment, its score table, and its Quick Snapshot boxes. The chart follows the markets you trade. Collapse all also closes this guide. Open all does not open it. **Feedback**, at the bottom of the sidebar, sends an issue or an idea. It is stored as submitted. The arrow on the left edge of the page closes the sidebar. It stays on that edge when the sidebar is closed, so the sidebar can be opened again. Hover the arrow to see which action it will take.
+1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest. Quick Snapshot, Market sentiment for crypto, Market sentiment for stocks, Crypto Scores, Equity Scores, Interactive Chart, Score Breakdown, Max pain, and Market sentiment each sit in a section that starts open. Close a header to fold that section away. **Open all** and **Collapse all**, on the right of the page title, do that for every one of those sections. The square beside them stacks every section in one column, with Quick Snapshot first. The mark with a wide top and two panes underneath puts Quick Snapshot and both score tables across the top, market sentiment on the left, and Interactive Chart, Score Breakdown, Max pain, and Market sentiment on the right. Those two bottom columns start at equal width. Drag the line between them to give either side more room. That line stays inside those two columns. On a narrow screen the wide layout stacks the left and right parts. **I trade cryptos**, **I trade equities**, and **I trade both**, in Settings, are saved on your account. A market you leave out is hidden, including its sentiment, its score table, and its Quick Snapshot boxes. The chart follows the markets you trade. Collapse all also closes this guide. Open all does not open it. **Feedback**, at the bottom of the sidebar, sends an issue or an idea. It is stored as submitted. The arrow on the left edge of the page closes the sidebar. It stays on that edge when the sidebar is closed, so the sidebar can be opened again. Hover the arrow to see which action it will take.
 2. Click a name in either table, a Quick Snapshot box, or an alert under Notifications. That asset stays highlighted, and the page moves down to the chart when the chart is off screen. Click a column title to sort that table. It starts with the strongest score at the top.
 3. Extra metrics add **7d %**, **Market Cap**, **ATR %**, and **Vol**. A separate checkbox adds **1d %** before the seven-day change and **30d %** after it. For **1d %** and **7d %**, green means the price rose and red means it fell. **30d %** uses the same colors as the **30-day trend**: green for a rise of about 2% or more, red for a fall of about 2% or more, and orange when the move stays inside about 2%. For stocks, one day is the previous trading session. **Market Cap** is the latest size of the asset, from CoinGecko for crypto and Yahoo for stocks. **ATR %** is volatility. **Vol** is volume versus its 20-day average.
 4. Alerts fire at 70 and 30 unless you move those sliders. One email goes to the address on your account when a technical score crosses a boundary. It is not sent again until the score leaves that boundary and crosses it later. Sentiment scores do not send alerts.
@@ -4342,7 +4466,27 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
     chart_logo = (st.session_state.get("asset_logos") or {}).get(asset_market_key(chart_kind, chart_asset))
     chart_label = f"📊 Interactive Chart - {chart_name}" if chart_name else "📊 Interactive Chart"
     if wide_layout:
-        mood_col, asset_col = st.columns([2, 3], gap="medium")
+        # Tops stay level. Do not put a widget above the chart expander in asset_col.
+        if "wide_split" not in st.session_state:
+            st.session_state.wide_split = 0.5
+        reported = _wide_split_handle(
+            key="wide_column_split",
+            data={"split": f"{float(st.session_state.wide_split):.3f}"},
+            on_split_change=lambda: None,
+        )
+        raw_split = getattr(reported, "split", None)
+        if raw_split not in (None, ""):
+            try:
+                next_split = float(raw_split)
+            except (TypeError, ValueError):
+                next_split = None
+            if next_split is not None:
+                next_split = min(_WIDE_SPLIT_MAX, max(_WIDE_SPLIT_MIN, next_split))
+                if abs(next_split - float(st.session_state.wide_split)) > 0.004:
+                    st.session_state.wide_split = next_split
+                    _rerun_fragment()
+        split = min(_WIDE_SPLIT_MAX, max(_WIDE_SPLIT_MIN, float(st.session_state.wide_split)))
+        mood_col, asset_col = st.columns([split, 1 - split], gap="medium", vertical_alignment="top")
         with mood_col:
             show_market_moods(trade_crypto, trade_equities)
         asset_area = asset_col
@@ -4351,13 +4495,6 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
     with asset_area:
         st.html(
             "<div id='interactive-chart' style='scroll-margin-top:4.5rem;'></div>"
-        )
-        _scroll_chart(
-            key="scroll_to_chart",
-            data={
-                "token": st.session_state.get("scroll_token") or "",
-                "target": st.session_state.get("scroll_target") or "interactive-chart",
-            },
         )
         with section_expander(chart_label, "interactive_chart"):
             logo_col, _, chart_top = st.columns([0.35, 4.85, 0.9], vertical_alignment="center")
@@ -4553,6 +4690,14 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             sentiment_label,
             crypto_ticker(asset_key) if asset_type == "Crypto" else asset_key,
         )
+    # Outside both wide columns, so it cannot push the chart header down.
+    _scroll_chart(
+        key="scroll_to_chart",
+        data={
+            "token": st.session_state.get("scroll_token") or "",
+            "target": st.session_state.get("scroll_target") or "interactive-chart",
+        },
+    )
 
 
 def _store_mood_vote(market_key: str, sentiment_at, vote, alt_score=None) -> None:
