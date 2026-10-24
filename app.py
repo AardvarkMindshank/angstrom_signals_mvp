@@ -3563,7 +3563,7 @@ with st.sidebar.expander("📝 Feedback", expanded=False):
     elif feedback_notice:
         st.warning(feedback_notice)
 
-with st.sidebar.expander("About", expanded=False):
+with st.sidebar.expander("ℹ️ About", expanded=False):
     st.markdown(_brand_mark(72), unsafe_allow_html=True)
     st.markdown("**angstrom signals**")
     st.caption("Market sentiment and technical signals, with the crowd alongside.")
