@@ -3563,6 +3563,22 @@ with st.sidebar.expander("📝 Feedback", expanded=False):
     elif feedback_notice:
         st.warning(feedback_notice)
 
+with st.sidebar.expander("About", expanded=False):
+    st.markdown(_brand_mark(72), unsafe_allow_html=True)
+    st.markdown("**angstrom signals**")
+    st.caption("Market sentiment and technical signals, with the crowd alongside.")
+    st.markdown(
+        "Angstrom Signals is a platform for traders who want aggregated signals "
+        "for whole markets and for individual assets. Technical scores and market "
+        "sentiment sit together and update as conditions change. A real-time social "
+        "stream lets the crowd react alongside those signals."
+    )
+    st.markdown(
+        "General: [info@angstromsignals.com](mailto:info@angstromsignals.com)  \n"
+        "Support: [support@angstromsignals.com](mailto:support@angstromsignals.com)  \n"
+        "Investors: [investors@angstromsignals.com](mailto:investors@angstromsignals.com)"
+    )
+
 
 @st.cache_data(ttl=300)
 def load_crypto(coin_id, days, nonce):
@@ -5453,18 +5469,3 @@ st.markdown(
 
 st.sidebar.markdown("---")
 st.sidebar.info("Prices and technical scores refresh every 5 minutes while this page is open. Market sentiment refreshes about every 12 hours. Alert checks continue every 5 minutes after you leave.")
-with st.sidebar.expander("About", expanded=False):
-    st.markdown(_brand_mark(72), unsafe_allow_html=True)
-    st.markdown("**angstrom signals**")
-    st.caption("Market sentiment and technical signals, with the crowd alongside.")
-    st.markdown(
-        "Angstrom Signals is a platform for traders who want aggregated signals "
-        "for whole markets and for individual assets. Technical scores and market "
-        "sentiment sit together and update as conditions change. A real-time social "
-        "stream lets the crowd react alongside those signals."
-    )
-    st.markdown(
-        "General: [info@angstromsignals.com](mailto:info@angstromsignals.com)  \n"
-        "Support: [support@angstromsignals.com](mailto:support@angstromsignals.com)  \n"
-        "Investors: [investors@angstromsignals.com](mailto:investors@angstromsignals.com)"
-    )
