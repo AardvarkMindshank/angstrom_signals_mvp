@@ -144,14 +144,14 @@ export default function(component) {
     document.head.appendChild(sideStyle);
   }
   let layoutStyle = document.getElementById("angstrom-layout-controls");
-  if (layoutStyle && layoutStyle.dataset.layout !== "split") {
+  if (layoutStyle && layoutStyle.dataset.layout !== "gap") {
     layoutStyle.remove();
     layoutStyle = null;
   }
   if (!layoutStyle) {
     layoutStyle = document.createElement("style");
     layoutStyle.id = "angstrom-layout-controls";
-    layoutStyle.dataset.layout = "split";
+    layoutStyle.dataset.layout = "gap";
     const singleMark = "url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Crect x=%272.4%27 y=%272.4%27 width=%2719.2%27 height=%2719.2%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3C/svg%3E')";
     const wideMark = "url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Crect x=%272.4%27 y=%272.4%27 width=%2719.2%27 height=%2719.2%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3Cpath d=%27M2.4 9.1H21.6M12 9.1V21.6%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3C/svg%3E')";
     layoutStyle.textContent = [
@@ -167,7 +167,7 @@ export default function(component) {
       "html.angstrom-night .st-key-layout_single button:hover,html.angstrom-night .st-key-layout_wide button:hover{border-color:#e5e7eb !important;}",
       "html.angstrom-night .st-key-layout_single button[data-testid='stBaseButton-primary'],html.angstrom-night .st-key-layout_wide button[data-testid='stBaseButton-primary']{background:#f3f4f6 !important;color:#111827 !important;border-color:#f3f4f6 !important;}",
       ".st-key-open_all_sections button,.st-key-collapse_all_sections button{width:auto !important;min-width:0 !important;max-width:max-content !important;height:2.05rem !important;min-height:2.05rem !important;padding:0 .7rem !important;white-space:nowrap;font-size:.85rem !important;}",
-      "[data-testid='stElementContainer']:not(:has([data-testid='stElementContainer'])):is(:has(#interactive-chart),:has(#market-mood-crypto),:has(#market-mood-stock)),[class*='st-key-scroll_to_chart'],[class*='st-key-wide_column_split']{position:absolute !important;width:0 !important;height:0 !important;min-height:0 !important;margin:0 !important;padding:0 !important;overflow:visible !important;}",
+      "[data-testid='stElementContainer']:not(:has([data-testid='stElementContainer'])):is(:has(#interactive-chart),:has(#market-mood-crypto),:has(#market-mood-stock),:has(#market-sentiment)),[class*='st-key-scroll_to_chart'],[class*='st-key-wide_column_split']{position:absolute !important;width:0 !important;height:0 !important;min-height:0 !important;margin:0 !important;padding:0 !important;overflow:visible !important;}",
       "#angstrom-wide-split{position:absolute;z-index:6;width:16px;margin-left:-8px;top:0;cursor:col-resize;touch-action:none;}",
       "#angstrom-wide-split::before{content:'';position:absolute;left:7px;top:0;bottom:0;width:2px;background:#d1d5db;}",
       "#angstrom-wide-split::after{content:'';position:absolute;left:3px;top:50%;width:10px;height:36px;margin-top:-18px;border-radius:999px;background:#9ca3af;}",
@@ -176,7 +176,7 @@ export default function(component) {
       "html.angstrom-night #angstrom-wide-split::before{background:#4b5563;}",
       "html.angstrom-night #angstrom-wide-split::after{background:#9ca3af;}",
       "html.angstrom-night #angstrom-wide-split:hover::before,html.angstrom-night #angstrom-wide-split.is-dragging::before{background:#d1d5db;}",
-      "#interactive-chart,#market-mood-crypto,#market-mood-stock{height:0;margin:0;padding:0;scroll-margin-top:4.5rem;}"
+      "#interactive-chart,#market-mood-crypto,#market-mood-stock,#market-sentiment{height:0;margin:0;padding:0;scroll-margin-top:4.5rem;}"
     ].join("");
     document.head.appendChild(layoutStyle);
   }
