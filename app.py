@@ -40,6 +40,17 @@ def _active_theme() -> str:
     return kind if kind in ("light", "dark") else "light"
 
 
+def _paint_chart(fig) -> None:
+    """Chart paper follows the same surface as the cards. Dark mode is grey, not black."""
+    dark = _active_theme() == "dark"
+    paper = "#262730" if dark else "#ffffff"
+    ink = "#e5e7eb" if dark else "#374151"
+    grid = "#3f4654" if dark else "#e5e7eb"
+    fig.update_layout(paper_bgcolor=paper, plot_bgcolor=paper, font=dict(color=ink))
+    fig.update_xaxes(gridcolor=grid, zerolinecolor=grid, tickfont=dict(color=ink), title_font=dict(color=ink))
+    fig.update_yaxes(gridcolor=grid, zerolinecolor=grid, tickfont=dict(color=ink), title_font=dict(color=ink))
+
+
 def _brand_mark(width: int, *, align: str = "center") -> str:
     """Both logos, with the current theme shown first. The page swaps them when the theme changes."""
     folder = Path(__file__).resolve().parent / "assets"
@@ -73,49 +84,68 @@ export default function(component) {
   const shell = parentElement.closest(".stBidiComponent") || parentElement;
   shell.style.display = "none";
   let style = document.getElementById("angstrom-brand-style");
-  if (style && style.dataset.layout !== "readings") {
+  if (style && style.dataset.layout !== "panels") {
     style.remove();
     style = null;
   }
   if (!style) {
     style = document.createElement("style");
     style.id = "angstrom-brand-style";
-    style.dataset.layout = "readings";
+    style.dataset.layout = "panels";
     style.textContent = [
+      "html{--ang-surface:#ffffff;--ang-border:#e5e7eb;--ang-text:#111827;--ang-muted:#6b7280;--ang-soft:#374151;--ang-track:#e5e7eb;--ang-line:#f3f4f6;--ang-select:#e5e7eb;--ang-select-text:#111827;}",
+      "html.angstrom-night{--ang-surface:#262730;--ang-border:#3f4654;--ang-text:#f3f4f6;--ang-muted:#9ca3af;--ang-soft:#d1d5db;--ang-track:#3f4654;--ang-line:#31333f;--ang-select:#3a4050;--ang-select-text:#f9fafb;}",
+      ".ang-card{background:var(--ang-surface);color:var(--ang-text);border:1px solid var(--ang-border);border-radius:10px;padding:12px 16px;}",
+      ".ang-kicker{font-size:.8rem;color:var(--ang-muted);margin-bottom:4px;}",
+      ".ang-copy{color:var(--ang-text);font-size:.95rem;line-height:1.4;}",
+      ".ang-title{color:var(--ang-text);font-weight:600;}",
+      ".ang-track{flex:1;background:var(--ang-track);border-radius:6px;height:14px;overflow:hidden;}",
+      ".ang-table{width:100%;border-collapse:collapse;font-size:.95rem;color:var(--ang-text);}",
+      ".ang-table thead tr{border-bottom:2px solid var(--ang-border);}",
+      ".ang-table tbody tr{border-bottom:1px solid var(--ang-line);}",
+      ".ang-table tr.ang-row-on{background:var(--ang-select);color:var(--ang-select-text);}",
+      "html:not(.angstrom-night) [data-testid='stAppViewContainer'],html:not(.angstrom-night) [data-testid='stHeader']{background:#eef0f4 !important;}",
+      "html:not(.angstrom-night) [data-testid='stSidebar']{background:#ffffff !important;border-right:1px solid #e5e7eb;}",
+      "html:not(.angstrom-night) [data-testid='stMain'] [data-testid='stExpander'] details,html:not(.angstrom-night) [data-testid='stMain'] [data-testid='stVerticalBlockBorderWrapper'],html:not(.angstrom-night) [data-testid='stMain'] [data-testid='stForm']{background:#ffffff !important;border-color:#e5e7eb !important;}",
+      "html:not(.angstrom-night) [data-testid='stSidebar'] [data-testid='stExpander'] details{background:#f8fafc !important;border-color:#e5e7eb !important;}",
+      "html.angstrom-night [data-testid='stAppViewContainer'],html.angstrom-night [data-testid='stHeader'],html.angstrom-night [data-testid='stBottom']{background:#0e1117 !important;}",
+      "html.angstrom-night [data-testid='stSidebar']{background:#16181f !important;border-right:1px solid var(--ang-border);}",
+      "html.angstrom-night [data-testid='stMain'] [data-testid='stExpander'] details,html.angstrom-night [data-testid='stMain'] [data-testid='stVerticalBlockBorderWrapper'],html.angstrom-night [data-testid='stMain'] [data-testid='stForm'],html.angstrom-night [data-testid='stMetric']{background:var(--ang-surface) !important;border-color:var(--ang-border) !important;}",
+      "html.angstrom-night [data-testid='stSidebar'] [data-testid='stExpander'] details{background:#262730 !important;border-color:var(--ang-border) !important;}",
+      "html.angstrom-night [data-testid='stExpander'] details > summary{background:transparent !important;}",
+      "html.angstrom-night [data-baseweb='input'],html.angstrom-night [data-baseweb='textarea'],html.angstrom-night [data-baseweb='select'] > div,html.angstrom-night [data-testid='stFileUploaderDropzone']{background-color:#31333f !important;border-color:var(--ang-border) !important;color:var(--ang-text) !important;}",
+      "html.angstrom-night [data-baseweb='input'] input,html.angstrom-night [data-baseweb='textarea'] textarea{background:transparent !important;color:var(--ang-text) !important;-webkit-text-fill-color:var(--ang-text);}",
+      "html.angstrom-night [data-testid='stBaseButton-secondary']{background:#31333f !important;border-color:#4b5563 !important;color:var(--ang-text) !important;}",
+      "html.angstrom-night [data-testid='stBaseButton-secondary']:hover{border-color:#e5e7eb !important;color:#ffffff !important;}",
+      "html.angstrom-night [data-baseweb='popover'] > div,html.angstrom-night [data-baseweb='menu'],html.angstrom-night [data-testid='stDialog'] [role='dialog']{background:#262730 !important;color:var(--ang-text) !important;}",
+      "html.angstrom-night [data-testid='stCode'],html.angstrom-night pre{background:#262730 !important;color:var(--ang-text);border:1px solid var(--ang-border);border-radius:8px;}",
       ".brand-mark img{display:none;}",
       ".brand-mark.is-light .logo-light,.brand-mark.is-dark .logo-dark{display:inline;}",
-      ".sentiment-card{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;}",
-      ".sentiment-kicker{font-size:.8rem;color:#6b7280;margin-bottom:4px;}",
+      ".sentiment-card{background:var(--ang-surface);color:var(--ang-text);border:1px solid var(--ang-border);border-radius:10px;padding:14px 16px;}",
+      ".sentiment-kicker{font-size:.8rem;color:var(--ang-muted);margin-bottom:4px;}",
       ".sentiment-score{display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border-radius:4px;font-weight:600;}",
       ".sentiment-coverage{margin-top:8px;font-weight:600;}",
-      ".sentiment-body{margin-top:8px;color:#111827;}",
+      ".sentiment-body{margin-top:8px;color:var(--ang-text);}",
       ".sentiment-side{margin-top:12px;}",
       ".sentiment-side .sentiment-body{margin-top:4px;}",
       ".sentiment-side-label{font-size:.75rem;font-weight:700;}",
       ".sentiment-drivers{margin:10px 0 0;padding-left:1.15rem;}",
-      ".sentiment-drivers li{margin:4px 0;color:#374151;}",
-      ".headline-group{margin:14px 0 0;font-weight:700;font-size:.95rem;color:#111827;}",
-      ".headline-aside{margin:4px 0 8px;font-size:.8rem;color:#6b7280;line-height:1.35;}",
-      "html.angstrom-night .sentiment-card{background:#0e1117;border-color:#4b5563;color:#fafafa;}",
-      "html.angstrom-night .sentiment-kicker{color:#9ca3af;}",
-      "html.angstrom-night .sentiment-body,html.angstrom-night .sentiment-drivers li{color:#e5e7eb;}",
-      "html.angstrom-night .headline-group{color:#fafafa;}",
-      "html.angstrom-night .headline-aside{color:#9ca3af;}",
-      "html.angstrom-night [class*='_take_box']{background:#0e1117 !important;border-color:#4b5563 !important;}",
+      ".sentiment-drivers li{margin:4px 0;color:var(--ang-soft);}",
+      ".headline-group{margin:14px 0 0;font-weight:700;font-size:.95rem;color:var(--ang-text);}",
+      ".headline-aside{margin:4px 0 8px;font-size:.8rem;color:var(--ang-muted);line-height:1.35;}",
+      "html.angstrom-night [class*='_take_box']{background:var(--ang-surface) !important;border-color:var(--ang-border) !important;}",
       ".headline-head,.headline-row{display:flex;gap:16px;}",
-      ".headline-head{align-items:center;padding:4px 0 8px;font-size:.8rem;font-weight:600;color:#6b7280;}",
-      ".headline-row{align-items:flex-start;padding:8px 0;border-top:1px solid #f3f4f6;}",
+      ".headline-head{align-items:center;padding:4px 0 8px;font-size:.8rem;font-weight:600;color:var(--ang-muted);}",
+      ".headline-row{align-items:flex-start;padding:8px 0;border-top:1px solid var(--ang-line);}",
       ".headline-title{flex:1.1;min-width:0;}",
-      ".headline-date{width:112px;flex:none;white-space:nowrap;color:#4b5563;}",
-      ".headline-note{flex:1.3;min-width:0;color:#374151;font-size:.9rem;line-height:1.35;}",
+      ".headline-date{width:112px;flex:none;white-space:nowrap;color:var(--ang-soft);}",
+      ".headline-note{flex:1.3;min-width:0;color:var(--ang-soft);font-size:.9rem;line-height:1.35;}",
       ".headline-score{width:76px;flex:none;text-align:right;}",
       ".headline-empty{color:#6b7280;}",
       ".headline-title a:link{color:#15803d;}",
       ".headline-title a:visited{color:#6d28d9;}",
       ".headline-title a:hover{color:#166534;}",
-      "html.angstrom-night .headline-head{color:#d1d5db;}",
-      "html.angstrom-night .headline-row{border-top-color:#31333f;}",
-      "html.angstrom-night .headline-date,html.angstrom-night .headline-note{color:#e5e7eb !important;}",
+      "html.angstrom-night .headline-date,html.angstrom-night .headline-note{color:var(--ang-soft) !important;}",
       "html.angstrom-night .headline-title a:link{color:#5ce488 !important;}",
       "html.angstrom-night .headline-title a:visited{color:#d8b4fe !important;}",
       "html.angstrom-night .headline-title a:hover{color:#bbf7d0 !important;}",
@@ -491,14 +521,14 @@ export default function(component) {
       window.socialStreamState.pinned = !!window.socialPanelPinned;
     }
     let style = document.getElementById("social-stream-style");
-    if (style && style.dataset.layout !== "titles") {
+    if (style && style.dataset.layout !== "surface") {
       style.remove();
       style = null;
     }
     if (!style) {
       style = document.createElement("style");
       style.id = "social-stream-style";
-      style.dataset.layout = "titles";
+      style.dataset.layout = "surface";
       style.textContent = [
         "#social-stream-root{position:fixed;inset:0;z-index:10000000;pointer-events:none;}",
         "#social-stream-root.is-open{pointer-events:auto;}",
@@ -586,7 +616,7 @@ export default function(component) {
         "#social-stream-root .coverage{margin-top:4px;font-size:.8rem;font-weight:600;}",
         "#social-stream-root .summary{margin:4px 0 0;color:#374151;font-size:.82rem;line-height:1.4;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}",
         "#social-stream-root .empty{color:#6b7280;padding:18px 0;font-size:.9rem;line-height:1.4;}",
-        "#social-stream-root.is-dark .panel{background:#0e1117;color:#fafafa;box-shadow:-12px 0 40px rgba(0,0,0,.45);}",
+        "#social-stream-root.is-dark .panel{background:#1c1f27;color:#fafafa;box-shadow:-12px 0 40px rgba(0,0,0,.45);}",
         "#social-stream-root.is-dark .width-grip::before{background:#6b7280;}",
         "#social-stream-root.is-dark .width-grip:hover::before,#social-stream-root.is-dark .width-grip.is-dragging::before{background:#e5e7eb;}",
         "#social-stream-root.is-dark .kicker,#social-stream-root.is-dark .count,#social-stream-root.is-dark .chars,#social-stream-root.is-dark .when,#social-stream-root.is-dark .empty,#social-stream-root.is-dark .picks label,#social-stream-root.is-dark .context-label,#social-stream-root.is-dark .replying{color:#9ca3af;}",
@@ -2861,14 +2891,14 @@ def profile_card(profile: dict, email: str) -> str:
             f"{initial}</div>"
         )
     bio_html = (
-        f"<div style='margin-top:8px;font-size:0.85rem;color:#374151;'>{html.escape(bio)}</div>"
+        f"<div class='ang-copy' style='margin-top:8px;font-size:0.85rem;'>{html.escape(bio)}</div>"
         if bio else ""
     )
     return (
-        "<div style='background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:12px;'>"
+        "<div class='ang-card'>"
         "<div style='display:flex;gap:10px;align-items:center;'>"
-        f"{face}<div><div style='font-weight:600;color:#111827;'>{safe_name}</div>"
-        f"<div style='font-size:0.78rem;color:#6b7280;'>{safe_email}</div></div></div>"
+        f"{face}<div><div class='ang-title'>{safe_name}</div>"
+        f"<div class='ang-kicker' style='margin:0;font-size:0.78rem;'>{safe_email}</div></div></div>"
         f"{bio_html}</div>"
     )
 
@@ -4291,7 +4321,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             summary_html = ""
             if text:
                 summary_html = (
-                    "<div style='flex:1;min-width:0;color:#111827;font-size:0.95rem;line-height:1.4;'>"
+                    "<div class='ang-copy' style='flex:1;min-width:0;'>"
                     f"{html.escape(text)}</div>"
                 )
             jump = html.escape(f"mood|{mood_key}", quote=True)
@@ -4303,8 +4333,8 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                 f"{badge}{status}</button>"
             )
             return (
-                "<div style='background: white; padding: 12px 16px; border-radius: 8px; border: 1px solid #e5e7eb;'>"
-                f"<div style='font-size: 0.8rem; color: #6b7280; margin-bottom: 8px;'>{safe_label}</div>"
+                "<div class='ang-card'>"
+                f"<div class='ang-kicker' style='margin-bottom:8px;'>{safe_label}</div>"
                 "<div style='display:flex;align-items:flex-start;gap:16px;'>"
                 f"<div style='flex:none;'>{score_block}</div>"
                 f"{summary_html}</div></div>"
@@ -4349,10 +4379,10 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             safe_name = html.escape(str(name))
             logo = asset_logo(logo_url, name) if name and name != "—" else ""
             body = (
-                "<div style='background: white; padding: 12px 16px; border-radius: 8px; border: 1px solid #e5e7eb;'>"
-                f"<div style='font-size: 0.8rem; color: #6b7280; margin-bottom: 4px;'>{safe_title}</div>"
-                "<div style='display:flex;align-items:center;gap:8px;font-size:1.1rem;font-weight:600;"
-                "color:#111827;margin-bottom:8px;white-space:nowrap;overflow:hidden;'>"
+                "<div class='ang-card'>"
+                f"<div class='ang-kicker'>{safe_title}</div>"
+                "<div class='ang-title' style='display:flex;align-items:center;gap:8px;font-size:1.1rem;"
+                "margin-bottom:8px;white-space:nowrap;overflow:hidden;'>"
                 f"{logo}<span style='overflow:hidden;text-overflow:ellipsis;'>{safe_name}</span></div>"
                 f"<div style='display: inline-flex; align-items: center; gap: 4px; background: {bg}; "
                 f"color: {color}; padding: 2px 8px; border-radius: 4px; font-size: 0.85rem; font-weight: 600;'>"
@@ -4403,7 +4433,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             label = f"{score:.0f}"
         return (
             '<div style="display:flex;align-items:center;gap:8px;width:100%;min-width:100px;">'
-            '<div style="flex:1;background:#e5e7eb;border-radius:6px;height:14px;overflow:hidden;">'
+            '<div class="ang-track">'
             f'<div style="width:{pct}%;background:{color};height:100%;border-radius:6px;"></div></div>'
             f'<span style="min-width:28px;font-weight:600;font-size:0.9em;">{label}</span></div>'
         )
@@ -4507,7 +4537,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             for _, row in frame.iterrows():
                 asset_id = str(row["key"])
                 selected = pick == (kind, asset_id)
-                row_style = "background:#e5e7eb;color:#111827;" if selected else ""
+                row_class = "ang-row-on" if selected else ""
                 price = row.get("latest_price")
                 rsi = row.get("rsi")
                 price_str = f"${price:,.2f}" if pd.notna(price) else "—"
@@ -4521,7 +4551,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                     f"{html.escape(str(row['symbol']))}</button>"
                 )
                 rows_html += (
-                    f"<tr style='border-bottom:1px solid #f0f0f0;{row_style}'>"
+                    f"<tr class='{row_class}'>"
                     f"<td data-sort='{sort_token(row.get('symbol'))}' style='padding:10px;white-space:nowrap;'>"
                     "<span style='display:inline-flex;align-items:center;gap:8px;'>"
                     f"{asset_logo(row.get('logo_url'), row.get('symbol'))}{name_button}</span></td>"
@@ -4578,9 +4608,9 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             table_key = html.escape(kind + "|" + "|".join(headers), quote=True)
             table_html = (
                 "<div style='width:100%;overflow-x:auto;margin-bottom:8px;-webkit-overflow-scrolling:touch;'>"
-                "<table data-table='"
-                f"{table_key}' style='width:100%;border-collapse:collapse;font-size:0.95rem;'>"
-                f"<thead><tr style='border-bottom:2px solid #e5e7eb;'>{header_html}</tr></thead>"
+                "<table class='ang-table' data-table='"
+                f"{table_key}'>"
+                f"<thead><tr>{header_html}</tr></thead>"
                 f"<tbody>{rows_html}</tbody></table></div>"
             )
             picked = _score_table(
@@ -4834,6 +4864,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             fig.update_yaxes(title_text="Price", row=1, col=1)
             fig.update_yaxes(title_text="Volume", row=2, col=1)
             fig.update_yaxes(title_text="RSI", range=[0, 100], row=3, col=1)
+            _paint_chart(fig)
             st.plotly_chart(fig, width="stretch")
 
             result = compute_score(df_chart, weights=weights)
@@ -4890,6 +4921,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                             margin=dict(t=30, b=20, l=10, r=10),
                         )
                         fig_contrib.add_vline(x=0, line_width=1.5, line_dash="dash", line_color="gray", opacity=0.7)
+                        _paint_chart(fig_contrib)
                         st.plotly_chart(fig_contrib, width="stretch")
                 with breakdown_col2:
                     st.markdown("**Detailed Reasons**")
@@ -4996,14 +5028,10 @@ def _sentiment_thumbs(
             overflow: visible !important;
         }}
         .st-key-{prefix}_take_box {{
-            background: #ffffff;
-            border: 1px solid #e5e7eb !important;
+            background: var(--ang-surface, #ffffff);
+            border: 1px solid var(--ang-border, #e5e7eb) !important;
             border-radius: 10px !important;
             overflow: visible !important;
-        }}
-        html.angstrom-night .st-key-{prefix}_take_box {{
-            background: #0e1117 !important;
-            border-color: #4b5563 !important;
         }}
         .st-key-{prefix}_agree,
         .st-key-{prefix}_disagree {{
@@ -5549,6 +5577,7 @@ def show_max_pain(kind: str, asset_id: str, label: str, chart_price: float | Non
             xaxis_title="Strike",
         )
         fig.update_xaxes(tickformat="," if whole else ",.2f")
+        _paint_chart(fig)
         st.plotly_chart(fig, width="stretch")
         if spot and level is not None and spot != 0:
             gap = (level - spot) / spot * 100
