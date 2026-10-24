@@ -4301,11 +4301,11 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
 
         snapshot_cards = []
         if trade_crypto:
-            snapshot_cards.append(("Top Crypto", crypto_top, "Crypto", "snapshot_crypto_top"))
-            snapshot_cards.append(("Weakest Crypto", crypto_bot, "Crypto", "snapshot_crypto_weak"))
+            snapshot_cards.append(("Top Watchlist Crypto", crypto_top, "Crypto", "snapshot_crypto_top"))
+            snapshot_cards.append(("Weakest Watchlist Crypto", crypto_bot, "Crypto", "snapshot_crypto_weak"))
         if trade_equities:
-            snapshot_cards.append(("Top Stock", stock_top, "Stock", "snapshot_stock_top"))
-            snapshot_cards.append(("Weakest Stock", stock_bot, "Stock", "snapshot_stock_weak"))
+            snapshot_cards.append(("Top Watchlist Stock", stock_top, "Stock", "snapshot_stock_top"))
+            snapshot_cards.append(("Weakest Watchlist Stock", stock_bot, "Stock", "snapshot_stock_weak"))
 
         def render_mood_snapshot(label, score, summary, mood_key):
             safe_label = html.escape(label)
