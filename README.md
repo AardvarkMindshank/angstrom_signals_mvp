@@ -56,7 +56,7 @@ RESEND_FROM
 
 `RESEND_FROM` must be a sender on a domain you have verified in Resend. The default `onboarding@resend.dev` address only delivers to the mailbox that owns the Resend account.
 
-GitHub Actions runs the worker from `.github/workflows/alerts.yml` about every 5 minutes, including when the dashboard is closed. Add these repository secrets: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, and `RESEND_FROM`. Scheduled runs can start late, and GitHub pauses them on private repos that stay inactive.
+GitHub Actions runs the worker from `.github/workflows/alerts.yml` about every 5 minutes, including when the dashboard is closed. That run saves shared prices, and it replaces market sentiment that is older than 12 hours. Add these repository secrets: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `RESEND_FROM`, and `XAI_API_KEY` (the same xAI key the app uses for sentiment). Scheduled runs can start late, and GitHub pauses them on private repos that stay inactive.
 
 ## Market sentiment
 

@@ -1,18 +1,21 @@
 """Shared prices and headline scores, one row per asset.
 
-Every account reads the same row. The dashboard and the alert worker both
-write the recent closes. The dashboard writes the sentiment score after Grok
-runs, and later accounts reuse it for 12 hours.
+Every account reads the same row. The background worker replaces prices about
+every 5 minutes and sentiment about every 12 hours. A session writes a row
+only when that asset is not stored yet.
 """
 
 from __future__ import annotations
 
 import html
 import json
+import math
 import re
 from datetime import datetime, timezone
 
-from sentiment import SENTIMENT_REFRESH_SECONDS
+import pandas as pd
+
+from sentiment import SENTIMENT_REFRESH_SECONDS, TECHNICAL_REFRESH_SECONDS
 
 SPARKLINE_POINTS = 31
 COMMENT_LIMIT = 160
@@ -771,6 +774,143 @@ def _canonical_id(kind: str, asset_id: str) -> str:
     return identity.upper() if str(kind) == "Stock" else identity.lower()
 
 
+_PRICE_LIMIT = 500
+_SHARED_COLUMNS = (
+    "asset_key, closes, logo_url, sentiment_report, sentiment_updated_at, "
+    "prices, prices_updated_at"
+)
+_SHARED_COLUMNS_LEGACY = "asset_key, closes, logo_url, sentiment_report, sentiment_updated_at"
+
+
+def _finite(value) -> float | None:
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    if not math.isfinite(number):
+        return None
+    return number
+
+
+def records_from_frame(frame) -> list[dict]:
+    """Daily open, high, low, close, and volume. The last 500 bars are enough to score."""
+    if frame is None or getattr(frame, "empty", True):
+        return []
+    if any(column not in frame.columns for column in ("open", "high", "low", "close")):
+        return []
+    records = []
+    for ts, row in frame.tail(_PRICE_LIMIT).iterrows():
+        when = pd.Timestamp(ts)
+        if when.tzinfo is not None:
+            when = when.tz_convert("UTC")
+        prices = [_finite(row[name]) for name in ("open", "high", "low", "close")]
+        if any(price is None for price in prices):
+            continue
+        volume = _finite(row["volume"]) if "volume" in frame.columns else 0.0
+        records.append({
+            "t": when.strftime("%Y-%m-%d"),
+            "o": prices[0],
+            "h": prices[1],
+            "l": prices[2],
+            "c": prices[3],
+            "v": 0.0 if volume is None else volume,
+        })
+    return records
+
+
+def frame_from_records(records) -> pd.DataFrame:
+    """The stored daily bars, oldest first. Empty when there are not enough to score."""
+    if isinstance(records, str):
+        try:
+            records = json.loads(records)
+        except json.JSONDecodeError:
+            return pd.DataFrame()
+    if not isinstance(records, list):
+        return pd.DataFrame()
+    rows = []
+    index = []
+    for item in records:
+        if not isinstance(item, dict):
+            continue
+        prices = [_finite(item.get(name)) for name in ("o", "h", "l", "c")]
+        if any(price is None for price in prices):
+            continue
+        try:
+            when = pd.Timestamp(item.get("t"))
+        except (TypeError, ValueError):
+            continue
+        if pd.isna(when):
+            continue
+        index.append(when)
+        volume = _finite(item.get("v"))
+        rows.append({
+            "open": prices[0],
+            "high": prices[1],
+            "low": prices[2],
+            "close": prices[3],
+            "volume": 0.0 if volume is None else volume,
+        })
+    if len(rows) < 15:
+        return pd.DataFrame()
+    frame = pd.DataFrame(rows, index=pd.DatetimeIndex(index))
+    return frame[~frame.index.duplicated(keep="last")].sort_index()
+
+
+def frame_from_row(row: dict | None) -> pd.DataFrame:
+    """Price history saved on one shared asset row."""
+    if not isinstance(row, dict):
+        return pd.DataFrame()
+    return frame_from_records(row.get("prices"))
+
+
+def row_timestamp(row: dict | None, field: str) -> float | None:
+    """When one column on a shared row was written, in seconds."""
+    if not isinstance(row, dict):
+        return None
+    return _stored_at(row.get(field))
+
+
+def sentiment_refresh_due(stored_at: float | None) -> bool:
+    """True when sentiment has never been saved, or the 12-hour window has passed."""
+    return stored_at is None or _age_expired(stored_at)
+
+
+def technical_refresh_due(stored_at: float | None) -> bool:
+    """True when prices have never been saved, or the 5-minute window has passed."""
+    if stored_at is None:
+        return True
+    return datetime.now(timezone.utc).timestamp() - stored_at >= TECHNICAL_REFRESH_SECONDS
+
+
+def save_price_frame(supabase, kind: str, asset_id: str, frame) -> bool:
+    """Store daily bars and the sparkline closes. Leaves sentiment and the logo in place."""
+    records = records_from_frame(frame)
+    if len(records) < 15:
+        return False
+    identity = _canonical_id(kind, asset_id)
+    if not identity:
+        return False
+    closes = recent_closes([item["c"] for item in records])
+    now = datetime.now(timezone.utc).isoformat()
+    payload = {
+        "asset_key": asset_market_key(kind, identity),
+        "kind": kind,
+        "asset_id": identity,
+        "closes": closes,
+        "closes_updated_at": now,
+        "prices": records,
+        "prices_updated_at": now,
+    }
+    try:
+        supabase.table("asset_market").upsert(payload, on_conflict="asset_key").execute()
+    except Exception as exc:
+        _warn(exc)
+        if "prices" in str(exc).lower():
+            save_price_paths(supabase, [{"kind": kind, "asset_id": identity, "closes": closes}])
+        return False
+    return True
+
+
 def save_price_paths(supabase, rows: list[dict]) -> None:
     """Store the recent closes for each asset. Leaves a saved sentiment score in place."""
     now = datetime.now(timezone.utc).isoformat()
@@ -946,13 +1086,24 @@ def load_shared_market(supabase, keys: list[str]) -> dict[str, dict]:
     try:
         response = (
             supabase.table("asset_market")
-            .select("asset_key, closes, logo_url, sentiment_report, sentiment_updated_at")
+            .select(_SHARED_COLUMNS)
             .in_("asset_key", wanted)
             .execute()
         )
     except Exception as exc:
-        _warn(exc)
-        return {}
+        if "prices" not in str(exc).lower():
+            _warn(exc)
+            return {}
+        try:
+            response = (
+                supabase.table("asset_market")
+                .select(_SHARED_COLUMNS_LEGACY)
+                .in_("asset_key", wanted)
+                .execute()
+            )
+        except Exception as fallback:
+            _warn(fallback)
+            return {}
     return {row["asset_key"]: row for row in (response.data or []) if row.get("asset_key")}
 
 
@@ -970,11 +1121,11 @@ def _stored_at(value) -> float | None:
 
 
 def sentiment_from_row(row: dict | None) -> tuple[dict | None, float | None]:
-    """The shared headline report, while it is still inside the 12-hour window."""
+    """The last shared headline report, including one waiting on the next update."""
     if not row:
         return None, None
     stored_at = _stored_at(row.get("sentiment_updated_at"))
-    if stored_at is None or _age_expired(stored_at):
+    if stored_at is None:
         return None, None
     report = row.get("sentiment_report")
     if isinstance(report, str):

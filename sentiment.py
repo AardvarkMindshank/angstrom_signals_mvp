@@ -25,7 +25,10 @@ _MODELS = (
     {"model": "grok-4.5"},
 )
 _CHAT_URL = "https://api.x.ai/v1/chat/completions"
+# One shared clock for the page and the background worker.
+# Change these two numbers to change how often saved results are replaced.
 SENTIMENT_REFRESH_SECONDS = 12 * 60 * 60
+TECHNICAL_REFRESH_SECONDS = 5 * 60
 _HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; SignalsDashboard/1.0)"}
 _BUSY_UNTIL: dict[str, float] = {}
 _SCORE_CACHE: dict[str, tuple[float, dict]] = {}
@@ -581,9 +584,9 @@ def remember_sentiment(query: str, report: dict, stored_at: float) -> None:
 
 
 def cached_sentiment_score(query: str) -> float | None:
-    """The saved headline score, while it is still inside the 12-hour window."""
+    """The last saved headline score, including one waiting on the next background update."""
     cached = _SCORE_CACHE.get(query)
-    if not cached or time.time() - cached[0] >= SENTIMENT_REFRESH_SECONDS:
+    if not cached:
         return None
     stored = cached[1]
     if not stored.get("ok"):

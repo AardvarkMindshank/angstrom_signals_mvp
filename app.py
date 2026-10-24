@@ -1891,7 +1891,6 @@ _wide_split_handle = st.components.v2.component(
     isolate_styles=False,
 )
 
-_TECHNICAL_REFRESH_SECONDS = 300
 _COUNTDOWN_JS = """
 export default function(component) {
   const { data, setTriggerValue, parentElement } = component;
@@ -1926,12 +1925,15 @@ export default function(component) {
     const hours = Math.floor(left / 3600);
     const minutes = Math.floor((left % 3600) / 60);
     const seconds = String(left % 60).padStart(2, "0");
-    const clock = hours > 0
-      ? hours + ":" + String(minutes).padStart(2, "0") + ":" + seconds
-      : minutes + ":" + seconds;
+    const clock = hours + ":" + String(minutes).padStart(2, "0") + ":" + seconds;
     const title = (data && data.label) || "🔄 Refresh";
+    const lead = (data && data.lead) || "";
     const label = buttonLabel();
-    if (label) label.textContent = title + " (" + clock + ")";
+    if (label) {
+      if (left <= 0) label.textContent = title + " (update due)";
+      else if (lead) label.textContent = title + " (" + lead + " " + clock + ")";
+      else label.textContent = title + " (" + clock + ")";
+    }
     if (left <= 0 && token && window[timerKey + "_sent"] !== token) {
       window.clearInterval(window[timerKey]);
       window[timerKey + "_sent"] = token;
@@ -2082,10 +2084,20 @@ _google_button = st.components.v2.component(
 )
 
 
-def _countdown_due(deadline: float, widget_key: str, label: str | None = None) -> bool:
-    """Show the time left and report when this deadline has been reached."""
-    token = str(int(deadline * 1000))
-    payload = {"deadlineMs": int(deadline * 1000), "token": token, "key": widget_key}
+def _countdown_due(deadline: float | None, widget_key: str, label: str | None = None) -> bool:
+    """Show the time until a shared update. A missing time stays on 'update due'."""
+    if deadline is None:
+        token = ""
+        deadline_ms = 0
+    else:
+        token = str(int(deadline * 1000))
+        deadline_ms = int(deadline * 1000)
+    payload = {
+        "deadlineMs": deadline_ms,
+        "token": token,
+        "key": widget_key,
+        "lead": "update in",
+    }
     if label:
         payload["label"] = label
     result = _countdown(
@@ -2093,19 +2105,12 @@ def _countdown_due(deadline: float, widget_key: str, label: str | None = None) -
         data=payload,
         on_due_change=lambda: None,
     )
-    return result.due == token
+    return bool(token) and result.due == token
 
 
-def _arm_deadline(store: dict, cache_key: str) -> float:
-    """The moment this saved score should refresh, kept on the first visit."""
-    if cache_key not in store:
-        cached_at = sentiment_cached_at(cache_key)
-        store[cache_key] = (
-            cached_at + SENTIMENT_REFRESH_SECONDS
-            if cached_at
-            else time.time() + SENTIMENT_REFRESH_SECONDS
-        )
-    return float(store[cache_key])
+def _open_saved_section(section_id: str, anchor: str) -> None:
+    """Open one section and scroll to it. This does not start a refresh."""
+    _reveal_section(section_id, anchor)
 
 
 def _rerun_fragment() -> None:
@@ -2232,8 +2237,10 @@ try:
         load_chat,
         load_market_moods,
         market_mood_crowd,
+        frame_from_row,
         load_shared_market,
         recent_closes,
+        row_timestamp,
         save_logos,
         save_market_mood,
         set_chat_vote,
@@ -2254,6 +2261,12 @@ try:
         trend_tone,
     )
     from scoring import calculate_indicators, compute_score, find_column
+    from shared_refresh import (
+        create_price_row,
+        ensure_new_asset,
+        next_update,
+        slice_history,
+    )
     from max_pain import (
         list_expiries,
         load_open_interest,
@@ -2265,15 +2278,14 @@ try:
     from sentiment import (
         analyze_market_mood,
         analyze_market_sentiment,
-        score_market_readings,
         MACRO_MOODS,
         cached_sentiment_score,
         newest_first,
         remember_sentiment,
-        sentiment_cached_at,
         sentiment_query,
         sentiment_ready,
         SENTIMENT_REFRESH_SECONDS,
+        TECHNICAL_REFRESH_SECONDS,
     )
 except Exception:
     st.error("The dashboard could not load its scoring code.")
@@ -3369,17 +3381,17 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
 
 **Market sentiment for crypto and stocks**
 
-In the single column these two sections sit under Quick Snapshot, crypto first and then stocks. Quick Snapshot shows each one as the colored score box, the status, such as Mildly bullish coverage, and the short summary to the right of the score, for the markets you trade. Click the score or the colored status to open that market's section. The public readings sit in a rounded box, in three groups, each with a one-sentence summary and its own score: liquidity and central banks, the dollar and yields, and crypto sentiment for crypto; policy and inflation, market breadth, and institutional feeds for stocks. The Google headlines follow in a second rounded box. On the selected asset, the articles sit in one box of the same kind. Each one uses the same layout as the asset sentiment under the chart: the score on the left, Your take on the right, then those reading rows, then the articles. Neither is an asset, and neither is added to the tables or the technical score. Each score is an average of recent headlines. The summary, the positive paragraph, and the negative paragraph can also use those public readings. Each article row also has a one-sentence AI Summary, after the date. A dash there means that score was saved before summaries, so use Update Market Sentiment for that market in Quick Snapshot. It is stored once and shown to every account for about 12 hours. Your take works the same way as on an asset: agree, disagree, a score from 0 to 100, and one short comment. A refresh of that market clears the thumbs and personal scores. A comment stays for 12 hours. The search wording can be tightened later.
+In the single column these two sections sit under Quick Snapshot, crypto first and then stocks. Quick Snapshot shows each one as the colored score box, the status, such as Mildly bullish coverage, and the short summary to the right of the score, for the markets you trade. Click the score or the colored status to open that market's section. The public readings sit in a rounded box, in three groups, each with a one-sentence summary and its own score: liquidity and central banks, the dollar and yields, and crypto sentiment for crypto; policy and inflation, market breadth, and institutional feeds for stocks. The Google headlines follow in a second rounded box. On the selected asset, the articles sit in one box of the same kind. Each one uses the same layout as the asset sentiment under the chart: the score on the left, Your take on the right, then those reading rows, then the articles. Neither is an asset, and neither is added to the tables or the technical score. Each score is an average of recent headlines. The summary, the positive paragraph, and the negative paragraph can also use those public readings. Each article row also has a one-sentence AI Summary, after the date. A dash there means that score was saved before summaries. The next background update fills it in. It is stored once and shown to every account. A background update replaces it about every 12 hours. Until that update arrives, the last score stays on screen. Your take works the same way as on an asset: agree, disagree, a score from 0 to 100, and one short comment. A refresh of that market clears the thumbs and personal scores. A comment stays for 12 hours. The search wording can be tightened later.
 
 **Max pain**
 
-This sits under the chart, above Market sentiment, for the same open asset. It is the options strike where the open calls and puts would be worth the least at that expiry. Green bars are call open interest and red bars are put open interest. The violet line is that strike. The orange line is the price. It describes where contracts are parked. It is not a price target, it is not mixed into the technical score, and it does not send an alert. Stocks use the Yahoo options chain. Bitcoin and Ethereum use Deribit's public options book. Other coins have no chain here, so the section says so. The nearest expiry is selected, and another can be chosen. It reloads with Update Technical Data - Selected Asset in Quick Snapshot.
+This sits under the chart, above Market sentiment, for the same open asset. It is the options strike where the open calls and puts would be worth the least at that expiry. Green bars are call open interest and red bars are put open interest. The violet line is that strike. The orange line is the price. It describes where contracts are parked. It is not a price target, it is not mixed into the technical score, and it does not send an alert. Stocks use the Yahoo options chain. Bitcoin and Ethereum use Deribit's public options book. Other coins have no chain here, so the section says so. The nearest expiry is selected, and another can be chosen. It keeps its own cache. The technical control in Quick Snapshot opens the chart and does not reload max pain.
 
 **Market sentiment**
 
-This sits under the chart. The heading names the open asset, for example **Market sentiment - Bitcoin (BTC)**. Grok reads headlines from the last 7 days and gives each one a score from 0 to 100. The newest headline is listed first. Beside each link is the date, then a one-sentence AI Summary, then the score. A dash in AI Summary means that score was saved before summaries, so use Update Market Sentiment - Selected Asset in Quick Snapshot. The number at the top of the section is the average of those article scores. Under the short summary, **Positive** and **Negative** each add a paragraph drawn from those same headlines. Green, amber, and red use the same bands as the technical score. The two scores stay separate, and sentiment is not mixed into the technical score.
+This sits under the chart. The heading names the open asset, for example **Market sentiment - Bitcoin (BTC)**. Grok reads headlines from the last 7 days and gives each one a score from 0 to 100. The newest headline is listed first. Beside each link is the date, then a one-sentence AI Summary, then the score. A dash in AI Summary means that score was saved before summaries. The next background update fills it in. The number at the top of the section is the average of those article scores. Under the short summary, **Positive** and **Negative** each add a paragraph drawn from those same headlines. Green, amber, and red use the same bands as the technical score. The two scores stay separate, and sentiment is not mixed into the technical score.
 
-The **Sentiment** column shows that saved score in the same colored box. A dash means that asset has not been scored yet. Open it on the chart, and the score fills in once Grok finishes. The score is stored once and shown to every account that holds the asset. It stays for about 12 hours.
+The **Sentiment** column shows that saved score in the same colored box. A dash means that asset has not been scored yet. Adding it to a watchlist writes the first score when nobody else has it stored, and the background update keeps it after that. The score is stored once and shown to every account. A background update replaces it about every 12 hours. Until that update arrives, the last score stays on screen.
 
 **30-day trend**, at the far right of each row, is a small line of that same 30-day move. Its color matches the **30d %** column: green for a rise of about 2% or more, red for a fall of about 2% or more, and orange when the move stays inside about 2%. The same line is shared by every account.
 
@@ -3391,7 +3403,9 @@ Beside the sentiment score you can press thumbs up if you agree, or thumbs down 
 
 Click a sentiment score in the table to highlight that asset and jump to its headlines. **↑ Top** scrolls back to the top of the page. It sits at the top right of the Interactive Chart section, and at the top right of Market sentiment. Another **↑ Top** sits at the bottom right of the page once you have scrolled down.
 
-The update buttons sit at the top of Quick Snapshot. Each one shows the time left and runs on its own when that timer reaches zero. Update Market Sentiment - Crypto and Update Market Sentiment - Equities pull fresh headlines and a new score for that whole market, then start a 12-hour timer. A market you do not trade is left out. Update Market Sentiment - Selected Asset does the same for the asset open on the chart. Update Technical Data - Selected Asset reloads prices, technical scores, and max pain, and starts a 5-minute timer. Pressing a button refreshes that part now and starts its timer again.
+The controls at the top of Quick Snapshot open a section. They do not start a refresh. Market Sentiment - Crypto opens the crypto market. Market Sentiment - Equities opens the stock market. A market you do not trade is left out. Market Sentiment - Selected Asset opens the sentiment for the asset on the chart. Technical Data - Selected Asset opens the chart. Each one shows the time until the next shared update, for example (update in 4:56:40). That clock is the same for every account. It counts from the last saved update. When it reaches zero the page reads the saved result again. It does not ask for a new one. If the background update is late, the last saved result stays on screen.
+
+Prices for every asset on any watchlist are saved about every 5 minutes. This page turns those prices into a technical score with this account's own weights. Market sentiment for the crypto market, the stock market, and each of those assets is saved about every 12 hours. Both intervals are one shared setting. An asset that is not already stored is written when it is added, then the same schedule keeps it.
 
 **Social signals and chat**
 
@@ -3419,7 +3433,7 @@ One box at the top of the panel filters the stream and the chat together. It mat
 
 **Alerts keep running in the background**
 
-Prices and technical scores on this page refresh every 5 minutes while it is open. Market sentiment refreshes about every 12 hours while it is open. The same 5-minute alert check keeps running after you close the page or log out.
+Prices are saved about every 5 minutes, and market sentiment about every 12 hours, whether or not this page is open. The page reads those saved results. Alert checks use the same prices and keep running after you close the page or log out.
 
 - A crossing is saved on your account. It shows up under Notifications the next time you log in.
 - The email goes only to you.
@@ -3517,6 +3531,19 @@ if st.session_state.get("reset_weights"):
     save_preferences_to_cloud({"scoring_weights": current_weights})
     st.session_state.reset_weights = False
 
+def _ensure_added(kind: str, asset_id: str, label: str) -> None:
+    """Write the first shared prices and sentiment when this asset is new."""
+    try:
+        days = int((settings or {}).get("days_history", 200) or 200)
+    except (TypeError, ValueError):
+        days = 200
+    try:
+        with st.spinner(f"Saving the first shared reading for {label}..."):
+            ensure_new_asset(supabase, kind, asset_id, label, days)
+    except Exception as exc:
+        print(f"First shared reading failed for {asset_id}: {exc}")
+
+
 with tracked_expander("⭐ Watchlists", "watchlists", sidebar=True):
     if trade_crypto:
         with tracked_expander("Edit Crypto", "edit_crypto"):
@@ -3530,16 +3557,19 @@ with tracked_expander("⭐ Watchlists", "watchlists", sidebar=True):
                     cid, label = found
                     ticker = crypto_ticker(cid)
                     alias = (ticker or "").lower()
+                    fresh = bool(cid) and cid not in CRYPTO_WATCHLIST
                     changed = False
                     if alias and alias != cid and alias in CRYPTO_WATCHLIST:
                         CRYPTO_WATCHLIST.pop(alias, None)
                         changed = True
-                    if cid and cid not in CRYPTO_WATCHLIST:
+                    if fresh:
                         CRYPTO_WATCHLIST[cid] = label
                         changed = True
                     if changed:
                         prefs["crypto"] = CRYPTO_WATCHLIST
                         save_preferences_to_cloud({"crypto_watchlist": CRYPTO_WATCHLIST})
+                        if fresh:
+                            _ensure_added("Crypto", cid, str(label))
                         st.rerun()
             if CRYPTO_WATCHLIST:
                 to_remove = st.selectbox("Remove crypto", [""] + list(CRYPTO_WATCHLIST.keys()), key="rm_crypto")
@@ -3559,6 +3589,7 @@ with tracked_expander("⭐ Watchlists", "watchlists", sidebar=True):
                     STOCK_WATCHLIST[tic] = tic
                     prefs["stock"] = STOCK_WATCHLIST
                     save_preferences_to_cloud({"stock_watchlist": STOCK_WATCHLIST})
+                    _ensure_added("Stock", tic, tic)
                     st.rerun()
             if STOCK_WATCHLIST:
                 to_remove = st.selectbox("Remove stock", [""] + list(STOCK_WATCHLIST.keys()), key="rm_stock")
@@ -4123,10 +4154,56 @@ def _ticker_label(kind: str, asset_id: str, fallback: str) -> str:
     return " ".join(str(fallback or "").split())
 
 
+def _stored_bars(kind: str, asset_id: str, days: int):
+    """Bars saved for every account. A missing row is written once, then only read."""
+    token = (str(kind), str(asset_id), int(days))
+    run = st.session_state.setdefault("_bar_run", {})
+    if token in run:
+        return run[token]
+    key = asset_market_key(kind, asset_id)
+    shared = st.session_state.get("_shared_rows") or {}
+    frame = frame_from_row(shared.get(key))
+    if frame is None or frame.empty:
+        frame = frame_from_row(load_shared_market(supabase, [key]).get(key))
+    if frame is not None and len(frame) >= 15:
+        result = (slice_history(frame, days), None)
+        run[token] = result
+        return result
+    memory = st.session_state.setdefault("_bar_memory", {})
+    remembered = memory.get(key)
+    if remembered is not None and len(remembered) >= 15:
+        result = (slice_history(remembered, days), None)
+        run[token] = result
+        return result
+    flag = f"price_fill_{key}"
+    if st.session_state.get(flag):
+        result = (pd.DataFrame(), "Shared prices are not ready yet.")
+        run[token] = result
+        return result
+    with st.spinner(f"Saving shared prices for {asset_id}..."):
+        frame, err, saved = create_price_row(supabase, kind, asset_id, days)
+    if err or frame is None or getattr(frame, "empty", True):
+        st.session_state[flag] = True
+        result = (pd.DataFrame(), err or "Shared prices are not ready yet.")
+        run[token] = result
+        return result
+    memory[key] = frame
+    if saved:
+        st.session_state["_shared_reread"] = True
+    result = (frame, None)
+    run[token] = result
+    return result
+
+
 @st.fragment
 def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, show_reasons_flag, show_extra_metrics_flag, show_period_changes_flag, trade_crypto, trade_equities):
-    if "technical_due" not in st.session_state:
-        st.session_state.technical_due = time.time() + _TECHNICAL_REFRESH_SECONDS
+    st.session_state["_bar_run"] = {}
+    shared_keys = []
+    if trade_crypto:
+        shared_keys.extend(asset_market_key("Crypto", asset_id) for asset_id in crypto_watchlist)
+    if trade_equities:
+        shared_keys.extend(asset_market_key("Stock", asset_id) for asset_id in stock_watchlist)
+    st.session_state["_shared_rows"] = load_shared_market(supabase, shared_keys)
 
     wide_layout = st.session_state.get("section_layout") == "Wide"
     allowed_kinds = []
@@ -4135,8 +4212,8 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
     if trade_equities:
         allowed_kinds.append("Stock")
     with section_expander("📸 Quick Snapshot", "quick_snapshot"):
-        def open_sentiment_query():
-            """The same search the asset sentiment section will use for the open chart."""
+        def open_asset():
+            """The asset on the chart: kind, id, label, and its sentiment search."""
             pick = st.session_state.get("chart_pick")
             kind = asset_id = None
             if pick and pick[0] in allowed_kinds:
@@ -4154,82 +4231,80 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             watchlist = crypto_watchlist if kind == "Crypto" else stock_watchlist
             if asset_id not in watchlist:
                 return None
+            label = str(watchlist[asset_id])
             ticker = crypto_ticker(asset_id) if kind == "Crypto" else asset_id
-            return sentiment_query(kind, str(watchlist[asset_id]), ticker)
+            return kind, asset_id, label, sentiment_query(kind, label, ticker)
 
-        updates = []
+        jumps = []
+        moods = load_market_moods(supabase) or {}
         if trade_crypto:
-            updates.append((
-                "mood",
-                "crypto",
-                "Update Market Sentiment - Crypto",
-                "refresh_mood_crypto",
+            jumps.append((
+                "Market Sentiment - Crypto",
+                "jump_mood_crypto",
                 "mood_countdown_crypto",
-                "Pull fresh headlines and a new score for the crypto market. This also runs when the timer reaches zero.",
+                next_update(row_timestamp(moods.get("crypto"), "sentiment_updated_at"), SENTIMENT_REFRESH_SECONDS),
+                "market_mood_crypto",
+                "market-mood-crypto",
+                "Open crypto market sentiment. The time is the next shared update. Pressing this does not refresh it.",
             ))
         if trade_equities:
-            updates.append((
-                "mood",
-                "stock",
-                "Update Market Sentiment - Equities",
-                "refresh_mood_stock",
+            jumps.append((
+                "Market Sentiment - Equities",
+                "jump_mood_stock",
                 "mood_countdown_stock",
-                "Pull fresh headlines and a new score for the stock market. This also runs when the timer reaches zero.",
+                next_update(row_timestamp(moods.get("stock"), "sentiment_updated_at"), SENTIMENT_REFRESH_SECONDS),
+                "market_mood_stock",
+                "market-mood-stock",
+                "Open stock market sentiment. The time is the next shared update. Pressing this does not refresh it.",
             ))
-        asset_query = open_sentiment_query()
-        if asset_query:
-            updates.append((
-                "asset",
-                asset_query,
-                "Update Market Sentiment - Selected Asset",
-                "refresh_sentiment",
+        opened = open_asset()
+        if opened:
+            opened_kind, opened_id, _opened_label, _opened_query = opened
+            opened_row = (st.session_state.get("_shared_rows") or {}).get(asset_market_key(opened_kind, opened_id))
+            jumps.append((
+                "Market Sentiment - Selected Asset",
+                "jump_sentiment",
                 "sentiment_countdown",
-                "Pull fresh headlines and a new score for the asset on the chart. This also runs when the timer reaches zero.",
+                next_update(row_timestamp(opened_row, "sentiment_updated_at"), SENTIMENT_REFRESH_SECONDS),
+                "market_sentiment_panel",
+                "market-sentiment",
+                "Open sentiment for the asset on the chart. The time is the next shared update. Pressing this does not refresh it.",
             ))
-        updates.append((
-            "technical",
-            None,
-            "Update Technical Data - Selected Asset",
-            "refresh_technical",
-            "technical_countdown",
-            "Pull fresh prices, technical scores, and max pain. This also runs on its own when the timer reaches zero.",
-        ))
-        # One button per column, so each timer writes onto its own button.
-        update_columns = st.columns(len(updates))
-        mood_deadlines = st.session_state.setdefault("mood_due", {})
-        sentiment_deadlines = st.session_state.setdefault("sentiment_due", {})
-        for column, (update_kind, target, title, button_key, timer_key, update_help) in zip(update_columns, updates):
-            with column:
-                pressed = st.button(
-                    title,
-                    key=button_key,
-                    use_container_width=True,
-                    wrap=True,
-                    help=update_help,
-                )
-                if update_kind == "technical":
-                    due = _countdown_due(st.session_state.technical_due, timer_key, title)
-                    if pressed or due:
-                        st.session_state.data_nonce += 1
-                        st.session_state.max_pain_force = True
-                        st.session_state.technical_due = time.time() + _TECHNICAL_REFRESH_SECONDS
-                        _rerun_fragment()
-                elif update_kind == "mood":
-                    cache_key = f"mood:{target}"
-                    due = _countdown_due(_arm_deadline(mood_deadlines, cache_key), timer_key, title)
-                    if pressed or due:
-                        mood_deadlines[cache_key] = time.time() + SENTIMENT_REFRESH_SECONDS
-                        st.session_state.mood_force = target
-                        _rerun_fragment()
-                else:
-                    due = _countdown_due(_arm_deadline(sentiment_deadlines, target), timer_key, title)
-                    if pressed or due:
-                        sentiment_deadlines[target] = time.time() + SENTIMENT_REFRESH_SECONDS
-                        st.session_state.sentiment_force = target
-                        _rerun_fragment()
+            jumps.append((
+                "Technical Data - Selected Asset",
+                "jump_technical",
+                "technical_countdown",
+                next_update(row_timestamp(opened_row, "prices_updated_at"), TECHNICAL_REFRESH_SECONDS),
+                "interactive_chart",
+                "interactive-chart",
+                "Open the chart. The time is the next shared price update. Pressing this does not refresh it.",
+            ))
+        if jumps:
+            # One control per column, so each timer writes onto its own button.
+            jump_columns = st.columns(len(jumps))
+            honored = st.session_state.setdefault("countdown_seen", {})
+            reread = False
+            for column, (title, button_key, timer_key, deadline, section_id, anchor, jump_help) in zip(jump_columns, jumps):
+                with column:
+                    st.button(
+                        title,
+                        key=button_key,
+                        use_container_width=True,
+                        wrap=True,
+                        help=jump_help,
+                        on_click=_open_saved_section,
+                        args=(section_id, anchor),
+                    )
+                    due = _countdown_due(deadline, timer_key, title)
+                    token = "" if deadline is None else str(int(deadline * 1000))
+                    if due and token and honored.get(timer_key) != token:
+                        honored[timer_key] = token
+                        reread = True
+            if reread:
+                _rerun_fragment()
 
-        # Wall-clock window so a scheduled rerun fetches new prices instead of the 5-minute cache.
-        nonce = (st.session_state.data_nonce, int(time.time() // 300))
+        # Market cap still uses a short cache. Prices and sentiment come from the shared rows.
+        nonce = (st.session_state.data_nonce, int(time.time() // TECHNICAL_REFRESH_SECONDS))
 
         def process_watchlist(watchlist, is_crypto=True):
             results = []
@@ -4238,53 +4313,50 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                     ticker = crypto_ticker(key)
                     if ticker and str(key).strip().upper() == ticker:
                         name = ticker
-                with st.spinner(f"Loading {name}..."):
-                    if is_crypto:
-                        df, err = load_crypto(key, history_days, nonce)
-                    else:
-                        df, err = load_stock(key, history_days, nonce)
+                kind = "Crypto" if is_crypto else "Stock"
+                df, err = _stored_bars(kind, key, history_days)
 
-                    result = {
-                        "symbol": name if is_crypto else f"{name} ({key})",
-                        "score": None,
-                        "label": "No data",
-                        "reasons": [err] if err else [],
-                        "latest_price": None,
-                        "rsi": None,
-                        "change_1d": None,
-                        "change_7d": None,
-                        "change_30d": None,
-                        "atr_pct": None,
-                        "volume_ratio": None,
-                        "bb_position": None,
-                        "adx": None,
-                        "confluence": None,
-                        "contributions": {},
-                        "type": "Crypto" if is_crypto else "Stock",
-                        "key": key,
-                    }
+                result = {
+                    "symbol": name if is_crypto else f"{name} ({key})",
+                    "score": None,
+                    "label": "No data",
+                    "reasons": [err] if err else [],
+                    "latest_price": None,
+                    "rsi": None,
+                    "change_1d": None,
+                    "change_7d": None,
+                    "change_30d": None,
+                    "atr_pct": None,
+                    "volume_ratio": None,
+                    "bb_position": None,
+                    "adx": None,
+                    "confluence": None,
+                    "contributions": {},
+                    "type": "Crypto" if is_crypto else "Stock",
+                    "key": key,
+                }
 
-                    if err:
-                        results.append(result)
-                        continue
-
-                    if df is not None and not df.empty and "close" in df.columns:
-                        result["closes"] = recent_closes(df["close"].tolist())
-
-                    if not df.empty and len(df) >= 15:
-                        try:
-                            df = calculate_indicators(df)
-                            scored = compute_score(df, weights=weights)
-                            if isinstance(scored, dict):
-                                result.update(scored)
-                                result["symbol"] = name if is_crypto else f"{name} ({key})"
-                                result["type"] = "Crypto" if is_crypto else "Stock"
-                                result["key"] = key
-                        except Exception as exc:
-                            result["label"] = "Error"
-                            result["reasons"] = [str(exc)]
-
+                if err:
                     results.append(result)
+                    continue
+
+                if df is not None and not df.empty and "close" in df.columns:
+                    result["closes"] = recent_closes(df["close"].tolist())
+
+                if df is not None and not df.empty and len(df) >= 15:
+                    try:
+                        df = calculate_indicators(df)
+                        scored = compute_score(df, weights=weights)
+                        if isinstance(scored, dict):
+                            result.update(scored)
+                            result["symbol"] = name if is_crypto else f"{name} ({key})"
+                            result["type"] = "Crypto" if is_crypto else "Stock"
+                            result["key"] = key
+                    except Exception as exc:
+                        result["label"] = "Error"
+                        result["reasons"] = [str(exc)]
+
+                results.append(result)
             return results
 
         crypto_results = process_watchlist(crypto_watchlist, is_crypto=True) if trade_crypto else []
@@ -4900,11 +4972,10 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                 st.info("Add an asset to this watchlist to see a chart.")
                 return
 
+            df_chart, chart_err = _stored_bars(asset_type, asset_key, history_days)
             if asset_type == "Crypto":
-                df_chart, chart_err = load_crypto(asset_key, history_days, nonce)
                 title = crypto_watchlist[asset_key]
             else:
-                df_chart, chart_err = load_stock(asset_key, history_days, nonce)
                 title = f"{stock_watchlist[asset_key]} ({asset_key})"
 
             if chart_err or df_chart.empty:
@@ -5063,6 +5134,8 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             "target": st.session_state.get("scroll_target") or "interactive-chart",
         },
     )
+    if st.session_state.pop("_shared_reread", False):
+        _rerun_fragment()
 
 
 def _store_mood_vote(market_key: str, sentiment_at, vote, alt_score=None) -> bool:
@@ -5532,13 +5605,6 @@ def _reading_articles(group: dict) -> list[dict]:
     return articles
 
 
-def _readings_scored(groups: list[dict]) -> bool:
-    items = [item for group in groups for item in (group.get("items") or [])]
-    if not items:
-        return True
-    return all(item.get("score") is not None for item in items)
-
-
 def _article_box(box_key: str, body: str) -> None:
     """Articles, summaries, and scores in the same rounded frame as Your take."""
     if not str(body or "").strip():
@@ -5555,12 +5621,6 @@ def _mood_reading_board(market_key: str, label: str, report: dict | None) -> str
             groups = market_gauge_groups(market_key)
         except Exception:
             groups = []
-    if groups and not _readings_scored(groups):
-        with st.spinner("Scoring the public readings..."):
-            try:
-                groups = score_market_readings(market_key, label, groups)
-            except Exception:
-                pass
     blocks = []
     for group in groups or []:
         articles = _reading_articles(group)
@@ -5574,20 +5634,30 @@ def _mood_reading_board(market_key: str, label: str, report: dict | None) -> str
     return "".join(blocks)
 
 
-def _mood_card(spec: dict, row: dict | None, deadlines: dict) -> None:
-    """One whole-market card. Quick Snapshot asks for a new score and restarts 12 hours."""
+def _mood_card(spec: dict, row: dict | None) -> None:
+    """One whole-market card. The background job replaces a saved score. A missing one is written once."""
     key = spec["key"]
     label = spec["label"]
     query = spec["query"]
     cache_key = f"mood:{key}"
-    force = st.session_state.get("mood_force") == key
-    if force:
-        st.session_state.mood_force = None
-    report, stored_at = (None, None) if force else sentiment_from_row(row)
+    report, stored_at = sentiment_from_row(row)
+    if not (report and report.get("ok")):
+        flag = f"mood_fill_{key}"
+        if not st.session_state.get(flag):
+            with st.spinner(f"Reading the {label.lower()}..."):
+                report = analyze_market_mood(key, label, query, sentiment_ready())
+            if report.get("reason") != "model_busy":
+                st.session_state[flag] = True
+            if report.get("ok"):
+                stored_at = time.time()
+                if save_market_mood(supabase, key, query, report, stored_at):
+                    row = dict(row or {})
+                    row["sentiment_updated_at"] = datetime.fromtimestamp(
+                        stored_at, timezone.utc
+                    ).isoformat()
+                    st.session_state["_shared_reread"] = True
     if report and stored_at is not None:
         remember_sentiment(cache_key, report, stored_at)
-    if cache_key not in deadlines:
-        _arm_deadline(deadlines, cache_key)
     head_col, top_col = st.columns([5.1, 0.85], vertical_alignment="center")
     with head_col:
         mood_icon = "🪙" if key == "crypto" else "📈"
@@ -5597,14 +5667,6 @@ def _mood_card(spec: dict, row: dict | None, deadlines: dict) -> None:
         )
     with top_col:
         _back_to_top(key=f"mood_top_{key}")
-    if force or not (report and report.get("ok")):
-        cached_before = sentiment_cached_at(cache_key)
-        with st.spinner(f"Reading the {label.lower()}..."):
-            report = analyze_market_mood(key, label, query, sentiment_ready(), force=True)
-        cached_after = sentiment_cached_at(cache_key)
-        if report.get("ok") and cached_after and cached_after != cached_before:
-            if save_market_mood(supabase, key, query, report, cached_after):
-                st.rerun(scope="app")
     headlines = newest_first((report or {}).get("headlines") or [])
     score = (report or {}).get("score")
     if report and report.get("ok") and score is not None:
@@ -5666,7 +5728,6 @@ def show_market_moods(trade_crypto: bool = True, trade_equities: bool = True) ->
         with section_expander("🌤️ Market sentiment", "market_mood"):
             st.info("Market sentiment storage is not ready yet. Run the latest supabase_rls.sql in the Supabase SQL editor.")
         return
-    deadlines = st.session_state.setdefault("mood_due", {})
     for spec in MACRO_MOODS:
         if spec["key"] == "crypto" and not trade_crypto:
             continue
@@ -5677,7 +5738,7 @@ def show_market_moods(trade_crypto: bool = True, trade_equities: bool = True) ->
             f"<div id='market-mood-{spec['key']}' style='scroll-margin-top:4.5rem;'></div>"
         )
         with section_expander(f"{mood_icon} Market sentiment - {spec['label']}", f"market_mood_{spec['key']}"):
-            _mood_card(spec, stored.get(spec["key"]), deadlines)
+            _mood_card(spec, stored.get(spec["key"]))
 
 
 def _price_text(value: float) -> str:
@@ -5791,10 +5852,9 @@ def show_market_sentiment(kind: str, asset_id: str, label: str, ticker: str | No
     stored = load_shared_market(supabase, [asset_market_key(kind, asset_id)]).get(
         asset_market_key(kind, asset_id)
     )
-    if st.session_state.get("sentiment_force") != query:
-        report, stored_at = sentiment_from_row(stored)
-        if report and stored_at is not None:
-            remember_sentiment(query, report, stored_at)
+    report, stored_at = sentiment_from_row(stored)
+    if report and stored_at is not None:
+        remember_sentiment(query, report, stored_at)
     st.html("<div id='market-sentiment' style='scroll-margin-top:4.5rem;'></div>")
     shown_name = " ".join((label or "").split())
     if kind == "Stock" and ticker and ticker.upper() not in shown_name.upper():
@@ -5816,21 +5876,25 @@ def show_market_sentiment(kind: str, asset_id: str, label: str, ticker: str | No
                     ),
                     unsafe_allow_html=True,
                 )
-        sentiment_deadlines = st.session_state.setdefault("sentiment_due", {})
-        _arm_deadline(sentiment_deadlines, query)
         with sentiment_top:
             _back_to_top(key="sentiment_back_to_top")
-        force_sentiment = st.session_state.get("sentiment_force") == query
-        if force_sentiment:
-            st.session_state.sentiment_force = None
-        cached_before = sentiment_cached_at(query)
-        with st.spinner("Reading recent headlines..."):
-            report = load_market_sentiment(query, sentiment_ready(), force=force_sentiment)
-        cached_after = sentiment_cached_at(query)
-        if report.get("ok") and cached_after and cached_after != cached_before:
-            save_sentiment(supabase, kind, asset_id, report, cached_after)
-            st.rerun(scope="app")
-
+        if not (report and report.get("ok")):
+            flag = f"sentiment_fill_{asset_market_key(kind, asset_id)}"
+            if not st.session_state.get(flag):
+                with st.spinner("Reading recent headlines..."):
+                    report = analyze_market_sentiment(query, sentiment_ready())
+                if report.get("reason") != "model_busy":
+                    st.session_state[flag] = True
+                if report.get("ok"):
+                    stored_at = time.time()
+                    save_sentiment(supabase, kind, asset_id, report, stored_at)
+                    remember_sentiment(query, report, stored_at)
+                    stored = dict(stored or {})
+                    stored["sentiment_updated_at"] = datetime.fromtimestamp(
+                        stored_at, timezone.utc
+                    ).isoformat()
+                    st.session_state["_shared_reread"] = True
+        report = report or {}
         headlines = newest_first(report.get("headlines") or [])
         score = report.get("score")
         if report.get("ok") and score is not None:
@@ -5890,4 +5954,4 @@ st.markdown(
 )
 
 st.sidebar.markdown("---")
-st.sidebar.info("Prices and technical scores refresh every 5 minutes while this page is open. Market sentiment refreshes about every 12 hours. Alert checks continue every 5 minutes after you leave.")
+st.sidebar.info("Prices are saved about every 5 minutes, and market sentiment about every 12 hours, for every account. This page reads those saved results. Alert checks use the same prices and continue after you leave.")

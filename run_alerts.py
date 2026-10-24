@@ -16,9 +16,13 @@ import requests
 from supabase import create_client
 
 from alerts import evaluate_alerts
-from data_fetchers import fetch_crypto_data, fetch_stock_data, period_for_days
-from market_store import recent_closes, save_price_paths
 from scoring import calculate_indicators, compute_score
+from shared_refresh import (
+    canonical_asset_id,
+    refresh_due_sentiment,
+    refresh_price_catalog,
+    slice_history,
+)
 
 try:
     from dotenv import load_dotenv
@@ -148,6 +152,28 @@ def _score_asset(df, weights):
     return scored.get("score")
 
 
+def _watchlist(user_pref: dict) -> tuple[dict, dict, int]:
+    """Crypto, stocks, and history length for one account. A hidden market is left out."""
+    settings = user_pref.get("settings") or {}
+    if not isinstance(settings, dict):
+        settings = {}
+    crypto = user_pref.get("crypto_watchlist") or {}
+    stock = user_pref.get("stock_watchlist") or {}
+    if not isinstance(crypto, dict):
+        crypto = {}
+    if not isinstance(stock, dict):
+        stock = {}
+    if settings.get("trade_crypto", True) is False:
+        crypto = {}
+    if settings.get("trade_equities", True) is False:
+        stock = {}
+    try:
+        days = int(settings.get("days_history", 200) or 200)
+    except (TypeError, ValueError):
+        days = 200
+    return crypto, stock, min(730, max(90, days))
+
+
 def run_background_checks() -> None:
     print("Starting background alert check...")
     url, key = load_credentials()
@@ -159,16 +185,27 @@ def run_background_checks() -> None:
         .execute()
     )
     all_user_prefs = prefs_res.data or []
+
+    catalog = {}
+    max_days = 200
+    for user_pref in all_user_prefs:
+        crypto_list, stock_list, days_history = _watchlist(user_pref)
+        max_days = max(max_days, days_history)
+        for coin_id, name in crypto_list.items():
+            catalog[("Crypto", str(coin_id))] = str(name)
+        for ticker, name in stock_list.items():
+            catalog[("Stock", str(ticker).upper())] = str(name)
+
+    frames = refresh_price_catalog(supabase, catalog, max_days)
+    refresh_due_sentiment(supabase, catalog)
+
     if not all_user_prefs:
         print("No user preferences found.")
+        print("Background alert check finished.")
         return
 
     alerts_res = supabase.table("alert_preferences").select("*").execute()
     alerts_map = {row["user_id"]: row for row in (alerts_res.data or [])}
-
-    crypto_cache = {}
-    stock_cache = {}
-    shared_prices = []
 
     for user_pref in all_user_prefs:
         user_id = user_pref["user_id"]
@@ -180,59 +217,30 @@ def run_background_checks() -> None:
         if not alert_config.get("enabled", True):
             continue
 
-        crypto_list = user_pref.get("crypto_watchlist") or {}
-        stock_list = user_pref.get("stock_watchlist") or {}
-        if not isinstance(crypto_list, dict):
-            crypto_list = {}
-        if not isinstance(stock_list, dict):
-            stock_list = {}
-
-        settings = user_pref.get("settings") or {}
-        days_history = int(settings.get("days_history", 200) or 200)
-        trade_crypto = settings.get("trade_crypto", True) is not False
-        trade_equities = settings.get("trade_equities", True) is not False
+        crypto_list, stock_list, days_history = _watchlist(user_pref)
         weights = user_pref.get("scoring_weights") or None
         results = []
-
         print(f"Checking assets for user {user_id}")
 
-        if trade_crypto:
-            for coin_id, name in crypto_list.items():
-                cache_key = (str(coin_id).lower(), days_history)
-                if cache_key not in crypto_cache:
-                    crypto_cache[cache_key] = fetch_crypto_data(coin_id, days_history)
-                df, err = crypto_cache[cache_key]
-                if err:
-                    print(err)
-                    continue
-                _keep_closes(shared_prices, "Crypto", coin_id, df)
+        for kind, assets, name_for in (
+            ("Crypto", crypto_list, lambda asset_id, name: name),
+            ("Stock", stock_list, lambda asset_id, name: f"{name} ({asset_id})"),
+        ):
+            for asset_id, name in assets.items():
+                frame = frames.get((kind, canonical_asset_id(kind, asset_id)))
+                scored = slice_history(frame, days_history)
                 try:
-                    score = _score_asset(df, weights)
+                    score = _score_asset(scored, weights)
                 except Exception as exc:
-                    print(f"Scoring failed for {coin_id}: {exc}")
+                    print(f"Scoring failed for {asset_id}: {exc}")
                     continue
                 if score is None:
                     continue
-                results.append({"key": coin_id, "symbol": name, "score": score})
-
-        if trade_equities:
-            for ticker, name in stock_list.items():
-                cache_key = (str(ticker).upper(), days_history)
-                if cache_key not in stock_cache:
-                    stock_cache[cache_key] = fetch_stock_data(ticker, period=period_for_days(days_history))
-                df, err = stock_cache[cache_key]
-                if err:
-                    print(err)
-                    continue
-                _keep_closes(shared_prices, "Stock", ticker, df)
-                try:
-                    score = _score_asset(df, weights)
-                except Exception as exc:
-                    print(f"Scoring failed for {ticker}: {exc}")
-                    continue
-                if score is None:
-                    continue
-                results.append({"key": ticker, "symbol": f"{name} ({ticker})", "score": score})
+                results.append({
+                    "key": asset_id,
+                    "symbol": name_for(asset_id, name),
+                    "score": score,
+                })
 
         try:
             opened = evaluate_alerts(
@@ -249,16 +257,7 @@ def run_background_checks() -> None:
         for alert in opened:
             print(f"Opened {alert['alert_type']} for {alert['asset_name']}")
 
-    save_price_paths(supabase, shared_prices)
     print("Background alert check finished.")
-
-
-def _keep_closes(shared_prices: list, kind: str, asset_id: str, df) -> None:
-    if df is None or getattr(df, "empty", True) or "close" not in getattr(df, "columns", []):
-        return
-    closes = recent_closes(df["close"].tolist())
-    if len(closes) >= 2:
-        shared_prices.append({"kind": kind, "asset_id": asset_id, "closes": closes})
 
 
 if __name__ == "__main__":

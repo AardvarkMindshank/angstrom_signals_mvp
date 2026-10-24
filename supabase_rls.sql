@@ -95,9 +95,10 @@ create policy "users update own profile" on public.profiles
 grant select, insert, update on public.profiles to authenticated;
 
 -- One row per asset, shared by every signed-in account.
--- Closes feed the Trend line. The sentiment columns are the headline score.
--- The alert worker writes closes with the service-role key. A signed-in
--- session can read the row and can save a new score after Grok runs.
+-- Closes feed the Trend line. prices is the daily history behind charts and
+-- technical scores. The sentiment columns are the headline score.
+-- The alert worker writes prices with the service-role key. A signed-in
+-- session writes the first row when that asset is not stored yet.
 create table if not exists public.asset_market (
     asset_key text primary key,
     kind text not null,
@@ -107,11 +108,19 @@ create table if not exists public.asset_market (
     sentiment_score numeric,
     sentiment_report jsonb,
     sentiment_updated_at timestamptz,
-    logo_url text
+    logo_url text,
+    prices jsonb,
+    prices_updated_at timestamptz
 );
 
 alter table public.asset_market
     add column if not exists logo_url text;
+
+alter table public.asset_market
+    add column if not exists prices jsonb;
+
+alter table public.asset_market
+    add column if not exists prices_updated_at timestamptz;
 
 alter table public.asset_market enable row level security;
 
