@@ -3307,7 +3307,7 @@ The **Sentiment** column shows that saved score in the same colored box. A dash 
 
 **Watching**, beside the name, is how many accounts have that asset on a watchlist. The people marks are a count, not the names of those accounts.
 
-The picture on the left of each name is that asset's logo. The same logo appears at the top of the Interactive Chart and Market sentiment sections. Crypto logos come from CoinGecko. Stock logos come from Finnhub. A letter shows when a logo is not available. The address is saved once and reused for every account.
+The picture on the left of each name is that asset's logo. The same logo appears at the top of the Interactive Chart and the asset's Market sentiment, with the ticker in large type beside it, such as SUI. Crypto market and Stock market use a larger version of the icon on their section title, with Crypto market or Stock market beside it. Crypto logos come from CoinGecko. Stock logos come from Finnhub. A letter shows when a logo is not available. The address is saved once and reused for every account.
 
 Beside the sentiment score you can press thumbs up if you agree, or thumbs down if you do not. Press the same thumb again to clear your take. Those buttons sit in an outlined box. After you disagree, scores appear in that same box, under the buttons: 0, 20, 40, 60, 80 and 100. The number you pick also fills the type box, and you can type any number from 0 to 100. It saves on its own when you click a score, press Enter, or leave the box. The thumbs and that same colored average sit at the bottom of Your take, and again under **Crowd** on each table row. The box is the average of the personal scores, in the same style as the Sentiment column. It updates when a score is clicked or typed. Hover the down thumb for the spread, which is how far those scores typically sit from the average. One score has no spread yet. A dash means nobody has given a personal score. Under the thumbs you can post one comment of up to 160 characters. A row of faces under the box can be added to the comment. A speech balloon appears beside the thumbs, and in the **Comments** column, once any comment exists. Click it, or the arrow on the right edge of the page, to open **Social signals and chat**, described below. A refresh of that sentiment clears every thumb and every personal score, because they belonged to the old score. A comment stays for 12 hours from when it was posted, and the stream keeps the sentiment it was answering even after a newer score arrives.
 
@@ -4012,6 +4012,37 @@ def _asset_logos(crypto_watchlist, stock_watchlist, shared: dict) -> dict[str, s
     save_logos(supabase, fresh)
     st.session_state["asset_logos"] = logos
     return logos
+
+
+def _section_mark(mark_html: str, title: str) -> str:
+    """A large icon with a name of the same height beside it."""
+    safe = html.escape(" ".join(str(title or "").split()))
+    return (
+        "<div style='display:flex;align-items:center;gap:12px;margin:0.15rem 0 0.25rem;'>"
+        f"{mark_html}"
+        f"<span class='ang-title' style='font-size:2rem;line-height:1;font-weight:600;'>{safe}</span>"
+        "</div>"
+    )
+
+
+def _emoji_mark(emoji: str, size: int = 32) -> str:
+    """The section emoji at the same size as an asset logo."""
+    return (
+        f"<span style='font-size:{size}px;line-height:1;display:inline-flex;"
+        "align-items:center;flex:none;'>"
+        f"{emoji}</span>"
+    )
+
+
+def _ticker_label(kind: str, asset_id: str, fallback: str) -> str:
+    """Short name beside a logo. SUI for a crypto, AAPL for a stock."""
+    if str(kind) == "Stock":
+        ticker = str(asset_id or "").strip().upper()
+        return ticker or " ".join(str(fallback or "").split())
+    ticker = crypto_ticker(str(asset_id or ""))
+    if ticker:
+        return str(ticker).upper()
+    return " ".join(str(fallback or "").split())
 
 
 @st.fragment
@@ -4743,10 +4774,16 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             "<div id='interactive-chart' style='scroll-margin-top:4.5rem;'></div>"
         )
         with section_expander(chart_label, "interactive_chart"):
-            logo_col, _, chart_top = st.columns([0.35, 4.85, 0.9], vertical_alignment="center")
-            with logo_col:
+            mark_col, chart_top = st.columns([5.2, 0.9], vertical_alignment="center")
+            with mark_col:
                 if chart_name:
-                    st.markdown(asset_logo(chart_logo, chart_name, size=32), unsafe_allow_html=True)
+                    st.markdown(
+                        _section_mark(
+                            asset_logo(chart_logo, chart_name, size=32),
+                            _ticker_label(chart_kind, chart_asset, chart_name),
+                        ),
+                        unsafe_allow_html=True,
+                    )
             with chart_top:
                 _back_to_top(key="chart_back_to_top")
 
@@ -5469,7 +5506,13 @@ def _mood_card(spec: dict, row: dict | None, deadlines: dict) -> None:
         remember_sentiment(cache_key, report, stored_at)
     if cache_key not in deadlines:
         _arm_deadline(deadlines, cache_key)
-    _, top_col = st.columns([5.1, 0.85], vertical_alignment="center")
+    head_col, top_col = st.columns([5.1, 0.85], vertical_alignment="center")
+    with head_col:
+        mood_icon = "🪙" if key == "crypto" else "📈"
+        st.markdown(
+            _section_mark(_emoji_mark(mood_icon), label),
+            unsafe_allow_html=True,
+        )
     with top_col:
         _back_to_top(key=f"mood_top_{key}")
     if force or not (report and report.get("ok")):
@@ -5681,10 +5724,16 @@ def show_market_sentiment(kind: str, asset_id: str, label: str, ticker: str | No
     if not sentiment_logo:
         sentiment_logo = (st.session_state.get("asset_logos") or {}).get(asset_market_key(kind, asset_id))
     with section_expander(sentiment_heading, "market_sentiment_panel"):
-        logo_col, _, sentiment_top = st.columns([0.35, 4.25, 0.85], vertical_alignment="center")
-        with logo_col:
+        mark_col, sentiment_top = st.columns([5.2, 0.85], vertical_alignment="center")
+        with mark_col:
             if shown_name:
-                st.markdown(asset_logo(sentiment_logo, shown_name, size=32), unsafe_allow_html=True)
+                st.markdown(
+                    _section_mark(
+                        asset_logo(sentiment_logo, shown_name, size=32),
+                        _ticker_label(kind, asset_id, shown_name),
+                    ),
+                    unsafe_allow_html=True,
+                )
         sentiment_deadlines = st.session_state.setdefault("sentiment_due", {})
         _arm_deadline(sentiment_deadlines, query)
         with sentiment_top:
