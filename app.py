@@ -2483,9 +2483,9 @@ _MAIN_SECTION_IDS = (
 _SECTION_IDS = _MAIN_SECTION_IDS + (
     "help_guides",
     "account",
+    "my_groups",
     "edit_profile",
     "invite",
-    "my_groups",
     "notifications",
     "alert_feed",
     "alert_rules",
@@ -3792,8 +3792,6 @@ with tracked_expander("👤 Account", "account", sidebar=True):
 
     with tracked_expander("Invite", "invite"):
         invite_someone()
-    with tracked_expander("My Groups", "my_groups"):
-        my_groups_panel()
 
     if st.button("Log Out", use_container_width=True):
         try:
@@ -3802,6 +3800,9 @@ with tracked_expander("👤 Account", "account", sidebar=True):
             pass
         clear_session()
         st.rerun()
+
+with tracked_expander("👥 My Groups", "my_groups", sidebar=True):
+    my_groups_panel()
 
 def tone(score):
     """Text color, badge background, arrow, and bar color for a score."""
