@@ -429,6 +429,10 @@ export default function(component) {
         openAndScroll("interactive-chart");
         return;
       }
+      if (button.hasAttribute("data-alert") && window.__angstromPickAsset) {
+        window.__angstromPickAsset("picked", pick);
+        return;
+      }
       setTriggerValue("picked", pick);
     });
   });
@@ -3375,27 +3379,15 @@ def notifications_panel() -> None:
                             kind_name, asset_id = target
                             pick_value = html.escape(f"{kind_name}|{asset_id}", quote=True)
                             card = (
-                                f"<button type='button' data-pick='{pick_value}' "
+                                f"<button type='button' data-alert='1' data-pick='{pick_value}' "
                                 "style='display:block;width:100%;margin:0;padding:0;border:none;"
                                 "background:transparent;text-align:left;cursor:pointer;font:inherit;color:inherit;'>"
                                 f"{card}</button>"
                             )
-                        picked = _score_table(
+                        _score_table(
                             key=f"notif_{note_id}",
                             data=card,
-                            on_picked_change=lambda: None,
-                        ).picked
-                        signature = f"{note_id}:{picked}"
-                        if picked and target:
-                            if st.session_state.get("notif_handled") != signature:
-                                st.session_state.notif_handled = signature
-                                st.session_state.chart_pick = target
-                                st.session_state.chart_pick_from_row = True
-                                st.session_state.scroll_target = "interactive-chart"
-                                st.session_state.scroll_token = str(time.time_ns())
-                                st.rerun()
-                        elif str(st.session_state.get("notif_handled") or "").startswith(f"{note_id}:"):
-                            st.session_state.notif_handled = None
+                        )
 
                     if st.button("🗑️ Clear Read Alerts", use_container_width=True, key="clear_read_btn"):
                         try:
@@ -6137,6 +6129,51 @@ def show_market_sentiment(kind: str, asset_id: str, label: str, ticker: str | No
             _article_box(f"asset_{asset_key}", headline_table(headlines))
         st.caption("This reads recent coverage. It is not the technical score, and it is not advice.")
 
+
+_ASSET_PICK_JS = """
+export default function(component) {
+  const { setTriggerValue, parentElement } = component;
+  const shell = parentElement.closest(".stBidiComponent") || parentElement;
+  shell.style.display = "none";
+  window.__angstromPickAsset = setTriggerValue;
+}
+"""
+_asset_pick = st.components.v2.component(
+    "alert_asset_pick",
+    js=_ASSET_PICK_JS,
+    isolate_styles=False,
+)
+
+
+def _take_alert_pick() -> None:
+    """An alert click names an asset. This pass draws that chart. It does not run again."""
+    reported = _asset_pick(key="alert_asset_pick", on_picked_change=lambda: None)
+    raw = str(getattr(reported, "picked", "") or "")
+    if "|" not in raw or st.session_state.get("_alert_pick_seen") == raw:
+        return
+    kind_name, asset_id = raw.split("|", 1)
+    if kind_name == "Crypto":
+        chosen = CRYPTO_WATCHLIST
+    elif kind_name == "Stock":
+        chosen = STOCK_WATCHLIST
+    else:
+        return
+    if asset_id not in chosen:
+        return
+    st.session_state["_alert_pick_seen"] = raw
+    st.session_state.chart_pick = (kind_name, asset_id)
+    st.session_state.chart_pick_from_row = True
+    st.session_state.asset_type = kind_name
+    if kind_name == "Crypto":
+        st.session_state.asset_crypto = asset_id
+    else:
+        st.session_state.asset_stock = asset_id
+    st.session_state.scroll_target = "interactive-chart"
+    st.session_state.scroll_token = str(time.time_ns())
+    _remember_section("interactive_chart", True)
+
+
+_take_alert_pick()
 
 render_dashboard(
     CRYPTO_WATCHLIST,
