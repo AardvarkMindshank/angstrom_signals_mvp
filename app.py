@@ -1954,6 +1954,50 @@ _countdown = st.components.v2.component(
     isolate_styles=False,
 )
 
+# Opening a section is only show and hide. This records that choice without
+# asking Streamlit to rebuild the page.
+_SECTION_TOGGLE_JS = """
+export default function(component) {
+  const { setTriggerValue, parentElement } = component;
+  const shell = parentElement.closest(".stBidiComponent") || parentElement;
+  shell.style.display = "none";
+  window.__angstromSetSection = setTriggerValue;
+  if (window.__angstromSectionWatch) return;
+  window.__angstromSectionWatch = true;
+  document.addEventListener("click", (event) => {
+    const target = event.target;
+    if (!target || !target.closest) return;
+    const summary = target.closest("summary");
+    if (!summary) return;
+    const expander = summary.closest('[data-testid="stExpander"]');
+    if (!expander) return;
+    let node = expander;
+    let sectionId = "";
+    while (node) {
+      const names = typeof node.className === "string" ? node.className.split(" ") : [];
+      const hit = names.find((name) => name.indexOf("st-key-sec_") === 0);
+      if (hit) {
+        sectionId = hit.slice("st-key-sec_".length);
+        break;
+      }
+      node = node.parentElement;
+    }
+    if (!sectionId) return;
+    window.setTimeout(() => {
+      const details = expander.querySelector('[data-testid="stExpanderDetails"]');
+      const opened = !!(details && !details.hasAttribute("inert"));
+      const send = window.__angstromSetSection;
+      if (send) send("toggle", sectionId + ":" + (opened ? "1" : "0"));
+    }, 40);
+  }, true);
+}
+"""
+_section_toggle = st.components.v2.component(
+    "section_toggle",
+    js=_SECTION_TOGGLE_JS,
+    isolate_styles=False,
+)
+
 # The reset link comes back in the address hash, which Streamlit does not send
 # to Python. This reads it once and hands the session to the password form.
 _RECOVERY_JS = """
@@ -2187,13 +2231,34 @@ def _remember_section(section_id: str, opened: bool) -> None:
 
 
 def tracked_expander(label: str, section_id: str, *, default: bool = False, sidebar: bool = False):
-    """One collapsible whose open or collapsed state is saved on the account."""
+    """One collapsible whose open or collapsed state is saved on the account.
+
+    The header toggles in the browser. A separate watcher saves that choice,
+    so opening or closing a section does not rebuild the page.
+    """
     expanded = _section_expanded(section_id, default)
     opener = st.sidebar.expander if sidebar else st.expander
-    box = opener(label, expanded=expanded, key=f"sec_{section_id}", on_change="rerun")
-    if box.open is not None and box.open != expanded:
-        _remember_section(section_id, bool(box.open))
-    return box
+    return opener(label, expanded=expanded, key=f"sec_{section_id}")
+
+
+@st.fragment
+def remember_section_clicks() -> None:
+    """Write one open or closed section onto the account, and leave the page as it is."""
+    reported = _section_toggle(
+        key="section_toggle_watch",
+        on_toggle_change=lambda: None,
+    )
+    raw = str(getattr(reported, "toggle", "") or "")
+    if ":" not in raw:
+        return
+    section_id, flag = raw.rsplit(":", 1)
+    if not section_id or flag not in ("0", "1"):
+        return
+    token = f"{section_id}:{flag}"
+    if st.session_state.get("_section_toggle_seen") == token:
+        return
+    st.session_state["_section_toggle_seen"] = token
+    _remember_section(section_id, flag == "1")
 
 
 def section_expander(label: str, section_id: str):
@@ -3326,6 +3391,7 @@ with st.container(horizontal=True, vertical_alignment="center", horizontal_align
             st.session_state.section_layout = "Wide"
             st.rerun()
 save_account_settings({"section_layout": st.session_state.section_layout})
+remember_section_clicks()
 
 with tracked_expander("📖 Help and guides", "help_guides", default=False):
     st.markdown("""
