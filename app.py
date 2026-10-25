@@ -3707,12 +3707,17 @@ def my_groups_panel() -> None:
         "[class*='st-key-group_person_'] [data-testid='stElementContainer']{align-self:center !important;margin-top:0 !important;margin-bottom:0 !important;display:flex !important;align-items:center !important;}"
         "[class*='st-key-group_person_'] [data-testid='stMarkdownContainer']{margin:0 !important;}"
         "[class*='st-key-group_person_'] [data-testid='stMarkdownContainer'] p{margin:0 !important;line-height:1.2 !important;display:flex;align-items:center;}"
-        "[class*='st-key-group_remove_'] button,[class*='st-key-group_xdelete_'] button,[class*='st-key-group_leave_'] button{color:#b91c1c !important;background:transparent !important;"
+        "[class*='st-key-group_remove_'] button,[class*='st-key-group_xdelete_'] button{color:#b91c1c !important;background:transparent !important;"
         "border:none !important;box-shadow:none !important;font-size:2.16rem !important;font-weight:700 !important;"
         "line-height:1 !important;min-height:0 !important;height:2.16rem !important;padding:0 !important;"
         "display:inline-flex !important;align-items:center !important;justify-content:center !important;}"
-        "[class*='st-key-group_remove_'] button *,[class*='st-key-group_xdelete_'] button *,[class*='st-key-group_leave_'] button *{font-size:2.16rem !important;line-height:1 !important;color:#b91c1c !important;}"
-        "[class*='st-key-group_leave_'] button{font-variant-emoji:text;}"
+        "[class*='st-key-group_remove_'] button *,[class*='st-key-group_xdelete_'] button *{font-size:2.16rem !important;line-height:1 !important;color:#b91c1c !important;}"
+        "[class*='st-key-group_leave_'] button{width:1.728rem !important;height:1.728rem !important;min-width:0 !important;min-height:0 !important;"
+        "padding:0 !important;border:none !important;box-shadow:none !important;background-color:transparent !important;"
+        "background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b91c1c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4'/%3E%3Cpolyline points='16 17 21 12 16 7'/%3E%3Cline x1='21' y1='12' x2='9' y2='12'/%3E%3C/svg%3E\") !important;"
+        "background-repeat:no-repeat !important;background-position:center !important;background-size:1.728rem 1.728rem !important;"
+        "color:transparent !important;font-size:0 !important;}"
+        "[class*='st-key-group_leave_'] button *{font-size:0 !important;color:transparent !important;}"
         "</style>",
         unsafe_allow_html=True,
     )
@@ -3765,7 +3770,7 @@ def my_groups_panel() -> None:
             with st.container(horizontal=True, vertical_alignment="center", gap="small"):
                 with st.expander(label, expanded=False, key=f"group_fold_{gid}"):
                     _group_member_list(row, gid)
-                if st.button("🚶", key=f"group_leave_{gid}", help="Leave group", type="tertiary"):
+                if st.button("Leave", key=f"group_leave_{gid}", help="Leave group", type="tertiary"):
                     try:
                         supabase.rpc("leave_group", {"chosen_group": gid}).execute()
                     except Exception:
