@@ -1453,8 +1453,9 @@ export default function(component) {
     const on = current.indexOf(id) === -1;
     window.socialFavourites = on ? current.concat([id]) : current.filter((item) => item !== id);
     if (window.renderSocialStream) window.renderSocialStream();
-    if (!window.socialStreamReport) return;
-    window.socialStreamReport("favourite", JSON.stringify({ n: Date.now(), user: id, on: on }));
+    if (window.__angstromSetFavourite) {
+      window.__angstromSetFavourite("picked", JSON.stringify({ n: Date.now(), user: id, on: on }));
+    }
   }
 
   function favouriteButton(item) {
@@ -2552,6 +2553,64 @@ def remember_section_clicks() -> None:
         return
     st.session_state["_section_toggle_seen"] = token
     _remember_section(section_id, flag == "1")
+
+
+_FAVOURITE_JS = """
+export default function(component) {
+  const { data, setTriggerValue, parentElement } = component;
+  const shell = parentElement.closest(".stBidiComponent") || parentElement;
+  shell.style.display = "none";
+  window.__angstromSetFavourite = setTriggerValue;
+  if (!data) return;
+  let problem = null;
+  try {
+    problem = JSON.parse(data);
+  } catch (error) {
+    problem = null;
+  }
+  if (!problem || !problem.revert || window.__angstromFavSeen === problem.n) return;
+  window.__angstromFavSeen = problem.n;
+  const id = String(problem.user || "").toLowerCase();
+  const current = (window.socialFavourites || []).map(String);
+  if (problem.on) window.socialFavourites = current.filter((item) => item !== id);
+  else if (id && current.indexOf(id) === -1) window.socialFavourites = current.concat([id]);
+  window.socialChatNotice = problem.notice || "That favourite could not be saved. Try again.";
+  if (window.renderSocialStream) window.renderSocialStream();
+}
+"""
+_favourite_watch = st.components.v2.component(
+    "favourite_watch",
+    js=_FAVOURITE_JS,
+    isolate_styles=False,
+)
+
+
+@st.fragment
+def remember_favourites() -> None:
+    """Save one star from the social panel without rebuilding the page."""
+    problem = st.session_state.get("fav_problem") or ""
+    reported = _favourite_watch(
+        key="favourite_watch",
+        data=problem,
+        on_picked_change=lambda: None,
+    )
+    if problem:
+        st.session_state.pop("fav_problem", None)
+    event = _favourite_event(getattr(reported, "picked", None))
+    if not event or st.session_state.get("favourite_done") == event.get("n"):
+        return
+    st.session_state["favourite_done"] = event.get("n")
+    notice = _apply_favourite(event)
+    if not notice:
+        return
+    st.session_state["fav_problem"] = json.dumps({
+        "revert": True,
+        "n": event.get("n"),
+        "user": str(event.get("user") or ""),
+        "on": bool(event.get("on")),
+        "notice": notice,
+    })
+    _rerun_fragment()
 
 
 def section_expander(label: str, section_id: str):
@@ -5141,14 +5200,12 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             on_asset_change=lambda: None,
             on_chat_change=lambda: None,
             on_signal_change=lambda: None,
-            on_favourite_change=lambda: None,
             on_group_change=lambda: None,
             on_panel_change=lambda: None,
         )
         chosen_scope = stream_state.asset
         chat_event = _chat_action(getattr(stream_state, "chat", None))
         signal_event = _chat_action(getattr(stream_state, "signal", None))
-        favourite_event = _favourite_event(getattr(stream_state, "favourite", None))
         group_event = _favourite_event(getattr(stream_state, "group", None))
         if chat_event and chat_event.get("n") != st.session_state.get("chat_done"):
             st.session_state["chat_done"] = chat_event.get("n")
@@ -5157,10 +5214,6 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
         if signal_event and signal_event.get("n") != st.session_state.get("signal_done"):
             st.session_state["signal_done"] = signal_event.get("n")
             st.session_state["chat_notice"] = _apply_signal_action(signal_event)
-            _rerun_fragment()
-        if favourite_event and favourite_event.get("n") != st.session_state.get("favourite_done"):
-            st.session_state["favourite_done"] = favourite_event.get("n")
-            st.session_state["chat_notice"] = _apply_favourite(favourite_event)
             _rerun_fragment()
         if group_event and group_event.get("n") != st.session_state.get("group_done"):
             st.session_state["group_done"] = group_event.get("n")
@@ -6747,6 +6800,7 @@ def _take_alert_pick() -> None:
     _remember_section("interactive_chart", True)
 
 
+remember_favourites()
 _take_alert_pick()
 
 render_dashboard(
