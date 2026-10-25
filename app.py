@@ -3411,9 +3411,10 @@ with tracked_expander("📖 Help and guides", "help_guides", default=False):
         ("Strong bullish", "70+", "#15803d", "#dcfce7"),
         ("Bullish", "60–69", "#15803d", "#dcfce7"),
         ("Neutral", "47–52", "#b45309", "#fef3c7"),
+        ("Bearish", "30–39", "#b91c1c", "#fee2e2"),
         ("Strong bearish", "below 30", "#b91c1c", "#fee2e2"),
     ]
-    band_cols = st.columns(4)
+    band_cols = st.columns(len(bands))
     for column, (name, span, color, background) in zip(band_cols, bands):
         column.markdown(
             f"<div style='background:{background};color:{color};border-radius:8px;padding:12px 14px;'>"
