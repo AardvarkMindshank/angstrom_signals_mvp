@@ -3321,8 +3321,6 @@ with tracked_expander("👤 Account", "account", sidebar=True):
         profile = {}
     st.markdown(profile_card(profile, st.session_state.user.email or ""), unsafe_allow_html=True)
     st.caption("A new post adds 5 to your social score. A reply adds 1.")
-    with tracked_expander("Invite", "invite"):
-        invite_someone()
     with tracked_expander("Edit profile", "edit_profile"):
         profile_name = st.text_input(
             "Display name",
@@ -3362,6 +3360,9 @@ with tracked_expander("👤 Account", "account", sidebar=True):
                     "Could not save the profile. If this is the first time, "
                     f"run the latest supabase_rls.sql in Supabase. {exc}"
                 )
+
+    with tracked_expander("Invite", "invite"):
+        invite_someone()
 
     if st.button("Log Out", use_container_width=True):
         try:
