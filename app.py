@@ -2266,30 +2266,63 @@ _countdown = st.components.v2.component(
 # asking Streamlit to rebuild the page.
 _SECTION_TOGGLE_JS = """
 export default function(component) {
-  const { setTriggerValue, parentElement } = component;
+  const { data, setTriggerValue, parentElement } = component;
   const shell = parentElement.closest(".stBidiComponent") || parentElement;
   shell.style.display = "none";
-  window.__angstromSetSection = setTriggerValue;
-  if (window.__angstromSectionWatch) return;
-  window.__angstromSectionWatch = true;
-  document.addEventListener("click", (event) => {
+  const mainIds = new Set((data && data.main) || []);
+  const closeIds = new Set((data && data.collapseAlso) || []);
+  window.__angstromSetSection = (name, value) => {
+    if (window.__angstromSectionBulk && String(value || "").indexOf("all:") !== 0) return;
+    setTriggerValue(name, value);
+  };
+  const sectionIdOf = (expander) => {
+    let node = expander;
+    while (node) {
+      const names = typeof node.className === "string" ? node.className.split(" ") : [];
+      const hit = names.find((name) => name.indexOf("st-key-sec_") === 0);
+      if (hit) return hit.slice("st-key-sec_".length);
+      node = node.parentElement;
+    }
+    return "";
+  };
+  const expanderOpen = (expander) => {
+    const details = expander.querySelector("details");
+    return !!(details && details.open);
+  };
+  const applyBulk = (open) => {
+    window.__angstromSectionBulk = true;
+    document.querySelectorAll('[data-testid="stExpander"]').forEach((expander) => {
+      const sectionId = sectionIdOf(expander);
+      if (!sectionId) return;
+      const included = open ? mainIds.has(sectionId) : (mainIds.has(sectionId) || closeIds.has(sectionId));
+      if (!included || expanderOpen(expander) === open) return;
+      const summary = expander.querySelector("summary");
+      if (summary) summary.click();
+    });
+    window.setTimeout(() => { window.__angstromSectionBulk = false; }, 80);
+  };
+  if (typeof window.__angstromSectionWatch === "function") {
+    document.removeEventListener("click", window.__angstromSectionWatch, true);
+  }
+  const watch = (event) => {
     const target = event.target;
-    if (!target || !target.closest) return;
+    if (!target || !target.closest || window.__angstromSectionBulk) return;
+    const button = target.closest("button");
+    const bulkHost = button && button.closest("[class*='st-key-open_all_sections'], [class*='st-key-collapse_all_sections']");
+    if (bulkHost) {
+      event.preventDefault();
+      event.stopPropagation();
+      const open = String(bulkHost.className).indexOf("st-key-open_all_sections") !== -1;
+      applyBulk(open);
+      const send = window.__angstromSetSection;
+      if (send) send("toggle", open ? "all:1" : "all:0");
+      return;
+    }
     const summary = target.closest("summary");
     if (!summary) return;
     const expander = summary.closest('[data-testid="stExpander"]');
     if (!expander) return;
-    let node = expander;
-    let sectionId = "";
-    while (node) {
-      const names = typeof node.className === "string" ? node.className.split(" ") : [];
-      const hit = names.find((name) => name.indexOf("st-key-sec_") === 0);
-      if (hit) {
-        sectionId = hit.slice("st-key-sec_".length);
-        break;
-      }
-      node = node.parentElement;
-    }
+    const sectionId = sectionIdOf(expander);
     if (!sectionId) return;
     window.setTimeout(() => {
       const details = expander.querySelector('[data-testid="stExpanderDetails"]');
@@ -2297,7 +2330,15 @@ export default function(component) {
       const send = window.__angstromSetSection;
       if (send) send("toggle", sectionId + ":" + (opened ? "1" : "0"));
     }, 40);
-  }, true);
+  };
+  window.__angstromSectionWatch = watch;
+  document.addEventListener("click", watch, true);
+  return () => {
+    if (window.__angstromSectionWatch === watch) {
+      document.removeEventListener("click", watch, true);
+      window.__angstromSectionWatch = null;
+    }
+  };
 }
 """
 _section_toggle = st.components.v2.component(
@@ -2547,6 +2588,17 @@ def _remember_section(section_id: str, opened: bool) -> None:
     save_account_settings({"sections": states})
 
 
+def _apply_section_bulk(opening: bool) -> None:
+    """Open or close every main section together. Collapse also closes the guide."""
+    states = _section_map()
+    opening = bool(opening)
+    for section_id in _MAIN_SECTION_IDS:
+        states[section_id] = opening
+    if not opening:
+        states["help_guides"] = False
+    save_account_settings({"sections": states})
+
+
 def tracked_expander(label: str, section_id: str, *, default: bool = False, sidebar: bool = False):
     """One collapsible whose open or collapsed state is saved on the account.
 
@@ -2563,9 +2615,13 @@ def remember_section_clicks() -> None:
     """Write one open or closed section onto the account, and leave the page as it is."""
     reported = _section_toggle(
         key="section_toggle_watch",
+        data={"main": list(_MAIN_SECTION_IDS), "collapseAlso": ["help_guides"]},
         on_toggle_change=lambda: None,
     )
     raw = str(getattr(reported, "toggle", "") or "")
+    if raw in ("all:1", "all:0"):
+        _apply_section_bulk(raw == "all:1")
+        return
     if ":" not in raw:
         return
     section_id, flag = raw.rsplit(":", 1)
@@ -4213,16 +4269,11 @@ with st.container(horizontal=True, vertical_alignment="center", horizontal_align
         )
         open_sections = st.button("Open all", key="open_all_sections", width="content")
         collapse_sections = st.button("Collapse all", key="collapse_all_sections", width="content")
-        # A layout button on this same run must not win. Collapse all only folds
-        # the sections, and the wide or single choice stays as it was.
+        # A layout button on this same run must not win. The buttons normally
+        # fold the sections in the browser. This covers a click that still
+        # reaches Streamlit, and the wide or single choice stays as it was.
         if open_sections or collapse_sections:
-            closing = bool(collapse_sections)
-            states = _section_map()
-            for section_id in _MAIN_SECTION_IDS:
-                states[section_id] = not closing
-            if closing:
-                states["help_guides"] = False
-            save_account_settings({"sections": states})
+            _apply_section_bulk(not collapse_sections)
             st.session_state.section_layout = st.session_state.section_layout
         elif hold_layout:
             st.session_state.section_layout = "Wide" if wide_on else "Single column"
