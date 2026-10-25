@@ -1969,12 +1969,19 @@ export default function(component) {
   const { parentElement } = component;
   const shell = parentElement.closest(".stBidiComponent") || parentElement;
   shell.style.display = "none";
+  const generation = (window.__angstromPageTopGen || 0) + 1;
+  window.__angstromPageTopGen = generation;
   let style = document.getElementById("angstrom-page-top-style");
+  if (style && style.dataset.layout !== "float") {
+    style.remove();
+    style = null;
+  }
   if (!style) {
     style = document.createElement("style");
     style.id = "angstrom-page-top-style";
+    style.dataset.layout = "float";
     style.textContent = [
-      "#angstrom-page-top{position:fixed;right:1.25rem;bottom:1.25rem;z-index:1000;display:none;",
+      "#angstrom-page-top{position:fixed;right:1.25rem;bottom:1.25rem;z-index:10000002;display:none;",
       "background:#fff;color:#6b7280;border:1px solid rgba(49,51,63,.2);border-radius:999px;",
       "padding:8px 14px;margin:0;font:inherit;font-weight:600;line-height:1.2;cursor:pointer;",
       "box-shadow:0 1px 4px rgba(0,0,0,.08);white-space:nowrap;}",
@@ -1994,36 +2001,50 @@ export default function(component) {
     button.textContent = "↑ Top";
     document.body.appendChild(button);
   }
-  const mainScroller = () => document.querySelector('[data-testid="stMain"]')
-    || document.querySelector("section.main");
+  const scrollers = () => document.querySelectorAll(
+    "[data-testid='stMain'], [data-testid='stAppViewContainer'], [data-testid='stAppScrollToBottomContainer']"
+  );
   const scrolled = () => {
-    const main = mainScroller();
-    const mainTop = main ? main.scrollTop : 0;
-    return mainTop > 120 || window.scrollY > 120;
+    if (window.scrollY > 120) return true;
+    for (const node of scrollers()) {
+      if (node.scrollTop > 120) return true;
+    }
+    return false;
   };
-  const sync = () => button.classList.toggle("is-on", scrolled());
+  const place = () => {
+    const root = document.getElementById("social-stream-root");
+    const panel = root && root.classList.contains("is-open") ? root.querySelector(".panel") : null;
+    const width = panel ? Math.round(panel.getBoundingClientRect().width) : 0;
+    button.style.right = (20 + width) + "px";
+  };
+  const sync = () => {
+    if (!button.isConnected || window.__angstromPageTopGen !== generation) return;
+    place();
+    button.classList.toggle("is-on", scrolled());
+  };
   if (!button.dataset.bound) {
     button.dataset.bound = "1";
     button.addEventListener("click", (event) => {
       event.preventDefault();
-      const main = mainScroller();
-      if (main) main.scrollTop = 0;
+      event.stopPropagation();
       window.scrollTo({top: 0, behavior: "auto"});
+      scrollers().forEach((node) => { node.scrollTop = 0; });
       sync();
     });
   }
-  const watch = (target) => {
-    if (!target || target.dataset.pageTopBound) return;
-    target.dataset.pageTopBound = "1";
-    target.addEventListener("scroll", sync, {passive: true});
-  };
-  watch(mainScroller());
-  if (!window.angstromPageTopBound) {
-    window.angstromPageTopBound = true;
-    window.addEventListener("scroll", sync, {passive: true});
+  window.__angstromPageTopSync = sync;
+  if (!window.angstromPageTopScroll) {
+    window.angstromPageTopScroll = true;
+    document.addEventListener("scroll", () => {
+      if (window.__angstromPageTopSync) window.__angstromPageTopSync();
+    }, {capture: true, passive: true});
   }
+  window.clearInterval(window.__angstromPageTopTimer);
+  window.__angstromPageTopTimer = window.setInterval(sync, 500);
   sync();
   return () => {
+    if (window.__angstromPageTopGen !== generation) return;
+    window.clearInterval(window.__angstromPageTopTimer);
     const current = document.getElementById("angstrom-page-top");
     if (current) current.remove();
   };
