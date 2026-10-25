@@ -437,6 +437,12 @@ export default function(component) {
       setTriggerValue("picked", pick);
     });
   });
+  host.querySelectorAll("td[data-sentiment-pick]").forEach((cell) => {
+    cell.addEventListener("click", (event) => {
+      if (event.target.closest("button")) return;
+      setTriggerValue("picked", cell.getAttribute("data-sentiment-pick") || "");
+    });
+  });
   const valueOf = (row, col) => {
     const cell = row.cells[col];
     if (!cell) return null;
@@ -4263,7 +4269,7 @@ The picture on the left of each name is that asset's logo. The same logo appears
 
 Beside the sentiment score you can press thumbs up if you agree, or thumbs down if you do not. Press the same thumb again to clear your take. Those buttons sit in an outlined box. After you disagree, scores appear in that same box, under the buttons: 0, 20, 40, 60, 80 and 100. The number you pick also fills the type box, and you can type any number from 0 to 100. It saves on its own when you click a score, press Enter, or leave the box. The thumbs and that same colored average sit at the bottom of Your take, and again under **Crowd** on each table row. The box is the average of the personal scores, in the same style as the Sentiment column. It updates when a score is clicked or typed. Hover the down thumb for the spread, which is how far those scores typically sit from the average. One score has no spread yet. A dash means nobody has given a personal score. Under the thumbs you can post one comment of up to 160 characters. A row of faces under the box can be added to the comment. A speech balloon appears beside the thumbs, and in the **Comments** column, once any comment exists. Click it, or the arrow on the right edge of the page, to open **Social signals and chat**, described below. A refresh of that sentiment clears every thumb and every personal score, because they belonged to the old score. A comment stays for 12 hours from when it was posted, and the stream keeps the sentiment it was answering even after a newer score arrives.
 
-Click a sentiment score in the table to highlight that asset and jump to its headlines. **↑ Top** scrolls back to the top of the page. It sits at the top right of the Interactive Chart section, and at the top right of Market sentiment. Another **↑ Top** sits at the bottom right of the page once you have scrolled down.
+Click the sentiment score, the thumbs, or the crowd average in the table to highlight that asset and jump to its headlines. **↑ Top** scrolls back to the top of the page. It sits at the top right of the Interactive Chart section, and at the top right of Market sentiment. Another **↑ Top** sits at the bottom right of the page once you have scrolled down.
 
 The controls at the top of Quick Snapshot open a section. They do not start a refresh. Market Sentiment - Crypto opens the crypto market. Market Sentiment - Equities opens the stock market. A market you do not trade is left out. Market Sentiment - Selected Asset opens the sentiment for the asset on the chart. Technical Data - Selected Asset opens the chart. Each one shows the time until the next shared update, for example (update in 4:56:40). That clock is the same for every account. It counts from the last saved update. When it reaches zero the page reads the saved result again. It does not ask for a new one. If the background update is late, the last saved result stays on screen.
 
@@ -5623,7 +5629,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                 st.caption("This watchlist is empty.")
                 return
             frame = pd.DataFrame(results).sort_values("score", ascending=False, na_position="last")
-            st.caption("Click a column title to sort. The table starts with the strongest score at the top. Click a name to show that asset on the chart. Click a sentiment score to open its headlines. Watching is how many accounts hold that asset. The Crowd box is the average of personal scores. Hover the down thumb for the spread. A comment balloon, or the arrow on the right edge, opens the social signals and chat. The 30-day trend uses the same colors as 30d %.")
+            st.caption("Click a column title to sort. The table starts with the strongest score at the top. Click a name to show that asset on the chart. Click the sentiment score, the thumbs, or the crowd average to open its headlines. Watching is how many accounts hold that asset. The Crowd box is the average of personal scores. Hover the down thumb for the spread. A comment balloon, or the arrow on the right edge, opens the social signals and chat. The 30-day trend uses the same colors as 30d %.")
 
             headers = ["Asset", "Watching", "Score", "Signal", "Price", "RSI"]
             if show_period_changes_flag:
@@ -5723,17 +5729,25 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                     ticker = crypto_ticker(asset_id) if kind == "Crypto" else asset_id
                     headline_score = cached_sentiment_score(sentiment_query(kind, str(label), ticker))
                 sentiment_pick = f"{kind}|{asset_id}|sentiment" if headline_score is not None else None
+                jump_attr = ""
+                pointer = ""
+                if sentiment_pick:
+                    jump_attr = (
+                        f" data-sentiment-pick='{html.escape(sentiment_pick, quote=True)}'"
+                        " title='Open market sentiment for this asset'"
+                    )
+                    pointer = "cursor:pointer;"
                 rows_html += (
                     f"<td data-sort='{sort_token(headline_score, numeric=True)}' "
-                    f"style='padding:10px;text-align:right;white-space:nowrap;'>"
+                    f"style='padding:10px;text-align:right;white-space:nowrap;{pointer}'{jump_attr}>"
                     f"{sentiment_badge(headline_score, sentiment_pick)}</td>"
                     f"<td data-crowd-mark='{pick_value}' "
                     f"data-sort='{sort_token((row.get('thumbs_up') or 0) - (row.get('thumbs_down') or 0), numeric=True)}' "
-                    f"style='padding:10px 4px 10px 10px;text-align:right;white-space:nowrap;'>"
+                    f"style='padding:10px 4px 10px 10px;text-align:right;white-space:nowrap;{pointer}'{jump_attr}>"
                     f"{crowd_mark(row.get('thumbs_up'), row.get('thumbs_down'), headline_score is not None, row.get('alt_count'), row.get('alt_avg'), row.get('alt_spread'))}</td>"
                     f"<td data-crowd-avg='{pick_value}' "
                     f"data-sort='{sort_token(row.get('alt_avg'), numeric=True)}' "
-                    f"style='padding:10px 10px 10px 4px;text-align:left;white-space:nowrap;'>"
+                    f"style='padding:10px 10px 10px 4px;text-align:left;white-space:nowrap;{pointer}'{jump_attr}>"
                     f"{crowd_average_badge(row.get('alt_avg'), row.get('alt_count'), row.get('alt_spread'), headline_score is not None)}</td>"
                 )
                 if show_comments:
