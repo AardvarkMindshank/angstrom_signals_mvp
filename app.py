@@ -5572,16 +5572,15 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
 
     def render_score_bar(score):
         if score is None or pd.isna(score):
-            pct, color, label = 0, "#6b7280", "—"
+            pct, color = 0, "#6b7280"
         else:
             pct = max(0, min(100, float(score)))
             color = tone(score)[3]
-            label = f"{score:.0f}"
         return (
             '<div style="display:flex;align-items:center;gap:8px;width:100%;min-width:100px;">'
             '<div class="ang-track">'
             f'<div style="width:{pct}%;background:{color};height:100%;border-radius:6px;"></div></div>'
-            f'<span style="min-width:28px;font-weight:600;font-size:0.9em;">{label}</span></div>'
+            f"{sentiment_badge(score)}</div>"
         )
 
     def sort_token(value, numeric=False):
@@ -5631,7 +5630,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             frame = pd.DataFrame(results).sort_values("score", ascending=False, na_position="last")
             st.caption("Click a column title to sort. The table starts with the strongest score at the top. Click a name to show that asset on the chart. Click the sentiment score, the thumbs, or the crowd average to open its headlines. Watching is how many accounts hold that asset. The Crowd box is the average of personal scores. Hover the down thumb for the spread. A comment balloon, or the arrow on the right edge, opens the social signals and chat. The 30-day trend uses the same colors as 30d %.")
 
-            headers = ["Asset", "Watching", "Score", "Signal", "Price", "RSI"]
+            headers = ["Asset", "Watching", "TA Score", "Signal", "Price", "RSI"]
             if show_period_changes_flag:
                 headers.append("1d %")
             if show_extra_metrics_flag:
@@ -5645,7 +5644,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             if show_comments:
                 headers.append("Comments")
             headers.append("30-day trend")
-            sort_at = {"Asset": 0, "Watching": 1, "Score": 2, "Signal": 3, "Price": 4, "RSI": 5}
+            sort_at = {"Asset": 0, "Watching": 1, "TA Score": 2, "Signal": 3, "Price": 4, "RSI": 5}
             column = 6
             for name in ("1d %", "7d %", "30d %", "Market Cap", "ATR %", "Vol"):
                 if name in headers:
@@ -5660,7 +5659,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             sort_at["30-day trend"] = next_column
 
             def header_button(name, align="left", colspan=1):
-                mark = " ↓" if name == "Score" else ""
+                mark = " ↓" if name == "TA Score" else ""
                 span = f" colspan='{colspan}'" if colspan > 1 else ""
                 return (
                     f"<th{span} style='padding:8px 10px;text-align:{align};white-space:nowrap;'>"
@@ -5704,7 +5703,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                     f"<td data-sort='{sort_token(row.get('holders'), numeric=True)}' "
                     f"style='padding:8px 10px;white-space:nowrap;'>{holders_mark(row.get('holders'))}</td>"
                     f"<td data-sort='{sort_token(row.get('score'), numeric=True)}' "
-                    f"style='padding:10px;min-width:130px;'>{render_score_bar(row['score'])}</td>"
+                    f"style='padding:10px;min-width:168px;'>{render_score_bar(row['score'])}</td>"
                     f"{cell(row.get('label') or '—', row.get('label') or '')}"
                     f"{cell(price_str, price, numeric=True)}{cell(rsi_str, rsi, numeric=True)}"
                 )
