@@ -671,13 +671,23 @@ def crowd_mark(up, down, active: bool = True, alt_count=0, alt_avg=None, alt_spr
         detail = f"{down_count} disagree. {scored} gave their own score."
         if scored >= 2 and spread is not None:
             detail += f" The spread is ±{round(spread)}."
-    down_text = f"👎 {down_count}"
     detail += " These reset when the sentiment is refreshed."
+    slot = (
+        "display:inline-block;min-width:4.5ch;text-align:left;"
+        "font-variant-numeric:tabular-nums;"
+    )
     return (
         "<span style='display:inline-flex;align-items:center;gap:8px;white-space:nowrap;'>"
-        f"<span title='{up_title}' style='color:#15803d;font-weight:700;'>👍 {up_count}</span>"
-        f"<span title='{html.escape(detail)}' style='color:#b91c1c;font-weight:700;'>{down_text}</span></span>"
+        f"<span title='{up_title}' style='color:#15803d;font-weight:700;display:inline-flex;align-items:center;gap:4px;'>"
+        f"<span>👍</span><span style='{slot}'>{html.escape(_thumb_count_label(up_count))}</span></span>"
+        f"<span title='{html.escape(detail)}' style='color:#b91c1c;font-weight:700;display:inline-flex;align-items:center;gap:4px;'>"
+        f"<span>👎</span><span style='{slot}'>{html.escape(_thumb_count_label(down_count))}</span></span></span>"
     )
+
+
+def _thumb_count_label(number: int) -> str:
+    """Shown count. Above 100 the label stays '>100' so the thumbs keep their places."""
+    return str(number) if number <= 100 else ">100"
 
 
 def holder_counts(supabase) -> dict[str, int]:

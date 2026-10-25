@@ -1350,8 +1350,10 @@ export default function(component) {
     button.classList.toggle("is-on", !!selected);
     const mark = document.createElement("span");
     mark.textContent = direction === 1 ? "👍" : "👎";
+    const number = Math.max(0, Number(count) || 0);
     const total = document.createElement("span");
-    total.textContent = String(Number(count) || 0);
+    total.textContent = number > 100 ? ">100" : String(number);
+    if (number > 100) button.title = String(number);
     button.append(mark, total);
     return button;
   }
