@@ -84,14 +84,14 @@ export default function(component) {
   const shell = parentElement.closest(".stBidiComponent") || parentElement;
   shell.style.display = "none";
   let style = document.getElementById("angstrom-brand-style");
-  if (style && style.dataset.layout !== "jump") {
+  if (style && style.dataset.layout !== "space") {
     style.remove();
     style = null;
   }
   if (!style) {
     style = document.createElement("style");
     style.id = "angstrom-brand-style";
-    style.dataset.layout = "jump";
+    style.dataset.layout = "space";
     style.textContent = [
       "html{--ang-surface:#ffffff;--ang-border:#e5e7eb;--ang-text:#111827;--ang-muted:#6b7280;--ang-soft:#374151;--ang-track:#e5e7eb;--ang-line:#f3f4f6;--ang-select:#e5e7eb;--ang-select-text:#111827;}",
       "html.angstrom-night{--ang-surface:#262730;--ang-border:#3f4654;--ang-text:#f3f4f6;--ang-muted:#9ca3af;--ang-soft:#d1d5db;--ang-track:#3f4654;--ang-line:#31333f;--ang-select:#3a4050;--ang-select-text:#f9fafb;}",
@@ -137,6 +137,7 @@ export default function(component) {
       ".sentiment-drivers li{margin:4px 0;color:var(--ang-soft);}",
       ".headline-group{margin:14px 0 0;font-weight:700;font-size:.95rem;color:var(--ang-text);}",
       "[class*='st-key-article_box_']{background:var(--ang-surface) !important;border:1px solid var(--ang-border) !important;border-radius:10px !important;}",
+      "[class*='st-key-article_box_mood_'][class*='_readings']{margin-top:1rem !important;}",
       ".article-sheet > .headline-group:first-child,.article-sheet > div:first-child{margin-top:0 !important;}",
       ".headline-aside{margin:4px 0 8px;font-size:.8rem;color:var(--ang-muted);line-height:1.35;}",
       "html.angstrom-night [class*='_take_box']{background:var(--ang-surface) !important;border-color:var(--ang-border) !important;}",
