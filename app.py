@@ -1009,26 +1009,28 @@ export default function(component) {
         ],
         true
       );
+      const personChoices = [["me", "Me"], ["favourites", "Favourites"]];
       fillStreamSelect(
         panel.querySelector("#stream-person"),
         "All people",
         people.map((name) => [name, name]),
         state.person,
-        [["favourites", "Favourites"]]
+        personChoices
       );
       fillStreamSelect(
         panel.querySelector("#chat-person"),
         "All people",
         chatPeople.map((name) => [name, name]),
         state.chatPerson || "",
-        [["favourites", "Favourites"]]
+        personChoices
       );
       const streamScopes = {
         watchlist: true, crypto: true, stock: true, "Mood|crypto": true, "Mood|stock": true
       };
       if (!streamScopes[state.asset] && !seenAssets[state.asset]) state.asset = "";
-      if (state.person !== "favourites" && !seenPeople[state.person]) state.person = "";
-      if ((state.chatPerson || "") !== "favourites" && !seenChatPeople[state.chatPerson || ""]) state.chatPerson = "";
+      const keptPeople = { favourites: true, me: true };
+      if (!keptPeople[state.person] && !seenPeople[state.person]) state.person = "";
+      if (!keptPeople[state.chatPerson || ""] && !seenChatPeople[state.chatPerson || ""]) state.chatPerson = "";
       panel.querySelector("#stream-asset").value = state.asset;
       panel.querySelector("#stream-person").value = state.person;
       const chatPerson = panel.querySelector("#chat-person");
@@ -1058,7 +1060,9 @@ export default function(component) {
         if (!shown.length) {
           const empty = document.createElement("div");
           empty.className = "empty";
-          empty.textContent = state.person === "favourites" && !favouriteSet().size
+          empty.textContent = state.person === "me"
+            ? "No comments from you yet."
+            : state.person === "favourites" && !favouriteSet().size
             ? "No favourites yet. Press the star beside a name."
             : items.length
             ? "No comments match these filters."
@@ -1315,6 +1319,10 @@ export default function(component) {
   function matchesPerson(item, person) {
     if (!person) return true;
     const notes = [item].concat(item.replies || []);
+    if (person === "me") {
+      const mine = String((window.socialMe || {}).id || "");
+      return notes.some((note) => note.mine || (mine && String(note.user || "") === mine));
+    }
     if (person === "favourites") {
       const stars = favouriteSet();
       return notes.some((note) => stars.has(String(note.user || "")));
@@ -1406,7 +1414,9 @@ export default function(component) {
     } else if (!shownThreads.length) {
       const empty = document.createElement("div");
       empty.className = "empty";
-      empty.textContent = chatPerson === "favourites" && !favouriteSet().size && !String(query).trim()
+      empty.textContent = chatPerson === "me"
+        ? "No chat comments from you yet."
+        : chatPerson === "favourites" && !favouriteSet().size && !String(query).trim()
         ? "No favourites yet. Press the star beside a name."
         : "No chat comments match.";
       list.appendChild(empty);
@@ -3483,7 +3493,7 @@ Comments are newest first. Each one shows the person's picture, name, and the ti
 
 All, Positive, Negative, and Mixed narrow the list by the coverage they were answering. Under Asset, All assets is every comment. My watchlists is the crypto and equity tables on your account. My Crypto Watchlist and My Equities Watchlist each show one of those lists. Crypto market and Stock market sit above the individual assets. All assets or a watchlist is saved on your account. You can also pick one asset.
 
-Under Person, All people shows everyone. Favourites shows notes from people you have starred, including a reply they wrote. A star beside another person's name adds them. Press the filled star to remove them. That list is saved on your account. You can also pick one person. A note stays in the list when that person wrote it or replied under it.
+Under Person, All people shows everyone. Me, just under that, shows notes you wrote, including a reply you wrote. Favourites shows notes from people you have starred, including a reply they wrote. A star beside another person's name adds them. Press the filled star to remove them. That list is saved on your account. You can also pick one person. A note stays in the list when that person wrote it or replied under it.
 
 The green thumb and the red thumb each show a count. You can mark any note, including one you posted. Press the same thumb again to clear your mark. The curved arrow replies. The trash can deletes a note you posted, and deleting a comment also removes the replies under it.
 
@@ -3491,7 +3501,7 @@ The green thumb and the red thumb each show a count. You can mark any note, incl
 
 This is a shared room, not tied to an asset. Notes are newest first, and they stay. The panel shows the newest 60 conversations, with the replies under each one. Older notes stay stored.
 
-The Person list works the same way as on the stream, including Favourites. Write a comment in the box at the bottom. Enter posts it. Shift and Enter starts a new line. The same row of faces sits under the box. The curved arrow replies. A reply to a reply is added under the original comment. Thumbs work the same way as on the stream, including on a note you posted, and the count sits beside each thumb. The trash can deletes a note you posted, and deleting a comment also removes the replies under it.
+The Person list works the same way as on the stream, including Me and Favourites. Write a comment in the box at the bottom. Enter posts it. Shift and Enter starts a new line. The same row of faces sits under the box. The curved arrow replies. A reply to a reply is added under the original comment. Thumbs work the same way as on the stream, including on a note you posted, and the count sits beside each thumb. The trash can deletes a note you posted, and deleting a comment also removes the replies under it.
 
 **Search**
 
