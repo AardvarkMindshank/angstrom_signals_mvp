@@ -3234,137 +3234,144 @@ def score_from_alert(note: dict):
     return None
 
 
-notifications_list = fetch_user_notifications()
-unread_count = sum(1 for note in notifications_list if not note.get("is_read", False))
-notifications_label = "🔔 Notifications" + (f" ({unread_count})" if unread_count else "")
+@st.fragment
+def notifications_panel() -> None:
+    """Alerts and alert rules. A filter, a button, or a slider redraws this section, not the page."""
+    notifications_list = fetch_user_notifications()
+    unread_count = sum(1 for note in notifications_list if not note.get("is_read", False))
+    notifications_label = "🔔 Notifications" + (f" ({unread_count})" if unread_count else "")
 
-with tracked_expander(notifications_label, "notifications", sidebar=True):
-    with tracked_expander("Alert Feed", "alert_feed"):
-        if not notifications_list:
-            st.caption("No alerts yet. When a watchlist asset crosses a threshold, it shows up here.")
-        else:
-            f_col1, f_col2 = st.columns(2)
-            with f_col1:
-                feed_filter = st.radio(
-                    "Filter",
-                    ["Unread", "All"],
-                    horizontal=True,
-                    label_visibility="collapsed",
-                    key="notif_filter_radio",
+    with tracked_expander(notifications_label, "notifications", sidebar=True):
+        with tracked_expander("Alert Feed", "alert_feed"):
+            if not notifications_list:
+                st.caption("No alerts yet. When a watchlist asset crosses a threshold, it shows up here.")
+            else:
+                f_col1, f_col2 = st.columns(2)
+                with f_col1:
+                    feed_filter = st.radio(
+                        "Filter",
+                        ["Unread", "All"],
+                        horizontal=True,
+                        label_visibility="collapsed",
+                        key="notif_filter_radio",
+                    )
+                with f_col2:
+                    if st.button("Mark read", key="mark_read_btn", use_container_width=True):
+                        try:
+                            supabase.table("user_notifications").update({"is_read": True}).eq("user_id", user_id).execute()
+                            _rerun_fragment()
+                        except Exception:
+                            st.error("Could not mark alerts as read.")
+
+                filtered_notifs = (
+                    [note for note in notifications_list if not note.get("is_read", False)]
+                    if feed_filter == "Unread"
+                    else notifications_list
                 )
-            with f_col2:
-                if st.button("Mark read", key="mark_read_btn", use_container_width=True):
-                    try:
-                        supabase.table("user_notifications").update({"is_read": True}).eq("user_id", user_id).execute()
-                        st.rerun()
-                    except Exception:
-                        st.error("Could not mark alerts as read.")
 
-            filtered_notifs = (
-                [note for note in notifications_list if not note.get("is_read", False)]
-                if feed_filter == "Unread"
-                else notifications_list
+                if not filtered_notifs:
+                    st.caption(f"No {feed_filter.lower()} notifications.")
+                else:
+                    st.caption("Click an alert to highlight that asset and open it on the chart.")
+                    crypto_list = prefs.get("crypto") or {}
+                    stock_list = prefs.get("stock") or {}
+
+                    def notification_target(symbol: str):
+                        raw = str(symbol or "").strip()
+                        if not raw:
+                            return None
+                        if raw in crypto_list:
+                            return "Crypto", raw
+                        if raw in stock_list:
+                            return "Stock", raw
+                        crypto_ids = {str(key).lower(): key for key in crypto_list}
+                        stock_ids = {str(key).upper(): key for key in stock_list}
+                        if raw.lower() in crypto_ids:
+                            return "Crypto", crypto_ids[raw.lower()]
+                        if raw.upper() in stock_ids:
+                            return "Stock", stock_ids[raw.upper()]
+                        return None
+
+                    for note in filtered_notifs:
+                        color, background, arrow, _bar = tone(score_from_alert(note))
+                        name = html.escape(str(note.get("asset_name") or "Asset"))
+                        message = html.escape(str(note.get("message") or ""))
+                        created = html.escape(str(note.get("created_at") or "")[:16].replace("T", " "))
+                        weight = "700" if not note.get("is_read") else "500"
+                        border = color if not note.get("is_read") else "#e5e7eb"
+                        target = notification_target(note.get("asset_symbol"))
+                        card = (
+                            "<div style='background:"
+                            f"{background};border:1px solid {border};border-radius:8px;padding:8px 10px;margin-bottom:8px;'>"
+                            f"<div style='font-weight:{weight};color:{color};'>{arrow} {name}</div>"
+                            f"<div style='font-size:0.8rem;color:#374151;margin-top:2px;'>{message}</div>"
+                            f"<div style='font-size:0.75rem;color:#6b7280;margin-top:2px;'>{created}</div></div>"
+                        )
+                        note_id = note.get("id") or name
+                        if target:
+                            kind_name, asset_id = target
+                            pick_value = html.escape(f"{kind_name}|{asset_id}", quote=True)
+                            card = (
+                                f"<button type='button' data-pick='{pick_value}' "
+                                "style='display:block;width:100%;margin:0;padding:0;border:none;"
+                                "background:transparent;text-align:left;cursor:pointer;font:inherit;color:inherit;'>"
+                                f"{card}</button>"
+                            )
+                        picked = _score_table(
+                            key=f"notif_{note_id}",
+                            data=card,
+                            on_picked_change=lambda: None,
+                        ).picked
+                        signature = f"{note_id}:{picked}"
+                        if picked and target:
+                            if st.session_state.get("notif_handled") != signature:
+                                st.session_state.notif_handled = signature
+                                st.session_state.chart_pick = target
+                                st.session_state.chart_pick_from_row = True
+                                st.session_state.scroll_target = "interactive-chart"
+                                st.session_state.scroll_token = str(time.time_ns())
+                                st.rerun()
+                        elif str(st.session_state.get("notif_handled") or "").startswith(f"{note_id}:"):
+                            st.session_state.notif_handled = None
+
+                    if st.button("🗑️ Clear Read Alerts", use_container_width=True, key="clear_read_btn"):
+                        try:
+                            supabase.table("user_notifications").delete().eq("user_id", user_id).eq("is_read", True).execute()
+                            st.success("Cleared read alerts.")
+                            _rerun_fragment()
+                        except Exception as exc:
+                            st.error(f"Could not clear alerts: {exc}")
+
+        with tracked_expander("Configure Alert Rules", "alert_rules"):
+            st.caption(
+                "70 is a strong bullish setup. 30 is a strong bearish setup. "
+                "An email is sent once when a score crosses a boundary, and again only after it leaves and crosses later."
+            )
+            alert_enabled = st.checkbox("Enable Alerts", value=alert_prefs.get("enabled", True), key="alert_enabled_cb")
+            min_score = st.slider(
+                "Bullish Alert Threshold (Score ≥)",
+                50, 95, int(alert_prefs.get("min_score_alert", 70)),
+                key="min_score_slider",
+            )
+            max_score = st.slider(
+                "Bearish Alert Threshold (Score ≤)",
+                5, 50, int(alert_prefs.get("max_score_alert", 30)),
+                key="max_score_slider",
             )
 
-            if not filtered_notifs:
-                st.caption(f"No {feed_filter.lower()} notifications.")
-            else:
-                st.caption("Click an alert to highlight that asset and open it on the chart.")
-                crypto_list = prefs.get("crypto") or {}
-                stock_list = prefs.get("stock") or {}
+            new_alert_settings = {
+                "enabled": alert_enabled,
+                "min_score_alert": min_score,
+                "max_score_alert": max_score,
+            }
+            if new_alert_settings != {name: alert_prefs.get(name) for name in new_alert_settings}:
+                alert_prefs.update(new_alert_settings)
+                prefs["alerts"] = alert_prefs
+                save_alert_preferences_to_cloud(new_alert_settings)
 
-                def notification_target(symbol: str):
-                    raw = str(symbol or "").strip()
-                    if not raw:
-                        return None
-                    if raw in crypto_list:
-                        return "Crypto", raw
-                    if raw in stock_list:
-                        return "Stock", raw
-                    crypto_ids = {str(key).lower(): key for key in crypto_list}
-                    stock_ids = {str(key).upper(): key for key in stock_list}
-                    if raw.lower() in crypto_ids:
-                        return "Crypto", crypto_ids[raw.lower()]
-                    if raw.upper() in stock_ids:
-                        return "Stock", stock_ids[raw.upper()]
-                    return None
 
-                for note in filtered_notifs:
-                    color, background, arrow, _bar = tone(score_from_alert(note))
-                    name = html.escape(str(note.get("asset_name") or "Asset"))
-                    message = html.escape(str(note.get("message") or ""))
-                    created = html.escape(str(note.get("created_at") or "")[:16].replace("T", " "))
-                    weight = "700" if not note.get("is_read") else "500"
-                    border = color if not note.get("is_read") else "#e5e7eb"
-                    target = notification_target(note.get("asset_symbol"))
-                    card = (
-                        "<div style='background:"
-                        f"{background};border:1px solid {border};border-radius:8px;padding:8px 10px;margin-bottom:8px;'>"
-                        f"<div style='font-weight:{weight};color:{color};'>{arrow} {name}</div>"
-                        f"<div style='font-size:0.8rem;color:#374151;margin-top:2px;'>{message}</div>"
-                        f"<div style='font-size:0.75rem;color:#6b7280;margin-top:2px;'>{created}</div></div>"
-                    )
-                    note_id = note.get("id") or name
-                    if target:
-                        kind_name, asset_id = target
-                        pick_value = html.escape(f"{kind_name}|{asset_id}", quote=True)
-                        card = (
-                            f"<button type='button' data-pick='{pick_value}' "
-                            "style='display:block;width:100%;margin:0;padding:0;border:none;"
-                            "background:transparent;text-align:left;cursor:pointer;font:inherit;color:inherit;'>"
-                            f"{card}</button>"
-                        )
-                    picked = _score_table(
-                        key=f"notif_{note_id}",
-                        data=card,
-                        on_picked_change=lambda: None,
-                    ).picked
-                    signature = f"{note_id}:{picked}"
-                    if picked and target:
-                        if st.session_state.get("notif_handled") != signature:
-                            st.session_state.notif_handled = signature
-                            st.session_state.chart_pick = target
-                            st.session_state.chart_pick_from_row = True
-                            st.session_state.scroll_target = "interactive-chart"
-                            st.session_state.scroll_token = str(time.time_ns())
-                            st.rerun()
-                    elif str(st.session_state.get("notif_handled") or "").startswith(f"{note_id}:"):
-                        st.session_state.notif_handled = None
+notifications_panel()
 
-                if st.button("🗑️ Clear Read Alerts", use_container_width=True, key="clear_read_btn"):
-                    try:
-                        supabase.table("user_notifications").delete().eq("user_id", user_id).eq("is_read", True).execute()
-                        st.success("Cleared read alerts.")
-                        st.rerun()
-                    except Exception as exc:
-                        st.error(f"Could not clear alerts: {exc}")
-
-    with tracked_expander("Configure Alert Rules", "alert_rules"):
-        st.caption(
-            "70 is a strong bullish setup. 30 is a strong bearish setup. "
-            "An email is sent once when a score crosses a boundary, and again only after it leaves and crosses later."
-        )
-        alert_enabled = st.checkbox("Enable Alerts", value=alert_prefs.get("enabled", True), key="alert_enabled_cb")
-        min_score = st.slider(
-            "Bullish Alert Threshold (Score ≥)",
-            50, 95, int(alert_prefs.get("min_score_alert", 70)),
-            key="min_score_slider",
-        )
-        max_score = st.slider(
-            "Bearish Alert Threshold (Score ≤)",
-            5, 50, int(alert_prefs.get("max_score_alert", 30)),
-            key="max_score_slider",
-        )
-
-        new_alert_settings = {
-            "enabled": alert_enabled,
-            "min_score_alert": min_score,
-            "max_score_alert": max_score,
-        }
-        if new_alert_settings != {name: alert_prefs.get(name) for name in new_alert_settings}:
-            alert_prefs.update(new_alert_settings)
-            prefs["alerts"] = alert_prefs
-            save_alert_preferences_to_cloud(new_alert_settings)
 
 if st.session_state.get("section_layout") not in ("Single column", "Wide"):
     saved_layout = (prefs.get("settings") or {}).get("section_layout")
@@ -3943,10 +3950,11 @@ def _store_feedback(kind: str, body: str) -> str:
     return f"Saved. The email was not sent: {reason}."
 
 
-if st.session_state.pop("feedback_clear", False):
-    st.session_state["feedback_body"] = ""
-
-with tracked_expander("📝 Feedback", "feedback", sidebar=True):
+@st.fragment
+def feedback_form() -> None:
+    """Issue or enhancement. Choosing one redraws this form, not the page."""
+    if st.session_state.pop("feedback_clear", False):
+        st.session_state["feedback_body"] = ""
     st.caption("An issue or an idea. It is stored as submitted, with your account and the date.")
     feedback_kind = st.radio(
         "Type",
@@ -3966,9 +3974,9 @@ with tracked_expander("📝 Feedback", "feedback", sidebar=True):
             "enhancement" if feedback_kind == "Enhancement" else "issue",
             feedback_body,
         )
-        if st.session_state.feedback_notice.startswith("Saved"):
+        if str(st.session_state.feedback_notice).startswith("Saved"):
             st.session_state.feedback_clear = True
-        st.rerun()
+        _rerun_fragment()
     feedback_notice = st.session_state.pop("feedback_notice", "")
     if feedback_notice.startswith("Saved and emailed"):
         st.success(feedback_notice)
@@ -3976,6 +3984,10 @@ with tracked_expander("📝 Feedback", "feedback", sidebar=True):
         st.warning(feedback_notice)
     elif feedback_notice:
         st.warning(feedback_notice)
+
+
+with tracked_expander("📝 Feedback", "feedback", sidebar=True):
+    feedback_form()
 
 with tracked_expander("ℹ️ About", "about", sidebar=True):
     st.markdown(_brand_mark(72), unsafe_allow_html=True)
