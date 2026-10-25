@@ -84,14 +84,14 @@ export default function(component) {
   const shell = parentElement.closest(".stBidiComponent") || parentElement;
   shell.style.display = "none";
   let style = document.getElementById("angstrom-brand-style");
-  if (style && style.dataset.layout !== "articles") {
+  if (style && style.dataset.layout !== "jump") {
     style.remove();
     style = null;
   }
   if (!style) {
     style = document.createElement("style");
     style.id = "angstrom-brand-style";
-    style.dataset.layout = "articles";
+    style.dataset.layout = "jump";
     style.textContent = [
       "html{--ang-surface:#ffffff;--ang-border:#e5e7eb;--ang-text:#111827;--ang-muted:#6b7280;--ang-soft:#374151;--ang-track:#e5e7eb;--ang-line:#f3f4f6;--ang-select:#e5e7eb;--ang-select-text:#111827;}",
       "html.angstrom-night{--ang-surface:#262730;--ang-border:#3f4654;--ang-text:#f3f4f6;--ang-muted:#9ca3af;--ang-soft:#d1d5db;--ang-track:#3f4654;--ang-line:#31333f;--ang-select:#3a4050;--ang-select-text:#f9fafb;}",
@@ -117,6 +117,10 @@ export default function(component) {
       "html.angstrom-night [data-baseweb='input'] input,html.angstrom-night [data-baseweb='textarea'] textarea{background:transparent !important;color:var(--ang-text) !important;-webkit-text-fill-color:var(--ang-text);}",
       "html.angstrom-night [data-testid='stBaseButton-secondary']{background:#31333f !important;border-color:#4b5563 !important;color:var(--ang-text) !important;}",
       "html.angstrom-night [data-testid='stBaseButton-secondary']:hover{border-color:#e5e7eb !important;color:#ffffff !important;}",
+      "button.angstrom-jump{display:block;width:100%;box-sizing:border-box;min-height:2.5rem;height:auto;padding:0.4rem 0.75rem;border-radius:0.5rem;border:1px solid rgba(49,51,63,0.2);background:#ffffff;color:#31333f;font:inherit;line-height:1.35;text-align:center;cursor:pointer;white-space:normal;}",
+      "button.angstrom-jump:hover{border-color:#ff4b4b;color:#ff4b4b;}",
+      "html.angstrom-night button.angstrom-jump{background:#31333f;border-color:#4b5563;color:var(--ang-text);}",
+      "html.angstrom-night button.angstrom-jump:hover{border-color:#e5e7eb;color:#ffffff;}",
       "html.angstrom-night [data-baseweb='popover'] > div,html.angstrom-night [data-baseweb='menu'],html.angstrom-night [data-testid='stDialog'] [role='dialog']{background:#262730 !important;color:var(--ang-text) !important;}",
       "html.angstrom-night [data-testid='stCode'],html.angstrom-night pre{background:#262730 !important;color:var(--ang-text);border:1px solid var(--ang-border);border-radius:8px;}",
       ".brand-mark img{display:none;}",
@@ -1943,29 +1947,53 @@ export default function(component) {
   const { data, setTriggerValue, parentElement } = component;
   const timerKey = "cd_" + ((data && data.key) || "x");
   window.clearInterval(window[timerKey]);
-  let host = parentElement.querySelector("[data-countdown]");
-  if (!host) {
-    host = document.createElement("div");
-    host.setAttribute("data-countdown", "");
-    parentElement.appendChild(host);
-  }
   const shell = parentElement.closest(".stBidiComponent") || parentElement;
-  shell.style.display = "none";
+  shell.style.display = "block";
+  shell.style.height = "auto";
+  shell.style.width = "100%";
+  let button = shell.querySelector("button.angstrom-jump");
+  if (!button) {
+    button = document.createElement("button");
+    button.type = "button";
+    button.className = "angstrom-jump";
+    shell.appendChild(button);
+  }
+  button.dataset.target = String((data && data.target) || "");
+  button.title = String((data && data.help) || "");
+  button.onclick = () => {
+    const targetId = button.dataset.target || "";
+    const target = document.getElementById(targetId);
+    if (!target) return;
+    let node = target;
+    for (let step = 0; step < 8 && node; step += 1) {
+      const sibling = node.nextElementSibling;
+      const expander = sibling && sibling.querySelector
+        ? sibling.querySelector('[data-testid="stExpander"]')
+        : null;
+      if (expander) {
+        const details = expander.querySelector('[data-testid="stExpanderDetails"]');
+        const summary = expander.querySelector("summary");
+        if (details && details.hasAttribute("inert") && summary) summary.click();
+        break;
+      }
+      node = node.parentElement;
+    }
+    const go = () => {
+      const current = document.getElementById(targetId);
+      if (!current) return;
+      current.scrollIntoView({behavior: "auto", block: "start"});
+      const scroller = current.closest('[data-testid="stMain"]') || current.closest("section.main");
+      if (!scroller) return;
+      const top = current.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop - 72;
+      scroller.scrollTop = Math.max(0, top);
+    };
+    go();
+    window.setTimeout(go, 50);
+    window.setTimeout(go, 250);
+    window.setTimeout(go, 700);
+  };
   const end = Number(data && data.deadlineMs);
   const token = String((data && data.token) || "");
-  function buttonLabel() {
-    const column = parentElement.closest('[data-testid="column"]')
-      || parentElement.closest('[data-testid="stColumn"]');
-    const button = column && column.querySelector("button");
-    if (!button) return null;
-    const named = data && data.label;
-    button.style.whiteSpace = named ? "normal" : "nowrap";
-    button.style.height = named ? "auto" : "";
-    if (named) button.style.minHeight = "2.5rem";
-    const text = button.querySelector("p") || button.querySelector('[data-testid="stMarkdownContainer"]') || button;
-    text.style.whiteSpace = named ? "normal" : "nowrap";
-    return text;
-  }
   function render() {
     if (!Number.isFinite(end)) return;
     const left = Math.max(0, Math.round((end - Date.now()) / 1000));
@@ -1973,14 +2001,11 @@ export default function(component) {
     const minutes = Math.floor((left % 3600) / 60);
     const seconds = String(left % 60).padStart(2, "0");
     const clock = hours + ":" + String(minutes).padStart(2, "0") + ":" + seconds;
-    const title = (data && data.label) || "🔄 Refresh";
+    const title = (data && data.label) || "Refresh";
     const lead = (data && data.lead) || "";
-    const label = buttonLabel();
-    if (label) {
-      if (left <= 0) label.textContent = title + " (update due)";
-      else if (lead) label.textContent = title + " (" + lead + " " + clock + ")";
-      else label.textContent = title + " (" + clock + ")";
-    }
+    if (left <= 0) button.textContent = title + " (update due)";
+    else if (lead) button.textContent = title + " (" + lead + " " + clock + ")";
+    else button.textContent = title + " (" + clock + ")";
     if (left <= 0 && token && window[timerKey + "_sent"] !== token) {
       window.clearInterval(window[timerKey]);
       window[timerKey + "_sent"] = token;
@@ -1991,7 +2016,6 @@ export default function(component) {
   window[timerKey] = setInterval(render, 1000);
   return () => {
     window.clearInterval(window[timerKey]);
-    host.remove();
   };
 }
 """
@@ -2175,8 +2199,17 @@ _google_button = st.components.v2.component(
 )
 
 
-def _countdown_due(deadline: float | None, widget_key: str, label: str | None = None) -> bool:
-    """Show the time until a shared update. A missing time stays on 'update due'."""
+def _countdown_due(
+    deadline: float | None,
+    widget_key: str,
+    label: str | None = None,
+    target: str = "",
+    help_text: str = "",
+) -> bool:
+    """Show the time until a shared update. A missing time stays on 'update due'.
+
+    The button opens its section in the browser. Pressing it does not rebuild the page.
+    """
     if deadline is None:
         token = ""
         deadline_ms = 0
@@ -2188,6 +2221,8 @@ def _countdown_due(deadline: float | None, widget_key: str, label: str | None = 
         "token": token,
         "key": widget_key,
         "lead": "update in",
+        "target": target,
+        "help": help_text,
     }
     if label:
         payload["label"] = label
@@ -2197,11 +2232,6 @@ def _countdown_due(deadline: float | None, widget_key: str, label: str | None = 
         on_due_change=lambda: None,
     )
     return bool(token) and result.due == token
-
-
-def _open_saved_section(section_id: str, anchor: str) -> None:
-    """Open one section and scroll to it. This does not start a refresh."""
-    _reveal_section(section_id, anchor)
 
 
 def _rerun_fragment() -> None:
@@ -4410,18 +4440,9 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             jump_columns = st.columns(len(jumps))
             honored = st.session_state.setdefault("countdown_seen", {})
             reread = False
-            for column, (title, button_key, timer_key, deadline, section_id, anchor, jump_help) in zip(jump_columns, jumps):
+            for column, (title, _button_key, timer_key, deadline, _section_id, anchor, jump_help) in zip(jump_columns, jumps):
                 with column:
-                    st.button(
-                        title,
-                        key=button_key,
-                        use_container_width=True,
-                        wrap=True,
-                        help=jump_help,
-                        on_click=_open_saved_section,
-                        args=(section_id, anchor),
-                    )
-                    due = _countdown_due(deadline, timer_key, title)
+                    due = _countdown_due(deadline, timer_key, title, anchor, jump_help)
                     token = "" if deadline is None else str(int(deadline * 1000))
                     if due and token and honored.get(timer_key) != token:
                         honored[timer_key] = token
