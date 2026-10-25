@@ -260,12 +260,19 @@ def _alpha_sectors():
     except requests.RequestException:
         return None
     if response.status_code != 200:
+        print(f"Alpha Vantage sectors skipped: HTTP {response.status_code}.")
         return None
     try:
         body = response.json()
     except ValueError:
+        print("Alpha Vantage sectors skipped: the response was not JSON.")
         return None
-    return _sector_sides(body)
+    sides = _sector_sides(body)
+    if sides:
+        return sides
+    names = ",".join(str(name) for name in list(body)[:8]) if isinstance(body, dict) else "not-json"
+    print(f"Alpha Vantage sectors skipped: {names}.")
+    return None
 
 
 def _sector_sides(body: dict):
