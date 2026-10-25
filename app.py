@@ -378,6 +378,39 @@ export default function(component) {
     parentElement.appendChild(host);
   }
   host.innerHTML = typeof data === "string" ? data : "";
+  const openAndScroll = (targetId) => {
+    const anchor = document.getElementById(targetId);
+    if (!anchor) return;
+    let section = anchor;
+    let node = anchor;
+    for (let step = 0; step < 8 && node; step += 1) {
+      const sibling = node.nextElementSibling;
+      const expander = sibling && sibling.querySelector
+        ? sibling.querySelector('[data-testid="stExpander"]')
+        : null;
+      if (expander) {
+        section = expander;
+        const details = expander.querySelector('[data-testid="stExpanderDetails"]');
+        const summary = expander.querySelector("summary");
+        if (details && details.hasAttribute("inert") && summary) summary.click();
+        break;
+      }
+      node = node.parentElement;
+    }
+    const go = () => {
+      const current = section && section.isConnected ? section : document.getElementById(targetId);
+      if (!current) return;
+      current.scrollIntoView({behavior: "auto", block: "start"});
+      const scroller = current.closest('[data-testid="stMain"]') || current.closest("section.main");
+      if (!scroller) return;
+      const top = current.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop - 72;
+      scroller.scrollTop = Math.max(0, top);
+    };
+    go();
+    window.setTimeout(go, 50);
+    window.setTimeout(go, 250);
+    window.setTimeout(go, 700);
+  };
   host.querySelectorAll("button[data-pick]").forEach((button) => {
     button.addEventListener("click", (event) => {
       event.preventDefault();
@@ -385,38 +418,15 @@ export default function(component) {
       button.blur();
       const pick = button.getAttribute("data-pick") || "";
       if (pick.indexOf("mood|") === 0) {
-        const targetId = "market-mood-" + pick.split("|")[1];
-        const anchor = document.getElementById(targetId);
-        if (!anchor) return;
-        let section = anchor;
-        let node = anchor;
-        for (let step = 0; step < 8 && node; step += 1) {
-          const sibling = node.nextElementSibling;
-          const expander = sibling && sibling.querySelector
-            ? sibling.querySelector('[data-testid="stExpander"]')
-            : null;
-          if (expander) {
-            section = expander;
-            const details = expander.querySelector('[data-testid="stExpanderDetails"]');
-            const summary = expander.querySelector("summary");
-            if (details && details.hasAttribute("inert") && summary) summary.click();
-            break;
-          }
-          node = node.parentElement;
-        }
-        const go = () => {
-          const current = section && section.isConnected ? section : document.getElementById(targetId);
-          if (!current) return;
-          current.scrollIntoView({behavior: "auto", block: "start"});
-          const scroller = current.closest('[data-testid="stMain"]') || current.closest("section.main");
-          if (!scroller) return;
-          const top = current.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop - 72;
-          scroller.scrollTop = Math.max(0, top);
-        };
-        go();
-        window.setTimeout(go, 50);
-        window.setTimeout(go, 250);
-        window.setTimeout(go, 700);
+        openAndScroll("market-mood-" + pick.split("|")[1]);
+        return;
+      }
+      const parts = pick.split("|");
+      const already = parts.length === 2 && Array.from(
+        document.querySelectorAll("tr.ang-row-on button[data-pick]")
+      ).some((el) => (el.getAttribute("data-pick") || "") === pick);
+      if (already) {
+        openAndScroll("interactive-chart");
         return;
       }
       setTriggerValue("picked", pick);
@@ -4635,6 +4645,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
         stock_top, stock_bot = get_top_bottom(stock_results)
 
         def _select_chart_asset(raw):
+            """Point the chart at one asset. The click already reran this section, so draw it once."""
             parts = str(raw).split("|")
             if len(parts) < 2:
                 return
@@ -4643,12 +4654,21 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             chosen = crypto_watchlist if kind_name == "Crypto" else stock_watchlist if kind_name == "Stock" else None
             if not chosen or asset_id not in chosen:
                 return
-            st.session_state.scroll_target = "market-sentiment" if destination == "sentiment" else "interactive-chart"
+            if destination == "sentiment":
+                st.session_state.scroll_target = "market-sentiment"
+                section_id = "market_sentiment_panel"
+            else:
+                st.session_state.scroll_target = "interactive-chart"
+                section_id = "interactive_chart"
             st.session_state.scroll_token = str(time.time_ns())
-            if st.session_state.get("chart_pick") != (kind_name, asset_id):
-                st.session_state.chart_pick = (kind_name, asset_id)
-                st.session_state.chart_pick_from_row = True
-            _rerun_fragment()
+            st.session_state.chart_pick = (kind_name, asset_id)
+            st.session_state.chart_pick_from_row = True
+            st.session_state.asset_type = kind_name
+            if kind_name == "Crypto":
+                st.session_state.asset_crypto = asset_id
+            else:
+                st.session_state.asset_stock = asset_id
+            _remember_section(section_id, True)
 
         snapshot_cards = []
         if trade_crypto:
