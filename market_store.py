@@ -192,6 +192,15 @@ def set_sentiment_vote(supabase, user_id, kind: str, asset_id: str, sentiment_at
     ).execute()
 
 
+def _social_points(row) -> int:
+    """The author's social score. Zero when the column is missing or blank."""
+    try:
+        points = int((row or {}).get("social_score") or 0)
+    except (TypeError, ValueError):
+        return 0
+    return points if points > 0 else 0
+
+
 def _author_id(row) -> str:
     """The account behind a note. Empty until the feed returns an id."""
     text = str((row or {}).get("author_id") or "").strip().lower()
@@ -242,6 +251,7 @@ def _comment_groups(supabase, keys: list[str]) -> dict[str, list] | None:
             "id": note_id,
             "user": _author_id(row),
             "name": " ".join(str(row.get("author_name") or "Member").split())[:40] or "Member",
+            "social": _social_points(row),
             "avatar": _public_avatar(row.get("avatar_url")),
             "at": _comment_time(row.get("created_at")),
             "text": text[:COMMENT_LIMIT],
@@ -399,6 +409,7 @@ def load_chat(supabase) -> list[dict] | None:
             "parent": parent_id,
             "user": _author_id(row),
             "name": " ".join(str(row.get("author_name") or "Member").split())[:40] or "Member",
+            "social": _social_points(row),
             "avatar": _public_avatar(row.get("avatar_url")),
             "text": text[:COMMENT_LIMIT],
             "at": _comment_time(row.get("created_at")),
@@ -412,7 +423,7 @@ def load_chat(supabase) -> list[dict] | None:
     for note in notes:
         if note["parent"] is not None:
             continue
-        item = {key: note[key] for key in ("id", "user", "name", "avatar", "text", "at", "mine", "up", "down", "vote")}
+        item = {key: note[key] for key in ("id", "user", "name", "social", "avatar", "text", "at", "mine", "up", "down", "vote")}
         item["replies"] = []
         roots[note["id"]] = item
         ordered.append(item)
@@ -421,7 +432,7 @@ def load_chat(supabase) -> list[dict] | None:
         if parent is None:
             continue
         parent["replies"].append({
-            key: note[key] for key in ("id", "user", "name", "avatar", "text", "at", "mine", "up", "down", "vote")
+            key: note[key] for key in ("id", "user", "name", "social", "avatar", "text", "at", "mine", "up", "down", "vote")
         })
     ordered.sort(key=lambda item: item["at"], reverse=True)
     for item in ordered:
@@ -514,6 +525,7 @@ def sentiment_replies(supabase) -> dict[int, list]:
             "id": reply_id,
             "user": _author_id(row),
             "name": " ".join(str(row.get("author_name") or "Member").split())[:40] or "Member",
+            "social": _social_points(row),
             "avatar": _public_avatar(row.get("avatar_url")),
             "text": text[:COMMENT_LIMIT],
             "at": _comment_time(row.get("created_at")),
@@ -623,6 +635,7 @@ def social_stream_items(comments_by_key, shared, names, logos=None, watchlist_ke
                 "summary": summary,
                 "user": str((note or {}).get("user") or ""),
                 "name": str((note or {}).get("name") or "Member")[:40] or "Member",
+                "social": int((note or {}).get("social") or 0),
                 "avatar": _public_avatar((note or {}).get("avatar")),
                 "at": str((note or {}).get("at") or ""),
                 "text": text[:COMMENT_LIMIT],

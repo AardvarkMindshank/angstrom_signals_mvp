@@ -851,7 +851,8 @@ returns table (
     thumbs_up integer,
     thumbs_down integer,
     my_vote smallint,
-    author_id uuid
+    author_id uuid,
+    social_score integer
 )
 language sql
 stable
@@ -895,7 +896,8 @@ as $$
             where votes.message_id = messages.id
               and votes.user_id = auth.uid()
         ),
-        messages.user_id
+        messages.user_id,
+        coalesce(profiles.social_score, 0)
     from public.chat_messages as messages
     left join public.profiles as profiles
       on profiles.user_id = messages.user_id
@@ -997,7 +999,8 @@ returns table (
     thumbs_up integer,
     thumbs_down integer,
     my_vote smallint,
-    author_id uuid
+    author_id uuid,
+    social_score integer
 )
 language sql
 stable
@@ -1036,7 +1039,8 @@ as $$
             where votes.comment_id = comments.id
               and votes.user_id = auth.uid()
         ),
-        comments.user_id
+        comments.user_id,
+        coalesce(profiles.social_score, 0)
     from public.sentiment_comments as comments
     left join public.profiles as profiles
       on profiles.user_id = comments.user_id
@@ -1067,7 +1071,8 @@ returns table (
     thumbs_up integer,
     thumbs_down integer,
     my_vote smallint,
-    author_id uuid
+    author_id uuid,
+    social_score integer
 )
 language sql
 stable
@@ -1104,7 +1109,8 @@ as $$
             where votes.reply_id = replies.id
               and votes.user_id = auth.uid()
         ),
-        replies.user_id
+        replies.user_id,
+        coalesce(profiles.social_score, 0)
     from public.sentiment_replies as replies
     join public.sentiment_comments as comments
       on comments.id = replies.comment_id

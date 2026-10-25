@@ -621,14 +621,14 @@ export default function(component) {
       window.socialStreamState.pinned = !!window.socialPanelPinned;
     }
     let style = document.getElementById("social-stream-style");
-    if (style && style.dataset.layout !== "surface") {
+    if (style && style.dataset.layout !== "score") {
       style.remove();
       style = null;
     }
     if (!style) {
       style = document.createElement("style");
       style.id = "social-stream-style";
-      style.dataset.layout = "surface";
+      style.dataset.layout = "score";
       style.textContent = [
         "#social-stream-root{position:fixed;inset:0;z-index:10000000;pointer-events:none;}",
         "#social-stream-root.is-open{pointer-events:auto;}",
@@ -704,7 +704,9 @@ export default function(component) {
         "#social-stream-root .favourite{flex:none;margin-left:auto;background:none;border:0;padding:0 2px;cursor:pointer;font-size:1.2rem;line-height:1;color:#9ca3af;}",
         "#social-stream-root .favourite.is-on{color:#d97706;}",
         "#social-stream-root .face{width:36px;height:36px;border-radius:50%;object-fit:cover;background:#dbeafe;color:#1d4ed8;display:flex;align-items:center;justify-content:center;font-weight:700;flex:none;}",
-        "#social-stream-root .who{font-weight:600;font-size:.92rem;}",
+        "#social-stream-root .who{display:flex;align-items:center;gap:6px;min-width:0;font-weight:600;font-size:.92rem;}",
+        "#social-stream-root .who .name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}",
+        "#social-stream-root .social-score{flex:none;font-size:.68rem;font-weight:600;line-height:1.4;color:#6b7280;background:#f3f4f6;border-radius:999px;padding:1px 6px;}",
         "#social-stream-root .when{color:#6b7280;font-size:.78rem;margin-top:1px;}",
         "#social-stream-root .saying{margin:8px 0 0;font-size:.95rem;line-height:1.4;white-space:pre-wrap;word-break:break-word;}",
         "#social-stream-root .context{margin-top:10px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:10px 12px;}",
@@ -720,6 +722,7 @@ export default function(component) {
         "#social-stream-root.is-dark .width-grip::before{background:#6b7280;}",
         "#social-stream-root.is-dark .width-grip:hover::before,#social-stream-root.is-dark .width-grip.is-dragging::before{background:#e5e7eb;}",
         "#social-stream-root.is-dark .kicker,#social-stream-root.is-dark .count,#social-stream-root.is-dark .chars,#social-stream-root.is-dark .when,#social-stream-root.is-dark .empty,#social-stream-root.is-dark .picks label,#social-stream-root.is-dark .context-label,#social-stream-root.is-dark .replying{color:#9ca3af;}",
+        "#social-stream-root.is-dark .social-score{color:#d1d5db;background:#31333f;}",
         "#social-stream-root.is-dark .finder input,#social-stream-root.is-dark select,#social-stream-root.is-dark .chat-box{background:#262730;color:#fafafa;border-color:#4b5563;color-scheme:dark;}",
         "#social-stream-root.is-dark .finder input::placeholder,#social-stream-root.is-dark .chat-box::placeholder{color:#9ca3af;}",
         "#social-stream-root.is-dark .close,#social-stream-root.is-dark .pin{background:#262730;color:#fafafa;}",
@@ -1044,9 +1047,11 @@ export default function(component) {
       const people = collectPeople(items);
       const seenPeople = {};
       people.forEach((name) => { seenPeople[name] = true; });
+      const streamScores = personScores(items);
       const chatPeople = collectPeople(window.socialChat || []);
       const seenChatPeople = {};
       chatPeople.forEach((name) => { seenChatPeople[name] = true; });
+      const chatScores = personScores(window.socialChat || []);
       assets.sort((a, b) => String(a[1]).localeCompare(String(b[1])));
       people.sort((a, b) => a.localeCompare(b));
       fillStreamSelect(
@@ -1067,14 +1072,14 @@ export default function(component) {
       fillStreamSelect(
         panel.querySelector("#stream-person"),
         "All people",
-        people.map((name) => [name, name]),
+        people.map((name) => [name, name + "  ✦ " + (streamScores[name] || 0)]),
         state.person,
         personChoices
       );
       fillStreamSelect(
         panel.querySelector("#chat-person"),
         "All people",
-        chatPeople.map((name) => [name, name]),
+        chatPeople.map((name) => [name, name + "  ✦ " + (chatScores[name] || 0)]),
         state.chatPerson || "",
         personChoices
       );
@@ -1185,7 +1190,11 @@ export default function(component) {
     const reply = (window.socialStreamState || {}).reply;
     if (!row || !label) return;
     row.hidden = !reply;
-    label.textContent = reply ? "Replying to " + reply.name : "";
+    label.replaceChildren();
+    if (reply) {
+      label.append("Replying to " + reply.name + " ");
+      label.appendChild(socialMark(reply.social));
+    }
     const composer = panel.querySelector(".composer");
     if (composer) composer.hidden = window.socialChatReady === false && !(reply && reply.kind === "signal");
   }
@@ -1202,6 +1211,7 @@ export default function(component) {
         id: "local-" + Date.now(),
         user: (window.socialMe || {}).id || "",
         name: (window.socialMe || {}).name || "You",
+        social: Math.max(0, Number((window.socialMe || {}).social) || 0),
         avatar: (window.socialMe || {}).avatar || "",
         text: text,
         at: new Date().toISOString(),
@@ -1223,6 +1233,7 @@ export default function(component) {
       id: "local-" + Date.now(),
       user: (window.socialMe || {}).id || "",
       name: (window.socialMe || {}).name || "You",
+      social: Math.max(0, Number((window.socialMe || {}).social) || 0),
       avatar: (window.socialMe || {}).avatar || "",
       text: text,
       at: new Date().toISOString(),
@@ -1330,6 +1341,15 @@ export default function(component) {
     return button;
   }
 
+  function socialMark(score) {
+    const points = Math.max(0, Number(score) || 0);
+    const mark = document.createElement("span");
+    mark.className = "social-score";
+    mark.textContent = "✦ " + points;
+    mark.title = "Social score " + points;
+    return mark;
+  }
+
   function personRow(item) {
     const person = document.createElement("div");
     person.className = "person";
@@ -1339,7 +1359,11 @@ export default function(component) {
     identity.className = "identity";
     const who = document.createElement("div");
     who.className = "who";
-    who.textContent = name;
+    const label = document.createElement("span");
+    label.className = "name";
+    label.textContent = name;
+    who.appendChild(label);
+    who.appendChild(socialMark(item.social));
     const when = document.createElement("div");
     when.className = "when";
     const parsedAt = new Date(item.at);
@@ -1352,6 +1376,18 @@ export default function(component) {
     const star = favouriteButton(item);
     if (star) person.appendChild(star);
     return person;
+  }
+
+  function personScores(rows) {
+    const scores = {};
+    const visit = (item) => {
+      const person = item.name || "Member";
+      const points = Math.max(0, Number(item.social) || 0);
+      if (scores[person] === undefined || points > scores[person]) scores[person] = points;
+      (item.replies || []).forEach(visit);
+    };
+    (rows || []).forEach(visit);
+    return scores;
   }
 
   function collectPeople(rows) {
@@ -1417,7 +1453,7 @@ export default function(component) {
       reply.title = "Reply";
       reply.setAttribute("aria-label", "Reply");
       reply.addEventListener("click", () => {
-        window.socialStreamState.reply = { id: rootId, name: String(item.name || "Member") };
+        window.socialStreamState.reply = { id: rootId, name: String(item.name || "Member"), social: item.social };
         paintReply(document.getElementById("social-stream-root"));
         const box = document.querySelector("#social-stream-root .chat-box");
         if (box) box.focus();
@@ -1641,7 +1677,7 @@ export default function(component) {
       reply.title = "Reply";
       reply.setAttribute("aria-label", "Reply");
       reply.addEventListener("click", () => {
-        window.socialStreamState.reply = { id: rootId, name: String(item.name || "Member"), kind: "signal" };
+        window.socialStreamState.reply = { id: rootId, name: String(item.name || "Member"), social: item.social, kind: "signal" };
         const panel = document.getElementById("social-stream-root");
         paintReply(panel);
         const box = panel && panel.querySelector(".chat-box");
@@ -3139,9 +3175,12 @@ def profile_card(profile: dict, email: str) -> str:
     return (
         "<div class='ang-card'>"
         "<div style='display:flex;gap:10px;align-items:center;'>"
-        f"{face}<div><div class='ang-title'>{safe_name}</div>"
+        f"{face}<div><div class='ang-title' style='display:flex;align-items:center;gap:6px;'>"
+        f"{safe_name}<span title='Social score {social_score}' "
+        "style='flex:none;font-size:0.68rem;font-weight:600;line-height:1.4;color:var(--ang-muted);"
+        "background:var(--ang-line);border-radius:999px;padding:1px 6px;'>✦ "
+        f"{social_score}</span></div>"
         f"<div class='ang-kicker' style='margin:0;font-size:0.78rem;'>{safe_email}</div>"
-        f"<div class='ang-kicker' style='margin:2px 0 0;font-size:0.78rem;'>Social score {social_score}</div>"
         "</div></div>"
         f"{bio_html}</div>"
     )
@@ -4254,7 +4293,16 @@ def _chat_viewer() -> dict:
     avatar = str((profile or {}).get("avatar_url") or "").strip()
     if not avatar.startswith("https://") or any(mark in avatar for mark in (" ", '"', "'", "<", ">", "\\")):
         avatar = ""
-    return {"id": str(user_id or ""), "name": (name or "Member")[:40], "avatar": avatar}
+    try:
+        social = int((profile or {}).get("social_score") or 0)
+    except (TypeError, ValueError):
+        social = 0
+    return {
+        "id": str(user_id or ""),
+        "name": (name or "Member")[:40],
+        "avatar": avatar,
+        "social": social if social > 0 else 0,
+    }
 
 
 def _favourite_event(raw):
