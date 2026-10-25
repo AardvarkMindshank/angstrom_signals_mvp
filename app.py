@@ -3707,11 +3707,12 @@ def my_groups_panel() -> None:
         "[class*='st-key-group_person_'] [data-testid='stElementContainer']{align-self:center !important;margin-top:0 !important;margin-bottom:0 !important;display:flex !important;align-items:center !important;}"
         "[class*='st-key-group_person_'] [data-testid='stMarkdownContainer']{margin:0 !important;}"
         "[class*='st-key-group_person_'] [data-testid='stMarkdownContainer'] p{margin:0 !important;line-height:1.2 !important;display:flex;align-items:center;}"
-        "[class*='st-key-group_remove_'] button,[class*='st-key-group_xdelete_'] button{color:#b91c1c !important;background:transparent !important;"
+        "[class*='st-key-group_remove_'] button,[class*='st-key-group_xdelete_'] button,[class*='st-key-group_leave_'] button{color:#b91c1c !important;background:transparent !important;"
         "border:none !important;box-shadow:none !important;font-size:2.16rem !important;font-weight:700 !important;"
         "line-height:1 !important;min-height:0 !important;height:2.16rem !important;padding:0 !important;"
         "display:inline-flex !important;align-items:center !important;justify-content:center !important;}"
-        "[class*='st-key-group_remove_'] button *,[class*='st-key-group_xdelete_'] button *{font-size:2.16rem !important;line-height:1 !important;color:#b91c1c !important;}"
+        "[class*='st-key-group_remove_'] button *,[class*='st-key-group_xdelete_'] button *,[class*='st-key-group_leave_'] button *{font-size:2.16rem !important;line-height:1 !important;color:#b91c1c !important;}"
+        "[class*='st-key-group_leave_'] button{font-variant-emoji:text;}"
         "</style>",
         unsafe_allow_html=True,
     )
@@ -3760,17 +3761,17 @@ def my_groups_panel() -> None:
                 continue
             name = " ".join(str(row.get("name") or "").split()) or "Group"
             leader = " ".join(str(row.get("leader_name") or "").split())
-            left, right = st.columns([3, 1])
             label = f"{name} · {leader}" if leader else name
-            with left.expander(label, expanded=False, key=f"group_fold_{gid}"):
-                _group_member_list(row, gid)
-            if right.button("Leave", key=f"group_leave_{gid}", use_container_width=True):
-                try:
-                    supabase.rpc("leave_group", {"chosen_group": gid}).execute()
-                except Exception:
-                    st.warning("Could not leave that group. Run the latest supabase_rls.sql, then try again.")
-                else:
-                    st.rerun()
+            with st.container(horizontal=True, vertical_alignment="center", gap="small"):
+                with st.expander(label, expanded=False, key=f"group_fold_{gid}"):
+                    _group_member_list(row, gid)
+                if st.button("🚶", key=f"group_leave_{gid}", help="Leave group", type="tertiary"):
+                    try:
+                        supabase.rpc("leave_group", {"chosen_group": gid}).execute()
+                    except Exception:
+                        st.warning("Could not leave that group. Run the latest supabase_rls.sql, then try again.")
+                    else:
+                        st.rerun()
 
 
 with tracked_expander("👤 Account", "account", sidebar=True):
