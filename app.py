@@ -2040,7 +2040,7 @@ _WIDE_SPLIT_MIN = 0.2
 _WIDE_SPLIT_MAX = 0.8
 _WIDE_SPLIT_JS = """
 export default function(component) {
-  const { data, parentElement, setTriggerValue } = component;
+  const { parentElement } = component;
   const shell = parentElement.closest(".stBidiComponent") || parentElement;
   shell.style.display = "none";
   const minSplit = 0.2;
@@ -2051,15 +2051,15 @@ export default function(component) {
   const remembered = () => {
     try { return localStorage.getItem("angstrom-wide-split"); } catch (error) { return null; }
   };
-  let handle = document.getElementById("angstrom-wide-split");
-  if (!handle) {
-    handle = document.createElement("div");
-    handle.id = "angstrom-wide-split";
-    handle.title = "Drag to resize these two columns";
-    const grip = document.createElement("div");
-    grip.className = "grip";
-    handle.appendChild(grip);
-  }
+  const stale = document.getElementById("angstrom-wide-split");
+  if (stale) stale.remove();
+  const handle = document.createElement("div");
+  handle.id = "angstrom-wide-split";
+  handle.dataset.drive = "local";
+  handle.title = "Drag to resize these two columns";
+  const grip = document.createElement("div");
+  grip.className = "grip";
+  handle.appendChild(grip);
   let watching = null;
   let observer = null;
   const pair = () => {
@@ -2131,54 +2131,43 @@ export default function(component) {
     columns[0].style.minWidth = "0";
     columns[1].style.minWidth = "0";
   };
-  if (!handle.dataset.bound) {
-    handle.dataset.bound = "1";
-    handle.addEventListener("pointerdown", (event) => {
-      const found = pair();
-      if (!found || stacked(found.columns) || event.button !== 0) return;
-      event.preventDefault();
-      handle.classList.add("is-dragging");
-      handle.setPointerCapture(event.pointerId);
-      const move = (ev) => {
-        const current = pair();
-        if (!current) return;
-        applyRatio(ratioFor(ev.clientX, current.block, current.columns), current.columns);
-        place();
-      };
-      const stop = (ev) => {
-        handle.classList.remove("is-dragging");
-        handle.removeEventListener("pointermove", move);
-        handle.removeEventListener("pointerup", stop);
-        handle.removeEventListener("pointercancel", stop);
-        const current = pair();
-        if (!current) return;
-        const ratio = ratioFor(ev.clientX, current.block, current.columns);
-        applyRatio(ratio, current.columns);
-        remember(ratio);
-        place();
-      };
-      handle.addEventListener("pointermove", move);
-      handle.addEventListener("pointerup", stop);
-      handle.addEventListener("pointercancel", stop);
-    });
-  }
+  handle.addEventListener("pointerdown", (event) => {
+    const found = pair();
+    if (!found || stacked(found.columns) || event.button !== 0) return;
+    event.preventDefault();
+    event.stopPropagation();
+    handle.classList.add("is-dragging");
+    handle.setPointerCapture(event.pointerId);
+    const move = (ev) => {
+      const current = pair();
+      if (!current) return;
+      applyRatio(ratioFor(ev.clientX, current.block, current.columns), current.columns);
+      place();
+    };
+    const stop = (ev) => {
+      handle.classList.remove("is-dragging");
+      handle.removeEventListener("pointermove", move);
+      handle.removeEventListener("pointerup", stop);
+      handle.removeEventListener("pointercancel", stop);
+      const current = pair();
+      if (!current) return;
+      const ratio = ratioFor(ev.clientX, current.block, current.columns);
+      applyRatio(ratio, current.columns);
+      remember(ratio);
+      place();
+    };
+    handle.addEventListener("pointermove", move);
+    handle.addEventListener("pointerup", stop);
+    handle.addEventListener("pointercancel", stop);
+  });
   place();
-  const storedSplit = remembered();
-  const serverSplit = data && data.split;
-  if (storedSplit && serverSplit && Math.abs(parseFloat(storedSplit) - parseFloat(serverSplit)) > 0.004) {
-    if (window.__angstromSplitSent !== storedSplit) {
-      window.__angstromSplitSent = storedSplit;
-      setTriggerValue("split", storedSplit);
-    }
-  } else {
-    window.__angstromSplitSent = "";
-  }
   const retry = window.setInterval(place, 400);
   const stopRetry = window.setTimeout(() => window.clearInterval(retry), 8000);
   return () => {
     window.clearInterval(retry);
     window.clearTimeout(stopRetry);
     if (observer) observer.disconnect();
+    handle.remove();
   };
 }
 """
