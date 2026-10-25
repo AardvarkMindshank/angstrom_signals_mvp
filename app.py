@@ -2635,7 +2635,7 @@ def _reveal_section(section_id: str, anchor: str) -> None:
 
 
 try:
-    from alerts import evaluate_alerts
+    from alerts import HELD_BEARISH, HELD_BULLISH, dismiss_read_alerts, evaluate_alerts
     from data_fetchers import (
         crypto_logo_urls,
         crypto_market_caps,
@@ -3349,6 +3349,7 @@ def fetch_user_notifications():
             supabase.table("user_notifications")
             .select("*")
             .eq("user_id", user_id)
+            .not_.in_("alert_type", [HELD_BULLISH, HELD_BEARISH])
             .order("created_at", desc=True)
             .limit(10)
             .execute()
@@ -3372,6 +3373,10 @@ def fetch_user_notifications():
     for row in (getattr(extra, "data", None) or []):
         if row.get("id") not in seen:
             rows.append(row)
+    rows = [
+        row for row in rows
+        if str(row.get("alert_type") or "") not in (HELD_BULLISH, HELD_BEARISH)
+    ]
     rows.sort(key=lambda row: str(row.get("created_at") or ""), reverse=True)
     return rows
 
@@ -4089,7 +4094,7 @@ def notifications_panel() -> None:
 
                     if st.button("🗑️ Clear Read Alerts", use_container_width=True, key="clear_read_btn"):
                         try:
-                            supabase.table("user_notifications").delete().eq("user_id", user_id).eq("is_read", True).neq("alert_type", "group_invite").execute()
+                            dismiss_read_alerts(supabase, user_id)
                             st.success("Cleared read alerts.")
                             _rerun_fragment()
                         except Exception as exc:

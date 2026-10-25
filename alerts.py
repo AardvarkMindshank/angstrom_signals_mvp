@@ -3,6 +3,7 @@ Shared alert rules for the dashboard and the background worker.
 
 An alert stays latched while the score remains past the threshold. It re-arms
 after the score leaves that threshold, so the same asset can alert again later.
+Reading or clearing the notification does not release that latch.
 """
 
 from __future__ import annotations
@@ -11,6 +12,29 @@ from datetime import datetime, timezone
 
 BULLISH = "BULLISH_THRESHOLD"
 BEARISH = "BEARISH_THRESHOLD"
+HELD_BULLISH = "BULLISH_THRESHOLD_HELD"
+HELD_BEARISH = "BEARISH_THRESHOLD_HELD"
+_HELD = {
+    BULLISH: HELD_BULLISH,
+    BEARISH: HELD_BEARISH,
+}
+
+
+def canonical_alert(alert_type: str) -> str:
+    """The open crossing a row represents, including one hidden after it was cleared."""
+    if alert_type in (BULLISH, HELD_BULLISH):
+        return BULLISH
+    if alert_type in (BEARISH, HELD_BEARISH):
+        return BEARISH
+    return alert_type
+
+
+def stored_types(alert_type: str) -> list[str]:
+    """Rows that still mean this crossing, whether or not the feed is showing them."""
+    held = _HELD.get(alert_type)
+    if held:
+        return [alert_type, held]
+    return [alert_type]
 
 
 def _missing(score) -> bool:
@@ -85,12 +109,12 @@ def evaluate_alerts(supabase, user_id, results, alerts_config, notify_email=None
         supabase.table("user_notifications")
         .select("asset_symbol, alert_type")
         .eq("user_id", user_id)
-        .in_("alert_type", [BULLISH, BEARISH])
+        .in_("alert_type", [BULLISH, BEARISH, HELD_BULLISH, HELD_BEARISH])
         .execute()
         .data
         or []
     )
-    latched = {(row["asset_symbol"], row["alert_type"]) for row in existing}
+    latched = {(row["asset_symbol"], canonical_alert(row["alert_type"])) for row in existing}
     opened = []
 
     for action in plan_alert_actions(results, latched, min_thresh, max_thresh):
@@ -101,7 +125,7 @@ def evaluate_alerts(supabase, user_id, results, alerts_config, notify_email=None
                 .update({"alert_type": f"{alert_type}_resolved"})
                 .eq("user_id", user_id)
                 .eq("asset_symbol", symbol)
-                .eq("alert_type", alert_type)
+                .in_("alert_type", stored_types(alert_type))
                 .execute()
             )
             continue
@@ -138,7 +162,7 @@ def _email_open_crossings(supabase, user_id, notify_email, send_email) -> None:
             supabase.table("user_notifications")
             .select("id, asset_name, message")
             .eq("user_id", user_id)
-            .in_("alert_type", [BULLISH, BEARISH])
+            .in_("alert_type", [BULLISH, BEARISH, HELD_BULLISH, HELD_BEARISH])
             .is_("emailed_at", "null")
             .execute()
             .data
@@ -169,3 +193,25 @@ def _email_open_crossings(supabase, user_id, notify_email, send_email) -> None:
             )
         except Exception as exc:
             print(f"Email was accepted for {name} but could not be marked sent. {exc}")
+
+
+def dismiss_read_alerts(supabase, user_id) -> None:
+    """Remove read alerts from the feed. A score still past its line stays latched."""
+    for open_type, held_type in _HELD.items():
+        (
+            supabase.table("user_notifications")
+            .update({"alert_type": held_type, "is_read": True})
+            .eq("user_id", user_id)
+            .eq("is_read", True)
+            .eq("alert_type", open_type)
+            .execute()
+        )
+    (
+        supabase.table("user_notifications")
+        .delete()
+        .eq("user_id", user_id)
+        .eq("is_read", True)
+        .neq("alert_type", "group_invite")
+        .not_.in_("alert_type", [HELD_BULLISH, HELD_BEARISH])
+        .execute()
+    )
