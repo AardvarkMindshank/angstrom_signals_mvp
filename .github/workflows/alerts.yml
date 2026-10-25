@@ -6,6 +6,12 @@ on:
     # Supabase is the clock that starts this workflow every 5 minutes.
     - cron: "*/5 * * * *"
   workflow_dispatch:
+    inputs:
+      refresh_moods:
+        description: Rewrite the crypto and stock market sentiment on this run
+        required: false
+        default: false
+        type: boolean
 
 # One run at a time. A second start waits, and any further start is dropped.
 concurrency:
@@ -38,4 +44,5 @@ jobs:
           RESEND_FROM: ${{ secrets.RESEND_FROM }}
           XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+          FORCE_MARKET_MOOD: ${{ github.event.inputs.refresh_moods == 'true' && '1' || '' }}
         run: python run_alerts.py

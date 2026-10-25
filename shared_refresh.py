@@ -6,6 +6,7 @@ the sentiment clock. A session writes a row only when that asset has none yet.
 
 from __future__ import annotations
 
+import os
 import time
 
 import pandas as pd
@@ -148,11 +149,17 @@ def refresh_price_catalog(supabase, catalog: dict, days: int) -> dict:
     return frames
 
 
-def _save_mood(supabase, spec: dict) -> None:
-    report = analyze_market_mood(spec["key"], spec["label"], spec["query"], True)
+def _force_market_mood() -> bool:
+    """True only when this worker run was started to rewrite both market reports."""
+    return os.getenv("FORCE_MARKET_MOOD", "").strip().lower() in {"1", "true", "yes"}
+
+
+def _save_mood(supabase, spec: dict, force: bool = False) -> None:
+    report = analyze_market_mood(spec["key"], spec["label"], spec["query"], True, force=force)
     if report.get("ok"):
         save_market_mood(supabase, spec["key"], spec["query"], report, time.time())
-        print(f"Saved {spec['label']} sentiment.")
+        readings = sum(len(group.get("items") or []) for group in (report.get("gauges") or []))
+        print(f"Saved {spec['label']} sentiment with {readings} readings.")
     else:
         print(f"Sentiment skipped for {spec['label']}: {report.get('reason') or 'not saved'}")
 
@@ -171,22 +178,28 @@ def refresh_due_sentiment(supabase, catalog: dict) -> None:
     """Replace market and asset sentiment that is older than the sentiment clock.
 
     One run writes at most SENTIMENT_BATCH scores, oldest first, so a large
-    watchlist does not hold up the price and alert pass.
+    watchlist does not hold up the price and alert pass. A run started with
+    FORCE_MARKET_MOOD also rewrites the crypto and stock reports immediately.
     """
     if not sentiment_ready():
         print("Shared sentiment skipped: set the XAI_API_KEY secret for the background worker.")
         return
     slots = SENTIMENT_BATCH
+    force_moods = _force_market_mood()
+    if force_moods:
+        print("Shared sentiment: rewriting crypto and stock market sentiment on this run.")
     moods = load_market_moods(supabase) or {}
     for spec in MACRO_MOODS:
-        if slots <= 0:
-            break
         row = moods.get(spec["key"]) if isinstance(moods, dict) else None
-        if not sentiment_refresh_due(row_timestamp(row, "sentiment_updated_at")):
+        due = sentiment_refresh_due(row_timestamp(row, "sentiment_updated_at"))
+        if not due and not force_moods:
             continue
-        slots -= 1
+        if due:
+            if slots <= 0:
+                break
+            slots -= 1
         try:
-            _save_mood(supabase, spec)
+            _save_mood(supabase, spec, force=force_moods)
         except Exception as exc:
             print(f"Sentiment failed for {spec['label']}: {exc}")
     if slots <= 0 or not catalog:
