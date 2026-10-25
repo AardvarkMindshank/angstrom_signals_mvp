@@ -32,6 +32,15 @@ TECHNICAL_REFRESH_SECONDS = 5 * 60
 _HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; SignalsDashboard/1.0)"}
 _BUSY_UNTIL: dict[str, float] = {}
 _SCORE_CACHE: dict[str, tuple[float, dict]] = {}
+_KEY_REJECTED = False
+
+
+def _api_key() -> str:
+    """The xAI key, without a wrapping quote or a pasted Bearer prefix."""
+    key = (os.getenv("XAI_API_KEY") or "").strip().strip('"').strip("'")
+    if key.lower().startswith("bearer "):
+        key = key[7:].strip()
+    return key
 
 
 def sentiment_query(kind: str, label: str, ticker: str | None) -> str:
@@ -518,6 +527,15 @@ def _error_text(response: requests.Response) -> str:
     return message[:180]
 
 
+def _rejected_key(response: requests.Response) -> bool:
+    """xAI reports a bad key as 400, not only as 401."""
+    if response.status_code in (401, 403):
+        return True
+    if response.status_code != 400:
+        return False
+    return "incorrect api key" in _error_text(response).lower()
+
+
 def _attempt_note(model: str, response: requests.Response, label: str = "") -> str:
     """Status only. A successful parse is not logged."""
     name = f"{model}{label}"
@@ -573,9 +591,12 @@ def _scored_report(parsed: dict, headlines: list[dict]) -> dict | None:
 
 
 def _summarize(query: str, headlines: list[dict], prompt: str | None = None) -> dict:
-    key = (os.getenv("XAI_API_KEY") or "").strip()
+    global _KEY_REJECTED
+    key = _api_key()
     if not key:
         return {"ok": False, "reason": "missing_key"}
+    if _KEY_REJECTED:
+        return {"ok": False, "reason": "bad_key"}
     if time.time() < _BUSY_UNTIL.get(query, 0):
         return {"ok": False, "reason": "model_busy"}
 
@@ -591,6 +612,9 @@ def _summarize(query: str, headlines: list[dict], prompt: str | None = None) -> 
             saw_busy = True
             break
         notes.append(_attempt_note(attempt["model"], response))
+        if _rejected_key(response):
+            saw_auth = True
+            break
         if response.status_code in (400, 422):
             try:
                 response = _post_grok(key, prompt, attempt, structured=False)
@@ -599,6 +623,9 @@ def _summarize(query: str, headlines: list[dict], prompt: str | None = None) -> 
                 saw_busy = True
                 break
             notes.append(_attempt_note(attempt["model"], response, " plain"))
+            if _rejected_key(response):
+                saw_auth = True
+                break
         if response.status_code == 200:
             try:
                 parsed = _read_model_text(response, len(headlines))
@@ -621,13 +648,16 @@ def _summarize(query: str, headlines: list[dict], prompt: str | None = None) -> 
         saw_busy = True
 
     if saw_auth:
+        _KEY_REJECTED = True
         reason = "bad_key"
+        print(f"Grok rejected the API key (length {len(key)}).", flush=True)
     elif saw_busy:
         _BUSY_UNTIL[query] = time.time() + 60
         reason = "model_busy"
+        print(f"Grok did not return a score: {' | '.join(notes)}", flush=True)
     else:
         reason = "model_error"
-    print(f"Grok did not return a score: {' | '.join(notes)}", flush=True)
+        print(f"Grok did not return a score: {' | '.join(notes)}", flush=True)
     return {"ok": False, "reason": reason}
 
 
