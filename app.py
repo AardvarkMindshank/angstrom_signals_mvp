@@ -385,14 +385,18 @@ export default function(component) {
       button.blur();
       const pick = button.getAttribute("data-pick") || "";
       if (pick.indexOf("mood|") === 0) {
-        const target = document.getElementById("market-mood-" + pick.split("|")[1]);
-        let node = target;
-        for (let step = 0; node && step < 8; step += 1) {
+        const targetId = "market-mood-" + pick.split("|")[1];
+        const anchor = document.getElementById(targetId);
+        if (!anchor) return;
+        let section = anchor;
+        let node = anchor;
+        for (let step = 0; step < 8 && node; step += 1) {
           const sibling = node.nextElementSibling;
           const expander = sibling && sibling.querySelector
             ? sibling.querySelector('[data-testid="stExpander"]')
             : null;
           if (expander) {
+            section = expander;
             const details = expander.querySelector('[data-testid="stExpanderDetails"]');
             const summary = expander.querySelector("summary");
             if (details && details.hasAttribute("inert") && summary) summary.click();
@@ -400,6 +404,20 @@ export default function(component) {
           }
           node = node.parentElement;
         }
+        const go = () => {
+          const current = section && section.isConnected ? section : document.getElementById(targetId);
+          if (!current) return;
+          current.scrollIntoView({behavior: "auto", block: "start"});
+          const scroller = current.closest('[data-testid="stMain"]') || current.closest("section.main");
+          if (!scroller) return;
+          const top = current.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop - 72;
+          scroller.scrollTop = Math.max(0, top);
+        };
+        go();
+        window.setTimeout(go, 50);
+        window.setTimeout(go, 250);
+        window.setTimeout(go, 700);
+        return;
       }
       setTriggerValue("picked", pick);
     });
@@ -4710,7 +4728,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                 if mood_score is not None and pd.isna(mood_score):
                     mood_score = None
                 with column:
-                    picked = _score_table(
+                    _score_table(
                         key=f"snapshot_mood_{mood_key}",
                         data=render_mood_snapshot(
                             mood_label,
@@ -4719,12 +4737,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                             mood_key,
                             mood_voices.get(mood_key) or {},
                         ),
-                        on_picked_change=lambda: None,
-                    ).picked
-                    if picked and str(picked).startswith("mood|"):
-                        market = str(picked).split("|", 1)[1]
-                        if market in ("crypto", "stock"):
-                            _reveal_section(f"market_mood_{market}", f"market-mood-{market}")
+                    )
 
         snapshot_columns = st.columns(len(snapshot_cards))
 
