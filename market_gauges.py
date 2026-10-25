@@ -247,27 +247,17 @@ _DENIED = object()
 
 
 def _alpha_market():
-    """Alpha Vantage news tone, or the most-active list when news is unavailable."""
+    """How many of the most active US stocks rose or fell. One free Alpha Vantage call."""
     key = _secret_key("ALPHAVANTAGE_API_KEY", "alphavantage")
     if not key:
         return None
-    news, news_reason = _alpha_json(key, {
-        "function": "NEWS_SENTIMENT",
-        "topics": "financial_markets",
-        "limit": "50",
-    })
-    scored = _news_score(news)
-    if scored:
-        return scored
-    if news_reason == "ok":
-        news_reason = "no-score"
-    movers, movers_reason = _alpha_json(key, {"function": "TOP_GAINERS_LOSERS"})
+    movers, reason = _alpha_json(key, {"function": "TOP_GAINERS_LOSERS"})
     counted = _active_counts(movers)
     if counted:
         return counted
-    if movers_reason == "ok":
-        movers_reason = "no-count"
-    print(f"Alpha Vantage market reading skipped: news {news_reason}; movers {movers_reason}.")
+    if reason == "ok":
+        reason = "no-count"
+    print(f"Alpha Vantage market reading skipped: {reason}.")
     return None
 
 
