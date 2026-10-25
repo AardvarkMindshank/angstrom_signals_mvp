@@ -1659,9 +1659,23 @@ export default function(component) {
   const targetId = String((data && data.target) || "interactive-chart");
   if (!token || window.scrollChartToken === token) return;
   window.scrollChartToken = token;
+  const sectionFor = (id) => {
+    const anchor = document.getElementById(id);
+    if (!anchor) return null;
+    let node = anchor;
+    for (let step = 0; step < 8 && node; step += 1) {
+      const sibling = node.nextElementSibling;
+      const expander = sibling && sibling.querySelector
+        ? sibling.querySelector('[data-testid="stExpander"]')
+        : null;
+      if (expander) return expander;
+      node = node.parentElement;
+    }
+    return anchor;
+  };
   const alreadyOnScreen = () => {
     if (targetId !== "interactive-chart") return false;
-    const target = document.getElementById(targetId);
+    const target = sectionFor(targetId);
     if (!target) return false;
     const scroller = target.closest('[data-testid="stMain"]') || target.closest("section.main");
     const viewTop = scroller ? scroller.getBoundingClientRect().top : 0;
@@ -1670,26 +1684,15 @@ export default function(component) {
     return rect.top >= viewTop - 16 && rect.top <= viewTop + (viewBottom - viewTop) * 0.55;
   };
   const openClosed = () => {
-    const target = document.getElementById(targetId);
-    if (!target) return;
-    let node = target;
-    for (let step = 0; step < 8 && node; step += 1) {
-      const sibling = node.nextElementSibling;
-      const expander = sibling && sibling.querySelector
-        ? sibling.querySelector('[data-testid="stExpander"]')
-        : null;
-      if (expander) {
-        const details = expander.querySelector('[data-testid="stExpanderDetails"]');
-        const summary = expander.querySelector("summary");
-        if (details && details.hasAttribute("inert") && summary) summary.click();
-        return;
-      }
-      node = node.parentElement;
-    }
+    const target = sectionFor(targetId);
+    if (!target || target.id) return;
+    const details = target.querySelector('[data-testid="stExpanderDetails"]');
+    const summary = target.querySelector("summary");
+    if (details && details.hasAttribute("inert") && summary) summary.click();
   };
   const go = () => {
     if (alreadyOnScreen()) return;
-    const target = document.getElementById(targetId);
+    const target = sectionFor(targetId);
     if (!target) return;
     target.scrollIntoView({behavior: "auto", block: "start"});
     const scroller = target.closest('[data-testid="stMain"]') || target.closest("section.main");
@@ -1962,15 +1965,17 @@ export default function(component) {
   button.title = String((data && data.help) || "");
   button.onclick = () => {
     const targetId = button.dataset.target || "";
-    const target = document.getElementById(targetId);
-    if (!target) return;
-    let node = target;
+    const anchor = document.getElementById(targetId);
+    if (!anchor) return;
+    let section = anchor;
+    let node = anchor;
     for (let step = 0; step < 8 && node; step += 1) {
       const sibling = node.nextElementSibling;
       const expander = sibling && sibling.querySelector
         ? sibling.querySelector('[data-testid="stExpander"]')
         : null;
       if (expander) {
+        section = expander;
         const details = expander.querySelector('[data-testid="stExpanderDetails"]');
         const summary = expander.querySelector("summary");
         if (details && details.hasAttribute("inert") && summary) summary.click();
@@ -1979,7 +1984,7 @@ export default function(component) {
       node = node.parentElement;
     }
     const go = () => {
-      const current = document.getElementById(targetId);
+      const current = section && section.isConnected ? section : document.getElementById(targetId);
       if (!current) return;
       current.scrollIntoView({behavior: "auto", block: "start"});
       const scroller = current.closest('[data-testid="stMain"]') || current.closest("section.main");
