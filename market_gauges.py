@@ -7,6 +7,7 @@ stable free feed is left as a short note, never a made-up number.
 
 from __future__ import annotations
 
+import os
 import time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
@@ -90,7 +91,70 @@ def _session() -> requests.Session:
     return session
 
 
+def _fred_api_key() -> str:
+    """FRED key from the worker environment, or from the Streamlit secrets."""
+    key = (os.getenv("FRED_API_KEY") or "").strip().strip('"').strip("'")
+    if key:
+        return key
+    try:
+        import streamlit as st
+        key = str(st.secrets["fred"]["api_key"]).strip()
+    except Exception:
+        return ""
+    if key:
+        os.environ["FRED_API_KEY"] = key
+    return key
+
+
 def _fred_tail(series_id: str):
+    key = _fred_api_key()
+    if key:
+        fetched = _fred_api_tail(series_id, key)
+        if fetched:
+            return fetched
+    return _fred_csv_tail(series_id)
+
+
+def _fred_api_tail(series_id: str, key: str):
+    """The last two published observations. The key stays out of any error text."""
+    response = _session().get(
+        "https://api.stlouisfed.org/fred/series/observations",
+        params={
+            "series_id": series_id,
+            "api_key": key,
+            "file_type": "json",
+            "sort_order": "desc",
+            "limit": 8,
+        },
+        timeout=15,
+    )
+    if response.status_code != 200:
+        return None
+    try:
+        observations = response.json().get("observations") or []
+    except ValueError:
+        return None
+    rows = []
+    for item in observations:
+        if not isinstance(item, dict):
+            continue
+        date = str(item.get("date") or "").strip()
+        raw = str(item.get("value") or "").strip()
+        if not date or raw in {"", "."}:
+            continue
+        try:
+            rows.append((date, float(raw)))
+        except ValueError:
+            continue
+        if len(rows) >= 2:
+            break
+    if not rows:
+        return None
+    previous = rows[1] if len(rows) > 1 else None
+    return rows[0], previous
+
+
+def _fred_csv_tail(series_id: str):
     response = _session().get(
         "https://fred.stlouisfed.org/graph/fredgraph.csv",
         params={"id": series_id},
