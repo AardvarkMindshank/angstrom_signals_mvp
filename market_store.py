@@ -1060,6 +1060,7 @@ def save_market_mood(supabase, market_key: str, query: str, report: dict, stored
     except Exception as exc:
         _warn(exc)
         return False
+    _record_sentiment_history(supabase, market_key, score, stored_at)
     return True
 
 
@@ -1089,7 +1090,22 @@ def save_sentiment(supabase, kind: str, asset_id: str, report: dict, stored_at: 
     except Exception as exc:
         _warn(exc)
         return
+    _record_sentiment_history(supabase, asset_market_key(kind, identity), score, stored_at)
     drop_expired_sentiment_comments(supabase)
+
+
+def _record_sentiment_history(supabase, subject_key: str, score: float, stored_at: float) -> None:
+    """Append one score. A repeat of the same update is ignored. Older than 30 days is removed."""
+    if not subject_key:
+        return
+    try:
+        supabase.rpc("record_sentiment_score", {
+            "subject_key": subject_key,
+            "score": score,
+            "recorded_at": datetime.fromtimestamp(stored_at, timezone.utc).isoformat(),
+        }).execute()
+    except Exception as exc:
+        _warn(exc)
 
 
 def load_shared_market(supabase, keys: list[str]) -> dict[str, dict]:

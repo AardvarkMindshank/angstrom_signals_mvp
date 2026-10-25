@@ -1881,3 +1881,54 @@ $$;
 revoke all on function public.remove_group_member(bigint, uuid) from public;
 revoke all on function public.remove_group_member(bigint, uuid) from anon;
 grant execute on function public.remove_group_member(bigint, uuid) to authenticated;
+
+-- One row per sentiment update. The live tables keep only the latest score.
+-- subject_key is crypto, stock, or an asset key such as Crypto|sui.
+-- Rows older than 30 days are removed when a new score is recorded.
+create table if not exists public.sentiment_history (
+    subject_key text not null,
+    score numeric not null,
+    recorded_at timestamptz not null,
+    primary key (subject_key, recorded_at)
+);
+
+alter table public.sentiment_history enable row level security;
+
+drop policy if exists "signed-in users read sentiment history" on public.sentiment_history;
+create policy "signed-in users read sentiment history" on public.sentiment_history
+    for select
+    to authenticated
+    using (true);
+
+grant select on public.sentiment_history to authenticated;
+
+create or replace function public.record_sentiment_score(
+    subject_key text,
+    score numeric,
+    recorded_at timestamptz
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+    if subject_key is null or btrim(subject_key) = '' or score is null or recorded_at is null then
+        return;
+    end if;
+    if score < 0 or score > 100 then
+        return;
+    end if;
+    insert into public.sentiment_history (subject_key, score, recorded_at)
+    values (left(btrim(subject_key), 200), score, recorded_at)
+    on conflict (subject_key, recorded_at) do nothing;
+
+    delete from public.sentiment_history
+    where recorded_at < now() - interval '30 days';
+end;
+$$;
+
+revoke all on function public.record_sentiment_score(text, numeric, timestamptz) from public;
+revoke all on function public.record_sentiment_score(text, numeric, timestamptz) from anon;
+grant execute on function public.record_sentiment_score(text, numeric, timestamptz) to authenticated;
+grant execute on function public.record_sentiment_score(text, numeric, timestamptz) to service_role;
