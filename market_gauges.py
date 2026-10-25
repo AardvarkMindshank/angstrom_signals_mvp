@@ -83,7 +83,7 @@ def _fetch_one(name: str):
     if name == "CNN":
         return _cnn()
     if name == "AV":
-        return _alpha_sectors()
+        return _alpha_market()
     if name == "POLY":
         return _polygon_breadth()
     return _fred_tail(name)
@@ -246,85 +246,144 @@ def _cnn():
 _DENIED = object()
 
 
-def _alpha_sectors():
-    """Best and worst US sector over the last day. One Alpha Vantage call."""
+def _alpha_market():
+    """Alpha Vantage news tone, or the most-active list when news is unavailable."""
     key = _secret_key("ALPHAVANTAGE_API_KEY", "alphavantage")
     if not key:
         return None
+    news = _alpha_json(key, {
+        "function": "NEWS_SENTIMENT",
+        "topics": "financial_markets",
+        "limit": "50",
+    })
+    scored = _news_score(news)
+    if scored:
+        return scored
+    counted = _active_counts(_alpha_json(key, {"function": "TOP_GAINERS_LOSERS"}))
+    if counted:
+        return counted
+    print("Alpha Vantage market reading skipped.")
+    return None
+
+
+def _alpha_json(key: str, params: dict):
+    """JSON from Alpha Vantage. The key stays out of any error text."""
+    query = dict(params)
+    query["apikey"] = key
     try:
-        response = _session().get(
-            "https://www.alphavantage.co/query",
-            params={"function": "SECTOR", "apikey": key},
-            timeout=20,
-        )
+        response = _session().get("https://www.alphavantage.co/query", params=query, timeout=20)
     except requests.RequestException:
         return None
     if response.status_code != 200:
-        print(f"Alpha Vantage sectors skipped: HTTP {response.status_code}.")
         return None
     try:
         body = response.json()
     except ValueError:
-        print("Alpha Vantage sectors skipped: the response was not JSON.")
         return None
-    sides = _sector_sides(body)
-    if sides:
-        return sides
-    names = ",".join(str(name) for name in list(body)[:8]) if isinstance(body, dict) else "not-json"
-    print(f"Alpha Vantage sectors skipped: {names}.")
-    return None
+    return body if isinstance(body, dict) else None
 
 
-def _sector_sides(body: dict):
+def _news_score(body):
     if not isinstance(body, dict):
         return None
-    block = body.get("Rank B: 1 Day Performance")
-    if not isinstance(block, dict):
-        block = None
-        for name, value in body.items():
-            if "1 day" in str(name).lower() and isinstance(value, dict):
-                block = value
-                break
-    if not block:
-        return None
-    parsed = []
-    for name, raw in block.items():
-        text = str(raw).strip().replace("%", "").replace("+", "")
+    scores = []
+    newest = ""
+    for item in body.get("feed") or []:
+        if not isinstance(item, dict):
+            continue
         try:
-            parsed.append((str(name).strip(), float(text)))
+            scores.append(float(item.get("overall_sentiment_score")))
+        except (TypeError, ValueError):
+            continue
+        stamp = str(item.get("time_published") or "")
+        if len(stamp) >= 8 and stamp[:8].isdigit() and stamp[:8] > newest:
+            newest = stamp[:8]
+    if len(scores) < 5:
+        return None
+    date = f"{newest[:4]}-{newest[4:6]}-{newest[6:8]}" if newest else ""
+    average = sum(scores) / len(scores)
+    return {"kind": "news", "score": average, "count": len(scores), "date": date}
+
+
+def _active_counts(body):
+    if not isinstance(body, dict):
+        return None
+    higher = lower = 0
+    for row in body.get("most_actively_traded") or []:
+        if not isinstance(row, dict):
+            continue
+        text = str(row.get("change_percentage") or "").strip().replace("%", "").replace("+", "")
+        try:
+            change = float(text)
         except ValueError:
             continue
-    if not parsed:
+        if change > 0:
+            higher += 1
+        elif change < 0:
+            lower += 1
+    total = higher + lower
+    if total < 5:
         return None
-    parsed.sort(key=lambda row: row[1])
-    refreshed = str((body.get("Meta Data") or {}).get("Last Refreshed") or "")
+    refreshed = str(body.get("last_updated") or "")
     date = refreshed[:10] if len(refreshed) >= 10 and refreshed[4] == "-" else ""
-    return {"lead": (*parsed[-1], date), "lag": (*parsed[0], date)}
+    return {"kind": "active", "higher": higher, "lower": lower, "total": total, "date": date}
 
 
-def _alpha_sector_items(payload) -> list[dict]:
+def _alpha_label(score: float) -> str:
+    if score <= -0.35:
+        return "Bearish"
+    if score <= -0.15:
+        return "Somewhat-Bearish"
+    if score < 0.15:
+        return "Neutral"
+    if score < 0.35:
+        return "Somewhat-Bullish"
+    return "Bullish"
+
+
+def _alpha_items(payload) -> list[dict]:
     if not isinstance(payload, dict):
         return []
-    rows = []
-    for label, side in (("Leading sector", payload.get("lead")), ("Lagging sector", payload.get("lag"))):
-        if not side or len(side) < 3:
-            continue
-        name, change, date = side[0], side[1], side[2]
-        detail = "1-day performance"
-        stamp = _stamp(str(date))
+    date = str(payload.get("date") or "")
+    stamp = _stamp(date)
+    if payload.get("kind") == "news":
+        try:
+            score = float(payload.get("score"))
+            count = int(payload.get("count"))
+        except (TypeError, ValueError):
+            return []
+        detail = f"Average score {score:+.2f} across {count} headlines"
         if stamp:
             detail = f"{detail} · {stamp}"
-        rows.append(_reading(
-            label,
-            f"{name} {change:+.2f}%",
+        return [_reading(
+            "Market news sentiment",
+            _alpha_label(score),
             detail,
             "Alpha Vantage",
             "https://www.alphavantage.co/",
             "",
-            str(date)[:10],
+            date[:10],
+        )]
+    if payload.get("kind") != "active":
+        return []
+    rows = []
+    for name, count in (("Most active higher", payload.get("higher")), ("Most active lower", payload.get("lower"))):
+        try:
+            count = int(count)
+        except (TypeError, ValueError):
+            continue
+        detail = "Of the most actively traded US stocks"
+        if stamp:
+            detail = f"{detail} · {stamp}"
+        rows.append(_reading(
+            name,
+            f"{count}",
+            detail,
+            "Alpha Vantage",
+            "https://www.alphavantage.co/",
+            "",
+            date[:10],
         ))
-    if len(rows) == 2 and rows[0]["value"] == rows[1]["value"]:
-        return rows[:1]
     return rows
 
 
@@ -585,7 +644,7 @@ def _stock_groups(raw: dict) -> list[dict]:
         },
         {
             "title": "Institutional & professional data providers",
-            "items": _present(*_alpha_sector_items(raw.get("AV")), *_polygon_items(raw.get("POLY"))),
+            "items": _present(*_alpha_items(raw.get("AV")), *_polygon_items(raw.get("POLY"))),
             "note": "Bloomberg Terminal and Refinitiv are not connected.",
         },
     ]
