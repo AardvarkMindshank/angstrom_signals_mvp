@@ -44,5 +44,7 @@ jobs:
           RESEND_FROM: ${{ secrets.RESEND_FROM }}
           XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+          ALPHAVANTAGE_API_KEY: ${{ secrets.ALPHAVANTAGE_API_KEY }}
+          POLYGON_API_KEY: ${{ secrets.POLYGON_API_KEY }}
           FORCE_MARKET_MOOD: ${{ github.event.inputs.refresh_moods == 'true' && '1' || '' }}
         run: python run_alerts.py

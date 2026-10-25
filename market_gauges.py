@@ -10,7 +10,7 @@ from __future__ import annotations
 import os
 import time
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from urllib.parse import quote
 
 import requests
@@ -60,7 +60,7 @@ def gauge_brief(groups: list[dict]) -> str:
 def _load_raw(market_key: str) -> dict:
     jobs = {
         "crypto": ("M2SL", "WALCL", "DFF", "DGS10", "DXY", "FNG", "CG"),
-        "stock": ("DFF", "T10YIE", "UMCSENT", "MICH", "VIXCLS", "CNN"),
+        "stock": ("DFF", "T10YIE", "UMCSENT", "MICH", "VIXCLS", "CNN", "AV", "POLY"),
     }[market_key]
     raw: dict = {}
     with ThreadPoolExecutor(max_workers=len(jobs)) as pool:
@@ -82,6 +82,10 @@ def _fetch_one(name: str):
         return _coingecko()
     if name == "CNN":
         return _cnn()
+    if name == "AV":
+        return _alpha_sectors()
+    if name == "POLY":
+        return _polygon_breadth()
     return _fred_tail(name)
 
 
@@ -91,19 +95,23 @@ def _session() -> requests.Session:
     return session
 
 
-def _fred_api_key() -> str:
-    """FRED key from the worker environment, or from the Streamlit secrets."""
-    key = (os.getenv("FRED_API_KEY") or "").strip().strip('"').strip("'")
+def _secret_key(env_name: str, section: str) -> str:
+    """A vendor key from the worker environment, or from the Streamlit secrets."""
+    key = (os.getenv(env_name) or "").strip().strip('"').strip("'")
     if key:
         return key
     try:
         import streamlit as st
-        key = str(st.secrets["fred"]["api_key"]).strip()
+        key = str(st.secrets[section]["api_key"]).strip()
     except Exception:
         return ""
     if key:
-        os.environ["FRED_API_KEY"] = key
+        os.environ[env_name] = key
     return key
+
+
+def _fred_api_key() -> str:
+    return _secret_key("FRED_API_KEY", "fred")
 
 
 def _fred_tail(series_id: str):
@@ -235,6 +243,224 @@ def _cnn():
     return block
 
 
+_DENIED = object()
+
+
+def _alpha_sectors():
+    """Best and worst US sector over the last day. One Alpha Vantage call."""
+    key = _secret_key("ALPHAVANTAGE_API_KEY", "alphavantage")
+    if not key:
+        return None
+    try:
+        response = _session().get(
+            "https://www.alphavantage.co/query",
+            params={"function": "SECTOR", "apikey": key},
+            timeout=20,
+        )
+    except requests.RequestException:
+        return None
+    if response.status_code != 200:
+        return None
+    try:
+        body = response.json()
+    except ValueError:
+        return None
+    return _sector_sides(body)
+
+
+def _sector_sides(body: dict):
+    if not isinstance(body, dict):
+        return None
+    block = body.get("Rank B: 1 Day Performance")
+    if not isinstance(block, dict):
+        block = None
+        for name, value in body.items():
+            if "1 day" in str(name).lower() and isinstance(value, dict):
+                block = value
+                break
+    if not block:
+        return None
+    parsed = []
+    for name, raw in block.items():
+        text = str(raw).strip().replace("%", "").replace("+", "")
+        try:
+            parsed.append((str(name).strip(), float(text)))
+        except ValueError:
+            continue
+    if not parsed:
+        return None
+    parsed.sort(key=lambda row: row[1])
+    refreshed = str((body.get("Meta Data") or {}).get("Last Refreshed") or "")
+    date = refreshed[:10] if len(refreshed) >= 10 and refreshed[4] == "-" else ""
+    return {"lead": (*parsed[-1], date), "lag": (*parsed[0], date)}
+
+
+def _alpha_sector_items(payload) -> list[dict]:
+    if not isinstance(payload, dict):
+        return []
+    rows = []
+    for label, side in (("Leading sector", payload.get("lead")), ("Lagging sector", payload.get("lag"))):
+        if not side or len(side) < 3:
+            continue
+        name, change, date = side[0], side[1], side[2]
+        detail = "1-day performance"
+        stamp = _stamp(str(date))
+        if stamp:
+            detail = f"{detail} · {stamp}"
+        rows.append(_reading(
+            label,
+            f"{name} {change:+.2f}%",
+            detail,
+            "Alpha Vantage",
+            "https://www.alphavantage.co/",
+            "",
+            str(date)[:10],
+        ))
+    if len(rows) == 2 and rows[0]["value"] == rows[1]["value"]:
+        return rows[:1]
+    return rows
+
+
+def _polygon_breadth():
+    """How many US stocks rose or fell in the last session. One Polygon call when the day is known."""
+    key = _secret_key("POLYGON_API_KEY", "polygon")
+    if not key:
+        return None
+    today = datetime.now(timezone.utc).date()
+    for ago in range(8):
+        day = today - timedelta(days=ago)
+        if day.weekday() >= 5:
+            continue
+        body = _polygon_json(
+            f"/v2/aggs/grouped/locale/us/market/stocks/{day.isoformat()}",
+            key,
+            {"adjusted": "true"},
+        )
+        if body is _DENIED:
+            break
+        counted = _breadth_from_grouped(body, day.isoformat())
+        if counted:
+            return counted
+    body = _polygon_json("/v2/aggs/ticker/SPY/prev", key, {"adjusted": "true"})
+    if body is _DENIED:
+        return None
+    return _spy_from_prev(body)
+
+
+def _polygon_json(path: str, key: str, params: dict):
+    """JSON from Polygon. The key stays out of any error text."""
+    query = dict(params)
+    query["apiKey"] = key
+    try:
+        response = _session().get("https://api.polygon.io" + path, params=query, timeout=25)
+    except requests.RequestException:
+        return None
+    if response.status_code in {401, 403, 429}:
+        return _DENIED
+    if response.status_code != 200:
+        return None
+    try:
+        body = response.json()
+    except ValueError:
+        return None
+    if not isinstance(body, dict):
+        return None
+    status = str(body.get("status") or "").upper()
+    if status in {"ERROR", "NOT_AUTHORIZED"}:
+        return _DENIED
+    return body
+
+
+def _breadth_from_grouped(body, day: str):
+    if not isinstance(body, dict):
+        return None
+    up = down = 0
+    for row in body.get("results") or []:
+        if not isinstance(row, dict):
+            continue
+        try:
+            opened = float(row.get("o"))
+            closed = float(row.get("c"))
+        except (TypeError, ValueError):
+            continue
+        if closed > opened:
+            up += 1
+        elif closed < opened:
+            down += 1
+    total = up + down
+    if total < 100:
+        return None
+    return {"kind": "breadth", "up": up, "down": down, "total": total, "date": day}
+
+
+def _spy_from_prev(body):
+    if not isinstance(body, dict):
+        return None
+    results = body.get("results") or []
+    if not results or not isinstance(results[0], dict):
+        return None
+    row = results[0]
+    try:
+        opened = float(row.get("o"))
+        closed = float(row.get("c"))
+    except (TypeError, ValueError):
+        return None
+    date = ""
+    try:
+        date = datetime.fromtimestamp(int(row.get("t")) / 1000, timezone.utc).strftime("%Y-%m-%d")
+    except (TypeError, ValueError, OSError):
+        date = ""
+    return {"kind": "spy", "open": opened, "close": closed, "date": date}
+
+
+def _polygon_items(payload) -> list[dict]:
+    if not isinstance(payload, dict):
+        return []
+    date = str(payload.get("date") or "")
+    stamp = _stamp(date)
+    if payload.get("kind") == "breadth":
+        total = int(payload.get("total") or 0)
+        if total <= 0:
+            return []
+        rows = []
+        for name, count in (("US stocks higher", payload.get("up")), ("US stocks lower", payload.get("down"))):
+            try:
+                count = int(count)
+            except (TypeError, ValueError):
+                continue
+            share = f"{count / total * 100:.0f}% of the last session"
+            detail = f"{share} · {stamp}" if stamp else share
+            rows.append(_reading(
+                name,
+                f"{count:,}",
+                detail,
+                "Polygon",
+                "https://massive.com/stocks",
+                "",
+                date[:10],
+            ))
+        return rows
+    if payload.get("kind") != "spy":
+        return []
+    try:
+        opened = float(payload.get("open"))
+        closed = float(payload.get("close"))
+    except (TypeError, ValueError):
+        return []
+    detail = _move_phrase(closed, opened, "open", "percent")
+    if stamp:
+        detail = f"{detail} · {stamp}" if detail else stamp
+    return [_reading(
+        "S&P 500 (SPY)",
+        f"{closed:,.2f}",
+        detail,
+        "Polygon",
+        "https://massive.com/stocks",
+        "",
+        date[:10],
+    )]
+
+
 def _crypto_groups(raw: dict) -> list[dict]:
     return [
         {
@@ -352,11 +578,8 @@ def _stock_groups(raw: dict) -> list[dict]:
         },
         {
             "title": "Institutional & professional data providers",
-            "items": [],
-            "note": (
-                "Bloomberg Terminal, Refinitiv, Alpha Vantage, and Polygon are not connected. "
-                "The readings above use public Fed, Michigan, CBOE, and CNN figures."
-            ),
+            "items": _present(*_alpha_sector_items(raw.get("AV")), *_polygon_items(raw.get("POLY"))),
+            "note": "Bloomberg Terminal and Refinitiv are not connected.",
         },
     ]
 

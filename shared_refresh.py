@@ -158,8 +158,16 @@ def _save_mood(supabase, spec: dict, force: bool = False) -> None:
     report = analyze_market_mood(spec["key"], spec["label"], spec["query"], True, force=force)
     if report.get("ok"):
         save_market_mood(supabase, spec["key"], spec["query"], report, time.time())
-        readings = sum(len(group.get("items") or []) for group in (report.get("gauges") or []))
-        print(f"Saved {spec['label']} sentiment with {readings} readings.")
+        groups = report.get("gauges") or []
+        readings = sum(len(group.get("items") or []) for group in groups)
+        sources = sorted({
+            str(item.get("source"))
+            for group in groups
+            for item in (group.get("items") or [])
+            if item.get("source")
+        })
+        tail = f" ({', '.join(sources)})" if sources else ""
+        print(f"Saved {spec['label']} sentiment with {readings} readings{tail}.")
     else:
         print(f"Sentiment skipped for {spec['label']}: {report.get('reason') or 'not saved'}")
 
