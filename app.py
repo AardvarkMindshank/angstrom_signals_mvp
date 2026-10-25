@@ -3688,9 +3688,10 @@ def my_groups_panel() -> None:
     st.markdown(
         "<style>"
         "[class*='st-key-group_fold_'] [data-testid='stMarkdownContainer'] p{margin:0 !important;display:flex;align-items:center;}"
-        "[class*='st-key-group_remove_'] button,[class*='st-key-group_xdelete_'] button{color:#b91c1c !important;background:transparent !important;"
-        "border:none !important;box-shadow:none !important;font-size:2.7rem !important;font-weight:700 !important;"
-        "line-height:1 !important;min-height:0 !important;height:auto !important;padding:0 .15rem !important;}"
+        "[class*='st-key-group_remove_'] button,[class*='st-key-group_xdelete_'] button,"
+        "[class*='st-key-group_remove_'] button *,[class*='st-key-group_xdelete_'] button *{color:#b91c1c !important;background:transparent !important;"
+        "border:none !important;box-shadow:none !important;font-size:5.4rem !important;font-weight:700 !important;"
+        "line-height:1 !important;min-height:0 !important;height:auto !important;padding:0 !important;}"
         "</style>",
         unsafe_allow_html=True,
     )
@@ -3704,10 +3705,17 @@ def my_groups_panel() -> None:
             name = " ".join(str(row.get("name") or "").split()) or "Group"
             count = _group_member_count(row)
             detail = f"{count} member" if count == 1 else f"{count} members"
-            left, right = st.columns([5, 1], vertical_alignment="center")
-            with left.expander(f"{name} · {detail}", expanded=False, key=f"group_fold_{gid}"):
-                _group_member_list(row, gid)
-            if right.button("×", key=f"group_xdelete_{gid}", help="Delete this group", type="tertiary"):
+            delete_group = False
+            with st.container(horizontal=True, vertical_alignment="center", gap="small"):
+                with st.expander(f"{name} · {detail}", expanded=False, key=f"group_fold_{gid}"):
+                    _group_member_list(row, gid)
+                delete_group = st.button(
+                    "×",
+                    key=f"group_xdelete_{gid}",
+                    help="Delete this group",
+                    type="tertiary",
+                )
+            if delete_group:
                 st.session_state["group_delete_id"] = gid
             if st.session_state.get("group_delete_id") == gid:
                 st.caption("Delete this group? Members will lose it.")
