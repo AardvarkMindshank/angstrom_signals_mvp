@@ -2488,6 +2488,7 @@ _MAIN_SECTION_IDS = (
     "market_mood_stock",
     "max_pain",
     "market_sentiment_panel",
+    "signal_matrix",
 )
 _SECTION_IDS = _MAIN_SECTION_IDS + (
     "help_guides",
@@ -4269,7 +4270,7 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
     st.markdown("""
 **How to use it**
 
-1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest. Quick Snapshot, Market sentiment for crypto, Market sentiment for stocks, Crypto Scores, Equity Scores, Interactive Chart, Score Breakdown, Max pain, and Market sentiment each sit in a section that starts open. Close a header to fold that section away. **Open all** and **Collapse all**, on the right of the page title, do that for every one of those sections. The square beside them stacks every section in one column, with Quick Snapshot first. The mark with a wide top and two panes underneath puts Quick Snapshot and both score tables across the top, market sentiment on the left, and Interactive Chart, Score Breakdown, Max pain, and Market sentiment on the right. Those two bottom columns start at equal width. Drag the line between them to give either side more room. That line stays inside those two columns. The wide or single choice, that column split, the open asset, the social panel's width, split, and pin, and the open or collapsed state of each section are saved on your account and come back when you log in. On a narrow screen the wide layout stacks the left and right parts. **I trade cryptos**, **I trade equities**, and **I trade both**, in Settings, are saved on your account. A market you leave out is hidden, including its sentiment, its score table, and its Quick Snapshot boxes. The chart follows the markets you trade. Collapse all also closes this guide. Open all does not open it. **Feedback**, at the bottom of the sidebar, sends an issue or an idea. It is stored as submitted. The arrow on the left edge of the page closes the sidebar. It stays on that edge when the sidebar is closed, so the sidebar can be opened again. Hover the arrow to see which action it will take.
+1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest. Quick Snapshot, Market sentiment for crypto, Market sentiment for stocks, Crypto Scores, Equity Scores, Interactive Chart, Score Breakdown, Max pain, Market sentiment, and Signal matrix each sit in a section that starts open. Close a header to fold that section away. **Open all** and **Collapse all**, on the right of the page title, do that for every one of those sections. The square beside them stacks every section in one column, with Quick Snapshot first. The mark with a wide top and two panes underneath puts Quick Snapshot and both score tables across the top, market sentiment on the left, and Interactive Chart, Score Breakdown, Max pain, Market sentiment, and Signal matrix on the right. Those two bottom columns start at equal width. Drag the line between them to give either side more room. That line stays inside those two columns. The wide or single choice, that column split, the open asset, the social panel's width, split, and pin, and the open or collapsed state of each section are saved on your account and come back when you log in. On a narrow screen the wide layout stacks the left and right parts. **I trade cryptos**, **I trade equities**, and **I trade both**, in Settings, are saved on your account. A market you leave out is hidden, including its sentiment, its score table, and its Quick Snapshot boxes. The chart follows the markets you trade. Collapse all also closes this guide. Open all does not open it. **Feedback**, at the bottom of the sidebar, sends an issue or an idea. It is stored as submitted. The arrow on the left edge of the page closes the sidebar. It stays on that edge when the sidebar is closed, so the sidebar can be opened again. Hover the arrow to see which action it will take.
 2. Click a name in either table, a Quick Snapshot box, or an alert under Notifications. That asset stays highlighted, and the page moves down to the chart when the chart is off screen. Click a column title to sort that table. It starts with the strongest score at the top.
 3. Extra metrics add **7d %**, **Market Cap**, **ATR %**, and **Vol**. A separate checkbox adds **1d %** before the seven-day change and **30d %** after it. For **1d %** and **7d %**, green means the price rose and red means it fell. **30d %** uses the same colors as the **30-day trend**: green for a rise of about 2% or more, red for a fall of about 2% or more, and orange when the move stays inside about 2%. For stocks, one day is the previous trading session. **Market Cap** is the latest size of the asset, from CoinGecko for crypto and Yahoo for stocks. **ATR %** is volatility. **Vol** is volume versus its 20-day average.
 4. Alerts fire at 70 and 30 unless you move those sliders. One email goes to the address on your account when a technical score crosses a boundary. It is not sent again until the score leaves that boundary and crosses it later. Sentiment scores do not send alerts.
@@ -6123,6 +6124,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             sentiment_label,
             crypto_ticker(asset_key) if asset_type == "Crypto" else asset_key,
         )
+        show_signal_matrix(asset_type, asset_key, sentiment_label, df_chart, weights)
     # Outside both wide columns, so it cannot push the chart header down.
     _scroll_chart(
         key="scroll_to_chart",
@@ -6841,6 +6843,209 @@ def show_max_pain(kind: str, asset_id: str, label: str, chart_price: float | Non
             "It is not a price target, and it is not part of the technical score. "
             "Open interest is contracts for stocks, and coin amount for Bitcoin and Ethereum."
         )
+
+
+def _sentiment_points(subject_key: str) -> list[tuple[str, float]]:
+    """Saved sentiment readings for one market or asset. Empty when history is not ready."""
+    try:
+        response = (
+            supabase.table("sentiment_history")
+            .select("score, recorded_at")
+            .eq("subject_key", subject_key)
+            .order("recorded_at")
+            .execute()
+        )
+    except Exception:
+        return []
+    points = []
+    for row in response.data or []:
+        day = str(row.get("recorded_at") or "")[:10]
+        try:
+            score = float(row.get("score"))
+        except (TypeError, ValueError):
+            continue
+        if day and score == score:
+            points.append((day, score))
+    return points
+
+
+def _lead_label(value) -> str:
+    if value is None:
+        return "—"
+    return f"{value:+.2f}"
+
+
+def show_signal_matrix(kind: str, asset_id: str, label: str, indicated, weights: dict) -> None:
+    """Price across 30 days, with each signal set on those same dates."""
+    from signal_matrix import LEAD_HORIZONS, MATRIX_DAYS, build_matrix
+
+    shown = " ".join(str(label or "").split()) or "Selected asset"
+    with section_expander(f"▦ Signal matrix - {shown}", "signal_matrix"):
+        if indicated is None or getattr(indicated, "empty", True):
+            st.caption("Price history is not ready for this asset yet.")
+            return
+        view = st.radio(
+            "Matrix display",
+            ["Lines", "Numbers"],
+            horizontal=True,
+            label_visibility="collapsed",
+            key="signal_matrix_view",
+        )
+        horizon = st.radio(
+            "Lead window",
+            list(LEAD_HORIZONS),
+            format_func=lambda days: f"Next {days} day" if days == 1 else f"Next {days} days",
+            horizontal=True,
+            key="signal_matrix_horizon",
+        )
+        sets = [("TA score", weights or {})]
+        for stored_name, plain in (
+            ("📊 Trend Following", "Trend Following"),
+            ("📉 Mean Reversion", "Mean Reversion"),
+            ("🚀 Momentum Heavy", "Momentum Heavy"),
+        ):
+            sets.append((plain, built_in_profiles.get(stored_name) or {}))
+        for name, saved in (custom_profiles or {}).items():
+            if name in built_in_profiles or not isinstance(saved, dict):
+                continue
+            sets.append((str(name), saved))
+        market_key = "crypto" if kind == "Crypto" else "stock"
+        sentiment = {
+            "Market sentiment": _sentiment_points(market_key),
+            "Asset sentiment": _sentiment_points(asset_market_key(kind, asset_id)),
+        }
+        matrix = build_matrix(indicated, sets, sentiment, int(horizon), MATRIX_DAYS)
+        dates = matrix["dates"]
+        if len(dates) < 2:
+            st.caption("Not enough daily prices yet to draw this matrix.")
+            return
+        st.caption(
+            f"The last {len(dates)} daily closes, then each signal on those same dates. "
+            f"Lead is how closely that signal lined up with the price change over the next {int(horizon)} "
+            + ("day" if int(horizon) == 1 else "days")
+            + ". Positive means a high score came before a rise. A blank day has no saved reading."
+        )
+        rows = matrix["rows"]
+        mix = matrix.get("mix")
+        plot_rows = list(rows)
+        if mix:
+            plot_rows.append({
+                "name": "Best mix",
+                "values": mix["values"],
+                "lead": mix["lead"],
+            })
+        if view == "Numbers":
+            head = "".join(
+                f"<th style='padding:4px 6px;font-weight:600;white-space:nowrap;'>{html.escape(day[5:])}</th>"
+                for day in dates
+            )
+            body = []
+            price_cells = "".join(
+                f"<td style='padding:4px 6px;text-align:right;white-space:nowrap;'>{close:,.2f}</td>"
+                for close in matrix["closes"]
+            )
+            body.append(
+                "<tr><td style='padding:4px 8px;font-weight:600;white-space:nowrap;'>Price</td>"
+                f"<td style='padding:4px 6px;text-align:right;'>—</td>{price_cells}</tr>"
+            )
+            for row in plot_rows:
+                cells = []
+                for value in row["values"]:
+                    shown_value = "—" if value is None else f"{value:.0f}"
+                    cells.append(
+                        "<td style='padding:4px 6px;text-align:right;white-space:nowrap;'>"
+                        f"{shown_value}</td>"
+                    )
+                body.append(
+                    "<tr><td style='padding:4px 8px;font-weight:600;white-space:nowrap;'>"
+                    f"{html.escape(row['name'])}</td>"
+                    f"<td style='padding:4px 6px;text-align:right;white-space:nowrap;'>{_lead_label(row.get('lead'))}</td>"
+                    f"{''.join(cells)}</tr>"
+                )
+            st.markdown(
+                "<div style='width:100%;overflow-x:auto;'><table style='border-collapse:collapse;font-size:0.8rem;'>"
+                "<thead><tr><th style='padding:4px 8px;text-align:left;'>Signal</th>"
+                "<th style='padding:4px 6px;text-align:right;'>Lead</th>"
+                f"{head}</tr></thead><tbody>{''.join(body)}</tbody></table></div>",
+                unsafe_allow_html=True,
+            )
+        else:
+            count = 1 + len(plot_rows)
+            fig = make_subplots(
+                rows=count,
+                cols=1,
+                shared_xaxes=True,
+                vertical_spacing=0.012,
+                row_heights=[0.22] + [0.78 / max(len(plot_rows), 1)] * len(plot_rows),
+                subplot_titles=["Price"] + [row["name"] for row in plot_rows],
+            )
+            fig.add_trace(
+                go.Scatter(
+                    x=dates,
+                    y=matrix["closes"],
+                    mode="lines",
+                    name="Price",
+                    line=dict(color="#2563eb", width=2),
+                ),
+                row=1,
+                col=1,
+            )
+            palette = ["#15803d", "#d97706", "#7c3aed", "#0891b2", "#b45309", "#0f766e", "#be123c", "#4f46e5"]
+            for index, row in enumerate(plot_rows):
+                fig.add_trace(
+                    go.Scatter(
+                        x=dates,
+                        y=row["values"],
+                        mode="lines",
+                        name=row["name"],
+                        line=dict(color=palette[index % len(palette)], width=1.6),
+                        connectgaps=False,
+                    ),
+                    row=index + 2,
+                    col=1,
+                )
+                fig.update_yaxes(range=[0, 100], row=index + 2, col=1)
+            fig.update_layout(
+                height=180 + 78 * len(plot_rows),
+                showlegend=False,
+                margin=dict(t=28, b=24, l=8, r=8),
+            )
+            fig.update_annotations(font_size=12)
+            _paint_chart(fig)
+            st.plotly_chart(fig, width="stretch")
+        ranked = sorted(
+            [row for row in rows if row.get("lead") is not None],
+            key=lambda row: abs(row["lead"]),
+            reverse=True,
+        )
+        rank_of = {row["name"]: index + 1 for index, row in enumerate(ranked)}
+        summary = []
+        for row in rows:
+            summary.append(
+                f"<tr><td style='padding:4px 8px;'>{html.escape(row['name'])}</td>"
+                f"<td style='padding:4px 8px;text-align:right;'>{rank_of.get(row['name'], '—')}</td>"
+                f"<td style='padding:4px 8px;text-align:right;'>{_lead_label(row.get('lead'))}</td></tr>"
+            )
+        st.markdown(
+            "<table style='border-collapse:collapse;font-size:0.9rem;margin-top:8px;'>"
+            "<thead><tr><th style='padding:4px 8px;text-align:left;'>Signal</th>"
+            "<th style='padding:4px 8px;text-align:right;'>Rank</th>"
+            "<th style='padding:4px 8px;text-align:right;'>Lead</th></tr></thead>"
+            f"<tbody>{''.join(summary)}</tbody></table>",
+            unsafe_allow_html=True,
+        )
+        if mix:
+            names = ", ".join(mix["names"])
+            st.caption(
+                f"Best lookback mix: {names}. Lead {_lead_label(mix['lead'])} over the next "
+                f"{int(horizon)} " + ("day." if int(horizon) == 1 else "days.")
+                + " This is a lookback on this window. It does not change the technical score or alerts."
+            )
+        else:
+            st.caption(
+                "No mix of two or three signals beat the best single signal in this window. "
+                "This is a lookback. It does not change the technical score or alerts."
+            )
 
 
 def show_market_sentiment(kind: str, asset_id: str, label: str, ticker: str | None):
