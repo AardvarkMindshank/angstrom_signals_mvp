@@ -84,14 +84,14 @@ export default function(component) {
   const shell = parentElement.closest(".stBidiComponent") || parentElement;
   shell.style.display = "none";
   let style = document.getElementById("angstrom-brand-style");
-  if (style && style.dataset.layout !== "space") {
+  if (style && style.dataset.layout !== "aiscore") {
     style.remove();
     style = null;
   }
   if (!style) {
     style = document.createElement("style");
     style.id = "angstrom-brand-style";
-    style.dataset.layout = "space";
+    style.dataset.layout = "aiscore";
     style.textContent = [
       "html{--ang-surface:#ffffff;--ang-border:#e5e7eb;--ang-text:#111827;--ang-muted:#6b7280;--ang-soft:#374151;--ang-track:#e5e7eb;--ang-line:#f3f4f6;--ang-select:#e5e7eb;--ang-select-text:#111827;}",
       "html.angstrom-night{--ang-surface:#262730;--ang-border:#3f4654;--ang-text:#f3f4f6;--ang-muted:#9ca3af;--ang-soft:#d1d5db;--ang-track:#3f4654;--ang-line:#31333f;--ang-select:#3a4050;--ang-select-text:#f9fafb;}",
@@ -148,6 +148,7 @@ export default function(component) {
       ".headline-date{width:112px;flex:none;white-space:nowrap;color:var(--ang-soft);}",
       ".headline-note{flex:1.3;min-width:0;color:var(--ang-soft);font-size:.9rem;line-height:1.35;}",
       ".headline-score{width:76px;flex:none;text-align:right;}",
+      ".headline-ai .headline-score{width:6.25rem;white-space:nowrap;}",
       ".headline-empty{color:#6b7280;}",
       ".headline-title a:link{color:#15803d;}",
       ".headline-title a:visited{color:#6d28d9;}",
@@ -6652,14 +6653,15 @@ def _published_label(value) -> str:
     return f"{when.strftime('%b')} {when.day}, {when.year}"
 
 
-def headline_table(headlines: list) -> str:
+def headline_table(headlines: list, score_label: str = "Score") -> str:
     """Article, the date, a one-sentence AI summary, then the score. A dash until a summary exists."""
+    sheet = " class='headline-ai'" if score_label != "Score" else ""
     rows = [
         "<div class='headline-head'>"
         "<div class='headline-title'>Article</div>"
         "<div class='headline-date'>Published</div>"
         "<div class='headline-note'>AI Summary</div>"
-        "<div class='headline-score'>Score</div>"
+        f"<div class='headline-score'>{html.escape(score_label)}</div>"
         "</div>"
     ]
     for item in headlines:
@@ -6680,7 +6682,7 @@ def headline_table(headlines: list) -> str:
             f"<div class='headline-note'>{note_html}</div>"
             f"<div class='headline-score'>{sentiment_badge(item.get('score'))}</div></div>"
         )
-    return f"<div style='margin-top:10px;'>{''.join(rows)}</div>"
+    return f"<div{sheet} style='margin-top:10px;'>{''.join(rows)}</div>"
 
 
 def _sentiment_story(report, coverage: str, score, color, background, arrow, note: str) -> str:
@@ -6777,7 +6779,7 @@ def _mood_reading_board(market_key: str, label: str, report: dict | None) -> str
         if not articles and not note:
             continue
         title = f"<div class='headline-group'>{html.escape(str(group.get('title') or ''))}</div>"
-        table = headline_table(articles) if articles else ""
+        table = headline_table(articles, "AI Score") if articles else ""
         aside = f"<div class='headline-aside'>{html.escape(note)}</div>" if note else ""
         blocks.append(title + table + aside)
     return "".join(blocks)
@@ -6862,7 +6864,7 @@ def _mood_card(spec: dict, row: dict | None) -> None:
         st.info("The market score could not be built this time.")
     _article_box(f"mood_{key}_readings", _mood_reading_board(key, label, report if isinstance(report, dict) else None))
     if headlines:
-        _article_box(f"mood_{key}_news", headline_table(headlines))
+        _article_box(f"mood_{key}_news", headline_table(headlines, "AI Score"))
     st.caption(
         "The rows above the Google headlines are public readings, each scored on its own. "
         "The score at the top is the average of the news article scores. "
