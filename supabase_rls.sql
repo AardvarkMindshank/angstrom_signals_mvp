@@ -1267,3 +1267,82 @@ select cron.schedule(
   '*/5 * * * *',
   $alerts$ select public.start_alert_worker(); $alerts$
 );
+
+-- A new post is 5 points. A reply is 1. Rewriting an existing note does not add more.
+-- Signed-in sessions cannot call this. The insert triggers are the only callers.
+create or replace function public.award_social_points(target uuid, points integer)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+    if target is null or points is null or points not in (1, 5) then
+        return;
+    end if;
+    perform set_config('angstrom.credit_social', 'on', true);
+    insert into public.profiles (user_id, social_score)
+    values (target, points)
+    on conflict (user_id) do update
+    set social_score = public.profiles.social_score + excluded.social_score,
+        updated_at = now();
+end;
+$$;
+
+revoke all on function public.award_social_points(uuid, integer) from public;
+revoke all on function public.award_social_points(uuid, integer) from anon;
+revoke all on function public.award_social_points(uuid, integer) from authenticated;
+
+create or replace function public.award_chat_points()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+    perform public.award_social_points(new.user_id, case when new.parent_id is null then 5 else 1 end);
+    return new;
+end;
+$$;
+
+drop trigger if exists chat_messages_award_points on public.chat_messages;
+create trigger chat_messages_award_points
+    after insert on public.chat_messages
+    for each row
+    execute function public.award_chat_points();
+
+create or replace function public.award_signal_post_points()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+    perform public.award_social_points(new.user_id, 5);
+    return new;
+end;
+$$;
+
+drop trigger if exists sentiment_comments_award_points on public.sentiment_comments;
+create trigger sentiment_comments_award_points
+    after insert on public.sentiment_comments
+    for each row
+    execute function public.award_signal_post_points();
+
+create or replace function public.award_signal_reply_points()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+    perform public.award_social_points(new.user_id, 1);
+    return new;
+end;
+$$;
+
+drop trigger if exists sentiment_replies_award_points on public.sentiment_replies;
+create trigger sentiment_replies_award_points
+    after insert on public.sentiment_replies
+    for each row
+    execute function public.award_signal_reply_points();

@@ -3281,6 +3281,7 @@ with tracked_expander("👤 Account", "account", sidebar=True):
         st.warning("Profile storage is not ready yet. Run the latest supabase_rls.sql in the Supabase SQL editor.")
         profile = {}
     st.markdown(profile_card(profile, st.session_state.user.email or ""), unsafe_allow_html=True)
+    st.caption("A new post adds 5 to your social score. A reply adds 1.")
     with tracked_expander("Invite", "invite"):
         invite_someone()
     with tracked_expander("Edit profile", "edit_profile"):
