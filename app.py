@@ -2040,11 +2040,17 @@ _WIDE_SPLIT_MIN = 0.2
 _WIDE_SPLIT_MAX = 0.8
 _WIDE_SPLIT_JS = """
 export default function(component) {
-  const { parentElement, setTriggerValue } = component;
+  const { data, parentElement, setTriggerValue } = component;
   const shell = parentElement.closest(".stBidiComponent") || parentElement;
   shell.style.display = "none";
   const minSplit = 0.2;
   const maxSplit = 0.8;
+  const remember = (ratio) => {
+    try { localStorage.setItem("angstrom-wide-split", Number(ratio).toFixed(3)); } catch (error) {}
+  };
+  const remembered = () => {
+    try { return localStorage.getItem("angstrom-wide-split"); } catch (error) { return null; }
+  };
   let handle = document.getElementById("angstrom-wide-split");
   if (!handle) {
     handle = document.createElement("div");
@@ -2082,6 +2088,14 @@ export default function(component) {
       return;
     }
     const { block, columns } = found;
+    const stored = remembered();
+    if (stored && !handle.classList.contains("is-dragging")) {
+      const ratio = Math.min(maxSplit, Math.max(minSplit, parseFloat(stored)));
+      const current = parseFloat(columns[0].style.flex);
+      if (Number.isFinite(ratio) && !(Number.isFinite(current) && Math.abs(current - ratio) < 0.004)) {
+        applyRatio(ratio, columns);
+      }
+    }
     if (handle.parentElement !== block) block.appendChild(handle);
     block.style.position = "relative";
     const blockRect = block.getBoundingClientRect();
@@ -2140,8 +2154,8 @@ export default function(component) {
         if (!current) return;
         const ratio = ratioFor(ev.clientX, current.block, current.columns);
         applyRatio(ratio, current.columns);
+        remember(ratio);
         place();
-        setTriggerValue("split", ratio.toFixed(3));
       };
       handle.addEventListener("pointermove", move);
       handle.addEventListener("pointerup", stop);
@@ -2149,6 +2163,16 @@ export default function(component) {
     });
   }
   place();
+  const storedSplit = remembered();
+  const serverSplit = data && data.split;
+  if (storedSplit && serverSplit && Math.abs(parseFloat(storedSplit) - parseFloat(serverSplit)) > 0.004) {
+    if (window.__angstromSplitSent !== storedSplit) {
+      window.__angstromSplitSent = storedSplit;
+      setTriggerValue("split", storedSplit);
+    }
+  } else {
+    window.__angstromSplitSent = "";
+  }
   const retry = window.setInterval(place, 400);
   const stopRetry = window.setTimeout(() => window.clearInterval(retry), 8000);
   return () => {
@@ -5911,7 +5935,6 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                 if abs(next_split - float(st.session_state.wide_split)) > 0.004:
                     st.session_state.wide_split = next_split
                     save_account_settings({"wide_split": round(next_split, 3)})
-                    _rerun_fragment()
         split = min(_WIDE_SPLIT_MAX, max(_WIDE_SPLIT_MIN, float(st.session_state.wide_split)))
         mood_col, asset_col = st.columns([split, 1 - split], gap="medium", vertical_alignment="top")
         with mood_col:
