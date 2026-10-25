@@ -3655,7 +3655,16 @@ alert_prefs = prefs.get("alerts", {})
 profile = st.session_state.profile
 
 _brand_watch(key="brand_watch")
-st.sidebar.markdown(_brand_mark(150), unsafe_allow_html=True)
+st.sidebar.markdown(
+    "<div style='margin:0.4rem 0 0.75rem;'>"
+    "<div style='display:flex;align-items:center;gap:0.85rem;'>"
+    f"{_brand_mark(58, align='left')}"
+    "<h1 style='margin:0;padding:0;line-height:1.15;font-size:2.25rem;font-weight:700;'>"
+    "angstrom<br>signals</h1></div>"
+    "<div style='margin-top:0.55rem;font-size:0.82rem;font-weight:500;line-height:1.35;opacity:0.72;'>"
+    "Market sentiment and technical signals, with the crowd alongside.</div></div>",
+    unsafe_allow_html=True,
+)
 
 @st.fragment
 def invite_someone() -> None:
