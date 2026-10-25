@@ -470,7 +470,8 @@ def _read_model_text(response: requests.Response, headline_count: int) -> dict:
     return {"ok": False, "reason": "model_error"}
 
 
-def _post_grok(key: str, prompt: str, attempt: dict) -> requests.Response:
+def _post_grok(key: str, prompt: str, attempt: dict, structured: bool = True) -> requests.Response:
+    """Ask Grok for the score. The plain retry drops fields a model may reject."""
     body = {
         "model": attempt["model"],
         "messages": [
@@ -480,10 +481,11 @@ def _post_grok(key: str, prompt: str, attempt: dict) -> requests.Response:
             },
             {"role": "user", "content": prompt},
         ],
-        "temperature": 0.2,
         "max_completion_tokens": 1800,
-        "response_format": {"type": "json_object"},
     }
+    if structured:
+        body["temperature"] = 0.2
+        body["response_format"] = {"type": "json_object"}
     if attempt.get("reasoning_effort"):
         body["reasoning_effort"] = attempt["reasoning_effort"]
     return requests.post(
@@ -492,6 +494,53 @@ def _post_grok(key: str, prompt: str, attempt: dict) -> requests.Response:
         json=body,
         timeout=40,
     )
+
+
+def _error_text(response: requests.Response) -> str:
+    """A short API message with the key removed, for the worker log."""
+    message = ""
+    try:
+        payload = response.json()
+    except ValueError:
+        payload = None
+    if isinstance(payload, dict):
+        error = payload.get("error")
+        if isinstance(error, dict):
+            message = str(error.get("message") or error.get("code") or "")
+        elif isinstance(error, str):
+            message = error
+    if not message:
+        message = response.text or ""
+    message = " ".join(message.split())
+    secret = (os.getenv("XAI_API_KEY") or "").strip()
+    if secret:
+        message = message.replace(secret, "")
+    return message[:180]
+
+
+def _attempt_note(model: str, response: requests.Response, label: str = "") -> str:
+    """Status only. A successful parse is not logged."""
+    name = f"{model}{label}"
+    if response.status_code != 200:
+        return f"{name} {response.status_code} {_error_text(response)}".strip()
+    finish = "none"
+    refusal = ""
+    chars = 0
+    try:
+        payload = response.json()
+    except ValueError:
+        return f"{name} 200 not-json"
+    if isinstance(payload, dict):
+        chars = sum(len(item) for item in _reply_texts(payload))
+        choices = payload.get("choices") or []
+        if choices and isinstance(choices[0], dict):
+            finish = str(choices[0].get("finish_reason") or "none")
+            message = choices[0].get("message") or {}
+            refusal = " ".join(str(message.get("refusal") or "").split())[:80]
+    note = f"{name} 200 finish={finish} chars={chars}"
+    if refusal:
+        note += f" refusal={refusal}"
+    return note
 
 
 def _scored_report(parsed: dict, headlines: list[dict]) -> dict | None:
@@ -533,12 +582,23 @@ def _summarize(query: str, headlines: list[dict], prompt: str | None = None) -> 
     prompt = prompt or _prompt(query, headlines)
     saw_busy = False
     saw_auth = False
+    notes = []
     for attempt in _MODELS:
         try:
             response = _post_grok(key, prompt, attempt)
-        except requests.RequestException:
+        except requests.RequestException as exc:
+            notes.append(f"{attempt['model']} network {exc.__class__.__name__}")
             saw_busy = True
             break
+        notes.append(_attempt_note(attempt["model"], response))
+        if response.status_code in (400, 422):
+            try:
+                response = _post_grok(key, prompt, attempt, structured=False)
+            except requests.RequestException as exc:
+                notes.append(f"{attempt['model']} plain network {exc.__class__.__name__}")
+                saw_busy = True
+                break
+            notes.append(_attempt_note(attempt["model"], response, " plain"))
         if response.status_code == 200:
             try:
                 parsed = _read_model_text(response, len(headlines))
@@ -553,7 +613,7 @@ def _summarize(query: str, headlines: list[dict], prompt: str | None = None) -> 
         if response.status_code in (401, 403):
             saw_auth = True
             break
-        if response.status_code in (400, 404):
+        if response.status_code in (400, 404, 422):
             continue
         if response.status_code in (429, 500, 503):
             saw_busy = True
@@ -561,11 +621,14 @@ def _summarize(query: str, headlines: list[dict], prompt: str | None = None) -> 
         saw_busy = True
 
     if saw_auth:
-        return {"ok": False, "reason": "bad_key"}
-    if saw_busy:
+        reason = "bad_key"
+    elif saw_busy:
         _BUSY_UNTIL[query] = time.time() + 60
-        return {"ok": False, "reason": "model_busy"}
-    return {"ok": False, "reason": "model_error"}
+        reason = "model_busy"
+    else:
+        reason = "model_error"
+    print(f"Grok did not return a score: {' | '.join(notes)}", flush=True)
+    return {"ok": False, "reason": reason}
 
 
 def sentiment_cached_at(query: str) -> float | None:
