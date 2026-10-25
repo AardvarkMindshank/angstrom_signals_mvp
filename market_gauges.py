@@ -289,8 +289,22 @@ def _alpha_json(key: str, params: dict):
         return None, "empty"
     for name in ("Error Message", "Information", "Note"):
         if name in body:
-            return None, name
+            return None, _alpha_refusal(str(body.get(name) or ""))
     return body, "ok"
+
+
+def _alpha_refusal(text: str) -> str:
+    """A short reason. The message itself can echo a key, so it is not printed."""
+    lowered = text.lower()
+    if any(word in lowered for word in ("per day", "frequency", "spread out", "rate limit")):
+        return "daily-limit"
+    if "premium" in lowered:
+        return "premium"
+    if "demo" in lowered:
+        return "demo-key"
+    if "invalid" in lowered or "apikey" in lowered:
+        return "rejected-key"
+    return "refused"
 
 
 def _news_score(body):
