@@ -6208,7 +6208,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             sentiment_label,
             crypto_ticker(asset_key) if asset_type == "Crypto" else asset_key,
         )
-        show_signal_matrix(asset_type, asset_key, sentiment_label, df_chart, weights)
+        show_signal_matrix(asset_type, asset_key, title, df_chart, weights)
     # Outside both wide columns, so it cannot push the chart header down.
     _scroll_chart(
         key="scroll_to_chart",
