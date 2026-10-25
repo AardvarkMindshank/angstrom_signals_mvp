@@ -1044,6 +1044,54 @@ grant execute on function public.delete_own_signal_message(bigint, text) to auth
 create extension if not exists pg_cron with schema pg_catalog;
 create extension if not exists pg_net with schema extensions;
 
+-- The first argument of vault.create_secret is the token. The second argument
+-- is the name github_actions_token. A swapped pair is accepted here so one
+-- mix-up does not leave the timer skipping every run.
+create or replace function public.start_alert_worker()
+returns bigint
+language plpgsql
+security definer
+set search_path = public, vault, net, extensions
+as $$
+declare
+  token text;
+begin
+  select decrypted_secret into token
+  from vault.decrypted_secrets
+  where name = 'github_actions_token'
+  limit 1;
+
+  if coalesce(token, '') = '' then
+    select name into token
+    from vault.decrypted_secrets
+    where decrypted_secret = 'github_actions_token'
+      and name like 'github_pat_%'
+    limit 1;
+  end if;
+
+  if coalesce(token, '') = '' then
+    raise exception 'Vault has no GitHub token named github_actions_token';
+  end if;
+
+  return net.http_post(
+    url := 'https://api.github.com/repos/AardvarkMindshank/angstrom_signals_mvp/actions/workflows/alerts.yml/dispatches',
+    headers := jsonb_build_object(
+      'Authorization', 'Bearer ' || token,
+      'Accept', 'application/vnd.github+json',
+      'Content-Type', 'application/json',
+      'User-Agent', 'angstrom-signals',
+      'X-GitHub-Api-Version', '2022-11-28'
+    ),
+    body := '{"ref":"main"}'::jsonb,
+    timeout_milliseconds := 10000
+  );
+end;
+$$;
+
+revoke all on function public.start_alert_worker() from public;
+revoke all on function public.start_alert_worker() from anon;
+revoke all on function public.start_alert_worker() from authenticated;
+
 do $$
 declare
   existing bigint;
@@ -1057,29 +1105,5 @@ end $$;
 select cron.schedule(
   'angstrom-alerts',
   '*/5 * * * *',
-  $alerts$
-  select net.http_post(
-    url := 'https://api.github.com/repos/AardvarkMindshank/angstrom_signals_mvp/actions/workflows/alerts.yml/dispatches',
-    headers := jsonb_build_object(
-      'Authorization', 'Bearer ' || coalesce((
-        select decrypted_secret
-        from vault.decrypted_secrets
-        where name = 'github_actions_token'
-        limit 1
-      ), ''),
-      'Accept', 'application/vnd.github+json',
-      'Content-Type', 'application/json',
-      'User-Agent', 'angstrom-signals',
-      'X-GitHub-Api-Version', '2022-11-28'
-    ),
-    body := '{"ref":"main"}'::jsonb,
-    timeout_milliseconds := 10000
-  )
-  where coalesce((
-    select decrypted_secret
-    from vault.decrypted_secrets
-    where name = 'github_actions_token'
-    limit 1
-  ), '') <> '';
-  $alerts$
+  $alerts$ select public.start_alert_worker(); $alerts$
 );
