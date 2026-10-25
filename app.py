@@ -3772,16 +3772,32 @@ def my_groups_panel() -> None:
             name = " ".join(str(row.get("name") or "").split()) or "Group"
             leader = " ".join(str(row.get("leader_name") or "").split())
             label = f"{name} · {leader}" if leader else name
+            leave_group = False
             with st.container(horizontal=True, vertical_alignment="center", gap="small"):
                 with st.expander(label, expanded=False, key=f"group_fold_{gid}"):
                     _group_member_list(row, gid)
-                if st.button("Leave", key=f"group_leave_{gid}", help="Leave group", type="tertiary"):
+                leave_group = st.button(
+                    "Leave",
+                    key=f"group_leave_{gid}",
+                    help="Leave group",
+                    type="tertiary",
+                )
+            if leave_group:
+                st.session_state["group_leave_id"] = gid
+            if st.session_state.get("group_leave_id") == gid:
+                st.caption("Leave this group?")
+                yes, no = st.columns(2)
+                if yes.button("Leave group", key=f"group_leave_yes_{gid}", use_container_width=True):
                     try:
                         supabase.rpc("leave_group", {"chosen_group": gid}).execute()
                     except Exception:
                         st.warning("Could not leave that group. Run the latest supabase_rls.sql, then try again.")
                     else:
+                        st.session_state.pop("group_leave_id", None)
                         st.rerun()
+                if no.button("Cancel", key=f"group_leave_no_{gid}", use_container_width=True):
+                    st.session_state.pop("group_leave_id", None)
+                    _rerun_fragment()
 
 
 with tracked_expander("👤 Account", "account", sidebar=True):
