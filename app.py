@@ -1711,9 +1711,8 @@ export default function(component) {
     if (!target) return false;
     const scroller = target.closest('[data-testid="stMain"]') || target.closest("section.main");
     const viewTop = scroller ? scroller.getBoundingClientRect().top : 0;
-    const viewBottom = scroller ? scroller.getBoundingClientRect().bottom : window.innerHeight;
     const rect = target.getBoundingClientRect();
-    return rect.top >= viewTop - 16 && rect.top <= viewTop + (viewBottom - viewTop) * 0.55;
+    return rect.top >= viewTop - 16 && rect.top <= viewTop + 96;
   };
   const openClosed = () => {
     const target = sectionFor(targetId);
