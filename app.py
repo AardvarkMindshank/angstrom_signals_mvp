@@ -3752,7 +3752,7 @@ The **Sentiment** column shows that saved score in the same colored box. A dash 
 
 **30-day trend**, at the far right of each row, is a small line of that same 30-day move. Its color matches the **30d %** column: green for a rise of about 2% or more, red for a fall of about 2% or more, and orange when the move stays inside about 2%. The same line is shared by every account.
 
-**Watching**, beside the name, is how many accounts have that asset on a watchlist. The people marks are a count, not the names of those accounts.
+**Watching**, beside the name, is how many accounts have that asset on a watchlist. At most three people marks are shown. The number beside them is the count. Above 100 it shows >100, and hovering shows the exact count. The marks are not the names of those accounts.
 
 The picture on the left of each name is that asset's logo. The same logo appears at the top of the Interactive Chart and the asset's Market sentiment, with the ticker in large type beside it, such as SUI. Crypto market and Stock market use a larger version of the icon on their section title, with Crypto market or Stock market beside it. Crypto logos come from CoinGecko. Stock logos come from Finnhub. A letter shows when a logo is not available. The address is saved once and reused for every account.
 

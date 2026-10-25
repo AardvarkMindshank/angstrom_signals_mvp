@@ -700,7 +700,7 @@ def holder_counts(supabase) -> dict[str, int]:
 
 
 def holders_mark(count) -> str:
-    """Overlapping people and a number. A dash when the count is unknown."""
+    """Up to three people and the count. Above 100 the label reads >100."""
     try:
         number = int(count)
     except (TypeError, ValueError):
@@ -721,11 +721,12 @@ def holders_mark(count) -> str:
             "display:inline-flex;align-items:center;justify-content:center;"
             f"border:1.5px solid #ffffff;{shift}'>{person}</span>"
         )
+    shown = str(number) if number <= 100 else ">100"
     label = "1 account holds this" if number == 1 else f"{number} accounts hold this"
     return (
-        f"<span title='{label}' style='display:inline-flex;align-items:center;gap:6px;'>"
+        f"<span title='{html.escape(label)}' style='display:inline-flex;align-items:center;gap:6px;'>"
         f"<span style='display:inline-flex;align-items:center;'>{''.join(faces)}</span>"
-        f"<span style='font-weight:650;color:#312e81;'>{number}</span></span>"
+        f"<span style='font-weight:650;color:inherit;'>{html.escape(shown)}</span></span>"
     )
 
 
