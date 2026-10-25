@@ -1056,7 +1056,7 @@ export default function(component) {
       people.sort((a, b) => a.localeCompare(b));
       fillStreamSelect(
         panel.querySelector("#stream-asset"),
-        "All assets",
+        "All Assets & Sentiments",
         assets,
         state.asset,
         [
@@ -3771,7 +3771,7 @@ The arrow on the right edge of the page, or a speech balloon, opens a panel. The
 
 Comments are newest first. Each one shows the person's picture, name, and the time, plus the sentiment they were answering. A note stays for 12 hours. A reply stays with that note for the same 12 hours.
 
-All, Positive, Negative, and Mixed narrow the list by the coverage they were answering. Under Asset, All assets is every comment. My watchlists is the crypto and equity tables on your account. My Crypto Watchlist and My Equities Watchlist each show one of those lists. Crypto market and Stock market sit above the individual assets. All assets or a watchlist is saved on your account. You can also pick one asset.
+All, Positive, Negative, and Mixed narrow the list by the coverage they were answering. Under Asset, All Assets & Sentiments is every comment. My watchlists is the crypto and equity tables on your account. My Crypto Watchlist and My Equities Watchlist each show one of those lists. Crypto market and Stock market sit above the individual assets. All Assets & Sentiments or a watchlist is saved on your account. You can also pick one asset.
 
 Under Person, All people shows everyone. Me, just under that, shows notes you wrote, including a reply you wrote. Favourites shows notes from people you have starred, including a reply they wrote. A star beside another person's name adds them. Press the filled star to remove them. That list is saved on your account. You can also pick one person. A note stays in the list when that person wrote it or replied under it.
 
