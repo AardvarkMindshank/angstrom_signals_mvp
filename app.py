@@ -3644,7 +3644,12 @@ def _group_member_list(row, group_id: int) -> None:
     is_leader = bool(row.get("is_leader"))
     for person in people:
         remove = False
-        with st.container(horizontal=True, vertical_alignment="center", gap="small"):
+        with st.container(
+            horizontal=True,
+            vertical_alignment="center",
+            gap="small",
+            key=f"group_person_{group_id}_{person['id']}",
+        ):
             st.markdown(
                 _person_face(person["name"], person["avatar"]),
                 unsafe_allow_html=True,
@@ -3688,10 +3693,13 @@ def my_groups_panel() -> None:
     st.markdown(
         "<style>"
         "[class*='st-key-group_fold_'] [data-testid='stMarkdownContainer'] p{margin:0 !important;display:flex;align-items:center;}"
-        "[class*='st-key-group_remove_'] button,[class*='st-key-group_xdelete_'] button,"
-        "[class*='st-key-group_remove_'] button *,[class*='st-key-group_xdelete_'] button *{color:#b91c1c !important;background:transparent !important;"
-        "border:none !important;box-shadow:none !important;font-size:5.4rem !important;font-weight:700 !important;"
-        "line-height:1 !important;min-height:0 !important;height:auto !important;padding:0 !important;}"
+        "[class*='st-key-group_person_']{align-items:center !important;}"
+        "[class*='st-key-group_person_'] [data-testid='stElementContainer']{align-self:center !important;margin-top:0 !important;margin-bottom:0 !important;}"
+        "[class*='st-key-group_remove_'] button,[class*='st-key-group_xdelete_'] button{color:#b91c1c !important;background:transparent !important;"
+        "border:none !important;box-shadow:none !important;font-size:2rem !important;font-weight:700 !important;"
+        "line-height:1 !important;min-height:0 !important;height:2rem !important;padding:0 !important;"
+        "display:inline-flex !important;align-items:center !important;justify-content:center !important;}"
+        "[class*='st-key-group_remove_'] button *,[class*='st-key-group_xdelete_'] button *{font-size:2rem !important;line-height:1 !important;color:#b91c1c !important;}"
         "</style>",
         unsafe_allow_html=True,
     )
