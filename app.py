@@ -393,7 +393,11 @@ export default function(component) {
         section = expander;
         const details = expander.querySelector('[data-testid="stExpanderDetails"]');
         const summary = expander.querySelector("summary");
-        if (details && details.hasAttribute("inert") && summary) summary.click();
+        if (details && details.hasAttribute("inert") && summary) {
+          window.__angstromSectionBulk = true;
+          summary.click();
+          window.setTimeout(() => { window.__angstromSectionBulk = false; }, 80);
+        }
         break;
       }
       node = node.parentElement;
@@ -411,6 +415,12 @@ export default function(component) {
     window.setTimeout(go, 50);
     window.setTimeout(go, 250);
     window.setTimeout(go, 700);
+  };
+  const sendPick = (pick) => {
+    const now = Date.now();
+    if (window.__angstromPickAt && now - window.__angstromPickAt < 400) return;
+    window.__angstromPickAt = now;
+    setTriggerValue("picked", pick);
   };
   host.querySelectorAll("button[data-pick]").forEach((button) => {
     button.addEventListener("click", (event) => {
@@ -434,13 +444,13 @@ export default function(component) {
         window.__angstromPickAsset("picked", pick);
         return;
       }
-      setTriggerValue("picked", pick);
+      sendPick(pick);
     });
   });
   host.querySelectorAll("td[data-sentiment-pick]").forEach((cell) => {
     cell.addEventListener("click", (event) => {
       if (event.target.closest("button")) return;
-      setTriggerValue("picked", cell.getAttribute("data-sentiment-pick") || "");
+      sendPick(cell.getAttribute("data-sentiment-pick") || "");
     });
   });
   const valueOf = (row, col) => {
@@ -1907,7 +1917,11 @@ export default function(component) {
     if (!target || target.id) return;
     const details = target.querySelector('[data-testid="stExpanderDetails"]');
     const summary = target.querySelector("summary");
-    if (details && details.hasAttribute("inert") && summary) summary.click();
+    if (details && details.hasAttribute("inert") && summary) {
+      window.__angstromSectionBulk = true;
+      summary.click();
+      window.setTimeout(() => { window.__angstromSectionBulk = false; }, 80);
+    }
   };
   const go = () => {
     if (alreadyOnScreen()) return;
@@ -2264,9 +2278,17 @@ export default function(component) {
     if (left <= 0) button.textContent = title + " (update due)";
     else if (lead) button.textContent = title + " (" + lead + " " + clock + ")";
     else button.textContent = title + " (" + clock + ")";
-    if (left <= 0 && token && window[timerKey + "_sent"] !== token) {
+    const seenKey = timerKey + "_seen";
+    const sentKey = timerKey + "_sent";
+    if (window[seenKey] !== token) {
+      window[seenKey] = token;
+      // Switching asset shows a deadline that is already due. Rebuild only
+      // when this same timer counts down to zero, not on that first paint.
+      if (left <= 0) window[sentKey] = token;
+    }
+    if (left <= 0 && token && window[sentKey] !== token) {
       window.clearInterval(window[timerKey]);
-      window[timerKey + "_sent"] = token;
+      window[sentKey] = token;
       setTriggerValue("due", token);
     }
   }
@@ -5349,7 +5371,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                     if due and token and honored.get(timer_key) != token:
                         honored[timer_key] = token
                         reread = True
-            if reread:
+            if reread and not st.session_state.pop("_chart_row_quiet", False):
                 _rerun_fragment()
 
         # Market cap still uses a short cache. Prices and sentiment come from the shared rows.
@@ -5533,6 +5555,8 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             st.session_state.scroll_token = str(time.time_ns())
             st.session_state.chart_pick = (kind_name, asset_id)
             st.session_state.chart_pick_from_row = True
+            st.session_state["_chart_from_row"] = True
+            st.session_state["_chart_row_quiet"] = True
             st.session_state.asset_type = kind_name
             if kind_name == "Crypto":
                 st.session_state.asset_crypto = asset_id
@@ -6046,12 +6070,35 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                     asset_key = None
                     st.caption("This watchlist is empty.")
 
-            if asset_key and st.session_state.get("chart_pick") != (asset_type, asset_key):
-                st.session_state.chart_pick = (asset_type, asset_key)
-                _rerun_fragment()
+            wanted = (asset_type, asset_key)
+            pick_now = st.session_state.get("chart_pick")
+            if (
+                asset_key
+                and st.session_state.get("_chart_from_row")
+                and pick_now
+                and pick_now[0] in allowed_kinds
+                and pick_now != wanted
+            ):
+                # A table click already chose the asset. Paint that once.
+                # Do not let the selectbox pull the chart back and run again.
+                row_hold = ("row", pick_now)
+                if st.session_state.get("_chart_sync_hold") != row_hold:
+                    st.session_state["_chart_sync_hold"] = row_hold
+                    _rerun_fragment()
+                else:
+                    asset_type, asset_key = pick_now
+            elif asset_key and pick_now != wanted:
+                st.session_state.chart_pick = wanted
+                if st.session_state.get("_chart_sync_hold") != wanted:
+                    st.session_state["_chart_sync_hold"] = wanted
+                    _rerun_fragment()
+            else:
+                st.session_state.pop("_chart_sync_hold", None)
 
             if not asset_key:
                 st.info("Add an asset to this watchlist to see a chart.")
+                st.session_state.pop("_chart_from_row", None)
+                st.session_state.pop("_chart_row_quiet", None)
                 return
 
             df_chart, chart_err = _stored_bars(asset_type, asset_key, history_days)
@@ -6062,6 +6109,8 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
 
             if chart_err or df_chart.empty:
                 st.warning(chart_err or "Could not load chart data. Check your internet connection.")
+                st.session_state.pop("_chart_from_row", None)
+                st.session_state.pop("_chart_row_quiet", None)
                 return
 
             df_chart = calculate_indicators(df_chart)
@@ -6217,7 +6266,9 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             "target": st.session_state.get("scroll_target") or "interactive-chart",
         },
     )
-    if st.session_state.pop("_shared_reread", False):
+    st.session_state.pop("_chart_row_quiet", None)
+    from_row = st.session_state.pop("_chart_from_row", False)
+    if st.session_state.pop("_shared_reread", False) and not from_row:
         _rerun_fragment()
 
 
