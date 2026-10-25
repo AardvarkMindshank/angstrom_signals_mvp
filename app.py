@@ -1384,7 +1384,7 @@ export default function(component) {
     return groups.map((group) => {
       let label = group.name || "Group";
       if (counts[label] > 1 && !group.lead && group.leader) label = label + " (" + group.leader + ")";
-      return ["group:" + group.id, label];
+      return ["group:" + group.id, label + " (group)"];
     });
   }
 
