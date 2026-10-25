@@ -1461,7 +1461,7 @@ returns table (
     leader_name text,
     is_leader boolean,
     members uuid[],
-    member_names text[]
+    people jsonb
 )
 language sql
 stable
@@ -1488,13 +1488,23 @@ as $$
         ),
         coalesce(
             (
-                select array_agg(named.member_name order by named.member_name)
+                select jsonb_agg(
+                    jsonb_build_object(
+                        'id', named.user_id,
+                        'name', named.member_name,
+                        'avatar', named.avatar_url
+                    )
+                    order by named.member_name
+                )
                 from (
-                    select coalesce(
-                        nullif(btrim(member_profiles.display_name), ''),
-                        nullif(split_part(member_users.email, '@', 1), ''),
-                        'Member'
-                    ) as member_name
+                    select
+                        members.user_id,
+                        coalesce(
+                            nullif(btrim(member_profiles.display_name), ''),
+                            nullif(split_part(member_users.email, '@', 1), ''),
+                            'Member'
+                        ) as member_name,
+                        coalesce(member_profiles.avatar_url, '') as avatar_url
                     from public.group_members as members
                     left join public.profiles as member_profiles
                       on member_profiles.user_id = members.user_id
@@ -1503,7 +1513,7 @@ as $$
                     where members.group_id = groups.id
                 ) as named
             ),
-            '{}'::text[]
+            '[]'::jsonb
         )
     from public.user_groups as groups
     left join public.profiles as profiles
@@ -1834,3 +1844,40 @@ $$;
 revoke all on function public.leave_group(bigint) from public;
 revoke all on function public.leave_group(bigint) from anon;
 grant execute on function public.leave_group(bigint) to authenticated;
+
+create or replace function public.remove_group_member(chosen_group bigint, person uuid)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    me uuid := auth.uid();
+    removed integer;
+begin
+    if me is null or chosen_group is null or person is null then
+        return 'missing';
+    end if;
+    if not exists (
+        select 1 from public.user_groups
+        where id = chosen_group and leader_id = me
+    ) then
+        return 'leader';
+    end if;
+    if person = me then
+        return 'self';
+    end if;
+    delete from public.group_members
+    where group_id = chosen_group
+      and user_id = person;
+    get diagnostics removed = row_count;
+    if removed = 0 then
+        return 'missing';
+    end if;
+    return 'ok';
+end;
+$$;
+
+revoke all on function public.remove_group_member(bigint, uuid) from public;
+revoke all on function public.remove_group_member(bigint, uuid) from anon;
+grant execute on function public.remove_group_member(bigint, uuid) to authenticated;

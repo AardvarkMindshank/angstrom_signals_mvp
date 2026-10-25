@@ -3576,39 +3576,109 @@ def _group_member_count(row) -> int:
     return len(_member_ids(row.get("members")))
 
 
-def _member_names(row) -> list[str]:
-    """Display names for the people in one group, in alphabetical order."""
-    raw = row.get("member_names")
-    if isinstance(raw, list):
-        parts = [str(item) for item in raw if item]
-    else:
-        text = str(raw or "").strip().strip("{}")
-        parts = [part.strip().strip('"') for part in text.split(",") if part.strip()] if text else []
-    names = []
-    for part in parts:
-        cleaned = " ".join(part.split())[:40]
-        if cleaned:
-            names.append(cleaned)
-    names.sort(key=str.lower)
-    return names
+def _group_people(row) -> list[dict]:
+    """People in one group: id, name, and photo. Alphabetical by name."""
+    raw = row.get("people")
+    if isinstance(raw, str):
+        try:
+            raw = json.loads(raw)
+        except json.JSONDecodeError:
+            raw = []
+    if not isinstance(raw, list):
+        return []
+    people = []
+    for item in raw:
+        if not isinstance(item, dict):
+            continue
+        person_id = str(item.get("id") or "").strip().lower()
+        if not re.fullmatch(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", person_id):
+            continue
+        name = " ".join(str(item.get("name") or "Member").split())[:40] or "Member"
+        avatar = str(item.get("avatar") or "").strip()
+        if not avatar.startswith("https://") or any(mark in avatar for mark in (" ", '"', "'", "<", ">", "\\")):
+            avatar = ""
+        people.append({"id": person_id, "name": name, "avatar": avatar})
+    people.sort(key=lambda person: person["name"].lower())
+    return people
 
 
-def _group_line(name: str, detail: str, names: list[str]) -> str:
-    """The group row. Hovering it lists the people in that group."""
-    label = html.escape(f"{name} · {detail}" if detail else name)
-    if not names:
-        return f"<span style='font-size:0.85rem;color:var(--ang-muted);'>{label}</span>"
-    title = html.escape("\n".join(names), quote=True)
+def _person_face(name: str, avatar: str) -> str:
+    """A round photo, or the first letter when there is no photo."""
+    if avatar:
+        return (
+            f"<img src='{html.escape(avatar, quote=True)}' alt='' "
+            "style='width:32px;height:32px;border-radius:50%;object-fit:cover;display:block;'>"
+        )
+    initial = html.escape((name[:1] or "?").upper())
     return (
-        f"<span title='{title}' style='font-size:0.85rem;color:var(--ang-muted);cursor:help;'>"
-        f"{label}</span>"
+        "<div style='width:32px;height:32px;border-radius:50%;background:#dbeafe;color:#1d4ed8;"
+        "display:flex;align-items:center;justify-content:center;font-weight:700;'>"
+        f"{initial}</div>"
     )
+
+
+def _remove_group_member(group_id: int, person_id: str) -> str:
+    """Remove one member. Only the leader can, and the leader stays. Empty means it worked."""
+    try:
+        result = supabase.rpc("remove_group_member", {
+            "chosen_group": group_id,
+            "person": person_id,
+        }).execute()
+    except Exception:
+        return "That person could not be removed. Run the latest supabase_rls.sql, then try again."
+    code = str(result.data or "").strip().strip('"')
+    if code == "ok":
+        return ""
+    if code == "self":
+        return "The leader stays until the group is deleted."
+    return "That person could not be removed. Run the latest supabase_rls.sql, then try again."
+
+
+@st.dialog("People")
+def _group_people_dialog(group_id: int) -> None:
+    """The people in one group. The leader can remove anyone except themselves."""
+    groups = _load_my_groups() or []
+    row = next((item for item in groups if str(item.get("id")) == str(group_id)), None)
+    if not row:
+        st.caption("That group is no longer available.")
+        return
+    name = " ".join(str(row.get("name") or "").split()) or "Group"
+    st.markdown(f"**{html.escape(name)}**")
+    people = _group_people(row)
+    if not people:
+        st.caption("The member list is not ready yet. Run the latest supabase_rls.sql in the Supabase SQL editor.")
+        return
+    leader_id = str(row.get("leader_id") or "").strip().lower()
+    is_leader = bool(row.get("is_leader"))
+    st.markdown(
+        "<style>[class*='st-key-group_remove_'] button{color:#b91c1c !important;background:transparent !important;"
+        "border:none !important;font-size:1.35rem !important;font-weight:700 !important;line-height:1 !important;}</style>",
+        unsafe_allow_html=True,
+    )
+    for person in people:
+        face, label, action = st.columns([1, 5, 1], vertical_alignment="center")
+        face.markdown(_person_face(person["name"], person["avatar"]), unsafe_allow_html=True)
+        label.markdown(html.escape(person["name"]))
+        if person["id"] == leader_id:
+            action.caption("Leader")
+        elif is_leader and action.button(
+            "×",
+            key=f"group_remove_{group_id}_{person['id']}",
+            help="Remove from the group",
+        ):
+            note = _remove_group_member(group_id, person["id"])
+            if note:
+                st.warning(note)
+            else:
+                st.session_state["group_open_id"] = group_id
+                st.rerun()
 
 
 @st.fragment
 def my_groups_panel() -> None:
     """Groups you lead, and groups you belong to. Delete and Leave redraw this section."""
     groups = _load_my_groups()
+    reopen = st.session_state.pop("group_open_id", None)
     if groups is None:
         st.caption("Groups are not ready yet. Run the latest supabase_rls.sql in the Supabase SQL editor.")
         return
@@ -3617,6 +3687,13 @@ def my_groups_panel() -> None:
     if not led and not joined:
         st.caption("You have no groups yet. Use the people icon beside a name in the social stream.")
         return
+    st.markdown(
+        "<style>[class*='st-key-group_open_'] button{justify-content:flex-start !important;"
+        "background:transparent !important;border:none !important;color:var(--ang-muted) !important;"
+        "box-shadow:none !important;padding-left:0 !important;font-weight:500 !important;}</style>",
+        unsafe_allow_html=True,
+    )
+    st.caption("Click a group to see its people.")
     if led:
         st.caption("Groups you lead")
         for row in led:
@@ -3628,7 +3705,8 @@ def my_groups_panel() -> None:
             count = _group_member_count(row)
             detail = f"{count} member" if count == 1 else f"{count} members"
             left, right = st.columns([3, 1])
-            left.markdown(_group_line(name, detail, _member_names(row)), unsafe_allow_html=True)
+            if left.button(f"{name} · {detail}", key=f"group_open_{gid}", type="tertiary"):
+                _group_people_dialog(gid)
             if right.button("Delete", key=f"group_delete_{gid}", use_container_width=True):
                 st.session_state["group_delete_id"] = gid
             if st.session_state.get("group_delete_id") == gid:
@@ -3655,7 +3733,9 @@ def my_groups_panel() -> None:
             name = " ".join(str(row.get("name") or "").split()) or "Group"
             leader = " ".join(str(row.get("leader_name") or "").split())
             left, right = st.columns([3, 1])
-            left.markdown(_group_line(name, leader, _member_names(row)), unsafe_allow_html=True)
+            label = f"{name} · {leader}" if leader else name
+            if left.button(label, key=f"group_open_{gid}", type="tertiary"):
+                _group_people_dialog(gid)
             if right.button("Leave", key=f"group_leave_{gid}", use_container_width=True):
                 try:
                     supabase.rpc("leave_group", {"chosen_group": gid}).execute()
@@ -3663,6 +3743,8 @@ def my_groups_panel() -> None:
                     st.warning("Could not leave that group. Run the latest supabase_rls.sql, then try again.")
                 else:
                     st.rerun()
+    if reopen:
+        _group_people_dialog(int(reopen))
 
 
 with tracked_expander("👤 Account", "account", sidebar=True):
