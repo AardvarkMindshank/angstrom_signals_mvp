@@ -3458,7 +3458,7 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
 
 **Market sentiment for crypto and stocks**
 
-In the single column these two sections sit under Quick Snapshot, crypto first and then stocks. Quick Snapshot shows each one as the colored score box, the status, such as Mildly bullish coverage, and the short summary to the right of the score, for the markets you trade. Click the score or the colored status to open that market's section. The public readings sit in a rounded box, in three groups, each with a one-sentence summary and its own score: liquidity and central banks, the dollar and yields, and crypto sentiment for crypto; policy and inflation, market breadth, and institutional feeds for stocks. The Google headlines follow in a second rounded box. On the selected asset, the articles sit in one box of the same kind. Each one uses the same layout as the asset sentiment under the chart: the score on the left, Your take on the right, then those reading rows, then the articles. Neither is an asset, and neither is added to the tables or the technical score. Each score is an average of recent headlines. The summary, the positive paragraph, and the negative paragraph can also use those public readings. Each article row also has a one-sentence AI Summary, after the date. A dash there means that score was saved before summaries. The next background update fills it in. It is stored once and shown to every account. A background update replaces it about every 12 hours. Until that update arrives, the last score stays on screen. Your take works the same way as on an asset: agree, disagree, a score from 0 to 100, and one short comment. A refresh of that market clears the thumbs and personal scores. A comment stays for 12 hours. The search wording can be tightened later.
+In the single column these two sections sit under Quick Snapshot, crypto first and then stocks. Quick Snapshot shows each one as the colored score box, the status, such as Mildly bullish coverage, and the short summary, for the markets you trade. The thumbs and the crowd's own score sit on the right. Click anywhere on that box to open that market's section. The public readings sit in a rounded box, in three groups, each with a one-sentence summary and its own score: liquidity and central banks, the dollar and yields, and crypto sentiment for crypto; policy and inflation, market breadth, and institutional feeds for stocks. The Google headlines follow in a second rounded box. On the selected asset, the articles sit in one box of the same kind. Each one uses the same layout as the asset sentiment under the chart: the score on the left, Your take on the right, then those reading rows, then the articles. Neither is an asset, and neither is added to the tables or the technical score. Each score is an average of recent headlines. The summary, the positive paragraph, and the negative paragraph can also use those public readings. Each article row also has a one-sentence AI Summary, after the date. A dash there means that score was saved before summaries. The next background update fills it in. It is stored once and shown to every account. A background update replaces it about every 12 hours. Until that update arrives, the last score stays on screen. Your take works the same way as on an asset: agree, disagree, a score from 0 to 100, and one short comment. A refresh of that market clears the thumbs and personal scores. A comment stays for 12 hours. The search wording can be tightened later.
 
 **Max pain**
 
@@ -4565,9 +4565,10 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             snapshot_cards.append(("Top Watchlist Stock", stock_top, "Stock", "snapshot_stock_top"))
             snapshot_cards.append(("Weakest Watchlist Stock", stock_bot, "Stock", "snapshot_stock_weak"))
 
-        def render_mood_snapshot(label, score, summary, mood_key):
+        def render_mood_snapshot(label, score, summary, mood_key, voice):
             safe_label = html.escape(label)
-            if score is None or pd.isna(score):
+            scored = score is not None and not pd.isna(score)
+            if not scored:
                 badge = sentiment_badge(None)
                 status = "<div style='margin-top:8px;color:#6b7280;font-weight:600;'>Not scored yet</div>"
             else:
@@ -4584,20 +4585,35 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                     "<div class='ang-copy' style='flex:1;min-width:0;'>"
                     f"{html.escape(text)}</div>"
                 )
+            crowd = (
+                "<div style='flex:none;margin-left:auto;display:flex;align-items:center;gap:8px;'>"
+                + crowd_mark(
+                    voice.get("up"),
+                    voice.get("down"),
+                    scored,
+                    voice.get("alt_count"),
+                    voice.get("alt_avg"),
+                    voice.get("alt_spread"),
+                )
+                + crowd_average_badge(
+                    voice.get("alt_avg"),
+                    voice.get("alt_count"),
+                    voice.get("alt_spread"),
+                    scored,
+                )
+                + "</div>"
+            )
             jump = html.escape(f"mood|{mood_key}", quote=True)
             jump_title = html.escape(f"Open {label} sentiment", quote=True)
-            score_block = (
-                f"<button type='button' data-pick='{jump}' title='{jump_title}' "
-                "style='display:block;margin:0;padding:0;border:none;background:transparent;"
-                "text-align:left;cursor:pointer;font:inherit;color:inherit;'>"
-                f"{badge}{status}</button>"
-            )
             return (
+                f"<button type='button' data-pick='{jump}' title='{jump_title}' "
+                "style='display:block;width:100%;margin:0;padding:0;border:none;background:transparent;"
+                "text-align:left;cursor:pointer;font:inherit;color:inherit;'>"
                 "<div class='ang-card'>"
                 f"<div class='ang-kicker' style='margin-bottom:8px;'>{safe_label}</div>"
                 "<div style='display:flex;align-items:flex-start;gap:16px;'>"
-                f"<div style='flex:none;'>{score_block}</div>"
-                f"{summary_html}</div></div>"
+                f"<div style='flex:none;'>{badge}{status}</div>"
+                f"{summary_html}{crowd}</div></div></button>"
             )
 
         mood_specs = []
@@ -4606,6 +4622,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
         if trade_equities:
             mood_specs.append(("stock", "Stock market"))
         stored_moods = load_market_moods(supabase)
+        mood_voices = market_mood_crowd(supabase, [key for key, _label in mood_specs]) if mood_specs else {}
         if stored_moods is not None and mood_specs:
             mood_columns = st.columns(2)
             for column, (mood_key, mood_label) in zip(mood_columns, mood_specs):
@@ -4621,7 +4638,11 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                     picked = _score_table(
                         key=f"snapshot_mood_{mood_key}",
                         data=render_mood_snapshot(
-                            mood_label, mood_score, (report or {}).get("summary"), mood_key,
+                            mood_label,
+                            mood_score,
+                            (report or {}).get("summary"),
+                            mood_key,
+                            mood_voices.get(mood_key) or {},
                         ),
                         on_picked_change=lambda: None,
                     ).picked
