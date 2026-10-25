@@ -6738,9 +6738,14 @@ def _reading_articles(group: dict) -> list[dict]:
             continue
         name = str(item.get("name") or "Reading")
         value = str(item.get("value") or "").strip()
+        source = str(item.get("source") or "")
+        if name.startswith("Michigan"):
+            source = "Michigan"
+        elif name.startswith("CBOE"):
+            source = "CBOE"
         articles.append({
             "title": f"{name}, {value}" if value else name,
-            "source": item.get("source") or "",
+            "source": source,
             "published": item.get("published") or "",
             "link": link,
             "note": item.get("note") or item.get("detail") or "",

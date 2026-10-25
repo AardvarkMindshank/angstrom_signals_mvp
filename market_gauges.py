@@ -320,12 +320,14 @@ def _stock_groups(raw: dict) -> list[dict]:
                     "month",
                     lambda value: f"{value:.1f}",
                     "https://fred.stlouisfed.org/series/UMCSENT",
+                    "Michigan",
                 ),
                 _rate_item(
                     "Michigan inflation expectation",
                     raw.get("MICH"),
                     "month",
                     "https://fred.stlouisfed.org/series/MICH",
+                    "Michigan",
                 ),
             ),
             "note": (
@@ -343,6 +345,7 @@ def _stock_groups(raw: dict) -> list[dict]:
                     "day",
                     lambda value: f"{value:.2f}",
                     "https://fred.stlouisfed.org/series/VIXCLS",
+                    "CBOE",
                 ),
             ),
             "note": "",
@@ -370,12 +373,12 @@ def _percent(value: float) -> str:
     return f"{value:.2f}".rstrip("0").rstrip(".") + "%"
 
 
-def _rate_item(name, pair, period, href):
-    return _move_item(name, pair, period, _percent, "points", "FRED", href, "")
+def _rate_item(name, pair, period, href, source="FRED"):
+    return _move_item(name, pair, period, _percent, "points", source, href, "")
 
 
-def _points_item(name, pair, period, formatter, href):
-    return _move_item(name, pair, period, formatter, "points", "FRED", href, "")
+def _points_item(name, pair, period, formatter, href, source="FRED"):
+    return _move_item(name, pair, period, formatter, "points", source, href, "")
 
 
 def _level_item(name, pair, period, formatter, source, href):
