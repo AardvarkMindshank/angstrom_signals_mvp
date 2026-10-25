@@ -7011,6 +7011,20 @@ def show_signal_matrix(kind: str, asset_id: str, label: str, indicated, weights:
                 margin=dict(t=28, b=24, l=8, r=8),
             )
             fig.update_annotations(font_size=12)
+            guide = "#6b7280" if _active_theme() == "dark" else "#9ca3af"
+            for day in dates[4:-1:5]:
+                fig.add_shape(
+                    type="line",
+                    x0=day,
+                    x1=day,
+                    y0=0,
+                    y1=1,
+                    xref="x",
+                    yref="paper",
+                    line=dict(color=guide, width=1, dash="dot"),
+                    layer="below",
+                )
+            fig.update_xaxes(showgrid=False)
             _paint_chart(fig)
             st.plotly_chart(fig, width="stretch")
         ranked = sorted(
