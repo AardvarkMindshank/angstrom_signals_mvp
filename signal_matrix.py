@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import itertools
 import math
+from datetime import datetime, timedelta
 
 import pandas as pd
 
@@ -17,6 +18,47 @@ from scoring import calculate_indicators, compute_score
 MATRIX_DAYS = 30
 LEAD_HORIZONS = (1, 3, 7)
 _MIN_PAIRS = 8
+
+
+def weekend_edges(dates) -> list[str]:
+    """Friday and Monday in the window, so each weekend sits between two lines.
+
+    A holiday uses the last weekday before Saturday and the first weekday after Sunday.
+    """
+    days = []
+    for raw in dates or []:
+        try:
+            days.append(datetime.strptime(str(raw)[:10], "%Y-%m-%d").date())
+        except ValueError:
+            continue
+    present = {day.isoformat() for day in days}
+    marks = []
+    seen = set()
+
+    def add(day):
+        key = day.isoformat()
+        if key in present and key not in seen:
+            seen.add(key)
+            marks.append(key)
+
+    for index, day in enumerate(days):
+        if day.weekday() >= 5:
+            continue
+        nxt = days[index + 1] if index + 1 < len(days) else None
+        prev = days[index - 1] if index else None
+        starts = day.weekday() == 4
+        ends = day.weekday() == 0
+        if nxt is not None and (nxt - day).days > 1:
+            span = [day + timedelta(days=step) for step in range(1, (nxt - day).days)]
+            if any(item.weekday() == 5 for item in span):
+                starts = True
+        if prev is not None and (day - prev).days > 1:
+            span = [prev + timedelta(days=step) for step in range(1, (day - prev).days)]
+            if any(item.weekday() == 6 for item in span):
+                ends = True
+        if starts or ends:
+            add(day)
+    return marks
 
 
 def build_matrix(frame, weight_sets, sentiment, horizon: int, days: int = MATRIX_DAYS) -> dict:

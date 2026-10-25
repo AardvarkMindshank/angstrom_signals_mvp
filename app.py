@@ -6877,7 +6877,7 @@ def _lead_label(value) -> str:
 
 def show_signal_matrix(kind: str, asset_id: str, label: str, indicated, weights: dict) -> None:
     """Price across 30 days, with each signal set on those same dates."""
-    from signal_matrix import LEAD_HORIZONS, MATRIX_DAYS, build_matrix
+    from signal_matrix import LEAD_HORIZONS, MATRIX_DAYS, build_matrix, weekend_edges
 
     shown = " ".join(str(label or "").split()) or "Selected asset"
     with section_expander(f"▦ Signal matrix - {shown}", "signal_matrix"):
@@ -7012,7 +7012,7 @@ def show_signal_matrix(kind: str, asset_id: str, label: str, indicated, weights:
             )
             fig.update_annotations(font_size=12)
             guide = "#6b7280" if _active_theme() == "dark" else "#9ca3af"
-            for day in dates[4:-1:5]:
+            for day in weekend_edges(dates):
                 fig.add_shape(
                     type="line",
                     x0=day,
