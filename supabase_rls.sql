@@ -94,6 +94,166 @@ create policy "users update own profile" on public.profiles
 
 grant select, insert, update on public.profiles to authenticated;
 
+-- Social score starts at 0. A signed-in session cannot change it.
+-- claim_invite_points is the only writer, and only when someone invited joins.
+alter table public.profiles
+    add column if not exists social_score integer not null default 0;
+
+create or replace function public.keep_social_score()
+returns trigger
+language plpgsql
+as $$
+begin
+    if coalesce(current_setting('angstrom.credit_social', true), '') = 'on' then
+        if new.social_score is null then
+            new.social_score := 0;
+        end if;
+        return new;
+    end if;
+    if tg_op = 'INSERT' then
+        new.social_score := 0;
+    else
+        new.social_score := old.social_score;
+    end if;
+    return new;
+end;
+$$;
+
+drop trigger if exists profiles_keep_social_score on public.profiles;
+create trigger profiles_keep_social_score
+    before insert or update on public.profiles
+    for each row
+    execute function public.keep_social_score();
+
+-- One row per inviter and email. Points are awarded once, when that person joins.
+create table if not exists public.invites (
+    id bigint generated always as identity primary key,
+    inviter_id uuid not null references auth.users (id) on delete cascade,
+    email text not null,
+    created_at timestamptz not null default now(),
+    joined_user_id uuid references auth.users (id) on delete set null,
+    credited_at timestamptz,
+    unique (inviter_id, email)
+);
+
+alter table public.invites enable row level security;
+
+create or replace function public.prepare_invite()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    own_email text;
+    recent integer;
+begin
+    if auth.uid() is null then
+        raise exception 'Sign in to send an invite';
+    end if;
+    new.inviter_id := auth.uid();
+    new.email := lower(btrim(coalesce(new.email, '')));
+    new.credited_at := null;
+    new.joined_user_id := null;
+    new.created_at := now();
+    if new.email !~ '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$' then
+        raise exception 'Enter a valid email address';
+    end if;
+    select lower(email) into own_email from auth.users where id = auth.uid();
+    if new.email = own_email then
+        raise exception 'Use someone else''s email address';
+    end if;
+    select count(*) into recent
+    from public.invites
+    where inviter_id = auth.uid()
+      and created_at > now() - interval '1 day';
+    if recent >= 20 then
+        raise exception 'invite limit';
+    end if;
+    return new;
+end;
+$$;
+
+drop trigger if exists invites_prepare on public.invites;
+create trigger invites_prepare
+    before insert on public.invites
+    for each row
+    execute function public.prepare_invite();
+
+drop policy if exists "users read own invites" on public.invites;
+create policy "users read own invites" on public.invites
+    for select
+    to authenticated
+    using (auth.uid() = inviter_id);
+
+drop policy if exists "users send own invites" on public.invites;
+create policy "users send own invites" on public.invites
+    for insert
+    to authenticated
+    with check (auth.uid() = inviter_id);
+
+grant select, insert on public.invites to authenticated;
+
+-- Award 100 social points to every person who invited this account before it existed.
+create or replace function public.claim_invite_points()
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    me uuid := auth.uid();
+    my_email text;
+    joined_at timestamptz;
+    rec record;
+    awarded integer := 0;
+begin
+    if me is null then
+        return 0;
+    end if;
+    select lower(email), created_at into my_email, joined_at
+    from auth.users
+    where id = me;
+    if coalesce(my_email, '') = '' or joined_at is null then
+        return 0;
+    end if;
+
+    perform set_config('angstrom.credit_social', 'on', true);
+
+    for rec in
+        select id, inviter_id
+        from public.invites
+        where email = my_email
+          and credited_at is null
+          and created_at <= joined_at
+          and inviter_id <> me
+        for update
+    loop
+        insert into public.profiles (user_id, social_score)
+        values (rec.inviter_id, 0)
+        on conflict (user_id) do nothing;
+
+        update public.profiles
+        set social_score = social_score + 100,
+            updated_at = now()
+        where user_id = rec.inviter_id;
+
+        update public.invites
+        set joined_user_id = me,
+            credited_at = now()
+        where id = rec.id;
+
+        awarded := awarded + 1;
+    end loop;
+
+    return awarded;
+end;
+$$;
+
+revoke all on function public.claim_invite_points() from public;
+revoke all on function public.claim_invite_points() from anon;
+grant execute on function public.claim_invite_points() to authenticated;
+
 -- One row per asset, shared by every signed-in account.
 -- Closes feed the Trend line. prices is the daily history behind charts and
 -- technical scores. The sentiment columns are the headline score.

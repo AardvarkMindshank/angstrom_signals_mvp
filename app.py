@@ -2305,6 +2305,7 @@ _SECTION_IDS = _MAIN_SECTION_IDS + (
     "help_guides",
     "account",
     "edit_profile",
+    "invite",
     "notifications",
     "alert_feed",
     "alert_rules",
@@ -2562,6 +2563,7 @@ _ACCOUNT_STATE_KEYS = (
     "max_score_slider",
     "profile_display_name",
     "profile_bio",
+    "invite_email",
     "load_profile_sb",
     "_seen_trade_markets",
     "_seen_show_reasons",
@@ -3126,6 +3128,10 @@ def profile_card(profile: dict, email: str) -> str:
             "display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.2rem;'>"
             f"{initial}</div>"
         )
+    try:
+        social_score = int((profile or {}).get("social_score") or 0)
+    except (TypeError, ValueError):
+        social_score = 0
     bio_html = (
         f"<div class='ang-copy' style='margin-top:8px;font-size:0.85rem;'>{html.escape(bio)}</div>"
         if bio else ""
@@ -3134,15 +3140,89 @@ def profile_card(profile: dict, email: str) -> str:
         "<div class='ang-card'>"
         "<div style='display:flex;gap:10px;align-items:center;'>"
         f"{face}<div><div class='ang-title'>{safe_name}</div>"
-        f"<div class='ang-kicker' style='margin:0;font-size:0.78rem;'>{safe_email}</div></div></div>"
+        f"<div class='ang-kicker' style='margin:0;font-size:0.78rem;'>{safe_email}</div>"
+        f"<div class='ang-kicker' style='margin:2px 0 0;font-size:0.78rem;'>Social score {social_score}</div>"
+        "</div></div>"
         f"{bio_html}</div>"
     )
+
+
+def _clean_invite_email(value: str) -> str:
+    """A lower-case email, or empty when the text is not an address."""
+    text = " ".join(str(value or "").split()).lower()
+    if text.count("@") != 1 or any(ch.isspace() for ch in text):
+        return ""
+    local, domain = text.split("@", 1)
+    if not local or "." not in domain or domain.startswith(".") or domain.endswith("."):
+        return ""
+    return text
+
+
+def _store_invite(address: str) -> str:
+    """Save one invite for this account. 'exists' means that address was already invited."""
+    try:
+        supabase.table("invites").insert({
+            "inviter_id": user_id,
+            "email": address,
+        }).execute()
+    except Exception as exc:
+        code = str(getattr(exc, "code", "") or "")
+        text = str(exc).lower()
+        if code == "23505" or "duplicate" in text:
+            return "exists"
+        if "invite limit" in text:
+            return "limit"
+        if "someone else" in text:
+            return "self"
+        return "error"
+    return ""
+
+
+def _my_invites() -> list:
+    """This account's invites, newest first."""
+    try:
+        response = (
+            supabase.table("invites")
+            .select("email,created_at,credited_at")
+            .eq("inviter_id", user_id)
+            .order("created_at", desc=True)
+            .limit(12)
+            .execute()
+        )
+    except Exception:
+        return []
+    return response.data or []
+
+
+def _settle_social_score() -> None:
+    """Award invite points for this new account, then read this account's score."""
+    try:
+        supabase.rpc("claim_invite_points").execute()
+    except Exception:
+        pass
+    profile_now = st.session_state.get("profile")
+    if not isinstance(profile_now, dict):
+        return
+    try:
+        response = (
+            supabase.table("profiles")
+            .select("social_score")
+            .eq("user_id", user_id)
+            .limit(1)
+            .execute()
+        )
+        row = (response.data or [{}])[0]
+        profile_now["social_score"] = int(row.get("social_score") or 0)
+    except Exception:
+        profile_now.setdefault("social_score", 0)
+    st.session_state.profile = profile_now
 
 
 if "cloud_prefs" not in st.session_state:
     st.session_state.cloud_prefs = load_user_preferences()
 if "profile" not in st.session_state:
     st.session_state.profile = load_profile()
+_settle_social_score()
 
 prefs = st.session_state.cloud_prefs
 alert_prefs = prefs.get("alerts", {})
@@ -3151,11 +3231,58 @@ profile = st.session_state.profile
 _brand_watch(key="brand_watch")
 st.sidebar.markdown(_brand_mark(150), unsafe_allow_html=True)
 
+@st.fragment
+def invite_someone() -> None:
+    """Send one invite. This form redraws on its own."""
+    st.caption(
+        "When that person creates an account, your social score gains 100 points. "
+        "Anyone else who already invited the same address gains 100 as well."
+    )
+    address_text = st.text_input(
+        "Their email",
+        key="invite_email",
+        placeholder="name@example.com",
+    )
+    if st.button("Send invite", key="invite_send", use_container_width=True):
+        address = _clean_invite_email(address_text)
+        own = _clean_invite_email(getattr(st.session_state.user, "email", "") or "")
+        if not address:
+            st.warning("Enter a valid email address.")
+        elif address == own:
+            st.warning("Use someone else's email address.")
+        else:
+            stored = _store_invite(address)
+            if stored == "limit":
+                st.warning("The day's invites are used. Try again tomorrow.")
+            elif stored == "error":
+                st.warning(
+                    "That invite could not be saved. Run the latest supabase_rls.sql in Supabase, then try again."
+                )
+            else:
+                inviter = (st.session_state.get("profile") or {}).get("display_name")
+                if not inviter:
+                    inviter = own.split("@")[0] if own else "Someone"
+                sent, reason = _email_invite(address, str(inviter))
+                if sent and stored == "exists":
+                    st.success("That invite was already saved. The email was sent again.")
+                elif sent:
+                    st.success("Invite sent.")
+                elif stored == "exists":
+                    st.warning(f"That invite is already saved. The email was not sent: {reason}.")
+                else:
+                    st.warning(f"Invite saved. The email was not sent: {reason}.")
+    for row in _my_invites():
+        state = "Joined" if row.get("credited_at") else "Waiting"
+        st.caption(f"{row.get('email') or ''} · {state}")
+
+
 with tracked_expander("👤 Account", "account", sidebar=True):
     if profile is None:
         st.warning("Profile storage is not ready yet. Run the latest supabase_rls.sql in the Supabase SQL editor.")
         profile = {}
     st.markdown(profile_card(profile, st.session_state.user.email or ""), unsafe_allow_html=True)
+    with tracked_expander("Invite", "invite"):
+        invite_someone()
     with tracked_expander("Edit profile", "edit_profile"):
         profile_name = st.text_input(
             "Display name",
@@ -3941,6 +4068,38 @@ def _resend_reason(response) -> str:
     if not message or "re_" in message.lower():
         return f"Resend returned status {response.status_code}"
     return message[:180]
+
+
+def _email_invite(address: str, inviter_name: str) -> tuple[bool, str]:
+    """Mail one invite. The reason is empty when the send is accepted."""
+    api_key, sender, _inbox = _feedback_mail_settings()
+    if not api_key:
+        return False, "the Resend key is missing from the Streamlit secrets"
+    safe_name = html.escape(inviter_name or "Someone")
+    link = html.escape(_app_url(), quote=True)
+    payload = {
+        "from": sender,
+        "to": [address],
+        "subject": "You are invited to Angstrom Signals",
+        "html": (
+            f"<p>{safe_name} invited you to Angstrom Signals.</p>"
+            f"<p><a href=\"{link}\">Create an account</a> with this email address.</p>"
+            "<p>Angstrom Signals is market sentiment and technical signals, with the crowd alongside. "
+            "It is research, not financial advice.</p>"
+        ),
+    }
+    try:
+        response = requests.post(
+            "https://api.resend.com/emails",
+            json=payload,
+            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+            timeout=15,
+        )
+    except Exception:
+        return False, "Resend could not be reached"
+    if response.status_code < 300:
+        return True, ""
+    return False, _resend_reason(response)
 
 
 def _email_feedback(kind: str, body: str, user_email: str, user_id: str) -> tuple[bool, str]:
