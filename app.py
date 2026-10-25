@@ -3273,10 +3273,7 @@ st.sidebar.markdown(_brand_mark(150), unsafe_allow_html=True)
 @st.fragment
 def invite_someone() -> None:
     """Send one invite. This form redraws on its own."""
-    st.caption(
-        "When that person creates an account, your social score gains 100 points. "
-        "Anyone else who already invited the same address gains 100 as well."
-    )
+    st.caption("Invite your friends to join! Get 100 social points when they do!")
     address_text = st.text_input(
         "Their email",
         key="invite_email",
