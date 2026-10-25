@@ -3634,51 +3634,49 @@ def _remove_group_member(group_id: int, person_id: str) -> str:
     return "That person could not be removed. Run the latest supabase_rls.sql, then try again."
 
 
-@st.dialog("People")
-def _group_people_dialog(group_id: int) -> None:
-    """The people in one group. The leader can remove anyone except themselves."""
-    groups = _load_my_groups() or []
-    row = next((item for item in groups if str(item.get("id")) == str(group_id)), None)
-    if not row:
-        st.caption("That group is no longer available.")
-        return
-    name = " ".join(str(row.get("name") or "").split()) or "Group"
-    st.markdown(f"**{html.escape(name)}**")
+def _group_member_list(row, group_id: int) -> None:
+    """Faces and names inside one group. The leader can remove anyone except themselves."""
     people = _group_people(row)
     if not people:
         st.caption("The member list is not ready yet. Run the latest supabase_rls.sql in the Supabase SQL editor.")
         return
     leader_id = str(row.get("leader_id") or "").strip().lower()
     is_leader = bool(row.get("is_leader"))
-    st.markdown(
-        "<style>[class*='st-key-group_remove_'] button{color:#b91c1c !important;background:transparent !important;"
-        "border:none !important;font-size:1.35rem !important;font-weight:700 !important;line-height:1 !important;}</style>",
-        unsafe_allow_html=True,
-    )
     for person in people:
-        face, label, action = st.columns([1, 5, 1], vertical_alignment="center")
-        face.markdown(_person_face(person["name"], person["avatar"]), unsafe_allow_html=True)
-        label.markdown(html.escape(person["name"]))
-        if person["id"] == leader_id:
-            action.caption("Leader")
-        elif is_leader and action.button(
-            "×",
-            key=f"group_remove_{group_id}_{person['id']}",
-            help="Remove from the group",
-        ):
-            note = _remove_group_member(group_id, person["id"])
-            if note:
-                st.warning(note)
-            else:
-                st.session_state["group_open_id"] = group_id
-                st.rerun()
+        remove = False
+        with st.container(horizontal=True, vertical_alignment="center", gap="small"):
+            st.markdown(
+                _person_face(person["name"], person["avatar"]),
+                unsafe_allow_html=True,
+                width="content",
+            )
+            st.markdown(html.escape(person["name"]), width="stretch")
+            if person["id"] == leader_id:
+                st.markdown(
+                    "<span style='color:var(--ang-muted);font-size:0.85rem;'>Leader</span>",
+                    unsafe_allow_html=True,
+                    width="content",
+                )
+            elif is_leader:
+                remove = st.button(
+                    "×",
+                    key=f"group_remove_{group_id}_{person['id']}",
+                    help="Remove from the group",
+                    type="tertiary",
+                )
+        if not remove:
+            continue
+        note = _remove_group_member(group_id, person["id"])
+        if note:
+            st.warning(note)
+        else:
+            st.rerun()
 
 
 @st.fragment
 def my_groups_panel() -> None:
     """Groups you lead, and groups you belong to. Delete and Leave redraw this section."""
     groups = _load_my_groups()
-    reopen = st.session_state.pop("group_open_id", None)
     if groups is None:
         st.caption("Groups are not ready yet. Run the latest supabase_rls.sql in the Supabase SQL editor.")
         return
@@ -3688,12 +3686,14 @@ def my_groups_panel() -> None:
         st.caption("You have no groups yet. Use the people icon beside a name in the social stream.")
         return
     st.markdown(
-        "<style>[class*='st-key-group_open_'] button{justify-content:flex-start !important;"
-        "background:transparent !important;border:none !important;color:var(--ang-muted) !important;"
-        "box-shadow:none !important;padding-left:0 !important;font-weight:500 !important;}</style>",
+        "<style>"
+        "[class*='st-key-group_fold_'] [data-testid='stMarkdownContainer'] p{margin:0 !important;display:flex;align-items:center;}"
+        "[class*='st-key-group_remove_'] button{color:#b91c1c !important;background:transparent !important;"
+        "border:none !important;box-shadow:none !important;font-size:2.7rem !important;font-weight:700 !important;"
+        "line-height:1 !important;min-height:0 !important;height:auto !important;padding:0 .15rem !important;}"
+        "</style>",
         unsafe_allow_html=True,
     )
-    st.caption("Click a group to see its people.")
     if led:
         st.caption("Groups you lead")
         for row in led:
@@ -3705,8 +3705,8 @@ def my_groups_panel() -> None:
             count = _group_member_count(row)
             detail = f"{count} member" if count == 1 else f"{count} members"
             left, right = st.columns([3, 1])
-            if left.button(f"{name} · {detail}", key=f"group_open_{gid}", type="tertiary"):
-                _group_people_dialog(gid)
+            with left.expander(f"{name} · {detail}", expanded=False, key=f"group_fold_{gid}"):
+                _group_member_list(row, gid)
             if right.button("Delete", key=f"group_delete_{gid}", use_container_width=True):
                 st.session_state["group_delete_id"] = gid
             if st.session_state.get("group_delete_id") == gid:
@@ -3734,8 +3734,8 @@ def my_groups_panel() -> None:
             leader = " ".join(str(row.get("leader_name") or "").split())
             left, right = st.columns([3, 1])
             label = f"{name} · {leader}" if leader else name
-            if left.button(label, key=f"group_open_{gid}", type="tertiary"):
-                _group_people_dialog(gid)
+            with left.expander(label, expanded=False, key=f"group_fold_{gid}"):
+                _group_member_list(row, gid)
             if right.button("Leave", key=f"group_leave_{gid}", use_container_width=True):
                 try:
                     supabase.rpc("leave_group", {"chosen_group": gid}).execute()
@@ -3743,8 +3743,6 @@ def my_groups_panel() -> None:
                     st.warning("Could not leave that group. Run the latest supabase_rls.sql, then try again.")
                 else:
                     st.rerun()
-    if reopen:
-        _group_people_dialog(int(reopen))
 
 
 with tracked_expander("👤 Account", "account", sidebar=True):
