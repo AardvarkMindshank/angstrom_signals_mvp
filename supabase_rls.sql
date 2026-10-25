@@ -1371,3 +1371,445 @@ create trigger sentiment_replies_award_points
     after insert on public.sentiment_replies
     for each row
     execute function public.award_signal_reply_points();
+
+-- Groups are a filter on people already in the stream and chat.
+-- The leader invites. A member joins only by accepting. No social points.
+create table if not exists public.user_groups (
+    id bigint generated always as identity primary key,
+    leader_id uuid not null references auth.users (id) on delete cascade,
+    name text not null,
+    created_at timestamptz not null default now()
+);
+
+create unique index if not exists user_groups_leader_name
+    on public.user_groups (leader_id, lower(name));
+
+create table if not exists public.group_members (
+    group_id bigint not null references public.user_groups (id) on delete cascade,
+    user_id uuid not null references auth.users (id) on delete cascade,
+    joined_at timestamptz not null default now(),
+    primary key (group_id, user_id)
+);
+
+create index if not exists group_members_user
+    on public.group_members (user_id);
+
+create table if not exists public.group_invites (
+    id bigint generated always as identity primary key,
+    group_id bigint not null references public.user_groups (id) on delete cascade,
+    inviter_id uuid not null references auth.users (id) on delete cascade,
+    invitee_id uuid not null references auth.users (id) on delete cascade,
+    created_at timestamptz not null default now(),
+    expires_at timestamptz not null default (now() + interval '30 days'),
+    unique (group_id, invitee_id)
+);
+
+create index if not exists group_invites_invitee
+    on public.group_invites (invitee_id);
+
+alter table public.user_groups enable row level security;
+alter table public.group_members enable row level security;
+alter table public.group_invites enable row level security;
+
+drop policy if exists "read groups you belong to" on public.user_groups;
+create policy "read groups you belong to" on public.user_groups
+    for select
+    to authenticated
+    using (
+        leader_id = auth.uid()
+        or exists (
+            select 1 from public.group_members as members
+            where members.group_id = user_groups.id
+              and members.user_id = auth.uid()
+        )
+    );
+
+drop policy if exists "read members of your groups" on public.group_members;
+create policy "read members of your groups" on public.group_members
+    for select
+    to authenticated
+    using (
+        user_id = auth.uid()
+        or exists (
+            select 1 from public.user_groups as groups
+            where groups.id = group_members.group_id
+              and groups.leader_id = auth.uid()
+        )
+        or exists (
+            select 1 from public.group_members as mine
+            where mine.group_id = group_members.group_id
+              and mine.user_id = auth.uid()
+        )
+    );
+
+drop policy if exists "read own group invites" on public.group_invites;
+create policy "read own group invites" on public.group_invites
+    for select
+    to authenticated
+    using (invitee_id = auth.uid() or inviter_id = auth.uid());
+
+grant select on public.user_groups to authenticated;
+grant select on public.group_members to authenticated;
+grant select on public.group_invites to authenticated;
+
+create or replace function public.my_groups()
+returns table (
+    id bigint,
+    name text,
+    leader_id uuid,
+    leader_name text,
+    is_leader boolean,
+    members uuid[]
+)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    select
+        groups.id,
+        groups.name,
+        groups.leader_id,
+        coalesce(
+            nullif(btrim(profiles.display_name), ''),
+            nullif(split_part(users.email, '@', 1), ''),
+            'Member'
+        ),
+        groups.leader_id = auth.uid(),
+        coalesce(
+            (
+                select array_agg(members.user_id)
+                from public.group_members as members
+                where members.group_id = groups.id
+            ),
+            '{}'::uuid[]
+        )
+    from public.user_groups as groups
+    left join public.profiles as profiles
+      on profiles.user_id = groups.leader_id
+    left join auth.users as users
+      on users.id = groups.leader_id
+    where groups.leader_id = auth.uid()
+       or exists (
+            select 1 from public.group_members as members
+            where members.group_id = groups.id
+              and members.user_id = auth.uid()
+       )
+    order by groups.name;
+$$;
+
+revoke all on function public.my_groups() from public;
+revoke all on function public.my_groups() from anon;
+grant execute on function public.my_groups() to authenticated;
+
+create or replace function public.expire_my_group_invites()
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    me uuid := auth.uid();
+begin
+    if me is null then
+        return;
+    end if;
+    delete from public.user_notifications as notes
+    using public.group_invites as invites
+    where invites.invitee_id = me
+      and invites.expires_at <= now()
+      and notes.user_id = me
+      and notes.alert_type = 'group_invite'
+      and notes.asset_symbol = 'group:' || invites.id::text;
+    delete from public.group_invites
+    where invitee_id = me
+      and expires_at <= now();
+end;
+$$;
+
+revoke all on function public.expire_my_group_invites() from public;
+revoke all on function public.expire_my_group_invites() from anon;
+grant execute on function public.expire_my_group_invites() to authenticated;
+
+create or replace function public.create_group_invite(
+    target uuid,
+    group_name text,
+    chosen_group bigint
+)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    me uuid := auth.uid();
+    gid bigint;
+    gname text;
+    seated integer;
+    waiting integer;
+    inviter_label text;
+    new_invite bigint;
+begin
+    if me is null or target is null or target = me then
+        return 'self';
+    end if;
+    if not exists (select 1 from auth.users where id = target) then
+        return 'missing';
+    end if;
+
+    if chosen_group is not null then
+        select groups.id, groups.name into gid, gname
+        from public.user_groups as groups
+        where groups.id = chosen_group
+          and groups.leader_id = me;
+        if gid is null then
+            return 'missing';
+        end if;
+    else
+        gname := left(regexp_replace(btrim(coalesce(group_name, '')), '\s+', ' ', 'g'), 40);
+        if gname = '' then
+            return 'name';
+        end if;
+        select groups.id into gid
+        from public.user_groups as groups
+        where groups.leader_id = me
+          and lower(groups.name) = lower(gname);
+        if gid is null then
+            if (select count(*) from public.user_groups where leader_id = me) >= 20 then
+                return 'limit';
+            end if;
+            insert into public.user_groups (leader_id, name)
+            values (me, gname)
+            returning id into gid;
+            insert into public.group_members (group_id, user_id)
+            values (gid, me);
+        end if;
+    end if;
+
+    if exists (
+        select 1 from public.group_members
+        where group_id = gid and user_id = target
+    ) then
+        return 'member';
+    end if;
+    if exists (
+        select 1 from public.group_invites
+        where group_id = gid
+          and invitee_id = target
+          and expires_at > now()
+    ) then
+        return 'pending';
+    end if;
+
+    delete from public.user_notifications as notes
+    using public.group_invites as invites
+    where invites.group_id = gid
+      and invites.invitee_id = target
+      and notes.alert_type = 'group_invite'
+      and notes.asset_symbol = 'group:' || invites.id::text;
+    delete from public.group_invites
+    where group_id = gid and invitee_id = target;
+
+    select count(*) into seated from public.group_members where group_id = gid;
+    select count(*) into waiting
+    from public.group_invites
+    where group_id = gid and expires_at > now();
+    if seated + waiting >= 50 then
+        return 'full';
+    end if;
+
+    insert into public.group_invites (group_id, inviter_id, invitee_id, expires_at)
+    values (gid, me, target, now() + interval '30 days')
+    returning id into new_invite;
+
+    select coalesce(
+        nullif(btrim(profiles.display_name), ''),
+        nullif(split_part(users.email, '@', 1), ''),
+        'Someone'
+    ) into inviter_label
+    from auth.users as users
+    left join public.profiles as profiles
+      on profiles.user_id = users.id
+    where users.id = me;
+    inviter_label := left(coalesce(inviter_label, 'Someone'), 80);
+
+    insert into public.user_notifications (
+        user_id, asset_symbol, asset_name, alert_type, message
+    )
+    values (
+        target,
+        'group:' || new_invite::text,
+        gname,
+        'group_invite',
+        inviter_label || ' invited you to the group ' || gname || '.'
+    );
+    return 'ok';
+exception
+    when unique_violation then
+        return 'pending';
+end;
+$$;
+
+revoke all on function public.create_group_invite(uuid, text, bigint) from public;
+revoke all on function public.create_group_invite(uuid, text, bigint) from anon;
+grant execute on function public.create_group_invite(uuid, text, bigint) to authenticated;
+
+create or replace function public.respond_group_invite(invite_id bigint, accept boolean)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    me uuid := auth.uid();
+    rec public.group_invites%rowtype;
+    gname text;
+    leader uuid;
+    seated integer;
+    who text;
+begin
+    if me is null or invite_id is null then
+        return 'gone';
+    end if;
+    select * into rec
+    from public.group_invites
+    where id = invite_id
+      and invitee_id = me
+    for update;
+    if not found then
+        delete from public.user_notifications
+        where user_id = me
+          and alert_type = 'group_invite'
+          and asset_symbol = 'group:' || invite_id::text;
+        return 'gone';
+    end if;
+    if rec.expires_at <= now() or accept is not true then
+        delete from public.user_notifications
+        where user_id = me
+          and alert_type = 'group_invite'
+          and asset_symbol = 'group:' || rec.id::text;
+        delete from public.group_invites where id = rec.id;
+        if rec.expires_at <= now() then
+            return 'expired';
+        end if;
+        return 'dismissed';
+    end if;
+
+    select groups.name, groups.leader_id into gname, leader
+    from public.user_groups as groups
+    where groups.id = rec.group_id;
+    if leader is null then
+        delete from public.user_notifications
+        where user_id = me
+          and alert_type = 'group_invite'
+          and asset_symbol = 'group:' || rec.id::text;
+        delete from public.group_invites where id = rec.id;
+        return 'gone';
+    end if;
+    select count(*) into seated
+    from public.group_members
+    where group_id = rec.group_id;
+    if seated >= 50 then
+        return 'full';
+    end if;
+
+    insert into public.group_members (group_id, user_id)
+    values (rec.group_id, me)
+    on conflict do nothing;
+
+    select coalesce(
+        nullif(btrim(profiles.display_name), ''),
+        nullif(split_part(users.email, '@', 1), ''),
+        'Someone'
+    ) into who
+    from auth.users as users
+    left join public.profiles as profiles
+      on profiles.user_id = users.id
+    where users.id = me;
+    who := left(coalesce(who, 'Someone'), 80);
+
+    insert into public.user_notifications (
+        user_id, asset_symbol, asset_name, alert_type, message
+    )
+    values (
+        leader,
+        '',
+        gname,
+        'group_joined',
+        who || ' joined your group ' || gname || '.'
+    );
+
+    delete from public.user_notifications
+    where user_id = me
+      and alert_type = 'group_invite'
+      and asset_symbol = 'group:' || rec.id::text;
+    delete from public.group_invites where id = rec.id;
+    return 'ok';
+end;
+$$;
+
+revoke all on function public.respond_group_invite(bigint, boolean) from public;
+revoke all on function public.respond_group_invite(bigint, boolean) from anon;
+grant execute on function public.respond_group_invite(bigint, boolean) to authenticated;
+
+create or replace function public.delete_my_group(chosen_group bigint)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    me uuid := auth.uid();
+begin
+    if me is null or chosen_group is null then
+        return;
+    end if;
+    if not exists (
+        select 1 from public.user_groups
+        where id = chosen_group and leader_id = me
+    ) then
+        return;
+    end if;
+    delete from public.user_notifications as notes
+    using public.group_invites as invites
+    where invites.group_id = chosen_group
+      and notes.alert_type = 'group_invite'
+      and notes.asset_symbol = 'group:' || invites.id::text;
+    delete from public.user_groups
+    where id = chosen_group
+      and leader_id = me;
+end;
+$$;
+
+revoke all on function public.delete_my_group(bigint) from public;
+revoke all on function public.delete_my_group(bigint) from anon;
+grant execute on function public.delete_my_group(bigint) to authenticated;
+
+create or replace function public.leave_group(chosen_group bigint)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    me uuid := auth.uid();
+begin
+    if me is null or chosen_group is null then
+        return 'missing';
+    end if;
+    if exists (
+        select 1 from public.user_groups
+        where id = chosen_group and leader_id = me
+    ) then
+        return 'leader';
+    end if;
+    delete from public.group_members
+    where group_id = chosen_group
+      and user_id = me;
+    return 'ok';
+end;
+$$;
+
+revoke all on function public.leave_group(bigint) from public;
+revoke all on function public.leave_group(bigint) from anon;
+grant execute on function public.leave_group(bigint) to authenticated;

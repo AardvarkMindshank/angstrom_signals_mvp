@@ -587,6 +587,7 @@ export default function(component) {
       window.socialChat = window.socialChatReady ? parsed.chat : [];
       window.socialMe = parsed.me && typeof parsed.me === "object" ? parsed.me : {};
       window.socialFavourites = Array.isArray(parsed.favourites) ? parsed.favourites.map(String) : [];
+      window.socialGroups = Array.isArray(parsed.groups) ? parsed.groups : [];
       window.socialChatNotice = typeof parsed.notice === "string" ? parsed.notice : "";
       window.socialChatFaces = Array.isArray(parsed.faces) ? parsed.faces : [];
       window.socialChatLimit = Number(parsed.limit) || 160;
@@ -595,6 +596,7 @@ export default function(component) {
     }
   } catch (error) {
     items = [];
+    window.socialGroups = [];
   }
   if (window.socialAccount !== account) {
     window.socialAccount = account;
@@ -621,14 +623,14 @@ export default function(component) {
       window.socialStreamState.pinned = !!window.socialPanelPinned;
     }
     let style = document.getElementById("social-stream-style");
-    if (style && style.dataset.layout !== "score") {
+    if (style && style.dataset.layout !== "groups") {
       style.remove();
       style = null;
     }
     if (!style) {
       style = document.createElement("style");
       style.id = "social-stream-style";
-      style.dataset.layout = "score";
+      style.dataset.layout = "groups";
       style.textContent = [
         "#social-stream-root{position:fixed;inset:0;z-index:10000000;pointer-events:none;}",
         "#social-stream-root.is-open{pointer-events:auto;}",
@@ -703,6 +705,16 @@ export default function(component) {
         "#social-stream-root .person .identity{flex:1;min-width:0;}",
         "#social-stream-root .favourite{flex:none;margin-left:auto;background:none;border:0;padding:0 2px;cursor:pointer;font-size:1.2rem;line-height:1;color:#9ca3af;}",
         "#social-stream-root .favourite.is-on{color:#d97706;}",
+        "#social-stream-root .group-invite{flex:none;display:inline-flex;align-items:center;background:none;border:0;padding:0 2px;cursor:pointer;color:#6b7280;}",
+        "#social-stream-root .group-invite:hover{color:#111827;}",
+        "#social-stream-root .group-box{margin:8px 18px 0;padding:10px 12px;border:1px solid #e5e7eb;border-radius:10px;background:#f8fafc;}",
+        "#social-stream-root .group-box-title{font-weight:650;font-size:.9rem;}",
+        "#social-stream-root .group-name,#social-stream-root .group-pick{width:100%;box-sizing:border-box;font:inherit;font-size:.85rem;color:#111827;border:1px solid #d1d5db;border-radius:8px;padding:6px 8px;background:#fff;margin-top:6px;}",
+        "#social-stream-root .group-hint{min-height:1rem;color:#b45309;font-size:.75rem;margin-top:4px;}",
+        "#social-stream-root .group-box-actions{display:flex;gap:8px;margin-top:8px;}",
+        "#social-stream-root .group-send,#social-stream-root .group-cancel{border-radius:999px;padding:4px 12px;font:inherit;font-weight:600;cursor:pointer;}",
+        "#social-stream-root .group-send{background:#111827;color:#fff;border:0;}",
+        "#social-stream-root .group-cancel{background:#fff;color:#111827;border:1px solid #d1d5db;}",
         "#social-stream-root .face{width:36px;height:36px;border-radius:50%;object-fit:cover;background:#dbeafe;color:#1d4ed8;display:flex;align-items:center;justify-content:center;font-weight:700;flex:none;}",
         "#social-stream-root .who{display:flex;align-items:center;gap:6px;min-width:0;font-weight:600;font-size:.92rem;}",
         "#social-stream-root .who .name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}",
@@ -746,12 +758,18 @@ export default function(component) {
         "#social-stream-root.is-dark .face{background:#1e3a5f;color:#93c5fd;}",
         "#social-stream-root.is-dark .favourite{color:#6b7280;}",
         "#social-stream-root.is-dark .favourite.is-on{color:#fbbf24;}",
+        "#social-stream-root.is-dark .group-invite{color:#9ca3af;}",
+        "#social-stream-root.is-dark .group-invite:hover{color:#fafafa;}",
+        "#social-stream-root.is-dark .group-box{background:#262730;border-color:#4b5563;}",
+        "#social-stream-root.is-dark .group-name,#social-stream-root.is-dark .group-pick{background:#31333f;color:#fafafa;border-color:#4b5563;}",
+        "#social-stream-root.is-dark .group-cancel{background:#31333f;color:#fafafa;border-color:#4b5563;}",
+        "#social-stream-root.is-dark .group-hint{color:#fbbf24;}",
         "#social-stream-root.is-dark .chat-notice{color:#fbbf24;}"
       ].join("");
       document.head.appendChild(style);
     }
     let root = document.getElementById("social-stream-root");
-    if (root && root.dataset.layout !== "titles") {
+    if (root && root.dataset.layout !== "groups") {
       root.remove();
       root = null;
     }
@@ -761,7 +779,7 @@ export default function(component) {
       const streamSignal = window.socialStreamAbort.signal;
       root = document.createElement("div");
       root.id = "social-stream-root";
-      root.dataset.layout = "titles";
+      root.dataset.layout = "groups";
       root.innerHTML = [
         "<div class='scrim'></div>",
         "<aside class='panel' role='dialog' aria-label='Social signals and chat'>",
@@ -781,7 +799,15 @@ export default function(component) {
         "<label>Asset<select id='stream-asset'></select></label>",
         "<label>Person<select id='stream-person'></select></label>",
         "</div></div>",
-        "<div class='count'></div><div class='list'></div></div>",
+        "<div class='count'></div>",
+        "<div class='group-box' hidden>",
+        "<div class='group-box-title'></div>",
+        "<input class='group-name' maxlength='40' placeholder='New group name' aria-label='New group name'>",
+        "<select class='group-pick' aria-label='Group you lead'></select>",
+        "<div class='group-hint'></div>",
+        "<div class='group-box-actions'><button type='button' class='group-send'>Invite</button><button type='button' class='group-cancel'>Cancel</button></div>",
+        "</div>",
+        "<div class='list'></div></div>",
         "<div class='splitter' role='separator' aria-orientation='horizontal' title='Drag to resize the stream and the chat'></div>",
         "<div class='chat-pane'>",
         "<header class='chat-head'><div class='kicker'>Chat</div>",
@@ -855,6 +881,39 @@ export default function(component) {
       root.querySelector("#chat-person").addEventListener("change", (event) => {
         window.socialStreamState.chatPerson = event.target.value;
         window.renderSocialStream();
+      });
+      const sendGroupInvite = () => {
+        const invite = (window.socialStreamState || {}).groupFor;
+        if (!invite || !window.socialStreamReport) return;
+        const nameBox = root.querySelector(".group-name");
+        const pick = root.querySelector(".group-pick");
+        const hint = root.querySelector(".group-hint");
+        const name = nameBox ? nameBox.value.replace(/\\s+/g, " ").trim() : "";
+        const group = pick ? pick.value : "";
+        if (!name && !group) {
+          if (hint) hint.textContent = "Enter a name or choose a group.";
+          return;
+        }
+        window.socialStreamState.groupFor = null;
+        window.socialStreamReport("group", JSON.stringify({
+          n: Date.now(),
+          user: invite.id,
+          name: name,
+          group: name ? 0 : Number(group)
+        }));
+      };
+      root.querySelector(".group-send").addEventListener("click", sendGroupInvite);
+      root.querySelector(".group-cancel").addEventListener("click", () => {
+        window.socialStreamState.groupFor = null;
+        const hint = root.querySelector(".group-hint");
+        if (hint) hint.textContent = "";
+        window.renderSocialStream();
+      });
+      root.querySelector(".group-name").addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          sendGroupInvite();
+        }
       });
       const finder = root.querySelector("#panel-search");
       if (finder) {
@@ -1068,7 +1127,7 @@ export default function(component) {
         ],
         true
       );
-      const personChoices = [["me", "Me"], ["favourites", "Favourites"]];
+      const personChoices = [["me", "Me"]].concat(groupChoices(), [["favourites", "Favourites"]]);
       fillStreamSelect(
         panel.querySelector("#stream-person"),
         "All people",
@@ -1088,6 +1147,7 @@ export default function(component) {
       };
       if (!streamScopes[state.asset] && !seenAssets[state.asset]) state.asset = "";
       const keptPeople = { favourites: true, me: true };
+      (window.socialGroups || []).forEach((group) => { keptPeople["group:" + group.id] = true; });
       if (!keptPeople[state.person] && !seenPeople[state.person]) state.person = "";
       if (!keptPeople[state.chatPerson || ""] && !seenChatPeople[state.chatPerson || ""]) state.chatPerson = "";
       panel.querySelector("#stream-asset").value = state.asset;
@@ -1112,6 +1172,7 @@ export default function(component) {
       });
       const count = panel.querySelector(".count");
       count.textContent = shown.length === 1 ? "1 comment" : shown.length + " comments";
+      paintGroupBox(panel);
       const list = panel.querySelector(".list");
       if (list) {
         const keptScroll = list.scrollTop;
@@ -1121,6 +1182,8 @@ export default function(component) {
           empty.className = "empty";
           empty.textContent = state.person === "me"
             ? "No comments from you yet."
+            : String(state.person || "").indexOf("group:") === 0
+            ? "No comments from that group yet."
             : state.person === "favourites" && !favouriteSet().size
             ? "No favourites yet. Press the star beside a name."
             : items.length
@@ -1309,6 +1372,75 @@ export default function(component) {
     return button;
   }
 
+  function groupChoices() {
+    const groups = (window.socialGroups || []).slice().sort((a, b) => {
+      return String(a.name || "").localeCompare(String(b.name || ""));
+    });
+    const counts = {};
+    groups.forEach((group) => {
+      const label = group.name || "Group";
+      counts[label] = (counts[label] || 0) + 1;
+    });
+    return groups.map((group) => {
+      let label = group.name || "Group";
+      if (counts[label] > 1 && !group.lead && group.leader) label = label + " (" + group.leader + ")";
+      return ["group:" + group.id, label];
+    });
+  }
+
+  function paintGroupBox(panel) {
+    const box = panel.querySelector(".group-box");
+    if (!box) return;
+    const invite = (window.socialStreamState || {}).groupFor;
+    box.hidden = !invite;
+    if (!invite) return;
+    const title = box.querySelector(".group-box-title");
+    if (title) title.textContent = "Invite " + invite.name + " to a group";
+    const switched = box.dataset.user !== String(invite.id);
+    if (switched) {
+      box.dataset.user = String(invite.id);
+      const nameBox = box.querySelector(".group-name");
+      const hint = box.querySelector(".group-hint");
+      if (nameBox) nameBox.value = "";
+      if (hint) hint.textContent = "";
+    }
+    const select = box.querySelector(".group-pick");
+    if (!select) return;
+    const current = switched ? "" : select.value;
+    select.replaceChildren();
+    const blank = document.createElement("option");
+    blank.value = "";
+    blank.textContent = "Or choose a group you lead";
+    select.appendChild(blank);
+    (window.socialGroups || []).filter((group) => group.lead).forEach((group) => {
+      const option = document.createElement("option");
+      option.value = String(group.id);
+      option.textContent = group.name || "Group";
+      select.appendChild(option);
+    });
+    if ([...select.options].some((option) => option.value === current)) select.value = current;
+  }
+
+  function groupButton(item) {
+    const id = String(item.user || "");
+    const mine = String((window.socialMe || {}).id || "");
+    if (!id || item.mine || id === mine) return null;
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "group-invite";
+    button.innerHTML = "<svg width='16' height='16' viewBox='0 0 16 16' aria-hidden='true'><circle cx='6' cy='5' r='2' fill='currentColor'/><circle cx='11' cy='5.5' r='1.6' fill='currentColor'/><path d='M1.8 13.2c.6-2.2 2.1-3.3 4.2-3.3s3.6 1.1 4.2 3.3' fill='currentColor'/><path d='M9.2 13.2c.3-1.2 1.1-2 2.3-2 1.1 0 1.9.7 2.3 2' fill='currentColor'/></svg>";
+    button.title = "Invite to a group";
+    button.setAttribute("aria-label", button.title);
+    button.addEventListener("click", () => {
+      window.socialStreamState.groupFor = { id: id, name: String(item.name || "Member") };
+      const panel = document.getElementById("social-stream-root");
+      if (window.renderSocialStream) window.renderSocialStream();
+      const nameBox = panel && panel.querySelector(".group-name");
+      if (nameBox) nameBox.focus();
+    });
+    return button;
+  }
+
   function favouriteSet() {
     return new Set((window.socialFavourites || []).map((id) => String(id)));
   }
@@ -1373,6 +1505,8 @@ export default function(component) {
     identity.appendChild(who);
     identity.appendChild(when);
     person.appendChild(identity);
+    const group = groupButton(item);
+    if (group) person.appendChild(group);
     const star = favouriteButton(item);
     if (star) person.appendChild(star);
     return person;
@@ -1416,6 +1550,12 @@ export default function(component) {
     if (person === "favourites") {
       const stars = favouriteSet();
       return notes.some((note) => stars.has(String(note.user || "")));
+    }
+    if (String(person).indexOf("group:") === 0) {
+      const id = String(person).slice(6);
+      const group = (window.socialGroups || []).find((item) => String(item.id) === id);
+      const members = new Set(((group && group.members) || []).map((member) => String(member)));
+      return notes.some((note) => members.has(String(note.user || "")));
     }
     return notes.some((note) => (note.name || "Member") === person);
   }
@@ -1506,6 +1646,8 @@ export default function(component) {
       empty.className = "empty";
       empty.textContent = chatPerson === "me"
         ? "No chat comments from you yet."
+        : String(chatPerson || "").indexOf("group:") === 0
+        ? "No chat comments from that group yet."
         : chatPerson === "favourites" && !favouriteSet().size && !String(query).trim()
         ? "No favourites yet. Press the star beside a name."
         : "No chat comments match.";
@@ -2342,6 +2484,7 @@ _SECTION_IDS = _MAIN_SECTION_IDS + (
     "account",
     "edit_profile",
     "invite",
+    "my_groups",
     "notifications",
     "alert_feed",
     "alert_rules",
@@ -3092,7 +3235,47 @@ def save_alert_preferences_to_cloud(updates: dict):
         st.error(f"Error saving alert preferences: {exc}")
 
 
+def _member_ids(raw) -> list[str]:
+    if isinstance(raw, list):
+        parts = [str(item) for item in raw if item]
+    else:
+        text = str(raw or "").strip().strip("{}")
+        parts = [part.strip().strip('"') for part in text.split(",") if part.strip()]
+    return [part.strip().lower() for part in parts if part.strip()]
+
+
+def _load_my_groups():
+    """Groups this account leads or belongs to. None when the functions are not installed."""
+    try:
+        response = supabase.rpc("my_groups").execute()
+    except Exception:
+        return None
+    return response.data or []
+
+
+def _groups_for_stream() -> list[dict]:
+    rows = _load_my_groups() or []
+    cleaned = []
+    for row in rows:
+        try:
+            gid = int(row.get("id"))
+        except (TypeError, ValueError):
+            continue
+        cleaned.append({
+            "id": gid,
+            "name": " ".join(str(row.get("name") or "").split())[:40] or "Group",
+            "lead": bool(row.get("is_leader")),
+            "leader": " ".join(str(row.get("leader_name") or "").split())[:40],
+            "members": _member_ids(row.get("members")),
+        })
+    return cleaned
+
+
 def fetch_user_notifications():
+    try:
+        supabase.rpc("expire_my_group_invites").execute()
+    except Exception:
+        pass
     try:
         res = (
             supabase.table("user_notifications")
@@ -3102,9 +3285,27 @@ def fetch_user_notifications():
             .limit(10)
             .execute()
         )
-        return res.data or []
+        rows = list(res.data or [])
     except Exception:
         return []
+    try:
+        extra = (
+            supabase.table("user_notifications")
+            .select("*")
+            .eq("user_id", user_id)
+            .eq("alert_type", "group_invite")
+            .order("created_at", desc=True)
+            .limit(20)
+            .execute()
+        )
+    except Exception:
+        extra = None
+    seen = {row.get("id") for row in rows}
+    for row in (getattr(extra, "data", None) or []):
+        if row.get("id") not in seen:
+            rows.append(row)
+    rows.sort(key=lambda row: str(row.get("created_at") or ""), reverse=True)
+    return rows
 
 
 def load_profile():
@@ -3312,6 +3513,70 @@ def invite_someone() -> None:
         st.caption(f"{row.get('email') or ''} · {state}")
 
 
+def _group_member_count(row) -> int:
+    return len(_member_ids(row.get("members")))
+
+
+@st.fragment
+def my_groups_panel() -> None:
+    """Groups you lead, and groups you belong to. Delete and Leave redraw this section."""
+    groups = _load_my_groups()
+    if groups is None:
+        st.caption("Groups are not ready yet. Run the latest supabase_rls.sql in the Supabase SQL editor.")
+        return
+    led = [row for row in groups if row.get("is_leader")]
+    joined = [row for row in groups if not row.get("is_leader")]
+    if not led and not joined:
+        st.caption("You have no groups yet. Use the people icon beside a name in the social stream.")
+        return
+    if led:
+        st.caption("Groups you lead")
+        for row in led:
+            try:
+                gid = int(row.get("id"))
+            except (TypeError, ValueError):
+                continue
+            name = " ".join(str(row.get("name") or "").split()) or "Group"
+            count = _group_member_count(row)
+            label = f"{name} · {count} member" if count == 1 else f"{name} · {count} members"
+            left, right = st.columns([3, 1])
+            left.caption(label)
+            if right.button("Delete", key=f"group_delete_{gid}", use_container_width=True):
+                st.session_state["group_delete_id"] = gid
+            if st.session_state.get("group_delete_id") == gid:
+                st.caption("Delete this group? Members will lose it.")
+                yes, no = st.columns(2)
+                if yes.button("Delete group", key=f"group_delete_yes_{gid}", use_container_width=True):
+                    try:
+                        supabase.rpc("delete_my_group", {"chosen_group": gid}).execute()
+                    except Exception:
+                        st.warning("That group could not be deleted. Run the latest supabase_rls.sql, then try again.")
+                    else:
+                        st.session_state.pop("group_delete_id", None)
+                        st.rerun()
+                if no.button("Cancel", key=f"group_delete_no_{gid}", use_container_width=True):
+                    st.session_state.pop("group_delete_id", None)
+                    _rerun_fragment()
+    if joined:
+        st.caption("Groups you belong to")
+        for row in joined:
+            try:
+                gid = int(row.get("id"))
+            except (TypeError, ValueError):
+                continue
+            name = " ".join(str(row.get("name") or "").split()) or "Group"
+            leader = " ".join(str(row.get("leader_name") or "").split())
+            left, right = st.columns([3, 1])
+            left.caption(f"{name} · {leader}" if leader else name)
+            if right.button("Leave", key=f"group_leave_{gid}", use_container_width=True):
+                try:
+                    supabase.rpc("leave_group", {"chosen_group": gid}).execute()
+                except Exception:
+                    st.warning("Could not leave that group. Run the latest supabase_rls.sql, then try again.")
+                else:
+                    st.rerun()
+
+
 with tracked_expander("👤 Account", "account", sidebar=True):
     if profile is None:
         st.warning("Profile storage is not ready yet. Run the latest supabase_rls.sql in the Supabase SQL editor.")
@@ -3359,6 +3624,8 @@ with tracked_expander("👤 Account", "account", sidebar=True):
 
     with tracked_expander("Invite", "invite"):
         invite_someone()
+    with tracked_expander("My Groups", "my_groups"):
+        my_groups_panel()
 
     if st.button("Log Out", use_container_width=True):
         try:
@@ -3465,6 +3732,25 @@ def score_from_alert(note: dict):
 
 
 @st.fragment
+def _respond_group_invite(invite_id: int, accept: bool) -> str:
+    """Accept or dismiss one group invite. Empty means it worked."""
+    try:
+        result = supabase.rpc("respond_group_invite", {
+            "invite_id": invite_id,
+            "accept": accept,
+        }).execute()
+    except Exception:
+        return "That invite could not be updated. Run the latest supabase_rls.sql, then try again."
+    code = str(result.data or "").strip().strip('"')
+    if code in ("ok", "dismissed", "gone"):
+        return ""
+    if code == "expired":
+        return "That invite has expired."
+    if code == "full":
+        return "That group already has 50 members."
+    return "That invite could not be updated. Run the latest supabase_rls.sql, then try again."
+
+
 def notifications_panel() -> None:
     """Alerts and alert rules. A filter, a button, or a slider redraws this section, not the page."""
     notifications_list = fetch_user_notifications()
@@ -3488,13 +3774,16 @@ def notifications_panel() -> None:
                 with f_col2:
                     if st.button("Mark read", key="mark_read_btn", use_container_width=True):
                         try:
-                            supabase.table("user_notifications").update({"is_read": True}).eq("user_id", user_id).execute()
+                            supabase.table("user_notifications").update({"is_read": True}).eq("user_id", user_id).neq("alert_type", "group_invite").execute()
                             _rerun_fragment()
                         except Exception:
                             st.error("Could not mark alerts as read.")
 
                 filtered_notifs = (
-                    [note for note in notifications_list if not note.get("is_read", False)]
+                    [
+                        note for note in notifications_list
+                        if not note.get("is_read", False) or note.get("alert_type") == "group_invite"
+                    ]
                     if feed_filter == "Unread"
                     else notifications_list
                 )
@@ -3521,9 +3810,10 @@ def notifications_panel() -> None:
                             return "Stock", stock_ids[raw.upper()]
                         return None
 
+                    quiet_notes = {"invite_joined", "group_invite", "group_joined"}
                     asset_notes = [
                         note for note in filtered_notifs
-                        if str(note.get("alert_type") or "") != "invite_joined"
+                        if str(note.get("alert_type") or "") not in quiet_notes
                         and notification_target(note.get("asset_symbol"))
                     ]
                     if asset_notes:
@@ -3533,16 +3823,41 @@ def notifications_panel() -> None:
                         message = html.escape(str(note.get("message") or ""))
                         created = html.escape(str(note.get("created_at") or "")[:16].replace("T", " "))
                         weight = "700" if not note.get("is_read") else "500"
-                        if str(note.get("alert_type") or "") == "invite_joined":
+                        kind = str(note.get("alert_type") or "")
+                        if kind in ("invite_joined", "group_invite", "group_joined"):
+                            titles = {
+                                "invite_joined": "Invite accepted",
+                                "group_invite": "Group invite",
+                                "group_joined": "Group",
+                            }
                             border = "#93c5fd" if not note.get("is_read") else "#e5e7eb"
                             card = (
                                 "<div style='background:#f8fafc;border:1px solid "
                                 f"{border};border-radius:8px;padding:8px 10px;margin-bottom:8px;'>"
-                                f"<div style='font-weight:{weight};color:#1e3a8a;'>Invite accepted</div>"
+                                f"<div style='font-weight:{weight};color:#1e3a8a;'>{titles[kind]}</div>"
                                 f"<div style='font-size:0.8rem;color:#374151;margin-top:2px;'>{message}</div>"
                                 f"<div style='font-size:0.75rem;color:#6b7280;margin-top:2px;'>{created}</div></div>"
                             )
                             _score_table(key=f"notif_{note.get('id') or name}", data=card)
+                            if kind == "group_invite":
+                                invite_raw = str(note.get("asset_symbol") or "")
+                                invite_id = None
+                                if invite_raw.startswith("group:"):
+                                    try:
+                                        invite_id = int(invite_raw.split(":", 1)[1])
+                                    except ValueError:
+                                        invite_id = None
+                                if invite_id:
+                                    yes, no = st.columns(2)
+                                    if yes.button("Accept", key=f"group_accept_{invite_id}", use_container_width=True):
+                                        answer = _respond_group_invite(invite_id, True)
+                                        if answer:
+                                            st.warning(answer)
+                                        else:
+                                            st.rerun()
+                                    if no.button("Dismiss", key=f"group_dismiss_{invite_id}", use_container_width=True):
+                                        _respond_group_invite(invite_id, False)
+                                        _rerun_fragment()
                             continue
                         color, background, arrow, _bar = tone(score_from_alert(note))
                         border = color if not note.get("is_read") else "#e5e7eb"
@@ -3571,7 +3886,7 @@ def notifications_panel() -> None:
 
                     if st.button("🗑️ Clear Read Alerts", use_container_width=True, key="clear_read_btn"):
                         try:
-                            supabase.table("user_notifications").delete().eq("user_id", user_id).eq("is_read", True).execute()
+                            supabase.table("user_notifications").delete().eq("user_id", user_id).eq("is_read", True).neq("alert_type", "group_invite").execute()
                             st.success("Cleared read alerts.")
                             _rerun_fragment()
                         except Exception as exc:
@@ -3773,7 +4088,7 @@ Comments are newest first. Each one shows the person's picture, name, and the ti
 
 All, Positive, Negative, and Mixed narrow the list by the coverage they were answering. Under Asset, All Assets & Sentiments is every comment. My watchlists is the crypto and equity tables on your account. My Crypto Watchlist and My Equities Watchlist each show one of those lists. Crypto market and Stock market sit above the individual assets. All Assets & Sentiments or a watchlist is saved on your account. You can also pick one asset.
 
-Under Person, All people shows everyone. Me, just under that, shows notes you wrote, including a reply you wrote. Favourites shows notes from people you have starred, including a reply they wrote. A star beside another person's name adds them. Press the filled star to remove them. That list is saved on your account. You can also pick one person. A note stays in the list when that person wrote it or replied under it.
+Under Person, All people shows everyone. Me, just under that, shows notes you wrote, including a reply you wrote. Groups you lead or belong to come next. Favourites shows notes from people you have starred, including a reply they wrote. A star beside another person's name adds them. Press the filled star to remove them. That list is saved on your account. The people icon beside the star invites that person to a group. You name a new group or pick one you lead. They accept or dismiss it under Notifications. An invite disappears after 30 days. A group shows notes from its members. You can also pick one person. A note stays in the list when that person wrote it or replied under it.
 
 The green thumb and the red thumb each show a count. You can mark any note, including one you posted. Press the same thumb again to clear your mark. The curved arrow replies. The trash can deletes a note you posted, and deleting a comment also removes the replies under it.
 
@@ -3781,7 +4096,7 @@ The green thumb and the red thumb each show a count. You can mark any note, incl
 
 This is a shared room, not tied to an asset. Notes are newest first, and they stay. The panel shows the newest 60 conversations, with the replies under each one. Older notes stay stored.
 
-The Person list works the same way as on the stream, including Me and Favourites. Write a comment in the box at the bottom. Enter posts it. Shift and Enter starts a new line. The same row of faces sits under the box. The curved arrow replies. A reply to a reply is added under the original comment. Thumbs work the same way as on the stream, including on a note you posted, and the count sits beside each thumb. The trash can deletes a note you posted, and deleting a comment also removes the replies under it.
+The Person list works the same way as on the stream, including Me, your groups, and Favourites. Write a comment in the box at the bottom. Enter posts it. Shift and Enter starts a new line. The same row of faces sits under the box. The curved arrow replies. A reply to a reply is added under the original comment. Thumbs work the same way as on the stream, including on a note you posted, and the count sits beside each thumb. The trash can deletes a note you posted, and deleting a comment also removes the replies under it.
 
 **Search**
 
@@ -4360,6 +4675,37 @@ def _apply_favourite(data) -> str:
         return "That favourite could not be saved. Try again."
 
 
+def _apply_group_invite(data) -> str:
+    """Invite one person into a group this account leads. The note is shown once."""
+    allowed = _favourite_ids([str(data.get("user") or "")])
+    if not allowed:
+        return ""
+    name = " ".join(str(data.get("name") or "").split())[:40]
+    try:
+        chosen = int(data.get("group") or 0)
+    except (TypeError, ValueError):
+        chosen = 0
+    try:
+        result = supabase.rpc("create_group_invite", {
+            "target": allowed[0],
+            "group_name": name,
+            "chosen_group": chosen or None,
+        }).execute()
+    except Exception:
+        return "That invite could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again."
+    code = str(result.data or "").strip().strip('"')
+    return {
+        "ok": "Invite sent.",
+        "member": "They are already in that group.",
+        "pending": "They already have an invite to that group.",
+        "limit": "You already have 20 groups.",
+        "full": "That group already has 50 members.",
+        "name": "Enter a group name of up to 40 characters.",
+        "missing": "Choose a group you lead, or enter a new name.",
+        "self": "",
+    }.get(code, "That invite could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again.")
+
+
 def _chat_action(raw):
     """One post or thumb from the chat panel. None when this run has nothing new."""
     if not raw:
@@ -4783,6 +5129,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                     "chat": load_chat(supabase),
                     "me": _chat_viewer(),
                     "favourites": _favourite_ids((prefs.get("settings") or {}).get("favourites")),
+                    "groups": _groups_for_stream(),
                     "notice": chat_notice,
                     "faces": list(COMMENT_EMOTICONS),
                     "limit": COMMENT_LIMIT,
@@ -4795,12 +5142,14 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             on_chat_change=lambda: None,
             on_signal_change=lambda: None,
             on_favourite_change=lambda: None,
+            on_group_change=lambda: None,
             on_panel_change=lambda: None,
         )
         chosen_scope = stream_state.asset
         chat_event = _chat_action(getattr(stream_state, "chat", None))
         signal_event = _chat_action(getattr(stream_state, "signal", None))
         favourite_event = _favourite_event(getattr(stream_state, "favourite", None))
+        group_event = _favourite_event(getattr(stream_state, "group", None))
         if chat_event and chat_event.get("n") != st.session_state.get("chat_done"):
             st.session_state["chat_done"] = chat_event.get("n")
             st.session_state["chat_notice"] = _apply_chat_action(chat_event)
@@ -4812,6 +5161,10 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
         if favourite_event and favourite_event.get("n") != st.session_state.get("favourite_done"):
             st.session_state["favourite_done"] = favourite_event.get("n")
             st.session_state["chat_notice"] = _apply_favourite(favourite_event)
+            _rerun_fragment()
+        if group_event and group_event.get("n") != st.session_state.get("group_done"):
+            st.session_state["group_done"] = group_event.get("n")
+            st.session_state["chat_notice"] = _apply_group_invite(group_event)
             _rerun_fragment()
         if chosen_scope in ("all", "watchlist", "crypto", "stock"):
             stored = prefs.setdefault("settings", {})
