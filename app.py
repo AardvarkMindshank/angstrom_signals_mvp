@@ -379,7 +379,25 @@ export default function(component) {
       event.preventDefault();
       event.stopPropagation();
       button.blur();
-      setTriggerValue("picked", button.getAttribute("data-pick"));
+      const pick = button.getAttribute("data-pick") || "";
+      if (pick.indexOf("mood|") === 0) {
+        const target = document.getElementById("market-mood-" + pick.split("|")[1]);
+        let node = target;
+        for (let step = 0; node && step < 8; step += 1) {
+          const sibling = node.nextElementSibling;
+          const expander = sibling && sibling.querySelector
+            ? sibling.querySelector('[data-testid="stExpander"]')
+            : null;
+          if (expander) {
+            const details = expander.querySelector('[data-testid="stExpanderDetails"]');
+            const summary = expander.querySelector("summary");
+            if (details && details.hasAttribute("inert") && summary) summary.click();
+            break;
+          }
+          node = node.parentElement;
+        }
+      }
+      setTriggerValue("picked", pick);
     });
   });
   const valueOf = (row, col) => {
@@ -1647,6 +1665,24 @@ export default function(component) {
     const rect = target.getBoundingClientRect();
     return rect.top >= viewTop - 16 && rect.top <= viewTop + (viewBottom - viewTop) * 0.55;
   };
+  const openClosed = () => {
+    const target = document.getElementById(targetId);
+    if (!target) return;
+    let node = target;
+    for (let step = 0; step < 8 && node; step += 1) {
+      const sibling = node.nextElementSibling;
+      const expander = sibling && sibling.querySelector
+        ? sibling.querySelector('[data-testid="stExpander"]')
+        : null;
+      if (expander) {
+        const details = expander.querySelector('[data-testid="stExpanderDetails"]');
+        const summary = expander.querySelector("summary");
+        if (details && details.hasAttribute("inert") && summary) summary.click();
+        return;
+      }
+      node = node.parentElement;
+    }
+  };
   const go = () => {
     if (alreadyOnScreen()) return;
     const target = document.getElementById(targetId);
@@ -1658,6 +1694,7 @@ export default function(component) {
     scroller.scrollTop = Math.max(0, top);
   };
   go();
+  setTimeout(openClosed, 50);
   setTimeout(go, 50);
   setTimeout(go, 250);
   setTimeout(go, 700);
