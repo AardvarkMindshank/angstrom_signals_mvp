@@ -3576,6 +3576,35 @@ def _group_member_count(row) -> int:
     return len(_member_ids(row.get("members")))
 
 
+def _member_names(row) -> list[str]:
+    """Display names for the people in one group, in alphabetical order."""
+    raw = row.get("member_names")
+    if isinstance(raw, list):
+        parts = [str(item) for item in raw if item]
+    else:
+        text = str(raw or "").strip().strip("{}")
+        parts = [part.strip().strip('"') for part in text.split(",") if part.strip()] if text else []
+    names = []
+    for part in parts:
+        cleaned = " ".join(part.split())[:40]
+        if cleaned:
+            names.append(cleaned)
+    names.sort(key=str.lower)
+    return names
+
+
+def _group_line(name: str, detail: str, names: list[str]) -> str:
+    """The group row. Hovering it lists the people in that group."""
+    label = html.escape(f"{name} · {detail}" if detail else name)
+    if not names:
+        return f"<span style='font-size:0.85rem;color:var(--ang-muted);'>{label}</span>"
+    title = html.escape("\n".join(names), quote=True)
+    return (
+        f"<span title='{title}' style='font-size:0.85rem;color:var(--ang-muted);cursor:help;'>"
+        f"{label}</span>"
+    )
+
+
 @st.fragment
 def my_groups_panel() -> None:
     """Groups you lead, and groups you belong to. Delete and Leave redraw this section."""
@@ -3597,9 +3626,9 @@ def my_groups_panel() -> None:
                 continue
             name = " ".join(str(row.get("name") or "").split()) or "Group"
             count = _group_member_count(row)
-            label = f"{name} · {count} member" if count == 1 else f"{name} · {count} members"
+            detail = f"{count} member" if count == 1 else f"{count} members"
             left, right = st.columns([3, 1])
-            left.caption(label)
+            left.markdown(_group_line(name, detail, _member_names(row)), unsafe_allow_html=True)
             if right.button("Delete", key=f"group_delete_{gid}", use_container_width=True):
                 st.session_state["group_delete_id"] = gid
             if st.session_state.get("group_delete_id") == gid:
@@ -3626,7 +3655,7 @@ def my_groups_panel() -> None:
             name = " ".join(str(row.get("name") or "").split()) or "Group"
             leader = " ".join(str(row.get("leader_name") or "").split())
             left, right = st.columns([3, 1])
-            left.caption(f"{name} · {leader}" if leader else name)
+            left.markdown(_group_line(name, leader, _member_names(row)), unsafe_allow_html=True)
             if right.button("Leave", key=f"group_leave_{gid}", use_container_width=True):
                 try:
                     supabase.rpc("leave_group", {"chosen_group": gid}).execute()

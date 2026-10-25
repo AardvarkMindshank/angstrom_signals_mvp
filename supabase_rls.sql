@@ -1452,14 +1452,16 @@ grant select on public.user_groups to authenticated;
 grant select on public.group_members to authenticated;
 grant select on public.group_invites to authenticated;
 
-create or replace function public.my_groups()
+drop function if exists public.my_groups();
+create function public.my_groups()
 returns table (
     id bigint,
     name text,
     leader_id uuid,
     leader_name text,
     is_leader boolean,
-    members uuid[]
+    members uuid[],
+    member_names text[]
 )
 language sql
 stable
@@ -1483,6 +1485,25 @@ as $$
                 where members.group_id = groups.id
             ),
             '{}'::uuid[]
+        ),
+        coalesce(
+            (
+                select array_agg(named.member_name order by named.member_name)
+                from (
+                    select coalesce(
+                        nullif(btrim(member_profiles.display_name), ''),
+                        nullif(split_part(member_users.email, '@', 1), ''),
+                        'Member'
+                    ) as member_name
+                    from public.group_members as members
+                    left join public.profiles as member_profiles
+                      on member_profiles.user_id = members.user_id
+                    left join auth.users as member_users
+                      on member_users.id = members.user_id
+                    where members.group_id = groups.id
+                ) as named
+            ),
+            '{}'::text[]
         )
     from public.user_groups as groups
     left join public.profiles as profiles
