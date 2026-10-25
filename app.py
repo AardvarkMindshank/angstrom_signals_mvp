@@ -3506,7 +3506,6 @@ def notifications_panel() -> None:
                 if not filtered_notifs:
                     st.caption(f"No {feed_filter.lower()} notifications.")
                 else:
-                    st.caption("Click an alert to highlight that asset and open it on the chart.")
                     crypto_list = prefs.get("crypto") or {}
                     stock_list = prefs.get("stock") or {}
 
@@ -3526,12 +3525,30 @@ def notifications_panel() -> None:
                             return "Stock", stock_ids[raw.upper()]
                         return None
 
+                    asset_notes = [
+                        note for note in filtered_notifs
+                        if str(note.get("alert_type") or "") != "invite_joined"
+                        and notification_target(note.get("asset_symbol"))
+                    ]
+                    if asset_notes:
+                        st.caption("Click an alert to highlight that asset and open it on the chart.")
                     for note in filtered_notifs:
-                        color, background, arrow, _bar = tone(score_from_alert(note))
                         name = html.escape(str(note.get("asset_name") or "Asset"))
                         message = html.escape(str(note.get("message") or ""))
                         created = html.escape(str(note.get("created_at") or "")[:16].replace("T", " "))
                         weight = "700" if not note.get("is_read") else "500"
+                        if str(note.get("alert_type") or "") == "invite_joined":
+                            border = "#93c5fd" if not note.get("is_read") else "#e5e7eb"
+                            card = (
+                                "<div style='background:#f8fafc;border:1px solid "
+                                f"{border};border-radius:8px;padding:8px 10px;margin-bottom:8px;'>"
+                                f"<div style='font-weight:{weight};color:#1e3a8a;'>Invite accepted</div>"
+                                f"<div style='font-size:0.8rem;color:#374151;margin-top:2px;'>{message}</div>"
+                                f"<div style='font-size:0.75rem;color:#6b7280;margin-top:2px;'>{created}</div></div>"
+                            )
+                            _score_table(key=f"notif_{note.get('id') or name}", data=card)
+                            continue
+                        color, background, arrow, _bar = tone(score_from_alert(note))
                         border = color if not note.get("is_read") else "#e5e7eb"
                         target = notification_target(note.get("asset_symbol"))
                         card = (

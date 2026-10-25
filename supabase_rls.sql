@@ -195,6 +195,7 @@ create policy "users send own invites" on public.invites
 grant select, insert on public.invites to authenticated;
 
 -- Award 100 social points to every person who invited this account before it existed.
+-- Each of those people also gets one notification in their alert feed.
 create or replace function public.claim_invite_points()
 returns integer
 language plpgsql
@@ -205,6 +206,8 @@ declare
     me uuid := auth.uid();
     my_email text;
     joined_at timestamptz;
+    joiner_name text;
+    who text;
     rec record;
     awarded integer := 0;
 begin
@@ -217,6 +220,11 @@ begin
     if coalesce(my_email, '') = '' or joined_at is null then
         return 0;
     end if;
+
+    select nullif(btrim(display_name), '') into joiner_name
+    from public.profiles
+    where user_id = me;
+    who := left(coalesce(joiner_name, nullif(my_email, ''), 'Someone'), 80);
 
     perform set_config('angstrom.credit_social', 'on', true);
 
@@ -237,6 +245,17 @@ begin
         set social_score = social_score + 100,
             updated_at = now()
         where user_id = rec.inviter_id;
+
+        insert into public.user_notifications (
+            user_id, asset_symbol, asset_name, alert_type, message
+        )
+        values (
+            rec.inviter_id,
+            '',
+            who,
+            'invite_joined',
+            who || ' joined from your invite. 100 was added to your social score.'
+        );
 
         update public.invites
         set joined_user_id = me,
