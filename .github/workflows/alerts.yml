@@ -2,9 +2,15 @@ name: Run Background Alerts
 
 on:
   schedule:
-    # GitHub may delay scheduled runs, especially on private free plans.
+    # Backup only. GitHub often starts this about every 2 hours.
+    # Supabase is the clock that starts this workflow every 5 minutes.
     - cron: "*/5 * * * *"
   workflow_dispatch:
+
+# One run at a time. A second start waits, and any further start is dropped.
+concurrency:
+  group: angstrom-alerts
+  cancel-in-progress: false
 
 jobs:
   run-alerts:

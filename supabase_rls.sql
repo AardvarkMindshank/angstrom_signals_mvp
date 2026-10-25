@@ -1028,3 +1028,58 @@ $$;
 revoke all on function public.delete_own_signal_message(bigint, text) from public;
 revoke all on function public.delete_own_signal_message(bigint, text) from anon;
 grant execute on function public.delete_own_signal_message(bigint, text) to authenticated;
+
+-- Supabase starts the alert worker every 5 minutes. GitHub's own schedule
+-- often waits about 2 hours, so this database clock is the one that keeps
+-- prices on time. The GitHub token is stored in Vault, not in this file.
+-- Before this can call GitHub, run this once in the SQL editor with a real
+-- token in place of the placeholder. Do not commit that token.
+--   select vault.create_secret(
+--     'PASTE_THE_GITHUB_TOKEN_HERE',
+--     'github_actions_token',
+--     'Starts the Angstrom alert worker every 5 minutes'
+--   );
+-- The token is a fine-grained GitHub token for AardvarkMindshank/angstrom_signals_mvp
+-- with Actions set to Read and write.
+create extension if not exists pg_cron with schema pg_catalog;
+create extension if not exists pg_net with schema extensions;
+
+do $$
+declare
+  existing bigint;
+begin
+  select jobid into existing from cron.job where jobname = 'angstrom-alerts';
+  if existing is not null then
+    perform cron.unschedule(existing);
+  end if;
+end $$;
+
+select cron.schedule(
+  'angstrom-alerts',
+  '*/5 * * * *',
+  $alerts$
+  select net.http_post(
+    url := 'https://api.github.com/repos/AardvarkMindshank/angstrom_signals_mvp/actions/workflows/alerts.yml/dispatches',
+    headers := jsonb_build_object(
+      'Authorization', 'Bearer ' || coalesce((
+        select decrypted_secret
+        from vault.decrypted_secrets
+        where name = 'github_actions_token'
+        limit 1
+      ), ''),
+      'Accept', 'application/vnd.github+json',
+      'Content-Type', 'application/json',
+      'User-Agent', 'angstrom-signals',
+      'X-GitHub-Api-Version', '2022-11-28'
+    ),
+    body := '{"ref":"main"}'::jsonb,
+    timeout_milliseconds := 10000
+  )
+  where coalesce((
+    select decrypted_secret
+    from vault.decrypted_secrets
+    where name = 'github_actions_token'
+    limit 1
+  ), '') <> '';
+  $alerts$
+);
