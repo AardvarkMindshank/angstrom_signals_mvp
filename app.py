@@ -2750,7 +2750,7 @@ def _reveal_section(section_id: str, anchor: str) -> None:
 
 
 try:
-    from alerts import HELD_BEARISH, HELD_BULLISH, dismiss_read_alerts, evaluate_alerts
+    from alerts import HELD_BEARISH, HELD_BULLISH, dismiss_read_alerts
     from data_fetchers import (
         crypto_logo_urls,
         crypto_market_caps,
@@ -5531,11 +5531,6 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                     panel_updates["stream_pinned"] = panel_choice["pinned"]
                 if panel_updates:
                     save_account_settings(panel_updates)
-
-        try:
-            evaluate_alerts(supabase, user_id, crypto_results + stock_results, alert_prefs)
-        except Exception:
-            st.warning("Alerts were not updated on this refresh.")
 
         def get_top_bottom(results):
             valid = [row for row in results if row.get("score") is not None and not pd.isna(row.get("score"))]

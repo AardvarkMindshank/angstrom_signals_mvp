@@ -2,8 +2,9 @@
 Shared alert rules for the dashboard and the background worker.
 
 An alert stays latched while the score remains past the threshold. It re-arms
-after the score leaves that threshold, so the same asset can alert again later.
-Reading or clearing the notification does not release that latch.
+only after the score has moved 5 points back through that line, so a small
+bounce does not alert again. Reading or clearing the notification does not
+release that latch. The background worker is the only writer.
 """
 
 from __future__ import annotations
@@ -18,6 +19,13 @@ _HELD = {
     BULLISH: HELD_BULLISH,
     BEARISH: HELD_BEARISH,
 }
+# How far back through the line the score must travel before that alert can arm again.
+_REARM_POINTS = 5.0
+
+
+def latch_symbol(symbol: str) -> str:
+    """One latch identity for an asset, whatever case the watchlist used."""
+    return " ".join(str(symbol or "").split()).lower()
 
 
 def canonical_alert(alert_type: str) -> str:
@@ -57,13 +65,19 @@ def plan_alert_actions(results, latched, min_thresh, max_thresh):
     """
     actions = []
     held = set(latched)
+    bullish_clear = min_thresh - _REARM_POINTS
+    bearish_clear = max_thresh + _REARM_POINTS
+    if bullish_clear < max_thresh:
+        bullish_clear = max_thresh
+    if bearish_clear > min_thresh:
+        bearish_clear = min_thresh
 
     for row in results:
         score = row.get("score")
         if _missing(score):
             continue
         score = float(score)
-        symbol = row.get("key")
+        symbol = latch_symbol(row.get("key"))
         if not symbol:
             continue
         name = row.get("symbol") or symbol
@@ -71,10 +85,10 @@ def plan_alert_actions(results, latched, min_thresh, max_thresh):
         bullish = score >= min_thresh
         bearish = score <= max_thresh
 
-        if not bullish and (symbol, BULLISH) in held:
+        if score <= bullish_clear and (symbol, BULLISH) in held:
             actions.append(("resolve", symbol, BULLISH))
             held.discard((symbol, BULLISH))
-        if not bearish and (symbol, BEARISH) in held:
+        if score >= bearish_clear and (symbol, BEARISH) in held:
             actions.append(("resolve", symbol, BEARISH))
             held.discard((symbol, BEARISH))
 
@@ -114,23 +128,46 @@ def evaluate_alerts(supabase, user_id, results, alerts_config, notify_email=None
         .data
         or []
     )
-    latched = {(row["asset_symbol"], canonical_alert(row["alert_type"])) for row in existing}
+    stored = {}
+    latched = set()
+    for row in existing:
+        raw = str(row.get("asset_symbol") or "")
+        symbol = latch_symbol(raw)
+        if not symbol:
+            continue
+        kind = canonical_alert(row.get("alert_type"))
+        latched.add((symbol, kind))
+        stored.setdefault((symbol, kind), set()).add(raw)
     opened = []
 
     for action in plan_alert_actions(results, latched, min_thresh, max_thresh):
         if action[0] == "resolve":
             _, symbol, alert_type = action
-            (
-                supabase.table("user_notifications")
-                .update({"alert_type": f"{alert_type}_resolved"})
-                .eq("user_id", user_id)
-                .eq("asset_symbol", symbol)
-                .in_("alert_type", stored_types(alert_type))
-                .execute()
-            )
+            for raw in stored.get((symbol, alert_type), {symbol}):
+                (
+                    supabase.table("user_notifications")
+                    .update({"alert_type": f"{alert_type}_resolved"})
+                    .eq("user_id", user_id)
+                    .eq("asset_symbol", raw)
+                    .in_("alert_type", stored_types(alert_type))
+                    .execute()
+                )
             continue
 
         _, symbol, name, alert_type, message = action
+        already = (
+            supabase.table("user_notifications")
+            .select("asset_symbol")
+            .eq("user_id", user_id)
+            .eq("asset_symbol", symbol)
+            .in_("alert_type", stored_types(alert_type))
+            .limit(1)
+            .execute()
+            .data
+            or []
+        )
+        if already:
+            continue
         (
             supabase.table("user_notifications")
             .insert({
