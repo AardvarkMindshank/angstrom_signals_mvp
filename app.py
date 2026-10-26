@@ -6987,11 +6987,18 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
         if (show_reasons_flag or reveal_breakdown) and result.get("reasons") and result.get("score") is not None:
             st.html("<div id='score-breakdown' style='scroll-margin-top:4.5rem;'></div>")
             with section_expander(f"🔍 Score Breakdown — {title}", "score_breakdown"):
+                table_rows = crypto_results if asset_type == "Crypto" else stock_results
+                matched = next(
+                    (row for row in table_rows if str(row.get("key")) == str(asset_key)),
+                    None,
+                )
+                summary = _score_sentence((matched or result).get("reasons"))
                 st.markdown(
                     "<div style='margin:0 0 12px;'>"
                     f"{sentiment_badge(result['score'])}"
                     f"<div style='margin-top:8px;color:{color};font-weight:600;'>"
-                    f"{html.escape(str(result['label']))}</div></div>",
+                    f"{html.escape(str(result['label']))}</div>"
+                    f"<div class='ang-copy' style='margin-top:6px;'>{html.escape(summary)}</div></div>",
                     unsafe_allow_html=True,
                 )
                 breakdown_col1, breakdown_col2 = st.columns(2)
