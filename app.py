@@ -5916,7 +5916,7 @@ def admin_panel() -> None:
         with tracked_expander(f"Feedback ({len(open_feedback)} open)", "admin_feedback"):
             st.caption(
                 "Click a column title to sort. The list scrolls inside this section once it is long. "
-                "Closed notes stay hidden until Show closed is on. "
+                "Search filters the rows. Closed notes stay hidden until Show closed is on. "
                 "Choosing a status saves it. Rejected asks for a reason."
             )
             _show_feedback(feedback)
@@ -5964,13 +5964,33 @@ def _show_feedback(rows) -> None:
     notice = st.session_state.pop("admin_feedback_notice", "")
     if notice:
         st.warning(notice)
-    show_closed = st.checkbox("Show closed", key="admin_feedback_show_closed")
-    visible = [
-        row for row in clean
-        if show_closed or str(row.get("status") or "") != "closed"
-    ]
+    tools = st.columns([4.2, 1.2], vertical_alignment="center")
+    query = " ".join(str(tools[0].text_input(
+        "Search feedback",
+        key="admin_feedback_search",
+        placeholder="Search feedback",
+        label_visibility="collapsed",
+    ) or "").split()).casefold()
+    show_closed = tools[1].checkbox("Show closed", key="admin_feedback_show_closed")
+    visible = []
+    for row in clean:
+        status = str(row.get("status") or "")
+        if not show_closed and status == "closed":
+            continue
+        if query:
+            haystack = " ".join((
+                "enhancement" if row.get("kind") == "enhancement" else "issue",
+                str(row.get("body") or ""),
+                _admin_when(row.get("created_at")),
+                _feedback_username(row),
+                str(row.get("email") or ""),
+                _FEEDBACK_STATUS.get(status, status),
+            )).casefold()
+            if query not in haystack:
+                continue
+        visible.append(row)
     if not visible:
-        st.caption("No open feedback.")
+        st.caption("No feedback matches that search." if query else "No open feedback.")
         return
     sort_key = st.session_state.get("admin_feedback_sort", "date")
     sort_desc = bool(st.session_state.get("admin_feedback_sort_desc", True))
