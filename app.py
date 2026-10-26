@@ -102,14 +102,14 @@ export default function(component) {
   paintColour("--ang-social-day", chosen.socialDay);
   paintColour("--ang-social-night", chosen.socialNight);
   let style = document.getElementById("angstrom-brand-style");
-  if (style && style.dataset.layout !== "formpage") {
+  if (style && style.dataset.layout !== "jumpicon") {
     style.remove();
     style = null;
   }
   if (!style) {
     style = document.createElement("style");
     style.id = "angstrom-brand-style";
-    style.dataset.layout = "formpage";
+    style.dataset.layout = "jumpicon";
     style.textContent = [
       "html{--ang-surface:#ffffff;--ang-border:#e5e7eb;--ang-text:#111827;--ang-muted:#6b7280;--ang-soft:#374151;--ang-track:#e5e7eb;--ang-line:#f3f4f6;--ang-select:#e5e7eb;--ang-select-text:#111827;--ang-page:var(--ang-page-day,#d6e8f8);--ang-heading:var(--ang-heading-day,#ffffff);--ang-section:var(--ang-section-day,#ffffff);--ang-hover:var(--ang-hover-day,#f3f4f6);--ang-side:var(--ang-side-day,#ffffff);--ang-social:var(--ang-social-day,#ffffff);}",
       "html.angstrom-night{--ang-surface:#262730;--ang-border:#3f4654;--ang-text:#f3f4f6;--ang-muted:#9ca3af;--ang-soft:#d1d5db;--ang-track:#3f4654;--ang-line:#31333f;--ang-select:#3a4050;--ang-select-text:#f9fafb;--ang-page:var(--ang-page-night,#0e1117);--ang-heading:var(--ang-heading-night,#262730);--ang-section:var(--ang-section-night,#262730);--ang-hover:var(--ang-hover-night,#31333f);--ang-side:var(--ang-side-night,#16181f);--ang-social:var(--ang-social-night,#1c1f27);}",
@@ -135,7 +135,9 @@ export default function(component) {
       "html.angstrom-night [data-baseweb='input'] input,html.angstrom-night [data-baseweb='textarea'] textarea{background:transparent !important;color:var(--ang-text) !important;-webkit-text-fill-color:var(--ang-text);}",
       "html.angstrom-night [data-testid='stBaseButton-secondary']{background:#31333f !important;border-color:#4b5563 !important;color:var(--ang-text) !important;}",
       "html.angstrom-night [data-testid='stBaseButton-secondary']:hover{border-color:#e5e7eb !important;color:#ffffff !important;}",
-      "button.angstrom-jump{display:block;width:100%;box-sizing:border-box;min-height:2.5rem;height:auto;padding:0.4rem 0.75rem;border-radius:0.5rem;border:1px solid rgba(49,51,63,0.2);background:#ffffff;color:#31333f;font:inherit;line-height:1.35;text-align:center;cursor:pointer;white-space:normal;}",
+      "button.angstrom-jump{display:flex;align-items:center;gap:0.75rem;width:100%;box-sizing:border-box;min-height:3.25rem;height:auto;padding:0.55rem 0.85rem;border-radius:0.5rem;border:1px solid rgba(49,51,63,0.2);background:#ffffff;color:#31333f;font:inherit;line-height:1.35;text-align:left;cursor:pointer;white-space:normal;}",
+      "button.angstrom-jump .angstrom-jump-icon{flex:none;font-size:2.25rem;line-height:1;}",
+      "button.angstrom-jump .angstrom-jump-text{flex:1;min-width:0;text-align:left;}",
       "button.angstrom-jump:hover{border-color:#ff4b4b;color:#ff4b4b;}",
       "html.angstrom-night button.angstrom-jump{background:#31333f;border-color:#4b5563;color:var(--ang-text);}",
       "html.angstrom-night button.angstrom-jump:hover{border-color:#e5e7eb;color:#ffffff;}",
@@ -2494,6 +2496,21 @@ export default function(component) {
   }
   button.dataset.target = String((data && data.target) || "");
   button.title = String((data && data.help) || "");
+  let icon = button.querySelector(".angstrom-jump-icon");
+  let text = button.querySelector(".angstrom-jump-text");
+  if (!icon || !text) {
+    button.textContent = "";
+    icon = document.createElement("span");
+    icon.className = "angstrom-jump-icon";
+    icon.setAttribute("aria-hidden", "true");
+    text = document.createElement("span");
+    text.className = "angstrom-jump-text";
+    button.appendChild(icon);
+    button.appendChild(text);
+  }
+  const mark = String((data && data.icon) || "");
+  icon.textContent = mark;
+  icon.style.display = mark ? "" : "none";
   button.onclick = () => {
     const targetId = button.dataset.target || "";
     const anchor = document.getElementById(targetId);
@@ -2539,9 +2556,9 @@ export default function(component) {
     const clock = hours + ":" + String(minutes).padStart(2, "0") + ":" + seconds;
     const title = (data && data.label) || "Refresh";
     const lead = (data && data.lead) || "";
-    if (left <= 0) button.textContent = title + " (update due)";
-    else if (lead) button.textContent = title + " (" + lead + " " + clock + ")";
-    else button.textContent = title + " (" + clock + ")";
+    if (left <= 0) text.textContent = title + " (update due)";
+    else if (lead) text.textContent = title + " (" + lead + " " + clock + ")";
+    else text.textContent = title + " (" + clock + ")";
     const seenKey = timerKey + "_seen";
     const sentKey = timerKey + "_sent";
     if (window[seenKey] !== token) {
@@ -2805,6 +2822,7 @@ def _countdown_due(
     label: str | None = None,
     target: str = "",
     help_text: str = "",
+    icon: str = "",
 ) -> bool:
     """Show the time until a shared update. A missing time stays on 'update due'.
 
@@ -2826,6 +2844,8 @@ def _countdown_due(
     }
     if label:
         payload["label"] = label
+    if icon:
+        payload["icon"] = icon
     result = _countdown(
         key=widget_key,
         data=payload,
@@ -5945,6 +5965,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                 "market_mood_crypto",
                 "market-mood-crypto",
                 "Open crypto market sentiment. The time is the next shared update. Pressing this does not refresh it.",
+                "🪙",
             ))
         if trade_equities:
             jumps.append((
@@ -5955,6 +5976,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                 "market_mood_stock",
                 "market-mood-stock",
                 "Open stock market sentiment. The time is the next shared update. Pressing this does not refresh it.",
+                "📈",
             ))
         opened = open_asset()
         if opened:
@@ -5968,6 +5990,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                 "market_sentiment_panel",
                 "market-sentiment",
                 "Open sentiment for the asset on the chart. The time is the next shared update. Pressing this does not refresh it.",
+                "📰",
             ))
             jumps.append((
                 "Technical Data - Selected Asset",
@@ -5977,15 +6000,16 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                 "interactive_chart",
                 "interactive-chart",
                 "Open the chart. The time is the next shared price update. Pressing this does not refresh it.",
+                "📊",
             ))
         if jumps:
             # One control per column, so each timer writes onto its own button.
             jump_columns = st.columns(len(jumps))
             honored = st.session_state.setdefault("countdown_seen", {})
             reread = False
-            for column, (title, _button_key, timer_key, deadline, _section_id, anchor, jump_help) in zip(jump_columns, jumps):
+            for column, (title, _button_key, timer_key, deadline, _section_id, anchor, jump_help, jump_icon) in zip(jump_columns, jumps):
                 with column:
-                    due = _countdown_due(deadline, timer_key, title, anchor, jump_help)
+                    due = _countdown_due(deadline, timer_key, title, anchor, jump_help, jump_icon)
                     token = "" if deadline is None else str(int(deadline * 1000))
                     if due and token and honored.get(timer_key) != token:
                         honored[timer_key] = token
