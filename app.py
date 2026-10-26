@@ -3105,6 +3105,8 @@ _SECTION_IDS = _MAIN_SECTION_IDS + (
     "feedback",
     "about",
     "socials_policy",
+    "terms",
+    "privacy",
     "admin_panel",
     "admin_feedback",
     "admin_reports",
@@ -6499,6 +6501,52 @@ with tracked_expander("ℹ️ About", "about", sidebar=True):
             "Use the flag on a comment that breaks these rules. The form opens at the top of the social panel. "
             "It is emailed to [report@angstromsignals.com](mailto:report@angstromsignals.com) "
             "and is not shown to the crowd. A comment that breaks these rules can be removed."
+        )
+    with tracked_expander("Terms", "terms"):
+        st.markdown("Last updated 26 October 2026.")
+        st.markdown(
+            "Using Angstrom Signals means you accept these terms and the socials policy above. "
+            "If you do not accept them, do not use the site."
+        )
+        st.markdown(
+            "The site is a research tool. Scores, sentiment, alerts, and comments are information "
+            "for you to read. They are not financial advice, not a recommendation to buy, sell, or hold, "
+            "and not an offer from us. We do not hold your money or place trades for you."
+        )
+        st.markdown(
+            "Figures can be late, missing, or wrong. A past score is not a promise of what happens next. "
+            "You decide what to do with your own money, and you carry that risk."
+        )
+        st.markdown(
+            "Keep your sign-in to yourself. You are responsible for what is posted from your account. "
+            "We can remove a comment that breaks the socials policy, and we can close an account that "
+            "breaks these terms or is barred."
+        )
+        st.markdown(
+            "The site can change, pause, or stop. These terms can change too. The date above is the version "
+            "on the site. Questions go to [info@angstromsignals.com](mailto:info@angstromsignals.com)."
+        )
+    with tracked_expander("Privacy", "privacy"):
+        st.markdown("Last updated 26 October 2026.")
+        st.markdown(
+            "We keep the details needed to run your account. That is your email, and if you sign in with "
+            "Google, the name and email Google shares for that sign-in. A password is stored by the sign-in "
+            "service, not on this page."
+        )
+        st.markdown(
+            "We also keep what you add: display name, bio, picture, watchlists, weights, colours, and other "
+            "settings. Comments, chat, replies, favourites, groups, feedback, and reports of comments are "
+            "stored with your account. If you turn alerts on, we store those alerts and email the ones you asked for."
+        )
+        st.markdown(
+            "The account and the page are stored with Supabase. Mail is sent with Resend. Google is used only "
+            "if you choose that sign-in. Market prices and sentiment come from data providers and are not your "
+            "personal details. A short-lived cookie is used only to finish a Google sign-in. We do not sell personal information."
+        )
+        st.markdown(
+            "Email [support@angstromsignals.com](mailto:support@angstromsignals.com) to ask what we hold, "
+            "to correct it, or to close the account. Reports of comments go to "
+            "[report@angstromsignals.com](mailto:report@angstromsignals.com)."
         )
 
 
