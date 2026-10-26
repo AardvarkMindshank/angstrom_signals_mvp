@@ -2363,3 +2363,225 @@ grant execute on function public.admin_reports() to authenticated;
 revoke all on function public.review_comment_report(bigint, text) from public;
 revoke all on function public.review_comment_report(bigint, text) from anon;
 grant execute on function public.review_comment_report(bigint, text) to authenticated;
+
+-- Barred emails cannot sign in. The list itself is not readable from the app.
+create table if not exists public.email_blacklist (
+    email text primary key,
+    created_at timestamptz not null default now(),
+    created_by uuid
+);
+
+alter table public.email_blacklist enable row level security;
+revoke all on public.email_blacklist from public;
+revoke all on public.email_blacklist from anon;
+revoke all on public.email_blacklist from authenticated;
+
+create or replace function public.email_is_barred(address text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    select exists (
+        select 1
+        from public.email_blacklist
+        where email = lower(btrim(coalesce(address, '')))
+    );
+$$;
+
+create or replace function public.account_barred()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    select exists (
+        select 1
+        from public.email_blacklist
+        where email = lower(coalesce(auth.jwt() ->> 'email', ''))
+    );
+$$;
+
+create or replace function public.bar_blacklisted_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+    if new.email is not null and exists (
+        select 1
+        from public.email_blacklist
+        where email = lower(new.email)
+    ) then
+        new.banned_until := timestamptz '2999-12-31 00:00:00+00';
+    end if;
+    return new;
+end;
+$$;
+
+drop trigger if exists bar_blacklisted_user on auth.users;
+create trigger bar_blacklisted_user
+    before insert or update of email on auth.users
+    for each row
+    execute function public.bar_blacklisted_user();
+
+create or replace function public._bar_auth_email(address text)
+returns void
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+declare
+    target uuid;
+begin
+    for target in
+        select id
+        from auth.users
+        where lower(coalesce(email, '')) = address
+    loop
+        update auth.users
+        set banned_until = timestamptz '2999-12-31 00:00:00+00'
+        where id = target;
+        begin
+            delete from auth.refresh_tokens
+            where user_id::text = target::text;
+        exception
+            when undefined_table or insufficient_privilege or foreign_key_violation then
+                null;
+        end;
+        begin
+            delete from auth.sessions
+            where user_id = target;
+        exception
+            when undefined_table or insufficient_privilege or foreign_key_violation then
+                null;
+        end;
+    end loop;
+end;
+$$;
+
+create or replace function public._clear_auth_bar(address text)
+returns void
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+begin
+    update auth.users
+    set banned_until = null
+    where lower(coalesce(email, '')) = address;
+end;
+$$;
+
+create or replace function public.admin_blacklist()
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+begin
+    if not public.is_admin() then
+        raise exception 'not allowed';
+    end if;
+    return coalesce(
+        (
+            select jsonb_agg(
+                jsonb_build_object(
+                    'email', listed.email,
+                    'created_at', listed.created_at
+                )
+                order by listed.created_at desc
+            )
+            from public.email_blacklist as listed
+        ),
+        '[]'::jsonb
+    );
+end;
+$$;
+
+create or replace function public.add_blacklist_email(address text)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    clean text := lower(btrim(coalesce(address, '')));
+begin
+    if not public.is_admin() then
+        return 'forbidden';
+    end if;
+    if clean !~ '^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$' then
+        return 'email';
+    end if;
+    if clean = lower(coalesce(auth.jwt() ->> 'email', '')) then
+        return 'self';
+    end if;
+    if exists (select 1 from public.email_blacklist where email = clean) then
+        return 'exists';
+    end if;
+    insert into public.email_blacklist (email, created_by)
+    values (clean, auth.uid());
+    perform public._bar_auth_email(clean);
+    return 'ok';
+end;
+$$;
+
+create or replace function public.remove_blacklist_email(address text)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    clean text := lower(btrim(coalesce(address, '')));
+begin
+    if not public.is_admin() then
+        return 'forbidden';
+    end if;
+    delete from public.email_blacklist
+    where email = clean;
+    if not found then
+        return 'missing';
+    end if;
+    perform public._clear_auth_bar(clean);
+    return 'ok';
+end;
+$$;
+
+revoke all on function public.email_is_barred(text) from public;
+revoke all on function public.account_barred() from public;
+revoke all on function public.bar_blacklisted_user() from public;
+revoke all on function public._bar_auth_email(text) from public;
+revoke all on function public._clear_auth_bar(text) from public;
+revoke all on function public.admin_blacklist() from public;
+revoke all on function public.add_blacklist_email(text) from public;
+revoke all on function public.remove_blacklist_email(text) from public;
+
+revoke all on function public.email_is_barred(text) from anon;
+revoke all on function public.account_barred() from anon;
+revoke all on function public.bar_blacklisted_user() from anon;
+revoke all on function public._bar_auth_email(text) from anon;
+revoke all on function public._clear_auth_bar(text) from anon;
+revoke all on function public.admin_blacklist() from anon;
+revoke all on function public.add_blacklist_email(text) from anon;
+revoke all on function public.remove_blacklist_email(text) from anon;
+
+revoke all on function public.email_is_barred(text) from authenticated;
+revoke all on function public.account_barred() from authenticated;
+revoke all on function public.bar_blacklisted_user() from authenticated;
+revoke all on function public._bar_auth_email(text) from authenticated;
+revoke all on function public._clear_auth_bar(text) from authenticated;
+revoke all on function public.admin_blacklist() from authenticated;
+revoke all on function public.add_blacklist_email(text) from authenticated;
+revoke all on function public.remove_blacklist_email(text) from authenticated;
+
+grant execute on function public.email_is_barred(text) to anon, authenticated;
+grant execute on function public.account_barred() to authenticated;
+grant execute on function public.admin_blacklist() to authenticated;
+grant execute on function public.add_blacklist_email(text) to authenticated;
+grant execute on function public.remove_blacklist_email(text) to authenticated;

@@ -204,14 +204,14 @@ export default function(component) {
     document.head.appendChild(sideStyle);
   }
   let layoutStyle = document.getElementById("angstrom-layout-controls");
-  if (layoutStyle && layoutStyle.dataset.layout !== "sort") {
+  if (layoutStyle && layoutStyle.dataset.layout !== "bar") {
     layoutStyle.remove();
     layoutStyle = null;
   }
   if (!layoutStyle) {
     layoutStyle = document.createElement("style");
     layoutStyle.id = "angstrom-layout-controls";
-    layoutStyle.dataset.layout = "sort";
+    layoutStyle.dataset.layout = "bar";
     const singleMark = "url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Crect x=%272.4%27 y=%272.4%27 width=%2719.2%27 height=%2719.2%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3C/svg%3E')";
     const wideMark = "url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Crect x=%272.4%27 y=%272.4%27 width=%2719.2%27 height=%2719.2%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3Cpath d=%27M2.4 9.1H21.6M12 9.1V21.6%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3C/svg%3E')";
     layoutStyle.textContent = [
@@ -240,7 +240,9 @@ export default function(component) {
       ".st-key-admin_feedback_table{max-height:32rem !important;overflow:auto !important;}",
       ".st-key-admin_feedback_head{position:sticky;top:0;z-index:4;background:var(--ang-section);}",
       ".st-key-admin_feedback_table [class*='st-key-admin_feedback_sort_'] button{background:transparent !important;border:0 !important;box-shadow:none !important;padding:.15rem 0 !important;min-height:0 !important;height:auto !important;justify-content:flex-start !important;font-weight:700 !important;color:var(--ang-text) !important;}",
-      ".st-key-admin_feedback_table [class*='st-key-admin_feedback_sort_'] button:hover{background:var(--ang-hover) !important;}"
+      ".st-key-admin_feedback_table [class*='st-key-admin_feedback_sort_'] button:hover{background:var(--ang-hover) !important;}",
+      ".st-key-admin_blacklist_table{max-height:24rem !important;overflow:auto !important;}",
+      ".st-key-admin_blacklist_table [class*='st-key-admin_blacklist_remove_'] button{width:1.7rem !important;min-width:1.7rem !important;height:1.7rem !important;min-height:1.7rem !important;padding:0 !important;border-radius:999px !important;line-height:1 !important;}"
     ].join("");
     document.head.appendChild(layoutStyle);
   }
@@ -3099,6 +3101,7 @@ _SECTION_IDS = _MAIN_SECTION_IDS + (
     "admin_panel",
     "admin_feedback",
     "admin_reports",
+    "admin_blacklist",
 )
 
 
@@ -3355,6 +3358,28 @@ def _optional_secret(*names: str) -> str:
         return ""
 
 
+_BARRED_NOTICE = (
+    "This account is barred at this time. You can email report@angstromsignals.com."
+)
+
+
+def _clean_invite_email(value: str) -> str:
+    """A lower-case email, or empty when the text is not an address."""
+    text = " ".join(str(value or "").split()).lower()
+    if text.count("@") != 1 or any(ch.isspace() for ch in text):
+        return ""
+    local, domain = text.split("@", 1)
+    if not local or "." not in domain or domain.startswith(".") or domain.endswith("."):
+        return ""
+    return text
+
+
+def _flag_is_true(data) -> bool:
+    if isinstance(data, str):
+        return data.strip().strip('"').lower() == "true"
+    return data is True
+
+
 def get_supabase():
     """A new client per script run, authenticated only for this browser session."""
     url = _secret("url")
@@ -3380,11 +3405,32 @@ def get_supabase():
     refresh = st.session_state.get("refresh_token")
     if access and refresh:
         try:
-            client.auth.set_session(access, refresh)
+            client.postgrest.auth(access)
+            barred = client.rpc("account_barred").execute()
         except Exception:
+            barred = None
+        if barred is not None and _flag_is_true(barred.data):
+            try:
+                client.auth.set_session(access, refresh)
+                client.auth.sign_out()
+            except Exception:
+                pass
+            st.session_state.auth_error = _BARRED_NOTICE
             st.session_state.user = None
             st.session_state.access_token = None
             st.session_state.refresh_token = None
+            st.session_state.pop("cloud_prefs", None)
+            st.session_state.pop("profile", None)
+            st.session_state.pop("prefs_user", None)
+            return create_client(url, key)
+        try:
+            client.auth.set_session(access, refresh)
+        except Exception as exc:
+            st.session_state.user = None
+            st.session_state.access_token = None
+            st.session_state.refresh_token = None
+            if "banned" in str(exc).lower():
+                st.session_state.auth_error = _BARRED_NOTICE
             client = create_client(url, key)
     return client
 
@@ -3396,6 +3442,36 @@ def clear_session():
     st.session_state.pop("cloud_prefs", None)
     st.session_state.pop("profile", None)
     st.session_state.pop("prefs_user", None)
+
+
+def _email_is_barred(address: str) -> bool:
+    """True when this address is on the blacklist. A missing function is not a bar."""
+    clean = _clean_invite_email(address)
+    if not clean:
+        return False
+    try:
+        result = supabase.rpc("email_is_barred", {"address": clean}).execute()
+    except Exception:
+        return False
+    return _flag_is_true(result.data)
+
+
+def _end_barred_session() -> None:
+    try:
+        supabase.auth.sign_out()
+    except Exception:
+        pass
+    clear_session()
+    st.session_state.auth_error = _BARRED_NOTICE
+    st.rerun()
+
+
+def _session_is_barred() -> bool:
+    try:
+        result = supabase.rpc("account_barred").execute()
+    except Exception:
+        return False
+    return _flag_is_true(result.data)
 
 
 # Widget values stay in the browser session after logout. The next person to
@@ -3508,6 +3584,9 @@ def _sign_in_from_tokens(access: str, refresh: str) -> None:
 
 def _note_auth_error(raw: str, link_type: str = "") -> None:
     text = " ".join(str(raw or "").replace("+", " ").split()).lower()
+    if "banned" in text:
+        st.session_state.auth_error = _BARRED_NOTICE
+        return
     if link_type == "recovery" or "otp" in text:
         st.session_state.recovery_error = _reset_link_error(raw)
         return
@@ -3620,6 +3699,9 @@ if "data_nonce" not in st.session_state:
     st.session_state.data_nonce = 0
 
 supabase = get_supabase()
+
+if st.session_state.user is not None and _session_is_barred():
+    _end_barred_session()
 
 if st.session_state.user is None:
     if not st.session_state.get("google_url") or not st.session_state.get("google_verifier"):
@@ -3745,8 +3827,11 @@ if st.session_state.user is None:
                                 st.session_state.access_token = session.access_token
                                 st.session_state.refresh_token = session.refresh_token
                                 st.rerun()
-                        except Exception:
-                            st.error("Login failed. Check your email and password.")
+                        except Exception as exc:
+                            if "banned" in str(exc).lower():
+                                st.error(_BARRED_NOTICE)
+                            else:
+                                st.error("Login failed. Check your email and password.")
                     if st.button("Forgot password?", use_container_width=True, key="forgot_password"):
                         st.session_state.recover_email = st.session_state.get("login_email", "")
                         st.session_state.show_recover = True
@@ -3774,14 +3859,20 @@ if st.session_state.user is None:
                     st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
                     created = st.form_submit_button("Create Account", type="primary", use_container_width=True)
                 if created:
-                    try:
-                        supabase.auth.sign_up({
-                            "email": signup_email,
-                            "password": signup_password,
-                        })
-                        st.success("Account created. Confirm the email if required, then log in.")
-                    except Exception:
-                        st.error("Sign up failed. Try a different email, or a longer password.")
+                    if _email_is_barred(signup_email):
+                        st.error(_BARRED_NOTICE)
+                    else:
+                        try:
+                            supabase.auth.sign_up({
+                                "email": signup_email,
+                                "password": signup_password,
+                            })
+                            st.success("Account created. Confirm the email if required, then log in.")
+                        except Exception as exc:
+                            if "banned" in str(exc).lower():
+                                st.error(_BARRED_NOTICE)
+                            else:
+                                st.error("Sign up failed. Try a different email, or a longer password.")
 
             if st.session_state.get("auth_error"):
                 st.error(st.session_state.auth_error)
@@ -4110,17 +4201,6 @@ def profile_card(profile: dict, email: str) -> str:
         "</div></div>"
         f"{bio_html}</div>"
     )
-
-
-def _clean_invite_email(value: str) -> str:
-    """A lower-case email, or empty when the text is not an address."""
-    text = " ".join(str(value or "").split()).lower()
-    if text.count("@") != 1 or any(ch.isspace() for ch in text):
-        return ""
-    local, domain = text.split("@", 1)
-    if not local or "." not in domain or domain.startswith(".") or domain.endswith("."):
-        return ""
-    return text
 
 
 def _store_invite(address: str) -> str:
@@ -5599,6 +5679,36 @@ def _email_report(reason: str, note: str, place: str, kind: str, row: dict, asse
     return False, _resend_reason(response)
 
 
+def _email_barred(address: str) -> tuple[bool, str]:
+    """Tell one address that the account is barred. The reason is empty when the send is accepted."""
+    api_key, sender, _inbox = _feedback_mail_settings()
+    inbox = _report_inbox()
+    if not api_key:
+        return False, "the Resend key is missing from the Streamlit secrets"
+    payload = {
+        "from": sender,
+        "to": [address],
+        "subject": "Your Angstrom Signals account is barred",
+        "html": (
+            "<p>Your Angstrom Signals account is barred at this time.</p>"
+            f"<p>You can email <a href=\"mailto:{html.escape(inbox, quote=True)}\">"
+            f"{html.escape(inbox)}</a>.</p>"
+        ),
+    }
+    try:
+        response = requests.post(
+            "https://api.resend.com/emails",
+            json=payload,
+            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+            timeout=15,
+        )
+    except Exception:
+        return False, "Resend could not be reached"
+    if response.status_code < 300:
+        return True, ""
+    return False, _resend_reason(response)
+
+
 def _reported_comment(place: str, kind: str, message_id: int) -> dict | None:
     """The stored comment a report points at. None when that row is gone."""
     if place == "chat":
@@ -5815,6 +5925,7 @@ def admin_panel() -> None:
             _show_reports(open_reports, actionable=True)
             with tracked_expander(f"Decided reports ({len(done_reports)})", "admin_reports_closed"):
                 _show_reports(done_reports, actionable=False)
+        _show_blacklist()
 
 
 def _feedback_username(row: dict) -> str:
@@ -5955,6 +6066,99 @@ def _show_feedback(rows) -> None:
                 st.session_state[f"admin_feedback_reset_{item_id}"] = status
                 st.session_state["admin_feedback_notice"] = problem
             _rerun_fragment()
+
+
+def _blacklist_call(function: str, address: str) -> str:
+    try:
+        result = supabase.rpc(function, {"address": address}).execute()
+    except Exception:
+        return "failed"
+    return str(result.data or "").strip().strip('"') or "failed"
+
+
+def _show_blacklist() -> None:
+    """Add, search, and remove barred emails. Only the admin panel calls this."""
+    rows = _admin_rows("admin_blacklist")
+    with tracked_expander(
+        f"Blacklist ({len(rows) if rows is not None else 0})",
+        "admin_blacklist",
+    ):
+        if rows is None:
+            st.caption("The blacklist is not ready yet. Run the latest supabase_rls.sql in the Supabase SQL editor.")
+            return
+        notice = st.session_state.pop("admin_blacklist_notice", "")
+        if notice.startswith("ok\n"):
+            st.success(notice[3:])
+        elif notice.startswith("warn\n"):
+            st.warning(notice[5:])
+        st.caption(
+            "A barred email cannot log in or sign up. An open session is closed, "
+            "and that address is emailed. Removing an email lets that person log in again."
+        )
+        if st.session_state.pop("admin_blacklist_clear", False):
+            st.session_state["admin_blacklist_email"] = ""
+        address_text = st.text_input(
+            "Email to bar",
+            key="admin_blacklist_email",
+            placeholder="name@example.com",
+        )
+        if st.button("Add to blacklist", key="admin_blacklist_add"):
+            clean = _clean_invite_email(address_text)
+            if not clean:
+                st.caption("Enter a valid email.")
+            else:
+                code = _blacklist_call("add_blacklist_email", clean)
+                if code == "ok":
+                    sent, why = _email_barred(clean)
+                    if sent:
+                        st.session_state["admin_blacklist_notice"] = (
+                            f"ok\n{clean} is barred. The email was sent."
+                        )
+                    else:
+                        st.session_state["admin_blacklist_notice"] = (
+                            f"warn\n{clean} is barred. The email was not sent: {why}."
+                        )
+                    st.session_state["admin_blacklist_clear"] = True
+                    _rerun_fragment()
+                else:
+                    st.caption({
+                        "exists": "That email is already on the list.",
+                        "self": "That is the admin account. It stays able to log in.",
+                        "email": "Enter a valid email.",
+                        "forbidden": "This account cannot change the blacklist.",
+                    }.get(code, "That could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again."))
+        query = " ".join(str(st.text_input(
+            "Search the blacklist",
+            key="admin_blacklist_search",
+            placeholder="Search emails",
+        ) or "").split()).lower()
+        visible = [
+            row for row in rows
+            if isinstance(row, dict) and (not query or query in str(row.get("email") or "").lower())
+        ]
+        if not visible:
+            st.caption("No email matches that search." if query else "No barred emails.")
+            return
+        with st.container(key="admin_blacklist_table"):
+            header = st.columns([4.2, 1.8, 0.45], vertical_alignment="center")
+            header[0].markdown("**Email**")
+            header[1].markdown("**Added**")
+            for row in visible:
+                email = str(row.get("email") or "")
+                cells = st.columns([4.2, 1.8, 0.45], vertical_alignment="center")
+                cells[0].write(email)
+                cells[1].write(_admin_when(row.get("created_at")))
+                if cells[2].button(
+                    "×",
+                    key=f"admin_blacklist_remove_{email}",
+                    help="Remove from the blacklist",
+                ):
+                    code = _blacklist_call("remove_blacklist_email", email)
+                    if code == "ok":
+                        st.session_state["admin_blacklist_notice"] = f"ok\n{email} was removed."
+                        _rerun_fragment()
+                    else:
+                        cells[2].caption("That email is no longer on the list." if code == "missing" else "That could not be removed.")
 
 
 def _show_reports(rows, actionable: bool) -> None:
