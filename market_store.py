@@ -1115,7 +1115,7 @@ def _record_sentiment_history(supabase, subject_key: str, score: float, stored_a
             "recorded_at": datetime.fromtimestamp(stored_at, timezone.utc).isoformat(),
         }).execute()
     except Exception as exc:
-        _warn(exc)
+        print(f"Sentiment history was not stored for {subject_key}: {exc}")
 
 
 def load_shared_market(supabase, keys: list[str]) -> dict[str, dict]:

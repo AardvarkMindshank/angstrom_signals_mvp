@@ -65,7 +65,8 @@ def build_matrix(frame, weight_sets, sentiment, horizon: int, days: int = MATRIX
     """Price and one value per signal for each of the last days.
 
     weight_sets is (name, weights) in display order. sentiment maps a row name
-    to (day, score) readings. Missing days stay empty.
+    to (day, score) readings. Days before the first reading stay empty. After
+    that, the last reading stays on each later price day until the next one.
     """
     indicated = frame
     if frame is None or getattr(frame, "empty", True):
@@ -122,15 +123,29 @@ def _number(value) -> float | None:
 
 
 def _align(dates, points) -> list[float | None]:
-    last = {}
+    """Put each reading on its day and keep it until a newer one.
+
+    A reading dated on a day with no price bar still fills the next price day.
+    Days before the first reading stay empty.
+    """
+    readings = []
     for item in points or []:
         if not isinstance(item, (tuple, list)) or len(item) < 2:
             continue
         day = str(item[0])[:10]
         score = _number(item[1])
         if day and score is not None:
-            last[day] = score
-    return [last.get(day) for day in dates]
+            readings.append((day, score))
+    readings.sort()
+    values = []
+    index = 0
+    current = None
+    for day in dates:
+        while index < len(readings) and readings[index][0] <= day:
+            current = readings[index][1]
+            index += 1
+        values.append(current)
+    return values
 
 
 def boundary_lines(

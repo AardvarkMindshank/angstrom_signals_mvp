@@ -7789,6 +7789,30 @@ def _sentiment_points(subject_key: str) -> list[tuple[str, float]]:
     return points
 
 
+def _live_sentiment_point(row) -> tuple[str, float] | None:
+    """The score already on screen, on the day it was saved."""
+    report, stored_at = sentiment_from_row(row)
+    if not report or stored_at is None:
+        return None
+    try:
+        score = float(report.get("score"))
+    except (TypeError, ValueError):
+        return None
+    if score != score:
+        return None
+    day = datetime.fromtimestamp(stored_at, timezone.utc).strftime("%Y-%m-%d")
+    return day, score
+
+
+def _sentiment_series(subject_key: str, row) -> list[tuple[str, float]]:
+    """History plus the current saved score, so the latest reading still shows."""
+    points = _sentiment_points(subject_key)
+    live = _live_sentiment_point(row)
+    if live is not None:
+        points.append(live)
+    return points
+
+
 def _lead_label(value) -> str:
     if value is None:
         return "—"
@@ -7830,9 +7854,14 @@ def show_signal_matrix(kind: str, asset_id: str, label: str, indicated, weights:
                 continue
             sets.append((str(name), saved))
         market_key = "crypto" if kind == "Crypto" else "stock"
+        asset_key = asset_market_key(kind, asset_id)
+        moods = load_market_moods(supabase) or {}
+        asset_row = (st.session_state.get("_shared_rows") or {}).get(asset_key)
+        if not isinstance(asset_row, dict):
+            asset_row = (load_shared_market(supabase, [asset_key]) or {}).get(asset_key)
         sentiment = {
-            "Market sentiment": _sentiment_points(market_key),
-            "Asset sentiment": _sentiment_points(asset_market_key(kind, asset_id)),
+            "Market sentiment": _sentiment_series(market_key, moods.get(market_key)),
+            "Asset sentiment": _sentiment_series(asset_key, asset_row),
         }
         matrix = build_matrix(indicated, sets, sentiment, int(horizon), MATRIX_DAYS)
         dates = matrix["dates"]
@@ -7843,7 +7872,8 @@ def show_signal_matrix(kind: str, asset_id: str, label: str, indicated, weights:
             f"The last {len(dates)} daily closes, then each signal on those same dates. "
             f"Lead is how closely that signal lined up with the price change over the next {int(horizon)} "
             + ("day" if int(horizon) == 1 else "days")
-            + ". Positive means a high score came before a rise. A blank day has no saved reading. "
+            + ". Positive means a high score came before a rise. "
+            + "A blank sentiment day is before the first saved reading. After that, the last saved score stays until the next one. "
             + "The 30-day record in the table below counts every signal the same way, using your bullish and bearish boundaries."
         )
         rows = matrix["rows"]
@@ -7913,13 +7943,15 @@ def show_signal_matrix(kind: str, asset_id: str, label: str, indicated, weights:
             )
             palette = ["#15803d", "#d97706", "#7c3aed", "#0891b2", "#b45309", "#0f766e", "#be123c", "#4f46e5"]
             for index, row in enumerate(plot_rows):
+                sentiment_row = row["name"] in ("Market sentiment", "Asset sentiment")
                 fig.add_trace(
                     go.Scatter(
                         x=dates,
                         y=row["values"],
-                        mode="lines",
+                        mode="lines+markers" if sentiment_row else "lines",
                         name=row["name"],
                         line=dict(color=palette[index % len(palette)], width=1.6),
+                        marker=dict(size=6) if sentiment_row else None,
                         connectgaps=False,
                     ),
                     row=index + 2,
@@ -7964,10 +7996,29 @@ def show_signal_matrix(kind: str, asset_id: str, label: str, indicated, weights:
             bear_line = 30.0
         summary = []
         for row in rows:
-            record = "<br>".join(
-                html.escape(line)
-                for line in boundary_lines(row.get("values"), matrix["closes"], bull_line, bear_line)
-            )
+            values = row.get("values") or []
+            present = sum(value is not None for value in values)
+            if present == 0:
+                lines = ["No saved readings in this window yet."]
+            else:
+                lines = boundary_lines(values, matrix["closes"], bull_line, bear_line)
+                quiet = all(" of " not in line for line in lines)
+                if quiet and row["name"] in ("Market sentiment", "Asset sentiment"):
+                    crossed = any(
+                        value is not None and (value >= bull_line or value <= bear_line)
+                        for value in values
+                    )
+                    if crossed:
+                        lines.append(
+                            "A saved score crossed your boundary, but no later price is in this window yet."
+                        )
+                    else:
+                        day_word = "day" if present == 1 else "days"
+                        lines.append(
+                            f"The saved score covers {present} {day_word} in this window "
+                            "and stayed between your bearish and bullish boundaries."
+                        )
+            record = "<br>".join(html.escape(line) for line in lines)
             summary.append(
                 f"<tr><td style='padding:4px 8px;vertical-align:top;'>{html.escape(row['name'])}</td>"
                 f"<td style='padding:4px 8px;text-align:right;vertical-align:top;'>{rank_of.get(row['name'], '—')}</td>"
