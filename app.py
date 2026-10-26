@@ -2745,9 +2745,9 @@ _recovery_link = st.components.v2.component(
     isolate_styles=False,
 )
 
-# Streamlit's own link button opens the address in a new tab, which drops the
-# sign-in secret. Google also refuses the sign-in page inside the app frame,
-# so this link moves the whole window, not the frame.
+# The app frame is not allowed to replace the whole window, and Google refuses
+# to sign in inside that frame. A new tab is allowed, and the sign-in secret is
+# saved before it opens so the return can still finish.
 _GOOGLE_BUTTON_JS = """
 export default function(component) {
   const { data, parentElement } = component;
@@ -2772,16 +2772,21 @@ export default function(component) {
     link.textContent = "Continue with Google";
     shell.appendChild(link);
   }
-  link.target = "_top";
+  link.target = "_blank";
+  link.rel = "noopener";
   const url = data && data.url ? String(data.url) : "";
   const verifier = data && data.verifier ? String(data.verifier) : "";
   link.href = url || "#";
-  link.onclick = () => {
-    if (!verifier) return;
-    try { sessionStorage.setItem("angstrom-pkce", verifier); } catch (err) {}
-    try { localStorage.setItem("angstrom-pkce", verifier); } catch (err) {}
-    const secure = location.protocol === "https:" ? "; Secure" : "";
-    document.cookie = "angstrom_pkce=" + encodeURIComponent(verifier) + "; Path=/; Max-Age=600; SameSite=Lax" + secure;
+  link.onclick = (event) => {
+    if (!url) return;
+    event.preventDefault();
+    if (verifier) {
+      try { sessionStorage.setItem("angstrom-pkce", verifier); } catch (err) {}
+      try { localStorage.setItem("angstrom-pkce", verifier); } catch (err) {}
+      const secure = location.protocol === "https:" ? "; Secure" : "";
+      document.cookie = "angstrom_pkce=" + encodeURIComponent(verifier) + "; Path=/; Max-Age=600; SameSite=Lax" + secure;
+    }
+    window.open(url, "_blank");
   };
 }
 """
