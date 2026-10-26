@@ -6998,7 +6998,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                     f"{sentiment_badge(result['score'])}"
                     f"<div style='margin-top:8px;color:{color};font-weight:600;'>"
                     f"{html.escape(str(result['label']))}</div>"
-                    f"<div class='ang-copy' style='margin-top:6px;'>{html.escape(summary)}</div></div>",
+                    f"<div class='ang-copy' style='margin-top:6px;'>Summary: {html.escape(summary)}</div></div>",
                     unsafe_allow_html=True,
                 )
                 breakdown_col1, breakdown_col2 = st.columns(2)
