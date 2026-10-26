@@ -2179,6 +2179,13 @@ alter table public.user_warnings enable row level security;
 revoke all on public.comment_report_events from public, anon, authenticated;
 revoke all on public.user_warnings from public, anon, authenticated;
 
+-- The account's own-row rule blocks a notice written for someone else.
+-- An admin decision is allowed to write that notice.
+drop policy if exists "admins insert notifications" on public.user_notifications;
+create policy "admins insert notifications" on public.user_notifications
+    for insert
+    with check (public.is_admin());
+
 create or replace function public.admin_remove_comment(place text, message_kind text, message_id bigint)
 returns void
 language plpgsql
@@ -2265,7 +2272,7 @@ declare
     current_status text;
     reason_label text;
     warning_number integer;
-    reporter record;
+    reporter_id uuid;
 begin
     if not public.is_admin() then
         return 'forbidden';
@@ -2302,9 +2309,12 @@ begin
             select count(*) into warning_number
             from public.user_warnings
             where user_id = chosen.author_id;
-            insert into public.user_notifications (user_id, asset_name, alert_type, message)
+            insert into public.user_notifications (
+                user_id, asset_symbol, asset_name, alert_type, message
+            )
             values (
                 chosen.author_id,
+                '',
                 'Comment',
                 'moderation_warning',
                 'A comment you posted was removed because it broke the socials policy ('
@@ -2332,17 +2342,20 @@ begin
             and events.status = next_status
       );
     if next_status in ('rejected', 'upheld') then
-        for reporter in
-            select distinct user_id
-            from public.comment_reports
-            where place = chosen.place
-              and message_id = chosen.message_id
-              and message_kind = chosen.message_kind
-              and user_id is distinct from chosen.author_id
+        for reporter_id in
+            select distinct reports.user_id
+            from public.comment_reports as reports
+            where reports.place = chosen.place
+              and reports.message_id = chosen.message_id
+              and reports.message_kind = chosen.message_kind
+              and reports.user_id is distinct from chosen.author_id
         loop
-            insert into public.user_notifications (user_id, asset_name, alert_type, message)
+            insert into public.user_notifications (
+                user_id, asset_symbol, asset_name, alert_type, message
+            )
             values (
-                reporter.user_id,
+                reporter_id,
+                '',
                 'Report',
                 'report_update',
                 case

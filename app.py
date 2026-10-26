@@ -5895,8 +5895,12 @@ def _admin_review(function: str, arguments: dict) -> str:
     """Run one admin status change. Empty means it worked."""
     try:
         result = supabase.rpc(function, arguments).execute()
-    except Exception:
-        return "That could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again."
+    except Exception as exc:
+        detail = " ".join(str(exc).split())
+        if len(detail) > 220:
+            detail = detail[:220].rstrip() + "…"
+        note = "That could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again."
+        return f"{note} ({detail})" if detail else note
     code = str(result.data or "").strip().strip('"')
     return {
         "ok": "",
