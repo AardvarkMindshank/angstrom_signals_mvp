@@ -204,14 +204,14 @@ export default function(component) {
     document.head.appendChild(sideStyle);
   }
   let layoutStyle = document.getElementById("angstrom-layout-controls");
-  if (layoutStyle && layoutStyle.dataset.layout !== "flush") {
+  if (layoutStyle && layoutStyle.dataset.layout !== "list") {
     layoutStyle.remove();
     layoutStyle = null;
   }
   if (!layoutStyle) {
     layoutStyle = document.createElement("style");
     layoutStyle.id = "angstrom-layout-controls";
-    layoutStyle.dataset.layout = "flush";
+    layoutStyle.dataset.layout = "list";
     const singleMark = "url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Crect x=%272.4%27 y=%272.4%27 width=%2719.2%27 height=%2719.2%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3C/svg%3E')";
     const wideMark = "url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Crect x=%272.4%27 y=%272.4%27 width=%2719.2%27 height=%2719.2%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3Cpath d=%27M2.4 9.1H21.6M12 9.1V21.6%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3C/svg%3E')";
     layoutStyle.textContent = [
@@ -237,16 +237,16 @@ export default function(component) {
       "html.angstrom-night #angstrom-wide-split .grip{background:#6b7280;}",
       "html.angstrom-night #angstrom-wide-split:hover .grip,html.angstrom-night #angstrom-wide-split.is-dragging .grip{background:#e5e7eb;}",
       "#interactive-chart,#market-mood-crypto,#market-mood-stock,#market-sentiment,#score-breakdown{height:0;margin:0;padding:0;scroll-margin-top:4.5rem;}",
-      ".st-key-admin_feedback_table,.st-key-admin_reports_table{max-height:32rem !important;overflow:auto !important;}",
-      ".st-key-admin_feedback_table [data-testid='stVerticalBlock'],.st-key-admin_reports_table [data-testid='stVerticalBlock']{gap:0 !important;}",
-      ".st-key-admin_feedback_table [data-testid='stHorizontalBlock'],.st-key-admin_reports_table [data-testid='stHorizontalBlock'],.st-key-admin_feedback_table [data-testid='stElementContainer'],.st-key-admin_reports_table [data-testid='stElementContainer'],.st-key-admin_feedback_table [data-testid='stMarkdown'],.st-key-admin_reports_table [data-testid='stMarkdown'],.st-key-admin_feedback_table [data-testid='stSelectbox'],.st-key-admin_reports_table [data-testid='stSelectbox']{margin-top:0 !important;margin-bottom:0 !important;padding-top:0 !important;padding-bottom:0 !important;}",
-      ".st-key-admin_feedback_table [data-testid='stMarkdownContainer'] p,.st-key-admin_reports_table [data-testid='stMarkdownContainer'] p,.st-key-admin_feedback_table [data-testid='stText'] p,.st-key-admin_reports_table [data-testid='stText'] p{margin:0 !important;padding:0 !important;line-height:1.25 !important;}",
+      ".st-key-admin_feedback_table,.st-key-admin_reports_table,.st-key-admin_blacklist_table{max-height:32rem !important;overflow:auto !important;}",
+      ".st-key-admin_feedback_table [data-testid='stVerticalBlock'],.st-key-admin_reports_table [data-testid='stVerticalBlock'],.st-key-admin_blacklist_table [data-testid='stVerticalBlock']{gap:0 !important;}",
+      ".st-key-admin_feedback_table [data-testid='stHorizontalBlock'],.st-key-admin_reports_table [data-testid='stHorizontalBlock'],.st-key-admin_blacklist_table [data-testid='stHorizontalBlock'],.st-key-admin_feedback_table [data-testid='stElementContainer'],.st-key-admin_reports_table [data-testid='stElementContainer'],.st-key-admin_blacklist_table [data-testid='stElementContainer'],.st-key-admin_feedback_table [data-testid='stMarkdown'],.st-key-admin_reports_table [data-testid='stMarkdown'],.st-key-admin_blacklist_table [data-testid='stMarkdown']{margin-top:0 !important;margin-bottom:0 !important;padding-top:0 !important;padding-bottom:0 !important;}",
+      ".st-key-admin_feedback_table [data-testid='stMarkdownContainer'] p,.st-key-admin_reports_table [data-testid='stMarkdownContainer'] p,.st-key-admin_blacklist_table [data-testid='stMarkdownContainer'] p,.st-key-admin_feedback_table [data-testid='stText'] p,.st-key-admin_reports_table [data-testid='stText'] p,.st-key-admin_blacklist_table [data-testid='stText'] p{margin:0 !important;padding:0 !important;line-height:1.25 !important;}",
+      ".st-key-admin_feedback_table [data-testid='stSelectbox'],.st-key-admin_reports_table [data-testid='stSelectbox']{margin-top:0 !important;margin-bottom:0 !important;padding-top:0 !important;padding-bottom:0 !important;}",
       ".st-key-admin_feedback_table [data-baseweb='select'] > div,.st-key-admin_reports_table [data-baseweb='select'] > div{min-height:1.35rem !important;padding-top:0 !important;padding-bottom:0 !important;}",
-      ".st-key-admin_feedback_head,.st-key-admin_reports_head{position:sticky;top:0;z-index:4;background:var(--ang-section);}",
-      ".st-key-admin_feedback_table [class*='st-key-admin_feedback_sort_'] button,.st-key-admin_reports_table [class*='st-key-admin_reports_sort_'] button{background:transparent !important;border:0 !important;box-shadow:none !important;padding:0 !important;min-height:0 !important;height:auto !important;justify-content:flex-start !important;font-weight:700 !important;color:var(--ang-text) !important;}",
-      ".st-key-admin_feedback_table [class*='st-key-admin_feedback_sort_'] button:hover,.st-key-admin_reports_table [class*='st-key-admin_reports_sort_'] button:hover{background:var(--ang-hover) !important;}",
-      ".st-key-admin_blacklist_table{max-height:24rem !important;overflow:auto !important;}",
-      ".st-key-admin_blacklist_table [class*='st-key-admin_blacklist_remove_'] button{width:1.7rem !important;min-width:1.7rem !important;height:1.7rem !important;min-height:1.7rem !important;padding:0 !important;border-radius:999px !important;line-height:1 !important;}"
+      ".st-key-admin_feedback_head,.st-key-admin_reports_head,.st-key-admin_blacklist_head{position:sticky;top:0;z-index:4;background:var(--ang-section);}",
+      ".st-key-admin_feedback_table [class*='st-key-admin_feedback_sort_'] button,.st-key-admin_reports_table [class*='st-key-admin_reports_sort_'] button,.st-key-admin_blacklist_table [class*='st-key-admin_blacklist_sort_'] button{background:transparent !important;border:0 !important;box-shadow:none !important;padding:0 !important;min-height:0 !important;height:auto !important;justify-content:flex-start !important;font-weight:700 !important;color:var(--ang-text) !important;}",
+      ".st-key-admin_feedback_table [class*='st-key-admin_feedback_sort_'] button:hover,.st-key-admin_reports_table [class*='st-key-admin_reports_sort_'] button:hover,.st-key-admin_blacklist_table [class*='st-key-admin_blacklist_sort_'] button:hover{background:var(--ang-hover) !important;}",
+      ".st-key-admin_blacklist_table [class*='st-key-admin_blacklist_remove_'] button{width:1.2rem !important;min-width:1.2rem !important;height:1.2rem !important;min-height:1.2rem !important;padding:0 !important;border-radius:999px !important;line-height:1 !important;}"
     ].join("");
     document.head.appendChild(layoutStyle);
   }
@@ -6093,17 +6093,21 @@ def _show_blacklist() -> None:
         elif notice.startswith("warn\n"):
             st.warning(notice[5:])
         st.caption(
-            "A barred email cannot log in or sign up. An open session is closed, "
-            "and that address is emailed. Removing an email lets that person log in again."
+            "Click a column title to sort. The list scrolls inside this section once it is long. "
+            "Search filters the rows. A barred email cannot log in or sign up. "
+            "An open session is closed, and that address is emailed. "
+            "The × removes an email and lets that person log in again."
         )
         if st.session_state.pop("admin_blacklist_clear", False):
             st.session_state["admin_blacklist_email"] = ""
-        address_text = st.text_input(
+        add = st.columns([4.2, 1.2], vertical_alignment="center")
+        address_text = add[0].text_input(
             "Email to bar",
             key="admin_blacklist_email",
             placeholder="name@example.com",
+            label_visibility="collapsed",
         )
-        if st.button("Add to blacklist", key="admin_blacklist_add"):
+        if add[1].button("Add to blacklist", key="admin_blacklist_add"):
             clean = _clean_invite_email(address_text)
             if not clean:
                 st.caption("Enter a valid email.")
@@ -6128,25 +6132,61 @@ def _show_blacklist() -> None:
                         "email": "Enter a valid email.",
                         "forbidden": "This account cannot change the blacklist.",
                     }.get(code, "That could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again."))
+        clean_rows = [row for row in rows if isinstance(row, dict)]
+        if not clean_rows:
+            st.caption("No barred emails.")
+            return
         query = " ".join(str(st.text_input(
             "Search the blacklist",
             key="admin_blacklist_search",
             placeholder="Search emails",
-        ) or "").split()).lower()
+            label_visibility="collapsed",
+        ) or "").split()).casefold()
         visible = [
-            row for row in rows
-            if isinstance(row, dict) and (not query or query in str(row.get("email") or "").lower())
+            row for row in clean_rows
+            if not query or query in str(row.get("email") or "").casefold()
         ]
         if not visible:
-            st.caption("No email matches that search." if query else "No barred emails.")
+            st.caption("No email matches that search.")
             return
-        with st.container(key="admin_blacklist_table"):
-            header = st.columns([4.2, 1.8, 0.45], vertical_alignment="center")
-            header[0].markdown("**Email**")
-            header[1].markdown("**Added**")
-            for row in visible:
+        sort_key = st.session_state.get("admin_blacklist_sort", "date")
+        sort_desc = bool(st.session_state.get("admin_blacklist_sort_desc", True))
+        columns = (("email", "Email"), ("date", "Added"))
+        if sort_key not in {key for key, _title in columns}:
+            sort_key = "date"
+        widths = [4.2, 1.8, 0.4]
+        with st.container(key="admin_blacklist_table", gap=0):
+            with st.container(key="admin_blacklist_head", gap=0):
+                header = st.columns(widths, vertical_alignment="center")
+                for column, (key, title) in zip(header, columns):
+                    mark = ""
+                    if key == sort_key:
+                        mark = " ↓" if sort_desc else " ↑"
+                    if column.button(
+                        title + mark,
+                        key=f"admin_blacklist_sort_{key}",
+                        help=f"Sort by {title}",
+                        type="tertiary",
+                        width="stretch",
+                    ):
+                        if sort_key == key:
+                            sort_desc = not sort_desc
+                        else:
+                            sort_key = key
+                            sort_desc = key == "date"
+                        st.session_state["admin_blacklist_sort"] = sort_key
+                        st.session_state["admin_blacklist_sort_desc"] = sort_desc
+            ordered = sorted(
+                visible,
+                key=lambda row: (
+                    str(row.get("created_at") or "") if sort_key == "date" else str(row.get("email") or "").casefold(),
+                    str(row.get("email") or ""),
+                ),
+                reverse=sort_desc,
+            )
+            for row in ordered:
                 email = str(row.get("email") or "")
-                cells = st.columns([4.2, 1.8, 0.45], vertical_alignment="center")
+                cells = st.columns(widths, vertical_alignment="center")
                 cells[0].write(email)
                 cells[1].write(_admin_when(row.get("created_at")))
                 if cells[2].button(
@@ -6159,7 +6199,9 @@ def _show_blacklist() -> None:
                         st.session_state["admin_blacklist_notice"] = f"ok\n{email} was removed."
                         _rerun_fragment()
                     else:
-                        cells[2].caption("That email is no longer on the list." if code == "missing" else "That could not be removed.")
+                        cells[2].caption(
+                            "That email is no longer on the list." if code == "missing" else "That could not be removed."
+                        )
 
 
 def _report_where(row: dict) -> str:
