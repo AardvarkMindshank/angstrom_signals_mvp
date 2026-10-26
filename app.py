@@ -933,14 +933,14 @@ export default function(component) {
       window.socialStreamState.report = null;
     }
     let style = document.getElementById("social-stream-style");
-    if (style && style.dataset.layout !== "report") {
+    if (style && style.dataset.layout !== "flag") {
       style.remove();
       style = null;
     }
     if (!style) {
       style = document.createElement("style");
       style.id = "social-stream-style";
-      style.dataset.layout = "report";
+      style.dataset.layout = "flag";
       style.textContent = [
         "#social-stream-root{position:fixed;inset:0;z-index:10000000;pointer-events:none;}",
         "#social-stream-root.is-open{pointer-events:auto;}",
@@ -1005,7 +1005,7 @@ export default function(component) {
         "#social-stream-root .chat-actions button.thumb-down{color:#b91c1c;}",
         "#social-stream-root .chat-actions button.thumb-up.is-on{background:#dcfce7;border-color:#15803d;color:#15803d;}",
         "#social-stream-root .chat-actions button.thumb-down.is-on{background:#fee2e2;border-color:#b91c1c;color:#b91c1c;}",
-        "#social-stream-root .chat-actions button.reply-note,#social-stream-root .chat-actions button.delete-note,#social-stream-root .chat-actions button.report-note{font-size:1rem;line-height:1;padding:2px 7px;}",
+        "#social-stream-root .chat-actions button.reply-note,#social-stream-root .chat-actions button.delete-note{font-size:1rem;line-height:1;padding:2px 7px;}",
         "#social-stream-root .chat-actions button.delete-note{color:#b91c1c;}",
         "#social-stream-root .report-box{flex:none;margin:10px 18px 0;padding:10px 12px;border:1px solid #e5e7eb;border-radius:10px;background:#f8fafc;}",
         "#social-stream-root .report-title{font-weight:650;font-size:.9rem;}",
@@ -1020,10 +1020,13 @@ export default function(component) {
         "#social-stream-root .chat-filters .picks{grid-template-columns:1fr;margin-top:0;}",
         "#social-stream-root .person{display:flex;gap:10px;align-items:center;}",
         "#social-stream-root .person .identity{flex:1;min-width:0;}",
-        "#social-stream-root .favourite{flex:none;margin-left:auto;background:none;border:0;padding:0 2px;cursor:pointer;font-size:1.2rem;line-height:1;color:#9ca3af;}",
+        "#social-stream-root .person-tools{margin-left:auto;display:flex;align-items:center;gap:2px;flex:none;}",
+        "#social-stream-root .favourite{flex:none;background:none;border:0;padding:0 2px;cursor:pointer;font-size:1.2rem;line-height:1;color:#9ca3af;}",
         "#social-stream-root .favourite.is-on{color:#d97706;}",
         "#social-stream-root .group-invite{flex:none;display:inline-flex;align-items:center;background:none;border:0;padding:0 2px;cursor:pointer;color:#6b7280;}",
         "#social-stream-root .group-invite:hover{color:#111827;}",
+        "#social-stream-root .report-flag{flex:none;display:inline-flex;align-items:center;background:none;border:0;padding:0 2px;cursor:pointer;color:#6b7280;}",
+        "#social-stream-root .report-flag:hover{color:#111827;}",
         "#social-stream-root .group-box{margin:8px 18px 0;padding:10px 12px;border:1px solid #e5e7eb;border-radius:10px;background:#f8fafc;}",
         "#social-stream-root .group-box-title{font-weight:650;font-size:.9rem;}",
         "#social-stream-root .group-name,#social-stream-root .group-pick{width:100%;box-sizing:border-box;font:inherit;font-size:.85rem;color:#111827;border:1px solid #d1d5db;border-radius:8px;padding:6px 8px;background:#fff;margin-top:6px;}",
@@ -1077,6 +1080,8 @@ export default function(component) {
         "#social-stream-root.is-dark .favourite.is-on{color:#fbbf24;}",
         "#social-stream-root.is-dark .group-invite{color:#9ca3af;}",
         "#social-stream-root.is-dark .group-invite:hover{color:#fafafa;}",
+        "#social-stream-root.is-dark .report-flag{color:#9ca3af;}",
+        "#social-stream-root.is-dark .report-flag:hover{color:#fafafa;}",
         "#social-stream-root.is-dark .group-box{background:#262730;border-color:#4b5563;}",
         "#social-stream-root.is-dark .group-name,#social-stream-root.is-dark .group-pick{background:#31333f;color:#fafafa;border-color:#4b5563;}",
         "#social-stream-root.is-dark .group-cancel{background:#31333f;color:#fafafa;border-color:#4b5563;}",
@@ -1644,8 +1649,8 @@ export default function(component) {
     if (item.mine || item.pending || !(Number(item.id) > 0)) return null;
     const button = document.createElement("button");
     button.type = "button";
-    button.className = "report-note";
-    button.textContent = "🚩";
+    button.className = "report-flag";
+    button.innerHTML = "<svg width='16' height='16' viewBox='0 0 16 16' aria-hidden='true'><path d='M3.2 1.8h1.1v12.4H3.2z' fill='currentColor'/><path d='M4.3 2.2h8l-1.7 2.5 1.7 2.5H4.3z' fill='currentColor'/></svg>";
     button.title = "Report";
     button.setAttribute("aria-label", "Report");
     button.addEventListener("click", () => {
@@ -1908,7 +1913,7 @@ export default function(component) {
     return mark;
   }
 
-  function personRow(item) {
+  function personRow(item, place, kind) {
     const person = document.createElement("div");
     person.className = "person";
     const name = String(item.name || "Member");
@@ -1931,10 +1936,15 @@ export default function(component) {
     identity.appendChild(who);
     identity.appendChild(when);
     person.appendChild(identity);
+    const tools = document.createElement("div");
+    tools.className = "person-tools";
+    const flag = reportButton(item, place, kind);
+    if (flag) tools.appendChild(flag);
     const group = groupButton(item);
-    if (group) person.appendChild(group);
+    if (group) tools.appendChild(group);
     const star = favouriteButton(item);
-    if (star) person.appendChild(star);
+    if (star) tools.appendChild(star);
+    if (tools.childElementCount) person.appendChild(tools);
     return person;
   }
 
@@ -1999,7 +2009,7 @@ export default function(component) {
   function chatCard(item, rootId) {
     const card = document.createElement("article");
     card.className = item.id === rootId ? "chat-card" : "reply";
-    const person = personRow(item);
+    const person = personRow(item, "chat", item.id === rootId ? "comment" : "reply");
     const saying = document.createElement("p");
     saying.className = "saying";
     saying.textContent = String(item.text || "");
@@ -2025,8 +2035,6 @@ export default function(component) {
         if (box) box.focus();
       });
       actions.appendChild(reply);
-      const flag = reportButton(item, "chat", item.id === rootId ? "comment" : "reply");
-      if (flag) actions.appendChild(flag);
     }
     if (item.mine && !item.pending && Number(item.id) > 0) {
       const top = item.id === rootId;
@@ -2159,7 +2167,7 @@ export default function(component) {
   function streamCard(item) {
     const card = document.createElement("article");
     card.className = "card";
-    const person = personRow(item);
+    const person = personRow(item, "signal", "comment");
     const saying = document.createElement("p");
     saying.className = "saying";
     saying.textContent = String(item.text || "");
@@ -2254,8 +2262,6 @@ export default function(component) {
         if (box) box.focus();
       });
       actions.appendChild(reply);
-      const flag = reportButton(item, "signal", kind);
-      if (flag) actions.appendChild(flag);
     }
     if (item.mine && !item.pending && Number(item.id) > 0) {
       actions.appendChild(deleteNoteButton(
@@ -2273,7 +2279,7 @@ export default function(component) {
   function signalReply(item, rootId) {
     const card = document.createElement("article");
     card.className = "reply";
-    const person = personRow(item);
+    const person = personRow(item, "signal", "reply");
     const saying = document.createElement("p");
     saying.className = "saying";
     saying.textContent = String(item.text || "");
@@ -5063,13 +5069,13 @@ All, Positive, Negative, and Mixed narrow the list by the coverage they were ans
 
 Under Person, All people shows everyone. Me, just under that, shows notes you wrote, including a reply you wrote. Groups you lead or belong to come next. Favourites shows notes from people you have starred, including a reply they wrote. A star beside another person's name adds them. Press the filled star to remove them. That list is saved on your account. The people icon beside the star invites that person to a group. You name a new group or pick one you lead. They accept or dismiss it under Notifications. An invite disappears after 30 days. A group shows notes from its members. You can also pick one person. A note stays in the list when that person wrote it or replied under it.
 
-The green thumb and the red thumb each show a count. You can mark any note, including one you posted. Press the same thumb again to clear your mark. The curved arrow replies. The flag reports a comment that breaks the socials policy. The form opens at the top of the panel, and the report is emailed. It is not shown on the stream. The trash can deletes a note you posted, and deleting a comment also removes the replies under it.
+The green thumb and the red thumb each show a count. You can mark any note, including one you posted. Press the same thumb again to clear your mark. The curved arrow replies. The flag to the left of the group and favourite icons reports a comment that breaks the socials policy. The form opens at the top of the panel, and the report is emailed. It is not shown on the stream. The trash can deletes a note you posted, and deleting a comment also removes the replies under it.
 
 **General chat**
 
 This is a shared room, not tied to an asset. Notes are newest first, and they stay. The panel shows the newest 60 conversations, with the replies under each one. Older notes stay stored.
 
-The Person list works the same way as on the stream, including Me, your groups, and Favourites. Write a comment in the box at the bottom. Enter posts it. Shift and Enter starts a new line. The same row of faces sits under the box. The curved arrow replies. A reply to a reply is added under the original comment. Thumbs work the same way as on the stream, including on a note you posted, and the count sits beside each thumb. The flag reports a chat comment the same way as on the stream. The trash can deletes a note you posted, and deleting a comment also removes the replies under it.
+The Person list works the same way as on the stream, including Me, your groups, and Favourites. Write a comment in the box at the bottom. Enter posts it. Shift and Enter starts a new line. The same row of faces sits under the box. The curved arrow replies. A reply to a reply is added under the original comment. Thumbs work the same way as on the stream, including on a note you posted, and the count sits beside each thumb. The flag beside the name reports a chat comment the same way as on the stream. The trash can deletes a note you posted, and deleting a comment also removes the replies under it.
 
 **Search**
 
