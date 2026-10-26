@@ -204,14 +204,14 @@ export default function(component) {
     document.head.appendChild(sideStyle);
   }
   let layoutStyle = document.getElementById("angstrom-layout-controls");
-  if (layoutStyle && layoutStyle.dataset.layout !== "breakdown") {
+  if (layoutStyle && layoutStyle.dataset.layout !== "sort") {
     layoutStyle.remove();
     layoutStyle = null;
   }
   if (!layoutStyle) {
     layoutStyle = document.createElement("style");
     layoutStyle.id = "angstrom-layout-controls";
-    layoutStyle.dataset.layout = "breakdown";
+    layoutStyle.dataset.layout = "sort";
     const singleMark = "url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Crect x=%272.4%27 y=%272.4%27 width=%2719.2%27 height=%2719.2%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3C/svg%3E')";
     const wideMark = "url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Crect x=%272.4%27 y=%272.4%27 width=%2719.2%27 height=%2719.2%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3Cpath d=%27M2.4 9.1H21.6M12 9.1V21.6%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3C/svg%3E')";
     layoutStyle.textContent = [
@@ -236,7 +236,11 @@ export default function(component) {
       "#angstrom-wide-split:hover .grip,#angstrom-wide-split.is-dragging .grip{background:#111827;}",
       "html.angstrom-night #angstrom-wide-split .grip{background:#6b7280;}",
       "html.angstrom-night #angstrom-wide-split:hover .grip,html.angstrom-night #angstrom-wide-split.is-dragging .grip{background:#e5e7eb;}",
-      "#interactive-chart,#market-mood-crypto,#market-mood-stock,#market-sentiment,#score-breakdown{height:0;margin:0;padding:0;scroll-margin-top:4.5rem;}"
+      "#interactive-chart,#market-mood-crypto,#market-mood-stock,#market-sentiment,#score-breakdown{height:0;margin:0;padding:0;scroll-margin-top:4.5rem;}",
+      ".st-key-admin_feedback_table{max-height:32rem !important;overflow:auto !important;}",
+      ".st-key-admin_feedback_head{position:sticky;top:0;z-index:4;background:var(--ang-section);}",
+      ".st-key-admin_feedback_table [class*='st-key-admin_feedback_sort_'] button{background:transparent !important;border:0 !important;box-shadow:none !important;padding:.15rem 0 !important;min-height:0 !important;height:auto !important;justify-content:flex-start !important;font-weight:700 !important;color:var(--ang-text) !important;}",
+      ".st-key-admin_feedback_table [class*='st-key-admin_feedback_sort_'] button:hover{background:var(--ang-hover) !important;}"
     ].join("");
     document.head.appendChild(layoutStyle);
   }
@@ -5791,10 +5795,15 @@ def admin_panel() -> None:
             row for row in reports
             if str(row.get("status") or "") in ("rejected", "upheld")
         ]
-        with tracked_expander(f"Feedback ({len(feedback)})", "admin_feedback"):
+        open_feedback = [
+            row for row in feedback
+            if isinstance(row, dict) and str(row.get("status") or "") != "closed"
+        ]
+        with tracked_expander(f"Feedback ({len(open_feedback)} open)", "admin_feedback"):
             st.caption(
-                "The status menu shows the current step and the ones that can follow it. "
-                "Choosing a step saves it. Rejected asks for a reason."
+                "Click a column title to sort. The list scrolls inside this section once it is long. "
+                "Closed notes stay hidden until Show closed is on. "
+                "Choosing a status saves it. Rejected asks for a reason."
             )
             _show_feedback(feedback)
         with tracked_expander(f"Reported comments ({len(open_reports)} open)", "admin_reports"):
@@ -5818,78 +5827,134 @@ def _feedback_username(row: dict) -> str:
     return email or "Member"
 
 
+def _feedback_sort_value(row: dict, key: str) -> str:
+    if key == "type":
+        return "enhancement" if row.get("kind") == "enhancement" else "issue"
+    if key == "comment":
+        return str(row.get("body") or "").casefold()
+    if key == "username":
+        return _feedback_username(row).casefold()
+    if key == "email":
+        return str(row.get("email") or "").casefold()
+    if key == "status":
+        return _FEEDBACK_STATUS.get(str(row.get("status") or ""), "").casefold()
+    return str(row.get("created_at") or "")
+
+
 def _show_feedback(rows) -> None:
-    if not rows:
+    clean = [row for row in rows if isinstance(row, dict)]
+    if not clean:
         st.caption("No feedback yet.")
         return
     notice = st.session_state.pop("admin_feedback_notice", "")
     if notice:
         st.warning(notice)
+    show_closed = st.checkbox("Show closed", key="admin_feedback_show_closed")
+    visible = [
+        row for row in clean
+        if show_closed or str(row.get("status") or "") != "closed"
+    ]
+    if not visible:
+        st.caption("No open feedback.")
+        return
+    sort_key = st.session_state.get("admin_feedback_sort", "date")
+    sort_desc = bool(st.session_state.get("admin_feedback_sort_desc", True))
+    columns = (
+        ("type", "Type"),
+        ("comment", "Comment"),
+        ("date", "Submit date"),
+        ("username", "Username"),
+        ("email", "Email"),
+        ("status", "Status"),
+    )
+    if sort_key not in {key for key, _title in columns}:
+        sort_key = "date"
     widths = [1.1, 3.2, 1.5, 1.4, 2.1, 1.8]
-    header = st.columns(widths)
-    for column, title in zip(header, ("Type", "Comment", "Submit date", "Username", "Email", "Status")):
-        column.markdown(f"**{title}**")
-    for row in rows:
-        if not isinstance(row, dict):
-            continue
-        try:
-            item_id = int(row.get("id"))
-        except (TypeError, ValueError):
-            continue
-        status = str(row.get("status") or "submitted")
-        if status not in _FEEDBACK_STATUS:
-            status = "submitted"
-        options = [status]
-        for step, _label in _FEEDBACK_NEXT.get(status) or []:
-            if step not in options:
-                options.append(step)
-        kind = "Enhancement" if row.get("kind") == "enhancement" else "Issue"
-        comment = html.escape(str(row.get("body") or "").strip()).replace("\n", "<br>")
-        cells = st.columns(widths)
-        cells[0].write(kind)
-        cells[1].markdown(comment or "—", unsafe_allow_html=True)
-        cells[2].write(_admin_when(row.get("created_at")))
-        cells[3].write(_feedback_username(row))
-        cells[4].write(str(row.get("email") or ""))
-        choice_key = f"admin_feedback_status_{item_id}"
-        reset = st.session_state.pop(f"admin_feedback_reset_{item_id}", None)
-        if reset in options:
-            st.session_state[choice_key] = reset
-        elif st.session_state.get(choice_key) not in options:
-            st.session_state[choice_key] = status
-        picked = cells[5].selectbox(
-            "Status",
-            options,
-            format_func=lambda value: _FEEDBACK_STATUS.get(value, value),
-            key=choice_key,
-            label_visibility="collapsed",
-            disabled=len(options) < 2,
+    with st.container(key="admin_feedback_table"):
+        with st.container(key="admin_feedback_head"):
+            header = st.columns(widths, vertical_alignment="center")
+            for column, (key, title) in zip(header, columns):
+                mark = ""
+                if key == sort_key:
+                    mark = " ↓" if sort_desc else " ↑"
+                if column.button(
+                    title + mark,
+                    key=f"admin_feedback_sort_{key}",
+                    help=f"Sort by {title}",
+                    type="tertiary",
+                    width="stretch",
+                ):
+                    if sort_key == key:
+                        sort_desc = not sort_desc
+                    else:
+                        sort_key = key
+                        sort_desc = False
+                    st.session_state["admin_feedback_sort"] = sort_key
+                    st.session_state["admin_feedback_sort_desc"] = sort_desc
+        ordered = sorted(
+            visible,
+            key=lambda row: (_feedback_sort_value(row, sort_key), str(row.get("id") or "")),
+            reverse=sort_desc,
         )
-        if picked == status:
-            continue
-        reason = ""
-        if picked == "rejected":
-            reason = cells[5].text_input(
-                "Rejection reason",
-                key=f"admin_feedback_reason_{item_id}",
-                max_chars=500,
-                placeholder="Rejection reason",
+        for row in ordered:
+            try:
+                item_id = int(row.get("id"))
+            except (TypeError, ValueError):
+                continue
+            status = str(row.get("status") or "submitted")
+            if status not in _FEEDBACK_STATUS:
+                status = "submitted"
+            options = [status]
+            for step, _label in _FEEDBACK_NEXT.get(status) or []:
+                if step not in options:
+                    options.append(step)
+            kind = "Enhancement" if row.get("kind") == "enhancement" else "Issue"
+            comment = html.escape(str(row.get("body") or "").strip()).replace("\n", "<br>")
+            cells = st.columns(widths, vertical_alignment="center")
+            cells[0].write(kind)
+            cells[1].markdown(comment or "—", unsafe_allow_html=True)
+            cells[2].write(_admin_when(row.get("created_at")))
+            cells[3].write(_feedback_username(row))
+            cells[4].write(str(row.get("email") or ""))
+            choice_key = f"admin_feedback_status_{item_id}"
+            reset = st.session_state.pop(f"admin_feedback_reset_{item_id}", None)
+            if reset in options:
+                st.session_state[choice_key] = reset
+            elif st.session_state.get(choice_key) not in options:
+                st.session_state[choice_key] = status
+            picked = cells[5].selectbox(
+                "Status",
+                options,
+                format_func=lambda value: _FEEDBACK_STATUS.get(value, value),
+                key=choice_key,
                 label_visibility="collapsed",
+                disabled=len(options) < 2,
             )
-            if not cells[5].button("Save rejection", key=f"admin_feedback_reject_{item_id}"):
+            if picked == status:
                 continue
-            if len(" ".join(str(reason).split())) < 4:
-                cells[5].caption("Write a short reason first.")
-                continue
-        problem = _admin_review("review_feedback", {
-            "note_id": item_id,
-            "next_status": picked,
-            "reason": reason,
-        })
-        if problem:
-            st.session_state[f"admin_feedback_reset_{item_id}"] = status
-            st.session_state["admin_feedback_notice"] = problem
-        _rerun_fragment()
+            reason = ""
+            if picked == "rejected":
+                reason = cells[5].text_input(
+                    "Rejection reason",
+                    key=f"admin_feedback_reason_{item_id}",
+                    max_chars=500,
+                    placeholder="Rejection reason",
+                    label_visibility="collapsed",
+                )
+                if not cells[5].button("Save rejection", key=f"admin_feedback_reject_{item_id}"):
+                    continue
+                if len(" ".join(str(reason).split())) < 4:
+                    cells[5].caption("Write a short reason first.")
+                    continue
+            problem = _admin_review("review_feedback", {
+                "note_id": item_id,
+                "next_status": picked,
+                "reason": reason,
+            })
+            if problem:
+                st.session_state[f"admin_feedback_reset_{item_id}"] = status
+                st.session_state["admin_feedback_notice"] = problem
+            _rerun_fragment()
 
 
 def _show_reports(rows, actionable: bool) -> None:
