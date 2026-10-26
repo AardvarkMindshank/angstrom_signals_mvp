@@ -399,6 +399,72 @@ export default function(component) {
       handle.title = "Drag onto another colour to copy it";
     });
   };
+  const moveSelector = (leftPct, topPct) => {
+    const white = document.querySelector(".saturation-white");
+    const container = white && white.parentElement;
+    if (!container) return;
+    const rect = container.getBoundingClientRect();
+    if (rect.width < 2 || rect.height < 2) return;
+    const clientX = rect.left + (leftPct / 100) * rect.width;
+    const clientY = rect.top + (topPct / 100) * rect.height;
+    const pageX = clientX + window.scrollX;
+    const pageY = clientY + window.scrollY;
+    const pointed = { bubbles: true, cancelable: true, view: window, clientX, clientY, pageX, pageY };
+    container.dispatchEvent(new MouseEvent("mousedown", pointed));
+    window.dispatchEvent(new MouseEvent("mouseup", pointed));
+  };
+  const placeAxes = () => {
+    const hue = document.querySelector(".hue-horizontal");
+    let axes = document.getElementById("ang-colour-axes");
+    if (!hue) {
+      if (axes) axes.remove();
+      return;
+    }
+    if (!document.getElementById("ang-colour-axes-style")) {
+      const style = document.createElement("style");
+      style.id = "ang-colour-axes-style";
+      style.textContent = "div:has(> div > .hue-horizontal){margin-bottom:80px !important;}#ang-colour-axes{position:fixed;z-index:10000020;display:flex;flex-direction:column;gap:4px;}#ang-colour-axes label{display:flex;flex-direction:column;gap:1px;font:600 11px/1.2 sans-serif;color:#31333f;}#ang-colour-axes input{width:100%;margin:0;}html.angstrom-night #ang-colour-axes label{color:#f3f4f6;}";
+      document.head.appendChild(style);
+    }
+    if (!axes) {
+      axes = document.createElement("div");
+      axes.id = "ang-colour-axes";
+      axes.innerHTML = "<label>Left / right<input type='range' min='0' max='100' data-axis='x'></label><label>Up / down<input type='range' min='0' max='100' data-axis='y'></label>";
+      const keepOpen = (event) => event.stopPropagation();
+      axes.addEventListener("mousedown", keepOpen);
+      axes.addEventListener("click", keepOpen);
+      axes.addEventListener("input", () => {
+        const across = axes.querySelector("[data-axis='x']");
+        const down = axes.querySelector("[data-axis='y']");
+        moveSelector(Number(across.value), Number(down.value));
+      });
+      document.body.appendChild(axes);
+    }
+    const rect = hue.getBoundingClientRect();
+    let layer = 10000020;
+    let node = hue;
+    while (node && node !== document.body) {
+      const value = Number(getComputedStyle(node).zIndex);
+      if (value > layer) layer = value + 1;
+      node = node.parentElement;
+    }
+    axes.style.zIndex = String(layer);
+    axes.style.left = rect.left + "px";
+    axes.style.top = (rect.bottom + 8) + "px";
+    axes.style.width = rect.width + "px";
+    const pointer = document.querySelector(".saturation-black > div");
+    const across = axes.querySelector("[data-axis='x']");
+    const down = axes.querySelector("[data-axis='y']");
+    if (!pointer || !across || !down) return;
+    if (document.activeElement !== across) {
+      const left = parseFloat(pointer.style.left);
+      if (!Number.isNaN(left)) across.value = String(Math.max(0, Math.min(100, Math.round(left))));
+    }
+    if (document.activeElement !== down) {
+      const top = parseFloat(pointer.style.top);
+      if (!Number.isNaN(top)) down.value = String(Math.max(0, Math.min(100, Math.round(top))));
+    }
+  };
   if (!window.__angstromColourDrag) {
     window.__angstromColourDrag = true;
     let dragged = false;
@@ -448,9 +514,16 @@ export default function(component) {
       event.preventDefault();
       event.stopPropagation();
     }, true);
-    new MutationObserver(arm).observe(document.body, { childList: true, subtree: true });
+    const watchPickers = () => {
+      arm();
+      placeAxes();
+    };
+    new MutationObserver(watchPickers).observe(document.body, { childList: true, subtree: true });
+    document.addEventListener("scroll", placeAxes, true);
+    window.addEventListener("resize", placeAxes);
   }
   arm();
+  placeAxes();
   return () => {};
 }
 """
