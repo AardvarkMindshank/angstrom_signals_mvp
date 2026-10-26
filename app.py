@@ -4099,6 +4099,7 @@ def _respond_group_invite(invite_id: int, accept: bool) -> str:
     return "That invite could not be updated. Run the latest supabase_rls.sql, then try again."
 
 
+@st.fragment
 def notifications_panel() -> None:
     """Alerts and alert rules. A filter, a button, or a slider redraws this section, not the page."""
     notifications_list = fetch_user_notifications()
@@ -4202,7 +4203,7 @@ def notifications_panel() -> None:
                                         if answer:
                                             st.warning(answer)
                                         else:
-                                            st.rerun()
+                                            _rerun_fragment()
                                     if no.button("Dismiss", key=f"group_dismiss_{invite_id}", use_container_width=True):
                                         _respond_group_invite(invite_id, False)
                                         _rerun_fragment()
