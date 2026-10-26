@@ -5148,7 +5148,7 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
         key="show_period_changes",
     )
 
-    with tracked_expander("Colours", "colours"):
+    with tracked_expander("UI Colours", "colours"):
         st.caption("Saved on this account. Left is day, right is night. Drag a colour onto another to copy it.")
         for label, day_key, night_key in (
             ("Page", "page_day", "page_night"),
