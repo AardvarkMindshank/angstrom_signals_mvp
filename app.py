@@ -399,50 +399,127 @@ export default function(component) {
       handle.title = "Drag onto another colour to copy it";
     });
   };
-  const moveSelector = (leftPct, topPct) => {
+  const pointAt = (el, clientX, clientY) => {
+    if (!el) return;
+    const pointed = {
+      bubbles: true,
+      cancelable: true,
+      view: window,
+      clientX: clientX,
+      clientY: clientY,
+      pageX: clientX + window.scrollX,
+      pageY: clientY + window.scrollY,
+    };
+    el.dispatchEvent(new MouseEvent("mousedown", pointed));
+    window.dispatchEvent(new MouseEvent("mouseup", pointed));
+  };
+  const moveSelector = (saturation, brightness) => {
     const white = document.querySelector(".saturation-white");
     const container = white && white.parentElement;
     if (!container) return;
     const rect = container.getBoundingClientRect();
     if (rect.width < 2 || rect.height < 2) return;
-    const clientX = rect.left + (leftPct / 100) * rect.width;
-    const clientY = rect.top + (topPct / 100) * rect.height;
-    const pageX = clientX + window.scrollX;
-    const pageY = clientY + window.scrollY;
-    const pointed = { bubbles: true, cancelable: true, view: window, clientX, clientY, pageX, pageY };
-    container.dispatchEvent(new MouseEvent("mousedown", pointed));
-    window.dispatchEvent(new MouseEvent("mouseup", pointed));
+    const across = Math.max(0, Math.min(100, saturation)) / 100;
+    const down = (100 - Math.max(0, Math.min(100, brightness))) / 100;
+    pointAt(container, rect.left + across * rect.width, rect.top + down * rect.height);
+  };
+  const moveHue = (degrees) => {
+    const bar = document.querySelector(".hue-horizontal");
+    if (!bar) return;
+    const rect = bar.getBoundingClientRect();
+    if (rect.width < 2) return;
+    const across = Math.max(0, Math.min(360, degrees)) / 360;
+    pointAt(bar, rect.left + across * rect.width, rect.top + rect.height / 2);
+  };
+  const hexToHsv = (raw) => {
+    const text = String(raw || "").replace("#", "").trim();
+    if (!/^[0-9a-fA-F]{6}$/.test(text)) return null;
+    const red = parseInt(text.slice(0, 2), 16) / 255;
+    const green = parseInt(text.slice(2, 4), 16) / 255;
+    const blue = parseInt(text.slice(4, 6), 16) / 255;
+    const max = Math.max(red, green, blue);
+    const min = Math.min(red, green, blue);
+    const delta = max - min;
+    let hue = 0;
+    if (delta !== 0) {
+      if (max === red) hue = ((green - blue) / delta) % 6;
+      else if (max === green) hue = (blue - red) / delta + 2;
+      else hue = (red - green) / delta + 4;
+      hue *= 60;
+      if (hue < 0) hue += 360;
+    }
+    return { h: hue, s: max === 0 ? 0 : (delta / max) * 100, v: max * 100 };
+  };
+  const readHsv = (hueBar) => {
+    const satPointer = document.querySelector(".saturation-black > div");
+    const huePointer = hueBar.querySelector("div");
+    let hue = NaN;
+    let saturation = NaN;
+    let brightness = NaN;
+    if (satPointer) {
+      saturation = parseFloat(satPointer.style.left);
+      const top = parseFloat(satPointer.style.top);
+      if (!Number.isNaN(top)) brightness = 100 - top;
+    }
+    if (huePointer) {
+      const left = parseFloat(huePointer.style.left);
+      if (!Number.isNaN(left)) hue = (left / 100) * 360;
+    }
+    if (!Number.isNaN(hue) && !Number.isNaN(saturation) && !Number.isNaN(brightness)) {
+      return { h: hue, s: saturation, v: brightness };
+    }
+    let node = hueBar;
+    while (node && node !== document.body) {
+      const inputs = node.querySelectorAll("input");
+      for (const input of inputs) {
+        const fromHex = hexToHsv(input.value);
+        if (fromHex) return fromHex;
+      }
+      node = node.parentElement;
+    }
+    return null;
   };
   const placeAxes = () => {
-    const hue = document.querySelector(".hue-horizontal");
+    const hueBar = document.querySelector(".hue-horizontal");
     let axes = document.getElementById("ang-colour-axes");
-    if (!hue) {
+    if (!hueBar) {
       if (axes) axes.remove();
       return;
     }
     if (!document.getElementById("ang-colour-axes-style")) {
       const style = document.createElement("style");
       style.id = "ang-colour-axes-style";
-      style.textContent = "div:has(> div > .hue-horizontal){margin-bottom:80px !important;}#ang-colour-axes{position:fixed;z-index:10000020;display:flex;flex-direction:column;gap:4px;}#ang-colour-axes label{display:flex;flex-direction:column;gap:1px;font:600 11px/1.2 sans-serif;color:#31333f;}#ang-colour-axes input{width:100%;margin:0;}html.angstrom-night #ang-colour-axes label{color:#f3f4f6;}";
+      style.textContent = "div:has(> div > .hue-horizontal){margin-bottom:124px !important;}#ang-colour-axes{position:fixed;z-index:10000020;display:flex;flex-direction:column;gap:4px;}#ang-colour-axes label{display:flex;flex-direction:column;gap:1px;font:600 11px/1.2 sans-serif;color:#31333f;}#ang-colour-axes input{width:100%;margin:0;}html.angstrom-night #ang-colour-axes label{color:#f3f4f6;}";
       document.head.appendChild(style);
     }
+    const current = readHsv(hueBar) || { h: 0, s: 0, v: 0 };
     if (!axes) {
       axes = document.createElement("div");
       axes.id = "ang-colour-axes";
-      axes.innerHTML = "<label>Left / right<input type='range' min='0' max='100' data-axis='x'></label><label>Up / down<input type='range' min='0' max='100' data-axis='y'></label>";
+      const shown = {
+        h: Math.round(current.h),
+        s: Math.round(current.s),
+        v: Math.round(current.v),
+      };
+      axes.innerHTML = "<label>Hue<input type='range' min='0' max='360' data-axis='h' value='" + shown.h + "'></label><label>Saturation<input type='range' min='0' max='100' data-axis='s' value='" + shown.s + "'></label><label>Brightness<input type='range' min='0' max='100' data-axis='v' value='" + shown.v + "'></label>";
       const keepOpen = (event) => event.stopPropagation();
       axes.addEventListener("mousedown", keepOpen);
       axes.addEventListener("click", keepOpen);
-      axes.addEventListener("input", () => {
-        const across = axes.querySelector("[data-axis='x']");
-        const down = axes.querySelector("[data-axis='y']");
-        moveSelector(Number(across.value), Number(down.value));
+      axes.addEventListener("input", (event) => {
+        const axis = event.target.getAttribute("data-axis");
+        if (axis === "h") {
+          moveHue(Number(event.target.value));
+          return;
+        }
+        const saturation = axes.querySelector("[data-axis='s']");
+        const brightness = axes.querySelector("[data-axis='v']");
+        moveSelector(Number(saturation.value), Number(brightness.value));
       });
       document.body.appendChild(axes);
     }
-    const rect = hue.getBoundingClientRect();
+    const rect = hueBar.getBoundingClientRect();
     let layer = 10000020;
-    let node = hue;
+    let node = hueBar;
     while (node && node !== document.body) {
       const value = Number(getComputedStyle(node).zIndex);
       if (value > layer) layer = value + 1;
@@ -452,19 +529,16 @@ export default function(component) {
     axes.style.left = rect.left + "px";
     axes.style.top = (rect.bottom + 8) + "px";
     axes.style.width = rect.width + "px";
-    const pointer = document.querySelector(".saturation-black > div");
-    const across = axes.querySelector("[data-axis='x']");
-    const down = axes.querySelector("[data-axis='y']");
-    if (!pointer || !across || !down) return;
-    if (document.activeElement !== across) {
-      const left = parseFloat(pointer.style.left);
-      if (!Number.isNaN(left)) across.value = String(Math.max(0, Math.min(100, Math.round(left))));
-    }
-    if (document.activeElement !== down) {
-      const top = parseFloat(pointer.style.top);
-      if (!Number.isNaN(top)) down.value = String(Math.max(0, Math.min(100, Math.round(top))));
-    }
+    const hsv = readHsv(hueBar);
+    if (!hsv) return;
+    const hueSlider = axes.querySelector("[data-axis='h']");
+    const saturationSlider = axes.querySelector("[data-axis='s']");
+    const brightnessSlider = axes.querySelector("[data-axis='v']");
+    if (hueSlider && document.activeElement !== hueSlider) hueSlider.value = String(Math.round(hsv.h));
+    if (saturationSlider && document.activeElement !== saturationSlider) saturationSlider.value = String(Math.round(hsv.s));
+    if (brightnessSlider && document.activeElement !== brightnessSlider) brightnessSlider.value = String(Math.round(hsv.v));
   };
+  window.__angstromPlaceAxes = placeAxes;
   if (!window.__angstromColourDrag) {
     window.__angstromColourDrag = true;
     let dragged = false;
@@ -514,13 +588,18 @@ export default function(component) {
       event.preventDefault();
       event.stopPropagation();
     }, true);
-    const watchPickers = () => {
+    const follow = () => {
       arm();
-      placeAxes();
+      if (window.__angstromPlaceAxes) window.__angstromPlaceAxes();
     };
-    new MutationObserver(watchPickers).observe(document.body, { childList: true, subtree: true });
-    document.addEventListener("scroll", placeAxes, true);
-    window.addEventListener("resize", placeAxes);
+    new MutationObserver(follow).observe(document.body, { childList: true, subtree: true });
+    document.addEventListener("scroll", follow, true);
+    window.addEventListener("resize", follow);
+    const tick = () => {
+      if (document.querySelector(".hue-horizontal") && window.__angstromPlaceAxes) window.__angstromPlaceAxes();
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
   }
   arm();
   placeAxes();
