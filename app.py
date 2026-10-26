@@ -2745,9 +2745,8 @@ _recovery_link = st.components.v2.component(
     isolate_styles=False,
 )
 
-# The app frame is not allowed to replace the whole window, and Google refuses
-# to sign in inside that frame. A new tab is allowed, and the sign-in secret is
-# saved before it opens so the return can still finish.
+# The app frame cannot move the main window, and Google will not sign in inside
+# that frame. A short-lived window is allowed to move this tab, then it closes.
 _GOOGLE_BUTTON_JS = """
 export default function(component) {
   const { data, parentElement } = component;
@@ -2772,8 +2771,7 @@ export default function(component) {
     link.textContent = "Continue with Google";
     shell.appendChild(link);
   }
-  link.target = "_blank";
-  link.rel = "noopener";
+  link.removeAttribute("target");
   const url = data && data.url ? String(data.url) : "";
   const verifier = data && data.verifier ? String(data.verifier) : "";
   link.href = url || "#";
@@ -2786,7 +2784,10 @@ export default function(component) {
       const secure = location.protocol === "https:" ? "; Secure" : "";
       document.cookie = "angstrom_pkce=" + encodeURIComponent(verifier) + "; Path=/; Max-Age=600; SameSite=Lax" + secure;
     }
-    window.open(url, "_blank");
+    const quoted = JSON.stringify(url);
+    const page = "<!doctype html><title>Continue</title><script>try{window.opener.top.location.replace(" + quoted + ");window.close();}catch(e){location.replace(" + quoted + ");}<" + "/script>";
+    const popup = window.open(URL.createObjectURL(new Blob([page], { type: "text/html" })), "_blank");
+    if (!popup) window.location.assign(url);
   };
 }
 """
