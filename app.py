@@ -204,14 +204,14 @@ export default function(component) {
     document.head.appendChild(sideStyle);
   }
   let layoutStyle = document.getElementById("angstrom-layout-controls");
-  if (layoutStyle && layoutStyle.dataset.layout !== "swatch") {
+  if (layoutStyle && layoutStyle.dataset.layout !== "breakdown") {
     layoutStyle.remove();
     layoutStyle = null;
   }
   if (!layoutStyle) {
     layoutStyle = document.createElement("style");
     layoutStyle.id = "angstrom-layout-controls";
-    layoutStyle.dataset.layout = "swatch";
+    layoutStyle.dataset.layout = "breakdown";
     const singleMark = "url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Crect x=%272.4%27 y=%272.4%27 width=%2719.2%27 height=%2719.2%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3C/svg%3E')";
     const wideMark = "url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Crect x=%272.4%27 y=%272.4%27 width=%2719.2%27 height=%2719.2%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3Cpath d=%27M2.4 9.1H21.6M12 9.1V21.6%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3C/svg%3E')";
     layoutStyle.textContent = [
@@ -227,7 +227,7 @@ export default function(component) {
       "html.angstrom-night .st-key-layout_single button:hover,html.angstrom-night .st-key-layout_wide button:hover{border-color:#e5e7eb !important;}",
       "html.angstrom-night .st-key-layout_single button[data-testid='stBaseButton-primary'],html.angstrom-night .st-key-layout_wide button[data-testid='stBaseButton-primary']{background:#f3f4f6 !important;color:#111827 !important;border-color:#f3f4f6 !important;}",
       ".st-key-open_all_sections button,.st-key-collapse_all_sections button{width:auto !important;min-width:0 !important;max-width:max-content !important;height:2.05rem !important;min-height:2.05rem !important;padding:0 .7rem !important;white-space:nowrap;font-size:.85rem !important;}",
-      "[data-testid='stElementContainer']:not(:has([data-testid='stElementContainer'])):is(:has(#interactive-chart),:has(#market-mood-crypto),:has(#market-mood-stock),:has(#market-sentiment)),[class*='st-key-scroll_to_chart'],[class*='st-key-wide_column_split']{position:absolute !important;width:0 !important;height:0 !important;min-height:0 !important;margin:0 !important;padding:0 !important;overflow:visible !important;}",
+      "[data-testid='stElementContainer']:not(:has([data-testid='stElementContainer'])):is(:has(#interactive-chart),:has(#market-mood-crypto),:has(#market-mood-stock),:has(#market-sentiment),:has(#score-breakdown)),[class*='st-key-scroll_to_chart'],[class*='st-key-wide_column_split']{position:absolute !important;width:0 !important;height:0 !important;min-height:0 !important;margin:0 !important;padding:0 !important;overflow:visible !important;}",
       "[class*='st-key-favourite_watch'],[class*='st-key-alert_asset_pick'],[class*='st-key-section_toggle_watch'],[class*='st-key-colour_copy'],[data-testid='stLayoutWrapper']:has(> [data-testid='stVerticalBlock'] > [class*='st-key-favourite_watch']),[data-testid='stLayoutWrapper']:has(> [data-testid='stVerticalBlock'] > [class*='st-key-section_toggle_watch']),[data-testid='stLayoutWrapper']:has(> [data-testid='stVerticalBlock'] > [class*='st-key-colour_copy']){position:absolute !important;width:0 !important;height:0 !important;min-height:0 !important;margin:0 !important;padding:0 !important;overflow:hidden !important;border:0 !important;}",
       "[class*='st-key-colour_'].ang-colour-drop{outline:2px solid #2563eb;outline-offset:2px;border-radius:8px;}",
       "[class*='st-key-colour_'] button[draggable='true']{cursor:grab;}",
@@ -236,7 +236,7 @@ export default function(component) {
       "#angstrom-wide-split:hover .grip,#angstrom-wide-split.is-dragging .grip{background:#111827;}",
       "html.angstrom-night #angstrom-wide-split .grip{background:#6b7280;}",
       "html.angstrom-night #angstrom-wide-split:hover .grip,html.angstrom-night #angstrom-wide-split.is-dragging .grip{background:#e5e7eb;}",
-      "#interactive-chart,#market-mood-crypto,#market-mood-stock,#market-sentiment{height:0;margin:0;padding:0;scroll-margin-top:4.5rem;}"
+      "#interactive-chart,#market-mood-crypto,#market-mood-stock,#market-sentiment,#score-breakdown{height:0;margin:0;padding:0;scroll-margin-top:4.5rem;}"
     ].join("");
     document.head.appendChild(layoutStyle);
   }
@@ -647,9 +647,9 @@ export default function(component) {
     parentElement.appendChild(host);
   }
   host.innerHTML = typeof data === "string" ? data : "";
-  const openAndScroll = (targetId) => {
+  const openSection = (targetId) => {
     const anchor = document.getElementById(targetId);
-    if (!anchor) return;
+    if (!anchor) return null;
     let section = anchor;
     let node = anchor;
     for (let step = 0; step < 8 && node; step += 1) {
@@ -670,8 +670,13 @@ export default function(component) {
       }
       node = node.parentElement;
     }
+    return section;
+  };
+  const openAndScroll = (targetId) => {
+    const section = openSection(targetId);
+    if (!section) return;
     const go = () => {
-      const current = section && section.isConnected ? section : document.getElementById(targetId);
+      const current = section.isConnected ? section : document.getElementById(targetId);
       if (!current) return;
       current.scrollIntoView({behavior: "auto", block: "start"});
       const scroller = current.closest('[data-testid="stMain"]') || current.closest("section.main");
@@ -701,6 +706,22 @@ export default function(component) {
         return;
       }
       const parts = pick.split("|");
+      if (parts[2] === "breakdown") {
+        const id = parts[0] + "|" + parts[1];
+        const loaded = Array.from(
+          document.querySelectorAll("tr.ang-row-on button[data-pick]")
+        ).some((el) => {
+          const value = el.getAttribute("data-pick") || "";
+          return value === id || value.indexOf(id + "|") === 0;
+        });
+        if (loaded && document.getElementById("score-breakdown")) {
+          openSection("interactive-chart");
+          window.setTimeout(() => openAndScroll("score-breakdown"), 90);
+          return;
+        }
+        sendPick(pick);
+        return;
+      }
       const already = parts.length === 2 && Array.from(
         document.querySelectorAll("tr.ang-row-on button[data-pick]")
       ).some((el) => (el.getAttribute("data-pick") || "") === pick);
@@ -4868,7 +4889,7 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
 **What changed** is the first block in Quick Snapshot. It lists scores that crossed your bullish or bearish boundary since you last opened the page, then up to three other large score moves, and the factor that moved each one the most. Click a row to open that asset on the chart. The first visit stores the scores and shows the changes next time.
 
 1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest. Quick Snapshot, Market sentiment for crypto, Market sentiment for stocks, Crypto Scores, Equity Scores, Interactive Chart, Score Breakdown, Max pain, Market sentiment, and Signal matrix each sit in a section that starts open. Close a header to fold that section away. **Open all** and **Collapse all**, on the right of the page title, do that for every one of those sections. The square beside them stacks every section in one column, with Quick Snapshot first. The mark with a wide top and two panes underneath puts Quick Snapshot and both score tables across the top, market sentiment on the left, and Interactive Chart, Score Breakdown, Max pain, Market sentiment, and Signal matrix on the right. Those two bottom columns start at equal width. Drag the line between them to give either side more room. That line stays inside those two columns. The wide or single choice, that column split, the open asset, the social panel's width, split, and pin, and the open or collapsed state of each section are saved on your account and come back when you log in. On a narrow screen the wide layout stacks the left and right parts. **I trade cryptos**, **I trade equities**, and **I trade both**, in Settings, are saved on your account. A market you leave out is hidden, including its sentiment, its score table, and its Quick Snapshot boxes. The chart follows the markets you trade. Collapse all also closes this guide. Open all does not open it. **Feedback**, at the bottom of the sidebar, sends an issue or an idea. It is stored as submitted. The arrow on the left edge of the page closes the sidebar. It stays on that edge when the sidebar is closed, so the sidebar can be opened again. Hover the arrow to see which action it will take.
-2. Click a name in either table, a Quick Snapshot box, or an alert under Notifications. That asset stays highlighted, and the page moves down to the chart when the chart is off screen. Click a column title to sort that table. It starts with the strongest score at the top.
+2. Click a name in either table, a Quick Snapshot box, or an alert under Notifications. That asset stays highlighted, and the page moves down to the chart when the chart is off screen. Hover a TA score to read why it landed there. Click that score to open Score Breakdown for the asset. Click a column title to sort that table. It starts with the strongest score at the top.
 3. Extra metrics add **7d %**, **Market Cap**, **ATR %**, and **Vol**. A separate checkbox adds **1d %** before the seven-day change and **30d %** after it. For **1d %** and **7d %**, green means the price rose and red means it fell. **30d %** uses the same colors as the **30-day trend**: green for a rise of about 2% or more, red for a fall of about 2% or more, and orange when the move stays inside about 2%. For stocks, one day is the previous trading session. **Market Cap** is the latest size of the asset, from CoinGecko for crypto and Yahoo for stocks. **ATR %** is volatility. **Vol** is volume versus its 20-day average.
 4. Alerts fire at 70 and 30 unless you move those sliders. One email goes to the address on your account when a technical score crosses a boundary. It is not sent again until the score leaves that boundary and crosses it later. Sentiment scores do not send alerts.
 
@@ -5969,6 +5990,34 @@ def _what_changed_html(rows, baseline, seen: bool) -> str:
     return "".join(parts)
 
 
+def _score_sentence(reasons) -> str:
+    """One line for the TA score hover. Neutral notes stay in the breakdown."""
+    if reasons is None or isinstance(reasons, str):
+        return "Open the score breakdown."
+    try:
+        reasons = list(reasons)
+    except TypeError:
+        return "Open the score breakdown."
+    quiet = ("neutral", "inside bollinger", "inside the ichimoku", "weak trend", "developing trend")
+    kept = []
+    for reason in reasons or []:
+        text = " ".join(str(reason).split())
+        if not text or any(piece in text.lower() for piece in quiet):
+            continue
+        kept.append(text)
+        if len(kept) == 3:
+            break
+    if not kept:
+        return "Open the score breakdown."
+    if len(kept) == 1:
+        sentence = kept[0]
+    else:
+        sentence = ", ".join(kept[:-1]) + ", and " + kept[-1]
+    if not sentence.endswith("."):
+        sentence += "."
+    return sentence
+
+
 @st.fragment
 def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, show_reasons_flag, show_extra_metrics_flag, show_period_changes_flag, trade_crypto, trade_equities):
     st.session_state["_bar_run"] = {}
@@ -6244,6 +6293,10 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             if destination == "sentiment":
                 st.session_state.scroll_target = "market-sentiment"
                 section_id = "market_sentiment_panel"
+            elif destination == "breakdown":
+                st.session_state.scroll_target = "score-breakdown"
+                _remember_section("interactive_chart", True)
+                section_id = "score_breakdown"
             else:
                 st.session_state.scroll_target = "interactive-chart"
                 section_id = "interactive_chart"
@@ -6468,7 +6521,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                 st.caption("This watchlist is empty.")
                 return
             frame = pd.DataFrame(results).sort_values("score", ascending=False, na_position="last")
-            st.caption("Click a column title to sort. The table starts with the strongest score at the top. Click a name to show that asset on the chart. Click the sentiment score, the thumbs, or the crowd average to open its headlines. Watching is how many accounts hold that asset. The Crowd box is the average of personal scores. Hover the down thumb for the spread. A comment balloon, or the arrow on the right edge, opens the social signals and chat. The 30-day trend uses the same colors as 30d %.")
+            st.caption("Click a column title to sort. The table starts with the strongest score at the top. Click a name to show that asset on the chart. Hover a TA score to read why it landed there, and click it to open the score breakdown. Click the sentiment score, the thumbs, or the crowd average to open its headlines. Watching is how many accounts hold that asset. The Crowd box is the average of personal scores. Hover the down thumb for the spread. A comment balloon, or the arrow on the right edge, opens the social signals and chat. The 30-day trend uses the same colors as 30d %.")
 
             headers = ["Asset", "Watching", "TA Score", "Signal", "Price", "RSI"]
             if show_period_changes_flag:
@@ -6535,6 +6588,16 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                     "cursor:pointer;white-space:nowrap;'>"
                     f"{html.escape(str(row['symbol']))}</button>"
                 )
+                score_box = render_score_bar(row["score"])
+                scored = row.get("score") is not None and not pd.isna(row.get("score"))
+                if scored:
+                    reason = html.escape(_score_sentence(row.get("reasons")), quote=True)
+                    score_box = (
+                        f"<button type='button' data-pick='{pick_value}|breakdown' title='{reason}' "
+                        "style='display:block;width:100%;margin:0;padding:0;border:none;background:transparent;"
+                        "text-align:left;cursor:pointer;font:inherit;color:inherit;'>"
+                        f"{score_box}</button>"
+                    )
                 rows_html += (
                     f"<tr class='{row_class}'>"
                     f"<td data-sort='{sort_token(row.get('symbol'))}' style='padding:10px;white-space:nowrap;'>"
@@ -6543,7 +6606,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                     f"<td data-sort='{sort_token(row.get('holders'), numeric=True)}' "
                     f"style='padding:8px 10px;white-space:nowrap;'>{holders_mark(row.get('holders'))}</td>"
                     f"<td data-sort='{sort_token(row.get('score'), numeric=True)}' "
-                    f"style='padding:10px;min-width:168px;'>{render_score_bar(row['score'])}</td>"
+                    f"style='padding:10px;min-width:168px;'>{score_box}</td>"
                     f"{cell(row.get('label') or '—', row.get('label') or '')}"
                     f"{cell(price_str, price, numeric=True)}{cell(rsi_str, rsi, numeric=True)}"
                 )
@@ -6920,7 +6983,9 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             if result.get("atr_pct") is not None:
                 col_c.metric("Volatility (ATR%)", f"{result['atr_pct']:.2f}%")
 
-        if show_reasons_flag and result.get("reasons") and result.get("score") is not None:
+        reveal_breakdown = st.session_state.get("scroll_target") == "score-breakdown"
+        if (show_reasons_flag or reveal_breakdown) and result.get("reasons") and result.get("score") is not None:
+            st.html("<div id='score-breakdown' style='scroll-margin-top:4.5rem;'></div>")
             with section_expander(f"🔍 Score Breakdown — {title}", "score_breakdown"):
                 st.markdown(
                     f"<span style='color:{color};font-weight:bold;font-size:1.1em'>"
