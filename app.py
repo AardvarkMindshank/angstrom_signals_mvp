@@ -5783,8 +5783,6 @@ def admin_panel() -> None:
         if feedback is None or reports is None:
             st.caption("Admin tools are not ready yet. Run the latest supabase_rls.sql in the Supabase SQL editor.")
             return
-        open_feedback = [row for row in feedback if str(row.get("status") or "") != "closed"]
-        done_feedback = [row for row in feedback if str(row.get("status") or "") == "closed"]
         open_reports = [
             row for row in reports
             if str(row.get("status") or "") not in ("rejected", "upheld")
@@ -5793,14 +5791,12 @@ def admin_panel() -> None:
             row for row in reports
             if str(row.get("status") or "") in ("rejected", "upheld")
         ]
-        with tracked_expander(f"Feedback ({len(open_feedback)} open)", "admin_feedback"):
+        with tracked_expander(f"Feedback ({len(feedback)})", "admin_feedback"):
             st.caption(
-                "Submitted goes to under review. From there it is accepted and built, "
-                "or rejected with a reason. Either path ends at closed. Each step keeps its date."
+                "The status menu shows the current step and the ones that can follow it. "
+                "Choosing a step saves it. Rejected asks for a reason."
             )
-            _show_feedback(open_feedback, actionable=True)
-            with tracked_expander(f"Closed feedback ({len(done_feedback)})", "admin_feedback_closed"):
-                _show_feedback(done_feedback, actionable=False)
+            _show_feedback(feedback)
         with tracked_expander(f"Reported comments ({len(open_reports)} open)", "admin_reports"):
             st.caption(
                 "Reported goes to under review. Reject leaves the comment up and tells the reporter. "
@@ -5812,22 +5808,27 @@ def admin_panel() -> None:
                 _show_reports(done_reports, actionable=False)
 
 
-def _feedback_heading(row: dict) -> str:
-    kind = "Enhancement" if row.get("kind") == "enhancement" else "Issue"
-    status = _FEEDBACK_STATUS.get(str(row.get("status") or ""), str(row.get("status") or ""))
-    body = html.escape(" ".join(str(row.get("body") or "").split()))
-    email = html.escape(str(row.get("email") or ""))
-    return (
-        f"<div style='margin-top:12px;'><strong>{html.escape(kind)}</strong> · {html.escape(status)}"
-        f"<div style='margin-top:4px;'>{body}</div>"
-        f"<div style='margin-top:4px;color:#6b7280;font-size:0.85rem;'>{email}</div></div>"
-    )
+def _feedback_username(row: dict) -> str:
+    name = " ".join(str(row.get("username") or "").split())
+    if name:
+        return name
+    email = str(row.get("email") or "")
+    if "@" in email:
+        return email.split("@", 1)[0]
+    return email or "Member"
 
 
-def _show_feedback(rows, actionable: bool) -> None:
+def _show_feedback(rows) -> None:
     if not rows:
-        st.caption("Nothing in this list.")
+        st.caption("No feedback yet.")
         return
+    notice = st.session_state.pop("admin_feedback_notice", "")
+    if notice:
+        st.warning(notice)
+    widths = [1.1, 3.2, 1.5, 1.4, 2.1, 1.8]
+    header = st.columns(widths)
+    for column, title in zip(header, ("Type", "Comment", "Submit date", "Username", "Email", "Status")):
+        column.markdown(f"**{title}**")
     for row in rows:
         if not isinstance(row, dict):
             continue
@@ -5835,36 +5836,60 @@ def _show_feedback(rows, actionable: bool) -> None:
             item_id = int(row.get("id"))
         except (TypeError, ValueError):
             continue
-        st.markdown(_feedback_heading(row), unsafe_allow_html=True)
-        st.caption(_admin_trail(row.get("created_at"), row.get("events"), _FEEDBACK_STATUS, "Submitted"))
-        if not actionable:
+        status = str(row.get("status") or "submitted")
+        if status not in _FEEDBACK_STATUS:
+            status = "submitted"
+        options = [status]
+        for step, _label in _FEEDBACK_NEXT.get(status) or []:
+            if step not in options:
+                options.append(step)
+        kind = "Enhancement" if row.get("kind") == "enhancement" else "Issue"
+        comment = html.escape(str(row.get("body") or "").strip()).replace("\n", "<br>")
+        cells = st.columns(widths)
+        cells[0].write(kind)
+        cells[1].markdown(comment or "—", unsafe_allow_html=True)
+        cells[2].write(_admin_when(row.get("created_at")))
+        cells[3].write(_feedback_username(row))
+        cells[4].write(str(row.get("email") or ""))
+        choice_key = f"admin_feedback_status_{item_id}"
+        reset = st.session_state.pop(f"admin_feedback_reset_{item_id}", None)
+        if reset in options:
+            st.session_state[choice_key] = reset
+        elif st.session_state.get(choice_key) not in options:
+            st.session_state[choice_key] = status
+        picked = cells[5].selectbox(
+            "Status",
+            options,
+            format_func=lambda value: _FEEDBACK_STATUS.get(value, value),
+            key=choice_key,
+            label_visibility="collapsed",
+            disabled=len(options) < 2,
+        )
+        if picked == status:
             continue
-        status = str(row.get("status") or "")
-        chosen = _FEEDBACK_NEXT.get(status) or []
         reason = ""
-        if any(step == "rejected" for step, _label in chosen):
-            reason = st.text_input(
-                "Reason for rejection",
+        if picked == "rejected":
+            reason = cells[5].text_input(
+                "Rejection reason",
                 key=f"admin_feedback_reason_{item_id}",
                 max_chars=500,
+                placeholder="Rejection reason",
+                label_visibility="collapsed",
             )
-        if not chosen:
-            continue
-        columns = st.columns(len(chosen))
-        for column, (step, label) in zip(columns, chosen):
-            if column.button(label, key=f"admin_feedback_{item_id}_{step}"):
-                if step == "rejected" and len(" ".join(str(reason).split())) < 4:
-                    st.warning("Write a short reason first.")
-                else:
-                    problem = _admin_review("review_feedback", {
-                        "note_id": item_id,
-                        "next_status": step,
-                        "reason": reason,
-                    })
-                    if problem:
-                        st.warning(problem)
-                    else:
-                        _rerun_fragment()
+            if not cells[5].button("Save rejection", key=f"admin_feedback_reject_{item_id}"):
+                continue
+            if len(" ".join(str(reason).split())) < 4:
+                cells[5].caption("Write a short reason first.")
+                continue
+        problem = _admin_review("review_feedback", {
+            "note_id": item_id,
+            "next_status": picked,
+            "reason": reason,
+        })
+        if problem:
+            st.session_state[f"admin_feedback_reset_{item_id}"] = status
+            st.session_state["admin_feedback_notice"] = problem
+        _rerun_fragment()
 
 
 def _show_reports(rows, actionable: bool) -> None:

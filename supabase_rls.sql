@@ -2070,6 +2070,11 @@ begin
                 notes.status,
                 notes.user_email as email,
                 notes.created_at,
+                coalesce(
+                    nullif(btrim(profiles.display_name), ''),
+                    nullif(split_part(notes.user_email, '@', 1), ''),
+                    'Member'
+                ) as username,
                 coalesce((
                     select jsonb_agg(jsonb_build_object(
                         'status', events.status,
@@ -2080,6 +2085,7 @@ begin
                     where events.feedback_id = notes.id
                 ), '[]'::jsonb) as events
             from public.feedback_notes notes
+            left join public.profiles profiles on profiles.user_id = notes.user_id
         ) item
     ), '[]'::jsonb);
 end;
