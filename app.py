@@ -80,21 +80,39 @@ def _brand_mark(width: int, *, align: str = "center") -> str:
 
 _BRAND_JS = """
 export default function(component) {
-  const { parentElement } = component;
+  const { data, parentElement } = component;
   const shell = parentElement.closest(".stBidiComponent") || parentElement;
   shell.style.display = "none";
+  const chosen = data || {};
+  const paintColour = (name, value) => {
+    if (typeof value === "string" && /^#[0-9a-fA-F]{6}$/.test(value)) {
+      document.documentElement.style.setProperty(name, value);
+    }
+  };
+  paintColour("--ang-page-day", chosen.pageDay);
+  paintColour("--ang-page-night", chosen.pageNight);
+  paintColour("--ang-heading-day", chosen.headingDay);
+  paintColour("--ang-heading-night", chosen.headingNight);
+  paintColour("--ang-section-day", chosen.sectionDay);
+  paintColour("--ang-section-night", chosen.sectionNight);
+  paintColour("--ang-hover-day", chosen.hoverDay);
+  paintColour("--ang-hover-night", chosen.hoverNight);
+  paintColour("--ang-side-day", chosen.sidebarDay);
+  paintColour("--ang-side-night", chosen.sidebarNight);
+  paintColour("--ang-social-day", chosen.socialDay);
+  paintColour("--ang-social-night", chosen.socialNight);
   let style = document.getElementById("angstrom-brand-style");
-  if (style && style.dataset.layout !== "heading") {
+  if (style && style.dataset.layout !== "colours") {
     style.remove();
     style = null;
   }
   if (!style) {
     style = document.createElement("style");
     style.id = "angstrom-brand-style";
-    style.dataset.layout = "heading";
+    style.dataset.layout = "colours";
     style.textContent = [
-      "html{--ang-surface:#ffffff;--ang-border:#e5e7eb;--ang-text:#111827;--ang-muted:#6b7280;--ang-soft:#374151;--ang-track:#e5e7eb;--ang-line:#f3f4f6;--ang-select:#e5e7eb;--ang-select-text:#111827;--ang-expander:var(--ang-surface);--ang-expander-hover:var(--ang-line);}",
-      "html.angstrom-night{--ang-surface:#262730;--ang-border:#3f4654;--ang-text:#f3f4f6;--ang-muted:#9ca3af;--ang-soft:#d1d5db;--ang-track:#3f4654;--ang-line:#31333f;--ang-select:#3a4050;--ang-select-text:#f9fafb;}",
+      "html{--ang-surface:#ffffff;--ang-border:#e5e7eb;--ang-text:#111827;--ang-muted:#6b7280;--ang-soft:#374151;--ang-track:#e5e7eb;--ang-line:#f3f4f6;--ang-select:#e5e7eb;--ang-select-text:#111827;--ang-page:var(--ang-page-day,#d6e8f8);--ang-heading:var(--ang-heading-day,#ffffff);--ang-section:var(--ang-section-day,#ffffff);--ang-hover:var(--ang-hover-day,#f3f4f6);--ang-side:var(--ang-side-day,#ffffff);--ang-social:var(--ang-social-day,#ffffff);}",
+      "html.angstrom-night{--ang-surface:#262730;--ang-border:#3f4654;--ang-text:#f3f4f6;--ang-muted:#9ca3af;--ang-soft:#d1d5db;--ang-track:#3f4654;--ang-line:#31333f;--ang-select:#3a4050;--ang-select-text:#f9fafb;--ang-page:var(--ang-page-night,#0e1117);--ang-heading:var(--ang-heading-night,#262730);--ang-section:var(--ang-section-night,#262730);--ang-hover:var(--ang-hover-night,#31333f);--ang-side:var(--ang-side-night,#16181f);--ang-social:var(--ang-social-night,#1c1f27);}",
       ".ang-card{background:var(--ang-surface);color:var(--ang-text);border:1px solid var(--ang-border);border-radius:10px;padding:12px 16px;}",
       ".ang-kicker{font-size:.8rem;color:var(--ang-muted);margin-bottom:4px;}",
       ".ang-copy{color:var(--ang-text);font-size:.95rem;line-height:1.4;}",
@@ -104,14 +122,13 @@ export default function(component) {
       ".ang-table thead tr{border-bottom:2px solid var(--ang-border);}",
       ".ang-table tbody tr{border-bottom:1px solid var(--ang-line);}",
       ".ang-table tr.ang-row-on{background:var(--ang-select);color:var(--ang-select-text);}",
-      "html:not(.angstrom-night) [data-testid='stAppViewContainer'],html:not(.angstrom-night) [data-testid='stHeader'],html:not(.angstrom-night) [data-testid='stBottom']{background:#d6e8f8 !important;}",
-      "html:not(.angstrom-night) [data-testid='stSidebar']{background:#ffffff !important;border-right:1px solid #e5e7eb;}",
+      "[data-testid='stAppViewContainer'],[data-testid='stHeader'],[data-testid='stBottom']{background:var(--ang-page) !important;}",
+      "html:not(.angstrom-night) [data-testid='stSidebar']{background:var(--ang-side) !important;border-right:1px solid #e5e7eb;}",
       "html:not(.angstrom-night) [data-testid='stMain'] [data-testid='stVerticalBlockBorderWrapper'],html:not(.angstrom-night) [data-testid='stMain'] [data-testid='stForm']{background:#ffffff !important;border-color:#e5e7eb !important;}",
-      "[data-testid='stExpander'] details{background:var(--ang-expander) !important;border-color:var(--ang-border) !important;}",
-      "[data-testid='stExpander'] details > summary{background:var(--ang-expander) !important;}",
-      "[data-testid='stExpander'] details > summary:hover,[data-testid='stExpander'] details > summary:focus-visible,[data-testid='stExpander'] details > summary:active{background:var(--ang-expander-hover) !important;}",
-      "html.angstrom-night [data-testid='stAppViewContainer'],html.angstrom-night [data-testid='stHeader'],html.angstrom-night [data-testid='stBottom']{background:#0e1117 !important;}",
-      "html.angstrom-night [data-testid='stSidebar']{background:#16181f !important;border-right:1px solid var(--ang-border);}",
+      "[data-testid='stExpander'] details{background:var(--ang-section) !important;border-color:var(--ang-border) !important;}",
+      "[data-testid='stExpander'] details > summary{background:var(--ang-heading) !important;}",
+      "[data-testid='stExpander'] details > summary:hover,[data-testid='stExpander'] details > summary:focus-visible,[data-testid='stExpander'] details > summary:active{background:var(--ang-hover) !important;}",
+      "html.angstrom-night [data-testid='stSidebar']{background:var(--ang-side) !important;border-right:1px solid var(--ang-border);}",
       "html.angstrom-night [data-testid='stMain'] [data-testid='stVerticalBlockBorderWrapper'],html.angstrom-night [data-testid='stMain'] [data-testid='stForm'],html.angstrom-night [data-testid='stMetric']{background:var(--ang-surface) !important;border-color:var(--ang-border) !important;}",
       "html.angstrom-night [data-baseweb='input'],html.angstrom-night [data-baseweb='textarea'],html.angstrom-night [data-baseweb='select'] > div,html.angstrom-night [data-testid='stFileUploaderDropzone']{background-color:#31333f !important;border-color:var(--ang-border) !important;color:var(--ang-text) !important;}",
       "html.angstrom-night [data-baseweb='input'] input,html.angstrom-night [data-baseweb='textarea'] textarea{background:transparent !important;color:var(--ang-text) !important;-webkit-text-fill-color:var(--ang-text);}",
@@ -642,14 +659,14 @@ export default function(component) {
       window.socialStreamState.pinned = !!window.socialPanelPinned;
     }
     let style = document.getElementById("social-stream-style");
-    if (style && style.dataset.layout !== "groups") {
+    if (style && style.dataset.layout !== "panel") {
       style.remove();
       style = null;
     }
     if (!style) {
       style = document.createElement("style");
       style.id = "social-stream-style";
-      style.dataset.layout = "groups";
+      style.dataset.layout = "panel";
       style.textContent = [
         "#social-stream-root{position:fixed;inset:0;z-index:10000000;pointer-events:none;}",
         "#social-stream-root.is-open{pointer-events:auto;}",
@@ -658,7 +675,7 @@ export default function(component) {
         "#social-stream-root.is-open .scrim{opacity:1;}",
         "#social-stream-root.is-open.is-pinned .scrim{opacity:0;pointer-events:none;}",
         "#social-stream-root.is-open.is-pinned .panel,#social-stream-root.is-open.is-pinned .edge{pointer-events:auto;}",
-        "#social-stream-root .panel{position:absolute;top:0;right:0;height:100%;width:min(var(--social-width,420px),100vw);background:#fff;color:#111827;box-shadow:-12px 0 40px rgba(17,24,39,.18);transform:translateX(100%);transition:transform .22s ease;display:flex;flex-direction:column;overflow:hidden;pointer-events:auto;}",
+        "#social-stream-root .panel{position:absolute;top:0;right:0;height:100%;width:min(var(--social-width,420px),100vw);background:var(--ang-social,#fff);color:#111827;box-shadow:-12px 0 40px rgba(17,24,39,.18);transform:translateX(100%);transition:transform .22s ease;display:flex;flex-direction:column;overflow:hidden;pointer-events:auto;}",
         "#social-stream-root .width-grip{position:absolute;top:0;bottom:0;left:0;width:12px;z-index:3;cursor:col-resize;touch-action:none;user-select:none;}",
         "#social-stream-root .width-grip::before{content:'';position:absolute;top:50%;left:3px;width:4px;height:48px;margin-top:-24px;border-radius:999px;background:#9ca3af;}",
         "#social-stream-root .width-grip:hover::before,#social-stream-root .width-grip.is-dragging::before{background:#111827;}",
@@ -749,7 +766,7 @@ export default function(component) {
         "#social-stream-root .coverage{margin-top:4px;font-size:.8rem;font-weight:600;}",
         "#social-stream-root .summary{margin:4px 0 0;color:#374151;font-size:.82rem;line-height:1.4;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}",
         "#social-stream-root .empty{color:#6b7280;padding:18px 0;font-size:.9rem;line-height:1.4;}",
-        "#social-stream-root.is-dark .panel{background:#1c1f27;color:#fafafa;box-shadow:-12px 0 40px rgba(0,0,0,.45);}",
+        "#social-stream-root.is-dark .panel{background:var(--ang-social,#1c1f27);color:#fafafa;box-shadow:-12px 0 40px rgba(0,0,0,.45);}",
         "#social-stream-root.is-dark .width-grip::before{background:#6b7280;}",
         "#social-stream-root.is-dark .width-grip:hover::before,#social-stream-root.is-dark .width-grip.is-dragging::before{background:#e5e7eb;}",
         "#social-stream-root.is-dark .kicker,#social-stream-root.is-dark .count,#social-stream-root.is-dark .chars,#social-stream-root.is-dark .when,#social-stream-root.is-dark .empty,#social-stream-root.is-dark .picks label,#social-stream-root.is-dark .context-label,#social-stream-root.is-dark .replying{color:#9ca3af;}",
@@ -2932,6 +2949,18 @@ _ACCOUNT_STATE_KEYS = (
     "_seen_show_extra_metrics",
     "_seen_show_period_changes",
     "_seen_days_history",
+    "colour_page_day",
+    "colour_page_night",
+    "colour_heading_day",
+    "colour_heading_night",
+    "colour_section_day",
+    "colour_section_night",
+    "colour_hover_day",
+    "colour_hover_night",
+    "colour_sidebar_day",
+    "colour_sidebar_night",
+    "colour_social_day",
+    "colour_social_night",
 )
 _WEIGHT_NAMES = (
     "rsi", "stochastic", "sma", "adx", "macd", "ichimoku", "bb", "volume", "obv", "performance",
@@ -3656,7 +3685,70 @@ prefs = st.session_state.cloud_prefs
 alert_prefs = prefs.get("alerts", {})
 profile = st.session_state.profile
 
-_brand_watch(key="brand_watch")
+_THEME_COLOURS = (
+    ("page_day", "#d6e8f8"),
+    ("page_night", "#0e1117"),
+    ("heading_day", "#ffffff"),
+    ("heading_night", "#262730"),
+    ("section_day", "#ffffff"),
+    ("section_night", "#262730"),
+    ("hover_day", "#f3f4f6"),
+    ("hover_night", "#31333f"),
+    ("sidebar_day", "#ffffff"),
+    ("sidebar_night", "#16181f"),
+    ("social_day", "#ffffff"),
+    ("social_night", "#1c1f27"),
+)
+
+
+def _hex_colour(value, fallback: str) -> str:
+    """A #rrggbb colour, or the fallback when the saved text is not one."""
+    text = str(value or "").strip()
+    if len(text) == 7 and text.startswith("#") and all(ch in "0123456789abcdefABCDEF" for ch in text[1:]):
+        return text.lower()
+    return fallback
+
+
+def _saved_colours() -> dict:
+    stored = (st.session_state.get("cloud_prefs") or {}).get("settings")
+    saved = stored.get("colours") if isinstance(stored, dict) else None
+    if not isinstance(saved, dict):
+        saved = {}
+    return {key: _hex_colour(saved.get(key), default) for key, default in _THEME_COLOURS}
+
+
+def _active_colours() -> dict:
+    """Picker values when this session has them, otherwise the colours saved on the account."""
+    saved = _saved_colours()
+    chosen = {}
+    for key, _default in _THEME_COLOURS:
+        widget = st.session_state.get(f"colour_{key}")
+        chosen[key] = _hex_colour(widget, saved[key]) if widget else saved[key]
+    return chosen
+
+
+def _colour_payload(chosen: dict) -> dict:
+    return {
+        "pageDay": chosen["page_day"],
+        "pageNight": chosen["page_night"],
+        "headingDay": chosen["heading_day"],
+        "headingNight": chosen["heading_night"],
+        "sectionDay": chosen["section_day"],
+        "sectionNight": chosen["section_night"],
+        "hoverDay": chosen["hover_day"],
+        "hoverNight": chosen["hover_night"],
+        "sidebarDay": chosen["sidebar_day"],
+        "sidebarNight": chosen["sidebar_night"],
+        "socialDay": chosen["social_day"],
+        "socialNight": chosen["social_night"],
+    }
+
+
+if st.session_state.pop("_reset_colours", False):
+    for key, default in _THEME_COLOURS:
+        st.session_state[f"colour_{key}"] = default
+account_colours = _active_colours()
+_brand_watch(key="brand_watch", data=_colour_payload(account_colours))
 st.sidebar.markdown(
     "<div style='margin:0.4rem 0 0.75rem;'>"
     "<div style='display:flex;align-items:center;gap:0.85rem;'>"
@@ -4725,6 +4817,32 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
         key="show_period_changes",
     )
 
+    st.markdown("**Colours**")
+    st.caption("Saved on this account. Left is day, right is night.")
+    for label, day_key, night_key in (
+        ("Page", "page_day", "page_night"),
+        ("Section heading", "heading_day", "heading_night"),
+        ("Section background", "section_day", "section_night"),
+        ("Heading hover", "hover_day", "hover_night"),
+        ("Sidebar", "sidebar_day", "sidebar_night"),
+        ("Social and chat", "social_day", "social_night"),
+    ):
+        st.caption(label)
+        day_col, night_col = st.columns(2)
+        for column, part in ((day_col, day_key), (night_col, night_key)):
+            state_key = f"colour_{part}"
+            if state_key not in st.session_state:
+                st.session_state[state_key] = account_colours[part]
+            column.color_picker(label, key=state_key, label_visibility="collapsed")
+    if st.button("Reset colours", key="reset_colours"):
+        st.session_state._reset_colours = True
+        save_account_settings({"colours": {key: default for key, default in _THEME_COLOURS}})
+        st.rerun()
+    chosen_colours = {
+        key: _hex_colour(st.session_state.get(f"colour_{key}"), default)
+        for key, default in _THEME_COLOURS
+    }
+
     save_account_settings({
         "days_history": int(days_history),
         "show_reasons": bool(show_reasons),
@@ -4732,6 +4850,7 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
         "show_period_changes": bool(show_period_changes),
         "trade_crypto": bool(trade_crypto),
         "trade_equities": bool(trade_equities),
+        "colours": chosen_colours,
     })
     st.session_state._seen_trade_markets = st.session_state.get("trade_markets")
     st.session_state._seen_show_reasons = bool(show_reasons)
