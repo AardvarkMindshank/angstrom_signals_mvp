@@ -7843,20 +7843,9 @@ def show_signal_matrix(kind: str, asset_id: str, label: str, indicated, weights:
             f"The last {len(dates)} daily closes, then each signal on those same dates. "
             f"Lead is how closely that signal lined up with the price change over the next {int(horizon)} "
             + ("day" if int(horizon) == 1 else "days")
-            + ". Positive means a high score came before a rise. A blank day has no saved reading."
+            + ". Positive means a high score came before a rise. A blank day has no saved reading. "
+            + "The 30-day record in the table below counts every signal the same way, using your bullish and bearish boundaries."
         )
-        ta_row = next((row for row in matrix["rows"] if row.get("name") == "TA score"), None)
-        try:
-            bull_line = float(alert_prefs.get("min_score_alert", 70))
-        except (TypeError, ValueError):
-            bull_line = 70.0
-        try:
-            bear_line = float(alert_prefs.get("max_score_alert", 30))
-        except (TypeError, ValueError):
-            bear_line = 30.0
-        if ta_row:
-            for line in boundary_lines(ta_row.get("values"), matrix["closes"], bull_line, bear_line):
-                st.markdown(line)
         rows = matrix["rows"]
         mix = matrix.get("mix")
         plot_rows = list(rows)
@@ -7965,18 +7954,32 @@ def show_signal_matrix(kind: str, asset_id: str, label: str, indicated, weights:
             reverse=True,
         )
         rank_of = {row["name"]: index + 1 for index, row in enumerate(ranked)}
+        try:
+            bull_line = float(alert_prefs.get("min_score_alert", 70))
+        except (TypeError, ValueError):
+            bull_line = 70.0
+        try:
+            bear_line = float(alert_prefs.get("max_score_alert", 30))
+        except (TypeError, ValueError):
+            bear_line = 30.0
         summary = []
         for row in rows:
+            record = "<br>".join(
+                html.escape(line)
+                for line in boundary_lines(row.get("values"), matrix["closes"], bull_line, bear_line)
+            )
             summary.append(
-                f"<tr><td style='padding:4px 8px;'>{html.escape(row['name'])}</td>"
-                f"<td style='padding:4px 8px;text-align:right;'>{rank_of.get(row['name'], '—')}</td>"
-                f"<td style='padding:4px 8px;text-align:right;'>{_lead_label(row.get('lead'))}</td></tr>"
+                f"<tr><td style='padding:4px 8px;vertical-align:top;'>{html.escape(row['name'])}</td>"
+                f"<td style='padding:4px 8px;text-align:right;vertical-align:top;'>{rank_of.get(row['name'], '—')}</td>"
+                f"<td style='padding:4px 8px;text-align:right;vertical-align:top;'>{_lead_label(row.get('lead'))}</td>"
+                f"<td style='padding:4px 8px;vertical-align:top;max-width:36rem;'>{record}</td></tr>"
             )
         st.markdown(
             "<table style='border-collapse:collapse;font-size:0.9rem;margin-top:8px;'>"
             "<thead><tr><th style='padding:4px 8px;text-align:left;'>Signal</th>"
             "<th style='padding:4px 8px;text-align:right;'>Rank</th>"
-            "<th style='padding:4px 8px;text-align:right;'>Lead</th></tr></thead>"
+            "<th style='padding:4px 8px;text-align:right;'>Lead</th>"
+            "<th style='padding:4px 8px;text-align:left;'>30-day record</th></tr></thead>"
             f"<tbody>{''.join(summary)}</tbody></table>",
             unsafe_allow_html=True,
         )
