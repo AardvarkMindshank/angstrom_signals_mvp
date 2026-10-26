@@ -101,18 +101,20 @@ export default function(component) {
   paintColour("--ang-side-night", chosen.sidebarNight);
   paintColour("--ang-social-day", chosen.socialDay);
   paintColour("--ang-social-night", chosen.socialNight);
+  paintColour("--ang-border-day", chosen.borderDay);
+  paintColour("--ang-border-night", chosen.borderNight);
   let style = document.getElementById("angstrom-brand-style");
-  if (style && style.dataset.layout !== "moodhead") {
+  if (style && style.dataset.layout !== "ruled") {
     style.remove();
     style = null;
   }
   if (!style) {
     style = document.createElement("style");
     style.id = "angstrom-brand-style";
-    style.dataset.layout = "moodhead";
+    style.dataset.layout = "ruled";
     style.textContent = [
-      "html{--ang-surface:#ffffff;--ang-border:#e5e7eb;--ang-text:#111827;--ang-muted:#6b7280;--ang-soft:#374151;--ang-track:#e5e7eb;--ang-line:#f3f4f6;--ang-select:#e5e7eb;--ang-select-text:#111827;--ang-page:var(--ang-page-day,#d6e8f8);--ang-heading:var(--ang-heading-day,#ffffff);--ang-section:var(--ang-section-day,#ffffff);--ang-hover:var(--ang-hover-day,#f3f4f6);--ang-side:var(--ang-side-day,#ffffff);--ang-social:var(--ang-social-day,#ffffff);}",
-      "html.angstrom-night{--ang-surface:#262730;--ang-border:#3f4654;--ang-text:#f3f4f6;--ang-muted:#9ca3af;--ang-soft:#d1d5db;--ang-track:#3f4654;--ang-line:#31333f;--ang-select:#3a4050;--ang-select-text:#f9fafb;--ang-page:var(--ang-page-night,#0e1117);--ang-heading:var(--ang-heading-night,#262730);--ang-section:var(--ang-section-night,#262730);--ang-hover:var(--ang-hover-night,#31333f);--ang-side:var(--ang-side-night,#16181f);--ang-social:var(--ang-social-night,#1c1f27);}",
+      "html{--ang-surface:#ffffff;--ang-border:var(--ang-border-day,#e5e7eb);--ang-text:#111827;--ang-muted:#6b7280;--ang-soft:#374151;--ang-track:#e5e7eb;--ang-line:var(--ang-border);--ang-select:#e5e7eb;--ang-select-text:#111827;--ang-page:var(--ang-page-day,#d6e8f8);--ang-heading:var(--ang-heading-day,#ffffff);--ang-section:var(--ang-section-day,#ffffff);--ang-hover:var(--ang-hover-day,#f3f4f6);--ang-side:var(--ang-side-day,#ffffff);--ang-social:var(--ang-social-day,#ffffff);}",
+      "html.angstrom-night{--ang-surface:#262730;--ang-border:var(--ang-border-night,#000000);--ang-text:#f3f4f6;--ang-muted:#9ca3af;--ang-soft:#d1d5db;--ang-track:#3f4654;--ang-line:var(--ang-border);--ang-select:#3a4050;--ang-select-text:#f9fafb;--ang-page:var(--ang-page-night,#0e1117);--ang-heading:var(--ang-heading-night,#262730);--ang-section:var(--ang-section-night,#262730);--ang-hover:var(--ang-hover-night,#31333f);--ang-side:var(--ang-side-night,#16181f);--ang-social:var(--ang-social-night,#1c1f27);}",
       ".ang-card{background:var(--ang-surface);color:var(--ang-text);border:1px solid var(--ang-border);border-radius:10px;padding:12px 16px;}",
       ".ang-kicker{font-size:.8rem;color:var(--ang-muted);margin-bottom:4px;}",
       ".ang-copy{color:var(--ang-text);font-size:.95rem;line-height:1.4;}",
@@ -123,8 +125,8 @@ export default function(component) {
       ".ang-table tbody tr{border-bottom:1px solid var(--ang-line);}",
       ".ang-table tr.ang-row-on{background:var(--ang-select);color:var(--ang-select-text);}",
       "[data-testid='stAppViewContainer'],[data-testid='stHeader'],[data-testid='stBottom']{background:var(--ang-page) !important;}",
-      "html:not(.angstrom-night) [data-testid='stSidebar']{background:var(--ang-side) !important;border-right:1px solid #e5e7eb;}",
-      "html:not(.angstrom-night) [data-testid='stMain'] [data-testid='stVerticalBlockBorderWrapper']{background:#ffffff !important;border-color:#e5e7eb !important;}",
+      "html:not(.angstrom-night) [data-testid='stSidebar']{background:var(--ang-side) !important;border-right:1px solid var(--ang-border);}",
+      "html:not(.angstrom-night) [data-testid='stMain'] [data-testid='stVerticalBlockBorderWrapper']{background:#ffffff !important;border-color:var(--ang-border) !important;}",
       "[data-testid='stForm']{background:var(--ang-page) !important;border-color:transparent !important;}",
       "[data-testid='stExpander'] details{background:var(--ang-section) !important;border-color:var(--ang-border) !important;}",
       "[data-testid='stExpander'] details > summary{background:var(--ang-heading) !important;}",
@@ -204,14 +206,14 @@ export default function(component) {
     document.head.appendChild(sideStyle);
   }
   let layoutStyle = document.getElementById("angstrom-layout-controls");
-  if (layoutStyle && layoutStyle.dataset.layout !== "list") {
+  if (layoutStyle && layoutStyle.dataset.layout !== "ruled") {
     layoutStyle.remove();
     layoutStyle = null;
   }
   if (!layoutStyle) {
     layoutStyle = document.createElement("style");
     layoutStyle.id = "angstrom-layout-controls";
-    layoutStyle.dataset.layout = "list";
+    layoutStyle.dataset.layout = "ruled";
     const singleMark = "url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Crect x=%272.4%27 y=%272.4%27 width=%2719.2%27 height=%2719.2%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3C/svg%3E')";
     const wideMark = "url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Crect x=%272.4%27 y=%272.4%27 width=%2719.2%27 height=%2719.2%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3Cpath d=%27M2.4 9.1H21.6M12 9.1V21.6%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3C/svg%3E')";
     layoutStyle.textContent = [
@@ -237,7 +239,8 @@ export default function(component) {
       "html.angstrom-night #angstrom-wide-split .grip{background:#6b7280;}",
       "html.angstrom-night #angstrom-wide-split:hover .grip,html.angstrom-night #angstrom-wide-split.is-dragging .grip{background:#e5e7eb;}",
       "#interactive-chart,#market-mood-crypto,#market-mood-stock,#market-sentiment,#score-breakdown{height:0;margin:0;padding:0;scroll-margin-top:4.5rem;}",
-      ".st-key-admin_feedback_table,.st-key-admin_reports_table,.st-key-admin_blacklist_table{max-height:32rem !important;overflow:auto !important;}",
+      ".st-key-admin_feedback_table,.st-key-admin_reports_table,.st-key-admin_blacklist_table{max-height:32rem !important;overflow:auto !important;border:1px solid var(--ang-border);}",
+      ".st-key-admin_feedback_table [data-testid='stHorizontalBlock'],.st-key-admin_reports_table [data-testid='stHorizontalBlock'],.st-key-admin_blacklist_table [data-testid='stHorizontalBlock']{border-bottom:1px solid var(--ang-border);}",
       ".st-key-admin_feedback_table [data-testid='stVerticalBlock'],.st-key-admin_reports_table [data-testid='stVerticalBlock'],.st-key-admin_blacklist_table [data-testid='stVerticalBlock']{gap:0 !important;}",
       ".st-key-admin_feedback_table [data-testid='stHorizontalBlock'],.st-key-admin_reports_table [data-testid='stHorizontalBlock'],.st-key-admin_blacklist_table [data-testid='stHorizontalBlock'],.st-key-admin_feedback_table [data-testid='stElementContainer'],.st-key-admin_reports_table [data-testid='stElementContainer'],.st-key-admin_blacklist_table [data-testid='stElementContainer'],.st-key-admin_feedback_table [data-testid='stMarkdown'],.st-key-admin_reports_table [data-testid='stMarkdown'],.st-key-admin_blacklist_table [data-testid='stMarkdown']{margin-top:0 !important;margin-bottom:0 !important;padding-top:0 !important;padding-bottom:0 !important;}",
       ".st-key-admin_feedback_table [data-testid='stMarkdownContainer'] p,.st-key-admin_reports_table [data-testid='stMarkdownContainer'] p,.st-key-admin_blacklist_table [data-testid='stMarkdownContainer'] p,.st-key-admin_feedback_table [data-testid='stText'] p,.st-key-admin_reports_table [data-testid='stText'] p,.st-key-admin_blacklist_table [data-testid='stText'] p{margin:0 !important;padding:0 !important;line-height:1.25 !important;}",
@@ -3518,6 +3521,8 @@ _ACCOUNT_STATE_KEYS = (
     "colour_sidebar_night",
     "colour_social_day",
     "colour_social_night",
+    "colour_border_day",
+    "colour_border_night",
     "score_visit_baseline",
     "score_visit_seen",
     "score_visit_saved",
@@ -4290,6 +4295,8 @@ _THEME_COLOURS = (
     ("sidebar_night", "#16181f"),
     ("social_day", "#ffffff"),
     ("social_night", "#1c1f27"),
+    ("border_day", "#e5e7eb"),
+    ("border_night", "#000000"),
 )
 
 
@@ -4349,6 +4356,8 @@ def _colour_payload(chosen: dict) -> dict:
         "sidebarNight": chosen["sidebar_night"],
         "socialDay": chosen["social_day"],
         "socialNight": chosen["social_night"],
+        "borderDay": chosen["border_day"],
+        "borderNight": chosen["border_night"],
     }
 
 
@@ -5457,6 +5466,7 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
             ("Heading hover", "hover_day", "hover_night"),
             ("Sidebar", "sidebar_day", "sidebar_night"),
             ("Social and chat", "social_day", "social_night"),
+            ("Borders", "border_day", "border_night"),
         ):
             st.caption(label)
             day_col, night_col = st.columns(2)
