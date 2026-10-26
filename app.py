@@ -199,14 +199,14 @@ export default function(component) {
     document.head.appendChild(sideStyle);
   }
   let layoutStyle = document.getElementById("angstrom-layout-controls");
-  if (layoutStyle && layoutStyle.dataset.layout !== "show") {
+  if (layoutStyle && layoutStyle.dataset.layout !== "swatch") {
     layoutStyle.remove();
     layoutStyle = null;
   }
   if (!layoutStyle) {
     layoutStyle = document.createElement("style");
     layoutStyle.id = "angstrom-layout-controls";
-    layoutStyle.dataset.layout = "show";
+    layoutStyle.dataset.layout = "swatch";
     const singleMark = "url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Crect x=%272.4%27 y=%272.4%27 width=%2719.2%27 height=%2719.2%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3C/svg%3E')";
     const wideMark = "url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Crect x=%272.4%27 y=%272.4%27 width=%2719.2%27 height=%2719.2%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3Cpath d=%27M2.4 9.1H21.6M12 9.1V21.6%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3C/svg%3E')";
     layoutStyle.textContent = [
@@ -223,7 +223,9 @@ export default function(component) {
       "html.angstrom-night .st-key-layout_single button[data-testid='stBaseButton-primary'],html.angstrom-night .st-key-layout_wide button[data-testid='stBaseButton-primary']{background:#f3f4f6 !important;color:#111827 !important;border-color:#f3f4f6 !important;}",
       ".st-key-open_all_sections button,.st-key-collapse_all_sections button{width:auto !important;min-width:0 !important;max-width:max-content !important;height:2.05rem !important;min-height:2.05rem !important;padding:0 .7rem !important;white-space:nowrap;font-size:.85rem !important;}",
       "[data-testid='stElementContainer']:not(:has([data-testid='stElementContainer'])):is(:has(#interactive-chart),:has(#market-mood-crypto),:has(#market-mood-stock),:has(#market-sentiment)),[class*='st-key-scroll_to_chart'],[class*='st-key-wide_column_split']{position:absolute !important;width:0 !important;height:0 !important;min-height:0 !important;margin:0 !important;padding:0 !important;overflow:visible !important;}",
-      "[class*='st-key-favourite_watch'],[class*='st-key-alert_asset_pick'],[class*='st-key-section_toggle_watch'],[data-testid='stLayoutWrapper']:has(> [data-testid='stVerticalBlock'] > [class*='st-key-favourite_watch']),[data-testid='stLayoutWrapper']:has(> [data-testid='stVerticalBlock'] > [class*='st-key-section_toggle_watch']){position:absolute !important;width:0 !important;height:0 !important;min-height:0 !important;margin:0 !important;padding:0 !important;overflow:hidden !important;border:0 !important;}",
+      "[class*='st-key-favourite_watch'],[class*='st-key-alert_asset_pick'],[class*='st-key-section_toggle_watch'],[class*='st-key-colour_copy'],[data-testid='stLayoutWrapper']:has(> [data-testid='stVerticalBlock'] > [class*='st-key-favourite_watch']),[data-testid='stLayoutWrapper']:has(> [data-testid='stVerticalBlock'] > [class*='st-key-section_toggle_watch']),[data-testid='stLayoutWrapper']:has(> [data-testid='stVerticalBlock'] > [class*='st-key-colour_copy']){position:absolute !important;width:0 !important;height:0 !important;min-height:0 !important;margin:0 !important;padding:0 !important;overflow:hidden !important;border:0 !important;}",
+      "[class*='st-key-colour_'].ang-colour-drop{outline:2px solid #2563eb;outline-offset:2px;border-radius:8px;}",
+      "[class*='st-key-colour_'] button[draggable='true']{cursor:grab;}",
       "#angstrom-wide-split{position:absolute;z-index:30;width:12px;margin-left:-6px;top:0;cursor:col-resize;touch-action:none;}",
       "#angstrom-wide-split .grip{position:absolute;top:50%;left:4px;width:4px;height:48px;margin-top:-24px;border-radius:999px;background:#9ca3af;}",
       "#angstrom-wide-split:hover .grip,#angstrom-wide-split.is-dragging .grip{background:#111827;}",
@@ -365,6 +367,96 @@ export default function(component) {
 _brand_watch = st.components.v2.component(
     "brand_watch",
     js=_BRAND_JS,
+    isolate_styles=False,
+)
+
+# A drag from one colour block onto another copies that colour. The click still opens the picker.
+_COLOUR_COPY_JS = """
+export default function(component) {
+  const { setTriggerValue, parentElement } = component;
+  const shell = parentElement.closest(".stBidiComponent") || parentElement;
+  shell.style.display = "none";
+  window.__angstromColourCopy = setTriggerValue;
+  const pickerOf = (node) => node && node.closest ? node.closest("[class*='st-key-colour_']") : null;
+  const keyOf = (el) => {
+    const match = String(el.className || "").match(/st-key-(colour_[a-z0-9_]+)/);
+    return match ? match[1] : "";
+  };
+  const hexOf = (picker) => {
+    const block = picker.querySelector("button div") || picker.querySelector("button");
+    if (!block) return "";
+    const parts = getComputedStyle(block).backgroundColor.match(/\\d+/g);
+    if (!parts || parts.length < 3) return "";
+    const hex = parts.slice(0, 3).map((part) => Number(part).toString(16).padStart(2, "0")).join("");
+    return "#" + hex;
+  };
+  const arm = () => {
+    document.querySelectorAll("[class*='st-key-colour_']").forEach((picker) => {
+      if (keyOf(picker) === "colour_copy") return;
+      const handle = picker.querySelector("button");
+      if (!handle || handle.getAttribute("draggable") === "true") return;
+      handle.setAttribute("draggable", "true");
+      handle.title = "Drag onto another colour to copy it";
+    });
+  };
+  if (!window.__angstromColourDrag) {
+    window.__angstromColourDrag = true;
+    let dragged = false;
+    document.addEventListener("dragstart", (event) => {
+      const picker = pickerOf(event.target);
+      if (!picker) return;
+      const key = keyOf(picker);
+      const hex = hexOf(picker);
+      if (!key || key === "colour_copy" || !hex) return;
+      dragged = true;
+      event.dataTransfer.setData("text/plain", key + "|" + hex);
+      event.dataTransfer.effectAllowed = "copy";
+    });
+    document.addEventListener("dragover", (event) => {
+      const picker = pickerOf(event.target);
+      if (!picker || keyOf(picker) === "colour_copy") return;
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "copy";
+      picker.classList.add("ang-colour-drop");
+    });
+    document.addEventListener("dragleave", (event) => {
+      const picker = pickerOf(event.target);
+      if (!picker) return;
+      const next = event.relatedTarget;
+      if (next && picker.contains(next)) return;
+      picker.classList.remove("ang-colour-drop");
+    });
+    document.addEventListener("dragend", () => {
+      document.querySelectorAll(".ang-colour-drop").forEach((el) => el.classList.remove("ang-colour-drop"));
+    });
+    document.addEventListener("drop", (event) => {
+      const picker = pickerOf(event.target);
+      document.querySelectorAll(".ang-colour-drop").forEach((el) => el.classList.remove("ang-colour-drop"));
+      if (!picker) return;
+      event.preventDefault();
+      const raw = event.dataTransfer.getData("text/plain") || "";
+      const parts = raw.split("|");
+      const target = keyOf(picker);
+      const send = window.__angstromColourCopy;
+      if (!send || parts.length !== 2 || !target || target === parts[0]) return;
+      if (!/^#[0-9a-fA-F]{6}$/.test(parts[1])) return;
+      send("copied", target + "|" + parts[1].toLowerCase() + "|" + Date.now());
+    });
+    document.addEventListener("click", (event) => {
+      if (!dragged || !pickerOf(event.target)) return;
+      dragged = false;
+      event.preventDefault();
+      event.stopPropagation();
+    }, true);
+    new MutationObserver(arm).observe(document.body, { childList: true, subtree: true });
+  }
+  arm();
+  return () => {};
+}
+"""
+_colour_copy = st.components.v2.component(
+    "colour_copy",
+    js=_COLOUR_COPY_JS,
     isolate_styles=False,
 )
 
@@ -3728,6 +3820,22 @@ def _active_colours() -> dict:
     return chosen
 
 
+def _take_colour_copy() -> None:
+    """A drop names the block that should take the dragged colour. One drop applies once."""
+    reported = _colour_copy(key="colour_copy", on_copied_change=lambda: None)
+    raw = str(getattr(reported, "copied", "") or "")
+    parts = raw.split("|")
+    if len(parts) != 3 or st.session_state.get("_colour_copy_seen") == raw:
+        return
+    target, hex_value = parts[0], parts[1]
+    allowed = {f"colour_{key}" for key, _default in _THEME_COLOURS}
+    cleaned = _hex_colour(hex_value, "")
+    if target not in allowed or not cleaned:
+        return
+    st.session_state["_colour_copy_seen"] = raw
+    st.session_state[target] = cleaned
+
+
 def _colour_payload(chosen: dict) -> dict:
     return {
         "pageDay": chosen["page_day"],
@@ -3748,6 +3856,7 @@ def _colour_payload(chosen: dict) -> dict:
 if st.session_state.pop("_reset_colours", False):
     for key, default in _THEME_COLOURS:
         st.session_state[f"colour_{key}"] = default
+_take_colour_copy()
 account_colours = _active_colours()
 _brand_watch(key="brand_watch", data=_colour_payload(account_colours))
 st.sidebar.markdown(
@@ -4819,7 +4928,7 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
     )
 
     with tracked_expander("Colours", "colours"):
-        st.caption("Saved on this account. Left is day, right is night.")
+        st.caption("Saved on this account. Left is day, right is night. Drag a colour onto another to copy it.")
         for label, day_key, night_key in (
             ("Page", "page_day", "page_night"),
             ("Section heading", "heading_day", "heading_night"),
