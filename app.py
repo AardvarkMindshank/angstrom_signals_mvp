@@ -1107,7 +1107,7 @@ export default function(component) {
       document.head.appendChild(style);
     }
     let root = document.getElementById("social-stream-root");
-    if (root && root.dataset.layout !== "report") {
+    if (root && root.dataset.layout !== "group") {
       root.remove();
       root = null;
     }
@@ -1117,7 +1117,7 @@ export default function(component) {
       const streamSignal = window.socialStreamAbort.signal;
       root = document.createElement("div");
       root.id = "social-stream-root";
-      root.dataset.layout = "report";
+      root.dataset.layout = "group";
       root.innerHTML = [
         "<div class='scrim'></div>",
         "<aside class='panel' role='dialog' aria-label='Social signals and chat'>",
@@ -1247,6 +1247,7 @@ export default function(component) {
           return;
         }
         window.socialStreamState.groupFor = null;
+        if (window.renderSocialStream) window.renderSocialStream();
         window.socialStreamReport("group", JSON.stringify({
           n: Date.now(),
           user: invite.id,
@@ -1254,13 +1255,15 @@ export default function(component) {
           group: name ? 0 : Number(group)
         }));
       };
-      root.querySelector(".group-send").addEventListener("click", sendGroupInvite);
-      root.querySelector(".group-cancel").addEventListener("click", () => {
+      const groupBox = root.querySelector(".group-box");
+      const closeGroupBox = () => {
         window.socialStreamState.groupFor = null;
-        const hint = root.querySelector(".group-hint");
+        const hint = groupBox.querySelector(".group-hint");
         if (hint) hint.textContent = "";
         window.renderSocialStream();
-      });
+      };
+      groupBox.querySelector(".group-send").addEventListener("click", sendGroupInvite);
+      groupBox.querySelector(".group-cancel").addEventListener("click", closeGroupBox);
       root.querySelector(".group-name").addEventListener("keydown", (event) => {
         if (event.key === "Enter") {
           event.preventDefault();
@@ -2304,7 +2307,7 @@ export default function(component) {
 }
 """
 _social_stream = st.components.v2.component(
-    "social_about",
+    "social_group",
     js=_SOCIAL_STREAM_JS,
     isolate_styles=False,
 )
