@@ -2620,6 +2620,7 @@ _SECTION_IDS = _MAIN_SECTION_IDS + (
     "edit_stocks",
     "weights",
     "settings_panel",
+    "colours",
     "feedback",
     "about",
 )
@@ -4817,27 +4818,27 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
         key="show_period_changes",
     )
 
-    st.markdown("**Colours**")
-    st.caption("Saved on this account. Left is day, right is night.")
-    for label, day_key, night_key in (
-        ("Page", "page_day", "page_night"),
-        ("Section heading", "heading_day", "heading_night"),
-        ("Section background", "section_day", "section_night"),
-        ("Heading hover", "hover_day", "hover_night"),
-        ("Sidebar", "sidebar_day", "sidebar_night"),
-        ("Social and chat", "social_day", "social_night"),
-    ):
-        st.caption(label)
-        day_col, night_col = st.columns(2)
-        for column, part in ((day_col, day_key), (night_col, night_key)):
-            state_key = f"colour_{part}"
-            if state_key not in st.session_state:
-                st.session_state[state_key] = account_colours[part]
-            column.color_picker(label, key=state_key, label_visibility="collapsed")
-    if st.button("Reset colours", key="reset_colours"):
-        st.session_state._reset_colours = True
-        save_account_settings({"colours": {key: default for key, default in _THEME_COLOURS}})
-        st.rerun()
+    with tracked_expander("Colours", "colours"):
+        st.caption("Saved on this account. Left is day, right is night.")
+        for label, day_key, night_key in (
+            ("Page", "page_day", "page_night"),
+            ("Section heading", "heading_day", "heading_night"),
+            ("Section background", "section_day", "section_night"),
+            ("Heading hover", "hover_day", "hover_night"),
+            ("Sidebar", "sidebar_day", "sidebar_night"),
+            ("Social and chat", "social_day", "social_night"),
+        ):
+            st.caption(label)
+            day_col, night_col = st.columns(2)
+            for column, part in ((day_col, day_key), (night_col, night_key)):
+                state_key = f"colour_{part}"
+                if state_key not in st.session_state:
+                    st.session_state[state_key] = account_colours[part]
+                column.color_picker(label, key=state_key, label_visibility="collapsed")
+        if st.button("Reset colours", key="reset_colours"):
+            st.session_state._reset_colours = True
+            save_account_settings({"colours": {key: default for key, default in _THEME_COLOURS}})
+            st.rerun()
     chosen_colours = {
         key: _hex_colour(st.session_state.get(f"colour_{key}"), default)
         for key, default in _THEME_COLOURS
