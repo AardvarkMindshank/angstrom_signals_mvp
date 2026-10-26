@@ -204,14 +204,14 @@ export default function(component) {
     document.head.appendChild(sideStyle);
   }
   let layoutStyle = document.getElementById("angstrom-layout-controls");
-  if (layoutStyle && layoutStyle.dataset.layout !== "bar") {
+  if (layoutStyle && layoutStyle.dataset.layout !== "tight") {
     layoutStyle.remove();
     layoutStyle = null;
   }
   if (!layoutStyle) {
     layoutStyle = document.createElement("style");
     layoutStyle.id = "angstrom-layout-controls";
-    layoutStyle.dataset.layout = "bar";
+    layoutStyle.dataset.layout = "tight";
     const singleMark = "url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Crect x=%272.4%27 y=%272.4%27 width=%2719.2%27 height=%2719.2%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3C/svg%3E')";
     const wideMark = "url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Crect x=%272.4%27 y=%272.4%27 width=%2719.2%27 height=%2719.2%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3Cpath d=%27M2.4 9.1H21.6M12 9.1V21.6%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3C/svg%3E')";
     layoutStyle.textContent = [
@@ -238,6 +238,10 @@ export default function(component) {
       "html.angstrom-night #angstrom-wide-split:hover .grip,html.angstrom-night #angstrom-wide-split.is-dragging .grip{background:#e5e7eb;}",
       "#interactive-chart,#market-mood-crypto,#market-mood-stock,#market-sentiment,#score-breakdown{height:0;margin:0;padding:0;scroll-margin-top:4.5rem;}",
       ".st-key-admin_feedback_table{max-height:32rem !important;overflow:auto !important;}",
+      ".st-key-admin_feedback_table,[class*='st-key-admin_feedback_table'] [data-testid='stVerticalBlock']{gap:0.1rem !important;}",
+      ".st-key-admin_feedback_table [data-testid='stElementContainer']{margin:0 !important;padding-top:0 !important;padding-bottom:0 !important;}",
+      ".st-key-admin_feedback_table [data-testid='stMarkdownContainer'] p,.st-key-admin_feedback_table [data-testid='stText'] p{margin:0 !important;line-height:1.25 !important;}",
+      ".st-key-admin_feedback_table [data-baseweb='select'] > div{min-height:1.7rem !important;}",
       ".st-key-admin_feedback_head{position:sticky;top:0;z-index:4;background:var(--ang-section);}",
       ".st-key-admin_feedback_table [class*='st-key-admin_feedback_sort_'] button{background:transparent !important;border:0 !important;box-shadow:none !important;padding:.15rem 0 !important;min-height:0 !important;height:auto !important;justify-content:flex-start !important;font-weight:700 !important;color:var(--ang-text) !important;}",
       ".st-key-admin_feedback_table [class*='st-key-admin_feedback_sort_'] button:hover{background:var(--ang-hover) !important;}",
@@ -5981,8 +5985,8 @@ def _show_feedback(rows) -> None:
     if sort_key not in {key for key, _title in columns}:
         sort_key = "date"
     widths = [1.1, 3.2, 1.5, 1.4, 2.1, 1.8]
-    with st.container(key="admin_feedback_table"):
-        with st.container(key="admin_feedback_head"):
+    with st.container(key="admin_feedback_table", gap="xxsmall"):
+        with st.container(key="admin_feedback_head", gap="xxsmall"):
             header = st.columns(widths, vertical_alignment="center")
             for column, (key, title) in zip(header, columns):
                 mark = ""
