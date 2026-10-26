@@ -5445,16 +5445,35 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
         except (TypeError, ValueError):
             saved_days = 200
         st.session_state.days_history = min(365, max(90, saved_days))
-    st.radio("Markets you trade", _TRADE_CHOICES, key="trade_markets")
-    days_history = st.slider("Days of history", 90, 365, key="days_history")
-    show_reasons = st.checkbox("Show score breakdown", key="show_reasons")
+    # Keep these for the whole session. A partial redraw otherwise drops them,
+    # and the next full run saves the blank defaults (90 days, toggles off, cryptos).
+    st.radio(
+        "Markets you trade",
+        _TRADE_CHOICES,
+        key="trade_markets",
+        persist_state="session",
+    )
+    days_history = st.slider(
+        "Days of history",
+        90,
+        365,
+        key="days_history",
+        persist_state="session",
+    )
+    show_reasons = st.checkbox(
+        "Show score breakdown",
+        key="show_reasons",
+        persist_state="session",
+    )
     show_extra_metrics = st.checkbox(
         "Show extra metrics (7d, market cap, ATR, volume)",
         key="show_extra_metrics",
+        persist_state="session",
     )
     show_period_changes = st.checkbox(
         "Show 1-day and 30-day changes",
         key="show_period_changes",
+        persist_state="session",
     )
 
     with tracked_expander("UI Colours", "colours"):
@@ -5474,7 +5493,12 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
                 state_key = f"colour_{part}"
                 if state_key not in st.session_state:
                     st.session_state[state_key] = account_colours[part]
-                column.color_picker(label, key=state_key, label_visibility="collapsed")
+                column.color_picker(
+                    label,
+                    key=state_key,
+                    label_visibility="collapsed",
+                    persist_state="session",
+                )
         if st.button("Reset colours", key="reset_colours"):
             st.session_state._reset_colours = True
             save_account_settings({"colours": {key: default for key, default in _THEME_COLOURS}})
