@@ -133,6 +133,63 @@ def _align(dates, points) -> list[float | None]:
     return [last.get(day) for day in dates]
 
 
+def boundary_lines(
+    scores,
+    closes,
+    bull: float = 70,
+    bear: float = 30,
+    horizons=LEAD_HORIZONS,
+) -> list[str]:
+    """Plain counts for the TA score over this window.
+
+    A case is a day whose score is on that side of the boundary and whose price
+    that many days later is already in the window. Higher means the later close
+    was above the close that day. Lower means it was below.
+    """
+    def level(value: float) -> str:
+        number = float(value)
+        if number.is_integer():
+            return str(int(number))
+        return f"{number:.1f}"
+
+    def sentence(prefix: str, counts: list[tuple[int, int, int]]) -> str:
+        parts = []
+        for horizon, hits, total in counts:
+            unit = "day" if int(horizon) == 1 else "days"
+            outcome = f"in {hits} of {total} cases" if total else "in none"
+            parts.append(f"{int(horizon)} {unit} later {outcome}")
+        if len(parts) == 1:
+            body = parts[0]
+        elif len(parts) == 2:
+            body = f"{parts[0]} and {parts[1]}"
+        else:
+            body = ", ".join(parts[:-1]) + ", and " + parts[-1]
+        return f"{prefix} {body}."
+
+    high = []
+    low = []
+    for horizon in horizons:
+        returns = _forward_returns(closes, horizon)
+        high_hits = high_total = low_hits = low_total = 0
+        for score, move in zip(scores or [], returns):
+            if score is None or move is None:
+                continue
+            if score >= bull:
+                high_total += 1
+                if move > 0:
+                    high_hits += 1
+            if score <= bear:
+                low_total += 1
+                if move < 0:
+                    low_hits += 1
+        high.append((int(horizon), high_hits, high_total))
+        low.append((int(horizon), low_hits, low_total))
+    return [
+        sentence(f"Above {level(bull)}, higher", high),
+        sentence(f"At or below {level(bear)}, lower", low),
+    ]
+
+
 def _forward_returns(closes, horizon: int) -> list[float | None]:
     step = max(1, int(horizon))
     returns = []

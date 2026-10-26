@@ -7797,7 +7797,7 @@ def _lead_label(value) -> str:
 
 def show_signal_matrix(kind: str, asset_id: str, label: str, indicated, weights: dict) -> None:
     """Price across 30 days, with each signal set on those same dates."""
-    from signal_matrix import LEAD_HORIZONS, MATRIX_DAYS, build_matrix, weekend_edges
+    from signal_matrix import LEAD_HORIZONS, MATRIX_DAYS, boundary_lines, build_matrix, weekend_edges
 
     shown = " ".join(str(label or "").split()) or "Selected asset"
     with section_expander(f"▦ Signal matrix - {shown}", "signal_matrix"):
@@ -7845,6 +7845,18 @@ def show_signal_matrix(kind: str, asset_id: str, label: str, indicated, weights:
             + ("day" if int(horizon) == 1 else "days")
             + ". Positive means a high score came before a rise. A blank day has no saved reading."
         )
+        ta_row = next((row for row in matrix["rows"] if row.get("name") == "TA score"), None)
+        try:
+            bull_line = float(alert_prefs.get("min_score_alert", 70))
+        except (TypeError, ValueError):
+            bull_line = 70.0
+        try:
+            bear_line = float(alert_prefs.get("max_score_alert", 30))
+        except (TypeError, ValueError):
+            bear_line = 30.0
+        if ta_row:
+            for line in boundary_lines(ta_row.get("values"), matrix["closes"], bull_line, bear_line):
+                st.markdown(line)
         rows = matrix["rows"]
         mix = matrix.get("mix")
         plot_rows = list(rows)
