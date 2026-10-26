@@ -204,14 +204,14 @@ export default function(component) {
     document.head.appendChild(sideStyle);
   }
   let layoutStyle = document.getElementById("angstrom-layout-controls");
-  if (layoutStyle && layoutStyle.dataset.layout !== "tight") {
+  if (layoutStyle && layoutStyle.dataset.layout !== "rows") {
     layoutStyle.remove();
     layoutStyle = null;
   }
   if (!layoutStyle) {
     layoutStyle = document.createElement("style");
     layoutStyle.id = "angstrom-layout-controls";
-    layoutStyle.dataset.layout = "tight";
+    layoutStyle.dataset.layout = "rows";
     const singleMark = "url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Crect x=%272.4%27 y=%272.4%27 width=%2719.2%27 height=%2719.2%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3C/svg%3E')";
     const wideMark = "url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Crect x=%272.4%27 y=%272.4%27 width=%2719.2%27 height=%2719.2%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3Cpath d=%27M2.4 9.1H21.6M12 9.1V21.6%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3C/svg%3E')";
     layoutStyle.textContent = [
@@ -237,14 +237,14 @@ export default function(component) {
       "html.angstrom-night #angstrom-wide-split .grip{background:#6b7280;}",
       "html.angstrom-night #angstrom-wide-split:hover .grip,html.angstrom-night #angstrom-wide-split.is-dragging .grip{background:#e5e7eb;}",
       "#interactive-chart,#market-mood-crypto,#market-mood-stock,#market-sentiment,#score-breakdown{height:0;margin:0;padding:0;scroll-margin-top:4.5rem;}",
-      ".st-key-admin_feedback_table{max-height:32rem !important;overflow:auto !important;}",
-      ".st-key-admin_feedback_table,[class*='st-key-admin_feedback_table'] [data-testid='stVerticalBlock']{gap:0.1rem !important;}",
-      ".st-key-admin_feedback_table [data-testid='stElementContainer']{margin:0 !important;padding-top:0 !important;padding-bottom:0 !important;}",
-      ".st-key-admin_feedback_table [data-testid='stMarkdownContainer'] p,.st-key-admin_feedback_table [data-testid='stText'] p{margin:0 !important;line-height:1.25 !important;}",
-      ".st-key-admin_feedback_table [data-baseweb='select'] > div{min-height:1.7rem !important;}",
-      ".st-key-admin_feedback_head{position:sticky;top:0;z-index:4;background:var(--ang-section);}",
-      ".st-key-admin_feedback_table [class*='st-key-admin_feedback_sort_'] button{background:transparent !important;border:0 !important;box-shadow:none !important;padding:.15rem 0 !important;min-height:0 !important;height:auto !important;justify-content:flex-start !important;font-weight:700 !important;color:var(--ang-text) !important;}",
-      ".st-key-admin_feedback_table [class*='st-key-admin_feedback_sort_'] button:hover{background:var(--ang-hover) !important;}",
+      ".st-key-admin_feedback_table,.st-key-admin_reports_table{max-height:32rem !important;overflow:auto !important;}",
+      ".st-key-admin_feedback_table,.st-key-admin_reports_table,[class*='st-key-admin_feedback_table'] [data-testid='stVerticalBlock'],[class*='st-key-admin_reports_table'] [data-testid='stVerticalBlock']{gap:0.1rem !important;}",
+      ".st-key-admin_feedback_table [data-testid='stElementContainer'],.st-key-admin_reports_table [data-testid='stElementContainer']{margin:0 !important;padding-top:0 !important;padding-bottom:0 !important;}",
+      ".st-key-admin_feedback_table [data-testid='stMarkdownContainer'] p,.st-key-admin_reports_table [data-testid='stMarkdownContainer'] p,.st-key-admin_feedback_table [data-testid='stText'] p,.st-key-admin_reports_table [data-testid='stText'] p{margin:0 !important;line-height:1.25 !important;}",
+      ".st-key-admin_feedback_table [data-baseweb='select'] > div,.st-key-admin_reports_table [data-baseweb='select'] > div{min-height:1.7rem !important;}",
+      ".st-key-admin_feedback_head,.st-key-admin_reports_head{position:sticky;top:0;z-index:4;background:var(--ang-section);}",
+      ".st-key-admin_feedback_table [class*='st-key-admin_feedback_sort_'] button,.st-key-admin_reports_table [class*='st-key-admin_reports_sort_'] button{background:transparent !important;border:0 !important;box-shadow:none !important;padding:.15rem 0 !important;min-height:0 !important;height:auto !important;justify-content:flex-start !important;font-weight:700 !important;color:var(--ang-text) !important;}",
+      ".st-key-admin_feedback_table [class*='st-key-admin_feedback_sort_'] button:hover,.st-key-admin_reports_table [class*='st-key-admin_reports_sort_'] button:hover{background:var(--ang-hover) !important;}",
       ".st-key-admin_blacklist_table{max-height:24rem !important;overflow:auto !important;}",
       ".st-key-admin_blacklist_table [class*='st-key-admin_blacklist_remove_'] button{width:1.7rem !important;min-width:1.7rem !important;height:1.7rem !important;min-height:1.7rem !important;padding:0 !important;border-radius:999px !important;line-height:1 !important;}"
     ].join("");
@@ -5840,25 +5840,6 @@ def _admin_when(value) -> str:
     return str(value or "").replace("T", " ")[:16]
 
 
-def _admin_trail(started, events, labels, start_label: str) -> str:
-    if isinstance(events, str):
-        try:
-            events = json.loads(events)
-        except json.JSONDecodeError:
-            events = []
-    parts = [f"{start_label} {_admin_when(started)}"]
-    for event in events or []:
-        if not isinstance(event, dict):
-            continue
-        label = labels.get(str(event.get("status") or ""), str(event.get("status") or ""))
-        line = f"{label} {_admin_when(event.get('at'))}"
-        note = " ".join(str(event.get("note") or "").split())
-        if note:
-            line += f" — {note}"
-        parts.append(line)
-    return " · ".join(parts)
-
-
 def _admin_rows(function: str):
     """Rows for an admin list. None when the database functions are not installed."""
     try:
@@ -5903,11 +5884,7 @@ def admin_panel() -> None:
             return
         open_reports = [
             row for row in reports
-            if str(row.get("status") or "") not in ("rejected", "upheld")
-        ]
-        done_reports = [
-            row for row in reports
-            if str(row.get("status") or "") in ("rejected", "upheld")
+            if isinstance(row, dict) and str(row.get("status") or "") not in ("rejected", "upheld")
         ]
         open_feedback = [
             row for row in feedback
@@ -5922,13 +5899,13 @@ def admin_panel() -> None:
             _show_feedback(feedback)
         with tracked_expander(f"Reported comments ({len(open_reports)} open)", "admin_reports"):
             st.caption(
-                "Reported goes to under review. Reject leaves the comment up and tells the reporter. "
-                "Uphold removes the comment, warns the author, and tells the reporter. "
-                "The author is not told about a rejected report."
+                "Click a column title to sort. The list scrolls inside this section once it is long. "
+                "Search filters the rows. Decided reports stay hidden until Show decided is on. "
+                "Choosing a status saves it. Uphold asks you to confirm before the comment is removed. "
+                "Reject leaves the comment up and tells the reporter. "
+                "Uphold removes the comment, warns the author, and tells the reporter."
             )
-            _show_reports(open_reports, actionable=True)
-            with tracked_expander(f"Decided reports ({len(done_reports)})", "admin_reports_closed"):
-                _show_reports(done_reports, actionable=False)
+            _show_reports(reports)
         _show_blacklist()
 
 
@@ -6185,62 +6162,180 @@ def _show_blacklist() -> None:
                         cells[2].caption("That email is no longer on the list." if code == "missing" else "That could not be removed.")
 
 
-def _show_reports(rows, actionable: bool) -> None:
-    if not rows:
-        st.caption("Nothing in this list.")
+def _report_where(row: dict) -> str:
+    place = "General chat" if row.get("place") == "chat" else "Social signals"
+    kind = "reply" if row.get("message_kind") == "reply" else "comment"
+    asset = " ".join(str(row.get("asset_key") or "").split())
+    text = f"{place} {kind}"
+    if asset:
+        text += f" · {asset}"
+    return text
+
+
+def _report_person(row: dict, name_key: str, email_key: str) -> str:
+    name = " ".join(str(row.get(name_key) or "").split())
+    if name:
+        return name
+    email = str(row.get(email_key) or "")
+    if "@" in email:
+        return email.split("@", 1)[0]
+    return email or "Member"
+
+
+def _report_sort_value(row: dict, key: str) -> str:
+    if key == "comment":
+        return str(row.get("comment_body") or "").casefold()
+    if key == "reason":
+        return _REPORT_REASONS.get(str(row.get("reason") or ""), str(row.get("reason") or "")).casefold()
+    if key == "author":
+        return _report_person(row, "author_name", "").casefold()
+    if key == "reporter":
+        return _report_person(row, "reporter_name", "reporter_email").casefold()
+    if key == "status":
+        status = str(row.get("status") or "")
+        return _REPORT_STATUS.get(status, status).casefold()
+    return str(row.get("created_at") or "")
+
+
+def _show_reports(rows) -> None:
+    clean = [row for row in rows if isinstance(row, dict)]
+    if not clean:
+        st.caption("No reports yet.")
         return
-    for row in rows:
-        if not isinstance(row, dict):
+    notice = st.session_state.pop("admin_report_notice", "")
+    if notice:
+        st.warning(notice)
+    tools = st.columns([4.2, 1.3], vertical_alignment="center")
+    query = " ".join(str(tools[0].text_input(
+        "Search reports",
+        key="admin_reports_search",
+        placeholder="Search reports",
+        label_visibility="collapsed",
+    ) or "").split()).casefold()
+    show_decided = tools[1].checkbox("Show decided", key="admin_reports_show_decided")
+    visible = []
+    for row in clean:
+        status = str(row.get("status") or "")
+        if not show_decided and status in ("rejected", "upheld"):
             continue
-        try:
-            item_id = int(row.get("id"))
-        except (TypeError, ValueError):
-            continue
-        status = _REPORT_STATUS.get(str(row.get("status") or ""), str(row.get("status") or ""))
-        where = "General chat" if row.get("place") == "chat" else "Social signals"
-        kind = "reply" if row.get("message_kind") == "reply" else "comment"
-        reason = _REPORT_REASONS.get(str(row.get("reason") or ""), str(row.get("reason") or ""))
-        comment = html.escape(" ".join(str(row.get("comment_body") or "").split()))
-        author = html.escape(str(row.get("author_name") or "Member"))
-        reporter = html.escape(str(row.get("reporter_name") or row.get("reporter_email") or ""))
-        try:
-            warnings = int(row.get("warnings") or 0)
-        except (TypeError, ValueError):
-            warnings = 0
-        warning_label = "1 warning" if warnings == 1 else f"{warnings} warnings"
-        note = " ".join(str(row.get("note") or "").split())
-        asset = " ".join(str(row.get("asset_key") or "").split())
-        detail = f"{html.escape(where)} {kind}"
-        if asset:
-            detail += f" · {html.escape(asset)}"
-        st.markdown(
-            "<div style='margin-top:12px;'>"
-            f"<strong>{html.escape(status)}</strong> · {detail}"
-            f"<div style='margin-top:4px;'>{comment}</div>"
-            f"<div style='margin-top:4px;color:#6b7280;font-size:0.85rem;'>"
-            f"Author {author} · {html.escape(warning_label)} · Reporter {reporter}"
-            f"<br>Reason: {html.escape(reason)}"
-            + (f"<br>Note: {html.escape(note)}" if note else "")
-            + "</div></div>",
-            unsafe_allow_html=True,
+        if query:
+            haystack = " ".join((
+                str(row.get("comment_body") or ""),
+                _report_where(row),
+                _REPORT_REASONS.get(str(row.get("reason") or ""), str(row.get("reason") or "")),
+                str(row.get("note") or ""),
+                _admin_when(row.get("created_at")),
+                _report_person(row, "author_name", ""),
+                _report_person(row, "reporter_name", "reporter_email"),
+                str(row.get("reporter_email") or ""),
+                _REPORT_STATUS.get(status, status),
+            )).casefold()
+            if query not in haystack:
+                continue
+        visible.append(row)
+    if not visible:
+        st.caption("No reports match that search." if query else "No open reports.")
+        return
+    sort_key = st.session_state.get("admin_reports_sort", "date")
+    sort_desc = bool(st.session_state.get("admin_reports_sort_desc", True))
+    columns = (
+        ("comment", "Comment"),
+        ("reason", "Reason"),
+        ("date", "Reported"),
+        ("author", "Author"),
+        ("reporter", "Reporter"),
+        ("status", "Status"),
+    )
+    if sort_key not in {key for key, _title in columns}:
+        sort_key = "date"
+    widths = [2.4, 1.6, 1.35, 1.25, 1.45, 1.55]
+    with st.container(key="admin_reports_table", gap="xxsmall"):
+        with st.container(key="admin_reports_head", gap="xxsmall"):
+            header = st.columns(widths, vertical_alignment="center")
+            for column, (key, title) in zip(header, columns):
+                mark = ""
+                if key == sort_key:
+                    mark = " ↓" if sort_desc else " ↑"
+                if column.button(
+                    title + mark,
+                    key=f"admin_reports_sort_{key}",
+                    help=f"Sort by {title}",
+                    type="tertiary",
+                    width="stretch",
+                ):
+                    if sort_key == key:
+                        sort_desc = not sort_desc
+                    else:
+                        sort_key = key
+                        sort_desc = False
+                    st.session_state["admin_reports_sort"] = sort_key
+                    st.session_state["admin_reports_sort_desc"] = sort_desc
+        ordered = sorted(
+            visible,
+            key=lambda row: (_report_sort_value(row, sort_key), str(row.get("id") or "")),
+            reverse=sort_desc,
         )
-        st.caption(_admin_trail(row.get("created_at"), row.get("events"), _REPORT_STATUS, "Reported"))
-        if not actionable:
-            continue
-        chosen = _REPORT_NEXT.get(str(row.get("status") or "")) or []
-        if not chosen:
-            continue
-        columns = st.columns(len(chosen))
-        for column, (step, label) in zip(columns, chosen):
-            if column.button(label, key=f"admin_report_{item_id}_{step}"):
-                problem = _admin_review("review_comment_report", {
-                    "report_id": item_id,
-                    "next_status": step,
-                })
-                if problem:
-                    st.warning(problem)
-                else:
-                    _rerun_fragment()
+        for row in ordered:
+            try:
+                item_id = int(row.get("id"))
+            except (TypeError, ValueError):
+                continue
+            status = str(row.get("status") or "reported")
+            if status not in _REPORT_STATUS:
+                status = "reported"
+            options = [status]
+            for step, _label in _REPORT_NEXT.get(status) or []:
+                if step not in options:
+                    options.append(step)
+            comment = html.escape(" ".join(str(row.get("comment_body") or "").split()))
+            where = html.escape(_report_where(row))
+            comment = f"{comment or '—'}<br><span style='opacity:.72'>{where}</span>"
+            reason = html.escape(_REPORT_REASONS.get(str(row.get("reason") or ""), str(row.get("reason") or "")))
+            note = " ".join(str(row.get("note") or "").split())
+            if note:
+                reason += f"<br><span style='opacity:.72'>{html.escape(note)}</span>"
+            author = _report_person(row, "author_name", "")
+            try:
+                warnings = int(row.get("warnings") or 0)
+            except (TypeError, ValueError):
+                warnings = 0
+            if warnings:
+                author += " · 1 warning" if warnings == 1 else f" · {warnings} warnings"
+            cells = st.columns(widths, vertical_alignment="center")
+            cells[0].markdown(comment, unsafe_allow_html=True)
+            cells[1].markdown(reason or "—", unsafe_allow_html=True)
+            cells[2].write(_admin_when(row.get("created_at")))
+            cells[3].write(author)
+            cells[4].write(_report_person(row, "reporter_name", "reporter_email"))
+            choice_key = f"admin_report_status_{item_id}"
+            reset = st.session_state.pop(f"admin_report_reset_{item_id}", None)
+            if reset in options:
+                st.session_state[choice_key] = reset
+            elif st.session_state.get(choice_key) not in options:
+                st.session_state[choice_key] = status
+            picked = cells[5].selectbox(
+                "Status",
+                options,
+                format_func=lambda value: _REPORT_STATUS.get(value, value),
+                key=choice_key,
+                label_visibility="collapsed",
+                disabled=len(options) < 2,
+            )
+            if picked == status:
+                continue
+            if picked == "upheld" and not cells[5].button(
+                "Remove comment",
+                key=f"admin_report_uphold_{item_id}",
+            ):
+                continue
+            problem = _admin_review("review_comment_report", {
+                "report_id": item_id,
+                "next_status": picked,
+            })
+            if problem:
+                st.session_state[f"admin_report_reset_{item_id}"] = status
+                st.session_state["admin_report_notice"] = problem
+            _rerun_fragment()
 
 
 def _store_feedback(kind: str, body: str) -> str:
