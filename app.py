@@ -8020,18 +8020,18 @@ def show_signal_matrix(kind: str, asset_id: str, label: str, indicated, weights:
                         )
             record = "<br>".join(html.escape(line) for line in lines)
             summary.append(
-                f"<tr><td style='padding:4px 8px;vertical-align:top;'>{html.escape(row['name'])}</td>"
-                f"<td style='padding:4px 8px;text-align:right;vertical-align:top;'>{rank_of.get(row['name'], '—')}</td>"
-                f"<td style='padding:4px 8px;text-align:right;vertical-align:top;'>{_lead_label(row.get('lead'))}</td>"
-                f"<td style='padding:4px 8px;vertical-align:top;max-width:36rem;'>{record}</td></tr>"
+                f"<tr><td style='padding:4px 8px;vertical-align:top;white-space:nowrap;'>{html.escape(row['name'])}</td>"
+                f"<td style='padding:4px 8px;text-align:right;vertical-align:top;white-space:nowrap;'>{rank_of.get(row['name'], '—')}</td>"
+                f"<td style='padding:4px 8px;text-align:right;vertical-align:top;white-space:nowrap;'>{_lead_label(row.get('lead'))}</td>"
+                f"<td style='padding:4px 8px;vertical-align:top;width:100%;'>{record}</td></tr>"
             )
         st.markdown(
-            "<table style='border-collapse:collapse;font-size:0.9rem;margin-top:8px;'>"
-            "<thead><tr><th style='padding:4px 8px;text-align:left;'>Signal</th>"
-            "<th style='padding:4px 8px;text-align:right;'>Rank</th>"
-            "<th style='padding:4px 8px;text-align:right;'>Lead</th>"
-            "<th style='padding:4px 8px;text-align:left;'>30-day record</th></tr></thead>"
-            f"<tbody>{''.join(summary)}</tbody></table>",
+            "<div style='width:100%;'><table style='width:100%;border-collapse:collapse;font-size:0.9rem;margin-top:8px;'>"
+            "<thead><tr><th style='padding:4px 8px;text-align:left;white-space:nowrap;'>Signal</th>"
+            "<th style='padding:4px 8px;text-align:right;white-space:nowrap;'>Rank</th>"
+            "<th style='padding:4px 8px;text-align:right;white-space:nowrap;'>Lead</th>"
+            "<th style='padding:4px 8px;text-align:left;width:100%;'>30-day record</th></tr></thead>"
+            f"<tbody>{''.join(summary)}</tbody></table></div>",
             unsafe_allow_html=True,
         )
         if mix:
