@@ -102,14 +102,14 @@ export default function(component) {
   paintColour("--ang-social-day", chosen.socialDay);
   paintColour("--ang-social-night", chosen.socialNight);
   let style = document.getElementById("angstrom-brand-style");
-  if (style && style.dataset.layout !== "jumpicon") {
+  if (style && style.dataset.layout !== "moodhead") {
     style.remove();
     style = null;
   }
   if (!style) {
     style = document.createElement("style");
     style.id = "angstrom-brand-style";
-    style.dataset.layout = "jumpicon";
+    style.dataset.layout = "moodhead";
     style.textContent = [
       "html{--ang-surface:#ffffff;--ang-border:#e5e7eb;--ang-text:#111827;--ang-muted:#6b7280;--ang-soft:#374151;--ang-track:#e5e7eb;--ang-line:#f3f4f6;--ang-select:#e5e7eb;--ang-select-text:#111827;--ang-page:var(--ang-page-day,#d6e8f8);--ang-heading:var(--ang-heading-day,#ffffff);--ang-section:var(--ang-section-day,#ffffff);--ang-hover:var(--ang-hover-day,#f3f4f6);--ang-side:var(--ang-side-day,#ffffff);--ang-social:var(--ang-social-day,#ffffff);}",
       "html.angstrom-night{--ang-surface:#262730;--ang-border:#3f4654;--ang-text:#f3f4f6;--ang-muted:#9ca3af;--ang-soft:#d1d5db;--ang-track:#3f4654;--ang-line:#31333f;--ang-select:#3a4050;--ang-select-text:#f9fafb;--ang-page:var(--ang-page-night,#0e1117);--ang-heading:var(--ang-heading-night,#262730);--ang-section:var(--ang-section-night,#262730);--ang-hover:var(--ang-hover-night,#31333f);--ang-side:var(--ang-side-night,#16181f);--ang-social:var(--ang-social-night,#1c1f27);}",
@@ -128,6 +128,8 @@ export default function(component) {
       "[data-testid='stForm']{background:var(--ang-page) !important;border-color:transparent !important;}",
       "[data-testid='stExpander'] details{background:var(--ang-section) !important;border-color:var(--ang-border) !important;}",
       "[data-testid='stExpander'] details > summary{background:var(--ang-heading) !important;}",
+      "[data-testid='stExpander'] details > summary:has(.ang-header-score){display:flex !important;align-items:center;}",
+      ".ang-header-score{margin-left:auto;margin-right:0.55rem;flex:none;display:inline-block;min-width:52px;text-align:center;border-radius:4px;padding:2px 8px;font-weight:600;line-height:1;}",
       "[data-testid='stExpander'] details > summary:hover,[data-testid='stExpander'] details > summary:focus-visible,[data-testid='stExpander'] details > summary:active{background:var(--ang-hover) !important;}",
       "html.angstrom-night [data-testid='stSidebar']{background:var(--ang-side) !important;border-right:1px solid var(--ang-border);}",
       "html.angstrom-night [data-testid='stMain'] [data-testid='stVerticalBlockBorderWrapper'],html.angstrom-night [data-testid='stMetric']{background:var(--ang-surface) !important;border-color:var(--ang-border) !important;}",
@@ -2586,6 +2588,44 @@ _countdown = st.components.v2.component(
     isolate_styles=False,
 )
 
+_HEADER_SCORE_JS = """
+export default function(component) {
+  const { data, parentElement } = component;
+  const shell = parentElement.closest(".stBidiComponent") || parentElement;
+  shell.style.display = "none";
+  let payload = data;
+  if (typeof data === "string") {
+    try { payload = JSON.parse(data); } catch (error) { payload = null; }
+  }
+  const expander = shell.closest('[data-testid="stExpander"]');
+  const summary = expander && expander.querySelector("summary");
+  if (!summary) return () => {};
+  let badge = summary.querySelector(":scope > .ang-header-score");
+  if (!badge) {
+    badge = document.createElement("span");
+    badge.className = "ang-header-score";
+    const icon = summary.querySelector('[data-testid="stExpanderToggleIcon"], [data-testid="stExpanderIcon"]');
+    let slot = icon;
+    while (slot && slot.parentElement !== summary) slot = slot.parentElement;
+    if (slot) summary.insertBefore(badge, slot);
+    else summary.appendChild(badge);
+  }
+  const raw = payload ? payload.score : null;
+  const score = raw === null || raw === undefined || raw === "" ? NaN : Number(raw);
+  const color = (payload && payload.color) || "#6b7280";
+  const background = (payload && payload.background) || "transparent";
+  badge.textContent = Number.isFinite(score) ? String(Math.round(score)) : "—";
+  badge.style.color = color;
+  badge.style.background = Number.isFinite(score) ? background : "transparent";
+  return () => badge.remove();
+}
+"""
+_header_score = st.components.v2.component(
+    "header_score",
+    js=_HEADER_SCORE_JS,
+    isolate_styles=False,
+)
+
 # Opening a section is only show and hide. This records that choice without
 # asking Streamlit to rebuild the page.
 _SECTION_TOGGLE_JS = """
@@ -4484,6 +4524,21 @@ def sentiment_badge(score, pick: str | None = None) -> str:
     )
 
 
+def _paint_section_score(section_key: str, score, ready: bool) -> None:
+    """Put this section's sentiment score in its header, using the same colors as the body."""
+    shown = score if ready else None
+    try:
+        missing = shown is None or pd.isna(shown)
+    except TypeError:
+        missing = shown is None
+    if missing:
+        payload = {"score": None, "color": "#6b7280", "background": "transparent"}
+    else:
+        color, background, _arrow, _bar = tone(shown)
+        payload = {"score": round(float(shown)), "color": color, "background": background}
+    _header_score(key=f"section_score_{section_key}", data=payload)
+
+
 def score_from_alert(note: dict):
     message = str(note.get("message") or "")
     if "/100" in message:
@@ -4827,7 +4882,7 @@ This sits under the chart, above Market sentiment, for the same open asset. It i
 
 **Market sentiment**
 
-This sits under the chart. The heading names the open asset, for example **Market sentiment - Bitcoin (BTC)**. Grok reads headlines from the last 7 days and gives each one a score from 0 to 100. The newest headline is listed first. Beside each link is the date, then a one-sentence AI Summary, then the score. A dash in AI Summary means that score was saved before summaries. The next background update fills it in. The number at the top of the section is the average of those article scores. Under the short summary, **Positive** and **Negative** each add a paragraph drawn from those same headlines. Green, amber, and red use the same bands as the technical score. The two scores stay separate, and sentiment is not mixed into the technical score.
+This sits under the chart. The heading names the open asset, for example **Market sentiment - Bitcoin (BTC)**. Grok reads headlines from the last 7 days and gives each one a score from 0 to 100. The newest headline is listed first. Beside each link is the date, then a one-sentence AI Summary, then the score. A dash in AI Summary means that score was saved before summaries. The next background update fills it in. The number at the top of the section is the average of those article scores. The same colored score sits in the header of this section, and in the crypto and stock market sentiment headers. It changes when that saved score changes. Under the short summary, **Positive** and **Negative** each add a paragraph drawn from those same headlines. Green, amber, and red use the same bands as the technical score. The two scores stay separate, and sentiment is not mixed into the technical score.
 
 The **Sentiment** column shows that saved score in the same colored box. A dash means that asset has not been scored yet. Adding it to a watchlist writes the first score when nobody else has it stored, and the background update keeps it after that. The score is stored once and shown to every account. A background update replaces it about every 12 hours. Until that update arrives, the last score stays on screen.
 
@@ -7457,6 +7512,7 @@ def _mood_card(spec: dict, row: dict | None) -> None:
         _back_to_top(key=f"mood_top_{key}")
     headlines = newest_first((report or {}).get("headlines") or [])
     score = (report or {}).get("score")
+    _paint_section_score(f"mood_{key}", score, bool(report and report.get("ok") and score is not None))
     if report and report.get("ok") and score is not None:
         color, background, arrow, _bar = tone(score)
         note = (
@@ -7902,6 +7958,7 @@ def show_market_sentiment(kind: str, asset_id: str, label: str, ticker: str | No
         report = report or {}
         headlines = newest_first(report.get("headlines") or [])
         score = report.get("score")
+        _paint_section_score("asset", score, bool(report.get("ok") and score is not None))
         if report.get("ok") and score is not None:
             color, background, arrow, _bar = tone(score)
             note = (
