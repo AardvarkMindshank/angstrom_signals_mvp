@@ -6987,6 +6987,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
         if (show_reasons_flag or reveal_breakdown) and result.get("reasons") and result.get("score") is not None:
             st.html("<div id='score-breakdown' style='scroll-margin-top:4.5rem;'></div>")
             with section_expander(f"🔍 Score Breakdown — {title}", "score_breakdown"):
+                _paint_section_score("breakdown", result["score"], result.get("score") is not None)
                 table_rows = crypto_results if asset_type == "Crypto" else stock_results
                 matched = next(
                     (row for row in table_rows if str(row.get("key")) == str(asset_key)),
