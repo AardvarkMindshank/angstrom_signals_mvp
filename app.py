@@ -2660,7 +2660,15 @@ export default function(component) {
   const { data, setTriggerValue, parentElement } = component;
   const shell = parentElement.closest(".stBidiComponent") || parentElement;
   shell.style.display = "none";
-  const search = new URLSearchParams(window.location.search);
+  // Google refuses to sign in inside the app frame, so the return lands on the
+  // outer page. The code is read from whichever address actually has it.
+  let codeOwner = window;
+  try {
+    if (window.top && new URLSearchParams(window.top.location.search).get("code")) {
+      codeOwner = window.top;
+    }
+  } catch (err) {}
+  const search = new URLSearchParams(codeOwner.location.search);
   const code = search.get("code") || "";
   const savePkce = (value) => {
     try { sessionStorage.setItem("angstrom-pkce", value); } catch (err) {}
@@ -2704,7 +2712,7 @@ export default function(component) {
     }));
     search.delete("code");
     const rest = search.toString();
-    history.replaceState(null, "", window.location.pathname + (rest ? "?" + rest : "") + window.location.hash);
+    codeOwner.history.replaceState(null, "", codeOwner.location.pathname + (rest ? "?" + rest : "") + codeOwner.location.hash);
   }
   if (data && data.clear) {
     if (window.location.hash) {
@@ -2738,7 +2746,8 @@ _recovery_link = st.components.v2.component(
 )
 
 # Streamlit's own link button opens the address in a new tab, which drops the
-# sign-in secret. This link stays in the same tab.
+# sign-in secret. Google also refuses the sign-in page inside the app frame,
+# so this link moves the whole window, not the frame.
 _GOOGLE_BUTTON_JS = """
 export default function(component) {
   const { data, parentElement } = component;
@@ -2761,9 +2770,9 @@ export default function(component) {
     link = document.createElement("a");
     link.className = "angstrom-google";
     link.textContent = "Continue with Google";
-    link.target = "_self";
     shell.appendChild(link);
   }
+  link.target = "_top";
   const url = data && data.url ? String(data.url) : "";
   const verifier = data && data.verifier ? String(data.verifier) : "";
   link.href = url || "#";
