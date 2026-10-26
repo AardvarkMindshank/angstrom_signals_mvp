@@ -102,14 +102,14 @@ export default function(component) {
   paintColour("--ang-social-day", chosen.socialDay);
   paintColour("--ang-social-night", chosen.socialNight);
   let style = document.getElementById("angstrom-brand-style");
-  if (style && style.dataset.layout !== "colours") {
+  if (style && style.dataset.layout !== "formpage") {
     style.remove();
     style = null;
   }
   if (!style) {
     style = document.createElement("style");
     style.id = "angstrom-brand-style";
-    style.dataset.layout = "colours";
+    style.dataset.layout = "formpage";
     style.textContent = [
       "html{--ang-surface:#ffffff;--ang-border:#e5e7eb;--ang-text:#111827;--ang-muted:#6b7280;--ang-soft:#374151;--ang-track:#e5e7eb;--ang-line:#f3f4f6;--ang-select:#e5e7eb;--ang-select-text:#111827;--ang-page:var(--ang-page-day,#d6e8f8);--ang-heading:var(--ang-heading-day,#ffffff);--ang-section:var(--ang-section-day,#ffffff);--ang-hover:var(--ang-hover-day,#f3f4f6);--ang-side:var(--ang-side-day,#ffffff);--ang-social:var(--ang-social-day,#ffffff);}",
       "html.angstrom-night{--ang-surface:#262730;--ang-border:#3f4654;--ang-text:#f3f4f6;--ang-muted:#9ca3af;--ang-soft:#d1d5db;--ang-track:#3f4654;--ang-line:#31333f;--ang-select:#3a4050;--ang-select-text:#f9fafb;--ang-page:var(--ang-page-night,#0e1117);--ang-heading:var(--ang-heading-night,#262730);--ang-section:var(--ang-section-night,#262730);--ang-hover:var(--ang-hover-night,#31333f);--ang-side:var(--ang-side-night,#16181f);--ang-social:var(--ang-social-night,#1c1f27);}",
@@ -124,12 +124,13 @@ export default function(component) {
       ".ang-table tr.ang-row-on{background:var(--ang-select);color:var(--ang-select-text);}",
       "[data-testid='stAppViewContainer'],[data-testid='stHeader'],[data-testid='stBottom']{background:var(--ang-page) !important;}",
       "html:not(.angstrom-night) [data-testid='stSidebar']{background:var(--ang-side) !important;border-right:1px solid #e5e7eb;}",
-      "html:not(.angstrom-night) [data-testid='stMain'] [data-testid='stVerticalBlockBorderWrapper'],html:not(.angstrom-night) [data-testid='stMain'] [data-testid='stForm']{background:#ffffff !important;border-color:#e5e7eb !important;}",
+      "html:not(.angstrom-night) [data-testid='stMain'] [data-testid='stVerticalBlockBorderWrapper']{background:#ffffff !important;border-color:#e5e7eb !important;}",
+      "[data-testid='stForm']{background:var(--ang-page) !important;border-color:transparent !important;}",
       "[data-testid='stExpander'] details{background:var(--ang-section) !important;border-color:var(--ang-border) !important;}",
       "[data-testid='stExpander'] details > summary{background:var(--ang-heading) !important;}",
       "[data-testid='stExpander'] details > summary:hover,[data-testid='stExpander'] details > summary:focus-visible,[data-testid='stExpander'] details > summary:active{background:var(--ang-hover) !important;}",
       "html.angstrom-night [data-testid='stSidebar']{background:var(--ang-side) !important;border-right:1px solid var(--ang-border);}",
-      "html.angstrom-night [data-testid='stMain'] [data-testid='stVerticalBlockBorderWrapper'],html.angstrom-night [data-testid='stMain'] [data-testid='stForm'],html.angstrom-night [data-testid='stMetric']{background:var(--ang-surface) !important;border-color:var(--ang-border) !important;}",
+      "html.angstrom-night [data-testid='stMain'] [data-testid='stVerticalBlockBorderWrapper'],html.angstrom-night [data-testid='stMetric']{background:var(--ang-surface) !important;border-color:var(--ang-border) !important;}",
       "html.angstrom-night [data-baseweb='input'],html.angstrom-night [data-baseweb='textarea'],html.angstrom-night [data-baseweb='select'] > div,html.angstrom-night [data-testid='stFileUploaderDropzone']{background-color:#31333f !important;border-color:var(--ang-border) !important;color:var(--ang-text) !important;}",
       "html.angstrom-night [data-baseweb='input'] input,html.angstrom-night [data-baseweb='textarea'] textarea{background:transparent !important;color:var(--ang-text) !important;-webkit-text-fill-color:var(--ang-text);}",
       "html.angstrom-night [data-testid='stBaseButton-secondary']{background:#31333f !important;border-color:#4b5563 !important;color:var(--ang-text) !important;}",
