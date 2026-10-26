@@ -84,14 +84,14 @@ export default function(component) {
   const shell = parentElement.closest(".stBidiComponent") || parentElement;
   shell.style.display = "none";
   let style = document.getElementById("angstrom-brand-style");
-  if (style && style.dataset.layout !== "aiscore") {
+  if (style && style.dataset.layout !== "dayblue") {
     style.remove();
     style = null;
   }
   if (!style) {
     style = document.createElement("style");
     style.id = "angstrom-brand-style";
-    style.dataset.layout = "aiscore";
+    style.dataset.layout = "dayblue";
     style.textContent = [
       "html{--ang-surface:#ffffff;--ang-border:#e5e7eb;--ang-text:#111827;--ang-muted:#6b7280;--ang-soft:#374151;--ang-track:#e5e7eb;--ang-line:#f3f4f6;--ang-select:#e5e7eb;--ang-select-text:#111827;}",
       "html.angstrom-night{--ang-surface:#262730;--ang-border:#3f4654;--ang-text:#f3f4f6;--ang-muted:#9ca3af;--ang-soft:#d1d5db;--ang-track:#3f4654;--ang-line:#31333f;--ang-select:#3a4050;--ang-select-text:#f9fafb;}",
@@ -104,7 +104,7 @@ export default function(component) {
       ".ang-table thead tr{border-bottom:2px solid var(--ang-border);}",
       ".ang-table tbody tr{border-bottom:1px solid var(--ang-line);}",
       ".ang-table tr.ang-row-on{background:var(--ang-select);color:var(--ang-select-text);}",
-      "html:not(.angstrom-night) [data-testid='stAppViewContainer'],html:not(.angstrom-night) [data-testid='stHeader']{background:#eef0f4 !important;}",
+      "html:not(.angstrom-night) [data-testid='stAppViewContainer'],html:not(.angstrom-night) [data-testid='stHeader'],html:not(.angstrom-night) [data-testid='stBottom']{background:#d6e8f8 !important;}",
       "html:not(.angstrom-night) [data-testid='stSidebar']{background:#ffffff !important;border-right:1px solid #e5e7eb;}",
       "html:not(.angstrom-night) [data-testid='stMain'] [data-testid='stExpander'] details,html:not(.angstrom-night) [data-testid='stMain'] [data-testid='stVerticalBlockBorderWrapper'],html:not(.angstrom-night) [data-testid='stMain'] [data-testid='stForm']{background:#ffffff !important;border-color:#e5e7eb !important;}",
       "html:not(.angstrom-night) [data-testid='stSidebar'] [data-testid='stExpander'] details{background:#f8fafc !important;border-color:#e5e7eb !important;}",
