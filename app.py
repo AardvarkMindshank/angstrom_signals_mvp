@@ -3494,10 +3494,24 @@ if st.session_state.user is None:
                         st.rerun()
                 else:
                     st.markdown("### Welcome Back")
-                    login_email = st.text_input("Email", key="login_email")
-                    login_password = st.text_input("Password", type="password", key="login_password")
-                    st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
-                    if st.button("Log In", type="primary", use_container_width=True):
+                    with st.form("login", border=False):
+                        login_email = st.text_input(
+                            "Email",
+                            key="login_email",
+                            type="email",
+                            autocomplete="username",
+                            icon="",
+                            placeholder="",
+                        )
+                        login_password = st.text_input(
+                            "Password",
+                            type="password",
+                            key="login_password",
+                            autocomplete="current-password",
+                        )
+                        st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
+                        submitted = st.form_submit_button("Log In", type="primary", use_container_width=True)
+                    if submitted:
                         try:
                             response = supabase.auth.sign_in_with_password({
                                 "email": login_email,
@@ -3522,10 +3536,24 @@ if st.session_state.user is None:
 
             with auth_tab2:
                 st.markdown("### Create New Account")
-                signup_email = st.text_input("Email", key="signup_email")
-                signup_password = st.text_input("Password", type="password", key="signup_password")
-                st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
-                if st.button("Create Account", type="primary", use_container_width=True):
+                with st.form("signup", border=False):
+                    signup_email = st.text_input(
+                        "Email",
+                        key="signup_email",
+                        type="email",
+                        autocomplete="email",
+                        icon="",
+                        placeholder="",
+                    )
+                    signup_password = st.text_input(
+                        "Password",
+                        type="password",
+                        key="signup_password",
+                        autocomplete="new-password",
+                    )
+                    st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
+                    created = st.form_submit_button("Create Account", type="primary", use_container_width=True)
+                if created:
                     try:
                         supabase.auth.sign_up({
                             "email": signup_email,
