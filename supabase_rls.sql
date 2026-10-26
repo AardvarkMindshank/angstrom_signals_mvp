@@ -2075,6 +2075,7 @@ begin
                     nullif(split_part(notes.user_email, '@', 1), ''),
                     'Member'
                 ) as username,
+                coalesce(profiles.avatar_url, '') as avatar,
                 coalesce((
                     select jsonb_agg(jsonb_build_object(
                         'status', events.status,
@@ -2238,7 +2239,9 @@ begin
                 reports.created_at,
                 reports.user_email as reporter_email,
                 coalesce(nullif(btrim(reporter.display_name), ''), reports.user_email) as reporter_name,
+                coalesce(reporter.avatar_url, '') as reporter_avatar,
                 coalesce(nullif(btrim(author.display_name), ''), 'Member') as author_name,
+                coalesce(author.avatar_url, '') as author_avatar,
                 (
                     select count(*)
                     from public.user_warnings warnings

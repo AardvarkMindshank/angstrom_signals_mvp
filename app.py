@@ -5961,6 +5961,32 @@ def _feedback_username(row: dict) -> str:
     return email or "Member"
 
 
+def _admin_face(name: str, avatar: str, extra: str = "") -> str:
+    """A name with that person's photo on the left. A letter stands in when there is no photo."""
+    label = " ".join(str(name or "Member").split()) or "Member"
+    safe = str(avatar or "").strip()
+    if not safe.startswith("https://") or any(mark in safe for mark in (" ", '"', "'", "<", ">", "\\")):
+        safe = ""
+    if safe:
+        face = (
+            f"<img src='{html.escape(safe, quote=True)}' alt='' "
+            "style='width:18px;height:18px;border-radius:50%;object-fit:cover;flex:none;'>"
+        )
+    else:
+        initial = html.escape(label[:1].upper())
+        face = (
+            "<span style='width:18px;height:18px;border-radius:50%;background:#dbeafe;color:#1d4ed8;"
+            "display:inline-flex;align-items:center;justify-content:center;font-size:.7rem;"
+            "font-weight:700;flex:none;line-height:1;'>"
+            f"{initial}</span>"
+        )
+    text = html.escape(label + extra)
+    return (
+        "<span style='display:inline-flex;align-items:center;gap:6px;vertical-align:middle;'>"
+        f"{face}<span>{text}</span></span>"
+    )
+
+
 def _feedback_sort_value(row: dict, key: str) -> str:
     if key == "type":
         return "enhancement" if row.get("kind") == "enhancement" else "issue"
@@ -6068,7 +6094,10 @@ def _show_feedback(rows) -> None:
             cells[0].write(kind)
             cells[1].markdown(comment or "—", unsafe_allow_html=True)
             cells[2].write(_admin_when(row.get("created_at")))
-            cells[3].write(_feedback_username(row))
+            cells[3].markdown(
+                _admin_face(_feedback_username(row), str(row.get("avatar") or "")),
+                unsafe_allow_html=True,
+            )
             cells[4].write(str(row.get("email") or ""))
             choice_key = f"admin_feedback_status_{item_id}"
             reset = st.session_state.pop(f"admin_feedback_reset_{item_id}", None)
@@ -6388,14 +6417,24 @@ def _show_reports(rows) -> None:
                 warnings = int(row.get("warnings") or 0)
             except (TypeError, ValueError):
                 warnings = 0
+            warning = ""
             if warnings:
-                author += " · 1 warning" if warnings == 1 else f" · {warnings} warnings"
+                warning = " · 1 warning" if warnings == 1 else f" · {warnings} warnings"
             cells = st.columns(widths, vertical_alignment="center")
             cells[0].markdown(comment, unsafe_allow_html=True)
             cells[1].markdown(reason or "—", unsafe_allow_html=True)
             cells[2].write(_admin_when(row.get("created_at")))
-            cells[3].write(author)
-            cells[4].write(_report_person(row, "reporter_name", "reporter_email"))
+            cells[3].markdown(
+                _admin_face(author, str(row.get("author_avatar") or ""), warning),
+                unsafe_allow_html=True,
+            )
+            cells[4].markdown(
+                _admin_face(
+                    _report_person(row, "reporter_name", "reporter_email"),
+                    str(row.get("reporter_avatar") or ""),
+                ),
+                unsafe_allow_html=True,
+            )
             choice_key = f"admin_report_status_{item_id}"
             reset = st.session_state.pop(f"admin_report_reset_{item_id}", None)
             if reset in options:
