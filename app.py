@@ -6988,8 +6988,10 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             st.html("<div id='score-breakdown' style='scroll-margin-top:4.5rem;'></div>")
             with section_expander(f"🔍 Score Breakdown — {title}", "score_breakdown"):
                 st.markdown(
-                    f"<span style='color:{color};font-weight:bold;font-size:1.1em'>"
-                    f"{result['score']}/100 ({html.escape(str(result['label']))})</span>",
+                    "<div style='margin:0 0 12px;'>"
+                    f"{sentiment_badge(result['score'])}"
+                    f"<div style='margin-top:8px;color:{color};font-weight:600;'>"
+                    f"{html.escape(str(result['label']))}</div></div>",
                     unsafe_allow_html=True,
                 )
                 breakdown_col1, breakdown_col2 = st.columns(2)
