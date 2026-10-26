@@ -3222,6 +3222,9 @@ _ACCOUNT_STATE_KEYS = (
     "colour_sidebar_night",
     "colour_social_day",
     "colour_social_night",
+    "score_visit_baseline",
+    "score_visit_seen",
+    "score_visit_saved",
 )
 _WEIGHT_NAMES = (
     "rsi", "stochastic", "sma", "adx", "macd", "ichimoku", "bb", "volume", "obv", "performance",
@@ -4787,6 +4790,8 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
     st.markdown("""
 **How to use it**
 
+**What changed** is the first block in Quick Snapshot. It lists scores that crossed your bullish or bearish boundary since you last opened the page, then up to three other large score moves, and the factor that moved each one the most. Click a row to open that asset on the chart. The first visit stores the scores and shows the changes next time.
+
 1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest. Quick Snapshot, Market sentiment for crypto, Market sentiment for stocks, Crypto Scores, Equity Scores, Interactive Chart, Score Breakdown, Max pain, Market sentiment, and Signal matrix each sit in a section that starts open. Close a header to fold that section away. **Open all** and **Collapse all**, on the right of the page title, do that for every one of those sections. The square beside them stacks every section in one column, with Quick Snapshot first. The mark with a wide top and two panes underneath puts Quick Snapshot and both score tables across the top, market sentiment on the left, and Interactive Chart, Score Breakdown, Max pain, Market sentiment, and Signal matrix on the right. Those two bottom columns start at equal width. Drag the line between them to give either side more room. That line stays inside those two columns. The wide or single choice, that column split, the open asset, the social panel's width, split, and pin, and the open or collapsed state of each section are saved on your account and come back when you log in. On a narrow screen the wide layout stacks the left and right parts. **I trade cryptos**, **I trade equities**, and **I trade both**, in Settings, are saved on your account. A market you leave out is hidden, including its sentiment, its score table, and its Quick Snapshot boxes. The chart follows the markets you trade. Collapse all also closes this guide. Open all does not open it. **Feedback**, at the bottom of the sidebar, sends an issue or an idea. It is stored as submitted. The arrow on the left edge of the page closes the sidebar. It stays on that edge when the sidebar is closed, so the sidebar can be opened again. Hover the arrow to see which action it will take.
 2. Click a name in either table, a Quick Snapshot box, or an alert under Notifications. That asset stays highlighted, and the page moves down to the chart when the chart is off screen. Click a column title to sort that table. It starts with the strongest score at the top.
 3. Extra metrics add **7d %**, **Market Cap**, **ATR %**, and **Vol**. A separate checkbox adds **1d %** before the seven-day change and **30d %** after it. For **1d %** and **7d %**, green means the price rose and red means it fell. **30d %** uses the same colors as the **30-day trend**: green for a rise of about 2% or more, red for a fall of about 2% or more, and orange when the move stays inside about 2%. For stocks, one day is the previous trading session. **Market Cap** is the latest size of the asset, from CoinGecko for crypto and Yahoo for stocks. **ATR %** is volatility. **Vol** is volume versus its 20-day average.
@@ -5712,6 +5717,183 @@ def _stored_bars(kind: str, asset_id: str, days: int):
     return result
 
 
+def _visit_asset_key(kind, asset_id) -> str:
+    return f"{kind}:{asset_id}"
+
+
+def _boundary_text(value: float) -> str:
+    number = float(value)
+    if number.is_integer():
+        return str(int(number))
+    return f"{number:.1f}"
+
+
+def _factor_shift(previous: dict, current: dict) -> tuple[str, float]:
+    """The factor whose points changed the most between two visits."""
+    best_name = ""
+    best_delta = 0.0
+    for name in set(previous) | set(current):
+        try:
+            delta = float(current.get(name) or 0) - float(previous.get(name) or 0)
+        except (TypeError, ValueError):
+            continue
+        if abs(delta) > abs(best_delta):
+            best_name = str(name)
+            best_delta = delta
+    return best_name, best_delta
+
+
+def _boundary_cross(previous: float, current: float, bull: float, bear: float) -> str:
+    """above or below when the score enters that side. Already being there is not a cross."""
+    if previous < bull <= current:
+        return "above"
+    if previous > bear >= current:
+        return "below"
+    return ""
+
+
+def _score_snapshot(rows) -> dict:
+    snapshot = {}
+    for row in rows:
+        score = row.get("score")
+        try:
+            if score is None or pd.isna(score):
+                continue
+            score = round(float(score), 1)
+        except (TypeError, ValueError):
+            continue
+        kind = str(row.get("type") or "")
+        asset_id = str(row.get("key") or "")
+        if kind not in ("Crypto", "Stock") or not asset_id:
+            continue
+        factors = {}
+        raw = row.get("contributions") or {}
+        if isinstance(raw, dict):
+            for name, points in raw.items():
+                try:
+                    factors[str(name)] = round(float(points), 1)
+                except (TypeError, ValueError):
+                    continue
+        snapshot[_visit_asset_key(kind, asset_id)] = {
+            "score": score,
+            "factors": factors,
+        }
+    return snapshot
+
+
+def _remember_score_visit(rows) -> tuple[dict, bool]:
+    """Keep the previous visit's scores for this session, and store today's for the next one."""
+    if "score_visit_baseline" not in st.session_state:
+        stored = (prefs.get("settings") or {}).get("score_visit")
+        if isinstance(stored, dict) and stored:
+            st.session_state.score_visit_baseline = stored
+            st.session_state.score_visit_seen = True
+        else:
+            st.session_state.score_visit_baseline = {}
+            st.session_state.score_visit_seen = False
+    current = _score_snapshot(rows)
+    if current and not st.session_state.get("score_visit_saved"):
+        if isinstance(st.session_state.get("cloud_prefs"), dict):
+            save_account_settings({"score_visit": current})
+            st.session_state.score_visit_saved = True
+    return st.session_state.score_visit_baseline, bool(st.session_state.score_visit_seen)
+
+
+def _change_button(pick: str, title: str, detail: str, color: str) -> str:
+    safe_pick = html.escape(pick, quote=True)
+    return (
+        f"<button type='button' data-pick='{safe_pick}' "
+        "style='display:block;width:100%;margin:0;padding:10px 0 2px;border:none;"
+        "border-top:1px solid var(--ang-border);background:transparent;text-align:left;"
+        "cursor:pointer;font:inherit;color:inherit;'>"
+        f"<div style='font-weight:600;color:{color};'>{html.escape(title)}</div>"
+        f"<div class='ang-kicker' style='margin:2px 0 8px;'>{html.escape(detail)}</div></button>"
+    )
+
+
+def _what_changed_html(rows, baseline, seen: bool) -> str:
+    """Crossings since the last visit, then the largest other moves."""
+    try:
+        bull = float(alert_prefs.get("min_score_alert", 70))
+    except (TypeError, ValueError):
+        bull = 70.0
+    try:
+        bear = float(alert_prefs.get("max_score_alert", 30))
+    except (TypeError, ValueError):
+        bear = 30.0
+    bull_label = _boundary_text(bull)
+    bear_label = _boundary_text(bear)
+    parts = [
+        "<div class='ang-card' style='margin-bottom:12px;'>",
+        "<div class='ang-kicker'>What changed</div>",
+    ]
+    if not seen:
+        parts.append("<div style='margin-top:8px;'>Changes show here from your next visit.</div></div>")
+        return "".join(parts)
+
+    crossings = []
+    moves = []
+    for row in rows:
+        kind = str(row.get("type") or "")
+        asset_id = str(row.get("key") or "")
+        previous = baseline.get(_visit_asset_key(kind, asset_id)) if isinstance(baseline, dict) else None
+        if not isinstance(previous, dict):
+            continue
+        try:
+            current_score = round(float(row.get("score")), 1)
+            previous_score = round(float(previous.get("score")), 1)
+        except (TypeError, ValueError):
+            continue
+        factors = {}
+        raw = row.get("contributions") or {}
+        if isinstance(raw, dict):
+            for name, points in raw.items():
+                try:
+                    factors[str(name)] = round(float(points), 1)
+                except (TypeError, ValueError):
+                    continue
+        previous_factors = previous.get("factors") if isinstance(previous.get("factors"), dict) else {}
+        factor_name, factor_delta = _factor_shift(previous_factors, factors)
+        detail = f"{previous_score:.1f} to {current_score:.1f}."
+        if factor_name and abs(factor_delta) >= 0.05:
+            detail = f"{detail} {factor_name} moved it most ({factor_delta:+.1f})."
+        delta = round(current_score - previous_score, 1)
+        color = "#15803d" if delta > 0 else "#b91c1c" if delta < 0 else "#6b7280"
+        item = {
+            "delta": delta,
+            "pick": f"{kind}|{asset_id}",
+            "detail": detail,
+            "color": color,
+            "symbol": str(row.get("symbol") or asset_id),
+        }
+        cross = _boundary_cross(previous_score, current_score, bull, bear)
+        if cross == "above":
+            item["title"] = f"{item['symbol']} crossed above {bull_label}"
+            crossings.append(item)
+        elif cross == "below":
+            item["title"] = f"{item['symbol']} crossed below {bear_label}"
+            crossings.append(item)
+        elif abs(delta) >= 1:
+            item["title"] = f"{item['symbol']} moved"
+            moves.append(item)
+
+    crossings.sort(key=lambda item: abs(item["delta"]), reverse=True)
+    moves.sort(key=lambda item: abs(item["delta"]), reverse=True)
+    moves = moves[:3]
+    if not crossings:
+        parts.append(
+            "<div style='margin-top:8px;'>No score crossed a boundary since your last visit.</div>"
+        )
+    for item in crossings:
+        parts.append(_change_button(item["pick"], item["title"], item["detail"], item["color"]))
+    if moves:
+        parts.append("<div class='ang-kicker' style='margin-top:10px;'>Largest moves</div>")
+        for item in moves:
+            parts.append(_change_button(item["pick"], item["title"], item["detail"], item["color"]))
+    parts.append("</div>")
+    return "".join(parts)
+
+
 @st.fragment
 def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, show_reasons_flag, show_extra_metrics_flag, show_period_changes_flag, trade_crypto, trade_equities):
     st.session_state["_bar_run"] = {}
@@ -5879,6 +6061,8 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                 row["market_cap"] = (caps.get("crypto") or {}).get(str(row.get("key") or "").lower())
             for row in stock_results:
                 row["market_cap"] = (caps.get("stock") or {}).get(str(row.get("key") or "").upper())
+        change_rows = crypto_results + stock_results
+        change_baseline, change_seen = _remember_score_visit(change_rows)
         _share_market_rows(crypto_watchlist, stock_watchlist, crypto_results, stock_results)
         saved_scope = (prefs.get("settings") or {}).get("stream_asset")
         scope = saved_scope if saved_scope in ("watchlist", "crypto", "stock") else ""
@@ -6055,6 +6239,14 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                 f"{summary_html}{crowd}</div></div></button>"
             )
 
+        changed = _score_table(
+            key="snapshot_changes",
+            data=_what_changed_html(change_rows, change_baseline, change_seen),
+            on_picked_change=lambda: None,
+        ).picked
+        if changed:
+            _select_chart_asset(str(changed))
+
         mood_specs = []
         if trade_crypto:
             mood_specs.append(("crypto", "Crypto market"))
@@ -6134,7 +6326,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
 
         for column, (card_title, card_row, card_kind, card_key) in zip(snapshot_columns, snapshot_cards):
             show_snapshot(column, card_title, card_row, card_kind, card_key)
-        st.caption("Click a box to open that asset on the chart.")
+        st.caption("Click a change or a box to open that asset on the chart.")
 
     if not wide_layout:
         show_market_moods(trade_crypto, trade_equities)
