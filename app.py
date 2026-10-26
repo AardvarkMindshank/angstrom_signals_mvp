@@ -6111,6 +6111,41 @@ def _blacklist_call(function: str, address: str) -> str:
     return str(result.data or "").strip().strip('"') or "failed"
 
 
+def _blacklist_add() -> None:
+    """Bar one email before the blacklist section redraws. The button click redraws that section."""
+    clean = _clean_invite_email(st.session_state.get("admin_blacklist_email"))
+    if not clean:
+        st.session_state["admin_blacklist_notice"] = "warn\nEnter a valid email."
+        return
+    code = _blacklist_call("add_blacklist_email", clean)
+    if code != "ok":
+        st.session_state["admin_blacklist_notice"] = "warn\n" + {
+            "exists": "That email is already on the list.",
+            "self": "That is the admin account. It stays able to log in.",
+            "email": "Enter a valid email.",
+            "forbidden": "This account cannot change the blacklist.",
+        }.get(code, "That could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again.")
+        return
+    sent, why = _email_barred(clean)
+    if sent:
+        st.session_state["admin_blacklist_notice"] = f"ok\n{clean} is barred. The email was sent."
+    else:
+        st.session_state["admin_blacklist_notice"] = f"warn\n{clean} is barred. The email was not sent: {why}."
+    st.session_state["admin_blacklist_clear"] = True
+
+
+def _blacklist_remove(email: str) -> None:
+    """Lift one bar before the blacklist section redraws. The rest of the page stays as it is."""
+    code = _blacklist_call("remove_blacklist_email", email)
+    if code == "ok":
+        st.session_state["admin_blacklist_notice"] = f"ok\n{email} was removed."
+    elif code == "missing":
+        st.session_state["admin_blacklist_notice"] = "warn\nThat email is no longer on the list."
+    else:
+        st.session_state["admin_blacklist_notice"] = "warn\nThat could not be removed."
+
+
+@st.fragment
 def _show_blacklist() -> None:
     """Add, search, and remove barred emails. Only the admin panel calls this."""
     rows = _admin_rows("admin_blacklist")
@@ -6135,37 +6170,13 @@ def _show_blacklist() -> None:
         if st.session_state.pop("admin_blacklist_clear", False):
             st.session_state["admin_blacklist_email"] = ""
         add = st.columns([4.2, 1.2], vertical_alignment="center")
-        address_text = add[0].text_input(
+        add[0].text_input(
             "Email to bar",
             key="admin_blacklist_email",
             placeholder="name@example.com",
             label_visibility="collapsed",
         )
-        if add[1].button("Add to blacklist", key="admin_blacklist_add"):
-            clean = _clean_invite_email(address_text)
-            if not clean:
-                st.caption("Enter a valid email.")
-            else:
-                code = _blacklist_call("add_blacklist_email", clean)
-                if code == "ok":
-                    sent, why = _email_barred(clean)
-                    if sent:
-                        st.session_state["admin_blacklist_notice"] = (
-                            f"ok\n{clean} is barred. The email was sent."
-                        )
-                    else:
-                        st.session_state["admin_blacklist_notice"] = (
-                            f"warn\n{clean} is barred. The email was not sent: {why}."
-                        )
-                    st.session_state["admin_blacklist_clear"] = True
-                    _rerun_fragment()
-                else:
-                    st.caption({
-                        "exists": "That email is already on the list.",
-                        "self": "That is the admin account. It stays able to log in.",
-                        "email": "Enter a valid email.",
-                        "forbidden": "This account cannot change the blacklist.",
-                    }.get(code, "That could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again."))
+        add[1].button("Add to blacklist", key="admin_blacklist_add", on_click=_blacklist_add)
         clean_rows = [row for row in rows if isinstance(row, dict)]
         if not clean_rows:
             st.caption("No barred emails.")
@@ -6223,19 +6234,13 @@ def _show_blacklist() -> None:
                 cells = st.columns(widths, vertical_alignment="center")
                 cells[0].write(email)
                 cells[1].write(_admin_when(row.get("created_at")))
-                if cells[2].button(
+                cells[2].button(
                     "×",
                     key=f"admin_blacklist_remove_{email}",
                     help="Remove from the blacklist",
-                ):
-                    code = _blacklist_call("remove_blacklist_email", email)
-                    if code == "ok":
-                        st.session_state["admin_blacklist_notice"] = f"ok\n{email} was removed."
-                        _rerun_fragment()
-                    else:
-                        cells[2].caption(
-                            "That email is no longer on the list." if code == "missing" else "That could not be removed."
-                        )
+                    on_click=_blacklist_remove,
+                    args=(email,),
+                )
 
 
 def _report_where(row: dict) -> str:
