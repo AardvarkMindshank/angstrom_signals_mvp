@@ -84,16 +84,16 @@ export default function(component) {
   const shell = parentElement.closest(".stBidiComponent") || parentElement;
   shell.style.display = "none";
   let style = document.getElementById("angstrom-brand-style");
-  if (style && style.dataset.layout !== "dayblue") {
+  if (style && style.dataset.layout !== "heading") {
     style.remove();
     style = null;
   }
   if (!style) {
     style = document.createElement("style");
     style.id = "angstrom-brand-style";
-    style.dataset.layout = "dayblue";
+    style.dataset.layout = "heading";
     style.textContent = [
-      "html{--ang-surface:#ffffff;--ang-border:#e5e7eb;--ang-text:#111827;--ang-muted:#6b7280;--ang-soft:#374151;--ang-track:#e5e7eb;--ang-line:#f3f4f6;--ang-select:#e5e7eb;--ang-select-text:#111827;}",
+      "html{--ang-surface:#ffffff;--ang-border:#e5e7eb;--ang-text:#111827;--ang-muted:#6b7280;--ang-soft:#374151;--ang-track:#e5e7eb;--ang-line:#f3f4f6;--ang-select:#e5e7eb;--ang-select-text:#111827;--ang-expander:var(--ang-surface);--ang-expander-hover:var(--ang-line);}",
       "html.angstrom-night{--ang-surface:#262730;--ang-border:#3f4654;--ang-text:#f3f4f6;--ang-muted:#9ca3af;--ang-soft:#d1d5db;--ang-track:#3f4654;--ang-line:#31333f;--ang-select:#3a4050;--ang-select-text:#f9fafb;}",
       ".ang-card{background:var(--ang-surface);color:var(--ang-text);border:1px solid var(--ang-border);border-radius:10px;padding:12px 16px;}",
       ".ang-kicker{font-size:.8rem;color:var(--ang-muted);margin-bottom:4px;}",
@@ -106,13 +106,13 @@ export default function(component) {
       ".ang-table tr.ang-row-on{background:var(--ang-select);color:var(--ang-select-text);}",
       "html:not(.angstrom-night) [data-testid='stAppViewContainer'],html:not(.angstrom-night) [data-testid='stHeader'],html:not(.angstrom-night) [data-testid='stBottom']{background:#d6e8f8 !important;}",
       "html:not(.angstrom-night) [data-testid='stSidebar']{background:#ffffff !important;border-right:1px solid #e5e7eb;}",
-      "html:not(.angstrom-night) [data-testid='stMain'] [data-testid='stExpander'] details,html:not(.angstrom-night) [data-testid='stMain'] [data-testid='stVerticalBlockBorderWrapper'],html:not(.angstrom-night) [data-testid='stMain'] [data-testid='stForm']{background:#ffffff !important;border-color:#e5e7eb !important;}",
-      "html:not(.angstrom-night) [data-testid='stSidebar'] [data-testid='stExpander'] details{background:#f8fafc !important;border-color:#e5e7eb !important;}",
+      "html:not(.angstrom-night) [data-testid='stMain'] [data-testid='stVerticalBlockBorderWrapper'],html:not(.angstrom-night) [data-testid='stMain'] [data-testid='stForm']{background:#ffffff !important;border-color:#e5e7eb !important;}",
+      "[data-testid='stExpander'] details{background:var(--ang-expander) !important;border-color:var(--ang-border) !important;}",
+      "[data-testid='stExpander'] details > summary{background:var(--ang-expander) !important;}",
+      "[data-testid='stExpander'] details > summary:hover,[data-testid='stExpander'] details > summary:focus-visible,[data-testid='stExpander'] details > summary:active{background:var(--ang-expander-hover) !important;}",
       "html.angstrom-night [data-testid='stAppViewContainer'],html.angstrom-night [data-testid='stHeader'],html.angstrom-night [data-testid='stBottom']{background:#0e1117 !important;}",
       "html.angstrom-night [data-testid='stSidebar']{background:#16181f !important;border-right:1px solid var(--ang-border);}",
-      "html.angstrom-night [data-testid='stMain'] [data-testid='stExpander'] details,html.angstrom-night [data-testid='stMain'] [data-testid='stVerticalBlockBorderWrapper'],html.angstrom-night [data-testid='stMain'] [data-testid='stForm'],html.angstrom-night [data-testid='stMetric']{background:var(--ang-surface) !important;border-color:var(--ang-border) !important;}",
-      "html.angstrom-night [data-testid='stSidebar'] [data-testid='stExpander'] details{background:#262730 !important;border-color:var(--ang-border) !important;}",
-      "html.angstrom-night [data-testid='stExpander'] details > summary{background:transparent !important;}",
+      "html.angstrom-night [data-testid='stMain'] [data-testid='stVerticalBlockBorderWrapper'],html.angstrom-night [data-testid='stMain'] [data-testid='stForm'],html.angstrom-night [data-testid='stMetric']{background:var(--ang-surface) !important;border-color:var(--ang-border) !important;}",
       "html.angstrom-night [data-baseweb='input'],html.angstrom-night [data-baseweb='textarea'],html.angstrom-night [data-baseweb='select'] > div,html.angstrom-night [data-testid='stFileUploaderDropzone']{background-color:#31333f !important;border-color:var(--ang-border) !important;color:var(--ang-text) !important;}",
       "html.angstrom-night [data-baseweb='input'] input,html.angstrom-night [data-baseweb='textarea'] textarea{background:transparent !important;color:var(--ang-text) !important;-webkit-text-fill-color:var(--ang-text);}",
       "html.angstrom-night [data-testid='stBaseButton-secondary']{background:#31333f !important;border-color:#4b5563 !important;color:var(--ang-text) !important;}",
