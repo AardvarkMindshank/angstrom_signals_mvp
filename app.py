@@ -1630,7 +1630,7 @@ export default function(component) {
     if (hint && notice.indexOf("Report") === 0 && notice.indexOf("Report sent") !== 0) {
       hint.textContent = notice;
     } else if (hint && !hint.textContent) {
-      hint.textContent = "This follows the socials policy in Settings. It is not shown on the stream.";
+      hint.textContent = "This follows the socials policy in About. It is not shown on the stream.";
     }
   }
 
@@ -2304,7 +2304,7 @@ export default function(component) {
 }
 """
 _social_stream = st.components.v2.component(
-    "social_stream",
+    "social_about",
     js=_SOCIAL_STREAM_JS,
     isolate_styles=False,
 )
@@ -5523,27 +5523,6 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
     st.session_state._seen_show_period_changes = bool(show_period_changes)
     st.session_state._seen_days_history = int(days_history)
 
-    with tracked_expander("Socials policy", "socials_policy"):
-        st.markdown(
-            "The social signals stream and the general chat are for reacting to the signals on this page."
-        )
-        st.markdown(
-            "Nothing on this site is financial advice. A comment, a reply, a thumb, or a crowd score "
-            "is one person's reaction. It is not a recommendation to buy, sell, or hold any asset."
-        )
-        st.markdown(
-            "Do not promote an asset. That includes telling people to buy or sell, posting a tip or a "
-            "referral link, or pushing a coin or ticker the note is not answering."
-        )
-        st.markdown(
-            "Be civil. No harassment, threats, or personal attacks. No spam, and no posting the same note over and over."
-        )
-        st.markdown(
-            "Use the flag on a comment that breaks these rules. The form opens at the top of the social panel. "
-            "It is emailed to [report@angstromsignals.com](mailto:report@angstromsignals.com) "
-            "and is not shown to the crowd. A comment that breaks these rules can be removed."
-        )
-
 
 def _feedback_setting(env_name: str, *secret_paths: tuple[str, ...]) -> str:
     """A mail setting from the environment, then from Streamlit secrets. Empty when unset."""
@@ -6501,6 +6480,26 @@ with tracked_expander("ℹ️ About", "about", sidebar=True):
         "Support: [support@angstromsignals.com](mailto:support@angstromsignals.com)  \n"
         "Investors: [investors@angstromsignals.com](mailto:investors@angstromsignals.com)"
     )
+    with tracked_expander("Socials policy", "socials_policy"):
+        st.markdown(
+            "The social signals stream and the general chat are for reacting to the signals on this page."
+        )
+        st.markdown(
+            "Nothing on this site is financial advice. A comment, a reply, a thumb, or a crowd score "
+            "is one person's reaction. It is not a recommendation to buy, sell, or hold any asset."
+        )
+        st.markdown(
+            "Do not promote an asset. That includes telling people to buy or sell, posting a tip or a "
+            "referral link, or pushing a coin or ticker the note is not answering."
+        )
+        st.markdown(
+            "Be civil. No harassment, threats, or personal attacks. No spam, and no posting the same note over and over."
+        )
+        st.markdown(
+            "Use the flag on a comment that breaks these rules. The form opens at the top of the social panel. "
+            "It is emailed to [report@angstromsignals.com](mailto:report@angstromsignals.com) "
+            "and is not shown to the crowd. A comment that breaks these rules can be removed."
+        )
 
 
 @st.cache_data(ttl=300)
