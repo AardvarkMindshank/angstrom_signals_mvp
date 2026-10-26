@@ -941,6 +941,9 @@ export default function(component) {
     if (typeof window.socialStreamState.pinned !== "boolean") {
       window.socialStreamState.pinned = !!window.socialPanelPinned;
     }
+    if (String(window.socialChatNotice || "") === "Invite sent.") {
+      window.socialStreamState.groupFor = null;
+    }
     const reportNotice = String(window.socialChatNotice || "");
     if (reportNotice.indexOf("Report sent") === 0 || reportNotice.indexOf("Report already") === 0) {
       window.socialStreamState.report = null;
@@ -1107,7 +1110,7 @@ export default function(component) {
       document.head.appendChild(style);
     }
     let root = document.getElementById("social-stream-root");
-    if (root && root.dataset.layout !== "group") {
+    if (root && root.dataset.layout !== "member") {
       root.remove();
       root = null;
     }
@@ -1117,7 +1120,7 @@ export default function(component) {
       const streamSignal = window.socialStreamAbort.signal;
       root = document.createElement("div");
       root.id = "social-stream-root";
-      root.dataset.layout = "group";
+      root.dataset.layout = "member";
       root.innerHTML = [
         "<div class='scrim'></div>",
         "<aside class='panel' role='dialog' aria-label='Social signals and chat'>",
@@ -1246,8 +1249,7 @@ export default function(component) {
           if (hint) hint.textContent = "Enter a name or choose a group.";
           return;
         }
-        window.socialStreamState.groupFor = null;
-        if (window.renderSocialStream) window.renderSocialStream();
+        if (hint) hint.textContent = "";
         window.socialStreamReport("group", JSON.stringify({
           n: Date.now(),
           user: invite.id,
@@ -1850,6 +1852,20 @@ export default function(component) {
       if (nameBox) nameBox.value = "";
       if (hint) hint.textContent = "";
     }
+    const memberWarning = "They are already in that group.";
+    if (String(window.socialChatNotice || "") === memberWarning) {
+      const hint = box.querySelector(".group-hint");
+      if (hint) hint.textContent = memberWarning;
+      if (box.dataset.closing !== "1") {
+        box.dataset.closing = "1";
+        setTimeout(() => {
+          box.dataset.closing = "";
+          if (window.socialStreamState) window.socialStreamState.groupFor = null;
+          if (window.socialChatNotice === memberWarning) window.socialChatNotice = "";
+          if (window.renderSocialStream) window.renderSocialStream();
+        }, 1600);
+      }
+    }
     const select = box.querySelector(".group-pick");
     if (!select) return;
     const current = switched ? "" : select.value;
@@ -2109,8 +2125,12 @@ export default function(component) {
     }
     const notice = panel.querySelector(".chat-notice");
     if (notice) {
-      notice.hidden = !window.socialChatNotice;
-      notice.textContent = window.socialChatNotice || "";
+      const text = window.socialChatNotice || "";
+      const shownInGroup = text === "They are already in that group."
+        && window.socialStreamState
+        && window.socialStreamState.groupFor;
+      notice.hidden = !text || shownInGroup;
+      notice.textContent = shownInGroup ? "" : text;
     }
     const faces = panel.querySelector(".faces");
     if (faces && (!faces.childElementCount || !faces.querySelector(".face-poop"))) {
@@ -2307,7 +2327,7 @@ export default function(component) {
 }
 """
 _social_stream = st.components.v2.component(
-    "social_group",
+    "social_member",
     js=_SOCIAL_STREAM_JS,
     isolate_styles=False,
 )
