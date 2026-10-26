@@ -249,6 +249,6 @@ def dismiss_read_alerts(supabase, user_id) -> None:
         .eq("user_id", user_id)
         .eq("is_read", True)
         .neq("alert_type", "group_invite")
-        .not_.in_("alert_type", [HELD_BULLISH, HELD_BEARISH])
+        .not_.in_("alert_type", [HELD_BULLISH, HELD_BEARISH, "moderation_warning", "report_update"])
         .execute()
     )

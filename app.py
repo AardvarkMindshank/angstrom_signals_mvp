@@ -928,15 +928,19 @@ export default function(component) {
     if (typeof window.socialStreamState.pinned !== "boolean") {
       window.socialStreamState.pinned = !!window.socialPanelPinned;
     }
+    const reportNotice = String(window.socialChatNotice || "");
+    if (reportNotice.indexOf("Report sent") === 0 || reportNotice.indexOf("Report already") === 0) {
+      window.socialStreamState.report = null;
+    }
     let style = document.getElementById("social-stream-style");
-    if (style && style.dataset.layout !== "panel") {
+    if (style && style.dataset.layout !== "report") {
       style.remove();
       style = null;
     }
     if (!style) {
       style = document.createElement("style");
       style.id = "social-stream-style";
-      style.dataset.layout = "panel";
+      style.dataset.layout = "report";
       style.textContent = [
         "#social-stream-root{position:fixed;inset:0;z-index:10000000;pointer-events:none;}",
         "#social-stream-root.is-open{pointer-events:auto;}",
@@ -1001,8 +1005,15 @@ export default function(component) {
         "#social-stream-root .chat-actions button.thumb-down{color:#b91c1c;}",
         "#social-stream-root .chat-actions button.thumb-up.is-on{background:#dcfce7;border-color:#15803d;color:#15803d;}",
         "#social-stream-root .chat-actions button.thumb-down.is-on{background:#fee2e2;border-color:#b91c1c;color:#b91c1c;}",
-        "#social-stream-root .chat-actions button.reply-note,#social-stream-root .chat-actions button.delete-note{font-size:1rem;line-height:1;padding:2px 7px;}",
+        "#social-stream-root .chat-actions button.reply-note,#social-stream-root .chat-actions button.delete-note,#social-stream-root .chat-actions button.report-note{font-size:1rem;line-height:1;padding:2px 7px;}",
         "#social-stream-root .chat-actions button.delete-note{color:#b91c1c;}",
+        "#social-stream-root .report-box{flex:none;margin:10px 18px 0;padding:10px 12px;border:1px solid #e5e7eb;border-radius:10px;background:#f8fafc;}",
+        "#social-stream-root .report-title{font-weight:650;font-size:.9rem;}",
+        "#social-stream-root .report-quote{margin-top:6px;font-size:.82rem;line-height:1.35;color:#374151;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}",
+        "#social-stream-root .report-label{display:flex;flex-direction:column;gap:4px;margin-top:8px;font-size:.75rem;font-weight:600;color:#6b7280;}",
+        "#social-stream-root .report-reason,#social-stream-root .report-note{width:100%;box-sizing:border-box;font:inherit;font-size:.85rem;color:#111827;border:1px solid #d1d5db;border-radius:8px;padding:6px 8px;background:#fff;}",
+        "#social-stream-root .report-note{min-height:64px;resize:vertical;margin-top:8px;}",
+        "#social-stream-root .report-hint{min-height:1rem;color:#b45309;font-size:.75rem;margin-top:4px;}",
         "#social-stream-root .chat-notice{color:#b45309;font-size:.8rem;line-height:1.35;margin-bottom:6px;}",
         "#social-stream-root .card{padding:14px 0;border-top:1px solid #e5e7eb;}",
         "#social-stream-root .chat-filters{padding:8px 18px 0;}",
@@ -1069,13 +1080,16 @@ export default function(component) {
         "#social-stream-root.is-dark .group-box{background:#262730;border-color:#4b5563;}",
         "#social-stream-root.is-dark .group-name,#social-stream-root.is-dark .group-pick{background:#31333f;color:#fafafa;border-color:#4b5563;}",
         "#social-stream-root.is-dark .group-cancel{background:#31333f;color:#fafafa;border-color:#4b5563;}",
-        "#social-stream-root.is-dark .group-hint{color:#fbbf24;}",
-        "#social-stream-root.is-dark .chat-notice{color:#fbbf24;}"
+        "#social-stream-root.is-dark .group-hint,#social-stream-root.is-dark .report-hint{color:#fbbf24;}",
+        "#social-stream-root.is-dark .chat-notice{color:#fbbf24;}",
+        "#social-stream-root.is-dark .report-box{background:#262730;border-color:#4b5563;}",
+        "#social-stream-root.is-dark .report-quote{color:#d1d5db;}",
+        "#social-stream-root.is-dark .report-reason,#social-stream-root.is-dark .report-note{background:#31333f;color:#fafafa;border-color:#4b5563;}"
       ].join("");
       document.head.appendChild(style);
     }
     let root = document.getElementById("social-stream-root");
-    if (root && root.dataset.layout !== "groups") {
+    if (root && root.dataset.layout !== "report") {
       root.remove();
       root = null;
     }
@@ -1085,12 +1099,26 @@ export default function(component) {
       const streamSignal = window.socialStreamAbort.signal;
       root = document.createElement("div");
       root.id = "social-stream-root";
-      root.dataset.layout = "groups";
+      root.dataset.layout = "report";
       root.innerHTML = [
         "<div class='scrim'></div>",
         "<aside class='panel' role='dialog' aria-label='Social signals and chat'>",
         "<div class='width-grip' role='separator' aria-orientation='vertical' title='Drag to resize the panel'></div>",
         "<div class='finder'><input id='panel-search' type='search' placeholder='Search the stream and the chat' aria-label='Search the stream and the chat'></div>",
+        "<div class='report-box' hidden>",
+        "<div class='report-title'>Report this comment</div>",
+        "<div class='report-quote'></div>",
+        "<label class='report-label'>Reason<select class='report-reason' aria-label='Reason'>",
+        "<option value='promotion'>Promoting an asset</option>",
+        "<option value='advice'>Presented as financial advice</option>",
+        "<option value='harassment'>Harassment or a personal attack</option>",
+        "<option value='spam'>Spam</option>",
+        "<option value='other'>Something else</option>",
+        "</select></label>",
+        "<textarea class='report-note' maxlength='500' placeholder='What should we look at? Add a note for Something else.'></textarea>",
+        "<div class='report-hint'></div>",
+        "<div class='group-box-actions'><button type='button' class='group-send report-send'>Send report</button><button type='button' class='group-cancel report-cancel'>Cancel</button></div>",
+        "</div>",
         "<div class='stream-pane'>",
         "<header class='head'><div>",
         "<div class='kicker'>Social signals</div>",
@@ -1221,6 +1249,15 @@ export default function(component) {
           sendGroupInvite();
         }
       });
+      const sendReport = root.querySelector(".report-send");
+      const cancelReport = root.querySelector(".report-cancel");
+      if (sendReport) sendReport.addEventListener("click", () => submitReport(root));
+      if (cancelReport) {
+        cancelReport.addEventListener("click", () => {
+          window.socialStreamState.report = null;
+          paintReport(root);
+        });
+      }
       const finder = root.querySelector("#panel-search");
       if (finder) {
         finder.addEventListener("input", () => {
@@ -1236,6 +1273,11 @@ export default function(component) {
         if (box && document.activeElement === box && window.socialStreamState.reply) {
           window.socialStreamState.reply = null;
           paintReply(root);
+          return;
+        }
+        if (window.socialStreamState.report) {
+          window.socialStreamState.report = null;
+          paintReport(root);
           return;
         }
         closeStream();
@@ -1479,6 +1521,7 @@ export default function(component) {
       const count = panel.querySelector(".count");
       count.textContent = shown.length === 1 ? "1 comment" : shown.length + " comments";
       paintGroupBox(panel);
+      paintReport(panel);
       const list = panel.querySelector(".list");
       if (list) {
         const keptScroll = list.scrollTop;
@@ -1551,6 +1594,80 @@ export default function(component) {
     if (next.length <= limit) box.value = next;
     updateChatCount(panel);
     box.focus();
+  }
+
+  function paintReport(panel) {
+    const box = panel && panel.querySelector(".report-box");
+    if (!box) return;
+    const report = (window.socialStreamState || {}).report;
+    box.hidden = !report;
+    if (!report) return;
+    const quote = box.querySelector(".report-quote");
+    const text = String(report.text || "").replace(/\\s+/g, " ").trim();
+    const where = report.place === "chat" ? "General chat" : "Social signals";
+    const asset = report.asset ? " on " + report.asset : "";
+    if (quote) quote.textContent = where + asset + " · " + report.name + ": " + text;
+    const hint = box.querySelector(".report-hint");
+    const notice = String(window.socialChatNotice || "");
+    if (hint && notice.indexOf("Report") === 0 && notice.indexOf("Report sent") !== 0) {
+      hint.textContent = notice;
+    } else if (hint && !hint.textContent) {
+      hint.textContent = "This follows the socials policy in Settings. It is not shown on the stream.";
+    }
+  }
+
+  function submitReport(panel) {
+    const report = (window.socialStreamState || {}).report;
+    if (!report || !window.socialStreamReport) return;
+    const reasonBox = panel.querySelector(".report-reason");
+    const noteBox = panel.querySelector(".report-note");
+    const hint = panel.querySelector(".report-hint");
+    const reason = reasonBox ? reasonBox.value : "";
+    const note = noteBox ? noteBox.value.replace(/\\s+/g, " ").trim() : "";
+    if (reason === "other" && note.length < 4) {
+      if (hint) hint.textContent = "Add a few words for Something else.";
+      return;
+    }
+    if (hint) hint.textContent = "Sending the report.";
+    window.socialStreamReport("report", JSON.stringify({
+      n: Date.now(),
+      place: report.place,
+      message: report.id,
+      kind: report.kind,
+      reason: reason,
+      note: note,
+      asset: report.asset || ""
+    }));
+  }
+
+  function reportButton(item, place, kind) {
+    if (item.mine || item.pending || !(Number(item.id) > 0)) return null;
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "report-note";
+    button.textContent = "🚩";
+    button.title = "Report";
+    button.setAttribute("aria-label", "Report");
+    button.addEventListener("click", () => {
+      window.socialStreamState.reply = null;
+      window.socialStreamState.report = {
+        place: place,
+        id: Number(item.id),
+        kind: kind,
+        name: String(item.name || "Member"),
+        text: String(item.text || ""),
+        asset: String(item.asset || "")
+      };
+      const panel = document.getElementById("social-stream-root");
+      const noteBox = panel && panel.querySelector("textarea.report-note");
+      const hint = panel && panel.querySelector(".report-hint");
+      if (noteBox) noteBox.value = "";
+      if (hint) hint.textContent = "";
+      paintReply(panel);
+      paintReport(panel);
+      if (noteBox) noteBox.focus();
+    });
+    return button;
   }
 
   function paintReply(panel) {
@@ -1908,6 +2025,8 @@ export default function(component) {
         if (box) box.focus();
       });
       actions.appendChild(reply);
+      const flag = reportButton(item, "chat", item.id === rootId ? "comment" : "reply");
+      if (flag) actions.appendChild(flag);
     }
     if (item.mine && !item.pending && Number(item.id) > 0) {
       const top = item.id === rootId;
@@ -2135,6 +2254,8 @@ export default function(component) {
         if (box) box.focus();
       });
       actions.appendChild(reply);
+      const flag = reportButton(item, "signal", kind);
+      if (flag) actions.appendChild(flag);
     }
     if (item.mine && !item.pending && Number(item.id) > 0) {
       actions.appendChild(deleteNoteButton(
@@ -2964,6 +3085,10 @@ _SECTION_IDS = _MAIN_SECTION_IDS + (
     "colours",
     "feedback",
     "about",
+    "socials_policy",
+    "admin_panel",
+    "admin_feedback",
+    "admin_reports",
 )
 
 
@@ -3879,7 +4004,7 @@ def fetch_user_notifications():
             supabase.table("user_notifications")
             .select("*")
             .eq("user_id", user_id)
-            .eq("alert_type", "group_invite")
+            .in_("alert_type", ["group_invite", "moderation_warning", "report_update"])
             .order("created_at", desc=True)
             .limit(20)
             .execute()
@@ -4656,7 +4781,10 @@ def notifications_panel() -> None:
                             return "Stock", stock_ids[raw.upper()]
                         return None
 
-                    quiet_notes = {"invite_joined", "group_invite", "group_joined"}
+                    quiet_notes = {
+                        "invite_joined", "group_invite", "group_joined",
+                        "moderation_warning", "report_update",
+                    }
                     asset_notes = [
                         note for note in filtered_notifs
                         if str(note.get("alert_type") or "") not in quiet_notes
@@ -4670,11 +4798,13 @@ def notifications_panel() -> None:
                         created = html.escape(str(note.get("created_at") or "")[:16].replace("T", " "))
                         weight = "700" if not note.get("is_read") else "500"
                         kind = str(note.get("alert_type") or "")
-                        if kind in ("invite_joined", "group_invite", "group_joined"):
+                        if kind in ("invite_joined", "group_invite", "group_joined", "moderation_warning", "report_update"):
                             titles = {
                                 "invite_joined": "Invite accepted",
                                 "group_invite": "Group invite",
                                 "group_joined": "Group",
+                                "moderation_warning": "Warning",
+                                "report_update": "Report",
                             }
                             border = "#93c5fd" if not note.get("is_read") else "#e5e7eb"
                             card = (
@@ -4933,13 +5063,13 @@ All, Positive, Negative, and Mixed narrow the list by the coverage they were ans
 
 Under Person, All people shows everyone. Me, just under that, shows notes you wrote, including a reply you wrote. Groups you lead or belong to come next. Favourites shows notes from people you have starred, including a reply they wrote. A star beside another person's name adds them. Press the filled star to remove them. That list is saved on your account. The people icon beside the star invites that person to a group. You name a new group or pick one you lead. They accept or dismiss it under Notifications. An invite disappears after 30 days. A group shows notes from its members. You can also pick one person. A note stays in the list when that person wrote it or replied under it.
 
-The green thumb and the red thumb each show a count. You can mark any note, including one you posted. Press the same thumb again to clear your mark. The curved arrow replies. The trash can deletes a note you posted, and deleting a comment also removes the replies under it.
+The green thumb and the red thumb each show a count. You can mark any note, including one you posted. Press the same thumb again to clear your mark. The curved arrow replies. The flag reports a comment that breaks the socials policy. The form opens at the top of the panel, and the report is emailed. It is not shown on the stream. The trash can deletes a note you posted, and deleting a comment also removes the replies under it.
 
 **General chat**
 
 This is a shared room, not tied to an asset. Notes are newest first, and they stay. The panel shows the newest 60 conversations, with the replies under each one. Older notes stay stored.
 
-The Person list works the same way as on the stream, including Me, your groups, and Favourites. Write a comment in the box at the bottom. Enter posts it. Shift and Enter starts a new line. The same row of faces sits under the box. The curved arrow replies. A reply to a reply is added under the original comment. Thumbs work the same way as on the stream, including on a note you posted, and the count sits beside each thumb. The trash can deletes a note you posted, and deleting a comment also removes the replies under it.
+The Person list works the same way as on the stream, including Me, your groups, and Favourites. Write a comment in the box at the bottom. Enter posts it. Shift and Enter starts a new line. The same row of faces sits under the box. The curved arrow replies. A reply to a reply is added under the original comment. Thumbs work the same way as on the stream, including on a note you posted, and the count sits beside each thumb. The flag reports a chat comment the same way as on the stream. The trash can deletes a note you posted, and deleting a comment also removes the replies under it.
 
 **Search**
 
@@ -5265,6 +5395,27 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
     st.session_state._seen_show_period_changes = bool(show_period_changes)
     st.session_state._seen_days_history = int(days_history)
 
+    with tracked_expander("Socials policy", "socials_policy"):
+        st.markdown(
+            "The social signals stream and the general chat are for reacting to the signals on this page."
+        )
+        st.markdown(
+            "Nothing on this site is financial advice. A comment, a reply, a thumb, or a crowd score "
+            "is one person's reaction. It is not a recommendation to buy, sell, or hold any asset."
+        )
+        st.markdown(
+            "Do not promote an asset. That includes telling people to buy or sell, posting a tip or a "
+            "referral link, or pushing a coin or ticker the note is not answering."
+        )
+        st.markdown(
+            "Be civil. No harassment, threats, or personal attacks. No spam, and no posting the same note over and over."
+        )
+        st.markdown(
+            "Use the flag on a comment that breaks these rules. The form opens at the top of the social panel. "
+            "It is emailed to [report@angstromsignals.com](mailto:report@angstromsignals.com) "
+            "and is not shown to the crowd. A comment that breaks these rules can be removed."
+        )
+
 
 def _feedback_setting(env_name: str, *secret_paths: tuple[str, ...]) -> str:
     """A mail setting from the environment, then from Streamlit secrets. Empty when unset."""
@@ -5376,6 +5527,396 @@ def _email_feedback(kind: str, body: str, user_email: str, user_id: str) -> tupl
     if response.status_code < 300:
         return True, ""
     return False, _resend_reason(response)
+
+
+_REPORT_REASONS = {
+    "promotion": "Promoting an asset",
+    "advice": "Presented as financial advice",
+    "harassment": "Harassment or a personal attack",
+    "spam": "Spam",
+    "other": "Something else",
+}
+
+
+def _report_inbox() -> str:
+    """Where a comment report is mailed. The public address unless a secret overrides it."""
+    found = _feedback_setting("REPORT_TO", ("resend", "report_to"))
+    return _mailbox(found) or "report@angstromsignals.com"
+
+
+def _email_report(reason: str, note: str, place: str, kind: str, row: dict, asset: str) -> tuple[bool, str]:
+    """Mail one comment report. The reason is empty when the send is accepted."""
+    api_key, sender, _inbox = _feedback_mail_settings()
+    inbox = _report_inbox()
+    if not api_key:
+        return False, "the Resend key is missing from the Streamlit secrets"
+    if not inbox:
+        return False, "the report inbox is missing"
+    user = st.session_state.user
+    user_email = str(getattr(user, "email", "") or "")
+    reporter = str(getattr(user, "id", "") or "")
+    label = _REPORT_REASONS.get(reason, "Comment report")
+    where = "General chat" if place == "chat" else "Social signals"
+    note_kind = "reply" if kind == "reply" else "comment"
+    safe_note = "<br>".join(html.escape(note).splitlines()) if note else "None"
+    payload = {
+        "from": sender,
+        "to": [inbox],
+        "subject": f"Angstrom report: {label}",
+        "html": (
+            f"<p><strong>{html.escape(label)}</strong> · {html.escape(where)} {html.escape(note_kind)}</p>"
+            f"<p>Comment: {html.escape(str(row.get('body') or ''))}</p>"
+            f"<p>Author {html.escape(str(row.get('user_id') or ''))}"
+            + (f" · {html.escape(asset)}" if asset else "")
+            + f"<br>Posted {html.escape(str(row.get('created_at') or ''))}</p>"
+            f"<p>Note: {safe_note}</p>"
+            f"<p>Reported by {html.escape(user_email or 'unknown account')} · {html.escape(reporter)}</p>"
+        ),
+    }
+    if "@" in user_email:
+        payload["reply_to"] = user_email
+    try:
+        response = requests.post(
+            "https://api.resend.com/emails",
+            json=payload,
+            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+            timeout=15,
+        )
+    except Exception:
+        return False, "Resend could not be reached"
+    if response.status_code < 300:
+        return True, ""
+    return False, _resend_reason(response)
+
+
+def _reported_comment(place: str, kind: str, message_id: int) -> dict | None:
+    """The stored comment a report points at. None when that row is gone."""
+    if place == "chat":
+        table, columns = "chat_messages", "id, user_id, body, created_at"
+    elif kind == "reply":
+        table, columns = "sentiment_replies", "id, user_id, body, created_at"
+    else:
+        table, columns = "sentiment_comments", "id, user_id, body, created_at, asset_key"
+    response = (
+        supabase.table(table)
+        .select(columns)
+        .eq("id", message_id)
+        .limit(1)
+        .execute()
+    )
+    rows = response.data or []
+    return rows[0] if rows else None
+
+
+def _report_action(raw):
+    """One comment report from the social panel. None when this run has nothing new."""
+    if not raw:
+        return None
+    try:
+        data = json.loads(raw) if isinstance(raw, str) else raw
+    except (TypeError, json.JSONDecodeError):
+        return None
+    if not isinstance(data, dict) or data.get("place") not in ("chat", "signal"):
+        return None
+    if data.get("reason") not in _REPORT_REASONS:
+        return None
+    try:
+        token = int(data.get("n") or 0)
+        message = int(data.get("message") or 0)
+    except (TypeError, ValueError):
+        return None
+    if token <= 0 or message <= 0:
+        return None
+    return data
+
+
+def _apply_comment_report(action) -> str:
+    """Save one report and email it. The returned note is shown once in the panel."""
+    place = action.get("place")
+    kind = "reply" if action.get("kind") == "reply" else "comment"
+    reason = str(action.get("reason") or "")
+    note = " ".join(str(action.get("note") or "").split())[:500]
+    if reason == "other" and len(note) < 4:
+        return "Report needs a few words when the reason is Something else."
+    try:
+        message_id = int(action.get("message") or 0)
+    except (TypeError, ValueError):
+        return "Report could not be sent."
+    try:
+        row = _reported_comment(place, kind, message_id)
+    except Exception:
+        return "Report could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again."
+    if not row or not str(row.get("body") or "").strip():
+        return "Report could not find that comment. It may already have expired."
+    author_id = str(row.get("user_id") or "")
+    if author_id and author_id == str(user_id):
+        return "Report your own comment by deleting it."
+    asset = " ".join(str(row.get("asset_key") or action.get("asset") or "").split())[:200]
+    user = st.session_state.user
+    user_email = str(getattr(user, "email", "") or "")
+    payload = {
+        "user_id": str(user_id),
+        "user_email": user_email or "unknown",
+        "place": place,
+        "message_id": message_id,
+        "message_kind": kind,
+        "asset_key": asset,
+        "comment_body": " ".join(str(row.get("body") or "").split())[:160],
+        "reason": reason,
+        "note": note,
+        "status": "reported",
+    }
+    if len(author_id) == 36:
+        payload["author_id"] = author_id
+    try:
+        supabase.table("comment_reports").insert(payload).execute()
+    except Exception as exc:
+        text = str(exc).lower()
+        if "duplicate" in text or "23505" in text:
+            return "Report already sent for this comment."
+        return "Report could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again."
+    sent, why = _email_report(reason, note, place, kind, row, asset)
+    if sent:
+        return "Report sent. Thank you."
+    return f"Report saved. The email was not sent: {why}."
+
+
+_FEEDBACK_STATUS = {
+    "submitted": "Submitted",
+    "under_review": "Under review",
+    "accepted": "Accepted",
+    "in_development": "In development",
+    "in_production": "In production",
+    "rejected": "Rejected",
+    "closed": "Closed",
+}
+_FEEDBACK_NEXT = {
+    "submitted": [("under_review", "Mark under review")],
+    "under_review": [("accepted", "Accept"), ("rejected", "Reject")],
+    "accepted": [("in_development", "Mark in development")],
+    "in_development": [("in_production", "Mark in production")],
+    "in_production": [("closed", "Close")],
+    "rejected": [("closed", "Close")],
+}
+_REPORT_STATUS = {
+    "reported": "Reported",
+    "submitted": "Reported",
+    "under_review": "Under review",
+    "rejected": "Rejected",
+    "upheld": "Upheld",
+}
+_REPORT_NEXT = {
+    "reported": [("under_review", "Mark under review")],
+    "submitted": [("under_review", "Mark under review")],
+    "under_review": [("rejected", "Reject the report"), ("upheld", "Uphold and remove the comment")],
+}
+
+
+def _admin_when(value) -> str:
+    return str(value or "").replace("T", " ")[:16]
+
+
+def _admin_trail(started, events, labels, start_label: str) -> str:
+    if isinstance(events, str):
+        try:
+            events = json.loads(events)
+        except json.JSONDecodeError:
+            events = []
+    parts = [f"{start_label} {_admin_when(started)}"]
+    for event in events or []:
+        if not isinstance(event, dict):
+            continue
+        label = labels.get(str(event.get("status") or ""), str(event.get("status") or ""))
+        line = f"{label} {_admin_when(event.get('at'))}"
+        note = " ".join(str(event.get("note") or "").split())
+        if note:
+            line += f" — {note}"
+        parts.append(line)
+    return " · ".join(parts)
+
+
+def _admin_rows(function: str):
+    """Rows for an admin list. None when the database functions are not installed."""
+    try:
+        response = supabase.rpc(function).execute()
+    except Exception:
+        return None
+    data = response.data
+    if isinstance(data, str):
+        try:
+            data = json.loads(data)
+        except json.JSONDecodeError:
+            return None
+    if isinstance(data, dict):
+        data = [data]
+    return data if isinstance(data, list) else []
+
+
+def _admin_review(function: str, arguments: dict) -> str:
+    """Run one admin status change. Empty means it worked."""
+    try:
+        result = supabase.rpc(function, arguments).execute()
+    except Exception:
+        return "That could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again."
+    code = str(result.data or "").strip().strip('"')
+    return {
+        "ok": "",
+        "reason": "Write a short reason first.",
+        "step": "That status change is not the next step.",
+        "missing": "That item is no longer there.",
+        "forbidden": "This account cannot change that.",
+    }.get(code, "That could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again.")
+
+
+@st.fragment
+def admin_panel() -> None:
+    """Feedback and comment reports. Only an admin account reaches this section."""
+    feedback = _admin_rows("admin_feedback")
+    reports = _admin_rows("admin_reports")
+    with tracked_expander("Admin", "admin_panel"):
+        if feedback is None or reports is None:
+            st.caption("Admin tools are not ready yet. Run the latest supabase_rls.sql in the Supabase SQL editor.")
+            return
+        open_feedback = [row for row in feedback if str(row.get("status") or "") != "closed"]
+        done_feedback = [row for row in feedback if str(row.get("status") or "") == "closed"]
+        open_reports = [
+            row for row in reports
+            if str(row.get("status") or "") not in ("rejected", "upheld")
+        ]
+        done_reports = [
+            row for row in reports
+            if str(row.get("status") or "") in ("rejected", "upheld")
+        ]
+        with tracked_expander(f"Feedback ({len(open_feedback)} open)", "admin_feedback"):
+            st.caption(
+                "Submitted goes to under review. From there it is accepted and built, "
+                "or rejected with a reason. Either path ends at closed. Each step keeps its date."
+            )
+            _show_feedback(open_feedback, actionable=True)
+            with tracked_expander(f"Closed feedback ({len(done_feedback)})", "admin_feedback_closed"):
+                _show_feedback(done_feedback, actionable=False)
+        with tracked_expander(f"Reported comments ({len(open_reports)} open)", "admin_reports"):
+            st.caption(
+                "Reported goes to under review. Reject leaves the comment up and tells the reporter. "
+                "Uphold removes the comment, warns the author, and tells the reporter. "
+                "The author is not told about a rejected report."
+            )
+            _show_reports(open_reports, actionable=True)
+            with tracked_expander(f"Decided reports ({len(done_reports)})", "admin_reports_closed"):
+                _show_reports(done_reports, actionable=False)
+
+
+def _feedback_heading(row: dict) -> str:
+    kind = "Enhancement" if row.get("kind") == "enhancement" else "Issue"
+    status = _FEEDBACK_STATUS.get(str(row.get("status") or ""), str(row.get("status") or ""))
+    body = html.escape(" ".join(str(row.get("body") or "").split()))
+    email = html.escape(str(row.get("email") or ""))
+    return (
+        f"<div style='margin-top:12px;'><strong>{html.escape(kind)}</strong> · {html.escape(status)}"
+        f"<div style='margin-top:4px;'>{body}</div>"
+        f"<div style='margin-top:4px;color:#6b7280;font-size:0.85rem;'>{email}</div></div>"
+    )
+
+
+def _show_feedback(rows, actionable: bool) -> None:
+    if not rows:
+        st.caption("Nothing in this list.")
+        return
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        try:
+            item_id = int(row.get("id"))
+        except (TypeError, ValueError):
+            continue
+        st.markdown(_feedback_heading(row), unsafe_allow_html=True)
+        st.caption(_admin_trail(row.get("created_at"), row.get("events"), _FEEDBACK_STATUS, "Submitted"))
+        if not actionable:
+            continue
+        status = str(row.get("status") or "")
+        chosen = _FEEDBACK_NEXT.get(status) or []
+        reason = ""
+        if any(step == "rejected" for step, _label in chosen):
+            reason = st.text_input(
+                "Reason for rejection",
+                key=f"admin_feedback_reason_{item_id}",
+                max_chars=500,
+            )
+        if not chosen:
+            continue
+        columns = st.columns(len(chosen))
+        for column, (step, label) in zip(columns, chosen):
+            if column.button(label, key=f"admin_feedback_{item_id}_{step}"):
+                if step == "rejected" and len(" ".join(str(reason).split())) < 4:
+                    st.warning("Write a short reason first.")
+                else:
+                    problem = _admin_review("review_feedback", {
+                        "note_id": item_id,
+                        "next_status": step,
+                        "reason": reason,
+                    })
+                    if problem:
+                        st.warning(problem)
+                    else:
+                        _rerun_fragment()
+
+
+def _show_reports(rows, actionable: bool) -> None:
+    if not rows:
+        st.caption("Nothing in this list.")
+        return
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        try:
+            item_id = int(row.get("id"))
+        except (TypeError, ValueError):
+            continue
+        status = _REPORT_STATUS.get(str(row.get("status") or ""), str(row.get("status") or ""))
+        where = "General chat" if row.get("place") == "chat" else "Social signals"
+        kind = "reply" if row.get("message_kind") == "reply" else "comment"
+        reason = _REPORT_REASONS.get(str(row.get("reason") or ""), str(row.get("reason") or ""))
+        comment = html.escape(" ".join(str(row.get("comment_body") or "").split()))
+        author = html.escape(str(row.get("author_name") or "Member"))
+        reporter = html.escape(str(row.get("reporter_name") or row.get("reporter_email") or ""))
+        try:
+            warnings = int(row.get("warnings") or 0)
+        except (TypeError, ValueError):
+            warnings = 0
+        warning_label = "1 warning" if warnings == 1 else f"{warnings} warnings"
+        note = " ".join(str(row.get("note") or "").split())
+        asset = " ".join(str(row.get("asset_key") or "").split())
+        detail = f"{html.escape(where)} {kind}"
+        if asset:
+            detail += f" · {html.escape(asset)}"
+        st.markdown(
+            "<div style='margin-top:12px;'>"
+            f"<strong>{html.escape(status)}</strong> · {detail}"
+            f"<div style='margin-top:4px;'>{comment}</div>"
+            f"<div style='margin-top:4px;color:#6b7280;font-size:0.85rem;'>"
+            f"Author {author} · {html.escape(warning_label)} · Reporter {reporter}"
+            f"<br>Reason: {html.escape(reason)}"
+            + (f"<br>Note: {html.escape(note)}" if note else "")
+            + "</div></div>",
+            unsafe_allow_html=True,
+        )
+        st.caption(_admin_trail(row.get("created_at"), row.get("events"), _REPORT_STATUS, "Reported"))
+        if not actionable:
+            continue
+        chosen = _REPORT_NEXT.get(str(row.get("status") or "")) or []
+        if not chosen:
+            continue
+        columns = st.columns(len(chosen))
+        for column, (step, label) in zip(columns, chosen):
+            if column.button(label, key=f"admin_report_{item_id}_{step}"):
+                problem = _admin_review("review_comment_report", {
+                    "report_id": item_id,
+                    "next_status": step,
+                })
+                if problem:
+                    st.warning(problem)
+                else:
+                    _rerun_fragment()
 
 
 def _store_feedback(kind: str, body: str) -> str:
@@ -6224,11 +6765,13 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             on_signal_change=lambda: None,
             on_group_change=lambda: None,
             on_panel_change=lambda: None,
+            on_report_change=lambda: None,
         )
         chosen_scope = stream_state.asset
         chat_event = _chat_action(getattr(stream_state, "chat", None))
         signal_event = _chat_action(getattr(stream_state, "signal", None))
         group_event = _favourite_event(getattr(stream_state, "group", None))
+        report_event = _report_action(getattr(stream_state, "report", None))
         if chat_event and chat_event.get("n") != st.session_state.get("chat_done"):
             st.session_state["chat_done"] = chat_event.get("n")
             st.session_state["chat_notice"] = _apply_chat_action(chat_event)
@@ -6236,6 +6779,10 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
         if signal_event and signal_event.get("n") != st.session_state.get("signal_done"):
             st.session_state["signal_done"] = signal_event.get("n")
             st.session_state["chat_notice"] = _apply_signal_action(signal_event)
+            _rerun_fragment()
+        if report_event and report_event.get("n") != st.session_state.get("report_done"):
+            st.session_state["report_done"] = report_event.get("n")
+            st.session_state["chat_notice"] = _apply_comment_report(report_event)
             _rerun_fragment()
         if group_event and group_event.get("n") != st.session_state.get("group_done"):
             st.session_state["group_done"] = group_event.get("n")
@@ -8192,6 +8739,8 @@ render_dashboard(
     trade_crypto,
     trade_equities,
 )
+if str((load_profile() or {}).get("role") or "") == "admin":
+    admin_panel()
 _page_top(key="page_back_to_top")
 
 st.markdown(

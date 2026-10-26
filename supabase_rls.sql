@@ -1932,3 +1932,428 @@ revoke all on function public.record_sentiment_score(text, numeric, timestamptz)
 revoke all on function public.record_sentiment_score(text, numeric, timestamptz) from anon;
 grant execute on function public.record_sentiment_score(text, numeric, timestamptz) to authenticated;
 grant execute on function public.record_sentiment_score(text, numeric, timestamptz) to service_role;
+
+-- One report per account per comment. The app emails report@angstromsignals.com as well.
+-- A person can read the reports they sent. The crowd cannot.
+create table if not exists public.comment_reports (
+    id bigint generated always as identity primary key,
+    user_id uuid not null references auth.users (id) on delete cascade,
+    user_email text not null,
+    place text not null check (place in ('chat', 'signal')),
+    message_id bigint not null,
+    message_kind text not null check (message_kind in ('comment', 'reply')),
+    author_id uuid,
+    asset_key text not null default '',
+    comment_body text not null check (char_length(btrim(comment_body)) between 1 and 160),
+    reason text not null check (reason in ('promotion', 'advice', 'harassment', 'spam', 'other')),
+    note text not null default '' check (char_length(note) <= 500),
+    status text not null default 'reported',
+    created_at timestamptz not null default now(),
+    unique (user_id, place, message_id, message_kind)
+);
+
+alter table public.comment_reports enable row level security;
+
+drop policy if exists "insert own comment report" on public.comment_reports;
+create policy "insert own comment report" on public.comment_reports
+    for insert
+    to authenticated
+    with check (auth.uid() = user_id and status = 'reported');
+
+drop policy if exists "read own comment reports" on public.comment_reports;
+create policy "read own comment reports" on public.comment_reports
+    for select
+    to authenticated
+    using (auth.uid() = user_id);
+
+grant select, insert on public.comment_reports to authenticated;
+grant usage, select on sequence public.comment_reports_id_seq to authenticated;
+
+-- Admin is a role on the profile. A signed-in session cannot change it.
+alter table public.profiles
+    add column if not exists role text not null default 'member';
+
+alter table public.profiles drop constraint if exists profiles_role_check;
+alter table public.profiles
+    add constraint profiles_role_check check (role in ('member', 'admin'));
+
+create or replace function public.keep_profile_role()
+returns trigger
+language plpgsql
+as $$
+begin
+    if auth.uid() is null then
+        return new;
+    end if;
+    if tg_op = 'INSERT' then
+        new.role := 'member';
+    else
+        new.role := old.role;
+    end if;
+    return new;
+end;
+$$;
+
+drop trigger if exists keep_profile_role on public.profiles;
+create trigger keep_profile_role
+    before insert or update on public.profiles
+    for each row
+    execute function public.keep_profile_role();
+
+create or replace function public.is_admin()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    select exists (
+        select 1
+        from public.profiles
+        where user_id = auth.uid()
+          and role = 'admin'
+    );
+$$;
+
+revoke all on function public.is_admin() from public;
+revoke all on function public.is_admin() from anon;
+grant execute on function public.is_admin() to authenticated;
+
+insert into public.profiles (user_id, role)
+select users.id, 'admin'
+from auth.users as users
+where lower(users.email) = 'angus_marshall@hotmail.com'
+on conflict (user_id) do update set role = excluded.role;
+
+-- Each feedback status change is its own dated row.
+alter table public.feedback_notes drop constraint if exists feedback_notes_status_check;
+alter table public.feedback_notes
+    add constraint feedback_notes_status_check check (
+        status in (
+            'submitted', 'under_review', 'accepted', 'in_development',
+            'in_production', 'rejected', 'closed'
+        )
+    );
+
+create table if not exists public.feedback_events (
+    id bigint generated always as identity primary key,
+    feedback_id bigint not null references public.feedback_notes (id) on delete cascade,
+    status text not null,
+    note text not null default '',
+    actor_id uuid,
+    created_at timestamptz not null default now()
+);
+
+alter table public.feedback_events enable row level security;
+revoke all on public.feedback_events from public;
+revoke all on public.feedback_events from anon;
+revoke all on public.feedback_events from authenticated;
+
+create or replace function public.admin_feedback()
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+begin
+    if not public.is_admin() then
+        raise exception 'not allowed';
+    end if;
+    return coalesce((
+        select jsonb_agg(to_jsonb(item) order by item.created_at desc)
+        from (
+            select
+                notes.id,
+                notes.kind,
+                notes.body,
+                notes.status,
+                notes.user_email as email,
+                notes.created_at,
+                coalesce((
+                    select jsonb_agg(jsonb_build_object(
+                        'status', events.status,
+                        'note', events.note,
+                        'at', events.created_at
+                    ) order by events.created_at)
+                    from public.feedback_events events
+                    where events.feedback_id = notes.id
+                ), '[]'::jsonb) as events
+            from public.feedback_notes notes
+        ) item
+    ), '[]'::jsonb);
+end;
+$$;
+
+create or replace function public.review_feedback(note_id bigint, next_status text, reason text)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    current_status text;
+    clean_reason text;
+begin
+    if not public.is_admin() then
+        return 'forbidden';
+    end if;
+    select status into current_status
+    from public.feedback_notes
+    where id = note_id;
+    if current_status is null then
+        return 'missing';
+    end if;
+    clean_reason := left(btrim(coalesce(reason, '')), 500);
+    if next_status = 'rejected' and char_length(clean_reason) < 4 then
+        return 'reason';
+    end if;
+    if not (
+        (current_status = 'submitted' and next_status = 'under_review')
+        or (current_status = 'under_review' and next_status in ('accepted', 'rejected'))
+        or (current_status = 'accepted' and next_status = 'in_development')
+        or (current_status = 'in_development' and next_status = 'in_production')
+        or (current_status = 'in_production' and next_status = 'closed')
+        or (current_status = 'rejected' and next_status = 'closed')
+    ) then
+        return 'step';
+    end if;
+    update public.feedback_notes
+    set status = next_status
+    where id = note_id;
+    insert into public.feedback_events (feedback_id, status, note, actor_id)
+    values (
+        note_id,
+        next_status,
+        case when next_status = 'rejected' then clean_reason else '' end,
+        auth.uid()
+    );
+    return 'ok';
+end;
+$$;
+
+revoke all on function public.admin_feedback() from public;
+revoke all on function public.admin_feedback() from anon;
+grant execute on function public.admin_feedback() to authenticated;
+
+revoke all on function public.review_feedback(bigint, text, text) from public;
+revoke all on function public.review_feedback(bigint, text, text) from anon;
+grant execute on function public.review_feedback(bigint, text, text) to authenticated;
+
+-- Reported comments move reported -> under review -> rejected or upheld.
+-- A warning is one dated row, so the count is how many times that person was upheld.
+alter table public.comment_reports alter column status set default 'reported';
+update public.comment_reports set status = 'reported' where status = 'submitted';
+
+alter table public.comment_reports drop constraint if exists comment_reports_status_check;
+alter table public.comment_reports
+    add constraint comment_reports_status_check check (
+        status in ('reported', 'under_review', 'rejected', 'upheld')
+    );
+
+create table if not exists public.comment_report_events (
+    id bigint generated always as identity primary key,
+    report_id bigint not null references public.comment_reports (id) on delete cascade,
+    status text not null,
+    note text not null default '',
+    actor_id uuid,
+    created_at timestamptz not null default now()
+);
+
+create table if not exists public.user_warnings (
+    id bigint generated always as identity primary key,
+    user_id uuid not null references auth.users (id) on delete cascade,
+    report_id bigint references public.comment_reports (id) on delete set null,
+    reason text not null,
+    created_at timestamptz not null default now()
+);
+
+alter table public.comment_report_events enable row level security;
+alter table public.user_warnings enable row level security;
+revoke all on public.comment_report_events from public, anon, authenticated;
+revoke all on public.user_warnings from public, anon, authenticated;
+
+create or replace function public.admin_remove_comment(place text, message_kind text, message_id bigint)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+    if not public.is_admin() then
+        return;
+    end if;
+    if place = 'chat' then
+        delete from public.chat_messages where id = message_id;
+        return;
+    end if;
+    if message_kind = 'reply' then
+        delete from public.sentiment_replies where id = message_id;
+        return;
+    end if;
+    delete from public.sentiment_comments where id = message_id;
+end;
+$$;
+
+revoke all on function public.admin_remove_comment(text, text, bigint) from public;
+revoke all on function public.admin_remove_comment(text, text, bigint) from anon;
+revoke all on function public.admin_remove_comment(text, text, bigint) from authenticated;
+
+create or replace function public.admin_reports()
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+begin
+    if not public.is_admin() then
+        raise exception 'not allowed';
+    end if;
+    return coalesce((
+        select jsonb_agg(to_jsonb(item) order by item.created_at desc)
+        from (
+            select
+                reports.id,
+                reports.place,
+                reports.message_kind,
+                reports.comment_body,
+                reports.reason,
+                reports.note,
+                reports.status,
+                reports.asset_key,
+                reports.created_at,
+                reports.user_email as reporter_email,
+                coalesce(nullif(btrim(reporter.display_name), ''), reports.user_email) as reporter_name,
+                coalesce(nullif(btrim(author.display_name), ''), 'Member') as author_name,
+                (
+                    select count(*)
+                    from public.user_warnings warnings
+                    where warnings.user_id = reports.author_id
+                ) as warnings,
+                coalesce((
+                    select jsonb_agg(jsonb_build_object(
+                        'status', events.status,
+                        'note', events.note,
+                        'at', events.created_at
+                    ) order by events.created_at)
+                    from public.comment_report_events events
+                    where events.report_id = reports.id
+                ), '[]'::jsonb) as events
+            from public.comment_reports reports
+            left join public.profiles reporter on reporter.user_id = reports.user_id
+            left join public.profiles author on author.user_id = reports.author_id
+        ) item
+    ), '[]'::jsonb);
+end;
+$$;
+
+create or replace function public.review_comment_report(report_id bigint, next_status text)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    chosen public.comment_reports%rowtype;
+    current_status text;
+    reason_label text;
+    warning_number integer;
+    reporter record;
+begin
+    if not public.is_admin() then
+        return 'forbidden';
+    end if;
+    if next_status not in ('under_review', 'rejected', 'upheld') then
+        return 'step';
+    end if;
+    select * into chosen from public.comment_reports where id = report_id;
+    if not found then
+        return 'missing';
+    end if;
+    current_status := chosen.status;
+    if current_status = 'submitted' then
+        current_status := 'reported';
+    end if;
+    if not (
+        (current_status = 'reported' and next_status = 'under_review')
+        or (current_status = 'under_review' and next_status in ('rejected', 'upheld'))
+    ) then
+        return 'step';
+    end if;
+    if next_status = 'upheld' then
+        perform public.admin_remove_comment(chosen.place, chosen.message_kind, chosen.message_id);
+        reason_label := case chosen.reason
+            when 'promotion' then 'promoting an asset'
+            when 'advice' then 'presenting it as financial advice'
+            when 'harassment' then 'harassment or a personal attack'
+            when 'spam' then 'spam'
+            else 'something else'
+        end;
+        if chosen.author_id is not null then
+            insert into public.user_warnings (user_id, report_id, reason)
+            values (chosen.author_id, chosen.id, chosen.reason);
+            select count(*) into warning_number
+            from public.user_warnings
+            where user_id = chosen.author_id;
+            insert into public.user_notifications (user_id, asset_name, alert_type, message)
+            values (
+                chosen.author_id,
+                'Comment',
+                'moderation_warning',
+                'A comment you posted was removed because it broke the socials policy ('
+                    || reason_label || '). This is warning ' || warning_number || '.'
+            );
+        end if;
+    end if;
+    update public.comment_reports
+    set status = next_status
+    where place = chosen.place
+      and message_id = chosen.message_id
+      and message_kind = chosen.message_kind
+      and status in ('reported', 'submitted', 'under_review');
+    insert into public.comment_report_events (report_id, status, actor_id)
+    select reports.id, next_status, auth.uid()
+    from public.comment_reports reports
+    where reports.place = chosen.place
+      and reports.message_id = chosen.message_id
+      and reports.message_kind = chosen.message_kind
+      and reports.status = next_status
+      and not exists (
+          select 1
+          from public.comment_report_events events
+          where events.report_id = reports.id
+            and events.status = next_status
+      );
+    if next_status in ('rejected', 'upheld') then
+        for reporter in
+            select distinct user_id
+            from public.comment_reports
+            where place = chosen.place
+              and message_id = chosen.message_id
+              and message_kind = chosen.message_kind
+              and user_id is distinct from chosen.author_id
+        loop
+            insert into public.user_notifications (user_id, asset_name, alert_type, message)
+            values (
+                reporter.user_id,
+                'Report',
+                'report_update',
+                case
+                    when next_status = 'upheld' then 'Your report was upheld. The comment was removed.'
+                    else 'Your report was reviewed. The comment stays.'
+                end
+            );
+        end loop;
+    end if;
+    return 'ok';
+end;
+$$;
+
+revoke all on function public.admin_reports() from public;
+revoke all on function public.admin_reports() from anon;
+grant execute on function public.admin_reports() to authenticated;
+
+revoke all on function public.review_comment_report(bigint, text) from public;
+revoke all on function public.review_comment_report(bigint, text) from anon;
+grant execute on function public.review_comment_report(bigint, text) to authenticated;
