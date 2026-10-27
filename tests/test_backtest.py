@@ -197,3 +197,85 @@ def test_score_details_never_sees_the_future():
 
     bt.score_details(data, detail_fn=detail, warmup=100)
     assert lengths == list(range(101, 301))
+
+
+# ------------------------------------------------------------------- volatility
+
+
+def volatile(n=1500, seed=11, strength=1.5):
+    """Move sizes that depend on a known factor |x| AND on slowly changing volatility."""
+    rng = np.random.default_rng(seed)
+    x = rng.normal(0, 1, n)
+    log_vol = np.zeros(n)
+    for i in range(1, n):
+        log_vol[i] = 0.98 * log_vol[i - 1] + 0.12 * rng.normal()
+    sigma = 0.01 * np.exp(log_vol)
+    sigma[2:] *= 1 + strength * np.abs(x[:-2])  # |x| at t sizes the move on day t+2
+    returns = rng.normal(0, 1, n) * sigma
+    close = 100 * np.exp(np.cumsum(returns))
+    index = pd.date_range("2018-01-01", periods=n)
+    data = pd.DataFrame(
+        {"open": close, "high": close, "low": close, "close": close, "volume": 1.0}, index=index
+    )
+    lookup = dict(zip(index, x))
+    junk = dict(zip(index, rng.normal(0, 1, n)))
+    closes = data["close"]
+    trailing = bt.trailing_activity(closes)
+
+    def detail(window):
+        day = window.index[-1]
+        return {
+            "score": 50 + 10 * lookup[day],
+            "contributions": {"RSI": lookup[day], "Stochastic": junk[day]},
+            "atr_pct": float(trailing.loc[day]) if trailing.loc[day] == trailing.loc[day] else float("nan"),
+        }
+
+    return data, detail
+
+
+def test_forward_activity_matches_the_trade_window():
+    closes = pd.Series([100.0, 100.0, 110.0, 110.0, 110.0, 121.0])
+    act = bt.forward_activity(closes, horizon=1, lag=1)
+    assert math.isclose(act.iloc[0], 10.0)  # signal day 0, trade at 1, moves on day 2 = +10%
+    assert math.isclose(act.iloc[2], 0.0)
+    assert math.isnan(act.iloc[-1])
+
+
+def test_partial_rank_correlation_removes_the_control():
+    rng = np.random.default_rng(0)
+    z = rng.normal(size=600)
+    x = z + rng.normal(scale=0.3, size=600)  # x is mostly z
+    y = z + rng.normal(scale=0.3, size=600)  # y is mostly z
+    assert bt.rank_correlation(x, y) > 0.7
+    assert abs(bt.partial_rank_correlation(x, y, z)) < 0.15
+    own = rng.normal(size=600)
+    y2 = z + 0.8 * own
+    assert bt.partial_rank_correlation(own, y2, z) > 0.4
+    assert bt.partial_rank_correlation(z, y, z) is None  # x is the control
+
+
+def test_volatility_test_finds_a_planted_driver_and_ignores_the_mirror():
+    data, detail = volatile()
+    details = bt.score_details(data, detail_fn=detail, warmup=50)
+    report = bt.volatility_report(details, data["close"], horizons=(1,))
+    real = report["rows"]["RSI strength"][1]
+    junk = report["rows"]["Stochastic strength"][1]
+    assert real["partial"] > 3 * real["noise_floor"]
+    assert abs(junk["partial"]) < 3 * junk["noise_floor"]
+    mirror = report["rows"]["ATR %"][1]["partial"]
+    assert mirror is None or abs(mirror) < 3 * real["noise_floor"]
+    persistence = report["rows"]["REFERENCE: trailing volatility"][1]["raw"]
+    assert persistence > 0.15  # volatility really is sticky in this data
+
+
+def test_volatility_table_marks_only_the_real_driver():
+    reports = {}
+    for name, seed in (("A", 1), ("B", 2)):
+        data, detail = volatile(seed=seed)
+        details = bt.score_details(data, detail_fn=detail, warmup=50)
+        reports[name] = bt.volatility_report(details, data["close"], horizons=(1,))
+    text = bt.format_volatility_report(reports, horizons=(1,))
+    rsi = next(line for line in text.splitlines() if line.strip().startswith("RSI strength"))
+    stoch = next(line for line in text.splitlines() if line.strip().startswith("Stochastic strength"))
+    assert rsi.rstrip().endswith("YES")
+    assert not stoch.rstrip().endswith("YES")

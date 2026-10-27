@@ -21,6 +21,10 @@ Usage:
     python backtest.py --csv prices.csv --bull 65 --bear 35 --horizons 1,5,10
     python backtest.py --ticker BTC-USD ETH-USD AAPL --factors
 
+--volatility asks a different question: does the score say how BIG the next
+moves will be, beyond what recent volatility already says? Volatility is very
+persistent, so every candidate is judged after removing trailing volatility.
+
 --factors tests each of the ten score factors on its own, and the four groups
 (trend, mean reversion, volume, recent move), across every ticker you give. A
 factor only counts as holding up if it points the same way on every asset and
@@ -207,6 +211,10 @@ FACTOR_GROUPS = {
 }
 
 
+# Raw readings compute_score already returns. Used by the volatility test.
+EXTRA_FIELDS = ("adx", "atr_pct", "volume_ratio", "bb_position")
+
+
 def score_details(frame: pd.DataFrame, weights: dict | None = None, warmup: int = WARMUP, detail_fn=None) -> pd.DataFrame:
     """Score and each factor's points for each day, using only bars up to that day.
 
@@ -243,6 +251,11 @@ def score_details(frame: pd.DataFrame, weights: dict | None = None, warmup: int 
                     row[name] = float(points)
                 except (TypeError, ValueError):
                     row[name] = float("nan")
+            for extra in EXTRA_FIELDS:
+                try:
+                    row["x_" + extra] = float(result.get(extra))
+                except (TypeError, ValueError):
+                    row["x_" + extra] = float("nan")
         rows[source.index[end]] = row
     return pd.DataFrame.from_dict(rows, orient="index")
 
@@ -314,6 +327,112 @@ def format_factor_report(reports: dict[str, dict], horizons=DEFAULT_HORIZONS) ->
     lines.append(
         "Reading it: with ten factors, three horizons and several assets, one or two rows will look good by luck. "
         "Trust a factor only if it holds at several horizons, and show it on an asset you did not use to find it."
+    )
+    return "\n".join(lines)
+
+
+# -------------------------------------------------------------------- volatility
+
+TRAILING_DAYS = 14
+
+
+def forward_activity(closes: pd.Series, horizon: int, lag: int = LAG) -> pd.Series:
+    """Average size of the daily moves over the same window forward_returns covers."""
+    moves = closes.pct_change().abs() * 100.0
+    return moves.rolling(int(horizon)).mean().shift(-(lag + int(horizon)))
+
+
+def trailing_activity(closes: pd.Series, days: int = TRAILING_DAYS) -> pd.Series:
+    """Average size of the daily moves over the last days, known at the close."""
+    return (closes.pct_change().abs() * 100.0).rolling(days).mean()
+
+
+def partial_rank_correlation(x, y, control) -> float | None:
+    """Rank correlation of x with y once control's effect on both is removed."""
+    frame = pd.DataFrame({"x": list(x), "y": list(y), "z": list(control)}).dropna()
+    if len(frame) < 10 or any(frame[c].nunique() < 2 for c in frame.columns):
+        return None
+    ranks = frame.rank()
+    rxy = ranks["x"].corr(ranks["y"])
+    rxz = ranks["x"].corr(ranks["z"])
+    ryz = ranks["y"].corr(ranks["z"])
+    if abs(rxz) > 0.999 or abs(ryz) > 0.999:
+        return None  # x is (nearly) the control itself; nothing is left to measure
+    denominator = math.sqrt(max(1e-12, (1 - rxz**2) * (1 - ryz**2)))
+    value = (rxy - rxz * ryz) / denominator
+    return float(value) if math.isfinite(value) else None
+
+
+def volatility_features(details: pd.DataFrame) -> dict[str, pd.Series]:
+    """Candidates for 'does this say how big the next moves will be'. All are sizes, not directions."""
+    features = {}
+    if "score" in details.columns:
+        features["Score extremeness |score-50|"] = (details["score"] - 50).abs()
+    for name in FACTOR_NAMES:
+        if name in details.columns:
+            features[f"{name} strength"] = details[name].abs()
+    if "x_adx" in details.columns:
+        features["ADX level"] = details["x_adx"]
+    if "x_bb_position" in details.columns:
+        features["Bollinger edge distance"] = (details["x_bb_position"] - 0.5).abs()
+    if "x_volume_ratio" in details.columns:
+        features["Volume ratio"] = details["x_volume_ratio"]
+    if "x_atr_pct" in details.columns:
+        features["ATR %"] = details["x_atr_pct"]
+    return features
+
+
+def volatility_report(details: pd.DataFrame, closes: pd.Series, horizons=DEFAULT_HORIZONS) -> dict:
+    """For each feature and horizon: raw and partial rank correlation with later move size."""
+    control = trailing_activity(closes).reindex(details.index)
+    features = volatility_features(details)
+    report = {"days": int(len(details)), "rows": {}}
+    for horizon in horizons:
+        future = forward_activity(closes, int(horizon)).reindex(details.index)
+        pair = pd.DataFrame({"y": future, "z": control}).dropna()
+        n_eff = effective_n(len(pair), int(horizon))
+        noise = noise_floor(n_eff)
+        report["rows"].setdefault("REFERENCE: trailing volatility", {})[int(horizon)] = {
+            "raw": rank_correlation(pair["z"], pair["y"]), "partial": None, "noise_floor": noise,
+        }
+        for name, values in features.items():
+            raw = rank_correlation(values, future)
+            partial = partial_rank_correlation(values, future, control)
+            report["rows"].setdefault(name, {})[int(horizon)] = {
+                "raw": raw, "partial": partial, "noise_floor": noise,
+            }
+    return report
+
+
+def format_volatility_report(reports: dict[str, dict], horizons=DEFAULT_HORIZONS) -> str:
+    names = list(reports)
+    lines = [
+        "Volatility test: does anything in the score say how BIG the next moves will be?",
+        "Numbers are rank correlations with the average size of the daily moves that follow, after removing",
+        "what trailing 14-day volatility already tells you. 'holds' needs the same sign and size on every asset.",
+        "The REFERENCE row shows how persistent volatility is on its own (raw, nothing removed).",
+    ]
+    ordered = list(next(iter(reports.values()))["rows"]) if reports else []
+    width = max([len(n) for n in ordered] + [12])
+    for horizon in horizons:
+        lines.append("")
+        lines.append(f"Next {horizon} day{'s' if horizon != 1 else ''}")
+        lines.append(f"  {'feature':<{width}}" + "".join(f"{n[:9]:>10}" for n in names) + f"{'noise':>8}  holds")
+        for feature in ordered:
+            cells_src = [reports[n]["rows"].get(feature, {}).get(int(horizon), {}) for n in names]
+            reference = feature.startswith("REFERENCE")
+            key = "raw" if reference else "partial"
+            cells = "".join(f"{_num(item.get(key)):>10}" for item in cells_src)
+            floors = [item.get("noise_floor") for item in cells_src if item.get("noise_floor") is not None]
+            noise = f"±{max(floors):.2f}" if floors else "-"
+            mark = ""
+            if not reference:
+                mark = "YES" if holds_up([{"ic": item.get("partial"), "noise_floor": item.get("noise_floor")} for item in cells_src]) else ""
+            lines.append(f"  {feature:<{width}}{cells}{noise:>8}  {mark}")
+    lines.append("")
+    lines.append(
+        "Reading it: many features, several horizons, a few assets, so one or two rows can look good by luck. "
+        "Trust a feature only if it holds at several horizons, then check it on an asset you did not use to find it."
     )
     return "\n".join(lines)
 
@@ -494,6 +613,7 @@ def main(argv=None) -> int:
     parser.add_argument("--horizons", type=_parse_horizons, default=DEFAULT_HORIZONS)
     parser.add_argument("--cost-bps", type=float, default=10.0, help="cost per side in basis points")
     parser.add_argument("--factors", action="store_true", help="test each score factor on its own")
+    parser.add_argument("--volatility", action="store_true", help="test whether the score says how big the next moves will be")
     parser.add_argument("--json", dest="json_path", help="also write the full report here")
     args = parser.parse_args(argv)
 
@@ -511,7 +631,14 @@ def main(argv=None) -> int:
         frames[label] = frame
 
     output = {}
-    if args.factors:
+    if args.volatility:
+        reports = {}
+        for label, frame in frames.items():
+            print(f"Scoring {label} ...", file=sys.stderr)
+            reports[label] = volatility_report(score_details(frame), frame["close"], args.horizons)
+        print(format_volatility_report(reports, args.horizons))
+        output = reports
+    elif args.factors:
         reports = {}
         for label, frame in frames.items():
             print(f"Scoring {label} ...", file=sys.stderr)
