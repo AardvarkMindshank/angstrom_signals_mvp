@@ -153,3 +153,26 @@ def test_summary_same_with_timezone_aware_prices():
     aware = prices.copy()
     aware.index = aware.index.tz_localize("UTC")
     assert fd.funding_summary(level, aware)["size"] == plain["size"]
+
+
+def test_deribit_fetch_chunks_and_daily_total():
+    start = pd.Timestamp("2024-01-01", tz="UTC")
+    stop = start + pd.Timedelta(days=70)
+    calls = []
+
+    def getter(url, params):
+        calls.append(params)
+        first, last = params["start_timestamp"], params["end_timestamp"]
+        hours = range(int(first // 3_600_000), int(last // 3_600_000))
+        return {"result": [{"timestamp": h * 3_600_000, "interest_1h": 0.00001} for h in hours]}
+
+    series = fd.fetch_deribit_funding("BTC-PERPETUAL", start, getter=getter, pause=0, now=stop)
+    assert len(calls) == 3 and series.index.is_monotonic_increasing
+    assert not series.index.duplicated().any()
+    daily = fd.daily_funding(series)
+    assert abs(daily.iloc[1] - 0.00024) < 1e-12
+
+
+def test_deribit_fetch_empty_when_no_data():
+    got = fd.fetch_deribit_funding("BTC-PERPETUAL", pd.Timestamp("2024-01-01"), getter=lambda u, p: {"result": []}, pause=0, now=pd.Timestamp("2024-02-15"))
+    assert got.empty

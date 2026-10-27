@@ -166,7 +166,14 @@ def _funding_block(kind: str, asset_id: str, frame: pd.DataFrame) -> dict | None
                 prices = longer
         except Exception:
             pass
-        series = fd.fetch_binance_funding(f"{base}USDT", prices.index[0])
+        series = None
+        try:
+            series = fd.fetch_binance_funding(f"{base}USDT", prices.index[0])
+        except Exception as exc:
+            print(f"Binance funding unavailable for {asset_id}: {str(exc)[:80]}")
+        if (series is None or series.empty) and base.upper() in fd.DERIBIT_INSTRUMENTS:
+            series = fd.fetch_deribit_funding(fd.DERIBIT_INSTRUMENTS[base.upper()], prices.index[0])
+            print(f"Funding for {asset_id} taken from Deribit.")
         daily = fd.daily_funding(series)
         return fd.funding_summary(daily, prices["close"])
     except Exception as exc:

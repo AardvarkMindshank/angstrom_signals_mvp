@@ -23,6 +23,9 @@ import backtest as bt
 
 BINANCE_URL = "https://fapi.binance.com/fapi/v1/fundingRate"
 PAGE = 1000
+DERIBIT_URL = "https://www.deribit.com/api/v2/public/get_funding_rate_history"
+DERIBIT_INSTRUMENTS = {"BTC": "BTC-PERPETUAL", "ETH": "ETH-PERPETUAL"}
+DERIBIT_CHUNK_DAYS = 30
 DIRECTION_FEATURES = (
     "Funding level (7d avg, annualized %)",
     "Funding percentile (180d)",
@@ -83,6 +86,51 @@ def fetch_binance_funding(symbol: str, start: pd.Timestamp, getter=None, pause: 
     if not chunks:
         return pd.Series(dtype=float)
     series = pd.concat(chunks)
+    return series[~series.index.duplicated(keep="last")].sort_index()
+
+
+def fetch_deribit_funding(instrument: str, start: pd.Timestamp, getter=None, pause: float = 0.1, now=None) -> pd.Series:
+    """Hourly funding on a Deribit perpetual since start, in 30-day pieces.
+
+    Used when Binance refuses the connection (it blocks many data-centre
+    locations). Each hourly row is the funding charged for that hour, so
+    daily_funding adds them up to a daily total just as it does for Binance.
+    """
+    if getter is None:
+        import requests
+
+        def getter(url, params):
+            response = requests.get(url, params=params, timeout=20)
+            response.raise_for_status()
+            return response.json()
+
+    begin = pd.Timestamp(start)
+    begin = begin.tz_localize("UTC") if begin.tzinfo is None else begin.tz_convert("UTC")
+    stop = pd.Timestamp(now) if now is not None else pd.Timestamp.now(tz="UTC")
+    stop = stop.tz_localize("UTC") if stop.tzinfo is None else stop.tz_convert("UTC")
+    step = pd.Timedelta(days=DERIBIT_CHUNK_DAYS)
+    times, rates = [], []
+    cursor = begin
+    for _ in range(150):  # about 12 years; just a runaway guard
+        if cursor >= stop:
+            break
+        end = min(cursor + step, stop)
+        payload = getter(DERIBIT_URL, {
+            "instrument_name": instrument,
+            "start_timestamp": int(cursor.timestamp() * 1000),
+            "end_timestamp": int(end.timestamp() * 1000),
+        })
+        for row in (payload or {}).get("result") or []:
+            try:
+                times.append(pd.Timestamp(int(row["timestamp"]), unit="ms", tz="UTC"))
+                rates.append(float(row["interest_1h"]))
+            except (KeyError, TypeError, ValueError):
+                continue
+        cursor = end
+        time.sleep(pause)
+    if not times:
+        return pd.Series(dtype=float)
+    series = pd.Series(rates, index=pd.DatetimeIndex(times), dtype=float)
     return series[~series.index.duplicated(keep="last")].sort_index()
 
 
