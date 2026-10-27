@@ -6,6 +6,7 @@ Run with: streamlit run app.py
 import base64
 from contextlib import nullcontext
 import html
+from table_pick import clicked_pick
 import io
 import json
 import re
@@ -7731,6 +7732,8 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                 header_html += header_button(name, align)
 
             pick = st.session_state.get("chart_pick")
+            # A row click arrives after the tables are drawn, so read it now to highlight at once.
+            pick = clicked_pick(st.session_state) or pick
             rows_html = ""
             for _, row in frame.iterrows():
                 asset_id = str(row["key"])
