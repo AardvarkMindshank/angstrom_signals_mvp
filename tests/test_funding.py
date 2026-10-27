@@ -145,3 +145,11 @@ def test_too_little_funding_returns_none():
     index = pd.date_range("2024-01-01", periods=100)
     daily = pd.Series(0.0003, index=index)
     assert fd.funding_summary(daily, pd.Series(100.0, index=index)) is None
+
+
+def test_summary_same_with_timezone_aware_prices():
+    level, prices = sized_market()
+    plain = fd.funding_summary(level, prices)
+    aware = prices.copy()
+    aware.index = aware.index.tz_localize("UTC")
+    assert fd.funding_summary(level, aware)["size"] == plain["size"]

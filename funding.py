@@ -111,11 +111,23 @@ def funding_features(daily: pd.Series) -> pd.DataFrame:
     })
 
 
+def _daily_closes(closes: pd.Series) -> pd.Series:
+    """Closes on plain calendar dates: no time zone, one row per day.
+
+    Funding days are plain dates, so price days carrying a time zone would
+    match nothing and every result would come back empty.
+    """
+    closes = closes.copy()
+    index = pd.DatetimeIndex(closes.index)
+    if index.tz is not None:
+        index = index.tz_localize(None)
+    closes.index = index.normalize()
+    return closes[~closes.index.duplicated(keep="last")]
+
+
 def funding_report(features: pd.DataFrame, closes: pd.Series, horizons=bt.DEFAULT_HORIZONS) -> dict:
     """Direction and move-size results for each feature and horizon."""
-    closes = closes.copy()
-    closes.index = pd.DatetimeIndex(closes.index).normalize()
-    closes = closes[~closes.index.duplicated(keep="last")]
+    closes = _daily_closes(closes)
     both = features.reindex(closes.index).dropna(how="all")
     control = bt.trailing_activity(closes).reindex(both.index)
     report = {"days": int(both.dropna().shape[0]), "direction": {}, "size": {}}
@@ -198,9 +210,7 @@ def funding_summary(daily: pd.Series, closes: pd.Series, horizons=SUMMARY_HORIZO
     level = features[DIRECTION_FEATURES[0]].dropna()
     if len(level) < 400:
         return None
-    closes = closes.copy()
-    closes.index = pd.DatetimeIndex(closes.index).normalize()
-    closes = closes[~closes.index.duplicated(keep="last")]
+    closes = _daily_closes(closes)
     extreme = features[SIZE_FEATURES[0]].reindex(closes.index)
     control = bt.trailing_activity(closes)
     now = float(level.iloc[-1])
