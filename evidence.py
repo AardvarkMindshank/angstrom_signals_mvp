@@ -145,6 +145,25 @@ def _volatility_block(details: pd.DataFrame, closes: pd.Series, horizons) -> dic
     }
 
 
+def _funding_block(kind: str, asset_id: str, frame: pd.DataFrame) -> dict | None:
+    """Funding summary for a crypto asset, or None when it cannot be fetched (blocked, no contract...)."""
+    if kind != "Crypto":
+        return None
+    try:
+        import funding as fd
+        from data_fetchers import crypto_ticker
+
+        base = crypto_ticker(asset_id)
+        if not base:
+            return None
+        series = fd.fetch_binance_funding(f"{base}USDT", frame.index[0])
+        daily = fd.daily_funding(series)
+        return fd.funding_summary(daily, frame["close"])
+    except Exception as exc:
+        print(f"Funding skipped for {asset_id}: {str(exc)[:100]}")
+        return None
+
+
 def volatility_text(record: dict) -> str | None:
     """One honest sentence about recent range and whether it has been informative here."""
     block = record.get("volatility") or {}
@@ -482,6 +501,9 @@ def refresh_due_evidence(supabase, catalog: dict, batch: int = EVIDENCE_BATCH) -
                     record = {"version": VERSION, "too_short": True, "bars": int(len(frame))}
                 else:
                     record["ai_text"] = ai_summary(record, label)
+                    block = _funding_block(kind, asset_id, frame)
+                    if block:
+                        record["funding"] = block
             if save_evidence(supabase, key, record):
                 done += 1
         except Exception as exc:

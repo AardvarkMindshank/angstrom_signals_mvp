@@ -186,3 +186,27 @@ def test_volatility_text_levels():
     base["volatility"]["atr_percentile"] = 10.0
     assert "lower than usual" in ev.volatility_text(base)
     assert ev.volatility_text({}) is None
+
+
+def test_worker_keeps_going_when_funding_cannot_be_fetched():
+    client = FakeSupabase()
+    data, detail = planted()
+    original = (ev.fetch_long_history, ev.build_evidence, ev.ai_summary, ev._funding_block)
+    try:
+        ev.fetch_long_history = lambda kind, asset_id: (data, None)
+        ev.build_evidence = lambda frame: original[1](frame, detail_fn=detail, warmup=50)
+        ev.ai_summary = lambda record, label: None
+        ev._funding_block = lambda kind, asset_id, frame: None  # blocked or no contract
+        ev.refresh_due_evidence(client, {("Crypto", "bitcoin"): "Bitcoin"}, batch=1)
+        stored = client.store["asset_evidence"][0]["payload"]
+        assert "funding" not in stored and "verdict" in stored
+        ev._funding_block = lambda kind, asset_id, frame: {"level_now": 10.0, "extremeness_percentile": 50.0, "since": "2020-01-01", "size": {}}
+        ev.refresh_due_evidence(client, {("Crypto", "ethereum"): "Ethereum"}, batch=1)
+        assert any("funding" in row["payload"] for row in client.store["asset_evidence"])
+    finally:
+        ev.fetch_long_history, ev.build_evidence, ev.ai_summary, ev._funding_block = original
+
+
+def test_funding_block_is_crypto_only_and_survives_errors():
+    assert ev._funding_block("Stock", "AAPL", None) is None
+    assert ev._funding_block("Crypto", "not-a-coin", pd.DataFrame()) is None

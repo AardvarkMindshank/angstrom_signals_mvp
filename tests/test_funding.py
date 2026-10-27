@@ -96,3 +96,52 @@ def test_report_text_lists_coins_and_marks_holds():
     assert "DIRECTION, next 1 day" in text and "MOVE SIZE, next 1 day" in text
     line = next(l for l in text.splitlines() if l.strip().startswith("Funding level"))
     assert line.rstrip().endswith("YES")
+
+
+def sized_market(n=1500, seed=4, strength=2.0):
+    """Daily funding whose extremeness really sizes the next moves."""
+    rng = np.random.default_rng(seed)
+    index = pd.date_range("2019-01-01", periods=n)
+    level = pd.Series(np.cumsum(rng.normal(0, 0.00003, n)) * 1.0, index=index)  # signed, wanders around 0
+    smooth = level.rolling(7).mean()
+    size = (smooth.abs() / smooth.abs().std()).fillna(0)
+    sigma = 0.01 * (1 + strength * size.values)
+    sigma = np.roll(sigma, 2)
+    returns = rng.normal(0, 1, n) * sigma
+    prices = pd.Series(100 * np.exp(np.cumsum(returns)), index=index)
+    return level, prices
+
+
+def test_summary_finds_extremeness_that_sizes_moves_and_both_halves_agree():
+    level, prices = sized_market()
+    block = fd.funding_summary(level, prices)
+    assert block["days"] > 1000 and 0 <= block["extremeness_percentile"] <= 100
+    seven = block["size"]["7"]
+    assert seven["ic"] > seven["noise"]
+    assert seven["first_half"] > 0 and seven["second_half"] > 0
+    text = fd.funding_text(block)
+    assert "size, not direction" in text and "both halves" in text
+
+
+def test_summary_on_noise_says_not_clear():
+    rng = np.random.default_rng(9)
+    index = pd.date_range("2019-01-01", periods=1500)
+    level = pd.Series(np.cumsum(rng.normal(0, 0.00003, 1500)), index=index)
+    prices = pd.Series(100 * np.exp(np.cumsum(rng.normal(0, 0.01, 1500))), index=index)
+    text = fd.funding_text(fd.funding_summary(level, prices))
+    assert "not clear" in text
+
+
+def test_funding_text_one_sided_and_empty():
+    block = {"level_now": 40.0, "extremeness_percentile": 95.0, "since": "2020-01-01", "days": 900,
+             "size": {"3": {"ic": 0.2, "noise": 0.1, "first_half": 0.3, "second_half": -0.1},
+                      "7": {"ic": 0.2, "noise": 0.1, "first_half": 0.3, "second_half": -0.1}}}
+    assert "one half" in fd.funding_text(block)
+    assert fd.funding_text(None) is None
+    assert fd.funding_text({}) is None
+
+
+def test_too_little_funding_returns_none():
+    index = pd.date_range("2024-01-01", periods=100)
+    daily = pd.Series(0.0003, index=index)
+    assert fd.funding_summary(daily, pd.Series(100.0, index=index)) is None

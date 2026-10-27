@@ -9039,10 +9039,14 @@ def show_signal_evidence(kind: str, asset_id: str, shown: str) -> None:
         "High and low scores are compared with an average day because most assets drift one way over time."
     )
     from evidence import volatility_text
+    from funding import funding_text
 
     typical = volatility_text(record)
     if typical:
         st.write(typical)
+    crowding = funding_text(record.get("funding"))
+    if crowding:
+        st.write(crowding)
     factors = verdict.get("factors") or []
     if factors:
         st.caption(
