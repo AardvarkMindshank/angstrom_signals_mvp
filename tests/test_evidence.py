@@ -165,3 +165,24 @@ def test_worker_evaluates_oldest_first_and_respects_the_batch():
         assert len(stored) == 3
     finally:
         ev.fetch_long_history, ev.build_evidence, ev.ai_summary = original
+
+
+def test_volatility_block_and_text():
+    # reuse the planted-volatility generator from the backtest tests
+    import test_backtest as tb
+
+    data, detail = tb.volatile(n=1500)
+    record = ev.build_evidence(data, detail_fn=detail, warmup=50)
+    block = record["volatility"]
+    assert 0 <= block["atr_percentile"] <= 100
+    text = ev.volatility_text(record)
+    assert text.startswith("Recent typical daily range:")
+    assert "size, not direction" in text or "not clear" in text
+
+
+def test_volatility_text_levels():
+    base = {"volatility": {"atr_now": 5.0, "atr_median": 2.0, "atr_percentile": 90.0, "checks": {}}}
+    assert "higher than usual" in ev.volatility_text(base)
+    base["volatility"]["atr_percentile"] = 10.0
+    assert "lower than usual" in ev.volatility_text(base)
+    assert ev.volatility_text({}) is None

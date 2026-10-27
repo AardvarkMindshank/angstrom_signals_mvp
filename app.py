@@ -4998,7 +4998,7 @@ def notifications_panel() -> None:
 
         with tracked_expander("Configure Alert Rules", "alert_rules"):
             st.caption(
-                "70 is a strong bullish setup. 30 is a strong bearish setup. "
+                "70 is a strongly positive reading. 30 is a strongly negative reading. These describe current conditions and are not forecasts. "
                 "An email is sent once when a score crosses a boundary, and again only after it leaves and crosses later."
             )
             alert_enabled = st.checkbox("Enable Alerts", value=alert_prefs.get("enabled", True), key="alert_enabled_cb")
@@ -5098,14 +5098,14 @@ remember_section_clicks()
 
 with tracked_expander("📖 Help and guides", "help_guides", default=False):
     st.markdown("""
-**Higher score = a more bullish setup.** Every score starts at 50 and each indicator adds or subtracts points. The result is kept between 0 and 100. This is a research tool, not financial advice.
+**Higher score = more of the indicators read positive.** Every score starts at 50 and each indicator adds or subtracts points. The result is kept between 0 and 100. It describes current conditions. It is not a forecast: in our long-run tests the score has not lined up with what price did next, and each asset's Evidence view shows its own result. This is a research tool, not financial advice.
 """)
     bands = [
-        ("Strong bullish", "70+", "#15803d", "#dcfce7"),
-        ("Bullish", "60–69", "#15803d", "#dcfce7"),
-        ("Neutral", "47–52", "#b45309", "#fef3c7"),
-        ("Bearish", "30–39", "#b91c1c", "#fee2e2"),
-        ("Strong bearish", "below 30", "#b91c1c", "#fee2e2"),
+        ("Strongly positive", "70+", "#15803d", "#dcfce7"),
+        ("Positive", "60–69", "#15803d", "#dcfce7"),
+        ("Mixed", "47–52", "#b45309", "#fef3c7"),
+        ("Negative", "30–39", "#b91c1c", "#fee2e2"),
+        ("Strongly negative", "below 30", "#b91c1c", "#fee2e2"),
     ]
     band_cols = st.columns(len(bands))
     for column, (name, span, color, background) in zip(band_cols, bands):
@@ -9038,6 +9038,11 @@ def show_signal_evidence(kind: str, asset_id: str, shown: str) -> None:
         "Link to later price runs from -1 to +1. Anything inside the chance level cannot be told apart from luck. "
         "High and low scores are compared with an average day because most assets drift one way over time."
     )
+    from evidence import volatility_text
+
+    typical = volatility_text(record)
+    if typical:
+        st.write(typical)
     factors = verdict.get("factors") or []
     if factors:
         st.caption(

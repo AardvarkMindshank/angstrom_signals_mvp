@@ -105,6 +105,10 @@ def build_evidence(
                 "noise": _clean(bt.noise_floor(bt.effective_n(len(pair), int(horizon)))),
             }
 
+    block = _volatility_block(details, closes, horizons)
+    if block:
+        record["volatility"] = block
+
     strategy = bt.run_strategy(closes, total, enter=bull)
     record["strategy"] = {key: _clean(strategy.get(key)) for key in (
         "strategy_return_pct", "buy_hold_return_pct", "exposure_pct",
@@ -113,6 +117,61 @@ def build_evidence(
     record["verdict"] = verdict_for(record)
     record["text"] = plain_text(record)
     return record
+
+
+def _volatility_block(details: pd.DataFrame, closes: pd.Series, horizons) -> dict | None:
+    """Recent typical daily range, where it sits in this asset's own history, and
+    whether wide ranges were followed by bigger moves here (beyond recent volatility)."""
+    if "x_atr_pct" not in details.columns:
+        return None
+    series = details["x_atr_pct"].dropna()
+    if len(series) < 250:
+        return None
+    now = float(series.iloc[-1])
+    control = bt.trailing_activity(closes).reindex(details.index)
+    checks = {}
+    for horizon in horizons:
+        future = bt.forward_activity(closes, int(horizon)).reindex(details.index)
+        pair = pd.DataFrame({"y": future, "z": control}).dropna()
+        checks[str(horizon)] = {
+            "partial": _clean(bt.partial_rank_correlation(details["x_atr_pct"], future, control)),
+            "noise": _clean(bt.noise_floor(bt.effective_n(len(pair), int(horizon)))),
+        }
+    return {
+        "atr_now": _clean(now),
+        "atr_median": _clean(series.median()),
+        "atr_percentile": _clean(float((series < now).mean() * 100.0)),
+        "checks": checks,
+    }
+
+
+def volatility_text(record: dict) -> str | None:
+    """One honest sentence about recent range and whether it has been informative here."""
+    block = record.get("volatility") or {}
+    now, median, pct = block.get("atr_now"), block.get("atr_median"), block.get("atr_percentile")
+    if now is None or median is None or pct is None:
+        return None
+    if pct >= 75:
+        where = "higher than usual"
+    elif pct <= 25:
+        where = "lower than usual"
+    else:
+        where = "about usual"
+    text = (
+        f"Recent typical daily range: {now:.1f}% of price ({where} for this asset; its median is {median:.1f}%)."
+    )
+    held = [
+        h for h, info in (block.get("checks") or {}).items()
+        if info.get("partial") is not None and info.get("noise") is not None and info["partial"] >= info["noise"]
+    ]
+    if len(held) >= 2:
+        text += (
+            " On this asset, wide recent ranges have tended to be followed by bigger moves over the next days, "
+            "beyond what closing prices alone showed. That is about size, not direction."
+        )
+    else:
+        text += " On this asset the link between recent range and later move size was not clear in this test."
+    return text
 
 
 def _bucket(info: dict | None) -> dict:

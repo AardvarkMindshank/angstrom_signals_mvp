@@ -172,18 +172,18 @@ def _empty_result(reason: str) -> dict:
 
 def _label_for(score: float) -> str:
     if score >= 70:
-        return "Strong Bullish"
+        return "Strongly positive reading"
     if score >= 60:
-        return "Bullish"
+        return "Positive reading"
     if score >= 53:
-        return "Mildly Bullish"
+        return "Slightly positive"
     if score >= 47:
-        return "Neutral"
+        return "Mixed"
     if score >= 40:
-        return "Mildly Bearish"
+        return "Slightly negative"
     if score >= 30:
-        return "Bearish"
-    return "Strong Bearish"
+        return "Negative reading"
+    return "Strongly negative reading"
 
 
 def compute_score(df: pd.DataFrame, weights: dict | None = None) -> dict:

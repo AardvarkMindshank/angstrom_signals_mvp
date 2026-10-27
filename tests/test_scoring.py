@@ -26,10 +26,10 @@ def bars(n=300, seed=0):
 @pytest.mark.parametrize(
     "score,label",
     [
-        (100, "Strong Bullish"), (70, "Strong Bullish"), (69.9, "Bullish"), (60, "Bullish"),
-        (53, "Mildly Bullish"), (50, "Neutral"), (47, "Neutral"), (46.9, "Mildly Bearish"),
-        (40, "Mildly Bearish"), (39.9, "Bearish"), (30, "Bearish"), (29.9, "Strong Bearish"),
-        (0, "Strong Bearish"),
+        (100, "Strongly positive reading"), (70, "Strongly positive reading"), (69.9, "Positive reading"), (60, "Positive reading"),
+        (53, "Slightly positive"), (50, "Mixed"), (47, "Mixed"), (46.9, "Slightly negative"),
+        (40, "Slightly negative"), (39.9, "Negative reading"), (30, "Negative reading"), (29.9, "Strongly negative reading"),
+        (0, "Strongly negative reading"),
     ],
 )
 def test_label_boundaries(score, label):

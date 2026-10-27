@@ -13,6 +13,7 @@ def test_opens_bullish_when_score_reaches_threshold():
     actions = plan_alert_actions([row(72)], set(), 70, 30)
     assert kinds(actions) == [("open", BULLISH)]
     assert "72.0" in actions[0][4]
+    assert "positive reading" in actions[0][4] and "bullish" not in actions[0][4].lower()
 
 
 def test_opens_bearish_at_or_below_threshold():

@@ -93,11 +93,11 @@ def plan_alert_actions(results, latched, min_thresh, max_thresh):
             held.discard((symbol, BEARISH))
 
         if bullish and (symbol, BULLISH) not in held:
-            message = f"Score reached {score:.1f}/100 (bullish setup)"
+            message = f"Score reached {score:.1f}/100 (strongly positive reading)"
             actions.append(("open", symbol, name, BULLISH, message))
             held.add((symbol, BULLISH))
         elif bearish and (symbol, BEARISH) not in held:
-            message = f"Score dropped to {score:.1f}/100 (bearish setup)"
+            message = f"Score dropped to {score:.1f}/100 (strongly negative reading)"
             actions.append(("open", symbol, name, BEARISH, message))
             held.add((symbol, BEARISH))
 
