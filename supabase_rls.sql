@@ -324,6 +324,90 @@ create policy "signed-in users update shared market data" on public.asset_market
 
 grant select, insert, update on public.asset_market to authenticated;
 
+-- Every signed-in account can write this table, so the policies above cannot say
+-- who may change what. This trigger does. A signed-in session may:
+--   * add a row for an asset nobody has stored yet,
+--   * fill a group of columns that is still empty,
+--   * replace a group only once its stored copy is older than 12 hours
+--     (a fallback for when the worker is behind).
+-- Anything else is quietly kept as stored, so a fresh shared value cannot be
+-- overwritten and the app does not see an error. The shape of every write is
+-- also checked, so a session cannot store oversized or out-of-range data.
+-- The service role and the SQL editor have no auth.uid() and pass straight through.
+create or replace function public.guard_asset_market_write()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+declare
+    cutoff timestamptz := now() - interval '12 hours';
+    ceiling_at constant timestamptz := now() + interval '5 minutes';
+begin
+    if auth.uid() is null then
+        return new;
+    end if;
+
+    if new.sentiment_score is not null and (new.sentiment_score < 0 or new.sentiment_score > 100) then
+        raise exception 'sentiment_score must be between 0 and 100';
+    end if;
+    if new.logo_url is not null and new.logo_url !~* '^https://' then
+        raise exception 'logo_url must be an https address';
+    end if;
+    if pg_column_size(new.closes) > 262144
+       or pg_column_size(new.prices) > 1048576
+       or pg_column_size(new.sentiment_report) > 65536 then
+        raise exception 'shared market data is too large';
+    end if;
+    if new.closes_updated_at > ceiling_at
+       or new.sentiment_updated_at > ceiling_at
+       or new.prices_updated_at > ceiling_at then
+        raise exception 'timestamps cannot be in the future';
+    end if;
+
+    if tg_op = 'INSERT' then
+        return new;
+    end if;
+
+    new.asset_key := old.asset_key;
+    new.kind := old.kind;
+    new.asset_id := old.asset_id;
+
+    if old.closes is not null
+       and (old.closes_updated_at is null or old.closes_updated_at > cutoff
+            or new.closes_updated_at is null or new.closes_updated_at <= old.closes_updated_at) then
+        new.closes := old.closes;
+        new.closes_updated_at := old.closes_updated_at;
+    end if;
+
+    if old.prices is not null
+       and (old.prices_updated_at is null or old.prices_updated_at > cutoff
+            or new.prices_updated_at is null or new.prices_updated_at <= old.prices_updated_at) then
+        new.prices := old.prices;
+        new.prices_updated_at := old.prices_updated_at;
+    end if;
+
+    if old.sentiment_updated_at is not null
+       and (old.sentiment_updated_at > cutoff
+            or new.sentiment_updated_at is null or new.sentiment_updated_at <= old.sentiment_updated_at) then
+        new.sentiment_score := old.sentiment_score;
+        new.sentiment_report := old.sentiment_report;
+        new.sentiment_updated_at := old.sentiment_updated_at;
+    end if;
+
+    if old.logo_url is not null then
+        new.logo_url := old.logo_url;
+    end if;
+
+    return new;
+end;
+$$;
+
+drop trigger if exists guard_asset_market_write on public.asset_market;
+create trigger guard_asset_market_write
+    before insert or update on public.asset_market
+    for each row
+    execute function public.guard_asset_market_write();
+
 -- How many accounts hold each asset. Returns counts only, never account names.
 -- security definer reads every watchlist; signed-in users cannot do that directly.
 create or replace function public.asset_holder_counts()
@@ -669,6 +753,49 @@ create policy "signed-in users update market mood" on public.market_mood
     with check (market_key in ('crypto', 'stock'));
 
 grant select, insert, update on public.market_mood to authenticated;
+
+-- Same idea as guard_asset_market_write: a session may add a mood or refresh one
+-- older than 12 hours. A fresh mood stays as stored. The service role passes through.
+create or replace function public.guard_market_mood_write()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+    if auth.uid() is null then
+        return new;
+    end if;
+    if new.sentiment_score is not null and (new.sentiment_score < 0 or new.sentiment_score > 100) then
+        raise exception 'sentiment_score must be between 0 and 100';
+    end if;
+    if pg_column_size(new.sentiment_report) > 65536 then
+        raise exception 'shared market data is too large';
+    end if;
+    if new.sentiment_updated_at > now() + interval '5 minutes' then
+        raise exception 'timestamps cannot be in the future';
+    end if;
+    if tg_op = 'INSERT' then
+        return new;
+    end if;
+
+    new.market_key := old.market_key;
+    if old.sentiment_updated_at is not null
+       and (old.sentiment_updated_at > now() - interval '12 hours'
+            or new.sentiment_updated_at is null or new.sentiment_updated_at <= old.sentiment_updated_at) then
+        new.query := old.query;
+        new.sentiment_score := old.sentiment_score;
+        new.sentiment_report := old.sentiment_report;
+        new.sentiment_updated_at := old.sentiment_updated_at;
+    end if;
+    return new;
+end;
+$$;
+
+drop trigger if exists guard_market_mood_write on public.market_mood;
+create trigger guard_market_mood_write
+    before insert or update on public.market_mood
+    for each row
+    execute function public.guard_market_mood_write();
 
 -- One take per account per market. sentiment_at is the mood it belongs to.
 create table if not exists public.market_mood_votes (
@@ -1902,6 +2029,12 @@ create policy "signed-in users read sentiment history" on public.sentiment_histo
 
 grant select on public.sentiment_history to authenticated;
 
+-- A signed-in session may only record a score that is already the stored one for
+-- that subject, with the same timestamp. The app saves the score first and records
+-- it straight after, so honest calls pass and invented history does not.
+-- The service role (the alert worker) and the SQL editor are not checked.
+-- Parameters keep their names because the app calls this with named arguments.
+-- Columns are qualified so the names cannot be read as the parameters.
 create or replace function public.record_sentiment_score(
     subject_key text,
     score numeric,
@@ -1912,19 +2045,54 @@ language plpgsql
 security definer
 set search_path = public
 as $$
+declare
+    stored_score numeric;
+    stored_at timestamptz;
 begin
-    if subject_key is null or btrim(subject_key) = '' or score is null or recorded_at is null then
+    if record_sentiment_score.subject_key is null
+       or btrim(record_sentiment_score.subject_key) = ''
+       or record_sentiment_score.score is null
+       or record_sentiment_score.recorded_at is null then
         return;
     end if;
-    if score < 0 or score > 100 then
+    if record_sentiment_score.score < 0 or record_sentiment_score.score > 100 then
         return;
     end if;
-    insert into public.sentiment_history (subject_key, score, recorded_at)
-    values (left(btrim(subject_key), 200), score, recorded_at)
-    on conflict (subject_key, recorded_at) do nothing;
+    if record_sentiment_score.recorded_at > now() + interval '5 minutes'
+       or record_sentiment_score.recorded_at < now() - interval '30 days' then
+        return;
+    end if;
 
-    delete from public.sentiment_history
-    where recorded_at < now() - interval '30 days';
+    if auth.uid() is not null then
+        if record_sentiment_score.subject_key in ('crypto', 'stock') then
+            select m.sentiment_score, m.sentiment_updated_at
+            into stored_score, stored_at
+            from public.market_mood as m
+            where m.market_key = record_sentiment_score.subject_key;
+        else
+            select a.sentiment_score, a.sentiment_updated_at
+            into stored_score, stored_at
+            from public.asset_market as a
+            where a.asset_key = record_sentiment_score.subject_key;
+        end if;
+        if stored_score is null
+           or stored_at is null
+           or abs(stored_score - record_sentiment_score.score) > 0.0001
+           or abs(extract(epoch from (stored_at - record_sentiment_score.recorded_at))) > 1 then
+            return;
+        end if;
+    end if;
+
+    insert into public.sentiment_history as h (subject_key, score, recorded_at)
+    values (
+        left(btrim(record_sentiment_score.subject_key), 200),
+        record_sentiment_score.score,
+        record_sentiment_score.recorded_at
+    )
+    on conflict on constraint sentiment_history_pkey do nothing;
+
+    delete from public.sentiment_history as old_rows
+    where old_rows.recorded_at < now() - interval '30 days';
 end;
 $$;
 
@@ -2019,11 +2187,11 @@ revoke all on function public.is_admin() from public;
 revoke all on function public.is_admin() from anon;
 grant execute on function public.is_admin() to authenticated;
 
-insert into public.profiles (user_id, role)
-select users.id, 'admin'
-from auth.users as users
-where lower(users.email) = 'angus_marshall@hotmail.com'
-on conflict (user_id) do update set role = excluded.role;
+-- No admin is created here. Make the first one by hand in the SQL editor, once:
+--   update public.profiles set role = 'admin'
+--   where user_id = (select id from auth.users where lower(email) = lower('you@example.com'));
+-- The keep_profile_role trigger lets the SQL editor change roles; a signed-in session cannot.
+-- An account that was already made admin by an earlier run of this file stays admin.
 
 -- Each feedback status change is its own dated row.
 alter table public.feedback_notes drop constraint if exists feedback_notes_status_check;
