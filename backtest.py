@@ -614,6 +614,7 @@ def main(argv=None) -> int:
     parser.add_argument("--cost-bps", type=float, default=10.0, help="cost per side in basis points")
     parser.add_argument("--factors", action="store_true", help="test each score factor on its own")
     parser.add_argument("--volatility", action="store_true", help="test whether the score says how big the next moves will be")
+    parser.add_argument("--funding", action="store_true", help="test crypto funding rates (BTC-USD style tickers)")
     parser.add_argument("--json", dest="json_path", help="also write the full report here")
     args = parser.parse_args(argv)
 
@@ -631,7 +632,16 @@ def main(argv=None) -> int:
         frames[label] = frame
 
     output = {}
-    if args.volatility:
+    if args.funding:
+        from funding import format_funding_report, run_funding
+
+        reports = run_funding(frames, args.horizons)
+        if not reports:
+            print("No coin had enough funding history.", file=sys.stderr)
+            return 2
+        print(format_funding_report(reports, args.horizons))
+        output = reports
+    elif args.volatility:
         reports = {}
         for label, frame in frames.items():
             print(f"Scoring {label} ...", file=sys.stderr)
