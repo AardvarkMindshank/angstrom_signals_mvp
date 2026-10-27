@@ -198,6 +198,13 @@ def run_background_checks() -> None:
 
     frames = refresh_price_catalog(supabase, catalog, max_days)
     refresh_due_sentiment(supabase, catalog)
+    try:
+        from evidence import refresh_due_evidence
+
+        refresh_due_evidence(supabase, catalog)
+    except Exception as exc:
+        # Evidence is a nice-to-have. It must never hold up the alert pass.
+        print(f"Evidence pass skipped: {str(exc)[:160]}")
 
     if not all_user_prefs:
         print("No user preferences found.")

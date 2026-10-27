@@ -226,7 +226,9 @@ def period_for_days(days: int) -> str:
         return "6mo"
     if days <= 365:
         return "1y"
-    return "2y"
+    if days <= 730:
+        return "2y"
+    return "5y"
 
 
 def _flatten_columns(df: pd.DataFrame) -> pd.DataFrame:

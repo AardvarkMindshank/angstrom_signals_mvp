@@ -8981,6 +8981,84 @@ def _lead_label(value, reliable: bool | None = None) -> str:
     return f"{value:+.2f}{mark}"
 
 
+def show_signal_evidence(kind: str, asset_id: str, shown: str) -> None:
+    """How the technical score has actually lined up with later price for this asset."""
+    from evidence import load_evidence
+
+    record = load_evidence(supabase, asset_market_key(kind, asset_id))
+    if not record:
+        st.info(
+            f"The long-run test for {shown} has not been prepared yet. The background worker adds it "
+            "within a few minutes of an asset being watched, then refreshes it daily. Check back soon."
+        )
+        return
+    if record.get("too_short"):
+        st.info(
+            f"{shown} does not have enough price history to test yet. The test needs about two and a half "
+            "years of daily prices."
+        )
+        return
+    verdict = record.get("verdict") or {}
+    level = verdict.get("level", "none")
+    reverse = bool(verdict.get("reverse"))
+    if level == "holds" and not reverse:
+        st.success("Held up in this test. Still not a forecast: check it on similar assets.")
+    elif level == "holds" and reverse:
+        st.warning("Held up in reverse: high scores were followed by weaker prices.")
+    elif level == "hint":
+        st.warning("A faint hint at one time frame. Not enough to rely on.")
+    else:
+        st.info("No evidence the score has helped for this asset.")
+
+    st.write(record.get("ai_text") or record.get("text") or "")
+
+    rows = []
+    for horizon, info in (record.get("horizons") or {}).items():
+        high, low = info.get("high") or {}, info.get("low") or {}
+
+        def move(bucket):
+            if not bucket.get("n"):
+                return "no cases"
+            excess = bucket.get("excess")
+            tail = "" if excess is None else f" ({excess:+.2f}% vs an average day)"
+            thin = " - few cases" if (bucket.get("effective_n") or 0) < 10 else ""
+            return f"{bucket['n']} days{tail}{thin}"
+
+        ic, noise = info.get("ic"), info.get("noise")
+        rows.append({
+            "Next": f"{horizon} day" + ("" if str(horizon) == "1" else "s"),
+            "Link to later price": "n/a" if ic is None else f"{ic:+.2f}",
+            "Chance level": "n/a" if noise is None else f"±{noise:.2f}",
+            "High scores": move(high),
+            "Low scores": move(low),
+        })
+    if rows:
+        st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")
+    st.caption(
+        "Link to later price runs from -1 to +1. Anything inside the chance level cannot be told apart from luck. "
+        "High and low scores are compared with an average day because most assets drift one way over time."
+    )
+    factors = verdict.get("factors") or []
+    if factors:
+        st.caption(
+            "Parts of the score that cleared the chance level at two or more time frames: "
+            + ", ".join(str(item) for item in factors)
+            + ". With this many comparisons that is worth a closer look, not proof."
+        )
+    strategy = record.get("strategy") or {}
+    if strategy.get("strategy_return_pct") is not None and strategy.get("buy_hold_return_pct") is not None:
+        st.caption(
+            f"Holding only while the score was high returned {strategy['strategy_return_pct']:+.0f}% "
+            f"against {strategy['buy_hold_return_pct']:+.0f}% for buy and hold, after costs and with a one-day delay "
+            f"(in the market {strategy.get('exposure_pct') or 0:.0f}% of days)."
+        )
+    st.caption(
+        f"Daily prices from {record.get('first_scored', '?')} to {record.get('asof', '?')} "
+        f"({record.get('scored_days', 0)} days). Tested without looking ahead. "
+        "A description of the past, not advice and not a forecast."
+    )
+
+
 def show_signal_matrix(kind: str, asset_id: str, label: str, indicated, weights: dict) -> None:
     """Price across 30 days, with each signal set on those same dates."""
     from signal_matrix import LEAD_HORIZONS, MATRIX_DAYS, boundary_lines, build_matrix, weekend_edges
@@ -8989,6 +9067,16 @@ def show_signal_matrix(kind: str, asset_id: str, label: str, indicated, weights:
     with section_expander(f"▦ Signal matrix - {shown}", "signal_matrix"):
         if indicated is None or getattr(indicated, "empty", True):
             st.caption("Price history is not ready for this asset yet.")
+            return
+        section = st.radio(
+            "Signal view",
+            ["Evidence", "Recent 30 days"],
+            horizontal=True,
+            label_visibility="collapsed",
+            key="signal_matrix_section",
+        )
+        if section == "Evidence":
+            show_signal_evidence(kind, asset_id, shown)
             return
         view = st.radio(
             "Matrix display",

@@ -2101,6 +2101,27 @@ revoke all on function public.record_sentiment_score(text, numeric, timestamptz)
 grant execute on function public.record_sentiment_score(text, numeric, timestamptz) to authenticated;
 grant execute on function public.record_sentiment_score(text, numeric, timestamptz) to service_role;
 
+-- One long-run evidence record per asset: how the technical score lined up with
+-- later price over about five years. Signed-in users can read it. Only the alert
+-- worker (service role) writes it, so no account can edit what everyone is shown.
+create table if not exists public.asset_evidence (
+    asset_key text primary key,
+    computed_at timestamptz not null default now(),
+    payload jsonb not null
+);
+
+alter table public.asset_evidence enable row level security;
+
+drop policy if exists "signed-in users read asset evidence" on public.asset_evidence;
+create policy "signed-in users read asset evidence" on public.asset_evidence
+    for select
+    to authenticated
+    using (true);
+
+revoke all on public.asset_evidence from anon;
+revoke insert, update, delete on public.asset_evidence from authenticated;
+grant select on public.asset_evidence to authenticated;
+
 -- One report per account per comment. The app emails report@angstromsignals.com as well.
 -- A person can read the reports they sent. The crowd cannot.
 create table if not exists public.comment_reports (
