@@ -132,3 +132,13 @@ The history slider applies to both crypto and stocks. Refresh reloads prices for
 ## Hosting
 
 The dashboard is a long-running Python process. A typical Hostgator shared plan serves PHP and will not run this app. The usual setup is to keep the domain's DNS at Hostgator and point the name at a host that can run Python. That step comes after the app itself is stable.
+
+## Tests and backtest
+
+```
+pip install -r requirements-dev.txt
+python -m pytest -q
+python backtest.py --ticker BTC-USD --period 5y
+```
+
+`backtest.py` replays the technical score over years of daily bars and reports what price did next by score bucket, compared with the average day. See the file header for what it does and does not claim.
