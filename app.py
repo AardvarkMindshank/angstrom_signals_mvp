@@ -9070,7 +9070,7 @@ def show_signal_matrix(kind: str, asset_id: str, label: str, indicated, weights:
             return
         section = st.radio(
             "Signal view",
-            ["Evidence", "Recent 30 days"],
+            ["Recent 30 days", "Evidence"],
             horizontal=True,
             label_visibility="collapsed",
             key="signal_matrix_section",
