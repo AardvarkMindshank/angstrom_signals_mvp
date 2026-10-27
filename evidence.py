@@ -26,6 +26,7 @@ HORIZONS = (1, 3, 7, 14)
 # Warm-up bars plus enough scored days that a 14-day horizon is not empty.
 MIN_BARS = bt.WARMUP + 300
 FETCH_DAYS = 1825  # about five years
+FUNDING_PRICE_DAYS = 3650  # as much history as Yahoo has, to overlap funding from 2019
 REFRESH_SECONDS = 24 * 60 * 60
 # How many assets one worker run will evaluate. Each takes a little while to score.
 EVIDENCE_BATCH = 2
@@ -151,14 +152,23 @@ def _funding_block(kind: str, asset_id: str, frame: pd.DataFrame) -> dict | None
         return None
     try:
         import funding as fd
-        from data_fetchers import crypto_ticker
+        from data_fetchers import crypto_ticker, fetch_crypto_data
 
         base = crypto_ticker(asset_id)
         if not base:
             return None
-        series = fd.fetch_binance_funding(f"{base}USDT", frame.index[0])
+        # Funding exists since about 2019, and the effect was strongest in 2020-21, so use
+        # the longest price history there is, not only the five years the score test uses.
+        prices = frame
+        try:
+            longer, err = fetch_crypto_data(asset_id, FUNDING_PRICE_DAYS)
+            if not err and longer is not None and len(longer) > len(frame):
+                prices = longer
+        except Exception:
+            pass
+        series = fd.fetch_binance_funding(f"{base}USDT", prices.index[0])
         daily = fd.daily_funding(series)
-        return fd.funding_summary(daily, frame["close"])
+        return fd.funding_summary(daily, prices["close"])
     except Exception as exc:
         print(f"Funding skipped for {asset_id}: {str(exc)[:100]}")
         return None

@@ -228,7 +228,9 @@ def period_for_days(days: int) -> str:
         return "1y"
     if days <= 730:
         return "2y"
-    return "5y"
+    if days <= 1825:
+        return "5y"
+    return "max"
 
 
 def _flatten_columns(df: pd.DataFrame) -> pd.DataFrame:
