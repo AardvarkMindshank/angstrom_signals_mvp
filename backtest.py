@@ -19,6 +19,12 @@ floors use.
 Usage:
     python backtest.py --ticker BTC-USD --period 5y
     python backtest.py --csv prices.csv --bull 65 --bear 35 --horizons 1,5,10
+    python backtest.py --ticker BTC-USD ETH-USD AAPL --factors
+
+--factors tests each of the ten score factors on its own, and the four groups
+(trend, mean reversion, volume, recent move), across every ticker you give. A
+factor only counts as holding up if it points the same way on every asset and
+clears the noise band on each one.
     python backtest.py --ticker AAPL --json report.json
 
 A CSV needs a date column plus open, high, low, close (volume is optional).
@@ -188,6 +194,130 @@ def information_coefficient(scores: pd.Series, fwd: pd.Series, horizon: int) -> 
     return result
 
 
+# ----------------------------------------------------------------------- factors
+
+FACTOR_NAMES = (
+    "RSI", "Stochastic", "Moving Averages", "ADX Trend", "MACD & Hist",
+    "Ichimoku Cloud", "Bollinger Bands", "Volume", "OBV", "Performance",
+)
+FACTOR_GROUPS = {
+    "GROUP Trend (SMA, ADX, MACD, Ichimoku)": ("Moving Averages", "ADX Trend", "MACD & Hist", "Ichimoku Cloud"),
+    "GROUP Mean reversion (RSI, Stoch, Bollinger)": ("RSI", "Stochastic", "Bollinger Bands"),
+    "GROUP Volume (Volume, OBV)": ("Volume", "OBV"),
+}
+
+
+def score_details(frame: pd.DataFrame, weights: dict | None = None, warmup: int = WARMUP, detail_fn=None) -> pd.DataFrame:
+    """Score and each factor's points for each day, using only bars up to that day.
+
+    detail_fn(window) -> {"score": number, "contributions": {name: points}} or
+    None lets tests supply their own.
+    """
+    if detail_fn is None:
+        from scoring import calculate_indicators, compute_score
+
+        source = calculate_indicators(frame)
+
+        def detail_fn(window):
+            result = compute_score(window, weights)
+            if not isinstance(result, dict) or result.get("label") == "Insufficient data":
+                return None
+            return result
+    else:
+        source = frame
+
+    rows = {}
+    for end in range(warmup, len(source)):
+        try:
+            result = detail_fn(source.iloc[: end + 1])
+        except Exception:
+            result = None
+        row = {"score": float("nan")}
+        if isinstance(result, dict):
+            try:
+                row["score"] = float(result.get("score"))
+            except (TypeError, ValueError):
+                pass
+            for name, points in (result.get("contributions") or {}).items():
+                try:
+                    row[name] = float(points)
+                except (TypeError, ValueError):
+                    row[name] = float("nan")
+        rows[source.index[end]] = row
+    return pd.DataFrame.from_dict(rows, orient="index")
+
+
+def factor_report(details: pd.DataFrame, closes: pd.Series, horizons=DEFAULT_HORIZONS) -> dict:
+    """Rank correlation of each factor (and group) with later return, per horizon."""
+    columns = {name: details[name] for name in FACTOR_NAMES if name in details.columns}
+    for title, members in FACTOR_GROUPS.items():
+        present = [m for m in members if m in details.columns]
+        if present:
+            columns[title] = details[present].sum(axis=1, min_count=1)
+    if "score" in details.columns:
+        columns["TOTAL SCORE"] = details["score"]
+
+    report = {"days": int(len(details)), "rows": {}}
+    for horizon in horizons:
+        fwd = forward_returns(closes, int(horizon)).reindex(details.index)
+        for name, values in columns.items():
+            frame = pd.DataFrame({"x": values, "fwd": fwd}).dropna()
+            active = int((frame["x"] != 0).sum()) if len(frame) else 0
+            middle = len(frame) // 2
+            report["rows"].setdefault(name, {})[int(horizon)] = {
+                "n": int(len(frame)),
+                "active_days": active,
+                "ic": rank_correlation(frame["x"], frame["fwd"]),
+                "noise_floor": noise_floor(effective_n(len(frame), horizon)),
+                "first_half": rank_correlation(frame["x"].iloc[:middle], frame["fwd"].iloc[:middle]),
+                "second_half": rank_correlation(frame["x"].iloc[middle:], frame["fwd"].iloc[middle:]),
+            }
+    return report
+
+
+def holds_up(per_asset: list[dict]) -> bool:
+    """Same direction on every asset, and past the noise band on each one."""
+    if not per_asset:
+        return False
+    signs = set()
+    for item in per_asset:
+        ic, floor = item.get("ic"), item.get("noise_floor")
+        if ic is None or floor is None or abs(ic) < floor or ic == 0:
+            return False
+        signs.add(ic > 0)
+    return len(signs) == 1
+
+
+def format_factor_report(reports: dict[str, dict], horizons=DEFAULT_HORIZONS) -> str:
+    """One table per horizon: each factor's rank correlation on every asset."""
+    names = list(reports)
+    lines = [
+        "Factor test: rank correlation of each factor's points with the return that follows.",
+        "Positive means more points came before a rise. 'holds' needs the same direction on every asset,",
+        "past that asset's noise band each time. Most rows should NOT hold; that is what noise looks like.",
+    ]
+    ordered = list(next(iter(reports.values()))["rows"]) if reports else []
+    width = max([len(n) for n in ordered] + [12])
+    for horizon in horizons:
+        lines.append("")
+        lines.append(f"Next {horizon} day{'s' if horizon != 1 else ''}")
+        head = f"  {'factor':<{width}}" + "".join(f"{n[:9]:>10}" for n in names) + f"{'noise':>8}  holds"
+        lines.append(head)
+        for factor in ordered:
+            per_asset = [reports[n]["rows"].get(factor, {}).get(int(horizon), {}) for n in names]
+            cells = "".join(f"{_num(item.get('ic')):>10}" for item in per_asset)
+            floors = [item.get("noise_floor") for item in per_asset if item.get("noise_floor") is not None]
+            noise = f"±{max(floors):.2f}" if floors else "-"
+            mark = "YES" if holds_up(per_asset) else ""
+            lines.append(f"  {factor:<{width}}{cells}{noise:>8}  {mark}")
+    lines.append("")
+    lines.append(
+        "Reading it: with ten factors, three horizons and several assets, one or two rows will look good by luck. "
+        "Trust a factor only if it holds at several horizons, and show it on an asset you did not use to find it."
+    )
+    return "\n".join(lines)
+
+
 # ---------------------------------------------------------------------- strategy
 
 
@@ -355,7 +485,7 @@ def _parse_horizons(text: str) -> tuple[int, ...]:
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description="Walk-forward backtest of the technical score.")
     source = parser.add_mutually_exclusive_group(required=True)
-    source.add_argument("--ticker", help="yfinance symbol, e.g. BTC-USD or AAPL")
+    source.add_argument("--ticker", nargs="+", help="yfinance symbol(s), e.g. BTC-USD AAPL")
     source.add_argument("--csv", help="CSV with date, open, high, low, close[, volume]")
     parser.add_argument("--period", default="5y", help="yfinance period (default 5y)")
     parser.add_argument("--bull", type=float, default=70.0, help="high-score boundary (default 70)")
@@ -363,29 +493,47 @@ def main(argv=None) -> int:
     parser.add_argument("--exit-below", type=float, default=50.0, help="strategy goes flat below this score")
     parser.add_argument("--horizons", type=_parse_horizons, default=DEFAULT_HORIZONS)
     parser.add_argument("--cost-bps", type=float, default=10.0, help="cost per side in basis points")
+    parser.add_argument("--factors", action="store_true", help="test each score factor on its own")
     parser.add_argument("--json", dest="json_path", help="also write the full report here")
     args = parser.parse_args(argv)
 
-    try:
-        frame = load_prices(args.ticker, args.period, args.csv)
-    except Exception as exc:
-        print(f"Could not load prices: {exc}", file=sys.stderr)
-        return 2
-    if len(frame) < WARMUP + 30:
-        print(f"Only {len(frame)} bars; need at least {WARMUP + 30}.", file=sys.stderr)
-        return 2
-    report = run_backtest(
-        frame,
-        bull=args.bull,
-        bear=args.bear,
-        horizons=args.horizons,
-        exit_below=args.exit_below,
-        cost_bps=args.cost_bps,
-    )
-    print(format_report(report, args.ticker or args.csv))
+    labels = args.ticker or [args.csv]
+    frames = {}
+    for label in labels:
+        try:
+            frame = load_prices(None if args.csv else label, args.period, args.csv)
+        except Exception as exc:
+            print(f"Could not load prices for {label}: {exc}", file=sys.stderr)
+            return 2
+        if len(frame) < WARMUP + 30:
+            print(f"{label}: only {len(frame)} bars; need at least {WARMUP + 30}.", file=sys.stderr)
+            return 2
+        frames[label] = frame
+
+    output = {}
+    if args.factors:
+        reports = {}
+        for label, frame in frames.items():
+            print(f"Scoring {label} ...", file=sys.stderr)
+            reports[label] = factor_report(score_details(frame), frame["close"], args.horizons)
+        print(format_factor_report(reports, args.horizons))
+        output = reports
+    else:
+        for label, frame in frames.items():
+            report = run_backtest(
+                frame,
+                bull=args.bull,
+                bear=args.bear,
+                horizons=args.horizons,
+                exit_below=args.exit_below,
+                cost_bps=args.cost_bps,
+            )
+            print(format_report(report, label))
+            print()
+            output[label] = report
     if args.json_path:
         with open(args.json_path, "w", encoding="utf-8") as handle:
-            json.dump(report, handle, indent=2, default=str)
+            json.dump(output, handle, indent=2, default=str)
     return 0
 
 

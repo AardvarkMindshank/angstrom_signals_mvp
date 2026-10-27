@@ -122,3 +122,78 @@ def test_csv_loader(tmp_path):
     loaded = bt.load_prices(csv_path=str(path))
     assert list(loaded.columns) == ["open", "high", "low", "close", "volume"]
     assert len(loaded) == 50
+
+
+# ------------------------------------------------------------------ factor test
+
+
+def planted(n=700, seed=5, strength=0.01):
+    """Prices where a known factor really does lead the return that follows the trade lag."""
+    rng = np.random.default_rng(seed)
+    signal = rng.normal(0, 1, n)
+    noise = rng.normal(0, 0.01, n)
+    returns = noise.copy()
+    returns[2:] += strength * signal[:-2]  # signal at t drives the move from t+1 to t+2
+    close = 100 * np.exp(np.cumsum(returns))
+    index = pd.date_range("2020-01-01", periods=n)
+    data = pd.DataFrame(
+        {"open": close, "high": close, "low": close, "close": close, "volume": 1.0}, index=index
+    )
+    lookup = dict(zip(index, signal))
+    junk = dict(zip(index, rng.normal(0, 1, n)))
+
+    def detail(window):
+        day = window.index[-1]
+        return {
+            "score": 50 + 10 * lookup[day],
+            "contributions": {"RSI": lookup[day], "Stochastic": junk[day]},
+        }
+
+    return data, detail
+
+
+def test_factor_report_finds_a_planted_signal_and_not_junk():
+    data, detail = planted()
+    details = bt.score_details(data, detail_fn=detail, warmup=50)
+    report = bt.factor_report(details, data["close"], horizons=(1,))
+    real = report["rows"]["RSI"][1]
+    junk = report["rows"]["Stochastic"][1]
+    assert real["ic"] > 3 * real["noise_floor"]
+    assert abs(junk["ic"]) < 3 * junk["noise_floor"]
+    assert report["rows"]["TOTAL SCORE"][1]["ic"] > 3 * real["noise_floor"]
+
+
+def test_holds_up_needs_same_direction_and_size_on_every_asset():
+    good = {"ic": 0.2, "noise_floor": 0.1}
+    weak = {"ic": 0.05, "noise_floor": 0.1}
+    flipped = {"ic": -0.2, "noise_floor": 0.1}
+    assert bt.holds_up([good, good])
+    assert not bt.holds_up([good, weak])
+    assert not bt.holds_up([good, flipped])
+    assert not bt.holds_up([])
+    assert not bt.holds_up([{"ic": None, "noise_floor": 0.1}])
+
+
+def test_factor_table_marks_only_the_real_factor():
+    reports = {}
+    for name, seed in (("A", 1), ("B", 2)):
+        data, detail = planted(seed=seed)
+        details = bt.score_details(data, detail_fn=detail, warmup=50)
+        reports[name] = bt.factor_report(details, data["close"], horizons=(1,))
+    text = bt.format_factor_report(reports, horizons=(1,))
+    rsi_line = next(line for line in text.splitlines() if line.strip().startswith("RSI"))
+    stoch_line = next(line for line in text.splitlines() if line.strip().startswith("Stochastic"))
+    assert rsi_line.rstrip().endswith("YES")
+    assert not stoch_line.rstrip().endswith("YES")
+
+
+def test_score_details_never_sees_the_future():
+    data, _ = planted(300)
+    lengths = []
+
+    def detail(window):
+        lengths.append(len(window))
+        return {"score": 50.0, "contributions": {}}
+
+    bt.score_details(data, detail_fn=detail, warmup=100)
+    assert lengths == list(range(101, 301))
