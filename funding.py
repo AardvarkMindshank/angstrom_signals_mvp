@@ -227,15 +227,30 @@ def format_funding_report(reports: dict[str, dict], horizons=bt.DEFAULT_HORIZONS
     return "\n".join(lines)
 
 
-def run_funding(frames: dict, horizons) -> dict:
-    """frames maps ticker -> price frame. Returns the per-coin reports."""
+def run_funding(frames: dict, horizons, source: str = "binance", since=None) -> dict:
+    """frames maps ticker -> price frame. Returns the per-coin reports.
+
+    source is "binance" or "deribit". since drops funding days before that
+    date, to see whether an early period drives the result.
+    """
     reports = {}
     for ticker, frame in frames.items():
         start = frame.index[0]
-        symbol = binance_symbol(ticker)
-        print(f"Funding for {symbol} ...", flush=True)
-        series = fetch_binance_funding(symbol, start)
+        base = str(ticker).upper().replace("-USD", "").replace("-USDT", "").strip()
+        if source == "deribit":
+            instrument = DERIBIT_INSTRUMENTS.get(base)
+            if not instrument:
+                print(f"{ticker}: Deribit has no matching contract here; skipped.")
+                continue
+            print(f"Funding for {instrument} on Deribit ...", flush=True)
+            series = fetch_deribit_funding(instrument, start)
+        else:
+            symbol = binance_symbol(ticker)
+            print(f"Funding for {symbol} ...", flush=True)
+            series = fetch_binance_funding(symbol, start)
         daily = daily_funding(series)
+        if since is not None:
+            daily = daily[daily.index >= pd.Timestamp(since)]
         if len(daily) < 400:
             print(f"{ticker}: only {len(daily)} days of funding; skipped.")
             continue
