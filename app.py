@@ -3583,7 +3583,7 @@ def _app_url() -> str:
         url = ""
     if url.startswith("http"):
         return url.split("#", 1)[0].split("?", 1)[0]
-    return "https://angstromsignalsmvp.streamlit.app"
+    return "https://app.angstromsignals.com"
 
 
 def _reset_link_error(raw: str) -> str:
