@@ -501,7 +501,9 @@ def refresh_due_evidence(supabase, catalog: dict, batch: int = EVIDENCE_BATCH) -
     done = 0
     for _stamp_value, key, kind, asset_id, label in due[: max(1, int(batch))]:
         try:
+            print(f"Evidence: starting {label}...", flush=True)
             frame, err = fetch_long_history(kind, asset_id)
+            print(f"Evidence: {label} history fetched.", flush=True)
             if err or frame is None or len(frame) < MIN_BARS:
                 print(f"Evidence skipped for {label}: not enough history.")
                 record = {"version": VERSION, "too_short": True, "bars": 0 if frame is None else int(len(frame))}
@@ -516,6 +518,7 @@ def refresh_due_evidence(supabase, catalog: dict, batch: int = EVIDENCE_BATCH) -
                         record["funding"] = block
             if save_evidence(supabase, key, record):
                 done += 1
+                print(f"Evidence: {label} saved.", flush=True)
         except Exception as exc:
             print(f"Evidence failed for {label}: {str(exc)[:160]}")
     print(f"Evidence: {done} updated, {max(0, len(due) - done)} still waiting.")

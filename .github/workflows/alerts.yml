@@ -21,6 +21,8 @@ concurrency:
 jobs:
   run-alerts:
     runs-on: ubuntu-24.04
+    # A stuck download must not block every later run.
+    timeout-minutes: 15
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
