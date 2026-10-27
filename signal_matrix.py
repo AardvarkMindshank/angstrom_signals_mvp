@@ -18,6 +18,11 @@ from scoring import calculate_indicators, compute_score
 MATRIX_DAYS = 30
 LEAD_HORIZONS = (1, 3, 7)
 _MIN_PAIRS = 8
+# Forward returns over a horizon of h bars overlap, so n pairs carry roughly
+# n / h independent observations. Below this a lead is shown but flagged.
+_MIN_EFFECTIVE = 8
+# A boundary count needs at least this many cases before it is called a record.
+_MIN_CASES = 5
 
 
 def weekend_edges(dates) -> list[str]:
@@ -61,12 +66,29 @@ def weekend_edges(dates) -> list[str]:
     return marks
 
 
-def build_matrix(frame, weight_sets, sentiment, horizon: int, days: int = MATRIX_DAYS) -> dict:
+def build_matrix(
+    frame,
+    weight_sets,
+    sentiment,
+    horizon: int,
+    days: int = MATRIX_DAYS,
+    include_mix: bool = False,
+) -> dict:
     """Price and one value per signal for each of the last days.
 
     weight_sets is (name, weights) in display order. sentiment maps a row name
     to (day, score) readings. Days before the first reading stay empty. After
     that, the last reading stays on each later price day until the next one.
+
+    Each row carries its lead plus how much data stands behind it: pairs (days
+    with both a signal and a later price), effective_n (pairs divided by the
+    horizon, because overlapping returns are not independent), noise_floor (the
+    size a correlation must pass to stand out from chance at that effective n)
+    and reliable (enough effective data, and the lead passes the floor).
+
+    include_mix is off by default. Searching every pair and triple of signals
+    for the best correlation on 30 days mostly finds noise, so the result is
+    only computed when asked for.
     """
     indicated = frame
     if frame is None or getattr(frame, "empty", True):
@@ -98,8 +120,23 @@ def build_matrix(frame, weight_sets, sentiment, horizon: int, days: int = MATRIX
     returns = _forward_returns(closes, horizon)
     for row in rows:
         row["lead"] = _correlation(row["values"], returns)
-    mix = _best_mix(rows, returns)
+        row.update(_support(row["values"], returns, row["lead"], horizon))
+    mix = _best_mix(rows, returns) if include_mix else None
     return {"dates": dates, "closes": closes, "rows": rows, "mix": mix, "horizon": int(horizon)}
+
+
+def _support(values, returns, lead, horizon: int) -> dict:
+    """How much independent data is behind a lead, and whether it clears noise."""
+    pairs = sum(1 for value, move in zip(values, returns) if value is not None and move is not None)
+    effective = pairs / max(1, int(horizon))
+    floor = 1.96 / math.sqrt(effective) if effective > 0 else None
+    reliable = (
+        lead is not None
+        and floor is not None
+        and effective >= _MIN_EFFECTIVE
+        and abs(lead) >= floor
+    )
+    return {"pairs": pairs, "effective_n": effective, "noise_floor": floor, "reliable": reliable}
 
 
 def _empty() -> dict:
@@ -159,7 +196,10 @@ def boundary_lines(
 
     A case is a day whose score is on that side of the boundary and whose price
     that many days later is already in the window. Higher means the later close
-    was above the close that day. Lower means it was below.
+    was above the close that day. Lower means it was below. Each count sits
+    beside the base rate, the same move across every day with a later price,
+    because a rising asset is higher most days whatever the score says. A side
+    with fewer than _MIN_CASES cases is reported as too few to judge.
     """
     def level(value: float) -> str:
         number = float(value)
@@ -167,11 +207,18 @@ def boundary_lines(
             return str(int(number))
         return f"{number:.1f}"
 
-    def sentence(prefix: str, counts: list[tuple[int, int, int]]) -> str:
+    def sentence(prefix: str, counts: list[tuple[int, int, int, int, int]]) -> str:
         parts = []
-        for horizon, hits, total in counts:
+        for horizon, hits, total, base_hits, base_total in counts:
             unit = "day" if int(horizon) == 1 else "days"
-            outcome = f"in {hits} of {total} cases" if total else "in none"
+            if not total:
+                outcome = "in none"
+            elif total < _MIN_CASES:
+                outcome = f"in {hits} of only {total} cases, too few to judge"
+            else:
+                outcome = f"in {hits} of {total} cases"
+            if total and base_total:
+                outcome += f" (all days: {base_hits} of {base_total})"
             parts.append(f"{int(horizon)} {unit} later {outcome}")
         if len(parts) == 1:
             body = parts[0]
@@ -186,8 +233,16 @@ def boundary_lines(
     for horizon in horizons:
         returns = _forward_returns(closes, horizon)
         high_hits = high_total = low_hits = low_total = 0
+        up_days = down_days = known = 0
         for score, move in zip(scores or [], returns):
-            if score is None or move is None:
+            if move is None:
+                continue
+            known += 1
+            if move > 0:
+                up_days += 1
+            elif move < 0:
+                down_days += 1
+            if score is None:
                 continue
             if score >= bull:
                 high_total += 1
@@ -197,8 +252,8 @@ def boundary_lines(
                 low_total += 1
                 if move < 0:
                     low_hits += 1
-        high.append((int(horizon), high_hits, high_total))
-        low.append((int(horizon), low_hits, low_total))
+        high.append((int(horizon), high_hits, high_total, up_days, known))
+        low.append((int(horizon), low_hits, low_total, down_days, known))
     return [
         sentence(f"Above {level(bull)}, higher", high),
         sentence(f"At or below {level(bear)}, lower", low),

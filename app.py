@@ -8973,10 +8973,12 @@ def _sentiment_series(subject_key: str, row) -> list[tuple[str, float]]:
     return points
 
 
-def _lead_label(value) -> str:
+def _lead_label(value, reliable: bool | None = None) -> str:
+    """Signed lead. A dagger marks a lead too thin to tell from chance."""
     if value is None:
         return "—"
-    return f"{value:+.2f}"
+    mark = "" if reliable is None or reliable else "†"
+    return f"{value:+.2f}{mark}"
 
 
 def show_signal_matrix(kind: str, asset_id: str, label: str, indicated, weights: dict) -> None:
@@ -9034,17 +9036,12 @@ def show_signal_matrix(kind: str, asset_id: str, label: str, indicated, weights:
             + ("day" if int(horizon) == 1 else "days")
             + ". Positive means a high score came before a rise. "
             + "A blank sentiment day is before the first saved reading. After that, the last saved score stays until the next one. "
-            + "The 30-day record in the table below counts every signal the same way, using your bullish and bearish boundaries."
+            + "The 30-day record in the table below counts every signal the same way, using your bullish and bearish boundaries. "
+            + "† marks a lead that is too thin to tell from chance. Price changes over the next few days overlap, "
+            + "so 30 days holds far fewer independent observations than it looks."
         )
         rows = matrix["rows"]
-        mix = matrix.get("mix")
         plot_rows = list(rows)
-        if mix:
-            plot_rows.append({
-                "name": "Best mix",
-                "values": mix["values"],
-                "lead": mix["lead"],
-            })
         if view == "Numbers":
             head = "".join(
                 f"<th style='padding:4px 6px;font-weight:600;white-space:nowrap;'>{html.escape(day[5:])}</th>"
@@ -9070,7 +9067,7 @@ def show_signal_matrix(kind: str, asset_id: str, label: str, indicated, weights:
                 body.append(
                     "<tr><td style='padding:4px 8px;font-weight:600;white-space:nowrap;'>"
                     f"{html.escape(row['name'])}</td>"
-                    f"<td style='padding:4px 6px;text-align:right;white-space:nowrap;'>{_lead_label(row.get('lead'))}</td>"
+                    f"<td style='padding:4px 6px;text-align:right;white-space:nowrap;'>{_lead_label(row.get('lead'), row.get('reliable'))}</td>"
                     f"{''.join(cells)}</tr>"
                 )
             st.markdown(
@@ -9141,7 +9138,7 @@ def show_signal_matrix(kind: str, asset_id: str, label: str, indicated, weights:
             _paint_chart(fig)
             st.plotly_chart(fig, width="stretch")
         ranked = sorted(
-            [row for row in rows if row.get("lead") is not None],
+            [row for row in rows if row.get("lead") is not None and row.get("reliable")],
             key=lambda row: abs(row["lead"]),
             reverse=True,
         )
@@ -9182,7 +9179,7 @@ def show_signal_matrix(kind: str, asset_id: str, label: str, indicated, weights:
             summary.append(
                 f"<tr><td style='padding:4px 8px;vertical-align:top;white-space:nowrap;'>{html.escape(row['name'])}</td>"
                 f"<td style='padding:4px 8px;text-align:right;vertical-align:top;white-space:nowrap;'>{rank_of.get(row['name'], '—')}</td>"
-                f"<td style='padding:4px 8px;text-align:right;vertical-align:top;white-space:nowrap;'>{_lead_label(row.get('lead'))}</td>"
+                f"<td style='padding:4px 8px;text-align:right;vertical-align:top;white-space:nowrap;'>{_lead_label(row.get('lead'), row.get('reliable'))}</td>"
                 f"<td style='padding:4px 8px;vertical-align:top;width:100%;'>{record}</td></tr>"
             )
         st.markdown(
@@ -9194,16 +9191,12 @@ def show_signal_matrix(kind: str, asset_id: str, label: str, indicated, weights:
             f"<tbody>{''.join(summary)}</tbody></table></div>",
             unsafe_allow_html=True,
         )
-        if mix:
-            names = ", ".join(mix["names"])
+        effective = [row.get("effective_n") for row in rows if row.get("effective_n")]
+        if effective:
             st.caption(
-                f"Best lookback mix: {names}. Lead {_lead_label(mix['lead'])} over the next "
-                f"{int(horizon)} " + ("day." if int(horizon) == 1 else "days.")
-                + " This is a lookback on this window. It does not change the technical score or alerts."
-            )
-        else:
-            st.caption(
-                "No mix of two or three signals beat the best single signal in this window. "
+                f"About {max(effective):.0f} independent observations per signal at this window. "
+                "Only leads that clear the noise level for that count are ranked. "
+                "Read the record beside the all-days figure: a rising asset is higher most days whatever the score says. "
                 "This is a lookback. It does not change the technical score or alerts."
             )
 
