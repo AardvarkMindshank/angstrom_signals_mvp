@@ -6024,12 +6024,14 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
         label_visibility="collapsed",
     )
     st.divider()
+    st.markdown("**Days of history**")
     days_history = st.slider(
         "Days of history",
         90,
         365,
         key="days_history",
         persist_state="session",
+        label_visibility="collapsed",
     )
     st.divider()
     st.markdown("**TA analysis**")
