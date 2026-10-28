@@ -6352,14 +6352,20 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
                 st.rerun()
         st.markdown("**Ready-made themes**")
         st.caption("Click a picture to try it. You can still change any colour afterwards, and the undo arrow returns to your saved colours.")
-        theme_cards = "".join(
-            f"<div class='theme-pick theme-card' data-theme-pick='{html.escape(name, quote=True)}' "
-            f"title='Try the {html.escape(name, quote=True)} colours' style='width:8.5rem;cursor:pointer;'>"
-            + colour_themes.swatch_html(colour_themes.THEMES[name])
-            + f"<div class='theme-name'>{html.escape(name)}</div></div>"
-            for name in colour_themes.THEMES
-        )
-        st.html(f"<div style='display:flex;flex-wrap:wrap;gap:.5rem .75rem;'>{theme_cards}</div>")
+        theme_names = list(colour_themes.THEMES)
+        for start in range(0, len(theme_names), 2):
+            for column, name in zip(st.columns(2, gap="small"), theme_names[start:start + 2]):
+                with column:
+                    st.html(
+                        f"<div class='theme-pick theme-card' data-theme-pick='{html.escape(name, quote=True)}' "
+                        "style='cursor:pointer;'>"
+                        + colour_themes.swatch_html(colour_themes.THEMES[name]) + "</div>"
+                    )
+                    st.button(
+                        name, key=f"theme_use_{name.lower().replace(' ', '_')}",
+                        on_click=_use_colours, args=(colour_themes.THEMES[name],), use_container_width=True,
+                        help=f"Try the {name} colours",
+                    )
         st.markdown("**Fine tune**")
         st.caption("Change the colour of individual UI elements. Drag and drop colours to copy them. Save and reset using the icons above.")
         widths = [1.5, 1, 1]
