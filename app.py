@@ -320,6 +320,13 @@ export default function(component) {
       "[class*='st-key-themepick_card_'],.st-key-themepick_saved{overflow:hidden !important;}",
       "[class*='st-key-colours_save_slot'] button,[class*='st-key-colours_back_slot'] button,[class*='st-key-reset_colours'] button{width:2.05rem !important;min-width:2.05rem !important;height:2.05rem !important;min-height:2.05rem !important;padding:0 !important;display:inline-flex;align-items:center;justify-content:center;}",
       "[class*='st-key-colours_save_slot'],[class*='st-key-colours_back_slot'],[class*='st-key-reset_colours']{width:2.05rem !important;flex:0 0 auto !important;}",
+      ".st-key-palette_table [data-testid='stVerticalBlock']{gap:.2rem !important;}",
+      ".st-key-palette_table [data-testid='stHorizontalBlock']{gap:.35rem !important;align-items:center !important;}",
+      ".st-key-palette_table [data-testid='stElementContainer'],.st-key-palette_table [data-testid='stMarkdown']{margin:0 !important;padding:0 !important;}",
+      ".st-key-palette_table [data-testid='stColorPicker']{margin:0 !important;padding:0 !important;}",
+      ".st-key-palette_table [data-testid='stColorPicker'] > div{gap:.3rem;}",
+      ".st-key-palette_table .pal-name{font-size:.8rem;line-height:1.15;color:var(--ang-text);overflow-wrap:anywhere;}",
+      ".st-key-palette_table .pal-head{font-size:.72rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ang-muted);}",
       ".st-key-admin_feedback_head,.st-key-admin_reports_head,.st-key-admin_blacklist_head,.st-key-admin_beta_head{position:sticky;top:0;z-index:4;background:var(--ang-section);}",
       ".st-key-admin_feedback_table [class*='st-key-admin_feedback_sort_'] button,.st-key-admin_reports_table [class*='st-key-admin_reports_sort_'] button,.st-key-admin_blacklist_table [class*='st-key-admin_blacklist_sort_'] button{background:transparent !important;border:0 !important;box-shadow:none !important;padding:0 !important;min-height:0 !important;height:auto !important;justify-content:flex-start !important;font-weight:700 !important;color:var(--ang-text) !important;}",
       ".st-key-admin_feedback_table [class*='st-key-admin_feedback_sort_'] button:hover,.st-key-admin_reports_table [class*='st-key-admin_reports_sort_'] button:hover,.st-key-admin_blacklist_table [class*='st-key-admin_blacklist_sort_'] button:hover{background:var(--ang-hover) !important;}",
@@ -6356,27 +6363,32 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
                     )
         st.markdown("**Fine tune**")
         st.caption("Change the colour of individual UI elements. Drag and drop colours to copy them. Save and reset using the icons above.")
-        for label, day_key, night_key in (
-            ("Page", "page_day", "page_night"),
-            ("Section heading", "heading_day", "heading_night"),
-            ("Section background", "section_day", "section_night"),
-            ("Heading hover", "hover_day", "hover_night"),
-            ("Sidebar", "sidebar_day", "sidebar_night"),
-            ("Social and chat", "social_day", "social_night"),
-            ("Borders", "border_day", "border_night"),
-        ):
-            st.caption(label)
-            day_col, night_col = st.columns(2)
-            for column, part in ((day_col, day_key), (night_col, night_key)):
-                state_key = f"colour_{part}"
-                if state_key not in st.session_state:
-                    st.session_state[state_key] = account_colours[part]
-                column.color_picker(
-                    label,
-                    key=state_key,
-                    label_visibility="collapsed",
-                    persist_state="session",
-                )
+        widths = [1.5, 1, 1]
+        with st.container(key="palette_table", gap=0):
+            head = st.columns(widths, gap="xsmall", vertical_alignment="center")
+            head[1].markdown("<div class='pal-head'>Day</div>", unsafe_allow_html=True)
+            head[2].markdown("<div class='pal-head'>Night</div>", unsafe_allow_html=True)
+            for label, day_key, night_key in (
+                ("Page", "page_day", "page_night"),
+                ("Section heading", "heading_day", "heading_night"),
+                ("Section background", "section_day", "section_night"),
+                ("Heading hover", "hover_day", "hover_night"),
+                ("Sidebar", "sidebar_day", "sidebar_night"),
+                ("Social and chat", "social_day", "social_night"),
+                ("Borders", "border_day", "border_night"),
+            ):
+                cells = st.columns(widths, gap="xsmall", vertical_alignment="center")
+                cells[0].markdown(f"<div class='pal-name'>{label}</div>", unsafe_allow_html=True)
+                for column, part in ((cells[1], day_key), (cells[2], night_key)):
+                    state_key = f"colour_{part}"
+                    if state_key not in st.session_state:
+                        st.session_state[state_key] = account_colours[part]
+                    column.color_picker(
+                        label,
+                        key=state_key,
+                        label_visibility="collapsed",
+                        persist_state="session",
+                    )
     chosen_colours = {
         key: _hex_colour(st.session_state.get(f"colour_{key}"), default)
         for key, default in _THEME_COLOURS
