@@ -66,7 +66,13 @@ if _POPOUT_VIEW:
         "{padding-top:0.75rem !important;padding-bottom:0.75rem !important;}"
         "[data-testid='stMainBlockContainer'] > [data-testid='stVerticalBlock'],"
         ".stMainBlockContainer > [data-testid='stVerticalBlock']{gap:0 !important;}"
-        "[data-testid='stMain'] footer,[data-testid='stBottom']{display:none !important;}</style>",
+        "[data-testid='stMain'] footer,[data-testid='stBottom']{display:none !important;}"
+        # Hidden sections and helper pieces leave empty slots. Take the slots out as well,
+        # and close the gaps only in the blocks that hold the section itself.
+        "div:has(> [class*='st-key-hide_']:only-child){display:none !important;}"
+        "[data-testid='stElementContainer']:has(> .stBidiComponent[style*='display: none']){display:none !important;}"
+        "[data-testid='stElementContainer']:has(> [data-testid='stHtml'] > div:only-child:empty){display:none !important;}"
+        "[data-testid='stVerticalBlock']:has([class*='st-key-pop_']){gap:0 !important;}</style>",
         unsafe_allow_html=True,
     )
 
