@@ -752,3 +752,89 @@ def search_stock_matches(query: str, limit: int = 8) -> list[dict]:
 
     return _cached_search("stock", text, fetch)
 
+
+# ---------------------------------------------------------------- earnings dates
+def _as_date(value):
+    """A date from text like 2026-10-30, from a date, or from a timestamp. None when it is neither."""
+    from datetime import date, datetime
+    if isinstance(value, datetime):
+        return value.date()
+    if isinstance(value, date):
+        return value
+    text = str(value or "").strip()[:10]
+    try:
+        return datetime.strptime(text, "%Y-%m-%d").date()
+    except ValueError:
+        return None
+
+
+def earliest_upcoming(dates, today) -> str | None:
+    """The soonest date that is today or later, as YYYY-MM-DD. None when there is none."""
+    upcoming = []
+    for value in dates or []:
+        day = _as_date(value)
+        if day is not None and day >= today:
+            upcoming.append(day)
+    return min(upcoming).isoformat() if upcoming else None
+
+
+def parse_finnhub_earnings(payload, today) -> str | None:
+    """The next report date from a Finnhub earnings calendar answer."""
+    rows = (payload or {}).get("earningsCalendar") if isinstance(payload, dict) else None
+    return earliest_upcoming([row.get("date") for row in rows or [] if isinstance(row, dict)], today)
+
+
+def _earnings_from_finnhub(symbol: str, today) -> str | None:
+    key = finnhub_api_key()
+    if not key:
+        return None
+    from datetime import timedelta
+    try:
+        response = requests.get(
+            "https://finnhub.io/api/v1/calendar/earnings",
+            params={
+                "symbol": symbol,
+                "from": today.isoformat(),
+                "to": (today + timedelta(days=120)).isoformat(),
+                "token": key,
+            },
+            timeout=10,
+        )
+        if response.status_code != 200:
+            return None
+        return parse_finnhub_earnings(response.json(), today)
+    except (requests.RequestException, ValueError):
+        return None
+
+
+def _earnings_from_yahoo(symbol: str, today) -> str | None:
+    try:
+        calendar = _yahoo().Ticker(symbol).calendar
+    except Exception:
+        return None
+    dates = []
+    if isinstance(calendar, dict):
+        raw = calendar.get("Earnings Date")
+        dates = list(raw) if isinstance(raw, (list, tuple)) else [raw]
+    return earliest_upcoming(dates, today)
+
+
+def stock_next_earnings(tickers, today=None) -> dict[str, str | None]:
+    """Next report date for each stock, as YYYY-MM-DD, or None when none is known (an ETF, say).
+    Every ticker asked about gets an entry, so the caller can tell "no date" from "not asked"."""
+    from datetime import date
+    today = today or date.today()
+    symbols = []
+    for ticker in tickers or []:
+        symbol = str(ticker or "").strip().upper()
+        if symbol and symbol not in symbols:
+            symbols.append(symbol)
+    if not symbols:
+        return {}
+
+    def one(symbol):
+        return _earnings_from_finnhub(symbol, today) or _earnings_from_yahoo(symbol, today)
+
+    with ThreadPoolExecutor(max_workers=min(4, len(symbols))) as pool:
+        return dict(zip(symbols, pool.map(one, symbols)))
+

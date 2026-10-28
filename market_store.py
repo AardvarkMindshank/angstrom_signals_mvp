@@ -814,7 +814,10 @@ _SHARED_COLUMNS = (
     "prices, prices_updated_at"
 )
 _SHARED_COLUMNS_LEGACY = "asset_key, closes, logo_url, sentiment_report, sentiment_updated_at"
-_SHARED_COLUMNS_STATS = _SHARED_COLUMNS + ", market_cap, market_rank, market_stats_updated_at"
+_SHARED_COLUMNS_STATS = (
+    _SHARED_COLUMNS
+    + ", market_cap, market_rank, market_stats_updated_at, next_earnings, earnings_checked_at"
+)
 # The first set that the database accepts is remembered, so a missing column costs one failed ask, not one per load.
 _COLUMN_TIER = 0
 
@@ -1187,6 +1190,47 @@ def market_stats_from_rows(shared: dict, max_age_seconds: float = 6 * 3600) -> d
             "rank": int(rank) if isinstance(rank, (int, float)) and rank > 0 else None,
         }
     return out
+
+
+def earnings_from_rows(shared: dict, max_age_seconds: float = 36 * 3600) -> dict[str, str | None]:
+    """Saved next-earnings dates for stocks: {TICKER: "YYYY-MM-DD" or None}. None means checked, none known.
+    A ticker is left out when it was never checked, or the check is old."""
+    now = datetime.now(timezone.utc).timestamp()
+    out = {}
+    for row in (shared or {}).values():
+        if not isinstance(row, dict) or str(row.get("kind") or "").lower() != "stock":
+            continue
+        checked = _stored_at(row.get("earnings_checked_at"))
+        asset_id = str(row.get("asset_id") or "").strip().upper()
+        if checked is None or not asset_id or now - checked > max_age_seconds:
+            continue
+        raw = str(row.get("next_earnings") or "").strip()[:10]
+        out[asset_id] = raw or None
+    return out
+
+
+def save_earnings(supabase, found: dict) -> None:
+    """Store each stock's next earnings date, and that it was checked. found is {TICKER: date or None}."""
+    now = datetime.now(timezone.utc).isoformat()
+    payload = {}
+    for ticker, when in (found or {}).items():
+        asset_id = _canonical_id("Stock", ticker)
+        if not asset_id:
+            continue
+        key = asset_market_key("Stock", asset_id)
+        payload[key] = {
+            "asset_key": key,
+            "kind": "Stock",
+            "asset_id": asset_id,
+            "next_earnings": when or None,
+            "earnings_checked_at": now,
+        }
+    if not payload:
+        return
+    try:
+        supabase.table("asset_market").upsert(list(payload.values()), on_conflict="asset_key").execute()
+    except Exception as exc:
+        _warn(exc)
 
 
 def save_market_stats(supabase, rows: list[dict]) -> None:

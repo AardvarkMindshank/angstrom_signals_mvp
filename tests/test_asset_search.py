@@ -76,3 +76,33 @@ def test_saved_stats_come_back_and_old_ones_do_not():
     got = ms.market_stats_from_rows(rows)
     assert got["crypto"] == {"stellar": {"cap": 3e9, "rank": 24}}
     assert got["stock"]["AAPL"]["cap"] == 3e12 and got["stock"]["AAPL"]["rank"] is None
+
+
+def test_earnings_picks_the_next_future_date():
+    from datetime import date
+    today = date(2026, 10, 28)
+    payload = {"earningsCalendar": [
+        {"date": "2026-08-01", "symbol": "AAPL"},
+        {"date": "2026-11-12", "symbol": "AAPL"},
+        {"date": "2026-10-30", "symbol": "AAPL"},
+        {"symbol": "AAPL"},
+    ]}
+    assert df.parse_finnhub_earnings(payload, today) == "2026-10-30"
+    assert df.parse_finnhub_earnings({"earningsCalendar": []}, today) is None
+    assert df.parse_finnhub_earnings(None, today) is None
+    assert df.earliest_upcoming(["2026-10-28", "junk", None], today) == "2026-10-28"
+
+
+def test_saved_earnings_come_back_with_none_meaning_checked():
+    import market_store as ms
+    from datetime import datetime, timedelta, timezone
+    fresh = datetime.now(timezone.utc).isoformat()
+    old = (datetime.now(timezone.utc) - timedelta(days=3)).isoformat()
+    rows = {
+        "stock:aapl": {"kind": "Stock", "asset_id": "AAPL", "next_earnings": "2026-10-30", "earnings_checked_at": fresh},
+        "stock:spy": {"kind": "Stock", "asset_id": "SPY", "next_earnings": None, "earnings_checked_at": fresh},
+        "stock:old": {"kind": "Stock", "asset_id": "OLD", "next_earnings": "2026-11-01", "earnings_checked_at": old},
+        "crypto:btc": {"kind": "Crypto", "asset_id": "bitcoin", "next_earnings": None, "earnings_checked_at": fresh},
+        "stock:never": {"kind": "Stock", "asset_id": "NEVER"},
+    }
+    assert ms.earnings_from_rows(rows) == {"AAPL": "2026-10-30", "SPY": None}

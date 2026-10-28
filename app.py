@@ -3496,6 +3496,7 @@ try:
         format_market_cap,
         stock_logo_url,
         stock_market_caps,
+        stock_next_earnings,
         period_for_days,
         resolve_crypto_id,
         search_crypto_matches,
@@ -3517,10 +3518,12 @@ try:
         market_mood_crowd,
         frame_from_row,
         load_shared_market,
+        earnings_from_rows,
         market_stats_from_rows,
         recent_closes,
         row_timestamp,
         save_logos,
+        save_earnings,
         save_market_stats,
         save_market_mood,
         set_chat_vote,
@@ -7630,6 +7633,44 @@ def load_market_caps(crypto_ids, stock_tickers, nonce, shared=None):
 
 _BACKGROUND = ThreadPoolExecutor(max_workers=2)
 
+_EARN_STORE: dict = {}
+_EARN_BUSY: set = set()
+_EARN_SECONDS = 12 * 3600
+
+
+def _fetch_earnings(token) -> None:
+    """Look up each stock's next report date behind the scenes, keep it, and save it for next time."""
+    try:
+        found = stock_next_earnings(list(token))
+        _EARN_STORE[token] = (time.time(), found)
+        save_earnings(supabase, found)
+    except Exception as exc:
+        print(f"earnings dates failed: {exc}")
+        previous = _EARN_STORE.get(token)
+        _EARN_STORE[token] = (time.time() - _EARN_SECONDS + 600, previous[1] if previous else {})
+    finally:
+        _EARN_BUSY.discard(token)
+
+
+def load_earnings(stock_tickers, shared=None) -> dict:
+    """{TICKER: "YYYY-MM-DD" or None}. Never makes the page wait: it uses what is saved, and the
+    lookup runs behind the scenes about twice a day. A stock shows a dash until its first lookup is done."""
+    token = tuple(str(t).upper() for t in stock_tickers)
+    if not token:
+        return {}
+    stored = _EARN_STORE.get(token)
+    if stored is None:
+        saved = earnings_from_rows(shared or {})
+        data = {ticker: saved[ticker] for ticker in token if ticker in saved}
+        complete = len(data) == len(token)
+        stored = (time.time() if complete else 0.0, data)
+        _EARN_STORE[token] = stored
+    saved_at, data = stored
+    if time.time() - saved_at > _EARN_SECONDS and token not in _EARN_BUSY:
+        _EARN_BUSY.add(token)
+        _BACKGROUND.submit(_fetch_earnings, token)
+    return data
+
 
 @contextmanager
 def _timed(label: str):
@@ -8584,6 +8625,10 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                 row["market_rank"] = (caps.get("rank") or {}).get(coin)
             for row in stock_results:
                 row["market_cap"] = (caps.get("stock") or {}).get(str(row.get("key") or "").upper())
+        if trade_equities and stock_results:
+            earnings = load_earnings(tuple(stock_watchlist), st.session_state.get("_shared_rows"))
+            for row in stock_results:
+                row["next_earnings"] = earnings.get(str(row.get("key") or "").upper())
         change_rows = crypto_results + stock_results
         change_baseline, change_seen = _remember_score_visit(change_rows)
         with _timed("shared rows, crowd and comments"):
@@ -8827,6 +8872,24 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             f"{html.escape(str(value))}</td>"
         )
 
+    def earnings_cell(value):
+        """Next report date with the days left. Orange inside a week, because scores can swing then."""
+        try:
+            day = datetime.strptime(str(value or "")[:10], "%Y-%m-%d").date()
+        except ValueError:
+            return "<td data-sort='' style='padding:10px;white-space:nowrap;color:#6b7280;'>—</td>"
+        left = (day - datetime.now(timezone.utc).date()).days
+        if left < 0:
+            return "<td data-sort='' style='padding:10px;white-space:nowrap;color:#6b7280;'>—</td>"
+        when = "today" if left == 0 else "tomorrow" if left == 1 else f"in {left}d"
+        soon = left <= 7
+        style = "color:#b45309;font-weight:700;" if soon else ""
+        hint = "Reports soon. Scores can swing around earnings." if soon else "Next earnings report."
+        return (
+            f"<td data-sort='{float(left):.8f}' title='{hint}' style='padding:10px;white-space:nowrap;'>"
+            f"<span style='{style}'>{day.strftime('%b')} {day.day} · {when}</span></td>"
+        )
+
     def percent_change_cell(value, match_trend=False):
         if value is None or pd.isna(value):
             inner = "<span style='color:#6b7280;'>—</span>"
@@ -8854,6 +8917,8 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             st.caption("Click a column title to sort. The table starts with the strongest score at the top. Click a name to show that asset on the chart. Hover a TA score to read why it landed there, and click it to open the score breakdown. Click the sentiment score, the thumbs, or the crowd average to open its headlines. Watching is how many accounts hold that asset. The Crowd box is the average of personal scores. Hover the down thumb for the spread. A comment balloon, or the arrow on the right edge, opens the social signals and chat. The 30-day trend uses the same colors as 30d %.")
 
             headers = ["Asset", "Watching"] + (["Rank"] if kind == "Crypto" else []) + ["TA Score", "Signal", "Price", "RSI"]
+            if kind == "Stock":
+                headers.append("Earnings")
             if show_period_changes_flag:
                 headers.append("1d %")
             if show_extra_metrics_flag:
@@ -8872,6 +8937,9 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             if kind == "Crypto":
                 sort_at["Rank"] = 2
             column = lead + 4
+            if kind == "Stock":
+                sort_at["Earnings"] = column
+                column += 1
             for name in ("1d %", "7d %", "30d %", "Market Cap", "ATR %", "Vol"):
                 if name in headers:
                     sort_at[name] = column
@@ -8950,6 +9018,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                     f"style='padding:10px;min-width:168px;'>{score_box}</td>"
                     f"{cell(row.get('label') or '—', row.get('label') or '')}"
                     f"{cell(price_str, price, numeric=True)}{cell(rsi_str, rsi, numeric=True)}"
+                    f"{earnings_cell(row.get('next_earnings')) if kind == 'Stock' else ''}"
                 )
                 if show_period_changes_flag:
                     rows_html += percent_change_cell(row.get("change_1d"))

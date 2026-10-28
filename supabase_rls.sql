@@ -310,6 +310,12 @@ alter table public.asset_market
 alter table public.asset_market
     add column if not exists market_stats_updated_at timestamptz;
 
+alter table public.asset_market
+    add column if not exists next_earnings date;
+
+alter table public.asset_market
+    add column if not exists earnings_checked_at timestamptz;
+
 alter table public.asset_market enable row level security;
 
 drop policy if exists "signed-in users read shared market data" on public.asset_market;
@@ -376,7 +382,8 @@ begin
     if new.closes_updated_at > ceiling_at
        or new.sentiment_updated_at > ceiling_at
        or new.prices_updated_at > ceiling_at
-       or new.market_stats_updated_at > ceiling_at then
+       or new.market_stats_updated_at > ceiling_at
+       or new.earnings_checked_at > ceiling_at then
         raise exception 'timestamps cannot be in the future';
     end if;
 
@@ -412,6 +419,14 @@ begin
 
     if old.logo_url is not null then
         new.logo_url := old.logo_url;
+    end if;
+
+    -- Earnings dates: kept for 6 hours, then a newer check may replace them.
+    if old.earnings_checked_at is not null
+       and (old.earnings_checked_at > now() - interval '6 hours'
+            or new.earnings_checked_at is null or new.earnings_checked_at <= old.earnings_checked_at) then
+        new.next_earnings := old.next_earnings;
+        new.earnings_checked_at := old.earnings_checked_at;
     end if;
 
     -- Market cap and rank follow the same rule: kept for 20 minutes, then a newer reading may replace them.
