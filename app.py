@@ -1238,7 +1238,7 @@ export default function(component) {
         "<header class='head'><div>",
         "<div class='kicker'>Social signals</div>",
         "<h2>Social signals stream</h2>",
-        "</div><div class='head-actions'><button type='button' class='follow tool' hidden title='Follow the asset picked in the main tab' aria-label='Follow the asset picked in the main tab'><svg viewBox='0 0 24 24' width='15' height='15' aria-hidden='true' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1'/><path d='M14 10a4 4 0 0 0-5.7 0l-3 3A4 4 0 0 0 11 18.7l1-1'/></svg></button><button type='button' class='layout-btn tool' data-layout='stacked' hidden title='Stream above chat' aria-label='Stream above chat'><svg viewBox='0 0 24 24' width='15' height='15' aria-hidden='true' fill='none' stroke='currentColor' stroke-width='2'><rect x='2.4' y='2.4' width='19.2' height='19.2'/><path d='M2.4 12H21.6'/></svg></button><button type='button' class='layout-btn tool' data-layout='side' hidden title='Stream beside chat' aria-label='Stream beside chat'><svg viewBox='0 0 24 24' width='15' height='15' aria-hidden='true' fill='none' stroke='currentColor' stroke-width='2'><rect x='2.4' y='2.4' width='19.2' height='19.2'/><path d='M12 2.4V21.6'/></svg></button><button type='button' class='popout-btn' title='Open this panel in its own tab' aria-label='Open this panel in its own tab'><svg viewBox='0 0 24 24' width='15' height='15' aria-hidden='true' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M14 4h6v6'/><path d='M20 4 10 14'/><path d='M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5'/></svg></button><button type='button' class='pin' title='Pin the panel' aria-label='Pin the panel'><svg viewBox='0 0 24 24' width='15' height='15' aria-hidden='true' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M9 4h6l-1 6 3 3H7l3-3z'/><path d='M12 13v7'/></svg></button><button type='button' class='close' title='Close' aria-label='Close'><svg viewBox='0 0 24 24' width='15' height='15' aria-hidden='true' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M6 6l12 12'/><path d='M18 6 6 18'/></svg></button></div></header>",
+        "</div><div class='head-actions'><button type='button' class='follow tool' hidden title='Follow the asset picked in the main tab' aria-label='Follow the asset picked in the main tab'><svg viewBox='0 0 24 24' width='15' height='15' aria-hidden='true' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1'/><path d='M14 10a4 4 0 0 0-5.7 0l-3 3A4 4 0 0 0 11 18.7l1-1'/></svg></button><button type='button' class='layout-btn tool' data-layout='stacked' hidden title='Stream above chat' aria-label='Stream above chat'><svg viewBox='0 0 24 24' width='15' height='15' aria-hidden='true' fill='none' stroke='currentColor' stroke-width='2'><rect x='2.4' y='2.4' width='19.2' height='19.2'/><path d='M2.4 12H21.6'/></svg></button><button type='button' class='layout-btn tool' data-layout='side' hidden title='Stream beside chat' aria-label='Stream beside chat'><svg viewBox='0 0 24 24' width='15' height='15' aria-hidden='true' fill='none' stroke='currentColor' stroke-width='2'><rect x='2.4' y='2.4' width='19.2' height='19.2'/><path d='M12 2.4V21.6'/></svg></button><button type='button' class='popout-btn' title='Open this panel in its own window' aria-label='Open this panel in its own window'><svg viewBox='0 0 24 24' width='15' height='15' aria-hidden='true' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M14 4h6v6'/><path d='M20 4 10 14'/><path d='M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5'/></svg></button><button type='button' class='pin' title='Pin the panel' aria-label='Pin the panel'><svg viewBox='0 0 24 24' width='15' height='15' aria-hidden='true' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M9 4h6l-1 6 3 3H7l3-3z'/><path d='M12 13v7'/></svg></button><button type='button' class='close' title='Close' aria-label='Close'><svg viewBox='0 0 24 24' width='15' height='15' aria-hidden='true' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M6 6l12 12'/><path d='M18 6 6 18'/></svg></button></div></header>",
         "<div class='filters'><div class='chips'>",
         "<button type='button' data-side=''>All</button>",
         "<button type='button' data-side='positive'>Positive</button>",
@@ -1566,7 +1566,14 @@ export default function(component) {
       const popButton = root.querySelector(".popout-btn");
       if (popButton) {
         popButton.addEventListener("click", () => {
-          window.open(window.location.origin + window.location.pathname + "?view=social", "_blank");
+          const address = window.location.origin + window.location.pathname + "?view=social";
+          const opened = window.open(address, "ang_popout_social", "popup=yes,width=980,height=820");
+          if (!opened) {
+            window.open(address, "_blank");
+          }
+          // Put the side panel away while the stream lives in its own window.
+          window.socialStreamState.open = false;
+          window.renderSocialStream();
         });
       }
       window.addEventListener("resize", () => {
@@ -3736,13 +3743,23 @@ export default function(component) {
       const button = document.createElement("button");
       button.type = "button";
       button.className = "ang-popout";
-      button.title = "Open this section in its own tab";
-      button.setAttribute("aria-label", "Open this section in its own tab");
+      button.title = "Open this section in its own window";
+      button.setAttribute("aria-label", "Open this section in its own window");
       button.innerHTML = "<svg viewBox='0 0 24 24' width='14' height='14' aria-hidden='true' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M14 4h6v6'/><path d='M20 4 10 14'/><path d='M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5'/></svg>";
       button.addEventListener("click", (event) => {
         event.preventDefault();
         event.stopPropagation();
-        window.open(window.location.origin + window.location.pathname + "?view=" + encodeURIComponent(id), "_blank");
+        const box = document.querySelector(".st-key-sec_" + id);
+        const address = window.location.origin + window.location.pathname + "?view=" + encodeURIComponent(id);
+        // A window of its own, reused if this section is already open in one.
+        const opened = window.open(address, "ang_popout_" + id, "popup=yes,width=1100,height=760");
+        if (!opened) {
+          window.open(address, "_blank");
+        }
+        // Fold the section here while it lives in its own window.
+        const details = box ? box.querySelector("details") : null;
+        const header = box ? box.querySelector("summary") : null;
+        if (details && details.open && header) header.click();
       });
       place(summary, button);
     });
