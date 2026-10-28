@@ -1178,13 +1178,17 @@ export default function(component) {
         "#social-stream-root.is-dark .report-box{background:#262730;border-color:#4b5563;}",
         "#social-stream-root.is-dark .report-quote{color:#d1d5db;}",
         "#social-stream-root.is-dark .report-reason,#social-stream-root.is-dark .report-note{background:#31333f;color:#fafafa;border-color:#4b5563;}",
-        "#social-stream-root .layout-toggle,#social-stream-root .follow,#social-stream-root .popout-btn{background:#f3f4f6;border:0;border-radius:999px;padding:6px 12px;font:inherit;font-weight:600;cursor:pointer;color:#111827;}",
-        "#social-stream-root .follow.is-on{background:#111827;color:#fff;}",
+        "#social-stream-root .popout-btn{background:#f3f4f6;border:0;border-radius:999px;padding:6px 12px;font:inherit;font-weight:600;cursor:pointer;color:#111827;}",
+        "#social-stream-root .tool{width:28px;height:28px;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:.4rem;background:#fff;color:#111827;border:1px solid rgba(49,51,63,.28);cursor:pointer;}",
+        "#social-stream-root .tool[hidden]{display:none;}",
+        "#social-stream-root .tool:hover{border-color:#111827;}",
+        "#social-stream-root .tool.is-on{background:#111827;color:#fff;border-color:#111827;}",
         "#social-stream-root .close,#social-stream-root .pin,#social-stream-root .popout-btn{width:28px;height:28px;padding:0;display:inline-flex;align-items:center;justify-content:center;}",
-        "#social-stream-root .layout-toggle,#social-stream-root .follow{padding:4px 10px;font-size:.8rem;}",
         "#social-stream-root .replying[hidden],#social-stream-root .chat-notice[hidden]{display:none;}",
-        "#social-stream-root.is-dark .layout-toggle,#social-stream-root.is-dark .follow,#social-stream-root.is-dark .popout-btn{background:#262730;color:#fafafa;}",
-        "#social-stream-root.is-dark .follow.is-on{background:#f3f4f6;color:#111827;}",
+        "#social-stream-root.is-dark .popout-btn{background:#262730;color:#fafafa;}",
+        "#social-stream-root.is-dark .tool{background:#262730;color:#fafafa;border-color:#4b5563;}",
+        "#social-stream-root.is-dark .tool:hover{border-color:#e5e7eb;}",
+        "#social-stream-root.is-dark .tool.is-on{background:#fafafa;color:#111827;border-color:#fafafa;}",
         "#social-stream-root.is-popout .panel{left:0;right:0;width:100vw;box-shadow:none;transform:none;}",
         "#social-stream-root.is-popout .scrim,#social-stream-root.is-popout .edge,#social-stream-root.is-popout .close,#social-stream-root.is-popout .pin,#social-stream-root.is-popout .width-grip,#social-stream-root.is-popout .popout-btn{display:none !important;}",
         "#social-stream-root.is-popout.is-open{pointer-events:auto;}",
@@ -1233,7 +1237,7 @@ export default function(component) {
         "<header class='head'><div>",
         "<div class='kicker'>Social signals</div>",
         "<h2>Social signals stream</h2>",
-        "</div><div class='head-actions'><button type='button' class='follow' hidden>Following</button><button type='button' class='layout-toggle' hidden>Side by side</button><button type='button' class='popout-btn' title='Open this panel in its own tab' aria-label='Open this panel in its own tab'><svg viewBox='0 0 24 24' width='15' height='15' aria-hidden='true' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M14 4h6v6'/><path d='M20 4 10 14'/><path d='M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5'/></svg></button><button type='button' class='pin' title='Pin the panel' aria-label='Pin the panel'><svg viewBox='0 0 24 24' width='15' height='15' aria-hidden='true' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M9 4h6l-1 6 3 3H7l3-3z'/><path d='M12 13v7'/></svg></button><button type='button' class='close' title='Close' aria-label='Close'><svg viewBox='0 0 24 24' width='15' height='15' aria-hidden='true' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M6 6l12 12'/><path d='M18 6 6 18'/></svg></button></div></header>",
+        "</div><div class='head-actions'><button type='button' class='follow tool' hidden title='Follow the asset picked in the main tab' aria-label='Follow the asset picked in the main tab'><svg viewBox='0 0 24 24' width='15' height='15' aria-hidden='true' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1'/><path d='M14 10a4 4 0 0 0-5.7 0l-3 3A4 4 0 0 0 11 18.7l1-1'/></svg></button><button type='button' class='layout-btn tool' data-layout='stacked' hidden title='Stream above chat' aria-label='Stream above chat'><svg viewBox='0 0 24 24' width='15' height='15' aria-hidden='true' fill='none' stroke='currentColor' stroke-width='2'><rect x='2.4' y='2.4' width='19.2' height='19.2'/><path d='M2.4 12H21.6'/></svg></button><button type='button' class='layout-btn tool' data-layout='side' hidden title='Stream beside chat' aria-label='Stream beside chat'><svg viewBox='0 0 24 24' width='15' height='15' aria-hidden='true' fill='none' stroke='currentColor' stroke-width='2'><rect x='2.4' y='2.4' width='19.2' height='19.2'/><path d='M12 2.4V21.6'/></svg></button><button type='button' class='popout-btn' title='Open this panel in its own tab' aria-label='Open this panel in its own tab'><svg viewBox='0 0 24 24' width='15' height='15' aria-hidden='true' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M14 4h6v6'/><path d='M20 4 10 14'/><path d='M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5'/></svg></button><button type='button' class='pin' title='Pin the panel' aria-label='Pin the panel'><svg viewBox='0 0 24 24' width='15' height='15' aria-hidden='true' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M9 4h6l-1 6 3 3H7l3-3z'/><path d='M12 13v7'/></svg></button><button type='button' class='close' title='Close' aria-label='Close'><svg viewBox='0 0 24 24' width='15' height='15' aria-hidden='true' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M6 6l12 12'/><path d='M18 6 6 18'/></svg></button></div></header>",
         "<div class='filters'><div class='chips'>",
         "<button type='button' data-side=''>All</button>",
         "<button type='button' data-side='positive'>Positive</button>",
@@ -1538,16 +1542,17 @@ export default function(component) {
       };
       fitSplit();
       window.socialRefit = fitSplit;
-      const layoutButton = root.querySelector(".layout-toggle");
-      if (layoutButton) {
+      root.querySelectorAll(".layout-btn").forEach((layoutButton) => {
         layoutButton.addEventListener("click", () => {
-          window.socialStreamState.layout = window.socialStreamState.layout === "side" ? "stacked" : "side";
-          window.socialPanelLayout = window.socialStreamState.layout;
+          const wanted = layoutButton.getAttribute("data-layout") === "side" ? "side" : "stacked";
+          if (window.socialStreamState.layout === wanted) return;
+          window.socialStreamState.layout = wanted;
+          window.socialPanelLayout = wanted;
           window.renderSocialStream();
           fitSplit();
           reportPanel();
         });
-      }
+      });
       const followButton = root.querySelector(".follow");
       if (followButton) {
         followButton.addEventListener("click", () => {
@@ -1567,8 +1572,9 @@ export default function(component) {
         applyWidth(Number(window.socialPanelWidth) >= 320 ? Number(window.socialPanelWidth) : 420);
         if (window.socialApplyLayout) window.socialApplyLayout(root);
         const wideEnough = window.innerWidth >= 760;
-        const toggle = root.querySelector(".layout-toggle");
-        if (toggle) toggle.hidden = !window.socialPopout || !wideEnough;
+        root.querySelectorAll(".layout-btn").forEach((button) => {
+          button.hidden = !window.socialPopout || !wideEnough;
+        });
         fitSplit();
       }, {signal: streamSignal});
     }
@@ -1595,19 +1601,21 @@ export default function(component) {
         panel.classList.remove("is-pinned");
       }
       window.socialApplyLayout(panel);
-      const layoutBtn = panel.querySelector(".layout-toggle");
-      if (layoutBtn) {
-        layoutBtn.hidden = !window.socialPopout || window.innerWidth < 760;
-        layoutBtn.textContent = state.layout === "side" ? "Stacked" : "Side by side";
-      }
+      panel.querySelectorAll(".layout-btn").forEach((button) => {
+        const mine = (button.getAttribute("data-layout") || "") === state.layout;
+        button.hidden = !window.socialPopout || window.innerWidth < 760;
+        button.classList.toggle("is-on", mine);
+        button.setAttribute("aria-pressed", mine ? "true" : "false");
+      });
       const followBtn = panel.querySelector(".follow");
       if (followBtn) {
         followBtn.hidden = !window.socialPopout;
         followBtn.classList.toggle("is-on", !!state.follow);
-        followBtn.textContent = state.follow ? "Following main tab" : "Not following";
+        followBtn.setAttribute("aria-pressed", state.follow ? "true" : "false");
         followBtn.title = state.follow
-          ? "The stream follows the asset picked in your main tab. Press to stop."
-          : "Press to follow the asset picked in your main tab again.";
+          ? "Following the asset picked in your main tab. Press to stop."
+          : "Not following. Press to follow the asset picked in your main tab.";
+        followBtn.setAttribute("aria-label", followBtn.title);
       }
       const app = document.querySelector(".stApp");
       const parts = app ? getComputedStyle(app).backgroundColor.match(/\\d+/g) : null;
