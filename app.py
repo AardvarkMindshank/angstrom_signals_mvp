@@ -174,7 +174,7 @@ export default function(component) {
       "[data-testid='stAppViewContainer'],[data-testid='stHeader'],[data-testid='stBottom']{background:var(--ang-page) !important;}",
       "html:not(.angstrom-night) [data-testid='stSidebar']{background:var(--ang-side) !important;border-right:1px solid var(--ang-border);}",
       "html:not(.angstrom-night) [data-testid='stMain'] [data-testid='stVerticalBlockBorderWrapper']{background:#ffffff !important;border-color:var(--ang-border) !important;}",
-      "[data-testid='stForm']{background:var(--ang-page) !important;border-color:transparent !important;}",
+      "[data-testid='stForm']{background:transparent !important;border-color:transparent !important;}",
       "[data-testid='stExpander'] details{background:var(--ang-section) !important;border-color:var(--ang-border) !important;}",
       "[data-testid='stExpander'] details > summary{background:var(--ang-heading) !important;}",
       "[data-testid='stExpander'] details > summary:has(.ang-header-score){display:flex !important;align-items:center;}",
