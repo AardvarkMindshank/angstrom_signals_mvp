@@ -24,12 +24,27 @@ from plotly.subplots import make_subplots
 from streamlit.errors import StreamlitInvalidLayoutContextError
 from supabase import create_client
 
+# A pop-out tab shows one part of the dashboard on its own: ?view=social
+_POPOUT_VIEWS = ("social",)
+_POPOUT_VIEW = str(st.query_params.get("view") or "")
+if _POPOUT_VIEW not in _POPOUT_VIEWS:
+    _POPOUT_VIEW = ""
+_POPOUT_MARK = "popout-tab"
+
 st.set_page_config(
-    page_title="angstrom signals",
+    page_title="angstrom signals - social" if _POPOUT_VIEW == "social" else "angstrom signals",
     page_icon="📈",
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+
+if _POPOUT_VIEW:
+    st.markdown(
+        "<style>[data-testid='stSidebar'],[data-testid='stSidebarCollapsedControl'],"
+        "[data-testid='stHeader'],[data-testid='stToolbar']{display:none !important;}</style>",
+        unsafe_allow_html=True,
+    )
 
 
 def _active_theme() -> str:
@@ -895,6 +910,7 @@ export default function(component) {
   let savedAsset = "";
   let account = "";
   let panelPrefs = {};
+  window.socialPopout = false;
   try {
     const parsed = typeof data === "string" ? JSON.parse(data || "[]") : data;
     if (Array.isArray(parsed)) {
@@ -913,6 +929,7 @@ export default function(component) {
       window.socialChatLimit = Number(parsed.limit) || 160;
       account = String(parsed.account || "");
       panelPrefs = parsed.panel && typeof parsed.panel === "object" ? parsed.panel : {};
+      window.socialPopout = !!parsed.popout;
     }
   } catch (error) {
     items = [];
@@ -926,6 +943,7 @@ export default function(component) {
     window.socialPanelWidth = width >= 320 && width <= 900 ? Math.round(width) : 420;
     window.socialPanelSplit = split > 0.08 && split < 0.92 ? split : 0.5;
     window.socialPanelPinned = !!panelPrefs.pinned;
+    window.socialPanelLayout = panelPrefs.layout === "side" ? "side" : "stacked";
     const existing = document.getElementById("social-stream-root");
     if (existing) existing.remove();
   }
@@ -933,11 +951,33 @@ export default function(component) {
   window.socialStreamReport = setTriggerValue;
   installSocialStream(savedAsset);
   window.renderSocialStream();
+  if (window.socialRefit) window.socialRefit();
+  if (window.socialPopout && !window.__angstromLinkRx && "BroadcastChannel" in window) {
+    window.__angstromLinkRx = new BroadcastChannel("angstrom-link");
+    window.__angstromLinkRx.onmessage = (event) => {
+      const msg = event.data || {};
+      const state = window.socialStreamState;
+      if (msg.type !== "asset" || !msg.key || !state) return;
+      state.linked = { key: String(msg.key), label: String(msg.label || msg.key) };
+      if (state.follow) {
+        state.asset = state.linked.key;
+        window.renderSocialStream();
+      }
+    };
+    window.__angstromLinkRx.postMessage({ type: "hello" });
+  }
   return () => {};
 
   function installSocialStream(savedAsset) {
     window.socialStreamState = window.socialStreamState || {
-      open: false, side: "", asset: savedAsset || "", person: ""
+      open: !!window.socialPopout, side: "", asset: savedAsset || "", person: "",
+      layout: window.socialPanelLayout || "stacked", follow: true
+    };
+    window.socialApplyLayout = (panel) => {
+      const state = window.socialStreamState || {};
+      const side = !!window.socialPopout && state.layout === "side" && window.innerWidth >= 760;
+      panel.classList.toggle("is-popout", !!window.socialPopout);
+      panel.classList.toggle("is-side", side);
     };
     if (typeof window.socialStreamState.pinned !== "boolean") {
       window.socialStreamState.pinned = !!window.socialPanelPinned;
@@ -950,14 +990,14 @@ export default function(component) {
       window.socialStreamState.report = null;
     }
     let style = document.getElementById("social-stream-style");
-    if (style && style.dataset.layout !== "flag") {
+    if (style && style.dataset.layout !== "flag2") {
       style.remove();
       style = null;
     }
     if (!style) {
       style = document.createElement("style");
       style.id = "social-stream-style";
-      style.dataset.layout = "flag";
+      style.dataset.layout = "flag2";
       style.textContent = [
         "#social-stream-root{position:fixed;inset:0;z-index:10000000;pointer-events:none;}",
         "#social-stream-root.is-open{pointer-events:auto;}",
@@ -1106,7 +1146,22 @@ export default function(component) {
         "#social-stream-root.is-dark .chat-notice{color:#fbbf24;}",
         "#social-stream-root.is-dark .report-box{background:#262730;border-color:#4b5563;}",
         "#social-stream-root.is-dark .report-quote{color:#d1d5db;}",
-        "#social-stream-root.is-dark .report-reason,#social-stream-root.is-dark .report-note{background:#31333f;color:#fafafa;border-color:#4b5563;}"
+        "#social-stream-root.is-dark .report-reason,#social-stream-root.is-dark .report-note{background:#31333f;color:#fafafa;border-color:#4b5563;}",
+        "#social-stream-root .layout-toggle,#social-stream-root .follow,#social-stream-root .popout-btn{background:#f3f4f6;border:0;border-radius:999px;padding:6px 12px;font:inherit;font-weight:600;cursor:pointer;color:#111827;}",
+        "#social-stream-root .follow.is-on{background:#111827;color:#fff;}",
+        "#social-stream-root .replying[hidden],#social-stream-root .chat-notice[hidden]{display:none;}",
+        "#social-stream-root.is-dark .layout-toggle,#social-stream-root.is-dark .follow,#social-stream-root.is-dark .popout-btn{background:#262730;color:#fafafa;}",
+        "#social-stream-root.is-dark .follow.is-on{background:#f3f4f6;color:#111827;}",
+        "#social-stream-root.is-popout .panel{left:0;right:0;width:100vw;box-shadow:none;transform:none;}",
+        "#social-stream-root.is-popout .scrim,#social-stream-root.is-popout .edge,#social-stream-root.is-popout .close,#social-stream-root.is-popout .pin,#social-stream-root.is-popout .width-grip,#social-stream-root.is-popout .popout-btn{display:none !important;}",
+        "#social-stream-root.is-popout.is-open{pointer-events:auto;}",
+        "#social-stream-root.is-popout.is-side .panel{display:grid;grid-template-columns:1fr 16px 1fr;grid-template-rows:auto auto minmax(0,1fr);}",
+        "#social-stream-root.is-popout.is-side .finder,#social-stream-root.is-popout.is-side .report-box{grid-column:1 / -1;}",
+        "#social-stream-root.is-popout.is-side .stream-pane{grid-column:1;grid-row:3;min-width:0;}",
+        "#social-stream-root.is-popout.is-side .chat-pane{grid-column:3;grid-row:3;min-width:0;}",
+        "#social-stream-root.is-popout.is-side .splitter{grid-column:2;grid-row:3;height:auto;width:16px;cursor:col-resize;border-top:0;border-bottom:0;border-left:1px solid #4b5563;border-right:1px solid #4b5563;}",
+        "#social-stream-root.is-popout.is-side .splitter::before{width:4px;height:64px;}",
+        "#social-stream-root.is-popout.is-side.is-dragging,#social-stream-root.is-popout.is-side.is-dragging *{cursor:col-resize !important;}"
       ].join("");
       document.head.appendChild(style);
     }
@@ -1145,7 +1200,7 @@ export default function(component) {
         "<header class='head'><div>",
         "<div class='kicker'>Social signals</div>",
         "<h2>Social signals stream</h2>",
-        "</div><div class='head-actions'><button type='button' class='pin' title='Pin the panel'>Pin</button><button type='button' class='close'>Close</button></div></header>",
+        "</div><div class='head-actions'><button type='button' class='follow' hidden>Following</button><button type='button' class='layout-toggle' hidden>Side by side</button><button type='button' class='popout-btn' title='Open this panel in its own tab'>Pop out</button><button type='button' class='pin' title='Pin the panel'>Pin</button><button type='button' class='close'>Close</button></div></header>",
         "<div class='filters'><div class='chips'>",
         "<button type='button' data-side=''>All</button>",
         "<button type='button' data-side='positive'>Positive</button>",
@@ -1199,7 +1254,8 @@ export default function(component) {
         window.socialStreamReport("panel", JSON.stringify({
           width: Number(window.socialPanelWidth) || 420,
           split: Number(window.socialPanelSplit) || 0.5,
-          pinned: !!(window.socialStreamState && window.socialStreamState.pinned)
+          pinned: !!(window.socialStreamState && window.socialStreamState.pinned),
+          layout: (window.socialStreamState && window.socialStreamState.layout) || "stacked"
         }));
       };
       root.querySelector(".pin").addEventListener("click", () => {
@@ -1223,6 +1279,7 @@ export default function(component) {
       });
       root.querySelector("#stream-asset").addEventListener("change", (event) => {
         const choice = event.target.value;
+        window.socialStreamState.follow = false;
         window.socialStreamState.asset = choice;
         window.renderSocialStream();
         const reported = { "": "all", watchlist: "watchlist", crypto: "crypto", stock: "stock" };
@@ -1345,6 +1402,7 @@ export default function(component) {
         const streamPane = root.querySelector(".stream-pane");
         const chatPane = root.querySelector(".chat-pane");
         if (!panelBox || !streamPane || !chatPane || !splitter) return;
+        panelBox.style.gridTemplateColumns = "";
         const finderBox = root.querySelector(".finder");
         const available = panelBox.clientHeight - splitter.offsetHeight - (finderBox ? finderBox.offsetHeight : 0);
         if (available < 80) return;
@@ -1362,6 +1420,20 @@ export default function(component) {
         heldRatio = next / available;
         window.socialPanelSplit = heldRatio;
       };
+      let wideRatio = 0.5;
+      const applyWide = (ratio) => {
+        const panelBox = root.querySelector(".panel");
+        const streamPane = root.querySelector(".stream-pane");
+        const chatPane = root.querySelector(".chat-pane");
+        if (!panelBox || !streamPane || !chatPane) return;
+        const next = Math.min(0.8, Math.max(0.2, Number(ratio) || 0.5));
+        streamPane.style.flex = "";
+        streamPane.style.height = "";
+        chatPane.style.flex = "";
+        chatPane.style.height = "";
+        panelBox.style.gridTemplateColumns = next + "fr 16px " + (1 - next) + "fr";
+        wideRatio = next;
+      };
       if (splitter) {
         splitter.addEventListener("pointerdown", (event) => {
           if (event.button !== 0) return;
@@ -1372,6 +1444,11 @@ export default function(component) {
           const move = (moveEvent) => {
             const panelBox = root.querySelector(".panel");
             if (!panelBox) return;
+            if (root.classList.contains("is-side")) {
+              const area = panelBox.getBoundingClientRect();
+              applyWide((moveEvent.clientX - area.left) / Math.max(1, area.width - 16));
+              return;
+            }
             applySplit(moveEvent.clientY - panelBox.getBoundingClientRect().top);
           };
           const stop = (endEvent) => {
@@ -1417,14 +1494,48 @@ export default function(component) {
       if (storedRatio > 0.08 && storedRatio < 0.92) heldRatio = storedRatio;
       const panelBox = root.querySelector(".panel");
       const fitSplit = () => {
+        if (root.classList.contains("is-side")) {
+          applyWide(wideRatio);
+          return;
+        }
         const finderBox = root.querySelector(".finder");
         const chrome = (splitter ? splitter.offsetHeight : 0) + (finderBox ? finderBox.offsetHeight : 0);
         const height = panelBox ? panelBox.clientHeight - chrome : 0;
         applySplit(height ? heldRatio * height : 0);
       };
       fitSplit();
+      window.socialRefit = fitSplit;
+      const layoutButton = root.querySelector(".layout-toggle");
+      if (layoutButton) {
+        layoutButton.addEventListener("click", () => {
+          window.socialStreamState.layout = window.socialStreamState.layout === "side" ? "stacked" : "side";
+          window.socialPanelLayout = window.socialStreamState.layout;
+          window.renderSocialStream();
+          fitSplit();
+          reportPanel();
+        });
+      }
+      const followButton = root.querySelector(".follow");
+      if (followButton) {
+        followButton.addEventListener("click", () => {
+          const state = window.socialStreamState;
+          state.follow = !state.follow;
+          if (state.follow && state.linked && state.linked.key) state.asset = state.linked.key;
+          window.renderSocialStream();
+        });
+      }
+      const popButton = root.querySelector(".popout-btn");
+      if (popButton) {
+        popButton.addEventListener("click", () => {
+          window.open(window.location.origin + window.location.pathname + "?view=social", "_blank");
+        });
+      }
       window.addEventListener("resize", () => {
         applyWidth(Number(window.socialPanelWidth) >= 320 ? Number(window.socialPanelWidth) : 420);
+        if (window.socialApplyLayout) window.socialApplyLayout(root);
+        const wideEnough = window.innerWidth >= 760;
+        const toggle = root.querySelector(".layout-toggle");
+        if (toggle) toggle.hidden = !window.socialPopout || !wideEnough;
         fitSplit();
       }, {signal: streamSignal});
     }
@@ -1444,6 +1555,27 @@ export default function(component) {
       const state = window.socialStreamState;
       panel.classList.toggle("is-open", !!state.open);
       panel.classList.toggle("is-pinned", !!state.pinned);
+      if (window.socialPopout) {
+        state.open = true;
+        state.pinned = false;
+        panel.classList.add("is-open");
+        panel.classList.remove("is-pinned");
+      }
+      window.socialApplyLayout(panel);
+      const layoutBtn = panel.querySelector(".layout-toggle");
+      if (layoutBtn) {
+        layoutBtn.hidden = !window.socialPopout || window.innerWidth < 760;
+        layoutBtn.textContent = state.layout === "side" ? "Stacked" : "Side by side";
+      }
+      const followBtn = panel.querySelector(".follow");
+      if (followBtn) {
+        followBtn.hidden = !window.socialPopout;
+        followBtn.classList.toggle("is-on", !!state.follow);
+        followBtn.textContent = state.follow ? "Following main tab" : "Not following";
+        followBtn.title = state.follow
+          ? "The stream follows the asset picked in your main tab. Press to stop."
+          : "Press to follow the asset picked in your main tab again.";
+      }
       const app = document.querySelector(".stApp");
       const parts = app ? getComputedStyle(app).backgroundColor.match(/\\d+/g) : null;
       const shade = parts
@@ -1483,6 +1615,10 @@ export default function(component) {
       const seenChatPeople = {};
       chatPeople.forEach((name) => { seenChatPeople[name] = true; });
       const chatScores = personScores(window.socialChat || []);
+      if (state.linked && state.linked.key === state.asset && !seenAssets[state.asset]) {
+        seenAssets[state.asset] = true;
+        assets.push([state.linked.key, state.linked.label]);
+      }
       assets.sort((a, b) => String(a[1]).localeCompare(String(b[1])));
       people.sort((a, b) => a.localeCompare(b));
       fillStreamSelect(
@@ -3413,6 +3549,113 @@ def _flag_is_true(data) -> bool:
     return data is True
 
 
+_HANDOFF_HOST_JS = """
+export default function(component) {
+  const { data, parentElement } = component;
+  const shell = parentElement.closest(".stBidiComponent") || parentElement;
+  shell.style.display = "none";
+  if (!("BroadcastChannel" in window)) return;
+  const access = String((data && data.access) || "");
+  window.__angstromAccess = access;
+  if (!window.__angstromHandoffHost) {
+    const channel = new BroadcastChannel("angstrom-handoff");
+    window.__angstromHandoffHost = channel;
+    channel.onmessage = (event) => {
+      const msg = event.data || {};
+      if (msg.type === "ask" && window.__angstromAccess) {
+        channel.postMessage({ type: "token", to: String(msg.id || ""), access: window.__angstromAccess });
+      }
+    };
+  }
+  if (access && window.__angstromAccessSent !== access) {
+    window.__angstromAccessSent = access;
+    window.__angstromHandoffHost.postMessage({ type: "token", to: "*", access: access });
+  }
+}
+"""
+_handoff_host = st.components.v2.component(
+    "pop_out_handoff_host",
+    js=_HANDOFF_HOST_JS,
+    isolate_styles=False,
+)
+
+_HANDOFF_ASK_JS = """
+export default function(component) {
+  const { data, setTriggerValue, parentElement } = component;
+  const shell = parentElement.closest(".stBidiComponent") || parentElement;
+  shell.style.display = "none";
+  window.__angstromHandoffSet = setTriggerValue;
+  const current = String((data && data.current) || "");
+  if (!("BroadcastChannel" in window)) {
+    if (!current) setTriggerValue("none", String(Date.now()));
+    return;
+  }
+  window.__angstromHandoffCurrent = current;
+  if (window.__angstromHandoffAsk) return;
+  const id = Math.random().toString(36).slice(2);
+  const channel = new BroadcastChannel("angstrom-handoff");
+  window.__angstromHandoffAsk = channel;
+  channel.onmessage = (event) => {
+    const msg = event.data || {};
+    if (msg.type !== "token" || !msg.access) return;
+    if (msg.to !== id && msg.to !== "*") return;
+    if (msg.access === window.__angstromHandoffCurrent) return;
+    window.__angstromHandoffCurrent = msg.access;
+    window.__angstromHandoffSet("token", msg.access);
+  };
+  let tries = 0;
+  const ask = () => {
+    if (window.__angstromHandoffCurrent) return;
+    tries += 1;
+    if (tries > 5) {
+      window.__angstromHandoffSet("none", String(Date.now()));
+      return;
+    }
+    channel.postMessage({ type: "ask", id: id });
+    window.setTimeout(ask, 700);
+  };
+  ask();
+}
+"""
+_handoff_ask = st.components.v2.component(
+    "pop_out_handoff_ask",
+    js=_HANDOFF_ASK_JS,
+    isolate_styles=False,
+)
+
+_ASSET_LINK_JS = """
+export default function(component) {
+  const { data, parentElement } = component;
+  const shell = parentElement.closest(".stBidiComponent") || parentElement;
+  shell.style.display = "none";
+  if (!("BroadcastChannel" in window)) return;
+  const key = String((data && data.key) || "");
+  const label = String((data && data.label) || key);
+  window.__angstromLinkCurrent = { key: key, label: label };
+  if (!window.__angstromLinkTx) {
+    const channel = new BroadcastChannel("angstrom-link");
+    window.__angstromLinkTx = channel;
+    channel.onmessage = (event) => {
+      const msg = event.data || {};
+      const now = window.__angstromLinkCurrent;
+      if (msg.type === "hello" && now && now.key) {
+        channel.postMessage({ type: "asset", key: now.key, label: now.label });
+      }
+    };
+  }
+  if (key && window.__angstromLinkSent !== key) {
+    window.__angstromLinkSent = key;
+    window.__angstromLinkTx.postMessage({ type: "asset", key: key, label: label });
+  }
+}
+"""
+_asset_link = st.components.v2.component(
+    "pop_out_asset_link",
+    js=_ASSET_LINK_JS,
+    isolate_styles=False,
+)
+
+
 def get_supabase():
     """A new client per script run, authenticated only for this browser session."""
     url = _secret("url")
@@ -3456,8 +3699,16 @@ def get_supabase():
             st.session_state.pop("profile", None)
             st.session_state.pop("prefs_user", None)
             return create_client(url, key)
+        if refresh == _POPOUT_MARK:
+            # A pop-out tab borrows the main tab's short-lived access token and never
+            # refreshes it, so the two tabs cannot invalidate each other's login.
+            return client
         try:
-            client.auth.set_session(access, refresh)
+            restored = client.auth.set_session(access, refresh)
+            fresh = getattr(restored, "session", None)
+            if fresh is not None and fresh.access_token and fresh.refresh_token:
+                st.session_state.access_token = fresh.access_token
+                st.session_state.refresh_token = fresh.refresh_token
         except Exception as exc:
             st.session_state.user = None
             st.session_state.access_token = None
@@ -3737,6 +3988,39 @@ supabase = get_supabase()
 
 if st.session_state.user is not None and _session_is_barred():
     _end_barred_session()
+
+def _take_handoff() -> None:
+    """A pop-out tab has no login yet. Ask the signed-in tab in this browser for one."""
+    reported = _handoff_ask(
+        key="handoff_ask",
+        data={"current": ""},
+        on_token_change=lambda: None,
+        on_none_change=lambda: None,
+    )
+    token = str(getattr(reported, "token", "") or "")
+    if token:
+        member = None
+        try:
+            member = supabase.auth.get_user(token).user
+        except Exception:
+            member = None
+        if member is not None:
+            st.session_state.user = member
+            st.session_state.access_token = token
+            st.session_state.refresh_token = _POPOUT_MARK
+            st.session_state.pop("auth_error", None)
+        else:
+            st.session_state.popout_handoff_failed = True
+        st.rerun()
+    if getattr(reported, "none", None):
+        st.session_state.popout_handoff_failed = True
+        st.rerun()
+    st.caption("Connecting this tab to your signed-in dashboard tab...")
+    st.stop()
+
+
+if st.session_state.user is None and _POPOUT_VIEW and not st.session_state.get("popout_handoff_failed"):
+    _take_handoff()
 
 if st.session_state.user is None:
     if not st.session_state.get("google_url") or not st.session_state.get("google_verifier"):
@@ -4071,6 +4355,7 @@ def account_panel() -> dict:
         "width": width,
         "split": round(split, 3),
         "pinned": bool(stored.get("stream_pinned", False)),
+        "layout": "side" if stored.get("stream_layout") == "side" else "stacked",
     }
 
 
@@ -6794,6 +7079,33 @@ def _apply_signal_action(action) -> str:
         return "That could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again."
 
 
+def _social_stream_json(crypto_watchlist, stock_watchlist, shared, logos, feed) -> str:
+    """The comments for the social stream, as the panel reads them."""
+    crypto_keys = [asset_market_key("Crypto", asset_id) for asset_id in crypto_watchlist]
+    stock_keys = [asset_market_key("Stock", asset_id) for asset_id in stock_watchlist]
+    market_keys = crypto_keys + stock_keys
+    stream_names = {}
+    for kind, watchlist in (("Crypto", crypto_watchlist), ("Stock", stock_watchlist)):
+        for asset_id, label in watchlist.items():
+            market_key = asset_market_key(kind, asset_id)
+            shown = " ".join(str(label or "").split())
+            if kind == "Stock":
+                ticker = str(asset_id).upper()
+                if ticker and ticker not in shown.upper():
+                    shown = f"{shown} ({ticker})" if shown else ticker
+            stream_names[market_key] = shown or str(asset_id)
+    stream_names["Mood|crypto"] = "Crypto market"
+    stream_names["Mood|stock"] = "Stock market"
+    return json.dumps(
+        social_stream_items(
+            feed, shared, stream_names, logos, market_keys,
+            {"crypto": crypto_keys, "stock": stock_keys},
+            sentiment_replies(supabase),
+        ),
+        ensure_ascii=False,
+    )
+
+
 def _share_market_rows(crypto_watchlist, stock_watchlist, crypto_results, stock_results):
     """Save this refresh's closes and reuse any headline score already stored."""
     priced = []
@@ -6813,26 +7125,7 @@ def _share_market_rows(crypto_watchlist, stock_watchlist, crypto_results, stock_
     crowd = sentiment_crowd(supabase, market_keys)
     comments = sentiment_comment_lists(supabase, market_keys)
     feed = sentiment_comment_lists(supabase, market_keys, every=True)
-    stream_names = {}
-    for kind, watchlist in (("Crypto", crypto_watchlist), ("Stock", stock_watchlist)):
-        for asset_id, label in watchlist.items():
-            market_key = asset_market_key(kind, asset_id)
-            shown = " ".join(str(label or "").split())
-            if kind == "Stock":
-                ticker = str(asset_id).upper()
-                if ticker and ticker not in shown.upper():
-                    shown = f"{shown} ({ticker})" if shown else ticker
-            stream_names[market_key] = shown or str(asset_id)
-    stream_names["Mood|crypto"] = "Crypto market"
-    stream_names["Mood|stock"] = "Stock market"
-    st.session_state["social_stream"] = json.dumps(
-        social_stream_items(
-            feed, shared, stream_names, logos, market_keys,
-            {"crypto": crypto_keys, "stock": stock_keys},
-            sentiment_replies(supabase),
-        ),
-        ensure_ascii=False,
-    )
+    st.session_state["social_stream"] = _social_stream_json(crypto_watchlist, stock_watchlist, shared, logos, feed)
     for kind, results, watchlist in (
         ("Crypto", crypto_results, crypto_watchlist),
         ("Stock", stock_results, stock_watchlist),
@@ -7173,6 +7466,92 @@ def _score_sentence(reasons) -> str:
     return sentence
 
 
+def _draw_social_stream(stream_items, scope, *, popout: bool = False):
+    """Draw the social panel with the comments, chat and saved panel choices."""
+    chat_notice = st.session_state.pop("chat_notice", "")
+    return _social_stream(
+        key="social_stream_host",
+        data=json.dumps(
+            {
+                "items": stream_items,
+                "asset": scope,
+                "chat": load_chat(supabase),
+                "me": _chat_viewer(),
+                "favourites": _favourite_ids((prefs.get("settings") or {}).get("favourites")),
+                "groups": _groups_for_stream(),
+                "notice": chat_notice,
+                "faces": list(COMMENT_EMOTICONS),
+                "limit": COMMENT_LIMIT,
+                "account": str(user_id),
+                "panel": account_panel(),
+                "popout": popout,
+            },
+            ensure_ascii=False,
+        ),
+        on_asset_change=lambda: None,
+        on_chat_change=lambda: None,
+        on_signal_change=lambda: None,
+        on_group_change=lambda: None,
+        on_panel_change=lambda: None,
+        on_report_change=lambda: None,
+    )
+
+
+def _handle_stream_events(stream_state) -> None:
+    """Act on whatever the social panel reported this run. Shared by the page and the pop-out."""
+    chosen_scope = stream_state.asset
+    chat_event = _chat_action(getattr(stream_state, "chat", None))
+    signal_event = _chat_action(getattr(stream_state, "signal", None))
+    group_event = _favourite_event(getattr(stream_state, "group", None))
+    report_event = _report_action(getattr(stream_state, "report", None))
+    if chat_event and chat_event.get("n") != st.session_state.get("chat_done"):
+        st.session_state["chat_done"] = chat_event.get("n")
+        st.session_state["chat_notice"] = _apply_chat_action(chat_event)
+        _rerun_fragment()
+    if signal_event and signal_event.get("n") != st.session_state.get("signal_done"):
+        st.session_state["signal_done"] = signal_event.get("n")
+        st.session_state["chat_notice"] = _apply_signal_action(signal_event)
+        _rerun_fragment()
+    if report_event and report_event.get("n") != st.session_state.get("report_done"):
+        st.session_state["report_done"] = report_event.get("n")
+        st.session_state["chat_notice"] = _apply_comment_report(report_event)
+        _rerun_fragment()
+    if group_event and group_event.get("n") != st.session_state.get("group_done"):
+        st.session_state["group_done"] = group_event.get("n")
+        st.session_state["chat_notice"] = _apply_group_invite(group_event)
+        _rerun_fragment()
+    if chosen_scope in ("all", "watchlist", "crypto", "stock"):
+        stored = prefs.setdefault("settings", {})
+        if stored.get("stream_asset") != chosen_scope:
+            save_account_settings({"stream_asset": chosen_scope})
+    panel_raw = getattr(stream_state, "panel", None)
+    if panel_raw:
+        try:
+            panel_choice = json.loads(panel_raw) if isinstance(panel_raw, str) else panel_raw
+        except (TypeError, json.JSONDecodeError):
+            panel_choice = None
+        if isinstance(panel_choice, dict):
+            panel_updates = {}
+            try:
+                panel_width = int(panel_choice.get("width"))
+            except (TypeError, ValueError):
+                panel_width = 0
+            if 320 <= panel_width <= 900:
+                panel_updates["stream_width"] = panel_width
+            try:
+                panel_split = float(panel_choice.get("split"))
+            except (TypeError, ValueError):
+                panel_split = 0.0
+            if 0.08 < panel_split < 0.92:
+                panel_updates["stream_split"] = round(panel_split, 3)
+            if isinstance(panel_choice.get("pinned"), bool):
+                panel_updates["stream_pinned"] = panel_choice["pinned"]
+            if panel_choice.get("layout") in ("stacked", "side"):
+                panel_updates["stream_layout"] = panel_choice["layout"]
+            if panel_updates:
+                save_account_settings(panel_updates)
+
+
 @st.fragment
 def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, show_reasons_flag, show_extra_metrics_flag, show_period_changes_flag, trade_crypto, trade_equities):
     st.session_state["_bar_run"] = {}
@@ -7355,81 +7734,8 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             stream_items = []
         if not isinstance(stream_items, list):
             stream_items = []
-        chat_notice = st.session_state.pop("chat_notice", "")
-        stream_state = _social_stream(
-            key="social_stream_host",
-            data=json.dumps(
-                {
-                    "items": stream_items,
-                    "asset": scope,
-                    "chat": load_chat(supabase),
-                    "me": _chat_viewer(),
-                    "favourites": _favourite_ids((prefs.get("settings") or {}).get("favourites")),
-                    "groups": _groups_for_stream(),
-                    "notice": chat_notice,
-                    "faces": list(COMMENT_EMOTICONS),
-                    "limit": COMMENT_LIMIT,
-                    "account": str(user_id),
-                    "panel": account_panel(),
-                },
-                ensure_ascii=False,
-            ),
-            on_asset_change=lambda: None,
-            on_chat_change=lambda: None,
-            on_signal_change=lambda: None,
-            on_group_change=lambda: None,
-            on_panel_change=lambda: None,
-            on_report_change=lambda: None,
-        )
-        chosen_scope = stream_state.asset
-        chat_event = _chat_action(getattr(stream_state, "chat", None))
-        signal_event = _chat_action(getattr(stream_state, "signal", None))
-        group_event = _favourite_event(getattr(stream_state, "group", None))
-        report_event = _report_action(getattr(stream_state, "report", None))
-        if chat_event and chat_event.get("n") != st.session_state.get("chat_done"):
-            st.session_state["chat_done"] = chat_event.get("n")
-            st.session_state["chat_notice"] = _apply_chat_action(chat_event)
-            _rerun_fragment()
-        if signal_event and signal_event.get("n") != st.session_state.get("signal_done"):
-            st.session_state["signal_done"] = signal_event.get("n")
-            st.session_state["chat_notice"] = _apply_signal_action(signal_event)
-            _rerun_fragment()
-        if report_event and report_event.get("n") != st.session_state.get("report_done"):
-            st.session_state["report_done"] = report_event.get("n")
-            st.session_state["chat_notice"] = _apply_comment_report(report_event)
-            _rerun_fragment()
-        if group_event and group_event.get("n") != st.session_state.get("group_done"):
-            st.session_state["group_done"] = group_event.get("n")
-            st.session_state["chat_notice"] = _apply_group_invite(group_event)
-            _rerun_fragment()
-        if chosen_scope in ("all", "watchlist", "crypto", "stock"):
-            stored = prefs.setdefault("settings", {})
-            if stored.get("stream_asset") != chosen_scope:
-                save_account_settings({"stream_asset": chosen_scope})
-        panel_raw = getattr(stream_state, "panel", None)
-        if panel_raw:
-            try:
-                panel_choice = json.loads(panel_raw) if isinstance(panel_raw, str) else panel_raw
-            except (TypeError, json.JSONDecodeError):
-                panel_choice = None
-            if isinstance(panel_choice, dict):
-                panel_updates = {}
-                try:
-                    panel_width = int(panel_choice.get("width"))
-                except (TypeError, ValueError):
-                    panel_width = 0
-                if 320 <= panel_width <= 900:
-                    panel_updates["stream_width"] = panel_width
-                try:
-                    panel_split = float(panel_choice.get("split"))
-                except (TypeError, ValueError):
-                    panel_split = 0.0
-                if 0.08 < panel_split < 0.92:
-                    panel_updates["stream_split"] = round(panel_split, 3)
-                if isinstance(panel_choice.get("pinned"), bool):
-                    panel_updates["stream_pinned"] = panel_choice["pinned"]
-                if panel_updates:
-                    save_account_settings(panel_updates)
+        stream_state = _draw_social_stream(stream_items, scope)
+        _handle_stream_events(stream_state)
 
         def get_top_bottom(results):
             valid = [row for row in results if row.get("score") is not None and not pd.isna(row.get("score"))]
@@ -7921,6 +8227,14 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
         return f"{watchlist[asset_id]} ({asset_id})", kind, asset_id
 
     chart_name, chart_kind, chart_asset = selected_chart_name()
+    if chart_kind in ("Crypto", "Stock") and chart_asset:
+        _asset_link(
+            key="asset_link",
+            data={
+                "key": asset_market_key(chart_kind, chart_asset),
+                "label": " ".join(str(chart_name or chart_asset).split()),
+            },
+        )
     if chart_kind in ("Crypto", "Stock") and chart_asset:
         save_account_settings({"chart_kind": chart_kind, "chart_asset": str(chart_asset)})
     chart_logo = (st.session_state.get("asset_logos") or {}).get(asset_market_key(chart_kind, chart_asset))
@@ -9431,6 +9745,51 @@ def _take_alert_pick() -> None:
     _remember_section("interactive_chart", True)
 
 
+@st.fragment(run_every="60s")
+def render_social_popout(crypto_watchlist, stock_watchlist) -> None:
+    """The social stream and chat on a page of their own, for a second window."""
+    pairs = [("Crypto", asset_id) for asset_id in crypto_watchlist]
+    pairs += [("Stock", asset_id) for asset_id in stock_watchlist]
+    keys = [asset_market_key(kind, asset_id) for kind, asset_id in pairs]
+    shared = load_shared_market(supabase, keys)
+    logos = _asset_logos(crypto_watchlist, stock_watchlist, shared)
+    feed = sentiment_comment_lists(supabase, keys, every=True)
+    st.session_state["social_stream"] = _social_stream_json(
+        crypto_watchlist, stock_watchlist, shared, logos, feed
+    )
+    saved_scope = (prefs.get("settings") or {}).get("stream_asset")
+    scope = saved_scope if saved_scope in ("watchlist", "crypto", "stock") else ""
+    try:
+        stream_items = json.loads(st.session_state.get("social_stream") or "[]")
+    except (TypeError, json.JSONDecodeError):
+        stream_items = []
+    if not isinstance(stream_items, list):
+        stream_items = []
+    stream_state = _draw_social_stream(stream_items, scope, popout=True)
+    _handle_stream_events(stream_state)
+
+
+def _keep_handoff_fresh() -> None:
+    """The main tab hands over a new access token when it renews its own. Use it here too."""
+    reported = _handoff_ask(
+        key="handoff_ask",
+        data={"current": str(st.session_state.get("access_token") or "")},
+        on_token_change=lambda: None,
+        on_none_change=lambda: None,
+    )
+    token = str(getattr(reported, "token", "") or "")
+    if token and token != st.session_state.get("access_token"):
+        st.session_state.access_token = token
+        st.rerun()
+
+
+if _POPOUT_VIEW == "social":
+    _keep_handoff_fresh()
+    remember_favourites()
+    render_social_popout(CRYPTO_WATCHLIST, STOCK_WATCHLIST)
+    st.stop()
+
+_handoff_host(key="handoff_host", data={"access": str(st.session_state.get("access_token") or "")})
 remember_favourites()
 _take_alert_pick()
 
