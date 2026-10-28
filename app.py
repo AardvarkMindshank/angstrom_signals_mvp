@@ -307,7 +307,6 @@ export default function(component) {
       "[data-baseweb='input'],[data-baseweb='textarea'],[data-baseweb='select'] > div,[data-testid='stFileUploaderDropzone']{border:1px solid var(--ang-border) !important;}",
       "[data-testid='stTextInputRootElement'],[data-testid='stNumberInputContainer'],[data-testid='stTextAreaRootElement'],[data-testid='stDateInputField'],[data-testid='stMultiSelect'] [data-baseweb='select'] > div{border-color:var(--ang-border) !important;}",
       "[class*='_take_box'] [data-testid='stForm'],[class*='_take_box'] [data-testid='stForm'] *:not(input):not(textarea):not(button):not([data-baseweb]):not([data-baseweb] *){background:transparent !important;background-color:transparent !important;}",
-      ".theme-card:hover > div:first-child{outline:2px solid #3b82f6;outline-offset:-2px;}",
       ".theme-pick .theme-name{text-align:center;font-size:.85rem;color:var(--ang-text);padding-bottom:2px;}",
       "[class*='st-key-colours_save_slot'] button,[class*='st-key-colours_back_slot'] button,[class*='st-key-reset_colours'] button{width:2.05rem !important;min-width:2.05rem !important;height:2.05rem !important;min-height:2.05rem !important;padding:0 !important;display:inline-flex;align-items:center;justify-content:center;}",
       "[class*='st-key-colours_save_slot'],[class*='st-key-colours_back_slot'],[class*='st-key-reset_colours']{width:2.05rem !important;flex:0 0 auto !important;}",
@@ -6325,7 +6324,7 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
 
     st.divider()
     with tracked_expander("UI Colours", "colours"):
-        st.caption("Your colours save on this account as you change them. Select a picture to try a different colour scheme.")
+        st.caption("Your colours save on this account as you change them. Press a theme's button to try a different colour scheme.")
         slot = _saved_colour_slot()
         st.markdown("**My saved colours**")
         if slot:
@@ -6351,16 +6350,12 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
                 save_account_settings({"colours": {key: default for key, default in _THEME_COLOURS}})
                 st.rerun()
         st.markdown("**Ready-made themes**")
-        st.caption("Click a picture to try it. You can still change any colour afterwards, and the undo arrow returns to your saved colours.")
+        st.caption("Press a theme's button to try it. You can still change any colour afterwards, and the undo arrow returns to your saved colours.")
         theme_names = list(colour_themes.THEMES)
         for start in range(0, len(theme_names), 2):
             for column, name in zip(st.columns(2, gap="small"), theme_names[start:start + 2]):
                 with column:
-                    st.html(
-                        f"<div class='theme-pick theme-card' data-theme-pick='{html.escape(name, quote=True)}' "
-                        "style='cursor:pointer;'>"
-                        + colour_themes.swatch_html(colour_themes.THEMES[name]) + "</div>"
-                    )
+                    st.html("<div class='theme-pick'>" + colour_themes.swatch_html(colour_themes.THEMES[name]) + "</div>")
                     st.button(
                         name, key=f"theme_use_{name.lower().replace(' ', '_')}",
                         on_click=_use_colours, args=(colour_themes.THEMES[name],), use_container_width=True,
