@@ -6264,13 +6264,17 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
             "the left is day and the right is night. Drag a colour onto another to copy it."
         )
         slot = _saved_colour_slot()
-        mine_col, save_col, back_col, reset_col = st.columns([2.2, 1, 1, 1], vertical_alignment="center")
+        st.markdown("**My saved colours**")
+        mine_col = st.columns(4)[0]
         with mine_col:
-            st.markdown("**My saved colours**")
             if slot:
-                st.html(colour_themes.swatch_html(slot))
+                st.html(
+                    "<div class='theme-pick'>" + colour_themes.swatch_html(slot)
+                    + "<div class='theme-name'>Saved</div></div>"
+                )
             else:
                 st.caption("Nothing saved yet. Press Save current to keep these colours.")
+        save_col, back_col, reset_col = st.columns(3)
         save_col.button(
             "Save current", key="colours_save_slot", on_click=_save_colour_slot, use_container_width=True,
             help="Keeps the colours you have now, so you can come back to them after experimenting.",
