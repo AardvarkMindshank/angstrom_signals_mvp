@@ -16,6 +16,7 @@ import requests
 from supabase import create_client
 
 from alerts import evaluate_alerts
+from email_brand import alert_tone, render_email
 from scoring import calculate_indicators, compute_score
 from shared_refresh import (
     canonical_asset_id,
@@ -112,6 +113,18 @@ def send_alert_email(to_email: str, asset_name: str, message: str) -> bool:
     safe_name = html.escape(str(asset_name))
     safe_message = html.escape(str(message))
     subject = "Angstrom alert: " + " ".join(str(asset_name).split())
+    app_url = (os.getenv("APP_URL") or "https://app.angstromsignals.com").strip()
+    page, plain = render_email(
+        f"{safe_name} crossed an alert boundary",
+        [
+            "This email is sent once for that crossing. "
+            "It is sent again only after the score leaves the boundary and crosses it later.",
+        ],
+        callout=safe_message,
+        tone=alert_tone(message),
+        button=("Open the dashboard", app_url),
+        preheader=" ".join(str(message).split())[:120],
+    )
     try:
         response = requests.post(
             "https://api.resend.com/emails",
@@ -119,12 +132,8 @@ def send_alert_email(to_email: str, asset_name: str, message: str) -> bool:
                 "from": sender,
                 "to": [to_email],
                 "subject": subject,
-                "html": (
-                    f"<p><strong>{safe_name}</strong> crossed an alert boundary.</p>"
-                    f"<p>{safe_message}</p>"
-                    "<p>This email is sent once for that crossing. "
-                    "It is sent again only after the score leaves the boundary and crosses it later.</p>"
-                ),
+                "html": page,
+                "text": plain,
             },
             headers={
                 "Authorization": f"Bearer {api_key}",

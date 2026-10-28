@@ -3479,6 +3479,10 @@ def _reveal_section(section_id: str, anchor: str) -> None:
     st.session_state.scroll_token = str(time.time_ns())
 
 
+from email_brand import render_email
+
+BETA_REQUEST_URL = "https://angstromsignals.com/beta.html"
+
 try:
     from alerts import HELD_BEARISH, HELD_BULLISH, dismiss_read_alerts
     from data_fetchers import (
@@ -6299,16 +6303,22 @@ def _email_invite(address: str, inviter_name: str) -> tuple[bool, str]:
         return False, "the Resend key is missing from the Streamlit secrets"
     safe_name = html.escape(inviter_name or "Someone")
     link = html.escape(_app_url(), quote=True)
+    page, plain = render_email(
+        f"{safe_name} invited you to Angstrom Signals",
+        [
+            "Angstrom Signals is market sentiment and technical signals, with the crowd alongside.",
+            "It is invite-only while we build with experienced traders. If you are not in yet, "
+            f"you can <a href=\"{BETA_REQUEST_URL}\" style=\"color:#1d5fd1;\">ask for a seat</a>.",
+        ],
+        button=("Open Angstrom Signals", _app_url()),
+        preheader=f"{inviter_name or 'Someone'} invited you to Angstrom Signals.",
+    )
     payload = {
         "from": sender,
         "to": [address],
         "subject": "You are invited to Angstrom Signals",
-        "html": (
-            f"<p>{safe_name} invited you to Angstrom Signals.</p>"
-            f"<p><a href=\"{link}\">Create an account</a> with this email address.</p>"
-            "<p>Angstrom Signals is market sentiment and technical signals, with the crowd alongside. "
-            "It is research, not financial advice.</p>"
-        ),
+        "html": page,
+        "text": plain,
     }
     try:
         response = requests.post(
@@ -6427,15 +6437,21 @@ def _email_barred(address: str) -> tuple[bool, str]:
     inbox = _report_inbox()
     if not api_key:
         return False, "the Resend key is missing from the Streamlit secrets"
+    page, plain = render_email(
+        "Your account is barred",
+        [
+            "Your Angstrom Signals account is barred at this time.",
+            f"You can email <a href=\"mailto:{html.escape(inbox, quote=True)}\" style=\"color:#1d5fd1;\">"
+            f"{html.escape(inbox)}</a>.",
+        ],
+        tone="down",
+    )
     payload = {
         "from": sender,
         "to": [address],
         "subject": "Your Angstrom Signals account is barred",
-        "html": (
-            "<p>Your Angstrom Signals account is barred at this time.</p>"
-            f"<p>You can email <a href=\"mailto:{html.escape(inbox, quote=True)}\">"
-            f"{html.escape(inbox)}</a>.</p>"
-        ),
+        "html": page,
+        "text": plain,
     }
     try:
         response = requests.post(
@@ -6665,23 +6681,28 @@ def _email_beta_welcome(address: str, name: str) -> tuple[bool, str]:
     api_key, sender, _inbox = _feedback_mail_settings()
     if not api_key:
         return False, "the Resend key is missing from the Streamlit secrets"
-    link = html.escape(_app_url(), quote=True)
     first = html.escape(" ".join(str(name or "").split()).split(" ")[0]) or "there"
+    page, plain = render_email(
+        "You are in",
+        [
+            f"Hi {first}, thank you for applying. You have a seat in the Angstrom Signals closed beta.",
+            "Open the dashboard, then either choose <strong>Continue with Google</strong> with this email "
+            "address, or open the <strong>Beta Access Accepted?</strong> tab and create a password for this "
+            "email address.",
+            "It is free for accepted beta traders. Seats are limited, and we would love your honest "
+            "feedback: use the Feedback box in the sidebar. If we introduce paid tiers later, we will "
+            "give at least 30 days' notice.",
+        ],
+        button=("Open the dashboard", _app_url()),
+        tone="up",
+        preheader="Your seat in the Angstrom Signals closed beta is ready.",
+    )
     payload = {
         "from": sender,
         "to": [address],
         "subject": "You are in: Angstrom Signals closed beta",
-        "html": (
-            f"<p>Hi {first},</p>"
-            "<p>Thank you for applying. You have a seat in the Angstrom Signals closed beta.</p>"
-            f"<p><a href=\"{link}\">Open the dashboard</a>, then either choose "
-            "<strong>Continue with Google</strong> with this email address, or open the "
-            "<strong>Beta Access Accepted?</strong> tab and create a password for this email address.</p>"
-            "<p>It is free for accepted beta traders. Seats are limited, and we would love your honest "
-            "feedback: use the Feedback box in the sidebar. If we introduce paid tiers later, we will "
-            "give at least 30 days' notice.</p>"
-            "<p>Angstrom Signals is a research tool, not financial advice.</p>"
-        ),
+        "html": page,
+        "text": plain,
     }
     try:
         response = requests.post(
