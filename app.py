@@ -3614,6 +3614,12 @@ export default function(component) {
   window.__angstromHandoffAsk = channel;
   channel.onmessage = (event) => {
     const msg = event.data || {};
+    if (msg.type === "logout") {
+      // The main tab signed out. Close this tab, or reload it onto the sign-in page.
+      window.close();
+      window.setTimeout(() => window.location.reload(), 400);
+      return;
+    }
     if (msg.type !== "token" || !msg.access) return;
     if (msg.to !== id && msg.to !== "*") return;
     if (msg.access === window.__angstromHandoffCurrent) return;
@@ -3637,6 +3643,26 @@ export default function(component) {
 _handoff_ask = st.components.v2.component(
     "pop_out_handoff_ask",
     js=_HANDOFF_ASK_JS,
+    isolate_styles=False,
+)
+
+_LOGOUT_CAST_JS = """
+export default function(component) {
+  const { data, parentElement } = component;
+  const shell = parentElement.closest(".stBidiComponent") || parentElement;
+  shell.style.display = "none";
+  if (!("BroadcastChannel" in window)) return;
+  const token = String((data && data.n) || "");
+  if (!token || window.__angstromLogoutSent === token) return;
+  window.__angstromLogoutSent = token;
+  const channel = new BroadcastChannel("angstrom-handoff");
+  channel.postMessage({ type: "logout" });
+  window.setTimeout(() => channel.close(), 500);
+}
+"""
+_logout_cast = st.components.v2.component(
+    "pop_out_logout_cast",
+    js=_LOGOUT_CAST_JS,
     isolate_styles=False,
 )
 
@@ -3741,6 +3767,7 @@ def get_supabase():
 
 
 def clear_session():
+    st.session_state["_announce_logout"] = str(time.time_ns())
     st.session_state.user = None
     st.session_state.access_token = None
     st.session_state.refresh_token = None
@@ -4044,6 +4071,8 @@ if st.session_state.user is None and _POPOUT_VIEW and not st.session_state.get("
     _take_handoff()
 
 if st.session_state.user is None:
+    if st.session_state.get("_announce_logout") and not _POPOUT_VIEW:
+        _logout_cast(key="logout_cast", data={"n": st.session_state["_announce_logout"]})
     if not st.session_state.get("google_url") or not st.session_state.get("google_verifier"):
         st.session_state.google_url, st.session_state.google_verifier = _google_oauth()
     google_url = st.session_state.google_url
