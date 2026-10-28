@@ -948,6 +948,7 @@ export default function(component) {
       account = String(parsed.account || "");
       panelPrefs = parsed.panel && typeof parsed.panel === "object" ? parsed.panel : {};
       window.socialPopout = !!parsed.popout;
+      window.socialPopoutOpts = { asWindow: parsed.popoutWindow !== false, fold: parsed.popoutFold !== false };
     }
   } catch (error) {
     items = [];
@@ -1567,13 +1568,18 @@ export default function(component) {
       if (popButton) {
         popButton.addEventListener("click", () => {
           const address = window.location.origin + window.location.pathname + "?view=social";
-          const opened = window.open(address, "ang_popout_social", "popup=yes,width=980,height=820");
+          const opts = window.socialPopoutOpts || { asWindow: true, fold: true };
+          const opened = opts.asWindow
+            ? window.open(address, "ang_popout_social", "popup=yes,width=980,height=820")
+            : null;
           if (!opened) {
             window.open(address, "_blank");
           }
           // Put the side panel away while the stream lives in its own window.
-          window.socialStreamState.open = false;
-          window.renderSocialStream();
+          if (opts.fold) {
+            window.socialStreamState.open = false;
+            window.renderSocialStream();
+          }
         });
       }
       window.addEventListener("resize", () => {
@@ -3710,6 +3716,7 @@ export default function(component) {
   if (holder) holder.style.display = "none";
   const ids = Array.isArray(data && data.ids) ? data.ids.map(String) : [];
   window.__angstromPopoutIds = ids;
+  window.__angstromPopoutOpts = { asWindow: !(data && data.asWindow === false), fold: !(data && data.fold === false) };
   if (window.__angstromPopoutTimer) return;
   if (!document.getElementById("ang-popout-style")) {
     const style = document.createElement("style");
@@ -3752,14 +3759,17 @@ export default function(component) {
         const box = document.querySelector(".st-key-sec_" + id);
         const address = window.location.origin + window.location.pathname + "?view=" + encodeURIComponent(id);
         // A window of its own, reused if this section is already open in one.
-        const opened = window.open(address, "ang_popout_" + id, "popup=yes,width=1100,height=760");
+        const opts = window.__angstromPopoutOpts || { asWindow: true, fold: true };
+        const opened = opts.asWindow
+          ? window.open(address, "ang_popout_" + id, "popup=yes,width=1100,height=760")
+          : null;
         if (!opened) {
           window.open(address, "_blank");
         }
         // Fold the section here while it lives in its own window.
         const details = box ? box.querySelector("details") : null;
         const header = box ? box.querySelector("summary") : null;
-        if (details && details.open && header) header.click();
+        if (opts.fold && details && details.open && header) header.click();
       });
       place(summary, button);
     });
@@ -3984,6 +3994,8 @@ def _session_is_barred() -> bool:
 # sign in on that same page would otherwise see them and save them as their own.
 _ACCOUNT_STATE_KEYS = (
     "popouts_close_on_logout",
+    "popouts_as_window",
+    "popouts_fold_section",
     "show_reasons",
     "show_extra_metrics",
     "show_period_changes",
@@ -6021,6 +6033,22 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
     )
     if "popouts_close_on_logout" not in st.session_state:
         st.session_state.popouts_close_on_logout = bool(settings.get("popouts_close_on_logout", True))
+    if "popouts_as_window" not in st.session_state:
+        st.session_state.popouts_as_window = bool(settings.get("popouts_as_window", True))
+    if "popouts_fold_section" not in st.session_state:
+        st.session_state.popouts_fold_section = bool(settings.get("popouts_fold_section", True))
+    popouts_as_window = st.checkbox(
+        "Open pop-outs in a new window",
+        key="popouts_as_window",
+        persist_state="session",
+        help="Off opens them in a new browser tab instead.",
+    )
+    popouts_fold_section = st.checkbox(
+        "Fold a section here when I pop it out",
+        key="popouts_fold_section",
+        persist_state="session",
+        help="The section closes on the main page while it is open in its own window.",
+    )
     close_popouts_on_logout = st.checkbox(
         "Close pop-out tabs when I log out",
         key="popouts_close_on_logout",
@@ -6070,6 +6098,8 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
         "show_extra_metrics": bool(show_extra_metrics),
         "show_period_changes": bool(show_period_changes),
         "popouts_close_on_logout": bool(close_popouts_on_logout),
+        "popouts_as_window": bool(popouts_as_window),
+        "popouts_fold_section": bool(popouts_fold_section),
         "trade_crypto": bool(trade_crypto),
         "trade_equities": bool(trade_equities),
         "colours": chosen_colours,
@@ -7731,6 +7761,8 @@ def _draw_social_stream(stream_items, scope, *, popout: bool = False):
                 "account": str(user_id),
                 "panel": account_panel(),
                 "popout": popout,
+                "popoutWindow": bool(st.session_state.get("popouts_as_window", True)),
+                "popoutFold": bool(st.session_state.get("popouts_fold_section", True)),
             },
             ensure_ascii=False,
         ),
@@ -10051,7 +10083,14 @@ if _POPOUT_VIEW:
     _keep_handoff_fresh()
 else:
     _handoff_host(key="handoff_host", data={"access": str(st.session_state.get("access_token") or "")})
-    _popout_buttons(key="popout_buttons", data={"ids": list(_POPOUT_SECTION_IDS)})
+    _popout_buttons(
+        key="popout_buttons",
+        data={
+            "ids": list(_POPOUT_SECTION_IDS),
+            "asWindow": bool(st.session_state.get("popouts_as_window", True)),
+            "fold": bool(st.session_state.get("popouts_fold_section", True)),
+        },
+    )
 remember_favourites()
 _take_alert_pick()
 if _POPOUT_VIEW:
