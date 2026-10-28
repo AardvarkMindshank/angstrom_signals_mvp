@@ -2828,6 +2828,7 @@ create table if not exists public.beta_requests (
     created_at timestamptz not null default now(),
     name text not null check (char_length(name) between 1 and 100),
     email text not null check (char_length(email) between 3 and 150),
+    phone text check (char_length(phone) <= 40),
     country text check (char_length(country) <= 80),
     markets text check (char_length(markets) <= 20),
     years_trading text check (char_length(years_trading) <= 20),
@@ -2839,13 +2840,14 @@ create table if not exists public.beta_requests (
     reviewed_at timestamptz
 );
 
+alter table public.beta_requests add column if not exists phone text check (char_length(phone) <= 40);
 alter table public.beta_requests add column if not exists years_trading text check (char_length(years_trading) <= 20);
 
 alter table public.beta_requests enable row level security;
 revoke all on public.beta_requests from public;
 revoke all on public.beta_requests from anon;
 revoke all on public.beta_requests from authenticated;
-grant insert (name, email, country, markets, years_trading, activity, tools, why) on public.beta_requests to anon;
+grant insert (name, email, phone, country, markets, years_trading, activity, tools, why) on public.beta_requests to anon;
 
 drop policy if exists beta_requests_website_insert on public.beta_requests;
 create policy beta_requests_website_insert
@@ -2909,6 +2911,7 @@ begin
                     'created_at', r.created_at,
                     'name', r.name,
                     'email', r.email,
+                    'phone', r.phone,
                     'country', r.country,
                     'markets', r.markets,
                     'years_trading', r.years_trading,
