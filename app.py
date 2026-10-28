@@ -321,12 +321,12 @@ export default function(component) {
       "[class*='st-key-colours_save_slot'] button,[class*='st-key-colours_back_slot'] button,[class*='st-key-reset_colours'] button{width:2.05rem !important;min-width:2.05rem !important;height:2.05rem !important;min-height:2.05rem !important;padding:0 !important;display:inline-flex;align-items:center;justify-content:center;}",
       "[class*='st-key-colours_save_slot'],[class*='st-key-colours_back_slot'],[class*='st-key-reset_colours']{width:2.05rem !important;flex:0 0 auto !important;}",
       ".st-key-palette_table [data-testid='stVerticalBlock']{gap:.2rem !important;}",
-      ".st-key-palette_table [data-testid='stHorizontalBlock']{gap:.35rem !important;align-items:center !important;}",
+      ".st-key-palette_table [data-testid='stHorizontalBlock']{gap:.5rem !important;align-items:center !important;}",
       ".st-key-palette_table [data-testid='stElementContainer'],.st-key-palette_table [data-testid='stMarkdown']{margin:0 !important;padding:0 !important;}",
-      ".st-key-palette_table [data-testid='stColorPicker']{margin:0 !important;padding:0 !important;}",
-      ".st-key-palette_table [data-testid='stColorPicker'] > div{gap:.3rem;}",
-      ".st-key-palette_table .pal-name{font-size:.8rem;line-height:1.15;color:var(--ang-text);overflow-wrap:anywhere;}",
-      ".st-key-palette_table .pal-head{font-size:.72rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ang-muted);}",
+      ".st-key-palette_table [data-testid='stColorPicker']{margin:0 !important;padding:0 !important;height:2.6rem;display:flex;align-items:center;}",
+      ".st-key-palette_table [data-testid='stColorPicker'] > div{margin:0 !important;gap:.3rem;align-items:center;}",
+      ".st-key-palette_table [data-testid='stColorPickerBlock']{width:2.1rem !important;height:2.1rem !important;border-radius:.45rem !important;}",
+      ".st-key-palette_table .pal-name{font-size:.8rem;line-height:1.15;color:var(--ang-text);overflow-wrap:anywhere;height:2.6rem;display:flex;align-items:center;}",
       ".st-key-admin_feedback_head,.st-key-admin_reports_head,.st-key-admin_blacklist_head,.st-key-admin_beta_head{position:sticky;top:0;z-index:4;background:var(--ang-section);}",
       ".st-key-admin_feedback_table [class*='st-key-admin_feedback_sort_'] button,.st-key-admin_reports_table [class*='st-key-admin_reports_sort_'] button,.st-key-admin_blacklist_table [class*='st-key-admin_blacklist_sort_'] button{background:transparent !important;border:0 !important;box-shadow:none !important;padding:0 !important;min-height:0 !important;height:auto !important;justify-content:flex-start !important;font-weight:700 !important;color:var(--ang-text) !important;}",
       ".st-key-admin_feedback_table [class*='st-key-admin_feedback_sort_'] button:hover,.st-key-admin_reports_table [class*='st-key-admin_reports_sort_'] button:hover,.st-key-admin_blacklist_table [class*='st-key-admin_blacklist_sort_'] button:hover{background:var(--ang-hover) !important;}",
@@ -6366,8 +6366,8 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
         widths = [1.5, 1, 1]
         with st.container(key="palette_table", gap=0):
             head = st.columns(widths, gap="xsmall", vertical_alignment="center")
-            head[1].markdown("<div class='pal-head'>Day</div>", unsafe_allow_html=True)
-            head[2].markdown("<div class='pal-head'>Night</div>", unsafe_allow_html=True)
+            head[1].caption("**Day**")
+            head[2].caption("**Night**")
             for label, day_key, night_key in (
                 ("Page", "page_day", "page_night"),
                 ("Section heading", "heading_day", "heading_night"),
