@@ -25,14 +25,30 @@ from streamlit.errors import StreamlitInvalidLayoutContextError
 from supabase import create_client
 
 # A pop-out tab shows one part of the dashboard on its own: ?view=social
-_POPOUT_VIEWS = ("social",)
+_POPOUT_SECTION_IDS = (
+    "quick_snapshot",
+    "crypto_scores",
+    "equity_scores",
+    "interactive_chart",
+    "score_breakdown",
+    "market_mood",
+    "market_mood_crypto",
+    "market_mood_stock",
+    "max_pain",
+    "market_sentiment_panel",
+    "signal_matrix",
+)
+_POPOUT_VIEWS = ("social",) + _POPOUT_SECTION_IDS
 _POPOUT_VIEW = str(st.query_params.get("view") or "")
 if _POPOUT_VIEW not in _POPOUT_VIEWS:
     _POPOUT_VIEW = ""
 _POPOUT_MARK = "popout-tab"
 
 st.set_page_config(
-    page_title="angstrom signals - social" if _POPOUT_VIEW == "social" else "angstrom signals",
+    page_title=(
+        "angstrom signals - " + _POPOUT_VIEW.replace("_", " ")
+        if _POPOUT_VIEW else "angstrom signals"
+    ),
     page_icon="📈",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -42,7 +58,8 @@ st.set_page_config(
 if _POPOUT_VIEW:
     st.markdown(
         "<style>[data-testid='stSidebar'],[data-testid='stSidebarCollapsedControl'],"
-        "[data-testid='stHeader'],[data-testid='stToolbar']{display:none !important;}</style>",
+        "[data-testid='stHeader'],[data-testid='stToolbar'],.st-key-page_header,"
+        ".st-key-sec_help_guides,[class*='st-key-hide_']{display:none !important;}</style>",
         unsafe_allow_html=True,
     )
 
@@ -3251,19 +3268,7 @@ def _rerun_fragment() -> None:
 
 # Main sections start open. The guide and the sidebar start closed.
 # Open all and Collapse all move only the main sections. Collapse all also closes the guide.
-_MAIN_SECTION_IDS = (
-    "quick_snapshot",
-    "crypto_scores",
-    "equity_scores",
-    "interactive_chart",
-    "score_breakdown",
-    "market_mood",
-    "market_mood_crypto",
-    "market_mood_stock",
-    "max_pain",
-    "market_sentiment_panel",
-    "signal_matrix",
-)
+_MAIN_SECTION_IDS = _POPOUT_SECTION_IDS
 _SECTION_IDS = _MAIN_SECTION_IDS + (
     "help_guides",
     "account",
@@ -3422,6 +3427,12 @@ def remember_favourites() -> None:
 
 def section_expander(label: str, section_id: str):
     """A main-page section. Open all and Collapse all move every one of these together."""
+    if _POPOUT_VIEW and _POPOUT_VIEW != "social":
+        # A pop-out tab shows one section. The others still run, because later
+        # sections use what earlier ones set up, but they are hidden.
+        if section_id == _POPOUT_VIEW:
+            return st.expander(label, expanded=True, key=f"pop_{section_id}")
+        return st.container(key=f"hide_{section_id}")
     return tracked_expander(label, section_id, default=True)
 
 
@@ -3666,6 +3677,77 @@ _logout_cast = st.components.v2.component(
     isolate_styles=False,
 )
 
+_POPOUT_BUTTONS_JS = """
+export default function(component) {
+  const { data, parentElement } = component;
+  const shell = parentElement.closest(".stBidiComponent") || parentElement;
+  shell.style.display = "none";
+  const ids = Array.isArray(data && data.ids) ? data.ids.map(String) : [];
+  window.__angstromPopoutIds = ids;
+  if (window.__angstromPopoutTimer) return;
+  if (!document.getElementById("ang-popout-style")) {
+    const style = document.createElement("style");
+    style.id = "ang-popout-style";
+    style.textContent = ".ang-popout{margin-left:auto;flex:none;display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;padding:0;border:0;border-radius:999px;background:transparent;color:inherit;opacity:.55;cursor:pointer;}.ang-popout:hover{opacity:1;background:rgba(128,128,128,.18);}";
+    document.head.appendChild(style);
+  }
+  const add = () => {
+    (window.__angstromPopoutIds || []).forEach((id) => {
+      const box = document.querySelector(".st-key-sec_" + id);
+      const summary = box ? box.querySelector("summary") : null;
+      if (!summary || summary.querySelector(".ang-popout")) return;
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "ang-popout";
+      button.title = "Open this section in its own tab";
+      button.setAttribute("aria-label", "Open this section in its own tab");
+      button.innerHTML = "<svg viewBox='0 0 24 24' width='14' height='14' aria-hidden='true' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M14 4h6v6'/><path d='M20 4 10 14'/><path d='M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5'/></svg>";
+      button.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        window.open(window.location.origin + window.location.pathname + "?view=" + encodeURIComponent(id), "_blank");
+      });
+      summary.appendChild(button);
+    });
+  };
+  add();
+  window.__angstromPopoutTimer = window.setInterval(add, 1500);
+}
+"""
+_popout_buttons = st.components.v2.component(
+    "pop_out_buttons",
+    js=_POPOUT_BUTTONS_JS,
+    isolate_styles=False,
+)
+
+_ASSET_FOLLOW_JS = """
+export default function(component) {
+  const { parentElement } = component;
+  const shell = parentElement.closest(".stBidiComponent") || parentElement;
+  shell.style.display = "none";
+  if (!("BroadcastChannel" in window) || window.__angstromFollowRx) return;
+  const channel = new BroadcastChannel("angstrom-link");
+  window.__angstromFollowRx = channel;
+  const pick = (kind, id, tries) => {
+    if (window.__angstromPickAsset) {
+      window.__angstromPickAsset(kind + "|" + id);
+    } else if (tries < 10) {
+      window.setTimeout(() => pick(kind, id, tries + 1), 300);
+    }
+  };
+  channel.onmessage = (event) => {
+    const msg = event.data || {};
+    if (msg.type === "asset" && msg.kind && msg.id) pick(String(msg.kind), String(msg.id), 0);
+  };
+  channel.postMessage({ type: "hello" });
+}
+"""
+_asset_follow = st.components.v2.component(
+    "pop_out_asset_follow",
+    js=_ASSET_FOLLOW_JS,
+    isolate_styles=False,
+)
+
 _ASSET_LINK_JS = """
 export default function(component) {
   const { data, setTriggerValue, parentElement } = component;
@@ -3675,7 +3757,9 @@ export default function(component) {
   window.__angstromLinkRefresh = setTriggerValue;
   const key = String((data && data.key) || "");
   const label = String((data && data.label) || key);
-  window.__angstromLinkCurrent = { key: key, label: label };
+  const kind = String((data && data.kind) || "");
+  const assetId = String((data && data.id) || "");
+  window.__angstromLinkCurrent = { key: key, label: label, kind: kind, id: assetId };
   if (!window.__angstromLinkTx) {
     const channel = new BroadcastChannel("angstrom-link");
     window.__angstromLinkTx = channel;
@@ -3683,7 +3767,7 @@ export default function(component) {
       const msg = event.data || {};
       const now = window.__angstromLinkCurrent;
       if (msg.type === "hello" && now && now.key) {
-        channel.postMessage({ type: "asset", key: now.key, label: now.label });
+        channel.postMessage({ type: "asset", key: now.key, label: now.label, kind: now.kind, id: now.id });
       }
       if (msg.type === "changed" && msg.from !== window.__angstromTabId && window.__angstromLinkRefresh) {
         window.__angstromLinkRefresh("refresh", String(Date.now()));
@@ -3692,7 +3776,7 @@ export default function(component) {
   }
   if (key && window.__angstromLinkSent !== key) {
     window.__angstromLinkSent = key;
-    window.__angstromLinkTx.postMessage({ type: "asset", key: key, label: label });
+    window.__angstromLinkTx.postMessage({ type: "asset", key: key, label: label, kind: kind, id: assetId });
   }
 }
 """
@@ -5385,7 +5469,7 @@ for _seen_name, _state_name in _layout_watched:
     if _seen_value is not None and st.session_state[_state_name] != _seen_value:
         hold_layout = True
         break
-with st.container(horizontal=True, vertical_alignment="center", horizontal_alignment="distribute"):
+with st.container(horizontal=True, vertical_alignment="center", horizontal_alignment="distribute", key="page_header"):
     st.markdown(
         "<div style='display:flex;align-items:center;gap:0.85rem;margin:0.4rem 0;'>"
         f"{_brand_mark(58, align='left')}"
@@ -5430,7 +5514,8 @@ with st.container(horizontal=True, vertical_alignment="center", horizontal_align
             st.session_state.section_layout = "Wide"
             st.rerun()
 save_account_settings({"section_layout": st.session_state.section_layout})
-remember_section_clicks()
+if not _POPOUT_VIEW:
+    remember_section_clicks()
 
 with tracked_expander("📖 Help and guides", "help_guides", default=False):
     st.markdown("""
@@ -7613,7 +7698,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
         shared_keys.extend(asset_market_key("Stock", asset_id) for asset_id in stock_watchlist)
     st.session_state["_shared_rows"] = load_shared_market(supabase, shared_keys)
 
-    wide_layout = st.session_state.get("section_layout") == "Wide"
+    wide_layout = st.session_state.get("section_layout") == "Wide" and not _POPOUT_VIEW
     allowed_kinds = []
     if trade_crypto:
         allowed_kinds.append("Crypto")
@@ -8284,6 +8369,8 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             data={
                 "key": asset_market_key(chart_kind, chart_asset),
                 "label": " ".join(str(chart_name or chart_asset).split()),
+                "kind": chart_kind,
+                "id": str(chart_asset),
             },
             on_refresh_change=lambda: None,
         )
@@ -9841,9 +9928,15 @@ if _POPOUT_VIEW == "social":
     render_social_popout(CRYPTO_WATCHLIST, STOCK_WATCHLIST)
     st.stop()
 
-_handoff_host(key="handoff_host", data={"access": str(st.session_state.get("access_token") or "")})
+if _POPOUT_VIEW:
+    _keep_handoff_fresh()
+else:
+    _handoff_host(key="handoff_host", data={"access": str(st.session_state.get("access_token") or "")})
+    _popout_buttons(key="popout_buttons", data={"ids": list(_POPOUT_SECTION_IDS)})
 remember_favourites()
 _take_alert_pick()
+if _POPOUT_VIEW:
+    _asset_follow(key="asset_follow")
 
 render_dashboard(
     CRYPTO_WATCHLIST,
@@ -9856,6 +9949,8 @@ render_dashboard(
     trade_crypto,
     trade_equities,
 )
+if _POPOUT_VIEW:
+    st.stop()
 if str((load_profile() or {}).get("role") or "") == "admin":
     admin_panel()
 _page_top(key="page_back_to_top")
