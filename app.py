@@ -6578,6 +6578,8 @@ def admin_panel() -> None:
                 st.caption("Milliseconds spent on each step the last time the dashboard drew. Slowest first.")
                 for label, spent in sorted(perf.items(), key=lambda item: item[1], reverse=True):
                     st.write(f"{label}: {spent}" if "worked out" in label else f"{label}: {spent} ms")
+                lacking = st.session_state.get("_logo_lacking") or []
+                st.write("Assets with no stored logo: " + (", ".join(lacking) if lacking else "none"))
 
 
 def _email_beta_welcome(address: str, name: str) -> tuple[bool, str]:
@@ -7800,11 +7802,14 @@ def _asset_logos(crypto_watchlist, stock_watchlist, shared: dict) -> dict[str, s
     logos = {}
     missing_crypto = []
     missing_stock = []
+    lacking = []
     now = time.time()
     for kind, watchlist in (("Crypto", crypto_watchlist), ("Stock", stock_watchlist)):
         for asset_id in watchlist:
             key = asset_market_key(kind, asset_id)
             saved = _stored_logo(shared.get(key))
+            if not saved:
+                lacking.append(str(asset_id))
             if saved:
                 logos[key] = saved
             elif now - _LOGO_ASKED.get(key, 0.0) >= 3600:
@@ -7813,6 +7818,7 @@ def _asset_logos(crypto_watchlist, stock_watchlist, shared: dict) -> dict[str, s
     if missing_crypto or missing_stock:
         _BACKGROUND.submit(_fetch_logos_later, list(missing_crypto), list(missing_stock))
     st.session_state["asset_logos"] = logos
+    st.session_state["_logo_lacking"] = lacking
     return logos
 
 
