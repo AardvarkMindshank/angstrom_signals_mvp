@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import os
 import re
+import time
 from concurrent.futures import ThreadPoolExecutor
 
 import requests
@@ -383,6 +384,9 @@ def get_current_price_crypto(coin_id: str) -> float | None:
 
 
 _LOGO_MISS: set[str] = set()
+# Coins CoinGecko gave no logo for, or a failed lookup, and when. They are not asked again for an hour.
+_CRYPTO_LOGO_MISS: dict[str, float] = {}
+_CRYPTO_LOGO_RETRY_SECONDS = 3600
 
 
 def _https_logo(url) -> str:
@@ -508,9 +512,12 @@ def crypto_logo_urls(coin_ids) -> dict[str, str]:
     for coin_id in coin_ids or []:
         cleaned = str(coin_id or "").strip().lower()
         if cleaned and cleaned not in ids:
+            if time.time() - _CRYPTO_LOGO_MISS.get(cleaned, 0.0) < _CRYPTO_LOGO_RETRY_SECONDS:
+                continue
             ids.append(cleaned)
     if not ids:
         return {}
+    asked = time.time()
     try:
         response = requests.get(
             "https://api.coingecko.com/api/v3/coins/markets",
@@ -525,8 +532,12 @@ def crypto_logo_urls(coin_ids) -> dict[str, str]:
             timeout=15,
         )
     except Exception:
+        for coin_id in ids:
+            _CRYPTO_LOGO_MISS[coin_id] = asked
         return {}
     if response.status_code != 200:
+        for coin_id in ids:
+            _CRYPTO_LOGO_MISS[coin_id] = asked
         return {}
     found = {}
     for item in response.json() or []:
@@ -536,6 +547,9 @@ def crypto_logo_urls(coin_ids) -> dict[str, str]:
         coin_id = str(item.get("id") or "").strip().lower()
         if coin_id and url:
             found[coin_id] = url
+    for coin_id in ids:
+        if coin_id not in found:
+            _CRYPTO_LOGO_MISS[coin_id] = asked
     return found
 
 

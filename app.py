@@ -7730,14 +7730,17 @@ def _share_market_rows(crypto_watchlist, stock_watchlist, crypto_results, stock_
     ):
         if name not in prefetch:
             jobs[name] = job
-    got = _together(jobs) if jobs else {}
+    with _timed("  extra lookups (should be none)"):
+        got = _together(jobs) if jobs else {}
     shared = earlier if reuse_shared else got["shared"]
     counts = prefetch["counts"] if "counts" in prefetch else got["counts"]
     crowd = prefetch["crowd"] if "crowd" in prefetch else got["crowd"]
     comments = prefetch["comments"] if "comments" in prefetch else got["comments"]
     feed = prefetch["feed"] if "feed" in prefetch else got["feed"]
-    logos = _asset_logos(crypto_watchlist, stock_watchlist, shared)
-    st.session_state["social_stream"] = _social_stream_json(crypto_watchlist, stock_watchlist, shared, logos, feed)
+    with _timed("  logos"):
+        logos = _asset_logos(crypto_watchlist, stock_watchlist, shared)
+    with _timed("  social stream build"):
+        st.session_state["social_stream"] = _social_stream_json(crypto_watchlist, stock_watchlist, shared, logos, feed)
     for kind, results, watchlist in (
         ("Crypto", crypto_results, crypto_watchlist),
         ("Stock", stock_results, stock_watchlist),
