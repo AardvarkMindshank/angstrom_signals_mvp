@@ -6589,7 +6589,7 @@ def _email_beta_welcome(address: str, name: str) -> tuple[bool, str]:
             "<p>Thank you for applying. You have a seat in the Angstrom Signals closed beta.</p>"
             f"<p><a href=\"{link}\">Open the dashboard</a>, then either choose "
             "<strong>Continue with Google</strong> with this email address, or open the "
-            "<strong>Accepted?</strong> tab and create a password for this email address.</p>"
+            "<strong>Beta Access Accepted?</strong> tab and create a password for this email address.</p>"
             "<p>It is free for accepted beta traders. Seats are limited, and we would love your honest "
             "feedback: use the Feedback box in the sidebar. If we introduce paid tiers later, we will "
             "give at least 30 days' notice.</p>"
