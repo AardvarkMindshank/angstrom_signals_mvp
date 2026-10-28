@@ -3696,14 +3696,32 @@ export default function(component) {
   if (!document.getElementById("ang-popout-style")) {
     const style = document.createElement("style");
     style.id = "ang-popout-style";
-    style.textContent = ".ang-popout{margin-left:auto;flex:none;display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;padding:0;border:0;border-radius:999px;background:transparent;color:inherit;opacity:.55;cursor:pointer;}.ang-popout:hover{opacity:1;background:rgba(128,128,128,.18);}";
+    style.textContent = ".ang-popout{margin-left:6px;flex:none;display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;padding:0;border:0;border-radius:999px;background:transparent;color:inherit;opacity:.55;cursor:pointer;}.ang-popout:hover{opacity:1;background:rgba(128,128,128,.18);}";
     document.head.appendChild(style);
   }
+  const place = (summary, button) => {
+    // Just left of the open/close arrow, and after the score when the header has one.
+    const icon = summary.querySelector('[data-testid="stExpanderToggleIcon"], [data-testid="stExpanderIcon"]');
+    let slot = icon;
+    while (slot && slot.parentElement !== summary) slot = slot.parentElement;
+    const badge = summary.querySelector(":scope > .ang-header-score");
+    if (slot) {
+      if (button.nextElementSibling !== slot) summary.insertBefore(button, slot);
+    } else if (button.parentElement !== summary || button !== summary.lastElementChild) {
+      summary.appendChild(button);
+    }
+    button.style.marginLeft = badge ? "6px" : "auto";
+  };
   const add = () => {
     (window.__angstromPopoutIds || []).forEach((id) => {
       const box = document.querySelector(".st-key-sec_" + id);
       const summary = box ? box.querySelector("summary") : null;
-      if (!summary || summary.querySelector(".ang-popout")) return;
+      if (!summary) return;
+      const existing = summary.querySelector(".ang-popout");
+      if (existing) {
+        place(summary, existing);
+        return;
+      }
       const button = document.createElement("button");
       button.type = "button";
       button.className = "ang-popout";
@@ -3715,7 +3733,7 @@ export default function(component) {
         event.stopPropagation();
         window.open(window.location.origin + window.location.pathname + "?view=" + encodeURIComponent(id), "_blank");
       });
-      summary.appendChild(button);
+      place(summary, button);
     });
   };
   add();
