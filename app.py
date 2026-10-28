@@ -459,21 +459,31 @@ export default function(component) {
     window.addEventListener("resize", () => placeSidebarTab());
     // Dragging the sidebar edge must not throw the page or the sidebar back to the top.
     let dragKeep = null;
-    const sideNode = () => document.querySelector("[data-testid='stSidebarContent']")
-      || document.querySelector("[data-testid='stSidebar'] > div");
-    const mainNode = () => document.querySelector("[data-testid='stMain']") || document.querySelector("section.main");
-    const snapshotScroll = () => {
-      const side = sideNode();
-      const main = mainNode();
-      return { window: window.scrollY, side: side ? side.scrollTop : 0, main: main ? main.scrollTop : 0 };
+    // Any box in the sidebar or main page that is scrolled and can scroll. Not only the ones named in Streamlit.
+    const scrolledBoxes = () => {
+      const roots = [document.querySelector("[data-testid='stSidebar']"), document.querySelector("[data-testid='stMain']")].filter(Boolean);
+      const found = [];
+      roots.forEach((root) => {
+        [root, ...root.querySelectorAll("*")].forEach((node) => {
+          if (node.scrollHeight <= node.clientHeight + 2) return;
+          const mode = getComputedStyle(node).overflowY;
+          if (mode === "auto" || mode === "scroll") found.push(node);
+        });
+      });
+      return found;
     };
-    // The nodes are looked up again each time, in case the page rebuilt them during the drag.
+    const snapshotScroll = () => ({
+      window: window.scrollY,
+      boxes: scrolledBoxes().filter((node) => node.scrollTop > 0).map((node) => [node, node.scrollTop]),
+    });
     const restoreScroll = () => {
       if (!dragKeep) return;
-      const side = sideNode();
-      const main = mainNode();
-      if (side && dragKeep.side > 0 && side.scrollTop < dragKeep.side - 2) side.scrollTop = dragKeep.side;
-      if (main && dragKeep.main > 0 && main.scrollTop < dragKeep.main - 2) main.scrollTop = dragKeep.main;
+      const live = scrolledBoxes();
+      dragKeep.boxes.forEach(([node, top]) => {
+        // A rebuilt box is no longer the same node, so the first scrollable box in the sidebar stands in.
+        const target = node.isConnected ? node : live.find((item) => item.closest("[data-testid='stSidebar']") && !dragKeep.boxes.some(([kept]) => kept === item));
+        if (target && target.scrollTop < top - 2) target.scrollTop = top;
+      });
       if (dragKeep.window > 0 && window.scrollY === 0) window.scrollTo({top: dragKeep.window, behavior: "auto"});
     };
     document.addEventListener("pointerdown", (event) => {
@@ -482,8 +492,14 @@ export default function(component) {
       const edge = sidebar.getBoundingClientRect().right;
       if (Math.abs(event.clientX - edge) <= 10) dragKeep = snapshotScroll();
     }, true);
-    document.addEventListener("pointermove", () => { if (dragKeep) restoreScroll(); }, true);
-    new MutationObserver(() => { if (dragKeep) restoreScroll(); }).observe(document.body, { childList: true, subtree: true });
+    let restoreQueued = false;
+    const queueRestore = () => {
+      if (!dragKeep || restoreQueued) return;
+      restoreQueued = true;
+      requestAnimationFrame(() => { restoreQueued = false; restoreScroll(); });
+    };
+    document.addEventListener("pointermove", queueRestore, true);
+    new MutationObserver(queueRestore).observe(document.body, { childList: true, subtree: true });
     document.addEventListener("pointerup", () => {
       if (!dragKeep) return;
       [0, 60, 120, 250, 400, 700, 1000].forEach((ms) => setTimeout(restoreScroll, ms));
