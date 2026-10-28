@@ -6021,6 +6021,7 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
         key="trade_markets",
         persist_state="session",
     )
+    st.divider()
     days_history = st.slider(
         "Days of history",
         90,
@@ -6028,6 +6029,8 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
         key="days_history",
         persist_state="session",
     )
+    st.divider()
+    st.markdown("**TA analysis**")
     show_reasons = st.checkbox(
         "Show score breakdown",
         key="show_reasons",
@@ -6043,6 +6046,8 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
         key="show_period_changes",
         persist_state="session",
     )
+    st.divider()
+    st.markdown("**UI pop-out options**")
     if "popouts_close_on_logout" not in st.session_state:
         st.session_state.popouts_close_on_logout = bool(settings.get("popouts_close_on_logout", True))
     if "popouts_as_window" not in st.session_state:
@@ -6072,6 +6077,7 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
         ),
     )
 
+    st.divider()
     with tracked_expander("UI Colours", "colours"):
         st.caption("Saved on this account. Left is day, right is night. Drag a colour onto another to copy it.")
         for label, day_key, night_key in (
