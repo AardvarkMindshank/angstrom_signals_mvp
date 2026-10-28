@@ -59,7 +59,8 @@ if _POPOUT_VIEW:
     st.markdown(
         "<style>[data-testid='stSidebar'],[data-testid='stSidebarCollapsedControl'],"
         "[data-testid='stHeader'],[data-testid='stToolbar'],.st-key-page_header,"
-        ".st-key-sec_help_guides,[class*='st-key-hide_']{display:none !important;}</style>",
+        ".st-key-sec_help_guides,[class*='st-key-hide_'],.angstrom-sidebar-tab,#social-stream-root .edge"
+        "{display:none !important;}</style>",
         unsafe_allow_html=True,
     )
 
@@ -7963,8 +7964,9 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             stream_items = []
         if not isinstance(stream_items, list):
             stream_items = []
-        stream_state = _draw_social_stream(stream_items, scope)
-        _handle_stream_events(stream_state)
+        if not _POPOUT_VIEW:
+            stream_state = _draw_social_stream(stream_items, scope)
+            _handle_stream_events(stream_state)
 
         def get_top_bottom(results):
             valid = [row for row in results if row.get("score") is not None and not pd.isna(row.get("score"))]
