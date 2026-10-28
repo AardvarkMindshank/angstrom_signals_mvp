@@ -16,6 +16,7 @@ import requests
 from supabase import create_client
 
 from alerts import evaluate_alerts
+from beta_worker import send_beta_decision_emails
 from email_brand import alert_tone, render_email
 from scoring import calculate_indicators, compute_score
 from shared_refresh import (
@@ -187,6 +188,11 @@ def run_background_checks() -> None:
     print("Starting background alert check...")
     url, key = load_credentials()
     supabase = create_client(url, key)
+
+    try:
+        send_beta_decision_emails(supabase)
+    except Exception as exc:
+        print(f"Beta decision emails failed: {exc}")
 
     prefs_res = (
         supabase.table("user_preferences")

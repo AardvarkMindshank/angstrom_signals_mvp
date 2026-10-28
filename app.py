@@ -3563,6 +3563,7 @@ def _reveal_section(section_id: str, anchor: str) -> None:
 
 
 from email_brand import render_email
+import beta_emails
 import colour_themes
 
 BETA_REQUEST_URL = "https://angstromsignals.com/beta.html"
@@ -6841,26 +6842,11 @@ def _email_beta_welcome(address: str, name: str) -> tuple[bool, str]:
     api_key, sender, _inbox = _feedback_mail_settings()
     if not api_key:
         return False, "the Resend key is missing from the Streamlit secrets"
-    first = html.escape(" ".join(str(name or "").split()).split(" ")[0]) or "there"
-    page, plain = render_email(
-        "You are in",
-        [
-            f"Hi {first}, thank you for applying. You have a seat in the Angstrom Signals closed beta.",
-            "Open the dashboard, then either choose <strong>Continue with Google</strong> with this email "
-            "address, or open the <strong>Beta Access Accepted?</strong> tab and create a password for this "
-            "email address.",
-            "It is free for accepted beta traders. Seats are limited, and we would love your honest "
-            "feedback: use the Feedback box in the sidebar. If we introduce paid tiers later, we will "
-            "give at least 30 days' notice.",
-        ],
-        button=("Open the dashboard", _app_url()),
-        tone="up",
-        preheader="Your seat in the Angstrom Signals closed beta is ready.",
-    )
+    subject, page, plain = beta_emails.welcome_email(name, _app_url())
     payload = {
         "from": sender,
         "to": [address],
-        "subject": "You are in: Angstrom Signals closed beta",
+        "subject": subject,
         "html": page,
         "text": plain,
     }

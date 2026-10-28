@@ -2991,7 +2991,7 @@ begin
         return 'missing';
     end if;
     update public.beta_requests
-    set status = decision, reviewed_by = auth.uid(), reviewed_at = now()
+    set status = decision, reviewed_by = auth.uid(), reviewed_at = now(), decided_via = 'dashboard'
     where id = request_id;
     if decision = 'approved' then
         insert into public.beta_access (email, created_by, request_id)
@@ -3139,3 +3139,157 @@ grant execute on function public.set_signup_open(boolean) to authenticated;
 
 -- Before the first deploy that turns the closed beta on, add yourself and anyone already testing
 -- (existing accounts keep working either way). The beta list only gates NEW accounts.
+
+
+-- ------------------------------------------------------------------
+-- Approve and Reject links in the beta request email.
+-- Each link carries a signature only the website server and this database can make, so nobody can
+-- approve themselves. The links open a confirm page first. Nothing changes until the button is pressed.
+-- ------------------------------------------------------------------
+
+create extension if not exists pgcrypto with schema extensions;
+
+alter table public.beta_settings add column if not exists link_secret text;
+alter table public.beta_requests add column if not exists request_ref text;
+alter table public.beta_requests add column if not exists decided_via text;
+alter table public.beta_requests add column if not exists notified_at timestamptz;
+
+do $$
+begin
+    if not exists (select 1 from pg_constraint where conname = 'beta_requests_ref_shape') then
+        alter table public.beta_requests
+            add constraint beta_requests_ref_shape check (request_ref is null or request_ref ~ '^[0-9a-f]{32}$');
+    end if;
+    if not exists (select 1 from pg_constraint where conname = 'beta_requests_decided_via_shape') then
+        alter table public.beta_requests
+            add constraint beta_requests_decided_via_shape check (decided_via is null or decided_via in ('dashboard', 'email'));
+    end if;
+end;
+$$;
+
+create unique index if not exists beta_requests_ref_key on public.beta_requests (request_ref) where request_ref is not null;
+
+-- Requests decided before this feature, or in the dashboard, never need a worker email.
+update public.beta_requests
+set notified_at = coalesce(reviewed_at, now())
+where notified_at is null and status <> 'pending' and decided_via is null;
+
+grant insert (request_ref) on public.beta_requests to anon;
+
+create or replace function public.beta_link_sig(p_ref text, p_action text)
+returns text
+language plpgsql
+stable
+security definer
+set search_path = public, extensions
+as $$
+declare
+    secret text;
+begin
+    select link_secret into secret from public.beta_settings where id;
+    if secret is null or char_length(secret) < 16 then
+        return null;
+    end if;
+    return encode(
+        hmac(convert_to(coalesce(p_ref, '') || ':' || coalesce(p_action, ''), 'UTF8'), convert_to(secret, 'UTF8'), 'sha256'),
+        'hex'
+    );
+end;
+$$;
+
+revoke all on function public.beta_link_sig(text, text) from public;
+revoke all on function public.beta_link_sig(text, text) from anon;
+revoke all on function public.beta_link_sig(text, text) from authenticated;
+
+create or replace function public.beta_decision_preview(p_ref text, p_action text, p_sig text)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+declare
+    wanted text;
+    req record;
+begin
+    if p_action not in ('approve', 'reject') or coalesce(p_ref, '') !~ '^[0-9a-f]{32}$' then
+        return jsonb_build_object('ok', false, 'reason', 'bad_link');
+    end if;
+    wanted := public.beta_link_sig(p_ref, p_action);
+    if wanted is null then
+        return jsonb_build_object('ok', false, 'reason', 'not_configured');
+    end if;
+    if p_sig is distinct from wanted then
+        return jsonb_build_object('ok', false, 'reason', 'bad_link');
+    end if;
+    select name, email, markets, years_trading, activity, status into req
+    from public.beta_requests where request_ref = p_ref;
+    if not found then
+        return jsonb_build_object('ok', false, 'reason', 'not_found');
+    end if;
+    return jsonb_build_object(
+        'ok', true, 'name', req.name, 'email', req.email, 'markets', req.markets,
+        'years', req.years_trading, 'activity', req.activity, 'status', req.status
+    );
+end;
+$$;
+
+create or replace function public.beta_decide(p_ref text, p_action text, p_sig text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    wanted text;
+    new_status text;
+    changed record;
+    existing record;
+begin
+    if p_action not in ('approve', 'reject') or coalesce(p_ref, '') !~ '^[0-9a-f]{32}$' then
+        return jsonb_build_object('ok', false, 'reason', 'bad_link');
+    end if;
+    wanted := public.beta_link_sig(p_ref, p_action);
+    if wanted is null then
+        return jsonb_build_object('ok', false, 'reason', 'not_configured');
+    end if;
+    if p_sig is distinct from wanted then
+        return jsonb_build_object('ok', false, 'reason', 'bad_link');
+    end if;
+    new_status := case p_action when 'approve' then 'approved' else 'declined' end;
+
+    update public.beta_requests
+    set status = new_status, reviewed_at = now(), decided_via = 'email'
+    where request_ref = p_ref and status = 'pending'
+    returning id, name, email into changed;
+
+    if not found then
+        select name, email, status into existing from public.beta_requests where request_ref = p_ref;
+        if not found then
+            return jsonb_build_object('ok', false, 'reason', 'not_found');
+        end if;
+        return jsonb_build_object('ok', false, 'reason', 'already', 'status', existing.status, 'name', existing.name);
+    end if;
+
+    if new_status = 'approved' then
+        insert into public.beta_access (email, request_id)
+        values (lower(btrim(changed.email)), changed.id)
+        on conflict (email) do nothing;
+    else
+        delete from public.beta_access where email = lower(btrim(changed.email));
+    end if;
+    return jsonb_build_object('ok', true, 'status', new_status, 'name', changed.name, 'email', changed.email);
+end;
+$$;
+
+revoke all on function public.beta_decision_preview(text, text, text) from public;
+revoke all on function public.beta_decide(text, text, text) from public;
+grant execute on function public.beta_decision_preview(text, text, text) to anon, authenticated;
+grant execute on function public.beta_decide(text, text, text) to anon, authenticated;
+
+-- One-time setup, run by hand in the SQL editor: make the link secret, then copy the value it shows
+-- into beta-config.php on the website as LINK_SECRET. Run it again only if you want new links.
+--   update public.beta_settings
+--   set link_secret = encode(extensions.gen_random_bytes(24), 'hex')
+--   where id and link_secret is null
+--   returning link_secret;
