@@ -285,14 +285,14 @@ export default function(component) {
       "html.angstrom-night #angstrom-wide-split .grip{background:#6b7280;}",
       "html.angstrom-night #angstrom-wide-split:hover .grip,html.angstrom-night #angstrom-wide-split.is-dragging .grip{background:#e5e7eb;}",
       "#interactive-chart,#market-mood-crypto,#market-mood-stock,#market-sentiment,#score-breakdown{height:0;margin:0;padding:0;scroll-margin-top:4.5rem;}",
-      ".st-key-admin_feedback_table,.st-key-admin_reports_table,.st-key-admin_blacklist_table{max-height:32rem !important;overflow:auto !important;border:1px solid var(--ang-border);}",
-      ".st-key-admin_feedback_table [data-testid='stHorizontalBlock'],.st-key-admin_reports_table [data-testid='stHorizontalBlock'],.st-key-admin_blacklist_table [data-testid='stHorizontalBlock']{border-bottom:1px solid var(--ang-border);}",
-      ".st-key-admin_feedback_table [data-testid='stVerticalBlock'],.st-key-admin_reports_table [data-testid='stVerticalBlock'],.st-key-admin_blacklist_table [data-testid='stVerticalBlock']{gap:0 !important;}",
-      ".st-key-admin_feedback_table [data-testid='stHorizontalBlock'],.st-key-admin_reports_table [data-testid='stHorizontalBlock'],.st-key-admin_blacklist_table [data-testid='stHorizontalBlock'],.st-key-admin_feedback_table [data-testid='stElementContainer'],.st-key-admin_reports_table [data-testid='stElementContainer'],.st-key-admin_blacklist_table [data-testid='stElementContainer'],.st-key-admin_feedback_table [data-testid='stMarkdown'],.st-key-admin_reports_table [data-testid='stMarkdown'],.st-key-admin_blacklist_table [data-testid='stMarkdown']{margin-top:0 !important;margin-bottom:0 !important;padding-top:0 !important;padding-bottom:0 !important;}",
-      ".st-key-admin_feedback_table [data-testid='stMarkdownContainer'] p,.st-key-admin_reports_table [data-testid='stMarkdownContainer'] p,.st-key-admin_blacklist_table [data-testid='stMarkdownContainer'] p,.st-key-admin_feedback_table [data-testid='stText'] p,.st-key-admin_reports_table [data-testid='stText'] p,.st-key-admin_blacklist_table [data-testid='stText'] p{margin:0 !important;padding:0 !important;line-height:1.25 !important;}",
+      ".st-key-admin_feedback_table,.st-key-admin_reports_table,.st-key-admin_blacklist_table,.st-key-admin_beta_table{max-height:32rem !important;overflow:auto !important;border:1px solid var(--ang-border);}",
+      ".st-key-admin_feedback_table [data-testid='stHorizontalBlock'],.st-key-admin_reports_table [data-testid='stHorizontalBlock'],.st-key-admin_blacklist_table [data-testid='stHorizontalBlock'],.st-key-admin_beta_table [data-testid='stHorizontalBlock']{border-bottom:1px solid var(--ang-border);}",
+      ".st-key-admin_feedback_table [data-testid='stVerticalBlock'],.st-key-admin_reports_table [data-testid='stVerticalBlock'],.st-key-admin_blacklist_table [data-testid='stVerticalBlock'],.st-key-admin_beta_table [data-testid='stVerticalBlock']{gap:0 !important;}",
+      ".st-key-admin_feedback_table [data-testid='stHorizontalBlock'],.st-key-admin_reports_table [data-testid='stHorizontalBlock'],.st-key-admin_blacklist_table [data-testid='stHorizontalBlock'],.st-key-admin_beta_table [data-testid='stHorizontalBlock'],.st-key-admin_feedback_table [data-testid='stElementContainer'],.st-key-admin_reports_table [data-testid='stElementContainer'],.st-key-admin_blacklist_table [data-testid='stElementContainer'],.st-key-admin_beta_table [data-testid='stElementContainer'],.st-key-admin_feedback_table [data-testid='stMarkdown'],.st-key-admin_reports_table [data-testid='stMarkdown'],.st-key-admin_blacklist_table [data-testid='stMarkdown'],.st-key-admin_beta_table [data-testid='stMarkdown']{margin-top:0 !important;margin-bottom:0 !important;padding-top:0 !important;padding-bottom:0 !important;}",
+      ".st-key-admin_feedback_table [data-testid='stMarkdownContainer'] p,.st-key-admin_reports_table [data-testid='stMarkdownContainer'] p,.st-key-admin_blacklist_table [data-testid='stMarkdownContainer'] p,.st-key-admin_beta_table [data-testid='stMarkdownContainer'] p,.st-key-admin_feedback_table [data-testid='stText'] p,.st-key-admin_reports_table [data-testid='stText'] p,.st-key-admin_blacklist_table [data-testid='stText'] p,.st-key-admin_beta_table [data-testid='stText'] p{margin:0 !important;padding:0 !important;line-height:1.25 !important;}",
       ".st-key-admin_feedback_table [data-testid='stSelectbox'],.st-key-admin_reports_table [data-testid='stSelectbox']{margin-top:0 !important;margin-bottom:0 !important;padding-top:0 !important;padding-bottom:0 !important;}",
       ".st-key-admin_feedback_table [data-baseweb='select'] > div,.st-key-admin_reports_table [data-baseweb='select'] > div{min-height:1.35rem !important;padding-top:0 !important;padding-bottom:0 !important;}",
-      ".st-key-admin_feedback_head,.st-key-admin_reports_head,.st-key-admin_blacklist_head{position:sticky;top:0;z-index:4;background:var(--ang-section);}",
+      ".st-key-admin_feedback_head,.st-key-admin_reports_head,.st-key-admin_blacklist_head,.st-key-admin_beta_head{position:sticky;top:0;z-index:4;background:var(--ang-section);}",
       ".st-key-admin_feedback_table [class*='st-key-admin_feedback_sort_'] button,.st-key-admin_reports_table [class*='st-key-admin_reports_sort_'] button,.st-key-admin_blacklist_table [class*='st-key-admin_blacklist_sort_'] button{background:transparent !important;border:0 !important;box-shadow:none !important;padding:0 !important;min-height:0 !important;height:auto !important;justify-content:flex-start !important;font-weight:700 !important;color:var(--ang-text) !important;}",
       ".st-key-admin_feedback_table [class*='st-key-admin_feedback_sort_'] button:hover,.st-key-admin_reports_table [class*='st-key-admin_reports_sort_'] button:hover,.st-key-admin_blacklist_table [class*='st-key-admin_blacklist_sort_'] button:hover{background:var(--ang-hover) !important;}",
       ".st-key-admin_blacklist_table [class*='st-key-admin_blacklist_remove_'] button{width:1.2rem !important;min-width:1.2rem !important;height:1.2rem !important;min-height:1.2rem !important;padding:0 !important;border-radius:999px !important;line-height:1 !important;}"
@@ -3327,6 +3327,7 @@ _SECTION_IDS = _MAIN_SECTION_IDS + (
     "admin_feedback",
     "admin_reports",
     "admin_blacklist",
+    "admin_beta",
 )
 
 
@@ -3591,6 +3592,10 @@ def _optional_secret(*names: str) -> str:
 
 _BARRED_NOTICE = (
     "This account is barred at this time. You can email report@angstromsignals.com."
+)
+_CLOSED_BETA_NOTICE = (
+    "Angstrom Signals is in closed beta, and that email has not been approved yet. "
+    "Use the email you applied with, or request access at angstromsignals.com."
 )
 
 
@@ -3972,6 +3977,20 @@ def clear_session():
     st.session_state.pop("prefs_user", None)
 
 
+def _signup_open() -> bool:
+    """True when anyone may create an account. Closed (False) unless the database says otherwise."""
+    cached = st.session_state.get("_signup_open_seen")
+    if cached and time.time() - cached[0] < 60:
+        return bool(cached[1])
+    try:
+        result = supabase.rpc("signup_is_open").execute()
+        opened = _flag_is_true(result.data)
+    except Exception:
+        opened = False
+    st.session_state["_signup_open_seen"] = (time.time(), opened)
+    return opened
+
+
 def _email_is_barred(address: str) -> bool:
     """True when this address is on the blacklist. A missing function is not a bar."""
     clean = _clean_invite_email(address)
@@ -4119,6 +4138,9 @@ def _note_auth_error(raw: str, link_type: str = "") -> None:
     text = " ".join(str(raw or "").replace("+", " ").split()).lower()
     if "banned" in text:
         st.session_state.auth_error = _BARRED_NOTICE
+        return
+    if "database error saving new user" in text or "closed beta" in text:
+        st.session_state.auth_error = _CLOSED_BETA_NOTICE
         return
     if link_type == "recovery" or "otp" in text:
         st.session_state.recovery_error = _reset_link_error(raw)
@@ -4338,7 +4360,8 @@ if st.session_state.user is None:
                             st.session_state.recovery_error = _reset_link_error("")
                             st.rerun()
         else:
-            auth_tab1, auth_tab2 = st.tabs(["🔑 Log In", "📝 Sign Up"])
+            signup_open = _signup_open()
+            auth_tab1, auth_tab2 = st.tabs(["🔑 Log In", "📝 Sign Up" if signup_open else "✉️ Accepted?"])
 
         if not st.session_state.get("recovery_access"):
             with auth_tab1:
@@ -4415,7 +4438,15 @@ if st.session_state.user is None:
                         st.rerun()
 
             with auth_tab2:
-                st.markdown("### Create New Account")
+                if signup_open:
+                    st.markdown("### Create New Account")
+                else:
+                    st.markdown("### Invited to the beta?")
+                    st.caption(
+                        "Angstrom Signals is invite-only while we build with experienced traders. "
+                        "If you have been accepted, create your account here with the email you applied with. "
+                        "Not invited yet? Request access at angstromsignals.com."
+                    )
                 with st.form("signup", border=False):
                     signup_email = st.text_input(
                         "Email",
@@ -4432,7 +4463,11 @@ if st.session_state.user is None:
                         autocomplete="new-password",
                     )
                     st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
-                    created = st.form_submit_button("Create Account", type="primary", use_container_width=True)
+                    created = st.form_submit_button(
+                        "Create Account" if signup_open else "Create my account",
+                        type="primary",
+                        use_container_width=True,
+                    )
                 if created:
                     if _email_is_barred(signup_email):
                         st.error(_BARRED_NOTICE)
@@ -4446,6 +4481,8 @@ if st.session_state.user is None:
                         except Exception as exc:
                             if "banned" in str(exc).lower():
                                 st.error(_BARRED_NOTICE)
+                            elif not signup_open:
+                                st.error(_CLOSED_BETA_NOTICE)
                             else:
                                 st.error("Sign up failed. Try a different email, or a longer password.")
 
@@ -6532,7 +6569,206 @@ def admin_panel() -> None:
                 "Uphold removes the comment, warns the author, and tells the reporter."
             )
             _show_reports(reports)
+        _show_beta()
         _show_blacklist()
+
+
+def _email_beta_welcome(address: str, name: str) -> tuple[bool, str]:
+    """Tell an accepted person how to get in. The reason is empty when the send is accepted."""
+    api_key, sender, _inbox = _feedback_mail_settings()
+    if not api_key:
+        return False, "the Resend key is missing from the Streamlit secrets"
+    link = html.escape(_app_url(), quote=True)
+    first = html.escape(" ".join(str(name or "").split()).split(" ")[0]) or "there"
+    payload = {
+        "from": sender,
+        "to": [address],
+        "subject": "You are in: Angstrom Signals closed beta",
+        "html": (
+            f"<p>Hi {first},</p>"
+            "<p>Thank you for applying. You have a seat in the Angstrom Signals closed beta.</p>"
+            f"<p><a href=\"{link}\">Open the dashboard</a>, then either choose "
+            "<strong>Continue with Google</strong> with this email address, or open the "
+            "<strong>Accepted?</strong> tab and create a password for this email address.</p>"
+            "<p>It is free for accepted beta traders. Seats are limited, and we would love your honest "
+            "feedback: use the Feedback box in the sidebar. If we introduce paid tiers later, we will "
+            "give at least 30 days' notice.</p>"
+            "<p>Angstrom Signals is a research tool, not financial advice.</p>"
+        ),
+    }
+    try:
+        response = requests.post(
+            "https://api.resend.com/emails",
+            json=payload,
+            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+            timeout=15,
+        )
+    except Exception:
+        return False, "Resend could not be reached"
+    if response.status_code < 300:
+        return True, ""
+    return False, _resend_reason(response)
+
+
+def _beta_call(function: str, arguments: dict) -> str:
+    try:
+        result = supabase.rpc(function, arguments).execute()
+    except Exception:
+        return "failed"
+    return str(result.data or "").strip().strip('"') or "failed"
+
+
+def _beta_note(kind: str, text: str) -> None:
+    st.session_state["admin_beta_notice"] = f"{kind}\n{text}"
+
+
+def _beta_review(request_id: int, decision: str, email: str, name: str) -> None:
+    """Approve or decline one request before the section redraws."""
+    code = _beta_call("review_beta_request", {"request_id": int(request_id), "decision": decision})
+    if code != "ok":
+        _beta_note("warn", {
+            "missing": "That request is no longer there.",
+            "forbidden": "This account cannot change beta requests.",
+        }.get(code, "That could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again."))
+        return
+    if decision == "approved":
+        sent, why = _email_beta_welcome(email, name)
+        if sent:
+            _beta_note("ok", f"{email} is approved. The welcome email was sent.")
+        else:
+            _beta_note("warn", f"{email} is approved. The welcome email was not sent: {why}. Tell them yourself.")
+    else:
+        _beta_note("ok", f"{email} is declined. No email was sent, and they cannot create an account.")
+
+
+def _beta_add() -> None:
+    clean = _clean_invite_email(st.session_state.get("admin_beta_email"))
+    if not clean:
+        _beta_note("warn", "Enter a valid email.")
+        return
+    code = _beta_call("add_beta_email", {"address": clean})
+    if code != "ok":
+        _beta_note("warn", {
+            "exists": "That email is already approved.",
+            "email": "Enter a valid email.",
+            "forbidden": "This account cannot change beta access.",
+        }.get(code, "That could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again."))
+        return
+    sent, why = _email_beta_welcome(clean, "")
+    if sent:
+        _beta_note("ok", f"{clean} is approved. The welcome email was sent.")
+    else:
+        _beta_note("warn", f"{clean} is approved. The welcome email was not sent: {why}. Tell them yourself.")
+    st.session_state["admin_beta_clear"] = True
+
+
+def _beta_set_open() -> None:
+    wanted = bool(st.session_state.get("admin_beta_open"))
+    code = _beta_call("set_signup_open", {"open_now": wanted})
+    st.session_state.pop("_signup_open_seen", None)
+    if code != "ok":
+        st.session_state["admin_beta_open"] = not wanted
+        _beta_note("warn", "That could not be saved.")
+    else:
+        _beta_note("ok", "Sign-up is open to everyone." if wanted else "Sign-up is closed. Only approved emails can create accounts.")
+
+
+@st.fragment
+def _show_beta() -> None:
+    """Beta access requests from the website. Approve to let someone create an account."""
+    rows = _admin_rows("admin_beta_requests")
+    pending = [r for r in (rows or []) if isinstance(r, dict) and str(r.get("status") or "") == "pending"]
+    with tracked_expander(f"Beta requests ({len(pending)} pending)", "admin_beta"):
+        if rows is None:
+            st.caption("Beta access is not ready yet. Run the latest supabase_rls.sql in the Supabase SQL editor.")
+            return
+        notice = st.session_state.pop("admin_beta_notice", "")
+        if notice.startswith("ok\n"):
+            st.success(notice[3:])
+        elif notice.startswith("warn\n"):
+            st.warning(notice[5:])
+        st.caption(
+            "Requests arrive from the website form. ✓ approves, which lets that email create an account "
+            "and sends a welcome email. ✗ declines, or takes approval back. "
+            "People who already have an account keep it either way. Hover a reason to read it all."
+        )
+        if "admin_beta_open" not in st.session_state:
+            try:
+                opened = _flag_is_true(supabase.rpc("admin_signup_open").execute().data)
+            except Exception:
+                opened = False
+            st.session_state["admin_beta_open"] = opened
+        st.toggle(
+            "Open sign-up to everyone (public launch)",
+            key="admin_beta_open",
+            on_change=_beta_set_open,
+            help="Off keeps the closed beta. On puts the Sign Up tab back and lets anyone create an account.",
+        )
+        if st.session_state.pop("admin_beta_clear", False):
+            st.session_state["admin_beta_email"] = ""
+        add = st.columns([4.2, 1.2], vertical_alignment="center")
+        add[0].text_input(
+            "Email to approve",
+            key="admin_beta_email",
+            placeholder="Approve an email directly: name@example.com",
+            label_visibility="collapsed",
+        )
+        add[1].button("Approve email", key="admin_beta_add", on_click=_beta_add)
+        clean_rows = [row for row in rows if isinstance(row, dict)]
+        if not clean_rows:
+            st.caption("No requests yet.")
+            return
+        show_decided = st.toggle("Show decided", key="admin_beta_show_decided")
+        query = " ".join(str(st.text_input(
+            "Search the requests",
+            key="admin_beta_search",
+            placeholder="Search names, emails, tools or reasons",
+            label_visibility="collapsed",
+        ) or "").split()).casefold()
+        visible = []
+        for row in clean_rows:
+            if not show_decided and str(row.get("status") or "") != "pending":
+                continue
+            haystack = " ".join(str(row.get(k) or "") for k in ("name", "email", "markets", "activity", "tools", "why", "country")).casefold()
+            if query and query not in haystack:
+                continue
+            visible.append(row)
+        if not visible:
+            st.caption("Nothing pending." if not show_decided else "No request matches that search.")
+            return
+        widths = [1.1, 1.5, 2.3, 0.9, 1.2, 1.7, 2.6, 0.9, 0.4, 0.4]
+        titles = ["Applied", "Name", "Email", "Markets", "Active", "Tools", "Why", "Status", "", ""]
+        with st.container(key="admin_beta_table", gap=0):
+            with st.container(key="admin_beta_head", gap=0):
+                for column, title in zip(st.columns(widths, vertical_alignment="center"), titles):
+                    if title:
+                        column.markdown(f"**{title}**")
+            for row in visible:
+                request_id = int(row.get("id") or 0)
+                email = str(row.get("email") or "")
+                name = str(row.get("name") or "")
+                status = str(row.get("status") or "pending")
+                why = " ".join(str(row.get("why") or "").split())
+                tools = " ".join(str(row.get("tools") or "").split())
+                cells = st.columns(widths, vertical_alignment="center")
+                cells[0].write(_admin_when(row.get("created_at")))
+                cells[1].write(name)
+                cells[2].write(email)
+                cells[3].write(str(row.get("markets") or ""))
+                cells[4].write(str(row.get("activity") or ""))
+                cells[5].markdown(tools[:60] + ("…" if len(tools) > 60 else ""), help=tools or None)
+                cells[6].markdown(why[:80] + ("…" if len(why) > 80 else ""), help=why or None)
+                cells[7].write({"pending": "Pending", "approved": "Approved", "declined": "Declined"}.get(status, status))
+                if status != "approved":
+                    cells[8].button(
+                        "✓", key=f"admin_beta_yes_{request_id}", help="Approve and send the welcome email",
+                        on_click=_beta_review, args=(request_id, "approved", email, name),
+                    )
+                if status != "declined":
+                    cells[9].button(
+                        "✗", key=f"admin_beta_no_{request_id}", help="Decline, or take approval back",
+                        on_click=_beta_review, args=(request_id, "declined", email, name),
+                    )
 
 
 def _feedback_username(row: dict) -> str:

@@ -2790,3 +2790,305 @@ grant execute on function public.account_barred() to authenticated;
 grant execute on function public.admin_blacklist() to authenticated;
 grant execute on function public.add_blacklist_email(text) to authenticated;
 grant execute on function public.remove_blacklist_email(text) to authenticated;
+
+
+-- ------------------------------------------------------------------
+-- Closed beta. New accounts are only allowed for approved emails.
+-- Accounts that already exist are not touched.
+-- ------------------------------------------------------------------
+
+create table if not exists public.beta_settings (
+    id boolean primary key default true check (id),
+    signup_open boolean not null default false
+);
+insert into public.beta_settings (id, signup_open) values (true, false)
+on conflict (id) do nothing;
+
+alter table public.beta_settings enable row level security;
+revoke all on public.beta_settings from public;
+revoke all on public.beta_settings from anon;
+revoke all on public.beta_settings from authenticated;
+
+create table if not exists public.beta_access (
+    email text primary key,
+    created_at timestamptz not null default now(),
+    created_by uuid,
+    request_id bigint
+);
+
+alter table public.beta_access enable row level security;
+revoke all on public.beta_access from public;
+revoke all on public.beta_access from anon;
+revoke all on public.beta_access from authenticated;
+
+-- Requests from the website form. The website may add a row (nothing more), and nobody can read them
+-- except through the admin functions below.
+create table if not exists public.beta_requests (
+    id bigint generated always as identity primary key,
+    created_at timestamptz not null default now(),
+    name text not null check (char_length(name) between 1 and 100),
+    email text not null check (char_length(email) between 3 and 150),
+    country text check (char_length(country) <= 80),
+    markets text check (char_length(markets) <= 20),
+    activity text check (char_length(activity) <= 40),
+    tools text check (char_length(tools) <= 600),
+    why text check (char_length(why) <= 3000),
+    status text not null default 'pending' check (status in ('pending', 'approved', 'declined')),
+    reviewed_by uuid,
+    reviewed_at timestamptz
+);
+
+alter table public.beta_requests enable row level security;
+revoke all on public.beta_requests from public;
+revoke all on public.beta_requests from anon;
+revoke all on public.beta_requests from authenticated;
+grant insert (name, email, country, markets, activity, tools, why) on public.beta_requests to anon;
+
+drop policy if exists beta_requests_website_insert on public.beta_requests;
+create policy beta_requests_website_insert
+    on public.beta_requests
+    for insert
+    to anon
+    with check (status = 'pending' and email ~ '^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$');
+
+create or replace function public.signup_is_open()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    select coalesce((select signup_open from public.beta_settings where id), false);
+$$;
+
+create or replace function public.beta_gate()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+    if public.signup_is_open() then
+        return new;
+    end if;
+    if exists (
+        select 1 from public.beta_access
+        where email = lower(btrim(coalesce(new.email, '')))
+    ) then
+        return new;
+    end if;
+    raise exception 'Angstrom Signals is in closed beta. Request access at angstromsignals.com.';
+end;
+$$;
+
+drop trigger if exists beta_gate on auth.users;
+create trigger beta_gate
+    before insert on auth.users
+    for each row
+    execute function public.beta_gate();
+
+create or replace function public.admin_beta_requests()
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+begin
+    if not public.is_admin() then
+        raise exception 'not allowed';
+    end if;
+    return coalesce(
+        (
+            select jsonb_agg(
+                jsonb_build_object(
+                    'id', r.id,
+                    'created_at', r.created_at,
+                    'name', r.name,
+                    'email', r.email,
+                    'country', r.country,
+                    'markets', r.markets,
+                    'activity', r.activity,
+                    'tools', r.tools,
+                    'why', r.why,
+                    'status', r.status
+                )
+                order by r.created_at desc
+            )
+            from public.beta_requests as r
+        ),
+        '[]'::jsonb
+    );
+end;
+$$;
+
+create or replace function public.review_beta_request(request_id bigint, decision text)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    found_email text;
+begin
+    if not public.is_admin() then
+        return 'forbidden';
+    end if;
+    if decision not in ('approved', 'declined', 'pending') then
+        return 'decision';
+    end if;
+    select lower(btrim(email)) into found_email
+    from public.beta_requests
+    where id = request_id;
+    if found_email is null then
+        return 'missing';
+    end if;
+    update public.beta_requests
+    set status = decision, reviewed_by = auth.uid(), reviewed_at = now()
+    where id = request_id;
+    if decision = 'approved' then
+        insert into public.beta_access (email, created_by, request_id)
+        values (found_email, auth.uid(), request_id)
+        on conflict (email) do nothing;
+    else
+        delete from public.beta_access where email = found_email;
+    end if;
+    return 'ok';
+end;
+$$;
+
+create or replace function public.admin_beta_access()
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+begin
+    if not public.is_admin() then
+        raise exception 'not allowed';
+    end if;
+    return coalesce(
+        (
+            select jsonb_agg(
+                jsonb_build_object(
+                    'email', a.email,
+                    'created_at', a.created_at,
+                    'has_account', exists (select 1 from auth.users u where lower(u.email) = a.email)
+                )
+                order by a.created_at desc
+            )
+            from public.beta_access as a
+        ),
+        '[]'::jsonb
+    );
+end;
+$$;
+
+create or replace function public.add_beta_email(address text)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    clean text := lower(btrim(coalesce(address, '')));
+begin
+    if not public.is_admin() then
+        return 'forbidden';
+    end if;
+    if clean !~ '^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$' then
+        return 'email';
+    end if;
+    if exists (select 1 from public.beta_access where email = clean) then
+        return 'exists';
+    end if;
+    insert into public.beta_requests (name, email, status, reviewed_by, reviewed_at, why)
+    values ('(added by admin)', clean, 'approved', auth.uid(), now(), '');
+    insert into public.beta_access (email, created_by) values (clean, auth.uid());
+    return 'ok';
+end;
+$$;
+
+create or replace function public.remove_beta_email(address text)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    clean text := lower(btrim(coalesce(address, '')));
+begin
+    if not public.is_admin() then
+        return 'forbidden';
+    end if;
+    delete from public.beta_access where email = clean;
+    if not found then
+        return 'missing';
+    end if;
+    return 'ok';
+end;
+$$;
+
+create or replace function public.admin_signup_open()
+returns boolean
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+begin
+    if not public.is_admin() then
+        raise exception 'not allowed';
+    end if;
+    return public.signup_is_open();
+end;
+$$;
+
+create or replace function public.set_signup_open(open_now boolean)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+    if not public.is_admin() then
+        return 'forbidden';
+    end if;
+    update public.beta_settings set signup_open = coalesce(open_now, false) where id;
+    return 'ok';
+end;
+$$;
+
+revoke all on function public.signup_is_open() from public;
+revoke all on function public.beta_gate() from public;
+revoke all on function public.admin_beta_requests() from public;
+revoke all on function public.review_beta_request(bigint, text) from public;
+revoke all on function public.admin_beta_access() from public;
+revoke all on function public.add_beta_email(text) from public;
+revoke all on function public.remove_beta_email(text) from public;
+revoke all on function public.admin_signup_open() from public;
+revoke all on function public.set_signup_open(boolean) from public;
+
+revoke all on function public.beta_gate() from anon;
+revoke all on function public.beta_gate() from authenticated;
+revoke all on function public.admin_beta_requests() from anon;
+revoke all on function public.review_beta_request(bigint, text) from anon;
+revoke all on function public.admin_beta_access() from anon;
+revoke all on function public.add_beta_email(text) from anon;
+revoke all on function public.remove_beta_email(text) from anon;
+revoke all on function public.admin_signup_open() from anon;
+revoke all on function public.set_signup_open(boolean) from anon;
+
+grant execute on function public.signup_is_open() to anon;
+grant execute on function public.signup_is_open() to authenticated;
+grant execute on function public.admin_beta_requests() to authenticated;
+grant execute on function public.review_beta_request(bigint, text) to authenticated;
+grant execute on function public.admin_beta_access() to authenticated;
+grant execute on function public.add_beta_email(text) to authenticated;
+grant execute on function public.remove_beta_email(text) to authenticated;
+grant execute on function public.admin_signup_open() to authenticated;
+grant execute on function public.set_signup_open(boolean) to authenticated;
+
+-- Before the first deploy that turns the closed beta on, add yourself and anyone already testing
+-- (existing accounts keep working either way). The beta list only gates NEW accounts.
