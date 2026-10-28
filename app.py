@@ -293,6 +293,13 @@ export default function(component) {
       ".st-key-admin_feedback_table [data-testid='stMarkdownContainer'] p,.st-key-admin_reports_table [data-testid='stMarkdownContainer'] p,.st-key-admin_blacklist_table [data-testid='stMarkdownContainer'] p,.st-key-admin_beta_table [data-testid='stMarkdownContainer'] p,.st-key-admin_feedback_table [data-testid='stText'] p,.st-key-admin_reports_table [data-testid='stText'] p,.st-key-admin_blacklist_table [data-testid='stText'] p,.st-key-admin_beta_table [data-testid='stText'] p{margin:0 !important;padding:0 !important;line-height:1.25 !important;}",
       ".st-key-admin_feedback_table [data-testid='stSelectbox'],.st-key-admin_reports_table [data-testid='stSelectbox']{margin-top:0 !important;margin-bottom:0 !important;padding-top:0 !important;padding-bottom:0 !important;}",
       ".st-key-admin_feedback_table [data-baseweb='select'] > div,.st-key-admin_reports_table [data-baseweb='select'] > div{min-height:1.35rem !important;padding-top:0 !important;padding-bottom:0 !important;}",
+      ".st-key-admin_beta_table{max-height:none !important;overflow:visible !important;}",
+      ".st-key-admin_beta_table .bt-scroll{overflow-x:auto;}",
+      ".st-key-admin_beta_table .bt-row{display:grid;grid-template-columns:6.6rem 6rem minmax(9.5rem,1.4fr) 7.6rem 3.8rem 5rem 5.6rem minmax(5rem,1fr) minmax(10rem,2.2fr) 4.6rem;column-gap:.5rem;align-items:start;min-width:64rem;padding:.45rem .5rem;font-size:.78rem;line-height:1.35;}",
+      ".st-key-admin_beta_table .bt-headrow{font-weight:700;font-size:.74rem;text-transform:uppercase;letter-spacing:.03em;opacity:.8;}",
+      ".st-key-admin_beta_table .bt-cell{min-width:0;overflow-wrap:anywhere;word-break:break-word;}",
+      ".st-key-admin_beta_head{position:static !important;}",
+      ".st-key-admin_beta_table button{min-height:1.9rem !important;padding:.1rem .5rem !important;font-size:.75rem !important;white-space:nowrap;}",
       ".st-key-admin_feedback_head,.st-key-admin_reports_head,.st-key-admin_blacklist_head,.st-key-admin_beta_head{position:sticky;top:0;z-index:4;background:var(--ang-section);}",
       ".st-key-admin_feedback_table [class*='st-key-admin_feedback_sort_'] button,.st-key-admin_reports_table [class*='st-key-admin_reports_sort_'] button,.st-key-admin_blacklist_table [class*='st-key-admin_blacklist_sort_'] button{background:transparent !important;border:0 !important;box-shadow:none !important;padding:0 !important;min-height:0 !important;height:auto !important;justify-content:flex-start !important;font-weight:700 !important;color:var(--ang-text) !important;}",
       ".st-key-admin_feedback_table [class*='st-key-admin_feedback_sort_'] button:hover,.st-key-admin_reports_table [class*='st-key-admin_reports_sort_'] button:hover,.st-key-admin_blacklist_table [class*='st-key-admin_blacklist_sort_'] button:hover{background:var(--ang-hover) !important;}",
@@ -6799,9 +6806,9 @@ def _show_beta() -> None:
         elif notice.startswith("warn\n"):
             st.warning(notice[5:])
         st.caption(
-            "Requests arrive from the website form. ✓ approves, which lets that email create an account "
-            "and sends a welcome email. ✗ declines, or takes approval back. "
-            "People who already have an account keep it either way. Hover a reason to read it all."
+            "Requests arrive from the website form. Approve lets that email create an account "
+            "and sends a welcome email. Decline refuses, or takes approval back. "
+            "People who already have an account keep it either way."
         )
         if "admin_beta_open" not in st.session_state:
             try:
@@ -6847,13 +6854,25 @@ def _show_beta() -> None:
         if not visible:
             st.caption("Nothing pending." if not show_decided else "No request matches that search.")
             return
-        widths = [1.0, 1.3, 2.1, 1.4, 0.9, 1.0, 1.2, 1.4, 2.1, 0.9, 0.4, 0.4]
-        titles = ["Applied", "Name", "Email", "Phone", "Markets", "Years", "Active", "Tools", "Why", "Status", "", ""]
+        titles = ["Applied", "Name", "Email", "Phone", "Markets", "Years", "Active", "Tools", "Why", "Status"]
+        status_label = {"pending": "Pending", "approved": "Approved", "declined": "Declined"}
+        status_tone = {"pending": "#b45309", "approved": "#15803d", "declined": "#b91c1c"}
+
+        def beta_cell(text, full="", tone=""):
+            clean = html.escape(str(text or ""))
+            tip = f" title='{html.escape(str(full), quote=True)}'" if full else ""
+            style = f" style='color:{tone};font-weight:700;'" if tone else ""
+            return f"<div class='bt-cell'{tip}><span{style}>{clean or '&mdash;'}</span></div>"
+
         with st.container(key="admin_beta_table", gap=0):
             with st.container(key="admin_beta_head", gap=0):
-                for column, title in zip(st.columns(widths, vertical_alignment="center"), titles):
-                    if title:
-                        column.markdown(f"**{title}**")
+                head = st.columns([20, 1.3, 1.3], vertical_alignment="center")
+                head[0].markdown(
+                    "<div class='bt-scroll'><div class='bt-row bt-headrow'>"
+                    + "".join(f"<div class='bt-cell'>{title}</div>" for title in titles)
+                    + "</div></div>",
+                    unsafe_allow_html=True,
+                )
             for row in visible:
                 request_id = int(row.get("id") or 0)
                 email = str(row.get("email") or "")
@@ -6861,26 +6880,32 @@ def _show_beta() -> None:
                 status = str(row.get("status") or "pending")
                 why = " ".join(str(row.get("why") or "").split())
                 tools = " ".join(str(row.get("tools") or "").split())
-                cells = st.columns(widths, vertical_alignment="center")
-                cells[0].write(_admin_when(row.get("created_at")))
-                cells[1].write(name)
-                cells[2].write(email)
-                cells[3].write(str(row.get("phone") or ""))
-                cells[4].write(str(row.get("markets") or ""))
-                cells[5].write(str(row.get("years_trading") or ""))
-                cells[6].write(str(row.get("activity") or ""))
-                cells[7].markdown(tools[:50] + ("…" if len(tools) > 50 else ""), help=tools or None)
-                cells[8].markdown(why[:70] + ("…" if len(why) > 70 else ""), help=why or None)
-                cells[9].write({"pending": "Pending", "approved": "Approved", "declined": "Declined"}.get(status, status))
+                when = _admin_when(row.get("created_at"))
+                cells = st.columns([20, 1.3, 1.3], vertical_alignment="center")
+                cells[0].markdown(
+                    "<div class='bt-scroll'><div class='bt-row'>"
+                    + beta_cell(when.replace(" ", " \u00b7 "))
+                    + beta_cell(name)
+                    + beta_cell(email)
+                    + beta_cell(row.get("phone"))
+                    + beta_cell(row.get("markets"))
+                    + beta_cell(row.get("years_trading"))
+                    + beta_cell(row.get("activity"))
+                    + beta_cell(tools, tools)
+                    + beta_cell(why, why)
+                    + beta_cell(status_label.get(status, status), tone=status_tone.get(status, ""))
+                    + "</div></div>",
+                    unsafe_allow_html=True,
+                )
                 if status != "approved":
-                    cells[10].button(
-                        "✓", key=f"admin_beta_yes_{request_id}", help="Approve and send the welcome email",
-                        on_click=_beta_review, args=(request_id, "approved", email, name),
+                    cells[1].button(
+                        "Approve", key=f"admin_beta_yes_{request_id}", help="Approve and send the welcome email",
+                        on_click=_beta_review, args=(request_id, "approved", email, name), use_container_width=True,
                     )
                 if status != "declined":
-                    cells[11].button(
-                        "✗", key=f"admin_beta_no_{request_id}", help="Decline, or take approval back",
-                        on_click=_beta_review, args=(request_id, "declined", email, name),
+                    cells[2].button(
+                        "Decline", key=f"admin_beta_no_{request_id}", help="Decline, or take approval back",
+                        on_click=_beta_review, args=(request_id, "declined", email, name), use_container_width=True,
                     )
 
 
