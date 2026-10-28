@@ -3638,7 +3638,9 @@ export default function(component) {
   channel.onmessage = (event) => {
     const msg = event.data || {};
     if (msg.type === "logout") {
-      // The main tab signed out. Close this tab, or reload it onto the sign-in page.
+      // The member chose to keep pop-outs open after signing out: leave this tab as it is.
+      if (msg.keep) return;
+      // Otherwise close this tab, or reload it onto the sign-in page.
       window.close();
       window.setTimeout(() => window.location.reload(), 400);
       return;
@@ -3681,7 +3683,7 @@ export default function(component) {
   if (!token || window.__angstromLogoutSent === token) return;
   window.__angstromLogoutSent = token;
   const channel = new BroadcastChannel("angstrom-handoff");
-  channel.postMessage({ type: "logout" });
+  channel.postMessage({ type: "logout", keep: !!(data && data.keep) });
   window.setTimeout(() => channel.close(), 500);
 }
 """
@@ -3916,6 +3918,11 @@ def get_supabase():
 
 
 def clear_session():
+    saved_now = (st.session_state.get("cloud_prefs") or {}).get("settings") or {}
+    close_popouts = st.session_state.get(
+        "popouts_close_on_logout", saved_now.get("popouts_close_on_logout", True)
+    )
+    st.session_state["_announce_logout_keep"] = not bool(close_popouts)
     st.session_state["_announce_logout"] = str(time.time_ns())
     st.session_state.user = None
     st.session_state.access_token = None
@@ -3958,6 +3965,7 @@ def _session_is_barred() -> bool:
 # Widget values stay in the browser session after logout. The next person to
 # sign in on that same page would otherwise see them and save them as their own.
 _ACCOUNT_STATE_KEYS = (
+    "popouts_close_on_logout",
     "show_reasons",
     "show_extra_metrics",
     "show_period_changes",
@@ -4222,7 +4230,13 @@ if st.session_state.user is None and _POPOUT_VIEW and not st.session_state.get("
 if st.session_state.user is None:
     _social_clear(key="social_clear")
     if st.session_state.get("_announce_logout") and not _POPOUT_VIEW:
-        _logout_cast(key="logout_cast", data={"n": st.session_state["_announce_logout"]})
+        _logout_cast(
+            key="logout_cast",
+            data={
+                "n": st.session_state["_announce_logout"],
+                "keep": bool(st.session_state.get("_announce_logout_keep")),
+            },
+        )
     if not st.session_state.get("google_url") or not st.session_state.get("google_verifier"):
         st.session_state.google_url, st.session_state.google_verifier = _google_oauth()
     google_url = st.session_state.google_url
@@ -5987,6 +6001,18 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
         key="show_period_changes",
         persist_state="session",
     )
+    if "popouts_close_on_logout" not in st.session_state:
+        st.session_state.popouts_close_on_logout = bool(settings.get("popouts_close_on_logout", True))
+    close_popouts_on_logout = st.checkbox(
+        "Close pop-out tabs when I log out",
+        key="popouts_close_on_logout",
+        persist_state="session",
+        help=(
+            "Switch this off to keep your pop-out windows where they are. "
+            "They reconnect when you log in again on the main tab, as long as "
+            "that is within about an hour. Leave it on if other people use this computer."
+        ),
+    )
 
     with tracked_expander("UI Colours", "colours"):
         st.caption("Saved on this account. Left is day, right is night. Drag a colour onto another to copy it.")
@@ -6025,6 +6051,7 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
         "show_reasons": bool(show_reasons),
         "show_extra_metrics": bool(show_extra_metrics),
         "show_period_changes": bool(show_period_changes),
+        "popouts_close_on_logout": bool(close_popouts_on_logout),
         "trade_crypto": bool(trade_crypto),
         "trade_equities": bool(trade_equities),
         "colours": chosen_colours,
@@ -9984,8 +10011,15 @@ def _keep_handoff_fresh() -> None:
     )
     token = str(getattr(reported, "token", "") or "")
     if token and token != st.session_state.get("access_token"):
-        st.session_state.access_token = token
-        st.rerun()
+        try:
+            member = supabase.auth.get_user(token).user
+        except Exception:
+            member = None
+        if member is not None:
+            # Same person: a renewed login. Someone else: this tab switches to them.
+            st.session_state.user = member
+            st.session_state.access_token = token
+            st.rerun()
 
 
 if _POPOUT_VIEW == "social":
