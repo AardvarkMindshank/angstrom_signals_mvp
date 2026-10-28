@@ -459,22 +459,22 @@ export default function(component) {
     window.addEventListener("resize", () => placeSidebarTab());
     // Dragging the sidebar edge must not throw the page or the sidebar back to the top.
     let dragKeep = null;
-    const scrollersNow = () => [
-      document.querySelector("[data-testid='stMain']"),
-      document.querySelector("section.main"),
-      document.querySelector("[data-testid='stSidebarContent']"),
-      document.querySelector("[data-testid='stSidebar'] > div"),
-    ].filter(Boolean);
-    const snapshotScroll = () => ({
-      window: window.scrollY,
-      nodes: scrollersNow().map((node) => [node, node.scrollTop]),
-    });
+    const sideNode = () => document.querySelector("[data-testid='stSidebarContent']")
+      || document.querySelector("[data-testid='stSidebar'] > div");
+    const mainNode = () => document.querySelector("[data-testid='stMain']") || document.querySelector("section.main");
+    const snapshotScroll = () => {
+      const side = sideNode();
+      const main = mainNode();
+      return { window: window.scrollY, side: side ? side.scrollTop : 0, main: main ? main.scrollTop : 0 };
+    };
+    // The nodes are looked up again each time, in case the page rebuilt them during the drag.
     const restoreScroll = () => {
       if (!dragKeep) return;
-      if (window.scrollY === 0 && dragKeep.window > 0) window.scrollTo({top: dragKeep.window, behavior: "auto"});
-      dragKeep.nodes.forEach(([node, top]) => {
-        if (top > 0 && node.scrollTop === 0) node.scrollTop = top;
-      });
+      const side = sideNode();
+      const main = mainNode();
+      if (side && dragKeep.side > 0 && side.scrollTop < dragKeep.side - 2) side.scrollTop = dragKeep.side;
+      if (main && dragKeep.main > 0 && main.scrollTop < dragKeep.main - 2) main.scrollTop = dragKeep.main;
+      if (dragKeep.window > 0 && window.scrollY === 0) window.scrollTo({top: dragKeep.window, behavior: "auto"});
     };
     document.addEventListener("pointerdown", (event) => {
       const sidebar = document.querySelector("[data-testid='stSidebar']");
@@ -483,10 +483,11 @@ export default function(component) {
       if (Math.abs(event.clientX - edge) <= 10) dragKeep = snapshotScroll();
     }, true);
     document.addEventListener("pointermove", () => { if (dragKeep) restoreScroll(); }, true);
+    new MutationObserver(() => { if (dragKeep) restoreScroll(); }).observe(document.body, { childList: true, subtree: true });
     document.addEventListener("pointerup", () => {
       if (!dragKeep) return;
-      [0, 120, 400, 900].forEach((ms) => setTimeout(restoreScroll, ms));
-      setTimeout(() => { dragKeep = null; }, 1000);
+      [0, 60, 120, 250, 400, 700, 1000].forEach((ms) => setTimeout(restoreScroll, ms));
+      setTimeout(() => { dragKeep = null; }, 1300);
     }, true);
   }
   return () => {};
