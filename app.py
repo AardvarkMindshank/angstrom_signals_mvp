@@ -303,6 +303,12 @@ export default function(component) {
       "[data-baseweb='input'],[data-baseweb='textarea'],[data-baseweb='select'] > div,[data-testid='stFileUploaderDropzone']{border:1px solid var(--ang-border) !important;}",
       "[data-testid='stTextInputRootElement'],[data-testid='stNumberInputContainer'],[data-testid='stTextAreaRootElement'],[data-testid='stDateInputField'],[data-testid='stMultiSelect'] [data-baseweb='select'] > div{border-color:var(--ang-border) !important;}",
       "[class*='_take_box'] [data-testid='stForm'],[class*='_take_box'] [data-testid='stForm'] *:not(input):not(textarea):not(button):not([data-baseweb]):not([data-baseweb] *){background:transparent !important;background-color:transparent !important;}",
+      "[class*='st-key-colour_theme_']{position:relative;cursor:pointer;}",
+      "[class*='st-key-colour_pick_']{position:absolute !important;inset:0;margin:0 !important;z-index:2;}",
+      "[class*='st-key-colour_pick_'] [data-testid='stButton'],[class*='st-key-colour_pick_'] button{width:100% !important;height:100% !important;}",
+      "[class*='st-key-colour_pick_'] button{opacity:0;cursor:pointer;}",
+      ".theme-pick .theme-name{text-align:center;font-size:.85rem;color:var(--ang-text);padding-bottom:2px;}",
+      "[class*='st-key-colour_theme_']:hover .theme-pick > div:first-child{outline:2px solid #3b82f6;outline-offset:1px;}",
       ".st-key-admin_feedback_head,.st-key-admin_reports_head,.st-key-admin_blacklist_head,.st-key-admin_beta_head{position:sticky;top:0;z-index:4;background:var(--ang-section);}",
       ".st-key-admin_feedback_table [class*='st-key-admin_feedback_sort_'] button,.st-key-admin_reports_table [class*='st-key-admin_reports_sort_'] button,.st-key-admin_blacklist_table [class*='st-key-admin_blacklist_sort_'] button{background:transparent !important;border:0 !important;box-shadow:none !important;padding:0 !important;min-height:0 !important;height:auto !important;justify-content:flex-start !important;font-weight:700 !important;color:var(--ang-text) !important;}",
       ".st-key-admin_feedback_table [class*='st-key-admin_feedback_sort_'] button:hover,.st-key-admin_reports_table [class*='st-key-admin_reports_sort_'] button:hover,.st-key-admin_blacklist_table [class*='st-key-admin_blacklist_sort_'] button:hover{background:var(--ang-hover) !important;}",
@@ -6280,16 +6286,22 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
             save_account_settings({"colours": {key: default for key, default in _THEME_COLOURS}})
             st.rerun()
         st.markdown("**Ready-made themes**")
-        st.caption("Pick one to try it. You can still change any colour afterwards, and Back to saved undoes it.")
+        st.caption("Click a picture to try it. You can still change any colour afterwards, and Back to saved undoes it.")
         theme_names = list(colour_themes.THEMES)
         for start in range(0, len(theme_names), 4):
             for column, name in zip(st.columns(4), theme_names[start:start + 4]):
+                slug = name.lower().replace(" ", "_")
                 with column:
-                    st.html(colour_themes.swatch_html(colour_themes.THEMES[name]))
-                    column.button(
-                        name, key=f"colour_theme_{name.lower().replace(' ', '_')}",
-                        on_click=_use_colours, args=(colour_themes.THEMES[name],), use_container_width=True,
-                    )
+                    with st.container(key=f"colour_theme_{slug}", gap=0):
+                        st.html(
+                            "<div class='theme-pick'>"
+                            + colour_themes.swatch_html(colour_themes.THEMES[name])
+                            + f"<div class='theme-name'>{html.escape(name)}</div></div>"
+                        )
+                        st.button(
+                            name, key=f"colour_pick_{slug}", help=f"Try the {name} colours",
+                            on_click=_use_colours, args=(colour_themes.THEMES[name],),
+                        )
         st.markdown("**Fine tune**")
         for label, day_key, night_key in (
             ("Page", "page_day", "page_night"),
