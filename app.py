@@ -307,17 +307,8 @@ export default function(component) {
       "[data-baseweb='input'],[data-baseweb='textarea'],[data-baseweb='select'] > div,[data-testid='stFileUploaderDropzone']{border:1px solid var(--ang-border) !important;}",
       "[data-testid='stTextInputRootElement'],[data-testid='stNumberInputContainer'],[data-testid='stTextAreaRootElement'],[data-testid='stDateInputField'],[data-testid='stMultiSelect'] [data-baseweb='select'] > div{border-color:var(--ang-border) !important;}",
       "[class*='_take_box'] [data-testid='stForm'],[class*='_take_box'] [data-testid='stForm'] *:not(input):not(textarea):not(button):not([data-baseweb]):not([data-baseweb] *){background:transparent !important;background-color:transparent !important;}",
-      "[class*='st-key-themepick_card_']{position:relative;cursor:pointer;}",
-      "[class*='st-key-themepick_btn_']{position:absolute !important;inset:0;margin:0 !important;z-index:2;}",
-      "[class*='st-key-themepick_btn_'] [data-testid='stButton'],[class*='st-key-themepick_btn_'] button{width:100% !important;height:100% !important;}",
-      "[class*='st-key-themepick_btn_'] button{opacity:0;cursor:pointer;}",
+      ".theme-card:hover > div:first-child{outline:2px solid #3b82f6;outline-offset:-2px;}",
       ".theme-pick .theme-name{text-align:center;font-size:.85rem;color:var(--ang-text);padding-bottom:2px;}",
-      "[class*='st-key-themepick_card_']:hover .theme-pick > div:first-child{outline:2px solid #3b82f6;outline-offset:-2px;}",
-      "[class*='st-key-themepick_card_']{width:8.5rem !important;flex:0 0 8.5rem !important;height:5.4rem !important;min-height:0 !important;}",
-      ".st-key-themepick_saved{width:8.5rem !important;height:5.4rem !important;min-height:0 !important;flex:0 0 auto !important;}",
-      ".st-key-themepick_grid{row-gap:.5rem !important;}",
-      "[data-testid='stLayoutWrapper']:has(> [class*='st-key-themepick_card_']),[data-testid='stLayoutWrapper']:has(> .st-key-themepick_saved),[data-testid='stElementContainer']:has(> .st-key-themepick_saved){height:5.4rem !important;min-height:0 !important;overflow:hidden;}",
-      "[class*='st-key-themepick_card_'],.st-key-themepick_saved{overflow:hidden !important;}",
       "[class*='st-key-colours_save_slot'] button,[class*='st-key-colours_back_slot'] button,[class*='st-key-reset_colours'] button{width:2.05rem !important;min-width:2.05rem !important;height:2.05rem !important;min-height:2.05rem !important;padding:0 !important;display:inline-flex;align-items:center;justify-content:center;}",
       "[class*='st-key-colours_save_slot'],[class*='st-key-colours_back_slot'],[class*='st-key-reset_colours']{width:2.05rem !important;flex:0 0 auto !important;}",
       ".st-key-palette_table [data-testid='stVerticalBlock']{gap:.2rem !important;}",
@@ -736,6 +727,11 @@ export default function(component) {
       send("copied", target + "|" + parts[1].toLowerCase() + "|" + Date.now());
     });
     document.addEventListener("click", (event) => {
+      const card = event.target && event.target.closest ? event.target.closest("[data-theme-pick]") : null;
+      if (card && window.__angstromColourCopy) {
+        window.__angstromColourCopy("copied", "themepick|" + card.getAttribute("data-theme-pick") + "|" + Date.now());
+        return;
+      }
       if (!dragged || !pickerOf(event.target)) return;
       dragged = false;
       event.preventDefault();
@@ -5063,6 +5059,13 @@ def _take_colour_copy() -> None:
     if len(parts) != 3 or st.session_state.get("_colour_copy_seen") == raw:
         return
     target, hex_value = parts[0], parts[1]
+    if target == "themepick":
+        theme = colour_themes.THEMES.get(hex_value)
+        if theme:
+            st.session_state["_colour_copy_seen"] = raw
+            for key, default in _THEME_COLOURS:
+                st.session_state[f"colour_{key}"] = _hex_colour(theme.get(key), default)
+        return
     allowed = {f"colour_{key}" for key, _default in _THEME_COLOURS}
     cleaned = _hex_colour(hex_value, "")
     if target not in allowed or not cleaned:
@@ -6325,14 +6328,13 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
         st.caption("Your colours save on this account as you change them. Select a picture to try a different colour scheme.")
         slot = _saved_colour_slot()
         st.markdown("**My saved colours**")
-        with st.container(key="themepick_saved", gap=0):
-            if slot:
-                st.html(
-                    "<div class='theme-pick'>" + colour_themes.swatch_html(slot)
-                    + "<div class='theme-name'>Saved</div></div>"
-                )
-            else:
-                st.caption("Nothing saved yet. Press the disk icon to keep these colours.")
+        if slot:
+            st.html(
+                "<div class='theme-pick' style='width:8.5rem;'>" + colour_themes.swatch_html(slot)
+                + "<div class='theme-name'>Saved</div></div>"
+            )
+        else:
+            st.caption("Nothing saved yet. Press the disk icon to keep these colours.")
         with st.container(horizontal=True, gap="xsmall", width="content", key="themepick_icons"):
             st.button(
                 ":material/save:", key="colours_save_slot", on_click=_save_colour_slot, width="content",
@@ -6350,19 +6352,14 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
                 st.rerun()
         st.markdown("**Ready-made themes**")
         st.caption("Click a picture to try it. You can still change any colour afterwards, and the undo arrow returns to your saved colours.")
-        with st.container(horizontal=True, gap="small", key="themepick_grid"):
-            for name in colour_themes.THEMES:
-                slug = name.lower().replace(" ", "_")
-                with st.container(key=f"themepick_card_{slug}", gap=0):
-                    st.html(
-                        "<div class='theme-pick'>"
-                        + colour_themes.swatch_html(colour_themes.THEMES[name])
-                        + f"<div class='theme-name'>{html.escape(name)}</div></div>"
-                    )
-                    st.button(
-                        name, key=f"themepick_btn_{slug}", help=f"Try the {name} colours",
-                        on_click=_use_colours, args=(colour_themes.THEMES[name],),
-                    )
+        theme_cards = "".join(
+            f"<div class='theme-pick theme-card' data-theme-pick='{html.escape(name, quote=True)}' "
+            f"title='Try the {html.escape(name, quote=True)} colours' style='width:8.5rem;cursor:pointer;'>"
+            + colour_themes.swatch_html(colour_themes.THEMES[name])
+            + f"<div class='theme-name'>{html.escape(name)}</div></div>"
+            for name in colour_themes.THEMES
+        )
+        st.html(f"<div style='display:flex;flex-wrap:wrap;gap:.5rem .75rem;'>{theme_cards}</div>")
         st.markdown("**Fine tune**")
         st.caption("Change the colour of individual UI elements. Drag and drop colours to copy them. Save and reset using the icons above.")
         widths = [1.5, 1, 1]
