@@ -1149,6 +1149,8 @@ export default function(component) {
         "#social-stream-root.is-dark .report-reason,#social-stream-root.is-dark .report-note{background:#31333f;color:#fafafa;border-color:#4b5563;}",
         "#social-stream-root .layout-toggle,#social-stream-root .follow,#social-stream-root .popout-btn{background:#f3f4f6;border:0;border-radius:999px;padding:6px 12px;font:inherit;font-weight:600;cursor:pointer;color:#111827;}",
         "#social-stream-root .follow.is-on{background:#111827;color:#fff;}",
+        "#social-stream-root .close,#social-stream-root .pin,#social-stream-root .popout-btn{width:28px;height:28px;padding:0;display:inline-flex;align-items:center;justify-content:center;}",
+        "#social-stream-root .layout-toggle,#social-stream-root .follow{padding:4px 10px;font-size:.8rem;}",
         "#social-stream-root .replying[hidden],#social-stream-root .chat-notice[hidden]{display:none;}",
         "#social-stream-root.is-dark .layout-toggle,#social-stream-root.is-dark .follow,#social-stream-root.is-dark .popout-btn{background:#262730;color:#fafafa;}",
         "#social-stream-root.is-dark .follow.is-on{background:#f3f4f6;color:#111827;}",
@@ -1200,7 +1202,7 @@ export default function(component) {
         "<header class='head'><div>",
         "<div class='kicker'>Social signals</div>",
         "<h2>Social signals stream</h2>",
-        "</div><div class='head-actions'><button type='button' class='follow' hidden>Following</button><button type='button' class='layout-toggle' hidden>Side by side</button><button type='button' class='popout-btn' title='Open this panel in its own tab'>Pop out</button><button type='button' class='pin' title='Pin the panel'>Pin</button><button type='button' class='close'>Close</button></div></header>",
+        "</div><div class='head-actions'><button type='button' class='follow' hidden>Following</button><button type='button' class='layout-toggle' hidden>Side by side</button><button type='button' class='popout-btn' title='Open this panel in its own tab' aria-label='Open this panel in its own tab'><svg viewBox='0 0 24 24' width='15' height='15' aria-hidden='true' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M14 4h6v6'/><path d='M20 4 10 14'/><path d='M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5'/></svg></button><button type='button' class='pin' title='Pin the panel' aria-label='Pin the panel'><svg viewBox='0 0 24 24' width='15' height='15' aria-hidden='true' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M9 4h6l-1 6 3 3H7l3-3z'/><path d='M12 13v7'/></svg></button><button type='button' class='close' title='Close' aria-label='Close'><svg viewBox='0 0 24 24' width='15' height='15' aria-hidden='true' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M6 6l12 12'/><path d='M18 6 6 18'/></svg></button></div></header>",
         "<div class='filters'><div class='chips'>",
         "<button type='button' data-side=''>All</button>",
         "<button type='button' data-side='positive'>Positive</button>",
@@ -1588,6 +1590,7 @@ export default function(component) {
       if (pin) {
         pin.classList.toggle("is-on", !!state.pinned);
         pin.title = state.pinned ? "Unpin the panel" : "Pin the panel";
+        pin.setAttribute("aria-label", pin.title);
         pin.setAttribute("aria-pressed", state.pinned ? "true" : "false");
       }
       const edge = panel.querySelector(".edge");
