@@ -9745,7 +9745,7 @@ def _take_alert_pick() -> None:
     _remember_section("interactive_chart", True)
 
 
-@st.fragment(run_every="60s")
+@st.fragment(run_every="30s")
 def render_social_popout(crypto_watchlist, stock_watchlist) -> None:
     """The social stream and chat on a page of their own, for a second window."""
     pairs = [("Crypto", asset_id) for asset_id in crypto_watchlist]
