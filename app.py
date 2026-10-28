@@ -254,20 +254,23 @@ export default function(component) {
   }
   const singleMark = "url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Crect x=%272.4%27 y=%272.4%27 width=%2719.2%27 height=%2719.2%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3C/svg%3E')";
   const wideMark = "url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Crect x=%272.4%27 y=%272.4%27 width=%2719.2%27 height=%2719.2%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3Cpath d=%27M2.4 9.1H21.6M12 9.1V21.6%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3C/svg%3E')";
+  const openMark = "url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Cpath d=%27M12 5.83 15.17 9l1.41-1.41L12 3 7.41 7.59 8.83 9 12 5.83zm0 12.34L8.83 15l-1.41 1.41L12 21l4.59-4.59L15.17 15 12 18.17z%27/%3E%3C/svg%3E')";
+  const closeMark = "url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Cpath d=%27M7.41 18.59 8.83 20 12 16.83 15.17 20l1.41-1.41L12 15 7.41 18.59zm9.18-13.18L15.17 4 12 7.17 8.83 4 7.41 5.41 12 10l4.59-4.59z%27/%3E%3C/svg%3E')";
   let layoutStyle = document.getElementById("angstrom-layout-controls");
   const layoutCss = [
       "[class*='st-key-layout_single'],[class*='st-key-layout_wide'],[class*='st-key-open_all_sections'],[class*='st-key-collapse_all_sections']{width:fit-content !important;max-width:max-content !important;flex:0 0 auto !important;}",
-      ".st-key-layout_single button,.st-key-layout_wide button{position:relative;width:2.05rem !important;height:2.05rem !important;min-height:2.05rem !important;padding:0 !important;border-radius:.4rem !important;display:inline-flex !important;align-items:center;justify-content:center;font-size:0 !important;line-height:0 !important;color:#111827 !important;background:#fff !important;border:1px solid rgba(49,51,63,.28) !important;box-shadow:none !important;}",
-      ".st-key-layout_single button > *,.st-key-layout_wide button > *{position:absolute !important;width:1px !important;height:1px !important;overflow:hidden !important;clip:rect(0,0,0,0) !important;}",
-      ".st-key-layout_single button::before,.st-key-layout_wide button::before{content:'';position:absolute;left:50%;top:50%;width:15px;height:15px;transform:translate(-50%,-50%);background:currentColor;-webkit-mask:var(--mark) center / contain no-repeat;mask:var(--mark) center / contain no-repeat;}",
+      ".st-key-layout_single button,.st-key-layout_wide button,.st-key-open_all_sections button,.st-key-collapse_all_sections button{position:relative;width:2.05rem !important;height:2.05rem !important;min-height:2.05rem !important;padding:0 !important;border-radius:.4rem !important;display:inline-flex !important;align-items:center;justify-content:center;font-size:0 !important;line-height:0 !important;color:#111827 !important;background:#fff !important;border:1px solid rgba(49,51,63,.28) !important;box-shadow:none !important;}",
+      ".st-key-layout_single button > *,.st-key-layout_wide button > *,.st-key-open_all_sections button > *,.st-key-collapse_all_sections button > *{position:absolute !important;width:1px !important;height:1px !important;overflow:hidden !important;clip:rect(0,0,0,0) !important;}",
+      ".st-key-layout_single button::before,.st-key-layout_wide button::before,.st-key-open_all_sections button::before,.st-key-collapse_all_sections button::before{content:'';position:absolute;left:50%;top:50%;width:15px;height:15px;transform:translate(-50%,-50%);background:currentColor;-webkit-mask:var(--mark) center / contain no-repeat;mask:var(--mark) center / contain no-repeat;}",
       ".st-key-layout_single button{--mark:" + singleMark + ";}",
       ".st-key-layout_wide button{--mark:" + wideMark + ";}",
-      ".st-key-layout_single button:hover,.st-key-layout_wide button:hover{border-color:#111827 !important;}",
+      ".st-key-layout_single button:hover,.st-key-layout_wide button:hover,.st-key-open_all_sections button:hover,.st-key-collapse_all_sections button:hover{border-color:#111827 !important;}",
       ".st-key-layout_single button[data-testid='stBaseButton-primary'],.st-key-layout_wide button[data-testid='stBaseButton-primary']{background:#111827 !important;color:#fff !important;border-color:#111827 !important;}",
-      "html.angstrom-night .st-key-layout_single button,html.angstrom-night .st-key-layout_wide button{background:#262730 !important;color:#fafafa !important;border-color:#4b5563 !important;}",
-      "html.angstrom-night .st-key-layout_single button:hover,html.angstrom-night .st-key-layout_wide button:hover{border-color:#e5e7eb !important;}",
+      "html.angstrom-night .st-key-layout_single button,html.angstrom-night .st-key-layout_wide button,html.angstrom-night .st-key-open_all_sections button,html.angstrom-night .st-key-collapse_all_sections button{background:#262730 !important;color:#fafafa !important;border-color:#4b5563 !important;}",
+      "html.angstrom-night .st-key-layout_single button:hover,html.angstrom-night .st-key-layout_wide button:hover,html.angstrom-night .st-key-open_all_sections button:hover,html.angstrom-night .st-key-collapse_all_sections button:hover{border-color:#e5e7eb !important;}",
       "html.angstrom-night .st-key-layout_single button[data-testid='stBaseButton-primary'],html.angstrom-night .st-key-layout_wide button[data-testid='stBaseButton-primary']{background:#f3f4f6 !important;color:#111827 !important;border-color:#f3f4f6 !important;}",
-      ".st-key-open_all_sections button,.st-key-collapse_all_sections button{width:auto !important;min-width:0 !important;max-width:max-content !important;height:2.05rem !important;min-height:2.05rem !important;padding:0 .7rem !important;white-space:nowrap;font-size:.85rem !important;}",
+      ".st-key-open_all_sections button{--mark:" + openMark + ";}",
+      ".st-key-collapse_all_sections button{--mark:" + closeMark + ";}",
       "[data-testid='stElementContainer']:not(:has([data-testid='stElementContainer'])):is(:has(#interactive-chart),:has(#market-mood-crypto),:has(#market-mood-stock),:has(#market-sentiment),:has(#score-breakdown)),[class*='st-key-scroll_to_chart'],[class*='st-key-wide_column_split']{position:absolute !important;width:0 !important;height:0 !important;min-height:0 !important;margin:0 !important;padding:0 !important;overflow:visible !important;}",
       "[class*='st-key-favourite_watch'],[class*='st-key-alert_asset_pick'],[class*='st-key-section_toggle_watch'],[class*='st-key-colour_copy'],[data-testid='stLayoutWrapper']:has(> [data-testid='stVerticalBlock'] > [class*='st-key-favourite_watch']),[data-testid='stLayoutWrapper']:has(> [data-testid='stVerticalBlock'] > [class*='st-key-section_toggle_watch']),[data-testid='stLayoutWrapper']:has(> [data-testid='stVerticalBlock'] > [class*='st-key-colour_copy']){position:absolute !important;width:0 !important;height:0 !important;min-height:0 !important;margin:0 !important;padding:0 !important;overflow:hidden !important;border:0 !important;}",
       "[class*='st-key-colour_'].ang-colour-drop{outline:2px solid #2563eb;outline-offset:2px;border-radius:8px;}",
@@ -5722,8 +5725,8 @@ with st.container(horizontal=True, vertical_alignment="center", horizontal_align
                 "Drag the line between them to resize."
             ),
         )
-        open_sections = st.button("Open all", key="open_all_sections", width="content")
-        collapse_sections = st.button("Collapse all", key="collapse_all_sections", width="content")
+        open_sections = st.button("Open all", key="open_all_sections", width="content", help="Open all sections")
+        collapse_sections = st.button("Collapse all", key="collapse_all_sections", width="content", help="Collapse all sections")
         # A layout button on this same run must not win. The buttons normally
         # fold the sections in the browser. This covers a click that still
         # reaches Streamlit, and the wide or single choice stays as it was.
