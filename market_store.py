@@ -11,6 +11,7 @@ import html
 import json
 import math
 import re
+import time
 from datetime import datetime, timezone
 
 import pandas as pd
@@ -318,8 +319,17 @@ def set_sentiment_comment(
     ).execute()
 
 
+_LAST_DROP = 0.0
+
+
 def drop_expired_sentiment_comments(supabase) -> None:
-    """Delete comments older than 12 hours. Leaves newer notes when a score refreshes."""
+    """Delete comments older than 12 hours. Leaves newer notes when a score refreshes.
+    Comments last 12 hours, so clearing once a minute is plenty."""
+    global _LAST_DROP
+    now = time.time()
+    if now - _LAST_DROP < 60:
+        return
+    _LAST_DROP = now
     try:
         supabase.rpc("drop_expired_sentiment_comments").execute()
     except Exception as exc:

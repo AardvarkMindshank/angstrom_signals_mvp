@@ -7466,6 +7466,9 @@ def load_market_caps(crypto_ids, stock_tickers, nonce):
     }
 
 
+_BACKGROUND = ThreadPoolExecutor(max_workers=2)
+
+
 @contextmanager
 def _timed(label: str):
     """Record how long a step took on this load. The Admin panel shows the list."""
@@ -7713,21 +7716,26 @@ def _share_market_rows(crypto_watchlist, stock_watchlist, crypto_results, stock_
     reuse_shared = bool(earlier) and not st.session_state.get("_shared_reread") and all(
         key in earlier for key in market_keys
     )
-    jobs = {
-        "save": lambda: save_price_paths(supabase, priced),
-        "counts": lambda: holder_counts(supabase),
-        "crowd": lambda: sentiment_crowd(supabase, market_keys),
-        "comments": lambda: sentiment_comment_lists(supabase, market_keys),
-        "feed": lambda: sentiment_comment_lists(supabase, market_keys, every=True),
-    }
+    # Saving the closes is not needed to draw the page, so it runs behind the scenes.
+    _BACKGROUND.submit(save_price_paths, supabase, priced)
+    prefetch = st.session_state.get("_prefetch") or {}
+    jobs = {}
     if not reuse_shared:
         jobs["shared"] = lambda: load_shared_market(supabase, market_keys)
-    got = _together(jobs)
+    for name, job in (
+        ("counts", lambda: holder_counts(supabase)),
+        ("crowd", lambda: sentiment_crowd(supabase, market_keys)),
+        ("comments", lambda: sentiment_comment_lists(supabase, market_keys)),
+        ("feed", lambda: sentiment_comment_lists(supabase, market_keys, every=True)),
+    ):
+        if name not in prefetch:
+            jobs[name] = job
+    got = _together(jobs) if jobs else {}
     shared = earlier if reuse_shared else got["shared"]
-    counts = got["counts"]
-    crowd = got["crowd"]
-    comments = got["comments"]
-    feed = got["feed"]
+    counts = prefetch["counts"] if "counts" in prefetch else got["counts"]
+    crowd = prefetch["crowd"] if "crowd" in prefetch else got["crowd"]
+    comments = prefetch["comments"] if "comments" in prefetch else got["comments"]
+    feed = prefetch["feed"] if "feed" in prefetch else got["feed"]
     logos = _asset_logos(crypto_watchlist, stock_watchlist, shared)
     st.session_state["social_stream"] = _social_stream_json(crypto_watchlist, stock_watchlist, shared, logos, feed)
     for kind, results, watchlist in (
@@ -8168,13 +8176,54 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
     if trade_equities:
         shared_keys.extend(asset_market_key("Stock", asset_id) for asset_id in stock_watchlist)
     st.session_state["_perf"] = {}
-    with _timed("shared prices and sentiment, plus market moods"):
-        first = _together({
-            "shared": lambda: load_shared_market(supabase, shared_keys),
-            "moods": lambda: load_market_moods(supabase),
-        })
-    st.session_state["_shared_rows"] = first["shared"]
-    _moods_now = first["moods"]
+    all_keys = [asset_market_key("Crypto", asset_id) for asset_id in crypto_watchlist]
+    all_keys += [asset_market_key("Stock", asset_id) for asset_id in stock_watchlist]
+    # Every lookup this load needs goes out at once, so the wait is the slowest one, not the sum.
+    # Prices, market moods and holder counts change slowly, so a result under 30 seconds old is reused.
+    # Comments and votes are always read fresh.
+    memo = st.session_state.setdefault("_memo", {})
+    nonce_now = st.session_state.data_nonce
+
+    def _recent(name, token):
+        entry = memo.get(name)
+        if entry and entry[2] == token and time.time() - entry[0] < 30:
+            return entry[1], True
+        return None, False
+
+    shared_now, shared_hit = (None, False) if st.session_state.get("_shared_reread") else _recent(
+        "shared", (nonce_now, tuple(all_keys)))
+    moods_now, moods_hit = _recent("moods", nonce_now)
+    counts_now, counts_hit = _recent("counts", nonce_now)
+    jobs = {
+        "crowd": lambda: sentiment_crowd(supabase, all_keys),
+        "comments": lambda: sentiment_comment_lists(supabase, all_keys),
+        "feed": lambda: sentiment_comment_lists(supabase, all_keys, every=True),
+    }
+    if not shared_hit:
+        jobs["shared"] = lambda: load_shared_market(supabase, all_keys)
+    if not moods_hit:
+        jobs["moods"] = lambda: load_market_moods(supabase)
+    if not counts_hit:
+        jobs["counts"] = lambda: holder_counts(supabase)
+    with _timed("lookups, run together"):
+        got = _together(jobs)
+    if not shared_hit:
+        shared_now = got["shared"]
+        memo["shared"] = (time.time(), shared_now, (nonce_now, tuple(all_keys)))
+    if not moods_hit:
+        moods_now = got["moods"]
+        memo["moods"] = (time.time(), moods_now, nonce_now)
+    if not counts_hit:
+        counts_now = got["counts"]
+        memo["counts"] = (time.time(), counts_now, nonce_now)
+    st.session_state["_shared_rows"] = shared_now
+    st.session_state["_prefetch"] = {
+        "counts": counts_now,
+        "crowd": got["crowd"],
+        "comments": got["comments"],
+        "feed": got["feed"],
+    }
+    _moods_now = moods_now
 
     wide_layout = st.session_state.get("section_layout") == "Wide" and not _POPOUT_VIEW
     allowed_kinds = []
