@@ -7459,13 +7459,44 @@ def load_stock(ticker, days, nonce):
 _CAPS_SECONDS = 1800
 
 
-@st.cache_data(ttl=_CAPS_SECONDS, show_spinner=False)
+_CAPS_STORE: dict = {}
+_CAPS_BUSY: set = set()
+
+
+def _fetch_market_caps(token, crypto_ids, stock_tickers) -> dict:
+    """Ask the data providers, keep the answer, and return it. Safe to run behind the scenes."""
+    try:
+        fresh = {
+            "crypto": crypto_market_caps(crypto_ids),
+            "stock": stock_market_caps(stock_tickers),
+        }
+        _CAPS_STORE[token] = (time.time(), fresh)
+        return fresh
+    except Exception as exc:
+        print(f"market caps failed: {exc}")
+        empty = {"crypto": {}, "stock": {}}
+        _CAPS_STORE[token] = (time.time() - _CAPS_SECONDS + 300, empty)
+        return empty
+    finally:
+        _CAPS_BUSY.discard(token)
+
+
 def load_market_caps(crypto_ids, stock_tickers, nonce):
-    del nonce
-    return {
-        "crypto": crypto_market_caps(crypto_ids),
-        "stock": stock_market_caps(stock_tickers),
-    }
+    """Market caps for the watchlists. The first ever ask waits for the answer. After that the page
+    uses the last answer straight away, and a refresh runs behind the scenes about every half hour."""
+    token = (tuple(crypto_ids), tuple(stock_tickers))
+    stored = _CAPS_STORE.get(token)
+    if stored is None:
+        _CAPS_BUSY.add(token)
+        return _fetch_market_caps(token, crypto_ids, stock_tickers)
+    saved_at, data = stored
+    asked_nonce = st.session_state.get("_caps_nonce_seen")
+    wanted_now = asked_nonce is not None and asked_nonce != nonce
+    st.session_state["_caps_nonce_seen"] = nonce
+    if (time.time() - saved_at > _CAPS_SECONDS or wanted_now) and token not in _CAPS_BUSY:
+        _CAPS_BUSY.add(token)
+        _BACKGROUND.submit(_fetch_market_caps, token, crypto_ids, stock_tickers)
+    return data
 
 
 _BACKGROUND = ThreadPoolExecutor(max_workers=2)
@@ -8340,7 +8371,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                 _rerun_fragment()
 
         # Market cap still uses a short cache. Prices and sentiment come from the shared rows.
-        nonce = (st.session_state.data_nonce, int(time.time() // _CAPS_SECONDS))
+        nonce = st.session_state.data_nonce
 
         def process_watchlist(watchlist, is_crypto=True):
             results = []
