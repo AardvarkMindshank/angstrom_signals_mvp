@@ -6729,15 +6729,15 @@ def _show_beta() -> None:
         for row in clean_rows:
             if not show_decided and str(row.get("status") or "") != "pending":
                 continue
-            haystack = " ".join(str(row.get(k) or "") for k in ("name", "email", "markets", "activity", "tools", "why", "country")).casefold()
+            haystack = " ".join(str(row.get(k) or "") for k in ("name", "email", "markets", "years_trading", "activity", "tools", "why", "country")).casefold()
             if query and query not in haystack:
                 continue
             visible.append(row)
         if not visible:
             st.caption("Nothing pending." if not show_decided else "No request matches that search.")
             return
-        widths = [1.1, 1.5, 2.3, 0.9, 1.2, 1.7, 2.6, 0.9, 0.4, 0.4]
-        titles = ["Applied", "Name", "Email", "Markets", "Active", "Tools", "Why", "Status", "", ""]
+        widths = [1.1, 1.4, 2.2, 0.9, 1.0, 1.2, 1.5, 2.3, 0.9, 0.4, 0.4]
+        titles = ["Applied", "Name", "Email", "Markets", "Years", "Active", "Tools", "Why", "Status", "", ""]
         with st.container(key="admin_beta_table", gap=0):
             with st.container(key="admin_beta_head", gap=0):
                 for column, title in zip(st.columns(widths, vertical_alignment="center"), titles):
@@ -6755,17 +6755,18 @@ def _show_beta() -> None:
                 cells[1].write(name)
                 cells[2].write(email)
                 cells[3].write(str(row.get("markets") or ""))
-                cells[4].write(str(row.get("activity") or ""))
-                cells[5].markdown(tools[:60] + ("…" if len(tools) > 60 else ""), help=tools or None)
-                cells[6].markdown(why[:80] + ("…" if len(why) > 80 else ""), help=why or None)
-                cells[7].write({"pending": "Pending", "approved": "Approved", "declined": "Declined"}.get(status, status))
+                cells[4].write(str(row.get("years_trading") or ""))
+                cells[5].write(str(row.get("activity") or ""))
+                cells[6].markdown(tools[:50] + ("…" if len(tools) > 50 else ""), help=tools or None)
+                cells[7].markdown(why[:70] + ("…" if len(why) > 70 else ""), help=why or None)
+                cells[8].write({"pending": "Pending", "approved": "Approved", "declined": "Declined"}.get(status, status))
                 if status != "approved":
-                    cells[8].button(
+                    cells[9].button(
                         "✓", key=f"admin_beta_yes_{request_id}", help="Approve and send the welcome email",
                         on_click=_beta_review, args=(request_id, "approved", email, name),
                     )
                 if status != "declined":
-                    cells[9].button(
+                    cells[10].button(
                         "✗", key=f"admin_beta_no_{request_id}", help="Decline, or take approval back",
                         on_click=_beta_review, args=(request_id, "declined", email, name),
                     )
