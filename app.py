@@ -252,18 +252,10 @@ export default function(component) {
     ].join("");
     document.head.appendChild(sideStyle);
   }
+  const singleMark = "url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Crect x=%272.4%27 y=%272.4%27 width=%2719.2%27 height=%2719.2%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3C/svg%3E')";
+  const wideMark = "url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Crect x=%272.4%27 y=%272.4%27 width=%2719.2%27 height=%2719.2%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3Cpath d=%27M2.4 9.1H21.6M12 9.1V21.6%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3C/svg%3E')";
   let layoutStyle = document.getElementById("angstrom-layout-controls");
-  if (layoutStyle && layoutStyle.dataset.layout !== "ruled") {
-    layoutStyle.remove();
-    layoutStyle = null;
-  }
-  if (!layoutStyle) {
-    layoutStyle = document.createElement("style");
-    layoutStyle.id = "angstrom-layout-controls";
-    layoutStyle.dataset.layout = "ruled";
-    const singleMark = "url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Crect x=%272.4%27 y=%272.4%27 width=%2719.2%27 height=%2719.2%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3C/svg%3E')";
-    const wideMark = "url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Crect x=%272.4%27 y=%272.4%27 width=%2719.2%27 height=%2719.2%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3Cpath d=%27M2.4 9.1H21.6M12 9.1V21.6%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27/%3E%3C/svg%3E')";
-    layoutStyle.textContent = [
+  const layoutCss = [
       "[class*='st-key-layout_single'],[class*='st-key-layout_wide'],[class*='st-key-open_all_sections'],[class*='st-key-collapse_all_sections']{width:fit-content !important;max-width:max-content !important;flex:0 0 auto !important;}",
       ".st-key-layout_single button,.st-key-layout_wide button{position:relative;width:2.05rem !important;height:2.05rem !important;min-height:2.05rem !important;padding:0 !important;border-radius:.4rem !important;display:inline-flex !important;align-items:center;justify-content:center;font-size:0 !important;line-height:0 !important;color:#111827 !important;background:#fff !important;border:1px solid rgba(49,51,63,.28) !important;box-shadow:none !important;}",
       ".st-key-layout_single button > *,.st-key-layout_wide button > *{position:absolute !important;width:1px !important;height:1px !important;overflow:hidden !important;clip:rect(0,0,0,0) !important;}",
@@ -307,7 +299,16 @@ export default function(component) {
       ".st-key-admin_feedback_table [class*='st-key-admin_feedback_sort_'] button,.st-key-admin_reports_table [class*='st-key-admin_reports_sort_'] button,.st-key-admin_blacklist_table [class*='st-key-admin_blacklist_sort_'] button{background:transparent !important;border:0 !important;box-shadow:none !important;padding:0 !important;min-height:0 !important;height:auto !important;justify-content:flex-start !important;font-weight:700 !important;color:var(--ang-text) !important;}",
       ".st-key-admin_feedback_table [class*='st-key-admin_feedback_sort_'] button:hover,.st-key-admin_reports_table [class*='st-key-admin_reports_sort_'] button:hover,.st-key-admin_blacklist_table [class*='st-key-admin_blacklist_sort_'] button:hover{background:var(--ang-hover) !important;}",
       ".st-key-admin_blacklist_table [class*='st-key-admin_blacklist_remove_'] button{width:1.2rem !important;min-width:1.2rem !important;height:1.2rem !important;min-height:1.2rem !important;padding:0 !important;border-radius:999px !important;line-height:1 !important;}"
-    ].join("");
+  ].join("");
+  if (layoutStyle && layoutStyle.textContent !== layoutCss) {
+    layoutStyle.remove();
+    layoutStyle = null;
+  }
+  if (!layoutStyle) {
+    layoutStyle = document.createElement("style");
+    layoutStyle.id = "angstrom-layout-controls";
+    layoutStyle.dataset.layout = "ruled";
+    layoutStyle.textContent = layoutCss;
     document.head.appendChild(layoutStyle);
   }
   const apply = () => {
