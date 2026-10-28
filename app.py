@@ -313,6 +313,9 @@ export default function(component) {
       "[class*='st-key-colour_pick_'] button{opacity:0;cursor:pointer;}",
       ".theme-pick .theme-name{text-align:center;font-size:.85rem;color:var(--ang-text);padding-bottom:2px;}",
       "[class*='st-key-colour_theme_']:hover .theme-pick > div:first-child{outline:2px solid #3b82f6;outline-offset:1px;}",
+      "[class*='st-key-colour_theme_']:not(.st-key-colour_theme_grid),.st-key-colour_saved_card{width:8.5rem !important;flex:0 0 8.5rem !important;}",
+      "[class*='st-key-colours_save_slot'] button,[class*='st-key-colours_back_slot'] button,[class*='st-key-reset_colours'] button{width:2.05rem !important;min-width:2.05rem !important;height:2.05rem !important;min-height:2.05rem !important;padding:0 !important;display:inline-flex;align-items:center;justify-content:center;}",
+      "[class*='st-key-colours_save_slot'],[class*='st-key-colours_back_slot'],[class*='st-key-reset_colours']{width:2.05rem !important;flex:0 0 auto !important;}",
       ".st-key-admin_feedback_head,.st-key-admin_reports_head,.st-key-admin_blacklist_head,.st-key-admin_beta_head{position:sticky;top:0;z-index:4;background:var(--ang-section);}",
       ".st-key-admin_feedback_table [class*='st-key-admin_feedback_sort_'] button,.st-key-admin_reports_table [class*='st-key-admin_reports_sort_'] button,.st-key-admin_blacklist_table [class*='st-key-admin_blacklist_sort_'] button{background:transparent !important;border:0 !important;box-shadow:none !important;padding:0 !important;min-height:0 !important;height:auto !important;justify-content:flex-start !important;font-weight:700 !important;color:var(--ang-text) !important;}",
       ".st-key-admin_feedback_table [class*='st-key-admin_feedback_sort_'] button:hover,.st-key-admin_reports_table [class*='st-key-admin_reports_sort_'] button:hover,.st-key-admin_blacklist_table [class*='st-key-admin_blacklist_sort_'] button:hover{background:var(--ang-hover) !important;}",
@@ -6269,8 +6272,7 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
         )
         slot = _saved_colour_slot()
         st.markdown("**My saved colours**")
-        mine_col = st.columns(4)[0]
-        with mine_col:
+        with st.container(key="colour_saved_card", gap=0):
             if slot:
                 st.html(
                     "<div class='theme-pick'>" + colour_themes.swatch_html(slot)
@@ -6278,38 +6280,36 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
                 )
             else:
                 st.caption("Nothing saved yet. Press the disk icon to keep these colours.")
-        save_col, back_col, reset_col, _spare = st.columns([1, 1, 1, 3])
-        save_col.button(
-            ":material/save:", key="colours_save_slot", on_click=_save_colour_slot, use_container_width=True,
-            help="Save current: keeps the colours you have now, so you can come back to them after experimenting.",
-        )
-        back_col.button(
-            ":material/undo:", key="colours_back_slot", on_click=_use_colours, args=(slot or {},),
-            disabled=not slot, use_container_width=True,
-            help="Back to saved: puts the pickers back to your saved colours.",
-        )
-        if reset_col.button(":material/restart_alt:", key="reset_colours", use_container_width=True,
-                            help="Reset to default: the original Angstrom colours."):
-            st.session_state._reset_colours = True
-            save_account_settings({"colours": {key: default for key, default in _THEME_COLOURS}})
-            st.rerun()
+        with st.container(horizontal=True, gap="xsmall", width="content", key="colour_icon_row"):
+            st.button(
+                ":material/save:", key="colours_save_slot", on_click=_save_colour_slot, width="content",
+                help="Save current: keeps the colours you have now, so you can come back to them after experimenting.",
+            )
+            st.button(
+                ":material/undo:", key="colours_back_slot", on_click=_use_colours, args=(slot or {},),
+                disabled=not slot, width="content",
+                help="Back to saved: puts the pickers back to your saved colours.",
+            )
+            if st.button(":material/restart_alt:", key="reset_colours", width="content",
+                         help="Reset to default: the original Angstrom colours."):
+                st.session_state._reset_colours = True
+                save_account_settings({"colours": {key: default for key, default in _THEME_COLOURS}})
+                st.rerun()
         st.markdown("**Ready-made themes**")
         st.caption("Click a picture to try it. You can still change any colour afterwards, and the undo arrow returns to your saved colours.")
-        theme_names = list(colour_themes.THEMES)
-        for start in range(0, len(theme_names), 4):
-            for column, name in zip(st.columns(4), theme_names[start:start + 4]):
+        with st.container(horizontal=True, gap="small", key="colour_theme_grid"):
+            for name in colour_themes.THEMES:
                 slug = name.lower().replace(" ", "_")
-                with column:
-                    with st.container(key=f"colour_theme_{slug}", gap=0):
-                        st.html(
-                            "<div class='theme-pick'>"
-                            + colour_themes.swatch_html(colour_themes.THEMES[name])
-                            + f"<div class='theme-name'>{html.escape(name)}</div></div>"
-                        )
-                        st.button(
-                            name, key=f"colour_pick_{slug}", help=f"Try the {name} colours",
-                            on_click=_use_colours, args=(colour_themes.THEMES[name],),
-                        )
+                with st.container(key=f"colour_theme_{slug}", gap=0):
+                    st.html(
+                        "<div class='theme-pick'>"
+                        + colour_themes.swatch_html(colour_themes.THEMES[name])
+                        + f"<div class='theme-name'>{html.escape(name)}</div></div>"
+                    )
+                    st.button(
+                        name, key=f"colour_pick_{slug}", help=f"Try the {name} colours",
+                        on_click=_use_colours, args=(colour_themes.THEMES[name],),
+                    )
         st.markdown("**Fine tune**")
         for label, day_key, night_key in (
             ("Page", "page_day", "page_night"),
