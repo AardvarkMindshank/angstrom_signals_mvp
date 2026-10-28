@@ -3769,7 +3769,7 @@ export default function(component) {
   window.__angstromFollowRx = channel;
   const pick = (kind, id, tries) => {
     if (window.__angstromPickAsset) {
-      window.__angstromPickAsset(kind + "|" + id);
+      window.__angstromPickAsset("picked", kind + "|" + id);
     } else if (tries < 10) {
       window.setTimeout(() => pick(kind, id, tries + 1), 300);
     }
