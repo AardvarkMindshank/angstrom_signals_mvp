@@ -457,53 +457,43 @@ export default function(component) {
       attributeFilter: ["data-collapsed", "style", "class"]
     });
     window.addEventListener("resize", () => placeSidebarTab());
-    // Dragging the sidebar edge must not throw the page or the sidebar back to the top.
-    let dragKeep = null;
-    // Any box in the sidebar or main page that is scrolled and can scroll. Not only the ones named in Streamlit.
-    const scrolledBoxes = () => {
-      const roots = [document.querySelector("[data-testid='stSidebar']"), document.querySelector("[data-testid='stMain']")].filter(Boolean);
-      const found = [];
-      roots.forEach((root) => {
-        [root, ...root.querySelectorAll("*")].forEach((node) => {
-          if (node.scrollHeight <= node.clientHeight + 2) return;
-          const mode = getComputedStyle(node).overflowY;
-          if (mode === "auto" || mode === "scroll") found.push(node);
-        });
-      });
-      return found;
+    // While the sidebar width is dragged its text re-wraps and the content changes height. Keep the
+    // item at the top of the view where it is on screen, so the view does not slide away.
+    let dragAnchor = null;
+    const sideBox = () => document.querySelector("[data-testid='stSidebarContent']");
+    const pickAnchor = () => {
+      const box = sideBox();
+      if (!box || box.scrollTop < 2) return null;
+      const rect = box.getBoundingClientRect();
+      let node = document.elementFromPoint(rect.left + Math.min(40, rect.width / 2), rect.top + 30);
+      if (!node || node === box || !box.contains(node)) return null;
+      while (node.parentElement && node.parentElement !== box && node.getBoundingClientRect().height < 24) {
+        node = node.parentElement;
+      }
+      return { node, offset: node.getBoundingClientRect().top - rect.top };
     };
-    const snapshotScroll = () => ({
-      window: window.scrollY,
-      boxes: scrolledBoxes().filter((node) => node.scrollTop > 0).map((node) => [node, node.scrollTop]),
-    });
-    const restoreScroll = () => {
-      if (!dragKeep) return;
-      const live = scrolledBoxes();
-      dragKeep.boxes.forEach(([node, top]) => {
-        // A rebuilt box is no longer the same node, so the first scrollable box in the sidebar stands in.
-        const target = node.isConnected ? node : live.find((item) => item.closest("[data-testid='stSidebar']") && !dragKeep.boxes.some(([kept]) => kept === item));
-        if (target && target.scrollTop < top - 2) target.scrollTop = top;
-      });
-      if (dragKeep.window > 0 && window.scrollY === 0) window.scrollTo({top: dragKeep.window, behavior: "auto"});
+    const holdAnchor = () => {
+      const box = sideBox();
+      if (!dragAnchor || !box || !dragAnchor.node.isConnected) return;
+      const rect = box.getBoundingClientRect();
+      const shift = (dragAnchor.node.getBoundingClientRect().top - rect.top) - dragAnchor.offset;
+      if (Math.abs(shift) > 1) box.scrollTop += shift;
+    };
+    const holdLoop = () => {
+      if (!dragAnchor) return;
+      holdAnchor();
+      requestAnimationFrame(holdLoop);
     };
     document.addEventListener("pointerdown", (event) => {
       const sidebar = document.querySelector("[data-testid='stSidebar']");
       if (!sidebar || sidebar.getAttribute("data-collapsed") === "true") return;
       const edge = sidebar.getBoundingClientRect().right;
-      if (Math.abs(event.clientX - edge) <= 10) dragKeep = snapshotScroll();
+      if (Math.abs(event.clientX - edge) > 10) return;
+      dragAnchor = pickAnchor();
+      if (dragAnchor) requestAnimationFrame(holdLoop);
     }, true);
-    let restoreQueued = false;
-    const queueRestore = () => {
-      if (!dragKeep || restoreQueued) return;
-      restoreQueued = true;
-      requestAnimationFrame(() => { restoreQueued = false; restoreScroll(); });
-    };
-    document.addEventListener("pointermove", queueRestore, true);
-    new MutationObserver(queueRestore).observe(document.body, { childList: true, subtree: true });
     document.addEventListener("pointerup", () => {
-      if (!dragKeep) return;
-      [0, 60, 120, 250, 400, 700, 1000].forEach((ms) => setTimeout(restoreScroll, ms));
-      setTimeout(() => { dragKeep = null; }, 1300);
+      if (dragAnchor) setTimeout(() => { holdAnchor(); dragAnchor = null; }, 300);
     }, true);
   }
   return () => {};
