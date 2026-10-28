@@ -512,7 +512,12 @@ export default function(component) {
   const shell = parentElement.closest(".stBidiComponent") || parentElement;
   shell.style.display = "none";
   window.__angstromColourCopy = setTriggerValue;
-  const pickerOf = (node) => node && node.closest ? node.closest("[class*='st-key-colour_']") : null;
+  // Only a real colour picker counts, whatever the names of the boxes around other controls are.
+  const isPicker = (el) => !!el && !!el.querySelector && !!el.querySelector("[data-testid='stColorPicker']");
+  const pickerOf = (node) => {
+    const found = node && node.closest ? node.closest("[class*='st-key-colour_']") : null;
+    return isPicker(found) ? found : null;
+  };
   const keyOf = (el) => {
     const match = String(el.className || "").match(/st-key-(colour_[a-z0-9_]+)/);
     return match ? match[1] : "";
@@ -527,7 +532,7 @@ export default function(component) {
   };
   const arm = () => {
     document.querySelectorAll("[class*='st-key-colour_']").forEach((picker) => {
-      if (keyOf(picker) === "colour_copy") return;
+      if (keyOf(picker) === "colour_copy" || !isPicker(picker)) return;
       const handle = picker.querySelector("button");
       if (!handle || handle.getAttribute("draggable") === "true") return;
       handle.setAttribute("draggable", "true");
