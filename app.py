@@ -3784,6 +3784,33 @@ _asset_follow = st.components.v2.component(
     isolate_styles=False,
 )
 
+_SOCIAL_CLEAR_JS = """
+export default function(component) {
+  const { parentElement } = component;
+  const shell = parentElement.closest(".stBidiComponent") || parentElement;
+  shell.style.display = "none";
+  const holder = shell.closest('[data-testid="stElementContainer"]');
+  if (holder) holder.style.display = "none";
+  // Signed out: the social panel and its pull-out tab belong to the signed-in page.
+  if (window.socialStreamAbort) window.socialStreamAbort.abort();
+  const root = document.getElementById("social-stream-root");
+  if (root) root.remove();
+  const style = document.getElementById("social-stream-style");
+  if (style) style.remove();
+  const main = document.querySelector("[data-testid='stMain']");
+  if (main) main.style.paddingRight = "";
+  window.socialStreamState = null;
+  window.socialAccount = "";
+  window.socialStreamItems = [];
+  window.socialChat = [];
+}
+"""
+_social_clear = st.components.v2.component(
+    "social_panel_clear",
+    js=_SOCIAL_CLEAR_JS,
+    isolate_styles=False,
+)
+
 _ASSET_LINK_JS = """
 export default function(component) {
   const { data, setTriggerValue, parentElement } = component;
@@ -4193,6 +4220,7 @@ if st.session_state.user is None and _POPOUT_VIEW and not st.session_state.get("
     _take_handoff()
 
 if st.session_state.user is None:
+    _social_clear(key="social_clear")
     if st.session_state.get("_announce_logout") and not _POPOUT_VIEW:
         _logout_cast(key="logout_cast", data={"n": st.session_state["_announce_logout"]})
     if not st.session_state.get("google_url") or not st.session_state.get("google_verifier"):
