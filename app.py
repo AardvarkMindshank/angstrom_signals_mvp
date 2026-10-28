@@ -4361,7 +4361,7 @@ if st.session_state.user is None:
                             st.rerun()
         else:
             signup_open = _signup_open()
-            auth_tab1, auth_tab2 = st.tabs(["🔑 Log In", "📝 Sign Up" if signup_open else "✉️ Accepted?"])
+            auth_tab1, auth_tab2 = st.tabs(["🔑 Log In", "📝 Sign Up" if signup_open else "✅ Beta Access Accepted?"])
 
         if not st.session_state.get("recovery_access"):
             with auth_tab1:
