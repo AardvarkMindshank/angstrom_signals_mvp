@@ -4,7 +4,8 @@ Run with: streamlit run app.py
 """
 
 import base64
-from contextlib import nullcontext
+from concurrent.futures import ThreadPoolExecutor
+from contextlib import contextmanager, nullcontext
 import html
 from table_pick import clicked_pick
 import io
@@ -6571,6 +6572,12 @@ def admin_panel() -> None:
             _show_reports(reports)
         _show_beta()
         _show_blacklist()
+        perf = st.session_state.get("_perf") or {}
+        if perf:
+            with st.expander("Page timing (last load of the dashboard)", expanded=False):
+                st.caption("Milliseconds spent on each step the last time the dashboard drew. Slowest first.")
+                for label, spent in sorted(perf.items(), key=lambda item: item[1], reverse=True):
+                    st.write(f"{label}: {spent} ms")
 
 
 def _email_beta_welcome(address: str, name: str) -> tuple[bool, str]:
@@ -7446,13 +7453,60 @@ def load_stock(ticker, days, nonce):
     return fetch_stock_data(ticker, period=period_for_days(days))
 
 
-@st.cache_data(ttl=300)
+# Market caps move slowly, so ask the data providers about every half hour, not every five minutes.
+_CAPS_SECONDS = 1800
+
+
+@st.cache_data(ttl=_CAPS_SECONDS, show_spinner=False)
 def load_market_caps(crypto_ids, stock_tickers, nonce):
     del nonce
     return {
         "crypto": crypto_market_caps(crypto_ids),
         "stock": stock_market_caps(stock_tickers),
     }
+
+
+@contextmanager
+def _timed(label: str):
+    """Record how long a step took on this load. The Admin panel shows the list."""
+    started = time.perf_counter()
+    try:
+        yield
+    finally:
+        spent = (time.perf_counter() - started) * 1000
+        try:
+            st.session_state.setdefault("_perf", {})[label] = round(spent)
+        except Exception:
+            pass
+        print(f"perf {label}: {spent:.0f} ms")
+
+
+def _together(jobs: dict) -> dict:
+    """Run independent lookups at the same time. Each job is a function with no arguments.
+    A job that fails is run again on its own, so the page still draws."""
+    if len(jobs) < 2:
+        return {name: job() for name, job in jobs.items()}
+    results = {}
+    failed = []
+    with ThreadPoolExecutor(max_workers=min(8, len(jobs))) as pool:
+        futures = {name: pool.submit(job) for name, job in jobs.items()}
+        for name, future in futures.items():
+            try:
+                results[name] = future.result(timeout=60)
+            except Exception:
+                failed.append(name)
+    for name in failed:
+        results[name] = jobs[name]()
+    return results
+
+
+@st.cache_data(ttl=900, max_entries=4000, show_spinner=False)
+def _scored_asset(kind: str, asset_id: str, days: int, weights_key: tuple, stamp: tuple, _df):
+    """The indicators and score for one asset. The same prices and weights give the same answer,
+    so it is worked out once and reused across clicks and across accounts."""
+    del kind, asset_id, days, stamp
+    frame = calculate_indicators(_df)
+    return compute_score(frame, weights=dict(weights_key) if weights_key else None)
 
 
 def load_market_sentiment(query: str, enabled: bool, force: bool = False):
@@ -7648,19 +7702,33 @@ def _share_market_rows(crypto_watchlist, stock_watchlist, crypto_results, stock_
     for kind, results in (("Crypto", crypto_results), ("Stock", stock_results)):
         for row in results:
             priced.append({"kind": kind, "asset_id": row.get("key"), "closes": row.get("closes")})
-    save_price_paths(supabase, priced)
-
     pairs = [("Crypto", asset_id) for asset_id in crypto_watchlist]
     pairs += [("Stock", asset_id) for asset_id in stock_watchlist]
-    shared = load_shared_market(supabase, [asset_market_key(kind, asset_id) for kind, asset_id in pairs])
-    counts = holder_counts(supabase)
-    logos = _asset_logos(crypto_watchlist, stock_watchlist, shared)
     crypto_keys = [asset_market_key("Crypto", asset_id) for asset_id in crypto_watchlist]
     stock_keys = [asset_market_key("Stock", asset_id) for asset_id in stock_watchlist]
     market_keys = crypto_keys + stock_keys
-    crowd = sentiment_crowd(supabase, market_keys)
-    comments = sentiment_comment_lists(supabase, market_keys)
-    feed = sentiment_comment_lists(supabase, market_keys, every=True)
+    # The prices were read a moment ago at the top of this load. Read them again only when
+    # something has just been saved, or the earlier read was empty.
+    earlier = st.session_state.get("_shared_rows")
+    reuse_shared = bool(earlier) and not st.session_state.get("_shared_reread") and all(
+        key in earlier for key in market_keys
+    )
+    jobs = {
+        "save": lambda: save_price_paths(supabase, priced),
+        "counts": lambda: holder_counts(supabase),
+        "crowd": lambda: sentiment_crowd(supabase, market_keys),
+        "comments": lambda: sentiment_comment_lists(supabase, market_keys),
+        "feed": lambda: sentiment_comment_lists(supabase, market_keys, every=True),
+    }
+    if not reuse_shared:
+        jobs["shared"] = lambda: load_shared_market(supabase, market_keys)
+    got = _together(jobs)
+    shared = earlier if reuse_shared else got["shared"]
+    counts = got["counts"]
+    crowd = got["crowd"]
+    comments = got["comments"]
+    feed = got["feed"]
+    logos = _asset_logos(crypto_watchlist, stock_watchlist, shared)
     st.session_state["social_stream"] = _social_stream_json(crypto_watchlist, stock_watchlist, shared, logos, feed)
     for kind, results, watchlist in (
         ("Crypto", crypto_results, crypto_watchlist),
@@ -8099,7 +8167,14 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
         shared_keys.extend(asset_market_key("Crypto", asset_id) for asset_id in crypto_watchlist)
     if trade_equities:
         shared_keys.extend(asset_market_key("Stock", asset_id) for asset_id in stock_watchlist)
-    st.session_state["_shared_rows"] = load_shared_market(supabase, shared_keys)
+    st.session_state["_perf"] = {}
+    with _timed("shared prices and sentiment, plus market moods"):
+        first = _together({
+            "shared": lambda: load_shared_market(supabase, shared_keys),
+            "moods": lambda: load_market_moods(supabase),
+        })
+    st.session_state["_shared_rows"] = first["shared"]
+    _moods_now = first["moods"]
 
     wide_layout = st.session_state.get("section_layout") == "Wide" and not _POPOUT_VIEW
     allowed_kinds = []
@@ -8132,7 +8207,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             return kind, asset_id, label, sentiment_query(kind, label, ticker)
 
         jumps = []
-        moods = load_market_moods(supabase) or {}
+        moods = _moods_now or {}
         if trade_crypto:
             jumps.append((
                 "Market Sentiment - Crypto",
@@ -8195,7 +8270,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                 _rerun_fragment()
 
         # Market cap still uses a short cache. Prices and sentiment come from the shared rows.
-        nonce = (st.session_state.data_nonce, int(time.time() // TECHNICAL_REFRESH_SECONDS))
+        nonce = (st.session_state.data_nonce, int(time.time() // _CAPS_SECONDS))
 
         def process_watchlist(watchlist, is_crypto=True):
             results = []
@@ -8236,8 +8311,20 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
 
                 if df is not None and not df.empty and len(df) >= 15:
                     try:
-                        df = calculate_indicators(df)
-                        scored = compute_score(df, weights=weights)
+                        try:
+                            weights_key = tuple(sorted((str(k), float(v)) for k, v in (weights or {}).items()))
+                        except (TypeError, ValueError):
+                            weights_key = (("_uncached", time.time_ns()),)
+                        shared_row = (st.session_state.get("_shared_rows") or {}).get(asset_market_key(kind, key))
+                        stamp = (
+                            row_timestamp(shared_row, "prices_updated_at"),
+                            len(df),
+                            float(df["close"].iloc[-1]),
+                        )
+                        try:
+                            scored = _scored_asset(kind, str(key), int(history_days), weights_key, stamp, df)
+                        except Exception:
+                            scored = compute_score(calculate_indicators(df), weights=weights)
                         if isinstance(scored, dict):
                             result.update(scored)
                             result["symbol"] = name if is_crypto else f"{name} ({key})"
@@ -8250,21 +8337,24 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                 results.append(result)
             return results
 
-        crypto_results = process_watchlist(crypto_watchlist, is_crypto=True) if trade_crypto else []
-        stock_results = process_watchlist(stock_watchlist, is_crypto=False) if trade_equities else []
+        with _timed("scores for every asset"):
+            crypto_results = process_watchlist(crypto_watchlist, is_crypto=True) if trade_crypto else []
+            stock_results = process_watchlist(stock_watchlist, is_crypto=False) if trade_equities else []
         if show_extra_metrics_flag:
-            caps = load_market_caps(
-                tuple(crypto_watchlist) if trade_crypto else (),
-                tuple(stock_watchlist) if trade_equities else (),
-                nonce,
-            )
+            with _timed("market caps"):
+                caps = load_market_caps(
+                    tuple(crypto_watchlist) if trade_crypto else (),
+                    tuple(stock_watchlist) if trade_equities else (),
+                    nonce,
+                )
             for row in crypto_results:
                 row["market_cap"] = (caps.get("crypto") or {}).get(str(row.get("key") or "").lower())
             for row in stock_results:
                 row["market_cap"] = (caps.get("stock") or {}).get(str(row.get("key") or "").upper())
         change_rows = crypto_results + stock_results
         change_baseline, change_seen = _remember_score_visit(change_rows)
-        _share_market_rows(crypto_watchlist, stock_watchlist, crypto_results, stock_results)
+        with _timed("shared rows, crowd and comments"):
+            _share_market_rows(crypto_watchlist, stock_watchlist, crypto_results, stock_results)
         saved_scope = (prefs.get("settings") or {}).get("stream_asset")
         scope = saved_scope if saved_scope in ("watchlist", "crypto", "stock") else ""
         try:
