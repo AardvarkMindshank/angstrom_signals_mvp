@@ -3493,6 +3493,8 @@ try:
         stock_market_caps,
         period_for_days,
         resolve_crypto_id,
+        search_crypto_matches,
+        search_stock_matches,
     )
     from market_store import (
         asset_logo,
@@ -5900,30 +5902,62 @@ def _ensure_added(kind: str, asset_id: str, label: str) -> None:
 with tracked_expander("⭐ Watchlists", "watchlists", sidebar=True):
     if trade_crypto:
         with tracked_expander("Edit Crypto", "edit_crypto"):
-            st.caption("Add a ticker (XLM) or a name (Stellar).")
+            st.caption("Type a name or ticker, press Enter, then pick the match.")
+            if st.session_state.pop("_clear_new_crypto", False):
+                st.session_state["new_crypto"] = ""
             new_crypto = st.text_input("Add crypto", key="new_crypto", placeholder="e.g. XLM or Stellar")
-            if st.button("Add Crypto") and new_crypto:
-                found = find_crypto(new_crypto)
-                if not found:
-                    st.warning(f"No coin found for '{new_crypto.strip()}'. Try the ticker, such as XLM, or the name, such as Stellar.")
+            crypto_query = (new_crypto or "").strip()
+            crypto_choice = None
+            if crypto_query:
+                crypto_matches = search_crypto_matches(crypto_query)
+                if not crypto_matches:
+                    # CoinGecko search can be out of reach. A coin we already know still resolves.
+                    known = find_crypto(crypto_query)
+                    if known:
+                        known_ticker = crypto_ticker(known[0]) or ""
+                        crypto_matches = [{"id": known[0], "name": str(known[1]), "symbol": known_ticker, "rank": None}]
+                if crypto_matches:
+                    crypto_options = {match["id"]: match for match in crypto_matches}
+
+                    def _crypto_option(coin_id, options=crypto_options):
+                        match = options[coin_id]
+                        symbol = f" ({match['symbol']})" if match["symbol"] and match["symbol"] not in match["name"].upper() else ""
+                        rank = f"  ·  rank {match['rank']}" if match["rank"] else ""
+                        return f"{match['name']}{symbol}{rank}"
+
+                    picked_id = st.selectbox(
+                        "Pick the coin",
+                        list(crypto_options),
+                        format_func=_crypto_option,
+                        key="pick_crypto",
+                        label_visibility="collapsed",
+                    )
+                    crypto_choice = crypto_options.get(picked_id)
                 else:
-                    cid, label = found
-                    ticker = crypto_ticker(cid)
-                    alias = (ticker or "").lower()
-                    fresh = bool(cid) and cid not in CRYPTO_WATCHLIST
-                    changed = False
-                    if alias and alias != cid and alias in CRYPTO_WATCHLIST:
-                        CRYPTO_WATCHLIST.pop(alias, None)
-                        changed = True
+                    st.warning(f"No coin found for '{crypto_query}'. Check the spelling, or try the ticker, such as XLM.")
+            if st.button("Add Crypto", disabled=crypto_choice is None):
+                cid = crypto_choice["id"]
+                symbol = crypto_choice["symbol"]
+                label = f"{crypto_choice['name']} ({symbol})" if symbol and symbol not in crypto_choice["name"].upper() else crypto_choice["name"]
+                ticker = crypto_ticker(cid)
+                alias = (ticker or "").lower()
+                fresh = bool(cid) and cid not in CRYPTO_WATCHLIST
+                changed = False
+                if alias and alias != cid and alias in CRYPTO_WATCHLIST:
+                    CRYPTO_WATCHLIST.pop(alias, None)
+                    changed = True
+                if fresh:
+                    CRYPTO_WATCHLIST[cid] = label
+                    changed = True
+                if changed:
+                    prefs["crypto"] = CRYPTO_WATCHLIST
+                    save_preferences_to_cloud({"crypto_watchlist": CRYPTO_WATCHLIST})
                     if fresh:
-                        CRYPTO_WATCHLIST[cid] = label
-                        changed = True
-                    if changed:
-                        prefs["crypto"] = CRYPTO_WATCHLIST
-                        save_preferences_to_cloud({"crypto_watchlist": CRYPTO_WATCHLIST})
-                        if fresh:
-                            _ensure_added("Crypto", cid, str(label))
-                        st.rerun()
+                        _ensure_added("Crypto", cid, str(label))
+                    st.session_state["_clear_new_crypto"] = True
+                    st.rerun()
+                else:
+                    st.info(f"{label} is already on your list.")
             if CRYPTO_WATCHLIST:
                 to_remove = st.selectbox("Remove crypto", [""] + list(CRYPTO_WATCHLIST.keys()), key="rm_crypto")
                 if to_remove and st.button("Remove Crypto"):
@@ -5934,15 +5968,56 @@ with tracked_expander("⭐ Watchlists", "watchlists", sidebar=True):
 
     if trade_equities:
         with tracked_expander("Edit Stocks", "edit_stocks"):
-            st.caption("Add by ticker (AAPL, MSFT, etc.)")
-            new_stock = st.text_input("Add stock ticker", key="new_stock", placeholder="e.g. GOOGL")
-            if st.button("Add Stock") and new_stock:
-                tic = new_stock.strip().upper()
-                if tic and tic not in STOCK_WATCHLIST:
-                    STOCK_WATCHLIST[tic] = tic
+            st.caption("Type a company name or ticker, press Enter, then pick the match.")
+            if st.session_state.pop("_clear_new_stock", False):
+                st.session_state["new_stock"] = ""
+            new_stock = st.text_input("Add stock or ETF", key="new_stock", placeholder="e.g. Apple, GOOGL or SIE.DE")
+            stock_query = (new_stock or "").strip()
+            stock_choice = None
+            if stock_query:
+                stock_matches = search_stock_matches(stock_query)
+                unchecked = False
+                if not stock_matches and re.fullmatch(r"[A-Za-z0-9.\-^=]{1,12}", stock_query):
+                    # Search is out of reach. Offer the ticker as typed, and say it is unchecked.
+                    stock_matches = [{"symbol": stock_query.upper(), "name": stock_query.upper(), "exchange": "", "type": "Stock"}]
+                    unchecked = True
+                if stock_matches:
+                    stock_options = {match["symbol"]: match for match in stock_matches}
+
+                    def _stock_option(symbol, options=stock_options):
+                        match = options[symbol]
+                        parts = [symbol]
+                        if match["name"] and match["name"] != symbol:
+                            parts.append(match["name"])
+                        if match["exchange"]:
+                            parts.append(match["exchange"])
+                        if match["type"] == "ETF":
+                            parts.append("ETF")
+                        return "  ·  ".join(parts)
+
+                    picked_symbol = st.selectbox(
+                        "Pick the stock",
+                        list(stock_options),
+                        format_func=_stock_option,
+                        key="pick_stock",
+                        label_visibility="collapsed",
+                    )
+                    stock_choice = stock_options.get(picked_symbol)
+                    if unchecked:
+                        st.caption("Search is not available right now, so this ticker has not been checked.")
+                else:
+                    st.warning(f"No stock found for '{stock_query}'. Try the company name or the ticker.")
+            if st.button("Add Stock", disabled=stock_choice is None):
+                tic = stock_choice["symbol"]
+                if tic in STOCK_WATCHLIST:
+                    st.info(f"{tic} is already on your list.")
+                else:
+                    label = stock_choice["name"] or tic
+                    STOCK_WATCHLIST[tic] = label
                     prefs["stock"] = STOCK_WATCHLIST
                     save_preferences_to_cloud({"stock_watchlist": STOCK_WATCHLIST})
-                    _ensure_added("Stock", tic, tic)
+                    _ensure_added("Stock", tic, label)
+                    st.session_state["_clear_new_stock"] = True
                     st.rerun()
             if STOCK_WATCHLIST:
                 to_remove = st.selectbox("Remove stock", [""] + list(STOCK_WATCHLIST.keys()), key="rm_stock")

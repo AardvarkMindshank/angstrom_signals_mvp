@@ -583,3 +583,151 @@ def get_current_price_stock(ticker: str) -> float | None:
         return stock.fast_info.get("last_price") or stock.info.get("regularMarketPrice")
     except Exception:
         return None
+
+
+# ---------------------------------------------------------------- asset search
+# Used by the Add crypto and Add stock boxes: type a few letters, pick from real matches.
+_SEARCH_CACHE: dict = {}
+_SEARCH_CACHE_SECONDS = 600
+
+
+def _cached_search(kind: str, query: str, fetch):
+    token = (kind, query.strip().lower())
+    stored = _SEARCH_CACHE.get(token)
+    if stored and time.time() - stored[0] < _SEARCH_CACHE_SECONDS:
+        return stored[1]
+    found = fetch()
+    if found:
+        if len(_SEARCH_CACHE) > 500:
+            _SEARCH_CACHE.clear()
+        _SEARCH_CACHE[token] = (time.time(), found)
+    return found
+
+
+def parse_crypto_matches(payload, limit: int = 8) -> list[dict]:
+    """Coins from a CoinGecko search answer, largest first."""
+    coins = (payload or {}).get("coins") if isinstance(payload, dict) else None
+    found = []
+    for coin in coins or []:
+        if not isinstance(coin, dict) or not coin.get("id"):
+            continue
+        rank = coin.get("market_cap_rank")
+        found.append({
+            "id": str(coin["id"]).strip().lower(),
+            "name": " ".join(str(coin.get("name") or "").split()),
+            "symbol": str(coin.get("symbol") or "").strip().upper(),
+            "rank": rank if isinstance(rank, int) else None,
+        })
+    found.sort(key=lambda item: item["rank"] if item["rank"] is not None else 10**9)
+    return found[:limit]
+
+
+def search_crypto_matches(query: str, limit: int = 8) -> list[dict]:
+    """Up to a few coins matching what was typed. Empty when nothing matches or CoinGecko is out of reach."""
+    text = (query or "").strip()
+    if len(text) < 2:
+        return []
+
+    def fetch():
+        try:
+            response = requests.get(
+                "https://api.coingecko.com/api/v3/search",
+                params={"query": text},
+                headers=_HEADERS,
+                timeout=10,
+            )
+        except requests.RequestException:
+            return []
+        if response.status_code != 200:
+            return []
+        try:
+            return parse_crypto_matches(response.json(), limit)
+        except ValueError:
+            return []
+
+    return _cached_search("crypto", text, fetch)
+
+
+_STOCK_TYPES = {"EQUITY": "Stock", "ETF": "ETF"}
+
+
+def parse_yahoo_matches(payload, limit: int = 8) -> list[dict]:
+    """Stocks and ETFs from a Yahoo Finance search answer."""
+    quotes = (payload or {}).get("quotes") if isinstance(payload, dict) else None
+    found = []
+    for quote in quotes or []:
+        if not isinstance(quote, dict):
+            continue
+        kind = _STOCK_TYPES.get(str(quote.get("quoteType") or "").upper())
+        symbol = str(quote.get("symbol") or "").strip().upper()
+        if not kind or not symbol:
+            continue
+        name = " ".join(str(quote.get("shortname") or quote.get("longname") or "").split())
+        found.append({
+            "symbol": symbol,
+            "name": name or symbol,
+            "exchange": " ".join(str(quote.get("exchDisp") or quote.get("exchange") or "").split()),
+            "type": kind,
+        })
+    return found[:limit]
+
+
+def parse_finnhub_matches(payload, limit: int = 8) -> list[dict]:
+    """Stocks and ETFs from a Finnhub search answer."""
+    rows = (payload or {}).get("result") if isinstance(payload, dict) else None
+    found = []
+    for row in rows or []:
+        if not isinstance(row, dict):
+            continue
+        kind = str(row.get("type") or "").lower()
+        symbol = str(row.get("symbol") or "").strip().upper()
+        if not symbol or ("common stock" not in kind and "etp" not in kind and "etf" not in kind):
+            continue
+        name = " ".join(str(row.get("description") or "").title().split())
+        found.append({
+            "symbol": symbol,
+            "name": name or symbol,
+            "exchange": "",
+            "type": "ETF" if ("etp" in kind or "etf" in kind) else "Stock",
+        })
+    return found[:limit]
+
+
+def search_stock_matches(query: str, limit: int = 8) -> list[dict]:
+    """Up to a few stocks or ETFs matching a ticker or company name. Yahoo first, Finnhub as backup."""
+    text = (query or "").strip()
+    if len(text) < 1:
+        return []
+
+    def fetch():
+        found = []
+        try:
+            response = requests.get(
+                "https://query2.finance.yahoo.com/v1/finance/search",
+                params={"q": text, "quotesCount": 10, "newsCount": 0, "lang": "en-US"},
+                headers=_HEADERS,
+                timeout=10,
+            )
+            if response.status_code == 200:
+                found = parse_yahoo_matches(response.json(), limit)
+        except (requests.RequestException, ValueError):
+            found = []
+        if found:
+            return found
+        key = finnhub_api_key()
+        if not key:
+            return []
+        try:
+            response = requests.get(
+                "https://finnhub.io/api/v1/search",
+                params={"q": text, "token": key},
+                timeout=10,
+            )
+            if response.status_code == 200:
+                return parse_finnhub_matches(response.json(), limit)
+        except (requests.RequestException, ValueError):
+            pass
+        return []
+
+    return _cached_search("stock", text, fetch)
+
