@@ -6273,24 +6273,24 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
                     + "<div class='theme-name'>Saved</div></div>"
                 )
             else:
-                st.caption("Nothing saved yet. Press Save current to keep these colours.")
-        save_col, back_col, reset_col = st.columns(3)
+                st.caption("Nothing saved yet. Press the disk icon to keep these colours.")
+        save_col, back_col, reset_col, _spare = st.columns([1, 1, 1, 3])
         save_col.button(
-            "Save current", key="colours_save_slot", on_click=_save_colour_slot, use_container_width=True,
-            help="Keeps the colours you have now, so you can come back to them after experimenting.",
+            ":material/save:", key="colours_save_slot", on_click=_save_colour_slot, use_container_width=True,
+            help="Save current: keeps the colours you have now, so you can come back to them after experimenting.",
         )
         back_col.button(
-            "Back to saved", key="colours_back_slot", on_click=_use_colours, args=(slot or {},),
+            ":material/undo:", key="colours_back_slot", on_click=_use_colours, args=(slot or {},),
             disabled=not slot, use_container_width=True,
-            help="Puts the pickers back to your saved colours.",
+            help="Back to saved: puts the pickers back to your saved colours.",
         )
-        if reset_col.button("Reset to default", key="reset_colours", use_container_width=True,
-                            help="The original Angstrom colours."):
+        if reset_col.button(":material/restart_alt:", key="reset_colours", use_container_width=True,
+                            help="Reset to default: the original Angstrom colours."):
             st.session_state._reset_colours = True
             save_account_settings({"colours": {key: default for key, default in _THEME_COLOURS}})
             st.rerun()
         st.markdown("**Ready-made themes**")
-        st.caption("Click a picture to try it. You can still change any colour afterwards, and Back to saved undoes it.")
+        st.caption("Click a picture to try it. You can still change any colour afterwards, and the undo arrow returns to your saved colours.")
         theme_names = list(colour_themes.THEMES)
         for start in range(0, len(theme_names), 4):
             for column, name in zip(st.columns(4), theme_names[start:start + 4]):
