@@ -6577,7 +6577,7 @@ def admin_panel() -> None:
             with st.expander("Page timing (last load of the dashboard)", expanded=False):
                 st.caption("Milliseconds spent on each step the last time the dashboard drew. Slowest first.")
                 for label, spent in sorted(perf.items(), key=lambda item: item[1], reverse=True):
-                    st.write(f"{label}: {spent} ms")
+                    st.write(f"{label}: {spent}" if "worked out" in label else f"{label}: {spent} ms")
 
 
 def _email_beta_welcome(address: str, name: str) -> tuple[bool, str]:
@@ -7503,11 +7503,16 @@ def _together(jobs: dict) -> dict:
     return results
 
 
+_SCORES_WORKED_OUT = 0
+
+
 @st.cache_data(ttl=900, max_entries=4000, show_spinner=False)
 def _scored_asset(kind: str, asset_id: str, days: int, weights_key: tuple, stamp: tuple, _df):
     """The indicators and score for one asset. The same prices and weights give the same answer,
     so it is worked out once and reused across clicks and across accounts."""
     del kind, asset_id, days, stamp
+    global _SCORES_WORKED_OUT
+    _SCORES_WORKED_OUT += 1
     frame = calculate_indicators(_df)
     return compute_score(frame, weights=dict(weights_key) if weights_key else None)
 
@@ -7771,34 +7776,42 @@ def _stored_logo(row: dict | None) -> str:
     return url.strip() if isinstance(url, str) and url.strip().startswith("https://") else ""
 
 
+_LOGO_ASKED: dict[str, float] = {}
+
+
+def _fetch_logos_later(crypto_ids, stock_tickers) -> None:
+    """Ask CoinGecko and Finnhub for logos, and save what they return. Runs behind the scenes,
+    so a slow or busy provider never holds up the page. The logos show from the next load."""
+    fresh = []
+    try:
+        for coin_id, url in crypto_logo_urls(crypto_ids).items():
+            fresh.append({"kind": "Crypto", "asset_id": coin_id, "logo_url": url})
+        for ticker in stock_tickers:
+            url = stock_logo_url(ticker)
+            if url:
+                fresh.append({"kind": "Stock", "asset_id": ticker, "logo_url": url})
+        save_logos(supabase, fresh)
+    except Exception as exc:
+        print(f"logo fetch failed: {exc}")
+
+
 def _asset_logos(crypto_watchlist, stock_watchlist, shared: dict) -> dict[str, str]:
-    """Reuse a saved logo. Ask CoinGecko or Finnhub only when an asset has none yet."""
+    """Reuse a saved logo. An asset with none yet is looked up behind the scenes, at most once an hour."""
     logos = {}
     missing_crypto = []
     missing_stock = []
-    fresh = []
+    now = time.time()
     for kind, watchlist in (("Crypto", crypto_watchlist), ("Stock", stock_watchlist)):
         for asset_id in watchlist:
             key = asset_market_key(kind, asset_id)
             saved = _stored_logo(shared.get(key))
             if saved:
                 logos[key] = saved
-            elif kind == "Crypto":
-                missing_crypto.append(asset_id)
-            else:
-                missing_stock.append(asset_id)
-    for coin_id, url in crypto_logo_urls(missing_crypto).items():
-        key = asset_market_key("Crypto", coin_id)
-        logos[key] = url
-        fresh.append({"kind": "Crypto", "asset_id": coin_id, "logo_url": url})
-    for ticker in missing_stock:
-        url = stock_logo_url(ticker)
-        if not url:
-            continue
-        key = asset_market_key("Stock", ticker)
-        logos[key] = url
-        fresh.append({"kind": "Stock", "asset_id": ticker, "logo_url": url})
-    save_logos(supabase, fresh)
+            elif now - _LOGO_ASKED.get(key, 0.0) >= 3600:
+                _LOGO_ASKED[key] = now
+                (missing_crypto if kind == "Crypto" else missing_stock).append(asset_id)
+    if missing_crypto or missing_stock:
+        _BACKGROUND.submit(_fetch_logos_later, list(missing_crypto), list(missing_stock))
     st.session_state["asset_logos"] = logos
     return logos
 
@@ -8388,9 +8401,11 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                 results.append(result)
             return results
 
+        worked_before = _SCORES_WORKED_OUT
         with _timed("scores for every asset"):
             crypto_results = process_watchlist(crypto_watchlist, is_crypto=True) if trade_crypto else []
             stock_results = process_watchlist(stock_watchlist, is_crypto=False) if trade_equities else []
+        st.session_state["_perf"]["  scores worked out fresh (0 means all remembered)"] = _SCORES_WORKED_OUT - worked_before
         if show_extra_metrics_flag:
             with _timed("market caps"):
                 caps = load_market_caps(
