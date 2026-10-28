@@ -326,7 +326,9 @@ export default function(component) {
       ".st-key-palette_table [data-testid='stColorPicker']{margin:0 !important;padding:0 !important;height:2.6rem;display:flex;align-items:center;}",
       ".st-key-palette_table [data-testid='stColorPicker'] > div{margin:0 !important;gap:.3rem;align-items:center;}",
       ".st-key-palette_table [data-testid='stColorPickerBlock']{width:2.1rem !important;height:2.1rem !important;border-radius:.45rem !important;}",
-      ".st-key-palette_table .pal-name{font-size:.8rem;line-height:1.15;color:var(--ang-text);overflow-wrap:anywhere;height:2.6rem;display:flex;align-items:center;}",
+      ".st-key-palette_table .pal-name{font-size:.8rem;line-height:1.15;color:var(--ang-text);overflow-wrap:anywhere;height:2.6rem;margin:0;padding:0;display:flex;align-items:center;}",
+      ".st-key-palette_table [data-testid='stMarkdownContainer'] p,.st-key-palette_table [data-testid='stHtml']{margin:0 !important;padding:0 !important;}",
+      ".st-key-palette_table [data-testid='stColumn']{justify-content:center;}",
       ".st-key-admin_feedback_head,.st-key-admin_reports_head,.st-key-admin_blacklist_head,.st-key-admin_beta_head{position:sticky;top:0;z-index:4;background:var(--ang-section);}",
       ".st-key-admin_feedback_table [class*='st-key-admin_feedback_sort_'] button,.st-key-admin_reports_table [class*='st-key-admin_reports_sort_'] button,.st-key-admin_blacklist_table [class*='st-key-admin_blacklist_sort_'] button{background:transparent !important;border:0 !important;box-shadow:none !important;padding:0 !important;min-height:0 !important;height:auto !important;justify-content:flex-start !important;font-weight:700 !important;color:var(--ang-text) !important;}",
       ".st-key-admin_feedback_table [class*='st-key-admin_feedback_sort_'] button:hover,.st-key-admin_reports_table [class*='st-key-admin_reports_sort_'] button:hover,.st-key-admin_blacklist_table [class*='st-key-admin_blacklist_sort_'] button:hover{background:var(--ang-hover) !important;}",
@@ -6378,7 +6380,7 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
                 ("Borders", "border_day", "border_night"),
             ):
                 cells = st.columns(widths, gap="xsmall", vertical_alignment="center")
-                cells[0].markdown(f"<div class='pal-name'>{label}</div>", unsafe_allow_html=True)
+                cells[0].html(f"<div class='pal-name'>{html.escape(label)}</div>")
                 for column, part in ((cells[1], day_key), (cells[2], night_key)):
                     state_key = f"colour_{part}"
                     if state_key not in st.session_state:
