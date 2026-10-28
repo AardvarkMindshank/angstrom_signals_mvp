@@ -3499,6 +3499,7 @@ def _reveal_section(section_id: str, anchor: str) -> None:
 
 
 from email_brand import render_email
+import colour_themes
 
 BETA_REQUEST_URL = "https://angstromsignals.com/beta.html"
 
@@ -4962,6 +4963,29 @@ def _active_colours() -> dict:
     return chosen
 
 
+def _use_colours(colours: dict) -> None:
+    """Load a set of colours into the pickers on the next run."""
+    st.session_state["_apply_colours"] = dict(colours)
+
+
+def _saved_colour_slot():
+    """The one set of colours this account has saved with Save current, or None."""
+    stored = (st.session_state.get("cloud_prefs") or {}).get("settings")
+    saved = stored.get("colours_saved") if isinstance(stored, dict) else None
+    if not isinstance(saved, dict):
+        return None
+    return colour_themes.clean_set(saved, dict(_THEME_COLOURS))
+
+
+def _save_colour_slot() -> None:
+    chosen = {
+        key: _hex_colour(st.session_state.get(f"colour_{key}"), default)
+        for key, default in _THEME_COLOURS
+    }
+    save_account_settings({"colours_saved": chosen})
+    st.toast("Saved. Back to saved will return to these colours.")
+
+
 def _take_colour_copy() -> None:
     """A drop names the block that should take the dragged colour. One drop applies once."""
     reported = _colour_copy(key="colour_copy", on_copied_change=lambda: None)
@@ -5000,6 +5024,10 @@ def _colour_payload(chosen: dict) -> dict:
 if st.session_state.pop("_reset_colours", False):
     for key, default in _THEME_COLOURS:
         st.session_state[f"colour_{key}"] = default
+_pending_colours = st.session_state.pop("_apply_colours", None)
+if isinstance(_pending_colours, dict):
+    for key, default in _THEME_COLOURS:
+        st.session_state[f"colour_{key}"] = _hex_colour(_pending_colours.get(key), default)
 _take_colour_copy()
 account_colours = _active_colours()
 _brand_watch(key="brand_watch", data=_colour_payload(account_colours))
@@ -6225,7 +6253,44 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
 
     st.divider()
     with tracked_expander("UI Colours", "colours"):
-        st.caption("Saved on this account. Left is day, right is night. Drag a colour onto another to copy it.")
+        st.caption(
+            "Your colours save on this account as you change them. In each picture and each pair of pickers, "
+            "the left is day and the right is night. Drag a colour onto another to copy it."
+        )
+        slot = _saved_colour_slot()
+        mine_col, save_col, back_col, reset_col = st.columns([2.2, 1, 1, 1], vertical_alignment="center")
+        with mine_col:
+            st.markdown("**My saved colours**")
+            if slot:
+                st.html(colour_themes.swatch_html(slot))
+            else:
+                st.caption("Nothing saved yet. Press Save current to keep these colours.")
+        save_col.button(
+            "Save current", key="colours_save_slot", on_click=_save_colour_slot, use_container_width=True,
+            help="Keeps the colours you have now, so you can come back to them after experimenting.",
+        )
+        back_col.button(
+            "Back to saved", key="colours_back_slot", on_click=_use_colours, args=(slot or {},),
+            disabled=not slot, use_container_width=True,
+            help="Puts the pickers back to your saved colours.",
+        )
+        if reset_col.button("Reset to default", key="reset_colours", use_container_width=True,
+                            help="The original Angstrom colours."):
+            st.session_state._reset_colours = True
+            save_account_settings({"colours": {key: default for key, default in _THEME_COLOURS}})
+            st.rerun()
+        st.markdown("**Ready-made themes**")
+        st.caption("Pick one to try it. You can still change any colour afterwards, and Back to saved undoes it.")
+        theme_names = list(colour_themes.THEMES)
+        for start in range(0, len(theme_names), 4):
+            for column, name in zip(st.columns(4), theme_names[start:start + 4]):
+                with column:
+                    st.html(colour_themes.swatch_html(colour_themes.THEMES[name]))
+                    column.button(
+                        name, key=f"colour_theme_{name.lower().replace(' ', '_')}",
+                        on_click=_use_colours, args=(colour_themes.THEMES[name],), use_container_width=True,
+                    )
+        st.markdown("**Fine tune**")
         for label, day_key, night_key in (
             ("Page", "page_day", "page_night"),
             ("Section heading", "heading_day", "heading_night"),
@@ -6247,10 +6312,6 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
                     label_visibility="collapsed",
                     persist_state="session",
                 )
-        if st.button("Reset colours", key="reset_colours"):
-            st.session_state._reset_colours = True
-            save_account_settings({"colours": {key: default for key, default in _THEME_COLOURS}})
-            st.rerun()
     chosen_colours = {
         key: _hex_colour(st.session_state.get(f"colour_{key}"), default)
         for key, default in _THEME_COLOURS
