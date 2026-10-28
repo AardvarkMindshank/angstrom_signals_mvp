@@ -948,7 +948,17 @@ export default function(component) {
     if (existing) existing.remove();
   }
   window.socialStreamItems = items;
-  window.socialStreamReport = setTriggerValue;
+  window.__angstromTabId = window.__angstromTabId || Math.random().toString(36).slice(2);
+  window.socialStreamReport = (name, value) => {
+    setTriggerValue(name, value);
+    if ((name === "chat" || name === "signal") && "BroadcastChannel" in window) {
+      // Tell the other tabs a comment changed, once the server has had time to save it.
+      window.setTimeout(() => {
+        if (!window.__angstromChangeTx) window.__angstromChangeTx = new BroadcastChannel("angstrom-link");
+        window.__angstromChangeTx.postMessage({ type: "changed", from: window.__angstromTabId });
+      }, 1500);
+    }
+  };
   installSocialStream(savedAsset);
   window.renderSocialStream();
   if (window.socialRefit) window.socialRefit();
@@ -957,6 +967,10 @@ export default function(component) {
     window.__angstromLinkRx.onmessage = (event) => {
       const msg = event.data || {};
       const state = window.socialStreamState;
+      if (msg.type === "changed" && msg.from !== window.__angstromTabId && window.socialStreamReport) {
+        window.socialStreamReport("refresh", String(Date.now()));
+        return;
+      }
       if (msg.type !== "asset" || !msg.key || !state) return;
       state.linked = { key: String(msg.key), label: String(msg.label || msg.key) };
       if (state.follow) {
@@ -3628,10 +3642,11 @@ _handoff_ask = st.components.v2.component(
 
 _ASSET_LINK_JS = """
 export default function(component) {
-  const { data, parentElement } = component;
+  const { data, setTriggerValue, parentElement } = component;
   const shell = parentElement.closest(".stBidiComponent") || parentElement;
   shell.style.display = "none";
   if (!("BroadcastChannel" in window)) return;
+  window.__angstromLinkRefresh = setTriggerValue;
   const key = String((data && data.key) || "");
   const label = String((data && data.label) || key);
   window.__angstromLinkCurrent = { key: key, label: label };
@@ -3643,6 +3658,9 @@ export default function(component) {
       const now = window.__angstromLinkCurrent;
       if (msg.type === "hello" && now && now.key) {
         channel.postMessage({ type: "asset", key: now.key, label: now.label });
+      }
+      if (msg.type === "changed" && msg.from !== window.__angstromTabId && window.__angstromLinkRefresh) {
+        window.__angstromLinkRefresh("refresh", String(Date.now()));
       }
     };
   }
@@ -7497,6 +7515,7 @@ def _draw_social_stream(stream_items, scope, *, popout: bool = False):
         on_group_change=lambda: None,
         on_panel_change=lambda: None,
         on_report_change=lambda: None,
+        on_refresh_change=lambda: None,
     )
 
 
@@ -8237,6 +8256,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                 "key": asset_market_key(chart_kind, chart_asset),
                 "label": " ".join(str(chart_name or chart_asset).split()),
             },
+            on_refresh_change=lambda: None,
         )
     if chart_kind in ("Crypto", "Stock") and chart_asset:
         save_account_settings({"chart_kind": chart_kind, "chart_asset": str(chart_asset)})
