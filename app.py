@@ -11,6 +11,7 @@ from table_pick import clicked_pick
 import io
 import json
 import re
+import threading
 import time
 import traceback
 from datetime import datetime, timezone
@@ -7724,7 +7725,8 @@ def load_market_caps(crypto_ids, stock_tickers, nonce, shared=None):
     token = (tuple(crypto_ids), tuple(stock_tickers))
     stored = _CAPS_STORE.get(token)
     if stored is None:
-        saved = market_stats_from_rows(shared or {})
+        # Even numbers from days ago beat making the page wait. The refresh below replaces them.
+        saved = market_stats_from_rows(shared or {}, max_age_seconds=30 * 24 * 3600)
         wanted_crypto = {str(c).lower() for c in crypto_ids}
         wanted_stock = {str(t).upper() for t in stock_tickers}
         from_db = {
@@ -7744,11 +7746,43 @@ def load_market_caps(crypto_ids, stock_tickers, nonce, shared=None):
     st.session_state["_caps_nonce_seen"] = nonce
     if (time.time() - saved_at > _CAPS_SECONDS or wanted_now) and token not in _CAPS_BUSY:
         _CAPS_BUSY.add(token)
-        _BACKGROUND.submit(_fetch_market_caps, token, crypto_ids, stock_tickers)
+        _background(_fetch_market_caps, token, crypto_ids, stock_tickers)
     return data
 
 
 _BACKGROUND = ThreadPoolExecutor(max_workers=2)
+_SCORING_NOW = 0
+_SCORING_LOCK = threading.Lock()
+
+
+class _scoring_busy:
+    """Marks that scores are being worked out, so background jobs wait their turn instead of
+    competing with the page for the same processor."""
+
+    def __enter__(self):
+        global _SCORING_NOW
+        with _SCORING_LOCK:
+            _SCORING_NOW += 1
+
+    def __exit__(self, *_exc):
+        global _SCORING_NOW
+        with _SCORING_LOCK:
+            _SCORING_NOW = max(0, _SCORING_NOW - 1)
+        return False
+
+
+def _run_when_quiet(function, *args):
+    """Run a background job once no page is working out scores. It never waits longer than 30 seconds."""
+    waited = 0.0
+    while _SCORING_NOW > 0 and waited < 30:
+        time.sleep(0.1)
+        waited += 0.1
+    return function(*args)
+
+
+def _background(function, *args) -> None:
+    _BACKGROUND.submit(_run_when_quiet, function, *args)
+
 
 _EARN_STORE: dict = {}
 _EARN_BUSY: set = set()
@@ -7785,7 +7819,7 @@ def load_earnings(stock_tickers, shared=None) -> dict:
     saved_at, data = stored
     if time.time() - saved_at > _EARN_SECONDS and token not in _EARN_BUSY:
         _EARN_BUSY.add(token)
-        _BACKGROUND.submit(_fetch_earnings, token)
+        _background(_fetch_earnings, token)
     return data
 
 
@@ -8041,7 +8075,7 @@ def _share_market_rows(crypto_watchlist, stock_watchlist, crypto_results, stock_
     # An asset with no saved row yet is simply missing, and reading again would not change that.
     reuse_shared = earlier is not None and not st.session_state.get("_shared_reread")
     # Saving the closes is not needed to draw the page, so it runs behind the scenes.
-    _BACKGROUND.submit(save_price_paths, supabase, priced)
+    _background(save_price_paths, supabase, priced)
     prefetch = st.session_state.get("_prefetch") or {}
     jobs = {}
     if not reuse_shared:
@@ -8134,7 +8168,7 @@ def _asset_logos(crypto_watchlist, stock_watchlist, shared: dict) -> dict[str, s
                 _LOGO_ASKED[key] = now
                 (missing_crypto if kind == "Crypto" else missing_stock).append(asset_id)
     if missing_crypto or missing_stock:
-        _BACKGROUND.submit(_fetch_logos_later, list(missing_crypto), list(missing_stock))
+        _background(_fetch_logos_later, list(missing_crypto), list(missing_stock))
     st.session_state["asset_logos"] = logos
     st.session_state["_logo_lacking"] = lacking
     return logos
@@ -8660,6 +8694,8 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
         # Market cap still uses a short cache. Prices and sentiment come from the shared rows.
         nonce = st.session_state.data_nonce
 
+        spent = {"bars": 0.0, "maths": 0.0}
+
         def process_watchlist(watchlist, is_crypto=True):
             results = []
             for key, name in watchlist.items():
@@ -8668,7 +8704,9 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                     if ticker and str(key).strip().upper() == ticker:
                         name = ticker
                 kind = "Crypto" if is_crypto else "Stock"
+                bars_from = time.perf_counter()
                 df, err = _stored_bars(kind, key, history_days)
+                spent["bars"] += time.perf_counter() - bars_from
 
                 result = {
                     "symbol": name if is_crypto else f"{name} ({key})",
@@ -8709,10 +8747,12 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                             len(df),
                             float(df["close"].iloc[-1]),
                         )
+                        maths_from = time.perf_counter()
                         try:
                             scored = _scored_asset(kind, str(key), int(history_days), weights_key, stamp, df)
                         except Exception:
                             scored = compute_score(calculate_indicators(df), weights=weights)
+                        spent["maths"] += time.perf_counter() - maths_from
                         if isinstance(scored, dict):
                             result.update(scored)
                             result["symbol"] = name if is_crypto else f"{name} ({key})"
@@ -8726,9 +8766,11 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             return results
 
         worked_before = _SCORES_WORKED_OUT
-        with _timed("scores for every asset"):
+        with _timed("scores for every asset"), _scoring_busy():
             crypto_results = process_watchlist(crypto_watchlist, is_crypto=True) if trade_crypto else []
             stock_results = process_watchlist(stock_watchlist, is_crypto=False) if trade_equities else []
+        st.session_state["_perf"]["  of which loading saved prices"] = round(spent["bars"] * 1000)
+        st.session_state["_perf"]["  of which indicator maths"] = round(spent["maths"] * 1000)
         st.session_state["_perf"]["  scores worked out fresh (0 means all remembered)"] = _SCORES_WORKED_OUT - worked_before
         # Crypto ranks always show, so crypto is always asked about. Stock caps only when extra metrics are on.
         stock_for_caps = tuple(stock_watchlist) if (trade_equities and show_extra_metrics_flag) else ()
