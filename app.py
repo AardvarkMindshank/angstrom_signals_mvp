@@ -6313,10 +6313,7 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
 
     st.divider()
     with tracked_expander("UI Colours", "colours"):
-        st.caption(
-            "Your colours save on this account as you change them. In each picture and each pair of pickers, "
-            "the left is day and the right is night. Drag a colour onto another to copy it."
-        )
+        st.caption("Your colours save on this account as you change them. Select a picture to try a different colour scheme.")
         slot = _saved_colour_slot()
         st.markdown("**My saved colours**")
         with st.container(key="themepick_saved", gap=0):
@@ -6358,6 +6355,7 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
                         on_click=_use_colours, args=(colour_themes.THEMES[name],),
                     )
         st.markdown("**Fine tune**")
+        st.caption("Change the colour of individual UI elements. Drag and drop colours to copy them. Save and reset using the icons above.")
         for label, day_key, night_key in (
             ("Page", "page_day", "page_night"),
             ("Section heading", "heading_day", "heading_night"),
