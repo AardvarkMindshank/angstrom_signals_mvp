@@ -301,6 +301,15 @@ alter table public.asset_market
 alter table public.asset_market
     add column if not exists prices_updated_at timestamptz;
 
+alter table public.asset_market
+    add column if not exists market_cap numeric;
+
+alter table public.asset_market
+    add column if not exists market_rank integer;
+
+alter table public.asset_market
+    add column if not exists market_stats_updated_at timestamptz;
+
 alter table public.asset_market enable row level security;
 
 drop policy if exists "signed-in users read shared market data" on public.asset_market;
@@ -353,6 +362,12 @@ begin
     if new.logo_url is not null and new.logo_url !~* '^https://' then
         raise exception 'logo_url must be an https address';
     end if;
+    if new.market_cap is not null and new.market_cap < 0 then
+        raise exception 'market_cap cannot be negative';
+    end if;
+    if new.market_rank is not null and (new.market_rank < 1 or new.market_rank > 1000000) then
+        raise exception 'market_rank is out of range';
+    end if;
     if pg_column_size(new.closes) > 262144
        or pg_column_size(new.prices) > 1048576
        or pg_column_size(new.sentiment_report) > 65536 then
@@ -360,7 +375,8 @@ begin
     end if;
     if new.closes_updated_at > ceiling_at
        or new.sentiment_updated_at > ceiling_at
-       or new.prices_updated_at > ceiling_at then
+       or new.prices_updated_at > ceiling_at
+       or new.market_stats_updated_at > ceiling_at then
         raise exception 'timestamps cannot be in the future';
     end if;
 
@@ -396,6 +412,15 @@ begin
 
     if old.logo_url is not null then
         new.logo_url := old.logo_url;
+    end if;
+
+    -- Market cap and rank follow the same rule: kept for 20 minutes, then a newer reading may replace them.
+    if old.market_stats_updated_at is not null
+       and (old.market_stats_updated_at > now() - interval '20 minutes'
+            or new.market_stats_updated_at is null or new.market_stats_updated_at <= old.market_stats_updated_at) then
+        new.market_cap := old.market_cap;
+        new.market_rank := old.market_rank;
+        new.market_stats_updated_at := old.market_stats_updated_at;
     end if;
 
     return new;

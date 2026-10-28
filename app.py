@@ -3484,6 +3484,7 @@ try:
     from data_fetchers import (
         crypto_logo_urls,
         crypto_market_caps,
+        crypto_market_stats,
         crypto_ticker,
         fetch_crypto_data,
         fetch_stock_data,
@@ -3512,9 +3513,11 @@ try:
         market_mood_crowd,
         frame_from_row,
         load_shared_market,
+        market_stats_from_rows,
         recent_closes,
         row_timestamp,
         save_logos,
+        save_market_stats,
         save_market_mood,
         set_chat_vote,
         set_signal_vote,
@@ -7536,34 +7539,64 @@ _CAPS_SECONDS = 1800
 
 _CAPS_STORE: dict = {}
 _CAPS_BUSY: set = set()
+_CAPS_RETRY_SECONDS = 120
 
 
 def _fetch_market_caps(token, crypto_ids, stock_tickers) -> dict:
-    """Ask the data providers, keep the answer, and return it. Safe to run behind the scenes."""
+    """Ask the data providers, keep the answer, and save it for next time. Safe to run behind the scenes.
+    An empty answer is a failed ask, not a result, so the last good numbers stay and it tries again soon."""
+    previous = _CAPS_STORE.get(token)
+    base = previous[1] if previous else {"crypto": {}, "rank": {}, "stock": {}}
     try:
+        crypto_stats = crypto_market_stats(crypto_ids) if crypto_ids else {}
+        stock_caps = stock_market_caps(stock_tickers) if stock_tickers else {}
         fresh = {
-            "crypto": crypto_market_caps(crypto_ids),
-            "stock": stock_market_caps(stock_tickers),
+            "crypto": {k: v["cap"] for k, v in crypto_stats.items() if v.get("cap") is not None},
+            "rank": {k: v["rank"] for k, v in crypto_stats.items() if v.get("rank") is not None},
+            "stock": dict(stock_caps),
         }
-        _CAPS_STORE[token] = (time.time(), fresh)
-        return fresh
+        complete = (not crypto_ids or bool(crypto_stats)) and (not stock_tickers or bool(stock_caps))
+        merged = {name: {**base.get(name, {}), **fresh[name]} for name in fresh}
+        if complete:
+            _CAPS_STORE[token] = (time.time(), merged)
+        else:
+            _CAPS_STORE[token] = (time.time() - _CAPS_SECONDS + _CAPS_RETRY_SECONDS, merged)
+        rows = [
+            {"kind": "Crypto", "asset_id": coin_id, "cap": stats.get("cap"), "rank": stats.get("rank")}
+            for coin_id, stats in crypto_stats.items()
+        ]
+        rows += [{"kind": "Stock", "asset_id": ticker, "cap": cap, "rank": None} for ticker, cap in stock_caps.items()]
+        save_market_stats(supabase, rows)
+        return merged
     except Exception as exc:
         print(f"market caps failed: {exc}")
-        empty = {"crypto": {}, "stock": {}}
-        _CAPS_STORE[token] = (time.time() - _CAPS_SECONDS + 300, empty)
-        return empty
+        _CAPS_STORE[token] = (time.time() - _CAPS_SECONDS + _CAPS_RETRY_SECONDS, base)
+        return base
     finally:
         _CAPS_BUSY.discard(token)
 
 
-def load_market_caps(crypto_ids, stock_tickers, nonce):
-    """Market caps for the watchlists. The first ever ask waits for the answer. After that the page
-    uses the last answer straight away, and a refresh runs behind the scenes about every half hour."""
+def load_market_caps(crypto_ids, stock_tickers, nonce, shared=None):
+    """Market caps and crypto ranks for the watchlists. They are saved in the database, so a restart
+    shows the last saved numbers straight away. The very first ask with nothing saved waits for the
+    answer. After that the page never waits, and a refresh runs behind the scenes about every half hour."""
     token = (tuple(crypto_ids), tuple(stock_tickers))
     stored = _CAPS_STORE.get(token)
     if stored is None:
-        _CAPS_BUSY.add(token)
-        return _fetch_market_caps(token, crypto_ids, stock_tickers)
+        saved = market_stats_from_rows(shared or {})
+        wanted_crypto = {str(c).lower() for c in crypto_ids}
+        wanted_stock = {str(t).upper() for t in stock_tickers}
+        from_db = {
+            "crypto": {k: v["cap"] for k, v in saved["crypto"].items() if k in wanted_crypto and v.get("cap") is not None},
+            "rank": {k: v["rank"] for k, v in saved["crypto"].items() if k in wanted_crypto and v.get("rank") is not None},
+            "stock": {k: v["cap"] for k, v in saved["stock"].items() if k in wanted_stock and v.get("cap") is not None},
+        }
+        if from_db["crypto"] or from_db["stock"]:
+            _CAPS_STORE[token] = (time.time() - _CAPS_SECONDS - 1, from_db)
+            stored = _CAPS_STORE[token]
+        else:
+            _CAPS_BUSY.add(token)
+            return _fetch_market_caps(token, crypto_ids, stock_tickers)
     saved_at, data = stored
     asked_nonce = st.session_state.get("_caps_nonce_seen")
     wanted_now = asked_nonce is not None and asked_nonce != nonce
@@ -8518,15 +8551,16 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             crypto_results = process_watchlist(crypto_watchlist, is_crypto=True) if trade_crypto else []
             stock_results = process_watchlist(stock_watchlist, is_crypto=False) if trade_equities else []
         st.session_state["_perf"]["  scores worked out fresh (0 means all remembered)"] = _SCORES_WORKED_OUT - worked_before
-        if show_extra_metrics_flag:
-            with _timed("market caps"):
-                caps = load_market_caps(
-                    tuple(crypto_watchlist) if trade_crypto else (),
-                    tuple(stock_watchlist) if trade_equities else (),
-                    nonce,
-                )
+        # Crypto ranks always show, so crypto is always asked about. Stock caps only when extra metrics are on.
+        stock_for_caps = tuple(stock_watchlist) if (trade_equities and show_extra_metrics_flag) else ()
+        crypto_for_caps = tuple(crypto_watchlist) if trade_crypto else ()
+        if crypto_for_caps or stock_for_caps:
+            with _timed("market caps and ranks"):
+                caps = load_market_caps(crypto_for_caps, stock_for_caps, nonce, st.session_state.get("_shared_rows"))
             for row in crypto_results:
-                row["market_cap"] = (caps.get("crypto") or {}).get(str(row.get("key") or "").lower())
+                coin = str(row.get("key") or "").lower()
+                row["market_cap"] = (caps.get("crypto") or {}).get(coin)
+                row["market_rank"] = (caps.get("rank") or {}).get(coin)
             for row in stock_results:
                 row["market_cap"] = (caps.get("stock") or {}).get(str(row.get("key") or "").upper())
         change_rows = crypto_results + stock_results
@@ -8798,7 +8832,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             frame = pd.DataFrame(results).sort_values("score", ascending=False, na_position="last")
             st.caption("Click a column title to sort. The table starts with the strongest score at the top. Click a name to show that asset on the chart. Hover a TA score to read why it landed there, and click it to open the score breakdown. Click the sentiment score, the thumbs, or the crowd average to open its headlines. Watching is how many accounts hold that asset. The Crowd box is the average of personal scores. Hover the down thumb for the spread. A comment balloon, or the arrow on the right edge, opens the social signals and chat. The 30-day trend uses the same colors as 30d %.")
 
-            headers = ["Asset", "Watching", "TA Score", "Signal", "Price", "RSI"]
+            headers = ["Asset", "Watching"] + (["Rank"] if kind == "Crypto" else []) + ["TA Score", "Signal", "Price", "RSI"]
             if show_period_changes_flag:
                 headers.append("1d %")
             if show_extra_metrics_flag:
@@ -8812,8 +8846,11 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             if show_comments:
                 headers.append("Comments")
             headers.append("30-day trend")
-            sort_at = {"Asset": 0, "Watching": 1, "TA Score": 2, "Signal": 3, "Price": 4, "RSI": 5}
-            column = 6
+            lead = 3 if kind == "Crypto" else 2
+            sort_at = {"Asset": 0, "Watching": 1, "TA Score": lead, "Signal": lead + 1, "Price": lead + 2, "RSI": lead + 3}
+            if kind == "Crypto":
+                sort_at["Rank"] = 2
+            column = lead + 4
             for name in ("1d %", "7d %", "30d %", "Market Cap", "ATR %", "Vol"):
                 if name in headers:
                     sort_at[name] = column
@@ -8865,6 +8902,11 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                     "cursor:pointer;white-space:nowrap;'>"
                     f"{html.escape(str(row['symbol']))}</button>"
                 )
+                rank_cell = ""
+                if kind == "Crypto":
+                    rank_value = row.get("market_rank")
+                    rank_ok = rank_value is not None and not pd.isna(rank_value)
+                    rank_cell = cell(f"#{int(rank_value):,}" if rank_ok else "—", rank_value if rank_ok else None, numeric=True)
                 score_box = render_score_bar(row["score"])
                 scored = row.get("score") is not None and not pd.isna(row.get("score"))
                 if scored:
@@ -8882,6 +8924,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                     f"{asset_logo(row.get('logo_url'), row.get('symbol'))}{name_button}</span></td>"
                     f"<td data-sort='{sort_token(row.get('holders'), numeric=True)}' "
                     f"style='padding:8px 10px;white-space:nowrap;'>{holders_mark(row.get('holders'))}</td>"
+                    f"{rank_cell}"
                     f"<td data-sort='{sort_token(row.get('score'), numeric=True)}' "
                     f"style='padding:10px;min-width:168px;'>{score_box}</td>"
                     f"{cell(row.get('label') or '—', row.get('label') or '')}"

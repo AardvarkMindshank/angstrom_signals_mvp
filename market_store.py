@@ -814,6 +814,9 @@ _SHARED_COLUMNS = (
     "prices, prices_updated_at"
 )
 _SHARED_COLUMNS_LEGACY = "asset_key, closes, logo_url, sentiment_report, sentiment_updated_at"
+_SHARED_COLUMNS_STATS = _SHARED_COLUMNS + ", market_cap, market_rank, market_stats_updated_at"
+# The first set that the database accepts is remembered, so a missing column costs one failed ask, not one per load.
+_COLUMN_TIER = 0
 
 
 def _finite(value) -> float | None:
@@ -1133,28 +1136,86 @@ def load_shared_market(supabase, keys: list[str]) -> dict[str, dict]:
     wanted = [key for key in keys if key]
     if not wanted:
         return {}
-    try:
-        response = (
-            supabase.table("asset_market")
-            .select(_SHARED_COLUMNS)
-            .in_("asset_key", wanted)
-            .execute()
-        )
-    except Exception as exc:
-        if "prices" not in str(exc).lower():
-            _warn(exc)
-            return {}
+    global _COLUMN_TIER
+    tiers = (_SHARED_COLUMNS_STATS, _SHARED_COLUMNS, _SHARED_COLUMNS_LEGACY)
+    response = None
+    last_error = None
+    for tier in range(_COLUMN_TIER, len(tiers)):
         try:
             response = (
                 supabase.table("asset_market")
-                .select(_SHARED_COLUMNS_LEGACY)
+                .select(tiers[tier])
                 .in_("asset_key", wanted)
                 .execute()
             )
-        except Exception as fallback:
-            _warn(fallback)
+        except Exception as exc:
+            last_error = exc
+            text = str(exc).lower()
+            if "prices" in text or "market_" in text or "column" in text:
+                continue
+            _warn(exc)
             return {}
+        _COLUMN_TIER = tier
+        break
+    if response is None:
+        _warn(last_error or RuntimeError("shared market data could not be read"))
+        return {}
     return {row["asset_key"]: row for row in (response.data or []) if row.get("asset_key")}
+
+
+def market_stats_from_rows(shared: dict, max_age_seconds: float = 6 * 3600) -> dict:
+    """Saved market caps and ranks, as {"crypto": {id: {...}}, "stock": {...}}. Old ones are left out."""
+    now = datetime.now(timezone.utc).timestamp()
+    out = {"crypto": {}, "stock": {}}
+    for row in (shared or {}).values():
+        if not isinstance(row, dict):
+            continue
+        saved_at = _stored_at(row.get("market_stats_updated_at"))
+        if saved_at is None or now - saved_at > max_age_seconds:
+            continue
+        kind = str(row.get("kind") or "")
+        asset_id = str(row.get("asset_id") or "")
+        key = str(row.get("asset_key") or "")
+        if not asset_id and ":" in key:
+            kind_part, _, asset_id = key.partition(":")
+            kind = kind or kind_part
+        cap = row.get("market_cap")
+        rank = row.get("market_rank")
+        bucket = "stock" if kind.lower().startswith("stock") else "crypto"
+        out[bucket][_canonical_id("Stock" if bucket == "stock" else "Crypto", asset_id)] = {
+            "cap": _finite(cap) if cap is not None else None,
+            "rank": int(rank) if isinstance(rank, (int, float)) and rank > 0 else None,
+        }
+    return out
+
+
+def save_market_stats(supabase, rows: list[dict]) -> None:
+    """Store each asset's market cap and rank. Each row is {kind, asset_id, cap, rank}."""
+    now = datetime.now(timezone.utc).isoformat()
+    payload = {}
+    for row in rows or []:
+        kind = row.get("kind") or "Crypto"
+        asset_id = _canonical_id(kind, row.get("asset_id") or "")
+        cap = _finite(row.get("cap")) if row.get("cap") is not None else None
+        rank = row.get("rank")
+        rank = rank if isinstance(rank, int) and not isinstance(rank, bool) and rank > 0 else None
+        if not asset_id or (cap is None and rank is None):
+            continue
+        key = asset_market_key(kind, asset_id)
+        payload[key] = {
+            "asset_key": key,
+            "kind": kind,
+            "asset_id": asset_id,
+            "market_cap": cap,
+            "market_rank": rank,
+            "market_stats_updated_at": now,
+        }
+    if not payload:
+        return
+    try:
+        supabase.table("asset_market").upsert(list(payload.values()), on_conflict="asset_key").execute()
+    except Exception as exc:
+        _warn(exc)
 
 
 def _stored_at(value) -> float | None:

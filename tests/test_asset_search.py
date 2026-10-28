@@ -42,3 +42,37 @@ def test_finnhub_matches_filter_by_type():
 def test_short_queries_search_nothing(monkeypatch=None):
     assert df.search_crypto_matches("x") == []
     assert df.search_stock_matches("") == []
+
+
+def test_crypto_stats_read_cap_and_rank():
+    payload = [
+        {"id": "Stellar", "market_cap": 3.1e9, "market_cap_rank": 24},
+        {"id": "newcoin", "market_cap": None, "market_cap_rank": None},
+        {"id": "ranked-only", "market_cap": 0, "market_cap_rank": 800},
+        {"id": "bad", "market_cap": "x", "market_cap_rank": True},
+        "junk",
+    ]
+    found = df.parse_crypto_stats(payload)
+    assert found["stellar"] == {"cap": 3.1e9, "rank": 24}
+    assert found["ranked-only"] == {"cap": None, "rank": 800}
+    assert "newcoin" not in found and "bad" not in found
+    assert df.parse_crypto_stats(None) == {}
+
+
+def test_saved_stats_come_back_and_old_ones_do_not():
+    import market_store as ms
+    from datetime import datetime, timedelta, timezone
+    fresh = datetime.now(timezone.utc).isoformat()
+    old = (datetime.now(timezone.utc) - timedelta(hours=9)).isoformat()
+    rows = {
+        "crypto:stellar": {"asset_key": "crypto:stellar", "kind": "Crypto", "asset_id": "stellar",
+                           "market_cap": 3e9, "market_rank": 24, "market_stats_updated_at": fresh},
+        "crypto:oldcoin": {"asset_key": "crypto:oldcoin", "kind": "Crypto", "asset_id": "oldcoin",
+                           "market_cap": 1e9, "market_rank": 90, "market_stats_updated_at": old},
+        "stock:aapl": {"asset_key": "stock:aapl", "kind": "Stock", "asset_id": "AAPL",
+                       "market_cap": 3e12, "market_rank": None, "market_stats_updated_at": fresh},
+        "crypto:empty": {"asset_key": "crypto:empty", "kind": "Crypto", "asset_id": "empty"},
+    }
+    got = ms.market_stats_from_rows(rows)
+    assert got["crypto"] == {"stellar": {"cap": 3e9, "rank": 24}}
+    assert got["stock"]["AAPL"]["cap"] == 3e12 and got["stock"]["AAPL"]["rank"] is None

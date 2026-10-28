@@ -443,8 +443,25 @@ def format_market_cap(value) -> str:
     return f"${number:,.0f}"
 
 
-def crypto_market_caps(coin_ids) -> dict[str, float]:
-    """Latest USD market cap from CoinGecko. One request for the whole list."""
+def parse_crypto_stats(payload) -> dict[str, dict]:
+    """Market cap and market-cap rank for each coin in a CoinGecko markets answer."""
+    found = {}
+    for item in payload or []:
+        if not isinstance(item, dict):
+            continue
+        coin_id = str(item.get("id") or "").strip().lower()
+        if not coin_id:
+            continue
+        cap = _finite_cap(item.get("market_cap"))
+        rank = item.get("market_cap_rank")
+        rank = rank if isinstance(rank, int) and not isinstance(rank, bool) and rank > 0 else None
+        if cap is not None or rank is not None:
+            found[coin_id] = {"cap": cap, "rank": rank}
+    return found
+
+
+def crypto_market_stats(coin_ids) -> dict[str, dict]:
+    """Latest USD market cap and rank from CoinGecko. One request for the whole list."""
     ids = []
     for coin_id in coin_ids or []:
         cleaned = str(coin_id or "").strip().lower()
@@ -469,15 +486,19 @@ def crypto_market_caps(coin_ids) -> dict[str, float]:
         return {}
     if response.status_code != 200:
         return {}
-    found = {}
-    for item in response.json() or []:
-        if not isinstance(item, dict):
-            continue
-        coin_id = str(item.get("id") or "").strip().lower()
-        cap = _finite_cap(item.get("market_cap"))
-        if coin_id and cap is not None:
-            found[coin_id] = cap
-    return found
+    try:
+        return parse_crypto_stats(response.json())
+    except ValueError:
+        return {}
+
+
+def crypto_market_caps(coin_ids) -> dict[str, float]:
+    """Latest USD market cap from CoinGecko. One request for the whole list."""
+    return {
+        coin_id: stats["cap"]
+        for coin_id, stats in crypto_market_stats(coin_ids).items()
+        if stats.get("cap") is not None
+    }
 
 
 def _stock_market_cap(symbol: str) -> float | None:
