@@ -3590,6 +3590,8 @@ export default function(component) {
   const { data, parentElement } = component;
   const shell = parentElement.closest(".stBidiComponent") || parentElement;
   shell.style.display = "none";
+  const holder = shell.closest('[data-testid="stElementContainer"]');
+  if (holder) holder.style.display = "none";
   if (!("BroadcastChannel" in window)) return;
   const access = String((data && data.access) || "");
   window.__angstromAccess = access;
@@ -3620,6 +3622,8 @@ export default function(component) {
   const { data, setTriggerValue, parentElement } = component;
   const shell = parentElement.closest(".stBidiComponent") || parentElement;
   shell.style.display = "none";
+  const holder = shell.closest('[data-testid="stElementContainer"]');
+  if (holder) holder.style.display = "none";
   window.__angstromHandoffSet = setTriggerValue;
   const current = String((data && data.current) || "");
   if (!("BroadcastChannel" in window)) {
@@ -3670,6 +3674,8 @@ export default function(component) {
   const { data, parentElement } = component;
   const shell = parentElement.closest(".stBidiComponent") || parentElement;
   shell.style.display = "none";
+  const holder = shell.closest('[data-testid="stElementContainer"]');
+  if (holder) holder.style.display = "none";
   if (!("BroadcastChannel" in window)) return;
   const token = String((data && data.n) || "");
   if (!token || window.__angstromLogoutSent === token) return;
@@ -3690,6 +3696,8 @@ export default function(component) {
   const { data, parentElement } = component;
   const shell = parentElement.closest(".stBidiComponent") || parentElement;
   shell.style.display = "none";
+  const holder = shell.closest('[data-testid="stElementContainer"]');
+  if (holder) holder.style.display = "none";
   const ids = Array.isArray(data && data.ids) ? data.ids.map(String) : [];
   window.__angstromPopoutIds = ids;
   if (window.__angstromPopoutTimer) return;
@@ -3751,6 +3759,8 @@ export default function(component) {
   const { parentElement } = component;
   const shell = parentElement.closest(".stBidiComponent") || parentElement;
   shell.style.display = "none";
+  const holder = shell.closest('[data-testid="stElementContainer"]');
+  if (holder) holder.style.display = "none";
   if (!("BroadcastChannel" in window) || window.__angstromFollowRx) return;
   const channel = new BroadcastChannel("angstrom-link");
   window.__angstromFollowRx = channel;
@@ -3779,6 +3789,8 @@ export default function(component) {
   const { data, setTriggerValue, parentElement } = component;
   const shell = parentElement.closest(".stBidiComponent") || parentElement;
   shell.style.display = "none";
+  const holder = shell.closest('[data-testid="stElementContainer"]');
+  if (holder) holder.style.display = "none";
   if (!("BroadcastChannel" in window)) return;
   window.__angstromLinkRefresh = setTriggerValue;
   const key = String((data && data.key) || "");
