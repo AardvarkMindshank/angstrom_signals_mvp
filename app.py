@@ -7713,9 +7713,8 @@ def _share_market_rows(crypto_watchlist, stock_watchlist, crypto_results, stock_
     # The prices were read a moment ago at the top of this load. Read them again only when
     # something has just been saved, or the earlier read was empty.
     earlier = st.session_state.get("_shared_rows")
-    reuse_shared = bool(earlier) and not st.session_state.get("_shared_reread") and all(
-        key in earlier for key in market_keys
-    )
+    # An asset with no saved row yet is simply missing, and reading again would not change that.
+    reuse_shared = earlier is not None and not st.session_state.get("_shared_reread")
     # Saving the closes is not needed to draw the page, so it runs behind the scenes.
     _BACKGROUND.submit(save_price_paths, supabase, priced)
     prefetch = st.session_state.get("_prefetch") or {}
