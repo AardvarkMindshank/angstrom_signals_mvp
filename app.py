@@ -307,13 +307,13 @@ export default function(component) {
       "[data-baseweb='input'],[data-baseweb='textarea'],[data-baseweb='select'] > div,[data-testid='stFileUploaderDropzone']{border:1px solid var(--ang-border) !important;}",
       "[data-testid='stTextInputRootElement'],[data-testid='stNumberInputContainer'],[data-testid='stTextAreaRootElement'],[data-testid='stDateInputField'],[data-testid='stMultiSelect'] [data-baseweb='select'] > div{border-color:var(--ang-border) !important;}",
       "[class*='_take_box'] [data-testid='stForm'],[class*='_take_box'] [data-testid='stForm'] *:not(input):not(textarea):not(button):not([data-baseweb]):not([data-baseweb] *){background:transparent !important;background-color:transparent !important;}",
-      "[class*='st-key-colour_theme_']{position:relative;cursor:pointer;}",
-      "[class*='st-key-colour_pick_']{position:absolute !important;inset:0;margin:0 !important;z-index:2;}",
-      "[class*='st-key-colour_pick_'] [data-testid='stButton'],[class*='st-key-colour_pick_'] button{width:100% !important;height:100% !important;}",
-      "[class*='st-key-colour_pick_'] button{opacity:0;cursor:pointer;}",
+      "[class*='st-key-themepick_card_']{position:relative;cursor:pointer;}",
+      "[class*='st-key-themepick_btn_']{position:absolute !important;inset:0;margin:0 !important;z-index:2;}",
+      "[class*='st-key-themepick_btn_'] [data-testid='stButton'],[class*='st-key-themepick_btn_'] button{width:100% !important;height:100% !important;}",
+      "[class*='st-key-themepick_btn_'] button{opacity:0;cursor:pointer;}",
       ".theme-pick .theme-name{text-align:center;font-size:.85rem;color:var(--ang-text);padding-bottom:2px;}",
-      "[class*='st-key-colour_theme_']:hover .theme-pick > div:first-child{outline:2px solid #3b82f6;outline-offset:1px;}",
-      "[class*='st-key-colour_theme_']:not(.st-key-colour_theme_grid),.st-key-colour_saved_card{width:8.5rem !important;flex:0 0 8.5rem !important;}",
+      "[class*='st-key-themepick_card_']:hover .theme-pick > div:first-child{outline:2px solid #3b82f6;outline-offset:1px;}",
+      "[class*='st-key-themepick_card_'],.st-key-themepick_saved{width:8.5rem !important;flex:0 0 8.5rem !important;}",
       "[class*='st-key-colours_save_slot'] button,[class*='st-key-colours_back_slot'] button,[class*='st-key-reset_colours'] button{width:2.05rem !important;min-width:2.05rem !important;height:2.05rem !important;min-height:2.05rem !important;padding:0 !important;display:inline-flex;align-items:center;justify-content:center;}",
       "[class*='st-key-colours_save_slot'],[class*='st-key-colours_back_slot'],[class*='st-key-reset_colours']{width:2.05rem !important;flex:0 0 auto !important;}",
       ".st-key-admin_feedback_head,.st-key-admin_reports_head,.st-key-admin_blacklist_head,.st-key-admin_beta_head{position:sticky;top:0;z-index:4;background:var(--ang-section);}",
@@ -6310,7 +6310,7 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
         )
         slot = _saved_colour_slot()
         st.markdown("**My saved colours**")
-        with st.container(key="colour_saved_card", gap=0):
+        with st.container(key="themepick_saved", gap=0):
             if slot:
                 st.html(
                     "<div class='theme-pick'>" + colour_themes.swatch_html(slot)
@@ -6318,7 +6318,7 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
                 )
             else:
                 st.caption("Nothing saved yet. Press the disk icon to keep these colours.")
-        with st.container(horizontal=True, gap="xsmall", width="content", key="colour_icon_row"):
+        with st.container(horizontal=True, gap="xsmall", width="content", key="themepick_icons"):
             st.button(
                 ":material/save:", key="colours_save_slot", on_click=_save_colour_slot, width="content",
                 help="Save current: keeps the colours you have now, so you can come back to them after experimenting.",
@@ -6335,17 +6335,17 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
                 st.rerun()
         st.markdown("**Ready-made themes**")
         st.caption("Click a picture to try it. You can still change any colour afterwards, and the undo arrow returns to your saved colours.")
-        with st.container(horizontal=True, gap="small", key="colour_theme_grid"):
+        with st.container(horizontal=True, gap="small", key="themepick_grid"):
             for name in colour_themes.THEMES:
                 slug = name.lower().replace(" ", "_")
-                with st.container(key=f"colour_theme_{slug}", gap=0):
+                with st.container(key=f"themepick_card_{slug}", gap=0):
                     st.html(
                         "<div class='theme-pick'>"
                         + colour_themes.swatch_html(colour_themes.THEMES[name])
                         + f"<div class='theme-name'>{html.escape(name)}</div></div>"
                     )
                     st.button(
-                        name, key=f"colour_pick_{slug}", help=f"Try the {name} colours",
+                        name, key=f"themepick_btn_{slug}", help=f"Try the {name} colours",
                         on_click=_use_colours, args=(colour_themes.THEMES[name],),
                     )
         st.markdown("**Fine tune**")
