@@ -60,7 +60,13 @@ if _POPOUT_VIEW:
         "<style>[data-testid='stSidebar'],[data-testid='stSidebarCollapsedControl'],"
         "[data-testid='stHeader'],[data-testid='stToolbar'],.st-key-page_header,"
         ".st-key-sec_help_guides,[class*='st-key-hide_'],.angstrom-sidebar-tab,#social-stream-root .edge"
-        "{display:none !important;}</style>",
+        "{display:none !important;}"
+        # Trim the room around a lone section: less padding, and no gaps between the hidden helpers.
+        "[data-testid='stMainBlockContainer'],.stMainBlockContainer"
+        "{padding-top:0.75rem !important;padding-bottom:0.75rem !important;}"
+        "[data-testid='stMainBlockContainer'] > [data-testid='stVerticalBlock'],"
+        ".stMainBlockContainer > [data-testid='stVerticalBlock']{gap:0 !important;}"
+        "[data-testid='stMain'] footer,[data-testid='stBottom']{display:none !important;}</style>",
         unsafe_allow_html=True,
     )
 
