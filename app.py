@@ -457,6 +457,37 @@ export default function(component) {
       attributeFilter: ["data-collapsed", "style", "class"]
     });
     window.addEventListener("resize", () => placeSidebarTab());
+    // Dragging the sidebar edge must not throw the page or the sidebar back to the top.
+    let dragKeep = null;
+    const scrollersNow = () => [
+      document.querySelector("[data-testid='stMain']"),
+      document.querySelector("section.main"),
+      document.querySelector("[data-testid='stSidebarContent']"),
+      document.querySelector("[data-testid='stSidebar'] > div"),
+    ].filter(Boolean);
+    const snapshotScroll = () => ({
+      window: window.scrollY,
+      nodes: scrollersNow().map((node) => [node, node.scrollTop]),
+    });
+    const restoreScroll = () => {
+      if (!dragKeep) return;
+      if (window.scrollY === 0 && dragKeep.window > 0) window.scrollTo({top: dragKeep.window, behavior: "auto"});
+      dragKeep.nodes.forEach(([node, top]) => {
+        if (top > 0 && node.scrollTop === 0) node.scrollTop = top;
+      });
+    };
+    document.addEventListener("pointerdown", (event) => {
+      const sidebar = document.querySelector("[data-testid='stSidebar']");
+      if (!sidebar || sidebar.getAttribute("data-collapsed") === "true") return;
+      const edge = sidebar.getBoundingClientRect().right;
+      if (Math.abs(event.clientX - edge) <= 10) dragKeep = snapshotScroll();
+    }, true);
+    document.addEventListener("pointermove", () => { if (dragKeep) restoreScroll(); }, true);
+    document.addEventListener("pointerup", () => {
+      if (!dragKeep) return;
+      [0, 120, 400, 900].forEach((ms) => setTimeout(restoreScroll, ms));
+      setTimeout(() => { dragKeep = null; }, 1000);
+    }, true);
   }
   return () => {};
 }
