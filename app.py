@@ -6015,11 +6015,13 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
         st.session_state.days_history = min(365, max(90, saved_days))
     # Keep these for the whole session. A partial redraw otherwise drops them,
     # and the next full run saves the blank defaults (90 days, toggles off, cryptos).
+    st.markdown("**Markets you trade**")
     st.radio(
         "Markets you trade",
         _TRADE_CHOICES,
         key="trade_markets",
         persist_state="session",
+        label_visibility="collapsed",
     )
     st.divider()
     days_history = st.slider(
