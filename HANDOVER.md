@@ -86,7 +86,11 @@ This is the plan agreed on 29 October and updated on 30 October. A longer versio
 
 Phase 3 design notes (for when it restarts): hourly bars are about 24 times the daily volume, so measure database size and free-tier limits first; fetch hourly bars on their own schedule so the 5-minute price refresh stays fast; stock hourly data has overnight and weekend gaps and must say so; 4-hour bars are built from 1-hour bars; the combined score would blend the four timeframes with weekly weighted heaviest and 1-hour for timing.
 
-Three "open decisions" in the plan document are ticked as decided, but **the answers were never written into the document**: whether the combined score is shown to all users or kept as a later pro feature; whether alerts follow one chosen timeframe or are set per timeframe; and whether hourly data's storage and refresh cost is acceptable on the current hosting plan. Confirm them with Angus before Phase 3 restarts.
+The three "open decisions" in the plan, as confirmed by Angus on 30 October:
+
+- **Combined score:** shown to everyone for now. A tiered user model will come later, so new features should be built so they can be placed in a tier.
+- **Alerts per timeframe:** still open. The question is which timeframe's score triggers an alert (for example, whether a 1-hour score crossing 70 should alert), not when emails arrive. Decide when Phase 3 restarts.
+- **Hosting cost of hourly data:** not pursued during the closed beta, where performance matters less. Revisit with Phase 3. A whole-app code review for unnecessary refreshes is wanted now regardless (section 10, step 3).
 
 Who checks what: Claude owns logic, tests, backtests and data code; Angus and Drew judge whether scores and regime labels match their reading of the market and how the screen looks; Cursor does visual polish.
 
@@ -171,12 +175,13 @@ Everything below is committed and pushed. Latest commit at time of writing: `ce8
 
 1. Live-test Approve/Reject and the daily digest (section 9).
 2. Look at the screen for everything listed as unverified in section 8; send screenshots of anything wrong.
-3. Cut unnecessary refreshes. Start from the Admin "Page timing" numbers and the Render plan, then audit the rerun sources.
+3. Code review of the whole app for unnecessary refreshes. Start from the Admin "Page timing" numbers and the Render plan, then audit every rerun source.
 4. Optional chart tidy-ups (remove RSI guide lines in overlay mode, round right-axis ticks, tidy legend).
 5. Drew's daily ideas. They may reorder this list.
 6. Backlog: custom alert rules; a better "What changed" panel; a worker health message; a regime icon per asset; back-fill of past earnings dates; BTC funding backtests; more assets and an extremes-only backtest to look for a score edge.
-7. Phase 2 (weekly bars) only if wanted; Phase 3 only after the score shows an edge and the three open decisions are written down.
-8. Update the work-plan document: its backlog still lists "digest alerts", which is now built.
+7. Phase 2 (weekly bars) only if wanted; Phase 3 only after the score shows an edge and the alerts-per-timeframe question is decided.
+
+The built-in browser now works in the linked chat ("Claude Code vs Cowork"), so screen checks can be done by Claude directly. Streamlit redraws after every click, so wait for the page to settle and re-read positions before each click.
 
 ## 11. Working practices and traps
 
