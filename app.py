@@ -3949,7 +3949,7 @@ _popout_buttons = st.components.v2.component(
 
 _ASSET_FOLLOW_JS = """
 export default function(component) {
-  const { parentElement } = component;
+  const { data, parentElement } = component;
   const shell = parentElement.closest(".stBidiComponent") || parentElement;
   shell.style.display = "none";
   const holder = shell.closest('[data-testid="stElementContainer"]');
@@ -3957,9 +3957,12 @@ export default function(component) {
   if (!("BroadcastChannel" in window) || window.__angstromFollowRx) return;
   const channel = new BroadcastChannel("angstrom-link");
   window.__angstromFollowRx = channel;
+  // The main page follows too, but quietly: it does not scroll, and it does not ask the other tabs
+  // what they have open (that would let a pop-out override the main page's own choice on load).
+  const quiet = !!(data && data.quiet);
   const pick = (kind, id, tries) => {
     if (window.__angstromPickAsset) {
-      window.__angstromPickAsset("picked", kind + "|" + id);
+      window.__angstromPickAsset("picked", kind + "|" + id + (quiet ? "|quiet" : ""));
     } else if (tries < 10) {
       window.setTimeout(() => pick(kind, id, tries + 1), 300);
     }
@@ -3968,7 +3971,7 @@ export default function(component) {
     const msg = event.data || {};
     if (msg.type === "asset" && msg.kind && msg.id) pick(String(msg.kind), String(msg.id), 0);
   };
-  channel.postMessage({ type: "hello" });
+  if (!quiet) channel.postMessage({ type: "hello" });
 }
 """
 _asset_follow = st.components.v2.component(
@@ -11280,7 +11283,8 @@ def _take_alert_pick() -> None:
     raw = str(getattr(reported, "picked", "") or "")
     if "|" not in raw or st.session_state.get("_alert_pick_seen") == raw:
         return
-    kind_name, asset_id = raw.split("|", 1)
+    kind_name, asset_id = raw.split("|")[:2]
+    quiet = raw.endswith("|quiet")
     if kind_name == "Crypto":
         chosen = CRYPTO_WATCHLIST
     elif kind_name == "Stock":
@@ -11297,6 +11301,8 @@ def _take_alert_pick() -> None:
         st.session_state.asset_crypto = asset_id
     else:
         st.session_state.asset_stock = asset_id
+    if quiet:
+        return
     st.session_state.scroll_target = "interactive-chart"
     st.session_state.scroll_token = str(time.time_ns())
     _remember_section("interactive_chart", True)
@@ -11368,7 +11374,10 @@ else:
 remember_favourites()
 _take_alert_pick()
 if _POPOUT_VIEW:
-    _asset_follow(key="asset_follow")
+    _asset_follow(key="asset_follow", data={"quiet": False})
+else:
+    # A pick made in a pop-out reaches the main page too.
+    _asset_follow(key="asset_follow", data={"quiet": True})
 
 render_dashboard(
     CRYPTO_WATCHLIST,
