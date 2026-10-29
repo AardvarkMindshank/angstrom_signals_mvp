@@ -36,3 +36,23 @@ def test_unknown_keys_ignored_and_available_order():
     assert plan(["nope"], FULL)["panels"] == ["volume", "rsi"]
     assert available(FULL) == ["sma200", "ichimoku", "macd", "stoch", "adx", "obv"]
     assert available(["close"]) == []
+
+
+def test_overlay_moves_bounded_curves_onto_the_price_panel():
+    out = plan(["stoch", "adx", "macd", "obv"], FULL + ["rsi"], overlay_curves=True)
+    assert out["secondary"] == ["rsi", "stoch", "adx"]
+    assert out["panels"] == ["volume", "macd", "obv"]
+    assert len(out["heights"]) == 1 + len(out["panels"])
+    assert abs(sum(out["heights"]) - 1) < 1e-9
+
+
+def test_overlay_off_keeps_everything_below():
+    out = plan(["stoch"], FULL + ["rsi"])
+    assert out["secondary"] == []
+    assert out["panels"] == ["volume", "rsi", "stoch"]
+
+
+def test_overlay_without_rsi_data_keeps_volume_only():
+    out = plan([], ["close"], overlay_curves=True)
+    assert out["secondary"] == []
+    assert out["panels"] == ["volume", "rsi"]

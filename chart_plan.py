@@ -38,9 +38,15 @@ def available(columns) -> list[str]:
     return [key for key, spec in INDICATORS.items() if _has(columns, spec)]
 
 
-def plan(selected, columns) -> dict:
+# Curves that always run 0 to 100, so they can share one right-hand axis on the price panel.
+BOUNDED = ("rsi", "stoch", "adx")
+
+
+def plan(selected, columns, overlay_curves: bool = False) -> dict:
     """overlays: drawn on the price panel. panels: lower panels, top to bottom.
-    heights: row heights, price first. skipped: chosen but not drawable."""
+    secondary: 0-100 curves drawn on the price panel's right-hand axis (only when overlay_curves).
+    heights: row heights, price first. skipped: chosen but not drawable.
+    MACD and OBV have no fixed range, so they always keep their own panel."""
     chosen = [key for key in INDICATORS if key in set(selected or ())]
     ok = set(available(columns))
     skipped = [key for key in chosen if key not in ok]
@@ -50,11 +56,18 @@ def plan(selected, columns) -> dict:
     if len(extra) > MAX_EXTRA_PANELS:
         skipped += extra[MAX_EXTRA_PANELS:]
         extra = extra[:MAX_EXTRA_PANELS]
-    panels = list(BASE_PANELS) + extra
+    secondary = []
+    if overlay_curves:
+        if "rsi" in [str(name) for name in columns]:
+            secondary.append("rsi")
+        secondary += [key for key in extra if key in BOUNDED]
+        extra = [key for key in extra if key not in BOUNDED]
+    panels = [name for name in BASE_PANELS if not (overlay_curves and name == "rsi" and "rsi" in secondary)] + extra
     each = (1 - PRICE_SHARE) / len(panels)
     return {
         "overlays": overlays,
         "panels": panels,
+        "secondary": secondary,
         "heights": [PRICE_SHARE] + [each] * len(panels),
         "skipped": skipped,
     }

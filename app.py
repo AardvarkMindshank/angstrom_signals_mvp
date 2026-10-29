@@ -9538,7 +9538,15 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                         format_func=_indicator_label,
                         key="chart_indicators",
                     )
-            layout = chart_plan.plan(chosen_indicators, df_chart.columns)
+            overlay_curves = st.checkbox(
+                "Overlay RSI, Stochastic and ADX on the price chart",
+                key="chart_overlay",
+                help=(
+                    "Draws these curves on the price chart against a 0 to 100 scale on the right, "
+                    "instead of in panels underneath. MACD and OBV have no fixed range, so they stay in their own panels."
+                ),
+            )
+            layout = chart_plan.plan(chosen_indicators, df_chart.columns, overlay_curves=overlay_curves)
             panel_titles = {
                 "volume": "Volume", "rsi": "RSI (14)", "macd": "MACD", "stoch": "Stochastic (14, 3)",
                 "adx": "ADX (14)", "obv": "On-balance volume",
@@ -9551,7 +9559,21 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                 vertical_spacing=0.04,
                 row_heights=layout["heights"],
                 subplot_titles=tuple([f"{title} Price"] + [panel_titles[name] for name in panels]),
+                specs=[[{"secondary_y": True}]] + [[{}] for _ in panels],
             )
+
+            def _put(trace, key):
+                """Draw on the price chart's right-hand axis, or in this curve's own panel."""
+                if key in layout["secondary"]:
+                    fig.add_trace(trace, row=1, col=1, secondary_y=True)
+                else:
+                    fig.add_trace(trace, row=row_of[key], col=1)
+
+            def _guide(key, level, colour, dash="dash"):
+                if key in layout["secondary"]:
+                    fig.add_hline(y=level, line_dash=dash, line_color=colour, opacity=0.4, row=1, col=1, secondary_y=True)
+                else:
+                    fig.add_hline(y=level, line_dash=dash, line_color=colour, opacity=0.5, row=row_of[key], col=1)
             fig.add_trace(
                 go.Candlestick(
                     x=df_chart.index, open=df_chart["open"], high=df_chart["high"],
@@ -9625,14 +9647,11 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                 row=row_of["volume"], col=1,
             )
             if "rsi" in df_chart.columns:
-                rsi_row = row_of["rsi"]
-                fig.add_trace(
-                    go.Scatter(x=df_chart.index, y=df_chart["rsi"], name="RSI", line=dict(color="purple", width=1.5)),
-                    row=rsi_row, col=1,
-                )
-                fig.add_hline(y=70, line_dash="dash", line_color="red", opacity=0.5, row=rsi_row, col=1)
-                fig.add_hline(y=30, line_dash="dash", line_color="green", opacity=0.5, row=rsi_row, col=1)
-                fig.add_hline(y=50, line_dash="dot", line_color="gray", opacity=0.3, row=rsi_row, col=1)
+                _put(go.Scatter(x=df_chart.index, y=df_chart["rsi"], name="RSI", line=dict(color="purple", width=1.5)), "rsi")
+                _guide("rsi", 70, "red")
+                _guide("rsi", 30, "green")
+                if "rsi" not in layout["secondary"]:
+                    _guide("rsi", 50, "gray", "dot")
             if "macd" in row_of:
                 macd_row = row_of["macd"]
                 hist_col = find_column(df_chart, "MACDh_")
@@ -9651,17 +9670,17 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                 if signal_col:
                     fig.add_trace(go.Scatter(x=df_chart.index, y=df_chart[signal_col], name="MACD signal",
                                              line=dict(color="orange", width=1.5)), row=macd_row, col=1)
-            if "stoch" in row_of:
-                stoch_row = row_of["stoch"]
-                fig.add_trace(go.Scatter(x=df_chart.index, y=df_chart["stoch_k"], name="Stochastic %K",
-                                         line=dict(color="#0ea5e9", width=1.5)), row=stoch_row, col=1)
-                fig.add_hline(y=80, line_dash="dash", line_color="red", opacity=0.5, row=stoch_row, col=1)
-                fig.add_hline(y=20, line_dash="dash", line_color="green", opacity=0.5, row=stoch_row, col=1)
-            if "adx" in row_of:
-                adx_row = row_of["adx"]
-                fig.add_trace(go.Scatter(x=df_chart.index, y=df_chart["adx"], name="ADX",
-                                         line=dict(color="#a16207", width=1.5)), row=adx_row, col=1)
-                fig.add_hline(y=25, line_dash="dash", line_color="gray", opacity=0.5, row=adx_row, col=1)
+            if "stoch" in layout["panels"] + layout["secondary"]:
+                _put(go.Scatter(x=df_chart.index, y=df_chart["stoch_k"], name="Stochastic %K",
+                                line=dict(color="#0ea5e9", width=1.5)), "stoch")
+                if "stoch" not in layout["secondary"]:
+                    _guide("stoch", 80, "red")
+                    _guide("stoch", 20, "green")
+            if "adx" in layout["panels"] + layout["secondary"]:
+                _put(go.Scatter(x=df_chart.index, y=df_chart["adx"], name="ADX",
+                                line=dict(color="#a16207", width=1.5)), "adx")
+                if "adx" not in layout["secondary"]:
+                    _guide("adx", 25, "gray")
             if "obv" in row_of:
                 obv_row = row_of["obv"]
                 fig.add_trace(go.Scatter(x=df_chart.index, y=df_chart["obv"], name="OBV",
@@ -9671,7 +9690,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                                              line=dict(color="orange", width=1.2, dash="dot")), row=obv_row, col=1)
 
             fig.update_layout(
-                height=750 + 150 * (len(panels) - 2),
+                height=750 + 150 * (len(panels) - 2) if len(panels) > 2 else 750 - 100 * (2 - len(panels)),
                 xaxis_rangeslider_visible=False,
                 showlegend=True,
                 legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
@@ -9679,9 +9698,15 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             )
             fig.update_yaxes(title_text="Price", row=1, col=1)
             fig.update_yaxes(title_text="Volume", row=row_of["volume"], col=1)
-            fig.update_yaxes(title_text="RSI", range=[0, 100], row=row_of["rsi"], col=1)
+            if "rsi" in row_of:
+                fig.update_yaxes(title_text="RSI", range=[0, 100], row=row_of["rsi"], col=1)
             if "stoch" in row_of:
                 fig.update_yaxes(range=[0, 100], row=row_of["stoch"], col=1)
+            if layout["secondary"]:
+                fig.update_yaxes(
+                    title_text="0 to 100", range=[0, 100], showgrid=False,
+                    row=1, col=1, secondary_y=True,
+                )
             _paint_chart(fig)
             st.plotly_chart(fig, width="stretch")
 
