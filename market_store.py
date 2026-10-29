@@ -820,6 +820,8 @@ _SHARED_COLUMNS_STATS = (
 )
 # The first set that the database accepts is remembered, so a missing column costs one failed ask, not one per load.
 _COLUMN_TIER = 0
+_COLUMN_TIER_SINCE = 0.0
+_COLUMN_TIER_RETRY_SECONDS = 600
 
 
 def _finite(value) -> float | None:
@@ -1139,8 +1141,13 @@ def load_shared_market(supabase, keys: list[str]) -> dict[str, dict]:
     wanted = [key for key in keys if key]
     if not wanted:
         return {}
-    global _COLUMN_TIER
+    global _COLUMN_TIER, _COLUMN_TIER_SINCE
     tiers = (_SHARED_COLUMNS_STATS, _SHARED_COLUMNS, _SHARED_COLUMNS_LEGACY)
+    # A fall-back to fewer columns is not for life: one odd error must not hide market caps and
+    # earnings dates until the next restart. Try the full set again every few minutes.
+    if _COLUMN_TIER and time.time() - _COLUMN_TIER_SINCE > _COLUMN_TIER_RETRY_SECONDS:
+        _COLUMN_TIER = 0
+    start_tier = _COLUMN_TIER
     response = None
     last_error = None
     for tier in range(_COLUMN_TIER, len(tiers)):
@@ -1158,6 +1165,8 @@ def load_shared_market(supabase, keys: list[str]) -> dict[str, dict]:
                 continue
             _warn(exc)
             return {}
+        if tier and tier != start_tier:
+            _COLUMN_TIER_SINCE = time.time()
         _COLUMN_TIER = tier
         break
     if response is None:
