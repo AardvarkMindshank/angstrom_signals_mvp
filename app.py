@@ -3839,11 +3839,18 @@ export default function(component) {
   const holder = shell.closest('[data-testid="stElementContainer"]');
   if (holder) holder.style.display = "none";
   const value = String((data && data.value) || "");
+  const pref = String((data && data.pref) || "");
   const secure = location.protocol === "https:" ? "; Secure" : "";
   if (value) {
     document.cookie = "angstrom_keep=" + encodeURIComponent(value) + "; Path=/; Max-Age=2592000; SameSite=Lax" + secure;
   } else {
     document.cookie = "angstrom_keep=; Path=/; Max-Age=0; SameSite=Lax" + secure;
+  }
+  // Remember only the choice (never a token), so the box starts ticked next time on this device.
+  if (pref === "1") {
+    document.cookie = "angstrom_keep_pref=1; Path=/; Max-Age=31536000; SameSite=Lax" + secure;
+  } else if (pref === "0") {
+    document.cookie = "angstrom_keep_pref=; Path=/; Max-Age=0; SameSite=Lax" + secure;
   }
 }
 """
@@ -3862,13 +3869,22 @@ def _keep_cookie_read() -> str:
         return ""
 
 
-def _keep_cookie_write(value: str) -> None:
-    """Save (or, with an empty value, clear) the cookie. Pop-out tabs never touch it."""
+def _keep_pref_read() -> bool:
+    """True when this device was last signed in with Keep me signed in ticked."""
+    try:
+        return str(st.context.cookies.get(_KEEP_COOKIE + "_pref") or "") == "1"
+    except Exception:
+        return False
+
+
+def _keep_cookie_write(value: str, pref: str = "") -> None:
+    """Save (or, with an empty value, clear) the cookie. pref "1" or "0" also remembers the choice.
+    Pop-out tabs never touch it."""
     if _POPOUT_VIEW:
         return
     count = int(st.session_state.get("_keep_n", 0)) + 1
     st.session_state["_keep_n"] = count
-    _keep_cookie(key=f"keep_cookie_{count}", data={"value": str(value or "")})
+    _keep_cookie(key=f"keep_cookie_{count}", data={"value": str(value or ""), "pref": pref})
 
 _POPOUT_BUTTONS_JS = """
 export default function(component) {
@@ -4449,8 +4465,11 @@ if st.session_state.user is not None and _session_is_barred():
     _end_barred_session()
 
 if st.session_state.user is not None and st.session_state.pop("_keep_write_pending", False):
-    if st.session_state.get("_keep_signed_in") and st.session_state.get("refresh_token") != _POPOUT_MARK:
-        _keep_cookie_write(str(st.session_state.get("refresh_token") or ""))
+    if st.session_state.get("refresh_token") != _POPOUT_MARK:
+        if st.session_state.get("_keep_signed_in"):
+            _keep_cookie_write(str(st.session_state.get("refresh_token") or ""), pref="1")
+        else:
+            _keep_cookie_write("", pref="0")  # logged in without the tick: remember that choice too
 
 if st.session_state.user is None and not _POPOUT_VIEW and not st.session_state.get("_keep_tried"):
     # A fresh page load with no login: use the saved sign-in, if the person asked for one.
@@ -4625,6 +4644,8 @@ if st.session_state.user is None:
                             key="login_password",
                             autocomplete="current-password",
                         )
+                        if "login_keep" not in st.session_state:
+                            st.session_state["login_keep"] = _keep_pref_read()
                         keep_me = st.checkbox(
                             "Keep me signed in on this device",
                             key="login_keep",
@@ -4646,7 +4667,7 @@ if st.session_state.user is None:
                                 st.session_state.access_token = session.access_token
                                 st.session_state.refresh_token = session.refresh_token
                                 st.session_state["_keep_signed_in"] = bool(keep_me)
-                                st.session_state["_keep_write_pending"] = bool(keep_me)
+                                st.session_state["_keep_write_pending"] = True
                                 st.rerun()
                         except Exception as exc:
                             if "banned" in str(exc).lower():
@@ -7903,7 +7924,7 @@ with tracked_expander("ℹ️ About", "about", sidebar=True):
         st.markdown(
             "The account and the page are stored with Supabase. Mail is sent with Resend. Google is used only "
             "if you choose that sign-in. Market prices and sentiment come from data providers and are not your "
-            "personal details. A short-lived cookie is used to finish a Google sign-in. If you tick Keep me signed in, one more cookie holds your sign-in on that device for up to 30 days, and logging out removes it. We do not sell personal information."
+            "personal details. A short-lived cookie is used to finish a Google sign-in. If you tick Keep me signed in, one more cookie holds your sign-in on that device for up to 30 days, and logging out removes it. A small cookie also remembers whether you ticked the box, for up to a year, and holds no sign-in details. We do not sell personal information."
         )
         st.markdown(
             "Email [support@angstromsignals.com](mailto:support@angstromsignals.com) to ask what we hold, "

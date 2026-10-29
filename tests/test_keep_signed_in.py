@@ -26,4 +26,15 @@ def test_pop_outs_never_touch_the_cookie():
 def test_logout_clears_and_nothing_is_saved_without_the_tick():
     clear = SOURCE[SOURCE.index("def clear_session():"): SOURCE.index("def clear_session():") + 200]
     assert '"_keep_clear"' in clear and '"_keep_signed_in"' in clear
-    assert 'st.session_state["_keep_write_pending"] = bool(keep_me)' in SOURCE
+    assert 'st.session_state["_keep_write_pending"] = True' in SOURCE
+    assert '_keep_cookie_write("", pref="0")' in SOURCE
+
+
+def test_the_choice_is_remembered_but_never_a_token():
+    assert "angstrom_keep_pref=1" in SOURCE
+    assert 'st.session_state["login_keep"] = _keep_pref_read()' in SOURCE
+    js = SOURCE[SOURCE.index("_KEEP_COOKIE_JS"): SOURCE.index("_keep_cookie = st.components")]
+    pref_part = js[js.index('pref === "1"'):]
+    assert "encodeURIComponent(value)" not in pref_part
+    # logging out clears the sign-in cookie only, so the remembered choice survives it
+    assert 'st.session_state.pop("_keep_clear", False):\n        _keep_cookie_write("")' in SOURCE
