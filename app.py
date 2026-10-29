@@ -9554,6 +9554,18 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                     "instead of in panels underneath. MACD and OBV have no fixed range, so they stay in their own panels."
                 ),
             )
+            show_earnings = False
+            if asset_type != "Crypto":
+                show_earnings = st.checkbox(
+                    "Show earnings report dates",
+                    value=True,
+                    key="chart_earnings",
+                    help=(
+                        "Marks past report days with dotted lines and the next one with a dashed line. "
+                        "The chart stretches to the right to fit the next date, so switch this off "
+                        "if it is months away and you want the chart to end at today."
+                    ),
+                )
             layout = chart_plan.plan(chosen_indicators, df_chart.columns, overlay_curves=overlay_curves)
             panel_titles = {
                 "volume": "Volume", "rsi": "RSI (14)", "macd": "MACD", "stoch": "Stochastic (14, 3)",
@@ -9698,14 +9710,14 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                                              line=dict(color="orange", width=1.2, dash="dot")), row=obv_row, col=1)
 
             earnings_on = None
-            if asset_type != "Crypto" and stock_watchlist:
+            if show_earnings and stock_watchlist:
                 try:
                     earnings_on = load_earnings(
                         tuple(stock_watchlist), st.session_state.get("_shared_rows")
                     ).get(str(asset_key).upper())
                 except Exception:
                     earnings_on = None
-            if asset_type != "Crypto":
+            if show_earnings:
                 try:
                     chart_start = pd.Timestamp(df_chart.index[0]).tz_localize(None)
                     for past_day in _past_report_dates(str(asset_key).upper()):
