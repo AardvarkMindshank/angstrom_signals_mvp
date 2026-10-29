@@ -22,7 +22,6 @@ SPARKLINE_POINTS = 31
 COMMENT_LIMIT = 160
 COMMENT_EMOTICONS = ("😀", "🙂", "😐", "🙁", "😮", "🔥", "💩", "🚀", "📈", "📉")
 _SIDEWAYS_PERCENT = 2.0
-_WARNED = False
 _AUTHOR_ID = re.compile(
     r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
 )
@@ -792,15 +791,32 @@ def sparkline_svg(closes, change_percent=None) -> str:
     )
 
 
+_WARN_EVERY_SECONDS = 600
+_LAST_WARNED: dict[str, float] = {}
+
+
+def _warn_reason(exc: Exception) -> tuple[str, str]:
+    """(short label, what to do) for a failed shared-market read or write."""
+    text = str(exc).lower()
+    if "jwt" in text and ("expired" in text or "invalid" in text):
+        return "sign-in expired", "The database session ran out. Logging out and in fixes it."
+    if "permission denied" in text or "row-level security" in text or "42501" in text:
+        return "not allowed", "The database refused access. Check the policies in supabase_rls.sql."
+    if "does not exist" in text or "column" in text or "relation" in text or "pgrst" in text:
+        return "table or column missing", "Run the latest supabase_rls.sql in the Supabase SQL editor."
+    if "timeout" in text or "timed out" in text or "connection" in text:
+        return "connection", "The database did not answer in time."
+    return "other", "See the reason below."
+
+
 def _warn(exc: Exception) -> None:
-    global _WARNED
-    if _WARNED:
+    """Say why shared market data failed, at most once every ten minutes per kind of failure."""
+    label, advice = _warn_reason(exc)
+    now = time.time()
+    if now - _LAST_WARNED.get(label, 0.0) < _WARN_EVERY_SECONDS:
         return
-    _WARNED = True
-    print(
-        "Shared market data was not stored. Run supabase_rls.sql in the Supabase "
-        f"SQL editor. {exc}"
-    )
+    _LAST_WARNED[label] = now
+    print(f"Shared market data problem ({label}). {advice} Reason: {exc}")
 
 
 def _canonical_id(kind: str, asset_id: str) -> str:
