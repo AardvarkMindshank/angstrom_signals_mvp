@@ -101,3 +101,33 @@ def test_other_attributes_pass_through_and_failures_do_not_break_queries():
 
     client.auth = Broken()
     assert fresh.table("asset_market") == "asset_market"
+
+
+class Stop(BaseException):
+    """Stands in for Streamlit's rerun signal, which is not an ordinary exception."""
+
+
+def test_failure_is_reported_and_a_rerun_signal_gets_through():
+    seen = []
+    client = Client()
+
+    class Broken(Auth):
+        def set_session(self, a, r):
+            raise RuntimeError("Invalid Refresh Token: Already Used")
+
+    client.auth = Broken()
+    fresh = FreshClient(client, get_tokens=lambda: (make_token(1), "r"), store_tokens=lambda a, r: None,
+                        on_failure=lambda exc: seen.append(str(exc)))
+    assert fresh.table("x") == "x"
+    assert seen == ["Invalid Refresh Token: Already Used"]
+
+    def stop(exc):
+        raise Stop()
+
+    fresh = FreshClient(client, get_tokens=lambda: (make_token(1), "r"), store_tokens=lambda a, r: None, on_failure=stop)
+    try:
+        fresh.table("x")
+        raised = False
+    except Stop:
+        raised = True
+    assert raised

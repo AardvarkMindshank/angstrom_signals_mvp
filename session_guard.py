@@ -43,12 +43,13 @@ def needs_refresh(token, now: float | None = None, margin: float = REFRESH_MARGI
 
 
 class FreshClient:
-    def __init__(self, client, get_tokens, store_tokens, in_page_thread=lambda: True, skip_refresh=lambda refresh: False):
+    def __init__(self, client, get_tokens, store_tokens, in_page_thread=lambda: True, skip_refresh=lambda refresh: False, on_failure=lambda exc: None):
         self._client = client
         self._get = get_tokens
         self._store = store_tokens
         self._in_page = in_page_thread
         self._skip = skip_refresh
+        self._failed = on_failure
 
     def _ensure_fresh(self) -> None:
         try:
@@ -68,6 +69,7 @@ class FreshClient:
                     self._store(session.access_token, session.refresh_token)
         except Exception as exc:
             print(f"Could not refresh the database session: {exc}")
+            self._failed(exc)
 
     def __getattr__(self, name):
         if name in _QUERY_METHODS:

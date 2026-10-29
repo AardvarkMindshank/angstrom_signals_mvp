@@ -3828,6 +3828,48 @@ _logout_cast = st.components.v2.component(
     isolate_styles=False,
 )
 
+# "Keep me signed in": one browser cookie holds the sign-in refresh token for 30 days.
+# It is set only after a person ticks the box, and cleared when they log out.
+_KEEP_COOKIE = "angstrom_keep"
+_KEEP_COOKIE_JS = """
+export default function(component) {
+  const { data, parentElement } = component;
+  const shell = parentElement.closest(".stBidiComponent") || parentElement;
+  shell.style.display = "none";
+  const holder = shell.closest('[data-testid="stElementContainer"]');
+  if (holder) holder.style.display = "none";
+  const value = String((data && data.value) || "");
+  const secure = location.protocol === "https:" ? "; Secure" : "";
+  if (value) {
+    document.cookie = "angstrom_keep=" + encodeURIComponent(value) + "; Path=/; Max-Age=2592000; SameSite=Lax" + secure;
+  } else {
+    document.cookie = "angstrom_keep=; Path=/; Max-Age=0; SameSite=Lax" + secure;
+  }
+}
+"""
+_keep_cookie = st.components.v2.component(
+    "keep_signed_in_cookie",
+    js=_KEEP_COOKIE_JS,
+    isolate_styles=False,
+)
+
+
+def _keep_cookie_read() -> str:
+    """The saved sign-in from this browser, or empty."""
+    try:
+        return str(st.context.cookies.get(_KEEP_COOKIE) or "")
+    except Exception:
+        return ""
+
+
+def _keep_cookie_write(value: str) -> None:
+    """Save (or, with an empty value, clear) the cookie. Pop-out tabs never touch it."""
+    if _POPOUT_VIEW:
+        return
+    count = int(st.session_state.get("_keep_n", 0)) + 1
+    st.session_state["_keep_n"] = count
+    _keep_cookie(key=f"keep_cookie_{count}", data={"value": str(value or "")})
+
 _POPOUT_BUTTONS_JS = """
 export default function(component) {
   const { data, parentElement } = component;
@@ -4069,12 +4111,30 @@ def get_supabase():
         store_tokens=_store_session_tokens,
         in_page_thread=_in_page_thread,
         skip_refresh=lambda refresh: refresh == _POPOUT_MARK,
+        on_failure=_session_failed,
     )
 
 
 def _store_session_tokens(access: str, refresh: str) -> None:
     st.session_state.access_token = access
     st.session_state.refresh_token = refresh
+    if st.session_state.get("_keep_signed_in") and refresh and refresh != _POPOUT_MARK:
+        _keep_cookie_write(refresh)  # the refresh token changed, so the saved copy must too
+
+
+def _session_failed(exc: Exception) -> None:
+    """A refresh token works once. If it was already used, another tab took this login over."""
+    text = str(exc).lower()
+    if "invalid refresh token" not in text and "already used" not in text:
+        return
+    st.session_state.user = None
+    st.session_state.access_token = None
+    st.session_state.refresh_token = None
+    st.session_state["_keep_signed_in"] = False
+    for name in ("cloud_prefs", "profile", "prefs_user"):
+        st.session_state.pop(name, None)
+    st.session_state.auth_error = "You were signed out because this account was opened in another tab. Log in again here."
+    st.rerun()
 
 
 def _in_page_thread() -> bool:
@@ -4088,6 +4148,8 @@ def _in_page_thread() -> bool:
 
 
 def clear_session():
+    st.session_state["_keep_clear"] = True
+    st.session_state["_keep_signed_in"] = False
     saved_now = (st.session_state.get("cloud_prefs") or {}).get("settings") or {}
     close_popouts = st.session_state.get(
         "popouts_close_on_logout", saved_now.get("popouts_close_on_logout", True)
@@ -4383,6 +4445,30 @@ supabase = get_supabase()
 if st.session_state.user is not None and _session_is_barred():
     _end_barred_session()
 
+if st.session_state.user is not None and st.session_state.pop("_keep_write_pending", False):
+    if st.session_state.get("_keep_signed_in") and st.session_state.get("refresh_token") != _POPOUT_MARK:
+        _keep_cookie_write(str(st.session_state.get("refresh_token") or ""))
+
+if st.session_state.user is None and not _POPOUT_VIEW and not st.session_state.get("_keep_tried"):
+    # A fresh page load with no login: use the saved sign-in, if the person asked for one.
+    st.session_state["_keep_tried"] = True
+    _saved_login = _keep_cookie_read()
+    if _saved_login:
+        try:
+            _restored = supabase.auth.refresh_session(_saved_login)
+            _session = getattr(_restored, "session", None)
+            _member = getattr(_restored, "user", None) or getattr(_session, "user", None)
+            if _session is None or _member is None or not _session.access_token or not _session.refresh_token:
+                raise RuntimeError("no session")
+            st.session_state.user = _member
+            st.session_state.access_token = _session.access_token
+            st.session_state.refresh_token = _session.refresh_token
+            st.session_state["_keep_signed_in"] = True
+            st.session_state["_keep_write_pending"] = True
+            st.rerun()
+        except Exception:
+            _keep_cookie_write("")  # that saved sign-in no longer works
+
 def _take_handoff() -> None:
     """A pop-out tab has no login yet. Ask the signed-in tab in this browser for one."""
     reported = _handoff_ask(
@@ -4418,6 +4504,8 @@ if st.session_state.user is None and _POPOUT_VIEW and not st.session_state.get("
 
 if st.session_state.user is None:
     _social_clear(key="social_clear")
+    if st.session_state.pop("_keep_clear", False):
+        _keep_cookie_write("")
     if st.session_state.get("_announce_logout") and not _POPOUT_VIEW:
         _logout_cast(
             key="logout_cast",
@@ -4534,6 +4622,11 @@ if st.session_state.user is None:
                             key="login_password",
                             autocomplete="current-password",
                         )
+                        keep_me = st.checkbox(
+                            "Keep me signed in on this device",
+                            key="login_keep",
+                            help="Stay signed in for up to 30 days, even after you close this tab. Do not tick this on a shared computer.",
+                        )
                         st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
                         submitted = st.form_submit_button("Log In", type="primary", use_container_width=True)
                     if submitted:
@@ -4549,6 +4642,8 @@ if st.session_state.user is None:
                                 st.session_state.user = response.user
                                 st.session_state.access_token = session.access_token
                                 st.session_state.refresh_token = session.refresh_token
+                                st.session_state["_keep_signed_in"] = bool(keep_me)
+                                st.session_state["_keep_write_pending"] = bool(keep_me)
                                 st.rerun()
                         except Exception as exc:
                             if "banned" in str(exc).lower():
@@ -7805,7 +7900,7 @@ with tracked_expander("ℹ️ About", "about", sidebar=True):
         st.markdown(
             "The account and the page are stored with Supabase. Mail is sent with Resend. Google is used only "
             "if you choose that sign-in. Market prices and sentiment come from data providers and are not your "
-            "personal details. A short-lived cookie is used only to finish a Google sign-in. We do not sell personal information."
+            "personal details. A short-lived cookie is used to finish a Google sign-in. If you tick Keep me signed in, one more cookie holds your sign-in on that device for up to 30 days, and logging out removes it. We do not sell personal information."
         )
         st.markdown(
             "Email [support@angstromsignals.com](mailto:support@angstromsignals.com) to ask what we hold, "
