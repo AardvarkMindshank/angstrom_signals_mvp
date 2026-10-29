@@ -19,7 +19,7 @@ It is a research tool, not financial advice. The score is presented as a **readi
 | Background worker | `run_alerts.py`, started by the GitHub Action `alerts.yml` | Supabase's own clock (pg_cron) starts it every 5 minutes. GitHub's own schedule is only a backup because it often waits about 2 hours. |
 | Emails | Resend, sent by the worker | One shared look in `email_brand.py`. |
 | Marketing site and beta form | HostGator, angstromsignals.com, plain HTML plus a few PHP files | The website source is **not in this repository** (see section 9). |
-| Tests | `tests/`, run by the `tests.yml` Action | 26 test files. |
+| Tests | `tests/`, run by the `tests.yml` Action | 25 test files. |
 | Backtests | `backtest.py` plus the manual `backtest.yml` Action | Results come back as a downloadable report. |
 
 The repository is **public** with an all-rights-reserved `LICENSE` (copyright Angus Marshall). That was a deliberate choice: the owner did not want to close it for now. The consequence is that anyone can read the code but has no right to reuse it. Do not put secrets, personal email addresses or private notes in the repository.
