@@ -3606,6 +3606,7 @@ try:
         load_shared_market,
         earnings_from_rows,
         held_report_dates,
+        load_earnings_status,
         load_earnings_history,
         market_stats_from_rows,
         recent_closes,
@@ -6805,6 +6806,50 @@ def _admin_review(function: str, arguments: dict) -> str:
     }.get(code, "That could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again.")
 
 
+def _ago(seconds) -> str:
+    if seconds is None:
+        return "never"
+    seconds = float(seconds)
+    if seconds < 90:
+        return "just now"
+    if seconds < 5400:
+        return f"{round(seconds / 60)} min ago"
+    if seconds < 172800:
+        return f"{seconds / 3600:.1f} hours ago"
+    return f"{seconds / 86400:.1f} days ago"
+
+
+def _show_earnings_status() -> None:
+    """Whether the earnings date lookups are working. Stocks that were never checked stand out."""
+    with st.expander("Earnings dates (lookup status)", expanded=False):
+        status = load_earnings_status(supabase)
+        if status is None:
+            st.caption("The saved earnings dates could not be read.")
+            return
+        if not status["stocks"]:
+            st.caption("No stocks have been saved yet.")
+            return
+        st.write(
+            f"{status['stocks']} stocks: {status['with_date']} with a date, "
+            f"{status['none_known']} with none known, {status['never_checked']} never checked."
+        )
+        st.write(
+            f"Last check: {_ago(status['newest_check_ago'])}. "
+            f"Oldest check: {_ago(status['oldest_check_ago'])}. A lookup runs about every 12 hours."
+        )
+        if status["with_date"] == 0 and status["stocks"] >= 3:
+            st.warning("No stock has a date. The lookups may be failing, so check the Finnhub key and the app log.")
+        st.dataframe(
+            [
+                {"Stock": line["ticker"], "Next report": line["next_earnings"] or "-",
+                 "State": line["state"], "Checked": _ago(line["checked_ago"])}
+                for line in status["lines"]
+            ],
+            hide_index=True,
+            width="stretch",
+        )
+
+
 @st.fragment
 def admin_panel() -> None:
     """Feedback and comment reports. Only an admin account reaches this section."""
@@ -6839,6 +6884,7 @@ def admin_panel() -> None:
             )
             _show_reports(reports)
         _show_beta()
+        _show_earnings_status()
         _show_blacklist()
         perf = st.session_state.get("_perf") or {}
         if perf:

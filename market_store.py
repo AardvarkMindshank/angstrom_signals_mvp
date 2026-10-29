@@ -1233,6 +1233,67 @@ def save_earnings(supabase, found: dict) -> None:
         _warn(exc)
 
 
+def earnings_status(rows, now=None) -> dict:
+    """A plain summary of the saved earnings dates, for the Admin panel.
+
+    rows are asset_market rows for stocks. Returns counts, the newest and oldest check
+    (as seconds ago), and one line per stock.
+    """
+    now = now if now is not None else datetime.now(timezone.utc).timestamp()
+    lines, checked_times = [], []
+    with_date = none_known = never = 0
+    for row in rows or []:
+        if not isinstance(row, dict):
+            continue
+        ticker = str(row.get("asset_id") or "").strip().upper()
+        if not ticker:
+            continue
+        checked = _stored_at(row.get("earnings_checked_at"))
+        date = str(row.get("next_earnings") or "").strip()[:10] or None
+        if checked is None:
+            never += 1
+            state = "never checked"
+        else:
+            checked_times.append(checked)
+            if date:
+                with_date += 1
+                state = "date saved"
+            else:
+                none_known += 1
+                state = "no date known"
+        lines.append({
+            "ticker": ticker,
+            "next_earnings": date,
+            "state": state,
+            "checked_ago": None if checked is None else max(0.0, now - checked),
+        })
+    lines.sort(key=lambda item: (item["state"] != "never checked", item["ticker"]))
+    return {
+        "stocks": len(lines),
+        "with_date": with_date,
+        "none_known": none_known,
+        "never_checked": never,
+        "newest_check_ago": None if not checked_times else max(0.0, now - max(checked_times)),
+        "oldest_check_ago": None if not checked_times else max(0.0, now - min(checked_times)),
+        "lines": lines,
+    }
+
+
+def load_earnings_status(supabase) -> dict | None:
+    """earnings_status for every stock the app has stored. None when the lookup fails."""
+    try:
+        result = (
+            supabase.table("asset_market")
+            .select("asset_id,next_earnings,earnings_checked_at")
+            .eq("kind", "Stock")
+            .execute()
+        )
+        return earnings_status(list(result.data or []))
+    except Exception as exc:
+        _warn(exc)
+        return None
+
+
 def held_report_dates(rows, today=None, slack_days: int = 1) -> list[str]:
     """Past report dates that held until the report, oldest first.
 
