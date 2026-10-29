@@ -807,21 +807,22 @@ def _earnings_from_finnhub(symbol: str, today) -> str | None:
         return None
 
 
-def _earnings_from_yahoo(symbol: str, today) -> str | None:
+def _earnings_from_yahoo(symbol: str, today) -> tuple[str | None, bool]:
+    """(date, answered). answered is False when the lookup itself failed, so a failure is not read as "no date"."""
     try:
         calendar = _yahoo().Ticker(symbol).calendar
     except Exception:
-        return None
+        return None, False
     dates = []
     if isinstance(calendar, dict):
         raw = calendar.get("Earnings Date")
         dates = list(raw) if isinstance(raw, (list, tuple)) else [raw]
-    return earliest_upcoming(dates, today)
+    return earliest_upcoming(dates, today), True
 
 
 def stock_next_earnings(tickers, today=None) -> dict[str, str | None]:
-    """Next report date for each stock, as YYYY-MM-DD, or None when none is known (an ETF, say).
-    Every ticker asked about gets an entry, so the caller can tell "no date" from "not asked"."""
+    """Next report date for each stock, as YYYY-MM-DD, or None when the sources answered and none is known (an ETF, say).
+    A stock whose lookup failed on every source is left out, so a bad moment never wipes a saved date."""
     from datetime import date
     today = today or date.today()
     symbols = []
@@ -833,8 +834,12 @@ def stock_next_earnings(tickers, today=None) -> dict[str, str | None]:
         return {}
 
     def one(symbol):
-        return _earnings_from_finnhub(symbol, today) or _earnings_from_yahoo(symbol, today)
+        found = _earnings_from_finnhub(symbol, today)
+        if found:
+            return symbol, found, True
+        found, answered = _earnings_from_yahoo(symbol, today)
+        return symbol, found, bool(found) or answered
 
     with ThreadPoolExecutor(max_workers=min(4, len(symbols))) as pool:
-        return dict(zip(symbols, pool.map(one, symbols)))
+        return {symbol: found for symbol, found, answered in pool.map(one, symbols) if answered}
 

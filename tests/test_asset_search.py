@@ -106,3 +106,17 @@ def test_saved_earnings_come_back_with_none_meaning_checked():
         "stock:never": {"kind": "Stock", "asset_id": "NEVER"},
     }
     assert ms.earnings_from_rows(rows) == {"AAPL": "2026-10-30", "SPY": None}
+
+
+def test_a_failed_lookup_is_left_out_not_read_as_no_date():
+    import datetime
+    today = datetime.date(2026, 10, 29)
+    answers = {"SPY": (None, True), "MSFT": (None, False)}
+    saved = df._earnings_from_finnhub, df._earnings_from_yahoo
+    df._earnings_from_finnhub = lambda symbol, day: "2026-11-02" if symbol == "AAPL" else None
+    df._earnings_from_yahoo = lambda symbol, day: answers[symbol]
+    try:
+        out = df.stock_next_earnings(["AAPL", "SPY", "MSFT"], today)
+    finally:
+        df._earnings_from_finnhub, df._earnings_from_yahoo = saved
+    assert out == {"AAPL": "2026-11-02", "SPY": None}

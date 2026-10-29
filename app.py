@@ -7849,7 +7849,10 @@ def _fetch_earnings(token) -> None:
     """Look up each stock's next report date behind the scenes, keep it, and save it for next time."""
     try:
         found = stock_next_earnings(list(token))
-        _EARN_STORE[token] = (time.time(), found)
+        previous = _EARN_STORE.get(token)
+        # A stock the lookup could not answer keeps the date it had.
+        kept = {**(previous[1] if previous else {}), **found}
+        _EARN_STORE[token] = (time.time(), kept)
         save_earnings(supabase, found)
     except Exception as exc:
         print(f"earnings dates failed: {exc}")
