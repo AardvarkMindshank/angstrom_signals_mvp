@@ -9734,8 +9734,10 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                 height=750 + 150 * (len(panels) - 2) if len(panels) > 2 else 750 - 100 * (2 - len(panels)),
                 xaxis_rangeslider_visible=False,
                 showlegend=True,
-                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-                margin=dict(t=60, b=20),
+                # The legend sits under the chart, in its own strip, so it never meets the toolbar
+                # that appears top right when the mouse is over the chart.
+                legend=dict(orientation="h", yref="container", y=0, yanchor="bottom", xref="paper", x=0, xanchor="left"),
+                margin=dict(t=60, b=150),
             )
             fig.update_yaxes(title_text="Price", row=1, col=1)
             fig.update_yaxes(title_text="Volume", row=row_of["volume"], col=1)
