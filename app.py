@@ -9562,7 +9562,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                     key="chart_earnings",
                     help=(
                         "Marks past report days with dotted lines and the next one with a dashed line. "
-                        "The chart stretches to the right to fit the next date, so switch this off "
+                        "The chart stretches to the right to fit the next date (only when it is within 6 weeks), so switch this off "
                         "if it is months away and you want the chart to end at today."
                     ),
                 )
@@ -9730,7 +9730,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                     report_day = pd.Timestamp(earnings_on).tz_localize(None).normalize()
                     last_bar = pd.Timestamp(df_chart.index[-1]).tz_localize(None).normalize()
                     first_bar = pd.Timestamp(df_chart.index[0]).tz_localize(None)
-                    if last_bar <= report_day <= last_bar + pd.Timedelta(days=120):
+                    if last_bar <= report_day <= last_bar + pd.Timedelta(days=42):
                         fig.add_vline(x=report_day.isoformat(), line_dash="dash", line_color="#f59e0b", line_width=2, opacity=0.9)
                         fig.add_annotation(
                             x=report_day.isoformat(), y=1, yref="paper", yanchor="bottom",
