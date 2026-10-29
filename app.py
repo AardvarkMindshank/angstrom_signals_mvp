@@ -3564,6 +3564,7 @@ def _reveal_section(section_id: str, anchor: str) -> None:
 
 from email_brand import render_email
 import beta_emails
+import chart_plan
 import colour_themes
 
 BETA_REQUEST_URL = "https://angstromsignals.com/beta.html"
@@ -9513,12 +9514,43 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                 return
 
             df_chart = calculate_indicators(df_chart)
+            indicator_keys = chart_plan.available(df_chart.columns)
+            indicator_icons = {"sma200": "📏", "ichimoku": "☁️", "macd": "〰️", "stoch": "🎚️", "adx": "🧭", "obv": "📊"}
+
+            def _indicator_label(key):
+                return f"{indicator_icons.get(key, '')} {chart_plan.INDICATORS[key]['label']}".strip()
+
+            chosen_indicators = []
+            if indicator_keys:
+                if hasattr(st, "pills"):
+                    chosen_indicators = st.pills(
+                        "Chart indicators",
+                        indicator_keys,
+                        selection_mode="multi",
+                        format_func=_indicator_label,
+                        key="chart_indicators",
+                        label_visibility="collapsed",
+                    ) or []
+                else:
+                    chosen_indicators = st.multiselect(
+                        "Chart indicators",
+                        indicator_keys,
+                        format_func=_indicator_label,
+                        key="chart_indicators",
+                    )
+            layout = chart_plan.plan(chosen_indicators, df_chart.columns)
+            panel_titles = {
+                "volume": "Volume", "rsi": "RSI (14)", "macd": "MACD", "stoch": "Stochastic (14, 3)",
+                "adx": "ADX (14)", "obv": "On-balance volume",
+            }
+            panels = layout["panels"]
+            row_of = {name: index + 2 for index, name in enumerate(panels)}
             fig = make_subplots(
-                rows=3, cols=1,
+                rows=1 + len(panels), cols=1,
                 shared_xaxes=True,
-                vertical_spacing=0.05,
-                row_heights=[0.55, 0.2, 0.25],
-                subplot_titles=(f"{title} Price", "Volume", "RSI (14)"),
+                vertical_spacing=0.04,
+                row_heights=layout["heights"],
+                subplot_titles=tuple([f"{title} Price"] + [panel_titles[name] for name in panels]),
             )
             fig.add_trace(
                 go.Candlestick(
@@ -9535,6 +9567,33 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             if "sma_50" in df_chart.columns:
                 fig.add_trace(
                     go.Scatter(x=df_chart.index, y=df_chart["sma_50"], name="SMA 50", line=dict(color="royalblue", width=1.5)),
+                    row=1, col=1,
+                )
+            if "sma200" in layout["overlays"]:
+                fig.add_trace(
+                    go.Scatter(x=df_chart.index, y=df_chart["sma_200"], name="SMA 200", line=dict(color="#9333ea", width=1.5)),
+                    row=1, col=1,
+                )
+            if "ichimoku" in layout["overlays"]:
+                fig.add_trace(
+                    go.Scatter(x=df_chart.index, y=df_chart["ichi_span_a"], name="Cloud edge A",
+                               line=dict(color="rgba(34,197,94,0.5)", width=1), showlegend=False),
+                    row=1, col=1,
+                )
+                fig.add_trace(
+                    go.Scatter(x=df_chart.index, y=df_chart["ichi_span_b"], name="Ichimoku cloud",
+                               line=dict(color="rgba(239,68,68,0.5)", width=1), fill="tonexty",
+                               fillcolor="rgba(128,128,128,0.12)"),
+                    row=1, col=1,
+                )
+                fig.add_trace(
+                    go.Scatter(x=df_chart.index, y=df_chart["ichi_tenkan"], name="Tenkan",
+                               line=dict(color="#0ea5e9", width=1)),
+                    row=1, col=1,
+                )
+                fig.add_trace(
+                    go.Scatter(x=df_chart.index, y=df_chart["ichi_kijun"], name="Kijun",
+                               line=dict(color="#f43f5e", width=1)),
                     row=1, col=1,
                 )
 
@@ -9563,27 +9622,66 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             ]
             fig.add_trace(
                 go.Bar(x=df_chart.index, y=df_chart["volume"], name="Volume", marker_color=colors, opacity=0.6),
-                row=2, col=1,
+                row=row_of["volume"], col=1,
             )
             if "rsi" in df_chart.columns:
+                rsi_row = row_of["rsi"]
                 fig.add_trace(
                     go.Scatter(x=df_chart.index, y=df_chart["rsi"], name="RSI", line=dict(color="purple", width=1.5)),
-                    row=3, col=1,
+                    row=rsi_row, col=1,
                 )
-                fig.add_hline(y=70, line_dash="dash", line_color="red", opacity=0.5, row=3, col=1)
-                fig.add_hline(y=30, line_dash="dash", line_color="green", opacity=0.5, row=3, col=1)
-                fig.add_hline(y=50, line_dash="dot", line_color="gray", opacity=0.3, row=3, col=1)
+                fig.add_hline(y=70, line_dash="dash", line_color="red", opacity=0.5, row=rsi_row, col=1)
+                fig.add_hline(y=30, line_dash="dash", line_color="green", opacity=0.5, row=rsi_row, col=1)
+                fig.add_hline(y=50, line_dash="dot", line_color="gray", opacity=0.3, row=rsi_row, col=1)
+            if "macd" in row_of:
+                macd_row = row_of["macd"]
+                hist_col = find_column(df_chart, "MACDh_")
+                line_col = find_column(df_chart, "MACD_")
+                signal_col = find_column(df_chart, "MACDs_")
+                if hist_col:
+                    hist = df_chart[hist_col]
+                    fig.add_trace(
+                        go.Bar(x=df_chart.index, y=hist, name="MACD histogram", opacity=0.6,
+                               marker_color=["green" if (v or 0) >= 0 else "red" for v in hist]),
+                        row=macd_row, col=1,
+                    )
+                if line_col:
+                    fig.add_trace(go.Scatter(x=df_chart.index, y=df_chart[line_col], name="MACD",
+                                             line=dict(color="royalblue", width=1.5)), row=macd_row, col=1)
+                if signal_col:
+                    fig.add_trace(go.Scatter(x=df_chart.index, y=df_chart[signal_col], name="MACD signal",
+                                             line=dict(color="orange", width=1.5)), row=macd_row, col=1)
+            if "stoch" in row_of:
+                stoch_row = row_of["stoch"]
+                fig.add_trace(go.Scatter(x=df_chart.index, y=df_chart["stoch_k"], name="Stochastic %K",
+                                         line=dict(color="#0ea5e9", width=1.5)), row=stoch_row, col=1)
+                fig.add_hline(y=80, line_dash="dash", line_color="red", opacity=0.5, row=stoch_row, col=1)
+                fig.add_hline(y=20, line_dash="dash", line_color="green", opacity=0.5, row=stoch_row, col=1)
+            if "adx" in row_of:
+                adx_row = row_of["adx"]
+                fig.add_trace(go.Scatter(x=df_chart.index, y=df_chart["adx"], name="ADX",
+                                         line=dict(color="#a16207", width=1.5)), row=adx_row, col=1)
+                fig.add_hline(y=25, line_dash="dash", line_color="gray", opacity=0.5, row=adx_row, col=1)
+            if "obv" in row_of:
+                obv_row = row_of["obv"]
+                fig.add_trace(go.Scatter(x=df_chart.index, y=df_chart["obv"], name="OBV",
+                                         line=dict(color="#14b8a6", width=1.5)), row=obv_row, col=1)
+                if "obv_sma_20" in df_chart.columns:
+                    fig.add_trace(go.Scatter(x=df_chart.index, y=df_chart["obv_sma_20"], name="OBV average",
+                                             line=dict(color="orange", width=1.2, dash="dot")), row=obv_row, col=1)
 
             fig.update_layout(
-                height=750,
+                height=750 + 150 * (len(panels) - 2),
                 xaxis_rangeslider_visible=False,
                 showlegend=True,
                 legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
                 margin=dict(t=60, b=20),
             )
             fig.update_yaxes(title_text="Price", row=1, col=1)
-            fig.update_yaxes(title_text="Volume", row=2, col=1)
-            fig.update_yaxes(title_text="RSI", range=[0, 100], row=3, col=1)
+            fig.update_yaxes(title_text="Volume", row=row_of["volume"], col=1)
+            fig.update_yaxes(title_text="RSI", range=[0, 100], row=row_of["rsi"], col=1)
+            if "stoch" in row_of:
+                fig.update_yaxes(range=[0, 100], row=row_of["stoch"], col=1)
             _paint_chart(fig)
             st.plotly_chart(fig, width="stretch")
 
@@ -9614,7 +9712,13 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                     unsafe_allow_html=True,
                 )
             if result.get("atr_pct") is not None:
-                col_c.metric("Volatility (ATR%)", f"{result['atr_pct']:.2f}%")
+                col_c.metric(
+                    "Typical daily move (ATR%)",
+                    f"{result['atr_pct']:.2f}%",
+                    help="The average distance price travels in a day, as a share of its price. "
+                    "In testing this was the one reading that reliably said how big the next few days' moves would be. "
+                    "It does not say which way.",
+                )
 
         reveal_breakdown = st.session_state.get("scroll_target") == "score-breakdown"
         if (show_reasons_flag or reveal_breakdown) and result.get("reasons") and result.get("score") is not None:
