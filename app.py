@@ -6196,7 +6196,8 @@ def _score_rules_popover(weights) -> None:
                     "When": when,
                     "Points": f"{points:+g}" if points else "0",
                 })
-        st.dataframe(table, hide_index=True, width="stretch")
+        # A plain table: not sortable, because the indicator name only sits on its first row.
+        st.table(table)
         st.markdown("**What each one measures**")
         for rule in score_rules.weighted_rows(None):
             st.markdown(f"- **{rule['name']}**: {rule['measures']}")
