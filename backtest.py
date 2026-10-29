@@ -84,7 +84,7 @@ def load_prices(ticker: str | None = None, period: str = "5y", csv_path: str | N
 # ------------------------------------------------------------------------ signals
 
 
-def score_series(frame: pd.DataFrame, weights: dict | None = None, warmup: int = WARMUP, score_fn=None) -> pd.Series:
+def score_series(frame: pd.DataFrame, weights: dict | None = None, warmup: int = WARMUP, score_fn=None, adaptive: bool = False) -> pd.Series:
     """Technical score for each day from warmup on, using only bars up to that day.
 
     score_fn(window) -> number or None lets tests supply their own signal.
@@ -95,7 +95,7 @@ def score_series(frame: pd.DataFrame, weights: dict | None = None, warmup: int =
         indicated = calculate_indicators(frame)
 
         def score_fn(window):
-            result = compute_score(window, weights)
+            result = compute_score(window, weights, adaptive=adaptive)
             if not isinstance(result, dict) or result.get("label") == "Insufficient data":
                 return None
             return result.get("score")
@@ -533,6 +533,43 @@ def run_backtest(
     return report
 
 
+def compare_adaptive(frame: pd.DataFrame, horizons=DEFAULT_HORIZONS, weights: dict | None = None,
+                     warmup: int = WARMUP, static_fn=None, adaptive_fn=None) -> dict:
+    """Does scaling the weights by market regime rank days better than fixed weights?
+
+    Returns the rank correlation (and its noise floor) for both scores at each horizon.
+    static_fn / adaptive_fn let tests supply their own score series.
+    """
+    static = static_fn() if static_fn else score_series(frame, weights, warmup=warmup)
+    adaptive = adaptive_fn() if adaptive_fn else score_series(frame, weights, warmup=warmup, adaptive=True)
+    out = {}
+    for horizon in horizons:
+        fwd = forward_returns(frame["close"], int(horizon))
+        before = information_coefficient(static, fwd.reindex(static.index), int(horizon))
+        after = information_coefficient(adaptive, fwd.reindex(adaptive.index), int(horizon))
+        change = None if before["ic"] is None or after["ic"] is None else after["ic"] - before["ic"]
+        out[int(horizon)] = {"static": before, "adaptive": after, "change": change}
+    return out
+
+
+def format_compare_adaptive(reports: dict[str, dict], horizons=DEFAULT_HORIZONS) -> str:
+    lines = ["Static weights against regime-adaptive weights (rank correlation of score with later return).",
+             "A change smaller than the noise floor is not evidence either way.", ""]
+    for label, report in reports.items():
+        lines.append(label)
+        for horizon in horizons:
+            row = report.get(int(horizon))
+            if not row:
+                continue
+            floor = row["static"].get("noise_floor")
+            lines.append(
+                f"  {horizon:>3}-bar:  static {_num(row['static']['ic'], 3)}   adaptive {_num(row['adaptive']['ic'], 3)}"
+                f"   change {_num(row['change'], 3)}   noise floor +/-{_num(floor, 3)}"
+            )
+        lines.append("")
+    return "\n".join(lines)
+
+
 def _pct(value, digits=2, sign=False) -> str:
     if value is None or (isinstance(value, float) and not math.isfinite(value)):
         return "-"
@@ -613,6 +650,7 @@ def main(argv=None) -> int:
     parser.add_argument("--horizons", type=_parse_horizons, default=DEFAULT_HORIZONS)
     parser.add_argument("--cost-bps", type=float, default=10.0, help="cost per side in basis points")
     parser.add_argument("--factors", action="store_true", help="test each score factor on its own")
+    parser.add_argument("--compare-adaptive", action="store_true", help="compare fixed weights with regime-adaptive weights")
     parser.add_argument("--volatility", action="store_true", help="test whether the score says how big the next moves will be")
     parser.add_argument("--funding", action="store_true", help="test crypto funding rates (BTC-USD style tickers)")
     parser.add_argument("--funding-source", choices=("binance", "deribit"), default="binance", help="where funding history comes from")
@@ -642,6 +680,13 @@ def main(argv=None) -> int:
             print("No coin had enough funding history.", file=sys.stderr)
             return 2
         print(format_funding_report(reports, args.horizons))
+        output = reports
+    elif args.compare_adaptive:
+        reports = {}
+        for label, frame in frames.items():
+            print(f"Scoring {label} (twice) ...", file=sys.stderr)
+            reports[label] = compare_adaptive(frame, args.horizons)
+        print(format_compare_adaptive(reports, args.horizons))
         output = reports
     elif args.volatility:
         reports = {}

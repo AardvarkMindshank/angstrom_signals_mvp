@@ -11,6 +11,8 @@ import numpy as np
 import pandas as pd
 import pandas_ta as ta
 
+from regime import latest_regime, multipliers_for
+
 
 DEFAULT_WEIGHTS = {
     "rsi": 1.0,
@@ -167,6 +169,7 @@ def _empty_result(reason: str) -> dict:
         "bb_position": None,
         "adx": None,
         "contributions": {},
+        "regime": None,
     }
 
 
@@ -186,8 +189,12 @@ def _label_for(score: float) -> str:
     return "Strongly negative reading"
 
 
-def compute_score(df: pd.DataFrame, weights: dict | None = None) -> dict:
-    """Score the latest bar from 0 to 100. Higher means a more bullish setup."""
+def compute_score(df: pd.DataFrame, weights: dict | None = None, adaptive: bool = False) -> dict:
+    """Score the latest bar from 0 to 100. Higher means a more bullish setup.
+
+    adaptive=True also scales each weight by the market regime (trending or ranging).
+    The regime is reported either way.
+    """
     merged = dict(DEFAULT_WEIGHTS)
     if weights:
         merged.update(weights)
@@ -199,6 +206,14 @@ def compute_score(df: pd.DataFrame, weights: dict | None = None) -> dict:
     close = _scalar(latest.get("close"))
     if close is None:
         return _empty_result("Missing close price")
+
+    regime = latest_regime(df)
+    if adaptive and regime:
+        for name, factor in multipliers_for(regime["state"]).items():
+            try:
+                merged[name] = float(merged.get(name, 1.0) or 0) * factor
+            except (TypeError, ValueError):
+                pass
 
     score = 50.0
     reasons = []
@@ -417,4 +432,5 @@ def compute_score(df: pd.DataFrame, weights: dict | None = None) -> dict:
         "bb_position": round(bb_position, 2) if bb_position is not None else None,
         "adx": round(adx, 1) if adx is not None else None,
         "contributions": contributions,
+        "regime": regime,
     }

@@ -6238,6 +6238,16 @@ with tracked_expander("⚖️ Scoring Balance Weights", "weights", sidebar=True)
         current_weights = new_weights
         prefs["weights"] = current_weights
 
+    st.checkbox(
+        "Adapt to the market (experimental)",
+        key="adaptive_scoring",
+        help=(
+            "Trending markets give more say to trend indicators (moving averages, MACD, Ichimoku, ADX, OBV) "
+            "and less to RSI, Stochastic and Bollinger Bands. Ranging markets do the opposite. "
+            "Your sliders still apply on top. Only affects this session; alerts use the standard weights."
+        ),
+    )
+
     if st.button("🔄 Reset to Default (1.0)"):
         st.session_state.reset_weights = True
         st.rerun()
@@ -7904,14 +7914,14 @@ _SCORES_WORKED_OUT = 0
 
 
 @st.cache_data(ttl=900, max_entries=4000, show_spinner=False)
-def _scored_asset(kind: str, asset_id: str, days: int, weights_key: tuple, stamp: tuple, _df):
+def _scored_asset(kind: str, asset_id: str, days: int, weights_key: tuple, stamp: tuple, _df, adaptive: bool = False):
     """The indicators and score for one asset. The same prices and weights give the same answer,
     so it is worked out once and reused across clicks and across accounts."""
     del kind, asset_id, days, stamp
     global _SCORES_WORKED_OUT
     _SCORES_WORKED_OUT += 1
     frame = calculate_indicators(_df)
-    return compute_score(frame, weights=dict(weights_key) if weights_key else None)
+    return compute_score(frame, weights=dict(weights_key) if weights_key else None, adaptive=adaptive)
 
 
 def load_market_sentiment(query: str, enabled: bool, force: bool = False):
@@ -8792,9 +8802,9 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                         )
                         maths_from = time.perf_counter()
                         try:
-                            scored = _scored_asset(kind, str(key), int(history_days), weights_key, stamp, df)
+                            scored = _scored_asset(kind, str(key), int(history_days), weights_key, stamp, df, bool(st.session_state.get("adaptive_scoring")))
                         except Exception:
-                            scored = compute_score(calculate_indicators(df), weights=weights)
+                            scored = compute_score(calculate_indicators(df), weights=weights, adaptive=bool(st.session_state.get("adaptive_scoring")))
                         spent["maths"] += time.perf_counter() - maths_from
                         if isinstance(scored, dict):
                             result.update(scored)
@@ -9577,7 +9587,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             _paint_chart(fig)
             st.plotly_chart(fig, width="stretch")
 
-            result = compute_score(df_chart, weights=weights)
+            result = compute_score(df_chart, weights=weights, adaptive=bool(st.session_state.get("adaptive_scoring")))
             score_val = result["score"]
             color, _bg, arrow, _bar = tone(score_val)
             col_a, col_b, col_c = st.columns(3)
