@@ -3293,3 +3293,60 @@ grant execute on function public.beta_decide(text, text, text) to anon, authenti
 --   set link_secret = encode(extensions.gen_random_bytes(24), 'hex')
 --   where id and link_secret is null
 --   returning link_secret;
+
+-- ---------------------------------------------------------------------------
+-- Earnings date history
+-- ---------------------------------------------------------------------------
+-- asset_market keeps only the NEXT report date, so a date is lost once it passes.
+-- This table keeps every date we have seen for a stock, when we first and last saw it,
+-- so charts can mark past reports and later analysis can line price moves up with them.
+-- A date that moved leaves its old row behind. last_seen_at close to report_date means
+-- the date held until the report; an early last_seen_at means it was replaced.
+-- Rows are written by a trigger on asset_market, never by the app, so history cannot be invented.
+create table if not exists public.earnings_history (
+    ticker text not null,
+    report_date date not null,
+    first_seen_at timestamptz not null default now(),
+    last_seen_at timestamptz not null default now(),
+    primary key (ticker, report_date)
+);
+
+alter table public.earnings_history enable row level security;
+
+drop policy if exists "signed-in users read earnings history" on public.earnings_history;
+create policy "signed-in users read earnings history" on public.earnings_history
+    for select
+    to authenticated
+    using (true);
+
+grant select on public.earnings_history to authenticated;
+
+create or replace function public.keep_earnings_history()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+    if new.kind = 'Stock' and new.next_earnings is not null and new.asset_id is not null then
+        insert into public.earnings_history (ticker, report_date)
+        values (upper(new.asset_id), new.next_earnings)
+        on conflict (ticker, report_date) do update set last_seen_at = now();
+    end if;
+    return null;
+end;
+$$;
+
+revoke all on function public.keep_earnings_history() from public, anon, authenticated;
+
+drop trigger if exists keep_earnings_history on public.asset_market;
+create trigger keep_earnings_history
+    after insert or update of next_earnings, earnings_checked_at on public.asset_market
+    for each row execute function public.keep_earnings_history();
+
+-- Start the history with the dates already stored.
+insert into public.earnings_history (ticker, report_date)
+select upper(asset_id), next_earnings
+from public.asset_market
+where kind = 'Stock' and next_earnings is not null and asset_id is not null
+on conflict (ticker, report_date) do nothing;

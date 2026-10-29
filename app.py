@@ -3605,6 +3605,8 @@ try:
         frame_from_row,
         load_shared_market,
         earnings_from_rows,
+        held_report_dates,
+        load_earnings_history,
         market_stats_from_rows,
         recent_closes,
         row_timestamp,
@@ -7877,6 +7879,12 @@ def load_earnings(stock_tickers, shared=None) -> dict:
     return data
 
 
+@st.cache_data(ttl=3600, show_spinner=False)
+def _past_report_dates(ticker: str) -> list:
+    """Past earnings days we saw held until the report. Empty until history has been saved."""
+    return held_report_dates(load_earnings_history(supabase, ticker))
+
+
 @contextmanager
 def _timed(label: str):
     """Record how long a step took on this load. The Admin panel shows the list."""
@@ -9697,6 +9705,14 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                     ).get(str(asset_key).upper())
                 except Exception:
                     earnings_on = None
+            if asset_type != "Crypto":
+                try:
+                    chart_start = pd.Timestamp(df_chart.index[0]).tz_localize(None)
+                    for past_day in _past_report_dates(str(asset_key).upper()):
+                        if pd.Timestamp(past_day) >= chart_start:
+                            fig.add_vline(x=past_day, line_dash="dot", line_color="#f59e0b", line_width=1.5, opacity=0.6)
+                except Exception:
+                    pass
             if earnings_on:
                 try:
                     report_day = pd.Timestamp(earnings_on).tz_localize(None).normalize()

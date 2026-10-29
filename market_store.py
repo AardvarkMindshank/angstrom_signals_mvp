@@ -1233,6 +1233,46 @@ def save_earnings(supabase, found: dict) -> None:
         _warn(exc)
 
 
+def held_report_dates(rows, today=None, slack_days: int = 1) -> list[str]:
+    """Past report dates that held until the report, oldest first.
+
+    rows are earnings_history rows. A date whose last_seen_at is well before the date
+    was replaced by a later one (the company moved it), so it was never a real report day.
+    """
+    today = pd.Timestamp(today or datetime.now(timezone.utc)).tz_localize(None).normalize() if (today is None or pd.Timestamp(today).tzinfo) else pd.Timestamp(today).normalize()
+    kept = []
+    for row in rows or []:
+        try:
+            day = pd.Timestamp(str(row.get("report_date"))[:10]).normalize()
+            seen = pd.Timestamp(str(row.get("last_seen_at"))[:19]).normalize()
+        except (TypeError, ValueError):
+            continue
+        if day >= today:
+            continue
+        if seen >= day - pd.Timedelta(days=slack_days):
+            kept.append(day.strftime("%Y-%m-%d"))
+    return sorted(set(kept))
+
+
+def load_earnings_history(supabase, ticker: str) -> list[dict]:
+    """Every stored report date for one stock. Empty when there is none or the lookup fails."""
+    symbol = str(ticker or "").strip().upper()
+    if not symbol:
+        return []
+    try:
+        result = (
+            supabase.table("earnings_history")
+            .select("report_date,first_seen_at,last_seen_at")
+            .eq("ticker", symbol)
+            .order("report_date")
+            .execute()
+        )
+        return list(result.data or [])
+    except Exception as exc:
+        _warn(exc)
+        return []
+
+
 def save_market_stats(supabase, rows: list[dict]) -> None:
     """Store each asset's market cap and rank. Each row is {kind, asset_id, cap, rank}."""
     now = datetime.now(timezone.utc).isoformat()
