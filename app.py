@@ -3565,6 +3565,7 @@ def _reveal_section(section_id: str, anchor: str) -> None:
 from email_brand import render_email
 import beta_emails
 import chart_plan
+import score_rules
 import session_guard
 import colour_themes
 
@@ -6182,8 +6183,33 @@ with tracked_expander("⭐ Watchlists", "watchlists", sidebar=True):
                     save_preferences_to_cloud({"stock_watchlist": STOCK_WATCHLIST})
                     st.rerun()
 
+def _score_rules_popover(weights) -> None:
+    """An info button that opens the plain-words scoring rules, with the user's own weights applied."""
+    with st.popover("ℹ️", help="How the score is worked out"):
+        st.markdown("**How the score is worked out**")
+        st.write(score_rules.HOW_IT_ADDS_UP)
+        table = []
+        for rule in score_rules.weighted_rows(weights if isinstance(weights, dict) else None):
+            for index, (when, points) in enumerate(rule["rows"]):
+                table.append({
+                    "Indicator": f"{rule['name']} (weight {rule['weight']:g})" if index == 0 else "",
+                    "When": when,
+                    "Points": f"{points:+g}" if points else "0",
+                })
+        st.dataframe(table, hide_index=True, width="stretch")
+        st.markdown("**What each one measures**")
+        for rule in score_rules.weighted_rows(None):
+            st.markdown(f"- **{rule['name']}**: {rule['measures']}")
+        st.markdown("**Reading the total**")
+        for line in score_rules.band_lines():
+            st.markdown(f"- {line}")
+        st.caption(score_rules.CONFLUENCE)
+        st.info(score_rules.HONEST_NOTE)
+
+
 with tracked_expander("⚖️ Scoring Balance Weights", "weights", sidebar=True):
     st.caption("Adjust the relative importance of each indicator. Every slider changes the score.")
+    _score_rules_popover(current_weights)
 
     st.markdown("**Named Weight Sets**")
     profile_names = ["Select saved set..."] + list(all_profiles.keys())
@@ -9876,6 +9902,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             st.html("<div id='score-breakdown' style='scroll-margin-top:4.5rem;'></div>")
             with section_expander(f"🔍 Score Breakdown — {title}", "score_breakdown"):
                 _paint_section_score("breakdown", result["score"], result.get("score") is not None)
+                _score_rules_popover(weights)
                 table_rows = crypto_results if asset_type == "Crypto" else stock_results
                 matched = next(
                     (row for row in table_rows if str(row.get("key")) == str(asset_key)),
