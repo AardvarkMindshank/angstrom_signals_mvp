@@ -5905,16 +5905,24 @@ def notifications_panel() -> None:
                 )
                 saved_hour = alert_prefs.get("digest_hour")
                 saved_hour = 8 if saved_hour is None else int(saved_hour)
-                saved_zone = alert_prefs.get("digest_tz") or ""
-                if not saved_zone:
-                    try:
-                        saved_zone = str(getattr(st.context, "timezone", "") or "")
-                    except Exception:
-                        saved_zone = ""
+                stored_zone = alert_prefs.get("digest_tz") or ""
+                try:
+                    browser_zone = str(getattr(st.context, "timezone", "") or "")
+                except Exception:
+                    browser_zone = ""
+                saved_zone = stored_zone
+                # The database column defaults to "UTC", and earlier versions also
+                # saved "UTC" as a guess. For anyone who has not switched the digest
+                # on, that is not a real choice, so prefer the browser's zone.
+                if browser_zone and (not saved_zone or (saved_zone == "UTC" and not alert_prefs.get("digest_enabled"))):
+                    saved_zone = browser_zone
                 zone_choices = list(COMMON_ZONES)
                 if saved_zone and saved_zone not in zone_choices:
                     zone_choices.insert(0, saved_zone)
-                digest_hour_choice, digest_zone_choice = saved_hour, saved_zone or "UTC"
+                # While the digest is off, keep whatever is stored, so nothing is
+                # saved just because the panel was opened.
+                digest_hour_choice = alert_prefs.get("digest_hour")
+                digest_zone_choice = alert_prefs.get("digest_tz")
                 if digest_on:
                     hour_col, zone_col = st.columns(2)
                     digest_hour_choice = hour_col.selectbox(
@@ -5924,16 +5932,19 @@ def notifications_panel() -> None:
                         format_func=lambda hour: f"{hour:02d}:00",
                         key="alert_digest_hour",
                     )
+                    start_zone = saved_zone or "UTC"
                     digest_zone_choice = zone_col.selectbox(
                         "Time zone",
                         zone_choices,
-                        index=zone_choices.index(digest_zone_choice) if digest_zone_choice in zone_choices else 0,
+                        index=zone_choices.index(start_zone) if start_zone in zone_choices else 0,
                         key="alert_digest_zone",
                     )
+                    if browser_zone and digest_zone_choice != browser_zone:
+                        st.caption(f"Your browser's time zone is {browser_zone}.")
                 new_alert_settings.update({
                     "instant_email": instant_on,
                     "digest_enabled": digest_on,
-                    "digest_hour": int(digest_hour_choice),
+                    "digest_hour": None if digest_hour_choice is None else int(digest_hour_choice),
                     "digest_tz": digest_zone_choice,
                 })
                 if not instant_on and not digest_on:
