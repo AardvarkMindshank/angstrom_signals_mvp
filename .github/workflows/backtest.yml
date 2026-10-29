@@ -1,0 +1,75 @@
+name: Run Backtest
+
+# Started by hand from the Actions tab. Nothing here runs on a schedule.
+on:
+  workflow_dispatch:
+    inputs:
+      tickers:
+        description: Symbols separated by spaces
+        required: true
+        default: "BTC-USD ETH-USD AAPL MSFT"
+      period:
+        description: How much history to test (for example 3y, 5y, 10y)
+        required: true
+        default: "5y"
+      test:
+        description: What to test
+        required: true
+        default: compare-adaptive
+        type: choice
+        options:
+          - compare-adaptive
+          - score
+          - factors
+          - volatility
+
+jobs:
+  backtest:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run backtest
+        env:
+          TICKERS: ${{ inputs.tickers }}
+          PERIOD: ${{ inputs.period }}
+          TEST: ${{ inputs.test }}
+        run: |
+          flag=""
+          case "$TEST" in
+            compare-adaptive) flag="--compare-adaptive" ;;
+            factors) flag="--factors" ;;
+            volatility) flag="--volatility" ;;
+          esac
+          # shellcheck disable=SC2086
+          python backtest.py --ticker $TICKERS --period "$PERIOD" $flag --json report.json | tee report.txt
+
+      - name: Show the result on the run page
+        if: always()
+        run: |
+          if [ -f report.txt ]; then
+            { echo '```'; cat report.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Keep the full report
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: backtest-report
+          path: |
+            report.txt
+            report.json
+          if-no-files-found: ignore
