@@ -9626,6 +9626,20 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             def _indicator_label(key):
                 return f"{indicator_icons.get(key, '')} {chart_plan.INDICATORS[key]['label']}".strip()
 
+            # The chart choices belong to the account. Start from what was saved, and keep a saved
+            # choice this asset cannot draw (too little history) so it comes back on the next asset.
+            saved_chart = (st.session_state.get("cloud_prefs") or {}).get("settings") or {}
+            saved_picks = [k for k in (saved_chart.get("chart_indicators") or []) if k in chart_plan.INDICATORS]
+            if "chart_indicators" not in st.session_state:
+                st.session_state["chart_indicators"] = [k for k in saved_picks if k in indicator_keys]
+            else:
+                st.session_state["chart_indicators"] = [
+                    k for k in (st.session_state.get("chart_indicators") or []) if k in indicator_keys
+                ]
+            if "chart_overlay" not in st.session_state:
+                st.session_state["chart_overlay"] = bool(saved_chart.get("chart_overlay", False))
+            if "chart_earnings" not in st.session_state:
+                st.session_state["chart_earnings"] = bool(saved_chart.get("chart_earnings", True))
             chosen_indicators = []
             if indicator_keys:
                 if hasattr(st, "pills"):
@@ -9656,7 +9670,6 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             if asset_type != "Crypto":
                 show_earnings = st.checkbox(
                     "Show earnings report dates",
-                    value=True,
                     key="chart_earnings",
                     help=(
                         "Marks past report days with dotted lines and the next one with a dashed line. "
@@ -9664,6 +9677,16 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                         "if it is months away and you want the chart to end at today."
                     ),
                 )
+            wanted_picks = [k for k in saved_picks if k not in indicator_keys] + [
+                k for k in chosen_indicators if k in chart_plan.INDICATORS
+            ]
+            chart_choices = {
+                "chart_indicators": [k for k in chart_plan.INDICATORS if k in wanted_picks],
+                "chart_overlay": bool(overlay_curves),
+            }
+            if asset_type != "Crypto":
+                chart_choices["chart_earnings"] = bool(show_earnings)
+            save_account_settings(chart_choices)
             layout = chart_plan.plan(chosen_indicators, df_chart.columns, overlay_curves=overlay_curves)
             panel_titles = {
                 "volume": "Volume", "rsi": "RSI (14)", "macd": "MACD", "stoch": "Stochastic (14, 3)",
