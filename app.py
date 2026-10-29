@@ -3565,6 +3565,7 @@ def _reveal_section(section_id: str, anchor: str) -> None:
 from email_brand import render_email
 import beta_emails
 import chart_plan
+import session_guard
 import colour_themes
 
 BETA_REQUEST_URL = "https://angstromsignals.com/beta.html"
@@ -4061,7 +4062,28 @@ def get_supabase():
             if "banned" in str(exc).lower():
                 st.session_state.auth_error = _BARRED_NOTICE
             client = create_client(url, key)
-    return client
+    return session_guard.FreshClient(
+        client,
+        get_tokens=lambda: (st.session_state.get("access_token"), st.session_state.get("refresh_token")),
+        store_tokens=_store_session_tokens,
+        in_page_thread=_in_page_thread,
+        skip_refresh=lambda refresh: refresh == _POPOUT_MARK,
+    )
+
+
+def _store_session_tokens(access: str, refresh: str) -> None:
+    st.session_state.access_token = access
+    st.session_state.refresh_token = refresh
+
+
+def _in_page_thread() -> bool:
+    """True on the thread that draws the page. Background jobs run on others and must not refresh."""
+    try:
+        from streamlit.runtime.scriptrunner import get_script_run_ctx
+
+        return get_script_run_ctx() is not None
+    except Exception:
+        return False
 
 
 def clear_session():
