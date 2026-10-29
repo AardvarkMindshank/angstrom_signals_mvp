@@ -9689,6 +9689,31 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                     fig.add_trace(go.Scatter(x=df_chart.index, y=df_chart["obv_sma_20"], name="OBV average",
                                              line=dict(color="orange", width=1.2, dash="dot")), row=obv_row, col=1)
 
+            earnings_on = None
+            if asset_type != "Crypto" and stock_watchlist:
+                try:
+                    earnings_on = load_earnings(
+                        tuple(stock_watchlist), st.session_state.get("_shared_rows")
+                    ).get(str(asset_key).upper())
+                except Exception:
+                    earnings_on = None
+            if earnings_on:
+                try:
+                    report_day = pd.Timestamp(earnings_on).tz_localize(None).normalize()
+                    last_bar = pd.Timestamp(df_chart.index[-1]).tz_localize(None).normalize()
+                    first_bar = pd.Timestamp(df_chart.index[0]).tz_localize(None)
+                    if last_bar <= report_day <= last_bar + pd.Timedelta(days=120):
+                        fig.add_vline(x=report_day.isoformat(), line_dash="dash", line_color="#f59e0b", line_width=2, opacity=0.9)
+                        fig.add_annotation(
+                            x=report_day.isoformat(), y=1, yref="paper", yanchor="bottom",
+                            text=f"Earnings {report_day:%d %b}", showarrow=False,
+                            font=dict(color="#f59e0b", size=12),
+                        )
+                        pad = max(3, (report_day - last_bar).days // 10)
+                        fig.update_xaxes(range=[first_bar.isoformat(), (report_day + pd.Timedelta(days=pad)).isoformat()])
+                except Exception:
+                    pass
+
             fig.update_layout(
                 height=750 + 150 * (len(panels) - 2) if len(panels) > 2 else 750 - 100 * (2 - len(panels)),
                 xaxis_rangeslider_visible=False,
