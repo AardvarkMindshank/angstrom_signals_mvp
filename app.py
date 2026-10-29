@@ -3566,6 +3566,7 @@ from email_brand import render_email
 import beta_emails
 import chart_plan
 import score_rules
+from digest import COMMON_ZONES
 import session_guard
 import colour_themes
 
@@ -4832,8 +4833,9 @@ def load_user_preferences():
                 "min_score_alert": 70,
                 "max_score_alert": 30,
             }
-            supabase.table("alert_preferences").insert(default_alerts).execute()
-            prefs_dict["alerts"] = default_alerts
+            inserted = supabase.table("alert_preferences").insert(default_alerts).execute()
+            # The stored row carries the column defaults, so every setting shows at once.
+            prefs_dict["alerts"] = (inserted.data or [default_alerts])[0]
 
         return prefs_dict
 
@@ -5875,10 +5877,78 @@ def notifications_panel() -> None:
                 "min_score_alert": min_score,
                 "max_score_alert": max_score,
             }
-            if new_alert_settings != {name: alert_prefs.get(name) for name in new_alert_settings}:
-                alert_prefs.update(new_alert_settings)
+
+            # The email options need the digest columns from the latest supabase_rls.sql.
+            # Until that has been run, show the old settings only.
+            if "digest_enabled" not in alert_prefs:
+                st.caption(
+                    "Email options (instant alerts and a daily digest) appear after the latest "
+                    "supabase_rls.sql has been run in Supabase."
+                )
+            else:
+                st.markdown("**Emails**")
+                instant_on = st.checkbox(
+                    "⚡ Instant alerts",
+                    value=alert_prefs.get("instant_email") is not False,
+                    key="alert_instant_cb",
+                    help="One email as soon as a score crosses a boundary.",
+                )
+                digest_on = st.checkbox(
+                    "📬 Daily digest",
+                    value=bool(alert_prefs.get("digest_enabled")),
+                    key="alert_digest_cb",
+                    help=(
+                        "One email a day that gathers everything that crossed. "
+                        "Nothing is sent on days with no alerts. "
+                        "You can use this with or without instant alerts."
+                    ),
+                )
+                saved_hour = alert_prefs.get("digest_hour")
+                saved_hour = 8 if saved_hour is None else int(saved_hour)
+                saved_zone = alert_prefs.get("digest_tz") or ""
+                if not saved_zone:
+                    try:
+                        saved_zone = str(getattr(st.context, "timezone", "") or "")
+                    except Exception:
+                        saved_zone = ""
+                zone_choices = list(COMMON_ZONES)
+                if saved_zone and saved_zone not in zone_choices:
+                    zone_choices.insert(0, saved_zone)
+                digest_hour_choice, digest_zone_choice = saved_hour, saved_zone or "UTC"
+                if digest_on:
+                    hour_col, zone_col = st.columns(2)
+                    digest_hour_choice = hour_col.selectbox(
+                        "Send at",
+                        list(range(24)),
+                        index=saved_hour if 0 <= saved_hour <= 23 else 8,
+                        format_func=lambda hour: f"{hour:02d}:00",
+                        key="alert_digest_hour",
+                    )
+                    digest_zone_choice = zone_col.selectbox(
+                        "Time zone",
+                        zone_choices,
+                        index=zone_choices.index(digest_zone_choice) if digest_zone_choice in zone_choices else 0,
+                        key="alert_digest_zone",
+                    )
+                new_alert_settings.update({
+                    "instant_email": instant_on,
+                    "digest_enabled": digest_on,
+                    "digest_hour": int(digest_hour_choice),
+                    "digest_tz": digest_zone_choice,
+                })
+                if not instant_on and not digest_on:
+                    st.caption("Both are off, so alerts only appear in the dashboard.")
+
+            changed = new_alert_settings != {name: alert_prefs.get(name) for name in new_alert_settings}
+            if changed:
+                to_save = dict(new_alert_settings)
+                if to_save.get("digest_enabled") and not alert_prefs.get("digest_enabled"):
+                    # Switched on now: the first digest goes out at the next chosen hour,
+                    # not at once with whatever happened earlier today.
+                    to_save["last_digest_at"] = datetime.now(timezone.utc).isoformat()
+                alert_prefs.update(to_save)
                 prefs["alerts"] = alert_prefs
-                save_alert_preferences_to_cloud(new_alert_settings)
+                save_alert_preferences_to_cloud(to_save)
 
 
 notifications_panel()

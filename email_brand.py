@@ -34,6 +34,25 @@ def alert_tone(message: str) -> str:
     return "info"
 
 
+def section_title(text: str) -> str:
+    """A small heading above a group of rows. Text must already be HTML-safe."""
+    return (
+        f'<p style="margin:22px 0 8px;font:800 13px/1.3 {_FONT};letter-spacing:.06em;'
+        f'text-transform:uppercase;color:{_MUTED};">{text}</p>'
+    )
+
+
+def list_row(title: str, detail: str, tone: str = "info") -> str:
+    """One row with a coloured stripe: a bold line and a smaller line. Both must be HTML-safe."""
+    accent = _TONES.get(tone, _BLUE)
+    return (
+        f'<div style="margin:0 0 8px;padding:10px 14px;background:{_PAPER};'
+        f'border-left:4px solid {accent};border-radius:4px;">'
+        f'<div style="font:700 15px/1.4 {_FONT};color:{_INK};">{title}</div>'
+        f'<div style="font:400 14px/1.45 {_FONT};color:{_MUTED};">{detail}</div></div>'
+    )
+
+
 def render_email(
     heading: str,
     paragraphs: list[str],
@@ -43,6 +62,8 @@ def render_email(
     tone: str = "info",
     footnote: str = "",
     preheader: str = "",
+    extra_html: str = "",
+    extra_plain: str = "",
 ) -> tuple[str, str]:
     """Return (html, plain text). Heading, paragraphs, callout and footnote are HTML-safe strings."""
     accent = _TONES.get(tone, _BLUE)
@@ -88,7 +109,7 @@ def render_email(
 </td></tr>
 <tr><td style="padding:30px 28px 10px;">
 <h1 style="margin:0 0 18px;font:800 24px/1.25 {_FONT};color:{_INK};">{heading}</h1>
-{body}{box}{action}
+{body}{box}{extra_html}{action}
 </td></tr>
 <tr><td style="padding:6px 28px 26px;border-top:1px solid {_RULE};">
 <p style="margin:16px 0 6px;">{note}</p>
@@ -98,14 +119,16 @@ def render_email(
 </table>
 </td></tr></table>
 </body></html>"""
-    return page, _plain(heading, paragraphs, callout, button, footnote)
+    return page, _plain(heading, paragraphs, callout, button, footnote, extra_plain)
 
 
-def _plain(heading, paragraphs, callout, button, footnote) -> str:
+def _plain(heading, paragraphs, callout, button, footnote, extra_plain="") -> str:
     lines = [_strip(heading), ""]
     lines += [_strip(part) for part in paragraphs if part]
     if callout:
         lines += ["", _strip(callout)]
+    if extra_plain:
+        lines += ["", extra_plain.strip()]
     if button:
         lines += ["", f"{button[0]}: {button[1]}"]
     if footnote:

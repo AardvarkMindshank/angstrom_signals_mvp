@@ -3350,3 +3350,26 @@ select upper(asset_id), next_earnings
 from public.asset_market
 where kind = 'Stock' and next_earnings is not null and asset_id is not null
 on conflict (ticker, report_date) do nothing;
+
+
+-- ============================================================
+-- Daily digest
+-- ============================================================
+-- instant_email: send an email at once for each crossing (on by default, as before).
+-- digest_enabled: send one summary email a day instead of, or as well as, the instant ones.
+-- digest_hour / digest_tz: when the digest goes out, in the person's own time zone.
+-- last_digest_at: when the last digest (or quiet day) was recorded.
+-- digested_at on a notification: this crossing has been included in a digest.
+alter table public.alert_preferences
+    add column if not exists instant_email boolean default true;
+alter table public.alert_preferences
+    add column if not exists digest_enabled boolean default false;
+alter table public.alert_preferences
+    add column if not exists digest_hour smallint default 8;
+alter table public.alert_preferences
+    add column if not exists digest_tz text default 'UTC';
+alter table public.alert_preferences
+    add column if not exists last_digest_at timestamptz;
+
+alter table public.user_notifications
+    add column if not exists digested_at timestamptz;

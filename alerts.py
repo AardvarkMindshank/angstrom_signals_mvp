@@ -9,7 +9,7 @@ release that latch. The background worker is the only writer.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 BULLISH = "BULLISH_THRESHOLD"
 BEARISH = "BEARISH_THRESHOLD"
@@ -186,7 +186,9 @@ def evaluate_alerts(supabase, user_id, results, alerts_config, notify_email=None
             "message": message,
         })
 
-    if notify_email and send_email:
+    # Instant emails are on unless the user turned them off. A digest-only user
+    # leaves the crossings unsent here; the digest picks them up.
+    if notify_email and send_email and alerts_config.get("instant_email") is not False:
         _email_open_crossings(supabase, user_id, notify_email, send_email)
 
     return opened
@@ -201,6 +203,9 @@ def _email_open_crossings(supabase, user_id, notify_email, send_email) -> None:
             .eq("user_id", user_id)
             .in_("alert_type", [BULLISH, BEARISH, HELD_BULLISH, HELD_BEARISH])
             .is_("emailed_at", "null")
+            # A crossing older than a day is stale. This also stops a burst of old
+            # crossings if someone turns instant alerts back on after a while.
+            .gte("created_at", (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat())
             .execute()
             .data
             or []

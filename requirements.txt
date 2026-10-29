@@ -6,3 +6,4 @@ yfinance
 requests
 python-dotenv
 supabase
+tzdata

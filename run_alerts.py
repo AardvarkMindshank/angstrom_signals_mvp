@@ -17,6 +17,7 @@ from supabase import create_client
 
 from alerts import evaluate_alerts
 from beta_worker import send_beta_decision_emails
+from digest import send_due_digest
 from email_brand import alert_tone, render_email
 from scoring import calculate_indicators, compute_score
 from shared_refresh import (
@@ -153,6 +154,30 @@ def send_alert_email(to_email: str, asset_name: str, message: str) -> bool:
     return False
 
 
+def send_digest_email(to_email: str, subject: str, page: str, plain: str) -> bool:
+    api_key = (os.getenv("RESEND_API_KEY") or "").strip()
+    if not api_key or not to_email:
+        print("Digest skipped: RESEND_API_KEY or the account email is missing.")
+        return False
+    sender = (os.getenv("RESEND_FROM") or "").strip() or "Angstrom Signals <onboarding@resend.dev>"
+    try:
+        response = requests.post(
+            "https://api.resend.com/emails",
+            json={"from": sender, "to": [to_email], "subject": subject, "html": page, "text": plain},
+            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+            timeout=15,
+        )
+    except Exception as exc:
+        print(f"Digest email failed: {exc}")
+        return False
+    if response.status_code in (200, 201):
+        print("Digest email sent")
+        return True
+    detail = " ".join((response.text or "").split())[:300]
+    print(f"Digest email failed: HTTP {response.status_code} {detail}")
+    return False
+
+
 def _score_asset(df, weights):
     if df is None or df.empty or len(df) < 15:
         return None
@@ -278,6 +303,18 @@ def run_background_checks() -> None:
             continue
         for alert in opened:
             print(f"Opened {alert['alert_type']} for {alert['asset_name']}")
+
+        digest_state = send_due_digest(
+            supabase,
+            user_id,
+            alert_config,
+            results,
+            user_email(supabase, user_id) if alert_config.get("digest_enabled") else None,
+            send_digest_email,
+            (os.getenv("APP_URL") or "https://app.angstromsignals.com").strip(),
+        )
+        if digest_state in ("sent", "error", "start"):
+            print(f"Daily digest for user {user_id}: {digest_state}")
 
     print("Background alert check finished.")
 
