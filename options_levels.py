@@ -233,3 +233,49 @@ def load_rows(ticker: str, today: date) -> tuple[list[dict], list[str], str | No
             "It does this for a while around the US market open, before the day's figures arrive."
         )
     return rows, chosen, None
+
+
+# ---------------------------------------------------------------- short interest
+
+_SHORT_TTL = 6 * 60 * 60   # published twice a month, so a few hours is plenty
+
+
+def short_interest_from_info(info: dict) -> dict:
+    """Short interest from a yfinance Ticker.info dict. Empty dict when Yahoo has none."""
+    info = info or {}
+    shares = _num(info.get("sharesShort"))
+    if shares <= 0:
+        return {}
+    prior = _num(info.get("sharesShortPriorMonth"))
+    stamp = _num(info.get("dateShortInterest"))
+    as_of = None
+    if stamp > 0:
+        from datetime import datetime, timezone
+        as_of = datetime.fromtimestamp(stamp, tz=timezone.utc).date()
+    pct = _num(info.get("shortPercentOfFloat"))
+    return {
+        "shares": shares,
+        "pct_float": pct if pct > 0 else None,
+        "days_to_cover": _num(info.get("shortRatio")) or None,
+        "change": (shares / prior - 1) if prior > 0 else None,
+        "as_of": as_of,
+    }
+
+
+def load_short_interest(ticker: str) -> dict:
+    ticker = str(ticker or "").strip().upper()
+    key = ("short", ticker)
+    hit = _cache.get(key)
+    if hit and time.time() - hit[0] < (_SHORT_TTL if hit[1][0] else _ERROR_TTL):
+        return hit[1][0]
+    try:
+        import yfinance as yf
+        with _YAHOO:
+            info = yf.Ticker(ticker).info
+        value = short_interest_from_info(info)
+    except Exception:
+        value = {}
+    if len(_cache) >= _CACHE_LIMIT:
+        _cache.pop(next(iter(_cache)))
+    _cache[key] = (time.time(), (value, None))
+    return value

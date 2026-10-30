@@ -73,3 +73,12 @@ def test_chain_lines_keep_only_open_contracts_and_survive_missing_columns():
     )
     lines = ol.chain_lines(found)
     assert lines == [{"type": "call", "strike": 100.0, "oi": 50.0, "iv": 0.4, "volume": 0.0}]
+
+
+def test_short_interest_reads_yahoo_fields():
+    info = {"sharesShort": 80_000_000, "sharesShortPriorMonth": 100_000_000, "shortPercentOfFloat": 0.031,
+            "shortRatio": 0.9, "dateShortInterest": 1760486400}
+    si = ol.short_interest_from_info(info)
+    assert si["pct_float"] == 0.031 and si["days_to_cover"] == 0.9
+    assert abs(si["change"] + 0.2) < 1e-9 and si["as_of"].year == 2025
+    assert ol.short_interest_from_info({}) == {} and ol.short_interest_from_info(None) == {}

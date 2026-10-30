@@ -11302,10 +11302,30 @@ def _level_change(side_rows_before, price: float, usd: float) -> str:
     return ("+" if change > 0 else "−") + _short_usd(abs(change))
 
 
+def _show_short_interest(si: dict) -> None:
+    """One line of short-interest figures, with the date they describe."""
+    if not si:
+        return
+    pct = si.get("pct_float")
+    parts = [f"**{pct * 100:.1f}%** of tradable shares sold short" if pct else f"**{_short_usd(si['shares'])[1:]}** shares sold short"]
+    if si.get("days_to_cover"):
+        parts.append(f"**{si['days_to_cover']:.1f}** days to cover")
+    if si.get("change") is not None:
+        arrow = ":red[▲]" if si["change"] > 0 else ":green[▼]"
+        parts.append(f"{arrow} {si['change'] * 100:+.0f}% vs the month before")
+    as_of = f" (as of {si['as_of'].strftime('%d %b')})" if si.get("as_of") else ""
+    st.markdown("🩳 Short interest: " + " · ".join(parts) + as_of, help=(
+        "Shares borrowed and sold, betting on a fall. A high share of the float or many days to cover "
+        "means more fuel for a squeeze if the price rises. Published twice a month, about a week late. "
+        "Data: Yahoo Finance."
+    ))
+
+
 def _show_options_positioning(ticker: str, chart_price: float | None) -> None:
     """Call and put walls, gamma exposure and put/call ratios for a stock, from its options chain."""
     import options_levels
 
+    _show_short_interest(options_levels.load_short_interest(ticker))
     today = datetime.now(timezone.utc).date()
     rows, expiries, error = options_levels.load_rows(ticker, today)
     if error:
