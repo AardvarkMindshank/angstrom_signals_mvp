@@ -290,3 +290,11 @@ def test_quiet_day_still_sends_the_watchlist_summary():
                                    [asset("btc", 60)], "me@x.com", lambda *a: sent.append(a) or True,
                                    "https://app", now=utc(2026, 10, 30, 2))
     assert state == "quiet" and len(sent) == 1
+
+
+def test_market_mood_badge_colours():
+    assert digest.market_mood_colour(70)[1] == "#0f9d46"
+    assert digest.market_mood_colour(50)[1] == "#fdebcf"
+    assert digest.market_mood_colour(44)[1] == "#fde2e0"
+    assert digest.market_mood_colour(30)[1] == "#c0392b"
+    assert digest.market_mood_colour(None)[1] == "#eef1f6"

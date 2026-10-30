@@ -177,6 +177,22 @@ def _mood_colour(value) -> tuple[str, str]:
     return _GREY, _GREY_BG
 
 
+def market_mood_colour(value, high=65.0, low=35.0) -> tuple[str, str]:
+    """(text, background) for a market mood badge, on the same five steps as the score bars,
+    with strong colours at the market alert lines."""
+    if value is None:
+        return _GREY, _GREY_BG
+    if value >= high:
+        return "#ffffff", _GREEN
+    if value >= 55:
+        return "#166534", _GREEN_BG
+    if value <= low:
+        return "#ffffff", _RED
+    if value <= 45:
+        return "#9b2c22", _RED_BG
+    return "#8a4b00", "#fdebcf"
+
+
 def _pill(text: str, colour: str, background: str) -> str:
     return (
         f'<span style="display:inline-block;padding:2px 9px;border-radius:999px;background:{background};'
@@ -277,7 +293,9 @@ def _watchlist_section(results, config) -> tuple[str, str]:
         mood = _number(rows[0].get("market_score")) if rows else None
         mood_html = ""
         if mood is not None:
-            text, bg = _mood_colour(mood)
+            text, bg = market_mood_colour(
+                mood, _number(config.get("market_high_alert")) or 65.0, _number(config.get("market_low_alert")) or 35.0,
+            )
             mood_html = (
                 f'<span style="font:400 13px/1.5 {_FONT};color:{_MUTED};">Market mood</span> '
                 + _pill(f"{mood:.0f}", text, bg)
