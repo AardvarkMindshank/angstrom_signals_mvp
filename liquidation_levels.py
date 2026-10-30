@@ -28,6 +28,7 @@ API_BASE = "https://api.coinalyze.net/v1"
 LEVERAGE_MIX = {10: 0.35, 25: 0.30, 50: 0.20, 100: 0.15}
 MAINTENANCE_MARGIN = 0.005
 BUCKET_SHARE = 0.0025          # buckets are 0.25% of price wide
+MERGE_GAP = 0.01               # levels within 1% of each other are shown as one
 LOOKBACK_HOURS = 7 * 24
 LEVELS_PER_SIDE = 5
 PREFERRED_EXCHANGES = ("binance", "bybit", "okx")
@@ -106,10 +107,26 @@ def estimate_levels(bars: list[dict], oi: list[dict], ratios: list[dict] | None 
         last_close = close
 
     def strongest(book: dict[int, float]) -> list[dict]:
-        rows = sorted(book.items(), key=lambda item: item[1], reverse=True)[:per_side]
-        return [{"price": round(_bucket_price(k), 8), "usd": round(v, 2)} for k, v in rows if v > 0]
+        merged = merge_nearby([(_bucket_price(k), v) for k, v in book.items() if v > 0])
+        rows = sorted(merged, key=lambda item: item[1], reverse=True)[:per_side]
+        return [{"price": round(price, 8), "usd": round(usd, 2)} for price, usd in rows]
 
     return {"price": last_close, "longs": strongest(longs), "shorts": strongest(shorts)}
+
+
+def merge_nearby(levels: list[tuple[float, float]], gap: float = MERGE_GAP) -> list[tuple[float, float]]:
+    """Join levels within `gap` (a share of price) of each other into one, at their
+    money-weighted price, so the strongest levels are genuinely different prices."""
+    clusters: list[list[float]] = []   # [weighted price sum, usd sum, last price]
+    for price, usd in sorted(levels):
+        if clusters and price <= clusters[-1][2] * (1 + gap):
+            cluster = clusters[-1]
+            cluster[0] += price * usd
+            cluster[1] += usd
+            cluster[2] = price
+        else:
+            clusters.append([price * usd, usd, price])
+    return [(total / usd, usd) for total, usd, _last in clusters if usd > 0]
 
 
 def _ok(value) -> bool:

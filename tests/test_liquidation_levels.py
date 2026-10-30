@@ -72,3 +72,11 @@ def test_bad_rows_are_skipped():
     oi = [{"t": 0, "c": "x"}, {"t": 1, "c": 5}]
     result = liq.estimate_levels(bars, oi)
     assert result["price"] == 100 and result["longs"] == [] and result["shorts"] == []
+
+
+def test_nearby_levels_are_merged_into_one():
+    merged = liq.merge_nearby([(0.820, 100.0), (0.822, 100.0), (0.8241, 200.0), (0.90, 50.0)])
+    assert len(merged) == 2
+    price, usd = merged[0]
+    assert usd == 400.0 and 0.820 < price < 0.8241
+    assert merged[1] == (0.90, 50.0)

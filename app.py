@@ -10087,33 +10087,32 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             chosen_indicators = []
             # Crypto only: a link to CoinGlass's liquidation heatmap for the coin on the chart.
             heatmap_url = coinglass_heatmap_url(asset_key) if asset_type == "Crypto" else ""
-            with st.container(horizontal=True, vertical_alignment="center", gap="small", key="chart_icon_row"):
-                if indicator_keys:
-                    if hasattr(st, "pills"):
-                        chosen_indicators = st.pills(
-                            "Chart indicators",
-                            indicator_keys,
-                            selection_mode="multi",
-                            format_func=_indicator_label,
-                            key="chart_indicators",
-                            label_visibility="collapsed",
-                        ) or []
-                    else:
-                        chosen_indicators = st.multiselect(
-                            "Chart indicators",
-                            indicator_keys,
-                            format_func=_indicator_label,
-                            key="chart_indicators",
-                        )
-                if heatmap_url:
-                    st.link_button(
-                        "🔥 CoinGlass",
-                        heatmap_url,
-                        help=(
-                            f"CoinGlass's liquidation heatmap for {title} (opens a new tab). "
-                            "CoinGlass asks you to log in, free, to see the full data."
-                        ),
+            if indicator_keys:
+                if hasattr(st, "pills"):
+                    chosen_indicators = st.pills(
+                        "Chart indicators",
+                        indicator_keys,
+                        selection_mode="multi",
+                        format_func=_indicator_label,
+                        key="chart_indicators",
+                        label_visibility="collapsed",
+                    ) or []
+                else:
+                    chosen_indicators = st.multiselect(
+                        "Chart indicators",
+                        indicator_keys,
+                        format_func=_indicator_label,
+                        key="chart_indicators",
                     )
+            if heatmap_url:
+                st.link_button(
+                    "🔥 CoinGlass",
+                    heatmap_url,
+                    help=(
+                        f"CoinGlass's liquidation heatmap for {title} (opens a new tab). "
+                        "CoinGlass asks you to log in, free, to see the full data."
+                    ),
+                )
             if LIQ_KEY in indicator_keys:
                 st.session_state["_chart_liq_on"] = LIQ_KEY in chosen_indicators
             liq_on = LIQ_KEY in chosen_indicators
