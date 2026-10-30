@@ -3388,3 +3388,42 @@ alter table public.alert_preferences
     add column if not exists market_high_alert numeric default 65;
 alter table public.alert_preferences
     add column if not exists market_low_alert numeric default 35;
+
+
+-- ============================================================
+-- Estimated liquidation levels (crypto)
+-- ============================================================
+-- liq_levels: the strongest estimated long and short liquidation levels for a coin,
+-- worked out by the background worker from Coinalyze data (see liquidation_levels.py).
+-- liq_updated_at: when they were last worked out (about hourly).
+-- Only the worker (service role) writes these; a signed-in session keeps what is stored.
+alter table public.asset_market
+    add column if not exists liq_levels jsonb;
+alter table public.asset_market
+    add column if not exists liq_updated_at timestamptz;
+
+create or replace function public.guard_asset_market_liq()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+    if auth.uid() is null then
+        return new;
+    end if;
+    if tg_op = 'INSERT' then
+        new.liq_levels := null;
+        new.liq_updated_at := null;
+    else
+        new.liq_levels := old.liq_levels;
+        new.liq_updated_at := old.liq_updated_at;
+    end if;
+    return new;
+end;
+$$;
+
+drop trigger if exists guard_asset_market_liq on public.asset_market;
+create trigger guard_asset_market_liq
+    before insert or update on public.asset_market
+    for each row
+    execute function public.guard_asset_market_liq();

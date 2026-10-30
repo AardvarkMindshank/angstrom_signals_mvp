@@ -309,6 +309,16 @@ def run_background_checks() -> None:
     frames = refresh_price_catalog(supabase, catalog, max_days)
     refresh_due_sentiment(supabase, catalog)
     try:
+        from data_fetchers import crypto_ticker
+        from liquidation_levels import refresh_due as refresh_liquidation_levels
+
+        refresh_liquidation_levels(
+            supabase, catalog, (os.getenv("COINALYZE_API_KEY") or "").strip(), crypto_ticker
+        )
+    except Exception as exc:
+        # Liquidation levels are a chart extra. They must never hold up the alert pass.
+        print(f"Liquidation levels skipped: {str(exc)[:160]}")
+    try:
         from evidence import refresh_due_evidence
 
         refresh_due_evidence(supabase, catalog)

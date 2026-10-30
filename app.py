@@ -5677,6 +5677,99 @@ def crowd_average_badge(average, count, spread, active: bool = True) -> str:
     return f"<span title='{html.escape(title)}'>{sentiment_badge(average)}</span>"
 
 
+LIQ_KEY = "liq"
+
+
+def _liquidation_record(asset_id) -> dict | None:
+    """The stored liquidation estimate for one coin, with when it was made. None if not ready."""
+    try:
+        rows = (
+            supabase.table("asset_market")
+            .select("liq_levels, liq_updated_at")
+            .eq("asset_key", asset_market_key("Crypto", asset_id))
+            .limit(1)
+            .execute()
+            .data
+            or []
+        )
+    except Exception:
+        return None
+    if not rows or not isinstance(rows[0].get("liq_levels"), dict):
+        return None
+    record = dict(rows[0]["liq_levels"])
+    record["updated_at"] = rows[0].get("liq_updated_at")
+    return record
+
+
+def _short_usd(value) -> str:
+    value = float(value or 0)
+    for size, mark in ((1e9, "B"), (1e6, "M"), (1e3, "K")):
+        if value >= size:
+            return f"${value / size:.1f}{mark}"
+    return f"${value:.0f}"
+
+
+def _number_or_none(value):
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    return number if number == number else None
+
+
+def _draw_liquidation_levels(fig, record, last_x) -> None:
+    """Faint lines at the strongest estimated levels: red longs below, green shorts above.
+    Brighter and thicker means more money would be liquidated there."""
+    if not record or record.get("status") != "ok":
+        return
+    rows = [("longs", r) for r in record.get("longs") or []] + [("shorts", r) for r in record.get("shorts") or []]
+    rows = [(side, r) for side, r in rows if _number_or_none(r.get("price")) and _number_or_none(r.get("usd"))]
+    if not rows:
+        return
+    biggest = max(float(r["usd"]) for _side, r in rows) or 1.0
+    xs, ys, texts, colours = [], [], [], []
+    for side, row in rows:
+        share = float(row["usd"]) / biggest
+        colour = "#ef4444" if side == "longs" else "#22c55e"
+        fig.add_hline(
+            y=float(row["price"]), line_color=colour, line_width=1 + 4 * share,
+            opacity=0.15 + 0.55 * share, row=1, col=1,
+        )
+        who = "Longs" if side == "longs" else "Shorts"
+        xs.append(last_x)
+        ys.append(float(row["price"]))
+        texts.append(f"{who} liquidated near {float(row['price']):,.4g}: about {_short_usd(row['usd'])} (estimate)")
+        colours.append(colour)
+    fig.add_trace(
+        go.Scatter(
+            x=xs, y=ys, mode="markers", name="🔥 Liquidation levels (estimate)",
+            marker=dict(symbol="diamond", size=8, color=colours, line=dict(width=0)),
+            hovertext=texts, hoverinfo="text",
+        ),
+        row=1, col=1,
+    )
+
+
+def _liquidation_caption(record) -> str:
+    credit = "Data: [Coinalyze](https://coinalyze.net)."
+    if not record:
+        return "🔥 Estimated liquidation levels appear within about an hour of a coin being watched. " + credit
+    status = record.get("status")
+    if status == "no_market":
+        return "🔥 No futures market for this coin on Binance, Bybit or OKX, so there are no liquidation levels."
+    if status != "ok":
+        return "🔥 The liquidation levels could not be worked out on the last try. They are retried about hourly."
+    when = str(record.get("updated_at") or "")[:16].replace("T", " ")
+    return (
+        "🔥 Estimated liquidation levels (not part of the score). Red lines below the price are where long "
+        "positions would be force-closed, green lines above are shorts. Brighter means more money. "
+        "Worked out from the last 7 days of open interest, assuming a typical leverage mix"
+        + (f", updated {when} UTC" if when else "")
+        + ". "
+        + credit
+    )
+
+
 def coinglass_heatmap_url(asset_id) -> str:
     """CoinGlass's liquidation heatmap page for one coin. Empty when the coin has no known ticker."""
     ticker = crypto_ticker(asset_id) or ""
@@ -9961,20 +10054,32 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             df_chart = calculate_indicators(df_chart)
             indicator_keys = chart_plan.available(df_chart.columns)
             indicator_icons = {"sma200": "📏", "ichimoku": "☁️", "macd": "〰️", "stoch": "🎚️", "adx": "🧭", "obv": "📊"}
+            # Crypto charts also offer estimated liquidation levels, drawn by this page, not chart_plan.
+            if asset_type == "Crypto":
+                indicator_keys = list(indicator_keys) + [LIQ_KEY]
 
             def _indicator_label(key):
+                if key == LIQ_KEY:
+                    return "🔥 Liquidation levels"
                 return f"{indicator_icons.get(key, '')} {chart_plan.INDICATORS[key]['label']}".strip()
 
             # The chart choices belong to the account. Start from what was saved, and keep a saved
             # choice this asset cannot draw (too little history) so it comes back on the next asset.
             saved_chart = (st.session_state.get("cloud_prefs") or {}).get("settings") or {}
             saved_picks = [k for k in (saved_chart.get("chart_indicators") or []) if k in chart_plan.INDICATORS]
+            # The liquidation choice is kept apart, so a stock chart (which has no levels)
+            # does not switch it off for the next coin.
+            if "_chart_liq_on" not in st.session_state:
+                st.session_state["_chart_liq_on"] = bool(saved_chart.get("chart_liq", False))
             if "chart_indicators" not in st.session_state:
                 st.session_state["chart_indicators"] = [k for k in saved_picks if k in indicator_keys]
             else:
                 st.session_state["chart_indicators"] = [
                     k for k in (st.session_state.get("chart_indicators") or []) if k in indicator_keys
                 ]
+            if LIQ_KEY in indicator_keys and st.session_state["_chart_liq_on"]:
+                if LIQ_KEY not in st.session_state["chart_indicators"]:
+                    st.session_state["chart_indicators"] = list(st.session_state["chart_indicators"]) + [LIQ_KEY]
             if "chart_overlay" not in st.session_state:
                 st.session_state["chart_overlay"] = bool(saved_chart.get("chart_overlay", False))
             if "chart_earnings" not in st.session_state:
@@ -10002,14 +10107,17 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                         )
                 if heatmap_url:
                     st.link_button(
-                        "🔥",
+                        "🔥 CoinGlass",
                         heatmap_url,
                         help=(
-                            f"Liquidation heatmap for {title} on CoinGlass (opens a new tab). "
-                            "It shows price levels where many leveraged futures positions would be "
-                            "force-closed. CoinGlass asks you to log in, free, to see the full data."
+                            f"CoinGlass's liquidation heatmap for {title} (opens a new tab). "
+                            "CoinGlass asks you to log in, free, to see the full data."
                         ),
                     )
+            if LIQ_KEY in indicator_keys:
+                st.session_state["_chart_liq_on"] = LIQ_KEY in chosen_indicators
+            liq_on = LIQ_KEY in chosen_indicators
+            chosen_indicators = [k for k in chosen_indicators if k != LIQ_KEY]
             overlay_curves = st.checkbox(
                 "Overlay RSI, Stochastic and ADX on the price chart",
                 key="chart_overlay",
@@ -10035,6 +10143,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             chart_choices = {
                 "chart_indicators": [k for k in chart_plan.INDICATORS if k in wanted_picks],
                 "chart_overlay": bool(overlay_curves),
+                "chart_liq": bool(st.session_state.get("_chart_liq_on")),
             }
             if asset_type != "Crypto":
                 chart_choices["chart_earnings"] = bool(show_earnings)
@@ -10130,6 +10239,10 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                     ),
                     row=1, col=1,
                 )
+
+            liq_record = _liquidation_record(asset_key) if liq_on else None
+            if liq_on:
+                _draw_liquidation_levels(fig, liq_record, df_chart.index[-1])
 
             colors = [
                 "green" if df_chart["close"].iloc[i] >= df_chart["open"].iloc[i] else "red"
@@ -10237,6 +10350,8 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                 )
             _paint_chart(fig)
             st.plotly_chart(fig, width="stretch")
+            if liq_on:
+                st.caption(_liquidation_caption(liq_record))
 
             result = compute_score(df_chart, weights=weights, adaptive=bool(st.session_state.get("adaptive_scoring")))
             score_val = result["score"]
