@@ -3094,7 +3094,8 @@ export default function(component) {
       } else if (left === 0 || !updatedAt) {
         parts.push("update due");
       }
-      line.textContent = "🕒 " + parts.join(" · ");
+      const lead = String(data.prefix || "");
+      line.textContent = (lead ? lead + " · " : "🕒 ") + parts.join(" · ");
       const seenKey = timerKey + "_seen", sentKey = timerKey + "_sent";
       if (window[seenKey] !== tokenNow) {
         window[seenKey] = tokenNow;
@@ -3516,7 +3517,8 @@ def _countdown_due(
     return bool(token) and result.due == token
 
 
-def _section_timer(updated_at: float | None, interval: float, widget_key: str, help_text: str) -> None:
+def _section_timer(updated_at: float | None, interval: float, widget_key: str, help_text: str,
+                   prefix: str = "") -> None:
     """A quiet 'Updated … · next update in …' line at the top of a section. When the update falls
     due, the page reruns once so it picks up the new shared data."""
     deadline = next_update(updated_at, interval)
@@ -3536,6 +3538,7 @@ def _section_timer(updated_at: float | None, interval: float, widget_key: str, h
             "token": token,
             "key": widget_key,
             "help": help_text,
+            "prefix": prefix,
         },
         on_due_change=lambda: None,
     )
@@ -9749,14 +9752,14 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, weig
                 print(f"market overview failed: {exc}")
                 overview, strip = None, ""
             if strip:
-                age = time.time() - float((overview or {}).get("fetched_at") or 0)
-                st.markdown(
-                    "<div class='ang-kicker' style='margin:0 0 6px;' title='Hover a card for what it measures. "
-                    "Shared for everyone and refreshed about every 15 minutes. Stock prices can be delayed "
-                    "about 15 minutes; futures prices for gold and oil.'>🌍 Markets · "
-                    f"updated {html.escape(_ago(age))}</div>" + strip,
-                    unsafe_allow_html=True,
+                _section_timer(
+                    float((overview or {}).get("fetched_at") or 0) or None,
+                    market_overview.REFRESH_SECONDS, "timer_markets",
+                    "Hover a card for what it measures. Shared for everyone and refreshed about every "
+                    "15 minutes. Stock prices can be delayed about 15 minutes; gold and oil are futures prices.",
+                    prefix="🌍 Markets",
                 )
+                st.markdown(strip, unsafe_allow_html=True)
             elif trade_crypto or trade_equities:
                 st.caption("🌍 Market overview is loading. It appears on the next update.")
         # Market cap still uses a short cache. Prices and sentiment come from the shared rows.

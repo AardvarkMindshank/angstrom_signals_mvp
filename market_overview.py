@@ -421,7 +421,7 @@ def overview_html(overview: dict | None, crypto: bool, stocks: bool, now: dateti
         return ""
     parts = [
         "<style>"
-        ".ang-mkt{display:flex;flex-wrap:wrap;gap:10px 14px;margin-bottom:16px;}"
+        ".ang-mkt{display:flex;flex-wrap:wrap;gap:10px 14px;margin:-10px 0 16px;}"
         ".ang-mkt-group{min-width:0;}"
         ".ang-mkt-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:8px;}"
         "@media (max-width:640px){.ang-mkt-group{flex:1 1 100% !important;}"
