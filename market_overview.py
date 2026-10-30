@@ -299,72 +299,119 @@ def _fng_word(value: float) -> str:
     return "Extreme greed"
 
 
+# Display groups, in order: (name, heading).
+GROUPS = (
+    ("stocks", "📈 Stock markets"),
+    ("rates", "🏦 Rates & dollar"),
+    ("commodities", "🛢️ Commodities"),
+    ("crypto", "🪙 Crypto"),
+    ("risk", "🧭 Sentiment & risk"),
+)
+_GROUP_OF = {
+    "spx": "stocks", "ndx": "stocks", "dji": "stocks", "ftse": "stocks", "dax": "stocks", "n225": "stocks",
+    "hsi": "stocks", "us10y": "rates", "dxy": "rates", "gold": "commodities", "oil": "commodities",
+    "btc": "crypto", "eth": "crypto", "crypto_cap": "crypto", "btc_dom": "crypto", "vix": "risk", "fng": "risk",
+}
+_EXTRA = (("crypto_cap", "Crypto market cap", "usd"), ("btc_dom", "Bitcoin share", "pct"), ("fng", "Fear & Greed", "points"))
+
+
+def _wanted(key: str, crypto: bool, stocks: bool) -> bool:
+    """Which readings a trader of these markets sees. Crypto-only traders still get the
+    VIX, the dollar and the 10-year yield, which move crypto too."""
+    group = _GROUP_OF.get(key)
+    if group in ("stocks", "commodities"):
+        return stocks
+    if group == "rates":
+        return stocks or crypto
+    if group == "crypto":
+        return crypto
+    if key == "vix":
+        return stocks or crypto
+    if key == "fng":
+        return crypto
+    return False
+
+
 def card_list(overview: dict | None, crypto: bool, stocks: bool, now: datetime | None = None) -> list[dict]:
-    """The cards to show, in order, for the markets this account trades."""
+    """The cards to show, in display order, for the markets this account trades."""
     items = (overview or {}).get("items") or {}
+    found = {}
+    for key, label, _symbol, _group, unit, exchange, invert in SPECS:
+        if key in items and _wanted(key, crypto, stocks):
+            found[key] = {"key": key, "label": label, "unit": unit, "exchange": exchange, "invert": invert, **items[key]}
+    for key, label, unit in _EXTRA:
+        if key in items and _wanted(key, crypto, stocks):
+            found[key] = {"key": key, "label": label, "unit": unit, "exchange": "", "invert": False, **items[key]}
     cards = []
-    groups = []
-    if stocks:
-        groups += ["stocks", "macro"]
-    if crypto:
-        groups.append("crypto")
-        if not stocks:
-            groups.insert(0, "macro_crypto")
-    for key, label, _symbol, group, unit, exchange, invert in SPECS:
-        wanted = group in groups or (group == "macro" and "macro_crypto" in groups and key in ("vix", "dxy", "us10y"))
-        if not wanted or key not in items:
-            continue
-        cards.append({"key": key, "label": label, "unit": unit, "exchange": exchange, "invert": invert,
-                      "group": group, **items[key]})
-    if crypto:
-        for key, label, unit in (("crypto_cap", "Crypto market cap", "usd"), ("btc_dom", "Bitcoin share", "pct"),
-                                 ("fng", "Fear & Greed", "points")):
-            if key in items:
-                cards.append({"key": key, "label": label, "unit": unit, "exchange": "", "invert": False,
-                              "group": "crypto", **items[key]})
-    for card in cards:
-        card["open"] = market_open(card["exchange"], now) if card["exchange"] else None
+    order = [spec[0] for spec in SPECS] + [extra[0] for extra in _EXTRA]
+    for group, _heading in GROUPS:
+        for key in order:
+            if key in found and _GROUP_OF.get(key) == group:
+                card = found[key]
+                card["group"] = group
+                card["open"] = market_open(card["exchange"], now) if card["exchange"] else None
+                cards.append(card)
     return cards
 
 
+def _card_html(card: dict) -> str:
+    key, unit = card["key"], card["unit"]
+    hint = HINTS.get(key, "")
+    dot = ""
+    if card["open"] is not None:
+        place = EXCHANGES[card["exchange"]][3]
+        state = "open" if card["open"] else "closed"
+        dot = (
+            f"<span title='{html.escape(place)} is {state}' style='display:inline-block;width:8px;height:8px;"
+            f"border-radius:50%;margin-right:5px;vertical-align:1px;"
+            f"background:{'#22c55e' if card['open'] else '#cbd5e1'};'></span>"
+        )
+        hint = f"{hint} {place} is {state} now (public holidays are not shown)."
+    value = value_text(key, unit, card["value"])
+    sub = ""
+    if key == "fng":
+        sub = f"<span style='font-size:0.75rem;color:{_GREY};'>{_fng_word(card['value'])}</span>"
+    pill = change_pill(card.get("change"), unit, card["invert"])
+    spark = spark_svg(card.get("spark"), card["invert"])
+    return (
+        f"<div class='ang-card' title='{html.escape(hint, quote=True)}' "
+        "style='min-width:0;padding:8px 10px;margin:0;'>"
+        f"<div class='ang-kicker' style='white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>{dot}{html.escape(card['label'])}</div>"
+        "<div style='display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;margin:2px 0;'>"
+        f"<span style='font-weight:700;font-size:1.05rem;'>{html.escape(value)}</span>{pill}{sub}</div>"
+        f"{spark}</div>"
+    )
+
+
 def overview_html(overview: dict | None, crypto: bool, stocks: bool, now: datetime | None = None) -> str:
-    """The strip of cards. Empty when nothing has been fetched yet."""
+    """The cards in labelled groups. Empty when nothing has been fetched yet.
+
+    Wide screens: groups flow side by side, each taking room for its cards, so small groups share a row.
+    Phones: each group is one row you swipe sideways."""
     cards = card_list(overview, crypto, stocks, now)
     if not cards:
         return ""
     parts = [
-        # A grid on wide screens; one row you swipe sideways on a phone.
-        "<style>.ang-mkt{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-bottom:10px;}"
-        "@media (max-width:640px){.ang-mkt{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;"
-        "padding-bottom:4px;}.ang-mkt>div{flex:0 0 150px;scroll-snap-align:start;}}</style>",
+        "<style>"
+        ".ang-mkt{display:flex;flex-wrap:wrap;gap:10px 14px;margin-bottom:12px;}"
+        ".ang-mkt-group{min-width:0;}"
+        ".ang-mkt-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:8px;}"
+        "@media (max-width:640px){.ang-mkt-group{flex:1 1 100% !important;}"
+        ".ang-mkt-cards{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:4px;}"
+        ".ang-mkt-cards>div{flex:0 0 150px;scroll-snap-align:start;}}"
+        "</style>",
         "<div class='ang-mkt'>",
     ]
-    for card in cards:
-        key, unit = card["key"], card["unit"]
-        hint = HINTS.get(key, "")
-        dot = ""
-        if card["open"] is not None:
-            place = EXCHANGES[card["exchange"]][3]
-            state = "open" if card["open"] else "closed"
-            dot = (
-                f"<span title='{html.escape(place)} is {state}' style='display:inline-block;width:8px;height:8px;"
-                f"border-radius:50%;margin-right:5px;vertical-align:1px;"
-                f"background:{'#22c55e' if card['open'] else '#cbd5e1'};'></span>"
-            )
-            hint = f"{hint} {place} is {state} now (public holidays are not shown)."
-        value = value_text(key, unit, card["value"])
-        sub = ""
-        if key == "fng":
-            sub = f"<span style='font-size:0.75rem;color:{_GREY};'>{_fng_word(card['value'])}</span>"
-        pill = change_pill(card.get("change"), unit, card["invert"])
-        spark = spark_svg(card.get("spark"), card["invert"])
+    for group, heading in GROUPS:
+        members = [card for card in cards if card["group"] == group]
+        if not members:
+            continue
+        count = len(members)
         parts.append(
-            f"<div class='ang-card' title='{html.escape(hint, quote=True)}' "
-            "style='min-width:0;padding:8px 10px;margin:0;'>"
-            f"<div class='ang-kicker' style='white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>{dot}{html.escape(card['label'])}</div>"
-            "<div style='display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;margin:2px 0;'>"
-            f"<span style='font-weight:700;font-size:1.05rem;'>{html.escape(value)}</span>{pill}{sub}</div>"
-            f"{spark}</div>"
+            # Grows in proportion to its number of cards; never narrower than they need.
+            f"<div class='ang-mkt-group' style='flex:{count} 1 {count * 136 - 8}px;'>"
+            f"<div class='ang-kicker' style='font-weight:600;margin:0 0 4px;'>{html.escape(heading)}</div>"
+            "<div class='ang-mkt-cards'>" + "".join(_card_html(card) for card in members) + "</div></div>"
         )
     parts.append("</div>")
     return "".join(parts)

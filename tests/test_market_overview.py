@@ -34,7 +34,7 @@ def test_cards_follow_the_markets_traded():
     assert "spx" in stocks_only and "vix" in stocks_only and "btc" not in stocks_only and "fng" not in stocks_only
     crypto_only = [c["key"] for c in mo.card_list(overview(), crypto=True, stocks=False)]
     assert "btc" in crypto_only and "fng" in crypto_only and "spx" not in crypto_only
-    assert "vix" in crypto_only and "gold" not in crypto_only
+    assert "vix" in crypto_only and "dxy" in crypto_only and "gold" not in crypto_only
     assert mo.card_list(overview(), crypto=False, stocks=False) == []
 
 
@@ -46,3 +46,11 @@ def test_html_values_and_vix_colours():
     assert "#15803d" in mo.change_pill(2.0, "index")
     assert "0.05 pt" in mo.change_pill(0.05, "yield")
     assert mo.overview_html(None, True, True) == ""
+
+
+def test_cards_come_in_groups_in_order():
+    keys = [c["key"] for c in mo.card_list(overview(), crypto=True, stocks=True)]
+    assert keys[:7] == ["spx", "ndx", "dji", "ftse", "dax", "n225", "hsi"]
+    assert keys[7:] == ["us10y", "dxy", "gold", "oil", "btc", "eth", "crypto_cap", "vix", "fng"]
+    page = mo.overview_html(overview(), crypto=True, stocks=True)
+    assert page.index("Stock markets") < page.index("Rates") < page.index("Commodities") < page.index("Crypto<") < page.index("Sentiment &amp; risk")
