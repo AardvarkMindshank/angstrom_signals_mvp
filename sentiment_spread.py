@@ -17,8 +17,12 @@ SPLIT_ABOVE = 20.0
 
 
 def article_scores(report: dict | None) -> list[float]:
+    """Every scored item: the articles, and for a market also its public readings."""
     values = []
-    for row in (report or {}).get("headlines") or []:
+    rows = list((report or {}).get("headlines") or [])
+    for group in (report or {}).get("gauges") or []:
+        rows += list((group or {}).get("items") or []) if isinstance(group, dict) else []
+    for row in rows:
         if not isinstance(row, dict):
             continue
         try:
@@ -44,9 +48,9 @@ def spread_word(values: list[float]) -> tuple[str, float]:
 
 
 _MEANING = {
-    "agree": "the articles mostly read the same way",
-    "mixed": "the articles lean different ways",
-    "split": "the articles disagree strongly; the average hides two camps",
+    "agree": "they mostly read the same way",
+    "mixed": "they lean different ways",
+    "split": "they disagree strongly; the average hides two camps",
 }
 
 
@@ -91,8 +95,14 @@ def spread_html(report: dict | None, average: float | None = None, width: int = 
         "stroke-width='1.2' opacity='0.7'/>"
         "</svg>"
     )
+    readings = sum(
+        1 for group in (report or {}).get("gauges") or [] if isinstance(group, dict)
+        for item in group.get("items") or [] if isinstance(item, dict) and item.get("score") is not None
+    )
+    what = f"{len(values) - readings} news articles and {readings} public readings" if readings else f"{len(values)} articles"
+    noun = "sources" if readings else "articles"
     title = (
-        f"{len(values)} articles, scored 0 to 100. Each dot is one article; the marker is the average "
+        f"{what}, each scored 0 to 100. Each dot is one; the marker is the average "
         f"({mean:.0f}). Spread ±{sd:.0f} points: {word}, {_MEANING[word]}."
     )
     colours = {"agree": ("#15803d", "#dcfce7"), "mixed": ("#b45309", "#fef3c7"), "split": ("#b91c1c", "#fee2e2")}
@@ -105,6 +115,6 @@ def spread_html(report: dict | None, average: float | None = None, width: int = 
         f"<span class='sentiment-spread' title='{html.escape(title, quote=True)}' "
         "style='display:inline-flex;align-items:center;gap:8px;cursor:help;'>"
         f"{svg}<span style='display:inline-flex;flex-direction:column;align-items:flex-start;line-height:1.2;'>"
-        f"{label}<span style='font-size:0.7rem;color:var(--ang-muted,#6b7280);'>{len(values)} articles</span>"
+        f"{label}<span style='font-size:0.7rem;color:var(--ang-muted,#6b7280);'>{len(values)} {noun}</span>"
         "</span></span>"
     )

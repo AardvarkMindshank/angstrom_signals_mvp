@@ -811,6 +811,35 @@ def score_market_readings(market_key: str, label: str, groups: list[dict]) -> li
     return groups
 
 
+def _scores_in(rows) -> list[float]:
+    values = []
+    for row in rows or []:
+        try:
+            value = float((row or {}).get("score"))
+        except (TypeError, ValueError, AttributeError):
+            continue
+        if value == value:
+            values.append(value)
+    return values
+
+
+def combine_mood_score(report: dict) -> dict:
+    """A market score is the average of every scored item: the news articles and the public
+    readings (central banks, yields, Fear & Greed...) alike, each counting once. The two
+    separate averages are kept too, for the hover text."""
+    news = _scores_in(report.get("headlines"))
+    readings = _scores_in(item for group in report.get("gauges") or [] for item in (group or {}).get("items") or [])
+    both = news + readings
+    if both:
+        report["score"] = sum(both) / len(both)
+        report["score_parts"] = {
+            "news": len(news), "readings": len(readings),
+            "news_score": sum(news) / len(news) if news else None,
+            "readings_score": sum(readings) / len(readings) if readings else None,
+        }
+    return report
+
+
 def analyze_market_mood(market_key: str, label: str, query: str, enabled: bool, force: bool = False) -> dict:
     """One whole-market score. Reused for 12 hours. Separate from any asset score."""
     cache_key = f"mood:{market_key}"
@@ -854,6 +883,8 @@ def analyze_market_mood(market_key: str, label: str, query: str, enabled: bool, 
         summary["gauges"] = gauges
     if not summary.get("headlines"):
         summary["headlines"] = headlines
+    if summary.get("ok"):
+        combine_mood_score(summary)
     if summary.get("ok"):
         _SCORE_CACHE[cache_key] = (time.time(), summary)
     return summary

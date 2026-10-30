@@ -11484,6 +11484,15 @@ def _mood_reading_board(market_key: str, label: str, report: dict | None) -> str
     return "".join(blocks)
 
 
+def _score_and_take():
+    """Where the score card and Your take go: side by side, or Your take underneath when the
+    sentiment sits in the narrow left column of the wide layout."""
+    narrow = st.session_state.get("section_layout") == "Wide" and not _POPOUT_VIEW
+    if narrow:
+        return st.container(), st.container()
+    return st.columns([3.5, 2.1], vertical_alignment="top")
+
+
 def _mood_card(spec: dict, row: dict | None) -> None:
     """One whole-market card. The background job replaces a saved score. A missing one is written once."""
     key = spec["key"]
@@ -11522,12 +11531,17 @@ def _mood_card(spec: dict, row: dict | None) -> None:
     _paint_section_score(f"mood_{key}", score, bool(report and report.get("ok") and score is not None))
     if report and report.get("ok") and score is not None:
         color, background, arrow, _bar = tone(score)
-        note = (
-            "Average of the news article scores below, from the last 7 days"
-            if any(item.get("score") is not None for item in headlines)
-            else "Score for these headlines, from the last 7 days"
-        )
-        score_card, vote_card = st.columns([3.5, 2.1], vertical_alignment="top")
+        parts = report.get("score_parts") or {}
+        if parts.get("readings"):
+            note = (
+                f"Average of all {parts['readings'] + parts['news']} scores below: "
+                f"{parts['readings']} public readings and {parts['news']} news articles"
+            )
+        elif any(item.get("score") is not None for item in headlines):
+            note = "Average of the news article scores below, from the last 7 days"
+        else:
+            note = "Score for these headlines, from the last 7 days"
+        score_card, vote_card = _score_and_take()
         with score_card:
             st.markdown(
                 _sentiment_story(report, _mood_coverage(score), score, color, background, arrow, note),
@@ -11567,7 +11581,8 @@ def _mood_card(spec: dict, row: dict | None) -> None:
         _article_box(f"mood_{key}_news", headline_table(headlines, "AI Score"))
     st.caption(
         "The rows above the Google headlines are public readings, each scored on its own. "
-        "The score at the top is the average of the news article scores. "
+        "The score at the top is the average of every scored row, readings and news articles alike "
+        "(scores made before 30 Oct counted the news articles only). "
         "This is not the technical score, and it is not advice."
     )
 
@@ -12484,7 +12499,7 @@ def show_market_sentiment(kind: str, asset_id: str, label: str, ticker: str | No
                 else "Score for these headlines, from the last 7 days"
             )
             sentiment_at = (stored or {}).get("sentiment_updated_at") if isinstance(stored, dict) else None
-            score_card, vote_card = st.columns([3.5, 2.1], vertical_alignment="top")
+            score_card, vote_card = _score_and_take()
             with score_card:
                 st.markdown(
                     _sentiment_story(report, _mood_coverage(score), score, color, background, arrow, note),
