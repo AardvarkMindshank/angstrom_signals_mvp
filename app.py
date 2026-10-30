@@ -108,8 +108,23 @@ def _paint_chart(fig) -> None:
     ink = "#e5e7eb" if dark else "#374151"
     grid = "#3f4654" if dark else "#e5e7eb"
     fig.update_layout(paper_bgcolor=paper, plot_bgcolor=paper, font=dict(color=ink))
-    fig.update_xaxes(gridcolor=grid, zerolinecolor=grid, tickfont=dict(color=ink), title_font=dict(color=ink))
+    fig.update_xaxes(
+        gridcolor=grid, zerolinecolor=grid, tickcolor=ink, tickfont=dict(color=ink), title_font=dict(color=ink),
+    )
     fig.update_yaxes(gridcolor=grid, zerolinecolor=grid, tickfont=dict(color=ink), title_font=dict(color=ink))
+
+
+def month_ticks(first, last) -> str:
+    """Spacing for date ticks on a chart: every month, or every 2 or 3 months on long histories."""
+    try:
+        days = (pd.Timestamp(last) - pd.Timestamp(first)).days
+    except Exception:
+        return "M1"
+    if days > 800:
+        return "M3"
+    if days > 420:
+        return "M2"
+    return "M1"
 
 
 def _brand_mark(width: int, *, align: str = "center") -> str:
@@ -10408,7 +10423,8 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, weig
             fig = make_subplots(
                 rows=1 + len(panels), cols=1,
                 shared_xaxes=True,
-                vertical_spacing=0.04,
+                # A little more room under the price chart for its own row of dates.
+                vertical_spacing=0.06,
                 row_heights=layout["heights"],
                 subplot_titles=tuple([f"{title} Price"] + [panel_titles[name] for name in panels]),
                 specs=[[{"secondary_y": True}]] + [[{}] for _ in panels],
@@ -10587,6 +10603,18 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, weig
                 legend=dict(orientation="h", yref="container", y=0, yanchor="bottom", xref="paper", x=0, xanchor="left"),
                 margin=dict(t=60, b=150),
             )
+            # Dates under the price chart as well as at the very bottom, with a tick at each month start.
+            try:
+                spacing = month_ticks(df_chart.index[0], df_chart.index[-1])
+            except Exception:
+                spacing = "M1"
+            fig.update_xaxes(
+                ticks="outside", ticklen=6, tickwidth=1, dtick=spacing, tick0="2000-01-01",
+                tickformat="%b '%y", showline=True, linewidth=1,
+                minor=dict(ticks="outside", ticklen=3, dtick=7 * 24 * 60 * 60 * 1000, tick0="2000-01-03")
+                if spacing == "M1" else None,
+            )
+            fig.update_xaxes(showticklabels=True, row=1, col=1)
             fig.update_yaxes(title_text="Price", row=1, col=1)
             fig.update_yaxes(title_text="Volume", row=row_of["volume"], col=1)
             if "rsi" in row_of:
