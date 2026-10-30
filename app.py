@@ -11299,7 +11299,9 @@ def show_leverage(kind: str, asset_id: str, label: str) -> None:
                     "change": _level_change(before.get(side), level_price, usd) if before else "—",
                 })
         rows.sort(key=lambda row: row["price"], reverse=True)
-        ladder_col, table_col = st.columns([3, 2])
+        # Stacked, not side by side: in the narrow right-hand column a side-by-side table lost
+        # its amount and change columns.
+        ladder_col, table_col = st.container(), st.container()
         with ladder_col:
             st.markdown("**Estimated liquidation levels**")
             if rows:
