@@ -47,6 +47,8 @@ if _POPOUT_VIEW not in _POPOUT_VIEWS:
     _POPOUT_VIEW = ""
 _POPOUT_MARK = "popout-tab"
 
+_RUN_STARTED = time.perf_counter()
+
 st.set_page_config(
     page_title=(
         "angstrom signals - " + _POPOUT_VIEW.replace("_", " ")
@@ -7442,6 +7444,14 @@ def admin_panel() -> None:
                 st.caption("Milliseconds spent on each step the last time the dashboard drew. Slowest first.")
                 for label, spent in sorted(perf.items(), key=lambda item: item[1], reverse=True):
                     st.write(f"{label}: {spent}" if "worked out" in label else f"{label}: {spent} ms")
+                runs = st.session_state.get("_perf_runs") or []
+                if runs:
+                    st.caption(
+                        "Recent redraws, newest first. 'whole page' is a full rerun; 'dashboard' is the "
+                        "scores, chart and sections redrawing on their own after a click."
+                    )
+                    for run in reversed(runs):
+                        st.write(f"{run['when']} · {run['what']}: {run['ms']} ms")
                 lacking = st.session_state.get("_logo_lacking") or []
                 st.write("Assets with no stored logo: " + (", ".join(lacking) if lacking else "none"))
 
@@ -9205,8 +9215,31 @@ def _handle_stream_events(stream_state) -> None:
                 save_account_settings(panel_updates)
 
 
+def _record_run(what: str, started: float) -> None:
+    """Keep the last 20 redraws (whole page or dashboard part) for the Page timing panel."""
+    try:
+        runs = st.session_state.setdefault("_perf_runs", [])
+        runs.append({
+            "when": time.strftime("%H:%M:%S"),
+            "what": what,
+            "ms": round((time.perf_counter() - started) * 1000),
+        })
+        del runs[:-20]
+    except Exception:
+        pass
+
+
 @st.fragment
-def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, show_reasons_flag, show_extra_metrics_flag, show_period_changes_flag, trade_crypto, trade_equities):
+def render_dashboard(*args, **kwargs):
+    """The dashboard redraws on its own when something inside it is clicked."""
+    started = time.perf_counter()
+    try:
+        _render_dashboard_body(*args, **kwargs)
+    finally:
+        _record_run("dashboard", started)
+
+
+def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, weights, show_reasons_flag, show_extra_metrics_flag, show_period_changes_flag, trade_crypto, trade_equities):
     st.session_state["_bar_run"] = {}
     shared_keys = []
     if trade_crypto:
@@ -10521,15 +10554,19 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                         st.caption(f"• {reason}")
 
         sentiment_label = crypto_watchlist[asset_key] if asset_type == "Crypto" else stock_watchlist[asset_key]
-        show_max_pain(asset_type, asset_key, title, float(df_chart["close"].iloc[-1]))
-        show_leverage(asset_type, asset_key, title)
-        show_market_sentiment(
-            asset_type,
-            asset_key,
-            sentiment_label,
-            crypto_ticker(asset_key) if asset_type == "Crypto" else asset_key,
-        )
-        show_signal_matrix(asset_type, asset_key, title, df_chart, weights)
+        with _timed("section: max pain"):
+            show_max_pain(asset_type, asset_key, title, float(df_chart["close"].iloc[-1]))
+        with _timed("section: leverage & liquidations"):
+            show_leverage(asset_type, asset_key, title)
+        with _timed("section: market sentiment"):
+            show_market_sentiment(
+                asset_type,
+                asset_key,
+                sentiment_label,
+                crypto_ticker(asset_key) if asset_type == "Crypto" else asset_key,
+            )
+        with _timed("section: signal matrix"):
+            show_signal_matrix(asset_type, asset_key, title, df_chart, weights)
     # Outside both wide columns, so it cannot push the chart header down.
     _scroll_chart(
         key="scroll_to_chart",
@@ -12068,6 +12105,7 @@ render_dashboard(
 )
 if _POPOUT_VIEW:
     st.stop()
+_record_run("whole page", _RUN_STARTED)
 if str((load_profile() or {}).get("role") or "") == "admin":
     admin_panel()
 _page_top(key="page_back_to_top")
