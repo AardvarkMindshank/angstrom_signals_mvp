@@ -3517,6 +3517,106 @@ def _countdown_due(
     return bool(token) and result.due == token
 
 
+CHART_PRICE_DEFAULT = 380
+CHART_PRICE_MIN, CHART_PRICE_MAX = 220, 1100
+
+
+def _chart_price_height() -> int:
+    """The main price chart's height in pixels, as this account last set it."""
+    value = st.session_state.get("chart_price_px")
+    if value is None:
+        value = (prefs.get("settings") or {}).get("chart_price_px", CHART_PRICE_DEFAULT)
+    try:
+        value = int(value)
+    except (TypeError, ValueError):
+        value = CHART_PRICE_DEFAULT
+    value = max(CHART_PRICE_MIN, min(CHART_PRICE_MAX, value))
+    st.session_state["chart_price_px"] = value
+    return value
+
+
+_CHART_RESIZE_JS = """
+export default function(component) {
+  const { data, setTriggerValue, parentElement } = component;
+  const start = Number((data && data.height) || 380);
+  const low = Number((data && data.min) || 220), high = Number((data && data.max) || 1100);
+  const fallback = Number((data && data.reset) || 380);
+  let bar = parentElement.querySelector(".ang-resize");
+  if (!bar) {
+    bar = document.createElement("div");
+    bar.className = "ang-resize";
+    bar.setAttribute("role", "separator");
+    bar.style.cssText = "height:14px;margin:-6px 0 4px;cursor:ns-resize;display:flex;align-items:center;" +
+      "justify-content:center;touch-action:none;user-select:none;";
+    bar.innerHTML = "<div class='ang-resize-grip' style='width:60px;height:5px;border-radius:3px;" +
+      "background:var(--ang-track,#d1d5db);'></div><span class='ang-resize-tip' style='margin-left:10px;" +
+      "font-size:.75rem;color:var(--ang-muted,#6b7280);display:none;'></span>";
+    parentElement.appendChild(bar);
+  }
+  bar.title = "Drag up or down to change the chart's height. Double-click to reset.";
+  const grip = bar.querySelector(".ang-resize-grip");
+  const tip = bar.querySelector(".ang-resize-tip");
+  // The chart is the element just above this bar.
+  const host = parentElement.closest("[data-testid='stElementContainer'], .stElementContainer") || parentElement;
+  let chart = host.previousElementSibling;
+  while (chart && !chart.querySelector(".js-plotly-plot")) chart = chart.previousElementSibling;
+  const box = chart ? chart.querySelector(".js-plotly-plot") : null;
+  if (box) { box.style.height = ""; box.style.overflow = ""; }   // drop any preview from the last drag
+  let y0 = 0, h0 = start, now = start, base = 0, dragging = false;
+  const size = (value) => Math.max(low, Math.min(high, Math.round(value)));
+  bar.onpointerdown = (event) => {
+    dragging = true; y0 = event.clientY; h0 = start; now = start;
+    base = box ? box.getBoundingClientRect().height : 0;
+    bar.setPointerCapture(event.pointerId);
+    grip.style.background = "var(--ang-muted,#6b7280)";
+    tip.style.display = "inline";
+  };
+  bar.onpointermove = (event) => {
+    if (!dragging) return;
+    now = size(h0 + (event.clientY - y0));
+    tip.textContent = "Chart height " + now + " px";
+    if (box && base) {
+      // A preview while dragging: the chart box stretches; it redraws properly on release.
+      box.style.height = (base + (now - h0)) + "px";
+      box.style.overflow = "hidden";
+    }
+  };
+  const finish = () => {
+    if (!dragging) return;
+    dragging = false;
+    grip.style.background = "var(--ang-track,#d1d5db)";
+    tip.style.display = "none";
+    if (Math.abs(now - start) >= 8) setTriggerValue("height", String(now));
+    else if (box) box.style.height = "";
+  };
+  bar.onpointerup = finish;
+  bar.onpointercancel = finish;
+  bar.ondblclick = () => { if (start !== fallback) setTriggerValue("height", String(fallback)); };
+}
+"""
+_chart_resize = st.components.v2.component("chart_resize", js=_CHART_RESIZE_JS, isolate_styles=False)
+
+
+def _chart_resize_handle(current: int) -> None:
+    """The drag bar under the price chart. A new height is saved to the account and redrawn."""
+    result = _chart_resize(
+        key="chart_resize",
+        data={"height": int(current), "min": CHART_PRICE_MIN, "max": CHART_PRICE_MAX, "reset": CHART_PRICE_DEFAULT},
+        on_height_change=lambda: None,
+    )
+    raw = getattr(result, "height", None)
+    if raw in (None, ""):
+        return
+    try:
+        wanted = max(CHART_PRICE_MIN, min(CHART_PRICE_MAX, int(float(raw))))
+    except (TypeError, ValueError):
+        return
+    if wanted != int(current):
+        st.session_state["chart_price_px"] = wanted
+        save_account_settings({"chart_price_px": wanted})
+        _rerun_fragment()
+
+
 def _section_timer(updated_at: float | None, interval: float, widget_key: str, help_text: str,
                    prefix: str = "") -> None:
     """A quiet 'Updated … · next update in …' line at the top of a section. When the update falls
@@ -6633,6 +6733,9 @@ by the page title. Each section's ↗ opens it in its own window, which follows 
 
 **Layout.** ▢ stacks everything in one column; the wide layout puts the tables on top, market sentiment
 on the left and the chart and its tools on the right. Drag the line between the columns to resize.
+
+**Chart height.** Drag the small bar under the chart up or down to make the price chart shorter or taller
+(the panels below keep their size). Your height is saved to your account. Double-click the bar to reset.
 
 **Settings** (sidebar)
 - **I trade cryptos / equities / both** hides the markets you don't trade.
@@ -10656,7 +10759,16 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, weig
             }
             panels = layout["panels"]
             row_of = {name: index + 2 for index, name in enumerate(panels)}
-            chart_height = 750 + 150 * (len(panels) - 2) if len(panels) > 2 else 750 - 100 * (2 - len(panels))
+            # Heights in pixels: the price chart is the user's to size (drag bar under the chart); the
+            # panels underneath keep the size they always had.
+            old_height = 750 + 150 * (len(panels) - 2) if len(panels) > 2 else 750 - 100 * (2 - len(panels))
+            panels_px = (old_height - 210) * (1 - chart_plan.PRICE_SHARE)
+            price_px = _chart_price_height()
+            chart_height = int(price_px + panels_px + 210)
+            if panels:
+                layout["heights"] = [price_px / (price_px + panels_px)] + [
+                    panels_px / len(panels) / (price_px + panels_px)
+                ] * len(panels)
             # About 34 px between panels: room for the dates under the price chart. The lower panels'
             # titles sit inside their panels (below), so they do not need room here.
             panel_gap = min(0.1, 34 / max(300, chart_height - 210))
@@ -10880,6 +10992,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, weig
                 )
             _paint_chart(fig)
             st.plotly_chart(fig, width="stretch")
+            _chart_resize_handle(price_px)
             if liq_on:
                 st.caption(_liquidation_caption(liq_record))
 
