@@ -10627,7 +10627,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, weig
         with _timed("section: max pain"):
             show_max_pain(asset_type, asset_key, title, float(df_chart["close"].iloc[-1]))
         with _timed("section: leverage & liquidations"):
-            show_leverage(asset_type, asset_key, title)
+            show_leverage(asset_type, asset_key, title, float(df_chart["close"].iloc[-1]))
         with _timed("section: market sentiment"):
             show_market_sentiment(
                 asset_type,
@@ -11302,8 +11302,116 @@ def _level_change(side_rows_before, price: float, usd: float) -> str:
     return ("+" if change > 0 else "−") + _short_usd(abs(change))
 
 
-def show_leverage(kind: str, asset_id: str, label: str) -> None:
-    """Estimated liquidation levels and the leverage data behind them, for the coin on the chart."""
+def _show_options_positioning(ticker: str, chart_price: float | None) -> None:
+    """Call and put walls, gamma exposure and put/call ratios for a stock, from its options chain."""
+    import options_levels
+
+    today = datetime.now(timezone.utc).date()
+    rows, expiries, error = options_levels.load_rows(ticker, today)
+    if error:
+        st.caption(f"{error} Options positioning needs a listed options chain.")
+        return
+    spot = float(chart_price or 0)
+    summary = options_levels.summarize(rows, spot, today)
+    if not summary.get("ok"):
+        st.caption("Not enough options data to show positioning yet.")
+        return
+
+    def gap(level):
+        return f"{(level / spot - 1) * 100:+.1f}% from price" if level and spot else None
+
+    def money(value):
+        sign = "-" if value < 0 else ""
+        return sign + _short_usd(abs(value))
+
+    net = summary["net_gex"]
+    c1, c2, c3, c4, c5 = st.columns(5)
+    pcr = summary.get("pcr_oi")
+    c1.metric(
+        "Put/call ratio", f"{pcr:.2f}" if pcr is not None else "—",
+        help="Open put contracts for each open call. Above 1 leans bearish or hedged, below 1 leans bullish.",
+    )
+    pcr_v = summary.get("pcr_volume")
+    c2.metric(
+        "Put/call, today's trades", f"{pcr_v:.2f}" if pcr_v is not None else "—",
+        help="The same ratio for contracts traded today. It moves faster than open interest.",
+    )
+    c3.metric(
+        "Call wall", _price_text(summary["call_wall"]) if summary.get("call_wall") else "—",
+        gap(summary.get("call_wall")), delta_color="off",
+        help="The strike with the most open call contracts near the price. Rallies often stall near it.",
+    )
+    c4.metric(
+        "Put wall", _price_text(summary["put_wall"]) if summary.get("put_wall") else "—",
+        gap(summary.get("put_wall")), delta_color="off",
+        help="The strike with the most open put contracts near the price. Falls often slow near it.",
+    )
+    c5.metric(
+        "Net gamma", money(net) + " per 1%",
+        "calming" if net >= 0 else "amplifying", delta_color="normal" if net >= 0 else "inverse",
+        help=(
+            "How much stock the market makers would trade to hedge a 1% move. Positive: they trade against "
+            "the move, which tends to calm prices. Negative: they trade with it, which tends to speed moves up."
+        ),
+    )
+
+    strikes = summary.get("strikes") or []
+    if strikes:
+        st.markdown("**Gamma by strike**")
+        ordered = sorted(strikes, key=lambda row: row["strike"], reverse=True)
+        bars = go.Figure(go.Bar(
+            x=[row["gex"] for row in ordered],
+            y=[_price_text(row["strike"]) for row in ordered],
+            orientation="h",
+            marker_color=["#22c55e" if row["gex"] >= 0 else "#ef4444" for row in ordered],
+            hovertext=[
+                f"Strike {_price_text(row['strike'])}: gamma {money(row['gex'])} per 1% · "
+                f"calls {row['call_oi']:,.0f} · puts {row['put_oi']:,.0f}" for row in ordered
+            ],
+            hoverinfo="text",
+        ))
+        bars.update_layout(
+            height=max(260, 16 * len(ordered) + 60), margin=dict(t=10, b=10, l=10, r=10), showlegend=False,
+            yaxis=dict(type="category", title=None), xaxis=dict(title="Gamma, $ per 1% move"),
+        )
+        _paint_chart(bars)
+        st.plotly_chart(bars, width="stretch")
+        flip = summary.get("flip")
+        st.caption(
+            f"Price now {_price_text(spot)}. Green strikes calm moves, red strikes amplify them. "
+            + (f"The gamma flip, where the total changes sign, is near {_price_text(flip)}. " if flip else "")
+            + "Above the flip, moves tend to be damped; below it, they tend to run."
+        )
+
+        st.markdown("**Biggest strikes**")
+        top = sorted(strikes, key=lambda row: row["call_oi"] + row["put_oi"], reverse=True)[:8]
+        table = pd.DataFrame([
+            {
+                "Strike": _price_text(row["strike"]),
+                "From price": f"{(row['strike'] / spot - 1) * 100:+.1f}%",
+                "Calls": f"{row['call_oi']:,.0f}",
+                "Puts": f"{row['put_oi']:,.0f}",
+                "Gamma per 1%": money(row["gex"]),
+            }
+            for row in sorted(top, key=lambda row: row["strike"], reverse=True)
+        ])
+        st.table(table.set_index("Strike"))
+    labels = ", ".join(datetime.strptime(e, "%Y-%m-%d").strftime("%d %b") for e in expiries)
+    st.caption(
+        f"🧲 From the {len(expiries)} nearest expiries ({labels}), {summary['contracts']:,.0f} open contracts. "
+        "Gamma is worked out with Black-Scholes from each contract's implied volatility, assuming market makers "
+        "are long calls and short puts (the usual convention). Open interest updates once a day. "
+        "Not part of the score. Data: Yahoo Finance."
+    )
+
+
+def show_leverage(kind: str, asset_id: str, label: str, chart_price: float | None = None) -> None:
+    """Estimated liquidation levels for a coin, or options positioning for a stock."""
+    if kind == "Stock":
+        heading = f"🧲 Options positioning - {label}" if label else "🧲 Options positioning"
+        with section_expander(heading, "leverage"):
+            _show_options_positioning(asset_id, chart_price)
+        return
     heading = f"🔥 Leverage & liquidations - {label}" if label else "🔥 Leverage & liquidations"
     with section_expander(heading, "leverage"):
         if kind != "Crypto":
