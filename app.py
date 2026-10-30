@@ -193,6 +193,8 @@ export default function(component) {
       "html.angstrom-night{--ang-surface:#262730;--ang-border:var(--ang-border-night,#000000);--ang-text:#f3f4f6;--ang-muted:#9ca3af;--ang-soft:#d1d5db;--ang-track:#3f4654;--ang-line:var(--ang-border);--ang-select:#3a4050;--ang-select-text:#f9fafb;--ang-page:var(--ang-page-night,#0e1117);--ang-heading:var(--ang-heading-night,#262730);--ang-section:var(--ang-section-night,#262730);--ang-hover:var(--ang-hover-night,#31333f);--ang-side:var(--ang-side-night,#16181f);--ang-social:var(--ang-social-night,#1c1f27);}",
       ".ang-card{background:var(--ang-surface);color:var(--ang-text);border:1px solid var(--ang-border);border-radius:10px;padding:12px 16px;}",
       ".ang-kicker{font-size:.8rem;color:var(--ang-muted);margin-bottom:4px;}",
+      // The social panel floats at the side; its empty holder in Quick Snapshot must not add a row gap.
+      ".st-key-social_host{margin-top:-1rem;}",
       ".ang-copy{color:var(--ang-text);font-size:.95rem;line-height:1.4;}",
       ".ang-title{color:var(--ang-text);font-weight:600;}",
       ".ang-track{flex:1;background:var(--ang-track);border-radius:6px;height:14px;overflow:hidden;}",
@@ -9857,7 +9859,8 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, weig
         with _timed("shared rows, crowd and comments"):
             _share_market_rows(crypto_watchlist, stock_watchlist, crypto_results, stock_results)
         if not _POPOUT_VIEW:
-            _social_panel()
+            with st.container(key="social_host"):
+                _social_panel()
 
         def get_top_bottom(results):
             valid = [row for row in results if row.get("score") is not None and not pd.isna(row.get("score"))]

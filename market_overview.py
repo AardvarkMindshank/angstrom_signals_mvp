@@ -334,7 +334,7 @@ def overview_html(overview: dict | None, crypto: bool, stocks: bool, now: dateti
         return ""
     parts = [
         # A grid on wide screens; one row you swipe sideways on a phone.
-        "<style>.ang-mkt{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;}"
+        "<style>.ang-mkt{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-bottom:10px;}"
         "@media (max-width:640px){.ang-mkt{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;"
         "padding-bottom:4px;}.ang-mkt>div{flex:0 0 150px;scroll-snap-align:start;}}</style>",
         "<div class='ang-mkt'>",
