@@ -3373,3 +3373,18 @@ alter table public.alert_preferences
 
 alter table public.user_notifications
     add column if not exists digested_at timestamptz;
+
+
+-- ============================================================
+-- Market sentiment alerts
+-- ============================================================
+-- market_alerts_enabled: alert when the crypto or stock market sentiment score
+-- reaches market_high_alert or drops to market_low_alert. Off by default.
+-- These use the same instant and digest choices as asset score alerts. The
+-- notification rows use asset_symbol market:crypto or market:stock.
+alter table public.alert_preferences
+    add column if not exists market_alerts_enabled boolean default false;
+alter table public.alert_preferences
+    add column if not exists market_high_alert numeric default 65;
+alter table public.alert_preferences
+    add column if not exists market_low_alert numeric default 35;

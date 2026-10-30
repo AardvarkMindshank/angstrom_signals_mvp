@@ -215,3 +215,31 @@ def test_instant_email_passes_the_logo():
                                  lambda *a, **k: calls.append((a, k)) or True,
                                  {"solana": "https://img.example/sol.png"})
     assert calls and calls[0][1].get("logo_url") == "https://img.example/sol.png"
+
+
+def test_digest_puts_market_sentiment_first():
+    notes = [
+        {"id": 1, "asset_symbol": "market:crypto", "asset_name": "🪙 Crypto market sentiment", "alert_type": BEARISH,
+         "message": "Market sentiment dropped to 33/100 (strongly negative mood)", "created_at": "2026-10-29T09:00:00+00:00"},
+        {"id": 2, "asset_symbol": "solana", "asset_name": "Solana (SOL)", "alert_type": BEARISH,
+         "message": "Score dropped to 27.5/100", "created_at": "2026-10-29T10:00:00+00:00"},
+    ]
+    markets = [
+        {"key": "market:crypto", "symbol": "🪙 Crypto market sentiment", "score": 33.0},
+        {"key": "market:stock", "symbol": "📈 Stock market sentiment", "score": 58.0},
+    ]
+    subject, page, plain = digest.render_digest(notes, [], cfg(market_alerts_enabled=True), "https://app", markets=markets)
+    assert "2 alerts" in subject
+    assert page.index("Market sentiment") < page.index("Solana (SOL)")
+    assert "Now 58/100, no alert" in page
+    # A market already listed as a crossing is not listed again as a plain reading.
+    assert "Now 33/100" not in page
+    assert plain.index("Crypto market sentiment") < plain.index("Solana")
+
+
+def test_digest_hides_market_readings_when_market_alerts_are_off():
+    markets = [{"key": "market:stock", "symbol": "📈 Stock market sentiment", "score": 58.0}]
+    notes = [{"id": 2, "asset_symbol": "solana", "asset_name": "Solana (SOL)", "alert_type": BEARISH,
+              "message": "Score dropped to 27.5/100", "created_at": "2026-10-29T10:00:00+00:00"}]
+    _, page, _ = digest.render_digest(notes, [], cfg(), "https://app", markets=markets)
+    assert "Market sentiment" not in page

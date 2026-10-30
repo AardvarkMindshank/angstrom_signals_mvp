@@ -80,3 +80,68 @@ def test_alert_type_helpers():
     assert canonical_alert("BULLISH_THRESHOLD_HELD") == BULLISH
     assert canonical_alert(BEARISH) == BEARISH
     assert stored_types(BULLISH) == [BULLISH, "BULLISH_THRESHOLD_HELD"]
+
+
+def test_market_rows_follow_the_markets_switched_on():
+    from alerts import market_rows
+    rows = market_rows({"crypto": 66.0, "stock": None}, ["crypto", "stock"])
+    assert [r["key"] for r in rows] == ["market:crypto"]
+    assert market_rows({"crypto": 66.0, "stock": 20.0}, ["stock"])[0]["key"] == "market:stock"
+    assert market_rows({"crypto": 66.0}, []) == []
+
+
+def test_market_alerts_use_their_own_lines_and_wording():
+    from alerts import market_message, market_rows
+    rows = market_rows({"crypto": 66.0, "stock": 50.0}, ["crypto", "stock"])
+    actions = plan_alert_actions(rows, set(), 65, 35, describe=market_message)
+    assert kinds(actions) == [("open", BULLISH)]
+    assert actions[0][1] == "market:crypto"
+    assert "Market sentiment reached 66/100" in actions[0][4]
+    # The same 10-point reset applies: 56 does not release a 65 alert, 55 does.
+    latched = {("market:crypto", BULLISH)}
+    assert plan_alert_actions(market_rows({"crypto": 56.0}, ["crypto"]), latched, 65, 35, describe=market_message) == []
+    released = plan_alert_actions(market_rows({"crypto": 55.0}, ["crypto"]), latched, 65, 35, describe=market_message)
+    assert released == [("resolve", "market:crypto", BULLISH)]
+
+
+class _Recorder:
+    def __init__(self, existing=()):
+        self.existing, self.inserted = list(existing), []
+
+    def table(self, name):
+        db = self
+
+        class Query:
+            def __init__(self):
+                self.mode = "select"
+            def select(self, *a, **k):
+                return self
+            def insert(self, row):
+                db.inserted.append(row)
+                self.mode = "insert"
+                return self
+            def update(self, *a, **k):
+                self.mode = "update"
+                return self
+            def __getattr__(self, name):
+                return lambda *a, **k: self
+            def execute(self):
+                data = db.existing if self.mode == "select" else []
+                return type("R", (), {"data": data})()
+        return Query()
+
+
+def test_evaluate_runs_market_alerts_even_with_asset_alerts_off():
+    from alerts import evaluate_alerts, market_rows
+    db = _Recorder()
+    config = {"enabled": False, "market_alerts_enabled": True, "market_high_alert": 65, "market_low_alert": 35}
+    opened = evaluate_alerts(db, "u", [row(90)], config, markets=market_rows({"stock": 30.0}, ["stock"]))
+    assert [o["asset_symbol"] for o in opened] == ["market:stock"]
+
+
+def test_evaluate_skips_markets_when_switched_off():
+    from alerts import evaluate_alerts, market_rows
+    db = _Recorder()
+    config = {"enabled": True, "market_alerts_enabled": False}
+    opened = evaluate_alerts(db, "u", [row(50)], config, markets=market_rows({"stock": 30.0}, ["stock"]))
+    assert opened == []

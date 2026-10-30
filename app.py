@@ -4827,13 +4827,33 @@ def load_user_preferences():
         if alert_res.data and len(alert_res.data) > 0:
             prefs_dict["alerts"] = alert_res.data[0]
         else:
-            default_alerts = {
+            basic_alerts = {
                 "user_id": user_id,
                 "enabled": True,
                 "min_score_alert": 70,
                 "max_score_alert": 30,
             }
-            inserted = supabase.table("alert_preferences").insert(default_alerts).execute()
+            # New accounts: asset and market alerts on, delivered as one daily digest
+            # at 08:00 in the browser's time zone, with no instant emails.
+            default_alerts = dict(basic_alerts)
+            default_alerts.update({
+                "market_alerts_enabled": True,
+                "instant_email": False,
+                "digest_enabled": True,
+                "digest_hour": 8,
+            })
+            try:
+                browser_zone = str(getattr(st.context, "timezone", "") or "")
+            except Exception:
+                browser_zone = ""
+            # Unset until the browser reports its zone; the settings panel fills it in.
+            default_alerts["digest_tz"] = browser_zone or None
+            try:
+                inserted = supabase.table("alert_preferences").insert(default_alerts).execute()
+            except Exception:
+                # The newer columns are missing until supabase_rls.sql is re-run.
+                default_alerts = basic_alerts
+                inserted = supabase.table("alert_preferences").insert(default_alerts).execute()
             # The stored row carries the column defaults, so every setting shows at once.
             prefs_dict["alerts"] = (inserted.data or [default_alerts])[0]
 
@@ -5857,26 +5877,68 @@ def notifications_panel() -> None:
 
         with tracked_expander("Configure Alert Rules", "alert_rules"):
             st.caption(
-                "70 is a strongly positive reading. 30 is a strongly negative reading. These describe current conditions and are not forecasts. "
-                "An email is sent once when a score crosses a boundary. It can alert again only after the score moves 10 points back (for example up to 40 after a 30 alert), then crosses again."
+                "Scores describe current conditions and are not forecasts. Each alert is sent once "
+                "when a score crosses a line, and again only after it moves 10 points back and crosses again."
             )
-            alert_enabled = st.checkbox("Enable Alerts", value=alert_prefs.get("enabled", True), key="alert_enabled_cb")
-            min_score = st.slider(
-                "Bullish Alert Threshold (Score ≥)",
-                50, 95, int(alert_prefs.get("min_score_alert", 70)),
-                key="min_score_slider",
+            alert_enabled = st.checkbox(
+                "📈 Asset score alerts",
+                value=alert_prefs.get("enabled", True) is not False,
+                key="alert_enabled_cb",
+                help="Alert when the technical score of an asset on your watchlists crosses one of your lines.",
             )
-            max_score = st.slider(
-                "Bearish Alert Threshold (Score ≤)",
-                5, 50, int(alert_prefs.get("max_score_alert", 30)),
-                key="max_score_slider",
-            )
+            min_score = int(alert_prefs.get("min_score_alert", 70))
+            max_score = int(alert_prefs.get("max_score_alert", 30))
+            if alert_enabled:
+                min_score = st.slider(
+                    "⬆️ Strongly positive at or above",
+                    50, 95, min_score,
+                    key="min_score_slider",
+                    help="An asset score at or above this line sends a positive alert. The default is 70.",
+                )
+                max_score = st.slider(
+                    "⬇️ Strongly negative at or below",
+                    5, 50, max_score,
+                    key="max_score_slider",
+                    help="An asset score at or below this line sends a negative alert. The default is 30.",
+                )
 
             new_alert_settings = {
                 "enabled": alert_enabled,
                 "min_score_alert": min_score,
                 "max_score_alert": max_score,
             }
+
+            # Market sentiment alerts need the columns from the latest supabase_rls.sql.
+            if "market_alerts_enabled" in alert_prefs:
+                market_on = st.checkbox(
+                    "🌐 Market sentiment alerts",
+                    value=bool(alert_prefs.get("market_alerts_enabled")),
+                    key="alert_market_cb",
+                    help=(
+                        "Alert when the crypto or stock market sentiment score crosses one of your lines. "
+                        "It covers the markets you have switched on. Market sentiment updates about twice a day."
+                    ),
+                )
+                market_high = int(float(alert_prefs.get("market_high_alert") or 65))
+                market_low = int(float(alert_prefs.get("market_low_alert") or 35))
+                if market_on:
+                    market_high = st.slider(
+                        "⬆️ Strongly positive mood at or above",
+                        55, 90, market_high,
+                        key="market_high_slider",
+                        help="Market sentiment at or above this line sends a positive alert. The default is 65.",
+                    )
+                    market_low = st.slider(
+                        "⬇️ Strongly negative mood at or below",
+                        10, 45, market_low,
+                        key="market_low_slider",
+                        help="Market sentiment at or below this line sends a negative alert. The default is 35.",
+                    )
+                new_alert_settings.update({
+                    "market_alerts_enabled": market_on,
+                    "market_high_alert": market_high,
+                    "market_low_alert": market_low,
+                })
 
             # The email options need the digest columns from the latest supabase_rls.sql.
             # Until that has been run, show the old settings only.
@@ -5941,6 +6003,10 @@ def notifications_panel() -> None:
                     )
                     if browser_zone and digest_zone_choice != browser_zone:
                         st.caption(f"Your browser's time zone is {browser_zone}.")
+                if digest_on and not stored_zone and not browser_zone and digest_zone_choice == "UTC":
+                    # The browser has not reported its zone yet. Leave the zone unset
+                    # rather than storing a guess; a later run fills it in.
+                    digest_zone_choice = None
                 new_alert_settings.update({
                     "instant_email": instant_on,
                     "digest_enabled": digest_on,
@@ -5949,6 +6015,8 @@ def notifications_panel() -> None:
                 })
                 if not instant_on and not digest_on:
                     st.caption("Both are off, so alerts only appear in the dashboard.")
+                if not alert_enabled and not new_alert_settings.get("market_alerts_enabled"):
+                    st.caption("All alerts are off.")
 
             changed = new_alert_settings != {name: alert_prefs.get(name) for name in new_alert_settings}
             if changed:

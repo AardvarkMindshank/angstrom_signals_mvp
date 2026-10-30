@@ -23,6 +23,39 @@ _HELD = {
 # How far back through the line the score must travel before that alert can arm again.
 _REARM_POINTS = 10.0
 
+# Whole-market sentiment alerts are stored like asset alerts, under these symbols.
+MARKET_PREFIX = "market:"
+MARKET_NAMES = {
+    "crypto": "🪙 Crypto market sentiment",
+    "stock": "📈 Stock market sentiment",
+}
+
+
+def is_market_symbol(symbol) -> bool:
+    return str(symbol or "").strip().lower().startswith(MARKET_PREFIX)
+
+
+def asset_message(score: float, alert_type: str) -> str:
+    if alert_type == BULLISH:
+        return f"Score reached {score:.1f}/100 (strongly positive reading)"
+    return f"Score dropped to {score:.1f}/100 (strongly negative reading)"
+
+
+def market_message(score: float, alert_type: str) -> str:
+    if alert_type == BULLISH:
+        return f"Market sentiment reached {score:.0f}/100 (strongly positive mood)"
+    return f"Market sentiment dropped to {score:.0f}/100 (strongly negative mood)"
+
+
+def market_rows(scores: dict, markets) -> list[dict]:
+    """Rows for plan_alert_actions, one per market this account follows that has a score."""
+    rows = []
+    for market in markets or []:
+        score = (scores or {}).get(market)
+        if market in MARKET_NAMES and not _missing(score):
+            rows.append({"key": MARKET_PREFIX + market, "symbol": MARKET_NAMES[market], "score": float(score)})
+    return rows
+
 
 def latch_symbol(symbol: str) -> str:
     """One latch identity for an asset, whatever case the watchlist used."""
@@ -56,7 +89,7 @@ def _missing(score) -> bool:
     return value != value
 
 
-def plan_alert_actions(results, latched, min_thresh, max_thresh):
+def plan_alert_actions(results, latched, min_thresh, max_thresh, describe=None):
     """
     Decide which latches to release and which alerts to open.
 
@@ -64,6 +97,7 @@ def plan_alert_actions(results, latched, min_thresh, max_thresh):
     ("resolve", symbol, alert_type) or
     ("open", symbol, name, alert_type, message).
     """
+    describe = describe or asset_message
     actions = []
     held = set(latched)
     bullish_clear = min_thresh - _REARM_POINTS
@@ -94,31 +128,38 @@ def plan_alert_actions(results, latched, min_thresh, max_thresh):
             held.discard((symbol, BEARISH))
 
         if bullish and (symbol, BULLISH) not in held:
-            message = f"Score reached {score:.1f}/100 (strongly positive reading)"
+            message = describe(score, BULLISH)
             actions.append(("open", symbol, name, BULLISH, message))
             held.add((symbol, BULLISH))
         elif bearish and (symbol, BEARISH) not in held:
-            message = f"Score dropped to {score:.1f}/100 (strongly negative reading)"
+            message = describe(score, BEARISH)
             actions.append(("open", symbol, name, BEARISH, message))
             held.add((symbol, BEARISH))
 
     return actions
 
 
-def evaluate_alerts(supabase, user_id, results, alerts_config, notify_email=None, send_email=None):
+def evaluate_alerts(supabase, user_id, results, alerts_config, notify_email=None, send_email=None, markets=None):
     """
-    Apply plan_alert_actions for one user.
+    Apply plan_alert_actions for one user: asset scores against the asset lines and,
+    when switched on, market sentiment rows (see market_rows) against the market lines.
 
     send_email(to_email, asset_name, message) runs once for each open crossing
     that has not been emailed yet. It does not run again while the score stays
     past the threshold.
     Returns the opened alert rows.
     """
-    if not alerts_config or not alerts_config.get("enabled", True):
+    if not alerts_config:
+        return []
+    assets_on = alerts_config.get("enabled", True) is not False
+    markets_on = bool(alerts_config.get("market_alerts_enabled")) and bool(markets)
+    if not assets_on and not markets_on:
         return []
 
     min_thresh = float(alerts_config.get("min_score_alert", 70))
     max_thresh = float(alerts_config.get("max_score_alert", 30))
+    market_high = float(alerts_config.get("market_high_alert") or 65)
+    market_low = float(alerts_config.get("market_low_alert") or 35)
 
     existing = (
         supabase.table("user_notifications")
@@ -141,7 +182,12 @@ def evaluate_alerts(supabase, user_id, results, alerts_config, notify_email=None
         stored.setdefault((symbol, kind), set()).add(raw)
     opened = []
 
-    for action in plan_alert_actions(results, latched, min_thresh, max_thresh):
+    actions = []
+    if assets_on:
+        actions += plan_alert_actions(results, latched, min_thresh, max_thresh)
+    if markets_on:
+        actions += plan_alert_actions(markets, latched, market_high, market_low, describe=market_message)
+    for action in actions:
         if action[0] == "resolve":
             _, symbol, alert_type = action
             for raw in stored.get((symbol, alert_type), {symbol}):

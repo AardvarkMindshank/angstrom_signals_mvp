@@ -15,7 +15,7 @@ import os
 import requests
 from supabase import create_client
 
-from alerts import evaluate_alerts
+from alerts import evaluate_alerts, market_rows
 from beta_worker import send_beta_decision_emails
 from digest import send_due_digest
 from email_brand import alert_tone, asset_logo, render_email
@@ -203,6 +203,51 @@ def load_logos(supabase, catalog) -> dict[str, str]:
     return logos
 
 
+# A market score older than this is not used for alerts: the 12-hour refresh has stalled.
+MARKET_SCORE_MAX_AGE_HOURS = 36
+
+
+def load_market_scores(supabase) -> dict[str, float]:
+    """Current crypto and stock market sentiment scores. Missing or stale ones are left out."""
+    from datetime import datetime, timedelta, timezone
+
+    try:
+        rows = (
+            supabase.table("market_mood")
+            .select("market_key, sentiment_score, sentiment_updated_at")
+            .execute()
+            .data
+            or []
+        )
+    except Exception as exc:
+        print(f"Market sentiment alerts skipped: {str(exc)[:160]}")
+        return {}
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=MARKET_SCORE_MAX_AGE_HOURS)
+    scores = {}
+    for row in rows:
+        try:
+            score = float(row.get("sentiment_score"))
+            stamp = datetime.fromisoformat(str(row.get("sentiment_updated_at")).replace("Z", "+00:00"))
+        except (TypeError, ValueError):
+            continue
+        if score == score and stamp >= cutoff:
+            scores[str(row.get("market_key"))] = score
+    return scores
+
+
+def followed_markets(user_pref: dict) -> list[str]:
+    """The markets this account has switched on in its settings."""
+    settings = user_pref.get("settings") or {}
+    if not isinstance(settings, dict):
+        settings = {}
+    markets = []
+    if settings.get("trade_crypto", True) is not False:
+        markets.append("crypto")
+    if settings.get("trade_equities", True) is not False:
+        markets.append("stock")
+    return markets
+
+
 def _score_asset(df, weights):
     if df is None or df.empty or len(df) < 15:
         return None
@@ -272,6 +317,7 @@ def run_background_checks() -> None:
         print(f"Evidence pass skipped: {str(exc)[:160]}")
 
     logos = load_logos(supabase, catalog)
+    market_scores = load_market_scores(supabase)
 
     if not all_user_prefs:
         print("No user preferences found.")
@@ -283,13 +329,20 @@ def run_background_checks() -> None:
 
     for user_pref in all_user_prefs:
         user_id = user_pref["user_id"]
+        # An account with no saved alert settings gets the new-account defaults:
+        # asset and market alerts, in a daily digest only.
         alert_config = alerts_map.get(user_id, {
             "enabled": True,
             "min_score_alert": 70,
             "max_score_alert": 30,
+            "market_alerts_enabled": True,
+            "instant_email": False,
+            "digest_enabled": True,
+            "digest_hour": 8,
         })
-        if not alert_config.get("enabled", True):
+        if alert_config.get("enabled", True) is False and not alert_config.get("market_alerts_enabled"):
             continue
+        markets = market_rows(market_scores, followed_markets(user_pref))
 
         crypto_list, stock_list, days_history = _watchlist(user_pref)
         weights = user_pref.get("scoring_weights") or None
@@ -325,6 +378,7 @@ def run_background_checks() -> None:
                 alert_config,
                 notify_email=user_email(supabase, user_id),
                 send_email=send_alert_email,
+                markets=markets,
             )
         except Exception as exc:
             print(f"Alerts failed for user {user_id}: {exc}")
@@ -340,6 +394,7 @@ def run_background_checks() -> None:
             user_email(supabase, user_id) if alert_config.get("digest_enabled") else None,
             send_digest_email,
             (os.getenv("APP_URL") or "https://app.angstromsignals.com").strip(),
+            markets=markets,
         )
         if digest_state in ("sent", "error", "start"):
             print(f"Daily digest for user {user_id}: {digest_state}")

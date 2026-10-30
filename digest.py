@@ -12,7 +12,7 @@ import html
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
-from alerts import BEARISH, BULLISH, HELD_BEARISH, HELD_BULLISH, latch_symbol, logos_by_symbol
+from alerts import BEARISH, BULLISH, HELD_BEARISH, HELD_BULLISH, is_market_symbol, latch_symbol, logos_by_symbol
 from email_brand import asset_logo, list_row, render_email, section_title
 
 # A crossing can be resolved (the score moved back) before the digest goes out.
@@ -127,11 +127,14 @@ def _local_time(note: dict, zone: ZoneInfo) -> str:
     return moment.astimezone(zone).strftime("%H:%M") if moment else ""
 
 
-def render_digest(notes, results, config, app_url: str) -> tuple[str, str, str]:
-    """(subject, html, plain text)."""
+def render_digest(notes, results, config, app_url: str, markets=None) -> tuple[str, str, str]:
+    """(subject, html, plain text). markets: current market sentiment rows, shown when market alerts are on."""
     zone = safe_zone(config.get("digest_tz"))
-    up, down = split_crossings(notes)
-    total = len(up) + len(down)
+    market_notes = [note for note in notes if is_market_symbol(note.get("asset_symbol"))]
+    asset_notes = [note for note in notes if not is_market_symbol(note.get("asset_symbol"))]
+    up, down = split_crossings(asset_notes)
+    market_up, market_down = split_crossings(market_notes)
+    total = len(up) + len(down) + len(market_up) + len(market_down)
     plural = "" if total == 1 else "s"
     subject = f"Angstrom daily digest: {total} alert{plural}"
 
@@ -158,6 +161,28 @@ def render_digest(notes, results, config, app_url: str) -> tuple[str, str, str]:
             logo = logo_for_symbol.get(latch_symbol(note.get("asset_symbol"))) or logo_for_name.get(name, "")
             html_parts.append(list_row(asset_logo(logo) + html.escape(name), detail, tone))
             plain.append(f"- {name}: {message}" + (f" ({when})" if when else ""))
+        plain.append("")
+
+    readings = list(markets or []) if config.get("market_alerts_enabled") else []
+    if market_notes or readings:
+        html_parts.append(section_title("Market sentiment"))
+        plain.append("Market sentiment")
+        for note in market_up + market_down:
+            name = " ".join(str(note.get("asset_name") or "Market").split())
+            message = " ".join(str(note.get("message") or "").split())
+            when = _local_time(note, zone)
+            tone = "up" if note in market_up else "down"
+            detail = html.escape(message) + (f" · {html.escape(when)}" if when else "")
+            html_parts.append(list_row(html.escape(name), detail, tone))
+            plain.append(f"- {name}: {message}" + (f" ({when})" if when else ""))
+        crossed = {latch_symbol(note.get("asset_symbol")) for note in market_notes}
+        for row in readings:
+            if latch_symbol(row.get("key")) in crossed:
+                continue
+            name = str(row.get("symbol") or "")
+            score = float(row.get("score"))
+            html_parts.append(list_row(html.escape(name), f"Now {score:.0f}/100, no alert", "info"))
+            plain.append(f"- {name}: now {score:.0f}/100, no alert")
         plain.append("")
 
     crossing_rows("Turned positive", up, "up")
@@ -190,7 +215,10 @@ def render_digest(notes, results, config, app_url: str) -> tuple[str, str, str]:
             f"Sent once a day at {hour:02d}:00 ({html.escape(zone_name)}), and only on days "
             "with at least one alert. Change this under Configure Alert Rules."
         ),
-        preheader=f"{len(up)} turned positive, {len(down)} turned negative",
+        preheader=(
+            f"{len(up)} turned positive, {len(down)} turned negative"
+            + (f", {len(market_notes)} market sentiment" if market_notes else "")
+        ),
         extra_html="".join(html_parts),
         extra_plain="\n".join(plain),
     )
@@ -207,7 +235,7 @@ def _stamp(supabase, user_id: str, moment: datetime) -> None:
 
 
 def send_due_digest(
-    supabase, user_id, config, results, notify_email, send_email, app_url, now=None
+    supabase, user_id, config, results, notify_email, send_email, app_url, now=None, markets=None
 ) -> str:
     """
     Send this user's digest if it is due. send_email(to, subject, html, plain) -> bool.
@@ -250,7 +278,7 @@ def send_due_digest(
             print(f"Digest day could not be recorded for {user_id}: {exc}")
         return "quiet"
 
-    subject, page, plain = render_digest(notes, results, config, app_url)
+    subject, page, plain = render_digest(notes, results, config, app_url, markets=markets)
     try:
         sent = bool(send_email(notify_email, subject, page, plain))
     except Exception as exc:
