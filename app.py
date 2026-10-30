@@ -3561,7 +3561,10 @@ export default function(component) {
   let chart = host.previousElementSibling;
   while (chart && !chart.querySelector(".js-plotly-plot")) chart = chart.previousElementSibling;
   const box = chart ? chart.querySelector(".js-plotly-plot") : null;
-  if (box) { box.style.height = ""; box.style.overflow = ""; }   // drop any preview from the last drag
+  const holder = chart || null;
+  // Drop any preview left from the last drag.
+  if (box) { box.style.transform = ""; box.style.transformOrigin = ""; }
+  if (holder) { holder.style.height = ""; holder.style.overflow = ""; }
   let y0 = 0, h0 = start, now = start, base = 0, dragging = false;
   const size = (value) => Math.max(low, Math.min(high, Math.round(value)));
   bar.onpointerdown = (event) => {
@@ -3575,10 +3578,14 @@ export default function(component) {
     if (!dragging) return;
     now = size(h0 + (event.clientY - y0));
     tip.textContent = "Chart height " + now + " px";
-    if (box && base) {
-      // A preview while dragging: the chart box stretches; it redraws properly on release.
-      box.style.height = (base + (now - h0)) + "px";
-      box.style.overflow = "hidden";
+    if (box && base && holder) {
+      // A preview while dragging: the whole chart stretches or squeezes to the new size, and the
+      // space around it follows. It redraws properly, with only the price chart changed, on release.
+      const target = Math.max(80, base + (now - h0));
+      box.style.transformOrigin = "top left";
+      box.style.transform = "scaleY(" + (target / base).toFixed(4) + ")";
+      holder.style.height = target + "px";
+      holder.style.overflow = "hidden";
     }
   };
   const finish = () => {
@@ -3587,7 +3594,10 @@ export default function(component) {
     grip.style.background = "var(--ang-track,#d1d5db)";
     tip.style.display = "none";
     if (Math.abs(now - start) >= 8) setTriggerValue("height", String(now));
-    else if (box) box.style.height = "";
+    else {
+      if (box) box.style.transform = "";
+      if (holder) { holder.style.height = ""; holder.style.overflow = ""; }
+    }
   };
   bar.onpointerup = finish;
   bar.onpointercancel = finish;
@@ -4781,6 +4791,16 @@ if st.session_state.user is None and not _POPOUT_VIEW and not st.session_state.g
         except Exception:
             _keep_cookie_write("")  # that saved sign-in no longer works
 
+def _signing_in(shell) -> None:
+    """Replace the login page with one calm line while the dashboard builds."""
+    with shell.container():
+        st.markdown(
+            "<div style='height:30vh;'></div><div style='text-align:center;font-size:1.1rem;"
+            "color:var(--ang-muted,#6b7280);'>Signing you in…</div>",
+            unsafe_allow_html=True,
+        )
+
+
 def _take_handoff() -> None:
     """A pop-out tab has no login yet. Ask the signed-in tab in this browser for one."""
     reported = _handoff_ask(
@@ -4833,8 +4853,12 @@ if st.session_state.user is None:
     _take_password_reset(google_verifier)
     _brand_watch(key="brand_watch")
     _version_watch(key="version_watch", data=app_version.BOOT_ID)
-    st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
-    _, col_center, _ = st.columns([1, 1.2, 1])
+    # The whole login page sits in one box. On a successful login the box is swapped for a short
+    # "Signing you in" line before the page rebuilds, so the old login page never shows twice.
+    _login_shell = st.empty()
+    with _login_shell.container():
+        st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
+        _, col_center, _ = st.columns([1, 1.2, 1])
 
     with col_center:
         st.markdown(_brand_mark(200), unsafe_allow_html=True)
@@ -4959,6 +4983,7 @@ if st.session_state.user is None:
                                 st.session_state.refresh_token = session.refresh_token
                                 st.session_state["_keep_signed_in"] = bool(keep_me)
                                 st.session_state["_keep_write_pending"] = True
+                                _signing_in(_login_shell)
                                 st.rerun()
                         except Exception as exc:
                             if "banned" in str(exc).lower():
