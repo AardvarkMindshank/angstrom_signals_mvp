@@ -10231,8 +10231,14 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, weig
         mood_col, asset_col = st.columns([split, 1 - split], gap="medium", vertical_alignment="top")
         with mood_col:
             show_market_moods(trade_crypto, trade_equities)
+            # The chart asset's own sentiment sits under the market sentiments, so every
+            # sentiment section is in the left column. It is filled in once the chart has
+            # settled which asset it shows.
+            sentiment_slot = st.container()
         asset_area = asset_col
     else:
+        # Single column: the asset's sentiment sits under the score tables, above the chart.
+        sentiment_slot = st.container()
         asset_area = nullcontext()
     with asset_area:
         st.html(
@@ -10745,7 +10751,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, weig
             show_max_pain(asset_type, asset_key, title, float(df_chart["close"].iloc[-1]))
         with _timed("section: leverage & liquidations"):
             show_leverage(asset_type, asset_key, title, float(df_chart["close"].iloc[-1]))
-        with _timed("section: market sentiment"):
+        with _timed("section: market sentiment"), sentiment_slot:
             show_market_sentiment(
                 asset_type,
                 asset_key,
