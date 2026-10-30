@@ -109,7 +109,7 @@ def series_item(closes, unit: str) -> dict | None:
     return {"value": last, "change": change, "spark": [round(v, 6) for v in values[-SPARK_POINTS:]]}
 
 
-def _yahoo_closes() -> dict[str, list[float]]:
+def _yahoo_closes(errors: list | None = None) -> dict[str, list[float]]:
     """Daily closes for each symbol, one at a time (the same way the rest of the app reads Yahoo).
     A symbol that fails is skipped."""
     import yfinance as yf
@@ -120,7 +120,8 @@ def _yahoo_closes() -> dict[str, list[float]]:
             frame = yf.Ticker(symbol).history(period="3mo", interval="1d", auto_adjust=False)
             closes = frame["Close"].dropna().tolist() if frame is not None and not frame.empty else []
         except Exception as exc:
-            print(f"Market overview: {symbol} failed: {str(exc)[:100]}")
+            if errors is not None:
+                errors.append(f"{symbol}: {str(exc)[:100]}")
             continue
         if closes:
             out[symbol] = closes
@@ -152,10 +153,11 @@ def _fear_greed() -> list[float]:
 def fetch_overview() -> dict:
     """Every reading that could be fetched. A source that fails is left out; the rest still show."""
     items = {}
+    errors = []
     try:
-        closes = _yahoo_closes()
+        closes = _yahoo_closes(errors)
     except Exception as exc:
-        print(f"Market overview: Yahoo failed: {str(exc)[:160]}")
+        errors.append(f"Yahoo: {str(exc)[:160]}")
         closes = {}
     for key, _label, symbol, _group, unit, _exchange, _invert in SPECS:
         item = series_item(closes.get(symbol), unit)
@@ -168,14 +170,16 @@ def fetch_overview() -> dict:
         if crypto.get("btc_dom"):
             items["btc_dom"] = {"value": crypto["btc_dom"], "change": None, "spark": []}
     except Exception as exc:
-        print(f"Market overview: CoinGecko failed: {str(exc)[:160]}")
+        errors.append(f"CoinGecko: {str(exc)[:160]}")
     try:
         fng = _fear_greed()
         if fng:
             items["fng"] = {"value": fng[-1], "change": (fng[-1] - fng[-2]) if len(fng) > 1 else None, "spark": fng}
     except Exception as exc:
-        print(f"Market overview: Fear & Greed failed: {str(exc)[:160]}")
-    return {"items": items, "fetched_at": time.time()}
+        errors.append(f"Fear & Greed: {str(exc)[:160]}")
+    for line in errors:
+        print(f"Market overview: {line}")
+    return {"items": items, "fetched_at": time.time(), "errors": errors[:20]}
 
 
 # ---------------------------------------------------------------- saving and reading

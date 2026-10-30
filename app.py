@@ -7470,6 +7470,31 @@ def _ago(seconds) -> str:
     return f"{seconds / 86400:.1f} days ago"
 
 
+def _show_overview_status() -> None:
+    """What the Quick Snapshot market strip is doing, for when it does not show."""
+    with st.expander("Market overview (status)", expanded=False):
+        now = time.time()
+        saved, own = _OVERVIEW.get("saved"), _OVERVIEW.get("own")
+        def line(name, copy):
+            if not copy:
+                return f"{name}: none yet."
+            return (f"{name}: {len(copy.get('items') or {})} readings, fetched "
+                    f"{_ago(now - float(copy.get('fetched_at') or 0))}.")
+        st.write(line("Saved by the worker", saved))
+        st.write(line("Fetched by this server", own))
+        if _OVERVIEW.get("busy"):
+            st.write(f"A fetch is running, started {_ago(now - float(_OVERVIEW.get('started') or now))}.")
+        elif _OVERVIEW.get("own_at"):
+            st.write(f"Last fetch here finished {_ago(now - float(_OVERVIEW['own_at']))}.")
+        else:
+            st.write("This server has not fetched yet.")
+        problems = list((own or {}).get("errors") or []) + list((saved or {}).get("errors") or [])
+        if _OVERVIEW.get("error"):
+            problems.insert(0, _OVERVIEW["error"])
+        for problem in problems[:12]:
+            st.caption(problem)
+
+
 def _show_earnings_status() -> None:
     """Whether the earnings date lookups are working. Stocks that were never checked stand out."""
     with st.expander("Earnings dates (lookup status)", expanded=False):
@@ -7536,6 +7561,7 @@ def admin_panel() -> None:
             _show_reports(reports)
         _show_beta()
         _show_earnings_status()
+        _show_overview_status()
         _show_blacklist()
         perf = st.session_state.get("_perf") or {}
         if perf:
@@ -8553,17 +8579,19 @@ def _background(function, *args) -> None:
     _BACKGROUND.submit(_run_when_quiet, function, *args)
 
 
-_OVERVIEW: dict = {"read_at": 0.0, "saved": None, "own": None, "own_at": 0.0, "busy": False}
+_OVERVIEW: dict = {"read_at": 0.0, "saved": None, "own": None, "own_at": 0.0, "busy": False, "started": 0.0, "error": ""}
 
 
 def _fetch_overview_here() -> None:
     """The page's own fetch, used only while the worker's saved copy is missing or old."""
+    _OVERVIEW["started"] = time.time()
     try:
         import market_overview
         fetched = market_overview.fetch_overview()
         print(f"market overview fetched here: {len(fetched.get('items') or {})} readings")
         _OVERVIEW["own"] = fetched
     except Exception as exc:
+        _OVERVIEW["error"] = str(exc)[:200]
         print(f"market overview fetch failed: {exc}")
     finally:
         _OVERVIEW["own_at"] = time.time()
