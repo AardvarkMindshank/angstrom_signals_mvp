@@ -5677,6 +5677,15 @@ def crowd_average_badge(average, count, spread, active: bool = True) -> str:
     return f"<span title='{html.escape(title)}'>{sentiment_badge(average)}</span>"
 
 
+def coinglass_heatmap_url(asset_id) -> str:
+    """CoinGlass's liquidation heatmap page for one coin. Empty when the coin has no known ticker."""
+    ticker = crypto_ticker(asset_id) or ""
+    ticker = "".join(ch for ch in ticker.upper() if ch.isalnum())
+    if not ticker:
+        return ""
+    return f"https://www.coinglass.com/pro/futures/LiquidationHeatMap?coin={ticker}"
+
+
 def sentiment_badge(score, pick: str | None = None) -> str:
     """Colored number box used for a headline score. A dash when there is no score yet."""
     if score is None or pd.isna(score):
@@ -9971,22 +9980,35 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
             if "chart_earnings" not in st.session_state:
                 st.session_state["chart_earnings"] = bool(saved_chart.get("chart_earnings", True))
             chosen_indicators = []
-            if indicator_keys:
-                if hasattr(st, "pills"):
-                    chosen_indicators = st.pills(
-                        "Chart indicators",
-                        indicator_keys,
-                        selection_mode="multi",
-                        format_func=_indicator_label,
-                        key="chart_indicators",
-                        label_visibility="collapsed",
-                    ) or []
-                else:
-                    chosen_indicators = st.multiselect(
-                        "Chart indicators",
-                        indicator_keys,
-                        format_func=_indicator_label,
-                        key="chart_indicators",
+            # Crypto only: a link to CoinGlass's liquidation heatmap for the coin on the chart.
+            heatmap_url = coinglass_heatmap_url(asset_key) if asset_type == "Crypto" else ""
+            with st.container(horizontal=True, vertical_alignment="center", gap="small", key="chart_icon_row"):
+                if indicator_keys:
+                    if hasattr(st, "pills"):
+                        chosen_indicators = st.pills(
+                            "Chart indicators",
+                            indicator_keys,
+                            selection_mode="multi",
+                            format_func=_indicator_label,
+                            key="chart_indicators",
+                            label_visibility="collapsed",
+                        ) or []
+                    else:
+                        chosen_indicators = st.multiselect(
+                            "Chart indicators",
+                            indicator_keys,
+                            format_func=_indicator_label,
+                            key="chart_indicators",
+                        )
+                if heatmap_url:
+                    st.link_button(
+                        "🔥",
+                        heatmap_url,
+                        help=(
+                            f"Liquidation heatmap for {title} on CoinGlass (opens a new tab). "
+                            "It shows price levels where many leveraged futures positions would be "
+                            "force-closed. CoinGlass asks you to log in, free, to see the full data."
+                        ),
                     )
             overlay_curves = st.checkbox(
                 "Overlay RSI, Stochastic and ADX on the price chart",
