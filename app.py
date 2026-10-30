@@ -3672,6 +3672,7 @@ try:
         load_open_interest,
         options_market,
         pain_strike,
+        stale_since,
         window_strikes,
     )
     from market_gauges import market_gauge_groups
@@ -11331,6 +11332,9 @@ def _show_options_positioning(ticker: str, chart_price: float | None) -> None:
     if error:
         st.caption(error)
         return
+    kept = options_levels.last_stale_from()
+    if kept:
+        st.caption(f"⏳ Yahoo is showing no contracts just now, so these are the last figures it gave ({_ago(time.time() - kept)}).")
     spot = float(chart_price or 0)
     summary = options_levels.summarize(rows, spot, today)
     if not summary.get("ok"):
@@ -11622,10 +11626,14 @@ def show_max_pain(kind: str, asset_id: str, label: str, chart_price: float | Non
             return
         if not calls and not puts:
             st.caption(
-                "This expiry shows no open interest. On an option's last day the data source often "
-                "reports none, so pick a later expiry above."
+                "This expiry shows no open interest right now. The data source sometimes reports none "
+                "for a while (often outside US trading hours, and on an option's last day). Try a later "
+                "expiry, or check back later."
             )
             return
+        kept = stale_since(market, expiry)
+        if kept:
+            st.caption(f"⏳ The data source is showing no contracts just now, so these are the last figures it gave ({_ago(time.time() - kept)}).")
         total_open = sum(calls.values()) + sum(puts.values())
         if market.startswith("stock:") and total_open < 100:
             # A handful of contracts (often on an option's last day) gives a meaningless answer.

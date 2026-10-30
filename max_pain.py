@@ -16,6 +16,9 @@ from data_fetchers import crypto_ticker
 
 _TTL_SECONDS = 12 * 60 * 60
 _ERROR_TTL_SECONDS = 90
+_LAST_GOOD_SECONDS = 4 * 24 * 60 * 60   # covers a long weekend
+_LAST_GOOD: dict[str, tuple[float, tuple]] = {}
+_STALE: dict[str, float] = {}
 _DERIBIT = "https://www.deribit.com/api/v2/public/get_book_summary_by_currency"
 _INSTRUMENT = re.compile(r"^(BTC|ETH)-(\d{1,2}[A-Z]{3}\d{2})-(\d+(?:\.\d+)?)-([CP])$")
 _MONTHS = {
@@ -160,8 +163,25 @@ def _stock_chain(
         return calls, puts, None, error
     calls = _oi_frame(getattr(chain, "calls", None))
     puts = _oi_frame(getattr(chain, "puts", None))
-    _write(key, (calls, puts), None)
+    if calls or puts:
+        _LAST_GOOD[key] = (time.time(), (calls, puts))
+        _STALE.pop(key, None)
+        _write(key, (calls, puts), None)
+        return calls, puts, None, None
+    # Yahoo sometimes blanks open interest for a while. Show the last figures it gave, if recent.
+    saved = _LAST_GOOD.get(key)
+    if saved and time.time() - saved[0] < _LAST_GOOD_SECONDS:
+        _STALE[key] = saved[0]
+        calls, puts = saved[1]
+    _cache[key] = (time.time() - _TTL_SECONDS + _ERROR_TTL_SECONDS, ((calls, puts), None))
     return calls, puts, None, None
+
+
+def stale_since(market: str, expiry: str) -> float | None:
+    """When the figures now shown were fetched, if they are kept from earlier because Yahoo sent none."""
+    if not market.startswith("stock:"):
+        return None
+    return _STALE.get(f"stock:{market.split(':', 1)[1]}:chain:{expiry}")
 
 
 def _read(market: str, force: bool):

@@ -82,3 +82,29 @@ def test_short_interest_reads_yahoo_fields():
     assert si["pct_float"] == 0.031 and si["days_to_cover"] == 0.9
     assert abs(si["change"] + 0.2) < 1e-9 and si["as_of"].year == 2025
     assert ol.short_interest_from_info({}) == {} and ol.short_interest_from_info(None) == {}
+
+
+def test_blank_chain_falls_back_to_last_good(monkeypatch):
+    import sys, types
+    good = _Chain({"strike": [100.0], "openInterest": [500], "impliedVolatility": [0.4]}, {})
+    blank = _Chain({"strike": [100.0], "openInterest": [0]}, {})
+    state = {"chain": good}
+
+    class Ticker:
+        def __init__(self, _):
+            self.options = ["2026-11-06"]
+
+        def option_chain(self, _):
+            return state["chain"]
+
+    monkeypatch.setitem(sys.modules, "yfinance", types.SimpleNamespace(Ticker=Ticker))
+    ol._cache.clear(); ol._last_good.clear()
+    rows, _, error = ol.load_rows("ZZZ", TODAY)
+    assert rows and error is None and ol.last_stale_from() is None
+    ol._cache.clear()
+    state["chain"] = blank
+    rows, _, error = ol.load_rows("ZZZ", TODAY)
+    assert rows and error is None and ol.last_stale_from() is not None
+    ol._cache.clear(); ol._last_good.clear()
+    rows, _, error = ol.load_rows("ZZZ", TODAY)
+    assert not rows and "no open contracts" in error

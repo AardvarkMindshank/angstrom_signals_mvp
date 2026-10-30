@@ -35,6 +35,8 @@ _CACHE_LIMIT = 200
 _cache: dict[tuple, tuple[float, object]] = {}
 # Yahoo refuses bursts of parallel requests, so chains are fetched one at a time.
 _YAHOO = threading.Lock()
+_LAST_GOOD_SECONDS = 4 * 24 * 60 * 60
+_last_good: dict[tuple, tuple[float, list]] = {}
 
 
 # ---------------------------------------------------------------- maths
@@ -179,6 +181,11 @@ def chain_lines(found) -> list[dict]:
     return out
 
 
+def last_stale_from() -> float | None:
+    """When the figures from the latest load_rows call were fetched, if kept from earlier."""
+    return getattr(load_rows, "stale_from", None)
+
+
 def load_rows(ticker: str, today: date) -> tuple[list[dict], list[str], str | None]:
     """Contract lines for the nearest expiries, the expiries used, and an error message."""
     ticker = str(ticker or "").strip().upper()
@@ -199,6 +206,7 @@ def load_rows(ticker: str, today: date) -> tuple[list[dict], list[str], str | No
         return [], [], "No options expiries in the next two months."
     rows: list[dict] = []
     failed = zero = 0
+    stale_from = None
     for expiry in chosen:
         def chain(expiry=expiry):
             found = None
@@ -217,8 +225,15 @@ def load_rows(ticker: str, today: date) -> tuple[list[dict], list[str], str | No
             return lines, (None if lines else "empty")
 
         lines, chain_error = _cached(("chain", ticker, expiry), chain)
+        if lines:
+            _last_good[(ticker, expiry)] = (time.time(), lines)
         if chain_error == "empty":
-            zero += 1
+            saved = _last_good.get((ticker, expiry))
+            if saved and time.time() - saved[0] < _LAST_GOOD_SECONDS:
+                stale_from = min(stale_from or saved[0], saved[0])
+                rows += [dict(line, expiry=date.fromisoformat(expiry)) for line in saved[1]]
+            else:
+                zero += 1
             continue
         if chain_error:
             failed += 1
@@ -229,9 +244,10 @@ def load_rows(ticker: str, today: date) -> tuple[list[dict], list[str], str | No
         if failed:
             return [], chosen, "Yahoo did not send the options chain just now. Try again in a minute or two."
         return [], chosen, (
-            "Yahoo is showing no open contracts for these expiries right now. "
-            "It does this for a while around the US market open, before the day's figures arrive."
+            "Yahoo is showing no open contracts for these expiries right now. It does this from time "
+            "to time, often outside US trading hours; the figures come back once it refreshes."
         )
+    load_rows.stale_from = stale_from
     return rows, chosen, None
 
 
