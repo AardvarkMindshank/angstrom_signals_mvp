@@ -10082,7 +10082,12 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                 st.session_state["chart_indicators"] = [
                     k for k in (st.session_state.get("chart_indicators") or []) if k in indicator_keys
                 ]
-            if LIQ_KEY in indicator_keys and st.session_state["_chart_liq_on"]:
+            # Put the choice back only when the icon was not on offer last time (first load,
+            # or coming from a stock chart). Otherwise the icon itself is the choice, so
+            # switching it off stays off.
+            liq_offered_before = bool(st.session_state.get("_chart_liq_offered"))
+            st.session_state["_chart_liq_offered"] = LIQ_KEY in indicator_keys
+            if LIQ_KEY in indicator_keys and not liq_offered_before and st.session_state["_chart_liq_on"]:
                 if LIQ_KEY not in st.session_state["chart_indicators"]:
                     st.session_state["chart_indicators"] = list(st.session_state["chart_indicators"]) + [LIQ_KEY]
             if "chart_overlay" not in st.session_state:

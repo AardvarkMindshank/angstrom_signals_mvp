@@ -98,3 +98,11 @@ def test_series_line_up_on_the_price_bars():
 
 def test_call_budget_per_coin():
     assert liq.calls_for([{}, {}, {}]) == 9
+
+
+def test_switching_the_chart_levels_off_stays_off():
+    import pathlib
+    source = pathlib.Path(__file__).resolve().parents[1].joinpath("app.py").read_text(encoding="utf-8")
+    block = source[source.index("liq_offered_before = "):][:600]
+    assert "not liq_offered_before" in block
+    assert 'st.session_state["_chart_liq_offered"] = LIQ_KEY in indicator_keys' in block
