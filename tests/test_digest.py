@@ -170,3 +170,48 @@ def test_instant_switch_is_respected_by_the_alert_worker():
     import alerts
     source = inspect.getsource(alerts.evaluate_alerts)
     assert 'alerts_config.get("instant_email") is not False' in source
+
+
+def test_digest_shows_logos_before_names():
+    notes = [{"id": 1, "asset_symbol": "solana", "asset_name": "Solana (SOL)", "alert_type": BEARISH,
+              "message": "Score dropped to 27.5/100", "created_at": "2026-10-29T09:00:00+00:00"}]
+    results = [
+        {"key": "solana", "symbol": "Solana (SOL)", "score": 27.5, "logo": "https://img.example/sol.png"},
+        {"key": "AAPL", "symbol": "Apple (AAPL)", "score": 72, "logo": "https://img.example/aapl.png"},
+        {"key": "MSFT", "symbol": "Microsoft (MSFT)", "score": 50, "logo": ""},
+    ]
+    _, page, plain = digest.render_digest(notes, results, cfg(), "https://app")
+    assert page.count('src="https://img.example/sol.png"') >= 1
+    assert page.index('src="https://img.example/sol.png"') < page.index("Solana (SOL)")
+    assert 'src="https://img.example/aapl.png"' in page
+    assert "<img" not in plain
+
+
+def test_logo_helper_rejects_unsafe_addresses():
+    from email_brand import asset_logo
+    assert asset_logo("") == ""
+    assert asset_logo("http://plain.example/x.png") == ""
+    assert asset_logo('https://x.example/a.png" onerror="x') == ""
+    assert 'src="https://x.example/a.png"' in asset_logo("https://x.example/a.png")
+
+
+def test_instant_email_passes_the_logo():
+    import alerts
+
+    class Table:
+        def __init__(self, rows):
+            self.rows = rows
+        def __getattr__(self, name):
+            return lambda *a, **k: self
+        def execute(self):
+            return type("R", (), {"data": self.rows})()
+
+    class DB:
+        def table(self, name):
+            return Table([{"id": 7, "asset_symbol": "solana", "asset_name": "Solana (SOL)", "message": "down"}])
+
+    calls = []
+    alerts._email_open_crossings(DB(), "u", "me@x.com",
+                                 lambda *a, **k: calls.append((a, k)) or True,
+                                 {"solana": "https://img.example/sol.png"})
+    assert calls and calls[0][1].get("logo_url") == "https://img.example/sol.png"

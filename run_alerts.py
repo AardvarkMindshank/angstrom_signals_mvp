@@ -18,8 +18,9 @@ from supabase import create_client
 from alerts import evaluate_alerts
 from beta_worker import send_beta_decision_emails
 from digest import send_due_digest
-from email_brand import alert_tone, render_email
+from email_brand import alert_tone, asset_logo, render_email
 from scoring import calculate_indicators, compute_score
+from market_store import asset_market_key
 from shared_refresh import (
     canonical_asset_id,
     refresh_due_sentiment,
@@ -96,7 +97,7 @@ def user_email(supabase, user_id: str) -> str | None:
         return None
 
 
-def send_alert_email(to_email: str, asset_name: str, message: str) -> bool:
+def send_alert_email(to_email: str, asset_name: str, message: str, logo_url: str = "") -> bool:
     api_key = (os.getenv("RESEND_API_KEY") or "").strip()
     if not api_key:
         print(f"Email skipped for {asset_name}: RESEND_API_KEY is not set.")
@@ -117,7 +118,7 @@ def send_alert_email(to_email: str, asset_name: str, message: str) -> bool:
     subject = "Angstrom alert: " + " ".join(str(asset_name).split())
     app_url = (os.getenv("APP_URL") or "https://app.angstromsignals.com").strip()
     page, plain = render_email(
-        f"{safe_name} crossed an alert boundary",
+        f"{asset_logo(logo_url, size=26)}{safe_name} crossed an alert boundary",
         [
             "This email is sent once for that crossing. "
             "It is sent again only after the score moves 10 points back from the boundary and then crosses it again.",
@@ -176,6 +177,30 @@ def send_digest_email(to_email: str, subject: str, page: str, plain: str) -> boo
     detail = " ".join((response.text or "").split())[:300]
     print(f"Digest email failed: HTTP {response.status_code} {detail}")
     return False
+
+
+def load_logos(supabase, catalog) -> dict[str, str]:
+    """Logo address per shared asset key. Empty if the lookup fails: emails go out without logos."""
+    keys = [asset_market_key(kind, asset_id) for kind, asset_id in catalog]
+    logos = {}
+    for start in range(0, len(keys), 100):
+        try:
+            rows = (
+                supabase.table("asset_market")
+                .select("asset_key, logo_url")
+                .in_("asset_key", keys[start:start + 100])
+                .execute()
+                .data
+                or []
+            )
+        except Exception as exc:
+            print(f"Logos skipped for emails: {str(exc)[:160]}")
+            return logos
+        for row in rows:
+            url = str(row.get("logo_url") or "").strip()
+            if url:
+                logos[str(row.get("asset_key"))] = url
+    return logos
 
 
 def _score_asset(df, weights):
@@ -246,6 +271,8 @@ def run_background_checks() -> None:
         # Evidence is a nice-to-have. It must never hold up the alert pass.
         print(f"Evidence pass skipped: {str(exc)[:160]}")
 
+    logos = load_logos(supabase, catalog)
+
     if not all_user_prefs:
         print("No user preferences found.")
         print("Background alert check finished.")
@@ -287,6 +314,7 @@ def run_background_checks() -> None:
                     "key": asset_id,
                     "symbol": name_for(asset_id, name),
                     "score": score,
+                    "logo": logos.get(asset_market_key(kind, asset_id), ""),
                 })
 
         try:

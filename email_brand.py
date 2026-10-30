@@ -34,6 +34,23 @@ def alert_tone(message: str) -> str:
     return "info"
 
 
+def asset_logo(url, size: int = 20) -> str:
+    """A small round asset logo to sit before a name. Empty when there is no safe https address.
+
+    Email programs drop most styling, so the image carries its own size and alignment.
+    Some programs hide remote pictures until the reader allows them; the name still reads fine.
+    """
+    address = str(url or "").strip()
+    if not address.lower().startswith("https://") or any(ch in address for ch in "\"'<> "):
+        return ""
+    safe = html.escape(address, quote=True)
+    return (
+        f'<img src="{safe}" width="{size}" height="{size}" alt="" '
+        f'style="width:{size}px;height:{size}px;vertical-align:-4px;border:0;'
+        f'border-radius:50%;margin-right:8px;background:#ffffff;">'
+    )
+
+
 def section_title(text: str) -> str:
     """A small heading above a group of rows. Text must already be HTML-safe."""
     return (

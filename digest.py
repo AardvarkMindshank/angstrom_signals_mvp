@@ -12,8 +12,8 @@ import html
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
-from alerts import BEARISH, BULLISH, HELD_BEARISH, HELD_BULLISH
-from email_brand import list_row, render_email, section_title
+from alerts import BEARISH, BULLISH, HELD_BEARISH, HELD_BULLISH, latch_symbol, logos_by_symbol
+from email_brand import asset_logo, list_row, render_email, section_title
 
 # A crossing can be resolved (the score moved back) before the digest goes out.
 # It still happened that day, so resolved rows are included.
@@ -137,6 +137,13 @@ def render_digest(notes, results, config, app_url: str) -> tuple[str, str, str]:
 
     html_parts: list[str] = []
     plain: list[str] = []
+    # Logos come with the current scores; alert rows only carry the asset.
+    logo_for_symbol = logos_by_symbol(results)
+    logo_for_name = {
+        str(row.get("symbol") or row.get("key") or ""): str(row.get("logo") or "")
+        for row in results or []
+        if row.get("logo")
+    }
 
     def crossing_rows(title: str, rows: list[dict], tone: str) -> None:
         if not rows:
@@ -148,7 +155,8 @@ def render_digest(notes, results, config, app_url: str) -> tuple[str, str, str]:
             message = " ".join(str(note.get("message") or "").split())
             when = _local_time(note, zone)
             detail = html.escape(message) + (f" · {html.escape(when)}" if when else "")
-            html_parts.append(list_row(html.escape(name), detail, tone))
+            logo = logo_for_symbol.get(latch_symbol(note.get("asset_symbol"))) or logo_for_name.get(name, "")
+            html_parts.append(list_row(asset_logo(logo) + html.escape(name), detail, tone))
             plain.append(f"- {name}: {message}" + (f" ({when})" if when else ""))
         plain.append("")
 
@@ -165,7 +173,7 @@ def render_digest(notes, results, config, app_url: str) -> tuple[str, str, str]:
         html_parts.append(section_title(html.escape(title)))
         plain.append(title)
         for value, name in rows:
-            html_parts.append(list_row(html.escape(name), f"Score {value:.0f}", tone))
+            html_parts.append(list_row(asset_logo(logo_for_name.get(name, "")) + html.escape(name), f"Score {value:.0f}", tone))
             plain.append(f"- {name}: score {value:.0f}")
         plain.append("")
 
@@ -218,7 +226,7 @@ def send_due_digest(
         since = (now - timedelta(hours=LOOKBACK_HOURS)).isoformat()
         notes = (
             supabase.table("user_notifications")
-            .select("id, asset_name, message, alert_type, created_at")
+            .select("id, asset_symbol, asset_name, message, alert_type, created_at")
             .eq("user_id", user_id)
             .in_("alert_type", CROSSING_TYPES)
             .is_("digested_at", "null")

@@ -190,17 +190,29 @@ def evaluate_alerts(supabase, user_id, results, alerts_config, notify_email=None
     # Instant emails are on unless the user turned them off. A digest-only user
     # leaves the crossings unsent here; the digest picks them up.
     if notify_email and send_email and alerts_config.get("instant_email") is not False:
-        _email_open_crossings(supabase, user_id, notify_email, send_email)
+        _email_open_crossings(supabase, user_id, notify_email, send_email, logos_by_symbol(results))
 
     return opened
 
 
-def _email_open_crossings(supabase, user_id, notify_email, send_email) -> None:
+def logos_by_symbol(results) -> dict[str, str]:
+    """Logo address for each scored asset, keyed the way alert rows store the asset."""
+    logos = {}
+    for row in results or []:
+        url = str(row.get("logo") or "").strip()
+        symbol = latch_symbol(row.get("key"))
+        if url and symbol:
+            logos[symbol] = url
+    return logos
+
+
+def _email_open_crossings(supabase, user_id, notify_email, send_email, logos=None) -> None:
     """Email each unresolved crossing once. A later run skips rows already marked."""
+    logos = logos or {}
     try:
         pending = (
             supabase.table("user_notifications")
-            .select("id, asset_name, message")
+            .select("id, asset_symbol, asset_name, message")
             .eq("user_id", user_id)
             .in_("alert_type", [BULLISH, BEARISH, HELD_BULLISH, HELD_BEARISH])
             .is_("emailed_at", "null")
@@ -220,8 +232,12 @@ def _email_open_crossings(supabase, user_id, notify_email, send_email) -> None:
 
     for note in pending:
         name = note.get("asset_name") or "Asset"
+        logo = logos.get(latch_symbol(note.get("asset_symbol")), "")
         try:
-            sent = bool(send_email(notify_email, name, note.get("message") or ""))
+            if logo:
+                sent = bool(send_email(notify_email, name, note.get("message") or "", logo_url=logo))
+            else:
+                sent = bool(send_email(notify_email, name, note.get("message") or ""))
         except Exception as exc:
             print(f"Email failed for {name}: {exc}")
             continue
