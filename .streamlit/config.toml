@@ -1,0 +1,3 @@
+[server]
+# Serves the static/ folder at /app/static/. The page reads static/boot.txt to notice a new version.
+enableStaticServing = true

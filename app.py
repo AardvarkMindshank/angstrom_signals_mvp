@@ -13,6 +13,8 @@ import json
 import re
 import threading
 import time
+
+import app_version
 import traceback
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
@@ -787,6 +789,51 @@ _COMMENT_BIND_JS = """
     });
   };
 """
+_VERSION_WATCH_JS = """
+export default function(component) {
+  const { data } = component;
+  const mine = typeof data === "string" ? data : "";
+  if (!mine) return;
+  if (!window.__angstromBoot) window.__angstromBoot = mine;
+  const busy = () => {
+    const el = document.activeElement;
+    if (el && (el.tagName === "TEXTAREA" || (el.tagName === "INPUT" && el.type !== "checkbox"))) return true;
+    return Array.from(document.querySelectorAll("textarea")).some((t) => t.value && t.value.trim());
+  };
+  const showBanner = () => {
+    if (document.getElementById("angstrom-new-version")) return;
+    const bar = document.createElement("button");
+    bar.id = "angstrom-new-version";
+    bar.type = "button";
+    bar.textContent = "🔄 A new version is ready. Tap to reload.";
+    bar.title = "The app was updated or restarted. Reloading reconnects this page.";
+    bar.style.cssText = "position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:100000;"
+      + "padding:10px 18px;border-radius:999px;border:none;background:#1e3a8a;color:#fff;font-size:14px;"
+      + "box-shadow:0 4px 16px rgba(0,0,0,.25);cursor:pointer;";
+    bar.addEventListener("click", () => window.location.reload());
+    document.body.appendChild(bar);
+  };
+  const changed = () => {
+    if (document.hidden || !busy()) window.location.reload();
+    else showBanner();
+  };
+  if (mine !== window.__angstromBoot) { changed(); return; }
+  if (window.__angstromBootTimer) return;
+  const check = () => {
+    fetch("/app/static/boot.txt?t=" + Date.now(), { cache: "no-store" })
+      .then((r) => (r.ok ? r.text() : ""))
+      .then((text) => {
+        const now = (text || "").trim();
+        if (now && /^[\\w-]{3,40}$/.test(now) && now !== window.__angstromBoot) changed();
+      })
+      .catch(() => {});
+  };
+  window.__angstromBootTimer = window.setInterval(check, 60000);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) check(); });
+  window.addEventListener("focus", check);
+}
+"""
+_version_watch = st.components.v2.component("version_watch", js=_VERSION_WATCH_JS)
 _SCORE_TABLE_JS = """
 export default function(component) {
   const { data, setTriggerValue, parentElement } = component;
@@ -4575,6 +4622,7 @@ if st.session_state.user is None:
     google_verifier = st.session_state.google_verifier
     _take_password_reset(google_verifier)
     _brand_watch(key="brand_watch")
+    _version_watch(key="version_watch", data=app_version.BOOT_ID)
     st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
     _, col_center, _ = st.columns([1, 1.2, 1])
 
@@ -5303,6 +5351,7 @@ if isinstance(_pending_colours, dict):
 _take_colour_copy()
 account_colours = _active_colours()
 _brand_watch(key="brand_watch", data=_colour_payload(account_colours))
+_version_watch(key="version_watch", data=app_version.BOOT_ID)
 st.sidebar.markdown(
     "<div style='margin:0.4rem 0 0.75rem;'>"
     "<div style='display:flex;align-items:center;gap:0.85rem;'>"
