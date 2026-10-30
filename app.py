@@ -8989,14 +8989,15 @@ def _remember_score_visit(rows) -> tuple[dict, bool]:
     return st.session_state.score_visit_baseline, bool(st.session_state.score_visit_seen)
 
 
-def _change_button(pick: str, title: str, detail: str, color: str) -> str:
+def _change_button(pick: str, title: str, detail: str, color: str, logo: str = "") -> str:
     safe_pick = html.escape(pick, quote=True)
     return (
         f"<button type='button' data-pick='{safe_pick}' "
         "style='display:block;width:100%;margin:0;padding:10px 0 2px;border:none;"
         "border-top:1px solid var(--ang-border);background:transparent;text-align:left;"
         "cursor:pointer;font:inherit;color:inherit;'>"
-        f"<div style='font-weight:600;color:{color};'>{html.escape(title)}</div>"
+        "<div style='display:flex;align-items:center;gap:8px;'>"
+        f"{logo}<span style='font-weight:600;color:{color};'>{html.escape(title)}</span></div>"
         f"<div class='ang-kicker' style='margin:2px 0 8px;'>{html.escape(detail)}</div></button>"
     )
 
@@ -9023,6 +9024,7 @@ def _what_changed_html(rows, baseline, seen: bool) -> str:
 
     crossings = []
     moves = []
+    logos = st.session_state.get("asset_logos") or {}
     for row in rows:
         kind = str(row.get("type") or "")
         asset_id = str(row.get("key") or "")
@@ -9049,12 +9051,14 @@ def _what_changed_html(rows, baseline, seen: bool) -> str:
             detail = f"{detail} {factor_name} moved it most ({factor_delta:+.1f})."
         delta = round(current_score - previous_score, 1)
         color = "#15803d" if delta > 0 else "#b91c1c" if delta < 0 else "#6b7280"
+        symbol = str(row.get("symbol") or asset_id)
         item = {
             "delta": delta,
             "pick": f"{kind}|{asset_id}",
             "detail": detail,
             "color": color,
-            "symbol": str(row.get("symbol") or asset_id),
+            "symbol": symbol,
+            "logo": asset_logo(logos.get(asset_market_key(kind, asset_id)), symbol, size=20),
         }
         cross = _boundary_cross(previous_score, current_score, bull, bear)
         if cross == "above":
@@ -9075,11 +9079,11 @@ def _what_changed_html(rows, baseline, seen: bool) -> str:
             "<div style='margin-top:8px;'>No score crossed a boundary since your last visit.</div>"
         )
     for item in crossings:
-        parts.append(_change_button(item["pick"], item["title"], item["detail"], item["color"]))
+        parts.append(_change_button(item["pick"], item["title"], item["detail"], item["color"], item["logo"]))
     if moves:
         parts.append("<div class='ang-kicker' style='margin-top:10px;'>Largest moves</div>")
         for item in moves:
-            parts.append(_change_button(item["pick"], item["title"], item["detail"], item["color"]))
+            parts.append(_change_button(item["pick"], item["title"], item["detail"], item["color"], item["logo"]))
     parts.append("</div>")
     return "".join(parts)
 
