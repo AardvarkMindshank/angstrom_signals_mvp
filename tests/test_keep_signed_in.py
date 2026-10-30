@@ -38,3 +38,14 @@ def test_the_choice_is_remembered_but_never_a_token():
     assert "encodeURIComponent(value)" not in pref_part
     # logging out clears the sign-in cookie only, so the remembered choice survives it
     assert 'st.session_state.pop("_keep_clear", False):\n        _keep_cookie_write("")' in SOURCE
+
+
+def test_a_token_swapped_on_page_load_also_updates_the_saved_copy():
+    # An idle page's sign-in runs out; set_session then hands back a new refresh token.
+    # That new token must go through _store_session_tokens, which rewrites the cookie.
+    start = SOURCE.index("restored = client.auth.set_session(access, refresh)")
+    block = SOURCE[start:start + 700]
+    assert "if fresh.refresh_token != refresh:" in block
+    assert "_store_session_tokens(fresh.access_token, fresh.refresh_token)" in block
+    store = SOURCE[SOURCE.index("def _store_session_tokens"):][:400]
+    assert "_keep_cookie_write(refresh)" in store

@@ -4131,8 +4131,14 @@ def get_supabase():
             restored = client.auth.set_session(access, refresh)
             fresh = getattr(restored, "session", None)
             if fresh is not None and fresh.access_token and fresh.refresh_token:
-                st.session_state.access_token = fresh.access_token
-                st.session_state.refresh_token = fresh.refresh_token
+                if fresh.refresh_token != refresh:
+                    # The sign-in had run out (for example a page left idle for over an hour),
+                    # so set_session swapped in a new refresh token. The saved "Keep me
+                    # signed in" copy must follow, or the next page load cannot restore it.
+                    _store_session_tokens(fresh.access_token, fresh.refresh_token)
+                else:
+                    st.session_state.access_token = fresh.access_token
+                    st.session_state.refresh_token = fresh.refresh_token
         except Exception as exc:
             st.session_state.user = None
             st.session_state.access_token = None
