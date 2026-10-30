@@ -1204,9 +1204,12 @@ def market_stats_from_rows(shared: dict, max_age_seconds: float = 6 * 3600) -> d
         kind = str(row.get("kind") or "")
         asset_id = str(row.get("asset_id") or "")
         key = str(row.get("asset_key") or "")
-        if not asset_id and ":" in key:
-            kind_part, _, asset_id = key.partition(":")
-            kind = kind or kind_part
+        # Keys look like "Crypto|sui". (Older code looked for a colon, so saved caps were never
+        # found and every server restart waited on the data providers.)
+        for mark in ("|", ":"):
+            if not asset_id and mark in key:
+                kind_part, _, asset_id = key.partition(mark)
+                kind = kind or kind_part
         cap = row.get("market_cap")
         rank = row.get("market_rank")
         bucket = "stock" if kind.lower().startswith("stock") else "crypto"
