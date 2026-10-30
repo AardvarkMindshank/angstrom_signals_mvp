@@ -11309,7 +11309,7 @@ def _show_options_positioning(ticker: str, chart_price: float | None) -> None:
     today = datetime.now(timezone.utc).date()
     rows, expiries, error = options_levels.load_rows(ticker, today)
     if error:
-        st.caption(f"{error} Options positioning needs a listed options chain.")
+        st.caption(error)
         return
     spot = float(chart_price or 0)
     summary = options_levels.summarize(rows, spot, today)

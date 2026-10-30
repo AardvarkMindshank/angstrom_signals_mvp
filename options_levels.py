@@ -21,6 +21,7 @@ Nothing here is part of the score.
 from __future__ import annotations
 
 import math
+import threading
 import time
 from datetime import date
 
@@ -32,6 +33,8 @@ _TTL = 60 * 60           # a chain is reused for an hour
 _ERROR_TTL = 90
 _CACHE_LIMIT = 200
 _cache: dict[tuple, tuple[float, object]] = {}
+# Yahoo refuses bursts of parallel requests, so chains are fetched one at a time.
+_YAHOO = threading.Lock()
 
 
 # ---------------------------------------------------------------- maths
@@ -157,6 +160,25 @@ def _num(value) -> float:
     return number if number == number else 0.0
 
 
+def chain_lines(found) -> list[dict]:
+    """Contract lines with open interest from one yfinance option_chain result."""
+    out = []
+    for kind, frame in (("call", getattr(found, "calls", None)), ("put", getattr(found, "puts", None))):
+        if frame is None or getattr(frame, "empty", True) or "strike" not in frame.columns:
+            continue
+        size = len(frame)
+        column = lambda name: list(frame[name]) if name in frame.columns else [0] * size
+        for strike, oi, iv, volume in zip(
+            column("strike"), column("openInterest"), column("impliedVolatility"), column("volume"),
+        ):
+            if _num(strike) > 0 and _num(oi) > 0:
+                out.append({
+                    "type": kind, "strike": round(_num(strike), 4), "oi": _num(oi),
+                    "iv": _num(iv), "volume": _num(volume),
+                })
+    return out
+
+
 def load_rows(ticker: str, today: date) -> tuple[list[dict], list[str], str | None]:
     """Contract lines for the nearest expiries, the expiries used, and an error message."""
     ticker = str(ticker or "").strip().upper()
@@ -164,7 +186,8 @@ def load_rows(ticker: str, today: date) -> tuple[list[dict], list[str], str | No
     def dates():
         try:
             import yfinance as yf
-            return [str(d)[:10] for d in (yf.Ticker(ticker).options or [])], None
+            with _YAHOO:
+                return [str(d)[:10] for d in (yf.Ticker(ticker).options or [])], None
         except Exception:
             return [], "The options chain could not be loaded."
 
@@ -175,33 +198,38 @@ def load_rows(ticker: str, today: date) -> tuple[list[dict], list[str], str | No
     if not chosen:
         return [], [], "No options expiries in the next two months."
     rows: list[dict] = []
+    failed = zero = 0
     for expiry in chosen:
         def chain(expiry=expiry):
-            try:
-                import yfinance as yf
-                found = yf.Ticker(ticker).option_chain(expiry)
-            except Exception:
-                return [], "The options chain could not be loaded."
-            out = []
-            for kind, frame in (("call", getattr(found, "calls", None)), ("put", getattr(found, "puts", None))):
-                if frame is None or getattr(frame, "empty", True):
-                    continue
-                for strike, oi, iv, volume in zip(
-                    frame.get("strike", []), frame.get("openInterest", []),
-                    frame.get("impliedVolatility", []), frame.get("volume", []),
-                ):
-                    if _num(strike) > 0 and _num(oi) > 0:
-                        out.append({
-                            "type": kind, "strike": round(_num(strike), 4), "oi": _num(oi),
-                            "iv": _num(iv), "volume": _num(volume),
-                        })
-            return out, None
+            found = None
+            for attempt in range(2):
+                try:
+                    import yfinance as yf
+                    with _YAHOO:
+                        found = yf.Ticker(ticker).option_chain(expiry)
+                    break
+                except Exception:
+                    time.sleep(1.5 * (attempt + 1))
+            if found is None:
+                return [], "failed"
+            lines = chain_lines(found)
+            # An empty chain is kept only briefly, like an error, so it is asked for again soon.
+            return lines, (None if lines else "empty")
 
         lines, chain_error = _cached(("chain", ticker, expiry), chain)
+        if chain_error == "empty":
+            zero += 1
+            continue
         if chain_error:
+            failed += 1
             continue
         when = date.fromisoformat(expiry)
         rows += [dict(line, expiry=when) for line in lines]
     if not rows:
-        return [], chosen, "These expiries show no open interest yet."
+        if failed:
+            return [], chosen, "Yahoo did not send the options chain just now. Try again in a minute or two."
+        return [], chosen, (
+            "Yahoo is showing no open contracts for these expiries right now. "
+            "It does this for a while around the US market open, before the day's figures arrive."
+        )
     return rows, chosen, None

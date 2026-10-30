@@ -46,3 +46,30 @@ def test_gamma_flip_found_between_put_and_call_heavy_strikes():
 def test_nothing_to_show_without_rows_or_price():
     assert ol.summarize([], 100.0, TODAY) == {"ok": False}
     assert ol.summarize([line("call", 100, 10)], 0, TODAY) == {"ok": False}
+
+
+class _Frame:
+    def __init__(self, data):
+        self._data = data
+        self.columns = list(data)
+        self.empty = not data or not len(next(iter(data.values())))
+
+    def __getitem__(self, name):
+        return self._data[name]
+
+    def __len__(self):
+        return len(next(iter(self._data.values()))) if self._data else 0
+
+
+class _Chain:
+    def __init__(self, calls, puts):
+        self.calls, self.puts = _Frame(calls), _Frame(puts)
+
+
+def test_chain_lines_keep_only_open_contracts_and_survive_missing_columns():
+    found = _Chain(
+        {"strike": [100.0, 110.0], "openInterest": [50, 0], "impliedVolatility": [0.4, 0.5]},
+        {"strike": [90.0], "openInterest": [float("nan")]},
+    )
+    lines = ol.chain_lines(found)
+    assert lines == [{"type": "call", "strike": 100.0, "oi": 50.0, "iv": 0.4, "volume": 0.0}]
