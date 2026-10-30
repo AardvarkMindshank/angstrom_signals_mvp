@@ -811,10 +811,21 @@ export default function(component) {
   const mine = typeof data === "string" ? data : "";
   if (!mine) return;
   if (!window.__angstromBoot) window.__angstromBoot = mine;
+  // Only text typed on this page counts as "busy". Boxes filled in from saved settings
+  // (a profile bio, say) do not.
+  if (!window.__angstromTyped) {
+    window.__angstromTyped = new Set();
+    document.addEventListener("input", (event) => {
+      const el = event.target;
+      if (el && (el.tagName === "TEXTAREA" || (el.tagName === "INPUT" && /^(text|search|email|)$/.test(el.type || "")))) {
+        window.__angstromTyped.add(el);
+      }
+    }, true);
+  }
   const busy = () => {
     const el = document.activeElement;
-    if (el && (el.tagName === "TEXTAREA" || (el.tagName === "INPUT" && el.type !== "checkbox"))) return true;
-    return Array.from(document.querySelectorAll("textarea")).some((t) => t.value && t.value.trim());
+    if (el && (el.tagName === "TEXTAREA" || (el.tagName === "INPUT" && /^(text|search|email|password|)$/.test(el.type || "")))) return true;
+    return Array.from(window.__angstromTyped).some((t) => t.isConnected && t.value && t.value.trim());
   };
   const showBanner = () => {
     if (document.getElementById("angstrom-new-version")) return;
