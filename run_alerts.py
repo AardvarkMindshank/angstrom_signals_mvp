@@ -363,6 +363,13 @@ def run_background_checks() -> None:
         # Liquidation levels are a chart extra. They must never hold up the alert pass.
         print(f"Liquidation levels skipped: {str(exc)[:160]}")
     try:
+        from market_overview import refresh_due as refresh_market_overview
+
+        refresh_market_overview(supabase)
+    except Exception as exc:
+        # The market overview strip is an extra. It must never hold up the alert pass.
+        print(f"Market overview skipped: {str(exc)[:160]}")
+    try:
         from evidence import refresh_due_evidence
 
         refresh_due_evidence(supabase, catalog)

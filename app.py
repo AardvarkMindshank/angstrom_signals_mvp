@@ -6375,10 +6375,16 @@ It is a research tool, not financial advice. The score describes conditions now;
 tests it has not predicted what price did next.
 
 **A quick tour**
-1. **Quick Snapshot** opens with *What changed*: scores that crossed your alert lines, and the biggest moves.
+1. **Quick Snapshot** opens with 🌍 **Markets**: the major indices, VIX, the US 10-year yield, the dollar,
+   gold, oil and crypto totals, each with today's move and a 30-day line (a green dot means that exchange is
+   open; hover a card for what it measures). Then *What changed*: scores that crossed your alert lines and
+   the biggest moves, each with the score before and now, the price and today's move, a 7-day line, and
+   badges for 📅 earnings within two weeks, 📰 headline sentiment and 🎯 how close it is to an alert line.
 2. **Crypto Scores** and **Equity Scores** rank your watchlists, strongest first. Click a name to open it on the chart.
+   The asset's 📰 Market sentiment sits under these tables (in the wide layout, in the left column under the
+   market sentiments).
 3. **Interactive Chart** shows the asset with the indicators you pick. Underneath sit Score Breakdown,
-   Max pain, Leverage & liquidations, Market sentiment and Signal matrix, all for that asset.
+   Max pain, Leverage & liquidations and Signal matrix, all for that asset.
 4. **Notifications**, in the sidebar, holds your alerts and their settings.
 5. The arrow on the right edge opens **Social signals and chat**.
 """)
@@ -8547,6 +8553,40 @@ def _background(function, *args) -> None:
     _BACKGROUND.submit(_run_when_quiet, function, *args)
 
 
+_OVERVIEW: dict = {"read_at": 0.0, "saved": None, "own": None, "own_at": 0.0, "busy": False}
+
+
+def _fetch_overview_here() -> None:
+    """The page's own fetch, used only while the worker's saved copy is missing or old."""
+    try:
+        import market_overview
+        _OVERVIEW["own"] = market_overview.fetch_overview()
+    except Exception as exc:
+        print(f"market overview fetch failed: {exc}")
+    finally:
+        _OVERVIEW["own_at"] = time.time()
+        _OVERVIEW["busy"] = False
+
+
+def load_market_overview() -> dict | None:
+    """The shared market overview. Never makes the page wait: the saved copy is re-read once a
+    minute, and a fetch runs behind the scenes only when that copy is missing or over an hour old."""
+    import market_overview
+    now = time.time()
+    if now - _OVERVIEW["read_at"] > 60:
+        _OVERVIEW["read_at"] = now
+        saved = market_overview.load_overview(supabase)
+        if saved:
+            _OVERVIEW["saved"] = saved
+    candidates = [c for c in (_OVERVIEW["saved"], _OVERVIEW["own"]) if c]
+    best = max(candidates, key=lambda c: float(c.get("fetched_at") or 0)) if candidates else None
+    fresh = best and now - float(best.get("fetched_at") or 0) < market_overview.STALE_SECONDS
+    if not fresh and not _OVERVIEW["busy"] and now - _OVERVIEW["own_at"] > market_overview.REFRESH_SECONDS:
+        _OVERVIEW["busy"] = True
+        _background(_fetch_overview_here)
+    return best
+
+
 _EARN_STORE: dict = {}
 _EARN_BUSY: set = set()
 _EARN_SECONDS = 12 * 3600
@@ -9121,17 +9161,113 @@ def _remember_score_visit(rows) -> tuple[dict, bool]:
     return st.session_state.score_visit_baseline, bool(st.session_state.score_visit_seen)
 
 
-def _change_button(pick: str, title: str, detail: str, color: str, logo: str = "") -> str:
+def _change_button(pick: str, title: str, detail: str, color: str, logo: str = "", extras: str = "") -> str:
+    """One What changed row: name and reason on the left, the live context on the right.
+    On a narrow screen the right side drops under the name."""
     safe_pick = html.escape(pick, quote=True)
     return (
         f"<button type='button' data-pick='{safe_pick}' "
         "style='display:block;width:100%;margin:0;padding:10px 0 2px;border:none;"
         "border-top:1px solid var(--ang-border);background:transparent;text-align:left;"
         "cursor:pointer;font:inherit;color:inherit;'>"
+        "<div style='display:flex;flex-wrap:wrap;align-items:center;gap:4px 16px;'>"
+        "<div style='flex:1 1 240px;min-width:0;'>"
         "<div style='display:flex;align-items:center;gap:8px;'>"
         f"{logo}<span style='font-weight:600;color:{color};'>{html.escape(title)}</span></div>"
-        f"<div class='ang-kicker' style='margin:2px 0 8px;'>{html.escape(detail)}</div></button>"
+        f"<div class='ang-kicker' style='margin:2px 0 8px;'>{html.escape(detail)}</div></div>"
+        + (
+            "<div style='flex:0 1 auto;display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;"
+            f"margin:0 0 8px auto;'>{extras}</div>" if extras else ""
+        )
+        + "</div></button>"
     )
+
+
+def _mini_badge(text: str, colour: str, background: str, hint: str = "") -> str:
+    title = f" title='{html.escape(hint, quote=True)}'" if hint else ""
+    return (
+        f"<span{title} style='display:inline-block;padding:1px 7px;border-radius:999px;background:{background};"
+        f"color:{colour};font-size:0.78rem;font-weight:700;white-space:nowrap;'>{html.escape(text)}</span>"
+    )
+
+
+def _change_extras(row: dict, previous_score: float, current_score: float, bull: float, bear: float,
+                   crossed: bool, shared_row: dict | None) -> str:
+    """Score move, price and today's move, a 7-day line and context badges for one changed asset."""
+    parts = []
+    old_fg, old_bg, _a, _b = tone(previous_score)
+    new_fg, new_bg, _a, _b = tone(current_score)
+    parts.append(
+        "<span title='Score at your last visit, and now' style='white-space:nowrap;'>"
+        + _mini_badge(f"{previous_score:.0f}", old_fg, old_bg)
+        + "<span style='margin:0 4px;color:var(--ang-muted);'>→</span>"
+        + _mini_badge(f"{current_score:.0f}", new_fg, new_bg)
+        + "</span>"
+    )
+    price = row.get("latest_price")
+    try:
+        price = float(price)
+    except (TypeError, ValueError):
+        price = None
+    if price and price > 0:
+        change = row.get("change_1d")
+        pill = ""
+        try:
+            change = float(change)
+            if change == change:
+                if abs(change) < 0.05:
+                    pill = _mini_badge("0.0%", "#6b7280", "#f3f4f6", "Today's price move")
+                elif change > 0:
+                    pill = _mini_badge(f"▲ {change:.1f}%", "#15803d", "#dcfce7", "Today's price move")
+                else:
+                    pill = _mini_badge(f"▼ {abs(change):.1f}%", "#b91c1c", "#fee2e2", "Today's price move")
+        except (TypeError, ValueError):
+            pass
+        parts.append(
+            "<span style='white-space:nowrap;font-weight:600;'>"
+            f"{html.escape(_price_text(price))} {pill}</span>"
+        )
+    closes = row.get("closes") or []
+    if len(closes) >= 3:
+        parts.append(
+            "<span title='Price over the last 7 days' style='display:inline-block;'>"
+            + sparkline_svg(list(closes)[-8:]).replace("margin-left:auto;", "")
+            + "</span>"
+        )
+    badges = []
+    earnings = str(row.get("next_earnings") or "")[:10]
+    if earnings:
+        try:
+            days = (datetime.strptime(earnings, "%Y-%m-%d").date() - datetime.now(timezone.utc).date()).days
+        except ValueError:
+            days = None
+        if days is not None and 0 <= days <= 14:
+            when = "today" if days == 0 else "tomorrow" if days == 1 else f"in {days}d"
+            badges.append(_mini_badge(f"📅 {when}", "#1e40af", "#dbeafe", f"Earnings report {when} ({earnings})"))
+    report, _stored = sentiment_from_row(shared_row)
+    try:
+        mood = float((report or {}).get("score"))
+    except (TypeError, ValueError):
+        mood = None
+    if mood is not None and mood == mood:
+        fg, bg, _a, _b = tone(mood)
+        badges.append(_mini_badge(f"📰 {mood:.0f}", fg, bg, "Headline sentiment for this asset, 0 to 100"))
+    if not crossed:
+        gap_up = bull - current_score
+        gap_down = current_score - bear
+        if 0 < gap_up <= 5:
+            badges.append(_mini_badge(
+                f"🎯 {gap_up:.0f} to {bull:.0f}", "#14532d", "#bbf7d0",
+                f"{gap_up:.1f} points below your positive alert line ({bull:.0f})",
+            ))
+        elif 0 < gap_down <= 5:
+            badges.append(_mini_badge(
+                f"🎯 {gap_down:.0f} to {bear:.0f}", "#7f1d1d", "#fecaca",
+                f"{gap_down:.1f} points above your negative alert line ({bear:.0f})",
+            ))
+    if badges:
+        parts.append("<span style='display:inline-flex;flex-wrap:wrap;gap:4px;'>" + "".join(badges) + "</span>")
+    return "".join(parts)
 
 
 def _what_changed_html(rows, baseline, seen: bool) -> str:
@@ -9184,6 +9320,15 @@ def _what_changed_html(rows, baseline, seen: bool) -> str:
         delta = round(current_score - previous_score, 1)
         color = "#15803d" if delta > 0 else "#b91c1c" if delta < 0 else "#6b7280"
         symbol = str(row.get("symbol") or asset_id)
+        cross = _boundary_cross(previous_score, current_score, bull, bear)
+        try:
+            extras = _change_extras(
+                row, previous_score, current_score, bull, bear, cross in ("above", "below"),
+                (st.session_state.get("_shared_rows") or {}).get(asset_market_key(kind, asset_id)),
+            )
+        except Exception as exc:
+            print(f"What changed extras failed for {asset_id}: {exc}")
+            extras = ""
         item = {
             "delta": delta,
             "pick": f"{kind}|{asset_id}",
@@ -9191,8 +9336,8 @@ def _what_changed_html(rows, baseline, seen: bool) -> str:
             "color": color,
             "symbol": symbol,
             "logo": asset_logo(logos.get(asset_market_key(kind, asset_id)), symbol, size=20),
+            "extras": extras,
         }
-        cross = _boundary_cross(previous_score, current_score, bull, bear)
         if cross == "above":
             item["title"] = f"{item['symbol']} crossed above {bull_label}"
             crossings.append(item)
@@ -9211,11 +9356,11 @@ def _what_changed_html(rows, baseline, seen: bool) -> str:
             "<div style='margin-top:8px;'>No score crossed a boundary since your last visit.</div>"
         )
     for item in crossings:
-        parts.append(_change_button(item["pick"], item["title"], item["detail"], item["color"], item["logo"]))
+        parts.append(_change_button(item["pick"], item["title"], item["detail"], item["color"], item["logo"], item["extras"]))
     if moves:
         parts.append("<div class='ang-kicker' style='margin-top:10px;'>Largest moves</div>")
         for item in moves:
-            parts.append(_change_button(item["pick"], item["title"], item["detail"], item["color"], item["logo"]))
+            parts.append(_change_button(item["pick"], item["title"], item["detail"], item["color"], item["logo"], item["extras"]))
     parts.append("</div>")
     return "".join(parts)
 
@@ -9473,6 +9618,25 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, weig
     if trade_equities:
         allowed_kinds.append("Stock")
     with section_expander("📸 Quick Snapshot", "quick_snapshot"):
+        with _timed("market overview"):
+            try:
+                import market_overview
+                overview = load_market_overview()
+                strip = market_overview.overview_html(overview, trade_crypto, trade_equities)
+            except Exception as exc:
+                print(f"market overview failed: {exc}")
+                overview, strip = None, ""
+            if strip:
+                age = time.time() - float((overview or {}).get("fetched_at") or 0)
+                st.markdown(
+                    "<div class='ang-kicker' style='margin:0 0 6px;' title='Hover a card for what it measures. "
+                    "Shared for everyone and refreshed about every 15 minutes. Stock prices can be delayed "
+                    "about 15 minutes; futures prices for gold and oil.'>🌍 Markets · "
+                    f"updated {html.escape(_ago(age))}</div>" + strip,
+                    unsafe_allow_html=True,
+                )
+            elif trade_crypto or trade_equities:
+                st.caption("🌍 Market overview is loading. It appears on the next update.")
         def open_asset():
             """The asset on the chart: kind, id, label, and its sentiment search."""
             pick = st.session_state.get("chart_pick")

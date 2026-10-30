@@ -3455,3 +3455,25 @@ create policy "signed-in users read liquidation history" on public.liquidation_h
     using (true);
 
 grant select on public.liquidation_history to authenticated;
+
+
+-- ============================================================
+-- Market overview (top of Quick Snapshot)
+-- ============================================================
+-- One shared row: major indices, VIX, yields, dollar, gold, oil and crypto totals.
+-- The background worker refreshes it about every 15 minutes; signed-in users read it.
+create table if not exists public.market_overview (
+    id text primary key,
+    data jsonb,
+    updated_at timestamptz
+);
+
+alter table public.market_overview enable row level security;
+
+drop policy if exists "signed-in users read market overview" on public.market_overview;
+create policy "signed-in users read market overview" on public.market_overview
+    for select
+    to authenticated
+    using (true);
+
+grant select on public.market_overview to authenticated;
