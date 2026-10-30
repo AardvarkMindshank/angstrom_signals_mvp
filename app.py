@@ -11280,7 +11280,11 @@ def show_max_pain(kind: str, asset_id: str, label: str, chart_price: float | Non
         if labels:
             expiry_key = f"max_pain_expiry_{market}"
             if st.session_state.get(expiry_key) not in labels:
-                st.session_state[expiry_key] = next(iter(labels))
+                # Start on the nearest expiry after today. On its last day a stock option
+                # often shows no open interest at all, so today's makes a blank default.
+                today_iso = datetime.now(timezone.utc).date().isoformat()
+                later = [item for item in labels if str(item) > today_iso]
+                st.session_state[expiry_key] = later[0] if later else next(iter(labels))
             expiry = st.selectbox(
                 "Expiry",
                 list(labels),
@@ -11302,7 +11306,18 @@ def show_max_pain(kind: str, asset_id: str, label: str, chart_price: float | Non
             st.warning(chain_error)
             return
         if not calls and not puts:
-            st.caption("This expiry has no open interest yet.")
+            st.caption(
+                "This expiry shows no open interest. On an option's last day the data source often "
+                "reports none, so pick a later expiry above."
+            )
+            return
+        total_open = sum(calls.values()) + sum(puts.values())
+        if market.startswith("stock:") and total_open < 100:
+            # A handful of contracts (often on an option's last day) gives a meaningless answer.
+            st.caption(
+                f"This expiry has only {total_open:,.0f} open contracts, too few for a meaningful max pain. "
+                "Pick a later expiry above."
+            )
             return
         level = pain_strike(calls, puts)
         spot = underlying if underlying else chart_price
