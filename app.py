@@ -5965,17 +5965,22 @@ def notifications_panel() -> None:
                     "supabase_rls.sql has been run in Supabase."
                 )
             else:
+                # With every alert type off there is nothing to email, so the email
+                # choices are greyed out. Their saved values are kept for later.
+                emails_off = not alert_enabled and not new_alert_settings.get("market_alerts_enabled")
                 st.markdown("**Emails**")
                 instant_on = st.checkbox(
                     "⚡ Instant alerts",
                     value=alert_prefs.get("instant_email") is not False,
                     key="alert_instant_cb",
                     help="One email as soon as a score crosses a boundary.",
+                    disabled=emails_off,
                 )
                 digest_on = st.checkbox(
                     "📬 Daily digest",
                     value=bool(alert_prefs.get("digest_enabled")),
                     key="alert_digest_cb",
+                    disabled=emails_off,
                     help=(
                         "One email a day that gathers everything that crossed. "
                         "Nothing is sent on days with no alerts. "
@@ -6010,6 +6015,7 @@ def notifications_panel() -> None:
                         index=saved_hour if 0 <= saved_hour <= 23 else 8,
                         format_func=lambda hour: f"{hour:02d}:00",
                         key="alert_digest_hour",
+                        disabled=emails_off,
                     )
                     start_zone = saved_zone or "UTC"
                     digest_zone_choice = zone_col.selectbox(
@@ -6017,6 +6023,7 @@ def notifications_panel() -> None:
                         zone_choices,
                         index=zone_choices.index(start_zone) if start_zone in zone_choices else 0,
                         key="alert_digest_zone",
+                        disabled=emails_off,
                     )
                     if browser_zone and digest_zone_choice != browser_zone:
                         st.caption(f"Your browser's time zone is {browser_zone}.")
@@ -6030,10 +6037,10 @@ def notifications_panel() -> None:
                     "digest_hour": None if digest_hour_choice is None else int(digest_hour_choice),
                     "digest_tz": digest_zone_choice,
                 })
-                if not instant_on and not digest_on:
+                if emails_off:
+                    st.caption("Tick an alert type above to choose how its emails arrive.")
+                elif not instant_on and not digest_on:
                     st.caption("Both are off, so alerts only appear in the dashboard.")
-                if not alert_enabled and not new_alert_settings.get("market_alerts_enabled"):
-                    st.caption("All alerts are off.")
 
             changed = new_alert_settings != {name: alert_prefs.get(name) for name in new_alert_settings}
             if changed:
