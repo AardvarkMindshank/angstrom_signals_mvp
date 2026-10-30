@@ -1220,16 +1220,33 @@ def market_stats_from_rows(shared: dict, max_age_seconds: float = 6 * 3600) -> d
     return out
 
 
+def _row_identity(row: dict) -> tuple[str, str]:
+    """(kind, asset id) for a saved row. The page only reads asset_key ("Stock|TSLA"), so the
+    kind and id are taken from it when the row has no separate columns for them."""
+    kind = str(row.get("kind") or "")
+    asset_id = str(row.get("asset_id") or "")
+    key = str(row.get("asset_key") or "")
+    for mark in ("|", ":"):
+        if (not asset_id or not kind) and mark in key:
+            kind_part, _, id_part = key.partition(mark)
+            kind = kind or kind_part
+            asset_id = asset_id or id_part
+    return kind, asset_id
+
+
 def earnings_from_rows(shared: dict, max_age_seconds: float = 36 * 3600) -> dict[str, str | None]:
     """Saved next-earnings dates for stocks: {TICKER: "YYYY-MM-DD" or None}. None means checked, none known.
     A ticker is left out when it was never checked, or the check is old."""
     now = datetime.now(timezone.utc).timestamp()
     out = {}
     for row in (shared or {}).values():
-        if not isinstance(row, dict) or str(row.get("kind") or "").lower() != "stock":
+        if not isinstance(row, dict):
+            continue
+        kind, asset_id = _row_identity(row)
+        if kind.lower() != "stock":
             continue
         checked = _stored_at(row.get("earnings_checked_at"))
-        asset_id = str(row.get("asset_id") or "").strip().upper()
+        asset_id = asset_id.strip().upper()
         if checked is None or not asset_id or now - checked > max_age_seconds:
             continue
         raw = str(row.get("next_earnings") or "").strip()[:10]

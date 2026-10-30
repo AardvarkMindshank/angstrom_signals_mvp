@@ -8557,8 +8557,15 @@ def _fetch_earnings(token) -> None:
     try:
         found = stock_next_earnings(list(token))
         previous = _EARN_STORE.get(token)
+        before = previous[1] if previous else {}
+        today_text = datetime.now(timezone.utc).date().isoformat()
+        # "No date" from a patchy lookup must not wipe a known report date that is still ahead.
+        found = {
+            ticker: (when or (before.get(ticker) if str(before.get(ticker) or "") >= today_text else None))
+            for ticker, when in found.items()
+        }
         # A stock the lookup could not answer keeps the date it had.
-        kept = {**(previous[1] if previous else {}), **found}
+        kept = {**before, **found}
         _EARN_STORE[token] = (time.time(), kept)
         save_earnings(supabase, found)
     except Exception as exc:
