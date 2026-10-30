@@ -209,8 +209,56 @@ def combine_open_interest(histories) -> list[dict]:
     return [{"t": t, "c": sum(table[t] for table in tables)} for t in sorted(shared)]
 
 
+def _series_value(row: dict, *names):
+    for name in names:
+        if _ok(row.get(name)):
+            return float(row[name])
+    return None
+
+
+def build_series(bars, oi, ratios, funding, liquidations) -> dict:
+    """Hourly series for the Leverage & liquidations section, lined up on the price bars.
+
+    funding rows carry o/h/l/c (the close is used); liquidation rows carry l (longs
+    liquidated, USD) and s (shorts liquidated, USD), added up across markets.
+    """
+    oi_at = {int(r["t"]): float(r["c"]) for r in oi or [] if _ok(r.get("c"))}
+    ratio_at = {int(r["t"]): _series_value(r, "r") for r in ratios or [] if r.get("t") is not None}
+    funding_at = {int(r["t"]): _series_value(r, "c", "value") for r in funding or [] if r.get("t") is not None}
+    longs_at: dict[int, float] = {}
+    shorts_at: dict[int, float] = {}
+    for rows in liquidations or []:
+        for r in rows or []:
+            if r.get("t") is None:
+                continue
+            t = int(r["t"])
+            longs_at[t] = longs_at.get(t, 0.0) + (_series_value(r, "l") or 0.0)
+            shorts_at[t] = shorts_at.get(t, 0.0) + (_series_value(r, "s") or 0.0)
+    series = {"t": [], "price": [], "oi": [], "ls": [], "funding": [], "liq_long": [], "liq_short": []}
+    for bar in sorted(bars or [], key=lambda row: int(row["t"])):
+        price = _series_value(bar, "c")
+        if price is None:
+            continue
+        t = int(bar["t"])
+        series["t"].append(t)
+        series["price"].append(price)
+        series["oi"].append(oi_at.get(t))
+        series["ls"].append(ratio_at.get(t))
+        series["funding"].append(funding_at.get(t))
+        series["liq_long"].append(round(longs_at.get(t, 0.0), 2))
+        series["liq_short"].append(round(shorts_at.get(t, 0.0), 2))
+    return series
+
+
+def calls_for(markets: list[dict]) -> int:
+    """Coinalyze calls one coin costs: open interest and liquidations per market,
+    plus price, funding and the long/short ratio from one market each."""
+    return 2 * len(markets) + 3
+
+
 def levels_for_coin(client: Coinalyze, markets: list[dict], hours: int = LOOKBACK_HOURS) -> dict:
-    """Fetch the coin's data from its chosen markets and estimate its levels."""
+    """Fetch the coin's data from its chosen markets, estimate its levels, and keep
+    the hourly series behind them for the Leverage & liquidations section."""
     symbols = [str(m["symbol"]) for m in markets]
     oi_by_symbol = client.history("/open-interest-history", symbols, hours, convert_to_usd="true")
     lead = symbols[0]
@@ -224,6 +272,23 @@ def levels_for_coin(client: Coinalyze, markets: list[dict], hours: int = LOOKBAC
     oi = combine_open_interest(oi_by_symbol.values())
     result = estimate_levels(bars, oi, ratios)
     result["markets"] = symbols
+    # The extras are for display. A failure here must not lose the levels.
+    funding, liquidations = [], []
+    try:
+        funding = client.history("/funding-rate-history", [lead], hours).get(lead, [])
+    except RateLimited:
+        raise
+    except Exception as exc:
+        result["funding_error"] = str(exc)[:120]
+    try:
+        liquidations = list(
+            client.history("/liquidation-history", symbols, hours, convert_to_usd="true").values()
+        )
+    except RateLimited:
+        raise
+    except Exception as exc:
+        result["liquidation_error"] = str(exc)[:120]
+    result["series"] = build_series(bars, oi, ratios, funding, liquidations)
     return result
 
 
@@ -282,7 +347,7 @@ def refresh_due(supabase, catalog: dict, api_key: str, crypto_ticker, budget: in
         coin = keys[key]
         ticker = (crypto_ticker(coin) or "").upper()
         chosen = pick_markets(markets, exchanges, ticker) if ticker else []
-        if client.calls + len(chosen) + 2 > budget:
+        if client.calls + calls_for(chosen) > budget:
             break
         stored_at = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
         if not chosen:
@@ -306,6 +371,36 @@ def refresh_due(supabase, catalog: dict, api_key: str, crypto_ticker, budget: in
             print(f"Liquidation levels for {ticker or coin}: {record.get('status')}")
         except Exception as exc:
             print(f"Liquidation levels for {ticker or coin} could not be saved: {str(exc)[:160]}")
+        if record.get("status") == "ok":
+            save_history(supabase, key, stored_at, record)
+
+
+HISTORY_DAYS = 30
+
+
+def save_history(supabase, key: str, stored_at: str, record: dict) -> None:
+    """Keep one snapshot per coin per update, for 30 days, so changes can be shown."""
+    series = record.get("series") or {}
+
+    def last(name):
+        values = [v for v in series.get(name) or [] if v is not None]
+        return values[-1] if values else None
+
+    try:
+        supabase.table("liquidation_history").insert({
+            "asset_key": key,
+            "recorded_at": stored_at,
+            "price": record.get("price"),
+            "longs": record.get("longs") or [],
+            "shorts": record.get("shorts") or [],
+            "open_interest": last("oi"),
+            "funding": last("funding"),
+            "long_short": last("ls"),
+        }).execute()
+        cutoff = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(time.time() - HISTORY_DAYS * 86400))
+        supabase.table("liquidation_history").delete().eq("asset_key", key).lt("recorded_at", cutoff).execute()
+    except Exception as exc:
+        print(f"Liquidation history not saved for {key}. Run the latest supabase_rls.sql. {str(exc)[:120]}")
 
 
 def _epoch(value) -> float | None:

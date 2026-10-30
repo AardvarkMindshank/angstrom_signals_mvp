@@ -3427,3 +3427,27 @@ create trigger guard_asset_market_liq
     before insert or update on public.asset_market
     for each row
     execute function public.guard_asset_market_liq();
+
+-- One snapshot per coin per liquidation update (about hourly), kept 30 days by the
+-- worker, so the Leverage & liquidations section can show how the levels change.
+create table if not exists public.liquidation_history (
+    asset_key text not null,
+    recorded_at timestamptz not null,
+    price numeric,
+    longs jsonb,
+    shorts jsonb,
+    open_interest numeric,
+    funding numeric,
+    long_short numeric,
+    primary key (asset_key, recorded_at)
+);
+
+alter table public.liquidation_history enable row level security;
+
+drop policy if exists "signed-in users read liquidation history" on public.liquidation_history;
+create policy "signed-in users read liquidation history" on public.liquidation_history
+    for select
+    to authenticated
+    using (true);
+
+grant select on public.liquidation_history to authenticated;

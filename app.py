@@ -37,6 +37,7 @@ _POPOUT_SECTION_IDS = (
     "market_mood_crypto",
     "market_mood_stock",
     "max_pain",
+    "leverage",
     "market_sentiment_panel",
     "signal_matrix",
 )
@@ -6317,7 +6318,7 @@ Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a
 
 **What changed** is the first block in Quick Snapshot. It lists scores that crossed your bullish or bearish boundary since you last opened the page, then up to three other large score moves, and the factor that moved each one the most. Click a row to open that asset on the chart. The first visit stores the scores and shows the changes next time.
 
-1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest. Quick Snapshot, Market sentiment for crypto, Market sentiment for stocks, Crypto Scores, Equity Scores, Interactive Chart, Score Breakdown, Max pain, Market sentiment, and Signal matrix each sit in a section that starts open. Close a header to fold that section away. **Open all** and **Collapse all**, on the right of the page title, do that for every one of those sections. The square beside them stacks every section in one column, with Quick Snapshot first. The mark with a wide top and two panes underneath puts Quick Snapshot and both score tables across the top, market sentiment on the left, and Interactive Chart, Score Breakdown, Max pain, Market sentiment, and Signal matrix on the right. Those two bottom columns start at equal width. Drag the line between them to give either side more room. That line stays inside those two columns. The wide or single choice, that column split, the open asset, the social panel's width, split, and pin, and the open or collapsed state of each section are saved on your account and come back when you log in. On a narrow screen the wide layout stacks the left and right parts. **I trade cryptos**, **I trade equities**, and **I trade both**, in Settings, are saved on your account. A market you leave out is hidden, including its sentiment, its score table, and its Quick Snapshot boxes. The chart follows the markets you trade. Collapse all also closes this guide. Open all does not open it. **Feedback**, at the bottom of the sidebar, sends an issue or an idea. It is stored as submitted. The arrow on the left edge of the page closes the sidebar. It stays on that edge when the sidebar is closed, so the sidebar can be opened again. Hover the arrow to see which action it will take.
+1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest. Quick Snapshot, Market sentiment for crypto, Market sentiment for stocks, Crypto Scores, Equity Scores, Interactive Chart, Score Breakdown, Max pain, Leverage & liquidations, Market sentiment, and Signal matrix each sit in a section that starts open. Close a header to fold that section away. **Open all** and **Collapse all**, on the right of the page title, do that for every one of those sections. The square beside them stacks every section in one column, with Quick Snapshot first. The mark with a wide top and two panes underneath puts Quick Snapshot and both score tables across the top, market sentiment on the left, and Interactive Chart, Score Breakdown, Max pain, Leverage & liquidations, Market sentiment, and Signal matrix on the right. Those two bottom columns start at equal width. Drag the line between them to give either side more room. That line stays inside those two columns. The wide or single choice, that column split, the open asset, the social panel's width, split, and pin, and the open or collapsed state of each section are saved on your account and come back when you log in. On a narrow screen the wide layout stacks the left and right parts. **I trade cryptos**, **I trade equities**, and **I trade both**, in Settings, are saved on your account. A market you leave out is hidden, including its sentiment, its score table, and its Quick Snapshot boxes. The chart follows the markets you trade. Collapse all also closes this guide. Open all does not open it. **Feedback**, at the bottom of the sidebar, sends an issue or an idea. It is stored as submitted. The arrow on the left edge of the page closes the sidebar. It stays on that edge when the sidebar is closed, so the sidebar can be opened again. Hover the arrow to see which action it will take.
 2. Click a name in either table, a Quick Snapshot box, or an alert under Notifications. That asset stays highlighted, and the page moves down to the chart when the chart is off screen. Hover a TA score to read why it landed there. Click that score to open Score Breakdown for the asset. Click a column title to sort that table. It starts with the strongest score at the top.
 3. Extra metrics add **7d %**, **Market Cap**, **ATR %**, and **Vol**. A separate checkbox adds **1d %** before the seven-day change and **30d %** after it. For **1d %** and **7d %**, green means the price rose and red means it fell. **30d %** uses the same colors as the **30-day trend**: green for a rise of about 2% or more, red for a fall of about 2% or more, and orange when the move stays inside about 2%. For stocks, one day is the previous trading session. **Market Cap** is the latest size of the asset, from CoinGecko for crypto and Yahoo for stocks. **ATR %** is volatility. **Vol** is volume versus its 20-day average.
 4. Alerts fire at 70 and 30 unless you move those sliders. One email goes to the address on your account when a technical score crosses a boundary. It is not sent again until the score moves 10 points back from that boundary (for example up to 40 after a 30 alert) and then crosses it again. Sentiment scores do not send alerts.
@@ -6329,6 +6330,10 @@ In the single column these two sections sit under Quick Snapshot, crypto first a
 **Max pain**
 
 This sits under the chart, above Market sentiment, for the same open asset. It is the options strike where the open calls and puts would be worth the least at that expiry. Green bars are call open interest and red bars are put open interest. The violet line is that strike. The orange line is the price. It describes where contracts are parked. It is not a price target, it is not mixed into the technical score, and it does not send an alert. Stocks use the Yahoo options chain. Bitcoin and Ethereum use Deribit's public options book. Other coins have no chain here, so the section says so. The nearest expiry is selected, and another can be chosen. It keeps its own cache. The technical control in Quick Snapshot opens the chart and does not reload max pain.
+
+**Leverage & liquidations**
+
+This sits under Max pain, for the coin on the chart (crypto only). It estimates the prices where many borrowed-money futures positions would be force-closed: red bars and lines below the price are longs, green above are shorts, and longer or brighter means more money. Under the levels, a table shows how far each is from the price and how it changed since the last update. The charts show the last 7 days, hour by hour: price with open interest (all open futures positions), the long/short ratio, the funding rate and the positions actually liquidated. The same levels can be drawn on the main chart with the 🔥 Liquidation levels icon, and 🔥 CoinGlass opens CoinGlass's own heatmap. The levels are an estimate from Coinalyze data with an assumed leverage mix, refreshed about hourly. They are not part of the score.
 
 **Market sentiment**
 
@@ -10434,6 +10439,7 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
 
         sentiment_label = crypto_watchlist[asset_key] if asset_type == "Crypto" else stock_watchlist[asset_key]
         show_max_pain(asset_type, asset_key, title, float(df_chart["close"].iloc[-1]))
+        show_leverage(asset_type, asset_key, title)
         show_market_sentiment(
             asset_type,
             asset_key,
@@ -11071,6 +11077,185 @@ def _price_text(value: float) -> str:
     if value >= 1:
         return f"{value:,.2f}"
     return f"{value:.4f}"
+
+
+def _liquidation_snapshots(asset_id, count: int = 2) -> list[dict]:
+    """The latest saved liquidation snapshots for one coin, newest first."""
+    try:
+        return (
+            supabase.table("liquidation_history")
+            .select("recorded_at, price, longs, shorts")
+            .eq("asset_key", asset_market_key("Crypto", asset_id))
+            .order("recorded_at", desc=True)
+            .limit(count)
+            .execute()
+            .data
+            or []
+        )
+    except Exception:
+        return []
+
+
+def _level_change(side_rows_before, price: float, usd: float) -> str:
+    """How a level's amount moved since the last update. A level within 1% counts as the same one."""
+    best = None
+    for row in side_rows_before or []:
+        before = _number_or_none(row.get("price"))
+        if before and abs(before - price) / price <= 0.01:
+            if best is None or abs(before - price) < abs(best[0] - price):
+                best = (before, _number_or_none(row.get("usd")) or 0.0)
+    if best is None:
+        return "new"
+    change = usd - best[1]
+    if abs(change) < 0.005 * max(usd, 1.0):
+        return "same"
+    return ("+" if change > 0 else "−") + _short_usd(abs(change))
+
+
+def show_leverage(kind: str, asset_id: str, label: str) -> None:
+    """Estimated liquidation levels and the leverage data behind them, for the coin on the chart."""
+    heading = f"🔥 Leverage & liquidations - {label}" if label else "🔥 Leverage & liquidations"
+    with section_expander(heading, "leverage"):
+        if kind != "Crypto":
+            st.caption("Leverage and liquidation data covers crypto futures. Pick a coin on the chart to see it.")
+            return
+        record = _liquidation_record(asset_id)
+        if not record or record.get("status") != "ok":
+            st.caption(_liquidation_caption(record))
+            return
+        series = record.get("series") or {}
+        price = _number_or_none(record.get("price"))
+        stamps = pd.to_datetime(series.get("t") or [], unit="s", utc=True)
+
+        def latest(name):
+            values = [v for v in series.get(name) or [] if v is not None]
+            return values[-1] if values else None
+
+        def day_ago(name):
+            values = series.get(name) or []
+            return values[-25] if len(values) >= 25 else None
+
+        # The headline numbers.
+        oi_now, oi_then = latest("oi"), day_ago("oi")
+        funding_now = latest("funding")
+        ratio_now = latest("ls")
+        long_24 = sum(v or 0 for v in (series.get("liq_long") or [])[-24:])
+        short_24 = sum(v or 0 for v in (series.get("liq_short") or [])[-24:])
+        c1, c2, c3, c4 = st.columns(4)
+        c1.metric(
+            "Open interest", _short_usd(oi_now) if oi_now else "—",
+            f"{(oi_now / oi_then - 1) * 100:+.1f}% in 24h" if oi_now and oi_then else None,
+            help="The value of all open futures positions on Binance, Bybit and OKX. Rising means new money is betting.",
+        )
+        c2.metric(
+            "Funding rate", f"{funding_now:+.4f}%" if funding_now is not None else "—",
+            help=(
+                "What one side pays the other to hold its position, each funding period. Positive: longs pay shorts, "
+                "so traders lean long. Negative: shorts pay longs. Large either way is a sign of a crowded side."
+            ),
+        )
+        c3.metric(
+            "Long/short ratio", f"{ratio_now:.2f}" if ratio_now else "—",
+            help="Accounts holding longs for each account holding shorts. Above 1 means more traders are long.",
+        )
+        c4.metric(
+            "Liquidated, 24h", f"{_short_usd(long_24 + short_24)}",
+            f"longs {_short_usd(long_24)} · shorts {_short_usd(short_24)}", delta_color="off",
+            help="Positions actually force-closed in the last 24 hours, longs and shorts.",
+        )
+
+        # The ladder: estimated levels as bars either side of the price.
+        snapshots = _liquidation_snapshots(asset_id, 2)
+        before = snapshots[1] if len(snapshots) > 1 else {}
+        rows = []
+        for side, colour in (("shorts", "#22c55e"), ("longs", "#ef4444")):
+            for level in record.get(side) or []:
+                level_price, usd = _number_or_none(level.get("price")), _number_or_none(level.get("usd"))
+                if not level_price or not usd:
+                    continue
+                rows.append({
+                    "side": side, "colour": colour, "price": level_price, "usd": usd,
+                    "gap": (level_price / price - 1) * 100 if price else None,
+                    "change": _level_change(before.get(side), level_price, usd) if before else "—",
+                })
+        rows.sort(key=lambda row: row["price"], reverse=True)
+        ladder_col, table_col = st.columns([3, 2])
+        with ladder_col:
+            st.markdown("**Estimated liquidation levels**")
+            if rows:
+                ladder = go.Figure(go.Bar(
+                    x=[row["usd"] for row in rows],
+                    y=[f"{row['price']:,.4g}" for row in rows],
+                    orientation="h",
+                    marker_color=[row["colour"] for row in rows],
+                    hovertext=[
+                        f"{'Shorts' if row['side'] == 'shorts' else 'Longs'} near {row['price']:,.4g}: "
+                        f"about {_short_usd(row['usd'])}" for row in rows
+                    ],
+                    hoverinfo="text",
+                ))
+                ladder.update_layout(
+                    height=320, margin=dict(t=10, b=10, l=10, r=10), showlegend=False,
+                    yaxis=dict(type="category", autorange="reversed", title=None),
+                    xaxis=dict(title="Estimated USD"),
+                )
+                _paint_chart(ladder)
+                st.plotly_chart(ladder, width="stretch")
+                st.caption(
+                    f"Price now {price:,.4g}. Green bars above are shorts that would be force-closed if the price "
+                    "rose there; red bars below are longs if it fell. The longer bar is the more crowded side."
+                    if price else ""
+                )
+        with table_col:
+            st.markdown("**Levels and changes**")
+            table = pd.DataFrame([
+                {
+                    "Side": "▲ Shorts" if row["side"] == "shorts" else "▼ Longs",
+                    "Price": f"{row['price']:,.4g}",
+                    "From price": f"{row['gap']:+.1f}%" if row["gap"] is not None else "—",
+                    "Amount": _short_usd(row["usd"]),
+                    "Since last": row["change"],
+                }
+                for row in rows
+            ])
+            if not table.empty:
+                st.table(table.set_index("Side"))
+            st.caption("Since last: change since the previous update, about an hour ago. New is a level that was not there.")
+
+        # Seven days of the inputs, hour by hour.
+        if len(stamps):
+            trend = make_subplots(
+                rows=4, cols=1, shared_xaxes=True, vertical_spacing=0.06,
+                row_heights=[0.34, 0.22, 0.22, 0.22],
+                subplot_titles=("Price and open interest", "Long/short ratio", "Funding rate (%)", "Liquidated per hour"),
+                specs=[[{"secondary_y": True}], [{}], [{}], [{}]],
+            )
+            trend.add_trace(go.Scatter(x=stamps, y=series.get("price"), name="Price", line=dict(color="#f97316", width=1.6)), row=1, col=1)
+            trend.add_trace(go.Scatter(x=stamps, y=series.get("oi"), name="Open interest", line=dict(color="#6366f1", width=1.4)), row=1, col=1, secondary_y=True)
+            trend.add_trace(go.Scatter(x=stamps, y=series.get("ls"), name="Long/short", line=dict(color="#0ea5e9", width=1.4)), row=2, col=1)
+            trend.add_hline(y=1, line_dash="dot", line_color="gray", opacity=0.5, row=2, col=1)
+            trend.add_trace(go.Bar(
+                x=stamps, y=series.get("funding"), name="Funding",
+                marker_color=["#22c55e" if (v or 0) >= 0 else "#ef4444" for v in series.get("funding") or []],
+            ), row=3, col=1)
+            trend.add_trace(go.Bar(x=stamps, y=[-(v or 0) for v in series.get("liq_long") or []], name="Longs liquidated", marker_color="#ef4444"), row=4, col=1)
+            trend.add_trace(go.Bar(x=stamps, y=series.get("liq_short"), name="Shorts liquidated", marker_color="#22c55e"), row=4, col=1)
+            trend.update_layout(
+                height=720, barmode="relative", showlegend=True,
+                legend=dict(orientation="h", yref="container", y=0, yanchor="bottom", xref="paper", x=0, xanchor="left"),
+                margin=dict(t=40, b=80, l=10, r=10),
+            )
+            trend.update_yaxes(title_text="Price", row=1, col=1)
+            trend.update_yaxes(title_text="USD", row=1, col=1, secondary_y=True, showgrid=False)
+            _paint_chart(trend)
+            st.plotly_chart(trend, width="stretch")
+            st.caption(
+                "Rising open interest with a rising price means new money is buying in; rising open interest with a "
+                "falling price means new shorts. A ratio far above 1, or funding far from zero, means one side is "
+                "crowded, which is when liquidations can cascade. In the bottom panel, red bars below the line are "
+                "longs force-closed that hour and green bars above are shorts."
+            )
+        st.caption(_liquidation_caption(record))
 
 
 def show_max_pain(kind: str, asset_id: str, label: str, chart_price: float | None) -> None:

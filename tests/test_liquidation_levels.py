@@ -80,3 +80,21 @@ def test_nearby_levels_are_merged_into_one():
     price, usd = merged[0]
     assert usd == 400.0 and 0.820 < price < 0.8241
     assert merged[1] == (0.90, 50.0)
+
+
+def test_series_line_up_on_the_price_bars():
+    bars = [bar(10, 2, 1, 1.5), bar(20, 2, 1, 1.6)]
+    oi = [{"t": 10, "c": 100.0}, {"t": 20, "c": 110.0}]
+    ratios = [{"t": 20, "r": 1.4}]
+    funding = [{"t": 10, "o": 0.0001, "h": 0.0002, "l": 0.0, "c": 0.0001}]
+    liqs = [[{"t": 20, "l": 5.0, "s": 1.0}], [{"t": 20, "l": 2.0, "s": 0.0}]]
+    series = liq.build_series(bars, oi, ratios, funding, liqs)
+    assert series["t"] == [10, 20] and series["price"] == [1.5, 1.6]
+    assert series["oi"] == [100.0, 110.0]
+    assert series["ls"] == [None, 1.4]
+    assert series["funding"] == [0.0001, None]
+    assert series["liq_long"] == [0.0, 7.0] and series["liq_short"] == [0.0, 1.0]
+
+
+def test_call_budget_per_coin():
+    assert liq.calls_for([{}, {}, {}]) == 9
