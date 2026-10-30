@@ -3556,18 +3556,27 @@ export default function(component) {
   bar.title = "Drag up or down to change the chart's height. Double-click to reset.";
   const grip = bar.querySelector(".ang-resize-grip");
   const tip = bar.querySelector(".ang-resize-tip");
-  // The chart is the element just above this bar.
-  const host = parentElement.closest("[data-testid='stElementContainer'], .stElementContainer") || parentElement;
-  let chart = host.previousElementSibling;
-  while (chart && !chart.querySelector(".js-plotly-plot")) chart = chart.previousElementSibling;
-  const box = chart ? chart.querySelector(".js-plotly-plot") : null;
-  const holder = chart || null;
-  // Drop any preview left from the last drag.
-  if (box) { box.style.transform = ""; box.style.transformOrigin = ""; }
-  if (holder) { holder.style.height = ""; holder.style.overflow = ""; }
+  // The chart is the element just above this bar. Found when needed: on first paint the bar is
+  // not attached to the page yet.
+  let holder = null, box = null;
+  const findChart = () => {
+    const host = bar.closest("[data-testid='stElementContainer']");
+    let chart = host ? host.previousElementSibling : null;
+    while (chart && !(chart.querySelector && chart.querySelector(".js-plotly-plot"))) chart = chart.previousElementSibling;
+    holder = chart || null;
+    box = chart ? chart.querySelector(".js-plotly-plot") : null;
+  };
+  const clearPreview = () => {
+    findChart();
+    if (box) { box.style.transform = ""; box.style.transformOrigin = ""; }
+    if (holder) { holder.style.height = ""; holder.style.overflow = ""; }
+  };
+  // Drop any preview left from the last drag, once the bar is on the page.
+  window.setTimeout(clearPreview, 0);
   let y0 = 0, h0 = start, now = start, base = 0, dragging = false;
   const size = (value) => Math.max(low, Math.min(high, Math.round(value)));
   bar.onpointerdown = (event) => {
+    findChart();
     dragging = true; y0 = event.clientY; h0 = start; now = start;
     base = box ? box.getBoundingClientRect().height : 0;
     bar.setPointerCapture(event.pointerId);
@@ -3594,10 +3603,7 @@ export default function(component) {
     grip.style.background = "var(--ang-track,#d1d5db)";
     tip.style.display = "none";
     if (Math.abs(now - start) >= 8) setTriggerValue("height", String(now));
-    else {
-      if (box) box.style.transform = "";
-      if (holder) { holder.style.height = ""; holder.style.overflow = ""; }
-    }
+    else clearPreview();
   };
   bar.onpointerup = finish;
   bar.onpointercancel = finish;
