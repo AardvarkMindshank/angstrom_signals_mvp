@@ -8589,7 +8589,7 @@ def _fetch_overview_here() -> None:
     _OVERVIEW["started"] = time.time()
     try:
         import market_overview
-        fetched = market_overview.fetch_overview()
+        fetched = market_overview.carry_history(market_overview.fetch_overview(), _OVERVIEW.get("saved"))
         print(f"market overview fetched here: {len(fetched.get('items') or {})} readings")
         _OVERVIEW["own"] = fetched
     except Exception as exc:

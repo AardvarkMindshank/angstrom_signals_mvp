@@ -54,3 +54,17 @@ def test_cards_come_in_groups_in_order():
     assert keys[7:] == ["us10y", "dxy", "gold", "oil", "btc", "eth", "crypto_cap", "vix", "fng"]
     page = mo.overview_html(overview(), crypto=True, stocks=True)
     assert page.index("Stock markets") < page.index("Rates") < page.index("Commodities") < page.index("Crypto<") < page.index("Sentiment &amp; risk")
+
+
+def test_daily_history_for_bitcoin_share_and_crypto_cap():
+    first = mo.carry_history({"items": {"btc_dom": {"value": 59.0, "change": None, "spark": []},
+                                         "crypto_cap": {"value": 2.5e12, "change": -1.0, "spark": []}}}, None, "2026-10-29")
+    assert first["history"]["btc_dom"] == {"2026-10-29": 59.0} and first["items"]["btc_dom"]["spark"] == []
+    later = mo.carry_history({"items": {"btc_dom": {"value": 59.6, "change": None, "spark": []}}}, first, "2026-10-30")
+    item = later["items"]["btc_dom"]
+    assert item["spark"] == [59.0, 59.6] and abs(item["change"] - 0.6) < 1e-9
+    # Same day again: replaces today's value, keeps the other days.
+    again = mo.carry_history({"items": {"btc_dom": {"value": 59.8, "change": None, "spark": []}}}, later, "2026-10-30")
+    assert again["history"]["btc_dom"] == {"2026-10-29": 59.0, "2026-10-30": 59.8}
+    assert again["history"]["crypto_cap"] == {"2026-10-29": 2.5e12}   # kept even when today's fetch missed it
+    assert "0.60 pt" in mo.change_pill(0.6, "pct")

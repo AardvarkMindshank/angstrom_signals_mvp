@@ -56,8 +56,10 @@ HINTS = {
     "oil": "US crude oil (WTI), US dollars per barrel (front-month future).",
     "btc": "Bitcoin in US dollars.",
     "eth": "Ether in US dollars.",
-    "crypto_cap": "The value of all cryptocurrencies together, with the change over 24 hours.",
-    "btc_dom": "Bitcoin's share of the whole crypto market. Rising often means money moving to safety within crypto.",
+    "crypto_cap": "The value of all cryptocurrencies together, with the change over 24 hours. "
+                  "The line is our own daily record, so it grows a day at a time.",
+    "btc_dom": "Bitcoin's share of the whole crypto market. Rising often means money moving to safety within crypto. "
+               "The line is our own daily record, so it grows a day at a time; the change is in percentage points.",
     "fng": "Crypto Fear & Greed, 0 to 100: below 25 extreme fear, above 75 extreme greed.",
 }
 
@@ -208,12 +210,38 @@ def load_overview(supabase) -> dict | None:
     return data if isinstance(data, dict) and data.get("items") else None
 
 
+# Readings with no free history: we keep our own, one value per day (the latest of that day).
+KEPT_HISTORY = ("btc_dom", "crypto_cap")
+
+
+def carry_history(overview: dict, previous: dict | None, today: str | None = None) -> dict:
+    """Add today's value of each KEPT_HISTORY reading to the daily history saved last time, and use
+    that history for the card's line. Bitcoin share also gets its change since the last earlier day."""
+    today = today or datetime.now(timezone.utc).date().isoformat()
+    history = dict((previous or {}).get("history") or {})
+    items = overview.get("items") or {}
+    for key in KEPT_HISTORY:
+        days = dict(history.get(key) or {})
+        item = items.get(key)
+        if item and _finite(item.get("value")) is not None:
+            days[today] = round(float(item["value"]), 6)
+        days = dict(sorted(days.items())[-SPARK_POINTS:])
+        history[key] = days
+        if item:
+            values = [v for _d, v in sorted(days.items())]
+            item["spark"] = values if len(values) >= 2 else []
+            if key == "btc_dom" and len(values) >= 2:
+                item["change"] = values[-1] - values[-2]
+    overview["history"] = history
+    return overview
+
+
 def refresh_due(supabase) -> None:
     """Worker step: fetch and save when the saved copy is older than REFRESH_SECONDS."""
     saved = load_overview(supabase)
     if saved and time.time() - float(saved.get("fetched_at") or 0) < REFRESH_SECONDS:
         return
-    overview = fetch_overview()
+    overview = carry_history(fetch_overview(), saved)
     if save_overview(supabase, overview):
         print(f"Market overview saved: {len(overview['items'])} readings")
 
@@ -243,13 +271,13 @@ def value_text(key: str, unit: str, value: float) -> str:
 def change_pill(change, unit: str, invert: bool = False) -> str:
     if change is None:
         return ""
-    if unit == "yield":
+    if unit in ("yield", "pct"):
         text = f"{change:+.2f} pt"
     elif unit == "points":
         text = f"{change:+.0f}"
     else:
         text = f"{change:+.1f}%"
-    small = abs(change) < (0.005 if unit == "yield" else 0.05)
+    small = abs(change) < (0.005 if unit in ("yield", "pct") else 0.05)
     up = change > 0
     if small:
         fg, bg, arrow = _GREY, _GREY_BG, ""
