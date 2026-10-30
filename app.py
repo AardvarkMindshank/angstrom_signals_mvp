@@ -6269,122 +6269,186 @@ if not _POPOUT_VIEW:
     remember_section_clicks()
 
 with tracked_expander("📖 Help and guides", "help_guides", default=False):
-    st.markdown("""
-**Higher score = more of the indicators read positive.** Every score starts at 50 and each indicator adds or subtracts points. The result is kept between 0 and 100. It describes current conditions. It is not a forecast: in our long-run tests the score has not lined up with what price did next, and each asset's Evidence view shows its own result. This is a research tool, not financial advice.
-""")
-    bands = [
-        ("Strongly positive", "70+", "#15803d", "#dcfce7"),
-        ("Positive", "60–69", "#15803d", "#dcfce7"),
-        ("Mixed", "47–52", "#b45309", "#fef3c7"),
-        ("Negative", "30–39", "#b91c1c", "#fee2e2"),
-        ("Strongly negative", "below 30", "#b91c1c", "#fee2e2"),
-    ]
-    band_cols = st.columns(len(bands))
-    for column, (name, span, color, background) in zip(band_cols, bands):
-        column.markdown(
-            f"<div style='background:{background};color:{color};border-radius:8px;padding:12px 14px;'>"
-            f"<div style='font-size:0.8rem;font-weight:600;'>{name}</div>"
-            f"<div style='font-size:1.6rem;font-weight:700;line-height:1.2;'>{span}</div></div>",
-            unsafe_allow_html=True,
-        )
-    st.caption("The same colors are used on the scores. Green is 53 and above. Amber is 47–52. Red is below 47.")
+    (
+        tab_start, tab_scores, tab_chart, tab_sentiment, tab_alerts, tab_social, tab_layout,
+    ) = st.tabs([
+        "🚀 Start here", "📈 Scores", "📊 Chart & tools", "📰 Sentiment",
+        "🔔 Alerts", "💬 Social", "🧭 Layout & settings",
+    ])
 
-    left, right = st.columns(2)
-    with left:
+    with tab_start:
         st.markdown("""
-**What moves the score** (at weight 1.0)
+**Angstrom Signals reads current market conditions for the crypto and stocks on your watchlists.**
+Each asset gets a technical score from 0 to 100, a news sentiment score, and tools to look closer.
+It is a research tool, not financial advice. The score describes conditions now; in our long-run
+tests it has not predicted what price did next.
 
-- **RSI** — oversold adds up to 8, overbought subtracts up to 8
-- **Stochastic** — below 20 adds 5, above 80 subtracts 5
-- **Moving averages** — 4 points for each of SMA 20, 50, and 200, added when price is above and subtracted when price is below
-- **ADX** — a strong trend adds or subtracts 4, in the direction of the 50-day average
-- **MACD** — up to 4 for the line versus zero, 3 for the signal cross, and 2 for the histogram
+**A quick tour**
+1. **Quick Snapshot** opens with *What changed*: scores that crossed your alert lines, and the biggest moves.
+2. **Crypto Scores** and **Equity Scores** rank your watchlists, strongest first. Click a name to open it on the chart.
+3. **Interactive Chart** shows the asset with the indicators you pick. Underneath sit Score Breakdown,
+   Max pain, Leverage & liquidations, Market sentiment and Signal matrix, all for that asset.
+4. **Notifications**, in the sidebar, holds your alerts and their settings.
+5. The arrow on the right edge opens **Social signals and chat**.
 """)
-    with right:
+        bands = [
+            ("Strongly positive", "70+", "#15803d", "#dcfce7"),
+            ("Positive", "53–69", "#15803d", "#dcfce7"),
+            ("Mixed", "47–52", "#b45309", "#fef3c7"),
+            ("Negative", "30–46", "#b91c1c", "#fee2e2"),
+            ("Strongly negative", "below 30", "#b91c1c", "#fee2e2"),
+        ]
+        band_cols = st.columns(len(bands))
+        for column, (name, span, color, background) in zip(band_cols, bands):
+            column.markdown(
+                f"<div style='background:{background};color:{color};border-radius:8px;padding:12px 14px;'>"
+                f"<div style='font-size:0.8rem;font-weight:600;'>{name}</div>"
+                f"<div style='font-size:1.6rem;font-weight:700;line-height:1.2;'>{span}</div></div>",
+                unsafe_allow_html=True,
+            )
+        st.caption("The same green, amber and red are used for technical and sentiment scores everywhere.")
+
+    with tab_scores:
         st.markdown("""
+**How the score works.** Every score starts at 50. Each indicator adds or subtracts points, and the
+total is kept between 0 and 100. Higher means more of the indicators read positive.
+""")
+        left, right = st.columns(2)
+        with left:
+            st.markdown("""
+**What moves it** (at weight 1.0)
+- **RSI**: oversold adds up to 8, overbought subtracts up to 8
+- **Stochastic**: below 20 adds 5, above 80 subtracts 5
+- **Moving averages**: ±4 each for price versus SMA 20, 50 and 200
+- **ADX**: a strong trend adds or subtracts 4
+- **MACD**: up to 4 for the line, 3 for the signal cross, 2 for the histogram
+""")
+        with right:
+            st.markdown("""
 **More factors**
+- **Ichimoku**: 5 for price versus the cloud, 3 for Tenkan versus Kijun
+- **Bollinger Bands**: near the lower band adds 4, the upper subtracts 4
+- **Volume**: a high-volume up bar adds 3, a down bar subtracts 3
+- **OBV**: ±3 for volume flow versus its average
+- **7-day move**: up to 4 either way
+""")
+        st.markdown("""
+**Your own weights.** *Scoring Balance Weights* in the sidebar scales each factor; 0 switches it off.
+Save a mix as a named set. *How the score adds up* shows the rules with your weights.
 
-- **Ichimoku** — 5 points for price versus the cloud, 3 for Tenkan versus Kijun
-- **Bollinger Bands** — near the lower band adds 4, near the upper band subtracts 4
-- **Volume** — a high-volume up bar adds 3, a high-volume down bar subtracts 3
-- **OBV** — 3 points for whether volume flow is above or below its average
-- **7-day move** — up to 4 points either way
+**The tables**
+- Click a column title to sort. Hover a TA score to see why it landed there; click it for Score Breakdown.
+- **Extra metrics** (Settings) add 7d %, Market Cap, ATR % (typical daily move) and Vol (volume versus its
+  20-day average). Another tick box adds 1d % and 30d %.
+- **Watching** shows how many accounts follow the asset. **30-day trend** is a small price line.
 
-Sidebar sliders scale each factor. Zero turns that factor off. Named sets save a slider mix to your account.
+**Freshness.** Prices are saved about every 5 minutes and sentiment about every 12 hours, for everyone.
+Your score is worked out from those saved prices with your own weights.
 """)
 
-    st.markdown("""
-**How to use it**
+    with tab_chart:
+        st.markdown("""
+**Interactive Chart.** Candles with SMA 20 and 50 and Bollinger Bands, plus volume and RSI underneath.
+The icon row adds more:
+- 📏 SMA 200 · ☁️ Ichimoku cloud · 〰️ MACD · 🎚️ Stochastic · 🧭 ADX · 📊 OBV
+- 🔥 **Liquidation levels** (crypto): estimated prices where leveraged positions would be force-closed,
+  red below the price for longs, green above for shorts. Brighter means more money.
+- 🔥 **CoinGlass** (crypto) opens CoinGlass's own liquidation heatmap in a new tab.
+- **Overlay** draws RSI, Stochastic and ADX on the price chart; **earnings dates** (stocks) mark report days.
 
-**What changed** is the first block in Quick Snapshot. It lists scores that crossed your bullish or bearish boundary since you last opened the page, then up to three other large score moves, and the factor that moved each one the most. Click a row to open that asset on the chart. The first visit stores the scores and shows the changes next time.
+Your choices are saved on your account.
 
-1. Read the snapshot and the tables. The top row is the strongest technical score, the bottom is the weakest. Quick Snapshot, Market sentiment for crypto, Market sentiment for stocks, Crypto Scores, Equity Scores, Interactive Chart, Score Breakdown, Max pain, Leverage & liquidations, Market sentiment, and Signal matrix each sit in a section that starts open. Close a header to fold that section away. **Open all** and **Collapse all**, on the right of the page title, do that for every one of those sections. The square beside them stacks every section in one column, with Quick Snapshot first. The mark with a wide top and two panes underneath puts Quick Snapshot and both score tables across the top, market sentiment on the left, and Interactive Chart, Score Breakdown, Max pain, Leverage & liquidations, Market sentiment, and Signal matrix on the right. Those two bottom columns start at equal width. Drag the line between them to give either side more room. That line stays inside those two columns. The wide or single choice, that column split, the open asset, the social panel's width, split, and pin, and the open or collapsed state of each section are saved on your account and come back when you log in. On a narrow screen the wide layout stacks the left and right parts. **I trade cryptos**, **I trade equities**, and **I trade both**, in Settings, are saved on your account. A market you leave out is hidden, including its sentiment, its score table, and its Quick Snapshot boxes. The chart follows the markets you trade. Collapse all also closes this guide. Open all does not open it. **Feedback**, at the bottom of the sidebar, sends an issue or an idea. It is stored as submitted. The arrow on the left edge of the page closes the sidebar. It stays on that edge when the sidebar is closed, so the sidebar can be opened again. Hover the arrow to see which action it will take.
-2. Click a name in either table, a Quick Snapshot box, or an alert under Notifications. That asset stays highlighted, and the page moves down to the chart when the chart is off screen. Hover a TA score to read why it landed there. Click that score to open Score Breakdown for the asset. Click a column title to sort that table. It starts with the strongest score at the top.
-3. Extra metrics add **7d %**, **Market Cap**, **ATR %**, and **Vol**. A separate checkbox adds **1d %** before the seven-day change and **30d %** after it. For **1d %** and **7d %**, green means the price rose and red means it fell. **30d %** uses the same colors as the **30-day trend**: green for a rise of about 2% or more, red for a fall of about 2% or more, and orange when the move stays inside about 2%. For stocks, one day is the previous trading session. **Market Cap** is the latest size of the asset, from CoinGecko for crypto and Yahoo for stocks. **ATR %** is volatility. **Vol** is volume versus its 20-day average.
-4. Alerts fire at 70 and 30 unless you move those sliders. One email goes to the address on your account when a technical score crosses a boundary. It is not sent again until the score moves 10 points back from that boundary (for example up to 40 after a 30 alert) and then crosses it again. Sentiment scores do not send alerts.
+**Score Breakdown** shows how many points each factor added or took away, with the reasons.
 
-**Market sentiment for crypto and stocks**
+**🎯 Max pain** (stocks, Bitcoin, Ethereum): the options strike where open contracts would be worth the
+least at expiry. It opens on the next expiry after today; one with almost no open contracts says so.
+It is not a price target.
 
-In the single column these two sections sit under Quick Snapshot, crypto first and then stocks. Quick Snapshot shows each one as the colored score box, the status, such as Mildly bullish coverage, and the short summary, for the markets you trade. The thumbs and the crowd's own score sit on the right. Click anywhere on that box to open that market's section. The public readings sit in a rounded box, in three groups, each with a one-sentence summary and its own score: liquidity and central banks, the dollar and yields, and crypto sentiment for crypto; policy and inflation, market breadth, and institutional feeds for stocks. The Google headlines follow in a second rounded box. On the selected asset, the articles sit in one box of the same kind. Each one uses the same layout as the asset sentiment under the chart: the score on the left, Your take on the right, then those reading rows, then the articles. Neither is an asset, and neither is added to the tables or the technical score. Each score is an average of recent headlines. The summary, the positive paragraph, and the negative paragraph can also use those public readings. Each article row also has a one-sentence AI Summary, after the date. A dash there means that score was saved before summaries. The next background update fills it in. It is stored once and shown to every account. A background update replaces it about every 12 hours. Until that update arrives, the last score stays on screen. Your take works the same way as on an asset: agree, disagree, a score from 0 to 100, and one short comment. A refresh of that market clears the thumbs and personal scores. A comment stays for 12 hours. The search wording can be tightened later.
+**🔥 Leverage & liquidations** (crypto): open interest, funding rate, long/short ratio and the last 24
+hours of liquidations, a ladder and table of the estimated liquidation levels with their change since
+the last update, and 7 days of hourly charts. Estimated from Coinalyze data, refreshed about hourly.
 
-**Max pain**
+**▦ Signal matrix** lines up price with each signal over recent weeks, and shows how each one has lined
+up with the price change that followed. The evidence view shows the long-run test for this asset.
 
-This sits under the chart, above Market sentiment, for the same open asset. It is the options strike where the open calls and puts would be worth the least at that expiry. Green bars are call open interest and red bars are put open interest. The violet line is that strike. The orange line is the price. It describes where contracts are parked. It is not a price target, it is not mixed into the technical score, and it does not send an alert. Stocks use the Yahoo options chain. Bitcoin and Ethereum use Deribit's public options book. Other coins have no chain here, so the section says so. The nearest expiry is selected, and another can be chosen. It keeps its own cache. The technical control in Quick Snapshot opens the chart and does not reload max pain.
+None of these tools change the technical score.
+""")
 
-**Leverage & liquidations**
+    with tab_sentiment:
+        st.markdown("""
+**What it is.** An AI reads recent headlines and scores each from 0 (very negative) to 100 (very
+positive). The sentiment score is their average. It is separate from the technical score.
 
-This sits under Max pain, for the coin on the chart (crypto only). It estimates the prices where many borrowed-money futures positions would be force-closed: red bars and lines below the price are longs, green above are shorts, and longer or brighter means more money. Under the levels, a table shows how far each is from the price and how it changed since the last update. The charts show the last 7 days, hour by hour: price with open interest (all open futures positions), the long/short ratio, the funding rate and the positions actually liquidated. The same levels can be drawn on the main chart with the 🔥 Liquidation levels icon, and 🔥 CoinGlass opens CoinGlass's own heatmap. The levels are an estimate from Coinalyze data with an assumed leverage mix, refreshed about hourly. They are not part of the score.
+**Where it shows**
+- **Market sentiment – Crypto / Stocks**: the whole market, from headlines plus public readings
+  (central banks, the dollar and yields, Fear & Greed, market breadth and more).
+- **Market sentiment – asset**, under the chart: the headlines for that asset, newest first, each with
+  its score and a one-line summary, plus Positive and Negative paragraphs.
+- The **Sentiment** column in the tables.
 
-**Market sentiment**
+**Your take.** 👍 if you agree, 👎 if you don't, then pick your own score from 0 to 100 and add a short
+comment. The **Crowd** box shows everyone's average; hover the 👎 for how spread out they are.
+A new sentiment update clears the takes, because they belonged to the old score.
 
-This sits under the chart. The heading names the open asset, for example **Market sentiment - Bitcoin (BTC)**. Grok reads headlines from the last 7 days and gives each one a score from 0 to 100. The newest headline is listed first. Beside each link is the date, then a one-sentence AI Summary, then the score. A dash in AI Summary means that score was saved before summaries. The next background update fills it in. The number at the top of the section is the average of those article scores. The same colored score sits in the header of this section, and in the crypto and stock market sentiment headers. It changes when that saved score changes. Under the short summary, **Positive** and **Negative** each add a paragraph drawn from those same headlines. Green, amber, and red use the same bands as the technical score. The two scores stay separate, and sentiment is not mixed into the technical score.
+Sentiment updates about every 12 hours for everyone. The timers in Quick Snapshot show when.
+""")
 
-The **Sentiment** column shows that saved score in the same colored box. A dash means that asset has not been scored yet. Adding it to a watchlist writes the first score when nobody else has it stored, and the background update keeps it after that. The score is stored once and shown to every account. A background update replaces it about every 12 hours. Until that update arrives, the last score stays on screen.
+    with tab_alerts:
+        st.markdown("""
+**Setting up** (Notifications → Configure Alert Rules)
+- 📈 **Asset score alerts**: an alert when an asset's technical score reaches your positive line
+  (default 70) or drops to your negative line (default 30). Checked about every 5 minutes.
+- 🌐 **Market sentiment alerts**: the same for the crypto or stock market sentiment (default 65 and 35),
+  for the markets you trade. Updated about every 12 hours.
+- **Emails**: ⚡ **Instant** (one email per alert, straight away) and/or 📬 **Daily digest** (one email a
+  day at your chosen hour and time zone, only on days with alerts). Greyed out while no alert type is on.
 
-**30-day trend**, at the far right of each row, is a small line of that same 30-day move. Its color matches the **30d %** column: green for a rise of about 2% or more, red for a fall of about 2% or more, and orange when the move stays inside about 2%. The same line is shared by every account.
+**No repeats on a wobble.** After an alert, the same one can only fire again once the score has moved
+10 points back (for example up to 40 after a 30 alert) and then crosses again.
 
-**Watching**, beside the name, is how many accounts have that asset on a watchlist. At most three people marks are shown. The number beside them is the count. Above 100 it shows >100, and hovering shows the exact count. The marks are not the names of those accounts.
+**The Alert Feed**
+- Unread alerts sit at the top. Click one to open it: an asset opens on the chart, a market alert opens
+  that market's sentiment. Clicking marks it read.
+- ✅ marks all as read · 🧹 clears read alerts · 🗑️ clears all. Group invites stay until you answer them.
 
-The picture on the left of each name is that asset's logo. The same logo appears at the top of the Interactive Chart and the asset's Market sentiment, with the ticker in large type beside it, such as SUI. Crypto market and Stock market use a larger version of the icon on their section title, with Crypto market or Stock market beside it. Crypto logos come from CoinGecko. Stock logos come from Finnhub. A letter shows when a logo is not available. The address is saved once and reused for every account.
+**Always on.** Alerts are checked in the background, whether or not this page is open. Emails go only
+to your account's address; the digest also lists market sentiment and your strongest and weakest assets.
+""")
 
-Beside the sentiment score you can press thumbs up if you agree, or thumbs down if you do not. Press the same thumb again to clear your take. Those buttons sit in an outlined box. After you disagree, scores appear in that same box, under the buttons: 0, 20, 40, 60, 80 and 100. The number you pick also fills the type box, and you can type any number from 0 to 100. It saves on its own when you click a score, press Enter, or leave the box. The thumbs and that same colored average sit at the bottom of Your take, and again under **Crowd** on each table row. The box is the average of the personal scores, in the same style as the Sentiment column. It updates when a score is clicked or typed. Hover the down thumb for the spread, which is how far those scores typically sit from the average. One score has no spread yet. A dash means nobody has given a personal score. Under the thumbs you can post one comment of up to 160 characters. A row of faces under the box can be added to the comment. A speech balloon appears beside the thumbs, and in the **Comments** column, once any comment exists. Click it, or the arrow on the right edge of the page, to open **Social signals and chat**, described below. A refresh of that sentiment clears every thumb and every personal score, because they belonged to the old score. A comment stays for 12 hours from when it was posted, and the stream keeps the sentiment it was answering even after a newer score arrives.
+    with tab_social:
+        st.markdown("""
+**Open it** with the arrow on the right edge, or a 💬 speech balloon. Drag its left edge to resize,
+drag the bar in the middle to split it, and 📌 **Pin** keeps it open while you use the page.
 
-Click the sentiment score, the thumbs, or the crowd average in the table to highlight that asset and jump to its headlines. **↑ Top** scrolls back to the top of the page. It sits at the top right of the Interactive Chart section, and at the top right of Market sentiment. Another **↑ Top** sits at the bottom right of the page once you have scrolled down.
+**Social signals** (top): comments on sentiment scores, newest first, kept for 12 hours with their
+replies. Filter by Positive / Negative / Mixed, by asset or watchlist, and by person: Me, your groups,
+or your ⭐ favourites.
 
-The controls at the top of Quick Snapshot open a section. They do not start a refresh. Market Sentiment - Crypto opens the crypto market. Market Sentiment - Equities opens the stock market. A market you do not trade is left out. Market Sentiment - Selected Asset opens the sentiment for the asset on the chart. Technical Data - Selected Asset opens the chart. Each one shows the time until the next shared update, for example (update in 4:56:40). That clock is the same for every account. It counts from the last saved update. When it reaches zero the page reads the saved result again. It does not ask for a new one. If the background update is late, the last saved result stays on screen.
+**General chat** (bottom): a shared room not tied to an asset. Enter posts; Shift+Enter adds a line.
 
-Prices for every asset on any watchlist are saved about every 5 minutes. This page turns those prices into a technical score with this account's own weights. Market sentiment for the crypto market, the stock market, and each of those assets is saved about every 12 hours. Both intervals are one shared setting. An asset that is not already stored is written when it is added, then the same schedule keeps it.
+**On any note**: 👍 / 👎 · ↩ reply · ⭐ add the person to favourites · 👥 invite them to a group ·
+🚩 report a comment that breaks the socials policy · 🗑️ delete your own note.
 
-**Social signals and chat**
+**Search**, at the top, filters both halves by words, names or assets.
+""")
 
-The arrow on the right edge of the page, or a speech balloon, opens a panel. The top half is the social signals stream. The bottom half is a general chat. Drag the gray bar between them to give either half more room. Drag the handle on the panel's left edge to make the panel wider or narrower. Close the panel with Close, the shaded area, or Escape. Pin, beside Close, keeps the panel open and leaves the rest of the page free to use. The shaded area and Escape no longer close it while it is pinned.
+    with tab_layout:
+        st.markdown("""
+**Sections.** Every section folds open or shut from its header. **Open all** and **Collapse all** sit
+by the page title. Each section's ↗ opens it in its own window, which follows the asset you pick.
 
-**Social signals stream**
+**Layout.** ▢ stacks everything in one column; the wide layout puts the tables on top, market sentiment
+on the left and the chart and its tools on the right. Drag the line between the columns to resize.
 
-Comments are newest first. Each one shows the person's picture, name, and the time, plus the sentiment they were answering. A note stays for 12 hours. A reply stays with that note for the same 12 hours.
+**Settings** (sidebar)
+- **I trade cryptos / equities / both** hides the markets you don't trade.
+- **Watchlists** add or remove assets; **Account** holds your name, picture and bio.
+- **Feedback** sends us an issue or an idea.
 
-All, Positive, Negative, and Mixed narrow the list by the coverage they were answering. Under Asset, All Assets & Sentiments is every comment. My watchlists is the crypto and equity tables on your account. My Crypto Watchlist and My Equities Watchlist each show one of those lists. Crypto market and Stock market sit above the individual assets. All Assets & Sentiments or a watchlist is saved on your account. You can also pick one asset.
+**Saved on your account**: layout, open sections, chart choices, weights, alert settings, the social
+panel, and the asset on the chart. They come back on any device.
 
-Under Person, All people shows everyone. Me, just under that, shows notes you wrote, including a reply you wrote. Groups you lead or belong to come next. Favourites shows notes from people you have starred, including a reply they wrote. A star beside another person's name adds them. Press the filled star to remove them. That list is saved on your account. The people icon beside the star invites that person to a group. You name a new group or pick one you lead. They accept or dismiss it under Notifications. An invite disappears after 30 days. A group shows notes from its members. You can also pick one person. A note stays in the list when that person wrote it or replied under it.
-
-The green thumb and the red thumb each show a count. You can mark any note, including one you posted. Press the same thumb again to clear your mark. The curved arrow replies. The flag to the left of the group and favourite icons reports a comment that breaks the socials policy. The form opens at the top of the panel, and the report is emailed. It is not shown on the stream. The trash can deletes a note you posted, and deleting a comment also removes the replies under it.
-
-**General chat**
-
-This is a shared room, not tied to an asset. Notes are newest first, and they stay. The panel shows the newest 60 conversations, with the replies under each one. Older notes stay stored.
-
-The Person list works the same way as on the stream, including Me, your groups, and Favourites. Write a comment in the box at the bottom. Enter posts it. Shift and Enter starts a new line. The same row of faces sits under the box. The curved arrow replies. A reply to a reply is added under the original comment. Thumbs work the same way as on the stream, including on a note you posted, and the count sits beside each thumb. The flag beside the name reports a chat comment the same way as on the stream. The trash can deletes a note you posted, and deleting a comment also removes the replies under it.
-
-**Search**
-
-One box at the top of the panel filters the stream and the chat together. It matches the words in a note or a reply, a person's name, or, on the stream, the asset. It searches the notes already on the panel, so it does not look through chat older than those 60 conversations.
-
-**Alerts keep running in the background**
-
-Prices are saved about every 5 minutes, and market sentiment about every 12 hours, whether or not this page is open. The page reads those saved results. Alert checks use the same prices and keep running after you close the page or log out.
-
-- A crossing is saved on your account. It shows up under Notifications the next time you log in.
-- The email goes only to you.
+**Keep me signed in** (at login) remembers you on this device for 30 days. Logging out forgets it.
 """)
 
 CRYPTO_WATCHLIST = prefs["crypto"]
