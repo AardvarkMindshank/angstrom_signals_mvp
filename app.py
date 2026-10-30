@@ -6353,7 +6353,7 @@ The icon row adds more:
 - 📏 SMA 200 · ☁️ Ichimoku cloud · 〰️ MACD · 🎚️ Stochastic · 🧭 ADX · 📊 OBV
 - 🔥 **Liquidation levels** (crypto): estimated prices where leveraged positions would be force-closed,
   red below the price for longs, green above for shorts. Brighter means more money.
-- 🔥 **CoinGlass** (crypto) opens CoinGlass's own liquidation heatmap in a new tab.
+- **CoinGlass liquidation heatmap ↗** (crypto), under the icons, opens CoinGlass's own heatmap in a new tab.
 - **Overlay** draws RSI, Stochastic and ADX on the price chart; **earnings dates** (stocks) mark report days.
 
 Your choices are saved on your account.
@@ -10179,13 +10179,23 @@ def render_dashboard(crypto_watchlist, stock_watchlist, history_days, weights, s
                         key="chart_indicators",
                     )
             if heatmap_url:
-                st.link_button(
-                    "🔥 CoinGlass",
-                    heatmap_url,
-                    help=(
-                        f"CoinGlass's liquidation heatmap for {title} (opens a new tab). "
-                        "CoinGlass asks you to log in, free, to see the full data."
-                    ),
+                # A plain link with the usual "opens elsewhere" mark, so it does not look like
+                # one more chart toggle.
+                tip = html.escape(
+                    f"CoinGlass's liquidation heatmap for {title}, in a new tab. "
+                    "CoinGlass asks you to log in, free, to see the full data.",
+                    quote=True,
+                )
+                st.markdown(
+                    f"<a href='{html.escape(heatmap_url, quote=True)}' target='_blank' rel='noopener' "
+                    f"title='{tip}' style='display:inline-flex;align-items:center;gap:5px;"
+                    "font-size:0.9rem;text-decoration:none;'>"
+                    "CoinGlass liquidation heatmap"
+                    "<svg viewBox='0 0 24 24' width='14' height='14' aria-hidden='true' fill='none' "
+                    "stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>"
+                    "<path d='M14 4h6v6'/><path d='M20 4 10 14'/>"
+                    "<path d='M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5'/></svg></a>",
+                    unsafe_allow_html=True,
                 )
             if LIQ_KEY in indicator_keys:
                 st.session_state["_chart_liq_on"] = LIQ_KEY in chosen_indicators
