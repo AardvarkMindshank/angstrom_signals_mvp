@@ -70,6 +70,10 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+# The first slot on the page. The login page is drawn in it; a signed-in page leaves it empty.
+# Because both pages use this same slot, the dashboard's first update replaces a leftover login
+# page straight away, instead of the old page lingering above the new one while it builds.
+_PAGE_SHELL = st.empty()
 
 
 if _POPOUT_VIEW:
@@ -4861,7 +4865,7 @@ if st.session_state.user is None:
     _version_watch(key="version_watch", data=app_version.BOOT_ID)
     # The whole login page sits in one box. On a successful login the box is swapped for a short
     # "Signing you in" line before the page rebuilds, so the old login page never shows twice.
-    _login_shell = st.empty()
+    _login_shell = _PAGE_SHELL
     with _login_shell.container():
         st.markdown("<div style='height: 40px;'></div>", unsafe_allow_html=True)
         _, col_center, _ = st.columns([1, 1.2, 1])
