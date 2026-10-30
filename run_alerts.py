@@ -225,6 +225,18 @@ def load_logos(supabase, catalog) -> dict[str, str]:
     return load_asset_details(supabase, catalog)[0]
 
 
+def day_change(frame):
+    """Change from the previous daily close to the latest, as a fraction, or None."""
+    try:
+        closes = frame["close"].dropna()
+        last, before = float(closes.iloc[-1]), float(closes.iloc[-2])
+    except Exception:
+        return None
+    if not (last == last and before == before) or before <= 0:
+        return None
+    return last / before - 1
+
+
 def last_price(frame):
     """The latest close in a stored price frame, or None."""
     try:
@@ -380,9 +392,15 @@ def run_background_checks() -> None:
             "market_alerts_enabled": True,
             "instant_email": False,
             "digest_enabled": True,
+            "digest_watchlist": True,
             "digest_hour": 8,
         })
-        if alert_config.get("enabled", True) is False and not alert_config.get("market_alerts_enabled"):
+        summary_only = alert_config.get("digest_enabled") and alert_config.get("digest_watchlist") is not False
+        if (
+            alert_config.get("enabled", True) is False
+            and not alert_config.get("market_alerts_enabled")
+            and not summary_only
+        ):
             continue
         markets = market_rows(market_scores, followed_markets(user_pref))
 
@@ -412,6 +430,7 @@ def run_background_checks() -> None:
                     "score": score,
                     "logo": logos.get(asset_market_key(kind, asset_id), ""),
                     "price": last_price(frame),
+                    "change": day_change(frame),
                     "sentiment": asset_sentiment.get(asset_market_key(kind, asset_id)),
                     "market": market,
                     "market_score": market_scores.get(market),

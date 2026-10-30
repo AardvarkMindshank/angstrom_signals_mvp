@@ -3370,6 +3370,10 @@ alter table public.alert_preferences
     add column if not exists digest_tz text default 'UTC';
 alter table public.alert_preferences
     add column if not exists last_digest_at timestamptz;
+-- digest_watchlist: add a colour-coded summary of the watchlist to the daily email,
+-- which is then sent every day instead of only on days with alerts.
+alter table public.alert_preferences
+    add column if not exists digest_watchlist boolean default true;
 
 alter table public.user_notifications
     add column if not exists digested_at timestamptz;

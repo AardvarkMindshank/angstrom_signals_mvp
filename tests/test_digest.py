@@ -85,14 +85,14 @@ def test_render_has_sections_times_and_escaping():
     subject, page, plain = digest.render_digest(
         notes, [{"symbol": "BTC", "score": 72}], cfg(), "https://app.example.com"
     )
-    assert subject == "Angstrom daily digest: 2 alerts"
+    assert subject == "Angstrom daily summary: 2 alerts"
     assert "Turned positive (1)" in page and "Turned negative (1)" in page
     assert "BTC &lt;b&gt;" in page and "&amp; rising" in page
     assert "08:30" in page  # 01:30 UTC shown in Bangkok time
     assert "https://app.example.com" in page and "Asia/Bangkok" in page
     assert "Turned positive (1)" in plain and "- ETH: Score fell to 28" in plain
     one = digest.render_digest(notes[:1], [], cfg(), "u")[0]
-    assert one == "Angstrom daily digest: 1 alert"
+    assert one == "Angstrom daily summary: 1 alert"
 
 
 class FakeTable:
@@ -243,3 +243,50 @@ def test_digest_hides_market_readings_when_market_alerts_are_off():
               "message": "Score dropped to 27.5/100", "created_at": "2026-10-29T10:00:00+00:00"}]
     _, page, _ = digest.render_digest(notes, [], cfg(), "https://app", markets=markets)
     assert "Market sentiment" not in page
+
+
+def asset(key, score, market="crypto", **extra):
+    row = {"key": key, "symbol": key.upper(), "score": score, "market": market}
+    row.update(extra)
+    return row
+
+
+def test_watchlist_pick_shares_ten_between_markets_strongest_first():
+    crypto = [asset(f"c{i}", i * 10) for i in range(8)]
+    stocks = [asset(f"s{i}", i * 10, "stock") for i in range(3)]
+    picked = dict((m, (rows, total)) for m, rows, total in digest.pick_watchlist(crypto + stocks))
+    rows, total = picked["crypto"]
+    assert total == 8 and [r["score"] for r in rows] == [70, 60, 50, 10, 0]
+    assert [r["score"] for r in picked["stock"][0]] == [20, 10, 0]
+    only = digest.pick_watchlist([asset(f"c{i}", i) for i in range(15)])
+    assert len(only[0][1]) == 10
+
+
+def test_watchlist_section_colours_and_text():
+    results = [
+        asset("btc", 75, price=67250.0, change=0.023, sentiment=64, market_score=52),
+        asset("tsla", 25, "stock", price=403.3, change=-0.018, sentiment=38, market_score=44),
+    ]
+    subject, page, plain = digest.render_digest([], results, cfg(), "https://app")
+    assert subject == "Angstrom daily summary: no new alerts"
+    assert "Your watchlist today" in page and "&#9650; 2.3%" in page and "&#9660; 1.8%" in page
+    assert "#0f9d46" in page and "#c0392b" in page          # strong green and red for 75 and 25
+    assert "- BTC: 67,250 (+2.3%) · score 75 · sentiment 64" in plain
+    assert "Sent every day" in page
+    _, page_off, _ = digest.render_digest([], results, cfg(digest_watchlist=False), "https://app")
+    assert "Your watchlist today" not in page_off and "only on days with at least one alert" in page_off
+
+
+def test_quiet_day_still_sends_the_watchlist_summary():
+    sent = []
+    db = FakeDB([])
+    config = cfg(last_digest_at=utc(2026, 10, 29, 2).isoformat())
+    state = digest.send_due_digest(db, "u1", config, [asset("btc", 60)], "me@x.com",
+                                   lambda *a: sent.append(a) or True, "https://app", now=utc(2026, 10, 30, 2))
+    assert state == "sent" and len(sent) == 1
+    assert not any(c[0] == "user_notifications" and c[1] == "update" for c in db.calls)
+    db = FakeDB([])
+    state = digest.send_due_digest(db, "u1", cfg(last_digest_at=config["last_digest_at"], digest_watchlist=False),
+                                   [asset("btc", 60)], "me@x.com", lambda *a: sent.append(a) or True,
+                                   "https://app", now=utc(2026, 10, 30, 2))
+    assert state == "quiet" and len(sent) == 1

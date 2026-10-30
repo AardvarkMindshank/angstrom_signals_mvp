@@ -4920,6 +4920,7 @@ def load_user_preferences():
                 "market_alerts_enabled": True,
                 "instant_email": False,
                 "digest_enabled": True,
+                "digest_watchlist": True,
                 "digest_hour": 8,
             })
             try:
@@ -6176,17 +6177,29 @@ def notifications_panel() -> None:
                     help="One email as soon as a score crosses a boundary.",
                     disabled=emails_off,
                 )
+                watchlist_column = "digest_watchlist" in alert_prefs
                 digest_on = st.checkbox(
-                    "📬 Daily digest",
+                    "📬 Daily alerts summary",
                     value=bool(alert_prefs.get("digest_enabled")),
                     key="alert_digest_cb",
-                    disabled=emails_off,
                     help=(
-                        "One email a day that gathers everything that crossed. "
-                        "Nothing is sent on days with no alerts. "
+                        "One email a day with everything that crossed your lines. "
                         "You can use this with or without instant alerts."
                     ),
                 )
+                watchlist_on = alert_prefs.get("digest_watchlist") is not False
+                if digest_on and watchlist_column:
+                    _, indent = st.columns([0.06, 0.94])
+                    watchlist_on = indent.checkbox(
+                        "📋 Include watchlist summary",
+                        value=watchlist_on,
+                        key="alert_digest_watchlist_cb",
+                        help=(
+                            "Adds a colour-coded summary of your watchlist below the alerts: price, today's move, "
+                            "score and sentiment for your strongest and weakest assets (up to 10). "
+                            "With this on, the email comes every day; with it off, only on days with alerts."
+                        ),
+                    )
                 saved_hour = alert_prefs.get("digest_hour")
                 saved_hour = 8 if saved_hour is None else int(saved_hour)
                 stored_zone = alert_prefs.get("digest_tz") or ""
@@ -6215,7 +6228,6 @@ def notifications_panel() -> None:
                         index=saved_hour if 0 <= saved_hour <= 23 else 8,
                         format_func=lambda hour: f"{hour:02d}:00",
                         key="alert_digest_hour",
-                        disabled=emails_off,
                     )
                     start_zone = saved_zone or "UTC"
                     digest_zone_choice = zone_col.selectbox(
@@ -6223,7 +6235,6 @@ def notifications_panel() -> None:
                         zone_choices,
                         index=zone_choices.index(start_zone) if start_zone in zone_choices else 0,
                         key="alert_digest_zone",
-                        disabled=emails_off,
                     )
                     if browser_zone and digest_zone_choice != browser_zone:
                         st.caption(f"Your browser's time zone is {browser_zone}.")
@@ -6231,13 +6242,15 @@ def notifications_panel() -> None:
                     # The browser has not reported its zone yet. Leave the zone unset
                     # rather than storing a guess; a later run fills it in.
                     digest_zone_choice = None
+                if watchlist_column:
+                    new_alert_settings["digest_watchlist"] = bool(watchlist_on)
                 new_alert_settings.update({
                     "instant_email": instant_on,
                     "digest_enabled": digest_on,
                     "digest_hour": None if digest_hour_choice is None else int(digest_hour_choice),
                     "digest_tz": digest_zone_choice,
                 })
-                if emails_off:
+                if emails_off and not (digest_on and watchlist_on):
                     st.caption("Tick an alert type above to choose how its emails arrive.")
                 elif not instant_on and not digest_on:
                     st.caption("Both are off, so alerts only appear in the dashboard.")
@@ -6459,8 +6472,12 @@ Sentiment updates about every 12 hours for everyone. The timers in Quick Snapsho
   (default 70) or drops to your negative line (default 30). Checked about every 5 minutes.
 - 🌐 **Market sentiment alerts**: the same for the crypto or stock market sentiment (default 65 and 35),
   for the markets you trade. Updated about every 12 hours.
-- **Emails**: ⚡ **Instant** (one email per alert, straight away) and/or 📬 **Daily digest** (one email a
-  day at your chosen hour and time zone, only on days with alerts). Greyed out while no alert type is on.
+- **Emails**: ⚡ **Instant** (one email per alert, straight away) and/or 📬 **Daily alerts summary** (one
+  email a day at your chosen hour and time zone). Each alert shows the price, the asset's sentiment and its
+  market's mood.
+- 📋 **Include watchlist summary** (under the daily summary, on by default): adds a colour-coded look at your
+  watchlist with price, today's move, score and sentiment for your strongest and weakest assets. With it on,
+  the email comes every day; with it off, only on days with alerts.
 
 **No repeats on a wobble.** After an alert, the same one can only fire again once the score has moved
 10 points back (for example up to 40 after a 30 alert) and then crosses again.
