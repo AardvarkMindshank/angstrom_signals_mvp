@@ -5945,13 +5945,13 @@ def notifications_panel() -> None:
             max_score = int(alert_prefs.get("max_score_alert", 30))
             if alert_enabled:
                 min_score = st.slider(
-                    "⬆️ Strongly positive at or above",
+                    ":green[▲] Strongly positive at or above",
                     50, 95, min_score,
                     key="min_score_slider",
                     help="An asset score at or above this line sends a positive alert. The default is 70.",
                 )
                 max_score = st.slider(
-                    "⬇️ Strongly negative at or below",
+                    ":red[▼] Strongly negative at or below",
                     5, 50, max_score,
                     key="max_score_slider",
                     help="An asset score at or below this line sends a negative alert. The default is 30.",
@@ -5978,13 +5978,13 @@ def notifications_panel() -> None:
                 market_low = int(float(alert_prefs.get("market_low_alert") or 35))
                 if market_on:
                     market_high = st.slider(
-                        "⬆️ Strongly positive mood at or above",
+                        ":green[▲] Strongly positive mood at or above",
                         55, 90, market_high,
                         key="market_high_slider",
                         help="Market sentiment at or above this line sends a positive alert. The default is 65.",
                     )
                     market_low = st.slider(
-                        "⬇️ Strongly negative mood at or below",
+                        ":red[▼] Strongly negative mood at or below",
                         10, 45, market_low,
                         key="market_low_slider",
                         help="Market sentiment at or below this line sends a negative alert. The default is 35.",
