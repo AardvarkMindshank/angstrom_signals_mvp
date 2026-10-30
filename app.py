@@ -5907,7 +5907,7 @@ def _draw_liquidation_levels(fig, record, last_x) -> None:
         colours.append(colour)
     fig.add_trace(
         go.Scatter(
-            x=xs, y=ys, mode="markers", name="🔥 Liquidation levels (estimate)",
+            x=xs, y=ys, mode="markers", name="🔥 Liq. levels (est.)",
             marker=dict(symbol="diamond", size=8, color=colours, line=dict(width=0)),
             hovertext=texts, hoverinfo="text",
         ),
@@ -10678,8 +10678,10 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, weig
                 )
 
             def _put(trace, key):
-                """Draw on the price chart's right-hand axis, or in this curve's own panel."""
+                """Draw on the price chart's right-hand axis, or in this curve's own panel.
+                On the price chart the curve is thinner and partly see-through, so the candles lead."""
                 if key in layout["secondary"]:
+                    trace.update(opacity=0.6, line=dict(width=1.1))
                     fig.add_trace(trace, row=1, col=1, secondary_y=True)
                 else:
                     fig.add_trace(trace, row=row_of[key], col=1)
@@ -10762,7 +10764,8 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, weig
                 for i in range(len(df_chart))
             ]
             fig.add_trace(
-                go.Bar(x=df_chart.index, y=df_chart["volume"], name="Volume", marker_color=colors, opacity=0.6),
+                go.Bar(x=df_chart.index, y=df_chart["volume"], name="Volume", marker_color=colors, opacity=0.6,
+                       showlegend=False),
                 row=row_of["volume"], col=1,
             )
             if "rsi" in df_chart.columns:
@@ -10790,7 +10793,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, weig
                     fig.add_trace(go.Scatter(x=df_chart.index, y=df_chart[signal_col], name="MACD signal",
                                              line=dict(color="orange", width=1.5)), row=macd_row, col=1)
             if "stoch" in layout["panels"] + layout["secondary"]:
-                _put(go.Scatter(x=df_chart.index, y=df_chart["stoch_k"], name="Stochastic %K",
+                _put(go.Scatter(x=df_chart.index, y=df_chart["stoch_k"], name="Stoch %K",
                                 line=dict(color="#0ea5e9", width=1.5)), "stoch")
                 if "stoch" not in layout["secondary"]:
                     _guide("stoch", 80, "red")
@@ -10847,7 +10850,8 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, weig
                 showlegend=True,
                 # The legend sits under the chart, in its own strip, so it never meets the toolbar
                 # that appears top right when the mouse is over the chart.
-                legend=dict(orientation="h", yref="container", y=0, yanchor="bottom", xref="paper", x=0, xanchor="left"),
+                legend=dict(orientation="h", yref="container", y=0, yanchor="bottom", xref="paper", x=0, xanchor="left",
+                            font=dict(size=11)),
                 margin=dict(t=60, b=150),
             )
             # Dates under the price chart as well as at the very bottom, with a tick at each month start.
@@ -10871,6 +10875,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, weig
             if layout["secondary"]:
                 fig.update_yaxes(
                     title_text="0 to 100", range=[0, 100], showgrid=False,
+                    tickmode="array", tickvals=[0, 25, 50, 75, 100],
                     row=1, col=1, secondary_y=True,
                 )
             _paint_chart(fig)
