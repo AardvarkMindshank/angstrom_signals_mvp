@@ -131,6 +131,7 @@ WATCHLIST_SHOWN = 10   # assets in the watchlist summary, split across crypto an
 
 _GREEN, _GREEN_SOFT, _GREEN_BG = "#0f9d46", "#7cd39b", "#dcfce7"
 _RED, _RED_SOFT, _RED_BG = "#c0392b", "#f0a29a", "#fde2e0"
+_AMBER = "#f2a33a"   # neutral middle scores
 _GREY, _GREY_BG, _TRACK = "#64748b", "#eef1f6", "#e3e8f0"
 _INK, _MUTED, _PAPER, _RULE = "#0c1b3a", "#4a5876", "#f7f9fc", "#d5dce8"
 _FONT = "-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif"
@@ -150,7 +151,8 @@ def _number(value):
 
 
 def score_colour(score, high=70.0, low=30.0) -> str:
-    """Strong green at or above the positive line, strong red at or below the negative one, softer near them."""
+    """Strong green at or above the positive line, strong red at or below the negative one, softer near them,
+    amber in the neutral middle (above 45 and below 55)."""
     if score is None:
         return _GREY
     if score >= high:
@@ -161,7 +163,7 @@ def score_colour(score, high=70.0, low=30.0) -> str:
         return _RED
     if score <= 45:
         return _RED_SOFT
-    return "#a7b1c2"
+    return _AMBER
 
 
 def _mood_colour(value) -> tuple[str, str]:
