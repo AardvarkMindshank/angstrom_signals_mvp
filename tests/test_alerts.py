@@ -145,3 +145,44 @@ def test_evaluate_skips_markets_when_switched_off():
     config = {"enabled": True, "market_alerts_enabled": False}
     opened = evaluate_alerts(db, "u", [row(50)], config, markets=market_rows({"stock": 30.0}, ["stock"]))
     assert opened == []
+
+
+def test_asset_facts_line():
+    from alerts import asset_facts, facts_by_symbol, price_text
+    row = {"key": "TSLA", "price": 403.3, "sentiment": 61.4, "market": "stock", "market_score": 44.0}
+    assert asset_facts(row) == "Price 403.30 · Sentiment 61/100 · Stock market mood 44/100"
+    assert asset_facts({"price": 0.88264, "market": "crypto", "market_score": None}) == "Price 0.8826"
+    assert asset_facts({}) == ""
+    assert price_text(67250.4) == "67,250" and price_text(None) == ""
+    assert facts_by_symbol([row, {"key": "x"}]) == {"tsla": asset_facts(row)}
+
+
+def test_instant_email_gets_facts(monkeypatch):
+    import pytest
+    pytest.importorskip("supabase")
+    pytest.importorskip("pandas_ta")
+    import run_alerts
+    sent = {}
+
+    class Response:
+        status_code = 200
+        text = ""
+
+    def fake_post(url, json=None, headers=None, timeout=None):
+        sent.update(json)
+        return Response()
+
+    monkeypatch.setenv("RESEND_API_KEY", "test")
+    monkeypatch.setattr(run_alerts.requests, "post", fake_post)
+    assert run_alerts.send_alert_email("a@b.c", "Tesla (TSLA)", "Score rose to 72", facts="Price 403.30")
+    assert "Now: Price 403.30" in sent["html"] and "Now: Price 403.30" in sent["text"]
+
+
+def test_last_price_reads_close():
+    import pytest
+    pytest.importorskip("supabase")
+    pytest.importorskip("pandas_ta")
+    import pandas as pd
+    from run_alerts import last_price
+    assert last_price(pd.DataFrame({"close": [1.0, 2.5, float("nan")]})) == 2.5
+    assert last_price(pd.DataFrame()) is None

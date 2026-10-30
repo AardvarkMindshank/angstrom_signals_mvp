@@ -236,7 +236,9 @@ def evaluate_alerts(supabase, user_id, results, alerts_config, notify_email=None
     # Instant emails are on unless the user turned them off. A digest-only user
     # leaves the crossings unsent here; the digest picks them up.
     if notify_email and send_email and alerts_config.get("instant_email") is not False:
-        _email_open_crossings(supabase, user_id, notify_email, send_email, logos_by_symbol(results))
+        _email_open_crossings(
+            supabase, user_id, notify_email, send_email, logos_by_symbol(results), facts_by_symbol(results),
+        )
 
     return opened
 
@@ -252,9 +254,50 @@ def logos_by_symbol(results) -> dict[str, str]:
     return logos
 
 
-def _email_open_crossings(supabase, user_id, notify_email, send_email, logos=None) -> None:
+def price_text(value) -> str:
+    """A price at a sensible precision: 403.30, 67,250, 0.8826, 0.00001234."""
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return ""
+    if number != number or number <= 0:
+        return ""
+    if number >= 1000:
+        return f"{number:,.0f}"
+    if number >= 1:
+        return f"{number:,.2f}"
+    return f"{number:.4g}"
+
+
+def asset_facts(row: dict) -> str:
+    """One line of context for an alert: price, the asset's own sentiment and its market's mood."""
+    parts = []
+    price = price_text(row.get("price"))
+    if price:
+        parts.append(f"Price {price}")
+    if not _missing(row.get("sentiment")):
+        parts.append(f"Sentiment {float(row['sentiment']):.0f}/100")
+    if not _missing(row.get("market_score")):
+        name = "Crypto market" if row.get("market") == "crypto" else "Stock market"
+        parts.append(f"{name} mood {float(row['market_score']):.0f}/100")
+    return " · ".join(parts)
+
+
+def facts_by_symbol(results) -> dict[str, str]:
+    """asset_facts for each scored asset, keyed the way alert rows store the asset."""
+    facts = {}
+    for row in results or []:
+        symbol = latch_symbol(row.get("key"))
+        line = asset_facts(row)
+        if symbol and line:
+            facts[symbol] = line
+    return facts
+
+
+def _email_open_crossings(supabase, user_id, notify_email, send_email, logos=None, facts=None) -> None:
     """Email each unresolved crossing once. A later run skips rows already marked."""
     logos = logos or {}
+    facts = facts or {}
     try:
         pending = (
             supabase.table("user_notifications")
@@ -278,12 +321,14 @@ def _email_open_crossings(supabase, user_id, notify_email, send_email, logos=Non
 
     for note in pending:
         name = note.get("asset_name") or "Asset"
-        logo = logos.get(latch_symbol(note.get("asset_symbol")), "")
+        symbol = latch_symbol(note.get("asset_symbol"))
+        extras = {}
+        if logos.get(symbol):
+            extras["logo_url"] = logos[symbol]
+        if facts.get(symbol):
+            extras["facts"] = facts[symbol]
         try:
-            if logo:
-                sent = bool(send_email(notify_email, name, note.get("message") or "", logo_url=logo))
-            else:
-                sent = bool(send_email(notify_email, name, note.get("message") or ""))
+            sent = bool(send_email(notify_email, name, note.get("message") or "", **extras))
         except Exception as exc:
             print(f"Email failed for {name}: {exc}")
             continue

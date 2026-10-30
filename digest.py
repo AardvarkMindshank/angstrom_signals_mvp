@@ -12,7 +12,7 @@ import html
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
-from alerts import BEARISH, BULLISH, HELD_BEARISH, HELD_BULLISH, is_market_symbol, latch_symbol, logos_by_symbol
+from alerts import BEARISH, BULLISH, HELD_BEARISH, HELD_BULLISH, asset_facts, facts_by_symbol, is_market_symbol, latch_symbol, logos_by_symbol
 from email_brand import asset_logo, list_row, render_email, section_title
 
 # A crossing can be resolved (the score moved back) before the digest goes out.
@@ -142,6 +142,10 @@ def render_digest(notes, results, config, app_url: str, markets=None) -> tuple[s
     plain: list[str] = []
     # Logos come with the current scores; alert rows only carry the asset.
     logo_for_symbol = logos_by_symbol(results)
+    facts_for_symbol = facts_by_symbol(results)
+    facts_for_name = {
+        str(row.get("symbol") or row.get("key") or ""): asset_facts(row) for row in results or []
+    }
     logo_for_name = {
         str(row.get("symbol") or row.get("key") or ""): str(row.get("logo") or "")
         for row in results or []
@@ -157,10 +161,14 @@ def render_digest(notes, results, config, app_url: str, markets=None) -> tuple[s
             name = " ".join(str(note.get("asset_name") or "Asset").split())
             message = " ".join(str(note.get("message") or "").split())
             when = _local_time(note, zone)
+            symbol = latch_symbol(note.get("asset_symbol"))
+            facts = facts_for_symbol.get(symbol) or facts_for_name.get(name, "")
             detail = html.escape(message) + (f" · {html.escape(when)}" if when else "")
-            logo = logo_for_symbol.get(latch_symbol(note.get("asset_symbol"))) or logo_for_name.get(name, "")
+            if facts:
+                detail += "<br>Now: " + html.escape(facts)
+            logo = logo_for_symbol.get(symbol) or logo_for_name.get(name, "")
             html_parts.append(list_row(asset_logo(logo) + html.escape(name), detail, tone))
-            plain.append(f"- {name}: {message}" + (f" ({when})" if when else ""))
+            plain.append(f"- {name}: {message}" + (f" ({when})" if when else "") + (f". Now: {facts}" if facts else ""))
         plain.append("")
 
     readings = list(markets or []) if config.get("market_alerts_enabled") else []
@@ -198,8 +206,12 @@ def render_digest(notes, results, config, app_url: str, markets=None) -> tuple[s
         html_parts.append(section_title(html.escape(title)))
         plain.append(title)
         for value, name in rows:
-            html_parts.append(list_row(asset_logo(logo_for_name.get(name, "")) + html.escape(name), f"Score {value:.0f}", tone))
-            plain.append(f"- {name}: score {value:.0f}")
+            facts = facts_for_name.get(name, "")
+            html_parts.append(list_row(
+                asset_logo(logo_for_name.get(name, "")) + html.escape(name),
+                f"Score {value:.0f}" + (f" · {html.escape(facts)}" if facts else ""), tone,
+            ))
+            plain.append(f"- {name}: score {value:.0f}" + (f" · {facts}" if facts else ""))
         plain.append("")
 
     hour = digest_hour(config)

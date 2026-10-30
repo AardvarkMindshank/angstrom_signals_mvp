@@ -97,7 +97,7 @@ def user_email(supabase, user_id: str) -> str | None:
         return None
 
 
-def send_alert_email(to_email: str, asset_name: str, message: str, logo_url: str = "") -> bool:
+def send_alert_email(to_email: str, asset_name: str, message: str, logo_url: str = "", facts: str = "") -> bool:
     api_key = (os.getenv("RESEND_API_KEY") or "").strip()
     if not api_key:
         print(f"Email skipped for {asset_name}: RESEND_API_KEY is not set.")
@@ -123,7 +123,9 @@ def send_alert_email(to_email: str, asset_name: str, message: str, logo_url: str
             "This email is sent once for that crossing. "
             "It is sent again only after the score moves 10 points back from the boundary and then crosses it again.",
         ],
-        callout=safe_message,
+        callout=safe_message + (
+            f'<br><span style="font-weight:400;font-size:15px;">Now: {html.escape(facts)}</span>' if facts else ""
+        ),
         tone=alert_tone(message),
         button=("Open the dashboard", app_url),
         preheader=" ".join(str(message).split())[:120],
@@ -179,28 +181,58 @@ def send_digest_email(to_email: str, subject: str, page: str, plain: str) -> boo
     return False
 
 
-def load_logos(supabase, catalog) -> dict[str, str]:
-    """Logo address per shared asset key. Empty if the lookup fails: emails go out without logos."""
+# An asset sentiment score older than this is left out of emails.
+ASSET_SENTIMENT_MAX_AGE_HOURS = 72
+
+
+def load_asset_details(supabase, catalog) -> tuple[dict[str, str], dict[str, float]]:
+    """(logo address, recent sentiment score) per shared asset key. Empty on failure: emails go without them."""
+    from datetime import datetime, timedelta, timezone
+
     keys = [asset_market_key(kind, asset_id) for kind, asset_id in catalog]
-    logos = {}
+    logos, sentiment = {}, {}
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=ASSET_SENTIMENT_MAX_AGE_HOURS)
     for start in range(0, len(keys), 100):
         try:
             rows = (
                 supabase.table("asset_market")
-                .select("asset_key, logo_url")
+                .select("asset_key, logo_url, sentiment_score, sentiment_updated_at")
                 .in_("asset_key", keys[start:start + 100])
                 .execute()
                 .data
                 or []
             )
         except Exception as exc:
-            print(f"Logos skipped for emails: {str(exc)[:160]}")
-            return logos
+            print(f"Logos and sentiment skipped for emails: {str(exc)[:160]}")
+            return logos, sentiment
         for row in rows:
+            key = str(row.get("asset_key"))
             url = str(row.get("logo_url") or "").strip()
             if url:
-                logos[str(row.get("asset_key"))] = url
-    return logos
+                logos[key] = url
+            try:
+                score = float(row.get("sentiment_score"))
+                stamp = datetime.fromisoformat(str(row.get("sentiment_updated_at")).replace("Z", "+00:00"))
+            except (TypeError, ValueError):
+                continue
+            if score == score and stamp >= cutoff:
+                sentiment[key] = score
+    return logos, sentiment
+
+
+def load_logos(supabase, catalog) -> dict[str, str]:
+    """Logo address per shared asset key."""
+    return load_asset_details(supabase, catalog)[0]
+
+
+def last_price(frame):
+    """The latest close in a stored price frame, or None."""
+    try:
+        column = next(c for c in ("close", "Close", "price") if c in frame.columns)
+        value = float(frame[column].dropna().iloc[-1])
+    except Exception:
+        return None
+    return value if value == value and value > 0 else None
 
 
 # A market score older than this is not used for alerts: the 12-hour refresh has stalled.
@@ -326,7 +358,7 @@ def run_background_checks() -> None:
         # Evidence is a nice-to-have. It must never hold up the alert pass.
         print(f"Evidence pass skipped: {str(exc)[:160]}")
 
-    logos = load_logos(supabase, catalog)
+    logos, asset_sentiment = load_asset_details(supabase, catalog)
     market_scores = load_market_scores(supabase)
 
     if not all_user_prefs:
@@ -373,11 +405,16 @@ def run_background_checks() -> None:
                     continue
                 if score is None:
                     continue
+                market = "crypto" if kind == "Crypto" else "stock"
                 results.append({
                     "key": asset_id,
                     "symbol": name_for(asset_id, name),
                     "score": score,
                     "logo": logos.get(asset_market_key(kind, asset_id), ""),
+                    "price": last_price(frame),
+                    "sentiment": asset_sentiment.get(asset_market_key(kind, asset_id)),
+                    "market": market,
+                    "market_score": market_scores.get(market),
                 })
 
         try:
