@@ -68,3 +68,11 @@ def test_daily_history_for_bitcoin_share_and_crypto_cap():
     assert again["history"]["btc_dom"] == {"2026-10-29": 59.0, "2026-10-30": 59.8}
     assert again["history"]["crypto_cap"] == {"2026-10-29": 2.5e12}   # kept even when today's fetch missed it
     assert "0.60 pt" in mo.change_pill(0.6, "pct")
+
+
+def test_section_timer_rolls_forward_and_keeps_its_own_clock():
+    import pathlib
+    source = pathlib.Path(__file__).resolve().parents[1].joinpath("app.py").read_text(encoding="utf-8")
+    block = source[source.index("def _section_timer("):][:1400]
+    assert "math.ceil((now - deadline + 1) / interval) * interval" in block
+    assert "return () => window.clearInterval(clock);" in source

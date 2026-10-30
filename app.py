@@ -10,6 +10,7 @@ import html
 from table_pick import clicked_pick
 import io
 import json
+import math
 import re
 import threading
 import time
@@ -3100,14 +3101,15 @@ export default function(component) {
         if (left === 0) window[sentKey] = tokenNow;
       }
       if (left === 0 && tokenNow && window[sentKey] !== tokenNow) {
-        window.clearInterval(window[timerKey]);
         window[sentKey] = tokenNow;
         setTriggerValue("due", tokenNow);
       }
     };
     paint();
-    window[timerKey] = setInterval(paint, 1000);
-    return () => window.clearInterval(window[timerKey]);
+    // Each copy keeps its own clock, so clearing an old copy never stops the new one.
+    const clock = setInterval(paint, 1000);
+    window[timerKey] = clock;
+    return () => window.clearInterval(clock);
   }
   let button = shell.querySelector("button.angstrom-jump");
   if (!button) {
@@ -3518,6 +3520,12 @@ def _section_timer(updated_at: float | None, interval: float, widget_key: str, h
     """A quiet 'Updated … · next update in …' line at the top of a section. When the update falls
     due, the page reruns once so it picks up the new shared data."""
     deadline = next_update(updated_at, interval)
+    if deadline is not None:
+        # Prices are saved only when they change, and a refresh can run late, so the last save can be
+        # long past. Count down to the next scheduled update instead of sitting on "update due".
+        now = time.time()
+        if deadline <= now:
+            deadline += math.ceil((now - deadline + 1) / interval) * interval
     token = "" if deadline is None else str(int(deadline * 1000))
     result = _countdown(
         key=widget_key,
