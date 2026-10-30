@@ -8745,6 +8745,9 @@ def _social_stream_json(crypto_watchlist, stock_watchlist, shared, logos, feed) 
     )
 
 
+_CLOSES_SAVED: dict = {}
+
+
 def _share_market_rows(crypto_watchlist, stock_watchlist, crypto_results, stock_results):
     """Save this refresh's closes and reuse any headline score already stored."""
     priced = []
@@ -8761,8 +8764,18 @@ def _share_market_rows(crypto_watchlist, stock_watchlist, crypto_results, stock_
     earlier = st.session_state.get("_shared_rows")
     # An asset with no saved row yet is simply missing, and reading again would not change that.
     reuse_shared = earlier is not None and not st.session_state.get("_shared_reread")
-    # Saving the closes is not needed to draw the page, so it runs behind the scenes.
-    _background(save_price_paths, supabase, priced)
+    # Saving the closes is not needed to draw the page, so it runs behind the scenes, and only
+    # for lines that changed since this server last saved them (prices move every 5 minutes,
+    # but a page redraws far more often than that).
+    changed = []
+    for row in priced:
+        line = tuple(row.get("closes") or ())
+        key = (row["kind"], str(row.get("asset_id")))
+        if line and _CLOSES_SAVED.get(key) != line:
+            _CLOSES_SAVED[key] = line
+            changed.append(row)
+    if changed:
+        _background(save_price_paths, supabase, changed)
     prefetch = st.session_state.get("_prefetch") or {}
     jobs = {}
     if not reuse_shared:
@@ -11690,6 +11703,17 @@ def show_signal_evidence(kind: str, asset_id: str, shown: str) -> None:
     )
 
 
+@st.cache_data(ttl=900, max_entries=100, show_spinner=False)
+def _matrix_cached(asset_key, stamp, sets_key, sentiment_key, horizon, days, _indicated, _sets, _sentiment):
+    """The Signal matrix replays the score for every day and every weight set (over a hundred
+    score calculations). Same prices, weights and sentiment give the same answer, so it is
+    worked out once and reused by every redraw and every account until something changes."""
+    from signal_matrix import build_matrix
+
+    del asset_key, stamp, sets_key, sentiment_key
+    return build_matrix(_indicated, _sets, _sentiment, horizon, days)
+
+
 def show_signal_matrix(kind: str, asset_id: str, label: str, indicated, weights: dict) -> None:
     """Price across 30 days, with each signal set on those same dates."""
     from signal_matrix import LEAD_HORIZONS, MATRIX_DAYS, boundary_lines, build_matrix, weekend_edges
@@ -11744,7 +11768,17 @@ def show_signal_matrix(kind: str, asset_id: str, label: str, indicated, weights:
             "Market sentiment": _sentiment_series(market_key, moods.get(market_key)),
             "Asset sentiment": _sentiment_series(asset_key, asset_row),
         }
-        matrix = build_matrix(indicated, sets, sentiment, int(horizon), MATRIX_DAYS)
+        try:
+            stamp = (len(indicated), str(indicated.index[-1]), float(indicated["close"].iloc[-1]))
+        except Exception:
+            stamp = (len(indicated), "", 0.0)
+        matrix = _matrix_cached(
+            asset_key, stamp,
+            json.dumps(sets, sort_keys=True, default=str),
+            json.dumps(sentiment, sort_keys=True, default=str),
+            int(horizon), MATRIX_DAYS,
+            indicated, sets, sentiment,
+        )
         dates = matrix["dates"]
         if len(dates) < 2:
             st.caption("Not enough daily prices yet to draw this matrix.")
