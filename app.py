@@ -10432,8 +10432,9 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, weig
             panels = layout["panels"]
             row_of = {name: index + 2 for index, name in enumerate(panels)}
             chart_height = 750 + 150 * (len(panels) - 2) if len(panels) > 2 else 750 - 100 * (2 - len(panels))
-            # About 48 px between panels: room for the dates under the price chart plus the next panel's title.
-            panel_gap = min(0.12, 48 / max(300, chart_height - 210))
+            # About 34 px between panels: room for the dates under the price chart. The lower panels'
+            # titles sit inside their panels (below), so they do not need room here.
+            panel_gap = min(0.1, 34 / max(300, chart_height - 210))
             fig = make_subplots(
                 rows=1 + len(panels), cols=1,
                 shared_xaxes=True,
@@ -10442,6 +10443,14 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, weig
                 subplot_titles=tuple([f"{title} Price"] + [panel_titles[name] for name in panels]),
                 specs=[[{"secondary_y": True}]] + [[{}] for _ in panels],
             )
+
+            # Lower panel titles (Volume, RSI...) go inside the top-left corner of their panel, so the
+            # dates under the price chart never run into them.
+            for title_note in list(fig.layout.annotations)[1:]:
+                title_note.update(
+                    x=0.005, xanchor="left", yanchor="top", font=dict(size=11),
+                    bgcolor="rgba(127,127,127,0.12)", borderpad=2,
+                )
 
             def _put(trace, key):
                 """Draw on the price chart's right-hand axis, or in this curve's own panel."""
