@@ -5901,7 +5901,10 @@ def notifications_panel() -> None:
                 "📈 Asset score alerts",
                 value=alert_prefs.get("enabled", True) is not False,
                 key="alert_enabled_cb",
-                help="Alert when the technical score of an asset on your watchlists crosses one of your lines.",
+                help=(
+                    "Alert when the technical score of an asset on your watchlists crosses one of your lines. "
+                    "Scores are checked about every 5 minutes."
+                ),
             )
             min_score = int(alert_prefs.get("min_score_alert", 70))
             max_score = int(alert_prefs.get("max_score_alert", 30))
@@ -5933,7 +5936,7 @@ def notifications_panel() -> None:
                     key="alert_market_cb",
                     help=(
                         "Alert when the crypto or stock market sentiment score crosses one of your lines. "
-                        "It covers the markets you have switched on. Market sentiment updates about twice a day."
+                        "It covers the markets you have switched on. Market sentiment updates about every 12 hours."
                     ),
                 )
                 market_high = int(float(alert_prefs.get("market_high_alert") or 65))
