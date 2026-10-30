@@ -3062,6 +3062,53 @@ export default function(component) {
   shell.style.display = "block";
   shell.style.height = "auto";
   shell.style.width = "100%";
+  if (data && data.compact) {
+    // One quiet line: when the shared data was updated, and when the next update is due.
+    let line = shell.querySelector(".angstrom-timer");
+    if (!line) {
+      shell.textContent = "";
+      line = document.createElement("div");
+      line.className = "angstrom-timer";
+      line.style.cssText = "font-size:.8rem;color:var(--ang-muted,#6b7280);margin:-4px 0 6px;";
+      shell.appendChild(line);
+    }
+    line.title = String(data.help || "");
+    const endAt = Number(data.deadlineMs) || 0;
+    const updatedAt = Number(data.updatedMs) || 0;
+    const tokenNow = String(data.token || "");
+    const ago = (ms) => {
+      const secs = Math.max(0, Math.round((Date.now() - ms) / 1000));
+      if (secs < 90) return "just now";
+      if (secs < 5400) return Math.round(secs / 60) + " min ago";
+      const h = Math.floor(secs / 3600), m = Math.round((secs % 3600) / 60);
+      return h + " h " + m + " min ago";
+    };
+    const paint = () => {
+      const left = endAt ? Math.max(0, Math.round((endAt - Date.now()) / 1000)) : -1;
+      const parts = [];
+      if (updatedAt) parts.push("Updated " + ago(updatedAt));
+      if (left > 0) {
+        const hh = Math.floor(left / 3600), mm = Math.floor((left % 3600) / 60), ss = String(left % 60).padStart(2, "0");
+        parts.push("next update in " + hh + ":" + String(mm).padStart(2, "0") + ":" + ss);
+      } else if (left === 0 || !updatedAt) {
+        parts.push("update due");
+      }
+      line.textContent = "🕒 " + parts.join(" · ");
+      const seenKey = timerKey + "_seen", sentKey = timerKey + "_sent";
+      if (window[seenKey] !== tokenNow) {
+        window[seenKey] = tokenNow;
+        if (left === 0) window[sentKey] = tokenNow;
+      }
+      if (left === 0 && tokenNow && window[sentKey] !== tokenNow) {
+        window.clearInterval(window[timerKey]);
+        window[sentKey] = tokenNow;
+        setTriggerValue("due", tokenNow);
+      }
+    };
+    paint();
+    window[timerKey] = setInterval(paint, 1000);
+    return () => window.clearInterval(window[timerKey]);
+  }
   let button = shell.querySelector("button.angstrom-jump");
   if (!button) {
     button = document.createElement("button");
@@ -3465,6 +3512,30 @@ def _countdown_due(
         on_due_change=lambda: None,
     )
     return bool(token) and result.due == token
+
+
+def _section_timer(updated_at: float | None, interval: float, widget_key: str, help_text: str) -> None:
+    """A quiet 'Updated … · next update in …' line at the top of a section. When the update falls
+    due, the page reruns once so it picks up the new shared data."""
+    deadline = next_update(updated_at, interval)
+    token = "" if deadline is None else str(int(deadline * 1000))
+    result = _countdown(
+        key=widget_key,
+        data={
+            "compact": True,
+            "deadlineMs": 0 if deadline is None else int(deadline * 1000),
+            "updatedMs": 0 if updated_at is None else int(updated_at * 1000),
+            "token": token,
+            "key": widget_key,
+            "help": help_text,
+        },
+        on_due_change=lambda: None,
+    )
+    honored = st.session_state.setdefault("countdown_seen", {})
+    if token and result.due == token and honored.get(widget_key) != token:
+        honored[widget_key] = token
+        if not st.session_state.pop("_chart_row_quiet", False):
+            _rerun_fragment()
 
 
 def _rerun_fragment() -> None:
@@ -6496,7 +6567,9 @@ for the details.
 comment. The **Crowd** box shows everyone's average; hover the 👎 for how spread out they are.
 A new sentiment update clears the takes, because they belonged to the old score.
 
-Sentiment updates about every 12 hours for everyone. The timers in Quick Snapshot show when.
+Sentiment updates about every 12 hours for everyone. The 🕒 line under each sentiment section's title shows
+when it was last updated and when the next update is due; prices and the chart (every 5 minutes) have the
+same line under the asset's name in the chart section.
 """)
 
     with tab_alerts:
@@ -9678,92 +9751,6 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, weig
                 )
             elif trade_crypto or trade_equities:
                 st.caption("🌍 Market overview is loading. It appears on the next update.")
-        def open_asset():
-            """The asset on the chart: kind, id, label, and its sentiment search."""
-            pick = st.session_state.get("chart_pick")
-            kind = asset_id = None
-            if pick and pick[0] in allowed_kinds:
-                kind, asset_id = pick[0], pick[1]
-                watchlist = crypto_watchlist if kind == "Crypto" else stock_watchlist
-                if asset_id not in watchlist:
-                    kind = asset_id = None
-            if kind is None:
-                if "Crypto" in allowed_kinds and crypto_watchlist:
-                    kind, asset_id = "Crypto", next(iter(crypto_watchlist))
-                elif "Stock" in allowed_kinds and stock_watchlist:
-                    kind, asset_id = "Stock", next(iter(stock_watchlist))
-                else:
-                    return None
-            watchlist = crypto_watchlist if kind == "Crypto" else stock_watchlist
-            if asset_id not in watchlist:
-                return None
-            label = str(watchlist[asset_id])
-            ticker = crypto_ticker(asset_id) if kind == "Crypto" else asset_id
-            return kind, asset_id, label, sentiment_query(kind, label, ticker)
-
-        jumps = []
-        moods = _moods_now or {}
-        if trade_crypto:
-            jumps.append((
-                "Market Sentiment - Crypto",
-                "jump_mood_crypto",
-                "mood_countdown_crypto",
-                next_update(row_timestamp(moods.get("crypto"), "sentiment_updated_at"), SENTIMENT_REFRESH_SECONDS),
-                "market_mood_crypto",
-                "market-mood-crypto",
-                "Open crypto market sentiment. The time is the next shared update. Pressing this does not refresh it.",
-                "🪙",
-            ))
-        if trade_equities:
-            jumps.append((
-                "Market Sentiment - Equities",
-                "jump_mood_stock",
-                "mood_countdown_stock",
-                next_update(row_timestamp(moods.get("stock"), "sentiment_updated_at"), SENTIMENT_REFRESH_SECONDS),
-                "market_mood_stock",
-                "market-mood-stock",
-                "Open stock market sentiment. The time is the next shared update. Pressing this does not refresh it.",
-                "📈",
-            ))
-        opened = open_asset()
-        if opened:
-            opened_kind, opened_id, _opened_label, _opened_query = opened
-            opened_row = (st.session_state.get("_shared_rows") or {}).get(asset_market_key(opened_kind, opened_id))
-            jumps.append((
-                "Market Sentiment - Selected Asset",
-                "jump_sentiment",
-                "sentiment_countdown",
-                next_update(row_timestamp(opened_row, "sentiment_updated_at"), SENTIMENT_REFRESH_SECONDS),
-                "market_sentiment_panel",
-                "market-sentiment",
-                "Open sentiment for the asset on the chart. The time is the next shared update. Pressing this does not refresh it.",
-                "📰",
-            ))
-            jumps.append((
-                "Technical Data - Selected Asset",
-                "jump_technical",
-                "technical_countdown",
-                next_update(row_timestamp(opened_row, "prices_updated_at"), TECHNICAL_REFRESH_SECONDS),
-                "interactive_chart",
-                "interactive-chart",
-                "Open the chart. The time is the next shared price update. Pressing this does not refresh it.",
-                "📊",
-            ))
-        if jumps:
-            # One control per column, so each timer writes onto its own button.
-            jump_columns = st.columns(len(jumps))
-            honored = st.session_state.setdefault("countdown_seen", {})
-            reread = False
-            for column, (title, _button_key, timer_key, deadline, _section_id, anchor, jump_help, jump_icon) in zip(jump_columns, jumps):
-                with column:
-                    due = _countdown_due(deadline, timer_key, title, anchor, jump_help, jump_icon)
-                    token = "" if deadline is None else str(int(deadline * 1000))
-                    if due and token and honored.get(timer_key) != token:
-                        honored[timer_key] = token
-                        reread = True
-            if reread and not st.session_state.pop("_chart_row_quiet", False):
-                _rerun_fragment()
-
         # Market cap still uses a short cache. Prices and sentiment come from the shared rows.
         nonce = st.session_state.data_nonce
 
@@ -10463,6 +10450,14 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, weig
                     )
             with chart_top:
                 _back_to_top(key="chart_back_to_top")
+            if chart_kind in ("Crypto", "Stock") and chart_asset:
+                _section_timer(
+                    row_timestamp((st.session_state.get("_shared_rows") or {}).get(
+                        asset_market_key(chart_kind, chart_asset)), "prices_updated_at"),
+                    TECHNICAL_REFRESH_SECONDS, "timer_technical",
+                    "Prices, the chart and the technical score are shared by everyone and updated about "
+                    "every 5 minutes. The page picks them up by itself when they are due.",
+                )
 
             if len(allowed_kinds) > 1:
                 col1, col2 = st.columns([1, 3])
@@ -11526,6 +11521,12 @@ def _mood_card(spec: dict, row: dict | None) -> None:
         )
     with top_col:
         _back_to_top(key=f"mood_top_{key}")
+    _section_timer(
+        row_timestamp(row, "sentiment_updated_at") if isinstance(row, dict) else None,
+        SENTIMENT_REFRESH_SECONDS, f"timer_mood_{key}",
+        "Market sentiment is shared by everyone and updated about every 12 hours. "
+        "The page picks up the new score by itself when it is due.",
+    )
     headlines = newest_first((report or {}).get("headlines") or [])
     score = (report or {}).get("score")
     _paint_section_score(f"mood_{key}", score, bool(report and report.get("ok") and score is not None))
@@ -12471,6 +12472,12 @@ def show_market_sentiment(kind: str, asset_id: str, label: str, ticker: str | No
                 )
         with sentiment_top:
             _back_to_top(key="sentiment_back_to_top")
+        _section_timer(
+            row_timestamp(stored, "sentiment_updated_at") if isinstance(stored, dict) else None,
+            SENTIMENT_REFRESH_SECONDS, "timer_sentiment",
+            "Headline sentiment is shared by everyone and updated about every 12 hours. "
+            "The page picks up the new score by itself when it is due.",
+        )
         if not (report and report.get("ok")):
             flag = f"sentiment_fill_{asset_market_key(kind, asset_id)}"
             if not st.session_state.get(flag):
