@@ -11684,11 +11684,13 @@ def show_max_pain(kind: str, asset_id: str, label: str, chart_price: float | Non
         if kept:
             st.caption(f"⏳ The data source is showing no contracts just now, so these are the last figures it gave ({_ago(time.time() - kept)}).")
         total_open = sum(calls.values()) + sum(puts.values())
-        if market.startswith("stock:") and total_open < 100:
-            # A handful of contracts (often on an option's last day) gives a meaningless answer.
+        if market.startswith("stock:") and total_open < 500:
+            # A handful of contracts gives a meaningless answer. Yahoo also sends near-empty
+            # chains for a while at times, outside US trading hours especially.
             st.caption(
-                f"This expiry has only {total_open:,.0f} open contracts, too few for a meaningful max pain. "
-                "Pick a later expiry above."
+                f"This expiry shows only {total_open:,.0f} open contracts, too few for a meaningful max pain. "
+                "The data source sometimes reports only a handful for a while (often outside US trading hours). "
+                "Try another expiry, or check back later."
             )
             return
         level = pain_strike(calls, puts)

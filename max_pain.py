@@ -17,6 +17,7 @@ from data_fetchers import crypto_ticker
 _TTL_SECONDS = 12 * 60 * 60
 _ERROR_TTL_SECONDS = 90
 _LAST_GOOD_SECONDS = 4 * 24 * 60 * 60   # covers a long weekend
+THIN_SHARE = 0.2   # a chain under a fifth of the last good one counts as blank
 _LAST_GOOD: dict[str, tuple[float, tuple]] = {}
 _STALE: dict[str, float] = {}
 _DERIBIT = "https://www.deribit.com/api/v2/public/get_book_summary_by_currency"
@@ -163,6 +164,12 @@ def _stock_chain(
         return calls, puts, None, error
     calls = _oi_frame(getattr(chain, "calls", None))
     puts = _oi_frame(getattr(chain, "puts", None))
+    saved = _LAST_GOOD.get(key)
+    total = sum(calls.values()) + sum(puts.values())
+    if saved and time.time() - saved[0] < _LAST_GOOD_SECONDS:
+        before = sum(saved[1][0].values()) + sum(saved[1][1].values())
+        if total < before * THIN_SHARE:
+            calls, puts = {}, {}   # a near-empty chain is Yahoo half-blank, not a real change
     if calls or puts:
         _LAST_GOOD[key] = (time.time(), (calls, puts))
         _STALE.pop(key, None)

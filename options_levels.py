@@ -28,6 +28,7 @@ from datetime import date
 RISK_FREE = 0.04
 EXPIRIES_USED = 3
 MAX_DAYS = 60
+MIN_CONTRACTS = 500     # fewer than this across the expiries is Yahoo half-blank, or too thin to read
 WINDOW = 0.15            # strikes within 15% of the price are shown
 _TTL = 60 * 60           # a chain is reused for an hour
 _ERROR_TTL = 90
@@ -225,6 +226,10 @@ def load_rows(ticker: str, today: date) -> tuple[list[dict], list[str], str | No
             return lines, (None if lines else "empty")
 
         lines, chain_error = _cached(("chain", ticker, expiry), chain)
+        saved = _last_good.get((ticker, expiry))
+        if lines and saved and time.time() - saved[0] < _LAST_GOOD_SECONDS:
+            if sum(l["oi"] for l in lines) < sum(l["oi"] for l in saved[1]) * 0.2:
+                lines, chain_error = [], "empty"   # Yahoo half-blank: treat as blank
         if lines:
             _last_good[(ticker, expiry)] = (time.time(), lines)
         if chain_error == "empty":
@@ -248,6 +253,11 @@ def load_rows(ticker: str, today: date) -> tuple[list[dict], list[str], str | No
             "to time, often outside US trading hours; the figures come back once it refreshes."
         )
     load_rows.stale_from = stale_from
+    if sum(row["oi"] for row in rows) < MIN_CONTRACTS:
+        return [], chosen, (
+            "Yahoo is only showing a handful of open contracts right now, too few to read. It does this from "
+            "time to time, often outside US trading hours; the figures come back once it refreshes."
+        )
     return rows, chosen, None
 
 

@@ -108,3 +108,28 @@ def test_blank_chain_falls_back_to_last_good(monkeypatch):
     ol._cache.clear(); ol._last_good.clear()
     rows, _, error = ol.load_rows("ZZZ", TODAY)
     assert not rows and "no open contracts" in error
+
+
+def test_half_blank_chain_uses_last_good_and_thin_chain_is_refused(monkeypatch):
+    import sys, types
+    good = _Chain({"strike": [100.0], "openInterest": [5000], "impliedVolatility": [0.4]}, {})
+    thin = _Chain({"strike": [60.0], "openInterest": [150], "impliedVolatility": [0.4]}, {})
+    state = {"chain": good}
+
+    class Ticker:
+        def __init__(self, _):
+            self.options = ["2026-11-06"]
+
+        def option_chain(self, _):
+            return state["chain"]
+
+    monkeypatch.setitem(sys.modules, "yfinance", types.SimpleNamespace(Ticker=Ticker))
+    ol._cache.clear(); ol._last_good.clear()
+    ol.load_rows("YYY", TODAY)
+    ol._cache.clear()
+    state["chain"] = thin
+    rows, _, error = ol.load_rows("YYY", TODAY)
+    assert error is None and rows[0]["oi"] == 5000 and ol.last_stale_from()
+    ol._cache.clear(); ol._last_good.clear()
+    rows, _, error = ol.load_rows("YYY", TODAY)
+    assert not rows and "handful" in error
