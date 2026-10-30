@@ -16,6 +16,7 @@ import time
 
 import app_version
 from score_colours import score_tone, tone_js
+from sentiment_spread import spread_html
 import traceback
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
@@ -6481,9 +6482,15 @@ positive). The sentiment score is their average. It is separate from the technic
 **Where it shows**
 - **Market sentiment – Crypto / Stocks**: the whole market, from headlines plus public readings
   (central banks, the dollar and yields, Fear & Greed, market breadth and more).
-- **Market sentiment – asset**, under the chart: the headlines for that asset, newest first, each with
-  its score and a one-line summary, plus Positive and Negative paragraphs.
+- **Market sentiment – asset**, above the chart (in the wide layout, in the left column): the headlines
+  for that asset, newest first, each with its score and a one-line summary, plus Positive and Negative
+  paragraphs.
 - The **Sentiment** column in the tables.
+
+**How much the articles agree.** Beside each sentiment score, a strip shows one dot per article on a
+0 to 100 line, with the average marked. The word says how spread out they are: **agree** (within about
+10 points), **mixed** (10 to 20) or **split** (more than 20, so the average hides two camps). Hover it
+for the details.
 
 **Your take.** 👍 if you agree, 👎 if you don't, then pick your own score from 0 to 100 and add a short
 comment. The **Crowd** box shows everyone's average; hover the 👎 for how spread out they are.
@@ -11401,8 +11408,10 @@ def _sentiment_story(report, coverage: str, score, color, background, arrow, not
     return (
         "<div class='sentiment-card'>"
         f"<div class='sentiment-kicker'>{html.escape(note)}</div>"
+        "<div style='display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;'>"
         f"<div class='sentiment-score' style='background:{background};color:{color};'>"
         f"{arrow} {score:.0f}/100</div>"
+        f"{spread_html(report, score)}</div>"
         f"<div class='sentiment-coverage' style='color:{color};'>{html.escape(coverage)}</div>"
         f"<div class='sentiment-body'>{summary}</div>"
         f"{drivers_html}{sides}</div>"
