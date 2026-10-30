@@ -270,7 +270,7 @@ def test_watchlist_section_colours_and_text():
     subject, page, plain = digest.render_digest([], results, cfg(), "https://app")
     assert subject == "Angstrom daily summary: no new alerts"
     assert "Your watchlist today" in page and "&#9650; 2.3%" in page and "&#9660; 1.8%" in page
-    assert "#0f9d46" in page and "#c0392b" in page          # strong green and red for 75 and 25
+    assert "#15803d" in page and "#b91c1c" in page          # deep green and red bars for 75 and 25
     assert "- BTC: 67,250 (+2.3%) · score 75 · sentiment 64" in plain
     assert "Sent every day" in page
     _, page_off, _ = digest.render_digest([], results, cfg(digest_watchlist=False), "https://app")
@@ -293,8 +293,10 @@ def test_quiet_day_still_sends_the_watchlist_summary():
 
 
 def test_market_mood_badge_colours():
-    assert digest.market_mood_colour(70)[1] == "#0f9d46"
-    assert digest.market_mood_colour(50)[1] == "#fdebcf"
-    assert digest.market_mood_colour(44)[1] == "#fde2e0"
-    assert digest.market_mood_colour(30)[1] == "#c0392b"
-    assert digest.market_mood_colour(None)[1] == "#eef1f6"
+    from score_colours import STEPS
+    assert digest.market_mood_colour(75) == STEPS["strong_up"][:2]
+    assert digest.market_mood_colour(60) == STEPS["up"][:2]
+    assert digest.market_mood_colour(50) == STEPS["mixed"][:2]
+    assert digest.market_mood_colour(40) == STEPS["down"][:2]
+    assert digest.market_mood_colour(20) == STEPS["strong_down"][:2]
+    assert digest.market_mood_colour(None) == STEPS["none"][:2]

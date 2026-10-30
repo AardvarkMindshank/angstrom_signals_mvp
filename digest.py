@@ -13,6 +13,7 @@ from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 from alerts import BEARISH, BULLISH, HELD_BEARISH, HELD_BULLISH, asset_facts, facts_by_symbol, is_market_symbol, latch_symbol, logos_by_symbol, price_text
+from score_colours import score_tone
 from email_brand import asset_logo, list_row, render_email, section_title
 
 # A crossing can be resolved (the score moved back) before the digest goes out.
@@ -150,47 +151,20 @@ def _number(value):
     return number if number == number else None
 
 
-def score_colour(score, high=70.0, low=30.0) -> str:
-    """Strong green at or above the positive line, strong red at or below the negative one, softer near them,
-    amber in the neutral middle (above 45 and below 55)."""
-    if score is None:
-        return _GREY
-    if score >= high:
-        return _GREEN
-    if score >= 55:
-        return _GREEN_SOFT
-    if score <= low:
-        return _RED
-    if score <= 45:
-        return _RED_SOFT
-    return _AMBER
+def score_colour(score, high=None, low=None) -> str:
+    """Bar and stripe colour on the site's five-step scale (see score_colours)."""
+    return score_tone(score)[3]
 
 
 def _mood_colour(value) -> tuple[str, str]:
-    """(text, background) for a 0-100 sentiment reading."""
-    if value is None:
-        return _GREY, _GREY_BG
-    if value >= 60:
-        return _GREEN, _GREEN_BG
-    if value <= 40:
-        return _RED, _RED_BG
-    return _GREY, _GREY_BG
+    """(text, background) for a 0-100 reading's badge, on the site's five-step scale."""
+    fg, bg, _arrow, _bar = score_tone(value)
+    return fg, bg
 
 
-def market_mood_colour(value, high=65.0, low=35.0) -> tuple[str, str]:
-    """(text, background) for a market mood badge, on the same five steps as the score bars,
-    with strong colours at the market alert lines."""
-    if value is None:
-        return _GREY, _GREY_BG
-    if value >= high:
-        return "#ffffff", _GREEN
-    if value >= 55:
-        return "#166534", _GREEN_BG
-    if value <= low:
-        return "#ffffff", _RED
-    if value <= 45:
-        return "#9b2c22", _RED_BG
-    return "#8a4b00", "#fdebcf"
+def market_mood_colour(value, high=None, low=None) -> tuple[str, str]:
+    """Market mood badges use the same five steps as everything else."""
+    return _mood_colour(value)
 
 
 def _pill(text: str, colour: str, background: str) -> str:

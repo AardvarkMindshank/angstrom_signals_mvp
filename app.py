@@ -15,6 +15,7 @@ import threading
 import time
 
 import app_version
+from score_colours import score_tone, tone_js
 import traceback
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
@@ -2538,9 +2539,7 @@ export default function(component) {
   function streamTone(score) {
     const number = Number(score);
     if (!Number.isFinite(number)) return null;
-    if (number >= 53) return { bg: "#dcfce7", fg: "#15803d", arrow: "↑" };
-    if (number >= 47) return { bg: "#fef3c7", fg: "#b45309", arrow: "→" };
-    return { bg: "#fee2e2", fg: "#b91c1c", arrow: "↓" };
+""" + tone_js() + """
   }
 
   function streamFace(name, avatar) {
@@ -5680,14 +5679,8 @@ with tracked_expander("👥 My Groups", "my_groups", sidebar=True):
     my_groups_panel()
 
 def tone(score):
-    """Text color, badge background, arrow, and bar color for a score."""
-    if score is None or pd.isna(score):
-        return "#6b7280", "#f3f4f6", "—", "#6b7280"
-    if score >= 53:
-        return "#15803d", "#dcfce7", "↑", "#22c55e"
-    if score >= 47:
-        return "#b45309", "#fef3c7", "→", "#f59e0b"
-    return "#b91c1c", "#fee2e2", "↓", "#ef4444"
+    """Text color, badge background, arrow, and bar color for a score, on the five-step scale."""
+    return score_tone(score)
 
 
 def _sync_table_crowd(kind: str, asset_id: str, voice: dict) -> None:
@@ -6364,11 +6357,11 @@ tests it has not predicted what price did next.
 5. The arrow on the right edge opens **Social signals and chat**.
 """)
         bands = [
-            ("Strongly positive", "70+", "#15803d", "#dcfce7"),
-            ("Positive", "53–69", "#15803d", "#dcfce7"),
-            ("Mixed", "47–52", "#b45309", "#fef3c7"),
-            ("Negative", "30–46", "#b91c1c", "#fee2e2"),
-            ("Strongly negative", "below 30", "#b91c1c", "#fee2e2"),
+            ("Strongly positive", "70+", *score_tone(75)[:2]),
+            ("Positive", "53–69", *score_tone(60)[:2]),
+            ("Mixed", "47–52", *score_tone(50)[:2]),
+            ("Negative", "30–46", *score_tone(40)[:2]),
+            ("Strongly negative", "below 30", *score_tone(20)[:2]),
         ]
         band_cols = st.columns(len(bands))
         for column, (name, span, color, background) in zip(band_cols, bands):
@@ -6378,7 +6371,7 @@ tests it has not predicted what price did next.
                 f"<div style='font-size:1.6rem;font-weight:700;line-height:1.2;'>{span}</div></div>",
                 unsafe_allow_html=True,
             )
-        st.caption("The same green, amber and red are used for technical and sentiment scores everywhere.")
+        st.caption("The same five shades, from deep green to deep red, are used for technical and sentiment scores everywhere, including the emails.")
 
     with tab_scores:
         st.markdown("""
