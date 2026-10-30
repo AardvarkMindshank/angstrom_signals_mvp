@@ -9637,7 +9637,9 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, weig
             summary_html = ""
             if text:
                 summary_html = (
-                    "<div class='ang-copy' style='flex:1;min-width:0;'>"
+                    # Below about 220px of room the summary drops under the score instead of
+                    # being squeezed to one word per line (narrow columns and phones).
+                    "<div class='ang-copy' style='flex:1 1 220px;min-width:0;'>"
                     f"{html.escape(text)}</div>"
                 )
             crowd = (
@@ -9666,7 +9668,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, weig
                 "text-align:left;cursor:pointer;font:inherit;color:inherit;'>"
                 "<div class='ang-card'>"
                 f"<div class='ang-kicker' style='margin-bottom:8px;'>{safe_label}</div>"
-                "<div style='display:flex;align-items:flex-start;gap:16px;'>"
+                "<div style='display:flex;flex-wrap:wrap;align-items:flex-start;gap:10px 16px;'>"
                 f"<div style='flex:none;'>{badge}{status}</div>"
                 f"{summary_html}{crowd}</div></div></button>"
             )
