@@ -194,7 +194,7 @@ export default function(component) {
       ".ang-card{background:var(--ang-surface);color:var(--ang-text);border:1px solid var(--ang-border);border-radius:10px;padding:12px 16px;}",
       ".ang-kicker{font-size:.8rem;color:var(--ang-muted);margin-bottom:4px;}",
       // The social panel floats at the side; its empty holder in Quick Snapshot must not add a row gap.
-      ".st-key-social_host{margin-top:-1rem;}",
+      "[data-testid='stLayoutWrapper']:has(> .st-key-social_host){margin-top:-1rem;}",
       ".ang-copy{color:var(--ang-text);font-size:.95rem;line-height:1.4;}",
       ".ang-title{color:var(--ang-text);font-weight:600;}",
       ".ang-track{flex:1;background:var(--ang-track);border-radius:6px;height:14px;overflow:hidden;}",
