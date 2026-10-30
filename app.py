@@ -5795,10 +5795,16 @@ def notifications_panel() -> None:
                     asset_notes = [
                         note for note in filtered_notifs
                         if str(note.get("alert_type") or "") not in quiet_notes
-                        and notification_target(note.get("asset_symbol"))
+                        and (
+                            notification_target(note.get("asset_symbol"))
+                            or str(note.get("asset_symbol") or "").lower().startswith("market:")
+                        )
                     ]
                     if asset_notes:
-                        st.caption("Click an alert to highlight that asset and open it on the chart.")
+                        st.caption(
+                            "Click an alert to open it: an asset opens on the chart, "
+                            "a market alert opens that market's sentiment."
+                        )
                     for note in filtered_notifs:
                         name = html.escape(str(note.get("asset_name") or "Asset"))
                         message = html.escape(str(note.get("message") or ""))
@@ -5853,7 +5859,18 @@ def notifications_panel() -> None:
                             f"<div style='font-size:0.75rem;color:#6b7280;margin-top:2px;'>{created}</div></div>"
                         )
                         note_id = note.get("id") or name
-                        if target:
+                        market = str(note.get("asset_symbol") or "").strip().lower()
+                        if market in ("market:crypto", "market:stock"):
+                            # A market alert opens that market's sentiment section and jumps to it.
+                            pick_value = html.escape("mood|" + market.split(":", 1)[1], quote=True)
+                            card = (
+                                f"<button type='button' data-pick='{pick_value}' "
+                                "title='Open this market sentiment section' "
+                                "style='display:block;width:100%;margin:0;padding:0;border:none;"
+                                "background:transparent;text-align:left;cursor:pointer;font:inherit;color:inherit;'>"
+                                f"{card}</button>"
+                            )
+                        elif target:
                             kind_name, asset_id = target
                             pick_value = html.escape(f"{kind_name}|{asset_id}", quote=True)
                             card = (
