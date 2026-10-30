@@ -120,7 +120,7 @@ def send_alert_email(to_email: str, asset_name: str, message: str) -> bool:
         f"{safe_name} crossed an alert boundary",
         [
             "This email is sent once for that crossing. "
-            "It is sent again only after the score leaves the boundary and crosses it later.",
+            "It is sent again only after the score moves 10 points back from the boundary and then crosses it again.",
         ],
         callout=safe_message,
         tone=alert_tone(message),

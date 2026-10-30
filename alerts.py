@@ -2,8 +2,9 @@
 Shared alert rules for the dashboard and the background worker.
 
 An alert stays latched while the score remains past the threshold. It re-arms
-only after the score has moved 5 points back through that line, so a small
-bounce does not alert again. Reading or clearing the notification does not
+only after the score has moved 10 points back through that line, so a small
+bounce does not alert again. One indicator flipping can move the score by
+several points within a day, so a narrower gap let alerts repeat. Reading or clearing the notification does not
 release that latch. The background worker is the only writer.
 """
 
@@ -20,7 +21,7 @@ _HELD = {
     BEARISH: HELD_BEARISH,
 }
 # How far back through the line the score must travel before that alert can arm again.
-_REARM_POINTS = 5.0
+_REARM_POINTS = 10.0
 
 
 def latch_symbol(symbol: str) -> str:

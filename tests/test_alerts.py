@@ -32,25 +32,27 @@ def test_latched_alert_does_not_open_again():
 
 def test_small_bounce_does_not_release_latch():
     latched = {(latch_symbol("Crypto|btc"), BULLISH)}
-    # 66 is below 70 but not 5 points back through the line (65)
+    # 61 is below 70 but not 10 points back through the line (60)
     assert plan_alert_actions([row(66)], latched, 70, 30) == []
+    assert plan_alert_actions([row(61)], latched, 70, 30) == []
 
 
-def test_releases_latch_five_points_back():
+def test_releases_latch_ten_points_back():
     latched = {(latch_symbol("Crypto|btc"), BULLISH)}
-    actions = plan_alert_actions([row(65)], latched, 70, 30)
+    actions = plan_alert_actions([row(60)], latched, 70, 30)
     assert actions == [("resolve", latch_symbol("Crypto|btc"), BULLISH)]
 
 
-def test_bearish_latch_releases_five_points_above_line():
+def test_bearish_latch_releases_ten_points_above_line():
     latched = {(latch_symbol("Crypto|btc"), BEARISH)}
-    assert plan_alert_actions([row(34)], latched, 70, 30) == []
-    actions = plan_alert_actions([row(35)], latched, 70, 30)
+    assert plan_alert_actions([row(35)], latched, 70, 30) == []
+    assert plan_alert_actions([row(39)], latched, 70, 30) == []
+    actions = plan_alert_actions([row(40)], latched, 70, 30)
     assert actions == [("resolve", latch_symbol("Crypto|btc"), BEARISH)]
 
 
 def test_close_thresholds_clamp_rearm_point():
-    # thresholds only 4 apart: the re-arm line (51) is clamped up to the bearish line (52)
+    # thresholds only 4 apart: the re-arm line (46) is clamped up to the bearish line (52)
     latched = {(latch_symbol("Crypto|btc"), BULLISH)}
     assert plan_alert_actions([row(53)], latched, 56, 52) == []
     actions = plan_alert_actions([row(52)], latched, 56, 52)
