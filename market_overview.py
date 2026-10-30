@@ -16,7 +16,6 @@ import time
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
-import requests
 
 REFRESH_SECONDS = 15 * 60
 STALE_SECONDS = 60 * 60
@@ -111,28 +110,32 @@ def series_item(closes, unit: str) -> dict | None:
 
 
 def _yahoo_closes() -> dict[str, list[float]]:
+    """Daily closes for each symbol, one at a time (the same way the rest of the app reads Yahoo).
+    A symbol that fails is skipped."""
     import yfinance as yf
 
-    symbols = [spec[2] for spec in SPECS]
-    frame = yf.download(
-        symbols, period="3mo", interval="1d", group_by="ticker", auto_adjust=False,
-        progress=False, threads=False,
-    )
     out = {}
-    for symbol in symbols:
+    for _key, _label, symbol, *_rest in SPECS:
         try:
-            closes = frame[symbol]["Close"].dropna().tolist()
-        except Exception:
+            frame = yf.Ticker(symbol).history(period="3mo", interval="1d", auto_adjust=False)
+            closes = frame["Close"].dropna().tolist() if frame is not None and not frame.empty else []
+        except Exception as exc:
+            print(f"Market overview: {symbol} failed: {str(exc)[:100]}")
             continue
         if closes:
             out[symbol] = closes
     return out
 
 
-def _crypto_global() -> dict:
-    response = requests.get("https://api.coingecko.com/api/v3/global", timeout=15)
+def _get(url: str, **params):
+    from market_gauges import _session
+    response = _session().get(url, params=params or None, timeout=15)
     response.raise_for_status()
-    data = response.json().get("data") or {}
+    return response.json()
+
+
+def _crypto_global() -> dict:
+    data = _get("https://api.coingecko.com/api/v3/global").get("data") or {}
     return {
         "cap": _finite((data.get("total_market_cap") or {}).get("usd")),
         "cap_change": _finite(data.get("market_cap_change_percentage_24h_usd")),
@@ -141,9 +144,7 @@ def _crypto_global() -> dict:
 
 
 def _fear_greed() -> list[float]:
-    response = requests.get("https://api.alternative.me/fng/", params={"limit": SPARK_POINTS}, timeout=15)
-    response.raise_for_status()
-    rows = response.json().get("data") or []
+    rows = _get("https://api.alternative.me/fng/", limit=SPARK_POINTS).get("data") or []
     values = [_finite(row.get("value")) for row in rows]
     return [v for v in reversed(values) if v is not None]   # oldest first
 

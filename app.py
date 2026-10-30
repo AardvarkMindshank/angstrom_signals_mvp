@@ -8560,7 +8560,9 @@ def _fetch_overview_here() -> None:
     """The page's own fetch, used only while the worker's saved copy is missing or old."""
     try:
         import market_overview
-        _OVERVIEW["own"] = market_overview.fetch_overview()
+        fetched = market_overview.fetch_overview()
+        print(f"market overview fetched here: {len(fetched.get('items') or {})} readings")
+        _OVERVIEW["own"] = fetched
     except Exception as exc:
         print(f"market overview fetch failed: {exc}")
     finally:
@@ -8578,10 +8580,12 @@ def load_market_overview() -> dict | None:
         saved = market_overview.load_overview(supabase)
         if saved:
             _OVERVIEW["saved"] = saved
-    candidates = [c for c in (_OVERVIEW["saved"], _OVERVIEW["own"]) if c]
+    candidates = [c for c in (_OVERVIEW["saved"], _OVERVIEW["own"]) if c and c.get("items")]
     best = max(candidates, key=lambda c: float(c.get("fetched_at") or 0)) if candidates else None
     fresh = best and now - float(best.get("fetched_at") or 0) < market_overview.STALE_SECONDS
-    if not fresh and not _OVERVIEW["busy"] and now - _OVERVIEW["own_at"] > market_overview.REFRESH_SECONDS:
+    # With nothing to show, try again after two minutes rather than waiting the full 15.
+    wait = market_overview.REFRESH_SECONDS if best else 120
+    if not fresh and not _OVERVIEW["busy"] and now - _OVERVIEW["own_at"] > wait:
         _OVERVIEW["busy"] = True
         _background(_fetch_overview_here)
     return best
