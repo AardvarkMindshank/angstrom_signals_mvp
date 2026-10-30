@@ -10431,11 +10431,13 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, weig
             }
             panels = layout["panels"]
             row_of = {name: index + 2 for index, name in enumerate(panels)}
+            chart_height = 750 + 150 * (len(panels) - 2) if len(panels) > 2 else 750 - 100 * (2 - len(panels))
+            # About 48 px between panels: room for the dates under the price chart plus the next panel's title.
+            panel_gap = min(0.12, 48 / max(300, chart_height - 210))
             fig = make_subplots(
                 rows=1 + len(panels), cols=1,
                 shared_xaxes=True,
-                # A little more room under the price chart for its own row of dates.
-                vertical_spacing=0.06,
+                vertical_spacing=panel_gap,
                 row_heights=layout["heights"],
                 subplot_titles=tuple([f"{title} Price"] + [panel_titles[name] for name in panels]),
                 specs=[[{"secondary_y": True}]] + [[{}] for _ in panels],
@@ -10606,7 +10608,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, weig
                     pass
 
             fig.update_layout(
-                height=750 + 150 * (len(panels) - 2) if len(panels) > 2 else 750 - 100 * (2 - len(panels)),
+                height=chart_height,
                 xaxis_rangeslider_visible=False,
                 showlegend=True,
                 # The legend sits under the chart, in its own strip, so it never meets the toolbar
