@@ -844,8 +844,22 @@ export default function(component) {
       event.stopPropagation();
       button.blur();
       const pick = button.getAttribute("data-pick") || "";
+      const noteId = button.getAttribute("data-note") || "";
+      if (noteId) {
+        // Shown as read straight away; the server records it with this click.
+        button.removeAttribute("data-note");
+        const card = button.firstElementChild;
+        if (card) {
+          card.style.borderColor = "#e5e7eb";
+          if (card.firstElementChild) card.firstElementChild.style.fontWeight = "500";
+        }
+      }
+      const sendRead = () => {
+        if (noteId && window.__angstromPickAsset) window.__angstromPickAsset("picked", "read|" + noteId);
+      };
       if (pick.indexOf("mood|") === 0) {
         openAndScroll("market-mood-" + pick.split("|")[1]);
+        sendRead();
         return;
       }
       const parts = pick.split("|");
@@ -870,10 +884,11 @@ export default function(component) {
       ).some((el) => (el.getAttribute("data-pick") || "") === pick);
       if (already) {
         openAndScroll("interactive-chart");
+        sendRead();
         return;
       }
       if (button.hasAttribute("data-alert") && window.__angstromPickAsset) {
-        window.__angstromPickAsset("picked", pick);
+        window.__angstromPickAsset("picked", pick + (noteId ? "|note:" + noteId : ""));
         return;
       }
       sendPick(pick);
@@ -5740,34 +5755,54 @@ def notifications_panel() -> None:
             if not notifications_list:
                 st.caption("No alerts yet. When a watchlist asset crosses a threshold, it shows up here.")
             else:
-                f_col1, f_col2 = st.columns(2)
-                with f_col1:
-                    feed_filter = st.radio(
-                        "Filter",
-                        ["Unread", "All"],
-                        horizontal=True,
-                        label_visibility="collapsed",
-                        key="notif_filter_radio",
-                    )
-                with f_col2:
-                    if st.button("Mark read", key="mark_read_btn", use_container_width=True):
-                        try:
-                            supabase.table("user_notifications").update({"is_read": True}).eq("user_id", user_id).neq("alert_type", "group_invite").execute()
-                            _rerun_fragment()
-                        except Exception:
-                            st.error("Could not mark alerts as read.")
+                def _is_alert(note) -> bool:
+                    return str(note.get("alert_type") or "") != "group_invite"
 
-                filtered_notifs = (
-                    [
-                        note for note in notifications_list
-                        if not note.get("is_read", False) or note.get("alert_type") == "group_invite"
-                    ]
-                    if feed_filter == "Unread"
-                    else notifications_list
+                has_unread = any(_is_alert(n) and not n.get("is_read", False) for n in notifications_list)
+                has_read = any(_is_alert(n) and n.get("is_read", False) for n in notifications_list)
+                has_any = any(_is_alert(n) for n in notifications_list)
+
+                def _mark_all_read() -> None:
+                    (
+                        supabase.table("user_notifications")
+                        .update({"is_read": True})
+                        .eq("user_id", user_id)
+                        .neq("alert_type", "group_invite")
+                        .execute()
+                    )
+
+                # One row of icons. Group invites are never touched: they need Accept or Dismiss.
+                with st.container(horizontal=True, gap="small", key="alert_feed_tools"):
+                    read_all = st.button(
+                        "✅", key="alerts_read_all", disabled=not has_unread,
+                        help="Mark all as read",
+                    )
+                    clear_read = st.button(
+                        "🧹", key="alerts_clear_read", disabled=not has_read,
+                        help="Clear read alerts",
+                    )
+                    clear_all = st.button(
+                        "🗑️", key="alerts_clear_all", disabled=not has_any,
+                        help="Clear all alerts. Each one was already sent by email or in your digest.",
+                    )
+                if read_all or clear_read or clear_all:
+                    try:
+                        if read_all or clear_all:
+                            _mark_all_read()
+                        if clear_read or clear_all:
+                            dismiss_read_alerts(supabase, user_id)
+                        _rerun_fragment()
+                    except Exception as exc:
+                        st.error(f"Could not update your alerts: {exc}")
+
+                # Unread first, then newest first. Read alerts are shown faded.
+                filtered_notifs = sorted(
+                    notifications_list, key=lambda note: str(note.get("created_at") or ""), reverse=True
                 )
+                filtered_notifs.sort(key=lambda note: bool(note.get("is_read", False)) and _is_alert(note))
 
                 if not filtered_notifs:
-                    st.caption(f"No {feed_filter.lower()} notifications.")
+                    st.caption("No notifications.")
                 else:
                     crypto_list = prefs.get("crypto") or {}
                     stock_list = prefs.get("stock") or {}
@@ -5859,12 +5894,13 @@ def notifications_panel() -> None:
                             f"<div style='font-size:0.75rem;color:#6b7280;margin-top:2px;'>{created}</div></div>"
                         )
                         note_id = note.get("id") or name
+                        note_ref = html.escape(str(note.get("id") or "") if not note.get("is_read") else "", quote=True)
                         market = str(note.get("asset_symbol") or "").strip().lower()
                         if market in ("market:crypto", "market:stock"):
                             # A market alert opens that market's sentiment section and jumps to it.
                             pick_value = html.escape("mood|" + market.split(":", 1)[1], quote=True)
                             card = (
-                                f"<button type='button' data-pick='{pick_value}' "
+                                f"<button type='button' data-alert='1' data-note='{note_ref}' data-pick='{pick_value}' "
                                 "title='Open this market sentiment section' "
                                 "style='display:block;width:100%;margin:0;padding:0;border:none;"
                                 "background:transparent;text-align:left;cursor:pointer;font:inherit;color:inherit;'>"
@@ -5874,7 +5910,7 @@ def notifications_panel() -> None:
                             kind_name, asset_id = target
                             pick_value = html.escape(f"{kind_name}|{asset_id}", quote=True)
                             card = (
-                                f"<button type='button' data-alert='1' data-pick='{pick_value}' "
+                                f"<button type='button' data-alert='1' data-note='{note_ref}' data-pick='{pick_value}' "
                                 "style='display:block;width:100%;margin:0;padding:0;border:none;"
                                 "background:transparent;text-align:left;cursor:pointer;font:inherit;color:inherit;'>"
                                 f"{card}</button>"
@@ -5884,13 +5920,6 @@ def notifications_panel() -> None:
                             data=card,
                         )
 
-                    if st.button("🗑️ Clear Read Alerts", use_container_width=True, key="clear_read_btn"):
-                        try:
-                            dismiss_read_alerts(supabase, user_id)
-                            st.success("Cleared read alerts.")
-                            _rerun_fragment()
-                        except Exception as exc:
-                            st.error(f"Could not clear alerts: {exc}")
 
         with tracked_expander("Configure Alert Rules", "alert_rules"):
             st.caption(
@@ -11474,11 +11503,36 @@ _asset_pick = st.components.v2.component(
 )
 
 
+def _mark_clicked_alert_read(raw: str) -> str:
+    """Record a clicked alert as read. Returns the asset pick that came with it, or ""."""
+    note_id, pick = "", raw
+    if raw.startswith("read|"):
+        note_id, pick = raw.split("|", 1)[1], ""
+    elif "|note:" in raw:
+        pick, note_id = raw.rsplit("|note:", 1)
+    if note_id.isdigit():
+        try:
+            (
+                supabase.table("user_notifications")
+                .update({"is_read": True})
+                .eq("user_id", user_id)
+                .eq("id", int(note_id))
+                .execute()
+            )
+        except Exception:
+            pass
+    return pick
+
+
 def _take_alert_pick() -> None:
     """An alert click names an asset. This pass draws that chart. It does not run again."""
     reported = _asset_pick(key="alert_asset_pick", on_picked_change=lambda: None)
     raw = str(getattr(reported, "picked", "") or "")
     if "|" not in raw or st.session_state.get("_alert_pick_seen") == raw:
+        return
+    raw_full, raw = raw, _mark_clicked_alert_read(raw)
+    if not raw:
+        st.session_state["_alert_pick_seen"] = raw_full
         return
     kind_name, asset_id = raw.split("|")[:2]
     quiet = raw.endswith("|quiet")
@@ -11490,7 +11544,7 @@ def _take_alert_pick() -> None:
         return
     if asset_id not in chosen:
         return
-    st.session_state["_alert_pick_seen"] = raw
+    st.session_state["_alert_pick_seen"] = raw_full
     st.session_state.chart_pick = (kind_name, asset_id)
     st.session_state.chart_pick_from_row = True
     st.session_state.asset_type = kind_name
