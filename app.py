@@ -49,6 +49,13 @@ _POPOUT_MARK = "popout-tab"
 
 _RUN_STARTED = time.perf_counter()
 
+# Helper threads that read the database are not attached to a page, and Streamlit logs a
+# harmless "missing ScriptRunContext" warning for each one. Hide that so real errors stand out.
+import logging as _logging
+
+_logging.getLogger("streamlit.runtime.scriptrunner_utils.script_run_context").setLevel(_logging.ERROR)
+_logging.getLogger("streamlit.runtime.scriptrunner.script_run_context").setLevel(_logging.ERROR)
+
 st.set_page_config(
     page_title=(
         "angstrom signals - " + _POPOUT_VIEW.replace("_", " ")
@@ -7441,6 +7448,12 @@ def admin_panel() -> None:
         perf = st.session_state.get("_perf") or {}
         if perf:
             with st.expander("Page timing (last load of the dashboard)", expanded=False):
+                memory_now, memory_peak = _memory_mb()
+                if memory_now:
+                    st.write(
+                        f"Server memory now {memory_now:.0f} MB, peak {memory_peak:.0f} MB, "
+                        "of the 512 MB the Render plan allows (for every user together)."
+                    )
                 st.caption("Milliseconds spent on each step the last time the dashboard drew. Slowest first.")
                 for label, spent in sorted(perf.items(), key=lambda item: item[1], reverse=True):
                     st.write(f"{label}: {spent}" if "worked out" in label else f"{label}: {spent} ms")
@@ -7451,7 +7464,8 @@ def admin_panel() -> None:
                         "scores, chart and sections redrawing on their own after a click."
                     )
                     for run in reversed(runs):
-                        st.write(f"{run['when']} · {run['what']}: {run['ms']} ms")
+                        memory = f" · {run['mb']} MB" if run.get("mb") else ""
+                        st.write(f"{run['when']} · {run['what']}: {run['ms']} ms{memory}")
                 lacking = st.session_state.get("_logo_lacking") or []
                 st.write("Assets with no stored logo: " + (", ".join(lacking) if lacking else "none"))
 
@@ -8413,6 +8427,7 @@ def load_market_caps(crypto_ids, stock_tickers, nonce, shared=None):
 
 
 _BACKGROUND = ThreadPoolExecutor(max_workers=2)
+_LOOKUPS = ThreadPoolExecutor(max_workers=4, thread_name_prefix="lookup")
 _SCORING_NOW = 0
 _SCORING_LOCK = threading.Lock()
 
@@ -8516,13 +8531,14 @@ def _together(jobs: dict) -> dict:
         return {name: job() for name, job in jobs.items()}
     results = {}
     failed = []
-    with ThreadPoolExecutor(max_workers=min(8, len(jobs))) as pool:
-        futures = {name: pool.submit(job) for name, job in jobs.items()}
-        for name, future in futures.items():
-            try:
-                results[name] = future.result(timeout=60)
-            except Exception:
-                failed.append(name)
+    # One shared pool for every page and every redraw, so overlapping redraws cannot start
+    # dozens of lookups at once (each holding its own copy of the data in memory).
+    futures = {name: _LOOKUPS.submit(job) for name, job in jobs.items()}
+    for name, future in futures.items():
+        try:
+            results[name] = future.result(timeout=60)
+        except Exception:
+            failed.append(name)
     for name in failed:
         results[name] = jobs[name]()
     return results
@@ -9160,6 +9176,22 @@ def _draw_social_stream(stream_items, scope, *, popout: bool = False):
     )
 
 
+@st.fragment
+def _social_panel() -> None:
+    """The social panel redraws on its own. Saving its width, split, pin or filter, or posting
+    and voting, refreshes only the panel, not the scores, chart and every section."""
+    saved_scope = (prefs.get("settings") or {}).get("stream_asset")
+    scope = saved_scope if saved_scope in ("watchlist", "crypto", "stock") else ""
+    try:
+        stream_items = json.loads(st.session_state.get("social_stream") or "[]")
+    except (TypeError, json.JSONDecodeError):
+        stream_items = []
+    if not isinstance(stream_items, list):
+        stream_items = []
+    stream_state = _draw_social_stream(stream_items, scope)
+    _handle_stream_events(stream_state)
+
+
 def _handle_stream_events(stream_state) -> None:
     """Act on whatever the social panel reported this run. Shared by the page and the pop-out."""
     chosen_scope = stream_state.asset
@@ -9219,12 +9251,41 @@ def _record_run(what: str, started: float) -> None:
     """Keep the last 20 redraws (whole page or dashboard part) for the Page timing panel."""
     try:
         runs = st.session_state.setdefault("_perf_runs", [])
+        memory_now, _peak = _memory_mb()
         runs.append({
             "when": time.strftime("%H:%M:%S"),
             "what": what,
             "ms": round((time.perf_counter() - started) * 1000),
+            "mb": round(memory_now) if memory_now else None,
         })
         del runs[:-20]
+    except Exception:
+        pass
+
+
+def _memory_mb() -> tuple[float | None, float | None]:
+    """This server process's memory now and its peak, in MB (Linux only)."""
+    now = peak = None
+    try:
+        with open("/proc/self/status") as status:
+            for line in status:
+                if line.startswith("VmRSS:"):
+                    now = int(line.split()[1]) / 1024
+                elif line.startswith("VmHWM:"):
+                    peak = int(line.split()[1]) / 1024
+    except OSError:
+        pass
+    return now, peak
+
+
+def _give_back_memory() -> None:
+    """Return freed memory to the system. Without this, Python keeps it after a redraw."""
+    try:
+        import ctypes
+        import gc
+
+        gc.collect()
+        ctypes.CDLL("libc.so.6").malloc_trim(0)
     except Exception:
         pass
 
@@ -9236,6 +9297,9 @@ def render_dashboard(*args, **kwargs):
     try:
         _render_dashboard_body(*args, **kwargs)
     finally:
+        # The price frames this redraw used are not needed between redraws.
+        st.session_state.pop("_bar_run", None)
+        _give_back_memory()
         _record_run("dashboard", started)
 
 
@@ -9490,17 +9554,8 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, weig
         change_baseline, change_seen = _remember_score_visit(change_rows)
         with _timed("shared rows, crowd and comments"):
             _share_market_rows(crypto_watchlist, stock_watchlist, crypto_results, stock_results)
-        saved_scope = (prefs.get("settings") or {}).get("stream_asset")
-        scope = saved_scope if saved_scope in ("watchlist", "crypto", "stock") else ""
-        try:
-            stream_items = json.loads(st.session_state.get("social_stream") or "[]")
-        except (TypeError, json.JSONDecodeError):
-            stream_items = []
-        if not isinstance(stream_items, list):
-            stream_items = []
         if not _POPOUT_VIEW:
-            stream_state = _draw_social_stream(stream_items, scope)
-            _handle_stream_events(stream_state)
+            _social_panel()
 
         def get_top_bottom(results):
             valid = [row for row in results if row.get("score") is not None and not pd.isna(row.get("score"))]
