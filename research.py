@@ -425,6 +425,29 @@ def parity_check(frames: dict[str, pd.DataFrame], details: dict[str, pd.DataFram
     return {"window": window, "checked": checked, "max_difference": worst}
 
 
+def parity_all(frames: dict[str, pd.DataFrame], details: dict[str, pd.DataFrame], window: int,
+               date_from: pd.Timestamp, samples: int = 12) -> dict:
+    """Parity for EVERY asset at `samples` dates on or after date_from (the hold-out run's version)."""
+    from scoring import calculate_indicators, compute_score
+
+    worst, checked, per_asset = 0.0, 0, {}
+    for ticker, table in details.items():
+        frame = frames[ticker]
+        first = max(int(frame.index.searchsorted(date_from)), window - 1)
+        if first >= len(frame):
+            continue
+        a_worst = 0.0
+        for pos in np.unique(np.linspace(first, len(frame) - 1, samples).astype(int)):
+            date = frame.index[pos]
+            if date not in table.index or pd.isna(table.loc[date, "score"]):
+                continue
+            live = compute_score(calculate_indicators(frame.iloc[pos - window + 1: pos + 1]))["score"]
+            diff = abs(float(live) - float(table.loc[date, "score"]))
+            a_worst, worst, checked = max(a_worst, diff), max(worst, diff), checked + 1
+        per_asset[ticker] = a_worst
+    return {"window": window, "checked": checked, "max_difference": worst, "per_asset": per_asset}
+
+
 def regime_flags(frames: dict[str, pd.DataFrame], index: pd.Index, klass: str) -> pd.Series:
     """True on dates when the class benchmark (S&P 500 or Bitcoin) closes above its 200-day average."""
     bench = frames.get(BENCHMARKS[klass])
@@ -735,6 +758,255 @@ def format_primary(primary: dict) -> str:
     return "\n".join(lines) + "\n"
 
 
+
+# ----------------------------------------------------------------------------- frozen hold-out specification
+
+HOLDOUT_TAG = "holdout-spec-v1"
+
+# Everything the one hold-out run depends on. Changing any value changes HOLDOUT_SPEC_HASH, which is recorded
+# in the signed-off spec; the run prints it, so a later reader can check nothing moved.
+HOLDOUT_SPEC = {
+    "tag": HOLDOUT_TAG,
+    "holdout_start": "2024-10-30",
+    "label_bars_embargo": LABEL_BARS,
+    "excluded_assets": list(ALREADY_SEEN),
+    "family_alpha": 0.05,
+    "bootstrap_runs": 10_000,
+    "seed": 20261031,
+    "primary": {
+        "B": {"class": "crypto", "statistic": "spread", "signal": "Trend", "horizon": 14, "direction": 1,
+              "kappa": 1.0, "mme": 0.50, "min_assets": 8},
+        "C1": {"class": "stock", "statistic": "forecast_gain", "candidate": "x_atr_pct",
+               "benchmark": "trailing 14-day", "horizon": 7, "direction": 1, "kappa": 1.2, "mme": 0.02},
+        "C2": {"class": "crypto", "statistic": "forecast_gain", "candidate": "x_atr_pct",
+               "benchmark": "trailing 14-day", "horizon": 7, "direction": 1, "kappa": 1.2, "mme": 0.02},
+    },
+    "dropped_at_development_gate": ["A1", "A2"],
+    "portfolio": {"period": 14, "select": "third", "cost_base": 0.002, "cost_stress": 0.005,
+                  "benchmarks": ["equal weight (same code, schedule and costs)", "BTC-USD bought and held"]},
+    "atr_k": {"stock": {"0.5": 0.45468100491019137, "0.8": 0.9062441049861204},
+              "crypto": {"0.5": 0.3895146382322925, "0.8": 0.8628443119905411}},
+    "calibration_tolerance": 0.05,
+    "parity": {"windows": [90, 200, 365], "must_pass": [200, 365], "tolerance_points": 0.5},
+    "min_history_days_for_claims": 200,
+    # v2 development estimates (research/2026-10-31_1043_limit0_v2). The run recomputes them first and stops
+    # if they differ: that catches a changed environment, changed code or a scoring look-ahead.
+    "expected_development": {"B": 1.4972999540605965, "C1": 0.06925556922726794, "C2": 0.010590860392287885},
+    "reproduction_tolerance": 1e-9,
+}
+
+
+def spec_hash(spec: dict = HOLDOUT_SPEC) -> str:
+    import hashlib
+
+    return hashlib.sha256(json.dumps(spec, sort_keys=True).encode()).hexdigest()
+
+
+HOLDOUT_SPEC_HASH = spec_hash()
+
+
+def _members(details, classes, klass):
+    return [t for t in details if classes[t] == klass and t not in ALREADY_SEEN]
+
+
+def primary_rows(frames, details, classes, key, cfg, signal_from=None, label_end=None):
+    """Numerator and denominator rows of one primary statistic, using signal dates >= signal_from and
+    prices <= label_end (both optional)."""
+    import research_stats as rst
+
+    m = _members(details, classes, cfg["class"])
+    closes = pd.DataFrame({t: frames[t]["close"] for t in m})
+    if label_end is not None:
+        closes = closes.loc[closes.index <= label_end]
+    h = cfg["horizon"]
+    if cfg["statistic"] == "spread":
+        sig = pd.DataFrame({t: details[t][cfg["signal"]] for t in m}).reindex(closes.index)
+        fwd = rst.forward_returns_table(closes, h)
+        if signal_from is not None:
+            sig, fwd = sig.loc[sig.index >= signal_from], fwd.loc[fwd.index >= signal_from]
+        num, den, _ = rst.spread_rows(sig, fwd, cfg["min_assets"])
+        return num, den
+    atr = pd.DataFrame({t: details[t][cfg["candidate"]] for t in m}).reindex(closes.index)
+    bench = pd.DataFrame({c: rst.trailing_move_size(closes[c], 14) for c in closes.columns})
+    target = pd.DataFrame({c: rst.move_size(closes[c], h) for c in closes.columns})
+    if signal_from is not None:
+        keep = atr.index >= signal_from
+        atr, bench, target = atr.loc[keep], bench.loc[keep], target.loc[keep]
+    return rst.forecast_gain_rows(atr, bench, target)
+
+
+def reproduce_development(dev_frames, dev_details, classes) -> dict:
+    """Recompute the frozen development estimates. Any difference stops a hold-out run."""
+    out, ok = {}, True
+    for key, cfg in HOLDOUT_SPEC["primary"].items():
+        num, den = primary_rows(dev_frames, dev_details, classes, key, cfg)
+        est = float(num.sum() / den.sum())
+        expected = HOLDOUT_SPEC["expected_development"][key]
+        same = abs(est - expected) <= HOLDOUT_SPEC["reproduction_tolerance"] * max(1.0, abs(expected))
+        ok &= same
+        out[key] = {"recomputed": est, "frozen": expected, "match": same}
+    out["all_match"] = ok
+    return out
+
+
+def evaluate_window(frames, details, classes, window_start, label_end, runs=None) -> dict:
+    """The frozen primary tests, Holm, outcomes and the pre-set exploratory reports for one evaluation window.
+    Used for the real hold-out and, unchanged, for the dry run on a pseudo window inside development."""
+    import research_stats as rst
+
+    runs = runs or HOLDOUT_SPEC["bootstrap_runs"]
+    seed = HOLDOUT_SPEC["seed"]
+    res = {"window_start": str(window_start.date()), "label_end": str(pd.Timestamp(label_end).date()),
+           "first_eligible_signal": {}, "primary": {}}
+    for klass in ("stock", "crypto"):
+        m = _members(details, classes, klass)
+        idx = frames[m[0]].index
+        res["first_eligible_signal"][klass] = str(
+            rst.first_eligible_signal(idx, window_start, HOLDOUT_SPEC["label_bars_embargo"]).date())
+    for key, cfg in HOLDOUT_SPEC["primary"].items():
+        first = pd.Timestamp(res["first_eligible_signal"][cfg["class"]])
+        num, den = primary_rows(frames, details, classes, key, cfg, signal_from=first, label_end=label_end)
+        res["primary"][key] = rst.studentised_test(num, den, cfg["horizon"], cfg["kappa"], cfg["direction"],
+                                                   cfg["mme"], runs=runs, seed=seed)
+    passed = rst.holm({k: v.get("p_value") for k, v in res["primary"].items()}, HOLDOUT_SPEC["family_alpha"])
+    for key, cfg in HOLDOUT_SPEC["primary"].items():
+        res["primary"][key]["holm_passed"] = passed[key]
+        res["primary"][key]["outcome"] = rst.outcome(res["primary"][key], passed[key], cfg["mme"])
+
+    # Exploratory, pre-set: long-only crypto against equal weight and Bitcoin; spread decomposition;
+    # calibration coverage with the frozen k. No p-values.
+    m = _members(details, classes, "crypto")
+    first = pd.Timestamp(res["first_eligible_signal"]["crypto"])
+    cl = pd.DataFrame({t: frames[t]["close"] for t in m})
+    cl = cl.loc[(cl.index >= first) & (cl.index <= label_end)]
+    sig = pd.DataFrame({t: details[t]["Trend"] for t in m}).reindex(cl.index)
+    pf = HOLDOUT_SPEC["portfolio"]
+    portfolio = {}
+    btc = frames.get("BTC-USD")
+    for label, cost in (("base 0.20%", pf["cost_base"]), ("stress 0.50%", pf["cost_stress"])):
+        strat = rst.long_only_portfolio(sig, cl, pf["select"], pf["period"], cost)
+        bench = rst.long_only_portfolio(sig, cl, None, pf["period"], cost)
+        extra = {"Bitcoin bought and held": rst.buy_and_hold(btc["close"], cl.index, cost)} if btc is not None else {}
+        portfolio[label] = rst.portfolio_summary(strat, bench, 365, skip=pf["period"] + 1, period=pf["period"],
+                                                 runs=min(runs, 2000), extra=extra)
+    res["long_only"] = portfolio
+    calib = {}
+    for klass in ("stock", "crypto"):
+        mm = _members(details, classes, klass)
+        f0 = pd.Timestamp(res["first_eligible_signal"][klass])
+        c2 = pd.DataFrame({t: frames[t]["close"] for t in mm})
+        c2 = c2.loc[(c2.index >= f0) & (c2.index <= label_end)]
+        atr = pd.DataFrame({t: details[t]["x_atr_pct"] for t in mm}).reindex(c2.index)
+        k = {float(q): v for q, v in HOLDOUT_SPEC["atr_k"][klass].items()}
+        calib[klass] = rst.coverage(atr, c2, 7, k)
+    res["calibration_coverage"] = calib
+    return res
+
+
+def crypto_concentration(dev_frames, dev_details, classes) -> dict:
+    """Robustness diagnostic for B on DEVELOPMENT data only: is the Trend ranking edge carried by a few coins
+    or a few periods? Descriptive; it does not change the primary test."""
+    import research_stats as rst
+
+    cfg = HOLDOUT_SPEC["primary"]["B"]
+    m = _members(dev_details, classes, "crypto")
+    cl = pd.DataFrame({t: dev_frames[t]["close"] for t in m})
+    sig = pd.DataFrame({t: dev_details[t]["Trend"] for t in m}).reindex(cl.index)
+    fwd = rst.forward_returns_table(cl, cfg["horizon"])
+
+    def spread(cols, mask=None):
+        s, f = sig[cols], fwd[cols]
+        if mask is not None:
+            s, f = s.loc[mask], f.loc[mask]
+        num, den, _ = rst.spread_rows(s, f, cfg["min_assets"])
+        if len(num) < 40:
+            return {"estimate": None, "dates": int(len(num))}
+        t = rst.studentised_test(num, den, cfg["horizon"], cfg["kappa"], 1, runs=2000)
+        return {"estimate": t["estimate"], "ci95": t["ci95"], "dates": t["dates"]}
+
+    out = {"all": spread(m)}
+    w = rst.spread_weights(sig.where(fwd.notna()), cfg["min_assets"])
+    live = w.abs().sum(axis=1) > 0
+    contrib = (w * fwd.fillna(0.0)).loc[live].sum() / live.sum()
+    out["contribution_by_coin_pct"] = contrib.sort_values(ascending=False).to_dict()
+    out["days_in_top_third"] = (w > 0).loc[live].mean().to_dict()
+    out["days_in_bottom_third"] = (w < 0).loc[live].mean().to_dict()
+    out["leave_one_out"] = {c: spread([x for x in m if x != c])["estimate"] for c in m}
+    top3 = list(contrib.abs().sort_values(ascending=False).index[:3])
+    out["without_top3_contributors"] = {"coins": top3, **spread([x for x in m if x not in top3])}
+    out["by_year"] = {int(y): spread(m, sig.index.year == y) for y in sorted(set(sig.index.year))}
+    regime = regime_flags(dev_frames, sig.index, "crypto")
+    out["by_bitcoin_regime"] = {"above 200-day": spread(m, regime == 1), "below 200-day": spread(m, regime == 0)}
+    half = sig.index[live][len(sig.index[live]) // 2]
+    out["by_half"] = {"first half": spread(m, sig.index < half), "second half": spread(m, sig.index >= half)}
+    out["coins_with_data_by_year"] = {int(y): int(sig.loc[sig.index.year == y].notna().any().sum())
+                                      for y in sorted(set(sig.index.year))}
+    return out
+
+
+def format_concentration(c: dict) -> str:
+    def cell(x):
+        if not x or x.get("estimate") is None:
+            return f"too few ({x.get('dates', 0)} dates)" if x else "too few"
+        lo, hi = x["ci95"]
+        return f"{x['estimate']:+.2f}% [{lo:+.2f}, {hi:+.2f}], {x['dates']} dates"
+
+    lines = ["# Crypto Trend ranking: concentration diagnostic (development data only)", "",
+             "Descriptive robustness check of claim B (14-day top third minus bottom third, %). 95% intervals, "
+             "no p-values. It does not change the primary test.", "", f"All coins: {cell(c['all'])}", "",
+             "## By calendar year", "", "| Year | Coins with data | Spread |", "| --- | --- | --- |"]
+    for y, v in c["by_year"].items():
+        lines.append(f"| {y} | {c['coins_with_data_by_year'].get(y, 0)} | {cell(v)} |")
+    lines += ["", "## By Bitcoin regime and by half", ""]
+    for name, v in {**c["by_bitcoin_regime"], **c["by_half"]}.items():
+        lines.append(f"- {name}: {cell(v)}")
+    lines += ["", "## By coin", "",
+              "Contribution = the coin's average share of the daily spread (sums to the total). Leave-one-out = "
+              "the spread with that coin removed from the universe.", "",
+              "| Coin | Contribution (%) | Days in top third | Days in bottom third | Spread without it |",
+              "| --- | --- | --- | --- | --- |"]
+    for coin, v in c["contribution_by_coin_pct"].items():
+        loo = c["leave_one_out"].get(coin)
+        lines.append(f"| {coin} | {v:+.3f} | {c['days_in_top_third'][coin]:.0%} | "
+                     f"{c['days_in_bottom_third'][coin]:.0%} | {loo:+.2f}% |" if loo is not None else
+                     f"| {coin} | {v:+.3f} | - | - | - |")
+    t = c["without_top3_contributors"]
+    lines += ["", f"Without the three largest contributors ({', '.join(t['coins'])}): {cell(t)}"]
+    return "\n".join(lines) + "\n"
+
+
+def format_evaluation(res: dict, title: str) -> str:
+    lines = [f"# {title}", "", f"Spec hash {HOLDOUT_SPEC_HASH} (tag {HOLDOUT_TAG}).",
+             f"Window from {res['window_start']}; first eligible signals: stocks {res['first_eligible_signal']['stock']}, "
+             f"crypto {res['first_eligible_signal']['crypto']}; prices up to {res['label_end']}.", "",
+             "## Primary tests (Holm across all three)", "",
+             "| Test | Estimate [95% CI] | One-sided 95% bound | p | p vs minimum | Holm | Outcome |",
+             "| --- | --- | --- | --- | --- | --- | --- |"]
+    for key, t in res["primary"].items():
+        if t.get("estimate") is None:
+            lines.append(f"| {key} | too few | | | | | {t.get('outcome')} |")
+            continue
+        lo, hi = t["ci95"]
+        lines.append(f"| {key} | {t['estimate']:+.4f} [{lo:+.4f}, {hi:+.4f}] | {t['one_sided_bound95']:+.4f} | "
+                     f"{t['p_value']:.5f} | {t.get('p_vs_mme', float('nan')):.4f} | "
+                     f"{'pass' if t['holm_passed'] else 'fail'} | {t['outcome']} |")
+    lines += ["", "## Exploratory: long-only crypto (not a test; ranking significance is not investable proof)", ""]
+    for label, s in res["long_only"].items():
+        lo, hi = s["band95"]
+        lines.append(f"- {label}: top third {s['strategy_pct_a_year']:+.1f}% a year (max drawdown "
+                     f"{s['strategy_max_drawdown_pct']:.0f}%, one-way turnover {s['strategy_one_way_turnover_a_year']:.1f}x "
+                     f"a year); equal weight {s['benchmark_pct_a_year']:+.1f}% (max drawdown "
+                     f"{s['benchmark_max_drawdown_pct']:.0f}%); excess {s['excess_pct_a_year']:+.1f}% [{lo:+.1f}, {hi:+.1f}]")
+        for name, a in s["against"].items():
+            lo, hi = a["band95"]
+            lines.append(f"  - against {name}: {a['benchmark_pct_a_year']:+.1f}% a year (max drawdown "
+                         f"{a['benchmark_max_drawdown_pct']:.0f}%); excess {a['excess_pct_a_year']:+.1f}% [{lo:+.1f}, {hi:+.1f}]")
+    lines += ["", "## Exploratory: expected-move calibration with the frozen k (target 50% / 80%, tolerance 5 points)", ""]
+    for klass, cov in res["calibration_coverage"].items():
+        lines.append(f"- {klass}: {cov.get(0.5, float('nan')):.1%} / {cov.get(0.8, float('nan')):.1%}")
+    return "\n".join(lines) + "\n"
+
+
 # ----------------------------------------------------------------------------- report writing
 
 def _fmt(value, digits=3):
@@ -841,6 +1113,83 @@ def format_report(report: dict, parity: dict | None = None) -> str:
     return "\n".join(lines) + "\n"
 
 
+# ----------------------------------------------------------------------------- preflight and hold-out runs
+
+DRY_RUN_START = pd.Timestamp("2022-10-30")  # pseudo window inside development for the dry run
+
+
+def _write(out: Path, name: str, text: str) -> None:
+    out.mkdir(parents=True, exist_ok=True)
+    (out / name).write_text(text, encoding="utf-8")
+
+
+def run_preflight(prices: str, out_dir: str) -> int:
+    """Development data only. Never reads a bar on or after the hold-out start after loading."""
+    out = Path(out_dir)
+    frames = load_cache(prices)
+    start = checked_start(frames)
+    frames = development_frames(frames, start)
+    details = score_all(frames)
+    classes = {t: asset_class(t) for t in details}
+    parity = {w: parity_check(frames, details, window=w) for w in PARITY_WINDOWS}
+    repro = reproduce_development(frames, details, classes)
+    conc = crypto_concentration(frames, details, classes)
+    dry = evaluate_window(frames, details, classes, DRY_RUN_START, max(f.index.max() for f in frames.values()))
+    report = {"spec_hash": HOLDOUT_SPEC_HASH, "parity": parity, "reproduction": repro,
+              "concentration": conc, "dry_run": dry}
+    text = [f"# Preflight (development data only)", "", f"Spec hash {HOLDOUT_SPEC_HASH}.", "",
+            "## Reproduction of the frozen v2 development estimates", ""]
+    for k, v in repro.items():
+        if k != "all_match":
+            text.append(f"- {k}: recomputed {v['recomputed']!r}, frozen {v['frozen']!r}, match {v['match']}")
+    text.append(f"- all match: {repro['all_match']}")
+    text += ["", "## Parity (development dates)", ""]
+    text += [f"- {w} bars: largest difference {v['max_difference']:.2f} over {v['checked']} days" for w, v in parity.items()]
+    _write(out, "preflight.md", "\n".join(text) + "\n\n" + format_concentration(conc) + "\n" +
+           format_evaluation(dry, "DRY RUN on a pseudo window inside development (2022-10-30 to the boundary)"))
+    _write(out, "preflight.json", json.dumps(report, indent=1, default=str))
+    print((out / "preflight.md").read_text())
+    return 0 if repro["all_match"] else 3
+
+
+def run_holdout(prices: str, out_dir: str, unlock: str, expect_hash: str) -> int:
+    """The single hold-out evaluation. Refuses unless every guard holds."""
+    import os
+
+    problems = []
+    if unlock != HOLDOUT_TAG:
+        problems.append(f"--unlock must be {HOLDOUT_TAG}")
+    if expect_hash != HOLDOUT_SPEC_HASH:
+        problems.append(f"spec hash is {HOLDOUT_SPEC_HASH}, signed-off hash given was {expect_hash}")
+    if os.environ.get("GITHUB_REF_TYPE") != "tag" or os.environ.get("GITHUB_REF_NAME") != HOLDOUT_TAG:
+        problems.append(f"must run from the git tag {HOLDOUT_TAG} in GitHub Actions")
+    if problems:
+        raise SystemExit("Hold-out refused: " + "; ".join(problems))
+    out = Path(out_dir)
+    frames = load_cache(prices)
+    start = checked_start(frames)
+    details = score_all(frames)
+    classes = {t: asset_class(t) for t in details}
+    parity = {w: parity_all(frames, details, w, start) for w in HOLDOUT_SPEC["parity"]["windows"]}
+    dev_frames = development_frames(frames, start)
+    dev_details = {t: development_view(d, start) for t, d in details.items()}
+    repro = reproduce_development(dev_frames, dev_details, classes)
+    parity_ok = all(parity[w]["max_difference"] <= HOLDOUT_SPEC["parity"]["tolerance_points"]
+                    for w in HOLDOUT_SPEC["parity"]["must_pass"])
+    if not (parity_ok and repro["all_match"]):
+        _write(out, "holdout_aborted.json", json.dumps({"parity": parity, "reproduction": repro}, indent=1, default=str))
+        print("ABORTED before any hold-out statistic: parity or reproduction failed. No results produced.")
+        return 4
+    label_end = max(f.index.max() for f in frames.values())
+    res = evaluate_window(frames, details, classes, start, label_end)
+    report = {"spec_hash": HOLDOUT_SPEC_HASH, "spec": HOLDOUT_SPEC, "parity": parity, "reproduction": repro,
+              "evaluation": res, "generated_at": datetime.now(timezone.utc).isoformat()}
+    _write(out, "holdout.md", format_evaluation(res, "HOLD-OUT evaluation (single run)"))
+    _write(out, "holdout.json", json.dumps(report, indent=1, default=str))
+    print((out / "holdout.md").read_text())
+    return 0
+
+
 # ----------------------------------------------------------------------------- command line
 
 def main(argv=None) -> int:
@@ -853,7 +1202,20 @@ def main(argv=None) -> int:
     run.add_argument("--prices", required=True)
     run.add_argument("--out", required=True)
     run.add_argument("--limit", type=int, default=0, help="only this many assets per class (a quick check)")
+    pre = sub.add_parser("preflight", help="development only: reproduce v2, crypto diagnostic, dry run")
+    pre.add_argument("--prices", required=True)
+    pre.add_argument("--out", required=True)
+    hold = sub.add_parser("holdout", help="THE one hold-out evaluation (guarded)")
+    hold.add_argument("--prices", required=True)
+    hold.add_argument("--out", required=True)
+    hold.add_argument("--unlock", required=True)
+    hold.add_argument("--expect-hash", required=True)
     args = parser.parse_args(argv)
+
+    if args.command == "preflight":
+        return run_preflight(args.prices, args.out)
+    if args.command == "holdout":
+        return run_holdout(args.prices, args.out, args.unlock, args.expect_hash)
 
     if args.command == "cache":
         manifest = download_universe(args.out, args.years)

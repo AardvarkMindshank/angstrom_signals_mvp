@@ -357,8 +357,23 @@ def long_only_portfolio(signal: pd.DataFrame, closes: pd.DataFrame, top: int | s
     }
 
 
+def buy_and_hold(close: pd.Series, index: pd.Index, cost_per_side: float = 0.002, lag: int = LAG) -> dict:
+    """One asset bought at the close `lag` bars after the first date of `index`, then held. One purchase cost,
+    no sale (it is still held at the end). Same output shape as long_only_portfolio."""
+    px = close.reindex(index)
+    r = px.pct_change().fillna(0.0).to_numpy()
+    net = np.zeros(len(index))
+    for d in range(lag + 1, len(index)):
+        net[d] = r[d]
+    if len(index) > lag:
+        net[lag] = -cost_per_side            # bought at close `lag`
+    series = pd.Series(net, index=index)
+    return {"net": series, "gross": series.where(series.index != index[min(lag, len(index) - 1)], 0.0),
+            "mean_traded_per_rebalance": 0.0, "rebalances": 1}
+
+
 def portfolio_summary(strategy: dict, benchmark: dict, periods_per_year: int = 365, horizon_block: int = 28,
-                      runs: int = 2000, skip: int = 15) -> dict:
+                      runs: int = 2000, skip: int = 15, period: int = 14, extra: dict | None = None) -> dict:
     """Net excess return a year (strategy minus benchmark), with a block-bootstrap band, plus drawdowns.
     The first `skip` days are left out: tranches are still buying in and partly hold cash."""
     strategy = {**strategy, "net": strategy["net"].iloc[skip:]}
@@ -382,7 +397,22 @@ def portfolio_summary(strategy: dict, benchmark: dict, periods_per_year: int = 3
         "benchmark_max_drawdown_pct": drawdown(benchmark["net"]),
         "strategy_traded_per_rebalance": strategy["mean_traded_per_rebalance"],
         "benchmark_traded_per_rebalance": benchmark["mean_traded_per_rebalance"],
+        # one-way turnover a year: half the traded value per rebalance x rebalances a year of the whole book
+        "strategy_one_way_turnover_a_year": (strategy["mean_traded_per_rebalance"] or 0) / 2 * periods_per_year / period,
+        "benchmark_one_way_turnover_a_year": (benchmark["mean_traded_per_rebalance"] or 0) / 2 * periods_per_year / period,
+        "against": {name: _against(strategy["net"], other["net"].iloc[skip:], periods_per_year, horizon_block, runs,
+                                   per_year, drawdown) for name, other in (extra or {}).items()},
     }
+
+
+def _against(strategy_net, other_net, periods_per_year, block, runs, per_year, drawdown) -> dict:
+    """The strategy against another benchmark (e.g. Bitcoin held throughout), same dates."""
+    other_net = other_net.reindex(strategy_net.index).fillna(0.0)
+    excess = strategy_net - other_net
+    draws = block_draws(excess.to_numpy(), np.ones(len(excess)), block, runs) * periods_per_year * 100
+    return {"excess_pct_a_year": float(excess.mean() * periods_per_year * 100),
+            "band95": (float(np.percentile(draws, 2.5)), float(np.percentile(draws, 97.5))),
+            "benchmark_pct_a_year": per_year(other_net), "benchmark_max_drawdown_pct": drawdown(other_net)}
 
 
 # ----------------------------------------------------------------------------- expected-move ranges

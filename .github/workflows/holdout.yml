@@ -1,0 +1,128 @@
+name: Hold-out
+
+# Two modes, started by hand from the Actions tab.
+#  preflight: DEVELOPMENT DATA ONLY. Reproduces the frozen v2 development numbers, runs the crypto
+#             concentration diagnostic and a dry run of the hold-out code on a window inside development,
+#             and records the exact package versions. Safe to run any number of times.
+#  holdout:   THE single hold-out evaluation. Runs only from the tag holdout-spec-v1, only with the typed
+#             confirmation and the signed-off spec hash, only if no hold-out result exists yet, and only
+#             with the locked package versions. Results are saved once and never overwritten.
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: preflight (development only) or holdout (the one real run)
+        required: true
+        default: preflight
+        type: choice
+        options: [preflight, holdout]
+      confirm:
+        description: For holdout only, type exactly  RUN HOLDOUT holdout-spec-v1
+        required: false
+        default: ""
+      spec_hash:
+        description: For holdout only, the spec hash recorded in the signed-off spec
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+concurrency:
+  group: holdout
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    if: inputs.mode == 'preflight'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install scipy
+      - name: Get the frozen prices
+        run: |
+          git fetch --depth=1 origin reports
+          git checkout FETCH_HEAD -- data/prices
+          mv data/prices prices
+          (cd prices && sha256sum *.csv.gz manifest.json) > price_checksums.txt
+      - name: Preflight (development data only)
+        run: |
+          python research.py preflight --prices prices --out out
+          python --version > out/environment.txt
+          pip freeze >> out/environment.txt
+          cp price_checksums.txt out/
+          (cd out && sha256sum * > sha256sums.txt)
+          cat out/preflight.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Save to the reports branch
+        if: always()
+        run: |
+          if [ -d out ]; then
+            bash .github/scripts/save_to_reports.sh "research/$(date -u +%Y-%m-%d_%H%M)_preflight" out/*
+          fi
+
+  holdout:
+    if: >-
+      inputs.mode == 'holdout' &&
+      github.ref_type == 'tag' && github.ref_name == 'holdout-spec-v1' &&
+      inputs.confirm == 'RUN HOLDOUT holdout-spec-v1'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Refuse if a hold-out result already exists
+        run: |
+          git fetch --depth=1 origin reports
+          if git cat-file -e FETCH_HEAD:holdout/holdout-spec-v1/holdout.json 2>/dev/null; then
+            echo "A hold-out result already exists on the reports branch. The hold-out runs once." && exit 1
+          fi
+      - name: Install the locked environment
+        run: |
+          test -f requirements-research.lock || { echo "requirements-research.lock is missing"; exit 1; }
+          python -m pip install --upgrade pip
+          pip install --no-deps -r requirements-research.lock
+      - name: Get the frozen prices and check them
+        run: |
+          git checkout FETCH_HEAD -- data/prices
+          mv data/prices prices
+          (cd prices && sha256sum -c ../price_checksums.lock)
+      - name: The hold-out evaluation (single run)
+        env:
+          SPEC_HASH: ${{ inputs.spec_hash }}
+        run: |
+          python research.py holdout --prices prices --out out --unlock holdout-spec-v1 --expect-hash "$SPEC_HASH"
+      - name: Record and fingerprint
+        if: always()
+        run: |
+          mkdir -p out
+          git rev-parse HEAD > out/code_commit.txt
+          python --version > out/environment.txt && pip freeze >> out/environment.txt
+          (cd out && sha256sum * > sha256sums.txt)
+          cat out/sha256sums.txt >> "$GITHUB_STEP_SUMMARY"
+          if [ -f out/holdout.md ]; then cat out/holdout.md >> "$GITHUB_STEP_SUMMARY"; fi
+      - name: Keep a copy with the run
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: holdout-results
+          path: out/
+          retention-days: 90
+      - name: Save once to the reports branch
+        if: always()
+        run: |
+          if [ -f out/holdout.json ]; then
+            bash .github/scripts/save_to_reports.sh "holdout/holdout-spec-v1" out/*
+          else
+            # stopped before any hold-out statistic (guards, parity or reproduction): keep the record apart
+            bash .github/scripts/save_to_reports.sh "holdout-aborted/$(date -u +%Y-%m-%d_%H%M)" out/*
+          fi
