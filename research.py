@@ -152,10 +152,26 @@ def download_universe(out_dir: str, years: int = 10, pause: float = 1.0) -> dict
     return manifest
 
 
-def load_cache(prices_dir: str) -> dict[str, pd.DataFrame]:
+def load_cache(prices_dir: str, before: pd.Timestamp | None = None) -> dict[str, pd.DataFrame]:
+    """Every cached ticker. With `before`, rows on or after that date are dropped as each file is read,
+    so they never reach the rest of the program."""
     folder = Path(prices_dir)
     manifest = json.loads((folder / "manifest.json").read_text(encoding="utf-8"))
-    return {ticker: load_frame(folder / info["file"]) for ticker, info in manifest["files"].items()}
+    out = {}
+    for ticker, info in manifest["files"].items():
+        frame = load_frame(folder / info["file"])
+        out[ticker] = frame.loc[frame.index < before] if before is not None else frame
+    return out
+
+
+def checked_start_from_manifest(prices_dir: str) -> pd.Timestamp:
+    """The hold-out start from the manifest's last dates (metadata only, no prices) must match the spec."""
+    manifest = json.loads((Path(prices_dir) / "manifest.json").read_text(encoding="utf-8"))
+    last = max(pd.Timestamp(info["last"]) for info in manifest["files"].values())
+    start = (last - pd.DateOffset(years=HOLDOUT_YEARS)).normalize()
+    if start != HOLDOUT_START:
+        raise SystemExit(f"Hold-out start from the manifest is {start.date()}, the spec fixes {HOLDOUT_START.date()}.")
+    return HOLDOUT_START
 
 
 # ----------------------------------------------------------------------------- periods
@@ -446,6 +462,75 @@ def parity_all(frames: dict[str, pd.DataFrame], details: dict[str, pd.DataFrame]
             a_worst, worst, checked = max(a_worst, diff), max(worst, diff), checked + 1
         per_asset[ticker] = a_worst
     return {"window": window, "checked": checked, "max_difference": worst, "per_asset": per_asset}
+
+
+INVARIANCE_FIELDS = ("score", "Trend", "x_atr_pct")
+
+
+def _point_values(result: dict) -> dict:
+    row = {"score": float(result.get("score")), "x_atr_pct": float(result.get("atr_pct") or float("nan"))}
+    contrib = pd.DataFrame([{k: float(v) for k, v in (result.get("contributions") or {}).items()}])
+    row["Trend"] = float(add_families(contrib)["Trend"].iloc[0])
+    return row
+
+
+def time_invariance(frames: dict[str, pd.DataFrame], details: dict[str, pd.DataFrame], date_from: pd.Timestamp,
+                    samples: int = 4, scorer=None) -> dict:
+    """Is each value used by B, C1 and C2 at date T unchanged when the future is REMOVED (frame cut at T) or
+    MODIFIED (every later bar scaled and reversed)? Checked for every asset at `samples` dates >= date_from,
+    through the same pipeline the run uses (indicators on the full frame, score on rows up to T)."""
+    if scorer is None:
+        from scoring import calculate_indicators, compute_score
+        scorer = (calculate_indicators, compute_score)
+    calc, comp = scorer
+    worst = {f: 0.0 for f in INVARIANCE_FIELDS}
+    checked = 0
+    for ticker, table in details.items():
+        frame = frames[ticker]
+        valid = table.index[(table.index >= date_from) & table["score"].notna()]
+        if len(valid) == 0:
+            continue
+        for date in valid[np.unique(np.linspace(0, len(valid) - 1, samples).astype(int))]:
+            pos = frame.index.get_loc(date)
+            stored = {f: float(table.loc[date, f]) for f in INVARIANCE_FIELDS}
+            removed = _point_values(comp(calc(frame.iloc[: pos + 1])))
+            changed = frame.copy()
+            later = changed.index > date
+            cols = [c for c in ("open", "high", "low", "close") if c in changed.columns]
+            changed.loc[later, cols] = changed.loc[later, cols].to_numpy()[::-1] * 3.0
+            if "volume" in changed.columns:
+                changed.loc[later, "volume"] = changed.loc[later, "volume"].to_numpy()[::-1] * 5.0
+            modified = _point_values(comp(calc(changed).iloc[: pos + 1]))
+            for f in INVARIANCE_FIELDS:
+                for other in (removed[f], modified[f]):
+                    if np.isnan(stored[f]) and np.isnan(other):
+                        continue
+                    worst[f] = max(worst[f], abs(stored[f] - other) if not np.isnan(other - stored[f]) else float("inf"))
+            checked += 1
+    return {"checked": checked, "max_difference": worst,
+            "passed": checked > 0 and all(v <= 1e-9 for v in worst.values())}
+
+
+def availability_audit(frames, details, classes, klass: str, horizon: int, signal_field: str,
+                       signal_from: pd.Timestamp | None = None, label_end: pd.Timestamp | None = None) -> dict:
+    """Asset-dates with a signal and a price on day t that drop out ONLY because a later price is missing.
+    Split into end-of-window (the last horizon+1 rows, expected) and internal (future-dependent selection)."""
+    import research_stats as rst
+
+    m = _members(details, classes, klass)
+    closes = pd.DataFrame({t: frames[t]["close"] for t in m})
+    if label_end is not None:
+        closes = closes.loc[closes.index <= label_end]
+    sig = pd.DataFrame({t: details[t][signal_field] for t in m}).reindex(closes.index)
+    fwd = rst.forward_returns_table(closes, horizon)
+    dropped = sig.notna() & closes.notna() & fwd.isna()
+    if signal_from is not None:
+        dropped = dropped.loc[dropped.index >= signal_from]
+    end = dropped.index >= closes.index[-(horizon + 1)] if len(closes) > horizon else np.ones(len(dropped), bool)
+    internal = dropped.loc[~end]
+    cases = [(str(d.date()), c) for d, row in internal.iterrows() for c in row.index[row.to_numpy()]]
+    return {"end_of_window": int(dropped.loc[end].to_numpy().sum()), "internal": len(cases),
+            "internal_cases": cases[:50]}
 
 
 def regime_flags(frames: dict[str, pd.DataFrame], index: pd.Index, klass: str) -> pd.Series:
@@ -868,6 +953,12 @@ def evaluate_window(frames, details, classes, window_start, label_end, runs=None
         num, den = primary_rows(frames, details, classes, key, cfg, signal_from=first, label_end=label_end)
         res["primary"][key] = rst.studentised_test(num, den, cfg["horizon"], cfg["kappa"], cfg["direction"],
                                                    cfg["mme"], runs=runs, seed=seed)
+    res["availability"] = {}
+    for key, cfg in HOLDOUT_SPEC["primary"].items():
+        field = cfg.get("signal", cfg.get("candidate"))
+        first = pd.Timestamp(res["first_eligible_signal"][cfg["class"]])
+        res["availability"][key] = availability_audit(frames, details, classes, cfg["class"], cfg["horizon"], field,
+                                                      signal_from=first, label_end=label_end)
     passed = rst.holm({k: v.get("p_value") for k, v in res["primary"].items()}, HOLDOUT_SPEC["family_alpha"])
     for key, cfg in HOLDOUT_SPEC["primary"].items():
         res["primary"][key]["holm_passed"] = passed[key]
@@ -990,6 +1081,11 @@ def format_evaluation(res: dict, title: str) -> str:
         lines.append(f"| {key} | {t['estimate']:+.4f} [{lo:+.4f}, {hi:+.4f}] | {t['one_sided_bound95']:+.4f} | "
                      f"{t['p_value']:.5f} | {t.get('p_vs_mme', float('nan')):.4f} | "
                      f"{'pass' if t['holm_passed'] else 'fail'} | {t['outcome']} |")
+    lines += ["", "Observations dropped only because a later price is missing (end of window is expected; "
+                  "internal would mean selection depends on the future, and is listed):", ""]
+    for key, a in res.get("availability", {}).items():
+        lines.append(f"- {key}: end of window {a['end_of_window']}, internal {a['internal']}"
+                     + (f" {a['internal_cases']}" if a["internal"] else ""))
     lines += ["", "## Exploratory: long-only crypto (not a test; ranking significance is not investable proof)", ""]
     for label, s in res["long_only"].items():
         lo, hi = s["band95"]
@@ -1126,17 +1222,19 @@ def _write(out: Path, name: str, text: str) -> None:
 def run_preflight(prices: str, out_dir: str) -> int:
     """Development data only. Never reads a bar on or after the hold-out start after loading."""
     out = Path(out_dir)
-    frames = load_cache(prices)
-    start = checked_start(frames)
-    frames = development_frames(frames, start)
+    start = checked_start_from_manifest(prices)
+    frames = load_cache(prices, before=start)          # hold-out rows are dropped as each file is read
+    if any(len(f) and f.index.max() >= start for f in frames.values()):
+        raise SystemExit("Preflight refused: a hold-out row reached memory.")
     details = score_all(frames)
     classes = {t: asset_class(t) for t in details}
     parity = {w: parity_check(frames, details, window=w) for w in PARITY_WINDOWS}
+    invariance = time_invariance(frames, details, DRY_RUN_START, samples=4)
     repro = reproduce_development(frames, details, classes)
     conc = crypto_concentration(frames, details, classes)
     dry = evaluate_window(frames, details, classes, DRY_RUN_START, max(f.index.max() for f in frames.values()))
-    report = {"spec_hash": HOLDOUT_SPEC_HASH, "parity": parity, "reproduction": repro,
-              "concentration": conc, "dry_run": dry}
+    report = {"spec_hash": HOLDOUT_SPEC_HASH, "parity": parity, "time_invariance": invariance,
+              "reproduction": repro, "concentration": conc, "dry_run": dry}
     text = [f"# Preflight (development data only)", "", f"Spec hash {HOLDOUT_SPEC_HASH}.", "",
             "## Reproduction of the frozen v2 development estimates", ""]
     for k, v in repro.items():
@@ -1145,15 +1243,21 @@ def run_preflight(prices: str, out_dir: str) -> int:
     text.append(f"- all match: {repro['all_match']}")
     text += ["", "## Parity (development dates)", ""]
     text += [f"- {w} bars: largest difference {v['max_difference']:.2f} over {v['checked']} days" for w, v in parity.items()]
+    text += ["", "## Time invariance (future removed or modified; score, Trend, ATR%)", "",
+             f"- {invariance['checked']} asset-dates; largest differences {invariance['max_difference']}; "
+             f"passed {invariance['passed']}"]
     _write(out, "preflight.md", "\n".join(text) + "\n\n" + format_concentration(conc) + "\n" +
            format_evaluation(dry, "DRY RUN on a pseudo window inside development (2022-10-30 to the boundary)"))
     _write(out, "preflight.json", json.dumps(report, indent=1, default=str))
     print((out / "preflight.md").read_text())
-    return 0 if repro["all_match"] else 3
+    return 0 if (repro["all_match"] and invariance["passed"]) else 3
 
 
-def run_holdout(prices: str, out_dir: str, unlock: str, expect_hash: str) -> int:
-    """The single hold-out evaluation. Refuses unless every guard holds."""
+HOLDOUT_STAGES = ("guards_passed", "data_loaded", "scored", "checks_passed", "statistics_computed", "outputs_written")
+
+
+def holdout_guards(unlock: str, expect_hash: str) -> list[str]:
+    """The checks that need no data. Run as their own step BEFORE an attempt is registered."""
     import os
 
     problems = []
@@ -1163,30 +1267,55 @@ def run_holdout(prices: str, out_dir: str, unlock: str, expect_hash: str) -> int
         problems.append(f"spec hash is {HOLDOUT_SPEC_HASH}, signed-off hash given was {expect_hash}")
     if os.environ.get("GITHUB_REF_TYPE") != "tag" or os.environ.get("GITHUB_REF_NAME") != HOLDOUT_TAG:
         problems.append(f"must run from the git tag {HOLDOUT_TAG} in GitHub Actions")
+    return problems
+
+
+def _stage(out: Path, name: str) -> None:
+    """Durable progress marker: appended and flushed to disk at once, so a crash leaves the last stage reached.
+    The workflow copies it into the attempt record whatever happens."""
+    out.mkdir(parents=True, exist_ok=True)
+    with open(out / "stage.log", "a", encoding="utf-8") as handle:
+        handle.write(f"{datetime.now(timezone.utc).isoformat()} {name}\n")
+        handle.flush()
+        import os
+        os.fsync(handle.fileno())
+
+
+def run_holdout(prices: str, out_dir: str, unlock: str, expect_hash: str) -> int:
+    """The single hold-out evaluation. Refuses unless every guard holds."""
+    problems = holdout_guards(unlock, expect_hash)
     if problems:
         raise SystemExit("Hold-out refused: " + "; ".join(problems))
     out = Path(out_dir)
+    _stage(out, "guards_passed")
+    start = checked_start_from_manifest(prices)
     frames = load_cache(prices)
-    start = checked_start(frames)
+    _stage(out, "data_loaded")
     details = score_all(frames)
     classes = {t: asset_class(t) for t in details}
+    _stage(out, "scored")
     parity = {w: parity_all(frames, details, w, start) for w in HOLDOUT_SPEC["parity"]["windows"]}
+    invariance = time_invariance(frames, details, start, samples=4)
     dev_frames = development_frames(frames, start)
     dev_details = {t: development_view(d, start) for t, d in details.items()}
     repro = reproduce_development(dev_frames, dev_details, classes)
     parity_ok = all(parity[w]["max_difference"] <= HOLDOUT_SPEC["parity"]["tolerance_points"]
                     for w in HOLDOUT_SPEC["parity"]["must_pass"])
-    if not (parity_ok and repro["all_match"]):
-        _write(out, "holdout_aborted.json", json.dumps({"parity": parity, "reproduction": repro}, indent=1, default=str))
-        print("ABORTED before any hold-out statistic: parity or reproduction failed. No results produced.")
+    if not (parity_ok and repro["all_match"] and invariance["passed"]):
+        _write(out, "holdout_aborted.json", json.dumps({"parity": parity, "time_invariance": invariance,
+                                                        "reproduction": repro}, indent=1, default=str))
+        print("ABORTED before any hold-out statistic: parity, time invariance or reproduction failed.")
         return 4
+    _stage(out, "checks_passed")
     label_end = max(f.index.max() for f in frames.values())
     res = evaluate_window(frames, details, classes, start, label_end)
-    report = {"spec_hash": HOLDOUT_SPEC_HASH, "spec": HOLDOUT_SPEC, "parity": parity, "reproduction": repro,
-              "evaluation": res, "generated_at": datetime.now(timezone.utc).isoformat()}
-    _write(out, "holdout.md", format_evaluation(res, "HOLD-OUT evaluation (single run)"))
+    _stage(out, "statistics_computed")
+    report = {"spec_hash": HOLDOUT_SPEC_HASH, "spec": HOLDOUT_SPEC, "parity": parity, "time_invariance": invariance,
+              "reproduction": repro, "evaluation": res, "generated_at": datetime.now(timezone.utc).isoformat()}
     _write(out, "holdout.json", json.dumps(report, indent=1, default=str))
-    print((out / "holdout.md").read_text())
+    _write(out, "holdout.md", format_evaluation(res, "HOLD-OUT evaluation (single run)"))
+    _stage(out, "outputs_written")
+    print((out / "holdout.md").read_text())          # printed only after the results are on disk
     return 0
 
 
@@ -1210,7 +1339,15 @@ def main(argv=None) -> int:
     hold.add_argument("--out", required=True)
     hold.add_argument("--unlock", required=True)
     hold.add_argument("--expect-hash", required=True)
+    guard = sub.add_parser("holdout-guard", help="check the data-free guards only (no prices read)")
+    guard.add_argument("--unlock", required=True)
+    guard.add_argument("--expect-hash", required=True)
     args = parser.parse_args(argv)
+
+    if args.command == "holdout-guard":
+        problems = holdout_guards(args.unlock, args.expect_hash)
+        print("Guards: " + ("; ".join(problems) if problems else "all passed"))
+        return 1 if problems else 0
 
     if args.command == "preflight":
         return run_preflight(args.prices, args.out)

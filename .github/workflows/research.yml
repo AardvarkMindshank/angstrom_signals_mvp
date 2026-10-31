@@ -32,6 +32,10 @@ on:
         description: For holdout only, the spec hash recorded in the signed-off spec
         required: false
         default: ""
+      recovery_of:
+        description: For a hold-out RECOVERY only, the run id of the attempt that did not finish
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -106,12 +110,11 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
         with:
-          python-version: "3.12"
-      - name: Install
+          python-version: "3.12.15"
+      - name: Install the locked environment
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install scipy
+          pip install --no-deps -r requirements-research.lock
       - name: Get the frozen prices
         run: |
           git fetch --depth=1 origin reports
@@ -134,60 +137,78 @@ jobs:
           fi
 
   holdout:
+    # The one hold-out run (spec section 12). A first run needs the typed confirmation; a recovery after a
+    # crashed or stopped attempt needs the recovery confirmation AND the run id of that attempt.
     if: >-
       inputs.mode == 'holdout' &&
       github.ref_type == 'tag' && github.ref_name == 'holdout-spec-v1' &&
-      inputs.confirm == 'RUN HOLDOUT holdout-spec-v1'
+      (inputs.confirm == 'RUN HOLDOUT holdout-spec-v1' ||
+       (inputs.confirm == 'RECOVER HOLDOUT holdout-spec-v1' && inputs.recovery_of != ''))
     runs-on: ubuntu-24.04
     timeout-minutes: 240
+    concurrency:
+      group: holdout-once
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
         with:
-          python-version: "3.12"
-      - name: Refuse if a hold-out result already exists
-        run: |
-          git fetch --depth=1 origin reports
-          if git cat-file -e FETCH_HEAD:holdout/holdout-spec-v1/holdout.json 2>/dev/null; then
-            echo "A hold-out result already exists on the reports branch. The hold-out runs once." && exit 1
-          fi
-      - name: Install the locked environment
+          python-version: "3.12.15"
+      - name: Install the locked environment (no data yet)
         run: |
           test -f requirements-research.lock || { echo "requirements-research.lock is missing"; exit 1; }
           python -m pip install --upgrade pip
           pip install --no-deps -r requirements-research.lock
+      - name: Data-free guards (tag, typed hash)
+        env:
+          SPEC_HASH: ${{ inputs.spec_hash }}
+        run: python research.py holdout-guard --unlock holdout-spec-v1 --expect-hash "$SPEC_HASH"
+      - name: Claim the attempt (durable, atomic; before any price is read)
+        id: claim
+        env:
+          SPEC_HASH: ${{ inputs.spec_hash }}
+          RECOVERY_OF: ${{ inputs.recovery_of }}
+        run: |
+          python .github/scripts/holdout_attempts.py claim --run-id "${{ github.run_id }}" \
+            --run-attempt "${{ github.run_attempt }}" --commit "$(git rev-parse HEAD)" \
+            --spec-hash "$SPEC_HASH" --recovery-of "$RECOVERY_OF"
+          echo "claimed=true" >> "$GITHUB_OUTPUT"
       - name: Get the frozen prices and check them
         run: |
+          git fetch --depth=1 origin reports
           git checkout FETCH_HEAD -- data/prices
           mv data/prices prices
           (cd prices && sha256sum -c ../price_checksums.lock)
-      - name: The hold-out evaluation (single run)
+      - name: The hold-out evaluation
         env:
           SPEC_HASH: ${{ inputs.spec_hash }}
+        run: python research.py holdout --prices prices --out out --unlock holdout-spec-v1 --expect-hash "$SPEC_HASH"
+      - name: Record the last stage reached, whatever happened
+        if: always() && steps.claim.outputs.claimed == 'true'
         run: |
-          python research.py holdout --prices prices --out out --unlock holdout-spec-v1 --expect-hash "$SPEC_HASH"
-      - name: Record and fingerprint
-        if: always()
+          mkdir -p out && touch out/stage.log
+          python .github/scripts/holdout_attempts.py finish --run-id "${{ github.run_id }}" --stage-log out/stage.log
+          python .github/scripts/holdout_attempts.py show --out out/attempts.json
+      - name: Fingerprint
+        if: always() && steps.claim.outputs.claimed == 'true'
         run: |
-          mkdir -p out
           git rev-parse HEAD > out/code_commit.txt
           python --version > out/environment.txt && pip freeze >> out/environment.txt
           (cd out && sha256sum * > sha256sums.txt)
           cat out/sha256sums.txt >> "$GITHUB_STEP_SUMMARY"
           if [ -f out/holdout.md ]; then cat out/holdout.md >> "$GITHUB_STEP_SUMMARY"; fi
       - name: Keep a copy with the run
-        if: always()
+        if: always() && steps.claim.outputs.claimed == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: holdout-results
+          name: holdout-attempt-${{ github.run_id }}
           path: out/
           retention-days: 90
-      - name: Save once to the reports branch
-        if: always()
+      - name: Save to the reports branch
+        if: always() && steps.claim.outputs.claimed == 'true'
         run: |
-          if [ -f out/holdout.json ]; then
+          if [ -f out/holdout.json ] && grep -q outputs_written out/stage.log; then
             bash .github/scripts/save_to_reports.sh "holdout/holdout-spec-v1" out/*
           else
-            # stopped before any hold-out statistic (guards, parity or reproduction): keep the record apart
-            bash .github/scripts/save_to_reports.sh "holdout-aborted/$(date -u +%Y-%m-%d_%H%M)" out/*
+            bash .github/scripts/save_to_reports.sh "holdout/attempts/${{ github.run_id }}" out/*
           fi
