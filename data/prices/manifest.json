@@ -1,0 +1,529 @@
+{
+  "downloaded_at": "2026-10-31T08:48:31.074604+00:00",
+  "years": 10,
+  "files": {
+    "AAPL": {
+      "file": "AAPL.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "MSFT": {
+      "file": "MSFT.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "NVDA": {
+      "file": "NVDA.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "GOOGL": {
+      "file": "GOOGL.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "META": {
+      "file": "META.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "ORCL": {
+      "file": "ORCL.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "IBM": {
+      "file": "IBM.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "ADBE": {
+      "file": "ADBE.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "CRM": {
+      "file": "CRM.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "INTC": {
+      "file": "INTC.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "CSCO": {
+      "file": "CSCO.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "QCOM": {
+      "file": "QCOM.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "TXN": {
+      "file": "TXN.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "AMD": {
+      "file": "AMD.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "AMZN": {
+      "file": "AMZN.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "TSLA": {
+      "file": "TSLA.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "HD": {
+      "file": "HD.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "MCD": {
+      "file": "MCD.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "NKE": {
+      "file": "NKE.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "SBUX": {
+      "file": "SBUX.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "WMT": {
+      "file": "WMT.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "COST": {
+      "file": "COST.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "PG": {
+      "file": "PG.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "KO": {
+      "file": "KO.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "PEP": {
+      "file": "PEP.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "JPM": {
+      "file": "JPM.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "BAC": {
+      "file": "BAC.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "WFC": {
+      "file": "WFC.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "GS": {
+      "file": "GS.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "MS": {
+      "file": "MS.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "C": {
+      "file": "C.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "AXP": {
+      "file": "AXP.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "JNJ": {
+      "file": "JNJ.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "PFE": {
+      "file": "PFE.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "MRK": {
+      "file": "MRK.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "ABBV": {
+      "file": "ABBV.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "UNH": {
+      "file": "UNH.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "LLY": {
+      "file": "LLY.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "AMGN": {
+      "file": "AMGN.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "XOM": {
+      "file": "XOM.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "CVX": {
+      "file": "CVX.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "COP": {
+      "file": "COP.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "SLB": {
+      "file": "SLB.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "LIN": {
+      "file": "LIN.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "NEM": {
+      "file": "NEM.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "FCX": {
+      "file": "FCX.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "CAT": {
+      "file": "CAT.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "DE": {
+      "file": "DE.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "BA": {
+      "file": "BA.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "GE": {
+      "file": "GE.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "HON": {
+      "file": "HON.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "UPS": {
+      "file": "UPS.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "LMT": {
+      "file": "LMT.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "NEE": {
+      "file": "NEE.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "DUK": {
+      "file": "DUK.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "AMT": {
+      "file": "AMT.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "SPG": {
+      "file": "SPG.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "T": {
+      "file": "T.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "VZ": {
+      "file": "VZ.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "DIS": {
+      "file": "DIS.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "NFLX": {
+      "file": "NFLX.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    },
+    "BTC-USD": {
+      "file": "BTC-USD.csv.gz",
+      "bars": 3652,
+      "first": "2016-10-31",
+      "last": "2026-10-30"
+    },
+    "ETH-USD": {
+      "file": "ETH-USD.csv.gz",
+      "bars": 3278,
+      "first": "2017-11-09",
+      "last": "2026-10-30"
+    },
+    "XRP-USD": {
+      "file": "XRP-USD.csv.gz",
+      "bars": 3278,
+      "first": "2017-11-09",
+      "last": "2026-10-30"
+    },
+    "LTC-USD": {
+      "file": "LTC-USD.csv.gz",
+      "bars": 3652,
+      "first": "2016-10-31",
+      "last": "2026-10-30"
+    },
+    "BCH-USD": {
+      "file": "BCH-USD.csv.gz",
+      "bars": 3278,
+      "first": "2017-11-09",
+      "last": "2026-10-30"
+    },
+    "ADA-USD": {
+      "file": "ADA-USD.csv.gz",
+      "bars": 3278,
+      "first": "2017-11-09",
+      "last": "2026-10-30"
+    },
+    "DOGE-USD": {
+      "file": "DOGE-USD.csv.gz",
+      "bars": 3278,
+      "first": "2017-11-09",
+      "last": "2026-10-30"
+    },
+    "XLM-USD": {
+      "file": "XLM-USD.csv.gz",
+      "bars": 3278,
+      "first": "2017-11-09",
+      "last": "2026-10-30"
+    },
+    "LINK-USD": {
+      "file": "LINK-USD.csv.gz",
+      "bars": 3278,
+      "first": "2017-11-09",
+      "last": "2026-10-30"
+    },
+    "TRX-USD": {
+      "file": "TRX-USD.csv.gz",
+      "bars": 3278,
+      "first": "2017-11-09",
+      "last": "2026-10-30"
+    },
+    "ETC-USD": {
+      "file": "ETC-USD.csv.gz",
+      "bars": 3278,
+      "first": "2017-11-09",
+      "last": "2026-10-30"
+    },
+    "XMR-USD": {
+      "file": "XMR-USD.csv.gz",
+      "bars": 3278,
+      "first": "2017-11-09",
+      "last": "2026-10-30"
+    },
+    "DASH-USD": {
+      "file": "DASH-USD.csv.gz",
+      "bars": 3278,
+      "first": "2017-11-09",
+      "last": "2026-10-30"
+    },
+    "ZEC-USD": {
+      "file": "ZEC-USD.csv.gz",
+      "bars": 3278,
+      "first": "2017-11-09",
+      "last": "2026-10-30"
+    },
+    "EOS-USD": {
+      "file": "EOS-USD.csv.gz",
+      "bars": 3278,
+      "first": "2017-11-09",
+      "last": "2026-10-30"
+    },
+    "NEO-USD": {
+      "file": "NEO-USD.csv.gz",
+      "bars": 3278,
+      "first": "2017-11-09",
+      "last": "2026-10-30"
+    },
+    "BNB-USD": {
+      "file": "BNB-USD.csv.gz",
+      "bars": 3278,
+      "first": "2017-11-09",
+      "last": "2026-10-30"
+    },
+    "XTZ-USD": {
+      "file": "XTZ-USD.csv.gz",
+      "bars": 3278,
+      "first": "2017-11-09",
+      "last": "2026-10-30"
+    },
+    "ATOM-USD": {
+      "file": "ATOM-USD.csv.gz",
+      "bars": 2788,
+      "first": "2019-03-14",
+      "last": "2026-10-30"
+    },
+    "VET-USD": {
+      "file": "VET-USD.csv.gz",
+      "bars": 3011,
+      "first": "2018-08-03",
+      "last": "2026-10-30"
+    },
+    "ALGO-USD": {
+      "file": "ALGO-USD.csv.gz",
+      "bars": 2689,
+      "first": "2019-06-21",
+      "last": "2026-10-30"
+    },
+    "DOT-USD": {
+      "file": "DOT-USD.csv.gz",
+      "bars": 2263,
+      "first": "2020-08-20",
+      "last": "2026-10-30"
+    },
+    "SOL-USD": {
+      "file": "SOL-USD.csv.gz",
+      "bars": 2395,
+      "first": "2020-04-10",
+      "last": "2026-10-30"
+    },
+    "AVAX-USD": {
+      "file": "AVAX-USD.csv.gz",
+      "bars": 2232,
+      "first": "2020-07-13",
+      "last": "2026-10-30"
+    },
+    "FIL-USD": {
+      "file": "FIL-USD.csv.gz",
+      "bars": 3244,
+      "first": "2017-12-13",
+      "last": "2026-10-30"
+    },
+    "^GSPC": {
+      "file": "_GSPC.csv.gz",
+      "bars": 2513,
+      "first": "2016-10-31",
+      "last": "2026-10-29"
+    }
+  },
+  "failed": {}
+}
