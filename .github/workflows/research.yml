@@ -1,0 +1,82 @@
+name: Research
+
+# Scoring audit experiments (research.py). Started by hand from the Actions tab.
+# Prices are downloaded once and kept on the "reports" branch, so every run reads the same copy.
+on:
+  workflow_dispatch:
+    inputs:
+      refresh_prices:
+        description: Download prices again (otherwise the saved copy is used)
+        required: false
+        default: false
+        type: boolean
+      years:
+        description: Years of history to download
+        required: false
+        default: "10"
+      limit:
+        description: Assets per class, for a quick check (0 = all)
+        required: false
+        default: "0"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: research
+  cancel-in-progress: false
+
+jobs:
+  research:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Get the saved prices
+        id: prices
+        env:
+          REFRESH: ${{ inputs.refresh_prices }}
+        run: |
+          if [ "$REFRESH" != "true" ] && git fetch --depth=1 origin reports 2>/dev/null \
+             && git checkout FETCH_HEAD -- data/prices 2>/dev/null; then
+            mv data/prices prices
+            echo "fresh=false" >> "$GITHUB_OUTPUT"
+            echo "Using the saved prices."
+          else
+            python research.py cache --out prices --years "${{ inputs.years }}"
+            echo "fresh=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Save new prices to the reports branch
+        if: steps.prices.outputs.fresh == 'true'
+        run: |
+          mkdir -p staged_data && cp -r prices staged_data/prices
+          bash .github/scripts/save_to_reports.sh data staged_data/prices
+
+      - name: Run the experiments
+        run: python research.py run --prices prices --out out --limit "${{ inputs.limit }}"
+
+      - name: Show the result on the run page
+        if: always()
+        run: |
+          if [ -f out/report.md ]; then cat out/report.md >> "$GITHUB_STEP_SUMMARY"; fi
+
+      - name: Save the results to the reports branch
+        if: always()
+        run: |
+          if [ -d out ]; then
+            bash .github/scripts/save_to_reports.sh "research/$(date -u +%Y-%m-%d_%H%M)_limit${{ inputs.limit }}" out/report.md out/report.json
+          fi

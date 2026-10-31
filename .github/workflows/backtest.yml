@@ -23,6 +23,10 @@ on:
           - factors
           - volatility
 
+# Write access lets the run save its report to the "reports" branch.
+permissions:
+  contents: write
+
 jobs:
   backtest:
     runs-on: ubuntu-24.04
@@ -73,3 +77,9 @@ jobs:
             report.txt
             report.json
           if-no-files-found: ignore
+
+      - name: Save the report to the reports branch
+        if: always()
+        env:
+          TEST: ${{ inputs.test }}
+        run: bash .github/scripts/save_to_reports.sh "backtests/$(date -u +%Y-%m-%d_%H%M)_${TEST}" report.txt report.json
