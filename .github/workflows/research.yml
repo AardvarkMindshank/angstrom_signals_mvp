@@ -44,6 +44,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          pip install scipy  # research statistics only; the app does not use it
 
       - name: Get the saved prices
         id: prices
@@ -72,11 +73,12 @@ jobs:
       - name: Show the result on the run page
         if: always()
         run: |
+          if [ -f out/primary_dev.md ]; then cat out/primary_dev.md >> "$GITHUB_STEP_SUMMARY"; fi
           if [ -f out/report.md ]; then cat out/report.md >> "$GITHUB_STEP_SUMMARY"; fi
 
       - name: Save the results to the reports branch
         if: always()
         run: |
           if [ -d out ]; then
-            bash .github/scripts/save_to_reports.sh "research/$(date -u +%Y-%m-%d_%H%M)_limit${{ inputs.limit }}" out/report.md out/report.json
+            bash .github/scripts/save_to_reports.sh "research/$(date -u +%Y-%m-%d_%H%M)_limit${{ inputs.limit }}_v2" out/report.md out/report.json out/primary_dev.md
           fi

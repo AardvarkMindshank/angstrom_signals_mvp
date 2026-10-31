@@ -68,7 +68,11 @@ UNIVERSE_CRYPTO = (
 BENCHMARKS = {"stock": "^GSPC", "crypto": "BTC-USD"}
 ALREADY_SEEN = ("BTC-USD", "ETH-USD", "AAPL", "MSFT")  # tested on 29 Oct: left out of the hold-out
 HOLDOUT_YEARS = 2
+HOLDOUT_START = pd.Timestamp("2024-10-30")  # fixed in the validation spec; checked against the cache
 HORIZONS = (1, 3, 7, 14, 30)
+LABEL_BARS = max(HORIZONS) + 1  # longest label: entry one bar after the signal, exit 30 bars later
+PARITY_WINDOWS = (90, 200, 365)  # the app's history slider runs 90-365 days, default 200
+METHOD_VERSION = 2  # 1 = first run (31 Oct 2026, commit a4e7a41); 2 = labels and scores stop at the boundary
 MIN_PANEL = 8  # fewest assets on a date for a cross-sectional reading
 BOOTSTRAP_RUNS = 400
 SEED = 20261031
@@ -171,6 +175,24 @@ def holdout_view(table: pd.DataFrame, start: pd.Timestamp, ticker: str) -> pd.Da
     if ticker in ALREADY_SEEN:
         return None
     return table.loc[table.index >= start]
+
+
+def development_frames(frames: dict[str, pd.DataFrame], start: pd.Timestamp) -> dict[str, pd.DataFrame]:
+    """Every bar on or after the hold-out start removed, BEFORE anything is scored or labelled.
+
+    Method v1 cut the signal dates but built forward returns on the full series, so the last
+    development labels used up to LABEL_BARS bars of hold-out prices. From v2 nothing past the
+    boundary is even loaded into the experiments; labels near the end simply come out empty.
+    """
+    return {t: development_view(f, start) for t, f in frames.items()}
+
+
+def checked_start(frames: dict[str, pd.DataFrame]) -> pd.Timestamp:
+    """The hold-out start from the cache must match the date fixed in the spec."""
+    start = holdout_start(frames)
+    if start.normalize() != HOLDOUT_START:
+        raise SystemExit(f"Hold-out start from the cache is {start.date()}, the spec fixes {HOLDOUT_START.date()}.")
+    return HOLDOUT_START
 
 
 # ----------------------------------------------------------------------------- per-asset signals
@@ -289,23 +311,31 @@ def pooled_rank_correlation(sig: pd.DataFrame, fwd: pd.DataFrame, horizon: int, 
 
 def cross_sectional_by_date(sig: pd.DataFrame, fwd: pd.DataFrame, classes: dict[str, str]) -> pd.DataFrame:
     """Per date and class: the rank correlation across assets, and the top-third minus
-    bottom-third return. Assets are only ever ranked against their own class."""
+    bottom-third return. Assets are only ever ranked against their own class.
+
+    Same results as the first version (a pandas loop, kept in tests as the reference), written with
+    numpy so a full run takes minutes instead of an hour."""
+    from scipy.stats import rankdata
+
     rows = []
     for klass in sorted(set(classes.values())):
         members = [c for c in sig.columns if classes.get(c) == klass]
         if len(members) < MIN_PANEL:
             continue
-        s_all, f_all = sig[members], fwd[members]
-        for date in s_all.index:
-            s, f = s_all.loc[date], f_all.loc[date]
-            keep = s.notna() & f.notna()
-            if keep.sum() < MIN_PANEL or s[keep].nunique() < 2:
+        s_all, f_all = sig[members].to_numpy(dtype=float), fwd[members].to_numpy(dtype=float)
+        for i, date in enumerate(sig.index):
+            s, f = s_all[i], f_all[i]
+            keep = ~np.isnan(s) & ~np.isnan(f)
+            if keep.sum() < MIN_PANEL:
                 continue
             s, f = s[keep], f[keep]
-            ic = s.rank().corr(f.rank())
+            if len(np.unique(s)) < 2:
+                continue
+            rs_, rf = rankdata(s), rankdata(f)
+            ic = float(np.corrcoef(rs_, rf)[0, 1]) if rf.std() > 0 else float("nan")
             third = max(1, len(s) // 3)
-            order = s.sort_values(kind="mergesort")
-            spread = f[order.index[-third:]].mean() - f[order.index[:third]].mean()
+            order = np.argsort(s, kind="mergesort")
+            spread = float(f[order[-third:]].mean() - f[order[:third]].mean())
             rows.append({"date": date, "class": klass, "ic": ic, "spread": spread})
     return pd.DataFrame(rows)
 
@@ -405,8 +435,11 @@ def regime_flags(frames: dict[str, pd.DataFrame], index: pd.Index, klass: str) -
     return above.reindex(index).ffill()
 
 
-def run_experiments(frames: dict[str, pd.DataFrame], details: dict[str, pd.DataFrame]) -> dict:
-    start = holdout_start(frames)
+def run_experiments(frames: dict[str, pd.DataFrame], details: dict[str, pd.DataFrame],
+                    start: pd.Timestamp | None = None) -> dict:
+    start = HOLDOUT_START if start is None else start
+    frames = development_frames(frames, start)
+    details = {t: development_view(d, start) for t, d in details.items()}
     classes = {t: asset_class(t) for t in details}
     report = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -414,9 +447,10 @@ def run_experiments(frames: dict[str, pd.DataFrame], details: dict[str, pd.DataF
         "assets": {k: sorted(t for t in details if classes[t] == k) for k in ("stock", "crypto")},
         "survivor_note": SURVIVOR_NOTE,
         "tests_counted": 0,
+        "method_version": METHOD_VERSION,
     }
 
-    # Point 1: how often the score reaches each level (all dates; no returns involved).
+    # Point 1: how often the score reaches each level (development dates only from v2).
     report["histogram"] = {
         "per_asset": {t: score_histogram(d["score"]) for t, d in details.items()},
         "per_class": {
@@ -519,7 +553,186 @@ def run_experiments(frames: dict[str, pd.DataFrame], details: dict[str, pd.DataF
             for h, cells in per_h.items()
         }
     report["volatility"] = vol
+    report["primary_dev"] = primary_on_development(frames, details, classes)
     return report
+
+
+# ----------------------------------------------------------------------------- primary metrics (v2), development only
+
+PRIMARY_HORIZON = 14
+ATR_HORIZON = 7
+MME = {"A1": 0.02, "A2": 0.02, "B": 0.50, "C1": 0.02, "C2": 0.02}
+PRIMARY_DEV_RUNS = 2000
+
+
+def _class_tables(frames, details, members, column):
+    return pd.DataFrame({t: details[t][column] for t in members if column in details[t]})
+
+
+def primary_on_development(frames: dict[str, pd.DataFrame], details: dict[str, pd.DataFrame],
+                           classes: dict[str, str]) -> dict:
+    """The five primary statistics of the validation spec, computed on development data only, plus the
+    v1 statistic's expected small-sample bias. Assets are the hold-out list (the four already-seen assets
+    are left out) so the numbers line up with what the hold-out will measure."""
+    import research_stats as rst
+
+    out = {"note": "Development data only (bars before the hold-out start). Exploratory: this is where the "
+                   "claims come from, so these numbers cannot confirm anything."}
+    members = {k: [t for t in details if classes[t] == k and t not in ALREADY_SEEN] for k in ("stock", "crypto")}
+    closes = {k: pd.DataFrame({t: frames[t]["close"] for t in members[k]}) for k in members}
+
+    # Claim A: stocks, relative timing (and the v1 statistic with its expected bias, for comparison)
+    m, cl = members["stock"], closes["stock"]
+    if m:
+        a = {}
+        for key, family, direction in (("A1", "Stretch", 1), ("A2", "Trend", -1)):
+            sig = _class_tables(frames, details, m, family).reindex(cl.index)
+            pct = pd.DataFrame({c: rst.expanding_percentile(sig[c]) for c in sig.columns})
+            per_h = {}
+            for h in HORIZONS:
+                fwd = rst.forward_returns_table(cl, h).reindex(sig.index)
+                num, den, _ = rst.relative_timing_rows(sig, fwd, percentiles=pct)
+                per_h[h] = rst.studentised_test(num, den, h, rst.KAPPA["relative_timing"], direction,
+                                                MME[key] if h == PRIMARY_HORIZON else None, runs=PRIMARY_DEV_RUNS)
+            fwd = rst.forward_returns_table(cl, PRIMARY_HORIZON).reindex(sig.index)
+            n1, d1 = rst.pooled_time_series_rows(sig, fwd)
+            v1 = float(n1.sum() / d1.sum()) if d1.sum() else None
+            a[key] = {"signal": family, "direction": direction, "relative_timing": per_h,
+                      "v1_statistic_14d": v1,
+                      "v1_expected_bias_14d": rst.rotation_null_mean(sig * direction, fwd, PRIMARY_HORIZON)}
+        out["A"] = a
+
+    # Claim B: crypto, Trend ranking spread, and the long-only portfolio gate
+    m, cl = members["crypto"], closes["crypto"]
+    if m:
+        sig = _class_tables(frames, details, m, "Trend").reindex(cl.index)
+        per_h = {}
+        for h in HORIZONS:
+            fwd = rst.forward_returns_table(cl, h)
+            num, den, _ = rst.spread_rows(sig, fwd, MIN_PANEL)
+            per_h[h] = rst.studentised_test(num, den, h, rst.KAPPA["spread"], 1,
+                                            MME["B"] if h == PRIMARY_HORIZON else None, runs=PRIMARY_DEV_RUNS)
+        fwd = rst.forward_returns_table(cl, PRIMARY_HORIZON)
+        w = rst.spread_weights(sig.where(fwd.notna()), MIN_PANEL)
+        f = fwd.fillna(0.0)
+        avg = f.where(w != 0).mean(axis=1)
+        top = (w.clip(lower=0) * f).sum(axis=1)
+        bottom = (w.clip(upper=0).abs() * f).sum(axis=1)
+        everyone = fwd.where(sig.notna()).mean(axis=1)
+        live = w.abs().sum(axis=1) > 0
+        decomposition = {"top_minus_all_pct": float((top - everyone)[live].mean()),
+                         "all_minus_bottom_pct": float((everyone - bottom)[live].mean())}
+        portfolio = {}
+        for label, cost in (("base 0.20%", 0.002), ("stress 0.50%", 0.005)):
+            strat = rst.long_only_portfolio(sig, cl, "third", PRIMARY_HORIZON, cost)
+            bench = rst.long_only_portfolio(sig, cl, None, PRIMARY_HORIZON, cost)
+            portfolio[label] = rst.portfolio_summary(strat, bench, 365, skip=PRIMARY_HORIZON + 1)
+        btc = frames.get("BTC-USD")
+        if btc is not None:
+            r = btc["close"].reindex(cl.index).pct_change().iloc[PRIMARY_HORIZON + 2:]
+            portfolio["bitcoin_buy_and_hold_pct_a_year"] = float(((1 + r).prod() ** (365 / max(1, len(r))) - 1) * 100)
+        out["B"] = {"spread": per_h, "decomposition_14d": decomposition, "long_only": portfolio}
+
+    # Claim C: ATR% against trailing volatility (primary) and stronger benchmarks (exploratory)
+    c_out = {}
+    for key, klass in (("C1", "stock"), ("C2", "crypto")):
+        m, cl = members[klass], closes[klass]
+        if not m:
+            continue
+        atr = _class_tables(frames, details, m, "x_atr_pct").reindex(cl.index)
+        target = pd.DataFrame({c: rst.move_size(cl[c], ATR_HORIZON) for c in cl.columns})
+        returns_ = cl.pct_change()
+        benchmarks = {
+            "trailing 14-day (primary)": pd.DataFrame({c: rst.trailing_move_size(cl[c], 14) for c in cl.columns}),
+            "EWMA 0.94": np.sqrt((returns_ ** 2).ewm(alpha=0.06, adjust=False).mean()) * 100,
+            "trailing 60-day": pd.DataFrame({c: rst.trailing_move_size(cl[c], 60) for c in cl.columns}),
+        }
+        rows = {}
+        for name, bench in benchmarks.items():
+            num, den = rst.forecast_gain_rows(atr, bench, target)
+            rows[name] = rst.studentised_test(num, den, ATR_HORIZON, rst.KAPPA["forecast_gain"], 1,
+                                              MME[key] if "primary" in name else None, runs=PRIMARY_DEV_RUNS)
+        # expected-move multipliers: fitted on 2016-2021, checked on 2022 to the boundary, then refitted on all
+        split = pd.Timestamp("2022-01-01")
+        early_cl, early_atr = cl.loc[cl.index < split], atr.loc[atr.index < split]
+        k_early = rst.fit_expected_move(early_atr, early_cl, ATR_HORIZON)
+        late = cl.index >= split
+        check = rst.coverage(atr.loc[late], cl.loc[late], ATR_HORIZON, k_early)
+        k_all = rst.fit_expected_move(atr, cl, ATR_HORIZON)
+        c_out[key] = {"class": klass, "forecast_gain": rows,
+                      "expected_move": {"k_fit_2016_2021": k_early, "coverage_2022_to_boundary": check,
+                                        "k_fit_all_development": k_all}}
+    out["C"] = c_out
+    return out
+
+
+def _test_cell(t: dict, digits: int = 3) -> str:
+    if not t or t.get("estimate") is None:
+        return "too few"
+    lo, hi = t["ci95"]
+    cell = f"{_fmt(t['estimate'], digits)} [{_fmt(lo, digits)}, {_fmt(hi, digits)}] p={t['p_value']:.4f}"
+    if "p_vs_mme" in t:
+        cell += f", p vs minimum={t['p_vs_mme']:.3f}"
+    return cell
+
+
+def format_primary(primary: dict) -> str:
+    lines = ["# Primary statistics on development data (method v2)", "", primary.get("note", ""), ""]
+    lines.append("Cells: estimate [95% confidence interval] and one-sided p-value in the claimed direction "
+                 "(studentised joint-date block bootstrap, t reference, inflation factor from the calibration study).")
+    a = primary.get("A", {})
+    if a:
+        lines += ["", "## A. Stocks: relative timing (own-history percentile x return rank across stocks)", ""]
+        lines.append("| Claim | " + " | ".join(f"{h}d" for h in HORIZONS) + " |")
+        lines.append("| --- | " + " | ".join("---" for _ in HORIZONS) + " |")
+        for key, cell in a.items():
+            lines.append(f"| {key} {cell['signal']} ({'+' if cell['direction'] > 0 else '-'}) | " +
+                         " | ".join(_test_cell(cell["relative_timing"].get(h, {})) for h in HORIZONS) + " |")
+        lines += ["", "First-run statistic at 14 days, in the claimed direction, next to the value it is expected to "
+                      "show with NO real effect (rotation null on the same data):", ""]
+        for key, cell in a.items():
+            lines.append(f"- {key}: first-run statistic {_fmt(cell['direction'] * (cell['v1_statistic_14d'] or 0))}; "
+                         f"expected with no effect {_fmt(cell['v1_expected_bias_14d'])}")
+    b = primary.get("B", {})
+    if b:
+        lines += ["", "## B. Crypto: Trend ranking, top third minus bottom third (%)", ""]
+        lines.append("| Horizon | Spread |")
+        lines.append("| --- | --- |")
+        for h, t in b["spread"].items():
+            lines.append(f"| {h}d | {_test_cell(t, 2)} |")
+        d = b["decomposition_14d"]
+        lines += ["", f"At 14 days the spread splits into top third minus all coins {_fmt(d['top_minus_all_pct'], 2)}% "
+                      f"and all coins minus bottom third {_fmt(d['all_minus_bottom_pct'], 2)}%.", ""]
+        lines.append("Long-only top third against all coins equally weighted (same schedule and costs), "
+                     "14 staggered tranches as one portfolio:")
+        lines.append("")
+        for label, s in b["long_only"].items():
+            if isinstance(s, dict):
+                lo, hi = s["band95"]
+                lines.append(f"- {label}: excess {s['excess_pct_a_year']:+.1f}% a year [{lo:+.1f}, {hi:+.1f}]; "
+                             f"top third {s['strategy_pct_a_year']:+.1f}% a year (max drawdown "
+                             f"{s['strategy_max_drawdown_pct']:.0f}%), all coins {s['benchmark_pct_a_year']:+.1f}% "
+                             f"(max drawdown {s['benchmark_max_drawdown_pct']:.0f}%); traded per rebalance "
+                             f"{s['strategy_traded_per_rebalance']:.2f} vs {s['benchmark_traded_per_rebalance']:.2f}")
+            else:
+                lines.append(f"- {label.replace('_', ' ')}: {s:+.1f}")
+    c = primary.get("C", {})
+    if c:
+        lines += ["", "## C. ATR%: gain in rank correlation with later move size over each benchmark", ""]
+        lines.append("| Claim | Benchmark | Gain |")
+        lines.append("| --- | --- | --- |")
+        for key, cell in c.items():
+            for name, t in cell["forecast_gain"].items():
+                lines.append(f"| {key} {cell['class']} | {name} | {_test_cell(t)} |")
+        lines += ["", "Expected-move multipliers k (move within k x ATR% x sqrt(7) for 50% / 80% of asset-days):", ""]
+        for key, cell in c.items():
+            e = cell["expected_move"]
+            lines.append(f"- {key} {cell['class']}: fitted 2016-2021 k50={e['k_fit_2016_2021'][0.5]:.3f}, "
+                         f"k80={e['k_fit_2016_2021'][0.8]:.3f}; coverage 2022 to boundary "
+                         f"{e['coverage_2022_to_boundary'][0.5]:.1%} / {e['coverage_2022_to_boundary'][0.8]:.1%}; "
+                         f"fitted on all development k50={e['k_fit_all_development'][0.5]:.3f}, "
+                         f"k80={e['k_fit_all_development'][0.8]:.3f}")
+    return "\n".join(lines) + "\n"
 
 
 # ----------------------------------------------------------------------------- report writing
@@ -541,6 +754,12 @@ def format_report(report: dict, parity: dict | None = None) -> str:
     lines = ["# Research run: development period", ""]
     lines.append(f"Generated {report['generated_at'][:16]} UTC. Hold-out starts {report['holdout_starts']} "
                  "and was NOT used. Every result below is from earlier dates only.")
+    if report.get("method_version", 1) >= 2:
+        lines.append("")
+        lines.append("Method v2: prices on or after the hold-out start are removed before scoring, so forward-return "
+                     "labels and the score histogram stop at the boundary. The first run (method v1, 31 Oct 2026) "
+                     "let the last development labels use up to 31 bars of hold-out prices; its report is kept "
+                     "unchanged on the reports branch.")
     lines.append("")
     lines.append(f"> {report['survivor_note']}")
     lines.append("")
@@ -548,8 +767,10 @@ def format_report(report: dict, parity: dict | None = None) -> str:
     lines.append(f"Crypto ({len(report['assets']['crypto'])}): {', '.join(report['assets']['crypto'])}")
     if parity:
         lines.append("")
-        lines.append(f"Parity check: {parity['checked']} sampled days scored from the last {parity['window']} bars "
-                     f"against all history; largest difference {parity['max_difference']:.2f} points.")
+        checks = parity.values() if "window" not in parity else [parity]
+        for pc in checks:
+            lines.append(f"Parity check: {pc['checked']} sampled days scored from the last {pc['window']} bars "
+                         f"against all history; largest difference {pc['max_difference']:.2f} points.")
     lines.append("")
     lines.append(f"Tests counted: {report['tests_counted']}. At a 5% false-alarm rate about "
                  f"{round(report['tests_counted'] * 0.05)} would pass by luck alone.")
@@ -644,13 +865,16 @@ def main(argv=None) -> int:
         keep = [t for t in UNIVERSE_STOCKS if t in frames][: args.limit] + \
                [t for t in UNIVERSE_CRYPTO if t in frames][: args.limit] + [BENCHMARKS["stock"]]
         frames = {t: frames[t] for t in keep if t in frames}
+    start = checked_start(frames)
+    frames = development_frames(frames, start)       # nothing on or after the hold-out start from here on
     details = score_all(frames)
-    parity = parity_check(frames, details)
-    report = run_experiments(frames, details)
+    parity = {w: parity_check(frames, details, window=w) for w in PARITY_WINDOWS}
+    report = run_experiments(frames, details, start)
     report["parity"] = parity
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     (out / "report.md").write_text(format_report(report, parity), encoding="utf-8")
+    (out / "primary_dev.md").write_text(format_primary(report.get("primary_dev", {})), encoding="utf-8")
     (out / "report.json").write_text(json.dumps(report, indent=1, default=str), encoding="utf-8")
     print(format_report(report, parity))
     return 0
