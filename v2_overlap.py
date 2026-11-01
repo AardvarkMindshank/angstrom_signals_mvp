@@ -87,7 +87,7 @@ def main(argv=None) -> int:
         clusters = pd.DataFrame({
             key: c_all[spec["components"]].mean(axis=1, skipna=True) for key, spec in v2.CLUSTERS.items()
         })
-        lvl = v2.DEFINITIONS["disagreement_level"]
+        lvl = v2.DEFINITIONS["against_trend_level"]
         t, s = clusters["trend"], clusters["stretch"]
         disagree = ((t.abs() >= lvl) & (s.abs() >= lvl) & ((t > 0) != (s > 0))).mean()
         sat = (c_all.abs() >= 0.95).mean()

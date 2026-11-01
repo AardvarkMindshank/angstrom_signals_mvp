@@ -3,7 +3,7 @@ name: Signals v2 checks
 # Runs on every push to the v2 development branch. Results are saved to the reports branch (ci/v2/...)
 # so they can be read without access to the Actions page.
 #  - tests: the full test suite with the real indicator library (pandas-ta) and Streamlit installed
-#  - overlap: the development-only overlap check for the v2 components (v2_overlap.py)
+#  - overlap: the development-only overlap check (v2_overlap.py) and the end-to-end smoke check (v2_smoke.py)
 on:
   push:
     branches: [v2]
@@ -61,6 +61,12 @@ jobs:
           mv data/prices prices
       - name: Overlap check
         run: python v2_overlap.py --prices prices --out out
+      - name: End-to-end smoke check (watchlist row, card, breakdown, matrix, evidence, alerts, digest)
+        if: always()
+        run: |
+          mkdir -p out
+          python v2_smoke.py --prices prices --out out
+          cat out/smoke.md >> "$GITHUB_STEP_SUMMARY"
       - name: Save
         if: always()
         run: |

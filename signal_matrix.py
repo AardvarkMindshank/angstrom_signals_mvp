@@ -1,6 +1,7 @@
-"""Line the open asset's price up with each signal set.
+"""Line the open asset's price up with each signal.
 
-Technical scores are replayed from the stored daily bars. Sentiment uses only
+Signals v2 readings (Trend, Stretch, Flow and the two named views) are replayed from the stored daily
+bars, each day using only the bars up to that day. Sentiment uses only
 the readings already saved. A lead is how that signal lined up with the price
 change that came after it.
 """
@@ -9,11 +10,11 @@ from __future__ import annotations
 
 import itertools
 import math
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import pandas as pd
 
-from scoring import calculate_indicators, compute_score
+import signals_v2
 
 MATRIX_DAYS = 30
 LEAD_HORIZONS = (1, 3, 7)
@@ -66,9 +67,26 @@ def weekend_edges(dates) -> list[str]:
     return marks
 
 
+# Technical rows: (name, where the value sits in a signals_v2 result). All run from -100 to +100.
+TECHNICAL_ROWS = (
+    ("📈 Trend", ("clusters", "trend")),
+    ("🎯 Stretch", ("clusters", "stretch")),
+    ("🔊 Flow", ("clusters", "flow")),
+    ("Trend-following view", ("lenses", "trend_following")),
+    ("Mean-reversion view", ("lenses", "mean_reversion")),
+)
+
+
+def _reading(result: dict, path) -> float | None:
+    if not isinstance(result, dict) or result.get("status") != "ok":
+        return None
+    group, key = path
+    return _number(((result.get(group) or {}).get(key) or {}).get("percent"))
+
+
 def build_matrix(
     frame,
-    weight_sets,
+    kind: str,
     sentiment,
     horizon: int,
     days: int = MATRIX_DAYS,
@@ -76,7 +94,8 @@ def build_matrix(
 ) -> dict:
     """Price and one value per signal for each of the last days.
 
-    weight_sets is (name, weights) in display order. sentiment maps a row name
+    The technical rows (TECHNICAL_ROWS) are marked scale "reading" (-100..+100); sentiment rows are
+    "score" (0..100). sentiment maps a row name
     to (day, score) readings. Days before the first reading stay empty. After
     that, the last reading stays on each later price day until the next one.
 
@@ -94,14 +113,17 @@ def build_matrix(
     if frame is None or getattr(frame, "empty", True):
         return _empty()
     if "rsi" not in frame.columns:
+        from scoring import calculate_indicators
+
         indicated = calculate_indicators(frame)
     if indicated is None or len(indicated) < 15 or "close" not in indicated.columns:
         return _empty()
 
     start = max(14, len(indicated) - max(1, int(days)))
+    now_utc = datetime.now(timezone.utc)
     dates = []
     closes = []
-    rows = [{"name": name, "values": []} for name, _weights in weight_sets]
+    rows = [{"name": name, "values": [], "scale": "reading"} for name, _path in TECHNICAL_ROWS]
     for end in range(start, len(indicated)):
         window = indicated.iloc[: end + 1]
         close = _number(indicated.iloc[end].get("close"))
@@ -110,12 +132,16 @@ def build_matrix(
         when = pd.Timestamp(indicated.index[end])
         dates.append(when.strftime("%Y-%m-%d"))
         closes.append(close)
-        for slot, (_name, weights) in zip(rows, weight_sets):
-            slot["values"].append(_score_of(compute_score(window, weights)))
+        # A past day's own bar is finished, so judge "finished" at that day's end, not now.
+        day_end = when.to_pydatetime().replace(tzinfo=None) + timedelta(days=1, hours=6)
+        judged_at = min(pd.Timestamp(day_end, tz="UTC").to_pydatetime(), now_utc)
+        result = signals_v2.score(window, kind, now=judged_at)
+        for slot, (_name, path) in zip(rows, TECHNICAL_ROWS):
+            slot["values"].append(_reading(result, path))
 
     placed = sentiment if isinstance(sentiment, dict) else {}
     for name, points in placed.items():
-        rows.append({"name": name, "values": _align(dates, points)})
+        rows.append({"name": name, "values": _align(dates, points), "scale": "score"})
 
     returns = _forward_returns(closes, horizon)
     for row in rows:
@@ -143,10 +169,6 @@ def _empty() -> dict:
     return {"dates": [], "closes": [], "rows": [], "mix": None, "horizon": 1}
 
 
-def _score_of(result) -> float | None:
-    if not isinstance(result, dict) or result.get("label") == "Insufficient data":
-        return None
-    return _number(result.get("score"))
 
 
 def _number(value) -> float | None:
@@ -192,7 +214,7 @@ def boundary_lines(
     bear: float = 30,
     horizons=LEAD_HORIZONS,
 ) -> list[str]:
-    """Plain counts for the TA score over this window.
+    """Plain counts for one signal over this window (a reading line such as +50 / -50, or a score line).
 
     A case is a day whose score is on that side of the boundary and whose price
     that many days later is already in the window. Higher means the later close
@@ -201,8 +223,12 @@ def boundary_lines(
     because a rising asset is higher most days whatever the score says. A side
     with fewer than _MIN_CASES cases is reported as too few to judge.
     """
+    signed = float(bear) < 0
+
     def level(value: float) -> str:
         number = float(value)
+        if signed:
+            return f"{int(number):+d}" if number.is_integer() else f"{number:+.1f}"
         if number.is_integer():
             return str(int(number))
         return f"{number:.1f}"

@@ -2,8 +2,6 @@ import math
 
 import pytest
 
-pytest.importorskip("pandas_ta")  # signal_matrix imports scoring
-
 import signal_matrix as sm
 
 
@@ -60,3 +58,29 @@ def test_boundary_lines_flag_too_few_cases():
 def test_weekend_edges_marks_friday_and_monday():
     days = ["2024-01-04", "2024-01-05", "2024-01-08", "2024-01-09"]
     assert sm.weekend_edges(days) == ["2024-01-05", "2024-01-08"]
+
+
+def test_matrix_rows_are_v2_readings_with_no_look_ahead():
+    import sys
+    from pathlib import Path
+
+    sys.path.insert(0, str(Path(__file__).parent))
+    import test_signals_v2 as fx
+
+    frame = fx.fixture(n=400)
+    full = sm.build_matrix(frame, "Crypto", {"Asset sentiment": [("2025-01-01", 60)]}, 3)
+    names = [row["name"] for row in full["rows"]]
+    assert names[:3] == ["📈 Trend", "🎯 Stretch", "🔊 Flow"] and "Asset sentiment" in names
+    assert {row["scale"] for row in full["rows"]} == {"reading", "score"}
+    for row in full["rows"][:5]:
+        assert all(v is None or -100 <= v <= 100 for v in row["values"])
+    # Changing later bars must not change an earlier day's readings.
+    later = frame.copy()
+    later.iloc[-5:, later.columns.get_loc("close")] *= 3
+    cut = sm.build_matrix(later, "Crypto", {}, 3)
+    assert full["rows"][0]["values"][:20] == cut["rows"][0]["values"][:20]
+
+
+def test_boundary_lines_sign_reading_lines():
+    high, low = sm.boundary_lines([60] * 6 + [-60] * 6, list(range(100, 112)), 50, -50, horizons=(1,))
+    assert high.startswith("Above +50") and low.startswith("At or below -50")

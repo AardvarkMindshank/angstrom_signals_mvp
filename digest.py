@@ -247,7 +247,7 @@ def pick_watchlist(results, limit: int = WATCHLIST_SHOWN) -> list[tuple[str, lis
     return picked
 
 
-def _watchlist_row(row: dict, high: float, low: float) -> tuple[str, str]:
+def _watchlist_row(row: dict) -> tuple[str, str]:
     name = " ".join(str(row.get("symbol") or row.get("key") or "").split())
     trend = _number(row.get("trend"))
     stretch, flow = _number(row.get("stretch")), _number(row.get("flow"))
@@ -284,8 +284,6 @@ def _watchlist_row(row: dict, high: float, low: float) -> tuple[str, str]:
 
 
 def _watchlist_section(results, config) -> tuple[str, str]:
-    high = _number(config.get("min_score_alert")) or 70.0
-    low = _number(config.get("max_score_alert")) or 30.0
     html_parts, plain = [], []
     for market, rows, total in pick_watchlist(results):
         title = "&#129689; Crypto" if market == "crypto" else "&#128200; Stocks"
@@ -307,7 +305,7 @@ def _watchlist_section(results, config) -> tuple[str, str]:
         label = "Crypto" if market == "crypto" else "Stocks"
         plain.append(label + (f" (market mood {mood:.0f})" if mood is not None else ""))
         for row in rows:
-            row_html, row_plain = _watchlist_row(row, high, low)
+            row_html, row_plain = _watchlist_row(row)
             html_parts.append(row_html)
             plain.append(row_plain)
         if total > len(rows):

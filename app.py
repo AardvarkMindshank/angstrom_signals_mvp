@@ -16,7 +16,7 @@ import threading
 import time
 
 import app_version
-from score_colours import score_tone, tone_js
+from score_colours import reading_tone, score_tone, tone_js
 from sentiment_spread import spread_html
 import traceback
 from datetime import datetime, timezone
@@ -3867,7 +3867,8 @@ def _reveal_section(section_id: str, anchor: str) -> None:
 from email_brand import render_email
 import beta_emails
 import chart_plan
-import score_rules
+import signals_v2
+import signals_view
 from digest import COMMON_ZONES
 import session_guard
 import colour_themes
@@ -3937,7 +3938,7 @@ try:
         sparkline_svg,
         trend_tone,
     )
-    from scoring import calculate_indicators, compute_score, find_column
+    from scoring import calculate_indicators, find_column
     from shared_refresh import (
         create_price_row,
         ensure_new_asset,
@@ -4550,7 +4551,6 @@ _ACCOUNT_STATE_KEYS = (
     "trade_markets",
     "section_layout",
     "wide_split",
-    "reset_weights",
     "chart_pick",
     "chart_pick_from_row",
     "asset_type",
@@ -6100,8 +6100,18 @@ def sentiment_badge(score, pick: str | None = None) -> str:
     )
 
 
-def _paint_section_score(section_key: str, score, ready: bool) -> None:
-    """Put this section's sentiment score in its header, using the same colors as the body."""
+def _trend_alert_level() -> float:
+    """The Trend alert line (both ways, +level and -level), saved in the account settings."""
+    try:
+        level = float((prefs.get("settings") or {}).get("trend_alert_level", signals_v2.TREND_ALERT_DEFAULT))
+    except (TypeError, ValueError):
+        level = float(signals_v2.TREND_ALERT_DEFAULT)
+    return max(10.0, min(95.0, level))
+
+
+def _paint_section_score(section_key: str, score, ready: bool, reading: bool = False) -> None:
+    """Put this section's sentiment score in its header, using the same colors as the body.
+    reading=True is for a -100..+100 signals reading (the Trend in the Signals Breakdown header)."""
     shown = score if ready else None
     try:
         missing = shown is None or pd.isna(shown)
@@ -6110,7 +6120,7 @@ def _paint_section_score(section_key: str, score, ready: bool) -> None:
     if missing:
         payload = {"score": None, "color": "#6b7280", "background": "transparent"}
     else:
-        color, background, _arrow, _bar = tone(shown)
+        color, background, _arrow, _bar = (reading_tone if reading else tone)(shown)
         payload = {"score": round(float(shown)), "color": color, "background": background}
     _header_score(key=f"section_score_{section_key}", data=payload)
 
@@ -6124,6 +6134,11 @@ def score_from_alert(note: dict):
         except ValueError:
             pass
     kind = str(note.get("alert_type") or "")
+    # Trend alerts carry a -100..+100 reading, never a 0-100 score: colour them by direction only.
+    if kind.startswith("TREND_UP"):
+        return 70.0
+    if kind.startswith("TREND_DOWN"):
+        return 30.0
     if kind.startswith("BULLISH"):
         return 70.0
     if kind.startswith("BEARISH"):
@@ -6331,38 +6346,37 @@ def notifications_panel() -> None:
 
         with tracked_expander("Configure Alert Rules", "alert_rules"):
             st.caption(
-                "Scores describe current conditions and are not forecasts. Each alert is sent once "
-                "when a score crosses a line, and again only after it moves 10 points back and crosses again."
+                "Readings describe current conditions and are not forecasts. Each alert is sent once when the "
+                f"📈 Trend reading crosses your line, and again only after it moves {signals_v2.TREND_ALERT_REARM} "
+                "points back and crosses again."
             )
             alert_enabled = st.checkbox(
-                "📈 Asset score alerts",
+                "📈 Trend alerts",
                 value=alert_prefs.get("enabled", True) is not False,
                 key="alert_enabled_cb",
                 help=(
-                    "Alert when the technical score of an asset on your watchlists crosses one of your lines. "
-                    "Scores are checked about every 5 minutes."
+                    "Alert when the Trend reading (-100 to +100) of an asset on your watchlists turns up through "
+                    "your line or down through minus your line. Readings use finished daily bars and are "
+                    "checked about every 5 minutes."
                 ),
             )
-            min_score = int(alert_prefs.get("min_score_alert", 70))
-            max_score = int(alert_prefs.get("max_score_alert", 30))
+            old_level = _trend_alert_level()
+            trend_level = int(old_level)
             if alert_enabled:
-                min_score = st.slider(
-                    ":green[▲] Strongly positive at or above",
-                    50, 95, min_score,
-                    key="min_score_slider",
-                    help="An asset score at or above this line sends a positive alert. The default is 70.",
+                trend_level = st.slider(
+                    "📈 Trend alert line (±)",
+                    10, 95, trend_level, step=5,
+                    key="trend_level_slider",
+                    help=(
+                        f"Trend turned up: the reading rises to +line or above. Trend turned down: it falls to "
+                        f"-line or below. The default is {signals_v2.TREND_ALERT_DEFAULT}."
+                    ),
                 )
-                max_score = st.slider(
-                    ":red[▼] Strongly negative at or below",
-                    5, 50, max_score,
-                    key="max_score_slider",
-                    help="An asset score at or below this line sends a negative alert. The default is 30.",
-                )
+            if float(trend_level) != old_level:
+                save_account_settings({"trend_alert_level": int(trend_level)})
 
             new_alert_settings = {
                 "enabled": alert_enabled,
-                "min_score_alert": min_score,
-                "max_score_alert": max_score,
             }
 
             # Market sentiment alerts need the columns from the latest supabase_rls.sql.
@@ -6590,24 +6604,40 @@ with tracked_expander("📖 Help and guides", "help_guides", default=False):
     with tab_start:
         st.markdown("""
 **Angstrom Signals reads current market conditions for the crypto and stocks on your watchlists.**
-Each asset gets a technical score from 0 to 100, a news sentiment score, and tools to look closer.
-It is a research tool, not financial advice. The score describes conditions now; in our long-run
-tests it has not predicted what price did next.
+Each asset gets three technical readings (📈 Trend, 🎯 Stretch, 🔊 Flow, each from -100 to +100), a news
+sentiment score from 0 to 100, and tools to look closer. It is a research tool, not financial advice. The
+readings describe conditions now; none has been shown to predict which way price goes next.
 
 **A quick tour**
 1. **Quick Snapshot** opens with 🌍 **Markets**: the major indices, VIX, the US 10-year yield, the dollar,
    gold, oil and crypto totals, each with today's move and a 30-day line (a green dot means that exchange is
-   open; hover a card for what it measures). Then *What changed*: scores that crossed your alert lines and
-   the biggest moves, each with the score before and now, the price and today's move, a 7-day line, and
+   open; hover a card for what it measures). Then *What changed*: Trend readings that crossed your alert line
+   and the biggest Trend moves, each with the reading before and now, the price and today's move, a 7-day line, and
    badges for 📅 earnings within two weeks, 📰 headline sentiment and 🎯 how close it is to an alert line.
-2. **Crypto Scores** and **Equity Scores** rank your watchlists, strongest first. Click a name to open it on the chart.
+2. **Crypto Signals** and **Equity Signals** list your watchlists, strongest Trend first. Click a name to open it on the chart.
    The asset's 📰 Market sentiment sits under these tables (in the wide layout, in the left column under the
    market sentiments).
-3. **Interactive Chart** shows the asset with the indicators you pick. Underneath sit Score Breakdown,
+3. **Interactive Chart** shows the asset with the indicators you pick. Underneath sit Signals Breakdown,
    Max pain, Leverage & liquidations and Signal matrix, all for that asset.
 4. **Notifications**, in the sidebar, holds your alerts and their settings.
 5. The arrow on the right edge opens **Social signals and chat**.
 """)
+        reading_bands = [
+            ("Strongly up", "+50 and above", *reading_tone(60)[:2]),
+            ("Up", "+20 to +49", *reading_tone(30)[:2]),
+            ("Mixed", "-19 to +19", *reading_tone(0)[:2]),
+            ("Down", "-49 to -20", *reading_tone(-30)[:2]),
+            ("Strongly down", "-50 and below", *reading_tone(-60)[:2]),
+        ]
+        st.markdown("**📈 Trend · 🎯 Stretch · 🔊 Flow** (-100 to +100)")
+        for column, (name, span, color, background) in zip(st.columns(len(reading_bands)), reading_bands):
+            column.markdown(
+                f"<div style='background:{background};color:{color};border-radius:8px;padding:12px 14px;'>"
+                f"<div style='font-size:0.8rem;font-weight:600;'>{name}</div>"
+                f"<div style='font-size:1.2rem;font-weight:700;line-height:1.2;'>{span}</div></div>",
+                unsafe_allow_html=True,
+            )
+        st.markdown("**📰 Sentiment** (0 to 100)")
         bands = [
             ("Strongly positive", "70+", *score_tone(75)[:2]),
             ("Positive", "53–69", *score_tone(60)[:2]),
@@ -6623,44 +6653,21 @@ tests it has not predicted what price did next.
                 f"<div style='font-size:1.6rem;font-weight:700;line-height:1.2;'>{span}</div></div>",
                 unsafe_allow_html=True,
             )
-        st.caption("The same five shades, from deep green to deep red, are used for technical and sentiment scores everywhere, including the emails.")
+        st.caption("The same five shades, from deep green to deep red, are used for the readings and sentiment everywhere, including the emails.")
 
     with tab_scores:
+        st.markdown(signals_view.EXPLAINER)
         st.markdown("""
-**How the score works.** Every score starts at 50. Each indicator adds or subtracts points, and the
-total is kept between 0 and 100. Higher means more of the indicators read positive.
-""")
-        left, right = st.columns(2)
-        with left:
-            st.markdown("""
-**What moves it** (at weight 1.0)
-- **RSI**: oversold adds up to 8, overbought subtracts up to 8
-- **Stochastic**: below 20 adds 5, above 80 subtracts 5
-- **Moving averages**: ±4 each for price versus SMA 20, 50 and 200
-- **ADX**: a strong trend adds or subtracts 4
-- **MACD**: up to 4 for the line, 3 for the signal cross, 2 for the histogram
-""")
-        with right:
-            st.markdown("""
-**More factors**
-- **Ichimoku**: 5 for price versus the cloud, 3 for Tenkan versus Kijun
-- **Bollinger Bands**: near the lower band adds 4, the upper subtracts 4
-- **Volume**: a high-volume up bar adds 3, a down bar subtracts 3
-- **OBV**: ±3 for volume flow versus its average
-- **7-day move**: up to 4 either way
-""")
-        st.markdown("""
-**Your own weights.** *Scoring Balance Weights* in the sidebar scales each factor; 0 switches it off.
-Save a mix as a named set. *How the score adds up* shows the rules with your weights.
-
 **The tables**
-- Click a column title to sort. Hover a TA score to see why it landed there; click it for Score Breakdown.
+- Click a column title to sort. Hover a 📈 Trend, 🎯 Stretch or 🔊 Flow cell to read it; click it for the
+  Signals Breakdown, which lists every part with its own reading, plus the two named views.
 - **Extra metrics** (Settings) add 7d %, Market Cap, ATR % (typical daily move) and Vol (volume versus its
   20-day average). Another tick box adds 1d % and 30d %.
 - **Watching** shows how many accounts follow the asset. **30-day trend** is a small price line.
 
 **Freshness.** Prices are saved about every 5 minutes and sentiment about every 12 hours, for everyone.
-Your score is worked out from those saved prices with your own weights.
+The readings use the last *finished* daily bar (crypto: the UTC day; stocks: after the New York close),
+so they change once a day; price, today's move and RSI in the table are live.
 """)
 
     with tab_chart:
@@ -6675,7 +6682,9 @@ The icon row adds more:
 
 Your choices are saved on your account.
 
-**Score Breakdown** shows how many points each factor added or took away, with the reasons.
+**🔍 Signals Breakdown** shows every part of 📈 Trend, 🎯 Stretch and 🔊 Flow with its own reading in plain
+words, the two named views (trend-following and mean-reversion, both unvalidated hypotheses) and the
+signals version used.
 
 **🎯 Max pain** (stocks, Bitcoin, Ethereum): the options strike where open contracts would be worth the
 least at expiry. It opens on the next expiry after today; one with almost no open contracts says so.
@@ -6688,13 +6697,13 @@ the last update, and 7 days of hourly charts. Estimated from Coinalyze data, ref
 **▦ Signal matrix** lines up price with each signal over recent weeks, and shows how each one has lined
 up with the price change that followed. The evidence view shows the long-run test for this asset.
 
-None of these tools change the technical score.
+None of these tools change the technical readings.
 """)
 
     with tab_sentiment:
         st.markdown("""
 **What it is.** An AI reads recent headlines and scores each from 0 (very negative) to 100 (very
-positive). The sentiment score is their average. It is separate from the technical score.
+positive). The sentiment score is their average. It is separate from the technical readings.
 
 **Where it shows**
 - **Market sentiment – Crypto / Stocks**: the whole market, from headlines plus public readings
@@ -6721,19 +6730,21 @@ same line under the asset's name in the chart section.
     with tab_alerts:
         st.markdown("""
 **Setting up** (Notifications → Configure Alert Rules)
-- 📈 **Asset score alerts**: an alert when an asset's technical score reaches your positive line
-  (default 70) or drops to your negative line (default 30). Checked about every 5 minutes.
+- 📈 **Trend alerts**: an alert when an asset's Trend reading turns up to your line (default +50) or down to
+  minus your line (default -50). Readings use finished daily bars; checked about every 5 minutes.
 - 🌐 **Market sentiment alerts**: the same for the crypto or stock market sentiment (default 65 and 35),
   for the markets you trade. Updated about every 12 hours.
 - **Emails**: ⚡ **Instant** (one email per alert, straight away) and/or 📬 **Daily alerts summary** (one
   email a day at your chosen hour and time zone). Each alert shows the price, the asset's sentiment and its
   market's mood.
 - 📋 **Include watchlist summary** (under the daily summary, on by default): adds a colour-coded look at your
-  watchlist with price, today's move, score and sentiment for your strongest and weakest assets. With it on,
+  watchlist with price, today's move, the Trend, Stretch and Flow readings and sentiment for your strongest
+  and weakest Trends. With it on,
   the email comes every day; with it off, only on days with alerts.
 
-**No repeats on a wobble.** After an alert, the same one can only fire again once the score has moved
-10 points back (for example up to 40 after a 30 alert) and then crosses again.
+**No repeats on a wobble.** After a Trend alert, the same one can only fire again once the reading has moved
+20 points back (for example back to +30 after a +50 alert) and then crosses again. Market sentiment alerts
+re-arm after 10 points.
 
 **The Alert Feed**
 - Unread alerts sit at the top. Click one to open it: an asset opens on the chart, a market alert opens
@@ -6777,7 +6788,7 @@ on the left and the chart and its tools on the right. Drag the line between the 
 - **Watchlists** add or remove assets; **Account** holds your name, picture and bio.
 - **Feedback** sends us an issue or an idea.
 
-**Saved on your account**: layout, open sections, chart choices, weights, alert settings, the social
+**Saved on your account**: layout, open sections, chart choices, alert settings, the social
 panel, and the asset on the chart. They come back on any device.
 
 **Keep me signed in** (at login) remembers you on this device for 30 days. Logging out forgets it.
@@ -6785,8 +6796,6 @@ panel, and the asset on the chart. They come back on any device.
 
 CRYPTO_WATCHLIST = prefs["crypto"]
 STOCK_WATCHLIST = prefs["stock"]
-current_weights = prefs["weights"]
-custom_profiles = prefs["profiles"]
 settings = prefs["settings"]
 _TRADE_CRYPTOS = "I trade cryptos"
 _TRADE_EQUITIES = "I trade equities"
@@ -6819,61 +6828,9 @@ if st.session_state.get("trade_markets") not in _TRADE_CHOICES:
 trade_crypto, trade_equities = _trade_flags(st.session_state.trade_markets)
 
 
-def get_builtin_profiles():
-    return {
-        "📊 Trend Following": {
-            "rsi": 0.8, "stochastic": 0.8, "sma": 1.5, "adx": 1.0,
-            "macd": 1.2, "ichimoku": 1.0, "bb": 0.8, "volume": 1.0,
-            "obv": 1.0, "performance": 1.2,
-        },
-        "📉 Mean Reversion": {
-            "rsi": 1.5, "stochastic": 1.2, "sma": 0.8, "adx": 1.0,
-            "macd": 0.8, "ichimoku": 1.0, "bb": 1.5, "volume": 0.8,
-            "obv": 0.8, "performance": 0.8,
-        },
-        "🚀 Momentum Heavy": {
-            "rsi": 1.0, "stochastic": 1.2, "sma": 1.0, "adx": 1.0,
-            "macd": 1.5, "ichimoku": 1.0, "bb": 1.0, "volume": 1.2,
-            "obv": 1.2, "performance": 1.5,
-        },
-    }
+# Signals v2 (signals_v2.py) has no user weights: the v1 sliders, named sets and the adaptive switch were
+# retired with the 0-100 score. Saved v1 weights stay in the database untouched and are not read.
 
-
-built_in_profiles = get_builtin_profiles()
-all_profiles = {**built_in_profiles, **custom_profiles}
-
-indicators = ["rsi", "stochastic", "sma", "adx", "macd", "ichimoku", "bb", "volume", "obv", "performance"]
-
-
-def stored_weight(name: str) -> float:
-    raw = current_weights.get(name, 1.0) if isinstance(current_weights, dict) else 1.0
-    try:
-        value = float(raw)
-    except (TypeError, ValueError):
-        value = 1.0
-    return min(2.0, max(0.0, round(value, 1)))
-
-
-# A slider with no starting value mounts at 0. That blank set was saved, and
-# every factor then adds nothing, so every score stays at 50.
-weights_blank = all(stored_weight(name) == 0.0 for name in indicators)
-if weights_blank:
-    current_weights = {name: 1.0 for name in indicators}
-    prefs["weights"] = current_weights
-    save_preferences_to_cloud({"scoring_weights": current_weights})
-
-for indicator in indicators:
-    key_name = f"weight_{indicator}"
-    if weights_blank or key_name not in st.session_state:
-        st.session_state[key_name] = stored_weight(indicator)
-
-if st.session_state.get("reset_weights"):
-    for indicator in indicators:
-        st.session_state[f"weight_{indicator}"] = 1.0
-    current_weights = {indicator: 1.0 for indicator in indicators}
-    prefs["weights"] = current_weights
-    save_preferences_to_cloud({"scoring_weights": current_weights})
-    st.session_state.reset_weights = False
 
 def _ensure_added(kind: str, asset_id: str, label: str) -> None:
     """Write the first shared prices and sentiment when this asset is new."""
@@ -7016,127 +6973,15 @@ with tracked_expander("⭐ Watchlists", "watchlists", sidebar=True):
                     save_preferences_to_cloud({"stock_watchlist": STOCK_WATCHLIST})
                     st.rerun()
 
-def _score_rules_popover(weights) -> None:
-    """An info button that opens the plain-words scoring rules, with the user's own weights applied."""
-    with st.popover("ℹ️", help="How the score is worked out"):
-        st.markdown("**How the score is worked out**")
-        st.write(score_rules.HOW_IT_ADDS_UP)
-        table = []
-        for rule in score_rules.weighted_rows(weights if isinstance(weights, dict) else None):
-            for index, (when, points) in enumerate(rule["rows"]):
-                table.append({
-                    "Indicator": f"{rule['name']} (weight {rule['weight']:g})" if index == 0 else "",
-                    "When": when,
-                    "Points": f"{points:+g}" if points else "0",
-                })
-        # A plain table: not sortable, because the indicator name only sits on its first row.
-        st.table(table)
-        st.markdown("**What each one measures**")
-        for rule in score_rules.weighted_rows(None):
-            st.markdown(f"- **{rule['name']}**: {rule['measures']}")
-        st.markdown("**Reading the total**")
-        for line in score_rules.band_lines():
-            st.markdown(f"- {line}")
-        st.caption(score_rules.CONFLUENCE)
-        st.info(score_rules.HONEST_NOTE)
+def _signals_info_popover() -> None:
+    """An info button that explains the signals v2 readings in plain words."""
+    with st.popover("ℹ️", help="How the technical signals work"):
+        st.markdown(signals_view.EXPLAINER)
 
 
-with tracked_expander("⚖️ Scoring Balance Weights", "weights", sidebar=True):
-    st.caption("Adjust the relative importance of each indicator. Every slider changes the score.")
-    _score_rules_popover(current_weights)
-
-    st.markdown("**Named Weight Sets**")
-    profile_names = ["Select saved set..."] + list(all_profiles.keys())
-    selected_profile = st.selectbox("Load Saved Set", profile_names, key="load_profile_sb")
-
-    col_p1, col_p2 = st.columns(2)
-    with col_p1:
-        if st.button("Load Set") and selected_profile != "Select saved set...":
-            if selected_profile in all_profiles:
-                loaded = all_profiles[selected_profile]
-                for indicator in indicators:
-                    st.session_state[f"weight_{indicator}"] = float(loaded.get(indicator, 1.0))
-                current_weights = loaded
-                prefs["weights"] = current_weights
-                save_preferences_to_cloud({"scoring_weights": current_weights})
-                st.success(f"Loaded '{selected_profile}'.")
-                st.rerun()
-    with col_p2:
-        if st.button("Delete Set") and selected_profile != "Select saved set...":
-            if selected_profile in built_in_profiles:
-                st.error("Built-in profiles cannot be deleted.")
-            elif selected_profile in custom_profiles:
-                custom_profiles.pop(selected_profile)
-                prefs["profiles"] = custom_profiles
-                save_preferences_to_cloud({"weight_profiles": custom_profiles})
-                st.success(f"Deleted '{selected_profile}'.")
-                st.rerun()
-
-    new_profile_name = st.text_input("New set name", placeholder="e.g. Volatility Focus")
-    if st.button("Save Current as New Set") and new_profile_name:
-        pname = new_profile_name.strip()
-        if pname:
-            if pname in built_in_profiles:
-                st.error("Cannot overwrite a built-in profile name.")
-            else:
-                custom_profiles[pname] = current_weights
-                prefs["profiles"] = custom_profiles
-                save_preferences_to_cloud({"weight_profiles": custom_profiles})
-                st.success(f"Saved set '{pname}'.")
-                st.rerun()
-
-    st.markdown("---")
-
-    def weight_slider(label: str, name: str):
-        key_name = f"weight_{name}"
-        # Pass the saved weight as the value. Without it, the slider's own
-        # default is the bottom of the range, which is 0.
-        return st.slider(
-            label,
-            0.0,
-            2.0,
-            float(st.session_state[key_name]),
-            step=0.1,
-            key=key_name,
-        )
-
-    w_rsi = weight_slider("RSI Weight", "rsi")
-    w_stoch = weight_slider("Stochastic Weight", "stochastic")
-    w_sma = weight_slider("Moving Averages Weight", "sma")
-    w_adx = weight_slider("ADX Trend Weight", "adx")
-    w_macd = weight_slider("MACD & Hist Weight", "macd")
-    w_ichi = weight_slider("Ichimoku Cloud Weight", "ichimoku")
-    w_bb = weight_slider("Bollinger Bands Weight", "bb")
-    w_vol = weight_slider("Volume Weight", "volume")
-    w_obv = weight_slider("OBV Weight", "obv")
-    w_perf = weight_slider("Performance Weight", "performance")
-
-    new_weights = {
-        "rsi": w_rsi, "stochastic": w_stoch, "sma": w_sma, "adx": w_adx,
-        "macd": w_macd, "ichimoku": w_ichi, "bb": w_bb, "volume": w_vol,
-        "obv": w_obv, "performance": w_perf,
-    }
-
-    # Every slider at 0 is the blank mount, not a mix worth keeping.
-    # One slider can still be 0 to turn that single factor off.
-    if new_weights != current_weights and any(float(value) != 0 for value in new_weights.values()):
-        save_preferences_to_cloud({"scoring_weights": new_weights})
-        current_weights = new_weights
-        prefs["weights"] = current_weights
-
-    st.checkbox(
-        "Adapt to the market (experimental)",
-        key="adaptive_scoring",
-        help=(
-            "Trending markets give more say to trend indicators (moving averages, MACD, Ichimoku, ADX, OBV) "
-            "and less to RSI, Stochastic and Bollinger Bands. Ranging markets do the opposite. "
-            "Your sliders still apply on top. Only affects this session; alerts use the standard weights."
-        ),
-    )
-
-    if st.button("🔄 Reset to Default (1.0)"):
-        st.session_state.reset_weights = True
-        st.rerun()
+with tracked_expander("📐 How the signals work", "weights", sidebar=True):
+    st.markdown(signals_view.EXPLAINER)
+    st.caption(f"Signals {signals_v2.VERSION} · definition {signals_v2.FINGERPRINT}")
 
 with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
     if "show_reasons" not in st.session_state:
@@ -7174,7 +7019,7 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
     st.divider()
     st.markdown("**TA analysis**")
     show_reasons = st.checkbox(
-        "Show score breakdown",
+        "Show signals breakdown",
         key="show_reasons",
         persist_state="session",
     )
@@ -8672,7 +8517,7 @@ with tracked_expander("ℹ️ About", "about", sidebar=True):
             "service, not on this page."
         )
         st.markdown(
-            "We also keep what you add: display name, bio, picture, watchlists, weights, colours, and other "
+            "We also keep what you add: display name, bio, picture, watchlists, colours, and other "
             "settings. Comments, chat, replies, favourites, groups, feedback, and reports of comments are "
             "stored with your account. If you turn alerts on, we store those alerts and email the ones you asked for."
         )
@@ -8944,14 +8789,14 @@ _SCORES_WORKED_OUT = 0
 
 
 @st.cache_data(ttl=900, max_entries=4000, show_spinner=False)
-def _scored_asset(kind: str, asset_id: str, days: int, weights_key: tuple, stamp: tuple, _df, adaptive: bool = False):
-    """The indicators and score for one asset. The same prices and weights give the same answer,
-    so it is worked out once and reused across clicks and across accounts."""
-    del kind, asset_id, days, stamp
+def _scored_asset(kind: str, asset_id: str, version: str, stamp: tuple, _df):
+    """The indicators and signals v2 readings for one asset. The same prices give the same answer,
+    so it is worked out once and reused across clicks and across accounts. The version and the hour
+    are part of the key: a new definition, or a bar finishing, gives fresh readings."""
+    del asset_id, version, stamp
     global _SCORES_WORKED_OUT
     _SCORES_WORKED_OUT += 1
-    frame = calculate_indicators(_df)
-    return compute_score(frame, weights=dict(weights_key) if weights_key else None, adaptive=adaptive)
+    return signals_view.row_fields(calculate_indicators(_df), kind)
 
 
 def load_market_sentiment(query: str, enabled: bool, force: bool = False):
@@ -9349,8 +9194,9 @@ def _visit_asset_key(kind, asset_id) -> str:
 def _boundary_text(value: float) -> str:
     number = float(value)
     if number.is_integer():
-        return str(int(number))
-    return f"{number:.1f}"
+        return f"{int(number):+d}"
+    return f"{number:+.1f}"
+
 
 
 def _factor_shift(previous: dict, current: dict) -> tuple[str, float]:
@@ -9378,9 +9224,11 @@ def _boundary_cross(previous: float, current: float, bull: float, bear: float) -
 
 
 def _score_snapshot(rows) -> dict:
+    """Trend reading and its parts per asset, kept for the next visit. v1 snapshots (key "score") are
+    simply ignored when read back, so a 0-100 score is never compared with a -100..+100 reading."""
     snapshot = {}
     for row in rows:
-        score = row.get("score")
+        score = row.get("trend")
         try:
             if score is None or pd.isna(score):
                 continue
@@ -9392,7 +9240,7 @@ def _score_snapshot(rows) -> dict:
         if kind not in ("Crypto", "Stock") or not asset_id:
             continue
         factors = {}
-        raw = row.get("contributions") or {}
+        raw = row.get("trend_parts") or {}
         if isinstance(raw, dict):
             for name, points in raw.items():
                 try:
@@ -9400,8 +9248,9 @@ def _score_snapshot(rows) -> dict:
                 except (TypeError, ValueError):
                     continue
         snapshot[_visit_asset_key(kind, asset_id)] = {
-            "score": score,
+            "trend": score,
             "factors": factors,
+            "signals_version": signals_v2.VERSION,
         }
     return snapshot
 
@@ -9458,13 +9307,13 @@ def _change_extras(row: dict, previous_score: float, current_score: float, bull:
                    crossed: bool, shared_row: dict | None) -> str:
     """Score move, price and today's move, a 7-day line and context badges for one changed asset."""
     parts = []
-    old_fg, old_bg, _a, _b = tone(previous_score)
-    new_fg, new_bg, _a, _b = tone(current_score)
+    old_fg, old_bg, _a, _b = reading_tone(previous_score)
+    new_fg, new_bg, _a, _b = reading_tone(current_score)
     parts.append(
-        "<span title='Score at your last visit, and now' style='white-space:nowrap;'>"
-        + _mini_badge(f"{previous_score:.0f}", old_fg, old_bg)
+        "<span title='📈 Trend reading at your last visit, and now (-100 to +100)' style='white-space:nowrap;'>"
+        + _mini_badge(f"{previous_score:+.0f}", old_fg, old_bg)
         + "<span style='margin:0 4px;color:var(--ang-muted);'>→</span>"
-        + _mini_badge(f"{current_score:.0f}", new_fg, new_bg)
+        + _mini_badge(f"{current_score:+.0f}", new_fg, new_bg)
         + "</span>"
     )
     price = row.get("latest_price")
@@ -9520,13 +9369,13 @@ def _change_extras(row: dict, previous_score: float, current_score: float, bull:
         gap_down = current_score - bear
         if 0 < gap_up <= 5:
             badges.append(_mini_badge(
-                f"🎯 {gap_up:.0f} to {bull:.0f}", "#14532d", "#bbf7d0",
-                f"{gap_up:.1f} points below your positive alert line ({bull:.0f})",
+                f"🎯 {gap_up:.0f} to {bull:+.0f}", "#14532d", "#bbf7d0",
+                f"{gap_up:.1f} points below your Trend-up alert line ({bull:+.0f})",
             ))
         elif 0 < gap_down <= 5:
             badges.append(_mini_badge(
-                f"🎯 {gap_down:.0f} to {bear:.0f}", "#7f1d1d", "#fecaca",
-                f"{gap_down:.1f} points above your negative alert line ({bear:.0f})",
+                f"🎯 {gap_down:.0f} to {bear:+.0f}", "#7f1d1d", "#fecaca",
+                f"{gap_down:.1f} points above your Trend-down alert line ({bear:+.0f})",
             ))
     if badges:
         parts.append("<span style='display:inline-flex;flex-wrap:wrap;gap:4px;'>" + "".join(badges) + "</span>")
@@ -9535,14 +9384,8 @@ def _change_extras(row: dict, previous_score: float, current_score: float, bull:
 
 def _what_changed_html(rows, baseline, seen: bool) -> str:
     """Crossings since the last visit, then the largest other moves."""
-    try:
-        bull = float(alert_prefs.get("min_score_alert", 70))
-    except (TypeError, ValueError):
-        bull = 70.0
-    try:
-        bear = float(alert_prefs.get("max_score_alert", 30))
-    except (TypeError, ValueError):
-        bear = 30.0
+    bull = _trend_alert_level()
+    bear = -bull
     bull_label = _boundary_text(bull)
     bear_label = _boundary_text(bear)
     parts = [
@@ -9563,12 +9406,12 @@ def _what_changed_html(rows, baseline, seen: bool) -> str:
         if not isinstance(previous, dict):
             continue
         try:
-            current_score = round(float(row.get("score")), 1)
-            previous_score = round(float(previous.get("score")), 1)
+            current_score = round(float(row.get("trend")), 1)
+            previous_score = round(float(previous.get("trend")), 1)
         except (TypeError, ValueError):
             continue
         factors = {}
-        raw = row.get("contributions") or {}
+        raw = row.get("trend_parts") or {}
         if isinstance(raw, dict):
             for name, points in raw.items():
                 try:
@@ -9577,7 +9420,7 @@ def _what_changed_html(rows, baseline, seen: bool) -> str:
                     continue
         previous_factors = previous.get("factors") if isinstance(previous.get("factors"), dict) else {}
         factor_name, factor_delta = _factor_shift(previous_factors, factors)
-        detail = f"{previous_score:.1f} to {current_score:.1f}."
+        detail = f"Trend {previous_score:+.0f} to {current_score:+.0f}."
         if factor_name and abs(factor_delta) >= 0.05:
             detail = f"{detail} {factor_name} moved it most ({factor_delta:+.1f})."
         delta = round(current_score - previous_score, 1)
@@ -9602,13 +9445,13 @@ def _what_changed_html(rows, baseline, seen: bool) -> str:
             "extras": extras,
         }
         if cross == "above":
-            item["title"] = f"{item['symbol']} crossed above {bull_label}"
+            item["title"] = f"{item['symbol']} Trend turned up (above {bull_label})"
             crossings.append(item)
         elif cross == "below":
-            item["title"] = f"{item['symbol']} crossed below {bear_label}"
+            item["title"] = f"{item['symbol']} Trend turned down (below {bear_label})"
             crossings.append(item)
-        elif abs(delta) >= 1:
-            item["title"] = f"{item['symbol']} moved"
+        elif abs(delta) >= 5:
+            item["title"] = f"{item['symbol']} Trend moved"
             moves.append(item)
 
     crossings.sort(key=lambda item: abs(item["delta"]), reverse=True)
@@ -9616,7 +9459,7 @@ def _what_changed_html(rows, baseline, seen: bool) -> str:
     moves = moves[:3]
     if not crossings:
         parts.append(
-            "<div style='margin-top:8px;'>No score crossed a boundary since your last visit.</div>"
+            "<div style='margin-top:8px;'>No Trend reading crossed your alert lines since your last visit.</div>"
         )
     for item in crossings:
         parts.append(_change_button(item["pick"], item["title"], item["detail"], item["color"], item["logo"], item["extras"]))
@@ -9626,34 +9469,6 @@ def _what_changed_html(rows, baseline, seen: bool) -> str:
             parts.append(_change_button(item["pick"], item["title"], item["detail"], item["color"], item["logo"], item["extras"]))
     parts.append("</div>")
     return "".join(parts)
-
-
-def _score_sentence(reasons) -> str:
-    """One line for the TA score hover. Neutral notes stay in the breakdown."""
-    if reasons is None or isinstance(reasons, str):
-        return "Open the score breakdown."
-    try:
-        reasons = list(reasons)
-    except TypeError:
-        return "Open the score breakdown."
-    quiet = ("neutral", "inside bollinger", "inside the ichimoku", "weak trend", "developing trend")
-    kept = []
-    for reason in reasons or []:
-        text = " ".join(str(reason).split())
-        if not text or any(piece in text.lower() for piece in quiet):
-            continue
-        kept.append(text)
-        if len(kept) == 3:
-            break
-    if not kept:
-        return "Open the score breakdown."
-    if len(kept) == 1:
-        sentence = kept[0]
-    else:
-        sentence = ", ".join(kept[:-1]) + ", and " + kept[-1]
-    if not sentence.endswith("."):
-        sentence += "."
-    return sentence
 
 
 def _draw_social_stream(stream_items, scope, *, popout: bool = False):
@@ -9817,7 +9632,7 @@ def render_dashboard(*args, **kwargs):
         _record_run("dashboard", started)
 
 
-def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, weights, show_reasons_flag, show_extra_metrics_flag, show_period_changes_flag, trade_crypto, trade_equities):
+def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show_reasons_flag, show_extra_metrics_flag, show_period_changes_flag, trade_crypto, trade_equities):
     st.session_state["_bar_run"] = {}
     shared_keys = []
     if trade_crypto:
@@ -9914,12 +9729,17 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, weig
                         name = ticker
                 kind = "Crypto" if is_crypto else "Stock"
                 bars_from = time.perf_counter()
-                df, err = _stored_bars(kind, key, history_days)
+                # Readings always use the full stored history; the chart setting only changes the chart.
+                df, err = _stored_bars(kind, key, signals_v2.SCORING_BARS)
                 spent["bars"] += time.perf_counter() - bars_from
 
                 result = {
                     "symbol": name if is_crypto else f"{name} ({key})",
-                    "score": None,
+                    "trend": None,
+                    "stretch": None,
+                    "flow": None,
+                    "signals": None,
+                    "trend_parts": {},
                     "label": "No data",
                     "reasons": [err] if err else [],
                     "latest_price": None,
@@ -9931,8 +9751,6 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, weig
                     "volume_ratio": None,
                     "bb_position": None,
                     "adx": None,
-                    "confluence": None,
-                    "contributions": {},
                     "type": "Crypto" if is_crypto else "Stock",
                     "key": key,
                 }
@@ -9946,21 +9764,18 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, weig
 
                 if df is not None and not df.empty and len(df) >= 15:
                     try:
-                        try:
-                            weights_key = tuple(sorted((str(k), float(v)) for k, v in (weights or {}).items()))
-                        except (TypeError, ValueError):
-                            weights_key = (("_uncached", time.time_ns()),)
                         shared_row = (st.session_state.get("_shared_rows") or {}).get(asset_market_key(kind, key))
                         stamp = (
                             row_timestamp(shared_row, "prices_updated_at"),
                             len(df),
                             float(df["close"].iloc[-1]),
+                            datetime.now(timezone.utc).strftime("%Y-%m-%d %H"),
                         )
                         maths_from = time.perf_counter()
                         try:
-                            scored = _scored_asset(kind, str(key), int(history_days), weights_key, stamp, df, bool(st.session_state.get("adaptive_scoring")))
+                            scored = _scored_asset(kind, str(key), signals_v2.FINGERPRINT, stamp, df)
                         except Exception:
-                            scored = compute_score(calculate_indicators(df), weights=weights, adaptive=bool(st.session_state.get("adaptive_scoring")))
+                            scored = signals_view.row_fields(calculate_indicators(df), kind)
                         spent["maths"] += time.perf_counter() - maths_from
                         if isinstance(scored, dict):
                             result.update(scored)
@@ -10006,10 +9821,10 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, weig
                 _social_panel()
 
         def get_top_bottom(results):
-            valid = [row for row in results if row.get("score") is not None and not pd.isna(row.get("score"))]
+            valid = [row for row in results if row.get("trend") is not None]
             if not valid:
                 return None, None
-            ordered = sorted(valid, key=lambda row: row["score"], reverse=True)
+            ordered = sorted(valid, key=lambda row: row["trend"], reverse=True)
             return ordered[0], ordered[-1]
 
         crypto_top, crypto_bot = get_top_bottom(crypto_results)
@@ -10049,11 +9864,11 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, weig
 
         snapshot_cards = []
         if trade_crypto:
-            snapshot_cards.append(("Top Watchlist Crypto", crypto_top, "Crypto", "snapshot_crypto_top"))
-            snapshot_cards.append(("Weakest Watchlist Crypto", crypto_bot, "Crypto", "snapshot_crypto_weak"))
+            snapshot_cards.append(("📈 Strongest Trend · Crypto", crypto_top, "Crypto", "snapshot_crypto_top"))
+            snapshot_cards.append(("📉 Weakest Trend · Crypto", crypto_bot, "Crypto", "snapshot_crypto_weak"))
         if trade_equities:
-            snapshot_cards.append(("Top Watchlist Stock", stock_top, "Stock", "snapshot_stock_top"))
-            snapshot_cards.append(("Weakest Watchlist Stock", stock_bot, "Stock", "snapshot_stock_weak"))
+            snapshot_cards.append(("📈 Strongest Trend · Stocks", stock_top, "Stock", "snapshot_stock_top"))
+            snapshot_cards.append(("📉 Weakest Trend · Stocks", stock_bot, "Stock", "snapshot_stock_weak"))
 
         def render_mood_snapshot(label, score, summary, mood_key, voice):
             safe_label = html.escape(label)
@@ -10149,8 +9964,8 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, weig
         snapshot_columns = st.columns(len(snapshot_cards))
 
         def render_snapshot_card(title, name, score, pick, logo_url=None):
-            color, bg, arrow, _bar = tone(score)
-            score_str = f"{score:.1f}/100" if score is not None and not pd.isna(score) else "—"
+            color, bg, arrow, _bar = reading_tone(score)
+            score_str = f"Trend {score:+.0f}" if score is not None and not pd.isna(score) else "—"
             safe_title = html.escape(str(title))
             safe_name = html.escape(str(name))
             logo = asset_logo(logo_url, name) if name and name != "—" else ""
@@ -10160,7 +9975,9 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, weig
                 "<div class='ang-title' style='display:flex;align-items:center;gap:8px;font-size:1.1rem;"
                 "margin-bottom:8px;white-space:nowrap;overflow:hidden;'>"
                 f"{logo}<span style='overflow:hidden;text-overflow:ellipsis;'>{safe_name}</span></div>"
-                f"<div style='display: inline-flex; align-items: center; gap: 4px; background: {bg}; "
+                "<div title='Trend reading, -100 to +100: where price sits against its longer averages. "
+                "A description, not a forecast.' "
+                f"style='display: inline-flex; align-items: center; gap: 4px; background: {bg}; "
                 f"color: {color}; padding: 2px 8px; border-radius: 4px; font-size: 0.85rem; font-weight: 600;'>"
                 f"{arrow} {score_str}</div></div>"
             )
@@ -10181,7 +9998,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, weig
             logo_url = None
             if row and row.get("key"):
                 name = row["symbol"]
-                score = row.get("score")
+                score = row.get("trend")
                 pick = f"{kind}|{row['key']}"
                 logo_url = row.get("logo_url")
             with column:
@@ -10199,19 +10016,6 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, weig
 
     if not wide_layout:
         show_market_moods(trade_crypto, trade_equities)
-
-    def render_score_bar(score):
-        if score is None or pd.isna(score):
-            pct, color = 0, "#6b7280"
-        else:
-            pct = max(0, min(100, float(score)))
-            color = tone(score)[3]
-        return (
-            '<div style="display:flex;align-items:center;gap:8px;width:100%;min-width:100px;">'
-            '<div class="ang-track">'
-            f'<div style="width:{pct}%;background:{color};height:100%;border-radius:6px;"></div></div>'
-            f"{sentiment_badge(score)}</div>"
-        )
 
     def sort_token(value, numeric=False):
         try:
@@ -10275,10 +10079,10 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, weig
             if not results:
                 st.caption("This watchlist is empty.")
                 return
-            frame = pd.DataFrame(results).sort_values("score", ascending=False, na_position="last")
-            st.caption("Click a column title to sort. The table starts with the strongest score at the top. Click a name to show that asset on the chart. Hover a TA score to read why it landed there, and click it to open the score breakdown. Click the sentiment score, the thumbs, or the crowd average to open its headlines. Watching is how many accounts hold that asset. The Crowd box is the average of personal scores. Hover the down thumb for the spread. A comment balloon, or the arrow on the right edge, opens the social signals and chat. The 30-day trend uses the same colors as 30d %.")
+            frame = pd.DataFrame(results).sort_values("trend", ascending=False, na_position="last")
+            st.caption("Click a column title to sort. The table starts with the strongest Trend at the top. Click a name to show that asset on the chart. 📈 Trend, 🎯 Stretch and 🔊 Flow each run from -100 to +100 (positive means up); they describe the market and are not forecasts. Hover one to read it, and click it to open the breakdown. Click the sentiment score, the thumbs, or the crowd average to open its headlines. Watching is how many accounts hold that asset. The Crowd box is the average of personal scores. Hover the down thumb for the spread. A comment balloon, or the arrow on the right edge, opens the social signals and chat. The 30-day trend uses the same colors as 30d %.")
 
-            headers = ["Asset", "Watching"] + (["Rank"] if kind == "Crypto" else []) + ["TA Score", "Signal", "Price", "RSI"]
+            headers = ["Asset", "Watching"] + (["Rank"] if kind == "Crypto" else []) + ["Trend", "Stretch", "Flow", "Price", "RSI"]
             if kind == "Stock":
                 headers.append("Earnings")
             if show_period_changes_flag:
@@ -10295,10 +10099,11 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, weig
                 headers.append("Comments")
             headers.append("30-day trend")
             lead = 3 if kind == "Crypto" else 2
-            sort_at = {"Asset": 0, "Watching": 1, "TA Score": lead, "Signal": lead + 1, "Price": lead + 2, "RSI": lead + 3}
+            sort_at = {"Asset": 0, "Watching": 1, "Trend": lead, "Stretch": lead + 1, "Flow": lead + 2,
+                       "Price": lead + 3, "RSI": lead + 4}
             if kind == "Crypto":
                 sort_at["Rank"] = 2
-            column = lead + 4
+            column = lead + 5
             if kind == "Stock":
                 sort_at["Earnings"] = column
                 column += 1
@@ -10315,14 +10120,20 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, weig
             sort_at["30-day trend"] = next_column
 
             def header_button(name, align="left", colspan=1):
-                mark = " ↓" if name == "TA Score" else ""
+                mark = " ↓" if name == "Trend" else ""
                 span = f" colspan='{colspan}'" if colspan > 1 else ""
+                cluster_key = name.lower()
+                hint = ""
+                shown = name
+                if cluster_key in signals_v2.CLUSTERS:
+                    hint = f" title='{html.escape(signals_view.header_hint(cluster_key), quote=True)}'"
+                    shown = f"{signals_v2.CLUSTERS[cluster_key]['icon']} {name}"
                 return (
-                    f"<th{span} style='padding:8px 10px;text-align:{align};white-space:nowrap;'>"
+                    f"<th{span}{hint} style='padding:8px 10px;text-align:{align};white-space:nowrap;'>"
                     f"<button type='button' data-sort-col='{sort_at[name]}' "
                     "style='background:none;border:none;padding:0;margin:0;color:inherit;"
                     "font:inherit;font-weight:600;cursor:pointer;white-space:nowrap;'>"
-                    f"{html.escape(name)}<span data-sort-mark>{mark}</span></button></th>"
+                    f"{html.escape(shown)}<span data-sort-mark>{mark}</span></button></th>"
                 )
 
             header_html = ""
@@ -10358,16 +10169,12 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, weig
                     rank_value = row.get("market_rank")
                     rank_ok = rank_value is not None and not pd.isna(rank_value)
                     rank_cell = cell(f"#{int(rank_value):,}" if rank_ok else "—", rank_value if rank_ok else None, numeric=True)
-                score_box = render_score_bar(row["score"])
-                scored = row.get("score") is not None and not pd.isna(row.get("score"))
-                if scored:
-                    reason = html.escape(_score_sentence(row.get("reasons")), quote=True)
-                    score_box = (
-                        f"<button type='button' data-pick='{pick_value}|breakdown' title='{reason}' "
-                        "style='display:block;width:100%;margin:0;padding:0;border:none;background:transparent;"
-                        "text-align:left;cursor:pointer;font:inherit;color:inherit;'>"
-                        f"{score_box}</button>"
-                    )
+                row_dict = {k: (None if isinstance(v, float) and pd.isna(v) else v) for k, v in row.items()}
+                has_signals = isinstance(row_dict.get("signals"), dict)
+                cluster_cells = "".join(
+                    signals_view.table_cell(k, row_dict, f"{kind}|{asset_id}" if has_signals else None)
+                    for k in signals_v2.CLUSTERS
+                )
                 rows_html += (
                     f"<tr class='{row_class}'>"
                     f"<td data-sort='{sort_token(row.get('symbol'))}' style='padding:10px;white-space:nowrap;'>"
@@ -10376,9 +10183,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, weig
                     f"<td data-sort='{sort_token(row.get('holders'), numeric=True)}' "
                     f"style='padding:8px 10px;white-space:nowrap;'>{holders_mark(row.get('holders'))}</td>"
                     f"{rank_cell}"
-                    f"<td data-sort='{sort_token(row.get('score'), numeric=True)}' "
-                    f"style='padding:10px;min-width:168px;'>{score_box}</td>"
-                    f"{cell(row.get('label') or '—', row.get('label') or '')}"
+                    f"{cluster_cells}"
                     f"{cell(price_str, price, numeric=True)}{cell(rsi_str, rsi, numeric=True)}"
                     f"{earnings_cell(row.get('next_earnings')) if kind == 'Stock' else ''}"
                 )
@@ -10496,9 +10301,9 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, weig
         st.session_state.asset_type = pick[0]
 
     if trade_crypto:
-        style_and_show_table(crypto_results, "₿ Crypto Scores", "Crypto", "crypto_scores")
+        style_and_show_table(crypto_results, "₿ Crypto Signals", "Crypto", "crypto_scores")
     if trade_equities:
-        style_and_show_table(stock_results, "📈 Equity Scores", "Stock", "equity_scores")
+        style_and_show_table(stock_results, "📈 Equity Signals", "Stock", "equity_scores")
 
     pick = st.session_state.get("chart_pick")
     if pick and pick[0] in allowed_kinds and (
@@ -10604,7 +10409,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, weig
                     row_timestamp((st.session_state.get("_shared_rows") or {}).get(
                         asset_market_key(chart_kind, chart_asset)), "prices_updated_at"),
                     TECHNICAL_REFRESH_SECONDS, "timer_technical",
-                    "Prices, the chart and the technical score are shared by everyone and updated about "
+                    "Prices, the chart and the technical readings are shared by everyone and updated about "
                     "every 5 minutes. The page picks them up by itself when they are due.",
                 )
 
@@ -11031,85 +10836,42 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, weig
             if liq_on:
                 st.caption(_liquidation_caption(liq_record))
 
-            result = compute_score(df_chart, weights=weights, adaptive=bool(st.session_state.get("adaptive_scoring")))
-            score_val = result["score"]
-            color, _bg, arrow, _bar = tone(score_val)
-            col_a, col_b, col_c = st.columns(3)
-            with col_a:
-                st.markdown(
-                    "<div style='font-size: 0.85rem; color: #6b7280; margin-bottom: 2px;'>Current Score</div>"
-                    f"<div style='font-size: 2.2rem; font-weight: 600; line-height: 1.1; margin-bottom: 4px;'>{score_val}/100</div>"
-                    f"<div style='font-size: 0.95rem; font-weight: 500; color: {color};'>"
-                    f"{arrow} {html.escape(str(result['label']))}</div>",
-                    unsafe_allow_html=True,
-                )
-            if result.get("change_7d") is not None:
-                change = result["change_7d"]
-                if change > 0:
-                    change_color = "#15803d"
-                elif change < 0:
-                    change_color = "#b91c1c"
-                else:
-                    change_color = "#6b7280"
-                col_b.markdown(
+            # The readings come from the full stored history (the table row already holds them); the
+            # chart window does not change them.
+            table_rows = crypto_results if asset_type == "Crypto" else stock_results
+            matched = next((row for row in table_rows if str(row.get("key")) == str(asset_key)), None)
+            result = (matched or {}).get("signals") if isinstance((matched or {}).get("signals"), dict) else None
+            if result is None:
+                full, _full_err = _stored_bars(asset_type, asset_key, signals_v2.SCORING_BARS)
+                source = full if full is not None and not full.empty else df_chart
+                result = signals_v2.score(calculate_indicators(source) if source is not df_chart else df_chart, asset_type)
+            card_col, change_col = st.columns([3, 1])
+            with card_col:
+                st.html(signals_view.asset_card(result))
+            change = (matched or {}).get("change_7d")
+            if change is None and "change_7d" in df_chart.columns:
+                change = signals_v2._num(df_chart["change_7d"].iloc[-1])
+            if change is not None:
+                change_color = "#15803d" if change > 0 else "#b91c1c" if change < 0 else "#6b7280"
+                change_col.markdown(
                     "<div style='font-size: 0.85rem; color: #6b7280; margin-bottom: 2px;'>7-Day Change</div>"
                     f"<div style='font-size: 2.2rem; font-weight: 600; line-height: 1.1; color: {change_color};'>"
                     f"{change:+.1f}%</div>",
                     unsafe_allow_html=True,
                 )
-            if result.get("atr_pct") is not None:
-                col_c.metric(
-                    "Typical daily move (ATR%)",
-                    f"{result['atr_pct']:.2f}%",
-                    help="The average distance price travels in a day, as a share of its price. "
-                    "In testing this was the one reading that reliably said how big the next few days' moves would be. "
-                    "It does not say which way.",
-                )
 
         reveal_breakdown = st.session_state.get("scroll_target") == "score-breakdown"
-        if (show_reasons_flag or reveal_breakdown) and result.get("reasons") and result.get("score") is not None:
+        if (show_reasons_flag or reveal_breakdown) and result and result.get("status") == "ok":
             st.html("<div id='score-breakdown' style='scroll-margin-top:4.5rem;'></div>")
-            with section_expander(f"🔍 Score Breakdown — {title}", "score_breakdown"):
-                _paint_section_score("breakdown", result["score"], result.get("score") is not None)
-                _score_rules_popover(weights)
-                table_rows = crypto_results if asset_type == "Crypto" else stock_results
-                matched = next(
-                    (row for row in table_rows if str(row.get("key")) == str(asset_key)),
-                    None,
-                )
-                summary = _score_sentence((matched or result).get("reasons"))
+            with section_expander(f"🔍 Signals Breakdown — {title}", "score_breakdown"):
+                trend_now = ((result.get("clusters") or {}).get("trend") or {}).get("percent")
+                _paint_section_score("breakdown", trend_now, trend_now is not None, reading=True)
+                _signals_info_popover()
                 st.markdown(
-                    "<div style='margin:0 0 12px;'>"
-                    f"{sentiment_badge(result['score'])}"
-                    f"<div style='margin-top:8px;color:{color};font-weight:600;'>"
-                    f"{html.escape(str(result['label']))}</div>"
-                    f"<div class='ang-copy' style='margin-top:6px;'>Summary: {html.escape(summary)}</div></div>",
+                    f"<div class='ang-copy' style='margin:0 0 8px;'>{html.escape(result.get('summary') or '')}</div>",
                     unsafe_allow_html=True,
                 )
-                breakdown_col1, breakdown_col2 = st.columns(2)
-                with breakdown_col1:
-                    contributions = result.get("contributions") or {}
-                    if contributions:
-                        fig_contrib = go.Figure(go.Bar(
-                            x=list(contributions.values()),
-                            y=list(contributions.keys()),
-                            orientation="h",
-                            marker_color=["#22c55e" if points >= 0 else "#ef4444" for points in contributions.values()],
-                        ))
-                        fig_contrib.update_layout(
-                            title="Indicator Point Contributions",
-                            xaxis_title="Points Added or Subtracted",
-                            yaxis=dict(autorange="reversed"),
-                            height=320,
-                            margin=dict(t=30, b=20, l=10, r=10),
-                        )
-                        fig_contrib.add_vline(x=0, line_width=1.5, line_dash="dash", line_color="gray", opacity=0.7)
-                        _paint_chart(fig_contrib)
-                        st.plotly_chart(fig_contrib, width="stretch")
-                with breakdown_col2:
-                    st.markdown("**Detailed Reasons**")
-                    for reason in result["reasons"]:
-                        st.caption(f"• {reason}")
+                st.html(signals_view.breakdown(result))
 
         sentiment_label = crypto_watchlist[asset_key] if asset_type == "Crypto" else stock_watchlist[asset_key]
         with _timed("section: max pain"):
@@ -11124,7 +10886,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, weig
                 crypto_ticker(asset_key) if asset_type == "Crypto" else asset_key,
             )
         with _timed("section: signal matrix"):
-            show_signal_matrix(asset_type, asset_key, title, df_chart, weights)
+            show_signal_matrix(asset_type, asset_key, title, df_chart)
     # Outside both wide columns, so it cannot push the chart header down.
     _scroll_chart(
         key="scroll_to_chart",
@@ -11748,7 +11510,7 @@ def _mood_card(spec: dict, row: dict | None) -> None:
         "The rows above the Google headlines are public readings, each scored on its own. "
         "The score at the top is the average of every scored row, readings and news articles alike "
         "(scores made before 30 Oct counted the news articles only). "
-        "This is not the technical score, and it is not advice."
+        "This is not a technical reading, and it is not advice."
     )
 
 
@@ -12205,7 +11967,7 @@ def show_max_pain(kind: str, asset_id: str, label: str, chart_price: float | Non
             st.caption("The bars are the strikes nearest the price. Max pain is calculated from the full chain.")
         st.caption(
             "This is where open contracts would be worth the least at expiry. "
-            "It is not a price target, and it is not part of the technical score. "
+            "It is not a price target, and it is not part of the technical readings. "
             "Open interest is contracts for stocks, and coin amount for Bitcoin and Ethereum."
         )
 
@@ -12267,14 +12029,14 @@ def _lead_label(value, reliable: bool | None = None) -> str:
 
 
 def show_signal_evidence(kind: str, asset_id: str, shown: str) -> None:
-    """How the technical score has actually lined up with later price for this asset."""
+    """How the 📈 Trend reading (signals v2) has lined up with later price for this asset."""
     from evidence import load_evidence
 
     record = load_evidence(supabase, asset_market_key(kind, asset_id))
     if not record:
         st.info(
-            f"The long-run test for {shown} has not been prepared yet. The background worker adds it "
-            "within a few minutes of an asset being watched, then refreshes it daily. Check back soon."
+            f"The long-run test for {shown} has not been prepared for the current signals yet. The background "
+            "worker adds it within a few minutes of an asset being watched, then refreshes it daily. Check back soon."
         )
         return
     if record.get("too_short"):
@@ -12289,11 +12051,11 @@ def show_signal_evidence(kind: str, asset_id: str, shown: str) -> None:
     if level == "holds" and not reverse:
         st.success("Held up in this test. Still not a forecast: check it on similar assets.")
     elif level == "holds" and reverse:
-        st.warning("Held up in reverse: high scores were followed by weaker prices.")
+        st.warning("Held up in reverse: a high Trend reading was followed by weaker prices.")
     elif level == "hint":
         st.warning("A faint hint at one time frame. Not enough to rely on.")
     else:
-        st.info("No evidence the score has helped for this asset.")
+        st.info("No evidence the Trend reading has helped for this asset.")
 
     st.write(record.get("ai_text") or record.get("text") or "")
 
@@ -12314,14 +12076,14 @@ def show_signal_evidence(kind: str, asset_id: str, shown: str) -> None:
             "Next": f"{horizon} day" + ("" if str(horizon) == "1" else "s"),
             "Link to later price": "n/a" if ic is None else f"{ic:+.2f}",
             "Chance level": "n/a" if noise is None else f"±{noise:.2f}",
-            "High scores": move(high),
-            "Low scores": move(low),
+            "Trend +50 or above": move(high),
+            "Trend -50 or below": move(low),
         })
     if rows:
         st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")
     st.caption(
         "Link to later price runs from -1 to +1. Anything inside the chance level cannot be told apart from luck. "
-        "High and low scores are compared with an average day because most assets drift one way over time."
+        "High and low Trend readings are compared with an average day because most assets drift one way over time."
     )
     from evidence import volatility_text
     from funding import funding_text
@@ -12335,36 +12097,38 @@ def show_signal_evidence(kind: str, asset_id: str, shown: str) -> None:
     factors = verdict.get("factors") or []
     if factors:
         st.caption(
-            "Parts of the score that cleared the chance level at two or more time frames: "
+            "Other readings that cleared the chance level at two or more time frames: "
             + ", ".join(str(item) for item in factors)
             + ". With this many comparisons that is worth a closer look, not proof."
         )
     strategy = record.get("strategy") or {}
     if strategy.get("strategy_return_pct") is not None and strategy.get("buy_hold_return_pct") is not None:
         st.caption(
-            f"Holding only while the score was high returned {strategy['strategy_return_pct']:+.0f}% "
+            f"Holding from a Trend reading of +50 until it fell below 0 returned {strategy['strategy_return_pct']:+.0f}% "
             f"against {strategy['buy_hold_return_pct']:+.0f}% for buy and hold, after costs and with a one-day delay "
             f"(in the market {strategy.get('exposure_pct') or 0:.0f}% of days)."
         )
     st.caption(
         f"Daily prices from {record.get('first_scored', '?')} to {record.get('asof', '?')} "
-        f"({record.get('scored_days', 0)} days). Tested without looking ahead. "
+        f"({record.get('scored_days', 0)} days). Tested without looking ahead, on this asset's own history "
+        "(in-sample: not a held-back validation). "
+        f"Signals {record.get('signals_version', '?')} · definition {record.get('signals_fingerprint', '?')}. "
         "A description of the past, not advice and not a forecast."
     )
 
 
 @st.cache_data(ttl=900, max_entries=100, show_spinner=False)
-def _matrix_cached(asset_key, stamp, sets_key, sentiment_key, horizon, days, _indicated, _sets, _sentiment):
-    """The Signal matrix replays the score for every day and every weight set (over a hundred
-    score calculations). Same prices, weights and sentiment give the same answer, so it is
-    worked out once and reused by every redraw and every account until something changes."""
+def _matrix_cached(asset_key, stamp, version, kind, sentiment_key, horizon, days, _indicated, _sentiment):
+    """The Signal matrix replays the signals v2 readings for every day in the window. Same prices,
+    definitions and sentiment give the same answer, so it is worked out once and reused by every
+    redraw and every account until something changes."""
     from signal_matrix import build_matrix
 
-    del asset_key, stamp, sets_key, sentiment_key
-    return build_matrix(_indicated, _sets, _sentiment, horizon, days)
+    del asset_key, stamp, version, sentiment_key
+    return build_matrix(_indicated, kind, _sentiment, horizon, days)
 
 
-def show_signal_matrix(kind: str, asset_id: str, label: str, indicated, weights: dict) -> None:
+def show_signal_matrix(kind: str, asset_id: str, label: str, indicated) -> None:
     """Price across 30 days, with each signal set on those same dates."""
     from signal_matrix import LEAD_HORIZONS, MATRIX_DAYS, boundary_lines, build_matrix, weekend_edges
 
@@ -12397,17 +12161,6 @@ def show_signal_matrix(kind: str, asset_id: str, label: str, indicated, weights:
             horizontal=True,
             key="signal_matrix_horizon",
         )
-        sets = [("TA score", weights or {})]
-        for stored_name, plain in (
-            ("📊 Trend Following", "Trend Following"),
-            ("📉 Mean Reversion", "Mean Reversion"),
-            ("🚀 Momentum Heavy", "Momentum Heavy"),
-        ):
-            sets.append((plain, built_in_profiles.get(stored_name) or {}))
-        for name, saved in (custom_profiles or {}).items():
-            if name in built_in_profiles or not isinstance(saved, dict):
-                continue
-            sets.append((str(name), saved))
         market_key = "crypto" if kind == "Crypto" else "stock"
         asset_key = asset_market_key(kind, asset_id)
         moods = load_market_moods(supabase) or {}
@@ -12423,11 +12176,10 @@ def show_signal_matrix(kind: str, asset_id: str, label: str, indicated, weights:
         except Exception:
             stamp = (len(indicated), "", 0.0)
         matrix = _matrix_cached(
-            asset_key, stamp,
-            json.dumps(sets, sort_keys=True, default=str),
+            asset_key, stamp, signals_v2.FINGERPRINT, kind,
             json.dumps(sentiment, sort_keys=True, default=str),
             int(horizon), MATRIX_DAYS,
-            indicated, sets, sentiment,
+            indicated, sentiment,
         )
         dates = matrix["dates"]
         if len(dates) < 2:
@@ -12437,9 +12189,12 @@ def show_signal_matrix(kind: str, asset_id: str, label: str, indicated, weights:
             f"The last {len(dates)} daily closes, then each signal on those same dates. "
             f"Lead is how closely that signal lined up with the price change over the next {int(horizon)} "
             + ("day" if int(horizon) == 1 else "days")
-            + ". Positive means a high score came before a rise. "
+            + ". Positive means a high reading came before a rise. "
+            + "📈 Trend, 🎯 Stretch, 🔊 Flow and the two named views run from -100 to +100, each day using only the bars up to that day; "
+            + "sentiment runs from 0 to 100. "
             + "A blank sentiment day is before the first saved reading. After that, the last saved score stays until the next one. "
-            + "The 30-day record in the table below counts every signal the same way, using your bullish and bearish boundaries. "
+            + "The 30-day record in the table below uses your Trend alert line (plus and minus) for the technical rows "
+            + "and your market sentiment lines for sentiment. "
             + "† marks a lead that is too thin to tell from chance. Price changes over the next few days overlap, "
             + "so 30 days holds far fewer independent observations than it looks."
         )
@@ -12462,7 +12217,9 @@ def show_signal_matrix(kind: str, asset_id: str, label: str, indicated, weights:
             for row in plot_rows:
                 cells = []
                 for value in row["values"]:
-                    shown_value = "—" if value is None else f"{value:.0f}"
+                    shown_value = "—" if value is None else (
+                        f"{value:+.0f}" if row.get("scale") == "reading" else f"{value:.0f}"
+                    )
                     cells.append(
                         "<td style='padding:4px 6px;text-align:right;white-space:nowrap;'>"
                         f"{shown_value}</td>"
@@ -12517,7 +12274,8 @@ def show_signal_matrix(kind: str, asset_id: str, label: str, indicated, weights:
                     row=index + 2,
                     col=1,
                 )
-                fig.update_yaxes(range=[0, 100], row=index + 2, col=1)
+                fig.update_yaxes(range=[-100, 100] if row.get("scale") == "reading" else [0, 100],
+                                 row=index + 2, col=1)
             fig.update_layout(
                 height=180 + 78 * len(plot_rows),
                 showlegend=False,
@@ -12546,16 +12304,18 @@ def show_signal_matrix(kind: str, asset_id: str, label: str, indicated, weights:
             reverse=True,
         )
         rank_of = {row["name"]: index + 1 for index, row in enumerate(ranked)}
+        reading_line = _trend_alert_level()
         try:
-            bull_line = float(alert_prefs.get("min_score_alert", 70))
+            mood_high = float(alert_prefs.get("market_high_alert") or 65)
+            mood_low = float(alert_prefs.get("market_low_alert") or 35)
         except (TypeError, ValueError):
-            bull_line = 70.0
-        try:
-            bear_line = float(alert_prefs.get("max_score_alert", 30))
-        except (TypeError, ValueError):
-            bear_line = 30.0
+            mood_high, mood_low = 65.0, 35.0
         summary = []
         for row in rows:
+            if row.get("scale") == "reading":
+                bull_line, bear_line = reading_line, -reading_line
+            else:
+                bull_line, bear_line = mood_high, mood_low
             values = row.get("values") or []
             present = sum(value is not None for value in values)
             if present == 0:
@@ -12576,7 +12336,7 @@ def show_signal_matrix(kind: str, asset_id: str, label: str, indicated, weights:
                         day_word = "day" if present == 1 else "days"
                         lines.append(
                             f"The saved score covers {present} {day_word} in this window "
-                            "and stayed between your bearish and bullish boundaries."
+                            "and stayed between your negative and positive lines."
                         )
             record = "<br>".join(html.escape(line) for line in lines)
             summary.append(
@@ -12600,7 +12360,8 @@ def show_signal_matrix(kind: str, asset_id: str, label: str, indicated, weights:
                 f"About {max(effective):.0f} independent observations per signal at this window. "
                 "Only leads that clear the noise level for that count are ranked. "
                 "Read the record beside the all-days figure: a rising asset is higher most days whatever the score says. "
-                "This is a lookback. It does not change the technical score or alerts."
+                "This is a lookback over 30 days, far too short to show that any reading predicts prices. "
+                "It does not change the readings or alerts."
             )
 
 
@@ -12694,7 +12455,7 @@ def show_market_sentiment(kind: str, asset_id: str, label: str, ticker: str | No
         if headlines:
             asset_key = "".join(ch if ch.isalnum() else "_" for ch in f"{kind}_{asset_id}").strip("_") or "asset"
             _article_box(f"asset_{asset_key}", headline_table(headlines))
-        st.caption("This reads recent coverage. It is not the technical score, and it is not advice.")
+        st.caption("This reads recent coverage. It is not a technical reading, and it is not advice.")
 
 
 _ASSET_PICK_JS = """
@@ -12843,7 +12604,6 @@ render_dashboard(
     CRYPTO_WATCHLIST,
     STOCK_WATCHLIST,
     days_history,
-    current_weights,
     show_reasons,
     show_extra_metrics,
     show_period_changes,

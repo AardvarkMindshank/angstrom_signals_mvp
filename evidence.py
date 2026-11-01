@@ -1,7 +1,10 @@
-"""How much has the technical score actually told us about this asset?
+"""How much has the Trend reading (signals v2) actually told us about this asset?
 
-build_evidence replays the score over years of daily bars (no look-ahead, trade
-one bar after the signal) and boils the result down to a small record. The
+build_evidence replays the signals v2 readings over years of daily bars (no look-ahead, trade
+one bar after the signal) and boils the result down to a small record. The tested series is the
+Trend reading (-100..+100); Stretch, Flow and the two named views are checked alongside as "factors".
+Records carry the signals version and definition fingerprint; a record from an older version
+(VERSION 1 tested the retired 0-100 score) is not shown and is rebuilt. The
 verdict comes from fixed rules, not from a model, and defaults to "no evidence".
 An AI paragraph may reword the numbers, but only if every number in it already
 appears in the facts it was given and it uses none of the banned phrases.
@@ -21,7 +24,9 @@ import pandas as pd
 
 import backtest as bt
 
-VERSION = 1
+VERSION = 2  # 2: signals v2 Trend reading. 1 was the retired 0-100 score.
+TREND_HIGH = 50.0   # "high" and "low" Trend readings for the bucket counts (same as the default alert line)
+TREND_LOW = -50.0
 HORIZONS = (1, 3, 7, 14)
 # Warm-up bars plus enough scored days that a 14-day horizon is not empty.
 MIN_BARS = bt.WARMUP + 300
@@ -51,17 +56,47 @@ def _clean(value):
     return round(number, 4) if math.isfinite(number) else None
 
 
+_FAR_FUTURE = datetime(2100, 1, 1, tzinfo=timezone.utc)
+
+
+def v2_detail_fn(kind: str):
+    """detail_fn for score_details: the Trend reading as "score", the other readings as factors.
+    Every bar in the replayed window is treated as finished (it is history)."""
+    import signals_v2
+
+    def detail(window):
+        result = signals_v2.score(window, kind, now=_FAR_FUTURE)
+        if result.get("status") != "ok":
+            return None
+        clusters, lenses = result["clusters"], result["lenses"]
+        factors = {"Stretch": clusters["stretch"]["percent"], "Flow": clusters["flow"]["percent"]}
+        for key, spec in signals_v2.LENSES.items():
+            factors[spec["name"]] = (lenses.get(key) or {}).get("percent")
+        vol = (result.get("context") or {}).get("volatility") or {}
+        return {"score": clusters["trend"]["percent"], "contributions": factors, "atr_pct": vol.get("atr_pct")}
+
+    return detail
+
+
 def build_evidence(
     frame: pd.DataFrame,
-    bull: float = 70.0,
-    bear: float = 30.0,
+    bull: float = TREND_HIGH,
+    bear: float = TREND_LOW,
     horizons=HORIZONS,
     detail_fn=None,
     warmup: int = bt.WARMUP,
+    kind: str = "Stock",
 ) -> dict | None:
     """The record for one asset, or None when there is too little history."""
+    import signals_v2
+
     if frame is None or len(frame) < warmup + 300:
         return None
+    if detail_fn is None:
+        from scoring import calculate_indicators
+
+        frame = calculate_indicators(frame)
+        detail_fn = v2_detail_fn(kind)
     details = bt.score_details(frame, detail_fn=detail_fn, warmup=warmup)
     if details.empty or details["score"].notna().sum() < 250:
         return None
@@ -70,6 +105,9 @@ def build_evidence(
 
     record = {
         "version": VERSION,
+        "subject": "Trend reading",
+        "signals_version": signals_v2.VERSION,
+        "signals_fingerprint": signals_v2.FINGERPRINT,
         "asof": str(details.index[-1])[:10],
         "first_scored": str(details.index[0])[:10],
         "scored_days": int(total.notna().sum()),
@@ -78,11 +116,10 @@ def build_evidence(
         "horizons": {},
         "factors": {},
     }
-    factor_columns = {name: details[name] for name in bt.FACTOR_NAMES if name in details.columns}
-    for title, members in bt.FACTOR_GROUPS.items():
-        present = [member for member in members if member in details.columns]
-        if present:
-            factor_columns[title.replace("GROUP ", "").split(" (")[0] + " group"] = details[present].sum(axis=1, min_count=1)
+    factor_columns = {
+        str(name): details[name] for name in details.columns
+        if name != "score" and not str(name).startswith("x_")
+    }
 
     for horizon in horizons:
         fwd = bt.forward_returns(closes, int(horizon)).reindex(details.index)
@@ -110,7 +147,7 @@ def build_evidence(
     if block:
         record["volatility"] = block
 
-    strategy = bt.run_strategy(closes, total, enter=bull)
+    strategy = bt.run_strategy(closes, total, enter=bull, exit_below=0.0)
     record["strategy"] = {key: _clean(strategy.get(key)) for key in (
         "strategy_return_pct", "buy_hold_return_pct", "exposure_pct",
         "strategy_max_drawdown_pct", "buy_hold_max_drawdown_pct",
@@ -196,14 +233,17 @@ def volatility_text(record: dict) -> str | None:
     text = (
         f"Recent typical daily range: {now:.1f}% of price ({where} for this asset; its median is {median:.1f}%)."
     )
+    # This per-asset check is in-sample. The one tested result (large US stocks, held-back data) is a
+    # pooled finding about move size; nothing here is a validated test for this asset.
     held = [
         h for h, info in (block.get("checks") or {}).items()
         if info.get("partial") is not None and info.get("noise") is not None and info["partial"] >= info["noise"]
     ]
     if len(held) >= 2:
         text += (
-            " On this asset, wide recent ranges have tended to be followed by bigger moves over the next days, "
-            "beyond what closing prices alone showed. That is about size, not direction."
+            " In this asset's own history, wide recent ranges have tended to be followed by bigger moves over the "
+            "next days, beyond what closing prices alone showed. That is about size, not direction, and it is a "
+            "look back over this asset, not a separate validated test."
         )
     else:
         text += " On this asset the link between recent range and later move size was not clear in this test."
@@ -296,25 +336,26 @@ def plain_text(record: dict) -> str:
     ics, noise = _range_text(record)
     if verdict["level"] == "none":
         text = (
-            f"Over {span} of this asset's history, the technical score showed no evidence of lining up "
+            f"Over {span} of this asset's history, the Trend reading showed no evidence of lining up "
             f"with what price did next. Its rank correlation with later returns ran from {ics}, against a "
             f"noise band of up to ±{noise}, so the pattern "
-            f"cannot be told apart from chance. Treat the score as a description of current conditions, "
+            f"cannot be told apart from chance. Treat the reading as a description of current conditions, "
             f"not a forecast."
         )
     else:
-        way = "in the opposite direction to the label (high scores were followed by weaker prices)" if verdict["reverse"] else "in the direction the label suggests"
+        way = ("in reverse (a high Trend reading was followed by weaker prices)" if verdict["reverse"]
+               else "in the trend's direction (a high Trend reading was followed by firmer prices)")
         horizons = ", ".join(str(h) for h in verdict["horizons"])
         strength = "held up" if verdict["level"] == "holds" else "showed a hint"
         text = (
-            f"Over {span}, the score {strength} {way} at the {horizons}-day horizon"
+            f"Over {span}, the Trend reading {strength} {way} at the {horizons}-day horizon"
             f"{'s' if len(verdict['horizons']) > 1 else ''}, in both halves of the history and beyond the noise band. "
             f"Even so, one asset over one period can look good by luck, and the link was weak "
             f"(rank correlation {ics}). Check that it also holds on similar assets before relying on it."
         )
     if verdict["factors"]:
         text += (
-            " Among the individual factors, " + ", ".join(verdict["factors"])
+            " Among the other readings, " + ", ".join(verdict["factors"])
             + " cleared the noise band at two or more horizons. With this many comparisons that is worth a closer look, not proof."
         )
     return text
@@ -336,11 +377,11 @@ def facts_for_model(record: dict, label: str) -> str:
     strategy = record.get("strategy") or {}
     if strategy.get("strategy_return_pct") is not None and strategy.get("buy_hold_return_pct") is not None:
         lines.append(
-            f"Holding only while the score was high returned {strategy['strategy_return_pct']:.0f}% "
+            f"Holding only from a Trend reading of +50 until it fell below 0 returned {strategy['strategy_return_pct']:.0f}% "
             f"against {strategy['buy_hold_return_pct']:.0f}% for buy and hold."
         )
     if verdict["factors"]:
-        lines.append("Factors that cleared the noise band at two or more horizons: " + ", ".join(verdict["factors"]))
+        lines.append("Other readings that cleared the noise band at two or more horizons: " + ", ".join(verdict["factors"]))
     return "\n".join(lines)
 
 
@@ -385,9 +426,10 @@ def ai_summary(record: dict, label: str) -> str | None:
     facts = facts_for_model(record, label)
     prompt = (
         "Write 3 or 4 plain sentences for a retail trader reading a dashboard. Explain what these backtest "
-        "results say about how useful the technical score has been for this asset. Rules: use only the facts "
+        "results say about how useful the Trend reading (a -100 to +100 description of where price sits against "
+        "its longer averages) has been for this asset. Rules: use only the facts "
         "below; any number you write must appear in them; do not invent figures; do not give trading advice; "
-        "do not predict prices; if the verdict is 'none', say plainly there is no evidence the score helped. "
+        "do not predict prices; if the verdict is 'none', say plainly there is no evidence the reading helped. "
         "Reply with the paragraph only.\n\n" + facts
     )
     for attempt in _MODELS[:2]:
@@ -453,6 +495,8 @@ def load_evidence(supabase, asset_key: str) -> dict | None:
     if not rows or not isinstance(rows[0].get("payload"), dict):
         return None
     payload = dict(rows[0]["payload"])
+    if payload.get("version") != VERSION:
+        return None  # an older methodology (v1 tested the retired 0-100 score): wait for the rebuild
     payload["computed_at"] = rows[0].get("computed_at")
     return payload
 
@@ -490,12 +534,18 @@ def refresh_due_evidence(supabase, catalog: dict, batch: int = EVIDENCE_BATCH) -
         return
     keys = {asset_market_key(kind, asset_id): (kind, asset_id, label) for (kind, asset_id), label in catalog.items()}
     try:
-        stored = {
-            row["asset_key"]: _stamp(row.get("computed_at"))
-            for row in (
-                supabase.table("asset_evidence").select("asset_key, computed_at").in_("asset_key", list(keys)).execute().data or []
-            )
-        }
+        stored = {}
+        for row in (
+            supabase.table("asset_evidence").select("asset_key, computed_at, version:payload->version")
+            .in_("asset_key", list(keys)).execute().data or []
+        ):
+            version = row.get("version", (row.get("payload") or {}).get("version"))
+            try:
+                current = int(version) == VERSION
+            except (TypeError, ValueError):
+                current = False
+            # A record from an older methodology is due at once.
+            stored[row["asset_key"]] = _stamp(row.get("computed_at")) if current else None
     except Exception as exc:
         print(f"Evidence skipped (run the latest supabase_rls.sql): {str(exc)[:120]}")
         return
@@ -515,7 +565,7 @@ def refresh_due_evidence(supabase, catalog: dict, batch: int = EVIDENCE_BATCH) -
                 print(f"Evidence skipped for {label}: not enough history.")
                 record = {"version": VERSION, "too_short": True, "bars": 0 if frame is None else int(len(frame))}
             else:
-                record = build_evidence(frame)
+                record = build_evidence(frame, kind=kind)
                 if record is None:
                     record = {"version": VERSION, "too_short": True, "bars": int(len(frame))}
                 else:

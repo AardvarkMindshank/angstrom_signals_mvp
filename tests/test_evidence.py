@@ -19,7 +19,7 @@ def planted(n=900, seed=5, strength=0.01):
 
     def detail(window):
         value = lookup[window.index[-1]]
-        return {"score": 50 + 10 * value, "contributions": {"RSI": value}}
+        return {"score": 20 * value, "contributions": {"Stretch": value}}
 
     return data, detail
 
@@ -30,7 +30,7 @@ def test_a_real_signal_is_found_and_marked_as_holding():
     verdict = record["verdict"]
     assert verdict["level"] == "holds" and not verdict["reverse"]
     assert len(verdict["horizons"]) >= 2
-    assert "RSI" in verdict["factors"]
+    assert "Stretch" in verdict["factors"]
 
 
 def test_a_backwards_signal_is_flagged_as_reverse():
@@ -142,7 +142,7 @@ class FakeSupabase:
 def test_save_and_load_round_trip():
     client = FakeSupabase()
     assert ev.load_evidence(client, "Crypto|btc") is None
-    assert ev.save_evidence(client, "Crypto|btc", {"version": 1, "text": "hello"})
+    assert ev.save_evidence(client, "Crypto|btc", {"version": ev.VERSION, "text": "hello"})
     loaded = ev.load_evidence(client, "Crypto|btc")
     assert loaded["text"] == "hello" and loaded["computed_at"]
 
@@ -154,7 +154,7 @@ def test_worker_evaluates_oldest_first_and_respects_the_batch():
     original = (ev.fetch_long_history, ev.build_evidence, ev.ai_summary)
     try:
         ev.fetch_long_history = lambda kind, asset_id: (calls.append(asset_id) or data, None)
-        ev.build_evidence = lambda frame: original[1](frame, detail_fn=detail, warmup=50)
+        ev.build_evidence = lambda frame, **_kw: original[1](frame, detail_fn=detail, warmup=50)
         ev.ai_summary = lambda record, label: None
         catalog = {("Stock", "AAA"): "A", ("Stock", "BBB"): "B", ("Stock", "CCC"): "C"}
         ev.refresh_due_evidence(client, catalog, batch=2)
@@ -194,7 +194,7 @@ def test_worker_keeps_going_when_funding_cannot_be_fetched():
     original = (ev.fetch_long_history, ev.build_evidence, ev.ai_summary, ev._funding_block)
     try:
         ev.fetch_long_history = lambda kind, asset_id: (data, None)
-        ev.build_evidence = lambda frame: original[1](frame, detail_fn=detail, warmup=50)
+        ev.build_evidence = lambda frame, **_kw: original[1](frame, detail_fn=detail, warmup=50)
         ev.ai_summary = lambda record, label: None
         ev._funding_block = lambda kind, asset_id, frame: None  # blocked or no contract
         ev.refresh_due_evidence(client, {("Crypto", "bitcoin"): "Bitcoin"}, batch=1)
@@ -210,3 +210,21 @@ def test_worker_keeps_going_when_funding_cannot_be_fetched():
 def test_funding_block_is_crypto_only_and_survives_errors():
     assert ev._funding_block("Stock", "AAPL", None) is None
     assert ev._funding_block("Crypto", "not-a-coin", pd.DataFrame()) is None
+
+
+def test_old_methodology_records_are_hidden_and_rebuilt():
+    client = FakeSupabase()
+    ev.save_evidence(client, "Stock|AAA", {"version": 1, "text": "v1 score record"})
+    assert ev.load_evidence(client, "Stock|AAA") is None
+    data, detail = planted()
+    original = (ev.fetch_long_history, ev.build_evidence, ev.ai_summary, ev._funding_block)
+    try:
+        ev.fetch_long_history = lambda kind, asset_id: (data, None)
+        ev.build_evidence = lambda frame, **_kw: original[1](frame, detail_fn=detail, warmup=50)
+        ev.ai_summary = lambda record, label: None
+        ev.refresh_due_evidence(client, {("Stock", "AAA"): "A"}, batch=1)
+    finally:
+        ev.fetch_long_history, ev.build_evidence, ev.ai_summary, ev._funding_block = original
+    loaded = ev.load_evidence(client, "Stock|AAA")
+    assert loaded["version"] == ev.VERSION and loaded["subject"] == "Trend reading"
+    assert loaded["signals_fingerprint"]
