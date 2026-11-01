@@ -4,16 +4,25 @@ Five layers, kept separate in the output:
 
 1. Readings     what each indicator says, in its own units, plus where that sits in the asset's own past year.
 2. Components   directional values from -1 to +1, each tied to one stated hypothesis. Continuous: no cliffs.
-3. Clusters     Trend (trend-following), Stretch (mean-reversion) and Flow (volume confirmation). Each is the
-                plain average of the components it has data for. They are reported side by side and are never
-                added together, because Trend and Stretch are opposite bets on the same price move.
+3. Clusters     descriptive states on two horizons plus volume:
+                  Trend    where price sits against its 50- and 200-day levels (weeks to months)
+                  Stretch  how far the last 1-4 weeks have run up or down within the recent range
+                  Flow     whether volume has been backing rises or falls
+                Each is the plain average of the components it has data for. They are shown side by side and
+                never added into one score.
 4. Context      non-directional: volatility, trend strength, regime, participation, data coverage. Never
                 pushes any reading up or down.
-5. Lenses       optional, named combinations with a stated meaning (see LENSES). Not a universal score.
+5. Lenses       optional, named hypotheses that read the clusters (see LENSES): trend-following reads WITH the
+                trend; mean-reversion reads AGAINST the stretch. Not a universal score.
 
-Sign convention for every component and cluster: positive means "under this hypothesis, leans up";
-negative means "leans down". That is a description of what the hypothesis says, not a forecast:
-none of the directional clusters has passed a validation test (see VALIDATION).
+Sign convention: every component and cluster is a description, positive = up (above the averages, stretched
+up, volume backing rises). Hypotheses only appear in the lenses. None of them has passed a validation test
+(see VALIDATION).
+
+Why two horizons rather than "trend vs stretch hypotheses": on development data (v2_overlap.py), signing
+oscillators the contrarian way made Stretch a mirror of Trend (rank correlation -0.93): the same move counted
+twice with opposite signs. Splitting by horizon keeps the information that differs, e.g. a pullback inside an
+uptrend.
 
 The indicator values come unchanged from scoring.calculate_indicators (pandas-ta). This module only turns
 them into readings. Scores use the last COMPLETED daily bar, so they do not change while a day is forming.
@@ -37,50 +46,51 @@ VERSION = "2.0.0"
 # Every number the readings depend on. Changing any of them changes FINGERPRINT, which is stored with every
 # result so a later reader can tell which definition produced it.
 DEFINITIONS = {
-    "ma_lengths": [20, 50, 200],
+    "ma_lengths": [50, 200],             # the 20-day level is short-term and already inside Bollinger (Stretch)
     "ma_scale_per_sqrt_length": 0.5,     # distance from an average, in ATRs, divided by 0.5 * sqrt(length)
-    "ichimoku_scale_atr": 1.0,           # distance outside the cloud and Tenkan-Kijun gap, in ATRs
+    "ichimoku_scale_atr": 3.0,           # distance outside the cloud and Tenkan-Kijun gap, in ATRs
     "macd_level_scale_atr": 1.0,         # MACD line in ATRs
     "macd_accel_scale_atr": 0.25,        # histogram (line minus signal) in quarter-ATRs
     "momentum_days": 7,                  # 7-day return in units of the expected 7-day move (ATR% * sqrt(7))
-    "rsi_centre": 50, "rsi_span": 30,    # RSI 20 -> +1 (stretched down), 80 -> -1 (stretched up)
+    "rsi_centre": 50, "rsi_span": 30,    # RSI 80 -> +1 (stretched up), 20 -> -1 (stretched down)
     "stoch_centre": 50, "stoch_span": 50,
-    "bb_centre": 0.5, "bb_span": 0.5,
+    "bb_centre": 0.5, "bb_gain": 2.0,    # tanh(2 x (position - 0.5)): 0.76 at a band, approaching 1 beyond it
     "obv_scale_sqrt_days": 20,           # OBV minus its 20-day average, in average daily volumes * sqrt(20)
     "heavy_volume_full_at": 2.0,         # volume ratio where a candle counts fully (1.0 counts nothing)
     "percentile_window": 252,            # own-history comparison: up to a year of earlier completed bars
     "percentile_min_history": 60,
     "adx_strong": 25, "adx_weak": 20,
     "label_band_strong": 0.5, "label_band": 0.2,
-    "disagreement_level": 0.3,
+    "against_trend_level": 0.3,
     "stock_close_new_york": "16:30",
-    "lenses": {"trend_following": {"trend": 0.75, "flow": 0.25}, "mean_reversion": {"stretch": 1.0}},
+    "lenses": {"trend_following": {"trend": 0.75, "flow": 0.25}, "mean_reversion": {"stretch": -1.0}},
 }
 FINGERPRINT = hashlib.sha256((VERSION + json.dumps(DEFINITIONS, sort_keys=True)).encode()).hexdigest()[:12]
 
 CLUSTERS = {
     "trend": {
-        "name": "Trend", "icon": "📈", "hypothesis": "trend-following",
-        "question": "Has price been rising or falling over the last weeks to months?",
-        "components": ["moving_averages", "ichimoku", "macd", "momentum"],
+        "name": "Trend", "icon": "📈", "horizon": "weeks to months",
+        "question": "Is price above or below its 50- and 200-day levels, and by how much?",
+        "components": ["moving_averages", "ichimoku", "macd"],
     },
     "stretch": {
-        "name": "Stretch", "icon": "🎯", "hypothesis": "mean-reversion",
-        "question": "Is price unusually low or high within its last 2-4 weeks?",
-        "components": ["rsi", "stochastic", "bollinger"],
+        "name": "Stretch", "icon": "🎯", "horizon": "1 to 4 weeks",
+        "question": "How far has price run up or down lately, within its recent range?",
+        "components": ["rsi", "stochastic", "bollinger", "momentum", "macd_acceleration"],
     },
     "flow": {
-        "name": "Flow", "icon": "🔊", "hypothesis": "volume confirmation",
+        "name": "Flow", "icon": "🔊", "horizon": "days to weeks",
         "question": "Is trading volume backing rises or falls?",
         "components": ["obv", "heavy_volume"],
     },
 }
 
 COMPONENT_NAMES = {
-    "moving_averages": "Moving averages (20, 50, 200 days)",
+    "moving_averages": "Moving averages (50, 200 days)",
     "ichimoku": "Ichimoku cloud",
-    "macd": "MACD",
-    "momentum": "7-day momentum",
+    "macd": "MACD line",
+    "momentum": "7-day move",
+    "macd_acceleration": "MACD histogram",
     "rsi": "RSI (14)",
     "stochastic": "Stochastic (14, 3)",
     "bollinger": "Bollinger position (20, 2)",
@@ -91,21 +101,22 @@ COMPONENT_NAMES = {
 LENSES = {
     "trend_following": {
         "name": "Trend-following view",
-        "meaning": "What a trend follower would read: Trend, with Flow as a smaller confirmation (75 / 25).",
+        "meaning": "Leans with the trend: Trend, with Flow as a smaller confirmation (75 / 25).",
     },
     "mean_reversion": {
         "name": "Mean-reversion view",
-        "meaning": "What a mean-reversion trader would read: Stretch alone.",
+        "meaning": "Leans against the recent stretch: stretched up leans down, stretched down leans up.",
     },
 }
 
 # What has and has not been shown on data kept aside (hold-out, tag holdout-spec-v1). Badges in the app come
 # from here, never from hand-written text.
 VALIDATION = {
-    "trend": {"status": "unvalidated", "note": "Not shown to predict price moves. A crypto trend-ranking test "
-                                              "on held-back data was inconclusive."},
-    "stretch": {"status": "unvalidated", "note": "Not shown to predict price moves."},
-    "flow": {"status": "unvalidated", "note": "Not shown to predict price moves."},
+    "trend": {"status": "unvalidated", "note": "A description of where price sits. Not shown to predict price "
+                                              "moves; a crypto trend-ranking test on held-back data was inconclusive."},
+    "stretch": {"status": "unvalidated", "note": "A description of the recent move. Not shown to predict "
+                                                "price moves, in either the trend or the mean-reversion reading."},
+    "flow": {"status": "unvalidated", "note": "A description of volume. Not shown to predict price moves."},
     "volatility_stock": {"status": "validated_size", "note": "For large US stocks, ATR% higher than usual has "
                          "been followed by bigger moves over the next week, up or down. Tested once on held-back "
                          "data; a modest improvement. It says nothing about direction."},
@@ -113,6 +124,7 @@ VALIDATION = {
                           "Treat ATR% as a description of recent behaviour only."},
 }
 
+SCORING_BARS = 500           # readings always use the full stored history (the chart setting only changes the chart)
 TREND_ALERT_DEFAULT = 50      # alerts: Trend reading (-100..100) crossing +50 / -50
 TREND_ALERT_REARM = 20        # it must come back 20 points before the same alert can fire again
 
@@ -229,20 +241,17 @@ def _components(row: pd.Series, frame: pd.DataFrame) -> tuple[dict, dict]:
         ichi.append(_tanh((tenkan - kijun) / (usable_atr * d["ichimoku_scale_atr"])))
     comps["ichimoku"] = _mean(ichi) if ichi else None
 
-    # Trend: MACD, counted once (level and acceleration averaged; the histogram IS line minus signal)
+    # MACD: the line (12- vs 26-day level, Trend) and the histogram (line minus signal = acceleration,
+    # Stretch). Each condition is used once; v1 scored "line above signal" and "histogram positive" as two votes.
     line_col, hist_col = _col(frame, "MACD_"), _col(frame, "MACDh_")
     macd_line = _num(row.get(line_col)) if line_col else None
     macd_hist = _num(row.get(hist_col)) if hist_col else None
-    macd_parts = []
-    if macd_line is not None and usable_atr:
-        macd_parts.append(_tanh(macd_line / (usable_atr * d["macd_level_scale_atr"])))
-        readings["macd"] = macd_line
-    if macd_hist is not None and usable_atr:
-        macd_parts.append(_tanh(macd_hist / (usable_atr * d["macd_accel_scale_atr"])))
-        readings["macd_histogram"] = macd_hist
-    comps["macd"] = _mean(macd_parts) if macd_parts else None
+    readings["macd"], readings["macd_histogram"] = macd_line, macd_hist
+    comps["macd"] = _tanh(macd_line / (usable_atr * d["macd_level_scale_atr"])) if macd_line is not None and usable_atr else None
+    comps["macd_acceleration"] = (_tanh(macd_hist / (usable_atr * d["macd_accel_scale_atr"]))
+                                  if macd_hist is not None and usable_atr else None)
 
-    # Trend: 7-day momentum, scaled by the asset's own volatility
+    # Stretch: 7-day move, scaled by the asset's own volatility
     change_7d = _num(row.get("change_7d"))
     atr_pct = (usable_atr / close * 100) if usable_atr and close else None
     readings["change_7d"] = change_7d
@@ -253,20 +262,20 @@ def _components(row: pd.Series, frame: pd.DataFrame) -> tuple[dict, dict]:
     else:
         comps["momentum"] = None
 
-    # Stretch: fixed, continuous maps of bounded oscillators (positive = stretched down = leans up for this view)
+    # Stretch: continuous maps of the bounded oscillators (positive = stretched up)
     rsi = _num(row.get("rsi"))
     readings["rsi"] = rsi
-    comps["rsi"] = _clip((d["rsi_centre"] - rsi) / d["rsi_span"]) if rsi is not None else None
+    comps["rsi"] = _clip((rsi - d["rsi_centre"]) / d["rsi_span"]) if rsi is not None else None
     stoch = _num(row.get("stoch_k"))
     readings["stoch_k"] = stoch
-    comps["stochastic"] = _clip((d["stoch_centre"] - stoch) / d["stoch_span"]) if stoch is not None else None
+    comps["stochastic"] = _clip((stoch - d["stoch_centre"]) / d["stoch_span"]) if stoch is not None else None
     upper_col, lower_col = _col(frame, "BBU_"), _col(frame, "BBL_")
     upper = _num(row.get(upper_col)) if upper_col else None
     lower = _num(row.get(lower_col)) if lower_col else None
     if None not in (upper, lower, close) and upper > lower:
         position = (close - lower) / (upper - lower)
         readings["bb_position"] = position
-        comps["bollinger"] = _clip((d["bb_centre"] - position) / d["bb_span"])
+        comps["bollinger"] = _tanh(d["bb_gain"] * (position - d["bb_centre"]))
     else:
         comps["bollinger"] = None
 
@@ -312,7 +321,7 @@ def _band(value: float | None, words: tuple[str, str, str, str, str]) -> str:
 
 CLUSTER_WORDS = {
     "trend": ("Strong uptrend", "Uptrend", "No clear trend", "Downtrend", "Strong downtrend"),
-    "stretch": ("Very stretched down", "Stretched down", "Not stretched", "Stretched up", "Very stretched up"),
+    "stretch": ("Very stretched up", "Stretched up", "Not stretched", "Stretched down", "Very stretched down"),
     "flow": ("Volume strongly backing rises", "Volume backing rises", "Volume neutral",
              "Volume backing falls", "Volume strongly backing falls"),
 }
@@ -342,7 +351,7 @@ def score(frame: pd.DataFrame, kind: str, now: datetime | None = None) -> dict:
         value = sum(present) / len(present) if present else None
         clusters[key] = {
             "value": value, "percent": percent(value), "label": _band(value, CLUSTER_WORDS[key]),
-            "coverage": [len(present), len(members)], "hypothesis": spec["hypothesis"],
+            "coverage": [len(present), len(members)], "horizon": spec["horizon"],
             "components": {m: {"value": comps.get(m), "percent": percent(comps.get(m))} for m in members},
         }
 
@@ -390,28 +399,36 @@ def score(frame: pd.DataFrame, kind: str, now: datetime | None = None) -> dict:
     lenses = {}
     for key, weights in DEFINITIONS["lenses"].items():
         parts = [(w, clusters[c]["value"]) for c, w in weights.items() if clusters[c]["value"] is not None]
-        total = sum(w for w, _ in parts)
+        total = sum(abs(w) for w, _ in parts)          # a negative weight reads a cluster against itself
         value = sum(w * v for w, v in parts) / total if parts and total else None
         lenses[key] = {"value": value, "percent": percent(value)}
 
     t, s = clusters["trend"]["value"], clusters["stretch"]["value"]
-    level = DEFINITIONS["disagreement_level"]
-    disagree = t is not None and s is not None and abs(t) >= level and abs(s) >= level and (t > 0) != (s > 0)
+    level = DEFINITIONS["against_trend_level"]
+    against = None
+    if t is not None and s is not None and abs(t) >= level and abs(s) >= level and (t > 0) != (s > 0):
+        against = "pullback" if t > 0 else "rally"
 
     as_of = pd.Timestamp(frame.index[pos])
     return {
         **base, "status": "ok", "as_of": str(as_of.date()), "unfinished_bar_skipped": pos < len(frame) - 1,
         "readings": readings, "clusters": clusters, "context": context, "lenses": lenses,
-        "disagreement": disagree,
-        "summary": summary(clusters, disagree),
+        "against_trend": against,
+        "summary": summary(clusters, against),
     }
 
 
-def summary(clusters: dict, disagree: bool) -> str:
+AGAINST_TREND_TEXT = {
+    "pullback": "A pullback inside an uptrend: the longer trend is up while the last few weeks have stretched down.",
+    "rally": "A rally inside a downtrend: the longer trend is down while the last few weeks have stretched up.",
+}
+
+
+def summary(clusters: dict, against: str | None) -> str:
     parts = [f"{CLUSTERS[k]['name']}: {clusters[k]['label'].lower()}" for k in CLUSTERS if clusters[k]["value"] is not None]
     text = "; ".join(parts) + "." if parts else "Not enough data."
-    if disagree:
-        text += " Trend and Stretch point opposite ways: trend-following and mean-reversion views disagree."
+    if against:
+        text += " " + AGAINST_TREND_TEXT[against]
     return text
 
 
@@ -439,7 +456,9 @@ def component_reading(key: str, readings: dict) -> str:
     if key == "ichimoku":
         return f"Price {r.get('cloud', 'unknown')} the cloud"
     if key == "macd":
-        return f"MACD {fmt(r.get('macd'), 3)}, histogram {fmt(r.get('macd_histogram'), 3)}"
+        return f"MACD line {fmt(r.get('macd'), 3)} (12-day minus 26-day average)"
+    if key == "macd_acceleration":
+        return f"Histogram {fmt(r.get('macd_histogram'), 3)} (MACD line minus its signal line)"
     if key == "momentum":
         return f"{fmt(r.get('change_7d'))}% over 7 days (typical daily range {fmt(r.get('atr_pct'), 2)}%)"
     if key == "rsi":

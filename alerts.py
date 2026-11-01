@@ -12,16 +12,28 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 
-BULLISH = "BULLISH_THRESHOLD"
+BULLISH = "BULLISH_THRESHOLD"          # market-sentiment alerts (and, before signals v2, asset scores)
 BEARISH = "BEARISH_THRESHOLD"
 HELD_BULLISH = "BULLISH_THRESHOLD_HELD"
 HELD_BEARISH = "BEARISH_THRESHOLD_HELD"
+# Signals v2: asset alerts follow the Trend reading (-100..100). Separate types, so a v1 score latch or
+# threshold can never act on a v2 reading.
+TREND_UP = "TREND_UP"
+TREND_DOWN = "TREND_DOWN"
+HELD_TREND_UP = "TREND_UP_HELD"
+HELD_TREND_DOWN = "TREND_DOWN_HELD"
 _HELD = {
     BULLISH: HELD_BULLISH,
     BEARISH: HELD_BEARISH,
+    TREND_UP: HELD_TREND_UP,
+    TREND_DOWN: HELD_TREND_DOWN,
 }
+OPEN_TYPES = [BULLISH, BEARISH, TREND_UP, TREND_DOWN]
+LATCH_TYPES = OPEN_TYPES + [HELD_BULLISH, HELD_BEARISH, HELD_TREND_UP, HELD_TREND_DOWN]
 # How far back through the line the score must travel before that alert can arm again.
 _REARM_POINTS = 10.0
+TREND_LEVEL_DEFAULT = 50.0     # signals_v2.TREND_ALERT_DEFAULT
+TREND_REARM = 20.0             # signals_v2.TREND_ALERT_REARM
 
 # Whole-market sentiment alerts are stored like asset alerts, under these symbols.
 MARKET_PREFIX = "market:"
@@ -39,6 +51,12 @@ def asset_message(score: float, alert_type: str) -> str:
     if alert_type == BULLISH:
         return f"Score reached {score:.1f}/100 (strongly positive reading)"
     return f"Score dropped to {score:.1f}/100 (strongly negative reading)"
+
+
+def trend_message(value: float, alert_type: str) -> str:
+    if alert_type == TREND_UP:
+        return f"Trend turned up: {value:+.0f} on the -100 to +100 Trend reading (a description, not a forecast)"
+    return f"Trend turned down: {value:+.0f} on the -100 to +100 Trend reading (a description, not a forecast)"
 
 
 def market_message(score: float, alert_type: str) -> str:
@@ -64,10 +82,9 @@ def latch_symbol(symbol: str) -> str:
 
 def canonical_alert(alert_type: str) -> str:
     """The open crossing a row represents, including one hidden after it was cleared."""
-    if alert_type in (BULLISH, HELD_BULLISH):
-        return BULLISH
-    if alert_type in (BEARISH, HELD_BEARISH):
-        return BEARISH
+    for open_type, held_type in _HELD.items():
+        if alert_type in (open_type, held_type):
+            return open_type
     return alert_type
 
 
@@ -89,26 +106,31 @@ def _missing(score) -> bool:
     return value != value
 
 
-def plan_alert_actions(results, latched, min_thresh, max_thresh, describe=None):
+def plan_alert_actions(results, latched, min_thresh, max_thresh, describe=None, field="score",
+                       types=(BULLISH, BEARISH), rearm=_REARM_POINTS):
     """
     Decide which latches to release and which alerts to open.
+
+    field names the value each row is judged on ("score" for market sentiment, "trend" for assets);
+    types are the (high, low) alert types; rearm is how far back through the line a value must travel.
 
     latched is a set of (symbol, alert_type). Each action is
     ("resolve", symbol, alert_type) or
     ("open", symbol, name, alert_type, message).
     """
     describe = describe or asset_message
+    high_type, low_type = types
     actions = []
     held = set(latched)
-    bullish_clear = min_thresh - _REARM_POINTS
-    bearish_clear = max_thresh + _REARM_POINTS
+    bullish_clear = min_thresh - rearm
+    bearish_clear = max_thresh + rearm
     if bullish_clear < max_thresh:
         bullish_clear = max_thresh
     if bearish_clear > min_thresh:
         bearish_clear = min_thresh
 
     for row in results:
-        score = row.get("score")
+        score = row.get(field)
         if _missing(score):
             continue
         score = float(score)
@@ -120,21 +142,19 @@ def plan_alert_actions(results, latched, min_thresh, max_thresh, describe=None):
         bullish = score >= min_thresh
         bearish = score <= max_thresh
 
-        if score <= bullish_clear and (symbol, BULLISH) in held:
-            actions.append(("resolve", symbol, BULLISH))
-            held.discard((symbol, BULLISH))
-        if score >= bearish_clear and (symbol, BEARISH) in held:
-            actions.append(("resolve", symbol, BEARISH))
-            held.discard((symbol, BEARISH))
+        if score <= bullish_clear and (symbol, high_type) in held:
+            actions.append(("resolve", symbol, high_type))
+            held.discard((symbol, high_type))
+        if score >= bearish_clear and (symbol, low_type) in held:
+            actions.append(("resolve", symbol, low_type))
+            held.discard((symbol, low_type))
 
-        if bullish and (symbol, BULLISH) not in held:
-            message = describe(score, BULLISH)
-            actions.append(("open", symbol, name, BULLISH, message))
-            held.add((symbol, BULLISH))
-        elif bearish and (symbol, BEARISH) not in held:
-            message = describe(score, BEARISH)
-            actions.append(("open", symbol, name, BEARISH, message))
-            held.add((symbol, BEARISH))
+        if bullish and (symbol, high_type) not in held:
+            actions.append(("open", symbol, name, high_type, describe(score, high_type)))
+            held.add((symbol, high_type))
+        elif bearish and (symbol, low_type) not in held:
+            actions.append(("open", symbol, name, low_type, describe(score, low_type)))
+            held.add((symbol, low_type))
 
     return actions
 
@@ -156,8 +176,12 @@ def evaluate_alerts(supabase, user_id, results, alerts_config, notify_email=None
     if not assets_on and not markets_on:
         return []
 
-    min_thresh = float(alerts_config.get("min_score_alert", 70))
-    max_thresh = float(alerts_config.get("max_score_alert", 30))
+    # Asset alerts follow the v2 Trend reading. The old 0-100 score lines (min/max_score_alert) are not used.
+    try:
+        trend_level = abs(float(alerts_config.get("trend_alert_level") or TREND_LEVEL_DEFAULT))
+    except (TypeError, ValueError):
+        trend_level = TREND_LEVEL_DEFAULT
+    trend_level = min(95.0, max(10.0, trend_level))
     market_high = float(alerts_config.get("market_high_alert") or 65)
     market_low = float(alerts_config.get("market_low_alert") or 35)
 
@@ -165,7 +189,7 @@ def evaluate_alerts(supabase, user_id, results, alerts_config, notify_email=None
         supabase.table("user_notifications")
         .select("asset_symbol, alert_type")
         .eq("user_id", user_id)
-        .in_("alert_type", [BULLISH, BEARISH, HELD_BULLISH, HELD_BEARISH])
+        .in_("alert_type", LATCH_TYPES)
         .execute()
         .data
         or []
@@ -184,7 +208,8 @@ def evaluate_alerts(supabase, user_id, results, alerts_config, notify_email=None
 
     actions = []
     if assets_on:
-        actions += plan_alert_actions(results, latched, min_thresh, max_thresh)
+        actions += plan_alert_actions(results, latched, trend_level, -trend_level, describe=trend_message,
+                                      field="trend", types=(TREND_UP, TREND_DOWN), rearm=TREND_REARM)
     if markets_on:
         actions += plan_alert_actions(markets, latched, market_high, market_low, describe=market_message)
     for action in actions:
@@ -303,7 +328,7 @@ def _email_open_crossings(supabase, user_id, notify_email, send_email, logos=Non
             supabase.table("user_notifications")
             .select("id, asset_symbol, asset_name, message")
             .eq("user_id", user_id)
-            .in_("alert_type", [BULLISH, BEARISH, HELD_BULLISH, HELD_BEARISH])
+            .in_("alert_type", LATCH_TYPES)
             .is_("emailed_at", "null")
             # A crossing older than a day is stale. This also stops a burst of old
             # crossings if someone turns instant alerts back on after a while.
@@ -362,6 +387,7 @@ def dismiss_read_alerts(supabase, user_id) -> None:
         .eq("user_id", user_id)
         .eq("is_read", True)
         .neq("alert_type", "group_invite")
-        .not_.in_("alert_type", [HELD_BULLISH, HELD_BEARISH, "moderation_warning", "report_update"])
+        .not_.in_("alert_type", [HELD_BULLISH, HELD_BEARISH, HELD_TREND_UP, HELD_TREND_DOWN,
+                                 "moderation_warning", "report_update"])
         .execute()
     )

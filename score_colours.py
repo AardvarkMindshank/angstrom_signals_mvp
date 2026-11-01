@@ -59,3 +59,34 @@ def tone_js() -> str:
     fg, bg, arrow, _ = STEPS["strong_down"]
     rows.append(f'return {{ bg: "{bg}", fg: "{fg}", arrow: "{arrow}" }};')
     return "\n    ".join(rows)
+
+
+# ----------------------------------------------------------------------------- signals v2 readings (-100..100)
+# Same five colours, on the bands signals_v2 uses for its words: 50 and up strong, 20 and up mild,
+# within 20 of zero neutral.
+
+READING_STRONG = 50.0
+READING_MILD = 20.0
+
+
+def reading_step(value) -> str:
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return "none"
+    if number != number:
+        return "none"
+    if number >= READING_STRONG:
+        return "strong_up"
+    if number >= READING_MILD:
+        return "up"
+    if number > -READING_MILD:
+        return "mixed"
+    if number > -READING_STRONG:
+        return "down"
+    return "strong_down"
+
+
+def reading_tone(value) -> tuple[str, str, str, str]:
+    """(text colour, badge background, arrow, bar colour) for a -100..100 signals v2 reading."""
+    return STEPS[reading_step(value)]

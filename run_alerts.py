@@ -19,7 +19,8 @@ from alerts import evaluate_alerts, market_rows
 from beta_worker import send_beta_decision_emails
 from digest import send_due_digest
 from email_brand import alert_tone, asset_logo, render_email
-from scoring import calculate_indicators, compute_score
+import signals_v2
+from scoring import calculate_indicators
 from market_store import asset_market_key
 from shared_refresh import (
     canonical_asset_id,
@@ -292,13 +293,14 @@ def followed_markets(user_pref: dict) -> list[str]:
     return markets
 
 
-def _score_asset(df, weights):
+def _score_asset(df, kind):
+    """Signals v2 readings for one asset (Trend, Stretch, Flow on -100..100), or None."""
     if df is None or df.empty or len(df) < 15:
         return None
-    scored = compute_score(calculate_indicators(df), weights=weights)
-    if not isinstance(scored, dict):
+    result = signals_v2.score(calculate_indicators(df), kind)
+    if result.get("status") != "ok":
         return None
-    return scored.get("score")
+    return signals_v2.flat_fields(result)
 
 
 def _watchlist(user_pref: dict) -> tuple[dict, dict, int]:
@@ -335,13 +337,13 @@ def run_background_checks() -> None:
 
     prefs_res = (
         supabase.table("user_preferences")
-        .select("user_id, crypto_watchlist, stock_watchlist, settings, scoring_weights")
+        .select("user_id, crypto_watchlist, stock_watchlist, settings")
         .execute()
     )
     all_user_prefs = prefs_res.data or []
 
     catalog = {}
-    max_days = 200
+    max_days = signals_v2.SCORING_BARS
     for user_pref in all_user_prefs:
         crypto_list, stock_list, days_history = _watchlist(user_pref)
         max_days = max(max_days, days_history)
@@ -411,8 +413,9 @@ def run_background_checks() -> None:
             continue
         markets = market_rows(market_scores, followed_markets(user_pref))
 
-        crypto_list, stock_list, days_history = _watchlist(user_pref)
-        weights = user_pref.get("scoring_weights") or None
+        crypto_list, stock_list, _days_history = _watchlist(user_pref)
+        settings = user_pref.get("settings") if isinstance(user_pref.get("settings"), dict) else {}
+        alert_config = {**alert_config, "trend_alert_level": settings.get("trend_alert_level")}
         results = []
         print(f"Checking assets for user {user_id}")
 
@@ -422,19 +425,19 @@ def run_background_checks() -> None:
         ):
             for asset_id, name in assets.items():
                 frame = frames.get((kind, canonical_asset_id(kind, asset_id)))
-                scored = slice_history(frame, days_history)
+                scored = slice_history(frame, signals_v2.SCORING_BARS)
                 try:
-                    score = _score_asset(scored, weights)
+                    readings = _score_asset(scored, kind)
                 except Exception as exc:
                     print(f"Scoring failed for {asset_id}: {exc}")
                     continue
-                if score is None:
+                if readings is None:
                     continue
                 market = "crypto" if kind == "Crypto" else "stock"
                 results.append({
                     "key": asset_id,
                     "symbol": name_for(asset_id, name),
-                    "score": score,
+                    **readings,
                     "logo": logos.get(asset_market_key(kind, asset_id), ""),
                     "price": last_price(frame),
                     "change": day_change(frame),

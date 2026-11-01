@@ -69,8 +69,8 @@ def test_split_groups_by_direction_and_includes_resolved():
 
 def test_strongest_and_weakest_skip_bad_scores_and_do_not_repeat():
     rows = [
-        {"symbol": "A", "score": 90}, {"symbol": "B", "score": 10},
-        {"symbol": "C", "score": None}, {"symbol": "D", "score": float("nan")},
+        {"symbol": "A", "trend": 90}, {"symbol": "B", "trend": 10},
+        {"symbol": "C", "trend": None}, {"symbol": "D", "trend": float("nan")},
     ]
     strongest, weakest = digest.strongest_and_weakest(rows)
     assert strongest == [(90.0, "A"), (10.0, "B")] or strongest[0] == (90.0, "A")
@@ -83,14 +83,14 @@ def test_render_has_sections_times_and_escaping():
         note("ETH", BEARISH, "Score fell to 28"),
     ]
     subject, page, plain = digest.render_digest(
-        notes, [{"symbol": "BTC", "score": 72}], cfg(), "https://app.example.com"
+        notes, [{"symbol": "BTC", "trend": 72}], cfg(), "https://app.example.com"
     )
     assert subject == "Angstrom daily summary: 2 alerts"
-    assert "Turned positive (1)" in page and "Turned negative (1)" in page
+    assert "Trend turned up (1)" in page and "Trend turned down (1)" in page
     assert "BTC &lt;b&gt;" in page and "&amp; rising" in page
     assert "08:30" in page  # 01:30 UTC shown in Bangkok time
     assert "https://app.example.com" in page and "Asia/Bangkok" in page
-    assert "Turned positive (1)" in plain and "- ETH: Score fell to 28" in plain
+    assert "Trend turned up (1)" in plain and "- ETH: Score fell to 28" in plain
     one = digest.render_digest(notes[:1], [], cfg(), "u")[0]
     assert one == "Angstrom daily summary: 1 alert"
 
@@ -176,9 +176,9 @@ def test_digest_shows_logos_before_names():
     notes = [{"id": 1, "asset_symbol": "solana", "asset_name": "Solana (SOL)", "alert_type": BEARISH,
               "message": "Score dropped to 27.5/100", "created_at": "2026-10-29T09:00:00+00:00"}]
     results = [
-        {"key": "solana", "symbol": "Solana (SOL)", "score": 27.5, "logo": "https://img.example/sol.png"},
-        {"key": "AAPL", "symbol": "Apple (AAPL)", "score": 72, "logo": "https://img.example/aapl.png"},
-        {"key": "MSFT", "symbol": "Microsoft (MSFT)", "score": 50, "logo": ""},
+        {"key": "solana", "symbol": "Solana (SOL)", "trend": -55, "logo": "https://img.example/sol.png"},
+        {"key": "AAPL", "symbol": "Apple (AAPL)", "trend": 44, "logo": "https://img.example/aapl.png"},
+        {"key": "MSFT", "symbol": "Microsoft (MSFT)", "trend": 0, "logo": ""},
     ]
     _, page, plain = digest.render_digest(notes, results, cfg(), "https://app")
     assert page.count('src="https://img.example/sol.png"') >= 1
@@ -245,8 +245,8 @@ def test_digest_hides_market_readings_when_market_alerts_are_off():
     assert "Market sentiment" not in page
 
 
-def asset(key, score, market="crypto", **extra):
-    row = {"key": key, "symbol": key.upper(), "score": score, "market": market}
+def asset(key, trend, market="crypto", **extra):
+    row = {"key": key, "symbol": key.upper(), "trend": trend, "market": market}
     row.update(extra)
     return row
 
@@ -256,8 +256,8 @@ def test_watchlist_pick_shares_ten_between_markets_strongest_first():
     stocks = [asset(f"s{i}", i * 10, "stock") for i in range(3)]
     picked = dict((m, (rows, total)) for m, rows, total in digest.pick_watchlist(crypto + stocks))
     rows, total = picked["crypto"]
-    assert total == 8 and [r["score"] for r in rows] == [70, 60, 50, 10, 0]
-    assert [r["score"] for r in picked["stock"][0]] == [20, 10, 0]
+    assert total == 8 and [r["trend"] for r in rows] == [70, 60, 50, 10, 0]
+    assert [r["trend"] for r in picked["stock"][0]] == [20, 10, 0]
     only = digest.pick_watchlist([asset(f"c{i}", i) for i in range(15)])
     assert len(only[0][1]) == 10
 
@@ -265,13 +265,14 @@ def test_watchlist_pick_shares_ten_between_markets_strongest_first():
 def test_watchlist_section_colours_and_text():
     results = [
         asset("btc", 75, price=67250.0, change=0.023, sentiment=64, market_score=52),
-        asset("tsla", 25, "stock", price=403.3, change=-0.018, sentiment=38, market_score=44),
+        asset("tsla", -75, "stock", price=403.3, change=-0.018, sentiment=38, market_score=44, stretch=30, flow=-5),
     ]
     subject, page, plain = digest.render_digest([], results, cfg(), "https://app")
     assert subject == "Angstrom daily summary: no new alerts"
     assert "Your watchlist today" in page and "&#9650; 2.3%" in page and "&#9660; 1.8%" in page
-    assert "#15803d" in page and "#b91c1c" in page          # deep green and red bars for 75 and 25
-    assert "- BTC: 67,250 (+2.3%) · score 75 · sentiment 64" in plain
+    assert "#15803d" in page and "#b91c1c" in page          # deep green and red bars for Trend +75 and -75
+    assert "- BTC: 67,250 (+2.3%) · trend +75 · sentiment 64" in plain
+    assert "trend -75 · stretch +30 · flow -5" in plain
     assert "Sent every day" in page
     _, page_off, _ = digest.render_digest([], results, cfg(digest_watchlist=False), "https://app")
     assert "Your watchlist today" not in page_off and "only on days with at least one alert" in page_off

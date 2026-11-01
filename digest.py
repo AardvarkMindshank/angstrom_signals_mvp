@@ -12,8 +12,8 @@ import html
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
-from alerts import BEARISH, BULLISH, HELD_BEARISH, HELD_BULLISH, asset_facts, facts_by_symbol, is_market_symbol, latch_symbol, logos_by_symbol, price_text
-from score_colours import score_tone
+from alerts import BEARISH, BULLISH, HELD_BEARISH, HELD_BULLISH, HELD_TREND_DOWN, HELD_TREND_UP, TREND_DOWN, TREND_UP, asset_facts, facts_by_symbol, is_market_symbol, latch_symbol, logos_by_symbol, price_text
+from score_colours import reading_tone, score_tone
 from email_brand import asset_logo, list_row, render_email, section_title
 
 # A crossing can be resolved (the score moved back) before the digest goes out.
@@ -21,6 +21,8 @@ from email_brand import asset_logo, list_row, render_email, section_title
 CROSSING_TYPES = [
     BULLISH, BEARISH, HELD_BULLISH, HELD_BEARISH,
     f"{BULLISH}_resolved", f"{BEARISH}_resolved",
+    TREND_UP, TREND_DOWN, HELD_TREND_UP, HELD_TREND_DOWN,
+    f"{TREND_UP}_resolved", f"{TREND_DOWN}_resolved",
 ]
 # Rows older than this are not worth reporting if a digest was missed for days.
 LOOKBACK_HOURS = 48
@@ -97,19 +99,19 @@ def split_crossings(notes: list[dict]) -> tuple[list[dict], list[dict]]:
     up, down = [], []
     for note in sorted(notes, key=lambda n: str(n.get("created_at") or "")):
         kind = str(note.get("alert_type") or "")
-        if kind.startswith(BULLISH):
+        if kind.startswith(BULLISH) or kind.startswith(TREND_UP):
             up.append(note)
-        elif kind.startswith(BEARISH):
+        elif kind.startswith(BEARISH) or kind.startswith(TREND_DOWN):
             down.append(note)
     return up, down
 
 
 def strongest_and_weakest(results: list[dict], count: int = READINGS_SHOWN):
-    """The highest and lowest current scores. Bad or missing scores are ignored."""
+    """The highest and lowest current Trend readings (signals v2). Missing ones are ignored."""
     scored = []
     for row in results or []:
         try:
-            value = float(row.get("score"))
+            value = float(row.get("trend"))
         except (TypeError, ValueError):
             continue
         if value != value:
@@ -202,6 +204,25 @@ def score_bar(score, high=70.0, low=30.0) -> str:
     )
 
 
+def trend_bar(value) -> str:
+    """A small -100..100 bar centred on zero, drawn with a table so it shows in Outlook as well."""
+    if value is None:
+        return ""
+    half = 50
+    size = max(1, min(half, int(round(abs(value) / 2))))
+    colour = reading_tone(value)[3]
+    cell = lambda w, bg: f'<td width="{w}" style="width:{w}px;background:{bg};font-size:0;line-height:0;">&nbsp;</td>'
+    if value >= 0:
+        cells = cell(half, _TRACK) + cell(size, colour) + (cell(half - size, _TRACK) if size < half else "")
+    else:
+        cells = (cell(half - size, _TRACK) if size < half else "") + cell(size, colour) + cell(half, _TRACK)
+    return (
+        '<table role="presentation" cellspacing="0" cellpadding="0" '
+        'style="display:inline-table;vertical-align:middle;border-collapse:collapse;border-radius:4px;overflow:hidden;">'
+        f'<tr style="height:8px;">{cells}</tr></table>'
+    )
+
+
 def pick_watchlist(results, limit: int = WATCHLIST_SHOWN) -> list[tuple[str, list[dict], int]]:
     """[(market, rows to show strongest first, how many that market has)] for crypto then stocks.
 
@@ -209,7 +230,7 @@ def pick_watchlist(results, limit: int = WATCHLIST_SHOWN) -> list[tuple[str, lis
     its strongest and weakest, with the strongest getting the extra one."""
     groups = {}
     for row in results or []:
-        if _number(row.get("score")) is None:
+        if _number(row.get("trend")) is None:
             continue
         groups.setdefault(row.get("market") or "crypto", []).append(row)
     present = [m for m in ("crypto", "stock") if m in groups] + [m for m in groups if m not in ("crypto", "stock")]
@@ -218,7 +239,7 @@ def pick_watchlist(results, limit: int = WATCHLIST_SHOWN) -> list[tuple[str, lis
     share = max(2, limit // len(present))
     picked = []
     for market in present:
-        rows = sorted(groups[market], key=lambda r: _number(r.get("score")), reverse=True)
+        rows = sorted(groups[market], key=lambda r: _number(r.get("trend")), reverse=True)
         if len(rows) > share:
             top = (share + 1) // 2
             rows = rows[:top] + rows[-(share - top):]
@@ -228,7 +249,8 @@ def pick_watchlist(results, limit: int = WATCHLIST_SHOWN) -> list[tuple[str, lis
 
 def _watchlist_row(row: dict, high: float, low: float) -> tuple[str, str]:
     name = " ".join(str(row.get("symbol") or row.get("key") or "").split())
-    score = _number(row.get("score"))
+    trend = _number(row.get("trend"))
+    stretch, flow = _number(row.get("stretch")), _number(row.get("flow"))
     price = price_text(row.get("price"))
     change = _number(row.get("change"))
     sentiment = _number(row.get("sentiment"))
@@ -240,17 +262,20 @@ def _watchlist_row(row: dict, high: float, low: float) -> tuple[str, str]:
     )
     html_row = (
         f'<table role="presentation" width="100%" cellspacing="0" cellpadding="0" '
-        f'style="margin:0 0 6px;background:{_PAPER};border-radius:6px;border-left:4px solid {score_colour(score, high, low)};">'
+        f'style="margin:0 0 6px;background:{_PAPER};border-radius:6px;border-left:4px solid {reading_tone(trend)[3]};">'
         f'<tr><td style="padding:8px 12px 2px;font:700 15px/1.4 {_FONT};color:{_INK};">'
         f'{asset_logo(row.get("logo") or "")}{html.escape(name)}</td>'
         f'<td align="right" style="padding:8px 12px 2px;font:600 15px/1.4 {_FONT};color:{_INK};white-space:nowrap;">'
         f'{html.escape(price)} {change_pill(change)}</td></tr>'
         f'<tr><td colspan="2" style="padding:2px 12px 9px;font:400 13px/1.5 {_FONT};color:{_MUTED};">'
-        f'Score {score_bar(score, high, low)} <strong style="color:{_INK};">{score:.0f}</strong>'
+        f'Trend {trend_bar(trend)} <strong style="color:{_INK};">{trend:+.0f}</strong>'
+        + (f' &nbsp;&middot;&nbsp; Stretch <strong style="color:{_INK};">{stretch:+.0f}</strong>' if stretch is not None else "")
+        + (f' &nbsp;&middot;&nbsp; Flow <strong style="color:{_INK};">{flow:+.0f}</strong>' if flow is not None else "")
         + (f' &nbsp;&middot;&nbsp; {sentiment_html}' if sentiment_html else "")
         + '</td></tr></table>'
     )
-    parts = [f"score {score:.0f}"]
+    parts = [f"trend {trend:+.0f}"] + ([f"stretch {stretch:+.0f}"] if stretch is not None else []) + (
+        [f"flow {flow:+.0f}"] if flow is not None else [])
     if price:
         parts.insert(0, price + (f" ({change * 100:+.1f}%)" if change is not None else ""))
     if sentiment is not None:
@@ -287,7 +312,8 @@ def _watchlist_section(results, config) -> tuple[str, str]:
             plain.append(row_plain)
         if total > len(rows):
             top = (len(rows) + 1) // 2
-            note = f"Your {top} strongest and {len(rows) - top} weakest of {total}. The rest are on the dashboard."
+            note = (f"Your {top} strongest and {len(rows) - top} weakest Trend readings of {total}. "
+                    "The rest are on the dashboard.")
             html_parts.append(f'<p style="margin:2px 0 4px;font:400 12px/1.5 {_FONT};color:{_MUTED};">{note}</p>')
             plain.append(note)
         plain.append("")
@@ -365,14 +391,14 @@ def render_digest(notes, results, config, app_url: str, markets=None) -> tuple[s
             plain.append(f"- {name}: now {score:.0f}/100, no alert")
         plain.append("")
 
-    crossing_rows("Turned positive", up, "up")
-    crossing_rows("Turned negative", down, "down")
+    crossing_rows("Trend turned up", up, "up")
+    crossing_rows("Trend turned down", down, "down")
     if not asset_notes and config.get("enabled", True) is not False:
         html_parts.append(
             f'<p style="margin:8px 0 0;font:400 15px/1.5 {_FONT};color:{_MUTED};">'
-            "No asset scores crossed your alert lines since the last summary.</p>"
+            "No Trend readings crossed your alert lines since the last summary.</p>"
         )
-        plain += ["No asset scores crossed your alert lines since the last summary.", ""]
+        plain += ["No Trend readings crossed your alert lines since the last summary.", ""]
 
     if with_watchlist:
         section_html, section_plain = _watchlist_section(results, config)
