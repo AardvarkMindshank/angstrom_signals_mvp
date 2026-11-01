@@ -1,0 +1,69 @@
+name: Signals v2 checks
+
+# Runs on every push to the v2 development branch. Results are saved to the reports branch (ci/v2/...)
+# so they can be read without access to the Actions page.
+#  - tests: the full test suite with the real indicator library (pandas-ta) and Streamlit installed
+#  - overlap: the development-only overlap check for the v2 components (v2_overlap.py)
+on:
+  push:
+    branches: [v2]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: v2-checks
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12.15"
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install --no-deps -r requirements-research.lock
+          pip install pytest
+      - name: Tests
+        run: |
+          mkdir -p out
+          set +e
+          python -m pytest -q -rs > out/tests.txt 2>&1
+          echo "exit=$?" >> out/tests.txt
+          set -e
+          tail -40 out/tests.txt >> "$GITHUB_STEP_SUMMARY"
+      - name: Save
+        if: always()
+        run: bash .github/scripts/save_to_reports.sh "ci/v2/$(date -u +%Y-%m-%d_%H%M)_${GITHUB_SHA::7}_tests" out/tests.txt
+
+  overlap:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12.15"
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install --no-deps -r requirements-research.lock
+      - name: Frozen prices (development rows are cut when read)
+        run: |
+          git fetch --depth=1 origin reports
+          git checkout FETCH_HEAD -- data/prices
+          mv data/prices prices
+      - name: Overlap check
+        run: python v2_overlap.py --prices prices --out out
+      - name: Save
+        if: always()
+        run: |
+          if [ -d out ]; then
+            bash .github/scripts/save_to_reports.sh "ci/v2/$(date -u +%Y-%m-%d_%H%M)_${GITHUB_SHA::7}_overlap" out/*
+          fi
