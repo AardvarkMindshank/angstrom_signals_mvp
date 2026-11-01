@@ -1,0 +1,944 @@
+{
+ "version": "2.0.0",
+ "fingerprint": "8c28cf760568",
+ "classes": {
+  "stock": {
+   "reading_correlations": {
+    "RSI": {
+     "RSI": 1.0,
+     "Stochastic": 0.85,
+     "Bollinger pos": 0.908,
+     "vs SMA20": 0.919,
+     "vs SMA50": 0.914,
+     "vs SMA200": 0.59,
+     "MACD/close": 0.841,
+     "MACD hist/close": 0.603,
+     "Ichimoku vs cloud": 0.801,
+     "ADX": 0.16,
+     "7d change": 0.735,
+     "OBV vs avg": 0.787,
+     "Volume ratio": -0.092,
+     "ATR%": -0.338
+    },
+    "Stochastic": {
+     "RSI": 0.85,
+     "Stochastic": 1.0,
+     "Bollinger pos": 0.888,
+     "vs SMA20": 0.9,
+     "vs SMA50": 0.682,
+     "vs SMA200": 0.393,
+     "MACD/close": 0.631,
+     "MACD hist/close": 0.812,
+     "Ichimoku vs cloud": 0.528,
+     "ADX": 0.071,
+     "7d change": 0.793,
+     "OBV vs avg": 0.758,
+     "Volume ratio": -0.111,
+     "ATR%": -0.235
+    },
+    "Bollinger pos": {
+     "RSI": 0.908,
+     "Stochastic": 0.888,
+     "Bollinger pos": 1.0,
+     "vs SMA20": 0.947,
+     "vs SMA50": 0.726,
+     "vs SMA200": 0.408,
+     "MACD/close": 0.62,
+     "MACD hist/close": 0.77,
+     "Ichimoku vs cloud": 0.56,
+     "ADX": 0.053,
+     "7d change": 0.828,
+     "OBV vs avg": 0.791,
+     "Volume ratio": -0.084,
+     "ATR%": -0.241
+    },
+    "vs SMA20": {
+     "RSI": 0.919,
+     "Stochastic": 0.9,
+     "Bollinger pos": 0.947,
+     "vs SMA20": 1.0,
+     "vs SMA50": 0.777,
+     "vs SMA200": 0.43,
+     "MACD/close": 0.701,
+     "MACD hist/close": 0.812,
+     "Ichimoku vs cloud": 0.603,
+     "ADX": 0.077,
+     "7d change": 0.818,
+     "OBV vs avg": 0.802,
+     "Volume ratio": -0.106,
+     "ATR%": -0.204
+    },
+    "vs SMA50": {
+     "RSI": 0.914,
+     "Stochastic": 0.682,
+     "Bollinger pos": 0.726,
+     "vs SMA20": 0.777,
+     "vs SMA50": 1.0,
+     "vs SMA200": 0.665,
+     "MACD/close": 0.955,
+     "MACD hist/close": 0.361,
+     "Ichimoku vs cloud": 0.938,
+     "ADX": 0.188,
+     "7d change": 0.551,
+     "OBV vs avg": 0.654,
+     "Volume ratio": -0.073,
+     "ATR%": -0.303
+    },
+    "vs SMA200": {
+     "RSI": 0.59,
+     "Stochastic": 0.393,
+     "Bollinger pos": 0.408,
+     "vs SMA20": 0.43,
+     "vs SMA50": 0.665,
+     "vs SMA200": 1.0,
+     "MACD/close": 0.661,
+     "MACD hist/close": 0.069,
+     "Ichimoku vs cloud": 0.761,
+     "ADX": 0.19,
+     "7d change": 0.294,
+     "OBV vs avg": 0.381,
+     "Volume ratio": -0.031,
+     "ATR%": -0.324
+    },
+    "MACD/close": {
+     "RSI": 0.841,
+     "Stochastic": 0.631,
+     "Bollinger pos": 0.62,
+     "vs SMA20": 0.701,
+     "vs SMA50": 0.955,
+     "vs SMA200": 0.661,
+     "MACD/close": 1.0,
+     "MACD hist/close": 0.315,
+     "Ichimoku vs cloud": 0.92,
+     "ADX": 0.206,
+     "7d change": 0.418,
+     "OBV vs avg": 0.598,
+     "Volume ratio": -0.064,
+     "ATR%": -0.302
+    },
+    "MACD hist/close": {
+     "RSI": 0.603,
+     "Stochastic": 0.812,
+     "Bollinger pos": 0.77,
+     "vs SMA20": 0.812,
+     "vs SMA50": 0.361,
+     "vs SMA200": 0.069,
+     "MACD/close": 0.315,
+     "MACD hist/close": 1.0,
+     "Ichimoku vs cloud": 0.146,
+     "ADX": -0.033,
+     "7d change": 0.782,
+     "OBV vs avg": 0.648,
+     "Volume ratio": -0.114,
+     "ATR%": -0.057
+    },
+    "Ichimoku vs cloud": {
+     "RSI": 0.801,
+     "Stochastic": 0.528,
+     "Bollinger pos": 0.56,
+     "vs SMA20": 0.603,
+     "vs SMA50": 0.938,
+     "vs SMA200": 0.761,
+     "MACD/close": 0.92,
+     "MACD hist/close": 0.146,
+     "Ichimoku vs cloud": 1.0,
+     "ADX": 0.217,
+     "7d change": 0.399,
+     "OBV vs avg": 0.525,
+     "Volume ratio": -0.052,
+     "ATR%": -0.319
+    },
+    "ADX": {
+     "RSI": 0.16,
+     "Stochastic": 0.071,
+     "Bollinger pos": 0.053,
+     "vs SMA20": 0.077,
+     "vs SMA50": 0.188,
+     "vs SMA200": 0.19,
+     "MACD/close": 0.206,
+     "MACD hist/close": -0.033,
+     "Ichimoku vs cloud": 0.217,
+     "ADX": 1.0,
+     "7d change": 0.034,
+     "OBV vs avg": 0.083,
+     "Volume ratio": 0.011,
+     "ATR%": -0.026
+    },
+    "7d change": {
+     "RSI": 0.735,
+     "Stochastic": 0.793,
+     "Bollinger pos": 0.828,
+     "vs SMA20": 0.818,
+     "vs SMA50": 0.551,
+     "vs SMA200": 0.294,
+     "MACD/close": 0.418,
+     "MACD hist/close": 0.782,
+     "Ichimoku vs cloud": 0.399,
+     "ADX": 0.034,
+     "7d change": 1.0,
+     "OBV vs avg": 0.662,
+     "Volume ratio": -0.099,
+     "ATR%": -0.133
+    },
+    "OBV vs avg": {
+     "RSI": 0.787,
+     "Stochastic": 0.758,
+     "Bollinger pos": 0.791,
+     "vs SMA20": 0.802,
+     "vs SMA50": 0.654,
+     "vs SMA200": 0.381,
+     "MACD/close": 0.598,
+     "MACD hist/close": 0.648,
+     "Ichimoku vs cloud": 0.525,
+     "ADX": 0.083,
+     "7d change": 0.662,
+     "OBV vs avg": 1.0,
+     "Volume ratio": -0.08,
+     "ATR%": -0.237
+    },
+    "Volume ratio": {
+     "RSI": -0.092,
+     "Stochastic": -0.111,
+     "Bollinger pos": -0.084,
+     "vs SMA20": -0.106,
+     "vs SMA50": -0.073,
+     "vs SMA200": -0.031,
+     "MACD/close": -0.064,
+     "MACD hist/close": -0.114,
+     "Ichimoku vs cloud": -0.052,
+     "ADX": 0.011,
+     "7d change": -0.099,
+     "OBV vs avg": -0.08,
+     "Volume ratio": 1.0,
+     "ATR%": 0.023
+    },
+    "ATR%": {
+     "RSI": -0.338,
+     "Stochastic": -0.235,
+     "Bollinger pos": -0.241,
+     "vs SMA20": -0.204,
+     "vs SMA50": -0.303,
+     "vs SMA200": -0.324,
+     "MACD/close": -0.302,
+     "MACD hist/close": -0.057,
+     "Ichimoku vs cloud": -0.319,
+     "ADX": -0.026,
+     "7d change": -0.133,
+     "OBV vs avg": -0.237,
+     "Volume ratio": 0.023,
+     "ATR%": 1.0
+    }
+   },
+   "component_correlations": {
+    "moving_averages": {
+     "moving_averages": 1.0,
+     "ichimoku": 0.863,
+     "macd": 0.832,
+     "momentum": 0.658,
+     "rsi": -0.952,
+     "stochastic": -0.772,
+     "bollinger": -0.812,
+     "obv": 0.718,
+     "heavy_volume": 0.181
+    },
+    "ichimoku": {
+     "moving_averages": 0.863,
+     "ichimoku": 1.0,
+     "macd": 0.705,
+     "momentum": 0.361,
+     "rsi": -0.813,
+     "stochastic": -0.574,
+     "bollinger": -0.581,
+     "obv": 0.561,
+     "heavy_volume": 0.07
+    },
+    "macd": {
+     "moving_averages": 0.832,
+     "ichimoku": 0.705,
+     "macd": 1.0,
+     "momentum": 0.766,
+     "rsi": -0.899,
+     "stochastic": -0.919,
+     "bollinger": -0.888,
+     "obv": 0.784,
+     "heavy_volume": 0.118
+    },
+    "momentum": {
+     "moving_averages": 0.658,
+     "ichimoku": 0.361,
+     "macd": 0.766,
+     "momentum": 1.0,
+     "rsi": -0.763,
+     "stochastic": -0.812,
+     "bollinger": -0.849,
+     "obv": 0.684,
+     "heavy_volume": 0.238
+    },
+    "rsi": {
+     "moving_averages": -0.952,
+     "ichimoku": -0.813,
+     "macd": -0.899,
+     "momentum": -0.763,
+     "rsi": 1.0,
+     "stochastic": 0.85,
+     "bollinger": 0.908,
+     "obv": -0.787,
+     "heavy_volume": -0.228
+    },
+    "stochastic": {
+     "moving_averages": -0.772,
+     "ichimoku": -0.574,
+     "macd": -0.919,
+     "momentum": -0.812,
+     "rsi": 0.85,
+     "stochastic": 1.0,
+     "bollinger": 0.889,
+     "obv": -0.758,
+     "heavy_volume": -0.14
+    },
+    "bollinger": {
+     "moving_averages": -0.812,
+     "ichimoku": -0.581,
+     "macd": -0.888,
+     "momentum": -0.849,
+     "rsi": 0.908,
+     "stochastic": 0.889,
+     "bollinger": 1.0,
+     "obv": -0.791,
+     "heavy_volume": -0.279
+    },
+    "obv": {
+     "moving_averages": 0.718,
+     "ichimoku": 0.561,
+     "macd": 0.784,
+     "momentum": 0.684,
+     "rsi": -0.787,
+     "stochastic": -0.758,
+     "bollinger": -0.791,
+     "obv": 1.0,
+     "heavy_volume": 0.226
+    },
+    "heavy_volume": {
+     "moving_averages": 0.181,
+     "ichimoku": 0.07,
+     "macd": 0.118,
+     "momentum": 0.238,
+     "rsi": -0.228,
+     "stochastic": -0.14,
+     "bollinger": -0.279,
+     "obv": 0.226,
+     "heavy_volume": 1.0
+    }
+   },
+   "cluster_correlations": {
+    "trend": {
+     "trend": 1.0,
+     "stretch": -0.93,
+     "flow": 0.747
+    },
+    "stretch": {
+     "trend": -0.93,
+     "stretch": 1.0,
+     "flow": -0.799
+    },
+    "flow": {
+     "trend": 0.747,
+     "stretch": -0.799,
+     "flow": 1.0
+    }
+   },
+   "trend_stretch_disagree_share": 0.5611451219739119,
+   "component_saturated_share": {
+    "moving_averages": 0.005,
+    "ichimoku": 0.22,
+    "macd": 0.005,
+    "momentum": 0.012,
+    "rsi": 0.018,
+    "stochastic": 0.007,
+    "bollinger": 0.135,
+    "obv": 0.003,
+    "heavy_volume": 0.001
+   },
+   "component_near_zero_share": {
+    "moving_averages": 0.061,
+    "ichimoku": 0.037,
+    "macd": 0.074,
+    "momentum": 0.058,
+    "rsi": 0.089,
+    "stochastic": 0.041,
+    "bollinger": 0.041,
+    "obv": 0.066,
+    "heavy_volume": 0.753
+   },
+   "component_quantiles": {
+    "moving_averages": {
+     "0.05": -0.67,
+     "0.25": -0.216,
+     "0.5": 0.2,
+     "0.75": 0.56,
+     "0.95": 0.844
+    },
+    "ichimoku": {
+     "0.05": -0.966,
+     "0.25": -0.443,
+     "0.5": 0.336,
+     "0.75": 0.867,
+     "0.95": 0.992
+    },
+    "macd": {
+     "0.05": -0.732,
+     "0.25": -0.276,
+     "0.5": 0.096,
+     "0.75": 0.458,
+     "0.95": 0.809
+    },
+    "momentum": {
+     "0.05": -0.764,
+     "0.25": -0.343,
+     "0.5": 0.1,
+     "0.75": 0.511,
+     "0.95": 0.854
+    },
+    "rsi": {
+     "0.05": -0.765,
+     "0.25": -0.392,
+     "0.5": -0.103,
+     "0.75": 0.19,
+     "0.95": 0.587
+    },
+    "stochastic": {
+     "0.05": -0.872,
+     "0.25": -0.634,
+     "0.5": -0.185,
+     "0.75": 0.399,
+     "0.95": 0.811
+    },
+    "bollinger": {
+     "0.05": -1.0,
+     "0.25": -0.63,
+     "0.5": -0.18,
+     "0.75": 0.415,
+     "0.95": 0.986
+    },
+    "obv": {
+     "0.05": -0.734,
+     "0.25": -0.309,
+     "0.5": 0.086,
+     "0.75": 0.449,
+     "0.95": 0.78
+    },
+    "heavy_volume": {
+     "0.05": -0.226,
+     "0.25": 0.0,
+     "0.5": 0.0,
+     "0.75": 0.0,
+     "0.95": 0.194
+    }
+   },
+   "cluster_quantiles": {
+    "trend": {
+     "0.05": -0.687,
+     "0.25": -0.254,
+     "0.5": 0.17,
+     "0.75": 0.523,
+     "0.95": 0.81
+    },
+    "stretch": {
+     "0.05": -0.82,
+     "0.25": -0.551,
+     "0.5": -0.158,
+     "0.75": 0.329,
+     "0.95": 0.739
+    },
+    "flow": {
+     "0.05": -0.403,
+     "0.25": -0.162,
+     "0.5": 0.043,
+     "0.75": 0.23,
+     "0.95": 0.417
+    }
+   },
+   "eigen_share": [
+    0.72,
+    0.833,
+    0.918,
+    0.952,
+    0.973,
+    0.984,
+    0.992,
+    0.998,
+    1.0
+   ],
+   "rows": 107482
+  },
+  "crypto": {
+   "reading_correlations": {
+    "RSI": {
+     "RSI": 1.0,
+     "Stochastic": 0.815,
+     "Bollinger pos": 0.907,
+     "vs SMA20": 0.915,
+     "vs SMA50": 0.903,
+     "vs SMA200": 0.541,
+     "MACD/close": 0.841,
+     "MACD hist/close": 0.542,
+     "Ichimoku vs cloud": 0.787,
+     "ADX": 0.038,
+     "7d change": 0.721,
+     "OBV vs avg": 0.727,
+     "Volume ratio": 0.32,
+     "ATR%": -0.182
+    },
+    "Stochastic": {
+     "RSI": 0.815,
+     "Stochastic": 1.0,
+     "Bollinger pos": 0.882,
+     "vs SMA20": 0.865,
+     "vs SMA50": 0.617,
+     "vs SMA200": 0.323,
+     "MACD/close": 0.568,
+     "MACD hist/close": 0.754,
+     "Ichimoku vs cloud": 0.468,
+     "ADX": 0.056,
+     "7d change": 0.767,
+     "OBV vs avg": 0.699,
+     "Volume ratio": 0.356,
+     "ATR%": -0.189
+    },
+    "Bollinger pos": {
+     "RSI": 0.907,
+     "Stochastic": 0.882,
+     "Bollinger pos": 1.0,
+     "vs SMA20": 0.943,
+     "vs SMA50": 0.699,
+     "vs SMA200": 0.35,
+     "MACD/close": 0.615,
+     "MACD hist/close": 0.738,
+     "Ichimoku vs cloud": 0.534,
+     "ADX": 0.05,
+     "7d change": 0.813,
+     "OBV vs avg": 0.758,
+     "Volume ratio": 0.353,
+     "ATR%": -0.2
+    },
+    "vs SMA20": {
+     "RSI": 0.915,
+     "Stochastic": 0.865,
+     "Bollinger pos": 0.943,
+     "vs SMA20": 1.0,
+     "vs SMA50": 0.761,
+     "vs SMA200": 0.385,
+     "MACD/close": 0.701,
+     "MACD hist/close": 0.761,
+     "Ichimoku vs cloud": 0.596,
+     "ADX": 0.047,
+     "7d change": 0.788,
+     "OBV vs avg": 0.745,
+     "Volume ratio": 0.374,
+     "ATR%": -0.242
+    },
+    "vs SMA50": {
+     "RSI": 0.903,
+     "Stochastic": 0.617,
+     "Bollinger pos": 0.699,
+     "vs SMA20": 0.761,
+     "vs SMA50": 1.0,
+     "vs SMA200": 0.624,
+     "MACD/close": 0.965,
+     "MACD hist/close": 0.274,
+     "Ichimoku vs cloud": 0.938,
+     "ADX": 0.049,
+     "7d change": 0.522,
+     "OBV vs avg": 0.567,
+     "Volume ratio": 0.241,
+     "ATR%": -0.176
+    },
+    "vs SMA200": {
+     "RSI": 0.541,
+     "Stochastic": 0.323,
+     "Bollinger pos": 0.35,
+     "vs SMA20": 0.385,
+     "vs SMA50": 0.624,
+     "vs SMA200": 1.0,
+     "MACD/close": 0.627,
+     "MACD hist/close": -0.001,
+     "Ichimoku vs cloud": 0.709,
+     "ADX": 0.068,
+     "7d change": 0.26,
+     "OBV vs avg": 0.304,
+     "Volume ratio": 0.057,
+     "ATR%": 0.093
+    },
+    "MACD/close": {
+     "RSI": 0.841,
+     "Stochastic": 0.568,
+     "Bollinger pos": 0.615,
+     "vs SMA20": 0.701,
+     "vs SMA50": 0.965,
+     "vs SMA200": 0.627,
+     "MACD/close": 1.0,
+     "MACD hist/close": 0.238,
+     "Ichimoku vs cloud": 0.928,
+     "ADX": 0.051,
+     "7d change": 0.409,
+     "OBV vs avg": 0.516,
+     "Volume ratio": 0.225,
+     "ATR%": -0.151
+    },
+    "MACD hist/close": {
+     "RSI": 0.542,
+     "Stochastic": 0.754,
+     "Bollinger pos": 0.738,
+     "vs SMA20": 0.761,
+     "vs SMA50": 0.274,
+     "vs SMA200": -0.001,
+     "MACD/close": 0.238,
+     "MACD hist/close": 1.0,
+     "Ichimoku vs cloud": 0.074,
+     "ADX": 0.084,
+     "7d change": 0.725,
+     "OBV vs avg": 0.596,
+     "Volume ratio": 0.341,
+     "ATR%": -0.153
+    },
+    "Ichimoku vs cloud": {
+     "RSI": 0.787,
+     "Stochastic": 0.468,
+     "Bollinger pos": 0.534,
+     "vs SMA20": 0.596,
+     "vs SMA50": 0.938,
+     "vs SMA200": 0.709,
+     "MACD/close": 0.928,
+     "MACD hist/close": 0.074,
+     "Ichimoku vs cloud": 1.0,
+     "ADX": 0.063,
+     "7d change": 0.382,
+     "OBV vs avg": 0.443,
+     "Volume ratio": 0.16,
+     "ATR%": -0.138
+    },
+    "ADX": {
+     "RSI": 0.038,
+     "Stochastic": 0.056,
+     "Bollinger pos": 0.05,
+     "vs SMA20": 0.047,
+     "vs SMA50": 0.049,
+     "vs SMA200": 0.068,
+     "MACD/close": 0.051,
+     "MACD hist/close": 0.084,
+     "Ichimoku vs cloud": 0.063,
+     "ADX": 1.0,
+     "7d change": 0.05,
+     "OBV vs avg": 0.051,
+     "Volume ratio": 0.03,
+     "ATR%": 0.241
+    },
+    "7d change": {
+     "RSI": 0.721,
+     "Stochastic": 0.767,
+     "Bollinger pos": 0.813,
+     "vs SMA20": 0.788,
+     "vs SMA50": 0.522,
+     "vs SMA200": 0.26,
+     "MACD/close": 0.409,
+     "MACD hist/close": 0.725,
+     "Ichimoku vs cloud": 0.382,
+     "ADX": 0.05,
+     "7d change": 1.0,
+     "OBV vs avg": 0.628,
+     "Volume ratio": 0.325,
+     "ATR%": -0.189
+    },
+    "OBV vs avg": {
+     "RSI": 0.727,
+     "Stochastic": 0.699,
+     "Bollinger pos": 0.758,
+     "vs SMA20": 0.745,
+     "vs SMA50": 0.567,
+     "vs SMA200": 0.304,
+     "MACD/close": 0.516,
+     "MACD hist/close": 0.596,
+     "Ichimoku vs cloud": 0.443,
+     "ADX": 0.051,
+     "7d change": 0.628,
+     "OBV vs avg": 1.0,
+     "Volume ratio": 0.293,
+     "ATR%": -0.138
+    },
+    "Volume ratio": {
+     "RSI": 0.32,
+     "Stochastic": 0.356,
+     "Bollinger pos": 0.353,
+     "vs SMA20": 0.374,
+     "vs SMA50": 0.241,
+     "vs SMA200": 0.057,
+     "MACD/close": 0.225,
+     "MACD hist/close": 0.341,
+     "Ichimoku vs cloud": 0.16,
+     "ADX": 0.03,
+     "7d change": 0.325,
+     "OBV vs avg": 0.293,
+     "Volume ratio": 1.0,
+     "ATR%": -0.131
+    },
+    "ATR%": {
+     "RSI": -0.182,
+     "Stochastic": -0.189,
+     "Bollinger pos": -0.2,
+     "vs SMA20": -0.242,
+     "vs SMA50": -0.176,
+     "vs SMA200": 0.093,
+     "MACD/close": -0.151,
+     "MACD hist/close": -0.153,
+     "Ichimoku vs cloud": -0.138,
+     "ADX": 0.241,
+     "7d change": -0.189,
+     "OBV vs avg": -0.138,
+     "Volume ratio": -0.131,
+     "ATR%": 1.0
+    }
+   },
+   "component_correlations": {
+    "moving_averages": {
+     "moving_averages": 1.0,
+     "ichimoku": 0.851,
+     "macd": 0.796,
+     "momentum": 0.626,
+     "rsi": -0.934,
+     "stochastic": -0.717,
+     "bollinger": -0.786,
+     "obv": 0.642,
+     "heavy_volume": 0.2
+    },
+    "ichimoku": {
+     "moving_averages": 0.851,
+     "ichimoku": 1.0,
+     "macd": 0.7,
+     "momentum": 0.359,
+     "rsi": -0.822,
+     "stochastic": -0.54,
+     "bollinger": -0.594,
+     "obv": 0.502,
+     "heavy_volume": 0.094
+    },
+    "macd": {
+     "moving_averages": 0.796,
+     "ichimoku": 0.7,
+     "macd": 1.0,
+     "momentum": 0.747,
+     "rsi": -0.889,
+     "stochastic": -0.887,
+     "bollinger": -0.9,
+     "obv": 0.728,
+     "heavy_volume": 0.137
+    },
+    "momentum": {
+     "moving_averages": 0.626,
+     "ichimoku": 0.359,
+     "macd": 0.747,
+     "momentum": 1.0,
+     "rsi": -0.745,
+     "stochastic": -0.792,
+     "bollinger": -0.839,
+     "obv": 0.651,
+     "heavy_volume": 0.261
+    },
+    "rsi": {
+     "moving_averages": -0.934,
+     "ichimoku": -0.822,
+     "macd": -0.889,
+     "momentum": -0.745,
+     "rsi": 1.0,
+     "stochastic": 0.815,
+     "bollinger": 0.907,
+     "obv": -0.727,
+     "heavy_volume": -0.256
+    },
+    "stochastic": {
+     "moving_averages": -0.717,
+     "ichimoku": -0.54,
+     "macd": -0.887,
+     "momentum": -0.792,
+     "rsi": 0.815,
+     "stochastic": 1.0,
+     "bollinger": 0.882,
+     "obv": -0.699,
+     "heavy_volume": -0.156
+    },
+    "bollinger": {
+     "moving_averages": -0.786,
+     "ichimoku": -0.594,
+     "macd": -0.9,
+     "momentum": -0.839,
+     "rsi": 0.907,
+     "stochastic": 0.882,
+     "bollinger": 1.0,
+     "obv": -0.757,
+     "heavy_volume": -0.304
+    },
+    "obv": {
+     "moving_averages": 0.642,
+     "ichimoku": 0.502,
+     "macd": 0.728,
+     "momentum": 0.651,
+     "rsi": -0.727,
+     "stochastic": -0.699,
+     "bollinger": -0.757,
+     "obv": 1.0,
+     "heavy_volume": 0.32
+    },
+    "heavy_volume": {
+     "moving_averages": 0.2,
+     "ichimoku": 0.094,
+     "macd": 0.137,
+     "momentum": 0.261,
+     "rsi": -0.256,
+     "stochastic": -0.156,
+     "bollinger": -0.304,
+     "obv": 0.32,
+     "heavy_volume": 1.0
+    }
+   },
+   "cluster_correlations": {
+    "trend": {
+     "trend": 1.0,
+     "stretch": -0.919,
+     "flow": 0.684
+    },
+    "stretch": {
+     "trend": -0.919,
+     "stretch": 1.0,
+     "flow": -0.748
+    },
+    "flow": {
+     "trend": 0.684,
+     "stretch": -0.748,
+     "flow": 1.0
+    }
+   },
+   "trend_stretch_disagree_share": 0.5205853404891456,
+   "component_saturated_share": {
+    "moving_averages": 0.004,
+    "ichimoku": 0.17,
+    "macd": 0.005,
+    "momentum": 0.028,
+    "rsi": 0.023,
+    "stochastic": 0.002,
+    "bollinger": 0.142,
+    "obv": 0.006,
+    "heavy_volume": 0.001
+   },
+   "component_near_zero_share": {
+    "moving_averages": 0.066,
+    "ichimoku": 0.038,
+    "macd": 0.081,
+    "momentum": 0.07,
+    "rsi": 0.091,
+    "stochastic": 0.049,
+    "bollinger": 0.042,
+    "obv": 0.074,
+    "heavy_volume": 0.734
+   },
+   "component_quantiles": {
+    "moving_averages": {
+     "0.05": -0.782,
+     "0.25": -0.45,
+     "0.5": -0.095,
+     "0.75": 0.31,
+     "0.95": 0.755
+    },
+    "ichimoku": {
+     "0.05": -0.985,
+     "0.25": -0.794,
+     "0.5": -0.16,
+     "0.75": 0.558,
+     "0.95": 0.953
+    },
+    "macd": {
+     "0.05": -0.723,
+     "0.25": -0.343,
+     "0.5": -0.022,
+     "0.75": 0.346,
+     "0.95": 0.802
+    },
+    "momentum": {
+     "0.05": -0.69,
+     "0.25": -0.357,
+     "0.5": -0.004,
+     "0.75": 0.426,
+     "0.95": 0.899
+    },
+    "rsi": {
+     "0.05": -0.73,
+     "0.25": -0.254,
+     "0.5": 0.045,
+     "0.75": 0.298,
+     "0.95": 0.629
+    },
+    "stochastic": {
+     "0.05": -0.797,
+     "0.25": -0.45,
+     "0.5": 0.064,
+     "0.75": 0.504,
+     "0.95": 0.802
+    },
+    "bollinger": {
+     "0.05": -1.0,
+     "0.25": -0.517,
+     "0.5": 0.064,
+     "0.75": 0.504,
+     "0.95": 0.985
+    },
+    "obv": {
+     "0.05": -0.674,
+     "0.25": -0.31,
+     "0.5": 0.03,
+     "0.75": 0.401,
+     "0.95": 0.805
+    },
+    "heavy_volume": {
+     "0.05": -0.183,
+     "0.25": 0.0,
+     "0.5": 0.0,
+     "0.75": 0.0,
+     "0.95": 0.306
+    }
+   },
+   "cluster_quantiles": {
+    "trend": {
+     "0.05": -0.709,
+     "0.25": -0.408,
+     "0.5": -0.075,
+     "0.75": 0.337,
+     "0.95": 0.779
+    },
+    "stretch": {
+     "0.05": -0.793,
+     "0.25": -0.402,
+     "0.5": 0.06,
+     "0.75": 0.43,
+     "0.95": 0.741
+    },
+    "flow": {
+     "0.05": -0.357,
+     "0.25": -0.161,
+     "0.5": 0.011,
+     "0.75": 0.206,
+     "0.95": 0.486
+    }
+   },
+   "eigen_share": [
+    0.702,
+    0.818,
+    0.905,
+    0.944,
+    0.968,
+    0.98,
+    0.991,
+    0.997,
+    1.0
+   ],
+   "rows": 53849
+  }
+ }
+}
