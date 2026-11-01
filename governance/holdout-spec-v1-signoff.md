@@ -72,3 +72,35 @@ Status: the tag is protected by ruleset 26300455 (no deletion, no force-push, no
   - C2 Inconclusive: +0.043, 95% CI [-0.047, +0.132], p 0.171.
 - Disclosed: C1/C2 date counts include 8 trailing rows with no target (471 and 701 rather than 463 and 693; C2 df 35 rather than 34). Estimates are unaffected and the outcome is not plausibly affected.
 - Drew's independent review: still not given.
+
+## Entry added 2026-11-01: outcomes accepted; permanent limitation; preservation
+
+**Outcomes accepted by the owner (11:45 UTC+07:00)**, after his own review with ChatGPT of the GitHub results, attempt registry and workflow run. The frozen primary outcomes stand:
+
+- C1: Confirmed under the pre-specified Holm procedure, but **not** conclusively above the minimum-improvement threshold (one-sided bound +0.0196 against 0.02).
+- B: Inconclusive.
+- C2: Inconclusive.
+
+They will not be re-run or recomputed with a different method.
+
+**Permanent methodological limitation.** In this hold-out (method v2), C1 and C2 counted 8 trailing dates with no valid forward target as empty rows:
+
+- reported dates were 471 and 701 (valid: 463 and 693);
+- C2 had 35 degrees of freedom (valid: 34);
+- the estimates are unaffected;
+- the effect on the standard errors is small, far below the roughly 8% that would have changed C1's outcome.
+
+**The historical results are not corrected.** Research code from method v3 (branch research-v3, commit 3863cfa) excludes such dates from the counts and degrees of freedom, with regression tests that fail on the v2 code.
+
+**Preservation:**
+
+- Tag holdout-spec-v1 (object 86c1388, commit ac2373b) is protected by ruleset 26300455: no deletion, update or force-push.
+- This branch (reports) is protected by ruleset 26300334: no deletion or force-push. It holds:
+  - holdout/holdout-spec-v1/ (complete outputs with checksums);
+  - holdout/attempts.json;
+  - the preflight reports;
+  - this record;
+  - a markdown copy of the specification as of doc revision 30: governance/holdout-spec-v1-specification-rev30.md, SHA-256 6239600864f4a3b6943b261cafca31705a08f70c2d39209dcdbd8cc5a3ebb9ca.
+- The GitHub Actions run log and its artifact copy expire after 90 days. The owner has been advised to download the artifact for an offline copy.
+
+Drew's independent review of the specification: still not given.
