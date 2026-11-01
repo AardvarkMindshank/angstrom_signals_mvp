@@ -311,7 +311,7 @@ def test_development_run_end_to_end_never_touches_the_holdout(quick):
     for d in details.values():
         d.loc[d.index >= rs.HOLDOUT_START, :] = np.nan
     report = rs.run_experiments(frames, details, rs.HOLDOUT_START)
-    assert report["method_version"] == 2
+    assert report["method_version"] == rs.METHOD_VERSION >= 3
     p = report["primary_dev"]
     assert set(p["A"]) == {"A1", "A2"} and set(p["C"]) == {"C1", "C2"}
     for key in ("A1", "A2"):

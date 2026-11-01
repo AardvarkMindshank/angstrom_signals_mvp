@@ -178,9 +178,14 @@ def forecast_gain_rows(candidate: pd.DataFrame, benchmark: pd.DataFrame, target:
     counts = keep.sum()
     assets = counts[counts > 30].index
     per_asset = d[assets].div(counts[assets], axis=1)        # each asset's column sums to its own correlation
-    num = per_asset.fillna(0.0).sum(axis=1).to_numpy()
-    # sum(num) = sum of the assets' correlations; den spreads the asset count evenly over dates so that
-    # sum(num) / sum(den) is their average, and a bootstrap resample of dates keeps that meaning.
+    # Only dates where at least one counted asset has a valid (candidate, benchmark, target) triple.
+    # Method v2 (frozen hold-out, tag holdout-spec-v1) kept dates with no valid target as empty rows, which
+    # inflated the reported date count and, for C2, the degrees of freedom. Fixed in v3; see
+    # RESEARCH_METHOD_CHANGES.md. The estimate is the same either way.
+    valid = keep[assets].any(axis=1).to_numpy()
+    num = per_asset.fillna(0.0).sum(axis=1).to_numpy()[valid]
+    # sum(num) = sum of the assets' correlations; den spreads the asset count evenly over the valid dates so
+    # that sum(num) / sum(den) is their average, and a bootstrap resample of dates keeps that meaning.
     den = np.full(len(num), len(assets) / max(1, len(num)))
     return num, den
 

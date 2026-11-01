@@ -72,7 +72,8 @@ HOLDOUT_START = pd.Timestamp("2024-10-30")  # fixed in the validation spec; chec
 HORIZONS = (1, 3, 7, 14, 30)
 LABEL_BARS = max(HORIZONS) + 1  # longest label: entry one bar after the signal, exit 30 bars later
 PARITY_WINDOWS = (90, 200, 365)  # the app's history slider runs 90-365 days, default 200
-METHOD_VERSION = 2  # 1 = first run (31 Oct 2026, commit a4e7a41); 2 = labels and scores stop at the boundary
+METHOD_VERSION = 3  # 1 = first run (31 Oct 2026, a4e7a41); 2 = boundary fix (frozen hold-out, tag holdout-spec-v1);
+#                    3 = dates without a valid target are dropped from every statistic's rows (counts and df)
 MIN_PANEL = 8  # fewest assets on a date for a cross-sectional reading
 BOOTSTRAP_RUNS = 400
 SEED = 20261031
