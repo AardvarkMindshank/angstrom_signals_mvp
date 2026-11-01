@@ -1,0 +1,21 @@
+[
+ {
+  "run_id": "41273694276",
+  "run_attempt": "1",
+  "commit": "ac2373b71efc18fab163f8695aef7a63c474ad7f",
+  "spec_hash": "38a5e31dc44358e64c625e4c11ff66765bce5c17d088843bf27090226d03ab61",
+  "kind": "first",
+  "recovery_of": null,
+  "claimed_at": "2026-11-01T04:36:08.109208+00:00",
+  "final_stage": "outputs_written",
+  "finished_at": "2026-11-01T04:39:01.761400+00:00",
+  "stages": [
+   "guards_passed",
+   "data_loaded",
+   "scored",
+   "checks_passed",
+   "statistics_computed",
+   "outputs_written"
+  ]
+ }
+]
