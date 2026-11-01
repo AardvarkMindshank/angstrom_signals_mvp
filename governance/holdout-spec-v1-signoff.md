@@ -58,3 +58,17 @@ The owner created and pushed the annotated tag from his own computer. This sessi
 The ChatGPT check reported by the owner gives the same tag object and target.
 
 Status: the tag is protected by ruleset 26300455 (no deletion, no force-push, no update). Drew's independent review: still not given. Hold-out evaluation: **not run**; it needs the owner's separate explicit authorisation.
+
+## Entry added 2026-11-01: hold-out run completed
+
+- Started by the owner from GitHub Actions on tag holdout-spec-v1.
+- Run 41273694276, attempt 1. It is the only attempt in holdout/attempts.json (kind: first; last stage: outputs_written).
+- Claimed 04:36:08 UTC, finished 04:39:01 UTC. Commit ac2373b; spec hash 38a5e31d...; the environment matched the lock exactly.
+- Results: holdout/holdout-spec-v1/ (reports commit af4af75). Claude verified the output checksums.
+- Pre-checks passed: exact reproduction, time invariance, parity (0.00 at 200 and 365 bars), availability audit (0 internal).
+- Outcomes (Holm, 5%):
+  - C1 Confirmed: +0.064, 95% CI [+0.010, +0.118], p 0.0107.
+  - B Inconclusive: +1.46%, 95% CI [-1.19, +4.12], p 0.133.
+  - C2 Inconclusive: +0.043, 95% CI [-0.047, +0.132], p 0.171.
+- Disclosed: C1/C2 date counts include 8 trailing rows with no target (471 and 701 rather than 463 and 693; C2 df 35 rather than 34). Estimates are unaffected and the outcome is not plausibly affected.
+- Drew's independent review: still not given.
