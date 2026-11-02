@@ -86,11 +86,11 @@ def test_render_has_sections_times_and_escaping():
         notes, [{"symbol": "BTC", "trend": 72}], cfg(), "https://app.example.com"
     )
     assert subject == "Angstrom daily summary: 2 alerts"
-    assert "Trend turned up (1)" in page and "Trend turned down (1)" in page
+    assert "Turned up (1)" in page and "Turned down (1)" in page
     assert "BTC &lt;b&gt;" in page and "&amp; rising" in page
     assert "08:30" in page  # 01:30 UTC shown in Bangkok time
     assert "https://app.example.com" in page and "Asia/Bangkok" in page
-    assert "Trend turned up (1)" in plain and "- ETH: Score fell to 28" in plain
+    assert "Turned up (1)" in plain and "- ETH: Score fell to 28" in plain
     one = digest.render_digest(notes[:1], [], cfg(), "u")[0]
     assert one == "Angstrom daily summary: 1 alert"
 

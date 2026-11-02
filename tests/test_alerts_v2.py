@@ -46,7 +46,7 @@ def test_evaluate_ignores_old_score_lines_for_assets():
     import inspect
 
     source = inspect.getsource(al.evaluate_alerts)
-    assert 'field="trend"' in source and "min_score_alert" not in source.split("market_high")[0].split("trend_level")[1]
+    assert "field=reading" in source and "min_score_alert" not in source and "max_score_alert" not in source
 
 
 class _DB:
@@ -105,3 +105,36 @@ def test_after_the_start_marker_trend_alerts_open_normally():
     db = _DB([marker])
     opened = al.evaluate_alerts(db, "u", [{"key": "Crypto|eth", "symbol": "ETH", "trend": 75}], {"enabled": True})
     assert [o["alert_type"] for o in opened] == [al.TREND_UP]
+
+
+def test_stretch_and_flow_alerts_are_off_unless_switched_on():
+    marker = [{"asset_symbol": al.READING_ALERTS[r]["start"], "alert_type": al.HELD_TREND_UP} for r in al.READING_ALERTS]
+    row = {"key": "Crypto|sol", "symbol": "SOL", "trend": 0, "stretch": 90, "flow": -90}
+    assert al.evaluate_alerts(_DB(marker), "u", [row], {"enabled": True}) == []
+    opened = al.evaluate_alerts(_DB(marker), "u", [row], {"enabled": True, "stretch_alert_on": True,
+                                                          "flow_alert_on": True})
+    assert sorted(o["alert_type"] for o in opened) == [al.FLOW_DOWN, al.STRETCH_UP]
+    assert all("not a forecast" in o["message"] for o in opened)
+
+
+def test_switching_stretch_on_starts_silently():
+    trend_marker = {"asset_symbol": al.V2_START_SYMBOL, "alert_type": al.HELD_TREND_UP}
+    db = _DB([trend_marker])
+    row = {"key": "Crypto|sol", "symbol": "SOL", "trend": 0, "stretch": 90}
+    assert al.evaluate_alerts(db, "u", [row], {"enabled": True, "stretch_alert_on": True}) == []
+    kinds = {r["asset_symbol"]: r["alert_type"] for r in db.inserted}
+    assert kinds == {"crypto|sol": "STRETCH_UP_HELD", "signals:start:stretch": "STRETCH_UP_HELD"}
+
+
+def test_levels_and_defaults():
+    assert al.reading_alert_level({}, "stretch") == 65 and al.reading_alert_level({}, "flow") == 40
+    assert al.reading_alert_level({"flow_alert_level": 200}, "flow") == 95
+    assert al.reading_alert_on({}, "trend") and not al.reading_alert_on({}, "stretch")
+    assert al.reading_alert_on({"enabled": False}, "trend") is False
+
+
+def test_digest_groups_every_reading_alert_by_direction():
+    import digest
+    up, down = digest.split_crossings([{"alert_type": "STRETCH_UP"}, {"alert_type": "FLOW_DOWN_resolved"},
+                                       {"alert_type": "TREND_UP_HELD"}])
+    assert len(up) == 2 and len(down) == 1

@@ -234,14 +234,15 @@ def breakdown(result: dict) -> str:
             f"<span class='ang-kicker'>{_esc(spec['meaning'])}</span></div>"
         )
     parts.append(
-        f"<div class='ang-kicker' style='margin-top:12px;'>Signals {v2.VERSION} · definition {result.get('fingerprint')}"
+        f"<div class='ang-kicker' style='margin-top:12px;' title='Identifies the exact indicator definitions behind "
+        f"these readings'>Definitions ref {result.get('fingerprint')}"
         f" · as of the {_esc(result.get('as_of'))} close</div>"
     )
     return "".join(parts)
 
 
 EXPLAINER = f"""
-**How the technical signals work (version {v2.VERSION})**
+**How the technical signals work**
 
 The ten classic indicators are read as **three separate descriptions**, never added into one score:
 
@@ -252,7 +253,7 @@ The ten classic indicators are read as **three separate descriptions**, never ad
 - 🔊 **Flow** (days to weeks): on-balance volume and heavy-volume days. Is volume backing rises or falls?
 
 Each runs from **-100 to +100; positive means up** (above the averages, stretched up, volume backing rises).
-Readings change smoothly; one price tick no longer flips a score. Missing data (for example a coin with no
+Readings change smoothly, so one price tick never flips a reading. Missing data (for example a coin with no
 volume) shows as missing, never as neutral. Readings use the last **finished** daily bar.
 
 **Context, never directional:** 🌊 typical daily range (ATR%) and how it compares with the asset's own past
@@ -264,5 +265,5 @@ inside the trend.
 
 **What is and isn't shown by evidence:** none of the directional readings has been shown to predict price moves.
 For large US stocks, a higher-than-usual ATR% has been followed by bigger moves, up or down (tested once on
-held-back data). Version 1 (the 0-100 score) was retired; it remains in the project's records for reproducibility.
+held-back data).
 """

@@ -15,7 +15,8 @@ import os
 import requests
 from supabase import create_client
 
-from alerts import evaluate_alerts, market_rows
+from alerts import READING_ALERTS, evaluate_alerts, market_rows, reading_alert_on
+from alerts import SETTINGS_KEYS as READING_SETTINGS_KEYS
 from beta_worker import send_beta_decision_emails
 from digest import send_due_digest
 from email_brand import alert_tone, asset_logo, render_email
@@ -404,9 +405,11 @@ def run_background_checks() -> None:
             "digest_watchlist": True,
             "digest_hour": 8,
         })
+        settings = user_pref.get("settings") if isinstance(user_pref.get("settings"), dict) else {}
+        alert_config = {**alert_config, **{key: settings.get(key) for key in READING_SETTINGS_KEYS}}
         summary_only = alert_config.get("digest_enabled") and alert_config.get("digest_watchlist") is not False
         if (
-            alert_config.get("enabled", True) is False
+            not any(reading_alert_on(alert_config, reading) for reading in READING_ALERTS)
             and not alert_config.get("market_alerts_enabled")
             and not summary_only
         ):
@@ -414,8 +417,6 @@ def run_background_checks() -> None:
         markets = market_rows(market_scores, followed_markets(user_pref))
 
         crypto_list, stock_list, _days_history = _watchlist(user_pref)
-        settings = user_pref.get("settings") if isinstance(user_pref.get("settings"), dict) else {}
-        alert_config = {**alert_config, "trend_alert_level": settings.get("trend_alert_level")}
         results = []
         print(f"Checking assets for user {user_id}")
 

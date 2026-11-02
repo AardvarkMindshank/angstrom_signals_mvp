@@ -76,7 +76,7 @@ def test_breakdown_lists_every_component_lenses_and_version():
         assert name in text
     for spec in v2.LENSES.values():
         assert spec["name"] in text
-    assert v2.VERSION in text and out["fingerprint"] in text
+    assert out["fingerprint"] in text
     assert "not validated" in text
 
 
@@ -88,7 +88,7 @@ def test_missing_volume_shows_as_missing_in_the_breakdown():
 def test_explainer_does_not_claim_direction_was_shown():
     text = view.EXPLAINER.lower()
     assert "none of the directional readings has been shown to predict" in text
-    assert "retired" in text
+    assert "version " not in text and "v1" not in text and "v2" not in text
 
 
 def test_table_survives_a_watchlist_with_a_missing_reading():

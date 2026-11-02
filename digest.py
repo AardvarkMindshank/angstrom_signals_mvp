@@ -12,18 +12,13 @@ import html
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
-from alerts import BEARISH, BULLISH, HELD_BEARISH, HELD_BULLISH, HELD_TREND_DOWN, HELD_TREND_UP, TREND_DOWN, TREND_UP, asset_facts, facts_by_symbol, is_market_symbol, latch_symbol, logos_by_symbol, price_text
+from alerts import BEARISH, BULLISH, DOWN_TYPES, HELD_TYPES, OPEN_TYPES, UP_TYPES, asset_facts, facts_by_symbol, is_market_symbol, latch_symbol, logos_by_symbol, price_text
 from score_colours import reading_tone, score_tone
 from email_brand import asset_logo, list_row, render_email, section_title
 
 # A crossing can be resolved (the score moved back) before the digest goes out.
 # It still happened that day, so resolved rows are included.
-CROSSING_TYPES = [
-    BULLISH, BEARISH, HELD_BULLISH, HELD_BEARISH,
-    f"{BULLISH}_resolved", f"{BEARISH}_resolved",
-    TREND_UP, TREND_DOWN, HELD_TREND_UP, HELD_TREND_DOWN,
-    f"{TREND_UP}_resolved", f"{TREND_DOWN}_resolved",
-]
+CROSSING_TYPES = OPEN_TYPES + HELD_TYPES + [f"{kind}_resolved" for kind in OPEN_TYPES]
 # Rows older than this are not worth reporting if a digest was missed for days.
 LOOKBACK_HOURS = 48
 DEFAULT_HOUR = 8
@@ -99,9 +94,9 @@ def split_crossings(notes: list[dict]) -> tuple[list[dict], list[dict]]:
     up, down = [], []
     for note in sorted(notes, key=lambda n: str(n.get("created_at") or "")):
         kind = str(note.get("alert_type") or "")
-        if kind.startswith(BULLISH) or kind.startswith(TREND_UP):
+        if kind.startswith(UP_TYPES):
             up.append(note)
-        elif kind.startswith(BEARISH) or kind.startswith(TREND_DOWN):
+        elif kind.startswith(DOWN_TYPES):
             down.append(note)
     return up, down
 
@@ -389,14 +384,14 @@ def render_digest(notes, results, config, app_url: str, markets=None) -> tuple[s
             plain.append(f"- {name}: now {score:.0f}/100, no alert")
         plain.append("")
 
-    crossing_rows("Trend turned up", up, "up")
-    crossing_rows("Trend turned down", down, "down")
+    crossing_rows("Turned up", up, "up")
+    crossing_rows("Turned down", down, "down")
     if not asset_notes and config.get("enabled", True) is not False:
         html_parts.append(
             f'<p style="margin:8px 0 0;font:400 15px/1.5 {_FONT};color:{_MUTED};">'
-            "No Trend readings crossed your alert lines since the last summary.</p>"
+            "No reading crossed your alert lines since the last summary.</p>"
         )
-        plain += ["No Trend readings crossed your alert lines since the last summary.", ""]
+        plain += ["No reading crossed your alert lines since the last summary.", ""]
 
     if with_watchlist:
         section_html, section_plain = _watchlist_section(results, config)

@@ -3876,7 +3876,7 @@ import colour_themes
 BETA_REQUEST_URL = "https://angstromsignals.com/beta.html"
 
 try:
-    from alerts import HELD_BEARISH, HELD_BULLISH, HELD_TREND_DOWN, HELD_TREND_UP, dismiss_read_alerts
+    from alerts import HELD_TYPES, READING_ALERTS, dismiss_read_alerts, reading_alert_level, reading_alert_on
     from data_fetchers import (
         crypto_logo_urls,
         crypto_market_caps,
@@ -5297,7 +5297,7 @@ def fetch_user_notifications():
             supabase.table("user_notifications")
             .select("*")
             .eq("user_id", user_id)
-            .not_.in_("alert_type", [HELD_BULLISH, HELD_BEARISH, HELD_TREND_UP, HELD_TREND_DOWN])
+            .not_.in_("alert_type", HELD_TYPES)
             .order("created_at", desc=True)
             .limit(10)
             .execute()
@@ -5323,7 +5323,7 @@ def fetch_user_notifications():
             rows.append(row)
     rows = [
         row for row in rows
-        if str(row.get("alert_type") or "") not in (HELD_BULLISH, HELD_BEARISH, HELD_TREND_UP, HELD_TREND_DOWN)
+        if str(row.get("alert_type") or "") not in HELD_TYPES
     ]
     rows.sort(key=lambda row: str(row.get("created_at") or ""), reverse=True)
     return rows
@@ -6135,9 +6135,9 @@ def score_from_alert(note: dict):
             pass
     kind = str(note.get("alert_type") or "")
     # Trend alerts carry a -100..+100 reading, never a 0-100 score: colour them by direction only.
-    if kind.startswith("TREND_UP"):
+    if kind.startswith(("TREND_UP", "STRETCH_UP", "FLOW_UP")):
         return 70.0
-    if kind.startswith("TREND_DOWN"):
+    if kind.startswith(("TREND_DOWN", "STRETCH_DOWN", "FLOW_DOWN")):
         return 30.0
     if kind.startswith("BULLISH"):
         return 70.0
@@ -6347,7 +6347,7 @@ def notifications_panel() -> None:
         with tracked_expander("Configure Alert Rules", "alert_rules"):
             st.caption(
                 "Readings describe current conditions and are not forecasts. Each alert is sent once when the "
-                f"📈 Trend reading crosses your line, and again only after it moves {signals_v2.TREND_ALERT_REARM} "
+                f"reading crosses your line, and again only after it moves {signals_v2.TREND_ALERT_REARM} "
                 "points back and crosses again."
             )
             alert_enabled = st.checkbox(
@@ -6374,6 +6374,43 @@ def notifications_panel() -> None:
                 )
             if float(trend_level) != old_level:
                 save_account_settings({"trend_alert_level": int(trend_level)})
+
+            # Optional alerts on the other two readings. Saved in the account settings, off by default.
+            account_settings = prefs.get("settings") or {}
+            extra_on = {}
+            for reading, hint_up, hint_down in (
+                ("stretch", "price has run up within its recent range", "price has run down within its recent range"),
+                ("flow", "volume is backing rises", "volume is backing falls"),
+            ):
+                spec = READING_ALERTS[reading]
+                icon = signals_v2.CLUSTERS[reading]["icon"]
+                was_on = reading_alert_on(account_settings, reading)
+                now_on = st.checkbox(
+                    f"{icon} {spec['name']} alerts",
+                    value=was_on,
+                    key=f"alert_{reading}_cb",
+                    help=(
+                        f"Alert when the {spec['name']} reading (-100 to +100) reaches your line ({hint_up}) or "
+                        f"minus your line ({hint_down}). Off unless you switch it on. When switched on, assets "
+                        "already past the line are noted quietly; only new crossings alert."
+                    ),
+                )
+                extra_on[reading] = now_on
+                updates = {}
+                if now_on != was_on:
+                    updates[spec["on"]] = bool(now_on)
+                if now_on:
+                    old_line = reading_alert_level(account_settings, reading)
+                    line = st.slider(
+                        f"{icon} {spec['name']} alert line (±)",
+                        10, 95, int(old_line), step=5,
+                        key=f"{reading}_level_slider",
+                        help=f"The default is {int(spec['default'])}.",
+                    )
+                    if float(line) != old_line:
+                        updates[spec["level"]] = int(line)
+                if updates:
+                    save_account_settings(updates)
 
             new_alert_settings = {
                 "enabled": alert_enabled,
@@ -6421,7 +6458,8 @@ def notifications_panel() -> None:
             else:
                 # With every alert type off there is nothing to email, so the email
                 # choices are greyed out. Their saved values are kept for later.
-                emails_off = not alert_enabled and not new_alert_settings.get("market_alerts_enabled")
+                emails_off = (not alert_enabled and not any(extra_on.values())
+                              and not new_alert_settings.get("market_alerts_enabled"))
                 st.markdown("**Emails**")
                 instant_on = st.checkbox(
                     "⚡ Instant alerts",
@@ -6597,7 +6635,7 @@ with tracked_expander("📖 Help and guides", "help_guides", default=False):
     (
         tab_start, tab_scores, tab_chart, tab_sentiment, tab_alerts, tab_social, tab_layout,
     ) = st.tabs([
-        "🚀 Start here", "📈 Scores", "📊 Chart & tools", "📰 Sentiment",
+        "🚀 Start here", "📈 Signals", "📊 Chart & tools", "📰 Sentiment",
         "🔔 Alerts", "💬 Social", "🧭 Layout & settings",
     ])
 
@@ -6684,7 +6722,7 @@ Your choices are saved on your account.
 
 **🔍 Signals Breakdown** shows every part of 📈 Trend, 🎯 Stretch and 🔊 Flow with its own reading in plain
 words, the two named views (trend-following and mean-reversion, both unvalidated hypotheses) and the
-signals version used.
+reference to the exact indicator definitions used.
 
 **🎯 Max pain** (stocks, Bitcoin, Ethereum): the options strike where open contracts would be worth the
 least at expiry. It opens on the next expiry after today; one with almost no open contracts says so.
@@ -6730,8 +6768,12 @@ same line under the asset's name in the chart section.
     with tab_alerts:
         st.markdown("""
 **Setting up** (Notifications → Configure Alert Rules)
-- 📈 **Trend alerts**: an alert when an asset's Trend reading turns up to your line (default +50) or down to
-  minus your line (default -50). Readings use finished daily bars; checked about every 5 minutes.
+- 📈 **Trend alerts** (on by default): an alert when an asset's Trend reading turns up to your line (default
+  +50) or down to minus your line (default -50). Readings use finished daily bars; checked about every 5 minutes.
+- 🎯 **Stretch alerts** and 🔊 **Flow alerts** (off until you switch them on): the same for the Stretch reading
+  (default ±65: price has run unusually far up or down within its recent range) and the Flow reading (default
+  ±40: volume is unusually strongly backing rises or falls). Switching one on notes the assets already past the
+  line quietly; only new crossings alert.
 - 🌐 **Market sentiment alerts**: the same for the crypto or stock market sentiment (default 65 and 35),
   for the markets you trade. Updated about every 12 hours.
 - **Emails**: ⚡ **Instant** (one email per alert, straight away) and/or 📬 **Daily alerts summary** (one
@@ -6742,7 +6784,7 @@ same line under the asset's name in the chart section.
   and weakest Trends. With it on,
   the email comes every day; with it off, only on days with alerts.
 
-**No repeats on a wobble.** After a Trend alert, the same one can only fire again once the reading has moved
+**No repeats on a wobble.** After a reading alert, the same one can only fire again once the reading has moved
 20 points back (for example back to +30 after a +50 alert) and then crosses again. Market sentiment alerts
 re-arm after 10 points.
 
@@ -6828,8 +6870,6 @@ if st.session_state.get("trade_markets") not in _TRADE_CHOICES:
 trade_crypto, trade_equities = _trade_flags(st.session_state.trade_markets)
 
 
-# Signals v2 (signals_v2.py) has no user weights: the v1 sliders, named sets and the adaptive switch were
-# retired with the 0-100 score. Saved v1 weights stay in the database untouched and are not read.
 
 
 def _ensure_added(kind: str, asset_id: str, label: str) -> None:
@@ -6974,14 +7014,11 @@ with tracked_expander("⭐ Watchlists", "watchlists", sidebar=True):
                     st.rerun()
 
 def _signals_info_popover() -> None:
-    """An info button that explains the signals v2 readings in plain words."""
+    """An info button that explains the technical readings in plain words."""
     with st.popover("ℹ️", help="How the technical signals work"):
         st.markdown(signals_view.EXPLAINER)
 
 
-with tracked_expander("📐 How the signals work", "weights", sidebar=True):
-    st.markdown(signals_view.EXPLAINER)
-    st.caption(f"Signals {signals_v2.VERSION} · definition {signals_v2.FINGERPRINT}")
 
 with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
     if "show_reasons" not in st.session_state:
@@ -12112,7 +12149,7 @@ def show_signal_evidence(kind: str, asset_id: str, shown: str) -> None:
         f"Daily prices from {record.get('first_scored', '?')} to {record.get('asof', '?')} "
         f"({record.get('scored_days', 0)} days). Tested without looking ahead, on this asset's own history "
         "(in-sample: not a held-back validation). "
-        f"Signals {record.get('signals_version', '?')} · definition {record.get('signals_fingerprint', '?')}. "
+        f"Definitions ref {record.get('signals_fingerprint', '?')}. "
         "A description of the past, not advice and not a forecast."
     )
 

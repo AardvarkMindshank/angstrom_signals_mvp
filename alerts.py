@@ -22,18 +22,62 @@ TREND_UP = "TREND_UP"
 TREND_DOWN = "TREND_DOWN"
 HELD_TREND_UP = "TREND_UP_HELD"
 HELD_TREND_DOWN = "TREND_DOWN_HELD"
+# Optional alerts on the other two readings (off unless the account switches them on).
+STRETCH_UP = "STRETCH_UP"
+STRETCH_DOWN = "STRETCH_DOWN"
+FLOW_UP = "FLOW_UP"
+FLOW_DOWN = "FLOW_DOWN"
 _HELD = {
     BULLISH: HELD_BULLISH,
     BEARISH: HELD_BEARISH,
     TREND_UP: HELD_TREND_UP,
     TREND_DOWN: HELD_TREND_DOWN,
+    STRETCH_UP: STRETCH_UP + "_HELD",
+    STRETCH_DOWN: STRETCH_DOWN + "_HELD",
+    FLOW_UP: FLOW_UP + "_HELD",
+    FLOW_DOWN: FLOW_DOWN + "_HELD",
 }
-OPEN_TYPES = [BULLISH, BEARISH, TREND_UP, TREND_DOWN]
-LATCH_TYPES = OPEN_TYPES + [HELD_BULLISH, HELD_BEARISH, HELD_TREND_UP, HELD_TREND_DOWN]
+OPEN_TYPES = list(_HELD)
+HELD_TYPES = list(_HELD.values())
+LATCH_TYPES = OPEN_TYPES + HELD_TYPES
+UP_TYPES = (BULLISH, TREND_UP, STRETCH_UP, FLOW_UP)
+DOWN_TYPES = (BEARISH, TREND_DOWN, STRETCH_DOWN, FLOW_DOWN)
 # How far back through the line the score must travel before that alert can arm again.
 _REARM_POINTS = 10.0
 TREND_LEVEL_DEFAULT = 50.0     # signals_v2.TREND_ALERT_DEFAULT
 TREND_REARM = 20.0             # signals_v2.TREND_ALERT_REARM
+
+# One entry per reading that can alert. "on" is the alerts_config key that switches it on (Trend uses the
+# account's main asset-alert switch, "enabled", on by default); "level" is the +/- line; "start" is the
+# marker symbol that records the silent first run for that reading.
+READING_ALERTS = {
+    "trend": {"types": (TREND_UP, TREND_DOWN), "on": "enabled", "on_default": True,
+              "level": "trend_alert_level", "default": TREND_LEVEL_DEFAULT, "start": "signals:v2-start",
+              "name": "Trend"},
+    "stretch": {"types": (STRETCH_UP, STRETCH_DOWN), "on": "stretch_alert_on", "on_default": False,
+                "level": "stretch_alert_level", "default": 65.0, "start": "signals:start:stretch",
+                "name": "Stretch"},
+    "flow": {"types": (FLOW_UP, FLOW_DOWN), "on": "flow_alert_on", "on_default": False,
+             "level": "flow_alert_level", "default": 40.0, "start": "signals:start:flow",
+             "name": "Flow"},
+}
+READING_REARM = TREND_REARM
+SETTINGS_KEYS = ("trend_alert_level", "stretch_alert_on", "stretch_alert_level", "flow_alert_on", "flow_alert_level")
+
+
+def reading_alert_on(alerts_config: dict, reading: str) -> bool:
+    spec = READING_ALERTS[reading]
+    value = (alerts_config or {}).get(spec["on"])
+    return spec["on_default"] if value is None else value is not False
+
+
+def reading_alert_level(alerts_config: dict, reading: str) -> float:
+    spec = READING_ALERTS[reading]
+    try:
+        level = abs(float((alerts_config or {}).get(spec["level"]) or spec["default"]))
+    except (TypeError, ValueError):
+        level = spec["default"]
+    return min(95.0, max(10.0, level))
 
 # Switching to signals v2: the first worker run for an account records which assets are already past the
 # Trend line as silent latches (held, read, already emailed and digested), so the switch does not send a
@@ -74,10 +118,23 @@ def asset_message(score: float, alert_type: str) -> str:
     return f"Score dropped to {score:.1f}/100 (strongly negative reading)"
 
 
+_READING_WORDS = {
+    TREND_UP: ("Trend turned up", "Trend", ""),
+    TREND_DOWN: ("Trend turned down", "Trend", ""),
+    STRETCH_UP: ("Stretched up", "Stretch", ": price has run up within its recent range"),
+    STRETCH_DOWN: ("Stretched down", "Stretch", ": price has run down within its recent range"),
+    FLOW_UP: ("Flow turned up", "Flow", ": volume is backing rises"),
+    FLOW_DOWN: ("Flow turned down", "Flow", ": volume is backing falls"),
+}
+
+
 def trend_message(value: float, alert_type: str) -> str:
-    if alert_type == TREND_UP:
-        return f"Trend turned up: {value:+.0f} on the -100 to +100 Trend reading (a description, not a forecast)"
-    return f"Trend turned down: {value:+.0f} on the -100 to +100 Trend reading (a description, not a forecast)"
+    """The alert text for any of the three readings (named for the first one it served)."""
+    title, reading, detail = _READING_WORDS[alert_type]
+    return f"{title}: {value:+.0f} on the -100 to +100 {reading} reading{detail} (a description, not a forecast)"
+
+
+reading_message = trend_message
 
 
 def market_message(score: float, alert_type: str) -> str:
@@ -192,17 +249,13 @@ def evaluate_alerts(supabase, user_id, results, alerts_config, notify_email=None
     """
     if not alerts_config:
         return []
-    assets_on = alerts_config.get("enabled", True) is not False
+    readings_on = [r for r in READING_ALERTS if reading_alert_on(alerts_config, r)]
+    assets_on = bool(readings_on)
     markets_on = bool(alerts_config.get("market_alerts_enabled")) and bool(markets)
     if not assets_on and not markets_on:
         return []
 
-    # Asset alerts follow the v2 Trend reading. The old 0-100 score lines (min/max_score_alert) are not used.
-    try:
-        trend_level = abs(float(alerts_config.get("trend_alert_level") or TREND_LEVEL_DEFAULT))
-    except (TypeError, ValueError):
-        trend_level = TREND_LEVEL_DEFAULT
-    trend_level = min(95.0, max(10.0, trend_level))
+    # Asset alerts follow the Trend, Stretch and Flow readings (-100..+100), each with its own +/- line.
     market_high = float(alerts_config.get("market_high_alert") or 65)
     market_low = float(alerts_config.get("market_low_alert") or 35)
 
@@ -228,18 +281,28 @@ def evaluate_alerts(supabase, user_id, results, alerts_config, notify_email=None
     opened = []
 
     actions = []
-    if assets_on:
-        actions += plan_alert_actions(results, latched, trend_level, -trend_level, describe=trend_message,
-                                      field="trend", types=(TREND_UP, TREND_DOWN), rearm=TREND_REARM)
+    reading_actions = {}
+    for reading in readings_on:
+        level = reading_alert_level(alerts_config, reading)
+        reading_actions[reading] = plan_alert_actions(
+            results, latched, level, -level, describe=reading_message, field=reading,
+            types=READING_ALERTS[reading]["types"], rearm=READING_REARM,
+        )
+        actions += reading_actions[reading]
     if markets_on:
         actions += plan_alert_actions(markets, latched, market_high, market_low, describe=market_message)
-    # First v2 run for this account: latch the Trend positions silently instead of alerting.
-    if assets_on and not any(symbol == V2_START_SYMBOL for symbol, _kind in latched):
+    # The first run with a reading's alerts switched on latches its current positions silently instead of
+    # alerting, so switching an alert on never sends a burst for positions that did not just cross.
+    for reading in readings_on:
+        spec = READING_ALERTS[reading]
+        if any(symbol == spec["start"] for symbol, _kind in latched):
+            continue
         now_iso = datetime.now(timezone.utc).isoformat()
-        silent = [a for a in actions if a[0] == "open" and a[3] in (TREND_UP, TREND_DOWN)]
+        silent = [a for a in reading_actions[reading] if a[0] == "open"]
         rows = [silent_latch_row(user_id, a[1], a[2], a[3], a[4], now_iso) for a in silent]
-        rows.append(silent_latch_row(user_id, V2_START_SYMBOL, "Signals v2 start", TREND_UP,
-                                     "Signals v2 started: Trend positions recorded without alerts.", now_iso))
+        rows.append(silent_latch_row(user_id, spec["start"], f"{spec['name']} alerts start", spec["types"][0],
+                                     f"{spec['name']} alerts started: current positions recorded without alerts.",
+                                     now_iso))
         try:
             supabase.table("user_notifications").insert(rows).execute()
         except Exception:
@@ -247,7 +310,7 @@ def evaluate_alerts(supabase, user_id, results, alerts_config, notify_email=None
                 supabase.table("user_notifications").insert(
                     [{k: v for k, v in r.items() if k != "digested_at"} for r in rows]).execute()
             except Exception as exc:
-                print(f"Signals v2 start not recorded for {user_id}; trying again next run. {str(exc)[:120]}")
+                print(f"{spec['name']} alerts start not recorded for {user_id}; trying again next run. {str(exc)[:120]}")
         # Never alert for these on this run, whether or not the start was recorded.
         actions = [a for a in actions if a not in silent]
 
@@ -426,7 +489,6 @@ def dismiss_read_alerts(supabase, user_id) -> None:
         .eq("user_id", user_id)
         .eq("is_read", True)
         .neq("alert_type", "group_invite")
-        .not_.in_("alert_type", [HELD_BULLISH, HELD_BEARISH, HELD_TREND_UP, HELD_TREND_DOWN,
-                                 "moderation_warning", "report_update"])
+        .not_.in_("alert_type", HELD_TYPES + ["moderation_warning", "report_update"])
         .execute()
     )
