@@ -3876,7 +3876,7 @@ import colour_themes
 BETA_REQUEST_URL = "https://angstromsignals.com/beta.html"
 
 try:
-    from alerts import HELD_BEARISH, HELD_BULLISH, dismiss_read_alerts
+    from alerts import HELD_BEARISH, HELD_BULLISH, HELD_TREND_DOWN, HELD_TREND_UP, dismiss_read_alerts
     from data_fetchers import (
         crypto_logo_urls,
         crypto_market_caps,
@@ -5297,7 +5297,7 @@ def fetch_user_notifications():
             supabase.table("user_notifications")
             .select("*")
             .eq("user_id", user_id)
-            .not_.in_("alert_type", [HELD_BULLISH, HELD_BEARISH])
+            .not_.in_("alert_type", [HELD_BULLISH, HELD_BEARISH, HELD_TREND_UP, HELD_TREND_DOWN])
             .order("created_at", desc=True)
             .limit(10)
             .execute()
@@ -5323,7 +5323,7 @@ def fetch_user_notifications():
             rows.append(row)
     rows = [
         row for row in rows
-        if str(row.get("alert_type") or "") not in (HELD_BULLISH, HELD_BEARISH)
+        if str(row.get("alert_type") or "") not in (HELD_BULLISH, HELD_BEARISH, HELD_TREND_UP, HELD_TREND_DOWN)
     ]
     rows.sort(key=lambda row: str(row.get("created_at") or ""), reverse=True)
     return rows

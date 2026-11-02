@@ -35,6 +35,27 @@ _REARM_POINTS = 10.0
 TREND_LEVEL_DEFAULT = 50.0     # signals_v2.TREND_ALERT_DEFAULT
 TREND_REARM = 20.0             # signals_v2.TREND_ALERT_REARM
 
+# Switching to signals v2: the first worker run for an account records which assets are already past the
+# Trend line as silent latches (held, read, already emailed and digested), so the switch does not send a
+# burst of "Trend turned up/down" alerts for positions that did not just cross. This marker row (a held
+# latch on a symbol no asset uses) records that the start was done, so it happens once per account.
+V2_START_SYMBOL = "signals:v2-start"
+
+
+def silent_latch_row(user_id, symbol: str, name: str, alert_type: str, message: str, now_iso: str) -> dict:
+    """A latch that nobody is told about: hidden from the feed, never emailed, never in a digest."""
+    return {
+        "user_id": user_id,
+        "asset_symbol": symbol,
+        "asset_name": name,
+        "alert_type": _HELD.get(alert_type, alert_type),
+        "message": message,
+        "is_read": True,
+        "emailed_at": now_iso,
+        "digested_at": now_iso,
+    }
+
+
 # Whole-market sentiment alerts are stored like asset alerts, under these symbols.
 MARKET_PREFIX = "market:"
 MARKET_NAMES = {
@@ -212,6 +233,24 @@ def evaluate_alerts(supabase, user_id, results, alerts_config, notify_email=None
                                       field="trend", types=(TREND_UP, TREND_DOWN), rearm=TREND_REARM)
     if markets_on:
         actions += plan_alert_actions(markets, latched, market_high, market_low, describe=market_message)
+    # First v2 run for this account: latch the Trend positions silently instead of alerting.
+    if assets_on and not any(symbol == V2_START_SYMBOL for symbol, _kind in latched):
+        now_iso = datetime.now(timezone.utc).isoformat()
+        silent = [a for a in actions if a[0] == "open" and a[3] in (TREND_UP, TREND_DOWN)]
+        rows = [silent_latch_row(user_id, a[1], a[2], a[3], a[4], now_iso) for a in silent]
+        rows.append(silent_latch_row(user_id, V2_START_SYMBOL, "Signals v2 start", TREND_UP,
+                                     "Signals v2 started: Trend positions recorded without alerts.", now_iso))
+        try:
+            supabase.table("user_notifications").insert(rows).execute()
+        except Exception:
+            try:  # a database without the digest column
+                supabase.table("user_notifications").insert(
+                    [{k: v for k, v in r.items() if k != "digested_at"} for r in rows]).execute()
+            except Exception as exc:
+                print(f"Signals v2 start not recorded for {user_id}; trying again next run. {str(exc)[:120]}")
+        # Never alert for these on this run, whether or not the start was recorded.
+        actions = [a for a in actions if a not in silent]
+
     for action in actions:
         if action[0] == "resolve":
             _, symbol, alert_type = action

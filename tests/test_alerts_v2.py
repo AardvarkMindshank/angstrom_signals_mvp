@@ -47,3 +47,61 @@ def test_evaluate_ignores_old_score_lines_for_assets():
 
     source = inspect.getsource(al.evaluate_alerts)
     assert 'field="trend"' in source and "min_score_alert" not in source.split("market_high")[0].split("trend_level")[1]
+
+
+class _DB:
+    """Tiny stand-in for the notifications table: filters selects by asset_symbol, records inserts."""
+
+    def __init__(self, rows=()):
+        self.rows, self.inserted = list(rows), []
+
+    def table(self, _name):
+        db = self
+
+        class Q:
+            def __init__(self):
+                self.mode, self.symbol = "select", None
+
+            def insert(self, rows):
+                db.inserted += rows if isinstance(rows, list) else [rows]
+                self.mode = "insert"
+                return self
+
+            def update(self, *_a, **_k):
+                self.mode = "update"
+                return self
+
+            def eq(self, column, value):
+                if column == "asset_symbol":
+                    self.symbol = value
+                return self
+
+            def __getattr__(self, _name):
+                return lambda *a, **k: self
+
+            def execute(self):
+                data = []
+                if self.mode == "select":
+                    data = [r for r in db.rows if self.symbol in (None, r["asset_symbol"])]
+                return type("R", (), {"data": data})()
+
+        return Q()
+
+
+def test_first_v2_run_latches_silently_once():
+    db = _DB()
+    results = [{"key": "Crypto|btc", "symbol": "BTC", "trend": 80}, {"key": "Stock|aapl", "symbol": "AAPL", "trend": -70}]
+    opened = al.evaluate_alerts(db, "u", results, {"enabled": True})
+    assert opened == []
+    held = {r["asset_symbol"]: r for r in db.inserted}
+    assert set(held) == {"crypto|btc", "stock|aapl", al.V2_START_SYMBOL}
+    for r in held.values():
+        assert r["alert_type"] in (al.HELD_TREND_UP, al.HELD_TREND_DOWN)
+        assert r["is_read"] and r["emailed_at"] and r["digested_at"]
+
+
+def test_after_the_start_marker_trend_alerts_open_normally():
+    marker = {"asset_symbol": al.V2_START_SYMBOL, "alert_type": al.HELD_TREND_UP}
+    db = _DB([marker])
+    opened = al.evaluate_alerts(db, "u", [{"key": "Crypto|eth", "symbol": "ETH", "trend": 75}], {"enabled": True})
+    assert [o["alert_type"] for o in opened] == [al.TREND_UP]
