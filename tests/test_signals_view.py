@@ -89,3 +89,16 @@ def test_explainer_does_not_claim_direction_was_shown():
     text = view.EXPLAINER.lower()
     assert "none of the directional readings has been shown to predict" in text
     assert "retired" in text
+
+
+def test_table_survives_a_watchlist_with_a_missing_reading():
+    import pandas as pd
+
+    good = view.row_fields(fx.fixture(), "Stock", LATER)
+    bad = {"trend": None, "stretch": None, "flow": None, "signals": None}
+    frame = pd.DataFrame([good, bad]).sort_values("trend", ascending=False, na_position="last")
+    for _, row in frame.iterrows():
+        row_dict = {k: (None if isinstance(v, float) and pd.isna(v) else v) for k, v in row.items()}
+        for key in v2.CLUSTERS:
+            view.table_cell(key, row_dict, "Stock|AAA")
+    assert view.signed(51.0) == "+51" and view.signed(float("nan")) == "—"

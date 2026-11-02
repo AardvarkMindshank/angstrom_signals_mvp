@@ -25,7 +25,14 @@ def _esc(text) -> str:
 
 
 def signed(value) -> str:
-    return "—" if value is None else f"{value:+d}"
+    """A reading as +62 / -5. Accepts floats too (a table column with a missing value turns ints into floats)."""
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return "—"
+    if number != number:
+        return "—"
+    return f"{int(round(number)):+d}"
 
 
 def row_fields(frame, kind: str, now=None) -> dict:

@@ -1,17 +1,31 @@
-# Signals v2: work in progress (branch v2, not merged, not deployed)
+# Signals v2: ready for review (branch v2, not merged, not deployed)
 
-Done in this commit:
-- app.py integrated with signals_v2 / signals_view: watchlist rows (Trend/Stretch/Flow columns), snapshot cards,
-  asset card, Signals Breakdown, What changed (Trend, +/- alert line), Trend alert line slider
-  (settings.trend_alert_level), Help text; v1 weights sliders, presets, adaptive switch and score popover removed.
-- signal_matrix.py replays v2 readings (Trend, Stretch, Flow, two named views); evidence.py record VERSION 2
-  tests the Trend reading, v1 records hidden and rebuilt; digest drops v1 thresholds.
-- New tests: tests/test_signals_view.py, matrix and evidence additions. New v2_smoke.py end-to-end check in CI.
+## What changed
+- Engine: signals_v2.py (version 2.0.0, definition fingerprint in every result). Three descriptive readings,
+  -100..+100, positive = up: Trend (50/200 MAs, Ichimoku, MACD line), Stretch (RSI, Stochastic, Bollinger,
+  7-day move, MACD histogram), Flow (OBV, heavy-volume day). Context (ATR%, ADX, regime, volume) never directional.
+  Two named views (trend-following, mean-reversion) carry the hypotheses. Finished daily bars only; missing data is
+  missing, never neutral; smooth mappings, no cliffs. No 0-100 score anywhere.
+- App: Trend/Stretch/Flow columns, snapshot cards by Trend, asset card with evidence badges, Signals Breakdown,
+  What changed on Trend, Trend alert line slider, Help rewritten. v1 weights, presets, adaptive switch removed.
+- Alerts worker, digest, signal matrix and per-asset evidence (record version 2) all use v2. v1 thresholds,
+  snapshots and evidence records are ignored, so nothing v1 acts on v2 numbers.
+- v1 stays reproducible through Git and the research records (scoring.compute_score, backtest.py, research.py kept).
 
-Unfinished / to check next session:
-- Full local test suite was not re-run after the last edits (interrupted); read CI results in reports/ci/v2/.
-- v2_smoke.py has never run yet (needs pandas-ta: runs in the v2-checks overlap job).
-- Overlap re-run on current definitions (previous run crashed on a renamed key; fixed in v2_overlap.py).
-- No live Streamlit check yet: run the branch locally or against the angstrom-test Supabase project.
-- New accounts still get default v1 scoring_weights written (harmless, unused); consider dropping.
-- Then: final summary of changes, limitations and deployment notes for approval.
+## Checks
+- Local: 301 passed, 6 skipped (need pandas-ta). GitHub (7ba0e9c): 341 passed; v2_smoke.py end-to-end check PASS
+  (6 real assets, development rows only; 0.05 s per asset, peak 307 MB).
+- Overlap on current definitions (development data): no saturated components; pullback/rally note on ~5% of days;
+  Trend-Stretch 0.57-0.59.
+
+## Known limitations
+- Stretch and Flow overlap (0.73-0.78 correlation): OBV vs its 20-day average behaves like recent momentum.
+- Heavy-volume component is zero on ~75% of days (by design: it only reacts to heavy days).
+- None of the directional readings or views is validated; only stock ATR% (move size) carries a "tested" badge.
+- The Streamlit app itself has not been run by Claude (no Supabase login in the build environment).
+
+## Deployment notes
+- No database changes: the Trend alert line is saved in user_preferences.settings (trend_alert_level, default 50).
+- Old min/max score alert columns and scoring_weights are left in the database, unused.
+- Per-asset evidence rebuilds automatically (v1 records are hidden until rebuilt, ~2 assets per worker run).
+- Merging to main redeploys Render and switches the alerts worker to Trend alerts.
