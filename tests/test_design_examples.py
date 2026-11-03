@@ -337,3 +337,106 @@ def test_reversal_source_count_would_be_unsatisfiable():
     for c in doc["conditions"]:
         items = [{"value": True, "support": [], "roots": sorted(_rule_roots(i, members, roots))} for i in c["rule"]["of"]]
         assert reference_count("count_distinct_sources_at_least", 2, items) is False
+
+
+# ----------------------------------------------------------------------------- strict capture ceilings (reference)
+
+PUBLIC = "public"
+
+
+def _aud(a):
+    """Audience as 'public', frozenset of communities, or None (owner only)."""
+    if a.get("public"):
+        return PUBLIC
+    if a.get("owner"):
+        return None
+    return frozenset(a.get("communities") or []) or None
+
+
+def _meet(x, y):
+    if x == PUBLIC:
+        return y
+    if y == PUBLIC:
+        return x
+    if x is None or y is None:
+        return None
+    return (x & y) or None
+
+
+def _within(x, y):
+    """x ⊆ y; owner-only (None) is within anything."""
+    if x is None or y == PUBLIC:
+        return True
+    if x == PUBLIC:
+        return False
+    return y is not None and x <= y
+
+
+class SharingReference:
+    """Test-only reference of design section 7 (strict capture ceilings). Not the database implementation."""
+
+    def __init__(self, users):
+        self.users = {u: frozenset(v["communities"]) for u, v in users.items()}
+        self.owner, self.copy_ceiling, self.versions = {}, {}, {}
+
+    def effective(self, cfg, ver):
+        v = self.versions[(cfg, ver)]
+        return _meet(v["published"], v["capture"])
+
+    def can_read(self, user, cfg, ver):
+        if self.owner[cfg] == user:
+            return True
+        eff = self.effective(cfg, ver)
+        return eff == PUBLIC or (eff is not None and bool(eff & self.users[user]))
+
+    def step(self, s):
+        user, cfg = s["user"], s.get("config")
+        if s["do"] == "copy":
+            src = tuple(s["from"])
+            if not self.can_read(user, *src):
+                return "refused", None
+            self.owner[cfg] = user
+            self.copy_ceiling[cfg] = self.effective(*src)
+            self.versions[(cfg, 1)] = {"published": None, "capture": self.copy_ceiling[cfg], "deps": [src]}
+            return "ok", self.copy_ceiling[cfg]
+        if s["do"] == "save":
+            if cfg in self.owner and self.owner[cfg] != user:
+                return "refused", None
+            deps = [tuple(e) for e in s.get("embeds", [])]
+            if not all(self.can_read(user, *d) for d in deps):
+                return "refused", None
+            self.owner.setdefault(cfg, user)
+            capture = self.copy_ceiling.get(cfg, PUBLIC)
+            for d in deps:
+                capture = _meet(capture, self.effective(*d))
+            self.versions[(cfg, s["version"])] = {"published": None, "capture": capture, "deps": deps}
+            return "ok", capture
+        if s["do"] == "publish":
+            if self.owner.get(cfg) != user:
+                return "refused", None
+            v = self.versions[(cfg, s["version"])]
+            want = _aud(s["audience"])
+            if not _within(want, v["capture"]) or not all(_within(want, self.effective(*d)) for d in v["deps"]):
+                return "refused", None
+            v["published"] = want
+            return "ok", None
+        raise ValueError(s["do"])
+
+
+@pytest.mark.parametrize("scenario", load("sharing_fixtures.json")["scenarios"], ids=lambda s: s["name"])
+def test_strict_capture_ceilings(scenario):
+    ref = SharingReference(load("sharing_fixtures.json")["users"])
+    for i, step in enumerate(scenario["steps"]):
+        outcome, ceiling = ref.step(step)
+        assert outcome == step.get("expect", "ok"), f"step {i}: {step}"
+        if "capture_ceiling" in step:
+            assert ceiling == _aud(step["capture_ceiling"]), f"step {i}: ceiling {ceiling}"
+
+
+def test_design_lists_five_tables_and_requires_real_rls_tests():
+    text = (EXAMPLES.parent / "groups_sets.md").read_text(encoding="utf-8")
+    for table in ("analysis_configs", "analysis_config_versions", "analysis_version_publications",
+                  "analysis_version_shares", "analysis_publication_log"):
+        assert table in text
+    assert "Five tables" in text and "Three tables" not in text
+    assert "Implementation acceptance requirement" in text and "real Supabase tests" in text

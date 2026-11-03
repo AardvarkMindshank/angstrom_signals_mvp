@@ -1,10 +1,11 @@
-# Design proposal: Signal Groups and Signal Sets (revision 3)
+# Design proposal: Signal Groups and Signal Sets (revision 4)
 
 Status: **proposal for review**. No application code. The examples in `docs/design/examples/` are checked by
 `tests/test_design_examples.py` (references, structure, rule paths against real signal outputs, snapshot hashes);
 that is design-time checking, not the product validator or evaluator. The counting worked cases
-(`examples/rule_fixtures.json`) are executed against a test-only reference of section 3.4.1; transform fixtures
-are checked for shape and range only, until the evaluator exists. Revisions 2 and 3 answer the reviews on PR #1; section 12 maps each finding to the change.
+(`examples/rule_fixtures.json`) and sharing scenarios (`examples/sharing_fixtures.json`) are executed against
+test-only references of sections 3.4.1 and 7; transform fixtures
+are checked for shape and range only, until the evaluator exists. Revisions 2–4 answer the reviews on PR #1; section 12 maps each finding to the change.
 
 ```
 Signal Library ──► Signal Groups ──► Signal Sets ──► Analysis Workspace / Strategy Builder
@@ -203,11 +204,16 @@ A Set is an analysis configuration, not a strategy: no entry, exit or risk rules
 
 ## 6. Storage, versions and publication
 
+Five tables:
+
 ```
 analysis_configs          id uuid PK, kind ('group'|'set'), owner_id (null = Angstrom starter), current_version int,
-                          copied_from_config, copied_from_version, audience_ceiling, archived bool, created_at, updated_at
+                          copied_from_config, copied_from_version, copy_ceiling (set once at copy; null for originals),
+                          archived bool, created_at, updated_at
 analysis_config_versions  (config_id, version) PK, schema text, body jsonb (≤ 64 KB), content_sha256 (computed by
-                          the server), lineage_version, created_by, created_at, change_note        -- immutable
+                          the server), lineage_version, capture_ceiling (computed by the server at save),
+                          dependencies (source config, version, effective audience at capture), created_by,
+                          created_at, change_note                                                  -- immutable
 analysis_version_publications (config_id, version) PK, audience ('private'|'communities'|'public'), updated_at,
                           updated_by                                                               -- mutable via functions
 analysis_version_shares   (config_id, version, user_group_id) PK, shared_by, shared_at            -- mutable via functions
@@ -228,33 +234,53 @@ analysis_publication_log  append-only record of every publish, share, narrowing 
 - **Community access** = leader (`user_groups.leader_id`) or member (`group_members`). Leaving or being removed
   ends access to that community's versions immediately.
 
-## 7. Copying, embedding and redistribution
+## 7. Copying, embedding and redistribution (strict capture ceilings)
 
 **Audiences** are sets of readers: `owner` (private), a set of communities, or `public`. Intersection: public ∩ X =
-X; communities A ∩ communities B = A ∩ B (empty → owner only); anything ∩ owner = owner.
+X; communities A ∩ communities B = A ∩ B (empty → owner); anything ∩ owner = owner. X ⊆ Y means every reader of X
+can read Y.
 
-- **Ceiling of a config**: `public` for an original (nothing upstream restricts it). For a copy, or a Set embedding
-  Groups, it is the intersection of the ceilings of everything copied or embedded (below).
-- **Effective audience of a source version** = its current publication audience ∩ its config's ceiling. A version
-  published to nobody (private) has effective audience `owner`.
-- **Copying or embedding** a version requires the caller to be inside its effective audience at that moment. The
-  dependency is recorded with `ceiling = effective audience at capture`. A private source can therefore be copied or
-  embedded only by its owner, and the result's ceiling is `owner` until the owner publishes that source version.
-- **Publishing or widening** a copy or Set to audience X requires X ⊆ its own ceiling **and**, for every embedded
-  dependency, X ⊆ (ceiling recorded at capture ∩ the source version's effective audience now). So narrowing a source
-  stops later widenings; publishing the source version more widely lets the owner widen the Set afterwards. An
-  original Group's privately published version cannot reach a public Set until that version itself is public.
+- **Effective audience of a source version** = its current publication audience, further limited by that version's
+  own `capture_ceiling` (and its config's `copy_ceiling` when it is a copy). An unpublished version's effective
+  audience is `owner`.
+- **Capture.** Copying a version, or saving a Set version that embeds it, requires the caller to be inside its
+  effective audience at that moment; otherwise it is refused. The server records each dependency with its effective
+  audience **at capture**, and computes the new version's `capture_ceiling` = intersection of those captured
+  audiences (and of the config's `copy_ceiling`, when it is a copy). Both are immutable parts of the version.
+- **Strict in v1: a capture ceiling never rises.** Publishing or sharing a version to audience X requires
+  X ⊆ its `capture_ceiling` **and**, for every dependency, X ⊆ that source version's effective audience **now**.
+  So a Group that was private when a Set version captured it keeps that Set version owner-only, even after the
+  Group is published. To redistribute, the owner saves a **new Set version**, which captures the Group again with
+  its new audience. Narrowing a source still blocks later publication or widening of anything that embeds it.
+- **Copies.** A copy's `copy_ceiling` is the source version's effective audience at copy time; every later version of
+  the copy is limited by it, because its content derives from the captured content.
+- **Already published stays published.** Narrowing or archiving a source does not withdraw versions that were
+  published while authorised (content already shared cannot be recalled); it blocks new captures, publications and
+  widenings. The publish screen says this before anyone publishes.
 - **Server-side enforcement.** All of this is computed inside the database functions (`copy_config`,
-  `save_config_version`, `publish_version`, `share_version`) from stored rows: source version audiences, shares,
-  community membership and recorded dependency ceilings. Submitted provenance and hashes are never trusted as proof
-  of permission: the server re-reads the source version, recomputes `content_sha256`, rejects a mismatch, and
+  `save_config_version`, `publish_version`, `share_version`) from stored rows: publication audiences, shares,
+  community membership (leader or member) and the recorded capture data. Submitted provenance and hashes are never
+  proof of permission: the server re-reads each source version, recomputes `content_sha256`, rejects a mismatch and
   stores the provenance itself.
-- **Revocation**: narrowing or archiving a source stops new copies, embeddings and widenings. Content already shared
-  while authorised cannot be recalled and stays where it is; the publish screen says so before anyone publishes.
-- Tests in the build: another owner's community-only Group into a public Set (refused); the owner's own privately
-  published Group version into a public Set (refused until that version is public); community→public widening
-  (refused); a forged provenance hash (refused); source access removed after copying (copy kept, ceiling kept);
-  version 2 published while version 1 private (version 1 unreadable).
+
+Worked scenarios (fixtures in `examples/sharing_fixtures.json`, executed against a test-only reference of these rules):
+
+| Scenario | Result |
+|---|---|
+| Owner embeds their own **unpublished** Group v1 in Set v1, later publishes Group v1 publicly, then tries to publish Set v1 publicly | refused: Set v1's capture ceiling is `owner` |
+| Owner then saves Set v2, re-capturing the now-public Group v1, and publishes Set v2 publicly | allowed |
+| Bob, a member of community A, embeds a Group shared only with A, then publishes his Set to A / to community B / publicly | A allowed; B refused; public refused |
+| Group shared with A and B; Bob (in A) captures it; publishes his Set to A and B | allowed (within the source's audience) |
+| Carol, not in A, tries to embed a Group shared only with A | refused at capture |
+| Group public at capture; later narrowed to A; Set version published publicly / to A | public refused; A allowed |
+| Another owner's unpublished Group embedded by anyone else | refused at capture |
+
+**Implementation acceptance requirement.** The build must include real Supabase tests of the row-level security and
+the functions above, run against a Postgres database with the actual SQL (two signed-in test users, communities,
+leader and member, anonymous): every scenario in the table, direct table writes refused for signed-in users,
+version rows never updatable, a forged hash refused, concurrent saves resolved by `expected_version`, leaving a
+community ending access, and unpublished earlier versions unreadable. The design-time reference in this PR does not
+replace those tests.
 
 ## 8. Evaluation and resources
 
@@ -284,16 +310,16 @@ entry, exit and risk schema; Set scores with typed semantics and explicit Group 
 
 ## 11. Decisions for approval
 
-| # | Decision | Proposal (revision 2) |
+| # | Decision | Proposal (revision 4) |
 |---|---|---|
 | D1 | Names | **Decided**: Communities (social); Signal Groups / Signal Sets |
-| D2 | Storage | Three tables; per-version publication; function-only atomic writes; immutable versions (section 6) |
-| D3 | Sets and others' Groups | Embedded snapshots; ceilings from each source version's effective audience; server-side checks at copy/embed/publish/widen; revocation stops new copies and widenings only (section 7) |
+| D2 | Storage | Five tables (configs, immutable versions, publications, shares, publication log); per-version publication; function-only atomic writes (section 6) |
+| D3 | Sets and others' Groups | Embedded snapshots; strict capture ceilings that never rise (re-capture in a new version to redistribute); server-side checks at capture/publish/widen; real Supabase RLS and function tests required at build (section 7) |
 | D4 | Unavailable data and coverage | Role-specific policies; exact coverage arithmetic; imputed never counts as observed (sections 3.1–3.2) |
 | D5 | Rule language | Bounded JSON, three-valued logic, typed paths, the counting contract with instance and source clusters, explicit event timing (section 3.4) |
 | D6 | Transforms | `map`, `bands`, `clip`, `events` v1 as specified with fixtures; adaptive transforms deferred (section 3.3) |
 | D7 | Set scores | Deferred: always null in the first build |
-| D8 | First build | Admin-only validator, evaluator and starters, live mode only, synthetic/development fixtures, hold-out untouched |
+| D8 | First build | Admin-only validator, evaluator and starters, live mode only, synthetic/development fixtures, hold-out untouched; storage SQL accepted only with real Supabase RLS and function tests (section 7) |
 
 ## 12. Review findings and changes (PR #1)
 
@@ -313,4 +339,6 @@ entry, exit and risk schema; Set scores with typed semantics and explicit Group 
 | R3-3 Counting compound rules | Section 3.4.1: support sets, instance and source clusters, cluster values, three-valued bounds, unsatisfiable rules refused; worked cases and `examples/rule_fixtures.json` |
 | R3-4 Immutable content vs publication | Audience moved out of the version row into publication and share tables plus an append-only log |
 | R3-5 Neutral with an unknown transform | Section 3.2: not observed = unavailable or transform unknown; both follow the member's policy |
+| R4-1 Captured ceilings contradiction | Strict capture ceilings: immutable per version, never rise; redistribution needs a new Set version that re-captures; worked scenarios incl. cross-community, executed against a test-only reference |
+| R4-2 Table count and RLS tests | Section 6 lists the five tables; real Supabase RLS/function tests made an implementation acceptance requirement (section 7) |
 | 10 CI gate | `checks.yml` shared jobs; required failures fail the job; optional live-feed checks labelled; `pr-checks.yml` runs read-only with artifacts (forks included); `v2-checks.yml` publishes on push |

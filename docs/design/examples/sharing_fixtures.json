@@ -1,0 +1,75 @@
+{
+  "schema": "angstrom.sharing-fixtures/1",
+  "note": "Scenarios for strict capture ceilings (design section 7). Audiences: {\"owner\": true}, {\"communities\": [...]}, {\"public\": true}. Each scenario is a sequence of steps; every step states the expected outcome. The build must reproduce these with real Supabase RLS and function tests.",
+  "users": {"alice": {"communities": []}, "bob": {"communities": ["A"]}, "carol": {"communities": ["B"]}, "dave": {"communities": ["A", "B"]}},
+  "scenarios": [
+    {
+      "name": "private at capture stays owner-only; re-capture in a new Set version to redistribute",
+      "steps": [
+        {"do": "save", "user": "alice", "config": "g", "version": 1},
+        {"do": "save", "user": "alice", "config": "s", "version": 1, "embeds": [["g", 1]], "expect": "ok", "capture_ceiling": {"owner": true}},
+        {"do": "publish", "user": "alice", "config": "g", "version": 1, "audience": {"public": true}, "expect": "ok"},
+        {"do": "publish", "user": "alice", "config": "s", "version": 1, "audience": {"public": true}, "expect": "refused"},
+        {"do": "save", "user": "alice", "config": "s", "version": 2, "embeds": [["g", 1]], "expect": "ok", "capture_ceiling": {"public": true}},
+        {"do": "publish", "user": "alice", "config": "s", "version": 2, "audience": {"public": true}, "expect": "ok"}
+      ]
+    },
+    {
+      "name": "cross-community redistribution is refused",
+      "steps": [
+        {"do": "save", "user": "alice", "config": "g", "version": 1},
+        {"do": "publish", "user": "alice", "config": "g", "version": 1, "audience": {"communities": ["A"]}, "expect": "ok"},
+        {"do": "save", "user": "bob", "config": "s", "version": 1, "embeds": [["g", 1]], "expect": "ok", "capture_ceiling": {"communities": ["A"]}},
+        {"do": "publish", "user": "bob", "config": "s", "version": 1, "audience": {"communities": ["B"]}, "expect": "refused"},
+        {"do": "publish", "user": "bob", "config": "s", "version": 1, "audience": {"public": true}, "expect": "refused"},
+        {"do": "publish", "user": "bob", "config": "s", "version": 1, "audience": {"communities": ["A"]}, "expect": "ok"}
+      ]
+    },
+    {
+      "name": "a non-member cannot capture a community-only Group",
+      "steps": [
+        {"do": "save", "user": "alice", "config": "g", "version": 1},
+        {"do": "publish", "user": "alice", "config": "g", "version": 1, "audience": {"communities": ["A"]}, "expect": "ok"},
+        {"do": "save", "user": "carol", "config": "s", "version": 1, "embeds": [["g", 1]], "expect": "refused"}
+      ]
+    },
+    {
+      "name": "redistribution within the source's own audience",
+      "steps": [
+        {"do": "save", "user": "alice", "config": "g", "version": 1},
+        {"do": "publish", "user": "alice", "config": "g", "version": 1, "audience": {"communities": ["A", "B"]}, "expect": "ok"},
+        {"do": "save", "user": "bob", "config": "s", "version": 1, "embeds": [["g", 1]], "expect": "ok", "capture_ceiling": {"communities": ["A", "B"]}},
+        {"do": "publish", "user": "bob", "config": "s", "version": 1, "audience": {"communities": ["A", "B"]}, "expect": "ok"}
+      ]
+    },
+    {
+      "name": "narrowing a source blocks later widening; capture ceiling does not rise again",
+      "steps": [
+        {"do": "save", "user": "alice", "config": "g", "version": 1},
+        {"do": "publish", "user": "alice", "config": "g", "version": 1, "audience": {"public": true}, "expect": "ok"},
+        {"do": "save", "user": "dave", "config": "s", "version": 1, "embeds": [["g", 1]], "expect": "ok", "capture_ceiling": {"public": true}},
+        {"do": "publish", "user": "alice", "config": "g", "version": 1, "audience": {"communities": ["A"]}, "expect": "ok"},
+        {"do": "publish", "user": "dave", "config": "s", "version": 1, "audience": {"public": true}, "expect": "refused"},
+        {"do": "publish", "user": "dave", "config": "s", "version": 1, "audience": {"communities": ["A"]}, "expect": "ok"}
+      ]
+    },
+    {
+      "name": "another owner's unpublished Group cannot be captured",
+      "steps": [
+        {"do": "save", "user": "alice", "config": "g", "version": 1},
+        {"do": "save", "user": "bob", "config": "s", "version": 1, "embeds": [["g", 1]], "expect": "refused"}
+      ]
+    },
+    {
+      "name": "a copy is limited by its copy ceiling in every later version",
+      "steps": [
+        {"do": "save", "user": "alice", "config": "g", "version": 1},
+        {"do": "publish", "user": "alice", "config": "g", "version": 1, "audience": {"communities": ["A"]}, "expect": "ok"},
+        {"do": "copy", "user": "bob", "from": ["g", 1], "config": "c", "expect": "ok", "capture_ceiling": {"communities": ["A"]}},
+        {"do": "save", "user": "bob", "config": "c", "version": 2, "expect": "ok", "capture_ceiling": {"communities": ["A"]}},
+        {"do": "publish", "user": "bob", "config": "c", "version": 2, "audience": {"public": true}, "expect": "refused"},
+        {"do": "publish", "user": "bob", "config": "c", "version": 2, "audience": {"communities": ["A"]}, "expect": "ok"}
+      ]
+    }
+  ]
+}
