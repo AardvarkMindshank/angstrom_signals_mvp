@@ -174,7 +174,9 @@ def _save_mood(supabase, spec: dict, force: bool = False, previous: dict | None 
             if item.get("source")
         })
         tail = f" ({', '.join(sources)})" if sources else ""
-        print(f"Saved {spec['label']} sentiment with {readings} readings{tail}.")
+        cover = report.get("coverage") or {}
+        print(f"Saved {spec['label']} sentiment with {readings} readings{tail}; news: {cover.get('events')} "
+              f"stories from {cover.get('sources')} publishers ({cover.get('level')}), model {report.get('model')}.")
     else:
         print(f"Sentiment skipped for {spec['label']}: {report.get('reason') or 'not saved'}")
 

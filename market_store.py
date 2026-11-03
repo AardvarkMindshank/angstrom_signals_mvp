@@ -1184,6 +1184,8 @@ def _record_sentiment_history(supabase, subject_key: str, score: float, stored_a
         if len(payload) == 3:
             print(f"Sentiment history was not stored for {subject_key}: {exc}")
             return
+        print(f"Sentiment history for {subject_key} stored without model and articles "
+              f"(run sql/2026-11-03_sentiment_history.sql): {str(exc)[:120]}")
     try:
         supabase.rpc("record_sentiment_score", {k: payload[k] for k in ("subject_key", "score", "recorded_at")}).execute()
     except Exception as exc:
