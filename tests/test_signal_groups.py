@@ -268,3 +268,61 @@ def test_starters_run_end_to_end_on_synthetic_candles():
         r = sg.evaluate_group(sg.starter(alias), full_ctx())
         assert r["status"] in ("ok", "vetoed", "veto_unknown", "insufficient")
         assert all(c["state"] in ("met", "not_met", "unknown", "active", "clear") for c in r["conditions"])
+
+
+# ----------------------------------------------------------------------------- Sets
+
+def _set():
+    return ex("set_multi_timeframe.json")
+
+
+def test_design_set_is_valid_and_hashes_match():
+    doc = _set()
+    assert sg.validate_set(doc) == []
+    for g in doc["groups"]:
+        assert g["provenance"]["content_sha256"] == sg.content_sha256(g["snapshot"])
+
+
+def test_set_validator_refusals():
+    doc = _set()
+    doc["score"] = {"method": "weighted_mean"}
+    assert any("Set scores" in e for e in sg.validate_set(doc))
+    doc = _set()
+    doc["market_context"][0]["data_modes"] = ["live", "point_in_time"]
+    assert any("current context only" in e for e in sg.validate_set(doc))
+    doc = _set()
+    doc["groups"][0]["snapshot"]["members"][0]["weight"] = -3
+    assert any(e.startswith("trend:") for e in sg.validate_set(doc))
+    doc = _set()
+    doc["standalone"].append({"key": "etf", "ref": {"id": "flows.btc_etf", "version": 1, "timeframe": "1D", "params": {}},
+                              "role": "context"})
+    assert any("market context" in e for e in sg.validate_set(doc))
+
+
+def test_set_evaluates_groups_once_and_reports_shared_sources():
+    from tests.test_signal_library_ta import _ctx as full_ctx
+    calls = []
+
+    def market(scope):
+        calls.append(scope)
+        return DataContext("market", scope.split(":")[1], flows_loader=lambda *a: {"error": "none stored"})
+
+    r = sg.evaluate_set(_set(), full_ctx(), market_context=market)
+    assert r["status"] == "ok" and r["score"] is None
+    assert [g["key"] for g in r["groups"]] == ["trend", "reversal"]
+    assert r["diagnostics"]["sources_by_part"]["price"] == sorted(
+        ["trend", "reversal", "standalone:alignment", "standalone:zones_4h"])
+    assert calls == ["market:bitcoin"]
+    assert r["market_context"][0]["signal"]["status"] == "missing_data"
+    json.dumps(r)
+
+
+def test_set_skips_crypto_context_for_shares():
+    frame = _frame(400)
+    ctx = DataContext("equity", "AAPL", candle_loader=lambda k, a, tf: {"frame": frame, "session": None, "source": "t"})
+    r = sg.evaluate_set(_set(), ctx, market_context=lambda s: None)
+    assert r["market_context"][0]["skipped"].startswith("applies to crypto")
+
+
+def test_set_point_in_time_refused():
+    assert sg.evaluate_set(_set(), _ctx(), data_mode="point_in_time")["status"] == "unsupported"
