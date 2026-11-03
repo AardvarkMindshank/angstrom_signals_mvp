@@ -91,10 +91,10 @@ def main(argv=None) -> int:
             ind = calculate_indicators(frame)
             res = per_asset(ind)
             results.append(res)
-            trend_cluster = candidates(ind, None)["trend"]
+            trend_cluster = candidates(ind, None)["trend"].reindex(ind.index)
             sample = pd.DataFrame({"er": [efficiency_ratio(ind["close"].iloc[:t + 1], 20) for t in range(260, len(ind), STEP)],
-                                   "adx": ind["adx"].iloc[260::STEP].to_numpy(),
-                                   "trend_reading": trend_cluster.iloc[260::STEP].abs().to_numpy()})
+                                   "adx": ind["adx"].to_numpy()[260::STEP],
+                                   "trend_reading": trend_cluster.abs().to_numpy()[260::STEP]})
             er_rows.append(sample.rank(pct=True))
         if not results:
             continue
