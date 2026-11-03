@@ -108,6 +108,34 @@ jobs:
           for i in $(seq 1 60); do curl -sf http://127.0.0.1:8599/_stcore/health && break; sleep 1; done
           node chart_streamlit_check.js http://127.0.0.1:8599/ out/streamlit_test || echo "chart inside Streamlit" >> out/required_failures.txt
           cat out/streamlit_test/chart_streamlit.md >> "$GITHUB_STEP_SUMMARY" || true
+      - name: Analysis card memory and time, made-up candles (required)
+        if: always()
+        run: |
+          python analysis_card_measure.py --synthetic --out out || echo "analysis card measurement (made-up candles)" >> out/required_failures.txt
+          cat out/analysis_card_measure_synthetic.md >> "$GITHUB_STEP_SUMMARY" || true
+      - name: Analysis card memory and time, live candles (optional, live Yahoo)
+        if: always()
+        run: |
+          python analysis_card_measure.py --out out || echo "analysis card measurement (live candles)" >> out/optional_failures.txt
+          cat out/analysis_card_measure.md >> "$GITHUB_STEP_SUMMARY" || true
+      - name: Analysis card inside Streamlit, made-up candles (required)
+        if: always()
+        run: |
+          streamlit run analysis_card_app.py --server.headless true --server.port 8598 -- --synthetic > out/analysis_streamlit.log 2>&1 &
+          pid=$!
+          for i in $(seq 1 60); do curl -sf http://127.0.0.1:8598/_stcore/health && break; sleep 1; done
+          node analysis_card_check.js http://127.0.0.1:8598/ out/analysis_card_test || echo "analysis card inside Streamlit (made-up candles)" >> out/required_failures.txt
+          cat out/analysis_card_test/analysis_card.md >> "$GITHUB_STEP_SUMMARY" || true
+          kill $pid || true
+      - name: Analysis card inside Streamlit, live candles (optional, live Yahoo)
+        if: always()
+        run: |
+          streamlit run analysis_card_app.py --server.headless true --server.port 8597 > out/analysis_streamlit_live.log 2>&1 &
+          pid=$!
+          for i in $(seq 1 60); do curl -sf http://127.0.0.1:8597/_stcore/health && break; sleep 1; done
+          node analysis_card_check.js http://127.0.0.1:8597/ out/analysis_card_live || echo "analysis card inside Streamlit (live candles)" >> out/optional_failures.txt
+          cat out/analysis_card_live/analysis_card.md >> "$GITHUB_STEP_SUMMARY" || true
+          kill $pid || true
       - name: Tidy results
         if: always()
         run: |
