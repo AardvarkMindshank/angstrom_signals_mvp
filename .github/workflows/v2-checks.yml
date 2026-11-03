@@ -42,6 +42,38 @@ jobs:
         if: always()
         run: bash .github/scripts/save_to_reports.sh "ci/v2/$(date -u +%Y-%m-%d_%H%M)_${GITHUB_SHA::7}_tests" out/tests.txt
 
+  chart:
+    # TradingView Lightweight Charts: fetch the official npm package (Apache 2.0) so the
+    # exact file can be kept in static/ with its licence, and check the chart candles live.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12.15"
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install --no-deps -r requirements-research.lock
+      - name: Lightweight Charts package
+        run: |
+          mkdir -p out/lwc pkg
+          cd pkg
+          npm pack lightweight-charts@5 --silent > name.txt
+          tar xzf "$(cat name.txt)"
+          cp package/dist/lightweight-charts.standalone.production.js ../out/lwc/
+          cp package/LICENSE ../out/lwc/LICENSE 2>/dev/null || true
+          cp package/NOTICE ../out/lwc/NOTICE 2>/dev/null || true
+          node -e "console.log(require('./package/package.json').version)" > ../out/lwc/VERSION
+          cd ../out/lwc && sha256sum lightweight-charts.standalone.production.js > SHA256 && cat VERSION SHA256
+      - name: Live candle check (Yahoo, nothing stored)
+        if: always()
+        run: python chart_data_check.py --out out || true
+      - name: Save
+        if: always()
+        run: bash .github/scripts/save_to_reports.sh "ci/v2/$(date -u +%Y-%m-%d_%H%M)_${GITHUB_SHA::7}_chart" out/*
+
   overlap:
     runs-on: ubuntu-24.04
     timeout-minutes: 60
