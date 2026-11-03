@@ -1,0 +1,171 @@
+{
+  "schema": "angstrom.group/1",
+  "name": "Trend Confirmation",
+  "question": "Is there a trend on the higher timeframes, and does the lower timeframe support it?",
+  "lineage_version": 2,
+  "members": [
+    {
+      "key": "trend_1d",
+      "label": "Daily trend",
+      "ref": {
+        "id": "trend.direction",
+        "version": 1,
+        "timeframe": "1D",
+        "params": {}
+      },
+      "role": "score",
+      "weight": 1,
+      "category": "trend",
+      "transform": {
+        "kind": "map",
+        "version": 1,
+        "map": {
+          "up": 1,
+          "down": -1,
+          "mixed": 0
+        }
+      },
+      "when_unavailable": "exclude"
+    },
+    {
+      "key": "trend_4h",
+      "label": "4-hour trend",
+      "ref": {
+        "id": "trend.direction",
+        "version": 1,
+        "timeframe": "4h",
+        "params": {}
+      },
+      "role": "score",
+      "weight": 1,
+      "category": "trend",
+      "transform": {
+        "kind": "map",
+        "version": 1,
+        "map": {
+          "up": 1,
+          "down": -1,
+          "mixed": 0
+        }
+      },
+      "when_unavailable": "exclude"
+    },
+    {
+      "key": "structure_1d",
+      "label": "Daily swing structure",
+      "ref": {
+        "id": "structure.swings",
+        "version": 1,
+        "timeframe": "1D",
+        "params": {
+          "left": 5,
+          "right": 5,
+          "count": 6
+        }
+      },
+      "role": "score",
+      "weight": 1,
+      "category": "structure",
+      "transform": {
+        "kind": "map",
+        "version": 1,
+        "field": "structure",
+        "map": {
+          "up": 1,
+          "down": -1,
+          "mixed": 0,
+          "unknown": null
+        }
+      },
+      "when_unavailable": "exclude"
+    },
+    {
+      "key": "momentum_4h",
+      "label": "4-hour momentum",
+      "ref": {
+        "id": "momentum.direction",
+        "version": 1,
+        "timeframe": "4h",
+        "params": {}
+      },
+      "role": "condition",
+      "category": "momentum"
+    },
+    {
+      "key": "regime_1d",
+      "label": "Daily regime",
+      "ref": {
+        "id": "regime.observation",
+        "version": 1,
+        "timeframe": "1D",
+        "params": {
+          "confirm": 3,
+          "window": 250
+        }
+      },
+      "role": "condition",
+      "category": "regime"
+    }
+  ],
+  "score": {
+    "method": "weighted_mean",
+    "range": [
+      -1,
+      1
+    ],
+    "meaning": "Direction of price-trend evidence: +1 when every scoring member points up, -1 when every one points down. Not a forecast.",
+    "min_coverage": {
+      "num": 2,
+      "den": 3
+    }
+  },
+  "conditions": [
+    {
+      "key": "bullish_confirmed",
+      "label": "Uptrend with 4-hour momentum agreeing (same price source; not independent confirmation)",
+      "kind": "confirmation",
+      "rule": {
+        "all": [
+          {
+            "score": {
+              "gte": 0.5
+            }
+          },
+          {
+            "member": "momentum_4h",
+            "eq": "up"
+          }
+        ]
+      }
+    },
+    {
+      "key": "bearish_confirmed",
+      "label": "Downtrend with 4-hour momentum agreeing (same price source; not independent confirmation)",
+      "kind": "confirmation",
+      "rule": {
+        "all": [
+          {
+            "score": {
+              "lte": -0.5
+            }
+          },
+          {
+            "member": "momentum_4h",
+            "eq": "down"
+          }
+        ]
+      }
+    },
+    {
+      "key": "ranging_veto",
+      "label": "Daily regime is ranging: trend readings are not meaningful",
+      "kind": "veto",
+      "rule": {
+        "member": "regime_1d",
+        "field": "state",
+        "eq": "ranging"
+      }
+    }
+  ],
+  "notes": "Every member derives from price, so agreement shows consistency between views of one source, not independent confirmation. Momentum repeats trend (about 80% agreement on development data) and is therefore a condition, not a second vote. Thresholds (0.5, 2/3) are conventions, not tuned on returns."
+}
