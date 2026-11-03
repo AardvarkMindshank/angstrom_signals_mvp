@@ -70,6 +70,9 @@ jobs:
       - name: Live candle check (Yahoo, nothing stored)
         if: always()
         run: python chart_data_check.py --out out || true
+      - name: Signal Library live run (every candle signal on real Yahoo candles)
+        if: always()
+        run: python signal_library_live.py --out out || echo "signal library: errors" >> out/chart_failures.txt
       - name: Browser tools
         if: always()
         run: |
@@ -127,6 +130,11 @@ jobs:
         run: |
           mkdir -p out
           python ta_coverage_check.py --prices prices --out out
+      - name: Signal Library descriptive check (development data only)
+        if: always()
+        run: |
+          mkdir -p out
+          python signal_library_check.py --prices prices --out out
       - name: Capital flows dry run (live feeds, nothing stored)
         if: always()
         run: |
