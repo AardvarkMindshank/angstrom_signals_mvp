@@ -1,35 +1,446 @@
 {
   "schema": "angstrom.set/1",
   "name": "Multi-Timeframe Analysis",
-  "purpose": "Trend and reversal evidence side by side, with regime, levels and Bitcoin flow context.",
+  "purpose": "Trend and reversal evidence side by side, with timeframe alignment, levels and Bitcoin flow context.",
+  "audience_ceiling": "public",
   "groups": [
-    {"key": "trend", "group": {"config": "starter:trend-confirmation", "version": 1}},
-    {"key": "reversal", "group": {"config": "starter:reversal-evidence", "version": 1}}
+    {
+      "key": "trend",
+      "provenance": {
+        "source_config": "starter:trend-confirmation",
+        "source_version": 1,
+        "source_owner": null,
+        "content_sha256": "4acc1665177bb5420ad1ef7215393699a6a2aecdec63a1b253d712bb6b6a71a4",
+        "captured_at": "2026-11-03T00:00:00Z",
+        "audience_ceiling": "public"
+      },
+      "snapshot": {
+        "schema": "angstrom.group/1",
+        "name": "Trend Confirmation",
+        "question": "Is there a trend on the higher timeframes, and does the lower timeframe support it?",
+        "members": [
+          {
+            "key": "trend_1d",
+            "label": "Daily trend",
+            "ref": {
+              "id": "trend.direction",
+              "version": 1,
+              "timeframe": "1D",
+              "params": {}
+            },
+            "role": "score",
+            "weight": 1,
+            "category": "trend",
+            "transform": {
+              "kind": "map",
+              "version": 1,
+              "map": {
+                "up": 1,
+                "down": -1,
+                "mixed": 0
+              }
+            },
+            "when_unavailable": "exclude"
+          },
+          {
+            "key": "trend_4h",
+            "label": "4-hour trend",
+            "ref": {
+              "id": "trend.direction",
+              "version": 1,
+              "timeframe": "4h",
+              "params": {}
+            },
+            "role": "score",
+            "weight": 1,
+            "category": "trend",
+            "transform": {
+              "kind": "map",
+              "version": 1,
+              "map": {
+                "up": 1,
+                "down": -1,
+                "mixed": 0
+              }
+            },
+            "when_unavailable": "exclude"
+          },
+          {
+            "key": "structure_1d",
+            "label": "Daily swing structure",
+            "ref": {
+              "id": "structure.swings",
+              "version": 1,
+              "timeframe": "1D",
+              "params": {
+                "left": 5,
+                "right": 5,
+                "count": 6
+              }
+            },
+            "role": "score",
+            "weight": 1,
+            "category": "structure",
+            "transform": {
+              "kind": "map",
+              "version": 1,
+              "field": "structure",
+              "map": {
+                "up": 1,
+                "down": -1,
+                "mixed": 0,
+                "unknown": null
+              }
+            },
+            "when_unavailable": "exclude"
+          },
+          {
+            "key": "momentum_4h",
+            "label": "4-hour momentum",
+            "ref": {
+              "id": "momentum.direction",
+              "version": 1,
+              "timeframe": "4h",
+              "params": {}
+            },
+            "role": "condition",
+            "category": "momentum"
+          },
+          {
+            "key": "regime_1d",
+            "label": "Daily regime",
+            "ref": {
+              "id": "regime.observation",
+              "version": 1,
+              "timeframe": "1D",
+              "params": {
+                "confirm": 3,
+                "window": 250
+              }
+            },
+            "role": "condition",
+            "category": "regime"
+          }
+        ],
+        "score": {
+          "method": "weighted_mean",
+          "range": [
+            -1,
+            1
+          ],
+          "meaning": "Direction of price-trend evidence: +1 when every scoring member points up, -1 when every one points down. Not a forecast.",
+          "min_coverage": {
+            "num": 2,
+            "den": 3
+          }
+        },
+        "conditions": [
+          {
+            "key": "bullish_confirmed",
+            "label": "Uptrend with 4-hour momentum agreeing (same price source; not independent confirmation)",
+            "kind": "confirmation",
+            "rule": {
+              "all": [
+                {
+                  "score": {
+                    "gte": 0.5
+                  }
+                },
+                {
+                  "member": "momentum_4h",
+                  "eq": "up"
+                }
+              ]
+            }
+          },
+          {
+            "key": "bearish_confirmed",
+            "label": "Downtrend with 4-hour momentum agreeing (same price source; not independent confirmation)",
+            "kind": "confirmation",
+            "rule": {
+              "all": [
+                {
+                  "score": {
+                    "lte": -0.5
+                  }
+                },
+                {
+                  "member": "momentum_4h",
+                  "eq": "down"
+                }
+              ]
+            }
+          },
+          {
+            "key": "ranging_veto",
+            "label": "Daily regime is ranging: trend readings are not meaningful",
+            "kind": "veto",
+            "rule": {
+              "member": "regime_1d",
+              "field": "state",
+              "eq": "ranging"
+            }
+          }
+        ],
+        "notes": "Every member derives from price, so agreement shows consistency between views of one source, not independent confirmation. Momentum repeats trend (about 80% agreement on development data) and is therefore a condition, not a second vote. Thresholds (0.5, 2/3) are conventions, not tuned on returns."
+      }
+    },
+    {
+      "key": "reversal",
+      "provenance": {
+        "source_config": "starter:reversal-evidence",
+        "source_version": 1,
+        "source_owner": null,
+        "content_sha256": "8a9c64ac3d583d32c498e9bfc538d8b1472a4f1557236281e6d90294955b6ca7",
+        "captured_at": "2026-11-03T00:00:00Z",
+        "audience_ceiling": "public"
+      },
+      "snapshot": {
+        "schema": "angstrom.group/1",
+        "name": "Reversal Evidence",
+        "question": "Is there corroborating evidence that the current move may be turning, and where?",
+        "members": [
+          {
+            "key": "rsi_div_4h",
+            "label": "4-hour RSI divergence",
+            "ref": {
+              "id": "ta.divergence.rsi",
+              "version": 1,
+              "timeframe": "4h",
+              "params": {
+                "left": 5,
+                "right": 5,
+                "min_gap": 5,
+                "max_gap": 60,
+                "lookback": 150,
+                "active_bars": 30
+              }
+            },
+            "role": "condition",
+            "category": "divergence"
+          },
+          {
+            "key": "macd_div_4h",
+            "label": "4-hour MACD divergence",
+            "ref": {
+              "id": "ta.divergence.macd",
+              "version": 1,
+              "timeframe": "4h",
+              "params": {
+                "left": 5,
+                "right": 5,
+                "min_gap": 5,
+                "max_gap": 60,
+                "lookback": 150,
+                "active_bars": 30,
+                "line": "histogram"
+              }
+            },
+            "role": "condition",
+            "category": "divergence"
+          },
+          {
+            "key": "breaks_4h",
+            "label": "4-hour structure breaks",
+            "ref": {
+              "id": "structure.breaks",
+              "version": 1,
+              "timeframe": "4h",
+              "params": {
+                "left": 5,
+                "right": 5,
+                "lookback": 150
+              }
+            },
+            "role": "condition",
+            "category": "structure"
+          },
+          {
+            "key": "zones_1d",
+            "label": "Daily support and resistance",
+            "ref": {
+              "id": "levels.zones",
+              "version": 1,
+              "timeframe": "1D",
+              "params": {
+                "left": 5,
+                "right": 5,
+                "lookback": 300,
+                "width_atr": 0.5,
+                "min_touches": 2,
+                "per_side": 3,
+                "max_width_mult": 2.0
+              }
+            },
+            "role": "levels",
+            "category": "levels"
+          },
+          {
+            "key": "cmf_4h",
+            "label": "4-hour Chaikin Money Flow",
+            "ref": {
+              "id": "volume.cmf",
+              "version": 1,
+              "timeframe": "4h",
+              "params": {
+                "length": 20
+              }
+            },
+            "role": "context",
+            "category": "volume"
+          }
+        ],
+        "score": null,
+        "conditions": [
+          {
+            "key": "bullish_reversal_setup",
+            "label": "Bullish reversal: at least two corroborating price observations (not independent: all derive from price)",
+            "kind": "confirmation",
+            "rule": {
+              "count_at_least": 2,
+              "of": [
+                {
+                  "any": [
+                    {
+                      "member": "rsi_div_4h",
+                      "events": {
+                        "type_in": [
+                          "regular_bullish"
+                        ]
+                      }
+                    },
+                    {
+                      "member": "macd_div_4h",
+                      "events": {
+                        "type_in": [
+                          "regular_bullish"
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "member": "breaks_4h",
+                  "events": {
+                    "direction": "bullish",
+                    "kind_in": [
+                      "CHoCH"
+                    ],
+                    "within_candles": 20
+                  }
+                },
+                {
+                  "member": "zones_1d",
+                  "field": "support.0.distance_atr",
+                  "lte": 1.0
+                }
+              ]
+            }
+          },
+          {
+            "key": "bearish_reversal_setup",
+            "label": "Bearish reversal: at least two corroborating price observations (not independent: all derive from price)",
+            "kind": "confirmation",
+            "rule": {
+              "count_at_least": 2,
+              "of": [
+                {
+                  "any": [
+                    {
+                      "member": "rsi_div_4h",
+                      "events": {
+                        "type_in": [
+                          "regular_bearish"
+                        ]
+                      }
+                    },
+                    {
+                      "member": "macd_div_4h",
+                      "events": {
+                        "type_in": [
+                          "regular_bearish"
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "member": "breaks_4h",
+                  "events": {
+                    "direction": "bearish",
+                    "kind_in": [
+                      "CHoCH"
+                    ],
+                    "within_candles": 20
+                  }
+                },
+                {
+                  "member": "zones_1d",
+                  "field": "resistance.0.distance_atr",
+                  "lte": 1.0
+                }
+              ]
+            }
+          }
+        ],
+        "notes": "No score: events and price levels do not average meaningfully. RSI and MACD divergences come from the same price swings, so they are grouped with any() and count once. Divergence, CHoCH and zones all derive from price; the rule is corroboration, not independent confirmation, and count_independent_at_least would be false by construction. Only active confirmed divergences count (developing, expired and invalidated do not). About half of divergences break their invalidation level within 30 candles on development data; this Group reports evidence, not a trade. If the zone signal is unavailable or no zone exists on that side, its predicate is unknown, so the setup can be unknown rather than not met."
+      }
+    }
   ],
   "standalone": [
     {
       "key": "alignment",
       "label": "Timeframe alignment",
-      "ref": {"id": "mtf.alignment", "version": 1, "timeframe": "1D", "params": {"set": "all"}},
+      "ref": {
+        "id": "mtf.alignment",
+        "version": 1,
+        "timeframe": "1D",
+        "params": {
+          "set": "all"
+        }
+      },
       "role": "context"
     },
     {
       "key": "zones_4h",
       "label": "4-hour levels",
-      "ref": {"id": "levels.zones", "version": 1, "timeframe": "4h",
-              "params": {"left": 5, "right": 5, "lookback": 300, "width_atr": 0.5, "min_touches": 2, "per_side": 3, "max_width_mult": 2.0}},
+      "ref": {
+        "id": "levels.zones",
+        "version": 1,
+        "timeframe": "4h",
+        "params": {
+          "left": 5,
+          "right": 5,
+          "lookback": 300,
+          "width_atr": 0.5,
+          "min_touches": 2,
+          "per_side": 3,
+          "max_width_mult": 2.0
+        }
+      },
       "role": "levels"
     }
   ],
   "market_context": [
     {
       "key": "btc_etf",
-      "label": "Bitcoin ETF flows",
+      "label": "Bitcoin ETF flows (current descriptive context only)",
       "subject": "market:bitcoin",
-      "ref": {"id": "flows.btc_etf", "version": 1, "timeframe": "1D", "params": {"point_in_time": false}},
-      "applies_to": "crypto"
+      "ref": {
+        "id": "flows.btc_etf",
+        "version": 1,
+        "timeframe": "1D",
+        "params": {
+          "point_in_time": false
+        }
+      },
+      "role": "context",
+      "applies_to": "crypto",
+      "data_modes": [
+        "live"
+      ]
     }
   ],
   "score": null,
-  "notes": "No overall Set score: the two Groups answer different questions (trend direction vs reversal evidence). The Set pins each Group's version; editing a Group later does not change this Set until it is upgraded on purpose."
+  "notes": "Each Group is embedded as a frozen snapshot of a pinned version; the snapshot is what is evaluated, the provenance records where it came from (content_sha256 is SHA-256 of the canonical JSON: sorted keys, no spaces, UTF-8). Editing the source never changes this Set until the owner upgrades it. Starters have a public ceiling, so this Set may be published publicly. No Set score (deferred). Both Groups are price-derived; Set diagnostics report the shared lineage."
 }

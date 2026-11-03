@@ -9,7 +9,7 @@
       "ref": {"id": "trend.direction", "version": 1, "timeframe": "1D", "params": {}},
       "role": "score",
       "weight": 1,
-      "family": "price_trend",
+      "category": "trend",
       "transform": {"kind": "map", "version": 1, "map": {"up": 1, "down": -1, "mixed": 0}},
       "when_unavailable": "exclude"
     },
@@ -19,7 +19,7 @@
       "ref": {"id": "trend.direction", "version": 1, "timeframe": "4h", "params": {}},
       "role": "score",
       "weight": 1,
-      "family": "price_trend",
+      "category": "trend",
       "transform": {"kind": "map", "version": 1, "map": {"up": 1, "down": -1, "mixed": 0}},
       "when_unavailable": "exclude"
     },
@@ -29,7 +29,7 @@
       "ref": {"id": "structure.swings", "version": 1, "timeframe": "1D", "params": {"left": 5, "right": 5, "count": 6}},
       "role": "score",
       "weight": 1,
-      "family": "price_structure",
+      "category": "structure",
       "transform": {"kind": "map", "version": 1, "field": "structure", "map": {"up": 1, "down": -1, "mixed": 0, "unknown": null}},
       "when_unavailable": "exclude"
     },
@@ -38,28 +38,26 @@
       "label": "4-hour momentum",
       "ref": {"id": "momentum.direction", "version": 1, "timeframe": "4h", "params": {}},
       "role": "condition",
-      "family": "price_trend",
-      "when_unavailable": "fail"
+      "category": "momentum"
     },
     {
       "key": "regime_1d",
       "label": "Daily regime",
       "ref": {"id": "regime.observation", "version": 1, "timeframe": "1D", "params": {"confirm": 3, "window": 250}},
-      "role": "context",
-      "family": "regime",
-      "when_unavailable": "ignore"
+      "role": "condition",
+      "category": "regime"
     }
   ],
   "score": {
     "method": "weighted_mean",
     "range": [-1, 1],
-    "meaning": "Direction of trend evidence: +1 all scoring members up, -1 all down. Not a forecast.",
-    "min_coverage": 0.67
+    "meaning": "Direction of price-trend evidence: +1 when every scoring member points up, -1 when every one points down. Not a forecast.",
+    "min_coverage": {"num": 2, "den": 3}
   },
   "conditions": [
     {
       "key": "bullish_confirmed",
-      "label": "Uptrend confirmed by 4-hour momentum",
+      "label": "Uptrend with 4-hour momentum agreeing (same price source; not independent confirmation)",
       "kind": "confirmation",
       "rule": {"all": [
         {"score": {"gte": 0.5}},
@@ -68,7 +66,7 @@
     },
     {
       "key": "bearish_confirmed",
-      "label": "Downtrend confirmed by 4-hour momentum",
+      "label": "Downtrend with 4-hour momentum agreeing (same price source; not independent confirmation)",
       "kind": "confirmation",
       "rule": {"all": [
         {"score": {"lte": -0.5}},
@@ -82,5 +80,5 @@
       "rule": {"member": "regime_1d", "field": "state", "eq": "ranging"}
     }
   ],
-  "notes": "Trend and momentum share price inputs (they agree about 80% of the time on development data), so momentum is a confirmation condition, not a second weighted vote. Both trend members are in one family; the agreement diagnostic counts families, not members."
+  "notes": "Every member derives from price, so agreement shows consistency between views of one source, not independent confirmation. Momentum repeats trend (about 80% agreement on development data) and is therefore a condition, not a second vote. Thresholds (0.5, 2/3) are conventions, not tuned on returns."
 }

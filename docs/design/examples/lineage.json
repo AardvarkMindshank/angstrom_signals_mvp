@@ -1,0 +1,59 @@
+{
+  "schema": "angstrom.lineage/1",
+  "version": 1,
+  "note": "Raw data roots per Signal Library signal. Two signals are independent only when their root sets are disjoint. 'price' = OHLC candles (Yahoo); 'volume' = candle volume; 'derivatives' = Coinalyze open interest, funding, long/short and liquidations (positioning.liquidation_levels is an estimate from that data). Not editable by users; a new library signal must be added before Groups can use it.",
+  "roots": {
+    "flows.btc_etf": [
+      "tftc_btc_etf"
+    ],
+    "flows.stablecoin_supply": [
+      "defillama_stablecoins"
+    ],
+    "momentum.direction": [
+      "price"
+    ],
+    "ta.divergence.macd": [
+      "price"
+    ],
+    "ta.divergence.rsi": [
+      "price"
+    ],
+    "positioning.liquidation_levels": [
+      "derivatives"
+    ],
+    "positioning.liquidations": [
+      "derivatives"
+    ],
+    "positioning.oi_price": [
+      "derivatives"
+    ],
+    "regime.observation": [
+      "price"
+    ],
+    "regime.state": [
+      "price"
+    ],
+    "levels.zones": [
+      "price"
+    ],
+    "structure.breaks": [
+      "price"
+    ],
+    "structure.swings": [
+      "price"
+    ],
+    "mtf.alignment": [
+      "price"
+    ],
+    "trend.direction": [
+      "price"
+    ],
+    "volume.cmf": [
+      "price",
+      "volume"
+    ],
+    "volume.relative": [
+      "volume"
+    ]
+  }
+}

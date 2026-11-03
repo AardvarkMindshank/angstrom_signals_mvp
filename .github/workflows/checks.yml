@@ -1,0 +1,183 @@
+name: Signals checks (shared)
+
+# The full check suite, called by two workflows:
+#  - v2-checks.yml  (push to v2, manual): publish=true, results saved to the reports branch (contents: write)
+#  - pr-checks.yml  (pull requests into main, forks included): publish=false, read-only token,
+#    results uploaded as workflow artifacts instead of being pushed anywhere.
+#
+# Required checks fail the job: the test suite, the deterministic chart browser and Streamlit checks, and the
+# development-data checks. Optional checks depend on live third-party feeds (Yahoo, TFTC, DefiLlama, Google News);
+# their failures are recorded in the step summary and reports but do not fail the job.
+on:
+  workflow_call:
+    inputs:
+      publish:
+        description: "Save results to the reports branch (needs contents: write)"
+        type: boolean
+        default: false
+
+jobs:
+  tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12.15"
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install --no-deps -r requirements-research.lock
+          pip install pytest
+      - name: Tests (required)
+        run: |
+          mkdir -p out
+          set +e
+          python -m pytest -q -rs > out/tests.txt 2>&1
+          code=$?
+          set -e
+          echo "exit=$code" >> out/tests.txt
+          tail -40 out/tests.txt >> "$GITHUB_STEP_SUMMARY"
+          exit $code
+      - name: Save to reports branch
+        if: always() && inputs.publish
+        run: bash .github/scripts/save_to_reports.sh "ci/v2/$(date -u +%Y-%m-%d_%H%M)_${GITHUB_SHA::7}_tests" out/tests.txt
+      - name: Upload results
+        if: always() && !inputs.publish
+        uses: actions/upload-artifact@v5
+        with:
+          name: tests
+          path: out/
+          if-no-files-found: ignore
+
+  chart:
+    # TradingView Lightweight Charts: fetch the official npm package (Apache 2.0) so the
+    # exact file can be kept in static/ with its licence, and check the chart and Signal Library.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12.15"
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install --no-deps -r requirements-research.lock
+          mkdir -p out
+      - name: Lightweight Charts package (optional, npm)
+        continue-on-error: true
+        run: |
+          mkdir -p out/lwc pkg
+          cd pkg
+          npm pack lightweight-charts@5 --silent > name.txt
+          tar xzf "$(cat name.txt)"
+          cp package/dist/lightweight-charts.standalone.production.js ../out/lwc/
+          cp package/LICENSE ../out/lwc/LICENSE 2>/dev/null || true
+          cp package/NOTICE ../out/lwc/NOTICE 2>/dev/null || true
+          node -e "console.log(require('./package/package.json').version)" > ../out/lwc/VERSION
+          cd ../out/lwc && sha256sum lightweight-charts.standalone.production.js > SHA256 && cat VERSION SHA256
+      - name: Live candle check (optional, live Yahoo)
+        if: always()
+        run: python chart_data_check.py --out out || echo "live candle check" >> out/optional_failures.txt
+      - name: Signal Library live run (optional, live Yahoo)
+        if: always()
+        run: python signal_library_live.py --out out || echo "signal library live run" >> out/optional_failures.txt
+      - name: Browser tools
+        run: |
+          npm install --no-save --silent playwright@1.63.0
+          npx playwright install --with-deps chromium > /dev/null
+      - name: Chart in a browser, made-up candles (required)
+        if: always()
+        run: |
+          python chart_browser_fixtures.py --out out/fixtures
+          node chart_browser_check.js out/fixtures out/browser_test || echo "chart browser check (made-up candles)" >> out/required_failures.txt
+          cat out/browser_test/chart_browser.md >> "$GITHUB_STEP_SUMMARY" || true
+      - name: Chart in a browser, live candles (optional, live Yahoo)
+        if: always()
+        run: |
+          python chart_browser_fixtures.py --live --out out/fixtures_live \
+            && node chart_browser_check.js out/fixtures_live out/browser_live \
+            || echo "chart browser check (live candles)" >> out/optional_failures.txt
+          cat out/browser_live/chart_browser.md >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
+      - name: Chart inside Streamlit, made-up candles (required)
+        if: always()
+        run: |
+          streamlit run chart_streamlit_app.py --server.headless true --server.port 8599 -- out/fixtures > out/streamlit.log 2>&1 &
+          for i in $(seq 1 60); do curl -sf http://127.0.0.1:8599/_stcore/health && break; sleep 1; done
+          node chart_streamlit_check.js http://127.0.0.1:8599/ out/streamlit_test || echo "chart inside Streamlit" >> out/required_failures.txt
+          cat out/streamlit_test/chart_streamlit.md >> "$GITHUB_STEP_SUMMARY" || true
+      - name: Tidy results
+        if: always()
+        run: |
+          ls -la out/fixtures_live > out/live_fixture_sizes.txt 2>/dev/null || true
+          rm -rf out/fixtures out/fixtures_live
+          for f in required optional; do
+            if [ -f "out/${f}_failures.txt" ]; then echo "### ${f} checks that failed" >> "$GITHUB_STEP_SUMMARY"; cat "out/${f}_failures.txt" >> "$GITHUB_STEP_SUMMARY"; fi
+          done
+      - name: Save to reports branch
+        if: always() && inputs.publish
+        run: bash .github/scripts/save_to_reports.sh "ci/v2/$(date -u +%Y-%m-%d_%H%M)_${GITHUB_SHA::7}_chart" out/*
+      - name: Upload results
+        if: always() && !inputs.publish
+        uses: actions/upload-artifact@v5
+        with:
+          name: chart
+          path: out/
+          if-no-files-found: ignore
+      - name: Gate (fails when a required check failed)
+        if: always()
+        run: |
+          if [ -f out/required_failures.txt ]; then
+            echo "Required checks failed:"; cat out/required_failures.txt; exit 1
+          fi
+          echo "All required chart checks passed."
+
+  overlap:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12.15"
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install --no-deps -r requirements-research.lock
+          mkdir -p out
+      - name: Frozen prices (development rows are cut when read)
+        run: |
+          git fetch --depth=1 origin reports
+          git checkout FETCH_HEAD -- data/prices
+          mv data/prices prices
+      - name: Overlap check (required)
+        run: python v2_overlap.py --prices prices --out out
+      - name: End-to-end smoke check (required)
+        if: always()
+        run: |
+          python v2_smoke.py --prices prices --out out
+          cat out/smoke.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Technical coverage overlap check (required, development data only)
+        if: always()
+        run: python ta_coverage_check.py --prices prices --out out
+      - name: Signal Library descriptive check (required, development data only)
+        if: always()
+        run: python signal_library_check.py --prices prices --out out
+      - name: Capital flows dry run (optional, live feeds, nothing stored)
+        if: always()
+        run: python capital_flows_check.py --out out || echo "capital flows dry run" >> out/optional_failures.txt
+      - name: Headline filter dry run (optional, live Google News, no model calls)
+        if: always()
+        run: python sentiment_filter_check.py --out out || echo "headline filter dry run" >> out/optional_failures.txt
+      - name: Save to reports branch
+        if: always() && inputs.publish
+        run: bash .github/scripts/save_to_reports.sh "ci/v2/$(date -u +%Y-%m-%d_%H%M)_${GITHUB_SHA::7}_overlap" out/*
+      - name: Upload results
+        if: always() && !inputs.publish
+        uses: actions/upload-artifact@v5
+        with:
+          name: overlap
+          path: out/
+          if-no-files-found: ignore

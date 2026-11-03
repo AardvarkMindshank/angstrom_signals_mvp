@@ -1,157 +1,21 @@
 name: Signals v2 checks
 
-# Runs on every push to the v2 development branch and on every pull request into main (the review
-# workflow: feature branch -> PR -> review -> approval -> merge). Results are saved to the reports branch
-# (ci/v2/...) so they can be read without access to the Actions page.
-#  - tests: the full test suite with the real indicator library (pandas-ta) and Streamlit installed
-#  - overlap: the development-only overlap check (v2_overlap.py) and the end-to-end smoke check (v2_smoke.py)
+# Push to the v2 development branch (or run by hand): the full check suite, with results saved to the
+# reports branch (ci/v2/...) so they can be read without the Actions page. The jobs live in checks.yml.
 on:
   push:
     branches: [v2]
-  pull_request:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: v2-checks-${{ github.event.pull_request.number || github.ref }}
+  group: v2-checks-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  tests:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.12.15"
-      - name: Install
-        run: |
-          python -m pip install --upgrade pip
-          pip install --no-deps -r requirements-research.lock
-          pip install pytest
-      - name: Tests
-        run: |
-          mkdir -p out
-          set +e
-          python -m pytest -q -rs > out/tests.txt 2>&1
-          echo "exit=$?" >> out/tests.txt
-          set -e
-          tail -40 out/tests.txt >> "$GITHUB_STEP_SUMMARY"
-      - name: Save
-        if: always()
-        run: bash .github/scripts/save_to_reports.sh "ci/v2/$(date -u +%Y-%m-%d_%H%M)_${GITHUB_SHA::7}_tests" out/tests.txt
-
-  chart:
-    # TradingView Lightweight Charts: fetch the official npm package (Apache 2.0) so the
-    # exact file can be kept in static/ with its licence, and check the chart candles live.
-    runs-on: ubuntu-24.04
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.12.15"
-      - name: Install
-        run: |
-          python -m pip install --upgrade pip
-          pip install --no-deps -r requirements-research.lock
-      - name: Lightweight Charts package
-        run: |
-          mkdir -p out/lwc pkg
-          cd pkg
-          npm pack lightweight-charts@5 --silent > name.txt
-          tar xzf "$(cat name.txt)"
-          cp package/dist/lightweight-charts.standalone.production.js ../out/lwc/
-          cp package/LICENSE ../out/lwc/LICENSE 2>/dev/null || true
-          cp package/NOTICE ../out/lwc/NOTICE 2>/dev/null || true
-          node -e "console.log(require('./package/package.json').version)" > ../out/lwc/VERSION
-          cd ../out/lwc && sha256sum lightweight-charts.standalone.production.js > SHA256 && cat VERSION SHA256
-      - name: Live candle check (Yahoo, nothing stored)
-        if: always()
-        run: python chart_data_check.py --out out || true
-      - name: Signal Library live run (every candle signal on real Yahoo candles)
-        if: always()
-        run: |
-          python signal_library_live.py --out out || echo "signal library errors" >> out/chart_failures.txt
-      - name: Browser tools
-        if: always()
-        run: |
-          npm install --no-save --silent playwright@1.63.0
-          npx playwright install --with-deps chromium > /dev/null
-      - name: Chart in a browser (made-up and live candles, desktop and emulated touch)
-        if: always()
-        run: |
-          python chart_browser_fixtures.py --out out/fixtures
-          node chart_browser_check.js out/fixtures out/browser_test || echo "made-up candles: failures" >> out/chart_failures.txt
-          python chart_browser_fixtures.py --live --out out/fixtures_live
-          node chart_browser_check.js out/fixtures_live out/browser_live || echo "live candles: failures" >> out/chart_failures.txt
-          cat out/browser_test/chart_browser.md out/browser_live/chart_browser.md >> "$GITHUB_STEP_SUMMARY" || true
-      - name: Chart inside Streamlit (reruns keep the view)
-        if: always()
-        run: |
-          streamlit run chart_streamlit_app.py --server.headless true --server.port 8599 -- out/fixtures_live > out/streamlit.log 2>&1 &
-          for i in $(seq 1 60); do curl -sf http://127.0.0.1:8599/_stcore/health && break; sleep 1; done
-          node chart_streamlit_check.js http://127.0.0.1:8599/ out/streamlit_test || echo "streamlit: failures" >> out/chart_failures.txt
-          cat out/streamlit_test/chart_streamlit.md >> "$GITHUB_STEP_SUMMARY" || true
-      - name: Save
-        if: always()
-        run: |
-          ls -la out/fixtures_live > out/live_fixture_sizes.txt 2>/dev/null || true
-          rm -rf out/fixtures out/fixtures_live
-          bash .github/scripts/save_to_reports.sh "ci/v2/$(date -u +%Y-%m-%d_%H%M)_${GITHUB_SHA::7}_chart" out/*
-
-  overlap:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 60
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.12.15"
-      - name: Install
-        run: |
-          python -m pip install --upgrade pip
-          pip install --no-deps -r requirements-research.lock
-      - name: Frozen prices (development rows are cut when read)
-        run: |
-          git fetch --depth=1 origin reports
-          git checkout FETCH_HEAD -- data/prices
-          mv data/prices prices
-      - name: Overlap check
-        run: python v2_overlap.py --prices prices --out out
-      - name: End-to-end smoke check (watchlist row, card, breakdown, matrix, evidence, alerts, digest)
-        if: always()
-        run: |
-          mkdir -p out
-          python v2_smoke.py --prices prices --out out
-          cat out/smoke.md >> "$GITHUB_STEP_SUMMARY"
-      - name: Technical coverage overlap check (development data only)
-        if: always()
-        run: |
-          mkdir -p out
-          python ta_coverage_check.py --prices prices --out out
-      - name: Signal Library descriptive check (development data only)
-        if: always()
-        run: |
-          mkdir -p out
-          python signal_library_check.py --prices prices --out out
-      - name: Capital flows dry run (live feeds, nothing stored)
-        if: always()
-        run: |
-          mkdir -p out
-          python capital_flows_check.py --out out || true
-      - name: Headline filter dry run (live Google News, no model calls)
-        if: always()
-        run: |
-          mkdir -p out
-          python sentiment_filter_check.py --out out || true
-      - name: Save
-        if: always()
-        run: |
-          if [ -d out ]; then
-            bash .github/scripts/save_to_reports.sh "ci/v2/$(date -u +%Y-%m-%d_%H%M)_${GITHUB_SHA::7}_overlap" out/*
-          fi
+  checks:
+    uses: ./.github/workflows/checks.yml
+    with:
+      publish: true

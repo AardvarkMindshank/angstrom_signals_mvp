@@ -1,0 +1,36 @@
+{
+  "schema": "angstrom.transform-fixtures/1",
+  "note": "Expected outputs for the v1 transforms (design section 3.3). 'unknown' means no contribution (never 0). The first build's evaluator must reproduce every case.",
+  "cases": [
+    {"kind": "map", "params": {"map": {"up": 1, "down": -1, "mixed": 0}}, "input": "up", "expected": 1},
+    {"kind": "map", "params": {"map": {"up": 1, "down": -1, "mixed": 0}}, "input": "mixed", "expected": 0},
+    {"kind": "map", "params": {"map": {"up": 1, "down": -1, "mixed": 0}}, "input": "sideways", "expected": "unknown"},
+    {"kind": "map", "params": {"map": {"up": 1, "unknown": null}}, "input": "unknown", "expected": "unknown"},
+    {"kind": "map", "params": {"field": "structure", "map": {"up": 1, "down": -1}}, "input": {"structure": "down"}, "expected": -1},
+    {"kind": "map", "params": {"field": "structure", "map": {"up": 1, "down": -1}}, "input": {"other": "up"}, "expected": "unknown"},
+
+    {"kind": "bands", "params": {"bands": [{"from": null, "to": -0.1, "value": -1}, {"from": -0.1, "to": 0.1, "value": 0}, {"from": 0.1, "to": null, "value": 1}]}, "input": -0.1, "expected": 0},
+    {"kind": "bands", "params": {"bands": [{"from": null, "to": -0.1, "value": -1}, {"from": -0.1, "to": 0.1, "value": 0}, {"from": 0.1, "to": null, "value": 1}]}, "input": 0.1, "expected": 1},
+    {"kind": "bands", "params": {"bands": [{"from": null, "to": -0.1, "value": -1}, {"from": -0.1, "to": 0.1, "value": 0}, {"from": 0.1, "to": null, "value": 1}]}, "input": -0.2, "expected": -1},
+    {"kind": "bands", "params": {"bands": [{"from": null, "to": -0.1, "value": -1}, {"from": -0.1, "to": 0.1, "value": 0}, {"from": 0.1, "to": null, "value": 1}]}, "input": "NaN", "expected": "unknown"},
+    {"kind": "bands", "params": {"bands": [{"from": null, "to": 0, "value": -1}, {"from": 0.5, "to": null, "value": 1}]}, "input": 0.2, "expected": "invalid_config", "why": "gap between 0 and 0.5"},
+
+    {"kind": "clip", "params": {"low": 0, "high": 100}, "input": 50, "expected": 0},
+    {"kind": "clip", "params": {"low": 0, "high": 100}, "input": 75, "expected": 0.5},
+    {"kind": "clip", "params": {"low": 0, "high": 100}, "input": 150, "expected": 1},
+    {"kind": "clip", "params": {"low": 0, "high": 100, "invert": true}, "input": 75, "expected": -0.5},
+    {"kind": "clip", "params": {"low": 0, "high": 100}, "input": null, "expected": "unknown"},
+    {"kind": "clip", "params": {"low": 5, "high": 5}, "input": 5, "expected": "invalid_config", "why": "low must be below high"},
+
+    {"kind": "events", "params": {"up_types": ["regular_bullish"], "down_types": ["regular_bearish"]},
+     "input": {"events": [{"type": "regular_bullish", "status": "confirmed"}]}, "expected": 1},
+    {"kind": "events", "params": {"up_types": ["regular_bullish"], "down_types": ["regular_bearish"]},
+     "input": {"events": [{"type": "regular_bullish", "status": "expired"}, {"type": "regular_bearish", "status": "invalidated"}]}, "expected": 0},
+    {"kind": "events", "params": {"up_types": ["regular_bullish"], "down_types": ["regular_bearish"]},
+     "input": {"events": [], "developing": [{"type": "regular_bullish", "status": "developing"}]}, "expected": 0},
+    {"kind": "events", "params": {"up_types": ["regular_bullish"], "down_types": ["regular_bearish"]},
+     "input": {"events": [{"type": "regular_bullish", "status": "confirmed"}, {"type": "regular_bearish", "status": "confirmed"}]}, "expected": 0, "flag": "conflicting_events"},
+    {"kind": "events", "params": {"up_types": ["regular_bullish"], "down_types": ["regular_bearish"]},
+     "input": null, "expected": "unknown"}
+  ]
+}
