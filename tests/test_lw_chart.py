@@ -147,8 +147,9 @@ def test_engine_interval_and_range_are_saved_to_the_account():
     assert "CHART_ENGINE_SETTING: chart_engine," in SOURCE
     assert 'saved_engine = settings.get(CHART_ENGINE_SETTING)' in SOURCE
     assert 'CHART_ENGINE_SETTING = "chart_style"' in SOURCE
+    assert 'key="chart_engine"' not in SOURCE and 'key="chart_style"' in SOURCE
     assert 'save_account_settings({"chart_interval": interval, "chart_range": range_key})' in SOURCE
-    for key in ("chart_engine", "chart_interval", "chart_range"):
+    for key in ("chart_style", "chart_interval", "chart_range"):
         assert f'    "{key}",\n' in SOURCE  # cleared when another account logs in
 
 
