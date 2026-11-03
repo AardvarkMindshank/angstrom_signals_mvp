@@ -67,6 +67,11 @@ jobs:
           mkdir -p out
           python v2_smoke.py --prices prices --out out
           cat out/smoke.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Headline filter dry run (live Google News, no model calls)
+        if: always()
+        run: |
+          mkdir -p out
+          python sentiment_filter_check.py --out out || true
       - name: Save
         if: always()
         run: |

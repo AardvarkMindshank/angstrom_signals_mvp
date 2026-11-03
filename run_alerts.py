@@ -123,7 +123,8 @@ def send_alert_email(to_email: str, asset_name: str, message: str, logo_url: str
         f"{asset_logo(logo_url, size=26)}{safe_name} crossed an alert boundary",
         [
             "This email is sent once for that crossing. "
-            "It is sent again only after the score moves 10 points back from the boundary and then crosses it again.",
+            "It is sent again only after the reading moves back from your line (20 points for Trend, Stretch and "
+            "Flow, 10 for market sentiment) and then crosses it again. Readings describe the market; they are not forecasts.",
         ],
         callout=safe_message + (
             f'<br><span style="font-weight:400;font-size:15px;">Now: {html.escape(facts)}</span>' if facts else ""

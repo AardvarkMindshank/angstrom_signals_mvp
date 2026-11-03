@@ -1104,7 +1104,7 @@ def save_market_mood(supabase, market_key: str, query: str, report: dict, stored
     except Exception as exc:
         _warn(exc)
         return False
-    _record_sentiment_history(supabase, market_key, score, stored_at)
+    _record_sentiment_history(supabase, market_key, score, stored_at, report)
     return True
 
 
@@ -1134,20 +1134,58 @@ def save_sentiment(supabase, kind: str, asset_id: str, report: dict, stored_at: 
     except Exception as exc:
         _warn(exc)
         return
-    _record_sentiment_history(supabase, asset_market_key(kind, identity), score, stored_at)
+    _record_sentiment_history(supabase, asset_market_key(kind, identity), score, stored_at, report)
     drop_expired_sentiment_comments(supabase)
 
 
-def _record_sentiment_history(supabase, subject_key: str, score: float, stored_at: float) -> None:
-    """Append one score. A repeat of the same update is ignored. Older than 30 days is removed."""
+HISTORY_ARTICLES_MAX = 30
+
+
+def history_payload(subject_key: str, score: float, stored_at: float, report: dict | None = None) -> dict:
+    """Arguments for record_sentiment_score: one observation with its model, coverage and the articles
+    it rests on (id, title, source, link, publication time, score, note). The database keeps each
+    article once (by id) and the observation keeps only the ids and scores."""
+    payload = {
+        "subject_key": subject_key,
+        "score": score,
+        "recorded_at": datetime.fromtimestamp(stored_at, timezone.utc).isoformat(),
+    }
+    if not isinstance(report, dict):
+        return payload
+    cover = report.get("coverage") if isinstance(report.get("coverage"), dict) else {}
+    articles = []
+    for row in report.get("headlines") or []:
+        if not isinstance(row, dict) or not row.get("id"):
+            continue
+        articles.append({key: row.get(key) for key in ("id", "title", "source", "link", "published_at", "score", "note")
+                         if row.get(key) is not None})
+        if len(articles) >= HISTORY_ARTICLES_MAX:
+            break
+    payload.update({
+        "model": str(report.get("model") or "")[:60] or None,
+        "coverage": cover.get("level"),
+        "events": cover.get("events"),
+        "sources": cover.get("sources"),
+        "articles": articles or None,
+    })
+    return payload
+
+
+def _record_sentiment_history(supabase, subject_key: str, score: float, stored_at: float, report: dict | None = None) -> None:
+    """Append one observation. A repeat of the same update is ignored by the database (same subject and
+    time). Until the history columns from supabase_rls.sql are added, only the score and time are kept."""
     if not subject_key:
         return
+    payload = history_payload(subject_key, score, stored_at, report)
     try:
-        supabase.rpc("record_sentiment_score", {
-            "subject_key": subject_key,
-            "score": score,
-            "recorded_at": datetime.fromtimestamp(stored_at, timezone.utc).isoformat(),
-        }).execute()
+        supabase.rpc("record_sentiment_score", payload).execute()
+        return
+    except Exception as exc:
+        if len(payload) == 3:
+            print(f"Sentiment history was not stored for {subject_key}: {exc}")
+            return
+    try:
+        supabase.rpc("record_sentiment_score", {k: payload[k] for k in ("subject_key", "score", "recorded_at")}).execute()
     except Exception as exc:
         print(f"Sentiment history was not stored for {subject_key}: {exc}")
 

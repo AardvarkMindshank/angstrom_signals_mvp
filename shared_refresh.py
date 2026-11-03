@@ -154,8 +154,15 @@ def _force_market_mood() -> bool:
     return os.getenv("FORCE_MARKET_MOOD", "").strip().lower() in {"1", "true", "yes"}
 
 
-def _save_mood(supabase, spec: dict, force: bool = False) -> None:
-    report = analyze_market_mood(spec["key"], spec["label"], spec["query"], True, force=force)
+def _previous_report(row) -> dict | None:
+    """The stored report on a shared row, so known articles keep their scores."""
+    report = (row or {}).get("sentiment_report") if isinstance(row, dict) else None
+    return report if isinstance(report, dict) and report.get("ok") else None
+
+
+def _save_mood(supabase, spec: dict, force: bool = False, previous: dict | None = None) -> None:
+    report = analyze_market_mood(spec["key"], spec["label"], spec["query"], True, force=force,
+                                 previous=None if force else previous)
     if report.get("ok"):
         save_market_mood(supabase, spec["key"], spec["query"], report, time.time())
         groups = report.get("gauges") or []
@@ -172,12 +179,15 @@ def _save_mood(supabase, spec: dict, force: bool = False) -> None:
         print(f"Sentiment skipped for {spec['label']}: {report.get('reason') or 'not saved'}")
 
 
-def _save_asset_sentiment(supabase, kind: str, asset_id: str, label: str) -> None:
+def _save_asset_sentiment(supabase, kind: str, asset_id: str, label: str, previous: dict | None = None) -> None:
     ticker = crypto_ticker(asset_id) if kind == "Crypto" else asset_id
-    report = analyze_market_sentiment(sentiment_query(kind, label, ticker), True)
+    report = analyze_market_sentiment(sentiment_query(kind, label, ticker), True, previous=previous)
     if report.get("ok"):
         save_sentiment(supabase, kind, asset_id, report, time.time())
-        print(f"Saved sentiment for {label or asset_id}.")
+        cover = report.get("coverage") or {}
+        how = "reused (same articles)" if report.get("reused_report") else f"{report.get('reused_articles', 0)} article scores reused"
+        print(f"Saved sentiment for {label or asset_id}: {cover.get('events')} events from {cover.get('sources')} "
+              f"sources ({cover.get('level')}); {how}.")
     else:
         print(f"Sentiment skipped for {label or asset_id}: {report.get('reason') or 'not saved'}")
 
@@ -207,7 +217,7 @@ def refresh_due_sentiment(supabase, catalog: dict) -> None:
                 break
             slots -= 1
         try:
-            _save_mood(supabase, spec, force=force_moods)
+            _save_mood(supabase, spec, force=force_moods, previous=_previous_report(row))
         except Exception as exc:
             print(f"Sentiment failed for {spec['label']}: {exc}")
     if slots <= 0 or not catalog:
@@ -227,7 +237,8 @@ def refresh_due_sentiment(supabase, catalog: dict) -> None:
     due.sort(reverse=True)
     for _age, kind, asset_id, label in due[:slots]:
         try:
-            _save_asset_sentiment(supabase, kind, asset_id, label)
+            _save_asset_sentiment(supabase, kind, asset_id, label,
+                                  previous=_previous_report(stored.get(asset_market_key(kind, asset_id))))
         except Exception as exc:
             print(f"Sentiment failed for {label}: {exc}")
     print("Shared sentiment: batch finished.")

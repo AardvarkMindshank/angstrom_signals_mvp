@@ -25,3 +25,13 @@ def test_footer_and_logo_always_present():
     page, plain = eb.render_email("T", ["p"])
     assert "not financial advice" in page and "logo.png" in page
     assert "not financial advice" in plain
+
+
+def test_alert_tone_for_every_reading_and_market_alert():
+    import alerts as al
+
+    for kind in al._READING_WORDS:
+        expected = "up" if kind.endswith("_UP") else "down"
+        assert eb.alert_tone(al.reading_message(60 if expected == "up" else -60, kind)) == expected
+    assert eb.alert_tone(al.market_message(70, al.BULLISH)) == "up"
+    assert eb.alert_tone(al.market_message(30, al.BEARISH)) == "down"

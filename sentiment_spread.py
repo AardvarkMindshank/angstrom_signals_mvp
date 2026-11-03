@@ -54,12 +54,29 @@ _MEANING = {
 }
 
 
+def coverage_badge(report: dict | None) -> str:
+    """A small warning when the score rests on thin news: few independent events or few publishers.
+    Empty when coverage is fine or was not recorded."""
+    cover = (report or {}).get("coverage") if isinstance(report, dict) else None
+    if not isinstance(cover, dict) or cover.get("level") != "thin":
+        return ""
+    events, sources = int(cover.get("events") or 0), int(cover.get("sources") or 0)
+    hint = (f"Based on only {events} separate news {'story' if events == 1 else 'stories'} from {sources} "
+            f"{'publisher' if sources == 1 else 'publishers'} (repeats of the same story count once). "
+            "Treat this score as a weak reading.")
+    return (f"<span title='{html.escape(hint, quote=True)}' style='display:inline-block;padding:1px 7px;"
+            "border-radius:999px;background:#fef3c7;color:#92400e;font-size:0.75rem;font-weight:700;cursor:help;'>"
+            "⚠️ thin news</span>")
+
+
 def spread_html(report: dict | None, average: float | None = None, width: int = 190) -> str:
-    """The strip and its word, ready to sit beside the score. Empty with fewer than two scored articles."""
+    """The strip and its word, ready to sit beside the score, plus a thin-news warning when it applies.
+    Only the warning (or nothing) with fewer than two scored articles."""
     values = article_scores(report)
     word, sd = spread_word(values)
+    thin = coverage_badge(report)
     if not word:
-        return ""
+        return thin
     mean = average if average is not None else sum(values) / len(values)
     height, pad = 28, 5
 
@@ -117,4 +134,5 @@ def spread_html(report: dict | None, average: float | None = None, width: int = 
         f"{svg}<span style='display:inline-flex;flex-direction:column;align-items:flex-start;line-height:1.2;'>"
         f"{label}<span style='font-size:0.7rem;color:var(--ang-muted,#6b7280);'>{len(values)} {noun}</span>"
         "</span></span>"
+        + (f"<span style='margin-left:8px;'>{thin}</span>" if thin else "")
     )

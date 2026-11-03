@@ -27,10 +27,10 @@ _TONES = {"up": _GREEN, "down": _RED, "info": _BLUE}
 def alert_tone(message: str) -> str:
     """Green for a rise, red for a fall, blue when it is neither."""
     text = str(message or "").lower()
-    if any(word in text for word in ("above", "bullish", "rose", "up ")):
-        return "up"
-    if any(word in text for word in ("below", "bearish", "fell", "down ")):
+    if any(word in text for word in ("turned down", "stretched down", "negative", "below", "bearish", "fell", "down ")):
         return "down"
+    if any(word in text for word in ("turned up", "stretched up", "positive", "above", "bullish", "rose", "up ")):
+        return "up"
     return "info"
 
 

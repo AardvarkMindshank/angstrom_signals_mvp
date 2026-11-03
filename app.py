@@ -6465,7 +6465,7 @@ def notifications_panel() -> None:
                     "⚡ Instant alerts",
                     value=alert_prefs.get("instant_email") is not False,
                     key="alert_instant_cb",
-                    help="One email as soon as a score crosses a boundary.",
+                    help="One email as soon as a reading or market sentiment crosses your line.",
                     disabled=emails_off,
                 )
                 watchlist_column = "digest_watchlist" in alert_prefs
@@ -6606,7 +6606,7 @@ with st.container(horizontal=True, vertical_alignment="center", horizontal_align
             key="layout_wide",
             type="primary" if wide_on else "secondary",
             help=(
-                "Snapshot and score tables across the top, market sentiment on the left, "
+                "Snapshot and signal tables across the top, market sentiment on the left, "
                 "and the chart sections on the right. The two bottom columns start equal. "
                 "Drag the line between them to resize."
             ),
@@ -6742,6 +6742,12 @@ None of these tools change the technical readings.
         st.markdown("""
 **What it is.** An AI reads recent headlines and scores each from 0 (very negative) to 100 (very
 positive). The sentiment score is their average. It is separate from the technical readings.
+
+**Which headlines count.** Only news from the last 7 days, and for an asset only headlines that name it or
+its ticker. The same story carried by several outlets counts once, no publisher supplies more than two
+headlines, and promotional items (presales, airdrops, price predictions, paid press wires) are left out.
+An article already scored keeps its score on later updates. **⚠️ thin news** beside a score means it rests
+on fewer than 4 separate stories or fewer than 3 publishers: treat it as a weak reading.
 
 **Where it shows**
 - **Market sentiment – Crypto / Stocks**: the whole market, from headlines plus public readings

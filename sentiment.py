@@ -17,6 +17,8 @@ from email.utils import parsedate_to_datetime
 
 import requests
 
+import news_filter
+
 # grok-4.3 can turn reasoning off, so a short headline score returns quickly.
 # grok-4.5 is only used if that model name is rejected.
 _MODELS = (
@@ -92,11 +94,11 @@ MACRO_MOODS = (
         "query": "stock market outlook inflation interest rates earnings",
     },
 )
-_MOOD_SKIP = ("presale", "airdrop", "openpr", "price prediction", "what will", "be worth")
+_MOOD_SKIP = news_filter.SKIP_WORDS
 
 
-def fetch_headlines(query: str, limit: int = 8) -> list[dict]:
-    """Recent headline, source, time, and link. Empty when the feed has nothing."""
+def _fetch_raw(query: str) -> list[dict]:
+    """Every headline Google News returns for the search over the last 7 days (up to about 100)."""
     response = requests.get(
         "https://news.google.com/rss/search",
         params={
@@ -129,20 +131,24 @@ def fetch_headlines(query: str, limit: int = 8) -> list[dict]:
             "published": (item.findtext("pubDate") or "").strip(),
             "link": link,
         })
-    return newest_first(headlines)[:limit]
+    return headlines
+
+
+def gather_headlines(query: str, market: bool = False, limit: int = 8) -> tuple[list[dict], dict]:
+    """(cleaned headlines, what was filtered). See news_filter: junk, stale, off-topic (asset searches),
+    duplicate and same-event reports and publisher repeats are removed before anything is scored."""
+    terms = {} if market else news_filter.asset_terms(query)
+    return news_filter.clean_headlines(_fetch_raw(query), time.time(), terms, limit)
+
+
+def fetch_headlines(query: str, limit: int = 8) -> list[dict]:
+    """Recent, relevant, de-duplicated headlines for one asset search. Empty when the feed has nothing."""
+    return gather_headlines(query, market=False, limit=limit)[0]
 
 
 def fetch_market_headlines(query: str, limit: int = 8) -> list[dict]:
-    """Market headlines, without presales and price-prediction repeats."""
-    kept = []
-    for item in fetch_headlines(query, limit=24):
-        blob = f"{item.get('title') or ''} {item.get('source') or ''}".lower()
-        if any(word in blob for word in _MOOD_SKIP):
-            continue
-        kept.append(item)
-        if len(kept) >= limit:
-            break
-    return kept
+    """Recent, de-duplicated whole-market headlines (no relevance filter: the market is the subject)."""
+    return gather_headlines(query, market=True, limit=limit)[0]
 
 
 def sentiment_ready() -> bool:
@@ -307,12 +313,27 @@ def _field(data: dict, *names):
     return None
 
 
+def _strict_score(value) -> float | None:
+    """A 0-100 article score, or None. Out-of-range values are rejected rather than clamped:
+    a model that answers on another scale must not be read as an extreme."""
+    try:
+        score = float(value)
+    except (TypeError, ValueError):
+        return None
+    if score != score or score < 0 or score > 100:
+        return None
+    return score
+
+
 def _first_score(item: dict) -> float | None:
     for name in ("score", "sentiment", "sentiment_score", "value", "rating"):
-        score = _clamp_score(_field(item, name))
+        score = _strict_score(_field(item, name))
         if score is not None:
             return score
     return None
+
+
+MIN_SCORED_SHARE = 0.5   # a reply that scores fewer than half the headlines is treated as a failed reply
 
 
 def _first_index(item: dict) -> int | None:
@@ -562,6 +583,10 @@ def _attempt_note(model: str, response: requests.Response, label: str = "") -> s
 
 
 def _scored_report(parsed: dict, headlines: list[dict]) -> dict | None:
+    """The report from one valid reply. None when the reply is incomplete: fewer than half the
+    headlines scored (then the next model is tried), or no score at all."""
+    if headlines and parsed.get("scores") and len(parsed["scores"]) < MIN_SCORED_SHARE * len(headlines):
+        return None
     scored = []
     values = []
     for index, item in enumerate(headlines, start=1):
@@ -582,6 +607,7 @@ def _scored_report(parsed: dict, headlines: list[dict]) -> dict | None:
     return {
         "ok": True,
         "score": score,
+        "scored": len(values),
         "summary": parsed.get("summary") or "",
         "positive": parsed.get("positive") or "",
         "negative": parsed.get("negative") or "",
@@ -634,8 +660,10 @@ def _summarize(query: str, headlines: list[dict], prompt: str | None = None) -> 
             if parsed.get("ok"):
                 report = _scored_report(parsed, headlines)
                 if report:
+                    report["model"] = attempt["model"]
                     _BUSY_UNTIL.pop(query, None)
                     return report
+                notes.append(f"{attempt['model']} incomplete reply")
             continue
         if response.status_code in (401, 403):
             saw_auth = True
@@ -693,11 +721,50 @@ def cached_sentiment_score(query: str) -> float | None:
     return score
 
 
-def analyze_market_sentiment(query: str, enabled: bool, force: bool = False) -> dict:
+def _ids(rows) -> list[str]:
+    return [str(row.get("id")) for row in rows or [] if isinstance(row, dict) and row.get("id")]
+
+
+def reuse_scores(report: dict, previous: dict | None) -> dict:
+    """An article already scored in the previous report (by the same model) keeps that score and
+    note, so the same story is not scored differently on every refresh. The average is recomputed
+    the same way as before (each scored headline counts once)."""
+    if not (isinstance(previous, dict) and previous.get("ok") and report.get("ok")):
+        return report
+    if previous.get("model") and report.get("model") and previous["model"] != report["model"]:
+        return report
+    known = {str(row["id"]): row for row in previous.get("headlines") or []
+             if isinstance(row, dict) and row.get("id") and row.get("score") is not None}
+    reused = 0
+    for row in report.get("headlines") or []:
+        old = known.get(str(row.get("id") or ""))
+        if old is None:
+            continue
+        row["score"] = old["score"]
+        if old.get("note"):
+            row["note"] = old["note"]
+        reused += 1
+    if reused:
+        values = _scores_in(report.get("headlines"))
+        if values:
+            report["score"] = sum(values) / len(values)
+        report["reused_articles"] = reused
+    return report
+
+
+def _with_quality(report: dict, stats: dict) -> dict:
+    report["coverage"] = news_filter.coverage(report.get("headlines") or [])
+    report["filtered"] = {k: v for k, v in (stats or {}).items() if k not in ("events", "sources", "level")}
+    return report
+
+
+def analyze_market_sentiment(query: str, enabled: bool, force: bool = False, previous: dict | None = None) -> dict:
     """Headlines plus a score when an xAI key is configured.
 
     A successful score is reused for 12 hours. A busy model is not cached,
     so the next look can try again. force skips that window and asks again.
+    previous is the last stored report: when the cleaned headlines are exactly the ones it scored,
+    it is reused without asking the model again; otherwise its article scores are reused.
     """
     if force:
         _SCORE_CACHE.pop(query, None)
@@ -709,13 +776,20 @@ def analyze_market_sentiment(query: str, enabled: bool, force: bool = False) -> 
         if stored.get("ok") and stored.get("score") is not None and stored_rows:
             return stored
     try:
-        headlines = fetch_headlines(query)
+        headlines, stats = gather_headlines(query)
     except Exception:
         return {"ok": False, "reason": "headlines_error", "headlines": []}
     if not headlines:
-        return {"ok": False, "reason": "no_headlines", "headlines": []}
+        return {"ok": False, "reason": "no_headlines", "headlines": [], "filtered": stats}
     if not enabled:
         return {"ok": False, "reason": "missing_key", "headlines": headlines}
+    if (isinstance(previous, dict) and previous.get("ok") and previous.get("model")
+            and sorted(_ids(previous.get("headlines"))) == sorted(_ids(headlines))):
+        summary = copy.deepcopy(previous)
+        summary["reused_report"] = True
+        _with_quality(summary, stats)
+        _SCORE_CACHE[query] = (time.time(), summary)
+        return summary
     try:
         summary = _summarize(query, headlines)
     except Exception:
@@ -723,6 +797,8 @@ def analyze_market_sentiment(query: str, enabled: bool, force: bool = False) -> 
     if not summary.get("headlines"):
         summary["headlines"] = headlines
     if summary.get("ok"):
+        reuse_scores(summary, previous)
+        _with_quality(summary, stats)
         _SCORE_CACHE[query] = (time.time(), summary)
     return summary
 
@@ -840,7 +916,8 @@ def combine_mood_score(report: dict) -> dict:
     return report
 
 
-def analyze_market_mood(market_key: str, label: str, query: str, enabled: bool, force: bool = False) -> dict:
+def analyze_market_mood(market_key: str, label: str, query: str, enabled: bool, force: bool = False,
+                        previous: dict | None = None) -> dict:
     """One whole-market score. Reused for 12 hours. Separate from any asset score."""
     cache_key = f"mood:{market_key}"
     if force:
@@ -854,7 +931,7 @@ def analyze_market_mood(market_key: str, label: str, query: str, enabled: bool, 
         if stored.get("ok") and stored.get("score") is not None and stored.get("headlines"):
             return stored
     try:
-        headlines = fetch_market_headlines(query)
+        headlines, stats = gather_headlines(query, market=True)
     except Exception:
         return {"ok": False, "reason": "headlines_error", "headlines": []}
     if not headlines:
@@ -884,6 +961,8 @@ def analyze_market_mood(market_key: str, label: str, query: str, enabled: bool, 
     if not summary.get("headlines"):
         summary["headlines"] = headlines
     if summary.get("ok"):
+        reuse_scores(summary, previous)
+        _with_quality(summary, stats)
         combine_mood_score(summary)
     if summary.get("ok"):
         _SCORE_CACHE[cache_key] = (time.time(), summary)
