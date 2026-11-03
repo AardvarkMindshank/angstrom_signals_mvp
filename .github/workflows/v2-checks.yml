@@ -72,6 +72,11 @@ jobs:
         run: |
           mkdir -p out
           python ta_coverage_check.py --prices prices --out out
+      - name: Capital flows dry run (live feeds, nothing stored)
+        if: always()
+        run: |
+          mkdir -p out
+          python capital_flows_check.py --out out || true
       - name: Headline filter dry run (live Google News, no model calls)
         if: always()
         run: |

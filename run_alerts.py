@@ -357,6 +357,13 @@ def run_background_checks() -> None:
     frames = refresh_price_catalog(supabase, catalog, max_days)
     refresh_due_sentiment(supabase, catalog)
     try:
+        # Observed capital flows: collected only, a few times a day. Never holds up the alert pass.
+        from capital_flows import refresh_due_flows
+
+        refresh_due_flows(supabase)
+    except Exception as exc:
+        print(f"Capital flows skipped: {str(exc)[:160]}")
+    try:
         from data_fetchers import crypto_ticker
         from liquidation_levels import refresh_due as refresh_liquidation_levels
 
