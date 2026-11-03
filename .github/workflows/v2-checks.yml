@@ -72,7 +72,8 @@ jobs:
         run: python chart_data_check.py --out out || true
       - name: Signal Library live run (every candle signal on real Yahoo candles)
         if: always()
-        run: python signal_library_live.py --out out || echo "signal library: errors" >> out/chart_failures.txt
+        run: |
+          python signal_library_live.py --out out || echo "signal library errors" >> out/chart_failures.txt
       - name: Browser tools
         if: always()
         run: |
