@@ -1,0 +1,265 @@
+{
+ "checks": [
+  [
+   "AAPL: status ok",
+   true,
+   ""
+  ],
+  [
+   "AAPL: no 0-100 score key",
+   true,
+   ""
+  ],
+  [
+   "AAPL: version and fingerprint",
+   true,
+   ""
+  ],
+  [
+   "AAPL: trend bounded or missing",
+   true,
+   "51"
+  ],
+  [
+   "AAPL: stretch bounded or missing",
+   true,
+   "14"
+  ],
+  [
+   "AAPL: flow bounded or missing",
+   true,
+   "26"
+  ],
+  [
+   "AAPL: trend coverage full",
+   true,
+   "[3, 3]"
+  ],
+  [
+   "ABBV: status ok",
+   true,
+   ""
+  ],
+  [
+   "ABBV: no 0-100 score key",
+   true,
+   ""
+  ],
+  [
+   "ABBV: version and fingerprint",
+   true,
+   ""
+  ],
+  [
+   "ABBV: trend bounded or missing",
+   true,
+   "-11"
+  ],
+  [
+   "ABBV: stretch bounded or missing",
+   true,
+   "-20"
+  ],
+  [
+   "ABBV: flow bounded or missing",
+   true,
+   "-26"
+  ],
+  [
+   "ABBV: trend coverage full",
+   true,
+   "[3, 3]"
+  ],
+  [
+   "ADBE: status ok",
+   true,
+   ""
+  ],
+  [
+   "ADBE: no 0-100 score key",
+   true,
+   ""
+  ],
+  [
+   "ADBE: version and fingerprint",
+   true,
+   ""
+  ],
+  [
+   "ADBE: trend bounded or missing",
+   true,
+   "-69"
+  ],
+  [
+   "ADBE: stretch bounded or missing",
+   true,
+   "-41"
+  ],
+  [
+   "ADBE: flow bounded or missing",
+   true,
+   "-26"
+  ],
+  [
+   "ADBE: trend coverage full",
+   true,
+   "[3, 3]"
+  ],
+  [
+   "ADA-USD: status ok",
+   true,
+   ""
+  ],
+  [
+   "ADA-USD: no 0-100 score key",
+   true,
+   ""
+  ],
+  [
+   "ADA-USD: version and fingerprint",
+   true,
+   ""
+  ],
+  [
+   "ADA-USD: trend bounded or missing",
+   true,
+   "-14"
+  ],
+  [
+   "ADA-USD: stretch bounded or missing",
+   true,
+   "2"
+  ],
+  [
+   "ADA-USD: flow bounded or missing",
+   true,
+   "16"
+  ],
+  [
+   "ADA-USD: trend coverage full",
+   true,
+   "[3, 3]"
+  ],
+  [
+   "ALGO-USD: status ok",
+   true,
+   ""
+  ],
+  [
+   "ALGO-USD: no 0-100 score key",
+   true,
+   ""
+  ],
+  [
+   "ALGO-USD: version and fingerprint",
+   true,
+   ""
+  ],
+  [
+   "ALGO-USD: trend bounded or missing",
+   true,
+   "-30"
+  ],
+  [
+   "ALGO-USD: stretch bounded or missing",
+   true,
+   "1"
+  ],
+  [
+   "ALGO-USD: flow bounded or missing",
+   true,
+   "20"
+  ],
+  [
+   "ALGO-USD: trend coverage full",
+   true,
+   "[3, 3]"
+  ],
+  [
+   "ATOM-USD: status ok",
+   true,
+   ""
+  ],
+  [
+   "ATOM-USD: no 0-100 score key",
+   true,
+   ""
+  ],
+  [
+   "ATOM-USD: version and fingerprint",
+   true,
+   ""
+  ],
+  [
+   "ATOM-USD: trend bounded or missing",
+   true,
+   "-9"
+  ],
+  [
+   "ATOM-USD: stretch bounded or missing",
+   true,
+   "-16"
+  ],
+  [
+   "ATOM-USD: flow bounded or missing",
+   true,
+   "22"
+  ],
+  [
+   "ATOM-USD: trend coverage full",
+   true,
+   "[3, 3]"
+  ],
+  [
+   "matrix: five v2 rows",
+   true,
+   ""
+  ],
+  [
+   "matrix: earlier days unchanged by later bars",
+   true,
+   ""
+  ],
+  [
+   "evidence: built",
+   true,
+   ""
+  ],
+  [
+   "evidence: version 2, Trend reading",
+   true,
+   ""
+  ],
+  [
+   "evidence: fingerprint",
+   true,
+   ""
+  ],
+  [
+   "evidence: text names the Trend reading",
+   true,
+   ""
+  ],
+  [
+   "alerts: Trend up and down opened",
+   true,
+   "{'TREND_UP', 'TREND_DOWN'}"
+  ],
+  [
+   "alerts: messages say not a forecast",
+   true,
+   ""
+  ],
+  [
+   "digest: shows Trend",
+   true,
+   ""
+  ]
+ ],
+ "timings": {
+  "watchlist rows (each)": 0.0801590784999983,
+  "signal matrix": 0.09279685999999288,
+  "evidence record (one stock)": 3.9177584839999895
+ },
+ "peak_mb": 309.7890625
+}
