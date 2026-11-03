@@ -4550,6 +4550,7 @@ _ACCOUNT_STATE_KEYS = (
     "show_extra_metrics",
     "show_period_changes",
     "days_history",
+    "chart_engine",
     "trade_markets",
     "section_layout",
     "wide_split",
@@ -6922,6 +6923,11 @@ _TRADE_CRYPTOS = "I trade cryptos"
 _TRADE_EQUITIES = "I trade equities"
 _TRADE_BOTH = "I trade both"
 _TRADE_CHOICES = (_TRADE_CRYPTOS, _TRADE_EQUITIES, _TRADE_BOTH)
+# Price chart engines. Plotly stays the default until the TradingView chart has been compared in use.
+CHART_ENGINE_TV = "TradingView"
+CHART_ENGINE_PLOTLY = "Plotly (original)"
+CHART_ENGINES = (CHART_ENGINE_TV, CHART_ENGINE_PLOTLY)
+CHART_ENGINE_DEFAULT = CHART_ENGINE_PLOTLY
 
 
 def _trade_choice(crypto: bool, equities: bool) -> str:
@@ -7133,6 +7139,22 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
         label_visibility="collapsed",
     )
     st.divider()
+    st.markdown("**Price chart**")
+    if "chart_engine" not in st.session_state:
+        saved_engine = settings.get("chart_engine")
+        st.session_state.chart_engine = saved_engine if saved_engine in CHART_ENGINES else CHART_ENGINE_DEFAULT
+    chart_engine = st.radio(
+        "Price chart",
+        CHART_ENGINES,
+        key="chart_engine",
+        persist_state="session",
+        label_visibility="collapsed",
+        help=(
+            "TradingView: zoom with the mouse wheel or a pinch, drag to scroll back, and pick 15-minute to "
+            "weekly candles. Plotly: the original chart. Both use the same indicators."
+        ),
+    )
+    st.divider()
     st.markdown("**TA analysis**")
     show_reasons = st.checkbox(
         "Show signals breakdown",
@@ -7257,6 +7279,7 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
         "show_reasons": bool(show_reasons),
         "show_extra_metrics": bool(show_extra_metrics),
         "show_period_changes": bool(show_period_changes),
+        "chart_engine": chart_engine,
         "popouts_close_on_logout": bool(close_popouts_on_logout),
         "popouts_as_window": bool(popouts_as_window),
         "popouts_fold_section": bool(popouts_fold_section),
