@@ -3867,6 +3867,7 @@ def _reveal_section(section_id: str, anchor: str) -> None:
 from email_brand import render_email
 import beta_emails
 import chart_plan
+import news_filter
 import signals_v2
 import signals_view
 from digest import COMMON_ZONES
@@ -3958,6 +3959,7 @@ try:
         analyze_market_mood,
         analyze_market_sentiment,
         MACRO_MOODS,
+        MIN_SCORED_SHARE,
         cached_sentiment_score,
         newest_first,
         remember_sentiment,
@@ -6100,6 +6102,58 @@ def sentiment_badge(score, pick: str | None = None) -> str:
     )
 
 
+SENTIMENT_METHOD = f"""
+Every step below is the same for every account and every asset. Nothing is weighted by hand.
+
+**1. Finding the news**
+- An **asset** is searched on Google News twice, by its name and by its ticker (for example *Ethereum
+  cryptocurrency* and *ETH cryptocurrency*), over the last 7 days. The two result lists are merged.
+- A **market** (crypto or stocks) is searched with one fixed set of words: *{MACRO_MOODS[0]["query"]}* and
+  *{MACRO_MOODS[1]["query"]}*.
+
+**2. Cleaning the list.** Headlines are removed, in this order, when they are:
+- **Promotional or filler**: presales, airdrops, price predictions, prediction-market listings, live-chart pages,
+  paid press-release wires and automated "fund raises its stake" filing notices.
+- **Out of date**: no publication date, older than {news_filter.MAX_AGE_DAYS} days, or dated in the future.
+- **Off topic** (assets only): the headline must name the asset or its ticker. The ticker must appear as a
+  whole word in capitals, and a short form of the name needs its capital letter, so *stocks near record highs*
+  is not counted as news about NEAR.
+- **The same story again**: when two headlines share at least {int(news_filter.SAME_EVENT_SIMILARITY * 100)}% of their
+  meaningful words (or one is almost contained in the other), only the newest is kept. It notes how many other
+  outlets carried the story, so wide coverage of one event cannot outvote different news.
+- **One publisher too often**: at most {news_filter.PER_SOURCE_MAX} headlines from any one publisher.
+
+The {8} newest headlines left are scored.
+
+**3. Scoring each headline**
+- An AI model (xAI's Grok; the model used is recorded with every score) scores each headline on its own from
+  0 (strongly negative) to 100 (strongly positive), with 50 meaning mixed or unclear, and writes one sentence
+  on it. It also writes a short summary and the Positive and Negative paragraphs. It is told to use only what
+  the headlines say and to add no facts of its own.
+- Its reply is checked before use. A score outside 0 to 100 is thrown away, not rounded into range. A reply
+  that scores fewer than {int(MIN_SCORED_SHARE * 100)}% of the headlines is rejected and the next model is asked.
+- A headline already scored at an earlier update keeps that score (when the same model scored it), so the
+  same story is not scored differently from one update to the next. For an asset, if none of the headlines
+  has changed, the earlier result is reused without asking the model again.
+
+**4. The score**
+- **Asset sentiment** is the plain average of its headline scores, each headline counting once.
+- **Market sentiment** is the plain average of its headline scores and its public readings (central banks,
+  the dollar and yields, Fear & Greed, market breadth and others), each counting once. The model scores each
+  public reading from the figure itself. Hover the market score to see the news and readings averages apart.
+
+**5. How much to trust it**
+- **⚠️ thin news** appears when the headlines cover fewer than {news_filter.COVERAGE_OK_EVENTS} separate stories
+  or come from fewer than {news_filter.COVERAGE_OK_SOURCES} publishers.
+- The **agreement strip** shows every headline's score; *split* means the average hides two camps.
+- Sentiment describes how recent news reads. It has not been shown to predict prices.
+
+**6. What is kept.** Each update is stored permanently with its time, score, the model, the coverage and the
+headlines it used (each headline is stored once and recognised again by its title and publisher). This lets
+sentiment be followed over time. Crowd takes (👍 👎 and your own score) are kept apart and never change the score.
+"""
+
+
 def _trend_alert_level() -> float:
     """The Trend alert line (both ways, +level and -level), saved in the account settings."""
     try:
@@ -6743,11 +6797,10 @@ None of these tools change the technical readings.
 **What it is.** An AI reads recent headlines and scores each from 0 (very negative) to 100 (very
 positive). The sentiment score is their average. It is separate from the technical readings.
 
-**Which headlines count.** Only news from the last 7 days, and for an asset only headlines that name it or
-its ticker. The same story carried by several outlets counts once, no publisher supplies more than two
-headlines, and promotional items (presales, airdrops, price predictions, paid press wires) are left out.
-An article already scored keeps its score on later updates. **⚠️ thin news** beside a score means it rests
-on fewer than 4 separate stories or fewer than 3 publishers: treat it as a weak reading.
+**Which headlines count.** Recent news (last 7 days) that is actually about the asset. The same story from
+several outlets counts once, no single publisher dominates, and promotional filler is left out.
+**⚠️ thin news** beside a score means it rests on too few separate stories or publishers: treat it as a weak
+reading. The full method is under *How a sentiment score is built* below.
 
 **Where it shows**
 - **Market sentiment – Crypto / Stocks**: the whole market, from headlines plus public readings
@@ -6770,6 +6823,8 @@ Sentiment updates about every 12 hours for everyone. The 🕒 line under each se
 when it was last updated and when the next update is due; prices and the chart (every 5 minutes) have the
 same line under the asset's name in the chart section.
 """)
+        with st.expander("🔬 How a sentiment score is built (full method)"):
+            st.markdown(SENTIMENT_METHOD)
 
     with tab_alerts:
         st.markdown("""
