@@ -1,19 +1,22 @@
 name: Signals v2 checks
 
-# Runs on every push to the v2 development branch. Results are saved to the reports branch (ci/v2/...)
-# so they can be read without access to the Actions page.
+# Runs on every push to the v2 development branch and on every pull request into main (the review
+# workflow: feature branch -> PR -> review -> approval -> merge). Results are saved to the reports branch
+# (ci/v2/...) so they can be read without access to the Actions page.
 #  - tests: the full test suite with the real indicator library (pandas-ta) and Streamlit installed
 #  - overlap: the development-only overlap check (v2_overlap.py) and the end-to-end smoke check (v2_smoke.py)
 on:
   push:
     branches: [v2]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: v2-checks
+  group: v2-checks-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:

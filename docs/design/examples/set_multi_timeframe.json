@@ -1,0 +1,35 @@
+{
+  "schema": "angstrom.set/1",
+  "name": "Multi-Timeframe Analysis",
+  "purpose": "Trend and reversal evidence side by side, with regime, levels and Bitcoin flow context.",
+  "groups": [
+    {"key": "trend", "group": {"config": "starter:trend-confirmation", "version": 1}},
+    {"key": "reversal", "group": {"config": "starter:reversal-evidence", "version": 1}}
+  ],
+  "standalone": [
+    {
+      "key": "alignment",
+      "label": "Timeframe alignment",
+      "ref": {"id": "mtf.alignment", "version": 1, "timeframe": "1D", "params": {"set": "all"}},
+      "role": "context"
+    },
+    {
+      "key": "zones_4h",
+      "label": "4-hour levels",
+      "ref": {"id": "levels.zones", "version": 1, "timeframe": "4h",
+              "params": {"left": 5, "right": 5, "lookback": 300, "width_atr": 0.5, "min_touches": 2, "per_side": 3, "max_width_mult": 2.0}},
+      "role": "levels"
+    }
+  ],
+  "market_context": [
+    {
+      "key": "btc_etf",
+      "label": "Bitcoin ETF flows",
+      "subject": "market:bitcoin",
+      "ref": {"id": "flows.btc_etf", "version": 1, "timeframe": "1D", "params": {"point_in_time": false}},
+      "applies_to": "crypto"
+    }
+  ],
+  "score": null,
+  "notes": "No overall Set score: the two Groups answer different questions (trend direction vs reversal evidence). The Set pins each Group's version; editing a Group later does not change this Set until it is upgraded on purpose."
+}
