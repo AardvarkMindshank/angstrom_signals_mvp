@@ -6913,6 +6913,36 @@ The icon row adds more:
 - **Overlay** draws RSI, Stochastic and ADX on the price chart; **earnings dates** (stocks) mark report days.
 
 Your choices are saved on your account.
+""")
+        with st.expander("Two chart styles: TradingView or Plotly"):
+            st.markdown("""
+Pick the chart style in **⚙️ Settings → Price chart**. Both use the same indicator icons, overlay and
+earnings choices, and both save to your account.
+
+**TradingView** (TradingView's free Lightweight Charts library):
+- **Zoom** with the mouse wheel or a two-finger pinch; **drag** sideways to go back in time; drag the
+  price scale to stretch it and double-click it to reset. ⟲ goes back to the chosen range, ⇥ jumps to
+  the newest candle. Where you have zoomed to is kept when you change indicators or the page refreshes.
+- **Candle size**: 15m · 1h · 4h · 1D · 1W. **Range**: 7D · 1M · 3M · 1Y · All, which is where the chart
+  opens. You can still scroll further back.
+- Yahoo keeps 15-minute candles for about 60 days and hourly candles for about 2 years, so longer ranges
+  are marked ⊘ for those sizes and the chart says so instead of showing something else.
+- **4-hour candles** are built from hourly ones: crypto in fixed UTC blocks (00:00, 04:00, 08:00 ...), shares
+  from the market open (US: 09:30 to 13:30 and 13:30 to 16:00 New York time), so a candle never spans the
+  overnight gap. This matches TradingView. **Weekly** candles run Monday to Sunday.
+- Intraday share candles cover regular trading hours only and show the exchange's own clock; crypto shows UTC.
+  Weekends and holidays have no candles, so the chart closes the gap.
+- The **newest candle** is drawn faded while it is still forming. The legend shows the last *closed* candle
+  until you point at another.
+- The indicators are worked out on the candles you are looking at, with the same formulas as the readings,
+  so RSI on 1h candles is the hourly RSI. They are for looking only: 📈 Trend, 🎯 Stretch, 🔊 Flow, alerts and the
+  evidence always use finished daily bars and do not change with the chart.
+- Chart by TradingView Lightweight Charts™ (Apache 2.0 licence; the logo in the corner links to TradingView).
+
+**Plotly** is the original chart: daily candles over the **Days of history** in Settings, with the drag bar under
+it for height. Pinch zoom on an iPad is unreliable with Plotly, which is why the TradingView style was added.
+""")
+        st.markdown("""
 
 **🔍 Signals Breakdown** shows every part of 📈 Trend, 🎯 Stretch and 🔊 Flow with its own reading in plain
 words, the two named views (trend-following and mean-reversion, both unvalidated hypotheses) and the

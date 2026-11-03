@@ -433,7 +433,8 @@ function draw(L, root, data) {
       const parts = (paneSeries[pane] || []).map((s) => {
         const v = s.values[i];
         const shown = s.id === "volume" || s.id === "obv" || s.id === "obv_avg" ? fmtBig(v) : fmt(v, v);
-        const name = s.name === data.panes[pane].title || s.id === "volume" ? "" : s.name.replace("MACD histogram", "Hist");
+        const single = (paneSeries[pane] || []).length === 1;
+        const name = single ? "" : s.name.replace("MACD histogram", "Hist");
         return name ? `<span style="color:${s.colors ? theme.muted : s.color}">${name}</span> ${shown}` : shown;
       });
       label.innerHTML = `<b>${data.panes[pane].title}</b> ${parts.join(" · ")}`;
