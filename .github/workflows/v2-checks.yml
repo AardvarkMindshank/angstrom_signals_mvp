@@ -67,6 +67,11 @@ jobs:
           mkdir -p out
           python v2_smoke.py --prices prices --out out
           cat out/smoke.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Technical coverage overlap check (development data only)
+        if: always()
+        run: |
+          mkdir -p out
+          python ta_coverage_check.py --prices prices --out out
       - name: Headline filter dry run (live Google News, no model calls)
         if: always()
         run: |
