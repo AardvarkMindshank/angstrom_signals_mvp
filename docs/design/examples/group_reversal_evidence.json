@@ -2,42 +2,94 @@
   "schema": "angstrom.group/1",
   "name": "Reversal Evidence",
   "question": "Is there corroborating evidence that the current move may be turning, and where?",
+  "lineage_version": 2,
   "members": [
     {
       "key": "rsi_div_4h",
       "label": "4-hour RSI divergence",
-      "ref": {"id": "ta.divergence.rsi", "version": 1, "timeframe": "4h",
-              "params": {"left": 5, "right": 5, "min_gap": 5, "max_gap": 60, "lookback": 150, "active_bars": 30}},
+      "ref": {
+        "id": "ta.divergence.rsi",
+        "version": 1,
+        "timeframe": "4h",
+        "params": {
+          "left": 5,
+          "right": 5,
+          "min_gap": 5,
+          "max_gap": 60,
+          "lookback": 150,
+          "active_bars": 30
+        }
+      },
       "role": "condition",
       "category": "divergence"
     },
     {
       "key": "macd_div_4h",
       "label": "4-hour MACD divergence",
-      "ref": {"id": "ta.divergence.macd", "version": 1, "timeframe": "4h",
-              "params": {"left": 5, "right": 5, "min_gap": 5, "max_gap": 60, "lookback": 150, "active_bars": 30, "line": "histogram"}},
+      "ref": {
+        "id": "ta.divergence.macd",
+        "version": 1,
+        "timeframe": "4h",
+        "params": {
+          "left": 5,
+          "right": 5,
+          "min_gap": 5,
+          "max_gap": 60,
+          "lookback": 150,
+          "active_bars": 30,
+          "line": "histogram"
+        }
+      },
       "role": "condition",
       "category": "divergence"
     },
     {
       "key": "breaks_4h",
       "label": "4-hour structure breaks",
-      "ref": {"id": "structure.breaks", "version": 1, "timeframe": "4h", "params": {"left": 5, "right": 5, "lookback": 150}},
+      "ref": {
+        "id": "structure.breaks",
+        "version": 1,
+        "timeframe": "4h",
+        "params": {
+          "left": 5,
+          "right": 5,
+          "lookback": 150
+        }
+      },
       "role": "condition",
       "category": "structure"
     },
     {
       "key": "zones_1d",
       "label": "Daily support and resistance",
-      "ref": {"id": "levels.zones", "version": 1, "timeframe": "1D",
-              "params": {"left": 5, "right": 5, "lookback": 300, "width_atr": 0.5, "min_touches": 2, "per_side": 3, "max_width_mult": 2.0}},
+      "ref": {
+        "id": "levels.zones",
+        "version": 1,
+        "timeframe": "1D",
+        "params": {
+          "left": 5,
+          "right": 5,
+          "lookback": 300,
+          "width_atr": 0.5,
+          "min_touches": 2,
+          "per_side": 3,
+          "max_width_mult": 2.0
+        }
+      },
       "role": "levels",
       "category": "levels"
     },
     {
       "key": "cmf_4h",
       "label": "4-hour Chaikin Money Flow",
-      "ref": {"id": "volume.cmf", "version": 1, "timeframe": "4h", "params": {"length": 20}},
+      "ref": {
+        "id": "volume.cmf",
+        "version": 1,
+        "timeframe": "4h",
+        "params": {
+          "length": 20
+        }
+      },
       "role": "context",
       "category": "volume"
     }
@@ -48,28 +100,92 @@
       "key": "bullish_reversal_setup",
       "label": "Bullish reversal: at least two corroborating price observations (not independent: all derive from price)",
       "kind": "confirmation",
-      "rule": {"count_at_least": 2, "of": [
-        {"any": [
-          {"member": "rsi_div_4h", "events": {"type_in": ["regular_bullish"]}},
-          {"member": "macd_div_4h", "events": {"type_in": ["regular_bullish"]}}
-        ]},
-        {"member": "breaks_4h", "events": {"direction": "bullish", "kind_in": ["CHoCH"], "within_candles": 20}},
-        {"member": "zones_1d", "field": "support.0.distance_atr", "lte": 1.0}
-      ]}
+      "rule": {
+        "count_at_least": 2,
+        "of": [
+          {
+            "any": [
+              {
+                "member": "rsi_div_4h",
+                "events": {
+                  "type_in": [
+                    "regular_bullish"
+                  ]
+                }
+              },
+              {
+                "member": "macd_div_4h",
+                "events": {
+                  "type_in": [
+                    "regular_bullish"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "member": "breaks_4h",
+            "events": {
+              "direction": "bullish",
+              "kind_in": [
+                "CHoCH"
+              ],
+              "within_candles": 20
+            }
+          },
+          {
+            "member": "zones_1d",
+            "field": "support.0.distance_atr",
+            "lte": 1.0
+          }
+        ]
+      }
     },
     {
       "key": "bearish_reversal_setup",
       "label": "Bearish reversal: at least two corroborating price observations (not independent: all derive from price)",
       "kind": "confirmation",
-      "rule": {"count_at_least": 2, "of": [
-        {"any": [
-          {"member": "rsi_div_4h", "events": {"type_in": ["regular_bearish"]}},
-          {"member": "macd_div_4h", "events": {"type_in": ["regular_bearish"]}}
-        ]},
-        {"member": "breaks_4h", "events": {"direction": "bearish", "kind_in": ["CHoCH"], "within_candles": 20}},
-        {"member": "zones_1d", "field": "resistance.0.distance_atr", "lte": 1.0}
-      ]}
+      "rule": {
+        "count_at_least": 2,
+        "of": [
+          {
+            "any": [
+              {
+                "member": "rsi_div_4h",
+                "events": {
+                  "type_in": [
+                    "regular_bearish"
+                  ]
+                }
+              },
+              {
+                "member": "macd_div_4h",
+                "events": {
+                  "type_in": [
+                    "regular_bearish"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "member": "breaks_4h",
+            "events": {
+              "direction": "bearish",
+              "kind_in": [
+                "CHoCH"
+              ],
+              "within_candles": 20
+            }
+          },
+          {
+            "member": "zones_1d",
+            "field": "resistance.0.distance_atr",
+            "lte": 1.0
+          }
+        ]
+      }
     }
   ],
-  "notes": "No score: events and price levels do not average meaningfully. RSI and MACD divergences come from the same price swings, so they are grouped with any() and count once. Divergence, CHoCH and zones all derive from price; the rule is corroboration, not independent confirmation, and count_independent_at_least would be false by construction. Only active confirmed divergences count (developing, expired and invalidated do not). About half of divergences break their invalidation level within 30 candles on development data; this Group reports evidence, not a trade. If the zone signal is unavailable or no zone exists on that side, its predicate is unknown, so the setup can be unknown rather than not met."
+  "notes": "No score: events and price levels do not average meaningfully. RSI and MACD divergences come from the same price swings, so they form one compound item with any(); the three items have disjoint support sets and so count as three clusters under count_at_least. Divergence, CHoCH and zones all derive from price: the rule is corroboration, not independent confirmation, and count_distinct_sources_at_least: 2 would be refused as unsatisfiable. Only active confirmed divergences count (developing, expired and invalidated do not). About half of divergences break their invalidation level within 30 candles on development data; this Group reports evidence, not a trade. If the zone signal is unavailable or no zone exists on that side, its predicate is unknown, so the setup can be unknown rather than not met."
 }

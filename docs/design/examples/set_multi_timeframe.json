@@ -2,6 +2,7 @@
   "schema": "angstrom.set/1",
   "name": "Multi-Timeframe Analysis",
   "purpose": "Trend and reversal evidence side by side, with timeframe alignment, levels and Bitcoin flow context.",
+  "lineage_version": 2,
   "audience_ceiling": "public",
   "groups": [
     {
@@ -10,14 +11,16 @@
         "source_config": "starter:trend-confirmation",
         "source_version": 1,
         "source_owner": null,
-        "content_sha256": "4acc1665177bb5420ad1ef7215393699a6a2aecdec63a1b253d712bb6b6a71a4",
+        "content_sha256": "206f069af4d048f87bf9d0e09ec0d7dfc5109030e8c8267d8db4d9ecebf1f46d",
         "captured_at": "2026-11-03T00:00:00Z",
-        "audience_ceiling": "public"
+        "audience_ceiling": "public",
+        "computed_by": "server"
       },
       "snapshot": {
         "schema": "angstrom.group/1",
         "name": "Trend Confirmation",
         "question": "Is there a trend on the higher timeframes, and does the lower timeframe support it?",
+        "lineage_version": 2,
         "members": [
           {
             "key": "trend_1d",
@@ -191,14 +194,16 @@
         "source_config": "starter:reversal-evidence",
         "source_version": 1,
         "source_owner": null,
-        "content_sha256": "8a9c64ac3d583d32c498e9bfc538d8b1472a4f1557236281e6d90294955b6ca7",
+        "content_sha256": "828c5c68df78d0f7a48893656d3108b1e26b94488ea49a3ec7cca3446b9e9c45",
         "captured_at": "2026-11-03T00:00:00Z",
-        "audience_ceiling": "public"
+        "audience_ceiling": "public",
+        "computed_by": "server"
       },
       "snapshot": {
         "schema": "angstrom.group/1",
         "name": "Reversal Evidence",
         "question": "Is there corroborating evidence that the current move may be turning, and where?",
+        "lineage_version": 2,
         "members": [
           {
             "key": "rsi_div_4h",
@@ -383,7 +388,7 @@
             }
           }
         ],
-        "notes": "No score: events and price levels do not average meaningfully. RSI and MACD divergences come from the same price swings, so they are grouped with any() and count once. Divergence, CHoCH and zones all derive from price; the rule is corroboration, not independent confirmation, and count_independent_at_least would be false by construction. Only active confirmed divergences count (developing, expired and invalidated do not). About half of divergences break their invalidation level within 30 candles on development data; this Group reports evidence, not a trade. If the zone signal is unavailable or no zone exists on that side, its predicate is unknown, so the setup can be unknown rather than not met."
+        "notes": "No score: events and price levels do not average meaningfully. RSI and MACD divergences come from the same price swings, so they form one compound item with any(); the three items have disjoint support sets and so count as three clusters under count_at_least. Divergence, CHoCH and zones all derive from price: the rule is corroboration, not independent confirmation, and count_distinct_sources_at_least: 2 would be refused as unsatisfiable. Only active confirmed divergences count (developing, expired and invalidated do not). About half of divergences break their invalidation level within 30 candles on development data; this Group reports evidence, not a trade. If the zone signal is unavailable or no zone exists on that side, its predicate is unknown, so the setup can be unknown rather than not met."
       }
     }
   ],
@@ -442,5 +447,5 @@
     }
   ],
   "score": null,
-  "notes": "Each Group is embedded as a frozen snapshot of a pinned version; the snapshot is what is evaluated, the provenance records where it came from (content_sha256 is SHA-256 of the canonical JSON: sorted keys, no spaces, UTF-8). Editing the source never changes this Set until the owner upgrades it. Starters have a public ceiling, so this Set may be published publicly. No Set score (deferred). Both Groups are price-derived; Set diagnostics report the shared lineage."
+  "notes": "Each Group is embedded as a frozen snapshot of a pinned version; the snapshot is what is evaluated. Provenance (including content_sha256 = SHA-256 of the canonical JSON: sorted keys, no spaces, UTF-8) is computed and stored by the server from the source version it re-reads, never taken from the client. Starters are public, so their effective audience is public and this Set may be published publicly. No Set score (deferred). Both Groups are price-derived; Set diagnostics report the shared instances and sources."
 }

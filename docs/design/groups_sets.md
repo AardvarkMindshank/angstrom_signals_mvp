@@ -1,9 +1,10 @@
-# Design proposal: Signal Groups and Signal Sets (revision 2)
+# Design proposal: Signal Groups and Signal Sets (revision 3)
 
 Status: **proposal for review**. No application code. The examples in `docs/design/examples/` are checked by
 `tests/test_design_examples.py` (references, structure, rule paths against real signal outputs, snapshot hashes);
-that is design-time checking, not the product validator. Revision 2 answers the review on PR #1; section 12 maps
-each finding to the change.
+that is design-time checking, not the product validator or evaluator. The counting worked cases
+(`examples/rule_fixtures.json`) are executed against a test-only reference of section 3.4.1; transform fixtures
+are checked for shape and range only, until the evaluator exists. Revisions 2 and 3 answer the reviews on PR #1; section 12 maps each finding to the change.
 
 ```
 Signal Library ──► Signal Groups ──► Signal Sets ──► Analysis Workspace / Strategy Builder
@@ -26,7 +27,7 @@ correlated signals as independent confirmation, no tuning on the protected hold-
 | Group | A named, versioned configuration answering one analytical question from its members. |
 | Set | A named, versioned collection of pinned Groups plus standalone signals and market context. |
 | Category | An editable, descriptive label on a member (trend, structure, volume...). Used for display only. |
-| Lineage | The raw data sources a signal is computed from (`price`, `volume`, `derivatives`, `tftc_btc_etf`...). Fixed by the library, not editable. Used for independence. |
+| Lineage | The analytical inputs a signal is computed from (`price`, `volume`, `derivatives`, `tftc_btc_etf`...), recorded by input, not by provider (price is `price` whether it comes from Yahoo or Coinalyze). Fixed, versioned, not editable. Used for **source separation** only. |
 
 Naming (D1, decided): social groups are **Communities** in the app (PR #2; tables unchanged). "Group" in the app
 means a Signal Group. New tables use the `analysis_` prefix.
@@ -54,8 +55,11 @@ window, a `mixed` label mapped to 0) is observed data; an unavailable signal is 
 
 - Weights are finite numbers 0 ≤ w ≤ 1000, compared exactly (decimal → rational). **Enabled** members have w > 0;
   w = 0 disables a member (shown, not counted). A non-null score needs at least one enabled score member.
-- `W_enabled` = sum of enabled weights. `W_observed` = sum over enabled members with an available signal and a
-  non-null transformed value. `W_imputed` = sum over unavailable members whose policy is `neutral`.
+- `W_enabled` = sum of enabled weights. `W_observed` = sum over enabled members with an available signal **and** a
+  known transformed value. A member is *not observed* when its signal is unavailable **or** its transform returns
+  unknown (unlisted label, missing field, null, non-finite); both cases follow the member's policy the same way:
+  `exclude` drops it, `neutral` imputes 0 and adds its weight to `W_imputed`. The result says which case applied
+  (`unavailable` or `transform_unknown`).
 - `observed_coverage = W_observed / W_enabled`. `min_coverage` is an exact fraction `{"num": 2, "den": 3}`; the
   score is computed only when `W_observed × den ≥ W_enabled × num`. Imputed weight never counts towards coverage.
 - When computed: `score = Σ(w·c) / (W_observed + W_imputed)` with neutral members contributing c = 0;
@@ -103,13 +107,36 @@ A rule is a JSON expression evaluated to **true, false or unknown**.
 - Predicates on the Group's score (`{"score": {"gte": 0.5}}`): unknown when the score is withheld.
 - `all`: false if any false; else unknown if any unknown; else true. `any`: true if any true; else unknown if any
   unknown; else false. `not`: swaps true and false; unknown stays unknown.
-- `count_at_least: k` over a list: duplicates of the same signal instance count once. True if trues ≥ k; false if
-  trues + unknowns < k; else unknown.
-- `count_independent_at_least: k`: like `count_at_least`, but true predicates whose signals share any lineage root
-  are merged and count once (section 3.6). The same three-valued bounds apply.
+- `count_at_least: k` and `count_distinct_sources_at_least: k` take a list `of` items; each item is any expression
+  (a predicate or a compound). Their exact contract is section 3.4.1.
 - `within_candles: N` is counted in the member's own timeframe: the number of closed candles from the candle that
   confirmed the event to the last closed candle at the evaluation cutoff (0 = confirmed on the last closed candle).
 - Limits: ≤ 30 members, ≤ 20 conditions, ≤ 50 predicates, nesting depth ≤ 6, document ≤ 64 KB. No scripting.
+
+#### 3.4.1 Counting contract
+
+1. **Support set.** Each item's support set is every signal instance referenced anywhere inside it (all predicates,
+   whichever of them made it true, so the count is conservative). A `score` predicate's support set is the
+   instances of all enabled score members. Instance = the `SignalRef` instance key (id, version, timeframe, params).
+2. **Clusters.** Items are merged into clusters: for `count_at_least`, items whose support sets share an instance
+   (transitively); for `count_distinct_sources_at_least`, items whose lineage root sets share a root, where an
+   item's roots are the union of its instances' roots under the pinned lineage version.
+3. **Cluster value.** True if any item in it is true; otherwise unknown if any item is unknown; otherwise false.
+   So an unknown item that shares an instance (or a source) with a true one never adds a second count.
+4. **Result.** With t true clusters and u unknown clusters: true if t ≥ k; false if t + u < k; otherwise unknown.
+5. The validator refuses k larger than the number of items; a rule whose items can never form k clusters (for
+   example every item price-derived with `count_distinct_sources_at_least: 2`) is refused as unsatisfiable.
+
+Worked cases (fixtures in `examples/rule_fixtures.json`):
+
+| Rule | Items (value; support; roots) | Clusters | Result |
+|---|---|---|---|
+| `count_at_least: 2` | A = RSI div (true; {rsi}; price), B = same predicate again (true; {rsi}) | {A,B} → true | 1 < 2 → **false** |
+| `count_at_least: 2` | A = any(RSI div, MACD div) (true; {rsi, macd}), B = all(RSI div, zone near) (true; {rsi, zones}) | shared rsi → {A,B} → true | **false** |
+| `count_at_least: 2` | A = RSI div (true; {rsi}), B = zone near (unknown; {zones}) | {A} true, {B} unknown | 1 < 2 ≤ 2 → **unknown** |
+| `count_distinct_sources_at_least: 2` | A = RSI div (true; price), B = zone near (unknown; price) | shared price → {A,B} → true | 1 < 2 → **false** |
+| `count_distinct_sources_at_least: 2` | A = RSI div (true; price), B = ETF flows 5-session sum ≥ 0 (unknown; tftc_btc_etf) | {A} true, {B} unknown | **unknown** |
+| `count_at_least: 2` | A (false; {rsi}), B (false; {macd}), C (unknown; {zones}) | three clusters | 0 + 1 < 2 → **false** |
 
 States: a confirmation is **met / not met / unknown**; a veto is **active / clear / unknown**. The Group's overall
 `status` is `ok`, `vetoed` (any veto active), `veto_unknown` (no veto active, at least one unknown) or
@@ -121,9 +148,10 @@ unavailable → `bullish_confirmed` met, `ranging_veto` unknown, status `veto_un
 
 - **Agreement**: weighted share of enabled, observed score members whose contribution has the score's sign (zero
   contributions listed separately).
-- **Independent support**: the lineage components behind the agreeing members. When every score member derives
-  from `price`, the result says so: agreement is consistency between views of one source, not independent
-  confirmation.
+- **Source separation**: the lineage components behind the agreeing members. Distinct sources are not statistical
+  independence (separate feeds can be strongly correlated); the diagnostic only shows whether agreement comes from
+  one source or several. When every score member derives from `price`, the result says agreement is consistency
+  between views of one source.
 - **Conflicts within a category**: categories whose members point opposite ways are flagged; weights are untouched.
 - **Duplicates**: the same signal instance used twice in a Group (or across Groups in a Set) is flagged and counted
   once in every count.
@@ -133,10 +161,14 @@ unavailable → `bullish_confirmed` met, `ranging_veto` unknown, status `veto_un
 
 ### 3.6 Lineage
 
-Lineage is a versioned table in the Groups layer keyed by signal id (`examples/lineage.json`, `lineage@1`). Today
-every candle-based signal derives from `price` (CMF and relative volume add `volume`); ETF flows, stablecoin supply
-and Coinalyze derivatives are separate roots. Two signals are independent only when their lineage sets are
-disjoint. Users cannot edit lineage; a new library signal must be added to the table before a Group can use it.
+Lineage is a versioned table in the Groups layer keyed by signal id (`examples/lineage.json`, version 2). It records
+analytical inputs, not providers: every candle signal has `price`; CMF adds `volume`; relative volume is `volume`
+only; `positioning.oi_price` and `positioning.liquidation_levels` use price as well as derivatives data, so they
+are `derivatives` + `price`; reported liquidations are `derivatives`; ETF flows and stablecoin supply are their own
+roots. Disjoint roots mean **separate sources**, nothing more: they are a necessary condition for treating evidence
+as independent, not proof of it. Each Group and Set version records the lineage version it was validated with
+(`lineage_version`), and evaluation uses that version, so a later lineage change cannot silently alter a pinned
+configuration's counts. Users cannot edit lineage; a new library signal must be added before Groups can use it.
 
 ## 4. Time and provenance
 
@@ -174,16 +206,20 @@ A Set is an analysis configuration, not a strategy: no entry, exit or risk rules
 ```
 analysis_configs          id uuid PK, kind ('group'|'set'), owner_id (null = Angstrom starter), current_version int,
                           copied_from_config, copied_from_version, audience_ceiling, archived bool, created_at, updated_at
-analysis_config_versions  (config_id, version) PK, schema text, body jsonb (≤ 64 KB), content_sha256,
-                          audience ('private'|'communities'|'public'), created_by, created_at, change_note
-analysis_version_shares   (config_id, version, user_group_id) PK, shared_by, shared_at
+analysis_config_versions  (config_id, version) PK, schema text, body jsonb (≤ 64 KB), content_sha256 (computed by
+                          the server), lineage_version, created_by, created_at, change_note        -- immutable
+analysis_version_publications (config_id, version) PK, audience ('private'|'communities'|'public'), updated_at,
+                          updated_by                                                               -- mutable via functions
+analysis_version_shares   (config_id, version, user_group_id) PK, shared_by, shared_at            -- mutable via functions
+analysis_publication_log  append-only record of every publish, share, narrowing and archive
 ```
 
 - **Writes only through security-definer functions**; no direct insert/update/delete grants:
   `save_config_version(config_id, expected_version, body, note)` locks the config row, checks
   `expected_version = current_version` (else `conflict`), inserts `current_version + 1`, updates
   `current_version`, all in one transaction; `(config_id, version)` is unique.
-- **Versions are immutable** (no update or delete, ever). Archiving hides a config from lists but keeps every
+- **Version content is immutable** (no update or delete of `analysis_config_versions`, ever). Who may read a version
+  is publication metadata in separate tables, changed only by the owner through functions and logged. Archiving hides a config from lists but keeps every
   version, so pins and copies stay valid. Hard delete is only for a private config that nothing references.
 - **Publication is per version.** A new version is private. Publishing version N (public, or to chosen
   communities) never publishes earlier versions. A config row is visible to someone who can read any of its versions.
@@ -194,21 +230,31 @@ analysis_version_shares   (config_id, version, user_group_id) PK, shared_by, sha
 
 ## 7. Copying, embedding and redistribution
 
-- **Audience order**: private ⊂ communities ⊂ public. Each config carries an `audience_ceiling`: `public` for an
-  original or a copy of a public/starter source; for a copy of a community-shared source, those communities
-  (at copy time).
-- **Copying** needs read access to the source version. The copy is owned by the copier, starts at version 1 with
-  provenance, and can never be published beyond its ceiling.
-- **Embedding in a Set** needs read access to each Group version. The Set's ceiling is the intersection of its
-  own and every embedded snapshot's ceiling (an empty intersection = private only).
-- **Checks** run at save, at publish/share, and whenever an audience is widened. A widening beyond any ceiling
-  is refused with the source named.
-- **Revocation**: narrowing or archiving a source stops new copies and new embeddings. Copies and snapshots made
-  while authorised remain (content already shared cannot be recalled); the publish screen says so before anyone
-  publishes. A copy's ceiling never widens because the source later becomes public; the owner can re-copy.
-- Tests in the build: another owner's community-only Group into a public Set (refused), community→public
-  widening (refused), source access removed after copy (copy kept, ceiling kept), version 2 published while
-  version 1 private (version 1 unreadable).
+**Audiences** are sets of readers: `owner` (private), a set of communities, or `public`. Intersection: public ∩ X =
+X; communities A ∩ communities B = A ∩ B (empty → owner only); anything ∩ owner = owner.
+
+- **Ceiling of a config**: `public` for an original (nothing upstream restricts it). For a copy, or a Set embedding
+  Groups, it is the intersection of the ceilings of everything copied or embedded (below).
+- **Effective audience of a source version** = its current publication audience ∩ its config's ceiling. A version
+  published to nobody (private) has effective audience `owner`.
+- **Copying or embedding** a version requires the caller to be inside its effective audience at that moment. The
+  dependency is recorded with `ceiling = effective audience at capture`. A private source can therefore be copied or
+  embedded only by its owner, and the result's ceiling is `owner` until the owner publishes that source version.
+- **Publishing or widening** a copy or Set to audience X requires X ⊆ its own ceiling **and**, for every embedded
+  dependency, X ⊆ (ceiling recorded at capture ∩ the source version's effective audience now). So narrowing a source
+  stops later widenings; publishing the source version more widely lets the owner widen the Set afterwards. An
+  original Group's privately published version cannot reach a public Set until that version itself is public.
+- **Server-side enforcement.** All of this is computed inside the database functions (`copy_config`,
+  `save_config_version`, `publish_version`, `share_version`) from stored rows: source version audiences, shares,
+  community membership and recorded dependency ceilings. Submitted provenance and hashes are never trusted as proof
+  of permission: the server re-reads the source version, recomputes `content_sha256`, rejects a mismatch, and
+  stores the provenance itself.
+- **Revocation**: narrowing or archiving a source stops new copies, embeddings and widenings. Content already shared
+  while authorised cannot be recalled and stays where it is; the publish screen says so before anyone publishes.
+- Tests in the build: another owner's community-only Group into a public Set (refused); the owner's own privately
+  published Group version into a public Set (refused until that version is public); community→public widening
+  (refused); a forged provenance hash (refused); source access removed after copying (copy kept, ceiling kept);
+  version 2 published while version 1 private (version 1 unreadable).
 
 ## 8. Evaluation and resources
 
@@ -228,10 +274,11 @@ entry, exit and risk schema; Set scores with typed semantics and explicit Group 
   missing, min coverage 2/3). All three derive from price, which the diagnostics state. 4-hour momentum is a
   confirmation condition (it repeats trend, so it is not a second vote, and not independent confirmation either).
   Daily regime is a condition role controlling the `ranging_veto`; when it is unavailable the veto is unknown.
-- **Reversal Evidence**: no score. A bullish (bearish) setup needs at least two of: an active RSI or MACD
-  divergence (both from the same price swings, so one signal family in practice; the same instance counts once),
-  a CHoCH within 20 candles, price within 1 ATR of a support (resistance) zone. All are price-derived, so the
-  condition is labelled corroborating, not independent. CMF is context.
+- **Reversal Evidence**: no score. A bullish (bearish) setup needs at least two of three items: an active RSI or
+  MACD divergence (one compound item: both come from the same price swings), a CHoCH within 20 candles, price within
+  1 ATR of a support (resistance) zone. Their support sets are disjoint, so they form three clusters under
+  `count_at_least`; all are price-derived, so the condition is labelled corroborating, and
+  `count_distinct_sources_at_least: 2` would be refused as unsatisfiable. CMF is context.
 - **Multi-Timeframe Analysis** Set: both Groups embedded as snapshots, timeframe alignment and 4-hour levels as
   standalone, Bitcoin ETF flows as current market context; no Set score.
 
@@ -241,9 +288,9 @@ entry, exit and risk schema; Set scores with typed semantics and explicit Group 
 |---|---|---|
 | D1 | Names | **Decided**: Communities (social); Signal Groups / Signal Sets |
 | D2 | Storage | Three tables; per-version publication; function-only atomic writes; immutable versions (section 6) |
-| D3 | Sets and others' Groups | Embedded snapshots with provenance; audience ceilings; checks at save/publish/widen; revocation stops new copies only (section 7) |
+| D3 | Sets and others' Groups | Embedded snapshots; ceilings from each source version's effective audience; server-side checks at copy/embed/publish/widen; revocation stops new copies and widenings only (section 7) |
 | D4 | Unavailable data and coverage | Role-specific policies; exact coverage arithmetic; imputed never counts as observed (sections 3.1–3.2) |
-| D5 | Rule language | Bounded JSON, three-valued logic, typed paths, lineage-based independence, explicit event timing (section 3.4) |
+| D5 | Rule language | Bounded JSON, three-valued logic, typed paths, the counting contract with instance and source clusters, explicit event timing (section 3.4) |
 | D6 | Transforms | `map`, `bands`, `clip`, `events` v1 as specified with fixtures; adaptive transforms deferred (section 3.3) |
 | D7 | Set scores | Deferred: always null in the first build |
 | D8 | First build | Admin-only validator, evaluator and starters, live mode only, synthetic/development fixtures, hold-out untouched |
@@ -252,7 +299,7 @@ entry, exit and risk schema; Set scores with typed semantics and explicit Group 
 
 | Finding | Change |
 |---|---|
-| 1 Families are not independence | `family` replaced by descriptive `category` plus fixed `lineage` (3.6); `count_independent_at_least`; duplicates count once; conflicts flagged; starter rule relabelled corroborating (10) |
+| 1 Families are not independence | `family` replaced by descriptive `category` plus fixed `lineage` (3.6); a source-counting operator (renamed in revision 3); duplicates count once; conflicts flagged; starter rule relabelled corroborating (10) |
 | 2 Snapshots and permissions | Audience ceilings, checks, provenance with hash, revocation (7); Set example embeds snapshots |
 | 3 Version publication and invariants | Per-version publication, function-only atomic writes, immutability, owner-only, leader + member access (6) |
 | 4 Roles vs rules, unknown vetoes | Role table (3.1); regime is a `condition`, zones `levels`; three-valued logic and statuses (3.4) |
@@ -261,4 +308,9 @@ entry, exit and risk schema; Set scores with typed semantics and explicit Group 
 | 7 Point-in-time metadata | Request `as_of` and `data_mode`, full per-member metadata, `point_in_time` refused until supported, ETF live-only label (4) |
 | 8 Transform schemas | Parameters, boundaries, unknowns, conflicts, fixtures (3.3) |
 | 9 Example tests | Structural checks: roles and policies, rule walk with paths resolved on real outputs, transforms, coverage fraction, starter aliases and versions, snapshot hashes, lineage coverage, fixture ranges |
+| R3-1 Ceilings from the source version's audience | Section 7 rewritten: effective audience = publication ∩ ceiling; private sources owner-only; widening rechecked against current source audience; all computed server-side, submitted hashes never trusted |
+| R3-2 Sources are not independence | Operator renamed `count_distinct_sources_at_least`; diagnostic renamed source separation and qualified; lineage records inputs not providers (`positioning.oi_price` and `.liquidation_levels` now include `price`); `lineage_version` pinned per Group/Set version |
+| R3-3 Counting compound rules | Section 3.4.1: support sets, instance and source clusters, cluster values, three-valued bounds, unsatisfiable rules refused; worked cases and `examples/rule_fixtures.json` |
+| R3-4 Immutable content vs publication | Audience moved out of the version row into publication and share tables plus an append-only log |
+| R3-5 Neutral with an unknown transform | Section 3.2: not observed = unavailable or transform unknown; both follow the member's policy |
 | 10 CI gate | `checks.yml` shared jobs; required failures fail the job; optional live-feed checks labelled; `pr-checks.yml` runs read-only with artifacts (forks included); `v2-checks.yml` publishes on push |

@@ -24,7 +24,7 @@ STARTERS = {"starter:trend-confirmation": "group_trend_confirmation.json",
             "starter:reversal-evidence": "group_reversal_evidence.json"}
 ROLES = {"score": {"exclude", "neutral"}, "condition": set(), "levels": set(), "context": set()}
 RULE_ROLES = {"score", "condition", "levels"}
-COMBINATORS = {"all", "any", "not", "count_at_least", "count_independent_at_least"}
+COMBINATORS = {"all", "any", "not", "count_at_least", "count_distinct_sources_at_least"}
 COMPARATORS = {"eq", "in", "gte", "lte", "between", "exists"}
 EVENT_FILTERS = {"type_in", "kind_in", "direction", "within_candles", "include_developing"}
 
@@ -157,6 +157,7 @@ def walk(rule, members, group_name, has_score, depth=0, counter=None):
 @pytest.mark.parametrize("name,doc", groups_under_test(), ids=[n for n, _ in groups_under_test()])
 def test_group_structure(name, doc):
     assert doc["schema"] == "angstrom.group/1"
+    assert doc["lineage_version"] == load("lineage.json")["version"], "pin the lineage version"
     members = {}
     for m in doc["members"]:
         assert m["key"] not in members, f"duplicate key {m['key']}"
@@ -216,6 +217,7 @@ def test_regime_controls_the_veto_as_a_condition():
 def test_set_snapshots_match_their_sources():
     doc = load("set_multi_timeframe.json")
     assert doc["schema"] == "angstrom.set/1" and doc["score"] is None
+    assert doc["lineage_version"] == load("lineage.json")["version"]
     keys = set()
     for g in doc["groups"]:
         assert g["key"] not in keys
@@ -261,7 +263,7 @@ def test_reversal_rule_does_not_claim_independence():
     rule_members = {m["ref"]["id"] for m in doc["members"] if m["role"] in RULE_ROLES}
     assert all(roots[i] == ["price"] for i in rule_members)
     text = json.dumps(doc["conditions"])
-    assert "count_independent_at_least" not in text and "not independent" in text
+    assert "count_distinct_sources_at_least" not in text and "not independent" in text
 
 
 def test_transform_fixtures_are_well_formed():
@@ -271,3 +273,67 @@ def test_transform_fixtures_are_well_formed():
     for c in cases:
         e = c["expected"]
         assert e in ("unknown", "invalid_config") or (isinstance(e, (int, float)) and -1 <= e <= 1), c
+
+
+def test_lineage_records_price_inputs_whatever_the_provider():
+    roots = load("lineage.json")["roots"]
+    assert "price" in roots["positioning.oi_price"] and "price" in roots["positioning.liquidation_levels"]
+    assert "price" not in roots["positioning.liquidations"] and roots["volume.relative"] == ["volume"]
+
+
+# ----------------------------------------------------------------------------- counting contract (reference)
+
+def reference_count(op, k, items):
+    """Test-only reference of design section 3.4.1, to show the worked cases are consistent with the contract.
+    Not the product evaluator."""
+    key = "support" if op == "count_at_least" else "roots"
+    parent = list(range(len(items)))
+
+    def find(i):
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]
+            i = parent[i]
+        return i
+
+    for i in range(len(items)):
+        for j in range(i + 1, len(items)):
+            if set(items[i][key]) & set(items[j][key]):
+                parent[find(i)] = find(j)
+    clusters = {}
+    for i, item in enumerate(items):
+        clusters.setdefault(find(i), []).append(item["value"])
+    values = [True if True in v else "unknown" if "unknown" in v else False for v in clusters.values()]
+    trues, unknowns = values.count(True), values.count("unknown")
+    if trues >= k:
+        return True
+    if trues + unknowns < k:
+        return False
+    return "unknown"
+
+
+@pytest.mark.parametrize("case", load("rule_fixtures.json")["cases"], ids=lambda c: c["name"])
+def test_counting_contract_worked_cases(case):
+    assert reference_count(case["op"], case["k"], case["items"]) == case["expected"]
+
+
+def _rule_roots(rule, members, roots):
+    """Union of lineage roots under a rule expression."""
+    if "member" in rule:
+        return set(roots[members[rule["member"]]["ref"]["id"]])
+    out = set()
+    for key in ("all", "any", "of"):
+        for sub in rule.get(key, []):
+            out |= _rule_roots(sub, members, roots)
+    if "not" in rule:
+        out |= _rule_roots(rule["not"], members, roots)
+    return out
+
+
+def test_reversal_source_count_would_be_unsatisfiable():
+    """Section 3.4.1 rule 5: every item is price-derived, so two distinct sources can never be reached."""
+    roots = load("lineage.json")["roots"]
+    doc = load("group_reversal_evidence.json")
+    members = {m["key"]: m for m in doc["members"]}
+    for c in doc["conditions"]:
+        items = [{"value": True, "support": [], "roots": sorted(_rule_roots(i, members, roots))} for i in c["rule"]["of"]]
+        assert reference_count("count_distinct_sources_at_least", 2, items) is False
