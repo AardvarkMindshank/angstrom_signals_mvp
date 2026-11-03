@@ -14,7 +14,8 @@ def test_catalogue_doc_lists_every_signal_version():
 
 def test_existing_readings_do_not_import_the_library():
     for name in ("scoring.py", "signals_v2.py", "alerts.py", "run_alerts.py", "evidence.py", "digest.py"):
-        assert "signal_library" not in (ROOT / name).read_text(encoding="utf-8"), name
+        text = (ROOT / name).read_text(encoding="utf-8")
+        assert "signal_library" not in text and "signal_groups" not in text, name
 
 
 def test_inspector_is_only_reached_by_admins():

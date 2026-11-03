@@ -61,14 +61,18 @@ def market_refs() -> list:
     return [sl.SignalRef.make(d, d.timeframes[0]) for d in sl.REGISTRY.latest() if d.scope.startswith("market:")]
 
 
-def render(st, supabase, assets: list[tuple[str, str, str]]) -> None:
-    """assets: (kind "crypto"|"equity", id, display name)."""
+def render(st, supabase, assets: list[tuple[str, str, str]], my_communities=None, user_id: str = "") -> None:
+    """assets: (kind "crypto"|"equity", id, display name). my_communities() -> [{"id", "name"}]."""
     st.caption(
         "Development view of the v3 Signal Library. Visible to admin accounts only; it does not change any reading, "
         "alert or setting. Signals run only when you press the button. Intraday timeframes fetch Yahoo candles for "
         "the chosen asset."
     )
-    tab_run, tab_catalogue = st.tabs(["Inspect an asset", "Catalogue"])
+    tab_run, tab_groups, tab_catalogue = st.tabs(["Inspect an asset", "Groups & Sets", "Catalogue"])
+    with tab_groups:
+        import signal_groups_inspector
+
+        signal_groups_inspector.render(st, supabase, assets, my_communities or (lambda: []), user_id)
     with tab_run:
         if not assets:
             st.info("No assets in the watchlists.")

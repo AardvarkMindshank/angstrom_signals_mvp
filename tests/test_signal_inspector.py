@@ -52,3 +52,32 @@ def test_inspector_runs_inside_streamlit():
     assert app.dataframe, "results table"
     table = app.dataframe[0].value
     assert len(table) >= 15 and "Signal" in table.columns
+
+
+def test_groups_tab_evaluates_a_starter_inside_streamlit():
+    testing = pytest.importorskip("streamlit.testing.v1")
+    app = testing.AppTest.from_function(_app, default_timeout=90)
+    app.run()
+    assert not app.exception
+    evaluate = [b for b in app.button if b.label == "Evaluate"]
+    assert len(evaluate) == 2  # signal inspector and Groups & Sets
+    evaluate[1].click().run()
+    assert not app.exception
+    text = " ".join(m.value for m in app.markdown)
+    assert "Trend Confirmation" in text and "status" in text
+    assert any(len(d.value) >= 3 for d in app.dataframe)  # conditions or members table
+
+
+def test_groups_inspector_helpers():
+    import signal_groups as sg
+    import signal_groups_inspector as gi
+
+    assert sg.validate_set(gi.example_set()) == []
+    assert gi._rpc_error(Exception("ERROR: beyond_capture_ceiling HINT ...")) == "beyond_capture_ceiling"
+
+    class Broken:
+        def table(self, name):
+            raise RuntimeError('relation "analysis_configs" does not exist')
+
+    saved, problem = gi.saved_configs(Broken())
+    assert saved == [] and "2026-11-04_signal_groups.sql" in problem

@@ -12951,6 +12951,7 @@ if str((load_profile() or {}).get("role") or "") == "admin":
             st, supabase,
             [("crypto", k, str(v)) for k, v in dict(CRYPTO_WATCHLIST or {}).items()]
             + [("equity", k, f"{v} ({k})") for k, v in dict(STOCK_WATCHLIST or {}).items()],
+            my_communities=_groups_for_stream, user_id=str(user_id),
         )
 _page_top(key="page_back_to_top")
 
