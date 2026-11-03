@@ -139,11 +139,14 @@ SOURCE = (ROOT / "app.py").read_text(encoding="utf-8")
 def test_app_still_parses_and_keeps_plotly():
     ast.parse(SOURCE)
     assert "st.plotly_chart(fig, width=\"stretch\")" in SOURCE
-    assert "CHART_ENGINE_DEFAULT = CHART_ENGINE_PLOTLY" in SOURCE
+    assert "CHART_ENGINE_DEFAULT = CHART_ENGINE_TV" in SOURCE
+    assert "CHART_ENGINE_PLOTLY" in SOURCE.split("CHART_ENGINES = (")[1].split(")")[0]
 
 
 def test_engine_interval_and_range_are_saved_to_the_account():
-    assert '"chart_engine": chart_engine' in SOURCE
+    assert "CHART_ENGINE_SETTING: chart_engine," in SOURCE
+    assert 'saved_engine = settings.get(CHART_ENGINE_SETTING)' in SOURCE
+    assert 'CHART_ENGINE_SETTING = "chart_style"' in SOURCE
     assert 'save_account_settings({"chart_interval": interval, "chart_range": range_key})' in SOURCE
     for key in ("chart_engine", "chart_interval", "chart_range"):
         assert f'    "{key}",\n' in SOURCE  # cleared when another account logs in

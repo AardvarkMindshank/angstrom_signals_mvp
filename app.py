@@ -7077,11 +7077,15 @@ _TRADE_CRYPTOS = "I trade cryptos"
 _TRADE_EQUITIES = "I trade equities"
 _TRADE_BOTH = "I trade both"
 _TRADE_CHOICES = (_TRADE_CRYPTOS, _TRADE_EQUITIES, _TRADE_BOTH)
-# Price chart engines. Plotly stays the default until the TradingView chart has been compared in use.
+# Price chart engines. TradingView is the default; Plotly stays available in Settings.
 CHART_ENGINE_TV = "TradingView"
 CHART_ENGINE_PLOTLY = "Plotly (original)"
 CHART_ENGINES = (CHART_ENGINE_TV, CHART_ENGINE_PLOTLY)
-CHART_ENGINE_DEFAULT = CHART_ENGINE_PLOTLY
+CHART_ENGINE_DEFAULT = CHART_ENGINE_TV
+# Saved under this key. The earlier key ("chart_engine") was written on every visit while Plotly was
+# the default, so it cannot tell a real choice from the old default; every account starts on
+# TradingView once, and any choice made after that is kept.
+CHART_ENGINE_SETTING = "chart_style"
 
 
 def _trade_choice(crypto: bool, equities: bool) -> str:
@@ -7295,7 +7299,7 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
     st.divider()
     st.markdown("**Price chart**")
     if "chart_engine" not in st.session_state:
-        saved_engine = settings.get("chart_engine")
+        saved_engine = settings.get(CHART_ENGINE_SETTING)
         st.session_state.chart_engine = saved_engine if saved_engine in CHART_ENGINES else CHART_ENGINE_DEFAULT
     chart_engine = st.radio(
         "Price chart",
@@ -7433,7 +7437,7 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
         "show_reasons": bool(show_reasons),
         "show_extra_metrics": bool(show_extra_metrics),
         "show_period_changes": bool(show_period_changes),
-        "chart_engine": chart_engine,
+        CHART_ENGINE_SETTING: chart_engine,
         "popouts_close_on_logout": bool(close_popouts_on_logout),
         "popouts_as_window": bool(popouts_as_window),
         "popouts_fold_section": bool(popouts_fold_section),
