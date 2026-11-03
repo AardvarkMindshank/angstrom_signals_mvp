@@ -27,9 +27,10 @@ no averaging of incompatible values, no assumption that correlated signals confi
 | Set | A named, versioned collection of pinned Groups plus standalone signals and market context. |
 | Family | A label on a member saying which evidence source it comes from (price trend, price structure, volume, flows...). Agreement is counted per family, not per member. |
 
-**Clash:** the app already has social "Groups" (`user_groups`, the 👥 My Groups section: people who follow each
-other). The new layer uses its own tables (`analysis_configs`, below) so nothing collides in the database. In
-the app it needs a different visible name, decision D1.
+**Naming:** the app's social groups (`user_groups`, formerly shown as "👥 My Groups") are renamed
+**Communities** in everything users read (PR #2; tables and ids unchanged). "Group" in the app then only ever
+means a Signal Group. The new layer uses its own tables (`analysis_configs`, below), so nothing collides in the
+database either. Sharing "to communities" below means sharing to those social groups.
 
 ## 3. A Group
 
@@ -181,7 +182,7 @@ The current Trend, Stretch and Flow readings could later be added as templates; 
 
 | # | Decision | Recommendation |
 |---|---|---|
-| D1 | Visible name for the new layer, given social "Groups" exist | Keep "Signal Groups" and "Signal Sets" everywhere they appear; rename nothing social |
+| D1 | Visible names | **Decided:** social groups become "Communities" (PR #2); the new layer is "Signal Groups" and "Signal Sets" |
 | D2 | Storage | The three tables above (needed for sharing and RLS), not JSON inside `user_preferences` |
 | D3 | Sets and private Groups | Embed a frozen copy of each pinned Group in the Set version |
 | D4 | Unavailable members | Per-member policy (`exclude`, `neutral`, `fail`, `ignore`) with `min_coverage` on scores |
