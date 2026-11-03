@@ -258,3 +258,39 @@ def test_history_falls_back_to_the_old_call_until_the_sql_is_run():
     client = _RPC()
     market_store._record_sentiment_history(client, "Crypto|btc", 61.0, NOW.timestamp(), REPORT)
     assert len(client.calls) == 1 and client.calls[0]["articles"]
+
+
+# ---- name and ticker searches ----------------------------------------------------------------------
+
+def test_query_always_carries_the_ticker():
+    assert se.sentiment_query("Crypto", "Ethereum", "ETH") == "Ethereum ETH cryptocurrency"
+    assert se.sentiment_query("Crypto", "Sui", "SUI") == "Sui SUI cryptocurrency"
+    assert se.sentiment_query("Stock", "Apple (AAPL)", "AAPL") == "Apple AAPL stock"
+    assert se.sentiment_query("Stock", "TSM", "TSM") == "TSM stock"
+
+
+def test_asset_is_searched_by_name_and_by_ticker():
+    assert se.asset_searches("Ethereum ETH cryptocurrency") == ["Ethereum cryptocurrency", "ETH cryptocurrency"]
+    assert se.asset_searches("Apple Inc. AAPL stock") == ["Apple Inc. stock", "AAPL stock"]
+    assert se.asset_searches("TSM stock") == ["TSM stock"]
+    assert se.asset_searches("crypto market outlook regulation ETF liquidity") == ["crypto market outlook regulation ETF liquidity"]
+
+
+def test_an_article_found_by_both_searches_counts_once(monkeypatch):
+    shared = item("Ethereum ETF approval lifts ETH", "Reuters", 1)
+    feeds = {"Ethereum cryptocurrency": [shared, item("Ethereum upgrade goes live", "CoinDesk", 2)],
+             "ETH cryptocurrency": [dict(shared), item("ETH staking yields climb", "The Block", 3)]}
+    monkeypatch.setattr(se, "_fetch_raw", lambda q: [dict(x) for x in feeds[q]])
+    monkeypatch.setattr(se.time, "time", lambda: NOW.timestamp())
+    kept, stats = se.gather_headlines("Ethereum ETH cryptocurrency")
+    assert len(kept) == 3 and stats["candidates"] == 4 and stats["duplicates"] == 1
+
+
+def test_one_failed_search_does_not_lose_the_other(monkeypatch):
+    def fetch(q):
+        if q.startswith("ETH"):
+            raise RuntimeError("feed down")
+        return [item("Ethereum upgrade goes live", "CoinDesk", 2)]
+    monkeypatch.setattr(se, "_fetch_raw", fetch)
+    monkeypatch.setattr(se.time, "time", lambda: NOW.timestamp())
+    assert len(se.gather_headlines("Ethereum ETH cryptocurrency")[0]) == 1

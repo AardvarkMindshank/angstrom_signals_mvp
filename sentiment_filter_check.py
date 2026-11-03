@@ -35,7 +35,7 @@ def main(argv=None) -> int:
     queries += [(spec["query"], True) for spec in se.MACRO_MOODS]
     for query, market in queries:
         try:
-            raw = se._fetch_raw(query)
+            raw = [x for search in ([query] if market else se.asset_searches(query)) for x in se._fetch_raw(search)]
         except Exception as exc:
             lines.append(f"| {query} | fetch failed: {str(exc)[:60]} |||||||||")
             continue

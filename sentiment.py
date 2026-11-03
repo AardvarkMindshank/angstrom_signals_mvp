@@ -46,11 +46,13 @@ def _api_key() -> str:
 
 
 def sentiment_query(kind: str, label: str, ticker: str | None) -> str:
-    """Search text for one asset. The extra word keeps the name from matching the wrong thing."""
+    """Search text for one asset: '<name> [TICKER] cryptocurrency|stock'. The ticker is always included
+    (unless the name is the ticker), so a headline that only says "ETH" is found too. The extra word keeps
+    the name from matching the wrong thing."""
     name = " ".join((label or "").replace("(", " ").replace(")", " ").split())
     symbol = (ticker or "").strip().upper()
     parts = [name]
-    if symbol and symbol not in name.upper():
+    if symbol and symbol not in name.split():
         parts.append(symbol)
     parts.append("cryptocurrency" if kind == "Crypto" else "stock")
     return " ".join(part for part in parts if part)
@@ -134,11 +136,36 @@ def _fetch_raw(query: str) -> list[dict]:
     return headlines
 
 
+def asset_searches(query: str) -> list[str]:
+    """An asset is searched twice, by name and by ticker ('Ethereum cryptocurrency', 'ETH cryptocurrency').
+    The two result lists are merged; the same article found by both searches counts once."""
+    words = str(query or "").split()
+    terms = news_filter.asset_terms(query)
+    ticker = terms.get("ticker") or ""
+    if not terms or not ticker or len(words) < 3:
+        return [query]
+    kind_word = words[-1]
+    name = " ".join(words[:-2]) if words[-2] == ticker else " ".join(words[:-1])
+    if not name or name.upper() == ticker:
+        return [query]
+    return [f"{name} {kind_word}", f"{ticker} {kind_word}"]
+
+
 def gather_headlines(query: str, market: bool = False, limit: int = 8) -> tuple[list[dict], dict]:
     """(cleaned headlines, what was filtered). See news_filter: junk, stale, off-topic (asset searches),
     duplicate and same-event reports and publisher repeats are removed before anything is scored."""
-    terms = {} if market else news_filter.asset_terms(query)
-    return news_filter.clean_headlines(_fetch_raw(query), time.time(), terms, limit)
+    if market:
+        return news_filter.clean_headlines(_fetch_raw(query), time.time(), {}, limit)
+    raw, failures = [], 0
+    searches = asset_searches(query)
+    for search in searches:
+        try:
+            raw += _fetch_raw(search)
+        except Exception:
+            failures += 1
+    if failures == len(searches):
+        raise RuntimeError("no headline search succeeded")
+    return news_filter.clean_headlines(raw, time.time(), news_filter.asset_terms(query), limit)
 
 
 def fetch_headlines(query: str, limit: int = 8) -> list[dict]:
