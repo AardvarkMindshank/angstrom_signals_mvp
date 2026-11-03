@@ -16,7 +16,7 @@ import threading
 import time
 
 import app_version
-from score_colours import reading_tone, score_tone, tone_js
+from score_colours import reading_tone, sentiment_spread, sentiment_stored, sentiment_text, sentiment_tone, sentiment_tone_js, sentiment_value
 from sentiment_spread import spread_html
 import traceback
 from datetime import datetime, timezone
@@ -2573,7 +2573,7 @@ export default function(component) {
   function streamTone(score) {
     const number = Number(score);
     if (!Number.isFinite(number)) return null;
-""" + tone_js() + """
+""" + sentiment_tone_js() + """
   }
 
   function streamFace(name, avatar) {
@@ -2626,7 +2626,7 @@ export default function(component) {
       badge.className = "badge";
       badge.style.background = tone.bg;
       badge.style.color = tone.fg;
-      badge.textContent = tone.arrow + " " + item.score;
+      badge.textContent = tone.arrow + " " + tone.text;
       head.appendChild(badge);
     }
     context.appendChild(label);
@@ -3241,7 +3241,7 @@ export default function(component) {
   const score = raw === null || raw === undefined || raw === "" ? NaN : Number(raw);
   const color = (payload && payload.color) || "#6b7280";
   const background = (payload && payload.background) || "transparent";
-  badge.textContent = Number.isFinite(score) ? String(Math.round(score)) : "—";
+  badge.textContent = Number.isFinite(score) ? ((payload && payload.text) || String(Math.round(score))) : "—";
   badge.style.color = color;
   badge.style.background = Number.isFinite(score) ? background : "transparent";
   return () => badge.remove();
@@ -5927,8 +5927,8 @@ with tracked_expander("👥 My Groups", "my_groups", sidebar=True):
     my_groups_panel()
 
 def tone(score):
-    """Text color, badge background, arrow, and bar color for a score, on the five-step scale."""
-    return score_tone(score)
+    """Colours for a stored 0..100 sentiment score, on the -100..+100 bands the whole site uses."""
+    return sentiment_tone(score)
 
 
 def _sync_table_crowd(kind: str, asset_id: str, voice: dict) -> None:
@@ -5975,7 +5975,7 @@ def crowd_average_badge(average, count, spread, active: bool = True) -> str:
         return "<span style='color:#6b7280;'>—</span>"
     title = f"Average of {scored} personal score" + ("s." if scored != 1 else ".")
     if scored >= 2 and spread is not None and not pd.isna(spread):
-        title += f" The spread is ±{round(float(spread))}."
+        title += f" The spread is ±{round(sentiment_spread(spread))}."
     return f"<span title='{html.escape(title)}'>{sentiment_badge(average)}</span>"
 
 
@@ -6082,14 +6082,14 @@ def coinglass_heatmap_url(asset_id) -> str:
 
 
 def sentiment_badge(score, pick: str | None = None) -> str:
-    """Colored number box used for a headline score. A dash when there is no score yet."""
+    """Colored number box for a sentiment score (stored 0..100, shown -100..+100). A dash when missing."""
     if score is None or pd.isna(score):
         return "<span style='color:#6b7280;'>—</span>"
     color, background, _arrow, _bar = tone(score)
     box = (
         f"<span style='display:inline-block;min-width:52px;text-align:center;background:{background};"
         f"color:{color};border-radius:4px;padding:2px 8px;font-weight:600;line-height:1;'>"
-        f"{float(score):.0f}</span>"
+        f"{sentiment_text(score)}</span>"
     )
     if not pick:
         return box
@@ -6126,11 +6126,11 @@ Every step below is the same for every account and every asset. Nothing is weigh
 The {8} newest headlines left are scored.
 
 **3. Scoring each headline**
-- An AI model (xAI's Grok; the model used is recorded with every score) scores each headline on its own from
-  0 (strongly negative) to 100 (strongly positive), with 50 meaning mixed or unclear, and writes one sentence
-  on it. It also writes a short summary and the Positive and Negative paragraphs. It is told to use only what
+- An AI model (xAI's Grok; the model used is recorded with every score) scores each headline on its own,
+  and writes one sentence on it. The model answers on 0 to 100 (50 = mixed), the scale it handles most
+  reliably; the site shows every score as -100 to +100 (the model's score minus 50, doubled), so 0 = mixed. It also writes a short summary and the Positive and Negative paragraphs. It is told to use only what
   the headlines say and to add no facts of its own.
-- Its reply is checked before use. A score outside 0 to 100 is thrown away, not rounded into range. A reply
+- Its reply is checked before use. A score outside the model's 0 to 100 is thrown away, not rounded into range. A reply
   that scores fewer than {int(MIN_SCORED_SHARE * 100)}% of the headlines is rejected and the next model is asked.
 - A headline already scored at an earlier update keeps that score (when the same model scored it), so the
   same story is not scored differently from one update to the next. For an asset, if none of the headlines
@@ -6147,6 +6147,8 @@ The {8} newest headlines left are scored.
   or come from fewer than {news_filter.COVERAGE_OK_SOURCES} publishers.
 - The **agreement strip** shows every headline's score; *split* means the average hides two camps.
 - Sentiment describes how recent news reads. It has not been shown to predict prices.
+- What is stored is the model's 0 to 100 score; the conversion to -100 to +100 happens only on screen and in
+  emails, so the history is unaffected.
 
 **6. What is kept.** Each update is stored permanently with its time, score, the model, the coverage and the
 headlines it used (each headline is stored once and recognised again by its title and publisher). This lets
@@ -6175,7 +6177,8 @@ def _paint_section_score(section_key: str, score, ready: bool, reading: bool = F
         payload = {"score": None, "color": "#6b7280", "background": "transparent"}
     else:
         color, background, _arrow, _bar = (reading_tone if reading else tone)(shown)
-        payload = {"score": round(float(shown)), "color": color, "background": background}
+        text = f"{round(float(shown)):+d}" if reading else sentiment_text(shown)
+        payload = {"score": round(float(shown)), "color": color, "background": background, "text": text}
     _header_score(key=f"section_score_{section_key}", data=payload)
 
 
@@ -6481,21 +6484,29 @@ def notifications_panel() -> None:
                         "It covers the markets you have switched on. Market sentiment updates about every 12 hours."
                     ),
                 )
-                market_high = int(float(alert_prefs.get("market_high_alert") or 65))
-                market_low = int(float(alert_prefs.get("market_low_alert") or 35))
+                # Stored as two 0..100 lines (default 65 and 35); shown as one +/- line on the -100..+100 scale.
+                try:
+                    stored_high = float(alert_prefs.get("market_high_alert") or 65)
+                except (TypeError, ValueError):
+                    stored_high = 65.0
+                old_line = int(round(max(10.0, min(80.0, abs(sentiment_value(stored_high) or 30.0)))))
+                market_line = old_line
                 if market_on:
-                    market_high = st.slider(
-                        ":green[▲] Strongly positive mood at or above",
-                        55, 90, market_high,
-                        key="market_high_slider",
-                        help="Market sentiment at or above this line sends a positive alert. The default is 65.",
+                    market_line = st.slider(
+                        "🌐 Market sentiment alert line (±)",
+                        10, 80, old_line, step=2,
+                        key="market_line_slider",
+                        help=(
+                            "Positive alert when market sentiment reaches +line or above; negative alert at -line or "
+                            "below (on the -100 to +100 scale). The default is 30."
+                        ),
                     )
-                    market_low = st.slider(
-                        ":red[▼] Strongly negative mood at or below",
-                        10, 45, market_low,
-                        key="market_low_slider",
-                        help="Market sentiment at or below this line sends a negative alert. The default is 35.",
-                    )
+                if market_line == old_line:
+                    market_high = alert_prefs.get("market_high_alert") or 65
+                    market_low = alert_prefs.get("market_low_alert") or 35
+                else:
+                    market_high = sentiment_stored(market_line)
+                    market_low = sentiment_stored(-market_line)
                 new_alert_settings.update({
                     "market_alerts_enabled": market_on,
                     "market_high_alert": market_high,
@@ -6696,9 +6707,13 @@ with tracked_expander("📖 Help and guides", "help_guides", default=False):
     with tab_start:
         st.markdown("""
 **Angstrom Signals reads current market conditions for the crypto and stocks on your watchlists.**
-Each asset gets three technical readings (📈 Trend, 🎯 Stretch, 🔊 Flow, each from -100 to +100), a news
-sentiment score from 0 to 100, and tools to look closer. It is a research tool, not financial advice. The
-readings describe conditions now; none has been shown to predict which way price goes next.
+Each asset gets three technical readings (📈 Trend, 🎯 Stretch, 🔊 Flow), a 📰 news sentiment score, and
+tools to look closer. It is a research tool, not financial advice. The readings and sentiment describe
+conditions now; none has been shown to predict which way price goes next.
+
+**One scale for every score.** All of them run from **-100 to +100**: 0 is neutral or mixed, above 0 is up
+or positive, below 0 is down or negative, and the further from 0, the stronger. Each keeps its own icon,
+because they measure different things and are never added together.
 
 **A quick tour**
 1. **Quick Snapshot** opens with 🌍 **Markets**: the major indices, VIX, the US 10-year yield, the dollar,
@@ -6714,38 +6729,25 @@ readings describe conditions now; none has been shown to predict which way price
 4. **Notifications**, in the sidebar, holds your alerts and their settings.
 5. The arrow on the right edge opens **Social signals and chat**.
 """)
-        reading_bands = [
-            ("Strongly up", "+50 and above", *reading_tone(60)[:2]),
-            ("Up", "+20 to +49", *reading_tone(30)[:2]),
-            ("Mixed", "-19 to +19", *reading_tone(0)[:2]),
-            ("Down", "-49 to -20", *reading_tone(-30)[:2]),
-            ("Strongly down", "-50 and below", *reading_tone(-60)[:2]),
+        bands = [
+            ("Strongly up / positive", "+50 and above", *reading_tone(60)[:2]),
+            ("Up / positive", "+20 to +49", *reading_tone(30)[:2]),
+            ("Neutral / mixed", "-19 to +19", *reading_tone(0)[:2]),
+            ("Down / negative", "-49 to -20", *reading_tone(-30)[:2]),
+            ("Strongly down / negative", "-50 and below", *reading_tone(-60)[:2]),
         ]
-        st.markdown("**📈 Trend · 🎯 Stretch · 🔊 Flow** (-100 to +100)")
-        for column, (name, span, color, background) in zip(st.columns(len(reading_bands)), reading_bands):
+        for column, (name, span, color, background) in zip(st.columns(len(bands)), bands):
             column.markdown(
                 f"<div style='background:{background};color:{color};border-radius:8px;padding:12px 14px;'>"
                 f"<div style='font-size:0.8rem;font-weight:600;'>{name}</div>"
                 f"<div style='font-size:1.2rem;font-weight:700;line-height:1.2;'>{span}</div></div>",
                 unsafe_allow_html=True,
             )
-        st.markdown("**📰 Sentiment** (0 to 100)")
-        bands = [
-            ("Strongly positive", "70+", *score_tone(75)[:2]),
-            ("Positive", "53–69", *score_tone(60)[:2]),
-            ("Mixed", "47–52", *score_tone(50)[:2]),
-            ("Negative", "30–46", *score_tone(40)[:2]),
-            ("Strongly negative", "below 30", *score_tone(20)[:2]),
-        ]
-        band_cols = st.columns(len(bands))
-        for column, (name, span, color, background) in zip(band_cols, bands):
-            column.markdown(
-                f"<div style='background:{background};color:{color};border-radius:8px;padding:12px 14px;'>"
-                f"<div style='font-size:0.8rem;font-weight:600;'>{name}</div>"
-                f"<div style='font-size:1.6rem;font-weight:700;line-height:1.2;'>{span}</div></div>",
-                unsafe_allow_html=True,
-            )
-        st.caption("The same five shades, from deep green to deep red, are used for the readings and sentiment everywhere, including the emails.")
+        st.caption(
+            "📈 Trend · 🎯 Stretch · 🔊 Flow · 📰 Sentiment all use these five shades, here and in the emails. "
+            "Indicators with their own well-known scale keep it so they match other sites: RSI and Stochastic "
+            "(0 to 100) on the chart, and Fear & Greed (0 to 100) in market sentiment."
+        )
 
     with tab_scores:
         st.markdown(signals_view.EXPLAINER)
@@ -6794,8 +6796,9 @@ None of these tools change the technical readings.
 
     with tab_sentiment:
         st.markdown("""
-**What it is.** An AI reads recent headlines and scores each from 0 (very negative) to 100 (very
-positive). The sentiment score is their average. It is separate from the technical readings.
+**What it is.** An AI reads recent headlines and scores each one from -100 (very negative) to +100 (very
+positive), with 0 meaning mixed or unclear. The sentiment score is their average. It is separate from the
+technical readings and never added to them.
 
 **Which headlines count.** Recent news (last 7 days) that is actually about the asset. The same story from
 several outlets counts once, no single publisher dominates, and promotional filler is left out.
@@ -6811,11 +6814,11 @@ reading. The full method is under *How a sentiment score is built* below.
 - The **Sentiment** column in the tables.
 
 **How much the articles agree.** Beside each sentiment score, a strip shows one dot per article on a
-0 to 100 line, with the average marked. The word says how spread out they are: **agree** (within about
-10 points), **mixed** (10 to 20) or **split** (more than 20, so the average hides two camps). Hover it
+-100 to +100 line, with the average marked. The word says how spread out they are: **agree** (within about
+20 points), **mixed** (20 to 40) or **split** (more than 40, so the average hides two camps). Hover it
 for the details.
 
-**Your take.** 👍 if you agree, 👎 if you don't, then pick your own score from 0 to 100 and add a short
+**Your take.** 👍 if you agree, 👎 if you don't, then pick your own score from -100 to +100 and add a short
 comment. The **Crowd** box shows everyone's average; hover the 👎 for how spread out they are.
 A new sentiment update clears the takes, because they belonged to the old score.
 
@@ -6835,8 +6838,8 @@ same line under the asset's name in the chart section.
   (default ±65: price has run unusually far up or down within its recent range) and the Flow reading (default
   ±40: volume is unusually strongly backing rises or falls). Switching one on notes the assets already past the
   line quietly; only new crossings alert.
-- 🌐 **Market sentiment alerts**: the same for the crypto or stock market sentiment (default 65 and 35),
-  for the markets you trade. Updated about every 12 hours.
+- 🌐 **Market sentiment alerts**: the same for the crypto or stock market sentiment (default ±30), for the
+  markets you trade. Updated about every 12 hours.
 - **Emails**: ⚡ **Instant** (one email per alert, straight away) and/or 📬 **Daily alerts summary** (one
   email a day at your chosen hour and time zone). Each alert shows the price, the asset's sentiment and its
   market's mood.
@@ -6845,9 +6848,8 @@ same line under the asset's name in the chart section.
   and weakest Trends. With it on,
   the email comes every day; with it off, only on days with alerts.
 
-**No repeats on a wobble.** After a reading alert, the same one can only fire again once the reading has moved
-20 points back (for example back to +30 after a +50 alert) and then crosses again. Market sentiment alerts
-re-arm after 10 points.
+**No repeats on a wobble.** After an alert, the same one can only fire again once the score has moved 20 points
+back (for example back to +30 after a +50 alert) and then crosses again. This applies to every alert.
 
 **The Alert Feed**
 - Unread alerts sit at the top. Click one to open it: an asset opens on the chart, a market alert opens
@@ -9461,7 +9463,7 @@ def _change_extras(row: dict, previous_score: float, current_score: float, bull:
         mood = None
     if mood is not None and mood == mood:
         fg, bg, _a, _b = tone(mood)
-        badges.append(_mini_badge(f"📰 {mood:.0f}", fg, bg, "Headline sentiment for this asset, 0 to 100"))
+        badges.append(_mini_badge(f"📰 {sentiment_text(mood)}", fg, bg, "Headline sentiment for this asset, -100 to +100"))
     if not crossed:
         gap_up = bull - current_score
         gap_down = current_score - bear
@@ -11315,19 +11317,21 @@ def _sentiment_alt_score(kind: str, asset_id: str, sentiment_at, mine_score, sel
     typed_key = f"{prefix}_alt_typed"
 
     def _pick(value: int, saver=on_vote, box=prefix, typed=typed_key) -> None:
-        st.session_state[typed] = int(value)
+        st.session_state[typed] = int(round(sentiment_value(value)))
         _take_result(box, bool(saver(-1, int(value))), "That thumb could not be saved. Please try again.")
 
     def _typed(saver=on_vote, box=prefix, typed=typed_key) -> None:
+        # Typed on the shown -100..+100 scale; stored on 0..100 like every sentiment score.
         raw = st.session_state.get(typed)
         if raw is None:
             return
-        _take_result(box, bool(saver(-1, int(raw))), "That thumb could not be saved. Please try again.")
+        stored = sentiment_stored(raw)
+        _take_result(box, bool(saver(-1, int(round(stored)))), "That thumb could not be saved. Please try again.")
 
     for column, value in zip(st.columns(6, gap="xxsmall", wrap=False), (0, 20, 40, 60, 80, 100)):
         with column:
             st.button(
-                str(value),
+                sentiment_text(value),
                 key=f"{prefix}_alt_{value}",
                 use_container_width=True,
                 type="primary" if selected == value else "secondary",
@@ -11335,13 +11339,13 @@ def _sentiment_alt_score(kind: str, asset_id: str, sentiment_at, mine_score, sel
                 args=(value,),
             )
     if typed_key not in st.session_state and mine_score is not None:
-        st.session_state[typed_key] = int(mine_score)
+        st.session_state[typed_key] = int(round(sentiment_value(mine_score)))
     number_kwargs = {
-        "min_value": 0,
+        "min_value": -100,
         "max_value": 100,
-        "step": 1,
+        "step": 2,
         "key": typed_key,
-        "placeholder": "0–100",
+        "placeholder": "-100 to +100",
         "on_change": _typed,
     }
     if typed_key not in st.session_state:
@@ -11429,7 +11433,7 @@ def _sentiment_story(report, coverage: str, score, color, background, arrow, not
         f"<div class='sentiment-kicker'>{html.escape(note)}</div>"
         "<div style='display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;'>"
         f"<div class='sentiment-score' style='background:{background};color:{color};'>"
-        f"{arrow} {score:.0f}/100</div>"
+        f"{arrow} {sentiment_text(score)}</div>"
         f"{spread_html(report, score)}</div>"
         f"<div class='sentiment-coverage' style='color:{color};'>{html.escape(coverage)}</div>"
         f"<div class='sentiment-body'>{summary}</div>"
@@ -12288,8 +12292,7 @@ def show_signal_matrix(kind: str, asset_id: str, label: str, indicated) -> None:
             f"Lead is how closely that signal lined up with the price change over the next {int(horizon)} "
             + ("day" if int(horizon) == 1 else "days")
             + ". Positive means a high reading came before a rise. "
-            + "📈 Trend, 🎯 Stretch, 🔊 Flow and the two named views run from -100 to +100, each day using only the bars up to that day; "
-            + "sentiment runs from 0 to 100. "
+            + "Every row runs from -100 to +100: 📈 Trend, 🎯 Stretch, 🔊 Flow and the two named views each day use only the bars up to that day. "
             + "A blank sentiment day is before the first saved reading. After that, the last saved score stays until the next one. "
             + "The 30-day record in the table below uses your Trend alert line (plus and minus) for the technical rows "
             + "and your market sentiment lines for sentiment. "
@@ -12410,10 +12413,10 @@ def show_signal_matrix(kind: str, asset_id: str, label: str, indicated) -> None:
             mood_high, mood_low = 65.0, 35.0
         summary = []
         for row in rows:
-            if row.get("scale") == "reading":
-                bull_line, bear_line = reading_line, -reading_line
+            if row.get("sentiment"):
+                bull_line, bear_line = sentiment_value(mood_high), sentiment_value(mood_low)
             else:
-                bull_line, bear_line = mood_high, mood_low
+                bull_line, bear_line = reading_line, -reading_line
             values = row.get("values") or []
             present = sum(value is not None for value in values)
             if present == 0:

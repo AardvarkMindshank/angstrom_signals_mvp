@@ -679,7 +679,7 @@ def crowd_mark(up, down, active: bool = True, alt_count=0, alt_avg=None, alt_spr
     if scored >= 1 and average is not None:
         detail = f"{down_count} disagree. {scored} gave their own score."
         if scored >= 2 and spread is not None:
-            detail += f" The spread is ±{round(spread)}."
+            detail += f" The spread is ±{round(spread * 2)} (on the -100 to +100 scale)."
     detail += " These reset when the sentiment is refreshed."
     slot = (
         "display:inline-block;min-width:4.5ch;text-align:left;"

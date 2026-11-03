@@ -96,7 +96,7 @@ def test_market_alerts_use_their_own_lines_and_wording():
     actions = plan_alert_actions(rows, set(), 65, 35, describe=market_message)
     assert kinds(actions) == [("open", BULLISH)]
     assert actions[0][1] == "market:crypto"
-    assert "Market sentiment reached 66/100" in actions[0][4]
+    assert "Market sentiment turned positive: +32" in actions[0][4]
     # The same 10-point reset applies: 56 does not release a 65 alert, 55 does.
     latched = {("market:crypto", BULLISH)}
     assert plan_alert_actions(market_rows({"crypto": 56.0}, ["crypto"]), latched, 65, 35, describe=market_message) == []
@@ -150,7 +150,7 @@ def test_evaluate_skips_markets_when_switched_off():
 def test_asset_facts_line():
     from alerts import asset_facts, facts_by_symbol, price_text
     row = {"key": "TSLA", "price": 403.3, "sentiment": 61.4, "market": "stock", "market_score": 44.0}
-    assert asset_facts(row) == "Price 403.30 · Sentiment 61/100 · Stock market mood 44/100"
+    assert asset_facts(row) == "Price 403.30 · Sentiment +23 · Stock market mood -12"
     assert asset_facts({"price": 0.88264, "market": "crypto", "market_score": None}) == "Price 0.8826"
     assert asset_facts({}) == ""
     assert price_text(67250.4) == "67,250" and price_text(None) == ""

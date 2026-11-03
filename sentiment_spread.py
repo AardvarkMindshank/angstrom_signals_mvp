@@ -1,8 +1,9 @@
 """How much the articles behind a sentiment score agree: a small dot strip and one word.
 
-Each article was scored 0 to 100. The strip puts one dot per article on a 0-100 line, coloured on
-the site's five-step scale, with the average marked. The word comes from the spread (standard
-deviation): agree under 10 points, mixed 10 to 20, split above 20.
+Each article is scored and stored on 0 to 100 and shown on -100 to +100 (0 = mixed), like every score
+on the site. The strip puts one dot per article on that line, coloured on the site's five-step scale,
+with the average marked. The word comes from the spread (standard deviation, in stored points): agree
+under 10 (under 20 on the shown scale), mixed 10 to 20 (20 to 40 shown), split above 20 (above 40 shown).
 """
 
 from __future__ import annotations
@@ -10,7 +11,7 @@ from __future__ import annotations
 import html
 import math
 
-from score_colours import score_tone
+from score_colours import sentiment_text, sentiment_tone
 
 AGREE_BELOW = 10.0
 SPLIT_ABOVE = 20.0
@@ -93,7 +94,7 @@ def spread_html(report: dict | None, average: float | None = None, width: int = 
         while any(abs(cx - px) < 6 and pl == level for px, pl in placed) and level < 2:
             level += 1
         placed.append((cx, level))
-        colour = score_tone(value)[3]
+        colour = sentiment_tone(value)[3]
         dots.append(
             f"<circle cx='{cx:.1f}' cy='{rows_y[level]}' r='3.6' fill='{colour}' fill-opacity='0.85' "
             "stroke='#ffffff' stroke-width='0.6'/>"
@@ -119,8 +120,8 @@ def spread_html(report: dict | None, average: float | None = None, width: int = 
     what = f"{len(values) - readings} news articles and {readings} public readings" if readings else f"{len(values)} articles"
     noun = "sources" if readings else "articles"
     title = (
-        f"{what}, each scored 0 to 100. Each dot is one; the marker is the average "
-        f"({mean:.0f}). Spread ±{sd:.0f} points: {word}, {_MEANING[word]}."
+        f"{what}, each scored from -100 (very negative) to +100 (very positive). Each dot is one; the marker is "
+        f"the average ({sentiment_text(mean)}). Spread ±{sd * 2:.0f} points: {word}, {_MEANING[word]}."
     )
     colours = {"agree": ("#15803d", "#dcfce7"), "mixed": ("#b45309", "#fef3c7"), "split": ("#b91c1c", "#fee2e2")}
     fg, bg = colours[word]

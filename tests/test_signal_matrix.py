@@ -71,7 +71,9 @@ def test_matrix_rows_are_v2_readings_with_no_look_ahead():
     full = sm.build_matrix(frame, "Crypto", {"Asset sentiment": [("2025-01-01", 60)]}, 3)
     names = [row["name"] for row in full["rows"]]
     assert names[:3] == ["📈 Trend", "🎯 Stretch", "🔊 Flow"] and "Asset sentiment" in names
-    assert {row["scale"] for row in full["rows"]} == {"reading", "score"}
+    assert {row["scale"] for row in full["rows"]} == {"reading"}
+    sentiment_row = next(r for r in full["rows"] if r.get("sentiment"))
+    assert {v for v in sentiment_row["values"] if v is not None} == {20.0}   # stored 60 shown as +20
     for row in full["rows"][:5]:
         assert all(v is None or -100 <= v <= 100 for v in row["values"])
     # Changing later bars must not change an earlier day's readings.

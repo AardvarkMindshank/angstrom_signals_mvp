@@ -15,7 +15,7 @@ def test_spread_words():
 def test_strip_has_a_dot_per_scored_article_and_a_hover():
     out = ss.spread_html(report(20, 40, 60, 80, 81), 56.2)
     assert out.count("<circle") == 5 and "5 articles" in out and "split" in out
-    assert "average (56)" in out
+    assert "average (+12)" in out
     assert ss.spread_html(report(50)) == "" and ss.spread_html(None) == ""
 
 

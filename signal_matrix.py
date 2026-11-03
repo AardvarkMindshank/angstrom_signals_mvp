@@ -94,8 +94,8 @@ def build_matrix(
 ) -> dict:
     """Price and one value per signal for each of the last days.
 
-    The technical rows (TECHNICAL_ROWS) are marked scale "reading" (-100..+100); sentiment rows are
-    "score" (0..100). sentiment maps a row name
+    Every row is on -100..+100 (scale "reading"); sentiment rows are converted from their stored 0..100
+    and marked "sentiment". sentiment maps a row name
     to (day, score) readings. Days before the first reading stay empty. After
     that, the last reading stays on each later price day until the next one.
 
@@ -141,7 +141,10 @@ def build_matrix(
 
     placed = sentiment if isinstance(sentiment, dict) else {}
     for name, points in placed.items():
-        rows.append({"name": name, "values": _align(dates, points), "scale": "score"})
+        # Sentiment is stored 0..100 and shown on -100..+100 like everything else (the lead is unchanged:
+        # a correlation does not move when a series is rescaled).
+        shown = [None if v is None else max(-100.0, min(100.0, v * 2.0 - 100.0)) for v in _align(dates, points)]
+        rows.append({"name": name, "values": shown, "scale": "reading", "sentiment": True})
 
     returns = _forward_returns(closes, horizon)
     for row in rows:

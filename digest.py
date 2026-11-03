@@ -13,7 +13,7 @@ from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 from alerts import BEARISH, BULLISH, DOWN_TYPES, HELD_TYPES, OPEN_TYPES, UP_TYPES, asset_facts, facts_by_symbol, is_market_symbol, latch_symbol, logos_by_symbol, price_text
-from score_colours import reading_tone, score_tone
+from score_colours import reading_tone, score_tone, sentiment_text, sentiment_tone
 from email_brand import asset_logo, list_row, render_email, section_title
 
 # A crossing can be resolved (the score moved back) before the digest goes out.
@@ -154,8 +154,8 @@ def score_colour(score, high=None, low=None) -> str:
 
 
 def _mood_colour(value) -> tuple[str, str]:
-    """(text, background) for a 0-100 reading's badge, on the site's five-step scale."""
-    fg, bg, _arrow, _bar = score_tone(value)
+    """(text, background) for a stored 0..100 sentiment badge, on the site's -100..+100 bands."""
+    fg, bg, _arrow, _bar = sentiment_tone(value)
     return fg, bg
 
 
@@ -252,7 +252,7 @@ def _watchlist_row(row: dict) -> tuple[str, str]:
     mood_text, mood_bg = _mood_colour(sentiment)
     sentiment_html = (
         f'<span style="font:400 13px/1.5 {_FONT};color:{_MUTED};">Sentiment</span> '
-        + _pill(f"{sentiment:.0f}", mood_text, mood_bg)
+        + _pill(sentiment_text(sentiment), mood_text, mood_bg)
         if sentiment is not None else ""
     )
     html_row = (
@@ -274,7 +274,7 @@ def _watchlist_row(row: dict) -> tuple[str, str]:
     if price:
         parts.insert(0, price + (f" ({change * 100:+.1f}%)" if change is not None else ""))
     if sentiment is not None:
-        parts.append(f"sentiment {sentiment:.0f}")
+        parts.append(f"sentiment {sentiment_text(sentiment)}")
     return html_row, f"- {name}: " + " · ".join(parts)
 
 
@@ -290,7 +290,7 @@ def _watchlist_section(results, config) -> tuple[str, str]:
             )
             mood_html = (
                 f'<span style="font:400 13px/1.5 {_FONT};color:{_MUTED};">Market mood</span> '
-                + _pill(f"{mood:.0f}", text, bg)
+                + _pill(sentiment_text(mood), text, bg)
             )
         html_parts.append(
             f'<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:14px 0 6px;"><tr>'
@@ -298,7 +298,7 @@ def _watchlist_section(results, config) -> tuple[str, str]:
             f'<td align="right">{mood_html}</td></tr></table>'
         )
         label = "Crypto" if market == "crypto" else "Stocks"
-        plain.append(label + (f" (market mood {mood:.0f})" if mood is not None else ""))
+        plain.append(label + (f" (market mood {sentiment_text(mood)})" if mood is not None else ""))
         for row in rows:
             row_html, row_plain = _watchlist_row(row)
             html_parts.append(row_html)
@@ -380,8 +380,8 @@ def render_digest(notes, results, config, app_url: str, markets=None) -> tuple[s
                 continue
             name = str(row.get("symbol") or "")
             score = float(row.get("score"))
-            html_parts.append(list_row(html.escape(name), f"Now {score:.0f}/100, no alert", "info"))
-            plain.append(f"- {name}: now {score:.0f}/100, no alert")
+            html_parts.append(list_row(html.escape(name), f"Now {sentiment_text(score)}, no alert", "info"))
+            plain.append(f"- {name}: now {sentiment_text(score)}, no alert")
         plain.append("")
 
     crossing_rows("Turned up", up, "up")

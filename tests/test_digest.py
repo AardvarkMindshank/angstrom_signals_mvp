@@ -231,7 +231,7 @@ def test_digest_puts_market_sentiment_first():
     subject, page, plain = digest.render_digest(notes, [], cfg(market_alerts_enabled=True), "https://app", markets=markets)
     assert "2 alerts" in subject
     assert page.index("Market sentiment") < page.index("Solana (SOL)")
-    assert "Now 58/100, no alert" in page
+    assert "Now +16, no alert" in page
     # A market already listed as a crossing is not listed again as a plain reading.
     assert "Now 33/100" not in page
     assert plain.index("Crypto market sentiment") < plain.index("Solana")
@@ -271,7 +271,7 @@ def test_watchlist_section_colours_and_text():
     assert subject == "Angstrom daily summary: no new alerts"
     assert "Your watchlist today" in page and "&#9650; 2.3%" in page and "&#9660; 1.8%" in page
     assert "#15803d" in page and "#b91c1c" in page          # deep green and red bars for Trend +75 and -75
-    assert "- BTC: 67,250 (+2.3%) · trend +75 · sentiment 64" in plain
+    assert "- BTC: 67,250 (+2.3%) · trend +75 · sentiment +28" in plain
     assert "trend -75 · stretch +30 · flow -5" in plain
     assert "Sent every day" in page
     _, page_off, _ = digest.render_digest([], results, cfg(digest_watchlist=False), "https://app")

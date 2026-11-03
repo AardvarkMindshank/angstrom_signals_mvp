@@ -90,3 +90,66 @@ def reading_step(value) -> str:
 def reading_tone(value) -> tuple[str, str, str, str]:
     """(text colour, badge background, arrow, bar colour) for a -100..100 signals v2 reading."""
     return STEPS[reading_step(value)]
+
+
+# ----------------------------------------------------------------------------- sentiment shown on -100..+100
+# Sentiment is scored and stored on 0..100 (50 = mixed); the site and emails show it on the same
+# -100..+100 scale as the technical readings (0 = mixed), with the same five colours and bands.
+
+def sentiment_value(score) -> float | None:
+    """A stored 0..100 sentiment score as shown: -100..+100. None when missing."""
+    try:
+        number = float(score)
+    except (TypeError, ValueError):
+        return None
+    if number != number:
+        return None
+    return max(-100.0, min(100.0, number * 2.0 - 100.0))
+
+
+def sentiment_stored(shown) -> float | None:
+    """The inverse: a -100..+100 value someone typed, as the 0..100 number that is stored."""
+    try:
+        number = float(shown)
+    except (TypeError, ValueError):
+        return None
+    if number != number:
+        return None
+    return max(0.0, min(100.0, (number + 100.0) / 2.0))
+
+
+def sentiment_text(score) -> str:
+    """'+32', '-8', '0' or a dash, from a stored 0..100 score."""
+    value = sentiment_value(score)
+    if value is None:
+        return "—"
+    shown = int(round(value))
+    return f"{shown:+d}" if shown else "0"
+
+
+def sentiment_spread(points) -> float | None:
+    """A spread measured in stored points, on the shown scale (twice as wide)."""
+    try:
+        return float(points) * 2.0
+    except (TypeError, ValueError):
+        return None
+
+
+def sentiment_tone(score) -> tuple[str, str, str, str]:
+    """Colours for a stored 0..100 sentiment score, on the -100..+100 reading bands."""
+    return reading_tone(sentiment_value(score))
+
+
+def sentiment_tone_js() -> str:
+    """JavaScript body for page components: `number` is a stored 0..100 score; returns
+    {bg, fg, arrow, text} on the -100..+100 scale and bands."""
+    rows = ["const v = Math.max(-100, Math.min(100, number * 2 - 100));",
+            "const r = Math.round(v);",
+            'const text = r > 0 ? "+" + r : String(r);']
+    for limit, name in ((READING_STRONG, "strong_up"), (READING_MILD, "up"), (-READING_MILD + 0.0001, "mixed"),
+                        (-READING_STRONG + 0.0001, "down")):
+        fg, bg, arrow, _ = STEPS[name]
+        rows.append(f'if (v >= {limit:g}) return {{ bg: "{bg}", fg: "{fg}", arrow: "{arrow}", text }};')
+    fg, bg, arrow, _ = STEPS["strong_down"]
+    rows.append(f'return {{ bg: "{bg}", fg: "{fg}", arrow: "{arrow}", text }};')
+    return "\n    ".join(rows)

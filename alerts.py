@@ -12,6 +12,8 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 
+from score_colours import sentiment_text
+
 BULLISH = "BULLISH_THRESHOLD"          # market-sentiment alerts (and, before signals v2, asset scores)
 BEARISH = "BEARISH_THRESHOLD"
 HELD_BULLISH = "BULLISH_THRESHOLD_HELD"
@@ -139,8 +141,8 @@ reading_message = trend_message
 
 def market_message(score: float, alert_type: str) -> str:
     if alert_type == BULLISH:
-        return f"Market sentiment reached {score:.0f}/100 (strongly positive mood)"
-    return f"Market sentiment dropped to {score:.0f}/100 (strongly negative mood)"
+        return f"Market sentiment turned positive: {sentiment_text(score)} on the -100 to +100 scale (strongly positive mood)"
+    return f"Market sentiment turned negative: {sentiment_text(score)} on the -100 to +100 scale (strongly negative mood)"
 
 
 def market_rows(scores: dict, markets) -> list[dict]:
@@ -403,10 +405,10 @@ def asset_facts(row: dict) -> str:
     if price:
         parts.append(f"Price {price}")
     if not _missing(row.get("sentiment")):
-        parts.append(f"Sentiment {float(row['sentiment']):.0f}/100")
+        parts.append(f"Sentiment {sentiment_text(row['sentiment'])}")
     if not _missing(row.get("market_score")):
         name = "Crypto market" if row.get("market") == "crypto" else "Stock market"
-        parts.append(f"{name} mood {float(row['market_score']):.0f}/100")
+        parts.append(f"{name} mood {sentiment_text(row['market_score'])}")
     return " · ".join(parts)
 
 

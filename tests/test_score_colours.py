@@ -18,5 +18,17 @@ def test_js_scale_matches():
 
 def test_site_uses_the_shared_scale():
     source = pathlib.Path(__file__).resolve().parents[1].joinpath("app.py").read_text(encoding="utf-8")
-    assert "return score_tone(score)" in source
-    assert '""" + tone_js() + """' in source
+    assert "return sentiment_tone(score)" in source
+    assert '""" + sentiment_tone_js() + """' in source
+
+
+def test_sentiment_is_shown_on_the_reading_scale():
+    import score_colours as sc
+    assert sc.sentiment_value(50) == 0 and sc.sentiment_value(75) == 50 and sc.sentiment_value(0) == -100
+    assert sc.sentiment_text(66) == "+32" and sc.sentiment_text(44) == "-12" and sc.sentiment_text(50) == "0"
+    assert sc.sentiment_text(None) == "—" and sc.sentiment_value("x") is None
+    assert sc.sentiment_stored(30) == 65 and sc.sentiment_stored(-30) == 35
+    # same colours as a reading of the same shown value
+    assert sc.sentiment_tone(75) == sc.reading_tone(50) and sc.sentiment_tone(55) == sc.reading_tone(10)
+    js = sc.sentiment_tone_js()
+    assert "number * 2 - 100" in js and "text" in js
