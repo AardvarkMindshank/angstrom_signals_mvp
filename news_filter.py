@@ -29,7 +29,10 @@ COVERAGE_OK_SOURCES = 3              # fewer publishers, is shown as based on th
 
 SKIP_WORDS = (
     "presale", "pre-sale", "airdrop", "price prediction", "what will", "be worth", "could reach",
-    "openpr", "einpresswire",
+    "openpr", "einpresswire", "prediction market", "live chart", "stock forecast",
+    # automated fund-filing notices ("X LLC increases stake in ..."): no news content
+    "increases stake", "decreases stake", "raises stake", "lowers stake", "trims stake", "boosts stake",
+    "cuts stake", "holdings increased by", "holdings decreased by", "holdings trimmed by", "holdings lifted by",
 )
 _STOP = {
     "the", "a", "an", "and", "or", "of", "to", "in", "on", "for", "at", "by", "with", "from", "as", "is",

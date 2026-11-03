@@ -106,6 +106,14 @@ def test_stale_undated_and_future_items_are_dropped():
     assert kept[0]["published_at"].startswith("2026-11-03T10:00")
 
 
+def test_filler_and_fund_filing_notices_are_dropped():
+    kept, stats = clean([item("Apple Inc. $AAPL Stock: Birch Hill Investment Advisors LLC Decreases Stake"),
+                         item("NVIDIA Corporation $NVDA Stock Holdings Increased by Wedmont Private Capital"),
+                         item("NVIDIA (NVDA) Stock Price Today, Live Chart & News"),
+                         item("Apple earnings beat estimates")], query="Apple Inc. AAPL stock")
+    assert [k["title"] for k in kept] == ["Apple earnings beat estimates"] and stats["junk"] == 3
+
+
 def test_promotional_items_are_dropped():
     kept, stats = clean([item("Bitcoin price prediction: could reach $500k"), item("New Bitcoin presale live"),
                          item("Bitcoin news", "openPR")])
