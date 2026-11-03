@@ -294,3 +294,24 @@ def test_one_failed_search_does_not_lose_the_other(monkeypatch):
     monkeypatch.setattr(se, "_fetch_raw", fetch)
     monkeypatch.setattr(se.time, "time", lambda: NOW.timestamp())
     assert len(se.gather_headlines("Ethereum ETH cryptocurrency")[0]) == 1
+
+
+# ---- shown scale: categories and labels -------------------------------------------------------------
+
+def test_coverage_words_and_social_sides_keep_their_lines_on_the_shown_number():
+    from market_store import _coverage_label, _sentiment_side
+    from score_colours import sentiment_stored
+    words = {v: _coverage_label(sentiment_stored(v)) for v in (-21, -20, -7, -6, 5, 6, 19, 20)}
+    assert words == {-21: "Bearish coverage", -20: "Mildly bearish coverage", -7: "Mildly bearish coverage",
+                     -6: "Mixed coverage", 5: "Mixed coverage", 6: "Mildly bullish coverage",
+                     19: "Mildly bullish coverage", 20: "Bullish coverage"}
+    assert _sentiment_side(53) == "positive" and _sentiment_side(52.9) == "positive"   # shown +6
+    assert _sentiment_side(50) == "mixed" and _sentiment_side(46.9) == "mixed"           # shown -6
+    assert _sentiment_side(46.6) == "negative"                                           # shown -7
+
+
+def test_spread_strip_converts_once():
+    from sentiment_spread import spread_html
+    report = {"headlines": [{"score": s} for s in (40, 60)]}   # mean 50, sd 10 stored
+    out = spread_html(report, 50)
+    assert "average (0)" in out and "±20 points" in out and "mixed" in out

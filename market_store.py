@@ -16,6 +16,7 @@ from datetime import datetime, timezone
 
 import pandas as pd
 
+from score_colours import sentiment_category_score
 from sentiment import SENTIMENT_REFRESH_SECONDS, TECHNICAL_REFRESH_SECONDS
 
 SPARKLINE_POINTS = 31
@@ -354,7 +355,8 @@ def comment_balloon(comments, asset_key: str) -> str:
 
 
 def _sentiment_side(score) -> str:
-    number = _optional_number(score)
+    # Judged on the number shown (-100..+100), with the original 53 / 47 lines (+6 / -6 shown).
+    number = sentiment_category_score(score)
     if number is None:
         return ""
     if number >= 53:
@@ -365,7 +367,8 @@ def _sentiment_side(score) -> str:
 
 
 def _coverage_label(score) -> str:
-    number = _optional_number(score)
+    # The original 60 / 53 / 47 / 40 lines, shown as +20 / +6 / -6 / -20, judged on the number shown.
+    number = sentiment_category_score(score)
     if number is None:
         return ""
     if number >= 60:

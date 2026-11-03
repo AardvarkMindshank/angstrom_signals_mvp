@@ -16,7 +16,7 @@ import threading
 import time
 
 import app_version
-from score_colours import reading_tone, sentiment_spread, sentiment_stored, sentiment_text, sentiment_tone, sentiment_tone_js, sentiment_value
+from score_colours import SENTIMENT_SHOWN_STEPS, reading_tone, sentiment_category_score, sentiment_spread, sentiment_stored, sentiment_text, sentiment_tone, sentiment_tone_js, sentiment_value
 from sentiment_spread import spread_html
 import traceback
 from datetime import datetime, timezone
@@ -6729,24 +6729,37 @@ because they measure different things and are never added together.
 4. **Notifications**, in the sidebar, holds your alerts and their settings.
 5. The arrow on the right edge opens **Social signals and chat**.
 """)
-        bands = [
-            ("Strongly up / positive", "+50 and above", *reading_tone(60)[:2]),
-            ("Up / positive", "+20 to +49", *reading_tone(30)[:2]),
-            ("Neutral / mixed", "-19 to +19", *reading_tone(0)[:2]),
-            ("Down / negative", "-49 to -20", *reading_tone(-30)[:2]),
-            ("Strongly down / negative", "-50 and below", *reading_tone(-60)[:2]),
-        ]
-        for column, (name, span, color, background) in zip(st.columns(len(bands)), bands):
-            column.markdown(
-                f"<div style='background:{background};color:{color};border-radius:8px;padding:12px 14px;'>"
-                f"<div style='font-size:0.8rem;font-weight:600;'>{name}</div>"
-                f"<div style='font-size:1.2rem;font-weight:700;line-height:1.2;'>{span}</div></div>",
-                unsafe_allow_html=True,
-            )
+        def _band_row(title, bands):
+            st.markdown(title)
+            for column, (name, span, color, background) in zip(st.columns(len(bands)), bands):
+                column.markdown(
+                    f"<div style='background:{background};color:{color};border-radius:8px;padding:12px 14px;'>"
+                    f"<div style='font-size:0.8rem;font-weight:600;'>{name}</div>"
+                    f"<div style='font-size:1.2rem;font-weight:700;line-height:1.2;'>{span}</div></div>",
+                    unsafe_allow_html=True,
+                )
+
+        _band_row("**📈 Trend · 🎯 Stretch · 🔊 Flow**", [
+            ("Strongly up", "+50 and above", *reading_tone(60)[:2]),
+            ("Up", "+20 to +49", *reading_tone(30)[:2]),
+            ("Mixed", "-19 to +19", *reading_tone(0)[:2]),
+            ("Down", "-49 to -20", *reading_tone(-30)[:2]),
+            ("Strongly down", "-50 and below", *reading_tone(-60)[:2]),
+        ])
+        _s = SENTIMENT_SHOWN_STEPS
+        _band_row("**📰 Sentiment**", [
+            ("Strongly positive", f"{_s['strong_up']:+d} and above", *sentiment_tone(sentiment_stored(_s["strong_up"]))[:2]),
+            ("Positive", f"{_s['up']:+d} to {_s['strong_up'] - 1:+d}", *sentiment_tone(sentiment_stored(_s["up"]))[:2]),
+            ("Mixed", f"{_s['mixed']:+d} to {_s['up'] - 1:+d}", *sentiment_tone(sentiment_stored(0))[:2]),
+            ("Negative", f"{_s['down']:+d} to {_s['mixed'] - 1:+d}", *sentiment_tone(sentiment_stored(_s["down"]))[:2]),
+            ("Strongly negative", f"{_s['down'] - 1:+d} and below", *sentiment_tone(sentiment_stored(_s["down"] - 2))[:2]),
+        ])
         st.caption(
-            "📈 Trend · 🎯 Stretch · 🔊 Flow · 📰 Sentiment all use these five shades, here and in the emails. "
-            "Indicators with their own well-known scale keep it so they match other sites: RSI and Stochastic "
-            "(0 to 100) on the chart, and Fear & Greed (0 to 100) in market sentiment."
+            "Both use the same five shades, here and in the emails, but each keeps its own lines: sentiment's "
+            "categories are the ones it has always had, converted to the -100 to +100 scale, so a mildly positive "
+            "news reading is not held to the technical readings' bar. Indicators with their own well-known scale "
+            "keep it so they match other sites: RSI and Stochastic (0 to 100) on the chart, and Fear & Greed "
+            "(0 to 100) in market sentiment."
         )
 
     with tab_scores:
@@ -6798,7 +6811,10 @@ None of these tools change the technical readings.
         st.markdown("""
 **What it is.** An AI reads recent headlines and scores each one from -100 (very negative) to +100 (very
 positive), with 0 meaning mixed or unclear. The sentiment score is their average. It is separate from the
-technical readings and never added to them.
+technical readings and never added to them. The lines between its categories are its own: **positive** from
++6, **strongly positive** from +40, **mixed** between -6 and +5, and the same below zero. The words under a
+score (**bullish** coverage from +20, **mildly bullish** from +6, **mixed**, **mildly bearish** from -7,
+**bearish** from -21) and the Positive / Mixed / Negative filters in the social panel use the same scale.
 
 **Which headlines count.** Recent news (last 7 days) that is actually about the asset. The same story from
 several outlets counts once, no single publisher dominates, and promotional filler is left out.
@@ -11442,6 +11458,8 @@ def _sentiment_story(report, coverage: str, score, color, background, arrow, not
 
 
 def _mood_coverage(score: float) -> str:
+    # Same words and lines as market_store._coverage_label, judged on the number shown.
+    score = sentiment_category_score(score)
     if score >= 60:
         return "Bullish coverage"
     if score >= 53:
