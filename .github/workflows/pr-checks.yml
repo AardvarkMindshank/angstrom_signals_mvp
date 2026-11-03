@@ -1,0 +1,22 @@
+name: PR checks
+
+# Pull requests into main (the review workflow: feature branch -> PR -> review -> approval -> merge).
+# Runs the full check suite with a read-only token: nothing is pushed anywhere, results are uploaded as
+# workflow artifacts. Works the same for pull requests from forks. The jobs live in checks.yml; required
+# checks fail the run.
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-checks-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    uses: ./.github/workflows/checks.yml
+    with:
+      publish: false
