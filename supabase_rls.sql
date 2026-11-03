@@ -1839,7 +1839,7 @@ begin
         'group:' || new_invite::text,
         gname,
         'group_invite',
-        inviter_label || ' invited you to the group ' || gname || '.'
+        inviter_label || ' invited you to the community ' || gname || '.'
     );
     return 'ok';
 exception
@@ -1934,7 +1934,7 @@ begin
         '',
         gname,
         'group_joined',
-        who || ' joined your group ' || gname || '.'
+        who || ' joined your community ' || gname || '.'
     );
 
     delete from public.user_notifications

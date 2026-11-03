@@ -1455,8 +1455,8 @@ export default function(component) {
         "<div class='count'></div>",
         "<div class='group-box' hidden>",
         "<div class='group-box-title'></div>",
-        "<input class='group-name' maxlength='40' placeholder='New group name' aria-label='New group name'>",
-        "<select class='group-pick' aria-label='Group you lead'></select>",
+        "<input class='group-name' maxlength='40' placeholder='New community name' aria-label='New community name'>",
+        "<select class='group-pick' aria-label='Community you lead'></select>",
         "<div class='group-hint'></div>",
         "<div class='group-box-actions'><button type='button' class='group-send'>Invite</button><button type='button' class='group-cancel'>Cancel</button></div>",
         "</div>",
@@ -1546,7 +1546,7 @@ export default function(component) {
         const name = nameBox ? nameBox.value.replace(/\\s+/g, " ").trim() : "";
         const group = pick ? pick.value : "";
         if (!name && !group) {
-          if (hint) hint.textContent = "Enter a name or choose a group.";
+          if (hint) hint.textContent = "Enter a name or choose a community.";
           return;
         }
         if (hint) hint.textContent = "";
@@ -1951,7 +1951,7 @@ export default function(component) {
           empty.textContent = state.person === "me"
             ? "No comments from you yet."
             : String(state.person || "").indexOf("group:") === 0
-            ? "No comments from that group yet."
+            ? "No comments from that community yet."
             : state.person === "favourites" && !favouriteSet().size
             ? "No favourites yet. Press the star beside a name."
             : items.length
@@ -2222,13 +2222,13 @@ export default function(component) {
     });
     const counts = {};
     groups.forEach((group) => {
-      const label = group.name || "Group";
+      const label = group.name || "Community";
       counts[label] = (counts[label] || 0) + 1;
     });
     return groups.map((group) => {
-      let label = group.name || "Group";
+      let label = group.name || "Community";
       if (counts[label] > 1 && !group.lead && group.leader) label = label + " (" + group.leader + ")";
-      return ["group:" + group.id, label + " (group)"];
+      return ["group:" + group.id, label + " (community)"];
     });
   }
 
@@ -2239,7 +2239,7 @@ export default function(component) {
     box.hidden = !invite;
     if (!invite) return;
     const title = box.querySelector(".group-box-title");
-    if (title) title.textContent = "Invite " + invite.name + " to a group";
+    if (title) title.textContent = "Invite " + invite.name + " to a community";
     const switched = box.dataset.user !== String(invite.id);
     if (switched) {
       box.dataset.user = String(invite.id);
@@ -2248,7 +2248,7 @@ export default function(component) {
       if (nameBox) nameBox.value = "";
       if (hint) hint.textContent = "";
     }
-    const memberWarning = "They are already in that group.";
+    const memberWarning = "They are already in that community.";
     if (String(window.socialChatNotice || "") === memberWarning) {
       const hint = box.querySelector(".group-hint");
       if (hint) hint.textContent = memberWarning;
@@ -2268,12 +2268,12 @@ export default function(component) {
     select.replaceChildren();
     const blank = document.createElement("option");
     blank.value = "";
-    blank.textContent = "Or choose a group you lead";
+    blank.textContent = "Or choose a community you lead";
     select.appendChild(blank);
     (window.socialGroups || []).filter((group) => group.lead).forEach((group) => {
       const option = document.createElement("option");
       option.value = String(group.id);
-      option.textContent = group.name || "Group";
+      option.textContent = group.name || "Community";
       select.appendChild(option);
     });
     if ([...select.options].some((option) => option.value === current)) select.value = current;
@@ -2287,7 +2287,7 @@ export default function(component) {
     button.type = "button";
     button.className = "group-invite";
     button.innerHTML = "<svg width='16' height='16' viewBox='0 0 16 16' aria-hidden='true'><circle cx='6' cy='5' r='2' fill='currentColor'/><circle cx='11' cy='5.5' r='1.6' fill='currentColor'/><path d='M1.8 13.2c.6-2.2 2.1-3.3 4.2-3.3s3.6 1.1 4.2 3.3' fill='currentColor'/><path d='M9.2 13.2c.3-1.2 1.1-2 2.3-2 1.1 0 1.9.7 2.3 2' fill='currentColor'/></svg>";
-    button.title = "Invite to a group";
+    button.title = "Invite to a community";
     button.setAttribute("aria-label", button.title);
     button.addEventListener("click", () => {
       window.socialStreamState.groupFor = { id: id, name: String(item.name || "Member") };
@@ -2511,7 +2511,7 @@ export default function(component) {
       empty.textContent = chatPerson === "me"
         ? "No chat comments from you yet."
         : String(chatPerson || "").indexOf("group:") === 0
-        ? "No chat comments from that group yet."
+        ? "No chat comments from that community yet."
         : chatPerson === "favourites" && !favouriteSet().size && !String(query).trim()
         ? "No favourites yet. Press the star beside a name."
         : "No chat comments match.";
@@ -2522,7 +2522,7 @@ export default function(component) {
     const notice = panel.querySelector(".chat-notice");
     if (notice) {
       const text = window.socialChatNotice || "";
-      const shownInGroup = text === "They are already in that group."
+      const shownInGroup = text === "They are already in that community."
         && window.socialStreamState
         && window.socialStreamState.groupFor;
       notice.hidden = !text || shownInGroup;
@@ -5406,7 +5406,7 @@ def _groups_for_stream() -> list[dict]:
             continue
         cleaned.append({
             "id": gid,
-            "name": " ".join(str(row.get("name") or "").split())[:40] or "Group",
+            "name": " ".join(str(row.get("name") or "").split())[:40] or "Community",
             "lead": bool(row.get("is_leader")),
             "leader": " ".join(str(row.get("leader_name") or "").split())[:40],
             "members": _member_ids(row.get("members")),
@@ -5836,7 +5836,7 @@ def _remove_group_member(group_id: int, person_id: str) -> str:
     if code == "ok":
         return ""
     if code == "self":
-        return "The leader stays until the group is deleted."
+        return "The leader stays until the community is deleted."
     return "That person could not be removed. Run the latest supabase_rls.sql, then try again."
 
 
@@ -5873,7 +5873,7 @@ def _group_member_list(row, group_id: int) -> None:
                 remove = st.button(
                     "×",
                     key=f"group_remove_{group_id}_{person['id']}",
-                    help="Remove from the group",
+                    help="Remove from the community",
                     type="tertiary",
                 )
         if not remove:
@@ -5890,12 +5890,12 @@ def my_groups_panel() -> None:
     """Groups you lead, and groups you belong to. Delete and Leave redraw this section."""
     groups = _load_my_groups()
     if groups is None:
-        st.caption("Groups are not ready yet. Run the latest supabase_rls.sql in the Supabase SQL editor.")
+        st.caption("Communities are not ready yet. Run the latest supabase_rls.sql in the Supabase SQL editor.")
         return
     led = [row for row in groups if row.get("is_leader")]
     joined = [row for row in groups if not row.get("is_leader")]
     if not led and not joined:
-        st.caption("You have no groups yet. Use the people icon beside a name in the social stream.")
+        st.caption("You have no communities yet. Use the people icon beside a name in the social stream.")
         return
     st.markdown(
         "<style>"
@@ -5919,13 +5919,13 @@ def my_groups_panel() -> None:
         unsafe_allow_html=True,
     )
     if led:
-        st.caption("Groups you lead")
+        st.caption("Communities you lead")
         for row in led:
             try:
                 gid = int(row.get("id"))
             except (TypeError, ValueError):
                 continue
-            name = " ".join(str(row.get("name") or "").split()) or "Group"
+            name = " ".join(str(row.get("name") or "").split()) or "Community"
             count = _group_member_count(row)
             detail = f"{count} member" if count == 1 else f"{count} members"
             delete_group = False
@@ -5935,19 +5935,19 @@ def my_groups_panel() -> None:
                 delete_group = st.button(
                     "×",
                     key=f"group_xdelete_{gid}",
-                    help="Delete this group",
+                    help="Delete this community",
                     type="tertiary",
                 )
             if delete_group:
                 st.session_state["group_delete_id"] = gid
             if st.session_state.get("group_delete_id") == gid:
-                st.caption("Delete this group? Members will lose it.")
+                st.caption("Delete this community? Members will lose it.")
                 yes, no = st.columns(2)
-                if yes.button("Delete group", key=f"group_delete_yes_{gid}", use_container_width=True):
+                if yes.button("Delete community", key=f"group_delete_yes_{gid}", use_container_width=True):
                     try:
                         supabase.rpc("delete_my_group", {"chosen_group": gid}).execute()
                     except Exception:
-                        st.warning("That group could not be deleted. Run the latest supabase_rls.sql, then try again.")
+                        st.warning("That community could not be deleted. Run the latest supabase_rls.sql, then try again.")
                     else:
                         st.session_state.pop("group_delete_id", None)
                         st.rerun()
@@ -5955,13 +5955,13 @@ def my_groups_panel() -> None:
                     st.session_state.pop("group_delete_id", None)
                     _rerun_fragment()
     if joined:
-        st.caption("Groups you belong to")
+        st.caption("Communities you belong to")
         for row in joined:
             try:
                 gid = int(row.get("id"))
             except (TypeError, ValueError):
                 continue
-            name = " ".join(str(row.get("name") or "").split()) or "Group"
+            name = " ".join(str(row.get("name") or "").split()) or "Community"
             leader = " ".join(str(row.get("leader_name") or "").split())
             label = f"{name} · {leader}" if leader else name
             leave_group = False
@@ -5971,19 +5971,19 @@ def my_groups_panel() -> None:
                 leave_group = st.button(
                     "Leave",
                     key=f"group_leave_{gid}",
-                    help="Leave group",
+                    help="Leave community",
                     type="tertiary",
                 )
             if leave_group:
                 st.session_state["group_leave_id"] = gid
             if st.session_state.get("group_leave_id") == gid:
-                st.caption("Leave this group?")
+                st.caption("Leave this community?")
                 yes, no = st.columns(2)
-                if yes.button("Leave group", key=f"group_leave_yes_{gid}", use_container_width=True):
+                if yes.button("Leave community", key=f"group_leave_yes_{gid}", use_container_width=True):
                     try:
                         supabase.rpc("leave_group", {"chosen_group": gid}).execute()
                     except Exception:
-                        st.warning("Could not leave that group. Run the latest supabase_rls.sql, then try again.")
+                        st.warning("Could not leave that community. Run the latest supabase_rls.sql, then try again.")
                     else:
                         st.session_state.pop("group_leave_id", None)
                         st.rerun()
@@ -6048,7 +6048,7 @@ with tracked_expander("👤 Account", "account", sidebar=True):
         clear_session()
         st.rerun()
 
-with tracked_expander("👥 My Groups", "my_groups", sidebar=True):
+with tracked_expander("👥 Communities", "my_groups", sidebar=True):
     my_groups_panel()
 
 def tone(score):
@@ -6344,7 +6344,7 @@ def _respond_group_invite(invite_id: int, accept: bool) -> str:
     if code == "expired":
         return "That invite has expired."
     if code == "full":
-        return "That group already has 50 members."
+        return "That community already has 50 members."
     return "That invite could not be updated. Run the latest supabase_rls.sql, then try again."
 
 
@@ -6454,8 +6454,8 @@ def notifications_panel() -> None:
                         if kind in ("invite_joined", "group_invite", "group_joined", "moderation_warning", "report_update"):
                             titles = {
                                 "invite_joined": "Invite accepted",
-                                "group_invite": "Group invite",
-                                "group_joined": "Group",
+                                "group_invite": "Community invite",
+                                "group_joined": "Community",
                                 "moderation_warning": "Warning",
                                 "report_update": "Report",
                             }
@@ -7037,12 +7037,12 @@ to your account's address; the digest also lists market sentiment and your stron
 drag the bar in the middle to split it, and 📌 **Pin** keeps it open while you use the page.
 
 **Social signals** (top): comments on sentiment scores, newest first, kept for 12 hours with their
-replies. Filter by Positive / Negative / Mixed, by asset or watchlist, and by person: Me, your groups,
+replies. Filter by Positive / Negative / Mixed, by asset or watchlist, and by person: Me, your communities,
 or your ⭐ favourites.
 
 **General chat** (bottom): a shared room not tied to an asset. Enter posts; Shift+Enter adds a line.
 
-**On any note**: 👍 / 👎 · ↩ reply · ⭐ add the person to favourites · 👥 invite them to a group ·
+**On any note**: 👍 / 👎 · ↩ reply · ⭐ add the person to favourites · 👥 invite them to a community ·
 🚩 report a comment that breaks the socials policy · 🗑️ delete your own note.
 
 **Search**, at the top, filters both halves by words, names or assets.
@@ -8816,7 +8816,7 @@ with tracked_expander("ℹ️ About", "about", sidebar=True):
         )
         st.markdown(
             "We also keep what you add: display name, bio, picture, watchlists, colours, and other "
-            "settings. Comments, chat, replies, favourites, groups, feedback, and reports of comments are "
+            "settings. Comments, chat, replies, favourites, communities, feedback, and reports of comments are "
             "stored with your account. If you turn alerts on, we store those alerts and email the ones you asked for."
         )
         st.markdown(
@@ -9184,12 +9184,12 @@ def _apply_group_invite(data) -> str:
     code = str(result.data or "").strip().strip('"')
     return {
         "ok": "Invite sent.",
-        "member": "They are already in that group.",
+        "member": "They are already in that community.",
         "pending": "They already have an invite to that group.",
         "limit": "You already have 20 groups.",
         "full": "That group already has 50 members.",
-        "name": "Enter a group name of up to 40 characters.",
-        "missing": "Choose a group you lead, or enter a new name.",
+        "name": "Enter a community name of up to 40 characters.",
+        "missing": "Choose a community you lead, or enter a new name.",
         "self": "",
     }.get(code, "That invite could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again.")
 
