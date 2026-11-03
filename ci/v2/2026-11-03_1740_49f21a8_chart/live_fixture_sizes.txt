@@ -1,0 +1,8 @@
+total 1676
+drwxr-xr-x  2 runner runner    4096 Nov  3 17:39 .
+drwxr-xr-x 10 runner runner    4096 Nov  3 17:40 ..
+-rw-r--r--  1 runner runner 1264401 Nov  3 17:39 crypto_15m_large.json
+-rw-r--r--  1 runner runner  175976 Nov  3 17:39 crypto_4h_all.json
+-rw-r--r--  1 runner runner   95115 Nov  3 17:39 crypto_4h_overlay.json
+-rw-r--r--  1 runner runner  100627 Nov  3 17:39 equity_1h.json
+-rw-r--r--  1 runner runner   62025 Nov  3 17:39 equity_daily_earnings.json
