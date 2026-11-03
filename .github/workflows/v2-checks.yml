@@ -70,9 +70,32 @@ jobs:
       - name: Live candle check (Yahoo, nothing stored)
         if: always()
         run: python chart_data_check.py --out out || true
+      - name: Browser tools
+        if: always()
+        run: |
+          npm install --no-save --silent playwright@1.63.0
+          npx playwright install --with-deps chromium > /dev/null
+      - name: Chart in a browser (made-up and live candles, desktop and emulated touch)
+        if: always()
+        run: |
+          python chart_browser_fixtures.py --out out/fixtures
+          node chart_browser_check.js out/fixtures out/browser_test || echo "made-up candles: failures" >> out/chart_failures.txt
+          python chart_browser_fixtures.py --live --out out/fixtures_live
+          node chart_browser_check.js out/fixtures_live out/browser_live || echo "live candles: failures" >> out/chart_failures.txt
+          cat out/browser_test/chart_browser.md out/browser_live/chart_browser.md >> "$GITHUB_STEP_SUMMARY" || true
+      - name: Chart inside Streamlit (reruns keep the view)
+        if: always()
+        run: |
+          streamlit run chart_streamlit_app.py --server.headless true --server.port 8599 -- out/fixtures_live > out/streamlit.log 2>&1 &
+          for i in $(seq 1 60); do curl -sf http://127.0.0.1:8599/_stcore/health && break; sleep 1; done
+          node chart_streamlit_check.js http://127.0.0.1:8599/ out/streamlit_test || echo "streamlit: failures" >> out/chart_failures.txt
+          cat out/streamlit_test/chart_streamlit.md >> "$GITHUB_STEP_SUMMARY" || true
       - name: Save
         if: always()
-        run: bash .github/scripts/save_to_reports.sh "ci/v2/$(date -u +%Y-%m-%d_%H%M)_${GITHUB_SHA::7}_chart" out/*
+        run: |
+          ls -la out/fixtures_live > out/live_fixture_sizes.txt 2>/dev/null || true
+          rm -rf out/fixtures out/fixtures_live
+          bash .github/scripts/save_to_reports.sh "ci/v2/$(date -u +%Y-%m-%d_%H%M)_${GITHUB_SHA::7}_chart" out/*
 
   overlap:
     runs-on: ubuntu-24.04

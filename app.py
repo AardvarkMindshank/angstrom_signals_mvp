@@ -3566,9 +3566,9 @@ export default function(component) {
   const findChart = () => {
     const host = bar.closest("[data-testid='stElementContainer']");
     let chart = host ? host.previousElementSibling : null;
-    while (chart && !(chart.querySelector && chart.querySelector(".js-plotly-plot"))) chart = chart.previousElementSibling;
+    while (chart && !(chart.querySelector && chart.querySelector(".js-plotly-plot, .ang-lwc"))) chart = chart.previousElementSibling;
     holder = chart || null;
-    box = chart ? chart.querySelector(".js-plotly-plot") : null;
+    box = chart ? chart.querySelector(".js-plotly-plot, .ang-lwc") : null;
   };
   const clearPreview = () => {
     findChart();
@@ -3635,6 +3635,126 @@ def _chart_resize_handle(current: int) -> None:
         st.session_state["chart_price_px"] = wanted
         save_account_settings({"chart_price_px": wanted})
         _rerun_fragment()
+
+
+# ---------------------------------------------------------------------------
+# TradingView Lightweight Charts price chart (chosen in Settings; Plotly stays available).
+# Candles: chart_data.py. Payload: lw_chart.py. Drawing: lw_chart.js. Library: static/lwc/.
+# ---------------------------------------------------------------------------
+_LW_CHART_JS = (Path(__file__).resolve().parent / "lw_chart.js").read_text(encoding="utf-8")
+_lw_chart = st.components.v2.component("lw_chart", js=_LW_CHART_JS, isolate_styles=False)
+_INTERVAL_TIPS = {
+    "15m": "15-minute candles (about the last 60 days)",
+    "1h": "1-hour candles (about the last 2 years)",
+    "4h": "4-hour candles: crypto in fixed UTC blocks, shares from the market open",
+    "1D": "Daily candles",
+    "1W": "Weekly candles (Monday to Sunday)",
+}
+
+
+def _set_chart_range(value: str) -> None:
+    st.session_state["chart_range"] = value
+
+
+def _chart_timeframe_controls() -> tuple[str, str]:
+    """Candle interval and range for the TradingView chart, saved to the account."""
+    saved = (st.session_state.get("cloud_prefs") or {}).get("settings") or {}
+    if st.session_state.get("chart_interval") not in chart_data.INTERVALS:
+        wanted = saved.get("chart_interval")
+        st.session_state["chart_interval"] = wanted if wanted in chart_data.INTERVALS else chart_data.INTERVAL_DEFAULT
+    if st.session_state.get("chart_range") not in chart_data.RANGES:
+        wanted = saved.get("chart_range")
+        st.session_state["chart_range"] = wanted if wanted in chart_data.RANGES else chart_data.RANGE_DEFAULT
+    current_interval = st.session_state["chart_interval"]
+    with st.container(horizontal=True, gap="small", key="chart_timeframe"):
+        interval = st.segmented_control(
+            "Candle interval",
+            chart_data.INTERVALS,
+            key="chart_interval",
+            label_visibility="collapsed",
+            help="Candle size. " + " · ".join(f"{k}: {v}" for k, v in _INTERVAL_TIPS.items()),
+        ) or current_interval
+
+        def _range_label(option):
+            usable, _reason = chart_data.availability(interval, option)
+            return option if usable else f"{option} ⊘"
+
+        range_key = st.segmented_control(
+            "Range",
+            chart_data.RANGES,
+            key="chart_range",
+            format_func=_range_label,
+            label_visibility="collapsed",
+            help=(
+                "How much history the chart opens on. You can still zoom and scroll beyond it. "
+                "⊘ means this interval has no candles that far back."
+            ),
+        ) or st.session_state.get("_chart_range_last") or chart_data.RANGE_DEFAULT
+    st.session_state["_chart_range_last"] = range_key
+    save_account_settings({"chart_interval": interval, "chart_range": range_key})
+    return interval, range_key
+
+
+def _tv_candles(asset_type: str, asset_key: str, interval: str, range_key: str, daily_bars: pd.DataFrame) -> dict:
+    """Candles with indicators for the chosen interval. Indicators are worked out on these
+    candles with the same calculate_indicators as everywhere else (never daily values on
+    intraday candles). Kept for the session until a new candle or price arrives."""
+    kind = "crypto" if asset_type == "Crypto" else "equity"
+    loaded = chart_data.load_candles(kind, asset_key, interval, range_key)
+    if loaded["error"] and interval in ("1D", "1W") and daily_bars is not None and not daily_bars.empty:
+        # Yahoo has no candles for this coin: the shared daily prices (the Plotly chart's data) still work.
+        if chart_data.availability(interval, range_key)[0]:
+            base = daily_bars[["open", "high", "low", "close", "volume"]]
+            candles = chart_data.group_daily(base) if interval == "1D" else chart_data.group_weekly(base)
+            if len(candles) >= chart_data.MIN_CANDLES:
+                candles = chart_data.mark_forming(candles, interval, kind)
+                days = chart_data.RANGE_DAYS[range_key]
+                start = candles.index[0] if days is None else max(
+                    candles.index[0], pd.Timestamp.now(tz="UTC") - pd.Timedelta(days=days))
+                loaded = {"candles": candles, "start": start, "session": None, "error": None,
+                          "source": "Shared daily prices (Yahoo has no candles for this coin)"
+                          + (", grouped into weeks" if interval == "1W" else "")}
+    if loaded["error"]:
+        return loaded
+    candles = loaded["candles"]
+    token = (asset_type, asset_key, interval, range_key, len(candles), str(candles.index[-1]),
+             float(candles["close"].iloc[-1]), float(candles["volume"].iloc[-1]))
+    memo = st.session_state.get("_tv_frame_memo")
+    if memo and memo[0] == token:
+        frame = memo[1]
+    else:
+        frame = calculate_indicators(candles[["open", "high", "low", "close", "volume"]])
+        frame["forming"] = candles["forming"]
+        st.session_state["_tv_frame_memo"] = (token, frame)
+    loaded["frame"] = frame
+    return loaded
+
+
+def _tv_chart(asset_type, asset_key, title, layout, tv, interval, range_key, price_px,
+              liq_record, show_earnings, stock_watchlist) -> None:
+    """Draw the TradingView chart from candles already loaded by _tv_candles."""
+    frame = tv["frame"]
+    past_reports, next_report = [], None
+    if show_earnings and asset_type != "Crypto":
+        symbol = str(asset_key).upper()
+        try:
+            past_reports = list(_past_report_dates(symbol))
+        except Exception:
+            past_reports = []
+        try:
+            next_report = load_earnings(tuple(stock_watchlist), st.session_state.get("_shared_rows")).get(symbol)
+        except Exception:
+            next_report = None
+    payload = lw_chart.build_payload(
+        frame, layout,
+        kind="crypto" if asset_type == "Crypto" else "equity",
+        interval=interval, range_key=range_key, session=tv.get("session"), range_start=tv.get("start"),
+        view_key=f"{asset_type}:{asset_key}|{interval}|{range_key}",
+        price_px=price_px, dark=_active_theme() == "dark",
+        past_reports=past_reports, next_report=next_report,
+        liquidation=liq_record, source=tv.get("source") or "", title=title,
+    )
+    _lw_chart(key="lw_chart", data=payload)
 
 
 def _section_timer(updated_at: float | None, interval: float, widget_key: str, help_text: str,
@@ -3867,6 +3987,8 @@ def _reveal_section(section_id: str, anchor: str) -> None:
 from email_brand import render_email
 import beta_emails
 import chart_plan
+import chart_data
+import lw_chart
 import news_filter
 import signals_v2
 import signals_view
@@ -4551,6 +4673,8 @@ _ACCOUNT_STATE_KEYS = (
     "show_period_changes",
     "days_history",
     "chart_engine",
+    "chart_interval",
+    "chart_range",
     "trade_markets",
     "section_layout",
     "wide_split",
@@ -10621,6 +10745,24 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                 return
 
             df_chart = calculate_indicators(df_chart)
+            # Trend, Stretch, Flow and the card under the chart always read these daily bars.
+            daily_chart = df_chart
+            use_tv = st.session_state.get("chart_engine", CHART_ENGINE_DEFAULT) == CHART_ENGINE_TV
+            tv = None
+            if use_tv:
+                tv_interval, tv_range = _chart_timeframe_controls()
+                tv = _tv_candles(asset_type, asset_key, tv_interval, tv_range, daily_chart)
+                if tv.get("error"):
+                    st.info(tv["error"], icon=":material/info:")
+                    if not chart_data.availability(tv_interval, tv_range)[0]:
+                        suggestion = chart_data.nearest_range(tv_interval, tv_range)
+                        st.button(
+                            f"Show {chart_data.RANGE_LABELS[suggestion]} instead", key="chart_range_fix",
+                            on_click=_set_chart_range, args=(suggestion,),
+                        )
+                else:
+                    # The chart's indicators are worked out on the chosen interval's candles.
+                    df_chart = tv["frame"]
             indicator_keys = chart_plan.available(df_chart.columns)
             indicator_icons = {"sma200": "📏", "ichimoku": "☁️", "macd": "〰️", "stoch": "🎚️", "adx": "🧭", "obv": "📊"}
             # Crypto charts also offer estimated liquidation levels, drawn by this page, not chart_plan.
@@ -10732,246 +10874,255 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                 chart_choices["chart_earnings"] = bool(show_earnings)
             save_account_settings(chart_choices)
             layout = chart_plan.plan(chosen_indicators, df_chart.columns, overlay_curves=overlay_curves)
-            panel_titles = {
-                "volume": "Volume", "rsi": "RSI (14)", "macd": "MACD", "stoch": "Stochastic (14, 3)",
-                "adx": "ADX (14)", "obv": "On-balance volume",
-            }
-            panels = layout["panels"]
-            row_of = {name: index + 2 for index, name in enumerate(panels)}
-            # Heights in pixels: the price chart is the user's to size (drag bar under the chart); the
-            # panels underneath keep the size they always had.
-            old_height = 750 + 150 * (len(panels) - 2) if len(panels) > 2 else 750 - 100 * (2 - len(panels))
-            panels_px = (old_height - 210) * (1 - chart_plan.PRICE_SHARE)
             price_px = _chart_price_height()
-            chart_height = int(price_px + panels_px + 210)
-            if panels:
-                layout["heights"] = [price_px / (price_px + panels_px)] + [
-                    panels_px / len(panels) / (price_px + panels_px)
-                ] * len(panels)
-            # About 34 px between panels: room for the dates under the price chart. The lower panels'
-            # titles sit inside their panels (below), so they do not need room here.
-            panel_gap = min(0.1, 34 / max(300, chart_height - 210))
-            fig = make_subplots(
-                rows=1 + len(panels), cols=1,
-                shared_xaxes=True,
-                vertical_spacing=panel_gap,
-                row_heights=layout["heights"],
-                subplot_titles=tuple([f"{title} Price"] + [panel_titles[name] for name in panels]),
-                specs=[[{"secondary_y": True}]] + [[{}] for _ in panels],
-            )
-
-            # Lower panel titles (Volume, RSI...) go inside the top-left corner of their panel, so the
-            # dates under the price chart never run into them.
-            for title_note in list(fig.layout.annotations)[1:]:
-                title_note.update(
-                    x=0.005, xanchor="left", yanchor="top", font=dict(size=11),
-                    bgcolor="rgba(127,127,127,0.12)", borderpad=2,
-                )
-
-            def _put(trace, key):
-                """Draw on the price chart's right-hand axis, or in this curve's own panel.
-                On the price chart the curve is thinner and partly see-through, so the candles lead."""
-                if key in layout["secondary"]:
-                    trace.update(opacity=0.6, line=dict(width=1.1))
-                    fig.add_trace(trace, row=1, col=1, secondary_y=True)
-                else:
-                    fig.add_trace(trace, row=row_of[key], col=1)
-
-            def _guide(key, level, colour, dash="dash"):
-                if key in layout["secondary"]:
-                    fig.add_hline(y=level, line_dash=dash, line_color=colour, opacity=0.4, row=1, col=1, secondary_y=True)
-                else:
-                    fig.add_hline(y=level, line_dash=dash, line_color=colour, opacity=0.5, row=row_of[key], col=1)
-            fig.add_trace(
-                go.Candlestick(
-                    x=df_chart.index, open=df_chart["open"], high=df_chart["high"],
-                    low=df_chart["low"], close=df_chart["close"], name="Price",
-                ),
-                row=1, col=1,
-            )
-            if "sma_20" in df_chart.columns:
-                fig.add_trace(
-                    go.Scatter(x=df_chart.index, y=df_chart["sma_20"], name="SMA 20", line=dict(color="orange", width=1.5)),
-                    row=1, col=1,
-                )
-            if "sma_50" in df_chart.columns:
-                fig.add_trace(
-                    go.Scatter(x=df_chart.index, y=df_chart["sma_50"], name="SMA 50", line=dict(color="royalblue", width=1.5)),
-                    row=1, col=1,
-                )
-            if "sma200" in layout["overlays"]:
-                fig.add_trace(
-                    go.Scatter(x=df_chart.index, y=df_chart["sma_200"], name="SMA 200", line=dict(color="#9333ea", width=1.5)),
-                    row=1, col=1,
-                )
-            if "ichimoku" in layout["overlays"]:
-                fig.add_trace(
-                    go.Scatter(x=df_chart.index, y=df_chart["ichi_span_a"], name="Cloud edge A",
-                               line=dict(color="rgba(34,197,94,0.5)", width=1), showlegend=False),
-                    row=1, col=1,
-                )
-                fig.add_trace(
-                    go.Scatter(x=df_chart.index, y=df_chart["ichi_span_b"], name="Ichimoku cloud",
-                               line=dict(color="rgba(239,68,68,0.5)", width=1), fill="tonexty",
-                               fillcolor="rgba(128,128,128,0.12)"),
-                    row=1, col=1,
-                )
-                fig.add_trace(
-                    go.Scatter(x=df_chart.index, y=df_chart["ichi_tenkan"], name="Tenkan",
-                               line=dict(color="#0ea5e9", width=1)),
-                    row=1, col=1,
-                )
-                fig.add_trace(
-                    go.Scatter(x=df_chart.index, y=df_chart["ichi_kijun"], name="Kijun",
-                               line=dict(color="#f43f5e", width=1)),
-                    row=1, col=1,
-                )
-
-            upper_name = find_column(df_chart, "BBU_")
-            lower_name = find_column(df_chart, "BBL_")
-            if upper_name and lower_name:
-                fig.add_trace(
-                    go.Scatter(
-                        x=df_chart.index, y=df_chart[upper_name], name="BB Upper",
-                        line=dict(color="gray", width=1, dash="dot"), showlegend=False,
-                    ),
-                    row=1, col=1,
-                )
-                fig.add_trace(
-                    go.Scatter(
-                        x=df_chart.index, y=df_chart[lower_name], name="BB Lower",
-                        line=dict(color="gray", width=1, dash="dot"), fill="tonexty",
-                        fillcolor="rgba(128,128,128,0.08)", showlegend=False,
-                    ),
-                    row=1, col=1,
-                )
-
             liq_record = _liquidation_record(asset_key) if liq_on else None
-            if liq_on:
-                _draw_liquidation_levels(fig, liq_record, df_chart.index[-1])
-
-            colors = [
-                "green" if df_chart["close"].iloc[i] >= df_chart["open"].iloc[i] else "red"
-                for i in range(len(df_chart))
-            ]
-            fig.add_trace(
-                go.Bar(x=df_chart.index, y=df_chart["volume"], name="Volume", marker_color=colors, opacity=0.6,
-                       showlegend=False),
-                row=row_of["volume"], col=1,
-            )
-            if "rsi" in df_chart.columns:
-                _put(go.Scatter(x=df_chart.index, y=df_chart["rsi"], name="RSI", line=dict(color="purple", width=1.5)), "rsi")
-                _guide("rsi", 70, "red")
-                _guide("rsi", 30, "green")
-                if "rsi" not in layout["secondary"]:
-                    _guide("rsi", 50, "gray", "dot")
-            if "macd" in row_of:
-                macd_row = row_of["macd"]
-                hist_col = find_column(df_chart, "MACDh_")
-                line_col = find_column(df_chart, "MACD_")
-                signal_col = find_column(df_chart, "MACDs_")
-                if hist_col:
-                    hist = df_chart[hist_col]
-                    fig.add_trace(
-                        go.Bar(x=df_chart.index, y=hist, name="MACD histogram", opacity=0.6,
-                               marker_color=["green" if (v or 0) >= 0 else "red" for v in hist]),
-                        row=macd_row, col=1,
+            if use_tv:
+                if tv and not tv.get("error"):
+                    _tv_chart(
+                        asset_type, asset_key, title, layout, tv, tv_interval, tv_range, price_px,
+                        liq_record, show_earnings, stock_watchlist,
                     )
-                if line_col:
-                    fig.add_trace(go.Scatter(x=df_chart.index, y=df_chart[line_col], name="MACD",
-                                             line=dict(color="royalblue", width=1.5)), row=macd_row, col=1)
-                if signal_col:
-                    fig.add_trace(go.Scatter(x=df_chart.index, y=df_chart[signal_col], name="MACD signal",
-                                             line=dict(color="orange", width=1.5)), row=macd_row, col=1)
-            if "stoch" in layout["panels"] + layout["secondary"]:
-                _put(go.Scatter(x=df_chart.index, y=df_chart["stoch_k"], name="Stoch %K",
-                                line=dict(color="#0ea5e9", width=1.5)), "stoch")
-                if "stoch" not in layout["secondary"]:
-                    _guide("stoch", 80, "red")
-                    _guide("stoch", 20, "green")
-            if "adx" in layout["panels"] + layout["secondary"]:
-                _put(go.Scatter(x=df_chart.index, y=df_chart["adx"], name="ADX",
-                                line=dict(color="#a16207", width=1.5)), "adx")
-                if "adx" not in layout["secondary"]:
-                    _guide("adx", 25, "gray")
-            if "obv" in row_of:
-                obv_row = row_of["obv"]
-                fig.add_trace(go.Scatter(x=df_chart.index, y=df_chart["obv"], name="OBV",
-                                         line=dict(color="#14b8a6", width=1.5)), row=obv_row, col=1)
-                if "obv_sma_20" in df_chart.columns:
-                    fig.add_trace(go.Scatter(x=df_chart.index, y=df_chart["obv_sma_20"], name="OBV average",
-                                             line=dict(color="orange", width=1.2, dash="dot")), row=obv_row, col=1)
-
-            earnings_on = None
-            if show_earnings and stock_watchlist:
-                try:
-                    earnings_on = load_earnings(
-                        tuple(stock_watchlist), st.session_state.get("_shared_rows")
-                    ).get(str(asset_key).upper())
-                except Exception:
-                    earnings_on = None
-            if show_earnings:
-                try:
-                    chart_start = pd.Timestamp(df_chart.index[0]).tz_localize(None)
-                    for past_day in _past_report_dates(str(asset_key).upper()):
-                        if pd.Timestamp(past_day) >= chart_start:
-                            fig.add_vline(x=past_day, line_dash="dot", line_color="#f59e0b", line_width=1.5, opacity=0.6)
-                except Exception:
-                    pass
-            if earnings_on:
-                try:
-                    report_day = pd.Timestamp(earnings_on).tz_localize(None).normalize()
-                    last_bar = pd.Timestamp(df_chart.index[-1]).tz_localize(None).normalize()
-                    first_bar = pd.Timestamp(df_chart.index[0]).tz_localize(None)
-                    if last_bar <= report_day <= last_bar + pd.Timedelta(days=42):
-                        fig.add_vline(x=report_day.isoformat(), line_dash="dash", line_color="#f59e0b", line_width=2, opacity=0.9)
-                        fig.add_annotation(
-                            x=report_day.isoformat(), y=1, yref="paper", yanchor="bottom",
-                            text=f"Earnings {report_day:%d %b}", showarrow=False,
-                            font=dict(color="#f59e0b", size=12),
-                        )
-                        pad = max(3, (report_day - last_bar).days // 10)
-                        fig.update_xaxes(range=[first_bar.isoformat(), (report_day + pd.Timedelta(days=pad)).isoformat()])
-                except Exception:
-                    pass
-
-            fig.update_layout(
-                height=chart_height,
-                xaxis_rangeslider_visible=False,
-                showlegend=True,
-                # The legend sits under the chart, in its own strip, so it never meets the toolbar
-                # that appears top right when the mouse is over the chart.
-                legend=dict(orientation="h", yref="container", y=0, yanchor="bottom", xref="paper", x=0, xanchor="left",
-                            font=dict(size=11)),
-                margin=dict(t=60, b=150),
-            )
-            # Dates under the price chart as well as at the very bottom, with a tick at each month start.
-            try:
-                spacing = month_ticks(df_chart.index[0], df_chart.index[-1])
-            except Exception:
-                spacing = "M1"
-            fig.update_xaxes(
-                ticks="outside", ticklen=6, tickwidth=1, dtick=spacing, tick0="2000-01-01",
-                tickformat="%b '%y", showline=True, linewidth=1,
-                minor=dict(ticks="outside", ticklen=3, dtick=7 * 24 * 60 * 60 * 1000, tick0="2000-01-03")
-                if spacing == "M1" else None,
-            )
-            fig.update_xaxes(showticklabels=True, row=1, col=1)
-            fig.update_yaxes(title_text="Price", row=1, col=1)
-            fig.update_yaxes(title_text="Volume", row=row_of["volume"], col=1)
-            if "rsi" in row_of:
-                fig.update_yaxes(title_text="RSI", range=[0, 100], row=row_of["rsi"], col=1)
-            if "stoch" in row_of:
-                fig.update_yaxes(range=[0, 100], row=row_of["stoch"], col=1)
-            if layout["secondary"]:
-                fig.update_yaxes(
-                    title_text="0 to 100", range=[0, 100], showgrid=False,
-                    tickmode="array", tickvals=[0, 25, 50, 75, 100],
-                    row=1, col=1, secondary_y=True,
+                    _chart_resize_handle(price_px)
+            else:
+                panel_titles = {
+                    "volume": "Volume", "rsi": "RSI (14)", "macd": "MACD", "stoch": "Stochastic (14, 3)",
+                    "adx": "ADX (14)", "obv": "On-balance volume",
+                }
+                panels = layout["panels"]
+                row_of = {name: index + 2 for index, name in enumerate(panels)}
+                # Heights in pixels: the price chart is the user's to size (drag bar under the chart); the
+                # panels underneath keep the size they always had.
+                old_height = 750 + 150 * (len(panels) - 2) if len(panels) > 2 else 750 - 100 * (2 - len(panels))
+                panels_px = (old_height - 210) * (1 - chart_plan.PRICE_SHARE)
+                price_px = _chart_price_height()
+                chart_height = int(price_px + panels_px + 210)
+                if panels:
+                    layout["heights"] = [price_px / (price_px + panels_px)] + [
+                        panels_px / len(panels) / (price_px + panels_px)
+                    ] * len(panels)
+                # About 34 px between panels: room for the dates under the price chart. The lower panels'
+                # titles sit inside their panels (below), so they do not need room here.
+                panel_gap = min(0.1, 34 / max(300, chart_height - 210))
+                fig = make_subplots(
+                    rows=1 + len(panels), cols=1,
+                    shared_xaxes=True,
+                    vertical_spacing=panel_gap,
+                    row_heights=layout["heights"],
+                    subplot_titles=tuple([f"{title} Price"] + [panel_titles[name] for name in panels]),
+                    specs=[[{"secondary_y": True}]] + [[{}] for _ in panels],
                 )
-            _paint_chart(fig)
-            st.plotly_chart(fig, width="stretch")
-            _chart_resize_handle(price_px)
+
+                # Lower panel titles (Volume, RSI...) go inside the top-left corner of their panel, so the
+                # dates under the price chart never run into them.
+                for title_note in list(fig.layout.annotations)[1:]:
+                    title_note.update(
+                        x=0.005, xanchor="left", yanchor="top", font=dict(size=11),
+                        bgcolor="rgba(127,127,127,0.12)", borderpad=2,
+                    )
+
+                def _put(trace, key):
+                    """Draw on the price chart's right-hand axis, or in this curve's own panel.
+                    On the price chart the curve is thinner and partly see-through, so the candles lead."""
+                    if key in layout["secondary"]:
+                        trace.update(opacity=0.6, line=dict(width=1.1))
+                        fig.add_trace(trace, row=1, col=1, secondary_y=True)
+                    else:
+                        fig.add_trace(trace, row=row_of[key], col=1)
+
+                def _guide(key, level, colour, dash="dash"):
+                    if key in layout["secondary"]:
+                        fig.add_hline(y=level, line_dash=dash, line_color=colour, opacity=0.4, row=1, col=1, secondary_y=True)
+                    else:
+                        fig.add_hline(y=level, line_dash=dash, line_color=colour, opacity=0.5, row=row_of[key], col=1)
+                fig.add_trace(
+                    go.Candlestick(
+                        x=df_chart.index, open=df_chart["open"], high=df_chart["high"],
+                        low=df_chart["low"], close=df_chart["close"], name="Price",
+                    ),
+                    row=1, col=1,
+                )
+                if "sma_20" in df_chart.columns:
+                    fig.add_trace(
+                        go.Scatter(x=df_chart.index, y=df_chart["sma_20"], name="SMA 20", line=dict(color="orange", width=1.5)),
+                        row=1, col=1,
+                    )
+                if "sma_50" in df_chart.columns:
+                    fig.add_trace(
+                        go.Scatter(x=df_chart.index, y=df_chart["sma_50"], name="SMA 50", line=dict(color="royalblue", width=1.5)),
+                        row=1, col=1,
+                    )
+                if "sma200" in layout["overlays"]:
+                    fig.add_trace(
+                        go.Scatter(x=df_chart.index, y=df_chart["sma_200"], name="SMA 200", line=dict(color="#9333ea", width=1.5)),
+                        row=1, col=1,
+                    )
+                if "ichimoku" in layout["overlays"]:
+                    fig.add_trace(
+                        go.Scatter(x=df_chart.index, y=df_chart["ichi_span_a"], name="Cloud edge A",
+                                   line=dict(color="rgba(34,197,94,0.5)", width=1), showlegend=False),
+                        row=1, col=1,
+                    )
+                    fig.add_trace(
+                        go.Scatter(x=df_chart.index, y=df_chart["ichi_span_b"], name="Ichimoku cloud",
+                                   line=dict(color="rgba(239,68,68,0.5)", width=1), fill="tonexty",
+                                   fillcolor="rgba(128,128,128,0.12)"),
+                        row=1, col=1,
+                    )
+                    fig.add_trace(
+                        go.Scatter(x=df_chart.index, y=df_chart["ichi_tenkan"], name="Tenkan",
+                                   line=dict(color="#0ea5e9", width=1)),
+                        row=1, col=1,
+                    )
+                    fig.add_trace(
+                        go.Scatter(x=df_chart.index, y=df_chart["ichi_kijun"], name="Kijun",
+                                   line=dict(color="#f43f5e", width=1)),
+                        row=1, col=1,
+                    )
+
+                upper_name = find_column(df_chart, "BBU_")
+                lower_name = find_column(df_chart, "BBL_")
+                if upper_name and lower_name:
+                    fig.add_trace(
+                        go.Scatter(
+                            x=df_chart.index, y=df_chart[upper_name], name="BB Upper",
+                            line=dict(color="gray", width=1, dash="dot"), showlegend=False,
+                        ),
+                        row=1, col=1,
+                    )
+                    fig.add_trace(
+                        go.Scatter(
+                            x=df_chart.index, y=df_chart[lower_name], name="BB Lower",
+                            line=dict(color="gray", width=1, dash="dot"), fill="tonexty",
+                            fillcolor="rgba(128,128,128,0.08)", showlegend=False,
+                        ),
+                        row=1, col=1,
+                    )
+
+                if liq_on:
+                    _draw_liquidation_levels(fig, liq_record, df_chart.index[-1])
+
+                colors = [
+                    "green" if df_chart["close"].iloc[i] >= df_chart["open"].iloc[i] else "red"
+                    for i in range(len(df_chart))
+                ]
+                fig.add_trace(
+                    go.Bar(x=df_chart.index, y=df_chart["volume"], name="Volume", marker_color=colors, opacity=0.6,
+                           showlegend=False),
+                    row=row_of["volume"], col=1,
+                )
+                if "rsi" in df_chart.columns:
+                    _put(go.Scatter(x=df_chart.index, y=df_chart["rsi"], name="RSI", line=dict(color="purple", width=1.5)), "rsi")
+                    _guide("rsi", 70, "red")
+                    _guide("rsi", 30, "green")
+                    if "rsi" not in layout["secondary"]:
+                        _guide("rsi", 50, "gray", "dot")
+                if "macd" in row_of:
+                    macd_row = row_of["macd"]
+                    hist_col = find_column(df_chart, "MACDh_")
+                    line_col = find_column(df_chart, "MACD_")
+                    signal_col = find_column(df_chart, "MACDs_")
+                    if hist_col:
+                        hist = df_chart[hist_col]
+                        fig.add_trace(
+                            go.Bar(x=df_chart.index, y=hist, name="MACD histogram", opacity=0.6,
+                                   marker_color=["green" if (v or 0) >= 0 else "red" for v in hist]),
+                            row=macd_row, col=1,
+                        )
+                    if line_col:
+                        fig.add_trace(go.Scatter(x=df_chart.index, y=df_chart[line_col], name="MACD",
+                                                 line=dict(color="royalblue", width=1.5)), row=macd_row, col=1)
+                    if signal_col:
+                        fig.add_trace(go.Scatter(x=df_chart.index, y=df_chart[signal_col], name="MACD signal",
+                                                 line=dict(color="orange", width=1.5)), row=macd_row, col=1)
+                if "stoch" in layout["panels"] + layout["secondary"]:
+                    _put(go.Scatter(x=df_chart.index, y=df_chart["stoch_k"], name="Stoch %K",
+                                    line=dict(color="#0ea5e9", width=1.5)), "stoch")
+                    if "stoch" not in layout["secondary"]:
+                        _guide("stoch", 80, "red")
+                        _guide("stoch", 20, "green")
+                if "adx" in layout["panels"] + layout["secondary"]:
+                    _put(go.Scatter(x=df_chart.index, y=df_chart["adx"], name="ADX",
+                                    line=dict(color="#a16207", width=1.5)), "adx")
+                    if "adx" not in layout["secondary"]:
+                        _guide("adx", 25, "gray")
+                if "obv" in row_of:
+                    obv_row = row_of["obv"]
+                    fig.add_trace(go.Scatter(x=df_chart.index, y=df_chart["obv"], name="OBV",
+                                             line=dict(color="#14b8a6", width=1.5)), row=obv_row, col=1)
+                    if "obv_sma_20" in df_chart.columns:
+                        fig.add_trace(go.Scatter(x=df_chart.index, y=df_chart["obv_sma_20"], name="OBV average",
+                                                 line=dict(color="orange", width=1.2, dash="dot")), row=obv_row, col=1)
+
+                earnings_on = None
+                if show_earnings and stock_watchlist:
+                    try:
+                        earnings_on = load_earnings(
+                            tuple(stock_watchlist), st.session_state.get("_shared_rows")
+                        ).get(str(asset_key).upper())
+                    except Exception:
+                        earnings_on = None
+                if show_earnings:
+                    try:
+                        chart_start = pd.Timestamp(df_chart.index[0]).tz_localize(None)
+                        for past_day in _past_report_dates(str(asset_key).upper()):
+                            if pd.Timestamp(past_day) >= chart_start:
+                                fig.add_vline(x=past_day, line_dash="dot", line_color="#f59e0b", line_width=1.5, opacity=0.6)
+                    except Exception:
+                        pass
+                if earnings_on:
+                    try:
+                        report_day = pd.Timestamp(earnings_on).tz_localize(None).normalize()
+                        last_bar = pd.Timestamp(df_chart.index[-1]).tz_localize(None).normalize()
+                        first_bar = pd.Timestamp(df_chart.index[0]).tz_localize(None)
+                        if last_bar <= report_day <= last_bar + pd.Timedelta(days=42):
+                            fig.add_vline(x=report_day.isoformat(), line_dash="dash", line_color="#f59e0b", line_width=2, opacity=0.9)
+                            fig.add_annotation(
+                                x=report_day.isoformat(), y=1, yref="paper", yanchor="bottom",
+                                text=f"Earnings {report_day:%d %b}", showarrow=False,
+                                font=dict(color="#f59e0b", size=12),
+                            )
+                            pad = max(3, (report_day - last_bar).days // 10)
+                            fig.update_xaxes(range=[first_bar.isoformat(), (report_day + pd.Timedelta(days=pad)).isoformat()])
+                    except Exception:
+                        pass
+
+                fig.update_layout(
+                    height=chart_height,
+                    xaxis_rangeslider_visible=False,
+                    showlegend=True,
+                    # The legend sits under the chart, in its own strip, so it never meets the toolbar
+                    # that appears top right when the mouse is over the chart.
+                    legend=dict(orientation="h", yref="container", y=0, yanchor="bottom", xref="paper", x=0, xanchor="left",
+                                font=dict(size=11)),
+                    margin=dict(t=60, b=150),
+                )
+                # Dates under the price chart as well as at the very bottom, with a tick at each month start.
+                try:
+                    spacing = month_ticks(df_chart.index[0], df_chart.index[-1])
+                except Exception:
+                    spacing = "M1"
+                fig.update_xaxes(
+                    ticks="outside", ticklen=6, tickwidth=1, dtick=spacing, tick0="2000-01-01",
+                    tickformat="%b '%y", showline=True, linewidth=1,
+                    minor=dict(ticks="outside", ticklen=3, dtick=7 * 24 * 60 * 60 * 1000, tick0="2000-01-03")
+                    if spacing == "M1" else None,
+                )
+                fig.update_xaxes(showticklabels=True, row=1, col=1)
+                fig.update_yaxes(title_text="Price", row=1, col=1)
+                fig.update_yaxes(title_text="Volume", row=row_of["volume"], col=1)
+                if "rsi" in row_of:
+                    fig.update_yaxes(title_text="RSI", range=[0, 100], row=row_of["rsi"], col=1)
+                if "stoch" in row_of:
+                    fig.update_yaxes(range=[0, 100], row=row_of["stoch"], col=1)
+                if layout["secondary"]:
+                    fig.update_yaxes(
+                        title_text="0 to 100", range=[0, 100], showgrid=False,
+                        tickmode="array", tickvals=[0, 25, 50, 75, 100],
+                        row=1, col=1, secondary_y=True,
+                    )
+                _paint_chart(fig)
+                st.plotly_chart(fig, width="stretch")
+                _chart_resize_handle(price_px)
             if liq_on:
                 st.caption(_liquidation_caption(liq_record))
 
@@ -10982,14 +11133,14 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             result = (matched or {}).get("signals") if isinstance((matched or {}).get("signals"), dict) else None
             if result is None:
                 full, _full_err = _stored_bars(asset_type, asset_key, signals_v2.SCORING_BARS)
-                source = full if full is not None and not full.empty else df_chart
-                result = signals_v2.score(calculate_indicators(source) if source is not df_chart else df_chart, asset_type)
+                source = full if full is not None and not full.empty else daily_chart
+                result = signals_v2.score(calculate_indicators(source) if source is not daily_chart else daily_chart, asset_type)
             card_col, change_col = st.columns([3, 1])
             with card_col:
                 st.html(signals_view.asset_card(result))
             change = (matched or {}).get("change_7d")
-            if change is None and "change_7d" in df_chart.columns:
-                change = signals_v2._num(df_chart["change_7d"].iloc[-1])
+            if change is None and "change_7d" in daily_chart.columns:
+                change = signals_v2._num(daily_chart["change_7d"].iloc[-1])
             if change is not None:
                 change_color = "#15803d" if change > 0 else "#b91c1c" if change < 0 else "#6b7280"
                 change_col.markdown(
@@ -11014,9 +11165,9 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
 
         sentiment_label = crypto_watchlist[asset_key] if asset_type == "Crypto" else stock_watchlist[asset_key]
         with _timed("section: max pain"):
-            show_max_pain(asset_type, asset_key, title, float(df_chart["close"].iloc[-1]))
+            show_max_pain(asset_type, asset_key, title, float(daily_chart["close"].iloc[-1]))
         with _timed("section: leverage & liquidations"):
-            show_leverage(asset_type, asset_key, title, float(df_chart["close"].iloc[-1]))
+            show_leverage(asset_type, asset_key, title, float(daily_chart["close"].iloc[-1]))
         with _timed("section: market sentiment"), sentiment_slot:
             show_market_sentiment(
                 asset_type,
@@ -11025,7 +11176,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                 crypto_ticker(asset_key) if asset_type == "Crypto" else asset_key,
             )
         with _timed("section: signal matrix"):
-            show_signal_matrix(asset_type, asset_key, title, df_chart)
+            show_signal_matrix(asset_type, asset_key, title, daily_chart)
     # Outside both wide columns, so it cannot push the chart header down.
     _scroll_chart(
         key="scroll_to_chart",

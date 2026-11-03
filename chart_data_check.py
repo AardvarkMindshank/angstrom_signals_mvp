@@ -37,9 +37,12 @@ def _times(candles, interval, kind, session):
 def _matches(big, small, label):
     """Every big candle equals the small candles inside it."""
     problems = 0
+    checked = 0
     starts = list(big.index)
     for i, start in enumerate(starts[:-1]):
         end = starts[i + 1]
+        if start < small.index[0]:
+            continue  # only partly covered by the smaller candles we fetched
         inside = small[(small.index >= start) & (small.index < end)]
         if inside.empty:
             continue
@@ -50,8 +53,9 @@ def _matches(big, small, label):
             and abs(row["high"] - inside["high"].max()) < 1e-9
             and abs(row["low"] - inside["low"].min()) < 1e-9
         )
+        checked += 1
         problems += 0 if ok else 1
-    return f"{label}: {len(starts) - 1 - problems}/{len(starts) - 1} match"
+    return f"{label}: {checked - problems}/{checked} match"
 
 
 def main() -> int:
