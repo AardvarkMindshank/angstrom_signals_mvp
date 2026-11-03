@@ -4672,7 +4672,7 @@ _ACCOUNT_STATE_KEYS = (
     "show_extra_metrics",
     "show_period_changes",
     "days_history",
-    "chart_style",
+    "price_chart",
     "chart_interval",
     "chart_range",
     "trade_markets",
@@ -7082,11 +7082,11 @@ CHART_ENGINE_TV = "TradingView"
 CHART_ENGINE_PLOTLY = "Plotly (original)"
 CHART_ENGINES = (CHART_ENGINE_TV, CHART_ENGINE_PLOTLY)
 CHART_ENGINE_DEFAULT = CHART_ENGINE_TV
-# Saved under this key. The earlier key ("chart_engine") was written on every visit while Plotly was
+# Saved under this key. The earlier keys ("chart_engine", then "chart_style") were written on every visit while Plotly was
 # the default, so it cannot tell a real choice from the old default; every account starts on
 # TradingView once, and any choice made after that is kept. The widget key is new for the same reason:
 # an open browser tab can bring back the old widget value.
-CHART_ENGINE_SETTING = "chart_style"
+CHART_ENGINE_SETTING = "price_chart"
 
 
 def _trade_choice(crypto: bool, equities: bool) -> str:
@@ -7299,13 +7299,13 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
     )
     st.divider()
     st.markdown("**Price chart**")
-    if "chart_style" not in st.session_state:
+    if "price_chart" not in st.session_state:
         saved_engine = settings.get(CHART_ENGINE_SETTING)
-        st.session_state.chart_style = saved_engine if saved_engine in CHART_ENGINES else CHART_ENGINE_DEFAULT
+        st.session_state.price_chart = saved_engine if saved_engine in CHART_ENGINES else CHART_ENGINE_DEFAULT
     chart_engine = st.radio(
         "Price chart",
         CHART_ENGINES,
-        key="chart_style",
+        key="price_chart",
         persist_state="session",
         label_visibility="collapsed",
         help=(
@@ -10782,7 +10782,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             df_chart = calculate_indicators(df_chart)
             # Trend, Stretch, Flow and the card under the chart always read these daily bars.
             daily_chart = df_chart
-            use_tv = st.session_state.get("chart_style", CHART_ENGINE_DEFAULT) == CHART_ENGINE_TV
+            use_tv = st.session_state.get("price_chart", CHART_ENGINE_DEFAULT) == CHART_ENGINE_TV
             tv = None
             if use_tv:
                 tv_interval, tv_range = _chart_timeframe_controls()
