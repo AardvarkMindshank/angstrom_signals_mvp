@@ -42,13 +42,17 @@ def evaluate_one(ref: SignalRef, ctx: DataContext) -> SignalResult:
         return SignalResult(status=UNSUPPORTED, notes=[f"{definition.name} does not apply to {ctx.subject}."], **base)
     if ref.timeframe not in definition.timeframes:
         return SignalResult(status=UNSUPPORTED, notes=[f"{definition.name} does not support {ref.timeframe}."], **base)
-    fingerprint = ctx.fingerprint(definition.requires, ref.timeframe)
+    # Signals built from other signals are not cached themselves: their parts are, and the parts'
+    # data (other timeframes) is not in this signal's fingerprint.
+    cacheable = "signals" not in definition.requires
+    fingerprint = ctx.fingerprint(definition.requires, ref.timeframe) if cacheable else ""
     cache_key = (ref.instance_key, ctx.subject, fingerprint)
-    with _LOCK:
-        hit = _CACHE.get(cache_key)
-        if hit and time.time() - hit[0] < CACHE_SECONDS:
-            _CACHE.move_to_end(cache_key)
-            return hit[1]
+    if cacheable:
+        with _LOCK:
+            hit = _CACHE.get(cache_key)
+            if hit and time.time() - hit[0] < CACHE_SECONDS:
+                _CACHE.move_to_end(cache_key)
+                return hit[1]
     try:
         result = definition.compute(ctx, ref.timeframe, dict(ref.params))
         if not isinstance(result, SignalResult):
@@ -58,7 +62,7 @@ def evaluate_one(ref: SignalRef, ctx: DataContext) -> SignalResult:
         result.unit = result.unit or definition.unit
     except Exception as exc:
         result = SignalResult(status=ERROR, notes=[f"Calculation failed: {exc}"], **base)
-    if result.status != ERROR:  # errors are retried next time
+    if cacheable and result.status != ERROR:  # errors are retried next time
         with _LOCK:
             _CACHE[cache_key] = (time.time(), result)
             while len(_CACHE) > CACHE_SIZE:
