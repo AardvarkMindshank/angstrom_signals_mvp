@@ -99,15 +99,42 @@ Backfilled flow history is flagged; `point_in_time=True` drops it for research r
 | Efficiency ratio vs ADX (Spearman) | 0.46 | 0.44 |
 | Efficiency ratio vs strength of the Trend reading | 0.58 | 0.54 |
 | Divergences per 1,000 daily candles (each type) | 4–14 | 5–12 |
-| Share invalidated within 30 candles | 45–67% | 46–57% |
+| Share invalidated within 30 candles (see note) | 45–67% | 46–57% |
 | Zones per asset (median) / width | 4 / 1.3% | 4 / 2.0% |
 
   Reading: trend and momentum direction mostly repeat each other (same price inputs), so a Group should not count both
-  as independent confirmation; swing structure adds the most distinct view. Roughly half of all divergences fail
-  within 30 candles, so a divergence alone is weak evidence. None of this is predictive testing.
+  as independent confirmation; swing structure adds the most distinct view.
+
+  **What "about half of divergences fail within 30 candles" means, exactly.** Data: daily candles of the development
+  period only (before the 2024-10-30 hold-out), 61 stocks and 25 coins. Every RSI and MACD-histogram divergence was
+  found with the default settings (swings confirmed 5 candles each side, 5–60 candles between the two swings). For
+  each confirmed divergence the check looked at the next 30 daily closes after its confirmation candle:
+  - *invalidated* = one of those closes went beyond the second swing's price (below the swing low for a bullish
+    divergence, above the swing high for a bearish one);
+  - *expired* = none did, so the 30-candle window ran out with the level intact.
+
+  Per divergence type, 45–67% (stocks) and 46–57% (crypto) were invalidated, and almost all the rest expired (a few at
+  the very end of each history were still inside their window). "Fail" therefore means only that price broke the
+  divergence's own invalidation level; it says nothing about profit or loss, and no forward returns were measured.
+  Bearish divergences on stocks were invalidated more often (62–67%), consistent with a rising market in that period.
+  The numbers describe how often the pattern's defining level breaks, not whether the pattern predicts anything.
 - **Regression**: full suite 522 passed in CI (with pandas-ta and Streamlit), including the inspector run inside
   Streamlit's test harness. Existing readings, alerts and settings are untouched (no imports from the library in
   scoring, alerts, evidence or the worker).
+
+## 4a. Conventions (documented, configurable, not tuned on returns)
+
+| Convention | Default | Parameter | Effect |
+|---|---|---|---|
+| Swing confirmation | 5 candles each side | `left`, `right` | Swings, structure, zones and divergences are confirmed `right` candles late |
+| Divergence lifetime | 30 candles after confirmation | `active_bars` | Within the window: *confirmed* (active) until a close crosses the invalidation level (*invalidated*, with `invalidated_at`). After it: *expired* (`expired_at`) if the level held. Expired and invalidated are always separate. |
+| Divergence swing spacing | 5–60 candles | `min_gap`, `max_gap` | Which pairs of swings are compared |
+| Zone grouping width | 0.5 × ATR(14) | `width_atr` | Neighbouring swings closer than this join one zone |
+| Zone width cap | 2 × grouping width | `max_width_mult` | A zone never spans more than this; longer chains split into separate zones |
+| Zone strength | ≥ 2 swings; 3 per side | `min_touches`, `per_side` | Weaker groups and extra zones are not shown as zones but stay in the evidence: `ungrouped_swings` and `other_zones` |
+| Regime volatility words | < 20th percentile compressed, > 80th expanded | (labels only) | The percentile number is always given |
+
+Every parameter is part of the `SignalRef`, so a Group can use different values without a new signal version.
 
 ## 5. Resource impact
 

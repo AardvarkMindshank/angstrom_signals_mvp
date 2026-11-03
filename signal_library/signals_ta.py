@@ -159,7 +159,10 @@ def _divergence(ctx, timeframe, params, osc_name, osc_series_fn):
             out["invalidated_at"] = _when(ctx, loaded, timeframe, frame, event["invalidated_index"])[1]
         if "expires_index" in event:
             n = len(frame)
+            out["active_window_candles"] = params["active_bars"]
             out["expires_after_candles"] = event["expires_index"] - (n - 1) if event["expires_index"] > n - 1 else 0
+            if event["status"] == "expired":
+                out["expired_at"] = _when(ctx, loaded, timeframe, frame, event["expires_index"])[1]
         for key in ("confirmed_index", "invalidated_index", "expires_index"):
             out.pop(key, None)
         for p in out["price_pivots"] + out["indicator_pivots"]:
@@ -289,12 +292,15 @@ def structure_breaks(ctx, timeframe, params):
             "lookback": Param(300, "int", 50, 2000, doc="candles back to collect swing points"),
             "width_atr": Param(0.5, "float", 0.1, 3.0, doc="swings within this many ATRs of each other form one zone"),
             "min_touches": Param(2, "int", 1, 10, doc="fewest swing points for a zone"),
-            "per_side": Param(3, "int", 1, 10, doc="most zones kept above and below price")},
+            "per_side": Param(3, "int", 1, 10, doc="most zones kept above and below price"),
+            "max_width_mult": Param(2.0, "float", 1.0, 10.0,
+                                    doc="a zone spans at most this many grouping widths (convention, not tuned)")},
     calculation=("Confirmed swing points from the lookback are sorted by price and grouped while neighbours are within "
-                 "width_atr x ATR(14), and no group grows wider than twice that. Each group with at least min_touches swings is a zone spanning their prices. The "
+                 "width_atr x ATR(14), and no group grows wider than max_width_mult times that (default 2, a convention). Each group with at least min_touches swings is a zone spanning their prices. The "
                  "strongest per_side zones above (resistance) and below (support) the last close are kept: most "
                  "touches first, then most recent. Each zone gives its distance from price in price, % and ATRs, "
-                 "the latest close through it and any retest after that."),
+                 "the latest close through it and any retest after that. Swings in groups below min_touches and zones beyond "
+                 "per_side are kept in the evidence (ungrouped_swings, other_zones), not discarded."),
     interpretation="Price areas where swings have repeatedly turned. Values are real prices, not scores.",
     limitations=("Zones from few touches are weak; they are dropped below min_touches. No volume information "
                  "(volume profile is on the roadmap). A zone far from price may be irrelevant for the current trade."),
@@ -307,11 +313,13 @@ def level_zones(ctx, timeframe, params):
     if not atr:
         return SignalResult(ref={}, subject=ctx.subject, status=INSUFFICIENT, notes=["ATR not available."])
     found = sw.zones(frame["high"], frame["low"], frame["close"], atr, params["left"], params["right"],
-                     params["lookback"], params["width_atr"], params["min_touches"], params["per_side"])
+                     params["lookback"], params["width_atr"], params["min_touches"], params["per_side"],
+                     params["max_width_mult"])
 
     def stamp(z):
         z = dict(z)
         z["last_touch"] = iso(frame.index[z.pop("last_touch_index")])
+        z["swing_times"] = [iso(frame.index[i]) for i in z.pop("swing_indexes", [])]
         for key in ("broken_index", "retest_index"):
             idx = z.pop(key)
             z[key.replace("_index", "_at")] = None if idx is None else _when(ctx, loaded, timeframe, frame, idx)[1]
@@ -320,7 +328,14 @@ def level_zones(ctx, timeframe, params):
     value = {side: [stamp(z) for z in found[side]] for side in ("support", "resistance", "at_price")}
     value["close"] = float(frame["close"].iloc[-1])
     value["atr"] = atr
-    return _ok(ctx, loaded, timeframe, frame, value, {"tolerance": found["tolerance"]})
+    evidence = {
+        "tolerance": found["tolerance"], "max_width": found["max_width"],
+        "swings_considered": found["swings_considered"],
+        "ungrouped_swings": [{"kind": p["kind"], "price": p["price"], "time": iso(frame.index[p["index"]])}
+                             for p in found["ungrouped_swings"]],
+        "other_zones": [stamp(z) for z in found["other_zones"]],
+    }
+    return _ok(ctx, loaded, timeframe, frame, value, evidence)
 
 
 # ============================================================================ regime evidence

@@ -299,3 +299,40 @@ def test_zone_signal_keeps_native_prices():
     close = value["close"]
     assert all(z["high"] < close for z in value["support"]) and all(z["low"] > close for z in value["resistance"])
     assert len(value["support"]) <= 3 and len(value["resistance"]) <= 3
+
+
+def test_zone_width_cap_is_a_parameter_and_nothing_is_discarded():
+    lows = [90 + 0.4 * i for i in range(11)]
+    points = [(0, 100)]
+    for i, p in enumerate(lows):
+        points += [(10 * i + 5, p), (10 * i + 10, 100)]
+    path = _vee(points, 10 * len(lows) + 11)
+    narrow = sw.zones(path + 0.1, path - 0.1, path, atr=1.0, width_atr=0.5, per_side=1, lookback=1000)
+    wide = sw.zones(path + 0.1, path - 0.1, path, atr=1.0, width_atr=0.5, per_side=1, lookback=1000, max_width_mult=10)
+    assert narrow["max_width"] == 1.0 and wide["max_width"] == 5.0
+    assert wide["support"][0]["touches"] > narrow["support"][0]["touches"]
+    # Every swing considered is in a kept zone, another zone, or the ungrouped list.
+    for out in (narrow, wide):
+        kept = sum(z["touches"] for side in ("support", "resistance", "at_price") for z in out[side])
+        other = sum(z["touches"] for z in out["other_zones"])
+        assert kept + other + len(out["ungrouped_swings"]) == out["swings_considered"]
+
+
+def test_zone_signal_evidence_keeps_ungrouped_swings_and_other_zones():
+    ref = SignalRef.make(REGISTRY.get("levels.zones"), "4h", per_side=1)
+    result = evaluate([ref], _ctx())[ref.instance_key]
+    ev = result.evidence
+    assert "ungrouped_swings" in ev and "other_zones" in ev and ev["swings_considered"] > 0
+    assert all("time" in p for p in ev["ungrouped_swings"])
+    assert REGISTRY.get("levels.zones").params["max_width_mult"].default == 2.0
+
+
+def test_divergence_events_say_expired_or_invalidated_and_the_window():
+    ref = SignalRef.make(REGISTRY.get("ta.divergence.rsi"), "1D", active_bars=10)
+    value = evaluate([ref], _ctx())[ref.instance_key].value
+    statuses = {e["status"] for e in value["events"]}
+    assert statuses <= {"confirmed", "invalidated", "expired"}
+    for e in value["events"]:
+        assert e["active_window_candles"] == 10
+        assert ("expired_at" in e) == (e["status"] == "expired")
+        assert ("invalidated_at" in e) == (e["status"] == "invalidated")

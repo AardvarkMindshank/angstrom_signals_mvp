@@ -240,29 +240,33 @@ def structure_breaks(high, low, close, left=5, right=5) -> list[dict]:
 # ---------------------------------------------------------------------------- price zones
 
 def zones(high, low, close, atr: float, left=5, right=5, lookback=300, width_atr=0.5,
-          min_touches=2, per_side=3) -> dict:
+          min_touches=2, per_side=3, max_width_mult=2.0) -> dict:
     """Support and resistance zones from clusters of confirmed swing points.
 
     Swing prices within the lookback are sorted and grouped while neighbours are within
-    width_atr x ATR of each other and the group stays within 2 x that width. A zone spans its swings' prices (at least a quarter of that width).
-    Zones with fewer than min_touches swings are dropped; the strongest per_side zones on each side of
-    the last close are kept (more touches first, then the most recent touch).
+    tol = width_atr x ATR of each other and the group spans no more than max_width_mult x tol
+    (a convention that stops long chains of nearby swings becoming one very wide zone).
+    A zone spans its swings' prices (at least a quarter of tol). Groups with fewer than min_touches
+    swings are not zones; the strongest per_side zones on each side of the last close are kept (more
+    touches first, then the most recent touch). Nothing is thrown away silently: swings in groups below
+    min_touches are returned in "ungrouped_swings", and zones beyond per_side in "other_zones".
     A retest is recorded when a candle closed through the zone and a later candle came back into it
     and closed on the new side again.
     """
     high, low, close = _arr(high), _arr(low), _arr(close)
     n = len(close)
+    empty = {"support": [], "resistance": [], "at_price": [], "tolerance": None, "max_width": None,
+             "ungrouped_swings": [], "other_zones": [], "swings_considered": 0}
     if n == 0 or not atr or atr != atr or atr <= 0:
-        return {"support": [], "resistance": [], "at_price": [], "tolerance": None}
+        return empty
     tol = width_atr * atr
+    max_width = max_width_mult * tol
     start = max(0, n - lookback)
     swings = [p for p in pivots(high, low, left, right) if p["index"] >= start]
     swings.sort(key=lambda p: p["price"])
     clusters, current = [], []
     for p in swings:
-        # A new zone starts when the gap to the previous swing is wider than tol, or the zone would
-        # grow wider than 2 x tol (stops long chains of nearby swings becoming one very wide zone).
-        if current and (p["price"] - current[-1]["price"] > tol or p["price"] - current[0]["price"] > 2 * tol):
+        if current and (p["price"] - current[-1]["price"] > tol or p["price"] - current[0]["price"] > max_width):
             clusters.append(current)
             current = []
         current.append(p)
@@ -270,9 +274,10 @@ def zones(high, low, close, atr: float, left=5, right=5, lookback=300, width_atr
         clusters.append(current)
 
     price = close[-1]
-    out = {"support": [], "resistance": [], "at_price": [], "tolerance": round(tol, 8)}
+    out = {**empty, "tolerance": round(tol, 8), "max_width": round(max_width, 8), "swings_considered": len(swings)}
     for group in clusters:
         if len(group) < min_touches:
+            out["ungrouped_swings"] += [{"kind": p["kind"], "index": p["index"], "price": p["price"]} for p in group]
             continue
         lo_p, hi_p = min(p["price"] for p in group), max(p["price"] for p in group)
         pad = max(0.0, (tol / 4 - (hi_p - lo_p)) / 2)
@@ -284,6 +289,7 @@ def zones(high, low, close, atr: float, left=5, right=5, lookback=300, width_atr
             "low": round(z_lo, 8), "high": round(z_hi, 8), "mid": round((z_lo + z_hi) / 2, 8),
             "touches": len(group), "highs": sum(p["kind"] == "high" for p in group),
             "lows": sum(p["kind"] == "low" for p in group), "last_touch_index": last_touch,
+            "swing_indexes": sorted(p["index"] for p in group),
             "distance": round(distance, 8), "distance_pct": round(distance / price * 100, 4) if price else None,
             "distance_atr": round(distance / atr, 3),
         }
@@ -291,8 +297,10 @@ def zones(high, low, close, atr: float, left=5, right=5, lookback=300, width_atr
         out[side].append(zone)
     for side in ("support", "resistance", "at_price"):
         out[side].sort(key=lambda z: (-z["touches"], -z["last_touch_index"]))
+        out["other_zones"] += [{**z, "side": side} for z in out[side][per_side:]]
         out[side] = out[side][:per_side]
         out[side].sort(key=lambda z: z["distance"])
+    out["ungrouped_swings"].sort(key=lambda p: p["index"])
     return out
 
 
