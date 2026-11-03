@@ -67,10 +67,22 @@ def main(argv=None) -> int:
     start = rss_mb()
     import pandas  # noqa: F401  (the app has these loaded already)
     import chart_data
-    import scoring  # noqa: F401
-    app_base = rss_mb()
+    import scoring
+    modules_only = rss_mb()
     if args.synthetic:
         chart_data.load_candles = synthetic_load_candles
+    # What the dashboard has already done before anyone presses Analyse: the indicator library and the Yahoo
+    # client are loaded and in use, and the chart has loaded daily candles for the selected asset.
+    try:
+        import data_fetchers  # noqa: F401
+        daily = chart_data.load_candles("crypto", "bitcoin", "1D", "1Y")
+        if daily.get("candles") is not None:
+            scoring.calculate_indicators(daily["candles"][["open", "high", "low", "close", "volume"]])
+    except Exception as exc:
+        print("warm-up skipped:", exc)
+    chart_data.CACHE.clear()
+    gc.collect()
+    app_base = rss_mb()
     import analysis_card as ac
     from signal_library import engine
 
@@ -114,7 +126,9 @@ def main(argv=None) -> int:
     summary = {
         "source": "synthetic candles (production sizes)" if args.synthetic else "live Yahoo candles",
         "rss_at_start_MB": round(start, 1),
-        "rss_with_pandas_and_app_modules_MB": round(app_base, 1),
+        "rss_with_pandas_and_app_modules_MB": round(modules_only, 1),
+        "rss_like_the_running_dashboard_MB": round(app_base, 1),
+        "dashboard_warm_up_MB": round(app_base - modules_only, 1),
         "rss_after_importing_card_MB": round(after_import, 1),
         "import_cost_MB": round(after_import - app_base, 1),
         "rss_after_all_steps_MB": round(rss_mb(), 1),
@@ -127,6 +141,8 @@ def main(argv=None) -> int:
     }
     md = [f"# Analysis card: memory and time ({summary['source']})", "",
           f"- Process memory with pandas and the app's data modules loaded: {summary['rss_with_pandas_and_app_modules_MB']} MB",
+          f"- Doing what the dashboard has already done (indicator library and Yahoo client in use, one chart's "
+          f"daily candles): +{summary['dashboard_warm_up_MB']} MB, giving {summary['rss_like_the_running_dashboard_MB']} MB",
           f"- Importing the card and the Groups/Sets code adds: {summary['import_cost_MB']} MB",
           f"- Growth over all {len(steps)} evaluations below: {summary['growth_over_all_steps_MB']} MB "
           f"(caches are bounded: signal results {summary['engine_cache_entries']}/{summary['engine_cache_limit']}, "
