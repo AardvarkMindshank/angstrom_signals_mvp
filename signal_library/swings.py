@@ -87,13 +87,15 @@ def _classify(kind: str, p1: float, p2: float, o1: float, o2: float) -> str | No
     return None
 
 
-def divergences(high, low, close, osc, left=5, right=5, min_gap=5, max_gap=60, near=2) -> dict:
+def divergences(high, low, close, osc, left=5, right=5, min_gap=5, max_gap=60, near=2, active_bars=30) -> dict:
     """Confirmed divergences between consecutive confirmed price swings, plus any developing one.
 
     A divergence compares two consecutive swing lows (bullish kinds) or highs (bearish kinds) that are
     min_gap..max_gap bars apart, with the indicator's own extreme within `near` bars of each price swing.
-    It is confirmed when the second swing is confirmed (right bars later). It is invalidated when, after
-    confirmation, a candle closes beyond the second swing's price (below it for bullish, above for bearish).
+    It is confirmed when the second swing is confirmed (right bars later). Within the next `active_bars`
+    candles it is invalidated by a close beyond the second swing's price (below it for bullish, above for
+    bearish). If that does not happen it expires after `active_bars` candles; until then it is active
+    ("confirmed").
     """
     high, low, close, osc = _arr(high), _arr(low), _arr(close), _arr(osc)
     n = len(close)
@@ -113,12 +115,16 @@ def divergences(high, low, close, osc, left=5, right=5, min_gap=5, max_gap=60, n
             if not label:
                 continue
             invalid_at = None
-            for k in range(b["confirmed_index"] + 1, n):
+            end = min(n, b["confirmed_index"] + 1 + active_bars)
+            for k in range(b["confirmed_index"] + 1, end):
                 if (kind == "low" and close[k] < b["price"]) or (kind == "high" and close[k] > b["price"]):
                     invalid_at = k
                     break
+            status = ("invalidated" if invalid_at is not None
+                      else "expired" if n - 1 >= b["confirmed_index"] + active_bars else "confirmed")
             events.append({
-                "type": label, "status": "invalidated" if invalid_at is not None else "confirmed",
+                "type": label, "status": status,
+                "expires_index": b["confirmed_index"] + active_bars,
                 "price_pivots": [{"index": a["index"], "price": a["price"]}, {"index": b["index"], "price": b["price"]}],
                 "indicator_pivots": [{"index": ia, "value": round(oa, 6)}, {"index": ib, "value": round(ob, 6)}],
                 "confirmed_index": b["confirmed_index"], "delay_bars": right,
@@ -238,7 +244,7 @@ def zones(high, low, close, atr: float, left=5, right=5, lookback=300, width_atr
     """Support and resistance zones from clusters of confirmed swing points.
 
     Swing prices within the lookback are sorted and grouped while neighbours are within
-    width_atr x ATR of each other. A zone spans its swings' prices (at least a quarter of that width).
+    width_atr x ATR of each other and the group stays within 2 x that width. A zone spans its swings' prices (at least a quarter of that width).
     Zones with fewer than min_touches swings are dropped; the strongest per_side zones on each side of
     the last close are kept (more touches first, then the most recent touch).
     A retest is recorded when a candle closed through the zone and a later candle came back into it
@@ -254,7 +260,9 @@ def zones(high, low, close, atr: float, left=5, right=5, lookback=300, width_atr
     swings.sort(key=lambda p: p["price"])
     clusters, current = [], []
     for p in swings:
-        if current and p["price"] - current[-1]["price"] > tol:
+        # A new zone starts when the gap to the previous swing is wider than tol, or the zone would
+        # grow wider than 2 x tol (stops long chains of nearby swings becoming one very wide zone).
+        if current and (p["price"] - current[-1]["price"] > tol or p["price"] - current[0]["price"] > 2 * tol):
             clusters.append(current)
             current = []
         current.append(p)

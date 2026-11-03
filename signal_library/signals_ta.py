@@ -146,7 +146,7 @@ def _divergence(ctx, timeframe, params, osc_name, osc_series_fn):
     if osc is None or osc.dropna().empty:
         return SignalResult(ref={}, subject=ctx.subject, status=INSUFFICIENT, notes=[f"{osc_name} not available."])
     found = sw.divergences(frame["high"], frame["low"], frame["close"], osc, params["left"], params["right"],
-                           params["min_gap"], params["max_gap"])
+                           params["min_gap"], params["max_gap"], active_bars=params["active_bars"])
     lookback_start = max(0, len(frame) - params["lookback"])
 
     def stamp(event):
@@ -157,7 +157,10 @@ def _divergence(ctx, timeframe, params, osc_name, osc_series_fn):
             out["confirmed_at"] = _when(ctx, loaded, timeframe, frame, event["confirmed_index"])[1]
         if event.get("invalidated_index") is not None:
             out["invalidated_at"] = _when(ctx, loaded, timeframe, frame, event["invalidated_index"])[1]
-        for key in ("confirmed_index", "invalidated_index"):
+        if "expires_index" in event:
+            n = len(frame)
+            out["expires_after_candles"] = event["expires_index"] - (n - 1) if event["expires_index"] > n - 1 else 0
+        for key in ("confirmed_index", "invalidated_index", "expires_index"):
             out.pop(key, None)
         for p in out["price_pivots"] + out["indicator_pivots"]:
             p.pop("index", None)
@@ -177,6 +180,7 @@ DIV_PARAMS = {
     "min_gap": Param(5, "int", 2, 50, doc="fewest bars between the two swings"),
     "max_gap": Param(60, "int", 10, 200, doc="most bars between the two swings"),
     "lookback": Param(150, "int", 20, 1000, doc="candles back to report confirmed divergences"),
+    "active_bars": Param(30, "int", 5, 200, doc="candles a confirmed divergence stays active before it expires"),
 }
 DIV_TEXT = dict(
     output=EVENTS, unit="events", scope=SCOPE_ASSET, timeframes=TIMEFRAMES, requires=("candles",), category="momentum",
@@ -195,7 +199,8 @@ DIV_TEXT = dict(
     "bars apart, take RSI(14)'s lowest/highest value within 2 bars of each swing (never past the confirmation bar). "
     "Regular bullish: lower price low, higher RSI low. Hidden bullish: higher price low, lower RSI low. Regular bearish: "
     "higher price high, lower RSI high. Hidden bearish: lower price high, higher RSI high. Confirmed when the second "
-    "swing is confirmed; invalidated by a later close beyond the second swing's price."))
+    "swing is confirmed; invalidated by a close beyond the second swing's price within the next active_bars "
+    "candles, otherwise expired after active_bars candles (active until then)."))
 def divergence_rsi(ctx, timeframe, params):
     return _divergence(ctx, timeframe, params, "RSI(14)", lambda f: f["rsi"] if "rsi" in f.columns else None)
 
@@ -286,7 +291,7 @@ def structure_breaks(ctx, timeframe, params):
             "min_touches": Param(2, "int", 1, 10, doc="fewest swing points for a zone"),
             "per_side": Param(3, "int", 1, 10, doc="most zones kept above and below price")},
     calculation=("Confirmed swing points from the lookback are sorted by price and grouped while neighbours are within "
-                 "width_atr x ATR(14). Each group with at least min_touches swings is a zone spanning their prices. The "
+                 "width_atr x ATR(14), and no group grows wider than twice that. Each group with at least min_touches swings is a zone spanning their prices. The "
                  "strongest per_side zones above (resistance) and below (support) the last close are kept: most "
                  "touches first, then most recent. Each zone gives its distance from price in price, % and ATRs, "
                  "the latest close through it and any retest after that."),

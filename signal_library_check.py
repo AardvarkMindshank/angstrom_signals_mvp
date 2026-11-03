@@ -109,6 +109,7 @@ def main(argv=None) -> int:
                 divs[f"{osc} {kind}"] = {
                     "per_1000_candles": round(len(picked) / bars * 1000, 2),
                     "share_invalidated": None if not picked else round(sum(e["status"] == "invalidated" for e in picked) / len(picked), 3),
+                    "share_expired": None if not picked else round(sum(e["status"] == "expired" for e in picked) / len(picked), 3),
                 }
         zone_counts = [len(r["zones"]["support"]) + len(r["zones"]["resistance"]) for r in results]
         widths = [(z["high"] - z["low"]) / z["mid"] * 100 for r in results for side in ("support", "resistance")
@@ -132,9 +133,9 @@ def main(argv=None) -> int:
         md += ["", f"- Efficiency ratio vs ADX (Spearman, within asset): {out['spearman_er_vs_adx']}",
                f"- Efficiency ratio vs strength of the Trend reading: {out['spearman_er_vs_abs_trend_reading']}",
                f"- Zones kept per asset (median): {out['zones_per_asset_median']}; zone width median "
-               f"{out['zone_width_pct_median']}% of price", "", "| Divergence | per 1,000 candles | share invalidated |",
-               "|---|---|---|"]
-        md += [f"| {k} | {v['per_1000_candles']} | {v['share_invalidated']} |" for k, v in divs.items()]
+               f"{out['zone_width_pct_median']}% of price", "", "| Divergence | per 1,000 candles | invalidated within 30 candles | expired untouched |",
+               "|---|---|---|---|"]
+        md += [f"| {k} | {v['per_1000_candles']} | {v['share_invalidated']} | {v['share_expired']} |" for k, v in divs.items()]
         md.append("")
         # Timing on one year of candles of the first asset.
         sample_frame = calculate_indicators(next(f for t, f in frames.items() if rs.asset_class(t) == klass).iloc[-365:])

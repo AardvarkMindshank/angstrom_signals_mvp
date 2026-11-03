@@ -72,7 +72,19 @@ def test_each_divergence_type_is_found_at_the_right_swings(kind):
     e = events[0]
     assert [p["index"] for p in e["price_pivots"]] == [20, 40]
     assert e["confirmed_index"] == 45 and e["delay_bars"] == 5
-    assert e["status"] == "confirmed"
+    assert e["status"] == "confirmed"  # 24 candles after confirmation, inside the 30-candle active window
+
+
+def test_divergence_expires_when_not_invalidated():
+    high, low, close, osc = _divergence_case("regular_bullish")
+    found = sw.divergences(high, low, close, osc, 5, 5, 5, 60, active_bars=10)
+    e = [x for x in found["events"] if x["type"] == "regular_bullish"][0]
+    assert e["status"] == "expired"
+    late = close.copy()
+    late[60] = 80  # a close below the swing, but after the 10-candle window
+    e2 = [x for x in sw.divergences(high, low, late, osc, 5, 5, 5, 60, active_bars=10)["events"]
+          if x["type"] == "regular_bullish"][0]
+    assert e2["status"] == "expired"
 
 
 def test_divergence_is_invalidated_by_close_beyond_second_swing():
@@ -158,6 +170,17 @@ def test_zone_retest_after_break():
     out = sw.zones(path + 0.3, path - 0.3, path, atr=2.0, left=5, right=5, min_touches=2)
     zone = out["support"][0]
     assert zone["broken_direction"] == "up" and zone["retest_index"] is not None
+
+
+def test_chained_swings_do_not_make_one_wide_zone():
+    # Swing lows every 0.4 apart from 90 to 94: with tol 0.5 they chain, but zones stay within 2 x tol.
+    lows = [90 + 0.4 * i for i in range(11)]
+    points = [(0, 100)]
+    for i, p in enumerate(lows):
+        points += [(10 * i + 5, p), (10 * i + 10, 100)]
+    path = _vee(points, 10 * len(lows) + 11)
+    out = sw.zones(path + 0.1, path - 0.1, path, atr=1.0, width_atr=0.5, min_touches=2, per_side=10, lookback=1000)
+    assert out["support"] and all(z["high"] - z["low"] <= 1.0 + 1e-9 for z in out["support"])
 
 
 def test_weak_levels_are_dropped():
