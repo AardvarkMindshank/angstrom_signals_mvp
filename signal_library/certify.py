@@ -525,7 +525,7 @@ def certify_dataset(dataset: Dataset, timeframe: str, *, cutoffs: int, pool, tal
                                  indicators=_INDICATORS["fn"])
             else:
                 bad = {tf: poisoned(dataset.histories[tf], t, v, seed + i) for tf in needed}
-                prun = ReplayRun(CERTIFICATION, lambda k, a, tf, bad=bad: bad.get(tf) or {"error": "none"},
+                prun = ReplayRun(CERTIFICATION, lambda k, a, tf, bad=bad: bad.get(tf) or dataset.candles(k, a, tf),
                                  indicators=_INDICATORS["fn"])
             poisoned_results.append((v, engine.evaluate(refs, prun.context(dataset.kind, dataset.asset_id, t))))
         cache_results = []
@@ -621,7 +621,19 @@ def run_suite(datasets: list[Dataset], *, indicators: str, cutoffs: int = 50, ti
     _REF_TIMES.clear()
     tallies: dict = {}
     ctx = multiprocessing.get_context("spawn")
-    with ProcessPoolExecutor(max_workers=1, mp_context=ctx) as pool:
+    # A spawned worker re-runs the parent's main script unless it has none. Under test runners (and Streamlit's
+    # AppTest) that script is not importable, so the worker starts from a clean main module instead.
+    import sys
+    import types
+
+    real_main = sys.modules.get("__main__")
+    sys.modules["__main__"] = types.ModuleType("__main__")
+    try:
+        pool = ProcessPoolExecutor(max_workers=1, mp_context=ctx)
+        pool.submit(int, 0).result()
+    finally:
+        sys.modules["__main__"] = real_main
+    with pool:
         for ds in datasets:
             tfs = ["1D"] if ds.kind == "market" else [tf for tf in ("15m", "1h", "4h", "1D", "1W") if tf in ds.histories]
             for tf in tfs:
