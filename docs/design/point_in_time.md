@@ -1,152 +1,292 @@
 # Point-in-time evaluation ("replay"): design note
 
-Status: draft for review, revision 1 (4 Nov 2026). Nothing here is built yet.
+Status: draft for review, revision 2 (4 Nov 2026). Nothing here is built yet.
+
+**Changes from revision 1** (review of 4 Nov):
+- Replays are called **as-of reconstructions**, not reproductions (§2).
+- Certification now uses an independent truncated path, future-data poisoning tests and cache checks (§4.1).
+- Algorithm certification is kept separate from data-source quality (§4.2), and whole-frame slicing has its own
+  certification (§4.3).
+- Results carry a completeness level per evaluation (§5), and coverage labels have four levels (§5.2).
+- The hold-out is enforced by data absence and separated code paths, not by a label alone (§6).
+- Every replay result carries a reproducibility record (§7).
+- Speed claims are only made after measuring the real path (§8).
+- Decisions A–E are recorded as reviewed (§10).
 
 ## 1. What this is for
 
 Today every Signal Library signal, Group and Set is worked out for **now** only. Groups and Sets refuse any other
 date on purpose: not every signal and cache can yet be trusted to ignore data that arrived later.
 
-Point-in-time evaluation means answering: **"what would this signal, Group or Set have said at time T, using only
-what was knowable at T?"** Everything historical depends on it:
+Point-in-time evaluation answers: **"what does this signal, Group or Set say at time T, using only inputs
+knowable at T?"** Everything historical depends on it:
 - a Signal matrix built from Groups;
 - evidence views;
-- the later Strategy builder and Research/Evaluate tests, for example Drew's TradingView strategy or "does
-  Coinbase's share price lead Bitcoin?".
+- the later Strategy builder and Research/Evaluate tests (Drew's TradingView strategy; "does Coinbase's share
+  price lead Bitcoin?").
 
-This note covers the foundation only. It changes nothing on the dashboard: Trend, Stretch, Flow, the matrix and
-alerts stay exactly as they are.
+This note covers the foundation only. The dashboard, Trend, Stretch, Flow, alerts and the Signal matrix stay
+exactly as they are. There are **no research statistics, strategy optimisation or hold-out evaluation** in this
+work.
 
-## 2. The rule
+## 2. The rule, and what a replay is
 
 A replayed result at time **T** may use only:
 - candles whose **close time is at or before T**;
-- stored observations whose **first-seen time is at or before T**, using the value as known at T and never a later
+- stored observations whose **first-seen time is at or before T**, using the value known at T and never a later
   revision.
 
-Every result already carries `available_at`, the time it could first have been known. In a replay,
-**`available_at <= T` must hold for the result and for every event and evidence item inside it.** A result that
-breaks this is an error, never a value.
+Every result carries `available_at`, the time it could first have been known. In a replay, **`available_at <= T`
+must hold for the result and for every nested event, level and evidence item.** A breach is an error, never a
+value.
 
-**What it targets.** A replay at T reproduces **what the app would have shown at T**: the same candle history
-length the live app loads (for example one year of daily candles), cut off at T. It is not "the best possible
-answer using all history". Long-memory indicators (EMAs, swing lists, zones) therefore match what a user would
-actually have seen. *(Review question A.)*
+**As-of reconstruction, not reproduction.** A replay runs the **current** signal algorithms, with their normal
+live lookback windows (for example one year of daily candles), on inputs cut off at T. It is *not* a claim about
+what the app actually displayed at T. Exact reproduction would also need:
+- the code and configuration in use at T;
+- the provider's data exactly as published at T, before later corrections;
+- data that may simply no longer exist.
+
+The app and documents call these results "reconstructed as of T".
 
 ## 3. How each kind of data is handled
 
-| Data | How it is replayed |
-|---|---|
-| **Candles** (all technical signals) | Load the history once. For each T, keep only candles that had closed by T, recompute which candle is "forming" relative to T (the existing `chart_data.mark_forming(now=T)`), and apply the live lookback window. Shares use their exchange session close; crypto uses UTC. |
-| **Multi-timeframe signals** (`mtf.alignment`) | Each timeframe is cut separately at T. A weekly candle still open at T is excluded, exactly as live. |
-| **Stored flows** (Bitcoin ETF flows, stablecoin supply) | Already supported: `daily_values(as_of=T, point_in_time=True)` keeps the latest revision first seen by T and drops backfilled rows. Replays force `point_in_time=True`. |
-| **Derivatives** (open interest, liquidations, liquidation levels) | **Live only.** The stored record keeps about 7 days and is overwritten hourly, so no honest history exists. Marked "not replayable". *(Review question E: start storing an append-only hourly history now, so these become replayable later.)* |
-| **Sentiment** (later, once it joins the library) | The same first-seen rule as flows. |
+| Data | Replay handling | Source quality (§4.2) |
+|---|---|---|
+| **Candles** (all technical signals) | Keep only candles closed by T. Recompute which candle is forming relative to T (the existing `chart_data.mark_forming(now=T)`). Apply the live lookback window. Shares use their exchange session close; crypto uses UTC. | Crypto: `reconstructed`. Shares: `reconstructed_with_limitations` (split-adjusted). |
+| **Multi-timeframe** (`mtf.alignment`) | Each timeframe is cut separately at T. A weekly candle still open at T is excluded, as live. | Same as candles. |
+| **Stored flows** (Bitcoin ETF flows, stablecoin supply) | `daily_values(as_of=T, point_in_time=True)`: the revision first seen by T; backfilled rows dropped. Replays always force `point_in_time=True`. | `point_in_time` from the first stored sighting; nothing before it. |
+| **Derivatives** (open interest, liquidations, levels) | None. About 7 days are stored and overwritten hourly. | `unavailable` (live only). |
+| **Sentiment** (later) | The first-seen rule, as flows. | Decided when added. |
 
-**Price adjustments.** Yahoo's history is adjusted for share splits, so past prices differ from the raw prices
-quoted at the time. This does not reveal direction, and every signal uses ratios or comparisons, so we accept it
-and document it as a known limitation. *(Review question C.)*
+**Split-adjusted prices (decision C).** Yahoo's share history is adjusted for splits, so historical price levels,
+and indicators derived from them, can differ from what traders saw at T. This is accepted **for descriptive
+replay only**, recorded as a limitation on every affected result, and never treated as strict point-in-time data.
 
 **Intraday history limits.** Yahoo gives about 60 days of 15-minute candles and about 2 years of 1-hour candles.
-Replays of intraday signals before that return "insufficient history". They never fall back to another timeframe.
+Replays before that return "insufficient history". They never fall back to another timeframe.
 
-## 4. Certification: proving each signal does not peek
+## 4. Certification
 
-Each signal definition gets a replay status: **`certified`** or **`live_only`** (with a reason). Only certified
-signals run in a replay; the others come back as unavailable with reason `not_replayable`.
+### 4.1 Algorithm certification: proving a signal does not use the future
 
-A signal is certified only by passing the automated **truncation test** in CI, for every timeframe it supports:
+Each signal version gets an **algorithm status** per timeframe: `certified`, or `not_certified` with a reason.
+Only certified signals run in a replay; the others return unavailable with reason `not_replayable`.
 
-1. Take a candle history: made-up random walks, plus frozen real development data for several crypto and stock
-   assets.
-2. Choose at least 50 cut points T spread across the history, including just before and after candle closes,
-   weekends and share sessions.
-3. Evaluate the signal at T twice:
-   - **(a)** with the full history loaded, replayed at T;
-   - **(b)** with the history physically cut at T.
-4. Status, value, events and their states, levels and `available_at` must be identical.
-5. Every timestamp inside the result must be at or before T.
+Certification runs automatically in CI on every change. The tests use **synthetic data and development data
+dated before 2024-10-30 only**; the protected hold-out is never used (§6). A signal is certified only when all of
+the following pass, for every supported timeframe, on at least 50 cut points per dataset:
 
-This catches the subtle cases:
+1. **Independent truncated reference.** The reference result comes from a **separate execution path**:
+   - raw OHLCV (or raw stored rows) are physically cut at T *before* any indicator is computed;
+   - a fresh DataContext and an empty cache are used;
+   - it runs in a separate process, so nothing in memory is shared.
+
+   The replay path's result must equal it exactly, compared as complete canonical JSON: status, value, every
+   nested event and its state, levels, evidence and all timestamps.
+2. **Future-data poisoning.** Data **strictly after T** is altered in several ways:
+   - random noise;
+   - extreme spikes;
+   - added and deleted candles;
+   - shifted volumes;
+   - for flows, later revisions and late first sightings.
+
+   The result at T must not change in any field.
+3. **Cache isolation.** The same cut point is evaluated cold, after a warm cache filled by evaluations at later
+   times, and after the shared live cache has been filled. All results must be identical.
+4. **Timestamp invariant.** Every timestamp anywhere in the result is at or before T.
+5. **Boundaries.** Cut points include:
+   - exactly at a candle close and one second before it;
+   - weekends;
+   - share session opens and closes;
+   - daylight-saving changes;
+   - the first T with enough history;
+   - Ts on either side of swing confirmations, regime-change confirmations and divergence expiry.
+
+Expected sensitive cases:
 - swing points need `right` candles to confirm;
 - the regime state must hold for N candles;
 - divergences expire after 30 candles;
-- an indicator could accidentally be computed on the whole frame and then sliced.
+- long-memory indicators depend on where their history starts.
 
-A failing signal is either fixed or stays `live_only`. Certification is re-run on every change, so a later edit
-cannot silently break it.
+A failing signal is fixed or stays `not_certified`. Certification is recorded per signal **version**, so changing
+a signal requires re-certifying it.
+
+### 4.2 Data-source quality, kept separate
+
+An algorithm can be replay-safe while a provider's history is not. Each data source therefore has its own
+**source quality**, with the date range it applies to:
+
+| Source quality | Meaning |
+|---|---|
+| `point_in_time` | Values as first known, with first-seen times (our stored flows). |
+| `reconstructed` | Today's copy of historical data, believed not to be materially revised (crypto candles). |
+| `reconstructed_with_limitations` | Today's copy with known revisions (split-adjusted share prices). The limitation text travels with every result. |
+| `unavailable` | No honest history (derivatives today). |
+
+A replay of a signal at T is allowed only when **algorithm = certified** and the **source has history covering T**.
+Its result carries both facts.
+
+### 4.3 Whole-frame computation is a separate certification
+
+Computing indicators once on the full frame and slicing per T is faster, but it is only allowed for a signal that
+separately passes the **slice-equivalence** test: sliced results must equal the independent truncated reference
+(§4.1, test 1). That test also runs under poisoning. Signals without it recompute on the truncated data at every
+T. Correctness never depends on the shortcut.
 
 ## 5. Groups and Sets
 
-- `evaluate_group` and `evaluate_set` accept `data_mode="point_in_time"` with `as_of=T`. Live mode is unchanged.
-- **Uncertified members** (for example derivatives) are treated as unavailable with reason `not_replayable`. The
-  existing rules then apply unchanged: score coverage, exclude/neutral policies, and conditions becoming "unknown".
-  The whole Group is **not** refused. *(Review question B.)*
-- Each Group and Set gets a computed **history label**, for example "replayable from 2019-01-01", "replayable from
-  2026-08-14 (Bitcoin ETF flows)" or "live only". It comes from its members' certification and data start dates,
-  never typed by hand.
-- Stored Group and Set versions are immutable and pinned, so a replay of version 3 always means the same rules.
+- `evaluate_group` and `evaluate_set` accept `data_mode="point_in_time"` with `as_of=T`. **Live mode results are
+  unchanged byte for byte** (tested against the current starters).
+- Members whose signal is not certified, or whose source has no history at T, are unavailable with reason
+  `not_replayable` or `no_history_at_T`. The existing coverage, exclude/neutral and three-valued condition rules
+  then apply unchanged (decision B).
+
+### 5.1 Completeness of each replayed result
+
+Every replayed Group result carries a **completeness** field:
+- `complete`: every member is replayable at T.
+- `partial`: one or more members are not replayable at T. The result lists them and what they affect: the score's
+  coverage, which conditions became unknown, and which vetoes became unknown.
+- `limited`: everything is replayable, but at least one source is `reconstructed_with_limitations`. The
+  limitation text is attached.
+
+A result can be both partial and limited.
+
+**Rule:** a replayed Group whose veto is unknown, or whose confirmation is unknown because of a non-replayable
+member, is never shown or exported unqualified:
+- its status is already `veto_unknown` for vetoes;
+- unknown confirmations are listed;
+- completeness `partial` is shown next to every score.
+
+A Set reports the completeness of each Group and its own worst case.
+
+### 5.2 Coverage labels
+
+A single start date is not enough. Each Group and Set gets a computed **coverage profile**: date ranges, each with
+one of four levels:
+
+| Level | Meaning |
+|---|---|
+| **Replayable** | All members certified, all sources `point_in_time` or `reconstructed`. |
+| **Reconstructed with limitations** | Complete, but a source carries a limitation (for example split-adjusted prices). |
+| **Partially evaluable** | Some members are missing; lists which, and whether a veto or confirmation depends on them. |
+| **Live only** | Not replayable at all (for example a Group built only on derivatives). |
+
+Example:
+- 2019-01 → 2026-08-13: partially evaluable (Bitcoin ETF flows missing; the "flow-backed" confirmation becomes
+  unknown);
+- 2026-08-14 → now: replayable.
+
+Members used by a veto, or needed for the score's minimum coverage, are marked **critical**. If a critical member
+is missing, the whole range is labelled partially evaluable, never replayable. The profile is computed from
+certification records and source ranges, never typed by hand.
 
 ## 6. Protecting the hold-out
 
-The validation spec fixes the hold-out start at 2024-10-30 (`research.HOLDOUT_START`, tag `holdout-spec-v1`).
+The validation spec fixes the hold-out start at **2024-10-30** (`research.HOLDOUT_START`, tag
+`holdout-spec-v1`). It is protected by design, not only by a label:
 
-- Every replay request states its purpose: **`display`** or **`research`**.
-- **`display`** (charts, a matrix of recent days, the admin inspector) may use any date. It is descriptive only and
-  never produces statistics.
-- **`research`** (lead tests, backtests, evidence, anything that produces a statistic or tunes a parameter) is
-  **refused for any T on or after the hold-out start**, and uses the frozen research price cache, so results can
-  be repeated exactly. *(Review question D.)*
-- The hold-out itself stays untouched. Nothing in this work reads it.
+1. **Research data excludes it.** Research-mode replays read only the frozen, versioned development dataset:
+   - its manifest lists every file with a SHA-256 hash and the cut-off rule;
+   - rows on or after 2024-10-30 are removed when the data is read, as the existing overlap checks already do;
+   - research code therefore never has hold-out data in memory to misuse.
+2. **Research mode refuses later dates.** Any request with T on or after 2024-10-30 is refused before data is
+   touched. This is tested.
+3. **Separate code paths.**
+   - Display replays live in the app's display module and never write results anywhere that statistics are
+     computed.
+   - Research and statistics modules are refused display results: every replay result carries its mode, and
+     the research entry points reject anything not marked `research` and not built from the frozen manifest.
+   - A guard test, like the existing ones for readings and alerts, fails CI if a research or statistics module
+     imports the display replay path.
+4. **No tuning on display output.** Display replays (charts, recent-days views, the admin inspector) are not
+   saved to research records, not exported in bulk, and offer no statistics or parameter search. Parameter
+   choice and optimisation happen only in research mode.
+5. **Certification uses no hold-out.** Certification datasets are synthetic, or development data before
+   2024-10-30 (§4.1).
 
-## 7. Speed and memory
+The hold-out itself stays untouched. Nothing in this work reads it.
 
-A naive replay reloads data and recomputes every indicator for each T. Instead:
+## 7. Reproducibility record
 
-- **Load once per run.** Each timeframe's candles are fetched once. Indicators are computed once on the full
-  frame. This is allowed only because certification proves the result equals computing on the cut frame.
-- **Step through T.** Each step slices the precomputed frame, which is cheap because signals read the last closed
-  candles.
-- **Separate cache.** Each replay run has its own short-lived result cache. It does not touch the shared live
-  cache (512 entries), so a long replay cannot push out the dashboard's live results.
-- **Bounded runs.** Display replays are capped (for example 90 steps per request). Long research replays run in CI
-  or a one-off job, not inside a user's page load.
-- **Measured before release.** Time and memory for a 30-step and a 365-step replay of the Multi-Timeframe Set on one
-  asset, reported in CI as was done for the Analysis card.
+Every replayed result carries a **replay record**:
+- **Mode:** `display` or `research`.
+- **Cutoff T,** and the time the replay was run.
+- **Code:** Git commit, Signal Library version, lineage table version.
+- **Every signal instance:** id, version, timeframe, parameters, instance key, algorithm certification
+  reference.
+- **For a Group or Set:** config id, version and `content_sha256`.
+- **Data, per source:**
+  - its identity and quality level;
+  - for research, the frozen dataset version and file hashes;
+  - for display, the provider, fetch time and a hash of the exact cut inputs used.
+- **Completeness and limitations** (§5.1).
 
-## 8. What gets built (in reviewable stages)
+Research results are exactly repeatable from this record. Display results from live providers are not guaranteed
+repeatable (providers revise data). The input hash makes any later difference detectable, and the app says
+"reconstructed".
 
-1. **Replay context.** Cutting at T, forming-candle recomputation, the live lookback window, the purpose flag, the
-   hold-out guard and the per-run cache.
-2. **Certification harness** (CI), the replay status on every definition, and fixes for any signal that fails.
-3. **Groups and Sets** accept `point_in_time`; the computed history labels.
-4. **Admin inspector:** an "as of" date on the Groups & Sets tab, to try replays on live data. Admin only;
-   nothing on the dashboard changes.
-5. **Measurements** (section 7) and a report.
+## 8. Speed and memory
+
+- Load each timeframe's candles **once per run**, never once per T.
+- Step through T, recomputing per T **unless** the signal holds slice-equivalence certification (§4.3).
+- Each replay run has its own short-lived result cache, separate from the shared live cache, so a long replay
+  cannot push out the dashboard's live results.
+- Display replays are capped (for example 90 steps per request). Long research replays run in CI or a one-off
+  job, never in a page load.
+- **Benchmarks of the real path, before any claim:**
+  - 30-step and 365-step replays of the Multi-Timeframe Set on one crypto and one share;
+  - with and without slice-equivalent shortcuts;
+  - reporting time, peak memory and memory growth, in CI as for the Analysis card.
+
+## 9. What gets built (in reviewable stages)
+
+1. **Replay foundation:**
+   - the replay context: cutting at T, forming-candle recomputation, the live lookback, the mode, the per-run
+     cache;
+   - the replay record;
+   - source-quality records;
+   - the hold-out refusal and module guard tests.
+2. **Certification harness (CI):**
+   - the independent truncated path, poisoning, cache isolation, timestamp and boundary tests;
+   - algorithm status per signal version;
+   - fixes for failures;
+   - slice-equivalence certification.
+3. **Groups and Sets integration:** `point_in_time` mode, the completeness field, critical members and coverage
+   profiles.
+4. **Admin inspector:** an "as of" date on the Groups & Sets tab (display mode only; it shows completeness,
+   limitations and the replay record). Nothing on the dashboard changes.
+5. **Benchmarks** (§8) and a report. Stages 1–2 are reported before stage 3 starts.
 
 **Not in scope:**
-- redesigning the Signal matrix;
+- the Signal matrix redesign;
 - the Strategy builder;
-- statistics or lead tests;
-- storing derivatives history (question E, separate small task if approved);
+- research statistics, lead tests or optimisation;
+- hold-out evaluation;
+- derivatives history collection (decision E, separate task);
 - any change to Trend, Stretch, Flow or alerts.
 
 **Acceptance:**
-- every candle signal is certified, or listed as `live_only` with a reason;
-- the truncation test runs in CI on every change;
-- research-purpose replays on or after 2024-10-30 are refused (tested);
-- replay results satisfy `available_at <= T` (tested);
-- live evaluation results are byte-for-byte unchanged (tested against the current starters);
-- measurements are reported.
+- every candle signal is certified per version and timeframe, or listed as not certified with a reason;
+- the certification suite runs in CI on every change;
+- research mode refuses T on or after 2024-10-30, and the research dataset contains no hold-out rows (tested);
+- the module guard test passes;
+- `available_at <= T` everywhere in replay results (tested);
+- completeness and coverage profiles are correct for the starters and the example Set;
+- live results are unchanged byte for byte;
+- benchmarks are reported.
 
-## 9. Questions for review
+## 10. Decisions (reviewed 4 Nov 2026)
 
-- **A. What a replay reproduces.** "What the app would have shown at T" (same lookback as live), rather than "the
-  best answer using all history before T". Recommended: the former.
-- **B. Uncertified members.** Treat them as unavailable (the Group still evaluates under its coverage rules, with
-  the history label), rather than refusing the whole Group. Recommended: unavailable.
-- **C. Split-adjusted prices.** Accept Yahoo's adjusted history as a documented limitation. Recommended: accept.
-- **D. Candle source for research replays.** Use the frozen research cache (reproducible) for research purposes,
-  and live Yahoo for display. Recommended: yes.
-- **E. Derivatives history.** Start an append-only hourly record now (small, cheap), so open interest and
-  liquidations become replayable in future. Recommended: yes, as a separate task.
+- **A. Approved, with clarification.** As-of reconstruction: current algorithms, normal lookback, inputs cut at
+  T. Not a reproduction of the historical display (§2).
+- **B. Approved.** Non-replayable members are unavailable under the existing rules. Partial results are always
+  qualified (§5.1).
+- **C. Approved for descriptive replay only.** Split-adjusted prices are a recorded limitation, never strict
+  point-in-time data (§3, §4.2).
+- **D. Approved.** Research uses frozen, versioned, hashed development data. Display uses current providers,
+  marked as reconstructed (§6, §7).
+- **E. Approved in principle, as a separate task.** Before any collection is enabled, investigate append-only
+  hourly derivatives snapshots: observation time, first-seen time, source, revisions, API availability, the
+  meaning of the history, licensing, storage and cost.
