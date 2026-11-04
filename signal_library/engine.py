@@ -42,6 +42,16 @@ def evaluate_one(ref: SignalRef, ctx: DataContext) -> SignalResult:
         return SignalResult(status=UNSUPPORTED, notes=[f"{definition.name} does not apply to {ctx.subject}."], **base)
     if ref.timeframe not in definition.timeframes:
         return SignalResult(status=UNSUPPORTED, notes=[f"{definition.name} does not support {ref.timeframe}."], **base)
+    # A replay (signal_library.replay) checks the signal may run at all, uses its own cache and verifies the
+    # result against its cutoff. A live context has none of this, so live evaluation is unchanged.
+    replay = getattr(ctx, "replay", None)
+    if replay is not None:
+        refused = replay.permit(definition, ref, ctx)
+        if refused is not None:
+            refused.computed_at = base["computed_at"]
+            refused.unit = definition.unit
+            return refused
+    cache, cache_size = (_CACHE, CACHE_SIZE) if replay is None else (ctx.result_cache, replay_cache_size())
     # Signals built from other signals are not cached themselves: their parts are, and the parts'
     # data (other timeframes) is not in this signal's fingerprint.
     cacheable = "signals" not in definition.requires
@@ -49,10 +59,13 @@ def evaluate_one(ref: SignalRef, ctx: DataContext) -> SignalResult:
     cache_key = (ref.instance_key, ctx.subject, fingerprint)
     if cacheable:
         with _LOCK:
-            hit = _CACHE.get(cache_key)
-            if hit and time.time() - hit[0] < CACHE_SECONDS:
-                _CACHE.move_to_end(cache_key)
+            hit = cache.get(cache_key)
+            if hit and (replay is not None or time.time() - hit[0] < CACHE_SECONDS):
+                cache.move_to_end(cache_key)
                 return hit[1]
+    outer = getattr(ctx, "current_signal", None)
+    if replay is not None:
+        ctx.current_signal = definition.key
     try:
         result = definition.compute(ctx, ref.timeframe, dict(ref.params))
         if not isinstance(result, SignalResult):
@@ -62,12 +75,24 @@ def evaluate_one(ref: SignalRef, ctx: DataContext) -> SignalResult:
         result.unit = result.unit or definition.unit
     except Exception as exc:
         result = SignalResult(status=ERROR, notes=[f"Calculation failed: {exc}"], **base)
+    finally:
+        if replay is not None:
+            ctx.current_signal = outer
+    if replay is not None:
+        result = replay.verify(result, ctx)
+        replay.note_signal(definition, ref, ctx, result)
     if cacheable and result.status != ERROR:  # errors are retried next time
         with _LOCK:
-            _CACHE[cache_key] = (time.time(), result)
-            while len(_CACHE) > CACHE_SIZE:
-                _CACHE.popitem(last=False)
+            cache[cache_key] = (time.time(), result)
+            while len(cache) > cache_size:
+                cache.popitem(last=False)
     return result
+
+
+def replay_cache_size() -> int:
+    from .replay import RUN_CACHE_SIZE
+
+    return RUN_CACHE_SIZE
 
 
 def evaluate(refs, ctx: DataContext) -> dict[str, SignalResult]:

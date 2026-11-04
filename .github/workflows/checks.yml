@@ -162,6 +162,53 @@ jobs:
           fi
           echo "All required chart checks passed."
 
+  replay:
+    # Point-in-time replay certification (docs/design/point_in_time.md): synthetic data plus frozen development
+    # data (rows from 2024-10-30 on are removed as each file is read). Required: the committed record
+    # signal_library/certification.json must match this run.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12.15"
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install --no-deps -r requirements-research.lock
+          mkdir -p out
+      - name: Frozen development prices
+        run: |
+          git fetch --depth=1 origin reports
+          git checkout FETCH_HEAD -- data/prices
+          mv data/prices prices
+          git rev-parse FETCH_HEAD > out/reports_commit.txt
+      - name: Certification suite (required)
+        run: |
+          set +e
+          python replay_certify.py --prices prices --out out --check > out/certification.log 2>&1
+          code=$?
+          set -e
+          tail -5 out/certification.log
+          cat out/certification.md >> "$GITHUB_STEP_SUMMARY" || true
+          exit $code
+      - name: Replay benchmark
+        if: always()
+        run: |
+          python replay_certify.py --prices prices --out out --benchmark || echo "benchmark failed" >> out/optional_failures.txt
+          cat out/replay_benchmark.md >> "$GITHUB_STEP_SUMMARY" || true
+      - name: Save to reports branch
+        if: always() && inputs.publish
+        run: bash .github/scripts/save_to_reports.sh "ci/v2/$(date -u +%Y-%m-%d_%H%M)_${GITHUB_SHA::7}_replay" out/*
+      - name: Upload results
+        if: always() && !inputs.publish
+        uses: actions/upload-artifact@v5
+        with:
+          name: replay
+          path: out/
+          if-no-files-found: ignore
+
   overlap:
     runs-on: ubuntu-24.04
     timeout-minutes: 60
