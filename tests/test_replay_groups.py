@@ -295,3 +295,34 @@ def test_uncertified_signals_make_coverage_partial(coin, certified):
     assert {p["level"] for p in cov["periods"]} == {"partially_evaluable"}
     assert "not certified" in cov["members"]["structure_1d"]["reason"]
     assert cov["members"]["structure_1d"]["confirmed_from"] is None
+
+
+# ------------------------------------------------------------------------------------------- stage 4: admin inspector
+
+@pytest.fixture
+def offline_display(monkeypatch, coin):
+    from signal_library import replay_display
+
+    monkeypatch.setattr(replay_display, "live_candles", coin.candles)
+    monkeypatch.setattr(rp, "default_indicators", simple_indicators)
+    return coin
+
+
+def test_inspector_reconstructs_one_group_at_one_time(offline_display):
+    t = _cutoff(offline_display)
+    title, kind, result, record, error = gi.reconstruct(None, "group", sg.starter("starter:trend-confirmation"),
+                                                        "crypto", offline_display.asset_id, t, "Trend")
+    assert error is None and result["data_mode"] == "point_in_time" and result["as_of"] == t.isoformat()
+    assert result["completeness"]["label"] == "complete"
+    assert record["mode"] == "display" and record["cutoffs"] == [t.isoformat()]
+    assert all(i["sha256"] for i in record["inputs"])
+
+
+def test_inspector_reconstructs_a_set_and_refuses_the_future(offline_display):
+    t = _cutoff(offline_display)
+    _, _, result, record, error = gi.reconstruct(None, "set", gi.example_set(), "crypto",
+                                                 offline_display.asset_id, t, "Set")
+    assert error is None and result["completeness"]["label"] == "partial"
+    future = pd.Timestamp.now(tz="UTC") + pd.Timedelta(days=1)
+    *_, error = gi.reconstruct(None, "set", gi.example_set(), "crypto", offline_display.asset_id, future, "Set")
+    assert error == "Choose a time in the past."

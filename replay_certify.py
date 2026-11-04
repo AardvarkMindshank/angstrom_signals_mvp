@@ -197,6 +197,82 @@ def benchmark(args) -> int:
     return 0
 
 
+def optimise(args) -> int:
+    """Stage 5: the example Set at consecutive daily cutoffs with (A) the exact path, (B) reuse of unchanged
+    timeframe frames, (C) the slice shortcut for slice-certified signals only, (D) both. Every step of B, C and D is
+    compared with A (whole Set result, administrative fields left out)."""
+    import pandas as pd
+
+    import signal_groups as sg
+    import signal_groups_inspector as gi
+    from signal_library import certify as cf, engine
+    from signal_library.replay import CERTIFICATION, ReplayRun
+
+    cf._INDICATORS.update(path=INDICATORS, fn=cf._indicators(INDICATORS))
+    committed = json.loads(RECORD.read_text()) if RECORD.exists() else {"signals": {}}
+    allow = {(k, tf) for k, tfs in committed["signals"].items() for tf, e in tfs.items() if e.get("slice_equivalent")}
+    doc = gi.example_set()
+    data = [cf.synthetic_crypto(days=args.days, seed=11), cf.synthetic_equity(days=args.days, seed=23)]
+    if args.prices and Path(args.prices, "manifest.json").exists():
+        data += cf.development_datasets(args.prices, tickers=("BTC-USD",))
+    admin = {"evaluated_at", "computed_at"}
+
+    def strip(v):
+        if isinstance(v, dict):
+            return {k: strip(x) for k, x in v.items() if k not in admin}
+        if isinstance(v, list):
+            return [strip(x) for x in v]
+        return v
+
+    variants = {"A exact": {}, "B reuse frames": {"reuse_frames": True},
+                "C certified slicing": {"shortcut": True, "slice_allow": allow},
+                "D slicing + reuse": {"shortcut": True, "slice_allow": allow, "reuse_frames": True}}
+    rows = []
+    for ds in data:
+        steps = args.steps
+        cutoffs = [pd.Timestamp(int(x), tz="UTC") for x in ds.histories["1D"].ends[-steps - 1:-1]]
+        reference = None
+        for name, options in variants.items():
+            engine.clear_cache()
+            gc.collect()
+            before = rss_mb()
+            tracemalloc.start()
+            t0 = time.perf_counter()
+            run = ReplayRun(CERTIFICATION, ds.candles, indicators=cf._INDICATORS["fn"], **options)
+            out = []
+            for t in cutoffs:
+                r = sg.evaluate_set(doc, run.context(ds.kind, ds.asset_id, t), data_mode="point_in_time",
+                                    market_context=lambda scope, t=t: run.context("market", scope.split(":")[1], t))
+                out.append(json.dumps(strip(r), sort_keys=True, default=str))
+            secs = time.perf_counter() - t0
+            peak = tracemalloc.get_traced_memory()[1] / 2**20
+            tracemalloc.stop()
+            if reference is None:
+                reference = out
+            diffs = [cutoffs[i].isoformat() for i, (a, b) in enumerate(zip(reference, out)) if a != b]
+            rows.append({"dataset": ds.name, "variant": name, "steps": steps, "seconds": round(secs, 1),
+                         "seconds_per_step": round(secs / steps, 3), "python_peak_MB": round(peak, 1),
+                         "rss_growth_MB": round(rss_mb() - before, 1), "frame_reuses": run.frame_reuses,
+                         "steps_differing_from_exact": len(diffs), "first_difference": diffs[:1]})
+            del run
+            gc.collect()
+    result = {"slice_allowed_pairs": len(allow), "rows": rows,
+              "note": "Example Set at consecutive daily cutoffs; every variant compared step by step with the exact path."}
+    Path(args.out).mkdir(parents=True, exist_ok=True)
+    Path(args.out, "replay_optimise.json").write_text(json.dumps(result, indent=1))
+    md = ["# Replay optimisation (stage 5)", "", result["note"], f"Slice shortcut allowed for {len(allow)} certified "
+          "signal/timeframe pairs (from the committed certification record).", "",
+          "| Dataset | Variant | Steps | Seconds | s/step | Python peak MB | RSS growth MB | Frames reused | "
+          "Steps differing from exact |", "|---|---|---|---|---|---|---|---|---|"]
+    for r in rows:
+        md.append(f"| {r['dataset']} | {r['variant']} | {r['steps']} | {r['seconds']} | {r['seconds_per_step']} | "
+                  f"{r['python_peak_MB']} | {r['rss_growth_MB']} | {r['frame_reuses']} | "
+                  f"{r['steps_differing_from_exact']} {' '.join(r['first_difference'])} |")
+    Path(args.out, "replay_optimise.md").write_text("\n".join(md) + "\n")
+    print("\n".join(md))
+    return 1 if any(r["steps_differing_from_exact"] for r in rows) else 0
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--prices", default=None, help="frozen research price cache (development rows are used)")
@@ -206,6 +282,8 @@ def main(argv=None) -> int:
     parser.add_argument("--check", action="store_true")
     parser.add_argument("--write", action="store_true")
     parser.add_argument("--benchmark", action="store_true")
+    parser.add_argument("--optimise", action="store_true", help="stage 5: shortcuts compared with the exact path")
+    parser.add_argument("--steps", type=int, default=60)
     parser.add_argument("--indicators", default=None, help=argparse.SUPPRESS)   # tests: a pure-pandas stand-in
     args = parser.parse_args(argv)
     if args.indicators:
@@ -213,6 +291,8 @@ def main(argv=None) -> int:
         INDICATORS = args.indicators
     if args.benchmark:
         return benchmark(args)
+    if args.optimise:
+        return optimise(args)
     return certify(args)
 
 
