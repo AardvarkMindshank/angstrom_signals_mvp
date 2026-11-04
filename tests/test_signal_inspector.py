@@ -81,3 +81,28 @@ def test_groups_inspector_helpers():
 
     saved, problem = gi.saved_configs(Broken())
     assert saved == [] and "2026-11-04_signal_groups.sql" in problem
+
+
+def _app_with_reconstruction():
+    import json
+    import pathlib
+
+    import streamlit as st
+
+    from tests.live_golden import GOLDEN   # tests/fixtures/, found from a module with a real file path
+    from tests.test_signal_inspector import _app
+
+    stored = json.loads(pathlib.Path(GOLDEN).with_name("reconstruction.json").read_text())
+    st.session_state.setdefault("siggroups_result", tuple(stored))
+    _app()
+
+
+def test_groups_tab_shows_a_stored_reconstruction():
+    testing = pytest.importorskip("streamlit.testing.v1")
+    app = testing.AppTest.from_function(_app_with_reconstruction, default_timeout=90)
+    app.run()
+    assert not app.exception
+    text = " ".join(m.value for m in app.markdown) + " ".join(i.value for i in app.info)
+    assert "As-of reconstruction" in text and "Reconstruction: partial" in text
+    assert any("not a complete reconstruction" in w.value for w in app.warning)
+    assert not [b for b in app.get("download_button")]   # reconstructions are not exported

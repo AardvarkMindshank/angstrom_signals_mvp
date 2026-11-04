@@ -64,6 +64,7 @@ SPLIT_LIMITATION = ("Share prices are today's split-adjusted copy: historical pr
 
 FLOW_DAYS = 120          # same day window as the live flows loader (signal_library.loaders.FLOW_DAYS)
 RUN_CACHE_SIZE = 4096
+FRAME_CACHE_SIZE = 32    # reused indicator frames per run (one per timeframe and window is enough for stepping)
 _ISO = re.compile(r"^\d{4}-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?([+-]\d{2}:\d{2}|Z)?)?$")
 ADMIN_FIELDS = ("computed_at",)
 
@@ -145,6 +146,7 @@ class ReplayRun:
 
     def __init__(self, mode: str, candles, *, flows=None, indicators=None, dataset: dict | None = None,
                  max_steps: int | None = None, shortcut: bool = False, check_certification: bool | None = None,
+                 reuse_frames: bool = False, slice_allow: set | None = None,
                  environment: dict | None = None):
         if mode not in MODES:
             raise ReplayRefused(f"Unknown replay mode {mode!r}.")
@@ -159,6 +161,12 @@ class ReplayRun:
         self.dataset = dataset if dataset is not None else {}
         self.max_steps = max_steps
         self.shortcut = shortcut
+        # Reuse a timeframe's indicator frame when the cut window is the same candles as at an earlier cutoff
+        # (no candle closed in between): the input rows are identical, so the frame is too.
+        self.reuse_frames = reuse_frames
+        self.slice_allow = slice_allow     # benchmarks only: (signal key, timeframe) pairs allowed to slice
+        self.frame_cache: OrderedDict = OrderedDict()
+        self.frame_reuses = 0
         self.check_certification = (mode != CERTIFICATION) if check_certification is None else check_certification
         self.environment = environment
         self.result_cache: OrderedDict = OrderedDict()
@@ -218,6 +226,8 @@ class ReplayRun:
     def slice_ok(self, signal_key: str | None, timeframe: str) -> bool:
         if not self.shortcut or signal_key is None:
             return False
+        if self.slice_allow is not None:
+            return (signal_key, timeframe) in self.slice_allow
         if self.mode == CERTIFICATION:
             return True
         return bool(certification.status(signal_key, timeframe).get("slice_equivalent"))
@@ -287,12 +297,21 @@ class ReplayContext(DataContext):
         if stop - begin < 1:
             return {"error": f"No {timeframe} candles had closed by {self.as_of.isoformat()} in this data."}
         raw = history.raw.iloc[begin:stop]
-        if path == "slice":
+        reuse_key = (id(history), begin, stop, path)
+        frame = self.replay.frame_cache.get(reuse_key) if self.replay.reuse_frames else None
+        if frame is not None:
+            self.replay.frame_cache.move_to_end(reuse_key)
+            self.replay.frame_reuses += 1
+        elif path == "slice":
             frame = self.replay.full_frame(history).iloc[begin:stop].copy()
         else:
             frame = self.replay.indicators(raw.copy())
             frame["forming"] = False
-        self.replay.inputs[(self.subject, timeframe, self.as_of.value)] = {
+        if self.replay.reuse_frames:
+            self.replay.frame_cache[reuse_key] = frame
+            while len(self.replay.frame_cache) > FRAME_CACHE_SIZE:
+                self.replay.frame_cache.popitem(last=False)
+        self.replay.inputs[(self.subject, timeframe, self.as_of.value, path)] = {
             "subject": self.subject, "timeframe": timeframe, "cutoff": self.as_of.isoformat(),
             "candles": int(len(raw)), "first": raw.index[0].isoformat(), "last": raw.index[-1].isoformat(),
             "sha256": frame_hash(raw), "source": history.source, "path": path,
@@ -328,8 +347,9 @@ class ReplayContext(DataContext):
         return got
 
     def fingerprint(self, requires: tuple, timeframe: str) -> str:
-        # The cutoff is part of every replay cache key: stored-data signals have no data fingerprint.
-        return super().fingerprint(requires, timeframe) + f"|T={self.as_of.value}"
+        # Within one run the inputs at a cutoff are fixed, so the cutoff alone identifies them. (Loading candles here
+        # would compute every indicator frame by the exact path before the signal runs, defeating the shortcuts.)
+        return f"T={self.as_of.value}"
 
 
 def cut_flow_rows(rows: list[dict], as_of) -> list[dict]:

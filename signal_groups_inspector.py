@@ -12,8 +12,11 @@ Nothing here changes Trend, Stretch, Flow, alerts or any user setting.
 from __future__ import annotations
 
 import copy
+import datetime as dt
 import json
 import time
+
+import pandas as pd
 
 import signal_groups as sg
 import signal_library as sl
@@ -141,7 +144,8 @@ def _set_card(st, result: dict, title: str) -> None:
 def render(st, supabase, assets, my_communities, user_id: str) -> None:
     st.caption(
         "Evaluate Signal Groups and Sets on live data. Admin only; nothing here changes readings, alerts or settings. "
-        "Signals run only when you press Evaluate. Only live evaluation exists (point-in-time is refused by design)."
+        "Signals run only when you press Evaluate. Tick \"Reconstruct at a past time\" to see what a Group or Set "
+        "said at one date and time (an as-of reconstruction: today's rules on data cut at that time)."
     )
     cached = st.session_state.get("siggroups_saved")
     if st.button("↻", key="siggroups_refresh", help="Reload saved Groups and Sets") or not cached \
@@ -167,25 +171,125 @@ def render(st, supabase, assets, my_communities, user_id: str) -> None:
         pick = cols[0].selectbox("Group or Set", list(choices), format_func=lambda k: choices[k], key="siggroups_pick")
         asset = cols[1].selectbox("Asset", list(names), format_func=lambda k: names[k], key="siggroups_asset")
         go = cols[2].form_submit_button("Evaluate", width="stretch")
+        past = st.checkbox("Reconstruct at a past time (one date, UTC)", key="siggroups_past",
+                           help="Evaluates the Group or Set as of one past moment, using only data available then. "
+                                "One date per request; this is not a history view.")
+        when = st.columns(2)
+        day = when[0].date_input("Date (UTC)", key="siggroups_day", value=(pd.Timestamp.now(tz="UTC")
+                                                                         - pd.Timedelta(days=30)).date())
+        clock = when[1].time_input("Time (UTC)", key="siggroups_time", value=dt.time(0, 0))
     if go:
         kind, body = docs[pick]
         akind, aid = asset.split(":", 1)
-        ctx = sl.DataContext(akind, aid, derivatives_loader=loaders.derivatives_loader(supabase))
-        if kind == "group":
-            result = sg.evaluate_group(body, ctx)
+        if past:
+            st.session_state["siggroups_result"] = reconstruct(supabase, kind, body, akind, aid,
+                                                               pd.Timestamp(dt.datetime.combine(day, clock), tz="UTC"),
+                                                               choices[pick])
         else:
-            result = sg.evaluate_set(body, ctx, market_context=lambda scope: sl.DataContext(
-                "market", scope.split(":", 1)[1], flows_loader=loaders.flows_loader(supabase)))
-        st.session_state["siggroups_result"] = (choices[pick], kind, result)
+            ctx = sl.DataContext(akind, aid, derivatives_loader=loaders.derivatives_loader(supabase))
+            if kind == "group":
+                result = sg.evaluate_group(body, ctx)
+            else:
+                result = sg.evaluate_set(body, ctx, market_context=lambda scope: sl.DataContext(
+                    "market", scope.split(":", 1)[1], flows_loader=loaders.flows_loader(supabase)))
+            st.session_state["siggroups_result"] = (choices[pick], kind, result)
     stored = st.session_state.get("siggroups_result")
     if stored:
-        title, kind, result = stored
-        (_group_card if kind == "group" else _set_card)(st, result, title)
-        st.download_button("Download result (JSON)", json.dumps(result, indent=1, default=str),
-                           file_name="group_result.json", mime="application/json", key="siggroups_download")
+        title, kind, result = stored[:3]
+        if result.get("data_mode") == "point_in_time" or len(stored) > 3:
+            _reconstruction_card(st, stored)
+        else:
+            (_group_card if kind == "group" else _set_card)(st, result, title)
+            st.download_button("Download result (JSON)", json.dumps(result, indent=1, default=str),
+                               file_name="group_result.json", mime="application/json", key="siggroups_download")
 
     with st.expander("Storage testing (admin): save, version, copy, publish, archive"):
         _storage(st, supabase, saved, docs, choices, my_communities, user_id, problem)
+
+
+# ---------------------------------------------------------------------------------------------- reconstruction
+
+COMPLETENESS_ICON = {"complete": "🟢", "limited": "🟡", "partial": "🟠", "partial and limited": "🟠"}
+
+
+def reconstruct(supabase, kind: str, body: dict, asset_kind: str, asset_id: str, as_of, title: str) -> tuple:
+    """One as-of reconstruction (display mode: descriptive, not saved, not for statistics).
+    Returns (title, kind, result or None, record or None, error or None)."""
+    from signal_library.replay import ReplayRefused
+    from signal_library.replay_display import display_run
+
+    now = pd.Timestamp.now(tz="UTC")
+    if as_of >= now:
+        return title, kind, {"data_mode": "point_in_time"}, None, "Choose a time in the past."
+    try:
+        run = display_run(supabase, max_steps=1, shortcut=True)   # certified slicing only (approved 4 Nov)
+        ctx = run.context(asset_kind, asset_id, as_of)
+        if kind == "group":
+            result = sg.evaluate_group(body, ctx, data_mode="point_in_time", as_of=as_of)
+        else:
+            result = sg.evaluate_set(body, ctx, data_mode="point_in_time",
+                                     market_context=lambda scope: run.context("market", scope.split(":", 1)[1], as_of))
+        return title, kind, result, run.record(), None
+    except ReplayRefused as exc:
+        return title, kind, {"data_mode": "point_in_time"}, None, str(exc)
+
+
+def _completeness_block(st, completeness: dict, kind: str) -> None:
+    label = completeness.get("label", "?")
+    st.markdown(f"{COMPLETENESS_ICON.get(label, '')} **Reconstruction: {label}**")
+    if completeness.get("qualified"):
+        st.warning("Read this result with its qualifications: it is not a complete reconstruction of this time.",
+                   icon=":material/warning:")
+    for note in completeness.get("notes") or []:
+        st.caption(f"• {note}")
+    if kind == "set":
+        if completeness.get("groups"):
+            st.caption("Groups: " + ", ".join(f"{k}: {v}" for k, v in completeness["groups"].items()))
+        for item in completeness.get("missing_items") or []:
+            st.caption(f"• {item['item']} ({item['section']}): {item['reason']}")
+        for text in completeness.get("limitations") or []:
+            st.caption(f"• {text}")
+    missing = completeness.get("missing") or []
+    if missing:
+        st.dataframe([{"Member": m["member"], "Why": m["reason"], "Critical": "yes" if m["critical"] else "",
+                       "Score coverage": "affected" if m["affects_score_coverage"] else "",
+                       "Confirmations unknown": ", ".join(m["confirmations_unknown"]),
+                       "Vetoes unknown": ", ".join(m["vetoes_unknown"])} for m in missing],
+                     hide_index=True, width="stretch")
+
+
+def _reconstruction_card(st, stored: tuple) -> None:
+    title, kind, result, record, error = (list(stored) + [None, None])[:5]
+    if error:
+        st.warning(error, icon=":material/error:")
+        return
+    st.info(f"As-of reconstruction at **{result.get('as_of', '?').replace('T', ' ')[:16]} UTC**: today's rules on data "
+            "cut at that time. Descriptive only: it is not saved and not used for statistics.",
+            icon=":material/history:")
+    if result.get("status") in ("unsupported", "invalid"):
+        (_group_card if kind == "group" else _set_card)(st, result, title)
+        return
+    if kind == "group":
+        _completeness_block(st, result.get("completeness") or {}, "group")
+        _group_card(st, result, title)
+    else:
+        _completeness_block(st, result.get("completeness") or {}, "set")
+        for g in result.get("groups") or []:
+            c = g["result"].get("completeness") or {}
+            st.caption(f"{COMPLETENESS_ICON.get(c.get('label'), '')} {g['key']}: {c.get('label')}")
+        _set_card(st, result, title)
+    if record:
+        with st.expander("Reconstruction record (what produced this result)"):
+            st.json({k: record[k] for k in ("mode", "kind", "cutoffs", "administrative", "code", "environment",
+                                            "hold_out")}, expanded=False)
+            st.dataframe([{"Input": i.get("timeframe") or f"{i.get('source')}/{i.get('series')}",
+                           "Subject": i["subject"], "Rows": i.get("candles", i.get("rows")),
+                           "Quality": (i.get("source") or {}).get("quality") if isinstance(i.get("source"), dict)
+                           else i.get("quality"), "SHA-256": i["sha256"][:16]} for i in record.get("inputs") or []],
+                         hide_index=True, width="stretch")
+            st.dataframe([{"Signal": s["key"], "TF": s["timeframe"], "Certification": s["certification"]["algorithm"],
+                           "Slice shortcut": "yes" if s["certification"].get("slice_equivalent") else "no"}
+                          for s in record.get("signals") or []], hide_index=True, width="stretch")
 
 
 def _storage(st, supabase, saved, docs, choices, my_communities, user_id, problem) -> None:

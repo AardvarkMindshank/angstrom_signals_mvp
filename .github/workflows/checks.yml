@@ -198,6 +198,12 @@ jobs:
         run: |
           python replay_certify.py --prices prices --out out --benchmark || echo "benchmark failed" >> out/optional_failures.txt
           cat out/replay_benchmark.md >> "$GITHUB_STEP_SUMMARY" || true
+      - name: Replay shortcuts compared with the exact path (required)
+        if: always()
+        run: |
+          python replay_certify.py --prices prices --out out --optimise --steps 60 || echo "replay shortcuts differ from the exact path" >> out/required_failures.txt
+          cat out/replay_optimise.md >> "$GITHUB_STEP_SUMMARY" || true
+          if [ -f out/required_failures.txt ]; then cat out/required_failures.txt; exit 1; fi
       - name: Save to reports branch
         if: always() && inputs.publish
         run: bash .github/scripts/save_to_reports.sh "ci/v2/$(date -u +%Y-%m-%d_%H%M)_${GITHUB_SHA::7}_replay" out/*
