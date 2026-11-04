@@ -51,7 +51,8 @@ shares (with the limitation text), `point_in_time` for flows, `unavailable` for 
 
 **Research entry** (`replay_research.py`):
 - reads only the frozen research price cache;
-- removes rows dated on or after 2024-10-30 as each file is read, before anything else sees them;
+- reads and parses each file whole, then filters out rows dated on or after 2024-10-30 before returning the data,
+  so they never reach signal evaluation (the rows are read from the file, but excluded before any use);
 - refuses any T on or after 2024-10-30 before touching data;
 - refuses any source other than the frozen dataset;
 - records the dataset (reports-branch location and commit, manifest hash, SHA-256 of every file read).

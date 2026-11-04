@@ -190,7 +190,9 @@ The validation spec fixes the hold-out start at **2024-10-30** (`research.HOLDOU
 1. **Research data excludes it.** Research-mode replays read only the frozen, versioned development dataset:
    - its manifest lists every file with a SHA-256 hash and the cut-off rule;
    - rows on or after 2024-10-30 are removed when the data is read, as the existing overlap checks already do;
-   - research code therefore never has hold-out data in memory to misuse.
+   - each file is read and parsed whole, and its hold-out rows are filtered out immediately, before the data is
+     returned: they never reach signal evaluation, statistics or caches (clarified after the stage 1–2 review: the
+     rows are read from the file, but excluded before any use).
 2. **Research mode refuses later dates.** Any request with T on or after 2024-10-30 is refused before data is
    touched. This is tested.
 3. **Separate code paths.**
@@ -206,7 +208,7 @@ The validation spec fixes the hold-out start at **2024-10-30** (`research.HOLDOU
 5. **Certification uses no hold-out.** Certification datasets are synthetic, or development data before
    2024-10-30 (§4.1).
 
-The hold-out itself stays untouched. Nothing in this work reads it.
+The hold-out itself stays untouched: no evaluation, statistic, test or certification in this work uses it.
 
 ## 7. Reproducibility record
 

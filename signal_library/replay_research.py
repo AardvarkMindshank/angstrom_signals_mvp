@@ -2,8 +2,8 @@
 Research replays (design section 6): reconstructions that may feed statistics, tests or parameter choices.
 
 - They read ONLY the frozen, versioned development dataset (the research price cache on the reports branch,
-  data/prices). Rows dated on or after the hold-out start (2024-10-30) are removed as each file is read, so the
-  hold-out never reaches memory.
+  data/prices). Each file is read and parsed whole; rows dated on or after the hold-out start (2024-10-30) are then
+  filtered out immediately, before the data is returned, so they never reach signal evaluation, statistics or caches.
 - Requests for any T on or after the hold-out start are refused before data is touched (signal_library.replay).
 - Every run records the dataset: where it lives, the manifest hash and the hash of every file actually read, plus
   the code and execution environment (clarification 2 of the review: the data itself is kept, on the reports
@@ -28,7 +28,8 @@ from .replay import (
 US_SESSION = ("America/New_York", 9 * 60 + 30, 16 * 60)
 ADJUSTED_LIMITATION = ("Research share prices are split- and dividend-adjusted daily bars downloaded once: historical "
                        "price levels, and indicators derived from them, can differ from what traders saw at the time.")
-CUT_RULE = "rows dated on or after 2024-10-30 are removed as each file is read, before anything else uses them"
+CUT_RULE = ("each file is read and parsed whole; rows dated on or after 2024-10-30 are filtered out immediately, before "
+            "the data is returned, so they never reach signal evaluation")
 
 
 class FrozenDailyCandles:
@@ -61,7 +62,7 @@ class FrozenDailyCandles:
             with gzip.open(io.BytesIO(data), "rt", encoding="utf-8") as handle:
                 frame = pd.read_csv(handle, index_col="date", parse_dates=["date"])
             frame = frame.sort_index()
-            frame = frame.loc[frame.index < HOLDOUT_START.tz_localize(None)]       # the hold-out never gets past here
+            frame = frame.loc[frame.index < HOLDOUT_START.tz_localize(None)]       # hold-out rows are dropped here, before the data is returned
             frame = frame[["open", "high", "low", "close", "volume"]].astype(float)
             frame.index = pd.DatetimeIndex(frame.index).tz_localize("UTC")
             self.dataset["files_read"][ticker] = {"file": info["file"], "sha256": hashlib.sha256(data).hexdigest(),

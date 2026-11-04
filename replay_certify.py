@@ -6,7 +6,7 @@ Replay certification suite and benchmarks (CI). Design: docs/design/point_in_tim
     python replay_certify.py --prices prices --out out --benchmark time and memory of 30- and 365-step replays
 
 Data: synthetic datasets, plus frozen development daily data from the research price cache (rows dated on or
-after 2024-10-30 are removed as each file is read). The protected hold-out is never read.
+after 2024-10-30 are filtered out right after each file is parsed, so they never reach evaluation).
 Indicators: the real ones (scoring.calculate_indicators), so this needs pandas_ta (CI).
 """
 

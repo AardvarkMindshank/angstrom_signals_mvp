@@ -20,7 +20,8 @@ For every candle signal and timeframe, on every dataset that has that timeframe,
 Slice-equivalence (section 4.3) is certified separately: indicators computed once on the whole history and sliced
 must also equal the independent reference.
 
-Datasets: synthetic only, plus frozen development data cut before 2024-10-30. The hold-out is never read.
+Datasets: synthetic only, plus frozen development data cut before 2024-10-30. Hold-out rows are filtered out right after each file is parsed
+and never reach evaluation.
 """
 
 from __future__ import annotations
