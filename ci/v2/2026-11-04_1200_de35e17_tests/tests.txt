@@ -1,0 +1,84 @@
+........................................................................ [ 10%]
+........................................................................ [ 21%]
+........................................................................ [ 32%]
+........................................................................ [ 42%]
+........................................................................ [ 53%]
+........................................................................ [ 64%]
+........................................................................ [ 75%]
+...............................F........................................ [ 85%]
+........................................................................ [ 96%]
+......................                                                   [100%]
+=================================== FAILURES ===================================
+________________ test_groups_tab_shows_a_stored_reconstruction _________________
+
+    def test_groups_tab_shows_a_stored_reconstruction():
+        testing = pytest.importorskip("streamlit.testing.v1")
+        app = testing.AppTest.from_function(_app_with_reconstruction, default_timeout=90)
+        app.run()
+>       assert not app.exception
+E       assert not ElementList(_list=[Exception(message="[Errno 2] No such file or directory: '/tmp/tmpxz8614xn/fixtures/reconstruction.j... mode, buffering, encoding, errors, newline)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^'])])
+E        +  where ElementList(_list=[Exception(message="[Errno 2] No such file or directory: '/tmp/tmpxz8614xn/fixtures/reconstruction.j... mode, buffering, encoding, errors, newline)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^'])]) = AppTest(\n    _script_path='/tmp/tmpxz8614xn/a5c70ef0e925a89481d981ca788c3621',\n    default_timeout=90,\n    _session_st...SpecialBlock(\n            type='sidebar'\n        ),\n        2: SpecialBlock(\n            type='event'\n        )\n    }\n).exception
+
+tests/test_signal_inspector.py:101: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2026-11-04 12:00:41.137 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2026-11-04 12:00:41.250 Uncaught app execution
+Traceback (most recent call last):
+  File "/opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 136, in exec_func_with_error_handling
+    result = func()
+             ^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 924, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/tmpxz8614xn/a5c70ef0e925a89481d981ca788c3621", line 11, in <module>
+    _app_with_reconstruction(*__args, **__kwargs)
+  File "/tmp/tmpxz8614xn/a5c70ef0e925a89481d981ca788c3621", line 7, in _app_with_reconstruction
+    stored = json.loads(pathlib.Path(__file__).resolve().parent.joinpath("fixtures", "reconstruction.json").read_text())
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/pathlib.py", line 1027, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/pathlib.py", line 1013, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/tmpxz8614xn/fixtures/reconstruction.json'
+------------------------------ Captured log call -------------------------------
+WARNING  streamlit.runtime.scriptrunner_utils.script_run_context:script_run_context.py:508 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+ERROR    streamlit.error_util:error_util.py:117 Uncaught app execution
+Traceback (most recent call last):
+  File "/opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 136, in exec_func_with_error_handling
+    result = func()
+             ^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 924, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/tmpxz8614xn/a5c70ef0e925a89481d981ca788c3621", line 11, in <module>
+    _app_with_reconstruction(*__args, **__kwargs)
+  File "/tmp/tmpxz8614xn/a5c70ef0e925a89481d981ca788c3621", line 7, in _app_with_reconstruction
+    stored = json.loads(pathlib.Path(__file__).resolve().parent.joinpath("fixtures", "reconstruction.json").read_text())
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/pathlib.py", line 1027, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/pathlib.py", line 1013, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/tmpxz8614xn/fixtures/reconstruction.json'
+=============================== warnings summary ===============================
+tests/test_chart_data.py::test_weekly_groups_monday_to_sunday_and_labels_monday
+tests/test_chart_data.py::test_weekly_equity_with_holiday_has_four_days
+tests/test_replay.py::test_only_candles_closed_by_t_inside_the_live_window
+tests/test_replay.py::test_suite_certifies_honest_signals_and_refuses_leaks
+tests/test_replay.py::test_slice_shortcut_is_certified_separately
+tests/test_replay_groups.py::test_replayed_group_equals_the_live_group_on_data_cut_at_t[starter:reversal-evidence]
+  /home/runner/work/angstrom_signals_mvp/angstrom_signals_mvp/chart_data.py:237: Pandas4Warning: DatetimeIndex.weekday is deprecated and will be removed in a future version. Use DatetimeIndex.day_of_week instead.
+    monday = df.index - pd.to_timedelta(df.index.weekday, unit="D")
+
+tests/test_lw_chart.py: 11 warnings
+  /opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages/pandas/core/indexes/datetimelike.py:1029: Pandas4Warning: DatetimeIndex.values returning an ndarray that drops timezone information is deprecated. In a future version, this will return the underlying DatetimeArray instead. Use 'DatetimeIndex.tz_convert(None).to_numpy()' to get a NumPy array of UTC values, or 'DatetimeIndex.array' to get the ExtensionArray.
+  See https://pandas.pydata.org/docs/dev/whatsnew/v3.1.0.html#whatsnew-310-deprecations-values for more details.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+1 failed, 669 passed, 17 warnings in 125.63s (0:02:05)
+exit=1
