@@ -311,7 +311,7 @@ class ReplayContext(DataContext):
             self.replay.frame_cache[reuse_key] = frame
             while len(self.replay.frame_cache) > FRAME_CACHE_SIZE:
                 self.replay.frame_cache.popitem(last=False)
-        self.replay.inputs[(self.subject, timeframe, self.as_of.value)] = {
+        self.replay.inputs[(self.subject, timeframe, self.as_of.value, path)] = {
             "subject": self.subject, "timeframe": timeframe, "cutoff": self.as_of.isoformat(),
             "candles": int(len(raw)), "first": raw.index[0].isoformat(), "last": raw.index[-1].isoformat(),
             "sha256": frame_hash(raw), "source": history.source, "path": path,

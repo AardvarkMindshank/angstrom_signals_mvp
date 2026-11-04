@@ -222,7 +222,7 @@ def reconstruct(supabase, kind: str, body: dict, asset_kind: str, asset_id: str,
     if as_of >= now:
         return title, kind, {"data_mode": "point_in_time"}, None, "Choose a time in the past."
     try:
-        run = display_run(supabase, max_steps=1)
+        run = display_run(supabase, max_steps=1, shortcut=True)   # certified slicing only (approved 4 Nov)
         ctx = run.context(asset_kind, asset_id, as_of)
         if kind == "group":
             result = sg.evaluate_group(body, ctx, data_mode="point_in_time", as_of=as_of)
