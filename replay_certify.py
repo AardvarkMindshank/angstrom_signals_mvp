@@ -147,7 +147,36 @@ def benchmark(args) -> int:
                                      "rss_growth_MB": round(rss_mb() - before, 1), "statuses": statuses})
                     else:
                         rows[-1]["python_peak_MB"] = round(peak, 1)
-    out = {"signals_per_step": len(refs), "note": "Every 1D candle signal incl. multi-timeframe alignment, per step; "
+    # Stage 3: the example Set replayed at consecutive daily cutoffs (two Groups, standalone items, live-only market
+    # item skipped), exact path.
+    import signal_groups as sg
+    import signal_groups_inspector as gi
+
+    set_rows = []
+    ds = data[0]
+    doc = gi.example_set()
+    for steps in (30, 90):
+        cutoffs = [pd.Timestamp(int(x), tz="UTC") for x in ds.histories["1D"].ends[-steps - 1:-1]]
+        engine.clear_cache()
+        gc.collect()
+        before = rss_mb()
+        tracemalloc.start()
+        t0 = time.perf_counter()
+        run = ReplayRun(CERTIFICATION, ds.candles, indicators=cf._INDICATORS["fn"])
+        labels = {}
+        for t in cutoffs:
+            r = sg.evaluate_set(doc, run.context(ds.kind, ds.asset_id, t), data_mode="point_in_time",
+                                market_context=lambda scope, t=t: run.context("market", scope.split(":")[1], t))
+            labels[r["completeness"]["label"]] = labels.get(r["completeness"]["label"], 0) + 1
+        secs = time.perf_counter() - t0
+        peak = tracemalloc.get_traced_memory()[1] / 2**20
+        tracemalloc.stop()
+        del run
+        gc.collect()
+        set_rows.append({"dataset": ds.name, "steps": steps, "seconds": round(secs, 2),
+                         "seconds_per_step": round(secs / steps, 3), "python_peak_MB": round(peak, 1),
+                         "rss_growth_MB": round(rss_mb() - before, 1), "completeness": labels})
+    out = {"set_rows": set_rows, "signals_per_step": len(refs), "note": "Every 1D candle signal incl. multi-timeframe alignment, per step; "
            "certification mode (no certification lookup), real indicators.", "rows": rows,
            "rss_end_MB": round(rss_mb(), 1)}
     Path(args.out).mkdir(parents=True, exist_ok=True)
@@ -157,6 +186,12 @@ def benchmark(args) -> int:
     for r in rows:
         md.append(f"| {r['dataset']} | {r['steps']} | {r['path']} | {r['seconds']} | {r['seconds_per_step']} | "
                   f"{r['rss_growth_MB']} | {r.get('python_peak_MB', '')} |")
+    md += ["", "## Multi-Timeframe Analysis Set at consecutive daily cutoffs (exact path, allocation traced)", "",
+           "| Dataset | Steps | Seconds | s/step | Python peak MB | RSS growth MB | Completeness |",
+           "|---|---|---|---|---|---|---|"]
+    for r in set_rows:
+        md.append(f"| {r['dataset']} | {r['steps']} | {r['seconds']} | {r['seconds_per_step']} | {r['python_peak_MB']} | "
+                  f"{r['rss_growth_MB']} | {r['completeness']} |")
     Path(args.out, "replay_benchmark.md").write_text("\n".join(md) + "\n")
     print("\n".join(md))
     return 0

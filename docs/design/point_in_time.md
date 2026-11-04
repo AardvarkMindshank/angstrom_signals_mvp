@@ -324,3 +324,51 @@ Where the build differs from, or adds detail to, the text above:
   Library, `scoring.py`, `regime.py`, `chart_data.py`). After a change to any of them, nothing counts as certified
   until the suite is re-run and its record committed. CI fails while the committed record differs.
 - **Display replays are capped** at 90 time steps per run.
+
+## 12. Implementation notes (stage 3: Groups and Sets)
+
+**Calling it.** `evaluate_group` and `evaluate_set` accept `data_mode="point_in_time"` together with a replay
+context at T (`ReplayRun.context`). A live context in that mode, a replay context in live mode, or a context at a
+different T is refused with status `unsupported` and the reason. Live results are unchanged, checked against the
+golden snapshot.
+
+**Members.** Each member row in a replayed result carries `replay_availability`:
+- `replayable` (the signal status is ok or stale);
+- `not_replayable` (not certified, a derivatives source, or non point-in-time flows);
+- `no_history_at_T` (missing or insufficient data at T);
+- otherwise the signal's own status.
+
+Missing members go through the existing coverage, exclude/neutral and three-valued rules unchanged.
+
+**Completeness** (`signal_groups/replay.py`):
+- **Label:** `complete`, `partial`, `limited`, or `partial and limited`.
+- **For each missing member:**
+  - the reason;
+  - whether it is critical, and why;
+  - whether it affects the score's coverage;
+  - which confirmations and vetoes it leaves unknown. Only conditions actually left `unknown` are listed: a
+    confirmation already false on the score alone stays false.
+- **Limitations:** the limitation texts of the sources used.
+- **`qualified`:** true for a partial or limited result, or one with an unknown veto.
+- **Sets:** a Set reports each Group's label and its own worst case. Standalone items and applicable market items
+  that cannot be replayed count as missing. A market item that does not apply to the asset (Bitcoin context for a
+  share) does not.
+
+**Critical members:**
+- members any veto depends on (a score predicate in a veto depends on every scoring member);
+- score members without which the minimum coverage cannot be reached.
+
+**Coverage profiles.** `group_coverage` and `set_coverage` produce date ranges, each with one of the four levels,
+plus the missing and critical-missing members and the reasons. They are computed from:
+- the certification record;
+- the first candle close of every timeframe the member reads. Multi-timeframe alignment needs at least two
+  timeframes, so its start is that of its second timeframe;
+- the first live (not backfilled) sighting for stored flows, from `flow_history_start`, or from `flow_starts`
+  passed in.
+
+**Live-only market items.** In point-in-time mode, a market item marked `data_modes: ["live"]` (for example the
+example Set's Bitcoin ETF flows, which use backfilled history) is skipped as live only. A Set that contains it is
+therefore partial.
+
+**Market contexts must match.** A market context must itself be a replay context at the same T, otherwise the item
+is skipped with the reason.

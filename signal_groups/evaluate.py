@@ -16,7 +16,7 @@ import pandas as pd
 import signal_library as sl
 from signal_library.context import confirmed_frame
 
-from . import lineage, rules, transforms
+from . import lineage, replay, rules, transforms
 from .transforms import UNKNOWN
 from .validate import validate_group
 
@@ -42,9 +42,17 @@ def evaluate_group(doc: dict, ctx: sl.DataContext, *, data_mode: str = "live", a
     now = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
     base = {"name": doc.get("name"), "subject": ctx.subject, "data_mode": data_mode, "evaluated_at": now,
             "as_of": now if as_of is None else str(as_of), "lineage_version": doc.get("lineage_version")}
-    if data_mode != "live":
-        return {**base, "status": "unsupported",
-                "reason": "Point-in-time evaluation is not supported yet: not every signal and cache respects a cutoff."}
+    pit = data_mode == replay.POINT_IN_TIME_MODE
+    if data_mode not in ("live", replay.POINT_IN_TIME_MODE):
+        return {**base, "status": "unsupported", "reason": f"Unknown data mode {data_mode!r}."}
+    if pit:
+        problem = replay.context_problem(ctx, as_of)
+        if problem:
+            return {**base, "status": "unsupported", "reason": problem}
+        base["as_of"] = ctx.as_of.isoformat()
+        base["replay_mode"] = ctx.replay.mode
+    elif getattr(ctx, "replay", None) is not None:
+        return {**base, "status": "unsupported", "reason": "A replay context needs data_mode='point_in_time'."}
     if not validated:
         errors = validate_group(doc)
         if errors:
@@ -106,6 +114,8 @@ def evaluate_group(doc: dict, ctx: sl.DataContext, *, data_mode: str = "live", a
                     w_observed += w
                     weighted_sum += w * _frac(c)
                     row["state"], row["contribution"] = "observed", float(c)
+        if pit:
+            row["replay_availability"] = replay.availability(res.status)
         rows.append(row)
 
     score_block = None
@@ -152,8 +162,11 @@ def evaluate_group(doc: dict, ctx: sl.DataContext, *, data_mode: str = "live", a
     else:
         status = "ok"
 
-    return {**base, "status": status, "score": score_block, "conditions": conditions, "members": rows,
-            "diagnostics": _diagnostics(rows, score_value, members)}
+    out = {**base, "status": status, "score": score_block, "conditions": conditions, "members": rows,
+           "diagnostics": _diagnostics(rows, score_value, members)}
+    if pit:
+        out["completeness"] = replay.group_completeness(doc, out, ctx)
+    return out
 
 
 def _diagnostics(rows: list, score, members: list) -> dict:
