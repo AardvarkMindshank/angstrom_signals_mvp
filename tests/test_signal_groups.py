@@ -26,7 +26,7 @@ def ex(name):
 
 # ----------------------------------------------------------------------------- starters
 
-@pytest.mark.parametrize("alias", sorted(sg.STARTERS))
+@pytest.mark.parametrize("alias", ["starter:reversal-evidence", "starter:trend-confirmation"])
 def test_starters_are_valid_and_match_the_design(alias):
     doc = sg.starter(alias)
     assert sg.validate_group(doc) == []

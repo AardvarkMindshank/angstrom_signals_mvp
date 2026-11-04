@@ -59,11 +59,19 @@ class Dataset:
     histories: dict = field(default_factory=dict)    # timeframe -> CandleHistory
     flows: list | None = None        # stored flow rows (market datasets)
     flow_spec: tuple | None = None   # (source, series) the flow rows belong to
+    sentiment: list | None = None    # stored sentiment rows (any subject key reads them)
     description: str = ""
 
     def candles(self, kind, asset_id, timeframe):
         h = self.histories.get(timeframe)
         return h if h is not None else {"error": f"No {timeframe} candles in {self.name}."}
+
+    def sentiment_loader(self, rows=None):
+        rows = self.sentiment if rows is None else rows
+
+        def load(subject_key, as_of):
+            return {"rows": [dict(r) for r in rows]} if rows else {"error": "none"}
+        return load if rows is not None else None
 
     def flow_loader(self, rows=None):
         rows = self.flows if rows is None else rows
@@ -260,6 +268,10 @@ def _reference_worker(job: dict) -> list[dict]:
             return frames.get(tf) or {"error": f"No {tf} candles."}
 
         rows = step.get("flows")
+        feelings = step.get("sentiment")
+
+        def sentiment_loader(subject_key, rows=feelings):
+            return {"rows": [dict(r) for r in rows]} if rows else {"error": "none"}
 
         def flows_loader(source, series, subject, rows=rows):
             picked = [r for r in (rows or []) if r.get("_source", "") in ("", source)
@@ -267,7 +279,8 @@ def _reference_worker(job: dict) -> list[dict]:
             return {"rows": [{k: v for k, v in r.items() if not k.startswith("_")} for r in picked]} if picked \
                 else {"error": "none"}
         ctx = WorkerContext(job["kind"], job["asset_id"], candle_loader=candle_loader,
-                            flows_loader=flows_loader if rows is not None else None, now=step["as_of"])
+                            flows_loader=flows_loader if rows is not None else None, now=step["as_of"],
+                            sentiment_loader=sentiment_loader if feelings is not None else None)
         results = worker_engine.evaluate(refs, ctx)
         out.append({k: canonical(v) for k, v in results.items()})
     worker_engine.clear_cache()
@@ -457,6 +470,13 @@ def _refs_for(dataset: Dataset, timeframe: str, include=None, only=None) -> list
             continue
         if only and d.id not in only:
             continue
+        if dataset.sentiment is not None:
+            if "sentiment" in d.requires and timeframe in d.timeframes and (
+                    (dataset.kind == "market" and d.scope.startswith("market:")
+                     and dataset.asset_id in d.scope.split(":", 1)[1].split("|"))
+                    or (dataset.kind != "market" and d.scope == "asset")):
+                refs.append(SignalRef.make(d, timeframe))
+            continue
         if dataset.kind == "market":
             if "capital_flows" in d.requires and timeframe in d.timeframes and d.scope == f"market:{dataset.asset_id}":
                 refs.append(SignalRef.make(d, timeframe, point_in_time=True))
@@ -473,13 +493,16 @@ def certify_dataset(dataset: Dataset, timeframe: str, *, cutoffs: int, pool, tal
     if not refs:
         return
     keys = {r.instance_key: f"{r.id}@{r.version}" for r in refs}
-    if dataset.kind == "market":
-        days = sorted({r["observed_date"] for r in dataset.flows})
+    stored = not dataset.histories
+    if stored:
+        rows = dataset.flows if dataset.flows is not None else dataset.sentiment
+        day_key, seen_key = ("observed_date", "fetched_at") if dataset.flows is not None else ("recorded_at", "first_seen_at")
+        days = sorted({str(r[day_key])[:10] for r in rows})
         lo = pd.Timestamp(days[len(days) // 3], tz="UTC")
         hi = pd.Timestamp(days[-1], tz="UTC") + pd.Timedelta(days=2)
         rng = np.random.default_rng(seed)
         points = set(pd.to_datetime(rng.uniform(lo.value, hi.value, cutoffs), utc=True).floor("s"))
-        seen = sorted({utc(r["fetched_at"]) for r in dataset.flows if lo <= utc(r["fetched_at"]) <= hi})
+        seen = sorted({utc(r[seen_key]) for r in rows if lo <= utc(r[seen_key]) <= hi})
         for s in seen[-10:]:
             points.update({s, s - pd.Timedelta(seconds=1)})
         times = sorted(points)
@@ -493,9 +516,11 @@ def certify_dataset(dataset: Dataset, timeframe: str, *, cutoffs: int, pool, tal
     steps = []
     for t in times:
         step = {"as_of": t, "candles": {tf: reference_cut(dataset.histories[tf], t) for tf in needed}
-                if dataset.kind != "market" else {}}
+                if not stored else {}}
         if dataset.flows is not None:
             step["flows"] = cut_flow_rows_reference(dataset.flows, t)
+        if dataset.sentiment is not None:
+            step["sentiment"] = cut_sentiment_rows_reference(dataset.sentiment, t)
         steps.append(step)
     job = {"indicators": _INDICATORS["path"], "imports": list(imports), "kind": dataset.kind, "asset_id": dataset.asset_id,
            "refs": [r.as_dict() for r in refs], "steps": steps,
@@ -506,8 +531,10 @@ def certify_dataset(dataset: Dataset, timeframe: str, *, cutoffs: int, pool, tal
     reference = pool.submit(_reference_worker, job).result()
 
     flows = dataset.flow_loader() if dataset.flows is not None else None
-    clean_run = ReplayRun(CERTIFICATION, dataset.candles, flows=flows, indicators=_INDICATORS["fn"])
-    slice_run = ReplayRun(CERTIFICATION, dataset.candles, flows=flows, indicators=_INDICATORS["fn"], shortcut=True)
+    feeling = dataset.sentiment_loader()
+    clean_run = ReplayRun(CERTIFICATION, dataset.candles, flows=flows, sentiment=feeling, indicators=_INDICATORS["fn"])
+    slice_run = ReplayRun(CERTIFICATION, dataset.candles, flows=flows, sentiment=feeling, indicators=_INDICATORS["fn"],
+                          shortcut=True)
     # The clean replay visits the cutoffs in a shuffled order, so state carried between evaluations (a later
     # cutoff seen first) shows up as a difference from the independent reference.
     order = np.random.default_rng(seed + 1).permutation(len(times))
@@ -515,14 +542,22 @@ def certify_dataset(dataset: Dataset, timeframe: str, *, cutoffs: int, pool, tal
         t, ref_out = times[i], reference[i]
         got = engine.evaluate(refs, clean_run.context(dataset.kind, dataset.asset_id, t))
         sliced = engine.evaluate(refs, slice_run.context(dataset.kind, dataset.asset_id, t)) \
-            if dataset.kind != "market" else None
-        variants = [POISONS[(2 * i) % 5], POISONS[(2 * i + 1) % 5]] if dataset.kind != "market" else \
-            [FLOW_POISONS[i % 3]]
+            if not stored else None
+        if not stored:
+            variants = [POISONS[(2 * i) % 5], POISONS[(2 * i + 1) % 5]]
+        elif dataset.flows is not None:
+            variants = [FLOW_POISONS[i % 3]]
+        else:
+            variants = [SENTIMENT_POISONS[i % 3]]
         poisoned_results = []
         for v in variants:
-            if dataset.kind == "market":
+            if stored and dataset.flows is not None:
                 rows = poisoned_flows(dataset.flows, t, v, seed + i)
                 prun = ReplayRun(CERTIFICATION, dataset.candles, flows=dataset.flow_loader(rows),
+                                 indicators=_INDICATORS["fn"])
+            elif stored:
+                rows = poisoned_sentiment(dataset.sentiment, t, v, seed + i)
+                prun = ReplayRun(CERTIFICATION, dataset.candles, sentiment=dataset.sentiment_loader(rows),
                                  indicators=_INDICATORS["fn"])
             else:
                 bad = {tf: poisoned(dataset.histories[tf], t, v, seed + i) for tf in needed}
@@ -532,12 +567,13 @@ def certify_dataset(dataset: Dataset, timeframe: str, *, cutoffs: int, pool, tal
         cache_results = []
         if i % 5 == 0:
             later = [x for x in times if x > t][:2]
-            warm = ReplayRun(CERTIFICATION, dataset.candles, flows=flows, indicators=_INDICATORS["fn"])
+            warm = ReplayRun(CERTIFICATION, dataset.candles, flows=flows, sentiment=feeling,
+                             indicators=_INDICATORS["fn"])
             for x in later:
                 engine.evaluate(refs, warm.context(dataset.kind, dataset.asset_id, x))
             cache_results.append(("warmed with later cutoffs",
                                   engine.evaluate(refs, warm.context(dataset.kind, dataset.asset_id, t))))
-            if dataset.kind != "market":
+            if not stored:
                 live = DataContext(dataset.kind, dataset.asset_id, now=times[-1] + pd.Timedelta(days=1),
                                    candle_loader=lambda k, a, tf: _live_frame(dataset, tf))
                 engine.evaluate(refs, live)
@@ -579,6 +615,69 @@ def certify_dataset(dataset: Dataset, timeframe: str, *, cutoffs: int, pool, tal
                     tally.slice_failures.append(f"{dataset.name} T={t.isoformat()}: "
                                                 + _first_difference(canonical(sliced[key]), ref_out[key]))
     log(f"  {dataset.name} {timeframe}: {len(times)} cutoffs, {len(refs)} signals")
+
+
+SENTIMENT_POISONS = ("late_import", "later_scores", "future_first_seen")
+
+
+def cut_sentiment_rows_reference(rows: list[dict], as_of) -> list[dict]:
+    """Independent version of replay.cut_sentiment_rows: received by the database by T, recorded by T."""
+    t = utc(as_of)
+    keep = []
+    for r in rows:
+        if r.get("first_seen_at") is None or pd.Timestamp(r["first_seen_at"]) > t:
+            continue
+        if pd.Timestamp(r["recorded_at"]) > t:
+            continue
+        keep.append(dict(r))
+    return keep
+
+
+def poisoned_sentiment(rows: list[dict], as_of, variant: str, seed: int) -> list[dict]:
+    """Rows that must not count at T: imported later with an earlier recorded_at (a backfill), scores recorded
+    after T, and rows recorded before T but only received after T."""
+    t = utc(as_of)
+    rng = np.random.default_rng(seed)
+    out = [dict(r) for r in rows]
+    later = (t + pd.Timedelta(minutes=30)).isoformat()
+    if variant == "late_import":
+        for k in range(12):
+            when = (t - pd.Timedelta(hours=6 * k + 1)).isoformat()
+            out.append({"score": float(rng.uniform(0, 100)), "recorded_at": when, "first_seen_at": later,
+                        "model": "import", "coverage": "ok", "events": 9, "sources": 9})
+    elif variant == "later_scores":
+        for k in range(1, 6):
+            when = (t + pd.Timedelta(hours=12 * k)).isoformat()
+            out.append({"score": 99.0, "recorded_at": when, "first_seen_at": when, "model": "m", "coverage": "ok",
+                        "events": 5, "sources": 5})
+    elif variant == "future_first_seen":
+        for r in out[-8:]:
+            if utc(r["recorded_at"]) <= t:
+                out.append({**r, "score": 1.0, "recorded_at": (utc(r["recorded_at"]) + pd.Timedelta(seconds=1)).isoformat(),
+                            "first_seen_at": later})
+    return out
+
+
+def synthetic_sentiment(seed: int = 9, days: int = 150, end="2024-06-28") -> list[Dataset]:
+    """Twice-daily stored sentiment scores (0..100) with database receipt times, thin-news days and gaps."""
+    rng = np.random.default_rng(seed)
+    rows = []
+    level = 50.0
+    for when in pd.date_range(end=pd.Timestamp(end, tz="UTC"), periods=days * 2, freq="12h"):
+        if rng.random() < 0.08:
+            continue                                           # missed update: a gap, not a neutral score
+        level = float(np.clip(level + rng.normal(0, 6), 0, 100))
+        thin = rng.random() < 0.15
+        recorded = when + pd.Timedelta(minutes=int(rng.integers(0, 50)))
+        rows.append({"score": round(level, 2), "recorded_at": recorded.isoformat(),
+                     "first_seen_at": (recorded + pd.Timedelta(seconds=int(rng.integers(0, 90)))).isoformat(),
+                     "model": "grok-test", "coverage": "thin" if thin else "ok",
+                     "events": int(rng.integers(1, 3)) if thin else int(rng.integers(4, 15)),
+                     "sources": int(rng.integers(1, 3)) if thin else int(rng.integers(3, 10))})
+    text = f"synthetic stored sentiment, twice daily with gaps and thin-news days (seed {seed})"
+    return [Dataset(f"synthetic-sentiment-{kind}-{asset}", kind, asset, sentiment=rows, description=text)
+            for kind, asset in (("market", "crypto"), ("market", "stocks"), ("crypto", "synthetic-coin"),
+                                ("equity", "SYNTH"))]
 
 
 def cut_flow_rows_reference(rows: list[dict], as_of) -> list[dict]:
@@ -636,7 +735,7 @@ def run_suite(datasets: list[Dataset], *, indicators: str, cutoffs: int = 50, ti
         sys.modules["__main__"] = real_main
     with pool:
         for ds in datasets:
-            tfs = ["1D"] if ds.kind == "market" else [tf for tf in ("15m", "1h", "4h", "1D", "1W") if tf in ds.histories]
+            tfs = ["1D"] if not ds.histories else [tf for tf in ("15m", "1h", "4h", "1D", "1W") if tf in ds.histories]
             for tf in tfs:
                 if timeframes and tf not in timeframes:
                     continue

@@ -41,9 +41,16 @@ def _ref(signal_id, tf="1D", **params):
 # ------------------------------------------------------------------------------------------- live is unchanged
 
 def test_live_results_unchanged_byte_for_byte():
+    """Every result captured before the replay and library-completion work is unchanged. Signals and starters
+    added since then appear in the snapshot too; they are new, so they are not in the golden file."""
     from tests.live_golden import GOLDEN, snapshot
 
-    assert json.loads(json.dumps(snapshot(), sort_keys=True)) == json.loads(GOLDEN.read_text())
+    now = json.loads(json.dumps(snapshot(), sort_keys=True))
+    golden = json.loads(GOLDEN.read_text())
+    for section in ("signals", "market", "derivatives", "groups"):
+        for key, value in golden[section].items():
+            assert now[section][key] == value, (section, key)
+    assert now["set"] == golden["set"]
 
 
 def test_hold_out_date_matches_the_validation_spec():

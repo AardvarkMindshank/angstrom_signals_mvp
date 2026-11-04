@@ -15,6 +15,10 @@ STARTERS_DIR = Path(__file__).resolve().parent / "starters"
 STARTERS = {
     "starter:trend-confirmation": "trend_confirmation.json",
     "starter:reversal-evidence": "reversal_evidence.json",
+    # The dashboard's three readings as Groups (docs/design/library_completion.md)
+    "starter:trend": "trend.json",
+    "starter:stretch": "stretch.json",
+    "starter:flow": "flow.json",
 }
 
 

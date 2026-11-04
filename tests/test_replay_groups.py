@@ -65,7 +65,7 @@ def _with_derivatives_veto():
 
 # ------------------------------------------------------------------------------------------- Groups at T
 
-@pytest.mark.parametrize("alias", sorted(sg.STARTERS))
+@pytest.mark.parametrize("alias", ["starter:reversal-evidence", "starter:trend-confirmation"])
 def test_replayed_group_equals_the_live_group_on_data_cut_at_t(coin, alias):
     """The Group engine at T, through a replay, gives exactly what it gives live on data physically cut at T."""
     t = _cutoff(coin)

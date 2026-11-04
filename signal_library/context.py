@@ -11,6 +11,8 @@ Data keys a definition can require:
     "derivatives"    hourly open interest, long/short ratio, funding and liquidations for a coin
                      (the stored Leverage & liquidations record; about 7 days, refreshed hourly)
     "capital_flows"  stored capital-flow observations (append-only, with first-seen times)
+    "sentiment"      stored headline-sentiment observations (sentiment_history: score, recorded_at, model,
+                     coverage, and first_seen_at once that column exists)
 """
 
 from __future__ import annotations
@@ -43,7 +45,8 @@ class DataContext:
     """Inputs for one subject. kind is "crypto" or "equity" (or "market" for market-level subjects)."""
 
     def __init__(self, kind: str, asset_id: str, *, candle_loader: Callable | None = None,
-                 derivatives_loader: Callable | None = None, flows_loader: Callable | None = None, now=None):
+                 derivatives_loader: Callable | None = None, flows_loader: Callable | None = None, now=None,
+                 sentiment_loader: Callable | None = None):
         self.kind = kind
         self.asset_id = asset_id
         self.now = pd.Timestamp(now) if now is not None else pd.Timestamp.now(tz="UTC")
@@ -52,6 +55,7 @@ class DataContext:
         self._candle_loader = candle_loader or default_candle_loader
         self._derivatives_loader = derivatives_loader
         self._flows_loader = flows_loader
+        self._sentiment_loader = sentiment_loader
         self._memo: dict = {}
 
     @property
@@ -88,6 +92,18 @@ class DataContext:
                     self._memo[key] = self._flows_loader(source, series, subject)
                 except Exception as exc:
                     self._memo[key] = {"error": f"Could not load capital flows ({exc})"}
+        return self._memo[key]
+
+    def sentiment(self, subject_key: str) -> dict:
+        key = ("sentiment", subject_key)
+        if key not in self._memo:
+            if self._sentiment_loader is None:
+                self._memo[key] = {"error": "No sentiment data source configured"}
+            else:
+                try:
+                    self._memo[key] = self._sentiment_loader(subject_key)
+                except Exception as exc:
+                    self._memo[key] = {"error": f"Could not load sentiment ({exc})"}
         return self._memo[key]
 
     def fingerprint(self, requires: tuple, timeframe: str) -> str:

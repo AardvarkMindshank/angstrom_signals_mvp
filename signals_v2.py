@@ -211,24 +211,35 @@ def _percentile(series: pd.Series, pos: int) -> float | None:
     return float(100.0 * below / len(past))
 
 
-def _components(row: pd.Series, frame: pd.DataFrame) -> tuple[dict, dict]:
-    """(components, readings). A component is None when its inputs are missing; it never defaults to 0."""
-    d = DEFINITIONS
-    close, atr = _num(row.get("close")), _num(row.get("atr"))
-    comps, readings = {}, {}
-    usable_atr = atr if atr and atr > 0 else None
+# ----------------------------------------------------------------------------- components
+# One function per component, each returning (value or None, readings it adds). They are the single source of
+# truth for these calculations: _components below and the component signals of the newer library both call
+# them (this module does not import that library). A component is None when its inputs are missing; it never
+# defaults to 0.
 
-    # Trend: moving averages
-    parts = []
+def _price(row: pd.Series) -> tuple:
+    close, atr = _num(row.get("close")), _num(row.get("atr"))
+    return close, (atr if atr and atr > 0 else None)
+
+
+def component_moving_averages(row: pd.Series, frame: pd.DataFrame) -> tuple:
+    d = DEFINITIONS
+    close, usable_atr = _price(row)
+    readings, parts = {}, []
     for length in d["ma_lengths"]:
         sma = _num(row.get(f"sma_{length}"))
         if sma is not None and close is not None:
             readings[f"vs_sma_{length}_pct"] = (close / sma - 1) * 100 if sma else None
             if usable_atr:
                 parts.append(_tanh((close - sma) / (usable_atr * d["ma_scale_per_sqrt_length"] * math.sqrt(length))))
-    comps["moving_averages"] = _mean(parts) if parts else None
+    return (_mean(parts) if parts else None), readings
 
-    # Trend: Ichimoku (continuous: 0 inside the cloud, growing with distance outside it)
+
+def component_ichimoku(row: pd.Series, frame: pd.DataFrame) -> tuple:
+    """Continuous: 0 inside the cloud, growing with distance outside it; plus the Tenkan-Kijun gap."""
+    d = DEFINITIONS
+    close, usable_atr = _price(row)
+    readings = {}
     span_a, span_b = _num(row.get("ichi_span_a")), _num(row.get("ichi_span_b"))
     tenkan, kijun = _num(row.get("ichi_tenkan")), _num(row.get("ichi_kijun"))
     ichi = []
@@ -239,68 +250,126 @@ def _components(row: pd.Series, frame: pd.DataFrame) -> tuple[dict, dict]:
         readings["cloud"] = "above" if close > top else "below" if close < bottom else "inside"
     if None not in (tenkan, kijun) and usable_atr:
         ichi.append(_tanh((tenkan - kijun) / (usable_atr * d["ichimoku_scale_atr"])))
-    comps["ichimoku"] = _mean(ichi) if ichi else None
+    return (_mean(ichi) if ichi else None), readings
 
-    # MACD: the line (12- vs 26-day level, Trend) and the histogram (line minus signal = acceleration,
-    # Stretch). Each condition is used once; v1 scored "line above signal" and "histogram positive" as two votes.
+
+def _macd_values(row: pd.Series, frame: pd.DataFrame) -> tuple:
     line_col, hist_col = _col(frame, "MACD_"), _col(frame, "MACDh_")
     macd_line = _num(row.get(line_col)) if line_col else None
     macd_hist = _num(row.get(hist_col)) if hist_col else None
-    readings["macd"], readings["macd_histogram"] = macd_line, macd_hist
-    comps["macd"] = _tanh(macd_line / (usable_atr * d["macd_level_scale_atr"])) if macd_line is not None and usable_atr else None
-    comps["macd_acceleration"] = (_tanh(macd_hist / (usable_atr * d["macd_accel_scale_atr"]))
-                                  if macd_hist is not None and usable_atr else None)
+    return macd_line, macd_hist
 
-    # Stretch: 7-day move, scaled by the asset's own volatility
+
+def component_macd(row: pd.Series, frame: pd.DataFrame) -> tuple:
+    """The MACD line (12- vs 26-day level), in ATRs. Trend."""
+    _, usable_atr = _price(row)
+    macd_line, macd_hist = _macd_values(row, frame)
+    value = _tanh(macd_line / (usable_atr * DEFINITIONS["macd_level_scale_atr"])) \
+        if macd_line is not None and usable_atr else None
+    return value, {"macd": macd_line, "macd_histogram": macd_hist}
+
+
+def component_macd_acceleration(row: pd.Series, frame: pd.DataFrame) -> tuple:
+    """The histogram (line minus signal = acceleration), in quarter-ATRs. Stretch. Each MACD condition is used
+    once; v1 scored "line above signal" and "histogram positive" as two votes."""
+    _, usable_atr = _price(row)
+    macd_line, macd_hist = _macd_values(row, frame)
+    value = (_tanh(macd_hist / (usable_atr * DEFINITIONS["macd_accel_scale_atr"]))
+             if macd_hist is not None and usable_atr else None)
+    return value, {"macd": macd_line, "macd_histogram": macd_hist}
+
+
+def component_momentum(row: pd.Series, frame: pd.DataFrame) -> tuple:
+    """The 7-day move, scaled by the asset's own volatility."""
+    close, usable_atr = _price(row)
     change_7d = _num(row.get("change_7d"))
     atr_pct = (usable_atr / close * 100) if usable_atr and close else None
-    readings["change_7d"] = change_7d
-    readings["atr_pct"] = atr_pct
+    readings = {"change_7d": change_7d, "atr_pct": atr_pct}
     if change_7d is not None and atr_pct:
-        expected = atr_pct * math.sqrt(d["momentum_days"])
-        comps["momentum"] = _tanh(change_7d / expected)
-    else:
-        comps["momentum"] = None
+        expected = atr_pct * math.sqrt(DEFINITIONS["momentum_days"])
+        return _tanh(change_7d / expected), readings
+    return None, readings
 
-    # Stretch: continuous maps of the bounded oscillators (positive = stretched up)
+
+def component_rsi(row: pd.Series, frame: pd.DataFrame) -> tuple:
+    d = DEFINITIONS
     rsi = _num(row.get("rsi"))
-    readings["rsi"] = rsi
-    comps["rsi"] = _clip((rsi - d["rsi_centre"]) / d["rsi_span"]) if rsi is not None else None
+    return (_clip((rsi - d["rsi_centre"]) / d["rsi_span"]) if rsi is not None else None), {"rsi": rsi}
+
+
+def component_stochastic(row: pd.Series, frame: pd.DataFrame) -> tuple:
+    d = DEFINITIONS
     stoch = _num(row.get("stoch_k"))
-    readings["stoch_k"] = stoch
-    comps["stochastic"] = _clip((stoch - d["stoch_centre"]) / d["stoch_span"]) if stoch is not None else None
+    return (_clip((stoch - d["stoch_centre"]) / d["stoch_span"]) if stoch is not None else None), {"stoch_k": stoch}
+
+
+def component_bollinger(row: pd.Series, frame: pd.DataFrame) -> tuple:
+    d = DEFINITIONS
+    close, _ = _price(row)
     upper_col, lower_col = _col(frame, "BBU_"), _col(frame, "BBL_")
     upper = _num(row.get(upper_col)) if upper_col else None
     lower = _num(row.get(lower_col)) if lower_col else None
     if None not in (upper, lower, close) and upper > lower:
         position = (close - lower) / (upper - lower)
-        readings["bb_position"] = position
-        comps["bollinger"] = _tanh(d["bb_gain"] * (position - d["bb_centre"]))
-    else:
-        comps["bollinger"] = None
+        return _tanh(d["bb_gain"] * (position - d["bb_centre"])), {"bb_position": position}
+    return None, {}
 
-    # Flow: only when the source really has volume (CoinGecko fallback coins do not)
+
+def _volume_ratio(row: pd.Series) -> tuple:
+    """(has volume, volume ratio or None). Flow only counts when the source really has volume (CoinGecko
+    fallback coins do not)."""
     volume = _num(row.get("volume"))
     vol_avg = _num(row.get("vol_sma_20"))
     has_volume = bool(vol_avg and vol_avg > 0 and volume is not None)
-    readings["volume_ratio"] = _num(row.get("volume_ratio")) if has_volume else None
+    return has_volume, (_num(row.get("volume_ratio")) if has_volume else None)
+
+
+def component_obv(row: pd.Series, frame: pd.DataFrame) -> tuple:
+    has_volume, ratio = _volume_ratio(row)
+    vol_avg = _num(row.get("vol_sma_20"))
     obv, obv_avg = _num(row.get("obv")), _num(row.get("obv_sma_20"))
     if has_volume and None not in (obv, obv_avg):
-        comps["obv"] = _tanh((obv - obv_avg) / (vol_avg * math.sqrt(d["obv_scale_sqrt_days"])))
-    else:
-        comps["obv"] = None
+        return _tanh((obv - obv_avg) / (vol_avg * math.sqrt(DEFINITIONS["obv_scale_sqrt_days"]))), {"volume_ratio": ratio}
+    return None, {"volume_ratio": ratio}
+
+
+def component_heavy_volume(row: pd.Series, frame: pd.DataFrame) -> tuple:
+    close, _ = _price(row)
+    has_volume, ratio = _volume_ratio(row)
     open_, high, low = _num(row.get("open")), _num(row.get("high")), _num(row.get("low"))
-    ratio = readings["volume_ratio"]
     if has_volume and ratio is not None and None not in (open_, high, low, close):
         span = high - low
         body = (close - open_) / span if span > 0 else 0.0
-        heavy = max(0.0, min(1.0, (ratio - 1.0) / (d["heavy_volume_full_at"] - 1.0)))
-        comps["heavy_volume"] = _clip(heavy * body)
-    else:
-        comps["heavy_volume"] = None
+        heavy = max(0.0, min(1.0, (ratio - 1.0) / (DEFINITIONS["heavy_volume_full_at"] - 1.0)))
+        return _clip(heavy * body), {"volume_ratio": ratio}
+    return None, {"volume_ratio": ratio}
 
+
+# Order matters only for the readings dict, which keeps the order the readings were added in before the split.
+COMPONENT_FUNCTIONS = {
+    "moving_averages": component_moving_averages,
+    "ichimoku": component_ichimoku,
+    "macd": component_macd,
+    "macd_acceleration": component_macd_acceleration,
+    "momentum": component_momentum,
+    "rsi": component_rsi,
+    "stochastic": component_stochastic,
+    "bollinger": component_bollinger,
+    "obv": component_obv,
+    "heavy_volume": component_heavy_volume,
+}
+
+
+def _components(row: pd.Series, frame: pd.DataFrame) -> tuple[dict, dict]:
+    """(components, readings). A component is None when its inputs are missing; it never defaults to 0."""
+    comps, readings = {}, {}
+    for name, fn in COMPONENT_FUNCTIONS.items():
+        comps[name], extra = fn(row, frame)
+        readings.update(extra)
+    if "volume_ratio" not in readings:
+        readings["volume_ratio"] = None
     readings["adx"] = _num(row.get("adx"))
-    readings["close"] = close
+    readings["close"] = _num(row.get("close"))
     return comps, readings
 
 

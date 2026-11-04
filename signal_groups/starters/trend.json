@@ -1,0 +1,85 @@
+{
+  "schema": "angstrom.group/1",
+  "name": "Trend",
+  "question": "Is price above or below its 50- and 200-day levels, and by how much?",
+  "purpose": "The dashboard's Trend reading rebuilt from its 3 parts: the average of their standard scores, so the same input data gives the same number. Copy it to change parts or weights.",
+  "lineage_version": 3,
+  "members": [
+    {
+      "key": "moving_averages",
+      "label": "Moving averages (50, 200 days)",
+      "ref": {
+        "id": "ma.position",
+        "version": 1,
+        "timeframe": "1D",
+        "params": {}
+      },
+      "role": "score",
+      "weight": 1,
+      "category": "trend",
+      "transform": {
+        "kind": "clip",
+        "version": 1,
+        "field": "standard_score",
+        "low": -1,
+        "high": 1
+      },
+      "when_unavailable": "exclude"
+    },
+    {
+      "key": "ichimoku",
+      "label": "Ichimoku cloud",
+      "ref": {
+        "id": "ichimoku.position",
+        "version": 1,
+        "timeframe": "1D",
+        "params": {}
+      },
+      "role": "score",
+      "weight": 1,
+      "category": "trend",
+      "transform": {
+        "kind": "clip",
+        "version": 1,
+        "field": "standard_score",
+        "low": -1,
+        "high": 1
+      },
+      "when_unavailable": "exclude"
+    },
+    {
+      "key": "macd",
+      "label": "MACD line",
+      "ref": {
+        "id": "macd.level",
+        "version": 1,
+        "timeframe": "1D",
+        "params": {}
+      },
+      "role": "score",
+      "weight": 1,
+      "category": "trend",
+      "transform": {
+        "kind": "clip",
+        "version": 1,
+        "field": "standard_score",
+        "low": -1,
+        "high": 1
+      },
+      "when_unavailable": "exclude"
+    }
+  ],
+  "conditions": [],
+  "score": {
+    "method": "weighted_mean",
+    "range": [
+      -1,
+      1
+    ],
+    "meaning": "Trend (weeks to months): Is price above or below its 50- and 200-day levels, and by how much? -1..+1 (shown as -100..+100); positive means up. The same calculation as the dashboard's reading; a description, not a forecast.",
+    "min_coverage": {
+      "num": 1,
+      "den": 3
+    }
+  }
+}

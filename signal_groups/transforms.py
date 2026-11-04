@@ -132,6 +132,9 @@ def apply(t: dict, value, candles_since=None) -> tuple[object, list[str]]:
         return UNKNOWN, []
     if kind == "clip":
         low, high = float(t["low"]), float(t["high"])
-        c = max(-1.0, min(1.0, 2 * (x - low) / (high - low) - 1))
+        if low == -1.0 and high == 1.0:     # the identity on -1..+1, without the rounding of the general formula
+            c = max(-1.0, min(1.0, x))
+        else:
+            c = max(-1.0, min(1.0, 2 * (x - low) / (high - low) - 1))
         return (-c if t.get("invert") else c), []
     return UNKNOWN, []

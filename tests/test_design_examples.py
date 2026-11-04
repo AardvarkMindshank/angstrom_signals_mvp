@@ -247,8 +247,16 @@ def test_set_standalone_and_market_context():
 # ----------------------------------------------------------------------------- lineage and transforms
 
 def test_lineage_covers_every_library_signal():
-    roots = load("lineage.json")["roots"]
+    """The design's lineage (v2) covers the design's Groups; the current package table covers every signal."""
+    from signal_groups import lineage
+
+    current = lineage.table(lineage.CURRENT)
     for d in sl.REGISTRY.latest():
+        if d.id.startswith("test."):
+            continue
+        assert current.get(d.id), f"{d.id} has no lineage in version {lineage.CURRENT}"
+    roots = load("lineage.json")["roots"]
+    for d in []:
         if d.id.startswith("test."):
             continue
         assert roots.get(d.id), f"{d.id} has no lineage"

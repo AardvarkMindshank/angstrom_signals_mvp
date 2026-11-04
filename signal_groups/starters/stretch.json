@@ -1,0 +1,127 @@
+{
+  "schema": "angstrom.group/1",
+  "name": "Stretch",
+  "question": "How far has price run up or down lately, within its recent range?",
+  "purpose": "The dashboard's Stretch reading rebuilt from its 5 parts: the average of their standard scores, so the same input data gives the same number. Copy it to change parts or weights.",
+  "lineage_version": 3,
+  "members": [
+    {
+      "key": "rsi",
+      "label": "RSI (14)",
+      "ref": {
+        "id": "rsi.level",
+        "version": 1,
+        "timeframe": "1D",
+        "params": {}
+      },
+      "role": "score",
+      "weight": 1,
+      "category": "stretch",
+      "transform": {
+        "kind": "clip",
+        "version": 1,
+        "field": "standard_score",
+        "low": -1,
+        "high": 1
+      },
+      "when_unavailable": "exclude"
+    },
+    {
+      "key": "stochastic",
+      "label": "Stochastic (14, 3)",
+      "ref": {
+        "id": "stochastic.level",
+        "version": 1,
+        "timeframe": "1D",
+        "params": {}
+      },
+      "role": "score",
+      "weight": 1,
+      "category": "stretch",
+      "transform": {
+        "kind": "clip",
+        "version": 1,
+        "field": "standard_score",
+        "low": -1,
+        "high": 1
+      },
+      "when_unavailable": "exclude"
+    },
+    {
+      "key": "bollinger",
+      "label": "Bollinger position (20, 2)",
+      "ref": {
+        "id": "bollinger.position",
+        "version": 1,
+        "timeframe": "1D",
+        "params": {}
+      },
+      "role": "score",
+      "weight": 1,
+      "category": "stretch",
+      "transform": {
+        "kind": "clip",
+        "version": 1,
+        "field": "standard_score",
+        "low": -1,
+        "high": 1
+      },
+      "when_unavailable": "exclude"
+    },
+    {
+      "key": "momentum",
+      "label": "7-day move",
+      "ref": {
+        "id": "move.seven_day",
+        "version": 1,
+        "timeframe": "1D",
+        "params": {}
+      },
+      "role": "score",
+      "weight": 1,
+      "category": "stretch",
+      "transform": {
+        "kind": "clip",
+        "version": 1,
+        "field": "standard_score",
+        "low": -1,
+        "high": 1
+      },
+      "when_unavailable": "exclude"
+    },
+    {
+      "key": "macd_acceleration",
+      "label": "MACD histogram",
+      "ref": {
+        "id": "macd.acceleration",
+        "version": 1,
+        "timeframe": "1D",
+        "params": {}
+      },
+      "role": "score",
+      "weight": 1,
+      "category": "stretch",
+      "transform": {
+        "kind": "clip",
+        "version": 1,
+        "field": "standard_score",
+        "low": -1,
+        "high": 1
+      },
+      "when_unavailable": "exclude"
+    }
+  ],
+  "conditions": [],
+  "score": {
+    "method": "weighted_mean",
+    "range": [
+      -1,
+      1
+    ],
+    "meaning": "Stretch (1 to 4 weeks): How far has price run up or down lately, within its recent range? -1..+1 (shown as -100..+100); positive means up. The same calculation as the dashboard's reading; a description, not a forecast.",
+    "min_coverage": {
+      "num": 1,
+      "den": 5
+    }
+  }
+}

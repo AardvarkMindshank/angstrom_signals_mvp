@@ -186,12 +186,14 @@ def render(st, supabase, assets, my_communities, user_id: str) -> None:
                                                                pd.Timestamp(dt.datetime.combine(day, clock), tz="UTC"),
                                                                choices[pick])
         else:
-            ctx = sl.DataContext(akind, aid, derivatives_loader=loaders.derivatives_loader(supabase))
+            ctx = sl.DataContext(akind, aid, derivatives_loader=loaders.derivatives_loader(supabase),
+                                 sentiment_loader=loaders.sentiment_loader(supabase))
             if kind == "group":
                 result = sg.evaluate_group(body, ctx)
             else:
                 result = sg.evaluate_set(body, ctx, market_context=lambda scope: sl.DataContext(
-                    "market", scope.split(":", 1)[1], flows_loader=loaders.flows_loader(supabase)))
+                    "market", scope.split(":", 1)[1], flows_loader=loaders.flows_loader(supabase),
+                    sentiment_loader=loaders.sentiment_loader(supabase)))
             st.session_state["siggroups_result"] = (choices[pick], kind, result)
     stored = st.session_state.get("siggroups_result")
     if stored:

@@ -193,7 +193,7 @@ def validate_set(doc) -> list[str]:
             if section == "market_context" and definition is not None:
                 if not definition.scope.startswith("market:"):
                     errors.append(f"{key}: market_context takes market signals only")
-                elif item.get("subject") != definition.scope:
+                elif item.get("subject") not in [f"market:{o}" for o in definition.scope.split(":", 1)[1].split("|")]:
                     errors.append(f"{key}: subject must be {definition.scope}")
                 if (item.get("ref") or {}).get("params", {}).get("point_in_time") is False and item.get("data_modes") != ["live"]:
                     errors.append(f"{key}: non-point-in-time flows are current context only (data_modes ['live'])")

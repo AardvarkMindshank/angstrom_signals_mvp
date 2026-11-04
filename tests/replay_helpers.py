@@ -28,3 +28,20 @@ def simple_indicators(raw: pd.DataFrame) -> pd.DataFrame:
     df["volume_ratio"] = df["volume"] / df["vol_sma_20"]
     df["obv"] = (np.sign(s.diff().fillna(0)) * df["volume"]).cumsum()
     return df
+
+
+def full_indicators(raw: pd.DataFrame) -> pd.DataFrame:
+    """simple_indicators plus the remaining columns signals_v2 reads (Stochastic, OBV average, 7-candle change,
+    Ichimoku), all causal."""
+    df = simple_indicators(raw)
+    s = df["close"]
+    low14, high14 = df["low"].rolling(14).min(), df["high"].rolling(14).max()
+    df["stoch_k"] = ((s - low14) / (high14 - low14) * 100).rolling(3).mean()
+    df["obv_sma_20"] = df["obv"].rolling(20).mean()
+    df["change_7d"] = s.pct_change(7) * 100
+    tenkan = (df["high"].rolling(9).max() + df["low"].rolling(9).min()) / 2
+    kijun = (df["high"].rolling(26).max() + df["low"].rolling(26).min()) / 2
+    df["ichi_tenkan"], df["ichi_kijun"] = tenkan, kijun
+    df["ichi_span_a"] = ((tenkan + kijun) / 2).shift(26)
+    df["ichi_span_b"] = ((df["high"].rolling(52).max() + df["low"].rolling(52).min()) / 2).shift(26)
+    return df

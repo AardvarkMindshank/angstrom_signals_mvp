@@ -67,6 +67,25 @@ def flows_as_of(supabase):
     return load
 
 
+def sentiment_as_of(supabase):
+    """Stored sentiment rows the database had received by T (first_seen_at), newest 400, oldest first. Without the
+    first_seen_at column the rows come back without it and the replay treats sentiment as live only."""
+    def load(subject_key: str, as_of) -> dict:
+        t = utc(as_of)
+        try:
+            rows = (supabase.table("sentiment_history")
+                    .select("score, recorded_at, model, coverage, events, sources, first_seen_at")
+                    .eq("subject_key", subject_key).lte("first_seen_at", t.isoformat())
+                    .order("recorded_at", desc=True).limit(400).execute().data or [])
+        except Exception:
+            return {"rows": [{"recorded_at": None}]}       # no first_seen_at column yet: live only
+        if not rows:
+            return {"error": f"No stored sentiment for {subject_key} first seen by {t.isoformat()}."}
+        return {"rows": list(reversed(rows))}
+    return load
+
+
 def display_run(supabase=None, *, max_steps: int = MAX_DISPLAY_STEPS, candles=None, **kwargs) -> ReplayRun:
     return ReplayRun(DISPLAY, candles or live_candles, flows=flows_as_of(supabase) if supabase is not None else None,
+                     sentiment=sentiment_as_of(supabase) if supabase is not None else None,
                      max_steps=min(max_steps, MAX_DISPLAY_STEPS), **kwargs)

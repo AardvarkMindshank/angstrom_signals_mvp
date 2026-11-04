@@ -31,6 +31,7 @@ def datasets(prices: str | None, days: int):
 
     out = [cf.synthetic_crypto(days=days, seed=11), cf.synthetic_equity(days=days, seed=23)]
     out += cf.synthetic_flows(seed=5)
+    out += cf.synthetic_sentiment(seed=9)
     if prices and Path(prices, "manifest.json").exists():
         out += cf.development_datasets(prices)
     return out
@@ -273,6 +274,59 @@ def optimise(args) -> int:
     return 1 if any(r["steps_differing_from_exact"] for r in rows) else 0
 
 
+def parity(args) -> int:
+    """Library completion: the Trend/Stretch/Flow starter Groups against signals_v2 on identical inputs (real
+    indicators, synthetic and frozen development data), at many cutoffs. Fails on any difference."""
+    import pandas as pd
+
+    import signal_groups as sg
+    import signals_v2 as v2
+    from scoring import calculate_indicators
+    from signal_library import DataContext, certify as cf, engine
+
+    data = [("synthetic-crypto", "crypto", cf.synthetic_crypto(days=args.days, seed=11).histories["1D"].raw),
+            ("synthetic-share", "equity", cf.synthetic_equity(days=args.days, seed=23).histories["1D"].raw)]
+    if args.prices and Path(args.prices, "manifest.json").exists():
+        for ds in cf.development_datasets(args.prices):
+            data.append((ds.name, ds.kind, ds.histories["1D"].raw))
+    starters = {"trend": "starter:trend", "stretch": "starter:stretch", "flow": "starter:flow"}
+    rows, failures = [], []
+    for name, kind, raw in data:
+        frame = calculate_indicators(raw.copy())
+        positions = sorted(set(list(range(15, len(frame), max(1, len(frame) // 60))) + [len(frame)]))
+        checked = 0
+        for pos in positions:
+            f = frame.iloc[:pos]
+            legacy = v2.score(f, "crypto" if kind == "crypto" else "stock", f.index[-1] + pd.Timedelta(days=3))
+            engine.clear_cache()
+            loaded = {"frame": f.assign(forming=False), "session": None, "source": "parity"}
+            ctx = DataContext(kind, "x", candle_loader=lambda k, a, tf, loaded=loaded: loaded,
+                              now=f.index[-1] + pd.Timedelta(days=3))
+            for cluster, alias in starters.items():
+                r = sg.evaluate_group(sg.starter(alias), ctx)
+                value = (r["score"] or {}).get("value")
+                observed = sum(1 for m in r["members"] if m.get("state") == "observed")
+                if legacy["status"] != "ok":
+                    ok = value is None
+                else:
+                    c = legacy["clusters"][cluster]
+                    ok = ([observed, len(r["members"])] == c["coverage"] and (value is None) == (c["value"] is None)
+                          and (value is None or (abs(value - c["value"]) < 1e-9 and v2.percent(value) == c["percent"])))
+                checked += 1
+                if not ok:
+                    failures.append(f"{name} bar {pos} {cluster}: group {value} vs v2 "
+                                    f"{legacy.get('clusters', {}).get(cluster)}")
+        rows.append((name, len(positions), checked))
+    md = ["# Trend / Stretch / Flow as Groups: parity with signals_v2 (identical inputs, real indicators)", "",
+          "| Data | Cutoffs | Comparisons |", "|---|---|---|"] + [f"| {a} | {b} | {c} |" for a, b, c in rows]
+    md += ["", f"Differences: {len(failures)} (tolerance 1e-9, identical displayed percent and coverage)"]
+    md += [f"- {x}" for x in failures[:20]]
+    Path(args.out).mkdir(parents=True, exist_ok=True)
+    Path(args.out, "parity.md").write_text("\n".join(md) + "\n")
+    print("\n".join(md))
+    return 1 if failures else 0
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--prices", default=None, help="frozen research price cache (development rows are used)")
@@ -283,6 +337,7 @@ def main(argv=None) -> int:
     parser.add_argument("--write", action="store_true")
     parser.add_argument("--benchmark", action="store_true")
     parser.add_argument("--optimise", action="store_true", help="stage 5: shortcuts compared with the exact path")
+    parser.add_argument("--parity", action="store_true", help="Trend/Stretch/Flow Groups vs signals_v2")
     parser.add_argument("--steps", type=int, default=60)
     parser.add_argument("--indicators", default=None, help=argparse.SUPPRESS)   # tests: a pure-pandas stand-in
     args = parser.parse_args(argv)
@@ -293,6 +348,8 @@ def main(argv=None) -> int:
         return benchmark(args)
     if args.optimise:
         return optimise(args)
+    if args.parity:
+        return parity(args)
     return certify(args)
 
 

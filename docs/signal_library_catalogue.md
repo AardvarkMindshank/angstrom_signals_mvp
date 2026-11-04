@@ -20,6 +20,22 @@ Generated from the registry (`signal_library.REGISTRY.catalogue()`). Regenerate 
 - **Interpretation:** Net issuance of stablecoins: more dollars available on crypto rails. It is not evidence that money entered Bitcoin or any particular coin.
 - **Limitations:** A daily total; issuer mints and burns can be lumpy. The newest day can be revised. History loaded on the first run is a backfill.
 
+### Bollinger position (20, 2) — `bollinger.position@1`
+
+- **Category:** momentum · **Output:** observation · **Unit:** 0 = lower band, 1 = upper band · **Scope:** asset
+- **Timeframes:** 15m, 1h, 4h, 1D, 1W · **Data:** candles
+- **Calculation:** Where the close sits between the 20-candle Bollinger bands (2 standard deviations). standard_score is the dashboard's Bollinger position (20, 2) component for this candle, on -1..+1 (positive = up or stretched up), computed by signals_v2.component_bollinger (definitions fingerprint recorded in the evidence).
+- **Interpretation:** Near 1: at the upper band. Standard score (dashboard Stretch part): tanh(2 x (position - 0.5)). Descriptive; not a forecast.
+- **Limitations:** Bands widen in volatile periods, so the same position means a different move. On timeframes other than 1D the standard score is daily-derived scaling.
+
+### MACD histogram — `macd.acceleration@1`
+
+- **Category:** momentum · **Output:** observation · **Unit:** price and ATRs · **Scope:** asset
+- **Timeframes:** 15m, 1h, 4h, 1D, 1W · **Data:** candles
+- **Calculation:** MACD histogram (line minus its 9-candle signal), and the same in quarter-ATR units. standard_score is the dashboard's MACD histogram component for this candle, on -1..+1 (positive = up or stretched up), computed by signals_v2.component_macd_acceleration (definitions fingerprint recorded in the evidence).
+- **Interpretation:** Whether momentum is speeding up or slowing. Standard score (dashboard Stretch part): tanh(histogram / (ATR/4)). Descriptive; not a forecast.
+- **Limitations:** Turns often in ranges. On timeframes other than 1D the standard score is daily-derived scaling.
+
 ### Momentum direction — `momentum.direction@1`
 
 - **Category:** momentum · **Output:** direction · **Unit:** label · **Scope:** asset
@@ -27,6 +43,30 @@ Generated from the registry (`signal_library.REGISTRY.catalogue()`). Regenerate 
 - **Calculation:** On the last closed candle: up when the MACD(12,26,9) histogram is above 0 and RSI(14) is above 50; down when the histogram is below 0 and RSI below 50; otherwise mixed. The histogram's change over the last 3 candles is shown as evidence (rising/falling).
 - **Interpretation:** Which way short-term momentum points on this timeframe, separate from the moving-average trend.
 - **Limitations:** Momentum turns early and often; in ranges it flips back and forth.
+
+### 7-candle move — `move.seven_day@1`
+
+- **Category:** momentum · **Output:** observation · **Unit:** % and expected moves · **Scope:** asset
+- **Timeframes:** 15m, 1h, 4h, 1D, 1W · **Data:** candles
+- **Calculation:** Close-to-close change over 7 candles, and the same change in units of the expected move (ATR% x sqrt(7)). standard_score is the dashboard's 7-candle move component for this candle, on -1..+1 (positive = up or stretched up), computed by signals_v2.component_momentum (definitions fingerprint recorded in the evidence).
+- **Interpretation:** How large the recent move is for this asset. Standard score (dashboard Stretch part): tanh(change / expected). Descriptive; not a forecast.
+- **Limitations:** On daily candles this is the 7-day move; on other timeframes it is 7 of those candles. On timeframes other than 1D the standard score is daily-derived scaling.
+
+### RSI (14) — `rsi.level@1`
+
+- **Category:** momentum · **Output:** observation · **Unit:** 0-100 · **Scope:** asset
+- **Timeframes:** 15m, 1h, 4h, 1D, 1W · **Data:** candles
+- **Calculation:** Relative Strength Index over 14 candles. standard_score is the dashboard's RSI (14) component for this candle, on -1..+1 (positive = up or stretched up), computed by signals_v2.component_rsi (definitions fingerprint recorded in the evidence).
+- **Interpretation:** How strongly recent closes have risen versus fallen. Standard score (dashboard Stretch part): (RSI - 50) / 30, clipped to -1..+1 (80 = +1, 20 = -1). Descriptive; not a forecast.
+- **Limitations:** Stays stretched for long periods in strong trends. On timeframes other than 1D the standard score is daily-derived scaling.
+
+### Stochastic %K (14, 3) — `stochastic.level@1`
+
+- **Category:** momentum · **Output:** observation · **Unit:** 0-100 · **Scope:** asset
+- **Timeframes:** 15m, 1h, 4h, 1D, 1W · **Data:** candles
+- **Calculation:** Stochastic %K: where the close sits within the 14-candle high-low range, smoothed. standard_score is the dashboard's Stochastic %K (14, 3) component for this candle, on -1..+1 (positive = up or stretched up), computed by signals_v2.component_stochastic (definitions fingerprint recorded in the evidence).
+- **Interpretation:** Near 100: closing near recent highs. Standard score (dashboard Stretch part): (%K - 50) / 50. Descriptive; not a forecast.
+- **Limitations:** Very sensitive in ranges; reaches extremes easily. On timeframes other than 1D the standard score is daily-derived scaling.
 
 ### MACD divergence — `ta.divergence.macd@1`
 
@@ -90,6 +130,22 @@ Generated from the registry (`signal_library.REGISTRY.catalogue()`). Regenerate 
 - **Interpretation:** Whether the asset is trending or ranging on this timeframe, with the evidence behind it.
 - **Limitations:** ADX thresholds are conventions; ADX says how strong a move is, not which way.
 
+### Asset headline sentiment — `sentiment.asset@1`
+
+- **Category:** sentiment · **Output:** observation · **Unit:** -100..+100 · **Scope:** asset
+- **Timeframes:** 1D · **Data:** sentiment
+- **Calculation:** The latest stored headline-sentiment score for this asset, on -100..+100 (stored 0..100), with its time, coverage (thin or ok), model, the change from the newest score at least 7 days before the evaluation time, and the last 10 scores. Stale after 36 hours.
+- **Interpretation:** Whether recent headlines about this asset read positive or negative. Descriptive.
+- **Limitations:** AI-scored headlines, not validated as predictive. Days with thin news can swing the score. History starts on 3 Nov 2026 and is replayable only from when each score first reached the database.
+
+### Market headline sentiment — `sentiment.market@1`
+
+- **Category:** sentiment · **Output:** observation · **Unit:** -100..+100 · **Scope:** market:crypto|stocks
+- **Timeframes:** 1D · **Data:** sentiment
+- **Calculation:** The latest stored headline-sentiment score for the whole crypto market (subject market:crypto) or stock market (market:stocks), on -100..+100 (stored 0..100; shown = 2 x stored - 100), with its time, coverage (thin or ok), model, the change from the newest score at least 7 days before the evaluation time, and the last 10 scores. Stale after 36 hours.
+- **Interpretation:** Whether recent market headlines read positive or negative. Descriptive.
+- **Limitations:** AI-scored headlines, not validated as predictive. Days with thin news can swing the score. History starts on 3 Nov 2026 and is replayable only from when each score first reached the database.
+
 ### Support and resistance zones — `levels.zones@1`
 
 - **Category:** structure · **Output:** levels · **Unit:** price · **Scope:** asset
@@ -117,6 +173,30 @@ Generated from the registry (`signal_library.REGISTRY.catalogue()`). Regenerate 
 - **Interpretation:** The sequence of confirmed swing points and what they say about structure on this timeframe.
 - **Limitations:** Swings are confirmed `right` candles late. Small swing settings give noisy structure on low timeframes.
 
+### Ichimoku cloud position — `ichimoku.position@1`
+
+- **Category:** trend · **Output:** observation · **Unit:** label and ATRs · **Scope:** asset
+- **Timeframes:** 15m, 1h, 4h, 1D, 1W · **Data:** candles
+- **Calculation:** Close above, inside or below the Ichimoku cloud; the distance outside it and the Tenkan-Kijun gap, in ATR(14). standard_score is the dashboard's Ichimoku cloud position component for this candle, on -1..+1 (positive = up or stretched up), computed by signals_v2.component_ichimoku (definitions fingerprint recorded in the evidence).
+- **Interpretation:** Where price sits relative to the cloud. The standard score (dashboard Trend part) is 0 inside the cloud and grows with distance outside it, averaged with the Tenkan-Kijun gap (both scaled by 3 ATRs). Descriptive; not a forecast.
+- **Limitations:** The cloud is plotted 26 candles ahead from past prices; it needs about 78 candles of history. On timeframes other than 1D the standard score is daily-derived scaling.
+
+### Moving averages (50, 200) — `ma.position@1`
+
+- **Category:** trend · **Output:** observation · **Unit:** % and ATRs · **Scope:** asset
+- **Timeframes:** 15m, 1h, 4h, 1D, 1W · **Data:** candles
+- **Calculation:** Close against the 50- and 200-candle simple moving averages: the gap in % and in ATR(14) units. standard_score is the dashboard's Moving averages (50, 200) component for this candle, on -1..+1 (positive = up or stretched up), computed by signals_v2.component_moving_averages (definitions fingerprint recorded in the evidence).
+- **Interpretation:** How far price sits above or below its longer averages. The standard score (dashboard Trend part) averages tanh(distance / (ATR x 0.5 x sqrt(length))) over the two averages. Descriptive; not a forecast.
+- **Limitations:** Averages lag. Without 200 candles of history only the 50 is used. On timeframes other than 1D the standard score is daily-derived scaling.
+
+### MACD line — `macd.level@1`
+
+- **Category:** trend · **Output:** observation · **Unit:** price and ATRs · **Scope:** asset
+- **Timeframes:** 15m, 1h, 4h, 1D, 1W · **Data:** candles
+- **Calculation:** MACD(12, 26) line: the 12-candle EMA minus the 26-candle EMA, and the same in ATR(14) units. standard_score is the dashboard's MACD line component for this candle, on -1..+1 (positive = up or stretched up), computed by signals_v2.component_macd (definitions fingerprint recorded in the evidence).
+- **Interpretation:** Whether the shorter average is above the longer one, and by how much. Standard score (dashboard Trend part): tanh(line / ATR). Descriptive; not a forecast.
+- **Limitations:** EMAs depend slightly on how much history was loaded. On timeframes other than 1D the standard score is daily-derived scaling.
+
 ### Multi-timeframe alignment — `mtf.alignment@1`
 
 - **Category:** trend · **Output:** observation · **Unit:** per-timeframe labels · **Scope:** asset
@@ -134,6 +214,14 @@ Generated from the registry (`signal_library.REGISTRY.catalogue()`). Regenerate 
 - **Interpretation:** Which way the moving-average stack points on this timeframe. Descriptive.
 - **Limitations:** Moving averages lag; after a sharp reversal this stays on the old direction for a while.
 
+### On-balance volume balance — `obv.balance@1`
+
+- **Category:** volume · **Output:** observation · **Unit:** scaled volumes · **Scope:** asset
+- **Timeframes:** 15m, 1h, 4h, 1D, 1W · **Data:** candles
+- **Calculation:** On-balance volume minus its 20-candle average, in average-candle volumes x sqrt(20). standard_score is the dashboard's On-balance volume balance component for this candle, on -1..+1 (positive = up or stretched up), computed by signals_v2.component_obv (definitions fingerprint recorded in the evidence).
+- **Interpretation:** Whether volume has recently come on up-candles or down-candles. Standard score (dashboard Flow part): tanh(balance). Descriptive; not a forecast.
+- **Limitations:** Needs a source with real volume; crypto volume differs by venue. On timeframes other than 1D the standard score is daily-derived scaling.
+
 ### Chaikin Money Flow — `volume.cmf@1`
 
 - **Category:** volume · **Output:** numeric · **Unit:** ratio (-1..+1) · **Scope:** asset
@@ -143,6 +231,14 @@ Generated from the registry (`signal_library.REGISTRY.catalogue()`). Regenerate 
 - **Interpretation:** Where candles close within their range, weighted by volume. Unlike OBV (whole-candle direction) it uses the close's position in the range, so it can differ from price direction. The coverage audit found it more distinct from the existing readings than OBV; predictive value is unproven.
 - **Limitations:** Gaps between candles are ignored. Crypto volume differs by venue; zero-volume candles are skipped.
 
+### Heavy-volume candle — `volume.heavy_candle@1`
+
+- **Category:** volume · **Output:** observation · **Unit:** ratio and share · **Scope:** asset
+- **Timeframes:** 15m, 1h, 4h, 1D, 1W · **Data:** candles
+- **Calculation:** The last candle's volume against its 20-candle average, its body as a share of its range, and how heavy it counts (1x average = 0, 2x or more = 1). standard_score is the dashboard's Heavy-volume candle component for this candle, on -1..+1 (positive = up or stretched up), computed by signals_v2.component_heavy_volume (definitions fingerprint recorded in the evidence).
+- **Interpretation:** A big candle on big volume. Standard score (dashboard Flow part): heaviness x body share, clipped to -1..+1. Descriptive; not a forecast.
+- **Limitations:** One candle only; needs real volume. On timeframes other than 1D the standard score is daily-derived scaling.
+
 ### Relative volume — `volume.relative@1`
 
 - **Category:** volume · **Output:** numeric · **Unit:** x average · **Scope:** asset
@@ -150,4 +246,3 @@ Generated from the registry (`signal_library.REGISTRY.catalogue()`). Regenerate 
 - **Calculation:** Volume of the last closed candle divided by the 20-candle average volume (the existing volume_ratio).
 - **Interpretation:** How busy the last candle was compared with usual. 2.0 = twice the normal volume.
 - **Limitations:** Intraday share volume has a daily rhythm (busy open and close), so 15m/1h values are high at the open on most days. Crypto volume varies by data venue.
-
