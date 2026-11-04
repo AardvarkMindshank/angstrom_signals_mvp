@@ -1,0 +1,28 @@
+........................................................................ [ 10%]
+........................................................................ [ 21%]
+........................................................................ [ 32%]
+........................................................................ [ 42%]
+........................................................................ [ 53%]
+........................................................................ [ 64%]
+........................................................................ [ 75%]
+........................................................................ [ 85%]
+........................................................................ [ 96%]
+.......................                                                  [100%]
+=============================== warnings summary ===============================
+tests/test_chart_data.py::test_weekly_groups_monday_to_sunday_and_labels_monday
+tests/test_chart_data.py::test_weekly_equity_with_holiday_has_four_days
+tests/test_replay.py::test_only_candles_closed_by_t_inside_the_live_window
+tests/test_replay.py::test_suite_certifies_honest_signals_and_refuses_leaks
+tests/test_replay.py::test_slice_shortcut_is_certified_separately
+tests/test_replay_groups.py::test_replayed_group_equals_the_live_group_on_data_cut_at_t[starter:reversal-evidence]
+  /home/runner/work/angstrom_signals_mvp/angstrom_signals_mvp/chart_data.py:237: Pandas4Warning: DatetimeIndex.weekday is deprecated and will be removed in a future version. Use DatetimeIndex.day_of_week instead.
+    monday = df.index - pd.to_timedelta(df.index.weekday, unit="D")
+
+tests/test_lw_chart.py: 11 warnings
+  /opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages/pandas/core/indexes/datetimelike.py:1029: Pandas4Warning: DatetimeIndex.values returning an ndarray that drops timezone information is deprecated. In a future version, this will return the underlying DatetimeArray instead. Use 'DatetimeIndex.tz_convert(None).to_numpy()' to get a NumPy array of UTC values, or 'DatetimeIndex.array' to get the ExtensionArray.
+  See https://pandas.pydata.org/docs/dev/whatsnew/v3.1.0.html#whatsnew-310-deprecations-values for more details.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+671 passed, 17 warnings in 126.91s (0:02:06)
+exit=0
