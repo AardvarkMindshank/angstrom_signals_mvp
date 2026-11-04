@@ -290,3 +290,35 @@ repeatable (providers revise data). The input hash makes any later difference de
 - **E. Approved in principle, as a separate task.** Before any collection is enabled, investigate append-only
   hourly derivatives snapshots: observation time, first-seen time, source, revisions, API availability, the
   meaning of the history, licensing, storage and cost.
+
+## 11. Implementation notes (stages 1–2)
+
+The review of revision 2 accepted it with two clarifications, both implemented:
+- **Timestamp rule.** It applies to all market data, events, evidence and observations. The only exemptions are
+  administrative times: `computed_at` on each result, and `administrative.run_started_at` in the replay record,
+  which is labelled as not market data.
+- **Reproducibility.** Research records reference the actual frozen dataset, not only hashes:
+  - its location (reports branch, `data/prices`), the reports-branch commit, the manifest hash and the hash of
+    every file read;
+  - the execution environment: Python and package versions, plus the hash of `requirements-research.lock`.
+
+Where the build differs from, or adds detail to, the text above:
+- **The candle containing T is dropped.** It is not shown as "forming", because its values include data from
+  after T. Signals only read closed candles, so their results are unaffected.
+- **Research data is daily only.** The frozen research dataset holds daily bars (1D, with 1W grouped from them).
+  Intraday research replays report that no research data exists for that timeframe.
+- **The research price limitation is wider.** The frozen research prices are split- **and dividend-adjusted**
+  (downloaded with `auto_adjust`), so their limitation text says both.
+- **Some data can only be certified on synthetic data:**
+  - intraday timeframes: all real intraday data available today falls inside the hold-out period;
+  - flows signals: stored flows begin in 2026, also inside the hold-out period.
+
+  Daily and weekly timeframes are also certified on frozen development data dated before 2024-10-30.
+- **The reference shares one definition with the replay path.** The independent reference still uses
+  `chart_data.candle_end` (the definition of when a candle closes). Its window cut, data handling, process and
+  caches are all separate.
+- **Replays have their own status.** `not_replayable` is a new result status, used only in replays.
+- **A certification record is tied to code.** It counts only for the exact source of 11 files (the Signal
+  Library, `scoring.py`, `regime.py`, `chart_data.py`). After a change to any of them, nothing counts as certified
+  until the suite is re-run and its record committed. CI fails while the committed record differs.
+- **Display replays are capped** at 90 time steps per run.
