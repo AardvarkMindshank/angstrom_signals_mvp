@@ -1,0 +1,151 @@
+{
+ "signals_per_step": 12,
+ "note": "Every 1D candle signal incl. multi-timeframe alignment, per step; certification mode (no certification lookup), real indicators.",
+ "rows": [
+  {
+   "dataset": "synthetic-crypto-s11",
+   "steps": 30,
+   "path": "exact",
+   "seconds": 3.24,
+   "seconds_per_step": 0.108,
+   "rss_growth_MB": 38.4,
+   "statuses": {
+    "ok": 360
+   },
+   "python_peak_MB": 6.3
+  },
+  {
+   "dataset": "synthetic-crypto-s11",
+   "steps": 30,
+   "path": "slice shortcut",
+   "seconds": 1.67,
+   "seconds_per_step": 0.056,
+   "rss_growth_MB": 8.6,
+   "statuses": {
+    "ok": 360
+   },
+   "python_peak_MB": 24.1
+  },
+  {
+   "dataset": "synthetic-crypto-s11",
+   "steps": 365,
+   "path": "exact",
+   "seconds": 32.79,
+   "seconds_per_step": 0.09,
+   "rss_growth_MB": 15.7,
+   "statuses": {
+    "ok": 4380
+   },
+   "python_peak_MB": 21.4
+  },
+  {
+   "dataset": "synthetic-crypto-s11",
+   "steps": 365,
+   "path": "slice shortcut",
+   "seconds": 15.84,
+   "seconds_per_step": 0.043,
+   "rss_growth_MB": 15.1,
+   "statuses": {
+    "ok": 4380
+   },
+   "python_peak_MB": 42.3
+  },
+  {
+   "dataset": "dev-BTC-USD",
+   "steps": 30,
+   "path": "exact",
+   "seconds": 1.97,
+   "seconds_per_step": 0.066,
+   "rss_growth_MB": 0.0,
+   "statuses": {
+    "ok": 360
+   },
+   "python_peak_MB": 2.7
+  },
+  {
+   "dataset": "dev-BTC-USD",
+   "steps": 30,
+   "path": "slice shortcut",
+   "seconds": 1.74,
+   "seconds_per_step": 0.058,
+   "rss_growth_MB": 0.0,
+   "statuses": {
+    "ok": 360
+   },
+   "python_peak_MB": 4.0
+  },
+  {
+   "dataset": "dev-BTC-USD",
+   "steps": 365,
+   "path": "exact",
+   "seconds": 24.2,
+   "seconds_per_step": 0.066,
+   "rss_growth_MB": 0.7,
+   "statuses": {
+    "ok": 4380
+   },
+   "python_peak_MB": 19.8
+  },
+  {
+   "dataset": "dev-BTC-USD",
+   "steps": 365,
+   "path": "slice shortcut",
+   "seconds": 20.02,
+   "seconds_per_step": 0.055,
+   "rss_growth_MB": 0.0,
+   "statuses": {
+    "ok": 4380
+   },
+   "python_peak_MB": 21.6
+  },
+  {
+   "dataset": "dev-AAPL",
+   "steps": 30,
+   "path": "exact",
+   "seconds": 1.83,
+   "seconds_per_step": 0.061,
+   "rss_growth_MB": 0.0,
+   "statuses": {
+    "ok": 360
+   },
+   "python_peak_MB": 3.4
+  },
+  {
+   "dataset": "dev-AAPL",
+   "steps": 30,
+   "path": "slice shortcut",
+   "seconds": 1.6,
+   "seconds_per_step": 0.053,
+   "rss_growth_MB": 0.0,
+   "statuses": {
+    "ok": 360
+   },
+   "python_peak_MB": 4.4
+  },
+  {
+   "dataset": "dev-AAPL",
+   "steps": 365,
+   "path": "exact",
+   "seconds": 22.51,
+   "seconds_per_step": 0.062,
+   "rss_growth_MB": 0.0,
+   "statuses": {
+    "ok": 4380
+   },
+   "python_peak_MB": 17.9
+  },
+  {
+   "dataset": "dev-AAPL",
+   "steps": 365,
+   "path": "slice shortcut",
+   "seconds": 19.18,
+   "seconds_per_step": 0.053,
+   "rss_growth_MB": 0.0,
+   "statuses": {
+    "ok": 4380
+   },
+   "python_peak_MB": 20.0
+  }
+ ],
+ "rss_end_MB": 378.3
+}
