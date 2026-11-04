@@ -48,7 +48,8 @@ MISSING = "missing_data"             # a required input could not be loaded
 STALE = "stale"                      # the newest input is older than the signal allows
 UNSUPPORTED = "unsupported"          # asset, market or timeframe not supported by this signal
 ERROR = "error"
-STATUSES = (OK, INSUFFICIENT, MISSING, STALE, UNSUPPORTED, ERROR)
+NOT_REPLAYABLE = "not_replayable"   # replays only: the signal or its data source cannot be reconstructed at T
+STATUSES = (OK, INSUFFICIENT, MISSING, STALE, UNSUPPORTED, ERROR, NOT_REPLAYABLE)
 
 # Confirmation of the value itself.
 CONFIRMED = "confirmed"      # built only from closed candles / published data; will not change
