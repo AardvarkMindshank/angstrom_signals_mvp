@@ -90,6 +90,7 @@ def _app_with_reconstruction():
     import streamlit as st
 
     from tests.live_golden import GOLDEN   # tests/fixtures/, found from a module with a real file path
+    from tests.test_signal_inspector import _app
 
     stored = json.loads(pathlib.Path(GOLDEN).with_name("reconstruction.json").read_text())
     st.session_state.setdefault("siggroups_result", tuple(stored))
