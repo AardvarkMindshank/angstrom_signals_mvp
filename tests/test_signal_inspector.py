@@ -89,7 +89,9 @@ def _app_with_reconstruction():
 
     import streamlit as st
 
-    stored = json.loads(pathlib.Path(__file__).resolve().parent.joinpath("fixtures", "reconstruction.json").read_text())
+    import tests
+
+    stored = json.loads(pathlib.Path(tests.__file__).resolve().parent.joinpath("fixtures", "reconstruction.json").read_text())
     st.session_state.setdefault("siggroups_result", tuple(stored))
     _app()
 

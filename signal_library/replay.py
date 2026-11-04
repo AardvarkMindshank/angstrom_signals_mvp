@@ -347,8 +347,9 @@ class ReplayContext(DataContext):
         return got
 
     def fingerprint(self, requires: tuple, timeframe: str) -> str:
-        # The cutoff is part of every replay cache key: stored-data signals have no data fingerprint.
-        return super().fingerprint(requires, timeframe) + f"|T={self.as_of.value}"
+        # Within one run the inputs at a cutoff are fixed, so the cutoff alone identifies them. (Loading candles here
+        # would compute every indicator frame by the exact path before the signal runs, defeating the shortcuts.)
+        return f"T={self.as_of.value}"
 
 
 def cut_flow_rows(rows: list[dict], as_of) -> list[dict]:
