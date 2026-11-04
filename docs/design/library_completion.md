@@ -1,6 +1,6 @@
 # Completing the Signal Library: the original readings, sentiment, and Trend/Stretch/Flow as Groups
 
-Status: draft for review, revision 1 (5 Nov 2026). Nothing here is built yet.
+Status: accepted with refinements, revision 2 (5 Nov 2026). Revision 2 adds the review's clarifications (§9).
 
 This is step 1 of the agreed sequence:
 1. complete the library;
@@ -148,3 +148,56 @@ using synthetic histories that are poisoned after T.
 - **D. Equality criterion.** Within 1e-9 and an identical −100..+100 percent on identical inputs. Recommended:
   yes.
 - **E. Sentiment** as two signals, display-replay only, stale after 36 hours. Recommended: yes.
+
+## 9. Review decisions and clarifications (revision 2)
+
+All five decisions were approved: A and B as proposed, C temporarily, D and E with safeguards. The clarifications
+below are binding for the build.
+
+**Standard score.** `standard_score` is a field inside the signal's value. The `SignalResult` structure is
+unchanged, and no existing signal's output changes. Groups read it with the existing `clip` transform on that
+field.
+
+**Legacy authority.** `signals_v2` remains the authority:
+- its component calculations are split into functions with no change in numerical behaviour, and the new signals
+  call those functions;
+- existing Trend/Stretch/Flow, alerts, the Signal Matrix and the live golden snapshot must be unchanged (tested).
+
+**Live parity is not established (C).** Identical inputs give identical calculations, and that is proven.
+- **Live parity** (dashboard vs library on the live site) is **not claimed**, while:
+  - the dashboard reads the stored daily bars and closes shares at 16:30 New York;
+  - the library reads Yahoo through the chart loader and closes shares at 16:00.
+- Unifying the live sources is a separate task, required before any library-based reading replaces a production
+  reading.
+
+**Parity tests (D).** Tolerance 1e-9 on identical inputs. Each case also checks that these match exactly:
+- the displayed −100..+100 percent;
+- the coverage counts;
+- the missing-data behaviour (a component missing in v2 is excluded in the Group; nothing present gives no value
+  in both);
+- rounding at the half-point boundaries;
+- short histories without SMA 200, sources without volume, and partial components.
+
+**Other timeframes.** On timeframes other than 1D, the standard score is labelled "daily-derived scaling (not
+calibrated for this timeframe)" in the signal's notes and documentation.
+
+**Sentiment safeguards (E):**
+- **First-available time.** `recorded_at` is not proof that a score was available then. The app's writers pass
+  the save time, but the database function accepts a `recorded_at` up to 30 days in the past, so a later import or
+  backfill is possible. A new column records when the database actually received each row:
+  - `first_seen_at timestamptz not null default now()`, added by a new, re-runnable SQL file;
+  - rows that existed before the column are stamped with the time the SQL is run, which is conservative;
+  - replays use `first_seen_at <= T` only;
+  - until the SQL has been run, the sentiment signals are live only (`not_replayable`, with the reason).
+- **Staleness and the 7-day change** are measured from the evaluation time: now, or the replay cutoff T.
+- **Missing is not neutral.** No observation means `missing_data`, never 0. A thin-news observation is reported
+  as such (`coverage: thin`, with its event and source counts), not as neutral.
+- **Provenance.** The model and coverage fields are kept where stored, and the source is named.
+- **No hold-out sentiment** in research or certification. Sentiment history starts in the hold-out period, so
+  research has no sentiment data. Replay certification uses synthetic histories only.
+
+**Lineage.** Lineage version 3 adds the new signals. Saved Groups and Sets pinned to version 2 keep evaluating as
+before.
+
+**Delivery** is in reviewable stages on a separate branch, ending with a report (certification, parity, CI,
+exceptions) before merge approval is requested. No builder or strategy work starts in this step.
