@@ -243,9 +243,48 @@ def test_set_coverage_combines_groups_and_items(coin):
     assert all("btc_etf" in p["missing"] for p in cov["periods"])
     doc["market_context"][0]["ref"]["params"]["point_in_time"] = True
     doc["market_context"][0]["data_modes"] = ["live", "point_in_time"]
-    start = end - pd.Timedelta(days=30)
-    cov2 = gr.set_coverage(doc, run, "crypto", coin.asset_id, end=end, flow_starts={"flows.btc_etf": start})
-    assert cov2["periods"][-1]["level"] == "replayable" and cov2["periods"][-1]["from"] == start.isoformat()
+    flows = cf.synthetic_flows(end="2024-06-30")[0]
+    first_seen = min(pd.Timestamp(r["fetched_at"]) for r in flows.flows if not r["backfilled"])
+    # Without flow data in the run, the source start is known but readings are not confirmed: never replayable.
+    cov2 = gr.set_coverage(doc, run, "crypto", coin.asset_id, end=end, flow_starts={"flows.btc_etf": first_seen})
+    assert cov2["items"]["btc_etf"]["confirmed_from"] is None and "not confirmed" in cov2["items"]["btc_etf"]["reason"]
+    run2 = rp.ReplayRun(rp.DISPLAY, coin.candles, flows=flows.flow_loader(), indicators=simple_indicators)
+    cov3 = gr.set_coverage(doc, run2, "crypto", coin.asset_id, end=end, flow_starts={"flows.btc_etf": first_seen})
+    item = cov3["items"]["btc_etf"]
+    # The ETF signal needs 5 sessions first seen live: its confirmed start is later than the first sighting.
+    assert pd.Timestamp(item["confirmed_from"]) > pd.Timestamp(item["source_from"]) == first_seen
+    last = cov3["periods"][-1]
+    assert last["level"] == "replayable"
+    assert pd.Timestamp(last["from"]) == max(pd.Timestamp(i["confirmed_from"]) for i in cov3["items"].values())
+
+
+def test_coverage_is_conservative_readings_not_just_source_data(coin):
+    """A replayable range starts only where every member is confirmed to read, never where candles merely exist."""
+    run = _run(coin)
+    end = pd.Timestamp(int(coin.histories["1D"].ends[-1]), tz="UTC")
+    doc = sg.starter("starter:trend-confirmation")
+    cov = gr.group_coverage(doc, run, "crypto", coin.asset_id, end=end)
+    members = cov["members"]
+    for key, m in members.items():
+        assert pd.Timestamp(m["confirmed_from"]) >= pd.Timestamp(m["source_from"]), key
+    # Warm-up: the daily trend needs 50 closed candles, so it reads well after its first candle.
+    assert pd.Timestamp(members["trend_1d"]["confirmed_from"]) >= \
+        pd.Timestamp(members["trend_1d"]["source_from"]) + pd.Timedelta(days=49)
+    replayable = [p for p in cov["periods"] if p["level"] == "replayable"]
+    assert replayable
+    first = pd.Timestamp(replayable[0]["from"])
+    at_start = sg.evaluate_group(doc, run.context("crypto", coin.asset_id, first), data_mode="point_in_time",
+                                 as_of=first)
+    assert all(m["replay_availability"] == "replayable" for m in at_start["members"])
+    assert at_start["completeness"]["label"] == "complete"
+    before = first - pd.Timedelta(seconds=1)
+    early = sg.evaluate_group(doc, _run(coin).context("crypto", coin.asset_id, before), data_mode="point_in_time",
+                              as_of=before)
+    assert early["completeness"]["partial"]
+    # Before that, ranges where data exists but readings do not are labelled as such.
+    source_only = [p for p in cov["periods"] if gr.SOURCE_ONLY in p["reasons"].values()]
+    assert source_only and all(p["level"] == "partially_evaluable" for p in source_only)
+    assert "not the first time its source data exists" in cov["evaluability"]
 
 
 def test_uncertified_signals_make_coverage_partial(coin, certified):
@@ -255,3 +294,4 @@ def test_uncertified_signals_make_coverage_partial(coin, certified):
     cov = gr.group_coverage(sg.starter("starter:trend-confirmation"), run, "crypto", coin.asset_id, end=end)
     assert {p["level"] for p in cov["periods"]} == {"partially_evaluable"}
     assert "not certified" in cov["members"]["structure_1d"]["reason"]
+    assert cov["members"]["structure_1d"]["confirmed_from"] is None

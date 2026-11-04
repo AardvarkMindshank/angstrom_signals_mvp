@@ -372,3 +372,16 @@ therefore partial.
 
 **Market contexts must match.** A market context must itself be a replay context at the same T, otherwise the item
 is skipped with the reason.
+
+**Coverage is conservative** (Stage 3 review). For each member a coverage profile records two starts:
+- `source_from`: when its input data first exists;
+- `confirmed_from`: the first cutoff from which the signal is confirmed to produce readings, so warm-up,
+  confirmation periods and other timeframes are included. It is found by evaluating the signal: bisection over
+  candle closes (or days, for flows), then the next three cutoffs must read as well, otherwise the search
+  continues after the failure.
+
+Levels use `confirmed_from` only. Ranges where source data exists but readings are not yet confirmed are labelled
+partially evaluable, with the reason "source data present, but no confirmed reading yet". A flows source whose data
+is not in the run has a source start but no confirmed start, so it is never counted as replayable. Inside a
+replayable range an individual date can still lack a reading (for example a weekly timeframe early in a run); the
+completeness of a replay at that date reports it.

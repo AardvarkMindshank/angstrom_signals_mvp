@@ -92,6 +92,21 @@ None from the accepted design. The clarifications made while building are record
 - non-applicable market items do not count as missing;
 - multi-timeframe alignment's history starts when its second timeframe has data.
 
+## Correction after review (coverage made conservative)
+
+The first version of the coverage profile used the first available candle close as the start of a member's
+history, which overstated coverage for signals that need warm-up, confirmation periods or other timeframes.
+
+Coverage now keeps two starts per member:
+- `source_from`: when data exists;
+- `confirmed_from`: when the signal is confirmed to produce readings. It is found by evaluating the signal
+  (bisection, then three further readings).
+
+Levels use the confirmed start only, and source-only ranges are labelled as such. New test: at the first
+advertised replayable cutoff every member reads and the replay is complete; one second earlier it is partial. The
+daily trend's confirmed start is at least 49 days after its first candle (SMA 50 warm-up). A flows item without
+data in the run is never counted as replayable.
+
 ## Ready for review
 
 Waiting for approval before merging, and before Stages 4 (admin "as of" inspector) and 5 (benchmarks and

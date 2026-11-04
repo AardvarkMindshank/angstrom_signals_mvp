@@ -180,42 +180,111 @@ def set_completeness(result: dict, ctx: ReplayContext) -> dict:
 
 # ---------------------------------------------------------------------------------------------- coverage (5.2)
 
-def _signal_start(run, definition, ref, kind: str, asset_id: str, flow_starts: dict) -> tuple:
-    """(first time this signal has any data in this run, limited?, reason if never replayable)."""
+CONFIRM_READINGS = 3          # a first reading counts only when the next few cutoffs read too
+MAX_RESTARTS = 12
+
+
+def _readable(probe, ref, kind, asset_id, t) -> bool:
+    got = sl.evaluate([ref], probe.context(kind, asset_id, t))[ref.instance_key]
+    return got.status in REPLAYABLE_STATUSES
+
+
+def _first_reading(run, ref, kind: str, asset_id: str, candidates: list) -> tuple:
+    """First cutoff from which the signal actually produces a reading, confirmed by the next CONFIRM_READINGS
+    candidate cutoffs. Searched by bisection over candle closes, then verified; a failed verification restarts the
+    search after it. Returns (Timestamp or None, number of evaluations)."""
+    from signal_library.replay import CERTIFICATION, ReplayRun
+
+    probe = ReplayRun(CERTIFICATION, run.candles_source, flows=run.flows_source, indicators=run.indicators)
+    probe._histories = run._histories                  # share the loaded data, not the results
+    lo, evaluations = 0, 0
+    for _ in range(MAX_RESTARTS):
+        hi = len(candidates)
+        a, b = lo, hi
+        while a < b:                                   # first index that reads, assuming readings persist
+            mid = (a + b) // 2
+            evaluations += 1
+            if _readable(probe, ref, kind, asset_id, candidates[mid]):
+                b = mid
+            else:
+                a = mid + 1
+        if a >= hi:
+            return None, evaluations
+        failed = None
+        for j in range(a + 1, min(hi, a + 1 + CONFIRM_READINGS)):
+            evaluations += 1
+            if not _readable(probe, ref, kind, asset_id, candidates[j]):
+                failed = j
+                break
+        if failed is None:
+            return candidates[a], evaluations
+        lo = failed + 1
+    return None, evaluations
+
+
+def _signal_start(run, definition, ref, kind: str, asset_id: str, flow_starts: dict, end) -> dict:
+    """Where this signal's history starts in this run, kept apart:
+    source_from: the first time its input data exists (candle closes, first live flow sighting);
+    from: the first time it is CONFIRMED to produce readings (warm-up, confirmation periods and other timeframes
+    included), found by evaluating it. Coverage levels use `from` only."""
+    out = {"source_from": None, "from": None, "limited": False, "reason": None, "method": None}
     if "derivatives" in definition.requires:
-        return None, False, "derivatives are live only (no stored history)"
+        return {**out, "reason": "derivatives are live only (no stored history)"}
     if "capital_flows" in definition.requires and not dict(ref.params).get("point_in_time"):
-        return None, False, "non point-in-time flows are live only"
+        return {**out, "reason": "non point-in-time flows are live only"}
     if run.check_certification:
         cert = certification.status(definition.key, ref.timeframe)
         if cert.get("algorithm") != "certified":
-            return None, False, f"not certified: {cert.get('reason')}"
+            return {**out, "reason": f"not certified: {cert.get('reason')}"}
+    end = utc(end)
     if "capital_flows" in definition.requires:
         start = flow_starts.get(definition.id)
-        return (utc(start) if start is not None else None), False, (None if start is not None else "no stored history")
-    timeframes = [ref.timeframe]
-    if "signals" in definition.requires:              # multi-timeframe alignment reads several timeframes
-        from signal_library.signals_ta import MTF_SETS
-        timeframes = list(MTF_SETS[dict(ref.params).get("set", "all")])
-    starts, limited = [], False
-    for tf in timeframes:
-        history = run.history(kind, asset_id, tf)
-        if isinstance(history, CandleHistory) and len(history.raw):
-            starts.append(pd.Timestamp(int(history.ends[0]), tz="UTC"))
-            limited = limited or history.source.get("quality") == RECONSTRUCTED_LIMITED
-    if not starts:
-        return None, False, "no candle history"
-    if "signals" in definition.requires:
-        starts = sorted(starts)[1:2] or starts           # it needs at least two readable timeframes
-    return max(starts), limited, None
+        if start is None:
+            return {**out, "reason": "no stored history"}
+        out["source_from"] = utc(start)
+        if run.flows_source is None:
+            return {**out, "reason": "source data exists; readings not confirmed (no flow data in this run)"}
+        days = pd.date_range(utc(start).normalize(), end, freq="D")
+        candidates = [d + pd.Timedelta(hours=23, minutes=59, seconds=59) for d in days]
+        candidates = [c for c in candidates if c <= end]
+    else:
+        timeframes = [ref.timeframe]
+        if "signals" in definition.requires:          # multi-timeframe alignment reads several timeframes
+            from signal_library.signals_ta import MTF_SETS
+            timeframes = list(MTF_SETS[dict(ref.params).get("set", "all")])
+        starts = []
+        for tf in timeframes:
+            history = run.history(kind, asset_id, tf)
+            if isinstance(history, CandleHistory) and len(history.raw):
+                starts.append(pd.Timestamp(int(history.ends[0]), tz="UTC"))
+                out["limited"] = out["limited"] or history.source.get("quality") == RECONSTRUCTED_LIMITED
+        if not starts:
+            return {**out, "reason": "no candle history"}
+        out["source_from"] = min(starts)
+        base = run.history(kind, asset_id, ref.timeframe)
+        if not isinstance(base, CandleHistory):
+            return {**out, "reason": f"no {ref.timeframe} candle history"}
+        candidates = [pd.Timestamp(int(x), tz="UTC") for x in base.ends if x <= end.value]
+    first, evaluations = _first_reading(run, ref, kind, asset_id, candidates)
+    out["method"] = (f"first reading confirmed by evaluation ({evaluations} evaluations; the first reading must be "
+                     f"followed by {CONFIRM_READINGS} more)")
+    if first is None:
+        return {**out, "reason": "source data exists, but the signal never produced a confirmed reading"}
+    out["from"] = first
+    return out
+
+
+SOURCE_ONLY = "source data present, but no confirmed reading yet (warm-up, confirmation or other timeframes)"
 
 
 def _periods(items: dict, end, critical: set) -> list[dict]:
-    """items: key -> {"from": Timestamp|None, "limited": bool, "reason": text|None}."""
-    starts = sorted({i["from"] for i in items.values() if i["from"] is not None})
-    if not starts:
+    """items: key -> {"source_from", "from", "limited", "reason"}. Levels use the confirmed `from` only; the source
+    start adds a boundary so the period where data exists but readings do not is shown as such."""
+    starts = sorted({i[k] for i in items.values() for k in ("source_from", "from") if i.get(k) is not None})
+    if not any(i["from"] is not None for i in items.values()):
         return [{"from": None, "to": None, "level": "live_only", "missing": sorted(items), "critical_missing":
-                 sorted(k for k in items if k in critical), "reasons": {k: i["reason"] for k, i in items.items()}}]
+                 sorted(k for k in items if k in critical),
+                 "reasons": {k: i["reason"] or SOURCE_ONLY for k, i in items.items()}}]
     end = utc(end)
     out = []
     for n, begin in enumerate(starts):
@@ -226,34 +295,52 @@ def _periods(items: dict, end, critical: set) -> list[dict]:
         missing = sorted(set(items) - present)
         limited = any(items[k]["limited"] for k in present)
         level = "partially_evaluable" if missing else "reconstructed_with_limitations" if limited else "replayable"
+        reasons = {}
+        for k in missing:
+            i = items[k]
+            if i["reason"]:
+                reasons[k] = i["reason"]
+            elif i.get("source_from") is not None and i["source_from"] <= begin:
+                reasons[k] = SOURCE_ONLY
+            else:
+                reasons[k] = "no source data yet at this time"
         out.append({"from": begin.isoformat(), "to": utc(stop).isoformat(), "level": level, "missing": missing,
-                    "critical_missing": [k for k in missing if k in critical],
-                    "reasons": {k: items[k]["reason"] or "no history yet at this time" for k in missing}})
+                    "critical_missing": [k for k in missing if k in critical], "reasons": reasons})
     merged = []
     for p in out:                                       # join neighbouring ranges that read the same
-        if merged and all(merged[-1][k] == p[k] for k in ("level", "missing", "critical_missing")):
+        if merged and all(merged[-1][k] == p[k] for k in ("level", "missing", "critical_missing", "reasons")):
             merged[-1]["to"] = p["to"]
         else:
             merged.append(p)
     return merged
 
 
+def _member_view(i: dict, critical: bool) -> dict:
+    iso_ = (lambda x: None if x is None else x.isoformat())
+    return {"source_from": iso_(i.get("source_from")), "confirmed_from": iso_(i["from"]), "limited": i["limited"],
+            "reason": i["reason"], "method": i.get("method"), "critical": critical}
+
+
+EVALUABILITY_NOTE = ("Levels use the first time each member is confirmed to produce readings (found by evaluating it), "
+                     "not the first time its source data exists. Inside a replayable range an individual date can "
+                     "still lack a reading; the completeness of a replay at that date says so.")
+
+
 def group_coverage(doc: dict, run, kind: str, asset_id: str, *, end=None, flow_starts: dict | None = None) -> dict:
     """Date ranges for one Group on one asset in this run's data, each with a level and what is missing."""
     from .evaluate import _ref
 
+    end = end or pd.Timestamp.now(tz="UTC")
     items = {}
     for m in doc.get("members") or []:
         ref = _ref(m)
-        start, limited, reason = _signal_start(run, sl.REGISTRY.get(ref.id, ref.version), ref, kind, asset_id,
-                                               flow_starts or {})
-        items[m["key"]] = {"from": start, "limited": limited, "reason": reason}
+        items[m["key"]] = _signal_start(run, sl.REGISTRY.get(ref.id, ref.version), ref, kind, asset_id,
+                                        flow_starts or {}, end)
     critical = set(critical_members(doc))
-    end = end or pd.Timestamp.now(tz="UTC")
     return {"subject": f"{kind}:{asset_id}", "periods": _periods(items, end, critical),
-            "members": {k: {"from": None if i["from"] is None else i["from"].isoformat(), "limited": i["limited"],
-                            "reason": i["reason"], "critical": k in critical} for k, i in items.items()},
-            "computed_from": "certification records and the history each source has in this run",
+            "members": {k: _member_view(i, k in critical) for k, i in items.items()},
+            "evaluability": EVALUABILITY_NOTE,
+            "computed_from": "certification records, the history each source has in this run, and evaluation",
             "certification": certification.suite_reference()}
 
 
@@ -269,8 +356,10 @@ def set_coverage(doc: dict, run, kind: str, asset_id: str, *, end=None, flow_sta
         cov = group_coverage(g["snapshot"], run, kind, asset_id, end=end, flow_starts=flow_starts)
         groups[g["key"]] = cov
         for key, info in cov["members"].items():
-            items[f"{g['key']}.{key}"] = {"from": None if info["from"] is None else utc(info["from"]),
-                                          "limited": info["limited"], "reason": info["reason"]}
+            items[f"{g['key']}.{key}"] = {
+                "source_from": None if info["source_from"] is None else utc(info["source_from"]),
+                "from": None if info["confirmed_from"] is None else utc(info["confirmed_from"]),
+                "limited": info["limited"], "reason": info["reason"]}
             if info["critical"]:
                 critical.add(f"{g['key']}.{key}")
     for section, subject_kind in (("standalone", kind), ("market_context", "market")):
@@ -279,15 +368,17 @@ def set_coverage(doc: dict, run, kind: str, asset_id: str, *, end=None, flow_sta
                 if kind not in APPLIES.get(item.get("applies_to", "all"), ("crypto", "equity")):
                     continue
                 if item.get("data_modes") == ["live"]:
-                    items[item["key"]] = {"from": None, "limited": False, "reason": "this item is live only"}
+                    items[item["key"]] = {"source_from": None, "from": None, "limited": False,
+                                          "reason": "this item is live only"}
                     continue
             ref = _ref(item)
             sub_id = item["subject"].split(":", 1)[1] if section == "market_context" else asset_id
-            start, limited, reason = _signal_start(run, sl.REGISTRY.get(ref.id, ref.version), ref, subject_kind,
-                                                   sub_id, flow_starts or {})
-            items[item["key"]] = {"from": start, "limited": limited, "reason": reason}
+            items[item["key"]] = _signal_start(run, sl.REGISTRY.get(ref.id, ref.version), ref, subject_kind, sub_id,
+                                               flow_starts or {}, end)
     return {"subject": f"{kind}:{asset_id}", "periods": _periods(items, end, critical), "groups": groups,
-            "computed_from": "certification records and the history each source has in this run",
+            "items": {k: _member_view(i, k in critical) for k, i in items.items()},
+            "evaluability": EVALUABILITY_NOTE,
+            "computed_from": "certification records, the history each source has in this run, and evaluation",
             "certification": certification.suite_reference()}
 
 
