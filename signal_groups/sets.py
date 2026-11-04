@@ -13,6 +13,7 @@ from datetime import datetime, timezone
 import signal_library as sl
 
 from . import lineage
+from . import replay
 from .evaluate import _ref, evaluate_group
 from .validate import validate_set
 
@@ -32,16 +33,25 @@ def evaluate_set(doc: dict, ctx: sl.DataContext, *, market_context=None, data_mo
     now = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
     base = {"name": doc.get("name"), "subject": ctx.subject, "data_mode": data_mode, "evaluated_at": now,
             "lineage_version": doc.get("lineage_version"), "score": None}
-    if data_mode != "live":
-        return {**base, "status": "unsupported",
-                "reason": "Point-in-time evaluation is not supported yet: not every signal and cache respects a cutoff."}
+    pit = data_mode == replay.POINT_IN_TIME_MODE
+    if data_mode not in ("live", replay.POINT_IN_TIME_MODE):
+        return {**base, "status": "unsupported", "reason": f"Unknown data mode {data_mode!r}."}
+    if pit:
+        problem = replay.context_problem(ctx, None)
+        if problem:
+            return {**base, "status": "unsupported", "reason": problem}
+        base["as_of"] = ctx.as_of.isoformat()
+        base["replay_mode"] = ctx.replay.mode
+    elif getattr(ctx, "replay", None) is not None:
+        return {**base, "status": "unsupported", "reason": "A replay context needs data_mode='point_in_time'."}
     errors = validate_set(doc)
     if errors:
         return {**base, "status": "invalid", "errors": errors}
     shared: dict = {}
     groups = []
     for g in doc.get("groups") or []:
-        result = evaluate_group(g["snapshot"], ctx, results=shared, validated=True)
+        result = evaluate_group(g["snapshot"], ctx, results=shared, validated=True, data_mode=data_mode,
+                                as_of=ctx.as_of if pit else None)
         groups.append({"key": g["key"], "provenance": g.get("provenance"), "result": result})
 
     standalone = []
@@ -59,11 +69,18 @@ def evaluate_set(doc: dict, ctx: sl.DataContext, *, market_context=None, data_mo
                  "data_modes": i.get("data_modes")}
         if ctx.kind not in APPLIES.get(i.get("applies_to", "all"), ("crypto", "equity")):
             entry["skipped"] = f"applies to {i.get('applies_to')} only"
+        elif pit and i.get("data_modes") == ["live"]:
+            entry["skipped"] = "this item is live only (current context, not replayable)"
         elif market_context is None:
             entry["skipped"] = "no market data source configured"
         else:
             ref = _ref(i)
-            entry["signal"] = sl.evaluate([ref], market_context(i["subject"]))[ref.instance_key].as_dict()
+            mctx = market_context(i["subject"])
+            problem = replay.context_problem(mctx, ctx.as_of) if pit else None
+            if problem:
+                entry["skipped"] = problem
+            else:
+                entry["signal"] = sl.evaluate([ref], mctx)[ref.instance_key].as_dict()
         market.append(entry)
 
     # ------------------------------------------------------------------ cross-Group diagnostics
@@ -86,5 +103,8 @@ def evaluate_set(doc: dict, ctx: sl.DataContext, *, market_context=None, data_mo
                  "Distinct sources are not statistical independence either."),
         "group_statuses": {g["key"]: g["result"]["status"] for g in groups},
     }
-    return {**base, "status": "ok", "groups": groups, "standalone": standalone, "market_context": market,
-            "diagnostics": diagnostics}
+    out = {**base, "status": "ok", "groups": groups, "standalone": standalone, "market_context": market,
+           "diagnostics": diagnostics}
+    if pit:
+        out["completeness"] = replay.set_completeness(out, ctx)
+    return out
