@@ -47,6 +47,7 @@ CSS = """
 .lat h3{font-size:14px;margin:0 0 8px}
 .lat .hd{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:8px}
 .lat .hd h3{margin:0}
+@media (max-width:640px){.lat .lib{max-width:none;flex-basis:100%;max-height:380px}.lat .mid{flex-basis:100%}}
 """
 
 JS = r"""
