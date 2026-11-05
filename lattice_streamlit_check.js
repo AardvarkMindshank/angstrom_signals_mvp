@@ -66,6 +66,16 @@ const { chromium } = require("playwright");
           (await page.$$(".lat .rule")).length === 1 && body.includes("says Yes when"), (body.match(/says Yes when[^\n]*/) || [""])[0]);
     check("the Set editor's styles are applied", (await styled()) === "flex");
     await page.screenshot({ path: path.join(dir, "lattice_set_in_streamlit.png"), fullPage: true });
+    // iPhone width (390 px): the page must not scroll sideways; screenshots of both editors for review.
+    await page.setViewportSize({ width: 390, height: 844 });
+    await settle();
+    const wide = () => page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+    await page.screenshot({ path: path.join(dir, "lattice_set_phone.png"), fullPage: true });
+    check("phone width: no sideways scrolling (Set editor)", (await wide()) <= 1, `${await wide()} px too wide`);
+    await page.click("text=Signal Groups");
+    await settle();
+    await page.screenshot({ path: path.join(dir, "lattice_group_phone.png"), fullPage: true });
+    check("phone width: no sideways scrolling (Group editor)", (await wide()) <= 1, `${await wide()} px too wide`);
     check("no browser errors", errors.length === 0, errors.join("; "));
   } catch (e) {
     check("ran to the end", false, String(e).slice(0, 300));

@@ -65,6 +65,11 @@ def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str = "") 
         return
     names = {f"{kind}:{key}": name for kind, key, name in assets}
 
+    # Outside the form so the page redraws at once: the date and time appear only for a past moment.
+    mode = st.segmented_control("When", ["Now", "A past moment"], default="Now", key="prism_when",
+                                help="Now uses the latest finished candles. A past moment rebuilds what was known "
+                                     "then, using only data available at that time.") or "Now"
+    day = clock = None
     with st.form("prism_form", border=False):
         top = st.columns([3, 1])
         pick = top[0].selectbox("Set", list(labels), format_func=lambda k: labels[k], key="prism_set",
@@ -73,13 +78,11 @@ def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str = "") 
         chosen = st.multiselect("Assets", list(names), default=list(names)[:prism.MAX_ASSETS],
                                 format_func=lambda k: names[k], key="prism_assets",
                                 help=f"Your Watchlist, at most {prism.MAX_ASSETS} per run.")
-        when = st.columns([2, 2, 2])
-        mode = when[0].radio("When", ["Now", "A past moment"], horizontal=True, key="prism_when",
-                             help="Now uses the latest finished candles. A past moment rebuilds what was known then, "
-                                  "using only data available at that time.")
-        day = when[1].date_input("Date (UTC)", key="prism_day",
-                                 value=(pd.Timestamp.now(tz="UTC") - pd.Timedelta(days=7)).date())
-        clock = when[2].time_input("Time (UTC)", key="prism_time", value=dt.time(0, 5))
+        if mode != "Now":
+            when = st.columns(2)
+            day = when[0].date_input("Date (UTC)", key="prism_day",
+                                     value=(pd.Timestamp.now(tz="UTC") - pd.Timedelta(days=7)).date())
+            clock = when[1].time_input("Time (UTC)", key="prism_time", value=dt.time(0, 5))
 
     doc = docs[pick]
     with st.expander("What this Set checks", expanded=False):

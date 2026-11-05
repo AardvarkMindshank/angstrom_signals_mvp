@@ -30,7 +30,7 @@ same thing they can open, copy and change in Lattice.
 
 ## Navigation: Angstrom Lattice
 
-- The dashboard section is now **Angstrom Lattice** (lattice icon on the section, logo and subtitle inside), as
+- The dashboard section is now **Angstrom Lattice** (lattice icon on the section and its heading, with a subtitle), as
   agreed in the naming discussion.
 - Four parts across the top, each with an icon: **Signal Groups**, **Signal Sets**, **Prism Scan**, **Strategies
   (soon)**. The bar's hover note explains all four; a line under it says what the chosen part is for.
