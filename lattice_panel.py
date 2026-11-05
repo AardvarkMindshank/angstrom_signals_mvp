@@ -2,8 +2,8 @@
 Angstrom Lattice, for every signed-in account (docs/design/lattice_prism.md §8; build stages 5 and 6).
 
 One section on the dashboard with four parts across the top: Signal Groups, Signal Sets, Prism Scan and
-Strategies (coming later). Only the chosen part is drawn. Nothing runs, and nothing is read from the database,
-until the section is switched on, so the dashboard costs the same for people who do not use it.
+Strategies (coming later). Only the chosen part is drawn; saved Groups and Sets are read at most once a minute,
+and Prism only does real work when Run now is pressed.
 """
 
 from __future__ import annotations
@@ -42,9 +42,6 @@ def label(key: str) -> str:
 
 def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str) -> None:
     st.html(LOGO)
-    if not st.toggle("Open Angstrom Lattice", key="lattice_open",
-                     help="Loads your Groups and Sets. Switch off to keep the page light."):
-        return
     hover = "\n\n".join(f"**{SECTIONS[k][1]}**: {SECTIONS[k][2]}" for k in SECTIONS)
     chosen = st.segmented_control("Lattice section", list(SECTIONS), format_func=label, default="groups",
                                   key="lattice_section", label_visibility="collapsed", help=hover) or "groups"

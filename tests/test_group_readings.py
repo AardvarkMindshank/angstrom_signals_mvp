@@ -113,9 +113,6 @@ def test_angstrom_lattice_has_four_parts_and_draws_only_the_chosen_one():
         def caption(self, *a, **k):
             pass
 
-        def toggle(self, *a, **k):
-            return True
-
         def segmented_control(self, *a, **k):
             return "strategies"
 

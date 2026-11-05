@@ -34,7 +34,8 @@ same thing they can open, copy and change in Lattice.
   agreed in the naming discussion.
 - Four parts across the top, each with an icon: **Signal Groups**, **Signal Sets**, **Prism Scan**, **Strategies
   (soon)**. The bar's hover note explains all four; a line under it says what the chosen part is for.
-- Only the chosen part is drawn, so opening the section stays light. Strategies shows what is coming.
+- No on/off switch: the section opens straight away. Only the chosen part is drawn, saved Groups and Sets are
+  read at most once a minute, and Prism works only when Run now is pressed. Strategies shows what is coming.
 - The old "Group editor / Set editor" switch inside Lattice is gone; Prism keeps its Run now / Scheduled scans
   switch.
 

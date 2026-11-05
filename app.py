@@ -12956,7 +12956,7 @@ render_dashboard(
 if _POPOUT_VIEW:
     st.stop()
 _record_run("whole page", _RUN_STARTED)
-# Angstrom Lattice (preview), for every signed-in account. Nothing loads until the section is switched on.
+# Angstrom Lattice (preview), for every signed-in account. Only the chosen part is drawn.
 with st.expander("Angstrom Lattice", icon=":material/hub:", expanded=False, key="lattice_panel"):
     import lattice_panel
 
