@@ -1,0 +1,150 @@
+{
+ "slice_allowed_pairs": 93,
+ "rows": [
+  {
+   "dataset": "synthetic-crypto-s11",
+   "variant": "A exact",
+   "steps": 60,
+   "seconds": 58.5,
+   "seconds_per_step": 0.975,
+   "python_peak_MB": 29.0,
+   "rss_growth_MB": 62.1,
+   "frame_reuses": 0,
+   "steps_differing_from_exact": 0,
+   "first_difference": []
+  },
+  {
+   "dataset": "synthetic-crypto-s11",
+   "variant": "B reuse frames",
+   "steps": 60,
+   "seconds": 56.0,
+   "seconds_per_step": 0.933,
+   "python_peak_MB": 32.8,
+   "rss_growth_MB": 22.7,
+   "frame_reuses": 51,
+   "steps_differing_from_exact": 0,
+   "first_difference": []
+  },
+  {
+   "dataset": "synthetic-crypto-s11",
+   "variant": "C certified slicing",
+   "steps": 60,
+   "seconds": 43.4,
+   "seconds_per_step": 0.723,
+   "python_peak_MB": 30.3,
+   "rss_growth_MB": 0.3,
+   "frame_reuses": 0,
+   "steps_differing_from_exact": 0,
+   "first_difference": []
+  },
+  {
+   "dataset": "synthetic-crypto-s11",
+   "variant": "D slicing + reuse",
+   "steps": 60,
+   "seconds": 43.2,
+   "seconds_per_step": 0.72,
+   "python_peak_MB": 46.9,
+   "rss_growth_MB": 17.7,
+   "frame_reuses": 51,
+   "steps_differing_from_exact": 0,
+   "first_difference": []
+  },
+  {
+   "dataset": "synthetic-equity-s23",
+   "variant": "A exact",
+   "steps": 60,
+   "seconds": 28.7,
+   "seconds_per_step": 0.479,
+   "python_peak_MB": 7.3,
+   "rss_growth_MB": -24.5,
+   "frame_reuses": 0,
+   "steps_differing_from_exact": 0,
+   "first_difference": []
+  },
+  {
+   "dataset": "synthetic-equity-s23",
+   "variant": "B reuse frames",
+   "steps": 60,
+   "seconds": 26.8,
+   "seconds_per_step": 0.446,
+   "python_peak_MB": 17.0,
+   "rss_growth_MB": 0.0,
+   "frame_reuses": 48,
+   "steps_differing_from_exact": 0,
+   "first_difference": []
+  },
+  {
+   "dataset": "synthetic-equity-s23",
+   "variant": "C certified slicing",
+   "steps": 60,
+   "seconds": 17.7,
+   "seconds_per_step": 0.295,
+   "python_peak_MB": 12.6,
+   "rss_growth_MB": 0.0,
+   "frame_reuses": 0,
+   "steps_differing_from_exact": 0,
+   "first_difference": []
+  },
+  {
+   "dataset": "synthetic-equity-s23",
+   "variant": "D slicing + reuse",
+   "steps": 60,
+   "seconds": 17.7,
+   "seconds_per_step": 0.294,
+   "python_peak_MB": 18.9,
+   "rss_growth_MB": 0.0,
+   "frame_reuses": 48,
+   "steps_differing_from_exact": 0,
+   "first_difference": []
+  },
+  {
+   "dataset": "dev-BTC-USD",
+   "variant": "A exact",
+   "steps": 60,
+   "seconds": 11.8,
+   "seconds_per_step": 0.197,
+   "python_peak_MB": 5.1,
+   "rss_growth_MB": 0.0,
+   "frame_reuses": 0,
+   "steps_differing_from_exact": 0,
+   "first_difference": []
+  },
+  {
+   "dataset": "dev-BTC-USD",
+   "variant": "B reuse frames",
+   "steps": 60,
+   "seconds": 9.7,
+   "seconds_per_step": 0.161,
+   "python_peak_MB": 12.1,
+   "rss_growth_MB": 0.1,
+   "frame_reuses": 50,
+   "steps_differing_from_exact": 0,
+   "first_difference": []
+  },
+  {
+   "dataset": "dev-BTC-USD",
+   "variant": "C certified slicing",
+   "steps": 60,
+   "seconds": 6.6,
+   "seconds_per_step": 0.11,
+   "python_peak_MB": 6.3,
+   "rss_growth_MB": 0.0,
+   "frame_reuses": 0,
+   "steps_differing_from_exact": 0,
+   "first_difference": []
+  },
+  {
+   "dataset": "dev-BTC-USD",
+   "variant": "D slicing + reuse",
+   "steps": 60,
+   "seconds": 6.6,
+   "seconds_per_step": 0.109,
+   "python_peak_MB": 10.8,
+   "rss_growth_MB": 0.0,
+   "frame_reuses": 50,
+   "steps_differing_from_exact": 0,
+   "first_difference": []
+  }
+ ],
+ "note": "Example Set at consecutive daily cutoffs; every variant compared step by step with the exact path."
+}
