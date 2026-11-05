@@ -27,6 +27,7 @@ import digest
 import evidence
 import research as rs
 import signal_matrix
+import group_readings as gr
 import signals_v2 as v2
 import signals_view as view
 from scoring import calculate_indicators
@@ -66,7 +67,7 @@ def main(argv=None) -> int:
         sig = row["signals"]
         check(f"{ticker}: status ok", sig["status"] == "ok", sig.get("message", ""))
         check(f"{ticker}: no 0-100 score key", "score" not in row and "score" not in sig)
-        check(f"{ticker}: version and fingerprint", sig["version"] == v2.VERSION and sig["fingerprint"] == v2.FINGERPRINT)
+        check(f"{ticker}: readings from the starter Groups", sig["version"] == gr.VERSION and sig["fingerprint"] == gr.FINGERPRINT)
         for key in v2.CLUSTERS:
             value = row[key]
             check(f"{ticker}: {key} bounded or missing", value is None or -100 <= value <= 100, value)

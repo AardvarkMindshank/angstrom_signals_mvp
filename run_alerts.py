@@ -20,6 +20,7 @@ from alerts import SETTINGS_KEYS as READING_SETTINGS_KEYS
 from beta_worker import send_beta_decision_emails
 from digest import send_due_digest
 from email_brand import alert_tone, asset_logo, render_email
+import group_readings
 import signals_v2
 from scoring import calculate_indicators
 from market_store import asset_market_key
@@ -296,13 +297,13 @@ def followed_markets(user_pref: dict) -> list[str]:
 
 
 def _score_asset(df, kind):
-    """Signals v2 readings for one asset (Trend, Stretch, Flow on -100..100), or None."""
+    """Trend, Stretch and Flow for one asset (-100..100), from the starter Groups, or None."""
     if df is None or df.empty or len(df) < 15:
         return None
-    result = signals_v2.score(calculate_indicators(df), kind)
+    result = group_readings.score(calculate_indicators(df), kind)
     if result.get("status") != "ok":
         return None
-    return signals_v2.flat_fields(result)
+    return group_readings.flat_fields(result)
 
 
 def _watchlist(user_pref: dict) -> tuple[dict, dict, int]:
