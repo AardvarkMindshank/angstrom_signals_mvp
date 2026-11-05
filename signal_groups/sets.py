@@ -32,8 +32,11 @@ def scannable(doc: dict) -> bool:
     return isinstance(doc, dict) and doc.get("decision") is not None
 
 
-def evaluate_set(doc: dict, ctx: sl.DataContext, *, market_context=None, data_mode: str = "live") -> dict:
-    """`market_context(scope)` returns a DataContext for a market subject such as "market:bitcoin"."""
+def evaluate_set(doc: dict, ctx: sl.DataContext, *, market_context=None, data_mode: str = "live",
+                 subject_context=None) -> dict:
+    """`market_context(scope)` returns a DataContext for a market subject such as "market:bitcoin".
+    `subject_context(kind, asset_id)` returns a DataContext for a fixed subject (E4, lattice_prism.md §4.4), read at
+    the same moment as `ctx`. Without it, items with a fixed subject are unavailable and their predicates unknown."""
     now = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
     base = {"name": doc.get("name"), "subject": ctx.subject, "data_mode": data_mode, "evaluated_at": now,
             "lineage_version": doc.get("lineage_version"), "score": None}
@@ -52,20 +55,61 @@ def evaluate_set(doc: dict, ctx: sl.DataContext, *, market_context=None, data_mo
     if errors:
         return {**base, "status": "invalid", "errors": errors}
     shared: dict = {}
+    by_subject: dict = {}        # fixed subjects: their own contexts and shared results, never mixed with ctx's
+    subject_problem = {}
+
+    def context_for(item):
+        subject = item.get("subject")
+        if not subject:
+            return ctx, shared
+        key = f"{subject['kind']}:{subject['id']}"
+        if key not in by_subject:
+            sub_ctx = None
+            if subject_context is not None:
+                try:
+                    sub_ctx = subject_context(subject["kind"], subject["id"])
+                except Exception as exc:            # a refused reconstruction or a missing source
+                    subject_problem[key] = str(exc)[:200]
+            elif not subject_problem.get(key):
+                subject_problem[key] = "no data source for a fixed subject here"
+            by_subject[key] = (sub_ctx, {})
+        return by_subject[key]
+
     groups = []
     for g in doc.get("groups") or []:
-        result = evaluate_group(g["snapshot"], ctx, results=shared, validated=True, data_mode=data_mode,
-                                as_of=ctx.as_of if pit else None)
-        groups.append({"key": g["key"], "provenance": g.get("provenance"), "result": result})
+        g_ctx, g_shared = context_for(g)
+        entry = {"key": g["key"], "provenance": g.get("provenance")}
+        if g.get("subject"):
+            entry["subject"] = g["subject"]
+        if g_ctx is None:
+            key = f"{g['subject']['kind']}:{g['subject']['id']}"
+            entry["result"] = {"status": "unsupported", "reason": subject_problem.get(key, "no data"),
+                               "subject": key, "members": [], "conditions": []}
+        else:
+            entry["result"] = evaluate_group(g["snapshot"], g_ctx, results=g_shared, validated=True,
+                                             data_mode=data_mode, as_of=ctx.as_of if pit else None)
+        groups.append(entry)
 
     standalone = []
     items = list(doc.get("standalone") or [])
     refs = {i["key"]: _ref(i) for i in items}
-    got = sl.evaluate([r for r in refs.values() if r.instance_key not in shared], ctx)
-    shared.update(got)
+    results_for: dict = {}
     for i in items:
-        standalone.append({"key": i["key"], "label": i.get("label"), "role": i["role"],
-                           "signal": shared[refs[i["key"]].instance_key].as_dict()})
+        i_ctx, i_shared = context_for(i)
+        ref = refs[i["key"]]
+        if i_ctx is None:
+            key = f"{i['subject']['kind']}:{i['subject']['id']}"
+            results_for[i["key"]] = sl.core.SignalResult(
+                ref={}, subject=key, status=sl.core.MISSING, notes=[subject_problem.get(key, "no data")])
+            continue
+        if ref.instance_key not in i_shared:
+            i_shared.update(sl.evaluate([ref], i_ctx))
+        results_for[i["key"]] = i_shared[ref.instance_key]
+    for i in items:
+        entry = {"key": i["key"], "label": i.get("label"), "role": i["role"], "signal": results_for[i["key"]].as_dict()}
+        if i.get("subject"):
+            entry["subject"] = i["subject"]
+        standalone.append(entry)
 
     market = []
     for i in doc.get("market_context") or []:
@@ -113,7 +157,7 @@ def evaluate_set(doc: dict, ctx: sl.DataContext, *, market_context=None, data_mo
         # Optional (docs/design/lattice_prism.md §4.2): only Sets that define a decision gain this key.
         members = {}
         for i in items:
-            res = shared[refs[i["key"]].instance_key]
+            res = results_for[i["key"]]
             members[i["key"]] = {"available": res.status in AVAILABLE, "value": res.value,
                                  "instance": refs[i["key"]].instance_key, "roots": set(table[refs[i["key"]].id])}
         mctx = rules.Context(members, None, set(), {m["instance"]: m["roots"] for m in members.values()},

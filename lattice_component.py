@@ -282,6 +282,84 @@ export default function(component) {
              clauses: [{operand: "score", op: suggest.value.toLowerCase().indexOf("bear") >= 0 || suggest.value.toLowerCase().indexOf("down") >= 0 || suggest.value.toLowerCase().indexOf("sell") >= 0 ? "lte" : "gte",
                         value: suggest.value.toLowerCase().indexOf("bear") >= 0 || suggest.value.toLowerCase().indexOf("down") >= 0 || suggest.value.toLowerCase().indexOf("sell") >= 0 ? "−30" : "+30"}]}); send(); }));
   rules.appendChild(add);
+
+  // ---------------------------------------------------------------- confirmations and vetoes
+  const checksBox = el("div", "col");
+  mid.appendChild(checksBox);
+  const chh = el("div", "hd");
+  chh.appendChild(el("h3", "", "Confirmations and vetoes"));
+  chh.appendChild(el("span", "muted", "Optional. A confirmation is reported as met or not met; a veto that fires makes every label Vetoed."));
+  checksBox.appendChild(chh);
+  function slugKey(text) {
+    let k = String(text || "").toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 36) || "check";
+    const taken = new Set((model.conditions || []).map((c) => c.key));
+    let out = k, n = 2;
+    while (taken.has(out)) { out = k + "_" + n; n += 1; }
+    return out;
+  }
+  (model.conditions || []).forEach((c, ci) => {
+    const row = el("div", "rule");
+    ["confirmation", "veto"].forEach((k) => {
+      const b = button(k === "veto" ? "⛔ Veto" : "✅ Confirmation", k === "veto" ? "When true, the Group is vetoed." : "Reported as met or not met.",
+                       () => { c.kind = k; send(); }, c.kind === k ? "on" : "");
+      b.setAttribute("aria-pressed", c.kind === k ? "true" : "false");
+      row.appendChild(b);
+    });
+    const lab = el("input");
+    lab.value = c.label || ""; lab.size = 24; lab.setAttribute("aria-label", "Name of this " + c.kind);
+    lab.addEventListener("change", () => { c.label = lab.value; send(); });
+    row.appendChild(lab);
+    row.appendChild(el("span", "muted", "when"));
+    (c.clauses || []).forEach((x, xi) => {
+      if (xi > 0) row.appendChild(button(c.joiner === "any" ? "OR" : "AND", "Switch between AND and OR",
+                                         () => { c.joiner = c.joiner === "any" ? "all" : "any"; send(); }));
+      const o = opByKey[x.operand] || {type: "number", scale: "", labels: []};
+      row.appendChild(el("span", "tag", o.type === "number" ? "#" : o.type === "yes/no" ? "Y/N" : "Aa"));
+      const pick = el("select");
+      pick.setAttribute("aria-label", "Reading");
+      operands.forEach((y) => { const op = el("option", "", y.label); op.value = y.key; if (y.key === x.operand) op.selected = true; pick.appendChild(op); });
+      if (!opByKey[x.operand]) { const op = el("option", "", "(removed reading)"); op.value = x.operand; op.selected = true; pick.appendChild(op); }
+      pick.addEventListener("change", () => {
+        x.operand = pick.value;
+        const n = opByKey[x.operand] || {type: "number", labels: []};
+        x.op = OPS[n.type] ? OPS[n.type][0][0] : "gte";
+        x.value = n.type === "label" ? (n.labels[0] || "") : "";
+        send();
+      });
+      row.appendChild(pick);
+      const ops = el("select");
+      ops.setAttribute("aria-label", "Comparison");
+      (OPS[o.type] || OPS.number).forEach(([k, t]) => { const op = el("option", "", t); op.value = k; if (k === x.op) op.selected = true; ops.appendChild(op); });
+      ops.addEventListener("change", () => { x.op = ops.value; send(); });
+      row.appendChild(ops);
+      if (o.type === "number") {
+        const v = el("input"); v.value = x.value || ""; v.size = 6; v.setAttribute("aria-label", "Value");
+        v.addEventListener("change", () => { x.value = v.value; send(); });
+        row.appendChild(v);
+        row.appendChild(el("span", "muted", o.scale || ""));
+      } else if (o.type === "label") {
+        const v = el("select"); v.setAttribute("aria-label", "Label");
+        (o.labels || []).forEach((l) => { const op = el("option", "", l); op.value = l; if (l === x.value) op.selected = true; v.appendChild(op); });
+        v.addEventListener("change", () => { x.value = v.value; send(); });
+        row.appendChild(v);
+      }
+      row.appendChild(button("✕", "Remove this condition", () => { c.clauses.splice(xi, 1); send(); }, "sq"));
+    });
+    row.appendChild(button("+ condition", "Add another condition",
+      () => { c.clauses = c.clauses || []; c.clauses.push({operand: "score", op: "gte", value: "+30"}); send(); }));
+    row.appendChild(button("🗑", "Remove this " + c.kind, () => { model.conditions.splice(ci, 1); send(); }, "sq"));
+    checksBox.appendChild(row);
+  });
+  const addChecks = el("div", "hd");
+  addChecks.appendChild(button("+ Confirmation", "Add a confirmation (reported as met or not met)", () => {
+    model.conditions = model.conditions || [];
+    model.conditions.push({key: slugKey("confirmation"), label: "Confirmation", kind: "confirmation", joiner: "all",
+                           clauses: [{operand: "score", op: "gte", value: "+50"}]}); send(); }));
+  addChecks.appendChild(button("+ Veto", "Add a veto (when true, every label becomes Vetoed)", () => {
+    model.conditions = model.conditions || [];
+    model.conditions.push({key: slugKey("veto"), label: "Veto", kind: "veto", joiner: "all",
+                           clauses: [{operand: "score", op: "lte", value: "0"}]}); send(); }));
+  checksBox.appendChild(addChecks);
 }
 """
 
@@ -351,6 +429,32 @@ export default function(component) {
     model.standalone = model.standalone || [];
     model.standalone.push({key: key(id.split(".").slice(-1)[0] + "_" + tf), id: s.id, version: s.version, timeframe: tf, role: "condition"});
     send();
+  }
+  function subjectPicker(item, name) {
+    // E4: read this item on the scanned asset (default) or on one fixed asset, at the same moment.
+    const wrap = el("span", "hd");
+    wrap.style.margin = "0";
+    const kind = el("select");
+    kind.setAttribute("aria-label", "Which asset " + name + " is read on");
+    kind.title = "Read on the asset being scanned, or always on one fixed asset (for example COIN), at the same moment.";
+    [["", "📌 the scanned asset"], ["crypto", "📌 fixed crypto"], ["equity", "📌 fixed share"]].forEach(([v, t]) => {
+      const o = el("option", "", t); o.value = v;
+      if ((item.subject ? item.subject.kind : "") === v) o.selected = true;
+      kind.appendChild(o);
+    });
+    const id = el("input");
+    id.size = 9; id.placeholder = "COIN, bitcoin"; id.setAttribute("aria-label", "Fixed asset for " + name);
+    id.value = item.subject ? item.subject.id : "";
+    id.style.display = item.subject ? "" : "none";
+    const apply = () => {
+      if (!kind.value) { delete item.subject; send(); return; }
+      id.style.display = "";
+      if (id.value.trim()) { item.subject = {kind: kind.value, id: id.value.trim()}; send(); }
+    };
+    kind.addEventListener("change", apply);
+    id.addEventListener("change", apply);
+    wrap.appendChild(kind); wrap.appendChild(id);
+    return wrap;
   }
   function onDrop(raw) {
     if (raw.indexOf("group|") === 0) addGroup(raw.slice(6));
@@ -426,6 +530,7 @@ export default function(component) {
     card.appendChild(el("span", "tag", "Group"));
     card.appendChild(el("div", "nm", info.name));
     card.appendChild(el("span", "muted", info.labels.length ? "gives label and score" : (info.has_score ? "gives score" : "")));
+    card.appendChild(subjectPicker(g, info.name));
     card.appendChild(button("✕", "Remove " + info.name, () => {
       model.groups.splice(i, 1);
       model.lines = (model.lines || []).filter((l) => (l.any || [l]).every((x) => x.group !== g.key));
@@ -443,6 +548,7 @@ export default function(component) {
     tf.addEventListener("change", () => { m.timeframe = tf.value; send(); });
     card.appendChild(tf);
     card.appendChild(el("span", "tag", (state.member_tags || {})[m.key] || ""));
+    card.appendChild(subjectPicker(m, s.name));
     ["condition", "context"].forEach((r) => {
       const b = button(r.charAt(0).toUpperCase() + r.slice(1), r === "condition" ? "Used in the decision." : "Shown for context; changes nothing.",
                        () => { m.role = r; send(); }, m.role === r ? "on" : "");
@@ -465,13 +571,14 @@ export default function(component) {
   const targets = state.targets || [];
   const tByKey = {};
   targets.forEach((t) => { tByKey[t.key] = t; });
-  const tkey = (l) => l.target === "member" ? "member:" + l.member + ":" + (l.field || "") : l.target + ":" + l.group;
+  const tkey = (l) => l.target === "member" ? "member:" + l.member + ":" + (l.field || "")
+    : l.target === "condition" ? "condition:" + l.group + ":" + l.condition : l.target + ":" + l.group;
   const OPS = {number: [["gte", "is at least"], ["lte", "is at most"]], "yes/no": [["yes", "is yes"], ["no", "is no"]],
                label: [["is", "is"], ["is_not", "is not"]]};
   function fresh() {
     const t = targets[0];
     if (!t) return null;
-    return {target: t.target, group: t.group, member: t.member, field: t.field,
+    return {target: t.target, group: t.group, member: t.member, field: t.field, condition: t.condition,
             op: (OPS[t.type] || OPS.number)[0][0], value: t.type === "number" ? "+30" : t.values.length ? t.values[0][0] : ""};
   }
   function lineRow(l, onRemove) {
@@ -485,7 +592,7 @@ export default function(component) {
     targets.forEach((x) => { const o = el("option", "", x.label); o.value = x.key; if (x.key === tkey(l)) o.selected = true; pick.appendChild(o); });
     pick.addEventListener("change", () => {
       const n = tByKey[pick.value];
-      l.target = n.target; l.group = n.group; l.member = n.member; l.field = n.field;
+      l.target = n.target; l.group = n.group; l.member = n.member; l.field = n.field; l.condition = n.condition;
       l.op = (OPS[n.type] || OPS.number)[0][0];
       l.value = n.type === "number" ? "" : n.values.length ? n.values[0][0] : "";
       send();

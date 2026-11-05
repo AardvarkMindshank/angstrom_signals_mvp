@@ -19,14 +19,13 @@ const { chromium, devices } = require("playwright");
     await page.goto(url);
     await page.waitForFunction(() => window.ready);
     await page.screenshot({ path: path.join(dir, "editor_desktop.png"), fullPage: true });
-    const last = () => page.evaluate(() => (window.sent.length ? window.sent[window.sent.length - 1][1] : null));
+    const last = async () => { await page.waitForTimeout(80); return page.evaluate(() => (window.sent.length ? window.sent[window.sent.length - 1][1] : null)); };
 
     await page.click('button[aria-label="Add Stochastic %K (14, 3) to the Group"]');
     let m = await last();
     check("tap + adds a signal", m && m.members.some((x) => x.id === "stochastic.level"));
 
-    const roleButtons = await page.$$(".card button[aria-pressed]");
-    await roleButtons[1].click();
+    await page.locator(".card").first().locator("button[aria-pressed]").nth(1).click();
     m = await last();
     check("a role button changes the role", m && m.members[0].role === "condition");
 
@@ -37,6 +36,7 @@ const { chromium, devices } = require("playwright");
     m = await last();
     check("rules reorder with the arrows", m && m.rules[0].label === "Bearish" && m.rules[1].label === "Bullish");
 
+    await page.waitForTimeout(80);
     await page.evaluate(() => {
       const chip = document.querySelector(".chip");
       const drop = document.querySelector(".drop");
@@ -48,6 +48,14 @@ const { chromium, devices } = require("playwright");
     m = await last();
     check("dragging a signal onto the Group adds it", m && m.members.length >= 5);
 
+    await page.click('button[title="Add a veto (when true, every label becomes Vetoed)"]');
+    m = await last();
+    check("a veto can be added", m && m.conditions && m.conditions.length === 1 && m.conditions[0].kind === "veto");
+    await page.click('button[title="Reported as met or not met."]');
+    m = await last();
+    check("a veto can be turned into a confirmation", m && m.conditions[0].kind === "confirmation");
+
+    await page.waitForTimeout(80);
     await page.fill('input[aria-label="Search signals"]', "volume");
     const chips = await page.$$eval(".chip", (cs) => cs.length);
     check("search filters the list", chips >= 1 && chips <= 4, `${chips} chips`);
@@ -69,7 +77,7 @@ const { chromium, devices } = require("playwright");
     await sp.goto("file://" + path.resolve(dir, "set_editor.html"));
     await sp.waitForFunction(() => window.ready);
     await sp.screenshot({ path: path.join(dir, "set_editor_desktop.png"), fullPage: true });
-    const slast = () => sp.evaluate(() => (window.sent.length ? window.sent[window.sent.length - 1][1] : null));
+    const slast = async () => { await sp.waitForTimeout(80); return sp.evaluate(() => (window.sent.length ? window.sent[window.sent.length - 1][1] : null)); };
     check("Set: the saved decision line is shown", (await sp.$$(".rule")).length === 1);
     await sp.click('button[aria-label="Add Flow v1 to the Set"]');
     let s = await slast();
@@ -77,6 +85,13 @@ const { chromium, devices } = require("playwright");
     await sp.click('button[aria-label="Add RSI (14) to the Set"]');
     s = await slast();
     check("Set: tap + adds a single signal as a Condition", s && s.standalone.length === 1 && s.standalone[0].role === "condition");
+    await sp.waitForTimeout(80);
+    await sp.selectOption('select[aria-label="Which asset Flow v1 is read on"]', "equity");
+    await sp.waitForTimeout(80);
+    await sp.fill('input[aria-label="Fixed asset for Flow v1"]', "coin");
+    await sp.press('input[aria-label="Fixed asset for Flow v1"]', "Tab");
+    s = await slast();
+    check("Set: a Group can be read on a fixed asset (E4)", s && s.groups.some((g) => g.subject && g.subject.id === "coin" && g.subject.kind === "equity"));
     await sp.click('button[title="Add a box where any one of its lines is enough"]');
     s = await slast();
     check("Set: an ANY box can be added", s && s.lines.some((l) => Array.isArray(l.any)));

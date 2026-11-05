@@ -58,8 +58,8 @@ def test_starters_round_trip_through_the_editor(alias):
 
 
 def test_groups_the_editor_cannot_show_yet_are_refused_with_a_reason():
-    model, why = le.from_document(sg.starter("starter:trend-confirmation"))
-    assert model is None and "confirmations or vetoes" in why
+    model, why = le.from_document(sg.starter("starter:reversal-evidence"))       # counting rules and events
+    assert model is None and "more complex than the editor can show yet" in why
 
 
 def test_the_screen_can_only_hand_back_what_the_editor_offers():

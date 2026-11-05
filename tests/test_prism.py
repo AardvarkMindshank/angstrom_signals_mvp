@@ -111,9 +111,26 @@ def test_a_refused_reconstruction_is_reported_for_that_asset_only():
 
 
 def _app():
-    from tests.test_signal_inspector import _app as inspector_app
+    """The 🧩 Lattice · 🔎 Prism panel, switched on, with made-up candles and no database."""
+    import streamlit as st
 
-    inspector_app()
+    import lattice_panel
+    from signal_library import context
+    from tests.test_signal_library_ta import _frame
+
+    frames = {tf: _frame(f) for tf, f in (("15m", "15min"), ("1h", "1h"), ("4h", "4h"), ("1D", "1D"), ("1W", "7D"))}
+    context.default_candle_loader = lambda kind, asset, tf: {"frame": frames[tf], "session": None, "source": "test"}
+
+    class Empty:
+        def __getattr__(self, name):
+            return lambda *a, **k: self
+
+        @property
+        def data(self):
+            return []
+
+    st.session_state.setdefault("lattice_open", True)
+    lattice_panel.render(st, Empty(), [("crypto", "bitcoin", "Bitcoin"), ("equity", "AAPL", "Apple (AAPL)")], "test")
 
 
 def test_prism_tab_runs_inside_streamlit():

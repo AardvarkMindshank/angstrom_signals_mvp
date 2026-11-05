@@ -12955,6 +12955,16 @@ render_dashboard(
 if _POPOUT_VIEW:
     st.stop()
 _record_run("whole page", _RUN_STARTED)
+# Lattice and Prism (preview), for every signed-in account. Nothing loads until the panel is switched on.
+with st.expander("🧩 Lattice · 🔎 Prism (preview)", expanded=False, key="lattice_panel"):
+    import lattice_panel
+
+    lattice_panel.render(
+        st, supabase,
+        [("crypto", k, str(v)) for k, v in dict(CRYPTO_WATCHLIST or {}).items()]
+        + [("equity", k, f"{v} ({k})") for k, v in dict(STOCK_WATCHLIST or {}).items()],
+        str(user_id),
+    )
 if str((load_profile() or {}).get("role") or "") == "admin":
     admin_panel()
     # v3 Signal Library, development only (admins). Runs nothing until its button is pressed.

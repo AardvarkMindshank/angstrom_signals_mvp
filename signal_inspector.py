@@ -68,16 +68,8 @@ def render(st, supabase, assets: list[tuple[str, str, str]], my_communities=None
         "alert or setting. Signals run only when you press the button. Intraday timeframes fetch Yahoo candles for "
         "the chosen asset."
     )
-    tab_run, tab_groups, tab_lattice, tab_prism, tab_catalogue = st.tabs(
-        ["Inspect an asset", "Groups & Sets", "🧩 Lattice", "🔎 Prism", "Catalogue"])
-    with tab_lattice:
-        import lattice_view
-
-        lattice_view.render(st, supabase, assets, user_id)
-    with tab_prism:
-        import prism_view
-
-        prism_view.render(st, supabase, assets, user_id)
+    # Lattice and Prism moved to their own panel for every account (lattice_panel.py).
+    tab_run, tab_groups, tab_catalogue = st.tabs(["Inspect an asset", "Groups & Sets", "Catalogue"])
     with tab_groups:
         import signal_groups_inspector
 

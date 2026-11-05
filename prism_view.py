@@ -1,7 +1,7 @@
 """
 Prism · Run now, admin view (docs/design/lattice_prism.md §5.1, build stage 2).
 
-A tab in the 🧪 Signal Library panel, visible to admin accounts only. Pick a Set that has a decision, pick assets
+A tab in the 🧩 Lattice · 🔎 Prism panel, for every signed-in account. Pick a Set that has a decision, pick assets
 (default: the whole Watchlist), choose Now or a past moment, and press Run now. Runs nothing until the button is
 pressed. Display only: results are not saved or exported, and past moments are reconstructions, not records.
 """
@@ -18,6 +18,7 @@ import signal_groups as sg
 import signal_library as sl
 from signal_library import loaders
 
+COOLDOWN_SECONDS = 20     # one Run now per account every 20 seconds: each run can read up to 40 assets
 HELP = {
     "answer": "Yes: every necessary line holds. No: at least one necessary line fails (missing data could not change "
               "that). Unknown: nothing fails, but something needed could not be decided.",
@@ -43,7 +44,7 @@ def scannable_sets(saved: list[dict], user_id: str) -> tuple[dict, dict]:
 
 
 def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str = "") -> None:
-    st.caption("🔎 **Prism · Run now** (admin preview). Checks a Set on your Watchlist and answers Yes, No or Unknown "
+    st.caption("🔎 **Prism · Run now** (preview). Checks a Set on your Watchlist and answers Yes, No or Unknown "
                "for each asset, with the reason. Nothing is saved; past moments are reconstructions from today's data "
                "providers, not records.")
     if not assets:
@@ -87,7 +88,11 @@ def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str = "") 
         st.caption("All lines must hold (ALL). A failed line gives No even if other data is missing; Unknown is "
                    "never turned into Yes or No.")
 
+    if go and time.time() - st.session_state.get("prism_last_run", 0.0) < COOLDOWN_SECONDS:
+        st.info(f"Please wait a few seconds between runs (at most one every {COOLDOWN_SECONDS} seconds).")
+        go = False
     if go:
+        st.session_state["prism_last_run"] = time.time()
         picked = [(k.split(":", 1)[0], k.split(":", 1)[1], names[k]) for k in chosen]
         if not picked:
             st.warning("Choose at least one asset.")
@@ -153,7 +158,8 @@ ZONES = ["Asia/Bangkok", "UTC", "Europe/London", "Europe/Berlin", "America/New_Y
          "Asia/Singapore", "Asia/Tokyo", "Australia/Sydney"]
 SQL_HINT = ("Scheduled scans need their tables. Run sql/2026-11-06_prism_scans.sql in the Supabase SQL editor.")
 RPC_ERRORS = {
-    "prism_preview_admins_only": "While Prism is in preview, only admin accounts can save scans.",
+    "prism_preview_admins_only": "Saving scans is not switched on for every account yet (the database update is "
+                                 "pending).",
     "too_many_active_scans": "You already have 5 active scans. Pause or delete one first.",
     "set_not_scannable": "This Set has no decision, so it cannot be scanned.",
     "bad_schedule": "The schedule is not valid.",

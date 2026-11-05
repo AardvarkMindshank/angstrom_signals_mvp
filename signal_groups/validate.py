@@ -23,6 +23,22 @@ MAX_MEMBERS, MAX_CONDITIONS, MAX_PREDICATES, MAX_BYTES = 30, 20, 50, 64 * 1024
 MAX_SET_GROUPS, MAX_SET_ITEMS = 10, 20
 KEY = re.compile(r"^[a-z0-9_]{1,40}$")
 STANDALONE_ROLES = ("context", "levels", "condition")
+SUBJECT_KINDS = ("crypto", "equity")
+SUBJECT_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9.\-_^=]{0,24}$")
+
+
+def subject_errors(item, where: str) -> list[str]:
+    """E4 (docs/design/lattice_prism.md §4.4): an optional fixed subject, {"kind": crypto | equity, "id": ...}."""
+    if "subject" not in item:
+        return []
+    subject = item.get("subject")
+    if not isinstance(subject, dict) or set(subject) != {"kind", "id"}:
+        return [f"{where}: a fixed subject is {{kind, id}}"]
+    if subject["kind"] not in SUBJECT_KINDS:
+        return [f"{where}: a fixed subject's kind is crypto or equity"]
+    if not isinstance(subject["id"], str) or not SUBJECT_ID.match(subject["id"]):
+        return [f"{where}: {subject.get('id')!r} is not an asset id like bitcoin or COIN"]
+    return []
 
 
 # ----------------------------------------------------------------------------- field descriptions (E3)
@@ -299,6 +315,7 @@ def validate_set(doc) -> list[str]:
         if "snapshot" not in g:
             errors.append(f"{key}: a Set embeds the Group snapshot itself")
             continue
+        errors += subject_errors(g, key)
         errors += [f"{key}: {e}" for e in validate_group(g["snapshot"])]
     items = list(doc.get("standalone") or []) + list(doc.get("market_context") or [])
     if len(items) > MAX_SET_ITEMS:
@@ -312,6 +329,10 @@ def validate_set(doc) -> list[str]:
             keys.add(key)
             e, definition = _ref_errors(item.get("ref"), key, allow_market=(section == "market_context"))
             errors += e
+            if section == "standalone":
+                errors += subject_errors(item, key)
+            elif "subject" in item and not str(item.get("subject") or "").startswith("market:"):
+                errors.append(f"{key}: market_context subjects are markets, not fixed assets")
             allowed = STANDALONE_ROLES if section == "standalone" else ("context", "levels")
             if item.get("role") not in allowed:
                 errors.append(f"{key}: role must be {' or '.join(allowed)}")

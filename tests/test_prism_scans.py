@@ -262,10 +262,10 @@ def test_sql_is_rerunnable_owner_only_and_claims_once():
 def _app_scheduled():
     import streamlit as st
 
-    from tests.test_signal_inspector import _app as inspector_app
+    from tests.test_prism import _app as panel_app
 
     st.session_state.setdefault("prism_view", "⏰ Scheduled scans")
-    inspector_app()
+    panel_app()
 
 
 def test_scheduled_scans_view_renders_inside_streamlit():
