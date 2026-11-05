@@ -12,9 +12,8 @@ from datetime import datetime, timezone
 
 import signal_library as sl
 
-from . import lineage
-from . import replay
-from .evaluate import _ref, evaluate_group
+from . import decision, lineage, replay, rules
+from .evaluate import AVAILABLE, _ref, evaluate_group
 from .validate import validate_set
 
 APPLIES = {"crypto": ("crypto",), "equity": ("equity",), "all": ("crypto", "equity")}
@@ -26,6 +25,11 @@ def canonical(body) -> bytes:
 
 def content_sha256(body) -> str:
     return hashlib.sha256(canonical(body)).hexdigest()
+
+
+def scannable(doc: dict) -> bool:
+    """Prism scans only Sets with a decision (docs/design/lattice_prism.md §4.2); a Set without one is never No."""
+    return isinstance(doc, dict) and doc.get("decision") is not None
 
 
 def evaluate_set(doc: dict, ctx: sl.DataContext, *, market_context=None, data_mode: str = "live") -> dict:
@@ -105,6 +109,16 @@ def evaluate_set(doc: dict, ctx: sl.DataContext, *, market_context=None, data_mo
     }
     out = {**base, "status": "ok", "groups": groups, "standalone": standalone, "market_context": market,
            "diagnostics": diagnostics}
+    if doc.get("decision") is not None:
+        # Optional (docs/design/lattice_prism.md §4.2): only Sets that define a decision gain this key.
+        members = {}
+        for i in items:
+            res = shared[refs[i["key"]].instance_key]
+            members[i["key"]] = {"available": res.status in AVAILABLE, "value": res.value,
+                                 "instance": refs[i["key"]].instance_key, "roots": set(table[refs[i["key"]].id])}
+        mctx = rules.Context(members, None, set(), {m["instance"]: m["roots"] for m in members.values()},
+                             lambda key, event: None)
+        out["decision"] = decision.evaluate(doc["decision"], {g["key"]: g["result"] for g in groups}, mctx)
     if pit:
         out["completeness"] = replay.set_completeness(out, ctx)
     return out

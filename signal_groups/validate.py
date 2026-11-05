@@ -10,9 +10,10 @@ import math
 import re
 
 import signal_library as sl
+from signal_library import fields
 from signal_library.core import EVENTS, NUMERIC
 
-from . import lineage, rules, transforms
+from . import decision, lineage, outcomes, rules, transforms
 
 GROUP_SCHEMA = "angstrom.group/1"
 SET_SCHEMA = "angstrom.set/1"
@@ -21,6 +22,114 @@ SCORE_POLICIES = ("exclude", "neutral")
 MAX_MEMBERS, MAX_CONDITIONS, MAX_PREDICATES, MAX_BYTES = 30, 20, 50, 64 * 1024
 MAX_SET_GROUPS, MAX_SET_ITEMS = 10, 20
 KEY = re.compile(r"^[a-z0-9_]{1,40}$")
+STANDALONE_ROLES = ("context", "levels", "condition")
+
+
+# ----------------------------------------------------------------------------- field descriptions (E3)
+
+def _signal_key(item) -> str:
+    ref = (item or {}).get("ref") or {}
+    return f"{ref.get('id')}@{ref.get('version')}"
+
+
+def _range_errors(where: str, name: str, desc: dict, values: list) -> list[str]:
+    bad = [v for v in values if rules._num(v) is None]
+    if bad:
+        return [f"{where}: {name} is a number; {bad[0]!r} is not"]
+    out = [v for v in values if not fields.in_range(desc, v)]
+    if out:
+        return [f"{where}: {name} runs {fields.scale_text(desc)}; {out[0]:g} is outside that scale, so the test "
+                "could never change"]
+    return []
+
+
+def _compare_errors(rule: dict, desc: dict, where: str, name: str) -> list[str]:
+    kind = desc["type"]
+    if kind == fields.OTHER or "exists" in rule:
+        return []
+    if "events" in rule:
+        return [] if kind == fields.EVENTS else [f"{where}: {name} is a {kind} reading, not a list of events"]
+    if kind == fields.EVENTS:
+        return [f"{where}: {name} is a list of events; use an events filter"]
+    numeric_ops = [o for o in ("gte", "lte") if o in rule]
+    if numeric_ops or "between" in rule:
+        if kind != fields.NUMBER:
+            return [f"{where}: {name} is a {kind} reading; test it with eq or in, not with a number"]
+        values = [rule[o] for o in numeric_ops] + list(rule.get("between") or [])
+        return _range_errors(where, name, desc, values)
+    wanted = [rule["eq"]] if "eq" in rule else rule.get("in") if isinstance(rule.get("in"), list) else []
+    if kind == fields.NUMBER:
+        return _range_errors(where, name, desc, wanted)
+    if kind == fields.YESNO:
+        bad = [w for w in wanted if not isinstance(w, bool)]
+        return [f"{where}: {name} is a yes/no reading; compare it with true or false, not {bad[0]!r}"] if bad else []
+    if kind == fields.LABEL:
+        allowed = desc.get("labels") or []
+        bad = [w for w in wanted if w not in allowed]
+        return [f"{where}: {name} is one of {allowed}; {bad[0]!r} is not"] if bad and allowed else []
+    return []
+
+
+def field_errors(rule, by_key: dict, where: str, score_range=None) -> list[str]:
+    """Type, path and range checks for described signals (docs/design/lattice_prism.md §4.3)."""
+    errors: list[str] = []
+
+    def walk(r, w):
+        if not isinstance(r, dict):
+            return
+        for c in ("all", "any"):
+            if isinstance(r.get(c), list):
+                for i, sub in enumerate(r[c]):
+                    walk(sub, f"{w}.{c}[{i}]")
+                return
+        if "not" in r:
+            walk(r["not"], f"{w}.not")
+            return
+        if isinstance(r.get("of"), list):
+            for i, sub in enumerate(r["of"]):
+                walk(sub, f"{w}.of[{i}]")
+            return
+        if "score" in r:
+            ops = r["score"] if isinstance(r["score"], dict) else {}
+            if score_range is not None:
+                low, high = score_range
+                values = [ops[k] for k in ("gte", "lte") if k in ops] + list(ops.get("between") or [])
+                if any(rules._num(v) is not None and not low <= v <= high for v in values):
+                    errors.append(f"{w}: a score threshold is outside the Group score range {low} to {high} "
+                                  "(stored scale; +30 on screen is 0.30)")
+            return
+        m = by_key.get(r.get("member"))
+        if not isinstance(m, dict):
+            return
+        key = _signal_key(m)
+        if not fields.described(key):
+            return
+        name = r["member"] + (f".{r['field']}" if r.get("field") else "")
+        desc = fields.field(key, r.get("field"))
+        if desc is None:
+            errors.append(f"{w}: {name} is not a readable field of {key}" +
+                          ("; name a field" if not r.get("field") else ""))
+            return
+        errors.extend(_compare_errors(r, desc, w, name))
+
+    walk(rule, where)
+    return errors
+
+
+def _transform_field_errors(key: str, m: dict) -> list[str]:
+    t = m.get("transform")
+    skey = _signal_key(m)
+    if not isinstance(t, dict) or not fields.described(skey):
+        return []
+    desc = fields.field(skey, t.get("field"))
+    name = key + (f".{t['field']}" if t.get("field") else "")
+    if desc is None:
+        return [f"{key}: {name} is not a readable field of {skey}"]
+    need = {"clip": (fields.NUMBER,), "bands": (fields.NUMBER,), "map": (fields.LABEL, fields.NUMBER, fields.YESNO),
+            "events": (fields.EVENTS,)}.get(t.get("kind"))
+    if need and desc["type"] not in need and desc["type"] != fields.OTHER:
+        return [f"{key}: a {t.get('kind')} transform cannot read {name}, which is a {desc['type']} reading"]
+    return []
 
 
 def _ref_errors(ref, where: str, allow_market: bool = False) -> tuple[list[str], object]:
@@ -92,6 +201,7 @@ def validate_group(doc) -> list[str]:
                 errors.append(f"{key}: a score member needs a transform")
             else:
                 errors += [f"{key}: {e}" for e in transforms.config_errors(t)]
+                errors += _transform_field_errors(key, m)
                 if definition:
                     if t.get("kind") == "events" and definition.output != EVENTS:
                         errors.append(f"{key}: events transform needs an events signal")
@@ -115,6 +225,11 @@ def validate_group(doc) -> list[str]:
         if not any(m.get("role") == "score" and isinstance(m.get("weight"), (int, float)) and m["weight"] > 0
                    for m in by_key.values()):
             errors.append("a score needs at least one score member with weight above 0")
+    score_range = None
+    if has_score and isinstance(score, dict):
+        rng = score.get("range") or [-1, 1]
+        if isinstance(rng, list) and len(rng) == 2 and all(rules._num(v) is not None for v in rng):
+            score_range = (rng[0], rng[1])
     conditions = doc.get("conditions") or []
     if not isinstance(conditions, list):
         return errors + ["conditions must be a list"]
@@ -140,6 +255,15 @@ def validate_group(doc) -> list[str]:
         e, n = rules.check(c.get("rule"), by_key, has_score, roots_of_member, path=c["key"])
         errors += e
         total += n
+        if not e:
+            errors += field_errors(c.get("rule"), by_key, c["key"], score_range)
+    if "outcomes" in doc:
+        e, n, walk = outcomes.check(doc["outcomes"], by_key, has_score, roots_of_member)
+        errors += e
+        total += n
+        if not e:
+            for where, rule in walk:
+                errors += field_errors(rule, by_key, where, score_range)
     if total > MAX_PREDICATES:
         errors.append(f"at most {MAX_PREDICATES} predicates in all")
     return errors
@@ -188,8 +312,9 @@ def validate_set(doc) -> list[str]:
             keys.add(key)
             e, definition = _ref_errors(item.get("ref"), key, allow_market=(section == "market_context"))
             errors += e
-            if item.get("role") not in ("context", "levels"):
-                errors.append(f"{key}: role must be context or levels")
+            allowed = STANDALONE_ROLES if section == "standalone" else ("context", "levels")
+            if item.get("role") not in allowed:
+                errors.append(f"{key}: role must be {' or '.join(allowed)}")
             if section == "market_context" and definition is not None:
                 if not definition.scope.startswith("market:"):
                     errors.append(f"{key}: market_context takes market signals only")
@@ -197,4 +322,21 @@ def validate_set(doc) -> list[str]:
                     errors.append(f"{key}: subject must be {definition.scope}")
                 if (item.get("ref") or {}).get("params", {}).get("point_in_time") is False and item.get("data_modes") != ["live"]:
                     errors.append(f"{key}: non-point-in-time flows are current context only (data_modes ['live'])")
+    if "decision" in doc:
+        snapshots = {g["key"]: g["snapshot"] for g in groups
+                     if isinstance(g, dict) and isinstance(g.get("key"), str) and isinstance(g.get("snapshot"), dict)}
+        members = {i["key"]: i for i in (doc.get("standalone") or []) if isinstance(i, dict) and isinstance(i.get("key"), str)}
+        try:
+            table = lineage.table(doc.get("lineage_version"))
+        except (KeyError, TypeError, ValueError):
+            table = {}
+
+        def roots_of_member(key):
+            return table.get(((members.get(key) or {}).get("ref") or {}).get("id"), frozenset())
+
+        e, member_preds = decision.check(doc["decision"], snapshots, members, roots_of_member)
+        errors += e
+        if not e:
+            for where, rule in member_preds:
+                errors += field_errors(rule, members, where)
     return errors

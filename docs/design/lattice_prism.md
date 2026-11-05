@@ -1,6 +1,6 @@
 # Lattice and Prism: the research workspace and the market scanner
 
-Status: **proposal, revision 2 (5 November 2026)**. Step 2 of the agreed sequence (design the builder).
+Status: **revision 2, approved for stage 1 (5 November 2026)**. Step 2 of the agreed sequence (design the builder).
 Revision 1 was reviewed by ChatGPT and Grok; their findings and the decisions taken are in §11. Revision 2 adds the
 Group status truth table (§4.1), exact Set predicates and semantics (§4.2), backward compatibility (§4.5), the stage 1
 fixtures (§6), a hold-out policy (§9), and moves History to its own research design (§5.4).
@@ -113,7 +113,7 @@ stay presentation: starters get no `outcomes` in this step.
 }
 ```
 
-**Predicates** (inside the usual `all` / `any` / `not` and counting operators):
+**Predicates** (inside `all` / `any` / `not`; counting operators and `within_candles` event filters are not available in decisions yet and are refused at save):
 
 | Shape | Value |
 |---|---|
@@ -143,14 +143,15 @@ stay presentation: starters get no `outcomes` in this step.
 
 ### 4.3 E3: field descriptions and range checks
 
-- Signal definitions gain `fields`: for each readable field path, its type (number, label, yes/no, events), unit
-  and, where fixed, its range (RSI 0..100, standard score −1..+1, sentiment −100..+100). Fields without a fixed range
-  (MACD in ATRs, ETF flows in US$) carry a unit only.
+- A field table next to the signal definitions (`signal_library/fields.py`, keyed by signal id and version): for
+  each readable field path, its type (number, label, yes/no, events), unit and, where fixed, its range (RSI 0..100,
+  standard score −1..+1, sentiment −100..+100). Fields without a fixed range (MACD in ATRs, ETF flows in US$) carry
+  a unit only. Signals not in the table are checked structurally only, as before.
 - The **backend validator** (`signal_groups/validate.py`) enforces: the field path exists, the comparison matches the
   type, thresholds sit inside a fixed range. The editor repeats the checks for display only.
 - Display thresholds are converted exactly before storing (Group score +30 → 0.30, as `Fraction`).
-- No calculation or signal version changes. The definitions sit in `CODE_FILES`, so the code hash changes and the
-  certification record is regenerated; every certified result must be identical.
+- No calculation or signal version changes. The table is documentation that no calculation reads, so it is kept
+  outside `CODE_FILES`: the certified code hash and the certification record are unchanged (tested).
 
 ### 4.4 E4: fixed-subject Set lines (named now, not in stage 1)
 
