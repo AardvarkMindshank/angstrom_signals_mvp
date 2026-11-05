@@ -1,6 +1,6 @@
 """Line the open asset's price up with each signal.
 
-Signals v2 readings (Trend, Stretch, Flow and the two named views) are replayed from the stored daily
+Trend, Stretch, Flow (from the starter Groups) and the two named views are replayed from the stored daily
 bars, each day using only the bars up to that day. Sentiment uses only
 the readings already saved. A lead is how that signal lined up with the price
 change that came after it.
@@ -14,6 +14,7 @@ from datetime import datetime, timedelta, timezone
 
 import pandas as pd
 
+import group_readings
 import signals_v2
 
 MATRIX_DAYS = 30
@@ -135,7 +136,7 @@ def build_matrix(
         # A past day's own bar is finished, so judge "finished" at that day's end, not now.
         day_end = when.to_pydatetime().replace(tzinfo=None) + timedelta(days=1, hours=6)
         judged_at = min(pd.Timestamp(day_end, tz="UTC").to_pydatetime(), now_utc)
-        result = signals_v2.score(window, kind, now=judged_at)
+        result = group_readings.score(window, kind, now=judged_at)
         for slot, (_name, path) in zip(rows, TECHNICAL_ROWS):
             slot["values"].append(_reading(result, path))
 

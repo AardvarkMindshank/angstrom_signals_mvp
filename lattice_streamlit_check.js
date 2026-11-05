@@ -27,6 +27,11 @@ const { chromium } = require("playwright");
     await page.waitForSelector(".lat", { timeout: 90000 });
     await settle();
     check("the editor appears", await page.$(".lat"));
+    const styled = () => page.evaluate(() => {
+      const find = (r) => { const x = r.querySelector(".lat"); if (x) return x;
+        for (const e of r.querySelectorAll("*")) if (e.shadowRoot) { const y = find(e.shadowRoot); if (y) return y; } return null; };
+      const lat = find(document); return lat ? getComputedStyle(lat).display : "missing"; });
+    check("the editor's styles are applied", (await styled()) === "flex", await styled());
     check("an empty Group cannot be saved", (await text()).includes("Add at least one signal"));
 
     await page.click('button[aria-label="Add RSI (14) to the Group"]');
@@ -39,6 +44,7 @@ const { chromium } = require("playwright");
     await page.click('.lat button[title="Add a rule that gives this label"]');
     await settle();
     check("a rule can be added", (await page.$$(".lat .rule")).length === 1);
+    check("styles survive a redraw", (await styled()) === "flex");
 
     await page.fill('.lat .rule input[aria-label="Value"]', "130");
     await page.keyboard.press("Tab");
@@ -48,7 +54,7 @@ const { chromium } = require("playwright");
           (body.match(/Can't save[^\n]*/) || [""])[0]);
     await page.screenshot({ path: path.join(dir, "lattice_in_streamlit.png"), fullPage: true });
 
-    await page.click("text=🗂️ Set editor");
+    await page.click("text=Signal Sets");
     await page.waitForSelector(".lat >> text=Decision: when does this Set say Yes?", { timeout: 60000 });
     await settle();
     await page.click('.lat button[aria-label="Add RSI (14) to the Set"]');
@@ -58,6 +64,7 @@ const { chromium } = require("playwright");
     body = await text();
     check("Set editor: a signal and a line go to Python and come back",
           (await page.$$(".lat .rule")).length === 1 && body.includes("says Yes when"), (body.match(/says Yes when[^\n]*/) || [""])[0]);
+    check("the Set editor's styles are applied", (await styled()) === "flex");
     await page.screenshot({ path: path.join(dir, "lattice_set_in_streamlit.png"), fullPage: true });
     check("no browser errors", errors.length === 0, errors.join("; "));
   } catch (e) {

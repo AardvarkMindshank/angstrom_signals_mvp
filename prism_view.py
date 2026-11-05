@@ -44,7 +44,7 @@ def scannable_sets(saved: list[dict], user_id: str) -> tuple[dict, dict]:
 
 
 def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str = "") -> None:
-    st.caption("🔎 **Prism · Run now** (preview). Checks a Set on your Watchlist and answers Yes, No or Unknown "
+    st.caption("Checks a Set on your Watchlist and answers Yes, No or Unknown "
                "for each asset, with the reason. Nothing is saved; past moments are reconstructions from today's data "
                "providers, not records.")
     if not assets:

@@ -3990,6 +3990,7 @@ import chart_plan
 import chart_data
 import lw_chart
 import news_filter
+import group_readings
 import signals_v2
 import signals_view
 from digest import COMMON_ZONES
@@ -9555,7 +9556,7 @@ def _score_snapshot(rows) -> dict:
         snapshot[_visit_asset_key(kind, asset_id)] = {
             "trend": score,
             "factors": factors,
-            "signals_version": signals_v2.VERSION,
+            "signals_version": group_readings.VERSION,
         }
     return snapshot
 
@@ -10078,7 +10079,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                         )
                         maths_from = time.perf_counter()
                         try:
-                            scored = _scored_asset(kind, str(key), signals_v2.FINGERPRINT, stamp, df)
+                            scored = _scored_asset(kind, str(key), group_readings.FINGERPRINT, stamp, df)
                         except Exception:
                             scored = signals_view.row_fields(calculate_indicators(df), kind)
                         spent["maths"] += time.perf_counter() - maths_from
@@ -11176,7 +11177,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             if result is None:
                 full, _full_err = _stored_bars(asset_type, asset_key, signals_v2.SCORING_BARS)
                 source = full if full is not None and not full.empty else daily_chart
-                result = signals_v2.score(calculate_indicators(source) if source is not daily_chart else daily_chart, asset_type)
+                result = group_readings.score(calculate_indicators(source) if source is not daily_chart else daily_chart, asset_type)
             card_col, change_col = st.columns([3, 1])
             with card_col:
                 st.html(signals_view.asset_card(result))
@@ -12519,7 +12520,7 @@ def show_signal_matrix(kind: str, asset_id: str, label: str, indicated) -> None:
         except Exception:
             stamp = (len(indicated), "", 0.0)
         matrix = _matrix_cached(
-            asset_key, stamp, signals_v2.FINGERPRINT, kind,
+            asset_key, stamp, group_readings.FINGERPRINT, kind,
             json.dumps(sentiment, sort_keys=True, default=str),
             int(horizon), MATRIX_DAYS,
             indicated, sentiment,
@@ -12955,8 +12956,8 @@ render_dashboard(
 if _POPOUT_VIEW:
     st.stop()
 _record_run("whole page", _RUN_STARTED)
-# Lattice and Prism (preview), for every signed-in account. Nothing loads until the panel is switched on.
-with st.expander("🧩 Lattice · 🔎 Prism (preview)", expanded=False, key="lattice_panel"):
+# Angstrom Lattice (preview), for every signed-in account. Only the chosen part is drawn.
+with st.expander("Angstrom Lattice", icon=":material/hub:", expanded=False, key="lattice_panel"):
     import lattice_panel
 
     lattice_panel.render(

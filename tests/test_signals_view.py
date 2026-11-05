@@ -23,7 +23,8 @@ def test_row_fields_has_readings_display_fields_and_no_score():
     assert "score" not in row and "contributions" not in row
     for key in ("trend", "stretch", "flow"):
         assert row[key] is None or -100 <= row[key] <= 100
-    assert row["signals"]["version"] == v2.VERSION
+    assert row["signals"]["version"] == "groups-1"                      # from the starter Groups (stage 6)
+    assert row["trend"] == v2.flat_fields(v2.score(frame, "Stock", LATER))["trend"]
     assert row["latest_price"] and row["atr_pct"] > 0
     assert row["label"] == "" and row["reasons"] == []
     assert set(row["trend_parts"]) <= set(v2.COMPONENT_NAMES.values())

@@ -179,11 +179,11 @@ def test_set_editor_round_trips_fixed_subjects_and_names_them():
 
 # ----------------------------------------------------------------------------------------------- open to everyone
 
-def test_the_panel_is_for_every_account_and_loads_nothing_until_switched_on():
+def test_the_panel_is_for_every_account_and_draws_only_the_chosen_part():
     from pathlib import Path
 
     app = Path(__file__).resolve().parent.parent.joinpath("app.py").read_text()
-    panel = app.index('st.expander("🧩 Lattice · 🔎 Prism (preview)"')
+    panel = app.index('st.expander("Angstrom Lattice", icon=":material/hub:"')
     admin = app.index('if str((load_profile() or {}).get("role") or "") == "admin":\n    admin_panel()')
     assert panel < admin                                            # outside the admin-only block
     inspector = Path(__file__).resolve().parent.parent.joinpath("signal_inspector.py").read_text()
@@ -191,16 +191,7 @@ def test_the_panel_is_for_every_account_and_loads_nothing_until_switched_on():
 
     import lattice_panel
 
-    class St:
-        def caption(self, *a, **k):
-            pass
-
-        def toggle(self, *a, **k):
-            return False
-
-        def tabs(self, *a, **k):
-            raise AssertionError("nothing renders while the panel is off")
-    lattice_panel.render(St(), None, [], "u")
+    assert "toggle" not in Path(lattice_panel.__file__).read_text()          # no switch: it opens straight away
 
 
 def test_the_open_to_all_sql_only_drops_the_admin_check():

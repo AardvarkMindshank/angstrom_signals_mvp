@@ -1,4 +1,4 @@
-"""HTML pieces for signals v2 in the app: table cells, the asset card, the breakdown and the explainer.
+"""HTML pieces for the Trend, Stretch and Flow readings in the app: table cells, the asset card, the breakdown and the explainer.
 
 Pure functions (no Streamlit), so they can be tested anywhere. Colours come from score_colours.reading_tone,
 the same five colours the site already uses. Every number shown is on -100..+100: positive means up
@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import html
 
+import group_readings as gr
 import signals_v2 as v2
 from score_colours import reading_tone
 
@@ -38,8 +39,8 @@ def signed(value) -> str:
 def row_fields(frame, kind: str, now=None) -> dict:
     """Everything a watchlist row needs: the v2 readings (last finished bar) and the live display figures
     (price, today's move, RSI and so on from the latest row, as before)."""
-    result = v2.score(frame, kind, now)
-    out = dict(v2.flat_fields(result))
+    result = gr.score(frame, kind, now)
+    out = dict(gr.flat_fields(result))
     out["signals"] = result
     out["label"] = "" if result.get("status") == "ok" else "No data"
     out["reasons"] = [] if result.get("status") == "ok" else [result.get("message") or "Not enough data yet"]
@@ -140,9 +141,22 @@ def cluster_rows(result: dict) -> str:
             f"{mini_bar(c.get('percent'), 120)}{number_badge(c.get('percent'))}"
             f"<span style='flex:1 1 140px;'>{_esc(c.get('label') or 'Not enough data')}"
             f"<span class='ang-kicker' style='margin-left:6px;'>{_esc(spec['horizon'])}</span></span>"
-            f"{badge(v2.VALIDATION[key]['status'])}</div>"
+            f"{group_tag(c)}{badge(v2.VALIDATION[key]['status'])}</div>"
         )
     return "".join(rows)
+
+
+def group_tag(cluster: dict) -> str:
+    """Which Group produced the reading and how complete its data was, as a small icon with a hover note."""
+    group = cluster.get("group") or {}
+    if not group:
+        return ""
+    have, total = (cluster.get("coverage") or [0, 0])[:2]
+    icon = "🧩" if group.get("completeness") == "Complete" else "🧩◐"
+    hint = (f"Worked out by the starter {group.get('name')} Group, "
+            f"which you can copy and change in Lattice. Data: {group.get('completeness', '').lower()}, "
+            f"{have} of {total} parts available.")
+    return f"<span title='{_esc(hint)}' style='cursor:help;font-size:0.85rem;'>{icon}</span>"
 
 
 def against_note(result: dict) -> str:
@@ -255,6 +269,9 @@ The ten classic indicators are read as **three separate descriptions**, never ad
 Each runs from **-100 to +100; positive means up** (above the averages, stretched up, volume backing rises).
 Readings change smoothly, so one price tick never flips a reading. Missing data (for example a coin with no
 volume) shows as missing, never as neutral. Readings use the last **finished** daily bar.
+
+🧩 Each reading is worked out by a **starter Group** of the same name (Trend, Stretch, Flow). Open
+**🧩 Lattice** to see how it is built, or copy it and make your own; a half-filled 🧩◐ means some parts had no data.
 
 **Context, never directional:** 🌊 typical daily range (ATR%) and how it compares with the asset's own past
 year, 💪 trend strength (ADX), 🧭 regime, 🔈 volume against usual.
