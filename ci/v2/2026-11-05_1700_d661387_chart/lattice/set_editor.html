@@ -1,0 +1,330 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Lattice Set editor check</title>
+<style>
+.lat{font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;color:inherit;display:flex;flex-wrap:wrap;gap:14px}
+.lat *{box-sizing:border-box}
+.lat .col{background:rgba(127,127,127,.06);border:1px solid rgba(127,127,127,.25);border-radius:12px;padding:12px}
+.lat .lib{flex:1 1 240px;max-width:300px;max-height:760px;overflow:auto}
+.lat .mid{flex:999 1 480px;min-width:0;display:flex;flex-direction:column;gap:14px}
+.lat .cat{font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.7;margin:10px 0 4px}
+.lat .chip{display:flex;align-items:center;gap:8px;padding:6px 6px 6px 10px;margin-bottom:4px;border-radius:8px;
+  border:1px solid rgba(127,127,127,.3);background:rgba(127,127,127,.06);cursor:grab}
+.lat .chip .nm{flex:1 1 auto;min-width:0}
+.lat .badge{font-size:11px;color:#b7791f}
+.lat button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid rgba(127,127,127,.4);
+  background:transparent;color:inherit;min-height:36px;padding:4px 10px}
+.lat button:disabled{opacity:.4;cursor:not-allowed}
+.lat button.on{background:#0f766e;border-color:#0f766e;color:#fff;font-weight:600}
+.lat button.sq{width:36px;padding:0}
+.lat input,.lat select{font:inherit;color:inherit;background:rgba(127,127,127,.08);border:1px solid rgba(127,127,127,.4);
+  border-radius:8px;padding:6px 8px;min-height:36px}
+.lat input.wide{width:100%}
+.lat .drop{border:2px dashed rgba(127,127,127,.45);border-radius:12px;padding:10px;min-height:120px;
+  display:flex;flex-direction:column;gap:8px}
+.lat .drop.over{border-color:#0f766e;background:rgba(15,118,110,.08)}
+.lat .card{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;
+  border:1px solid rgba(127,127,127,.3);background:rgba(127,127,127,.05)}
+.lat .card .nm{flex:1 1 160px;min-width:0;font-weight:600}
+.lat .muted{opacity:.72;font-size:12px}
+.lat .tag{font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid rgba(127,127,127,.4);
+  font-family:ui-monospace,monospace;opacity:.85}
+.lat .rule{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px;border-radius:10px;
+  background:rgba(127,127,127,.07);margin-bottom:8px}
+.lat .num{width:28px;height:28px;border-radius:999px;border:1px solid rgba(127,127,127,.4);display:inline-flex;
+  align-items:center;justify-content:center;font-family:ui-monospace,monospace}
+.lat .lbl{font-weight:600;padding:4px 8px;border-radius:6px;background:rgba(15,118,110,.12)}
+.lat .fixed{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px;border-radius:10px;
+  border:1px dashed rgba(127,127,127,.45);margin-bottom:8px}
+.lat h3{font-size:14px;margin:0 0 8px}
+.lat .hd{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:8px}
+.lat .hd h3{margin:0}
+ body{font-family:system-ui,sans-serif;margin:16px;background:#fff;color:#111}</style></head>
+<body><div id="host"></div><script>
+
+window.renderLattice = function(component) {
+  const { data, setTriggerValue, parentElement } = component;
+  const state = data || {};
+  const catalogue = state.catalogue || [];
+  const groupsAvail = state.groups || [];
+  const byId = {};
+  catalogue.forEach((s) => { byId[s.id] = s; });
+  const bySource = {};
+  groupsAvail.forEach((g) => { bySource[g.source] = g; });
+  let model = JSON.parse(JSON.stringify(state.model || {groups: [], standalone: [], lines: []}));
+  let query = (window.__latSetQuery || "");
+
+  Array.from(parentElement.children).filter((c) => c.classList && c.classList.contains("lat")).forEach((c) => c.remove());
+  const root = el("div", "lat");
+  parentElement.appendChild(root);
+
+  function el(tag, cls, text) {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text !== undefined && text !== null) n.textContent = String(text);
+    return n;
+  }
+  function button(text, title, onClick, cls) {
+    const b = el("button", cls || "", text);
+    b.type = "button";
+    if (title) { b.title = title; b.setAttribute("aria-label", title); }
+    b.addEventListener("click", onClick);
+    return b;
+  }
+  function send() { setTriggerValue("model", JSON.stringify(model)); }
+  function key(base) {
+    base = String(base).toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 30) || "item";
+    if (!/^[a-z]/.test(base)) base = ("g_" + base).slice(0, 30);
+    const taken = new Set([...(model.groups || []).map((g) => g.key), ...(model.standalone || []).map((m) => m.key)]);
+    let k = base, n = 2;
+    while (taken.has(k)) { k = base + "_" + n; n += 1; }
+    return k;
+  }
+  function addGroup(source) {
+    const g = bySource[source];
+    if (!g) return;
+    model.groups = model.groups || [];
+    model.groups.push({key: key(g.name.split(" v")[0]), source: source});
+    send();
+  }
+  function addSignal(id) {
+    const s = byId[id];
+    if (!s) return;
+    const tf = s.timeframes.indexOf("1D") >= 0 ? "1D" : s.timeframes[0];
+    model.standalone = model.standalone || [];
+    model.standalone.push({key: key(id.split(".").slice(-1)[0] + "_" + tf), id: s.id, version: s.version, timeframe: tf, role: "condition"});
+    send();
+  }
+  function subjectPicker(item, name) {
+    // E4: read this item on the scanned asset (default) or on one fixed asset, at the same moment.
+    const wrap = el("span", "hd");
+    wrap.style.margin = "0";
+    const kind = el("select");
+    kind.setAttribute("aria-label", "Which asset " + name + " is read on");
+    kind.title = "Read on the asset being scanned, or always on one fixed asset (for example COIN), at the same moment.";
+    [["", "📌 the scanned asset"], ["crypto", "📌 fixed crypto"], ["equity", "📌 fixed share"]].forEach(([v, t]) => {
+      const o = el("option", "", t); o.value = v;
+      if ((item.subject ? item.subject.kind : "") === v) o.selected = true;
+      kind.appendChild(o);
+    });
+    const id = el("input");
+    id.size = 9; id.placeholder = "COIN, bitcoin"; id.setAttribute("aria-label", "Fixed asset for " + name);
+    id.value = item.subject ? item.subject.id : "";
+    id.style.display = item.subject ? "" : "none";
+    const apply = () => {
+      if (!kind.value) { delete item.subject; send(); return; }
+      id.style.display = "";
+      if (id.value.trim()) { item.subject = {kind: kind.value, id: id.value.trim()}; send(); }
+    };
+    kind.addEventListener("change", apply);
+    id.addEventListener("change", apply);
+    wrap.appendChild(kind); wrap.appendChild(id);
+    return wrap;
+  }
+  function onDrop(raw) {
+    if (raw.indexOf("group|") === 0) addGroup(raw.slice(6));
+    else if (raw.indexOf("signal|") === 0) addSignal(raw.slice(7));
+  }
+
+  // ---------------------------------------------------------------- library
+  const lib = el("div", "col lib");
+  root.appendChild(lib);
+  lib.appendChild(el("h3", "", "Groups and signals"));
+  lib.appendChild(el("div", "muted", "Drag into the Set, or tap +. A Group goes in exactly as saved."));
+  const search = el("input", "wide");
+  search.placeholder = "Search…";
+  search.value = query;
+  search.setAttribute("aria-label", "Search Groups and signals");
+  lib.appendChild(search);
+  const list = el("div");
+  lib.appendChild(list);
+  function chip(label, sub, hint, payload, onAdd, addTitle) {
+    const c = el("div", "chip");
+    c.draggable = true;
+    c.title = hint || "";
+    c.addEventListener("dragstart", (e) => { e.dataTransfer.setData("text/plain", payload); });
+    const nm = el("div", "nm");
+    nm.appendChild(el("div", "", label));
+    if (sub) nm.appendChild(el("div", "muted", sub));
+    c.appendChild(nm);
+    c.appendChild(button("+", addTitle, onAdd, "sq"));
+    return c;
+  }
+  function drawLibrary() {
+    list.replaceChildren();
+    const q = query.toLowerCase();
+    list.appendChild(el("div", "cat", "Groups"));
+    const gs = groupsAvail.filter((g) => !q || g.name.toLowerCase().indexOf(q) >= 0);
+    if (!gs.length) list.appendChild(el("div", "muted", "No saved Groups yet: save one in the Group editor."));
+    gs.forEach((g) => {
+      const sub = (g.owner === "starter" ? "starter" : g.owner) + " · " + (g.labels.length ? "labels: " + g.labels.join(", ") : (g.has_score ? "score only" : "no score"));
+      list.appendChild(chip(g.name, sub, "Members: " + g.members.join(", "), "group|" + g.source, () => addGroup(g.source), "Add " + g.name + " to the Set"));
+    });
+    list.appendChild(el("div", "cat", "Single signals"));
+    catalogue.filter((s) => !q || s.name.toLowerCase().indexOf(q) >= 0).forEach((s) => {
+      list.appendChild(chip(s.name, s.badge || s.category_label, s.hint, "signal|" + s.id, () => addSignal(s.id), "Add " + s.name + " to the Set"));
+    });
+  }
+  search.addEventListener("input", () => { query = search.value; window.__latSetQuery = query; drawLibrary(); });
+  drawLibrary();
+
+  // ---------------------------------------------------------------- set
+  const mid = el("div", "mid");
+  root.appendChild(mid);
+  const box = el("div", "col");
+  mid.appendChild(box);
+  const name = el("input", "wide");
+  name.value = model.name || ""; name.placeholder = "Set name"; name.setAttribute("aria-label", "Set name");
+  name.addEventListener("change", () => { model.name = name.value; send(); });
+  box.appendChild(name);
+  const purpose = el("input", "wide");
+  purpose.value = model.purpose || ""; purpose.placeholder = "What it looks for (optional)";
+  purpose.setAttribute("aria-label", "Purpose");
+  purpose.addEventListener("change", () => { model.purpose = purpose.value; send(); });
+  box.appendChild(purpose);
+  const drop = el("div", "drop");
+  drop.style.marginTop = "10px";
+  drop.addEventListener("dragover", (e) => { e.preventDefault(); drop.classList.add("over"); });
+  drop.addEventListener("dragleave", () => drop.classList.remove("over"));
+  drop.addEventListener("drop", (e) => { e.preventDefault(); drop.classList.remove("over"); onDrop(e.dataTransfer.getData("text/plain")); });
+  box.appendChild(drop);
+  if (!(model.groups || []).length && !(model.standalone || []).length) drop.appendChild(el("div", "muted", "Drag Groups or signals here, or tap +."));
+  (model.groups || []).forEach((g, i) => {
+    const info = bySource[g.source] || {name: "(no longer readable)", labels: [], has_score: false};
+    const card = el("div", "card");
+    card.appendChild(el("span", "tag", "Group"));
+    card.appendChild(el("div", "nm", info.name));
+    card.appendChild(el("span", "muted", info.labels.length ? "gives label and score" : (info.has_score ? "gives score" : "")));
+    card.appendChild(subjectPicker(g, info.name));
+    card.appendChild(button("✕", "Remove " + info.name, () => {
+      model.groups.splice(i, 1);
+      model.lines = (model.lines || []).filter((l) => (l.any || [l]).every((x) => x.group !== g.key));
+      send(); }, "sq"));
+    drop.appendChild(card);
+  });
+  (model.standalone || []).forEach((m, i) => {
+    const s = byId[m.id] || {name: m.id, timeframes: [m.timeframe]};
+    const card = el("div", "card");
+    card.appendChild(el("span", "tag", "Signal"));
+    card.appendChild(el("div", "nm", s.name));
+    const tf = el("select");
+    tf.setAttribute("aria-label", "Timeframe of " + s.name);
+    s.timeframes.forEach((t) => { const o = el("option", "", t); o.value = t; if (t === m.timeframe) o.selected = true; tf.appendChild(o); });
+    tf.addEventListener("change", () => { m.timeframe = tf.value; send(); });
+    card.appendChild(tf);
+    card.appendChild(el("span", "tag", (state.member_tags || {})[m.key] || ""));
+    card.appendChild(subjectPicker(m, s.name));
+    ["condition", "context"].forEach((r) => {
+      const b = button(r.charAt(0).toUpperCase() + r.slice(1), r === "condition" ? "Used in the decision." : "Shown for context; changes nothing.",
+                       () => { m.role = r; send(); }, m.role === r ? "on" : "");
+      b.setAttribute("aria-pressed", m.role === r ? "true" : "false");
+      card.appendChild(b);
+    });
+    card.appendChild(button("✕", "Remove " + s.name, () => {
+      model.standalone.splice(i, 1);
+      model.lines = (model.lines || []).filter((l) => (l.any || [l]).every((x) => x.member !== m.key));
+      send(); }, "sq"));
+    drop.appendChild(card);
+  });
+
+  // ---------------------------------------------------------------- decision
+  const dec = el("div", "col");
+  mid.appendChild(dec);
+  const dh = el("div", "hd");
+  dh.appendChild(el("h3", "", "Decision: when does this Set say Yes?"));
+  dec.appendChild(dh);
+  const targets = state.targets || [];
+  const tByKey = {};
+  targets.forEach((t) => { tByKey[t.key] = t; });
+  const tkey = (l) => l.target === "member" ? "member:" + l.member + ":" + (l.field || "")
+    : l.target === "condition" ? "condition:" + l.group + ":" + l.condition : l.target + ":" + l.group;
+  const OPS = {number: [["gte", "is at least"], ["lte", "is at most"]], "yes/no": [["yes", "is yes"], ["no", "is no"]],
+               label: [["is", "is"], ["is_not", "is not"]]};
+  function fresh() {
+    const t = targets[0];
+    if (!t) return null;
+    return {target: t.target, group: t.group, member: t.member, field: t.field, condition: t.condition,
+            op: (OPS[t.type] || OPS.number)[0][0], value: t.type === "number" ? "+30" : t.values.length ? t.values[0][0] : ""};
+  }
+  function lineRow(l, onRemove) {
+    const row = el("div", "rule");
+    const t = tByKey[tkey(l)] || {type: "number", values: [], scale: ""};
+    const tag = el("span", "tag", t.type === "number" ? "#" : t.type === "yes/no" ? "Y/N" : "Aa");
+    tag.title = t.type === "number" ? "A number: compare it with a value." : t.type === "yes/no" ? "A yes/no reading." : "A label or status: test it with is or is not.";
+    row.appendChild(tag);
+    const pick = el("select");
+    pick.setAttribute("aria-label", "Reading");
+    targets.forEach((x) => { const o = el("option", "", x.label); o.value = x.key; if (x.key === tkey(l)) o.selected = true; pick.appendChild(o); });
+    pick.addEventListener("change", () => {
+      const n = tByKey[pick.value];
+      l.target = n.target; l.group = n.group; l.member = n.member; l.field = n.field; l.condition = n.condition;
+      l.op = (OPS[n.type] || OPS.number)[0][0];
+      l.value = n.type === "number" ? "" : n.values.length ? n.values[0][0] : "";
+      send();
+    });
+    row.appendChild(pick);
+    const ops = el("select");
+    ops.setAttribute("aria-label", "Comparison");
+    (OPS[t.type] || OPS.number).forEach(([k, txt]) => { const o = el("option", "", txt); o.value = k; if (k === l.op) o.selected = true; ops.appendChild(o); });
+    ops.addEventListener("change", () => { l.op = ops.value; send(); });
+    row.appendChild(ops);
+    if (t.type === "number") {
+      const v = el("input"); v.value = l.value || ""; v.size = 6; v.setAttribute("aria-label", "Value");
+      v.addEventListener("change", () => { l.value = v.value; send(); });
+      row.appendChild(v);
+      row.appendChild(el("span", "muted", t.scale || ""));
+    } else if (t.type === "label") {
+      const v = el("select"); v.setAttribute("aria-label", "Value");
+      t.values.forEach(([id, label]) => { const o = el("option", "", label); o.value = id; if (id === l.value) o.selected = true; v.appendChild(o); });
+      v.addEventListener("change", () => { l.value = v.value; send(); });
+      row.appendChild(v);
+    }
+    row.appendChild(button("✕", "Remove this line", onRemove, "sq"));
+    return row;
+  }
+  const all = el("div", "col");
+  all.style.borderColor = "#0f766e";
+  const ah = el("div", "hd");
+  ah.appendChild(el("span", "lbl", "ALL · AND"));
+  ah.appendChild(el("span", "muted", "Every line in this box must hold. An ANY box inside counts as one line."));
+  all.appendChild(ah);
+  if (!targets.length) all.appendChild(el("div", "muted", "Add a Group or a Condition signal first; then its readings can be tested here."));
+  (model.lines || []).forEach((line, i) => {
+    if (line.any) {
+      const anyBox = el("div", "fixed");
+      anyBox.style.flexDirection = "column"; anyBox.style.alignItems = "stretch";
+      const head = el("div", "hd");
+      head.appendChild(el("span", "lbl", "ANY · OR"));
+      head.appendChild(el("span", "muted", "This box holds if any of its lines holds."));
+      head.appendChild(button("🗑", "Remove this ANY box", () => { model.lines.splice(i, 1); send(); }, "sq"));
+      anyBox.appendChild(head);
+      line.any.forEach((l, j) => anyBox.appendChild(lineRow(l, () => { line.any.splice(j, 1); if (!line.any.length) model.lines.splice(i, 1); send(); })));
+      anyBox.appendChild(button("+ line in this box", "Add a line to this ANY box", () => { const f = fresh(); if (f) { line.any.push(f); send(); } }));
+      all.appendChild(anyBox);
+    } else {
+      all.appendChild(lineRow(line, () => { model.lines.splice(i, 1); send(); }));
+    }
+  });
+  const adds = el("div", "hd");
+  const addLine = button("+ Line", "Add a line that must hold", () => { const f = fresh(); if (f) { model.lines = model.lines || []; model.lines.push(f); send(); } });
+  const addAny = button("+ ANY (OR) box", "Add a box where any one of its lines is enough", () => { const f = fresh(); if (f) { model.lines = model.lines || []; model.lines.push({any: [f]}); send(); } });
+  addLine.disabled = addAny.disabled = !targets.length;
+  adds.appendChild(addLine); adds.appendChild(addAny);
+  all.appendChild(adds);
+  dec.appendChild(all);
+  const how = el("div", "fixed");
+  how.style.flexDirection = "column"; how.style.alignItems = "flex-start";
+  how.appendChild(el("div", "", "🔒 How the answer is decided (fixed)"));
+  how.appendChild(el("div", "muted", "Yes: every line holds (an ANY box: at least one of its lines)."));
+  how.appendChild(el("div", "muted", "No: at least one line fails, even if others are missing: missing data cannot rescue it."));
+  how.appendChild(el("div", "muted", "Unknown: nothing fails, but something needed is missing; it names what."));
+  dec.appendChild(how);
+}
+
+window.sent = [];
+window.baseData = {"model": {"name": "Daily check", "purpose": "", "groups": [{"key": "trend_with_labels", "source": "saved:11111111-1111-1111-1111-111111111111:1"}], "standalone": [], "lines": [{"target": "outcome", "group": "trend_with_labels", "op": "is", "value": "bullish"}]}, "targets": [{"key": "outcome:trend_with_labels", "target": "outcome", "group": "trend_with_labels", "type": "label", "label": "Trend (with labels) v1 \u00b7 label", "scale": "", "values": [["bullish", "Bullish"], ["bearish", "Bearish"], ["neutral", "Neutral"], ["vetoed", "Vetoed"]]}, {"key": "score:trend_with_labels", "target": "score", "group": "trend_with_labels", "type": "number", "label": "Trend (with labels) v1 \u00b7 score", "scale": "\u2212100 to +100", "values": []}, {"key": "status:trend_with_labels", "target": "status", "group": "trend_with_labels", "type": "label", "label": "Trend (with labels) v1 \u00b7 status", "scale": "", "values": [["ok", "OK"], ["vetoed", "vetoed"], ["veto_unknown", "veto unknown"], ["insufficient", "not enough data"]]}], "checks": {"blocks": [], "warnings": []}, "description": "Daily check says Yes when Trend (with labels) v1 label is Bullish. If any line fails it says No, even with missing data; if nothing fails but something needed is missing, it says Unknown and names it.", "can_save": true, "scannable": true, "groups": [{"source": "saved:11111111-1111-1111-1111-111111111111:1", "name": "Trend (with labels) v1", "owner": "yours", "labels": ["Bullish", "Bearish", "Neutral"], "has_score": true, "members": ["Moving averages (50, 200 days)", "Ichimoku cloud", "MACD line"]}, {"source": "saved:22222222-2222-2222-2222-222222222222:1", "name": "Flow v1", "owner": "starter", "labels": [], "has_score": true, "members": ["On-balance volume", "Heavy-volume candle"]}], "member_tags": {}, "catalogue": [{"id": "ichimoku.position", "version": 1, "name": "Ichimoku cloud position", "category": "trend", "category_label": "Trend", "icon": "trend", "timeframes": ["15m", "1h", "4h", "1D", "1W"], "hint": "Where price sits relative to the cloud. The standard score (dashboard Trend part) is 0 inside the cloud and grows with distance outside it, averaged with the Tenkan-Kijun gap (both scaled by 3 ATRs). Descriptive; not a f", "badge": "", "can_score": true, "operands": [{"field": "cloud", "type": "label", "label": "cloud", "scale": "label", "labels": ["above", "inside", "below"], "range": null}, {"field": "outside_cloud_atr", "type": "number", "label": "outside cloud atr", "scale": "ATRs outside the cloud", "labels": [], "range": [null, null]}, {"field": "tenkan_kijun_gap_atr", "type": "number", "label": "tenkan kijun gap atr", "scale": "ATRs", "labels": [], "range": [null, null]}, {"field": "span_a", "type": "number", "label": "span a", "scale": "price, at least 0", "labels": [], "range": [0, null]}, {"field": "span_b", "type": "number", "label": "span b", "scale": "price, at least 0", "labels": [], "range": [0, null]}, {"field": "tenkan", "type": "number", "label": "tenkan", "scale": "price, at least 0", "labels": [], "range": [0, null]}, {"field": "kijun", "type": "number", "label": "kijun", "scale": "price, at least 0", "labels": [], "range": [0, null]}, {"field": "close", "type": "number", "label": "close", "scale": "price, at least 0", "labels": [], "range": [0, null]}, {"field": "standard_score", "type": "number", "label": "standard score", "scale": "standard score, -1 to 1", "labels": [], "range": [-1, 1]}]}, {"id": "macd.level", "version": 1, "name": "MACD line", "category": "trend", "category_label": "Trend", "icon": "trend", "timeframes": ["15m", "1h", "4h", "1D", "1W"], "hint": "Whether the shorter average is above the longer one, and by how much. Standard score (dashboard Trend part): tanh(line / ATR). Descriptive; not a forecast.", "badge": "", "can_score": true, "operands": [{"field": "macd_line", "type": "number", "label": "macd line", "scale": "price", "labels": [], "range": [null, null]}, {"field": "macd_line_atr", "type": "number", "label": "macd line atr", "scale": "ATRs", "labels": [], "range": [null, null]}, {"field": "standard_score", "type": "number", "label": "standard score", "scale": "standard score, -1 to 1", "labels": [], "range": [-1, 1]}]}, {"id": "ma.position", "version": 1, "name": "Moving averages (50, 200)", "category": "trend", "category_label": "Trend", "icon": "trend", "timeframes": ["15m", "1h", "4h", "1D", "1W"], "hint": "How far price sits above or below its longer averages. The standard score (dashboard Trend part) averages tanh(distance / (ATR x 0.5 x sqrt(length))) over the two averages. Descriptive; not a forecast.", "badge": "", "can_score": true, "operands": [{"field": "close", "type": "number", "label": "close", "scale": "price, at least 0", "labels": [], "range": [0, null]}, {"field": "sma_50", "type": "number", "label": "sma 50", "scale": "price, at least 0", "labels": [], "range": [0, null]}, {"field": "sma_200", "type": "number", "label": "sma 200", "scale": "price, at least 0", "labels": [], "range": [0, null]}, {"field": "vs_sma_50_pct", "type": "number", "label": "vs sma 50 pct", "scale": "% from the 50-period average, at least -100", "labels": [], "range": [-100, null]}, {"field": "vs_sma_200_pct", "type": "number", "label": "vs sma 200 pct", "scale": "% from the 200-period average, at least -100", "labels": [], "range": [-100, null]}, {"field": "distance_atr_50", "type": "number", "label": "distance atr 50", "scale": "ATRs from the 50-period average", "labels": [], "range": [null, null]}, {"field": "distance_atr_200", "type": "number", "label": "distance atr 200", "scale": "ATRs from the 200-period average", "labels": [], "range": [null, null]}, {"field": "standard_score", "type": "number", "label": "standard score", "scale": "standard score, -1 to 1", "labels": [], "range": [-1, 1]}]}, {"id": "mtf.alignment", "version": 1, "name": "Multi-timeframe alignment", "category": "trend", "category_label": "Trend", "icon": "trend", "timeframes": ["1D"], "hint": "Shows where timeframes agree and where they conflict. There is deliberately no single alignment score: agreement is descriptive, not evidence of a future move.", "badge": "", "can_score": false, "operands": [{"field": "trend_counts.up", "type": "number", "label": "trend counts.up", "scale": "timeframes, at least 0", "labels": [], "range": [0, null]}, {"field": "trend_counts.down", "type": "number", "label": "trend counts.down", "scale": "timeframes, at least 0", "labels": [], "range": [0, null]}, {"field": "trend_counts.mixed", "type": "number", "label": "trend counts.mixed", "scale": "timeframes, at least 0", "labels": [], "range": [0, null]}]}, {"id": "trend.direction", "version": 1, "name": "Trend direction", "category": "trend", "category_label": "Trend", "icon": "trend", "timeframes": ["15m", "1h", "4h", "1D", "1W"], "hint": "Which way the moving-average stack points on this timeframe. Descriptive.", "badge": "", "can_score": true, "operands": [{"field": "", "type": "label", "label": "value", "scale": "label", "labels": ["up", "down", "mixed"], "range": null}]}, {"id": "move.seven_day", "version": 1, "name": "7-candle move", "category": "momentum", "category_label": "Momentum", "icon": "momentum", "timeframes": ["15m", "1h", "4h", "1D", "1W"], "hint": "How large the recent move is for this asset. Standard score (dashboard Stretch part): tanh(change / expected). Descriptive; not a forecast.", "badge": "", "can_score": true, "operands": [{"field": "change_7d_pct", "type": "number", "label": "change 7d pct", "scale": "% change, at least -100", "labels": [], "range": [-100, null]}, {"field": "atr_pct", "type": "number", "label": "atr pct", "scale": "% of price, at least 0", "labels": [], "range": [0, null]}, {"field": "expected_7d_move_pct", "type": "number", "label": "expected 7d move pct", "scale": "% of price, at least 0", "labels": [], "range": [0, null]}, {"field": "move_in_expected_units", "type": "number", "label": "move in expected units", "scale": "expected moves", "labels": [], "range": [null, null]}, {"field": "standard_score", "type": "number", "label": "standard score", "scale": "standard score, -1 to 1", "labels": [], "range": [-1, 1]}]}, {"id": "bollinger.position", "version": 1, "name": "Bollinger position (20, 2)", "category": "momentum", "category_label": "Momentum", "icon": "momentum", "timeframes": ["15m", "1h", "4h", "1D", "1W"], "hint": "Near 1: at the upper band. Standard score (dashboard Stretch part): tanh(2 x (position - 0.5)). Descriptive; not a forecast.", "badge": "", "can_score": true, "operands": [{"field": "position", "type": "number", "label": "position", "scale": "0 = lower band, 1 = upper band", "labels": [], "range": [null, null]}, {"field": "upper", "type": "number", "label": "upper", "scale": "price", "labels": [], "range": [null, null]}, {"field": "lower", "type": "number", "label": "lower", "scale": "price", "labels": [], "range": [null, null]}, {"field": "close", "type": "number", "label": "close", "scale": "price, at least 0", "labels": [], "range": [0, null]}, {"field": "standard_score", "type": "number", "label": "standard score", "scale": "standard score, -1 to 1", "labels": [], "range": [-1, 1]}]}, {"id": "ta.divergence.macd", "version": 1, "name": "MACD divergence", "category": "momentum", "category_label": "Momentum", "icon": "momentum", "timeframes": ["15m", "1h", "4h", "1D", "1W"], "hint": "Regular divergence: price makes a new extreme the indicator does not confirm (possible exhaustion). Hidden divergence: price holds a higher low / lower high while the indicator overshoots (possible continuation). Each ev", "badge": "", "can_score": false, "operands": []}, {"id": "macd.acceleration", "version": 1, "name": "MACD histogram", "category": "momentum", "category_label": "Momentum", "icon": "momentum", "timeframes": ["15m", "1h", "4h", "1D", "1W"], "hint": "Whether momentum is speeding up or slowing. Standard score (dashboard Stretch part): tanh(histogram / (ATR/4)). Descriptive; not a forecast.", "badge": "", "can_score": true, "operands": [{"field": "histogram", "type": "number", "label": "histogram", "scale": "price", "labels": [], "range": [null, null]}, {"field": "histogram_quarter_atr", "type": "number", "label": "histogram quarter atr", "scale": "quarter-ATRs", "labels": [], "range": [null, null]}, {"field": "standard_score", "type": "number", "label": "standard score", "scale": "standard score, -1 to 1", "labels": [], "range": [-1, 1]}]}, {"id": "momentum.direction", "version": 1, "name": "Momentum direction", "category": "momentum", "category_label": "Momentum", "icon": "momentum", "timeframes": ["15m", "1h", "4h", "1D", "1W"], "hint": "Which way short-term momentum points on this timeframe, separate from the moving-average trend.", "badge": "", "can_score": true, "operands": [{"field": "", "type": "label", "label": "value", "scale": "label", "labels": ["up", "down", "mixed"], "range": null}]}, {"id": "rsi.level", "version": 1, "name": "RSI (14)", "category": "momentum", "category_label": "Momentum", "icon": "momentum", "timeframes": ["15m", "1h", "4h", "1D", "1W"], "hint": "How strongly recent closes have risen versus fallen. Standard score (dashboard Stretch part): (RSI - 50) / 30, clipped to -1..+1 (80 = +1, 20 = -1). Descriptive; not a forecast.", "badge": "", "can_score": true, "operands": [{"field": "rsi", "type": "number", "label": "rsi", "scale": "RSI (14), 0 to 100", "labels": [], "range": [0, 100]}, {"field": "standard_score", "type": "number", "label": "standard score", "scale": "standard score, -1 to 1", "labels": [], "range": [-1, 1]}]}, {"id": "ta.divergence.rsi", "version": 1, "name": "RSI divergence", "category": "momentum", "category_label": "Momentum", "icon": "momentum", "timeframes": ["15m", "1h", "4h", "1D", "1W"], "hint": "Regular divergence: price makes a new extreme the indicator does not confirm (possible exhaustion). Hidden divergence: price holds a higher low / lower high while the indicator overshoots (possible continuation). Each ev", "badge": "", "can_score": false, "operands": []}, {"id": "stochastic.level", "version": 1, "name": "Stochastic %K (14, 3)", "category": "momentum", "category_label": "Momentum", "icon": "momentum", "timeframes": ["15m", "1h", "4h", "1D", "1W"], "hint": "Near 100: closing near recent highs. Standard score (dashboard Stretch part): (%K - 50) / 50. Descriptive; not a forecast.", "badge": "", "can_score": true, "operands": [{"field": "stoch_k", "type": "number", "label": "stoch k", "scale": "Stochastic %K, 0 to 100", "labels": [], "range": [0, 100]}, {"field": "standard_score", "type": "number", "label": "standard score", "scale": "standard score, -1 to 1", "labels": [], "range": [-1, 1]}]}, {"id": "regime.observation", "version": 1, "name": "Regime evidence", "category": "regime", "category_label": "Regime", "icon": "regime", "timeframes": ["15m", "1h", "4h", "1D", "1W"], "hint": "Why the regime is what it is, and whether volatility is compressed or expanding. Percentiles are reported as numbers; the words (compressed below the 20th, expanded above the 80th) are guides.", "badge": "", "can_score": true, "operands": [{"field": "state", "type": "label", "label": "state", "scale": "label", "labels": ["trending", "ranging", "transitional"], "range": null}, {"field": "direction", "type": "label", "label": "direction", "scale": "label", "labels": ["up", "down", "mixed"], "range": null}, {"field": "in_transition", "type": "yes/no", "label": "in transition", "scale": "yes/no", "labels": [], "range": null}, {"field": "adx", "type": "number", "label": "adx", "scale": "ADX, 0 to 100", "labels": [], "range": [0, 100]}, {"field": "adx_change_5", "type": "number", "label": "adx change 5", "scale": "ADX points", "labels": [], "range": [null, null]}, {"field": "efficiency_ratio_20", "type": "number", "label": "efficiency ratio 20", "scale": "ratio, 0 to 1", "labels": [], "range": [0, 1]}, {"field": "atr_pct", "type": "number", "label": "atr pct", "scale": "% of price, at least 0", "labels": [], "range": [0, null]}, {"field": "atr_pct_percentile", "type": "number", "label": "atr pct percentile", "scale": "percentile, 0 to 100", "labels": [], "range": [0, 100]}, {"field": "band_width", "type": "number", "label": "band width", "scale": "ratio, at least 0", "labels": [], "range": [0, null]}, {"field": "band_width_percentile", "type": "number", "label": "band width percentile", "scale": "percentile, 0 to 100", "labels": [], "range": [0, 100]}]}, {"id": "structure.swings", "version": 1, "name": "Market structure", "category": "structure", "category_label": "Structure", "icon": "structure", "timeframes": ["15m", "1h", "4h", "1D", "1W"], "hint": "The sequence of confirmed swing points and what they say about structure on this timeframe.", "badge": "", "can_score": true, "operands": [{"field": "structure", "type": "label", "label": "structure", "scale": "label", "labels": ["up", "down", "mixed"], "range": null}]}, {"id": "structure.breaks", "version": 1, "name": "Structure breaks (BOS / CHoCH)", "category": "structure", "category_label": "Structure", "icon": "structure", "timeframes": ["15m", "1h", "4h", "1D", "1W"], "hint": "Where price closed through recent structure, and whether that continued or challenged it.", "badge": "", "can_score": false, "operands": []}, {"id": "levels.zones", "version": 1, "name": "Support and resistance zones", "category": "structure", "category_label": "Structure", "icon": "structure", "timeframes": ["15m", "1h", "4h", "1D", "1W"], "hint": "Price areas where swings have repeatedly turned. Values are real prices, not scores.", "badge": "", "can_score": false, "operands": [{"field": "close", "type": "number", "label": "close", "scale": "price, at least 0", "labels": [], "range": [0, null]}, {"field": "atr", "type": "number", "label": "atr", "scale": "price, at least 0", "labels": [], "range": [0, null]}]}, {"id": "volume.cmf", "version": 1, "name": "Chaikin Money Flow", "category": "volume", "category_label": "Volume", "icon": "volume", "timeframes": ["15m", "1h", "4h", "1D", "1W"], "hint": "Where candles close within their range, weighted by volume. Unlike OBV (whole-candle direction) it uses the close's position in the range, so it can differ from price direction. The coverage audit found it more distinct ", "badge": "", "can_score": false, "operands": [{"field": "", "type": "number", "label": "value", "scale": "Chaikin money flow, -1 to 1", "labels": [], "range": [-1, 1]}]}, {"id": "volume.heavy_candle", "version": 1, "name": "Heavy-volume candle", "category": "volume", "category_label": "Volume", "icon": "volume", "timeframes": ["15m", "1h", "4h", "1D", "1W"], "hint": "A big candle on big volume. Standard score (dashboard Flow part): heaviness x body share, clipped to -1..+1. Descriptive; not a forecast.", "badge": "", "can_score": true, "operands": [{"field": "volume_ratio", "type": "number", "label": "volume ratio", "scale": "\u00d7 average volume, at least 0", "labels": [], "range": [0, null]}, {"field": "body_share_of_range", "type": "number", "label": "body share of range", "scale": "share of range, -1 to 1", "labels": [], "range": [-1, 1]}, {"field": "heaviness", "type": "number", "label": "heaviness", "scale": "heaviness, 0 to 1", "labels": [], "range": [0, 1]}, {"field": "standard_score", "type": "number", "label": "standard score", "scale": "standard score, -1 to 1", "labels": [], "range": [-1, 1]}]}, {"id": "obv.balance", "version": 1, "name": "On-balance volume balance", "category": "volume", "category_label": "Volume", "icon": "volume", "timeframes": ["15m", "1h", "4h", "1D", "1W"], "hint": "Whether volume has recently come on up-candles or down-candles. Standard score (dashboard Flow part): tanh(balance). Descriptive; not a forecast.", "badge": "", "can_score": true, "operands": [{"field": "obv", "type": "number", "label": "obv", "scale": "volume", "labels": [], "range": [null, null]}, {"field": "obv_average_20", "type": "number", "label": "obv average 20", "scale": "volume", "labels": [], "range": [null, null]}, {"field": "has_volume", "type": "yes/no", "label": "has volume", "scale": "yes/no", "labels": [], "range": null}, {"field": "balance_in_scaled_volumes", "type": "number", "label": "balance in scaled volumes", "scale": "scaled volumes", "labels": [], "range": [null, null]}, {"field": "standard_score", "type": "number", "label": "standard score", "scale": "standard score, -1 to 1", "labels": [], "range": [-1, 1]}]}, {"id": "sentiment.asset", "version": 1, "name": "Asset headline sentiment", "category": "sentiment", "category_label": "Sentiment", "icon": "sentiment", "timeframes": ["1D"], "hint": "Whether recent headlines about this asset read positive or negative. Descriptive.", "badge": "History from Nov 2026", "can_score": false, "operands": [{"field": "score", "type": "number", "label": "score", "scale": "sentiment, \u2212100 to +100, -100 to 100", "labels": [], "range": [-100, 100]}, {"field": "change_7d", "type": "number", "label": "change 7d", "scale": "sentiment points, -200 to 200", "labels": [], "range": [-200, 200]}, {"field": "age_hours", "type": "number", "label": "age hours", "scale": "hours, at least 0", "labels": [], "range": [0, null]}, {"field": "thin_news", "type": "yes/no", "label": "thin news", "scale": "yes/no", "labels": [], "range": null}]}]};
+window.draw = (model) => window.renderLattice({data: Object.assign({}, window.baseData, model ? {model} : {}),
+  parentElement: document.getElementById("host"),
+  // like Streamlit: each edit comes back and the component is drawn again with the edited model
+  setTriggerValue: (k, v) => { const m = JSON.parse(v); window.sent.push([k, m]); setTimeout(() => window.draw(m), 0); }});
+window.draw(null);
+window.ready = true;
+</script></body></html>
