@@ -1,0 +1,856 @@
+........................................................................ [  9%]
+........................................................................ [ 18%]
+........................................................................ [ 28%]
+........................................................................ [ 37%]
+......................................................F................. [ 46%]
+........................................................................ [ 56%]
+........................................................................ [ 65%]
+........................................................................ [ 74%]
+........................................................................ [ 84%]
+........................................................................ [ 93%]
+.................................................                        [100%]
+=================================== FAILURES ===================================
+_ test_20_documents_without_the_new_keys_hash_validate_and_evaluate_exactly_as_before _
+
+    def test_20_documents_without_the_new_keys_hash_validate_and_evaluate_exactly_as_before():
+        recorded = json.loads(lattice_compat.FIXTURE.read_text(encoding="utf-8"))
+>       assert json.loads(json.dumps(lattice_compat.snapshot(), sort_keys=True)) == recorded
+E       AssertionError: assert {'hashes': {'...ow': [], ...}} == {'hashes': {'...ow': [], ...}}
+E         
+E         Omitting 2 identical items, use -vv to show
+E         Differing items:
+E         {'results': {'example:group_reversal_evidence|seed1': {'conditions': {'bearish_reversal_setup': 'not_met', 'bullish_re... None], 'structure_1d': ['ok', 'observed'], 'trend_1d': ['ok', 'observed'], ...}, 'score': -0.666666666667, ...}, ...}} != {'results': {'example:group_reversal_evidence|seed1': {'conditions': {'bearish_reversal_setup': 'not_met', 'bullish_re... None], 'structure_1d': ['ok', 'observed'], 'trend_1d': ['ok', 'observed'], ...}, 'score': -0.666666666667, ...}, ...}}
+E         
+E         Full diff: (-: missing in left side, +: extra in left side)
+E           {
+E               'hashes': {
+E                   'example:group_reversal_evidence': '828c5c68df78d0f7a48893656d3108b1e26b94488ea49a3ec7cca3446b9e9c45',
+E                   'example:group_trend_confirmation': '206f069af4d048f87bf9d0e09ec0d7dfc5109030e8c8267d8db4d9ecebf1f46d',
+E                   'example:set_multi_timeframe': '1e6776922bc645e9a074822f343a477e2f1ffe3f6fc4c3bd065b929fc14554d5',
+E                   'starter:flow': 'a5eb16279c8cd3dbca55f591eeec59a1e89a6ed02c56beeeeed3518813e3216b',
+E                   'starter:reversal-evidence': '828c5c68df78d0f7a48893656d3108b1e26b94488ea49a3ec7cca3446b9e9c45',
+E                   'starter:stretch': '85e9eb91113bd9717968ae3fd835c922c35732fcda45a33278a20f7b5a5c2a60',
+E                   'starter:trend': 'bc9e8794096b58aaaa196a11e2857cf49e081c56862032959035f530106d7292',
+E                   'starter:trend-confirmation': '206f069af4d048f87bf9d0e09ec0d7dfc5109030e8c8267d8db4d9ecebf1f46d',
+E               },
+E               'results': {
+E                   'example:group_reversal_evidence|seed1': {
+E                       'conditions': {
+E                           'bearish_reversal_setup': 'not_met',
+E                           'bullish_reversal_setup': 'not_met',
+E                       },
+E                       'keys': [
+E                           'as_of',
+E                           'conditions',
+E                           'data_mode',
+E                           'diagnostics',
+E                           'evaluated_at',
+E                           'lineage_version',
+E                           'members',
+E                           'name',
+E                           'score',
+E                           'status',
+E                           'subject',
+E                       ],
+E                       'members': {
+E                           'breaks_4h': [
+E                               'ok',
+E                               None,
+E                           ],
+E                           'cmf_4h': [
+E                               'ok',
+E                               None,
+E                           ],
+E                           'macd_div_4h': [
+E                               'ok',
+E                               None,
+E                           ],
+E                           'rsi_div_4h': [
+E                               'ok',
+E                               None,
+E                           ],
+E                           'zones_1d': [
+E                               'ok',
+E                               None,
+E                           ],
+E                       },
+E                       'score': None,
+E                       'status': 'ok',
+E                       'withheld': None,
+E                   },
+E                   'example:group_reversal_evidence|seed2': {
+E                       'conditions': {
+E                           'bearish_reversal_setup': 'not_met',
+E                           'bullish_reversal_setup': 'not_met',
+E                       },
+E                       'keys': [
+E                           'as_of',
+E                           'conditions',
+E                           'data_mode',
+E                           'diagnostics',
+E                           'evaluated_at',
+E                           'lineage_version',
+E                           'members',
+E                           'name',
+E                           'score',
+E                           'status',
+E                           'subject',
+E                       ],
+E                       'members': {
+E                           'breaks_4h': [
+E                               'ok',
+E                               None,
+E                           ],
+E                           'cmf_4h': [
+E                               'ok',
+E                               None,
+E                           ],
+E                           'macd_div_4h': [
+E                               'ok',
+E                               None,
+E                           ],
+E                           'rsi_div_4h': [
+E                               'ok',
+E                               None,
+E                           ],
+E                           'zones_1d': [
+E                               'ok',
+E                               None,
+E                           ],
+E                       },
+E                       'score': None,
+E                       'status': 'ok',
+E                       'withheld': None,
+E                   },
+E                   'example:group_trend_confirmation|seed1': {
+E                       'conditions': {
+E                           'bearish_confirmed': 'not_met',
+E                           'bullish_confirmed': 'not_met',
+E                           'ranging_veto': 'clear',
+E                       },
+E                       'keys': [
+E                           'as_of',
+E                           'conditions',
+E                           'data_mode',
+E                           'diagnostics',
+E                           'evaluated_at',
+E                           'lineage_version',
+E                           'members',
+E                           'name',
+E                           'score',
+E                           'status',
+E                           'subject',
+E                       ],
+E                       'members': {
+E                           'momentum_4h': [
+E                               'ok',
+E                               None,
+E                           ],
+E                           'regime_1d': [
+E                               'ok',
+E                               None,
+E                           ],
+E                           'structure_1d': [
+E                               'ok',
+E                               'observed',
+E                           ],
+E                           'trend_1d': [
+E                               'ok',
+E                               'observed',
+E                           ],
+E                           'trend_4h': [
+E                               'ok',
+E                               'observed',
+E                           ],
+E                       },
+E                       'score': -1.0,
+E                       'status': 'ok',
+E                       'withheld': None,
+E                   },
+E                   'example:group_trend_confirmation|seed2': {
+E                       'conditions': {
+E                           'bearish_confirmed': 'met',
+E                           'bullish_confirmed': 'not_met',
+E                           'ranging_veto': 'clear',
+E                       },
+E                       'keys': [
+E                           'as_of',
+E                           'conditions',
+E                           'data_mode',
+E                           'diagnostics',
+E                           'evaluated_at',
+E                           'lineage_version',
+E                           'members',
+E                           'name',
+E                           'score',
+E                           'status',
+E                           'subject',
+E                       ],
+E                       'members': {
+E                           'momentum_4h': [
+E                               'ok',
+E                               None,
+E                           ],
+E                           'regime_1d': [
+E                               'ok',
+E                               None,
+E                           ],
+E                           'structure_1d': [
+E                               'ok',
+E                               'observed',
+E                           ],
+E                           'trend_1d': [
+E                               'ok',
+E                               'observed',
+E                           ],
+E                           'trend_4h': [
+E                               'ok',
+E                               'observed',
+E                           ],
+E                       },
+E                       'score': -0.666666666667,
+E                       'status': 'ok',
+E                       'withheld': None,
+E                   },
+E                   'example:set_multi_timeframe|seed1': {
+E                       'groups': {
+E                           'reversal': {
+E                               'conditions': {
+E                                   'bearish_reversal_setup': 'not_met',
+E                                   'bullish_reversal_setup': 'not_met',
+E                               },
+E                               'keys': [
+E                                   'as_of',
+E                                   'conditions',
+E                                   'data_mode',
+E                                   'diagnostics',
+E                                   'evaluated_at',
+E                                   'lineage_version',
+E                                   'members',
+E                                   'name',
+E                                   'score',
+E                                   'status',
+E                                   'subject',
+E                               ],
+E                               'members': {
+E                                   'breaks_4h': [
+E                                       'ok',
+E                                       None,
+E                                   ],
+E                                   'cmf_4h': [
+E                                       'ok',
+E                                       None,
+E                                   ],
+E                                   'macd_div_4h': [
+E                                       'ok',
+E                                       None,
+E                                   ],
+E                                   'rsi_div_4h': [
+E                                       'ok',
+E                                       None,
+E                                   ],
+E                                   'zones_1d': [
+E                                       'ok',
+E                                       None,
+E                                   ],
+E                               },
+E                               'score': None,
+E                               'status': 'ok',
+E                               'withheld': None,
+E                           },
+E                           'trend': {
+E                               'conditions': {
+E                                   'bearish_confirmed': 'not_met',
+E                                   'bullish_confirmed': 'not_met',
+E                                   'ranging_veto': 'clear',
+E                               },
+E                               'keys': [
+E                                   'as_of',
+E                                   'conditions',
+E                                   'data_mode',
+E                                   'diagnostics',
+E                                   'evaluated_at',
+E                                   'lineage_version',
+E                                   'members',
+E                                   'name',
+E                                   'score',
+E                                   'status',
+E                                   'subject',
+E                               ],
+E                               'members': {
+E                                   'momentum_4h': [
+E                                       'ok',
+E                                       None,
+E                                   ],
+E                                   'regime_1d': [
+E                                       'ok',
+E                                       None,
+E                                   ],
+E                                   'structure_1d': [
+E                                       'ok',
+E                                       'observed',
+E                                   ],
+E                                   'trend_1d': [
+E                                       'ok',
+E                                       'observed',
+E                                   ],
+E                                   'trend_4h': [
+E                                       'ok',
+E                                       'observed',
+E                                   ],
+E                               },
+E                               'score': -1.0,
+E                               'status': 'ok',
+E                               'withheld': None,
+E                           },
+E                       },
+E                       'keys': [
+E                           'data_mode',
+E                           'diagnostics',
+E                           'evaluated_at',
+E                           'groups',
+E                           'lineage_version',
+E                           'market_context',
+E                           'name',
+E                           'score',
+E                           'standalone',
+E                           'status',
+E                           'subject',
+E                       ],
+E                       'shared': [],
+E                       'standalone': {
+E                           'alignment': 'ok',
+E                           'zones_4h': 'ok',
+E                       },
+E                       'status': 'ok',
+E                   },
+E                   'example:set_multi_timeframe|seed2': {
+E                       'groups': {
+E                           'reversal': {
+E                               'conditions': {
+E                                   'bearish_reversal_setup': 'not_met',
+E                                   'bullish_reversal_setup': 'not_met',
+E                               },
+E                               'keys': [
+E                                   'as_of',
+E                                   'conditions',
+E                                   'data_mode',
+E                                   'diagnostics',
+E                                   'evaluated_at',
+E                                   'lineage_version',
+E                                   'members',
+E                                   'name',
+E                                   'score',
+E                                   'status',
+E                                   'subject',
+E                               ],
+E                               'members': {
+E                                   'breaks_4h': [
+E                                       'ok',
+E                                       None,
+E                                   ],
+E                                   'cmf_4h': [
+E                                       'ok',
+E                                       None,
+E                                   ],
+E                                   'macd_div_4h': [
+E                                       'ok',
+E                                       None,
+E                                   ],
+E                                   'rsi_div_4h': [
+E                                       'ok',
+E                                       None,
+E                                   ],
+E                                   'zones_1d': [
+E                                       'ok',
+E                                       None,
+E                                   ],
+E                               },
+E                               'score': None,
+E                               'status': 'ok',
+E                               'withheld': None,
+E                           },
+E                           'trend': {
+E                               'conditions': {
+E                                   'bearish_confirmed': 'met',
+E                                   'bullish_confirmed': 'not_met',
+E                                   'ranging_veto': 'clear',
+E                               },
+E                               'keys': [
+E                                   'as_of',
+E                                   'conditions',
+E                                   'data_mode',
+E                                   'diagnostics',
+E                                   'evaluated_at',
+E                                   'lineage_version',
+E                                   'members',
+E                                   'name',
+E                                   'score',
+E                                   'status',
+E                                   'subject',
+E                               ],
+E                               'members': {
+E                                   'momentum_4h': [
+E                                       'ok',
+E                                       None,
+E                                   ],
+E                                   'regime_1d': [
+E                                       'ok',
+E                                       None,
+E                                   ],
+E                                   'structure_1d': [
+E                                       'ok',
+E                                       'observed',
+E                                   ],
+E                                   'trend_1d': [
+E                                       'ok',
+E                                       'observed',
+E                                   ],
+E                                   'trend_4h': [
+E                                       'ok',
+E                                       'observed',
+E                                   ],
+E                               },
+E                               'score': -0.666666666667,
+E                               'status': 'ok',
+E                               'withheld': None,
+E                           },
+E                       },
+E                       'keys': [
+E                           'data_mode',
+E                           'diagnostics',
+E                           'evaluated_at',
+E                           'groups',
+E                           'lineage_version',
+E                           'market_context',
+E                           'name',
+E                           'score',
+E                           'standalone',
+E                           'status',
+E                           'subject',
+E                       ],
+E                       'shared': [],
+E                       'standalone': {
+E                           'alignment': 'ok',
+E                           'zones_4h': 'ok',
+E                       },
+E                       'status': 'ok',
+E                   },
+E                   'starter:flow|seed1': {
+E                       'conditions': {},
+E                       'keys': [
+E                           'as_of',
+E                           'conditions',
+E                           'data_mode',
+E                           'diagnostics',
+E                           'evaluated_at',
+E                           'lineage_version',
+E                           'members',
+E                           'name',
+E                           'score',
+E                           'status',
+E                           'subject',
+E                       ],
+E                       'members': {
+E                           'heavy_volume': [
+E                               'ok',
+E                               'observed',
+E                           ],
+E                           'obv': [
+E                               'ok',
+E                               'observed',
+E                           ],
+E                       },
+E                       'score': -0.321848493522,
+E                       'status': 'ok',
+E                       'withheld': None,
+E                   },
+E                   'starter:flow|seed2': {
+E                       'conditions': {},
+E                       'keys': [
+E                           'as_of',
+E                           'conditions',
+E                           'data_mode',
+E                           'diagnostics',
+E                           'evaluated_at',
+E                           'lineage_version',
+E                           'members',
+E                           'name',
+E                           'score',
+E                           'status',
+E                           'subject',
+E                       ],
+E                       'members': {
+E                           'heavy_volume': [
+E                               'ok',
+E                               'observed',
+E                           ],
+E                           'obv': [
+E                               'ok',
+E                               'observed',
+E                           ],
+E                       },
+E                       'score': -0.480468945436,
+E                       'status': 'ok',
+E                       'withheld': None,
+E                   },
+E                   'starter:reversal-evidence|seed1': {
+E                       'conditions': {
+E                           'bearish_reversal_setup': 'not_met',
+E                           'bullish_reversal_setup': 'not_met',
+E                       },
+E                       'keys': [
+E                           'as_of',
+E                           'conditions',
+E                           'data_mode',
+E                           'diagnostics',
+E                           'evaluated_at',
+E                           'lineage_version',
+E                           'members',
+E                           'name',
+E                           'score',
+E                           'status',
+E                           'subject',
+E                       ],
+E                       'members': {
+E                           'breaks_4h': [
+E                               'ok',
+E                               None,
+E                           ],
+E                           'cmf_4h': [
+E                               'ok',
+E                               None,
+E                           ],
+E                           'macd_div_4h': [
+E                               'ok',
+E                               None,
+E                           ],
+E                           'rsi_div_4h': [
+E                               'ok',
+E                               None,
+E                           ],
+E                           'zones_1d': [
+E                               'ok',
+E                               None,
+E                           ],
+E                       },
+E                       'score': None,
+E                       'status': 'ok',
+E                       'withheld': None,
+E                   },
+E                   'starter:reversal-evidence|seed2': {
+E                       'conditions': {
+E                           'bearish_reversal_setup': 'not_met',
+E                           'bullish_reversal_setup': 'not_met',
+E                       },
+E                       'keys': [
+E                           'as_of',
+E                           'conditions',
+E                           'data_mode',
+E                           'diagnostics',
+E                           'evaluated_at',
+E                           'lineage_version',
+E                           'members',
+E                           'name',
+E                           'score',
+E                           'status',
+E                           'subject',
+E                       ],
+E                       'members': {
+E                           'breaks_4h': [
+E                               'ok',
+E                               None,
+E                           ],
+E                           'cmf_4h': [
+E                               'ok',
+E                               None,
+E                           ],
+E                           'macd_div_4h': [
+E                               'ok',
+E                               None,
+E                           ],
+E                           'rsi_div_4h': [
+E                               'ok',
+E                               None,
+E                           ],
+E                           'zones_1d': [
+E                               'ok',
+E                               None,
+E                           ],
+E                       },
+E                       'score': None,
+E                       'status': 'ok',
+E                       'withheld': None,
+E                   },
+E                   'starter:stretch|seed1': {
+E                       'conditions': {},
+E                       'keys': [
+E                           'as_of',
+E                           'conditions',
+E                           'data_mode',
+E                           'diagnostics',
+E                           'evaluated_at',
+E                           'lineage_version',
+E                           'members',
+E                           'name',
+E                           'score',
+E                           'status',
+E                           'subject',
+E                       ],
+E                       'members': {
+E                           'bollinger': [
+E                               'ok',
+E                               'observed',
+E                           ],
+E                           'macd_acceleration': [
+E                               'ok',
+E                               'observed',
+E                           ],
+E                           'momentum': [
+E                               'ok',
+E                               'observed',
+E                           ],
+E                           'rsi': [
+E                               'ok',
+E                               'observed',
+E                           ],
+E                           'stochastic': [
+E                               'ok',
+E                               'observed',
+E                           ],
+E                       },
+E         -             'score': -0.534967608594,
+E         ?                                   ^^
+E         +             'score': -0.534967608588,
+E         ?                                   ^^
+E                       'status': 'ok',
+E                       'withheld': None,
+E                   },
+E                   'starter:stretch|seed2': {
+E                       'conditions': {},
+E                       'keys': [
+E                           'as_of',
+E                           'conditions',
+E                           'data_mode',
+E                           'diagnostics',
+E                           'evaluated_at',
+E                           'lineage_version',
+E                           'members',
+E                           'name',
+E                           'score',
+E                           'status',
+E                           'subject',
+E                       ],
+E                       'members': {
+E                           'bollinger': [
+E                               'ok',
+E                               'observed',
+E                           ],
+E                           'macd_acceleration': [
+E                               'ok',
+E                               'observed',
+E                           ],
+E                           'momentum': [
+E                               'ok',
+E                               'observed',
+E                           ],
+E                           'rsi': [
+E                               'ok',
+E                               'observed',
+E                           ],
+E                           'stochastic': [
+E                               'ok',
+E                               'observed',
+E                           ],
+E                       },
+E                       'score': -0.794386707682,
+E                       'status': 'ok',
+E                       'withheld': None,
+E                   },
+E                   'starter:trend-confirmation|seed1': {
+E                       'conditions': {
+E                           'bearish_confirmed': 'not_met',
+E                           'bullish_confirmed': 'not_met',
+E                           'ranging_veto': 'clear',
+E                       },
+E                       'keys': [
+E                           'as_of',
+E                           'conditions',
+E                           'data_mode',
+E                           'diagnostics',
+E                           'evaluated_at',
+E                           'lineage_version',
+E                           'members',
+E                           'name',
+E                           'score',
+E                           'status',
+E                           'subject',
+E                       ],
+E                       'members': {
+E                           'momentum_4h': [
+E                               'ok',
+E                               None,
+E                           ],
+E                           'regime_1d': [
+E                               'ok',
+E                               None,
+E                           ],
+E                           'structure_1d': [
+E                               'ok',
+E                               'observed',
+E                           ],
+E                           'trend_1d': [
+E                               'ok',
+E                               'observed',
+E                           ],
+E                           'trend_4h': [
+E                               'ok',
+E                               'observed',
+E                           ],
+E                       },
+E                       'score': -1.0,
+E                       'status': 'ok',
+E                       'withheld': None,
+E                   },
+E                   'starter:trend-confirmation|seed2': {
+E                       'conditions': {
+E                           'bearish_confirmed': 'met',
+E                           'bullish_confirmed': 'not_met',
+E                           'ranging_veto': 'clear',
+E                       },
+E                       'keys': [
+E                           'as_of',
+E                           'conditions',
+E                           'data_mode',
+E                           'diagnostics',
+E                           'evaluated_at',
+E                           'lineage_version',
+E                           'members',
+E                           'name',
+E                           'score',
+E                           'status',
+E                           'subject',
+E                       ],
+E                       'members': {
+E                           'momentum_4h': [
+E                               'ok',
+E                               None,
+E                           ],
+E                           'regime_1d': [
+E                               'ok',
+E                               None,
+E                           ],
+E                           'structure_1d': [
+E                               'ok',
+E                               'observed',
+E                           ],
+E                           'trend_1d': [
+E                               'ok',
+E                               'observed',
+E                           ],
+E                           'trend_4h': [
+E                               'ok',
+E                               'observed',
+E                           ],
+E                       },
+E                       'score': -0.666666666667,
+E                       'status': 'ok',
+E                       'withheld': None,
+E                   },
+E                   'starter:trend|seed1': {
+E                       'conditions': {},
+E                       'keys': [
+E                           'as_of',
+E                           'conditions',
+E                           'data_mode',
+E                           'diagnostics',
+E                           'evaluated_at',
+E                           'lineage_version',
+E                           'members',
+E                           'name',
+E                           'score',
+E                           'status',
+E                           'subject',
+E                       ],
+E                       'members': {
+E                           'ichimoku': [
+E                               'ok',
+E                               'observed',
+E                           ],
+E                           'macd': [
+E                               'ok',
+E                               'observed',
+E                           ],
+E                           'moving_averages': [
+E                               'ok',
+E                               'observed',
+E                           ],
+E                       },
+E                       'score': -0.999792851648,
+E                       'status': 'ok',
+E                       'withheld': None,
+E                   },
+E                   'starter:trend|seed2': {
+E                       'conditions': {},
+E                       'keys': [
+E                           'as_of',
+E                           'conditions',
+E                           'data_mode',
+E                           'diagnostics',
+E                           'evaluated_at',
+E                           'lineage_version',
+E                           'members',
+E                           'name',
+E                           'score',
+E                           'status',
+E                           'subject',
+E                       ],
+E                       'members': {
+E                           'ichimoku': [
+E                               'ok',
+E                               'observed',
+E                           ],
+E                           'macd': [
+E                               'ok',
+E                               'observed',
+E                           ],
+E                           'moving_averages': [
+E                               'ok',
+E                               'observed',
+E                           ],
+E                       },
+E                       'score': -0.997412279918,
+E                       'status': 'ok',
+E                       'withheld': None,
+E                   },
+E               },
+E               'valid': {
+E                   'example:group_reversal_evidence': [],
+E                   'example:group_trend_confirmation': [],
+E                   'example:set_multi_timeframe': [],
+E                   'starter:flow': [],
+E                   'starter:reversal-evidence': [],
+E                   'starter:stretch': [],
+E                   'starter:trend': [],
+E                   'starter:trend-confirmation': [],
+E               },
+E           }
+
+tests/test_lattice_stage1.py:385: AssertionError
+=============================== warnings summary ===============================
+tests/test_chart_data.py: 2 warnings
+tests/test_lattice_stage1.py: 26 warnings
+tests/test_library_completion.py: 12 warnings
+tests/test_replay.py: 3 warnings
+tests/test_replay_groups.py: 1 warning
+  /home/runner/work/angstrom_signals_mvp/angstrom_signals_mvp/chart_data.py:237: Pandas4Warning: DatetimeIndex.weekday is deprecated and will be removed in a future version. Use DatetimeIndex.day_of_week instead.
+    monday = df.index - pd.to_timedelta(df.index.weekday, unit="D")
+
+tests/test_lw_chart.py: 11 warnings
+  /opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages/pandas/core/indexes/datetimelike.py:1029: Pandas4Warning: DatetimeIndex.values returning an ndarray that drops timezone information is deprecated. In a future version, this will return the underlying DatetimeArray instead. Use 'DatetimeIndex.tz_convert(None).to_numpy()' to get a NumPy array of UTC values, or 'DatetimeIndex.array' to get the ExtensionArray.
+  See https://pandas.pydata.org/docs/dev/whatsnew/v3.1.0.html#whatsnew-310-deprecations-values for more details.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+1 failed, 768 passed, 55 warnings in 242.04s (0:04:02)
+exit=1
