@@ -1,0 +1,281 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Lattice editor check</title>
+<style>
+.lat{font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;color:inherit;display:flex;flex-wrap:wrap;gap:14px}
+.lat *{box-sizing:border-box}
+.lat .col{background:rgba(127,127,127,.06);border:1px solid rgba(127,127,127,.25);border-radius:12px;padding:12px}
+.lat .lib{flex:1 1 240px;max-width:300px;max-height:760px;overflow:auto}
+.lat .mid{flex:999 1 480px;min-width:0;display:flex;flex-direction:column;gap:14px}
+.lat .cat{font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.7;margin:10px 0 4px}
+.lat .chip{display:flex;align-items:center;gap:8px;padding:6px 6px 6px 10px;margin-bottom:4px;border-radius:8px;
+  border:1px solid rgba(127,127,127,.3);background:rgba(127,127,127,.06);cursor:grab}
+.lat .chip .nm{flex:1 1 auto;min-width:0}
+.lat .badge{font-size:11px;color:#b7791f}
+.lat button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid rgba(127,127,127,.4);
+  background:transparent;color:inherit;min-height:36px;padding:4px 10px}
+.lat button:disabled{opacity:.4;cursor:not-allowed}
+.lat button.on{background:#0f766e;border-color:#0f766e;color:#fff;font-weight:600}
+.lat button.sq{width:36px;padding:0}
+.lat input,.lat select{font:inherit;color:inherit;background:rgba(127,127,127,.08);border:1px solid rgba(127,127,127,.4);
+  border-radius:8px;padding:6px 8px;min-height:36px}
+.lat input.wide{width:100%}
+.lat .drop{border:2px dashed rgba(127,127,127,.45);border-radius:12px;padding:10px;min-height:120px;
+  display:flex;flex-direction:column;gap:8px}
+.lat .drop.over{border-color:#0f766e;background:rgba(15,118,110,.08)}
+.lat .card{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;
+  border:1px solid rgba(127,127,127,.3);background:rgba(127,127,127,.05)}
+.lat .card .nm{flex:1 1 160px;min-width:0;font-weight:600}
+.lat .muted{opacity:.72;font-size:12px}
+.lat .tag{font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid rgba(127,127,127,.4);
+  font-family:ui-monospace,monospace;opacity:.85}
+.lat .rule{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px;border-radius:10px;
+  background:rgba(127,127,127,.07);margin-bottom:8px}
+.lat .num{width:28px;height:28px;border-radius:999px;border:1px solid rgba(127,127,127,.4);display:inline-flex;
+  align-items:center;justify-content:center;font-family:ui-monospace,monospace}
+.lat .lbl{font-weight:600;padding:4px 8px;border-radius:6px;background:rgba(15,118,110,.12)}
+.lat .fixed{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px;border-radius:10px;
+  border:1px dashed rgba(127,127,127,.45);margin-bottom:8px}
+.lat h3{font-size:14px;margin:0 0 8px}
+.lat .hd{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:8px}
+.lat .hd h3{margin:0}
+ body{font-family:system-ui,sans-serif;margin:16px;background:#fff;color:#111}</style></head>
+<body><div id="host"></div><script>
+
+window.renderLattice = function(component) {
+  const { data, setTriggerValue, parentElement } = component;
+  const state = data || {};
+  const catalogue = state.catalogue || [];
+  const byId = {};
+  catalogue.forEach((s) => { byId[s.id] = s; });
+  let model = JSON.parse(JSON.stringify(state.model || {members: [], rules: [], otherwise: {id: "neutral", label: "Neutral"}}));
+  let query = (window.__latQuery || "");
+
+  Array.from(parentElement.children).forEach((c) => c.remove());
+  const root = el("div", "lat");
+  parentElement.appendChild(root);
+
+  function el(tag, cls, text) {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text !== undefined && text !== null) n.textContent = String(text);
+    return n;
+  }
+  function button(text, title, onClick, cls) {
+    const b = el("button", cls || "", text);
+    b.type = "button";
+    if (title) { b.title = title; b.setAttribute("aria-label", title); }
+    b.addEventListener("click", onClick);
+    return b;
+  }
+  function send() { setTriggerValue("model", JSON.stringify(model)); }
+  function slug(text) {
+    let s = String(text || "").toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 24);
+    if (!s) s = "label";
+    if (!/^[a-z]/.test(s)) s = ("l_" + s).slice(0, 24);
+    return s;
+  }
+  function memberKey(id, tf) {
+    const base = (id.split(".")[0] + "_" + id.split(".").slice(-1)[0] + "_" + tf).toLowerCase().replace(/[^a-z0-9_]/g, "_").slice(0, 36);
+    let key = base, n = 2;
+    const taken = new Set((model.members || []).map((m) => m.key));
+    while (taken.has(key)) { key = base + "_" + n; n += 1; }
+    return key;
+  }
+  function addSignal(id) {
+    const s = byId[id];
+    if (!s) return;
+    const tf = s.timeframes.indexOf("1D") >= 0 ? "1D" : s.timeframes[0];
+    model.members = model.members || [];
+    model.members.push({key: memberKey(id, tf), id: s.id, version: s.version, timeframe: tf,
+                        role: s.can_score ? "score" : "condition"});
+    send();
+  }
+
+  // ---------------------------------------------------------------- library
+  const lib = el("div", "col lib");
+  root.appendChild(lib);
+  lib.appendChild(el("h3", "", "Signals"));
+  lib.appendChild(el("div", "muted", "Drag a signal into the Group, or tap + (works on iPad). Hover for what it measures."));
+  const search = el("input", "wide");
+  search.placeholder = "Search: RSI, volume, sentiment…";
+  search.value = query;
+  search.setAttribute("aria-label", "Search signals");
+  lib.appendChild(search);
+  const list = el("div");
+  lib.appendChild(list);
+  function drawLibrary() {
+    list.replaceChildren();
+    const q = query.toLowerCase();
+    let last = null;
+    catalogue.filter((s) => !q || s.name.toLowerCase().indexOf(q) >= 0 || s.category_label.toLowerCase().indexOf(q) >= 0)
+      .forEach((s) => {
+        if (s.category_label !== last) { list.appendChild(el("div", "cat", s.category_label)); last = s.category_label; }
+        const chip = el("div", "chip");
+        chip.draggable = true;
+        chip.title = s.hint;
+        chip.addEventListener("dragstart", (e) => { e.dataTransfer.setData("text/plain", s.id); });
+        const nm = el("div", "nm");
+        nm.appendChild(el("div", "", s.name));
+        if (s.badge) nm.appendChild(el("div", "badge", s.badge));
+        if (!s.can_score) nm.appendChild(el("div", "muted", "condition only"));
+        chip.appendChild(nm);
+        chip.appendChild(button("+", "Add " + s.name + " to the Group", () => addSignal(s.id), "sq"));
+        list.appendChild(chip);
+      });
+  }
+  search.addEventListener("input", () => { query = search.value; window.__latQuery = query; drawLibrary(); });
+  drawLibrary();
+
+  // ---------------------------------------------------------------- group
+  const mid = el("div", "mid");
+  root.appendChild(mid);
+  const group = el("div", "col");
+  mid.appendChild(group);
+  const head = el("div", "hd");
+  const name = el("input", "wide");
+  name.value = model.name || "";
+  name.placeholder = "Group name";
+  name.setAttribute("aria-label", "Group name");
+  name.addEventListener("change", () => { model.name = name.value; send(); });
+  head.appendChild(name);
+  group.appendChild(head);
+  const question = el("input", "wide");
+  question.value = model.question || "";
+  question.placeholder = "The question it answers (optional), e.g. Is the trend up and not overstretched?";
+  question.setAttribute("aria-label", "Question");
+  question.addEventListener("change", () => { model.question = question.value; send(); });
+  group.appendChild(question);
+
+  const drop = el("div", "drop");
+  drop.style.marginTop = "10px";
+  drop.addEventListener("dragover", (e) => { e.preventDefault(); drop.classList.add("over"); });
+  drop.addEventListener("dragleave", () => drop.classList.remove("over"));
+  drop.addEventListener("drop", (e) => { e.preventDefault(); drop.classList.remove("over"); addSignal(e.dataTransfer.getData("text/plain")); });
+  group.appendChild(drop);
+  const ROLE_TITLES = state.role_hints || {};
+  if (!(model.members || []).length) drop.appendChild(el("div", "muted", "Drag signals here, or tap + in the list."));
+  (model.members || []).forEach((m, i) => {
+    const s = byId[m.id] || {name: m.id, timeframes: [m.timeframe], can_score: false};
+    const card = el("div", "card");
+    const nm = el("div", "nm", s.name);
+    nm.title = s.hint || "";
+    card.appendChild(nm);
+    const tf = el("select");
+    tf.setAttribute("aria-label", "Timeframe of " + s.name);
+    tf.title = "Timeframe this member is read on (always its last closed candle)";
+    s.timeframes.forEach((t) => { const o = el("option", "", t); o.value = t; if (t === m.timeframe) o.selected = true; tf.appendChild(o); });
+    tf.addEventListener("change", () => { m.timeframe = tf.value; send(); });
+    card.appendChild(tf);
+    const tag = el("span", "tag", (state.member_tags || {})[m.key] || ((m.timeframe || "") + " · last closed candle"));
+    tag.title = "What this member is read from. The candle still forming is never used.";
+    card.appendChild(tag);
+    ["score", "condition", "levels", "context"].forEach((r) => {
+      const label = r.charAt(0).toUpperCase() + r.slice(1);
+      const b = button(label, ROLE_TITLES[r] || label, () => { m.role = r; send(); }, m.role === r ? "on" : "");
+      b.setAttribute("aria-pressed", m.role === r ? "true" : "false");
+      if (r === "score" && !s.can_score) { b.disabled = true; b.title = s.name + " has no standard score: use it as a Condition."; }
+      card.appendChild(b);
+    });
+    card.appendChild(button("✕", "Remove " + s.name, () => { model.members.splice(i, 1); send(); }, "sq"));
+    drop.appendChild(card);
+  });
+
+  // ---------------------------------------------------------------- rules
+  const rules = el("div", "col");
+  mid.appendChild(rules);
+  const rh = el("div", "hd");
+  rh.appendChild(el("h3", "", "Rules: what the Group says"));
+  rh.appendChild(el("span", "muted", "Checked top to bottom · first match wins · ↑↓ to reorder"));
+  rules.appendChild(rh);
+  const operands = state.operands || [];
+  const opByKey = {};
+  operands.forEach((o) => { opByKey[o.key] = o; });
+  const OPS = {number: [["gte", "is at least"], ["lte", "is at most"]], "yes/no": [["yes", "is yes"], ["no", "is no"]],
+               label: [["is", "is"], ["is_not", "is not"]]};
+  (model.rules || []).forEach((r, ri) => {
+    const row = el("div", "rule");
+    const up = button("↑", "Check this rule earlier", () => { const t = model.rules[ri - 1]; model.rules[ri - 1] = r; model.rules[ri] = t; send(); }, "sq");
+    up.disabled = ri === 0;
+    const down = button("↓", "Check this rule later", () => { const t = model.rules[ri + 1]; model.rules[ri + 1] = r; model.rules[ri] = t; send(); }, "sq");
+    down.disabled = ri === model.rules.length - 1;
+    row.appendChild(up); row.appendChild(down);
+    row.appendChild(el("span", "num", ri + 1));
+    const lab = el("input");
+    lab.value = r.label; lab.size = 12; lab.title = "The label this rule gives (for example Bullish)";
+    lab.setAttribute("aria-label", "Label of rule " + (ri + 1));
+    lab.addEventListener("change", () => { r.label = lab.value; r.id = slug(lab.value); send(); });
+    row.appendChild(lab);
+    row.appendChild(el("span", "muted", "when"));
+    (r.clauses || []).forEach((c, ci) => {
+      if (ci > 0) {
+        const j = button(r.joiner === "any" ? "OR" : "AND", "Switch between AND (all must hold) and OR (any may hold)",
+                         () => { r.joiner = r.joiner === "any" ? "all" : "any"; send(); });
+        row.appendChild(j);
+      }
+      const o = opByKey[c.operand] || {type: "number", scale: "", labels: []};
+      const type = el("span", "tag", o.type === "number" ? "#" : o.type === "yes/no" ? "Y/N" : "Aa");
+      type.title = o.type === "number" ? "A number: compare it with a value." : o.type === "yes/no" ? "A yes/no reading." : "A label.";
+      row.appendChild(type);
+      const pick = el("select");
+      pick.setAttribute("aria-label", "Reading");
+      operands.forEach((x) => { const op = el("option", "", x.label); op.value = x.key; if (x.key === c.operand) op.selected = true; pick.appendChild(op); });
+      if (!opByKey[c.operand]) { const op = el("option", "", "(removed reading)"); op.value = c.operand; op.selected = true; pick.appendChild(op); }
+      pick.addEventListener("change", () => {
+        c.operand = pick.value;
+        const n = opByKey[c.operand] || {type: "number", labels: []};
+        c.op = OPS[n.type] ? OPS[n.type][0][0] : "gte";
+        c.value = n.type === "label" ? (n.labels[0] || "") : n.type === "yes/no" ? "" : "";
+        send();
+      });
+      row.appendChild(pick);
+      const ops = el("select");
+      ops.setAttribute("aria-label", "Comparison");
+      (OPS[o.type] || OPS.number).forEach(([k, t]) => { const op = el("option", "", t); op.value = k; if (k === c.op) op.selected = true; ops.appendChild(op); });
+      ops.addEventListener("change", () => { c.op = ops.value; send(); });
+      row.appendChild(ops);
+      if (o.type === "number") {
+        const v = el("input"); v.value = c.value || ""; v.size = 6; v.setAttribute("aria-label", "Value");
+        v.addEventListener("change", () => { c.value = v.value; send(); });
+        row.appendChild(v);
+        row.appendChild(el("span", "muted", o.scale || ""));
+      } else if (o.type === "label") {
+        const v = el("select"); v.setAttribute("aria-label", "Label");
+        (o.labels || []).forEach((l) => { const op = el("option", "", l); op.value = l; if (l === c.value) op.selected = true; v.appendChild(op); });
+        v.addEventListener("change", () => { c.value = v.value; send(); });
+        row.appendChild(v);
+      }
+      row.appendChild(button("✕", "Remove this condition", () => { r.clauses.splice(ci, 1); send(); }, "sq"));
+    });
+    row.appendChild(button("+ condition", "Add another condition to this rule",
+      () => { r.clauses = r.clauses || []; r.clauses.push({operand: "score", op: "gte", value: "+30"}); send(); }));
+    row.appendChild(button("🗑", "Remove this rule", () => { model.rules.splice(ri, 1); send(); }, "sq"));
+    rules.appendChild(row);
+  });
+  const unknown = el("div", "fixed");
+  unknown.appendChild(el("span", "lbl", "Unknown"));
+  unknown.appendChild(el("span", "", "if a rule cannot be checked because a reading is missing. Later rules are not tried."));
+  unknown.title = "Fixed: missing data never becomes a confident label.";
+  rules.appendChild(unknown);
+  const other = el("div", "fixed");
+  const ol = el("input"); ol.value = (model.otherwise || {}).label || "Neutral"; ol.size = 12;
+  ol.setAttribute("aria-label", "Label when no rule matches");
+  ol.addEventListener("change", () => { model.otherwise = {id: slug(ol.value), label: ol.value}; send(); });
+  other.appendChild(ol);
+  other.appendChild(el("span", "", "otherwise: every rule was checked and none matched."));
+  rules.appendChild(other);
+  const add = el("div", "hd");
+  const suggest = el("select");
+  suggest.setAttribute("aria-label", "Label for a new rule");
+  (state.suggested_labels || []).forEach(([id, label]) => { const o = el("option", "", label); o.value = label; suggest.appendChild(o); });
+  add.appendChild(suggest);
+  add.appendChild(button("+ Add rule", "Add a rule that gives this label",
+    () => { model.rules = model.rules || []; model.rules.push({id: slug(suggest.value), label: suggest.value, joiner: "all",
+             clauses: [{operand: "score", op: suggest.value.toLowerCase().indexOf("bear") >= 0 || suggest.value.toLowerCase().indexOf("down") >= 0 || suggest.value.toLowerCase().indexOf("sell") >= 0 ? "lte" : "gte",
+                        value: suggest.value.toLowerCase().indexOf("bear") >= 0 || suggest.value.toLowerCase().indexOf("down") >= 0 || suggest.value.toLowerCase().indexOf("sell") >= 0 ? "−30" : "+30"}]}); send(); }));
+  rules.appendChild(add);
+}
+
+window.sent = [];
+window.renderLattice({data: {"model": {"name": "Trend (with labels)", "question": "Is price above or below its 50- and 200-day levels, and by how much?", "members": [{"key": "moving_averages", "id": "ma.position", "version": 1, "timeframe": "1D", "role": "score", "label": "Moving averages (50, 200 days)"}, {"key": "ichimoku", "id": "ichimoku.position", "version": 1, "timeframe": "1D", "role": "score", "label": "Ichimoku cloud"}, {"key": "macd", "id": "macd.level", "version": 1, "timeframe": "1D", "role": "score", "label": "MACD line"}, {"key": "rsi_level_1d", "id": "rsi.level", "version": 1, "timeframe": "1D", "role": "condition"}], "rules": [{"id": "bullish", "label": "Bullish", "joiner": "all", "clauses": [{"operand": "score", "op": "gte", "value": "+30"}, {"operand": "rsi_level_1d:rsi", "op": "lte", "value": "70"}]}, {"id": "bearish", "label": "Bearish", "joiner": "all", "clauses": [{"operand": "score", "op": "lte", "value": "\u221230"}]}], "otherwise": {"id": "neutral", "label": "Neutral"}}, "operands": [{"key": "score", "label": "Group score", "type": "number", "scale": "\u2212100 to +100", "labels": []}, {"key": "moving_averages:close", "label": "Moving averages (50, 200) (1D) \u00b7 close", "type": "number", "scale": "price, at least 0", "labels": []}, {"key": "moving_averages:sma_50", "label": "Moving averages (50, 200) (1D) \u00b7 sma 50", "type": "number", "scale": "price, at least 0", "labels": []}, {"key": "moving_averages:sma_200", "label": "Moving averages (50, 200) (1D) \u00b7 sma 200", "type": "number", "scale": "price, at least 0", "labels": []}, {"key": "moving_averages:vs_sma_50_pct", "label": "Moving averages (50, 200) (1D) \u00b7 vs sma 50 pct", "type": "number", "scale": "% from the 50-period average, at least -100", "labels": []}, {"key": "moving_averages:vs_sma_200_pct", "label": "Moving averages (50, 200) (1D) \u00b7 vs sma 200 pct", "type": "number", "scale": "% from the 200-period average, at least -100", "labels": []}, {"key": "moving_averages:distance_atr_50", "label": "Moving averages (50, 200) (1D) \u00b7 distance atr 50", "type": "number", "scale": "ATRs from the 50-period average", "labels": []}, {"key": "moving_averages:distance_atr_200", "label": "Moving averages (50, 200) (1D) \u00b7 distance atr 200", "type": "number", "scale": "ATRs from the 200-period average", "labels": []}, {"key": "moving_averages:standard_score", "label": "Moving averages (50, 200) (1D) \u00b7 standard score", "type": "number", "scale": "standard score, -1 to 1", "labels": []}, {"key": "ichimoku:cloud", "label": "Ichimoku cloud position (1D) \u00b7 cloud", "type": "label", "scale": "label", "labels": ["above", "inside", "below"]}, {"key": "ichimoku:outside_cloud_atr", "label": "Ichimoku cloud position (1D) \u00b7 outside cloud atr", "type": "number", "scale": "ATRs outside the cloud", "labels": []}, {"key": "ichimoku:tenkan_kijun_gap_atr", "label": "Ichimoku cloud position (1D) \u00b7 tenkan kijun gap atr", "type": "number", "scale": "ATRs", "labels": []}, {"key": "ichimoku:span_a", "label": "Ichimoku cloud position (1D) \u00b7 span a", "type": "number", "scale": "price, at least 0", "labels": []}, {"key": "ichimoku:span_b", "label": "Ichimoku cloud position (1D) \u00b7 span b", "type": "number", "scale": "price, at least 0", "labels": []}, {"key": "ichimoku:tenkan", "label": "Ichimoku cloud position (1D) \u00b7 tenkan", "type": "number", "scale": "price, at least 0", "labels": []}, {"key": "ichimoku:kijun", "label": "Ichimoku cloud position (1D) \u00b7 kijun", "type": "number", "scale": "price, at least 0", "labels": []}, {"key": "ichimoku:close", "label": "Ichimoku cloud position (1D) \u00b7 close", "type": "number", "scale": "price, at least 0", "labels": []}, {"key": "ichimoku:standard_score", "label": "Ichimoku cloud position (1D) \u00b7 standard score", "type": "number", "scale": "standard score, -1 to 1", "labels": []}, {"key": "macd:macd_line", "label": "MACD line (1D) \u00b7 macd line", "type": "number", "scale": "price", "labels": []}, {"key": "macd:macd_line_atr", "label": "MACD line (1D) \u00b7 macd line atr", "type": "number", "scale": "ATRs", "labels": []}, {"key": "macd:standard_score", "label": "MACD line (1D) \u00b7 standard score", "type": "number", "scale": "standard score, -1 to 1", "labels": []}, {"key": "rsi_level_1d:rsi", "label": "RSI (14) (1D) \u00b7 rsi", "type": "number", "scale": "RSI (14), 0 to 100", "labels": []}, {"key": "rsi_level_1d:standard_score", "label": "RSI (14) (1D) \u00b7 standard score", "type": "number", "scale": "standard score, -1 to 1", "labels": []}], "checks": {"blocks": [], "warnings": ["Ichimoku cloud position, MACD line and Moving averages (50, 200) all measure trend. The score may count the same move several times.", "Every score member comes from price and volume alone, so they will often agree."]}, "member_tags": {"moving_averages": "1D \u00b7 last closed candle", "ichimoku": "1D \u00b7 last closed candle", "macd": "1D \u00b7 last closed candle", "rsi_level_1d": "1D \u00b7 last closed candle"}, "description": "Trend (with labels) averages 3 readings (Moving averages (50, 200) (1D), Ichimoku cloud position (1D), MACD line (1D)) into a score from \u2212100 to +100. Rule 1: Bullish when the Group score is at least +30 and RSI (14) (1D) rsi is at most 70. Rule 2: Bearish when the Group score is at most \u221230. If a rule cannot be checked, the label is Unknown. If none match, Neutral. A score is given when at least 1 of its 3 readings is available.", "can_save": true, "returns": {"score": true, "labels": ["Bullish", "Bearish", "Neutral"]}, "catalogue": [{"id": "ichimoku.position", "version": 1, "name": "Ichimoku cloud position", "category": "trend", "category_label": "Trend", "icon": "trend", "timeframes": ["15m", "1h", "4h", "1D", "1W"], "hint": "Where price sits relative to the cloud. The standard score (dashboard Trend part) is 0 inside the cloud and grows with distance outside it, averaged with the Tenkan-Kijun gap (both scaled by 3 ATRs). Descriptive; not a f", "badge": "", "can_score": true, "operands": [{"field": "cloud", "type": "label", "label": "cloud", "scale": "label", "labels": ["above", "inside", "below"], "range": null}, {"field": "outside_cloud_atr", "type": "number", "label": "outside cloud atr", "scale": "ATRs outside the cloud", "labels": [], "range": [null, null]}, {"field": "tenkan_kijun_gap_atr", "type": "number", "label": "tenkan kijun gap atr", "scale": "ATRs", "labels": [], "range": [null, null]}, {"field": "span_a", "type": "number", "label": "span a", "scale": "price, at least 0", "labels": [], "range": [0, null]}, {"field": "span_b", "type": "number", "label": "span b", "scale": "price, at least 0", "labels": [], "range": [0, null]}, {"field": "tenkan", "type": "number", "label": "tenkan", "scale": "price, at least 0", "labels": [], "range": [0, null]}, {"field": "kijun", "type": "number", "label": "kijun", "scale": "price, at least 0", "labels": [], "range": [0, null]}, {"field": "close", "type": "number", "label": "close", "scale": "price, at least 0", "labels": [], "range": [0, null]}, {"field": "standard_score", "type": "number", "label": "standard score", "scale": "standard score, -1 to 1", "labels": [], "range": [-1, 1]}]}, {"id": "macd.level", "version": 1, "name": "MACD line", "category": "trend", "category_label": "Trend", "icon": "trend", "timeframes": ["15m", "1h", "4h", "1D", "1W"], "hint": "Whether the shorter average is above the longer one, and by how much. Standard score (dashboard Trend part): tanh(line / ATR). Descriptive; not a forecast.", "badge": "", "can_score": true, "operands": [{"field": "macd_line", "type": "number", "label": "macd line", "scale": "price", "labels": [], "range": [null, null]}, {"field": "macd_line_atr", "type": "number", "label": "macd line atr", "scale": "ATRs", "labels": [], "range": [null, null]}, {"field": "standard_score", "type": "number", "label": "standard score", "scale": "standard score, -1 to 1", "labels": [], "range": [-1, 1]}]}, {"id": "ma.position", "version": 1, "name": "Moving averages (50, 200)", "category": "trend", "category_label": "Trend", "icon": "trend", "timeframes": ["15m", "1h", "4h", "1D", "1W"], "hint": "How far price sits above or below its longer averages. The standard score (dashboard Trend part) averages tanh(distance / (ATR x 0.5 x sqrt(length))) over the two averages. Descriptive; not a forecast.", "badge": "", "can_score": true, "operands": [{"field": "close", "type": "number", "label": "close", "scale": "price, at least 0", "labels": [], "range": [0, null]}, {"field": "sma_50", "type": "number", "label": "sma 50", "scale": "price, at least 0", "labels": [], "range": [0, null]}, {"field": "sma_200", "type": "number", "label": "sma 200", "scale": "price, at least 0", "labels": [], "range": [0, null]}, {"field": "vs_sma_50_pct", "type": "number", "label": "vs sma 50 pct", "scale": "% from the 50-period average, at least -100", "labels": [], "range": [-100, null]}, {"field": "vs_sma_200_pct", "type": "number", "label": "vs sma 200 pct", "scale": "% from the 200-period average, at least -100", "labels": [], "range": [-100, null]}, {"field": "distance_atr_50", "type": "number", "label": "distance atr 50", "scale": "ATRs from the 50-period average", "labels": [], "range": [null, null]}, {"field": "distance_atr_200", "type": "number", "label": "distance atr 200", "scale": "ATRs from the 200-period average", "labels": [], "range": [null, null]}, {"field": "standard_score", "type": "number", "label": "standard score", "scale": "standard score, -1 to 1", "labels": [], "range": [-1, 1]}]}, {"id": "mtf.alignment", "version": 1, "name": "Multi-timeframe alignment", "category": "trend", "category_label": "Trend", "icon": "trend", "timeframes": ["1D"], "hint": "Shows where timeframes agree and where they conflict. There is deliberately no single alignment score: agreement is descriptive, not evidence of a future move.", "badge": "", "can_score": false, "operands": [{"field": "trend_counts.up", "type": "number", "label": "trend counts.up", "scale": "timeframes, at least 0", "labels": [], "range": [0, null]}, {"field": "trend_counts.down", "type": "number", "label": "trend counts.down", "scale": "timeframes, at least 0", "labels": [], "range": [0, null]}, {"field": "trend_counts.mixed", "type": "number", "label": "trend counts.mixed", "scale": "timeframes, at least 0", "labels": [], "range": [0, null]}]}, {"id": "trend.direction", "version": 1, "name": "Trend direction", "category": "trend", "category_label": "Trend", "icon": "trend", "timeframes": ["15m", "1h", "4h", "1D", "1W"], "hint": "Which way the moving-average stack points on this timeframe. Descriptive.", "badge": "", "can_score": true, "operands": [{"field": "", "type": "label", "label": "value", "scale": "label", "labels": ["up", "down", "mixed"], "range": null}]}, {"id": "move.seven_day", "version": 1, "name": "7-candle move", "category": "momentum", "category_label": "Momentum", "icon": "momentum", "timeframes": ["15m", "1h", "4h", "1D", "1W"], "hint": "How large the recent move is for this asset. Standard score (dashboard Stretch part): tanh(change / expected). Descriptive; not a forecast.", "badge": "", "can_score": true, "operands": [{"field": "change_7d_pct", "type": "number", "label": "change 7d pct", "scale": "% change, at least -100", "labels": [], "range": [-100, null]}, {"field": "atr_pct", "type": "number", "label": "atr pct", "scale": "% of price, at least 0", "labels": [], "range": [0, null]}, {"field": "expected_7d_move_pct", "type": "number", "label": "expected 7d move pct", "scale": "% of price, at least 0", "labels": [], "range": [0, null]}, {"field": "move_in_expected_units", "type": "number", "label": "move in expected units", "scale": "expected moves", "labels": [], "range": [null, null]}, {"field": "standard_score", "type": "number", "label": "standard score", "scale": "standard score, -1 to 1", "labels": [], "range": [-1, 1]}]}, {"id": "bollinger.position", "version": 1, "name": "Bollinger position (20, 2)", "category": "momentum", "category_label": "Momentum", "icon": "momentum", "timeframes": ["15m", "1h", "4h", "1D", "1W"], "hint": "Near 1: at the upper band. Standard score (dashboard Stretch part): tanh(2 x (position - 0.5)). Descriptive; not a forecast.", "badge": "", "can_score": true, "operands": [{"field": "position", "type": "number", "label": "position", "scale": "0 = lower band, 1 = upper band", "labels": [], "range": [null, null]}, {"field": "upper", "type": "number", "label": "upper", "scale": "price", "labels": [], "range": [null, null]}, {"field": "lower", "type": "number", "label": "lower", "scale": "price", "labels": [], "range": [null, null]}, {"field": "close", "type": "number", "label": "close", "scale": "price, at least 0", "labels": [], "range": [0, null]}, {"field": "standard_score", "type": "number", "label": "standard score", "scale": "standard score, -1 to 1", "labels": [], "range": [-1, 1]}]}, {"id": "ta.divergence.macd", "version": 1, "name": "MACD divergence", "category": "momentum", "category_label": "Momentum", "icon": "momentum", "timeframes": ["15m", "1h", "4h", "1D", "1W"], "hint": "Regular divergence: price makes a new extreme the indicator does not confirm (possible exhaustion). Hidden divergence: price holds a higher low / lower high while the indicator overshoots (possible continuation). Each ev", "badge": "", "can_score": false, "operands": []}, {"id": "macd.acceleration", "version": 1, "name": "MACD histogram", "category": "momentum", "category_label": "Momentum", "icon": "momentum", "timeframes": ["15m", "1h", "4h", "1D", "1W"], "hint": "Whether momentum is speeding up or slowing. Standard score (dashboard Stretch part): tanh(histogram / (ATR/4)). Descriptive; not a forecast.", "badge": "", "can_score": true, "operands": [{"field": "histogram", "type": "number", "label": "histogram", "scale": "price", "labels": [], "range": [null, null]}, {"field": "histogram_quarter_atr", "type": "number", "label": "histogram quarter atr", "scale": "quarter-ATRs", "labels": [], "range": [null, null]}, {"field": "standard_score", "type": "number", "label": "standard score", "scale": "standard score, -1 to 1", "labels": [], "range": [-1, 1]}]}, {"id": "momentum.direction", "version": 1, "name": "Momentum direction", "category": "momentum", "category_label": "Momentum", "icon": "momentum", "timeframes": ["15m", "1h", "4h", "1D", "1W"], "hint": "Which way short-term momentum points on this timeframe, separate from the moving-average trend.", "badge": "", "can_score": true, "operands": [{"field": "", "type": "label", "label": "value", "scale": "label", "labels": ["up", "down", "mixed"], "range": null}]}, {"id": "rsi.level", "version": 1, "name": "RSI (14)", "category": "momentum", "category_label": "Momentum", "icon": "momentum", "timeframes": ["15m", "1h", "4h", "1D", "1W"], "hint": "How strongly recent closes have risen versus fallen. Standard score (dashboard Stretch part): (RSI - 50) / 30, clipped to -1..+1 (80 = +1, 20 = -1). Descriptive; not a forecast.", "badge": "", "can_score": true, "operands": [{"field": "rsi", "type": "number", "label": "rsi", "scale": "RSI (14), 0 to 100", "labels": [], "range": [0, 100]}, {"field": "standard_score", "type": "number", "label": "standard score", "scale": "standard score, -1 to 1", "labels": [], "range": [-1, 1]}]}, {"id": "ta.divergence.rsi", "version": 1, "name": "RSI divergence", "category": "momentum", "category_label": "Momentum", "icon": "momentum", "timeframes": ["15m", "1h", "4h", "1D", "1W"], "hint": "Regular divergence: price makes a new extreme the indicator does not confirm (possible exhaustion). Hidden divergence: price holds a higher low / lower high while the indicator overshoots (possible continuation). Each ev", "badge": "", "can_score": false, "operands": []}, {"id": "stochastic.level", "version": 1, "name": "Stochastic %K (14, 3)", "category": "momentum", "category_label": "Momentum", "icon": "momentum", "timeframes": ["15m", "1h", "4h", "1D", "1W"], "hint": "Near 100: closing near recent highs. Standard score (dashboard Stretch part): (%K - 50) / 50. Descriptive; not a forecast.", "badge": "", "can_score": true, "operands": [{"field": "stoch_k", "type": "number", "label": "stoch k", "scale": "Stochastic %K, 0 to 100", "labels": [], "range": [0, 100]}, {"field": "standard_score", "type": "number", "label": "standard score", "scale": "standard score, -1 to 1", "labels": [], "range": [-1, 1]}]}, {"id": "regime.observation", "version": 1, "name": "Regime evidence", "category": "regime", "category_label": "Regime", "icon": "regime", "timeframes": ["15m", "1h", "4h", "1D", "1W"], "hint": "Why the regime is what it is, and whether volatility is compressed or expanding. Percentiles are reported as numbers; the words (compressed below the 20th, expanded above the 80th) are guides.", "badge": "", "can_score": false, "operands": [{"field": "state", "type": "label", "label": "state", "scale": "label", "labels": ["trending", "ranging", "transitional"], "range": null}, {"field": "direction", "type": "label", "label": "direction", "scale": "label", "labels": ["up", "down", "mixed"], "range": null}, {"field": "in_transition", "type": "yes/no", "label": "in transition", "scale": "yes/no", "labels": [], "range": null}, {"field": "adx", "type": "number", "label": "adx", "scale": "ADX, 0 to 100", "labels": [], "range": [0, 100]}, {"field": "adx_change_5", "type": "number", "label": "adx change 5", "scale": "ADX points", "labels": [], "range": [null, null]}, {"field": "efficiency_ratio_20", "type": "number", "label": "efficiency ratio 20", "scale": "ratio, 0 to 1", "labels": [], "range": [0, 1]}, {"field": "atr_pct", "type": "number", "label": "atr pct", "scale": "% of price, at least 0", "labels": [], "range": [0, null]}, {"field": "atr_pct_percentile", "type": "number", "label": "atr pct percentile", "scale": "percentile, 0 to 100", "labels": [], "range": [0, 100]}, {"field": "band_width", "type": "number", "label": "band width", "scale": "ratio, at least 0", "labels": [], "range": [0, null]}, {"field": "band_width_percentile", "type": "number", "label": "band width percentile", "scale": "percentile, 0 to 100", "labels": [], "range": [0, 100]}]}, {"id": "structure.swings", "version": 1, "name": "Market structure", "category": "structure", "category_label": "Structure", "icon": "structure", "timeframes": ["15m", "1h", "4h", "1D", "1W"], "hint": "The sequence of confirmed swing points and what they say about structure on this timeframe.", "badge": "", "can_score": false, "operands": [{"field": "structure", "type": "label", "label": "structure", "scale": "label", "labels": ["up", "down", "mixed"], "range": null}]}, {"id": "structure.breaks", "version": 1, "name": "Structure breaks (BOS / CHoCH)", "category": "structure", "category_label": "Structure", "icon": "structure", "timeframes": ["15m", "1h", "4h", "1D", "1W"], "hint": "Where price closed through recent structure, and whether that continued or challenged it.", "badge": "", "can_score": false, "operands": []}, {"id": "levels.zones", "version": 1, "name": "Support and resistance zones", "category": "structure", "category_label": "Structure", "icon": "structure", "timeframes": ["15m", "1h", "4h", "1D", "1W"], "hint": "Price areas where swings have repeatedly turned. Values are real prices, not scores.", "badge": "", "can_score": false, "operands": [{"field": "close", "type": "number", "label": "close", "scale": "price, at least 0", "labels": [], "range": [0, null]}, {"field": "atr", "type": "number", "label": "atr", "scale": "price, at least 0", "labels": [], "range": [0, null]}]}, {"id": "volume.cmf", "version": 1, "name": "Chaikin Money Flow", "category": "volume", "category_label": "Volume", "icon": "volume", "timeframes": ["15m", "1h", "4h", "1D", "1W"], "hint": "Where candles close within their range, weighted by volume. Unlike OBV (whole-candle direction) it uses the close's position in the range, so it can differ from price direction. The coverage audit found it more distinct ", "badge": "", "can_score": false, "operands": [{"field": "", "type": "number", "label": "value", "scale": "Chaikin money flow, -1 to 1", "labels": [], "range": [-1, 1]}]}, {"id": "volume.heavy_candle", "version": 1, "name": "Heavy-volume candle", "category": "volume", "category_label": "Volume", "icon": "volume", "timeframes": ["15m", "1h", "4h", "1D", "1W"], "hint": "A big candle on big volume. Standard score (dashboard Flow part): heaviness x body share, clipped to -1..+1. Descriptive; not a forecast.", "badge": "", "can_score": true, "operands": [{"field": "volume_ratio", "type": "number", "label": "volume ratio", "scale": "\u00d7 average volume, at least 0", "labels": [], "range": [0, null]}, {"field": "body_share_of_range", "type": "number", "label": "body share of range", "scale": "share of range, -1 to 1", "labels": [], "range": [-1, 1]}, {"field": "heaviness", "type": "number", "label": "heaviness", "scale": "heaviness, 0 to 1", "labels": [], "range": [0, 1]}, {"field": "standard_score", "type": "number", "label": "standard score", "scale": "standard score, -1 to 1", "labels": [], "range": [-1, 1]}]}, {"id": "obv.balance", "version": 1, "name": "On-balance volume balance", "category": "volume", "category_label": "Volume", "icon": "volume", "timeframes": ["15m", "1h", "4h", "1D", "1W"], "hint": "Whether volume has recently come on up-candles or down-candles. Standard score (dashboard Flow part): tanh(balance). Descriptive; not a forecast.", "badge": "", "can_score": true, "operands": [{"field": "obv", "type": "number", "label": "obv", "scale": "volume", "labels": [], "range": [null, null]}, {"field": "obv_average_20", "type": "number", "label": "obv average 20", "scale": "volume", "labels": [], "range": [null, null]}, {"field": "has_volume", "type": "yes/no", "label": "has volume", "scale": "yes/no", "labels": [], "range": null}, {"field": "balance_in_scaled_volumes", "type": "number", "label": "balance in scaled volumes", "scale": "scaled volumes", "labels": [], "range": [null, null]}, {"field": "standard_score", "type": "number", "label": "standard score", "scale": "standard score, -1 to 1", "labels": [], "range": [-1, 1]}]}, {"id": "sentiment.asset", "version": 1, "name": "Asset headline sentiment", "category": "sentiment", "category_label": "Sentiment", "icon": "sentiment", "timeframes": ["1D"], "hint": "Whether recent headlines about this asset read positive or negative. Descriptive.", "badge": "History from Nov 2026", "can_score": false, "operands": [{"field": "score", "type": "number", "label": "score", "scale": "sentiment, \u2212100 to +100, -100 to 100", "labels": [], "range": [-100, 100]}, {"field": "change_7d", "type": "number", "label": "change 7d", "scale": "sentiment points, -200 to 200", "labels": [], "range": [-200, 200]}, {"field": "age_hours", "type": "number", "label": "age hours", "scale": "hours, at least 0", "labels": [], "range": [0, null]}, {"field": "thin_news", "type": "yes/no", "label": "thin news", "scale": "yes/no", "labels": [], "range": null}]}], "role_hints": {"score": "Counts towards the Group score (\u2212100 to +100), using the signal's standard score.", "condition": "Used only in the rules, not in the score.", "levels": "Supplies price levels (support, resistance) for later strategies.", "context": "Shown alongside the result, but changes nothing."}, "suggested_labels": [["bullish", "Bullish"], ["bearish", "Bearish"], ["stretched_up", "Stretched up"], ["stretched_down", "Stretched down"], ["buying", "Buying"], ["selling", "Selling"]]}, parentElement: document.getElementById("host"),
+  setTriggerValue: (k, v) => window.sent.push([k, JSON.parse(v)])});
+window.ready = true;
+</script></body></html>
