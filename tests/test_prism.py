@@ -146,3 +146,12 @@ def test_prism_tab_runs_inside_streamlit():
     tables = [d.value for d in app.dataframe if "Answer" in d.value.columns]
     assert tables and len(tables[0]) == 2 and {"How sure", "Why", "Data available"} <= set(tables[0].columns)
     assert not [b for b in app.get("download_button") if "prism" in str(b.key)]   # display only: no export
+
+
+def test_date_and_time_show_only_for_a_past_moment():
+    from pathlib import Path
+
+    src = Path(__file__).resolve().parent.parent.joinpath("prism_view.py").read_text()
+    when, form, guard, date = (src.index('"When"'), src.index('st.form("prism_form"'),
+                               src.index('if mode != "Now":'), src.index('date_input("Date (UTC)"'))
+    assert when < form < guard < date                     # chosen outside the form, so the page redraws at once
