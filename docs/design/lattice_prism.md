@@ -302,12 +302,15 @@ is not a permanent limit on what users can analyse.
 
 1. **During development (now):** untouched. No events, outcomes, statistics or tuning on it, in any stage of this
    plan.
-2. **One certification:** when the research layer is ready, a single certification run on the hold-out, approved by
-   the owner, with its result recorded.
-3. **Release:** after that run, the hold-out period becomes ordinary history available to the whole system. The new
-   unseen data is everything after the release date; live operation is the forward test.
-4. **Users' own studies** may then use all available history, labelled as exploratory, with the fitting-the-past
-   guardrails (event counts, recorded tries, no best-setting search).
+2. **One certification, pre-registered:** when the research layer is ready, an owner-approved certification run.
+   Before the hold-out is accessed, the models, configurations, thresholds, evaluation procedure and pass/fail
+   criteria are frozen and recorded. The result is reported whether it passes or fails.
+3. **Release by separate decision:** after certification the period is no longer unseen validation data. It becomes
+   ordinary research history only through a separate, explicit, owner-approved release decision, never
+   automatically. Live observations after that provide forward validation, but are not automatically equivalent to a
+   new independent hold-out.
+4. **Users' own studies**, once released, may use all available history, labelled as exploratory, with the
+   fitting-the-past guardrails (event counts, recorded tries, no best-setting search).
 
 Changing the hold-out itself, including the certification and release steps, needs its own design note and approval.
 Until then point 1 applies.
