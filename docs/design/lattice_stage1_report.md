@@ -56,7 +56,26 @@ Also: results gain the `outcome` key only for Groups that define outcomes, and e
 
 Prism (Run now, scheduled scans, alerts), the editor, E4 fixed subjects, History and strategies. No SQL changes.
 
+## CI
+
+Run 41999575146 on commit d5fcfbd (pushed to `v2`): **all four jobs passed** (tests, chart, overlap, replay).
+Results are on the reports branch under `ci/v2/…_d5fcfbd_*`.
+- Certification `--check`: matches the committed record.
+- Trend/Stretch/Flow Groups vs `signals_v2`: 0 differences in 1,143 comparisons.
+- Replay shortcuts compared with the exact path: pass.
+
+**Certification record refreshed (not caused by this stage).** The first run (41995436515, commit ac97aaa) failed
+the certification check, and so had the run on `main`'s merge commit 8289e4d this morning. The code hash was
+unchanged. The committed record (from 10cdf85) differed from today's runs only in the 16th significant digit of a
+few slice-equivalence comparisons, which switched one shortcut off: `ma.position` 1W now uses the exact path instead
+of certified slicing (the safe direction). No signal's certification status changed (110 of 113). Both of today's
+runs agreed with each other exactly; the record from run 41995436515 is committed.
+
+**Recommendation (separate, small item):** compare slice equivalence with a stated tolerance and keep raw float
+digits out of the compared record, so differences in the last digit between CI machines cannot fail the check. That
+changes the certification method, so it needs its own note and approval; it is not part of this stage.
+
 ## For merge approval
 
-CI on this branch (tests, chart, overlap, replay with certification `--check`) is to be reported here before merge
-approval is requested.
+Stage 1 is complete on `lattice-stage1`: design revision 2, engine extensions, 80 new tests, unchanged existing
+results, refreshed certification record, CI green. Merging changes nothing users see.
