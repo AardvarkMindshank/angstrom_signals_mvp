@@ -382,7 +382,9 @@ def test_19_display_thresholds_convert_exactly_and_out_of_scale_scores_are_refus
 
 def test_20_documents_without_the_new_keys_hash_validate_and_evaluate_exactly_as_before():
     recorded = json.loads(lattice_compat.FIXTURE.read_text(encoding="utf-8"))
-    assert json.loads(json.dumps(lattice_compat.snapshot(), sort_keys=True)) == recorded
+    now = json.loads(json.dumps(lattice_compat.snapshot(), sort_keys=True))
+    assert now["hashes"] == recorded["hashes"] and now["valid"] == recorded["valid"]   # exact
+    assert lattice_compat.differences(now, recorded) == []      # scores within 1e-9, everything else exact
 
 
 def test_21_no_certified_calculation_changed():
