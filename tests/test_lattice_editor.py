@@ -152,3 +152,75 @@ def test_lattice_tab_renders_inside_streamlit():
     app = testing.AppTest.from_function(_app, default_timeout=120)
     app.run()
     assert not app.exception
+
+
+# ----------------------------------------------------------------------------------------------- Set editor
+
+import lattice_sets as ls  # noqa: E402
+
+
+def _saved():
+    return [{"id": "11111111-1111-1111-1111-111111111111", "kind": "group", "name": "Trend (with labels)", "owner_id": "me",
+             "starter_alias": None, "current_version": 1,
+             "versions": [{"version": 1, "body": prism.labelled_starter("starter:trend")}]},
+            {"id": "22222222-2222-2222-2222-222222222222", "kind": "group", "name": "Flow", "owner_id": None,
+             "starter_alias": "starter:flow", "current_version": 1,
+             "versions": [{"version": 1, "body": sg.starter("starter:flow")}]}]
+
+
+def _set_model(lines, standalone=()):
+    choices = ls.group_choices(_saved(), "me")
+    raw = {"name": "Daily check", "groups": [{"source": k} for k in choices], "standalone": list(standalone),
+           "lines": lines}
+    return ls.clean_model(raw, choices), choices
+
+
+def test_set_groups_are_embedded_exactly_with_their_provenance():
+    model, choices = _set_model([{"target": "outcome", "group": "trend_with_labels", "op": "is", "value": "bullish"}])
+    doc = ls.to_document(model, choices)
+    assert [g["key"] for g in doc["groups"]] == ["trend_with_labels", "flow"]
+    assert doc["groups"][0]["snapshot"] == prism.labelled_starter("starter:trend")
+    assert doc["groups"][1]["provenance"] == {"source_config": "starter:flow", "source_version": 1}
+    assert sg.validate_set(doc) == [] and sg.scannable(doc)
+
+
+def test_set_decisions_with_any_boxes_not_and_scores_round_trip():
+    lines = [{"target": "outcome", "group": "trend_with_labels", "op": "is_not", "value": "bearish"},
+             {"any": [{"target": "score", "group": "flow", "op": "gte", "value": "+10"},
+                      {"target": "member", "member": "score_1d", "field": "score", "op": "gte", "value": "-20"}]}]
+    model, choices = _set_model(lines, [{"key": "score_1d", "id": "sentiment.asset", "role": "condition"}])
+    doc = ls.to_document(model, choices)
+    assert doc["decision"]["rule"] == {"all": [
+        {"not": {"group": "trend_with_labels", "outcome": {"eq": "bearish"}}},
+        {"any": [{"group": "flow", "score": {"gte": 0.1}}, {"member": "score_1d", "field": "score", "gte": -20.0}]}]}
+    back, why = ls.from_document(doc, choices)
+    assert why is None and back == model
+    assert "says Yes when Trend (with labels) v1 label is not Bearish, and any of (Flow v1 score is at least +10" in \
+        ls.describe(model, choices)
+
+
+def test_set_checks():
+    model, choices = _set_model([])
+    assert "no decision yet, so Prism cannot scan it" in " ".join(ls.checks(model, choices)["warnings"])
+    bad, choices = _set_model([{"target": "score", "group": "flow", "op": "gte", "value": "130"}])
+    assert "outside the Group score scale, −100 to +100" in " ".join(ls.checks(bad, choices)["blocks"])
+    nan, choices = _set_model([{"target": "score", "group": "flow", "op": "gte", "value": "lots"}])
+    assert "is not a number" in " ".join(ls.checks(nan, choices)["blocks"])
+    ctx, choices = _set_model([{"target": "member", "member": "rsi_1d", "field": "rsi", "op": "gte", "value": "50"}],
+                              [{"key": "rsi_1d", "id": "rsi.level", "role": "context"}])
+    assert "Context item" in " ".join(ls.checks(ctx, choices)["blocks"])
+    unused, choices = _set_model([{"target": "status", "group": "flow", "op": "is", "value": "ok"}],
+                                 [{"key": "rsi_1d", "id": "rsi.level", "role": "condition"}])
+    assert "no line uses it" in " ".join(ls.checks(unused, choices)["warnings"])
+    assert ls.checks(ls.clean_model(_set_model([])[0], {}), {})["blocks"] == ["Add at least one Group or signal."]
+    orphan, _ = _set_model([{"target": "status", "group": "flow", "op": "is", "value": "ok"}])
+    assert "can no longer be read" in " ".join(ls.checks(orphan, {})["blocks"])        # never a crash
+    assert ls.state_for_screen(orphan, {})["can_save"] is False
+
+
+def test_set_screen_input_is_cleaned():
+    choices = ls.group_choices(_saved(), "me")
+    raw = {"groups": [{"source": "saved:not-mine:1"}, {"source": next(iter(choices)), "key": "bad key"}],
+           "standalone": [{"id": "evil"}], "lines": [{"target": "drop"}, {"any": [{"target": "outcome", "group": "nope"}]}]}
+    model = ls.clean_model(raw, choices)
+    assert [g["key"] for g in model["groups"]] == ["trend_with_labels"] and model["standalone"] == [] and model["lines"] == []

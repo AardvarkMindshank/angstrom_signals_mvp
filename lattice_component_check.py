@@ -41,6 +41,44 @@ window.ready = true;
 </script></body></html>"""
 
 
+def harness_set() -> tuple[dict, dict]:
+    import signal_groups as sg
+
+    import lattice_sets as ls
+
+    saved = [{"id": "11111111-1111-1111-1111-111111111111", "kind": "group", "name": "Trend (with labels)",
+              "owner_id": "me", "starter_alias": None, "current_version": 1,
+              "versions": [{"version": 1, "body": prism.labelled_starter("starter:trend")}]},
+             {"id": "22222222-2222-2222-2222-222222222222", "kind": "group", "name": "Flow", "owner_id": None,
+              "starter_alias": "starter:flow", "current_version": 1,
+              "versions": [{"version": 1, "body": sg.starter("starter:flow")}]}]
+    choices = ls.group_choices(saved, "me")
+    model = ls.clean_model({"name": "Daily check", "groups": [{"source": next(iter(choices))}],
+                            "lines": [{"target": "outcome", "group": "trend_with_labels", "op": "is",
+                                       "value": "bullish"}]}, choices)
+    return model, choices
+
+
+def set_page(model: dict, choices: dict) -> str:
+    import lattice_sets as ls
+
+    data = {**ls.state_for_screen(model, choices), "catalogue": le.catalogue()}
+    script = lc.SET_JS.replace("export default function(component)", "window.renderLattice = function(component)")
+    return page_shell(script, data, "Lattice Set editor check")
+
+
+def page_shell(script: str, data: dict, title: str) -> str:
+    return f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><title>{title}</title>
+<style>{lc.CSS} body{{font-family:system-ui,sans-serif;margin:16px;background:#fff;color:#111}}</style></head>
+<body><div id="host"></div><script>
+{script}
+window.sent = [];
+window.renderLattice({{data: {json.dumps(data)}, parentElement: document.getElementById("host"),
+  setTriggerValue: (k, v) => window.sent.push([k, JSON.parse(v)])}});
+window.ready = true;
+</script></body></html>"""
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default="out/lattice")
@@ -48,6 +86,7 @@ def main() -> None:
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     (out / "editor.html").write_text(page(harness_model()), encoding="utf-8")
+    (out / "set_editor.html").write_text(set_page(*harness_set()), encoding="utf-8")
     print(f"wrote {out / 'editor.html'}")
 
 

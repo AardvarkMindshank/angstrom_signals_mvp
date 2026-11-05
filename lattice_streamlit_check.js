@@ -47,6 +47,18 @@ const { chromium } = require("playwright");
     check("an out-of-scale threshold blocks saving", body.includes("Can't save") && body.includes("outside"),
           (body.match(/Can't save[^\n]*/) || [""])[0]);
     await page.screenshot({ path: path.join(dir, "lattice_in_streamlit.png"), fullPage: true });
+
+    await page.click("text=🗂️ Set editor");
+    await page.waitForSelector(".lat >> text=Decision: when does this Set say Yes?", { timeout: 60000 });
+    await settle();
+    await page.click('.lat button[aria-label="Add RSI (14) to the Set"]');
+    await settle();
+    await page.click('.lat button[title="Add a line that must hold"]');
+    await settle();
+    body = await text();
+    check("Set editor: a signal and a line go to Python and come back",
+          (await page.$$(".lat .rule")).length === 1 && body.includes("says Yes when"), (body.match(/says Yes when[^\n]*/) || [""])[0]);
+    await page.screenshot({ path: path.join(dir, "lattice_set_in_streamlit.png"), fullPage: true });
     check("no browser errors", errors.length === 0, errors.join("; "));
   } catch (e) {
     check("ran to the end", false, String(e).slice(0, 300));

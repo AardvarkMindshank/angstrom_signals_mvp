@@ -62,6 +62,39 @@ const { chromium, devices } = require("playwright");
     await ipad.screenshot({ path: path.join(dir, "editor_ipad.png"), fullPage: true });
     const wide = await ipad.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1);
     check("iPad width: no sideways scrolling", wide);
+    // ------------------------------------------------------------ the Set editor
+    const sp = await browser.newPage({ viewport: { width: 1400, height: 1000 } });
+    const serrors = [];
+    sp.on("pageerror", (e) => serrors.push(e.message));
+    await sp.goto("file://" + path.resolve(dir, "set_editor.html"));
+    await sp.waitForFunction(() => window.ready);
+    await sp.screenshot({ path: path.join(dir, "set_editor_desktop.png"), fullPage: true });
+    const slast = () => sp.evaluate(() => (window.sent.length ? window.sent[window.sent.length - 1][1] : null));
+    check("Set: the saved decision line is shown", (await sp.$$(".rule")).length === 1);
+    await sp.click('button[aria-label="Add Flow v1 to the Set"]');
+    let s = await slast();
+    check("Set: tap + adds a Group", s && s.groups.length === 2);
+    await sp.click('button[aria-label="Add RSI (14) to the Set"]');
+    s = await slast();
+    check("Set: tap + adds a single signal as a Condition", s && s.standalone.length === 1 && s.standalone[0].role === "condition");
+    await sp.click('button[title="Add a box where any one of its lines is enough"]');
+    s = await slast();
+    check("Set: an ANY box can be added", s && s.lines.some((l) => Array.isArray(l.any)));
+    await sp.click('button[title="Add a line that must hold"]');
+    s = await slast();
+    check("Set: a line can be added", s && s.lines.length >= 2);
+    await sp.click('button[aria-label="Remove Trend (with labels) v1"]');
+    s = await slast();
+    check("Set: removing a Group removes the lines that tested it",
+          s && s.groups.length === 1 && s.groups[0].key === "flow"
+            && s.lines.every((l) => (l.any || [l]).every((x) => x.group !== "trend_with_labels")));
+    check("Set: no browser errors", serrors.length === 0, serrors.join("; "));
+    const sipad = await browser.newPage({ ...devices["iPad (gen 7)"] });
+    await sipad.goto("file://" + path.resolve(dir, "set_editor.html"));
+    await sipad.waitForFunction(() => window.ready);
+    await sipad.screenshot({ path: path.join(dir, "set_editor_ipad.png"), fullPage: true });
+    check("Set: iPad width without sideways scrolling",
+          await sipad.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1));
   } finally {
     await browser.close();
   }
