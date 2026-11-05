@@ -44,4 +44,5 @@ in the Set editor, counting operators in decisions, opening Lattice to all accou
 
 ## CI
 
-To be reported before merge approval.
+Run 42048487889 on commit 3bc6d1d: **tests, chart (with the browser and Streamlit editor checks), overlap and replay all
+passed**. Results on the reports branch under `ci/v2/`.
