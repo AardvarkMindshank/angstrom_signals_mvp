@@ -37,4 +37,14 @@ panel for now; it becomes the Lattice page when the editor exists.
 
 ## CI
 
-To be reported before merge approval.
+Run 42033659768 on commit 6ef380d (pushed to `v2`): **all four jobs passed** (tests 776 passed including the
+Prism tab inside Streamlit, chart, overlap, replay with certification `--check`, Trend/Stretch/Flow parity and
+shortcut comparison).
+
+This branch also carries the last part of the approved certification fix (`point_in_time.md` §13): `--check` keeps
+the `slice_reason` text informational, because for a pair that is genuinely not equivalent two machines can report a
+different first field. Equivalence and every certification result are still compared (`tests/test_cert_check.py`).
+
+## For merge approval
+
+Merging adds the 🔎 Prism tab to the admin Signal Library panel only. Nothing changes for other accounts.
