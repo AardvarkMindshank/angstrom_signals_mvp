@@ -1,0 +1,175 @@
+{
+ "set_rows": [
+  {
+   "dataset": "synthetic-crypto-s11",
+   "steps": 30,
+   "seconds": 43.09,
+   "seconds_per_step": 1.436,
+   "python_peak_MB": 5.9,
+   "rss_growth_MB": 0.0,
+   "completeness": {
+    "partial": 30
+   }
+  },
+  {
+   "dataset": "synthetic-crypto-s11",
+   "steps": 90,
+   "seconds": 128.97,
+   "seconds_per_step": 1.433,
+   "python_peak_MB": 10.1,
+   "rss_growth_MB": 0.0,
+   "completeness": {
+    "partial": 90
+   }
+  }
+ ],
+ "signals_per_step": 22,
+ "note": "Every 1D candle signal incl. multi-timeframe alignment, per step; certification mode (no certification lookup), real indicators.",
+ "rows": [
+  {
+   "dataset": "synthetic-crypto-s11",
+   "steps": 30,
+   "path": "exact",
+   "seconds": 6.31,
+   "seconds_per_step": 0.21,
+   "rss_growth_MB": 41.2,
+   "statuses": {
+    "ok": 660
+   },
+   "python_peak_MB": 6.8
+  },
+  {
+   "dataset": "synthetic-crypto-s11",
+   "steps": 30,
+   "path": "slice shortcut",
+   "seconds": 2.81,
+   "seconds_per_step": 0.094,
+   "rss_growth_MB": 8.5,
+   "statuses": {
+    "ok": 660
+   },
+   "python_peak_MB": 24.4
+  },
+  {
+   "dataset": "synthetic-crypto-s11",
+   "steps": 365,
+   "path": "exact",
+   "seconds": 66.18,
+   "seconds_per_step": 0.181,
+   "rss_growth_MB": 12.0,
+   "statuses": {
+    "ok": 8030
+   },
+   "python_peak_MB": 18.6
+  },
+  {
+   "dataset": "synthetic-crypto-s11",
+   "steps": 365,
+   "path": "slice shortcut",
+   "seconds": 25.18,
+   "seconds_per_step": 0.069,
+   "rss_growth_MB": 2.1,
+   "statuses": {
+    "ok": 8030
+   },
+   "python_peak_MB": 39.2
+  },
+  {
+   "dataset": "dev-BTC-USD",
+   "steps": 30,
+   "path": "exact",
+   "seconds": 3.95,
+   "seconds_per_step": 0.132,
+   "rss_growth_MB": 0.0,
+   "statuses": {
+    "ok": 660
+   },
+   "python_peak_MB": 3.3
+  },
+  {
+   "dataset": "dev-BTC-USD",
+   "steps": 30,
+   "path": "slice shortcut",
+   "seconds": 2.78,
+   "seconds_per_step": 0.093,
+   "rss_growth_MB": 0.0,
+   "statuses": {
+    "ok": 660
+   },
+   "python_peak_MB": 4.2
+  },
+  {
+   "dataset": "dev-BTC-USD",
+   "steps": 365,
+   "path": "exact",
+   "seconds": 50.33,
+   "seconds_per_step": 0.138,
+   "rss_growth_MB": 0.9,
+   "statuses": {
+    "ok": 8030
+   },
+   "python_peak_MB": 16.7
+  },
+  {
+   "dataset": "dev-BTC-USD",
+   "steps": 365,
+   "path": "slice shortcut",
+   "seconds": 34.08,
+   "seconds_per_step": 0.093,
+   "rss_growth_MB": 0.0,
+   "statuses": {
+    "ok": 8030
+   },
+   "python_peak_MB": 18.0
+  },
+  {
+   "dataset": "dev-AAPL",
+   "steps": 30,
+   "path": "exact",
+   "seconds": 4.01,
+   "seconds_per_step": 0.134,
+   "rss_growth_MB": 0.0,
+   "statuses": {
+    "ok": 660
+   },
+   "python_peak_MB": 4.0
+  },
+  {
+   "dataset": "dev-AAPL",
+   "steps": 30,
+   "path": "slice shortcut",
+   "seconds": 2.72,
+   "seconds_per_step": 0.091,
+   "rss_growth_MB": 0.0,
+   "statuses": {
+    "ok": 660
+   },
+   "python_peak_MB": 4.7
+  },
+  {
+   "dataset": "dev-AAPL",
+   "steps": 365,
+   "path": "exact",
+   "seconds": 47.81,
+   "seconds_per_step": 0.131,
+   "rss_growth_MB": 0.0,
+   "statuses": {
+    "ok": 8030
+   },
+   "python_peak_MB": 15.4
+  },
+  {
+   "dataset": "dev-AAPL",
+   "steps": 365,
+   "path": "slice shortcut",
+   "seconds": 31.71,
+   "seconds_per_step": 0.087,
+   "rss_growth_MB": 0.0,
+   "statuses": {
+    "ok": 8030
+   },
+   "python_peak_MB": 17.4
+  }
+ ],
+ "rss_end_MB": 373.9
+}
