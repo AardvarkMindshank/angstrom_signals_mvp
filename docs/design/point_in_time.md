@@ -401,3 +401,6 @@ which made the committed certification record match one kind of machine and fail
   digits, so the compared record is the same on every machine.
 - Certification suite version 2. A shortcut certified under it may differ from the exact path by at most the
   tolerance, far below anything displayed (scores are shown to whole points).
+- The `slice_reason` text (which field failed first, and by how much) is kept in the record for people to read but
+  is not compared by `--check`: for a pair that is genuinely not equivalent, different machines can report a
+  different first field. Whether each shortcut is equivalent, and every certification result, are compared.

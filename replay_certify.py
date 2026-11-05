@@ -64,12 +64,24 @@ def certify(args) -> int:
         print(f"updated {RECORD}")
     if args.check:
         committed = json.loads(RECORD.read_text()) if RECORD.exists() else {}
-        if {k: committed.get(k) for k in COMPARED} != {k: record[k] for k in COMPARED}:
+        if _compared(committed) != _compared(record):
             print("The committed certification record differs from this run: re-certify and commit "
                   "signal_library/certification.json (out/certification.json).")
             return 1
         print("Committed certification record matches this run.")
     return 0
+
+
+INFORMATIONAL = ("slice_reason",)   # explanations for people: which field failed first can differ by machine
+
+
+def _compared(record: dict) -> dict:
+    """What --check compares (point_in_time.md §13): the record without its informational fields."""
+    out = {k: record.get(k) for k in COMPARED}
+    out["signals"] = {key: {tf: {f: v for f, v in entry.items() if f not in INFORMATIONAL}
+                            for tf, entry in (tfs or {}).items()}
+                      for key, tfs in (out.get("signals") or {}).items()}
+    return out
 
 
 def report(record: dict, seconds: float) -> str:
