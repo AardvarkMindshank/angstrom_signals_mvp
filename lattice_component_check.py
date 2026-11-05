@@ -35,8 +35,12 @@ def page(model: dict) -> str:
 <body><div id="host"></div><script>
 {script}
 window.sent = [];
-window.renderLattice({{data: {json.dumps(data)}, parentElement: document.getElementById("host"),
-  setTriggerValue: (k, v) => window.sent.push([k, JSON.parse(v)])}});
+window.baseData = {json.dumps(data)};
+window.draw = (model) => window.renderLattice({{data: Object.assign({{}}, window.baseData, model ? {{model}} : {{}}),
+  parentElement: document.getElementById("host"),
+  // like Streamlit: each edit comes back and the component is drawn again with the edited model
+  setTriggerValue: (k, v) => {{ const m = JSON.parse(v); window.sent.push([k, m]); setTimeout(() => window.draw(m), 0); }}}});
+window.draw(null);
 window.ready = true;
 </script></body></html>"""
 
@@ -73,8 +77,12 @@ def page_shell(script: str, data: dict, title: str) -> str:
 <body><div id="host"></div><script>
 {script}
 window.sent = [];
-window.renderLattice({{data: {json.dumps(data)}, parentElement: document.getElementById("host"),
-  setTriggerValue: (k, v) => window.sent.push([k, JSON.parse(v)])}});
+window.baseData = {json.dumps(data)};
+window.draw = (model) => window.renderLattice({{data: Object.assign({{}}, window.baseData, model ? {{model}} : {{}}),
+  parentElement: document.getElementById("host"),
+  // like Streamlit: each edit comes back and the component is drawn again with the edited model
+  setTriggerValue: (k, v) => {{ const m = JSON.parse(v); window.sent.push([k, m]); setTimeout(() => window.draw(m), 0); }}}});
+window.draw(null);
 window.ready = true;
 </script></body></html>"""
 

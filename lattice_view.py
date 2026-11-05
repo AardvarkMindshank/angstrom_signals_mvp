@@ -45,7 +45,7 @@ def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str = "") 
 
         lattice_set_view.render(st, supabase, user_id)
         return
-    st.caption("🧩 **Lattice · Group editor** (admin preview). Build a Group by dragging signals in, or tap + on a "
+    st.caption("🧩 **Lattice · Group editor** (preview). Build a Group by dragging signals in, or tap + on a "
                "tablet. Rules give it labels such as Bullish; the checks below say what blocks saving and what is "
                "only a warning.")
     import signal_groups_inspector as gi

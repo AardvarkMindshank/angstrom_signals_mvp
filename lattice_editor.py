@@ -78,9 +78,14 @@ def catalogue() -> list[dict]:
 def _score_transform(signal_key: str) -> dict | None:
     if fields.field(signal_key, "standard_score"):
         return {"kind": "clip", "version": 1, "field": "standard_score", "low": -1, "high": 1}
-    root = fields.field(signal_key, "")
-    if root and root["type"] == fields.LABEL and set(root.get("labels") or []) == set(DIRECTION_MAP):
-        return {"kind": "map", "version": 1, "map": dict(DIRECTION_MAP)}
+    table = fields.FIELDS.get(signal_key) or {}
+    for path in [""] + [p for p in table if p and "*" not in p]:
+        desc = table.get(path)
+        if desc and desc["type"] == fields.LABEL and set(desc.get("labels") or []) == set(DIRECTION_MAP):
+            transform = {"kind": "map", "version": 1, "map": dict(DIRECTION_MAP)}
+            if path:
+                transform = {"kind": "map", "version": 1, "field": path, "map": dict(DIRECTION_MAP)}
+            return transform
     return None
 
 
@@ -95,7 +100,7 @@ def new_member_key(model: dict, signal_id: str, timeframe: str) -> str:
 
 
 def empty_model() -> dict:
-    return {"name": "My Group", "question": "", "members": [], "rules": [],
+    return {"name": "My Group", "question": "", "members": [], "rules": [], "conditions": [],
             "otherwise": {"id": "neutral", "label": "Neutral"}}
 
 
@@ -150,10 +155,11 @@ def to_document(model: dict) -> dict:
     score_keys = []
     for m in model.get("members") or []:
         member = {"key": m["key"], "label": m.get("label") or _name_of(m["id"]),
-                  "ref": {"id": m["id"], "version": m["version"], "timeframe": m["timeframe"], "params": {}},
+                  "ref": {"id": m["id"], "version": m["version"], "timeframe": m["timeframe"],
+                          "params": dict(m.get("params") or {})},
                   "role": m["role"], "category": _category_of(m["id"])}
         if m["role"] == "score":
-            transform = _score_transform(_signal_key(m))
+            transform = m.get("transform") or _score_transform(_signal_key(m))   # a saved transform stays as saved
             member.update({"weight": 1, "when_unavailable": "exclude",
                            "transform": transform or {"kind": "clip", "version": 1, "field": "standard_score",
                                                       "low": -1, "high": 1}})
@@ -161,7 +167,9 @@ def to_document(model: dict) -> dict:
         members.append(member)
     doc = {"schema": "angstrom.group/1", "name": (model.get("name") or "").strip() or "Untitled Group",
            "question": (model.get("question") or "").strip() or "What do these readings say together?",
-           "lineage_version": LINEAGE, "members": members, "conditions": [],
+           "lineage_version": LINEAGE, "members": members,
+           "conditions": [{"key": c["key"], "label": c["label"], "kind": c["kind"], "rule": _when(c)}
+                          for c in model.get("conditions") or [] if c.get("clauses")],
            "notes": "Built in the Lattice editor."}
     doc["score"] = {"method": "weighted_mean", "range": [-1, 1],
                     "meaning": "The average of the score members' standard scores (−1 to +1), shown as −100 to +100. "
@@ -192,21 +200,27 @@ def _category_of(signal_id: str) -> str:
 
 def from_document(doc: dict) -> tuple[dict | None, str | None]:
     """(model, None) or (None, reason) when the Group uses something the editor cannot show yet."""
-    if doc.get("conditions"):
-        return None, "This Group has confirmations or vetoes, which the editor cannot show yet."
+    conditions = []
+    for c in doc.get("conditions") or []:
+        parsed = _clauses(c["rule"])
+        if parsed is None:
+            return None, f"The {c['kind']} {c.get('label') or c['key']!r} is more complex than the editor can show yet."
+        joiner, clauses = parsed
+        conditions.append({"key": c["key"], "label": c.get("label") or c["key"], "kind": c["kind"], "joiner": joiner,
+                           "clauses": clauses})
     members = []
     for m in doc.get("members") or []:
         ref = m["ref"]
-        if ref.get("params"):
-            return None, f"{m['key']} uses custom parameters, which the editor cannot show yet."
         if not fields.described(f"{ref['id']}@{ref['version']}"):
             return None, f"{m['key']} ({ref['id']}) is not in the editor's signal list yet."
         if m["role"] == "score" and m.get("weight") not in (1, 1.0):
             return None, f"{m['key']} has weight {m.get('weight')}; the editor uses equal weights."
         members.append({"key": m["key"], "id": ref["id"], "version": ref["version"], "timeframe": ref["timeframe"],
-                        "role": m["role"], "label": m.get("label")})
+                        "role": m["role"], "label": m.get("label"),
+                        **({"params": dict(ref["params"])} if ref.get("params") else {}),
+                        **({"transform": dict(m["transform"])} if m["role"] == "score" and m.get("transform") else {})})
     model = {"name": doc.get("name") or "", "question": doc.get("question") or "", "members": members, "rules": [],
-             "otherwise": {"id": "neutral", "label": "Neutral"}}
+             "conditions": conditions, "otherwise": {"id": "neutral", "label": "Neutral"}}
     spec = doc.get("outcomes")
     if spec:
         model["otherwise"] = dict(spec["otherwise"])
@@ -258,7 +272,7 @@ def checks(model: dict) -> dict:
         blocks.append("Add at least one signal.")
     score = [m for m in members if m["role"] == "score"]
     for m in score:
-        if _score_transform(_signal_key(m)) is None:
+        if not m.get("transform") and _score_transform(_signal_key(m)) is None:
             blocks.append(f"{_name_of(m['id'])} has no standard score, so it cannot be a Score member. "
                           "Use it as a Condition.")
     if members and not score and not model.get("rules"):
@@ -267,6 +281,17 @@ def checks(model: dict) -> dict:
     if len(set(rule_ids)) != len(rule_ids):
         blocks.append("Two rules use the same label; each label must be different.")
     kinds = {o["key"]: o["type"] for o in operands(model)}
+    keys = [c["key"] for c in model.get("conditions") or []]
+    if len(set(keys)) != len(keys):
+        blocks.append("Two confirmations or vetoes have the same name; each must be different.")
+    for c in model.get("conditions") or []:
+        if not c.get("clauses"):
+            blocks.append(f"The {c['kind']} {c['label']!r} has no condition yet.")
+        for cl in c.get("clauses") or []:
+            if cl.get("operand") not in kinds:
+                blocks.append(f"The {c['kind']} {c['label']!r} uses a reading that is no longer in the Group.")
+            elif kinds[cl["operand"]] == fields.NUMBER and cl.get("op") in ("gte", "lte") and _number(cl.get("value")) is None:
+                blocks.append(f"The {c['kind']} {c['label']!r}: {cl.get('value')!r} is not a number.")
     for i, r in enumerate(model.get("rules") or []):
         if not r.get("clauses"):
             blocks.append(f"Rule {i + 1} ({r['label']}) has no condition yet.")
@@ -288,6 +313,15 @@ def checks(model: dict) -> dict:
             key = str(c.get("operand") or "").partition(":")[0]
             if key != "score":
                 used.setdefault(key, set()).add(i + 1)
+    in_checks: set = set()
+    for c in model.get("conditions") or []:
+        for cl in c.get("clauses") or []:
+            key = str(cl.get("operand") or "").partition(":")[0]
+            if key != "score":
+                in_checks.add(key)
+    if any(c["kind"] == "veto" for c in model.get("conditions") or []) and model.get("rules"):
+        warns.append("When a veto fires, every label becomes Vetoed; when a veto cannot be checked, labels are marked "
+                     "qualified and a Set treats them as uncertain.")
     by_cat: dict = {}
     for m in score:
         by_cat.setdefault(_category_of(m["id"]), []).append(_name_of(m["id"]))
@@ -306,13 +340,13 @@ def checks(model: dict) -> dict:
                      "they update at different times.")
     for m in members:
         name = _name_of(m["id"])
-        if m["role"] == "condition" and m["key"] not in used:
+        if m["role"] == "condition" and m["key"] not in used and m["key"] not in in_checks:
             warns.append(f"{name} is a Condition member, but no rule uses it, so it changes nothing.")
         if m["role"] == "score" and m["key"] in used:
             warns.append(f"{name} already counts in the score and is tested again in rule "
                          f"{', '.join(map(str, sorted(used[m['key']])))}. That leans harder on the same evidence; it is "
                          "not independent confirmation.")
-        if m["role"] == "context" and m["key"] in used:
+        if m["role"] == "context" and (m["key"] in used or m["key"] in in_checks):
             blocks.append(f"{name} is marked Context, so rules cannot use it. Make it a Condition.")
         if "sentiment" in sl.REGISTRY.get(m["id"]).requires:
             warns.append(f"{name}: sentiment history starts in November 2026, so earlier dates will show it as missing.")
@@ -374,6 +408,11 @@ def describe(model: dict) -> str:
     if rules:
         parts.append(f"If a rule cannot be checked, the label is Unknown. If none match, "
                      f"{(model.get('otherwise') or {}).get('label', 'Neutral')}.")
+    for c in model.get("conditions") or []:
+        if c.get("clauses"):
+            joint = " and " if c.get("joiner") != "any" else " or "
+            what = "Veto" if c["kind"] == "veto" else "Confirmation"
+            parts.append(f"{what} “{c['label']}”: " + joint.join(_clause_text(x, members) for x in c["clauses"]) + ".")
     if score:
         parts.append(f"A score is given when at least 1 of its {len(score)} readings is available.")
     return " ".join(parts)
@@ -401,7 +440,7 @@ def member_tag(member: dict) -> str:
     requires = sl.REGISTRY.get(member["id"]).requires
     if "sentiment" in requires:
         return "Latest score at the time"
-    return f"{member['timeframe']} · last closed candle"
+    return f"{member['timeframe']} · last closed candle" + (" · custom settings" if member.get("params") else "")
 
 
 def state_for_screen(model: dict) -> dict:
@@ -440,7 +479,20 @@ def clean_model(raw) -> dict:
             key = new_member_key(model, m["id"], tf)
         seen.add(key)
         role = m.get("role") if m.get("role") in ROLES else ("score" if s["can_score"] else "condition")
-        model["members"].append({"key": key, "id": s["id"], "version": s["version"], "timeframe": tf, "role": role})
+        member = {"key": key, "id": s["id"], "version": s["version"], "timeframe": tf, "role": role}
+        params = m.get("params")
+        if isinstance(params, dict) and params:
+            try:   # settings saved with the Group are kept as they are, if the signal accepts them
+                sl.SignalRef.make(sl.REGISTRY.get(s["id"], s["version"]), tf, **params)
+                member["params"] = dict(params)
+            except (ValueError, TypeError, KeyError):
+                pass
+        if m.get("label"):
+            member["label"] = str(m["label"])[:80]
+        transform = m.get("transform")
+        if role == "score" and isinstance(transform, dict) and not sg.transforms.config_errors(transform):
+            member["transform"] = transform
+        model["members"].append(member)
     for r in (raw.get("rules") or [])[:MAX_RULES]:
         if not isinstance(r, dict):
             continue
@@ -456,6 +508,24 @@ def clean_model(raw) -> dict:
                                 "value": str(c.get("value") if c.get("value") is not None else "")[:40]})
         model["rules"].append({"id": rid, "label": label, "joiner": "any" if r.get("joiner") == "any" else "all",
                                "clauses": clauses})
+    model["conditions"] = []
+    ckeys: set = set()
+    for c in (raw.get("conditions") or [])[:MAX_RULES]:
+        if not isinstance(c, dict):
+            continue
+        label = str(c.get("label") or "").strip()[:200] or "Check"
+        key = str(c.get("key") or "")
+        if not re.match(r"^[a-z0-9_]{1,40}$", key) or key in ckeys:
+            key = (re.sub(r"[^a-z0-9]+", "_", label.lower()).strip("_") or "check")[:36]
+            base, n = key, 2
+            while key in ckeys:
+                key, n = f"{base}_{n}", n + 1
+        ckeys.add(key)
+        clauses = [{"operand": str(x.get("operand") or "score")[:80], "op": x["op"],
+                    "value": str(x.get("value") if x.get("value") is not None else "")[:40]}
+                   for x in (c.get("clauses") or [])[:MAX_CLAUSES] if isinstance(x, dict) and x.get("op") in OPS]
+        model["conditions"].append({"key": key, "label": label, "kind": "veto" if c.get("kind") == "veto" else "confirmation",
+                                    "joiner": "any" if c.get("joiner") == "any" else "all", "clauses": clauses})
     other = raw.get("otherwise") if isinstance(raw.get("otherwise"), dict) else {}
     olabel = str(other.get("label") or "Neutral").strip()[:24] or "Neutral"
     oid = str(other.get("id") or "")

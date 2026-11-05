@@ -186,14 +186,16 @@ def run_now(doc: dict, assets: list[tuple[str, str, str]], *, live_context, mark
     rows = []
     for n, (kind, asset_id, name) in enumerate(assets):
         if replay is None:
-            result = sg.evaluate_set(doc, live_context(kind, asset_id), market_context=market_context)
+            result = sg.evaluate_set(doc, live_context(kind, asset_id), market_context=market_context,
+                                     subject_context=live_context)        # E4: a fixed asset, read live too
             path = "Live"
         else:
             run, as_of = replay
             try:
                 ctx = run.context(kind, asset_id, as_of)
                 result = sg.evaluate_set(doc, ctx, data_mode="point_in_time",
-                                         market_context=lambda scope: run.context("market", scope.split(":", 1)[1], as_of))
+                                         market_context=lambda scope: run.context("market", scope.split(":", 1)[1], as_of),
+                                         subject_context=lambda k, i: run.context(k, i, as_of))   # same moment T
             except Exception as exc:   # a refused reconstruction is reported for that asset only
                 result = {"status": "unsupported", "reason": str(exc)[:200]}
             path = f"Reconstruction as of {pd.Timestamp(as_of).strftime('%d %b %Y %H:%M')} UTC"
