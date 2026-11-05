@@ -18,7 +18,8 @@ def test_asset_refs_respect_scope():
     equity = {r.id for r in signal_inspector.asset_refs("equity", "1D")}
     assert "positioning.oi_price" in crypto and "positioning.oi_price" not in equity
     assert "mtf.alignment" in equity
-    assert {r.id for r in signal_inspector.market_refs()} == {"flows.btc_etf", "flows.stablecoin_supply"}
+    assert {r.id for r in signal_inspector.market_refs()} == {"flows.btc_etf", "flows.stablecoin_supply",
+                                                              "sentiment.market"}
 
 
 def _app():

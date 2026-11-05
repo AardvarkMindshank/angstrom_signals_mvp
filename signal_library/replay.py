@@ -144,7 +144,8 @@ class ReplayRun:
     flows(source, series, subject, as_of) -> {"rows": [...]} or {"error": text}; rows must carry fetched_at
     """
 
-    def __init__(self, mode: str, candles, *, flows=None, indicators=None, dataset: dict | None = None,
+    def __init__(self, mode: str, candles, *, flows=None, sentiment=None, indicators=None,
+                 dataset: dict | None = None,
                  max_steps: int | None = None, shortcut: bool = False, check_certification: bool | None = None,
                  reuse_frames: bool = False, slice_allow: set | None = None,
                  environment: dict | None = None):
@@ -157,6 +158,7 @@ class ReplayRun:
         self.mode = mode
         self.candles_source = candles
         self.flows_source = flows
+        self.sentiment_source = sentiment
         self.indicators = indicators or default_indicators
         self.dataset = dataset if dataset is not None else {}
         self.max_steps = max_steps
@@ -346,10 +348,51 @@ class ReplayContext(DataContext):
         self._memo[key] = got
         return got
 
+    def sentiment(self, subject_key: str) -> dict:
+        key = ("sentiment", subject_key)
+        if key in self._memo:
+            return self._memo[key]
+        if self.replay.sentiment_source is None:
+            got = {"error": "No sentiment source in this replay."}
+        else:
+            try:
+                got = self.replay.sentiment_source(subject_key, self.as_of)
+            except Exception as exc:
+                got = {"error": f"Could not load sentiment ({exc})"}
+        if not got.get("error"):
+            rows = got.get("rows") or []
+            if rows and not all(r.get("first_seen_at") for r in rows):
+                got = {"error": "Sentiment is live only until first_seen_at is recorded "
+                                "(run sql/2026-11-05_sentiment_first_seen.sql)."}
+            else:
+                got = {"rows": cut_sentiment_rows(rows, self.as_of)}
+                if not got["rows"]:
+                    got = {"error": f"No sentiment first seen by {self.as_of.isoformat()}."}
+                else:
+                    digest = hashlib.sha256(json.dumps(got["rows"], sort_keys=True, default=str).encode()).hexdigest()
+                    self.replay.inputs[(self.subject, f"sentiment/{subject_key}", self.as_of.value)] = {
+                        "subject": self.subject, "source": "sentiment_history", "series": subject_key,
+                        "cutoff": self.as_of.isoformat(), "rows": len(got["rows"]), "sha256": digest,
+                        "quality": POINT_IN_TIME}
+        self._memo[key] = got
+        return got
+
     def fingerprint(self, requires: tuple, timeframe: str) -> str:
         # Within one run the inputs at a cutoff are fixed, so the cutoff alone identifies them. (Loading candles here
         # would compute every indicator frame by the exact path before the signal runs, defeating the shortcuts.)
         return f"T={self.as_of.value}"
+
+
+def cut_sentiment_rows(rows: list[dict], as_of) -> list[dict]:
+    """Sentiment rows usable at T: received by the database (first_seen_at) and recorded at or before T."""
+    t = utc(as_of)
+    out = []
+    for row in rows:
+        seen, recorded = row.get("first_seen_at"), row.get("recorded_at")
+        if not seen or not recorded or utc(seen) > t or utc(recorded) > t:
+            continue
+        out.append(dict(row))
+    return out
 
 
 def cut_flow_rows(rows: list[dict], as_of) -> list[dict]:

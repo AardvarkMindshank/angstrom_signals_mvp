@@ -64,6 +64,7 @@ SCOPE_ASSET = "asset"                    # any watchlist asset (crypto or equity
 SCOPE_CRYPTO_ASSET = "crypto_asset"      # crypto assets only (derivatives data)
 SCOPE_MARKET_BTC = "market:bitcoin"      # one market-wide subject
 SCOPE_MARKET_CRYPTO = "market:crypto"
+SCOPE_MARKET_STOCKS = "market:stocks"
 
 
 # --------------------------------------------------------------------------- definitions

@@ -1,0 +1,64 @@
+{
+  "schema": "angstrom.group/1",
+  "name": "Flow",
+  "question": "Is trading volume backing rises or falls?",
+  "purpose": "The dashboard's Flow reading rebuilt from its 2 parts: the average of their standard scores, so the same input data gives the same number. Copy it to change parts or weights.",
+  "lineage_version": 3,
+  "members": [
+    {
+      "key": "obv",
+      "label": "On-balance volume",
+      "ref": {
+        "id": "obv.balance",
+        "version": 1,
+        "timeframe": "1D",
+        "params": {}
+      },
+      "role": "score",
+      "weight": 1,
+      "category": "flow",
+      "transform": {
+        "kind": "clip",
+        "version": 1,
+        "field": "standard_score",
+        "low": -1,
+        "high": 1
+      },
+      "when_unavailable": "exclude"
+    },
+    {
+      "key": "heavy_volume",
+      "label": "Heavy-volume candle",
+      "ref": {
+        "id": "volume.heavy_candle",
+        "version": 1,
+        "timeframe": "1D",
+        "params": {}
+      },
+      "role": "score",
+      "weight": 1,
+      "category": "flow",
+      "transform": {
+        "kind": "clip",
+        "version": 1,
+        "field": "standard_score",
+        "low": -1,
+        "high": 1
+      },
+      "when_unavailable": "exclude"
+    }
+  ],
+  "conditions": [],
+  "score": {
+    "method": "weighted_mean",
+    "range": [
+      -1,
+      1
+    ],
+    "meaning": "Flow (days to weeks): Is trading volume backing rises or falls? -1..+1 (shown as -100..+100); positive means up. The same calculation as the dashboard's reading; a description, not a forecast.",
+    "min_coverage": {
+      "num": 1,
+      "den": 2
+    }
+  }
+}

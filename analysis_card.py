@@ -334,11 +334,12 @@ def _slim(value):
 
 def evaluate(doc: dict, asset_kind: str, asset_id: str, supabase, *, candle_loader=None) -> dict:
     """Runs the real Set evaluator for one asset. Signals shared by several Groups are calculated once."""
+    feeling = loaders.sentiment_loader(supabase)
     ctx = sl.DataContext(asset_kind, asset_id, candle_loader=candle_loader,
-                         derivatives_loader=loaders.derivatives_loader(supabase))
+                         derivatives_loader=loaders.derivatives_loader(supabase), sentiment_loader=feeling)
     flows = loaders.flows_loader(supabase)
     result = sg.evaluate_set(doc, ctx, market_context=lambda scope: sl.DataContext(
-        "market", scope.split(":", 1)[1], flows_loader=flows, candle_loader=candle_loader))
+        "market", scope.split(":", 1)[1], flows_loader=flows, candle_loader=candle_loader, sentiment_loader=feeling))
     return _slim(result)
 
 

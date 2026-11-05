@@ -86,10 +86,12 @@ def render(st, supabase, assets: list[tuple[str, str, str]], my_communities=None
             go = cols[2].form_submit_button("Evaluate", width="stretch")
         if go:
             kind, asset_id = pick.split(":", 1)
-            ctx = sl.DataContext(kind, asset_id, derivatives_loader=loaders.derivatives_loader(supabase))
+            ctx = sl.DataContext(kind, asset_id, derivatives_loader=loaders.derivatives_loader(supabase),
+                                 sentiment_loader=loaders.sentiment_loader(supabase))
             results = list(sl.evaluate(asset_refs(kind, timeframe), ctx).values())
-            for subject in ("bitcoin", "crypto"):
-                market = sl.DataContext("market", subject, flows_loader=loaders.flows_loader(supabase))
+            for subject in ("bitcoin", "crypto", "stocks"):
+                market = sl.DataContext("market", subject, flows_loader=loaders.flows_loader(supabase),
+                                        sentiment_loader=loaders.sentiment_loader(supabase))
                 results += [r for r in sl.evaluate(market_refs(), market).values() if r.status != "unsupported"]
             st.session_state["siglib_results"] = (pick, timeframe, [r.as_dict() for r in results])
         stored = st.session_state.get("siglib_results")

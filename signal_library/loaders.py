@@ -41,3 +41,27 @@ def flows_loader(supabase):
             return {"error": f"No stored {series} observations from {source}."}
         return {"rows": rows}
     return load
+
+
+SENTIMENT_ROWS = 400     # newest observations read per subject (about 6 months at two a day)
+
+
+def sentiment_loader(supabase):
+    """sentiment_history rows for one subject (crypto, stock, or an asset key such as Crypto|sui), oldest first.
+    first_seen_at is included once the column exists (sql/2026-11-05_sentiment_first_seen.sql)."""
+    def load(subject_key: str) -> dict:
+        columns = "score, recorded_at, model, coverage, events, sources"
+        rows = None
+        for cols in (columns + ", first_seen_at", columns):
+            try:
+                rows = (supabase.table("sentiment_history").select(cols).eq("subject_key", subject_key)
+                        .order("recorded_at", desc=True).limit(SENTIMENT_ROWS).execute().data or [])
+                break
+            except Exception:
+                continue
+        if rows is None:
+            return {"error": "Sentiment history could not be read."}
+        if not rows:
+            return {"error": f"No stored sentiment for {subject_key}."}
+        return {"rows": list(reversed(rows))}
+    return load

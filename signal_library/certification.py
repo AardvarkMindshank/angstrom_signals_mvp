@@ -21,7 +21,9 @@ SUITE_VERSION = 1
 # Everything a replayed signal's result depends on. Changing any of these requires re-certification.
 CODE_FILES = ("signal_library/core.py", "signal_library/context.py", "signal_library/engine.py",
               "signal_library/signals_basic.py", "signal_library/signals_ta.py", "signal_library/signals_market.py",
-              "signal_library/swings.py", "signal_library/replay.py", "scoring.py", "regime.py", "chart_data.py")
+              "signal_library/swings.py", "signal_library/replay.py", "signal_library/signals_components.py",
+              "signal_library/signals_sentiment.py", "signals_v2.py", "score_colours.py", "scoring.py", "regime.py",
+              "chart_data.py")
 
 
 @lru_cache(maxsize=1)

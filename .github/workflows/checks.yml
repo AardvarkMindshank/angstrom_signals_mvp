@@ -198,6 +198,11 @@ jobs:
         run: |
           python replay_certify.py --prices prices --out out --benchmark || echo "benchmark failed" >> out/optional_failures.txt
           cat out/replay_benchmark.md >> "$GITHUB_STEP_SUMMARY" || true
+      - name: Trend/Stretch/Flow Groups equal signals_v2 on identical inputs (required)
+        if: always()
+        run: |
+          python replay_certify.py --prices prices --out out --parity || echo "Trend/Stretch/Flow parity" >> out/required_failures.txt
+          cat out/parity.md >> "$GITHUB_STEP_SUMMARY" || true
       - name: Replay shortcuts compared with the exact path (required)
         if: always()
         run: |

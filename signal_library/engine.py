@@ -30,7 +30,8 @@ def _scope_ok(scope: str, ctx: DataContext) -> bool:
     if scope == "crypto_asset":
         return ctx.kind == "crypto"
     if scope.startswith("market:"):
-        return ctx.kind == "market" and f"market:{ctx.asset_id}" == scope
+        # "market:crypto|stocks" accepts either subject
+        return ctx.kind == "market" and ctx.asset_id in scope.split(":", 1)[1].split("|")
     return False
 
 
