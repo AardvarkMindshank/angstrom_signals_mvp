@@ -59,4 +59,5 @@ every account.
 
 ## CI
 
-To be reported before merge approval.
+Run 42057959309 on commit 46eb686 (stage 5 with stage 4 merged in): **tests, chart (browser and Streamlit editor
+checks), overlap and replay all passed**. Results on the reports branch under `ci/v2/`.
