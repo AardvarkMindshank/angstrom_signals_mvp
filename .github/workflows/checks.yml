@@ -94,6 +94,12 @@ jobs:
           python chart_browser_fixtures.py --out out/fixtures
           node chart_browser_check.js out/fixtures out/browser_test || echo "chart browser check (made-up candles)" >> out/required_failures.txt
           cat out/browser_test/chart_browser.md >> "$GITHUB_STEP_SUMMARY" || true
+      - name: Lattice editor in a browser (required)
+        if: always()
+        run: |
+          python lattice_component_check.py --out out/lattice
+          node lattice_component_check.js out/lattice || echo "lattice editor browser check" >> out/required_failures.txt
+          cat out/lattice/lattice_browser.md >> "$GITHUB_STEP_SUMMARY" || true
       - name: Chart in a browser, live candles (optional, live Yahoo)
         if: always()
         run: |
@@ -108,6 +114,15 @@ jobs:
           for i in $(seq 1 60); do curl -sf http://127.0.0.1:8599/_stcore/health && break; sleep 1; done
           node chart_streamlit_check.js http://127.0.0.1:8599/ out/streamlit_test || echo "chart inside Streamlit" >> out/required_failures.txt
           cat out/streamlit_test/chart_streamlit.md >> "$GITHUB_STEP_SUMMARY" || true
+      - name: Lattice editor inside Streamlit (required)
+        if: always()
+        run: |
+          streamlit run lattice_streamlit_app.py --server.headless true --server.port 8597 > out/lattice_streamlit.log 2>&1 &
+          pid=$!
+          for i in $(seq 1 60); do curl -sf http://127.0.0.1:8597/_stcore/health && break; sleep 1; done
+          node lattice_streamlit_check.js http://127.0.0.1:8597/ out/lattice_streamlit || echo "lattice editor inside Streamlit" >> out/required_failures.txt
+          cat out/lattice_streamlit/lattice_streamlit.md >> "$GITHUB_STEP_SUMMARY" || true
+          kill $pid || true
       - name: Analysis card memory and time, made-up candles (required)
         if: always()
         run: |
