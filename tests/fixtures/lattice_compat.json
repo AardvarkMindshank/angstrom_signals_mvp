@@ -1,0 +1,810 @@
+{
+ "hashes": {
+  "example:group_reversal_evidence": "828c5c68df78d0f7a48893656d3108b1e26b94488ea49a3ec7cca3446b9e9c45",
+  "example:group_trend_confirmation": "206f069af4d048f87bf9d0e09ec0d7dfc5109030e8c8267d8db4d9ecebf1f46d",
+  "example:set_multi_timeframe": "1e6776922bc645e9a074822f343a477e2f1ffe3f6fc4c3bd065b929fc14554d5",
+  "starter:flow": "a5eb16279c8cd3dbca55f591eeec59a1e89a6ed02c56beeeeed3518813e3216b",
+  "starter:reversal-evidence": "828c5c68df78d0f7a48893656d3108b1e26b94488ea49a3ec7cca3446b9e9c45",
+  "starter:stretch": "85e9eb91113bd9717968ae3fd835c922c35732fcda45a33278a20f7b5a5c2a60",
+  "starter:trend": "bc9e8794096b58aaaa196a11e2857cf49e081c56862032959035f530106d7292",
+  "starter:trend-confirmation": "206f069af4d048f87bf9d0e09ec0d7dfc5109030e8c8267d8db4d9ecebf1f46d"
+ },
+ "results": {
+  "example:group_reversal_evidence|seed1": {
+   "conditions": {
+    "bearish_reversal_setup": "not_met",
+    "bullish_reversal_setup": "not_met"
+   },
+   "keys": [
+    "as_of",
+    "conditions",
+    "data_mode",
+    "diagnostics",
+    "evaluated_at",
+    "lineage_version",
+    "members",
+    "name",
+    "score",
+    "status",
+    "subject"
+   ],
+   "members": {
+    "breaks_4h": [
+     "ok",
+     null
+    ],
+    "cmf_4h": [
+     "ok",
+     null
+    ],
+    "macd_div_4h": [
+     "ok",
+     null
+    ],
+    "rsi_div_4h": [
+     "ok",
+     null
+    ],
+    "zones_1d": [
+     "ok",
+     null
+    ]
+   },
+   "score": null,
+   "status": "ok",
+   "withheld": null
+  },
+  "example:group_reversal_evidence|seed2": {
+   "conditions": {
+    "bearish_reversal_setup": "not_met",
+    "bullish_reversal_setup": "not_met"
+   },
+   "keys": [
+    "as_of",
+    "conditions",
+    "data_mode",
+    "diagnostics",
+    "evaluated_at",
+    "lineage_version",
+    "members",
+    "name",
+    "score",
+    "status",
+    "subject"
+   ],
+   "members": {
+    "breaks_4h": [
+     "ok",
+     null
+    ],
+    "cmf_4h": [
+     "ok",
+     null
+    ],
+    "macd_div_4h": [
+     "ok",
+     null
+    ],
+    "rsi_div_4h": [
+     "ok",
+     null
+    ],
+    "zones_1d": [
+     "ok",
+     null
+    ]
+   },
+   "score": null,
+   "status": "ok",
+   "withheld": null
+  },
+  "example:group_trend_confirmation|seed1": {
+   "conditions": {
+    "bearish_confirmed": "not_met",
+    "bullish_confirmed": "not_met",
+    "ranging_veto": "clear"
+   },
+   "keys": [
+    "as_of",
+    "conditions",
+    "data_mode",
+    "diagnostics",
+    "evaluated_at",
+    "lineage_version",
+    "members",
+    "name",
+    "score",
+    "status",
+    "subject"
+   ],
+   "members": {
+    "momentum_4h": [
+     "ok",
+     null
+    ],
+    "regime_1d": [
+     "ok",
+     null
+    ],
+    "structure_1d": [
+     "ok",
+     "observed"
+    ],
+    "trend_1d": [
+     "ok",
+     "observed"
+    ],
+    "trend_4h": [
+     "ok",
+     "observed"
+    ]
+   },
+   "score": -1.0,
+   "status": "ok",
+   "withheld": null
+  },
+  "example:group_trend_confirmation|seed2": {
+   "conditions": {
+    "bearish_confirmed": "met",
+    "bullish_confirmed": "not_met",
+    "ranging_veto": "clear"
+   },
+   "keys": [
+    "as_of",
+    "conditions",
+    "data_mode",
+    "diagnostics",
+    "evaluated_at",
+    "lineage_version",
+    "members",
+    "name",
+    "score",
+    "status",
+    "subject"
+   ],
+   "members": {
+    "momentum_4h": [
+     "ok",
+     null
+    ],
+    "regime_1d": [
+     "ok",
+     null
+    ],
+    "structure_1d": [
+     "ok",
+     "observed"
+    ],
+    "trend_1d": [
+     "ok",
+     "observed"
+    ],
+    "trend_4h": [
+     "ok",
+     "observed"
+    ]
+   },
+   "score": -0.666666666667,
+   "status": "ok",
+   "withheld": null
+  },
+  "example:set_multi_timeframe|seed1": {
+   "groups": {
+    "reversal": {
+     "conditions": {
+      "bearish_reversal_setup": "not_met",
+      "bullish_reversal_setup": "not_met"
+     },
+     "keys": [
+      "as_of",
+      "conditions",
+      "data_mode",
+      "diagnostics",
+      "evaluated_at",
+      "lineage_version",
+      "members",
+      "name",
+      "score",
+      "status",
+      "subject"
+     ],
+     "members": {
+      "breaks_4h": [
+       "ok",
+       null
+      ],
+      "cmf_4h": [
+       "ok",
+       null
+      ],
+      "macd_div_4h": [
+       "ok",
+       null
+      ],
+      "rsi_div_4h": [
+       "ok",
+       null
+      ],
+      "zones_1d": [
+       "ok",
+       null
+      ]
+     },
+     "score": null,
+     "status": "ok",
+     "withheld": null
+    },
+    "trend": {
+     "conditions": {
+      "bearish_confirmed": "not_met",
+      "bullish_confirmed": "not_met",
+      "ranging_veto": "clear"
+     },
+     "keys": [
+      "as_of",
+      "conditions",
+      "data_mode",
+      "diagnostics",
+      "evaluated_at",
+      "lineage_version",
+      "members",
+      "name",
+      "score",
+      "status",
+      "subject"
+     ],
+     "members": {
+      "momentum_4h": [
+       "ok",
+       null
+      ],
+      "regime_1d": [
+       "ok",
+       null
+      ],
+      "structure_1d": [
+       "ok",
+       "observed"
+      ],
+      "trend_1d": [
+       "ok",
+       "observed"
+      ],
+      "trend_4h": [
+       "ok",
+       "observed"
+      ]
+     },
+     "score": -1.0,
+     "status": "ok",
+     "withheld": null
+    }
+   },
+   "keys": [
+    "data_mode",
+    "diagnostics",
+    "evaluated_at",
+    "groups",
+    "lineage_version",
+    "market_context",
+    "name",
+    "score",
+    "standalone",
+    "status",
+    "subject"
+   ],
+   "shared": [],
+   "standalone": {
+    "alignment": "ok",
+    "zones_4h": "ok"
+   },
+   "status": "ok"
+  },
+  "example:set_multi_timeframe|seed2": {
+   "groups": {
+    "reversal": {
+     "conditions": {
+      "bearish_reversal_setup": "not_met",
+      "bullish_reversal_setup": "not_met"
+     },
+     "keys": [
+      "as_of",
+      "conditions",
+      "data_mode",
+      "diagnostics",
+      "evaluated_at",
+      "lineage_version",
+      "members",
+      "name",
+      "score",
+      "status",
+      "subject"
+     ],
+     "members": {
+      "breaks_4h": [
+       "ok",
+       null
+      ],
+      "cmf_4h": [
+       "ok",
+       null
+      ],
+      "macd_div_4h": [
+       "ok",
+       null
+      ],
+      "rsi_div_4h": [
+       "ok",
+       null
+      ],
+      "zones_1d": [
+       "ok",
+       null
+      ]
+     },
+     "score": null,
+     "status": "ok",
+     "withheld": null
+    },
+    "trend": {
+     "conditions": {
+      "bearish_confirmed": "met",
+      "bullish_confirmed": "not_met",
+      "ranging_veto": "clear"
+     },
+     "keys": [
+      "as_of",
+      "conditions",
+      "data_mode",
+      "diagnostics",
+      "evaluated_at",
+      "lineage_version",
+      "members",
+      "name",
+      "score",
+      "status",
+      "subject"
+     ],
+     "members": {
+      "momentum_4h": [
+       "ok",
+       null
+      ],
+      "regime_1d": [
+       "ok",
+       null
+      ],
+      "structure_1d": [
+       "ok",
+       "observed"
+      ],
+      "trend_1d": [
+       "ok",
+       "observed"
+      ],
+      "trend_4h": [
+       "ok",
+       "observed"
+      ]
+     },
+     "score": -0.666666666667,
+     "status": "ok",
+     "withheld": null
+    }
+   },
+   "keys": [
+    "data_mode",
+    "diagnostics",
+    "evaluated_at",
+    "groups",
+    "lineage_version",
+    "market_context",
+    "name",
+    "score",
+    "standalone",
+    "status",
+    "subject"
+   ],
+   "shared": [],
+   "standalone": {
+    "alignment": "ok",
+    "zones_4h": "ok"
+   },
+   "status": "ok"
+  },
+  "starter:flow|seed1": {
+   "conditions": {},
+   "keys": [
+    "as_of",
+    "conditions",
+    "data_mode",
+    "diagnostics",
+    "evaluated_at",
+    "lineage_version",
+    "members",
+    "name",
+    "score",
+    "status",
+    "subject"
+   ],
+   "members": {
+    "heavy_volume": [
+     "ok",
+     "observed"
+    ],
+    "obv": [
+     "ok",
+     "observed"
+    ]
+   },
+   "score": -0.321848493522,
+   "status": "ok",
+   "withheld": null
+  },
+  "starter:flow|seed2": {
+   "conditions": {},
+   "keys": [
+    "as_of",
+    "conditions",
+    "data_mode",
+    "diagnostics",
+    "evaluated_at",
+    "lineage_version",
+    "members",
+    "name",
+    "score",
+    "status",
+    "subject"
+   ],
+   "members": {
+    "heavy_volume": [
+     "ok",
+     "observed"
+    ],
+    "obv": [
+     "ok",
+     "observed"
+    ]
+   },
+   "score": -0.480468945436,
+   "status": "ok",
+   "withheld": null
+  },
+  "starter:reversal-evidence|seed1": {
+   "conditions": {
+    "bearish_reversal_setup": "not_met",
+    "bullish_reversal_setup": "not_met"
+   },
+   "keys": [
+    "as_of",
+    "conditions",
+    "data_mode",
+    "diagnostics",
+    "evaluated_at",
+    "lineage_version",
+    "members",
+    "name",
+    "score",
+    "status",
+    "subject"
+   ],
+   "members": {
+    "breaks_4h": [
+     "ok",
+     null
+    ],
+    "cmf_4h": [
+     "ok",
+     null
+    ],
+    "macd_div_4h": [
+     "ok",
+     null
+    ],
+    "rsi_div_4h": [
+     "ok",
+     null
+    ],
+    "zones_1d": [
+     "ok",
+     null
+    ]
+   },
+   "score": null,
+   "status": "ok",
+   "withheld": null
+  },
+  "starter:reversal-evidence|seed2": {
+   "conditions": {
+    "bearish_reversal_setup": "not_met",
+    "bullish_reversal_setup": "not_met"
+   },
+   "keys": [
+    "as_of",
+    "conditions",
+    "data_mode",
+    "diagnostics",
+    "evaluated_at",
+    "lineage_version",
+    "members",
+    "name",
+    "score",
+    "status",
+    "subject"
+   ],
+   "members": {
+    "breaks_4h": [
+     "ok",
+     null
+    ],
+    "cmf_4h": [
+     "ok",
+     null
+    ],
+    "macd_div_4h": [
+     "ok",
+     null
+    ],
+    "rsi_div_4h": [
+     "ok",
+     null
+    ],
+    "zones_1d": [
+     "ok",
+     null
+    ]
+   },
+   "score": null,
+   "status": "ok",
+   "withheld": null
+  },
+  "starter:stretch|seed1": {
+   "conditions": {},
+   "keys": [
+    "as_of",
+    "conditions",
+    "data_mode",
+    "diagnostics",
+    "evaluated_at",
+    "lineage_version",
+    "members",
+    "name",
+    "score",
+    "status",
+    "subject"
+   ],
+   "members": {
+    "bollinger": [
+     "ok",
+     "observed"
+    ],
+    "macd_acceleration": [
+     "ok",
+     "observed"
+    ],
+    "momentum": [
+     "ok",
+     "observed"
+    ],
+    "rsi": [
+     "ok",
+     "observed"
+    ],
+    "stochastic": [
+     "ok",
+     "observed"
+    ]
+   },
+   "score": -0.534967608594,
+   "status": "ok",
+   "withheld": null
+  },
+  "starter:stretch|seed2": {
+   "conditions": {},
+   "keys": [
+    "as_of",
+    "conditions",
+    "data_mode",
+    "diagnostics",
+    "evaluated_at",
+    "lineage_version",
+    "members",
+    "name",
+    "score",
+    "status",
+    "subject"
+   ],
+   "members": {
+    "bollinger": [
+     "ok",
+     "observed"
+    ],
+    "macd_acceleration": [
+     "ok",
+     "observed"
+    ],
+    "momentum": [
+     "ok",
+     "observed"
+    ],
+    "rsi": [
+     "ok",
+     "observed"
+    ],
+    "stochastic": [
+     "ok",
+     "observed"
+    ]
+   },
+   "score": -0.794386707682,
+   "status": "ok",
+   "withheld": null
+  },
+  "starter:trend-confirmation|seed1": {
+   "conditions": {
+    "bearish_confirmed": "not_met",
+    "bullish_confirmed": "not_met",
+    "ranging_veto": "clear"
+   },
+   "keys": [
+    "as_of",
+    "conditions",
+    "data_mode",
+    "diagnostics",
+    "evaluated_at",
+    "lineage_version",
+    "members",
+    "name",
+    "score",
+    "status",
+    "subject"
+   ],
+   "members": {
+    "momentum_4h": [
+     "ok",
+     null
+    ],
+    "regime_1d": [
+     "ok",
+     null
+    ],
+    "structure_1d": [
+     "ok",
+     "observed"
+    ],
+    "trend_1d": [
+     "ok",
+     "observed"
+    ],
+    "trend_4h": [
+     "ok",
+     "observed"
+    ]
+   },
+   "score": -1.0,
+   "status": "ok",
+   "withheld": null
+  },
+  "starter:trend-confirmation|seed2": {
+   "conditions": {
+    "bearish_confirmed": "met",
+    "bullish_confirmed": "not_met",
+    "ranging_veto": "clear"
+   },
+   "keys": [
+    "as_of",
+    "conditions",
+    "data_mode",
+    "diagnostics",
+    "evaluated_at",
+    "lineage_version",
+    "members",
+    "name",
+    "score",
+    "status",
+    "subject"
+   ],
+   "members": {
+    "momentum_4h": [
+     "ok",
+     null
+    ],
+    "regime_1d": [
+     "ok",
+     null
+    ],
+    "structure_1d": [
+     "ok",
+     "observed"
+    ],
+    "trend_1d": [
+     "ok",
+     "observed"
+    ],
+    "trend_4h": [
+     "ok",
+     "observed"
+    ]
+   },
+   "score": -0.666666666667,
+   "status": "ok",
+   "withheld": null
+  },
+  "starter:trend|seed1": {
+   "conditions": {},
+   "keys": [
+    "as_of",
+    "conditions",
+    "data_mode",
+    "diagnostics",
+    "evaluated_at",
+    "lineage_version",
+    "members",
+    "name",
+    "score",
+    "status",
+    "subject"
+   ],
+   "members": {
+    "ichimoku": [
+     "ok",
+     "observed"
+    ],
+    "macd": [
+     "ok",
+     "observed"
+    ],
+    "moving_averages": [
+     "ok",
+     "observed"
+    ]
+   },
+   "score": -0.999792851648,
+   "status": "ok",
+   "withheld": null
+  },
+  "starter:trend|seed2": {
+   "conditions": {},
+   "keys": [
+    "as_of",
+    "conditions",
+    "data_mode",
+    "diagnostics",
+    "evaluated_at",
+    "lineage_version",
+    "members",
+    "name",
+    "score",
+    "status",
+    "subject"
+   ],
+   "members": {
+    "ichimoku": [
+     "ok",
+     "observed"
+    ],
+    "macd": [
+     "ok",
+     "observed"
+    ],
+    "moving_averages": [
+     "ok",
+     "observed"
+    ]
+   },
+   "score": -0.997412279918,
+   "status": "ok",
+   "withheld": null
+  }
+ },
+ "valid": {
+  "example:group_reversal_evidence": [],
+  "example:group_trend_confirmation": [],
+  "example:set_multi_timeframe": [],
+  "starter:flow": [],
+  "starter:reversal-evidence": [],
+  "starter:stretch": [],
+  "starter:trend": [],
+  "starter:trend-confirmation": []
+ }
+}

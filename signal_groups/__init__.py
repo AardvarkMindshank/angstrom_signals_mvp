@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 
 from .evaluate import evaluate_group  # noqa: F401
-from .sets import content_sha256, evaluate_set  # noqa: F401
+from .sets import content_sha256, evaluate_set, scannable  # noqa: F401
 from .validate import validate_group, validate_set  # noqa: F401
 
 STARTERS_DIR = Path(__file__).resolve().parent / "starters"

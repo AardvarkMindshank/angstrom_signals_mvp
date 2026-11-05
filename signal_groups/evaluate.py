@@ -16,7 +16,7 @@ import pandas as pd
 import signal_library as sl
 from signal_library.context import confirmed_frame
 
-from . import lineage, replay, rules, transforms
+from . import lineage, outcomes, replay, rules, transforms
 from .transforms import UNKNOWN
 from .validate import validate_group
 
@@ -164,6 +164,9 @@ def evaluate_group(doc: dict, ctx: sl.DataContext, *, data_mode: str = "live", a
 
     out = {**base, "status": status, "score": score_block, "conditions": conditions, "members": rows,
            "diagnostics": _diagnostics(rows, score_value, members)}
+    if doc.get("outcomes") is not None:
+        # Optional (docs/design/lattice_prism.md §4.1): only documents that define outcomes gain this key.
+        out["outcome"] = outcomes.publish(doc["outcomes"], rctx, status)
     if pit:
         out["completeness"] = replay.group_completeness(doc, out, ctx)
     return out
