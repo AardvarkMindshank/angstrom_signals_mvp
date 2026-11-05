@@ -178,7 +178,7 @@ Everything below is committed and pushed. Latest commit at time of writing: `ce8
 3. Code review of the whole app for unnecessary refreshes. Start from the Admin "Page timing" numbers and the Render plan, then audit every rerun source.
 4. Optional chart tidy-ups (remove RSI guide lines in overlay mode, round right-axis ticks, tidy legend).
 5. Drew's daily ideas. They may reorder this list.
-6. Backlog: custom alert rules; a better "What changed" panel; a worker health message; a regime icon per asset; back-fill of past earnings dates; BTC funding backtests; more assets and an extremes-only backtest to look for a score edge.
+6. Backlog: custom alert rules; a better "What changed" panel; a worker health message; a regime icon per asset; back-fill of past earnings dates; BTC funding backtests; more assets and an extremes-only backtest to look for a score edge. Before a Strategy Builder mockup, read `docs/research/visual_strategy_builders.md`. That note is external research only. It does not redefine Groups, Sets, or the reconstruction.
 7. Phase 2 (weekly bars) only if wanted; Phase 3 only after the score shows an edge and the alerts-per-timeframe question is decided.
 
 The built-in browser now works in the linked chat ("Claude Code vs Cowork"), so screen checks can be done by Claude directly. Streamlit redraws after every click, so wait for the page to settle and re-read positions before each click.
