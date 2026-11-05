@@ -68,7 +68,12 @@ def render(st, supabase, assets: list[tuple[str, str, str]], my_communities=None
         "alert or setting. Signals run only when you press the button. Intraday timeframes fetch Yahoo candles for "
         "the chosen asset."
     )
-    tab_run, tab_groups, tab_catalogue = st.tabs(["Inspect an asset", "Groups & Sets", "Catalogue"])
+    tab_run, tab_groups, tab_prism, tab_catalogue = st.tabs(["Inspect an asset", "Groups & Sets", "🔎 Prism",
+                                                              "Catalogue"])
+    with tab_prism:
+        import prism_view
+
+        prism_view.render(st, supabase, assets, user_id)
     with tab_groups:
         import signal_groups_inspector
 
