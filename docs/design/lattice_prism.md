@@ -1,14 +1,17 @@
 # Lattice and Prism: the research workspace and the market scanner
 
-Status: **proposal, revision 1 (5 November 2026)**. Step 2 of the agreed sequence (design the builder). For review
-before any build starts. Nothing here changes the dashboard, Trend/Stretch/Flow, alerts as they work today, the
-Signal Matrix, or the accepted Groups/Sets design, except the extensions in §4, which need explicit approval.
+Status: **proposal, revision 2 (5 November 2026)**. Step 2 of the agreed sequence (design the builder).
+Revision 1 was reviewed by ChatGPT and Grok; their findings and the decisions taken are in §11. Revision 2 adds the
+Group status truth table (§4.1), exact Set predicates and semantics (§4.2), backward compatibility (§4.5), the stage 1
+fixtures (§6), a hold-out policy (§9), and moves History to its own research design (§5.4).
 
-Inputs:
-- the clickable mockup (four screens: Groups, Sets, Prism run now, Prism scheduled scans), reviewed by ChatGPT and
-  Grok in three rounds on 5 November;
-- Grok's external research, `docs/research/visual_strategy_builders.md`;
-- the accepted designs `groups_sets.md` (revision 4), `point_in_time.md` and `library_completion.md`.
+Nothing here changes the dashboard, Trend/Stretch/Flow, alerts as they work today, the Signal Matrix, existing saved
+configurations, or the protected hold-out. The accepted Groups/Sets design changes only by the optional extensions in
+§4, which need explicit approval.
+
+Inputs: the clickable mockup (Groups, Sets, Prism run now, Prism scheduled scans), reviewed in three rounds;
+`docs/research/visual_strategy_builders.md`; the accepted designs `groups_sets.md` (revision 4), `point_in_time.md`
+and `library_completion.md`.
 
 ## 1. Names
 
@@ -17,278 +20,318 @@ Inputs:
 | **Angstrom Signals** | The product. Unchanged; no second product name. |
 | **Lattice** | The research workspace inside it. Header: "Angstrom Signals · Lattice", subtitle "Research workspace". |
 | **Groups**, **Sets** | As in `groups_sets.md`. |
-| **Prism** (subtitle "Market scanner") | Runs a Set on assets: **Run now** (once, now or at a past date) and **Scheduled scans** (on a schedule, with alerts). Replaces the mockup's separate "Evaluate" tab. |
-| **Strategies** | Later, shown greyed out. Specified separately once Drew's trading rules are in. |
+| **Prism** ("Market scanner") | Runs a Set on assets: **Run now** and **Scheduled scans**. |
+| **Strategies** | Later, shown greyed out. Specified separately from Drew's trading rules. |
 
-Vocabulary in the app: "Open Lattice", "Build a Group", "Create a Set", "Run Prism", "Schedule a Prism scan".
 Trademark and product-name checks are needed before any public use of "Lattice" and "Prism".
 
-## 2. What the reviews settled (frozen as the design reference)
+## 2. What the mockup reviews settled
 
-**Groups**
-1. Signals are added by drag and drop or by tapping **+** (iPad). Each member has a role (Score, Condition,
-   Levels, Context) and its own timeframe.
-2. Every member shows what it is read from, generated from its timeframe and source: "4H · last closed candle",
-   "Latest score at the time" (sentiment), "Last published flow day" (flows), "Live reading only" (derivatives).
-3. Rule operands always show **which number** they are and its scale: a signal's *native value* (RSI, 0 to 100), its
-   *standard score* (−1 to +1), the *Group score* (shown −100 to +100), or a *yes/no* reading. Labels (Bullish…) are
-   categories, never numbers.
-4. Thresholds are validated against the chosen operand: wrong type or a value outside the scale **blocks saving**,
-   with the reason in plain words.
-5. Rule order is visible and reorderable; first match wins. **Unknown** is a fixed, visible outcome: if a rule
-   cannot be checked, the label is Unknown and later rules are not tried. **Neutral** only when every rule was
-   checked and none matched.
-6. Checks: blocks (cannot save) vs warnings (can save). Warnings include: two score members measuring the same
-   thing; all score members from price; mixed timeframes; members with short or no history; members available for
-   some assets only; a Condition member no rule uses; a Score member also tested in a rule (reused evidence, not
-   independent confirmation); an OR rule that can overlap another rule (priority decides).
-7. An auto-written description of what the Group does, always generated from the document.
+**Groups.** Drag and drop or tap **+** (iPad). Roles Score / Condition / Levels / Context, each member with its own
+timeframe and a source tag generated from it ("4H · last closed candle", "Latest score at the time", "Last published
+flow day", "Live reading only"). Rule operands show which number they are and its scale (native value, standard
+score −1..+1, Group score shown −100..+100, yes/no, label). Wrong types and out-of-scale thresholds block saving.
+Rule order is visible and reorderable; first match wins; **Unknown** stops evaluation; **Neutral** (the
+`otherwise` outcome) only when every rule is false. Blocks vs warnings: overlapping measures, price-only scores,
+mixed timeframes, short or no history, partial asset coverage, an unused Condition member, a Score member reused in
+a rule, overlapping OR rules. An auto-written description.
 
-**Sets**
-8. Groups and single signals are combined. No Set score (D7 unchanged). A Group in a rule is used either by its
-   **label** or its **score**, chosen explicitly.
-9. The Set's decision is shown as an **ALL (AND)** box, optionally holding **ANY (OR)** groups, with a fixed
-   explanation of how Yes / No / Unknown are reached: No if any necessary line is No, even with gaps; Unknown when
-   nothing is No but something is missing, naming what.
-10. Warnings when members share signals or sources.
+**Sets.** Groups and single signals; no Set score. A Group is used by its **outcome**, **score**, **condition state**
+or **status**, chosen explicitly. The decision is an **ALL (AND)** box with optional **ANY (OR)** groups and a fixed
+explanation of Yes / No / Unknown. Warnings for shared signals and sources.
 
-**Prism**
-11. Results separate the **answer** (Yes / No / Unknown), **how sure** (Definite / Undecided, with the decisive
-    reason: "Fails on Trend; missing sentiment could not change this") and **data available** (Complete / Partial).
-12. Scheduled scans run on the Watchlist only, with a chosen schedule, alert on change by default, never alert on
-    Unknown, and use the existing alert channels.
-13. Strategies are a greyed-out future preview: no position, order, fill or stage is implied anywhere.
+**Prism.** Results separate the **answer**, **how sure** (with the decisive reason) and **data available**. Scheduled
+scans on the Watchlist with a chosen schedule, alert on change, never on Unknown, existing channels. Strategies are a
+greyed-out preview; nothing implies a position, order or fill.
 
-## 3. How the mockup maps to the accepted Groups/Sets design
+## 3. Mapping to the accepted Groups/Sets design
 
-| Mockup | Accepted design (`groups_sets.md`) | Gap |
+| Mockup | Accepted design | Gap |
 |---|---|---|
-| Roles Score / Condition / Levels / Context | §3.1, identical | none |
-| Score member uses the standard score | `transform` on a field (`clip` on `standard_score`, as the starters do) | none |
-| Group score −100..+100 | stored −1..+1 (§3.2), displayed ×100 as the dashboard does | display only; thresholds typed in display units are converted |
-| Rules with AND / OR, three-valued | §3.4 `all` / `any` / `not`, three-valued | none |
-| Type check on operands | §3.4 "comparing incompatible types is refused at save time" | range check is new (E3) |
-| **Ordered label rules** (Bullish / Bearish / Neutral / Unknown) | named `conditions` (confirmation / veto) and `status`; labels are presentation | **E1** |
-| **Set decision** (Yes / No / Unknown) | Sets have no rules: "an analysis configuration, not a strategy" | **E2** |
-| Standalone signal used in a Set rule | standalone role must be `context` or `levels` | part of **E2** |
-| Warnings (unused, reused evidence, overlap) | §3.5 diagnostics, never change results | additions to diagnostics only |
-| Prism run now | evaluation on demand (§8), replay `DISPLAY` mode for past dates | none |
-| Scheduled scans and alerts | §9 "Later: alerts on Groups" | **this proposal (§5)** |
+| Roles, transforms, three-valued `all`/`any`/`not`, counting contract | §3.1–3.4 | none |
+| Group score −100..+100 | stored −1..+1 (§3.2), shown ×100 | display only; thresholds converted exactly (+30 → 0.30) |
+| Ordered labels Bullish / Bearish / Neutral / Unknown | named conditions and `status`; words are presentation | **E1** |
+| Set decision Yes / No / Unknown; standalone signal in a rule | Sets have no rules; standalone `context`/`levels` only | **E2** |
+| Scales and range checks | type check at save (§3.4) | **E3** |
+| "Trend on COIN" inside a Set run on another asset | not in the design | **E4**, not in stage 1 |
+| Warnings | §3.5 diagnostics | additions only; never change results |
 
-## 4. Proposed extensions (need approval)
+## 4. Extensions (for approval)
 
-### E1. Group outcome labels
-
-An optional `outcomes` list on a Group, evaluated **after** the existing conditions, in order:
+### 4.1 E1: Group outcomes
 
 ```json
 "outcomes": {
   "version": 1,
   "rules": [
-    {"label": "Bullish", "when": {"all": [{"score": {"gte": 0.30}}, {"member": "rsi_1d", "lte": 70}]}},
-    {"label": "Bearish", "when": {"score": {"lte": -0.30}}}
+    {"id": "bullish", "label": "Bullish", "when": {"all": [{"score": {"gte": 0.30}}, {"member": "rsi_1d", "lte": 70}]}},
+    {"id": "bearish", "label": "Bearish", "when": {"score": {"lte": -0.30}}}
   ],
-  "otherwise": "Neutral"
+  "otherwise": {"id": "neutral", "label": "Neutral"}
 }
 ```
 
-- Each `when` is an ordinary §3.4 rule (same engine, limits and counting contract).
-- Evaluation: first rule that is **true** wins. If a rule is **unknown** before any rule is true, the outcome is
-  `Unknown` and later rules are not evaluated, because the unknown rule might have matched. `otherwise` only when
-  every rule is false.
-- Labels are free text (≤ 24 characters) from a short suggested list; the Set editor offers a Group's own labels
-  plus `Unknown`.
-- Existing documents without `outcomes` are unchanged; their content hashes do not change. The starters gain no
-  outcomes in this step (their words stay presentation, as decided in `library_completion.md` §3).
-- Schema: additive optional key under `angstrom.group/1`, accepted by the validator from this version on.
-  *Review question A.*
+- `id`: `[a-z][a-z0-9_]{0,23}`, unique in the Group, stored in Set predicates. `label`: display text, ≤ 24
+  characters, may be renamed in a new version without breaking Sets. Reserved ids, never user-defined:
+  **`unknown`** and **`vetoed`**.
+- Each `when` is an ordinary §3.4 rule (same engine, limits, counting contract).
 
-### E2. Set decision rule
+**Step 1, ordered rules → raw outcome.**
 
-An optional `decision` on a Set:
+| Rules in order | Raw outcome |
+|---|---|
+| rule *i* true, every earlier rule false | rule *i*'s id |
+| the first rule that is not false is unknown | `unknown` (later rules are not evaluated) |
+| every rule false | `otherwise` id |
+
+A rule that is false because one of its `all` lines is false is false even if another of its lines is unknown
+(the existing `all` contract), so it falls through.
+
+**Step 2, Group status → published outcome.** The Group's `status` (§3.4 of `groups_sets.md`) gates the raw
+outcome, so a label never hides a veto or a withheld score:
+
+| Group status | Published outcome | Qualified |
+|---|---|---|
+| `ok` | raw outcome | no |
+| `vetoed` (any veto active) | `vetoed` | no |
+| `veto_unknown` (no veto active, at least one unknown) | raw outcome | **yes**: may be `vetoed` |
+| `insufficient` (score withheld) | `unknown` | no |
+
+The result carries `outcome`, `outcome_label`, `status` and `qualified`. The dashboard-style words for the starters
+stay presentation: starters get no `outcomes` in this step.
+
+### 4.2 E2: Set decision
 
 ```json
 "decision": {
   "version": 1,
   "rule": {"all": [
-    {"group": "trend", "outcome": {"eq": "Bullish"}},
-    {"not": {"group": "momentum", "outcome": {"eq": "Bearish"}}},
+    {"group": "trend", "outcome": {"eq": "bullish"}},
+    {"not": {"group": "momentum", "outcome": {"eq": "bearish"}}},
     {"member": "sentiment_market", "gte": -20}
   ]}
 }
 ```
 
-- New predicate targets: a Group's `outcome` (E1 label), `score` (−1..+1), or a named `condition` state (met / not
-  met / unknown). Signals by `member`, as in Groups.
-- The same three-valued `all` / `any` / `not` and counting contract. Answer: **Yes** = true, **No** = false,
-  **Unknown** = unknown. A Group whose outcome is `Unknown` makes its predicate unknown.
-- To use a standalone signal in the decision, standalone items may take role **`condition`** (today: `context` or
-  `levels` only). Context items stay unusable in rules.
-- Still no Set score, no entry, exit, sizing or risk: the decision answers "does this asset match?", nothing more.
-- The result names the **decisive lines**: for No, the lines that are false; for Unknown, the unknown lines that
-  could change the answer. This is computed from the rule tree, not from the completeness labels.
-  *Review question B.*
+**Predicates** (inside the usual `all` / `any` / `not` and counting operators):
 
-### E3. Operand scales and range checks
+| Shape | Value |
+|---|---|
+| `{"group": g, "outcome": {"eq": id}}` or `{"in": [ids]}` | compares the published outcome (ids only; `unknown` and `vetoed` may appear in `in`/`eq` only as described below) |
+| `{"group": g, "score": {"gte"/"lte"/"between": …}}` | the Group score, stored −1..+1 |
+| `{"group": g, "condition": c, "state": {"eq": s}}` | a named condition's state: confirmations `met` / `not_met`, vetoes `active` / `clear` |
+| `{"group": g, "status": {"in": [statuses]}}` | the Group status, always known |
+| `{"member": m, …}` | a standalone item with role `condition`, as Group member predicates |
 
-- Signal definitions gain an optional `fields` description: for each readable field, its type (number, label,
-  yes/no, events), unit and, where fixed, its range (RSI 0..100, standard score −1..+1, sentiment −100..+100).
-  Fields without a fixed range (MACD in ATRs, ETF flows in US$) show the unit only.
-- The validator refuses a threshold outside a fixed range, and a comparison between incompatible types. The editor
-  shows the scale next to every threshold.
-- Adding `fields` documents existing outputs; it is not a calculation change and no signal version changes. The
-  definitions live in files listed in `CODE_FILES`, so the code hash changes and the certification record is
-  regenerated in the usual way; every certified result must be identical before and after. *Review question C.*
+**Semantics.**
+- An outcome predicate is evaluated against the published outcome. If the outcome is **qualified**
+  (`veto_unknown`), it is evaluated for both the raw outcome and `vetoed`: the same result for both gives that
+  result, otherwise **unknown**. So `outcome eq bullish` is unknown under an unknown veto, but `outcome eq bearish`
+  is definitely false when the raw outcome is bullish (it is false either way).
+- An outcome of `unknown` makes every outcome predicate on it **unknown**, including `not` (unknown stays unknown).
+  No predicate tests "is unknown": Unknown can never be turned into a decision. `vetoed` may be named in `eq` or
+  `in` (for example "Trend is not vetoed" as `{"not": {"…eq": "vetoed"}}`).
+- A condition whose state is unknown makes its predicate unknown. A score that is withheld makes score predicates
+  unknown. A Group that failed to evaluate makes all its predicates unknown.
+- Standalone items may take role `condition` in Sets; `context` items stay unusable in rules (refused at save).
+- **Answer**: Yes = true, No = false, Unknown = unknown.
+- **Decisive lines**: a sufficient reason taken from the rule tree, not a list of everything evaluated. For No,
+  the false lines that make the result false; for Unknown, the unknown lines that could change it.
+- A Set **without** a `decision` is **not scannable**: Prism refuses it with a reason. Run now shows its readings
+  without an answer. It is never treated as No.
+- Still no Set score, and no entry, exit, sizing or risk.
+
+### 4.3 E3: field descriptions and range checks
+
+- Signal definitions gain `fields`: for each readable field path, its type (number, label, yes/no, events), unit
+  and, where fixed, its range (RSI 0..100, standard score −1..+1, sentiment −100..+100). Fields without a fixed range
+  (MACD in ATRs, ETF flows in US$) carry a unit only.
+- The **backend validator** (`signal_groups/validate.py`) enforces: the field path exists, the comparison matches the
+  type, thresholds sit inside a fixed range. The editor repeats the checks for display only.
+- Display thresholds are converted exactly before storing (Group score +30 → 0.30, as `Fraction`).
+- No calculation or signal version changes. The definitions sit in `CODE_FILES`, so the code hash changes and the
+  certification record is regenerated; every certified result must be identical.
+
+### 4.4 E4: fixed-subject Set lines (named now, not in stage 1)
+
+A Set item may pin a subject ("Trend on COIN") while the rest of the Set runs on the scanned asset. Both are read at
+the same cutoff T and both appear in the replay record. Stateless and testable. Specified with the stage that needs
+it.
+
+### 4.5 Backward compatibility and immutable versions
+
+- `outcomes` and `decision` are additive optional keys under `angstrom.group/1` and `angstrom.set/1`. A document
+  without them validates, evaluates and hashes exactly as today (keys absent, never null).
+- Every existing starter, example and stored version keeps its content hash and its result (golden tests).
+- Adding outcomes or a decision creates a **new version** of that configuration; old versions are untouched.
+- A Set embeds a Group **version**. An outcome predicate on an embedded version without `outcomes` is refused at
+  save with "this Group version has no outcomes; embed a newer version".
+- Lineage version is unchanged. Live Trend/Stretch/Flow, alerts and the Signal Matrix do not read these keys.
 
 ## 5. Prism
 
 ### 5.1 Run now
 
-- Pick a Set and assets (default: the Watchlist). **Now** evaluates live with confirmed candles only; **a past
-  date** uses the certified point-in-time reconstruction in `DISPLAY` mode (`replay_display.display_run`).
-- Results table: one row per asset with each Set line's reading (label and score for Groups, value with its scale
-  for signals), the answer, how sure with the decisive reason, and data available.
-- No statistics (hit rates, returns after a Yes). Those are research and need the protected hold-out rules; they
-  belong to the backtesting and strategy work.
+- Pick a Set (with a decision) and assets (default: the Watchlist).
+- **Now** uses the live path with confirmed candles. **A past date** uses the point-in-time reconstruction in
+  `DISPLAY` mode. The results page says which path it used.
+- One row per asset: each line's reading (label and score for Groups, value with its scale for signals), answer,
+  how sure with the decisive reason, data available.
+- No statistics, returns or bulk export (`point_in_time.md` §6, §8).
 
 ### 5.2 Scheduled scans
 
-**What a scan is.** Owner, a pinned Set version, the Watchlist, a schedule, an alert mode, channels, paused flag.
+**A scan**: owner, pinned Set version, the Watchlist, schedule, alert mode, channels, paused.
 
 **Schedules.**
-- *Each candle close* for 4H, 1D or 1W: the scan runs once a new candle of that timeframe has closed for the asset
-  (crypto 1D at 00:00 UTC; shares after the US close, using the library's share calendar).
-- *Set times*: up to 4 times a day in the user's time zone, with every day, weekdays or chosen days.
-- Each run's cutoff **T** is the scheduled moment. Every member uses only its last closed candle at T.
-- A warning (not a block) when the schedule is faster than the Set's slowest-changing member ("this Set reads daily
-  candles; every 4 hours gives the same answer until the next daily close").
+- *Each candle close* (4H, 1D, 1W). The cutoff **T** is the candle's close, not the worker tick. Shares use the
+  library's share calendar (16:00 New York), shown on the scan, not the dashboard's 16:30.
+- *Set times*: up to 4 a day in the user's time zone, every day, weekdays or chosen days; T is the set time.
+- A warning when the schedule is faster than the Set's slowest-changing member.
 
-**Where it runs.** Inside the existing worker (`run_alerts.py`, started every 5 minutes by the Supabase clock via
-`alerts.yml`). No new service, no always-on process. Each tick:
-1. find scans that are due (like `digest_due`), oldest first;
-2. evaluate each due scan at its cutoff T through the **same point-in-time path as "past date"** in Run now, so a
-   scheduled result can be reproduced exactly later and matches what "Check past dates" shows;
-3. store a compact run record; decide alerts; send.
+**Running.** Inside the existing worker (`run_alerts.py`, every 5 minutes):
+1. the existing alert and digest work runs first; Prism uses the time left, at most 4 minutes of the 15;
+2. due scans are claimed atomically (one claim per scan and cutoff), oldest due first, fairly across users;
+3. each is evaluated at T through the point-in-time path and its **run record** is stored with input hashes and code
+   identity;
+4. a failure is recorded for that scan only and does not stop the others or count as an answer;
+5. a scan that did not fit waits for the next tick and says how late it ran.
 
-**Budget.** About 1 second per asset per Set (stage 4–5 benchmarks). Limits for the first build: 5 active scans per
-user, Watchlist size as today, and a per-tick time budget (default 4 minutes of the worker's 15). Scans that do not
-fit wait for the next tick and say so ("ran 6 minutes late"); none are dropped silently.
+**Records, not re-runs.** The stored run record is what the scan said. A later reconstruction ("check past dates")
+can differ if a provider revised data; the page labels actual scans and reconstructions differently.
 
 **Alerts.**
-- Default mode **turns Yes**: an alert when an asset's answer becomes Yes after being No or Unknown. A latch per
-  (scan, asset), like the existing reading alerts: released only by a **No**. Unknown neither opens nor releases it,
-  so a data gap cannot cause a repeat alert.
-- Optional mode **every run while Yes**.
-- Unknown never alerts; it is listed on the results page ("couldn't decide: market sentiment missing").
-- Delivery through the existing system: an in-app row in `user_notifications` (new `alert_type` `prism`), instant
-  email if the user has instant alerts on, otherwise a **Prism** section in the daily digest. Discord and Telegram
-  later.
+- Latch per (scan, asset). The first Yes ever observed alerts once. Only a confirmed **No** releases the latch;
+  **Unknown** and failed runs neither open nor release it.
+- A new Set version on the scan keeps the latches, with the version change noted; the user can reset them.
+- "Every run while Yes" is off unless chosen.
+- Notifications are idempotent: one per (scan, asset, cutoff), whatever retries happen.
+- Delivery: in-app (`user_notifications`, new type `prism`), instant email if on, otherwise a Prism section in the
+  daily digest. Discord and Telegram later.
 
-**Storage** (new SQL file, same safety rules as `2026-11-04_signal_groups.sql`: owner-only, writes through
-security-definer functions, re-runnable):
-- `prism_scans`: id, owner, set config + version, schedule (jsonb), alert mode, channels, paused, timestamps.
-- `prism_scan_runs`: scan, cutoff T, started/finished, code identity (as the replay record), and per asset: answer,
-  how sure, decisive lines, data available. Kept 90 days.
-- `prism_scan_latches`: (scan, asset) → open since.
+**Storage** (new re-runnable SQL file, owner-only, writes through security-definer functions):
+`prism_scans`, `prism_scan_runs` (kept 90 days), `prism_scan_latches`, and a claim table or claim column for (scan,
+cutoff).
 
-**Results page.** Latest run grouped as: New Yes (alerted) · Still Yes · Couldn't decide · No (collapsed), each
-with its reason and a link to the asset. **Check past dates** replays the scan over recent dates in `DISPLAY` mode
-(at most 90 steps, as now) to show what it would have flagged, without statistics (§5.1).
+**Limits for the first build**: 5 active scans per user, Watchlist only, 4 minutes per tick after existing work,
+90-day run history.
 
-*Review questions D–F.*
+### 5.3 Results page
 
-### 5.3 History: when would it have fired, and what followed? (proposed for discussion)
+Latest run grouped as New Yes (alerted) · Still Yes · Couldn't decide · No (collapsed). "Check past dates" is a
+display reconstruction, at most 90 steps, with answers only: no returns or statistics.
 
-A single past date is mainly a check that a reconstruction is faithful. The practical question is: **across all the
-available history, when did this Set's answer turn Yes, and what did the price do afterwards?** This is an event
-study, not a strategy: no positions, sizing, entries or exits.
+### 5.4 History (separate research design, not in this build)
 
-- **Events:** every date the answer turned Yes (after No or Unknown), per asset. Unknown periods are reported, not
-  filled.
-- **What followed:** forward returns after each event (for example 1, 5 and 20 candles), compared with the same
-  measure on all dates for that asset (the baseline), with the number of events, their spread and the share
-  positive.
-- **Research rules apply:** statistics use `RESEARCH` mode on the frozen data before 30 October 2024 only; the
-  protected hold-out stays untouched until a separate certification. Sets whose members have no history in that
-  period (sentiment, derivatives) cannot be studied, and say so.
-- **Guardrails against fitting the past:** minimum event counts with a warning below them; overlapping events
-  counted once per window; every Set version tested is recorded so the number of tries is visible; no "best
-  setting" search.
-- **Speed:** step-by-step replay costs about 1 s per date per asset, which is hours for six years of a Watchlist.
-  History needs the planned fast path: each signal's full history computed in one causal pass, certified equal to
-  the step-by-step replay at sampled cutoffs. This brings the planned speed-up forward from the strategy work.
-- **Place in the order:** after scheduled scans and before strategies; strategies later reuse the same fast path
-  and event engine.
+The useful question is "across all history, when would this Set have turned Yes, and what did the price do
+afterwards?". Both reviews approve the concept, not an implementation. It gets its own research design covering:
+eligibility (members and timeframes with history in the permitted period), event transitions, forward horizons (for
+example median return at 5 and 20 daily candles and the share positive, against all dates for that asset), overlap
+handling, minimum events (for example 30, below which only the count is shown), recorded tries, no best-setting
+search, and the causally certified fast path.
 
-*Review question H.*
+Direction for that design: a **research job** (CI or background) computes the study under the research rules and
+§9's hold-out policy; Prism **displays stored results** and never computes statistics in a page load.
 
-### 5.4 Can one result start another evaluation?
+### 5.5 Linking evaluations
 
-Three different cases, handled differently:
+Same asset and moment: one Set. Another asset at the same moment: E4. Sequences over time ("A then B within N days"):
+the strategy layer's state machine, as an alert-only strategy. No action that runs another evaluation.
 
-1. **Same asset, same moment** ("if A is Yes, also check B"): no chaining. Both go in one Set's ALL box; the answer
-   is identical. The evaluator may skip B when A is already No (an optimisation only, never changing the answer).
-2. **Another asset, same moment** ("only consider BTC if COIN is Yes"): a Set line may name a **fixed subject**,
-   for example "Trend on COIN is Bullish", while the rest of the Set runs on the scanned asset, as market context
-   already does for market-wide readings. Still stateless, so it is reproducible and testable on history.
-3. **Over time** ("COIN Yes, then within 3 days BTC Yes"): this needs memory and is the Waiting → Armed part of a
-   strategy. It belongs to the strategy layer as a strategy whose only action is an alert, with no positions, so
-   there is one state machine in the product, not two.
+## 6. Stage 1 fixtures (executable, synthetic data and frozen pre-hold-out data only)
 
-Not proposed: a free-form action where one result runs another evaluation. Chains can loop, are hard to explain to
-the person receiving the alert, and are hard to test fairly on history.
+**Outcomes (E1).**
+1. Rule 1 true → its id; rule 1 false and rule 2 true → rule 2's id; all false → `otherwise`.
+2. Rule 1 unknown and rule 2 true → `unknown` (not rule 2).
+3. Rule 1 false because one `all` line is false while another is unknown → falls through to rule 2.
+4. Reordering rules changes the outcome where two rules overlap (priority is the order).
+5. Status `vetoed` → `vetoed`; `insufficient` → `unknown`; `veto_unknown` → raw outcome, qualified.
+6. Reserved ids refused; duplicate ids refused; renaming a label does not change any Set result.
 
-*Review question I.*
+**Set decisions (E2).**
+7. Outcome `eq bullish` under `veto_unknown` with raw bullish → unknown; `eq bearish` with raw bullish under
+   `veto_unknown` → false.
+8. Active veto → `eq bullish` false.
+9. `not` of unknown stays unknown; an outcome of `unknown` makes predicates unknown.
+10. Definite No: one necessary line false while another input is missing → No, with the false line decisive.
+11. Unknown: no line false, one missing → Unknown, naming the missing line.
+12. ANY group: one true → true; all false → false; none true and one unknown → unknown.
+13. A `context` item in a decision refused; a `condition` standalone item accepted.
+14. Set without a decision: not scannable.
+15. Outcome predicate on an embedded Group version without outcomes refused.
 
-## 6. The editor (Lattice UI)
+**Scales (E3).**
+16. Field table for the starter members and the example Set; every fixture value lies inside its stated range.
+17. One out-of-range value per fixed field refused (for example 70 on a −1..+1 standard score).
+18. Type mismatches refused (a yes/no field compared with a number; a label compared with `gte`).
+19. Group score +30 stored as exactly 0.30.
 
-- Streamlit cannot drag and drop natively. Proposal: one small custom component, built like the existing chart
-  component (`lw_chart.js` / `lw_chart.py`): a signal panel and drop zones with HTML5 drag and drop **plus tap-to-add
-  buttons** for touch screens. It returns the edited document; all validation, warnings, descriptions and saving
-  stay in Python, using `validate.py` and the existing save functions.
-- Icons with hover explanations, as elsewhere. Text strings collected in one place, ready for translation later.
-- Saving uses the accepted versioned storage (`analysis_configs`); nothing about versions, publication or sharing
-  changes.
+**Compatibility.**
+20. Every starter, example and stored test document without the new keys: identical content hash and identical
+    evaluation (golden).
+21. Live Trend/Stretch/Flow, the v2 overlap job and the live golden snapshot unchanged; certification results
+    identical after regeneration.
 
-## 7. Build order (proposed)
+## 7. The editor (Lattice UI)
+
+One small custom component, built like the existing chart component (`lw_chart.js` / `lw_chart.py`): signal panel,
+drop zones, HTML5 drag and drop plus tap-to-add. It returns the edited document; validation, warnings, descriptions
+and saving stay in Python. Icons with hover explanations; strings collected for later translation. Saving uses the
+existing versioned storage.
+
+## 8. Build order
 
 Each stage on its own branch with a report, CI green, merge only on approval.
 
-1. **Engine extensions** E1–E3, headless: validator, evaluation, decisive-line explanation, tests and fixtures for
-   every Yes/No/Unknown case in §2, including definite No with missing inputs.
-2. **Prism Run now**, admin-only first: a Lattice page with Set and asset pickers and the results table. Usable with
-   starter Groups and Sets made by an admin, so Drew can start before the editor exists.
-3. **Scheduled scans**: SQL, worker integration, alerts, digest section, results page; admin-only, then all users.
-4. **Editor**: the drag-and-drop component and Group/Set editors.
-5. **Strategy specification**: separate design note from Drew's rules, script and examples (unchanged plan,
-   including the swing-algorithm speed-up and re-certification for the strategy engine).
+1. **Engine extensions E1–E3**, headless, with the §6 fixtures.
+2. **Prism Run now**, admin-only: Set and asset pickers and the results table. Starters have no outcomes, so it is
+   first used with an admin-authored Set deciding on scores, condition states or outcomes of admin-made Groups.
+3. **Scheduled scans**: SQL, worker integration, alerts, digest section, results page; a plain form to choose a
+   saved Set, schedule and channels (no drag and drop needed). Admin-only, then all users.
+4. **Editor**: the drag-and-drop component and the Group and Set editors.
+5. **Strategies**: separate specification from Drew's rules, script and examples.
 
-This moves Prism ahead of the strategy work: it needs no trading logic and answers Drew's daily need (a shortlist
-from the Watchlist) soonest. *Review question G.*
+History (§5.4) is a separately approved research stage; its place relative to the editor is decided when its design
+is approved. E4 is specified with the stage that needs it.
 
-## 8. Not in scope
+## 9. Hold-out policy
 
-Strategies, ladders, positions, orders and fills; statistics or backtests on scan results; assets outside the
-Watchlist; Discord and Telegram; Set scores; any change to the dashboard, Trend/Stretch/Flow, existing alerts or
+The hold-out (`holdout-spec-v1`, data from 30 October 2024 onwards) protects **Angstrom's own research claims**: a
+signal, threshold or starter is only called "researched" with evidence from data that was not used to design it. It
+is not a permanent limit on what users can analyse.
+
+1. **During development (now):** untouched. No events, outcomes, statistics or tuning on it, in any stage of this
+   plan.
+2. **One certification:** when the research layer is ready, a single certification run on the hold-out, approved by
+   the owner, with its result recorded.
+3. **Release:** after that run, the hold-out period becomes ordinary history available to the whole system. The new
+   unseen data is everything after the release date; live operation is the forward test.
+4. **Users' own studies** may then use all available history, labelled as exploratory, with the fitting-the-past
+   guardrails (event counts, recorded tries, no best-setting search).
+
+Changing the hold-out itself, including the certification and release steps, needs its own design note and approval.
+Until then point 1 applies.
+
+## 10. Not in scope
+
+Strategies, ladders, positions, orders, fills; History implementation; statistics on scans; assets outside the
+Watchlist; Discord and Telegram; Set scores; E4; any change to the dashboard, Trend/Stretch/Flow, existing alerts or
 the Signal Matrix.
 
-## 9. Questions for review
+## 11. Review decisions (revision 1 → 2)
 
-- **A. Group outcome labels (E1)** as an optional, ordered `outcomes` list on top of the existing conditions, with
-  "Unknown stops evaluation". Recommended: yes.
-- **B. Set decision (E2)** as an optional three-valued rule, with standalone `condition` items allowed. This relaxes
-  "a Set has no rules" while keeping "no entry, exit or risk". Recommended: yes; it is what makes Prism possible.
-- **C. Field descriptions and range checks (E3)** as documentation on definitions, with no signal version change.
-  Recommended: yes.
-- **D. Scheduled runs use the point-in-time path** at cutoff T rather than the live path, so stored results are
-  reproducible and match "Check past dates". Recommended: yes (cost about 1 s per asset).
-- **E. Alert latch** released only by No, never by Unknown. Recommended: yes.
-- **F. Limits**: 5 active scans per user, Watchlist only, 4-minute budget per worker tick, 90-day run history.
-  Recommended: yes, revisit with usage.
-- **G. Build order** with Prism before the editor and before strategies. Recommended: yes.
-- **H. History (§5.3)**: an event study of when a Set turned Yes and what followed, under the research and
-  hold-out rules, with the fast path certified against replay. Recommended: yes, as its own stage after scheduled
-  scans; open on which forward measures to show first and on the minimum event count.
-- **I. Linking evaluations (§5.4)**: same-asset cases inside one Set; cross-asset cases by fixed-subject Set lines
-  (stateless); sequences over time in the strategy layer as alert-only strategies; no free-form "run another
-  evaluation" action. Recommended: yes.
+ChatGPT and Grok reviewed revision 1. Decisions taken with the owner:
+
+| Question | Decision | Change in revision 2 |
+|---|---|---|
+| A. Outcomes | approved with changes | stable ids; reserved `unknown` and `vetoed`; status gate and qualified outcomes (§4.1) |
+| B. Set decision | approved with changes | exact predicates and semantics; decisive lines as a sufficient reason; no decision = not scannable (§4.2) |
+| C. Fields and ranges | approved | enforced in the backend validator; field paths checked (§4.3) |
+| D. Point-in-time scans | approved with changes | run records with provenance are the record; no promise of exact re-runs; T = candle close; library share calendar (§5.2) |
+| E. Latch | approved | first Yes alerts once; failed runs do not reset; Set-version changes (§5.2) |
+| F. Limits | approved with changes | Prism after existing worker work; atomic claims; idempotent notifications; failure isolation (§5.2) |
+| G. Build order | approved | History removed from the sequence; plain scan form in stage 3 (§8) |
+| H. History | concept approved | separate research design; stored results displayed, never computed in a page (§5.4); hold-out policy (§9) |
+| I. Linking | approved | fixed subjects named E4, not in stage 1 (§4.4, §5.5) |
+
+Both reviews conditionally approve stage 1 once revision 2 contains §4.1, §4.2, §4.5 and §6.
