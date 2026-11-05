@@ -16,7 +16,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 RECORD = Path(__file__).resolve().parent / "certification.json"
-SUITE_VERSION = 1
+SUITE_VERSION = 2   # 2: slice equivalence within a stated tolerance (point_in_time.md §13)
 
 # Everything a replayed signal's result depends on. Changing any of these requires re-certification.
 CODE_FILES = ("signal_library/core.py", "signal_library/context.py", "signal_library/engine.py",

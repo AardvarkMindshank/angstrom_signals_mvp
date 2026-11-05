@@ -70,6 +70,24 @@ def snapshot() -> dict:
     return out
 
 
+TOLERANCE = 1e-9   # scores: the same tolerance as the Trend/Stretch/Flow parity check (CPU rounding differs)
+
+
+def differences(now, recorded, path="") -> list[str]:
+    """Exact comparison except numbers, which may differ by TOLERANCE (they come from floating-point indicators)."""
+    if isinstance(now, bool) or isinstance(recorded, bool) or not all(isinstance(x, (int, float)) for x in (now, recorded)):
+        if isinstance(now, dict) and isinstance(recorded, dict):
+            out = [f"{path}.{k}: missing on one side" for k in sorted(set(now) ^ set(recorded))]
+            for k in sorted(set(now) & set(recorded)):
+                out += differences(now[k], recorded[k], f"{path}.{k}")
+            return out
+        if isinstance(now, list) and isinstance(recorded, list) and len(now) == len(recorded):
+            return [d for i, (a, b) in enumerate(zip(now, recorded)) for d in differences(a, b, f"{path}[{i}]")]
+        same = type(now) is type(recorded) and now == recorded
+        return [] if same else [f"{path}: {now!r} vs {recorded!r}"]
+    return [] if abs(now - recorded) <= TOLERANCE else [f"{path}: {now} vs {recorded}"]
+
+
 if __name__ == "__main__":
     if "--write" in sys.argv:
         FIXTURE.write_text(json.dumps(snapshot(), indent=1, sort_keys=True) + "\n", encoding="utf-8")
