@@ -107,7 +107,7 @@ def test_angstrom_lattice_has_four_parts_and_draws_only_the_chosen_one():
     drawn = []
 
     class St:
-        def html(self, *a, **k):
+        def markdown(self, *a, **k):
             pass
 
         def caption(self, *a, **k):
