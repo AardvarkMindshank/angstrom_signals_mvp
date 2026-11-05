@@ -67,4 +67,5 @@ row cache key now uses the Groups' definitions reference, so cached rows refresh
 
 ## CI
 
-To be reported before merge approval.
+Run 42071415590 on commit 560db79: **tests, chart (including the new style checks in Streamlit), overlap and
+replay (including Trend/Stretch/Flow parity) all passed**. Results on the reports branch under `ci/v2/`.
