@@ -28,6 +28,16 @@ same thing they can open, copy and change in Lattice.
   was missed. The Streamlit check now also confirms the styles are applied, on first draw and after a redraw, in
   both editors.
 
+## Navigation: Angstrom Lattice
+
+- The dashboard section is now **Angstrom Lattice** (lattice icon on the section, logo and subtitle inside), as
+  agreed in the naming discussion.
+- Four parts across the top, each with an icon: **Signal Groups**, **Signal Sets**, **Prism Scan**, **Strategies
+  (soon)**. The bar's hover note explains all four; a line under it says what the chosen part is for.
+- Only the chosen part is drawn, so opening the section stays light. Strategies shows what is coming.
+- The old "Group editor / Set editor" switch inside Lattice is gone; Prism keeps its Run now / Scheduled scans
+  switch.
+
 ## What did not change
 
 - **The numbers.** The starter Groups were built to reproduce the old calculation, and CI already checks it on real
@@ -52,7 +62,7 @@ row cache key now uses the Groups' definitions reference, so cached rows refresh
 - `tests/test_group_readings.py`: identical numbers, parts, coverage, bands, views and context at many cutoffs; the
   band edges (+0.5, +0.2, -0.2, -0.5) match the old wording; the dashboard Groups validate and their labels fit;
   no-data messages unchanged; the app, the worker, the matrix and the row builder no longer call the old scorer.
-- Full local suite: **792 passed, 15 skipped, 0 failed**.
+- Full local suite: **793 passed, 15 skipped, 0 failed**.
 
 ## CI
 

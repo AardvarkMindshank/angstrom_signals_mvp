@@ -19,8 +19,8 @@ START_NEW = "new"
 
 
 def render(st, supabase, user_id: str = "") -> None:
-    st.caption("🗂️ **Lattice · Set editor** (preview). Combine saved Groups and single signals, then say when "
-               "the Set answers Yes. A Group goes in exactly as saved; save a Group with labels in the Group editor "
+    st.caption("Combine saved Groups and single signals, then say when the Set answers Yes. A Group goes in exactly "
+               "as saved; save a Group with labels in Signal Groups "
                "first to test its label here.")
     import signal_groups_inspector as gi
 

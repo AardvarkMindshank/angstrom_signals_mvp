@@ -130,6 +130,7 @@ def _app():
             return []
 
     st.session_state.setdefault("lattice_open", True)
+    st.session_state.setdefault("lattice_section", "prism")
     lattice_panel.render(st, Empty(), [("crypto", "bitcoin", "Bitcoin"), ("equity", "AAPL", "Apple (AAPL)")], "test")
 
 

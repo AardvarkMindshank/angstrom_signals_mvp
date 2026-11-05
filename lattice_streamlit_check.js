@@ -54,7 +54,7 @@ const { chromium } = require("playwright");
           (body.match(/Can't save[^\n]*/) || [""])[0]);
     await page.screenshot({ path: path.join(dir, "lattice_in_streamlit.png"), fullPage: true });
 
-    await page.click("text=🗂️ Set editor");
+    await page.click("text=Signal Sets");
     await page.waitForSelector(".lat >> text=Decision: when does this Set say Yes?", { timeout: 60000 });
     await settle();
     await page.click('.lat button[aria-label="Add RSI (14) to the Set"]');

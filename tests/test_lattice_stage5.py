@@ -183,7 +183,7 @@ def test_the_panel_is_for_every_account_and_loads_nothing_until_switched_on():
     from pathlib import Path
 
     app = Path(__file__).resolve().parent.parent.joinpath("app.py").read_text()
-    panel = app.index('st.expander("🧩 Lattice · 🔎 Prism (preview)"')
+    panel = app.index('st.expander("Angstrom Lattice", icon=":material/hub:"')
     admin = app.index('if str((load_profile() or {}).get("role") or "") == "admin":\n    admin_panel()')
     assert panel < admin                                            # outside the admin-only block
     inspector = Path(__file__).resolve().parent.parent.joinpath("signal_inspector.py").read_text()
@@ -193,6 +193,9 @@ def test_the_panel_is_for_every_account_and_loads_nothing_until_switched_on():
 
     class St:
         def caption(self, *a, **k):
+            pass
+
+        def html(self, *a, **k):
             pass
 
         def toggle(self, *a, **k):

@@ -93,3 +93,33 @@ def test_the_app_alerts_matrix_and_evidence_read_the_groups():
         assert not re.search(r"signals_v2\.score\(|v2\.score\(", text), name
     assert "group_readings" in (ROOT / "signals_view.py").read_text()
     assert "group_readings" in (ROOT / "run_alerts.py").read_text()
+
+
+def test_angstrom_lattice_has_four_parts_and_draws_only_the_chosen_one():
+    import lattice_panel as lp
+
+    assert lp.TITLE == "Angstrom Lattice"
+    assert [lp.SECTIONS[k][1] for k in lp.SECTIONS] == ["Signal Groups", "Signal Sets", "Prism Scan", "Strategies"]
+    assert all(lp.SECTIONS[k][0].startswith(":material/") for k in lp.SECTIONS)
+    assert lp.label("strategies").endswith("(soon)")
+    app = (ROOT / "app.py").read_text()
+    assert 'st.expander("Angstrom Lattice", icon=":material/hub:"' in app
+    drawn = []
+
+    class St:
+        def html(self, *a, **k):
+            pass
+
+        def caption(self, *a, **k):
+            pass
+
+        def toggle(self, *a, **k):
+            return True
+
+        def segmented_control(self, *a, **k):
+            return "strategies"
+
+        def info(self, text, *a, **k):
+            drawn.append(text)
+    lp.render(St(), None, [], "u")
+    assert len(drawn) == 1 and "coming later" in drawn[0]

@@ -12956,8 +12956,8 @@ render_dashboard(
 if _POPOUT_VIEW:
     st.stop()
 _record_run("whole page", _RUN_STARTED)
-# Lattice and Prism (preview), for every signed-in account. Nothing loads until the panel is switched on.
-with st.expander("🧩 Lattice · 🔎 Prism (preview)", expanded=False, key="lattice_panel"):
+# Angstrom Lattice (preview), for every signed-in account. Nothing loads until the section is switched on.
+with st.expander("Angstrom Lattice", icon=":material/hub:", expanded=False, key="lattice_panel"):
     import lattice_panel
 
     lattice_panel.render(
