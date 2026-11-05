@@ -484,6 +484,17 @@ def run_background_checks() -> None:
         if digest_state in ("sent", "error", "start"):
             print(f"Daily digest for user {user_id}: {digest_state}")
 
+    # Prism scheduled scans (docs/design/lattice_prism.md §5.2): after all existing work, in the time left.
+    try:
+        import prism_scans
+
+        prism_summary = prism_scans.run_from_worker(
+            supabase, all_user_prefs, alerts_map, send_email=send_alert_email,
+            email_of=lambda uid: user_email(supabase, uid))
+        print(f"Prism scans: {prism_summary}")
+    except Exception as exc:
+        print(f"Prism scans skipped: {str(exc)[:200]}")
+
     print("Background alert check finished.")
 
 

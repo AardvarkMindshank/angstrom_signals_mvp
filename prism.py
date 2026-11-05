@@ -197,7 +197,7 @@ def run_now(doc: dict, assets: list[tuple[str, str, str]], *, live_context, mark
             except Exception as exc:   # a refused reconstruction is reported for that asset only
                 result = {"status": "unsupported", "reason": str(exc)[:200]}
             path = f"Reconstruction as of {pd.Timestamp(as_of).strftime('%d %b %Y %H:%M')} UTC"
-        rows.append(row(name, result, path))
+        rows.append({**row(name, result, path), "kind": kind, "id": asset_id})
         if progress:
             progress(n + 1, len(assets))
     return rows

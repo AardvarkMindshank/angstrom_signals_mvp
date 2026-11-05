@@ -313,7 +313,10 @@ def _watchlist_section(results, config) -> tuple[str, str]:
     return "".join(html_parts), "\n".join(plain)
 
 
-def render_digest(notes, results, config, app_url: str, markets=None) -> tuple[str, str, str]:
+PRISM_TYPE = "prism"   # prism_scans.ALERT_TYPE: a scheduled Prism scan said Yes
+
+
+def render_digest(notes, results, config, app_url: str, markets=None, prism=None) -> tuple[str, str, str]:
     """(subject, html, plain text). The alerts that crossed come first; then, if switched on,
     a colour-coded summary of the watchlist. markets: current market sentiment rows."""
     zone = safe_zone(config.get("digest_tz"))
@@ -392,6 +395,22 @@ def render_digest(notes, results, config, app_url: str, markets=None) -> tuple[s
             "No reading crossed your alert lines since the last summary.</p>"
         )
         plain += ["No reading crossed your alert lines since the last summary.", ""]
+
+    if prism:
+        # Prism scans that said Yes since the last summary (only when there are some: otherwise nothing changes).
+        html_parts.append(section_title(f"Prism scans ({len(prism)})"))
+        plain.append(f"Prism scans ({len(prism)})")
+        for note in sorted(prism, key=lambda n: str(n.get("created_at") or "")):
+            name = " ".join(str(note.get("asset_name") or "Asset").split())
+            text = " ".join(str(note.get("message") or "").split())
+            when = _local_time(note, zone)
+            detail = html.escape(text) + (f" · {html.escape(when)}" if when else "")
+            logo = logo_for_symbol.get(latch_symbol(note.get("asset_symbol"))) or logo_for_name.get(name, "")
+            html_parts.append(list_row(asset_logo(logo) + html.escape(name), detail, "up"))
+            plain.append(f"- {name}: {text}" + (f" ({when})" if when else ""))
+        plain.append("")
+        if not total:
+            subject = f"Angstrom daily summary: {len(prism)} Prism match{'' if len(prism) == 1 else 'es'}"
 
     if with_watchlist:
         section_html, section_plain = _watchlist_section(results, config)
@@ -472,7 +491,23 @@ def send_due_digest(
         )
         return "error"
 
-    if not notes and not (watchlist_on(config) and results):
+    prism = []
+    try:
+        prism = (
+            supabase.table("user_notifications")
+            .select("id, asset_symbol, asset_name, message, alert_type, created_at")
+            .eq("user_id", user_id)
+            .eq("alert_type", PRISM_TYPE)
+            .is_("digested_at", "null")
+            .gte("created_at", since)
+            .execute()
+            .data
+            or []
+        )
+    except Exception as exc:
+        print(f"Prism notes skipped in the digest for {user_id}: {str(exc)[:120]}")
+
+    if not notes and not prism and not (watchlist_on(config) and results):
         # A quiet day. Record it so a crossing at 3pm waits for tomorrow's digest.
         try:
             _stamp(supabase, user_id, now)
@@ -480,7 +515,7 @@ def send_due_digest(
             print(f"Digest day could not be recorded for {user_id}: {exc}")
         return "quiet"
 
-    subject, page, plain = render_digest(notes, results, config, app_url, markets=markets)
+    subject, page, plain = render_digest(notes, results, config, app_url, markets=markets, prism=prism)
     try:
         sent = bool(send_email(notify_email, subject, page, plain))
     except Exception as exc:
@@ -489,11 +524,11 @@ def send_due_digest(
     if not sent:
         return "error"
     try:
-        if notes:
+        if notes or prism:
             (
                 supabase.table("user_notifications")
                 .update({"digested_at": now.isoformat()})
-                .in_("id", [note["id"] for note in notes])
+                .in_("id", [note["id"] for note in notes + prism])
                 .execute()
             )
         _stamp(supabase, user_id, now)
