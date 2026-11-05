@@ -385,3 +385,19 @@ partially evaluable, with the reason "source data present, but no confirmed read
 is not in the run has a source start but no confirmed start, so it is never counted as replayable. Inside a
 replayable range an individual date can still lack a reading (for example a weekly timeframe early in a run); the
 completeness of a replay at that date reports it.
+
+## 13. Slice equivalence within a stated tolerance (5 November 2026, approved by the owner)
+
+The certified slicing shortcut and the exact path compute the same numbers by different routes. On different CI
+machines they differed in about the 16th significant digit (for example 0.7347059897980095 vs 0.7347059898057529),
+which made the committed certification record match one kind of machine and fail on the other.
+
+- **Slice equivalence** now treats numbers as equal when |a − b| ≤ 1e-9 × max(1, |a|, |b|), the tolerance already
+  used for the Trend/Stretch/Flow parity check. Everything that is not a number (statuses, labels, keys, list
+  lengths, timestamps) must still match exactly.
+- The **reference, poisoning, cache and timestamp checks stay exact**: they compare the same computation and are
+  what detects leaks.
+- Slice failures are recorded as the field and the size of the gap ("differs by 1.0e-04"), never as raw float
+  digits, so the compared record is the same on every machine.
+- Certification suite version 2. A shortcut certified under it may differ from the exact path by at most the
+  tolerance, far below anything displayed (scores are shown to whole points).

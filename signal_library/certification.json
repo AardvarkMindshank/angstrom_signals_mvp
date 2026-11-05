@@ -52,9 +52,9 @@
   }
  ],
  "generated_by": {
-  "git_commit": "ac97aaaf2f4dd870be202d3152949d17fcc2176a",
+  "git_commit": "daf053be75c6c4b2baa06f3d76393a10eb13b7a6",
   "note": "administrative; not compared",
-  "run_id": "41995436515"
+  "run_id": "42012959274"
  },
  "signals": {
   "bollinger.position@1": {
@@ -78,7 +78,7 @@
      "ok": 113
     },
     "slice_equivalent": false,
-    "slice_reason": "synthetic-crypto-s11 T=2024-02-04T16:30:00+00:00: .value.standard_score: 0.7347059899067006 vs 0.7347059898050837"
+    "slice_reason": "synthetic-crypto-s11 T=2023-09-30T10:45:00+00:00: .value.lower: differs by 1.0e-06 (beyond the 1e-09 tolerance)"
    },
    "1D": {
     "algorithm": "certified",
@@ -103,8 +103,8 @@
     "result_statuses": {
      "ok": 342
     },
-    "slice_equivalent": false,
-    "slice_reason": "dev-BTC-USD T=2022-06-28T00:00:00+00:00: .value.standard_score: -0.29304365353360995 vs -0.2930436535336113"
+    "slice_equivalent": true,
+    "slice_reason": null
    },
    "1W": {
     "algorithm": "certified",
@@ -152,7 +152,7 @@
      "ok": 113
     },
     "slice_equivalent": false,
-    "slice_reason": "synthetic-crypto-s11 T=2024-02-04T17:00:00+00:00: .value.standard_score: 0.6716601608648824 vs 0.6716601608648164"
+    "slice_reason": "synthetic-crypto-s11 T=2023-09-30T11:00:00+00:00: .value.standard_score: differs by 5.9e-09 (beyond the 1e-09 tolerance)"
    },
    "4h": {
     "algorithm": "certified",
@@ -173,8 +173,8 @@
     "result_statuses": {
      "ok": 112
     },
-    "slice_equivalent": false,
-    "slice_reason": "synthetic-crypto-s11 T=2024-06-18T08:00:00+00:00: .value.standard_score: 0.8054676260100703 vs 0.8054676260100729"
+    "slice_equivalent": true,
+    "slice_reason": null
    }
   },
   "flows.btc_etf@1": {
@@ -510,8 +510,8 @@
     "result_statuses": {
      "ok": 342
     },
-    "slice_equivalent": false,
-    "slice_reason": "dev-AAPL T=2020-06-06T12:00:00+00:00: .value.standard_score: 0.8812938185869703 vs 0.8812938185869704"
+    "slice_equivalent": true,
+    "slice_reason": null
    },
    "1W": {
     "algorithm": "certified",
@@ -537,8 +537,8 @@
      "insufficient_data": 46,
      "ok": 288
     },
-    "slice_equivalent": false,
-    "slice_reason": "synthetic-crypto-s11 T=2024-01-29T00:00:01+00:00: .value.standard_score: -0.1689131161684083 vs -0.1689131161684084"
+    "slice_equivalent": true,
+    "slice_reason": null
    },
    "1h": {
     "algorithm": "certified",
@@ -631,8 +631,8 @@
     "result_statuses": {
      "ok": 342
     },
-    "slice_equivalent": false,
-    "slice_reason": "dev-AAPL T=2020-06-06T12:00:00+00:00: .value.standard_score: -0.09698210308148068 vs -0.0969821030814807"
+    "slice_equivalent": true,
+    "slice_reason": null
    },
    "1W": {
     "algorithm": "certified",
@@ -780,7 +780,7 @@
      "ok": 327
     },
     "slice_equivalent": false,
-    "slice_reason": "synthetic-crypto-s11 T=2023-10-02T00:00:00+00:00: .available_at: 2023-10-02T00:00:00+00:00 vs None"
+    "slice_reason": "synthetic-crypto-s11 T=2023-10-02T00:00:00+00:00: .available_at: different kinds of value"
    },
    "1h": {
     "algorithm": "certified",
@@ -1117,7 +1117,7 @@
      "ok": 113
     },
     "slice_equivalent": false,
-    "slice_reason": "synthetic-crypto-s11 T=2024-02-04T16:30:00+00:00: .value.obv: 147799.641284 vs 103652.64973"
+    "slice_reason": "synthetic-crypto-s11 T=2024-02-04T16:30:00+00:00: .value.obv: differs by 4.4e+04 (beyond the 1e-09 tolerance)"
    },
    "1D": {
     "algorithm": "certified",
@@ -1143,7 +1143,7 @@
      "ok": 342
     },
     "slice_equivalent": false,
-    "slice_reason": "dev-BTC-USD T=2022-06-28T00:00:00+00:00: .value.obv: 1686400486036.0 vs 510955557787.0"
+    "slice_reason": "dev-BTC-USD T=2022-06-28T00:00:00+00:00: .value.obv: differs by 1.2e+12 (beyond the 1e-09 tolerance)"
    },
    "1W": {
     "algorithm": "certified",
@@ -1191,7 +1191,7 @@
      "ok": 113
     },
     "slice_equivalent": false,
-    "slice_reason": "synthetic-crypto-s11 T=2024-02-04T17:00:00+00:00: .value.obv: 369253.168341 vs 750237.999617"
+    "slice_reason": "synthetic-crypto-s11 T=2024-02-04T17:00:00+00:00: .value.obv: differs by 3.8e+05 (beyond the 1e-09 tolerance)"
    },
    "4h": {
     "algorithm": "certified",
@@ -1213,7 +1213,7 @@
      "ok": 112
     },
     "slice_equivalent": false,
-    "slice_reason": "synthetic-crypto-s11 T=2024-06-18T08:00:00+00:00: .value.obv: 853083.665237 vs 328620.328287"
+    "slice_reason": "synthetic-crypto-s11 T=2024-06-18T08:00:00+00:00: .value.obv: differs by 5.2e+05 (beyond the 1e-09 tolerance)"
    }
   },
   "positioning.liquidation_levels@1": {
@@ -1539,8 +1539,8 @@
     "result_statuses": {
      "ok": 342
     },
-    "slice_equivalent": false,
-    "slice_reason": "dev-AAPL T=2024-09-23T20:00:00+00:00: .value.standard_score: 0.20193662997585282 vs 0.20193662997585235"
+    "slice_equivalent": true,
+    "slice_reason": null
    },
    "1W": {
     "algorithm": "certified",
@@ -2748,5 +2748,5 @@
    }
   }
  },
- "suite_version": 1
+ "suite_version": 2
 }

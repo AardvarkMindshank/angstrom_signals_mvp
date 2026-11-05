@@ -452,6 +452,49 @@ def _first_difference(a: str, b: str) -> str:
     return walk("", x, y) or "differs"
 
 
+# Slice equivalence (docs/design/point_in_time.md §13): the sliced shortcut and the exact path compute the same
+# numbers by different routes, so they may differ in the last binary digits, and differently on different CPUs.
+# Numbers are equal when |a - b| <= SLICE_TOLERANCE * max(1, |a|, |b|); everything else must match exactly. The
+# reference, poisoning, cache and timestamp checks stay exact.
+SLICE_TOLERANCE = 1e-9
+
+
+def _is_number(x) -> bool:
+    return isinstance(x, (int, float)) and not isinstance(x, bool)
+
+
+def _slice_difference(a: str, b: str, tolerance: float = SLICE_TOLERANCE) -> str:
+    """"" when equal within the tolerance; otherwise the first difference, without raw float digits."""
+    x, y = json.loads(a), json.loads(b)
+
+    def walk(p, u, v):
+        if _is_number(u) and _is_number(v):
+            gap = abs(u - v)
+            if gap <= tolerance * max(1.0, abs(u), abs(v)):
+                return ""
+            return f"{p}: differs by {gap:.1e} (beyond the {tolerance:.0e} tolerance)"
+        if type(u) is not type(v):
+            return f"{p}: different kinds of value"
+        if isinstance(u, dict):
+            for k in sorted(set(u) | set(v)):
+                if k not in u or k not in v:
+                    return f"{p}.{k}: missing on one side"
+                d = walk(f"{p}.{k}", u[k], v[k])
+                if d:
+                    return d
+            return ""
+        if isinstance(u, list):
+            if len(u) != len(v):
+                return f"{p}: {len(u)} vs {len(v)} items"
+            for i, (s, w) in enumerate(zip(u, v)):
+                d = walk(f"{p}[{i}]", s, w)
+                if d:
+                    return d
+            return ""
+        return "" if u == v else f"{p}: {str(u)[:60]} vs {str(v)[:60]}"
+    return walk("", x, y)
+
+
 @dataclass
 class Tally:
     cutoffs: int = 0
@@ -611,9 +654,9 @@ def certify_dataset(dataset: Dataset, timeframe: str, *, cutoffs: int, pool, tal
                                           + _first_difference(mine, canonical(res[key])))
             if sliced is not None:
                 tally.checks["slice"] += 1
-                if canonical(sliced[key]) != ref_out[key]:
-                    tally.slice_failures.append(f"{dataset.name} T={t.isoformat()}: "
-                                                + _first_difference(canonical(sliced[key]), ref_out[key]))
+                gap = _slice_difference(canonical(sliced[key]), ref_out[key])
+                if gap:
+                    tally.slice_failures.append(f"{dataset.name} T={t.isoformat()}: {gap}")
     log(f"  {dataset.name} {timeframe}: {len(times)} cutoffs, {len(refs)} signals")
 
 
