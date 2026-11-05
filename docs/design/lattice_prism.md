@@ -197,6 +197,31 @@ with its reason and a link to the asset. **Check past dates** replays the scan o
 
 *Review questions D–F.*
 
+### 5.3 History: when would it have fired, and what followed? (proposed for discussion)
+
+A single past date is mainly a check that a reconstruction is faithful. The practical question is: **across all the
+available history, when did this Set's answer turn Yes, and what did the price do afterwards?** This is an event
+study, not a strategy: no positions, sizing, entries or exits.
+
+- **Events:** every date the answer turned Yes (after No or Unknown), per asset. Unknown periods are reported, not
+  filled.
+- **What followed:** forward returns after each event (for example 1, 5 and 20 candles), compared with the same
+  measure on all dates for that asset (the baseline), with the number of events, their spread and the share
+  positive.
+- **Research rules apply:** statistics use `RESEARCH` mode on the frozen data before 30 October 2024 only; the
+  protected hold-out stays untouched until a separate certification. Sets whose members have no history in that
+  period (sentiment, derivatives) cannot be studied, and say so.
+- **Guardrails against fitting the past:** minimum event counts with a warning below them; overlapping events
+  counted once per window; every Set version tested is recorded so the number of tries is visible; no "best
+  setting" search.
+- **Speed:** step-by-step replay costs about 1 s per date per asset, which is hours for six years of a Watchlist.
+  History needs the planned fast path: each signal's full history computed in one causal pass, certified equal to
+  the step-by-step replay at sampled cutoffs. This brings the planned speed-up forward from the strategy work.
+- **Place in the order:** after scheduled scans and before strategies; strategies later reuse the same fast path
+  and event engine.
+
+*Review question H.*
+
 ## 6. The editor (Lattice UI)
 
 - Streamlit cannot drag and drop natively. Proposal: one small custom component, built like the existing chart
@@ -243,3 +268,6 @@ the Signal Matrix.
 - **F. Limits**: 5 active scans per user, Watchlist only, 4-minute budget per worker tick, 90-day run history.
   Recommended: yes, revisit with usage.
 - **G. Build order** with Prism before the editor and before strategies. Recommended: yes.
+- **H. History (§5.3)**: an event study of when a Set turned Yes and what followed, under the research and
+  hold-out rules, with the fast path certified against replay. Recommended: yes, as its own stage after scheduled
+  scans; open on which forward measures to show first and on the minimum event count.
