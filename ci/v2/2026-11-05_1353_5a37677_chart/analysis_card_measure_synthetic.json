@@ -1,0 +1,107 @@
+{
+ "source": "synthetic candles (production sizes)",
+ "rss_at_start_MB": 15.0,
+ "rss_with_pandas_and_app_modules_MB": 238.4,
+ "rss_like_the_running_dashboard_MB": 296.8,
+ "dashboard_warm_up_MB": 58.4,
+ "rss_after_importing_card_MB": 299.5,
+ "import_cost_MB": 2.7,
+ "rss_after_all_steps_MB": 307.7,
+ "growth_over_all_steps_MB": 8.2,
+ "engine_cache_entries": 19,
+ "engine_cache_limit": 512,
+ "candle_cache_entries": 0,
+ "candle_cache_limit": 24,
+ "steps": [
+  {
+   "step": "first evaluation (cold: candles fetched)",
+   "asset": "crypto:bitcoin",
+   "seconds": 0.23,
+   "rss_before_MB": 300.0,
+   "rss_after_MB": 302.9,
+   "rss_change_MB": 2.9,
+   "python_peak_MB": null,
+   "kept_result_KB": 35.5,
+   "groups": {
+    "trend": "vetoed",
+    "reversal": "ok"
+   },
+   "unavailable": []
+  },
+  {
+   "step": "same asset again (cached)",
+   "asset": "crypto:bitcoin",
+   "seconds": 0.08,
+   "rss_before_MB": 302.9,
+   "rss_after_MB": 302.9,
+   "rss_change_MB": 0.0,
+   "python_peak_MB": null,
+   "kept_result_KB": 35.5,
+   "groups": {
+    "trend": "vetoed",
+    "reversal": "ok"
+   },
+   "unavailable": []
+  },
+  {
+   "step": "second coin (cold)",
+   "asset": "crypto:ethereum",
+   "seconds": 0.19,
+   "rss_before_MB": 302.9,
+   "rss_after_MB": 302.9,
+   "rss_change_MB": 0.0,
+   "python_peak_MB": null,
+   "kept_result_KB": 28.0,
+   "groups": {
+    "trend": "vetoed",
+    "reversal": "ok"
+   },
+   "unavailable": []
+  },
+  {
+   "step": "a share (cold)",
+   "asset": "equity:AAPL",
+   "seconds": 0.2,
+   "rss_before_MB": 302.9,
+   "rss_after_MB": 306.2,
+   "rss_change_MB": 3.3,
+   "python_peak_MB": null,
+   "kept_result_KB": 23.1,
+   "groups": {
+    "trend": "vetoed",
+    "reversal": "ok"
+   },
+   "unavailable": []
+  },
+  {
+   "step": "third coin (cold)",
+   "asset": "crypto:solana",
+   "seconds": 0.2,
+   "rss_before_MB": 306.2,
+   "rss_after_MB": 306.3,
+   "rss_change_MB": 0.1,
+   "python_peak_MB": null,
+   "kept_result_KB": 25.9,
+   "groups": {
+    "trend": "vetoed",
+    "reversal": "ok"
+   },
+   "unavailable": []
+  },
+  {
+   "step": "cold again with allocation tracing",
+   "asset": "crypto:bitcoin",
+   "seconds": 0.81,
+   "rss_before_MB": 306.3,
+   "rss_after_MB": 307.7,
+   "rss_change_MB": 1.4,
+   "python_peak_MB": 7.7,
+   "kept_result_KB": 35.5,
+   "groups": {
+    "trend": "vetoed",
+    "reversal": "ok"
+   },
+   "unavailable": []
+  }
+ ]
+}
