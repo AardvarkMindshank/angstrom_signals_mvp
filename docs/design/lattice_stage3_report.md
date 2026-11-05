@@ -42,4 +42,5 @@ Watchlist, History, the editor, strategies.
 
 ## CI
 
-To be reported before merge approval.
+Run 42039495267 on commit 5a37677 (pushed to `v2`): **all four jobs passed** (tests including the Scheduled scans
+view inside Streamlit, chart, overlap, replay with certification `--check`).
