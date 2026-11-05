@@ -20,6 +20,14 @@ same thing they can open, copy and change in Lattice.
   Group and how many parts had data. The explainer says the readings come from the starter Groups and points to
   Lattice.
 
+## Fix: the editors had no styling in the live app
+
+- Each time the Group or Set editor redrew, it cleared its whole box, which also removed the stylesheet Streamlit
+  places there, so the editors showed as plain unstyled text and boxes. They now remove only their own drawing.
+- The test harness supplied the styles separately, and the checks inside Streamlit only tested behaviour, so this
+  was missed. The Streamlit check now also confirms the styles are applied, on first draw and after a redraw, in
+  both editors.
+
 ## What did not change
 
 - **The numbers.** The starter Groups were built to reproduce the old calculation, and CI already checks it on real

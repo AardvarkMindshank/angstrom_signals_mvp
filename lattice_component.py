@@ -59,7 +59,7 @@ export default function(component) {
   let model = JSON.parse(JSON.stringify(state.model || {members: [], rules: [], otherwise: {id: "neutral", label: "Neutral"}}));
   let query = (window.__latQuery || "");
 
-  Array.from(parentElement.children).forEach((c) => c.remove());
+  Array.from(parentElement.children).filter((c) => c.classList && c.classList.contains("lat")).forEach((c) => c.remove());
   const root = el("div", "lat");
   parentElement.appendChild(root);
 
@@ -389,7 +389,7 @@ export default function(component) {
   let model = JSON.parse(JSON.stringify(state.model || {groups: [], standalone: [], lines: []}));
   let query = (window.__latSetQuery || "");
 
-  Array.from(parentElement.children).forEach((c) => c.remove());
+  Array.from(parentElement.children).filter((c) => c.classList && c.classList.contains("lat")).forEach((c) => c.remove());
   const root = el("div", "lat");
   parentElement.appendChild(root);
 
