@@ -222,6 +222,24 @@ study, not a strategy: no positions, sizing, entries or exits.
 
 *Review question H.*
 
+### 5.4 Can one result start another evaluation?
+
+Three different cases, handled differently:
+
+1. **Same asset, same moment** ("if A is Yes, also check B"): no chaining. Both go in one Set's ALL box; the answer
+   is identical. The evaluator may skip B when A is already No (an optimisation only, never changing the answer).
+2. **Another asset, same moment** ("only consider BTC if COIN is Yes"): a Set line may name a **fixed subject**,
+   for example "Trend on COIN is Bullish", while the rest of the Set runs on the scanned asset, as market context
+   already does for market-wide readings. Still stateless, so it is reproducible and testable on history.
+3. **Over time** ("COIN Yes, then within 3 days BTC Yes"): this needs memory and is the Waiting → Armed part of a
+   strategy. It belongs to the strategy layer as a strategy whose only action is an alert, with no positions, so
+   there is one state machine in the product, not two.
+
+Not proposed: a free-form action where one result runs another evaluation. Chains can loop, are hard to explain to
+the person receiving the alert, and are hard to test fairly on history.
+
+*Review question I.*
+
 ## 6. The editor (Lattice UI)
 
 - Streamlit cannot drag and drop natively. Proposal: one small custom component, built like the existing chart
@@ -271,3 +289,6 @@ the Signal Matrix.
 - **H. History (§5.3)**: an event study of when a Set turned Yes and what followed, under the research and
   hold-out rules, with the fast path certified against replay. Recommended: yes, as its own stage after scheduled
   scans; open on which forward measures to show first and on the minimum event count.
+- **I. Linking evaluations (§5.4)**: same-asset cases inside one Set; cross-asset cases by fixed-subject Set lines
+  (stateless); sequences over time in the strategy layer as alert-only strategies; no free-form "run another
+  evaluation" action. Recommended: yes.
