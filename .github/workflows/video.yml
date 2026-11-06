@@ -6,7 +6,7 @@ on:
     branches: [video]
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
   video:
     runs-on: ubuntu-latest
@@ -36,6 +36,9 @@ jobs:
           node video/record.js http://127.0.0.1:8601/ out/video
       - name: Build
         run: python video/build.py out/video
+      - name: Save to reports branch
+        if: always()
+        run: bash .github/scripts/save_to_reports.sh "videos/$(date -u +%Y-%m-%d_%H%M)_${GITHUB_SHA::7}" out/video/*.mp4 out/video/*.srt out/video/*.png out/video/timeline.json out/video/durations.json
       - uses: actions/upload-artifact@v5
         if: always()
         with:
