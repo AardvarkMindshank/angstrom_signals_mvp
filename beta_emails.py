@@ -11,8 +11,19 @@ def _first_name(name: str) -> str:
     return html.escape(words[0]) if words and words[0] else "there"
 
 
-def welcome_email(name: str, app_url: str) -> tuple[str, str, str]:
-    """(subject, html, plain text) for an applicant who got a seat."""
+def welcome_email(name: str, app_url: str, nda: bool | None = None) -> tuple[str, str, str]:
+    """(subject, html, plain text) for an applicant who got a seat. When the beta NDA is switched on, the email says
+    it is signed at the first sign-in."""
+    if nda is None:
+        try:
+            import nda as nda_module
+
+            current = nda_module.current()
+            nda = bool(current and current["enforce"])
+        except Exception:
+            nda = False
+    extra = (["When you first sign in, you will be asked to read and sign the beta non-disclosure agreement "
+              "(a minute, once). You will get a signed copy by email."] if nda else [])
     page, plain = render_email(
         "You are in",
         [
@@ -20,6 +31,10 @@ def welcome_email(name: str, app_url: str) -> tuple[str, str, str]:
             "Open the dashboard, then either choose <strong>Continue with Google</strong> with this email "
             "address, or open the <strong>Beta Access Accepted?</strong> tab and create a password for this "
             "email address.",
+            "It is free for accepted beta traders. Seats are limited, and we would love your honest "
+            "feedback: use the Feedback box in the sidebar. If we introduce paid tiers later, we will "
+            "give at least 30 days' notice.",
+        ][:2] + extra + [
             "It is free for accepted beta traders. Seats are limited, and we would love your honest "
             "feedback: use the Feedback box in the sidebar. If we introduce paid tiers later, we will "
             "give at least 30 days' notice.",

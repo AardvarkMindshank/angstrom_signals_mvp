@@ -327,7 +327,7 @@ export default function(component) {
       ".st-key-admin_feedback_table [data-baseweb='select'] > div,.st-key-admin_reports_table [data-baseweb='select'] > div{min-height:1.35rem !important;padding-top:0 !important;padding-bottom:0 !important;}",
       ".st-key-admin_beta_table{max-height:none !important;overflow:visible !important;}",
       ".st-key-admin_beta_table .bt-scroll{overflow-x:auto;}",
-      ".st-key-admin_beta_table .bt-row{display:grid;grid-template-columns:6.6rem 6rem minmax(9.5rem,1.4fr) 7.6rem 3.8rem 5rem 5.6rem minmax(5rem,1fr) minmax(10rem,2.2fr) 4.6rem;column-gap:.5rem;align-items:start;min-width:64rem;padding:.45rem .5rem;font-size:.78rem;line-height:1.35;}",
+      ".st-key-admin_beta_table .bt-row{display:grid;grid-template-columns:6.6rem 6rem minmax(9.5rem,1.4fr) 7.6rem 3.8rem 5rem 5.6rem minmax(5rem,1fr) minmax(10rem,2.2fr) 4.6rem 6.2rem;column-gap:.5rem;align-items:start;min-width:70rem;padding:.45rem .5rem;font-size:.78rem;line-height:1.35;}",
       ".st-key-admin_beta_table .bt-headrow{font-weight:700;font-size:.74rem;text-transform:uppercase;letter-spacing:.03em;opacity:.8;}",
       ".st-key-admin_beta_table .bt-cell{min-width:0;overflow-wrap:anywhere;word-break:break-word;}",
       ".st-key-admin_beta_table [data-testid='stHorizontalBlock']{border-bottom:0 !important;align-items:center !important;height:auto !important;min-height:2.8rem;}",
@@ -5198,6 +5198,11 @@ if st.session_state.user is None:
 user_id = st.session_state.user.id
 _use_account(user_id)
 
+# Beta NDA: until the current NDA is signed, the dashboard shows only the signing page (admins pass; nda.py).
+import nda as _nda
+
+_nda.gate(st, supabase, st.session_state.user)
+
 
 def _favourite_ids(raw) -> list[str]:
     """Account ids saved as favourites. Blank, your own id, and anything else are left out."""
@@ -8123,7 +8128,8 @@ def _show_beta() -> None:
         if not visible:
             st.caption("Nothing pending." if not show_decided else "No request matches that search.")
             return
-        titles = ["Applied", "Name", "Email", "Phone", "Markets", "Years", "Active", "Tools", "Why", "Status"]
+        titles = ["Applied", "Name", "Email", "Phone", "Markets", "Years", "Active", "Tools", "Why", "Status", "NDA"]
+        current_nda = _nda.current()
         status_label = {"pending": "Pending", "approved": "Approved", "declined": "Declined"}
         status_tone = {"pending": "#b45309", "approved": "#15803d", "declined": "#b91c1c"}
 
@@ -8163,6 +8169,7 @@ def _show_beta() -> None:
                     + beta_cell(tools, tools)
                     + beta_cell(why, why)
                     + beta_cell(status_label.get(status, status), tone=status_tone.get(status, ""))
+                    + beta_cell(*_nda.admin_cell(row, current_nda))
                     + "</div></div>",
                     unsafe_allow_html=True,
                 )
@@ -8176,6 +8183,35 @@ def _show_beta() -> None:
                         "✗", key=f"admin_beta_no_{request_id}", help="Decline, or take approval back",
                         on_click=_beta_review, args=(request_id, "declined", email, name), use_container_width=True,
                     )
+        signed = [r for r in clean_rows if r.get("nda_id")]
+        if current_nda is not None and st.button("👀 Preview the NDA page", key="admin_nda_preview",
+                                                 help="See and try the signing page testers get. Nothing is recorded."):
+            st.session_state["nda_preview"] = True
+            st.rerun()
+        if current_nda is not None and not current_nda["enforce"]:
+            st.caption(f"✍️ NDA version {current_nda['version']} is set up but switched off: testers are not asked to "
+                       "sign yet.")
+        elif current_nda is not None:
+            st.caption(f"✍️ NDA version {current_nda['version']}: {sum(1 for r in signed if r.get('nda_version') == current_nda['version'])} signed. "
+                       "Testers sign at their first sign-in after approval; a signed copy is emailed to them and to admins.")
+        if signed:
+            pick = st.selectbox(
+                "Signed NDA copy",
+                [int(r["nda_id"]) for r in signed],
+                format_func=lambda i: next(f"{r.get('name')} · {r.get('email')} · v{r.get('nda_version')} · {str(r.get('nda_signed_at'))[:10]}"
+                                           for r in signed if int(r["nda_id"]) == i),
+                key="admin_nda_pick",
+            )
+            if st.button("📄 Get the signed copy", key="admin_nda_get"):
+                try:
+                    copy = supabase.rpc("admin_nda_copy", {"p_id": pick}).execute().data or {}
+                    st.session_state["admin_nda_copy"] = (pick, base64.b64decode(copy.get("pdf") or ""),
+                                                          f"NDA-signed-{copy.get('email', 'tester')}-v{copy.get('nda_version')}.pdf")
+                except Exception as exc:
+                    st.warning(f"The copy could not be read: {str(exc)[:120]}")
+            held = st.session_state.get("admin_nda_copy")
+            if held and held[0] == pick and held[1]:
+                st.download_button("⬇️ Download", held[1], file_name=held[2], mime="application/pdf", key="admin_nda_dl")
 
 
 def _feedback_username(row: dict) -> str:
