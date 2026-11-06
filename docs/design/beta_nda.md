@@ -1,6 +1,6 @@
 # Beta NDA signing
 
-Status: built 6 November 2026 (branch `beta-nda`), switched off until the final NDA is ready.
+Status: built 6 November 2026 (branch `beta-nda`). The owner's draft (v2, with placeholders such as the legal entity name) is installed switched off; it goes on with the final version.
 
 ## Flow
 

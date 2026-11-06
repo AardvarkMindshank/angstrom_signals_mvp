@@ -17,6 +17,7 @@ create table if not exists public.nda_signatures (
     nda_version text not null check (char_length(nda_version) between 1 and 40),
     doc_sha256 text not null check (doc_sha256 ~ '^[0-9a-f]{64}$'),
     full_name text not null check (char_length(btrim(full_name)) between 2 and 120),
+    country text not null check (char_length(btrim(country)) between 2 and 80),
     drawing_png text not null check (char_length(drawing_png) between 100 and 400000),   -- base64 PNG
     signed_pdf text not null check (char_length(signed_pdf) <= 12000000),                 -- base64 PDF copy
     ip text check (char_length(ip) <= 100),
@@ -28,7 +29,7 @@ create table if not exists public.nda_signatures (
 
 alter table public.nda_signatures enable row level security;
 revoke all on public.nda_signatures from public, anon, authenticated;
-grant select (id, reference, nda_version, doc_sha256, full_name, signed_at) on public.nda_signatures to authenticated;
+grant select (id, reference, nda_version, doc_sha256, full_name, country, signed_at) on public.nda_signatures to authenticated;
 
 drop policy if exists "signers read their signatures" on public.nda_signatures;
 create policy "signers read their signatures" on public.nda_signatures
@@ -51,7 +52,7 @@ as $$
 $$;
 
 create or replace function public.nda_sign(p_reference uuid, p_version text, p_sha256 text, p_full_name text,
-                                           p_drawing text, p_signed_pdf text, p_ip text, p_user_agent text)
+                                           p_country text, p_drawing text, p_signed_pdf text, p_ip text, p_user_agent text)
 returns bigint
 language plpgsql
 security definer
@@ -67,9 +68,9 @@ begin
     if exists (select 1 from public.nda_signatures where user_id = me and nda_version = p_version) then
         raise exception 'already_signed';
     end if;
-    insert into public.nda_signatures (reference, user_id, email, nda_version, doc_sha256, full_name, drawing_png,
+    insert into public.nda_signatures (reference, user_id, email, nda_version, doc_sha256, full_name, country, drawing_png,
                                        signed_pdf, ip, user_agent)
-    values (p_reference, me, coalesce(my_email, ''), p_version, lower(p_sha256), btrim(p_full_name), p_drawing,
+    values (p_reference, me, coalesce(my_email, ''), p_version, lower(p_sha256), btrim(p_full_name), btrim(p_country), p_drawing,
             p_signed_pdf, left(p_ip, 100), left(p_user_agent, 400))
     returning id into new_id;
     return new_id;
@@ -143,8 +144,8 @@ end;
 $$;
 
 revoke all on function public.nda_status(text) from public, anon;
-revoke all on function public.nda_sign(uuid, text, text, text, text, text, text, text) from public, anon;
+revoke all on function public.nda_sign(uuid, text, text, text, text, text, text, text, text) from public, anon;
 revoke all on function public.admin_nda_copy(bigint) from public, anon;
 grant execute on function public.nda_status(text) to authenticated;
-grant execute on function public.nda_sign(uuid, text, text, text, text, text, text, text) to authenticated;
+grant execute on function public.nda_sign(uuid, text, text, text, text, text, text, text, text) to authenticated;
 grant execute on function public.admin_nda_copy(bigint) to authenticated;

@@ -52,12 +52,14 @@ def pdf_text(pdf: bytes) -> str:
         return ""
 
 
-def check_signature(full_name: str, agreed: bool, drawing_png: str | None) -> list[str]:
+def check_signature(full_name: str, agreed: bool, drawing_png: str | None, country: str = "--") -> list[str]:
     problems = []
     if not agreed:
         problems.append("Tick the box to confirm you have read and agree to the NDA.")
     if len(" ".join(str(full_name or "").split())) < 2 or len(str(full_name)) > 120:
         problems.append("Type your full legal name.")
+    if len(" ".join(str(country or "").split())) < 2 or len(str(country)) > 80:
+        problems.append("Type your country of residence.")
     try:
         raw = base64.b64decode(drawing_png or "", validate=True)
     except (ValueError, TypeError):
@@ -68,7 +70,7 @@ def check_signature(full_name: str, agreed: bool, drawing_png: str | None) -> li
 
 
 def signed_copy(nda: dict, *, reference: str, full_name: str, email: str, user_id: str, drawing_png: str,
-                signed_at: datetime, ip: str, user_agent: str) -> bytes:
+                signed_at: datetime, ip: str, user_agent: str, country: str = "") -> bytes:
     """The NDA with a signature page added at the end."""
     from pypdf import PdfReader, PdfWriter
     from reportlab.lib.pagesizes import A4
@@ -85,8 +87,9 @@ def signed_copy(nda: dict, *, reference: str, full_name: str, email: str, user_i
     c.setFont("Helvetica", 10.5)
     y -= 10 * mm
     lines = [
-        ("Signed by", " ".join(full_name.split())),
-        ("Account email", email),
+        ("Participant full name", " ".join(full_name.split())),
+        ("Registered email", email),
+        ("Country of residence", " ".join(str(country).split()) or "not given"),
         ("Signed at (UTC)", signed_at.astimezone(timezone.utc).strftime("%d %B %Y, %H:%M:%S")),
         ("NDA version", nda["version"]),
         ("Document fingerprint (SHA-256)", nda["sha256"]),
@@ -211,6 +214,7 @@ def _page(st, supabase, user, nda: dict, preview: bool = False) -> None:
     st.caption(f"Version {nda['version']} · document fingerprint {nda['sha256'][:16]}…")
     agreed = st.checkbox("I have read the NDA and agree to its terms.", key="nda_agree")
     full_name = st.text_input("Your full legal name", key="nda_name", max_chars=120)
+    country = st.text_input("Country of residence", key="nda_country", max_chars=80)
     st.markdown("**Your signature**: draw it with your finger or mouse.")
     drawn = nda_component.pad(key="nda_pad")
     sent = getattr(drawn, "png", None) if drawn is not None else None
@@ -218,7 +222,7 @@ def _page(st, supabase, user, nda: dict, preview: bool = False) -> None:
         st.session_state["nda_png"] = sent         # kept until signing, whatever else redraws the page
     drawing = st.session_state.get("nda_png")
     if st.button("✍️ Sign and continue", type="primary", key="nda_sign"):
-        problems = check_signature(full_name, agreed, drawing)
+        problems = check_signature(full_name, agreed, drawing, country)
         if problems:
             for p in problems:
                 st.error(p)
@@ -229,14 +233,15 @@ def _page(st, supabase, user, nda: dict, preview: bool = False) -> None:
         email = str(getattr(user, "email", "") or "")
         copy = signed_copy(nda, reference=reference, full_name=full_name, email=email,
                            user_id=str(getattr(user, "id", "")), drawing_png=drawing, signed_at=when, ip=ip,
-                           user_agent=agent)
+                           user_agent=agent, country=country)
         if preview:
             st.session_state["nda_sample"] = copy
             st.rerun()
         try:
             supabase.rpc("nda_sign", {
                 "p_reference": reference, "p_version": nda["version"], "p_sha256": nda["sha256"],
-                "p_full_name": " ".join(full_name.split()), "p_drawing": drawing,
+                "p_full_name": " ".join(full_name.split()), "p_country": " ".join(country.split()),
+                "p_drawing": drawing,
                 "p_signed_pdf": base64.b64encode(copy).decode(), "p_ip": ip, "p_user_agent": agent}).execute()
         except Exception as exc:
             if "already_signed" not in str(exc):
@@ -245,7 +250,7 @@ def _page(st, supabase, user, nda: dict, preview: bool = False) -> None:
         st.session_state[f"nda_ok_{nda['version']}"] = True
         st.session_state["nda_just_signed"] = copy
         st.rerun()
-    st.caption("Signing records your typed name, your drawn signature, the time, your IP address and browser, and "
+    st.caption("Signing records your typed name and country, your drawn signature, the time, your IP address and browser, and "
                "which version of the NDA you signed. You will get a signed copy by email.")
 
 

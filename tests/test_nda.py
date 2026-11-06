@@ -63,8 +63,8 @@ def test_the_current_nda_has_a_version_a_fingerprint_and_readable_text(nda_dir):
 
 def test_a_signature_needs_the_tick_a_name_and_a_drawing():
     assert nda.check_signature("Ann Lee", True, _png()) == []
-    problems = nda.check_signature(" ", False, "")
-    assert len(problems) == 3
+    problems = nda.check_signature(" ", False, "", "")
+    assert len(problems) == 4
     blank = base64.b64encode(b"\x89PNG" + b"0" * 10).decode()
     assert nda.check_signature("Ann Lee", True, blank) == ["Draw your signature in the box."]
 
@@ -75,11 +75,11 @@ def test_the_signed_copy_is_the_nda_plus_a_signature_page(nda_dir):
     doc = nda.current(nda_dir)
     copy = nda.signed_copy(doc, reference="ref-123", full_name="Ann  Lee", email="ann@example.com", user_id="u1",
                            drawing_png=_png(), signed_at=datetime(2026, 11, 6, 4, 5, tzinfo=timezone.utc),
-                           ip="203.0.113.9", user_agent="Mobile Safari")
+                           ip="203.0.113.9", user_agent="Mobile Safari", country="Thailand")
     pages = PdfReader(io.BytesIO(copy)).pages
     assert len(pages) == 3
     last = pages[-1].extract_text()
-    for words in ("Ann Lee", "ann@example.com", "06 November 2026, 04:05:00", doc["sha256"], "ref-123",
+    for words in ("Ann Lee", "Thailand", "ann@example.com", "06 November 2026, 04:05:00", doc["sha256"], "ref-123",
                   "203.0.113.9", "draft-1"):
         assert words in last, words
     assert pages[0].extract_text() == PdfReader(io.BytesIO(doc["pdf"])).pages[0].extract_text()
@@ -92,7 +92,7 @@ class Stop(Exception):
 class FakeSt:
     def __init__(self, button=False, **inputs):
         self.session_state = {}
-        self.inputs = {"nda_agree": True, "nda_name": "Ann Lee", **inputs}
+        self.inputs = {"nda_agree": True, "nda_name": "Ann Lee", "nda_country": "Thailand", **inputs}
         self.press = button
         self.shown = []
         self.context = type("C", (), {"headers": {"X-Forwarded-For": "203.0.113.9, 10.0.0.1", "User-Agent": "Safari"}})()
@@ -159,7 +159,7 @@ def test_the_gate(nda_dir, monkeypatch):
     with pytest.raises(Stop):
         nda.gate(st, db, USER)
     name, args = db.calls[-1]
-    assert name == "nda_sign" and args["p_version"] == "draft-1" and args["p_full_name"] == "Ann Lee"
+    assert name == "nda_sign" and args["p_version"] == "draft-1" and args["p_full_name"] == "Ann Lee" and args["p_country"] == "Thailand"
     assert args["p_ip"] == "203.0.113.9" and args["p_user_agent"] == "Safari" and len(args["p_sha256"]) == 64
     assert base64.b64decode(args["p_signed_pdf"]).startswith(b"%PDF") and st.session_state["nda_ok_draft-1"]
     nda.gate(FakeSt(), FakeDb(None), USER)                                    # tables not installed: not blocked
@@ -248,6 +248,12 @@ def test_the_sql_keeps_signatures_unchangeable_and_owner_or_admin_only():
     assert "grant update" not in sql and "grant delete" not in sql and "grant insert" not in sql
     assert "unique (user_id, nda_version)" in sql and "already_signed" in sql and "public.is_admin()" in sql
     assert "'nda_signed_at', s.signed_at" in sql and "'status', r.status" in sql
+
+
+def test_the_real_draft_is_set_up_switched_off_and_readable():
+    doc = nda.current()
+    assert doc is not None and doc["enforce"] is False and doc["version"] == "2026-11-draft-v2"
+    assert "NON-DISCLOSURE AGREEMENT" in doc["text"] and "Country of Residence" in doc["text"]
 
 
 def test_the_dashboard_asks_for_the_nda_right_after_sign_in():
