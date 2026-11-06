@@ -4666,6 +4666,7 @@ def _session_is_barred() -> bool:
 # Widget values stay in the browser session after logout. The next person to
 # sign in on that same page would otherwise see them and save them as their own.
 _ACCOUNT_STATE_KEYS = (
+    "explain_mode",
     "popouts_close_on_logout",
     "popouts_as_window",
     "popouts_fold_section",
@@ -6834,11 +6835,34 @@ save_account_settings({"section_layout": st.session_state.section_layout})
 if not _POPOUT_VIEW:
     remember_section_clicks()
 
+
+def _has_prism_scan() -> bool:
+    """For the getting-started checklist: does this account have a saved Prism Scan? Read once per session."""
+    if "_has_prism_scan" not in st.session_state:
+        try:
+            rows = supabase.table("prism_scans").select("id").limit(1).execute().data or []
+            st.session_state["_has_prism_scan"] = bool(rows)
+        except Exception:
+            st.session_state["_has_prism_scan"] = False
+    return bool(st.session_state["_has_prism_scan"])
+
+
+import onboarding as _onboarding
+
+if not _POPOUT_VIEW:
+    _onboarding.tap_explain(st, bool(st.session_state.get("explain_mode", (prefs.get("settings") or {}).get("explain_mode"))))
+    _onboarding.render(
+        st, prefs.get("settings") or {},
+        {"watchlist": len(prefs.get("crypto") or {}) + len(prefs.get("stock") or {}) >= 3,
+         "prism": _has_prism_scan()},
+        save_account_settings,
+    )
+
 with tracked_expander("📖 Help and guides", "help_guides", default=False):
     (
-        tab_start, tab_scores, tab_chart, tab_sentiment, tab_alerts, tab_social, tab_layout,
+        tab_start, tab_scores, tab_chart, tab_sentiment, tab_lattice, tab_alerts, tab_social, tab_layout,
     ) = st.tabs([
-        "🚀 Start here", "📈 Signals", "📊 Chart & tools", "📰 Sentiment",
+        "🚀 Start here", "📈 Signals", "📊 Chart & tools", "📰 Sentiment", "🧩 Lattice & Prism",
         "🔔 Alerts", "💬 Social", "🧭 Layout & settings",
     ])
 
@@ -6866,7 +6890,15 @@ because they measure different things and are never added together.
    Max pain, Leverage & liquidations and Signal matrix, all for that asset.
 4. **Notifications**, in the sidebar, holds your alerts and their settings.
 5. The arrow on the right edge opens **Social signals and chat**.
+6. **🧩 Angstrom Lattice** (preview), near the bottom, is your research workspace: build your own readings and
+   rules from the same signals, then scan your watchlist with them in **Prism**, now or on a schedule with alerts.
+   See the 🧩 Lattice & Prism tab.
 """)
+        if st.button("🚀 Show the getting-started checklist", key="onboarding_show_again",
+                     help="Brings back the checklist at the top of the page."):
+            _onboarding.show_again(prefs.get("settings") or {}, save_account_settings)
+            st.rerun()
+
         def _band_row(title, bands):
             st.markdown(title)
             for column, (name, span, color, background) in zip(st.columns(len(bands)), bands):
@@ -7013,6 +7045,58 @@ same line under the asset's name in the chart section.
         with st.expander("🔬 How a sentiment score is built (full method)"):
             st.markdown(SENTIMENT_METHOD)
 
+    with tab_lattice:
+        st.markdown("""
+**Angstrom Lattice** (preview) is the research workspace near the bottom of the dashboard. Open it and pick a
+part from the bar at the top; hover the bar for what each part does. Like the rest of the app, it describes
+conditions; nothing in it is a forecast or advice.
+
+**🧩 Signal Groups: your own reading.** Combine signals into one score from -100 to +100, then give it labels.
+- Start from a starter Group (📈 Trend, 🎯 Stretch, 🔊 Flow and others; the dashboard's three readings *are*
+  these starter Groups) or a new one. Drag signals in, or tap **+** on a phone or tablet.
+- Each signal is **Score** (counts towards the score), **Condition** (used only in the rules), **Levels**
+  (price levels for later strategies) or **Context** (shown alongside, changes nothing).
+- **Rules** give the labels, checked top to bottom: the first that matches wins (for example *Bullish* when the
+  score is at least +30). **Otherwise** is the label when none match; **Unknown** when a rule can't be checked
+  because a reading is missing.
+- **Confirmations and vetoes** (optional): a confirmation is reported as met or not met; a veto that fires turns
+  every label into *Vetoed*.
+- **Checks** say what blocks saving (⛔) and what is only a warning (⚠️). The description is written
+  automatically. Save as a new Group, or as a new version of yours; earlier versions stay as they were.
+
+**🗂️ Signal Sets: a Yes / No decision.** Combine saved Groups and single signals, then write the lines that must
+hold, for example *Trend is Bullish* and *RSI is below 70*.
+- **Answer:** Yes (every line holds), No (at least one fails, even if other data is missing) or Unknown (nothing
+  fails, but something needed is missing). Unknown is never turned into Yes or No.
+- Each line can read a **📌 fixed asset**, for example *Trend on COIN is Bullish* while the Set runs on each crypto
+  being scanned. Both are read at the same moment.
+- A Set needs a decision before Prism can scan it.
+
+**🔎 Prism Scan: scan your watchlist.** Your saved scans, each a Set plus its assets, schedule and alerts.
+- **Start a scan:** drag a saved Set onto the board, or tap **+**. It starts on your whole watchlist and runs
+  only when you press ▶.
+- **Assets:** drop single assets, or the groups that follow your watchlist (**Whole Watchlist**, **All crypto**,
+  **All equities**), onto a scan; remove one with ×.
+- **Each scan's row** shows the Yes / No / ? counts from its last scheduled run, a dot per recent run (green had a
+  Yes, orange all No, grey mostly Unknown, red ring failed) and when it runs next. Click the arrow, or **Expand
+  all**, for the details.
+- **▶ Run now** checks up to 40 assets on the latest finished candles (one run every 20 seconds). **⏪ Past
+  moment** rebuilds what was known at a date and time you choose, from today's data providers (a
+  reconstruction, not a record of what was shown then). **⏸ Pause**, **⧉ Duplicate**, and **✕ Delete** (press
+  twice).
+- **Runs:** only when you press ▶, or at each 4-hour, daily or weekly close, or at set times in your time zone.
+  At most **5 scheduled scans**; paused and Play-only scans don't count. Each run uses only finished candles.
+- **Alerts:** Instant (app and email), Daily digest, App only, or Off; for when an asset **turns Yes** (on by
+  default), **turns No**, or when a run **can't run** properly. An asset alerts once when it turns Yes and not
+  again until it has said No. **Snooze** one asset on one scan for 1, 3 or 7 days. Resuming a paused scan is
+  quiet: its first run records the answers without alerting.
+- **"vN available"** appears when you have saved a newer version of the scan's Set; tap it to switch. Until
+  then the scan keeps the version it was saved with.
+
+**🛣️ Strategies** (coming later): turn a Set's Yes into a plan with entries, exits and risk, including sequences
+such as *A, then B within N days*.
+""")
+
     with tab_alerts:
         st.markdown("""
 **Setting up** (Notifications → Configure Alert Rules)
@@ -7031,6 +7115,9 @@ same line under the asset's name in the chart section.
   watchlist with price, today's move, the Trend, Stretch and Flow readings and sentiment for your strongest
   and weakest Trends. With it on,
   the email comes every day; with it off, only on days with alerts.
+
+- 🔎 **Prism scan alerts** are set on each scan in **Angstrom Lattice → Prism Scan**: instant, in the daily
+  summary (its own *Prism scans* section), in the app only, or off. See the 🧩 Lattice & Prism tab.
 
 **No repeats on a wobble.** After an alert, the same one can only fire again once the score has moved 20 points
 back (for example back to +30 after a +50 alert) and then crosses again. This applies to every alert.
@@ -7077,8 +7164,15 @@ on the left and the chart and its tools on the right. Drag the line between the 
 - **Watchlists** add or remove assets; **Account** holds your name, picture and bio.
 - **Feedback** sends us an issue or an idea.
 
+**❓ Explain mode** (Settings → Help): while it is on, tapping or clicking anything with an explanation shows
+it instead of doing it. Without it, on a phone or tablet, a tap on an icon or reading shows what it means, and a
+long press explains a button without pressing it.
+
+**Angstrom Lattice** works on a phone too: tap **+** where a computer would drag. Changes inside it redraw
+only that section.
+
 **Saved on your account**: layout, open sections, chart choices, alert settings, the social
-panel, and the asset on the chart. They come back on any device.
+panel, the asset on the chart, and your Groups, Sets and Prism Scans. They come back on any device.
 
 **Keep me signed in** (at login) remembers you on this device for 30 days. Logging out forgets it.
 """)
@@ -7271,8 +7365,9 @@ with tracked_expander("⭐ Watchlists", "watchlists", sidebar=True):
                     st.rerun()
 
 def _signals_info_popover() -> None:
-    """An info button that explains the technical readings in plain words."""
-    with st.popover("ℹ️", help="How the technical signals work"):
+    """How the technical readings work, in plain words: a full-width fold-out, closed until opened (a pop-up was
+    cramped on phones)."""
+    with st.expander("ℹ️ How the technical signals work", expanded=False, key="signals_info"):
         st.markdown(signals_view.EXPLAINER)
 
 
@@ -7342,6 +7437,20 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
         "Show 1-day and 30-day changes",
         key="show_period_changes",
         persist_state="session",
+    )
+    st.divider()
+    st.markdown("**Help**")
+    if "explain_mode" not in st.session_state:
+        st.session_state.explain_mode = bool(settings.get("explain_mode", False))
+    explain_mode = st.toggle(
+        "❓ Explain mode",
+        key="explain_mode",
+        persist_state="session",
+        help=(
+            "When on, tapping or clicking an icon, reading or button shows what it means instead of doing it. "
+            "Switch off to use the app normally. Without it, a tap explains icons and readings, and a long press "
+            "explains buttons."
+        ),
     )
     st.divider()
     st.markdown("**UI pop-out options**")
@@ -7455,6 +7564,7 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
         "popouts_close_on_logout": bool(close_popouts_on_logout),
         "popouts_as_window": bool(popouts_as_window),
         "popouts_fold_section": bool(popouts_fold_section),
+        "explain_mode": bool(explain_mode),
         "trade_crypto": bool(trade_crypto),
         "trade_equities": bool(trade_equities),
         "colours": chosen_colours,

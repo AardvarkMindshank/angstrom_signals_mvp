@@ -112,6 +112,12 @@ jobs:
           python nda_pad_check.py --out out/nda_pad
           node nda_pad_check.js out/nda_pad || echo "NDA signature pad browser check" >> out/required_failures.txt
           cat out/nda_pad/nda_pad.md >> "$GITHUB_STEP_SUMMARY" || true
+      - name: Tap to explain in a browser (required)
+        if: always()
+        run: |
+          python onboarding_check.py --out out/onboarding
+          node onboarding_check.js out/onboarding || echo "tap to explain browser check" >> out/required_failures.txt
+          cat out/onboarding/onboarding.md >> "$GITHUB_STEP_SUMMARY" || true
       - name: Chart in a browser, live candles (optional, live Yahoo)
         if: always()
         run: |

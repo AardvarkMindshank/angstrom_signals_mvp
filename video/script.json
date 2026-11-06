@@ -1,0 +1,43 @@
+{
+ "title": "Your first Prism Scan",
+ "steps": [
+  {
+   "id": "intro",
+   "say": "This is Angstrom Lattice, the research workspace at the bottom of your dashboard. Prism Scan checks your watchlist with your own rules."
+  },
+  {
+   "id": "create",
+   "say": "On the left are your saved Sets. Tap plus, or drag one across, and it becomes a Prism Scan."
+  },
+  {
+   "id": "card",
+   "say": "Each scan is a card. The top row shows its answers and controls. Open it to see the details."
+  },
+  {
+   "id": "assets",
+   "say": "Choose what it scans. Groups like All crypto follow your watchlist as it changes."
+  },
+  {
+   "id": "play",
+   "say": "Press play to check every asset now, on the latest finished daily candles."
+  },
+  {
+   "id": "results",
+   "say": "Each asset gets Yes, No, or Unknown, with the line that decided it. Missing data is never guessed."
+  },
+  {
+   "id": "schedule",
+   "say": "To keep watching, give the scan a schedule. Here, every daily close."
+  },
+  {
+   "id": "alerts",
+   "say": "Then choose how you hear about it: | instantly, | in the daily summary, | or only in the app."
+  },
+  {
+   "id": "tidy",
+   "say": "Collapse all keeps a long list tidy. That's Prism: descriptive readings, not advice."
+  }
+ ],
+ "intro_say": "Angstrom Signals. Your first Prism Scan.",
+ "outro_say": "Find out more at angstrom signals dot com."
+}
