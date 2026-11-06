@@ -4666,6 +4666,7 @@ def _session_is_barred() -> bool:
 # Widget values stay in the browser session after logout. The next person to
 # sign in on that same page would otherwise see them and save them as their own.
 _ACCOUNT_STATE_KEYS = (
+    "explain_mode",
     "popouts_close_on_logout",
     "popouts_as_window",
     "popouts_fold_section",
@@ -6834,6 +6835,29 @@ save_account_settings({"section_layout": st.session_state.section_layout})
 if not _POPOUT_VIEW:
     remember_section_clicks()
 
+
+def _has_prism_scan() -> bool:
+    """For the getting-started checklist: does this account have a saved Prism Scan? Read once per session."""
+    if "_has_prism_scan" not in st.session_state:
+        try:
+            rows = supabase.table("prism_scans").select("id").limit(1).execute().data or []
+            st.session_state["_has_prism_scan"] = bool(rows)
+        except Exception:
+            st.session_state["_has_prism_scan"] = False
+    return bool(st.session_state["_has_prism_scan"])
+
+
+import onboarding as _onboarding
+
+if not _POPOUT_VIEW:
+    _onboarding.tap_explain(st, bool(st.session_state.get("explain_mode", (prefs.get("settings") or {}).get("explain_mode"))))
+    _onboarding.render(
+        st, prefs.get("settings") or {},
+        {"watchlist": len(prefs.get("crypto") or {}) + len(prefs.get("stock") or {}) >= 3,
+         "prism": _has_prism_scan()},
+        save_account_settings,
+    )
+
 with tracked_expander("📖 Help and guides", "help_guides", default=False):
     (
         tab_start, tab_scores, tab_chart, tab_sentiment, tab_lattice, tab_alerts, tab_social, tab_layout,
@@ -6870,6 +6894,11 @@ because they measure different things and are never added together.
    rules from the same signals, then scan your watchlist with them in **Prism**, now or on a schedule with alerts.
    See the 🧩 Lattice & Prism tab.
 """)
+        if st.button("🚀 Show the getting-started checklist", key="onboarding_show_again",
+                     help="Brings back the checklist at the top of the page."):
+            _onboarding.show_again(prefs.get("settings") or {}, save_account_settings)
+            st.rerun()
+
         def _band_row(title, bands):
             st.markdown(title)
             for column, (name, span, color, background) in zip(st.columns(len(bands)), bands):
@@ -7134,6 +7163,10 @@ on the left and the chart and its tools on the right. Drag the line between the 
 - **I trade cryptos / equities / both** hides the markets you don't trade.
 - **Watchlists** add or remove assets; **Account** holds your name, picture and bio.
 - **Feedback** sends us an issue or an idea.
+
+**❓ Explain mode** (Settings → Help): while it is on, tapping or clicking anything with an explanation shows
+it instead of doing it. Without it, on a phone or tablet, a tap on an icon or reading shows what it means, and a
+long press explains a button without pressing it.
 
 **Angstrom Lattice** works on a phone too: tap **+** where a computer would drag. Changes inside it redraw
 only that section.
@@ -7405,6 +7438,20 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
         persist_state="session",
     )
     st.divider()
+    st.markdown("**Help**")
+    if "explain_mode" not in st.session_state:
+        st.session_state.explain_mode = bool(settings.get("explain_mode", False))
+    explain_mode = st.toggle(
+        "❓ Explain mode",
+        key="explain_mode",
+        persist_state="session",
+        help=(
+            "When on, tapping or clicking an icon, reading or button shows what it means instead of doing it. "
+            "Switch off to use the app normally. Without it, a tap explains icons and readings, and a long press "
+            "explains buttons."
+        ),
+    )
+    st.divider()
     st.markdown("**UI pop-out options**")
     if "popouts_close_on_logout" not in st.session_state:
         st.session_state.popouts_close_on_logout = bool(settings.get("popouts_close_on_logout", True))
@@ -7516,6 +7563,7 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
         "popouts_close_on_logout": bool(close_popouts_on_logout),
         "popouts_as_window": bool(popouts_as_window),
         "popouts_fold_section": bool(popouts_fold_section),
+        "explain_mode": bool(explain_mode),
         "trade_crypto": bool(trade_crypto),
         "trade_equities": bool(trade_equities),
         "colours": chosen_colours,
