@@ -76,4 +76,6 @@ board shows its library and existing scans, and any change says the update is ne
 
 ## CI
 
-To be reported before merge.
+Run 42158040052 on commit 5879d59: **tests, chart (Prism board in a browser, 28 checks; the board and the
+editors inside Streamlit; editing shows at once), overlap and replay all passed**. Results on the reports branch under
+`ci/v2/`.
