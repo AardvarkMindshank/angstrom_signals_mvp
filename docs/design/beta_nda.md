@@ -36,3 +36,8 @@ Act). This is not legal advice: the owner will have a lawyer review the NDA and 
 
 `sql/2026-11-09_beta_nda.sql`, then the PDF and `legal/nda/current.json` (see legal/nda/README.md). New Python
 packages: `pypdf`, `reportlab` (requirements.txt).
+
+## CI
+
+Run 42164380961 on commit 4d2f4fd: tests, chart (including 8 signature pad checks in a browser), overlap and
+replay all passed.
