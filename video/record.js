@@ -12,11 +12,15 @@ const { chromium } = require("playwright");
   const durations = JSON.parse(fs.readFileSync(path.join(dir, "durations.json")));
   const browser = await chromium.launch();
   // Warm up first (fonts, first run), so the video starts on a ready page.
-  const warm = await browser.newPage({ viewport: { width: 1024, height: 576 } });
+  const warm = await browser.newPage({ viewport: { width: 1280, height: 720 } });
   await warm.goto(url); await warm.waitForSelector(".lat.prism", { timeout: 120000 }); await warm.close();
-  // A 1024 x 576 page drawn at 1.25x gives a sharp 1280 x 720 video with text 25% larger.
-  const ctx = await browser.newContext({ viewport: { width: 1024, height: 576 }, deviceScaleFactor: 1.25,
+  // A 1280 x 720 video of the page zoomed to 125%: the layout of a 1024-wide window, text 25% larger, sharp.
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1,
     recordVideo: { dir: path.join(dir, "raw"), size: { width: 1280, height: 720 } } });
+  await ctx.addInitScript(() => {
+    const zoom = () => { document.documentElement.style.zoom = "1.25"; };
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", zoom); else zoom();
+  });
   // A visible pointer, and a ripple on every click (recordings do not show the real pointer).
   await ctx.addInitScript(() => {
     const ready = () => {
