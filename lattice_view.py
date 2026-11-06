@@ -13,6 +13,7 @@ import json
 import time
 
 import lattice_component
+import lattice_panel
 import lattice_editor as le
 import signal_groups as sg
 import signal_library as sl
@@ -65,6 +66,14 @@ def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str = "") 
                 st.session_state["lattice_model"], st.session_state["lattice_source"] = model, cfg
     model = st.session_state.get("lattice_model") or le.empty_model()
 
+    early = lattice_panel.pending(st, "lattice_group_editor", "model")
+    if early and early != st.session_state.get("lattice_seen"):
+        st.session_state["lattice_seen"] = early                 # picked up now: no second redraw below
+        try:
+            st.session_state["lattice_model"] = le.clean_model(json.loads(early))
+        except ValueError:
+            pass
+        model = st.session_state["lattice_model"]
     screen = le.state_for_screen(model)
     try:
         result = lattice_component.component()(
@@ -83,7 +92,7 @@ def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str = "") 
             st.session_state["lattice_model"] = le.clean_model(json.loads(raw))
         except ValueError:
             pass
-        st.rerun()
+        lattice_panel.rerun(st)
 
     left, right = st.columns([3, 2])
     with left:

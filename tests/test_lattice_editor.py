@@ -141,7 +141,7 @@ def test_description_and_member_tags():
 
 def test_the_browser_harness_is_built_from_the_real_component():
     page = harness.page(harness.harness_model())
-    assert "window.renderLattice = function(component)" in page and "export default" not in page
+    assert "window.renderLattice = function latticeGroup(component)" in page and "export default" not in page
     assert '"catalogue"' in page and "innerHTML" not in page.split("<script>", 1)[1]
 
 

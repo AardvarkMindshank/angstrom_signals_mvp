@@ -16,7 +16,12 @@ Each run:
    revises data;
 4. updates the latch per (scan, asset): the first Yes ever seen alerts once; only a confirmed No releases it; Unknown
    and failed runs neither open nor release it;
-5. notifies in the app (type "prism"), by instant email when the owner has instant alerts on, and in the daily digest.
+5. notifies as the scan says (stage 7): instantly (app and email), in the daily digest, in the app only, or not at all;
+   when an asset turns Yes, and optionally when it turns No or when the scan can't run. Snoozed assets and the first
+   run after resuming a paused scan update the latches without alerting.
+
+Each scan scans its own assets: groups that follow the Watchlist (whole, crypto, shares) and fixed assets. A
+"manual" scan has no schedule and runs only with the Play button.
 
 A failure is recorded for that scan only. Missed cutoffs are not back-filled: a late worker runs the latest one.
 """
@@ -59,6 +64,8 @@ def validate_schedule(schedule) -> list[str]:
     if not isinstance(schedule, dict):
         return ["the schedule must be an object"]
     kind = schedule.get("kind")
+    if kind == "manual":
+        return []
     if kind == "close":
         return [] if schedule.get("timeframe") in TIMEFRAMES else [f"timeframe must be one of {TIMEFRAMES}"]
     if kind != "times":
@@ -131,6 +138,8 @@ def latest_cutoff(schedule: dict, market: str, now) -> pd.Timestamp:
 
 
 def describe_schedule(schedule: dict) -> str:
+    if schedule.get("kind") == "manual":
+        return "only when you press Play"
     if schedule.get("kind") == "close":
         return f"every {TF_WORDS.get(schedule.get('timeframe'), '?')} close"
     days = schedule.get("days", "all")
@@ -177,8 +186,38 @@ def plan_alerts(answers: dict, latched: set, mode: str) -> tuple[list, list, lis
     return opens, releases, notify
 
 
-def message(scan_name: str, row: dict) -> str:
+def message(scan_name: str, row: dict, ended: bool = False) -> str:
+    if ended:
+        return f"Prism: “{scan_name}” no longer says Yes. {row['reason']}"[:500]
     return f"Prism: “{scan_name}” says Yes. {row['reason']}"[:500]
+
+
+CHANNELS = ("instant", "digest", "app", "off")
+UNKNOWN_SHARE = 0.5                     # "can't run" also covers a run where at least half the answers are Unknown
+
+
+def alert_settings(scan: dict) -> dict:
+    """The scan's alert settings. Scans saved before stage 7 ({in_app, email}) keep their old behaviour: email only
+    when the account has instant alerts on ("account")."""
+    notify = scan.get("notify") or {}
+    if "channel" not in notify:
+        return {"channel": "account", "email": notify.get("email", True), "on_yes": True, "on_no": False,
+                "on_fail": False}
+    channel = notify.get("channel") if notify.get("channel") in CHANNELS else "instant"
+    return {"channel": channel, "on_yes": notify.get("on_yes", True) is not False, "on_no": bool(notify.get("on_no")),
+            "on_fail": bool(notify.get("on_fail"))}
+
+
+def snoozed(scan: dict, now) -> set:
+    """Asset keys whose alerts are snoozed on this scan at `now`."""
+    out = set()
+    for key, until in (scan.get("snoozes") or {}).items():
+        try:
+            if _ts(until) > _ts(now):
+                out.add(key)
+        except (ValueError, TypeError):
+            continue
+    return out
 
 
 # ----------------------------------------------------------------------------------------------- storage
@@ -228,6 +267,13 @@ class SupabaseStore:
     def touch(self, scan_id, when) -> None:
         self.db.table("prism_scans").update({"last_run_at": when.isoformat()}).eq("id", scan_id).execute()
 
+    def clear_quiet(self, scan_id) -> None:
+        self.db.table("prism_scans").update({"quiet_next": False}).eq("id", scan_id).execute()
+
+    def mark_digested(self, note_ids, when) -> None:
+        if note_ids:
+            self.db.table("user_notifications").update({"digested_at": when.isoformat()}).in_("id", note_ids).execute()
+
     def expire_and_prune(self, now) -> None:
         (self.db.table("prism_scan_runs").update({"status": "failed", "error": "stopped before finishing"})
          .eq("status", "running").lt("started_at", (now - STALE_CLAIM).isoformat()).execute())
@@ -243,14 +289,33 @@ def _assets(watchlist: tuple[dict, dict], market: str) -> list[tuple[str, str, s
     return [("equity", str(k).upper(), f"{v} ({str(k).upper()})") for k, v in stocks.items()]
 
 
+def scan_assets(scan: dict, watchlist: tuple[dict, dict], market: str) -> list[tuple[str, str, str]]:
+    """The scan's assets in one market: Watchlist groups as the Watchlist is now, plus fixed assets."""
+    crypto, stocks = watchlist
+    out: dict[str, tuple[str, str, str]] = {}
+    for item in scan.get("assets") or [{"group": "watchlist"}]:
+        group, kind, aid = item.get("group"), item.get("kind"), str(item.get("id") or "")
+        if market == "crypto" and group in ("watchlist", "crypto"):
+            out.update({f"crypto:{a[1]}": a for a in _assets(watchlist, "crypto")})
+        elif market == "equity" and group in ("watchlist", "shares"):
+            out.update({f"equity:{a[1]}": a for a in _assets(watchlist, "equity")})
+        elif market == "crypto" and kind == "crypto" and aid:
+            out.setdefault(f"crypto:{aid}", ("crypto", aid, str(crypto.get(aid) or aid.replace("-", " ").title())))
+        elif market == "equity" and kind == "equity" and aid:
+            t = aid.upper()
+            name = stocks.get(t) or stocks.get(aid)
+            out.setdefault(f"equity:{t}", ("equity", t, f"{name} ({t})" if name else t))
+    return list(out.values())
+
+
 def due_items(scans: list[dict], watchlists: dict, now) -> list[tuple]:
-    """(cutoff, scan, market, assets) for every scan and market with assets, oldest cutoff first."""
+    """(cutoff, scan, market, assets) for every scheduled scan and market with assets, oldest cutoff first."""
     items = []
     for scan in scans:
-        if validate_schedule(scan.get("schedule")):
+        if validate_schedule(scan.get("schedule")) or (scan.get("schedule") or {}).get("kind") == "manual":
             continue
         for market in MARKETS:
-            assets = _assets(watchlists.get(scan["owner_id"], ({}, {})), market)
+            assets = scan_assets(scan, watchlists.get(scan["owner_id"], ({}, {})), market)
             if not assets:
                 continue
             try:
@@ -303,11 +368,24 @@ def run_due_scans(store, *, watchlists: dict, prefs: dict, evaluate, now=None, b
             store.open_latches(scan["id"], opens, cutoff)
             store.release_latches(scan["id"], releases)
             by_key = {f"{r['kind']}:{r['id']}": r for r in rows}
-            notes = [{"user_id": scan["owner_id"], "asset_symbol": by_key[k]["id"], "asset_name": by_key[k]["asset"],
-                      "alert_type": ALERT_TYPE, "message": message(scan["name"], by_key[k])} for k in notify]
+            settings = alert_settings(scan)
+            quiet = bool(scan.get("quiet_next")) or settings["channel"] == "off"
+            muted = snoozed(scan, now)
+            notes = []
+            if not quiet:
+                if settings["on_yes"]:
+                    notes += [_note(scan, by_key[k], False) for k in notify if k not in muted]
+                if settings["on_no"]:
+                    notes += [_note(scan, by_key[k], True) for k in releases if k not in muted]
+                unknown = sum(r["answer"] == "unknown" for r in rows)
+                if settings["on_fail"] and rows and unknown / len(rows) >= UNKNOWN_SHARE:
+                    notes.append(_fail_note(scan, f"{unknown} of {len(rows)} answers were Unknown (missing data)."))
             inserted = store.notify(notes)
             summary["notified"] += len(inserted)
-            _instant_emails(store, scan, inserted, prefs.get(scan["owner_id"]) or {}, send_email, email_of, now, log)
+            _deliver(store, scan, settings, inserted, prefs.get(scan["owner_id"]) or {}, send_email, email_of, now,
+                     log)
+            if scan.get("quiet_next"):
+                store.clear_quiet(scan["id"])
             store.finish(run_id, {
                 "status": "ok", "finished_at": datetime.now(timezone.utc).isoformat(), "late_seconds": late,
                 "results": [{k: r[k] for k in ("kind", "id", "asset", "answer", "how_sure", "reason", "available")}
@@ -321,9 +399,43 @@ def run_due_scans(store, *, watchlists: dict, prefs: dict, evaluate, now=None, b
             try:
                 store.finish(run_id, {"status": "failed", "error": str(exc)[:500], "late_seconds": late,
                                       "finished_at": datetime.now(timezone.utc).isoformat()})
+                settings = alert_settings(scan)
+                if settings["on_fail"] and settings["channel"] != "off":
+                    inserted = store.notify([_fail_note(scan, f"The run failed: {str(exc)[:160]}")])
+                    _deliver(store, scan, settings, inserted, prefs.get(scan["owner_id"]) or {}, send_email,
+                             email_of, now, log)
             except Exception:
                 pass
     return summary
+
+
+def _note(scan: dict, row: dict, ended: bool) -> dict:
+    return {"user_id": scan["owner_id"], "asset_symbol": row["id"], "asset_name": row["asset"],
+            "alert_type": ALERT_TYPE, "message": message(scan["name"], row, ended)}
+
+
+def _fail_note(scan: dict, why: str) -> dict:
+    return {"user_id": scan["owner_id"], "asset_symbol": None, "asset_name": scan["name"], "alert_type": ALERT_TYPE,
+            "message": f"Prism: “{scan['name']}” could not run properly. {why}"[:500]}
+
+
+def _deliver(store, scan, settings, notes, pref, send_email, email_of, now, log) -> None:
+    """instant: email now, keep out of the digest; digest: leave for the daily digest; app: keep out of the digest.
+    Scans saved before stage 7 follow the account's instant setting, as before."""
+    if not notes:
+        return
+    channel = settings["channel"]
+    if channel == "account":
+        _instant_emails(store, scan, notes, pref, send_email, email_of, now, log)
+        return
+    if channel == "instant":
+        _instant_emails(store, {**scan, "notify": {"email": True}}, notes, {"instant_email": True}, send_email,
+                        email_of, now, log)
+    if channel in ("instant", "app"):
+        try:
+            store.mark_digested([n["id"] for n in notes if n.get("id") is not None], now)
+        except Exception as exc:
+            log(f"Prism: could not keep notes out of the digest: {str(exc)[:120]}")
 
 
 def _instant_emails(store, scan, notes, pref, send_email, email_of, now, log) -> None:

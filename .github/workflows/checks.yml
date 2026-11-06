@@ -100,6 +100,12 @@ jobs:
           python lattice_component_check.py --out out/lattice
           node lattice_component_check.js out/lattice || echo "lattice editor browser check" >> out/required_failures.txt
           cat out/lattice/lattice_browser.md >> "$GITHUB_STEP_SUMMARY" || true
+      - name: Prism Scans board in a browser (required)
+        if: always()
+        run: |
+          python prism_board_check.py --out out/prism_board
+          node prism_board_check.js out/prism_board || echo "prism board browser check" >> out/required_failures.txt
+          cat out/prism_board/prism_board.md >> "$GITHUB_STEP_SUMMARY" || true
       - name: Chart in a browser, live candles (optional, live Yahoo)
         if: always()
         run: |

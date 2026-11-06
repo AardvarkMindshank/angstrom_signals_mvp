@@ -62,6 +62,17 @@ const { chromium, devices } = require("playwright");
 
     const injected = await page.evaluate(() => document.querySelectorAll("#host script, #host img").length);
     check("page text is never inserted as HTML", injected === 0);
+    await page.fill('input[aria-label="Search signals"]', "");
+    await page.waitForTimeout(80);
+    const instant = await page.evaluate(() => {
+      // the harness, like Streamlit, only answers later; the editor must show the change in the same moment
+      const before = document.querySelectorAll(".lat .card").length;
+      const add = document.querySelector('button[aria-label="Add MACD line to the Group"]');
+      if (!add) return "no button";
+      add.click();
+      return document.querySelectorAll(".lat .card").length - before;
+    });
+    check("an added signal shows at once, without waiting for Python", instant === 1, String(instant));
     check("no browser errors", errors.length === 0, errors.join("; "));
 
     const ipad = await browser.newPage({ ...devices["iPad (gen 7)"] });

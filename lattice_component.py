@@ -668,3 +668,25 @@ def set_component():
 
         _SET_COMPONENT = st.components.v2.component("lattice_set_editor", js=SET_JS, css=CSS)
     return _SET_COMPONENT
+
+
+def _instant(js: str, name: str) -> str:
+    """Draw an edit at once in the browser; Python's checked version (descriptions, checks) follows. Without this the
+    editor waited for the round trip to Python before showing the change."""
+    head = "export default function(component) {\n  const { data, setTriggerValue, parentElement } = component;\n  const state = data || {};"
+    assert head in js
+    js = js.replace(head, f"""export default function {name}(component) {{
+  const {{ data, setTriggerValue, parentElement }} = component;
+  const state = Object.assign({{}}, data || {{}}, component.__local ? {{model: component.__local}} : {{}});
+  component.__local = null;""", 1)
+    send = 'function send() { setTriggerValue("model", JSON.stringify(model)); }'
+    assert send in js
+    return js.replace(send, f"""function send() {{
+    setTriggerValue("model", JSON.stringify(model));
+    component.__local = JSON.parse(JSON.stringify(model));
+    {name}(component);
+  }}""", 1)
+
+
+JS = _instant(JS, "latticeGroup")
+SET_JS = _instant(SET_JS, "latticeSet")
