@@ -1,0 +1,145 @@
+........................................................................ [  8%]
+........................................................................ [ 16%]
+........................................................................ [ 24%]
+........................................................................ [ 33%]
+........................................................................ [ 41%]
+........................................................................ [ 49%]
+..................E.EEEE...F............................................ [ 58%]
+........................................................................ [ 66%]
+........................................................................ [ 74%]
+........................................................................ [ 82%]
+........................................................................ [ 91%]
+........................................................................ [ 99%]
+....                                                                     [100%]
+==================================== ERRORS ====================================
+_ ERROR at setup of test_the_current_nda_has_a_version_a_fingerprint_and_readable_text _
+
+tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-0/test_the_current_nda_has_a_ver0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f32bed05700>
+
+    @pytest.fixture
+    def nda_dir(tmp_path, monkeypatch):
+>       (tmp_path / "nda.pdf").write_bytes(_pdf())
+                                           ^^^^^^
+
+tests/test_nda.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+text = 'This is a test non-disclosure agreement. The tester keeps beta features confidential.'
+
+    def _pdf(text="This is a test non-disclosure agreement. The tester keeps beta features confidential.") -> bytes:
+>       from reportlab.pdfgen import canvas
+E       ModuleNotFoundError: No module named 'reportlab'
+
+tests/test_nda.py:22: ModuleNotFoundError
+___ ERROR at setup of test_the_signed_copy_is_the_nda_plus_a_signature_page ____
+
+tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-0/test_the_signed_copy_is_the_nd0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f32bec42a50>
+
+    @pytest.fixture
+    def nda_dir(tmp_path, monkeypatch):
+>       (tmp_path / "nda.pdf").write_bytes(_pdf())
+                                           ^^^^^^
+
+tests/test_nda.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+text = 'This is a test non-disclosure agreement. The tester keeps beta features confidential.'
+
+    def _pdf(text="This is a test non-disclosure agreement. The tester keeps beta features confidential.") -> bytes:
+>       from reportlab.pdfgen import canvas
+E       ModuleNotFoundError: No module named 'reportlab'
+
+tests/test_nda.py:22: ModuleNotFoundError
+_______________________ ERROR at setup of test_the_gate ________________________
+
+tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-0/test_the_gate0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f32bec43bf0>
+
+    @pytest.fixture
+    def nda_dir(tmp_path, monkeypatch):
+>       (tmp_path / "nda.pdf").write_bytes(_pdf())
+                                           ^^^^^^
+
+tests/test_nda.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+text = 'This is a test non-disclosure agreement. The tester keeps beta features confidential.'
+
+    def _pdf(text="This is a test non-disclosure agreement. The tester keeps beta features confidential.") -> bytes:
+>       from reportlab.pdfgen import canvas
+E       ModuleNotFoundError: No module named 'reportlab'
+
+tests/test_nda.py:22: ModuleNotFoundError
+_ ERROR at setup of test_a_draft_asks_nobody_and_the_admin_preview_records_nothing _
+
+tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-0/test_a_draft_asks_nobody_and_t0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f32bec43290>
+
+    @pytest.fixture
+    def nda_dir(tmp_path, monkeypatch):
+>       (tmp_path / "nda.pdf").write_bytes(_pdf())
+                                           ^^^^^^
+
+tests/test_nda.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+text = 'This is a test non-disclosure agreement. The tester keeps beta features confidential.'
+
+    def _pdf(text="This is a test non-disclosure agreement. The tester keeps beta features confidential.") -> bytes:
+>       from reportlab.pdfgen import canvas
+E       ModuleNotFoundError: No module named 'reportlab'
+
+tests/test_nda.py:22: ModuleNotFoundError
+___________________ ERROR at setup of test_the_admin_column ____________________
+
+tmp_path = PosixPath('/tmp/pytest-of-runner/pytest-0/test_the_admin_column0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f32bed07470>
+
+    @pytest.fixture
+    def nda_dir(tmp_path, monkeypatch):
+>       (tmp_path / "nda.pdf").write_bytes(_pdf())
+                                           ^^^^^^
+
+tests/test_nda.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+text = 'This is a test non-disclosure agreement. The tester keeps beta features confidential.'
+
+    def _pdf(text="This is a test non-disclosure agreement. The tester keeps beta features confidential.") -> bytes:
+>       from reportlab.pdfgen import canvas
+E       ModuleNotFoundError: No module named 'reportlab'
+
+tests/test_nda.py:22: ModuleNotFoundError
+=================================== FAILURES ===================================
+___________ test_the_real_draft_is_set_up_switched_off_and_readable ____________
+
+    def test_the_real_draft_is_set_up_switched_off_and_readable():
+        doc = nda.current()
+        assert doc is not None and doc["enforce"] is False and doc["version"] == "2026-11-draft-v2"
+>       assert "NON-DISCLOSURE AGREEMENT" in doc["text"] and "Country of Residence" in doc["text"]
+E       AssertionError: assert ('NON-DISCLOSURE AGREEMENT' in '')
+
+tests/test_nda.py:256: AssertionError
+=============================== warnings summary ===============================
+tests/test_chart_data.py: 2 warnings
+tests/test_group_readings.py: 3 warnings
+tests/test_lattice_editor.py: 1 warning
+tests/test_lattice_stage1.py: 26 warnings
+tests/test_lattice_stage5.py: 5 warnings
+tests/test_library_completion.py: 12 warnings
+tests/test_prism.py: 9 warnings
+tests/test_replay.py: 3 warnings
+tests/test_replay_groups.py: 1 warning
+  /home/runner/work/angstrom_signals_mvp/angstrom_signals_mvp/chart_data.py:237: Pandas4Warning: DatetimeIndex.weekday is deprecated and will be removed in a future version. Use DatetimeIndex.day_of_week instead.
+    monday = df.index - pd.to_timedelta(df.index.weekday, unit="D")
+
+tests/test_lw_chart.py: 11 warnings
+  /opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages/pandas/core/indexes/datetimelike.py:1029: Pandas4Warning: DatetimeIndex.values returning an ndarray that drops timezone information is deprecated. In a future version, this will return the underlying DatetimeArray instead. Use 'DatetimeIndex.tz_convert(None).to_numpy()' to get a NumPy array of UTC values, or 'DatetimeIndex.array' to get the ExtensionArray.
+  See https://pandas.pydata.org/docs/dev/whatsnew/v3.1.0.html#whatsnew-310-deprecations-values for more details.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+1 failed, 862 passed, 73 warnings, 5 errors in 259.02s (0:04:19)
+exit=1
