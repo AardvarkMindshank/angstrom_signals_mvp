@@ -1,0 +1,35 @@
+1
+00:00:00,000 --> 00:00:07,704
+This is Angstrom Lattice, the research workspace at the bottom of your dashboard. Prism Scan checks your watchlist with your own rules.
+
+2
+00:00:07,805 --> 00:00:13,653
+On the left are your saved Sets. Tap plus, or drag one across, and it becomes a Prism Scan.
+
+3
+00:00:13,753 --> 00:00:20,049
+Each scan is a card. The top row shows its answers and controls. Open it to see the details.
+
+4
+00:00:20,151 --> 00:00:25,316
+Choose what it scans. Groups like All crypto follow your watchlist as it changes.
+
+5
+00:00:25,419 --> 00:00:30,222
+Press play to check every asset now, on the latest finished daily candles.
+
+6
+00:00:35,400 --> 00:00:41,696
+Each asset gets Yes, No, or Unknown, with the line that decided it. Missing data is never guessed.
+
+7
+00:00:41,798 --> 00:00:46,174
+To keep watching, give the scan a schedule. Here, every daily close.
+
+8
+00:00:46,276 --> 00:00:53,558
+Then choose how you hear about it: instantly, in the daily summary, or only in the app.
+
+9
+00:00:53,658 --> 00:00:59,143
+Collapse all keeps a long list tidy. That's Prism: descriptive readings, not advice.
