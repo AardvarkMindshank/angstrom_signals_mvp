@@ -261,3 +261,12 @@ def test_lattice_redraws_only_its_own_section_once_per_change():
     for name in ("lattice_view.py", "lattice_set_view.py", "prism_view.py"):
         text = (ROOT / name).read_text()
         assert "st.rerun()" not in text and "lattice_panel.pending(" in text, name
+
+
+def test_the_help_guide_covers_lattice_and_prism():
+    app = (ROOT / "app.py").read_text()
+    guide = app[app.index('with tracked_expander("📖 Help and guides"'):app.index("CRYPTO_WATCHLIST = prefs")]
+    for words in ('"🧩 Lattice & Prism"', "Signal Groups", "Signal Sets", "Prism Scan", "All equities",
+                  "Prism scan alerts", "5 scheduled scans", "Strategies"):
+        assert words in guide, words
+    assert "All shares" not in guide

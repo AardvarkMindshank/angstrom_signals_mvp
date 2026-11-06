@@ -271,7 +271,8 @@ Readings change smoothly, so one price tick never flips a reading. Missing data 
 volume) shows as missing, never as neutral. Readings use the last **finished** daily bar.
 
 🧩 Each reading is worked out by a **starter Group** of the same name (Trend, Stretch, Flow). Open
-**🧩 Lattice** to see how it is built, or copy it and make your own; a half-filled 🧩◐ means some parts had no data.
+**Angstrom Lattice → Signal Groups** to see how it is built, or copy it and make your own; a half-filled 🧩◐ means
+some parts had no data.
 
 **Context, never directional:** 🌊 typical daily range (ATR%) and how it compares with the asset's own past
 year, 💪 trend strength (ADX), 🧭 regime, 🔈 volume against usual.
