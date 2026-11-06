@@ -46,6 +46,18 @@ jobs:
         run: |
           python video/cards.py out/video
           python video/build.py out/video
+      - name: Upload to the website
+        env:
+          HOSTGATOR_FTP_HOST: ${{ secrets.HOSTGATOR_FTP_HOST }}
+          HOSTGATOR_FTP_USER: ${{ secrets.HOSTGATOR_FTP_USER }}
+          HOSTGATOR_FTP_PASSWORD: ${{ secrets.HOSTGATOR_FTP_PASSWORD }}
+        run: |
+          slug=$(python -c "import json;print(json.load(open('video/script.json'))['slug'])")
+          section=$(python -c "import json;print(json.load(open('video/script.json')).get('section','training'))")
+          python video/upload.py out/video "$section" "$slug"
+          url="https://angstromsignals.com/videos/$section/$slug.mp4"
+          code=$(curl -s -o /dev/null -w "%{http_code}" -I "$url" || true)
+          echo "Public address: $url (HTTP $code)" | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Save to reports branch
         if: always()
         run: bash .github/scripts/save_to_reports.sh "videos/$(date -u +%Y-%m-%d_%H%M)_${GITHUB_SHA::7}" out/video/*.mp4 out/video/*.mp3 out/video/*.srt out/video/*.png out/video/timeline.json out/video/durations.json

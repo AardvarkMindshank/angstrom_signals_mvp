@@ -39,5 +39,7 @@
   }
  ],
  "intro_say": "Angstrom Signals. Your first Prism Scan.",
- "outro_say": "Find out more at angstrom signals dot com."
+ "outro_say": "Find out more at angstrom signals dot com.",
+ "slug": "your-first-prism-scan",
+ "section": "training"
 }
