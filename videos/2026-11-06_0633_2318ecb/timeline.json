@@ -1,0 +1,50 @@
+{
+ "steps": [
+  {
+   "id": "intro",
+   "start": 0,
+   "say": "This is Angstrom Lattice, the research workspace at the bottom of your dashboard. Prism Scan checks your watchlist with your own rules."
+  },
+  {
+   "id": "create",
+   "start": 7.806,
+   "say": "On the left are your saved Sets. Tap plus, or drag one across, and it becomes a Prism Scan."
+  },
+  {
+   "id": "card",
+   "start": 13.753,
+   "say": "Each scan is a card. The top row shows its answers and controls. Open it to see the details."
+  },
+  {
+   "id": "assets",
+   "start": 20.15,
+   "say": "Choose what it scans. Groups like All crypto follow your watchlist as it changes."
+  },
+  {
+   "id": "play",
+   "start": 25.417,
+   "say": "Press play to check every asset now, on the latest finished daily candles."
+  },
+  {
+   "id": "results",
+   "start": 33.878,
+   "say": "Each asset gets Yes, No, or Unknown, with the line that decided it. Missing data is never guessed."
+  },
+  {
+   "id": "schedule",
+   "start": 40.275,
+   "say": "To keep watching, give the scan a schedule. Here, every daily close."
+  },
+  {
+   "id": "alerts",
+   "start": 44.752,
+   "say": "Then choose how you hear about it: instantly, in the daily summary, or only in the app."
+  },
+  {
+   "id": "tidy",
+   "start": 50.252,
+   "say": "Collapse all keeps a long list tidy. That's Prism: descriptive readings, not advice."
+  }
+ ],
+ "end": 57.339
+}
