@@ -65,6 +65,12 @@ for step in script["steps"]:
     speak(step["say"], path)
     with wave.open(str(path)) as wf:
         durations[step["id"]] = wf.getnframes() / wf.getframerate()
+for key in ("intro", "outro"):                 # spoken over the opening and closing cards
+    if script.get(f"{key}_say"):
+        path = out / f"_{key}.wav"
+        speak(script[f"{key}_say"], path)
+        with wave.open(str(path)) as wf:
+            durations[f"_{key}"] = wf.getnframes() / wf.getframerate()
 (base / "durations.json").write_text(json.dumps(durations, indent=1))
 print(durations)
 
