@@ -12,10 +12,36 @@ const { chromium } = require("playwright");
   const durations = JSON.parse(fs.readFileSync(path.join(dir, "durations.json")));
   const browser = await chromium.launch();
   // Warm up first (fonts, first run), so the video starts on a ready page.
-  const warm = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+  const warm = await browser.newPage({ viewport: { width: 1024, height: 576 } });
   await warm.goto(url); await warm.waitForSelector(".lat.prism", { timeout: 120000 }); await warm.close();
-  const ctx = await browser.newContext({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1,
+  // A 1024 x 576 page drawn at 1.25x gives a sharp 1280 x 720 video with text 25% larger.
+  const ctx = await browser.newContext({ viewport: { width: 1024, height: 576 }, deviceScaleFactor: 1.25,
     recordVideo: { dir: path.join(dir, "raw"), size: { width: 1280, height: 720 } } });
+  // A visible pointer, and a ripple on every click (recordings do not show the real pointer).
+  await ctx.addInitScript(() => {
+    const ready = () => {
+      if (document.getElementById("demo-pointer")) return;
+      const p = document.createElement("div");
+      p.id = "demo-pointer";
+      p.innerHTML = '<svg width="26" height="26" viewBox="0 0 24 24"><path d="M3 2l7 19 2.6-7.4L20 11z" fill="#111" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>';
+      Object.assign(p.style, { position: "fixed", left: "-40px", top: "-40px", zIndex: 2147483647, pointerEvents: "none",
+        transition: "transform .08s", filter: "drop-shadow(0 2px 3px rgba(0,0,0,.35))" });
+      document.documentElement.appendChild(p);
+      document.addEventListener("mousemove", (e) => { p.style.left = e.clientX - 3 + "px"; p.style.top = e.clientY - 2 + "px"; }, true);
+      document.addEventListener("mousedown", (e) => {
+        p.style.transform = "scale(.85)";
+        const r = document.createElement("div");
+        Object.assign(r.style, { position: "fixed", left: e.clientX - 18 + "px", top: e.clientY - 18 + "px", width: "36px",
+          height: "36px", borderRadius: "50%", border: "3px solid #f59e0b", background: "rgba(245,158,11,.25)",
+          zIndex: 2147483646, pointerEvents: "none", transition: "transform .45s ease-out, opacity .45s ease-out" });
+        document.documentElement.appendChild(r);
+        requestAnimationFrame(() => { r.style.transform = "scale(1.9)"; r.style.opacity = "0"; });
+        setTimeout(() => r.remove(), 500);
+      }, true);
+      document.addEventListener("mouseup", () => { p.style.transform = ""; }, true);
+    };
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", ready); else ready();
+  });
   const page = await ctx.newPage();
   const t0 = Date.now();
   const now = () => (Date.now() - t0) / 1000;
@@ -27,12 +53,16 @@ const { chromium } = require("playwright");
   };
   const glide = async (selector) => {           // move the pointer visibly before clicking
     const box = await page.locator(selector).first().boundingBox();
-    if (box) await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 18 });
-    await page.waitForTimeout(250);
+    if (box) await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 24 });
+    await page.waitForTimeout(350);
   };
+  const press = async (selector) => { await glide(selector); await page.click(selector); };
   const scrollTo = (selector) => page.locator(selector).first().scrollIntoViewIfNeeded().catch(() => {});
   const actions = {
-    intro: async () => { await page.goto(url); await page.waitForSelector(".lat.prism", { timeout: 120000 }); await settle(); },
+    intro: async () => {
+      await page.goto(url); await page.waitForSelector(".lat.prism", { timeout: 120000 }); await settle();
+      await page.mouse.move(520, 300, { steps: 2 });
+    },
     create: async () => {
       const b = 'button[aria-label="Start a scan with Trend and Flow agree (demo)"]';
       await glide(b); await page.click(b); await page.waitForSelector(".lat.prism .scan", { timeout: 60000 }); await settle();
