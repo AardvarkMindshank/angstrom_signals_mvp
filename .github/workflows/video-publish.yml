@@ -1,0 +1,35 @@
+# Upload the latest recorded training video (from the reports branch) to the website, with nothing to install.
+# Runs when the "video-publish" branch is pushed. The video job (video.yml) also uploads after each recording.
+name: video-publish
+on:
+  push:
+    branches: [video-publish]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - name: Latest video
+        run: |
+          git fetch -q --depth=1 origin reports
+          latest=$(git ls-tree --name-only origin/reports videos/ | tail -1)
+          echo "Latest: $latest"
+          mkdir -p out/video
+          git show "origin/reports:$latest/prism_scan_demo.mp4" > out/video/prism_scan_demo.mp4
+          git show "origin/reports:$latest/captions.srt" > out/video/captions.srt
+      - name: Upload to the website
+        env:
+          HOSTGATOR_FTP_HOST: ${{ secrets.HOSTGATOR_FTP_HOST }}
+          HOSTGATOR_FTP_USER: ${{ secrets.HOSTGATOR_FTP_USER }}
+          HOSTGATOR_FTP_PASSWORD: ${{ secrets.HOSTGATOR_FTP_PASSWORD }}
+        run: |
+          slug=$(python3 -c "import json;print(json.load(open('video/script.json'))['slug'])")
+          section=$(python3 -c "import json;print(json.load(open('video/script.json')).get('section','training'))")
+          python3 video/upload.py out/video "$section" "$slug"
+          url="https://angstromsignals.com/videos/$section/$slug.mp4"
+          code=$(curl -s -o /dev/null -w "%{http_code}" -I "$url" || true)
+          echo "Public address: $url (HTTP $code)" | tee -a "$GITHUB_STEP_SUMMARY"
