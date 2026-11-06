@@ -12,13 +12,15 @@ const { chromium } = require("playwright");
   const durations = JSON.parse(fs.readFileSync(path.join(dir, "durations.json")));
   const browser = await chromium.launch();
   // Warm up first (fonts, first run), so the video starts on a ready page.
-  const warm = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+  const warm = await browser.newPage({ viewport: { width: 1280, height: 610 } });
   await warm.goto(url); await warm.waitForSelector(".lat.prism", { timeout: 120000 }); await warm.close();
-  // A 1280 x 720 video of the page zoomed to 125%: the layout of a 1024-wide window, text 25% larger, sharp.
-  const ctx = await browser.newContext({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1,
-    recordVideo: { dir: path.join(dir, "raw"), size: { width: 1280, height: 720 } } });
+  // The app is recorded at 1280 x 610, zoomed to 125% (text 25% larger, sharp); build.py adds a 110-pixel caption
+  // band underneath for a 1280 x 720 video. Only the page body is zoomed: the pointer below sits outside the zoom,
+  // so it is drawn exactly where the mouse is.
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 610 }, deviceScaleFactor: 1,
+    recordVideo: { dir: path.join(dir, "raw"), size: { width: 1280, height: 610 } } });
   await ctx.addInitScript(() => {
-    const zoom = () => { document.documentElement.style.zoom = "1.25"; };
+    const zoom = () => { if (document.body) document.body.style.zoom = "1.25"; else requestAnimationFrame(zoom); };
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", zoom); else zoom();
   });
   // A visible pointer, and a ripple on every click (recordings do not show the real pointer).

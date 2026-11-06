@@ -31,9 +31,11 @@ for n, step in enumerate(steps):
     ms = int(step["start"] * 1000)
     filters.append(f"[{n + 1}:a]adelay={ms}|{ms},apad[a{n}]")
 mix = "".join(f"[a{n}]" for n in range(len(steps))) + f"amix=inputs={len(steps)}:normalize=0:duration=longest[voice]"
-style = ("FontName=DejaVu Sans,FontSize=15,PrimaryColour=&H00FFFFFF,BackColour=&H99000000,BorderStyle=4,"
-         "Outline=0,Shadow=0,MarginV=26,Alignment=2")
-video = f"[0:v]subtitles={d / 'captions.srt'}:force_style='{style}',fps=25,format=yuv420p[v]"
+# Captions sit in a dark band under the app (recorded at 1280 x 610), never over it: 1280 x 720 in all.
+style = ("FontName=DejaVu Sans,FontSize=12.5,PrimaryColour=&H00FFFFFF,BorderStyle=1,Outline=0,Shadow=0,"
+         "MarginV=9,Alignment=2")
+video = (f"[0:v]scale=1280:610,pad=1280:720:0:0:color=0x0b1220,"
+         f"subtitles={d / 'captions.srt'}:force_style='{style}',fps=25,format=yuv420p[v]")
 ENC = ["-c:v", "libx264", "-preset", "veryfast", "-crf", "22", "-c:a", "aac", "-b:a", "128k", "-ar", "48000",
        "-ac", "1"]
 cmd = ["ffmpeg", "-y", "-v", "error", *inputs, "-filter_complex", ";".join(filters + [mix, video]),

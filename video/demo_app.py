@@ -32,9 +32,7 @@ class DemoDb:
     def table(self, name):
         if name == "prism_scans":
             return Query(list(st.session_state.setdefault("_scans", {}).values()))
-        if name in ("prism_scan_runs", "prism_scan_latches"):
-            return Query([])
-        raise RuntimeError("demo page")
+        return Query([])                 # anything else: nothing saved yet
 
     def rpc(self, name, params=None):
         scans = st.session_state.setdefault("_scans", {})
@@ -49,13 +47,13 @@ class DemoDb:
         if name == "prism_delete_scan":
             scans.pop(params["p_id"], None)
             return Query(None)
-        raise RuntimeError("demo page")
+        return Query([])
 
 
 st.set_page_config(page_title="Angstrom Signals", layout="wide")
 st.markdown("<style>header[data-testid='stHeader'],[data-testid='stToolbar'],[data-testid='stDecoration']"
             "{display:none!important} .block-container{padding-top:1.2rem!important}"
-            ".st-key-video_caption_hide{display:none}</style>", unsafe_allow_html=True)
+            "</style>", unsafe_allow_html=True)
 st.session_state.setdefault("lattice_section", "prism")
 lattice_panel.render(st, DemoDb(), [
     ("crypto", "bitcoin", "Bitcoin"), ("crypto", "ethereum", "Ethereum"), ("crypto", "solana", "Solana"),
