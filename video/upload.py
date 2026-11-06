@@ -20,20 +20,26 @@ def main(out: Path, section: str, slug: str) -> int:
         print("Upload skipped: the HOSTGATOR_FTP_* secrets are not set.")
         return 0
     files = {f"{slug}.mp4": out / "prism_scan_demo.mp4", f"{slug}.srt": out / "captions.srt"}
-    context = ssl.create_default_context()
-    try:
-        ftp = ftplib.FTP_TLS(host, timeout=60, context=context)
-        ftp.login(user, password)
-    except ssl.SSLCertVerificationError:
-        # Shared hosting often presents the server's own certificate name, not the domain's: still encrypted.
+    def connect(verify: bool):
         context = ssl.create_default_context()
-        context.check_hostname = False
-        context.verify_mode = ssl.CERT_NONE
+        if not verify:
+            context.check_hostname = False
+            context.verify_mode = ssl.CERT_NONE
         ftp = ftplib.FTP_TLS(host, timeout=60, context=context)
         ftp.login(user, password)
-        print("Note: the FTP server's certificate does not name this host; the connection is still encrypted.")
+        return ftp
+
+    try:
+        try:
+            ftp = connect(verify=True)
+        except ssl.SSLCertVerificationError:
+            # Shared hosting often shows the server's own certificate name, not the domain's: still encrypted.
+            print("Note: the FTP server's certificate does not name this host; the connection is still encrypted.")
+            ftp = connect(verify=False)
     except ftplib.error_perm as exc:
-        print(f"Upload failed: the FTP login was refused ({str(exc)[:80]}). Check the HOSTGATOR_FTP_* secrets.")
+        print(f"Upload failed: HostGator refused the login ({str(exc)[:60]}). The server was reached, so check "
+              "HOSTGATOR_FTP_USER (the full name, e.g. videos@yourdomain) and HOSTGATOR_FTP_PASSWORD.")
+        print(f"(The username has {len(user)} characters and {'contains' if '@' in user else 'does not contain'} '@'.)")
         return 1
     ftp.prot_p()                                   # encrypt the file transfers too
     try:
