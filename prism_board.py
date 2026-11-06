@@ -21,7 +21,7 @@ import signal_groups as sg
 MAX_SCHEDULED = ps.MAX_ACTIVE_SCANS
 MAX_ASSET_ITEMS = 60
 SNOOZE_DAYS = (1, 3, 7)
-GROUPS = {"watchlist": "Whole Watchlist", "crypto": "All crypto", "shares": "All shares"}
+GROUPS = {"watchlist": "Whole Watchlist", "crypto": "All crypto", "shares": "All equities"}   # "shares" is the stored id; "equities" is the word used across the app
 CHANNELS = {"instant": "Instant (app and email)", "digest": "Daily digest", "app": "App only", "off": "Off",
             "account": "As my alert settings"}
 RUNS = {"manual": "Only when I press Play", "4H": "Each 4-hour close", "1D": "Each daily close",
@@ -75,7 +75,7 @@ def library(choices: dict, assets: list[tuple[str, str, str]]) -> dict:
                    {"group": "crypto", "name": GROUPS["crypto"], "count": len(crypto)},
                    {"group": "shares", "name": GROUPS["shares"], "count": len(stocks)}],
         "assets": [{"kind": "crypto" if kind == "crypto" else "equity", "id": aid, "name": name,
-                    "market": "crypto" if kind == "crypto" else "share"} for kind, aid, name in assets],
+                    "market": "crypto" if kind == "crypto" else "equity"} for kind, aid, name in assets],
     }
 
 

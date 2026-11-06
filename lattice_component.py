@@ -438,7 +438,7 @@ export default function(component) {
     const kind = el("select");
     kind.setAttribute("aria-label", "Which asset " + name + " is read on");
     kind.title = "Read on the asset being scanned, or always on one fixed asset (for example COIN), at the same moment.";
-    [["", "📌 the scanned asset"], ["crypto", "📌 fixed crypto"], ["equity", "📌 fixed share"]].forEach(([v, t]) => {
+    [["", "📌 the scanned asset"], ["crypto", "📌 fixed crypto"], ["equity", "📌 fixed equity"]].forEach(([v, t]) => {
       const o = el("option", "", t); o.value = v;
       if ((item.subject ? item.subject.kind : "") === v) o.selected = true;
       kind.appendChild(o);

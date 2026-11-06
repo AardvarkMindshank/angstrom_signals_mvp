@@ -41,7 +41,7 @@ def test_library_lists_sets_groups_and_assets():
     assert "saved:cfg1:2" in choices and "saved:cfg1:1" not in choices          # newest version only
     lib = pb.library(choices, ASSETS)
     assert {g["group"]: g["count"] for g in lib["groups"]} == {"watchlist": 3, "crypto": 2, "shares": 1}
-    assert {"kind": "equity", "id": "COIN", "name": "Coinbase (COIN)", "market": "share"} in lib["assets"]
+    assert {"kind": "equity", "id": "COIN", "name": "Coinbase (COIN)", "market": "equity"} in lib["assets"]
 
 
 def test_a_scan_card_shows_summary_details_and_an_update_badge():
