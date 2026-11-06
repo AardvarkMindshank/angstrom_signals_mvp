@@ -29,7 +29,7 @@ def harness_model() -> dict:
 def page(model: dict) -> str:
     data = {**le.state_for_screen(model), "catalogue": le.catalogue(), "role_hints": le.ROLE_HINT,
             "suggested_labels": le.SUGGESTED_LABELS}
-    script = lc.JS.replace("export default function(component)", "window.renderLattice = function(component)")
+    script = lc.JS.replace("export default function latticeGroup(component)", "window.renderLattice = function latticeGroup(component)")
     return f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Lattice editor check</title>
 <style>{lc.CSS} body{{font-family:system-ui,sans-serif;margin:16px;background:#fff;color:#111}}</style></head>
 <body><div id="host"></div><script>
@@ -67,7 +67,7 @@ def set_page(model: dict, choices: dict) -> str:
     import lattice_sets as ls
 
     data = {**ls.state_for_screen(model, choices), "catalogue": le.catalogue()}
-    script = lc.SET_JS.replace("export default function(component)", "window.renderLattice = function(component)")
+    script = lc.SET_JS.replace("export default function latticeSet(component)", "window.renderLattice = function latticeSet(component)")
     return page_shell(script, data, "Lattice Set editor check")
 
 

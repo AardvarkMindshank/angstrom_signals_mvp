@@ -66,6 +66,27 @@ const { chromium } = require("playwright");
           (await page.$$(".lat .rule")).length === 1 && body.includes("says Yes when"), (body.match(/says Yes when[^\n]*/) || [""])[0]);
     check("the Set editor's styles are applied", (await styled()) === "flex");
     await page.screenshot({ path: path.join(dir, "lattice_set_in_streamlit.png"), fullPage: true });
+    // Prism Scans board: a press goes to Python, is saved, and comes back as a scan card.
+    await page.click("text=Prism Scan");
+    await page.waitForSelector(".lat.prism", { timeout: 30000 });
+    await settle();
+    check("Prism board appears with its styles", (await styled()) === "flex");
+    await page.click('.lat.prism button[aria-label="Start a scan with Trend and Flow agree (demo)"]');
+    await page.waitForSelector(".lat.prism .scan", { timeout: 30000 });
+    await settle();
+    check("Prism: tap + on a Set saves a new scan", (await page.$$(".lat.prism .scan")).length === 1);
+    check("Prism: the new scan opens", await page.$(".lat.prism .scan .body"));
+    await page.click('.lat.prism .scan button[aria-label^="Pause"]');
+    await page.waitForSelector(".lat.prism .scan.paused", { timeout: 30000 });
+    check("Prism: pause is saved and shown", await page.$(".lat.prism .scan.paused"));
+    await page.screenshot({ path: path.join(dir, "prism_in_streamlit.png"), fullPage: true });
+    await page.setViewportSize({ width: 390, height: 844 });
+    await settle();
+    await page.screenshot({ path: path.join(dir, "prism_phone.png"), fullPage: true });
+    check("phone width: no sideways scrolling (Prism)", (await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)) <= 1);
+    await page.setViewportSize({ width: 1400, height: 1100 });
+    await settle();
+
     // iPhone width (390 px): the page must not scroll sideways; screenshots of both editors for review.
     await page.setViewportSize({ width: 390, height: 844 });
     await settle();

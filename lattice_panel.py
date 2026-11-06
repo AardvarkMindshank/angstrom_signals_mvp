@@ -29,7 +29,38 @@ def label(key: str) -> str:
     return f"{icon} {name}" + (" (soon)" if key in PENDING else "")
 
 
+def rerun(st) -> None:
+    """Redraw only the Angstrom Lattice section when it runs as a fragment, else the page."""
+    try:
+        st.rerun(scope="fragment")
+    except Exception:                  # not inside a fragment (tests, older Streamlit): the whole page
+        st.rerun()
+
+
+def pending(st, key: str, field: str):
+    """A value the browser sent for component `key` before this run, read before the component is drawn, so a change
+    needs one redraw, not two. None when there is nothing (or this Streamlit keeps it elsewhere)."""
+    try:
+        value = st.session_state.get(key)
+    except Exception:
+        return None
+    if value is None:
+        return None
+    if isinstance(value, dict):
+        return value.get(field)
+    return getattr(value, field, None)
+
+
 def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str) -> None:
+    """The section runs as a Streamlit fragment: a change inside it redraws only this section, not the dashboard."""
+    fragment = getattr(st, "fragment", None)
+    if callable(fragment):
+        fragment(lambda: _render(st, supabase, assets, user_id))()
+    else:
+        _render(st, supabase, assets, user_id)
+
+
+def _render(st, supabase, assets: list[tuple[str, str, str]], user_id: str) -> None:
     st.markdown(HEADER)
     st.caption(SUBTITLE)
     hover = "\n\n".join(f"**{SECTIONS[k][1]}**: {SECTIONS[k][2]}" for k in SECTIONS)

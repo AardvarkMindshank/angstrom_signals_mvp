@@ -122,6 +122,12 @@ class FakeStore:
     def touch(self, scan_id, when):
         pass
 
+    def clear_quiet(self, scan_id):
+        self.quiet_cleared = scan_id
+
+    def mark_digested(self, note_ids, when):
+        self.digested = getattr(self, "digested", []) + list(note_ids)
+
     def expire_and_prune(self, now):
         pass
 
@@ -257,20 +263,3 @@ def test_sql_is_rerunnable_owner_only_and_claims_once():
     for line in re.findall(r"create policy[^\n]+", sql):
         assert "drop policy if exists" in sql.split(line)[0].rsplit("\n", 3)[-2]
     assert "if active >= 5" in sql
-
-
-def _app_scheduled():
-    import streamlit as st
-
-    from tests.test_prism import _app as panel_app
-
-    st.session_state.setdefault("prism_view", "⏰ Scheduled scans")
-    panel_app()
-
-
-def test_scheduled_scans_view_renders_inside_streamlit():
-    testing = pytest.importorskip("streamlit.testing.v1")
-    app = testing.AppTest.from_function(_app_scheduled, default_timeout=120)
-    app.run()
-    assert not app.exception
-    assert [b for b in app.button if "Save scan" in b.label]

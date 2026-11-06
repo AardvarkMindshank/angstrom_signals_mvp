@@ -139,19 +139,13 @@ def test_prism_tab_runs_inside_streamlit():
     app = testing.AppTest.from_function(_app, default_timeout=120)
     app.run()
     assert not app.exception
-    run = [b for b in app.button if b.label == "Run now"]
-    assert len(run) == 1
-    run[0].click().run()
-    assert not app.exception
-    tables = [d.value for d in app.dataframe if "Answer" in d.value.columns]
-    assert tables and len(tables[0]) == 2 and {"How sure", "Why", "Data available"} <= set(tables[0].columns)
     assert not [b for b in app.get("download_button") if "prism" in str(b.key)]   # display only: no export
 
 
 def test_date_and_time_show_only_for_a_past_moment():
-    from pathlib import Path
+    import prism_component
 
-    src = Path(__file__).resolve().parent.parent.joinpath("prism_view.py").read_text()
-    when, form, guard, date = (src.index('"When"'), src.index('st.form("prism_form"'),
-                               src.index('if mode != "Now":'), src.index('date_input("Date (UTC)"'))
-    assert when < form < guard < date                     # chosen outside the form, so the page redraws at once
+    js = prism_component.JS
+    toggle, guard, date = (js.index("window.__prismPast[s.id] = !window.__prismPast[s.id]"),
+                           js.index("if (window.__prismPast[s.id]) {"), js.index('d.type = "date"'))
+    assert toggle < guard < date                            # the date and time appear only after ⏪ is pressed

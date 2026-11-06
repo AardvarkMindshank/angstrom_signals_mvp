@@ -12,6 +12,7 @@ import json
 import time
 
 import lattice_component
+import lattice_panel
 import lattice_editor as le
 import lattice_sets as ls
 
@@ -46,6 +47,14 @@ def render(st, supabase, user_id: str = "") -> None:
                 st.session_state["lattice_set_model"], st.session_state["lattice_set_source"] = model, cfg
     model = ls.clean_model(st.session_state.get("lattice_set_model") or ls.empty_model(), choices)
 
+    early = lattice_panel.pending(st, "lattice_set_editor", "model")
+    if early and early != st.session_state.get("lattice_set_seen"):
+        st.session_state["lattice_set_seen"] = early                 # picked up now: no second redraw below
+        try:
+            st.session_state["lattice_set_model"] = ls.clean_model(json.loads(early), choices)
+        except ValueError:
+            pass
+        model = st.session_state["lattice_set_model"]
     screen = ls.state_for_screen(model, choices)
     try:
         result = lattice_component.set_component()(
@@ -60,7 +69,7 @@ def render(st, supabase, user_id: str = "") -> None:
             st.session_state["lattice_set_model"] = ls.clean_model(json.loads(raw), choices)
         except ValueError:
             pass
-        st.rerun()
+        lattice_panel.rerun(st)
 
     left, right = st.columns([3, 2])
     with left:
