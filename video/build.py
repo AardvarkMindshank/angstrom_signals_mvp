@@ -41,6 +41,10 @@ cmd = ["ffmpeg", "-y", "-v", "error", *inputs, "-filter_complex", ";".join(filte
 subprocess.run(cmd, check=True)
 
 
+MUSIC = Path(__file__).resolve().parent / "music" / "theme.mp3"     # optional; licence noted in video/music/README.md
+MUSIC_VOLUME = 0.45
+
+
 def card_clip(name: str, minimum: float) -> Path | None:
     """A still card with its spoken line, faded in and out."""
     image, voice = d / f"{name}.png", d / "voice" / f"_{name}.wav"
@@ -49,10 +53,19 @@ def card_clip(name: str, minimum: float) -> Path | None:
     length = max(minimum, durations.get(f"_{name}", 0) + 1.2)
     audio = (["-i", str(voice)] if voice.exists() else ["-f", "lavfi", "-i", "anullsrc=r=48000:cl=mono"])
     clip = d / f"{name}.mp4"
+    fade = f"[0:v]fps=25,format=yuv420p,fade=in:st=0:d=0.5,fade=out:st={length - 0.5:.2f}:d=0.5[v];"
+    speech = "[1:a]adelay=400|400,apad,aresample=48000"
+    if MUSIC.exists():
+        # The theme under the card: its opening for the intro, its ending for the outro, below the voice.
+        music = (["-i", str(MUSIC)] if name == "intro" else ["-sseof", f"-{length:.2f}", "-i", str(MUSIC)])
+        audio += music
+        mix = (f"{speech}[s];[2:a]aresample=48000,aformat=channel_layouts=mono,volume={MUSIC_VOLUME},"
+               f"afade=t=in:st=0:d=0.15,afade=t=out:st={length - 0.9:.2f}:d=0.9,apad[m];"
+               f"[s][m]amix=inputs=2:normalize=0:duration=first[a]")
+    else:
+        mix = f"{speech}[a]"
     subprocess.run(["ffmpeg", "-y", "-v", "error", "-loop", "1", "-t", f"{length:.2f}", "-i", str(image), *audio,
-                    "-filter_complex",
-                    f"[0:v]fps=25,format=yuv420p,fade=in:st=0:d=0.5,fade=out:st={length - 0.5:.2f}:d=0.5[v];"
-                    f"[1:a]adelay=400|400,apad,aresample=48000[a]",
+                    "-filter_complex", fade + mix,
                     "-map", "[v]", "-map", "[a]", "-t", f"{length:.2f}", *ENC, str(clip)], check=True)
     return clip
 
