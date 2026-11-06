@@ -59,16 +59,38 @@ if speak is None:
         def speak(text, path, voice=None):
             subprocess.run(["espeak-ng", "-v", "en-us", "-s", "155", "-w", str(path), text], check=True)
 
+PAUSE = 0.35         # seconds of silence for each "|" in a line: "instantly, | in the daily summary"
+
+
+def say(text, path):
+    """Speak a line; a "|" marks a pause (each part is spoken separately, with silence between)."""
+    parts = [p.strip() for p in str(text).split("|") if p.strip()]
+    if len(parts) == 1:
+        speak(parts[0], path)
+        return
+    chunks, rate = [], None
+    for n, part in enumerate(parts):
+        tmp = out / f"_part{n}.wav"
+        speak(part, tmp)
+        with wave.open(str(tmp)) as wf:
+            rate, frames = wf.getframerate(), wf.readframes(wf.getnframes())
+            chunks.append(np.frombuffer(frames, dtype=np.int16))
+        tmp.unlink()
+    silence = np.zeros(int(rate * PAUSE), dtype=np.int16)
+    joined = np.concatenate([c for chunk in chunks for c in (chunk, silence)][:-1])
+    write_wav(path, joined.astype(np.float32) / 32767, rate)
+
+
 durations = {}
 for step in script["steps"]:
     path = out / f"{step['id']}.wav"
-    speak(step["say"], path)
+    say(step["say"], path)
     with wave.open(str(path)) as wf:
         durations[step["id"]] = wf.getnframes() / wf.getframerate()
 for key in ("intro", "outro"):                 # spoken over the opening and closing cards
     if script.get(f"{key}_say"):
         path = out / f"_{key}.wav"
-        speak(script[f"{key}_say"], path)
+        say(script[f"{key}_say"], path)
         with wave.open(str(path)) as wf:
             durations[f"_{key}"] = wf.getnframes() / wf.getframerate()
 (base / "durations.json").write_text(json.dumps(durations, indent=1))

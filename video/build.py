@@ -22,7 +22,8 @@ lines = []
 for n, step in enumerate(steps):
     end = steps[n + 1]["start"] if n + 1 < len(steps) else timeline["end"]
     end = min(end, step["start"] + durations[step["id"]] + 0.6)
-    lines += [str(n + 1), f"{stamp(step['start'])} --> {stamp(end)}", step["say"], ""]
+    words = " ".join(step["say"].replace("|", " ").split())          # pause marks are for the voice only
+    lines += [str(n + 1), f"{stamp(step['start'])} --> {stamp(end)}", words, ""]
 (d / "captions.srt").write_text("\n".join(lines))
 
 inputs, filters = ["-i", str(d / "raw.webm")], []

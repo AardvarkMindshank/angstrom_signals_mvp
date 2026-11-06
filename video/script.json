@@ -31,7 +31,7 @@
   },
   {
    "id": "alerts",
-   "say": "Then choose how you hear about it: instantly, in the daily summary, or only in the app."
+   "say": "Then choose how you hear about it: | instantly, | in the daily summary, | or only in the app."
   },
   {
    "id": "tidy",
