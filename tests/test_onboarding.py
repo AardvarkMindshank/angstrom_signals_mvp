@@ -80,3 +80,9 @@ def test_tap_to_explain_never_presses_a_button_on_a_plain_tap_and_explain_mode_i
     assert '"❓ Explain mode"' in settings and '"explain_mode": bool(explain_mode)' in settings
     assert '"explain_mode",' in app[app.index("_ACCOUNT_STATE_KEYS = ("):app.index("_ACCOUNT_STATE_KEYS = (") + 200]
     assert "_onboarding.tap_explain(st" in app and "_onboarding.render(" in app
+
+
+def test_the_breakdown_explains_the_readings_in_a_full_width_fold_out():
+    app = (ROOT / "app.py").read_text()
+    body = app[app.index("def _signals_info_popover"):app.index("def _signals_info_popover") + 400]
+    assert 'st.expander("ℹ️ How the technical signals work", expanded=False' in body and "st.popover" not in body

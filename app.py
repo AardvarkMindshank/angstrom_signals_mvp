@@ -7365,8 +7365,9 @@ with tracked_expander("⭐ Watchlists", "watchlists", sidebar=True):
                     st.rerun()
 
 def _signals_info_popover() -> None:
-    """An info button that explains the technical readings in plain words."""
-    with st.popover("ℹ️", help="How the technical signals work"):
+    """How the technical readings work, in plain words: a full-width fold-out, closed until opened (a pop-up was
+    cramped on phones)."""
+    with st.expander("ℹ️ How the technical signals work", expanded=False, key="signals_info"):
         st.markdown(signals_view.EXPLAINER)
 
 
