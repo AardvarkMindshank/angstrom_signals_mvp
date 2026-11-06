@@ -74,3 +74,5 @@ watchdog==6.0.0
 websockets==15.0.1
 yarl==1.25.1
 yfinance==1.7.0
+pypdf==6.17.0
+reportlab==5.0.1
