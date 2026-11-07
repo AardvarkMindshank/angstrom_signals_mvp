@@ -467,13 +467,16 @@ def run_background_checks() -> None:
         # The readings are only worked out when something here needs them: the daily digest's watchlist summary,
         # or the old alert check before the built-in scans are installed.
         need_readings = builtins_by_owner is None or digest_due(alert_config, now_utc) == "send"
+        # The asset rows (price, sentiment, readings) are only built when an email or the digest will use them, so
+        # a quiet pass reads no stored price histories at all.
+        need_rows = need_readings or bool(builtin_out["notes"])
         results = []
         print(f"Checking assets for user {user_id}")
 
-        for kind, assets, name_for in (
+        for kind, assets, name_for in ((
             ("Crypto", crypto_list, lambda asset_id, name: name),
             ("Stock", stock_list, lambda asset_id, name: f"{name} ({asset_id})"),
-        ):
+        ) if need_rows else ()):
             for asset_id, name in assets.items():
                 frame = frames.get((kind, canonical_asset_id(kind, asset_id)))
                 scored = slice_history(frame, signals_v2.SCORING_BARS)

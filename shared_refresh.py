@@ -15,6 +15,7 @@ from data_fetchers import crypto_ticker, fetch_crypto_data, fetch_stock_data, pe
 from market_store import (
     asset_market_key,
     frame_from_row,
+    load_market_columns,
     load_market_moods,
     load_shared_market,
     row_timestamp,
@@ -123,15 +124,18 @@ def refresh_price_catalog(supabase, catalog: dict, days: int) -> dict:
     keyed by (kind, canonical id) and still need slicing to one account's history.
     """
     keys = [asset_market_key(kind, asset_id) for kind, asset_id in catalog]
-    stored = load_shared_market(supabase, keys) if keys else {}
-    frames = {}
+    # Only the save times are read here. A stored history is downloaded only for an asset that isn't refreshed on
+    # this pass (StoredFrames, on first use): reading every history every 5 minutes used most of the database's
+    # monthly egress allowance.
+    stamps = load_market_columns(supabase, keys, "prices_updated_at") if keys else {}
+    frames = StoredFrames(supabase)
     refreshed = 0
     for kind, asset_id in catalog:
         identity = canonical_asset_id(kind, asset_id)
-        row = stored.get(asset_market_key(kind, asset_id))
-        frame = frame_from_row(row)
+        row = stamps.get(asset_market_key(kind, asset_id))
+        frame = None
         due = technical_refresh_due(row_timestamp(row, "prices_updated_at"))
-        if due or len(frame) < 15:
+        if due or row is None:
             try:
                 fetched, err = fetch_bars(kind, asset_id, days)
             except Exception as exc:
@@ -145,8 +149,35 @@ def refresh_price_catalog(supabase, catalog: dict, days: int) -> dict:
                 frame = fetched
         if frame is not None and len(frame) >= 15:
             frames[(kind, identity)] = frame
-    print(f"Shared prices: {refreshed} refreshed, {len(frames)} ready.")
+        else:
+            frames.later(kind, identity, asset_market_key(kind, asset_id))
+    print(f"Shared prices: {refreshed} refreshed, {len(frames)} fetched, {len(frames.pending)} stored if needed.")
     return frames
+
+
+class StoredFrames(dict):
+    """Price frames by (kind, id): the ones fetched on this pass, and the stored history of the others, read from
+    the database only when something asks for it (then kept for the rest of the pass)."""
+
+    def __init__(self, supabase):
+        super().__init__()
+        self.supabase = supabase
+        self.pending: dict = {}
+
+    def later(self, kind, identity, key) -> None:
+        self.pending[(kind, identity)] = key
+
+    def get(self, item, default=None):
+        if item in self:
+            return self[item]
+        key = self.pending.pop(item, None)
+        if key is None:
+            return default
+        frame = frame_from_row(load_shared_market(self.supabase, [key]).get(key))
+        if frame is not None and len(frame) >= 15:
+            self[item] = frame
+            return frame
+        return default
 
 
 def _force_market_mood() -> bool:
@@ -226,7 +257,7 @@ def refresh_due_sentiment(supabase, catalog: dict) -> None:
         print("Shared sentiment: batch finished.")
         return
     keys = [asset_market_key(kind, asset_id) for kind, asset_id in catalog]
-    stored = load_shared_market(supabase, keys)
+    stored = load_market_columns(supabase, keys, "sentiment_updated_at")     # the times only; reports when due
     now = time.time()
     due = []
     for (kind, asset_id), label in catalog.items():
@@ -238,9 +269,10 @@ def refresh_due_sentiment(supabase, catalog: dict) -> None:
         due.append((age, kind, asset_id, str(label or asset_id)))
     due.sort(reverse=True)
     for _age, kind, asset_id, label in due[:slots]:
+        key = asset_market_key(kind, asset_id)
         try:
-            _save_asset_sentiment(supabase, kind, asset_id, label,
-                                  previous=_previous_report(stored.get(asset_market_key(kind, asset_id))))
+            previous = load_market_columns(supabase, [key], "sentiment_report, sentiment_updated_at").get(key)
+            _save_asset_sentiment(supabase, kind, asset_id, label, previous=_previous_report(previous))
         except Exception as exc:
             print(f"Sentiment failed for {label}: {exc}")
     print("Shared sentiment: batch finished.")
