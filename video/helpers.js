@@ -62,6 +62,7 @@ module.exports = function makeHelpers(page, url) {
     if (!(await opener.count())) opener = box;
     await h.glide(opener);
     await opener.click({ force: true });
+    if (!(await page.locator('[role="option"]').count())) await page.keyboard.press("ArrowDown");   // open the list
     await page.waitForSelector('[role="option"]', { timeout: 5000 }).catch(() => {});
     await page.waitForTimeout(900);
     if (option === null) { await page.keyboard.press("Escape"); await page.waitForTimeout(300); return; }

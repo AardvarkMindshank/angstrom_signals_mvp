@@ -70,6 +70,7 @@ async function past(h, date) {
   if (!(await open.count())) await h.press('.lat.prism .scan button[aria-label="Run at a past moment"]', false);
   await h.glide(open.first());
   await open.first().fill(date);
+  await open.first().dispatchEvent("change");
   await h.wait(500);
   await h.press('.lat.prism .scan button[aria-label="Rebuild what was known then, using only data available at that time"]');
   await h.page.waitForSelector(TABLE, { timeout: 240000 }).catch(() => {});
@@ -197,9 +198,12 @@ module.exports = {
       await h.type('.lat input[aria-label="Group name"]', "My Trend");
       await h.press('button:has-text("Save as a new Group")');
       const saved = h.page.getByText("Saved as a new Group").first();
-      if (!(await saved.isVisible().catch(() => false))) {
-        await h.wait(1500);
-        if (!(await saved.isVisible().catch(() => false))) console.log("save: no message after saving the Group");
+      await h.wait(1200);
+      if (!(await saved.isVisible().catch(() => false))) {       // the click landed during a redraw: press again
+        console.log("save: no message after the first press; pressing again");
+        await h.press('button:has-text("Save as a new Group")');
+        await h.wait(1200);
+        if (!(await saved.isVisible().catch(() => false))) console.log("save: still no message");
       }
       await h.pick("Start from", null);          // My Trend is now in the list, as one of yours
     },

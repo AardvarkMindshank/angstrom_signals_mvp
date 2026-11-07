@@ -268,9 +268,14 @@ export default function(component) {
       r.appendChild(el("b", "", "Past moment"));
       const d = el("input"); d.type = "date"; d.setAttribute("aria-label", "Date (UTC)");
       const t = el("input"); t.type = "time"; t.value = "00:05"; t.setAttribute("aria-label", "Time (UTC)");
-      const day = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10); d.value = day; d.max = new Date().toISOString().slice(0, 10);
+      const day = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10);
+      const kept = (window.__prismPastAt || {})[s.id] || {};          // keep the chosen moment when the board redraws
+      d.value = kept.date || day; d.max = new Date().toISOString().slice(0, 10);
+      if (kept.time) t.value = kept.time;
+      const keep = () => { window.__prismPastAt = window.__prismPastAt || {}; window.__prismPastAt[s.id] = {date: d.value, time: t.value}; };
+      d.addEventListener("change", keep); t.addEventListener("change", keep);
       r.appendChild(d); r.appendChild(t); r.appendChild(el("span", "muted", "UTC"));
-      r.appendChild(button("⏪ Run at this moment", "Rebuild what was known then, using only data available at that time", () => act("run_past", {scan: s.id, date: d.value, time: t.value}), "on"));
+      r.appendChild(button("⏪ Run at this moment", "Rebuild what was known then, using only data available at that time", () => { keep(); act("run_past", {scan: s.id, date: d.value, time: t.value}); }, "on"));
       body.appendChild(r);
     }
 

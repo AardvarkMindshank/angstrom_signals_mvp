@@ -1,8 +1,5 @@
 # Videos recorded when the "video" branch is pushed, one per line (names of files in video/series/, without .json).
-01-angstrom-lattice-at-a-glance
-02-signals
 03-signal-groups
-04-signal-sets
 05-prism-scan
 w1-trend-with-volume
 w2-overextended-rally
