@@ -89,17 +89,15 @@ def _draw_player(st) -> None:
     v, near = info(name), neighbours(name)
     st.markdown(f"**{v['label']}** · {v['length']}")
     st.caption(f"{v['series_name']} · {v['position']} of {v['count']}")
-    cols = st.columns(3)
-    if cols[0].button("Start", icon=":material/first_page:", key="tv_first", disabled=near["previous"] is None,
-                      help="Back to the first video of this series", width="stretch"):
+    row = st.container(horizontal=True, horizontal_alignment="center", gap="small")   # one row, even on a phone
+    if row.button("Start", icon=":material/first_page:", key="tv_first", disabled=near["previous"] is None,
+                  help="Back to the first video of this series"):
         _go(st, near["first"])
-    if cols[1].button("Back", icon=":material/chevron_left:", key="tv_prev", disabled=near["previous"] is None,
-                      help=("Previous: " + info(near["previous"])["label"]) if near["previous"] else "This is the first video",
-                      width="stretch"):
+    if row.button("Back", icon=":material/chevron_left:", key="tv_prev", disabled=near["previous"] is None,
+                  help=("Previous: " + info(near["previous"])["label"]) if near["previous"] else "This is the first video"):
         _go(st, near["previous"])
-    if cols[2].button("Next", icon=":material/chevron_right:", key="tv_next", disabled=near["next"] is None,
-                      help=("Next: " + info(near["next"])["label"]) if near["next"] else "This is the last video",
-                      width="stretch"):
+    if row.button("Next", icon=":material/chevron_right:", key="tv_next", disabled=near["next"] is None,
+                  help=("Next: " + info(near["next"])["label"]) if near["next"] else "This is the last video"):
         _go(st, near["next"])
     st.video(v["url"], autoplay=True)
     with st.expander("All videos", icon=ICON):
