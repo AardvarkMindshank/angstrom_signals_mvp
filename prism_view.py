@@ -62,8 +62,12 @@ def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str = "") 
         st.session_state["siggroups_saved"] = cached
     _, saved, problem = cached
     choices = pb.set_choices(saved, user_id)
+    builtins: list = []
+
     def load():
-        return supabase.table("prism_scans").select("*").order("created_at").execute().data or []
+        rows = supabase.table("prism_scans").select("*").order("created_at").execute().data or []
+        builtins[:] = [r for r in rows if r.get("builtin")]    # the built-in alerts: shown below, not on the board
+        return [r for r in rows if not r.get("builtin")]
 
     try:
         scans = load()
@@ -109,10 +113,48 @@ def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str = "") 
             action = {}
         st.session_state["prism_flash"] = handle(st, supabase, action, by_id, choices, assets, now)
         lattice_panel.rerun(st)
+    _builtin_section(st, supabase, builtins)
     st.caption("Answers are descriptive readings, not forecasts or advice. ▶ uses the latest finished candles; ⏪ "
                "rebuilds a past moment from today's data providers (a reconstruction, not a record).")
     if problem:
         st.caption(f"Saved Sets could not be read: {problem}")
+
+
+CHANNEL_WORDS = {"account": "as your alert settings", "instant": "instantly (app and email)", "digest": "daily summary",
+                 "app": "app only", "off": "off"}
+
+
+def _builtin_section(st, supabase, builtins: list) -> None:
+    """The six built-in alerts (Trend, Stretch and Flow, up and down): what each checks, where its alerts go, and
+    which assets are past the line now. Their lines and on/off are set in Notifications → Configure Alert Rules."""
+    if not builtins:
+        return
+    import builtin_alerts as ba
+
+    order = {k: n for n, k in enumerate(ba.BUILTINS)}
+    builtins = sorted(builtins, key=lambda r: order.get(r.get("builtin"), 99))
+    _, latches = _history(supabase, [b["id"] for b in builtins])
+    on = sum((b.get("notify") or {}).get("channel") != "off" for b in builtins)
+    with st.expander(f"🔔 Built-in alerts · {on} of {len(builtins)} on", icon=":material/notifications_active:"):
+        st.caption("Trend, Stretch and Flow alerts, checked at each daily close (crypto 00:10 UTC, shares 10 minutes "
+                   "after the New York close) on the same readings as the dashboard. Change the lines and switch "
+                   "them on or off in Notifications → Configure Alert Rules. They don't count towards your "
+                   f"{MAX_SCANS_TEXT} scheduled scans.")
+        rows = []
+        for b in builtins:
+            reading, direction, _ = ba.BUILTINS[b["builtin"]]
+            line = float((b.get("set_source") or {}).get("line") or 0)
+            channel = (b.get("notify") or {}).get("channel") or "account"
+            past = latches.get(b["id"], [])
+            rows.append({"Alert": ("🔔 " if channel != "off" else "🔕 ") + b["name"],
+                         "Says Yes at": f"{direction * line:+.0f}",
+                         "Alerts again after": f"{direction * ba.rearm_level(line):+.0f}",
+                         "Alerts go": CHANNEL_WORDS.get(channel, channel),
+                         "Past the line now": len(past) if channel != "off" else "—"})
+        st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")
+
+
+MAX_SCANS_TEXT = "5"
 
 
 def _history(supabase, ids: list) -> tuple[dict, dict]:

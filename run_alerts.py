@@ -8,6 +8,7 @@ in the Streamlit app.
 from __future__ import annotations
 
 import base64
+from datetime import datetime, timezone
 import html
 import json
 import os
@@ -15,7 +16,8 @@ import os
 import requests
 from supabase import create_client
 
-from alerts import READING_ALERTS, evaluate_alerts, market_rows, reading_alert_on
+from alerts import READING_ALERTS, _email_open_crossings, evaluate_alerts, facts_by_symbol, logos_by_symbol, market_rows
+from alerts import reading_alert_on
 from alerts import SETTINGS_KEYS as READING_SETTINGS_KEYS
 from beta_worker import send_beta_decision_emails, send_nda_copies
 from digest import send_due_digest
@@ -405,6 +407,26 @@ def run_background_checks() -> None:
     alerts_res = supabase.table("alert_preferences").select("*").execute()
     alerts_map = {row["user_id"]: row for row in (alerts_res.data or [])}
 
+    # Trend, Stretch and Flow alerts are built-in Prism scans (builtin_alerts.py), run at each daily close on the
+    # stored bars. Until sql/2026-11-10_prism_builtin_alerts.sql is run, the old check below still does it.
+    import builtin_alerts
+    from digest import digest_due
+
+    builtin_store = builtin_alerts.Store(supabase)
+    try:
+        builtins_by_owner = builtin_store.builtin_scans()
+    except Exception as exc:
+        builtins_by_owner = None
+        print(f"Built-in alert scans not installed yet (run sql/2026-11-10_prism_builtin_alerts.sql): {str(exc)[:120]}")
+
+    def stored_frame(kind, asset_id):
+        stored_kind = "Crypto" if kind == "crypto" else "Stock"
+        return slice_history(frames.get((stored_kind, canonical_asset_id(stored_kind, asset_id))),
+                             signals_v2.SCORING_BARS)
+
+    shared_readings = builtin_alerts.Readings(stored_frame)
+    now_utc = datetime.now(timezone.utc)
+
     for user_pref in all_user_prefs:
         user_id = user_pref["user_id"]
         # An account with no saved alert settings gets the new-account defaults:
@@ -421,16 +443,30 @@ def run_background_checks() -> None:
         })
         settings = user_pref.get("settings") if isinstance(user_pref.get("settings"), dict) else {}
         alert_config = {**alert_config, **{key: settings.get(key) for key in READING_SETTINGS_KEYS}}
+        crypto_list, stock_list, _days_history = _watchlist(user_pref)
+        builtin_out = {"notes": []}
+        if builtins_by_owner is not None:
+            try:
+                mine = builtin_store.sync(user_id, builtins_by_owner.setdefault(user_id, {}), alert_config, stock_list)
+                builtin_out = builtin_alerts.run_account(builtin_store, user_id, list(mine.values()),
+                                                         (crypto_list, stock_list), shared_readings, now=now_utc)
+                if builtin_out.get("ran"):
+                    print(f"Built-in alerts for {user_id}: {builtin_out['ran']} runs, {len(builtin_out['notes'])} alerts")
+            except Exception as exc:
+                print(f"Built-in alerts failed for user {user_id}: {str(exc)[:200]}")
+            # The old every-pass check of the three readings is off: market sentiment alerts only.
+            alert_config = {**alert_config, "enabled": False, "stretch_alert_on": False, "flow_alert_on": False}
         summary_only = alert_config.get("digest_enabled") and alert_config.get("digest_watchlist") is not False
-        if (
+        if not builtin_out["notes"] and (
             not any(reading_alert_on(alert_config, reading) for reading in READING_ALERTS)
             and not alert_config.get("market_alerts_enabled")
             and not summary_only
         ):
             continue
         markets = market_rows(market_scores, followed_markets(user_pref))
-
-        crypto_list, stock_list, _days_history = _watchlist(user_pref)
+        # The readings are only worked out when something here needs them: the daily digest's watchlist summary,
+        # or the old alert check before the built-in scans are installed.
+        need_readings = builtins_by_owner is None or digest_due(alert_config, now_utc) == "send"
         results = []
         print(f"Checking assets for user {user_id}")
 
@@ -441,13 +477,15 @@ def run_background_checks() -> None:
             for asset_id, name in assets.items():
                 frame = frames.get((kind, canonical_asset_id(kind, asset_id)))
                 scored = slice_history(frame, signals_v2.SCORING_BARS)
-                try:
-                    readings = _score_asset(scored, kind)
-                except Exception as exc:
-                    print(f"Scoring failed for {asset_id}: {exc}")
-                    continue
-                if readings is None:
-                    continue
+                readings = {}
+                if need_readings:
+                    try:
+                        readings = _score_asset(scored, kind)
+                    except Exception as exc:
+                        print(f"Scoring failed for {asset_id}: {exc}")
+                        continue
+                    if readings is None:
+                        continue
                 market = "crypto" if kind == "Crypto" else "stock"
                 results.append({
                     "key": asset_id,
@@ -476,6 +514,12 @@ def run_background_checks() -> None:
             continue
         for alert in opened:
             print(f"Opened {alert['alert_type']} for {alert['asset_name']}")
+        if builtin_out["notes"] and (alert_config.get("instant_email") is not False or builtin_out.get("instant")):
+            try:      # the built-in alerts' instant emails, with price, sentiment and the market's mood as before
+                _email_open_crossings(supabase, user_id, user_email(supabase, user_id), send_alert_email,
+                                      logos_by_symbol(results), facts_by_symbol(results))
+            except Exception as exc:
+                print(f"Built-in alert emails failed for user {user_id}: {str(exc)[:160]}")
 
         digest_state = send_due_digest(
             supabase,

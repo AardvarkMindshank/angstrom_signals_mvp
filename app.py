@@ -6553,7 +6553,7 @@ def notifications_panel() -> None:
                 help=(
                     "Alert when the Trend reading (-100 to +100) of an asset on your watchlists turns up through "
                     "your line or down through minus your line. Readings use finished daily bars and are "
-                    "checked about every 5 minutes."
+                    "checked at each daily close (crypto 00:10 UTC, shares 10 minutes after the New York close)."
                 ),
             )
             old_level = _trend_alert_level()
@@ -7117,7 +7117,8 @@ such as *A, then B within N days*.
         st.markdown("""
 **Setting up** (Notifications → Configure Alert Rules)
 - 📈 **Trend alerts** (on by default): an alert when an asset's Trend reading turns up to your line (default
-  +50) or down to minus your line (default -50). Readings use finished daily bars; checked about every 5 minutes.
+  +50) or down to minus your line (default -50). Readings use finished daily bars, so they are checked once at
+  each daily close: crypto at 00:10 UTC, shares 10 minutes after the New York close on weekdays.
 - 🎯 **Stretch alerts** and 🔊 **Flow alerts** (off until you switch them on): the same for the Stretch reading
   (default ±65: price has run unusually far up or down within its recent range) and the Flow reading (default
   ±40: volume is unusually strongly backing rises or falls). Switching one on notes the assets already past the
@@ -7142,6 +7143,10 @@ back (for example back to +30 after a +50 alert) and then crosses again. This ap
 - Unread alerts sit at the top. Click one to open it: an asset opens on the chart, a market alert opens
   that market's sentiment. Clicking marks it read.
 - ✅ marks all as read · 🧹 clears read alerts · 🗑️ clears all. Group invites stay until you answer them.
+
+**Built-in Prism scans.** The Trend, Stretch and Flow alerts are six built-in scans in 🧩 Angstrom Lattice →
+Prism Scan (*Trend turns up*, *Trend turns down*, and so on), listed under 🔔 Built-in alerts there. They work like
+your own scans, on the same readings as the dashboard, and don't count towards your 5 scheduled scans.
 
 **Always on.** Alerts are checked in the background, whether or not this page is open. Emails go only
 to your account's address; the digest also lists market sentiment and your strongest and weakest assets.
