@@ -69,7 +69,7 @@ def demo_sets() -> dict[str, dict]:
                  {"group": "trend", "outcome": {"eq": "bullish"}},
                  {"not": {"group": "stretch", "outcome": {"eq": "stretched_up"}}},
                  {"member": "mood", "field": "score", "gte": -20}]}}}
-    return {"demo:agree": agree, "demo:entry": entry, **against_trend_sets()}
+    return {"demo:agree": agree, "demo:entry": entry, **against_trend_sets(), **library_sets()}
 
 
 AGAINST_LEVEL = 0.3     # the dashboard's level for a pullback or rally inside a trend (signals_v2 against_trend_level)
@@ -240,3 +240,117 @@ def table(doc: dict, rows: list[dict]) -> pd.DataFrame:
                                                   if r["available"] not in ("Complete", "—") and r["available_detail"] else "")
         records.append(rec)
     return pd.DataFrame(records)
+
+
+# ----------------------------------------------------------------------------------------------- the provided library
+# Stage A of the agreed plan (docs/design/provided_library.md): Sets built only from existing signals and Groups.
+# Descriptions, not forecasts: none has been tested for what follows a Yes.
+
+def _item(key: str, label: str, signal: str, timeframe: str = "1D", **params) -> dict:
+    return {"key": key, "label": label, "role": "condition",
+            "ref": {"id": signal, "version": 1, "timeframe": timeframe, "params": params}}
+
+
+def _weekly(alias: str) -> dict:
+    """A labelled starter read on weekly candles."""
+    doc = labelled_starter(alias)
+    doc["name"] = doc["name"].replace("(with labels)", "(weekly, with labels)")
+    for m in doc["members"]:
+        m["ref"]["timeframe"] = "1W"
+        m["key"] = m["key"] + "_w"
+    return doc
+
+
+def _pinned(key: str, alias: str, kind: str, asset_id: str) -> dict:
+    g = _group(key, alias)
+    g["subject"] = {"kind": kind, "id": asset_id}
+    return g
+
+
+def _breakout_group() -> dict:
+    """Recent structure breaks: +1 when the only breaks in the last 3 daily candles were upward, -1 downward.
+    Set rules can't say "within N candles" yet, so the recency lives in this Group's confirmation."""
+    return {
+        "schema": "angstrom.group/1", "name": "Recent structure break", "lineage_version": 3,
+        "question": "Did price close through recent structure in the last 3 daily candles, and which way?",
+        "score": {"method": "weighted_mean", "range": [-1, 1], "min_coverage": {"num": 1, "den": 1},
+                  "meaning": "+1: only upward breaks recently; -1: only downward; 0: none or both."},
+        "members": [{"key": "breaks", "label": "Daily structure breaks", "role": "score", "category": "structure",
+                     "ref": {"id": "structure.breaks", "version": 1, "timeframe": "1D", "params": {}},
+                     "weight": 1, "when_unavailable": "exclude",
+                     "transform": {"kind": "events", "version": 1, "up_kinds": ["BOS", "CHoCH", "break"],
+                                   "down_kinds": ["BOS", "CHoCH", "break"], "within_candles": 3}}],
+        "conditions": [{"key": "recent_up", "label": "An upward break in the last 3 daily candles",
+                        "kind": "confirmation",
+                        "rule": {"member": "breaks", "events": {"direction": "bullish", "within_candles": 3}}}],
+    }
+
+
+def library_sets() -> dict[str, dict]:
+    base = {"schema": "angstrom.set/1", "lineage_version": 3, "score": None, "market_context": []}
+    weekly = _weekly("starter:trend")
+    out = {
+        "demo:alignment": {
+            **base, "name": "Trend alignment",
+            "purpose": "The daily and the weekly Trend are both Bullish: the shorter and the longer view agree.",
+            "groups": [_group("trend", "starter:trend"),
+                       {"key": "trend_w", "snapshot": weekly,
+                        "provenance": {"source_config": "starter:trend", "note": "the Trend starter on weekly candles",
+                                       "content_sha256": sg.content_sha256(weekly)}}],
+            "standalone": [],
+            "decision": {"version": 1, "rule": {"all": [{"group": "trend", "outcome": {"eq": "bullish"}},
+                                                        {"group": "trend_w", "outcome": {"eq": "bullish"}}]}}},
+        "demo:breakout": {
+            **base, "name": "Breakout with volume",
+            "purpose": "Price closed through recent structure upwards in the last 3 daily candles, and the latest "
+                       "candle traded at least 1.5 times its usual volume.",
+            "groups": [{"key": "breakout", "snapshot": _breakout_group(),
+                        "provenance": {"source_config": "provided", "note": "a recent upward structure break",
+                                       "content_sha256": sg.content_sha256(_breakout_group())}}],
+            "standalone": [_item("volume", "Relative volume", "volume.relative")],
+            "decision": {"version": 1, "rule": {"all": [
+                {"group": "breakout", "condition": "recent_up", "state": {"eq": "met"}},
+                {"member": "volume", "gte": 1.5}]}}},
+        "demo:squeeze": {
+            **base, "name": "Volatility squeeze",
+            "purpose": "The Bollinger bands are narrower than on 80% of days in the past year: unusually quiet "
+                       "trading. It says nothing about which way a later move would go.",
+            "groups": [],
+            "standalone": [_item("regime", "Regime evidence", "regime.observation", window=252)],
+            "decision": {"version": 1, "rule": {"member": "regime", "field": "band_width_percentile", "lte": 20}}},
+        "demo:range_low": {
+            **base, "name": "Oversold in a range",
+            "purpose": "The market is ranging (no clear trend), and RSI is 30 or lower or Stochastic %K is 20 or "
+                       "lower: price is near the bottom of its recent swings.",
+            "groups": [],
+            "standalone": [_item("regime", "Market regime", "regime.state"),
+                           _item("rsi", "RSI (14)", "rsi.level"), _item("stoch", "Stochastic %K", "stochastic.level")],
+            "decision": {"version": 1, "rule": {"all": [
+                {"member": "regime", "eq": "ranging"},
+                {"any": [{"member": "rsi", "field": "rsi", "lte": 30},
+                         {"member": "stoch", "field": "stoch_k", "lte": 20}]}]}}},
+        "demo:near_support": {
+            **base, "name": "Near support in a range",
+            "purpose": "The market is ranging, and the nearest support zone is within half a typical daily range "
+                       "of price.",
+            "groups": [],
+            "standalone": [_item("regime", "Market regime", "regime.state"),
+                           _item("zones", "Support and resistance", "levels.zones")],
+            "decision": {"version": 1, "rule": {"all": [
+                {"member": "regime", "eq": "ranging"},
+                {"member": "zones", "field": "support.0.touches", "exists": True},   # no support zone below: No
+                {"member": "zones", "field": "support.0.distance_atr", "lte": 0.5}]}}},
+        "demo:btc_filter": {
+            **base, "name": "Bitcoin trend filter",
+            "purpose": "Bitcoin's own daily Trend is Bullish, whatever asset is scanned. Copy it into your own Sets "
+                       "as a market filter.",
+            "groups": [_pinned("btc_trend", "starter:trend", "crypto", "bitcoin")], "standalone": [],
+            "decision": {"version": 1, "rule": {"group": "btc_trend", "outcome": {"eq": "bullish"}}}},
+        "demo:overextended": {
+            **base, "name": "Overextended",
+            "purpose": "The Stretch is +50 or more: price has run far up within its recent range. A caution "
+                       "against chasing, not a signal to sell.",
+            "groups": [_group("stretch", "starter:stretch")], "standalone": [],
+            "decision": {"version": 1, "rule": {"group": "stretch", "outcome": {"eq": "stretched_up"}}}},
+    }
+    return out

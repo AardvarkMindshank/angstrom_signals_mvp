@@ -42,12 +42,20 @@ def chosen(settings: dict | None) -> dict:
         keys, seen = [], set()
         for key in raw.get(part) or []:
             key = str(key)
-            if key in seen or not (key.startswith("saved:") or (part == "groups" and key in starter_keys())):
+            if key in seen or not (key.startswith("saved:") or (part == "groups" and key in starter_keys())
+                                   or (part == "sets" and key in provided_sets())):
                 continue
             seen.add(key)
             keys.append(key)
         out[part] = keys[:MAX_EACH]
     return out
+
+
+def provided_sets() -> dict:
+    """The provided Sets (prism.demo_sets): key -> document."""
+    import prism
+
+    return prism.demo_sets()
 
 
 def starter_keys() -> list[str]:
@@ -58,7 +66,8 @@ def options(saved: list[dict], user_id: str) -> tuple[dict, dict]:
     """(groups, sets): key -> label for everything a column can show. Groups: the starters, then the account's own
     and shared ones; Sets: every readable Set with a decision."""
     groups = {alias: f"{sg.starter(alias)['name']} (provided)" for alias in sg.STARTERS}
-    sets = {}
+    sets = {key: f"{doc['name']} (provided)" for key, doc in provided_sets().items()
+            if not doc["name"].endswith("(demo)")}
     for c in saved:
         if not c.get("versions") or c.get("starter_alias"):
             continue
@@ -80,6 +89,10 @@ def resolve(columns: dict, saved: list[dict]) -> list[dict]:
             if key in CLUSTER_OF:
                 specs.append({"key": key, "part": part, "name": sg.starter(key)["name"], "doc": None,
                               "cluster": CLUSTER_OF[key], "config": None, "version": None})
+            elif part == "sets" and key in provided_sets():
+                doc = provided_sets()[key]
+                specs.append({"key": key, "part": part, "name": doc["name"], "doc": doc, "cluster": None,
+                              "config": None, "version": None})
             elif key.startswith("starter:"):
                 specs.append({"key": key, "part": part, "name": sg.starter(key)["name"], "doc": sg.starter(key),
                               "cluster": None, "config": None, "version": None})
@@ -228,6 +241,8 @@ def group_cell(spec: dict, cell: dict | None, row_pick: str | None = None) -> st
 
 
 ANSWER_MARK = {"yes": ("✓", "Yes", YES), "no": ("✕", "No", NO), "unknown": ("?", "Unknown", UNKNOWN)}
+ANSWER_HOVER = {"yes": "Yes: conditions met", "no": "No: a condition failed",
+                "unknown": "Unknown: nothing failed, but some data is missing"}
 
 
 def set_cell(spec: dict, cell: dict | None, row_pick: str | None = None) -> str:
@@ -238,7 +253,7 @@ def set_cell(spec: dict, cell: dict | None, row_pick: str | None = None) -> str:
     answer = cell.get("answer") if cell.get("answer") in ANSWER_MARK else "unknown"
     when, stale = freshness(spec, cell)
     mark, word, (fg, bg) = ANSWER_MARK[answer]
-    tip = f"{spec['name']}: {word}" + (f" · {cell['why']}" if cell.get("why") else "")
+    tip = f"{spec['name']}: {ANSWER_HOVER[answer]}" + (f" · {cell['why']}" if cell.get("why") else "")
     if cell.get("error"):
         tip += f" · could not be worked out ({cell['error']})"
     if when:

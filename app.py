@@ -9408,6 +9408,8 @@ def _open_in_lattice(raw: str) -> None:
             st.session_state["_lattice_start_next"] = ref
         else:
             st.session_state["lattice_start"] = f"saved:{ref}"
+    elif part == "sets" and ref.startswith("demo:"):
+        st.session_state["lattice_section"] = "prism"        # provided Sets are run, not edited: Prism lists them
     elif part == "sets":
         st.session_state["lattice_section"] = "sets"
         st.session_state["lattice_set_start"] = f"saved:{ref}"

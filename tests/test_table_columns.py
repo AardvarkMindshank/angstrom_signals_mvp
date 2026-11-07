@@ -30,7 +30,7 @@ def test_options_and_resolve_use_the_newest_version():
     saved = _saved()
     groups, sets = tc.options(saved, "demo")
     assert "saved:cfg-my-trend" in groups and "starter:trend" in groups
-    assert list(sets) == ["saved:cfg-pullback"]
+    assert [k for k in sets if k.startswith("saved:")] == ["saved:cfg-pullback"]
     specs = tc.resolve({"groups": ["starter:trend", "saved:cfg-my-trend", "saved:gone"],
                         "sets": ["saved:cfg-pullback"]}, saved)
     assert [(s["key"], s["part"], s["cluster"]) for s in specs] == [
@@ -58,7 +58,7 @@ def test_cells_explain_on_hover_and_open_lattice_on_click():
     g = tc.group_cell(spec_g, {"value": 42.0, "label": "Bullish"})
     assert "data-pick='lattice|groups|g1'" in g and "My Trend: +42 · Bullish" in g and "data-sec='g'" in g
     s = tc.set_cell(spec_s, {"answer": "yes", "why": "every line holds"})
-    assert "data-pick='lattice|sets|s1'" in s and "Pullback: Yes · every line holds" in s and "✓" in s
+    assert "data-pick='lattice|sets|s1'" in s and "Pullback: Yes: conditions met · every line holds" in s and "✓" in s
     assert "data-sort='0'" in tc.set_cell(spec_s, {"answer": "no"})
     assert "Unknown" in tc.set_cell(spec_s, {"error": "boom"})
     assert "2 of 3 Sets say Yes" in tc.folded_cell("sets", [{"answer": "yes"}, {"answer": "yes"}, {"answer": "no"}])
