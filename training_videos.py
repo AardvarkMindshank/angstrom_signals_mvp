@@ -126,8 +126,10 @@ def link(st, name: str, key: str | None = None) -> None:
 
 
 def all_links(st, key: str) -> None:
-    """Every series, one 🎬 link per video."""
-    for series_key, (series, videos) in SERIES.items():
-        st.markdown(f"**{series}**")
-        for slug, _, _ in videos:
-            link(st, slug, key=f"tv_{key}_{slug}")
+    """Every series, one 🎬 link per video; the series side by side on a wide screen."""
+    cols = st.columns(len(SERIES))
+    for col, (series_key, (series, videos)) in zip(cols, SERIES.items()):
+        with col:
+            st.markdown(f"**{series}**")
+            for slug, _, _ in videos:
+                link(st, slug, key=f"tv_{key}_{slug}")
