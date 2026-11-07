@@ -18,7 +18,7 @@ const { chromium, devices } = require("playwright");
     page.on("pageerror", (e) => errors.push(e.message));
     await page.goto(url + "?section=prism"); await page.waitForSelector(".lat.prism", { timeout: 120000 }); await page.waitForTimeout(2000);
     const prov = page.locator(".lat.prism details.prov").first();
-    await prov.locator("summary").click(); await page.waitForTimeout(300);
+    await prov.locator(":scope > summary").click(); await page.waitForTimeout(300);
     const chip = page.locator(".lat.prism .chip", { hasText: "Breakout with volume" }).first();
     const text = await chip.innerText();
     check(`${label}: icons on a provided Set`, text.includes("🔊") && text.includes("🧱"), text.replace(/\n/g, " ").slice(0, 120));
