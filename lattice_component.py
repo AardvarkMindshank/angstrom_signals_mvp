@@ -493,7 +493,7 @@ export default function(component) {
     const gs = groupsAvail.filter((g) => !q || g.name.toLowerCase().indexOf(q) >= 0);
     if (!gs.length) list.appendChild(el("div", "muted", "No saved Groups yet: save one in Signal Groups."));
     gs.forEach((g) => {
-      const sub = (g.owner === "starter" ? "starter" : g.owner) + " · " + (g.labels.length ? "labels: " + g.labels.join(", ") : (g.has_score ? "score only" : "no score"));
+      const sub = (g.owner === "starter" ? "🔰 provided starter" : g.owner) + " · " + (g.labels.length ? "labels: " + g.labels.join(", ") : (g.has_score ? "score only" : "no score"));
       list.appendChild(chip(g.name, sub, "Members: " + g.members.join(", "), "group|" + g.source, () => addGroup(g.source), "Add " + g.name + " to the Set"));
     });
     list.appendChild(el("div", "cat", "Single signals"));

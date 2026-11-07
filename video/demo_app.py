@@ -109,6 +109,10 @@ st.markdown("<style>header[data-testid='stHeader'],[data-testid='stToolbar'],[da
             "{display:none!important} .block-container{padding-top:1.2rem!important}"
             "</style>", unsafe_allow_html=True)
 store = _store()
+if "_show_provided_next" in st.session_state:          # the 🔰 switch in a Lattice list (the app does this in Settings)
+    st.session_state["show_provided"] = bool(st.session_state.pop("_show_provided_next"))
+if "show_provided" not in st.session_state:
+    st.session_state["show_provided"] = st.query_params.get("provided", "1") != "0"
 if "lattice_section" not in st.session_state:
     st.session_state["lattice_section"] = st.query_params.get("section", "prism")
     if st.query_params.get("preset"):

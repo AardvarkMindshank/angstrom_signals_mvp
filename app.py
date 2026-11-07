@@ -4670,6 +4670,7 @@ def _session_is_barred() -> bool:
 # sign in on that same page would otherwise see them and save them as their own.
 _ACCOUNT_STATE_KEYS = (
     "explain_mode",
+    "show_provided",
     "popouts_close_on_logout",
     "popouts_as_window",
     "popouts_fold_section",
@@ -7057,6 +7058,10 @@ same line under the asset's name in the chart section.
 **Angstrom Lattice** (preview) is the research workspace near the bottom of the dashboard. Open it and pick a
 part from the bar at the top; hover the bar for what each part does. Like the rest of the app, it describes
 conditions; nothing in it is a forecast or advice.
+
+**🔰 Provided by Angstrom Signals:** the starter Groups, the example Sets and the built-in alerts. To keep only your
+own in the lists, press **🔰 Hide provided** in any of them, or switch off ⚙️ Settings → Show provided starters and
+examples (one setting for all three). Hiding changes nothing else.
 """)
         _training.link(st, "01-angstrom-lattice-at-a-glance", key="tv_lat_01")
         _training.link(st, "02-signals", key="tv_lat_02")
@@ -7477,6 +7482,23 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
         ),
     )
     st.divider()
+    st.markdown("**Angstrom Lattice**")
+    if "_show_provided_next" in st.session_state:      # the switch in a Lattice list was pressed
+        st.session_state.show_provided = bool(st.session_state.pop("_show_provided_next"))
+    if "show_provided" not in st.session_state:
+        st.session_state.show_provided = settings.get("show_provided", True) is not False
+    show_provided = st.toggle(
+        "🔰 Show provided starters and examples",
+        key="show_provided",
+        persist_state="session",
+        help=(
+            "🔰 marks what Angstrom Signals provides: the starter Groups, the example Sets and the built-in "
+            "alerts. Switch off to keep only your own in Signal Groups, Signal Sets and Prism Scan. Hiding never "
+            "changes anything: your Groups and Sets built from a starter keep working, and built-in alerts that are "
+            "on keep running."
+        ),
+    )
+    st.divider()
     st.markdown("**UI pop-out options**")
     if "popouts_close_on_logout" not in st.session_state:
         st.session_state.popouts_close_on_logout = bool(settings.get("popouts_close_on_logout", True))
@@ -7589,6 +7611,7 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
         "popouts_as_window": bool(popouts_as_window),
         "popouts_fold_section": bool(popouts_fold_section),
         "explain_mode": bool(explain_mode),
+        "show_provided": bool(show_provided),
         "trade_crypto": bool(trade_crypto),
         "trade_equities": bool(trade_equities),
         "colours": chosen_colours,

@@ -56,6 +56,13 @@ def render(st, supabase, user_id: str = "") -> None:
             pass
         model = st.session_state["lattice_set_model"]
     screen = ls.state_for_screen(model, choices)
+    hidden = 0
+    if not lattice_panel.provided_shown(st):            # starters leave the library, unless this Set uses one
+        used = {g["source"] for g in model.get("groups") or []}
+        keep = [g for g in screen["groups"] if g["owner"] != "starter" or g["source"] in used]
+        hidden = len(screen["groups"]) - len(keep)
+        screen["groups"] = keep
+    lattice_panel.provided_switch(st, hidden, "provided_sets")
     try:
         result = lattice_component.set_component()(
             key="lattice_set_editor", data={**screen, "catalogue": le.catalogue()}, on_model_change=lambda: None)

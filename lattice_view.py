@@ -22,12 +22,12 @@ from signal_library import loaders
 START_NEW = "new"
 
 
-def _sources(saved: list[dict], user_id: str) -> tuple[dict, dict]:
+def _sources(saved: list[dict], user_id: str, show_provided: bool = True) -> tuple[dict, dict]:
     labels = {START_NEW: "➕ New Group"}
     docs: dict = {}
-    for alias in sg.STARTERS:
+    for alias in sg.STARTERS if show_provided else ():
         doc = sg.starter(alias)
-        labels[f"starter:{alias}"] = f"⭐ {doc['name']} (copy of a starter)"
+        labels[f"starter:{alias}"] = f"{lattice_panel.PROVIDED} {doc['name']} (copy of a starter)"
         docs[f"starter:{alias}"] = (doc, None)
     for c in saved:
         if c.get("kind") != "group" or c.get("owner_id") != user_id or not c["versions"]:
@@ -48,7 +48,11 @@ def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str = "") 
         cached = (time.time(), *gi.saved_configs(supabase))
         st.session_state["siggroups_saved"] = cached
     _, saved, problem = cached
-    labels, docs = _sources(saved, user_id)
+    shown = lattice_panel.provided_shown(st)
+    labels, docs = _sources(saved, user_id, shown)
+    if st.session_state.get("lattice_start") not in labels:
+        st.session_state.pop("lattice_start", None)         # a starter that is now hidden
+    lattice_panel.provided_switch(st, 0 if shown else len(sg.STARTERS), "provided_groups")
     start = st.selectbox("Start from", list(labels), format_func=labels.get, key="lattice_start")
     if st.session_state.get("lattice_loaded") != start:
         st.session_state["lattice_loaded"] = start

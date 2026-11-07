@@ -38,7 +38,7 @@ def set_choices(saved: list[dict], user_id: str) -> dict[str, dict]:
     key -> {name, meta, doc, config, version, latest}."""
     out = {}
     for key, doc in prism.demo_sets().items():
-        out[key] = {"name": doc["name"], "meta": "example Set", "doc": doc, "config": None, "version": None}
+        out[key] = {"name": doc["name"], "meta": "🔰 provided example", "doc": doc, "config": None, "version": None}
     for c in saved:
         if c.get("kind") != "set":
             continue
