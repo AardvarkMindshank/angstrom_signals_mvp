@@ -13,6 +13,8 @@ from __future__ import annotations
 import html
 import math
 import time
+
+from market_store import MINIMAL
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
@@ -194,7 +196,7 @@ def save_overview(supabase, overview: dict) -> bool:
             "id": "latest",
             "data": overview,
             "updated_at": datetime.now(timezone.utc).isoformat(),
-        }, on_conflict="id").execute()
+        }, on_conflict="id", returning=MINIMAL).execute()
         return True
     except Exception as exc:
         print(f"Market overview not saved. Run the latest supabase_rls.sql. {str(exc)[:160]}")
@@ -238,9 +240,15 @@ def carry_history(overview: dict, previous: dict | None, today: str | None = Non
 
 def refresh_due(supabase) -> None:
     """Worker step: fetch and save when the saved copy is older than REFRESH_SECONDS."""
-    saved = load_overview(supabase)
-    if saved and time.time() - float(saved.get("fetched_at") or 0) < REFRESH_SECONDS:
+    try:      # the save time only: the whole saved copy is downloaded only when a new one is due (database egress)
+        rows = (supabase.table("market_overview").select("fetched_at:data->fetched_at").eq("id", "latest").limit(1)
+                .execute().data or [])
+        fetched = float((rows[0] or {}).get("fetched_at") or 0) if rows else 0.0
+    except Exception:
+        fetched = 0.0
+    if time.time() - fetched < REFRESH_SECONDS:
         return
+    saved = load_overview(supabase)
     overview = carry_history(fetch_overview(), saved)
     if save_overview(supabase, overview):
         print(f"Market overview saved: {len(overview['items'])} readings")

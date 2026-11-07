@@ -19,6 +19,12 @@ import pandas as pd
 from score_colours import sentiment_category_score
 from sentiment import SENTIMENT_REFRESH_SECONDS, TECHNICAL_REFRESH_SECONDS
 
+try:     # writes ask the database to send nothing back: a saved price history is ~50 KB, and every byte read back
+    from postgrest.types import ReturnMethod     # counts towards the monthly egress allowance
+    MINIMAL = ReturnMethod.minimal
+except Exception:                                # older client, or tests without it
+    MINIMAL = "minimal"
+
 SPARKLINE_POINTS = 31
 COMMENT_LIMIT = 160
 COMMENT_EMOTICONS = ("😀", "🙂", "😐", "🙁", "😮", "🔥", "💩", "🚀", "📈", "📉")
@@ -963,7 +969,7 @@ def save_price_frame(supabase, kind: str, asset_id: str, frame) -> bool:
         "prices_updated_at": now,
     }
     try:
-        supabase.table("asset_market").upsert(payload, on_conflict="asset_key").execute()
+        supabase.table("asset_market").upsert(payload, on_conflict="asset_key", returning=MINIMAL).execute()
     except Exception as exc:
         _warn(exc)
         if "prices" in str(exc).lower():
@@ -996,7 +1002,7 @@ def save_price_paths(supabase, rows: list[dict]) -> None:
         return
     payload = list(payload.values())
     try:
-        supabase.table("asset_market").upsert(payload, on_conflict="asset_key").execute()
+        supabase.table("asset_market").upsert(payload, on_conflict="asset_key", returning=MINIMAL).execute()
     except Exception as exc:
         _warn(exc)
 
@@ -1022,7 +1028,7 @@ def save_logos(supabase, rows: list[dict]) -> None:
     if not payload:
         return
     try:
-        supabase.table("asset_market").upsert(list(payload.values()), on_conflict="asset_key").execute()
+        supabase.table("asset_market").upsert(list(payload.values()), on_conflict="asset_key", returning=MINIMAL).execute()
     except Exception as exc:
         _warn(exc)
 
@@ -1103,7 +1109,7 @@ def save_market_mood(supabase, market_key: str, query: str, report: dict, stored
         "sentiment_updated_at": datetime.fromtimestamp(stored_at, timezone.utc).isoformat(),
     }
     try:
-        supabase.table("market_mood").upsert(payload, on_conflict="market_key").execute()
+        supabase.table("market_mood").upsert(payload, on_conflict="market_key", returning=MINIMAL).execute()
     except Exception as exc:
         _warn(exc)
         return False
@@ -1133,7 +1139,7 @@ def save_sentiment(supabase, kind: str, asset_id: str, report: dict, stored_at: 
         "sentiment_updated_at": datetime.fromtimestamp(stored_at, timezone.utc).isoformat(),
     }
     try:
-        supabase.table("asset_market").upsert(payload, on_conflict="asset_key").execute()
+        supabase.table("asset_market").upsert(payload, on_conflict="asset_key", returning=MINIMAL).execute()
     except Exception as exc:
         _warn(exc)
         return
@@ -1195,11 +1201,62 @@ def _record_sentiment_history(supabase, subject_key: str, score: float, stored_a
         print(f"Sentiment history was not stored for {subject_key}: {exc}")
 
 
+def load_market_columns(supabase, keys: list[str], columns: str) -> dict[str, dict]:
+    """Only the named columns of these assets' rows (always with asset_key): for checks such as "is this due?",
+    which must not download whole price histories. Empty when the table or a column is missing."""
+    wanted = [key for key in keys if key]
+    if not wanted:
+        return {}
+    try:
+        rows = (supabase.table("asset_market").select(f"asset_key, {columns}").in_("asset_key", wanted)
+                .execute().data or [])
+    except Exception as exc:
+        _warn(exc)
+        return {}
+    return {row["asset_key"]: row for row in rows if row.get("asset_key")}
+
+
+# The app server keeps the shared rows it has read (the same for every account) and, on each load, first asks only
+# for the rows' save times; whole rows (price history, sentiment report) are downloaded again only when one of
+# those times changed. Pages redraw far more often than the data changes, and each full row is tens of KB of the
+# database's monthly egress allowance. Switched on by the app only (enable_row_cache), so the worker and tests read
+# directly.
+_STAMPS = "prices_updated_at, sentiment_updated_at, closes_updated_at, market_stats_updated_at, earnings_checked_at"
+_ROW_CACHE: dict | None = None
+_ROW_CACHE_MAX_AGE = 1800        # and every half hour anyway, for columns without a save time (the logo)
+
+
+def enable_row_cache() -> None:
+    global _ROW_CACHE
+    if _ROW_CACHE is None:
+        _ROW_CACHE = {}
+
+
 def load_shared_market(supabase, keys: list[str]) -> dict[str, dict]:
     """Rows already stored for these assets. Empty when the table is not there yet."""
     wanted = [key for key in keys if key]
     if not wanted:
         return {}
+    if _ROW_CACHE is None:
+        return _load_rows(supabase, wanted)
+    try:
+        stamps = {row["asset_key"]: tuple(row.get(c.strip()) for c in _STAMPS.split(","))
+                  for row in (supabase.table("asset_market").select(f"asset_key, {_STAMPS}")
+                              .in_("asset_key", wanted).execute().data or []) if row.get("asset_key")}
+    except Exception:                      # an older table without every time column: read whole rows
+        return _load_rows(supabase, wanted)
+    now = time.time()
+    stale = [k for k in stamps if k not in _ROW_CACHE or _ROW_CACHE[k][0] != stamps[k]
+             or now - _ROW_CACHE[k][2] > _ROW_CACHE_MAX_AGE]
+    if stale:
+        fresh = _load_rows(supabase, stale)
+        for k in stale:
+            if k in fresh:
+                _ROW_CACHE[k] = (stamps[k], fresh[k], now)
+    return {k: dict(_ROW_CACHE[k][1]) for k in wanted if k in stamps and k in _ROW_CACHE}
+
+
+def _load_rows(supabase, wanted: list[str]) -> dict[str, dict]:
     global _COLUMN_TIER, _COLUMN_TIER_SINCE
     tiers = (_SHARED_COLUMNS_STATS, _SHARED_COLUMNS, _SHARED_COLUMNS_LEGACY)
     # A fall-back to fewer columns is not for life: one odd error must not hide market caps and
@@ -1316,7 +1373,7 @@ def save_earnings(supabase, found: dict) -> None:
     if not payload:
         return
     try:
-        supabase.table("asset_market").upsert(list(payload.values()), on_conflict="asset_key").execute()
+        supabase.table("asset_market").upsert(list(payload.values()), on_conflict="asset_key", returning=MINIMAL).execute()
     except Exception as exc:
         _warn(exc)
 
@@ -1446,7 +1503,7 @@ def save_market_stats(supabase, rows: list[dict]) -> None:
     if not payload:
         return
     try:
-        supabase.table("asset_market").upsert(list(payload.values()), on_conflict="asset_key").execute()
+        supabase.table("asset_market").upsert(list(payload.values()), on_conflict="asset_key", returning=MINIMAL).execute()
     except Exception as exc:
         _warn(exc)
 

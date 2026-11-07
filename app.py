@@ -4062,6 +4062,9 @@ try:
         sparkline_svg,
         trend_tone,
     )
+    import market_store as _market_store
+
+    _market_store.enable_row_cache()          # shared rows re-read only when they change (database egress)
     from scoring import calculate_indicators, find_column
     from shared_refresh import (
         create_price_row,
