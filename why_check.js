@@ -20,13 +20,15 @@ const { chromium, devices } = require("playwright");
     check(`${label}: a block per column`, titles.length === 6, titles.join(" / "));
     check(`${label}: Trend shows its number and label`, titles.some((t) => /📈 Trend · [+-]?\d+ · /.test(t)));
     check(`${label}: the waiting hourly column says so`, titles.some((t) => t.includes("Hourly dip · no answer yet")));
-    const open = await page.locator("details[open] summary").allInnerTexts();
+    // Streamlit keeps [open] on every expander; the arrow icon says which are expanded.
+    const expanded = (ts) => ts.filter((t) => t.includes("keyboard_arrow_down"));
+    const open = expanded(titles);
     check(`${label}: the clicked column is open`, open.some((t) => t.includes("Pullback")) && !open.some((t) => t.includes("Trend ·")), open.join(" / "));
-    const body = await page.locator("details[open]").last().innerText();
+    const body = await page.locator("[data-testid='stExpander']", { hasText: "Pullback" }).last().innerText();
     check(`${label}: Set lines with their readings`, body.includes("reading:"), body.slice(0, 120));
     check(`${label}: a Lattice button`, await page.getByRole("button", { name: /Open in Lattice/ }).filter({ visible: true }).count() >= 1);
     await page.locator("summary", { hasText: "Trend ·" }).first().click(); await page.waitForTimeout(600);
-    const trend = await page.locator("details[open]").allInnerTexts();
+    const trend = await page.locator("[data-testid='stExpander']", { hasText: "Trend ·" }).allInnerTexts();
     check(`${label}: Trend parts in plain words`, trend.join(" ").includes("Moving averages") && trend.join(" ").includes("vs 200-day"));
     check(`${label}: no named views`, !trend.join(" ").includes("Named views"));
     check(`${label}: no sideways scrolling`, await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1));
