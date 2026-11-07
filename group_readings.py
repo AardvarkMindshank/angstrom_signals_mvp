@@ -111,6 +111,53 @@ def stored_context(frame: pd.DataFrame, kind: str, now: datetime | None = None, 
     return ctx, pd.Timestamp(done.index[-1])
 
 
+CONTEXT_REFS = (("regime.observation", {"window": v2.DEFINITIONS["percentile_window"]}), ("volume.relative", {}))
+
+
+def context_from_signals(ctx, kind: str, warnings: list | None = None) -> dict:
+    """The non-directional context beside the readings (daily range, trend strength, regime, volume against usual),
+    read from the Regime evidence and Relative volume signals, in the shape the asset card draws."""
+    import signal_library as sl
+
+    refs = [sl.SignalRef.make(sl.REGISTRY.get(i, 1), "1D", **params) for i, params in CONTEXT_REFS]
+    got = sl.evaluate(refs, ctx)
+    regime_sig, volume_sig = (got[r.instance_key] for r in refs)
+    obs = regime_sig.value if regime_sig.status == "ok" and isinstance(regime_sig.value, dict) else {}
+    pct, adx = obs.get("atr_pct_percentile"), obs.get("adx")
+    stock = not str(kind).lower().startswith("crypto")
+    strong, weak = v2.DEFINITIONS["adx_strong"], v2.DEFINITIONS["adx_weak"]
+    return {
+        "volatility": {
+            "atr_pct": obs.get("atr_pct"), "percentile": pct,
+            "label": ("Higher than usual" if pct is not None and pct >= 80 else
+                      "Lower than usual" if pct is not None and pct <= 20 else
+                      "About usual" if pct is not None else "Not enough history"),
+            "validation": "volatility_stock" if stock else "volatility_crypto",
+        },
+        "trend_strength": {"adx": adx, "label": ("Strong" if adx is not None and adx >= strong else
+                                                  "Weak" if adx is not None and adx < weak else
+                                                  "Developing" if adx is not None else "Not enough data")},
+        "regime": ({"state": obs["state"], "direction": obs.get("direction"),
+                    "label": obs["state"] if obs["state"] != "trending" else f"trending_{obs.get('direction')}"} if obs.get("state") else None),
+        "participation": {"volume_ratio": volume_sig.value if volume_sig.status == "ok" else None},
+        "warnings": list(warnings or []),
+        "source": "signals",
+    }
+
+
+def against_trend(ctx) -> str | None:
+    """"pullback" or "rally" when the provided Set of that name answers Yes (prism.against_trend_sets), else None."""
+    import prism
+    import signal_groups as sg
+
+    for key, word in (("demo:pullback", "pullback"), ("demo:rally", "rally")):
+        doc = prism.against_trend_sets()[key]
+        result = sg.evaluate_set(doc, ctx)
+        if (result.get("decision") or {}).get("answer") == "yes":
+            return word
+    return None
+
+
 def score(frame: pd.DataFrame, kind: str, now: datetime | None = None) -> dict:
     """The readings for the last finished daily bar of `frame` (the output of scoring.calculate_indicators), in the
     shape of signals_v2.score, with Trend, Stretch and Flow from the starter Groups."""
@@ -127,11 +174,8 @@ def score(frame: pd.DataFrame, kind: str, now: datetime | None = None) -> dict:
         clusters[cluster] = _cluster(cluster, result, spec["components"], spec["horizon"])
     out["clusters"] = clusters
 
-    t, s = clusters["trend"]["value"], clusters["stretch"]["value"]
-    level = v2.DEFINITIONS["against_trend_level"]
-    against = None
-    if t is not None and s is not None and abs(t) >= level and abs(s) >= level and (t > 0) != (s > 0):
-        against = "pullback" if t > 0 else "rally"
+    against = against_trend(ctx)
+    out["context"] = context_from_signals(ctx, kind, (legacy.get("context") or {}).get("warnings"))
     out.pop("lenses", None)               # the old "named views": retired (Groups and Sets cover them)
     out.update(against_trend=against, summary=v2.summary(clusters, against))
     return out

@@ -69,7 +69,28 @@ def demo_sets() -> dict[str, dict]:
                  {"group": "trend", "outcome": {"eq": "bullish"}},
                  {"not": {"group": "stretch", "outcome": {"eq": "stretched_up"}}},
                  {"member": "mood", "field": "score", "gte": -20}]}}}
-    return {"demo:agree": agree, "demo:entry": entry}
+    return {"demo:agree": agree, "demo:entry": entry, **against_trend_sets()}
+
+
+AGAINST_LEVEL = 0.3     # the dashboard's level for a pullback or rally inside a trend (signals_v2 against_trend_level)
+
+
+def against_trend_sets() -> dict[str, dict]:
+    """Pullback in an uptrend / Rally in a downtrend: the Trend and the Stretch pointing opposite ways, each at least
+    0.3 (30) from zero. The asset card's note reads these Sets (group_readings.score)."""
+    base = {"schema": "angstrom.set/1", "lineage_version": 3, "score": None, "market_context": [], "standalone": []}
+    groups = [_group("trend", "starter:trend"), _group("stretch", "starter:stretch")]
+    pullback = {**base, "name": "Pullback in an uptrend",
+                "purpose": "The daily Trend is up (at least +30) while the Stretch has pulled back (−30 or lower).",
+                "groups": groups, "decision": {"version": 1, "rule": {"all": [
+                    {"group": "trend", "score": {"gte": AGAINST_LEVEL}},
+                    {"group": "stretch", "score": {"lte": -AGAINST_LEVEL}}]}}}
+    rally = {**base, "name": "Rally in a downtrend",
+             "purpose": "The daily Trend is down (−30 or lower) while the Stretch has bounced (at least +30).",
+             "groups": copy.deepcopy(groups), "decision": {"version": 1, "rule": {"all": [
+                 {"group": "trend", "score": {"lte": -AGAINST_LEVEL}},
+                 {"group": "stretch", "score": {"gte": AGAINST_LEVEL}}]}}}
+    return {"demo:pullback": pullback, "demo:rally": rally}
 
 
 # ----------------------------------------------------------------------------------------------- one row per asset

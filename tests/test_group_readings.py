@@ -53,9 +53,23 @@ def test_same_numbers_bands_and_coverage_as_before_at_many_cutoffs():
                 assert b["group"]["completeness"] in ("Complete", "Partial", "None")
             assert new["against_trend"] == old["against_trend"]
             assert "lenses" not in new                       # the named views are retired
-            assert new["context"] == old["context"] and new["readings"] == old["readings"]
+            assert new["readings"] == old["readings"]
             assert gr.flat_fields(new)["trend"] == v2.flat_fields(old)["trend"]
             checked += 1
+            # The context chips now read the Regime evidence and Relative volume signals: the same measurements,
+            # rounded by the signals (percentile to 0.1 and its window counted slightly differently).
+            nc, oc = new["context"], old["context"]
+            assert nc["warnings"] == oc["warnings"]
+            if pos < 60:                # the regime signal needs about 50 bars; until then the chips say so
+                assert nc["volatility"]["atr_pct"] is None or nc["regime"] == oc["regime"]
+                continue
+            assert nc["regime"] == oc["regime"]
+            assert nc["trend_strength"]["label"] == oc["trend_strength"]["label"]
+            for a, b in ((nc["volatility"]["atr_pct"], oc["volatility"]["atr_pct"]),
+                         (nc["participation"]["volume_ratio"], oc["participation"]["volume_ratio"])):
+                assert (a is None) == (b is None) and (a is None or abs(a - b) <= max(1e-3, 1e-4 * abs(b)))
+            if oc["volatility"]["percentile"] is not None:
+                assert abs(nc["volatility"]["percentile"] - oc["volatility"]["percentile"]) < 1.5
     assert checked > 50
 
 

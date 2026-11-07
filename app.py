@@ -5500,13 +5500,6 @@ def load_profile():
     return {}
 
 
-def _is_admin() -> bool:
-    """The account's role from its profile row, read once per session (the server-side profiles table decides)."""
-    if "_is_admin" not in st.session_state:
-        st.session_state["_is_admin"] = str((load_profile() or {}).get("role") or "") == "admin"
-    return bool(st.session_state["_is_admin"])
-
-
 def save_profile(updates: dict):
     payload = {
         "user_id": user_id,
@@ -11626,13 +11619,6 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                     f"{change:+.1f}%</div>",
                     unsafe_allow_html=True,
                 )
-            if _is_admin():
-                # Signal Sets for the selected asset (admin preview). Runs only when its button is pressed and never
-                # touches the readings above, the tables or alerts.
-                import analysis_card
-
-                with st.container(key="analysis_card"):
-                    analysis_card.render(st, supabase, asset_type, asset_key, title)
 
         reveal_breakdown = st.session_state.get("scroll_target") == "score-breakdown"
         if (show_reasons_flag or reveal_breakdown) and result and result.get("status") == "ok":

@@ -37,7 +37,7 @@ v2 still validate and evaluate (tested).
 
 **Other changes:**
 - The signal catalogue was regenerated; every existing entry is unchanged.
-- The admin inspectors and the Analysis card can read sentiment.
+- The admin inspector can read sentiment (the Analysis card was later removed; Prism replaced it).
 
 ## Legacy authority: no change to production readings
 
