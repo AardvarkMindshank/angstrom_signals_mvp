@@ -1,0 +1,244 @@
+........................................................................ [  8%]
+........................................................................ [ 16%]
+..F..................................................................... [ 24%]
+........................................................................ [ 32%]
+........................................................................ [ 40%]
+........................................................................ [ 48%]
+........................................................................ [ 56%]
+........................................................................ [ 64%]
+........................................................................ [ 72%]
+........................................................................ [ 80%]
+........................................................................ [ 88%]
+........................................................................ [ 96%]
+...............................                                          [100%]
+=================================== FAILURES ===================================
+____________________ test_set_snapshots_match_their_sources ____________________
+
+    def test_set_snapshots_match_their_sources():
+        doc = load("set_multi_timeframe.json")
+        assert doc["schema"] == "angstrom.set/1" and doc["score"] is None
+        assert doc["lineage_version"] == load("lineage.json")["version"]
+        keys = set()
+        for g in doc["groups"]:
+            assert g["key"] not in keys
+            keys.add(g["key"])
+            prov = g["provenance"]
+            assert prov["source_config"] in STARTERS, prov["source_config"]
+            assert prov["source_version"] == 1
+            source = load(STARTERS[prov["source_config"]])
+>           assert g["snapshot"] == source, "snapshot differs from the pinned source version"
+E           AssertionError: snapshot differs from the pinned source version
+E           assert {'schema': 'a...sion': 2, ...} == {'schema': 'a...sion': 2, ...}
+E             
+E             Omitting 7 identical items, use -vv to show
+E             Differing items:
+E             {'name': 'Trend Confirmation'} != {'name': 'Trend agreement'}
+E             
+E             Full diff: (-: missing in left side, +: extra in left side)
+E               {
+E                   'schema': 'angstrom.group/1',
+E             -     'name': 'Trend agreement',
+E             +     'name': 'Trend Confirmation',
+E                   'question': 'Is there a trend on the higher timeframes, and does the lower timeframe '
+E                   'support it?',
+E                   'lineage_version': 2,
+E                   'members': [
+E                       {
+E                           'key': 'trend_1d',
+E                           'label': 'Daily trend',
+E                           'ref': {
+E                               'id': 'trend.direction',
+E                               'version': 1,
+E                               'timeframe': '1D',
+E                               'params': {},
+E                           },
+E                           'role': 'score',
+E                           'weight': 1,
+E                           'category': 'trend',
+E                           'transform': {
+E                               'kind': 'map',
+E                               'version': 1,
+E                               'map': {
+E                                   'up': 1,
+E                                   'down': -1,
+E                                   'mixed': 0,
+E                               },
+E                           },
+E                           'when_unavailable': 'exclude',
+E                       },
+E                       {
+E                           'key': 'trend_4h',
+E                           'label': '4-hour trend',
+E                           'ref': {
+E                               'id': 'trend.direction',
+E                               'version': 1,
+E                               'timeframe': '4h',
+E                               'params': {},
+E                           },
+E                           'role': 'score',
+E                           'weight': 1,
+E                           'category': 'trend',
+E                           'transform': {
+E                               'kind': 'map',
+E                               'version': 1,
+E                               'map': {
+E                                   'up': 1,
+E                                   'down': -1,
+E                                   'mixed': 0,
+E                               },
+E                           },
+E                           'when_unavailable': 'exclude',
+E                       },
+E                       {
+E                           'key': 'structure_1d',
+E                           'label': 'Daily swing structure',
+E                           'ref': {
+E                               'id': 'structure.swings',
+E                               'version': 1,
+E                               'timeframe': '1D',
+E                               'params': {
+E                                   'left': 5,
+E                                   'right': 5,
+E                                   'count': 6,
+E                               },
+E                           },
+E                           'role': 'score',
+E                           'weight': 1,
+E                           'category': 'structure',
+E                           'transform': {
+E                               'kind': 'map',
+E                               'version': 1,
+E                               'field': 'structure',
+E                               'map': {
+E                                   'up': 1,
+E                                   'down': -1,
+E                                   'mixed': 0,
+E                                   'unknown': None,
+E                               },
+E                           },
+E                           'when_unavailable': 'exclude',
+E                       },
+E                       {
+E                           'key': 'momentum_4h',
+E                           'label': '4-hour momentum',
+E                           'ref': {
+E                               'id': 'momentum.direction',
+E                               'version': 1,
+E                               'timeframe': '4h',
+E                               'params': {},
+E                           },
+E                           'role': 'condition',
+E                           'category': 'momentum',
+E                       },
+E                       {
+E                           'key': 'regime_1d',
+E                           'label': 'Daily regime',
+E                           'ref': {
+E                               'id': 'regime.observation',
+E                               'version': 1,
+E                               'timeframe': '1D',
+E                               'params': {
+E                                   'confirm': 3,
+E                                   'window': 250,
+E                               },
+E                           },
+E                           'role': 'condition',
+E                           'category': 'regime',
+E                       },
+E                   ],
+E                   'score': {
+E                       'method': 'weighted_mean',
+E                       'range': [
+E                           -1,
+E                           1,
+E                       ],
+E                       'meaning': 'Direction of price-trend evidence: +1 when every scoring member '
+E                       'points up, -1 when every one points down. Not a forecast.',
+E                       'min_coverage': {
+E                           'num': 2,
+E                           'den': 3,
+E                       },
+E                   },
+E                   'conditions': [
+E                       {
+E                           'key': 'bullish_confirmed',
+E                           'label': 'Uptrend with 4-hour momentum agreeing (same price source; not '
+E                           'independent confirmation)',
+E                           'kind': 'confirmation',
+E                           'rule': {
+E                               'all': [
+E                                   {
+E                                       'score': {
+E                                           'gte': 0.5,
+E                                       },
+E                                   },
+E                                   {
+E                                       'member': 'momentum_4h',
+E                                       'eq': 'up',
+E                                   },
+E                               ],
+E                           },
+E                       },
+E                       {
+E                           'key': 'bearish_confirmed',
+E                           'label': 'Downtrend with 4-hour momentum agreeing (same price source; not '
+E                           'independent confirmation)',
+E                           'kind': 'confirmation',
+E                           'rule': {
+E                               'all': [
+E                                   {
+E                                       'score': {
+E                                           'lte': -0.5,
+E                                       },
+E                                   },
+E                                   {
+E                                       'member': 'momentum_4h',
+E                                       'eq': 'down',
+E                                   },
+E                               ],
+E                           },
+E                       },
+E                       {
+E                           'key': 'ranging_veto',
+E                           'label': 'Daily regime is ranging: trend readings are not meaningful',
+E                           'kind': 'veto',
+E                           'rule': {
+E                               'member': 'regime_1d',
+E                               'field': 'state',
+E                               'eq': 'ranging',
+E                           },
+E                       },
+E                   ],
+E                   'notes': 'Every member derives from price, so agreement shows consistency between '
+E                   'views of one source, not independent confirmation. Momentum repeats trend '
+E                   '(about 80% agreement on development data) and is therefore a condition, '
+E                   'not a second vote. Thresholds (0.5, 2/3) are conventions, not tuned on '
+E                   'returns.',
+E               }
+
+tests/test_design_examples.py:229: AssertionError
+=============================== warnings summary ===============================
+tests/test_builtin_alerts.py: 1 warning
+tests/test_chart_data.py: 2 warnings
+tests/test_group_readings.py: 3 warnings
+tests/test_lattice_editor.py: 1 warning
+tests/test_lattice_stage1.py: 26 warnings
+tests/test_lattice_stage5.py: 5 warnings
+tests/test_library_completion.py: 12 warnings
+tests/test_prism.py: 9 warnings
+tests/test_provided_library.py: 3 warnings
+tests/test_replay.py: 3 warnings
+tests/test_replay_groups.py: 1 warning
+tests/test_table_columns.py: 1 warning
+tests/test_why_panel.py: 1 warning
+  /home/runner/work/angstrom_signals_mvp/angstrom_signals_mvp/chart_data.py:237: Pandas4Warning: DatetimeIndex.weekday is deprecated and will be removed in a future version. Use DatetimeIndex.day_of_week instead.
+    monday = df.index - pd.to_timedelta(df.index.weekday, unit="D")
+
+tests/test_lw_chart.py: 11 warnings
+  /opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages/pandas/core/indexes/datetimelike.py:1029: Pandas4Warning: DatetimeIndex.values returning an ndarray that drops timezone information is deprecated. In a future version, this will return the underlying DatetimeArray instead. Use 'DatetimeIndex.tz_convert(None).to_numpy()' to get a NumPy array of UTC values, or 'DatetimeIndex.array' to get the ExtensionArray.
+  See https://pandas.pydata.org/docs/dev/whatsnew/v3.1.0.html#whatsnew-310-deprecations-values for more details.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+1 failed, 894 passed, 79 warnings in 261.64s (0:04:21)
+exit=1
