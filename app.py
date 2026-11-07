@@ -208,6 +208,9 @@ export default function(component) {
       ".ang-table thead tr{border-bottom:2px solid var(--ang-border);}",
       ".ang-table tbody tr{border-bottom:1px solid var(--ang-line);}",
       ".ang-table tr.ang-row-on{background:var(--ang-select);color:var(--ang-select-text);}",
+      ".ang-table [data-sec-folded]{display:none;}",
+      ".ang-table.fold-g [data-sec='g'],.ang-table.fold-s [data-sec='s']{display:none;}",
+      ".ang-table.fold-g [data-sec-folded='g'],.ang-table.fold-s [data-sec-folded='s']{display:table-cell;}",
       "[data-testid='stAppViewContainer'],[data-testid='stHeader'],[data-testid='stBottom']{background:var(--ang-page) !important;}",
       "html:not(.angstrom-night) [data-testid='stSidebar']{background:var(--ang-side) !important;border-right:1px solid var(--ang-border);}",
       "html:not(.angstrom-night) [data-testid='stMain'] [data-testid='stVerticalBlockBorderWrapper']{background:#ffffff !important;border-color:var(--ang-border) !important;}",
@@ -1042,6 +1045,25 @@ export default function(component) {
       else if (!prev && col === 2) dir = 1;
       state[key] = {col: col, dir: dir};
       applySort(table, col, dir);
+    });
+  });
+  // The Groups and Sets sections fold sideways; the choice is remembered in this browser, for every table.
+  const foldKey = (part) => "angFold-" + part;
+  host.querySelectorAll("table.ang-table").forEach((table) => {
+    ["g", "s"].forEach((part) => {
+      let folded = false;
+      try { folded = window.localStorage.getItem(foldKey(part)) === "1"; } catch (e) {}
+      table.classList.toggle("fold-" + part, folded);
+    });
+  });
+  host.querySelectorAll("button[data-fold]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const part = button.getAttribute("data-fold");
+      const fold = !button.closest("table").classList.contains("fold-" + part);
+      document.querySelectorAll("table.ang-table").forEach((table) => table.classList.toggle("fold-" + part, fold));
+      try { window.localStorage.setItem(foldKey(part), fold ? "1" : "0"); } catch (e) {}
     });
   });
 """ + _COMMENT_BIND_JS + """
@@ -3993,6 +4015,7 @@ import news_filter
 import group_readings
 import signals_v2
 import signals_view
+import table_columns
 from digest import COMMON_ZONES
 import session_guard
 import colour_themes
@@ -9288,6 +9311,90 @@ _SCORES_WORKED_OUT = 0
 
 
 @st.cache_data(ttl=900, max_entries=4000, show_spinner=False)
+def _column_cells(kind: str, asset_id: str, fingerprint: str, stamp: tuple, _df, _specs):
+    """The chosen Group and Set columns for one asset (table_columns.py), on its stored daily bars. The same
+    prices and the same definitions give the same answer, so it is worked out once and shared."""
+    del fingerprint, stamp
+    from group_readings import stored_context
+
+    ctx, _ = stored_context(calculate_indicators(_df), kind, asset_id=asset_id)
+
+    def subject(engine_kind, subject_id):       # a Set line pinned to another asset, for example Bitcoin
+        stored_kind = "Crypto" if engine_kind == "crypto" else "Stock"
+        frame, err = _stored_bars(stored_kind, subject_id, signals_v2.SCORING_BARS)
+        if err or frame is None or len(frame) < 15:
+            raise ValueError(f"No stored daily bars for {subject_id}.")
+        return stored_context(calculate_indicators(frame), stored_kind, asset_id=subject_id)[0]
+
+    return table_columns.evaluate(_specs, ctx, subject_context=subject)
+
+
+def _open_in_lattice(raw: str) -> None:
+    """A Group or Set cell in a table: open Angstrom Lattice on that Group (Signal Groups) or Set (Signal Sets)."""
+    _, part, ref = (raw.split("|", 2) + ["", ""])[:3]
+    if part == "groups":
+        st.session_state["lattice_section"] = "groups"
+        if ref.startswith("starter:"):
+            st.session_state["_lattice_start_next"] = ref
+        else:
+            st.session_state["lattice_start"] = f"saved:{ref}"
+    elif part == "sets":
+        st.session_state["lattice_section"] = "sets"
+        st.session_state["lattice_set_start"] = f"saved:{ref}"
+    else:
+        return
+    _reveal_section("lattice_panel", "angstrom-lattice")
+
+
+def _choose_columns_dialog():
+    """⚙️ Columns: which Signal Groups and Signal Sets each watchlist table shows."""
+    import signal_groups_inspector as gi
+
+    settings = (st.session_state.get("cloud_prefs") or {}).get("settings") or {}
+    now = table_columns.chosen(settings if isinstance(settings, dict) else {})
+    cached = st.session_state.get("siggroups_saved")
+    if not cached or time.time() - cached[0] > 60:
+        cached = (time.time(), *gi.saved_configs(supabase))
+        st.session_state["siggroups_saved"] = cached
+    group_opts, set_opts = table_columns.options(cached[1], str(user_id))
+    st.caption("Pick the readings each watchlist table shows, in the order you pick them. Groups show their score "
+               "or label; Sets show ✓ Yes, ✕ No or ? Unknown. Each works out on the latest finished daily bar; "
+               "fold either section sideways with ◂ in its first column title.")
+    groups = st.multiselect("Signal Groups", list(group_opts), default=[k for k in now["groups"] if k in group_opts],
+                            format_func=group_opts.get, max_selections=table_columns.MAX_EACH, key="tc_groups")
+    sets = st.multiselect("Signal Sets", list(set_opts), default=[k for k in now["sets"] if k in set_opts],
+                          format_func=set_opts.get, max_selections=table_columns.MAX_EACH, key="tc_sets",
+                          placeholder="Your Sets with a decision" if set_opts else "No Sets with a decision yet")
+    cols = st.columns(2)
+    if cols[0].button("Save", type="primary", icon=":material/check:", key="tc_save", width="stretch"):
+        save_account_settings({"table_columns": {"groups": groups, "sets": sets}})
+        st.rerun()
+    if cols[1].button("Back to Trend, Stretch and Flow", key="tc_default", width="stretch"):
+        save_account_settings({"table_columns": dict(table_columns.DEFAULT)})
+        st.rerun()
+
+
+_COLUMNS_DIALOG = st.dialog("Table columns", width="medium")(_choose_columns_dialog)
+
+
+def _table_column_specs() -> list[dict]:
+    """The account's chosen reading columns, resolved to definitions. Saved Groups and Sets are read only when
+    one is chosen, at most once a minute (shared with Angstrom Lattice)."""
+    settings = (st.session_state.get("cloud_prefs") or {}).get("settings") or {}
+    columns = table_columns.chosen(settings if isinstance(settings, dict) else {})
+    saved = []
+    if any(k.startswith("saved:") for part in columns.values() for k in part):
+        import signal_groups_inspector as gi
+
+        cached = st.session_state.get("siggroups_saved")
+        if not cached or time.time() - cached[0] > 60:
+            cached = (time.time(), *gi.saved_configs(supabase))
+            st.session_state["siggroups_saved"] = cached
+        saved = cached[1]
+    return table_columns.resolve(columns, saved)
+
+
+@st.cache_data(ttl=900, max_entries=4000, show_spinner=False)
 def _scored_asset(kind: str, asset_id: str, version: str, stamp: tuple, _df):
     """The indicators and signals v2 readings for one asset. The same prices give the same answer,
     so it is worked out once and reused across clicks and across accounts. The version and the hour
@@ -10133,6 +10240,9 @@ def render_dashboard(*args, **kwargs):
 
 def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show_reasons_flag, show_extra_metrics_flag, show_period_changes_flag, trade_crypto, trade_equities):
     st.session_state["_bar_run"] = {}
+    column_specs = _table_column_specs()
+    column_print = table_columns.fingerprint(column_specs)
+    extra_columns = [c for c in column_specs if not c["cluster"]]
     shared_keys = []
     if trade_crypto:
         shared_keys.extend(asset_market_key("Crypto", asset_id) for asset_id in crypto_watchlist)
@@ -10278,6 +10388,12 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                         spent["maths"] += time.perf_counter() - maths_from
                         if isinstance(scored, dict):
                             result.update(scored)
+                            if extra_columns:
+                                try:
+                                    result["columns"] = _column_cells(kind, str(key), column_print, stamp, df,
+                                                                      extra_columns)
+                                except Exception as exc:
+                                    result["columns"] = {c["key"]: {"error": str(exc)[:160]} for c in extra_columns}
                             result["symbol"] = name if is_crypto else f"{name} ({key})"
                             result["type"] = "Crypto" if is_crypto else "Stock"
                             result["key"] = key
@@ -10331,6 +10447,9 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
 
         def _select_chart_asset(raw):
             """Point the chart at one asset. The click already reran this section, so draw it once."""
+            if str(raw).startswith("lattice|"):
+                _open_in_lattice(str(raw))
+                return
             parts = str(raw).split("|")
             if len(parts) < 2:
                 return
@@ -10573,62 +10692,79 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             token = sort_token(number, numeric=True)
         return f"<td data-sort='{token}' style='padding:10px;white-space:nowrap;'>{inner}</td>"
 
-    def style_and_show_table(results, title, kind, section_id):
+    def style_and_show_table(results, title, kind, section_id, column_specs):
         with section_expander(title, section_id):
             if not results:
                 st.caption("This watchlist is empty.")
                 return
             frame = pd.DataFrame(results).sort_values("trend", ascending=False, na_position="last")
+            if st.button("Columns", icon=":material/view_column:", key=f"columns_{kind}", type="tertiary",
+                         help="Choose which Signal Groups and Signal Sets this table shows"):
+                _COLUMNS_DIALOG()
             st.caption("Click a column title to sort. The table starts with the strongest Trend at the top. Click a name to show that asset on the chart. 📈 Trend, 🎯 Stretch and 🔊 Flow each run from -100 to +100 (positive means up); they describe the market and are not forecasts. Hover one to read it, and click it to open the breakdown. Click the sentiment score, the thumbs, or the crowd average to open its headlines. Watching is how many accounts hold that asset. The Crowd box is the average of personal scores. Hover the down thumb for the spread. A comment balloon, or the arrow on the right edge, opens the social signals and chat. The 30-day trend uses the same colors as 30d %.")
 
-            headers = ["Asset", "Watching"] + (["Rank"] if kind == "Crypto" else []) + ["Trend", "Stretch", "Flow", "Price", "RSI"]
+            # Columns in order, as (title, cells it takes, extra header attributes). The reading columns come from
+            # the account's choice (table_columns.py): a Groups section, then a Sets section, each folding sideways.
+            group_specs = [c for c in column_specs if c["part"] == "groups"]
+            set_specs = [c for c in column_specs if c["part"] == "sets"]
+            layout = [("Asset", 1, ""), ("Watching", 1, "")] + ([("Rank", 1, "")] if kind == "Crypto" else [])
+            layout += [(f"col:{c['key']}", 1, "g") for c in group_specs] + ([("fold:g", 1, "")] if group_specs else [])
+            layout += [(f"col:{c['key']}", 1, "s") for c in set_specs] + ([("fold:s", 1, "")] if set_specs else [])
+            layout += [("Price", 1, ""), ("RSI", 1, "")]
             if kind == "Stock":
-                headers.append("Earnings")
+                layout.append(("Earnings", 1, ""))
             if show_period_changes_flag:
-                headers.append("1d %")
+                layout.append(("1d %", 1, ""))
             if show_extra_metrics_flag:
-                headers.append("7d %")
+                layout.append(("7d %", 1, ""))
             if show_period_changes_flag:
-                headers.append("30d %")
+                layout.append(("30d %", 1, ""))
             if show_extra_metrics_flag:
-                headers += ["Market Cap", "ATR %", "Vol"]
+                layout += [("Market Cap", 1, ""), ("ATR %", 1, ""), ("Vol", 1, "")]
             show_comments = any(row.get("comments") for row in results)
-            headers += ["Sentiment", "Crowd"]
+            layout += [("Sentiment", 1, ""), ("Crowd", 2, "")]
             if show_comments:
-                headers.append("Comments")
-            headers.append("30-day trend")
-            lead = 3 if kind == "Crypto" else 2
-            sort_at = {"Asset": 0, "Watching": 1, "Trend": lead, "Stretch": lead + 1, "Flow": lead + 2,
-                       "Price": lead + 3, "RSI": lead + 4}
-            if kind == "Crypto":
-                sort_at["Rank"] = 2
-            column = lead + 5
-            if kind == "Stock":
-                sort_at["Earnings"] = column
-                column += 1
-            for name in ("1d %", "7d %", "30d %", "Market Cap", "ATR %", "Vol"):
-                if name in headers:
-                    sort_at[name] = column
-                    column += 1
-            sort_at["Sentiment"] = column
-            sort_at["Crowd"] = column + 2
-            next_column = column + 3
-            if show_comments:
-                sort_at["Comments"] = next_column
-                next_column += 1
-            sort_at["30-day trend"] = next_column
+                layout.append(("Comments", 1, ""))
+            layout.append(("30-day trend", 1, ""))
+            headers = [name for name, _, _ in layout]
+            sort_at, column = {}, 0
+            for name, width, _ in layout:
+                sort_at[name] = column
+                column += width
+            spec_by = {f"col:{c['key']}": c for c in column_specs}
+            first_of = {"g": f"col:{group_specs[0]['key']}" if group_specs else None,
+                        "s": f"col:{set_specs[0]['key']}" if set_specs else None}
+            fold_words = {"g": ("Groups", "Signal Groups"), "s": ("Sets", "Signal Sets")}
 
-            def header_button(name, align="left", colspan=1):
-                mark = " ↓" if name == "Trend" else ""
+            def header_button(name, align="left", colspan=1, section=""):
+                spec = spec_by.get(name)
+                cluster_key = (spec or {}).get("cluster") or ""
+                mark = " ↓" if cluster_key == "trend" else ""
                 span = f" colspan='{colspan}'" if colspan > 1 else ""
-                cluster_key = name.lower()
+                sec = f" data-sec='{section}'" if section else ""
                 hint = ""
                 shown = name
-                if cluster_key in signals_v2.CLUSTERS:
+                if name.startswith("fold:"):
+                    part = name[5:]
+                    word, long = fold_words[part]
+                    return (f"<th data-sec-folded='{part}' style='padding:8px 10px;white-space:nowrap;'>"
+                            f"<button type='button' data-fold='{part}' title='Show the {long} columns' "
+                            "style='background:none;border:none;padding:0;margin:0;color:inherit;font:inherit;"
+                            f"font-weight:600;cursor:pointer;'>▸ {word}</button></th>")
+                if cluster_key:
                     hint = f" title='{html.escape(signals_view.header_hint(cluster_key), quote=True)}'"
-                    shown = f"{signals_v2.CLUSTERS[cluster_key]['icon']} {name}"
+                    shown = f"{signals_v2.CLUSTERS[cluster_key]['icon']} {signals_v2.CLUSTERS[cluster_key]['name']}"
+                elif spec:
+                    hint = f" title='{html.escape(table_columns.header(spec), quote=True)}'"
+                    shown = spec["name"]
+                fold = ""
+                if section and first_of.get(section) == name:
+                    word, long = fold_words[section]
+                    fold = (f"<button type='button' data-fold='{section}' title='Fold the {long} columns' "
+                            "style='background:none;border:none;padding:0 6px 0 0;margin:0;color:inherit;"
+                            "font:inherit;cursor:pointer;opacity:.6;'>◂</button>")
                 return (
-                    f"<th{span}{hint} style='padding:8px 10px;text-align:{align};white-space:nowrap;'>"
+                    f"<th{span}{sec}{hint} style='padding:8px 10px;text-align:{align};white-space:nowrap;'>{fold}"
                     f"<button type='button' data-sort-col='{sort_at[name]}' "
                     "style='background:none;border:none;padding:0;margin:0;color:inherit;"
                     "font:inherit;font-weight:600;cursor:pointer;white-space:nowrap;'>"
@@ -10636,12 +10772,13 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                 )
 
             header_html = ""
-            for name in headers:
+            for name, width, section in layout:
                 if name == "Crowd":
                     header_html += header_button(name, "center", 2)
                     continue
-                align = "right" if name in ("Sentiment", "30-day trend") else "center" if name == "Comments" else "left"
-                header_html += header_button(name, align)
+                align = ("right" if name in ("Sentiment", "30-day trend") else "center" if name == "Comments"
+                         or section == "s" else "left")
+                header_html += header_button(name, align, 1, section)
 
             pick = st.session_state.get("chart_pick")
             # A row click arrives after the tables are drawn, so read it now to highlight at once.
@@ -10670,10 +10807,20 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                     rank_cell = cell(f"#{int(rank_value):,}" if rank_ok else "—", rank_value if rank_ok else None, numeric=True)
                 row_dict = {k: (None if isinstance(v, float) and pd.isna(v) else v) for k, v in row.items()}
                 has_signals = isinstance(row_dict.get("signals"), dict)
-                cluster_cells = "".join(
-                    signals_view.table_cell(k, row_dict, f"{kind}|{asset_id}" if has_signals else None)
-                    for k in signals_v2.CLUSTERS
-                )
+                extra = row_dict.get("columns") or {}
+                cluster_cells = ""
+                for spec in group_specs:
+                    if spec["cluster"]:
+                        cluster_cells += signals_view.table_cell(
+                            spec["cluster"], row_dict, f"{kind}|{asset_id}" if has_signals else None, section="g")
+                    else:
+                        cluster_cells += table_columns.group_cell(spec, extra.get(spec["key"]))
+                if group_specs:
+                    cluster_cells += table_columns.folded_cell("groups", [])
+                for spec in set_specs:
+                    cluster_cells += table_columns.set_cell(spec, extra.get(spec["key"]))
+                if set_specs:
+                    cluster_cells += table_columns.folded_cell("sets", [extra.get(c["key"]) for c in set_specs])
                 rows_html += (
                     f"<tr class='{row_class}'>"
                     f"<td data-sort='{sort_token(row.get('symbol'))}' style='padding:10px;white-space:nowrap;'>"
@@ -10800,9 +10947,9 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
         st.session_state.asset_type = pick[0]
 
     if trade_crypto:
-        style_and_show_table(crypto_results, "₿ Crypto Signals", "Crypto", "crypto_scores")
+        style_and_show_table(crypto_results, "₿ Crypto Signals", "Crypto", "crypto_scores", column_specs)
     if trade_equities:
-        style_and_show_table(stock_results, "📈 Equity Signals", "Stock", "equity_scores")
+        style_and_show_table(stock_results, "📈 Equity Signals", "Stock", "equity_scores", column_specs)
 
     pick = st.session_state.get("chart_pick")
     if pick and pick[0] in allowed_kinds and (
@@ -13150,7 +13297,8 @@ if _POPOUT_VIEW:
     st.stop()
 _record_run("whole page", _RUN_STARTED)
 # Angstrom Lattice (preview), for every signed-in account. Only the chosen part is drawn.
-with st.expander("Angstrom Lattice", icon=":material/hub:", expanded=False, key="lattice_panel"):
+st.markdown("<div id='angstrom-lattice' style='scroll-margin-top:4.5rem;'></div>", unsafe_allow_html=True)
+with tracked_expander(":material/hub: Angstrom Lattice", "lattice_panel"):
     import lattice_panel
 
     lattice_panel.render(

@@ -103,7 +103,7 @@ def cluster_hint(key: str, cluster: dict | None) -> str:
     return f"{spec['name']} ({spec['horizon']}): {cluster.get('label')}. {spec['question']}{part} A description, not a forecast."
 
 
-def table_cell(key: str, row: dict, pick: str | None = None) -> str:
+def table_cell(key: str, row: dict, pick: str | None = None, section: str = "") -> str:
     """One sortable table cell for a cluster: bar plus signed number, with a hover explanation."""
     value = row.get(key)
     cluster = ((row.get("signals") or {}).get("clusters") or {}).get(key)
@@ -115,7 +115,8 @@ def table_cell(key: str, row: dict, pick: str | None = None) -> str:
                  f"cursor:pointer;font:inherit;color:inherit;'>{inner}</button>")
     else:
         inner = f"<span title='{_esc(cluster_hint(key, cluster))}'>{inner}</span>"
-    return f"<td data-sort='{sort}' style='padding:10px;white-space:nowrap;'>{inner}</td>"
+    sec = f" data-sec='{section}'" if section else ""
+    return f"<td data-sort='{sort}'{sec} style='padding:10px;white-space:nowrap;'>{inner}</td>"
 
 
 def header_hint(key: str) -> str:

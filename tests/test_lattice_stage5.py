@@ -183,7 +183,7 @@ def test_the_panel_is_for_every_account_and_draws_only_the_chosen_part():
     from pathlib import Path
 
     app = Path(__file__).resolve().parent.parent.joinpath("app.py").read_text()
-    panel = app.index('st.expander("Angstrom Lattice", icon=":material/hub:"')
+    panel = app.index('tracked_expander(":material/hub: Angstrom Lattice", "lattice_panel")')
     admin = app.index('if str((load_profile() or {}).get("role") or "") == "admin":\n    admin_panel()')
     assert panel < admin                                            # outside the admin-only block
     inspector = Path(__file__).resolve().parent.parent.joinpath("signal_inspector.py").read_text()

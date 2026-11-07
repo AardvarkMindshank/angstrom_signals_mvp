@@ -103,7 +103,7 @@ def test_angstrom_lattice_has_four_parts_and_draws_only_the_chosen_one():
     assert all(lp.SECTIONS[k][0].startswith(":material/") for k in lp.SECTIONS)
     assert lp.label("strategies").endswith("(soon)")
     app = (ROOT / "app.py").read_text()
-    assert 'st.expander("Angstrom Lattice", icon=":material/hub:"' in app
+    assert 'tracked_expander(":material/hub: Angstrom Lattice", "lattice_panel")' in app
     drawn = []
 
     class St:
