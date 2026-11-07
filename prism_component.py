@@ -12,6 +12,18 @@ from __future__ import annotations
 import lattice_component
 
 CSS = lattice_component.CSS + """
+.lat.prism .pv{display:inline-flex;gap:2px;margin-left:6px;font-size:13px;vertical-align:middle}
+.lat.prism .pv span{cursor:help}
+.lat.prism .ev{margin-left:6px;font-size:13px;opacity:.75;cursor:help}
+.lat.prism .line{font-size:12px;opacity:.8;margin-top:2px}
+.lat.prism .more{font-size:12px;margin-top:2px}
+.lat.prism .more summary{cursor:pointer;opacity:.75;min-height:24px;list-style:none}
+.lat.prism .more summary::-webkit-details-marker{display:none}
+.lat.prism .more p{margin:4px 0}
+.lat.prism .pvf{display:flex;flex-wrap:wrap;gap:4px;margin:4px 0 6px}
+.lat.prism .pvf button{min-width:36px;min-height:32px;padding:2px 6px;font-size:15px;border-radius:8px;
+  border:1px solid rgba(127,127,127,.35);background:transparent;cursor:pointer}
+.lat.prism .pvf button.on{border-color:#0f766e;background:rgba(15,118,110,.12)}
 .lat.prism .scans{display:flex;flex-direction:column;gap:10px}
 .lat.prism .scan{border:1px solid rgba(127,127,127,.3);border-radius:12px;background:rgba(127,127,127,.05);
   padding:8px 12px;display:flex;flex-direction:column;gap:8px}
@@ -121,13 +133,42 @@ export default function(component) {
   libCol.appendChild(el("div", "muted", "Drag a Set onto the scans, or tap + to start a scan."));
   const fs = el("input", "wide"); fs.placeholder = "Filter Sets"; fs.setAttribute("aria-label", "Filter Sets"); fs.value = qSets;
   libCol.appendChild(fs);
+  // Filter by what a Set looks at: tap an icon, tap it again to show all.
+  const pvf = el("div", "pvf");
+  (lib.perspectives || []).forEach((p) => {
+    const b = button(p.icon, p.hover + " (tap to filter)", () => {
+      window.__prismPv = window.__prismPv === p.key ? "" : p.key;
+      pvf.querySelectorAll("button").forEach((x) => x.classList.toggle("on", x.dataset.k === window.__prismPv));
+      drawSets();
+    });
+    b.dataset.k = p.key; b.setAttribute("aria-label", p.hover);
+    if (window.__prismPv === p.key) b.classList.add("on");
+    pvf.appendChild(b);
+  });
+  libCol.appendChild(pvf);
   const setList = el("div", "");
   libCol.appendChild(setList);
   function setChip(s) {
       const c = el("div", "chip");
       c.draggable = true;
       c.addEventListener("dragstart", (e) => e.dataTransfer.setData("text/plain", JSON.stringify({type: "set", key: s.key})));
-      const nm = el("div", "nm"); nm.appendChild(el("div", "", s.name)); nm.appendChild(el("div", "muted", s.meta));
+      const nm = el("div", "nm");
+      const title = el("div", "", s.name);
+      const pv = el("span", "pv");
+      (s.icons || []).forEach((p) => { const i = el("span", "", p.icon); i.title = p.hover; i.setAttribute("aria-label", p.hover); pv.appendChild(i); });
+      title.appendChild(pv);
+      if (s.evidence) { const ev = el("span", "ev", s.evidence.icon); ev.title = s.evidence.hover; ev.setAttribute("aria-label", s.evidence.hover); title.appendChild(ev); }
+      nm.appendChild(title);
+      if (s.line) nm.appendChild(el("div", "line", s.line));
+      if (s.more) {
+        const d = el("details", "more");
+        d.appendChild(el("summary", "", "more…"));
+        [["What it measures", s.more.measures], ["Why traders watch it", s.more.why], ["What it doesn't prove", s.more.not_proven]]
+          .forEach(([h, t]) => { const p = el("p", ""); const b = el("b", "", h + ": "); p.appendChild(b); p.appendChild(document.createTextNode(t)); d.appendChild(p); });
+        d.addEventListener("click", (e) => e.stopPropagation());
+        nm.appendChild(d);
+      }
+      if (!s.provided) nm.appendChild(el("div", "muted", s.meta));
       c.appendChild(nm);
       c.appendChild(button("+", "Start a scan with " + s.name, () => act("create", {set: s.key}), "sq"));
       return c;
@@ -137,12 +178,14 @@ export default function(component) {
     const q = qSets.toLowerCase();
     const showProvided = state.show_provided !== false;
     const usable = lib.sets.filter((s) => showProvided || !s.provided);
-    const shown = usable.filter((s) => !q || (s.name + " " + s.meta).toLowerCase().includes(q));
+    const pick = window.__prismPv || "";
+    const shown = usable.filter((s) => (!q || (s.name + " " + s.meta + " " + (s.line || "")).toLowerCase().includes(q))
+      && (!pick || (s.icons || []).some((p) => p.key === pick)));
     const given = shown.filter((s) => s.provided), mine = shown.filter((s) => !s.provided);
     if (given.length) {
       // What Angstrom Signals provides sits in its own folded section at the top (hidden with the setting).
       const box = el("details", "prov");
-      box.open = !!window.__prismProvOpen || !!q;
+      box.open = !!window.__prismProvOpen || !!q || !!pick;
       box.addEventListener("toggle", () => { if (!q) window.__prismProvOpen = box.open; });
       const sum = el("summary", "", "Provided by Angstrom Signals · " + given.length);
       sum.title = "Example Sets made by Angstrom Signals. Hide them in ⚙️ Settings → Show provided starters and examples.";
@@ -376,7 +419,9 @@ export default function(component) {
     }
 
     const res = el("div", "");
-    res.appendChild(el("div", "muted", s.results_title || (s.last_text + ". Press ▶ to run it now.")));
+    const rt = el("div", "muted", s.results_title || (s.last_text + ". Press ▶ to run it now."));
+    if (s.evidence) { const ev = el("span", "ev", s.evidence.icon); ev.title = s.evidence.hover; ev.setAttribute("aria-label", s.evidence.hover); rt.appendChild(ev); }
+    res.appendChild(rt);
     if (s.results.length) {
       const tb = el("table");
       const tr = el("tr"); ["Asset", "Answer", "Deciding line"].forEach((h) => tr.appendChild(el("th", "", h)));
@@ -384,7 +429,10 @@ export default function(component) {
       s.results.forEach((r) => {
         const row = el("tr");
         row.appendChild(el("td", "", r.asset));
-        row.appendChild(el("td", r.answer === "yes" ? "y" : r.answer === "no" ? "n" : "u", r.answer === "yes" ? "Yes" : r.answer === "no" ? "No" : "Unknown"));
+        const ans = el("td", r.answer === "yes" ? "y" : r.answer === "no" ? "n" : "u", r.answer === "yes" ? "Yes" : r.answer === "no" ? "No" : "Unknown");
+        ans.title = {yes: "Yes: conditions met", no: "No: a condition failed"}[r.answer] || "Unknown: nothing failed, but some data is missing";
+        if (r.data) { const d = el("span", "ev", r.data.icon); d.title = r.data.hover; d.setAttribute("aria-label", r.data.hover); ans.appendChild(d); }
+        row.appendChild(ans);
         row.appendChild(el("td", "", r.reason));
         tb.appendChild(row);
       });

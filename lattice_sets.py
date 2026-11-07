@@ -23,6 +23,7 @@ import copy
 import re
 
 import lattice_editor as le
+import perspectives
 import signal_groups as sg
 import signal_library as sl
 from signal_groups import lineage
@@ -358,7 +359,8 @@ def state_for_screen(model: dict, choices: dict) -> dict:
             "description": describe(model, choices), "can_save": not found["blocks"],
             "scannable": bool(model.get("lines")) and not found["blocks"],
             "groups": [{"source": k, "name": v["name"], "owner": v["owner"], "labels": [l for _, l in v["labels"]],
-                        "has_score": v["has_score"], "members": v["members"][:6]} for k, v in choices.items()],
+                        "has_score": v["has_score"], "members": v["members"][:6],
+                        "icons": perspectives.chips(v["body"])} for k, v in choices.items()],
             "member_tags": {m["key"]: le.member_tag(m) for m in model.get("standalone") or []}}
 
 

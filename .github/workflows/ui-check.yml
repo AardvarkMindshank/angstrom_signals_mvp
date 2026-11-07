@@ -8,7 +8,7 @@ on:
 permissions:
   contents: write
 env:
-  UI_CHECK: why_check
+  UI_CHECK: library_check
 jobs:
   check:
     runs-on: ubuntu-latest

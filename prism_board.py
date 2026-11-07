@@ -14,6 +14,7 @@ from datetime import timedelta
 
 import pandas as pd
 
+import perspectives
 import prism
 import prism_scans as ps
 import signal_groups as sg
@@ -68,11 +69,24 @@ def watchlist(assets: list[tuple[str, str, str]]) -> tuple[dict, dict]:
     return crypto, stocks
 
 
+def _set_entry(key: str, c: dict) -> dict:
+    """One library chip: name, the perspectives it looks at, a one-line description, and for provided Sets the
+    "more…" explanation and evidence status (perspectives.py)."""
+    doc = c.get("doc") or {}
+    more = perspectives.explain(key) if c.get("provided") else None
+    line = more["line"] if more else str(doc.get("purpose") or "")
+    icon, words = perspectives.EVIDENCE["untested"]
+    return {"key": key, "name": c["name"], "meta": c["meta"], "provided": bool(c.get("provided")),
+            "icons": perspectives.chips(doc), "line": line,
+            "more": ({k: more[k] for k in ("measures", "why", "not_proven")} if more else None),
+            "evidence": {"icon": icon, "hover": words}}
+
+
 def library(choices: dict, assets: list[tuple[str, str, str]]) -> dict:
     crypto, stocks = watchlist(assets)
     return {
-        "sets": [{"key": k, "name": c["name"], "meta": c["meta"], "provided": bool(c.get("provided"))}
-                 for k, c in choices.items()],
+        "sets": [_set_entry(k, c) for k, c in choices.items()],
+        "perspectives": [{"key": k, "icon": i, "hover": h} for k, i, h in perspectives.ICONS],
         "groups": [{"group": "watchlist", "name": GROUPS["watchlist"], "count": len(crypto) + len(stocks)},
                    {"group": "crypto", "name": GROUPS["crypto"], "count": len(crypto)},
                    {"group": "shares", "name": GROUPS["shares"], "count": len(stocks)}],
@@ -265,10 +279,20 @@ def view(scan: dict, runs: list[dict], latched: list[str], choices: dict, assets
         "yes_now": [{"key": k, "name": names.get(k) or k.split(":", 1)[-1]} for k in sorted(latched)],
         "snoozes": [{"key": k, "name": names.get(k) or k.split(":", 1)[-1], "until": u} for k, u in snoozes.items()],
         "results_title": results_title,
-        "results": [{"asset": r.get("asset"), "answer": r.get("answer"), "reason": r.get("reason")}
-                    for r in results[:prism.MAX_ASSETS * 2]],
+        "results": [_result_row(r) for r in results[:prism.MAX_ASSETS * 2]],
+        "evidence": dict(zip(("icon", "hover"), perspectives.EVIDENCE["untested"])),
         "warning": ps.schedule_warning(sched, obj["set"]) if sched.get("kind") == "close" else None,
     }
+
+
+def _result_row(r: dict) -> dict:
+    """Asset, answer, deciding line, and the data-completeness mark (● complete, ◐ partial, ○ none)."""
+    out = {"asset": r.get("asset"), "answer": r.get("answer"), "reason": r.get("reason")}
+    if r.get("available"):
+        icon, words = perspectives.data_mark(r["available"])
+        detail = r.get("available_detail") or ""
+        out["data"] = {"icon": icon, "hover": words + (f": {detail}" if detail and detail != "All readings available" else "")}
+    return out
 
 
 def scheduled_count(scans: list[dict]) -> int:

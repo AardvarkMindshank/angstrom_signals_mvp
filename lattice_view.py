@@ -129,12 +129,43 @@ def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str = "") 
         st.caption(f"Saved Groups could not be read: {problem}")
 
 
+def starters_html() -> str:
+    """Each starter Group: name, what it looks at, evidence status, one line and "more…" (perspectives.py)."""
+    import html
+
+    import perspectives
+
+    esc = lambda t: html.escape(str(t), quote=True)
+    rows = []
+    for alias in sg.STARTERS:
+        doc, more = sg.starter(alias), perspectives.explain(alias)
+        icons = "".join(f"<span title='{esc(c['hover'])}' aria-label='{esc(c['hover'])}' style='cursor:help'>{c['icon']}"
+                        "</span>" for c in perspectives.chips(doc))
+        ev_icon, ev_words = perspectives.EVIDENCE["untested"]
+        body = ""
+        if more:
+            body = (f"<div style='font-size:13px;opacity:.85'>{esc(more['line'])}</div>"
+                    "<details style='font-size:13px'><summary style='cursor:pointer;opacity:.75;list-style:none'>more…"
+                    "</summary>"
+                    f"<p style='margin:4px 0'><b>What it measures:</b> {esc(more['measures'])}</p>"
+                    f"<p style='margin:4px 0'><b>Why traders watch it:</b> {esc(more['why'])}</p>"
+                    f"<p style='margin:4px 0'><b>What it doesn't prove:</b> {esc(more['not_proven'])}</p></details>")
+        rows.append(f"<div style='padding:6px 0;border-bottom:1px solid rgba(127,127,127,.2)'>"
+                    f"<div><b>{esc(doc['name'])}</b> <span style='margin-left:4px'>{icons}</span>"
+                    f"<span title='{esc(ev_words)}' aria-label='{esc(ev_words)}' style='margin-left:6px;opacity:.75;"
+                    f"cursor:help'>{ev_icon}</span></div>{body}</div>")
+    return "<div>" + "".join(rows) + "</div>"
+
+
 def _provided_starters(st) -> None:
     """The starter Groups, in their own folded section: copy one to start from it."""
     with st.expander(lattice_panel.PROVIDED_TITLE + " · starter Groups", icon=":material/inventory_2:"):
         st.caption("The dashboard's own readings, as Groups. Copy one to change it; the original stays as it is. "
                    "Hide this section in ⚙️ Settings → Show provided starters and examples.")
-        names = {a: sg.starter(a)["name"] for a in sg.STARTERS}
+        import perspectives
+
+        st.html(starters_html())
+        names = {a: f"{sg.starter(a)['name']} {perspectives.icons(sg.starter(a))}" for a in sg.STARTERS}
         cols = st.columns([3, 1], vertical_alignment="bottom")
         pick = cols[0].selectbox("Starter", list(names), format_func=names.get, key="lattice_starter_pick")
         if cols[1].button("Copy", icon=":material/content_copy:", key="lattice_starter_copy", width="stretch",

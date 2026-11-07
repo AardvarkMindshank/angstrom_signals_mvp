@@ -35,6 +35,8 @@ CSS = """
   border:1px solid rgba(127,127,127,.3);background:rgba(127,127,127,.05)}
 .lat .card .nm{flex:1 1 160px;min-width:0;font-weight:600}
 .lat .muted{opacity:.72;font-size:12px}
+.lat .pv{display:inline-flex;gap:2px;margin-left:6px;font-size:13px;vertical-align:middle}
+.lat .pv span{cursor:help}
 .lat .tag{font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid rgba(127,127,127,.4);
   font-family:ui-monospace,monospace;opacity:.85}
 .lat .rule{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px;border-radius:10px;
@@ -477,13 +479,19 @@ export default function(component) {
   lib.appendChild(search);
   const list = el("div");
   lib.appendChild(list);
-  function chip(label, sub, hint, payload, onAdd, addTitle) {
+  function chip(label, sub, hint, payload, onAdd, addTitle, icons) {
     const c = el("div", "chip");
     c.draggable = true;
     c.title = hint || "";
     c.addEventListener("dragstart", (e) => { e.dataTransfer.setData("text/plain", payload); });
     const nm = el("div", "nm");
-    nm.appendChild(el("div", "", label));
+    const top = el("div", "", label);
+    if (icons && icons.length) {
+      const pv = el("span", "pv");
+      icons.forEach((p) => { const i = el("span", "", p.icon); i.title = p.hover; i.setAttribute("aria-label", p.hover); pv.appendChild(i); });
+      top.appendChild(pv);
+    }
+    nm.appendChild(top);
     if (sub) nm.appendChild(el("div", "muted", sub));
     c.appendChild(nm);
     c.appendChild(button("+", addTitle, onAdd, "sq"));
@@ -495,7 +503,7 @@ export default function(component) {
     const gs = groupsAvail.filter((g) => !q || g.name.toLowerCase().indexOf(q) >= 0);
     const groupChip = (g) => {
       const sub = (g.owner === "starter" ? "starter" : g.owner) + " · " + (g.labels.length ? "labels: " + g.labels.join(", ") : (g.has_score ? "score only" : "no score"));
-      return chip(g.name, sub, "Members: " + g.members.join(", "), "group|" + g.source, () => addGroup(g.source), "Add " + g.name + " to the Set");
+      return chip(g.name, sub, "Members: " + g.members.join(", "), "group|" + g.source, () => addGroup(g.source), "Add " + g.name + " to the Set", g.icons);
     };
     // What Angstrom Signals provides (the starter Groups) sits in its own folded section at the top; the setting
     // in ⚙️ Settings hides it. A starter already in this Set stays usable either way.

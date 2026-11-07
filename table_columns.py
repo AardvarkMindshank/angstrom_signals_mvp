@@ -65,17 +65,20 @@ def starter_keys() -> list[str]:
 def options(saved: list[dict], user_id: str) -> tuple[dict, dict]:
     """(groups, sets): key -> label for everything a column can show. Groups: the starters, then the account's own
     and shared ones; Sets: every readable Set with a decision."""
-    groups = {alias: f"{sg.starter(alias)['name']} (provided)" for alias in sg.STARTERS}
-    sets = {key: f"{doc['name']} (provided)" for key, doc in provided_sets().items()
+    import perspectives
+
+    tag = lambda doc: (" " + perspectives.icons(doc)) if perspectives.icons(doc) else ""
+    groups = {alias: f"{sg.starter(alias)['name']}{tag(sg.starter(alias))} (provided)" for alias in sg.STARTERS}
+    sets = {key: f"{doc['name']}{tag(doc)} (provided)" for key, doc in provided_sets().items()
             if not doc["name"].endswith("(demo)")}
     for c in saved:
         if not c.get("versions") or c.get("starter_alias"):
             continue
         owner = "yours" if c.get("owner_id") == user_id else "shared"
         if c.get("kind") == "group":
-            groups[f"saved:{c['id']}"] = f"{c['name']} ({owner})"
+            groups[f"saved:{c['id']}"] = f"{c['name']}{tag(c['versions'][-1].get('body'))} ({owner})"
         elif c.get("kind") == "set" and sg.scannable(c["versions"][-1].get("body") or {}):
-            sets[f"saved:{c['id']}"] = f"{c['name']} ({owner})"
+            sets[f"saved:{c['id']}"] = f"{c['name']}{tag(c['versions'][-1].get('body'))} ({owner})"
     return groups, sets
 
 
@@ -133,7 +136,8 @@ def evaluate(specs: list[dict], ctx, subject_context=None, as_of: str = "") -> d
                                     "status": result.get("status"), "why": _group_why(result), "as_of": as_of}
             else:
                 row = prism.row(spec["name"], sg.evaluate_set(spec["doc"], ctx, subject_context=subject_context), "")
-                out[spec["key"]] = {"answer": row["answer"], "why": row.get("reason") or "", "as_of": as_of}
+                out[spec["key"]] = {"answer": row["answer"], "why": row.get("reason") or "", "as_of": as_of,
+                                    "available": row.get("available")}
         except Exception as exc:          # one column never breaks the table
             out[spec["key"]] = {"error": str(exc)[:160]}
     return out
@@ -253,7 +257,12 @@ def set_cell(spec: dict, cell: dict | None, row_pick: str | None = None) -> str:
     answer = cell.get("answer") if cell.get("answer") in ANSWER_MARK else "unknown"
     when, stale = freshness(spec, cell)
     mark, word, (fg, bg) = ANSWER_MARK[answer]
+    import perspectives
+
     tip = f"{spec['name']}: {ANSWER_HOVER[answer]}" + (f" · {cell['why']}" if cell.get("why") else "")
+    if cell.get("available"):
+        tip += " · " + " ".join(perspectives.data_mark(cell["available"]))
+    tip += " · " + " ".join(perspectives.EVIDENCE["untested"])
     if cell.get("error"):
         tip += f" · could not be worked out ({cell['error']})"
     if when:

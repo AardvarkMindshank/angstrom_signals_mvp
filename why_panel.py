@@ -94,7 +94,20 @@ def set_item(spec: dict, result: dict) -> dict:
         pass
     return {"key": spec["key"], "part": "sets", "title": f"{mark} {spec['name']} · {word}", "answer": answer,
             "rows": lines, "note": row.get("reason") or "", "how_sure": row.get("how_sure"),
+            "status": status_marks(answer, row.get("available"), row.get("available_detail")),
             "lattice": lattice_pick(spec), "name": spec["name"]}
+
+
+def status_marks(answer: str, available: str | None, detail: str | None = None) -> list[tuple[str, str]]:
+    """The three-line status: conditions met, data complete, evidence. (icon, words) each."""
+    import perspectives
+
+    mark, _, _ = tc.ANSWER_MARK[answer if answer in tc.ANSWER_MARK else "unknown"]
+    data_icon, data_words = perspectives.data_mark(available)
+    if detail and detail != "All readings available":
+        data_words += f": {detail}"
+    return [(mark, tc.ANSWER_HOVER[answer if answer in tc.ANSWER_HOVER else "unknown"]), (data_icon, data_words),
+            perspectives.EVIDENCE["untested"]]
 
 
 def background_item(spec: dict, cell: dict | None) -> dict:
@@ -170,6 +183,11 @@ def block_html(item: dict) -> str:
                 f"<span style='min-width:24px;font-weight:700;'>{_esc(str(r['value'])[:1])}</span>"
                 f"<span style='flex:1 1 220px;'>{_esc(r['text'])}</span>"
                 f"<span class='ang-kicker'>reading: {_esc(str(r['value'])[1:].strip() or r['value'])}</span></div>")
+    if item.get("status"):
+        marks = "".join(f"<span title='{_esc(w)}' aria-label='{_esc(w)}' style='cursor:help;margin-right:10px'>"
+                        f"{_esc(i)} <span class='ang-kicker'>{_esc(w.split(':')[0])}</span></span>"
+                        for i, w in item["status"])
+        parts.insert(0, f"<div style='margin:2px 0 8px'>{marks}</div>")
     if item.get("note"):
         parts.append(f"<div class='ang-kicker' style='margin-top:8px;'>{_esc(item['note'])}</div>")
     if item.get("detail_note"):

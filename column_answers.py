@@ -118,7 +118,7 @@ def evaluate(spec: dict, assets: list[tuple], at: pd.Timestamp, run) -> dict:
                 result = sg.evaluate_set(spec["doc"], ctx, data_mode="point_in_time",
                                          subject_context=lambda k, i: run.context(k, i, at))
                 row = prism.row(label, result, "")
-                out[key] = {"answer": row["answer"], "why": row.get("reason") or ""}
+                out[key] = {"answer": row["answer"], "why": row.get("reason") or "", "available": row.get("available")}
         except Exception as exc:
             out[key] = {"error": str(exc)[:160]}
     return out
