@@ -2,7 +2,7 @@
  "hashes": {
   "example:group_reversal_evidence": "828c5c68df78d0f7a48893656d3108b1e26b94488ea49a3ec7cca3446b9e9c45",
   "example:group_trend_confirmation": "e658228beb9676ed27af245f58af6ff592fb4b84f6f5227eb984a0f11793ef7c",
-  "example:set_multi_timeframe": "1e6776922bc645e9a074822f343a477e2f1ffe3f6fc4c3bd065b929fc14554d5",
+  "example:set_multi_timeframe": "ecd47e7156ba3773c39503bfb05c4d387dad48558090b0731700b3912024ad40",
   "starter:flow": "a5eb16279c8cd3dbca55f591eeec59a1e89a6ed02c56beeeeed3518813e3216b",
   "starter:reversal-evidence": "828c5c68df78d0f7a48893656d3108b1e26b94488ea49a3ec7cca3446b9e9c45",
   "starter:stretch": "85e9eb91113bd9717968ae3fd835c922c35732fcda45a33278a20f7b5a5c2a60",

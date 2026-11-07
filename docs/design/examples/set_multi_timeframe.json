@@ -11,14 +11,14 @@
         "source_config": "starter:trend-confirmation",
         "source_version": 1,
         "source_owner": null,
-        "content_sha256": "206f069af4d048f87bf9d0e09ec0d7dfc5109030e8c8267d8db4d9ecebf1f46d",
+        "content_sha256": "e658228beb9676ed27af245f58af6ff592fb4b84f6f5227eb984a0f11793ef7c",
         "captured_at": "2026-11-03T00:00:00Z",
         "audience_ceiling": "public",
         "computed_by": "server"
       },
       "snapshot": {
         "schema": "angstrom.group/1",
-        "name": "Trend Confirmation",
+        "name": "Trend agreement",
         "question": "Is there a trend on the higher timeframes, and does the lower timeframe support it?",
         "lineage_version": 2,
         "members": [
