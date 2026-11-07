@@ -40,7 +40,8 @@ CSS = """
 .lat .pv span{cursor:help}
 .lat .tag{font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid rgba(127,127,127,.4);
   font-family:ui-monospace,monospace;opacity:.85}
-.lat .clause{display:flex;flex-wrap:wrap;align-items:center;gap:6px;flex-basis:100%}
+.lat .clause{display:flex;flex-wrap:wrap;align-items:center;gap:6px;flex-basis:100%;min-width:0;max-width:100%}
+.lat .clause>select{min-width:0;max-width:100%;flex:0 1 auto}
 .lat button.del{color:#dc2626;border-color:rgba(220,38,38,.45)}
 .lat .rule{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px;border-radius:10px;
   background:rgba(127,127,127,.07);margin-bottom:8px}
