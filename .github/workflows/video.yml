@@ -38,7 +38,13 @@ jobs:
           kokoro=https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0
           curl -sSfL --retry 3 -o out/video/voice_model/kokoro-v1.0.onnx $kokoro/kokoro-v1.0.onnx
           curl -sSfL --retry 3 -o out/video/voice_model/voices-v1.0.bin $kokoro/voices-v1.0.bin
+      - name: Saved prices (for past moments, cut before the hold-out)
+        run: |
+          git fetch -q --depth=1 origin reports
+          mkdir -p prices && git archive FETCH_HEAD data/prices | tar -x -C prices
       - name: Record
+        env:
+          DEMO_PRICES: prices/data/prices
         run: |
           streamlit run video/demo_app.py --server.headless true --server.port 8601 > out/video/streamlit.log 2>&1 &
           for i in $(seq 1 90); do curl -sf http://127.0.0.1:8601/_stcore/health && break; sleep 1; done

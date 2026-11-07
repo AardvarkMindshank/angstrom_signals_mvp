@@ -24,7 +24,7 @@ def stamp(sec: float) -> str:
 
 steps = timeline["steps"]
 PAUSE = 0.35                 # narrate.py's silence between parts
-MAX_CHARS = 95               # about two lines in the caption band
+MAX_CHARS = 84               # about two lines in the caption band
 
 
 def pieces(text: str) -> list[str]:
@@ -60,10 +60,11 @@ for n, step in enumerate(steps):
     for part, length in zip(parts, lengths):
         bits = pieces(part)
         total = sum(map(len, bits))
-        for bit in bits:
+        for k, bit in enumerate(bits):
             span = length * len(bit) / total
-            number += 1
-            lines += [str(number), f"{stamp(t)} --> {stamp(t + span + 0.25)}", bit, ""]
+            last = k == len(bits) - 1
+            number += 1                # never overlapping: two captions at once would stack into the app picture
+            lines += [str(number), f"{stamp(t)} --> {stamp(t + span + (PAUSE - 0.05 if last else -0.02))}", bit, ""]
             t += span
         t += PAUSE
 (d / "captions.srt").write_text("\n".join(lines))

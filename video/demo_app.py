@@ -7,10 +7,13 @@ Address options (all optional):
   &seed=trend | pullback            already saved: My Trend (video 3); with pullback, also the Set from video 4
   &preset=1                         open the saved Group and Set in their editors (for quick looks)
 
+With DEMO_PRICES set (a folder of saved daily prices), "Run at a past moment" reads those, cut before 30 Oct 2024.
+
 Run: streamlit run video/demo_app.py
 """
 
 import copy
+import os
 import sys
 import uuid
 from pathlib import Path
@@ -23,13 +26,21 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import lattice_panel  # noqa: E402
 import seed  # noqa: E402
 
+if os.environ.get("DEMO_PRICES"):
+    # Past-moment scans read the saved daily prices, cut before the protected hold-out (saved_prices.py), instead of
+    # today's providers: nothing from 30 Oct 2024 onwards is loaded.
+    import saved_prices  # noqa: E402
+    from signal_library import replay_display  # noqa: E402
+
+    replay_display.live_candles = saved_prices.candles
+
 ASSETS = [
     ("crypto", "bitcoin", "Bitcoin"), ("crypto", "ethereum", "Ethereum"), ("crypto", "solana", "Solana"),
     ("crypto", "ripple", "XRP"), ("crypto", "binancecoin", "BNB"), ("crypto", "cardano", "Cardano"),
     ("crypto", "dogecoin", "Dogecoin"), ("crypto", "avalanche-2", "Avalanche"), ("crypto", "chainlink", "Chainlink"),
     ("equity", "AAPL", "Apple (AAPL)"), ("equity", "MSFT", "Microsoft (MSFT)"), ("equity", "NVDA", "NVIDIA (NVDA)"),
     ("equity", "AMZN", "Amazon (AMZN)"), ("equity", "META", "Meta (META)"), ("equity", "GOOGL", "Alphabet (GOOGL)"),
-    ("equity", "TSLA", "Tesla (TSLA)"), ("equity", "COIN", "Coinbase (COIN)"), ("equity", "JPM", "JPMorgan (JPM)"),
+    ("equity", "TSLA", "Tesla (TSLA)"), ("equity", "NFLX", "Netflix (NFLX)"), ("equity", "JPM", "JPMorgan (JPM)"),
 ]
 
 

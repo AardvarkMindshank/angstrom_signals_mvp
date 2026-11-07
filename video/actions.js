@@ -184,7 +184,12 @@ module.exports = {
       await h.top();
       await h.type('.lat input[aria-label="Group name"]', "My Trend");
       await h.press('button:has-text("Save as a new Group")');
-      await h.glide(h.page.getByText("Saved as a new Group").first());
+      const saved = h.page.getByText("Saved as a new Group").first();
+      if (!(await saved.isVisible().catch(() => false))) {
+        await h.wait(1500);
+        if (!(await saved.isVisible().catch(() => false))) console.log("save: no message after saving the Group");
+      }
+      await h.pick("Start from", null);          // My Trend is now in the list, as one of yours
     },
     summary: async (h) => {
       await h.card({ kicker: "Saved", title: "My Trend",

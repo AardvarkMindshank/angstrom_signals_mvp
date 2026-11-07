@@ -27,11 +27,11 @@ jobs:
           mkdir -p prices && git archive FETCH_HEAD data/prices | tar -x -C prices
       - name: Search
         run: |
-          python video/find_dates.py prices/data/prices pull_v1,pull_v2,w1,w2,w3 2021-01-04 2024-10-28 4 | tee dates.txt
+          python video/find_dates.py prices/data/prices trend,rsi45,rsi50,stoch20,stoch30,move5,eq_rsi40,eq_stoch20 2021-01-03 2024-10-28 3 | tee dates.txt
           {
             echo '### Dates with Yes answers (before the hold-out)'
             echo '```'
-            grep -E "pull_v1:[2-9]" dates.txt | head -60
+            grep -E "(rsi45|stoch20|stoch30|move5):[2-9]" dates.txt | head -80
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
       - name: Save

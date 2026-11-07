@@ -23,7 +23,7 @@ jobs:
         run: |
           git fetch -q --depth=1 origin reports
           batch=$(grep -v '^#' video/publish.txt | grep -v '^\s*$' | head -1)
-          [ "$batch" = "latest" ] && batch=$(git ls-tree --name-only origin/reports videos/ | tail -1 | sed 's|^videos/||')
+          [ "$batch" = "latest" ] && batch=$(git ls-tree -d --name-only origin/reports videos/ | grep '^videos/20' | tail -1 | sed 's|^videos/||')
           echo "Batch: $batch"
           for slug in $(grep -v '^#' video/publish.txt | grep -v '^\s*$' | tail -n +2); do
             mkdir -p "out/$slug"

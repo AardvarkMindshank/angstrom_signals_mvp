@@ -5,6 +5,7 @@ const DIAGRAM = require("./diagram.js");
 
 module.exports = function makeHelpers(page, url) {
   const h = { page };
+  page.setDefaultTimeout(10000);           // a missed element costs seconds, not half a minute
   h.wait = (ms) => page.waitForTimeout(ms);
   h.loc = (selector) => (typeof selector === "string" ? page.locator(selector).first() : selector);
 
@@ -56,11 +57,15 @@ module.exports = function makeHelpers(page, url) {
   };
   // A Streamlit drop-down ("Start from"): open it, so the list is seen, then pick the option.
   h.pick = async (label, option) => {
-    const box = page.locator(`[data-testid="stSelectbox"]:has-text("${label}")`).first();
-    await h.press(box.locator("[data-baseweb='select']"), false);
+    const box = page.locator('[data-testid="stSelectbox"]').filter({ hasText: label }).first();
+    let opener = box.locator('[role="combobox"], [data-baseweb="select"], input').first();
+    if (!(await opener.count())) opener = box;
+    await h.glide(opener);
+    await opener.click({ force: true });
+    await page.waitForSelector('[role="option"]', { timeout: 5000 }).catch(() => {});
     await page.waitForTimeout(900);
     if (option === null) { await page.keyboard.press("Escape"); await page.waitForTimeout(300); return; }
-    await h.press(page.locator(`[role="option"]:has-text("${option}")`).first());
+    await h.press(page.locator('[role="option"]').filter({ hasText: option }).first());
   };
   // One of the four parts of Angstrom Lattice.
   h.section = async (name) => {

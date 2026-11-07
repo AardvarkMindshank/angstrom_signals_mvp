@@ -41,6 +41,22 @@ sets = {
             {"target": "member", "member": "position_1d", "field": "position", "op": "gte", "value": "1"},
             {"target": "member", "member": "heavy_candle_1d", "field": "volume_ratio", "op": "gte", "value": "2"}]), "equity"),
 }
+def dip(name, sid, field, op, value):
+    member = {"key": "dip_1d", "id": sid, "version": 1, "timeframe": "1D", "role": "condition"}
+    return (mk(name, [T], [member], [bull, {"target": "member", "member": "dip_1d", "field": field, "op": op, "value": value}]),
+            "crypto")
+
+
+sets.update({
+    "trend": (mk("t", [T], [], [bull]), "crypto"),
+    "rsi45": dip("rsi45", "rsi.level", "rsi", "lte", "45"),
+    "rsi50": dip("rsi50", "rsi.level", "rsi", "lte", "50"),
+    "stoch20": dip("stoch20", "stochastic.level", "stoch_k", "lte", "20"),
+    "stoch30": dip("stoch30", "stochastic.level", "stoch_k", "lte", "30"),
+    "move5": dip("move5", "move.seven_day", "change_7d_pct", "lte", "-5"),
+    "eq_rsi40": (dip("eq_rsi40", "rsi.level", "rsi", "lte", "40")[0], "equity"),
+    "eq_stoch20": (dip("eq_stoch20", "stochastic.level", "stoch_k", "lte", "20")[0], "equity"),
+})
 which = sys.argv[2].split(",")
 start, end, step = sys.argv[3], sys.argv[4], int(sys.argv[5])
 for day in pd.date_range(start, end, freq=f"{step}D"):
