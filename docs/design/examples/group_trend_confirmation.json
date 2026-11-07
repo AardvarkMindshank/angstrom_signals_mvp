@@ -1,6 +1,6 @@
 {
   "schema": "angstrom.group/1",
-  "name": "Trend Confirmation",
+  "name": "Trend agreement",
   "question": "Is there a trend on the higher timeframes, and does the lower timeframe support it?",
   "lineage_version": 2,
   "members": [

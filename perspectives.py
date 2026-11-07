@@ -82,7 +82,7 @@ EXPLAIN = {
         "Many traders prefer to trade in the direction of the bigger trend rather than against it.",
         "A trend describes the past. It can end at any time, and an up trend is not a forecast of further rises."),
     "starter:stretch": (
-        "How far price has run within its recent range.",
+        "Extended versus its recent range: how far price has run up or down.",
         "RSI, Stochastic, Bollinger position, the 7-day move and the MACD histogram, from −100 (stretched down) to "
         "+100 (stretched up).",
         "Stretched moves often pause or pull back; traders use it to avoid chasing, or to look for dips.",

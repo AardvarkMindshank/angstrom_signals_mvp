@@ -94,13 +94,19 @@ def number_badge(value) -> str:
             f"border-radius:4px;padding:2px 6px;font-weight:600;line-height:1;'>{signed(value)}</span>")
 
 
+STRETCH_NOTE = (" Stretch means extended versus its recent range: stretched up is not a reason to sell, and stretched down "
+                "is not a reason to buy; strong trends can stay stretched for a long time.")
+
+
 def cluster_hint(key: str, cluster: dict | None) -> str:
     spec = v2.CLUSTERS[key]
     if not cluster or cluster.get("value") is None:
         return f"{spec['name']}: not enough data. {spec['question']}"
     have, total = cluster.get("coverage") or (0, 0)
     part = f" Uses {have} of {total} parts." if have < total else ""
-    return f"{spec['name']} ({spec['horizon']}): {cluster.get('label')}. {spec['question']}{part} A description, not a forecast."
+    extra = STRETCH_NOTE if key == "stretch" else ""
+    return (f"{spec['name']} ({spec['horizon']}): {cluster.get('label')}. {spec['question']}{part}{extra} "
+            "A description, not a forecast.")
 
 
 def table_cell(key: str, row: dict, pick: str | None = None, section: str = "") -> str:
@@ -254,7 +260,8 @@ The ten classic indicators are read as **three separate descriptions**, never ad
 - 📈 **Trend** (weeks to months): price against its 50- and 200-day averages, the Ichimoku cloud and the MACD
   line, measured in the asset's own typical daily ranges.
 - 🎯 **Stretch** (1 to 4 weeks): RSI, Stochastic, Bollinger position, the 7-day move and the MACD histogram.
-  How far price has run up or down within its recent range.
+  How far price has run up or down within its recent range: **extended versus recent range**. Stretched up is
+  not a reason to sell, and stretched down is not a reason to buy; strong trends can stay stretched for weeks.
 - 🔊 **Flow** (days to weeks): on-balance volume and heavy-volume days. Is volume backing rises or falls?
 
 Each runs from **-100 to +100; positive means up** (above the averages, stretched up, volume backing rises).

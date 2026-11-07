@@ -59,9 +59,12 @@ def catalogue() -> list[dict]:
         table = fields.FIELDS[d.key]
         operands = []
         for path, desc in table.items():
-            if "*" in path or desc["type"] in (fields.EVENTS, fields.OTHER):
+            if desc["type"] in (fields.EVENTS, fields.OTHER):
                 continue
             label = path.replace("_", " ") if path else "value"
+            if "*" in path:                       # a list: offer its first item ("support.0" = the nearest support)
+                head, _, rest = path.partition(".*.")
+                path, label = path.replace("*", "0"), f"nearest {head} · {rest.replace('_', ' ')}"
             operands.append({"field": path, "type": desc["type"], "label": label, "scale": fields.scale_text(desc),
                              "labels": desc.get("labels") or [], "range": desc.get("range")})
         badge = ("History from Nov 2026" if "sentiment" in d.requires else "")

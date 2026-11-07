@@ -35,13 +35,16 @@ def frame(symbol: str) -> pd.DataFrame:
 
 def candles(kind: str, asset_id: str, timeframe: str):
     """The replay's candle source: daily candles only (the video Sets read 1D)."""
-    if timeframe != "1D":
-        return {"error": "Only daily candles are saved."}
+    if timeframe not in ("1D", "1W"):
+        return {"error": "Only daily candles are saved (weekly are built from them)."}
     symbol = CRYPTO.get(asset_id, asset_id)
     try:
         raw = frame(symbol)
     except FileNotFoundError:
         return {"error": f"No saved prices for {symbol}."}
+    if timeframe == "1W":                            # weeks built from the saved days (Monday to Sunday)
+        raw = raw.resample("W-SUN", label="left", closed="left").agg(
+            {"open": "first", "high": "max", "low": "min", "close": "last", "volume": "sum"}).dropna()
     quality = RECONSTRUCTED if kind == "crypto" else RECONSTRUCTED_LIMITED
     return CandleHistory(raw, timeframe, kind, None, {"provider": "saved daily prices (reports branch)",
                                                       "quality": quality, "limitations": []})

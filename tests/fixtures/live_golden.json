@@ -1568,7 +1568,7 @@
      }
     }
    ],
-   "name": "Trend Confirmation",
+   "name": "Trend agreement",
    "score": {
     "meaning": "Direction of price-trend evidence: +1 when every scoring member points up, -1 when every one points down. Not a forecast.",
     "min_coverage": {
@@ -1718,7 +1718,7 @@
      "audience_ceiling": "public",
      "captured_at": "2026-11-03T00:00:00Z",
      "computed_by": "server",
-     "content_sha256": "206f069af4d048f87bf9d0e09ec0d7dfc5109030e8c8267d8db4d9ecebf1f46d",
+     "content_sha256": "e658228beb9676ed27af245f58af6ff592fb4b84f6f5227eb984a0f11793ef7c",
      "source_config": "starter:trend-confirmation",
      "source_owner": null,
      "source_version": 1
@@ -2067,7 +2067,7 @@
        }
       }
      ],
-     "name": "Trend Confirmation",
+     "name": "Trend agreement",
      "score": {
       "meaning": "Direction of price-trend evidence: +1 when every scoring member points up, -1 when every one points down. Not a forecast.",
       "min_coverage": {

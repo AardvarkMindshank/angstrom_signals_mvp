@@ -88,6 +88,9 @@ FIELDS: dict[str, dict[str, dict]] = {
         "support.*.touches": num("touches", 0), "resistance.*.touches": num("touches", 0),
         "support.*.mid": num("price", 0), "resistance.*.mid": num("price", 0),
     },
+    # ---- whole-value readings used by the provided library (agreed plan, Stage A)
+    "regime.state@1": {"": label("trending", "ranging", "transitional")},
+    "volume.relative@1": {"": num("times the 20-candle average volume", 0)},
     # ---- sentiment (library_completion.md §4) and flows
     "sentiment.market@1": {"score": num("sentiment, −100 to +100", -100, 100), "change_7d": num("sentiment points", -200, 200),
                            "age_hours": num("hours", 0), "thin_news": YES_NO, "coverage": _other("label")},
