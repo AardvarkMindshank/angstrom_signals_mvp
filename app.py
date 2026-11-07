@@ -6904,7 +6904,9 @@ because they measure different things and are never added together.
    open; hover a card for what it measures). Then *What changed*: Trend readings that crossed your alert line
    and the biggest Trend moves, each with the reading before and now, the price and today's move, a 7-day line, and
    badges for 📅 earnings within two weeks, 📰 headline sentiment and 🎯 how close it is to an alert line.
-2. **Crypto Signals** and **Equity Signals** list your watchlists, strongest Trend first. Click a name to open it on the chart.
+2. **Crypto Signals** and **Equity Signals** list your watchlists, strongest Trend first. The reading columns are
+   the Groups and Sets you choose with **Columns** (📈 Trend, 🎯 Stretch and 🔊 Flow to start). Click a name to open it
+   on the chart.
    The asset's 📰 Market sentiment sits under these tables (in the wide layout, in the left column under the
    market sentiments).
 3. **Interactive Chart** shows the asset with the indicators you pick. Underneath sit 🔍 Why these readings,
@@ -6961,10 +6963,24 @@ because they measure different things and are never added together.
         st.markdown("""
 **The tables**
 - Click a column title to sort. Hover any reading to read it; click it to open **🔍 Why these readings** for
-  that asset at that column, part by part. **Columns** chooses which Groups and Sets the tables show.
+  that asset at that column, part by part.
+- **Columns** chooses which Groups and Sets the tables show: yours, and the ones provided by Angstrom Signals.
+  The icons beside each name say what it looks at (📈 trend, 🎯 momentum or stretch, 🔊 volume, 🧱 support,
+  resistance or structure, 🌊 volatility or regime, 🔭 another asset, 💬 news, 🏦 positioning or flows).
+  Fold the Groups or the Sets sideways with ◂ in their first column title.
+- A Set shows ✓ (Yes: conditions met), ✕ (No: a condition failed) or ? (Unknown: nothing failed, but some data
+  is missing). Its hover adds how complete the data was (● complete, ◐ partly missing, ○ none) and 🔬, which
+  means nobody has yet studied what usually followed a Yes.
+- Columns that read 4-hour or hourly candles are worked out in the background at each close: the hover says when,
+  ⏳ means a newer close has passed since, and **—** means the first answer hasn't arrived yet.
 - **Extra metrics** (Settings) add 7d %, Market Cap, ATR % (typical daily move) and Vol (volume versus its
   20-day average). Another tick box adds 1d % and 30d %.
 - **Watching** shows how many accounts follow the asset. **30-day trend** is a small price line.
+
+**The asset card** above the chart notes a *pullback inside an uptrend* or a *rally inside a downtrend* when the
+provided Sets of those names say Yes, and shows context chips (🌊 daily range, 💪 trend strength, 🧭 regime,
+🔈 volume against usual) read from the Regime evidence and Relative volume signals. They describe how the asset
+is moving, never which way it will go.
 
 **Freshness.** Prices are saved about every 5 minutes and sentiment about every 12 hours, for everyone.
 The readings use the last *finished* daily bar (crypto: the UTC day; stocks: after the New York close),
@@ -7015,9 +7031,9 @@ it for height. Pinch zoom on an iPad is unreliable with Plotly, which is why the
 
 **🔍 Why these readings** has one folded block for each column in the tables. A Group block shows every part
 with its own reading in plain words and its share of the score; a Set block shows each line with ✓ or ✕ and
-the reason for its answer. The :material/hub: button in a block opens it in Angstrom Lattice, where you can see
-or change how it is built. Columns that read 4-hour or hourly candles show their latest answer and when it was
-worked out.
+the reason for its answer, with the three status marks (answer, data ●◐○, evidence 🔬). The :material/hub:
+**Open in Lattice** button in a block shows how it is built (a provided Set opens in Prism, where it is run).
+Columns that read 4-hour or hourly candles show their latest answer and when it was worked out.
 
 **🎯 Max pain** (stocks, Bitcoin, Ethereum): the options strike where open contracts would be worth the
 least at expiry. It opens on the next expiry after today; one with almost no open contracts says so.
@@ -7077,17 +7093,28 @@ same line under the asset's name in the chart section.
 part from the bar at the top; hover the bar for what each part does. Like the rest of the app, it describes
 conditions; nothing in it is a forecast or advice.
 
-**Provided by Angstrom Signals:** the starter Groups, the example Sets and the built-in alerts sit in a folded
+**Provided by Angstrom Signals:** the starter Groups, the provided Sets and the built-in alerts sit in a folded
 section of that name at the top of each part. To keep only your own, switch off ⚙️ Settings → Show provided
 starters and examples (one setting for all three). Hiding changes nothing else: your Groups and Sets built from a
 starter keep working, and built-in alerts that are on keep running.
+
+- **Icons** beside every Group and Set say what it looks at, worked out from its ingredients: 📈 trend,
+  🎯 momentum or stretch, 🔊 volume, 🧱 support, resistance or structure, 🌊 volatility or regime, 🔭 another asset
+  or the wider market, 💬 news sentiment, 🏦 positioning or fund flows. In Prism, tap an icon above the list to show
+  only the Sets that use it; tap it again to show all.
+- Each provided item has a one-line description and **more…**: what it measures, why traders watch it, and what
+  it doesn't prove. **🔬** means nobody has yet studied what usually followed it: it describes conditions only.
+- The provided Sets include *Pullback in an uptrend*, *Rally in a downtrend*, *Trend alignment* (daily and
+  weekly), *Breakout with volume*, *Volatility squeeze*, *Oversold in a range*, *Near support in a range*,
+  *Bitcoin trend filter* and *Overextended*. Any of them can also be a column in the tables.
 """)
         _training.link(st, "01-angstrom-lattice-at-a-glance", key="tv_lat_01")
         _training.link(st, "02-signals", key="tv_lat_02")
         st.markdown("""
 **🧩 Signal Groups: your own reading.** Combine signals into one score from -100 to +100, then give it labels.
-- Start from a starter Group (📈 Trend, 🎯 Stretch, 🔊 Flow and others; the dashboard's three readings *are*
-  these starter Groups) or a new one. Drag signals in, or tap **+** on a phone or tablet.
+- Start from a starter Group (📈 Trend, 🎯 Stretch, 🔊 Flow, Trend agreement and Reversal evidence; the
+  dashboard's three readings *are* these starter Groups) or a new one. Drag signals in, or tap **+** on a phone or
+  tablet.
 - Each signal is **Score** (counts towards the score), **Condition** (used only in the rules), **Levels**
   (price levels for later strategies) or **Context** (shown alongside, changes nothing).
 - **Rules** give the labels, checked top to bottom: the first that matches wins (for example *Bullish* when the
@@ -7106,6 +7133,9 @@ hold, for example *Trend is Bullish* and *RSI is below 70*.
   fails, but something needed is missing). Unknown is never turned into Yes or No.
 - Each line can read a **📌 fixed asset**, for example *Trend on COIN is Bullish* while the Set runs on each crypto
   being scanned. Both are read at the same moment.
+- Lines can test single signals directly, including **Market regime** (trending, ranging, transitional),
+  **Relative volume** (times the usual volume) and the **nearest support or resistance** (its distance in % or in
+  typical daily moves).
 - A Set needs a decision before Prism can scan it.
 """)
         _training.link(st, "04-signal-sets", key="tv_lat_04")
@@ -7115,6 +7145,8 @@ hold, for example *Trend is Bullish* and *RSI is below 70*.
   only when you press ▶.
 - **Assets:** drop single assets, or the groups that follow your watchlist (**Whole Watchlist**, **All crypto**,
   **All equities**), onto a scan; remove one with ×.
+- **Results** list each asset's answer with its data mark (● complete, ◐ partly missing, ○ none) and the line
+  that decided it; 🔬 beside the title means the Set's history hasn't been studied yet.
 - **Each scan's row** shows the Yes / No / ? counts from its last scheduled run, a dot per recent run (green had a
   Yes, orange all No, grey mostly Unknown, red ring failed) and when it runs next. Click the arrow, or **Expand
   all**, for the details.
@@ -7136,8 +7168,9 @@ hold, for example *Trend is Bullish* and *RSI is below 70*.
         for _slug in ("w1-trend-with-volume", "w2-overextended-rally", "w3-breakout-with-volume"):
             _training.link(st, _slug, key=f"tv_lat_{_slug}")
         st.markdown("""
-**🛣️ Strategies** (coming later): turn a Set's Yes into a plan with entries, exits and risk, including sequences
-such as *A, then B within N days*.
+**Coming next:** a history of past scan answers and studies of what usually followed a Set's Yes (on data from
+before 30 Oct 2024 only); then *sequences* in Sets (*A, then B within N candles*), a Set score, and counting
+(*at least 2 of these 4*). **🛣️ Strategies** (later): entries, exits and risk.
 """)
 
     with tab_alerts:
