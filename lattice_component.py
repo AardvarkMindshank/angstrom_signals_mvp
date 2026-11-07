@@ -40,6 +40,8 @@ CSS = """
 .lat .pv span{cursor:help}
 .lat .tag{font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid rgba(127,127,127,.4);
   font-family:ui-monospace,monospace;opacity:.85}
+.lat .clause{display:flex;flex-wrap:wrap;align-items:center;gap:6px;flex-basis:100%}
+.lat button.del{color:#dc2626;border-color:rgba(220,38,38,.45)}
 .lat .rule{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px;border-radius:10px;
   background:rgba(127,127,127,.07);margin-bottom:8px}
 .lat .num{width:28px;height:28px;border-radius:999px;border:1px solid rgba(127,127,127,.4);display:inline-flex;
@@ -192,7 +194,7 @@ export default function(component) {
       if (r === "score" && !s.can_score) { b.disabled = true; b.title = s.name + " has no standard score: use it as a Condition."; }
       card.appendChild(b);
     });
-    card.appendChild(button("✕", "Remove " + s.name, () => { model.members.splice(i, 1); send(); }, "sq"));
+    card.appendChild(button("✕", "Remove " + s.name, () => { model.members.splice(i, 1); send(); }, "sq del"));
     drop.appendChild(card);
   });
 
@@ -223,15 +225,14 @@ export default function(component) {
     row.appendChild(lab);
     row.appendChild(el("span", "muted", "when"));
     (r.clauses || []).forEach((c, ci) => {
+      const cl = el("div", "clause");
+      row.appendChild(cl);
       if (ci > 0) {
         const j = button(r.joiner === "any" ? "OR" : "AND", "Switch between AND (all must hold) and OR (any may hold)",
                          () => { r.joiner = r.joiner === "any" ? "all" : "any"; send(); });
-        row.appendChild(j);
+        cl.appendChild(j);
       }
       const o = opByKey[c.operand] || {type: "number", scale: "", labels: []};
-      const type = el("span", "tag", o.type === "number" ? "#" : o.type === "yes/no" ? "Y/N" : "Aa");
-      type.title = o.type === "number" ? "A number: compare it with a value." : o.type === "yes/no" ? "A yes/no reading." : "A label.";
-      row.appendChild(type);
       const pick = el("select");
       pick.setAttribute("aria-label", "Reading");
       operands.forEach((x) => { const op = el("option", "", x.label); op.value = x.key; if (x.key === c.operand) op.selected = true; pick.appendChild(op); });
@@ -243,24 +244,24 @@ export default function(component) {
         c.value = n.type === "label" ? (n.labels[0] || "") : n.type === "yes/no" ? "" : "";
         send();
       });
-      row.appendChild(pick);
+      cl.appendChild(pick);
       const ops = el("select");
       ops.setAttribute("aria-label", "Comparison");
       (OPS[o.type] || OPS.number).forEach(([k, t]) => { const op = el("option", "", t); op.value = k; if (k === c.op) op.selected = true; ops.appendChild(op); });
       ops.addEventListener("change", () => { c.op = ops.value; send(); });
-      row.appendChild(ops);
+      cl.appendChild(ops);
       if (o.type === "number") {
         const v = el("input"); v.value = c.value || ""; v.size = 6; v.setAttribute("aria-label", "Value");
         v.addEventListener("change", () => { c.value = v.value; send(); });
-        row.appendChild(v);
-        row.appendChild(el("span", "muted", o.scale || ""));
+        cl.appendChild(v);
+        cl.appendChild(el("span", "muted", o.scale || ""));
       } else if (o.type === "label") {
         const v = el("select"); v.setAttribute("aria-label", "Label");
         (o.labels || []).forEach((l) => { const op = el("option", "", l); op.value = l; if (l === c.value) op.selected = true; v.appendChild(op); });
         v.addEventListener("change", () => { c.value = v.value; send(); });
-        row.appendChild(v);
+        cl.appendChild(v);
       }
-      row.appendChild(button("✕", "Remove this condition", () => { r.clauses.splice(ci, 1); send(); }, "sq"));
+      cl.appendChild(button("✕", "Remove this condition", () => { r.clauses.splice(ci, 1); send(); }, "sq del"));
     });
     row.appendChild(button("+ condition", "Add another condition to this rule",
       () => { r.clauses = r.clauses || []; r.clauses.push({operand: "score", op: "gte", value: "+30"}); send(); }));
@@ -318,10 +319,11 @@ export default function(component) {
     row.appendChild(lab);
     row.appendChild(el("span", "muted", "when"));
     (c.clauses || []).forEach((x, xi) => {
-      if (xi > 0) row.appendChild(button(c.joiner === "any" ? "OR" : "AND", "Switch between AND and OR",
+      const cl = el("div", "clause");
+      row.appendChild(cl);
+      if (xi > 0) cl.appendChild(button(c.joiner === "any" ? "OR" : "AND", "Switch between AND and OR",
                                          () => { c.joiner = c.joiner === "any" ? "all" : "any"; send(); }));
       const o = opByKey[x.operand] || {type: "number", scale: "", labels: []};
-      row.appendChild(el("span", "tag", o.type === "number" ? "#" : o.type === "yes/no" ? "Y/N" : "Aa"));
       const pick = el("select");
       pick.setAttribute("aria-label", "Reading");
       operands.forEach((y) => { const op = el("option", "", y.label); op.value = y.key; if (y.key === x.operand) op.selected = true; pick.appendChild(op); });
@@ -333,24 +335,24 @@ export default function(component) {
         x.value = n.type === "label" ? (n.labels[0] || "") : "";
         send();
       });
-      row.appendChild(pick);
+      cl.appendChild(pick);
       const ops = el("select");
       ops.setAttribute("aria-label", "Comparison");
       (OPS[o.type] || OPS.number).forEach(([k, t]) => { const op = el("option", "", t); op.value = k; if (k === x.op) op.selected = true; ops.appendChild(op); });
       ops.addEventListener("change", () => { x.op = ops.value; send(); });
-      row.appendChild(ops);
+      cl.appendChild(ops);
       if (o.type === "number") {
         const v = el("input"); v.value = x.value || ""; v.size = 6; v.setAttribute("aria-label", "Value");
         v.addEventListener("change", () => { x.value = v.value; send(); });
-        row.appendChild(v);
-        row.appendChild(el("span", "muted", o.scale || ""));
+        cl.appendChild(v);
+        cl.appendChild(el("span", "muted", o.scale || ""));
       } else if (o.type === "label") {
         const v = el("select"); v.setAttribute("aria-label", "Label");
         (o.labels || []).forEach((l) => { const op = el("option", "", l); op.value = l; if (l === x.value) op.selected = true; v.appendChild(op); });
         v.addEventListener("change", () => { x.value = v.value; send(); });
-        row.appendChild(v);
+        cl.appendChild(v);
       }
-      row.appendChild(button("✕", "Remove this condition", () => { c.clauses.splice(xi, 1); send(); }, "sq"));
+      cl.appendChild(button("✕", "Remove this condition", () => { c.clauses.splice(xi, 1); send(); }, "sq del"));
     });
     row.appendChild(button("+ condition", "Add another condition",
       () => { c.clauses = c.clauses || []; c.clauses.push({operand: "score", op: "gte", value: "+30"}); send(); }));
@@ -562,7 +564,7 @@ export default function(component) {
     card.appendChild(button("✕", "Remove " + info.name, () => {
       model.groups.splice(i, 1);
       model.lines = (model.lines || []).filter((l) => (l.any || [l]).every((x) => x.group !== g.key));
-      send(); }, "sq"));
+      send(); }, "sq del"));
     drop.appendChild(card);
   });
   (model.standalone || []).forEach((m, i) => {
@@ -586,7 +588,7 @@ export default function(component) {
     card.appendChild(button("✕", "Remove " + s.name, () => {
       model.standalone.splice(i, 1);
       model.lines = (model.lines || []).filter((l) => (l.any || [l]).every((x) => x.member !== m.key));
-      send(); }, "sq"));
+      send(); }, "sq del"));
     drop.appendChild(card);
   });
 
@@ -612,9 +614,6 @@ export default function(component) {
   function lineRow(l, onRemove) {
     const row = el("div", "rule");
     const t = tByKey[tkey(l)] || {type: "number", values: [], scale: ""};
-    const tag = el("span", "tag", t.type === "number" ? "#" : t.type === "yes/no" ? "Y/N" : "Aa");
-    tag.title = t.type === "number" ? "A number: compare it with a value." : t.type === "yes/no" ? "A yes/no reading." : "A label or status: test it with is or is not.";
-    row.appendChild(tag);
     const pick = el("select");
     pick.setAttribute("aria-label", "Reading");
     targets.forEach((x) => { const o = el("option", "", x.label); o.value = x.key; if (x.key === tkey(l)) o.selected = true; pick.appendChild(o); });
@@ -642,7 +641,7 @@ export default function(component) {
       v.addEventListener("change", () => { l.value = v.value; send(); });
       row.appendChild(v);
     }
-    row.appendChild(button("✕", "Remove this line", onRemove, "sq"));
+    row.appendChild(button("✕", "Remove this line", onRemove, "sq del"));
     return row;
   }
   const all = el("div", "col");

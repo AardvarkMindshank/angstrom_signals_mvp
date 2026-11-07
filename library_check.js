@@ -35,6 +35,15 @@ const { chromium, devices } = require("playwright");
     await page.screenshot({ path: `${out}/${label}_filtered.png`, fullPage: false });
     check(`${label}: no sideways scrolling`, await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1));
     check(`${label}: no browser errors`, errors.length === 0, errors.join("; "));
+    // The Group editor: no # tags, each condition on its own line, red remove buttons.
+    await page.goto(url + "?section=groups&seed=trend&preset=1"); await page.waitForSelector(".lat .rule", { timeout: 120000 }); await page.waitForTimeout(1500);
+    const hashes = await page.locator(".lat .tag", { hasText: /^#$/ }).count();
+    check(`${label}: no # tags in the editor`, hashes === 0, String(hashes));
+    check(`${label}: conditions sit in their own lines`, await page.locator(".lat .rule .clause").count() > 0);
+    const red = await page.locator(".lat button.del").first().evaluate((b) => getComputedStyle(b).color);
+    check(`${label}: remove buttons are red`, red === "rgb(220, 38, 38)", red);
+    await page.locator(".lat .rule").first().scrollIntoViewIfNeeded();
+    await page.screenshot({ path: `${out}/${label}_editor.png`, fullPage: false });
     await ctx.close();
   }
   await browser.close();
