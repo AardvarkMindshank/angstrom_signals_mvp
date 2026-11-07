@@ -13,8 +13,11 @@ const { chromium, devices } = require("playwright");
   for (const [label, opts] of [["desktop", { viewport: { width: 1280, height: 800 } }], ["iphone", devices["iPhone 13"]]]) {
     const page = await browser.newPage(opts);
     await page.goto(url);
-    const open3 = page.locator("button", { hasText: "Watch: 3 · Signal Groups" }).first();
-    await open3.waitFor({ timeout: 120000 });
+    await page.waitForTimeout(8000);
+    await page.screenshot({ path: `${out}/${label}_loaded.png`, fullPage: true });
+    console.log(`${label}: ${await page.locator("button", { hasText: "Watch: 3" }).count()} matching buttons`);
+    const open3 = page.locator("button", { hasText: "Watch: 3 · Signal Groups" }).filter({ visible: true }).first();
+    await open3.waitFor({ timeout: 60000 });
     await page.screenshot({ path: `${out}/${label}_links.png`, fullPage: true });
     await open3.click();
     const dialog = page.locator('[role="dialog"]');
