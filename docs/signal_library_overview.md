@@ -1,7 +1,7 @@
 # Angstrom Signal Library (v3 foundation)
 
 Status: development only. Not shown to users; does not change Trend, Stretch, Flow, alerts, evidence or any setting.
-Admins can inspect every signal in the app under **🧪 Signal Library (development)** (runs only when *Evaluate* is pressed).
+Signals are used through Signal Groups and Signal Sets in **Angstrom Lattice** and **Prism** (the admin inspector was removed).
 
 Guiding principle: every score explainable, every signal inspectable, every grouping customizable.
 

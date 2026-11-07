@@ -13389,16 +13389,6 @@ with tracked_expander(":material/hub: Angstrom Lattice", "lattice_panel"):
     )
 if str((load_profile() or {}).get("role") or "") == "admin":
     admin_panel()
-    # v3 Signal Library, development only (admins). Runs nothing until its button is pressed.
-    with st.expander("🧪 Signal Library (development)", expanded=False, key="siglib_panel"):
-        import signal_inspector
-
-        signal_inspector.render(
-            st, supabase,
-            [("crypto", k, str(v)) for k, v in dict(CRYPTO_WATCHLIST or {}).items()]
-            + [("equity", k, f"{v} ({k})") for k, v in dict(STOCK_WATCHLIST or {}).items()],
-            my_communities=_groups_for_stream, user_id=str(user_id),
-        )
 _page_top(key="page_back_to_top")
 
 st.markdown(
