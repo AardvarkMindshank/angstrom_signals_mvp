@@ -27,6 +27,7 @@ const { chromium, devices } = require("playwright");
     await chip.locator("details.more summary").click(); await page.waitForTimeout(300);
     const more = await chip.innerText();
     check(`${label}: more… opens three parts`, more.includes("What it measures") && more.includes("doesn't prove"));
+    check(`${label}: more… turns into less…`, more.includes("less…") && !more.includes("more…"));
     await page.screenshot({ path: `${out}/${label}_library.png`, fullPage: false });
     await page.locator(".lat.prism .pvf button", { hasText: "🌊" }).first().click(); await page.waitForTimeout(300);
     const names = await page.locator(".lat.prism details.prov .chip .nm > div:first-child").allInnerTexts();

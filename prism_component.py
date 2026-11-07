@@ -20,6 +20,7 @@ CSS = lattice_component.CSS + """
 .lat.prism .more summary{cursor:pointer;opacity:.75;min-height:24px;list-style:none}
 .lat.prism .more summary::-webkit-details-marker{display:none}
 .lat.prism .more p{margin:4px 0}
+.lat.prism .more[open] .m,.lat.prism .more:not([open]) .l{display:none}
 .lat.prism .pvf{display:flex;flex-wrap:wrap;gap:4px;margin:4px 0 6px}
 .lat.prism .pvf button{min-width:36px;min-height:32px;padding:2px 6px;font-size:15px;border-radius:8px;
   border:1px solid rgba(127,127,127,.35);background:transparent;cursor:pointer}
@@ -162,7 +163,9 @@ export default function(component) {
       if (s.line) nm.appendChild(el("div", "line", s.line));
       if (s.more) {
         const d = el("details", "more");
-        d.appendChild(el("summary", "", "more…"));
+        const sm = el("summary", "");
+        sm.appendChild(el("span", "m", "more…")); sm.appendChild(el("span", "l", "less…"));
+        d.appendChild(sm);
         [["What it measures", s.more.measures], ["Why traders watch it", s.more.why], ["What it doesn't prove", s.more.not_proven]]
           .forEach(([h, t]) => { const p = el("p", ""); const b = el("b", "", h + ": "); p.appendChild(b); p.appendChild(document.createTextNode(t)); d.appendChild(p); });
         d.addEventListener("click", (e) => e.stopPropagation());

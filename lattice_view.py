@@ -145,8 +145,8 @@ def starters_html() -> str:
         body = ""
         if more:
             body = (f"<div style='font-size:13px;opacity:.85'>{esc(more['line'])}</div>"
-                    "<details style='font-size:13px'><summary style='cursor:pointer;opacity:.75;list-style:none'>more…"
-                    "</summary>"
+                    "<details class='more' style='font-size:13px'><summary style='cursor:pointer;opacity:.75;"
+                    "list-style:none'><span class='m'>more…</span><span class='l'>less…</span></summary>"
                     f"<p style='margin:4px 0'><b>What it measures:</b> {esc(more['measures'])}</p>"
                     f"<p style='margin:4px 0'><b>Why traders watch it:</b> {esc(more['why'])}</p>"
                     f"<p style='margin:4px 0'><b>What it doesn't prove:</b> {esc(more['not_proven'])}</p></details>")
@@ -154,7 +154,9 @@ def starters_html() -> str:
                     f"<div><b>{esc(doc['name'])}</b> <span style='margin-left:4px'>{icons}</span>"
                     f"<span title='{esc(ev_words)}' aria-label='{esc(ev_words)}' style='margin-left:6px;opacity:.75;"
                     f"cursor:help'>{ev_icon}</span></div>{body}</div>")
-    return "<div>" + "".join(rows) + "</div>"
+    style = ("<style>details.more[open] .m,details.more:not([open]) .l{display:none}"
+             "details.more summary::-webkit-details-marker{display:none}</style>")
+    return style + "<div>" + "".join(rows) + "</div>"
 
 
 def _provided_starters(st) -> None:
