@@ -1,0 +1,35 @@
+1
+00:00:00,000 --> 00:00:02,191
+Not every Set looks for an entry.
+
+2
+00:00:02,291 --> 00:00:06,509
+This one is a caution flag: a strong trend that has run very hot.
+
+3
+00:00:07,012 --> 00:00:09,566
+Add My Trend, and the RSI signal.
+
+4
+00:00:11,059 --> 00:00:13,208
+Line one: My Trend is Bullish.
+
+5
+00:00:13,308 --> 00:00:16,224
+Line two: RSI is at least seventy-five.
+
+6
+00:00:23,361 --> 00:00:25,424
+Save it, and run it in Prism.
+
+7
+00:00:40,689 --> 00:00:42,518
+A Yes doesn't mean sell.
+
+8
+00:00:42,618 --> 00:00:46,409
+It means: this one has run hard, so think twice before chasing it.
+
+9
+00:00:46,912 --> 00:00:51,407
+Set it to alert you, and it becomes a quiet warning when a favourite gets stretched.

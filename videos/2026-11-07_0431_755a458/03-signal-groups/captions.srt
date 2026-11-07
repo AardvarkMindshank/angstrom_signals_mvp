@@ -1,0 +1,83 @@
+1
+00:00:00,000 --> 00:00:03,194
+A Signal Group turns several signals into one reading:
+
+2
+00:00:03,294 --> 00:00:08,045
+a score from minus one hundred to plus one hundred, and a label, such as Bullish.
+
+3
+00:00:08,542 --> 00:00:13,616
+You can start from a starter Group, the same ones behind the dashboard's pre-configured Trend,
+
+4
+00:00:13,366 --> 00:00:14,488
+Stretch and Flow,
+
+5
+00:00:14,588 --> 00:00:16,865
+or from scratch. Let's build our own.
+
+6
+00:00:53,833 --> 00:00:56,771
+Add signals by dragging them in, or tapping plus.
+
+7
+00:00:56,871 --> 00:01:00,598
+Here: moving averages, the Ichimoku cloud, and the MACD line.
+
+8
+00:01:01,119 --> 00:01:05,316
+Each signal has a role. Score signals are combined into the Group's score.
+
+9
+00:01:05,416 --> 00:01:10,082
+Condition signals are only used in rules, and Context is shown alongside.
+
+10
+00:01:10,566 --> 00:01:14,763
+Rules give the labels, checked from the top: the first that matches wins.
+
+11
+00:01:14,863 --> 00:01:20,019
+At least plus thirty is Bullish. At most minus thirty is Bearish. Otherwise, Neutral.
+
+12
+00:01:20,532 --> 00:01:24,857
+If a rule can't be checked because a reading is missing, the label is Unknown,
+
+13
+00:01:24,957 --> 00:01:26,316
+never a guess.
+
+14
+00:01:26,822 --> 00:01:29,504
+Vetoes protect you from the wrong conditions.
+
+15
+00:01:29,604 --> 00:01:33,737
+Here, if the daily market is ranging, every label becomes Vetoed.
+
+16
+00:01:38,878 --> 00:01:42,520
+The checks tell you what blocks saving, and what is only a warning.
+
+17
+00:01:42,620 --> 00:01:45,537
+And the description is written for you, in plain words.
+
+18
+00:01:46,031 --> 00:01:50,036
+Name it, and save. It's yours, and private, until you publish it.
+
+19
+00:01:50,136 --> 00:01:54,375
+Changing it later saves a new version, so earlier ones stay as they were.
+
+20
+00:02:36,307 --> 00:02:38,605
+Why it helps: your reading of the trend,
+
+21
+00:02:38,705 --> 00:02:41,110
+the same every time, on every asset.

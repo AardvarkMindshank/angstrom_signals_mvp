@@ -1,0 +1,35 @@
+1
+00:00:00,000 --> 00:00:03,258
+A breakout means more when the structure is already rising,
+
+2
+00:00:03,358 --> 00:00:05,379
+and when a crowd turns up for it.
+
+3
+00:00:05,881 --> 00:00:11,080
+Add three single signals: market structure, Bollinger position, and the heavy-volume candle.
+
+4
+00:00:11,737 --> 00:00:14,014
+Line one: market structure is up.
+
+5
+00:00:14,114 --> 00:00:17,670
+Line two: the close is at or above the upper Bollinger band.
+
+6
+00:00:17,770 --> 00:00:20,986
+Line three: today's volume is at least twice the usual.
+
+7
+00:00:30,971 --> 00:00:33,290
+Save it, and run it on your equities.
+
+8
+00:00:48,877 --> 00:00:51,964
+Yes means all three are true on today's finished candle.
+
+9
+00:00:52,064 --> 00:00:54,405
+Each No shows which piece is missing.
