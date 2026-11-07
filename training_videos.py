@@ -68,7 +68,7 @@ def _player():
     if _PLAYER is None:
         import streamlit as st
 
-        @st.dialog("🎬 Training video", width="large")
+        @st.dialog("🎬 Training video", width="medium")
         def player():
             _draw_player(st)
 
@@ -87,10 +87,9 @@ def _go(st, name: str) -> None:
 def _draw_player(st) -> None:
     name = st.session_state.get(STATE) or SERIES["lattice"][1][0][0]
     v, near = info(name), neighbours(name)
-    st.caption(f"{v['series_name']} · {v['position']} of {v['count']}")
     st.markdown(f"**{v['label']}** · {v['length']}")
-    st.video(v["url"], autoplay=True)
-    cols = st.columns([1, 1, 2, 1], vertical_alignment="center")
+    st.caption(f"{v['series_name']} · {v['position']} of {v['count']}")
+    cols = st.columns(3)
     if cols[0].button("Start", icon=":material/first_page:", key="tv_first", disabled=near["previous"] is None,
                       help="Back to the first video of this series", width="stretch"):
         _go(st, near["first"])
@@ -98,12 +97,11 @@ def _draw_player(st) -> None:
                       help=("Previous: " + info(near["previous"])["label"]) if near["previous"] else "This is the first video",
                       width="stretch"):
         _go(st, near["previous"])
-    cols[2].markdown(f"<div style='text-align:center;opacity:.75'>{v['position']} of {v['count']}</div>",
-                     unsafe_allow_html=True)
-    if cols[3].button("Next", icon=":material/chevron_right:", key="tv_next", disabled=near["next"] is None,
+    if cols[2].button("Next", icon=":material/chevron_right:", key="tv_next", disabled=near["next"] is None,
                       help=("Next: " + info(near["next"])["label"]) if near["next"] else "This is the last video",
                       width="stretch"):
         _go(st, near["next"])
+    st.video(v["url"], autoplay=True)
     with st.expander("All videos", icon=ICON):
         for key, (series, videos) in SERIES.items():
             st.markdown(f"**{series}**")

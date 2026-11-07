@@ -25,6 +25,7 @@ jobs:
           npm install --no-save --silent playwright@1.63.0 && npx playwright install --with-deps chromium > /dev/null
       - name: Check
         run: |
+          set -o pipefail
           mkdir -p out/ui
           streamlit run ${UI_CHECK}_app.py --server.headless true --server.port 8611 > out/ui/streamlit.log 2>&1 &
           for i in $(seq 1 90); do curl -sf http://127.0.0.1:8611/_stcore/health && break; sleep 1; done
