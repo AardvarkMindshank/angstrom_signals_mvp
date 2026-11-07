@@ -1,0 +1,163 @@
+2021-06-01 pullback:0/18/0 rally:2/16/0 alignment:4/14/0 breakout:1/17/0 squeeze:4/14/0 range_low:0/18/0 near_support:0/18/0 btc_filter:0/18/0 overextended:3/15/0
+2021-06-15 pullback:0/18/0 rally:2/16/0 alignment:4/14/0 breakout:0/18/0 squeeze:5/13/0 range_low:1/17/0 near_support:1/17/0 btc_filter:0/18/0 overextended:6/12/0
+2021-06-29 pullback:0/18/0 rally:0/18/0 alignment:6/12/0 breakout:1/17/0 squeeze:2/16/0 range_low:0/18/0 near_support:0/18/0 btc_filter:0/18/0 overextended:6/12/0
+2021-07-13 pullback:0/18/0 rally:0/18/0 alignment:6/12/0 breakout:0/18/0 squeeze:8/10/0 range_low:1/17/0 near_support:1/17/0 btc_filter:0/18/0 overextended:4/14/0
+2021-07-27 pullback:0/18/0 rally:3/15/0 alignment:6/12/0 breakout:1/17/0 squeeze:5/13/0 range_low:0/18/0 near_support:0/18/0 btc_filter:0/18/0 overextended:5/13/0
+2021-08-10 pullback:0/18/0 rally:0/18/0 alignment:9/9/0 breakout:2/16/0 squeeze:4/14/0 range_low:0/18/0 near_support:3/15/0 btc_filter:18/0/0 overextended:11/7/0
+2021-08-24 pullback:0/18/0 rally:0/18/0 alignment:11/7/0 breakout:1/17/0 squeeze:6/12/0 range_low:0/18/0 near_support:0/18/0 btc_filter:18/0/0 overextended:8/10/0
+2021-09-07 pullback:0/18/0 rally:0/18/0 alignment:16/2/0 breakout:0/18/0 squeeze:7/11/0 range_low:0/18/0 near_support:1/17/0 btc_filter:18/0/0 overextended:10/8/0
+2021-09-21 pullback:4/14/0 rally:0/18/0 alignment:7/11/0 breakout:1/17/0 squeeze:6/12/0 range_low:1/17/0 near_support:1/17/0 btc_filter:0/18/0 overextended:0/18/0
+2021-10-05 pullback:0/18/0 rally:1/17/0 alignment:5/13/0 breakout:0/18/0 squeeze:4/14/0 range_low:1/17/0 near_support:1/17/0 btc_filter:0/18/0 overextended:6/12/0
+2021-10-19 pullback:0/18/0 rally:0/18/0 alignment:7/11/0 breakout:0/18/0 squeeze:7/11/0 range_low:0/18/0 near_support:1/17/0 btc_filter:18/0/0 overextended:8/10/0
+2021-11-02 pullback:0/18/0 rally:0/18/0 alignment:11/7/0 breakout:0/18/0 squeeze:6/12/0 range_low:0/18/0 near_support:1/17/0 btc_filter:18/0/0 overextended:5/13/0
+2021-11-16 pullback:1/17/0 rally:0/18/0 alignment:12/6/0 breakout:0/18/0 squeeze:8/10/0 range_low:1/17/0 near_support:0/18/0 btc_filter:18/0/0 overextended:3/15/0
+2021-11-30 pullback:2/16/0 rally:0/18/0 alignment:9/9/0 breakout:0/18/0 squeeze:6/12/0 range_low:0/18/0 near_support:0/18/0 btc_filter:0/18/0 overextended:1/17/0
+2021-12-14 pullback:0/18/0 rally:0/18/0 alignment:2/16/0 breakout:0/18/0 squeeze:2/16/0 range_low:1/17/0 near_support:1/17/0 btc_filter:0/18/0 overextended:1/17/0
+2021-12-28 pullback:0/18/0 rally:3/15/0 alignment:3/15/0 breakout:0/18/0 squeeze:7/11/0 range_low:0/18/0 near_support:0/18/0 btc_filter:0/18/0 overextended:5/13/0
+2022-01-11 pullback:1/17/0 rally:0/18/0 alignment:2/16/0 breakout:0/18/0 squeeze:1/17/0 range_low:4/14/0 near_support:2/16/0 btc_filter:0/18/0 overextended:2/16/0
+2022-01-25 pullback:0/18/0 rally:0/18/0 alignment:0/18/0 breakout:0/18/0 squeeze:0/18/0 range_low:3/15/0 near_support:0/18/0 btc_filter:0/18/0 overextended:0/18/0
+2022-02-08 pullback:0/18/0 rally:6/12/0 alignment:0/18/0 breakout:1/17/0 squeeze:1/17/0 range_low:0/18/0 near_support:0/18/0 btc_filter:0/18/0 overextended:9/9/0
+2022-02-22 pullback:0/18/0 rally:0/18/0 alignment:0/18/0 breakout:0/18/0 squeeze:0/18/0 range_low:6/12/0 near_support:0/18/0 btc_filter:0/18/0 overextended:0/18/0
+2022-03-08 pullback:0/18/0 rally:0/18/0 alignment:0/18/0 breakout:0/18/0 squeeze:3/15/0 range_low:0/18/0 near_support:1/17/0 btc_filter:0/18/0 overextended:0/18/0
+2022-03-22 pullback:0/18/0 rally:5/13/0 alignment:0/18/0 breakout:0/18/0 squeeze:5/13/0 range_low:0/18/0 near_support:0/18/0 btc_filter:0/18/0 overextended:11/7/0
+2022-04-05 pullback:0/18/0 rally:0/18/0 alignment:3/15/0 breakout:0/18/0 squeeze:2/16/0 range_low:0/18/0 near_support:0/18/0 btc_filter:18/0/0 overextended:10/8/0
+2022-04-19 pullback:1/17/0 rally:0/18/0 alignment:1/17/0 breakout:0/18/0 squeeze:1/17/0 range_low:5/13/0 near_support:0/18/0 btc_filter:0/18/0 overextended:0/18/0
+2022-05-03 pullback:0/18/0 rally:0/18/0 alignment:0/18/0 breakout:0/18/0 squeeze:5/13/0 range_low:1/17/0 near_support:0/18/0 btc_filter:0/18/0 overextended:0/18/0
+2022-05-17 pullback:0/18/0 rally:0/18/0 alignment:0/18/0 breakout:0/18/0 squeeze:0/18/0 range_low:0/18/0 near_support:0/18/0 btc_filter:0/18/0 overextended:0/18/0
+2022-05-31 pullback:0/18/0 rally:5/13/0 alignment:0/18/0 breakout:0/18/0 squeeze:4/14/0 range_low:0/18/0 near_support:1/17/0 btc_filter:0/18/0 overextended:1/17/0
+2022-06-14 pullback:0/18/0 rally:0/18/0 alignment:0/18/0 breakout:0/18/0 squeeze:0/18/0 range_low:2/16/0 near_support:1/17/0 btc_filter:0/18/0 overextended:0/18/0
+2022-06-28 pullback:0/18/0 rally:5/13/0 alignment:0/18/0 breakout:0/18/0 squeeze:0/18/0 range_low:0/18/0 near_support:1/17/0 btc_filter:0/18/0 overextended:1/17/0
+2022-07-12 pullback:0/18/0 rally:1/17/0 alignment:0/18/0 breakout:0/18/0 squeeze:4/14/0 range_low:0/18/0 near_support:1/17/0 btc_filter:0/18/0 overextended:1/17/0
+2022-07-26 pullback:0/18/0 rally:1/17/0 alignment:0/18/0 breakout:0/18/0 squeeze:2/16/0 range_low:0/18/0 near_support:2/16/0 btc_filter:0/18/0 overextended:6/12/0
+2022-08-09 pullback:0/18/0 rally:0/18/0 alignment:0/18/0 breakout:0/18/0 squeeze:7/11/0 range_low:0/18/0 near_support:0/18/0 btc_filter:0/18/0 overextended:7/11/0
+2022-08-23 pullback:1/17/0 rally:0/18/0 alignment:0/18/0 breakout:0/18/0 squeeze:2/16/0 range_low:2/16/0 near_support:1/17/0 btc_filter:0/18/0 overextended:0/18/0
+2022-09-06 pullback:0/18/0 rally:1/17/0 alignment:0/18/0 breakout:0/18/0 squeeze:2/16/0 range_low:5/13/0 near_support:1/17/0 btc_filter:0/18/0 overextended:1/17/0
+2022-09-20 pullback:0/18/0 rally:0/18/0 alignment:0/18/0 breakout:1/17/0 squeeze:8/10/0 range_low:3/15/0 near_support:2/16/0 btc_filter:0/18/0 overextended:3/15/0
+2022-10-04 pullback:0/18/0 rally:0/18/0 alignment:0/18/0 breakout:0/18/0 squeeze:7/11/0 range_low:4/14/0 near_support:1/17/0 btc_filter:0/18/0 overextended:1/17/0
+2022-10-18 pullback:0/18/0 rally:0/18/0 alignment:0/18/0 breakout:0/18/0 squeeze:8/10/0 range_low:0/18/0 near_support:2/16/0 btc_filter:0/18/0 overextended:1/17/0
+2022-11-01 pullback:0/18/0 rally:1/17/0 alignment:0/18/0 breakout:3/15/0 squeeze:3/15/0 range_low:0/18/0 near_support:1/17/0 btc_filter:0/18/0 overextended:12/6/0
+2022-11-15 pullback:0/18/0 rally:2/16/0 alignment:0/18/0 breakout:0/18/0 squeeze:0/18/0 range_low:1/17/0 near_support:3/15/0 btc_filter:0/18/0 overextended:3/15/0
+2022-11-29 pullback:0/18/0 rally:1/17/0 alignment:0/18/0 breakout:0/18/0 squeeze:3/15/0 range_low:0/18/0 near_support:1/17/0 btc_filter:0/18/0 overextended:2/16/0
+2022-12-13 pullback:0/18/0 rally:1/17/0 alignment:0/18/0 breakout:0/18/0 squeeze:14/4/0 range_low:3/15/0 near_support:2/16/0 btc_filter:0/18/0 overextended:0/18/0
+2022-12-27 pullback:0/18/0 rally:0/18/0 alignment:0/18/0 breakout:0/18/0 squeeze:5/13/0 range_low:3/15/0 near_support:1/17/0 btc_filter:0/18/0 overextended:0/18/0
+2023-01-10 pullback:0/18/0 rally:3/15/0 alignment:1/17/0 breakout:2/16/0 squeeze:6/12/0 range_low:1/17/0 near_support:0/18/0 btc_filter:0/18/0 overextended:10/8/0
+2023-01-24 pullback:0/18/0 rally:1/17/0 alignment:1/17/0 breakout:1/17/0 squeeze:1/17/0 range_low:0/18/0 near_support:2/16/0 btc_filter:18/0/0 overextended:15/3/0
+2023-02-07 pullback:1/17/0 rally:0/18/0 alignment:3/15/0 breakout:0/18/0 squeeze:4/14/0 range_low:0/18/0 near_support:0/18/0 btc_filter:18/0/0 overextended:6/12/0
+2023-02-21 pullback:1/17/0 rally:0/18/0 alignment:3/15/0 breakout:0/18/0 squeeze:2/16/0 range_low:1/17/0 near_support:0/18/0 btc_filter:18/0/0 overextended:4/14/0
+2023-03-07 pullback:1/17/0 rally:0/18/0 alignment:2/16/0 breakout:0/18/0 squeeze:9/9/0 range_low:4/14/0 near_support:0/18/0 btc_filter:0/18/0 overextended:0/18/0
+2023-03-21 pullback:0/18/0 rally:0/18/0 alignment:1/17/0 breakout:0/18/0 squeeze:4/14/0 range_low:0/18/0 near_support:1/17/0 btc_filter:18/0/0 overextended:9/9/0
+2023-04-04 pullback:0/18/0 rally:0/18/0 alignment:4/14/0 breakout:1/17/0 squeeze:4/14/0 range_low:0/18/0 near_support:1/17/0 btc_filter:18/0/0 overextended:7/11/0
+2023-04-18 pullback:0/18/0 rally:0/18/0 alignment:6/12/0 breakout:1/17/0 squeeze:8/10/0 range_low:0/18/0 near_support:0/18/0 btc_filter:18/0/0 overextended:7/11/0
+2023-05-02 pullback:0/18/0 rally:0/18/0 alignment:4/14/0 breakout:0/18/0 squeeze:6/12/0 range_low:2/16/0 near_support:3/15/0 btc_filter:0/18/0 overextended:4/14/0
+2023-05-16 pullback:0/18/0 rally:0/18/0 alignment:4/14/0 breakout:0/18/0 squeeze:8/10/0 range_low:1/17/0 near_support:2/16/0 btc_filter:0/18/0 overextended:2/16/0
+2023-05-30 pullback:0/18/0 rally:2/16/0 alignment:6/12/0 breakout:0/18/0 squeeze:12/6/0 range_low:0/18/0 near_support:2/16/0 btc_filter:0/18/0 overextended:9/9/0
+2023-06-13 pullback:0/18/0 rally:0/18/0 alignment:7/11/0 breakout:0/18/0 squeeze:2/16/0 range_low:3/15/0 near_support:1/17/0 btc_filter:0/18/0 overextended:4/14/0
+2023-06-27 pullback:3/15/0 rally:1/17/0 alignment:10/8/0 breakout:0/18/0 squeeze:6/12/0 range_low:0/18/0 near_support:0/18/0 btc_filter:18/0/0 overextended:4/14/0
+2023-07-11 pullback:1/17/0 rally:0/18/0 alignment:9/9/0 breakout:0/18/0 squeeze:14/4/0 range_low:0/18/0 near_support:1/17/0 btc_filter:18/0/0 overextended:2/16/0
+2023-07-25 pullback:5/13/0 rally:0/18/0 alignment:9/9/0 breakout:0/18/0 squeeze:6/12/0 range_low:2/16/0 near_support:0/18/0 btc_filter:0/18/0 overextended:1/17/0
+2023-08-08 pullback:1/17/0 rally:0/18/0 alignment:5/13/0 breakout:0/18/0 squeeze:6/12/0 range_low:2/16/0 near_support:2/16/0 btc_filter:0/18/0 overextended:1/17/0
+2023-08-22 pullback:0/18/0 rally:0/18/0 alignment:3/15/0 breakout:0/18/0 squeeze:3/15/0 range_low:3/15/0 near_support:2/16/0 btc_filter:0/18/0 overextended:0/18/0
+2023-09-05 pullback:0/18/0 rally:0/18/0 alignment:3/15/0 breakout:0/18/0 squeeze:8/10/0 range_low:0/18/0 near_support:0/18/0 btc_filter:0/18/0 overextended:4/14/0
+2023-09-19 pullback:0/18/0 rally:4/14/0 alignment:3/15/0 breakout:1/17/0 squeeze:12/6/0 range_low:2/16/0 near_support:2/16/0 btc_filter:0/18/0 overextended:3/15/0
+2023-10-03 pullback:0/18/0 rally:2/16/0 alignment:0/18/0 breakout:4/14/0 squeeze:9/9/0 range_low:0/18/0 near_support:1/17/0 btc_filter:0/18/0 overextended:4/14/0
+2023-10-17 pullback:0/18/0 rally:0/18/0 alignment:3/15/0 breakout:1/17/0 squeeze:5/13/0 range_low:0/18/0 near_support:0/18/0 btc_filter:18/0/0 overextended:2/16/0
+2023-10-31 pullback:0/18/0 rally:0/18/0 alignment:3/15/0 breakout:0/18/0 squeeze:1/17/0 range_low:2/16/0 near_support:1/17/0 btc_filter:18/0/0 overextended:9/9/0
+2023-11-14 pullback:0/18/0 rally:0/18/0 alignment:10/8/0 breakout:1/17/0 squeeze:0/18/0 range_low:0/18/0 near_support:1/17/0 btc_filter:18/0/0 overextended:11/7/0
+2023-11-28 pullback:0/18/0 rally:0/18/0 alignment:13/5/0 breakout:0/18/0 squeeze:0/18/0 range_low:0/18/0 near_support:1/17/0 btc_filter:18/0/0 overextended:5/13/0
+2023-12-12 pullback:2/16/0 rally:0/18/0 alignment:12/6/0 breakout:1/17/0 squeeze:8/10/0 range_low:0/18/0 near_support:0/18/0 btc_filter:18/0/0 overextended:5/13/0
+2023-12-26 pullback:0/18/0 rally:0/18/0 alignment:13/5/0 breakout:0/18/0 squeeze:4/14/0 range_low:0/18/0 near_support:0/18/0 btc_filter:18/0/0 overextended:7/11/0
+2024-01-09 pullback:2/16/0 rally:0/18/0 alignment:9/9/0 breakout:2/16/0 squeeze:4/14/0 range_low:3/15/0 near_support:0/18/0 btc_filter:18/0/0 overextended:3/15/0
+2024-01-23 pullback:0/18/0 rally:0/18/0 alignment:8/10/0 breakout:0/18/0 squeeze:3/15/0 range_low:1/17/0 near_support:0/18/0 btc_filter:0/18/0 overextended:5/13/0
+2024-02-06 pullback:1/17/0 rally:0/18/0 alignment:8/10/0 breakout:0/18/0 squeeze:0/18/0 range_low:0/18/0 near_support:1/17/0 btc_filter:0/18/0 overextended:5/13/0
+2024-02-20 pullback:0/18/0 rally:1/17/0 alignment:13/5/0 breakout:0/18/0 squeeze:1/17/0 range_low:0/18/0 near_support:1/17/0 btc_filter:18/0/0 overextended:10/8/0
+2024-03-05 pullback:0/18/0 rally:0/18/0 alignment:14/4/0 breakout:0/18/0 squeeze:4/14/0 range_low:0/18/0 near_support:0/18/0 btc_filter:18/0/0 overextended:11/7/0
+2024-03-19 pullback:3/15/0 rally:0/18/0 alignment:13/5/0 breakout:0/18/0 squeeze:3/15/0 range_low:0/18/0 near_support:2/16/0 btc_filter:18/0/0 overextended:4/14/0
+2024-04-02 pullback:2/16/0 rally:0/18/0 alignment:12/6/0 breakout:0/18/0 squeeze:6/12/0 range_low:0/18/0 near_support:0/18/0 btc_filter:18/0/0 overextended:3/15/0
+2024-04-16 pullback:1/17/0 rally:1/17/0 alignment:4/14/0 breakout:0/18/0 squeeze:5/13/0 range_low:1/17/0 near_support:1/17/0 btc_filter:0/18/0 overextended:0/18/0
+2024-04-30 pullback:0/18/0 rally:0/18/0 alignment:2/16/0 breakout:2/16/0 squeeze:0/18/0 range_low:0/18/0 near_support:2/16/0 btc_filter:0/18/0 overextended:2/16/0
+2024-05-14 pullback:0/18/0 rally:0/18/0 alignment:5/13/0 breakout:0/18/0 squeeze:6/12/0 range_low:0/18/0 near_support:1/17/0 btc_filter:0/18/0 overextended:4/14/0
+2024-05-28 pullback:0/18/0 rally:0/18/0 alignment:10/8/0 breakout:0/18/0 squeeze:1/17/0 range_low:1/17/0 near_support:1/17/0 btc_filter:18/0/0 overextended:5/13/0
+2024-06-11 pullback:1/17/0 rally:0/18/0 alignment:10/8/0 breakout:0/18/0 squeeze:10/8/0 range_low:4/14/0 near_support:1/17/0 btc_filter:18/0/0 overextended:3/15/0
+2024-06-25 pullback:0/18/0 rally:0/18/0 alignment:7/11/0 breakout:0/18/0 squeeze:2/16/0 range_low:2/16/0 near_support:2/16/0 btc_filter:0/18/0 overextended:1/17/0
+2024-07-09 pullback:0/18/0 rally:0/18/0 alignment:8/10/0 breakout:0/18/0 squeeze:3/15/0 range_low:0/18/0 near_support:0/18/0 btc_filter:0/18/0 overextended:7/11/0
+2024-07-23 pullback:3/15/0 rally:0/18/0 alignment:7/11/0 breakout:1/17/0 squeeze:0/18/0 range_low:0/18/0 near_support:3/15/0 btc_filter:18/0/0 overextended:6/12/0
+2024-08-06 pullback:0/18/0 rally:0/18/0 alignment:0/18/0 breakout:0/18/0 squeeze:0/18/0 range_low:4/14/0 near_support:1/17/0 btc_filter:0/18/0 overextended:0/18/0
+2024-08-20 pullback:0/18/0 rally:2/16/0 alignment:4/14/0 breakout:0/18/0 squeeze:0/18/0 range_low:0/18/0 near_support:1/17/0 btc_filter:0/18/0 overextended:6/12/0
+2024-09-03 pullback:0/18/0 rally:0/18/0 alignment:4/14/0 breakout:0/18/0 squeeze:1/17/0 range_low:3/15/0 near_support:0/18/0 btc_filter:0/18/0 overextended:1/17/0
+2024-09-17 pullback:0/18/0 rally:0/18/0 alignment:3/15/0 breakout:0/18/0 squeeze:9/9/0 range_low:0/18/0 near_support:1/17/0 btc_filter:0/18/0 overextended:3/15/0
+2024-10-01 pullback:0/18/0 rally:0/18/0 alignment:8/10/0 breakout:1/17/0 squeeze:0/18/0 range_low:0/18/0 near_support:3/15/0 btc_filter:18/0/0 overextended:4/14/0
+2024-10-15 pullback:0/18/0 rally:0/18/0 alignment:6/12/0 breakout:1/17/0 squeeze:5/13/0 range_low:0/18/0 near_support:4/14/0 btc_filter:18/0/0 overextended:3/15/0
+
+## Summary (yes / no / unknown over all dates and assets)
+
+Pullback in an uptrend: yes 38 (2.4%), no 1564, unknown 0
+   e.g. 2021-09-21: solana, MSFT, NVDA, GOOGL
+   e.g. 2021-11-16: TSLA
+   e.g. 2021-11-30: GOOGL, NFLX
+   e.g. 2022-01-11: AAPL
+   e.g. 2022-04-19: TSLA
+   e.g. 2022-08-23: AMZN
+
+Rally in a downtrend: yes 57 (3.6%), no 1545, unknown 0
+   e.g. 2021-06-01: TSLA, NFLX
+   e.g. 2021-06-15: bitcoin, TSLA
+   e.g. 2021-07-27: ripple, dogecoin, chainlink
+   e.g. 2021-10-05: dogecoin
+   e.g. 2021-12-28: bitcoin, cardano, dogecoin
+   e.g. 2022-02-08: solana, binancecoin, cardano, chainlink, AMZN, JPM
+
+Trend alignment: yes 417 (26.0%), no 1185, unknown 0
+   e.g. 2021-06-01: NVDA, META, GOOGL, JPM
+   e.g. 2021-06-15: MSFT, NVDA, META, GOOGL
+   e.g. 2021-06-29: AAPL, MSFT, NVDA, AMZN, META, GOOGL
+   e.g. 2021-07-13: AAPL, MSFT, NVDA, AMZN, META, GOOGL
+   e.g. 2021-07-27: AAPL, MSFT, NVDA, AMZN, META, GOOGL
+   e.g. 2021-08-10: ethereum, solana, binancecoin, cardano, AAPL, MSFT, NVDA, META, GOOGL
+
+Breakout with volume: yes 32 (2.0%), no 1570, unknown 0
+   e.g. 2021-06-01: NVDA
+   e.g. 2021-06-29: META
+   e.g. 2021-07-27: bitcoin
+   e.g. 2021-08-10: dogecoin, avalanche-2
+   e.g. 2021-08-24: NVDA
+   e.g. 2021-09-21: MSFT
+
+Volatility squeeze: yes 385 (24.0%), no 1217, unknown 0
+   e.g. 2021-06-01: AAPL, MSFT, AMZN, NFLX
+   e.g. 2021-06-15: AAPL, AMZN, TSLA, NFLX, JPM
+   e.g. 2021-06-29: META, GOOGL
+   e.g. 2021-07-13: bitcoin, solana, ripple, binancecoin, cardano, avalanche-2, chainlink, GOOGL
+   e.g. 2021-07-27: ripple, binancecoin, cardano, TSLA, NFLX
+   e.g. 2021-08-10: AAPL, MSFT, NFLX, JPM
+
+Oversold in a range: yes 90 (5.6%), no 1512, unknown 0
+   e.g. 2021-06-15: JPM
+   e.g. 2021-07-13: solana
+   e.g. 2021-09-21: AAPL
+   e.g. 2021-10-05: NVDA
+   e.g. 2021-11-16: JPM
+   e.g. 2021-12-14: JPM
+
+Near support in a range: yes 83 (5.2%), no 1519, unknown 0
+   e.g. 2021-06-15: NFLX
+   e.g. 2021-07-13: ethereum
+   e.g. 2021-08-10: binancecoin, TSLA, NFLX
+   e.g. 2021-09-07: TSLA
+   e.g. 2021-09-21: chainlink
+   e.g. 2021-10-05: chainlink
+
+Bitcoin trend filter: yes 558 (34.8%), no 1044, unknown 0
+   e.g. 2021-08-10: bitcoin, ethereum, solana, ripple, binancecoin, cardano, dogecoin, avalanche-2, chainlink, AAPL, MSFT, NVDA, AMZN, META, GOOGL, TSLA, NFLX, JPM
+   e.g. 2021-08-24: bitcoin, ethereum, solana, ripple, binancecoin, cardano, dogecoin, avalanche-2, chainlink, AAPL, MSFT, NVDA, AMZN, META, GOOGL, TSLA, NFLX, JPM
+   e.g. 2021-09-07: bitcoin, ethereum, solana, ripple, binancecoin, cardano, dogecoin, avalanche-2, chainlink, AAPL, MSFT, NVDA, AMZN, META, GOOGL, TSLA, NFLX, JPM
+   e.g. 2021-10-19: bitcoin, ethereum, solana, ripple, binancecoin, cardano, dogecoin, avalanche-2, chainlink, AAPL, MSFT, NVDA, AMZN, META, GOOGL, TSLA, NFLX, JPM
+   e.g. 2021-11-02: bitcoin, ethereum, solana, ripple, binancecoin, cardano, dogecoin, avalanche-2, chainlink, AAPL, MSFT, NVDA, AMZN, META, GOOGL, TSLA, NFLX, JPM
+   e.g. 2021-11-16: bitcoin, ethereum, solana, ripple, binancecoin, cardano, dogecoin, avalanche-2, chainlink, AAPL, MSFT, NVDA, AMZN, META, GOOGL, TSLA, NFLX, JPM
+
+Overextended: yes 374 (23.3%), no 1228, unknown 0
+   e.g. 2021-06-01: NVDA, META, GOOGL
+   e.g. 2021-06-15: bitcoin, AAPL, MSFT, NVDA, AMZN, GOOGL
+   e.g. 2021-06-29: AAPL, MSFT, NVDA, META, TSLA, NFLX
+   e.g. 2021-07-13: AAPL, MSFT, AMZN, GOOGL
+   e.g. 2021-07-27: bitcoin, ethereum, MSFT, META, GOOGL
+   e.g. 2021-08-10: bitcoin, ethereum, solana, ripple, binancecoin, cardano, dogecoin, avalanche-2, chainlink, TSLA, JPM
