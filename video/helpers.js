@@ -64,6 +64,7 @@ module.exports = function makeHelpers(page, url) {
     await opener.click({ force: true });
     if (!(await page.locator('[role="option"]').count())) await page.keyboard.press("ArrowDown");   // open the list
     await page.waitForSelector('[role="option"]', { timeout: 5000 }).catch(() => {});
+    if (process.env.VIDEO_DEBUG) console.log(`pick ${label}: ${await page.locator('[role="option"]').count()} options; opener ${await opener.evaluate((n) => n.outerHTML.slice(0, 200))}`);
     await page.waitForTimeout(900);
     if (option === null) { await page.keyboard.press("Escape"); await page.waitForTimeout(300); return; }
     await h.press(page.locator('[role="option"]').filter({ hasText: option }).first());

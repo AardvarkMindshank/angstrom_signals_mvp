@@ -56,6 +56,8 @@ const ACTIONS = require("./actions.js");
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", ready); else ready();
   });
   const page = await ctx.newPage();
+  page.on("console", (m) => { if (m.type() === "error" || process.env.VIDEO_DEBUG) console.log(`browser ${m.type()}: ${m.text().slice(0, 300)}`); });
+  page.on("pageerror", (e) => console.log(`page error: ${String(e).slice(0, 300)}`));
   const t0 = Date.now();
   const now = () => (Date.now() - t0) / 1000;
   const h = makeHelpers(page, url);

@@ -203,7 +203,10 @@ module.exports = {
         console.log("save: no message after the first press; pressing again");
         await h.press('button:has-text("Save as a new Group")');
         await h.wait(1200);
-        if (!(await saved.isVisible().catch(() => false))) console.log("save: still no message");
+        if (!(await saved.isVisible().catch(() => false))) {
+          console.log("save: still no message. Alerts: " + JSON.stringify(await h.page.locator('[data-testid="stAlert"], [data-testid="stException"]').allInnerTexts()));
+          console.log("save: buttons: " + JSON.stringify(await h.page.locator('button:has-text("Save")').evaluateAll((b) => b.map((x) => [x.innerText, x.disabled]))));
+        }
       }
       await h.pick("Start from", null);          // My Trend is now in the list, as one of yours
     },
