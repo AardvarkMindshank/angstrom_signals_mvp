@@ -1,0 +1,56 @@
+{
+ "steps": [
+  {
+   "id": "what",
+   "start": 3.042,
+   "say": "A signal is one measurement of the market, worked out from price and volume on finished candles. | Each one answers a single question."
+  },
+  {
+   "id": "hover",
+   "start": 11.35,
+   "say": "Most signals can be read on several timeframes, from fifteen minutes to weekly. | Hover any signal to see what it measures."
+  },
+  {
+   "id": "trend",
+   "start": 19.375,
+   "say": "Trend signals ask: which way is the market going, and how firmly? | Traders use them to work with the main direction, rather than against it."
+  },
+  {
+   "id": "momentum",
+   "start": 28.332,
+   "say": "Momentum signals ask: how fast, and how stretched? | They help spot moves that have run hard, or are losing steam. A divergence is when price makes a new extreme, but momentum does not follow."
+  },
+  {
+   "id": "regime",
+   "start": 40.422,
+   "say": "Regime asks: what kind of market is this? Trending or ranging, | and is volatility compressed or expanding? The same setup can mean different things in each."
+  },
+  {
+   "id": "structure",
+   "start": 50.261,
+   "say": "Structure follows the swing highs and lows: | whether they are rising or falling, where price broke through, and the real price levels where swings have turned before."
+  },
+  {
+   "id": "volume",
+   "start": 59.84,
+   "say": "Volume asks: is the crowd behind the move? | Rising prices on rising volume tell a different story from rising prices on thin volume."
+  },
+  {
+   "id": "sentiment",
+   "start": 68.705,
+   "say": "Sentiment reads recent headlines about the asset, positive or negative. | Its history starts in November 2026 with the birth of Angstrom Signals."
+  },
+  {
+   "id": "together",
+   "start": 78.723,
+   "say": "On their own, signals are ingredients. | In Lattice you combine them into Groups, and Groups into Sets, so they are read together, the way a trader reads a chart."
+  },
+  {
+   "id": "reason",
+   "start": 88.304,
+   "say": "Every signal describes what is happening now. None of them is a prediction, | which is why Lattice always shows a reading together with its reason."
+  }
+ ],
+ "end": 98.337,
+ "trim": 3.042
+}

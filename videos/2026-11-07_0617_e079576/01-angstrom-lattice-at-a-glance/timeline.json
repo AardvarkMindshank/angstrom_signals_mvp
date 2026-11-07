@@ -1,0 +1,51 @@
+{
+ "steps": [
+  {
+   "id": "intro",
+   "start": 3.037,
+   "say": "Every trader has their own way of reading a chart. Angstrom Lattice lets you write yours down once, | and have it checked on every asset you follow."
+  },
+  {
+   "id": "signals",
+   "start": 11.824,
+   "say": "It starts with signals: the indicators behind the dashboard, such as moving averages, RSI, volume, and market structure. Each one measures one thing."
+  },
+  {
+   "id": "groups",
+   "start": 21.392,
+   "say": "Signal Groups combine signals into one reading, a score from minus one hundred to plus one hundred, | with labels you choose, such as Bullish. The dashboard's already configured Trend, Stretch and Flow are Signal Groups like these."
+  },
+  {
+   "id": "sets",
+   "start": 34.963,
+   "say": "Signal Sets turn readings into a decision: | Yes, No, or Unknown, | with the line that decided it. For example: the trend is bullish, | and Stochastic is at most thirty, a pullback in an uptrend."
+  },
+  {
+   "id": "prism",
+   "start": 47.793,
+   "say": "Prism Scan runs a Set across your watchlist, | now, | at a past moment, | or on a schedule."
+  },
+  {
+   "id": "alerts",
+   "start": 55.496,
+   "say": "And when an asset turns Yes, you hear about it, | instantly or in your daily summary."
+  },
+  {
+   "id": "strategies",
+   "start": 61.126,
+   "say": "Strategies come next: entries, exits, and risk, built on the same Sets."
+  },
+  {
+   "id": "cuts",
+   "start": 66.127,
+   "say": "Why it helps: your rules stay the same every time, | every answer shows its reasons, | and missing data is reported as Unknown, never guessed."
+  },
+  {
+   "id": "whole",
+   "start": 75.651,
+   "say": "Everything here describes the market as it is. | It is not a forecast, and not advice."
+  }
+ ],
+ "end": 82.982,
+ "trim": 3.037
+}
