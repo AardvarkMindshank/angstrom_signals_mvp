@@ -24,7 +24,8 @@ CSS = """
   background:transparent;color:inherit;min-height:36px;padding:4px 10px}
 .lat button:disabled{opacity:.4;cursor:not-allowed}
 .lat button.on{background:#0f766e;border-color:#0f766e;color:#fff;font-weight:600}
-.lat button.sq{width:36px;padding:0}
+.lat button.sq{width:36px;height:36px;min-height:36px;padding:0;flex:0 0 36px;align-self:center}
+.lat .chip:has(details[open])>button.sq{align-self:flex-start;margin-top:4px}
 .lat input,.lat select{font:inherit;color:inherit;background:rgba(127,127,127,.08);border:1px solid rgba(127,127,127,.4);
   border-radius:8px;padding:6px 8px;min-height:36px}
 .lat input.wide{width:100%}

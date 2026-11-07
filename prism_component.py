@@ -20,7 +20,6 @@ CSS = lattice_component.CSS + """
 .lat.prism .more summary{cursor:pointer;opacity:.75;min-height:24px;list-style:none}
 .lat.prism .more summary::-webkit-details-marker{display:none}
 .lat.prism .more p{margin:4px 0}
-.lat.prism .chip>button.sq{align-self:flex-start;flex:0 0 auto}
 .lat.prism .pvf{display:flex;flex-wrap:wrap;gap:4px;margin:4px 0 6px}
 .lat.prism .pvf button{min-width:36px;min-height:32px;padding:2px 6px;font-size:15px;border-radius:8px;
   border:1px solid rgba(127,127,127,.35);background:transparent;cursor:pointer}
