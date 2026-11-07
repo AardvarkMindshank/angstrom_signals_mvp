@@ -1,0 +1,56 @@
+{
+ "steps": [
+  {
+   "id": "what",
+   "start": 3.145,
+   "say": "A Signal Group turns several signals into one reading: | a score from minus one hundred to plus one hundred, and a label, such as Bullish."
+  },
+  {
+   "id": "start",
+   "start": 11.681,
+   "say": "You can start from a starter Group, the same ones behind the dashboard's pre-configured Trend, Stretch and Flow, | or from scratch. Let's build our own."
+  },
+  {
+   "id": "add",
+   "start": 20.496,
+   "say": "Add signals by dragging them in, or tapping plus. | Here: moving averages, the Ichimoku cloud, and the MACD line."
+  },
+  {
+   "id": "roles",
+   "start": 27.757,
+   "say": "Each signal has a role. Score signals are combined into the Group's score. | Condition signals are only used in rules, and Context is shown alongside."
+  },
+  {
+   "id": "rules",
+   "start": 37.215,
+   "say": "Rules give the labels, checked from the top: the first that matches wins. | At least plus thirty is Bullish. At most minus thirty is Bearish. Otherwise, Neutral."
+  },
+  {
+   "id": "unknown",
+   "start": 47.165,
+   "say": "If a rule can't be checked because a reading is missing, the label is Unknown, | never a guess."
+  },
+  {
+   "id": "veto",
+   "start": 53.445,
+   "say": "Vetoes protect you from the wrong conditions. | Here, if the daily market is ranging, every label becomes Vetoed."
+  },
+  {
+   "id": "checks",
+   "start": 65.645,
+   "say": "The checks tell you what blocks saving, and what is only a warning. | And the description is written for you, in plain words."
+  },
+  {
+   "id": "save",
+   "start": 72.806,
+   "say": "Name it, and save. It's yours, and private, until you publish it. | Changing it later saves a new version, so earlier ones stay as they were."
+  },
+  {
+   "id": "summary",
+   "start": 84.311,
+   "say": "Why it helps: your reading of the trend, | the same every time, on every asset."
+  }
+ ],
+ "end": 91.127,
+ "trim": 3.145
+}
