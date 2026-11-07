@@ -314,6 +314,8 @@ def due_items(scans: list[dict], watchlists: dict, now) -> list[tuple]:
     for scan in scans:
         if validate_schedule(scan.get("schedule")) or (scan.get("schedule") or {}).get("kind") == "manual":
             continue
+        if scan.get("builtin"):            # the built-in alerts run on stored bars (builtin_alerts.py)
+            continue
         for market in MARKETS:
             assets = scan_assets(scan, watchlists.get(scan["owner_id"], ({}, {})), market)
             if not assets:
@@ -365,6 +367,9 @@ def run_due_scans(store, *, watchlists: dict, prefs: dict, evaluate, now=None, b
             answers = {f"{r['kind']}:{r['id']}": r["answer"] for r in rows}
             latched = store.latches(scan["id"])
             opens, releases, notify = plan_alerts(answers, latched, scan.get("alert_mode") or "change")
+            if scan.get("rearm"):          # re-arm only when the re-arm Set says Yes, not on any No
+                again, _ = evaluate(scan["rearm"], [a for a in assets if f"{a[0]}:{a[1]}" in latched], cutoff)
+                releases = [f"{r['kind']}:{r['id']}" for r in again if r["answer"] == "yes"]
             store.open_latches(scan["id"], opens, cutoff)
             store.release_latches(scan["id"], releases)
             by_key = {f"{r['kind']}:{r['id']}": r for r in rows}

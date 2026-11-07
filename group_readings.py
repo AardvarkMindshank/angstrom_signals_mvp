@@ -97,21 +97,30 @@ def _cluster(cluster: str, result: dict, members: list[str], horizon: str) -> di
     }
 
 
+def stored_context(frame: pd.DataFrame, kind: str, now: datetime | None = None, asset_id: str = "dashboard"):
+    """(engine context, start of the last finished daily bar) for stored daily bars with indicators: what the
+    dashboard reads. Every Group or Set evaluated through it sees exactly the dashboard's numbers."""
+    from signal_library import DataContext
+
+    pos = v2.last_completed_position(frame.index, kind, now)
+    done = frame.iloc[: pos + 1]
+    loaded = {"frame": done.assign(forming=False), "session": None, "source": "stored"}
+    ctx = DataContext(_engine_kind(kind), asset_id, candle_loader=lambda k, a, tf: loaded if tf == "1D" else
+                      {"error": f"Stored bars are daily; {tf} is not stored."},
+                      now=pd.Timestamp(done.index[-1]) + pd.Timedelta(days=3))
+    return ctx, pd.Timestamp(done.index[-1])
+
+
 def score(frame: pd.DataFrame, kind: str, now: datetime | None = None) -> dict:
     """The readings for the last finished daily bar of `frame` (the output of scoring.calculate_indicators), in the
     shape of signals_v2.score, with Trend, Stretch and Flow from the starter Groups."""
     import signal_groups as sg
-    from signal_library import DataContext
 
     legacy = v2.score(frame, kind, now)
     out = {**legacy, "version": VERSION, "fingerprint": FINGERPRINT, "source": "groups"}
     if legacy.get("status") != "ok":
         return out
-    pos = v2.last_completed_position(frame.index, kind, now)
-    done = frame.iloc[: pos + 1]
-    loaded = {"frame": done.assign(forming=False), "session": None, "source": "stored"}
-    ctx = DataContext(_engine_kind(kind), "dashboard", candle_loader=lambda k, a, tf: loaded,
-                      now=pd.Timestamp(done.index[-1]) + pd.Timedelta(days=3))
+    ctx, _ = stored_context(frame, kind, now)
     clusters = {}
     for cluster, spec in CLUSTERS.items():
         result = sg.evaluate_group(dashboard_group(cluster), ctx)
