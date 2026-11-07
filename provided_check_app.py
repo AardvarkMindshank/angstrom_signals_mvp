@@ -1,4 +1,4 @@
-"""The training-video demo page, for the 🔰 provided-items browser check (provided_check.js). Not the app."""
+"""The training-video demo page, for the provided-items browser check (provided_check.js). Not the app."""
 import runpy
 from pathlib import Path
 

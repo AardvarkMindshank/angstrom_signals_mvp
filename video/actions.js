@@ -336,6 +336,8 @@ module.exports = {
     add: async (h) => {
       await h.clear();
       await h.press(SET_ADD("My Trend v1"));
+      const provided = h.page.locator(".lat details.prov > summary").first();   // the starters' folded section
+      if (await provided.count()) await h.press(provided, false);
       await h.tip('.lat .lib .chip:has-text("Flow v1")', null, "right");
       await h.wait(1200);
       await h.clear("demo-tip");

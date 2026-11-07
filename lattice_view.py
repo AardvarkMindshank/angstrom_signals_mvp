@@ -22,13 +22,16 @@ from signal_library import loaders
 START_NEW = "new"
 
 
-def _sources(saved: list[dict], user_id: str, show_provided: bool = True) -> tuple[dict, dict]:
+def _sources(saved: list[dict], user_id: str, current: str | None = None) -> tuple[dict, dict]:
+    """"Start from": a new Group and your own. A provided starter appears only while it is the one being copied
+    (picked under "Copy a provided starter")."""
     labels = {START_NEW: "➕ New Group"}
     docs: dict = {}
-    for alias in sg.STARTERS if show_provided else ():
+    for alias in sg.STARTERS:
         doc = sg.starter(alias)
-        labels[f"starter:{alias}"] = f"{lattice_panel.PROVIDED} {doc['name']} (copy of a starter)"
         docs[f"starter:{alias}"] = (doc, None)
+        if current == f"starter:{alias}":
+            labels[current] = f"Copy of {doc['name']} (provided starter)"
     for c in saved:
         if c.get("kind") != "group" or c.get("owner_id") != user_id or not c["versions"]:
             continue
@@ -48,11 +51,13 @@ def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str = "") 
         cached = (time.time(), *gi.saved_configs(supabase))
         st.session_state["siggroups_saved"] = cached
     _, saved, problem = cached
-    shown = lattice_panel.provided_shown(st)
-    labels, docs = _sources(saved, user_id, shown)
+    if "_lattice_start_next" in st.session_state:          # a starter picked under "Copy a provided starter"
+        st.session_state["lattice_start"] = st.session_state.pop("_lattice_start_next")
+    labels, docs = _sources(saved, user_id, st.session_state.get("lattice_start"))
     if st.session_state.get("lattice_start") not in labels:
-        st.session_state.pop("lattice_start", None)         # a starter that is now hidden
-    lattice_panel.provided_switch(st, 0 if shown else len(sg.STARTERS), "provided_groups")
+        st.session_state.pop("lattice_start", None)
+    if lattice_panel.provided_shown(st):
+        _provided_starters(st)
     start = st.selectbox("Start from", list(labels), format_func=labels.get, key="lattice_start")
     if st.session_state.get("lattice_loaded") != start:
         st.session_state["lattice_loaded"] = start
@@ -122,6 +127,20 @@ def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str = "") 
     _try(st, supabase, model, assets, screen["can_save"])
     if problem:
         st.caption(f"Saved Groups could not be read: {problem}")
+
+
+def _provided_starters(st) -> None:
+    """The starter Groups, in their own folded section: copy one to start from it."""
+    with st.expander(lattice_panel.PROVIDED_TITLE + " · starter Groups", icon=":material/inventory_2:"):
+        st.caption("The dashboard's own readings, as Groups. Copy one to change it; the original stays as it is. "
+                   "Hide this section in ⚙️ Settings → Show provided starters and examples.")
+        names = {a: sg.starter(a)["name"] for a in sg.STARTERS}
+        cols = st.columns([3, 1], vertical_alignment="bottom")
+        pick = cols[0].selectbox("Starter", list(names), format_func=names.get, key="lattice_starter_pick")
+        if cols[1].button("Copy", icon=":material/content_copy:", key="lattice_starter_copy", width="stretch",
+                          help="Start a new Group from a copy of this starter"):
+            st.session_state["_lattice_start_next"] = f"starter:{pick}"
+            lattice_panel.rerun(st)
 
 
 def _save(st, supabase, model: dict, can_save: bool) -> None:

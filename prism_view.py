@@ -29,7 +29,7 @@ HELP = {
 
 def scannable_sets(saved: list[dict], user_id: str) -> tuple[dict, dict]:
     """(labels, documents) for the demo Sets and every readable saved Set version that has a decision."""
-    labels = {k: f"🔰 {d['name']}" for k, d in prism.demo_sets().items()}
+    labels = {k: f"⭐ {d['name']}" for k, d in prism.demo_sets().items()}
     docs = dict(prism.demo_sets())
     for c in saved:
         if c.get("kind") != "set":
@@ -92,16 +92,11 @@ def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str = "") 
     flash = st.session_state.pop("prism_flash", None)
     if flash:
         (st.success if flash[0] == "ok" else st.error)(flash[1])
-    library = pb.library(choices, assets)
     shown = lattice_panel.provided_shown(st)
-    hidden = 0
-    if not shown:                                    # example Sets and the built-in alerts are hidden
-        keep = [s for s in library["sets"] if not s["meta"].startswith("🔰")]
-        hidden = len(library["sets"]) - len(keep) + (1 if builtins else 0)
-        library["sets"] = keep
-    lattice_panel.provided_switch(st, hidden, "provided_prism")
+    if shown:                                         # provided by Angstrom Signals: at the top, folded
+        _builtin_section(st, supabase, builtins)
     data = {
-        "library": library, "zones": pb.ZONES,
+        "library": pb.library(choices, assets), "zones": pb.ZONES, "show_provided": shown,
         "scheduled": pb.scheduled_count(scans), "max_scheduled": pb.MAX_SCHEDULED,
         "open_new": st.session_state.pop("prism_open_new", None),
         "scans": [pb.view(s, runs.get(s["id"], []), latches.get(s["id"], []), choices, assets, now,
@@ -121,8 +116,6 @@ def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str = "") 
             action = {}
         st.session_state["prism_flash"] = handle(st, supabase, action, by_id, choices, assets, now)
         lattice_panel.rerun(st)
-    if shown:
-        _builtin_section(st, supabase, builtins)
     st.caption("Answers are descriptive readings, not forecasts or advice. ▶ uses the latest finished candles; ⏪ "
                "rebuilds a past moment from today's data providers (a reconstruction, not a record).")
     if problem:
@@ -144,7 +137,8 @@ def _builtin_section(st, supabase, builtins: list) -> None:
     builtins = sorted(builtins, key=lambda r: order.get(r.get("builtin"), 99))
     _, latches = _history(supabase, [b["id"] for b in builtins])
     on = sum((b.get("notify") or {}).get("channel") != "off" for b in builtins)
-    with st.expander(f"🔰 Built-in alerts · {on} of {len(builtins)} on", icon=":material/notifications_active:"):
+    with st.expander(f"Provided by Angstrom Signals · built-in alerts, {on} of {len(builtins)} on",
+                     icon=":material/notifications_active:"):
         st.caption("Trend, Stretch and Flow alerts, checked at each daily close (crypto 00:10 UTC, shares 10 minutes "
                    "after the New York close) on the same readings as the dashboard. Change the lines and switch "
                    "them on or off in Notifications → Configure Alert Rules. They don't count towards your "

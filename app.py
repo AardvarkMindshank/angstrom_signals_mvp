@@ -7059,9 +7059,10 @@ same line under the asset's name in the chart section.
 part from the bar at the top; hover the bar for what each part does. Like the rest of the app, it describes
 conditions; nothing in it is a forecast or advice.
 
-**🔰 Provided by Angstrom Signals:** the starter Groups, the example Sets and the built-in alerts. To keep only your
-own in the lists, press **🔰 Hide provided** in any of them, or switch off ⚙️ Settings → Show provided starters and
-examples (one setting for all three). Hiding changes nothing else.
+**Provided by Angstrom Signals:** the starter Groups, the example Sets and the built-in alerts sit in a folded
+section of that name at the top of each part. To keep only your own, switch off ⚙️ Settings → Show provided
+starters and examples (one setting for all three). Hiding changes nothing else: your Groups and Sets built from a
+starter keep working, and built-in alerts that are on keep running.
 """)
         _training.link(st, "01-angstrom-lattice-at-a-glance", key="tv_lat_01")
         _training.link(st, "02-signals", key="tv_lat_02")
@@ -7483,17 +7484,16 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
     )
     st.divider()
     st.markdown("**Angstrom Lattice**")
-    if "_show_provided_next" in st.session_state:      # the switch in a Lattice list was pressed
-        st.session_state.show_provided = bool(st.session_state.pop("_show_provided_next"))
     if "show_provided" not in st.session_state:
         st.session_state.show_provided = settings.get("show_provided", True) is not False
     show_provided = st.toggle(
-        "🔰 Show provided starters and examples",
+        "Show provided starters and examples",
         key="show_provided",
         persist_state="session",
         help=(
-            "🔰 marks what Angstrom Signals provides: the starter Groups, the example Sets and the built-in "
-            "alerts. Switch off to keep only your own in Signal Groups, Signal Sets and Prism Scan. Hiding never "
+            "What Angstrom Signals provides (the starter Groups, the example Sets and the built-in alerts) sits in a "
+            "folded \"Provided by Angstrom Signals\" section at the top of Signal Groups, Signal Sets and Prism "
+            "Scan. Switch off to hide those sections and keep only your own. Hiding never "
             "changes anything: your Groups and Sets built from a starter keep working, and built-in alerts that are "
             "on keep running."
         ),

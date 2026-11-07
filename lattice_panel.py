@@ -51,8 +51,7 @@ def pending(st, key: str, field: str):
     return getattr(value, field, None)
 
 
-PROVIDED = "🔰"          # marks what Angstrom Signals provides: starter Groups, example Sets, built-in alerts
-PROVIDED_HINT = "Provided by Angstrom Signals"
+PROVIDED_TITLE = "Provided by Angstrom Signals"     # the folded section that holds starters, examples and alerts
 
 
 def provided_shown(st) -> bool:
@@ -61,23 +60,6 @@ def provided_shown(st) -> bool:
         return st.session_state.get("show_provided", True) is not False
     except Exception:
         return True
-
-
-def provided_switch(st, hidden: int, key: str) -> None:
-    """The same small switch in every Lattice list: hide the provided items, or show them again. It flips the
-    one account setting in ⚙️ Settings (saved on the next full redraw)."""
-    shown = provided_shown(st)
-    if shown:
-        label, tip = f"{PROVIDED} Hide provided", ("Hide the starters, examples and built-in alerts Angstrom Signals "
-                                                   "provides, in every Lattice list. Same as ⚙️ Settings → Show "
-                                                   "provided starters and examples.")
-    else:
-        if not hidden:
-            return
-        label, tip = f"{PROVIDED} Show {hidden} provided", "Show the starters, examples and built-in alerts again."
-    if st.button(label, key=key, type="tertiary", help=tip):
-        st.session_state["_show_provided_next"] = not shown
-        st.rerun()                    # the whole page, so ⚙️ Settings shows and saves the change
 
 
 def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str) -> None:

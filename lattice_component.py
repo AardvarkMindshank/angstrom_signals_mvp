@@ -47,6 +47,9 @@ CSS = """
 .lat h3{font-size:14px;margin:0 0 8px}
 .lat .hd{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:8px}
 .lat .hd h3{margin:0}
+.lat details.prov{border:1px solid rgba(127,127,127,.3);border-radius:10px;padding:4px 8px;margin:6px 0 8px;
+  background:rgba(127,127,127,.04)}
+.lat details.prov>summary{cursor:pointer;font-size:12px;letter-spacing:.04em;opacity:.8;padding:6px 0;min-height:28px}
 @media (max-width:640px){.lat .lib{max-width:none;flex-basis:100%;max-height:380px}.lat .mid{flex-basis:100%}}
 """
 
@@ -489,13 +492,28 @@ export default function(component) {
   function drawLibrary() {
     list.replaceChildren();
     const q = query.toLowerCase();
-    list.appendChild(el("div", "cat", "Groups"));
     const gs = groupsAvail.filter((g) => !q || g.name.toLowerCase().indexOf(q) >= 0);
-    if (!gs.length) list.appendChild(el("div", "muted", "No saved Groups yet: save one in Signal Groups."));
-    gs.forEach((g) => {
-      const sub = (g.owner === "starter" ? "🔰 provided starter" : g.owner) + " · " + (g.labels.length ? "labels: " + g.labels.join(", ") : (g.has_score ? "score only" : "no score"));
-      list.appendChild(chip(g.name, sub, "Members: " + g.members.join(", "), "group|" + g.source, () => addGroup(g.source), "Add " + g.name + " to the Set"));
-    });
+    const groupChip = (g) => {
+      const sub = (g.owner === "starter" ? "starter" : g.owner) + " · " + (g.labels.length ? "labels: " + g.labels.join(", ") : (g.has_score ? "score only" : "no score"));
+      return chip(g.name, sub, "Members: " + g.members.join(", "), "group|" + g.source, () => addGroup(g.source), "Add " + g.name + " to the Set");
+    };
+    // What Angstrom Signals provides (the starter Groups) sits in its own folded section at the top; the setting
+    // in ⚙️ Settings hides it. A starter already in this Set stays usable either way.
+    const given = state.show_provided === false ? [] : gs.filter((g) => g.owner === "starter");
+    const mine = gs.filter((g) => g.owner !== "starter");
+    if (given.length) {
+      const box = el("details", "prov");
+      box.open = !!window.__latProvOpen || !!q;
+      box.addEventListener("toggle", () => { if (!q) window.__latProvOpen = box.open; });
+      const sum = el("summary", "", "Provided by Angstrom Signals · " + given.length);
+      sum.title = "The starter Groups: the dashboard's own readings. Hide them in ⚙️ Settings → Show provided starters and examples.";
+      box.appendChild(sum);
+      given.forEach((g) => box.appendChild(groupChip(g)));
+      list.appendChild(box);
+    }
+    list.appendChild(el("div", "cat", "Your Groups"));
+    if (!mine.length) list.appendChild(el("div", "muted", "No saved Groups yet: save one in Signal Groups."));
+    mine.forEach((g) => list.appendChild(groupChip(g)));
     list.appendChild(el("div", "cat", "Single signals"));
     catalogue.filter((s) => !q || s.name.toLowerCase().indexOf(q) >= 0).forEach((s) => {
       list.appendChild(chip(s.name, s.badge || s.category_label, s.hint, "signal|" + s.id, () => addSignal(s.id), "Add " + s.name + " to the Set"));

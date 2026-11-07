@@ -123,20 +123,36 @@ export default function(component) {
   libCol.appendChild(fs);
   const setList = el("div", "");
   libCol.appendChild(setList);
-  function drawSets() {
-    setList.innerHTML = "";
-    const q = qSets.toLowerCase();
-    const shown = lib.sets.filter((s) => !q || (s.name + " " + s.meta).toLowerCase().includes(q));
-    if (!shown.length) setList.appendChild(el("div", "muted", lib.sets.length ? "No Set matches." : "No Sets with a decision yet: make one in Signal Sets."));
-    shown.forEach((s) => {
+  function setChip(s) {
       const c = el("div", "chip");
       c.draggable = true;
       c.addEventListener("dragstart", (e) => e.dataTransfer.setData("text/plain", JSON.stringify({type: "set", key: s.key})));
       const nm = el("div", "nm"); nm.appendChild(el("div", "", s.name)); nm.appendChild(el("div", "muted", s.meta));
       c.appendChild(nm);
       c.appendChild(button("+", "Start a scan with " + s.name, () => act("create", {set: s.key}), "sq"));
-      setList.appendChild(c);
-    });
+      return c;
+  }
+  function drawSets() {
+    setList.innerHTML = "";
+    const q = qSets.toLowerCase();
+    const showProvided = state.show_provided !== false;
+    const usable = lib.sets.filter((s) => showProvided || !s.provided);
+    const shown = usable.filter((s) => !q || (s.name + " " + s.meta).toLowerCase().includes(q));
+    const given = shown.filter((s) => s.provided), mine = shown.filter((s) => !s.provided);
+    if (given.length) {
+      // What Angstrom Signals provides sits in its own folded section at the top (hidden with the setting).
+      const box = el("details", "prov");
+      box.open = !!window.__prismProvOpen || !!q;
+      box.addEventListener("toggle", () => { if (!q) window.__prismProvOpen = box.open; });
+      const sum = el("summary", "", "Provided by Angstrom Signals · " + given.length);
+      sum.title = "Example Sets made by Angstrom Signals. Hide them in ⚙️ Settings → Show provided starters and examples.";
+      box.appendChild(sum);
+      given.forEach((s) => box.appendChild(setChip(s)));
+      setList.appendChild(box);
+    }
+    if (given.length && mine.length) setList.appendChild(el("div", "cat", "Your Sets"));
+    mine.forEach((s) => setList.appendChild(setChip(s)));
+    if (!shown.length) setList.appendChild(el("div", "muted", usable.length ? "No Set matches." : "No Sets with a decision yet: make one in Signal Sets."));
   }
   fs.addEventListener("input", () => { qSets = fs.value; window.__prismQS = qSets; drawSets(); });
   drawSets();

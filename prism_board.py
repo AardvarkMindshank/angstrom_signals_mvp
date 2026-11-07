@@ -38,7 +38,8 @@ def set_choices(saved: list[dict], user_id: str) -> dict[str, dict]:
     key -> {name, meta, doc, config, version, latest}."""
     out = {}
     for key, doc in prism.demo_sets().items():
-        out[key] = {"name": doc["name"], "meta": "🔰 provided example", "doc": doc, "config": None, "version": None}
+        out[key] = {"name": doc["name"], "meta": "example Set", "doc": doc, "config": None, "version": None,
+                    "provided": True}
     for c in saved:
         if c.get("kind") != "set":
             continue
@@ -70,7 +71,8 @@ def watchlist(assets: list[tuple[str, str, str]]) -> tuple[dict, dict]:
 def library(choices: dict, assets: list[tuple[str, str, str]]) -> dict:
     crypto, stocks = watchlist(assets)
     return {
-        "sets": [{"key": k, "name": c["name"], "meta": c["meta"]} for k, c in choices.items()],
+        "sets": [{"key": k, "name": c["name"], "meta": c["meta"], "provided": bool(c.get("provided"))}
+                 for k, c in choices.items()],
         "groups": [{"group": "watchlist", "name": GROUPS["watchlist"], "count": len(crypto) + len(stocks)},
                    {"group": "crypto", "name": GROUPS["crypto"], "count": len(crypto)},
                    {"group": "shares", "name": GROUPS["shares"], "count": len(stocks)}],
