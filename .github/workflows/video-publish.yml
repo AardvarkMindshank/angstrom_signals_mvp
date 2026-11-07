@@ -1,6 +1,6 @@
 # Put checked training videos on the website, with nothing to install. Runs when the "video-publish" branch is pushed.
-# video/publish.txt says which: the first line is a folder under videos/ on the reports branch ("latest" for the
-# newest), and each following line is one video in it. Each goes to angstromsignals.com/videos/training/<name>.mp4,
+# video/publish.txt says which, one per line: <folder under videos/ on the reports branch>/<video name>, where the
+# folder may be "latest" for the newest recording run. Each goes to angstromsignals.com/videos/training/<name>.mp4,
 # with its captions (.srt) beside it.
 name: video-publish
 on:
@@ -22,10 +22,11 @@ jobs:
           HOSTGATOR_FTP_PASSWORD: ${{ secrets.HOSTGATOR_FTP_PASSWORD }}
         run: |
           git fetch -q --depth=1 origin reports
-          batch=$(grep -v '^#' video/publish.txt | grep -v '^\s*$' | head -1)
-          [ "$batch" = "latest" ] && batch=$(git ls-tree -d --name-only origin/reports videos/ | grep '^videos/20' | tail -1 | sed 's|^videos/||')
-          echo "Batch: $batch"
-          for slug in $(grep -v '^#' video/publish.txt | grep -v '^\s*$' | tail -n +2); do
+          newest=$(git ls-tree -d --name-only origin/reports videos/ | grep '^videos/20' | tail -1 | sed 's|^videos/||')
+          for entry in $(grep -v '^#' video/publish.txt | grep -v '^\s*$'); do
+            batch=${entry%/*}; slug=${entry##*/}
+            [ "$batch" = "latest" ] && batch=$newest
+            echo "$slug from $batch"
             mkdir -p "out/$slug"
             git show "origin/reports:videos/$batch/$slug/video.mp4" > "out/$slug/video.mp4"
             git show "origin/reports:videos/$batch/$slug/captions.srt" > "out/$slug/captions.srt"
