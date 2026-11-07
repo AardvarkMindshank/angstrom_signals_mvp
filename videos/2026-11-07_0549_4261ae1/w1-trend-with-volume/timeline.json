@@ -1,0 +1,36 @@
+{
+ "steps": [
+  {
+   "id": "idea",
+   "start": 2.119,
+   "say": "A rising trend is more convincing when volume backs it. | Let's ask for both."
+  },
+  {
+   "id": "add",
+   "start": 7.782,
+   "say": "Add My Trend, and the starter Flow Group, which reads whether volume is buying or selling."
+  },
+  {
+   "id": "lines",
+   "start": 14.858,
+   "say": "Line one: My Trend is Bullish. | Line two: Flow's score is at least plus thirty, | the level the dashboard calls Buying."
+  },
+  {
+   "id": "veto",
+   "start": 27.228,
+   "say": "And because My Trend already has its ranging veto, a choppy, sideways market won't count."
+  },
+  {
+   "id": "save",
+   "start": 33.319,
+   "say": "Save it, add it to Prism, and run it, | here as of the thirteenth of March 2024."
+  },
+  {
+   "id": "results",
+   "start": 53.166,
+   "say": "Yes means the trend is up and volume agrees. | A No tells you which one is missing."
+  }
+ ],
+ "end": 60.217,
+ "trim": 2.119
+}

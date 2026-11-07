@@ -1,0 +1,115 @@
+1
+00:00:00,000 --> 00:00:02,967
+Prism Scan checks your watchlist with your own Sets.
+
+2
+00:00:03,406 --> 00:00:08,186
+On the left are your saved Sets, like the Pullback in an uptrend Set we just built.
+
+3
+00:00:08,236 --> 00:00:12,077
+Tap plus, or drag one across, and it becomes a Prism Scan.
+
+4
+00:00:12,521 --> 00:00:16,507
+Each scan is a card. The top row shows its answers and controls.
+
+5
+00:00:16,527 --> 00:00:18,517
+Open it to see the details.
+
+6
+00:00:18,959 --> 00:00:23,824
+Choose what it scans. Groups like All crypto follow your watchlist as it changes.
+
+7
+00:00:24,260 --> 00:00:28,763
+Press play to check every asset now, on the latest finished daily candles.
+
+8
+00:00:28,813 --> 00:00:32,953
+Or rewind to a past moment, and Prism rebuilds what was known then.
+
+9
+00:00:33,003 --> 00:00:36,460
+Here, the fifteenth of January 2024.
+
+10
+00:00:36,907 --> 00:00:41,090
+Each asset gets Yes, No, or Unknown, with the line that decided it.
+
+11
+00:00:41,526 --> 00:00:43,106
+That's a good start.
+
+12
+00:00:43,156 --> 00:00:45,051
+But crypto tends to move together,
+
+13
+00:00:45,071 --> 00:00:49,259
+and many traders only buy a dip when Bitcoin itself is in an uptrend.
+
+14
+00:00:49,309 --> 00:00:51,017
+Let's add that check.
+
+15
+00:00:51,461 --> 00:00:54,790
+In Signal Sets, open the Set and add My Trend again,
+
+16
+00:00:54,840 --> 00:00:57,679
+this time pinned to a fixed asset: Bitcoin.
+
+17
+00:00:57,729 --> 00:01:01,293
+Then add a third line: My Trend on Bitcoin is Bullish.
+
+18
+00:01:09,492 --> 00:01:13,397
+Save it as version two. The earlier version stays as it was.
+
+19
+00:01:13,830 --> 00:01:17,351
+Back in Prism, the scan shows a newer version is available.
+
+20
+00:01:17,401 --> 00:01:19,173
+One tap switches it.
+
+21
+00:01:19,625 --> 00:01:21,013
+Run it again.
+
+22
+00:01:21,063 --> 00:01:24,840
+Now a dip is only a Yes when Bitcoin's own trend is bullish too.
+
+23
+00:01:24,890 --> 00:01:27,601
+When it isn't, the Bitcoin line is the reason.
+
+24
+00:01:28,042 --> 00:01:32,118
+To keep watching, give the scan a schedule. Here, every daily close.
+
+25
+00:01:32,555 --> 00:01:34,754
+Then choose how you hear about it:
+
+26
+00:01:34,804 --> 00:01:36,085
+instantly,
+
+27
+00:01:36,135 --> 00:01:37,736
+in the daily summary,
+
+28
+00:01:37,786 --> 00:01:39,537
+or only in the app.
+
+29
+00:01:40,003 --> 00:01:45,188
+Collapse all keeps a long list tidy. That's Prism: descriptive readings, not advice.

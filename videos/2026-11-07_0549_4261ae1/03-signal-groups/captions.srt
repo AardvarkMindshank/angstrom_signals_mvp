@@ -1,0 +1,87 @@
+1
+00:00:00,000 --> 00:00:03,244
+A Signal Group turns several signals into one reading:
+
+2
+00:00:03,294 --> 00:00:08,095
+a score from minus one hundred to plus one hundred, and a label, such as Bullish.
+
+3
+00:00:08,532 --> 00:00:10,308
+You can start from a starter Group,
+
+4
+00:00:10,328 --> 00:00:14,528
+the same ones behind the dashboard's pre-configured Trend, Stretch and Flow,
+
+5
+00:00:14,578 --> 00:00:16,905
+or from scratch. Let's build our own.
+
+6
+00:00:17,347 --> 00:00:20,335
+Add signals by dragging them in, or tapping plus.
+
+7
+00:00:20,385 --> 00:00:24,162
+Here: moving averages, the Ichimoku cloud, and the MACD line.
+
+8
+00:00:24,601 --> 00:00:28,848
+Each signal has a role. Score signals are combined into the Group's score.
+
+9
+00:00:28,898 --> 00:00:33,614
+Condition signals are only used in rules, and Context is shown alongside.
+
+10
+00:00:34,048 --> 00:00:38,295
+Rules give the labels, checked from the top: the first that matches wins.
+
+11
+00:00:38,345 --> 00:00:42,121
+At least plus thirty is Bullish. At most minus thirty is Bearish.
+
+12
+00:00:42,141 --> 00:00:43,551
+Otherwise, Neutral.
+
+13
+00:00:43,981 --> 00:00:48,356
+If a rule can't be checked because a reading is missing, the label is Unknown,
+
+14
+00:00:48,406 --> 00:00:49,815
+never a guess.
+
+15
+00:00:50,258 --> 00:00:52,990
+Vetoes protect you from the wrong conditions.
+
+16
+00:00:53,040 --> 00:00:57,223
+Here, if the daily market is ranging, every label becomes Vetoed.
+
+17
+00:01:02,345 --> 00:01:06,037
+The checks tell you what blocks saving, and what is only a warning.
+
+18
+00:01:06,087 --> 00:01:09,054
+And the description is written for you, in plain words.
+
+19
+00:01:09,484 --> 00:01:13,539
+Name it, and save. It's yours, and private, until you publish it.
+
+20
+00:01:13,589 --> 00:01:17,878
+Changing it later saves a new version, so earlier ones stay as they were.
+
+21
+00:01:23,280 --> 00:01:25,628
+Why it helps: your reading of the trend,
+
+22
+00:01:25,678 --> 00:01:28,133
+the same every time, on every asset.
