@@ -196,6 +196,7 @@ module.exports = {
       await h.clear("demo-ring");
       await h.top();
       await h.type('.lat input[aria-label="Group name"]', "My Trend");
+      await h.wait(1200);                         // let the name reach the page before saving
       await h.press('button:has-text("Save as a new Group")');
       const saved = h.page.getByText("Saved as a new Group").first();
       await h.wait(1200);
