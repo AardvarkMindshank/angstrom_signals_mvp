@@ -1,0 +1,103 @@
+1
+00:00:00,000 --> 00:00:02,215
+A signal is one measurement of the market,
+
+2
+00:00:02,235 --> 00:00:05,356
+worked out from price and volume on finished candles.
+
+3
+00:00:05,406 --> 00:00:07,861
+Each one answers a single question.
+
+4
+00:00:08,317 --> 00:00:12,820
+Most signals can be read on several timeframes, from fifteen minutes to weekly.
+
+5
+00:00:12,870 --> 00:00:15,324
+Hover any signal to see what it measures.
+
+6
+00:00:16,422 --> 00:00:20,605
+Trend signals ask: which way is the market going, and how firmly?
+
+7
+00:00:20,655 --> 00:00:24,944
+Traders use them to work with the main direction, rather than against it.
+
+8
+00:00:25,390 --> 00:00:28,762
+Momentum signals ask: how fast, and how stretched?
+
+9
+00:00:28,812 --> 00:00:32,300
+They help spot moves that have run hard, or are losing steam.
+
+10
+00:00:32,320 --> 00:00:37,048
+A divergence is when price makes a new extreme, but momentum does not follow.
+
+11
+00:00:37,494 --> 00:00:41,442
+Regime asks: what kind of market is this? Trending or ranging,
+
+12
+00:00:41,492 --> 00:00:43,825
+and is volatility compressed or expanding?
+
+13
+00:00:43,845 --> 00:00:46,891
+The same setup can mean different things in each.
+
+14
+00:00:47,359 --> 00:00:50,091
+Structure follows the swing highs and lows:
+
+15
+00:00:50,141 --> 00:00:53,251
+whether they are rising or falling, where price broke through,
+
+16
+00:00:53,271 --> 00:00:56,500
+and the real price levels where swings have turned before.
+
+17
+00:00:56,962 --> 00:00:59,822
+Volume asks: is the crowd behind the move?
+
+18
+00:00:59,872 --> 00:01:02,066
+Rising prices on rising volume tell a
+
+19
+00:01:02,086 --> 00:01:05,377
+different story from rising prices on thin volume.
+
+20
+00:01:05,821 --> 00:01:10,409
+Sentiment reads recent headlines about the asset, positive or negative.
+
+21
+00:01:10,459 --> 00:01:15,388
+Its history starts in November 2026 with the birth of Angstrom Signals.
+
+22
+00:01:15,848 --> 00:01:18,409
+On their own, signals are ingredients.
+
+23
+00:01:18,459 --> 00:01:21,658
+In Lattice you combine them into Groups, and Groups into Sets,
+
+24
+00:01:21,678 --> 00:01:24,989
+so they are read together, the way a trader reads a chart.
+
+25
+00:01:25,438 --> 00:01:29,898
+Every signal describes what is happening now. None of them is a prediction,
+
+26
+00:01:29,948 --> 00:01:33,533
+which is why Lattice always shows a reading together with its reason.

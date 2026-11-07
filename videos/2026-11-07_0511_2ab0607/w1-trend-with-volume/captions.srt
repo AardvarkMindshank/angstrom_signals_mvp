@@ -1,0 +1,51 @@
+1
+00:00:00,000 --> 00:00:03,457
+A rising trend is more convincing when volume backs it.
+
+2
+00:00:03,507 --> 00:00:05,215
+Let's ask for both.
+
+3
+00:00:05,677 --> 00:00:07,878
+Add My Trend, and the starter Flow Group,
+
+4
+00:00:07,898 --> 00:00:10,798
+which reads whether volume is buying or selling.
+
+5
+00:00:12,819 --> 00:00:15,018
+Line one: My Trend is Bullish.
+
+6
+00:00:15,068 --> 00:00:17,949
+Line two: Flow's score is at least plus thirty,
+
+7
+00:00:17,999 --> 00:00:20,326
+the level the dashboard calls Buying.
+
+8
+00:00:25,208 --> 00:00:28,824
+And because My Trend already has its ranging veto, a choppy,
+
+9
+00:00:28,844 --> 00:00:30,841
+sideways market won't count.
+
+10
+00:00:31,284 --> 00:00:33,760
+Save it, add it to Prism, and run it,
+
+11
+00:00:33,810 --> 00:00:37,566
+here as of the thirteenth of March 2024.
+
+12
+00:00:51,427 --> 00:00:54,244
+Yes means the trend is up and volume agrees.
+
+13
+00:00:54,294 --> 00:00:56,536
+A No tells you which one is missing.

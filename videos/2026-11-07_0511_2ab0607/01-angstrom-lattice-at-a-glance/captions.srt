@@ -1,0 +1,107 @@
+1
+00:00:00,000 --> 00:00:02,788
+Every trader has their own way of reading a chart.
+
+2
+00:00:02,808 --> 00:00:05,804
+Angstrom Lattice lets you write yours down once,
+
+3
+00:00:05,854 --> 00:00:08,351
+and have it checked on every asset you follow.
+
+4
+00:00:08,788 --> 00:00:12,373
+It starts with signals: the indicators behind the dashboard,
+
+5
+00:00:12,393 --> 00:00:14,596
+such as moving averages, RSI, volume,
+
+6
+00:00:14,616 --> 00:00:17,920
+and market structure. Each one measures one thing.
+
+7
+00:00:18,357 --> 00:00:20,987
+Signal Groups combine signals into one reading,
+
+8
+00:00:21,007 --> 00:00:24,182
+a score from minus one hundred to plus one hundred,
+
+9
+00:00:24,232 --> 00:00:26,403
+with labels you choose, such as Bullish.
+
+10
+00:00:26,423 --> 00:00:28,648
+The dashboard's already configured Trend,
+
+11
+00:00:28,668 --> 00:00:31,487
+Stretch and Flow are Signal Groups like these.
+
+12
+00:00:31,926 --> 00:00:34,658
+Signal Sets turn readings into a decision:
+
+13
+00:00:34,708 --> 00:00:36,501
+Yes, No, or Unknown,
+
+14
+00:00:36,551 --> 00:00:40,563
+with the line that decided it. For example: the trend is bullish,
+
+15
+00:00:40,613 --> 00:00:44,327
+and Stochastic is at most thirty, a pullback in an uptrend.
+
+16
+00:00:44,778 --> 00:00:47,553
+Prism Scan runs a Set across your watchlist,
+
+17
+00:00:47,603 --> 00:00:48,649
+now,
+
+18
+00:00:48,699 --> 00:00:50,386
+at a past moment,
+
+19
+00:00:50,436 --> 00:00:52,037
+or on a schedule.
+
+20
+00:00:52,477 --> 00:00:55,209
+And when an asset turns Yes, you hear about it,
+
+21
+00:00:55,259 --> 00:00:57,671
+instantly or in your daily summary.
+
+22
+00:00:58,135 --> 00:01:02,702
+Strategies come next: entries, exits, and risk, built on the same Sets.
+
+23
+00:01:03,149 --> 00:01:06,222
+Why it helps: your rules stay the same every time,
+
+24
+00:01:06,272 --> 00:01:08,514
+every answer shows its reasons,
+
+25
+00:01:08,564 --> 00:01:11,978
+and missing data is reported as Unknown, never guessed.
+
+26
+00:01:12,688 --> 00:01:15,484
+Everything here describes the market as it is.
+
+27
+00:01:15,534 --> 00:01:18,074
+It is not a forecast, and not advice.
