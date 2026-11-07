@@ -47,7 +47,7 @@ function draw({ stage, lit }) {
         <div style="margin-top:8px;font-size:13px;color:${GREY}">one score, your labels</div>`],
       ["sets", "Signal Sets", `
         <div style="margin-top:8px;display:flex;flex-direction:column;gap:8px;font-size:14px">
-          ${["Trend is Bullish", "RSI is at most 40"].map((t, i) => `<div class="dg-bit" style="transition-delay:${0.3 + i * 0.5}s;display:flex;gap:8px;align-items:center">
+          ${["Trend is Bullish", "Stochastic is at most 30"].map((t, i) => `<div class="dg-bit" style="transition-delay:${0.3 + i * 0.5}s;display:flex;gap:8px;align-items:center">
             <span style="width:22px;height:22px;border-radius:50%;background:${GREEN};color:#fff;font:bold 13px/22px ${FONT};text-align:center">✓</span>${t}</div>`).join("")}
           <div class="dg-bit" style="transition-delay:1.4s;margin-top:6px;text-align:center">${pill("Yes", "#dcfce7", GREEN)}</div>
         </div>

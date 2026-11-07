@@ -25,7 +25,7 @@
   {
    "id": "sets",
    "screen": "An arrow to Signal Sets; two lines with ticks, then \"Yes\"",
-   "say": "Signal Sets turn readings into a decision: | Yes, No, or Unknown, | with the line that decided it. For example: the trend is bullish, | and RSI is at most forty, a pullback in an uptrend."
+   "say": "Signal Sets turn readings into a decision: | Yes, No, or Unknown, | with the line that decided it. For example: the trend is bullish, | and Stochastic is at most thirty, a pullback in an uptrend."
   },
   {
    "id": "prism",

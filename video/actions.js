@@ -41,7 +41,7 @@ async function category(h, name) {
 }
 
 // Save the Set being edited, then scan it on a Watchlist group in Prism Scan.
-async function saveAndScan(h, name, group) {
+async function saveAndScan(h, name, group, date) {
   await h.type('.lat input[aria-label="Set name"]', name);
   await h.press('button:has-text("Save as a new Set")');
   await h.wait(900);
@@ -49,7 +49,7 @@ async function saveAndScan(h, name, group) {
   await h.press(`.lat.prism button[aria-label="Start a scan with ${name}"]`);
   await h.page.waitForSelector(".lat.prism .scan", { timeout: 60000 });
   await addAssets(h, group);
-  await play(h);
+  await past(h, date);
 }
 
 async function addAssets(h, group) {
@@ -60,6 +60,18 @@ async function addAssets(h, group) {
 
 async function play(h) {
   await h.press(PLAY);
+  await h.page.waitForSelector(TABLE, { timeout: 240000 }).catch(() => {});
+  await h.settle();
+}
+
+// Rewind to a past moment (before the hold-out) and run there: Prism rebuilds what was known at that time.
+async function past(h, date) {
+  const open = h.page.locator('.lat.prism .scan input[aria-label="Date (UTC)"]');
+  if (!(await open.count())) await h.press('.lat.prism .scan button[aria-label="Run at a past moment"]', false);
+  await h.glide(open.first());
+  await open.first().fill(date);
+  await h.wait(500);
+  await h.press('.lat.prism .scan button[aria-label="Rebuild what was known then, using only data available at that time"]');
   await h.page.waitForSelector(TABLE, { timeout: 240000 }).catch(() => {});
   await h.settle();
 }
@@ -209,17 +221,17 @@ module.exports = {
     },
     group: async (h) => { await h.clear(); await h.press(SET_ADD("My Trend v1")); },
     signal: async (h) => {
-      await h.tip('.lat .lib .chip:has-text("RSI (14)")', null, "right");
-      await h.wait(1800);
+      await h.tip('.lat .lib .chip:has-text("Stochastic %K")', null, "right");
+      await h.wait(2600);
       await h.clear("demo-tip");
-      await h.press(SET_ADD("RSI (14)"));
+      await h.press(SET_ADD("Stochastic %K (14, 3)"));
     },
     lines: async (h) => {
       await newLine(h);
       await setLine(h, 0, "outcome:my_trend", null, "bullish");
       await h.wait(800);
       await newLine(h);
-      await setLine(h, 1, "member:level_1d:rsi", "lte", "40");
+      await setLine(h, 1, "member:level_1d:stoch_k", "lte", "30");
     },
     all: async (h) => {
       await h.ring(h.page.locator(".lat .col").filter({ has: h.page.locator(".lbl", { hasText: "ALL · AND" }) }).last());
@@ -243,7 +255,7 @@ module.exports = {
     },
     summary: async (h) => {
       await h.card({ kicker: "Saved", title: "Pullback in an uptrend",
-        lines: ["✓ My Trend is Bullish", "✓ RSI (14) is at most 40", "Yes, No or Unknown for every asset, with its reason"] });
+        lines: ["✓ My Trend is Bullish", "✓ Stochastic %K is at most 30", "Yes, No or Unknown for every asset, with its reason"] });
     },
   },
 
@@ -258,7 +270,12 @@ module.exports = {
     },
     card: async (h) => { await h.glide(".lat.prism .scan .head"); await h.ring(".lat.prism .scan .head"); },
     assets: async (h) => { await h.clear(); await addAssets(h, "All crypto"); },
-    play: async (h) => { await play(h); },
+    play: async (h) => {
+      await h.tip(PLAY, "Run now: the latest finished daily candles");
+      await h.wait(2200);
+      await h.clear("demo-tip");
+      await past(h, "2024-01-15");
+    },
     results: async (h) => { await showResults(h); },
     pause: async (h) => {
       await h.clear();
@@ -283,7 +300,7 @@ module.exports = {
       await h.section("Prism Scan");
       await h.press('.lat.prism button[aria-label="Switch this scan to version 2 of its Set"]');
     },
-    rerun: async (h) => { await play(h); await showResults(h); },
+    rerun: async (h) => { await past(h, "2024-01-15"); await showResults(h); },
     schedule: async (h) => {
       await h.clear();
       await h.choose('.lat.prism .scan select[aria-label="When the scan runs"]', "1D");
@@ -326,7 +343,7 @@ module.exports = {
       await h.tip(h.page.locator(".lat .card", { hasText: "My Trend v1" }).first(),
         "Inside My Trend: a veto when the daily market is ranging.\nA vetoed trend is never Bullish.");
     },
-    save: async (h) => { await h.clear(); await saveAndScan(h, "Trend with volume behind it", "All crypto"); },
+    save: async (h) => { await h.clear(); await saveAndScan(h, "Trend with volume behind it", "All crypto", "2024-03-13"); },
     results: async (h) => { await showResults(h); },
   },
 
@@ -343,7 +360,7 @@ module.exports = {
       await newLine(h);
       await setLine(h, 1, "member:level_1d:rsi", "gte", "75");
     },
-    save: async (h) => { await saveAndScan(h, "Overextended rally", "All crypto"); },
+    save: async (h) => { await saveAndScan(h, "Overextended rally", "All crypto", "2024-03-13"); },
     results: async (h) => { await showResults(h); },
     alerts: async (h) => {
       await h.clear();
@@ -373,7 +390,7 @@ module.exports = {
       await newLine(h);
       await setLine(h, 2, "member:heavy_candle_1d:volume_ratio", "gte", "2");
     },
-    save: async (h) => { await saveAndScan(h, "Breakout with volume", "All equities"); },
+    save: async (h) => { await saveAndScan(h, "Breakout with volume", "All equities", "2023-04-28"); },
     results: async (h) => { await showResults(h); },
   },
 };

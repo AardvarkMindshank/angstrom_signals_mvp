@@ -25,12 +25,12 @@
   {
    "id": "signal",
    "screen": "Adding the single signal RSI (14)",
-   "say": "Add a single signal too: RSI, | which measures how hard recent closes have pushed up or down."
+   "say": "Add a single signal too: Stochastic, | which shows where the latest close sits in its recent range, from zero at the low to a hundred at the high."
   },
   {
    "id": "lines",
    "screen": "Writing two lines: \"My Trend is Bullish\" and \"RSI is below 40\"",
-   "say": "Now the decision. Line one: My Trend is Bullish. | Line two: RSI is at most forty, a short-term dip."
+   "say": "Now the decision. Line one: My Trend is Bullish. | Line two: Stochastic is at most thirty, a short-term dip."
   },
   {
    "id": "all",

@@ -30,7 +30,7 @@
   {
    "id": "play",
    "screen": "Pressing ▶",
-   "say": "Press play to check every asset now, on the latest finished daily candles."
+   "say": "Press play to check every asset now, on the latest finished daily candles. | Or rewind to a past moment, and Prism rebuilds what was known then. | Here, the fifteenth of January 2024."
   },
   {
    "id": "results",

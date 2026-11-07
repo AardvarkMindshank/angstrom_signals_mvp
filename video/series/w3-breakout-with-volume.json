@@ -25,12 +25,12 @@
   {
    "id": "save",
    "screen": "Save; Prism: + and ▶ on All equities",
-   "say": "Save it, and run it on your equities."
+   "say": "Save it, and run it on your equities, | as of the twenty-eighth of April 2023."
   },
   {
    "id": "results",
    "screen": "Results",
-   "say": "Yes means all three are true on today's finished candle. | Each No shows which piece is missing."
+   "say": "Yes means all three are true on the latest finished candle. | Each No shows which piece is missing."
   }
  ]
 }

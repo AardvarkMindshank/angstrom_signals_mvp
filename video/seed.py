@@ -5,7 +5,8 @@ what a person would have saved in the earlier videos:
 * the starter Groups, as the database holds them (no labels);
 * "My Trend" (video 3): moving averages, Ichimoku cloud and MACD line scored together, Bullish at +30 or more,
   Bearish at -30 or less, otherwise Neutral, with a veto when the daily regime is ranging;
-* "Pullback in an uptrend" (video 4): My Trend is Bullish, and RSI (14) is at most 40.
+* "Pullback in an uptrend" (video 4): My Trend is Bullish, and Stochastic %K is at most 30 (the close near the
+  bottom of its recent range).
 """
 
 from __future__ import annotations
@@ -52,9 +53,10 @@ def pullback_model(choices: dict) -> dict:
     model = ls.empty_model()
     model.update(name="Pullback in an uptrend", purpose="The main trend is up, but price has dipped in the short term.")
     model["groups"] = [{"key": "my_trend", "source": f"saved:{MY_TREND}:1"}]
-    model["standalone"] = [{"key": "rsi_1d", "id": "rsi.level", "version": 1, "timeframe": "1D", "role": "condition"}]
+    model["standalone"] = [{"key": "level_1d", "id": "stochastic.level", "version": 1, "timeframe": "1D",
+                            "role": "condition"}]
     model["lines"] = [{"target": "outcome", "group": "my_trend", "op": "is", "value": "bullish"},
-                      {"target": "member", "member": "rsi_1d", "field": "rsi", "op": "lte", "value": "40"}]
+                      {"target": "member", "member": "level_1d", "field": "stoch_k", "op": "lte", "value": "30"}]
     return ls.clean_model(model, choices)
 
 
