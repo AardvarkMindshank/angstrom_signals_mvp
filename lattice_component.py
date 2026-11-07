@@ -233,6 +233,7 @@ export default function(component) {
                          () => { r.joiner = r.joiner === "any" ? "all" : "any"; send(); });
         cl.appendChild(j);
       }
+      cl.appendChild(button("✕", "Remove this condition", () => { r.clauses.splice(ci, 1); send(); }, "sq del"));
       const o = opByKey[c.operand] || {type: "number", scale: "", labels: []};
       const pick = el("select");
       pick.setAttribute("aria-label", "Reading");
@@ -262,7 +263,6 @@ export default function(component) {
         v.addEventListener("change", () => { c.value = v.value; send(); });
         cl.appendChild(v);
       }
-      cl.appendChild(button("✕", "Remove this condition", () => { r.clauses.splice(ci, 1); send(); }, "sq del"));
     });
     row.appendChild(button("+ condition", "Add another condition to this rule",
       () => { r.clauses = r.clauses || []; r.clauses.push({operand: "score", op: "gte", value: "+30"}); send(); }));
@@ -324,6 +324,7 @@ export default function(component) {
       row.appendChild(cl);
       if (xi > 0) cl.appendChild(button(c.joiner === "any" ? "OR" : "AND", "Switch between AND and OR",
                                          () => { c.joiner = c.joiner === "any" ? "all" : "any"; send(); }));
+      cl.appendChild(button("✕", "Remove this condition", () => { c.clauses.splice(xi, 1); send(); }, "sq del"));
       const o = opByKey[x.operand] || {type: "number", scale: "", labels: []};
       const pick = el("select");
       pick.setAttribute("aria-label", "Reading");
@@ -353,7 +354,6 @@ export default function(component) {
         v.addEventListener("change", () => { x.value = v.value; send(); });
         cl.appendChild(v);
       }
-      cl.appendChild(button("✕", "Remove this condition", () => { c.clauses.splice(xi, 1); send(); }, "sq del"));
     });
     row.appendChild(button("+ condition", "Add another condition",
       () => { c.clauses = c.clauses || []; c.clauses.push({operand: "score", op: "gte", value: "+30"}); send(); }));
