@@ -26,6 +26,31 @@ for n, step in enumerate(steps):
     lines += [str(n + 1), f"{stamp(step['start'])} --> {stamp(end)}", words, ""]
 (d / "captions.srt").write_text("\n".join(lines))
 
+
+
+def check_captions_clear(app_bottom: int = 610, gap: int = 6) -> None:
+    """Draw every caption alone on a black frame, exactly as the video does, and stop if any of it reaches the app
+    picture (rows 0-609): captions must never cover the screen."""
+    from PIL import Image
+
+    probe = d / "_captions_probe.mp4"
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i",
+                    f"color=black:size=1280x720:rate=4:d={timeline['end'] + 1:.2f}", "-vf",
+                    f"subtitles={d / 'captions.srt'}:force_style='{style}'", str(probe)], check=True)
+    for n, step in enumerate(steps):
+        frame = d / f"_probe_{n}.png"
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", f"{step['start'] + 0.5:.2f}", "-i", str(probe),
+                        "-frames:v", "1", str(frame)], check=True)
+        im = Image.open(frame).convert("L")
+        top = next((y for y in range(im.height) if max(im.crop((0, y, im.width, y + 1)).getdata()) > 80), None)
+        frame.unlink()
+        if top is not None and top < app_bottom + gap:
+            raise SystemExit(f"Caption {n + 1} reaches row {top}, over the app (ends at row {app_bottom - 1}). "
+                             f"Shorten it: \"{step['say'][:60]}…\"")
+    probe.unlink()
+    print("Captions checked: none reaches the app picture.")
+
+
 inputs, filters = ["-i", str(d / "raw.webm")], []
 for n, step in enumerate(steps):
     inputs += ["-i", str(d / "voice" / f"{step['id']}.wav")]
@@ -35,6 +60,7 @@ mix = "".join(f"[a{n}]" for n in range(len(steps))) + f"amix=inputs={len(steps)}
 # Captions sit in a dark band under the app (recorded at 1280 x 610), never over it: 1280 x 720 in all.
 style = ("FontName=DejaVu Sans,FontSize=12.5,PrimaryColour=&H00FFFFFF,BorderStyle=1,Outline=0,Shadow=0,"
          "MarginV=9,Alignment=2")
+check_captions_clear()
 video = (f"[0:v]scale=1280:610,pad=1280:720:0:0:color=0x0b1220,"
          f"subtitles={d / 'captions.srt'}:force_style='{style}',fps=25,format=yuv420p[v]")
 ENC = ["-c:v", "libx264", "-preset", "veryfast", "-crf", "22", "-c:a", "aac", "-b:a", "128k", "-ar", "48000",
