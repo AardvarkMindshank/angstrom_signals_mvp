@@ -1,5 +1,5 @@
 // The Angstrom Lattice diagram for the training videos, drawn over the page at 1280 x 610 real pixels.
-// draw({stage, lit}): stage 0 = title only; 1..5 add Signals, Signal Groups, Signal Sets, Prism Scan and Alerts in
+// draw({stage, lit}): every part shows in outline from the start; stage 0 = outlines only; 1..5 fill in Signals, Signal Groups, Signal Sets, Prism Scan and Alerts in
 // turn; 6 adds Strategies (coming next); 7 adds the closing line. lit = "signals" | "groups" | "sets" | "prism" |
 // "alerts" highlights one part and dims the rest. Calling it again animates from the current picture.
 // Everything is example content, drawn here; nothing is read from the app.
@@ -68,38 +68,43 @@ function draw({ stage, lit }) {
     parts.forEach(([key, name, body], i) => {
       const x = X0 + i * (W + GAP);
       html += `<div class="dg-box" data-k="${key}" data-i="${i + 1}" style="position:absolute;left:${x}px;top:${Y}px;width:${W}px;height:${H}px;box-sizing:border-box;padding:14px 14px;border:2px solid #cbd5e1;border-radius:16px;background:#fff">
-        <div style="display:flex;align-items:center;gap:8px;font:bold 17px ${FONT}">${svg(key, 22, TEAL)}${name}</div>${body}</div>`;
+        <div class="dg-head" style="display:flex;align-items:center;gap:8px;font:bold 17px ${FONT}">${svg(key, 22, TEAL)}${name}</div><div class="dg-body">${body}</div></div>`;
       if (i < 4) html += `<div class="dg-arrow" data-i="${i + 2}" style="position:absolute;left:${x + W + 4}px;top:${Y + H / 2 - 14}px;width:${GAP - 8}px;height:28px">
         <svg width="${GAP - 8}" height="28" viewBox="0 0 26 28"><path d="M2 14h18M14 7l7 7-7 7" fill="none" stroke="${TEAL}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>`;
     });
     const sx = X0 + 2 * (W + GAP) + W / 2 - 210;
     html += `<div class="dg-box" data-k="strategies" data-i="6" style="position:absolute;left:${sx}px;top:${Y + H + 34}px;width:420px;height:76px;box-sizing:border-box;padding:12px 16px;border:2px dashed #94a3b8;border-radius:16px;background:#fff;color:${GREY}">
-      <div style="display:flex;align-items:center;gap:8px;font:bold 17px ${FONT}">${svg("strategies", 22, GREY)}Strategies <span style="font:13px ${FONT}">· coming next</span></div>
-      <div style="font-size:14px;margin-top:4px">Entries, exits and risk, built on the same Sets</div></div>`;
+      <div class="dg-head" style="display:flex;align-items:center;gap:8px;font:bold 17px ${FONT}">${svg("strategies", 22, GREY)}Strategies <span class="dg-body" style="font:13px ${FONT}">· coming next</span></div>
+      <div class="dg-body" style="font-size:14px;margin-top:4px">Entries, exits and risk, built on the same Sets</div></div>`;
     html += `<div class="dg-arrow" data-i="6" style="position:absolute;left:${X0 + 2 * (W + GAP) + W / 2 - 1}px;top:${Y + H + 4}px;height:28px;border-left:3px dashed #94a3b8"></div>`;
     html += `<div class="dg-foot" data-i="7" style="position:absolute;bottom:26px;width:100%;text-align:center;font:17px ${FONT};color:${GREY}">Descriptive readings of the market as it is: not a forecast, and not advice.</div>`;
     root.innerHTML = html;
     root.querySelectorAll(".dg-box,.dg-arrow,.dg-foot").forEach((n) => {
       Object.assign(n.style, { opacity: "0", transform: "translateY(14px)", transition: "opacity .55s, transform .55s, border-color .4s, box-shadow .4s, filter .4s" });
     });
+    root.querySelectorAll(".dg-body,.dg-head").forEach((n) => { n.style.opacity = "0"; n.style.transition = "opacity .5s"; });
     root.querySelectorAll(".dg-bit").forEach((n) => { n.style.opacity = "0"; n.style.transition = (n.style.transition ? n.style.transition + "," : "") + "opacity .45s"; });
     document.documentElement.appendChild(root);
   }
   requestAnimationFrame(() => requestAnimationFrame(() => {
     root.style.opacity = "1";
+    // Every part is drawn in outline from the start; a part fills in when the narration reaches it.
     root.querySelectorAll("[data-i]").forEach((n) => {
       const on = Number(n.dataset.i) <= stage;
-      n.style.opacity = on ? "1" : "0";
-      n.style.transform = on ? "none" : "translateY(14px)";
+      const box = n.classList.contains("dg-box"), arrow = n.classList.contains("dg-arrow");
+      n.style.opacity = on || box ? "1" : arrow ? "0.3" : "0";
+      n.style.transform = on || box || arrow ? "none" : "translateY(14px)";
+      if (!box) return;
+      n.querySelectorAll(".dg-body").forEach((b) => { b.style.opacity = on ? "1" : "0"; });
+      n.querySelectorAll(".dg-head").forEach((b) => { b.style.opacity = on ? "1" : "0.45"; });
       if (on) n.querySelectorAll(".dg-bit").forEach((b) => { b.style.opacity = "1"; });
       const needle = n.querySelector(".dg-needle");
       if (needle && on) needle.style.transform = "rotate(38deg)";
-      if (n.classList.contains("dg-box") && on) {
-        const me = lit && n.dataset.k === lit;
-        n.style.borderColor = me ? "#0f766e" : n.dataset.k === "strategies" ? "#94a3b8" : "#cbd5e1";
-        n.style.boxShadow = me ? "0 0 0 6px rgba(15,118,110,.15), 0 10px 30px rgba(15,118,110,.18)" : "none";
-        n.style.filter = lit && !me ? "grayscale(.6) opacity(.45)" : "none";
-      }
+      const me = on && lit && n.dataset.k === lit;
+      n.style.borderStyle = on && n.dataset.k !== "strategies" ? "solid" : "dashed";
+      n.style.borderColor = me ? "#0f766e" : on && n.dataset.k !== "strategies" ? "#cbd5e1" : "#cbd5e1";
+      n.style.boxShadow = me ? "0 0 0 6px rgba(15,118,110,.15), 0 10px 30px rgba(15,118,110,.18)" : "none";
+      n.style.filter = on && lit && !me ? "grayscale(.6) opacity(.45)" : "none";
     });
   }));
 }
