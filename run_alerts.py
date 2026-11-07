@@ -548,6 +548,14 @@ def run_background_checks() -> None:
     except Exception as exc:
         print(f"Prism scans skipped: {str(exc)[:200]}")
 
+    # Table columns that read 4-hour, hourly or weekly candles (column_answers.py): only the answers are saved.
+    try:
+        import column_answers
+
+        print(f"Table columns: {column_answers.run_from_worker(supabase, all_user_prefs)}")
+    except Exception as exc:
+        print(f"Table columns skipped: {str(exc)[:200]}")
+
     print("Background alert check finished.")
 
 

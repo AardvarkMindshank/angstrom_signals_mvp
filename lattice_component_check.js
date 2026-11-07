@@ -90,6 +90,7 @@ const { chromium, devices } = require("playwright");
     await sp.screenshot({ path: path.join(dir, "set_editor_desktop.png"), fullPage: true });
     const slast = async () => { await sp.waitForTimeout(80); return sp.evaluate(() => (window.sent.length ? window.sent[window.sent.length - 1][1] : null)); };
     check("Set: the saved decision line is shown", (await sp.$$(".rule")).length === 1);
+    for (const s of await sp.locator("details.prov:not([open]) > summary").all()) await s.click();   // provided starters are folded
     await sp.click('button[aria-label="Add Flow v1 to the Set"]');
     let s = await slast();
     check("Set: tap + adds a Group", s && s.groups.length === 2);

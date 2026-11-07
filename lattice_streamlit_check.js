@@ -71,6 +71,7 @@ const { chromium } = require("playwright");
     await page.waitForSelector(".lat.prism", { timeout: 30000 });
     await settle();
     check("Prism board appears with its styles", (await styled()) === "flex");
+    for (const s of await page.locator(".lat.prism details.prov:not([open]) > summary").all()) await s.click();   // provided examples are folded
     await page.click('.lat.prism button[aria-label="Start a scan with Trend and Flow agree (demo)"]');
     await page.waitForSelector(".lat.prism .scan", { timeout: 30000 });
     await settle();

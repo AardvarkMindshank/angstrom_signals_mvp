@@ -9317,7 +9317,12 @@ def _column_cells(kind: str, asset_id: str, fingerprint: str, stamp: tuple, _df,
     del fingerprint, stamp
     from group_readings import stored_context
 
-    ctx, _ = stored_context(calculate_indicators(_df), kind, asset_id=asset_id)
+    ctx, last = stored_context(calculate_indicators(_df), kind, asset_id=asset_id)
+    try:
+        when = pd.Timestamp(last.name if hasattr(last, "name") else last)
+        as_of = f"{when:%-d %b %Y}"
+    except Exception:
+        as_of = ""
 
     def subject(engine_kind, subject_id):       # a Set line pinned to another asset, for example Bitcoin
         stored_kind = "Crypto" if engine_kind == "crypto" else "Stock"
@@ -9326,7 +9331,27 @@ def _column_cells(kind: str, asset_id: str, fingerprint: str, stamp: tuple, _df,
             raise ValueError(f"No stored daily bars for {subject_id}.")
         return stored_context(calculate_indicators(frame), stored_kind, asset_id=subject_id)[0]
 
-    return table_columns.evaluate(_specs, ctx, subject_context=subject)
+    return table_columns.evaluate(_specs, ctx, subject_context=subject, as_of=as_of)
+
+
+def _intraday_answers(specs: list[dict], crypto_watchlist, stock_watchlist, trade_crypto, trade_equities) -> dict:
+    """(def hash, asset key) -> the background answer for columns that read 4-hour, hourly or weekly candles
+    (column_answers.py). Read every few minutes at most, and only when such a column is chosen."""
+    import column_answers
+
+    intraday = [c for c in specs if not c["cluster"] and c["doc"] is not None and not table_columns.daily_only(c["doc"])]
+    if not intraday:
+        return {}
+    keys = ([f"crypto:{k}" for k in (crypto_watchlist or {})] if trade_crypto else []) + \
+           ([f"equity:{str(k).upper()}" for k in (stock_watchlist or {})] if trade_equities else [])
+    hashes = sorted({column_answers.def_hash(c["doc"]) for c in intraday})
+    sig = (tuple(hashes), tuple(sorted(keys)))
+    cached = st.session_state.get("_intraday_answers")
+    if cached and cached[0] == sig and time.time() - cached[1] < 300:
+        return cached[2]
+    answers = column_answers.load(supabase, hashes, keys)
+    st.session_state["_intraday_answers"] = (sig, time.time(), answers)
+    return answers
 
 
 def _open_in_lattice(raw: str) -> None:
@@ -9358,8 +9383,9 @@ def _choose_columns_dialog():
         st.session_state["siggroups_saved"] = cached
     group_opts, set_opts = table_columns.options(cached[1], str(user_id))
     st.caption("Pick the readings each watchlist table shows, in the order you pick them. Groups show their score "
-               "or label; Sets show ✓ Yes, ✕ No or ? Unknown. Each works out on the latest finished daily bar; "
-               "fold either section sideways with ◂ in its first column title.")
+               "or label; Sets show ✓ Yes, ✕ No or ? Unknown. Daily ones work out on the latest finished daily bar; ones that read 4-hour or "
+               "hourly candles are worked out in the background at each close and show ⏳ if a close has passed "
+               "since. Fold either section sideways with ◂ in its first column title.")
     groups = st.multiselect("Signal Groups", list(group_opts), default=[k for k in now["groups"] if k in group_opts],
                             format_func=group_opts.get, max_selections=table_columns.MAX_EACH, key="tc_groups")
     sets = st.multiselect("Signal Sets", list(set_opts), default=[k for k in now["sets"] if k in set_opts],
@@ -10243,6 +10269,10 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
     column_specs = _table_column_specs()
     column_print = table_columns.fingerprint(column_specs)
     extra_columns = [c for c in column_specs if not c["cluster"]]
+    try:
+        intraday = _intraday_answers(column_specs, crypto_watchlist, stock_watchlist, trade_crypto, trade_equities)
+    except Exception:
+        intraday = {}
     shared_keys = []
     if trade_crypto:
         shared_keys.extend(asset_market_key("Crypto", asset_id) for asset_id in crypto_watchlist)
@@ -10394,6 +10424,15 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                                                                       extra_columns)
                                 except Exception as exc:
                                     result["columns"] = {c["key"]: {"error": str(exc)[:160]} for c in extra_columns}
+                                if intraday:
+                                    import column_answers
+
+                                    akey = f"{'crypto' if is_crypto else 'equity'}:{key if is_crypto else str(key).upper()}"
+                                    for c in extra_columns:
+                                        if c["doc"] is not None and not table_columns.daily_only(c["doc"]):
+                                            got = intraday.get((column_answers.def_hash(c["doc"]), akey))
+                                            if got is not None:
+                                                result["columns"][c["key"]] = got
                             result["symbol"] = name if is_crypto else f"{name} ({key})"
                             result["type"] = "Crypto" if is_crypto else "Stock"
                             result["key"] = key
