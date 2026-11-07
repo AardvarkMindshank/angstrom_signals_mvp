@@ -19,7 +19,7 @@ def main(out: Path, section: str, slug: str) -> int:
     if not (host and user and password):
         print("Upload skipped: the HOSTGATOR_FTP_* secrets are not set.")
         return 0
-    files = {f"{slug}.mp4": out / "prism_scan_demo.mp4", f"{slug}.srt": out / "captions.srt"}
+    files = {f"{slug}.mp4": out / "video.mp4", f"{slug}.srt": out / "captions.srt"}
     def connect(verify: bool):
         context = ssl.create_default_context()
         if not verify:

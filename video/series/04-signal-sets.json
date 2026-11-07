@@ -1,0 +1,56 @@
+{
+ "title": "Signal Sets",
+ "series": "Angstrom Lattice · 4 of 5",
+ "next": "Next: 5 · Prism Scan",
+ "slug": "04-signal-sets",
+ "section": "training",
+ "intro_say": "Angstrom Signals. | Signal Sets.",
+ "outro_say": "Next: scanning your watchlist with Prism.",
+ "steps": [
+  {
+   "id": "what",
+   "screen": "The diagram with Signal Sets lit, then the Set editor",
+   "say": "A Signal Set turns readings into a decision: | Yes, No, or Unknown, with the reason."
+  },
+  {
+   "id": "idea",
+   "screen": "The idea as a card: \"Pullback in an uptrend\"",
+   "say": "Here's a setup many traders look for: a pullback in an uptrend. | The main trend is up, but price has dipped in the short term."
+  },
+  {
+   "id": "group",
+   "screen": "Adding the saved Group \"My Trend\"",
+   "say": "Add the My Trend Group we built in the last video."
+  },
+  {
+   "id": "signal",
+   "screen": "Adding the single signal RSI (14)",
+   "say": "Add a single signal too: RSI, | which measures how hard recent closes have pushed up or down."
+  },
+  {
+   "id": "lines",
+   "screen": "Writing two lines: \"My Trend is Bullish\" and \"RSI is below 40\"",
+   "say": "Now the decision. Line one: My Trend is Bullish. | Line two: RSI is at most forty, a short-term dip."
+  },
+  {
+   "id": "all",
+   "screen": "The \"all of\" box around the two lines; a hint of \"any of\" boxes",
+   "say": "Both lines must hold for a Yes. | For more flexible rules, you can add \"any of\" boxes."
+  },
+  {
+   "id": "returns",
+   "screen": "The \"What this Set returns\" panel",
+   "say": "Yes means every line holds. No means at least one fails. | Unknown means something needed is missing, and Lattice never fills it in."
+  },
+  {
+   "id": "save",
+   "screen": "The description, then Save as a new Set; the message \"It now appears in Prism\"",
+   "say": "The description reads your rule back in plain words. Save it, | and it's ready to scan in Prism."
+  },
+  {
+   "id": "summary",
+   "screen": "Summary card",
+   "say": "Why it helps: instead of flicking through charts looking for dips in strong trends, | you get a clear Yes or No for every asset, with its reason."
+  }
+ ]
+}

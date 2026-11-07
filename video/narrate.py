@@ -13,7 +13,7 @@ from pathlib import Path
 
 import numpy as np
 
-script = json.loads(Path("video/script.json").read_text())
+script = json.loads(Path(os.environ.get("SCRIPT", "video/series/05-prism-scan.json")).read_text())
 base = Path(sys.argv[1] if len(sys.argv) > 1 else "out/video")
 out = base / "voice"
 out.mkdir(parents=True, exist_ok=True)
@@ -62,12 +62,10 @@ if speak is None:
 PAUSE = 0.35         # seconds of silence for each "|" in a line: "instantly, | in the daily summary"
 
 
-def say(text, path):
-    """Speak a line; a "|" marks a pause (each part is spoken separately, with silence between)."""
+def say(text, path) -> list[float]:
+    """Speak a line; a "|" marks a pause (each part is spoken separately, with silence between). Returns how long
+    each part takes, so the captions can follow the voice part by part."""
     parts = [p.strip() for p in str(text).split("|") if p.strip()]
-    if len(parts) == 1:
-        speak(parts[0], path)
-        return
     chunks, rate = [], None
     for n, part in enumerate(parts):
         tmp = out / f"_part{n}.wav"
@@ -79,12 +77,13 @@ def say(text, path):
     silence = np.zeros(int(rate * PAUSE), dtype=np.int16)
     joined = np.concatenate([c for chunk in chunks for c in (chunk, silence)][:-1])
     write_wav(path, joined.astype(np.float32) / 32767, rate)
+    return [len(c) / rate for c in chunks]
 
 
 durations = {}
 for step in script["steps"]:
     path = out / f"{step['id']}.wav"
-    say(step["say"], path)
+    durations[f"{step['id']}#parts"] = say(step["say"], path)
     with wave.open(str(path)) as wf:
         durations[step["id"]] = wf.getnframes() / wf.getframerate()
 for key in ("intro", "outro"):                 # spoken over the opening and closing cards

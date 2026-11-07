@@ -1,0 +1,81 @@
+{
+ "title": "Prism Scan",
+ "series": "Angstrom Lattice · 5 of 5",
+ "next": "Next: worked examples",
+ "slug": "05-prism-scan",
+ "section": "training",
+ "intro_say": "Angstrom Signals. | Prism Scan.",
+ "outro_say": "That completes the series. | Next: more worked examples.",
+ "steps": [
+  {
+   "id": "board",
+   "screen": "The Prism board",
+   "say": "Prism Scan checks your watchlist with your own Sets."
+  },
+  {
+   "id": "create",
+   "screen": "Tapping + on \"Pullback in an uptrend\"",
+   "say": "On the left are your saved Sets, like the Pullback in an uptrend Set we just built. | Tap plus, or drag one across, and it becomes a Prism Scan."
+  },
+  {
+   "id": "card",
+   "screen": "The new scan card",
+   "say": "Each scan is a card. The top row shows its answers and controls. Open it to see the details."
+  },
+  {
+   "id": "assets",
+   "screen": "Adding All crypto",
+   "say": "Choose what it scans. Groups like All crypto follow your watchlist as it changes."
+  },
+  {
+   "id": "play",
+   "screen": "Pressing ▶",
+   "say": "Press play to check every asset now, on the latest finished daily candles."
+  },
+  {
+   "id": "results",
+   "screen": "The results, with a Yes or two",
+   "say": "Each asset gets Yes, No, or Unknown, with the line that decided it."
+  },
+  {
+   "id": "pause",
+   "screen": "Pausing on a Yes",
+   "say": "That's a good start. | But crypto tends to move together, and many traders only buy a dip when Bitcoin itself is in an uptrend. | Let's add that check."
+  },
+  {
+   "id": "bitcoin",
+   "screen": "Signal Sets: opening the Set; adding \"My Trend\" again with 📌 fixed crypto: Bitcoin; a third line \"My Trend on Bitcoin is Bullish\"",
+   "say": "In Signal Sets, open the Set and add My Trend again, | this time pinned to a fixed asset: Bitcoin. | Then add a third line: My Trend on Bitcoin is Bullish."
+  },
+  {
+   "id": "version",
+   "screen": "Save as version 2",
+   "say": "Save it as version two. The earlier version stays as it was."
+  },
+  {
+   "id": "switch",
+   "screen": "Back in Prism: the \"v2 available\" badge; one tap",
+   "say": "Back in Prism, the scan shows a newer version is available. | One tap switches it."
+  },
+  {
+   "id": "rerun",
+   "screen": "Pressing ▶ again; the results now name the Bitcoin line",
+   "say": "Run it again. | Now a dip is only a Yes when Bitcoin's own trend is bullish too. | When it isn't, the Bitcoin line is the reason."
+  },
+  {
+   "id": "schedule",
+   "screen": "Runs: each daily close",
+   "say": "To keep watching, give the scan a schedule. Here, every daily close."
+  },
+  {
+   "id": "alerts",
+   "screen": "Alerts",
+   "say": "Then choose how you hear about it: | instantly, | in the daily summary, | or only in the app."
+  },
+  {
+   "id": "tidy",
+   "screen": "Collapse all",
+   "say": "Collapse all keeps a long list tidy. That's Prism: descriptive readings, not advice."
+  }
+ ]
+}

@@ -1,0 +1,3 @@
+# Which videos the "video-publish" branch puts on the website. First line: the folder under videos/ on the reports
+# branch ("latest" = the newest). Then one video per line.
+latest

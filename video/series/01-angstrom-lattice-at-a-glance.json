@@ -1,0 +1,56 @@
+{
+ "title": "Angstrom Lattice at a glance",
+ "series": "Angstrom Lattice · 1 of 5",
+ "next": "Next: 2 · Signals",
+ "slug": "01-angstrom-lattice-at-a-glance",
+ "section": "training",
+ "intro_say": "Angstrom Signals. | Angstrom Lattice, at a glance.",
+ "outro_say": "Next: the signals themselves.",
+ "steps": [
+  {
+   "id": "intro",
+   "screen": "Empty diagram; the title \"From signals to a scan\" appears",
+   "say": "Every trader has their own way of reading a chart. Angstrom Lattice lets you write yours down once, | and have it checked on every asset you follow."
+  },
+  {
+   "id": "signals",
+   "screen": "The Signals box lights up, with small icons for its six kinds",
+   "say": "It starts with signals: the indicators behind the dashboard, such as moving averages, RSI, volume, and market structure. Each one measures one thing."
+  },
+  {
+   "id": "groups",
+   "screen": "An arrow to Signal Groups; a score dial from -100 to +100 and the label \"Bullish\"",
+   "say": "Signal Groups combine signals into one reading, a score from minus one hundred to plus one hundred, | with labels you choose, such as Bullish. The dashboard's already configured Trend, Stretch and Flow are Signal Groups like these."
+  },
+  {
+   "id": "sets",
+   "screen": "An arrow to Signal Sets; two lines with ticks, then \"Yes\"",
+   "say": "Signal Sets turn readings into a decision: | Yes, No, or Unknown, | with the line that decided it. For example: the trend is bullish, | and RSI is at most forty, a pullback in an uptrend."
+  },
+  {
+   "id": "prism",
+   "screen": "An arrow to Prism Scan; asset names fill a list, a few marked Yes",
+   "say": "Prism Scan runs a Set across your watchlist, | now, | at a past moment, | or on a schedule."
+  },
+  {
+   "id": "alerts",
+   "screen": "An arrow to Alerts: app, email, daily summary",
+   "say": "And when an asset turns Yes, you hear about it, | instantly or in your daily summary."
+  },
+  {
+   "id": "strategies",
+   "screen": "A dashed box: Strategies, \"coming next\"",
+   "say": "Strategies come next: entries, exits, and risk, built on the same Sets."
+  },
+  {
+   "id": "cuts",
+   "screen": "Quick cuts of the real screens: Signal Groups, Signal Sets, the Prism board",
+   "say": "Why it helps: your rules stay the same every time, | every answer shows its reasons, | and missing data is reported as Unknown, never guessed."
+  },
+  {
+   "id": "whole",
+   "screen": "The full diagram again",
+   "say": "Everything here describes the market as it is. | It is not a forecast, and not advice."
+  }
+ ]
+}

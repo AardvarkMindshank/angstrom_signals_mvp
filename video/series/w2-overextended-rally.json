@@ -1,0 +1,41 @@
+{
+ "title": "Overextended rally",
+ "series": "Worked example",
+ "next": "",
+ "slug": "w2-overextended-rally",
+ "section": "training",
+ "intro_say": "Angstrom Signals. | Worked example: an overextended rally.",
+ "outro_say": "Descriptive readings, not advice.",
+ "steps": [
+  {
+   "id": "idea",
+   "screen": "The idea as a card",
+   "say": "Not every Set looks for an entry. | This one is a caution flag: a strong trend that has run very hot."
+  },
+  {
+   "id": "add",
+   "screen": "Set editor: \"My Trend\" and RSI (14)",
+   "say": "Add My Trend, and the RSI signal."
+  },
+  {
+   "id": "lines",
+   "screen": "Lines: \"My Trend is Bullish\" and \"RSI is at least 75\"",
+   "say": "Line one: My Trend is Bullish. | Line two: RSI is at least seventy-five."
+  },
+  {
+   "id": "save",
+   "screen": "Save; Prism: + and ▶",
+   "say": "Save it, and run it in Prism."
+  },
+  {
+   "id": "results",
+   "screen": "Results",
+   "say": "A Yes doesn't mean sell. | It means: this one has run hard, so think twice before chasing it."
+  },
+  {
+   "id": "alerts",
+   "screen": "Alerts: \"Turns Yes\"",
+   "say": "Set it to alert you, and it becomes a quiet warning when a favourite gets stretched."
+  }
+ ]
+}
