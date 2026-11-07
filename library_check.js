@@ -42,6 +42,17 @@ const { chromium, devices } = require("playwright");
     check(`${label}: conditions sit in their own lines`, await page.locator(".lat .rule .clause").count() > 0);
     const red = await page.locator(".lat button.del").first().evaluate((b) => getComputedStyle(b).color);
     check(`${label}: remove buttons are red`, red === "rgb(220, 38, 38)", red);
+    check(`${label}: a drag handle, no arrow buttons`, await page.locator(".lat .rule .grip").count() >= 2
+      && await page.locator('.lat button[title="Check this rule earlier"]').count() === 0);
+    {   // drag rule 2 above rule 1 with a finger or mouse
+      const before = await page.locator(".lat .rule input").first().inputValue();
+      const g = await page.locator(".lat .rule .grip").nth(1).boundingBox(), f = await page.locator(".lat .rule .grip").nth(0).boundingBox();
+      await page.mouse.move(g.x + g.width / 2, g.y + g.height / 2); await page.mouse.down();
+      await page.mouse.move(g.x + g.width / 2, f.y - 20, { steps: 10 }); await page.mouse.up();
+      await page.waitForTimeout(2500);
+      const after = await page.locator(".lat .rule input").first().inputValue();
+      check(`${label}: dragging reorders the rules`, before !== after, before + " → " + after);
+    }
     await page.locator(".lat .rule").first().scrollIntoViewIfNeeded();
     await page.screenshot({ path: `${out}/${label}_editor.png`, fullPage: false });
     await ctx.close();

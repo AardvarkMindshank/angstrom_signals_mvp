@@ -32,9 +32,14 @@ const { chromium, devices } = require("playwright");
     const disabled = await page.$eval('button[aria-label="Add RSI divergence to the Group"]', (b) => !!b);
     check("signals without a standard score are listed", disabled);
 
-    await page.click('button[title="Check this rule earlier"]:not([disabled])');
+    {   // drag the second rule's ⠿ handle above the first
+      const grip = page.locator(".rule .grip").nth(1), first = page.locator(".rule .grip").nth(0);
+      const g = await grip.boundingBox(), f = await first.boundingBox();
+      await page.mouse.move(g.x + g.width / 2, g.y + g.height / 2); await page.mouse.down();
+      await page.mouse.move(g.x + g.width / 2, f.y - 20, { steps: 8 }); await page.mouse.up();
+    }
     m = await last();
-    check("rules reorder with the arrows", m && m.rules[0].label === "Bearish" && m.rules[1].label === "Bullish");
+    check("rules reorder by dragging the handle", m && m.rules[0].label === "Bearish" && m.rules[1].label === "Bullish");
 
     await page.waitForTimeout(80);
     await page.evaluate(() => {

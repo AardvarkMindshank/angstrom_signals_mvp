@@ -40,6 +40,12 @@ CSS = """
 .lat .pv span{cursor:help}
 .lat .tag{font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid rgba(127,127,127,.4);
   font-family:ui-monospace,monospace;opacity:.85}
+.lat .grip{cursor:grab;touch-action:none;user-select:none;font-size:20px;line-height:1;padding:6px 4px;opacity:.6;
+  min-width:24px;text-align:center}
+.lat .grip:active{cursor:grabbing}
+.lat .rule.dragging{position:relative;z-index:5;box-shadow:0 6px 18px rgba(0,0,0,.25);opacity:.95}
+.lat .rule{transition:transform .12s}
+.lat .rule.dragging{transition:none}
 .lat .clause{display:flex;flex-wrap:wrap;align-items:center;gap:6px;flex-basis:100%;min-width:0;max-width:100%}
 .lat .clause>select{min-width:0;max-width:100%;flex:0 1 auto}
 .lat .clause>select:first-of-type{flex:1 1 8em;width:0}
@@ -205,20 +211,56 @@ export default function(component) {
   mid.appendChild(rules);
   const rh = el("div", "hd");
   rh.appendChild(el("h3", "", "Rules: what the Group says"));
-  rh.appendChild(el("span", "muted", "Checked top to bottom · first match wins · ↑↓ to reorder"));
+  rh.appendChild(el("span", "muted", "Checked top to bottom · first match wins · drag ⠿ to reorder"));
   rules.appendChild(rh);
   const operands = state.operands || [];
   const opByKey = {};
   operands.forEach((o) => { opByKey[o.key] = o; });
   const OPS = {number: [["gte", "is at least"], ["lte", "is at most"]], "yes/no": [["yes", "is yes"], ["no", "is no"]],
                label: [["is", "is"], ["is_not", "is not"]]};
+  // Reorder rules by dragging the ⠿ handle (mouse, pen or finger): the rows move apart to show where it will land.
+  function dragHandle(row, from) {
+    const h = el("span", "grip", "⠿");
+    h.title = "Drag to check this rule earlier or later";
+    h.setAttribute("aria-label", "Drag to reorder rule " + (from + 1));
+    h.setAttribute("role", "button"); h.tabIndex = 0;
+    h.addEventListener("keydown", (e) => {          // keyboard: arrow keys move it one place
+      const to = e.key === "ArrowUp" ? from - 1 : e.key === "ArrowDown" ? from + 1 : -1;
+      if (to < 0 || to >= model.rules.length) return;
+      e.preventDefault(); const [m] = model.rules.splice(from, 1); model.rules.splice(to, 0, m); send();
+    });
+    h.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      h.setPointerCapture(e.pointerId);
+      const rows = [...rules.querySelectorAll(":scope > .rule")];
+      const mids = rows.map((x) => { const b = x.getBoundingClientRect(); return b.top + b.height / 2; });
+      const startY = e.clientY;
+      let to = from;
+      row.classList.add("dragging");
+      const move = (ev) => {
+        const dy = ev.clientY - startY;
+        row.style.transform = "translateY(" + dy + "px)";
+        const y = mids[from] + dy;
+        to = mids.filter((m, i) => i !== from && m < y).length;
+        rows.forEach((x, i) => {
+          if (i === from) return;
+          const shift = from < to && i > from && i <= to ? -1 : from > to && i < from && i >= to ? 1 : 0;
+          x.style.transform = shift ? "translateY(" + shift * (row.offsetHeight + 8) + "px)" : "";
+        });
+      };
+      const up = () => {
+        h.removeEventListener("pointermove", move); h.removeEventListener("pointerup", up); h.removeEventListener("pointercancel", up);
+        rows.forEach((x) => { x.style.transform = ""; }); row.classList.remove("dragging");
+        if (to !== from) { const [m] = model.rules.splice(from, 1); model.rules.splice(to, 0, m); send(); }
+      };
+      h.addEventListener("pointermove", move); h.addEventListener("pointerup", up); h.addEventListener("pointercancel", up);
+    });
+    return h;
+  }
   (model.rules || []).forEach((r, ri) => {
     const row = el("div", "rule");
-    const up = button("↑", "Check this rule earlier", () => { const t = model.rules[ri - 1]; model.rules[ri - 1] = r; model.rules[ri] = t; send(); }, "sq");
-    up.disabled = ri === 0;
-    const down = button("↓", "Check this rule later", () => { const t = model.rules[ri + 1]; model.rules[ri + 1] = r; model.rules[ri] = t; send(); }, "sq");
-    down.disabled = ri === model.rules.length - 1;
-    row.appendChild(up); row.appendChild(down);
+    row.dataset.ri = ri;
+    if (model.rules.length > 1) row.appendChild(dragHandle(row, ri));
     row.appendChild(el("span", "num", ri + 1));
     const lab = el("input");
     lab.value = r.label; lab.size = 12; lab.title = "The label this rule gives (for example Bullish)";
