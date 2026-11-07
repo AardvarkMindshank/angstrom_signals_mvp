@@ -6333,7 +6333,7 @@ def _trend_alert_level() -> float:
 
 def _paint_section_score(section_key: str, score, ready: bool, reading: bool = False) -> None:
     """Put this section's sentiment score in its header, using the same colors as the body.
-    reading=True is for a -100..+100 signals reading (the Trend in the Signals Breakdown header)."""
+    reading=True is for a -100..+100 signals reading (the Trend in the Why these readings header)."""
     shown = score if ready else None
     try:
         missing = shown is None or pd.isna(shown)
@@ -6914,7 +6914,7 @@ because they measure different things and are never added together.
 2. **Crypto Signals** and **Equity Signals** list your watchlists, strongest Trend first. Click a name to open it on the chart.
    The asset's 📰 Market sentiment sits under these tables (in the wide layout, in the left column under the
    market sentiments).
-3. **Interactive Chart** shows the asset with the indicators you pick. Underneath sit Signals Breakdown,
+3. **Interactive Chart** shows the asset with the indicators you pick. Underneath sit 🔍 Why these readings,
    Max pain, Leverage & liquidations and Signal matrix, all for that asset.
 4. **Notifications**, in the sidebar, holds your alerts and their settings.
 5. The arrow on the right edge opens **Social signals and chat**.
@@ -6967,8 +6967,8 @@ because they measure different things and are never added together.
         st.markdown(signals_view.EXPLAINER)
         st.markdown("""
 **The tables**
-- Click a column title to sort. Hover a 📈 Trend, 🎯 Stretch or 🔊 Flow cell to read it; click it for the
-  Signals Breakdown, which lists every part with its own reading, plus the two named views.
+- Click a column title to sort. Hover any reading to read it; click it to open **🔍 Why these readings** for
+  that asset at that column, part by part. **Columns** chooses which Groups and Sets the tables show.
 - **Extra metrics** (Settings) add 7d %, Market Cap, ATR % (typical daily move) and Vol (volume versus its
   20-day average). Another tick box adds 1d % and 30d %.
 - **Watching** shows how many accounts follow the asset. **30-day trend** is a small price line.
@@ -7020,9 +7020,11 @@ it for height. Pinch zoom on an iPad is unreliable with Plotly, which is why the
 """)
         st.markdown("""
 
-**🔍 Signals Breakdown** shows every part of 📈 Trend, 🎯 Stretch and 🔊 Flow with its own reading in plain
-words, the two named views (trend-following and mean-reversion, both unvalidated hypotheses) and the
-reference to the exact indicator definitions used.
+**🔍 Why these readings** has one folded block for each column in the tables. A Group block shows every part
+with its own reading in plain words and its share of the score; a Set block shows each line with ✓ or ✕ and
+the reason for its answer. The :material/hub: button in a block opens it in Angstrom Lattice, where you can see
+or change how it is built. Columns that read 4-hour or hourly candles show their latest answer and when it was
+worked out.
 
 **🎯 Max pain** (stocks, Bitcoin, Ethereum): the options strike where open contracts would be worth the
 least at expiry. It opens on the next expiry after today; one with almost no open contracts says so.
@@ -9318,18 +9320,12 @@ def _column_cells(kind: str, asset_id: str, fingerprint: str, stamp: tuple, _df,
     from group_readings import stored_context
 
     ctx, last = stored_context(calculate_indicators(_df), kind, asset_id=asset_id)
+    subject = _subject_context
     try:
         when = pd.Timestamp(last.name if hasattr(last, "name") else last)
         as_of = f"{when:%-d %b %Y}"
     except Exception:
         as_of = ""
-
-    def subject(engine_kind, subject_id):       # a Set line pinned to another asset, for example Bitcoin
-        stored_kind = "Crypto" if engine_kind == "crypto" else "Stock"
-        frame, err = _stored_bars(stored_kind, subject_id, signals_v2.SCORING_BARS)
-        if err or frame is None or len(frame) < 15:
-            raise ValueError(f"No stored daily bars for {subject_id}.")
-        return stored_context(calculate_indicators(frame), stored_kind, asset_id=subject_id)[0]
 
     return table_columns.evaluate(_specs, ctx, subject_context=subject, as_of=as_of)
 
@@ -9352,6 +9348,62 @@ def _intraday_answers(specs: list[dict], crypto_watchlist, stock_watchlist, trad
     answers = column_answers.load(supabase, hashes, keys)
     st.session_state["_intraday_answers"] = (sig, time.time(), answers)
     return answers
+
+
+def _subject_context(engine_kind, subject_id):
+    """A Set line pinned to another asset, for example Bitcoin: that asset's stored daily bars."""
+    from group_readings import stored_context
+
+    stored_kind = "Crypto" if engine_kind == "crypto" else "Stock"
+    frame, err = _stored_bars(stored_kind, subject_id, signals_v2.SCORING_BARS)
+    if err or frame is None or len(frame) < 15:
+        raise ValueError(f"No stored daily bars for {subject_id}.")
+    return stored_context(calculate_indicators(frame), stored_kind, asset_id=subject_id)[0]
+
+
+@st.cache_data(ttl=900, max_entries=500, show_spinner=False)
+def _why_items(kind: str, asset_id: str, fingerprint: str, stamp: tuple, _df, _specs, _readings):
+    """🔍 Why these readings for one asset (why_panel.py), on the same stored daily bars as the table."""
+    del fingerprint, stamp
+    import why_panel
+    from group_readings import stored_context
+
+    ctx, _ = stored_context(calculate_indicators(_df), kind, asset_id=asset_id)
+    return why_panel.items(_specs, ctx, _readings, subject_context=_subject_context)
+
+
+def _render_why_panel(asset_type: str, asset_key: str, result: dict, column_specs: list, intraday: dict) -> None:
+    """One folded block per table column for the selected asset; the clicked column opens. Each block has a
+    Lattice button for how it is built."""
+    import column_answers
+    import why_panel
+
+    frame, err = _stored_bars(asset_type, asset_key, signals_v2.SCORING_BARS)
+    if err or frame is None or frame.empty:
+        st.caption("No stored daily bars for this asset yet.")
+        return
+    stamp = (len(frame), str(frame.index[-1]), float(frame["close"].iloc[-1]))
+    try:
+        items = _why_items(asset_type, str(asset_key), table_columns.fingerprint(column_specs), stamp, frame,
+                           column_specs, result.get("readings") or {})
+    except Exception as exc:
+        st.caption(f"Could not work these out: {str(exc)[:160]}")
+        return
+    akey = f"{'crypto' if asset_type == 'Crypto' else 'equity'}:{asset_key if asset_type == 'Crypto' else str(asset_key).upper()}"
+    by_key = {s["key"]: s for s in column_specs}
+    focus, token = st.session_state.get("why_focus") or ("", "")
+    if not focus and items:
+        focus = items[0]["key"]
+    for item in items:
+        spec = by_key.get(item["key"])
+        if spec and spec["doc"] is not None and not table_columns.daily_only(spec["doc"]):
+            item = why_panel.background_item(spec, (intraday or {}).get((column_answers.def_hash(spec["doc"]), akey)))
+        with st.expander(item["title"], expanded=item["key"] == focus, key=f"why_{item['key']}_{token}"):
+            st.html(why_panel.block_html(item))
+            if st.button("Open in Lattice", icon=":material/hub:", type="tertiary", key=f"why_open_{item['key']}",
+                         help=f"See or change how {item['name']} is built, in Angstrom Lattice"):
+                _open_in_lattice(item["lattice"])
+                st.rerun()
 
 
 def _open_in_lattice(raw: str) -> None:
@@ -10502,6 +10554,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                 section_id = "market_sentiment_panel"
             elif destination == "breakdown":
                 st.session_state.scroll_target = "score-breakdown"
+                st.session_state["why_focus"] = (parts[3] if len(parts) > 3 else "", str(time.time_ns()))
                 _remember_section("interactive_chart", True)
                 section_id = "score_breakdown"
             else:
@@ -10853,11 +10906,13 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                         cluster_cells += signals_view.table_cell(
                             spec["cluster"], row_dict, f"{kind}|{asset_id}" if has_signals else None, section="g")
                     else:
-                        cluster_cells += table_columns.group_cell(spec, extra.get(spec["key"]))
+                        cluster_cells += table_columns.group_cell(
+                            spec, extra.get(spec["key"]), f"{kind}|{asset_id}" if has_signals else None)
                 if group_specs:
                     cluster_cells += table_columns.folded_cell("groups", [])
                 for spec in set_specs:
-                    cluster_cells += table_columns.set_cell(spec, extra.get(spec["key"]))
+                    cluster_cells += table_columns.set_cell(
+                        spec, extra.get(spec["key"]), f"{kind}|{asset_id}" if has_signals else None)
                 if set_specs:
                     cluster_cells += table_columns.folded_cell("sets", [extra.get(c["key"]) for c in set_specs])
                 rows_html += (
@@ -11582,7 +11637,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
         reveal_breakdown = st.session_state.get("scroll_target") == "score-breakdown"
         if (show_reasons_flag or reveal_breakdown) and result and result.get("status") == "ok":
             st.html("<div id='score-breakdown' style='scroll-margin-top:4.5rem;'></div>")
-            with section_expander(f"🔍 Signals Breakdown — {title}", "score_breakdown"):
+            with section_expander(f"🔍 Why these readings — {title}", "score_breakdown"):
                 trend_now = ((result.get("clusters") or {}).get("trend") or {}).get("percent")
                 _paint_section_score("breakdown", trend_now, trend_now is not None, reading=True)
                 _signals_info_popover()
@@ -11590,7 +11645,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                     f"<div class='ang-copy' style='margin:0 0 8px;'>{html.escape(result.get('summary') or '')}</div>",
                     unsafe_allow_html=True,
                 )
-                st.html(signals_view.breakdown(result))
+                _render_why_panel(asset_type, asset_key, result, column_specs, intraday)
 
         sentiment_label = crypto_watchlist[asset_key] if asset_type == "Crypto" else stock_watchlist[asset_key]
         with _timed("section: max pain"):
@@ -12913,7 +12968,7 @@ def show_signal_matrix(kind: str, asset_id: str, label: str, indicated) -> None:
             f"Lead is how closely that signal lined up with the price change over the next {int(horizon)} "
             + ("day" if int(horizon) == 1 else "days")
             + ". Positive means a high reading came before a rise. "
-            + "Every row runs from -100 to +100: 📈 Trend, 🎯 Stretch, 🔊 Flow and the two named views each day use only the bars up to that day. "
+            + "Every row runs from -100 to +100: 📈 Trend, 🎯 Stretch, 🔊 Flow and each day use only the bars up to that day. "
             + "A blank sentiment day is before the first saved reading. After that, the last saved score stays until the next one. "
             + "The 30-day record in the table below uses your Trend alert line (plus and minus) for the technical rows "
             + "and your market sentiment lines for sentiment. "

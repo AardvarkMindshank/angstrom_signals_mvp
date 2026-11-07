@@ -68,3 +68,8 @@ def test_daily_only():
     assert tc.daily_only(None)
     doc = {"members": [{"ref": {"timeframe": "1D"}}, {"ref": {"timeframe": "4h"}}]}
     assert not tc.daily_only(doc)
+
+
+def test_a_cell_in_a_row_opens_that_assets_why_block():
+    spec_g = {"key": "saved:g1", "part": "groups", "name": "My Trend", "config": "g1", "version": 2, "cluster": None}
+    assert "data-pick='Crypto|bitcoin|breakdown|saved:g1'" in tc.group_cell(spec_g, {"value": 5.0}, "Crypto|bitcoin")

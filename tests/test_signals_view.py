@@ -40,7 +40,7 @@ def test_table_cell_sorts_by_the_reading_and_opens_the_breakdown():
     row = view.row_fields(frame, "Stock", LATER)
     cell = view.table_cell("trend", row, "Stock|AAA")
     assert f"data-sort='{float(row['trend']):.4f}'" in cell
-    assert "data-pick='Stock|AAA|breakdown'" in cell
+    assert "data-pick='Stock|AAA|breakdown|starter:trend'" in cell
     assert "not a forecast" in cell
 
 
@@ -70,15 +70,14 @@ def test_stock_volatility_is_the_only_validated_claim():
     assert "Tested: size only" not in view.asset_card(crypto)
 
 
-def test_breakdown_lists_every_component_lenses_and_version():
+def test_breakdown_lists_every_component_and_version_without_named_views():
     out = result()
     text = view.breakdown(out)
     for name in v2.COMPONENT_NAMES.values():
         assert name in text
     for spec in v2.LENSES.values():
-        assert spec["name"] in text
+        assert spec["name"] not in text
     assert out["fingerprint"] in text
-    assert "not validated" in text
 
 
 def test_missing_volume_shows_as_missing_in_the_breakdown():

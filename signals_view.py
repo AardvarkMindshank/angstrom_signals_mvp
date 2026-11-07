@@ -110,7 +110,7 @@ def table_cell(key: str, row: dict, pick: str | None = None, section: str = "") 
     sort = "" if value is None else f"{float(value):.4f}"
     inner = f"<span style='display:inline-flex;align-items:center;gap:6px;'>{mini_bar(value)}{number_badge(value)}</span>"
     if pick:
-        inner = (f"<button type='button' data-pick='{_esc(pick)}|breakdown' title='{_esc(cluster_hint(key, cluster))}' "
+        inner = (f"<button type='button' data-pick='{_esc(pick)}|breakdown|starter:{key}' title='{_esc(cluster_hint(key, cluster))}' "
                  "style='display:block;margin:0;padding:0;border:none;background:transparent;text-align:left;"
                  f"cursor:pointer;font:inherit;color:inherit;'>{inner}</button>")
     else:
@@ -218,7 +218,7 @@ def asset_card(result: dict) -> str:
 
 
 def breakdown(result: dict) -> str:
-    """Every component with its plain reading, grouped by cluster, then the lenses and the version."""
+    """Every component with its plain reading, grouped by cluster, then the version (v2_smoke.py; the app uses why_panel)."""
     if result.get("status") != "ok":
         return ""
     readings = result.get("readings") or {}
@@ -238,16 +238,6 @@ def breakdown(result: dict) -> str:
                 f"<span style='width:44px;text-align:right;font-weight:600;'>{signed(pct)}</span>"
                 f"<span class='ang-kicker'>{_esc(reading)}</span></div>"
             )
-    lenses = result.get("lenses") or {}
-    parts.append("<div style='margin-top:14px;font-weight:700;'>🔎 Named views (hypotheses, not validated)</div>")
-    for key, spec in v2.LENSES.items():
-        value = (lenses.get(key) or {}).get("percent")
-        parts.append(
-            "<div style='display:flex;align-items:center;gap:10px;padding:4px 0 4px 18px;flex-wrap:wrap;'>"
-            f"<span style='width:210px;'>{_esc(spec['name'])}</span>{mini_bar(value, 90)}"
-            f"<span style='width:44px;text-align:right;font-weight:600;'>{signed(value)}</span>"
-            f"<span class='ang-kicker'>{_esc(spec['meaning'])}</span></div>"
-        )
     parts.append(
         f"<div class='ang-kicker' style='margin-top:12px;' title='Identifies the exact indicator definitions behind "
         f"these readings'>Definitions ref {result.get('fingerprint')}"
@@ -278,9 +268,7 @@ some parts had no data.
 **Context, never directional:** 🌊 typical daily range (ATR%) and how it compares with the asset's own past
 year, 💪 trend strength (ADX), 🧭 regime, 🔈 volume against usual.
 
-**Named views** state a hypothesis: a *trend-following* view leans with the Trend; a *mean-reversion* view leans
-against the Stretch. When the Trend and the Stretch point opposite ways, the app calls it a pullback (or rally)
-inside the trend.
+When the Trend and the Stretch point opposite ways, the app calls it a pullback (or rally) inside the trend.
 
 **What is and isn't shown by evidence:** none of the directional readings has been shown to predict price moves.
 For large US stocks, a higher-than-usual ATR% has been followed by bigger moves, up or down (tested once on

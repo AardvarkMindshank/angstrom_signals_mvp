@@ -52,7 +52,7 @@ def test_same_numbers_bands_and_coverage_as_before_at_many_cutoffs():
                     {k: v["percent"] for k, v in a["components"].items()}
                 assert b["group"]["completeness"] in ("Complete", "Partial", "None")
             assert new["against_trend"] == old["against_trend"]
-            assert {k: v["percent"] for k, v in new["lenses"].items()} == {k: v["percent"] for k, v in old["lenses"].items()}
+            assert "lenses" not in new                       # the named views are retired
             assert new["context"] == old["context"] and new["readings"] == old["readings"]
             assert gr.flat_fields(new)["trend"] == v2.flat_fields(old)["trend"]
             checked += 1

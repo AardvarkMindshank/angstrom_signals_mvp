@@ -143,7 +143,7 @@ def header(spec: dict) -> str:
     tail = f" v{spec['version']}" if spec.get("version") else ""
     when = ("on the latest finished daily bar" if daily_only(spec.get("doc")) else
             "worked out in the background at each close of its shortest timeframe")
-    return f"{spec['name']}{tail}: your {kind}, {when}. Click a cell to open it in Lattice."
+    return f"{spec['name']}{tail}: your {kind}, {when}. Click a cell to see why it reads that way."
 
 
 def freshness(spec: dict, cell: dict, now=None) -> tuple[str, bool]:
@@ -194,7 +194,15 @@ def _stale_mark(stale: bool) -> str:
             if stale else "")
 
 
-def group_cell(spec: dict, cell: dict | None) -> str:
+def _pick(spec: dict, row_pick: str | None) -> str:
+    """With the row's asset, a click opens that asset's 🔍 Why block for this column; without, the Group or Set
+    in Lattice."""
+    if row_pick:
+        return f"{row_pick}|breakdown|{spec['key']}"
+    return f"lattice|{spec['part']}|{spec['config'] or spec['key']}"
+
+
+def group_cell(spec: dict, cell: dict | None, row_pick: str | None = None) -> str:
     """Bar and number (or the Group's label), coloured like the dashboard readings; hover explains; click opens
     the Group in Signal Groups."""
     from signals_view import mini_bar, number_badge
@@ -216,13 +224,13 @@ def group_cell(spec: dict, cell: dict | None) -> str:
     inner = (f"<span style='display:inline-flex;align-items:center;gap:6px;'>{mini_bar(value, 48)}"
              + (f"<span style='font-size:12px;font-weight:600;'>{_esc(label)}</span>" if label else number_badge(value))
              + _stale_mark(stale) + "</span>")
-    return _clickable(f"lattice|groups|{spec['config'] or spec['key']}", tip, inner, sort, "g")
+    return _clickable(_pick(spec, row_pick), tip, inner, sort, "g")
 
 
 ANSWER_MARK = {"yes": ("✓", "Yes", YES), "no": ("✕", "No", NO), "unknown": ("?", "Unknown", UNKNOWN)}
 
 
-def set_cell(spec: dict, cell: dict | None) -> str:
+def set_cell(spec: dict, cell: dict | None, row_pick: str | None = None) -> str:
     """✓ Yes, ✕ No or ? Unknown in a small round badge; hover gives the reason; click opens the Set."""
     if cell is None and not daily_only(spec.get("doc")):
         return waiting_cell(spec, "s")
@@ -239,7 +247,7 @@ def set_cell(spec: dict, cell: dict | None) -> str:
              f"width:24px;height:24px;border-radius:50%;background:{bg};color:{fg};font-weight:700;'>{mark}</span>"
              + _stale_mark(stale))
     sort = {"yes": "2", "unknown": "1", "no": "0"}[answer]
-    return _clickable(f"lattice|sets|{spec['config']}", tip, inner, sort, "s", center=True)
+    return _clickable(_pick(spec, row_pick), tip, inner, sort, "s", center=True)
 
 
 def _clickable(pick: str, tip: str, inner: str, sort: str, section: str, center: bool = False) -> str:

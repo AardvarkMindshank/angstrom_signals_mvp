@@ -1,6 +1,6 @@
 """Line the open asset's price up with each signal.
 
-Trend, Stretch, Flow (from the starter Groups) and the two named views are replayed from the stored daily
+Trend, Stretch and Flow (from the starter Groups) are replayed from the stored daily
 bars, each day using only the bars up to that day. Sentiment uses only
 the readings already saved. A lead is how that signal lined up with the price
 change that came after it.
@@ -73,8 +73,6 @@ TECHNICAL_ROWS = (
     ("📈 Trend", ("clusters", "trend")),
     ("🎯 Stretch", ("clusters", "stretch")),
     ("🔊 Flow", ("clusters", "flow")),
-    ("Trend-following view", ("lenses", "trend_following")),
-    ("Mean-reversion view", ("lenses", "mean_reversion")),
 )
 
 

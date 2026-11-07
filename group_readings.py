@@ -132,13 +132,8 @@ def score(frame: pd.DataFrame, kind: str, now: datetime | None = None) -> dict:
     against = None
     if t is not None and s is not None and abs(t) >= level and abs(s) >= level and (t > 0) != (s > 0):
         against = "pullback" if t > 0 else "rally"
-    lenses = {}
-    for key, weights in v2.DEFINITIONS["lenses"].items():
-        parts = [(w, clusters[c]["value"]) for c, w in weights.items() if clusters[c]["value"] is not None]
-        total = sum(abs(w) for w, _ in parts)
-        value = sum(w * v for w, v in parts) / total if parts and total else None
-        lenses[key] = {"value": value, "percent": v2.percent(value)}
-    out.update(lenses=lenses, against_trend=against, summary=v2.summary(clusters, against))
+    out.pop("lenses", None)               # the old "named views": retired (Groups and Sets cover them)
+    out.update(against_trend=against, summary=v2.summary(clusters, against))
     return out
 
 
