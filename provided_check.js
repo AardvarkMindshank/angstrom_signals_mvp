@@ -34,7 +34,7 @@ const { chromium } = require("playwright");
     const fold = await page.locator(".lat .lib details.prov").count();
     const lib = await page.locator(".lat .lib").first().innerText();
     check(`${label}: Set library ${q === "1" ? "folds the starters at the top" : "has no starters"}`,
-      q === "1" ? fold === 1 && lib.indexOf("Provided by Angstrom Signals") < lib.indexOf("Your Groups") : fold === 0);
+      q === "1" ? fold === 1 && lib.toLowerCase().indexOf("provided by angstrom signals") < lib.toLowerCase().indexOf("your groups") : fold === 0);
     check(`${label}: your Groups listed`, lib.includes("My Trend"));
     await page.screenshot({ path: `${out}/${label}_sets.png` });
 
