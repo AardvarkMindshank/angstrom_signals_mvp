@@ -13105,14 +13105,14 @@ def show_signal_matrix(kind: str, asset_id: str, label: str, indicated) -> None:
                         )
             record = "<br>".join(html.escape(line) for line in lines)
             summary.append(
-                f"<tr><td style='padding:4px 8px;vertical-align:top;white-space:nowrap;'>{html.escape(row['name'])}</td>"
+                f"<tr><td style='padding:4px 8px;vertical-align:top;min-width:5.5em;max-width:9em;overflow-wrap:break-word;'>{html.escape(row['name'])}</td>"
                 f"<td style='padding:4px 8px;text-align:right;vertical-align:top;white-space:nowrap;'>{rank_of.get(row['name'], '—')}</td>"
                 f"<td style='padding:4px 8px;text-align:right;vertical-align:top;white-space:nowrap;'>{_lead_label(row.get('lead'), row.get('reliable'))}</td>"
                 f"<td style='padding:4px 8px;vertical-align:top;width:100%;'>{record}</td></tr>"
             )
         st.markdown(
             "<div style='width:100%;'><table style='width:100%;border-collapse:collapse;font-size:0.9rem;margin-top:8px;'>"
-            "<thead><tr><th style='padding:4px 8px;text-align:left;white-space:nowrap;'>Signal</th>"
+            "<thead><tr><th style='padding:4px 8px;text-align:left;min-width:5.5em;max-width:9em;'>Signal</th>"
             "<th style='padding:4px 8px;text-align:right;white-space:nowrap;'>Rank</th>"
             "<th style='padding:4px 8px;text-align:right;white-space:nowrap;'>Lead</th>"
             "<th style='padding:4px 8px;text-align:left;width:100%;'>30-day record</th></tr></thead>"
