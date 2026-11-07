@@ -2,7 +2,9 @@
 and the tagline on white. Writes out/video/intro.png and outro.png (1280 x 720)."""
 
 import json
+import os
 import sys
+from datetime import date
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
@@ -12,6 +14,7 @@ FONTS = Path("/usr/share/fonts/truetype/dejavu")
 NAVY, GREEN, GREY = (11, 45, 107), (22, 163, 74), (95, 102, 115)
 W, H = 1280, 720
 WEBSITE, EMAIL = "angstromsignals.com", "info@angstromsignals.com"
+COPYRIGHT_HOLDER = "Angstrom Signals"      # change to the legal entity's name once it exists
 
 
 def font(size, bold=False):
@@ -40,14 +43,21 @@ def card(lines, logo_h) -> Image.Image:
 
 
 def main(out: Path) -> None:
-    script = json.loads((ROOT / "video" / "script.json").read_text())
+    script = json.loads(Path(os.environ.get("SCRIPT", ROOT / "video" / "series" / "05-prism-scan.json")).read_text())
+    series = [(script["series"], 22, True, GREY, 34)] if script.get("series") else []
     card([("angstrom signals", 58, True, NAVY, 0),
           ("Market sentiment and technical signals, with the crowd alongside.", 22, False, GREY, 14),
-          (script["title"], 34, True, GREEN, 40)], 210).save(out / "intro.png")
-    card([("angstrom signals", 44, True, NAVY, 0),
+          *series,
+          (script["title"], 34, True, GREEN, 10 if series else 40)], 210).save(out / "intro.png")
+    following = [(script["next"], 24, True, GREEN, 30)] if script.get("next") else []
+    outro = card([("angstrom signals", 44, True, NAVY, 0),
           (WEBSITE, 36, True, NAVY, 34),
           (EMAIL, 28, False, GREY, 16),
-          ("Descriptive readings, not financial advice.", 18, False, GREY, 36)], 160).save(out / "outro.png")
+          ("Descriptive readings, not financial advice.", 18, False, GREY, 36),
+          *following], 160 if not following else 140)
+    d = ImageDraw.Draw(outro)
+    centred(d, H - 34, f"© {date.today().year} {COPYRIGHT_HOLDER}. All rights reserved.", font(14), (140, 146, 156))
+    outro.save(out / "outro.png")
 
 
 if __name__ == "__main__":

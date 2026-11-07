@@ -1,0 +1,41 @@
+{
+ "title": "Trend with volume behind it",
+ "series": "Worked example",
+ "next": "",
+ "slug": "w1-trend-with-volume",
+ "section": "training",
+ "intro_say": "Angstrom Signals. | Worked example: a trend with volume behind it.",
+ "outro_say": "Descriptive readings, not advice.",
+ "steps": [
+  {
+   "id": "idea",
+   "screen": "The idea as a card",
+   "say": "A rising trend is more convincing when volume backs it. | Let's ask for both."
+  },
+  {
+   "id": "add",
+   "screen": "Set editor: adding \"My Trend\" and the starter Group Flow",
+   "say": "Add My Trend, and the starter Flow Group, which reads whether volume is buying or selling."
+  },
+  {
+   "id": "lines",
+   "screen": "Lines: \"My Trend is Bullish\" and \"Flow is Buying\"",
+   "say": "Line one: My Trend is Bullish. | Line two: Flow's score is at least plus thirty, | the level the dashboard calls Buying."
+  },
+  {
+   "id": "veto",
+   "screen": "The veto inside My Trend, shown briefly",
+   "say": "And because My Trend already has its ranging veto, a choppy, sideways market won't count."
+  },
+  {
+   "id": "save",
+   "screen": "Save; Prism: + and ▶ on All crypto",
+   "say": "Save it, add it to Prism, and run it, | here as of the thirteenth of March 2024."
+  },
+  {
+   "id": "results",
+   "screen": "Results",
+   "say": "Yes means the trend is up and volume agrees. | A No tells you which one is missing."
+  }
+ ]
+}

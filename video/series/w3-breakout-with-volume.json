@@ -1,0 +1,36 @@
+{
+ "title": "Breakout with volume",
+ "series": "Worked example",
+ "next": "",
+ "slug": "w3-breakout-with-volume",
+ "section": "training",
+ "intro_say": "Angstrom Signals. | Worked example: a breakout with volume.",
+ "outro_say": "Descriptive readings, not advice.",
+ "steps": [
+  {
+   "id": "idea",
+   "screen": "The idea as a card",
+   "say": "A breakout means more when the structure is already rising, | and when a crowd turns up for it."
+  },
+  {
+   "id": "add",
+   "screen": "Set editor: three single signals: Market structure, Bollinger position, Heavy-volume candle",
+   "say": "Add three single signals: market structure, Bollinger position, and the heavy-volume candle."
+  },
+  {
+   "id": "lines",
+   "screen": "Lines: \"Market structure is up\", \"Bollinger position is at least 1\", \"Volume ratio is at least 2\"",
+   "say": "Line one: market structure is up. | Line two: the close is at or above the upper Bollinger band. | Line three: today's volume is at least twice the usual."
+  },
+  {
+   "id": "save",
+   "screen": "Save; Prism: + and ▶ on All equities",
+   "say": "Save it, and run it on your equities, | as of the twenty-eighth of April 2023."
+  },
+  {
+   "id": "results",
+   "screen": "Results",
+   "say": "Yes means all three are true on the latest finished candle. | Each No shows which piece is missing."
+  }
+ ]
+}

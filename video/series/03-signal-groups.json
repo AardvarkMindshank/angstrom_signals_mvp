@@ -1,0 +1,61 @@
+{
+ "title": "Signal Groups",
+ "series": "Angstrom Lattice · 3 of 5",
+ "next": "Next: 4 · Signal Sets",
+ "slug": "03-signal-groups",
+ "section": "training",
+ "intro_say": "Angstrom Signals. | Signal Groups.",
+ "outro_say": "Next: turning Groups into a decision, with Signal Sets.",
+ "steps": [
+  {
+   "id": "what",
+   "screen": "The diagram with Signal Groups lit, then the Group editor",
+   "say": "A Signal Group turns several signals into one reading: | a score from minus one hundred to plus one hundred, and a label, such as Bullish."
+  },
+  {
+   "id": "start",
+   "screen": "\"Start from\": the starter Groups listed; then \"New Group\"",
+   "say": "You can start from a starter Group, the same ones behind the dashboard's pre-configured Trend, Stretch and Flow, | or from scratch. Let's build our own."
+  },
+  {
+   "id": "add",
+   "screen": "Tapping + on Moving averages, Ichimoku cloud and MACD line; three cards appear",
+   "say": "Add signals by dragging them in, or tapping plus. | Here: moving averages, the Ichimoku cloud, and the MACD line."
+  },
+  {
+   "id": "roles",
+   "screen": "Each card's role shows Score",
+   "say": "Each signal has a role. Score signals are combined into the Group's score. | Condition signals are only used in rules, and Context is shown alongside."
+  },
+  {
+   "id": "rules",
+   "screen": "Adding a rule: score at least +30 → Bullish; then at most -30 → Bearish; \"Otherwise: Neutral\"",
+   "say": "Rules give the labels, checked from the top: the first that matches wins. | At least plus thirty is Bullish. At most minus thirty is Bearish. Otherwise, Neutral."
+  },
+  {
+   "id": "unknown",
+   "screen": "The rule panel's note about Unknown",
+   "say": "If a rule can't be checked because a reading is missing, the label is Unknown, | never a guess."
+  },
+  {
+   "id": "veto",
+   "screen": "Adding Regime evidence as a Condition, then + Veto: \"Daily regime is ranging\"",
+   "say": "Vetoes protect you from the wrong conditions. | Here, if the daily market is ranging, every label becomes Vetoed."
+  },
+  {
+   "id": "checks",
+   "screen": "The Checks panel turns green; the automatic description",
+   "say": "The checks tell you what blocks saving, and what is only a warning. | And the description is written for you, in plain words."
+  },
+  {
+   "id": "save",
+   "screen": "Naming it \"My Trend\" and pressing Save as a new Group",
+   "say": "Name it, and save. It's yours, and private, until you publish it. | Changing it later saves a new version, so earlier ones stay as they were."
+  },
+  {
+   "id": "summary",
+   "screen": "Summary card: one score, your labels, your veto",
+   "say": "Why it helps: your reading of the trend, | the same every time, on every asset."
+  }
+ ]
+}

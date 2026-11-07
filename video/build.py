@@ -1,5 +1,6 @@
 """Combine the opening card, the recording (with its voice and burned-in subtitles) and the closing card into
-out/video/prism_scan_demo.mp4."""
+<out>/video.mp4. Captions follow the voice part by part (a "|" in the script is a pause and a new caption), and a
+long part is split at sentence ends, so no caption is more than two lines."""
 
 import json
 import subprocess
@@ -9,6 +10,10 @@ from pathlib import Path
 d = Path(sys.argv[1] if len(sys.argv) > 1 else "out/video")
 timeline = json.loads((d / "timeline.json").read_text())
 durations = json.loads((d / "durations.json").read_text())
+TRIM = float(timeline.get("trim") or 0)        # page loading before the first step: cut from the recording
+for _step in timeline["steps"]:
+    _step["start"] -= TRIM
+timeline["end"] -= TRIM
 
 
 def stamp(sec: float) -> str:
@@ -18,15 +23,83 @@ def stamp(sec: float) -> str:
 
 
 steps = timeline["steps"]
-lines = []
-for n, step in enumerate(steps):
-    end = steps[n + 1]["start"] if n + 1 < len(steps) else timeline["end"]
-    end = min(end, step["start"] + durations[step["id"]] + 0.6)
-    words = " ".join(step["say"].replace("|", " ").split())          # pause marks are for the voice only
-    lines += [str(n + 1), f"{stamp(step['start'])} --> {stamp(end)}", words, ""]
-(d / "captions.srt").write_text("\n".join(lines))
+PAUSE = 0.35                 # narrate.py's silence between parts
+MAX_CHARS = 84               # about two lines in the caption band
 
-inputs, filters = ["-i", str(d / "raw.webm")], []
+
+def pieces(text: str) -> list[str]:
+    """One part of a line, cut at sentence ends (or commas) into pieces of at most about MAX_CHARS."""
+    words = " ".join(text.split())
+    if len(words) <= MAX_CHARS:
+        return [words]
+    for mark in (". ", "? ", ": ", ", "):
+        cut = [c for c in words.split(mark)]
+        if len(cut) > 1:
+            out, cur = [], ""
+            for n, c in enumerate(cut):
+                c = c + (mark.strip() if n < len(cut) - 1 else "")
+                if cur and len(cur) + 1 + len(c) > MAX_CHARS:
+                    out.append(cur)
+                    cur = c
+                else:
+                    cur = f"{cur} {c}".strip()
+            out.append(cur)
+            if all(len(o) <= MAX_CHARS + 30 for o in out) and len(out) > 1:
+                return [p for o in out for p in pieces(o)] if any(len(o) > MAX_CHARS for o in out) else out
+    half = len(words.split()) // 2
+    return [" ".join(words.split()[:half]), " ".join(words.split()[half:])]
+
+
+lines, number = [], 0
+for n, step in enumerate(steps):
+    parts = [p.strip() for p in step["say"].split("|") if p.strip()]
+    lengths = durations.get(f"{step['id']}#parts") or [durations[step["id"]]]
+    if len(lengths) != len(parts):
+        lengths = [durations[step["id"]] * len(p) / sum(map(len, parts)) for p in parts]
+    t = step["start"]
+    for part, length in zip(parts, lengths):
+        bits = pieces(part)
+        total = sum(map(len, bits))
+        for k, bit in enumerate(bits):
+            span = length * len(bit) / total
+            last = k == len(bits) - 1
+            number += 1                # never overlapping: two captions at once would stack into the app picture
+            lines += [str(number), f"{stamp(t)} --> {stamp(t + span + (PAUSE - 0.05 if last else -0.02))}", bit, ""]
+            t += span
+        t += PAUSE
+(d / "captions.srt").write_text("\n".join(lines))
+cues = []                    # (start, text) of every caption, for the check below
+for block in "\n".join(lines).split("\n\n"):
+    rows = block.strip().splitlines()
+    if len(rows) >= 3:
+        h, m, sec = rows[1].split(" --> ")[0].replace(",", ".").split(":")
+        cues.append((int(h) * 3600 + int(m) * 60 + float(sec), rows[2]))
+
+
+def check_captions_clear(app_bottom: int = 610, gap: int = 6) -> None:
+    """Draw every caption alone on a black frame, exactly as the video does, and stop if any of it reaches the app
+    picture (rows 0-609): captions must never cover the screen."""
+    from PIL import Image
+
+    probe = d / "_captions_probe.mp4"
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i",
+                    f"color=black:size=1280x720:rate=4:d={timeline['end'] + 1:.2f}", "-vf",
+                    f"subtitles={d / 'captions.srt'}:force_style='{style}'", str(probe)], check=True)
+    for n, (start, text) in enumerate(cues):
+        frame = d / f"_probe_{n}.png"
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", f"{start + 0.1:.2f}", "-i", str(probe),
+                        "-frames:v", "1", str(frame)], check=True)
+        im = Image.open(frame).convert("L")
+        top = next((y for y in range(im.height) if max(im.crop((0, y, im.width, y + 1)).getdata()) > 80), None)
+        frame.unlink()
+        if top is not None and top < app_bottom + gap:
+            raise SystemExit(f"Caption {n + 1} reaches row {top}, over the app (ends at row {app_bottom - 1}). "
+                             f"Shorten it: \"{text[:60]}…\"")
+    probe.unlink()
+    print("Captions checked: none reaches the app picture.")
+
+
+inputs, filters = ["-ss", f"{TRIM:.3f}", "-i", str(d / "raw.webm")], []
 for n, step in enumerate(steps):
     inputs += ["-i", str(d / "voice" / f"{step['id']}.wav")]
     ms = int(step["start"] * 1000)
@@ -35,6 +108,7 @@ mix = "".join(f"[a{n}]" for n in range(len(steps))) + f"amix=inputs={len(steps)}
 # Captions sit in a dark band under the app (recorded at 1280 x 610), never over it: 1280 x 720 in all.
 style = ("FontName=DejaVu Sans,FontSize=12.5,PrimaryColour=&H00FFFFFF,BorderStyle=1,Outline=0,Shadow=0,"
          "MarginV=9,Alignment=2")
+check_captions_clear()
 video = (f"[0:v]scale=1280:610,pad=1280:720:0:0:color=0x0b1220,"
          f"subtitles={d / 'captions.srt'}:force_style='{style}',fps=25,format=yuv420p[v]")
 ENC = ["-c:v", "libx264", "-preset", "veryfast", "-crf", "22", "-c:a", "aac", "-b:a", "128k", "-ar", "48000",
@@ -77,6 +151,6 @@ parts = [p for p in (card_clip("intro", 3.5), d / "main.mp4", card_clip("outro",
 streams = "".join(f"[{n}:v][{n}:a]" for n in range(len(parts)))
 cmd = ["ffmpeg", "-y", "-v", "error"] + [x for p in parts for x in ("-i", str(p))] + [
     "-filter_complex", f"{streams}concat=n={len(parts)}:v=1:a=1[v][a]", "-map", "[v]", "-map", "[a]", *ENC,
-    "-movflags", "+faststart", str(d / "prism_scan_demo.mp4")]
+    "-movflags", "+faststart", str(d / "video.mp4")]
 subprocess.run(cmd, check=True)
-print("wrote", d / "prism_scan_demo.mp4")
+print("wrote", d / "video.mp4")

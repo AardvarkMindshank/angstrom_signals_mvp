@@ -1,0 +1,35 @@
+# Quick browser check of one page (no hour-long CI): runs the Streamlit page named in UI_CHECK below with its
+# check script and saves the pictures to the reports branch (ui-checks/<date>_<commit>/). Runs when the "ui-check"
+# branch is pushed.
+name: ui-check
+on:
+  push:
+    branches: [ui-check]
+permissions:
+  contents: write
+env:
+  UI_CHECK: training_videos_check
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install --no-deps -r requirements-research.lock
+          npm install --no-save --silent playwright@1.63.0 && npx playwright install --with-deps chromium > /dev/null
+      - name: Check
+        run: |
+          set -o pipefail
+          mkdir -p out/ui
+          streamlit run ${UI_CHECK}_app.py --server.headless true --server.port 8611 > out/ui/streamlit.log 2>&1 &
+          for i in $(seq 1 90); do curl -sf http://127.0.0.1:8611/_stcore/health && break; sleep 1; done
+          node ${UI_CHECK}.js http://127.0.0.1:8611/ out/ui | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Save to reports branch
+        if: always()
+        run: bash .github/scripts/save_to_reports.sh "ui-checks/$(date -u +%Y-%m-%d_%H%M)_${GITHUB_SHA::7}" out/ui

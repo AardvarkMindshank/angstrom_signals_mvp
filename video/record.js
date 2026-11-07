@@ -1,22 +1,29 @@
-// Records the demo page (desktop, 1280x720) step by step, paced by the narration. Usage:
-// node video/record.js http://127.0.0.1:8601/ out/video
-// Writes out/video/raw.webm and timeline.json (when each step starts, in seconds from the start of the video).
+// Records one training video from the demo page (desktop, 1280 x 610, zoomed to 125%), step by step, paced by the
+// narration. Usage:
+//   SCRIPT=video/series/03-signal-groups.json node video/record.js http://127.0.0.1:8601/ out/video/03-signal-groups
+// Reads <dir>/durations.json (from narrate.py). Writes <dir>/raw.webm, timeline.json (when each step starts, in
+// seconds; "trim" is the loading time cut from the start) and a picture of the end of every step (step_<id>.png),
+// for checking the recording without watching it.
 const fs = require("fs");
 const path = require("path");
 const { chromium } = require("playwright");
+const makeHelpers = require("./helpers.js");
+const ACTIONS = require("./actions.js");
 
 (async () => {
   const url = process.argv[2];
   const dir = process.argv[3] || "out/video";
-  const script = JSON.parse(fs.readFileSync("video/script.json"));
+  const script = JSON.parse(fs.readFileSync(process.env.SCRIPT || "video/series/05-prism-scan.json"));
   const durations = JSON.parse(fs.readFileSync(path.join(dir, "durations.json")));
+  const actions = ACTIONS[script.slug];
+  if (!actions) throw new Error(`No actions for ${script.slug} in video/actions.js`);
   const browser = await chromium.launch();
-  // Warm up first (fonts, first run), so the video starts on a ready page.
+  // Warm up first (fonts, first run, price downloads), so the video starts on a ready page.
   const warm = await browser.newPage({ viewport: { width: 1280, height: 610 } });
-  await warm.goto(url); await warm.waitForSelector(".lat.prism", { timeout: 120000 }); await warm.close();
+  await warm.goto(url + (actions.query || "")); await warm.waitForSelector(".lat", { timeout: 180000 }); await warm.close();
   // The app is recorded at 1280 x 610, zoomed to 125% (text 25% larger, sharp); build.py adds a 110-pixel caption
-  // band underneath for a 1280 x 720 video. Only the page body is zoomed: the pointer below sits outside the zoom,
-  // so it is drawn exactly where the mouse is.
+  // band underneath for a 1280 x 720 video. Only the page body is zoomed: the pointer, diagrams, cards and notes are
+  // drawn outside the zoom, at real pixels.
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 610 }, deviceScaleFactor: 1,
     recordVideo: { dir: path.join(dir, "raw"), size: { width: 1280, height: 610 } } });
   await ctx.addInitScript(() => {
@@ -49,74 +56,32 @@ const { chromium } = require("playwright");
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", ready); else ready();
   });
   const page = await ctx.newPage();
+  page.on("console", (m) => { if (m.type() === "error" || process.env.VIDEO_DEBUG) console.log(`browser ${m.type()}: ${m.text().slice(0, 300)}`); });
+  page.on("pageerror", (e) => console.log(`page error: ${String(e).slice(0, 300)}`));
   const t0 = Date.now();
   const now = () => (Date.now() - t0) / 1000;
-  const settle = async () => {
-    await page.waitForTimeout(500);
-    await page.waitForFunction(() => !document.querySelector("[data-testid='stStatusWidgetRunningIcon']"),
-      null, { timeout: 120000 }).catch(() => {});
-    await page.waitForTimeout(400);
-  };
-  const glide = async (selector) => {           // move the pointer visibly before clicking
-    const box = await page.locator(selector).first().boundingBox();
-    if (box) await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 24 });
-    await page.waitForTimeout(350);
-  };
-  const press = async (selector) => { await glide(selector); await page.click(selector); };
-  const scrollTo = (selector) => page.locator(selector).first().scrollIntoViewIfNeeded().catch(() => {});
-  const actions = {
-    intro: async () => {
-      await page.goto(url); await page.waitForSelector(".lat.prism", { timeout: 120000 }); await settle();
-      await page.mouse.move(520, 300, { steps: 2 });
-    },
-    create: async () => {
-      const b = 'button[aria-label="Start a scan with Trend and Flow agree (demo)"]';
-      await glide(b); await page.click(b); await page.waitForSelector(".lat.prism .scan", { timeout: 60000 }); await settle();
-    },
-    card: async () => { await glide(".lat.prism .scan .head"); await page.waitForTimeout(800); },
-    assets: async () => {
-      const g = 'button[aria-label="Add All crypto to the selected scan"]';
-      await glide(g); await page.click(g); await settle();
-      const x = '.lat.prism .scan button[aria-label="Remove Whole Watchlist"]';
-      if (await page.$(x)) { await glide(x); await page.click(x); await settle(); }
-    },
-    play: async () => {
-      const p = ".lat.prism .scan button.play";
-      await glide(p); await page.click(p); await settle();
-      await page.waitForSelector(".lat.prism .scan table", { timeout: 180000 }).catch(() => {});
-    },
-    results: async () => { await scrollTo(".lat.prism .scan table"); await glide(".lat.prism .scan table tr:nth-child(2)"); },
-    schedule: async () => {
-      await scrollTo('.lat.prism .scan select[aria-label="When the scan runs"]');
-      const s = '.lat.prism .scan select[aria-label="When the scan runs"]';
-      await glide(s); await page.selectOption(s, "1D"); await page.waitForTimeout(500);
-      const save = '.lat.prism .scan button[aria-label="Save when the scan runs"]';
-      await glide(save); await page.click(save); await settle();
-    },
-    alerts: async () => {
-      const a = '.lat.prism .scan select[aria-label="Where alerts go"]';
-      await scrollTo(a); await glide(a); await page.waitForTimeout(1200);
-    },
-    tidy: async () => {
-      await page.evaluate(() => window.scrollTo({ top: 0, behavior: "smooth" })); await page.waitForTimeout(700);
-      const c = "text=Collapse all"; await glide(c); await page.click(c); await page.waitForTimeout(800);
-    },
-  };
+  const h = makeHelpers(page, url);
+  await h.open(actions.query || "");
+  if (actions.setup) await actions.setup(h);
+  const trim = now();
   const timeline = [];
   for (const step of script.steps) {
     const start = now();
     timeline.push({ id: step.id, start, say: step.say });
-    try { await actions[step.id](); } catch (e) { console.log(`step ${step.id}: ${e}`); }
+    const fn = actions[step.id];
+    if (!fn) console.log(`step ${step.id}: no action (the screen stays as it is)`);
+    try { if (fn) await fn(h, durations[step.id]); } catch (e) { console.log(`step ${step.id}: ${String(e).split("\n")[0]}`); }
     const wanted = start + durations[step.id] + 0.7;
     if (now() < wanted) await page.waitForTimeout((wanted - now()) * 1000);
+    else console.log(`step ${step.id}: the actions took ${(now() - start - durations[step.id]).toFixed(1)} s longer than the voice`);
+    await page.screenshot({ path: path.join(dir, `step_${step.id}.png`) }).catch(() => {});
   }
   await page.waitForTimeout(1500);
   const end = now();
-  await page.screenshot({ path: path.join(dir, "last_frame.png") });
   await ctx.close();
   const video = fs.readdirSync(path.join(dir, "raw")).find((f) => f.endsWith(".webm"));
   fs.renameSync(path.join(dir, "raw", video), path.join(dir, "raw.webm"));
-  fs.writeFileSync(path.join(dir, "timeline.json"), JSON.stringify({ steps: timeline, end }, null, 1));
+  fs.writeFileSync(path.join(dir, "timeline.json"), JSON.stringify({ steps: timeline, end, trim }, null, 1));
   await browser.close();
-  console.log(JSON.stringify(timeline.map((t) => [t.id, t.start.toFixed(1)])));
+  console.log(JSON.stringify(timeline.map((t) => [t.id, (t.start - trim).toFixed(1)])));
 })();

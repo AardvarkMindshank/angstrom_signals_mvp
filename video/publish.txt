@@ -1,0 +1,10 @@
+# Which videos the "video-publish" branch puts on the website, one per line:
+# <recording run folder under videos/ on the reports branch, or "latest">/<video name>
+2026-11-07_0617_e079576/01-angstrom-lattice-at-a-glance
+2026-11-07_0617_e079576/02-signals
+2026-11-07_0617_e079576/03-signal-groups
+2026-11-07_0617_e079576/04-signal-sets
+2026-11-07_0549_4261ae1/05-prism-scan
+2026-11-07_0549_4261ae1/w1-trend-with-volume
+2026-11-07_0549_4261ae1/w2-overextended-rally
+2026-11-07_0549_4261ae1/w3-breakout-with-volume

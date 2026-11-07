@@ -6848,6 +6848,7 @@ def _has_prism_scan() -> bool:
 
 
 import onboarding as _onboarding
+import training_videos as _training
 
 if not _POPOUT_VIEW:
     _onboarding.tap_explain(st, bool(st.session_state.get("explain_mode", (prefs.get("settings") or {}).get("explain_mode"))))
@@ -6894,6 +6895,9 @@ because they measure different things and are never added together.
    rules from the same signals, then scan your watchlist with them in **Prism**, now or on a schedule with alerts.
    See the 🧩 Lattice & Prism tab.
 """)
+        st.markdown("**🎬 Training videos**: short videos with captions, about a minute or two each. Back, Next and "
+                    "Start in the player move through a series.")
+        _training.all_links(st, key="start")
         if st.button("🚀 Show the getting-started checklist", key="onboarding_show_again",
                      help="Brings back the checklist at the top of the page."):
             _onboarding.show_again(prefs.get("settings") or {}, save_account_settings)
@@ -7050,7 +7054,10 @@ same line under the asset's name in the chart section.
 **Angstrom Lattice** (preview) is the research workspace near the bottom of the dashboard. Open it and pick a
 part from the bar at the top; hover the bar for what each part does. Like the rest of the app, it describes
 conditions; nothing in it is a forecast or advice.
-
+""")
+        _training.link(st, "01-angstrom-lattice-at-a-glance", key="tv_lat_01")
+        _training.link(st, "02-signals", key="tv_lat_02")
+        st.markdown("""
 **🧩 Signal Groups: your own reading.** Combine signals into one score from -100 to +100, then give it labels.
 - Start from a starter Group (📈 Trend, 🎯 Stretch, 🔊 Flow and others; the dashboard's three readings *are*
   these starter Groups) or a new one. Drag signals in, or tap **+** on a phone or tablet.
@@ -7063,7 +7070,9 @@ conditions; nothing in it is a forecast or advice.
   every label into *Vetoed*.
 - **Checks** say what blocks saving (⛔) and what is only a warning (⚠️). The description is written
   automatically. Save as a new Group, or as a new version of yours; earlier versions stay as they were.
-
+""")
+        _training.link(st, "03-signal-groups", key="tv_lat_03")
+        st.markdown("""
 **🗂️ Signal Sets: a Yes / No decision.** Combine saved Groups and single signals, then write the lines that must
 hold, for example *Trend is Bullish* and *RSI is below 70*.
 - **Answer:** Yes (every line holds), No (at least one fails, even if other data is missing) or Unknown (nothing
@@ -7071,7 +7080,9 @@ hold, for example *Trend is Bullish* and *RSI is below 70*.
 - Each line can read a **📌 fixed asset**, for example *Trend on COIN is Bullish* while the Set runs on each crypto
   being scanned. Both are read at the same moment.
 - A Set needs a decision before Prism can scan it.
-
+""")
+        _training.link(st, "04-signal-sets", key="tv_lat_04")
+        st.markdown("""
 **🔎 Prism Scan: scan your watchlist.** Your saved scans, each a Set plus its assets, schedule and alerts.
 - **Start a scan:** drag a saved Set onto the board, or tap **+**. It starts on your whole watchlist and runs
   only when you press ▶.
@@ -7092,7 +7103,12 @@ hold, for example *Trend is Bullish* and *RSI is below 70*.
   quiet: its first run records the answers without alerting.
 - **"vN available"** appears when you have saved a newer version of the scan's Set; tap it to switch. Until
   then the scan keeps the version it was saved with.
-
+""")
+        _training.link(st, "05-prism-scan", key="tv_lat_05")
+        st.markdown("**🎬 Worked examples**: one recognisable setup each, built and scanned from start to finish.")
+        for _slug in ("w1-trend-with-volume", "w2-overextended-rally", "w3-breakout-with-volume"):
+            _training.link(st, _slug, key=f"tv_lat_{_slug}")
+        st.markdown("""
 **🛣️ Strategies** (coming later): turn a Set's Yes into a plan with entries, exits and risk, including sequences
 such as *A, then B within N days*.
 """)

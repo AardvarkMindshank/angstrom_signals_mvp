@@ -1,0 +1,38 @@
+# Put checked training videos on the website, with nothing to install. Runs when the "video-publish" branch is pushed.
+# video/publish.txt says which, one per line: <folder under videos/ on the reports branch>/<video name>, where the
+# folder may be "latest" for the newest recording run. Each goes to angstromsignals.com/videos/training/<name>.mp4,
+# with its captions (.srt) beside it.
+name: video-publish
+on:
+  push:
+    branches: [video-publish]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - name: Upload to the website
+        env:
+          HOSTGATOR_FTP_HOST: ${{ secrets.HOSTGATOR_FTP_HOST }}
+          HOSTGATOR_FTP_USER: ${{ secrets.HOSTGATOR_FTP_USER }}
+          HOSTGATOR_FTP_PASSWORD: ${{ secrets.HOSTGATOR_FTP_PASSWORD }}
+        run: |
+          git fetch -q --depth=1 origin reports
+          newest=$(git ls-tree -d --name-only origin/reports videos/ | grep '^videos/20' | tail -1 | sed 's|^videos/||')
+          for entry in $(grep -v '^#' video/publish.txt | grep -v '^\s*$'); do
+            batch=${entry%/*}; slug=${entry##*/}
+            [ "$batch" = "latest" ] && batch=$newest
+            echo "$slug from $batch"
+            mkdir -p "out/$slug"
+            git show "origin/reports:videos/$batch/$slug/video.mp4" > "out/$slug/video.mp4"
+            git show "origin/reports:videos/$batch/$slug/captions.srt" > "out/$slug/captions.srt"
+            section=$(python3 -c "import json;print(json.load(open('video/series/$slug.json')).get('section','training'))")
+            python3 video/upload.py "out/$slug" "$section" "$slug"
+            url="https://www.angstromsignals.com/videos/$section/$slug.mp4"
+            code=$(curl -s -o /dev/null -w "%{http_code}" -I "$url" || true)
+            echo "$slug: $url (HTTP $code)" | tee -a "$GITHUB_STEP_SUMMARY"
+          done

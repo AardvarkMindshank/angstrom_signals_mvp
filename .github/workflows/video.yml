@@ -1,5 +1,7 @@
-# Training videos (manual): records the demo page with Playwright, adds an AI voice (Kokoro, offline) and burned-in
-# subtitles, and uploads the MP4 as a workflow artifact. Runs when the "video" branch is pushed.
+# Training videos: records every video listed in video/queue.txt from the demo page with Playwright, adds an AI voice
+# (Kokoro, offline) and captions, and saves them to the reports branch (videos/<date>_<commit>/<name>/) for checking.
+# Nothing is uploaded here: once checked, push the "video-publish" branch to put them on the website.
+# Runs when the "video" branch is pushed.
 name: video
 on:
   push:
@@ -10,7 +12,7 @@ permissions:
 jobs:
   video:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 100
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -26,6 +28,7 @@ jobs:
           need=""
           command -v ffmpeg >/dev/null || need="$need ffmpeg"
           fc-list | grep -qi "DejaVu Sans" || need="$need fonts-dejavu-core"
+          fc-list | grep -qi "Noto Color Emoji" || need="$need fonts-noto-color-emoji"
           if [ -n "$need" ]; then
             sudo apt-get -o Acquire::Retries=3 update -q
             sudo apt-get -o Acquire::Retries=3 install -y -q --no-install-recommends $need
@@ -35,27 +38,24 @@ jobs:
           kokoro=https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0
           curl -sSfL --retry 3 -o out/video/voice_model/kokoro-v1.0.onnx $kokoro/kokoro-v1.0.onnx
           curl -sSfL --retry 3 -o out/video/voice_model/voices-v1.0.bin $kokoro/voices-v1.0.bin
-      - name: Voice
-        run: python video/narrate.py out/video
+      - name: Saved prices (for past moments, cut before the hold-out)
+        run: |
+          git fetch -q --depth=1 origin reports
+          mkdir -p prices && git archive FETCH_HEAD data/prices | tar -x -C prices
       - name: Record
+        env:
+          DEMO_PRICES: prices/data/prices
         run: |
           streamlit run video/demo_app.py --server.headless true --server.port 8601 > out/video/streamlit.log 2>&1 &
           for i in $(seq 1 90); do curl -sf http://127.0.0.1:8601/_stcore/health && break; sleep 1; done
-          node video/record.js http://127.0.0.1:8601/ out/video
-      - name: Build
-        run: |
-          python video/cards.py out/video
-          python video/build.py out/video
+          bash video/make.sh
       - name: Save to reports branch
         if: always()
-        run: bash .github/scripts/save_to_reports.sh "videos/$(date -u +%Y-%m-%d_%H%M)_${GITHUB_SHA::7}" out/video/*.mp4 out/video/*.mp3 out/video/*.srt out/video/*.png out/video/timeline.json out/video/durations.json
+        run: bash .github/scripts/save_to_reports.sh "videos/$(date -u +%Y-%m-%d_%H%M)_${GITHUB_SHA::7}" $(ls -d out/video/*/ | grep -v voice_model) out/video/streamlit.log
       - uses: actions/upload-artifact@v5
         if: always()
         with:
           name: video
           path: |
-            out/video/*.mp4
-            out/video/*.srt
-            out/video/*.png
-            out/video/*.json
+            out/video/*/video.mp4
             out/video/streamlit.log
