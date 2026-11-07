@@ -1,0 +1,37 @@
+........................................................................ [  8%]
+........................................................................ [ 16%]
+........................................................................ [ 24%]
+........................................................................ [ 32%]
+........................................................................ [ 40%]
+........................................................................ [ 48%]
+........................................................................ [ 56%]
+........................................................................ [ 65%]
+........................................................................ [ 73%]
+........................................................................ [ 81%]
+........................................................................ [ 89%]
+........................................................................ [ 97%]
+.....................                                                    [100%]
+=============================== warnings summary ===============================
+tests/test_builtin_alerts.py: 1 warning
+tests/test_chart_data.py: 2 warnings
+tests/test_group_readings.py: 3 warnings
+tests/test_lattice_editor.py: 1 warning
+tests/test_lattice_stage1.py: 26 warnings
+tests/test_lattice_stage5.py: 5 warnings
+tests/test_library_completion.py: 12 warnings
+tests/test_prism.py: 9 warnings
+tests/test_replay.py: 3 warnings
+tests/test_replay_groups.py: 1 warning
+tests/test_table_columns.py: 1 warning
+tests/test_why_panel.py: 1 warning
+  /home/runner/work/angstrom_signals_mvp/angstrom_signals_mvp/chart_data.py:237: Pandas4Warning: DatetimeIndex.weekday is deprecated and will be removed in a future version. Use DatetimeIndex.day_of_week instead.
+    monday = df.index - pd.to_timedelta(df.index.weekday, unit="D")
+
+tests/test_lw_chart.py: 11 warnings
+  /opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages/pandas/core/indexes/datetimelike.py:1029: Pandas4Warning: DatetimeIndex.values returning an ndarray that drops timezone information is deprecated. In a future version, this will return the underlying DatetimeArray instead. Use 'DatetimeIndex.tz_convert(None).to_numpy()' to get a NumPy array of UTC values, or 'DatetimeIndex.array' to get the ExtensionArray.
+  See https://pandas.pydata.org/docs/dev/whatsnew/v3.1.0.html#whatsnew-310-deprecations-values for more details.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+885 passed, 76 warnings in 201.04s (0:03:21)
+exit=0
