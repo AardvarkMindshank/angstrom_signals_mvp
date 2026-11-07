@@ -45,6 +45,7 @@ const { chromium, devices } = require("playwright");
     check(`${label}: a drag handle, no arrow buttons`, await page.locator(".lat .rule .grip").count() >= 2
       && await page.locator('.lat button[title="Check this rule earlier"]').count() === 0);
     {   // drag rule 2 above rule 1 with a finger or mouse
+      await page.locator(".lat .rule .grip").nth(1).scrollIntoViewIfNeeded(); await page.waitForTimeout(300);
       const before = await page.locator(".lat .rule input").first().inputValue();
       const g = await page.locator(".lat .rule .grip").nth(1).boundingBox(), f = await page.locator(".lat .rule .grip").nth(0).boundingBox();
       await page.mouse.move(g.x + g.width / 2, g.y + g.height / 2); await page.mouse.down();
