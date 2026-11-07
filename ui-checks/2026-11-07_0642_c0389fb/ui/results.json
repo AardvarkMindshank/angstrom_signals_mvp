@@ -1,0 +1,92 @@
+[
+ [
+  "desktop: opens at video 3",
+  true,
+  "https://www.angstromsignals.com/videos/training/03-signal-groups.mp4"
+ ],
+ [
+  "desktop: says 3 of 5",
+  true,
+  ""
+ ],
+ [
+  "desktop: Next goes to 4",
+  true,
+  ""
+ ],
+ [
+  "desktop: Back twice goes to 2",
+  true,
+  ""
+ ],
+ [
+  "desktop: Start goes to 1",
+  true,
+  ""
+ ],
+ [
+  "desktop: Back and Start are off on the first video",
+  true,
+  ""
+ ],
+ [
+  "desktop: the list jumps to a worked example",
+  true,
+  ""
+ ],
+ [
+  "desktop: worked examples count on their own",
+  true,
+  ""
+ ],
+ [
+  "desktop: no sideways scrolling",
+  true,
+  "0 px"
+ ],
+ [
+  "iphone: opens at video 3",
+  true,
+  "https://www.angstromsignals.com/videos/training/03-signal-groups.mp4"
+ ],
+ [
+  "iphone: says 3 of 5",
+  true,
+  ""
+ ],
+ [
+  "iphone: Next goes to 4",
+  true,
+  ""
+ ],
+ [
+  "iphone: Back twice goes to 2",
+  true,
+  ""
+ ],
+ [
+  "iphone: Start goes to 1",
+  true,
+  ""
+ ],
+ [
+  "iphone: Back and Start are off on the first video",
+  true,
+  ""
+ ],
+ [
+  "iphone: the list jumps to a worked example",
+  true,
+  ""
+ ],
+ [
+  "iphone: worked examples count on their own",
+  true,
+  ""
+ ],
+ [
+  "iphone: no sideways scrolling",
+  true,
+  "0 px"
+ ]
+]
