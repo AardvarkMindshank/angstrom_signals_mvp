@@ -1,0 +1,747 @@
+{
+ "method": "what-followed-1",
+ "horizon": 10,
+ "gap": 5,
+ "family": 15,
+ "sets": {
+  "demo:pullback": {
+   "type": "directional",
+   "verdict": "No clear difference",
+   "rests_on": null,
+   "episodes": 1503,
+   "weeks": 307,
+   "assets": 86,
+   "coins": 327,
+   "shares": 1176,
+   "coin_assets": 25,
+   "share_assets": 61,
+   "top_assets": [
+    [
+     "MSFT",
+     0.017
+    ],
+    [
+     "NVDA",
+     0.017
+    ],
+    [
+     "BTC-USD",
+     0.017
+    ]
+   ],
+   "first": "2017-05-27",
+   "last": "2024-10-10",
+   "plain": {
+    "gain_first": 0.5083166999334664,
+    "gain_first_usual": 0.5196147263105497,
+    "loss_first": 0.44843646041250834,
+    "loss_first_usual": 0.4442714650832621,
+    "move": 0.20769000295825452,
+    "move_usual": 0.3531387211478924,
+    "higher": 0.5389221556886228,
+    "higher_usual": 0.5538684367503819
+   },
+   "tests": {
+    "first": {
+     "estimate": -0.01546302170632965,
+     "ci95": [
+      -0.1064698051655133,
+      0.07554376175285399
+     ],
+     "p_two_sided": 0.7366496810664739,
+     "df": 96,
+     "block": 28,
+     "holm_passed": false,
+     "consistency": {
+      "checked": [
+       "before 2019",
+       "2019 to 2021",
+       "2022 to Oct 2024",
+       "coins",
+       "shares"
+      ],
+      "same_way": [
+       "before 2019",
+       "2022 to Oct 2024",
+       "shares"
+      ],
+      "all_same": false
+     }
+    },
+    "move": {
+     "estimate": -0.1454487181896379,
+     "ci95": [
+      -0.4766518936391107,
+      0.18575445725983492
+     ],
+     "p_two_sided": 0.3855409768915734,
+     "df": 96,
+     "block": 28,
+     "holm_passed": false,
+     "consistency": {
+      "checked": [
+       "before 2019",
+       "2019 to 2021",
+       "2022 to Oct 2024",
+       "coins",
+       "shares"
+      ],
+      "same_way": [
+       "before 2019",
+       "2019 to 2021",
+       "2022 to Oct 2024",
+       "coins",
+       "shares"
+      ],
+      "all_same": true
+     }
+    }
+   },
+   "name": "Pullback in an uptrend",
+   "hash": "2b7445918b49d3df06d0f1d0"
+  },
+  "demo:rally": {
+   "type": "directional",
+   "verdict": "No clear difference",
+   "rests_on": null,
+   "episodes": 1199,
+   "weeks": 248,
+   "assets": 86,
+   "coins": 541,
+   "shares": 658,
+   "coin_assets": 25,
+   "share_assets": 61,
+   "top_assets": [
+    [
+     "EOS-USD",
+     0.024
+    ],
+    [
+     "ZEC-USD",
+     0.024
+    ],
+    [
+     "NEO-USD",
+     0.023
+    ]
+   ],
+   "first": "2017-08-25",
+   "last": "2024-09-19",
+   "plain": {
+    "gain_first": 0.5129274395329442,
+    "gain_first_usual": 0.49166168459923393,
+    "loss_first": 0.4395329441201001,
+    "loss_first_usual": 0.45626942032370654,
+    "move": 0.24723893573745834,
+    "move_usual": 0.16137123896028385,
+    "higher": 0.5421184320266889,
+    "higher_usual": 0.5242614838826383
+   },
+   "tests": {
+    "first": {
+     "estimate": 0.038002231137316704,
+     "ci95": [
+      -0.08334060736160853,
+      0.15934506963624195
+     ],
+     "p_two_sided": 0.535477799634572,
+     "df": 92,
+     "block": 28,
+     "holm_passed": false,
+     "consistency": {
+      "checked": [
+       "before 2019",
+       "2019 to 2021",
+       "2022 to Oct 2024",
+       "coins",
+       "shares"
+      ],
+      "same_way": [
+       "2019 to 2021",
+       "2022 to Oct 2024",
+       "coins",
+       "shares"
+      ],
+      "all_same": false
+     }
+    },
+    "move": {
+     "estimate": 0.08586769677717443,
+     "ci95": [
+      -0.39258395284668407,
+      0.564319346401033
+     ],
+     "p_two_sided": 0.7223251245300751,
+     "df": 92,
+     "block": 28,
+     "holm_passed": false,
+     "consistency": {
+      "checked": [
+       "before 2019",
+       "2019 to 2021",
+       "2022 to Oct 2024",
+       "coins",
+       "shares"
+      ],
+      "same_way": [
+       "2019 to 2021",
+       "2022 to Oct 2024",
+       "coins",
+       "shares"
+      ],
+      "all_same": false
+     }
+    }
+   },
+   "name": "Rally in a downtrend",
+   "hash": "9f6e6b788a6bcfe39740e353"
+  },
+  "demo:alignment": {
+   "type": "directional",
+   "verdict": "Some difference, not established",
+   "rests_on": "first",
+   "episodes": 1417,
+   "weeks": 336,
+   "assets": 86,
+   "coins": 299,
+   "shares": 1118,
+   "coin_assets": 25,
+   "share_assets": 61,
+   "top_assets": [
+    [
+     "AMGN",
+     0.019
+    ],
+    [
+     "WMT",
+     0.019
+    ],
+    [
+     "ORCL",
+     0.018
+    ]
+   ],
+   "first": "2017-06-18",
+   "last": "2024-10-15",
+   "plain": {
+    "gain_first": 0.4883556810162315,
+    "gain_first_usual": 0.5479285075167666,
+    "loss_first": 0.46859562455892734,
+    "loss_first_usual": 0.41283339891466647,
+    "move": 0.4537575063967979,
+    "move_usual": 0.5457062713060502,
+    "higher": 0.5582215949188426,
+    "higher_usual": 0.5996122683093457
+   },
+   "tests": {
+    "first": {
+     "estimate": -0.11533505214479588,
+     "ci95": [
+      -0.19162472416651322,
+      -0.03904538012307854
+     ],
+     "p_two_sided": 0.0034340603096932247,
+     "df": 95,
+     "block": 28,
+     "holm_passed": false,
+     "consistency": {
+      "checked": [
+       "before 2019",
+       "2019 to 2021",
+       "2022 to Oct 2024",
+       "coins",
+       "shares"
+      ],
+      "same_way": [
+       "before 2019",
+       "2019 to 2021",
+       "2022 to Oct 2024",
+       "coins",
+       "shares"
+      ],
+      "all_same": true
+     }
+    },
+    "move": {
+     "estimate": -0.09194876490925236,
+     "ci95": [
+      -0.3536761220870136,
+      0.1697785922685089
+     ],
+     "p_two_sided": 0.4872254990857029,
+     "df": 95,
+     "block": 28,
+     "holm_passed": false,
+     "consistency": {
+      "checked": [
+       "before 2019",
+       "2019 to 2021",
+       "2022 to Oct 2024",
+       "coins",
+       "shares"
+      ],
+      "same_way": [
+       "before 2019",
+       "2022 to Oct 2024",
+       "shares"
+      ],
+      "all_same": false
+     }
+    }
+   },
+   "name": "Trend alignment",
+   "hash": "cbde614cc5028407ada6e36d"
+  },
+  "demo:breakout": {
+   "type": "directional",
+   "verdict": "No clear difference",
+   "rests_on": null,
+   "episodes": 1879,
+   "weeks": 347,
+   "assets": 86,
+   "coins": 742,
+   "shares": 1137,
+   "coin_assets": 25,
+   "share_assets": 61,
+   "top_assets": [
+    [
+     "LTC-USD",
+     0.024
+    ],
+    [
+     "LINK-USD",
+     0.023
+    ],
+    [
+     "ADA-USD",
+     0.02
+    ]
+   ],
+   "first": "2017-06-17",
+   "last": "2024-10-15",
+   "plain": {
+    "gain_first": 0.5130388504523683,
+    "gain_first_usual": 0.5020840151512714,
+    "loss_first": 0.45023948908994144,
+    "loss_first_usual": 0.44849993151559864,
+    "move": 0.5198259558048546,
+    "move_usual": 0.3196393486249734,
+    "higher": 0.532197977647685,
+    "higher_usual": 0.5351795651987484
+   },
+   "tests": {
+    "first": {
+     "estimate": 0.009215277726754059,
+     "ci95": [
+      -0.061266228336303595,
+      0.07969678378981171
+     ],
+     "p_two_sided": 0.7957598360630193,
+     "df": 95,
+     "block": 28,
+     "holm_passed": false,
+     "consistency": {
+      "checked": [
+       "before 2019",
+       "2019 to 2021",
+       "2022 to Oct 2024",
+       "coins",
+       "shares"
+      ],
+      "same_way": [
+       "2022 to Oct 2024",
+       "coins"
+      ],
+      "all_same": false
+     }
+    },
+    "move": {
+     "estimate": 0.20018660717988113,
+     "ci95": [
+      -0.17896972895314106,
+      0.5793429433129034
+     ],
+     "p_two_sided": 0.2972192211666336,
+     "df": 95,
+     "block": 28,
+     "holm_passed": false,
+     "consistency": {
+      "checked": [
+       "before 2019",
+       "2019 to 2021",
+       "2022 to Oct 2024",
+       "coins",
+       "shares"
+      ],
+      "same_way": [
+       "2019 to 2021",
+       "2022 to Oct 2024",
+       "coins",
+       "shares"
+      ],
+      "all_same": false
+     }
+    }
+   },
+   "name": "Breakout with volume",
+   "hash": "c4f4ada4236641a35f6fa055"
+  },
+  "demo:squeeze": {
+   "type": "neutral",
+   "verdict": "No clear difference",
+   "rests_on": null,
+   "episodes": 3187,
+   "weeks": 361,
+   "assets": 86,
+   "coins": 1070,
+   "shares": 2117,
+   "coin_assets": 25,
+   "share_assets": 61,
+   "top_assets": [
+    [
+     "LTC-USD",
+     0.017
+    ],
+    [
+     "XLM-USD",
+     0.017
+    ],
+    [
+     "LINK-USD",
+     0.016
+    ]
+   ],
+   "first": "2017-07-05",
+   "last": "2024-10-18",
+   "plain": {
+    "size": 1.8995178428953006,
+    "size_usual": 1.781058020383233
+   },
+   "tests": {
+    "size": {
+     "estimate": 0.1184598225120676,
+     "ci95": [
+      -0.004363867706893523,
+      0.24128351273102872
+     ],
+     "p_two_sided": 0.058537490503775734,
+     "df": 95,
+     "block": 28,
+     "holm_passed": false,
+     "consistency": {
+      "checked": [
+       "before 2019",
+       "2019 to 2021",
+       "2022 to Oct 2024",
+       "coins",
+       "shares"
+      ],
+      "same_way": [
+       "before 2019",
+       "2019 to 2021",
+       "2022 to Oct 2024",
+       "coins",
+       "shares"
+      ],
+      "all_same": true
+     }
+    }
+   },
+   "name": "Volatility squeeze",
+   "hash": "c230b4c36ea5838bd68ea1ae"
+  },
+  "demo:range_low": {
+   "type": "directional",
+   "verdict": "No clear difference",
+   "rests_on": null,
+   "episodes": 2128,
+   "weeks": 343,
+   "assets": 86,
+   "coins": 629,
+   "shares": 1499,
+   "coin_assets": 25,
+   "share_assets": 61,
+   "top_assets": [
+    [
+     "BCH-USD",
+     0.016
+    ],
+    [
+     "FIL-USD",
+     0.016
+    ],
+    [
+     "JNJ",
+     0.016
+    ]
+   ],
+   "first": "2017-07-11",
+   "last": "2024-10-10",
+   "plain": {
+    "gain_first": 0.47603383458646614,
+    "gain_first_usual": 0.5029986235191024,
+    "loss_first": 0.48355263157894735,
+    "loss_first_usual": 0.4554146756283008,
+    "move": 0.1383662707672889,
+    "move_usual": 0.18463296935330967,
+    "higher": 0.5296052631578947,
+    "higher_usual": 0.5312488800580771
+   },
+   "tests": {
+    "first": {
+     "estimate": -0.05510274488328287,
+     "ci95": [
+      -0.1421674499580096,
+      0.031961960191443844
+     ],
+     "p_two_sided": 0.21200281644900926,
+     "df": 94,
+     "block": 28,
+     "holm_passed": false,
+     "consistency": {
+      "checked": [
+       "before 2019",
+       "2019 to 2021",
+       "2022 to Oct 2024",
+       "coins",
+       "shares"
+      ],
+      "same_way": [
+       "2019 to 2021",
+       "2022 to Oct 2024",
+       "coins",
+       "shares"
+      ],
+      "all_same": false
+     }
+    },
+    "move": {
+     "estimate": -0.04626669858602073,
+     "ci95": [
+      -0.3420924043767729,
+      0.24955900720473145
+     ],
+     "p_two_sided": 0.7568432418764357,
+     "df": 94,
+     "block": 28,
+     "holm_passed": false,
+     "consistency": {
+      "checked": [
+       "before 2019",
+       "2019 to 2021",
+       "2022 to Oct 2024",
+       "coins",
+       "shares"
+      ],
+      "same_way": [
+       "2019 to 2021",
+       "2022 to Oct 2024",
+       "coins"
+      ],
+      "all_same": false
+     }
+    }
+   },
+   "name": "Oversold in a range",
+   "hash": "c503fa08d7763170e22a7aaa"
+  },
+  "demo:near_support": {
+   "type": "directional",
+   "verdict": "No clear difference",
+   "rests_on": null,
+   "episodes": 2975,
+   "weeks": 372,
+   "assets": 86,
+   "coins": 836,
+   "shares": 2139,
+   "coin_assets": 25,
+   "share_assets": 61,
+   "top_assets": [
+    [
+     "JNJ",
+     0.017
+    ],
+    [
+     "DIS",
+     0.016
+    ],
+    [
+     "CVX",
+     0.016
+    ]
+   ],
+   "first": "2017-08-16",
+   "last": "2024-10-17",
+   "plain": {
+    "gain_first": 0.506890756302521,
+    "gain_first_usual": 0.5084604493841928,
+    "loss_first": 0.45579831932773107,
+    "loss_first_usual": 0.44877624725664783,
+    "move": 0.24724344078581847,
+    "move_usual": 0.1886614684380768,
+    "higher": 0.5452100840336135,
+    "higher_usual": 0.5378774643265826
+   },
+   "tests": {
+    "first": {
+     "estimate": -0.008591765152755036,
+     "ci95": [
+      -0.0773626456910343,
+      0.06017911538552424
+     ],
+     "p_two_sided": 0.8046097772999685,
+     "df": 93,
+     "block": 28,
+     "holm_passed": false,
+     "consistency": {
+      "checked": [
+       "before 2019",
+       "2019 to 2021",
+       "2022 to Oct 2024",
+       "coins",
+       "shares"
+      ],
+      "same_way": [
+       "before 2019",
+       "2022 to Oct 2024",
+       "coins",
+       "shares"
+      ],
+      "all_same": false
+     }
+    },
+    "move": {
+     "estimate": 0.0585819723477417,
+     "ci95": [
+      -0.19558831863389636,
+      0.3127522633293798
+     ],
+     "p_two_sided": 0.6482399148122854,
+     "df": 93,
+     "block": 28,
+     "holm_passed": false,
+     "consistency": {
+      "checked": [
+       "before 2019",
+       "2019 to 2021",
+       "2022 to Oct 2024",
+       "coins",
+       "shares"
+      ],
+      "same_way": [
+       "before 2019",
+       "2019 to 2021",
+       "shares"
+      ],
+      "all_same": false
+     }
+    }
+   },
+   "name": "Near support in a range",
+   "hash": "a006ceadb83ac847cbfc88dd"
+  },
+  "demo:overextended": {
+   "type": "directional",
+   "verdict": "No clear difference",
+   "rests_on": null,
+   "episodes": 4817,
+   "weeks": 375,
+   "assets": 86,
+   "coins": 1399,
+   "shares": 3418,
+   "coin_assets": 25,
+   "share_assets": 61,
+   "top_assets": [
+    [
+     "LTC-USD",
+     0.016
+    ],
+    [
+     "BTC-USD",
+     0.015
+    ],
+    [
+     "GOOGL",
+     0.015
+    ]
+   ],
+   "first": "2017-06-03",
+   "last": "2024-10-18",
+   "plain": {
+    "gain_first": 0.5111064978202201,
+    "gain_first_usual": 0.5178530030873366,
+    "loss_first": 0.4492422669711439,
+    "loss_first_usual": 0.4400908042359269,
+    "move": 0.39817727618581733,
+    "move_usual": 0.2834511918913364,
+    "higher": 0.5412082208843678,
+    "higher_usual": 0.5534014161612733
+   },
+   "tests": {
+    "first": {
+     "estimate": -0.01589796800233341,
+     "ci95": [
+      -0.07699792355033269,
+      0.045201987545665866
+     ],
+     "p_two_sided": 0.6067033672935231,
+     "df": 96,
+     "block": 28,
+     "holm_passed": false,
+     "consistency": {
+      "checked": [
+       "before 2019",
+       "2019 to 2021",
+       "2022 to Oct 2024",
+       "coins",
+       "shares"
+      ],
+      "same_way": [
+       "before 2019",
+       "shares"
+      ],
+      "all_same": false
+     }
+    },
+    "move": {
+     "estimate": 0.11472608429448099,
+     "ci95": [
+      -0.16424044302714447,
+      0.39369261161610647
+     ],
+     "p_two_sided": 0.4163309655972578,
+     "df": 96,
+     "block": 28,
+     "holm_passed": false,
+     "consistency": {
+      "checked": [
+       "before 2019",
+       "2019 to 2021",
+       "2022 to Oct 2024",
+       "coins",
+       "shares"
+      ],
+      "same_way": [
+       "2019 to 2021",
+       "2022 to Oct 2024",
+       "coins"
+      ],
+      "all_same": false
+     }
+    }
+   },
+   "name": "Overextended",
+   "hash": "3ce72f3edff6263c2bd7b9f8"
+  },
+  "demo:btc_filter": {
+   "type": "filter",
+   "verdict": null,
+   "note": "A filter for other Sets: it is not studied on its own.",
+   "name": "Bitcoin trend filter",
+   "hash": "2a9f34326dd1e4d447c50653"
+  }
+ },
+ "through": "2024-10-29",
+ "start": "2014-09-17",
+ "note": "Worked out by what_followed_run.py on the saved daily prices (25 coins, 61 US shares), Sep 2014 to 29 Oct 2024; Trend alignment re-run after the weekly-candle fix."
+}

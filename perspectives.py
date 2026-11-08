@@ -242,28 +242,42 @@ def followed_card(doc: dict | None, key: str | None = None) -> dict | None:
         title += f" · {_month(data.get('start', s['first']))} to {_month(data.get('through', s['last']))}"
         if s.get("coin_assets") is not None:
             lines.append(f"Studied on {s['coin_assets']} major coins and {s['share_assets']} large US shares.")
-        lines.append(f"Turned Yes {s['episodes']} separate times, in {s['weeks']} different weeks.")
+        lines.append(f"Turned Yes {s['episodes']:,} separate times, in {s['weeks']:,} different weeks.")
         n = s["plain"]
         if s["type"] == "neutral":
-            lines.append(f"Size of the move after 10 candles, either way: {n['size']:.1f} typical moves on "
+            lines.append(f"Size of the move after 10 daily candles, either way: {n['size']:.1f} typical moves on "
                          f"average (comparable days {n['size_usual']:.1f}).")
         else:
             lines.append(f"Rose a typical move before falling one: {n['gain_first']:.0%} of the time "
                          f"(comparable days {n['gain_first_usual']:.0%}); fell one first: {n['loss_first']:.0%} "
                          f"({n['loss_first_usual']:.0%}).")
-            lines.append(f"After 10 candles: {_signed(n['move'])} typical moves on average (comparable days "
+            lines.append(f"After 10 daily candles: {_signed(n['move'])} typical moves on average (comparable days "
                          f"{_signed(n['move_usual'])}); finished higher {n['higher']:.0%} of the time "
                          f"({n['higher_usual']:.0%}).")
-        top = ", ".join(f"{a.replace('-USD', '')} {v:.0%}" for a, v in s.get("top_assets") or [])
-        lines.append(f"From {s['coins']} coin and {s['shares']} share episodes; most from {top}.")
-        m = s.get("rests_on") or next(iter(s.get("tests") or {}), None)
-        cons = ((s.get("tests") or {}).get(m) or {}).get("consistency") or {}
-        if cons.get("checked"):
+        top = s.get("top_assets") or []
+        if top and top[0][1] >= 0.1:
+            lines.append(f"From {s['coins']:,} coin and {s['shares']:,} share episodes; most from "
+                         + ", ".join(f"{a.replace('-USD', '')} {v:.0%}" for a, v in top) + ".")
+        else:
+            lines.append(f"From {s['coins']:,} coin and {s['shares']:,} share episodes, spread across assets "
+                         f"(none above {max([v for _, v in top] or [0]):.0%}).")
+        m = s.get("rests_on")
+        test = ((s.get("tests") or {}).get(m) or {}) if m else {}
+        cons = test.get("consistency") or {}
+        if m and test.get("estimate") is not None:
+            better = test["estimate"] > 0
+            if m == "size":
+                short = "bigger" if better else "smaller"
+                lines.insert(0, f"In short: after it turned Yes, moves were a little {short} than on comparable days.")
+            else:
+                short = "better" if better else "worse"
+                lines.insert(0, f"In short: after it turned Yes, price did a little {short} than on comparable days.")
+        if m and cons.get("checked"):
             periods = [c for c in cons["checked"] if c not in ("coins", "shares")]
             same = [c for c in cons["same_way"] if c in periods]
             markets = [c for c in ("coins", "shares") if c in cons["checked"]]
             both = all(c in cons["same_way"] for c in markets)
-            lines.append(f"Pointed the same way in {len(same)} of {len(periods)} periods"
+            lines.append(f"That difference pointed the same way in {len(same)} of {len(periods)} periods"
                          + (", and in both coins and shares." if markets and both else
                             ", but not in both coins and shares." if markets else "."))
     else:

@@ -147,7 +147,8 @@ def test_card_belongs_to_the_exact_set(monkeypatch):
     card = perspectives.followed_card(doc, "demo:pullback")
     text = " ".join(card["lines"])
     assert "212 separate times" in text and "56%" in text and "comparable days 52%" in text
-    assert "1 of 3 periods" in text and "BTC 5%" in text and card["verdict"] == "No clear difference"
+    assert "none above 5%" in text and "periods" not in text and "In short" not in text
+    assert card["verdict"] == "No clear difference"
     assert perspectives.evidence(doc, "demo:pullback")[0] == "⚖️"
     renamed = dict(doc, name="My pullback")
     assert perspectives.followed_card(renamed) is not None              # a renamed copy keeps its study
@@ -155,6 +156,12 @@ def test_card_belongs_to_the_exact_set(monkeypatch):
     changed["rules"] = [{"changed": True}]
     assert perspectives.followed_card(changed) is None                  # any change to its logic does not
     assert perspectives.evidence(changed)[0] == "🔬"
+    s = fake["sets"]["demo:pullback"]
+    s.update(verdict="Some difference, not established", rests_on="first")
+    s["tests"]["first"]["estimate"] = -0.1
+    lines = perspectives.followed_card(doc, "demo:pullback")["lines"]
+    assert lines[0].startswith("In short") and "worse" in lines[0]
+    assert any("1 of 3 periods" in line and "in both coins and shares" in line for line in lines)
 
 
 def json_copy(d):
