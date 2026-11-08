@@ -75,10 +75,11 @@ def _set_entry(key: str, c: dict) -> dict:
     doc = c.get("doc") or {}
     more = perspectives.explain(key) if c.get("provided") else None
     line = more["line"] if more else str(doc.get("purpose") or "")
-    icon, words = perspectives.EVIDENCE["untested"]
+    icon, words = perspectives.evidence(doc, key)
     return {"key": key, "name": c["name"], "meta": c["meta"], "provided": bool(c.get("provided")),
             "icons": perspectives.chips(doc), "line": line,
             "more": ({k: more[k] for k in ("measures", "why", "not_proven")} if more else None),
+            "followed": perspectives.followed_card(doc, key),
             "evidence": {"icon": icon, "hover": words}}
 
 
@@ -280,7 +281,7 @@ def view(scan: dict, runs: list[dict], latched: list[str], choices: dict, assets
         "snoozes": [{"key": k, "name": names.get(k) or k.split(":", 1)[-1], "until": u} for k, u in snoozes.items()],
         "results_title": results_title,
         "results": [_result_row(r) for r in results[:prism.MAX_ASSETS * 2]],
-        "evidence": dict(zip(("icon", "hover"), perspectives.EVIDENCE["untested"])),
+        "evidence": dict(zip(("icon", "hover"), perspectives.evidence(obj["set"]))),
         "warning": ps.schedule_warning(sched, obj["set"]) if sched.get("kind") == "close" else None,
     }
 

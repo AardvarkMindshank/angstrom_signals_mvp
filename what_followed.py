@@ -53,6 +53,14 @@ WORDS = {"first": "Gain first", "move": "Move after 10 candles", "higher": "Fini
          "size": "Size of the move"}
 
 
+def logic_hash(doc: dict) -> str:
+    """Fingerprint of what a Set checks, ignoring its name and description: a renamed copy keeps its study, any
+    change to its logic does not."""
+    from column_answers import def_hash
+
+    return def_hash({k: v for k, v in (doc or {}).items() if k not in ("name", "purpose", "description", "notes")})
+
+
 def set_type(key: str) -> str:
     return SET_TYPE.get(key, "directional")
 

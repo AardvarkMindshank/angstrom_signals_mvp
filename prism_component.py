@@ -20,6 +20,8 @@ CSS = lattice_component.CSS + """
 .lat.prism .more summary{cursor:pointer;opacity:.75;min-height:24px;list-style:none}
 .lat.prism .more summary::-webkit-details-marker{display:none}
 .lat.prism .more p{margin:4px 0}
+.lat.prism .wf{margin:8px 0 2px;padding:6px 8px;border-left:3px solid rgba(127,127,127,.35);display:grid;gap:3px}
+.lat.prism .wf .v{margin-top:2px}
 .lat.prism .more[open] .m,.lat.prism .more:not([open]) .l{display:none}
 .lat.prism .hstrip{margin:6px 0 10px}
 .lat.prism .hstrip .hrow{display:flex;align-items:center;gap:8px;padding:3px 0;cursor:pointer;border-radius:6px}
@@ -178,6 +180,7 @@ export default function(component) {
         d.appendChild(sm);
         [["What it measures", s.more.measures], ["Why traders watch it", s.more.why], ["What it doesn't prove", s.more.not_proven]]
           .forEach(([h, t]) => { const p = el("p", ""); const b = el("b", "", h + ": "); p.appendChild(b); p.appendChild(document.createTextNode(t)); d.appendChild(p); });
+        if (s.followed) d.appendChild(followedBlock(s.followed));
         d.addEventListener("click", (e) => e.stopPropagation());
         nm.appendChild(d);
       }
@@ -185,6 +188,14 @@ export default function(component) {
       c.appendChild(nm);
       c.appendChild(button("+", "Start a scan with " + s.name, () => act("create", {set: s.key}), "sq"));
       return c;
+  }
+  function followedBlock(f) {        // "What followed": plain lines, muted, no colours (small gaps must not look like skill)
+    const b = el("div", "wf");
+    b.appendChild(el("b", "", f.title));
+    (f.lines || []).forEach((t) => b.appendChild(el("div", "", t)));
+    if (f.verdict) { const v = el("div", "v"); v.appendChild(el("b", "", "Verdict: ")); v.appendChild(document.createTextNode(f.verdict + ".")); b.appendChild(v); }
+    if (f.note) b.appendChild(el("div", "muted", f.note));
+    return b;
   }
   function drawSets() {
     setList.innerHTML = "";

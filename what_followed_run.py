@@ -72,9 +72,7 @@ def answers_step(args) -> int:
 
 
 def _hash(doc: dict) -> str:
-    from column_answers import def_hash
-
-    return def_hash(doc)
+    return wf.logic_hash(doc)
 
 
 def _answers_series(spans: list) -> pd.Series:

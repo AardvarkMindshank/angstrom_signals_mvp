@@ -262,7 +262,7 @@ def set_cell(spec: dict, cell: dict | None, row_pick: str | None = None) -> str:
     tip = f"{spec['name']}: {ANSWER_HOVER[answer]}" + (f" · {cell['why']}" if cell.get("why") else "")
     if cell.get("available"):
         tip += " · " + " ".join(perspectives.data_mark(cell["available"]))
-    tip += " · " + " ".join(perspectives.EVIDENCE["untested"])
+    tip += " · " + " ".join(perspectives.evidence(spec.get("doc"), spec.get("key")))
     if cell.get("error"):
         tip += f" · could not be worked out ({cell['error']})"
     if when:

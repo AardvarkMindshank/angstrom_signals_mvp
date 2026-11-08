@@ -162,6 +162,115 @@ EXPLAIN = {
 }
 
 
+# ----------------------------------------------------------------------------------------------- what followed
+# Results of the "What followed" study (what_followed.py, run in CI on saved prices before the hold-out). A result
+# counts only for the exact Set it was worked out for: change the Set and it goes back to "not yet studied".
+
+RESULTS_FILE = "data/what_followed.json"
+VERDICT_MARK = {
+    "Too few to judge": ("🔬", "What followed: too few past Yes moments to judge."),
+    "No clear difference": ("⚖️", "What followed: no clear difference from comparable days."),
+    "Some difference, not established": ("〰️", "What followed: some difference from comparable days, not "
+                                                "established."),
+    "Consistent difference": ("🧭", "What followed: a consistent difference from comparable days, in the past. "
+                                    "Not a forecast."),
+}
+FILTER_MARK = ("🔗", "A filter for other Sets: it is not studied on its own.")
+TYPICAL = ("A typical move is the asset's average daily range over the 20 candles before the Yes, so Bitcoin and "
+           "Apple can be compared.")
+_results: dict = {}
+
+
+def results() -> dict:
+    if "data" not in _results:
+        import json
+        from pathlib import Path
+
+        try:
+            _results["data"] = json.loads((Path(__file__).resolve().parent / RESULTS_FILE).read_text())
+        except Exception:
+            _results["data"] = {}
+    return _results["data"]
+
+
+def study_for(doc: dict | None, key: str | None = None) -> dict | None:
+    """The study of this exact Set, or None (not studied, or the Set changed since)."""
+    if not doc:
+        return None
+    import what_followed
+
+    try:
+        h = what_followed.logic_hash(doc)
+    except Exception:
+        return None
+    sets = results().get("sets") or {}
+    if key and key in sets and sets[key].get("hash") == h:
+        return sets[key]
+    return next((s for s in sets.values() if s.get("hash") == h), None)
+
+
+def evidence(doc: dict | None, key: str | None = None) -> tuple[str, str]:
+    s = study_for(doc, key)
+    if s is None:
+        return EVIDENCE["untested"]
+    if s.get("type") == "filter":
+        return FILTER_MARK
+    return VERDICT_MARK.get(s.get("verdict"), EVIDENCE["untested"])
+
+
+def _month(day: str) -> str:
+    import pandas as pd
+
+    return pd.Timestamp(day).strftime("%b %Y")
+
+
+def _signed(v: float) -> str:
+    return f"{v:+.1f}"
+
+
+def followed_card(doc: dict | None, key: str | None = None) -> dict | None:
+    """{title, lines, verdict, note} in plain words, or None when this Set has not been studied."""
+    s = study_for(doc, key)
+    if s is None:
+        return None
+    if s.get("type") == "filter":
+        return {"title": "What followed", "lines": [], "verdict": None, "note": FILTER_MARK[1]}
+    data = results()
+    title = "What followed"
+    lines = []
+    if s.get("episodes"):
+        title += f" · {_month(data.get('start', s['first']))} to {_month(data.get('through', s['last']))} · " \
+                 f"{s['assets']} assets"
+        lines.append(f"Turned Yes {s['episodes']} separate times, in {s['weeks']} different weeks.")
+        n = s["plain"]
+        if s["type"] == "neutral":
+            lines.append(f"Size of the move after 10 candles, either way: {n['size']:.1f} typical moves on "
+                         f"average (comparable days {n['size_usual']:.1f}).")
+        else:
+            lines.append(f"Rose a typical move before falling one: {n['gain_first']:.0%} of the time "
+                         f"(comparable days {n['gain_first_usual']:.0%}); fell one first: {n['loss_first']:.0%} "
+                         f"({n['loss_first_usual']:.0%}).")
+            lines.append(f"After 10 candles: {_signed(n['move'])} typical moves on average (comparable days "
+                         f"{_signed(n['move_usual'])}); finished higher {n['higher']:.0%} of the time "
+                         f"({n['higher_usual']:.0%}).")
+        top = ", ".join(f"{a.replace('-USD', '')} {v:.0%}" for a, v in s.get("top_assets") or [])
+        lines.append(f"From {s['coins']} coin and {s['shares']} share episodes; most from {top}.")
+        m = s.get("rests_on") or next(iter(s.get("tests") or {}), None)
+        cons = ((s.get("tests") or {}).get(m) or {}).get("consistency") or {}
+        if cons.get("checked"):
+            periods = [c for c in cons["checked"] if c not in ("coins", "shares")]
+            same = [c for c in cons["same_way"] if c in periods]
+            markets = [c for c in ("coins", "shares") if c in cons["checked"]]
+            both = all(c in cons["same_way"] for c in markets)
+            lines.append(f"Pointed the same way in {len(same)} of {len(periods)} periods"
+                         + (", and in both coins and shares." if markets and both else
+                            ", but not in both coins and shares." if markets else "."))
+    else:
+        lines.append("It has not turned Yes often enough in the saved history to study.")
+    return {"title": title, "lines": lines, "verdict": s.get("verdict"),
+            "note": "Past patterns, measured from the close after each Yes, before costs. Not a forecast. " + TYPICAL}
+
+
 def explain(key: str) -> dict | None:
     """{line, measures, why, not_proven, evidence: (icon, words)} for a provided Group or Set, else None."""
     if key not in EXPLAIN:

@@ -128,3 +128,36 @@ def test_a_real_effect_is_found():
     out = wf.study(per_set, {"s": "directional"}, runs=400)
     assert out["sets"]["s"]["verdict"] == "Consistent difference", out["sets"]["s"]
     assert out["sets"]["s"]["plain"]["gain_first"] > out["sets"]["s"]["plain"]["gain_first_usual"]
+
+
+def test_card_belongs_to_the_exact_set(monkeypatch):
+    import perspectives
+    import prism
+
+    doc = prism.demo_sets()["demo:pullback"]
+    fake = {"start": "2014-09-17", "through": "2024-10-29", "sets": {"demo:pullback": {
+        "type": "directional", "verdict": "No clear difference", "rests_on": None, "episodes": 212, "weeks": 180,
+        "assets": 80, "coins": 70, "shares": 142, "top_assets": [["BTC-USD", 0.05]], "first": "2014-10-01",
+        "last": "2024-10-01", "hash": wf.logic_hash(doc),
+        "plain": {"gain_first": 0.56, "gain_first_usual": 0.52, "loss_first": 0.4, "loss_first_usual": 0.42,
+                  "move": 0.31, "move_usual": 0.22, "higher": 0.55, "higher_usual": 0.53},
+        "tests": {"first": {"consistency": {"checked": ["before 2019", "2019 to 2021", "2022 to Oct 2024", "coins",
+                                                        "shares"], "same_way": ["before 2019", "coins", "shares"]}}}}}}
+    monkeypatch.setitem(perspectives._results, "data", fake)
+    card = perspectives.followed_card(doc, "demo:pullback")
+    text = " ".join(card["lines"])
+    assert "212 separate times" in text and "56%" in text and "comparable days 52%" in text
+    assert "1 of 3 periods" in text and "BTC 5%" in text and card["verdict"] == "No clear difference"
+    assert perspectives.evidence(doc, "demo:pullback")[0] == "⚖️"
+    renamed = dict(doc, name="My pullback")
+    assert perspectives.followed_card(renamed) is not None              # a renamed copy keeps its study
+    changed = json_copy(doc)
+    changed["rules"] = [{"changed": True}]
+    assert perspectives.followed_card(changed) is None                  # any change to its logic does not
+    assert perspectives.evidence(changed)[0] == "🔬"
+
+
+def json_copy(d):
+    import json
+
+    return json.loads(json.dumps(d))

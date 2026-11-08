@@ -94,11 +94,13 @@ def set_item(spec: dict, result: dict) -> dict:
         pass
     return {"key": spec["key"], "part": "sets", "title": f"{mark} {spec['name']} · {word}", "answer": answer,
             "rows": lines, "note": row.get("reason") or "", "how_sure": row.get("how_sure"),
-            "status": status_marks(answer, row.get("available"), row.get("available_detail")),
+            "status": status_marks(answer, row.get("available"), row.get("available_detail"), spec.get("doc"),
+                                   spec.get("key")),
             "lattice": lattice_pick(spec), "name": spec["name"]}
 
 
-def status_marks(answer: str, available: str | None, detail: str | None = None) -> list[tuple[str, str]]:
+def status_marks(answer: str, available: str | None, detail: str | None = None, doc: dict | None = None,
+                 key: str | None = None) -> list[tuple[str, str]]:
     """The three-line status: conditions met, data complete, evidence. (icon, words) each."""
     import perspectives
 
@@ -107,7 +109,7 @@ def status_marks(answer: str, available: str | None, detail: str | None = None) 
     if detail and detail != "All readings available":
         data_words += f": {detail}"
     return [(mark, tc.ANSWER_HOVER[answer if answer in tc.ANSWER_HOVER else "unknown"]), (data_icon, data_words),
-            perspectives.EVIDENCE["untested"]]
+            perspectives.evidence(doc, key)]
 
 
 def background_item(spec: dict, cell: dict | None) -> dict:
