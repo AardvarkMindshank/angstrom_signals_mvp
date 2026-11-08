@@ -1,0 +1,2752 @@
+{
+ "code_sha256": "793e3cb4a1e696581da1419c339027447d384cdc64125b9ed95769e160dbfaab",
+ "cutoffs_per_dataset_minimum": 50,
+ "datasets": [
+  {
+   "description": "500 days of synthetic 15-minute crypto bars (seed 11), grouped like the chart",
+   "name": "synthetic-crypto-s11"
+  },
+  {
+   "description": "357 sessions of synthetic 15-minute share bars (seed 23), New York hours",
+   "name": "synthetic-equity-s23"
+  },
+  {
+   "description": "synthetic stored ETF flows with first-seen times, next-day revisions and a backfill (seed 5)",
+   "name": "synthetic-etf-flows-s5"
+  },
+  {
+   "description": "synthetic stored stablecoin supply with first-seen times, next-day revisions and a backfill (seed 5)",
+   "name": "synthetic-stablecoins-s5"
+  },
+  {
+   "description": "synthetic stored sentiment, twice daily with gaps and thin-news days (seed 9)",
+   "name": "synthetic-sentiment-market-crypto"
+  },
+  {
+   "description": "synthetic stored sentiment, twice daily with gaps and thin-news days (seed 9)",
+   "name": "synthetic-sentiment-market-stocks"
+  },
+  {
+   "description": "synthetic stored sentiment, twice daily with gaps and thin-news days (seed 9)",
+   "name": "synthetic-sentiment-crypto-synthetic-coin"
+  },
+  {
+   "description": "synthetic stored sentiment, twice daily with gaps and thin-news days (seed 9)",
+   "name": "synthetic-sentiment-equity-SYNTH"
+  },
+  {
+   "description": "frozen development daily data for BTC-USD, before 2024-10-30",
+   "name": "dev-BTC-USD"
+  },
+  {
+   "description": "frozen development daily data for SOL-USD, before 2024-10-30",
+   "name": "dev-SOL-USD"
+  },
+  {
+   "description": "frozen development daily data for AAPL, before 2024-10-30",
+   "name": "dev-AAPL"
+  },
+  {
+   "description": "frozen development daily data for JPM, before 2024-10-30",
+   "name": "dev-JPM"
+  }
+ ],
+ "generated_by": {
+  "git_commit": "f9621d150d9320d5302983d6f2097264564c2afe",
+  "note": "administrative; not compared",
+  "run_id": "42447899072"
+ },
+ "signals": {
+  "bollinger.position@1": {
+   "15m": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": false,
+    "slice_reason": "synthetic-crypto-s11 T=2023-09-30T10:45:00+00:00: .value.lower: differs by 1.0e-06 (beyond the 1e-09 tolerance)"
+   },
+   "1D": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 142,
+     "poison": 684,
+     "reference": 342,
+     "slice": 342,
+     "timestamps": 342
+    },
+    "cutoffs": 342,
+    "cutoffs_per_dataset": {
+     "dev-AAPL": 66,
+     "dev-BTC-USD": 53,
+     "dev-JPM": 64,
+     "dev-SOL-USD": 50,
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 342
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1W": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 136,
+     "poison": 668,
+     "reference": 334,
+     "slice": 334,
+     "timestamps": 334
+    },
+    "cutoffs": 334,
+    "cutoffs_per_dataset": {
+     "dev-AAPL": 65,
+     "dev-BTC-USD": 51,
+     "dev-JPM": 65,
+     "dev-SOL-USD": 50,
+     "synthetic-crypto-s11": 50,
+     "synthetic-equity-s23": 53
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 334
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": false,
+    "slice_reason": "synthetic-crypto-s11 T=2023-09-30T11:00:00+00:00: .value.standard_score: differs by 5.9e-09 (beyond the 1e-09 tolerance)"
+   },
+   "4h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 224,
+     "reference": 112,
+     "slice": 112,
+     "timestamps": 112
+    },
+    "cutoffs": 112,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 59
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 112
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   }
+  },
+  "flows.btc_etf@1": {
+   "1D": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 14,
+     "poison": 70,
+     "reference": 70,
+     "slice": 0,
+     "timestamps": 70
+    },
+    "cutoffs": 70,
+    "cutoffs_per_dataset": {
+     "synthetic-etf-flows-s5": 70
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 70
+    },
+    "slice_equivalent": false,
+    "slice_reason": "not tested"
+   }
+  },
+  "flows.stablecoin_supply@1": {
+   "1D": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 14,
+     "poison": 70,
+     "reference": 70,
+     "slice": 0,
+     "timestamps": 70
+    },
+    "cutoffs": 70,
+    "cutoffs_per_dataset": {
+     "synthetic-stablecoins-s5": 70
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 70
+    },
+    "slice_equivalent": false,
+    "slice_reason": "not tested"
+   }
+  },
+  "ichimoku.position@1": {
+   "15m": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1D": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 142,
+     "poison": 684,
+     "reference": 342,
+     "slice": 342,
+     "timestamps": 342
+    },
+    "cutoffs": 342,
+    "cutoffs_per_dataset": {
+     "dev-AAPL": 66,
+     "dev-BTC-USD": 53,
+     "dev-JPM": 64,
+     "dev-SOL-USD": 50,
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 342
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1W": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 136,
+     "poison": 668,
+     "reference": 334,
+     "slice": 334,
+     "timestamps": 334
+    },
+    "cutoffs": 334,
+    "cutoffs_per_dataset": {
+     "dev-AAPL": 65,
+     "dev-BTC-USD": 51,
+     "dev-JPM": 65,
+     "dev-SOL-USD": 50,
+     "synthetic-crypto-s11": 50,
+     "synthetic-equity-s23": 53
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 334
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "4h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 224,
+     "reference": 112,
+     "slice": 112,
+     "timestamps": 112
+    },
+    "cutoffs": 112,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 59
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 112
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   }
+  },
+  "levels.zones@1": {
+   "15m": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1D": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 142,
+     "poison": 684,
+     "reference": 342,
+     "slice": 342,
+     "timestamps": 342
+    },
+    "cutoffs": 342,
+    "cutoffs_per_dataset": {
+     "dev-AAPL": 66,
+     "dev-BTC-USD": 53,
+     "dev-JPM": 64,
+     "dev-SOL-USD": 50,
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 342
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1W": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 136,
+     "poison": 668,
+     "reference": 334,
+     "slice": 334,
+     "timestamps": 334
+    },
+    "cutoffs": 334,
+    "cutoffs_per_dataset": {
+     "dev-AAPL": 65,
+     "dev-BTC-USD": 51,
+     "dev-JPM": 65,
+     "dev-SOL-USD": 50,
+     "synthetic-crypto-s11": 50,
+     "synthetic-equity-s23": 53
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "insufficient_data": 69,
+     "ok": 265
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "4h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 224,
+     "reference": 112,
+     "slice": 112,
+     "timestamps": 112
+    },
+    "cutoffs": 112,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 59
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 112
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   }
+  },
+  "ma.position@1": {
+   "15m": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1D": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 142,
+     "poison": 684,
+     "reference": 342,
+     "slice": 342,
+     "timestamps": 342
+    },
+    "cutoffs": 342,
+    "cutoffs_per_dataset": {
+     "dev-AAPL": 66,
+     "dev-BTC-USD": 53,
+     "dev-JPM": 64,
+     "dev-SOL-USD": 50,
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 342
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1W": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 136,
+     "poison": 668,
+     "reference": 334,
+     "slice": 334,
+     "timestamps": 334
+    },
+    "cutoffs": 334,
+    "cutoffs_per_dataset": {
+     "dev-AAPL": 65,
+     "dev-BTC-USD": 51,
+     "dev-JPM": 65,
+     "dev-SOL-USD": 50,
+     "synthetic-crypto-s11": 50,
+     "synthetic-equity-s23": 53
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "insufficient_data": 46,
+     "ok": 288
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "4h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 224,
+     "reference": 112,
+     "slice": 112,
+     "timestamps": 112
+    },
+    "cutoffs": 112,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 59
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 112
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   }
+  },
+  "macd.acceleration@1": {
+   "15m": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1D": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 142,
+     "poison": 684,
+     "reference": 342,
+     "slice": 342,
+     "timestamps": 342
+    },
+    "cutoffs": 342,
+    "cutoffs_per_dataset": {
+     "dev-AAPL": 66,
+     "dev-BTC-USD": 53,
+     "dev-JPM": 64,
+     "dev-SOL-USD": 50,
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 342
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1W": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 136,
+     "poison": 668,
+     "reference": 334,
+     "slice": 334,
+     "timestamps": 334
+    },
+    "cutoffs": 334,
+    "cutoffs_per_dataset": {
+     "dev-AAPL": 65,
+     "dev-BTC-USD": 51,
+     "dev-JPM": 65,
+     "dev-SOL-USD": 50,
+     "synthetic-crypto-s11": 50,
+     "synthetic-equity-s23": 53
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "insufficient_data": 7,
+     "ok": 327
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "4h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 224,
+     "reference": 112,
+     "slice": 112,
+     "timestamps": 112
+    },
+    "cutoffs": 112,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 59
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 112
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   }
+  },
+  "macd.level@1": {
+   "15m": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1D": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 142,
+     "poison": 684,
+     "reference": 342,
+     "slice": 342,
+     "timestamps": 342
+    },
+    "cutoffs": 342,
+    "cutoffs_per_dataset": {
+     "dev-AAPL": 66,
+     "dev-BTC-USD": 53,
+     "dev-JPM": 64,
+     "dev-SOL-USD": 50,
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 342
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1W": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 136,
+     "poison": 668,
+     "reference": 334,
+     "slice": 334,
+     "timestamps": 334
+    },
+    "cutoffs": 334,
+    "cutoffs_per_dataset": {
+     "dev-AAPL": 65,
+     "dev-BTC-USD": 51,
+     "dev-JPM": 65,
+     "dev-SOL-USD": 50,
+     "synthetic-crypto-s11": 50,
+     "synthetic-equity-s23": 53
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "insufficient_data": 7,
+     "ok": 327
+    },
+    "slice_equivalent": false,
+    "slice_reason": "synthetic-crypto-s11 T=2023-10-02T00:00:00+00:00: .available_at: different kinds of value"
+   },
+   "1h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "4h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 224,
+     "reference": 112,
+     "slice": 112,
+     "timestamps": 112
+    },
+    "cutoffs": 112,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 59
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 112
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   }
+  },
+  "momentum.direction@1": {
+   "15m": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1D": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 142,
+     "poison": 684,
+     "reference": 342,
+     "slice": 342,
+     "timestamps": 342
+    },
+    "cutoffs": 342,
+    "cutoffs_per_dataset": {
+     "dev-AAPL": 66,
+     "dev-BTC-USD": 53,
+     "dev-JPM": 64,
+     "dev-SOL-USD": 50,
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 342
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1W": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 136,
+     "poison": 668,
+     "reference": 334,
+     "slice": 334,
+     "timestamps": 334
+    },
+    "cutoffs": 334,
+    "cutoffs_per_dataset": {
+     "dev-AAPL": 65,
+     "dev-BTC-USD": 51,
+     "dev-JPM": 65,
+     "dev-SOL-USD": 50,
+     "synthetic-crypto-s11": 50,
+     "synthetic-equity-s23": 53
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "insufficient_data": 23,
+     "ok": 311
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "4h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 224,
+     "reference": 112,
+     "slice": 112,
+     "timestamps": 112
+    },
+    "cutoffs": 112,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 59
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 112
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   }
+  },
+  "move.seven_day@1": {
+   "15m": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1D": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 142,
+     "poison": 684,
+     "reference": 342,
+     "slice": 342,
+     "timestamps": 342
+    },
+    "cutoffs": 342,
+    "cutoffs_per_dataset": {
+     "dev-AAPL": 66,
+     "dev-BTC-USD": 53,
+     "dev-JPM": 64,
+     "dev-SOL-USD": 50,
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 342
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1W": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 136,
+     "poison": 668,
+     "reference": 334,
+     "slice": 334,
+     "timestamps": 334
+    },
+    "cutoffs": 334,
+    "cutoffs_per_dataset": {
+     "dev-AAPL": 65,
+     "dev-BTC-USD": 51,
+     "dev-JPM": 65,
+     "dev-SOL-USD": 50,
+     "synthetic-crypto-s11": 50,
+     "synthetic-equity-s23": 53
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 334
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "4h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 224,
+     "reference": 112,
+     "slice": 112,
+     "timestamps": 112
+    },
+    "cutoffs": 112,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 59
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 112
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   }
+  },
+  "mtf.alignment@1": {
+   "1D": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 142,
+     "poison": 684,
+     "reference": 342,
+     "slice": 342,
+     "timestamps": 342
+    },
+    "cutoffs": 342,
+    "cutoffs_per_dataset": {
+     "dev-AAPL": 66,
+     "dev-BTC-USD": 53,
+     "dev-JPM": 64,
+     "dev-SOL-USD": 50,
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 342
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   }
+  },
+  "obv.balance@1": {
+   "15m": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": false,
+    "slice_reason": "synthetic-crypto-s11 T=2024-02-04T16:30:00+00:00: .value.obv: differs by 4.4e+04 (beyond the 1e-09 tolerance)"
+   },
+   "1D": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 142,
+     "poison": 684,
+     "reference": 342,
+     "slice": 342,
+     "timestamps": 342
+    },
+    "cutoffs": 342,
+    "cutoffs_per_dataset": {
+     "dev-AAPL": 66,
+     "dev-BTC-USD": 53,
+     "dev-JPM": 64,
+     "dev-SOL-USD": 50,
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 342
+    },
+    "slice_equivalent": false,
+    "slice_reason": "dev-BTC-USD T=2022-06-28T00:00:00+00:00: .value.obv: differs by 1.2e+12 (beyond the 1e-09 tolerance)"
+   },
+   "1W": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 136,
+     "poison": 668,
+     "reference": 334,
+     "slice": 334,
+     "timestamps": 334
+    },
+    "cutoffs": 334,
+    "cutoffs_per_dataset": {
+     "dev-AAPL": 65,
+     "dev-BTC-USD": 51,
+     "dev-JPM": 65,
+     "dev-SOL-USD": 50,
+     "synthetic-crypto-s11": 50,
+     "synthetic-equity-s23": 53
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 334
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": false,
+    "slice_reason": "synthetic-crypto-s11 T=2024-02-04T17:00:00+00:00: .value.obv: differs by 3.8e+05 (beyond the 1e-09 tolerance)"
+   },
+   "4h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 224,
+     "reference": 112,
+     "slice": 112,
+     "timestamps": 112
+    },
+    "cutoffs": 112,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 59
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 112
+    },
+    "slice_equivalent": false,
+    "slice_reason": "synthetic-crypto-s11 T=2024-06-18T08:00:00+00:00: .value.obv: differs by 5.2e+05 (beyond the 1e-09 tolerance)"
+   }
+  },
+  "positioning.liquidation_levels@1": {
+   "1h": {
+    "algorithm": "not_certified",
+    "checks": {},
+    "cutoffs": 0,
+    "failures": 0,
+    "reason": "Derivatives have no stored history (live only); see decision E.",
+    "result_statuses": {},
+    "slice_equivalent": false,
+    "slice_reason": "not tested"
+   }
+  },
+  "positioning.liquidations@1": {
+   "1h": {
+    "algorithm": "not_certified",
+    "checks": {},
+    "cutoffs": 0,
+    "failures": 0,
+    "reason": "Derivatives have no stored history (live only); see decision E.",
+    "result_statuses": {},
+    "slice_equivalent": false,
+    "slice_reason": "not tested"
+   }
+  },
+  "positioning.oi_price@1": {
+   "1h": {
+    "algorithm": "not_certified",
+    "checks": {},
+    "cutoffs": 0,
+    "failures": 0,
+    "reason": "Derivatives have no stored history (live only); see decision E.",
+    "result_statuses": {},
+    "slice_equivalent": false,
+    "slice_reason": "not tested"
+   }
+  },
+  "regime.observation@1": {
+   "15m": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1D": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 142,
+     "poison": 684,
+     "reference": 342,
+     "slice": 342,
+     "timestamps": 342
+    },
+    "cutoffs": 342,
+    "cutoffs_per_dataset": {
+     "dev-AAPL": 66,
+     "dev-BTC-USD": 53,
+     "dev-JPM": 64,
+     "dev-SOL-USD": 50,
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 342
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1W": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 136,
+     "poison": 668,
+     "reference": 334,
+     "slice": 334,
+     "timestamps": 334
+    },
+    "cutoffs": 334,
+    "cutoffs_per_dataset": {
+     "dev-AAPL": 65,
+     "dev-BTC-USD": 51,
+     "dev-JPM": 65,
+     "dev-SOL-USD": 50,
+     "synthetic-crypto-s11": 50,
+     "synthetic-equity-s23": 53
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "insufficient_data": 69,
+     "ok": 265
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "4h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 224,
+     "reference": 112,
+     "slice": 112,
+     "timestamps": 112
+    },
+    "cutoffs": 112,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 59
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 112
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   }
+  },
+  "regime.state@1": {
+   "15m": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1D": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 142,
+     "poison": 684,
+     "reference": 342,
+     "slice": 342,
+     "timestamps": 342
+    },
+    "cutoffs": 342,
+    "cutoffs_per_dataset": {
+     "dev-AAPL": 66,
+     "dev-BTC-USD": 53,
+     "dev-JPM": 64,
+     "dev-SOL-USD": 50,
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 342
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1W": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 136,
+     "poison": 668,
+     "reference": 334,
+     "slice": 334,
+     "timestamps": 334
+    },
+    "cutoffs": 334,
+    "cutoffs_per_dataset": {
+     "dev-AAPL": 65,
+     "dev-BTC-USD": 51,
+     "dev-JPM": 65,
+     "dev-SOL-USD": 50,
+     "synthetic-crypto-s11": 50,
+     "synthetic-equity-s23": 53
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 334
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "4h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 224,
+     "reference": 112,
+     "slice": 112,
+     "timestamps": 112
+    },
+    "cutoffs": 112,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 59
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 112
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   }
+  },
+  "rsi.level@1": {
+   "15m": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1D": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 142,
+     "poison": 684,
+     "reference": 342,
+     "slice": 342,
+     "timestamps": 342
+    },
+    "cutoffs": 342,
+    "cutoffs_per_dataset": {
+     "dev-AAPL": 66,
+     "dev-BTC-USD": 53,
+     "dev-JPM": 64,
+     "dev-SOL-USD": 50,
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 342
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1W": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 136,
+     "poison": 668,
+     "reference": 334,
+     "slice": 334,
+     "timestamps": 334
+    },
+    "cutoffs": 334,
+    "cutoffs_per_dataset": {
+     "dev-AAPL": 65,
+     "dev-BTC-USD": 51,
+     "dev-JPM": 65,
+     "dev-SOL-USD": 50,
+     "synthetic-crypto-s11": 50,
+     "synthetic-equity-s23": 53
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 334
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "4h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 224,
+     "reference": 112,
+     "slice": 112,
+     "timestamps": 112
+    },
+    "cutoffs": 112,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 59
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 112
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   }
+  },
+  "sentiment.asset@1": {
+   "1D": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 28,
+     "poison": 140,
+     "reference": 140,
+     "slice": 0,
+     "timestamps": 140
+    },
+    "cutoffs": 140,
+    "cutoffs_per_dataset": {
+     "synthetic-sentiment-crypto-synthetic-coin": 70,
+     "synthetic-sentiment-equity-SYNTH": 70
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 138,
+     "stale": 2
+    },
+    "slice_equivalent": false,
+    "slice_reason": "not tested"
+   }
+  },
+  "sentiment.market@1": {
+   "1D": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 28,
+     "poison": 140,
+     "reference": 140,
+     "slice": 0,
+     "timestamps": 140
+    },
+    "cutoffs": 140,
+    "cutoffs_per_dataset": {
+     "synthetic-sentiment-market-crypto": 70,
+     "synthetic-sentiment-market-stocks": 70
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 138,
+     "stale": 2
+    },
+    "slice_equivalent": false,
+    "slice_reason": "not tested"
+   }
+  },
+  "stochastic.level@1": {
+   "15m": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1D": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 142,
+     "poison": 684,
+     "reference": 342,
+     "slice": 342,
+     "timestamps": 342
+    },
+    "cutoffs": 342,
+    "cutoffs_per_dataset": {
+     "dev-AAPL": 66,
+     "dev-BTC-USD": 53,
+     "dev-JPM": 64,
+     "dev-SOL-USD": 50,
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 342
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1W": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 136,
+     "poison": 668,
+     "reference": 334,
+     "slice": 334,
+     "timestamps": 334
+    },
+    "cutoffs": 334,
+    "cutoffs_per_dataset": {
+     "dev-AAPL": 65,
+     "dev-BTC-USD": 51,
+     "dev-JPM": 65,
+     "dev-SOL-USD": 50,
+     "synthetic-crypto-s11": 50,
+     "synthetic-equity-s23": 53
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 334
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "4h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 224,
+     "reference": 112,
+     "slice": 112,
+     "timestamps": 112
+    },
+    "cutoffs": 112,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 59
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 112
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   }
+  },
+  "structure.breaks@1": {
+   "15m": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1D": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 142,
+     "poison": 684,
+     "reference": 342,
+     "slice": 342,
+     "timestamps": 342
+    },
+    "cutoffs": 342,
+    "cutoffs_per_dataset": {
+     "dev-AAPL": 66,
+     "dev-BTC-USD": 53,
+     "dev-JPM": 64,
+     "dev-SOL-USD": 50,
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 342
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1W": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 136,
+     "poison": 668,
+     "reference": 334,
+     "slice": 334,
+     "timestamps": 334
+    },
+    "cutoffs": 334,
+    "cutoffs_per_dataset": {
+     "dev-AAPL": 65,
+     "dev-BTC-USD": 51,
+     "dev-JPM": 65,
+     "dev-SOL-USD": 50,
+     "synthetic-crypto-s11": 50,
+     "synthetic-equity-s23": 53
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 334
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "4h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 224,
+     "reference": 112,
+     "slice": 112,
+     "timestamps": 112
+    },
+    "cutoffs": 112,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 59
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 112
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   }
+  },
+  "structure.swings@1": {
+   "15m": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1D": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 142,
+     "poison": 684,
+     "reference": 342,
+     "slice": 342,
+     "timestamps": 342
+    },
+    "cutoffs": 342,
+    "cutoffs_per_dataset": {
+     "dev-AAPL": 66,
+     "dev-BTC-USD": 53,
+     "dev-JPM": 64,
+     "dev-SOL-USD": 50,
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 342
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1W": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 136,
+     "poison": 668,
+     "reference": 334,
+     "slice": 334,
+     "timestamps": 334
+    },
+    "cutoffs": 334,
+    "cutoffs_per_dataset": {
+     "dev-AAPL": 65,
+     "dev-BTC-USD": 51,
+     "dev-JPM": 65,
+     "dev-SOL-USD": 50,
+     "synthetic-crypto-s11": 50,
+     "synthetic-equity-s23": 53
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "insufficient_data": 24,
+     "ok": 310
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "4h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 224,
+     "reference": 112,
+     "slice": 112,
+     "timestamps": 112
+    },
+    "cutoffs": 112,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 59
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 112
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   }
+  },
+  "ta.divergence.macd@1": {
+   "15m": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1D": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 142,
+     "poison": 684,
+     "reference": 342,
+     "slice": 342,
+     "timestamps": 342
+    },
+    "cutoffs": 342,
+    "cutoffs_per_dataset": {
+     "dev-AAPL": 66,
+     "dev-BTC-USD": 53,
+     "dev-JPM": 64,
+     "dev-SOL-USD": 50,
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 342
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1W": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 136,
+     "poison": 668,
+     "reference": 334,
+     "slice": 334,
+     "timestamps": 334
+    },
+    "cutoffs": 334,
+    "cutoffs_per_dataset": {
+     "dev-AAPL": 65,
+     "dev-BTC-USD": 51,
+     "dev-JPM": 65,
+     "dev-SOL-USD": 50,
+     "synthetic-crypto-s11": 50,
+     "synthetic-equity-s23": 53
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "insufficient_data": 69,
+     "ok": 265
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "4h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 224,
+     "reference": 112,
+     "slice": 112,
+     "timestamps": 112
+    },
+    "cutoffs": 112,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 59
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 112
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   }
+  },
+  "ta.divergence.rsi@1": {
+   "15m": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1D": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 142,
+     "poison": 684,
+     "reference": 342,
+     "slice": 342,
+     "timestamps": 342
+    },
+    "cutoffs": 342,
+    "cutoffs_per_dataset": {
+     "dev-AAPL": 66,
+     "dev-BTC-USD": 53,
+     "dev-JPM": 64,
+     "dev-SOL-USD": 50,
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 342
+    },
+    "slice_equivalent": false,
+    "slice_reason": "dev-AAPL T=2024-02-20T20:59:59+00:00: .value.events[0].indicator_pivots[0].time: 2023-05-15T00:00:00+00:00 vs 2023-05-16T00:00:00+00:00"
+   },
+   "1W": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 136,
+     "poison": 668,
+     "reference": 334,
+     "slice": 334,
+     "timestamps": 334
+    },
+    "cutoffs": 334,
+    "cutoffs_per_dataset": {
+     "dev-AAPL": 65,
+     "dev-BTC-USD": 51,
+     "dev-JPM": 65,
+     "dev-SOL-USD": 50,
+     "synthetic-crypto-s11": 50,
+     "synthetic-equity-s23": 53
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "insufficient_data": 69,
+     "ok": 265
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "4h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 224,
+     "reference": 112,
+     "slice": 112,
+     "timestamps": 112
+    },
+    "cutoffs": 112,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 59
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 112
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   }
+  },
+  "trend.direction@1": {
+   "15m": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1D": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 142,
+     "poison": 684,
+     "reference": 342,
+     "slice": 342,
+     "timestamps": 342
+    },
+    "cutoffs": 342,
+    "cutoffs_per_dataset": {
+     "dev-AAPL": 66,
+     "dev-BTC-USD": 53,
+     "dev-JPM": 64,
+     "dev-SOL-USD": 50,
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 342
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1W": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 136,
+     "poison": 668,
+     "reference": 334,
+     "slice": 334,
+     "timestamps": 334
+    },
+    "cutoffs": 334,
+    "cutoffs_per_dataset": {
+     "dev-AAPL": 65,
+     "dev-BTC-USD": 51,
+     "dev-JPM": 65,
+     "dev-SOL-USD": 50,
+     "synthetic-crypto-s11": 50,
+     "synthetic-equity-s23": 53
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "insufficient_data": 46,
+     "ok": 288
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "4h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 224,
+     "reference": 112,
+     "slice": 112,
+     "timestamps": 112
+    },
+    "cutoffs": 112,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 59
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 112
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   }
+  },
+  "volume.cmf@1": {
+   "15m": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1D": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 142,
+     "poison": 684,
+     "reference": 342,
+     "slice": 342,
+     "timestamps": 342
+    },
+    "cutoffs": 342,
+    "cutoffs_per_dataset": {
+     "dev-AAPL": 66,
+     "dev-BTC-USD": 53,
+     "dev-JPM": 64,
+     "dev-SOL-USD": 50,
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 342
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1W": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 136,
+     "poison": 668,
+     "reference": 334,
+     "slice": 334,
+     "timestamps": 334
+    },
+    "cutoffs": 334,
+    "cutoffs_per_dataset": {
+     "dev-AAPL": 65,
+     "dev-BTC-USD": 51,
+     "dev-JPM": 65,
+     "dev-SOL-USD": 50,
+     "synthetic-crypto-s11": 50,
+     "synthetic-equity-s23": 53
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 334
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "4h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 224,
+     "reference": 112,
+     "slice": 112,
+     "timestamps": 112
+    },
+    "cutoffs": 112,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 59
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 112
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   }
+  },
+  "volume.heavy_candle@1": {
+   "15m": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1D": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 142,
+     "poison": 684,
+     "reference": 342,
+     "slice": 342,
+     "timestamps": 342
+    },
+    "cutoffs": 342,
+    "cutoffs_per_dataset": {
+     "dev-AAPL": 66,
+     "dev-BTC-USD": 53,
+     "dev-JPM": 64,
+     "dev-SOL-USD": 50,
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 342
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1W": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 136,
+     "poison": 668,
+     "reference": 334,
+     "slice": 334,
+     "timestamps": 334
+    },
+    "cutoffs": 334,
+    "cutoffs_per_dataset": {
+     "dev-AAPL": 65,
+     "dev-BTC-USD": 51,
+     "dev-JPM": 65,
+     "dev-SOL-USD": 50,
+     "synthetic-crypto-s11": 50,
+     "synthetic-equity-s23": 53
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 334
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "4h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 224,
+     "reference": 112,
+     "slice": 112,
+     "timestamps": 112
+    },
+    "cutoffs": 112,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 59
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 112
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   }
+  },
+  "volume.relative@1": {
+   "15m": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1D": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 142,
+     "poison": 684,
+     "reference": 342,
+     "slice": 342,
+     "timestamps": 342
+    },
+    "cutoffs": 342,
+    "cutoffs_per_dataset": {
+     "dev-AAPL": 66,
+     "dev-BTC-USD": 53,
+     "dev-JPM": 64,
+     "dev-SOL-USD": 50,
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 342
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1W": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 136,
+     "poison": 668,
+     "reference": 334,
+     "slice": 334,
+     "timestamps": 334
+    },
+    "cutoffs": 334,
+    "cutoffs_per_dataset": {
+     "dev-AAPL": 65,
+     "dev-BTC-USD": 51,
+     "dev-JPM": 65,
+     "dev-SOL-USD": 50,
+     "synthetic-crypto-s11": 50,
+     "synthetic-equity-s23": 53
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 334
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "4h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 224,
+     "reference": 112,
+     "slice": 112,
+     "timestamps": 112
+    },
+    "cutoffs": 112,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 59
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 112
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   }
+  }
+ },
+ "suite_version": 2
+}
