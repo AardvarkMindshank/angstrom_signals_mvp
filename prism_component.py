@@ -186,60 +186,6 @@ export default function(component) {
       c.appendChild(button("+", "Start a scan with " + s.name, () => act("create", {set: s.key}), "sq"));
       return c;
   }
-  // Visualize History: one thin row per asset on a shared time axis; green = Yes, amber = Unknown. Tap a row to see
-  // the Set as bands on that asset's price chart.
-  function historyStrip(s) {
-    const h = s.history, box = el("div", "hstrip");
-    const day = (t) => Date.parse(t + "T00:00:00Z");
-    const t1 = day(h.end || "2020-01-02") + 864e5;
-    const YEARS = [["1Y", 1], ["3Y", 3], ["10Y", 10], ["All", 0]];
-    const pickYears = window.__prismHistYears === undefined ? 10 : window.__prismHistYears;
-    const tStart = day(h.start || "2020-01-01");
-    const t0 = pickYears ? Math.max(tStart, t1 - pickYears * 365.25 * 864e5) : tStart, span = Math.max(1, t1 - t0);
-    const head = el("div", "row");
-    head.appendChild(el("span", "muted", "🕰️ Visualize History · green = Yes, amber = Unknown, clear = No · tap a row to see it on the price chart"));
-    const seg = el("span", "hseg");
-    YEARS.forEach(([word, years]) => {
-      const b = button(word, years ? `The last ${years} year${years > 1 ? "s" : ""}` : "Everything there is", () => {
-        window.__prismHistYears = years; redraw(); });
-      if (years === pickYears) b.classList.add("on");
-      seg.appendChild(b);
-    });
-    head.appendChild(seg);
-    box.appendChild(head);
-    const NS = "http://www.w3.org/2000/svg";
-    (h.rows || []).forEach((r) => {
-      const row = el("div", "hrow");
-      row.setAttribute("role", "button"); row.tabIndex = 0;
-      const yes = r.spans.filter((x) => x[2] === "yes").length;
-      row.title = r.spans.length ? `${r.name}: Yes ${yes} time${yes === 1 ? "" : "s"} since ${r.spans[0][0].slice(0, 4)}. Tap to see it on the chart.`
-                                 : `${r.name}: no long daily history available`;
-      row.appendChild(el("span", "hname", r.name));
-      const svg = document.createElementNS(NS, "svg");
-      svg.setAttribute("viewBox", "0 0 1000 16"); svg.setAttribute("preserveAspectRatio", "none");
-      r.spans.forEach(([a, b, ans]) => {
-        if (ans === "no" || day(b) + 864e5 < t0) return;
-        const from = Math.max(day(a), t0);
-        const x = (from - t0) / span * 1000, w = Math.max(0.6, (day(b) + 864e5 - from) / span * 1000);
-        const rect = document.createElementNS(NS, "rect");
-        rect.setAttribute("x", x); rect.setAttribute("y", 0); rect.setAttribute("width", w); rect.setAttribute("height", 16);
-        rect.setAttribute("fill", ans === "yes" ? "rgba(22,163,74,.85)" : "rgba(217,119,6,.55)");
-        svg.appendChild(rect);
-      });
-      row.appendChild(svg);
-      const open = () => act("history_open", {scan: s.id, kind: r.kind, id: r.id, name: r.name});
-      row.addEventListener("click", open);
-      row.addEventListener("keydown", (e) => { if (e.key === "Enter") open(); });
-      box.appendChild(row);
-    });
-    const ax = el("div", "hax");
-    const y0 = new Date(t0).getUTCFullYear(), y1 = new Date(t1).getUTCFullYear();
-    ax.appendChild(el("span", "", String(y0))); ax.appendChild(el("span", "", String(Math.round((y0 + y1) / 2))));
-    ax.appendChild(el("span", "", String(y1)));
-    box.appendChild(ax);
-    return box;
-  }
-
   function drawSets() {
     setList.innerHTML = "";
     const q = qSets.toLowerCase();
@@ -374,7 +320,7 @@ export default function(component) {
     ctl.addEventListener("click", (e) => e.stopPropagation());
     ctl.appendChild(iconButton("play", "Run now on " + s.asset_count + " assets", () => { window.__prismOpen[s.id] = true; act("run", {scan: s.id}); }, "play"));
     ctl.appendChild(iconButton("past", "Run at a past moment", () => { window.__prismPast[s.id] = !window.__prismPast[s.id]; window.__prismOpen[s.id] = true; redraw(); }));
-    const hb = button("🕰️", "Visualize History: this Set on every past day, for each asset", () => {
+    const hb = button("🕰️", s.history ? "Close Visualize History" : "Visualize History: this Set on every past day, for each asset, on a chart under the scans", () => {
       window.__prismOpen[s.id] = true; act(s.history ? "history_close" : "history", {scan: s.id}); }, "sq hist");
     if (s.history) hb.classList.add("on");
     ctl.appendChild(hb);
@@ -392,7 +338,6 @@ export default function(component) {
     if (!open) return c;
     const body = el("div", "body");
     c.appendChild(body);
-    if (s.history) body.appendChild(historyStrip(s));
 
     if (window.__prismPast[s.id]) {
       const r = el("div", "row");

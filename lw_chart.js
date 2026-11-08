@@ -312,7 +312,7 @@ function draw(L, root, data) {
       panes: { separatorColor: theme.grid, separatorHoverColor: theme.muted, enableResize: true },
     },
     grid: { vertLines: { color: theme.grid }, horzLines: { color: theme.grid } },
-    rightPriceScale: { borderColor: theme.grid, scaleMargins: { top: 0.16, bottom: 0.08 } },
+    rightPriceScale: { borderColor: theme.grid, scaleMargins: { top: 0.16, bottom: 0.08 }, mode: data.log_scale ? 1 : 0 },
     leftPriceScale: { visible: hasOsc, borderColor: theme.grid },
     timeScale: {
       borderColor: theme.grid, timeVisible: data.intraday, secondsVisible: false,
@@ -386,6 +386,8 @@ function draw(L, root, data) {
       api = chart.addSeries(L.LineSeries, options, s.pane);
     }
     api.setData(rows);
+    if (data.log_scale && s.type === "line" && s.pane > 0) { try { api.priceScale().applyOptions({ mode: 1 }); } catch (e) { /* older library */ } }
+    if (s.zones && s.zones.some((c) => c)) api.attachPrimitive(new ZoneBlocks(s.zones));
     made[s.id] = api;
     if (paneFirst[s.pane] === undefined) paneFirst[s.pane] = api;
   }

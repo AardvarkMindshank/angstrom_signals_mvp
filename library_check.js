@@ -39,15 +39,17 @@ const { chromium, devices } = require("playwright");
       await page.locator(".lat.prism .chip", { hasText: "Volatility squeeze" }).first().locator("button.sq").first().click();
       await page.waitForSelector(".lat.prism button.hist", { timeout: 60000 }); await page.waitForTimeout(1500);
       await page.locator(".lat.prism button.hist").first().click();
-      await page.waitForSelector(".lat.prism .hstrip .hrow", { timeout: 420000 }); await page.waitForTimeout(1000);
-      const rows = await page.locator(".lat.prism .hstrip .hrow").count();
-      const rects = await page.locator(".lat.prism .hstrip rect").count();
-      check(`${label}: Visualize History draws a row per asset`, rows >= 10, `${rows} rows, ${rects} coloured spans`);
-      check(`${label}: rows show Yes spans`, rects > 20);
-      await page.locator(".lat.prism .hstrip").first().scrollIntoViewIfNeeded();
+      await page.waitForFunction(() => { const r = document.querySelector(".ang-lwc"); return r && r.__chart; }, null, { timeout: 420000 });
+      await page.waitForTimeout(2500);
+      const panes = await page.evaluate(() => document.querySelector(".ang-lwc").__chart.panes().length);
+      check(`${label}: Visualize History draws the chosen asset and a pane per other asset`, panes >= 10, `${panes} panes`);
+      const legend = await page.locator(".ang-lwc-legend").first().innerText();
+      check(`${label}: the legend names the Set`, legend.includes("Volatility squeeze"), legend.replace(/\n/g, " ").slice(0, 120));
+      await page.locator(".ang-lwc").first().scrollIntoViewIfNeeded();
       await page.screenshot({ path: `${out}/${label}_history.png`, fullPage: false });
-      await page.locator(".lat.prism .hstrip .hrow").first().click(); await page.waitForTimeout(4000);
-      check(`${label}: tapping a row opens it on the chart`, (await page.content()).includes("on the") );
+      await page.setViewportSize({ width: 1280, height: 1600 }); await page.waitForTimeout(800);
+      await page.locator(".ang-lwc").first().scrollIntoViewIfNeeded();
+      await page.screenshot({ path: `${out}/${label}_history_tall.png`, fullPage: false });
     }
     check(`${label}: no browser errors`, errors.length === 0, errors.join("; "));
     // The Group editor: no # tags, each condition on its own line, red remove buttons.
