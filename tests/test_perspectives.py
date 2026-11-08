@@ -36,5 +36,6 @@ def test_library_chips_carry_icons_line_more_and_evidence():
     lib = pb.library(choices, [("crypto", "bitcoin", "Bitcoin")])
     chip = next(s for s in lib["sets"] if s["key"] == "demo:breakout")
     assert [c["icon"] for c in chip["icons"]] == ["🔊", "🧱"] and chip["line"].startswith("An upward break")
-    assert set(chip["more"]) == {"measures", "why", "not_proven"} and chip["evidence"]["icon"] == "🔬"
+    assert set(chip["more"]) == {"measures", "why", "not_proven"} and chip["evidence"]["icon"] == "⚖️"
+    assert chip["followed"]["verdict"] == "No clear difference"
     assert [x["key"] for x in lib["perspectives"]][:3] == ["trend", "stretch", "volume"]

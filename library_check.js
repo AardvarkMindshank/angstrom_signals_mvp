@@ -24,7 +24,7 @@ const { chromium, devices } = require("playwright");
     check(`${label}: icons on a provided Set`, text.includes("🔊") && text.includes("🧱"), text.replace(/\n/g, " ").slice(0, 120));
     check(`${label}: evidence mark from the study`, text.includes("⚖️") && !text.includes("🔬"), text.slice(0, 80));
     check(`${label}: one-line description`, text.includes("An upward break"));
-    await chip.locator("details.more summary").click(); await page.waitForTimeout(300);
+    await chip.locator("details.more > summary").click(); await page.waitForTimeout(300);
     const more = await chip.innerText();
     check(`${label}: more… opens three parts`, more.includes("What it measures") && more.includes("doesn't prove"));
     check(`${label}: more… turns into less…`, more.includes("less…") && !more.includes("more…"));
