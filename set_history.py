@@ -29,10 +29,20 @@ def _with_weekly(ctx, done: pd.DataFrame):
     def load(kind, asset, tf):
         if tf != "1W":
             return loader(kind, asset, tf)
+        from scoring import calculate_indicators
+
         raw = done[["open", "high", "low", "close", "volume"]]
         weekly = raw.resample("W-SUN", label="left", closed="left").agg(
             {"open": "first", "high": "max", "low": "min", "close": "last", "volume": "sum"}).dropna()
-        return {"frame": weekly.assign(forming=False), "session": None, "source": "stored (weekly from daily)"}
+        # The weekly readings need their indicator columns, as every other candle loader gives them; without them
+        # weekly members (such as the weekly Trend) could never be read. The week holding the last day is still
+        # forming unless that day is its Sunday, as in the live app.
+        frame = calculate_indicators(weekly) if len(weekly) else weekly
+        forming = pd.Series(False, index=frame.index)
+        if len(frame) and pd.Timestamp(done.index[-1]).dayofweek != 6:
+            forming.iloc[-1] = True
+        frame = frame.assign(forming=forming)
+        return {"frame": frame, "session": None, "source": "stored (weekly from daily)"}
 
     ctx._candle_loader = load
     return ctx
