@@ -139,3 +139,127 @@ def summary(span_list: list) -> dict:
         days[answer] += (pd.Timestamp(last) - pd.Timestamp(first)).days + 1
         episodes[answer] += 1
     return {"days": days, "episodes": episodes}
+
+
+# ----------------------------------------------------------------------------------------------- stored spans
+
+def asset_key(kind: str, asset_id: str) -> str:
+    return f"{'crypto' if kind == 'crypto' else 'equity'}:{asset_id if kind == 'crypto' else str(asset_id).upper()}"
+
+
+def load(supabase, hashes: list[str], keys: list[str]) -> dict:
+    """(def hash, asset key) -> {"through", "spans"}; {} when the table is missing or unreadable."""
+    if supabase is None or not hashes or not keys:
+        return {}
+    try:
+        rows = (supabase.table("set_history").select("def_hash, asset_key, through, spans")
+                .in_("def_hash", hashes).in_("asset_key", keys).execute().data or [])
+    except Exception:
+        return {}
+    return {(r["def_hash"], r["asset_key"]): {"through": str(r["through"]), "spans": r.get("spans") or []}
+            for r in rows}
+
+
+def save(supabase, def_hash: str, key: str, span_list: list) -> bool:
+    if supabase is None or not span_list:
+        return False
+    try:
+        from market_store import MINIMAL
+
+        supabase.table("set_history").upsert(
+            {"def_hash": def_hash, "asset_key": key, "through": through(span_list), "spans": span_list},
+            on_conflict="def_hash,asset_key", returning=MINIMAL).execute()
+        return True
+    except Exception:
+        return False
+
+
+def subjects_of(doc: dict) -> list[tuple[str, str]]:
+    """Other assets the Set's lines are pinned to."""
+    out = []
+    for item in (doc.get("groups") or []) + (doc.get("standalone") or []):
+        sub = item.get("subject")
+        if sub and (sub.get("kind"), sub.get("id")) not in out:
+            out.append((sub.get("kind"), sub.get("id")))
+    return out
+
+
+def bring_up_to_date(doc: dict, frame: pd.DataFrame, kind: str, asset_id: str, stored: dict | None,
+                     subjects: dict | None = None) -> tuple[list, bool]:
+    """(spans through the frame's last day, changed?). Only days after the stored ones are worked out."""
+    span_list = list((stored or {}).get("spans") or [])
+    last = pd.Timestamp(frame.index[-1]).strftime("%Y-%m-%d")
+    done = through(span_list)
+    if done and done >= last:
+        return span_list, False
+    start = None if not done else pd.Timestamp(done) + pd.Timedelta(days=1)
+    new = daily_answers(doc, frame, kind, asset_id, start=start, subjects=subjects)
+    return spans(new, span_list), bool(new)
+
+
+# ----------------------------------------------------------------------------------------------- whole histories
+
+_FRAMES: dict = {}
+
+
+def full_daily(kind: str, asset_id: str) -> pd.DataFrame | None:
+    """The asset's whole daily history with indicators, finished days only (Yahoo, "max"). Kept in memory for the
+    day, shared by every account in this process."""
+    import data_fetchers
+    import signals_v2
+    from scoring import calculate_indicators
+
+    key = (kind, str(asset_id), pd.Timestamp.now(tz="UTC").strftime("%Y-%m-%d"))
+    if key in _FRAMES:
+        return _FRAMES[key]
+    ticker = data_fetchers.crypto_ticker(asset_id) if kind == "crypto" else str(asset_id).upper()
+    frame = None
+    if ticker:
+        raw = data_fetchers._history_from_yahoo(ticker, "max")
+        if raw is not None and len(raw) >= 80:
+            raw.index = pd.to_datetime(raw.index, utc=True).normalize()
+            raw = raw[~raw.index.duplicated(keep="last")]
+            pos = signals_v2.last_completed_position(raw.index, kind)
+            if pos is not None:
+                frame = calculate_indicators(raw.iloc[: pos + 1])
+    if len(_FRAMES) > 64:
+        _FRAMES.clear()
+    _FRAMES[key] = frame
+    return frame
+
+
+def history_for(supabase, doc: dict, kind: str, asset_id: str, frames=full_daily) -> list | None:
+    """The Set's spans on one asset through its last finished day: stored ones brought up to date and saved."""
+    from column_answers import def_hash
+
+    frame = frames(kind, asset_id)
+    if frame is None or frame.empty:
+        return None
+    h, key = def_hash(doc), asset_key(kind, asset_id)
+    stored = load(supabase, [h], [key]).get((h, key))
+    subjects = {}
+    for sk, sid in subjects_of(doc):
+        other = frames(sk, sid)
+        if other is not None:
+            subjects[(sk, sid)] = other
+    span_list, changed = bring_up_to_date(doc, frame, kind, asset_id, stored, subjects)
+    if changed:
+        save(supabase, h, key, span_list)
+    return span_list
+
+
+def strip_rows(supabase, doc: dict, assets: list[tuple[str, str, str]], progress=None, frames=full_daily) -> dict:
+    """Visualize History: one row per asset, {"rows": [{key, kind, id, name, spans}], "start", "end"}."""
+    rows = []
+    for n, (kind, asset_id, name) in enumerate(assets):
+        if progress:
+            progress(n, len(assets), name)
+        try:
+            span_list = history_for(supabase, doc, kind, asset_id, frames)
+        except Exception:
+            span_list = None
+        rows.append({"key": asset_key(kind, asset_id), "kind": kind, "id": asset_id, "name": name,
+                     "spans": span_list or []})
+    firsts = [r["spans"][0][0] for r in rows if r["spans"]]
+    lasts = [r["spans"][-1][1] for r in rows if r["spans"]]
+    return {"rows": rows, "start": min(firsts) if firsts else None, "end": max(lasts) if lasts else None}

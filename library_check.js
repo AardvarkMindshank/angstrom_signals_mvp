@@ -34,6 +34,21 @@ const { chromium, devices } = require("playwright");
     check(`${label}: filter by 🌊 keeps only volatility Sets`, names.length >= 2 && names.every((n) => n.includes("🌊")), names.join(" / ").slice(0, 160));
     await page.screenshot({ path: `${out}/${label}_filtered.png`, fullPage: false });
     check(`${label}: no sideways scrolling`, await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1));
+    if (label === "desktop") {   // Visualize History on a new scan of a provided Set (real prices from Yahoo)
+      await page.locator(".lat.prism .pvf button.on").first().click(); await page.waitForTimeout(300);
+      await page.locator(".lat.prism .chip", { hasText: "Volatility squeeze" }).first().locator("button.sq").first().click();
+      await page.waitForSelector(".lat.prism button.hist", { timeout: 60000 }); await page.waitForTimeout(1500);
+      await page.locator(".lat.prism button.hist").first().click();
+      await page.waitForSelector(".lat.prism .hstrip .hrow", { timeout: 420000 }); await page.waitForTimeout(1000);
+      const rows = await page.locator(".lat.prism .hstrip .hrow").count();
+      const rects = await page.locator(".lat.prism .hstrip rect").count();
+      check(`${label}: Visualize History draws a row per asset`, rows >= 10, `${rows} rows, ${rects} coloured spans`);
+      check(`${label}: rows show Yes spans`, rects > 20);
+      await page.locator(".lat.prism .hstrip").first().scrollIntoViewIfNeeded();
+      await page.screenshot({ path: `${out}/${label}_history.png`, fullPage: false });
+      await page.locator(".lat.prism .hstrip .hrow").first().click(); await page.waitForTimeout(4000);
+      check(`${label}: tapping a row opens it on the chart`, (await page.content()).includes("on the") );
+    }
     check(`${label}: no browser errors`, errors.length === 0, errors.join("; "));
     // The Group editor: no # tags, each condition on its own line, red remove buttons.
     await page.goto(url + "?section=groups&seed=trend&preset=1"); await page.waitForSelector(".lat .rule", { timeout: 120000 }); await page.waitForTimeout(1500);

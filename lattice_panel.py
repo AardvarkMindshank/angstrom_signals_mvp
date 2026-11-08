@@ -37,6 +37,11 @@ def rerun(st) -> None:
         st.rerun()
 
 
+def rerun_page(st) -> None:
+    """Redraw the whole page: only for a change outside Lattice (Visualize History opening the price chart)."""
+    st.rerun(scope="app")
+
+
 def pending(st, key: str, field: str):
     """A value the browser sent for component `key` before this run, read before the component is drawn, so a change
     needs one redraw, not two. None when there is nothing (or this Streamlit keeps it elsewhere)."""

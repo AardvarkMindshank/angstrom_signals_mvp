@@ -85,6 +85,8 @@ def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str = "") 
         except ValueError:
             action = {}
         st.session_state["prism_flash"] = handle(st, supabase, action, by_id, choices, assets, now)
+        if st.session_state.get("_chart_jump"):
+            lattice_panel.rerun_page(st)              # the chart is outside this section
         scans = load()
         by_id = {s["id"]: s for s in scans}
     runs, latches = _history(supabase, list(by_id))
@@ -99,8 +101,9 @@ def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str = "") 
         "library": pb.library(choices, assets), "zones": pb.ZONES, "show_provided": shown,
         "scheduled": pb.scheduled_count(scans), "max_scheduled": pb.MAX_SCHEDULED,
         "open_new": st.session_state.pop("prism_open_new", None),
-        "scans": [pb.view(s, runs.get(s["id"], []), latches.get(s["id"], []), choices, assets, now,
-                          results.get(s["id"])) for s in scans],
+        "scans": [{**pb.view(s, runs.get(s["id"], []), latches.get(s["id"], []), choices, assets, now,
+                             results.get(s["id"])),
+                   "history": st.session_state.get("prism_history", {}).get(s["id"])} for s in scans],
     }
     try:
         result = prism_component.component()(key="prism_board", data=data, on_action_change=lambda: None)
@@ -115,6 +118,8 @@ def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str = "") 
         except ValueError:
             action = {}
         st.session_state["prism_flash"] = handle(st, supabase, action, by_id, choices, assets, now)
+        if st.session_state.get("_chart_jump"):
+            lattice_panel.rerun_page(st)              # the chart is outside this section
         lattice_panel.rerun(st)
     st.caption("Answers are descriptive readings, not forecasts or advice. ▶ uses the latest finished candles; ⏪ "
                "rebuilds a past moment from today's data providers (a reconstruction, not a record).")
@@ -203,6 +208,17 @@ def handle(st, supabase, action: dict, by_id: dict, choices: dict, assets, now) 
         obj = pb.tidy_snoozes(pb.scan_object(scan), now)
         if op in ("run", "run_past"):
             return _run(st, scan, obj, op, action, assets)
+        if op == "history":
+            return _history_strip(st, scan, obj, assets)
+        if op == "history_close":
+            st.session_state.get("prism_history", {}).pop(scan["id"], None)
+            return "ok", "History closed."
+        if op == "history_open":
+            kind, asset_id = action.get("kind"), action.get("id")
+            st.session_state["_chart_jump"] = {
+                "pick": f"{'Crypto' if kind == 'crypto' else 'Stock'}|{asset_id}",
+                "band": (f"scan:{scan['id']}", f"{obj['name']} (this scan)", obj["set"])}
+            return "ok", f"Showing {obj['name']} on the {action.get('name') or asset_id} chart."
         if op == "delete":
             supabase.rpc("prism_delete_scan", {"p_id": scan["id"]}).execute()
             st.session_state.get("prism_results", {}).pop(scan["id"], None)
@@ -241,6 +257,28 @@ def handle(st, supabase, action: dict, by_id: dict, choices: dict, assets, now) 
         return "ok", "Saved."
     except Exception as exc:
         return "error", _rpc_message(exc)
+
+
+def _history_strip(st, scan, obj, assets) -> tuple[str, str]:
+    """Visualize History: the scan's Set on every past day for each of its assets (set_history.py)."""
+    import prism_board as pb
+    import set_history
+
+    markets = pb.scan_markets(obj, assets)
+    picked = [(k if k == "crypto" else "equity", i, n) for m in ("crypto", "equity") for k, i, n in markets[m]]
+    if not picked:
+        return "error", "This scan has no assets on your Watchlist right now."
+    bar = st.progress(0.0, text="Working out every past day…")
+
+    def progress(n, total, name):
+        bar.progress(n / max(total, 1), text=f"Working out every past day: {name} ({n + 1} of {total}). "
+                                             "The first time takes a few seconds per asset; after that it's quick.")
+
+    strip = set_history.strip_rows(_SUPABASE[0], obj["set"], picked, progress)
+    bar.empty()
+    st.session_state.setdefault("prism_history", {})[scan["id"]] = strip
+    shown = sum(1 for r in strip["rows"] if r["spans"])
+    return "ok", f"History for {shown} of {len(picked)} assets. Tap a row to see it on the price chart."
 
 
 def _run(st, scan, obj, op, action, assets) -> tuple[str, str]:

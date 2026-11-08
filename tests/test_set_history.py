@@ -53,3 +53,59 @@ def test_weekly_and_pinned_members_answer():
     assert {"yes", "no"} <= set(btc.values())
     lost = dict(sh.daily_answers(prism.library_sets()["demo:btc_filter"], f.iloc[:200], "crypto", "x"))
     assert set(lost.values()) == {"unknown"}                         # no Bitcoin history given: Unknown, never No
+
+
+class _Db:
+    """Enough of Supabase for set_history: one table kept in a dict."""
+
+    def __init__(self):
+        self.rows, self.writes = {}, 0
+
+    def table(self, name):
+        db = self
+
+        class Q:
+            def select(self, *a):
+                return self
+
+            def in_(self, *a):
+                return self
+
+            def upsert(self, row, **k):
+                db.rows[(row["def_hash"], row["asset_key"])] = row
+                db.writes += 1
+                return self
+
+            def execute(self):
+                self.data = list(db.rows.values())
+                return self
+        return Q()
+
+
+def test_history_is_saved_once_and_only_new_days_are_worked_out(monkeypatch):
+    f = _frame(3, 500)
+    doc = prism.library_sets()["demo:squeeze"]
+    db = _Db()
+    frames = {"full": f.iloc[:480]}
+    first = sh.history_for(db, doc, "crypto", "x", frames=lambda k, i: frames["full"])
+    assert db.writes == 1 and sh.through(first) == f.index[479].strftime("%Y-%m-%d")
+    assert sh.history_for(db, doc, "crypto", "x", frames=lambda k, i: frames["full"]) == first and db.writes == 1
+    calls = []
+    real = sh.daily_answers
+    monkeypatch.setattr(sh, "daily_answers", lambda *a, **k: calls.append(k.get("start")) or real(*a, **k))
+    longer = f
+    frames["full"] = longer
+    again = sh.history_for(db, doc, "crypto", "x", frames=lambda k, i: frames["full"])
+    assert db.writes == 2 and calls and calls[0] is not None            # only the new days
+    assert sh.through(again) == longer.index[-1].strftime("%Y-%m-%d")
+
+
+def test_strip_rows_cover_every_asset():
+    f = _frame(11, 500)
+    doc = prism.library_sets()["demo:squeeze"]
+    seen = []
+    strip = sh.strip_rows(None, doc, [("crypto", "a", "A"), ("equity", "b", "B")],
+                          progress=lambda n, t, name: seen.append(name), frames=lambda k, i: None if i == "b" else f)
+    assert [r["name"] for r in strip["rows"]] == ["A", "B"] and seen == ["A", "B"]
+    assert strip["rows"][0]["spans"] and strip["rows"][1]["spans"] == []
+    assert strip["start"] == strip["rows"][0]["spans"][0][0]

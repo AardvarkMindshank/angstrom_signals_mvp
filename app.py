@@ -3759,6 +3759,9 @@ def _chart_set_options() -> dict:
     import signal_groups_inspector as gi
 
     out = {}
+    extra = st.session_state.get("chart_band_extra")
+    if extra:                                     # opened from Visualize History: the scan's own Set
+        out[extra[0]] = (extra[1], extra[2])
     for key, doc in table_columns.provided_sets().items():
         if not doc["name"].endswith("(demo)"):
             out[key] = (f"{doc['name']} (provided)", doc)
@@ -3798,42 +3801,14 @@ def _chart_set_picker():
     return (key, options[key][1], bool(show_no)) if key else None
 
 
-@st.cache_data(ttl=6 * 3600, max_entries=200, show_spinner=False)
-def _full_daily(kind: str, asset_id: str):
-    """The asset's whole daily history with indicators (Yahoo, "max"), for Set bands. Shared by every account."""
-    import data_fetchers
-
-    ticker = (data_fetchers.crypto_ticker(asset_id) if kind == "crypto" else str(asset_id).upper())
-    if not ticker:
-        return None
-    raw = data_fetchers._history_from_yahoo(ticker, "max")
-    if raw is None or len(raw) < 80:
-        return None
-    raw.index = pd.to_datetime(raw.index, utc=True).normalize()
-    raw = raw[~raw.index.duplicated(keep="last")]
-    pos = signals_v2.last_completed_position(raw.index, kind)
-    if pos is None:
-        return None
-    return calculate_indicators(raw.iloc[: pos + 1])
-
-
 @st.cache_data(ttl=12 * 3600, max_entries=400, show_spinner=False)
-def _set_spans(def_hash: str, kind: str, asset_id: str, last_day: str, _doc):
-    """[[first day, last day, answer], ...] for one Set on one asset, from its whole daily history."""
-    del def_hash, last_day
+def _set_spans(def_hash: str, kind: str, asset_id: str, day: str, _doc):
+    """[[first day, last day, answer], ...] for one Set on one asset over its whole daily history (stored in
+    set_history and brought up to date with the new days only)."""
+    del def_hash, day
     import set_history
 
-    frame = _full_daily(kind, asset_id)
-    if frame is None:
-        return None
-    subjects = {}
-    for g in (_doc.get("groups") or []) + (_doc.get("standalone") or []):
-        sub = g.get("subject")
-        if sub and (sub.get("kind"), sub.get("id")) not in subjects:
-            other = _full_daily(sub.get("kind"), sub.get("id"))
-            if other is not None:
-                subjects[(sub.get("kind"), sub.get("id"))] = other
-    return set_history.spans(set_history.daily_answers(_doc, frame, kind, asset_id, subjects=subjects))
+    return set_history.history_for(supabase, _doc, kind, asset_id)
 
 
 def _band_payload(band_set, asset_type: str, asset_key: str, frame: pd.DataFrame) -> dict | None:
@@ -3847,8 +3822,7 @@ def _band_payload(band_set, asset_type: str, asset_key: str, frame: pd.DataFrame
     kind = "crypto" if asset_type == "Crypto" else "equity"
     asset_id = str(asset_key) if kind == "crypto" else str(asset_key).upper()
     try:
-        full = _full_daily(kind, asset_id)
-        last = "" if full is None else str(full.index[-1].date())
+        last = pd.Timestamp.now(tz="UTC").strftime("%Y-%m-%d")
         with st.spinner("Working out the Set's answer on every past day (first time only)…"):
             span_list = _set_spans(column_answers.def_hash(doc), kind, asset_id, last, doc)
     except Exception as exc:
@@ -10718,6 +10692,12 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             else:
                 st.session_state.asset_stock = asset_id
             _remember_section(section_id, True)
+
+        jump = st.session_state.pop("_chart_jump", None)
+        if jump:            # Visualize History: a tapped row opens that asset's chart with the scan's Set as bands
+            _select_chart_asset(jump["pick"])
+            st.session_state["chart_band_extra"] = jump["band"]
+            st.session_state["chart_band_set"] = jump["band"][0]
 
         snapshot_cards = []
         if trade_crypto:
