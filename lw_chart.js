@@ -164,6 +164,49 @@ class VerticalLines {
   }
 }
 
+// ------------------------------------------------------------------ Set bands (solid blocks behind the candles)
+
+class ZoneBlocks {
+  constructor(colors) {
+    // Runs of the same colour: [first bar, last bar, colour].
+    this.runs = [];
+    colors.forEach((c, i) => {
+      const last = this.runs[this.runs.length - 1];
+      if (c && last && last[2] === c && last[1] === i - 1) last[1] = i;
+      else if (c) this.runs.push([i, i, c]);
+    });
+    this.chart = null;
+  }
+  attached(params) { this.chart = params.chart; }
+  detached() { this.chart = null; }
+  updateAllViews() {}
+  paneViews() {
+    const self = this;
+    return [{
+      zOrder: () => "bottom",
+      renderer: () => ({
+        draw: (target) => {
+          if (!self.chart) return;
+          const scale = self.chart.timeScale();
+          target.useBitmapCoordinateSpace((scope) => {
+            const ctx = scope.context;
+            for (const [a, b, colour] of self.runs) {
+              const ca = scale.logicalToCoordinate(a), cb = scale.logicalToCoordinate(b);
+              if (ca === null || cb === null) continue;
+              const half = (self.chart.timeScale().options().barSpacing || 6) / 2;
+              const x0 = ca - half, x1 = cb + half;
+              if (x1 < 0 || x0 > scope.mediaSize.width) continue;
+              ctx.fillStyle = colour;
+              const left = Math.round(x0 * scope.horizontalPixelRatio);
+              ctx.fillRect(left, 0, Math.max(1, Math.round(x1 * scope.horizontalPixelRatio) - left), scope.bitmapSize.height);
+            }
+          });
+        },
+      }),
+    }];
+  }
+}
+
 // ------------------------------------------------------------------ view memory
 
 function saveView(key, chart, times, extra) {
@@ -301,6 +344,7 @@ function draw(L, root, data) {
     wickUpColor: theme.up, wickDownColor: theme.down, priceLineVisible: true, lastValueVisible: true,
   }, 0);
   candles.setData(candleRows);
+  if (data.zones && data.zones.some((c) => c)) candles.attachPrimitive(new ZoneBlocks(data.zones));
 
   const made = { candles };
   const paneFirst = { 0: candles };
@@ -424,6 +468,12 @@ function draw(L, root, data) {
       ` V <b style="color:${theme.ink}">${fmtBig(data.volume[i])}</b></div>`;
     const bits = legendSeries.map((s) => `${swatch(s.color)}<span style="color:${theme.muted}">${s.name}</span> <span style="color:${theme.ink}">${fmt(s.values[i], C[i])}</span>`);
     if (bits.length) html += `<div>${bits.join(" &nbsp;")}</div>`;
+    if (data.zones_answers) {
+      const a = data.zones_answers[i];
+      const word = a === "yes" ? "Yes" : a === "no" ? "No" : a === "unknown" ? "Unknown" : "not worked out";
+      const tint = a === "yes" ? "#16a34a" : a === "unknown" ? "#d97706" : theme.muted;
+      html += `<div><span style="color:${theme.muted}">${data.zones_name}</span> <b style="color:${tint}">${word}</b></div>`;
+    }
     legend.innerHTML = html;
     legend.style.background = theme.dark ? "rgba(38,39,48,0.75)" : "rgba(255,255,255,0.75)";
     legend.style.borderRadius = "6px";
@@ -493,6 +543,7 @@ function draw(L, root, data) {
     : "";
   note.style.color = theme.muted;
   note.textContent =
+    (data.zones_legend ? data.zones_legend + ". " : "") +
     `${data.source}. ${data.clock ? "Times in " + data.clock + ". " : ""}${formingText}` +
     "Scroll or pinch to zoom, drag to move back in time, double-click the price scale to reset it.";
 

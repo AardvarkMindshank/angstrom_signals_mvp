@@ -3752,10 +3752,124 @@ def _tv_candles(asset_type: str, asset_key: str, interval: str, range_key: str, 
     return loaded
 
 
+def _chart_set_options() -> dict:
+    """key -> (name, document) for Sets that can be drawn as bands: provided ones and the account's own, when they
+    read daily or weekly candles only (bands are worked out from daily history)."""
+    import column_answers
+    import signal_groups_inspector as gi
+
+    out = {}
+    for key, doc in table_columns.provided_sets().items():
+        if not doc["name"].endswith("(demo)"):
+            out[key] = (f"{doc['name']} (provided)", doc)
+    cached = st.session_state.get("siggroups_saved")
+    if not cached or time.time() - cached[0] > 60:
+        try:
+            cached = (time.time(), *gi.saved_configs(supabase))
+            st.session_state["siggroups_saved"] = cached
+        except Exception:
+            cached = (time.time(), [])
+    for c in cached[1] or []:
+        if c.get("kind") != "set" or not c.get("versions"):
+            continue
+        doc = c["versions"][-1].get("body") or {}
+        if doc.get("decision") and set(column_answers.timeframes(doc)) <= {"1D", "1W"}:
+            out[f"saved:{c['id']}"] = (c["name"], doc)
+    return out
+
+
+def _chart_set_picker():
+    """Choose a Set to show as coloured bands behind the price: green = Yes, amber = Unknown."""
+    options = _chart_set_options()
+    keys = [""] + list(options)
+    if st.session_state.get("chart_band_set") not in keys:
+        st.session_state["chart_band_set"] = ""
+    cols = st.columns([3, 2], vertical_alignment="center")
+    with cols[0]:
+        key = st.selectbox(
+            "Show a Set on the chart", keys, key="chart_band_set",
+            format_func=lambda k: "No Set" if not k else options[k][0],
+            help=("Colours every day by the Set's answer at that day's close: green = Yes (conditions met), "
+                  "amber = Unknown (data missing), clear = No. Worked out from the full daily history; a "
+                  "description of the past, not a forecast."))
+    with cols[1]:
+        show_no = st.toggle("Show No as faint red", key="chart_band_no", disabled=not key,
+                            help="Tint the No days too. Off keeps the chart clear, since most days are No.")
+    return (key, options[key][1], bool(show_no)) if key else None
+
+
+@st.cache_data(ttl=6 * 3600, max_entries=200, show_spinner=False)
+def _full_daily(kind: str, asset_id: str):
+    """The asset's whole daily history with indicators (Yahoo, "max"), for Set bands. Shared by every account."""
+    import data_fetchers
+
+    ticker = (data_fetchers.crypto_ticker(asset_id) if kind == "crypto" else str(asset_id).upper())
+    if not ticker:
+        return None
+    raw = data_fetchers._history_from_yahoo(ticker, "max")
+    if raw is None or len(raw) < 80:
+        return None
+    raw.index = pd.to_datetime(raw.index, utc=True).normalize()
+    raw = raw[~raw.index.duplicated(keep="last")]
+    pos = signals_v2.last_completed_position(raw.index, kind)
+    if pos is None:
+        return None
+    return calculate_indicators(raw.iloc[: pos + 1])
+
+
+@st.cache_data(ttl=12 * 3600, max_entries=400, show_spinner=False)
+def _set_spans(def_hash: str, kind: str, asset_id: str, last_day: str, _doc):
+    """[[first day, last day, answer], ...] for one Set on one asset, from its whole daily history."""
+    del def_hash, last_day
+    import set_history
+
+    frame = _full_daily(kind, asset_id)
+    if frame is None:
+        return None
+    subjects = {}
+    for g in (_doc.get("groups") or []) + (_doc.get("standalone") or []):
+        sub = g.get("subject")
+        if sub and (sub.get("kind"), sub.get("id")) not in subjects:
+            other = _full_daily(sub.get("kind"), sub.get("id"))
+            if other is not None:
+                subjects[(sub.get("kind"), sub.get("id"))] = other
+    return set_history.spans(set_history.daily_answers(_doc, frame, kind, asset_id, subjects=subjects))
+
+
+def _band_payload(band_set, asset_type: str, asset_key: str, frame: pd.DataFrame) -> dict | None:
+    """Per-bar colours for the chart, with a legend line."""
+    import column_answers
+    import set_history
+
+    if not band_set:
+        return None
+    key, doc, show_no = band_set
+    kind = "crypto" if asset_type == "Crypto" else "equity"
+    asset_id = str(asset_key) if kind == "crypto" else str(asset_key).upper()
+    try:
+        full = _full_daily(kind, asset_id)
+        last = "" if full is None else str(full.index[-1].date())
+        with st.spinner("Working out the Set's answer on every past day (first time only)…"):
+            span_list = _set_spans(column_answers.def_hash(doc), kind, asset_id, last, doc)
+    except Exception as exc:
+        st.caption(f"Could not work out the Set's history: {str(exc)[:160]}")
+        return None
+    if not span_list:
+        st.caption("No long daily history is available for this asset, so the Set can't be shown on the chart.")
+        return None
+    days = [pd.Timestamp(t).strftime("%Y-%m-%d") for t in frame.index]
+    stats = set_history.summary(span_list)
+    return {"colors": set_history.colours_for(days, span_list, show_no),
+            "answers": set_history.answers_for(days, span_list), "name": doc.get("name") or "Set",
+            "legend": (f"{doc.get('name')}: green = Yes ({stats['episodes']['yes']} times since "
+                       f"{span_list[0][0][:4]}), amber = Unknown" + (", red = No" if show_no else ""))}
+
+
 def _tv_chart(asset_type, asset_key, title, layout, tv, interval, range_key, price_px,
-              liq_record, show_earnings, stock_watchlist) -> None:
+              liq_record, show_earnings, stock_watchlist, band_set=None) -> None:
     """Draw the TradingView chart from candles already loaded by _tv_candles."""
     frame = tv["frame"]
+    bands = _band_payload(band_set, asset_type, asset_key, frame)
     past_reports, next_report = [], None
     if show_earnings and asset_type != "Crypto":
         symbol = str(asset_key).upper()
@@ -3776,6 +3890,11 @@ def _tv_chart(asset_type, asset_key, title, layout, tv, interval, range_key, pri
         past_reports=past_reports, next_report=next_report,
         liquidation=liq_record, source=tv.get("source") or "", title=title,
     )
+    if bands:
+        payload["zones"] = bands["colors"]
+        payload["zones_legend"] = bands["legend"]
+        payload["zones_answers"] = bands["answers"]
+        payload["zones_name"] = bands["name"]
     _lw_chart(key="lw_chart", data=payload)
 
 
@@ -11367,6 +11486,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                         "if it is months away and you want the chart to end at today."
                     ),
                 )
+            band_set = _chart_set_picker() if use_tv else None
             wanted_picks = [k for k in saved_picks if k not in indicator_keys] + [
                 k for k in chosen_indicators if k in chart_plan.INDICATORS
             ]
@@ -11385,7 +11505,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                 if tv and not tv.get("error"):
                     _tv_chart(
                         asset_type, asset_key, title, layout, tv, tv_interval, tv_range, price_px,
-                        liq_record, show_earnings, stock_watchlist,
+                        liq_record, show_earnings, stock_watchlist, band_set=band_set,
                     )
                     _chart_resize_handle(price_px)
             else:
