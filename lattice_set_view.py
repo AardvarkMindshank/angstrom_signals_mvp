@@ -124,9 +124,17 @@ def render(st, supabase, user_id: str = "") -> None:
 
     doc = ls.to_document(model, choices)
     source = st.session_state.get("lattice_set_source")
-    cols = st.columns(2)
-    if cols[0].button("💾 Save as a new Set", disabled=not screen["can_save"], key="lattice_set_save_new", type="primary",
-                      help="Saves version 1. It is private until you publish it."):
+    mine = bool(source and source.get("owner_id") == user_id)
+    cols = lattice_view.action_row(st, 1 + bool(source) + mine)
+    new = cols[0].button("💾 Save as a new Set", disabled=not screen["can_save"], key="lattice_set_save_new",
+                         type="primary", width="stretch", help="Saves version 1. It is private until you publish it.")
+    nxt = bool(source) and cols[1].button(f"💾 Save as version {source['current_version'] + 1} of {source['name']}",
+                                          disabled=not screen["can_save"], key="lattice_set_save_next",
+                                          width="stretch")
+    if mine:
+        with cols[-1]:
+            lattice_view._delete(st, supabase, "set", source)
+    if new:
         try:
             supabase.rpc("analysis_create_config", {"kind": "set", "body": doc}).execute()
             st.success("Saved as a new Set (version 1)."
@@ -134,10 +142,7 @@ def render(st, supabase, user_id: str = "") -> None:
             st.session_state.pop("siggroups_saved", None)
         except Exception as exc:
             st.error(f"Refused: {gi._rpc_error(exc)}")
-    if source and source.get("owner_id") == user_id:
-        lattice_view._delete(st, supabase, "set", source)
-    if source and cols[1].button(f"💾 Save as version {source['current_version'] + 1} of {source['name']}",
-                                 disabled=not screen["can_save"], key="lattice_set_save_next"):
+    if nxt:
         try:
             v = supabase.rpc("analysis_save_version", {"cfg": source["id"], "expected_version": source["current_version"],
                                                        "body": doc}).execute().data

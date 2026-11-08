@@ -188,8 +188,8 @@ def _delete(st, supabase, kind: str, source: dict) -> None:
             scans = []
         users = ld.scans_using(source["id"], scans)
     word = "Group" if kind == "group" else "Set"
-    with st.popover(f"Delete this {word}", icon=":material/delete:",
-                    help=f"Remove {source['name']} from your {word}s. You can undo it straight after."):
+    with _popover(st, f"Delete this {word}", icon=":material/delete:",
+                  help=f"Remove {source['name']} from your {word}s. You can undo it straight after."):
         if users:
             st.warning(ld.blocked_message(kind, users))
             return
@@ -207,6 +207,13 @@ def _delete(st, supabase, kind: str, source: dict) -> None:
             st.session_state.pop("lattice_start" if kind == "group" else "lattice_set_start", None)
             st.session_state.pop("lattice_loaded" if kind == "group" else "lattice_set_loaded", None)
             lattice_panel.rerun_page(st)
+
+
+def _popover(st, label: str, **kw):
+    try:
+        return st.popover(label, width="stretch", **kw)
+    except TypeError:                      # an older Streamlit without width
+        return st.popover(label, **kw)
 
 
 def undo_bar(st, supabase, kind: str) -> None:
@@ -230,14 +237,28 @@ def undo_bar(st, supabase, kind: str) -> None:
         lattice_panel.rerun(st)
 
 
+def action_row(st, n: int):
+    """One row for the save and delete buttons: side by side on a wide screen, one under another on a phone
+    (Streamlit stacks columns on narrow screens)."""
+    return st.columns(n, vertical_alignment="center")
+
+
 def _save(st, supabase, model: dict, can_save: bool) -> None:
     import signal_groups_inspector as gi
 
     doc = le.to_document(model)
     source = st.session_state.get("lattice_source")
-    cols = st.columns(2)
-    if cols[0].button("💾 Save as a new Group", disabled=not can_save, key="lattice_save_new", type="primary",
-                      help="Saves version 1 of a new Group. It is private until you publish it."):
+    mine = bool(source and source.get("owner_id") == st.session_state.get("_lattice_user"))
+    cols = action_row(st, 1 + bool(source) + mine)
+    new = cols[0].button("💾 Save as a new Group", disabled=not can_save, key="lattice_save_new", type="primary",
+                         width="stretch", help="Saves version 1 of a new Group. It is private until you publish it.")
+    nxt = bool(source) and cols[1].button(f"💾 Save as version {source['current_version'] + 1} of {source['name']}",
+                                          disabled=not can_save, key="lattice_save_next", width="stretch",
+                                          help="Saves a new version. Earlier versions stay as they were.")
+    if mine:
+        with cols[-1]:
+            _delete(st, supabase, "group", source)
+    if new:
         try:
             new_id = supabase.rpc("analysis_create_config", {"kind": "group", "body": doc}).execute().data
             st.success("Saved as a new Group (version 1). It is private until you publish it.")
@@ -245,18 +266,14 @@ def _save(st, supabase, model: dict, can_save: bool) -> None:
             st.session_state["lattice_saved_id"] = new_id
         except Exception as exc:
             st.error(f"Refused: {gi._rpc_error(exc)}")
-    if source and source.get("owner_id") == st.session_state.get("_lattice_user"):
-        _delete(st, supabase, "group", source)
-    if source:
-        if cols[1].button(f"💾 Save as version {source['current_version'] + 1} of {source['name']}", disabled=not can_save,
-                          key="lattice_save_next", help="Saves a new version. Earlier versions stay as they were."):
-            try:
-                v = supabase.rpc("analysis_save_version", {"cfg": source["id"], "expected_version": source["current_version"],
-                                                           "body": doc}).execute().data
-                st.success(f"Saved version {v}.")
-                st.session_state.pop("siggroups_saved", None)
-            except Exception as exc:
-                st.error(f"Refused: {gi._rpc_error(exc)}")
+    if nxt:
+        try:
+            v = supabase.rpc("analysis_save_version", {"cfg": source["id"], "expected_version": source["current_version"],
+                                                       "body": doc}).execute().data
+            st.success(f"Saved version {v}.")
+            st.session_state.pop("siggroups_saved", None)
+        except Exception as exc:
+            st.error(f"Refused: {gi._rpc_error(exc)}")
 
 
 def _try(st, supabase, model: dict, assets, can_save: bool) -> None:

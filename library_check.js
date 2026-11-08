@@ -112,6 +112,30 @@ const { chromium, devices } = require("playwright");
       }
       await page.screenshot({ path: `${out}/${label}_set_study.png`, fullPage: false });
     }
+    if (label === "desktop") {   // Deleting a Group nothing uses: gone from Start from at once; Undo brings it back
+      const options = async () => {
+        const box = page.locator('[data-testid="stSelectbox"]').filter({ hasText: "Start from" }).first();
+        await box.scrollIntoViewIfNeeded();
+        await box.locator('[role="combobox"], [data-baseweb="select"], input').first().click({ force: true });
+        if (!(await page.locator('[role="option"]').count())) await page.keyboard.press("ArrowDown");
+        await page.waitForSelector('[role="option"]', { timeout: 5000 }).catch(() => {}); await page.waitForTimeout(400);
+        const o = await page.locator('[role="option"]').allInnerTexts(); await page.keyboard.press("Escape"); await page.waitForTimeout(300);
+        return o.join(" / ");
+      };
+      await page.goto(url + "?section=groups&seed=trend&preset=1"); await page.waitForSelector(".lat .rule", { timeout: 120000 }); await page.waitForTimeout(1500);
+      const row = await page.locator('[data-testid="stHorizontalBlock"]').filter({ hasText: "Save as a new Group" }).first().boundingBox();
+      const del = await page.getByRole("button", { name: /Delete this Group/ }).first().boundingBox();
+      check(`${label}: save and delete buttons sit in one row`, row && del && Math.abs(del.y - row.y) < row.height, JSON.stringify([row && row.y, del && del.y]));
+      await page.getByRole("button", { name: /Delete this Group/ }).first().click(); await page.waitForTimeout(800);
+      await page.locator('[data-testid="stPopoverBody"] button', { hasText: "Delete My Trend" }).first().click();
+      await page.waitForSelector("text=Deleted", { timeout: 60000 }).catch(() => {}); await page.waitForTimeout(2500);
+      const gone = await options();
+      check(`${label}: a deleted Group leaves Start from at once`, !gone.includes("My Trend"), gone.slice(0, 200));
+      await page.screenshot({ path: `${out}/${label}_deleted.png`, fullPage: false });
+      await page.getByRole("button", { name: "Undo" }).first().click(); await page.waitForTimeout(2500);
+      const back = await options();
+      check(`${label}: Undo puts it back in Start from`, back.includes("My Trend"), back.slice(0, 200));
+    }
     // The Group editor: no # tags, each condition on its own line, red remove buttons.
     await page.goto(url + "?section=groups&seed=trend&preset=1"); await page.waitForSelector(".lat .rule", { timeout: 120000 }); await page.waitForTimeout(1500);
     const hashes = await page.locator(".lat .tag", { hasText: /^#$/ }).count();

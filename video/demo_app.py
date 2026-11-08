@@ -100,6 +100,9 @@ class DemoDb:
                                "paused": o["paused"], "assets": o["assets"], "snoozes": o["snoozes"],
                                "alert_mode": "change", "set_version": 1}
             return Query(sid)
+        if name in ("analysis_archive_config", "analysis_restore_config"):
+            s["configs"][params["cfg"]]["archived"] = name == "analysis_archive_config"
+            return Query(None)
         if name == "request_set_study":          # queued, never worked out on this page
             s.setdefault("studies", {})[params["set_hash"]] = {"set_hash": params["set_hash"], "status": "queued"}
             return Query("queued")
