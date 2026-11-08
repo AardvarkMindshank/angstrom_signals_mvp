@@ -29,7 +29,7 @@ CSS = lattice_component.CSS + """
 .lat.prism .hstrip .hax{display:flex;justify-content:space-between;font-size:11px;opacity:.7;margin-left:calc(7.5em + 8px)}
 .lat.prism .hseg{display:inline-flex;gap:4px;margin-left:auto}
 .lat.prism .hseg button{min-height:28px;padding:2px 8px;font-size:12px}
-.lat.prism .hseg button.on{border-color:#0f766e;background:rgba(15,118,110,.12)}
+.lat.prism .hseg button.on{border-color:#0f766e;background:rgba(15,118,110,.12);color:inherit;font-weight:600}
 .lat.prism button.hist.on{border-color:#0f766e;background:rgba(15,118,110,.12)}
 .lat.prism .pvf{display:flex;flex-wrap:wrap;gap:4px;margin:4px 0 6px}
 .lat.prism .pvf button{min-width:36px;min-height:32px;padding:2px 6px;font-size:15px;border-radius:8px;
