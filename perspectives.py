@@ -193,6 +193,31 @@ def results() -> dict:
     return _results["data"]
 
 
+_shared: dict = {"rows": {}, "at": 0.0}
+STUDY_TTL = 300
+
+
+def load_studies(supabase, force: bool = False) -> None:
+    """Finished studies of people's own Sets (table set_studies), shared by Set logic and kept for 5 minutes."""
+    import time
+
+    if not force and time.time() - _shared["at"] < STUDY_TTL:
+        return
+    _shared["at"] = time.time()
+    try:
+        rows = (supabase.table("set_studies").select("set_hash, result").eq("status", "done").limit(2000)
+                .execute().data or [])
+    except Exception:
+        return
+    out = {}
+    for r in rows:
+        res = r.get("result") or {}
+        s = (res.get("sets") or {}).get(r["set_hash"])
+        if s:
+            out[r["set_hash"]] = dict(s, start=res.get("start"), through=res.get("through"))
+    _shared["rows"] = out
+
+
 def study_for(doc: dict | None, key: str | None = None) -> dict | None:
     """The study of this exact Set, or None (not studied, or the Set changed since)."""
     if not doc:
@@ -206,7 +231,8 @@ def study_for(doc: dict | None, key: str | None = None) -> dict | None:
     sets = results().get("sets") or {}
     if key and key in sets and sets[key].get("hash") == h:
         return sets[key]
-    return next((s for s in sets.values() if s.get("hash") == h), None)
+    found = next((s for s in sets.values() if s.get("hash") == h), None)
+    return found or _shared["rows"].get(h)
 
 
 def evidence(doc: dict | None, key: str | None = None) -> tuple[str, str]:
@@ -239,7 +265,9 @@ def followed_card(doc: dict | None, key: str | None = None) -> dict | None:
     title = "What followed"
     lines = []
     if s.get("episodes"):
-        title += f" · {_month(data.get('start', s['first']))} to {_month(data.get('through', s['last']))}"
+        start = s.get("start") or data.get("start") or s["first"]
+        through = s.get("through") or data.get("through") or s["last"]
+        title += f" · {_month(start)} to {_month(through)}"
         if s.get("coin_assets") is not None:
             lines.append(f"Studied on {s['coin_assets']} major coins and {s['share_assets']} large US shares.")
         lines.append(f"Turned Yes {s['episodes']:,} separate times, in {s['weeks']:,} different weeks.")

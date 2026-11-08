@@ -77,6 +77,9 @@ def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str) -> No
 
 
 def _render(st, supabase, assets: list[tuple[str, str, str]], user_id: str) -> None:
+    import perspectives
+
+    perspectives.load_studies(supabase)              # "What followed" on people's own Sets, shared by Set logic
     st.markdown(HEADER)
     st.caption(SUBTITLE)
     hover = "\n\n".join(f"**{SECTIONS[k][1]}**: {SECTIONS[k][2]}" for k in SECTIONS)

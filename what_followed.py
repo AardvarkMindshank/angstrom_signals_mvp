@@ -61,6 +61,38 @@ def logic_hash(doc: dict) -> str:
     return def_hash({k: v for k, v in (doc or {}).items() if k not in ("name", "purpose", "description", "notes")})
 
 
+NO_HISTORY = {"sentiment": "news sentiment", "positioning": "positioning", "flows": "fund flows"}
+
+
+def studyable(doc: dict | None) -> tuple[bool, str]:
+    """(can it be studied, why not). Studies use saved daily prices only: every part must read daily or weekly
+    candles of a coin or share, not news, positioning, fund flows or market-wide readings, which have no saved
+    history."""
+    import perspectives
+    import signal_library as sl
+
+    if not doc:
+        return False, "There is no saved Set to study."
+    if not (doc.get("groups") or doc.get("standalone") or doc.get("members")):
+        return False, "This Set has no parts yet."
+    for ref, _ in perspectives._refs(doc):
+        tf = (ref or {}).get("timeframe", "1D")
+        if tf not in ("1D", "1W"):
+            return False, (f"It reads {tf} candles; studies use saved daily prices, so only Sets that read daily or "
+                           "weekly candles can be studied.")
+        try:
+            definition = sl.REGISTRY.get(ref["id"], ref.get("version", 1))
+        except Exception:
+            return False, f"One of its parts ({(ref or {}).get('id', '?')}) is not in the signal library."
+        if definition.category in NO_HISTORY:
+            return False, f"It uses {NO_HISTORY[definition.category]}, which has no saved history to study."
+        if str(getattr(definition, "scope", "") or "").startswith("market:"):
+            return False, "It uses a market-wide reading, which has no saved history to study."
+    if doc.get("market_context"):
+        return False, "It uses a market-wide reading, which has no saved history to study."
+    return True, ""
+
+
 def set_type(key: str) -> str:
     return SET_TYPE.get(key, "directional")
 

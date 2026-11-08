@@ -145,5 +145,66 @@ def render(st, supabase, user_id: str = "") -> None:
             st.session_state.pop("siggroups_saved", None)
         except Exception as exc:
             st.error(f"Refused: {gi._rpc_error(exc)}")
+    if source and source.get("owner_id") == user_id and source.get("versions"):
+        study_block(st, supabase, source)
     if problem:
         st.caption(f"Saved Groups and Sets could not be read: {problem}")
+
+
+STUDY_WAIT = "Studies run in the background, usually within an hour; you can leave this page."
+
+
+def study_block(st, supabase, source: dict) -> None:
+    """🔬 "What followed" for your saved Set: the study if there is one, its progress, or a button to start it.
+    It studies the saved version (what the Set checks, not its name)."""
+    import perspectives
+    import what_followed as wf
+
+    version = source["versions"][-1]
+    doc = version["body"]
+    st.markdown("**What followed** · what happened after this Set turned Yes in the past")
+    card = perspectives.followed_card(doc)
+    if card:
+        icon, _ = perspectives.evidence(doc)
+        with st.expander(f"{icon} What followed: {card['verdict'] or 'not studied on its own'}"):
+            st.caption(card["title"].replace("What followed · ", ""))
+            for line in card["lines"]:
+                st.markdown(f"- {line}")
+            st.caption(card["note"])
+        return
+    ok, why = wf.studyable(doc)
+    if not ok:
+        st.caption(f"🔬 Can't be studied: {why}")
+        return
+    h = wf.logic_hash(doc)
+    try:
+        row = (supabase.table("set_studies").select("status, error, requested_at").eq("set_hash", h)
+               .limit(1).execute().data or [None])[0]
+    except Exception:
+        row = None
+    status = (row or {}).get("status")
+    if status in ("queued", "running"):
+        word = "is being worked out" if status == "running" else "is waiting its turn"
+        st.info(f"⏳ The study of version {version['version']} {word}. {STUDY_WAIT}")
+        return
+    if status == "done":                         # finished since this page last looked
+        perspectives.load_studies(supabase, force=True)
+        st.caption("✅ The study is ready: reopen this Set to see it.")
+        return
+    if status in ("refused", "failed") and row.get("error"):
+        st.caption(f"Last try: {row['error']}")
+    if status == "refused":
+        return
+    if st.button(f"🔬 Study this Set (version {version['version']})", key=f"lattice_study_{h}",
+                 help="Checks what happened after this Set turned Yes on 25 major coins and 61 large US shares, "
+                      "Sep 2014 to Oct 2024, against comparable days. " + STUDY_WAIT):
+        try:
+            got = supabase.rpc("request_set_study", {"set_hash": h, "body": doc,
+                                                     "name": source.get("name") or ""}).execute().data
+            st.success("⏳ Queued. " + STUDY_WAIT if got in ("queued", "running") else f"Status: {got}.")
+        except Exception as exc:
+            import signal_groups_inspector as gi
+
+            msg = gi._rpc_error(exc)
+            st.error("You already have 5 studies waiting; try again when one finishes." if "too_many_waiting" in msg
+                     else f"Could not queue the study: {msg}")

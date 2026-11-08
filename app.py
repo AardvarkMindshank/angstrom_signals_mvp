@@ -9598,6 +9598,9 @@ def _table_column_specs() -> list[dict]:
             cached = (time.time(), *gi.saved_configs(supabase))
             st.session_state["siggroups_saved"] = cached
         saved = cached[1]
+        import perspectives
+
+        perspectives.load_studies(supabase)          # "What followed" marks on your own Sets' columns
     return table_columns.resolve(columns, saved)
 
 

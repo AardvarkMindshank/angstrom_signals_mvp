@@ -186,6 +186,7 @@ export default function(component) {
         d.addEventListener("click", (e) => e.stopPropagation());
         nm.appendChild(d);
       }
+      if (s.followed && !s.more) nm.appendChild(followedBlock(s.followed, s.evidence && s.evidence.icon));
       if (!s.provided) nm.appendChild(el("div", "muted", s.meta));
       c.appendChild(nm);
       c.appendChild(button("+", "Start a scan with " + s.name, () => act("create", {set: s.key}), "sq"));
