@@ -1,0 +1,45 @@
+
+Pullback in an uptrend: No clear difference
+  195 episodes in 134 weeks, 12 assets (38 coin, 157 share episodes); top [('AXP', 0.113), ('AAPL', 0.108), ('ADBE', 0.108)]
+  gain_first 0.451, gain_first_usual 0.518, loss_first 0.497, loss_first_usual 0.447, move 0.025, move_usual 0.397, higher 0.508, higher_usual 0.551
+  first: estimate -0.11711359636032433, 95% [-0.2738427405643233, 0.03961554784367462], p 0.14120728659612525, Holm False, consistency {'checked': ['before 2019', '2019 to 2021', '2022 to Oct 2024', 'coins', 'shares'], 'same_way': ['before 2019', '2019 to 2021', '2022 to Oct 2024', 'shares'], 'all_same': False}
+  move: estimate -0.15795722109779667, 95% [-0.6974725195304533, 0.38155807733486], p 0.5623398522314018, Holm False, consistency {'checked': ['before 2019', '2019 to 2021', '2022 to Oct 2024', 'coins', 'shares'], 'same_way': ['before 2019', '2022 to Oct 2024', 'shares'], 'all_same': False}
+
+Rally in a downtrend: No clear difference
+  151 episodes in 94 weeks, 12 assets (76 coin, 75 share episodes); top [('ADA-USD', 0.179), ('ALGO-USD', 0.132), ('AVAX-USD', 0.106)]
+  gain_first 0.550, gain_first_usual 0.485, loss_first 0.430, loss_first_usual 0.463, move 0.001, move_usual -0.065, higher 0.510, higher_usual 0.509
+  first: estimate 0.0974078703466306, 95% [-0.09574438508563606, 0.2905601257788973], p 0.3189480648990969, Holm False, consistency {'checked': ['before 2019', '2019 to 2021', '2022 to Oct 2024', 'coins', 'shares'], 'same_way': ['before 2019', '2019 to 2021', '2022 to Oct 2024', 'coins', 'shares'], 'all_same': True}
+  move: estimate -0.08835669399509365, 95% [-0.7843493861033517, 0.6076359981131645], p 0.8013826630509123, Holm False, consistency {'checked': ['before 2019', '2019 to 2021', '2022 to Oct 2024', 'coins', 'shares'], 'same_way': ['before 2019', '2019 to 2021', 'shares'], 'all_same': False}
+
+Trend alignment: Too few to judge
+
+Breakout with volume: No clear difference
+  258 episodes in 168 weeks, 12 assets (103 coin, 155 share episodes); top [('ADA-USD', 0.143), ('ATOM-USD', 0.112), ('AMD', 0.089)]
+  gain_first 0.508, gain_first_usual 0.501, loss_first 0.453, loss_first_usual 0.452, move 0.573, move_usual 0.352, higher 0.550, higher_usual 0.543
+  first: estimate 0.005017829395175482, 95% [-0.1645444874152309, 0.17458014620558185], p 0.9532542174970365, Holm False, consistency {'checked': ['before 2019', '2019 to 2021', '2022 to Oct 2024', 'coins', 'shares'], 'same_way': ['2022 to Oct 2024', 'coins'], 'all_same': False}
+  move: estimate 0.4020629778253204, 95% [-0.24803969636023293, 1.0521656520108738], p 0.22242842345887742, Holm False, consistency {'checked': ['before 2019', '2019 to 2021', '2022 to Oct 2024', 'coins', 'shares'], 'same_way': ['2019 to 2021', '2022 to Oct 2024', 'coins', 'shares'], 'all_same': False}
+
+Volatility squeeze: No clear difference
+  439 episodes in 236 weeks, 12 assets (150 coin, 289 share episodes); top [('ADA-USD', 0.109), ('AMGN', 0.093), ('ATOM-USD', 0.089)]
+  size 1.448, size_usual 1.761
+  size: estimate 0.09407110063048141, 95% [-0.13448649719541175, 0.32262869845637454], p 0.41582988244158203, Holm False, consistency {'checked': ['before 2019', '2019 to 2021', '2022 to Oct 2024', 'coins', 'shares'], 'same_way': ['before 2019', '2022 to Oct 2024', 'shares'], 'all_same': False}
+
+Oversold in a range: No clear difference
+  258 episodes in 154 weeks, 12 assets (75 coin, 183 share episodes); top [('AMD', 0.112), ('AMT', 0.112), ('AMZN', 0.112)]
+  gain_first 0.442, gain_first_usual 0.505, loss_first 0.527, loss_first_usual 0.453, move 0.207, move_usual 0.112, higher 0.554, higher_usual 0.528
+  first: estimate -0.1371798671701246, 95% [-0.29505508963642524, 0.020695355296176027], p 0.08776067088970083, Holm False, consistency {'checked': ['before 2019', '2019 to 2021', '2022 to Oct 2024', 'coins', 'shares'], 'same_way': ['before 2019', '2019 to 2021', '2022 to Oct 2024', 'coins', 'shares'], 'all_same': True}
+  move: estimate 0.009842563097995211, 95% [-0.39928141828967234, 0.41896654448566273], p 0.9619990153827823, Holm False, consistency {'checked': ['before 2019', '2019 to 2021', '2022 to Oct 2024', 'coins', 'shares'], 'same_way': ['before 2019', '2019 to 2021', 'shares'], 'all_same': False}
+
+Near support in a range: No clear difference
+  362 episodes in 222 weeks, 12 assets (113 coin, 249 share episodes); top [('AMZN', 0.102), ('AMGN', 0.099), ('ATOM-USD', 0.099)]
+  gain_first 0.508, gain_first_usual 0.515, loss_first 0.461, loss_first_usual 0.443, move 0.406, move_usual 0.191, higher 0.575, higher_usual 0.555
+  first: estimate -0.025024488665580606, 95% [-0.14412897453815962, 0.09407999720699842], p 0.6774735423380382, Holm False, consistency {'checked': ['before 2019', '2019 to 2021', '2022 to Oct 2024', 'coins', 'shares'], 'same_way': ['before 2019', '2019 to 2021', '2022 to Oct 2024', 'coins', 'shares'], 'all_same': True}
+  move: estimate 0.17252156430946752, 95% [-0.17828251454783145, 0.5233256431667666], p 0.33130303601748284, Holm False, consistency {'checked': ['before 2019', '2019 to 2021', '2022 to Oct 2024', 'coins', 'shares'], 'same_way': ['before 2019', '2019 to 2021', '2022 to Oct 2024', 'shares'], 'all_same': False}
+
+Overextended: No clear difference
+  637 episodes in 270 weeks, 12 assets (178 coin, 459 share episodes); top [('AXP', 0.104), ('AMZN', 0.1), ('ADBE', 0.096)]
+  gain_first 0.535, gain_first_usual 0.517, loss_first 0.429, loss_first_usual 0.444, move 0.314, move_usual 0.291, higher 0.559, higher_usual 0.551
+  first: estimate 0.03431563137844957, 95% [-0.06692811216730005, 0.1355593749241992], p 0.5025724139365413, Holm False, consistency {'checked': ['before 2019', '2019 to 2021', '2022 to Oct 2024', 'coins', 'shares'], 'same_way': ['2019 to 2021', '2022 to Oct 2024', 'coins', 'shares'], 'all_same': False}
+  move: estimate 0.1988176573522951, 95% [-0.15696910977763404, 0.5546044244822242], p 0.269994459656282, Holm False, consistency {'checked': ['before 2019', '2019 to 2021', '2022 to Oct 2024', 'coins', 'shares'], 'same_way': ['before 2019', '2019 to 2021', '2022 to Oct 2024', 'coins', 'shares'], 'all_same': True}
+
+Bitcoin trend filter: A filter for other Sets: it is not studied on its own.
