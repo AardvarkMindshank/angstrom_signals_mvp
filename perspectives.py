@@ -239,8 +239,9 @@ def followed_card(doc: dict | None, key: str | None = None) -> dict | None:
     title = "What followed"
     lines = []
     if s.get("episodes"):
-        title += f" · {_month(data.get('start', s['first']))} to {_month(data.get('through', s['last']))} · " \
-                 f"{s['assets']} assets"
+        title += f" · {_month(data.get('start', s['first']))} to {_month(data.get('through', s['last']))}"
+        if s.get("coin_assets") is not None:
+            lines.append(f"Studied on {s['coin_assets']} major coins and {s['share_assets']} large US shares.")
         lines.append(f"Turned Yes {s['episodes']} separate times, in {s['weeks']} different weeks.")
         n = s["plain"]
         if s["type"] == "neutral":

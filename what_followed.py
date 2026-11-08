@@ -264,6 +264,8 @@ def study(per_set: dict, types: dict, runs: int = rs.RUNS, seed: int = rs.SEED) 
             summary.update({
                 "assets": int(rows["asset"].nunique()),
                 "coins": int((rows["kind"] == "crypto").sum()), "shares": int((rows["kind"] == "equity").sum()),
+                "coin_assets": int(rows.loc[rows["kind"] == "crypto", "asset"].nunique()),
+                "share_assets": int(rows.loc[rows["kind"] == "equity", "asset"].nunique()),
                 "top_assets": concentration(rows),
                 "first": _naive(rows["date"]).min().strftime("%Y-%m-%d"),
                 "last": _naive(rows["date"]).max().strftime("%Y-%m-%d"),
