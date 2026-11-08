@@ -45,8 +45,8 @@ const { chromium, devices } = require("playwright");
       check(`${label}: Visualize History draws the chosen asset and a pane per other asset`, panes >= 10, `${panes} panes`);
       const legend = await page.locator(".ang-lwc-legend").first().innerText();
       check(`${label}: the legend names the Set`, legend.includes("Volatility squeeze"), legend.replace(/\n/g, " ").slice(0, 120));
-      const waiting = await page.getByText("⏳ 10Y").count();
-      check(`${label}: opens on the last year while older years load (⏳)`, waiting > 0);
+      const seg = await page.evaluate(() => { const t = document.body.innerText; const i = t.indexOf("Years"); return t.slice(i, i + 60); });
+      check(`${label}: opens on the last year while older years load (⏳)`, seg.includes("⏳"), seg.replace(/\n/g, " "));
       // Tap the third small pane: that asset goes on top.
       const before = (await page.locator(".ang-lwc-legend").first().innerText()).split("\n")[0];
       await page.locator(".ang-lwc").first().scrollIntoViewIfNeeded();
@@ -60,10 +60,11 @@ const { chromium, devices } = require("playwright");
       await page.waitForFunction((b) => { const l = document.querySelector(".ang-lwc-legend"); return l && !l.innerText.startsWith(b); }, before, { timeout: 60000 }).catch(() => {});
       await page.waitForTimeout(1500);
       const after = (await page.locator(".ang-lwc-legend").first().innerText()).split("\n")[0];
-      check(`${label}: tapping a small chart puts it on top`, after !== before, before + " → " + after);
+      const topName = (t) => t.split(" · ")[0];
+      check(`${label}: tapping a small chart puts it on top`, topName(after) !== topName(before), before + " → " + after);
       // Older years fill in; then 10Y can be chosen.
-      await page.waitForFunction(() => !document.body.innerText.includes("⏳ 10Y"), null, { timeout: 600000 }).catch(() => {});
-      check(`${label}: older years finish loading`, (await page.getByText("⏳ 10Y").count()) === 0);
+      await page.waitForFunction(() => !document.body.innerText.includes("⏳"), null, { timeout: 600000 }).catch(() => {});
+      check(`${label}: older years finish loading`, !(await page.evaluate(() => document.body.innerText.includes("⏳"))));
       await page.getByRole("button", { name: "10Y", exact: true }).first().click().catch(() => {}); await page.waitForTimeout(3000);
       await page.locator(".ang-lwc").first().scrollIntoViewIfNeeded();
       await page.screenshot({ path: `${out}/${label}_history.png`, fullPage: false });
