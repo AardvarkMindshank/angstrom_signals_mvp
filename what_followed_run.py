@@ -29,7 +29,8 @@ LIBRARY = ["demo:pullback", "demo:rally", "demo:alignment", "demo:breakout", "de
 
 
 def symbols(prices: str) -> list[str]:
-    return sorted(p.name[:-7] for p in Path(prices).glob("*.csv.gz"))
+    """Coins and shares; not the S&P 500 index (_GSPC), which is saved as the market benchmark, not an asset."""
+    return sorted(p.name[:-7] for p in Path(prices).glob("*.csv.gz") if not p.name.startswith("_"))
 
 
 def kind_of(symbol: str) -> str:
@@ -89,6 +90,8 @@ def study_step(args) -> int:
         folder = Path(args.out) / "answers" / key.replace(":", "_")
         parts = []
         for f in sorted(folder.glob("*.json")) if folder.exists() else []:
+            if f.name.startswith("_"):
+                continue
             rec = json.loads(f.read_text())
             symbol = rec["symbol"]
             hashes[key] = rec["hash"]
