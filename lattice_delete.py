@@ -44,5 +44,6 @@ def column_settings_without(settings: dict, key: str) -> dict | None:
 def blocked_message(kind: str, users: list[str]) -> str:
     what = "Sets" if kind == "group" else "scans"
     names = ", ".join(users[:6]) + (f" and {len(users) - 6} more" if len(users) > 6 else "")
+    one = "Set" if kind == "group" else "scan"
     return (f"Used in {len(users)} of your {what}: {names}. Remove it from "
-            f"{'them' if len(users) > 1 else 'it'} first, then delete.")
+            f"{'them' if len(users) > 1 else 'that ' + one} first, then delete.")
