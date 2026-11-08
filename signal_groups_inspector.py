@@ -45,7 +45,7 @@ def saved_configs(supabase) -> tuple[list[dict], str | None]:
         by_cfg.setdefault(v["config_id"], []).append(v)
     for c in configs:
         c["versions"] = sorted(by_cfg.get(c["id"], []), key=lambda v: v["version"])
-    return [c for c in configs if c["versions"]], None
+    return [c for c in configs if c["versions"] and not c.get("archived")], None      # deleted = archived: hidden
 
 
 def _rpc_error(exc) -> str:

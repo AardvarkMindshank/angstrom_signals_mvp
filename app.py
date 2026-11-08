@@ -9579,6 +9579,14 @@ _COLUMNS_DIALOG = st.dialog("Table columns", width="medium")(_choose_columns_dia
 def _table_column_specs() -> list[dict]:
     """The account's chosen reading columns, resolved to definitions. Saved Groups and Sets are read only when
     one is chosen, at most once a minute (shared with Angstrom Lattice)."""
+    drop = st.session_state.pop("_drop_column", None)
+    if drop:                     # a deleted Group or Set: its table column goes too (lattice_delete.py)
+        import lattice_delete
+
+        kept = lattice_delete.column_settings_without(
+            (st.session_state.get("cloud_prefs") or {}).get("settings") or {}, drop)
+        if kept is not None:
+            save_account_settings({"table_columns": kept})
     settings = (st.session_state.get("cloud_prefs") or {}).get("settings") or {}
     columns = table_columns.chosen(settings if isinstance(settings, dict) else {})
     saved = []

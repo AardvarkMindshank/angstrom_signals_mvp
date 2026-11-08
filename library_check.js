@@ -74,6 +74,23 @@ const { chromium, devices } = require("playwright");
       await page.screenshot({ path: `${out}/${label}_history_tall.png`, fullPage: false });
     }
     check(`${label}: no browser errors`, errors.length === 0, errors.join("; "));
+    if (label === "desktop") {   // One "Start from" list; deleting a Group a Set uses is refused with its name
+      await page.goto(url + "?section=groups&seed=trend,pullback&preset=1"); await page.waitForSelector(".lat .rule", { timeout: 120000 }); await page.waitForTimeout(1500);
+      const startBox = page.locator('[data-testid="stSelectbox"]').filter({ hasText: "Start from" }).first();
+      await startBox.scrollIntoViewIfNeeded();
+      await startBox.locator('[role="combobox"], [data-baseweb="select"], input').first().click({ force: true });
+      if (!(await page.locator('[role="option"]').count())) await page.keyboard.press("ArrowDown");
+      await page.waitForSelector('[role="option"]', { timeout: 5000 }).catch(() => {}); await page.waitForTimeout(600);
+      const opts = await page.locator('[role="option"]').allInnerTexts();
+      check(`${label}: Start from lists New, provided, then yours`, opts[0].includes("New Group") && opts.some((o) => o.includes("(provided)")) && opts.some((o) => o.includes("My Trend")), opts.join(" / ").slice(0, 200));
+      check(`${label}: no separate starter picker`, await page.getByText("Copy", { exact: true }).count() === 0);
+      await page.keyboard.press("Escape");
+      await page.getByRole("button", { name: /Delete this Group/ }).first().click(); await page.waitForTimeout(800);
+      const pop = await page.locator('[data-testid="stPopoverBody"]').first().innerText().catch(() => "");
+      check(`${label}: a Group used by a Set can't be deleted`, pop.includes("Used in 1 of your Sets") && pop.includes("Pullback"), pop.replace(/\n/g, " ").slice(0, 160));
+      await page.screenshot({ path: `${out}/${label}_delete.png`, fullPage: false });
+      await page.keyboard.press("Escape");
+    }
     // The Group editor: no # tags, each condition on its own line, red remove buttons.
     await page.goto(url + "?section=groups&seed=trend&preset=1"); await page.waitForSelector(".lat .rule", { timeout: 120000 }); await page.waitForTimeout(1500);
     const hashes = await page.locator(".lat .tag", { hasText: /^#$/ }).count();
