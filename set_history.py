@@ -273,3 +273,66 @@ def strip_rows(supabase, doc: dict, assets: list[tuple[str, str, str]], progress
     firsts = [r["spans"][0][0] for r in rows if r["spans"]]
     lasts = [r["spans"][-1][1] for r in rows if r["spans"]]
     return {"rows": rows, "start": min(firsts) if firsts else None, "end": max(lasts) if lasts else None}
+
+
+# ----------------------------------------------------------------------------------------------- quick first look
+
+QUICK_DAYS = 400       # the last year, plus a little: the chart can open on 1Y while older years are worked out
+
+
+def bounds(strip: dict) -> dict:
+    firsts = [r["spans"][0][0] for r in strip["rows"] if r["spans"]]
+    lasts = [r["spans"][-1][1] for r in strip["rows"] if r["spans"]]
+    strip["start"] = min(firsts) if firsts else None
+    strip["end"] = max(lasts) if lasts else None
+    strip["pending"] = sum(1 for r in strip["rows"] if not r.get("full"))
+    return strip
+
+
+def quick_rows(supabase, doc: dict, assets: list[tuple[str, str, str]], progress=None, frames=full_daily) -> dict:
+    """Visualize History, first look: assets whose history is saved come back whole (brought up to date with the new
+    days); the others get just their last year, marked not "full" (complete_row does the rest, one at a time)."""
+    from column_answers import def_hash
+
+    h = def_hash(doc)
+    keys = [asset_key(k, i) for k, i, _ in assets]
+    stored = load(supabase, [h], keys)
+    rows = []
+    for n, (kind, asset_id, name) in enumerate(assets):
+        if progress:
+            progress(n, len(assets), name)
+        key = asset_key(kind, asset_id)
+        row = {"key": key, "kind": kind, "id": asset_id, "name": name, "spans": [], "full": True}
+        try:
+            frame = frames(kind, asset_id)
+            if frame is None or frame.empty:
+                rows.append(row)
+                continue
+            subjects = {(sk, sid): frames(sk, sid) for sk, sid in subjects_of(doc)}
+            subjects = {k: v for k, v in subjects.items() if v is not None}
+            if (h, key) in stored:
+                row["spans"], changed = bring_up_to_date(doc, frame, kind, asset_id, stored[(h, key)], subjects)
+                if changed:
+                    save(supabase, h, key, row["spans"])
+            else:
+                start = frame.index[-1] - pd.Timedelta(days=QUICK_DAYS)
+                row["spans"] = spans(daily_answers(doc, frame, kind, asset_id, start=start, subjects=subjects))
+                row["full"] = False
+        except Exception:
+            pass
+        rows.append(row)
+    return bounds({"rows": rows})
+
+
+def complete_row(supabase, doc: dict, strip: dict, frames=full_daily) -> str | None:
+    """Work out the whole history of the next asset that only has its last year; returns its name (None when done)."""
+    for row in strip["rows"]:
+        if not row.get("full"):
+            try:
+                row["spans"] = history_for(supabase, doc, row["kind"], row["id"], frames) or row["spans"]
+            except Exception:
+                pass
+            row["full"] = True
+            bounds(strip)
+            return row["name"]
+    return None

@@ -68,6 +68,8 @@ function signature(data) {
     data.key, n, data.times[0], data.times[n - 1], c[n - 1], data.ohlc[1][n - 1], data.ohlc[2][n - 1],
     data.volume[n - 1], data.forming, data.series.map((s) => s.id + ":" + s.pane + ":" + (s.scale || "")),
     data.panes.map((p) => p.height), data.vlines.length, data.price_lines.length, data.theme.dark, data.right_offset,
+    (data.zones || []).map((z) => z || "").join("|").length, data.series.map((s) => (s.zones || []).filter((z) => z).length),
+    data.zones_name || "",
   ]);
 }
 
@@ -344,6 +346,20 @@ function draw(L, root, data) {
     wickUpColor: theme.up, wickDownColor: theme.down, priceLineVisible: true, lastValueVisible: true,
   }, 0);
   candles.setData(candleRows);
+  if (data.pane_keys) {
+    // Visualize History: tapping a small pane puts that asset on top.
+    chart.subscribeClick((p) => {
+      if (!p || !p.point) return;
+      let pane = typeof p.paneIndex === "number" ? p.paneIndex : -1;
+      if (pane < 0) {            // older library: work it out from the height
+        let y = p.point.y, top = 0;
+        chart.panes().forEach((x, i) => { const h = x.getHeight(); if (pane < 0 && y >= top && y < top + h) pane = i; top += h + 1; });
+      }
+      const key = data.pane_keys[pane];
+      if (pane > 0 && key && root.__trigger) root.__trigger("pane", key);
+    });
+    host.title = "Tap a small chart to put that asset on top";
+  }
   if (data.zones && data.zones.some((c) => c)) candles.attachPrimitive(new ZoneBlocks(data.zones));
 
   const made = { candles };
@@ -561,6 +577,7 @@ export default function (component) {
   if (!data || !data.times) return;
   let root = parentElement.querySelector(".ang-lwc");
   if (!root) root = buildShell(parentElement);
+  root.__trigger = component.setTriggerValue;
   const sig = signature(data);
   if (root.__chart && root.__sig === sig) return; // nothing changed: keep the chart exactly as it is
   loadLibrary(data.lib)

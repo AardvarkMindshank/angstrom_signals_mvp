@@ -45,6 +45,26 @@ const { chromium, devices } = require("playwright");
       check(`${label}: Visualize History draws the chosen asset and a pane per other asset`, panes >= 10, `${panes} panes`);
       const legend = await page.locator(".ang-lwc-legend").first().innerText();
       check(`${label}: the legend names the Set`, legend.includes("Volatility squeeze"), legend.replace(/\n/g, " ").slice(0, 120));
+      const waiting = await page.getByText("⏳ 10Y").count();
+      check(`${label}: opens on the last year while older years load (⏳)`, waiting > 0);
+      // Tap the third small pane: that asset goes on top.
+      const before = (await page.locator(".ang-lwc-legend").first().innerText()).split("\n")[0];
+      await page.locator(".ang-lwc").first().scrollIntoViewIfNeeded();
+      const pt = await page.evaluate(() => {
+        const r = document.querySelector(".ang-lwc"), c = r.__chart, host = r.querySelector(".ang-lwc-host").getBoundingClientRect();
+        let top = 0; const hs = c.panes().map((p) => p.getHeight());
+        for (let i = 0; i < 3; i++) top += hs[i] + 1;
+        return { x: host.left + host.width / 2, y: host.top + top + hs[3] / 2 };
+      });
+      await page.mouse.click(pt.x, pt.y);
+      await page.waitForFunction((b) => { const l = document.querySelector(".ang-lwc-legend"); return l && !l.innerText.startsWith(b); }, before, { timeout: 60000 }).catch(() => {});
+      await page.waitForTimeout(1500);
+      const after = (await page.locator(".ang-lwc-legend").first().innerText()).split("\n")[0];
+      check(`${label}: tapping a small chart puts it on top`, after !== before, before + " → " + after);
+      // Older years fill in; then 10Y can be chosen.
+      await page.waitForFunction(() => !document.body.innerText.includes("⏳ 10Y"), null, { timeout: 600000 }).catch(() => {});
+      check(`${label}: older years finish loading`, (await page.getByText("⏳ 10Y").count()) === 0);
+      await page.getByRole("button", { name: "10Y", exact: true }).first().click().catch(() => {}); await page.waitForTimeout(3000);
       await page.locator(".ang-lwc").first().scrollIntoViewIfNeeded();
       await page.screenshot({ path: `${out}/${label}_history.png`, fullPage: false });
       await page.setViewportSize({ width: 1280, height: 1600 }); await page.waitForTimeout(800);

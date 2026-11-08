@@ -36,6 +36,7 @@ def payload(strip: dict, selected: str, years: int, frames=sh.full_daily, dark: 
         df, {"panels": [], "overlays": [], "secondary": []}, kind=main["kind"], interval="1D",
         range_key="All", view_key=f"history|{selected}|{years}|{len(rows)}", price_px=MAIN_PX, dark=dark,
         source="Daily prices from Yahoo", title=f"{main['name']} · {set_name}")
+    out["pane_keys"] = [main["key"]]
     out["log_scale"] = True                   # ten years of prices span a huge range: equal steps are equal % moves
     out["zones"] = sh.colours_for(days, main["spans"], show_no)
     out["zones_answers"] = sh.answers_for(days, main["spans"])
@@ -50,6 +51,7 @@ def payload(strip: dict, selected: str, years: int, frames=sh.full_daily, dark: 
         closes = other["close"].reindex(df.index, method="ffill")
         closes[df.index < other.index[0]] = float("nan")
         pane = len(out["panes"])
+        out.setdefault("pane_keys", [main["key"]]).append(r["key"])
         out["panes"].append({"title": r["name"], "height": ROW_PX})
         out["series"].append({
             "id": f"row_{r['key']}", "type": "line", "name": r["name"], "pane": pane,

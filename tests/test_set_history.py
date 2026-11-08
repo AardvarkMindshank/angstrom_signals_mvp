@@ -109,3 +109,32 @@ def test_strip_rows_cover_every_asset():
     assert [r["name"] for r in strip["rows"]] == ["A", "B"] and seen == ["A", "B"]
     assert strip["rows"][0]["spans"] and strip["rows"][1]["spans"] == []
     assert strip["start"] == strip["rows"][0]["spans"][0][0]
+
+
+def test_first_look_is_the_last_year_then_older_years_fill_in():
+    f = _frame(3, 900)
+    doc = prism.library_sets()["demo:squeeze"]
+    db = _Db()
+    frames = lambda k, i: f
+    strip = sh.quick_rows(db, doc, [("crypto", "a", "A"), ("crypto", "b", "B")], frames=frames)
+    assert strip["pending"] == 2 and db.writes == 0                       # partial years are never saved
+    first = pd.Timestamp(strip["start"])
+    assert first >= f.index[-1].tz_localize(None) - pd.Timedelta(days=sh.QUICK_DAYS + 1)
+    assert sh.complete_row(db, doc, strip, frames) == "A" and strip["pending"] == 1 and db.writes == 1
+    assert pd.Timestamp(strip["start"]) < first                          # A now reaches back further
+    assert sh.complete_row(db, doc, strip, frames) == "B" and strip["pending"] == 0
+    assert sh.complete_row(db, doc, strip, frames) is None
+    # Next time both are saved: whole histories at once, nothing pending.
+    again = sh.quick_rows(db, doc, [("crypto", "a", "A"), ("crypto", "b", "B")], frames=frames)
+    assert again["pending"] == 0 and again["rows"][0]["spans"] == strip["rows"][0]["spans"]
+
+
+def test_history_chart_panes_can_be_tapped():
+    import history_chart as hc
+
+    f = _frame(3, 500)
+    doc = prism.library_sets()["demo:squeeze"]
+    strip = sh.strip_rows(None, doc, [("crypto", "a", "A"), ("crypto", "b", "B")], frames=lambda k, i: f)
+    data = hc.payload(strip, "crypto:b", 0, frames=lambda k, i: f)
+    assert data["pane_keys"] == ["crypto:b", "crypto:a"] and data["log_scale"]
+    assert len(data["panes"]) == 2 and data["series"][-1]["zones"]

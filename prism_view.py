@@ -278,52 +278,76 @@ def _history_component(st):
 
 def _history_view(st, scan, strip) -> None:
     """🕰️ Visualize History: the chosen asset's candles with the Set's answers as bands, and one thin pane per
-    asset underneath with its own price line and bands, all on one time axis."""
+    asset underneath with its own price line and bands, all on one time axis. Tap a small pane to put it on top.
+    Assets seen for the first time open with their last year; older years are worked out one asset per rerun, and
+    3Y, 10Y and All become available when every asset is done."""
     import history_chart
+    import lattice_panel
     import prism_board as pb
+    import set_history
 
     obj = pb.scan_object(scan)
+    sid = scan["id"]
     rows = [r for r in strip.get("rows") or [] if r.get("spans")]
     st.markdown(f"##### 🕰️ Visualize History · {obj['name']}")
     if not rows:
         st.caption("No long daily history was available for these assets.")
         return
     names = {r["key"]: r["name"] for r in rows}
+    pending = int(strip.get("pending") or 0)
+    nxt = st.session_state.pop(f"hist_top_next_{sid}", None)       # a tapped pane, applied before the picker
+    if nxt in names:
+        st.session_state[f"hist_top_{sid}"] = nxt
     cols = st.columns([3, 3, 2], vertical_alignment="bottom")
     with cols[0]:
-        top = st.selectbox("On top", list(names), format_func=lambda k: names[k], key=f"hist_top_{scan['id']}",
-                           help="The asset drawn large with candles; every asset in the scan has a thin row underneath.")
+        top = st.selectbox("On top", list(names), format_func=lambda k: names[k], key=f"hist_top_{sid}",
+                           help="The asset drawn large with candles. Tap any small chart to put it on top.")
     with cols[1]:
-        span = st.segmented_control("Years", ["1Y", "3Y", "10Y", "All"], default="10Y",
-                                    key=f"hist_years_{scan['id']}", help="How far back the chart opens. "
-                                    "You can also zoom and drag along the time axis.") or "10Y"
+        span = st.segmented_control(
+            "Years", ["1Y", "3Y", "10Y", "All"], default="1Y" if pending else "10Y", key=f"hist_years_{sid}",
+            format_func=lambda o: o if (o == "1Y" or not pending) else f"⏳ {o}",
+            help="How far back the chart opens; you can also zoom and drag along the time axis. ⏳ = still being "
+                 "worked out.") or "1Y"
     with cols[2]:
-        show_no = st.toggle("No as faint red", key=f"hist_no_{scan['id']}",
+        show_no = st.toggle("No as faint red", key=f"hist_no_{sid}",
                             help="Tint the No days too. Off keeps the chart clear, since most days are No.")
+    if pending and span != "1Y":
+        st.caption(f"⏳ Older years are still being worked out ({len(strip['rows']) - pending} of "
+                   f"{len(strip['rows'])} assets done); showing the last year until then.")
+        span = "1Y"
     years = {"1Y": 1, "3Y": 3, "10Y": 10, "All": 0}[span]
     dark = str(getattr(getattr(st.context, "theme", None), "type", "") or "") == "dark"
     data = history_chart.payload(strip, top, years, dark=dark, show_no=show_no, set_name=obj["name"])
     if not data:
         st.caption("The chosen asset's daily history could not be loaded.")
         return
-    _history_component(st)(key=f"lw_history_{scan['id']}", data=data)
-    yes = {r["key"]: sum(1 for x in r["spans"] if x[2] == "yes") for r in rows}
-    st.caption(f"Green = Yes (conditions met), amber = Unknown, clear = No · {names[top]}: Yes {yes[top]} times since "
-               f"{next(r for r in rows if r['key'] == top)['spans'][0][0][:4]}. A description of the past, not a "
-               "forecast. Each day uses only data up to its close.")
-    if st.button("Open on the main price chart", icon=":material/candlestick_chart:", key=f"hist_open_{scan['id']}",
-                 help="Show this asset on the main chart with this Set's bands, beside your usual indicators."):
+    result = _history_component(st)(key=f"lw_history_{sid}", data=data, on_pane_change=lambda: None)
+    tapped = getattr(result, "pane", None)
+    if tapped and tapped in names and tapped != top and tapped != st.session_state.get(f"hist_tapped_{sid}"):
+        st.session_state[f"hist_tapped_{sid}"] = tapped
+        st.session_state[f"hist_top_next_{sid}"] = tapped
+        lattice_panel.rerun(st)
+    yes = sum(1 for x in next(r for r in rows if r["key"] == top)["spans"] if x[2] == "yes")
+    since = next(r for r in rows if r["key"] == top)["spans"][0][0][:4]
+    st.caption(f"Green = Yes (conditions met), amber = Unknown, clear = No · {names[top]}: Yes {yes} times since "
+               f"{since}. Tap a small chart to put it on top. A description of the past, not a forecast; each day "
+               "uses only data up to its close.")
+    if st.button("Open on the main price chart", icon=":material/candlestick_chart:", key=f"hist_open_{sid}",
+                 help="Select this asset everywhere (tables, chart, analysis sections) with this Set's bands on."):
         r = next(r for r in rows if r["key"] == top)
         st.session_state["_chart_jump"] = {
             "pick": f"{'Crypto' if r['kind'] == 'crypto' else 'Stock'}|{r['id']}",
-            "band": (f"scan:{scan['id']}", f"{obj['name']} (this scan)", obj["set"])}
-        import lattice_panel
-
+            "band": (f"scan:{sid}", f"{obj['name']} (this scan)", obj["set"])}
         lattice_panel.rerun_page(st)
+    if pending:                     # one more asset's older years, then draw again
+        with st.spinner(f"Working out older years ({len(strip['rows']) - pending + 1} of {len(strip['rows'])})…"):
+            set_history.complete_row(_SUPABASE[0], obj["set"], strip)
+        lattice_panel.rerun(st)
 
 
 def _history_strip(st, scan, obj, assets) -> tuple[str, str]:
-    """Visualize History: the scan's Set on every past day for each of its assets (set_history.py)."""
+    """Visualize History, first look: every asset's last year (or its whole saved history), so the chart opens
+    quickly; _history_view fills in the older years."""
     import prism_board as pb
     import set_history
 
@@ -331,17 +355,18 @@ def _history_strip(st, scan, obj, assets) -> tuple[str, str]:
     picked = [(k if k == "crypto" else "equity", i, n) for m in ("crypto", "equity") for k, i, n in markets[m]]
     if not picked:
         return "error", "This scan has no assets on your Watchlist right now."
-    bar = st.progress(0.0, text="Working out every past day…")
+    bar = st.progress(0.0, text="Working out the last year…")
 
     def progress(n, total, name):
-        bar.progress(n / max(total, 1), text=f"Working out every past day: {name} ({n + 1} of {total}). "
-                                             "The first time takes a few seconds per asset; after that it's quick.")
+        bar.progress(n / max(total, 1), text=f"Working out the last year: {name} ({n + 1} of {total})")
 
-    strip = set_history.strip_rows(_SUPABASE[0], obj["set"], picked, progress)
+    strip = set_history.quick_rows(_SUPABASE[0], obj["set"], picked, progress)
     bar.empty()
     st.session_state["prism_history"] = {scan["id"]: strip}          # one at a time, drawn under the scans
+    st.session_state.pop(f"hist_years_{scan['id']}", None)
     shown = sum(1 for r in strip["rows"] if r["spans"])
-    return "ok", f"History for {shown} of {len(picked)} assets: see the chart under the scans."
+    more = " Older years are being filled in." if strip["pending"] else ""
+    return "ok", f"History for {shown} of {len(picked)} assets: see the chart under the scans.{more}"
 
 
 def _run(st, scan, obj, op, action, assets) -> tuple[str, str]:
