@@ -75,6 +75,8 @@ class DemoDb:
             return Query([v for c in s["configs"].values() for v in c["versions"]])
         if name == "prism_scans":
             return Query(list(s["scans"].values()))
+        if name == "set_studies":
+            return Query(list(s.setdefault("studies", {}).values()))
         return Query([])                 # run history and anything else: nothing yet
 
     def rpc(self, name, params=None):
@@ -98,6 +100,9 @@ class DemoDb:
                                "paused": o["paused"], "assets": o["assets"], "snoozes": o["snoozes"],
                                "alert_mode": "change", "set_version": 1}
             return Query(sid)
+        if name == "request_set_study":          # queued, never worked out on this page
+            s.setdefault("studies", {})[params["set_hash"]] = {"set_hash": params["set_hash"], "status": "queued"}
+            return Query("queued")
         if name == "prism_delete_scan":
             s["scans"].pop(params["p_id"], None)
             return Query(None)

@@ -98,6 +98,20 @@ const { chromium, devices } = require("playwright");
       await page.screenshot({ path: `${out}/${label}_delete.png`, fullPage: false });
       await page.keyboard.press("Escape");
     }
+    if (label === "desktop") {   // "What followed" in the Set editor: the study, or a button that queues one
+      await page.goto(url + "?section=sets&seed=trend,pullback&preset=1"); await page.waitForSelector(".lat .rule", { timeout: 120000 }); await page.waitForTimeout(1500);
+      const body = await page.locator("body").innerText();
+      check(`${label}: Set editor has What followed`, body.includes("What followed · what happened after"), "");
+      const study = page.getByRole("button", { name: /Study this Set/ });
+      if (await study.count()) {
+        await study.first().click(); await page.waitForTimeout(1500);
+        const after = await page.locator("body").innerText();
+        check(`${label}: Study this Set queues it`, after.includes("Queued") || after.includes("waiting its turn"), "");
+      } else {
+        check(`${label}: the provided study shows on a same-logic Set`, body.includes("What followed:"), "");
+      }
+      await page.screenshot({ path: `${out}/${label}_set_study.png`, fullPage: false });
+    }
     // The Group editor: no # tags, each condition on its own line, red remove buttons.
     await page.goto(url + "?section=groups&seed=trend&preset=1"); await page.waitForSelector(".lat .rule", { timeout: 120000 }); await page.waitForTimeout(1500);
     const hashes = await page.locator(".lat .tag", { hasText: /^#$/ }).count();
