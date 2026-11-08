@@ -77,7 +77,8 @@ const { chromium, devices } = require("playwright");
     if (label === "desktop") {   // One "Start from" list; deleting a Group a Set uses is refused with its name
       await page.goto(url + "?section=groups&seed=trend,pullback&preset=1"); await page.waitForSelector(".lat .rule", { timeout: 120000 }); await page.waitForTimeout(1500);
       await page.getByText("Start from").first().scrollIntoViewIfNeeded();
-      await page.locator('[data-testid="stSelectbox"]').filter({ hasText: "My Trend" }).first().click(); await page.waitForTimeout(500);
+      await page.locator('[data-testid="stSelectbox"]').filter({ hasText: "Start from" }).filter({ visible: true }).first()
+        .locator('[data-baseweb="select"]').first().click(); await page.waitForTimeout(600);
       const opts = await page.locator('[role="option"]').allInnerTexts();
       check(`${label}: Start from lists New, provided, then yours`, opts[0].includes("New Group") && opts.some((o) => o.includes("(provided)")) && opts.some((o) => o.includes("My Trend")), opts.join(" / ").slice(0, 200));
       check(`${label}: no separate starter picker`, await page.getByText("Copy", { exact: true }).count() === 0);
