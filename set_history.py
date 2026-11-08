@@ -212,7 +212,17 @@ def full_daily(kind: str, asset_id: str) -> pd.DataFrame | None:
     key = (kind, str(asset_id), pd.Timestamp.now(tz="UTC").strftime("%Y-%m-%d"))
     if key in _FRAMES:
         return _FRAMES[key]
-    ticker = data_fetchers.crypto_ticker(asset_id) if kind == "crypto" else str(asset_id).upper()
+    if kind == "crypto":             # a Yahoo pair such as BTC-USD (a bare "BTC" or "LINK" is a share, not the coin)
+        coin = data_fetchers.resolve_crypto_id(asset_id)
+        ticker = data_fetchers.YAHOO_TICKER_BY_ID.get(coin) or data_fetchers.YF_BY_COINGECKO_ID.get(coin)
+        if ticker is None:
+            try:
+                symbol = data_fetchers._coingecko_symbol(coin)
+                ticker = f"{symbol}-USD" if symbol else None
+            except Exception:
+                ticker = None
+    else:
+        ticker = str(asset_id).upper()
     frame = None
     if ticker:
         raw = data_fetchers._history_from_yahoo(ticker, "max")

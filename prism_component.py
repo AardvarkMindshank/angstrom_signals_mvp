@@ -27,6 +27,9 @@ CSS = lattice_component.CSS + """
 .lat.prism .hstrip .hname{flex:0 0 7.5em;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lat.prism .hstrip svg{flex:1 1 auto;height:16px;min-width:0;border-radius:3px;background:rgba(127,127,127,.12)}
 .lat.prism .hstrip .hax{display:flex;justify-content:space-between;font-size:11px;opacity:.7;margin-left:calc(7.5em + 8px)}
+.lat.prism .hseg{display:inline-flex;gap:4px;margin-left:auto}
+.lat.prism .hseg button{min-height:28px;padding:2px 8px;font-size:12px}
+.lat.prism .hseg button.on{border-color:#0f766e;background:rgba(15,118,110,.12)}
 .lat.prism button.hist.on{border-color:#0f766e;background:rgba(15,118,110,.12)}
 .lat.prism .pvf{display:flex;flex-wrap:wrap;gap:4px;margin:4px 0 6px}
 .lat.prism .pvf button{min-width:36px;min-height:32px;padding:2px 6px;font-size:15px;border-radius:8px;
@@ -188,8 +191,21 @@ export default function(component) {
   function historyStrip(s) {
     const h = s.history, box = el("div", "hstrip");
     const day = (t) => Date.parse(t + "T00:00:00Z");
-    const t0 = day(h.start || "2020-01-01"), t1 = day(h.end || "2020-01-02") + 864e5, span = Math.max(1, t1 - t0);
-    const head = el("div", "muted", "🕰️ Visualize History · green = Yes, amber = Unknown, clear = No · tap a row to see it on the price chart");
+    const t1 = day(h.end || "2020-01-02") + 864e5;
+    const YEARS = [["1Y", 1], ["3Y", 3], ["10Y", 10], ["All", 0]];
+    const pickYears = window.__prismHistYears === undefined ? 10 : window.__prismHistYears;
+    const tStart = day(h.start || "2020-01-01");
+    const t0 = pickYears ? Math.max(tStart, t1 - pickYears * 365.25 * 864e5) : tStart, span = Math.max(1, t1 - t0);
+    const head = el("div", "row");
+    head.appendChild(el("span", "muted", "🕰️ Visualize History · green = Yes, amber = Unknown, clear = No · tap a row to see it on the price chart"));
+    const seg = el("span", "hseg");
+    YEARS.forEach(([word, years]) => {
+      const b = button(word, years ? `The last ${years} year${years > 1 ? "s" : ""}` : "Everything there is", () => {
+        window.__prismHistYears = years; redraw(); });
+      if (years === pickYears) b.classList.add("on");
+      seg.appendChild(b);
+    });
+    head.appendChild(seg);
     box.appendChild(head);
     const NS = "http://www.w3.org/2000/svg";
     (h.rows || []).forEach((r) => {
@@ -202,8 +218,9 @@ export default function(component) {
       const svg = document.createElementNS(NS, "svg");
       svg.setAttribute("viewBox", "0 0 1000 16"); svg.setAttribute("preserveAspectRatio", "none");
       r.spans.forEach(([a, b, ans]) => {
-        if (ans === "no") return;
-        const x = (day(a) - t0) / span * 1000, w = Math.max(0.6, (day(b) + 864e5 - day(a)) / span * 1000);
+        if (ans === "no" || day(b) + 864e5 < t0) return;
+        const from = Math.max(day(a), t0);
+        const x = (from - t0) / span * 1000, w = Math.max(0.6, (day(b) + 864e5 - from) / span * 1000);
         const rect = document.createElementNS(NS, "rect");
         rect.setAttribute("x", x); rect.setAttribute("y", 0); rect.setAttribute("width", w); rect.setAttribute("height", 16);
         rect.setAttribute("fill", ans === "yes" ? "rgba(22,163,74,.85)" : "rgba(217,119,6,.55)");
