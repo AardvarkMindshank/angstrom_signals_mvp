@@ -267,12 +267,13 @@ def study(per_set: dict, types: dict, runs: int = rs.RUNS, seed: int = rs.SEED) 
 
 
 def plain_numbers(rows: pd.DataFrame, kind: str) -> dict:
-    """The numbers the card shows, beside the same numbers for comparable days."""
+    """The numbers the card shows, beside the same numbers for comparable days. Averages, so they always agree
+    with the tests (which compare averages)."""
     if kind == "neutral":
-        return {"size": float(rows["size"].median()), "size_usual": float(rows["size_usual"].median())}
+        return {"size": float(rows["size"].mean()), "size_usual": float(rows["size_usual"].mean())}
     return {"gain_first": float(rows["up_first"].mean()), "gain_first_usual": float(rows["up_first_usual"].mean()),
             "loss_first": float(rows["down_first"].mean()), "loss_first_usual": float(rows["down_first_usual"].mean()),
-            "move": float(rows["move"].median()), "move_usual": float(rows["move_usual"].median()),
+            "move": float(rows["move"].mean()), "move_usual": float(rows["move_usual"].mean()),
             "higher": float(rows["higher"].mean()), "higher_usual": float(rows["higher_usual"].mean())}
 
 

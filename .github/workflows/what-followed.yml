@@ -10,7 +10,7 @@ permissions:
   contents: write
 env:
   SHARDS: "12"
-  LIMIT: "1"
+  LIMIT: "0"
   SETS: ""
 jobs:
   answers:
