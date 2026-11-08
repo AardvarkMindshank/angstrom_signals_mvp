@@ -8,6 +8,7 @@ in 🔎 Prism straight away, for Run now and Scheduled scans.
 
 from __future__ import annotations
 
+import copy
 import json
 import time
 
@@ -17,6 +18,23 @@ import lattice_editor as le
 import lattice_sets as ls
 
 START_NEW = "new"
+
+
+def _provided_starts(choices: list) -> dict:
+    """Provided Sets the editor can open as your copy: key -> (label, model). One whose parts the editor can't
+    rebuild (for example a Group made only for that Set) is left out."""
+    import perspectives
+    import table_columns
+
+    out = {}
+    for key, doc in table_columns.provided_sets().items():
+        try:
+            model, _why = ls.from_document(copy.deepcopy(doc), choices)
+        except Exception:
+            model = None
+        if model is not None:
+            out[key] = (f"{doc['name']} {perspectives.icons(doc)} (provided)", model)
+    return out
 
 
 def render(st, supabase, user_id: str = "") -> None:
@@ -30,15 +48,29 @@ def render(st, supabase, user_id: str = "") -> None:
         cached = (time.time(), *gi.saved_configs(supabase))
         st.session_state["siggroups_saved"] = cached
     _, saved, problem = cached
+    import lattice_view
+
+    st.session_state["_lattice_user"] = user_id
+    lattice_view.undo_bar(st, supabase, "set")
     choices = ls.group_choices(saved, user_id)
     mine = [c for c in saved if c.get("kind") == "set" and c.get("owner_id") == user_id and c["versions"]]
-    starts = {START_NEW: "➕ New Set", **{f"saved:{c['id']}": f"🗂️ {c['name']} (yours, v{c['versions'][-1]['version']})"
-                                         for c in mine}}
+    starts = {START_NEW: "➕ New Set"}
+    # Provided Sets are run in Prism; most can't open here yet (they use labelled copies of the starter Groups that
+    # the editor can't match), so only those that rebuild cleanly are offered.
+    provided = _provided_starts(choices) if lattice_panel.provided_shown(st) else {}
+    starts.update({k: label for k, (label, _) in provided.items()})
+    starts.update({f"saved:{c['id']}": f"🗂️ {c['name']} (yours, v{c['versions'][-1]['version']})" for c in mine})
+    if st.session_state.get("lattice_set_start") not in starts:
+        st.session_state.pop("lattice_set_start", None)
     start = st.selectbox("Start from", list(starts), format_func=starts.get, key="lattice_set_start")
     if st.session_state.get("lattice_set_loaded") != start:
         st.session_state["lattice_set_loaded"] = start
         st.session_state["lattice_set_model"], st.session_state["lattice_set_source"] = ls.empty_model(), None
-        if start != START_NEW:
+        if start in provided:                             # a provided Set opens as your own copy
+            model = provided[start][1]
+            model["name"] = f"{model.get('name') or 'Set'} (my copy)"
+            st.session_state["lattice_set_model"] = model
+        elif start != START_NEW:
             cfg = next(c for c in mine if f"saved:{c['id']}" == start)
             model, why = ls.from_document(cfg["versions"][-1]["body"], choices)
             if model is None:
@@ -102,6 +134,8 @@ def render(st, supabase, user_id: str = "") -> None:
             st.session_state.pop("siggroups_saved", None)
         except Exception as exc:
             st.error(f"Refused: {gi._rpc_error(exc)}")
+    if source and source.get("owner_id") == user_id:
+        lattice_view._delete(st, supabase, "set", source)
     if source and cols[1].button(f"💾 Save as version {source['current_version'] + 1} of {source['name']}",
                                  disabled=not screen["can_save"], key="lattice_set_save_next"):
         try:

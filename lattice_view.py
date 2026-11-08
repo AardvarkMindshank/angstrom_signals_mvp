@@ -22,16 +22,18 @@ from signal_library import loaders
 START_NEW = "new"
 
 
-def _sources(saved: list[dict], user_id: str, current: str | None = None) -> tuple[dict, dict]:
-    """"Start from": a new Group and your own. A provided starter appears only while it is the one being copied
-    (picked under "Copy a provided starter")."""
+def _sources(saved: list[dict], user_id: str, current: str | None = None, provided: bool = True) -> tuple[dict, dict]:
+    """"Start from": a new Group, then the provided starters (opened as your copy), then your own Groups."""
+    import perspectives
+
+    del current
     labels = {START_NEW: "➕ New Group"}
     docs: dict = {}
     for alias in sg.STARTERS:
         doc = sg.starter(alias)
         docs[f"starter:{alias}"] = (doc, None)
-        if current == f"starter:{alias}":
-            labels[current] = f"Copy of {doc['name']} (provided starter)"
+        if provided:
+            labels[f"starter:{alias}"] = f"{doc['name']} {perspectives.icons(doc)} (provided)"
     for c in saved:
         if c.get("kind") != "group" or c.get("owner_id") != user_id or not c["versions"]:
             continue
@@ -51,9 +53,11 @@ def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str = "") 
         cached = (time.time(), *gi.saved_configs(supabase))
         st.session_state["siggroups_saved"] = cached
     _, saved, problem = cached
+    st.session_state["_lattice_user"] = user_id
+    undo_bar(st, supabase, "group")
     if "_lattice_start_next" in st.session_state:          # a starter picked under "Copy a provided starter"
         st.session_state["lattice_start"] = st.session_state.pop("_lattice_start_next")
-    labels, docs = _sources(saved, user_id, st.session_state.get("lattice_start"))
+    labels, docs = _sources(saved, user_id, st.session_state.get("lattice_start"), lattice_panel.provided_shown(st))
     if st.session_state.get("lattice_start") not in labels:
         st.session_state.pop("lattice_start", None)
     if lattice_panel.provided_shown(st):
@@ -162,18 +166,68 @@ def starters_html() -> str:
 def _provided_starters(st) -> None:
     """The starter Groups, in their own folded section: copy one to start from it."""
     with st.expander(lattice_panel.PROVIDED_TITLE + " · starter Groups", icon=":material/inventory_2:"):
-        st.caption("The dashboard's own readings, as Groups. Copy one to change it; the original stays as it is. "
-                   "Hide this section in ⚙️ Settings → Show provided starters and examples.")
-        import perspectives
-
+        st.caption("The dashboard's own readings, as Groups. Pick one in **Start from** below to open your own copy; "
+                   "the original stays as it is. Hide these in ⚙️ Settings → Show provided starters and examples.")
         st.html(starters_html())
-        names = {a: f"{sg.starter(a)['name']} {perspectives.icons(sg.starter(a))}" for a in sg.STARTERS}
-        cols = st.columns([3, 1], vertical_alignment="bottom")
-        pick = cols[0].selectbox("Starter", list(names), format_func=names.get, key="lattice_starter_pick")
-        if cols[1].button("Copy", icon=":material/content_copy:", key="lattice_starter_copy", width="stretch",
-                          help="Start a new Group from a copy of this starter"):
-            st.session_state["_lattice_start_next"] = f"starter:{pick}"
-            lattice_panel.rerun(st)
+
+
+def _delete(st, supabase, kind: str, source: dict) -> None:
+    """🗑 Delete your own Group or Set: refused while something is built on it; a table column showing it is
+    removed; Undo brings it back (lattice_delete.py)."""
+    import lattice_delete as ld
+    import signal_groups_inspector as gi
+
+    saved = (st.session_state.get("siggroups_saved") or (0, []))[1]
+    user_id = st.session_state.get("_lattice_user")
+    if kind == "group":
+        users = ld.sets_using(source["id"], saved, user_id)
+    else:
+        try:
+            scans = (supabase.table("prism_scans").select("name, set_source").execute().data or [])
+        except Exception:
+            scans = []
+        users = ld.scans_using(source["id"], scans)
+    word = "Group" if kind == "group" else "Set"
+    with st.popover(f"Delete this {word}", icon=":material/delete:",
+                    help=f"Remove {source['name']} from your {word}s. You can undo it straight after."):
+        if users:
+            st.warning(ld.blocked_message(kind, users))
+            return
+        st.markdown(f"Delete **{source['name']}**? It disappears from your lists; if it is a column in your tables, "
+                    "that column is removed too. You can undo this straight after.")
+        if st.button(f"Delete {source['name']}", type="primary", key=f"lattice_delete_{kind}_{source['id']}"):
+            try:
+                supabase.rpc("analysis_archive_config", {"cfg": source["id"]}).execute()
+            except Exception as exc:
+                st.error(f"Refused: {gi._rpc_error(exc)}")
+                return
+            st.session_state["_drop_column"] = f"saved:{source['id']}"
+            st.session_state["_lattice_undo"] = {"id": source["id"], "name": source["name"], "kind": kind}
+            st.session_state.pop("siggroups_saved", None)
+            st.session_state.pop("lattice_start" if kind == "group" else "lattice_set_start", None)
+            st.session_state.pop("lattice_loaded" if kind == "group" else "lattice_set_loaded", None)
+            lattice_panel.rerun_page(st)
+
+
+def undo_bar(st, supabase, kind: str) -> None:
+    """Straight after a delete: Undo brings the Group or Set back."""
+    import signal_groups_inspector as gi
+
+    undo = st.session_state.get("_lattice_undo")
+    if not undo or undo["kind"] != kind:
+        return
+    cols = st.columns([4, 1], vertical_alignment="center")
+    cols[0].info(f"Deleted **{undo['name']}**.", icon=":material/delete:")
+    if cols[1].button("Undo", icon=":material/undo:", key=f"lattice_undo_{kind}", width="stretch"):
+        try:
+            supabase.rpc("analysis_restore_config", {"cfg": undo["id"]}).execute()
+        except Exception as exc:
+            st.error(f"Could not undo: {gi._rpc_error(exc)}. If it says the function is missing, run "
+                     "sql/2026-11-13_restore_config.sql once.")
+            return
+        st.session_state.pop("_lattice_undo", None)
+        st.session_state.pop("siggroups_saved", None)
+        lattice_panel.rerun(st)
 
 
 def _save(st, supabase, model: dict, can_save: bool) -> None:
@@ -191,6 +245,8 @@ def _save(st, supabase, model: dict, can_save: bool) -> None:
             st.session_state["lattice_saved_id"] = new_id
         except Exception as exc:
             st.error(f"Refused: {gi._rpc_error(exc)}")
+    if source and source.get("owner_id") == st.session_state.get("_lattice_user"):
+        _delete(st, supabase, "group", source)
     if source:
         if cols[1].button(f"💾 Save as version {source['current_version'] + 1} of {source['name']}", disabled=not can_save,
                           key="lattice_save_next", help="Saves a new version. Earlier versions stay as they were."):
