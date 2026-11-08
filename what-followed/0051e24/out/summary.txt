@@ -1,0 +1,22 @@
+
+Pullback in an uptrend: Too few to judge
+
+Rally in a downtrend: Too few to judge
+
+Trend alignment: Consistent difference
+  1417 episodes in 336 weeks, 86 assets (299 coin, 1118 share episodes); top [('AMGN', 0.019), ('WMT', 0.019), ('ORCL', 0.018)]
+  gain_first 0.488, gain_first_usual 0.548, loss_first 0.469, loss_first_usual 0.413, move 0.454, move_usual 0.546, higher 0.558, higher_usual 0.600
+  first: estimate -0.11533505214479588, 95% [-0.19162472416651322, -0.03904538012307854], p 0.0034340603096932247, Holm True, consistency {'checked': ['before 2019', '2019 to 2021', '2022 to Oct 2024', 'coins', 'shares'], 'same_way': ['before 2019', '2019 to 2021', '2022 to Oct 2024', 'coins', 'shares'], 'all_same': True}
+  move: estimate -0.09194876490925265, 95% [-0.3536761220870137, 0.16977859226850844], p 0.48722549908570123, Holm False, consistency {'checked': ['before 2019', '2019 to 2021', '2022 to Oct 2024', 'coins', 'shares'], 'same_way': ['before 2019', '2022 to Oct 2024', 'shares'], 'all_same': False}
+
+Breakout with volume: Too few to judge
+
+Volatility squeeze: Too few to judge
+
+Oversold in a range: Too few to judge
+
+Near support in a range: Too few to judge
+
+Overextended: Too few to judge
+
+Bitcoin trend filter: A filter for other Sets: it is not studied on its own.
