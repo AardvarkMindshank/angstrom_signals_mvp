@@ -54,7 +54,7 @@ def test_a_scan_card_shows_summary_details_and_an_update_badge():
                 choices, ASSETS, NOW)
     assert v["counts"] == {"yes": 1, "no": 1, "unknown": 0} and v["dots"] == ["failed", "yes"]
     assert v["update"] == {"key": "saved:cfg1:2", "version": 2} and v["version"] == "v1"
-    assert v["asset_count"] == 2 and v["assets"] == [{"label": "All crypto", "group": True}]
+    assert v["asset_count"] == 2 and v["assets"] == [{"label": "All crypto", "group": True, "watchlist": False}]
     assert v["next_text"].startswith("next in") and v["yes_now"] == [{"key": "crypto:solana", "name": "Solana"}]
     assert v["snoozes"][0]["key"] == "crypto:solana" and [r["answer"] for r in v["results"]] == ["yes", "no"]
     manual = pb.view(_stored(schedule={"kind": "manual"}), [], [], choices, ASSETS, NOW)
