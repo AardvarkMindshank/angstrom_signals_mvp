@@ -4543,6 +4543,17 @@ export default function(component) {
   channel.onmessage = (event) => {
     const msg = event.data || {};
     if (msg.type === "asset" && msg.kind && msg.id) pick(String(msg.kind), String(msg.id), 0);
+    // Visualize History in a Lattice pop-out: open the asset here, on the main window's chart, with the Set's bands.
+    if (msg.type === "chart_jump" && msg.jump && msg.token && quiet) {
+      const send = (tries) => {
+        if (window.__angstromPickAsset) {
+          window.__angstromPickAsset("picked", "jump|" + msg.token + "|" + JSON.stringify(msg.jump));
+        } else if (tries < 10) {
+          window.setTimeout(() => send(tries + 1), 300);
+        }
+      };
+      send(0);
+    }
   };
   if (!quiet) channel.postMessage({ type: "hello" });
 }
@@ -4550,6 +4561,27 @@ export default function(component) {
 _asset_follow = st.components.v2.component(
     "pop_out_asset_follow",
     js=_ASSET_FOLLOW_JS,
+    isolate_styles=False,
+)
+
+_CHART_SEND_JS = """
+export default function(component) {
+  const { data, parentElement } = component;
+  const shell = parentElement.closest(".stBidiComponent") || parentElement;
+  shell.style.display = "none";
+  const holder = shell.closest('[data-testid="stElementContainer"]');
+  if (holder) holder.style.display = "none";
+  const token = String((data && data.token) || "");
+  if (!token || !("BroadcastChannel" in window) || window.__angstromJumpSent === token) return;
+  window.__angstromJumpSent = token;
+  const channel = window.__angstromJumpTx || (window.__angstromJumpTx = new BroadcastChannel("angstrom-link"));
+  channel.postMessage({ type: "chart_jump", token: token, jump: data.jump });
+  try { if (window.opener && !window.opener.closed) window.opener.focus(); } catch (e) { /* another origin */ }
+}
+"""
+_chart_send = st.components.v2.component(
+    "pop_out_chart_send",
+    js=_CHART_SEND_JS,
     isolate_styles=False,
 )
 
@@ -13478,6 +13510,17 @@ def _take_alert_pick() -> None:
     raw = str(getattr(reported, "picked", "") or "")
     if "|" not in raw or st.session_state.get("_alert_pick_seen") == raw:
         return
+    if raw.startswith("jump|"):                 # from a Lattice pop-out: its Visualize History opens this chart
+        st.session_state["_alert_pick_seen"] = raw
+        try:
+            jump = json.loads(raw.split("|", 2)[2])
+            st.session_state["_chart_jump"] = {"pick": str(jump["pick"]), "band": tuple(jump["band"])}
+        except (ValueError, KeyError, TypeError, IndexError):
+            return
+        st.session_state.scroll_target = "interactive-chart"
+        st.session_state.scroll_token = str(time.time_ns())
+        _remember_section("interactive_chart", True)
+        return
     raw_full, raw = raw, _mark_clicked_alert_read(raw)
     if not raw:
         st.session_state["_alert_pick_seen"] = raw_full
@@ -13595,6 +13638,11 @@ def _render_lattice() -> None:
 
 if _POPOUT_VIEW == "lattice_panel":
     # Lattice needs only the Watchlist, so the dashboard sections are not worked out in this window.
+    _jump = st.session_state.pop("_chart_jump", None)
+    if _jump:      # Visualize History's "Open on the main price chart": the main window draws it
+        _chart_send(key="chart_send", data={"token": str(time.time_ns()), "jump": {
+            "pick": _jump["pick"], "band": list(_jump["band"])}})
+        st.toast("Opened on the main window's price chart.", icon=":material/candlestick_chart:")
     with st.expander(":material/hub: Angstrom Lattice", expanded=True, key="pop_lattice_panel"):
         _render_lattice()
     st.stop()
