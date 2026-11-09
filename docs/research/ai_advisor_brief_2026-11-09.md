@@ -6,6 +6,8 @@
 
 We want an AI advisor inside Angstrom Signals that helps a newcomer do two things. First, turn an idea in plain words into a working setup. Second, understand what the results say, and what they do not. It must never become a tipster: it explains readings and evidence, it never tells anyone to buy or sell.
 
+It is designed in phases: first for what exists today (Groups, Sets, Prism scans and studies), then extended to Strategies once that layer is built. Strategies have their own brief, reviewed before this one is built: [strategies_brief_2026-11-09.md](strategies_brief_2026-11-09.md).
+
 We ask you, as a reviewer, to:
 
 1. Critique the design below: what to keep, change or drop.
@@ -103,19 +105,26 @@ The gap we saw in a competitor's AI summary (confident sentences such as "raises
 - **Cost creep.** Long conversations and repeated history previews add up.
 - **Over-trust.** A fluent assistant can feel more authoritative than the evidence behind it.
 
-## Proposed first version
+## Phases: Sets first, then strategies
 
-Start with explaining, then add building. Explaining only reads, so it is safer and teaches us how the model behaves.
+The advisor grows with the product. Each phase uses only building blocks that already exist and have been tested, so it never describes a capability the app does not have.
 
-1. **Version 1: "Explain this".** An ✨ button on the Why panel, a Set's What followed card and Visualize History. It answers in plain words from tool-returned numbers only, follows the honesty rules, and lists the readings it used.
-2. **Version 2: "Find or build a setup".** The idea-to-setup conversation in Angstrom Lattice, reuse first, drafts validated before they are shown, saving and scanning behind approvals.
-3. **Later:** follow-up questions across several assets ("which of my coins look like this?"), and voice.
+| Phase | Covers | Explain (reads only) | Find or build (with approval) |
+| --- | --- | --- | --- |
+| 1 | Sets, as today | Explains a Why panel reading, a Set's history bands and its What followed card | Turns an idea into Groups and a Set, reuse first; adds it to a Prism scan; starts a study |
+| 2 | Sequences in Sets | Explains why a sequence is Armed or met ("Coinbase turned bullish 3 candles ago; Bitcoin has not yet") | Builds "A, then B within N candles", including across two assets |
+| 3 | Strategies, tracked | Explains which stage each asset is in and why, and what the plan says happens next | Turns a described plan ("buy in three steps, take profit in two, give up below X") into a strategy draft with its ladder drawn on the chart, for approval |
+| 4 | Strategies, studied | Explains a plan study in the fixed verdict wording, including how many variations were tried | Proposes a study and warns when a change looks like tuning to the past |
 
-Before launch, a set of test questions (including traps such as "should I buy?" and "make it work better on the past") is run against the advisor, and its answers are checked by hand and by rules for invented numbers and forecast words.
+The honesty rules apply in every phase, and strategies add three: the advisor never suggests sizes, stops or targets of its own (it only restates the user's plan); it never turns a stage change into an instruction; and it counts every variation of a plan it builds as a test.
+
+Version 1 is phase 1: an ✨ "Explain this" button first, then "Find or build a setup" for Sets. Phases 2 to 4 follow the strategy work.
+
+Before launch of each phase, a set of test questions (including traps such as "should I buy?", "make it work better on the past" and, from phase 3, "how much should I put in?") is run against the advisor, and its answers are checked by hand and by rules for invented numbers, forecast words and advice.
 
 ## Questions for reviewers
 
-1. **Order:** Is explaining first, building second the right order, or is building the part users will value most?
+1. **Order:** Is explaining first, building second the right order within each phase? And is the phase order (Sets, sequences, tracked strategies, strategy studies) right?
 2. **Tools:** Is the tool list complete and small enough? What would you add, merge or remove?
 3. **Reuse first:** Is matching by logic fingerprint plus "close match" comparison enough? How should the advisor present an existing setup versus a new one so the user is not confused?
 4. **Approvals:** Which steps truly need approval, and which would only add friction?

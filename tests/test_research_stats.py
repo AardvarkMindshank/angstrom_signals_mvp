@@ -173,7 +173,7 @@ def test_holm_step_down():
 
 def test_outcome_labels():
     base = {"estimate": 0.03, "se": 0.01, "df": 15}
-    tq = st.t_dist.ppf(0.95, 15)
+    tq = __import__("scipy.stats").stats.t.ppf(0.95, 15)
     make = lambda est, p_mme: {**base, "estimate": est, "one_sided_bound95": est - tq * 0.01,
                                "one_sided_upper95": est + tq * 0.01, "p_vs_mme": p_mme}
     assert st.outcome(make(0.03, 0.2), True, 0.02) == "Confirmed"

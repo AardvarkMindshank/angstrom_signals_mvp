@@ -25,7 +25,6 @@ import math
 
 import numpy as np
 import pandas as pd
-from scipy.stats import t as t_dist
 
 LAG = 1                       # entry at the close after the signal (as backtest.py)
 SEED = 20261031
@@ -244,6 +243,8 @@ def studentised_test(num, den, horizon: int, kappa: float, direction: int = 1, m
     - p_vs_mme tests H0: effect <= the minimum meaningful effect (evidence it is ABOVE the threshold).
     - ci95 is two-sided and is a statement about the size of the effect, not a test.
     """
+    from scipy.stats import t as t_dist   # here, not at the top: the live app imports this module without scipy
+
     num, den = np.asarray(num, float), np.asarray(den, float)
     if len(num) < 40 or den.sum() <= 0:
         return {"estimate": None}
@@ -280,6 +281,8 @@ def outcome(test: dict, holm_passed: bool, mme: float) -> str:
     """The outcome labels fixed in the spec (section 0 and 4)."""
     if test.get("estimate") is None:
         return "Not enough data"
+    from scipy.stats import t as t_dist
+
     signed = test["one_sided_bound95"] + t_dist.ppf(0.95, test["df"]) * test["se"]
     if test["one_sided_upper95"] < 0:
         return "Contradicted"
