@@ -9487,8 +9487,10 @@ def _why_items(kind: str, asset_id: str, fingerprint: str, stamp: tuple, _df, _s
     import why_panel
     from group_readings import stored_context
 
-    ctx, _ = stored_context(calculate_indicators(_df), kind, asset_id=asset_id)
-    return why_panel.items(_specs, ctx, _readings, subject_context=_subject_context)
+    frame = calculate_indicators(_df)
+    ctx, _ = stored_context(frame, kind, asset_id=asset_id)
+    return why_panel.items(_specs, ctx, _readings, subject_context=_subject_context, frame=frame, kind=kind,
+                           asset_id=asset_id)
 
 
 def _render_why_panel(asset_type: str, asset_key: str, result: dict, column_specs: list, intraday: dict) -> None:

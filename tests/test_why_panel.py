@@ -55,3 +55,40 @@ def test_background_columns_show_their_stored_answer():
     assert "no answer yet" in waiting["title"] and "background" in waiting["note"]
     got = wp.background_item(spec, {"answer": "yes", "why": "all lines hold", "as_of": "2026-11-04T08:00:00+00:00"})
     assert got["title"].startswith("✓ Fast · Yes") and "all lines hold" in got["note"]
+
+
+def test_week_change_and_sentences():
+    import why_panel as wp
+
+    scores = [10] * 20 + [12, 20, 25, 30, 35, 40, 42, 44]
+    assert wp.week_change(scores) == 44 - 12
+    assert wp.week_change([None] * 10) is None
+    assert wp.group_sentence("Trend", 44, "Bullish", 32) == \
+        "Trend reads bullish (+44); it has risen 32 points over the past week."
+    assert "barely changed" in wp.group_sentence("Trend", 44, "Bullish", 2)
+    dates = [f"2026-11-{d:02d}" for d in range(1, 11)]
+    answers = ["no"] * 3 + ["yes"] * 2 + ["no"] * 5
+    assert wp.set_sentence(answers, dates) == "No for 5 days; last Yes on 5 Nov (Yes on 2 of the last 10 days)."
+    assert wp.set_sentence(["yes"] * 10, dates) == "Yes for all of the last 10 days."
+
+
+def test_trend_reads_each_close_and_feeds_the_card(monkeypatch):
+    import pandas as pd
+
+    import set_history
+    import signal_groups as sg
+    import why_panel as wp
+
+    frame = pd.DataFrame({"close": range(40)}, index=pd.date_range("2026-10-01", periods=40, freq="D", tz="UTC"))
+    monkeypatch.setattr(set_history, "context_at", lambda f, k, day, a, history=None: (day, day))
+    monkeypatch.setattr(sg, "evaluate_group", lambda doc, day: {
+        "score": {"value": (day.day % 10) / 10},
+        "members": [{"key": "a", "state": "observed", "contribution": 0.1}]})
+    spec = {"cluster": None, "doc": {"members": []}, "part": "groups", "key": "k", "name": "Mine"}
+    t = wp.trend(spec, frame, "Crypto", "bitcoin")
+    assert len(t["dates"]) == 30 and len(t["scores"]) == 30 and t["parts"]["a"] == [10] * 30
+    item = {"part": "groups", "name": "Mine", "percent": t["scores"][-1], "label": "Neutral",
+            "rows": [{"key": "a", "role": "score", "name": "a", "percent": 10, "text": "", "share": 1}]}
+    wp.with_trend(item, t)
+    html = wp.block_html(item)
+    assert "<svg" in html and "Mine reads neutral" in html and "→ 0 this week" in html
