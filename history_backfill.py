@@ -106,7 +106,7 @@ def main(argv=None) -> int:
     args = p.parse_args(argv)
     out = Path(args.out)
     stablecoins(out)
-    client = Daily(os.environ["COINALYZE_API_KEY"])
+    client = Daily(os.environ["COINALYZE_API_KEY"].strip())
     markets = client.get("/future-markets")
     exchanges = client.get("/exchanges")
     (out / "derivatives").mkdir(parents=True, exist_ok=True)
