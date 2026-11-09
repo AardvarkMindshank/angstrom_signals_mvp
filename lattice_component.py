@@ -78,6 +78,11 @@ html.angstrom-night .lat .split:hover::after,html.angstrom-night .lat .split.on:
 html.angstrom-night .lat select{color-scheme:dark}
 html.angstrom-night .lat select option{color:#f3f4f6;background:#1f2937}
 .lat input.wide{width:100%}
+.lat .found{flex-basis:100%;display:flex;flex-direction:column;align-items:stretch;gap:2px;margin-top:4px;
+  max-height:220px;overflow:auto;border:1px solid rgba(127,127,127,.35);border-radius:8px;padding:4px}
+.lat .found .pick{text-align:left;background:none;border:0;border-radius:6px;padding:6px 8px;color:inherit;font:inherit;
+  cursor:pointer}
+.lat .found .pick:hover{background:rgba(37,99,235,.15)}
 .lat .drop{border:2px dashed rgba(127,127,127,.45);border-radius:12px;padding:10px;min-height:120px;
   display:flex;flex-direction:column;gap:8px}
 .lat .drop.over{border-color:#0f766e;background:rgba(15,118,110,.08)}
@@ -560,17 +565,49 @@ export default function(component) {
       kind.appendChild(o);
     });
     const id = el("input");
-    id.size = 9; id.placeholder = "COIN, bitcoin"; id.setAttribute("aria-label", "Fixed asset for " + name);
+    id.size = 12; id.placeholder = "Name or ticker, then Enter"; id.setAttribute("aria-label", "Fixed asset for " + name);
+    id.title = "Type a name or ticker and press Enter (or 🔍) to search the market, as in the Watchlist editor.";
     id.value = item.subject ? item.subject.id : "";
-    id.style.display = item.subject ? "" : "none";
+    id.style.display = item.subject || window.__latFixedOpen === item.key ? "" : "none";
+    const slot = item.key;
+    // Market search, as in the Watchlist editor: Python asks CoinGecko (coins) or Yahoo (equities) and sends back
+    // matches; picking one fixes the line to that asset (a coin by its CoinGecko id, an equity by its ticker).
+    const search = () => {
+      const q = id.value.trim();
+      if (!kind.value || !q) return;
+      window.__latFixedOpen = slot;
+      setTriggerValue("search", JSON.stringify({slot: slot, kind: kind.value, q: q, nonce: Date.now()}));
+    };
     const apply = () => {
-      if (!kind.value) { delete item.subject; send(); return; }
+      if (!kind.value) { delete item.subject; window.__latFixedOpen = null; send(); return; }
       id.style.display = "";
-      if (id.value.trim()) { item.subject = {kind: kind.value, id: id.value.trim()}; send(); }
+      window.__latFixedOpen = slot;
+      if (item.subject && item.subject.kind !== kind.value) { delete item.subject; id.value = ""; send(); }
+      id.focus();
     };
     kind.addEventListener("change", apply);
-    id.addEventListener("change", apply);
+    id.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); search(); } });
     wrap.appendChild(kind); wrap.appendChild(id);
+    const go = button("🔍", "Search the market for this name or ticker", search, "sq");
+    go.style.display = id.style.display;
+    wrap.appendChild(go);
+    const found = state.search || {};
+    if (found.slot === slot && found.kind === kind.value && found.nonce !== window.__latSearchUsed) {
+      const list = el("div", "found");
+      if (!(found.results || []).length) list.appendChild(el("div", "muted", "No match for “" + found.q + "”. Try another name or ticker."));
+      (found.results || []).forEach((r) => {
+        const b = el("button", "pick", r.label);
+        b.type = "button";
+        b.title = "Read this line on " + r.label;
+        b.addEventListener("click", () => {
+          window.__latSearchUsed = found.nonce;
+          item.subject = {kind: found.kind, id: r.id};
+          send();
+        });
+        list.appendChild(b);
+      });
+      wrap.appendChild(list);
+    }
     return wrap;
   }
   function onDrop(raw) {

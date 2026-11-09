@@ -37,6 +37,32 @@ def _provided_starts(choices: list) -> dict:
     return out
 
 
+def fixed_asset_matches(raw: str, search_crypto=None, search_stock=None) -> dict | None:
+    """A fixed-asset search from the Set editor ({slot, kind, q, nonce}) answered with market matches, as the
+    Watchlist editor finds them: coins from CoinGecko (fixed by their CoinGecko id), equities from Yahoo (by ticker)."""
+    import data_fetchers
+
+    try:
+        ask = json.loads(raw)
+    except (TypeError, ValueError):
+        return None
+    kind, q = ask.get("kind"), str(ask.get("q") or "").strip()[:60]
+    if kind not in ("crypto", "equity") or not q:
+        return None
+    try:
+        if kind == "crypto":
+            found = (search_crypto or data_fetchers.search_crypto_matches)(q)
+            results = [{"id": m["id"], "label": f"{m.get('name') or m['id']} ({m.get('symbol') or ''})".replace(" ()", "")}
+                       for m in found if m.get("id")]
+        else:
+            found = (search_stock or data_fetchers.search_stock_matches)(q)
+            results = [{"id": m["symbol"], "label": " · ".join(x for x in (m["symbol"], m.get("name"), m.get("exchange"))
+                                                               if x)} for m in found if m.get("symbol")]
+    except Exception:
+        results = []
+    return {"slot": ask.get("slot"), "kind": kind, "q": q, "nonce": ask.get("nonce"), "results": results[:8]}
+
+
 def render(st, supabase, user_id: str = "") -> None:
     st.caption("Combine saved Groups and single signals, then say when the Set answers Yes. A Group goes in exactly "
                "as saved; save a Group with labels in Signal Groups "
@@ -89,12 +115,19 @@ def render(st, supabase, user_id: str = "") -> None:
         model = st.session_state["lattice_set_model"]
     screen = ls.state_for_screen(model, choices)
     screen["show_provided"] = lattice_panel.provided_shown(st)   # the library's "Provided" section
+    screen["search"] = st.session_state.get("lattice_set_search")      # market matches for a fixed asset
     try:
         result = lattice_component.set_component()(
-            key="lattice_set_editor", data={**screen, "catalogue": le.catalogue()}, on_model_change=lambda: None)
+            key="lattice_set_editor", data={**screen, "catalogue": le.catalogue()}, on_model_change=lambda: None,
+            on_search_change=lambda: None)
     except Exception as exc:
         st.info(f"The editor could not load here ({str(exc)[:120]}).")
         result = None
+    asked = getattr(result, "search", None)
+    if asked and asked != st.session_state.get("lattice_set_search_seen"):
+        st.session_state["lattice_set_search_seen"] = asked
+        st.session_state["lattice_set_search"] = fixed_asset_matches(asked)
+        lattice_panel.rerun(st)
     raw = getattr(result, "model", None)
     if raw and raw != st.session_state.get("lattice_set_seen"):
         st.session_state["lattice_set_seen"] = raw
