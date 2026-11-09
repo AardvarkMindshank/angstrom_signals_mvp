@@ -19,12 +19,17 @@ SERIES = {
         ("02-signals", "Signals", "1:44"),
         ("03-signal-groups", "Signal Groups", "1:39"),
         ("04-signal-sets", "Signal Sets", "1:21"),
-        ("05-prism-scan", "Prism Scan", "1:56"),
+        ("05-prism-scan", "Prism Scan", "1:58"),
     ]),
     "examples": ("Worked examples", [
-        ("w1-trend-with-volume", "Trend with volume behind it", "1:08"),
+        ("w1-trend-with-volume", "Trend with volume behind it", "1:10"),
         ("w2-overextended-rally", "Overextended rally", "1:05"),
         ("w3-breakout-with-volume", "Breakout with volume", "1:08"),
+    ]),
+    # Visualize History (07) joins between these two once its recording is fixed.
+    "evidence": ("Reading the evidence", [
+        ("06-provided-library", "The provided library", "1:18"),
+        ("08-what-followed", "What followed", "1:35"),
     ]),
 }
 STATE = "training_video"
