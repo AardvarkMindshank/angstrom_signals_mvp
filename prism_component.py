@@ -22,6 +22,7 @@ CSS = lattice_component.CSS + """
 .lat.prism details.inside .sig{opacity:.85}
 .lat.prism details.inside .dec{border-left-color:#2563eb}
 .lat.prism details.inside button{margin-top:8px}
+.lat.prism details.inside.scan{font-size:13px;margin:0 0 10px;padding:8px 10px;border:1px solid rgba(127,127,127,.3);border-radius:8px}
 .lat.prism .armed{margin-left:6px;font-size:12px;padding:0 5px;border-radius:8px;background:#ede9fe;color:#5b21b6;cursor:help;white-space:nowrap}
 .lat.prism .line{font-size:12px;opacity:.8;margin-top:2px}
 .lat.prism .more{font-size:12px;margin-top:2px}
@@ -97,6 +98,7 @@ export default function(component) {
   const lib = state.library || {sets: [], groups: [], assets: []};
   const scans = state.scans || [];
   window.__prismOpen = window.__prismOpen || {};
+  window.__prismInside = window.__prismInside || {};
   window.__prismPast = window.__prismPast || {};
   if (state.open_new && window.__prismOpen[state.open_new] === undefined) window.__prismOpen[state.open_new] = true;
   if (state.open_new) window.__prismSel = state.open_new;
@@ -128,6 +130,7 @@ export default function(component) {
       past: '<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 8v4l3 2"/>',
       pause: '<rect x="6" y="5" width="4" height="14" rx="1" fill="currentColor" stroke="none"/><rect x="14" y="5" width="4" height="14" rx="1" fill="currentColor" stroke="none"/>',
       resume: '<path d="M7 4.5v15l12-7.5z"/>',
+      inside: '<circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/>',
       copy: '<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>',
       del: '<path d="M6 6l12 12M18 6L6 18"/>',
       chev: '<path d="M9 6l6 6-6 6"/>',
@@ -394,6 +397,12 @@ export default function(component) {
     if (s.history) hb.classList.add("on");
     ctl.appendChild(hb);
     ctl.appendChild(iconButton(s.paused ? "resume" : "pause", s.paused ? "Resume: the first run after resuming records answers without alerting" : "Pause: keeps the scan, stops runs and alerts", () => act(s.paused ? "resume" : "pause", {scan: s.id})));
+    if (s.inside) {
+      const ib = iconButton("inside", "Look inside: the Groups and signals this scan's Set is made of, and when it says Yes",
+        () => { window.__prismInside[s.id] = !window.__prismInside[s.id]; window.__prismOpen[s.id] = true; redraw(); });
+      if (window.__prismInside[s.id]) ib.classList.add("on");
+      ctl.appendChild(ib);
+    }
     ctl.appendChild(iconButton("copy", "Duplicate this scan: same Set, to run on other assets or with another schedule or alerts (the copy runs only when you press Play until you schedule it). To change what the Set checks, use 🔍 Look inside → Make my own copy", () => act("duplicate", {scan: s.id})));
     const del = iconButton("del", "Delete this scan", () => {
       if (del.classList.contains("arm")) { act("delete", {scan: s.id}); return; }
@@ -406,6 +415,13 @@ export default function(component) {
 
     if (!open) return c;
     const body = el("div", "body");
+    if (s.inside && window.__prismInside[s.id]) {
+      const box = insideBlock({key: s.set_key, inside: s.inside, open: s.set_key ? s.set_open : null});
+      box.open = true;
+      box.querySelector("summary").textContent = "🔍 Inside this scan's Set";
+      box.classList.add("scan");
+      body.appendChild(box);
+    }
     c.appendChild(body);
 
     if (window.__prismPast[s.id]) {
@@ -435,7 +451,7 @@ export default function(component) {
     });
     const only = s.assets.length === 1;
     ar.appendChild(el("span", "muted", s.asset_count + " assets now · " + (only
-      ? (s.assets[0].group === "watchlist"
+      ? (s.assets[0].watchlist
         ? "to scan less, drop assets or a group here (or tap + in the list): they take the Watchlist's place"
         : "drop more assets or a group here, or tap + in the list (a scan keeps at least one)")
       : "drop assets or a group here, or tap + in the list")));

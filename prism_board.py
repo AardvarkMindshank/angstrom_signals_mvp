@@ -291,8 +291,14 @@ def view(scan: dict, runs: list[dict], latched: list[str], choices: dict, assets
         "schedule": sched, "schedule_text": ps.describe_schedule(sched), "next_text": next_text,
         "notify": {"channel": notify.get("channel", "instant"), "on_yes": notify.get("on_yes", True),
                    "on_no": bool(notify.get("on_no")), "on_fail": bool(notify.get("on_fail"))},
-        "assets": [{"label": asset_label(a, names), "group": bool(a.get("group"))} for a in obj["assets"]],
+        "assets": [{"label": asset_label(a, names), "group": bool(a.get("group")),
+                    "watchlist": a.get("group") == "watchlist"} for a in obj["assets"]],
         "asset_count": sum(len(v) for v in markets.values()),
+        # 🔍 Look inside: the Set this scan runs (as saved in the scan), and how to open it in Signal Sets
+        "inside": _inside(obj["set"]),
+        "set_key": source.get("key") if source.get("key") in choices else None,
+        "set_open": ("copy" if (choices.get(source.get("key")) or {}).get("provided") else "open")
+        if source.get("key") in choices else None,
         "counts": counts, "dots": [run_dot(r) for r in reversed(runs[:10])], "last_text": last_text,
         "yes_now": [{"key": k, "name": names.get(k) or k.split(":", 1)[-1]} for k in sorted(latched)],
         "snoozes": [{"key": k, "name": names.get(k) or k.split(":", 1)[-1], "until": u} for k, u in snoozes.items()],
