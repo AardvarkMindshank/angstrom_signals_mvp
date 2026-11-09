@@ -170,7 +170,7 @@ def test_set_editor_round_trips_fixed_subjects_and_names_them():
     doc = ls.to_document(model, choices)
     assert doc["groups"][0]["subject"] == {"kind": "equity", "id": "COIN"} and sg.validate_set(doc) == []
     assert ls.from_document(doc, choices) == (model, None)
-    assert "Trend Confirmation v1 on COIN score is at least +30" in ls.describe(model, choices)
+    assert "Trend Confirmation on COIN score is at least +30" in ls.describe(model, choices)
     assert any("same moment" in w for w in ls.checks(model, choices)["warnings"])
     bad = ls.clean_model({**raw, "groups": [{"source": next(iter(choices)), "subject": {"kind": "equity", "id": "bad id!"}}]},
                          choices)

@@ -195,7 +195,7 @@ def test_set_decisions_with_any_boxes_not_and_scores_round_trip():
         {"any": [{"group": "flow", "score": {"gte": 0.1}}, {"member": "score_1d", "field": "score", "gte": -20.0}]}]}
     back, why = ls.from_document(doc, choices)
     assert why is None and back == model
-    assert "says Yes when Trend (with labels) v1 label is not Bearish, and any of (Flow v1 score is at least +10" in \
+    assert "says Yes when Trend (with labels) v1 label is not Bearish, and any of (Flow score is at least +10" in \
         ls.describe(model, choices)
 
 

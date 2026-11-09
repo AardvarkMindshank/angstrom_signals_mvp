@@ -55,7 +55,9 @@ def group_choices(saved: list[dict], user_id: str) -> dict:
             if spec:
                 labels.append((spec["otherwise"]["id"], spec["otherwise"]["label"]))
             out[f"saved:{c['id']}:{v['version']}"] = {
-                "name": f"{c['name']} v{v['version']}", "owner": owner, "body": body,
+                # Provided Groups carry no version in their name: their versions are Angstrom's own updates and mean
+                # nothing to a user. Your own keep theirs, since you save them as v1, v2 and may pick either.
+                "name": c["name"] if owner == "starter" else f"{c['name']} v{v['version']}", "owner": owner, "body": body,
                 "provenance": {"source_config": c.get("starter_alias") or c["id"], "source_version": v["version"]},
                 "labels": labels, "has_score": body.get("score") is not None,
                 "members": [m.get("label") or m["ref"]["id"] for m in body.get("members") or []]}
