@@ -36,3 +36,13 @@ jobs:
             code=$(curl -s -o /dev/null -w "%{http_code}" -I "$url" || true)
             echo "$slug: $url (HTTP $code)" | tee -a "$GITHUB_STEP_SUMMARY"
           done
+      - name: The training videos page (not linked from the menus)
+        env:
+          HOSTGATOR_FTP_HOST: ${{ secrets.HOSTGATOR_FTP_HOST }}
+          HOSTGATOR_FTP_USER: ${{ secrets.HOSTGATOR_FTP_USER }}
+          HOSTGATOR_FTP_PASSWORD: ${{ secrets.HOSTGATOR_FTP_PASSWORD }}
+        run: |
+          python3 video/series_page.py out/page
+          python3 video/upload.py out/page training --page
+          code=$(curl -s -o /dev/null -w "%{http_code}" -I "https://www.angstromsignals.com/videos/training/" || true)
+          echo "Page: https://www.angstromsignals.com/videos/training/ (HTTP $code)" | tee -a "$GITHUB_STEP_SUMMARY"
