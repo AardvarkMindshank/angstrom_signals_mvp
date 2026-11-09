@@ -3807,6 +3807,19 @@ def _chart_set_options() -> dict:
 def _chart_set_picker():
     """Choose a Set to show as coloured bands behind the price: green = Yes, amber = Unknown."""
     options = _chart_set_options()
+    extra = st.session_state.get("chart_band_extra")
+    if extra and extra[0] in options:
+        # Opened from Visualize History: when the scan's Set is one already in the list (a provided Set or one of
+        # yours, same rules), select that entry by its usual name instead of adding a second copy of it.
+        import column_answers
+
+        mine = column_answers.def_hash(extra[2])
+        twin = next((k for k, (_, doc) in options.items() if k != extra[0] and column_answers.def_hash(doc) == mine),
+                    None)
+        if twin:
+            if st.session_state.get("chart_band_set") == extra[0]:
+                st.session_state["chart_band_set"] = twin
+            options.pop(extra[0])
     keys = [""] + list(options)
     if st.session_state.get("chart_band_set") not in keys:
         st.session_state["chart_band_set"] = ""
