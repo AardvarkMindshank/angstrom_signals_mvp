@@ -1,0 +1,31 @@
+{
+ "steps": [
+  {
+   "id": "idea",
+   "start": 2.092,
+   "say": "A breakout means more when the structure is already rising, | and when a crowd turns up for it."
+  },
+  {
+   "id": "add",
+   "start": 7.964,
+   "say": "Add three single signals: market structure, Bollinger position, and the heavy-volume candle."
+  },
+  {
+   "id": "lines",
+   "start": 13.814,
+   "say": "Line one: market structure is up. | Line two: the close is at or above the upper Bollinger band. | Line three: today's volume is at least twice the usual."
+  },
+  {
+   "id": "save",
+   "start": 32.946,
+   "say": "Save it, and run it on your equities, | as of the twenty-eighth of April 2023."
+  },
+  {
+   "id": "results",
+   "start": 57.541,
+   "say": "Yes means all three are true on the latest finished candle. | Each No shows which piece is missing."
+  }
+ ],
+ "end": 99.573,
+ "trim": 2.092
+}
