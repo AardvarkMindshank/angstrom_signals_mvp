@@ -203,7 +203,9 @@ def _delete(st, supabase, kind: str, source: dict) -> None:
             st.session_state["_drop_column"] = f"saved:{source['id']}"
             st.session_state["_lattice_undo"] = {"id": source["id"], "name": source["name"], "kind": kind}
             st.session_state.pop("siggroups_saved", None)
-            st.session_state.pop("lattice_start" if kind == "group" else "lattice_set_start", None)
+            # Back to "New" in Start from: popping the choice is not enough, because the browser sends the old
+            # choice back on the next run; the "next" value is applied before the list is drawn.
+            st.session_state["_lattice_start_next" if kind == "group" else "_lattice_set_start_next"] = START_NEW
             st.session_state.pop("lattice_loaded" if kind == "group" else "lattice_set_loaded", None)
             lattice_panel.rerun_page(st)
 
