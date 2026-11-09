@@ -101,6 +101,7 @@ def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str = "") 
         "library": pb.library(choices, assets), "zones": pb.ZONES, "show_provided": shown,
         "scheduled": pb.scheduled_count(scans), "max_scheduled": pb.MAX_SCHEDULED,
         "open_new": st.session_state.pop("prism_open_new", None),
+        "focus_set": st.session_state.pop("prism_focus_set", None),
         "scans": [{**pb.view(s, runs.get(s["id"], []), latches.get(s["id"], []), choices, assets, now,
                              results.get(s["id"])),
                    "history": st.session_state.get("prism_history", {}).get(s["id"])} for s in scans],

@@ -9541,6 +9541,7 @@ def _open_in_lattice(raw: str) -> None:
             st.session_state["lattice_start"] = f"saved:{ref}"
     elif part == "sets" and ref.startswith("demo:"):
         st.session_state["lattice_section"] = "prism"        # provided Sets are run, not edited: Prism lists them
+        st.session_state["prism_focus_set"] = {"key": ref, "token": str(time.time_ns())}   # shown open and outlined
     elif part == "sets":
         st.session_state["lattice_section"] = "sets"
         st.session_state["lattice_set_start"] = f"saved:{ref}"

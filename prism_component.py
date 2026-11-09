@@ -15,6 +15,7 @@ CSS = lattice_component.CSS + """
 .lat.prism .pv{display:inline-flex;gap:2px;margin-left:6px;font-size:13px;vertical-align:middle}
 .lat.prism .pv span{cursor:help}
 .lat.prism .ev{margin-left:6px;font-size:13px;opacity:.75;cursor:help}
+.lat.prism .chip.focus{outline:2px solid #2563eb;outline-offset:1px}
 .lat.prism .armed{margin-left:6px;font-size:12px;padding:0 5px;border-radius:8px;background:#ede9fe;color:#5b21b6;cursor:help;white-space:nowrap}
 .lat.prism .line{font-size:12px;opacity:.8;margin-top:2px}
 .lat.prism .more{font-size:12px;margin-top:2px}
@@ -189,6 +190,16 @@ export default function(component) {
         nm.appendChild(d);
       }
       if (s.followed && !s.more) nm.appendChild(followedBlock(s.followed, s.evidence && s.evidence.icon));
+      if (s.key && s.key === (state.focus_set || {}).key) {
+        c.classList.add("focus");
+        const more = nm.querySelector("details.more");
+        if (more) more.open = true;
+        const token = state.focus_set.token;
+        if (window.__prismFocusToken !== token) {          // scroll to it once per Open in Lattice
+          window.__prismFocusToken = token;
+          window.setTimeout(() => c.scrollIntoView({behavior: "smooth", block: "center"}), 700);
+        }
+      }
       if (!s.provided) nm.appendChild(el("div", "muted", s.meta));
       c.appendChild(nm);
       c.appendChild(button("+", "Start a scan with " + s.name, () => act("create", {set: s.key}), "sq"));
@@ -210,7 +221,8 @@ export default function(component) {
     setList.innerHTML = "";
     const q = qSets.toLowerCase();
     const showProvided = state.show_provided !== false;
-    const usable = lib.sets.filter((s) => showProvided || !s.provided);
+    const focus = (state.focus_set || {}).key || "";          // Open in Lattice on a provided Set
+    const usable = lib.sets.filter((s) => showProvided || !s.provided || s.key === focus);
     const pick = window.__prismPv || "";
     const shown = usable.filter((s) => (!q || (s.name + " " + s.meta + " " + (s.line || "")).toLowerCase().includes(q))
       && (!pick || (s.icons || []).some((p) => p.key === pick)));
@@ -218,7 +230,7 @@ export default function(component) {
     if (given.length) {
       // What Angstrom Signals provides sits in its own folded section at the top (hidden with the setting).
       const box = el("details", "prov");
-      box.open = !!window.__prismProvOpen || !!q || !!pick;
+      box.open = !!window.__prismProvOpen || !!q || !!pick || given.some((s) => s.key === focus);
       box.addEventListener("toggle", () => { if (!q) window.__prismProvOpen = box.open; });
       const sum = el("summary", "", "Provided by Angstrom Signals · " + given.length);
       sum.title = "Example Sets made by Angstrom Signals. Hide them in ⚙️ Settings → Show provided starters and examples.";
