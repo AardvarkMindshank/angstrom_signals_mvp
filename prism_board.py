@@ -159,6 +159,10 @@ def add_asset(obj: dict, item: dict) -> tuple[dict, str | None]:
         return out, None
     if clean in out["assets"]:
         return obj, None
+    if out["assets"] == [{"group": "watchlist"}]:
+        # The whole Watchlist already covers it, so adding one asset or group means narrowing the scan to it.
+        out["assets"] = [clean]
+        return out, None
     if len(out["assets"]) >= MAX_ASSET_ITEMS:
         return obj, f"A scan holds at most {MAX_ASSET_ITEMS} entries."
     out["assets"].append(clean)
@@ -167,7 +171,8 @@ def add_asset(obj: dict, item: dict) -> tuple[dict, str | None]:
 
 def remove_asset(obj: dict, index: int) -> tuple[dict, str | None]:
     if len(obj["assets"]) <= 1:
-        return obj, "A scan needs at least one asset or Watchlist group."
+        return obj, ("A scan needs at least one asset or group. To scan something else, drop it here (or tap + "
+                     "beside it in the Watchlist list): it takes the place of this one.")
     out = copy.deepcopy(obj)
     if 0 <= index < len(out["assets"]):
         out["assets"].pop(index)

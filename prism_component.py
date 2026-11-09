@@ -429,10 +429,16 @@ export default function(component) {
     s.assets.forEach((a, i) => {
       const ch = el("span", "achip" + (a.group ? " grp" : ""));
       ch.appendChild(el("span", "", a.label));
-      ch.appendChild(button("×", "Remove " + a.label, () => act("remove_asset", {scan: s.id, index: i})));
+      // The only entry has no ×: a scan always scans something. Adding another replaces it.
+      if (s.assets.length > 1) ch.appendChild(button("×", "Remove " + a.label, () => act("remove_asset", {scan: s.id, index: i})));
       ar.appendChild(ch);
     });
-    ar.appendChild(el("span", "muted", s.asset_count + " assets now · drop assets or a group here, or tap + in the list"));
+    const only = s.assets.length === 1;
+    ar.appendChild(el("span", "muted", s.asset_count + " assets now · " + (only
+      ? (s.assets[0].group === "watchlist"
+        ? "to scan less, drop assets or a group here (or tap + in the list): they take the Watchlist's place"
+        : "drop more assets or a group here, or tap + in the list (a scan keeps at least one)")
+      : "drop assets or a group here, or tap + in the list")));
     body.appendChild(ar);
 
     const rr = el("div", "row");

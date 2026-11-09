@@ -272,3 +272,11 @@ def test_the_help_guide_covers_lattice_and_prism():
                   "Prism scan alerts", "5 scheduled scans", "Strategies"):
         assert words in guide, words
     assert "All shares" not in guide
+
+
+def test_a_first_asset_takes_the_place_of_the_whole_watchlist():
+    whole = {"assets": [{"group": "watchlist"}]}
+    narrowed, problem = pb.add_asset(whole, {"kind": "crypto", "id": "bitcoin"})
+    assert problem is None and narrowed["assets"] == [{"kind": "crypto", "id": "bitcoin"}]
+    more, _ = pb.add_asset(narrowed, {"kind": "crypto", "id": "solana"})
+    assert more["assets"] == [{"kind": "crypto", "id": "bitcoin"}, {"kind": "crypto", "id": "solana"}]
