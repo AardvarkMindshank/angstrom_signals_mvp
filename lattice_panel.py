@@ -85,6 +85,27 @@ def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str) -> No
         _render(st, supabase, assets, user_id)       # this Streamlit refuses a fragment here: draw it plainly
 
 
+class _nothing:
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+
+_ADVISOR = []
+
+
+def _advisor_window(st, supabase, user_id: str) -> None:
+    """The AI Advisor in a window over the page; the conversation is kept while you close it and follow the steps."""
+    if not _ADVISOR:
+        import advisor
+
+        _ADVISOR.append(st.dialog("✨ AI Advisor", width="large")(
+            lambda sb, uid: advisor.render(st, sb, uid)))
+    _ADVISOR[0](supabase, user_id)
+
+
 def _render(st, supabase, assets: list[tuple[str, str, str]], user_id: str) -> None:
     import perspectives
 
@@ -95,8 +116,15 @@ def _render(st, supabase, assets: list[tuple[str, str, str]], user_id: str) -> N
     if state is not None and "_lattice_section_next" in state:   # a button elsewhere in Lattice asked for another tab
         state["lattice_section"] = state.pop("_lattice_section_next")
     hover = "\n\n".join(f"**{SECTIONS[k][1]}**: {SECTIONS[k][2]}" for k in SECTIONS)
-    chosen = st.segmented_control("Lattice section", list(SECTIONS), format_func=label, default="groups",
-                                  key="lattice_section", label_visibility="collapsed", help=hover) or "groups"
+    bar = st.container(horizontal=True, vertical_alignment="center", gap="small") if hasattr(st, "container") else None
+    with (bar if bar is not None else _nothing()):
+        chosen = st.segmented_control("Lattice section", list(SECTIONS), format_func=label, default="groups",
+                                      key="lattice_section", label_visibility="collapsed", help=hover) or "groups"
+        if hasattr(st, "dialog") and st.button("AI", icon=":material/auto_awesome:", key="advisor_open",
+                                                help="✨ AI Advisor: describe a trading idea in plain words and get "
+                                                     "step-by-step help building and testing it. It explains; you "
+                                                     "do the clicks."):
+            _advisor_window(st, supabase, user_id)
     if chosen == "groups":
         import lattice_view
 
