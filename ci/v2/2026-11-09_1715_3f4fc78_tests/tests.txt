@@ -1,0 +1,169 @@
+........................................................................ [  7%]
+........................................................................ [ 14%]
+........................................................................ [ 22%]
+........................................................................ [ 29%]
+........................................................................ [ 37%]
+..................................................F..................... [ 44%]
+........................................................................ [ 52%]
+........................................................................ [ 59%]
+........................................................................ [ 67%]
+........................................................................ [ 74%]
+........................................................................ [ 81%]
+........................................................................ [ 89%]
+........................................................................ [ 96%]
+..............................                                           [100%]
+=================================== FAILURES ===================================
+______ test_the_panel_is_for_every_account_and_draws_only_the_chosen_part ______
+
+    def test_the_panel_is_for_every_account_and_draws_only_the_chosen_part():
+        from pathlib import Path
+    
+        app = Path(__file__).resolve().parent.parent.joinpath("app.py").read_text()
+        panel = app.index('tracked_expander(":material/hub: Angstrom Lattice", "lattice_panel")')
+        admin = app.index('if str((load_profile() or {}).get("role") or "") == "admin":\n    admin_panel()')
+        assert panel < admin                                            # outside the admin-only block
+        inspector = Path(__file__).resolve().parent.parent.joinpath("signal_inspector.py").read_text()
+        assert "lattice_view" not in inspector and "prism_view" not in inspector
+    
+        import lattice_panel
+    
+>       assert "toggle" not in Path(lattice_panel.__file__).read_text()          # no switch: it opens straight away
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       assert 'toggle' not in '"""\nAngstr...g rules.")\n'
+E         
+E         'toggle' is contained here:
+E           classList.toggle("compact", button.dataset.start === "lattice");
+E         ?           ++++++
+E             if (data && data.tip) { button.title = data.tip; button.setAttribute("aria-label", data.tip); }
+E             if (button.dataset.ready) return;
+E             button.dataset.ready = "1";
+E             button.addEventListener("click", () => {
+E               const address = window.location.origin + window.location.pathname + "?view=advisor&from="
+E                 + encodeURIComponent(button.dataset.start);
+E               // One small window beside the app, shared by every ✨ button. If it is already open it is brought to the front
+E               // as it is, so the conversation carries on; if pop-ups are blocked, a tab.
+E               const left = Math.max(0, (window.screenX || 0) + (window.outerWidth || 1200) - 540);
+E               const opened = window.open("", "ang_advisor", "popup=yes,width=520,height=820,top=60,left=" + left);
+E               if (!opened) { window.open(address, "_blank"); return; }
+E               let blank = true;
+E               try { blank = !opened.location.href || opened.location.href === "about:blank"; } catch (e) { blank = false; }
+E               if (blank) opened.location.href = address;
+E               opened.focus();
+E             });
+E           }
+E           """
+E           
+E           _ADVISOR_HTML = (
+E               "<button type='button' class='ang-ai-btn' title='{tip}'>"
+E               "<svg viewBox='0 0 24 24' width='18' height='18' fill='currentColor' aria-hidden='true'><path d='M19 9l1.25-2.75"
+E               "L23 5.5l-2.75-1.25L19 1.5l-1.25 2.75L15 5.5l2.75 1.25L19 9zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 "
+E               "12l-5.5-2.5zM19 15l-1.25 2.75L15 19l2.75 1.25L19 23l1.25-2.75L23 19l-2.75-1.25L19 15z'/></svg>"
+E               "<span>AI</span></button>")
+E           
+E           _ADVISOR_CSS = """
+E           .ang-ai-btn{display:inline-flex;align-items:center;gap:6px;height:2.5rem;padding:0 14px;border-radius:.5rem;
+E             border:1px solid var(--st-border-color, rgba(128,128,128,.35));background:transparent;color:inherit;font:inherit;
+E             cursor:pointer}
+E           .ang-ai-btn.compact{height:2rem;padding:0 10px;gap:5px}
+E           .ang-ai-btn:hover{border-color:var(--st-primary-color,#ff4b4b);color:var(--st-primary-color,#ff4b4b)}
+E           """
+E           
+E           
+E           TIPS = {
+E               "lattice": "✨ Angstrom Assistant (opens in its own window): describe a trading idea in plain words and get "
+E                          "step-by-step help building and testing it. It also answers questions about the rest of the app. It "
+E                          "explains; you do the clicks.",
+E               "app": "✨ Angstrom Assistant (opens in its own window): ask anything about the app, such as where things are, "
+E                      "how to use them, or what a reading means, or get help building and testing an idea. It explains; you do "
+E                      "the clicks.",
+E           }
+E           
+E           
+E           def advisor_button(st, start: str = "lattice", key: str = "advisor_open") -> None:
+E               """A ✨ AI button: opens the Angstrom Assistant in a pop-out window, so the pages under it stay free to work on.
+E               Every ✨ button opens the same window; `start` says where it was opened from."""
+E               import html
+E           
+E               if not _ADVISOR:
+E                   _ADVISOR.append(st.components.v2.component(
+E                       "advisor_popout", html=_ADVISOR_HTML.replace("{tip}", html.escape(TIPS["lattice"], quote=True)),
+E                       css=_ADVISOR_CSS, js=_ADVISOR_JS, isolate_styles=False))
+E               _ADVISOR[0](key=key, data={"start": start, "tip": TIPS.get(start, TIPS["lattice"])})
+E           
+E           
+E           _advisor_button = advisor_button
+E           
+E           
+E           def render_popout(st, supabase, user_id: str, start: str = "lattice") -> None:
+E               """The Angstrom Assistant alone in its own window (?view=advisor&from=app|lattice)."""
+E               import advisor
+E           
+E               st.markdown("#### ✨ Angstrom Assistant")
+E               advisor.render(st, supabase, user_id, start if start in advisor.START else "lattice")
+E           
+E           
+E           def _render(st, supabase, assets: list[tuple[str, str, str]], user_id: str) -> None:
+E               import perspectives
+E           
+E               perspectives.load_studies(supabase)              # "What followed" on people's own Sets, shared by Set logic
+E               st.markdown(HEADER)
+E               st.caption(SUBTITLE)
+E               state = getattr(st, "session_state", None)
+E               if state is not None and "_lattice_section_next" in state:   # a button elsewhere in Lattice asked for another tab
+E                   state["lattice_section"] = state.pop("_lattice_section_next")
+E               hover = "\n\n".join(f"**{SECTIONS[k][1]}**: {SECTIONS[k][2]}" for k in SECTIONS)
+E               bar = st.container(horizontal=True, vertical_alignment="center", gap="small") if hasattr(st, "container") else None
+E               with (bar if bar is not None else _nothing()):
+E                   chosen = st.segmented_control("Lattice section", list(SECTIONS), format_func=label, default="groups",
+E                                                 key="lattice_section", label_visibility="collapsed", help=hover) or "groups"
+E                   if hasattr(st, "components") and hasattr(st.components, "v2"):
+E                       advisor_button(st, "lattice")
+E               if chosen == "groups":
+E                   import lattice_view
+E           
+E                   lattice_view.render(st, supabase, assets, user_id)
+E               elif chosen == "sets":
+E                   import lattice_set_view
+E           
+E                   lattice_set_view.render(st, supabase, user_id)
+E               elif chosen == "prism":
+E                   import prism_view
+E           
+E                   prism_view.render(st, supabase, assets, user_id)
+E               else:
+E                   st.info("🛣️ **Strategies are coming later.** A strategy will turn a Set's Yes into a plan: when to enter, "
+E                           "when to exit, and how much risk to take, including sequences such as \"A, then B within N days\". "
+E                           "They will be designed with Drew's trading rules.")
+
+tests/test_lattice_stage5.py:194: AssertionError
+=============================== warnings summary ===============================
+tests/test_builtin_alerts.py: 1 warning
+tests/test_chart_data.py: 2 warnings
+tests/test_group_readings.py: 3 warnings
+tests/test_lattice_editor.py: 1 warning
+tests/test_lattice_stage1.py: 26 warnings
+tests/test_lattice_stage5.py: 5 warnings
+tests/test_library_completion.py: 12 warnings
+tests/test_prism.py: 9 warnings
+tests/test_provided_library.py: 3 warnings
+tests/test_replay.py: 3 warnings
+tests/test_replay_groups.py: 1 warning
+tests/test_sequences.py: 3 warnings
+tests/test_set_history.py: 6 warnings
+tests/test_table_columns.py: 1 warning
+tests/test_why_panel.py: 1 warning
+  /home/runner/work/angstrom_signals_mvp/angstrom_signals_mvp/chart_data.py:237: Pandas4Warning: DatetimeIndex.weekday is deprecated and will be removed in a future version. Use DatetimeIndex.day_of_week instead.
+    monday = df.index - pd.to_timedelta(df.index.weekday, unit="D")
+
+tests/test_lw_chart.py: 11 warnings
+  /opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages/pandas/core/indexes/datetimelike.py:1029: Pandas4Warning: DatetimeIndex.values returning an ndarray that drops timezone information is deprecated. In a future version, this will return the underlying DatetimeArray instead. Use 'DatetimeIndex.tz_convert(None).to_numpy()' to get a NumPy array of UTC values, or 'DatetimeIndex.array' to get the ExtensionArray.
+  See https://pandas.pydata.org/docs/dev/whatsnew/v3.1.0.html#whatsnew-310-deprecations-values for more details.
+    warnings.warn(
+
+tests/test_set_history.py: 841 warnings
+  /home/runner/work/angstrom_signals_mvp/angstrom_signals_mvp/set_history.py:42: Pandas4Warning: Timestamp.dayofweek is deprecated and will be removed in a future version. Use Timestamp.day_of_week instead.
+    if len(frame) and pd.Timestamp(done.index[-1]).dayofweek != 6:
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+1 failed, 965 passed, 929 warnings in 355.34s (0:05:55)
+exit=1
