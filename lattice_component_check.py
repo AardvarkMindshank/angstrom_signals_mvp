@@ -39,7 +39,18 @@ window.baseData = {json.dumps(data)};
 window.draw = (model) => window.renderLattice({{data: Object.assign({{}}, window.baseData, model ? {{model}} : {{}}),
   parentElement: document.getElementById("host"),
   // like Streamlit: each edit comes back and the component is drawn again with the edited model
-  setTriggerValue: (k, v) => {{ const m = JSON.parse(v); window.sent.push([k, m]); setTimeout(() => window.draw(m), 0); }}}});
+  setTriggerValue: (k, v) => {{
+    const m = JSON.parse(v); window.sent.push([k, m]);
+    if (k === "search") {{     // a market search for a fixed asset: answer as Python would, with one match
+      window.baseData.search = Object.assign({{}}, m, {{results: [{{id: m.kind === "equity" ? m.q.toUpperCase() : m.q,
+                                                                     label: m.q.toUpperCase() + " · test match"}}]}});
+      setTimeout(() => window.draw(window.lastModel), 0);
+      return;
+    }}
+    window.lastModel = m;
+    setTimeout(() => window.draw(m), 0);
+  }}}});
+window.lastModel = null;
 window.draw(null);
 window.ready = true;
 </script></body></html>"""
@@ -81,7 +92,18 @@ window.baseData = {json.dumps(data)};
 window.draw = (model) => window.renderLattice({{data: Object.assign({{}}, window.baseData, model ? {{model}} : {{}}),
   parentElement: document.getElementById("host"),
   // like Streamlit: each edit comes back and the component is drawn again with the edited model
-  setTriggerValue: (k, v) => {{ const m = JSON.parse(v); window.sent.push([k, m]); setTimeout(() => window.draw(m), 0); }}}});
+  setTriggerValue: (k, v) => {{
+    const m = JSON.parse(v); window.sent.push([k, m]);
+    if (k === "search") {{     // a market search for a fixed asset: answer as Python would, with one match
+      window.baseData.search = Object.assign({{}}, m, {{results: [{{id: m.kind === "equity" ? m.q.toUpperCase() : m.q,
+                                                                     label: m.q.toUpperCase() + " · test match"}}]}});
+      setTimeout(() => window.draw(window.lastModel), 0);
+      return;
+    }}
+    window.lastModel = m;
+    setTimeout(() => window.draw(m), 0);
+  }}}});
+window.lastModel = null;
 window.draw(null);
 window.ready = true;
 </script></body></html>"""

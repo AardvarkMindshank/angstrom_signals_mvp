@@ -96,17 +96,21 @@ const { chromium, devices } = require("playwright");
     const slast = async () => { await sp.waitForTimeout(80); return sp.evaluate(() => (window.sent.length ? window.sent[window.sent.length - 1][1] : null)); };
     check("Set: the saved decision line is shown", (await sp.$$(".rule")).length === 1);
     for (const s of await sp.locator("details.prov:not([open]) > summary").all()) await s.click();   // provided starters are folded
-    await sp.click('button[aria-label="Add Flow v1 to the Set"]');
+    await sp.click('button[aria-label="Add Flow to the Set"]');
     let s = await slast();
     check("Set: tap + adds a Group", s && s.groups.length === 2);
     await sp.click('button[aria-label="Add RSI (14) to the Set"]');
     s = await slast();
     check("Set: tap + adds a single signal as a Condition", s && s.standalone.length === 1 && s.standalone[0].role === "condition");
     await sp.waitForTimeout(80);
-    await sp.selectOption('select[aria-label="Which asset Flow v1 is read on"]', "equity");
+    await sp.selectOption('select[aria-label="Which asset Flow is read on"]', "equity");
     await sp.waitForTimeout(80);
-    await sp.fill('input[aria-label="Fixed asset for Flow v1"]', "coin");
-    await sp.press('input[aria-label="Fixed asset for Flow v1"]', "Tab");
+    await sp.fill('input[aria-label="Fixed asset for Flow"]', "coin");
+    await sp.press('input[aria-label="Fixed asset for Flow"]', "Enter");          // searches the market
+    await sp.waitForTimeout(150);
+    check("Set: Enter searches the market for a fixed asset",
+          await sp.evaluate(() => window.sent.some(([k, m]) => k === "search" && m.q === "coin" && m.kind === "equity")));
+    await sp.click(".found .pick");                                                // picks the match
     s = await slast();
     check("Set: a Group can be read on a fixed asset (E4)", s && s.groups.some((g) => g.subject && g.subject.id === "coin" && g.subject.kind === "equity"));
     await sp.click('button[title="Add a box where any one of its lines is enough"]');
