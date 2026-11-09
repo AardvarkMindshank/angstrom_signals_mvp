@@ -108,7 +108,9 @@ def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str = "") 
             pass
         lattice_panel.rerun(st)
 
-    left, right = st.columns([3, 2])
+    # Lined up with the editor's divider above: Checks under the left panel, what it returns under the right one
+    # (the widths follow the divider as it is dragged; lattice_component.SPLITTER_JS).
+    left, right = st.container(key="lat_checks_group").columns([3, 2])
     with left:
         st.markdown("**Checks**")
         for b in screen["checks"]["blocks"]:

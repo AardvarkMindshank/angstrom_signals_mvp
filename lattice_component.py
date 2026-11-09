@@ -14,7 +14,23 @@ from __future__ import annotations
 SPLITTER_JS = """
   function addSplitter(root, lib, mid) {
     const KEY = "angLatLibW";
+    // The Checks / "What this returns" columns under the editor follow the same divider (a page-wide variable).
+    if (!document.getElementById("ang-lat-split-style")) {
+      const st = document.createElement("style");
+      st.id = "ang-lat-split-style";
+      st.textContent = "@media (min-width: 641px){" +
+        "[class*='st-key-lat_checks_'] [data-testid='stHorizontalBlock'] > [data-testid='stColumn']:first-child" +
+        "{flex:0 0 var(--lat-lib-w, 260px) !important;width:var(--lat-lib-w, 260px) !important;min-width:0 !important}" +
+        "[class*='st-key-lat_checks_'] [data-testid='stHorizontalBlock'] > [data-testid='stColumn']:nth-child(2)" +
+        "{flex:1 1 0 !important;width:auto !important;min-width:0 !important}}";
+      document.head.appendChild(st);
+    }
+    const share = () => {
+      const w = Math.round(lib.getBoundingClientRect().width);
+      if (w > 0) document.documentElement.style.setProperty("--lat-lib-w", w + "px");
+    };
     try { const w = parseInt(window.localStorage.getItem(KEY) || "", 10); if (w) root.style.setProperty("--lib-w", w + "px"); } catch (e) {}
+    requestAnimationFrame(share);
     const bar = document.createElement("div");
     bar.className = "split";
     bar.title = "Drag to make this panel wider or narrower (double-click to reset)";
@@ -29,6 +45,7 @@ SPLITTER_JS = """
       const move = (e) => {
         const w = Math.round(Math.min(most, Math.max(180, e.clientX - left)));
         root.style.setProperty("--lib-w", w + "px");
+        share();
       };
       const up = () => {
         bar.classList.remove("on");
@@ -43,6 +60,7 @@ SPLITTER_JS = """
     });
     bar.addEventListener("dblclick", () => {
       root.style.removeProperty("--lib-w");
+      requestAnimationFrame(share);
       try { window.localStorage.removeItem(KEY); } catch (e) {}
     });
   }
