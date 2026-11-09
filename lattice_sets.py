@@ -406,6 +406,19 @@ def describe(model: dict, choices: dict) -> str:
             "data; if nothing fails but something needed is missing, it says Unknown and names it.")
 
 
+def _newest_starters(choices: dict) -> set:
+    """The newest version of each provided starter Group. Older versions stay readable (a saved Set may embed one)
+    but are not offered: a starter updated by Angstrom Signals showed up twice, as v1 and v2."""
+    newest: dict = {}
+    for k in choices:
+        if choices[k]["owner"] != "starter":
+            continue
+        _, config, version = k.split(":")
+        if int(version) > newest.get(config, (0, ""))[0]:
+            newest[config] = (int(version), k)
+    return {k for _, k in newest.values()}
+
+
 def state_for_screen(model: dict, choices: dict) -> dict:
     found = checks(model, choices)
     return {"model": copy.deepcopy(model), "targets": targets(model, choices), "checks": found,
@@ -413,7 +426,8 @@ def state_for_screen(model: dict, choices: dict) -> dict:
             "scannable": bool(model.get("lines")) and not found["blocks"],
             "groups": [{"source": k, "name": v["name"], "owner": v["owner"], "labels": [l for _, l in v["labels"]],
                         "has_score": v["has_score"], "members": v["members"][:6],
-                        "icons": perspectives.chips(v["body"])} for k, v in choices.items()],
+                        "icons": perspectives.chips(v["body"])} for k, v in choices.items()
+                       if v["owner"] != "starter" or k in _newest_starters(choices)],
             "member_tags": {m["key"]: le.member_tag(m) for m in model.get("standalone") or []}}
 
 
