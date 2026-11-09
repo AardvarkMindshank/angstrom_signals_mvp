@@ -1,0 +1,46 @@
+{
+ "title": "Visualize History",
+ "series": "Reading the evidence · 2 of 3",
+ "next": "Next: What followed",
+ "slug": "07-visualize-history",
+ "section": "training",
+ "intro_say": "Angstrom Signals. | Visualize History.",
+ "outro_say": "That's Visualize History. | Next: what followed.",
+ "steps": [
+  {
+   "id": "what",
+   "screen": "A scan of Volatility squeeze: pressing 🕰️",
+   "say": "Visualize History shows what a Set said on every past day. | Open a scan, and press the clock."
+  },
+  {
+   "id": "bands",
+   "screen": "The main chart with its bands",
+   "say": "The price is drawn with coloured bands behind it. | Green is Yes. Amber is Unknown. | No is left clear."
+  },
+  {
+   "id": "panes",
+   "screen": "The small charts underneath",
+   "say": "Underneath, every other asset in the scan gets a small chart of its own, with the same bands. | So you can compare them at a glance."
+  },
+  {
+   "id": "tap",
+   "screen": "Tapping a small chart",
+   "say": "Tap a small chart, and that asset moves to the top."
+  },
+  {
+   "id": "years",
+   "screen": "Years: 1Y, 3Y, 10Y, All",
+   "say": "Choose how far back to look: one year, three, ten, or everything. | Older years load in the background, marked with an hourglass."
+  },
+  {
+   "id": "main",
+   "screen": "Open on the main price chart",
+   "say": "Open on the main price chart takes the asset and its bands to your dashboard chart."
+  },
+  {
+   "id": "note",
+   "screen": "A card: what the bands are, and aren't",
+   "say": "The bands show when the conditions were met. | They don't say what happened next. | That is the job of the next video."
+  }
+ ]
+}

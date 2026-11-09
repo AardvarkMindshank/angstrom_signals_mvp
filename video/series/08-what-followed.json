@@ -1,0 +1,51 @@
+{
+ "title": "What followed",
+ "series": "Reading the evidence · 3 of 3",
+ "next": "",
+ "slug": "08-what-followed",
+ "section": "training",
+ "intro_say": "Angstrom Signals. | What followed.",
+ "outro_say": "That completes the series. | Past patterns, before costs. Not a forecast.",
+ "steps": [
+  {
+   "id": "question",
+   "screen": "A card: the question",
+   "say": "When a Set turns Yes, does anything different tend to happen next, compared with ordinary days?"
+  },
+  {
+   "id": "how",
+   "screen": "A card: how it is measured",
+   "say": "Each time a Set first turns Yes, we look at the next ten daily candles. | We compare them with ordinary days: the same asset, the same year, and the same side of its long-term average. | Twenty-five coins and sixty-one large US equities, from 2014 to October 2024."
+  },
+  {
+   "id": "find",
+   "screen": "Prism library: Breakout with volume, more…",
+   "say": "Every provided Set carries the result. | Open more, and the last line is What followed."
+  },
+  {
+   "id": "card",
+   "screen": "Tapping What followed: the numbers",
+   "say": "Tap it for the numbers. | Breakout with volume turned Yes almost nineteen hundred times. | Price rose a typical move before falling one fifty-one percent of the time, against fifty percent on comparable days."
+  },
+  {
+   "id": "verdicts",
+   "screen": "A card: the four verdicts",
+   "say": "Every study ends in one of four verdicts: | too few to judge, | no clear difference, | some difference, not established, | or a consistent difference."
+  },
+  {
+   "id": "honest",
+   "screen": "The verdict line",
+   "say": "Most simple setups show no clear difference. | That's an honest, useful answer: they describe a situation; they don't predict one."
+  },
+  {
+   "id": "alignment",
+   "screen": "Trend alignment's card",
+   "say": "Trend alignment is the interesting one. | After the daily and weekly trends first agree, price did a little worse than on comparable days. | Often the weekly trend confirms a move after much of it has happened."
+  },
+  {
+   "id": "own",
+   "screen": "Signal Sets: Study this Set",
+   "say": "Your own Sets can be studied too. | Open one in Signal Sets, and tap Study this Set. | It runs in the background, usually within the hour."
+  }
+ ]
+}

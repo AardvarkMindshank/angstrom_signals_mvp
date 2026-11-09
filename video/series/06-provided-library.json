@@ -1,0 +1,56 @@
+{
+ "title": "The provided library",
+ "series": "Reading the evidence · 1 of 3",
+ "next": "Next: Visualize History",
+ "slug": "06-provided-library",
+ "section": "training",
+ "intro_say": "Angstrom Signals. | The provided library.",
+ "outro_say": "That's the library. | Next: Visualize History.",
+ "steps": [
+  {
+   "id": "open",
+   "screen": "Prism: opening 'Provided by Angstrom Signals'",
+   "say": "Angstrom Signals comes with a library of Groups and Sets, built around common trading situations. | In Prism, open Provided by Angstrom Signals."
+  },
+  {
+   "id": "icons",
+   "screen": "Breakout with volume: its icons",
+   "say": "Each one shows small icons for what it looks at. | Here: volume, and structure, the support and resistance levels."
+  },
+  {
+   "id": "line",
+   "screen": "The one-line description",
+   "say": "Underneath, one line says what it describes, in plain words."
+  },
+  {
+   "id": "more",
+   "screen": "Tapping more…",
+   "say": "Tap more for three parts: | what it measures, | why traders watch it, | and what it doesn't prove."
+  },
+  {
+   "id": "evidence",
+   "screen": "The evidence mark ⚖️",
+   "say": "The last icon is the evidence mark. | A microscope means not yet studied. | A balance means it was studied, and showed no clear difference. | The next two videos explain both."
+  },
+  {
+   "id": "filter",
+   "screen": "The filter row: 🌊 volatility",
+   "say": "To find one quickly, tap an icon in the filter row. | Here, only the Sets that look at volatility."
+  },
+  {
+   "id": "use",
+   "screen": "+ on Volatility squeeze: a new scan",
+   "say": "Tap plus, and a provided Set becomes one of your Prism scans, ready to run."
+  },
+  {
+   "id": "groups",
+   "screen": "Signal Groups: the Start from list",
+   "say": "Signal Groups and Signal Sets have the same library at the top. | And the Start from list offers them too, after New, and before your own."
+  },
+  {
+   "id": "hide",
+   "screen": "A note on the setting",
+   "say": "Once you know them, one setting hides everything provided. | Descriptive readings, not advice."
+  }
+ ]
+}

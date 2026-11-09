@@ -82,6 +82,9 @@ async function showResults(h) {
   await h.ring(TABLE);
 }
 
+// A provided item in Prism's library, by name.
+const provided = (h, name) => h.page.locator(".lat.prism .chip", { hasText: name }).first();
+
 module.exports = {
   // ------------------------------------------------------------------------------------------ 1 · at a glance
   "01-angstrom-lattice-at-a-glance": {
@@ -402,5 +405,186 @@ module.exports = {
     },
     save: async (h) => { await saveAndScan(h, "Breakout with volume", "All equities", "2023-04-28"); },
     results: async (h) => { await showResults(h); },
+  },
+
+  // ------------------------------------------------------------------------------------------ 6 · the provided library
+  "06-provided-library": {
+    query: "?section=prism",
+    open: async (h) => {
+      await h.ring(".lat.prism details.prov");
+      await h.press(h.page.locator(".lat.prism details.prov > summary").first(), false);
+      await h.wait(500);
+    },
+    icons: async (h) => {
+      await h.clear();
+      const chip = provided(h, "Breakout with volume");
+      await h.tip(chip.locator(".pv, .ic, span[title]").first(), "🔊 Looks at volume\n🧱 Looks at support, resistance or structure", "right");
+    },
+    line: async (h) => {
+      await h.clear();
+      await h.ring(provided(h, "Breakout with volume"));
+    },
+    more: async (h) => {
+      await h.clear();
+      const chip = provided(h, "Breakout with volume");
+      await h.press(chip.locator("details.more > summary").first(), false);
+      await h.wait(400);
+      await h.show(chip.locator("details.more").first());
+    },
+    evidence: async (h) => {
+      const chip = provided(h, "Breakout with volume");
+      await h.tip(chip.locator("details.wf > summary").first(),
+        "🔬 Not yet studied\n⚖️ Studied: no clear difference from comparable days", "right");
+      await h.wait(2500);
+      await h.clear();
+      await h.press(chip.locator("details.more > summary").first(), false);
+    },
+    filter: async (h) => {
+      await h.press(h.page.locator(".lat.prism .pvf button", { hasText: "🌊" }).first(), false);
+      await h.wait(600);
+      await h.ring(h.page.locator(".lat.prism details.prov").first());
+    },
+    use: async (h) => {
+      await h.clear();
+      await h.press(h.page.locator(".lat.prism .pvf button.on").first(), false);
+      await h.press(provided(h, "Volatility squeeze").locator("button.sq").first());
+      await h.wait(800);
+      await h.ring(h.page.locator(".lat.prism .scan, .lat.prism .card").first());
+    },
+    groups: async (h) => {
+      await h.clear();
+      await h.section("Signal Groups");
+      await h.ring(h.page.locator(".lat details.prov, [data-testid='stExpander']").first());
+      await h.wait(1500);
+      await h.clear();
+      await h.pick("Start from", null);
+    },
+    hide: async (h) => {
+      await h.card({ kicker: "Settings", title: "Show provided items",
+        lines: ["One switch hides every provided Group, Set and built-in alert", "Your own items stay as they are"] });
+    },
+  },
+
+  // ------------------------------------------------------------------------------------------ 7 · Visualize History
+  "07-visualize-history": {
+    query: "?section=prism",
+    setup: async (h) => {
+      // Make the scan and load its history once, off camera, so the recording does not wait for the downloads.
+      await h.page.locator(".lat.prism details.prov > summary").first().click();
+      await h.wait(400);
+      await provided(h, "Volatility squeeze").locator("button.sq").first().click();
+      await h.page.waitForSelector(".lat.prism button.hist", { timeout: 60000 }); await h.wait(1500);
+      await h.page.locator(".lat.prism button.hist").first().click();
+      await h.page.waitForFunction(() => { const r = document.querySelector(".ang-lwc"); return r && r.__chart; }, null, { timeout: 420000 });
+      await h.page.waitForFunction(() => !document.body.innerText.includes("⏳"), null, { timeout: 900000 }).catch(() => {});
+      await h.page.locator(".lat.prism button.hist").first().click();
+      await h.settle();
+      await h.page.locator(".lat.prism details.prov > summary").first().click();
+      await h.top();
+    },
+    what: async (h) => {
+      await h.press(h.page.locator(".lat.prism button.hist").first());
+      await h.page.waitForFunction(() => { const r = document.querySelector(".ang-lwc"); return r && r.__chart; }, null, { timeout: 120000 }).catch(() => {});
+      await h.wait(800);
+      await h.show(".ang-lwc");
+    },
+    bands: async (h) => {
+      await h.tip(".ang-lwc-legend", "Green: Yes · Amber: Unknown · No: clear\n(a switch shows No as faint red)", "below");
+    },
+    panes: async (h) => {
+      await h.clear();
+      await h.page.evaluate(() => { const r = document.querySelector(".ang-lwc"); if (r) window.scrollBy({ top: r.getBoundingClientRect().top + 260, behavior: "smooth" }); });
+      await h.wait(1800);
+    },
+    tap: async (h) => {
+      const pt = await h.page.evaluate(() => {
+        const r = document.querySelector(".ang-lwc"), c = r.__chart, host = r.querySelector(".ang-lwc-host").getBoundingClientRect();
+        let top = 0; const hs = c.panes().map((p) => p.getHeight());
+        for (let i = 0; i < 2; i++) top += hs[i] + 1;
+        return { x: host.left + host.width / 2, y: host.top + top + hs[2] / 2 };
+      });
+      await h.page.mouse.move(pt.x, pt.y, { steps: 20 }); await h.wait(300);
+      await h.page.mouse.click(pt.x, pt.y);
+      await h.settle();
+      await h.show(".ang-lwc");
+    },
+    years: async (h, dur) => {
+      const seg = h.page.getByRole("button", { name: "3Y", exact: true }).first();
+      await h.ring(seg.locator("xpath=.."));
+      await h.wait(1200); await h.clear();
+      await h.press(seg); await h.wait(Math.max(800, dur * 250));
+      await h.press(h.page.getByRole("button", { name: "10Y", exact: true }).first());
+      await h.show(".ang-lwc");
+    },
+    main: async (h) => {
+      await h.ring(h.page.getByRole("button", { name: /Open on the main price chart/ }).first());
+    },
+    note: async (h) => {
+      await h.clear();
+      await h.card({ kicker: "Remember", title: "Bands show when, not what next",
+        lines: ["✓ When the Set's conditions were met", "✓ On every asset in the scan, side by side",
+                "What happened afterwards is the job of What followed"] });
+    },
+  },
+
+  // ------------------------------------------------------------------------------------------ 8 · What followed
+  "08-what-followed": {
+    query: "?section=prism",
+    question: async (h) => {
+      await h.card({ kicker: "What followed", title: "After a Yes, what happened next?",
+        lines: ["Compared with ordinary days", "Measured on the past, before October 2024"] });
+    },
+    how: async (h) => {
+      await h.card({ kicker: "How it is measured", title: "The next 10 daily candles",
+        lines: ["✓ Each time a Set first turns Yes", "✓ Against comparable days: same asset, same year, same side of the 200-day average",
+                "✓ 25 coins and 61 large US equities, Sep 2014 to Oct 2024"],
+        foot: "Moves are measured in each asset's typical daily move, so Bitcoin and Apple can be compared." });
+    },
+    find: async (h) => {
+      await h.clear();
+      await h.press(h.page.locator(".lat.prism details.prov > summary").first(), false);
+      await h.wait(400);
+      const chip = provided(h, "Breakout with volume");
+      await h.press(chip.locator("details.more > summary").first(), false);
+      await h.wait(400);
+      await h.ring(chip.locator("details.wf").first());
+    },
+    card: async (h) => {
+      await h.clear();
+      const chip = provided(h, "Breakout with volume");
+      await h.press(chip.locator("details.wf > summary").first(), false);
+      await h.wait(400);
+      await h.show(chip.locator("details.wf").first());
+      await h.ring(chip.locator("details.wf").first());
+    },
+    verdicts: async (h) => {
+      await h.clear();
+      await h.card({ kicker: "Four verdicts", title: "What the study can say",
+        lines: ["🔬 Too few to judge", "⚖️ No clear difference", "〰️ Some difference, not established", "🧭 Consistent difference"],
+        foot: "Corrected for the number of tests, and checked across periods and between coins and equities." });
+    },
+    honest: async (h) => {
+      await h.clear();
+      const chip = provided(h, "Breakout with volume");
+      await h.ring(chip.locator("details.wf > summary").first());
+    },
+    alignment: async (h) => {
+      await h.clear();
+      const chip = provided(h, "Trend alignment");
+      await h.show(chip);
+      await h.press(chip.locator("details.more > summary").first(), false);
+      await h.wait(300);
+      await h.press(chip.locator("details.wf > summary").first(), false);
+      await h.wait(400);
+      await h.show(chip.locator("details.wf").first());
+      await h.ring(chip.locator("details.wf").first());
+    },
+    own: async (h) => {
+      await h.clear();
+      await h.open("?section=sets&seed=trend,pullback&preset=1");
+      const study = h.page.getByRole("button", { name: /Study this Set/ });
+      if (await study.count()) { await h.press(study.first()); }
+      else await h.ring(h.page.getByText("What followed · what happened after").first());
+    },
   },
 };
