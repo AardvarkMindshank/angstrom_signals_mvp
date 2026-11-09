@@ -233,7 +233,7 @@ def _tell(db, user_id, name: str, what: str) -> None:
         return
     try:
         db.table("user_notifications").insert({
-            "user_id": user_id, "asset_symbol": None, "asset_name": name or "Your Set", "alert_type": "study",
+            "user_id": user_id, "asset_symbol": "", "asset_name": name or "Your Set", "alert_type": "study",
             "message": f"What followed for “{name or 'your Set'}” {what}"[:500]}).execute()
     except Exception as exc:                        # a note that can't be written never stops the study
         print(f"note not written: {exc}")
