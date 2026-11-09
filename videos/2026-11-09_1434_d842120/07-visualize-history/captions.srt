@@ -1,0 +1,59 @@
+1
+00:00:00,000 --> 00:00:03,543
+Visualize History shows what a Set said on every past day.
+
+2
+00:00:03,593 --> 00:00:05,877
+Open a scan, and press the clock.
+
+3
+00:00:06,339 --> 00:00:09,242
+The price is drawn with coloured bands behind it.
+
+4
+00:00:09,292 --> 00:00:11,618
+Green is Yes. Amber is Unknown.
+
+5
+00:00:11,668 --> 00:00:13,355
+No is left clear.
+
+6
+00:00:13,815 --> 00:00:17,785
+Underneath, every other asset in the scan gets a small chart of its own,
+
+7
+00:00:17,805 --> 00:00:19,214
+with the same bands.
+
+8
+00:00:19,264 --> 00:00:21,441
+So you can compare them at a glance.
+
+9
+00:00:21,900 --> 00:00:25,080
+Tap a small chart, and that asset moves to the top.
+
+10
+00:00:25,527 --> 00:00:29,112
+Choose how far back to look: one year, three, or everything.
+
+11
+00:00:29,162 --> 00:00:32,257
+You can also zoom and drag along the time axis.
+
+12
+00:00:35,976 --> 00:00:40,991
+Open on the main price chart takes the asset and its bands to your dashboard chart.
+
+13
+00:00:41,441 --> 00:00:43,896
+The bands show when the conditions were met.
+
+14
+00:00:43,946 --> 00:00:46,123
+They don't say what happened next.
+
+15
+00:00:46,173 --> 00:00:48,478
+That is the job of the next video.
