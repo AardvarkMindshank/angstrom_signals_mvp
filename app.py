@@ -869,9 +869,19 @@ export default function(component) {
       })
       .catch(() => {});
   };
-  window.__angstromBootTimer = window.setInterval(check, 60000);
+  window.__angstromBootTimer = window.setInterval(check, 20000);
   document.addEventListener("visibilitychange", () => { if (!document.hidden) check(); });
   window.addEventListener("focus", check);
+  // After an update, a click inside a part that redraws on its own (Angstrom Lattice tabs, for example) is ignored
+  // by the new server until the page reloads. So any click also checks (at most every 3 seconds): an update found
+  // then reloads the page at once, instead of leaving the click to do nothing.
+  let lastCheck = 0;
+  document.addEventListener("pointerdown", () => {
+    const now = Date.now();
+    if (now - lastCheck < 3000) return;
+    lastCheck = now;
+    check();
+  }, true);
 }
 """
 _version_watch = st.components.v2.component("version_watch", js=_VERSION_WATCH_JS)
