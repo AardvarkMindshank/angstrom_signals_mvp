@@ -342,7 +342,9 @@ def block_html(item: dict) -> str:
             parts.append(
                 "<div style='display:flex;align-items:center;gap:10px;padding:4px 0;flex-wrap:wrap;'>"
                 f"<span style='min-width:24px;font-weight:700;'>{_esc(str(r['value'])[:1])}</span>"
-                f"<span style='flex:1 1 220px;'>{_esc(r['text'])}</span>"
+                # A fixed width (shrinking on a phone) puts the readings in line with the Group rows' notes,
+                # instead of far out on the right of a wide screen.
+                f"<span style='flex:0 0 auto;width:min(330px,calc(100% - 34px));'>{_esc(r['text'])}</span>"
                 f"<span class='ang-kicker'>reading: {_esc(str(r['value'])[1:].strip() or r['value'])}</span></div>")
     if item.get("trend"):
         parts.insert(0, head_html(item))
