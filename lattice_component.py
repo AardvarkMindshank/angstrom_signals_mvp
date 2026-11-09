@@ -54,8 +54,10 @@ CSS = """
 .lat .col{background:rgba(127,127,127,.06);border:1px solid rgba(127,127,127,.25);border-radius:12px;padding:12px}
 .lat .lib{flex:0 0 var(--lib-w,260px);max-width:none;max-height:760px;overflow:auto}
 .lat .split{flex:0 0 10px;margin:0 -12px;align-self:stretch;cursor:col-resize;position:relative;touch-action:none;z-index:2}
-.lat .split::after{content:"";position:absolute;left:4px;top:40%;width:2px;height:48px;border-radius:2px;background:rgba(127,127,127,.35)}
-.lat .split:hover::after,.lat .split.on::after{background:#2563eb;top:0;height:100%}
+.lat .split::after{content:"";position:absolute;left:3px;top:50%;width:4px;height:48px;margin-top:-24px;border-radius:999px;background:#9ca3af}
+.lat .split:hover::after,.lat .split.on::after{background:#111827}
+html.angstrom-night .lat .split::after{background:#6b7280}
+html.angstrom-night .lat .split:hover::after,html.angstrom-night .lat .split.on::after{background:#e5e7eb}
 .lat .mid{flex:999 1 480px;min-width:0;display:flex;flex-direction:column;gap:14px}
 .lat .cat{font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.7;margin:10px 0 4px}
 .lat .chip{display:flex;align-items:center;gap:8px;padding:6px 6px 6px 10px;margin-bottom:4px;border-radius:8px;

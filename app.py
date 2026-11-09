@@ -1275,11 +1275,13 @@ export default function(component) {
         "#social-stream-root.is-width-dragging,#social-stream-root.is-width-dragging *{cursor:col-resize !important;user-select:none !important;}",
         "#social-stream-root.is-width-dragging .panel,#social-stream-root.is-width-dragging .edge{transition:none;}",
         "#social-stream-root .stream-pane,#social-stream-root .chat-pane{display:flex;flex-direction:column;min-height:0;overflow:hidden;}",
-        "#social-stream-root .splitter{position:relative;flex:none;height:16px;cursor:row-resize;background:#9ca3af;border-top:1px solid #4b5563;border-bottom:1px solid #4b5563;display:flex;align-items:center;justify-content:center;touch-action:none;user-select:none;}",
-        "#social-stream-root .splitter::before{content:'';width:64px;height:4px;border-radius:999px;background:#1f2937;}",
+        "#social-stream-root .splitter{position:relative;flex:none;height:12px;cursor:row-resize;background:transparent;border-top:1px solid rgba(127,127,127,.25);display:flex;align-items:center;justify-content:center;touch-action:none;user-select:none;}",
+        "#social-stream-root .splitter::before{content:'';width:48px;height:4px;border-radius:999px;background:#9ca3af;}",
         "#social-stream-root .splitter::after{content:'';position:absolute;left:0;right:0;top:-10px;bottom:-10px;}",
-        "#social-stream-root .splitter:hover,#social-stream-root .splitter.is-dragging{background:#4b5563;}",
+        "#social-stream-root .splitter:hover,#social-stream-root .splitter.is-dragging{background:transparent;}",
         "#social-stream-root .splitter:hover::before,#social-stream-root .splitter.is-dragging::before{background:#111827;}",
+        "html.angstrom-night #social-stream-root .splitter::before,html.angstrom-night #social-stream-root .width-grip::before{background:#6b7280;}",
+        "html.angstrom-night #social-stream-root .splitter:hover::before,html.angstrom-night #social-stream-root .splitter.is-dragging::before,html.angstrom-night #social-stream-root .width-grip:hover::before,html.angstrom-night #social-stream-root .width-grip.is-dragging::before{background:#e5e7eb;}",
         "#social-stream-root.is-dragging,#social-stream-root.is-dragging *{cursor:row-resize !important;user-select:none !important;}",
         "#social-stream-root.is-open .panel{transform:none;}",
         "#social-stream-root .finder{flex:none;padding:14px 18px 0;}",
@@ -1427,8 +1429,8 @@ export default function(component) {
         "#social-stream-root.is-popout.is-side .finder,#social-stream-root.is-popout.is-side .report-box{grid-column:1 / -1;}",
         "#social-stream-root.is-popout.is-side .stream-pane{grid-column:1;grid-row:3;min-width:0;}",
         "#social-stream-root.is-popout.is-side .chat-pane{grid-column:3;grid-row:3;min-width:0;}",
-        "#social-stream-root.is-popout.is-side .splitter{grid-column:2;grid-row:3;height:auto;width:16px;cursor:col-resize;border-top:0;border-bottom:0;border-left:1px solid #4b5563;border-right:1px solid #4b5563;}",
-        "#social-stream-root.is-popout.is-side .splitter::before{width:4px;height:64px;}",
+        "#social-stream-root.is-popout.is-side .splitter{grid-column:2;grid-row:3;height:auto;width:12px;cursor:col-resize;border-top:0;border-bottom:0;border-left:1px solid rgba(127,127,127,.25);border-right:0;}",
+        "#social-stream-root.is-popout.is-side .splitter::before{width:4px;height:48px;}",
         "#social-stream-root.is-popout.is-side.is-dragging,#social-stream-root.is-popout.is-side.is-dragging *{cursor:col-resize !important;}"
       ].join("");
       document.head.appendChild(style);
@@ -3578,12 +3580,14 @@ export default function(component) {
     bar.setAttribute("role", "separator");
     bar.style.cssText = "height:14px;margin:-6px 0 4px;cursor:ns-resize;display:flex;align-items:center;" +
       "justify-content:center;touch-action:none;user-select:none;";
-    bar.innerHTML = "<div class='ang-resize-grip' style='width:60px;height:5px;border-radius:3px;" +
-      "background:var(--ang-track,#d1d5db);'></div><span class='ang-resize-tip' style='margin-left:10px;" +
+    bar.innerHTML = "<div class='ang-resize-grip' style='width:48px;height:4px;border-radius:999px;" +
+      "background:#9ca3af;'></div><span class='ang-resize-tip' style='margin-left:10px;" +
       "font-size:.75rem;color:var(--ang-muted,#6b7280);display:none;'></span>";
     parentElement.appendChild(bar);
   }
   bar.title = "Drag up or down to change the chart's height. Double-click to reset.";
+  bar.onpointerenter = () => { if (!dragging) grip.style.background = "#111827"; };
+  bar.onpointerleave = () => { if (!dragging) grip.style.background = "#9ca3af"; };
   const grip = bar.querySelector(".ang-resize-grip");
   const tip = bar.querySelector(".ang-resize-tip");
   // The chart is the element just above this bar. Found when needed: on first paint the bar is
@@ -3610,7 +3614,7 @@ export default function(component) {
     dragging = true; y0 = event.clientY; h0 = start; now = start;
     base = box ? box.getBoundingClientRect().height : 0;
     bar.setPointerCapture(event.pointerId);
-    grip.style.background = "var(--ang-muted,#6b7280)";
+    grip.style.background = "#111827";
     tip.style.display = "inline";
   };
   bar.onpointermove = (event) => {
@@ -3630,7 +3634,7 @@ export default function(component) {
   const finish = () => {
     if (!dragging) return;
     dragging = false;
-    grip.style.background = "var(--ang-track,#d1d5db)";
+    grip.style.background = "#9ca3af";
     tip.style.display = "none";
     if (Math.abs(now - start) >= 8) setTriggerValue("height", String(now));
     else clearPreview();
