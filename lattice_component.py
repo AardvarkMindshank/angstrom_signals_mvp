@@ -72,6 +72,11 @@ html.angstrom-night .lat .split:hover::after,html.angstrom-night .lat .split.on:
 .lat .chip:has(details[open])>button.sq{align-self:flex-start;margin-top:4px}
 .lat input,.lat select{font:inherit;color:inherit;background:rgba(127,127,127,.08);border:1px solid rgba(127,127,127,.4);
   border-radius:8px;padding:6px 8px;min-height:36px}
+/* The open list of a dropdown is drawn by the browser on its own background; with the page's light text (night
+   mode) the other choices were invisible. Give the list explicit colours, dark in night mode. */
+.lat select option{color:#111827;background:#ffffff}
+html.angstrom-night .lat select{color-scheme:dark}
+html.angstrom-night .lat select option{color:#f3f4f6;background:#1f2937}
 .lat input.wide{width:100%}
 .lat .drop{border:2px dashed rgba(127,127,127,.45);border-radius:12px;padding:10px;min-height:120px;
   display:flex;flex-direction:column;gap:8px}
