@@ -7329,9 +7329,9 @@ hold, for example *Trend is Bullish* and *RSI is below 70*.
         st.markdown("**🎬 Worked examples**: one recognisable setup each, built and scanned from start to finish.")
         for _slug in ("w1-trend-with-volume", "w2-overextended-rally", "w3-breakout-with-volume"):
             _training.link(st, _slug, key=f"tv_lat_{_slug}")
-        st.markdown("**🎬 Reading the evidence**: the Sets Angstrom Signals provides, and what usually followed a "
-                    "Set's Yes in the past.")
-        for _slug in ("06-provided-library", "08-what-followed"):
+        st.markdown("**🎬 Reading the evidence**: the Sets Angstrom Signals provides, a Set's answer on every past "
+                    "day, and what usually followed its Yes.")
+        for _slug in ("06-provided-library", "07-visualize-history", "08-what-followed"):
             _training.link(st, _slug, key=f"tv_lat_{_slug}")
         st.markdown("""
 **Coming next:** a Set score and counting (*at least 2 of these 4*). **🛣️ Strategies** (later): tracking your own

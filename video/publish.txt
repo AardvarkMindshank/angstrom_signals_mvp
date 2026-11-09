@@ -9,4 +9,5 @@
 2026-11-09_0725_134c93c/w2-overextended-rally
 2026-11-09_0725_134c93c/w3-breakout-with-volume
 2026-11-09_0740_e8adb5d/06-provided-library
+2026-11-09_1434_d842120/07-visualize-history
 2026-11-09_0725_134c93c/08-what-followed

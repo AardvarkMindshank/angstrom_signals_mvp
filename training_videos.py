@@ -26,9 +26,9 @@ SERIES = {
         ("w2-overextended-rally", "Overextended rally", "1:05"),
         ("w3-breakout-with-volume", "Breakout with volume", "1:08"),
     ]),
-    # Visualize History (07) joins between these two once its recording is fixed.
     "evidence": ("Reading the evidence", [
         ("06-provided-library", "The provided library", "1:18"),
+        ("07-visualize-history", "Visualize History", "0:59"),
         ("08-what-followed", "What followed", "1:35"),
     ]),
 }
