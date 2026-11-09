@@ -73,7 +73,10 @@ SOURCES = {
         "name": "Coin Metrics Community API",
         "url": "https://community-api.coinmetrics.io/v4",
         "docs": "https://docs.coinmetrics.io/service-and-support/coverage",
-        "measures": "On-chain metrics, possibly exchange flows (which metrics are free not confirmed)",
+        "measures": ("On-chain metrics. Checked 9 Nov 2026 (catalogue, daily): active addresses for 19 of our 25 "
+                     "coins (not SOL, AVAX, ATOM, FIL, VET, XMR), MVRV for 17, exchange inflows/outflows and exchange "
+                     "supply for BTC and ETH only; no SOPR. Years of history; recent values marked 'flash' can be "
+                     "revised. No key; 10 requests per 6 seconds."),
         "kind": "estimate (labelled wallets)",
         "scope": "per coin",
         "licence": "CC BY-NC",
@@ -82,7 +85,9 @@ SOURCES = {
         "cost": "free",
         "upgrade_path": "Coin Metrics Pro (price not checked)",
         "before_launch": "Needs a commercial licence before any use in Angstrom.",
-        "status": "inactive",   # Angstrom is a business: even development use is not clearly non-commercial
+        # Deferred 9 Nov 2026 (owner): Angstrom is not a business yet but is meant to become one, so not used until
+        # there is a Coin Metrics commercial licence or a free source whose terms allow commercial use.
+        "status": "inactive",
     },
     "farside": {
         "name": "Farside Investors ETF flow tables",
