@@ -1,0 +1,41 @@
+{
+ "steps": [
+  {
+   "id": "what",
+   "start": 235.636,
+   "say": "Visualize History shows what a Set said on every past day. | Open a scan, and press the clock."
+  },
+  {
+   "id": "bands",
+   "start": 252.16,
+   "say": "The price is drawn with coloured bands behind it. | Green is Yes. Amber is Unknown. | No is left clear."
+  },
+  {
+   "id": "panes",
+   "start": 259.607,
+   "say": "Underneath, every other asset in the scan gets a small chart of its own, with the same bands. | So you can compare them at a glance."
+  },
+  {
+   "id": "tap",
+   "start": 267.682,
+   "say": "Tap a small chart, and that asset moves to the top."
+  },
+  {
+   "id": "years",
+   "start": 294.124,
+   "say": "Choose how far back to look: one year, three, ten, or everything. | Older years load in the background, marked with an hourglass."
+  },
+  {
+   "id": "main",
+   "start": 321.025,
+   "say": "Open on the main price chart takes the asset and its bands to your dashboard chart."
+  },
+  {
+   "id": "note",
+   "start": 326.478,
+   "say": "The bands show when the conditions were met. | They don't say what happened next. | That is the job of the next video."
+  }
+ ],
+ "end": 335.475,
+ "trim": 235.636
+}

@@ -1,0 +1,51 @@
+{
+ "steps": [
+  {
+   "id": "open",
+   "start": 2.078,
+   "say": "Angstrom Signals comes with a library of Groups and Sets, built around common trading situations. | In Prism, open Provided by Angstrom Signals."
+  },
+  {
+   "id": "icons",
+   "start": 11.663,
+   "say": "Each one shows small icons for what it looks at. | Here: volume, and structure, the support and resistance levels."
+  },
+  {
+   "id": "line",
+   "start": 18.846,
+   "say": "Underneath, one line says what it describes, in plain words."
+  },
+  {
+   "id": "more",
+   "start": 22.878,
+   "say": "Tap more for three parts: | what it measures, | why traders watch it, | and what it doesn't prove."
+  },
+  {
+   "id": "evidence",
+   "start": 30.359,
+   "say": "The last icon is the evidence mark. | A microscope means not yet studied. | A balance means it was studied, and showed no clear difference. | The next two videos explain both."
+  },
+  {
+   "id": "filter",
+   "start": 41.889,
+   "say": "To find one quickly, tap an icon in the filter row. | Here, only the Sets that look at volatility."
+  },
+  {
+   "id": "use",
+   "start": 48.423,
+   "say": "Tap plus, and a provided Set becomes one of your Prism scans, ready to run."
+  },
+  {
+   "id": "groups",
+   "start": 53.535,
+   "say": "Signal Groups and Signal Sets have the same library at the top. | And the Start from list offers them too, after New, and before your own."
+  },
+  {
+   "id": "hide",
+   "start": 62.942,
+   "say": "Once you know them, one setting hides everything provided. | Descriptive readings, not advice."
+  }
+ ],
+ "end": 70.779,
+ "trim": 2.078
+}
