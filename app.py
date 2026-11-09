@@ -1710,6 +1710,9 @@ export default function(component) {
           root.classList.add("is-dragging");
           splitter.classList.add("is-dragging");
           try { splitter.setPointerCapture(event.pointerId); } catch (error) {}
+          // Where on the divider it was grabbed, so the divider stays under the pointer instead of jumping by the
+          // height of whatever sits above the stream (the search box).
+          const grab = event.clientY - splitter.getBoundingClientRect().top;
           const move = (moveEvent) => {
             const panelBox = root.querySelector(".panel");
             if (!panelBox) return;
@@ -1718,7 +1721,9 @@ export default function(component) {
               applyWide((moveEvent.clientX - area.left) / Math.max(1, area.width - 16));
               return;
             }
-            applySplit(moveEvent.clientY - panelBox.getBoundingClientRect().top);
+            const streamPane = root.querySelector(".stream-pane");
+            const top = streamPane ? streamPane.getBoundingClientRect().top : panelBox.getBoundingClientRect().top;
+            applySplit(moveEvent.clientY - grab - top);
           };
           const stop = (endEvent) => {
             root.classList.remove("is-dragging");
