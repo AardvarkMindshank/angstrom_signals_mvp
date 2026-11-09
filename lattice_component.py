@@ -559,29 +559,33 @@ export default function(component) {
     const kind = el("select");
     kind.setAttribute("aria-label", "Which asset " + name + " is read on");
     kind.title = "Read on the asset being scanned, or always on one fixed asset (for example COIN), at the same moment.";
+    // Until a match is picked the line has no fixed asset yet, so the chosen kind is remembered here; otherwise the
+    // redraw after a search would put the list back to "the scanned asset".
+    const pending = (window.__latFixedKind || {})[item.key] || "";
+    const shownKind = item.subject ? item.subject.kind : pending;
     [["", "📌 the scanned asset"], ["crypto", "📌 fixed crypto"], ["equity", "📌 fixed equity"]].forEach(([v, t]) => {
       const o = el("option", "", t); o.value = v;
-      if ((item.subject ? item.subject.kind : "") === v) o.selected = true;
+      if (shownKind === v) o.selected = true;
       kind.appendChild(o);
     });
     const id = el("input");
     id.size = 12; id.placeholder = "Name or ticker, then Enter"; id.setAttribute("aria-label", "Fixed asset for " + name);
     id.title = "Type a name or ticker and press Enter (or 🔍) to search the market, as in the Watchlist editor.";
-    id.value = item.subject ? item.subject.id : "";
-    id.style.display = item.subject || window.__latFixedOpen === item.key ? "" : "none";
+    id.value = item.subject ? item.subject.id : ((state.search || {}).slot === item.key ? state.search.q : "");
+    id.style.display = item.subject || shownKind ? "" : "none";
     const slot = item.key;
     // Market search, as in the Watchlist editor: Python asks CoinGecko (coins) or Yahoo (equities) and sends back
     // matches; picking one fixes the line to that asset (a coin by its CoinGecko id, an equity by its ticker).
     const search = () => {
       const q = id.value.trim();
       if (!kind.value || !q) return;
-      window.__latFixedOpen = slot;
       setTriggerValue("search", JSON.stringify({slot: slot, kind: kind.value, q: q, nonce: Date.now()}));
     };
     const apply = () => {
-      if (!kind.value) { delete item.subject; window.__latFixedOpen = null; send(); return; }
+      window.__latFixedKind = Object.assign(window.__latFixedKind || {}, {[slot]: kind.value});
+      if (!kind.value) { delete item.subject; send(); return; }
       id.style.display = "";
-      window.__latFixedOpen = slot;
+      go.style.display = "";
       if (item.subject && item.subject.kind !== kind.value) { delete item.subject; id.value = ""; send(); }
       id.focus();
     };

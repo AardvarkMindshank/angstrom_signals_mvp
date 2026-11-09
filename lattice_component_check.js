@@ -112,7 +112,7 @@ const { chromium, devices } = require("playwright");
           await sp.evaluate(() => window.sent.some(([k, m]) => k === "search" && m.q === "coin" && m.kind === "equity")));
     await sp.click(".found .pick");                                                // picks the match
     s = await slast();
-    check("Set: a Group can be read on a fixed asset (E4)", s && s.groups.some((g) => g.subject && g.subject.id === "coin" && g.subject.kind === "equity"));
+    check("Set: a Group can be read on a fixed asset (E4)", s && s.groups.some((g) => g.subject && g.subject.id === "COIN" && g.subject.kind === "equity"));
     await sp.click('button[title="Add a box where any one of its lines is enough"]');
     s = await slast();
     check("Set: an ANY box can be added", s && s.lines.some((l) => Array.isArray(l.any)));
