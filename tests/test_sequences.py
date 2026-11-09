@@ -223,3 +223,4 @@ def test_armed_shows_beside_no():
     assert row["armed"] == {"left": 2, "text": "A 1 close ago; B not yet (2 closes left)"}
     result["decision"]["sequences"][0]["state"] = "waiting"
     assert "armed" not in prism.row("X", result, "")
+

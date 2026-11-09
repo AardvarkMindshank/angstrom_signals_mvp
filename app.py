@@ -9533,7 +9533,9 @@ def _open_in_lattice(raw: str) -> None:
     if part == "groups":
         st.session_state["lattice_section"] = "groups"
         if ref.startswith("starter:"):
-            st.session_state["_lattice_start_next"] = ref
+            # The Start-from list keys a provided starter as "starter:" + its alias, and the alias itself already
+            # begins with "starter:" (for example "starter:starter:trend"); the bare alias was never found.
+            st.session_state["_lattice_start_next"] = f"starter:{ref}"
         else:
             st.session_state["lattice_start"] = f"saved:{ref}"
     elif part == "sets" and ref.startswith("demo:"):

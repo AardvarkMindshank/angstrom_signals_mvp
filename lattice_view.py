@@ -26,13 +26,12 @@ def _sources(saved: list[dict], user_id: str, current: str | None = None, provid
     """"Start from": a new Group, then the provided starters (opened as your copy), then your own Groups."""
     import perspectives
 
-    del current
     labels = {START_NEW: "➕ New Group"}
     docs: dict = {}
     for alias in sg.STARTERS:
         doc = sg.starter(alias)
         docs[f"starter:{alias}"] = (doc, None)
-        if provided:
+        if provided or current == f"starter:{alias}":     # asked for by name (Open in Lattice): shown even if hidden
             labels[f"starter:{alias}"] = f"{doc['name']} {perspectives.icons(doc)} (provided)"
     for c in saved:
         if c.get("kind") != "group" or c.get("owner_id") != user_id or not c["versions"]:
