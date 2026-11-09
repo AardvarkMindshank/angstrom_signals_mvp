@@ -52,8 +52,8 @@ const { chromium, devices } = require("playwright");
       await ai.waitFor({ timeout: 30000 });
       const [adv] = await Promise.all([page.waitForEvent("popup", { timeout: 30000 }), ai.click()]);
       await adv.waitForTimeout(5000);
-      check("desktop: ✨ AI opens the Advisor in its own window", adv.url().includes("view=advisor")
-        && (await adv.locator("body").innerText()).includes("AI Advisor"), adv.url());
+      check("desktop: ✨ AI opens the Assistant in its own window", adv.url().includes("view=advisor")
+        && (await adv.locator("body").innerText()).includes("Angstrom Assistant"), adv.url());
       await adv.screenshot({ path: `${out}/advisor_window.png` });
       await adv.close();
     }

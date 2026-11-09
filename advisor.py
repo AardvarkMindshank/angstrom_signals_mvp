@@ -1,5 +1,12 @@
 """
-✨ AI Advisor, phase 0: explains in plain words how to build an idea in Lattice, and answers follow-up questions.
+✨ Angstrom Assistant (it started as the Lattice AI Advisor), phase 0: one assistant for the whole app. It answers
+questions about where things are and how to use them, and explains in plain words how to build and test an idea in
+Lattice. Opened from the top bar it starts as the app guide; opened from Lattice, as the research coach; it answers
+either kind of question in the same conversation. Both buttons open the same window (?view=advisor&from=...).
+
+What it knows is rebuilt from the app on every question, so it cannot drift: the Help and guides text (read from
+app.py), the training videos, every signal, the provided Groups and Sets, and the person's own. The hand-written part
+(RULES) is guarded by tests/test_advisor_guide.py.
 
 It never builds, saves or runs anything: the person does every click. It knows the building blocks (every signal and
 its readings, the provided Groups and Sets as Look inside shows them, the person's own Groups and Sets, the What
@@ -23,10 +30,16 @@ MAX_TOKENS = 1600
 MAX_TURNS = 12                         # earlier turns are dropped from what is sent, oldest first
 DAILY_LIMIT = 60                       # questions per person per day (this browser session's count)
 
-RULES = """You are the AI Advisor inside Angstrom Signals, a market research app for traders, in its research
-workspace called Angstrom Lattice. You help one person turn a trading idea into the app's building blocks and
-understand the results. You only explain: you never claim to have built, saved, run or changed anything, because
-you cannot. The person does every click, following your steps.
+RULES = """You are the ✨ Angstrom Assistant inside Angstrom Signals, a market research app for crypto and stocks. You
+have two jobs, and the person can ask about either at any time:
+1. App guide: where things are and how to use them (sections, buttons, settings, alerts, watchlists, the chart,
+   what a reading or score means). Answer from the Help and guides text below, which is the app's own help; when
+   a 🎬 training video covers the question, name it exactly (the videos open from the 🎬 links in 📖 Help and
+   guides). If the help does not cover something, say you are not sure rather than guess where it is.
+2. Research coach in the research workspace, Angstrom Lattice: help the person turn a trading idea into the app's
+   building blocks and understand the results.
+You only explain: you never claim to have built, saved, run or changed anything, because you cannot. The person
+does every click, following your steps.
 
 How you answer:
 - Plain words for a beginner. Short paragraphs or numbered steps. Name the real buttons and fields exactly as the
@@ -152,18 +165,76 @@ def _mine(saved: list[dict], user_id: str) -> list[str]:
     return out or ["(none saved yet)"]
 
 
-def system_prompt(saved: list[dict], user_id: str) -> str:
-    return "\n".join([RULES, "Signals (name, readings and their ranges):", *_signals(), "", *_provided(), "",
-                      "The person's own Groups and Sets:", *_mine(saved, user_id)])
+_HELP: list[str] = []
 
 
-def ask(history: list[dict], question: str, system: str, post=requests.post) -> str:
+def _help_text() -> str:
+    """The text of 📖 Help and guides, read from app.py (every markdown, caption and tab name in that section)."""
+    if not _HELP:
+        import ast
+        from pathlib import Path
+
+        src = (Path(__file__).resolve().parent / "app.py").read_text(encoding="utf-8")
+        texts = []
+        for node in ast.walk(ast.parse(src)):
+            if not (isinstance(node, ast.With) and "Help and guides" in (ast.get_source_segment(
+                    src, node.items[0].context_expr) or "")):
+                continue
+            for call in ast.walk(node):
+                if not (isinstance(call, ast.Call) and isinstance(call.func, ast.Attribute) and call.args
+                        and call.func.attr in ("markdown", "caption", "tabs", "info", "write", "expander")):
+                    continue
+                arg = call.args[0]
+                if isinstance(arg, ast.Constant) and isinstance(arg.value, str):
+                    texts.append(arg.value)
+                elif isinstance(arg, ast.JoinedStr):
+                    texts.append("".join(v.value if isinstance(v, ast.Constant) else "…" for v in arg.values))
+                elif isinstance(arg, ast.List):
+                    texts.append("Help tabs: " + " | ".join(e.value for e in arg.elts if isinstance(e, ast.Constant)))
+            break
+        _HELP.append("\n\n".join(t.strip() for t in texts if t.strip()))
+    return _HELP[0]
+
+
+def _videos() -> list[str]:
+    import training_videos as tv
+
+    out = []
+    for _, (series, videos) in tv.SERIES.items():
+        out.append(f"{series}: " + "; ".join(f"“{tv.info(slug)['label']}” ({length})" for slug, _, length in videos))
+    return out
+
+
+START = {
+    "app": "The person opened you from the top bar of the app: expect questions about the app itself first.",
+    "lattice": "The person opened you from Angstrom Lattice: expect questions about building and testing ideas first.",
+}
+
+
+def system_parts(saved: list[dict], user_id: str, start: str = "lattice") -> tuple[str, str]:
+    """(the part that is the same for everyone, so it can be cached; the part about this person)."""
+    shared = "\n".join([RULES, "Help and guides (the app's own help text):", _help_text(), "",
+                        "🎬 Training videos:", *_videos(), "",
+                        "Signals (name, readings and their ranges):", *_signals(), "", *_provided()])
+    mine = "\n".join([START.get(start, START["lattice"]), "", "The person's own Groups and Sets:",
+                      *_mine(saved, user_id)])
+    return shared, mine
+
+
+def system_prompt(saved: list[dict], user_id: str, start: str = "lattice") -> str:
+    return "\n\n".join(system_parts(saved, user_id, start))
+
+
+def ask(history: list[dict], question: str, system, post=requests.post) -> str:
     """The Advisor's answer to `question`, given the conversation so far ([{role, content}])."""
     key = api_key()
     if not key:
         raise RuntimeError("The AI Advisor needs ANTHROPIC_API_KEY in the app's environment.")
     messages = [m for m in history if m.get("role") in ("user", "assistant")][-2 * MAX_TURNS:]
     messages = messages + [{"role": "user", "content": question}]
+    if isinstance(system, (tuple, list)):         # the shared part is cached by the API, so each question costs less
+        system = [{"type": "text", "text": system[0], "cache_control": {"type": "ephemeral"}},
+                  {"type": "text", "text": system[1]}]
     response = post(API_URL, timeout=90, headers={
         "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json"},
         data=json.dumps({"model": MODEL, "max_tokens": MAX_TOKENS, "system": system, "messages": messages}))
@@ -179,16 +250,16 @@ def ask(history: list[dict], question: str, system: str, post=requests.post) -> 
 
 # ----------------------------------------------------------------------------------------------- the tab
 
-def render(st, supabase, user_id: str = "") -> None:
+def render(st, supabase, user_id: str = "", start: str = "lattice") -> None:
     import time
 
     import signal_groups_inspector as gi
 
-    st.caption("Describe a trading idea in plain words. The Advisor explains how to build it from Groups, signals "
-               "and Sets, and how to test it; you do the clicks. It explains, it doesn't advise: no buy or sell "
-               "calls.")
+    st.caption("Ask anything about the app: where things are, how to use them, what a reading means. Or describe a "
+               "trading idea in plain words and get step-by-step help building and testing it in Angstrom Lattice. "
+               "It explains; you do the clicks. No buy or sell calls.")
     if not available():
-        st.info("The AI Advisor isn't switched on yet: it needs an Anthropic API key in the app's settings "
+        st.info("The Angstrom Assistant isn't switched on yet: it needs an Anthropic API key in the app's settings "
                 "(ANTHROPIC_API_KEY on Render).")
         return
     chat = st.session_state.setdefault("advisor_chat", [])
@@ -198,11 +269,14 @@ def render(st, supabase, user_id: str = "") -> None:
         with st.chat_message(m["role"], avatar="🧑" if m["role"] == "user" else ":material/auto_awesome:"):
             st.markdown(m["content"])
     if not chat:
-        st.markdown("Try: *“I think price often drops a few days after a breakout on heavy volume fizzles out. How "
-                    "do I check that?”*")
+        if start == "app":
+            st.markdown("Try: *“Where do I change which emails I get?”* or *“What does a Stretch of +60 mean?”*")
+        else:
+            st.markdown("Try: *“I think price often drops a few days after a breakout on heavy volume fizzles out. "
+                        "How do I check that?”*")
     with st.form("advisor_form", clear_on_submit=True, border=False):
         question = st.text_area("Your question", key="advisor_q", height=90, label_visibility="collapsed",
-                                placeholder="Ask about an idea, a Set, a result, or how to build something…")
+                                placeholder="Ask about the app, an idea, a Set, or a result…")
         cols = st.columns([1, 1, 3])
         sent = cols[0].form_submit_button("Ask", type="primary", icon=":material/send:", width="stretch")
         fresh = cols[1].form_submit_button("New chat", icon=":material/refresh:", width="stretch")
@@ -213,7 +287,7 @@ def render(st, supabase, user_id: str = "") -> None:
         lattice_panel.rerun(st)
     if sent and question.strip():
         if used >= DAILY_LIMIT:
-            st.warning(f"That's {DAILY_LIMIT} questions today: the Advisor is resting until tomorrow.")
+            st.warning(f"That's {DAILY_LIMIT} questions today: the Assistant is resting until tomorrow.")
             return
         cached = st.session_state.get("siggroups_saved")
         if not cached or time.time() - cached[0] > 60:
@@ -221,9 +295,9 @@ def render(st, supabase, user_id: str = "") -> None:
             st.session_state["siggroups_saved"] = cached
         with st.spinner("Thinking…"):
             try:
-                answer = ask(chat, question.strip()[:4000], system_prompt(cached[1] or [], user_id))
+                answer = ask(chat, question.strip()[:4000], system_parts(cached[1] or [], user_id, start))
             except Exception as exc:
-                st.error(f"The Advisor couldn't answer just now ({str(exc)[:200]}).")
+                st.error(f"The Assistant couldn't answer just now ({str(exc)[:200]}).")
                 return
         chat.extend([{"role": "user", "content": question.strip()}, {"role": "assistant", "content": answer}])
         st.session_state["advisor_used"][day] = used + 1

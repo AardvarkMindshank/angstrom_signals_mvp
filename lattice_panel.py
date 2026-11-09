@@ -97,24 +97,33 @@ _ADVISOR = []
 
 _ADVISOR_JS = """
 export default function(component) {
-  const { parentElement } = component;
+  const { parentElement, data } = component;
   const button = parentElement.querySelector("button");
-  if (!button || button.dataset.ready) return;
+  if (!button) return;
+  button.dataset.start = (data && data.start) || "lattice";
+  // Beside the Lattice tabs it matches their smaller height (less padding; the icon keeps its size).
+  button.classList.toggle("compact", button.dataset.start === "lattice");
+  if (data && data.tip) { button.title = data.tip; button.setAttribute("aria-label", data.tip); }
+  if (button.dataset.ready) return;
   button.dataset.ready = "1";
   button.addEventListener("click", () => {
-    const address = window.location.origin + window.location.pathname + "?view=advisor";
-    // A small window of its own beside the app, reused if the Advisor is already open; a tab if pop-ups are blocked.
+    const address = window.location.origin + window.location.pathname + "?view=advisor&from="
+      + encodeURIComponent(button.dataset.start);
+    // One small window beside the app, shared by every ✨ button. If it is already open it is brought to the front
+    // as it is, so the conversation carries on; if pop-ups are blocked, a tab.
     const left = Math.max(0, (window.screenX || 0) + (window.outerWidth || 1200) - 540);
-    const opened = window.open(address, "ang_advisor",
-                               "popup=yes,width=520,height=820,top=60,left=" + left);
-    if (opened) opened.focus(); else window.open(address, "_blank");
+    const opened = window.open("", "ang_advisor", "popup=yes,width=520,height=820,top=60,left=" + left);
+    if (!opened) { window.open(address, "_blank"); return; }
+    let blank = true;
+    try { blank = !opened.location.href || opened.location.href === "about:blank"; } catch (e) { blank = false; }
+    if (blank) opened.location.href = address;
+    opened.focus();
   });
 }
 """
 
 _ADVISOR_HTML = (
-    "<button type='button' class='ang-ai-btn' title='✨ AI Advisor (opens in its own window): describe a trading "
-    "idea in plain words and get step-by-step help building and testing it. It explains; you do the clicks.'>"
+    "<button type='button' class='ang-ai-btn' title='{tip}'>"
     "<svg viewBox='0 0 24 24' width='18' height='18' fill='currentColor' aria-hidden='true'><path d='M19 9l1.25-2.75"
     "L23 5.5l-2.75-1.25L19 1.5l-1.25 2.75L15 5.5l2.75 1.25L19 9zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 "
     "12l-5.5-2.5zM19 15l-1.25 2.75L15 19l2.75 1.25L19 23l1.25-2.75L23 19l-2.75-1.25L19 15z'/></svg>"
@@ -124,24 +133,42 @@ _ADVISOR_CSS = """
 .ang-ai-btn{display:inline-flex;align-items:center;gap:6px;height:2.5rem;padding:0 14px;border-radius:.5rem;
   border:1px solid var(--st-border-color, rgba(128,128,128,.35));background:transparent;color:inherit;font:inherit;
   cursor:pointer}
+.ang-ai-btn.compact{height:2rem;padding:0 10px;gap:5px}
 .ang-ai-btn:hover{border-color:var(--st-primary-color,#ff4b4b);color:var(--st-primary-color,#ff4b4b)}
 """
 
 
-def _advisor_button(st) -> None:
-    """The ✨ AI button: opens the Advisor in a pop-out window, so the pages under it stay free to work on."""
+TIPS = {
+    "lattice": "✨ Angstrom Assistant (opens in its own window): describe a trading idea in plain words and get "
+               "step-by-step help building and testing it. It also answers questions about the rest of the app. It "
+               "explains; you do the clicks.",
+    "app": "✨ Angstrom Assistant (opens in its own window): ask anything about the app, such as where things are, "
+           "how to use them, or what a reading means, or get help building and testing an idea. It explains; you do "
+           "the clicks.",
+}
+
+
+def advisor_button(st, start: str = "lattice", key: str = "advisor_open") -> None:
+    """A ✨ AI button: opens the Angstrom Assistant in a pop-out window, so the pages under it stay free to work on.
+    Every ✨ button opens the same window; `start` says where it was opened from."""
+    import html
+
     if not _ADVISOR:
-        _ADVISOR.append(st.components.v2.component("advisor_popout", html=_ADVISOR_HTML, css=_ADVISOR_CSS,
-                                                   js=_ADVISOR_JS, isolate_styles=False))
-    _ADVISOR[0](key="advisor_open")
+        _ADVISOR.append(st.components.v2.component(
+            "advisor_popout", html=_ADVISOR_HTML.replace("{tip}", html.escape(TIPS["lattice"], quote=True)),
+            css=_ADVISOR_CSS, js=_ADVISOR_JS, isolate_styles=False))
+    _ADVISOR[0](key=key, data={"start": start, "tip": TIPS.get(start, TIPS["lattice"])})
 
 
-def render_popout(st, supabase, user_id: str) -> None:
-    """The AI Advisor alone in its own window (?view=advisor)."""
+_advisor_button = advisor_button
+
+
+def render_popout(st, supabase, user_id: str, start: str = "lattice") -> None:
+    """The Angstrom Assistant alone in its own window (?view=advisor&from=app|lattice)."""
     import advisor
 
-    st.markdown("#### ✨ AI Advisor")
-    advisor.render(st, supabase, user_id)
+    st.markdown("#### ✨ Angstrom Assistant")
+    advisor.render(st, supabase, user_id, start if start in advisor.START else "lattice")
 
 
 def _render(st, supabase, assets: list[tuple[str, str, str]], user_id: str) -> None:
@@ -159,7 +186,7 @@ def _render(st, supabase, assets: list[tuple[str, str, str]], user_id: str) -> N
         chosen = st.segmented_control("Lattice section", list(SECTIONS), format_func=label, default="groups",
                                       key="lattice_section", label_visibility="collapsed", help=hover) or "groups"
         if hasattr(st, "components") and hasattr(st.components, "v2"):
-            _advisor_button(st)
+            advisor_button(st, "lattice")
     if chosen == "groups":
         import lattice_view
 

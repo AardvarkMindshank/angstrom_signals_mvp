@@ -6982,6 +6982,10 @@ with st.container(horizontal=True, vertical_alignment="center", horizontal_align
         unsafe_allow_html=True,
     )
     with st.container(horizontal=True, vertical_alignment="center", gap="xsmall", width="content"):
+        if not _POPOUT_VIEW:
+            import lattice_panel as _lp
+
+            _lp.advisor_button(st, "app", key="assistant_open")    # ✨ Angstrom Assistant: help with the whole app
         single_layout = st.button(
             "Single column",
             key="layout_single",
@@ -7079,6 +7083,8 @@ because they measure different things and are never added together.
 6. **🧩 Angstrom Lattice** (preview), near the bottom, is your research workspace: build your own readings and
    rules from the same signals, then scan your watchlist with them in **Prism**, now or on a schedule with alerts.
    See the 🧩 Lattice & Prism tab.
+7. **✨ AI** (top right, and beside the Lattice tabs) opens the Angstrom Assistant in its own window: ask where
+   things are, how to use them or what a reading means, or get step-by-step help building and testing an idea.
 """)
         st.markdown("**🎬 Training videos**: short videos with captions, about a minute or two each. Back, Next and "
                     "Start in the player move through a series.")
@@ -13698,7 +13704,7 @@ if _POPOUT_VIEW == "advisor":
     # The AI Advisor in its own window beside the app, so it never covers the pages you are working on.
     import lattice_panel
 
-    lattice_panel.render_popout(st, supabase, str(user_id))
+    lattice_panel.render_popout(st, supabase, str(user_id), str(st.query_params.get("from") or "lattice"))
     st.stop()
 
 if _POPOUT_VIEW == "lattice_panel":
