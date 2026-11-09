@@ -73,3 +73,11 @@ def test_daily_only():
 def test_a_cell_in_a_row_opens_that_assets_why_block():
     spec_g = {"key": "saved:g1", "part": "groups", "name": "My Trend", "config": "g1", "version": 2, "cluster": None}
     assert "data-pick='Crypto|bitcoin|breakdown|saved:g1'" in tc.group_cell(spec_g, {"value": 5.0}, "Crypto|bitcoin")
+
+
+def test_folded_groups_show_one_coloured_dot_each():
+    import table_columns as t
+
+    cell = t.folded_cell("groups", [("Trend", 42.0), ("Stretch", -64.0), ("Mine", None)])
+    assert cell.count("border-radius:50%") == 3 and "Trend: +42" in cell and "Mine: no reading" in cell
+    assert "data-sort='-11.0000'" in cell               # sorts by the average of the readings

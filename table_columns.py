@@ -283,13 +283,30 @@ def _clickable(pick: str, tip: str, inner: str, sort: str, section: str, center:
 
 
 def folded_cell(part: str, cells: list[dict]) -> str:
-    """The one narrow cell a folded section shows: Sets, how many said Yes; Groups, a dot."""
+    """The one narrow cell a folded section shows: Sets, how many said Yes; Groups, a row of coloured dots."""
     if part == "sets":
         yes = sum(1 for c in cells if (c or {}).get("answer") == "yes")
         inner = (f"<span title='{yes} of {len(cells)} Sets say Yes' style='font-weight:600;color:"
                  f"{YES[0] if yes else NO[0]};'>{yes}✓</span>")
         return f"<td data-sort='{yes}' data-sec-folded='s' style='padding:10px;text-align:center;'>{inner}</td>"
-    return "<td data-sort='' data-sec-folded='g' style='padding:10px;text-align:center;opacity:.5;'>…</td>"
+    # Groups: one dot per Group, in column order, coloured as the score bars are (green up, red down, grey near
+    # zero, paler when weaker); hover lists each. cells: [(name, score -100..+100 or None)]. Sorted by the average.
+    from score_colours import reading_tone
+
+    dots, lines, known = [], [], []
+    for name, value in cells:
+        if value is None:
+            colour, shown = "var(--ang-track, #e5e7eb)", "no reading"
+        else:
+            colour, shown = reading_tone(value)[3], f"{value:+.0f}"
+            known.append(float(value))
+        dots.append(f"<span style='display:inline-block;width:9px;height:9px;border-radius:50%;background:{colour};"
+                    "border:1px solid rgba(127,127,127,.35);'></span>")
+        lines.append(f"{name}: {shown}")
+    sort = f"{sum(known) / len(known):.4f}" if known else ""
+    hint = html.escape("\n".join(lines) or "No Groups", quote=True)
+    return (f"<td data-sort='{sort}' data-sec-folded='g' style='padding:10px;text-align:center;white-space:nowrap;'>"
+            f"<span title='{hint}' style='display:inline-flex;gap:3px;cursor:help;'>{''.join(dots)}</span></td>")
 
 
 def daily_only(doc: dict | None) -> bool:

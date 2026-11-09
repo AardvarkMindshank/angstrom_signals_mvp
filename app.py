@@ -11148,7 +11148,14 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                         cluster_cells += table_columns.group_cell(
                             spec, extra.get(spec["key"]), f"{kind}|{asset_id}" if has_signals else None)
                 if group_specs:
-                    cluster_cells += table_columns.folded_cell("groups", [])
+                    dots = []
+                    for spec in group_specs:
+                        if spec["cluster"]:
+                            value = row_dict.get(spec["cluster"])
+                        else:
+                            value = (extra.get(spec["key"]) or {}).get("value")
+                        dots.append((spec["name"], None if value is None else float(value)))
+                    cluster_cells += table_columns.folded_cell("groups", dots)
                 for spec in set_specs:
                     cluster_cells += table_columns.set_cell(
                         spec, extra.get(spec["key"]), f"{kind}|{asset_id}" if has_signals else None)
