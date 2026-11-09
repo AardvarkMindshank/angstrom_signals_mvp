@@ -46,7 +46,7 @@ _POPOUT_SECTION_IDS = (
     "market_sentiment_panel",
     "signal_matrix",
 )
-_POPOUT_VIEWS = ("social",) + _POPOUT_SECTION_IDS
+_POPOUT_VIEWS = ("social",) + _POPOUT_SECTION_IDS + ("lattice_panel",)   # Angstrom Lattice pops out too
 _POPOUT_VIEW = str(st.query_params.get("view") or "")
 if _POPOUT_VIEW not in _POPOUT_VIEWS:
     _POPOUT_VIEW = ""
@@ -13565,7 +13565,7 @@ else:
     _popout_buttons(
         key="popout_buttons",
         data={
-            "ids": list(_POPOUT_SECTION_IDS),
+            "ids": list(_POPOUT_SECTION_IDS) + ["lattice_panel"],
             "asWindow": bool(st.session_state.get("popouts_as_window", True)),
             "fold": bool(st.session_state.get("popouts_fold_section", True)),
         },
@@ -13577,6 +13577,27 @@ if _POPOUT_VIEW:
 else:
     # A pick made in a pop-out reaches the main page too.
     _asset_follow(key="asset_follow", data={"quiet": True})
+
+
+
+
+def _render_lattice() -> None:
+    """Angstrom Lattice: on the main page under the dashboard, or alone in its own pop-out window."""
+    import lattice_panel
+
+    lattice_panel.render(
+        st, supabase,
+        [("crypto", k, str(v)) for k, v in dict(CRYPTO_WATCHLIST or {}).items()]
+        + [("equity", k, f"{v} ({k})") for k, v in dict(STOCK_WATCHLIST or {}).items()],
+        str(user_id),
+    )
+
+
+if _POPOUT_VIEW == "lattice_panel":
+    # Lattice needs only the Watchlist, so the dashboard sections are not worked out in this window.
+    with st.expander(":material/hub: Angstrom Lattice", expanded=True, key="pop_lattice_panel"):
+        _render_lattice()
+    st.stop()
 
 render_dashboard(
     CRYPTO_WATCHLIST,
@@ -13594,14 +13615,7 @@ _record_run("whole page", _RUN_STARTED)
 # Angstrom Lattice (preview), for every signed-in account. Only the chosen part is drawn.
 st.markdown("<div id='angstrom-lattice' style='scroll-margin-top:4.5rem;'></div>", unsafe_allow_html=True)
 with tracked_expander(":material/hub: Angstrom Lattice", "lattice_panel"):
-    import lattice_panel
-
-    lattice_panel.render(
-        st, supabase,
-        [("crypto", k, str(v)) for k, v in dict(CRYPTO_WATCHLIST or {}).items()]
-        + [("equity", k, f"{v} ({k})") for k, v in dict(STOCK_WATCHLIST or {}).items()],
-        str(user_id),
-    )
+    _render_lattice()
 if str((load_profile() or {}).get("role") or "") == "admin":
     admin_panel()
 _page_top(key="page_back_to_top")
