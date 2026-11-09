@@ -1,0 +1,45 @@
+........................................................................ [  7%]
+........................................................................ [ 15%]
+........................................................................ [ 22%]
+........................................................................ [ 30%]
+........................................................................ [ 37%]
+........................................................................ [ 45%]
+........................................................................ [ 52%]
+........................................................................ [ 60%]
+........................................................................ [ 67%]
+........................................................................ [ 75%]
+........................................................................ [ 82%]
+........................................................................ [ 90%]
+........................................................................ [ 97%]
+......................                                                   [100%]
+=============================== warnings summary ===============================
+tests/test_builtin_alerts.py: 1 warning
+tests/test_chart_data.py: 2 warnings
+tests/test_group_readings.py: 3 warnings
+tests/test_lattice_editor.py: 1 warning
+tests/test_lattice_stage1.py: 26 warnings
+tests/test_lattice_stage5.py: 5 warnings
+tests/test_library_completion.py: 12 warnings
+tests/test_prism.py: 9 warnings
+tests/test_provided_library.py: 3 warnings
+tests/test_replay.py: 3 warnings
+tests/test_replay_groups.py: 1 warning
+tests/test_sequences.py: 3 warnings
+tests/test_set_history.py: 6 warnings
+tests/test_table_columns.py: 1 warning
+tests/test_why_panel.py: 1 warning
+  /home/runner/work/angstrom_signals_mvp/angstrom_signals_mvp/chart_data.py:237: Pandas4Warning: DatetimeIndex.weekday is deprecated and will be removed in a future version. Use DatetimeIndex.day_of_week instead.
+    monday = df.index - pd.to_timedelta(df.index.weekday, unit="D")
+
+tests/test_lw_chart.py: 11 warnings
+  /opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages/pandas/core/indexes/datetimelike.py:1029: Pandas4Warning: DatetimeIndex.values returning an ndarray that drops timezone information is deprecated. In a future version, this will return the underlying DatetimeArray instead. Use 'DatetimeIndex.tz_convert(None).to_numpy()' to get a NumPy array of UTC values, or 'DatetimeIndex.array' to get the ExtensionArray.
+  See https://pandas.pydata.org/docs/dev/whatsnew/v3.1.0.html#whatsnew-310-deprecations-values for more details.
+    warnings.warn(
+
+tests/test_set_history.py: 841 warnings
+  /home/runner/work/angstrom_signals_mvp/angstrom_signals_mvp/set_history.py:42: Pandas4Warning: Timestamp.dayofweek is deprecated and will be removed in a future version. Use Timestamp.day_of_week instead.
+    if len(frame) and pd.Timestamp(done.index[-1]).dayofweek != 6:
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+958 passed, 929 warnings in 158.34s (0:02:38)
+exit=0
