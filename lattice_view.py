@@ -347,9 +347,15 @@ def _save(st, supabase, model: dict, can_save: bool) -> None:
         try:
             v = supabase.rpc("analysis_save_version", {"cfg": source["id"], "expected_version": source["current_version"],
                                                        "body": doc}).execute().data
-            st.success(f"Saved version {v}.")
             st.session_state.pop("siggroups_saved", None)
+            # Open the saved version, so everything below (such as Study this Set) is about version {v}.
+            st.session_state["_lattice_start_next"] = f"saved:{source['id']}"
+            st.session_state.pop("lattice_loaded", None)
+            st.session_state["lattice_flash_group"] = ("ok", f"Saved version {v}.")
+            lattice_panel.rerun(st)
         except Exception as exc:
+            if "Rerun" in type(exc).__name__:
+                raise
             st.error(f"Refused: {gi._rpc_error(exc)}")
 
 
