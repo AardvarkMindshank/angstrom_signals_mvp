@@ -1,2 +1,3 @@
 # Videos recorded when the "video" branch is pushed, one per line (names of files in video/series/, without .json).
+06-provided-library
 07-visualize-history

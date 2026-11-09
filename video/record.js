@@ -27,7 +27,11 @@ const ACTIONS = require("./actions.js");
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 610 }, deviceScaleFactor: 1,
     recordVideo: { dir: path.join(dir, "raw"), size: { width: 1280, height: 610 } } });
   await ctx.addInitScript(() => {
-    const zoom = () => { if (document.body) document.body.style.zoom = "1.25"; else requestAnimationFrame(zoom); };
+    // Zoom, and never scroll sideways: bringing a narrow column's content into view must not shift the page.
+    const zoom = () => {
+      if (document.body) { document.body.style.zoom = "1.25"; document.documentElement.style.overflowX = "clip"; document.body.style.overflowX = "clip"; }
+      else requestAnimationFrame(zoom);
+    };
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", zoom); else zoom();
   });
   // A visible pointer, and a ripple on every click (recordings do not show the real pointer).
