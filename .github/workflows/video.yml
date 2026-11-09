@@ -34,10 +34,21 @@ jobs:
             sudo apt-get -o Acquire::Retries=3 install -y -q --no-install-recommends $need
           fi
           npm install --no-save --silent playwright@1.63.0 && npx playwright install --with-deps chromium > /dev/null
+      # The voice model (about 340 MB) is kept between runs, so a GitHub download outage does not stop a recording.
+      - name: Voice model (cached)
+        id: voice
+        uses: actions/cache@v4
+        with:
+          path: out/video/voice_model
+          key: kokoro-model-files-v1.0
+      - name: Voice model (download when not cached)
+        if: steps.voice.outputs.cache-hit != 'true'
+        run: |
           mkdir -p out/video/voice_model
           kokoro=https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0
-          curl -sSfL --retry 3 -o out/video/voice_model/kokoro-v1.0.onnx $kokoro/kokoro-v1.0.onnx
-          curl -sSfL --retry 3 -o out/video/voice_model/voices-v1.0.bin $kokoro/voices-v1.0.bin
+          for f in kokoro-v1.0.onnx voices-v1.0.bin; do
+            curl -sSfL --retry 12 --retry-delay 30 --retry-all-errors -o out/video/voice_model/$f $kokoro/$f
+          done
       - name: Saved prices (for past moments, cut before the hold-out)
         run: |
           git fetch -q --depth=1 origin reports
