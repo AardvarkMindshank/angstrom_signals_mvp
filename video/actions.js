@@ -509,11 +509,11 @@ module.exports = {
       await h.show(".ang-lwc");
     },
     years: async (h, dur) => {
-      const seg = h.page.getByRole("button", { name: "3Y", exact: true }).first();
+      const seg = h.page.getByRole("button", { name: /3Y$/ }).first();      // "⏳ 3Y" while older years load
       await h.ring(seg.locator("xpath=.."));
       await h.wait(1200); await h.clear();
       await h.press(seg); await h.wait(Math.max(800, dur * 250));
-      await h.press(h.page.getByRole("button", { name: "10Y", exact: true }).first());
+      await h.press(h.page.getByRole("button", { name: /10Y$/ }).first());
       await h.show(".ang-lwc");
     },
     main: async (h) => {
