@@ -95,15 +95,53 @@ class _nothing:
 
 _ADVISOR = []
 
+_ADVISOR_JS = """
+export default function(component) {
+  const { parentElement } = component;
+  const button = parentElement.querySelector("button");
+  if (!button || button.dataset.ready) return;
+  button.dataset.ready = "1";
+  button.addEventListener("click", () => {
+    const address = window.location.origin + window.location.pathname + "?view=advisor";
+    // A small window of its own beside the app, reused if the Advisor is already open; a tab if pop-ups are blocked.
+    const left = Math.max(0, (window.screenX || 0) + (window.outerWidth || 1200) - 540);
+    const opened = window.open(address, "ang_advisor",
+                               "popup=yes,width=520,height=820,top=60,left=" + left);
+    if (opened) opened.focus(); else window.open(address, "_blank");
+  });
+}
+"""
 
-def _advisor_window(st, supabase, user_id: str) -> None:
-    """The AI Advisor in a window over the page; the conversation is kept while you close it and follow the steps."""
+_ADVISOR_HTML = (
+    "<button type='button' class='ang-ai-btn' title='✨ AI Advisor (opens in its own window): describe a trading "
+    "idea in plain words and get step-by-step help building and testing it. It explains; you do the clicks.'>"
+    "<svg viewBox='0 0 24 24' width='18' height='18' fill='currentColor' aria-hidden='true'><path d='M19 9l1.25-2.75"
+    "L23 5.5l-2.75-1.25L19 1.5l-1.25 2.75L15 5.5l2.75 1.25L19 9zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 "
+    "12l-5.5-2.5zM19 15l-1.25 2.75L15 19l2.75 1.25L19 23l1.25-2.75L23 19l-2.75-1.25L19 15z'/></svg>"
+    "<span>AI</span></button>")
+
+_ADVISOR_CSS = """
+.ang-ai-btn{display:inline-flex;align-items:center;gap:6px;height:2.5rem;padding:0 14px;border-radius:.5rem;
+  border:1px solid var(--st-border-color, rgba(128,128,128,.35));background:transparent;color:inherit;font:inherit;
+  cursor:pointer}
+.ang-ai-btn:hover{border-color:var(--st-primary-color,#ff4b4b);color:var(--st-primary-color,#ff4b4b)}
+"""
+
+
+def _advisor_button(st) -> None:
+    """The ✨ AI button: opens the Advisor in a pop-out window, so the pages under it stay free to work on."""
     if not _ADVISOR:
-        import advisor
+        _ADVISOR.append(st.components.v2.component("advisor_popout", html=_ADVISOR_HTML, css=_ADVISOR_CSS,
+                                                   js=_ADVISOR_JS, isolate_styles=False))
+    _ADVISOR[0](key="advisor_open")
 
-        _ADVISOR.append(st.dialog("✨ AI Advisor", width="large")(
-            lambda sb, uid: advisor.render(st, sb, uid)))
-    _ADVISOR[0](supabase, user_id)
+
+def render_popout(st, supabase, user_id: str) -> None:
+    """The AI Advisor alone in its own window (?view=advisor)."""
+    import advisor
+
+    st.markdown("#### ✨ AI Advisor")
+    advisor.render(st, supabase, user_id)
 
 
 def _render(st, supabase, assets: list[tuple[str, str, str]], user_id: str) -> None:
@@ -120,11 +158,8 @@ def _render(st, supabase, assets: list[tuple[str, str, str]], user_id: str) -> N
     with (bar if bar is not None else _nothing()):
         chosen = st.segmented_control("Lattice section", list(SECTIONS), format_func=label, default="groups",
                                       key="lattice_section", label_visibility="collapsed", help=hover) or "groups"
-        if hasattr(st, "dialog") and st.button("AI", icon=":material/auto_awesome:", key="advisor_open",
-                                                help="✨ AI Advisor: describe a trading idea in plain words and get "
-                                                     "step-by-step help building and testing it. It explains; you "
-                                                     "do the clicks."):
-            _advisor_window(st, supabase, user_id)
+        if hasattr(st, "components") and hasattr(st.components, "v2"):
+            _advisor_button(st)
     if chosen == "groups":
         import lattice_view
 

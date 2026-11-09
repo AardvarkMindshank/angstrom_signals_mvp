@@ -46,7 +46,7 @@ _POPOUT_SECTION_IDS = (
     "market_sentiment_panel",
     "signal_matrix",
 )
-_POPOUT_VIEWS = ("social",) + _POPOUT_SECTION_IDS + ("lattice_panel",)   # Angstrom Lattice pops out too
+_POPOUT_VIEWS = ("social",) + _POPOUT_SECTION_IDS + ("lattice_panel", "advisor")   # Lattice and the AI Advisor too
 _POPOUT_VIEW = str(st.query_params.get("view") or "")
 if _POPOUT_VIEW not in _POPOUT_VIEWS:
     _POPOUT_VIEW = ""
@@ -13686,6 +13686,13 @@ def _lattice_section() -> None:
     with tracked_expander(":material/hub: Angstrom Lattice", "lattice_panel"):
         _render_lattice()
 
+
+if _POPOUT_VIEW == "advisor":
+    # The AI Advisor in its own window beside the app, so it never covers the pages you are working on.
+    import lattice_panel
+
+    lattice_panel.render_popout(st, supabase, str(user_id))
+    st.stop()
 
 if _POPOUT_VIEW == "lattice_panel":
     # Lattice needs only the Watchlist, so the dashboard sections are not worked out in this window.
