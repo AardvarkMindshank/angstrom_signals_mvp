@@ -394,7 +394,7 @@ export default function(component) {
     if (s.history) hb.classList.add("on");
     ctl.appendChild(hb);
     ctl.appendChild(iconButton(s.paused ? "resume" : "pause", s.paused ? "Resume: the first run after resuming records answers without alerting" : "Pause: keeps the scan, stops runs and alerts", () => act(s.paused ? "resume" : "pause", {scan: s.id})));
-    ctl.appendChild(iconButton("copy", "Duplicate (the copy runs only when you press Play until you schedule it)", () => act("duplicate", {scan: s.id})));
+    ctl.appendChild(iconButton("copy", "Duplicate this scan: same Set, to run on other assets or with another schedule or alerts (the copy runs only when you press Play until you schedule it). To change what the Set checks, use 🔍 Look inside → Make my own copy", () => act("duplicate", {scan: s.id})));
     const del = iconButton("del", "Delete this scan", () => {
       if (del.classList.contains("arm")) { act("delete", {scan: s.id}); return; }
       del.classList.add("arm"); del.textContent = "Delete?"; del.title = "Press again to delete";
