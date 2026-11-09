@@ -9549,6 +9549,32 @@ def _open_in_lattice(raw: str) -> None:
     _reveal_section("lattice_panel", "angstrom-lattice")
 
 
+def _move_column(key: str, index: int, step: int) -> None:
+    """Swap a chosen column with its neighbour (runs before the picker is drawn again, so its value may change)."""
+    chosen = list(st.session_state.get(key) or [])
+    other = index + step
+    if 0 <= index < len(chosen) and 0 <= other < len(chosen):
+        chosen[index], chosen[other] = chosen[other], chosen[index]
+        st.session_state[key] = chosen
+
+
+def _column_order(key: str, names: dict, word: str) -> None:
+    """The chosen columns in table order, left to right, with ↑ ↓ to move one (works with a finger too)."""
+    chosen = [k for k in st.session_state.get(key) or [] if k in names]
+    if len(chosen) < 2:
+        return
+    st.caption(f"{word} in table order, left to right:")
+    for i, k in enumerate(chosen):
+        # A horizontal container keeps the arrows beside the name on a phone (columns would stack).
+        box = st.container(horizontal=True, vertical_alignment="center", gap="small")
+        row = [box, box, box]
+        row[0].markdown(f"{i + 1}. {names[k]}", width="stretch")
+        row[1].button("", icon=":material/arrow_upward:", key=f"{key}_up_{k}", disabled=i == 0, type="tertiary",
+                      help="Move left in the table", on_click=_move_column, args=(key, i, -1))
+        row[2].button("", icon=":material/arrow_downward:", key=f"{key}_down_{k}", disabled=i == len(chosen) - 1,
+                      type="tertiary", help="Move right in the table", on_click=_move_column, args=(key, i, 1))
+
+
 def _choose_columns_dialog():
     """⚙️ Columns: which Signal Groups and Signal Sets each watchlist table shows."""
     import signal_groups_inspector as gi
@@ -9560,7 +9586,7 @@ def _choose_columns_dialog():
         cached = (time.time(), *gi.saved_configs(supabase))
         st.session_state["siggroups_saved"] = cached
     group_opts, set_opts = table_columns.options(cached[1], str(user_id))
-    st.caption("Pick the readings each watchlist table shows, in the order you pick them. Groups show their score "
+    st.caption("Pick the readings each watchlist table shows; change their order with ↑ ↓ under the lists. Groups show their score "
                "or label; Sets show ✓ Yes, ✕ No or ? Unknown. Daily ones work out on the latest finished daily bar; ones that read 4-hour or "
                "hourly candles are worked out in the background at each close and show ⏳ if a close has passed "
                "since. Fold either section sideways with ◂ in its first column title.")
@@ -9569,6 +9595,8 @@ def _choose_columns_dialog():
     sets = st.multiselect("Signal Sets", list(set_opts), default=[k for k in now["sets"] if k in set_opts],
                           format_func=set_opts.get, max_selections=table_columns.MAX_EACH, key="tc_sets",
                           placeholder="Your Sets with a decision" if set_opts else "No Sets with a decision yet")
+    _column_order("tc_groups", group_opts, "Groups")
+    _column_order("tc_sets", set_opts, "Sets")
     cols = st.columns(2)
     if cols[0].button("Save", type="primary", icon=":material/check:", key="tc_save", width="stretch"):
         save_account_settings({"table_columns": {"groups": groups, "sets": sets}})
