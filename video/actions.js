@@ -84,6 +84,15 @@ async function showResults(h) {
 
 // A provided item in Prism's library, by name.
 const provided = (h, name) => h.page.locator(".lat.prism .chip", { hasText: name }).first();
+// Visualize History's heading at the top of the screen, with the big chart under it (a tall chart scrolled "into view"
+// is centred, which showed only the small charts).
+async function chartTop(h) {
+  await h.page.evaluate(() => {
+    const r = document.querySelector(".ang-lwc");
+    if (r) window.scrollBy({ top: r.getBoundingClientRect().top - 130, behavior: "instant" });
+  });
+  await h.wait(300);
+}
 
 module.exports = {
   // ------------------------------------------------------------------------------------------ 1 · at a glance
@@ -469,7 +478,8 @@ module.exports = {
   "07-visualize-history": {
     query: "?section=prism",
     setup: async (h) => {
-      // Make the scan and load its history once, off camera, so the recording does not wait for the downloads.
+      // Make the scan and work out its whole history once, off camera (the demo keeps it), so the recording opens with
+      // every year ready.
       await h.page.locator(".lat.prism details.prov > summary").first().click();
       await h.wait(400);
       await provided(h, "Volatility squeeze").locator("button.sq").first().click();
@@ -486,35 +496,49 @@ module.exports = {
       await h.press(h.page.locator(".lat.prism button.hist").first());
       await h.page.waitForFunction(() => { const r = document.querySelector(".ang-lwc"); return r && r.__chart; }, null, { timeout: 120000 }).catch(() => {});
       await h.wait(800);
-      await h.show(".ang-lwc");
+      await chartTop(h);
     },
     bands: async (h) => {
       await h.tip(".ang-lwc-legend", "Green: Yes · Amber: Unknown · No: clear\n(a switch shows No as faint red)", "below");
     },
     panes: async (h) => {
       await h.clear();
-      await h.page.evaluate(() => { const r = document.querySelector(".ang-lwc"); if (r) window.scrollBy({ top: r.getBoundingClientRect().top + 260, behavior: "smooth" }); });
+      await h.page.evaluate(() => { const r = document.querySelector(".ang-lwc"); if (r) window.scrollBy({ top: r.getBoundingClientRect().top + 240, behavior: "smooth" }); });
       await h.wait(1800);
     },
     tap: async (h) => {
+      // The third small chart, brought into view, then tapped: that asset moves to the top.
       const pt = await h.page.evaluate(() => {
         const r = document.querySelector(".ang-lwc"), c = r.__chart, host = r.querySelector(".ang-lwc-host").getBoundingClientRect();
         let top = 0; const hs = c.panes().map((p) => p.getHeight());
-        for (let i = 0; i < 2; i++) top += hs[i] + 1;
-        return { x: host.left + host.width / 2, y: host.top + top + hs[2] / 2 };
+        for (let i = 0; i < 3; i++) top += hs[i] + 1;
+        const y = host.top + top + hs[3] / 2;
+        if (y < 80 || y > window.innerHeight - 40) window.scrollBy({ top: y - window.innerHeight / 2 });
+        return true;
       });
-      await h.page.mouse.move(pt.x, pt.y, { steps: 20 }); await h.wait(300);
-      await h.page.mouse.click(pt.x, pt.y);
+      await h.wait(400);
+      const xy = await h.page.evaluate(() => {
+        const r = document.querySelector(".ang-lwc"), c = r.__chart, host = r.querySelector(".ang-lwc-host").getBoundingClientRect();
+        let top = 0; const hs = c.panes().map((p) => p.getHeight());
+        for (let i = 0; i < 3; i++) top += hs[i] + 1;
+        return { x: host.left + host.width / 2, y: host.top + top + hs[3] / 2 };
+      });
+      await h.page.mouse.move(xy.x, xy.y, { steps: 20 }); await h.wait(300);
+      await h.page.mouse.click(xy.x, xy.y);
       await h.settle();
-      await h.show(".ang-lwc");
+      await h.page.waitForFunction(() => { const r = document.querySelector(".ang-lwc"); return r && r.__chart; }, null, { timeout: 120000 }).catch(() => {});
+      await h.wait(600);
+      await chartTop(h);
     },
     years: async (h, dur) => {
-      const seg = h.page.getByRole("button", { name: /3Y$/ }).first();      // "⏳ 3Y" while older years load
-      await h.ring(seg.locator("xpath=.."));
-      await h.wait(1200); await h.clear();
-      await h.press(seg); await h.wait(Math.max(800, dur * 250));
-      await h.press(h.page.getByRole("button", { name: /10Y$/ }).first());
-      await h.show(".ang-lwc");
+      // The chart opens on ten years when every year is ready; show one year, then three, then everything.
+      const pick = (re) => h.page.getByRole("button", { name: re }).first();
+      await h.ring(pick(/1Y$/).locator("xpath=.."));
+      await h.wait(900); await h.clear();
+      await h.press(pick(/1Y$/)); await h.wait(Math.max(700, dur * 180));
+      await h.press(pick(/3Y$/)); await h.wait(Math.max(700, dur * 180));
+      await h.press(pick(/All$/));
+      await chartTop(h);
     },
     main: async (h) => {
       await h.ring(h.page.getByRole("button", { name: /Open on the main price chart/ }).first());
@@ -526,6 +550,7 @@ module.exports = {
                 "What happened afterwards is the job of What followed"] });
     },
   },
+
 
   // ------------------------------------------------------------------------------------------ 8 · What followed
   "08-what-followed": {

@@ -30,7 +30,7 @@
   {
    "id": "years",
    "screen": "Years: 1Y, 3Y, 10Y, All",
-   "say": "Choose how far back to look: one year, three, ten, or everything. | Older years load in the background, marked with an hourglass."
+   "say": "Choose how far back to look: one year, three, or everything. | You can also zoom and drag along the time axis."
   },
   {
    "id": "main",
@@ -42,5 +42,6 @@
    "screen": "A card: what the bands are, and aren't",
    "say": "The bands show when the conditions were met. | They don't say what happened next. | That is the job of the next video."
   }
- ]
+ ],
+ "zoom": "none"
 }
