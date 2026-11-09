@@ -1,23 +1,36 @@
-# A second nudge to Render after every push to main, in case GitHub's own message to Render is lost
-# (a release was skipped that way on 9 Nov 2026). A duplicate deploy of the same commit is harmless.
+# A backup nudge to Render after a push to main, used only when GitHub's own message to Render was lost (a release
+# was skipped that way on 9 Nov 2026). It waits for the live app to report this commit (static/boot.txt starts with
+# the commit Render built) and asks Render to deploy only if it hasn't after a few minutes. Deploying the same
+# commit twice restarted the app twice, and every open page reloaded each time.
 name: Render deploy nudge
 
 on:
   push:
     branches: [main]
 
+concurrency:
+  group: render-nudge
+  cancel-in-progress: true          # a newer push takes over: only the newest commit matters
+
 jobs:
   nudge:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 15
     steps:
-      - name: Ask Render to deploy the latest commit
+      - name: Deploy only if Render did not pick this commit up
         env:
           HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+          SHA: ${{ github.sha }}
         run: |
           if [ -z "$HOOK" ]; then echo "No RENDER_DEPLOY_HOOK secret; nothing to do."; exit 0; fi
-          sleep 60   # give Render's own auto-deploy the first chance
-          for i in 1 2 3 4 5; do
+          want=${SHA::8}
+          for i in $(seq 1 20); do          # up to about 10 minutes
+            live=$(curl -fsS -m 10 "https://app.angstromsignals.com/app/static/boot.txt?t=$(date +%s)" || true)
+            if [ "${live::8}" = "$want" ]; then echo "Render is already running $want."; exit 0; fi
+            sleep 30
+          done
+          echo "Render is still running ${live::8}, not $want: asking it to deploy."
+          for i in 1 2 3; do
             if curl -fsS -X POST "$HOOK" -o /dev/null; then echo "Render asked to deploy."; exit 0; fi
             sleep 30
           done
