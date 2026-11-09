@@ -247,6 +247,10 @@ def study_block(st, supabase, source: dict) -> None:
     status = (row or {}).get("status")
     if status in ("queued", "running"):
         word = "is being worked out" if status == "running" else "is waiting its turn"
+        if status == "queued":
+            import study_nudge
+
+            study_nudge.nudge(force=False)       # GitHub's timer can be hours late: start the job now
         st.info(f"⏳ The study of version {version['version']} {word}. {STUDY_WAIT}")
         return
     if status == "done":                         # finished since this page last looked
@@ -263,6 +267,10 @@ def study_block(st, supabase, source: dict) -> None:
         try:
             got = supabase.rpc("request_set_study", {"set_hash": h, "body": doc,
                                                      "name": source.get("name") or ""}).execute().data
+            if got == "queued":
+                import study_nudge
+
+                study_nudge.nudge()
             st.success("⏳ Queued. " + STUDY_WAIT if got in ("queued", "running") else f"Status: {got}.")
         except Exception as exc:
             import signal_groups_inspector as gi
