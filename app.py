@@ -10998,12 +10998,13 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             first_of = {"g": f"col:{group_specs[0]['key']}" if group_specs else None,
                         "s": f"col:{set_specs[0]['key']}" if set_specs else None}
             fold_words = {"g": ("Groups", "Signal Groups"), "s": ("Sets", "Signal Sets")}
-            # ⚙️ Columns sits in the header, just above the fold arrow of the first section (Groups, else Sets).
+            # The column chooser sits in a thin row of its own above the titles, over the fold arrow of the first
+            # section (Groups, else Sets), so the titles stay on one line.
             chooser_at = "g" if group_specs else "s"
             chooser = (
                 f"<button type='button' data-pick='columns|{kind}' title='Choose which Signal Groups and Signal Sets "
-                "the tables show' aria-label='Choose table columns' style='display:block;background:none;border:none;"
-                "padding:0;margin:0 0 2px;color:inherit;cursor:pointer;opacity:.7;line-height:0;'>"
+                "the tables show' aria-label='Choose table columns' style='background:none;border:none;"
+                "padding:0;margin:0;color:inherit;cursor:pointer;opacity:.7;line-height:0;'>"
                 "<svg width='16' height='16' viewBox='0 0 24 24' fill='currentColor' aria-hidden='true'>"
                 "<path d='M4 5h4v14H4zM10 5h4v14h-4zM16 5h4v14h-4z' opacity='.35'/>"
                 "<path d='M3 4h18v16H3zM5 6v12h3V6zm5 0v12h4V6zm6 0v12h3V6z'/></svg></button>")
@@ -11020,7 +11021,6 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                     part = name[5:]
                     word, long = fold_words[part]
                     return (f"<th data-sec-folded='{part}' style='padding:8px 10px;white-space:nowrap;'>"
-                            + (chooser if part == chooser_at else "") +
                             f"<button type='button' data-fold='{part}' title='Show the {long} columns' "
                             "style='background:none;border:none;padding:0;margin:0;color:inherit;font:inherit;"
                             f"font-weight:600;cursor:pointer;'>▸ {word}</button></th>")
@@ -11036,8 +11036,6 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                     fold = (f"<button type='button' data-fold='{section}' title='Fold the {long} columns' "
                             "style='background:none;border:none;padding:0 6px 0 0;margin:0;color:inherit;"
                             "font:inherit;cursor:pointer;opacity:.6;'>◂</button>")
-                    if section == chooser_at:
-                        fold = chooser + fold
                 return (
                     f"<th{span}{sec}{hint} style='padding:8px 10px;text-align:{align};white-space:nowrap;'>{fold}"
                     f"<button type='button' data-sort-col='{sort_at[name]}' "
@@ -11045,6 +11043,20 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                     "font:inherit;font-weight:600;cursor:pointer;white-space:nowrap;'>"
                     f"{html.escape(shown)}<span data-sort-mark>{mark}</span></button></th>"
                 )
+
+            tools_html = ""
+            for name, width, section in layout:
+                span = f" colspan='{width}'" if width > 1 else ""
+                cell_style = " style='padding:4px 10px 0;line-height:0;text-align:left;'"
+                if name.startswith("fold:"):
+                    part = name[5:]
+                    inner = chooser if part == chooser_at else ""
+                    tools_html += f"<th data-sec-folded='{part}'{span}{cell_style}>{inner}</th>"
+                elif section:
+                    inner = chooser if first_of.get(section) == name and section == chooser_at else ""
+                    tools_html += f"<th data-sec='{section}'{span}{cell_style}>{inner}</th>"
+                else:
+                    tools_html += f"<th{span}{cell_style}></th>"
 
             header_html = ""
             for name, width, section in layout:
@@ -11168,7 +11180,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                 "<div style='width:100%;overflow-x:auto;margin-bottom:8px;-webkit-overflow-scrolling:touch;'>"
                 "<table class='ang-table' data-table='"
                 f"{table_key}'>"
-                f"<thead><tr>{header_html}</tr></thead>"
+                f"<thead><tr class='ang-tools' style='border-bottom:none;'>{tools_html}</tr><tr>{header_html}</tr></thead>"
                 f"<tbody>{rows_html}</tbody></table></div>"
             )
             picked = _score_table(
