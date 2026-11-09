@@ -9,11 +9,53 @@ is inserted with textContent, never as HTML.
 
 from __future__ import annotations
 
+# The left panel (signals, Groups, Sets, Watchlist) can be dragged wider or narrower on a computer; the width is
+# remembered in this browser and shared by the Group, Set and Prism pages. Double-click the divider to reset it.
+SPLITTER_JS = """
+  function addSplitter(root, lib, mid) {
+    const KEY = "angLatLibW";
+    try { const w = parseInt(window.localStorage.getItem(KEY) || "", 10); if (w) root.style.setProperty("--lib-w", w + "px"); } catch (e) {}
+    const bar = document.createElement("div");
+    bar.className = "split";
+    bar.title = "Drag to make this panel wider or narrower (double-click to reset)";
+    bar.setAttribute("role", "separator");
+    bar.setAttribute("aria-orientation", "vertical");
+    root.insertBefore(bar, mid);
+    bar.addEventListener("pointerdown", (ev) => {
+      ev.preventDefault();
+      bar.setPointerCapture(ev.pointerId);
+      bar.classList.add("on");
+      const left = lib.getBoundingClientRect().left, most = Math.max(220, root.getBoundingClientRect().width * 0.6);
+      const move = (e) => {
+        const w = Math.round(Math.min(most, Math.max(180, e.clientX - left)));
+        root.style.setProperty("--lib-w", w + "px");
+      };
+      const up = () => {
+        bar.classList.remove("on");
+        bar.removeEventListener("pointermove", move);
+        bar.removeEventListener("pointerup", up);
+        bar.removeEventListener("pointercancel", up);
+        try { window.localStorage.setItem(KEY, String(parseInt(root.style.getPropertyValue("--lib-w"), 10) || 260)); } catch (e) {}
+      };
+      bar.addEventListener("pointermove", move);
+      bar.addEventListener("pointerup", up);
+      bar.addEventListener("pointercancel", up);
+    });
+    bar.addEventListener("dblclick", () => {
+      root.style.removeProperty("--lib-w");
+      try { window.localStorage.removeItem(KEY); } catch (e) {}
+    });
+  }
+"""
+
 CSS = """
 .lat{font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;color:inherit;display:flex;flex-wrap:wrap;gap:14px}
 .lat *{box-sizing:border-box}
 .lat .col{background:rgba(127,127,127,.06);border:1px solid rgba(127,127,127,.25);border-radius:12px;padding:12px}
-.lat .lib{flex:1 1 240px;max-width:300px;max-height:760px;overflow:auto}
+.lat .lib{flex:0 0 var(--lib-w,260px);max-width:none;max-height:760px;overflow:auto}
+.lat .split{flex:0 0 10px;margin:0 -12px;align-self:stretch;cursor:col-resize;position:relative;touch-action:none;z-index:2}
+.lat .split::after{content:"";position:absolute;left:4px;top:40%;width:2px;height:48px;border-radius:2px;background:rgba(127,127,127,.35)}
+.lat .split:hover::after,.lat .split.on::after{background:#2563eb;top:0;height:100%}
 .lat .mid{flex:999 1 480px;min-width:0;display:flex;flex-direction:column;gap:14px}
 .lat .cat{font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.7;margin:10px 0 4px}
 .lat .chip{display:flex;align-items:center;gap:8px;padding:6px 6px 6px 10px;margin-bottom:4px;border-radius:8px;
@@ -63,7 +105,7 @@ CSS = """
 .lat details.prov{border:1px solid rgba(127,127,127,.3);border-radius:10px;padding:4px 8px;margin:6px 0 8px;
   background:rgba(127,127,127,.04)}
 .lat details.prov>summary{cursor:pointer;font-size:12px;letter-spacing:.04em;opacity:.8;padding:6px 0;min-height:28px}
-@media (max-width:640px){.lat .lib{max-width:none;flex-basis:100%;max-height:380px}.lat .mid{flex-basis:100%}}
+@media (max-width:640px){.lat .lib{max-width:none;flex-basis:100%;max-height:380px}.lat .mid{flex-basis:100%}.lat .split{display:none}}
 """
 
 JS = r"""
@@ -78,6 +120,7 @@ export default function(component) {
 
   Array.from(parentElement.children).filter((c) => c.classList && c.classList.contains("lat")).forEach((c) => c.remove());
   const root = el("div", "lat");
+""" + SPLITTER_JS + r"""
   parentElement.appendChild(root);
 
   function el(tag, cls, text) {
@@ -155,6 +198,7 @@ export default function(component) {
   // ---------------------------------------------------------------- group
   const mid = el("div", "mid");
   root.appendChild(mid);
+  addSplitter(root, lib, mid);
   const group = el("div", "col");
   mid.appendChild(group);
   const head = el("div", "hd");
@@ -456,6 +500,7 @@ export default function(component) {
 
   Array.from(parentElement.children).filter((c) => c.classList && c.classList.contains("lat")).forEach((c) => c.remove());
   const root = el("div", "lat");
+""" + SPLITTER_JS + r"""
   parentElement.appendChild(root);
 
   function el(tag, cls, text) {
@@ -592,6 +637,7 @@ export default function(component) {
   // ---------------------------------------------------------------- set
   const mid = el("div", "mid");
   root.appendChild(mid);
+  addSplitter(root, lib, mid);
   const box = el("div", "col");
   mid.appendChild(box);
   const name = el("input", "wide");

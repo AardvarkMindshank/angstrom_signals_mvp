@@ -100,6 +100,7 @@ export default function(component) {
   Array.from(parentElement.children).filter((c) => c.classList && c.classList.contains("lat")).forEach((c) => c.remove());
   const root = el("div", "lat prism");
   parentElement.appendChild(root);
+""" + lattice_component.SPLITTER_JS + r"""
 
   function el(tag, cls, text) {
     const n = document.createElement(tag);
@@ -272,6 +273,7 @@ export default function(component) {
   // ------------------------------------------------------------------ scans
   const mid = el("div", "mid");
   root.appendChild(mid);
+  addSplitter(root, libCol, mid);
   const hd = el("div", "hd");
   hd.appendChild(el("h3", "", "Prism Scans"));
   hd.appendChild(el("span", "muted", (state.scheduled || 0) + " of " + (state.max_scheduled || 5) + " scheduled · paused and Play-only scans don't count"));
