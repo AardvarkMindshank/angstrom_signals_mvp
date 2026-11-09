@@ -1,6 +1,8 @@
 """
-Training videos in Help and guides: a small 🎬 link beside each topic opens the video in a pop-up player, with
-buttons to go back, go on, or start the series again, and a list of every video in the series.
+Training videos in Help and guides: a small 🎬 link beside each topic opens the video in a player in its own window
+(?view=video&v=<name>), so it never covers the page you are following along on. The player has buttons to go back,
+go on, or start the series again, and a list of every video in the series. Without the window script (or with
+pop-ups blocked) the link opens the player in a new tab.
 
 The videos live on the website (angstromsignals.com/videos/training/<name>.mp4), made by the pipeline in video/.
 Captions are part of the picture, so nothing else needs loading. Adding a video: record it, publish it, and add a
@@ -64,29 +66,58 @@ def neighbours(name: str) -> dict:
 
 # ----------------------------------------------------------------------------------------------- on the page
 
-_PLAYER = None
+VIEW = "video"
+WINDOW = "ang_video"
+
+_WINDOW_JS = """
+export default function(component) {
+  const { parentElement } = component;
+  const shell = parentElement.closest(".stBidiComponent") || parentElement;
+  shell.style.display = "none";
+  const holder = shell.closest('[data-testid="stElementContainer"]');
+  if (holder) holder.style.display = "none";
+  if (window.__angstromVideoLinks) return;
+  window.__angstromVideoLinks = true;
+  // Every 🎬 link opens the player in one small window of its own beside the app (reused for the next video).
+  document.addEventListener("click", (event) => {
+    const a = event.target.closest ? event.target.closest("a.ang-tv-link") : null;
+    if (!a) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const left = Math.max(0, (window.screenX || 0) + (window.outerWidth || 1200) - 940);
+    const opened = window.open(a.href, "ang_video", "popup=yes,width=900,height=720,top=60,left=" + left);
+    if (opened) opened.focus(); else window.open(a.href, "_blank");
+  }, true);
+}
+"""
+_WINDOW = []
+
+_LINK_CSS = (".ang-tv-link{display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:inherit;"
+             "padding:2px 0;font-size:.95rem}.ang-tv-link:hover{color:var(--st-primary-color,#ff4b4b)}"
+             ".ang-tv-link svg{flex:none}")
+_ICON_SVG = ("<svg viewBox='0 0 24 24' width='18' height='18' fill='currentColor' aria-hidden='true'><path d='M21 3H3"
+             "c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"
+             "M16 11l-7 4V7z'/></svg>")
 
 
-def _player():
-    """The pop-up player (one per page). It redraws only itself when you move through the series."""
-    global _PLAYER
-    if _PLAYER is None:
-        import streamlit as st
+def install(st) -> None:
+    """The small script that makes 🎬 links open the player in its own window. Draw it once per page."""
+    if not _WINDOW:
+        _WINDOW.append(st.components.v2.component("training_video_window", js=_WINDOW_JS, isolate_styles=False))
+    _WINDOW[0](key="training_video_window")
 
-        @st.dialog("🎬 Training video", width="medium")
-        def player():
-            _draw_player(st)
 
-        _PLAYER = player
-    return _PLAYER
+def address(name: str) -> str:
+    return f"?view={VIEW}&v={name}"
 
 
 def _go(st, name: str) -> None:
     st.session_state[STATE] = name
     try:
-        st.rerun(scope="fragment")         # stay in the pop-up
+        st.query_params["v"] = name          # a refresh of the window keeps this video
     except Exception:
-        st.rerun()
+        pass
+    st.rerun()
 
 
 def _draw_player(st) -> None:
@@ -118,14 +149,28 @@ def _draw_player(st) -> None:
                "financial advice." % v["url"])
 
 
+def render_popout(st, name: str | None) -> None:
+    """The player alone in its own window (?view=video&v=<name>)."""
+    if STATE not in st.session_state:
+        try:
+            find(name or "")
+            st.session_state[STATE] = name
+        except KeyError:
+            pass
+    st.markdown("#### 🎬 Training video")
+    _draw_player(st)
+
+
 def link(st, name: str, key: str | None = None) -> None:
-    """A small 🎬 link: the video's title and length; it opens the player at that video."""
+    """A small 🎬 link: the video's title and length; it opens the player, in its own window, at that video."""
+    import html
+
     v = info(name)
-    if st.button(f"Watch: {v['label']} · {v['length']}", icon=ICON, key=key or f"tv_link_{name}", type="tertiary",
-                 help=f"Training video, {v['series_name']} ({v['position']} of {v['count']}). Opens a player with "
-                      "Back, Next and Start, to move through the series."):
-        st.session_state[STATE] = name
-        _player()()
+    tip = (f"Training video, {v['series_name']} ({v['position']} of {v['count']}). Opens in its own window, with "
+           "Back, Next and Start to move through the series.")
+    st.markdown(f"<style>{_LINK_CSS}</style><a class='ang-tv-link' href='{address(name)}' target='{WINDOW}' "
+                f"title='{html.escape(tip, quote=True)}'>{_ICON_SVG}<span>Watch: {html.escape(v['label'])} · "
+                f"{v['length']}</span></a>", unsafe_allow_html=True)
 
 
 def all_links(st, key: str) -> None:

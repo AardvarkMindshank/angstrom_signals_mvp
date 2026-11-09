@@ -46,7 +46,7 @@ _POPOUT_SECTION_IDS = (
     "market_sentiment_panel",
     "signal_matrix",
 )
-_POPOUT_VIEWS = ("social",) + _POPOUT_SECTION_IDS + ("lattice_panel", "advisor")   # Lattice and the AI Advisor too
+_POPOUT_VIEWS = ("social",) + _POPOUT_SECTION_IDS + ("lattice_panel", "advisor", "video")   # Lattice, the AI Advisor and videos too
 _POPOUT_VIEW = str(st.query_params.get("view") or "")
 if _POPOUT_VIEW not in _POPOUT_VIEWS:
     _POPOUT_VIEW = ""
@@ -13659,6 +13659,7 @@ else:
     )
 remember_favourites()
 _take_alert_pick()
+_training.install(st)          # 🎬 links open the player in its own window
 if _POPOUT_VIEW:
     _asset_follow(key="asset_follow", data={"quiet": False})
 else:
@@ -13686,6 +13687,11 @@ def _lattice_section() -> None:
     with tracked_expander(":material/hub: Angstrom Lattice", "lattice_panel"):
         _render_lattice()
 
+
+if _POPOUT_VIEW == "video":
+    # A training video in its own window beside the app.
+    _training.render_popout(st, str(st.query_params.get("v") or ""))
+    st.stop()
 
 if _POPOUT_VIEW == "advisor":
     # The AI Advisor in its own window beside the app, so it never covers the pages you are working on.
