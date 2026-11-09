@@ -46,7 +46,7 @@ async function saveAndScan(h, name, group, date) {
   await h.press('button:has-text("Save as a new Set")');
   await h.wait(900);
   await h.section("Prism Scan");
-  await h.press(`.lat.prism button[aria-label="Start a scan with ${name}"]`);
+  await h.press(`.lat.prism button[aria-label="Start a scan with ${name}"] >> visible=true`);   // your Set, not the provided one of the same name
   await h.page.waitForSelector(".lat.prism .scan", { timeout: 60000 });
   await addAssets(h, group);
   await past(h, date);
@@ -276,7 +276,7 @@ module.exports = {
     board: async (h) => { await h.ring(".lat.prism .lib"); },
     create: async (h) => {
       await h.clear();
-      await h.press('.lat.prism button[aria-label="Start a scan with Pullback in an uptrend"]');
+      await h.press('.lat.prism button[aria-label="Start a scan with Pullback in an uptrend"] >> visible=true');
       await h.page.waitForSelector(".lat.prism .scan", { timeout: 60000 });
     },
     card: async (h) => { await h.glide(".lat.prism .scan .head"); await h.ring(".lat.prism .scan .head"); },

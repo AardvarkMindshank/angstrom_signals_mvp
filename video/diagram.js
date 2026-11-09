@@ -31,7 +31,7 @@ function draw({ stage, lit }) {
           ${[["Trend", "#2563eb"], ["Momentum", "#9333ea"], ["Regime", "#0891b2"], ["Structure", "#b45309"], ["Volume", "#16a34a"], ["Sentiment", "#db2777"]]
             .map(([t, c], i) => `<div class="dg-bit" style="transition-delay:${0.15 + i * 0.12}s;font-size:13px;padding:5px 6px;border-radius:8px;background:${c}14;color:${c};font-weight:bold;text-align:center">${t}</div>`).join("")}
         </div>
-        <div style="margin-top:12px;font-size:13px;color:${GREY}">21 signals, each one measurement</div>`],
+        <div style="margin-top:12px;font-size:13px;color:${GREY}">31 signals, each one measurement</div>`],
       ["groups", "Signal Groups", `
         <svg width="186" height="114" viewBox="0 0 186 114" style="margin-top:2px">
           <defs><linearGradient id="dg-g" x1="0" x2="1"><stop offset="0" stop-color="${RED}"/><stop offset=".5" stop-color="#cbd5e1"/><stop offset="1" stop-color="${GREEN}"/></linearGradient></defs>

@@ -4,6 +4,9 @@
 03-signal-groups
 04-signal-sets
 05-prism-scan
+06-provided-library
+07-visualize-history
+08-what-followed
 w1-trend-with-volume
 w2-overextended-rally
 w3-breakout-with-volume
