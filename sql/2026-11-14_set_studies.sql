@@ -39,6 +39,7 @@ language plpgsql
 security definer
 set search_path = public
 as $$
+#variable_conflict use_column
 declare
     me uuid := auth.uid();
     current_status text;
