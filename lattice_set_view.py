@@ -86,6 +86,8 @@ def render(st, supabase, user_id: str = "") -> None:
     provided = _provided_starts(choices) if lattice_panel.provided_shown(st) else {}
     starts.update({k: label for k, (label, _) in provided.items()})
     starts.update({f"saved:{c['id']}": f"🗂️ {c['name']} (yours, v{c['versions'][-1]['version']})" for c in mine})
+    if "_lattice_set_start_next" in st.session_state:      # the Set just saved
+        st.session_state["lattice_set_start"] = st.session_state.pop("_lattice_set_start_next")
     if st.session_state.get("lattice_set_start") not in starts:
         st.session_state.pop("lattice_set_start", None)
     start = st.selectbox("Start from", list(starts), format_func=starts.get, key="lattice_set_start")
@@ -167,13 +169,23 @@ def render(st, supabase, user_id: str = "") -> None:
     if mine:
         with cols[-1]:
             lattice_view._delete(st, supabase, "set", source)
+    lattice_view.show_flash(st, "lattice_flash_set")
+    if new and lattice_view.name_taken(saved, user_id, "set", doc.get("name")):
+        st.warning(lattice_view.taken_message("Set", doc.get("name") or "", source))
+        new = False
     if new:
         try:
-            supabase.rpc("analysis_create_config", {"kind": "set", "body": doc}).execute()
-            st.success("Saved as a new Set (version 1)."
-                       + (" It now appears in 🔎 Prism." if screen["scannable"] else ""))
+            new_id = supabase.rpc("analysis_create_config", {"kind": "set", "body": doc}).execute().data
             st.session_state.pop("siggroups_saved", None)
+            # Open the Set just saved, so the next save offers "Save as version 2" instead of another new Set.
+            st.session_state["_lattice_set_start_next"] = f"saved:{new_id}"
+            st.session_state.pop("lattice_set_loaded", None)
+            st.session_state["lattice_flash_set"] = ("ok", "Saved as a new Set (version 1)."
+                                                     + (" It now appears in 🔎 Prism." if screen["scannable"] else ""))
+            lattice_panel.rerun(st)
         except Exception as exc:
+            if "Rerun" in type(exc).__name__:
+                raise
             st.error(f"Refused: {gi._rpc_error(exc)}")
     if nxt:
         try:

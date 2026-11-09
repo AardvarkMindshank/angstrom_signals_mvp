@@ -346,9 +346,21 @@ def tidy_snoozes(obj: dict, now) -> dict:
     return out
 
 
-def duplicate(obj: dict) -> dict:
+def unique_name(name: str, taken) -> str:
+    """The name, or "name (2)", "name (3)" … when one of your scans already has it (any letter case)."""
+    base = " ".join(str(name or "Scan").split())[:72]
+    used = {" ".join(str(t or "").split()).casefold() for t in taken}
+    if base.casefold() not in used:
+        return base
+    n = 2
+    while f"{base} ({n})".casefold() in used:
+        n += 1
+    return f"{base} ({n})"
+
+
+def duplicate(obj: dict, taken=()) -> dict:
     out = copy.deepcopy(obj)
-    out["name"] = (out["name"][:73] + " (copy)")
+    out["name"] = unique_name(out["name"], taken)
     out["schedule"] = {"kind": "manual"}            # a copy starts manual, so it never pushes past the limit
     out["snoozes"] = {}
     out["paused"] = False

@@ -83,8 +83,10 @@ def test_asset_edits_snoozes_duplicates_and_older_alert_settings():
     assert ps.snoozed({"snoozes": snoozed["snoozes"]}, NOW) == {"crypto:solana"}
     assert pb.unsnooze(snoozed, "crypto:solana")["snoozes"] == {}
     assert pb.tidy_snoozes(pb.snooze(obj, "crypto:solana", 1, NOW - pd.Timedelta(days=5)), NOW)["snoozes"] == {}
-    copy = pb.duplicate(obj)
-    assert copy["name"].endswith("(copy)") and copy["schedule"] == {"kind": "manual"}
+    copy = pb.duplicate(obj, [obj["name"]])
+    assert copy["name"] == obj["name"] + " (2)" and copy["schedule"] == {"kind": "manual"}
+    assert pb.unique_name("Pullback", ["pullback", "Pullback (2)"]) == "Pullback (3)"
+    assert pb.unique_name("New one", ["Pullback"]) == "New one"
     old = pb.scan_object(_stored(notify={"in_app": True, "email": False}))
     assert old["notify"]["channel"] == "account"
     assert pb.for_database(old)["notify"] == {"channel": "app", "on_yes": True, "on_no": False, "on_fail": False}

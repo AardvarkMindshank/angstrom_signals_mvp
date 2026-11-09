@@ -205,7 +205,9 @@ def handle(st, supabase, action: dict, by_id: dict, choices: dict, assets, now) 
         if op == "create":
             if action.get("set") not in choices:
                 return "error", "That Set is no longer available."
-            new_id = _put(supabase, None, pb.new_scan(action["set"], choices))
+            fresh = pb.new_scan(action["set"], choices)
+            fresh["name"] = pb.unique_name(fresh["name"], [s.get("name") for s in by_id.values()])
+            new_id = _put(supabase, None, fresh)
             st.session_state["prism_open_new"] = new_id
             return "ok", "Scan added. Press ▶ to run it, or open it to choose its assets, schedule and alerts."
         if scan is None:
@@ -229,7 +231,7 @@ def handle(st, supabase, action: dict, by_id: dict, choices: dict, assets, now) 
             st.session_state.get("prism_results", {}).pop(scan["id"], None)
             return "ok", f"Deleted “{scan['name']}”."
         if op == "duplicate":
-            new_id = _put(supabase, None, pb.duplicate(obj))
+            new_id = _put(supabase, None, pb.duplicate(obj, [s.get("name") for s in by_id.values()]))
             st.session_state["prism_open_new"] = new_id
             return "ok", "Copied. The copy runs only when you press ▶ until you give it a schedule."
         if op in ("pause", "resume"):

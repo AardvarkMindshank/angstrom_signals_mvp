@@ -242,6 +242,28 @@ def action_row(st, n: int):
     return st.columns(n, vertical_alignment="center")
 
 
+def name_taken(saved: list[dict], user_id: str, kind: str, name: str) -> bool:
+    """True when one of your own (not deleted) Groups or Sets of this kind already has this name (any letter case)."""
+    wanted = " ".join(str(name or "").split()).casefold()
+    return any(c.get("kind") == kind and c.get("owner_id") == user_id and not c.get("archived")
+               and " ".join(str(c.get("name") or "").split()).casefold() == wanted for c in saved)
+
+
+def taken_message(word: str, name: str, source: dict | None) -> str:
+    more = (f" or use **Save as version {source['current_version'] + 1}** to update the one you have open"
+            if source and " ".join(str(source.get('name') or '').split()).casefold()
+            == " ".join(name.split()).casefold() else "")
+    return (f"You already have a {word} called **{name}**. Give this one a different name{more}, so the lists never "
+            f"show two {word}s with the same name.")
+
+
+def show_flash(st, key: str) -> None:
+    """A message from the save before the redraw (a redraw clears anything shown before it)."""
+    flash = st.session_state.pop(key, None)
+    if flash:
+        (st.success if flash[0] == "ok" else st.warning)(flash[1])
+
+
 def _save(st, supabase, model: dict, can_save: bool) -> None:
     import signal_groups_inspector as gi
 
@@ -257,13 +279,24 @@ def _save(st, supabase, model: dict, can_save: bool) -> None:
     if mine:
         with cols[-1]:
             _delete(st, supabase, "group", source)
+    show_flash(st, "lattice_flash_group")
+    saved = (st.session_state.get("siggroups_saved") or (0, []))[1]
+    if new and name_taken(saved, st.session_state.get("_lattice_user"), "group", doc.get("name")):
+        st.warning(taken_message("Group", doc.get("name") or "", source))
+        new = False
     if new:
         try:
             new_id = supabase.rpc("analysis_create_config", {"kind": "group", "body": doc}).execute().data
-            st.success("Saved as a new Group (version 1). It is private until you publish it.")
             st.session_state.pop("siggroups_saved", None)
-            st.session_state["lattice_saved_id"] = new_id
+            # Open the Group just saved, so the next save offers "Save as version 2" instead of another new Group.
+            st.session_state["_lattice_start_next"] = f"saved:{new_id}"
+            st.session_state.pop("lattice_loaded", None)
+            st.session_state["lattice_flash_group"] = ("ok", "Saved as a new Group (version 1). It is private until "
+                                                             "you publish it.")
+            lattice_panel.rerun(st)
         except Exception as exc:
+            if "Rerun" in type(exc).__name__:
+                raise
             st.error(f"Refused: {gi._rpc_error(exc)}")
     if nxt:
         try:
