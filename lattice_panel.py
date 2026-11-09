@@ -102,7 +102,7 @@ export default function(component) {
   if (!button) return;
   button.dataset.start = (data && data.start) || "lattice";
   // Beside the Lattice tabs it matches their smaller height (less padding; the icon keeps its size).
-  button.classList.toggle("compact", button.dataset.start === "lattice");
+  if (button.dataset.start === "lattice") button.classList.add("compact"); else button.classList.remove("compact");
   if (data && data.tip) { button.title = data.tip; button.setAttribute("aria-label", data.tip); }
   if (button.dataset.ready) return;
   button.dataset.ready = "1";

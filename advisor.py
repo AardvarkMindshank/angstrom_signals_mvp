@@ -40,6 +40,8 @@ have two jobs, and the person can ask about either at any time:
    building blocks and understand the results.
 You only explain: you never claim to have built, saved, run or changed anything, because you cannot. The person
 does every click, following your steps.
+The person may attach screenshots of the app. Read them to see what they are looking at, and answer about what is
+actually on the screen; say so if a screenshot is unclear or is not of this app.
 
 How you answer:
 - Plain words for a beginner. Short paragraphs or numbered steps. Name the real buttons and fields exactly as the
@@ -225,13 +227,31 @@ def system_prompt(saved: list[dict], user_id: str, start: str = "lattice") -> st
     return "\n\n".join(system_parts(saved, user_id, start))
 
 
-def ask(history: list[dict], question: str, system, post=requests.post) -> str:
-    """The Advisor's answer to `question`, given the conversation so far ([{role, content}])."""
+MAX_IMAGES = 3                          # screenshots per question
+
+
+def image_blocks(images: list[str] | None) -> list[dict]:
+    """Pasted screenshots (data: URLs from the paste box) as API image blocks; anything else is left out."""
+    out = []
+    for url in (images or [])[:MAX_IMAGES]:
+        head, _, body = str(url).partition(",")
+        kind = head[5:].split(";")[0] if head.startswith("data:") and ";base64" in head else ""
+        if kind in ("image/jpeg", "image/png", "image/webp", "image/gif") and body:
+            out.append({"type": "image", "source": {"type": "base64", "media_type": kind, "data": body}})
+    return out
+
+
+def ask(history: list[dict], question: str, system, post=requests.post, images: list[str] | None = None) -> str:
+    """The Advisor's answer to `question` (with any pasted screenshots), given the conversation so far
+    ([{role, content}]; earlier screenshots are not sent again)."""
     key = api_key()
     if not key:
         raise RuntimeError("The AI Advisor needs ANTHROPIC_API_KEY in the app's environment.")
-    messages = [m for m in history if m.get("role") in ("user", "assistant")][-2 * MAX_TURNS:]
-    messages = messages + [{"role": "user", "content": question}]
+    messages = [{"role": m["role"], "content": m["content"] + (" [screenshot attached]" if m.get("images") else "")}
+                for m in history if m.get("role") in ("user", "assistant")][-2 * MAX_TURNS:]
+    pictures = image_blocks(images)
+    messages = messages + [{"role": "user", "content": pictures + [{"type": "text", "text": question}]
+                            if pictures else question}]
     if isinstance(system, (tuple, list)):         # the shared part is cached by the API, so each question costs less
         system = [{"type": "text", "text": system[0], "cache_control": {"type": "ephemeral"}},
                   {"type": "text", "text": system[1]}]
@@ -248,7 +268,121 @@ def ask(history: list[dict], question: str, system, post=requests.post) -> str:
     return "".join(part.get("text", "") for part in data.get("content") or [] if part.get("type") == "text").strip()
 
 
-# ----------------------------------------------------------------------------------------------- the tab
+# ----------------------------------------------------------------------------------------------- the window
+
+_PASTE_JS = """
+export default function(component) {
+  const { data, setStateValue, parentElement } = component;
+  const box = parentElement.querySelector(".ang-paste");
+  if (!box) return;
+  const strip = box.querySelector(".ang-shots");
+  const pick = box.querySelector("input[type=file]");
+  const max = (data && data.max) || 3;
+  // Cleared after each question: the window remembers the token it last cleared for.
+  if (data && data.clear !== window.__angPasteCleared) { window.__angPasteCleared = data.clear; window.__angShots = []; }
+  let shots = window.__angShots || [];
+  const draw = () => {
+    strip.innerHTML = "";
+    shots.forEach((url, i) => {
+      const cell = document.createElement("span");
+      cell.className = "ang-shot";
+      const img = document.createElement("img"); img.src = url; img.alt = "Screenshot " + (i + 1);
+      const x = document.createElement("button"); x.type = "button"; x.textContent = "✕"; x.title = "Remove this screenshot";
+      x.addEventListener("click", () => { shots.splice(i, 1); save(); });
+      cell.append(img, x); strip.appendChild(cell);
+    });
+    box.classList.toggle("has", shots.length > 0);
+  };
+  const save = () => { window.__angShots = shots; draw(); setStateValue("images", shots.slice()); };
+  // Screenshots are shrunk to at most 1568 px on the long side (what the AI reads anyway) and sent as JPEG.
+  const add = (file) => {
+    if (!file || !file.type.startsWith("image/") || shots.length >= max) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, 1568 / Math.max(img.width, img.height));
+        const c = document.createElement("canvas");
+        c.width = Math.round(img.width * scale); c.height = Math.round(img.height * scale);
+        const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height);
+        g.drawImage(img, 0, 0, c.width, c.height);
+        if (shots.length < max) { shots.push(c.toDataURL("image/jpeg", 0.85)); save(); }
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  };
+  draw();
+  if (!box.dataset.ready) {
+    box.dataset.ready = "1";
+    pick.addEventListener("change", () => { Array.from(pick.files || []).forEach(add); pick.value = ""; });
+    box.querySelector(".ang-add").addEventListener("click", () => pick.click());
+  }
+  if (!window.__angPasteReady) {
+    window.__angPasteReady = true;
+    // Paste anywhere in the window (Ctrl+V / ⌘V), or drop a picture on it.
+    document.addEventListener("paste", (e) => {
+      const items = Array.from((e.clipboardData && e.clipboardData.items) || []).filter((it) => it.type.startsWith("image/"));
+      if (!items.length) return;
+      e.preventDefault();
+      items.forEach((it) => add(it.getAsFile()));
+    });
+    document.addEventListener("dragover", (e) => e.preventDefault());
+    document.addEventListener("drop", (e) => {
+      const files = Array.from((e.dataTransfer && e.dataTransfer.files) || []).filter((f) => f.type.startsWith("image/"));
+      if (!files.length) return;
+      e.preventDefault();
+      files.forEach(add);
+    });
+  }
+}
+"""
+
+_PASTE_HTML = (
+    "<div class='ang-paste'><div class='ang-shots'></div>"
+    "<button type='button' class='ang-add' title='Add a screenshot of the app: paste it anywhere in this window "
+    "(Ctrl+V, or ⌘V on a Mac), drop it here, or tap to choose one. Up to 3 per question.'>"
+    "<svg viewBox='0 0 24 24' width='16' height='16' fill='currentColor' aria-hidden='true'><path d='M21 19V5c0-1.1"
+    "-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z'/>"
+    "</svg><span>Paste or add a screenshot</span></button>"
+    "<input type='file' accept='image/*' multiple hidden></div>")
+
+_PASTE_CSS = """
+.ang-paste{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:2px 0 6px}
+.ang-shots{display:flex;flex-wrap:wrap;gap:8px}
+.ang-shot{position:relative;display:inline-block}
+.ang-shot img{height:64px;max-width:140px;object-fit:cover;border-radius:6px;border:1px solid rgba(128,128,128,.35)}
+.ang-shot button{position:absolute;top:-7px;right:-7px;width:20px;height:20px;border-radius:50%;border:none;
+  background:#334155;color:#fff;font-size:11px;line-height:20px;padding:0;cursor:pointer}
+.ang-add{display:inline-flex;align-items:center;gap:6px;background:transparent;color:inherit;opacity:.75;
+  border:1px dashed rgba(128,128,128,.5);border-radius:8px;padding:6px 10px;font:inherit;font-size:.85rem;cursor:pointer}
+.ang-add:hover{opacity:1}
+"""
+_PASTE = []
+
+
+def _paste_box(st) -> list[str]:
+    """The screenshot box under the question; returns the pasted screenshots (data: URLs)."""
+    if not _PASTE:
+        _PASTE.append(st.components.v2.component("advisor_paste", html=_PASTE_HTML, css=_PASTE_CSS, js=_PASTE_JS,
+                                                 isolate_styles=False))
+    got = _PASTE[0](key="advisor_paste", data={"max": MAX_IMAGES, "clear": st.session_state.get("advisor_cleared", 0)},
+                    default={"images": []}, on_images_change=lambda: None)
+    try:
+        return list(getattr(got, "images", None) or [])
+    except Exception:
+        return []
+
+
+def _show_images(st, images: list[str]) -> None:
+    import base64
+
+    for url in images or []:
+        try:
+            st.image(base64.b64decode(url.partition(",")[2]), width=220)
+        except Exception:
+            pass
+
 
 def render(st, supabase, user_id: str = "", start: str = "lattice") -> None:
     import time
@@ -267,6 +401,7 @@ def render(st, supabase, user_id: str = "", start: str = "lattice") -> None:
     used = st.session_state.setdefault("advisor_used", {}).get(day, 0)
     for m in chat:
         with st.chat_message(m["role"], avatar="🧑" if m["role"] == "user" else ":material/auto_awesome:"):
+            _show_images(st, m.get("images"))
             st.markdown(m["content"])
     if not chat:
         if start == "app":
@@ -274,6 +409,7 @@ def render(st, supabase, user_id: str = "", start: str = "lattice") -> None:
         else:
             st.markdown("Try: *“I think price often drops a few days after a breakout on heavy volume fizzles out. "
                         "How do I check that?”*")
+    images = _paste_box(st)              # outside the form: adding a picture must not count as pressing Ask
     with st.form("advisor_form", clear_on_submit=True, border=False):
         question = st.text_area("Your question", key="advisor_q", height=90, label_visibility="collapsed",
                                 placeholder="Ask about the app, an idea, a Set, or a result…")
@@ -285,6 +421,8 @@ def render(st, supabase, user_id: str = "", start: str = "lattice") -> None:
         import lattice_panel
 
         lattice_panel.rerun(st)
+    if sent and not question.strip() and images:
+        st.warning("Add a question to go with the screenshot, such as “what am I looking at here?”")
     if sent and question.strip():
         if used >= DAILY_LIMIT:
             st.warning(f"That's {DAILY_LIMIT} questions today: the Assistant is resting until tomorrow.")
@@ -295,11 +433,14 @@ def render(st, supabase, user_id: str = "", start: str = "lattice") -> None:
             st.session_state["siggroups_saved"] = cached
         with st.spinner("Thinking…"):
             try:
-                answer = ask(chat, question.strip()[:4000], system_parts(cached[1] or [], user_id, start))
+                answer = ask(chat, question.strip()[:4000], system_parts(cached[1] or [], user_id, start),
+                             images=images)
             except Exception as exc:
                 st.error(f"The Assistant couldn't answer just now ({str(exc)[:200]}).")
                 return
-        chat.extend([{"role": "user", "content": question.strip()}, {"role": "assistant", "content": answer}])
+        chat.extend([{"role": "user", "content": question.strip(), "images": images[:MAX_IMAGES]},
+                     {"role": "assistant", "content": answer}])
+        st.session_state["advisor_cleared"] = st.session_state.get("advisor_cleared", 0) + 1   # empty the box
         st.session_state["advisor_used"][day] = used + 1
         import lattice_panel
 

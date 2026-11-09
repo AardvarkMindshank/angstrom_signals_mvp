@@ -59,3 +59,32 @@ def test_the_shared_part_is_cached():
     finally:
         del advisor.os.environ["ANTHROPIC_API_KEY"]
     assert sent["system"][0]["cache_control"] == {"type": "ephemeral"} and sent["system"][1]["text"] == "mine"
+
+
+def test_screenshots_go_with_the_question_once():
+    sent = {}
+
+    class Reply:
+        status_code = 200
+
+        def json(self):
+            return {"content": [{"type": "text", "text": "ok"}]}
+
+    import json as _json
+
+    def post(url, timeout, headers, data):
+        sent.update(_json.loads(data))
+        return Reply()
+
+    shot = "data:image/jpeg;base64,AAAA"
+    advisor.os.environ["ANTHROPIC_API_KEY"] = "test"
+    try:
+        advisor.ask([{"role": "user", "content": "before", "images": [shot]}, {"role": "assistant", "content": "a"}],
+                    "what is this?", "sys", post=post, images=[shot, "data:text/html;base64,AAAA", shot, shot, shot])
+    finally:
+        del advisor.os.environ["ANTHROPIC_API_KEY"]
+    first, last = sent["messages"][0], sent["messages"][-1]
+    assert first["content"] == "before [screenshot attached]"            # earlier pictures are not sent again
+    kinds = [b["type"] for b in last["content"]]
+    assert kinds == ["image", "image", "text"]                           # the non-image is dropped; at most 3 tried
+    assert last["content"][0]["source"] == {"type": "base64", "media_type": "image/jpeg", "data": "AAAA"}

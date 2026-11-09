@@ -54,6 +54,17 @@ const { chromium, devices } = require("playwright");
       await adv.waitForTimeout(5000);
       check("desktop: ✨ AI opens the Assistant in its own window", adv.url().includes("view=advisor")
         && (await adv.locator("body").innerText()).includes("Angstrom Assistant"), adv.url());
+      // A pasted screenshot shows as a thumbnail ready to send (simulated paste of a small PNG).
+      await adv.waitForSelector(".ang-add", { timeout: 30000 }).catch(() => null);
+      await adv.evaluate(async () => {
+        const c = document.createElement("canvas"); c.width = 40; c.height = 30;
+        c.getContext("2d").fillRect(0, 0, 40, 30);
+        const blob = await new Promise((r) => c.toBlob(r, "image/png"));
+        const dt = new DataTransfer(); dt.items.add(new File([blob], "shot.png", { type: "image/png" }));
+        document.dispatchEvent(new ClipboardEvent("paste", { clipboardData: dt, bubbles: true }));
+      });
+      await adv.waitForTimeout(3000);
+      check("desktop: a pasted screenshot is ready to send", (await adv.locator(".ang-shot img").count()) === 1);
       await adv.screenshot({ path: `${out}/advisor_window.png` });
       await adv.close();
     }
