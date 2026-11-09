@@ -66,9 +66,27 @@ def _store() -> dict:
     return st.session_state["_demo"]
 
 
+@st.cache_resource
+def _set_history() -> dict:
+    """Worked-out history bands, kept for the whole process (as the real table keeps them), so the recording reopens
+    a history that the setup already worked out."""
+    return {}
+
+
+class HistoryQuery(Query):
+    def __init__(self):
+        super().__init__([dict(v) for v in _set_history().values()])
+
+    def upsert(self, row, **_):
+        _set_history()[(row["def_hash"], row["asset_key"])] = dict(row)
+        return self
+
+
 class DemoDb:
     def table(self, name):
         s = _store()
+        if name == "set_history":
+            return HistoryQuery()
         if name == "analysis_configs":
             return Query([{k: v for k, v in c.items() if k != "versions"} for c in s["configs"].values()])
         if name == "analysis_config_versions":

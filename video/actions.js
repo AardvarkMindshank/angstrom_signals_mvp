@@ -476,7 +476,7 @@ module.exports = {
       await h.page.waitForSelector(".lat.prism button.hist", { timeout: 60000 }); await h.wait(1500);
       await h.page.locator(".lat.prism button.hist").first().click();
       await h.page.waitForFunction(() => { const r = document.querySelector(".ang-lwc"); return r && r.__chart; }, null, { timeout: 420000 });
-      await h.page.waitForFunction(() => !document.body.innerText.includes("⏳"), null, { timeout: 900000 }).catch(() => {});
+      await h.page.waitForFunction(() => !document.body.innerText.includes("⏳"), null, { timeout: 1500000 }).catch(() => {});
       await h.page.locator(".lat.prism button.hist").first().click();
       await h.settle();
       await h.page.locator(".lat.prism details.prov > summary").first().click();
