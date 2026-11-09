@@ -1,0 +1,24 @@
+# A second nudge to Render after every push to main, in case GitHub's own message to Render is lost
+# (a release was skipped that way on 9 Nov 2026). A duplicate deploy of the same commit is harmless.
+name: Render deploy nudge
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  nudge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Ask Render to deploy the latest commit
+        env:
+          HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$HOOK" ]; then echo "No RENDER_DEPLOY_HOOK secret; nothing to do."; exit 0; fi
+          sleep 60   # give Render's own auto-deploy the first chance
+          for i in 1 2 3 4 5; do
+            if curl -fsS -X POST "$HOOK" -o /dev/null; then echo "Render asked to deploy."; exit 0; fi
+            sleep 30
+          done
+          echo "Could not reach Render's deploy hook."; exit 1
