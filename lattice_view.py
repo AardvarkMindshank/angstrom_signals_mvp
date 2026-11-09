@@ -202,6 +202,10 @@ def _rename(st, supabase, kind: str, source: dict) -> None:
                 return
             st.session_state.pop("siggroups_saved", None)
             st.session_state.pop("lattice_loaded" if kind == "group" else "lattice_set_loaded", None)
+            # Set the Start from choice again before the list is drawn: the list then shows the new name as chosen
+            # (left alone, the browser kept showing the old name in the box).
+            st.session_state["_lattice_start_next" if kind == "group" else "_lattice_set_start_next"] = \
+                f"saved:{source['id']}"
             st.session_state["lattice_flash_group" if kind == "group" else "lattice_flash_set"] = (
                 "ok", f"Renamed to “{clean}”. It shows under the new name everywhere.")
             lattice_panel.rerun_page(st)
