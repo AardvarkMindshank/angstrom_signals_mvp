@@ -107,3 +107,29 @@ def test_market_context_does_not_stop_a_study():
     doc["market_context"] = [{"key": "stables", "role": "context", "subject": "market:crypto",
                               "ref": {"id": "flows.stablecoin_supply", "version": 1, "timeframe": "1D"}}]
     assert wf.studyable(doc) == (True, "")
+
+
+def test_a_finished_study_leaves_a_note_for_the_person_who_asked():
+    import what_followed_run as run
+
+    written = []
+
+    class Table:
+        def insert(self, row):
+            written.append(row)
+            return self
+
+        def execute(self):
+            return self
+
+    class Db:
+        def table(self, name):
+            assert name == "user_notifications"
+            return Table()
+
+    run._tell(Db(), "user-1", "Breakout fading", "is ready: No clear difference. Open the Set in Signal Sets to read it.")
+    run._tell(Db(), None, "x", "ignored")               # nobody to tell
+    assert written == [{"user_id": "user-1", "asset_symbol": None, "asset_name": "Breakout fading",
+                        "alert_type": "study",
+                        "message": "What followed for “Breakout fading” is ready: No clear difference. "
+                                   "Open the Set in Signal Sets to read it."}]

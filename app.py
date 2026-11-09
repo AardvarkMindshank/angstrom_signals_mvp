@@ -6646,8 +6646,10 @@ def notifications_panel() -> None:
                         created = html.escape(str(note.get("created_at") or "")[:16].replace("T", " "))
                         weight = "700" if not note.get("is_read") else "500"
                         kind = str(note.get("alert_type") or "")
-                        if kind in ("invite_joined", "group_invite", "group_joined", "moderation_warning", "report_update"):
+                        if kind in ("invite_joined", "group_invite", "group_joined", "moderation_warning", "report_update",
+                                    "study"):
                             titles = {
+                                "study": "🔬 Study finished",
                                 "invite_joined": "Invite accepted",
                                 "group_invite": "Community invite",
                                 "group_joined": "Community",

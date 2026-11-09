@@ -198,7 +198,7 @@ def pick_step(args) -> int:
     """Queued Sets (and any stuck while running) -> out/queue.json. Sets that cannot be studied are refused with
     the reason; a body whose fingerprint does not match its row is refused too."""
     db = _client()
-    rows = (db.table("set_studies").select("set_hash, set_body, set_name, status, started_at")
+    rows = (db.table("set_studies").select("set_hash, set_body, set_name, status, started_at, requested_by")
             .in_("status", ["queued", "running"]).order("requested_at").limit(20).execute().data or [])
     stuck = pd.Timestamp.now(tz="UTC") - pd.Timedelta(hours=STUCK_HOURS)
     queue = {}
@@ -214,9 +214,10 @@ def pick_step(args) -> int:
         ok, why = wf.studyable(body)
         if not ok:
             _update(db, r["set_hash"], status="refused", error=why, finished_at=_now())
+            _tell(db, r.get("requested_by"), r.get("set_name") or "", f"can't be studied: {why}")
             continue
         _update(db, r["set_hash"], status="running", started_at=_now())
-        queue[r["set_hash"]] = {"body": body, "name": r.get("set_name") or ""}
+        queue[r["set_hash"]] = {"body": body, "name": r.get("set_name") or "", "by": r.get("requested_by")}
     Path(args.out).mkdir(parents=True, exist_ok=True)
     Path(args.out, "queue.json").write_text(json.dumps(queue))
     print(f"{len(queue)} Set(s) to study")
@@ -224,6 +225,18 @@ def pick_step(args) -> int:
         with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
             fh.write(f"work={'yes' if queue else 'no'}\n")
     return 0
+
+
+def _tell(db, user_id, name: str, what: str) -> None:
+    """🔬 A note in the person's notifications (the list on the left) when their study is done, refused or failed."""
+    if not user_id:
+        return
+    try:
+        db.table("user_notifications").insert({
+            "user_id": user_id, "asset_symbol": None, "asset_name": name or "Your Set", "alert_type": "study",
+            "message": f"What followed for “{name or 'your Set'}” {what}"[:500]}).execute()
+    except Exception as exc:                        # a note that can't be written never stops the study
+        print(f"note not written: {exc}")
 
 
 def _update(db, set_hash: str, **fields) -> None:
@@ -235,9 +248,10 @@ def finish_step(args) -> int:
     db = _client()
     queue = json.loads(Path(args.out, "queue.json").read_text())
     if os.environ.get("ANSWERS_RESULT", "success") != "success":       # a study on part of the assets is not one
-        for key in queue:
+        for key, item in queue.items():
             _update(db, key, status="failed", finished_at=_now(),
                     error="The study could not finish this time. Tap Study this Set to try again.")
+            _tell(db, item.get("by"), item.get("name"), "could not finish this time. Tap Study this Set to try again.")
         print("answers did not finish: marked failed")
         return 0
     tables: dict = {}
@@ -250,9 +264,13 @@ def finish_step(args) -> int:
             result["sets"] = {key: s}
             _update(db, key, status="done", result=json.loads(json.dumps(result, default=float)),
                     method=wf.METHOD, finished_at=_now(), error=None)
+            verdict = s.get("verdict") or s.get("note") or "ready"
+            _tell(db, item.get("by"), item.get("name"),
+                  f"is ready: {verdict}. Open the Set in Signal Sets to read it.")
             _print(result)
         except Exception as exc:                                    # one Set never stops the others
             _update(db, key, status="failed", error=str(exc)[:480], finished_at=_now())
+            _tell(db, item.get("by"), item.get("name"), "could not finish this time. Tap Study this Set to try again.")
             print(f"{key}: failed: {exc}")
     return 0
 
