@@ -133,6 +133,7 @@ _ADVISOR_CSS = """
 .ang-ai-btn{display:inline-flex;align-items:center;gap:6px;height:2.5rem;padding:0 14px;border-radius:.5rem;
   border:1px solid var(--st-border-color, rgba(128,128,128,.35));background:transparent;color:inherit;font:inherit;
   cursor:pointer}
+.ang-ai-btn svg{color:#f5a524;filter:drop-shadow(0 0 2px rgba(245,165,36,.35))}
 .ang-ai-btn.compact{height:2rem;padding:0 10px;gap:5px}
 .ang-ai-btn:hover{border-color:var(--st-primary-color,#ff4b4b);color:var(--st-primary-color,#ff4b4b)}
 """
