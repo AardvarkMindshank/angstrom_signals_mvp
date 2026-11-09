@@ -1,0 +1,103 @@
+1
+00:00:00,000 --> 00:00:03,710
+When a Set turns Yes, does anything different tend to happen next,
+
+2
+00:00:03,730 --> 00:00:05,612
+compared with ordinary days?
+
+3
+00:00:06,072 --> 00:00:10,468
+Each time a Set first turns Yes, we look at the next ten daily candles.
+
+4
+00:00:10,518 --> 00:00:12,450
+We compare them with ordinary days:
+
+5
+00:00:12,470 --> 00:00:16,898
+the same asset, the same year, and the same side of its long-term average.
+
+6
+00:00:16,948 --> 00:00:24,459
+Twenty-five coins and sixty-one large US equities, from 2014 to October 2024.
+
+7
+00:00:24,925 --> 00:00:27,508
+Every provided Set carries the result.
+
+8
+00:00:27,558 --> 00:00:30,332
+Open more, and the last line is What followed.
+
+9
+00:00:30,781 --> 00:00:32,489
+Tap it for the numbers.
+
+10
+00:00:32,539 --> 00:00:36,210
+Breakout with volume turned Yes almost nineteen hundred times.
+
+11
+00:00:36,260 --> 00:00:40,405
+Price rose a typical move before falling one fifty-one percent of the time,
+
+12
+00:00:40,425 --> 00:00:43,002
+against fifty percent on comparable days.
+
+13
+00:00:43,449 --> 00:00:46,096
+Every study ends in one of four verdicts:
+
+14
+00:00:46,146 --> 00:00:47,747
+too few to judge,
+
+15
+00:00:47,797 --> 00:00:49,441
+no clear difference,
+
+16
+00:00:49,491 --> 00:00:51,626
+some difference, not established,
+
+17
+00:00:51,676 --> 00:00:53,661
+or a consistent difference.
+
+18
+00:00:54,116 --> 00:00:56,827
+Most simple setups show no clear difference.
+
+19
+00:00:56,877 --> 00:01:01,678
+That's an honest, useful answer: they describe a situation; they don't predict one.
+
+20
+00:01:02,131 --> 00:01:04,628
+Trend alignment is the interesting one.
+
+21
+00:01:04,678 --> 00:01:07,127
+After the daily and weekly trends first agree,
+
+22
+00:01:07,147 --> 00:01:10,077
+price did a little worse than on comparable days.
+
+23
+00:01:10,127 --> 00:01:13,926
+Often the weekly trend confirms a move after much of it has happened.
+
+24
+00:01:14,383 --> 00:01:16,603
+Your own Sets can be studied too.
+
+25
+00:01:16,653 --> 00:01:19,982
+Open one in Signal Sets, and tap Study this Set.
+
+26
+00:01:20,032 --> 00:01:23,106
+It runs in the background, usually within the hour.

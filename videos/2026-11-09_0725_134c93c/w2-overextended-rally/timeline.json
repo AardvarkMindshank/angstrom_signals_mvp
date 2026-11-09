@@ -1,0 +1,36 @@
+{
+ "steps": [
+  {
+   "id": "idea",
+   "start": 2.717,
+   "say": "Not every Set looks for an entry. | This one is a caution flag: a strong trend that has run very hot."
+  },
+  {
+   "id": "add",
+   "start": 9.736,
+   "say": "Add My Trend, and the RSI signal."
+  },
+  {
+   "id": "lines",
+   "start": 13.831,
+   "say": "Line one: My Trend is Bullish. | Line two: RSI is at least seventy-five."
+  },
+  {
+   "id": "save",
+   "start": 26.184,
+   "say": "Save it, and run it in Prism, | as of the thirteenth of March 2024."
+  },
+  {
+   "id": "results",
+   "start": 45.467,
+   "say": "A Yes doesn't mean sell. | It means: this one has run hard, so think twice before chasing it."
+  },
+  {
+   "id": "alerts",
+   "start": 51.683,
+   "say": "Set it to alert you, and it becomes a quiet warning when a favourite gets stretched."
+  }
+ ],
+ "end": 58.185,
+ "trim": 2.717
+}

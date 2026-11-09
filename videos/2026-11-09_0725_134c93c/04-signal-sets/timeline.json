@@ -1,0 +1,51 @@
+{
+ "steps": [
+  {
+   "id": "what",
+   "start": 3.114,
+   "say": "A Signal Set turns readings into a decision: | Yes, No, or Unknown, with the reason."
+  },
+  {
+   "id": "idea",
+   "start": 8.968,
+   "say": "Here's a setup many traders look for: a pullback in an uptrend. | The main trend is up, but price has dipped in the short term."
+  },
+  {
+   "id": "group",
+   "start": 16.586,
+   "say": "Add the My Trend Group we built in the last video."
+  },
+  {
+   "id": "signal",
+   "start": 20.027,
+   "say": "Add a single signal too: Stochastic, | which shows where the latest close sits in its recent range, from zero at the low to a hundred at the high."
+  },
+  {
+   "id": "lines",
+   "start": 29.114,
+   "say": "Now the decision. Line one: My Trend is Bullish. | Line two: Stochastic is at most thirty, a short-term dip."
+  },
+  {
+   "id": "all",
+   "start": 42.252,
+   "say": "Both lines must hold for a Yes. | For more flexible rules, you can add \"any of\" boxes."
+  },
+  {
+   "id": "returns",
+   "start": 48.134,
+   "say": "Yes means every line holds. No means at least one fails. | Unknown means something needed is missing, and Lattice never fills it in."
+  },
+  {
+   "id": "save",
+   "start": 56.608,
+   "say": "The description reads your rule back in plain words. Save it, | and it's ready to scan in Prism."
+  },
+  {
+   "id": "summary",
+   "start": 65.555,
+   "say": "Why it helps: instead of flicking through charts looking for dips in strong trends, | you get a clear Yes or No for every asset, with its reason."
+  }
+ ],
+ "end": 75.56,
+ "trim": 3.114
+}

@@ -1,0 +1,46 @@
+{
+ "steps": [
+  {
+   "id": "question",
+   "start": 2.716,
+   "say": "When a Set turns Yes, does anything different tend to happen next, compared with ordinary days?"
+  },
+  {
+   "id": "how",
+   "start": 8.788,
+   "say": "Each time a Set first turns Yes, we look at the next ten daily candles. | We compare them with ordinary days: the same asset, the same year, and the same side of its long-term average. | Twenty-five coins and sixty-one large US equities, from 2014 to October 2024."
+  },
+  {
+   "id": "find",
+   "start": 27.641,
+   "say": "Every provided Set carries the result. | Open more, and the last line is What followed."
+  },
+  {
+   "id": "card",
+   "start": 33.497,
+   "say": "Tap it for the numbers. | Breakout with volume turned Yes almost nineteen hundred times. | Price rose a typical move before falling one fifty-one percent of the time, against fifty percent on comparable days."
+  },
+  {
+   "id": "verdicts",
+   "start": 46.165,
+   "say": "Every study ends in one of four verdicts: | too few to judge, | no clear difference, | some difference, not established, | or a consistent difference."
+  },
+  {
+   "id": "honest",
+   "start": 56.832,
+   "say": "Most simple setups show no clear difference. | That's an honest, useful answer: they describe a situation; they don't predict one."
+  },
+  {
+   "id": "alignment",
+   "start": 64.847,
+   "say": "Trend alignment is the interesting one. | After the daily and weekly trends first agree, price did a little worse than on comparable days. | Often the weekly trend confirms a move after much of it has happened."
+  },
+  {
+   "id": "own",
+   "start": 77.099,
+   "say": "Your own Sets can be studied too. | Open one in Signal Sets, and tap Study this Set. | It runs in the background, usually within the hour."
+  }
+ ],
+ "end": 87.776,
+ "trim": 2.716
+}

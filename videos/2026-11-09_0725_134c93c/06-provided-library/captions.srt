@@ -1,0 +1,83 @@
+1
+00:00:00,000 --> 00:00:03,273
+Angstrom Signals comes with a library of Groups and Sets,
+
+2
+00:00:03,293 --> 00:00:05,847
+built around common trading situations.
+
+3
+00:00:05,897 --> 00:00:09,141
+In Prism, open Provided by Angstrom Signals.
+
+4
+00:00:09,609 --> 00:00:12,512
+Each one shows small icons for what it looks at.
+
+5
+00:00:12,562 --> 00:00:16,339
+Here: volume, and structure, the support and resistance levels.
+
+6
+00:00:16,781 --> 00:00:20,388
+Underneath, one line says what it describes, in plain words.
+
+7
+00:00:20,829 --> 00:00:22,708
+Tap more for three parts:
+
+8
+00:00:22,758 --> 00:00:24,210
+what it measures,
+
+9
+00:00:24,260 --> 00:00:26,053
+why traders watch it,
+
+10
+00:00:26,103 --> 00:00:27,875
+and what it doesn't prove.
+
+11
+00:00:28,331 --> 00:00:30,914
+The last icon is the evidence mark.
+
+12
+00:00:30,964 --> 00:00:33,397
+A microscope means not yet studied.
+
+13
+00:00:33,447 --> 00:00:37,032
+A balance means it was studied, and showed no clear difference.
+
+14
+00:00:37,082 --> 00:00:39,430
+The next two videos explain both.
+
+15
+00:00:39,874 --> 00:00:43,182
+To find one quickly, tap an icon in the filter row.
+
+16
+00:00:43,232 --> 00:00:45,985
+Here, only the Sets that look at volatility.
+
+17
+00:00:46,424 --> 00:00:51,097
+Tap plus, and a provided Set becomes one of your Prism scans, ready to run.
+
+18
+00:00:51,559 --> 00:00:55,294
+Signal Groups and Signal Sets have the same library at the top.
+
+19
+00:00:55,344 --> 00:00:59,462
+And the Start from list offers them too, after New, and before your own.
+
+20
+00:01:01,047 --> 00:01:04,526
+Once you know them, one setting hides everything provided.
+
+21
+00:01:04,576 --> 00:01:06,945
+Descriptive readings, not advice.
