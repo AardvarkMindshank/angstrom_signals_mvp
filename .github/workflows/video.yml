@@ -46,7 +46,8 @@ jobs:
         env:
           DEMO_PRICES: prices/data/prices
         run: |
-          streamlit run video/demo_app.py --server.headless true --server.port 8601 > out/video/streamlit.log 2>&1 &
+          # From the top folder, so the chart files in static/ are served (Visualize History); it runs video/demo_app.py.
+          streamlit run library_check_app.py --server.headless true --server.port 8601 > out/video/streamlit.log 2>&1 &
           for i in $(seq 1 90); do curl -sf http://127.0.0.1:8601/_stcore/health && break; sleep 1; done
           bash video/make.sh
       - name: Save to reports branch
