@@ -3946,7 +3946,7 @@ def _rerun_fragment() -> None:
 
 # Main sections start open. The guide and the sidebar start closed.
 # Open all and Collapse all move only the main sections. Collapse all also closes the guide.
-_MAIN_SECTION_IDS = _POPOUT_SECTION_IDS
+_MAIN_SECTION_IDS = _POPOUT_SECTION_IDS + ("lattice_panel",)   # Open all and Collapse all move Lattice too
 _SECTION_IDS = _MAIN_SECTION_IDS + (
     "help_guides",
     "account",
