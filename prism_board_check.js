@@ -95,7 +95,7 @@ const { chromium } = require("playwright");
     await page.selectOption('.scan[data-scan="s1"] select[aria-label="When the scan runs"]', "times");
     check("set times show their fields", await page.isVisible('.scan[data-scan="s1"] input[aria-label="Times of day"]'));
     await page.fill('.scan[data-scan="s1"] input[aria-label="Times of day"]', "08:00, 20:00");
-    await page.click('.scan[data-scan="s1"] button[aria-label="Save when the scan runs"]');
+    await page.press('.scan[data-scan="s1"] input[aria-label="Times of day"]', "Tab");   // saved on change, no button
     a = await last();
     check("the schedule saves", a && a.op === "schedule" && a.runs === "times" && a.times === "08:00, 20:00");
     await page.selectOption('.scan[data-scan="s1"] select[aria-label="Snooze Solana"]', "3");

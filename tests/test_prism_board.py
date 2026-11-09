@@ -280,3 +280,13 @@ def test_a_first_asset_takes_the_place_of_the_whole_watchlist():
     assert problem is None and narrowed["assets"] == [{"kind": "crypto", "id": "bitcoin"}]
     more, _ = pb.add_asset(narrowed, {"kind": "crypto", "id": "solana"})
     assert more["assets"] == [{"kind": "crypto", "id": "bitcoin"}, {"kind": "crypto", "id": "solana"}]
+
+
+def test_a_market_group_takes_in_its_single_assets_and_covers_new_ones():
+    obj = {"assets": [{"kind": "crypto", "id": "stellar"}, {"kind": "equity", "id": "AAPL"}]}
+    out, problem = pb.add_asset(obj, {"group": "crypto"})
+    assert problem is None and out["assets"] == [{"kind": "equity", "id": "AAPL"}, {"group": "crypto"}]
+    same, problem = pb.add_asset(out, {"kind": "crypto", "id": "bitcoin"})
+    assert same == out and problem == "All crypto already covers it."
+    only, _ = pb.add_asset({"assets": [{"kind": "crypto", "id": "stellar"}]}, {"group": "crypto"})
+    assert only["assets"] == [{"group": "crypto"}]

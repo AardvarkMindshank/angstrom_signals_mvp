@@ -473,9 +473,12 @@ export default function(component) {
     const timeBits = [times, days, tz];
     function showTimes() { timeBits.forEach((x) => { x.style.display = runs.value === "times" ? "" : "none"; }); }
     timeBits.forEach((x) => rr.appendChild(x));
-    const saveRuns = button("Save", "Save when the scan runs", () => act("schedule", {scan: s.id, runs: runs.value, times: times.value, days: days.value, tz: tz.value}), "on");
-    rr.appendChild(saveRuns);
-    runs.addEventListener("change", showTimes);
+    // Saved as soon as it changes, like the alert settings. Only "At set times" waits for its times to be typed.
+    const saveSchedule = () => act("schedule", {scan: s.id, runs: runs.value, times: times.value, days: days.value, tz: tz.value});
+    runs.addEventListener("change", () => { showTimes(); if (runs.value !== "times") saveSchedule(); });
+    times.addEventListener("change", () => { if (runs.value === "times" && times.value.trim()) saveSchedule(); });
+    days.addEventListener("change", () => { if (runs.value === "times") saveSchedule(); });
+    tz.addEventListener("change", () => { if (runs.value === "times") saveSchedule(); });
     showTimes();
     body.appendChild(rr);
     if (s.warning) body.appendChild(el("div", "muted", "Note: " + s.warning));

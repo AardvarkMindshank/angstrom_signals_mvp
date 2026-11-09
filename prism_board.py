@@ -23,6 +23,7 @@ MAX_SCHEDULED = ps.MAX_ACTIVE_SCANS
 MAX_ASSET_ITEMS = 60
 SNOOZE_DAYS = (1, 3, 7)
 GROUPS = {"watchlist": "Whole Watchlist", "crypto": "All crypto", "shares": "All equities"}   # "shares" is the stored id; "equities" is the word used across the app
+MARKET_OF = {"crypto": "crypto", "shares": "equity"}            # a market group -> the kind of asset it covers
 CHANNELS = {"instant": "Instant (app and email)", "digest": "Daily digest", "app": "App only", "off": "Off",
             "account": "As my alert settings"}
 RUNS = {"manual": "Only when I press Play", "4H": "Each 4-hour close", "1D": "Each daily close",
@@ -159,6 +160,16 @@ def add_asset(obj: dict, item: dict) -> tuple[dict, str | None]:
         return out, None
     if clean in out["assets"]:
         return obj, None
+    covered = _covered_by(out["assets"], clean)
+    if covered:
+        return obj, covered
+    if clean.get("group") in MARKET_OF:
+        # All crypto (or All equities) covers that market's single assets: they go, so nothing is listed twice.
+        market = MARKET_OF[clean["group"]]
+        out["assets"] = [a for a in out["assets"] if a.get("kind") != market]
+        if not out["assets"]:
+            out["assets"] = [clean]
+            return out, None
     if out["assets"] == [{"group": "watchlist"}]:
         # The whole Watchlist already covers it, so adding one asset or group means narrowing the scan to it.
         out["assets"] = [clean]
@@ -167,6 +178,16 @@ def add_asset(obj: dict, item: dict) -> tuple[dict, str | None]:
         return obj, f"A scan holds at most {MAX_ASSET_ITEMS} entries."
     out["assets"].append(clean)
     return out, None
+
+
+def _covered_by(assets: list, item: dict) -> str | None:
+    """A message when an entry already in the scan covers the new one (one coin while All crypto is in)."""
+    group = next((g for g, m in MARKET_OF.items() if m == item.get("kind")), None)
+    if group and {"group": group} in assets:
+        return f"{GROUPS[group]} already covers it."
+    if item.get("kind") and {"group": "watchlist"} in assets and len(assets) > 1:
+        return "Whole Watchlist already covers it."
+    return None
 
 
 def remove_asset(obj: dict, index: int) -> tuple[dict, str | None]:
