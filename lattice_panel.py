@@ -70,10 +70,19 @@ def provided_shown(st) -> bool:
 def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str) -> None:
     """The section runs as a Streamlit fragment: a change inside it redraws only this section, not the dashboard."""
     fragment = getattr(st, "fragment", None)
-    if callable(fragment):
-        fragment(lambda: _render(st, supabase, assets, user_id))()
-    else:
+    if not callable(fragment):
         _render(st, supabase, assets, user_id)
+        return
+    try:
+        # Lattice sits inside the dashboard (under the chart), itself a fragment: a fragment of its own keeps a
+        # change in Lattice from redrawing the dashboard.
+        fragment(lambda: _render(st, supabase, assets, user_id))()
+    except Exception as exc:
+        if "Rerun" in type(exc).__name__ or "StopException" in type(exc).__name__:
+            raise
+        if "fragment" not in str(exc).lower():
+            raise
+        _render(st, supabase, assets, user_id)       # this Streamlit refuses a fragment here: draw it plainly
 
 
 def _render(st, supabase, assets: list[tuple[str, str, str]], user_id: str) -> None:

@@ -209,10 +209,9 @@ export default function(component) {
       ".ang-table tbody tr{border-bottom:1px solid var(--ang-line);}",
       ".ang-table tr.ang-row-on{background:var(--ang-select);color:var(--ang-select-text);}",
       ".ang-table [data-sec-folded]{display:none;}",
-      // Angstrom Lattice open: at least a screen tall. A tab switch redraws the section, and for a moment it is
-      // nearly empty; on a page whose other sections are folded, the page then became too short to stay scrolled
-      // to Lattice and the browser jumped back to the top.
-      ".st-key-sec_lattice_panel [data-testid='stExpanderDetails']{min-height:100vh;}",
+      // Angstrom Lattice open: a tab switch redraws it and for a moment it is nearly empty. It sits mid-page now
+      // (under the chart), so a modest floor is enough to keep the page from jumping; a full screen left a gap.
+      ".st-key-sec_lattice_panel [data-testid='stExpanderDetails']{min-height:60vh;}",
       ".ang-table.fold-g [data-sec='g'],.ang-table.fold-s [data-sec='s']{display:none;}",
       ".ang-table.fold-g [data-sec-folded='g'],.ang-table.fold-s [data-sec-folded='s']{display:table-cell;}",
       "[data-testid='stAppViewContainer'],[data-testid='stHeader'],[data-testid='stBottom']{background:var(--ang-page) !important;}",
@@ -2972,14 +2971,15 @@ export default function(component) {
   let watching = null;
   let observer = null;
   const pair = () => {
-    const chart = document.getElementById("interactive-chart");
-    if (!chart) return null;
-    const mood = document.getElementById("market-mood-crypto") || document.getElementById("market-mood-stock");
-    let node = chart.parentElement;
+    // The two wide columns sit under the full-width chart and Lattice: the left one holds the sentiment sections.
+    const mark = document.getElementById("market-mood-crypto") || document.getElementById("market-mood-stock")
+      || document.getElementById("market-sentiment");
+    if (!mark) return null;
+    let node = mark.parentElement;
     while (node && node !== document.body) {
-      if (node.getAttribute("data-testid") === "stHorizontalBlock" && (!mood || node.contains(mood))) {
+      if (node.getAttribute("data-testid") === "stHorizontalBlock") {
         const columns = [...node.children].filter((el) => el.getAttribute("data-testid") === "stColumn");
-        if (columns.length >= 2 && node.contains(chart)) return { block: node, columns };
+        if (columns.length >= 2) return { block: node, columns };
       }
       node = node.parentElement;
     }
@@ -11361,19 +11361,12 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                     st.session_state.wide_split = next_split
                     save_account_settings({"wide_split": round(next_split, 3)})
         split = min(_WIDE_SPLIT_MAX, max(_WIDE_SPLIT_MIN, float(st.session_state.wide_split)))
-        mood_col, asset_col = st.columns([split, 1 - split], gap="medium", vertical_alignment="top")
-        with mood_col:
-            show_market_moods(trade_crypto, trade_equities)
-            # The chart asset's own sentiment sits under the market sentiments, so every
-            # sentiment section is in the left column. It is filled in once the chart has
-            # settled which asset it shows.
-            sentiment_slot = st.container()
-        asset_area = asset_col
     else:
         # Single column: the asset's sentiment sits under the score tables, above the chart.
         sentiment_slot = st.container()
-        asset_area = nullcontext()
-    with asset_area:
+    # The chart is full width in both layouts, with Angstrom Lattice straight under it; in the wide layout the
+    # two columns (sentiment on the left, the asset's other sections on the right) follow.
+    with nullcontext():
         st.html(
             "<div id='interactive-chart' style='scroll-margin-top:4.5rem;'></div>"
         )
@@ -11874,6 +11867,20 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                     unsafe_allow_html=True,
                 )
 
+    if not _POPOUT_VIEW:
+        _lattice_section()
+    if wide_layout:
+        mood_col, asset_col = st.columns([split, 1 - split], gap="medium", vertical_alignment="top")
+        with mood_col:
+            show_market_moods(trade_crypto, trade_equities)
+            # The chart asset's own sentiment sits under the market sentiments, so every
+            # sentiment section is in the left column. It is filled in once the chart has
+            # settled which asset it shows.
+            sentiment_slot = st.container()
+        asset_area = asset_col
+    else:
+        asset_area = nullcontext()
+    with asset_area:
         reveal_breakdown = st.session_state.get("scroll_target") == "score-breakdown"
         if (show_reasons_flag or reveal_breakdown) and result and result.get("status") == "ok":
             st.html("<div id='score-breakdown' style='scroll-margin-top:4.5rem;'></div>")
@@ -13643,6 +13650,13 @@ def _render_lattice() -> None:
     )
 
 
+def _lattice_section() -> None:
+    """Angstrom Lattice (preview), for every signed-in account, full width under the Interactive Chart."""
+    st.markdown("<div id='angstrom-lattice' style='scroll-margin-top:4.5rem;'></div>", unsafe_allow_html=True)
+    with tracked_expander(":material/hub: Angstrom Lattice", "lattice_panel"):
+        _render_lattice()
+
+
 if _POPOUT_VIEW == "lattice_panel":
     # Lattice needs only the Watchlist, so the dashboard sections are not worked out in this window.
     _jump = st.session_state.pop("_chart_jump", None)
@@ -13667,10 +13681,7 @@ render_dashboard(
 if _POPOUT_VIEW:
     st.stop()
 _record_run("whole page", _RUN_STARTED)
-# Angstrom Lattice (preview), for every signed-in account. Only the chosen part is drawn.
-st.markdown("<div id='angstrom-lattice' style='scroll-margin-top:4.5rem;'></div>", unsafe_allow_html=True)
-with tracked_expander(":material/hub: Angstrom Lattice", "lattice_panel"):
-    _render_lattice()
+# Angstrom Lattice is drawn inside the dashboard, straight under the Interactive Chart (_lattice_section).
 if str((load_profile() or {}).get("role") or "") == "admin":
     admin_panel()
 _page_top(key="page_back_to_top")
