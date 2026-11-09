@@ -32,7 +32,7 @@ jobs:
       - name: Saved prices
         run: |
           git fetch -q --depth=1 origin reports
-          mkdir -p prices && git archive FETCH_HEAD data/prices | tar -x -C prices
+          mkdir -p prices && git archive FETCH_HEAD data/prices data/derivatives | tar -x -C prices
       - name: Daily answers
         run: python what_followed_run.py answers prices/data/prices out --shard ${{ matrix.shard }}/${SHARDS} --limit ${LIMIT} ${SETS:+--sets $SETS}
       - uses: actions/upload-artifact@v5
@@ -57,7 +57,7 @@ jobs:
       - name: Saved prices
         run: |
           git fetch -q --depth=1 origin reports
-          mkdir -p prices && git archive FETCH_HEAD data/prices | tar -x -C prices
+          mkdir -p prices && git archive FETCH_HEAD data/prices data/derivatives | tar -x -C prices
       - uses: actions/download-artifact@v5
         with:
           pattern: answers-*

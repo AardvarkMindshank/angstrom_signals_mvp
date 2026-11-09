@@ -57,7 +57,7 @@ jobs:
       - name: Saved prices
         run: |
           git fetch -q --depth=1 origin reports
-          mkdir -p prices && git archive FETCH_HEAD data/prices | tar -x -C prices
+          mkdir -p prices && git archive FETCH_HEAD data/prices data/derivatives | tar -x -C prices
       - uses: actions/download-artifact@v5
         with:
           name: queue
@@ -85,7 +85,7 @@ jobs:
       - name: Saved prices
         run: |
           git fetch -q --depth=1 origin reports
-          mkdir -p prices && git archive FETCH_HEAD data/prices | tar -x -C prices
+          mkdir -p prices && git archive FETCH_HEAD data/prices data/derivatives | tar -x -C prices
       - uses: actions/download-artifact@v5
         with:
           name: queue

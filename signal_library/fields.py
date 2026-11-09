@@ -90,6 +90,15 @@ FIELDS: dict[str, dict[str, dict]] = {
     },
     # ---- whole-value readings used by the provided library (agreed plan, Stage A)
     "regime.state@1": {"": label("trending", "ranging", "transitional")},
+    # ---- daily positioning (crypto; Coinalyze daily series)
+    "positioning.funding@1": {
+        "funding_latest": num("% per funding interval"), "funding_average": num("% per funding interval"),
+        "average_rank": num("rank in the lookback, 0 to 100", 0, 100),
+        "reading": label("crowded longs", "crowded shorts", "neutral"), "days": num("days", 1, 60)},
+    "positioning.long_short@1": {
+        "ratio_latest": num("longs per short", 0), "ratio_change": num("longs per short"),
+        "ratio_rank": num("rank in the lookback, 0 to 100", 0, 100),
+        "reading": label("more longs than usual", "more shorts than usual", "usual"), "days": num("days", 1, 60)},
     "volume.relative@1": {"": num("times the 20-candle average volume", 0)},
     # ---- sentiment (library_completion.md §4) and flows
     "sentiment.market@1": {"score": num("sentiment, −100 to +100", -100, 100), "change_7d": num("sentiment points", -200, 200),

@@ -61,13 +61,16 @@ def logic_hash(doc: dict) -> str:
     return def_hash({k: v for k, v in (doc or {}).items() if k not in ("name", "purpose", "description", "notes")})
 
 
-NO_HISTORY = {"sentiment": "news sentiment", "positioning": "positioning", "flows": "fund flows"}
+from study_history import SAVED_SINCE  # noqa: E402
+
+NO_HISTORY = {"sentiment": "news sentiment", "positioning": "hourly positioning", "flows": "fund flows"}
 
 
 def studyable(doc: dict | None) -> tuple[bool, str]:
-    """(can it be studied, why not). Studies use saved daily prices only: every part must read daily or weekly
-    candles of a coin or share, not news, positioning, fund flows or market-wide readings, which have no saved
-    history."""
+    """(can it be studied, why not). Studies use saved daily prices only: every part that decides the answer must
+    read daily or weekly candles of a coin or share, not news sentiment or positioning, which have no saved history
+    yet. Market-wide readings (fund flows, market sentiment) can only sit in a Set's market context, which never
+    changes its Yes or No, so they do not stop a study."""
     import perspectives
     import signal_library as sl
 
@@ -84,12 +87,12 @@ def studyable(doc: dict | None) -> tuple[bool, str]:
             definition = sl.REGISTRY.get(ref["id"], ref.get("version", 1))
         except Exception:
             return False, f"One of its parts ({(ref or {}).get('id', '?')}) is not in the signal library."
+        if ref["id"] in SAVED_SINCE:              # daily positioning: filled in from Coinalyze (study_history.py)
+            continue
         if definition.category in NO_HISTORY:
-            return False, f"It uses {NO_HISTORY[definition.category]}, which has no saved history to study."
+            return False, f"It uses {NO_HISTORY[definition.category]}, which has no saved history to study yet."
         if str(getattr(definition, "scope", "") or "").startswith("market:"):
             return False, "It uses a market-wide reading, which has no saved history to study."
-    if doc.get("market_context"):
-        return False, "It uses a market-wide reading, which has no saved history to study."
     return True, ""
 
 

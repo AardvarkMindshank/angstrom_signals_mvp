@@ -97,7 +97,7 @@ def test_series_line_up_on_the_price_bars():
 
 
 def test_call_budget_per_coin():
-    assert liq.calls_for([{}, {}, {}]) == 9
+    assert liq.calls_for([{}, {}, {}]) == 11
 
 
 def test_switching_the_chart_levels_off_stays_off():

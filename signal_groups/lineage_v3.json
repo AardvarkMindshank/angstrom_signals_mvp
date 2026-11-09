@@ -25,6 +25,8 @@
     "positioning.liquidations": [
       "derivatives"
     ],
+    "positioning.funding": ["derivatives"],
+    "positioning.long_short": ["derivatives"],
     "positioning.oi_price": [
       "derivatives",
       "price"

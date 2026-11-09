@@ -1,5 +1,5 @@
 {
- "code_sha256": "793e3cb4a1e696581da1419c339027447d384cdc64125b9ed95769e160dbfaab",
+ "code_sha256": "bcb1333e107b788e8477ee46e0e4d4a8aa561fac508c628191974046aadd08f0",
  "cutoffs_per_dataset_minimum": 50,
  "datasets": [
   {
@@ -52,9 +52,9 @@
   }
  ],
  "generated_by": {
-  "git_commit": "daf053be75c6c4b2baa06f3d76393a10eb13b7a6",
+  "git_commit": "b95daa49c289a85b28ee8bebe36f27c93ce9a800",
   "note": "administrative; not compared",
-  "run_id": "42012959274"
+  "run_id": "42547198207"
  },
  "signals": {
   "bollinger.position@1": {
@@ -1216,6 +1216,18 @@
     "slice_reason": "synthetic-crypto-s11 T=2024-06-18T08:00:00+00:00: .value.obv: differs by 5.2e+05 (beyond the 1e-09 tolerance)"
    }
   },
+  "positioning.funding@1": {
+   "1D": {
+    "algorithm": "not_certified",
+    "checks": {},
+    "cutoffs": 0,
+    "failures": 0,
+    "reason": "Derivatives have no stored history (live only); see decision E.",
+    "result_statuses": {},
+    "slice_equivalent": false,
+    "slice_reason": "not tested"
+   }
+  },
   "positioning.liquidation_levels@1": {
    "1h": {
     "algorithm": "not_certified",
@@ -1230,6 +1242,18 @@
   },
   "positioning.liquidations@1": {
    "1h": {
+    "algorithm": "not_certified",
+    "checks": {},
+    "cutoffs": 0,
+    "failures": 0,
+    "reason": "Derivatives have no stored history (live only); see decision E.",
+    "result_statuses": {},
+    "slice_equivalent": false,
+    "slice_reason": "not tested"
+   }
+  },
+  "positioning.long_short@1": {
+   "1D": {
     "algorithm": "not_certified",
     "checks": {},
     "cutoffs": 0,

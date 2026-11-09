@@ -48,18 +48,21 @@ def _with_weekly(ctx, done: pd.DataFrame):
     return ctx
 
 
-def context_at(frame: pd.DataFrame, kind: str, day: pd.Timestamp, asset_id: str):
-    """The engine context at the close of `day` (its bar is finished, nothing later is seen)."""
+def context_at(frame: pd.DataFrame, kind: str, day: pd.Timestamp, asset_id: str, history=None):
+    """The engine context at the close of `day` (its bar is finished, nothing later is seen). history: saved daily
+    positioning for studies (study_history.SavedHistory), cut at the same day; asset_id is then its saved symbol."""
     now = pd.Timestamp(day) + pd.Timedelta(days=1, minutes=10)
     if now.tzinfo is None:
         now = now.tz_localize("UTC")
     ctx, last = gr.stored_context(frame.loc[:pd.Timestamp(day)], kind, now, asset_id=asset_id)
+    if history is not None:
+        ctx._derivatives_loader = history.derivatives_at(asset_id, last)
     done = frame.loc[:last]
     return _with_weekly(ctx, done), last
 
 
 def daily_answers(doc: dict, frame: pd.DataFrame, kind: str, asset_id: str, *, start=None,
-                  subjects: dict | None = None, warmup: int = 60) -> list[tuple[str, str]]:
+                  subjects: dict | None = None, warmup: int = 60, history=None) -> list[tuple[str, str]]:
     """[(YYYY-MM-DD, answer)] for every finished day from `start` (default: after `warmup` bars).
     frame: daily bars with indicators (scoring.calculate_indicators). subjects: (kind, id) -> such a frame, for
     lines pinned to another asset."""
@@ -73,7 +76,7 @@ def daily_answers(doc: dict, frame: pd.DataFrame, kind: str, asset_id: str, *, s
         first = first.tz_localize(index.tz)
     out = []
     for day in index[index >= first]:
-        ctx, last = context_at(frame, kind, day, asset_id)
+        ctx, last = context_at(frame, kind, day, asset_id, history)
         if pd.Timestamp(last) != pd.Timestamp(day):
             continue
 

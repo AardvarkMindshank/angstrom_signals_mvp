@@ -23,7 +23,7 @@ specs = tc.resolve({"groups": ["starter:trend", "starter:flow", "saved:cfg-my-tr
                    seed.configs({"pullback"}))
 specs.append({"key": "saved:fast", "part": "sets", "name": "Hourly dip", "config": "fast", "version": 1,
               "cluster": None, "doc": {"members": [{"ref": {"timeframe": "1h"}}]}})
-items = wp.items(specs, ctx, result["readings"])
+items = wp.items(specs, ctx, result["readings"], frame=frame, kind="crypto", asset_id="x")
 focus = st.query_params.get("focus", "saved:cfg-pullback")
 with st.expander("🔍 Why these readings — Bitcoin", expanded=True):
     for item in items:

@@ -1,0 +1,35 @@
+# Daily positioning (Coinalyze) and stablecoin supply (DefiLlama) history up to 29 Oct 2024, for studies of Sets that
+# read them. Saved on the reports branch beside the prices. Run by hand (or by pushing the history-backfill branch).
+name: history-backfill
+on:
+  workflow_dispatch:
+  push:
+    branches: [history-backfill]
+permissions:
+  contents: write
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install --no-deps -r requirements-research.lock
+      - name: Saved prices (for the coin list)
+        run: |
+          git fetch -q --depth=1 origin reports
+          mkdir -p prices && git archive FETCH_HEAD data/prices | tar -x -C prices
+      - name: Fetch
+        env:
+          COINALYZE_API_KEY: ${{ secrets.COINALYZE_API_KEY }}
+        run: |
+          set -o pipefail
+          python history_backfill.py out --prices prices/data/prices | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Save
+        run: |
+          bash .github/scripts/save_to_reports.sh data out/derivatives out/flows

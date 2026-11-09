@@ -153,6 +153,14 @@ class Coinalyze:
         response.raise_for_status()
         return response.json()
 
+    def daily(self, path: str, symbols: list[str], days: int, **extra) -> dict[str, list[dict]]:
+        """Daily points (the close of each UTC day) for the last `days` days; Coinalyze keeps daily data for good."""
+        now = int(time.time())
+        self.calls += len(symbols)
+        rows = self.get(path, symbols=",".join(symbols), interval="daily",
+                        **{"from": now - days * 86400, "to": now}, **extra) or []
+        return {str(row.get("symbol")): list(row.get("history") or []) for row in rows}
+
     def history(self, path: str, symbols: list[str], hours: int, **extra) -> dict[str, list[dict]]:
         now = int(time.time())
         self.calls += len(symbols)
@@ -250,10 +258,22 @@ def build_series(bars, oi, ratios, funding, liquidations) -> dict:
     return series
 
 
+DAILY_DAYS = 400               # a year of daily funding and long/short for the daily positioning signals
+
+
+def build_daily(funding: list[dict], ratios: list[dict]) -> dict:
+    """{t, funding, ls}: one point per UTC day (Coinalyze daily closes), oldest first."""
+    f = {int(r["t"]): _series_value(r, "c", "value") for r in funding or [] if r.get("t") is not None}
+    r_at = {int(r["t"]): _series_value(r, "r") for r in ratios or [] if r.get("t") is not None}
+    days = sorted(set(f) | set(r_at))
+    return {"t": days, "funding": [f.get(t) for t in days], "ls": [r_at.get(t) for t in days]}
+
+
 def calls_for(markets: list[dict]) -> int:
     """Coinalyze calls one coin costs: open interest and liquidations per market,
-    plus price, funding and the long/short ratio from one market each."""
-    return 2 * len(markets) + 3
+    plus price, funding and the long/short ratio from one market each, and the
+    daily funding and long/short series."""
+    return 2 * len(markets) + 5
 
 
 def levels_for_coin(client: Coinalyze, markets: list[dict], hours: int = LOOKBACK_HOURS) -> dict:
@@ -289,6 +309,15 @@ def levels_for_coin(client: Coinalyze, markets: list[dict], hours: int = LOOKBAC
     except Exception as exc:
         result["liquidation_error"] = str(exc)[:120]
     result["series"] = build_series(bars, oi, ratios, funding, liquidations)
+    try:                                   # daily series for the daily positioning signals
+        funding_d = client.daily("/funding-rate-history", [lead], DAILY_DAYS).get(lead, [])
+        ratios_d = (client.daily("/long-short-ratio-history", [str(ratio_market["symbol"])], DAILY_DAYS)
+                    .get(str(ratio_market["symbol"]), []) if ratio_market else [])
+        result["daily"] = build_daily(funding_d, ratios_d)
+    except RateLimited:
+        raise
+    except Exception as exc:
+        result["daily_error"] = str(exc)[:120]
     return result
 
 
