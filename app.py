@@ -6998,7 +6998,7 @@ because they measure different things and are never added together.
    and the biggest Trend moves, each with the reading before and now, the price and today's move, a 7-day line, and
    badges for 📅 earnings within two weeks, 📰 headline sentiment and 🎯 how close it is to an alert line.
 2. **Crypto Signals** and **Equity Signals** list your watchlists, strongest Trend first. The reading columns are
-   the Groups and Sets you choose with **Columns** (📈 Trend, 🎯 Stretch and 🔊 Flow to start). Click a name to open it
+   the Groups and Sets you choose with the column icon in the table header (📈 Trend, 🎯 Stretch and 🔊 Flow to start). Click a name to open it
    on the chart.
    The asset's 📰 Market sentiment sits under these tables (in the wide layout, in the left column under the
    market sentiments).
@@ -7057,7 +7057,8 @@ because they measure different things and are never added together.
 **The tables**
 - Click a column title to sort. Hover any reading to read it; click it to open **🔍 Why these readings** for
   that asset at that column, part by part.
-- **Columns** chooses which Groups and Sets the tables show: yours, and the ones provided by Angstrom Signals.
+- The **column icon** in the table header, just above the Groups fold arrow (◂), chooses which Groups and Sets the
+  tables show: yours, and the ones provided by Angstrom Signals.
   The icons beside each name say what it looks at (📈 trend, 🎯 momentum or stretch, 🔊 volume, 🧱 support,
   resistance or structure, 🌊 volatility or regime, 🔭 another asset, 💬 news, 🏦 positioning or flows).
   Fold the Groups or the Sets sideways with ◂ in their first column title.
@@ -10677,6 +10678,9 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             if str(raw).startswith("lattice|"):
                 _open_in_lattice(str(raw))
                 return
+            if str(raw).startswith("columns|"):          # the column icon in a table header
+                _COLUMNS_DIALOG()
+                return
             parts = str(raw).split("|")
             if len(parts) < 2:
                 return
@@ -10932,9 +10936,6 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                 st.caption("This watchlist is empty.")
                 return
             frame = pd.DataFrame(results).sort_values("trend", ascending=False, na_position="last")
-            if st.button("Columns", icon=":material/view_column:", key=f"columns_{kind}", type="tertiary",
-                         help="Choose which Signal Groups and Signal Sets this table shows"):
-                _COLUMNS_DIALOG()
             st.caption("Click a column title to sort. The table starts with the strongest Trend at the top. Click a name to show that asset on the chart. 📈 Trend, 🎯 Stretch and 🔊 Flow each run from -100 to +100 (positive means up); they describe the market and are not forecasts. Hover one to read it, and click it to open the breakdown. Click the sentiment score, the thumbs, or the crowd average to open its headlines. Watching is how many accounts hold that asset. The Crowd box is the average of personal scores. Hover the down thumb for the spread. A comment balloon, or the arrow on the right edge, opens the social signals and chat. The 30-day trend uses the same colors as 30d %.")
 
             # Columns in order, as (title, cells it takes, extra header attributes). The reading columns come from
@@ -10969,6 +10970,15 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             first_of = {"g": f"col:{group_specs[0]['key']}" if group_specs else None,
                         "s": f"col:{set_specs[0]['key']}" if set_specs else None}
             fold_words = {"g": ("Groups", "Signal Groups"), "s": ("Sets", "Signal Sets")}
+            # ⚙️ Columns sits in the header, just above the fold arrow of the first section (Groups, else Sets).
+            chooser_at = "g" if group_specs else "s"
+            chooser = (
+                f"<button type='button' data-pick='columns|{kind}' title='Choose which Signal Groups and Signal Sets "
+                "the tables show' aria-label='Choose table columns' style='display:block;background:none;border:none;"
+                "padding:0;margin:0 0 2px;color:inherit;cursor:pointer;opacity:.7;line-height:0;'>"
+                "<svg width='16' height='16' viewBox='0 0 24 24' fill='currentColor' aria-hidden='true'>"
+                "<path d='M4 5h4v14H4zM10 5h4v14h-4zM16 5h4v14h-4z' opacity='.35'/>"
+                "<path d='M3 4h18v16H3zM5 6v12h3V6zm5 0v12h4V6zm6 0v12h3V6z'/></svg></button>")
 
             def header_button(name, align="left", colspan=1, section=""):
                 spec = spec_by.get(name)
@@ -10982,6 +10992,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                     part = name[5:]
                     word, long = fold_words[part]
                     return (f"<th data-sec-folded='{part}' style='padding:8px 10px;white-space:nowrap;'>"
+                            + (chooser if part == chooser_at else "") +
                             f"<button type='button' data-fold='{part}' title='Show the {long} columns' "
                             "style='background:none;border:none;padding:0;margin:0;color:inherit;font:inherit;"
                             f"font-weight:600;cursor:pointer;'>▸ {word}</button></th>")
@@ -10997,6 +11008,8 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                     fold = (f"<button type='button' data-fold='{section}' title='Fold the {long} columns' "
                             "style='background:none;border:none;padding:0 6px 0 0;margin:0;color:inherit;"
                             "font:inherit;cursor:pointer;opacity:.6;'>◂</button>")
+                    if section == chooser_at:
+                        fold = chooser + fold
                 return (
                     f"<th{span}{sec}{hint} style='padding:8px 10px;text-align:{align};white-space:nowrap;'>{fold}"
                     f"<button type='button' data-sort-col='{sort_at[name]}' "
