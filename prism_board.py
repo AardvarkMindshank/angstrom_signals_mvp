@@ -80,7 +80,19 @@ def _set_entry(key: str, c: dict) -> dict:
             "icons": perspectives.chips(doc), "line": line,
             "more": ({k: more[k] for k in ("measures", "why", "not_proven")} if more else None),
             "followed": perspectives.followed_card(doc, key),
-            "evidence": {"icon": icon, "hover": words}}
+            "evidence": {"icon": icon, "hover": words},
+            "inside": _inside(doc),
+            # Provided Sets open in Signal Sets as your own copy; yours open as they are.
+            "open": "copy" if c.get("provided") else ("open" if c.get("config") and "yours" in c.get("meta", "") else None)}
+
+
+def _inside(doc: dict) -> dict | None:
+    import set_inside
+
+    try:
+        return set_inside.parts(doc)
+    except Exception:
+        return None
 
 
 def library(choices: dict, assets: list[tuple[str, str, str]]) -> dict:

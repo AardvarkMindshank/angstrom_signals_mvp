@@ -75,6 +75,8 @@ def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str = "") 
             else:
                 if cfg is None:
                     model["name"] = f"{model['name']} (my copy)"
+                else:
+                    model["name"] = cfg["name"]          # its current name (it may have been renamed since saving)
                 st.session_state["lattice_model"], st.session_state["lattice_source"] = model, cfg
     model = st.session_state.get("lattice_model") or le.empty_model()
 
@@ -168,6 +170,41 @@ def _provided_starters(st) -> None:
         st.caption("The dashboard's own readings, as Groups. Pick one in **Start from** below to open your own copy; "
                    "the original stays as it is. Hide these in ⚙️ Settings → Show provided starters and examples.")
         st.html(starters_html())
+
+
+def _rename(st, supabase, kind: str, source: dict) -> None:
+    """✏️ Rename your own Group or Set. Every list, pull-down and table column shows the new name at once; studies,
+    history bands and table answers are kept, because they follow what it checks, not its name."""
+    import signal_groups_inspector as gi
+
+    word = "Group" if kind == "group" else "Set"
+    saved = (st.session_state.get("siggroups_saved") or (0, []))[1]
+    with _popover(st, "Rename", icon=":material/edit:", help=f"Give {source['name']} a new name."):
+        new = st.text_input(f"New name for this {word}", value=source["name"], max_chars=80,
+                            key=f"lattice_rename_{kind}_{source['id']}")
+        clean = " ".join(str(new or "").split())
+        same = clean.casefold() == " ".join(str(source["name"]).split()).casefold()
+        taken = not same and name_taken(saved, st.session_state.get("_lattice_user"), kind, clean)
+        if taken:
+            st.warning(f"You already have a {word} called **{clean}**.")
+        if st.button("Rename", type="primary", disabled=not clean or same or taken,
+                     key=f"lattice_rename_go_{kind}_{source['id']}"):
+            try:
+                supabase.rpc("analysis_rename_config", {"cfg": source["id"], "new_name": clean}).execute()
+            except Exception as exc:
+                text = str(getattr(exc, "message", "") or exc)
+                if "analysis_rename_config" in text or "PGRST202" in text:
+                    st.error("Renaming needs a one-off database update first (sql/2026-11-15_provided_groups.sql).")
+                elif "name_taken" in text:
+                    st.warning(f"You already have a {word} called **{clean}**.")
+                else:
+                    st.error(f"Refused: {gi._rpc_error(exc)}")
+                return
+            st.session_state.pop("siggroups_saved", None)
+            st.session_state.pop("lattice_loaded" if kind == "group" else "lattice_set_loaded", None)
+            st.session_state["lattice_flash_group" if kind == "group" else "lattice_flash_set"] = (
+                "ok", f"Renamed to “{clean}”. It shows under the new name everywhere.")
+            lattice_panel.rerun_page(st)
 
 
 def _delete(st, supabase, kind: str, source: dict) -> None:
@@ -272,13 +309,15 @@ def _save(st, supabase, model: dict, can_save: bool) -> None:
     doc = le.to_document(model)
     source = st.session_state.get("lattice_source")
     mine = bool(source and source.get("owner_id") == st.session_state.get("_lattice_user"))
-    cols = action_row(st, 1 + bool(source) + mine)
+    cols = action_row(st, 1 + bool(source) + 2 * mine)
     new = cols[0].button("💾 Save as a new Group", disabled=not can_save, key="lattice_save_new", type="primary",
                          width="stretch", help="Saves version 1 of a new Group. It is private until you publish it.")
     nxt = bool(source) and cols[1].button(f"💾 Save as version {source['current_version'] + 1} of {source['name']}",
                                           disabled=not can_save, key="lattice_save_next", width="stretch",
                                           help="Saves a new version. Earlier versions stay as they were.")
     if mine:
+        with cols[-2]:
+            _rename(st, supabase, "group", source)
         with cols[-1]:
             _delete(st, supabase, "group", source)
     show_flash(st, "lattice_flash_group")

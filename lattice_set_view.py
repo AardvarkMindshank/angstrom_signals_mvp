@@ -83,7 +83,8 @@ def render(st, supabase, user_id: str = "") -> None:
     starts = {START_NEW: "➕ New Set"}
     # Provided Sets are run in Prism; most can't open here yet (they use labelled copies of the starter Groups that
     # the editor can't match), so only those that rebuild cleanly are offered.
-    provided = _provided_starts(choices) if lattice_panel.provided_shown(st) else {}
+    asked = st.session_state.get("_lattice_set_start_next")
+    provided = _provided_starts(choices) if lattice_panel.provided_shown(st) or str(asked).startswith("demo:") else {}
     starts.update({k: label for k, (label, _) in provided.items()})
     starts.update({f"saved:{c['id']}": f"🗂️ {c['name']} (yours, v{c['versions'][-1]['version']})" for c in mine})
     if "_lattice_set_start_next" in st.session_state:      # the Set just saved
@@ -104,8 +105,10 @@ def render(st, supabase, user_id: str = "") -> None:
             if model is None:
                 st.warning(f"{why} Starting a new Set instead.")
             else:
+                model["name"] = cfg["name"]               # its current name (it may have been renamed since saving)
                 st.session_state["lattice_set_model"], st.session_state["lattice_set_source"] = model, cfg
     model = ls.clean_model(st.session_state.get("lattice_set_model") or ls.empty_model(), choices)
+    lattice_view.show_flash(st, "lattice_flash_set")            # "Saved …", "Opened a copy of …"
 
     early = lattice_panel.pending(st, "lattice_set_editor", "model")
     if early and early != st.session_state.get("lattice_set_seen"):
@@ -160,16 +163,17 @@ def render(st, supabase, user_id: str = "") -> None:
     doc = ls.to_document(model, choices)
     source = st.session_state.get("lattice_set_source")
     mine = bool(source and source.get("owner_id") == user_id)
-    cols = lattice_view.action_row(st, 1 + bool(source) + mine)
+    cols = lattice_view.action_row(st, 1 + bool(source) + 2 * mine)
     new = cols[0].button("💾 Save as a new Set", disabled=not screen["can_save"], key="lattice_set_save_new",
                          type="primary", width="stretch", help="Saves version 1. It is private until you publish it.")
     nxt = bool(source) and cols[1].button(f"💾 Save as version {source['current_version'] + 1} of {source['name']}",
                                           disabled=not screen["can_save"], key="lattice_set_save_next",
                                           width="stretch")
     if mine:
+        with cols[-2]:
+            lattice_view._rename(st, supabase, "set", source)
         with cols[-1]:
             lattice_view._delete(st, supabase, "set", source)
-    lattice_view.show_flash(st, "lattice_flash_set")
     if new and lattice_view.name_taken(saved, user_id, "set", doc.get("name")):
         st.warning(lattice_view.taken_message("Set", doc.get("name") or "", source))
         new = False

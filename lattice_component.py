@@ -272,7 +272,7 @@ export default function(component) {
   const operands = state.operands || [];
   const opByKey = {};
   operands.forEach((o) => { opByKey[o.key] = o; });
-  const OPS = {number: [["gte", "is at least"], ["lte", "is at most"]], "yes/no": [["yes", "is yes"], ["no", "is no"]],
+  const OPS = {number: [["gte", "is at least"], ["lte", "is at most"], ["exists", "has a value"]], "yes/no": [["yes", "is yes"], ["no", "is no"]],
                label: [["is", "is"], ["is_not", "is not"]]};
   // Reorder rules by dragging the ⠿ handle (mouse, pen or finger): the rows move apart to show where it will land.
   function dragHandle(row, from) {
@@ -351,7 +351,7 @@ export default function(component) {
       (OPS[o.type] || OPS.number).forEach(([k, t]) => { const op = el("option", "", t); op.value = k; if (k === c.op) op.selected = true; ops.appendChild(op); });
       ops.addEventListener("change", () => { c.op = ops.value; send(); });
       cl.appendChild(ops);
-      if (o.type === "number") {
+      if (o.type === "number" && c.op !== "exists") {
         const v = el("input"); v.value = c.value || ""; v.size = 6; v.setAttribute("aria-label", "Value");
         v.addEventListener("change", () => { c.value = v.value; send(); });
         cl.appendChild(v);
@@ -728,6 +728,12 @@ export default function(component) {
     tf.addEventListener("change", () => { m.timeframe = tf.value; send(); });
     card.appendChild(tf);
     card.appendChild(el("span", "tag", (state.member_tags || {})[m.key] || ""));
+    if (m.params && Object.keys(m.params).length) {        // its own settings (from a provided Set), kept as they are
+      const t = Object.keys(m.params).sort().map((k) => k.replace(/_/g, " ") + " " + m.params[k]).join(", ");
+      const chip = el("span", "tag", "⚙ " + t);
+      chip.title = "This signal's own settings, kept when you save (the usual settings otherwise)";
+      card.appendChild(chip);
+    }
     card.appendChild(subjectPicker(m, s.name));
     ["condition", "context"].forEach((r) => {
       const b = button(r.charAt(0).toUpperCase() + r.slice(1), r === "condition" ? "Used in the decision." : "Shown for context; changes nothing.",
@@ -753,7 +759,7 @@ export default function(component) {
   targets.forEach((t) => { tByKey[t.key] = t; });
   const tkey = (l) => l.target === "member" ? "member:" + l.member + ":" + (l.field || "")
     : l.target === "condition" ? "condition:" + l.group + ":" + l.condition : l.target + ":" + l.group;
-  const OPS = {number: [["gte", "is at least"], ["lte", "is at most"]], "yes/no": [["yes", "is yes"], ["no", "is no"]],
+  const OPS = {number: [["gte", "is at least"], ["lte", "is at most"], ["exists", "has a value"]], "yes/no": [["yes", "is yes"], ["no", "is no"]],
                label: [["is", "is"], ["is_not", "is not"]]};
   function fresh() {
     const t = targets[0];
@@ -780,7 +786,7 @@ export default function(component) {
     (OPS[t.type] || OPS.number).forEach(([k, txt]) => { const o = el("option", "", txt); o.value = k; if (k === l.op) o.selected = true; ops.appendChild(o); });
     ops.addEventListener("change", () => { l.op = ops.value; send(); });
     row.appendChild(ops);
-    if (t.type === "number") {
+    if (t.type === "number" && l.op !== "exists") {
       const v = el("input"); v.value = l.value || ""; v.size = 6; v.setAttribute("aria-label", "Value");
       v.addEventListener("change", () => { l.value = v.value; send(); });
       row.appendChild(v);

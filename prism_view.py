@@ -202,6 +202,17 @@ def handle(st, supabase, action: dict, by_id: dict, choices: dict, assets, now) 
     op = action.get("op")
     scan = by_id.get(action.get("scan"))
     try:
+        if op == "open_set":             # 🔍 Look inside → open it in Signal Sets (a provided Set as your copy)
+            c = choices.get(action.get("set"))
+            if c is None:
+                return "error", "That Set is no longer available."
+            st.session_state["_lattice_section_next"] = "sets"
+            st.session_state["_lattice_set_start_next"] = action["set"] if c.get("provided") else f"saved:{c['config']}"
+            st.session_state.pop("lattice_set_loaded", None)
+            st.session_state["lattice_flash_set"] = ("ok", (
+                f"Opened a copy of “{c['name']}”: change it and save it as your own." if c.get("provided")
+                else f"Opened “{c['name']}”."))
+            return None
         if op == "create":
             if action.get("set") not in choices:
                 return "error", "That Set is no longer available."

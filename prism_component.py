@@ -16,6 +16,12 @@ CSS = lattice_component.CSS + """
 .lat.prism .pv span{cursor:help}
 .lat.prism .ev{margin-left:6px;font-size:13px;opacity:.75;cursor:help}
 .lat.prism .chip.focus{outline:2px solid #2563eb;outline-offset:1px}
+.lat.prism details.inside{margin-top:4px;font-size:12px}
+.lat.prism details.inside>summary{cursor:pointer;opacity:.8}
+.lat.prism details.inside .part{margin:6px 0 0;padding-left:8px;border-left:2px solid rgba(127,127,127,.3)}
+.lat.prism details.inside .sig{opacity:.85}
+.lat.prism details.inside .dec{border-left-color:#2563eb}
+.lat.prism details.inside button{margin-top:8px}
 .lat.prism .armed{margin-left:6px;font-size:12px;padding:0 5px;border-radius:8px;background:#ede9fe;color:#5b21b6;cursor:help;white-space:nowrap}
 .lat.prism .line{font-size:12px;opacity:.8;margin-top:2px}
 .lat.prism .more{font-size:12px;margin-top:2px}
@@ -200,10 +206,40 @@ export default function(component) {
           window.setTimeout(() => c.scrollIntoView({behavior: "smooth", block: "center"}), 700);
         }
       }
+      if (s.inside) nm.appendChild(insideBlock(s));
       if (!s.provided) nm.appendChild(el("div", "muted", s.meta));
       c.appendChild(nm);
       c.appendChild(button("+", "Start a scan with " + s.name, () => act("create", {set: s.key}), "sq"));
       return c;
+  }
+  function insideBlock(s) {   // 🔍 the building blocks: Groups (signals, labels), single signals, the decision
+    const b = el("details", "inside");
+    const sm = el("summary", "", "🔍 Look inside");
+    sm.title = "The Groups and signals this Set is made of, and when it says Yes";
+    b.appendChild(sm);
+    const x = s.inside;
+    (x.groups || []).forEach((g) => {
+      const p = el("div", "part");
+      p.appendChild(el("b", "", "Group · " + g.name));
+      if (g.labels && g.labels.length) p.appendChild(el("div", "muted", "Labels: " + g.labels.join(", ")));
+      (g.signals || []).forEach((t) => p.appendChild(el("div", "sig", "• " + t)));
+      b.appendChild(p);
+    });
+    (x.signals || []).forEach((t) => {
+      const p = el("div", "part");
+      p.appendChild(el("b", "", "Signal · " + t.name));
+      if (t.settings) p.appendChild(el("div", "muted", "Settings: " + t.settings));
+      b.appendChild(p);
+    });
+    if (x.decision) b.appendChild(el("div", "part dec", x.decision));
+    if (s.open) {
+      const go = button(s.open === "copy" ? "Make my own copy" : "Open in Signal Sets",
+        s.open === "copy" ? "Opens a copy in Signal Sets that you can change and save as your own"
+                          : "Opens this Set in Signal Sets", () => act("open_set", {set: s.key}));
+      b.appendChild(go);
+    }
+    b.addEventListener("click", (e) => e.stopPropagation());
+    return b;
   }
   function followedBlock(f, mark) {   // "What followed", folded to one line: the verdict; tap for the plain numbers (muted, no colours)
     const b = el("details", "wf");

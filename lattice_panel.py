@@ -91,6 +91,9 @@ def _render(st, supabase, assets: list[tuple[str, str, str]], user_id: str) -> N
     perspectives.load_studies(supabase)              # "What followed" on people's own Sets, shared by Set logic
     st.markdown(HEADER)
     st.caption(SUBTITLE)
+    state = getattr(st, "session_state", None)
+    if state is not None and "_lattice_section_next" in state:   # a button elsewhere in Lattice asked for another tab
+        state["lattice_section"] = state.pop("_lattice_section_next")
     hover = "\n\n".join(f"**{SECTIONS[k][1]}**: {SECTIONS[k][2]}" for k in SECTIONS)
     chosen = st.segmented_control("Lattice section", list(SECTIONS), format_func=label, default="groups",
                                   key="lattice_section", label_visibility="collapsed", help=hover) or "groups"

@@ -111,6 +111,18 @@ def _clean_line(raw, groups: set, members: set):
     return None
 
 
+def _clean_params(raw) -> dict:
+    """A signal's settings as sent back by the browser: a few plain values only."""
+    if not isinstance(raw, dict):
+        return {}
+    out = {}
+    for k, v in list(raw.items())[:10]:
+        if re.match(r"^[a-z_][a-z0-9_]{0,30}$", str(k)) and (isinstance(v, (int, float, str, bool)) and
+                                                            len(str(v)) <= 40):
+            out[str(k)] = v
+    return out
+
+
 def clean_model(raw, choices: dict) -> dict:
     """The model sent by the browser, reduced to known Groups, signals, roles and limits."""
     raw = raw if isinstance(raw, dict) else {}
@@ -141,6 +153,9 @@ def clean_model(raw, choices: dict) -> dict:
         taken.add(key)
         role = m.get("role") if m.get("role") in ("condition", "context") else "condition"
         entry = {"key": key, "id": s["id"], "version": s["version"], "timeframe": tf, "role": role}
+        params = _clean_params(m.get("params"))
+        if params:
+            entry["params"] = params            # a signal's own settings (such as a 252-day window); checked on save
         subject = clean_subject(m.get("subject"))
         if subject:
             entry["subject"] = subject
@@ -209,7 +224,8 @@ def to_document(model: dict, choices: dict) -> dict:
     standalone = []
     for m in model.get("standalone") or []:
         entry = {"key": m["key"], "label": le._name_of(m["id"]), "role": m["role"],
-                 "ref": {"id": m["id"], "version": m["version"], "timeframe": m["timeframe"], "params": {}}}
+                 "ref": {"id": m["id"], "version": m["version"], "timeframe": m["timeframe"],
+                         "params": dict(m.get("params") or {})}}
         if m.get("subject"):
             entry["subject"] = dict(m["subject"])
         standalone.append(entry)
@@ -462,9 +478,18 @@ def from_document(doc: dict, choices: dict) -> tuple[dict | None, str | None]:
              "lines": []}
     by_prov = {(str(c["provenance"]["source_config"]), int(c["provenance"]["source_version"])): k
                for k, c in choices.items()}
+    # A Group embedded without a version (the provided Sets) is matched by its content: the same document as one of
+    # the Groups you can pick, preferring one from the same source.
+    by_content: dict = {}
+    for k, c in choices.items():
+        by_content.setdefault(sg.content_sha256(c["body"]), []).append(k)
     for g in doc.get("groups") or []:
         prov = g.get("provenance") or {}
         source = by_prov.get((str(prov.get("source_config")), int(prov.get("source_version") or 0)))
+        if source is None:
+            same = by_content.get(sg.content_sha256(g.get("snapshot") or {}), [])
+            source = next((k for k in same if str(choices[k]["provenance"]["source_config"])
+                           == str(prov.get("source_config"))), same[0] if same else None)
         if source is None:
             return None, f"Group {g['key']!r} comes from a version you cannot read here."
         model["groups"].append({"key": g["key"], "source": source, **({"subject": g["subject"]} if g.get("subject") else {})})
@@ -472,10 +497,11 @@ def from_document(doc: dict, choices: dict) -> tuple[dict | None, str | None]:
         return None, "This Set has market context items, which the editor cannot show yet."
     for m in doc.get("standalone") or []:
         ref = m["ref"]
-        if ref.get("params") or not fields.described(f"{ref['id']}@{ref['version']}") or m["role"] not in ("condition", "context"):
+        if not fields.described(f"{ref['id']}@{ref['version']}") or m["role"] not in ("condition", "context"):
             return None, f"{m['key']} cannot be shown in the editor yet."
         model["standalone"].append({"key": m["key"], "id": ref["id"], "version": ref["version"],
                                     "timeframe": ref["timeframe"], "role": m["role"],
+                                    **({"params": dict(ref["params"])} if ref.get("params") else {}),
                                     **({"subject": m["subject"]} if m.get("subject") else {})})
     rule = (doc.get("decision") or {}).get("rule")
     if rule:

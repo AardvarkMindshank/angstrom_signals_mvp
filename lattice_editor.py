@@ -38,7 +38,8 @@ CATEGORY = {"trend": "Trend", "momentum": "Momentum", "regime": "Regime", "struc
 CATEGORY_ICON = {"trend": "trend", "momentum": "momentum", "regime": "regime", "structure": "structure",
                  "volume": "volume", "sentiment": "sentiment"}
 DIRECTION_MAP = {"up": 1, "down": -1, "mixed": 0}
-OPS = {"gte": "is at least", "lte": "is at most", "yes": "is yes", "no": "is no", "is": "is", "is_not": "is not"}
+OPS = {"gte": "is at least", "lte": "is at most", "yes": "is yes", "no": "is no", "is": "is", "is_not": "is not",
+       "exists": "has a value"}     # "exists": there is one (for example a support zone at all)
 TF_WORDS = {"15m": "15-minute", "1h": "hourly", "4h": "4-hour", "1D": "daily", "1W": "weekly"}
 SUGGESTED_LABELS = [("bullish", "Bullish"), ("bearish", "Bearish"), ("stretched_up", "Stretched up"),
                     ("stretched_down", "Stretched down"), ("buying", "Buying"), ("selling", "Selling")]
@@ -141,6 +142,8 @@ def _predicate(clause: dict) -> dict:
         pred["eq"] = value
     elif op == "is_not":
         return {"not": {**pred, "eq": value}}
+    elif op == "exists":
+        pred["exists"] = True
     else:
         pred["eq"] = value
     return pred
@@ -249,6 +252,8 @@ def _clause(pred: dict) -> dict | None:
     for op in ("gte", "lte"):
         if op in pred:
             return {"operand": operand, "op": op, "value": f"{pred[op]:g}"}
+    if pred.get("exists") is True:
+        return {"operand": operand, "op": "exists", "value": ""}
     if "eq" in pred:
         if isinstance(pred["eq"], bool):
             return {"operand": operand, "op": "yes" if pred["eq"] else "no", "value": ""}
@@ -388,7 +393,7 @@ def _clause_text(c: dict, members: dict) -> str:
         name += f" {field.replace('_', ' ')}"
     elif field == "standard_score":
         name += " standard score"
-    if c["op"] in ("yes", "no"):
+    if c["op"] in ("yes", "no", "exists"):
         return f"{name} {OPS[c['op']]}"
     return f"{name} {OPS.get(c['op'], c['op'])} {c.get('value')}"
 

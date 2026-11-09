@@ -324,6 +324,19 @@ def _breakout_group() -> dict:
     }
 
 
+def provided_groups() -> dict[str, tuple[str, dict]]:
+    """Every Group a provided Set uses, as a provided Group in the database (starter alias -> (name shown, body)),
+    so each provided Set is built only from parts a user can find, look at and copy (sql/2026-11-15_provided_groups.sql,
+    written by provided_groups_sql.py). The bodies are exactly what the provided Sets embed."""
+    return {
+        "starter:trend": ("Trend", labelled_starter("starter:trend")),
+        "starter:stretch": ("Stretch", labelled_starter("starter:stretch")),
+        "starter:flow": ("Flow", labelled_starter("starter:flow")),
+        "starter:trend-weekly": ("Trend (weekly)", _weekly("starter:trend")),
+        "starter:breakout": ("Recent structure break", _breakout_group()),
+    }
+
+
 def library_sets() -> dict[str, dict]:
     base = {"schema": "angstrom.set/1", "lineage_version": 3, "score": None, "market_context": []}
     weekly = _weekly("starter:trend")
