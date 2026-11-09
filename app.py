@@ -7090,6 +7090,7 @@ because they measure different things and are never added together.
 
         def _band_row(title, bands):
             st.markdown(title)
+            bands = list(reversed(bands))       # negative on the left, positive on the right, like a number line
             for column, (name, span, color, background) in zip(st.columns(len(bands)), bands):
                 column.markdown(
                     f"<div style='background:{background};color:{color};border-radius:8px;padding:12px 14px;'>"
