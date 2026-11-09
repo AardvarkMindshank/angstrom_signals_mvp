@@ -89,9 +89,11 @@ def _folder(out: str, key: str) -> Path:
 
 def answers_step(args) -> int:
     import set_history as sh
+    import study_history
     from scoring import calculate_indicators
 
     docs = {k: v for k, v in _docs(args).items() if v[2] != "filter"}
+    saved = study_history.SavedHistory(Path(args.prices).parent)        # derivatives/ beside prices/
     i, n = (int(x) for x in args.shard.split("/"))
     mine = [s for j, s in enumerate(symbols(args.prices)) if j % n == i]
     if args.limit:
@@ -110,7 +112,8 @@ def answers_step(args) -> int:
             if out.exists():
                 continue
             t1 = time.time()
-            days = sh.daily_answers(doc, frame, kind_of(symbol), symbol, start=START, subjects=subject_frames)
+            days = sh.daily_answers(doc, frame, kind_of(symbol), symbol, start=START, subjects=subject_frames,
+                                    history=saved)
             out.parent.mkdir(parents=True, exist_ok=True)
             out.write_text(json.dumps({"set": key, "hash": wf.logic_hash(doc), "symbol": symbol,
                                        "spans": sh.spans(days)}))

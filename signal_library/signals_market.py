@@ -337,3 +337,112 @@ def positioning_liq_levels(ctx, timeframe, params):
     }
     return _base(ctx, record, frame, value, {"all_long_levels": longs, "all_short_levels": shorts},
                  ["Estimated levels, not observed liquidations."], max_age=3.0)
+
+
+# ---------------------------------------------------------------------------- daily positioning
+# Daily readings for Sets that look past the last day, and for studies of what followed: they read the stored daily
+# series (Coinalyze, the close of each UTC day), never the hourly one, and only finished days.
+
+def _daily_series(ctx, name: str):
+    record = ctx.derivatives()
+    if not record or record.get("error"):
+        return None, None, SignalResult(ref={}, subject=ctx.subject, status=MISSING,
+                                        notes=[(record or {}).get("error") or "No derivatives record."])
+    daily = record.get("daily") or {}
+    t = daily.get("t") or []
+    if not t or not daily.get(name):
+        return None, None, SignalResult(ref={}, subject=ctx.subject, status=MISSING,
+                                        notes=["No stored daily series for this coin yet."])
+    series = pd.to_numeric(pd.Series(daily.get(name), index=pd.to_datetime([int(x) for x in t], unit="s", utc=True)),
+                           errors="coerce").sort_index()
+    now = pd.Timestamp(ctx.now)
+    now = now.tz_localize("UTC") if now.tzinfo is None else now
+    series = series[series.index + pd.Timedelta(days=1) <= now].dropna()      # finished days only
+    return record, series, None
+
+
+def _percentile(value: float, history: pd.Series) -> float | None:
+    history = history.dropna()
+    if len(history) < 60:
+        return None
+    return round(float((history < value).mean() * 100 + (history == value).mean() * 50), 1)
+
+
+def _daily_result(ctx, record, series, value, notes):
+    last = series.index[-1]
+    now = pd.Timestamp(ctx.now)
+    now = now.tz_localize("UTC") if now.tzinfo is None else now
+    stale = (now - (last + pd.Timedelta(days=1))).total_seconds() > 3 * 86400
+    return SignalResult(
+        ref={}, subject=ctx.subject, status=STALE if stale else OK, confirmation=CONFIRMED, value=value,
+        observed_at=iso(last), available_at=iso(last + pd.Timedelta(days=1)),
+        provenance=[COINALYZE] + [f"markets: {', '.join(record.get('markets') or [])}"],
+        notes=list(notes) + (["Newest stored day is more than 3 days old."] if stale else []),
+    )
+
+
+DAILY_PARAMS = {"days": Param(7, "int", 1, 60, doc="days averaged or compared"),
+                "lookback": Param(365, "int", 60, 1000, doc="days of history the reading is ranked against")}
+
+
+@signal(
+    id="positioning.funding", version=1, name="Funding rate (daily)", category="positioning",
+    output=OBSERVATION, unit="% per funding interval", scope=SCOPE_CRYPTO_ASSET, timeframes=("1D",),
+    requires=("derivatives",), params=DAILY_PARAMS,
+    calculation=("From the stored daily funding rate of the coin's main perpetual market (the close of each finished UTC "
+                 "day): the latest day, the average over the last `days` days, and where that average ranks among every "
+                 "`days`-day average in the last `lookback` days (0 to 100). Crowded longs when it ranks 90 or more and "
+                 "is positive; crowded shorts when it ranks 10 or less and is negative; otherwise neutral."),
+    interpretation=("Funding is what traders betting on a rise pay those betting on a fall (or the other way round when "
+                    "negative) to keep their futures open. Unusually high funding means many are betting the same way; "
+                    "crowded markets can unwind sharply. It is a reading of positioning, not a forecast."),
+    limitations=("One market (the coin's largest stablecoin perpetual on Binance, Bybit or OKX), not every venue. Rates "
+                 "are per funding interval, usually 8 hours, as the exchange reports them. History before Angstrom "
+                 "collected it was filled in from Coinalyze's daily record."),
+)
+def positioning_funding(ctx, timeframe, params):
+    record, s, failed = _daily_series(ctx, "funding")
+    if failed:
+        return failed
+    days = params["days"]
+    if len(s) < days:
+        return SignalResult(ref={}, subject=ctx.subject, status=INSUFFICIENT, notes=[f"{len(s)} days stored."])
+    averages = s.rolling(days).mean()
+    avg = float(averages.iloc[-1])
+    rank = _percentile(avg, averages.iloc[-params["lookback"]:])
+    reading = None
+    if rank is not None:
+        reading = ("crowded longs" if rank >= 90 and avg > 0 else "crowded shorts" if rank <= 10 and avg < 0
+                   else "neutral")
+    value = {"funding_latest": round(float(s.iloc[-1]), 6), "funding_average": round(avg, 6),
+             "average_rank": rank, "reading": reading, "days": days}
+    return _daily_result(ctx, record, s, value, ["Reported funding; the crowding reading is a ranking, not a forecast."])
+
+
+@signal(
+    id="positioning.long_short", version=1, name="Long/short account ratio (daily)", category="positioning",
+    output=OBSERVATION, unit="longs per short", scope=SCOPE_CRYPTO_ASSET, timeframes=("1D",),
+    requires=("derivatives",), params=DAILY_PARAMS,
+    calculation=("From the stored daily long/short account ratio (accounts betting on a rise per account betting on a "
+                 "fall, the close of each finished UTC day): the latest day, its change over `days` days, and where the "
+                 "latest ranks among the last `lookback` days (0 to 100). More longs than usual when it ranks 90 or more; "
+                 "more shorts than usual when 10 or less; otherwise usual."),
+    interpretation=("Counts accounts, not money: many small accounts betting one way can sit against a few large ones. "
+                    "Traders often read an unusually long-heavy crowd as a sign of fragile positioning."),
+    limitations=("One exchange's accounts (the market Coinalyze reports a ratio for). History before Angstrom collected "
+                 "it was filled in from Coinalyze's daily record."),
+)
+def positioning_long_short(ctx, timeframe, params):
+    record, s, failed = _daily_series(ctx, "ls")
+    if failed:
+        return failed
+    days = params["days"]
+    if len(s) <= days:
+        return SignalResult(ref={}, subject=ctx.subject, status=INSUFFICIENT, notes=[f"{len(s)} days stored."])
+    latest = float(s.iloc[-1])
+    rank = _percentile(latest, s.iloc[-params["lookback"]:])
+    reading = None if rank is None else ("more longs than usual" if rank >= 90 else
+                                         "more shorts than usual" if rank <= 10 else "usual")
+    value = {"ratio_latest": round(latest, 4), "ratio_change": round(latest - float(s.iloc[-1 - days]), 4),
+             "ratio_rank": rank, "reading": reading, "days": days}
+    return _daily_result(ctx, record, s, value, ["Reported account ratio; the reading is a ranking, not a forecast."])

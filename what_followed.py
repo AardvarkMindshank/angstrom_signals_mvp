@@ -61,7 +61,9 @@ def logic_hash(doc: dict) -> str:
     return def_hash({k: v for k, v in (doc or {}).items() if k not in ("name", "purpose", "description", "notes")})
 
 
-NO_HISTORY = {"sentiment": "news sentiment", "positioning": "positioning", "flows": "fund flows"}
+from study_history import SAVED_SINCE  # noqa: E402
+
+NO_HISTORY = {"sentiment": "news sentiment", "positioning": "hourly positioning", "flows": "fund flows"}
 
 
 def studyable(doc: dict | None) -> tuple[bool, str]:
@@ -85,6 +87,8 @@ def studyable(doc: dict | None) -> tuple[bool, str]:
             definition = sl.REGISTRY.get(ref["id"], ref.get("version", 1))
         except Exception:
             return False, f"One of its parts ({(ref or {}).get('id', '?')}) is not in the signal library."
+        if ref["id"] in SAVED_SINCE:              # daily positioning: filled in from Coinalyze (study_history.py)
+            continue
         if definition.category in NO_HISTORY:
             return False, f"It uses {NO_HISTORY[definition.category]}, which has no saved history to study yet."
         if str(getattr(definition, "scope", "") or "").startswith("market:"):

@@ -94,6 +94,24 @@ Generated from the registry (`signal_library.REGISTRY.catalogue()`). Regenerate 
 - **Interpretation:** Where leveraged positions would be forced closed if price got there, by estimate.
 - **Limitations:** An estimate from public open interest, not exchange order data: actual leverage and stops are unknown. Not a liquidation heatmap.
 
+### Funding rate (daily) — `positioning.funding@1`
+
+- **Category:** positioning · **Output:** observation · **Unit:** % per funding interval · **Scope:** crypto_asset
+- **Timeframes:** 1D · **Data:** derivatives
+- **Parameters:** `days` = 7 (days averaged or compared); `lookback` = 365 (days of history the reading is ranked against)
+- **Calculation:** From the stored daily funding rate of the coin's main perpetual market (the close of each finished UTC day): the latest day, the average over the last `days` days, and where that average ranks among every `days`-day average in the last `lookback` days (0 to 100). Crowded longs when it ranks 90 or more and is positive; crowded shorts when it ranks 10 or less and is negative; otherwise neutral.
+- **Interpretation:** Funding is what traders betting on a rise pay those betting on a fall (or the other way round when negative) to keep their futures open. Unusually high funding means many are betting the same way; crowded markets can unwind sharply. It is a reading of positioning, not a forecast.
+- **Limitations:** One market (the coin's largest stablecoin perpetual on Binance, Bybit or OKX), not every venue. Rates are per funding interval, usually 8 hours, as the exchange reports them. History before Angstrom collected it was filled in from Coinalyze's daily record.
+
+### Long/short account ratio (daily) — `positioning.long_short@1`
+
+- **Category:** positioning · **Output:** observation · **Unit:** longs per short · **Scope:** crypto_asset
+- **Timeframes:** 1D · **Data:** derivatives
+- **Parameters:** `days` = 7 (days averaged or compared); `lookback` = 365 (days of history the reading is ranked against)
+- **Calculation:** From the stored daily long/short account ratio (accounts betting on a rise per account betting on a fall, the close of each finished UTC day): the latest day, its change over `days` days, and where the latest ranks among the last `lookback` days (0 to 100). More longs than usual when it ranks 90 or more; more shorts than usual when 10 or less; otherwise usual.
+- **Interpretation:** Counts accounts, not money: many small accounts betting one way can sit against a few large ones. Traders often read an unusually long-heavy crowd as a sign of fragile positioning.
+- **Limitations:** One exchange's accounts (the market Coinalyze reports a ratio for). History before Angstrom collected it was filled in from Coinalyze's daily record.
+
 ### Liquidations (24h) — `positioning.liquidations@1`
 
 - **Category:** positioning · **Output:** observation · **Unit:** USD · **Scope:** crypto_asset

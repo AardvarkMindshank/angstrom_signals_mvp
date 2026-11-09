@@ -60,7 +60,7 @@ See `docs/signal_library_catalogue.md` (generated from the registry, so it alway
 | Regime | `regime.state@1` (existing rules unchanged), `regime.observation@1` (ADX and its change, efficiency ratio, ATR% and band-width percentiles, compression/expansion, in-transition flag) |
 | Volume | `volume.cmf@1`, `volume.relative@1` |
 | Capital flows | `flows.btc_etf@1` (latest, 5- and 20-session sums, acceleration, per fund), `flows.stablecoin_supply@1` (7/30-day change, acceleration) |
-| Positioning (crypto) | `positioning.oi_price@1` (OI and price change, inferred build-up/unwinding, funding, long/short), `positioning.liquidations@1`, `positioning.liquidation_levels@1` (estimates) |
+| Positioning (crypto) | `positioning.oi_price@1` (OI and price change, inferred build-up/unwinding, funding, long/short), `positioning.liquidations@1`, `positioning.liquidation_levels@1` (estimates); daily: `positioning.funding@1`, `positioning.long_short@1` (ranked against the last year; studyable) |
 
 Reused, not rebuilt: indicator columns from `scoring.calculate_indicators`; candles from `chart_data` (the chart's
 15m–1W candles, sessions and forming flag); regime rules from `regime.py`; derivatives from the stored Coinalyze
