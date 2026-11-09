@@ -100,3 +100,10 @@ def test_only_daily_sets_without_news_can_be_studied():
     four_hour["groups"][0]["snapshot"]["members"][0]["ref"]["timeframe"] = "4h"
     ok, why = wf.studyable(four_hour)
     assert not ok and "4h candles" in why
+
+
+def test_market_context_does_not_stop_a_study():
+    doc = json.loads(json.dumps(prism.demo_sets()["demo:pullback"]))
+    doc["market_context"] = [{"key": "stables", "role": "context", "subject": "market:crypto",
+                              "ref": {"id": "flows.stablecoin_supply", "version": 1, "timeframe": "1D"}}]
+    assert wf.studyable(doc) == (True, "")
