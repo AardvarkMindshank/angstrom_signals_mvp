@@ -209,6 +209,9 @@ export default function(component) {
       ".ang-table tbody tr{border-bottom:1px solid var(--ang-line);}",
       ".ang-table tr.ang-row-on{background:var(--ang-select);color:var(--ang-select-text);}",
       ".ang-table [data-sec-folded]{display:none;}",
+      // Angstrom Lattice open: at least a screen tall, so switching to a shorter tab (Groups, Sets, Prism) never
+      // forces the browser to scroll the page up and the section stays where it was.
+      ".st-key-sec_lattice_panel [data-testid='stExpanderDetails']{min-height:calc(100vh - 6rem);}",
       ".ang-table.fold-g [data-sec='g'],.ang-table.fold-s [data-sec='s']{display:none;}",
       ".ang-table.fold-g [data-sec-folded='g'],.ang-table.fold-s [data-sec-folded='s']{display:table-cell;}",
       "[data-testid='stAppViewContainer'],[data-testid='stHeader'],[data-testid='stBottom']{background:var(--ang-page) !important;}",
