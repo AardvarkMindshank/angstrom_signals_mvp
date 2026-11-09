@@ -80,7 +80,8 @@ export default function(component) {
   window.__angstromVideoLinks = true;
   // Every 🎬 link opens the player in one small window of its own beside the app (reused for the next video).
   document.addEventListener("click", (event) => {
-    const a = event.target.closest ? event.target.closest("a.ang-tv-link") : null;
+    // 🎬 links, and links to a video written by the Angstrom Assistant (…?view=video&v=…)
+    const a = event.target.closest ? event.target.closest("a.ang-tv-link, a[href*='view=video&v=']") : null;
     if (!a) return;
     event.preventDefault();
     event.stopPropagation();
@@ -120,7 +121,7 @@ def _go(st, name: str) -> None:
     st.rerun()
 
 
-def _draw_player(st) -> None:
+def _draw_player(st, on_top: bool = False) -> None:
     name = st.session_state.get(STATE) or SERIES["lattice"][1][0][0]
     v, near = info(name), neighbours(name)
     st.markdown(f"**{v['label']}** · {v['length']}")
@@ -135,6 +136,9 @@ def _draw_player(st) -> None:
     if row.button("Next", icon=":material/chevron_right:", key="tv_next", disabled=near["next"] is None,
                   help=("Next: " + info(near["next"])["label"]) if near["next"] else "This is the last video"):
         _go(st, near["next"])
+    if on_top and hasattr(st, "components") and hasattr(st.components, "v2"):
+        with row:
+            _keep_on_top(st)
     st.video(v["url"], autoplay=True)
     with st.expander("All videos", icon=ICON):
         for key, (series, videos) in SERIES.items():
@@ -149,6 +153,43 @@ def _draw_player(st) -> None:
                "financial advice." % v["url"])
 
 
+_ON_TOP_JS = """
+export default function(component) {
+  const { parentElement } = component;
+  const button = parentElement.querySelector("button");
+  if (!button) return;
+  if (!document.pictureInPictureEnabled) { button.style.display = "none"; return; }
+  if (button.dataset.ready) return;
+  button.dataset.ready = "1";
+  // Picture in picture: the browser's own small video window that stays on top of every other window.
+  button.addEventListener("click", async () => {
+    const video = document.querySelector("video");
+    if (!video) return;
+    try {
+      if (document.pictureInPictureElement) await document.exitPictureInPicture();
+      else { await video.requestPictureInPicture(); if (video.paused) video.play().catch(() => {}); }
+    } catch (e) { button.title = "This browser would not keep the video on top: " + e.message; }
+  });
+}
+"""
+_ON_TOP_HTML = ("<button type='button' class='ang-ontop' title='Keep on top: the video moves to a small window that "
+                "stays above every other window while you work in the app (picture in picture). Click again to bring "
+                "it back.'><svg viewBox='0 0 24 24' width='16' height='16' fill='currentColor' aria-hidden='true'>"
+                "<path d='M19 11h-8v6h8v-6zm4 8V4.98C23 3.88 22.1 3 21 3H3c-1.1 0-2 .88-2 1.98V19c0 1.1.9 2 2 2h18"
+                "c1.1 0 2-.9 2-2zm-2 .02H3V4.97h18v14.05z'/></svg><span>Keep on top</span></button>")
+_ON_TOP_CSS = (".ang-ontop{display:inline-flex;align-items:center;gap:6px;height:2.5rem;padding:0 12px;"
+               "border-radius:.5rem;border:1px solid rgba(128,128,128,.35);background:transparent;color:inherit;"
+               "font:inherit;cursor:pointer}.ang-ontop:hover{border-color:#f5a524}")
+_ON_TOP = []
+
+
+def _keep_on_top(st) -> None:
+    if not _ON_TOP:
+        _ON_TOP.append(st.components.v2.component("training_video_on_top", html=_ON_TOP_HTML, css=_ON_TOP_CSS,
+                                                  js=_ON_TOP_JS, isolate_styles=False))
+    _ON_TOP[0](key="tv_on_top")
+
+
 def render_popout(st, name: str | None) -> None:
     """The player alone in its own window (?view=video&v=<name>)."""
     if STATE not in st.session_state:
@@ -158,7 +199,7 @@ def render_popout(st, name: str | None) -> None:
         except KeyError:
             pass
     st.markdown("#### 🎬 Training video")
-    _draw_player(st)
+    _draw_player(st, on_top=True)
 
 
 def link(st, name: str, key: str | None = None) -> None:

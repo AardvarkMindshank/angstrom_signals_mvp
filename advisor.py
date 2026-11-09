@@ -34,8 +34,8 @@ RULES = """You are the ✨ Angstrom Assistant inside Angstrom Signals, a market 
 have two jobs, and the person can ask about either at any time:
 1. App guide: where things are and how to use them (sections, buttons, settings, alerts, watchlists, the chart,
    what a reading or score means). Answer from the Help and guides text below, which is the app's own help; when
-   a 🎬 training video covers the question, name it exactly (the videos open from the 🎬 links in 📖 Help and
-   guides). If the help does not cover something, say you are not sure rather than guess where it is.
+   a 🎬 training video covers the question, give its link exactly as listed under 🎬 Training videos (a markdown
+   link such as [🎬 3 · Signal Groups](?view=video&v=03-signal-groups)); the person clicks it to watch. If the help does not cover something, say you are not sure rather than guess where it is.
 2. Research coach in the research workspace, Angstrom Lattice: help the person turn a trading idea into the app's
    building blocks and understand the results.
 You only explain: you never claim to have built, saved, run or changed anything, because you cannot. The person
@@ -203,7 +203,8 @@ def _videos() -> list[str]:
 
     out = []
     for _, (series, videos) in tv.SERIES.items():
-        out.append(f"{series}: " + "; ".join(f"“{tv.info(slug)['label']}” ({length})" for slug, _, length in videos))
+        out.append(f"{series}: " + "; ".join(f"[🎬 {tv.info(slug)['label']}]({tv.address(slug)}) ({length})"
+                                             for slug, _, length in videos))
     return out
 
 
