@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 
 import signal_library as sl
 
-from . import decision, lineage, replay, rules
+from . import decision, lineage, replay, rules, sequence
 from .evaluate import AVAILABLE, _ref, evaluate_group
 from .validate import validate_set
 
@@ -32,28 +32,9 @@ def scannable(doc: dict) -> bool:
     return isinstance(doc, dict) and doc.get("decision") is not None
 
 
-def evaluate_set(doc: dict, ctx: sl.DataContext, *, market_context=None, data_mode: str = "live",
-                 subject_context=None) -> dict:
-    """`market_context(scope)` returns a DataContext for a market subject such as "market:bitcoin".
-    `subject_context(kind, asset_id)` returns a DataContext for a fixed subject (E4, lattice_prism.md §4.4), read at
-    the same moment as `ctx`. Without it, items with a fixed subject are unavailable and their predicates unknown."""
-    now = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
-    base = {"name": doc.get("name"), "subject": ctx.subject, "data_mode": data_mode, "evaluated_at": now,
-            "lineage_version": doc.get("lineage_version"), "score": None}
-    pit = data_mode == replay.POINT_IN_TIME_MODE
-    if data_mode not in ("live", replay.POINT_IN_TIME_MODE):
-        return {**base, "status": "unsupported", "reason": f"Unknown data mode {data_mode!r}."}
-    if pit:
-        problem = replay.context_problem(ctx, None)
-        if problem:
-            return {**base, "status": "unsupported", "reason": problem}
-        base["as_of"] = ctx.as_of.isoformat()
-        base["replay_mode"] = ctx.replay.mode
-    elif getattr(ctx, "replay", None) is not None:
-        return {**base, "status": "unsupported", "reason": "A replay context needs data_mode='point_in_time'."}
-    errors = validate_set(doc)
-    if errors:
-        return {**base, "status": "invalid", "errors": errors}
+def _parts(doc: dict, ctx, subject_context, data_mode: str, pit: bool, keep: tuple | None = None):
+    """(Group entries, standalone items, their refs, their results) at ctx's moment. keep: (Group keys, standalone
+    keys) to read, for the earlier closes of a sequence; everything when None."""
     shared: dict = {}
     by_subject: dict = {}        # fixed subjects: their own contexts and shared results, never mixed with ctx's
     subject_problem = {}
@@ -77,6 +58,8 @@ def evaluate_set(doc: dict, ctx: sl.DataContext, *, market_context=None, data_mo
 
     groups = []
     for g in doc.get("groups") or []:
+        if keep is not None and g["key"] not in keep[0]:
+            continue
         g_ctx, g_shared = context_for(g)
         entry = {"key": g["key"], "provenance": g.get("provenance")}
         if g.get("subject"):
@@ -90,8 +73,7 @@ def evaluate_set(doc: dict, ctx: sl.DataContext, *, market_context=None, data_mo
                                              data_mode=data_mode, as_of=ctx.as_of if pit else None)
         groups.append(entry)
 
-    standalone = []
-    items = list(doc.get("standalone") or [])
+    items = [i for i in doc.get("standalone") or [] if keep is None or i["key"] in keep[1]]
     refs = {i["key"]: _ref(i) for i in items}
     results_for: dict = {}
     for i in items:
@@ -105,6 +87,73 @@ def evaluate_set(doc: dict, ctx: sl.DataContext, *, market_context=None, data_mo
         if ref.instance_key not in i_shared:
             i_shared.update(sl.evaluate([ref], i_ctx))
         results_for[i["key"]] = i_shared[ref.instance_key]
+    return groups, items, refs, results_for
+
+
+def _members(items, refs, results_for, table) -> rules.Context:
+    members = {}
+    for i in items:
+        res = results_for[i["key"]]
+        members[i["key"]] = {"available": res.status in AVAILABLE, "value": res.value,
+                             "instance": refs[i["key"]].instance_key, "roots": set(table[refs[i["key"]].id])}
+    return rules.Context(members, None, set(), {m["instance"]: m["roots"] for m in members.values()},
+                         lambda key, event: None)
+
+
+def _past(doc: dict, ctx, earlier, data_mode: str, pit: bool, table, cache: dict | None = None) -> list | None:
+    """The earlier closes a sequence reads, newest first, as (groups, members); None for a close that could not be
+    read. None when there is no way to read earlier closes here. cache: day -> reading, kept by a caller that works
+    out many days in a row (each earlier close is then read once)."""
+    n = sequence.longest(doc.get("decision"))
+    if not n or earlier is None:
+        return None
+    keep = sequence.needs(doc["decision"]["rule"])
+    days = sequence.closes(ctx, n)
+    if not days:                       # the scanned asset's own candles could not be read
+        return None
+    out = []
+    for day in days[1:]:
+        if cache is not None and day in cache:
+            out.append(cache[day])
+            continue
+        try:
+            past_ctx, past_subjects = earlier(day)
+            groups, items, refs, results_for = _parts(doc, past_ctx, past_subjects, data_mode, pit, keep)
+            got = ({g["key"]: g["result"] for g in groups}, _members(items, refs, results_for, table))
+        except Exception:
+            got = None
+        if cache is not None:
+            cache[day] = got
+        out.append(got)
+    return out
+
+
+def evaluate_set(doc: dict, ctx: sl.DataContext, *, market_context=None, data_mode: str = "live",
+                 subject_context=None, earlier=None, earlier_cache: dict | None = None) -> dict:
+    """`market_context(scope)` returns a DataContext for a market subject such as "market:bitcoin".
+    `subject_context(kind, asset_id)` returns a DataContext for a fixed subject (E4, lattice_prism.md §4.4), read at
+    the same moment as `ctx`. Without it, items with a fixed subject are unavailable and their predicates unknown.
+    `earlier(day)` returns (context, subject_context) at the close of the earlier daily candle starting `day`, read as
+    known then; sequences need it (docs/design/sequences.md). Without it, every sequence is undecided."""
+    now = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    base = {"name": doc.get("name"), "subject": ctx.subject, "data_mode": data_mode, "evaluated_at": now,
+            "lineage_version": doc.get("lineage_version"), "score": None}
+    pit = data_mode == replay.POINT_IN_TIME_MODE
+    if data_mode not in ("live", replay.POINT_IN_TIME_MODE):
+        return {**base, "status": "unsupported", "reason": f"Unknown data mode {data_mode!r}."}
+    if pit:
+        problem = replay.context_problem(ctx, None)
+        if problem:
+            return {**base, "status": "unsupported", "reason": problem}
+        base["as_of"] = ctx.as_of.isoformat()
+        base["replay_mode"] = ctx.replay.mode
+    elif getattr(ctx, "replay", None) is not None:
+        return {**base, "status": "unsupported", "reason": "A replay context needs data_mode='point_in_time'."}
+    errors = validate_set(doc)
+    if errors:
+        return {**base, "status": "invalid", "errors": errors}
+    groups, items, refs, results_for = _parts(doc, ctx, subject_context, data_mode, pit)
+    standalone = []
     for i in items:
         entry = {"key": i["key"], "label": i.get("label"), "role": i["role"], "signal": results_for[i["key"]].as_dict()}
         if i.get("subject"):
@@ -155,14 +204,10 @@ def evaluate_set(doc: dict, ctx: sl.DataContext, *, market_context=None, data_mo
            "diagnostics": diagnostics}
     if doc.get("decision") is not None:
         # Optional (docs/design/lattice_prism.md §4.2): only Sets that define a decision gain this key.
-        members = {}
-        for i in items:
-            res = results_for[i["key"]]
-            members[i["key"]] = {"available": res.status in AVAILABLE, "value": res.value,
-                                 "instance": refs[i["key"]].instance_key, "roots": set(table[refs[i["key"]].id])}
-        mctx = rules.Context(members, None, set(), {m["instance"]: m["roots"] for m in members.values()},
-                             lambda key, event: None)
-        out["decision"] = decision.evaluate(doc["decision"], {g["key"]: g["result"] for g in groups}, mctx)
+        mctx = _members(items, refs, results_for, table)
+        out["decision"] = decision.evaluate(doc["decision"], {g["key"]: g["result"] for g in groups}, mctx,
+                                            _past(doc, ctx, earlier, data_mode, pit, table,
+                                                  earlier_cache))
     if pit:
         out["completeness"] = replay.set_completeness(out, ctx)
     return out

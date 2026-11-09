@@ -75,19 +75,28 @@ def daily_answers(doc: dict, frame: pd.DataFrame, kind: str, asset_id: str, *, s
     if first.tzinfo is None and index.tz is not None:
         first = first.tz_localize(index.tz)
     out = []
-    for day in index[index >= first]:
-        ctx, last = context_at(frame, kind, day, asset_id, history)
-        if pd.Timestamp(last) != pd.Timestamp(day):
-            continue
+    cache: dict = {}           # sequences: each earlier close is read once, however many later days look back to it
 
-        def subject(k, i, day=day):
+    def subject_at(day):
+        def subject(k, i):
             other = subjects.get((k, i))
             if other is None:
                 raise ValueError(f"No saved daily history for {i}.")
             return context_at(other, k, day, i)[0]
+        return subject
 
+    def earlier(day):
+        return context_at(frame, kind, day, asset_id, history)[0], subject_at(day)
+
+    for day in index[index >= first]:
+        ctx, last = context_at(frame, kind, day, asset_id, history)
+        if pd.Timestamp(last) != pd.Timestamp(day):
+            continue
+        if len(cache) > 64:
+            for old in sorted(cache)[:-32]:
+                del cache[old]
         try:
-            result = sg.evaluate_set(doc, ctx, subject_context=subject)
+            result = sg.evaluate_set(doc, ctx, subject_context=subject_at(day), earlier=earlier, earlier_cache=cache)
             answer = prism.row("", result, "")["answer"]
         except Exception:
             answer = "unknown"

@@ -72,13 +72,18 @@ def reconstruct(supabase, kind: str, body: dict, asset_kind: str, asset_id: str,
     if as_of >= now:
         return title, kind, {"data_mode": "point_in_time"}, None, "Choose a time in the past."
     try:
-        run = display_run(supabase, max_steps=1, shortcut=True)   # certified slicing only (approved 4 Nov)
+        import prism
+
+        run = display_run(supabase, max_steps=prism.steps_needed(body) if kind != "group" else 1,
+                          shortcut=True)   # certified slicing only (approved 4 Nov)
         ctx = run.context(asset_kind, asset_id, as_of)
         if kind == "group":
             result = sg.evaluate_group(body, ctx, data_mode="point_in_time", as_of=as_of)
         else:
             result = sg.evaluate_set(body, ctx, data_mode="point_in_time",
-                                     market_context=lambda scope: run.context("market", scope.split(":", 1)[1], as_of))
+                                     market_context=lambda scope: run.context("market", scope.split(":", 1)[1], as_of),
+                                     subject_context=lambda k, i: run.context(k, i, as_of),
+                                     earlier=prism.earlier_from(run, asset_kind, asset_id))
         return title, kind, result, run.record(), None
     except ReplayRefused as exc:
         return title, kind, {"data_mode": "point_in_time"}, None, str(exc)

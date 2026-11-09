@@ -155,8 +155,12 @@ def row(asset_name: str, result: dict, path: str) -> dict:
     how_sure, text = reason(decision, _missing(result))
     lines = {l["path"]: f"{VALUE_ICON[l['value']]} {l['reading'] if l['reading'] is not None else 'missing'}"
              for l in decision["lines"]}
-    return {"asset": asset_name, "answer": decision["answer"], "how_sure": how_sure, "reason": text,
-            "available": available, "available_detail": detail, "lines": lines, "path": path}
+    out = {"asset": asset_name, "answer": decision["answer"], "how_sure": how_sure, "reason": text,
+           "available": available, "available_detail": detail, "lines": lines, "path": path}
+    armed = [q for q in decision.get("sequences") or [] if q["state"] == "armed"]
+    if armed and decision["answer"] != "yes":     # A seen, B can still come in time: not a match, shown beside it
+        out["armed"] = {"left": min(q["left"] for q in armed), "text": "; ".join(q["text"] for q in armed)}
+    return out
 
 
 def columns(doc: dict) -> list[tuple[str, str]]:
@@ -165,8 +169,11 @@ def columns(doc: dict) -> list[tuple[str, str]]:
 
 
 def _walk(rule: dict, path: str):
-    from signal_groups.decision import _choice_text, _num_text
+    from signal_groups.decision import _choice_text, _num_text, rule_text
 
+    if "sequence" in rule:
+        yield path, rule_text(rule)
+        return
     for combo in ("all", "any"):
         if combo in rule:
             for i, sub in enumerate(rule[combo]):
@@ -193,10 +200,39 @@ def _walk(rule: dict, path: str):
 
 # ----------------------------------------------------------------------------------------------- running
 
+def steps_needed(doc: dict) -> int:
+    """Replay time steps one run of `doc` may need: 1, or for a sequence its earlier closes too (coins and shares
+    close at different times, so up to two sets of them)."""
+    from signal_groups import sequence
+
+    n = sequence.longest(doc.get("decision") if isinstance(doc, dict) else None)
+    return 1 + 2 * (n + 1) if n else 1
+
+
+def _cutoff(run, kind: str, asset_id: str, day) -> pd.Timestamp:
+    """When the daily candle of `asset_id` starting `day` closed, from the run's own candles."""
+    history = run.history(kind, asset_id, "1D")
+    pos = history.raw.index.get_indexer([pd.Timestamp(day).tz_convert("UTC") if pd.Timestamp(day).tzinfo
+                                         else pd.Timestamp(day).tz_localize("UTC")])[0]
+    if pos < 0:
+        raise ValueError(f"No daily candle starting {day} in this data.")
+    return pd.Timestamp(int(history.ends[pos]), tz="UTC")
+
+
+def earlier_from(run, kind: str, asset_id: str):
+    """earlier(day) for evaluate_set: the asset (and its pinned lines) reconstructed at an earlier daily close."""
+    def earlier(day):
+        t = _cutoff(run, kind, asset_id, day)
+        return run.context(kind, asset_id, t), (lambda k, i: run.context(k, i, t))
+    return earlier
+
+
 def run_now(doc: dict, assets: list[tuple[str, str, str]], *, live_context, market_context=None,
-            replay=None, progress=None) -> list[dict]:
+            replay=None, progress=None, earlier_run=None) -> list[dict]:
     """Evaluate `doc` on each (kind, id, name). Live when `replay` is None; otherwise `replay` is
-    (ReplayRun, as_of) and each asset is reconstructed at that moment (one replay step for all assets)."""
+    (ReplayRun, as_of) and each asset is reconstructed at that moment (one replay step for all assets).
+    Sequences read earlier closes as reconstructions: from the replay's run, or in live mode from `earlier_run`
+    (without one, a live sequence is undecided)."""
     if not sg.scannable(doc):
         raise ValueError("This Set has no decision, so Prism cannot scan it. Add a decision first.")
     errors = sg.validate_set(doc)
@@ -208,7 +244,8 @@ def run_now(doc: dict, assets: list[tuple[str, str, str]], *, live_context, mark
     for n, (kind, asset_id, name) in enumerate(assets):
         if replay is None:
             result = sg.evaluate_set(doc, live_context(kind, asset_id), market_context=market_context,
-                                     subject_context=live_context)        # E4: a fixed asset, read live too
+                                     subject_context=live_context,        # E4: a fixed asset, read live too
+                                     earlier=earlier_from(earlier_run, kind, asset_id) if earlier_run else None)
             path = "Live"
         else:
             run, as_of = replay
@@ -216,7 +253,8 @@ def run_now(doc: dict, assets: list[tuple[str, str, str]], *, live_context, mark
                 ctx = run.context(kind, asset_id, as_of)
                 result = sg.evaluate_set(doc, ctx, data_mode="point_in_time",
                                          market_context=lambda scope: run.context("market", scope.split(":", 1)[1], as_of),
-                                         subject_context=lambda k, i: run.context(k, i, as_of))   # same moment T
+                                         subject_context=lambda k, i: run.context(k, i, as_of),   # same moment T
+                                         earlier=earlier_from(run, kind, asset_id))
             except Exception as exc:   # a refused reconstruction is reported for that asset only
                 result = {"status": "unsupported", "reason": str(exc)[:200]}
             path = f"Reconstruction as of {pd.Timestamp(as_of).strftime('%d %b %Y %H:%M')} UTC"

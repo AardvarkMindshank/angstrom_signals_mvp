@@ -116,7 +116,8 @@ def evaluate(spec: dict, assets: list[tuple], at: pd.Timestamp, run) -> dict:
                             "label": (result.get("outcome") or {}).get("label"), "why": tc._group_why(result)}
             else:
                 result = sg.evaluate_set(spec["doc"], ctx, data_mode="point_in_time",
-                                         subject_context=lambda k, i: run.context(k, i, at))
+                                         subject_context=lambda k, i: run.context(k, i, at),
+                                         earlier=prism.earlier_from(run, kind, asset_id))
                 row = prism.row(label, result, "")
                 out[key] = {"answer": row["answer"], "why": row.get("reason") or "", "available": row.get("available")}
         except Exception as exc:
@@ -182,8 +183,12 @@ def run_from_worker(supabase, user_prefs: list[dict], *, now=None, log=print, cl
             if clock() - started > BUDGET_SECONDS:
                 log("Table columns: the rest wait for the next pass (time budget used).")
                 break
-            run = runs.get(at) or display_run(None, max_steps=1, shortcut=True)
-            runs[at] = run
+            import prism
+
+            steps = prism.steps_needed(entry["spec"]["doc"])       # a sequence's earlier closes get a run of their own
+            run_key = at if steps == 1 else (at, h)
+            run = runs.get(run_key) or display_run(None, max_steps=steps, shortcut=True)
+            runs[run_key] = run
             for key, answer in evaluate(entry["spec"], due, at, run).items():
                 rows.append({"def_hash": h, "asset_key": key, "cutoff": at.isoformat(), "payload": answer,
                              "computed_at": datetime.now(timezone.utc).isoformat()})

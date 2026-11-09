@@ -293,9 +293,14 @@ def folded_cell(part: str, cells: list[dict]) -> str:
 
 
 def daily_only(doc: dict | None) -> bool:
-    """True when every member reads daily candles (the tables have stored daily bars only)."""
+    """True when every member reads daily candles (the tables have stored daily bars only). A Set with a sequence
+    reads earlier closes as reconstructions, so it is worked out in the background (column_answers) too."""
     if not doc:
         return True
+    from signal_groups import sequence
+
+    if sequence.longest(doc.get("decision")):
+        return False
     try:
         refs = [m["ref"] for m in doc.get("members") or []]
         for g in doc.get("groups") or []:

@@ -333,7 +333,7 @@ def default_evaluate(supabase):
     def evaluate(doc, assets, cutoff):
         from signal_library.replay_display import display_run
 
-        run = display_run(supabase, max_steps=1, shortcut=True)
+        run = display_run(supabase, max_steps=prism.steps_needed(doc), shortcut=True)
         rows = prism.run_now(doc, assets, live_context=None, replay=(run, cutoff))
         return rows, run.record()
     return evaluate
@@ -393,8 +393,8 @@ def run_due_scans(store, *, watchlists: dict, prefs: dict, evaluate, now=None, b
                 store.clear_quiet(scan["id"])
             store.finish(run_id, {
                 "status": "ok", "finished_at": datetime.now(timezone.utc).isoformat(), "late_seconds": late,
-                "results": [{k: r[k] for k in ("kind", "id", "asset", "answer", "how_sure", "reason", "available")}
-                            for r in rows],
+                "results": [{k: r[k] for k in ("kind", "id", "asset", "answer", "how_sure", "reason", "available",
+                                               "armed") if k in r} for r in rows],
                 "opened": opens, "released": releases, "record": record, "set_version": scan.get("set_version")})
             store.touch(scan["id"], now)
             summary["ran"] += 1

@@ -289,6 +289,8 @@ def view(scan: dict, runs: list[dict], latched: list[str], choices: dict, assets
 def _result_row(r: dict) -> dict:
     """Asset, answer, deciding line, and the data-completeness mark (● complete, ◐ partial, ○ none)."""
     out = {"asset": r.get("asset"), "answer": r.get("answer"), "reason": r.get("reason")}
+    if r.get("armed"):
+        out["armed"] = r["armed"]
     if r.get("available"):
         icon, words = perspectives.data_mark(r["available"])
         detail = r.get("available_detail") or ""

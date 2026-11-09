@@ -440,6 +440,18 @@ export default function(component) {
   const bySource = {};
   groupsAvail.forEach((g) => { bySource[g.source] = g; });
   let model = JSON.parse(JSON.stringify(state.model || {groups: [], standalone: [], lines: []}));
+  // Remove the lines that test something being removed, inside ANY and THEN boxes too; empty boxes go.
+  function dropLines(lines, gone) {
+    return (lines || []).map((l) => {
+      if (l.seq) {
+        const q = Object.assign({}, l.seq);
+        ["first", "then", "cancel"].forEach((p) => { q[p] = (q[p] || []).filter((x) => !gone(x)); });
+        return (q.first.length || q.then.length) ? {seq: q} : null;
+      }
+      if (l.any) { const a = l.any.filter((x) => !gone(x)); return a.length ? {any: a} : null; }
+      return gone(l) ? null : l;
+    }).filter((l) => l);
+  }
   let query = (window.__latSetQuery || "");
 
   Array.from(parentElement.children).filter((c) => c.classList && c.classList.contains("lat")).forEach((c) => c.remove());
@@ -607,7 +619,7 @@ export default function(component) {
     card.appendChild(subjectPicker(g, info.name));
     card.appendChild(button("✕", "Remove " + info.name, () => {
       model.groups.splice(i, 1);
-      model.lines = (model.lines || []).filter((l) => (l.any || [l]).every((x) => x.group !== g.key));
+      model.lines = dropLines(model.lines, (x) => x.group === g.key);
       send(); }, "sq del"));
     drop.appendChild(card);
   });
@@ -631,7 +643,7 @@ export default function(component) {
     });
     card.appendChild(button("✕", "Remove " + s.name, () => {
       model.standalone.splice(i, 1);
-      model.lines = (model.lines || []).filter((l) => (l.any || [l]).every((x) => x.member !== m.key));
+      model.lines = dropLines(model.lines, (x) => x.member === m.key);
       send(); }, "sq del"));
     drop.appendChild(card);
   });
@@ -696,7 +708,43 @@ export default function(component) {
   all.appendChild(ah);
   if (!targets.length) all.appendChild(el("div", "muted", "Add a Group or a Condition signal first; then its readings can be tested here."));
   (model.lines || []).forEach((line, i) => {
-    if (line.any) {
+    if (line.seq) {
+      const q = line.seq;
+      const box = el("div", "fixed");
+      box.style.flexDirection = "column"; box.style.alignItems = "stretch"; box.style.borderColor = "#7c3aed";
+      const head = el("div", "hd");
+      head.appendChild(el("span", "lbl", "⏭ THEN"));
+      head.appendChild(el("span", "muted", "First, on an earlier close; then, within the days you choose."));
+      head.appendChild(button("🗑", "Remove this THEN box", () => { model.lines.splice(i, 1); send(); }, "sq"));
+      box.appendChild(head);
+      const part = (key, title, hint, addText) => {
+        const h = el("div", "hd");
+        if (title) h.appendChild(el("span", "lbl", title));
+        h.appendChild(el("span", "muted", hint));
+        box.appendChild(h);
+        q[key] = q[key] || [];
+        q[key].forEach((l, j) => box.appendChild(lineRow(l, () => { q[key].splice(j, 1); send(); })));
+        box.appendChild(button(addText, hint, () => { const f = fresh(); if (f) { q[key].push(f); send(); } }));
+      };
+      part("first", "1 · First", "All of these held on an earlier daily close.", "+ First line");
+      const w = el("div", "hd");
+      w.appendChild(el("span", "lbl", "2 · Then, within"));
+      const days = el("input"); days.type = "number"; days.min = 1; days.max = 20; days.value = q.within || 5;
+      days.style.width = "4em"; days.setAttribute("aria-label", "Within this many closed daily candles");
+      days.title = "Closed daily candles of the scanned asset: every day for coins, trading days for shares (1 to 20).";
+      days.addEventListener("change", () => { q.within = Math.min(20, Math.max(1, parseInt(days.value, 10) || 5)); send(); });
+      w.appendChild(days);
+      w.appendChild(el("span", "muted", "daily closes"));
+      box.appendChild(w);
+      part("then", "", "All of these hold on a later close.", "+ Then line");
+      if ((q.cancel || []).length) {
+        part("cancel", "3 · Cancel if", "If all of these hold on a close after First, that First no longer counts.", "+ Cancel line");
+      } else {
+        box.appendChild(button("+ Cancel if…", "Optional: a reading that, if it happens after First, cancels it",
+                               () => { const f = fresh(); if (f) { q.cancel = [f]; send(); } }));
+      }
+      all.appendChild(box);
+    } else if (line.any) {
       const anyBox = el("div", "fixed");
       anyBox.style.flexDirection = "column"; anyBox.style.alignItems = "stretch";
       const head = el("div", "hd");
@@ -714,14 +762,20 @@ export default function(component) {
   const adds = el("div", "hd");
   const addLine = button("+ Line", "Add a line that must hold", () => { const f = fresh(); if (f) { model.lines = model.lines || []; model.lines.push(f); send(); } });
   const addAny = button("+ ANY (OR) box", "Add a box where any one of its lines is enough", () => { const f = fresh(); if (f) { model.lines = model.lines || []; model.lines.push({any: [f]}); send(); } });
+  const seqCount = (model.lines || []).filter((l) => l.seq).length;
+  const addSeq = button("+ ⏭ THEN box", seqCount >= 2 ? "At most 2 THEN boxes in a Set"
+                        : "A then B: First on an earlier close, then Then within N daily closes",
+                        () => { const f = fresh(), g = fresh(); if (f) { model.lines = model.lines || [];
+                                model.lines.push({seq: {first: [f], then: [g], within: 5, cancel: []}}); send(); } });
   addLine.disabled = addAny.disabled = !targets.length;
-  adds.appendChild(addLine); adds.appendChild(addAny);
+  addSeq.disabled = !targets.length || seqCount >= 2;
+  adds.appendChild(addLine); adds.appendChild(addAny); adds.appendChild(addSeq);
   all.appendChild(adds);
   dec.appendChild(all);
   const how = el("div", "fixed");
   how.style.flexDirection = "column"; how.style.alignItems = "flex-start";
   how.appendChild(el("div", "", "🔒 How the answer is decided (fixed)"));
-  how.appendChild(el("div", "muted", "Yes: every line holds (an ANY box: at least one of its lines)."));
+  how.appendChild(el("div", "muted", "Yes: every line holds (an ANY box: at least one of its lines; a THEN box: First on an earlier close, then Then, in time)."));
   how.appendChild(el("div", "muted", "No: at least one line fails, even if others are missing: missing data cannot rescue it."));
   how.appendChild(el("div", "muted", "Unknown: nothing fails, but something needed is missing; it names what."));
   dec.appendChild(how);

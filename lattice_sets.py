@@ -9,7 +9,10 @@ Set model:
     {"name", "purpose",
      "groups": [{"key", "source"}],                 # source: "saved:<config id>:<version>"
      "standalone": [{"key", "id", "version", "timeframe", "role"}],   # role: condition or context
-     "lines": [ line | {"any": [line, ...]} ]}       # all lines must hold (ALL); an ANY box holds if any line holds
+     "lines": [ line | {"any": [line, ...]} | {"seq": {"first": [line, ...], "then": [line, ...], "within": N,
+                                                       "cancel": [line, ...]}} ]}
+    # all lines must hold (ALL); an ANY box holds if any line holds; a THEN box (docs/design/sequences.md): its
+    # First lines all held on an earlier close, then its Then lines all hold, within N closes; Cancel is optional
 line:
     {"target": "outcome", "group", "op": "is" | "is_not", "value": outcome id}
     {"target": "score",   "group", "op": "gte" | "lte", "value": "+30"}          # shown −100..+100
@@ -26,13 +29,14 @@ import lattice_editor as le
 import perspectives
 import signal_groups as sg
 import signal_library as sl
-from signal_groups import lineage
+from signal_groups import lineage, sequence
 from signal_groups.units import score_from_display
 from signal_library import fields
 
 LINEAGE = 3
 STATUSES = {"ok": "OK", "vetoed": "vetoed", "veto_unknown": "veto unknown", "insufficient": "not enough data"}
 MAX_GROUPS, MAX_ITEMS, MAX_LINES = 10, 20, 20
+SEQ_PARTS = ("first", "then", "cancel")
 
 
 # ----------------------------------------------------------------------------------------------- what can go in
@@ -141,8 +145,21 @@ def clean_model(raw, choices: dict) -> dict:
         model["standalone"].append(entry)
     gkeys = {g["key"] for g in model["groups"]}
     mkeys = {m["key"] for m in model["standalone"]}
+    seqs = 0
     for line in (raw.get("lines") or [])[:MAX_LINES]:
-        if isinstance(line, dict) and isinstance(line.get("any"), list):
+        if isinstance(line, dict) and isinstance(line.get("seq"), dict) and seqs < sequence.MAX_SEQUENCES:
+            q = line["seq"]
+            parts = {p: [x for x in (_clean_line(l, gkeys, mkeys) for l in (q.get(p) or [])[:MAX_LINES]
+                                     if isinstance(q.get(p), list)) if x] for p in SEQ_PARTS}
+            try:
+                within = min(max(int(q.get("within")), 1), sequence.MAX_WITHIN)
+            except (TypeError, ValueError):
+                within = 5
+            if parts["first"] or parts["then"]:
+                model["lines"].append({"seq": {"first": parts["first"], "then": parts["then"], "within": within,
+                                               "cancel": parts["cancel"]}})
+                seqs += 1
+        elif isinstance(line, dict) and isinstance(line.get("any"), list):
             inner = [x for x in (_clean_line(l, gkeys, mkeys) for l in line["any"][:MAX_LINES]) if x]
             if inner:
                 model["lines"].append({"any": inner})
@@ -199,8 +216,21 @@ def to_document(model: dict, choices: dict) -> dict:
            "groups": groups, "standalone": standalone, "market_context": [],
            "notes": "Built in the Lattice editor."}
     lines = []
+
+    def joined(part):
+        preds = [_predicate(l) for l in part]
+        return preds[0] if len(preds) == 1 else {"all": preds}
+
     for line in model.get("lines") or []:
-        if "any" in line:
+        if "seq" in line:
+            q = line["seq"]
+            if not q.get("first") or not q.get("then"):
+                continue                       # an unfinished THEN box is reported by checks, never saved half-made
+            spec = {"first": joined(q["first"]), "then": joined(q["then"]), "within": q["within"]}
+            if q.get("cancel"):
+                spec["cancel"] = joined(q["cancel"])
+            lines.append({"sequence": spec})
+        elif "any" in line:
             preds = [_predicate(l) for l in line["any"]]
             lines.append(preds[0] if len(preds) == 1 else {"any": preds})
         else:
@@ -260,7 +290,12 @@ def checks(model: dict, choices: dict) -> dict:
             blocks.append("A Group in this Set can no longer be read.")
     known = {t["key"] for t in targets(model, choices)}
     for i, line in enumerate(model.get("lines") or []):
-        for l in line.get("any", [line]):
+        if "seq" in line:
+            if not line["seq"].get("first"):
+                blocks.append(f"Line {i + 1}: the THEN box needs at least one First line.")
+            if not line["seq"].get("then"):
+                blocks.append(f"Line {i + 1}: the THEN box needs at least one Then line.")
+        for l in _flat(line):
             key = (f"member:{l['member']}:{l.get('field') or ''}" if l["target"] == "member" else
                    f"condition:{l['group']}:{l['condition']}" if l["target"] == "condition" else f"{l['target']}:{l['group']}")
             if key not in known:
@@ -283,9 +318,12 @@ def checks(model: dict, choices: dict) -> dict:
         warns += _shared(model, choices)
     fixed = [x for x in (model.get("groups") or []) + (model.get("standalone") or []) if x.get("subject")]
     if fixed:
-        warns.append("Fixed assets are read at the same moment as the scanned asset. \"A, then B within N days\" "
-                     "needs a strategy, which comes later.")
-    used = {l.get("member") for line in model.get("lines") or [] for l in line.get("any", [line])}
+        warns.append("Fixed assets are read at the same moment as the scanned asset: at each close, the value known "
+                     "then (a share reads Friday's close over a weekend).")
+    if any("seq" in line for line in model.get("lines") or []):
+        warns.append("A THEN box counts closed daily candles of the scanned asset: every day for coins, trading days "
+                     "for shares. Each earlier close is read as it was known then, so scans take a little longer.")
+    used = {l.get("member") for line in model.get("lines") or [] for l in _flat(line)}
     for m in model.get("standalone") or []:
         name = le._name_of(m["id"])
         if m["role"] == "condition" and m["key"] not in used:
@@ -293,6 +331,13 @@ def checks(model: dict, choices: dict) -> dict:
         if "sentiment" in sl.REGISTRY.get(m["id"]).requires:
             warns.append(f"{name}: sentiment history starts in November 2026, so earlier dates will show it as missing.")
     return {"blocks": list(dict.fromkeys(blocks)), "warnings": list(dict.fromkeys(warns))}
+
+
+def _flat(line: dict) -> list[dict]:
+    """The plain lines inside a line, an ANY box or a THEN box."""
+    if "seq" in line:
+        return [l for p in SEQ_PARTS for l in line["seq"].get(p) or []]
+    return line.get("any", [line])
 
 
 def _shared(model: dict, choices: dict) -> list[str]:
@@ -345,7 +390,15 @@ def describe(model: dict, choices: dict) -> str:
         return f"{name} has no decision yet."
     parts = []
     for line in lines:
-        if "any" in line:
+        if "seq" in line:
+            q = line["seq"]
+            words = lambda part: " and ".join(_line_text(l, model, choices) for l in q.get(part) or []) or "(nothing yet)"
+            text = (f"{words('first')} held on an earlier close, then {words('then')} holds, within "
+                    f"{q['within']} closed daily candle{'s' if q['within'] != 1 else ''}")
+            if q.get("cancel"):
+                text += f" (unless {words('cancel')} happened in between)"
+            parts.append(text)
+        elif "any" in line:
             parts.append("any of (" + "; ".join(_line_text(l, model, choices) for l in line["any"]) + ")")
         else:
             parts.append(_line_text(line, model, choices))
@@ -412,7 +465,17 @@ def from_document(doc: dict, choices: dict) -> tuple[dict | None, str | None]:
     if rule:
         items = rule["all"] if "all" in rule else [rule]
         for item in items:
-            if "any" in item:
+            if "sequence" in item:
+                q = item["sequence"]
+                parts = {}
+                for part in SEQ_PARTS:
+                    sub = q.get(part)
+                    preds = [] if sub is None else sub["all"] if "all" in sub else [sub]
+                    parts[part] = [_line(p) for p in preds]
+                    if None in parts[part]:
+                        return None, "The decision is more complex than the editor can show yet."
+                model["lines"].append({"seq": {**parts, "within": q["within"]}})
+            elif "any" in item:
                 inner = [_line(p) for p in item["any"]]
                 if None in inner:
                     return None, "The decision is more complex than the editor can show yet."

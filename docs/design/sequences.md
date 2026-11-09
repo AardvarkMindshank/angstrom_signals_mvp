@@ -1,7 +1,10 @@
 # Sequences in Sets: "A, then B within N closed candles"
 
-Status: **draft for review, revision 1 (9 November 2026)**. Part 1 of the strategies decision recorded in the
-Strategies brief ("Decision after review (9 Nov)"). Nothing here is built yet.
+Status: **revision 1, approved by the owner and built (9 November 2026)**. Part 1 of the strategies decision recorded in
+the Strategies brief ("Decision after review (9 Nov)"). Built: the engine (`signal_groups/sequence.py`, decisions,
+Set evaluation), every place a Set is worked out (Prism run now and scheduled scans, as-of reconstructions, table
+columns, history bands, What followed), the THEN box in the Set editor, and Armed beside No in Prism results. Not yet:
+the optional "tell me when Armed" alert (§6) and the cost measured on the 86 saved assets (§7).
 
 Inputs: the Strategies design brief and the three reviews of 9 November (ChatGPT, Gemini, Grok);
 `lattice_prism.md` §4.2 (Set decisions) and §4.4 (pinned subjects); `point_in_time.md` (as-of reconstructions).
@@ -65,12 +68,13 @@ and a Set that uses it is a new Set version (new hash), as with every other edit
 
 At close c0 with earlier closes c1 … cN (c1 the most recent):
 
-1. Read B at c0. **False → No. Unknown → Unknown.** True → go on.
-2. Look for A at c1 … cN. An A at ck **counts** if no `cancel` was true at any close after ck up to c0.
-3. **Yes** if some A counts.
-4. Otherwise **Unknown** if some close could still have given a counting A: A unknown there, or A true there but a
-   later `cancel` unknown, or the close could not be read at all (too little history, a failed reconstruction).
-5. Otherwise **No**.
+1. Look for A at c1 … cN. An A at ck **counts** if no `cancel` was true at any close after ck up to c0 (a cancel on
+   A's own close does not cancel it).
+2. "Some A counts" is **true** if one does; **unknown** if none does but some close could still have given one (A
+   unknown there, or A true there but a later `cancel` unknown, or the close could not be read at all); otherwise
+   **false**. Closes that never existed (a new listing) cannot matter.
+3. The answer is "B at c0" **and** "some A counts", in the usual three-valued way: either false gives **No**
+   (so with no A anywhere the answer is No even while B is unknown); both true gives **Yes**; otherwise **Unknown**.
 
 So Unknown is never treated as met, and never silently as not met either: a gap in the window that could have
 mattered makes the answer Unknown, as everywhere else in Sets.

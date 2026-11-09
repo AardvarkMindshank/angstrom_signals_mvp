@@ -9,6 +9,8 @@ Predicates:
     {"group": g, "condition": c, "state": {"eq" | "in": ...}}  a named condition: met / not_met, active / clear
     {"group": g, "status": {"eq" | "in": ...}}                 ok / vetoed / veto_unknown / insufficient
     {"member": m, ...}                                          a standalone condition item, as in Groups
+    {"sequence": {"first": rule, "then": rule, "within": N, "cancel": rule?}}   A, then B within N closes
+                                                                (docs/design/sequences.md)
 combined with "all", "any" and "not". Counting operators are not available in decisions yet.
 
 Unknown can never become a decision: no predicate tests for "unknown"; an unknown outcome, state or score makes the
@@ -20,7 +22,7 @@ from __future__ import annotations
 
 import math
 
-from . import rules
+from . import rules, sequence
 from .outcomes import RESERVED, outcome_ids
 from .transforms import UNKNOWN
 
@@ -104,11 +106,62 @@ def _group_line(pred: dict, groups: dict) -> tuple[object, str, object]:
     return _choice(pred["status"], status), text, status
 
 
-def _node(rule: dict, groups: dict, members: rules.Context, path: str) -> dict:
+def rule_text(rule: dict) -> str:
+    """A rule in words, without evaluating it."""
+    for combo, joint in (("all", " and "), ("any", " or ")):
+        if combo in rule:
+            parts = [rule_text(r) for r in rule[combo]]
+            return parts[0] if len(parts) == 1 else "(" + joint.join(parts) + ")"
+    if "not" in rule:
+        return "NOT " + rule_text(rule["not"])
+    if "sequence" in rule:
+        q = rule["sequence"]
+        text = f"{rule_text(q['first'])}, then {rule_text(q['then'])} within {q['within']} closes"
+        return text + (f" (cancelled by {rule_text(q['cancel'])})" if q.get("cancel") else "")
+    if "group" in rule:
+        g = rule["group"]
+        if "outcome" in rule:
+            return f"{g} outcome {_choice_text(rule['outcome'])}"
+        if "score" in rule:
+            return f"{g} score {_num_text(rule['score'])}"
+        if "condition" in rule:
+            return f"{g} condition {rule['condition']} {_choice_text(rule['state'])}"
+        return f"{g} status {_choice_text(rule['status'])}"
+    field = f".{rule['field']}" if rule.get("field") else ""
+    return f"{rule['member']}{field} " + ("has a matching event" if "events" in rule else _num_text(rule))
+
+
+def _sequence(rule: dict, groups: dict, members: rules.Context, path: str, past: list | None) -> dict:
+    q = rule["sequence"]
+    n = q["within"]
+    past = [None] * n if past is None else past[:n]
+
+    def at(sub, g, m):
+        return _node(sub, g, m, path, None)["value"] if sub is not None else False
+
+    a, c = [at(q["first"], groups, members)], [at(q.get("cancel"), groups, members)]
+    for moment in past:
+        if moment is None:                         # a close that could not be read
+            a.append(UNKNOWN)
+            c.append(UNKNOWN if q.get("cancel") else False)
+        else:
+            a.append(at(q["first"], *moment))
+            c.append(at(q.get("cancel"), *moment))
+    b = at(q["then"], groups, members)
+    state = sequence.judge(q, a, b, c)
+    text = sequence.words(q, state, rule_text(q["first"]), rule_text(q["then"]))
+    line = {"path": path, "text": rule_text(rule), "reading": text, "value": _word(state["value"]),
+            "sequence": {"state": state["state"], "since": state["since"], "left": state["left"], "within": n}}
+    return {"kind": "line", "value": state["value"], "line": line}
+
+
+def _node(rule: dict, groups: dict, members: rules.Context, path: str, past: list | None = None) -> dict:
+    if "sequence" in rule:
+        return _sequence(rule, groups, members, path, past)
     for combo in ("all", "any", "not"):
         if combo in rule:
             subs = [rule["not"]] if combo == "not" else rule[combo]
-            kids = [_node(s, groups, members, f"{path}.not" if combo == "not" else f"{path}.{combo}[{i}]")
+            kids = [_node(s, groups, members, f"{path}.not" if combo == "not" else f"{path}.{combo}[{i}]", past)
                     for i, s in enumerate(subs)]
             values = [k["value"] for k in kids]
             if combo == "not":
@@ -151,12 +204,19 @@ def _lines(node: dict) -> list[dict]:
     return [line for k in node["children"] for line in _lines(k)]
 
 
-def evaluate(spec: dict, groups: dict, members: rules.Context) -> dict:
-    """`groups`: Group key -> evaluate_group result. `members`: rules.Context over the Set's standalone items."""
-    tree = _node(spec["rule"], groups, members, "decision.rule")
+def evaluate(spec: dict, groups: dict, members: rules.Context, past: list | None = None) -> dict:
+    """`groups`: Group key -> evaluate_group result. `members`: rules.Context over the Set's standalone items.
+    `past`: for sequences, the earlier closes c1, c2, … as (groups, members), or None for a close that could not be
+    read; None altogether when no earlier close can be read here (every sequence is then undecided)."""
+    tree = _node(spec["rule"], groups, members, "decision.rule", past)
     value = tree["value"]
-    return {"answer": ANSWER.get(value, "unknown"), "decisive": _decisive(tree), "lines": _lines(tree),
-            "version": spec.get("version")}
+    lines = _lines(tree)
+    out = {"answer": ANSWER.get(value, "unknown"), "decisive": _decisive(tree), "lines": lines,
+           "version": spec.get("version")}
+    found = [dict(l["sequence"], path=l["path"], text=l["reading"]) for l in lines if l.get("sequence")]
+    if found:
+        out["sequences"] = found
+    return out
 
 
 # ----------------------------------------------------------------------------- validation
@@ -173,6 +233,7 @@ def check(spec, snapshots: dict, members: dict, roots_of_member) -> tuple[list[s
         errors.append(f"decision: unknown keys {sorted(set(spec) - {'version', 'rule'})}")
     member_preds: list[tuple[str, dict]] = []
     count = [0]
+    sequences = [0]
 
     def choice_errors(where, value, allowed, what):
         if not isinstance(value, dict) or len(value) != 1 or not set(value) <= {"eq", "in"}:
@@ -189,12 +250,34 @@ def check(spec, snapshots: dict, members: dict, roots_of_member) -> tuple[list[s
         if bad:
             errors.append(f"{where}: {what} {bad} not among {list(allowed)}")
 
-    def walk(rule, where, depth):
+    def walk(rule, where, depth, inside=False):
         if depth > MAX_DEPTH:
             errors.append(f"{where}: nested deeper than {MAX_DEPTH}")
             return
         if not isinstance(rule, dict):
             errors.append(f"{where}: must be an object")
+            return
+        if "sequence" in rule:
+            q = rule["sequence"]
+            if len(rule) != 1 or not isinstance(q, dict):
+                errors.append(f"{where}: a sequence is an object on its own")
+                return
+            if inside:
+                errors.append(f"{where}: a sequence cannot sit inside another sequence")
+                return
+            sequences[0] += 1
+            extra = set(q) - {"first", "then", "within", "cancel"}
+            if extra:
+                errors.append(f"{where}.sequence: unknown keys {sorted(extra)}")
+            n = q.get("within")
+            if not isinstance(n, int) or isinstance(n, bool) or not 1 <= n <= sequence.MAX_WITHIN:
+                errors.append(f"{where}.sequence: within must be a whole number from 1 to {sequence.MAX_WITHIN}")
+            for part in ("first", "then"):
+                if part not in q:
+                    errors.append(f"{where}.sequence: needs {part}")
+            for part in sequence.PARTS:
+                if part in q:
+                    walk(q[part], f"{where}.sequence.{part}", depth + 1, True)
             return
         if any(c in rule for c in ("count_at_least", "count_distinct_sources_at_least")):
             errors.append(f"{where}: counting operators are not available in Set decisions yet")
@@ -210,7 +293,7 @@ def check(spec, snapshots: dict, members: dict, roots_of_member) -> tuple[list[s
                 errors.append(f"{where}.{c}: needs a non-empty list")
                 return
             for i, s in enumerate(subs):
-                walk(s, f"{where}.not" if c == "not" else f"{where}.{c}[{i}]", depth + 1)
+                walk(s, f"{where}.not" if c == "not" else f"{where}.{c}[{i}]", depth + 1, inside)
             return
         count[0] += 1
         if ("group" in rule) == ("member" in rule):
@@ -281,6 +364,8 @@ def check(spec, snapshots: dict, members: dict, roots_of_member) -> tuple[list[s
             choice_errors(where, rule["status"], STATUSES, "status")
 
     walk(spec.get("rule"), "decision.rule", 0)
+    if sequences[0] > sequence.MAX_SEQUENCES:
+        errors.append(f"at most {sequence.MAX_SEQUENCES} sequences in a decision")
     if count[0] > MAX_PREDICATES:
         errors.append(f"at most {MAX_PREDICATES} predicates in a decision")
     return errors, member_preds

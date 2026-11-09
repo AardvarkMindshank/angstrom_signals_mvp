@@ -15,6 +15,7 @@ CSS = lattice_component.CSS + """
 .lat.prism .pv{display:inline-flex;gap:2px;margin-left:6px;font-size:13px;vertical-align:middle}
 .lat.prism .pv span{cursor:help}
 .lat.prism .ev{margin-left:6px;font-size:13px;opacity:.75;cursor:help}
+.lat.prism .armed{margin-left:6px;font-size:12px;padding:0 5px;border-radius:8px;background:#ede9fe;color:#5b21b6;cursor:help;white-space:nowrap}
 .lat.prism .line{font-size:12px;opacity:.8;margin-top:2px}
 .lat.prism .more{font-size:12px;margin-top:2px}
 .lat.prism .more summary{cursor:pointer;opacity:.75;min-height:24px;list-style:none}
@@ -467,6 +468,13 @@ export default function(component) {
         const ans = el("td", r.answer === "yes" ? "y" : r.answer === "no" ? "n" : "u", r.answer === "yes" ? "Yes" : r.answer === "no" ? "No" : "Unknown");
         ans.title = {yes: "Yes: conditions met", no: "No: a condition failed"}[r.answer] || "Unknown: nothing failed, but some data is missing";
         if (r.data) { const d = el("span", "ev", r.data.icon); d.title = r.data.hover; d.setAttribute("aria-label", r.data.hover); ans.appendChild(d); }
+        if (r.armed) {
+          const a = el("span", "armed", "⏭ " + r.armed.left);
+          const hover = "Armed: the first step was seen; the next can still come in time (" + r.armed.left +
+                        " close" + (r.armed.left === 1 ? "" : "s") + " left). Not a match yet. " + r.armed.text;
+          a.title = hover; a.setAttribute("aria-label", hover);
+          ans.appendChild(a);
+        }
         row.appendChild(ans);
         row.appendChild(el("td", "", r.reason));
         tb.appendChild(row);

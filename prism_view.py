@@ -369,6 +369,15 @@ def _history_strip(st, scan, obj, assets) -> tuple[str, str]:
     return "ok", f"History for {shown} of {len(picked)} assets: see the chart under the scans.{more}"
 
 
+def _earlier_run(doc: dict):
+    """For a Set with a sequence, a reconstruction run that reads its earlier daily closes; None otherwise."""
+    if prism.steps_needed(doc) == 1:
+        return None
+    from signal_library.replay_display import display_run
+
+    return display_run(_SUPABASE[0], max_steps=prism.steps_needed(doc), shortcut=True)
+
+
 def _run(st, scan, obj, op, action, assets) -> tuple[str, str]:
     import prism_board as pb
 
@@ -388,7 +397,8 @@ def _run(st, scan, obj, op, action, assets) -> tuple[str, str]:
             live_context=lambda kind, aid: sl.DataContext(
                 kind, aid, derivatives_loader=_loader("derivatives"), sentiment_loader=_loader("sentiment")),
             market_context=lambda scope: sl.DataContext(
-                "market", scope.split(":", 1)[1], flows_loader=_loader("flows"), sentiment_loader=_loader("sentiment")))
+                "market", scope.split(":", 1)[1], flows_loader=_loader("flows"), sentiment_loader=_loader("sentiment")),
+            earlier_run=_earlier_run(obj["set"]))
         title = f"Run now at {pd.Timestamp.now(tz='UTC'):%d %b %H:%M} UTC"
     else:
         try:
@@ -399,13 +409,14 @@ def _run(st, scan, obj, op, action, assets) -> tuple[str, str]:
             return "error", "Choose a moment in the past."
         from signal_library.replay_display import display_run
 
-        run = display_run(_SUPABASE[0], max_steps=1, shortcut=True)
+        run = display_run(_SUPABASE[0], max_steps=prism.steps_needed(obj["set"]), shortcut=True)
         rows = prism.run_now(obj["set"], picked, live_context=None, replay=(run, as_of))
         title = f"Reconstruction at {as_of:%d %b %Y %H:%M} UTC: today's data providers, not a record of what was shown"
     counts = {a: sum(r["answer"] == a for r in rows) for a in ("yes", "no", "unknown")}
     st.session_state.setdefault("prism_results", {})[scan["id"]] = {
         "title": f"{title} · Yes {counts['yes']} · No {counts['no']} · ? {counts['unknown']}",
-        "rows": [{"asset": r["asset"], "answer": r["answer"], "reason": r["reason"]} for r in rows]}
+        "rows": [{"asset": r["asset"], "answer": r["answer"], "reason": r["reason"],
+                  **({"armed": r["armed"]} if r.get("armed") else {})} for r in rows]}
     return "ok", f"“{scan['name']}”: Yes {counts['yes']} · No {counts['no']} · Unknown {counts['unknown']}."
 
 
