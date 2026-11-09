@@ -91,4 +91,4 @@ def test_trend_reads_each_close_and_feeds_the_card(monkeypatch):
             "rows": [{"key": "a", "role": "score", "name": "a", "percent": 10, "text": "", "share": 1}]}
     wp.with_trend(item, t)
     html = wp.block_html(item)
-    assert "<svg" in html and "Mine reads neutral" in html and "→ 0 this week" in html
+    assert "why-line" in html and "Mine reads neutral" in html and "→ 0 this week" in html

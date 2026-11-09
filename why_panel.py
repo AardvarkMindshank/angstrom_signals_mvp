@@ -255,19 +255,24 @@ def items(specs: list[dict], ctx, readings: dict, subject_context=None, backgrou
 
 
 def sparkline(values: list, width: int = 140, height: int = 32) -> str:
-    """A small line of a Group's score over the last days (−100 to +100, the zero line dashed)."""
+    """A small line of a Group's score over the last days (−100 to +100, the zero line dashed), as an image: the
+    panel's HTML display removes inline SVG. Grey, readable on light and dark backgrounds."""
+    import base64
+
     pts = [(i, v) for i, v in enumerate(values) if v is not None]
     if len(pts) < 2:
         return ""
     n = max(len(values) - 1, 1)
-    y = lambda v: round(height / 2 - v / 100 * (height / 2 - 2), 1)  # noqa: E731
-    line = " ".join(f"{round(i / n * width, 1)},{y(v)}" for i, v in pts)
-    last_x, last_y = round(pts[-1][0] / n * width, 1), y(pts[-1][1])
-    return (f"<svg width='{width}' height='{height}' viewBox='0 0 {width} {height}' aria-hidden='true' "
-            f"style='overflow:visible'><line x1='0' x2='{width}' y1='{height / 2}' y2='{height / 2}' "
-            f"stroke='currentColor' stroke-opacity='.25' stroke-dasharray='3 3'/>"
-            f"<polyline points='{line}' fill='none' stroke='currentColor' stroke-opacity='.75' stroke-width='1.6' "
-            f"stroke-linejoin='round'/><circle cx='{last_x}' cy='{last_y}' r='2.4' fill='currentColor'/></svg>")
+    y = lambda v: round(height / 2 - v / 100 * (height / 2 - 3), 1)  # noqa: E731
+    line = " ".join(f"{round(i / n * (width - 4) + 2, 1)},{y(v)}" for i, v in pts)
+    last_x, last_y = round(pts[-1][0] / n * (width - 4) + 2, 1), y(pts[-1][1])
+    svg = (f"<svg xmlns='http://www.w3.org/2000/svg' width='{width}' height='{height}' viewBox='0 0 {width} {height}'>"
+           f"<line x1='0' x2='{width}' y1='{height / 2}' y2='{height / 2}' stroke='#8a8f98' stroke-opacity='.5' "
+           f"stroke-dasharray='3 3'/><polyline points='{line}' fill='none' stroke='#8a8f98' stroke-width='1.8' "
+           f"stroke-linejoin='round'/><circle cx='{last_x}' cy='{last_y}' r='2.6' fill='#8a8f98'/></svg>")
+    data = base64.b64encode(svg.encode()).decode()
+    return (f"<img class='why-line' src='data:image/svg+xml;base64,{data}' width='{width}' height='{height}' "
+            f"alt='Score over the last {len(values)} daily closes'>")
 
 
 STRIP = {"yes": ("#3f9d5a", "Yes"), "no": ("rgba(127,127,127,.28)", "No"), "unknown": ("transparent", "Unknown")}

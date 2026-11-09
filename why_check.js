@@ -34,7 +34,7 @@ const { chromium, devices } = require("playwright");
     const trend = await page.locator("[data-testid='stExpander']", { hasText: "Trend ·" }).allInnerTexts();
     check(`${label}: Trend parts in plain words`, trend.join(" ").includes("Moving averages") && trend.join(" ").includes("vs 200-day"));
     check(`${label}: no named views`, !trend.join(" ").includes("Named views"));
-    const svg = await page.locator("[data-testid='stExpander']", { hasText: "Trend ·" }).first().locator("svg polyline").count();
+    const svg = await page.locator("[data-testid='stExpander']", { hasText: "Trend ·" }).first().locator("img.why-line").count();
     check(`${label}: Trend has its 30-day line`, svg === 1);
     check(`${label}: Trend says what changed this week`, /Trend reads \w+ \([+-]?\d+\)/.test(trend.join(" ")) && trend.join(" ").includes("this week"), trend.join(" ").slice(0, 200));
     await page.locator("[data-testid='stExpander']", { hasText: "Trend ·" }).first().screenshot({ path: `${out}/${label}_trend_card.png` });
