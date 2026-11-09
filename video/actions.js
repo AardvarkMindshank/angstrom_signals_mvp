@@ -87,9 +87,10 @@ const provided = (h, name) => h.page.locator(".lat.prism .chip", { hasText: name
 // Visualize History's heading at the top of the screen, with the big chart under it (a tall chart scrolled "into view"
 // is centred, which showed only the small charts).
 async function chartTop(h) {
+  // The Visualize History heading at the top (scrollIntoView works whichever part of the page scrolls).
   await h.page.evaluate(() => {
-    const r = document.querySelector(".ang-lwc");
-    if (r) window.scrollBy({ top: r.getBoundingClientRect().top - 130, behavior: "instant" });
+    const head = [...document.querySelectorAll("h5, h4, h3")].find((x) => x.textContent.includes("Visualize History"));
+    (head || document.querySelector(".ang-lwc")).scrollIntoView({ block: "start", behavior: "instant" });
   });
   await h.wait(300);
 }
@@ -503,25 +504,23 @@ module.exports = {
     },
     panes: async (h) => {
       await h.clear();
-      await h.page.evaluate(() => { const r = document.querySelector(".ang-lwc"); if (r) window.scrollBy({ top: r.getBoundingClientRect().top + 240, behavior: "smooth" }); });
+      await h.page.evaluate(() => {
+        const label = document.querySelector('.ang-lwc-panes [data-pane="3"]');
+        if (label) label.scrollIntoView({ block: "center", behavior: "smooth" });
+      });
       await h.wait(1800);
     },
     tap: async (h) => {
-      // The third small chart, brought into view, then tapped: that asset moves to the top.
-      const pt = await h.page.evaluate(() => {
-        const r = document.querySelector(".ang-lwc"), c = r.__chart, host = r.querySelector(".ang-lwc-host").getBoundingClientRect();
-        let top = 0; const hs = c.panes().map((p) => p.getHeight());
-        for (let i = 0; i < 3; i++) top += hs[i] + 1;
-        const y = host.top + top + hs[3] / 2;
-        if (y < 80 || y > window.innerHeight - 40) window.scrollBy({ top: y - window.innerHeight / 2 });
-        return true;
+      // The third small chart (its name tag sits at its top-left), tapped in its middle: that asset moves to the top.
+      await h.page.evaluate(() => {
+        const label = document.querySelector('.ang-lwc-panes [data-pane="3"]');
+        if (label) label.scrollIntoView({ block: "center", behavior: "instant" });
       });
       await h.wait(400);
       const xy = await h.page.evaluate(() => {
-        const r = document.querySelector(".ang-lwc"), c = r.__chart, host = r.querySelector(".ang-lwc-host").getBoundingClientRect();
-        let top = 0; const hs = c.panes().map((p) => p.getHeight());
-        for (let i = 0; i < 3; i++) top += hs[i] + 1;
-        return { x: host.left + host.width / 2, y: host.top + top + hs[3] / 2 };
+        const label = document.querySelector('.ang-lwc-panes [data-pane="3"]').getBoundingClientRect();
+        const host = document.querySelector(".ang-lwc-host").getBoundingClientRect();
+        return { x: host.left + host.width / 2, y: label.top + 22 };
       });
       await h.page.mouse.move(xy.x, xy.y, { steps: 20 }); await h.wait(300);
       await h.page.mouse.click(xy.x, xy.y);
@@ -532,12 +531,13 @@ module.exports = {
     },
     years: async (h, dur) => {
       // The chart opens on ten years when every year is ready; show one year, then three, then everything.
-      const pick = (re) => h.page.getByRole("button", { name: re }).first();
-      await h.ring(pick(/1Y$/).locator("xpath=.."));
+      // The visible Years buttons (the main chart's own range buttons are hidden while its section is folded)
+      const pick = (re) => h.page.locator("button:visible", { hasText: re }).first();
+      await h.ring(pick(/^\s*1Y\s*$/).locator("xpath=.."));
       await h.wait(900); await h.clear();
-      await h.press(pick(/1Y$/)); await h.wait(Math.max(700, dur * 180));
-      await h.press(pick(/3Y$/)); await h.wait(Math.max(700, dur * 180));
-      await h.press(pick(/All$/));
+      await h.press(pick(/^\s*1Y\s*$/)); await h.wait(Math.max(700, dur * 180));
+      await h.press(pick(/^\s*3Y\s*$/)); await h.wait(Math.max(700, dur * 180));
+      await h.press(pick(/^\s*All\s*$/));
       await chartTop(h);
     },
     main: async (h) => {

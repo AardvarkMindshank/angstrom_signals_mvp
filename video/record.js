@@ -19,17 +19,16 @@ const ACTIONS = require("./actions.js");
   if (!actions) throw new Error(`No actions for ${script.slug} in video/actions.js`);
   const browser = await chromium.launch();
   // Warm up first (fonts, first run, price downloads), so the video starts on a ready page.
-  // A video can ask for no page zoom ("zoom": "none" in its series file): the page is then laid out at 1024 x 488 and
-  // the recording scaled up to the same 1280 x 610. Charts drawn on a canvas (Visualize History) measure themselves
-  // wrongly under CSS zoom, so they need this.
+  // A video can ask for no page zoom ("zoom": "none" in its series file): the page is then recorded at its normal
+  // size (smaller text). Charts drawn on a canvas (Visualize History) measure themselves wrongly under CSS zoom.
   const noZoom = script.zoom === "none";
-  const view = noZoom ? { width: 1024, height: 488 } : { width: 1280, height: 610 };
+  const view = { width: 1280, height: 610 };
   const warm = await browser.newPage({ viewport: view });
   await warm.goto(url + (actions.query || "")); await warm.waitForSelector(".lat", { timeout: 180000 }); await warm.close();
   // The app is recorded at 1280 x 610, zoomed to 125% (text 25% larger, sharp); build.py adds a 110-pixel caption
   // band underneath for a 1280 x 720 video. Only the page body is zoomed: the pointer, diagrams, cards and notes are
   // drawn outside the zoom, at real pixels.
-  const ctx = await browser.newContext({ viewport: view, deviceScaleFactor: noZoom ? 1.25 : 1,
+  const ctx = await browser.newContext({ viewport: view, deviceScaleFactor: 1,
     recordVideo: { dir: path.join(dir, "raw"), size: { width: 1280, height: 610 } } });
   await ctx.addInitScript((zoomed) => {
     // Zoom, and never scroll sideways: bringing a narrow column's content into view must not shift the page.
