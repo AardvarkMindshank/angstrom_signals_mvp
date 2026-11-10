@@ -22,14 +22,28 @@ from signal_library import loaders
 START_NEW = "new"
 
 
+def provided_groups() -> list[tuple[str, str, dict]]:
+    """[(alias, name, document)] for every Group Angstrom Signals provides, as the database holds them (the starters,
+    then the others such as Recent structure break): the same list the Signal Sets library shows."""
+    import prism
+
+    extra = prism.provided_groups()
+    out = []
+    for alias in sg.STARTERS:
+        name, doc = extra[alias] if alias in extra else (None, sg.starter(alias))
+        out.append((alias, name or doc["name"], doc))
+    out += [(alias, name, doc) for alias, (name, doc) in extra.items() if alias not in sg.STARTERS]
+    return out
+
+
 def _sources(saved: list[dict], user_id: str, current: str | None = None, provided: bool = True) -> tuple[dict, dict]:
-    """"Start from": a new Group, then the provided starters (opened as your copy), then your own Groups."""
+    """"Start from": a new Group, then the provided Groups (opened as your copy), then your own Groups."""
     import perspectives
 
     labels = {START_NEW: "➕ New Group"}
     docs: dict = {}
-    for alias in sg.STARTERS:
-        doc = sg.starter(alias)
+    for alias, name, doc in provided_groups():
+        doc = dict(doc, name=name)
         docs[f"starter:{alias}"] = (doc, None)
         if provided or current == f"starter:{alias}":     # asked for by name (Open in Lattice): shown even if hidden
             labels[f"starter:{alias}"] = f"{doc['name']} {perspectives.icons(doc)} (provided)"
@@ -144,8 +158,8 @@ def starters_html() -> str:
 
     esc = lambda t: html.escape(str(t), quote=True)
     rows = []
-    for alias in sg.STARTERS:
-        doc, more = sg.starter(alias), perspectives.explain(alias)
+    for alias, name, doc in provided_groups():
+        doc, more = dict(doc, name=name), perspectives.explain(alias)
         icons = "".join(f"<span title='{esc(c['hover'])}' aria-label='{esc(c['hover'])}' style='cursor:help'>{c['icon']}"
                         "</span>" for c in perspectives.chips(doc))
         ev_icon, ev_words = perspectives.EVIDENCE["untested"]
@@ -168,7 +182,7 @@ def starters_html() -> str:
 
 def _provided_starters(st) -> None:
     """The starter Groups, in their own folded section: copy one to start from it."""
-    with st.expander(lattice_panel.PROVIDED_TITLE + " · starter Groups", icon=":material/inventory_2:"):
+    with st.expander(lattice_panel.PROVIDED_TITLE + " · Groups", icon=":material/inventory_2:"):
         st.caption("The dashboard's own readings, as Groups. Pick one in **Start from** below to open your own copy; "
                    "the original stays as it is. Hide these in ⚙️ Settings → Show provided starters and examples.")
         st.html(starters_html())

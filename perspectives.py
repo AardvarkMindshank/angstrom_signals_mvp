@@ -65,9 +65,14 @@ def icons(doc: dict | None) -> str:
     return " ".join(ICON[k] for k in of_doc(doc))
 
 
+# The same areas in one or two words, as the signal list names its categories.
+WORD = {"trend": "Trend", "stretch": "Momentum", "volume": "Volume", "structure": "Structure", "volatility": "Regime",
+        "other": "Other assets", "sentiment": "Sentiment", "positioning": "Positioning"}
+
+
 def chips(doc: dict | None) -> list[dict]:
-    """[{icon, hover}] for screens that draw each icon with its own hover."""
-    return [{"icon": ICON[k], "hover": HOVER[k], "key": k} for k in of_doc(doc)]
+    """[{icon, hover, key, word}] for screens that draw each icon with its own hover."""
+    return [{"icon": ICON[k], "hover": HOVER[k], "key": k, "word": WORD[k]} for k in of_doc(doc)]
 
 
 # ----------------------------------------------------------------------------------------------- explanations

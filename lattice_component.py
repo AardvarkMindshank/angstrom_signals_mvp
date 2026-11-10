@@ -107,6 +107,8 @@ html.angstrom-night .lat select option{color:#f3f4f6;background:#1f2937}
 .lat .card{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;
   border:1px solid rgba(127,127,127,.3);background:rgba(127,127,127,.05)}
 .lat .card .nm{flex:1 1 160px;min-width:0;font-weight:600}
+.lat .cat.sub{font-size:10px;opacity:.55;margin:8px 0 3px 4px}
+.lat .card .nm .sub{font-weight:400;font-size:12px;opacity:.7;margin-top:1px}
 .lat .muted{opacity:.72;font-size:12px}
 .lat .pv{display:inline-flex;gap:2px;margin-left:6px;font-size:13px;vertical-align:middle}
 .lat .pv span{cursor:help}
@@ -259,6 +261,7 @@ export default function(component) {
     const card = el("div", "card");
     const nm = el("div", "nm", s.name);
     nm.title = s.hint || "";
+    if (s.category_label) nm.appendChild(el("div", "sub", s.category_label));
     card.appendChild(nm);
     const tf = el("select");
     tf.setAttribute("aria-label", "Timeframe of " + s.name);
@@ -693,9 +696,13 @@ export default function(component) {
     if (!mine.length) list.appendChild(el("div", "muted", "No saved Groups yet: save one in Signal Groups."));
     mine.forEach((g) => list.appendChild(groupChip(g)));
     list.appendChild(el("div", "cat", "Single signals"));
-    catalogue.filter((s) => !q || s.name.toLowerCase().indexOf(q) >= 0).forEach((s) => {
-      list.appendChild(chip(s.name, s.badge || s.category_label, s.hint, "signal|" + s.id, () => addSignal(s.id), "Add " + s.name + " to the Set"));
-    });
+    // Clustered under a heading for each kind, as in Signal Groups.
+    let last = null;
+    catalogue.filter((s) => !q || s.name.toLowerCase().indexOf(q) >= 0 || s.category_label.toLowerCase().indexOf(q) >= 0)
+      .forEach((s) => {
+        if (s.category_label !== last) { list.appendChild(el("div", "cat sub", s.category_label)); last = s.category_label; }
+        list.appendChild(chip(s.name, s.badge || "", s.hint, "signal|" + s.id, () => addSignal(s.id), "Add " + s.name + " to the Set"));
+      });
   }
   search.addEventListener("input", () => { query = search.value; window.__latSetQuery = query; drawLibrary(); });
   drawLibrary();
@@ -726,7 +733,10 @@ export default function(component) {
     const info = bySource[g.source] || {name: "(no longer readable)", labels: [], has_score: false};
     const card = el("div", "card");
     card.appendChild(el("span", "tag", "Group"));
-    card.appendChild(el("div", "nm", info.name));
+    const gName = el("div", "nm", info.name);          // what it looks at, in small text, as in the signal list
+    const words = (info.icons || []).map((c) => c.word).filter(Boolean);
+    if (words.length) gName.appendChild(el("div", "sub", words.join(" · ")));
+    card.appendChild(gName);
     card.appendChild(el("span", "muted", info.labels.length ? "gives label and score" : (info.has_score ? "gives score" : "")));
     card.appendChild(subjectPicker(g, info.name));
     card.appendChild(button("✕", "Remove " + info.name, () => {
@@ -739,7 +749,9 @@ export default function(component) {
     const s = byId[m.id] || {name: m.id, timeframes: [m.timeframe]};
     const card = el("div", "card");
     card.appendChild(el("span", "tag", "Signal"));
-    card.appendChild(el("div", "nm", s.name));
+    const sName = el("div", "nm", s.name);
+    if (s.category_label) sName.appendChild(el("div", "sub", s.category_label));
+    card.appendChild(sName);
     const tf = el("select");
     tf.setAttribute("aria-label", "Timeframe of " + s.name);
     s.timeframes.forEach((t) => { const o = el("option", "", t); o.value = t; if (t === m.timeframe) o.selected = true; tf.appendChild(o); });
