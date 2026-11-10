@@ -1,0 +1,131 @@
+1
+00:00:00,000 --> 00:00:03,710
+When a Set turns Yes, does anything different tend to happen next,
+
+2
+00:00:03,730 --> 00:00:05,612
+compared with ordinary days?
+
+3
+00:00:06,060 --> 00:00:10,456
+Each time a Set first turns Yes, we look at the next ten daily candles.
+
+4
+00:00:10,506 --> 00:00:12,438
+We compare them with ordinary days:
+
+5
+00:00:12,458 --> 00:00:16,886
+the same asset, the same year, and the same side of its long-term average.
+
+6
+00:00:16,936 --> 00:00:24,447
+Twenty-five coins and sixty-one large US equities, from 2014 to October 2024.
+
+7
+00:00:24,889 --> 00:00:27,472
+Every provided Set carries the result.
+
+8
+00:00:27,522 --> 00:00:30,296
+Open more, and the last line is What followed.
+
+9
+00:00:30,731 --> 00:00:32,439
+Tap it for the numbers.
+
+10
+00:00:32,489 --> 00:00:36,160
+Breakout with volume turned Yes almost nineteen hundred times.
+
+11
+00:00:36,210 --> 00:00:40,355
+Price rose a typical move before falling one fifty-one percent of the time,
+
+12
+00:00:40,375 --> 00:00:42,952
+against fifty percent on comparable days.
+
+13
+00:00:43,402 --> 00:00:46,326
+Under it, coins and equities, each on its own:
+
+14
+00:00:46,376 --> 00:00:49,599
+here, no clear difference in either, and none between them.
+
+15
+00:00:50,033 --> 00:00:52,680
+Every study ends in one of four verdicts:
+
+16
+00:00:52,730 --> 00:00:54,331
+too few to judge,
+
+17
+00:00:54,381 --> 00:00:56,025
+no clear difference,
+
+18
+00:00:56,075 --> 00:00:58,210
+some difference, not established,
+
+19
+00:00:58,260 --> 00:01:00,245
+or a consistent difference.
+
+20
+00:01:00,688 --> 00:01:03,399
+Most simple setups show no clear difference.
+
+21
+00:01:03,449 --> 00:01:08,250
+That's an honest, useful answer: they describe a situation; they don't predict one.
+
+22
+00:01:08,683 --> 00:01:11,180
+Trend alignment is the interesting one.
+
+23
+00:01:11,230 --> 00:01:13,679
+After the daily and weekly trends first agree,
+
+24
+00:01:13,699 --> 00:01:16,629
+price did a little worse than on comparable days.
+
+25
+00:01:16,679 --> 00:01:20,478
+Often the weekly trend confirms a move after much of it has happened.
+
+26
+00:01:20,927 --> 00:01:24,363
+Make your own copy and save it: its study comes with it.
+
+27
+00:01:24,413 --> 00:01:28,574
+In Signal Sets, the card also shows the three periods side by side,
+
+28
+00:01:41,749 --> 00:01:44,396
+and every asset on its own, with a luck check.
+
+29
+00:01:44,446 --> 00:01:49,183
+Ten assets look unusual for this Set, where luck alone typically makes about four.
+
+30
+00:01:49,233 --> 00:01:51,496
+A place to look closer, not proof.
+
+31
+00:01:51,946 --> 00:01:54,187
+Your own Sets can be studied too:
+
+32
+00:01:54,237 --> 00:01:57,567
+open one in Signal Sets, and tap Study this Set.
+
+33
+00:01:57,617 --> 00:02:00,882
+When it's ready, a note arrives in your notifications.
