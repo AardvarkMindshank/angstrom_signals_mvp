@@ -22,7 +22,7 @@ import requests
 
 import binance_data as bn
 
-TOP = 200
+TOP = 500
 MIN_VOLUME_USD = 1_000_000       # median daily USDT traded on Binance over the last 30 closed days (~$40k an hour)
 MIN_DAYS = 200                   # daily candles on Binance: enough for the daily Sets (EMA 50 needs ~150)
 MAX_GAP_DAYS = 0                 # closed days without trading in the last 30
@@ -66,13 +66,32 @@ def top_coins(n: int) -> list[dict]:
     return rows[:n]
 
 
+LABELS = {"exchange-based-tokens": "another exchange's own token", "tokenized-treasury-bills": "tokenised fund",
+          "tokenized-treasury-bonds": "tokenised fund", "privacy-coins": "privacy coin"}
+
+
+def labels() -> dict[str, str]:
+    """{coingecko id: what it is} for categories that explain why a coin is not on Binance (wording only)."""
+    out: dict[str, str] = {}
+    for category, word in LABELS.items():
+        try:
+            for page in (1, 2):
+                for row in _coingecko({"category": category, "per_page": 250, "page": page}):
+                    out.setdefault(row["id"], word)
+        except Exception:
+            pass
+        time.sleep(3)
+    return out
+
+
 def not_coins() -> dict[str, str]:
     """{coingecko id: reason} for every coin in the excluded categories."""
     out: dict[str, str] = {}
     for category in NOT_COINS:
         try:
-            for row in _coingecko({"category": category, "per_page": 250, "page": 1}):
-                out.setdefault(row["id"], REASON[category])
+            for page in (1, 2):
+                for row in _coingecko({"category": category, "per_page": 250, "page": page}):
+                    out.setdefault(row["id"], REASON[category])
         except Exception:
             pass                                            # the name and price rules below still catch most
         time.sleep(3)
@@ -104,10 +123,12 @@ def quality(pair: str, now: pd.Timestamp, get=bn._get) -> dict:
     }
 
 
-def build(top: int = TOP, coins=None, excluded_ids=None, pairs=None, price_of=None, quality_of=None, now=None) -> dict:
+def build(top: int = TOP, coins=None, excluded_ids=None, pairs=None, price_of=None, quality_of=None, now=None,
+          kinds=None) -> dict:
     now = pd.Timestamp.now(tz="UTC") if now is None else now
     coins = top_coins(top) if coins is None else coins
     excluded_ids = not_coins() if excluded_ids is None else excluded_ids
+    kinds = (labels() if coins is None else {}) if kinds is None else kinds
     pairs = bn.trading_pairs() if pairs is None else pairs
     price_of = bn.last_price if price_of is None else price_of
     quality_of = (lambda p: quality(p, now)) if quality_of is None else quality_of
@@ -125,7 +146,8 @@ def build(top: int = TOP, coins=None, excluded_ids=None, pairs=None, price_of=No
             continue
         pair = bn.pair_for("crypto", coin["id"], None, coin, pairs=pairs, price_of=price_of)
         if pair is None:
-            leave("not traded on Binance against USDT" if base["symbol"] not in pairs
+            what = f" ({kinds[coin['id']]})" if coin["id"] in kinds else ""
+            leave(f"not traded on Binance against USDT{what}" if base["symbol"] not in pairs
                   else "Binance's coin with this ticker has a different price (another coin)")
             continue
         if pair in used_pairs:
@@ -151,8 +173,12 @@ def build(top: int = TOP, coins=None, excluded_ids=None, pairs=None, price_of=No
 
 
 def summary(u: dict) -> str:
-    reasons = pd.Series([e["reason"].split(" (")[0] if "days on Binance" not in e["reason"] else "short history"
-                         for e in u["excluded"]]).value_counts()
+    def kind(reason: str) -> str:
+        if "days on Binance" in reason:
+            return "short history"
+        return reason if reason.startswith("not traded") else reason.split(" (")[0]
+
+    reasons = pd.Series([kind(e["reason"]) for e in u["excluded"]]).value_counts()
     lines = [f"Universe: {len(u['included'])} coins usable of the top {u['rules']['top']} "
              f"({len(u['excluded'])} left out)"]
     lines += [f"  {n:4}  {r}" for r, n in reasons.items()]

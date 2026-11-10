@@ -10,13 +10,13 @@ on:
     inputs:
       top:
         description: "How many of CoinGecko's top coins to check"
-        default: "200"
+        default: "500"
 permissions:
   contents: write
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -28,7 +28,7 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           pip install -q pandas requests supabase
-          python crypto_universe.py out --top "${{ github.event.inputs.top || '200' }}" --save | tee out_summary.txt
+          python crypto_universe.py out --top "${{ github.event.inputs.top || '500' }}" --save | tee out_summary.txt
           { echo '### Crypto universe'; echo '```'; cat out_summary.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
       - name: Save
         run: bash .github/scripts/save_to_reports.sh crypto-universe/latest out/crypto_universe.json
