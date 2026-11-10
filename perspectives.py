@@ -270,7 +270,14 @@ def followed_card(doc: dict | None, key: str | None = None) -> dict | None:
         title += f" · {_month(start)} to {_month(through)}"
         if s.get("coin_assets") is not None:
             lines.append(f"Studied on {s['coin_assets']} major coins and {s['share_assets']} large US shares.")
-        lines.append(f"Turned Yes {s['episodes']:,} separate times, in {s['weeks']:,} different weeks.")
+        sp = s.get("spread") or {}
+        if sp.get("days"):
+            lines.append(f"Turned Yes {s['episodes']:,} separate times, on {sp['days']:,} different days in "
+                         f"{s['weeks']:,} different weeks"
+                         + (f"; the busiest week holds {sp['top_week_share']:.0%} of them." if sp.get("top_week_share", 0)
+                            >= 0.05 else "."))
+        else:
+            lines.append(f"Turned Yes {s['episodes']:,} separate times, in {s['weeks']:,} different weeks.")
         n = s["plain"]
         if s["type"] == "neutral":
             lines.append(f"Size of the move after 10 daily candles, either way: {n['size']:.1f} typical moves on "
@@ -310,8 +317,82 @@ def followed_card(doc: dict | None, key: str | None = None) -> dict | None:
                             ", but not in both coins and shares." if markets else "."))
     else:
         lines.append("It has not turned Yes often enough in the saved history to study.")
-    return {"title": title, "lines": lines, "verdict": s.get("verdict"),
-            "note": "Past patterns, measured from the close after each Yes, before costs. Not a forecast. " + TYPICAL}
+    out = {"title": title, "lines": lines, "verdict": s.get("verdict"),
+           "note": "Past patterns, measured from the close after each Yes, before costs. Not a forecast. " + TYPICAL}
+    out.update(breakdown(s))
+    return out
+
+
+PART_NAMES = {"coins": "🪙 Coins", "equities": "🏛️ Equities"}
+
+
+def _numbers(n: dict | None, kind: str) -> str:
+    """The plain numbers in one short line."""
+    if not n:
+        return "too few to compare"
+    if kind == "neutral":
+        return f"moved {n['size']:.1f} typical moves either way (usual {n['size_usual']:.1f})"
+    return (f"rose first {n['gain_first']:.0%} (usual {n['gain_first_usual']:.0%}), fell first {n['loss_first']:.0%} "
+            f"({n['loss_first_usual']:.0%}), after 10 candles {_signed(n['move'])} ({_signed(n['move_usual'])})")
+
+
+def breakdown(s: dict) -> dict:
+    """The parts of a study under its verdict (decided 10 Nov): coins and equities, the coins-versus-equities
+    comparison, the three periods, asset by asset with one luck line, and the study history. Numbers only where a
+    verdict is not earned; no marks on single assets."""
+    kind = s.get("type") or "directional"
+    out: dict = {}
+    parts = []
+    for name, p in (s.get("parts") or {}).items():
+        head = f"{PART_NAMES.get(name, name)} ({p.get('assets', 0)} assets): {p['episodes']:,} episodes in " \
+               f"{p['weeks']:,} weeks"
+        verdict = p.get("verdict")
+        if verdict:
+            head += f" · {VERDICT_MARK.get(verdict, ('', ''))[0]} {verdict}".replace("  ", " ")
+        parts.append({"name": name, "verdict": verdict, "line": head + ". " + _numbers(p.get("plain"), kind).capitalize()
+                      + "."})
+    if parts:
+        out["parts"] = parts
+        c = s.get("compare")
+        if c and c.get("differ"):
+            if kind == "neutral":
+                how = "bigger" if c["estimate"] > 0 else "smaller"
+                what = f"moves after coins' Yes were {how} than after equities'"
+            else:
+                how = "better" if c["estimate"] > 0 else "worse"
+                what = f"price did {how} after coins' Yes than after equities'"
+            out["compare"] = f"Coins and equities clearly differ here: {what}, by more than luck usually gives."
+        elif c:
+            out["compare"] = "Coins and equities: no clear difference between them."
+        else:
+            out["compare"] = "Coins and equities can't be compared yet: one has too few weeks of episodes."
+        if not any(p.get("verdict") and p["verdict"] != VERDICTS_FEW for p in parts):
+            out["parts_note"] = ("Same method, fewer episodes each. A part can look different by luck, so these are "
+                                 "numbers to read, not verdicts.")
+    if s.get("periods"):
+        out["periods"] = [{"Period": p["name"], "Episodes": p["episodes"], "What followed": _numbers(p.get("plain"),
+                                                                                                    kind)}
+                          for p in s["periods"]]
+    rows = s.get("per_asset") or []
+    if rows:
+        table = [{"Asset": r["asset"].replace("-USD", ""), "Episodes": r["episodes"],
+                  "What followed": _numbers(r.get("plain"), kind)} for r in rows]
+        lk = s.get("luck")
+        if lk:
+            line = (f"{lk['unusual']} of the {lk['checked']} assets with enough episodes look unusual for this Set; "
+                    f"luck alone typically makes about {lk['chance']} look this way (up to {lk['chance_high']}).")
+        else:
+            line = "Too few assets have enough episodes for a luck check."
+        out["assets"] = {"line": line, "rows": table,
+                         "note": ("A guide only, in name order. An asset that looks unusual is a place to look closer, "
+                                  "not proof that the Set works on it: with many assets, some always look unusual.")}
+    if s.get("episodes"):
+        out["history"] = ("Studied once, on every studied asset and year. Choosing assets or years isn't offered, so "
+                          "a lucky slice can't be picked out.")
+    return out
+
+
+VERDICTS_FEW = "Too few to judge"
 
 
 def explain(key: str) -> dict | None:

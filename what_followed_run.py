@@ -127,8 +127,10 @@ def _answers_series(spans: list) -> pd.Series:
     return pd.concat(parts) if parts else pd.Series(dtype=object)
 
 
-def episode_rows(prices: str, out: str, key: str, tables: dict) -> pd.DataFrame:
-    """Every episode of one Set across the assets, with its outcomes and comparable days."""
+def episode_rows(prices: str, out: str, key: str, tables: dict, backdrop: dict | None = None,
+                 measure: str = "first") -> pd.DataFrame:
+    """Every episode of one Set across the assets, with its outcomes and comparable days. backdrop (if given) is
+    filled with each asset's differences on its No days, for the luck line."""
     folder = _folder(out, key)
     parts = []
     for f in sorted(folder.glob("*.json")) if folder.exists() else []:
@@ -143,6 +145,8 @@ def episode_rows(prices: str, out: str, key: str, tables: dict) -> pd.DataFrame:
         answers = _answers_series(rec["spans"])
         answers.index = answers.index.normalize()
         rows = wf.differences(answers, tables[symbol])
+        if backdrop is not None:
+            backdrop[symbol] = wf.daily_differences(answers, tables[symbol], measure)
         if rows.empty:
             continue
         rows["asset"], rows["kind"] = symbol, kind_of(symbol)
@@ -172,8 +176,10 @@ def study_step(args) -> int:
     """The provided library, one family of tests across all its Sets."""
     docs = _docs(args)
     tables: dict = {}
-    per_set = {key: episode_rows(args.prices, args.out, key, tables) for key in docs}
-    result = _finish(wf.study(per_set, {k: v[2] for k, v in docs.items()}))
+    backdrops = {key: {} for key in docs}
+    per_set = {key: episode_rows(args.prices, args.out, key, tables, backdrops[key], wf.core(docs[key][2]))
+               for key in docs}
+    result = _finish(wf.study(per_set, {k: v[2] for k, v in docs.items()}, backdrops=backdrops))
     for key, s in result["sets"].items():
         s["name"] = docs[key][1]
         s["hash"] = wf.logic_hash(docs[key][0])
@@ -257,8 +263,9 @@ def finish_step(args) -> int:
     tables: dict = {}
     for key, item in queue.items():
         try:
-            rows = episode_rows(args.prices, args.out, key, tables)
-            result = _finish(wf.study({key: rows}, {key: "directional"}))
+            back: dict = {}
+            rows = episode_rows(args.prices, args.out, key, tables, back, wf.core("directional"))
+            result = _finish(wf.study({key: rows}, {key: "directional"}, backdrops={key: back}))
             s = result["sets"][key]
             s["name"], s["hash"] = item["name"], key
             result["sets"] = {key: s}

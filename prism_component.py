@@ -252,6 +252,10 @@ export default function(component) {
     b.appendChild(sm);
     b.appendChild(el("div", "muted", f.title.replace(/^What followed · /, "")));
     (f.lines || []).forEach((t) => b.appendChild(el("div", "", t)));
+    (f.parts || []).forEach((p) => b.appendChild(el("div", "", p.line)));
+    if (f.compare) b.appendChild(el("div", "", f.compare));
+    if (f.parts_note) b.appendChild(el("div", "muted", f.parts_note));
+    if (f.assets) b.appendChild(el("div", "", f.assets.line + " Asset by asset: open the Set in Signal Sets."));
     if (f.note) b.appendChild(el("div", "muted", f.note));
     b.addEventListener("click", (e) => e.stopPropagation());
     return b;

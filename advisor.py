@@ -159,8 +159,12 @@ def _mine(saved: list[dict], user_id: str) -> list[str]:
         if c.get("kind") == "set":
             inside = set_inside.parts(body)
             card = perspectives.followed_card(body)
-            out.append(f"- Set “{c['name']}” (v{v}): {inside['decision'] or 'no decision yet'}"
-                       + (f" What followed: {card['verdict']}" if card else ""))
+            extra = ""
+            if card:
+                bits = [p["line"] for p in card.get("parts") or []] + [card.get("compare") or "",
+                                                                    (card.get("assets") or {}).get("line") or ""]
+                extra = f" What followed: {card['verdict']}. " + " ".join(b for b in bits if b)
+            out.append(f"- Set “{c['name']}” (v{v}): {inside['decision'] or 'no decision yet'}" + extra)
         else:
             members = ", ".join(m.get("label") or m["ref"]["id"] for m in body.get("members") or [])
             out.append(f"- Group “{c['name']}” (v{v}): signals {members}")

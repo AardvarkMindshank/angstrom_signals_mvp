@@ -7308,6 +7308,12 @@ hold, for example *Trend is Bullish* and *RSI is below 70*.
   **Relative volume** (times the usual volume) and the **nearest support or resistance** (its distance in % or in
   typical daily moves).
 - A Set needs a decision before Prism can scan it.
+- **🔬 What followed:** press **Study this Set** to see what happened after it turned Yes in the past (Sep 2014 to
+  Oct 2024, on every studied coin and equity), against comparable ordinary days. The verdict is one of *Too few to
+  judge*, *No clear difference*, *Some difference, not established* or *Consistent difference*. Under it: coins and
+  equities on their own, the three periods side by side, and asset by asset with a luck check (with many assets,
+  some always look unusual by chance, so an unusual asset is a place to look closer, not proof). Past patterns
+  before costs, never a forecast.
 """)
         _training.link(st, "04-signal-sets", key="tv_lat_04")
         st.markdown("""

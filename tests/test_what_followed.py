@@ -168,3 +168,72 @@ def json_copy(d):
     import json
 
     return json.loads(json.dumps(d))
+
+
+# ----------------------------------------------------------------------------------------------- breakdowns (10 Nov)
+
+def _effect_study(lift=1.04, crypto_only=False, with_backdrop=True):
+    parts, back = [], {}
+    for a in range(12):
+        f = _prices(n=2200, seed=500 + a, drift=0.0, start="2017-01-01")
+        rng = np.random.default_rng(a)
+        yes_days = np.sort(rng.choice(np.arange(250, 2150), 70, replace=False))
+        close = f["close"].to_numpy().copy()
+        kind = "crypto" if a % 2 else "equity"
+        if not crypto_only or kind == "crypto":
+            for d in yes_days:
+                close[d + 2:] *= lift
+        f["close"], f["high"], f["low"] = close, close * 1.01, close * 0.99
+        t = wf.outcomes(f)
+        answers = pd.Series("no", index=t.index)
+        answers.iloc[yes_days] = "yes"
+        rows = wf.differences(answers, t)
+        rows["asset"], rows["kind"] = f"A{a:02d}", kind
+        parts.append(rows)
+        back[f"A{a:02d}"] = wf.daily_differences(answers, t, "first")
+    rows = pd.concat(parts, ignore_index=True)
+    return wf.study({"s": rows}, {"s": "directional"}, runs=400, backdrops={"s": back} if with_backdrop else None)
+
+
+def test_breakdowns_are_in_every_study():
+    out = _effect_study()
+    s = out["sets"]["s"]
+    assert out["method"] == "what-followed-2"
+    assert set(s["parts"]) == {"coins", "equities"}
+    assert s["parts"]["coins"]["episodes"] + s["parts"]["equities"]["episodes"] == s["episodes"]
+    assert [p["name"] for p in s["periods"]] == [p[0] for p in wf.PERIODS]
+    names = [r["asset"] for r in s["per_asset"]]
+    assert names == sorted(names)                                    # name order, never by result
+    assert all(set(r) <= {"asset", "kind", "episodes", "plain"} for r in s["per_asset"])   # no marks or verdicts
+    assert all(("plain" in r) == (r["episodes"] >= wf.MIN_ASSET) for r in s["per_asset"])
+    assert s["spread"]["days"] > 0 and s["spread"]["weeks"] == s["weeks"]
+    assert s["luck"]["checked"] == 12 and s["luck"]["unusual"] >= s["luck"]["chance"]   # a real lift on every asset
+
+
+def test_parts_have_no_verdict_until_calibrated(monkeypatch):
+    s = _effect_study()["sets"]["s"]
+    if not wf.SPLIT_VERDICTS:
+        assert all(p["verdict"] in (None, "Too few to judge") for p in s["parts"].values())
+    monkeypatch.setattr(wf, "SPLIT_VERDICTS", True)
+    out = _effect_study()
+    assert out["family"] > 2                                         # parts join the pooled tests' family
+    assert all(p["verdict"] in wf.VERDICTS for p in out["sets"]["s"]["parts"].values())
+
+
+def test_coins_and_equities_compared_directly():
+    s = _effect_study(lift=1.05, crypto_only=True)["sets"]["s"]
+    assert s["compare"]["differ"] and s["compare"]["estimate"] > 0     # only coins had the lift
+    same = _effect_study(lift=1.0)["sets"]["s"]["compare"]
+    assert same is None or not same["differ"]
+
+
+def test_the_card_shows_breakdowns_without_marks():
+    import perspectives
+
+    s = _effect_study()["sets"]["s"]
+    s["type"] = "directional"
+    b = perspectives.breakdown(s)
+    assert len(b["parts"]) == 2 and b["compare"] and len(b["periods"]) == 3
+    assert "luck alone typically makes about" in b["assets"]["line"]
+    assert [r["Asset"] for r in b["assets"]["rows"]] == sorted(r["Asset"] for r in b["assets"]["rows"])
+    assert "not proof" in b["assets"]["note"] and "Studied once" in b["history"]

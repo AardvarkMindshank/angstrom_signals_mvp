@@ -216,6 +216,35 @@ def render(st, supabase, user_id: str = "") -> None:
 STUDY_WAIT = "Studies run in the background, usually within an hour; you can leave this page."
 
 
+def show_card(st, card: dict) -> None:
+    """A study card: the verdict's lines, then coins and equities, the periods, and asset by asset (folded)."""
+    st.caption(card["title"].replace("What followed · ", ""))
+    for line in card["lines"]:
+        st.markdown(f"- {line}")
+    if card.get("parts"):
+        st.markdown("**Coins and equities**")
+        for p in card["parts"]:
+            st.markdown(f"- {p['line']}")
+        if card.get("compare"):
+            st.markdown(f"- {card['compare']}")
+        if card.get("parts_note"):
+            st.caption(card["parts_note"])
+    if card.get("periods"):
+        st.markdown("**By period**")
+        st.dataframe(card["periods"], hide_index=True, width="stretch")
+    if card.get("assets"):
+        st.markdown("**Asset by asset**")
+        st.markdown(card["assets"]["line"])
+        if st.toggle("Show every asset (a guide only)", key="wf_assets",
+                     help="Each asset's numbers beside its own comparable days, in name order. No asset is marked: "
+                          "with many assets, some always look unusual by luck."):
+            st.caption(card["assets"]["note"])
+            st.dataframe(card["assets"]["rows"], hide_index=True, width="stretch")
+    if card.get("history"):
+        st.caption("🗂️ " + card["history"])
+    st.caption(card["note"])
+
+
 def study_block(st, supabase, source: dict) -> None:
     """🔬 "What followed" for your saved Set: the study if there is one, its progress, or a button to start it.
     It studies the saved version (what the Set checks, not its name)."""
@@ -229,10 +258,7 @@ def study_block(st, supabase, source: dict) -> None:
     if card:
         icon, _ = perspectives.evidence(doc)
         with st.expander(f"{icon} What followed: {card['verdict'] or 'not studied on its own'}"):
-            st.caption(card["title"].replace("What followed · ", ""))
-            for line in card["lines"]:
-                st.markdown(f"- {line}")
-            st.caption(card["note"])
+            show_card(st, card)
         return
     ok, why = wf.studyable(doc)
     if not ok:

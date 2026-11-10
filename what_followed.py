@@ -18,6 +18,16 @@ It describes the past. It is not a trade test and not a forecast.
 - Differences are pooled by calendar date and resampled in calendar blocks across all assets together
   (research_stats.studentised_test), corrected for the number of tests with Holm, then checked for consistency across
   three periods and between coins and shares.
+
+Breakdowns (decided after the reviews of 10 Nov, docs/research/study_enhancements_brief_2026-11-10.md):
+- Coins and equities: the same test on each part. Their tests join the pooled tests in one Holm family, and a part
+  gets a verdict only once the test is shown to keep its false-positive rate on parts (SPLIT_VERDICTS, set after the
+  calibration run in what_followed_calibrate.py). A direct comparison says whether the two parts differ.
+- Periods: the three fixed periods side by side, as information.
+- Asset by asset: numbers only (from MIN_ASSET episodes), no verdicts or marks, in name order. One luck line counts
+  assets outside the range that random No days give them, against how many do so when every asset's episode dates
+  are slid together by the same random offset (which keeps assets moving together and episodes bunching in time).
+- Concentration: distinct days and weeks behind the episodes, and the largest asset's share.
 """
 
 from __future__ import annotations
@@ -29,7 +39,7 @@ import pandas as pd
 
 import research_stats as rs
 
-METHOD = "what-followed-1"
+METHOD = "what-followed-2"            # 2: coins/equities parts, periods, assets, luck line
 HORIZON = 10
 GAP = 5
 ATR_DAYS = 20
@@ -39,6 +49,10 @@ MIN_WEEKS = 40               # episodes in at least this many different weeks, e
 MIN_COMPARABLE = 20          # comparable days needed in an episode's year and trend side
 MIN_PART = 10                # episodes needed for a period, or for coins or shares, to count in the consistency check
 KAPPA = 1.2
+MIN_ASSET = 15               # episodes an asset needs before its numbers are shown
+SHIFTS = 200                 # random offsets for the luck line
+PART_KINDS = (("coins", "crypto"), ("equities", "equity"))
+SPLIT_VERDICTS = True        # coins / equities verdicts: on since the calibration run of 10 Nov passed (docs/research/study_calibration_2026-11-10.md)
 HOLDOUT = pd.Timestamp("2024-10-30")
 PERIODS = (("before 2019", None, "2018-12-31"), ("2019 to 2021", "2019-01-01", "2021-12-31"),
            ("2022 to Oct 2024", "2022-01-01", None))
@@ -192,6 +206,22 @@ def differences(answers: pd.Series, table: pd.DataFrame, measures=ALL_MEASURES) 
     return pd.DataFrame(rows)
 
 
+def daily_differences(answers: pd.Series, table: pd.DataFrame, measure: str) -> pd.Series:
+    """The difference from comparable days on every No day that has them: what a random No day would show. Used by
+    the luck line."""
+    answers = answers.reindex(table.index)
+    ordinary = table[(answers == "no") & table["move"].notna() & table["above"].notna()]
+    if ordinary.empty:
+        return pd.Series(dtype=float)
+    groups = ordinary.groupby(["year", "above"])
+    means, counts = groups[measure].mean(), groups.size()
+    keys = pd.MultiIndex.from_arrays([ordinary["year"], ordinary["above"]])
+    usual = means.reindex(keys).to_numpy(float)
+    enough = counts.reindex(keys).fillna(0).to_numpy() >= MIN_COMPARABLE
+    out = pd.Series(ordinary[measure].to_numpy(float) - usual, index=ordinary.index)
+    return out[enough & ~np.isnan(out.to_numpy())]
+
+
 # ----------------------------------------------------------------------------------------------- pooling and tests
 
 def _naive(days) -> pd.DatetimeIndex:
@@ -270,7 +300,151 @@ def concentration(rows: pd.DataFrame, top: int = 3) -> list[tuple[str, float]]:
     return [(a, round(float(s), 3)) for a, s in shares.head(top).items()]
 
 
-def study(per_set: dict, types: dict, runs: int = rs.RUNS, seed: int = rs.SEED) -> dict:
+def core(kind: str) -> str:
+    """The measure a breakdown is read on: gain first, or size for Sets that do not point one way."""
+    return "size" if kind == "neutral" else "first"
+
+
+def _calendar_sums(rows: pd.DataFrame, column: str, calendar: pd.DatetimeIndex) -> tuple[np.ndarray, np.ndarray]:
+    days = _naive(rows["date"]).normalize()
+    sums = pd.Series(rows[column].to_numpy(float), index=days).groupby(level=0).sum()
+    counts = pd.Series(1.0, index=days).groupby(level=0).sum()
+    return sums.reindex(calendar, fill_value=0).to_numpy(), counts.reindex(calendar, fill_value=0).to_numpy()
+
+
+def compare(rows: pd.DataFrame, measure: str, runs: int = rs.RUNS, seed: int = rs.SEED) -> dict | None:
+    """Coins minus equities, resampled in the same calendar blocks for both (so days that move both markets stay
+    together). {estimate, ci95, p_two_sided, differ}; None when either part has too few weeks."""
+    from scipy.stats import t as t_dist
+
+    coins, shares = rows[rows["kind"] == "crypto"], rows[rows["kind"] == "equity"]
+    if weeks(coins) < MIN_WEEKS or weeks(shares) < MIN_WEEKS:
+        return None
+    days = _naive(rows["date"]).normalize()
+    calendar = pd.date_range(days.min(), days.max(), freq="D")
+    nc, dc = _calendar_sums(coins, f"{measure}_diff", calendar)
+    ne, de = _calendar_sums(shares, f"{measure}_diff", calendar)
+    n = len(calendar)
+    block = min(rs.block_for(math.ceil(HORIZON * 7 / 5)), n)
+    nb = math.ceil(n / block)
+    rng = np.random.default_rng(seed)
+    draws = []
+    for start in range(0, runs, 500):
+        m = min(500, runs - start)
+        idx = ((rng.integers(0, n, size=(m, nb))[:, :, None] + np.arange(block)) % n).reshape(m, -1)[:, :n]
+        a, b = dc[idx].sum(1), de[idx].sum(1)
+        ok = (a > 0) & (b > 0)
+        draws.append(nc[idx].sum(1)[ok] / a[ok] - ne[idx].sum(1)[ok] / b[ok])
+    draws = np.concatenate(draws)
+    est = float(nc.sum() / dc.sum() - ne.sum() / de.sum())
+    se = float(draws.std(ddof=1)) * KAPPA if len(draws) > 1 else 0.0
+    df = max(1, nb - 1)
+    if se <= 0:
+        return {"estimate": est, "ci95": None, "p_two_sided": None, "differ": False}
+    p = float(min(1.0, 2 * t_dist.sf(abs(est) / se, df)))
+    q = float(t_dist.ppf(0.975, df))
+    return {"estimate": est, "ci95": [est - q * se, est + q * se], "p_two_sided": p, "differ": p <= 0.05}
+
+
+def periods(rows: pd.DataFrame, kind: str) -> list[dict]:
+    """The three fixed periods side by side, as information (no verdicts)."""
+    days = _naive(rows["date"])
+    out = []
+    for name, start, end in PERIODS:
+        mask = np.ones(len(rows), bool)
+        if start:
+            mask &= days >= pd.Timestamp(start)
+        if end:
+            mask &= days <= pd.Timestamp(end)
+        part = rows.loc[mask]
+        rec = {"name": name, "episodes": int(len(part)), "weeks": weeks(part)}
+        if len(part) >= MIN_PART:
+            rec["plain"] = plain_numbers(part, kind)
+            rec["difference"] = float(part[f"{core(kind)}_diff"].mean())
+        out.append(rec)
+    return out
+
+
+def per_asset(rows: pd.DataFrame, kind: str) -> list[dict]:
+    """One row per asset in name order: its episodes, and its numbers beside its own comparable days from MIN_ASSET
+    episodes. No verdicts, marks or ranks."""
+    out = []
+    for asset, part in sorted(rows.groupby("asset"), key=lambda kv: kv[0]):
+        rec = {"asset": asset, "kind": str(part["kind"].iloc[0]), "episodes": int(len(part))}
+        if len(part) >= MIN_ASSET:
+            rec["plain"] = plain_numbers(part, kind)
+        out.append(rec)
+    return out
+
+
+def luck(rows: pd.DataFrame, backdrop: dict, measure: str, shifts: int = SHIFTS, seed: int = rs.SEED) -> dict | None:
+    """How many assets sit outside the range random No days give them, and how many typically do by chance.
+
+    backdrop: asset -> daily differences on its No days (daily_differences). Every asset's episode dates are slid by
+    the same random number of days (wrapping round the studied span), so assets that move together and episodes that
+    bunch in time stay that way. An asset's range is the middle 95% of its slid averages; the chance count is how many
+    assets fall outside their range on a typical slide."""
+    counts = rows["asset"].value_counts()
+    assets = sorted(a for a, n in counts.items() if n >= MIN_ASSET and a in backdrop and len(backdrop[a]))
+    if len(assets) < 5:
+        return None
+    starts = [_naive(backdrop[a].index).min() for a in assets]
+    ends = [_naive(backdrop[a].index).max() for a in assets]
+    origin, span = min(starts), (max(ends) - min(starts)).days + 1
+    margin = 3 * HORIZON
+    if span <= 4 * margin:
+        return None
+    rng = np.random.default_rng(seed)
+    offsets = rng.integers(margin, span - margin, size=shifts)
+    observed = np.empty(len(assets))
+    slid = np.full((shifts, len(assets)), np.nan)
+    for j, a in enumerate(assets):
+        mine = rows[rows["asset"] == a]
+        observed[j] = float(mine[f"{measure}_diff"].mean())
+        series = backdrop[a]
+        days = np.asarray((_naive(series.index).normalize() - origin).days)
+        values = series.to_numpy(float)
+        eps = np.asarray((_naive(mine["date"]).normalize() - origin).days)
+        for i, k in enumerate(offsets):
+            target = np.sort((eps + k) % span)
+            pos = np.searchsorted(days, target)
+            ok = pos < len(days)
+            pos, target = pos[ok], target[ok]
+            near = (days[pos] - target) <= 4             # the next No day within a few days (weekends, Yes runs)
+            if near.sum() >= MIN_ASSET // 2:
+                slid[i, j] = values[pos[near]].mean()
+    lo, hi = np.nanpercentile(slid, 2.5, axis=0), np.nanpercentile(slid, 97.5, axis=0)
+    outside = (observed < lo) | (observed > hi)
+    by_chance = ((slid < lo) | (slid > hi)).sum(axis=1)
+    return {"checked": len(assets), "unusual": int(outside.sum()), "chance": int(round(float(np.mean(by_chance)))),
+            "chance_exact": float(np.mean(by_chance)),
+            "chance_high": int(round(float(np.percentile(by_chance, 90)))), "measure": measure}
+
+
+def spread(rows: pd.DataFrame) -> dict:
+    """How concentrated the episodes are: distinct days and weeks, and the busiest week's share."""
+    days = _naive(rows["date"]).normalize()
+    by_week = pd.Series(days.to_period("W")).value_counts(normalize=True)
+    return {"days": int(days.nunique()), "weeks": weeks(rows),
+            "top_week_share": round(float(by_week.iloc[0]), 3) if len(by_week) else 0.0}
+
+
+def _part_summary(rows: pd.DataFrame, kind: str, tests: dict, passed: dict, cons: dict) -> dict:
+    n_weeks = weeks(rows)
+    out = {"episodes": int(len(rows)), "weeks": n_weeks,
+           "assets": int(rows["asset"].nunique()) if len(rows) else 0}
+    if SPLIT_VERDICTS:
+        out["verdict"], out["rests_on"] = verdict(n_weeks, tests, passed, cons)
+    else:
+        out["verdict"] = VERDICTS[0] if n_weeks < MIN_WEEKS else None
+    if len(rows) >= MIN_PART:
+        out["plain"] = plain_numbers(rows, kind)
+    out["tests"] = {m: _slim(t, passed.get(m), cons.get(m)) for m, t in tests.items()}
+    return out
+
+
+def study(per_set: dict, types: dict, runs: int = rs.RUNS, seed: int = rs.SEED,
+          backdrops: dict | None = None) -> dict:
     """per_set: set key -> DataFrame of episodes (differences() rows plus "asset" and "kind" columns).
     types: set key -> directional / neutral / filter. Holm covers every test of every studied Set together."""
     tests, p_values = {}, {}
@@ -281,6 +455,13 @@ def study(per_set: dict, types: dict, runs: int = rs.RUNS, seed: int = rs.SEED) 
         for m in MEASURES[kind]:
             tests[(key, m)] = test(rows, m, runs, seed)
             p_values[(key, m)] = tests[(key, m)].get("p_two_sided")
+            for part, asset_kind in PART_KINDS:
+                sub = rows[rows["kind"] == asset_kind]
+                if weeks(sub) < MIN_WEEKS:
+                    continue
+                tests[(key, m, part)] = test(sub, m, runs, seed)
+                if SPLIT_VERDICTS:                   # one family with the pooled tests, once calibrated
+                    p_values[(key, m, part)] = tests[(key, m, part)].get("p_two_sided")
     passed = rs.holm(p_values) if p_values else {}
     out = {}
     for key, rows in per_set.items():
@@ -307,8 +488,26 @@ def study(per_set: dict, types: dict, runs: int = rs.RUNS, seed: int = rs.SEED) 
                 "plain": plain_numbers(rows, kind),
             })
         summary["tests"] = {m: _slim(t, passed.get((key, m)), cons.get(m)) for m, t in mine.items()}
+        if not rows.empty:
+            parts = {}
+            for part, asset_kind in PART_KINDS:
+                sub = rows[rows["kind"] == asset_kind]
+                if sub.empty:
+                    continue
+                its = {m: tests[(key, m, part)] for m in MEASURES[kind] if (key, m, part) in tests}
+                its_cons = {m: consistency(sub, m, t["estimate"]) for m, t in its.items()
+                            if t.get("estimate") is not None}
+                parts[part] = _part_summary(sub, kind, its, {m: passed.get((key, m, part)) for m in its}, its_cons)
+            summary["parts"] = parts
+            summary["compare"] = compare(rows, core(kind), runs, seed)
+            summary["periods"] = periods(rows, kind)
+            summary["per_asset"] = per_asset(rows, kind)
+            summary["spread"] = spread(rows)
+            back = (backdrops or {}).get(key)
+            summary["luck"] = luck(rows, back, core(kind), seed=seed) if back else None
         out[key] = summary
-    return {"method": METHOD, "horizon": HORIZON, "gap": GAP, "family": len(p_values), "sets": out}
+    return {"method": METHOD, "horizon": HORIZON, "gap": GAP, "family": len(p_values),
+            "split_verdicts": SPLIT_VERDICTS, "sets": out}
 
 
 def plain_numbers(rows: pd.DataFrame, kind: str) -> dict:
