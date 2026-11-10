@@ -95,3 +95,18 @@ Please reply in this order, in plain words, and keep it under about 1,500 words:
 5. **Sources:** links to any methods or products you cite.
 
 If you can read the repository, the study code is in `what_followed.py` (the study), `what_followed_run.py` (the queue and runs) and `research_stats.py` (block bootstrap and Holm).
+
+## Decision after review (10 Nov)
+
+Reviews: Gemini, ChatGPT and Grok (`study_enhancements_review_2026-11-10.md`), all "sound with changes". The owner approved this first version.
+
+**Build now**
+
+1. **Coins and equities panels** under the pooled verdict, which stays the headline. Each shows its plain numbers, episodes and weeks. A panel gets a verdict only with episodes in at least 40 weeks, and only after a calibration run on random days shows the test keeps its false-positive rate on these smaller groups. Pooled and panel tests sit in **one** Holm family (with the run's other Sets, as today), so the pooled verdict becomes slightly harder to reach; the provided Sets are studied again.
+2. **A direct coins-versus-equities comparison:** "they differ" only when the difference between the two estimates is clear, never from one verdict passing and the other not.
+3. **Period breakdown:** the three fixed periods side by side, as information. The pooled verdict rule (including its consistency check) is unchanged.
+4. **Per-asset table**, folded under the verdict: episode count and numbers beside the asset's own comparable days, shown from 15 episodes (fewer: "too few to compare"). No per-asset verdicts, marks or colours; sorted by name or episode count, never by result. One luck line above it: how many assets look unusual, against how many typically do when episode dates are redrawn jointly in calendar blocks across all assets.
+5. **Concentration:** distinct weeks behind the episodes (so a Set pinned to Bitcoin shows "700 coin results from 14 weeks"), and the largest asset's share.
+6. **Study history line** on the card.
+
+**Later, not in this version:** chosen assets and chosen years, only with discovery on earlier years and confirmation on later ones (never the hold-out), labelled exploratory until then; separate Crypto-only and Equities-only studies (the panels cover them); partial pooling; funnel plots.
