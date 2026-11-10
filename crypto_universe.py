@@ -179,6 +179,22 @@ def yahoo_fallback(coin: dict, now: pd.Timestamp, check=yahoo_quality):
     return ticker, None, q
 
 
+EXCHANGE_WORDS = ("leo token", "okb", "bitget token", "gatetoken", "gate token", "kucoin token", "htx", "huobi",
+                  "whitebit", "mx token", "bitmart", "cronos", "bybit", "bnb")
+
+
+def _named_kind(coin: dict) -> str | None:
+    """A backup for the category lists: tokenised shares and funds, and exchange tokens, by name."""
+    name = str(coin.get("name") or "").lower()
+    if "xstock" in name or "tokenized" in name or "tokenised" in name or "(ondo" in name:
+        return "tokenised share"
+    if "treasury" in name or " fund" in name:
+        return "tokenised fund"
+    if any(w == name or name.startswith(w + " ") or name.endswith(" " + w) for w in EXCHANGE_WORDS):
+        return "another exchange's own token"
+    return None
+
+
 def quality(pair: str, now: pd.Timestamp, get=bn._get) -> dict:
     """Listing day, days of history, the median daily USDT volume and days without trading (last 30 closed days)."""
     first = get("/api/v3/klines", {"symbol": pair, "interval": "1d", "startTime": 0, "limit": 1})
@@ -198,9 +214,10 @@ def build(top: int = TOP, coins=None, excluded_ids=None, pairs=None, price_of=No
           kinds=None, yahoo=None) -> dict:
     """yahoo(coin, now) -> (ticker, reason, quality): the fallback for coins Binance does not list (None: off)."""
     now = pd.Timestamp.now(tz="UTC") if now is None else now
-    coins = top_coins(top) if coins is None else coins
+    live = coins is None
+    coins = top_coins(top) if live else coins
     excluded_ids = not_coins() if excluded_ids is None else excluded_ids
-    kinds = (labels() if coins is None else {}) if kinds is None else kinds
+    kinds = (labels() if live else {}) if kinds is None else kinds
     pairs = bn.trading_pairs() if pairs is None else pairs
     price_of = bn.last_price if price_of is None else price_of
     quality_of = (lambda p: quality(p, now)) if quality_of is None else quality_of
@@ -218,7 +235,7 @@ def build(top: int = TOP, coins=None, excluded_ids=None, pairs=None, price_of=No
             continue
         pair = bn.pair_for("crypto", coin["id"], None, coin, pairs=pairs, price_of=price_of)
         if pair is None:
-            what = kinds.get(coin["id"])
+            what = kinds.get(coin["id"]) or _named_kind(coin)
             if base["symbol"] in pairs:
                 leave("Binance's coin with this ticker has a different price (another coin)")
             elif what in YAHOO_LEAVE_OUT or yahoo is None:
