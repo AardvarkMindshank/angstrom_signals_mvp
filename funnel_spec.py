@@ -38,7 +38,7 @@ def validate(funnel: dict) -> tuple[list[str], list[str]]:
             blocks.append(f"{label}: choose when it is checked (15 minutes to weekly).")
             continue
         if market == "equity" and tf == "12h":
-            blocks.append(f"{label}: shares trade 6½ hours a day, so a 12-hour check is the daily one; use daily.")
+            blocks.append(f"{label}: equities trade 6½ hours a day, so a 12-hour check is the daily one; use daily.")
         doc = stage.get("set_body")
         if not isinstance(doc, dict):
             blocks.append(f"{label}: choose a Set.")

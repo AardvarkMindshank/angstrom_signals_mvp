@@ -114,7 +114,7 @@ def source_line(pair: str | None, market: str = "crypto") -> str | None:
 
 
 def earnings_line(day: str | None, now=None) -> str | None:
-    """Shares: the next earnings report, when it is within two weeks (prices can jump on a report)."""
+    """Equities: the next earnings report, when it is within two weeks (prices can jump on a report)."""
     if not day:
         return None
     try:

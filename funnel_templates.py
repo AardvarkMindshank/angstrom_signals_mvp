@@ -15,7 +15,7 @@ Descriptions, not forecasts: nobody has tested what followed these answers.
 from __future__ import annotations
 
 TIMEFRAMES = ("1D", "12h", "4h")             # crypto: daily, 12-hour, 4-hour
-EQUITY_TIMEFRAMES = ("1W", "1D", "4h")        # shares trade 6.5 hours a day, so a 12-hour candle is the daily
+EQUITY_TIMEFRAMES = ("1W", "1D", "4h")        # equities trade 6.5 hours a day, so a 12-hour candle is the daily
 LIBRARY_TIMEFRAMES = ("1W", "1D", "12h", "4h")
 ENTRY_TIMEFRAME = "1h"
 BASE = {"schema": "angstrom.set/1", "lineage_version": 3, "score": None, "market_context": [], "groups": []}
@@ -150,7 +150,7 @@ def explanations() -> dict[str, tuple[str, str, str, str]]:
 
 def trend_funnel(direction: str, market: str = "crypto") -> dict:
     """{name, direction, market, stages: [{label, timeframe, set_body, set_source}]} ready for funnel_save.
-    Crypto: daily, 12-hour, 4-hour, then the 1-hour entry. Shares: weekly, daily, 4-hour (from the session open),
+    Crypto: daily, 12-hour, 4-hour, then the 1-hour entry. Equities: weekly, daily, 4-hour (from the session open),
     then the 1-hour entry."""
     if market == "equity":
         labels, tfs = ("Weekly", "Daily", "Shortlist (4-hour)"), EQUITY_TIMEFRAMES
@@ -165,6 +165,6 @@ def trend_funnel(direction: str, market: str = "crypto") -> dict:
     stages.append({"label": "Entry (1-hour)", "timeframe": ENTRY_TIMEFRAME, "set_body": entry_set(direction),
                    "set_source": {"provided": library_key(None, direction)}})
     arrow = "▲" if direction == "long" else "▼"
-    what = "share" if market == "equity" else ""
-    return {"name": f"Trend {what + ' ' if what else ''}{'longs' if direction == 'long' else 'shorts'} {arrow}",
+    what = "equity" if market == "equity" else "crypto"
+    return {"name": f"Trend {what} {'longs' if direction == 'long' else 'shorts'} {arrow}",
             "direction": direction, "market": market, "stages": stages}

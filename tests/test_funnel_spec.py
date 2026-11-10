@@ -23,7 +23,7 @@ def test_blocks():
     shares = ft.trend_funnel("long", "equity")
     twelve = copy.deepcopy(shares)
     twelve["stages"][1]["timeframe"] = "12h"
-    assert any("6½ hours" in b for b in fs.validate(twelve)[0])
+    assert any("equities trade 6½ hours" in b for b in fs.validate(twelve)[0])
     no_decision = copy.deepcopy(f)
     no_decision["stages"][1]["set_body"].pop("decision")
     assert fs.validate(no_decision)[0]

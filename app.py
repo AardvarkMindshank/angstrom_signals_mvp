@@ -7222,7 +7222,8 @@ because they measure different things and are never added together.
   a day, no gappy hours, 200 days of history); a real coin Binance doesn't list comes from **Yahoo Finance** instead
   if it trades at least $1M a day across exchanges with complete hourly candles. The Stage hover says which. The
   list is rebuilt every day.
-- Start from a ready-made funnel (*Trend longs ▲* or *Trend shorts ▼*). Longs and shorts are separate funnels.
+- Start from a ready-made funnel (*Trend crypto longs ▲* or *Trend crypto shorts ▼*; for equities *Trend equity
+  longs ▲* or *Trend equity shorts ▼*). Longs and shorts are separate funnels.
 - **Change a funnel in Angstrom Lattice → 🔻 Funnels.** Pick one of yours, or *Start from* a ready-made one. You can
   change its name, direction, leave rule, alerts and **pool** (top 50/100/200/500 by market cap, a minimum traded a
   day, or only your watchlist). Under **Stages (advanced)**: each stage's Set (any provided Set or one of yours) and
@@ -7230,11 +7231,11 @@ because they measure different things and are never added together.
   Nothing changes until you press **Save and activate**, which first says what a save will reset (changing the stages
   or the pool starts every asset again, quietly). **Duplicate** a funnel to experiment. A funnel note in 🔔 opens its
   funnel here. Funnels you change are marked *Customised* or *My funnel*: not reviewed or tested by Angstrom.
-- **Shares** have the same switch above the Equity table. The pool is the **S&P 500** (price at least $5, at least
+- **Equities** have the same switch above the Equity table. The pool is the **S&P 500** (price at least $5, at least
   about $20M traded a day, about 3 years of history for the weekly stage), from Yahoo Finance. Shares trade 6½
-  hours a day, so the ready-made share funnels read **weekly → daily → 4-hour → 1-hour**: the 4-hour candles run
+  hours a day, so the ready-made equity funnels read **weekly → daily → 4-hour → 1-hour**: the 4-hour candles run
   from the open (09:30–13:30 and 13:30–16:00 New York), and the stages are checked at New York closes only
-  (weekends and market holidays skipped). The Stage hover warns when a share reports earnings within two weeks.
+  (weekends and market holidays skipped). The Stage hover warns when an equity reports earnings within two weeks.
 
 **The asset card** above the chart notes a *pullback inside an uptrend* or a *rally inside a downtrend* when the
 provided Sets of those names say Yes, and shows context chips (🌊 daily range, 💪 trend strength, 🧭 regime,
@@ -10705,7 +10706,7 @@ _FUNNEL_KEYS = {
     "crypto": ("crypto_table_mode", "funnel_pick", "funnel_stage", "crypto_table",
                {"coins": "coins", "coin": "coin", "pool": "the top 500 coins", "venue": "Binance spot or Yahoo"}),
     "equity": ("equity_table_mode", "eq_funnel_pick", "eq_funnel_stage", "equity_table",
-               {"coins": "shares", "coin": "share", "pool": "the S&P 500", "venue": "Yahoo Finance"}),
+               {"coins": "equities", "coin": "equity", "pool": "the S&P 500", "venue": "Yahoo Finance"}),
 }
 
 
@@ -10782,7 +10783,7 @@ def _create_funnel(market: str, direction: str) -> None:
     except Exception as exc:
         text = str(exc)
         missing = "funnel_save" in text and ("does not exist" in text or "PGRST" in text or "function" in text)
-        st.error(("The database update for share funnels hasn't been run yet." if market != "crypto" else
+        st.error(("The database update for equity funnels hasn't been run yet." if market != "crypto" else
                   "The funnel tables are not installed yet.") if missing else f"Could not create it: {text[:160]}")
 
 
@@ -11479,7 +11480,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             dynamic = st.session_state.get("_dynamic" if kind == "Crypto" else "_dynamic_equity")
             _funnel_controls(dynamic, "crypto" if kind == "Crypto" else "equity")
             if not results:
-                st.caption(("No coins hold this stage right now." if kind == "Crypto" else "No shares hold this stage right now.")
+                st.caption(("No coins hold this stage right now." if kind == "Crypto" else "No equities hold this stage right now.")
                            if dynamic is not None else "This watchlist is empty.")
                 return
             frame = pd.DataFrame(results).sort_values("trend", ascending=False, na_position="last")

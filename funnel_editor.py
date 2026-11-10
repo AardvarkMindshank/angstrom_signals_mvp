@@ -19,7 +19,7 @@ import funnel_templates as ft
 import funnel_view as fv
 
 TEMPLATES = [("crypto", "long"), ("crypto", "short"), ("equity", "long"), ("equity", "short")]
-MARKET_WORDS = {"crypto": "Crypto", "equity": "Shares"}
+MARKET_WORDS = {"crypto": "Crypto", "equity": "Equities"}
 TF_LABELS = {"15m": "15 minutes", "30m": "30 minutes", "1h": "1 hour", "4h": "4 hours", "12h": "12 hours",
              "1D": "1 day", "1W": "1 week"}
 NOTE = "Candidate means an asset matches your selected conditions. It is not a recommendation to trade."
@@ -130,7 +130,7 @@ def render(st, supabase, user_id: str) -> None:
     import prism
     import signal_groups_inspector as gi
 
-    st.caption("🔻 A funnel narrows the top coins or shares down in stages, from the longest timeframe to the hour, and "
+    st.caption("🔻 A funnel narrows the top coins or equities down in stages, from the longest timeframe to the hour, and "
                "keeps the list up to date by itself. It shows as **Dynamic funnel** above the crypto and equity "
                "tables. " + NOTE)
     funnels = fv.load_funnels(supabase, user_id)
@@ -207,10 +207,10 @@ def render(st, supabase, user_id: str) -> None:
                            format_func=lambda n: f"All eligible: {whole}" if n == 0 else f"Top {n} by market cap")
         vol = st.number_input("Minimum traded a day (US$, 0 = no extra minimum)", min_value=0, max_value=10_000_000_000,
                               value=int(pool.get("min_volume") or 0), step=250_000, key=f"fe_vol_{pick}",
-                              help="On the coin's venue (Binance) or across exchanges (Yahoo coins); shares: in New York.")
+                              help="On the coin's venue (Binance) or across exchanges (Yahoo coins); equities: in New York.")
         only = st.toggle("Only my watchlist", value=bool(pool.get("watchlist_only")), key=f"fe_watch_{pick}",
                          help="The funnel checks only your own watchlist's eligible "
-                              f"{'coins' if market == 'crypto' else 'shares'}, not the market.")
+                              f"{'coins' if market == 'crypto' else 'equities'}, not the market.")
         pool = {k: v for k, v in (("top", top or None), ("min_volume", vol or None), ("watchlist_only", only or None))
                 if v}
         f["pool"] = pool

@@ -66,3 +66,10 @@ def test_the_share_funnel_reads_weekly_daily_4h_then_1h():
     for s in f["stages"]:
         assert library[s["set_source"]["provided"]] == s["set_body"]
         assert sg.validate_set(s["set_body"]) == []
+
+
+def test_ready_made_names_say_crypto_or_equity():
+    import funnel_runner as fr
+
+    names = {(m, d): ft.trend_funnel(d, m)["name"] for m in ("crypto", "equity") for d in ("long", "short")}
+    assert names == {k: new for k, (_old, new) in fr.OLD_NAMES.items()}

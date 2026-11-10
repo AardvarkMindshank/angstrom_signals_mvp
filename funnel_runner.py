@@ -31,6 +31,10 @@ FREQ = {"15m": "15min", "30m": "30min", "1h": "1h", "4h": "4h", "12h": "12h", "1
 WORDS = {"15m": "15-minute", "30m": "30-minute", "1h": "1-hour", "4h": "4-hour", "12h": "12-hour", "1D": "daily",
          "1W": "weekly"}
 ALERT_TYPE = "funnel"
+OLD_NAMES = {("crypto", "long"): ("Trend longs ▲", "Trend crypto longs ▲"),
+             ("crypto", "short"): ("Trend shorts ▼", "Trend crypto shorts ▼"),
+             ("equity", "long"): ("Trend share longs ▲", "Trend equity longs ▲"),
+             ("equity", "short"): ("Trend share shorts ▼", "Trend equity shorts ▼")}
 CHUNK = 40                                      # prism.MAX_ASSETS
 
 
@@ -65,7 +69,7 @@ def _session_closes(timeframe: str, day) -> list[pd.Timestamp]:
 
 
 def latest_close(timeframe: str, now: pd.Timestamp, market: str = "crypto") -> pd.Timestamp:
-    """The moment the newest closed (and settled) candle closed. Crypto: UTC blocks, weeks from Monday. Shares: New
+    """The moment the newest closed (and settled) candle closed. Crypto: UTC blocks, weeks from Monday. Equities: New
     York sessions, holidays skipped; a week closes on its last trading day."""
     ready = now - SETTLE
     if market != "equity":
@@ -287,6 +291,11 @@ def run_all(store, evaluate, now=None, log=print, budget_seconds=BUDGET_SECONDS,
     now = now.tz_localize("UTC") if now.tzinfo is None else now.tz_convert("UTC")
     started = clock()
     out = {"funnels": 0, "waiting": 0}
+    if hasattr(store, "rename_old_names"):
+        try:
+            store.rename_old_names()
+        except Exception as exc:
+            log(f"Renaming ready-made funnels failed: {str(exc)[:160]}")
     funnels = fair_order(store.active_funnels())
     universes: dict[str, dict] = {}
     for i, f in enumerate(funnels):
@@ -405,6 +414,22 @@ class SupabaseStore:
             except Exception as exc:
                 log(f"Sentiment for {name} failed: {str(exc)[:160]}")
         return done
+
+    def rename_old_names(self) -> None:
+        """The ready-made funnels were first named "Trend longs ▲" (crypto) and "Trend share longs ▲" (equities); since
+        10 Nov they say "crypto" and "equity" (one word everywhere). Funnels still carrying an old name, and their
+        notes, take the new one."""
+        for (market, direction), (old, new) in OLD_NAMES.items():
+            rows = (self.db.table("funnels").select("id").eq("name", old).eq("market", market)
+                    .eq("direction", direction).execute().data or [])
+            for r in rows:
+                self.db.table("funnels").update({"name": new}).eq("id", r["id"]).execute()
+            notes = (self.db.table("user_notifications").select("id, message").eq("alert_type", ALERT_TYPE)
+                     .eq("asset_name", old).execute().data or [])
+            for n in notes:
+                self.db.table("user_notifications").update({
+                    "asset_name": new, "message": str(n.get("message") or "").replace(f"“{old}”", f"“{new}”")
+                }).eq("id", n["id"]).execute()
 
     def watchlist(self, owner_id: str, market: str) -> set[str]:
         rows = (self.db.table("user_preferences").select("crypto_watchlist, stock_watchlist").eq("user_id", owner_id)
