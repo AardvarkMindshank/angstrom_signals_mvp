@@ -774,7 +774,12 @@ module.exports = {
       await h.show(luck);
       await h.ring(luck);
       await h.wait(1500);
-      await h.show(h.page.locator("[data-testid='stDataFrame']").last());
+      // Into view without sliding the page sideways (a wide table would otherwise pull it left).
+      await h.page.locator("[data-testid='stDataFrame']").last().evaluate((t) => {
+        t.scrollIntoView({ block: "center", inline: "nearest" });
+        for (let n = t; n; n = n.parentElement) if (n.scrollLeft) n.scrollLeft = 0;
+      });
+      await h.wait(300);
       await h.ring(h.page.locator("[data-testid='stDataFrame']").last());
     },
     own: async (h) => {
