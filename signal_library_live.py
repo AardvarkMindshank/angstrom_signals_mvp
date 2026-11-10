@@ -28,7 +28,7 @@ def main(argv=None) -> int:
     for kind, asset in ASSETS:
         ctx = sl.DataContext(kind, asset)
         md += [f"## {asset}", "", "| Signal | TF | Status | Reading | Available |", "|---|---|---|---|---|"]
-        for tf in ("15m", "1h", "4h", "1D", "1W"):
+        for tf in ("15m", "30m", "1h", "4h", "12h", "1D", "1W"):
             refs = [r for r in signal_inspector.asset_refs(kind, tf) if r.timeframe == tf and not r.id.startswith("positioning.")]
             t0 = time.perf_counter()
             results = sl.evaluate(refs, ctx)

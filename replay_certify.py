@@ -92,7 +92,7 @@ def report(record: dict, seconds: float) -> str:
              "|---|---|---|---|---|---|---|---|"]
     certified = total = 0
     for key, tfs in sorted(record["signals"].items()):
-        for tf, e in sorted(tfs.items(), key=lambda x: ["15m", "1h", "4h", "1D", "1W"].index(x[0])):
+        for tf, e in sorted(tfs.items(), key=lambda x: ["15m", "30m", "1h", "4h", "12h", "1D", "1W"].index(x[0])):
             total += 1
             certified += e["algorithm"] == "certified"
             c = e.get("checks") or {}

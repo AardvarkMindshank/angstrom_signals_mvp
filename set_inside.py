@@ -11,7 +11,7 @@ import re
 import lattice_editor as le
 from signal_groups.units import score_to_display
 
-_TF = {"15m": "15-minute", "1h": "hourly", "4h": "4-hour", "1D": "daily", "1W": "weekly"}
+_TF = {"15m": "15-minute", "30m": "30-minute", "1h": "hourly", "4h": "4-hour", "12h": "12-hour", "1D": "daily", "1W": "weekly"}
 _STATES = {"met": "met", "not_met": "not met", "active": "active", "clear": "clear"}
 
 

@@ -23,7 +23,7 @@ import pandas as pd
 import table_columns as tc
 
 SETTLE = pd.Timedelta(minutes=10)
-MINUTES = {"15m": 15, "1h": 60, "4h": 240, "1D": 1440, "1W": 1440}
+MINUTES = {"15m": 15, "30m": 30, "1h": 60, "4h": 240, "12h": 720, "1D": 1440, "1W": 1440}
 NEW_YORK = "America/New_York"
 BUDGET_SECONDS = 120
 

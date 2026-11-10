@@ -29,15 +29,17 @@ from datetime import datetime, timedelta, timezone
 
 import pandas as pd
 
-INTERVALS = ("15m", "1h", "4h", "1D", "1W")
+INTERVALS = ("15m", "30m", "1h", "4h", "12h", "1D", "1W")
 RANGES = ("7D", "1M", "3M", "1Y", "All")
 INTERVAL_DEFAULT = "1D"
 RANGE_DEFAULT = "3M"
 
 INTERVAL_LABELS = {
     "15m": "15 minutes",
+    "30m": "30 minutes",
     "1h": "1 hour",
     "4h": "4 hours",
+    "12h": "12 hours",
     "1D": "1 day",
     "1W": "1 week",
 }
@@ -48,8 +50,10 @@ RANGE_DAYS = {"7D": 7, "1M": 31, "3M": 92, "1Y": 366, "All": None}
 # step of the candles we build (minutes; None = calendar day or week).
 _SOURCE = {
     "15m": ("15m", 59, 15),
+    "30m": ("15m", 59, 30),           # built from 15-minute bars, as 4h is built from hourly ones
     "1h": ("60m", 729, 60),
     "4h": ("60m", 729, 240),
+    "12h": ("60m", 729, 720),         # crypto: 00:00 and 12:00 UTC blocks; shares: one block per session
     "1D": ("1d", None, None),
     "1W": ("1d", None, None),
 }
@@ -79,7 +83,7 @@ def availability(interval: str, range_key: str) -> tuple[bool, str]:
     _yahoo_interval, keep_days, _step = _SOURCE[interval]
     days = RANGE_DAYS[range_key]
     if keep_days is not None and (days is None or days > keep_days + 1):
-        kept = "about 60 days" if interval == "15m" else "about 2 years"
+        kept = "about 60 days" if interval in ("15m", "30m") else "about 2 years"
         return False, (
             f"{INTERVAL_LABELS[interval]} candles only go back {kept}, "
             f"so {RANGE_LABELS[range_key]} cannot be shown at this interval."
@@ -403,7 +407,7 @@ def build_candles(raw: pd.DataFrame, interval: str, kind: str, meta: dict | None
         return candles, session
     if kind == "crypto":
         return group_utc(raw, step), None
-    base_step = 15 if interval == "15m" else 60
+    base_step = 15 if interval in ("15m", "30m") else 60
     session = session_from_metadata(meta) or session_from_bars(_clean(raw), base_step)
     return group_session(raw, step, session), session
 
@@ -473,9 +477,13 @@ def load_candles(kind: str, asset_id: str, interval: str, range_key: str, now=No
         candles = candles.iloc[-MAX_CANDLES:]
         first_shown = max(first_shown, candles.index[0])
 
-    if interval == "4h":
-        how = "fixed 4-hour UTC blocks" if kind == "crypto" else "4-hour blocks from the session open"
+    if interval in ("4h", "12h"):
+        hours = interval[:-1]
+        how = f"fixed {hours}-hour UTC blocks" if kind == "crypto" else f"{hours}-hour blocks from the session open"
         source = f"Yahoo Finance 1-hour candles grouped into {how}"
+    elif interval == "30m":
+        how = "fixed 30-minute UTC blocks" if kind == "crypto" else "30-minute blocks from the session open"
+        source = f"Yahoo Finance 15-minute candles grouped into {how}"
     elif interval == "1W":
         source = "Yahoo Finance daily candles grouped into Monday-to-Sunday weeks"
     else:

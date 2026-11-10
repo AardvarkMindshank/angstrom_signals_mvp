@@ -49,7 +49,7 @@ STALE_CLAIM = timedelta(minutes=30)
 NEW_YORK = ZoneInfo("America/New_York")
 SHARE_CLOSE = (16, 0)                  # chart_data._US_CLOSE: the library's share calendar
 DAY_NAMES = ("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
-TF_ORDER = {"15m": 0, "1h": 1, "4h": 2, "4H": 2, "1D": 3, "1d": 3, "1W": 4, "1w": 4}
+TF_ORDER = {"15m": 0, "30m": 0.5, "1h": 1, "4h": 2, "4H": 2, "12h": 2.5, "1D": 3, "1d": 3, "1W": 4, "1w": 4}
 TF_WORDS = {"4H": "4-hour", "1D": "daily", "1W": "weekly"}
 
 

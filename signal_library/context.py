@@ -24,7 +24,7 @@ import pandas as pd
 import chart_data
 
 # The longest range each timeframe can load (the chart's own limits).
-RANGE_FOR = {"15m": "1M", "1h": "1Y", "4h": "1Y", "1D": "1Y", "1W": "All"}
+RANGE_FOR = {"15m": "1M", "30m": "1M", "1h": "1Y", "4h": "1Y", "12h": "1Y", "1D": "1Y", "1W": "All"}
 
 
 def default_candle_loader(kind: str, asset_id: str, timeframe: str) -> dict:

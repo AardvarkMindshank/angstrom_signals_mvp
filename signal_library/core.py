@@ -56,7 +56,7 @@ CONFIRMED = "confirmed"      # built only from closed candles / published data; 
 DEVELOPING = "developing"    # includes something that can still change (forming candle, unconfirmed pivot)
 NOT_APPLICABLE = "n/a"
 
-TIMEFRAMES = ("15m", "1h", "4h", "1D", "1W")
+TIMEFRAMES = ("15m", "30m", "1h", "4h", "12h", "1D", "1W")
 MARKET_TIMEFRAME = "1D"      # market-level daily series (ETF flows, stablecoin supply)
 
 # Scopes: which subjects a signal can be asked about.

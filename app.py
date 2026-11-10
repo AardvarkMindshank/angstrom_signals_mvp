@@ -3690,8 +3690,10 @@ _LW_CHART_JS = (Path(__file__).resolve().parent / "lw_chart.js").read_text(encod
 _lw_chart = st.components.v2.component("lw_chart", js=_LW_CHART_JS, isolate_styles=False)
 _INTERVAL_TIPS = {
     "15m": "15-minute candles (about the last 60 days)",
+    "30m": "30-minute candles, built from 15-minute ones (about the last 60 days)",
     "1h": "1-hour candles (about the last 2 years)",
     "4h": "4-hour candles: crypto in fixed UTC blocks, shares from the market open",
+    "12h": "12-hour candles: crypto in 00:00 and 12:00 UTC blocks; for shares, one per session",
     "1D": "Daily candles",
     "1W": "Weekly candles (Monday to Sunday)",
 }

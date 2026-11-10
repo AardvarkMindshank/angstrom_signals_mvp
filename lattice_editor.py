@@ -40,7 +40,7 @@ CATEGORY_ICON = {"trend": "trend", "momentum": "momentum", "regime": "regime", "
 DIRECTION_MAP = {"up": 1, "down": -1, "mixed": 0}
 OPS = {"gte": "is at least", "lte": "is at most", "yes": "is yes", "no": "is no", "is": "is", "is_not": "is not",
        "exists": "has a value"}     # "exists": there is one (for example a support zone at all)
-TF_WORDS = {"15m": "15-minute", "1h": "hourly", "4h": "4-hour", "1D": "daily", "1W": "weekly"}
+TF_WORDS = {"15m": "15-minute", "30m": "30-minute", "1h": "hourly", "4h": "4-hour", "12h": "12-hour", "1D": "daily", "1W": "weekly"}
 SUGGESTED_LABELS = [("bullish", "Bullish"), ("bearish", "Bearish"), ("stretched_up", "Stretched up"),
                     ("stretched_down", "Stretched down"), ("buying", "Buying"), ("selling", "Selling")]
 
