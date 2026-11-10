@@ -7080,14 +7080,17 @@ because they measure different things and are never added together.
    Max pain, Leverage & liquidations and Signal matrix, all for that asset.
 4. **Notifications**, in the sidebar, holds your alerts and their settings.
 5. The arrow on the right edge opens **Social signals and chat**.
-6. **🧩 Angstrom Lattice** (preview), near the bottom, is your research workspace: build your own readings and
-   rules from the same signals, then scan your watchlist with them in **Prism**, now or on a schedule with alerts.
-   See the 🧩 Lattice & Prism tab.
+6. **🧩 Angstrom Lattice** (preview), right under the chart, is your research workspace: build your own readings
+   and rules from the same signals, scan your watchlist with them in **Prism**, now or on a schedule with alerts,
+   and study what followed a Set's Yes in the past. See the 🧩 Lattice & Prism tab.
 7. **✨ AI** (top right, and beside the Lattice tabs) opens the Angstrom Assistant in its own window: ask where
    things are, how to use them or what a reading means, or get step-by-step help building and testing an idea.
+   Paste a screenshot (Ctrl+V), drop one on the window or tap 🖼 to add one, and ask what you're looking at. It
+   links the right training video when there is one. It explains; you do the clicks.
 """)
-        st.markdown("**🎬 Training videos**: short videos with captions, about a minute or two each. Back, Next and "
-                    "Start in the player move through a series.")
+        st.markdown("**🎬 Training videos**: short videos with captions, about a minute or two each. Each opens in "
+                    "its own window beside the app; Back, Next and Start move through a series, and 📌 Keep on top "
+                    "floats the video above your other windows while you follow along.")
         _training.all_links(st, key="start")
         if st.button("🚀 Show the getting-started checklist", key="onboarding_show_again",
                      help="Brings back the checklist at the top of the page."):
@@ -7134,14 +7137,16 @@ because they measure different things and are never added together.
 **The tables**
 - Click a column title to sort. Hover any reading to read it; click it to open **🔍 Why these readings** for
   that asset at that column, part by part.
-- The **column icon** in the table header, just above the Groups fold arrow (◂), chooses which Groups and Sets the
-  tables show: yours, and the ones provided by Angstrom Signals.
+- The **column icon**, in the row above the column titles, chooses which Groups and Sets the tables show (yours,
+  and the ones provided by Angstrom Signals) and their order (↑ ↓).
   The icons beside each name say what it looks at (📈 trend, 🎯 momentum or stretch, 🔊 volume, 🧱 support,
   resistance or structure, 🌊 volatility or regime, 🔭 another asset, 💬 news, 🏦 positioning or flows).
-  Fold the Groups or the Sets sideways with ◂ in their first column title.
+  Fold the Groups or the Sets sideways with ◂ in their first column title: folded Groups show a row of coloured
+  dots, one per Group; folded Sets show how many say Yes.
 - A Set shows ✓ (Yes: conditions met), ✕ (No: a condition failed) or ? (Unknown: nothing failed, but some data
-  is missing). Its hover adds how complete the data was (● complete, ◐ partly missing, ○ none) and 🔬, which
-  means nobody has yet studied what usually followed a Yes.
+  is missing). Its hover adds how complete the data was (● complete, ◐ partly missing, ○ none) and what its
+  study found: 🔬 not yet studied, ⚖️ no clear difference, 〰️ some difference, not established, 🧭 a consistent
+  difference (in the past; never a forecast).
 - Columns that read 4-hour or hourly candles are worked out in the background at each close: the hover says when,
   ⏳ means a newer close has passed since, and **—** means the first answer hasn't arrived yet.
 - **Extra metrics** (Settings) add 7d %, Market Cap, ATR % (typical daily move) and Vol (volume versus its
@@ -7167,6 +7172,9 @@ The icon row adds more:
   red below the price for longs, green above for shorts. Brighter means more money.
 - **CoinGlass liquidation heatmap ↗** (crypto), under the icons, opens CoinGlass's own heatmap in a new tab.
 - **Overlay** draws RSI, Stochastic and ADX on the price chart; **earnings dates** (stocks) mark report days.
+
+- **Show a Set on the chart** colours the background on every past day the Set said Yes (green) or couldn't
+  tell (amber), across the whole history. 🕰️ Visualize History in Prism opens the same view.
 
 Your choices are saved on your account.
 """)
@@ -7202,7 +7210,7 @@ it for height. Pinch zoom on an iPad is unreliable with Plotly, which is why the
 
 **🔍 Why these readings** has one folded block for each column in the tables. A Group block shows every part
 with its own reading in plain words and its share of the score; a Set block shows each line with ✓ or ✕ and
-the reason for its answer, with the three status marks (answer, data ●◐○, evidence 🔬). The :material/hub:
+the reason for its answer, with the three status marks (answer, data ●◐○, and its study: 🔬 ⚖️ 〰️ 🧭). The :material/hub:
 **Open in Lattice** button in a block shows how it is built (a provided Set opens in Prism, where it is run).
 Columns that read 4-hour or hourly candles show their latest answer and when it was worked out.
 
@@ -7260,8 +7268,10 @@ same line under the asset's name in the chart section.
 
     with tab_lattice:
         st.markdown("""
-**Angstrom Lattice** (preview) is the research workspace near the bottom of the dashboard. Open it and pick a
-part from the bar at the top; hover the bar for what each part does. Like the rest of the app, it describes
+**Angstrom Lattice** (preview) is the research workspace right under the chart. Open it and pick a part from
+the bar at the top; hover the bar for what each part does. ↗ opens it in its own window, and anything it opens on
+a chart (such as Visualize History) shows on the main window's chart. ✨ AI beside the bar opens the Assistant.
+Drag the dividers between the library, the editor and the checks to give each more room. Like the rest of the app, it describes
 conditions; nothing in it is a forecast or advice.
 
 **Provided by Angstrom Signals:** the starter Groups, the provided Sets and the built-in alerts sit in a folded
@@ -7274,7 +7284,11 @@ starter keep working, and built-in alerts that are on keep running.
   or the wider market, 💬 news sentiment, 🏦 positioning or fund flows. In Prism, tap an icon above the list to show
   only the Sets that use it; tap it again to show all.
 - Each provided item has a one-line description and **more…**: what it measures, why traders watch it, and what
-  it doesn't prove. **🔬** means nobody has yet studied what usually followed it: it describes conditions only.
+  it doesn't prove, and its study mark: **🔬** not yet studied (it describes conditions only), or the study's
+  verdict (⚖️ 〰️ 🧭).
+- **🔍 Look inside** on a provided Set (in Prism, on its chip or on a scan) shows the Groups and signals it is made
+  of, in plain words. **Make my own copy** opens it in Signal Sets as your own, to change and save; the provided
+  one stays as it is.
 - The provided Sets include *Pullback in an uptrend*, *Rally in a downtrend*, *Trend alignment* (daily and
   weekly), *Breakout with volume*, *Volatility squeeze*, *Oversold in a range*, *Near support in a range*,
   *Bitcoin trend filter* and *Overextended*. Any of them can also be a column in the tables.
@@ -7294,7 +7308,9 @@ starter keep working, and built-in alerts that are on keep running.
 - **Confirmations and vetoes** (optional): a confirmation is reported as met or not met; a veto that fires turns
   every label into *Vetoed*.
 - **Checks** say what blocks saving (⛔) and what is only a warning (⚠️). The description is written
-  automatically. Save as a new Group, or as a new version of yours; earlier versions stay as they were.
+  automatically. Save as a new Group, or as a new version of yours; earlier versions stay as they were. Names
+  must be unique among yours. **✏️ Rename** changes the name everywhere at once; **🗑 Delete** removes every version,
+  only when nothing else uses it.
 """)
         _training.link(st, "03-signal-groups", key="tv_lat_03")
         st.markdown("""
@@ -7307,7 +7323,11 @@ hold, for example *Trend is Bullish* and *RSI is below 70*.
 - Lines can test single signals directly, including **Market regime** (trending, ranging, transitional),
   **Relative volume** (times the usual volume) and the **nearest support or resistance** (its distance in % or in
   typical daily moves).
-- A Set needs a decision before Prism can scan it.
+- **+ ⏭ THEN box** adds an order in time: **1 · First** (lines that held on an earlier daily close), **2 · Then,
+  within** N closes (lines that hold now), and an optional **3 · Cancel if** (a reading after First that cancels
+  it). The Set says Yes when Then holds today and First held within the last N closes. At most 2 THEN boxes; First
+  and Then on the same close don't count (use ordinary lines for "both at once").
+- A Set needs a decision before Prism can scan it. Saving, versions, ✏️ Rename and 🗑 Delete work as for Groups.
 - **🔬 What followed:** press **Study this Set** to see what happened after it turned Yes in the past (Sep 2014 to
   Oct 2024, on every studied coin and equity), against comparable ordinary days. The verdict is one of *Too few to
   judge*, *No clear difference*, *Some difference, not established* or *Consistent difference*. Under it: coins and
@@ -7319,11 +7339,17 @@ hold, for example *Trend is Bullish* and *RSI is below 70*.
         st.markdown("""
 **🔎 Prism Scan: scan your watchlist.** Your saved scans, each a Set plus its assets, schedule and alerts.
 - **Start a scan:** drag a saved Set onto the board, or tap **+**. It starts on your whole watchlist and runs
-  only when you press ▶.
+  only when you press ▶. **🔍 Look inside** shows the Set a scan uses; **⧉ Duplicate** copies the scan (same
+  Set) for other assets, a schedule or alerts.
 - **Assets:** drop single assets, or the groups that follow your watchlist (**Whole Watchlist**, **All crypto**,
-  **All equities**), onto a scan; remove one with ×.
+  **All equities**), onto a scan; remove one with ×. Adding **All crypto** takes in the single coins already there (likewise
+  **All equities**), and adding anything replaces a lone **Whole Watchlist**.
 - **Results** list each asset's answer with its data mark (● complete, ◐ partly missing, ○ none) and the line
-  that decided it; 🔬 beside the title means the Set's history hasn't been studied yet.
+  that decided it, with the Set's study mark beside the title (🔬 not yet studied). A Set with a THEN box shows
+  **⏭ N** beside a No when the first step was seen and the next can still come within N closes (*Armed*: not a
+  match yet).
+- **🕰️ Visualize History** shows the scan's Set on every past day for each asset, as bands on a chart under the
+  scans; tap an asset to open it on the main chart.
 - **Each scan's row** shows the Yes / No / ? counts from its last scheduled run, a dot per recent run (green had a
   Yes, orange all No, grey mostly Unknown, red ring failed) and when it runs next. Click the arrow, or **Expand
   all**, for the details.
@@ -7350,7 +7376,7 @@ hold, for example *Trend is Bullish* and *RSI is below 70*.
             _training.link(st, _slug, key=f"tv_lat_{_slug}")
         st.markdown("""
 **Coming next:** a Set score and counting (*at least 2 of these 4*). **🛣️ Strategies** (later): tracking your own
-plans from a Set or sequence, with entries, exits and ladders.
+plans from a Set or THEN box, with entries, exits and ladders.
 """)
 
     with tab_alerts:
@@ -7375,6 +7401,9 @@ plans from a Set or sequence, with entries, exits and ladders.
 
 - 🔎 **Prism scan alerts** are set on each scan in **Angstrom Lattice → Prism Scan**: instant, in the daily
   summary (its own *Prism scans* section), in the app only, or off. See the 🧩 Lattice & Prism tab.
+
+- 🔬 **Study finished**: when a *What followed* study you started is ready (or couldn't finish), a note arrives
+  here. Open the Set in Signal Sets to read it.
 
 **No repeats on a wobble.** After an alert, the same one can only fire again once the score has moved 20 points
 back (for example back to +30 after a +50 alert) and then crosses again. This applies to every alert.
@@ -7414,8 +7443,14 @@ or your ⭐ favourites.
 **Sections.** Every section folds open or shut from its header. **Open all** and **Collapse all** sit
 by the page title. Each section's ↗ opens it in its own window, which follows the asset you pick.
 
-**Layout.** ▢ stacks everything in one column; the wide layout puts the tables on top, market sentiment
-on the left and the chart and its tools on the right. Drag the line between the columns to resize.
+**Layout.** ▢ stacks everything in one column; the wide layout puts the tables on top, then the chart and
+🧩 Angstrom Lattice across the full width, then market sentiment on the left and the chart's tools on the right.
+Drag the line between the columns to resize.
+
+**Windows of their own.** ✨ AI (the Assistant) and 🎬 training videos open in small windows beside the app, so
+they never cover what you're working on; opening another reuses the same window. In Chrome, Edge or Safari, 📌 Keep
+on top floats a video above every other window. On Windows, the free PowerToys *Always on Top* (Windows + Ctrl + T)
+keeps any window, the Assistant included, on top. On a phone they open as tabs.
 
 **Chart height.** Drag the small bar under the chart up or down to make the price chart shorter or taller
 (the panels below keep their size). Your height is saved to your account. Double-click the bar to reset.
