@@ -101,7 +101,8 @@ def candidate_message(f: dict, coins: list[tuple[str, str]]) -> str:
     names = ", ".join(f"{name} ({symbol})" for symbol, name in coins[:12])
     more = f" and {len(coins) - 12} more" if len(coins) > 12 else ""
     side = "long" if f["direction"] == "long" else "short"
-    return (f"Funnel “{f['name']}” {arrow}: new {side} Candidate{'s' if len(coins) > 1 else ''}: {names}{more}. "
+    label = f["name"] if f["name"].rstrip().endswith(arrow) else f"{f['name']} {arrow}"
+    return (f"Funnel “{label}”: new {side} Candidate{'s' if len(coins) > 1 else ''}: {names}{more}. "
             "Every stage holds, including the entry conditions. A coin to look at, not a recommendation.")[:500]
 
 
@@ -157,7 +158,8 @@ def run_funnel(store, f: dict, universe: dict[str, dict], evaluate, now: pd.Time
                                   "finished_at": datetime.now(timezone.utc).isoformat()})
     new = [c for c, st in states.items() if fn.alert_due(st)]
     if new and (f.get("alerts") or {}).get("in_app", True):
-        store.notify([{"user_id": f["owner_id"], "asset_symbol": "", "asset_name": f["name"], "alert_type": ALERT_TYPE,
+        store.notify([{"user_id": f["owner_id"], "asset_symbol": f"funnel:{f['id']}", "asset_name": f["name"],
+                       "alert_type": ALERT_TYPE,
                        "message": candidate_message(f, [(universe[c].get("symbol") or universe[c].get("ticker") or c,
                                                          universe[c].get("name") or c)
                                                         for c in new])}])

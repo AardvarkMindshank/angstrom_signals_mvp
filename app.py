@@ -6652,8 +6652,9 @@ def notifications_panel() -> None:
                         weight = "700" if not note.get("is_read") else "500"
                         kind = str(note.get("alert_type") or "")
                         if kind in ("invite_joined", "group_invite", "group_joined", "moderation_warning", "report_update",
-                                    "study"):
+                                    "study", "funnel"):
                             titles = {
+                                "funnel": f"🔻 {name}",      # not clickable yet: will open the funnel's own tab
                                 "study": "🔬 Study finished",
                                 "invite_joined": "Invite accepted",
                                 "group_invite": "Community invite",
