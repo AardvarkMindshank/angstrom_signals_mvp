@@ -318,13 +318,25 @@ def strip_rows(supabase, doc: dict, assets: list[tuple[str, str, str]], progress
 QUICK_DAYS = 400       # the last year, plus a little: the chart can open on 1Y while older years are worked out
 
 
+STEPS = (3, 10)            # Visualize History fills in older years in these steps (then all), for every asset in turn
+
+
 def bounds(strip: dict) -> dict:
     firsts = [r["spans"][0][0] for r in strip["rows"] if r["spans"]]
     lasts = [r["spans"][-1][1] for r in strip["rows"] if r["spans"]]
     strip["start"] = min(firsts) if firsts else None
     strip["end"] = max(lasts) if lasts else None
     strip["pending"] = sum(1 for r in strip["rows"] if not r.get("full"))
+    # How many years every asset has worked out so far (0 = all of them): a Years button opens once it is covered.
+    open_rows = [r.get("years") or 1 for r in strip["rows"] if not r.get("full")]
+    strip["covered"] = 0 if not open_rows else min(open_rows)
     return strip
+
+
+def covers(strip: dict, years: int) -> bool:
+    """Can the chart show `years` (0 = all) for every asset yet?"""
+    covered = strip.get("covered", 0 if not strip.get("pending") else 1)
+    return covered == 0 or (years != 0 and years <= covered)
 
 
 def quick_rows(supabase, doc: dict, assets: list[tuple[str, str, str]], progress=None, frames=full_daily) -> dict:
@@ -356,6 +368,7 @@ def quick_rows(supabase, doc: dict, assets: list[tuple[str, str, str]], progress
                 start = frame.index[-1] - pd.Timedelta(days=QUICK_DAYS)
                 row["spans"] = spans(daily_answers(doc, frame, kind, asset_id, start=start, subjects=subjects))
                 row["full"] = False
+                row["years"] = 1
         except Exception:
             pass
         rows.append(row)
@@ -363,14 +376,47 @@ def quick_rows(supabase, doc: dict, assets: list[tuple[str, str, str]], progress
 
 
 def complete_row(supabase, doc: dict, strip: dict, frames=full_daily) -> str | None:
-    """Work out the whole history of the next asset that only has its last year; returns its name (None when done)."""
-    for row in strip["rows"]:
-        if not row.get("full"):
-            try:
-                row["spans"] = history_for(supabase, doc, row["kind"], row["id"], frames) or row["spans"]
-            except Exception:
-                pass
+    """One step of filling in older years: the asset with the fewest years so far gets its next step (3 years, then 10,
+    then all of them, when it is saved like any whole history), so every asset reaches 3 years before any goes to 10,
+    and the chart's 3Y, 10Y and All open one after another. Returns the asset's name (None when all are done)."""
+    open_rows = [r for r in strip["rows"] if not r.get("full")]
+    if not open_rows:
+        return None
+    row = min(open_rows, key=lambda r: r.get("years") or 1)
+    have = row.get("years") or 1
+    nxt = next((y for y in STEPS if y > have), 0)
+    try:
+        frame = frames(row["kind"], row["id"])
+        if frame is None or frame.empty or not row["spans"]:
+            raise ValueError("no history")
+        if nxt == 0:                                       # the rest: the whole history, saved for next time
+            row["spans"] = history_for(supabase, doc, row["kind"], row["id"], frames) or row["spans"]
             row["full"] = True
-            bounds(strip)
-            return row["name"]
-    return None
+        else:
+            first = pd.Timestamp(row["spans"][0][0])
+            first = first.tz_localize(frame.index.tz) if first.tzinfo is None and frame.index.tz is not None else first
+            older_frame = frame[frame.index < first]
+            start = frame.index[-1] - pd.Timedelta(days=365 * nxt + 35)
+            subjects = {(sk, sid): frames(sk, sid) for sk, sid in subjects_of(doc)}
+            subjects = {k: v for k, v in subjects.items() if v is not None}
+            older = []
+            if len(older_frame) and older_frame.index[-1] >= start:
+                older = daily_answers(doc, older_frame, row["kind"], row["id"], start=max(start, older_frame.index[0]),
+                                      subjects=subjects)
+            joined = spans(older)
+            for first_day, last_day, answer in row["spans"]:
+                if joined and joined[-1][2] == answer:
+                    joined[-1][1] = last_day
+                else:
+                    joined.append([first_day, last_day, answer])
+            row["spans"] = joined
+            row["years"] = nxt
+            if not older:                                  # nothing older than this: the history is whole
+                row["full"] = True
+                from column_answers import def_hash
+
+                save(supabase, def_hash(doc), row["key"], row["spans"])
+    except Exception:
+        row["full"] = True                                 # never retry forever on one asset
+    bounds(strip)
+    return row["name"]

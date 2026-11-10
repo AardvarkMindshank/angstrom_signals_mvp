@@ -316,19 +316,22 @@ def _history_view(st, scan, strip) -> None:
     with cols[0]:
         top = st.selectbox("On top", list(names), format_func=lambda k: names[k], key=f"hist_top_{sid}",
                            help="The asset drawn large with candles. Tap any small chart to put it on top.")
+    years_of = {"1Y": 1, "3Y": 3, "10Y": 10, "All": 0}
+    ready = {o: (not pending) or set_history.covers(strip, y) for o, y in years_of.items()}
     with cols[1]:
         span = st.segmented_control(
-            "Years", ["1Y", "3Y", "10Y", "All"], default="1Y" if pending else "10Y", key=f"hist_years_{sid}",
-            format_func=lambda o: o if (o == "1Y" or not pending) else f"⏳ {o}",
+            "Years", list(years_of), default="1Y" if pending else "10Y", key=f"hist_years_{sid}",
+            format_func=lambda o: o if ready[o] else f"⏳ {o}",
             help="How far back the chart opens; you can also zoom and drag along the time axis. ⏳ = still being "
-                 "worked out.") or "1Y"
+                 "worked out: 3Y opens when every asset has 3 years, then 10Y, then All.") or "1Y"
     with cols[2]:
         show_no = st.toggle("No as faint red", key=f"hist_no_{sid}",
                             help="Tint the No days too. Off keeps the chart clear, since most days are No.")
-    if pending and span != "1Y":
-        st.caption(f"⏳ Older years are still being worked out ({len(strip['rows']) - pending} of "
-                   f"{len(strip['rows'])} assets done); showing the last year until then.")
-        span = "1Y"
+    if not ready[span]:
+        best = max((o for o in ("1Y", "3Y", "10Y") if ready[o]), key=lambda o: years_of[o])
+        st.caption(f"⏳ {span} is still being worked out ({len(strip['rows']) - pending} of {len(strip['rows'])} "
+                   f"assets complete); showing {best} until then.")
+        span = best
     years = {"1Y": 1, "3Y": 3, "10Y": 10, "All": 0}[span]
     dark = str(getattr(getattr(st.context, "theme", None), "type", "") or "") == "dark"
     data = history_chart.payload(strip, top, years, dark=dark, show_no=show_no, set_name=obj["name"])
@@ -353,8 +356,9 @@ def _history_view(st, scan, strip) -> None:
             "pick": f"{'Crypto' if r['kind'] == 'crypto' else 'Stock'}|{r['id']}",
             "band": (f"scan:{sid}", f"{obj['name']} (this scan)", obj["set"])}
         lattice_panel.rerun_page(st)
-    if pending:                     # one more asset's older years, then draw again
-        with st.spinner(f"Working out older years ({len(strip['rows']) - pending + 1} of {len(strip['rows'])})…"):
+    if pending:                     # one more step of older years, then draw again
+        step = {1: "3 years", 3: "10 years"}.get(strip.get("covered") or 0, "the whole history")
+        with st.spinner(f"Working out older years: {step} for every asset…"):
             set_history.complete_row(_SUPABASE[0], obj["set"], strip)
         lattice_panel.rerun(st)
 
