@@ -1,0 +1,49 @@
+
+Pullback in an uptrend: No clear difference
+  1503 episodes in 307 weeks, 86 assets (327 coin, 1176 share episodes); top [('MSFT', 0.017), ('NVDA', 0.017), ('BTC-USD', 0.017)]
+  gain_first 0.508, gain_first_usual 0.520, loss_first 0.448, loss_first_usual 0.444, move 0.208, move_usual 0.353, higher 0.539, higher_usual 0.554
+  first: estimate -0.01546302170632965, 95% [-0.1064698051655133, 0.07554376175285399], p 0.7366496810664739, Holm False, consistency {'checked': ['before 2019', '2019 to 2021', '2022 to Oct 2024', 'coins', 'shares'], 'same_way': ['before 2019', '2022 to Oct 2024', 'shares'], 'all_same': False}
+  move: estimate -0.14544871818963767, 95% [-0.4766518936391104, 0.18575445725983508], p 0.38554097689157407, Holm False, consistency {'checked': ['before 2019', '2019 to 2021', '2022 to Oct 2024', 'coins', 'shares'], 'same_way': ['before 2019', '2019 to 2021', '2022 to Oct 2024', 'coins', 'shares'], 'all_same': True}
+
+Rally in a downtrend: No clear difference
+  1199 episodes in 248 weeks, 86 assets (541 coin, 658 share episodes); top [('EOS-USD', 0.024), ('ZEC-USD', 0.024), ('NEO-USD', 0.023)]
+  gain_first 0.513, gain_first_usual 0.492, loss_first 0.440, loss_first_usual 0.456, move 0.247, move_usual 0.161, higher 0.542, higher_usual 0.524
+  first: estimate 0.038002231137316704, 95% [-0.08334060736160853, 0.15934506963624195], p 0.535477799634572, Holm False, consistency {'checked': ['before 2019', '2019 to 2021', '2022 to Oct 2024', 'coins', 'shares'], 'same_way': ['2019 to 2021', '2022 to Oct 2024', 'coins', 'shares'], 'all_same': False}
+  move: estimate 0.08586769677717254, 95% [-0.39258395284668646, 0.5643193464010315], p 0.7223251245300812, Holm False, consistency {'checked': ['before 2019', '2019 to 2021', '2022 to Oct 2024', 'coins', 'shares'], 'same_way': ['2019 to 2021', '2022 to Oct 2024', 'coins', 'shares'], 'all_same': False}
+
+Trend alignment: Some difference, not established
+  1417 episodes in 336 weeks, 86 assets (299 coin, 1118 share episodes); top [('AMGN', 0.019), ('WMT', 0.019), ('ORCL', 0.018)]
+  gain_first 0.488, gain_first_usual 0.548, loss_first 0.469, loss_first_usual 0.413, move 0.454, move_usual 0.546, higher 0.558, higher_usual 0.600
+  first: estimate -0.11533505214479588, 95% [-0.19162472416651322, -0.03904538012307854], p 0.0034340603096932247, Holm False, consistency {'checked': ['before 2019', '2019 to 2021', '2022 to Oct 2024', 'coins', 'shares'], 'same_way': ['before 2019', '2019 to 2021', '2022 to Oct 2024', 'coins', 'shares'], 'all_same': True}
+  move: estimate -0.09194876490925265, 95% [-0.3536761220870137, 0.16977859226850844], p 0.48722549908570123, Holm False, consistency {'checked': ['before 2019', '2019 to 2021', '2022 to Oct 2024', 'coins', 'shares'], 'same_way': ['before 2019', '2022 to Oct 2024', 'shares'], 'all_same': False}
+
+Breakout with volume: No clear difference
+  1879 episodes in 347 weeks, 86 assets (742 coin, 1137 share episodes); top [('LTC-USD', 0.024), ('LINK-USD', 0.023), ('ADA-USD', 0.02)]
+  gain_first 0.513, gain_first_usual 0.502, loss_first 0.450, loss_first_usual 0.448, move 0.520, move_usual 0.320, higher 0.532, higher_usual 0.535
+  first: estimate 0.009215277726754059, 95% [-0.061266228336303595, 0.07969678378981171], p 0.7957598360630193, Holm False, consistency {'checked': ['before 2019', '2019 to 2021', '2022 to Oct 2024', 'coins', 'shares'], 'same_way': ['2022 to Oct 2024', 'coins'], 'all_same': False}
+  move: estimate 0.2001866071798805, 95% [-0.1789697289531417, 0.5793429433129027], p 0.297219221166635, Holm False, consistency {'checked': ['before 2019', '2019 to 2021', '2022 to Oct 2024', 'coins', 'shares'], 'same_way': ['2019 to 2021', '2022 to Oct 2024', 'coins', 'shares'], 'all_same': False}
+
+Volatility squeeze: No clear difference
+  3187 episodes in 361 weeks, 86 assets (1070 coin, 2117 share episodes); top [('LTC-USD', 0.017), ('XLM-USD', 0.017), ('LINK-USD', 0.016)]
+  size 1.900, size_usual 1.781
+  size: estimate 0.11845982251206681, 95% [-0.004363867706894245, 0.24128351273102788], p 0.058537490503777254, Holm False, consistency {'checked': ['before 2019', '2019 to 2021', '2022 to Oct 2024', 'coins', 'shares'], 'same_way': ['before 2019', '2019 to 2021', '2022 to Oct 2024', 'coins', 'shares'], 'all_same': True}
+
+Oversold in a range: No clear difference
+  2128 episodes in 343 weeks, 86 assets (629 coin, 1499 share episodes); top [('BCH-USD', 0.016), ('FIL-USD', 0.016), ('JNJ', 0.016)]
+  gain_first 0.476, gain_first_usual 0.503, loss_first 0.484, loss_first_usual 0.455, move 0.138, move_usual 0.185, higher 0.530, higher_usual 0.531
+  first: estimate -0.05510274488328287, 95% [-0.1421674499580096, 0.031961960191443844], p 0.21200281644900926, Holm False, consistency {'checked': ['before 2019', '2019 to 2021', '2022 to Oct 2024', 'coins', 'shares'], 'same_way': ['2019 to 2021', '2022 to Oct 2024', 'coins', 'shares'], 'all_same': False}
+  move: estimate -0.04626669858602179, 95% [-0.3420924043767741, 0.2495590072047305], p 0.7568432418764304, Holm False, consistency {'checked': ['before 2019', '2019 to 2021', '2022 to Oct 2024', 'coins', 'shares'], 'same_way': ['2019 to 2021', '2022 to Oct 2024', 'coins'], 'all_same': False}
+
+Near support in a range: No clear difference
+  2975 episodes in 372 weeks, 86 assets (836 coin, 2139 share episodes); top [('JNJ', 0.017), ('DIS', 0.016), ('CVX', 0.016)]
+  gain_first 0.507, gain_first_usual 0.508, loss_first 0.456, loss_first_usual 0.449, move 0.247, move_usual 0.189, higher 0.545, higher_usual 0.538
+  first: estimate -0.008591765152755036, 95% [-0.07736264569103429, 0.06017911538552423], p 0.8046097772999685, Holm False, consistency {'checked': ['before 2019', '2019 to 2021', '2022 to Oct 2024', 'coins', 'shares'], 'same_way': ['before 2019', '2022 to Oct 2024', 'coins', 'shares'], 'all_same': False}
+  move: estimate 0.05858197234774125, 95% [-0.19558831863389659, 0.3127522633293791], p 0.6482399148122876, Holm False, consistency {'checked': ['before 2019', '2019 to 2021', '2022 to Oct 2024', 'coins', 'shares'], 'same_way': ['before 2019', '2019 to 2021', 'shares'], 'all_same': False}
+
+Overextended: No clear difference
+  4817 episodes in 375 weeks, 86 assets (1399 coin, 3418 share episodes); top [('LTC-USD', 0.016), ('BTC-USD', 0.015), ('GOOGL', 0.015)]
+  gain_first 0.511, gain_first_usual 0.518, loss_first 0.449, loss_first_usual 0.440, move 0.398, move_usual 0.283, higher 0.541, higher_usual 0.553
+  first: estimate -0.01589796800233341, 95% [-0.07699792355033269, 0.045201987545665866], p 0.6067033672935231, Holm False, consistency {'checked': ['before 2019', '2019 to 2021', '2022 to Oct 2024', 'coins', 'shares'], 'same_way': ['before 2019', 'shares'], 'all_same': False}
+  move: estimate 0.11472608429448101, 95% [-0.16424044302714458, 0.3936926116161066], p 0.41633096559725785, Holm False, consistency {'checked': ['before 2019', '2019 to 2021', '2022 to Oct 2024', 'coins', 'shares'], 'same_way': ['2019 to 2021', '2022 to Oct 2024', 'coins'], 'all_same': False}
+
+Bitcoin trend filter: A filter for other Sets: it is not studied on its own.
