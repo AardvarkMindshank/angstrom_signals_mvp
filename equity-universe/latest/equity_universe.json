@@ -1,0 +1,5013 @@
+{
+ "built_at": "2026-11-10T10:36:34.984966+00:00",
+ "rules": {
+  "list": "S&P 500",
+  "min_price": 5.0,
+  "min_dollar_volume": 20000000,
+  "min_days": 1100,
+  "venue": "Yahoo Finance (US exchanges)",
+  "size": 503
+ },
+ "included": [
+  {
+   "ticker": "MMM",
+   "name": "3M",
+   "sector": "Industrials",
+   "price": 188.63,
+   "volume_usd": 534082629,
+   "market_cap": null,
+   "next_earnings": "2027-01-19",
+   "rank": 1
+  },
+  {
+   "ticker": "AOS",
+   "name": "A. O. Smith",
+   "sector": "Industrials",
+   "price": 65.2,
+   "volume_usd": 102365551,
+   "market_cap": null,
+   "next_earnings": "2027-01-28",
+   "rank": 2
+  },
+  {
+   "ticker": "ABT",
+   "name": "Abbott Laboratories",
+   "sector": "Health Care",
+   "price": 110.51,
+   "volume_usd": 881236755,
+   "market_cap": null,
+   "next_earnings": "2027-01-28",
+   "rank": 3
+  },
+  {
+   "ticker": "ABBV",
+   "name": "AbbVie",
+   "sector": "Health Care",
+   "price": 293.3,
+   "volume_usd": 1515673020,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 4
+  },
+  {
+   "ticker": "ACN",
+   "name": "Accenture",
+   "sector": "Information Technology",
+   "price": 254.37,
+   "volume_usd": 1478795465,
+   "market_cap": null,
+   "next_earnings": "2026-12-17",
+   "rank": 5
+  },
+  {
+   "ticker": "ADBE",
+   "name": "Adobe Inc.",
+   "sector": "Information Technology",
+   "price": 237.32,
+   "volume_usd": 949620337,
+   "market_cap": null,
+   "next_earnings": "2026-12-09",
+   "rank": 6
+  },
+  {
+   "ticker": "AMD",
+   "name": "Advanced Micro Devices",
+   "sector": "Information Technology",
+   "price": 508.58,
+   "volume_usd": 11739047900,
+   "market_cap": null,
+   "next_earnings": "2027-02-02",
+   "rank": 7
+  },
+  {
+   "ticker": "AES",
+   "name": "AES Corporation",
+   "sector": "Utilities",
+   "price": 14.9,
+   "volume_usd": 136148571,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 8
+  },
+  {
+   "ticker": "AFL",
+   "name": "Aflac",
+   "sector": "Financials",
+   "price": 125.22,
+   "volume_usd": 201597614,
+   "market_cap": null,
+   "next_earnings": "2027-02-03",
+   "rank": 9
+  },
+  {
+   "ticker": "A",
+   "name": "Agilent Technologies",
+   "sector": "Health Care",
+   "price": 180.17,
+   "volume_usd": 365743459,
+   "market_cap": null,
+   "next_earnings": "2026-11-23",
+   "rank": 10
+  },
+  {
+   "ticker": "APD",
+   "name": "Air Products",
+   "sector": "Materials",
+   "price": 311.08,
+   "volume_usd": 291670466,
+   "market_cap": null,
+   "next_earnings": "2027-01-29",
+   "rank": 11
+  },
+  {
+   "ticker": "ABNB",
+   "name": "Airbnb",
+   "sector": "Consumer Discretionary",
+   "price": 190.29,
+   "volume_usd": 596308638,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 12
+  },
+  {
+   "ticker": "AKAM",
+   "name": "Akamai Technologies",
+   "sector": "Information Technology",
+   "price": 80.29,
+   "volume_usd": 474901221,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 13
+  },
+  {
+   "ticker": "ALB",
+   "name": "Albemarle Corporation",
+   "sector": "Materials",
+   "price": 99.12,
+   "volume_usd": 219192078,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 14
+  },
+  {
+   "ticker": "ARE",
+   "name": "Alexandria Real Estate Equities",
+   "sector": "Real Estate",
+   "price": 45.88,
+   "volume_usd": 102735274,
+   "market_cap": null,
+   "next_earnings": "2027-01-25",
+   "rank": 15
+  },
+  {
+   "ticker": "ALGN",
+   "name": "Align Technology",
+   "sector": "Health Care",
+   "price": 174.26,
+   "volume_usd": 142044935,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 16
+  },
+  {
+   "ticker": "ALLE",
+   "name": "Allegion",
+   "sector": "Industrials",
+   "price": 190.52,
+   "volume_usd": 178830315,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 17
+  },
+  {
+   "ticker": "LNT",
+   "name": "Alliant Energy",
+   "sector": "Utilities",
+   "price": 73.46,
+   "volume_usd": 202692915,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 18
+  },
+  {
+   "ticker": "ALL",
+   "name": "Allstate",
+   "sector": "Financials",
+   "price": 253.79,
+   "volume_usd": 405862907,
+   "market_cap": null,
+   "next_earnings": "2027-02-03",
+   "rank": 19
+  },
+  {
+   "ticker": "GOOGL",
+   "name": "Alphabet Inc. (Class A)",
+   "sector": "Communication Services",
+   "price": 288.15,
+   "volume_usd": 9087843915,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 20
+  },
+  {
+   "ticker": "GOOG",
+   "name": "Alphabet Inc. (Class C)",
+   "sector": "Communication Services",
+   "price": 286.01,
+   "volume_usd": 5848228954,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 21
+  },
+  {
+   "ticker": "MO",
+   "name": "Altria",
+   "sector": "Consumer Staples",
+   "price": 75.81,
+   "volume_usd": 545297006,
+   "market_cap": null,
+   "next_earnings": "2027-01-28",
+   "rank": 22
+  },
+  {
+   "ticker": "AMZN",
+   "name": "Amazon",
+   "sector": "Consumer Discretionary",
+   "price": 266.93,
+   "volume_usd": 9294370564,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 23
+  },
+  {
+   "ticker": "AMCR",
+   "name": "Amcor",
+   "sector": "Materials",
+   "price": 45.14,
+   "volume_usd": 130427505,
+   "market_cap": null,
+   "next_earnings": "2027-02-02",
+   "rank": 24
+  },
+  {
+   "ticker": "AEE",
+   "name": "Ameren",
+   "sector": "Utilities",
+   "price": 114.02,
+   "volume_usd": 210670357,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 25
+  },
+  {
+   "ticker": "AEP",
+   "name": "American Electric Power",
+   "sector": "Utilities",
+   "price": 128.33,
+   "volume_usd": 442253263,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 26
+  },
+  {
+   "ticker": "AXP",
+   "name": "American Express",
+   "sector": "Financials",
+   "price": 324.31,
+   "volume_usd": 937166363,
+   "market_cap": null,
+   "next_earnings": "2027-01-29",
+   "rank": 27
+  },
+  {
+   "ticker": "AIG",
+   "name": "American International Group",
+   "sector": "Financials",
+   "price": 79.63,
+   "volume_usd": 357467206,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 28
+  },
+  {
+   "ticker": "AMT",
+   "name": "American Tower",
+   "sector": "Real Estate",
+   "price": 189.0,
+   "volume_usd": 551900160,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 29
+  },
+  {
+   "ticker": "AWK",
+   "name": "American Water Works",
+   "sector": "Utilities",
+   "price": 149.22,
+   "volume_usd": 276107345,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 30
+  },
+  {
+   "ticker": "AMP",
+   "name": "Ameriprise Financial",
+   "sector": "Financials",
+   "price": 518.3,
+   "volume_usd": 279461649,
+   "market_cap": null,
+   "next_earnings": "2027-01-28",
+   "rank": 31
+  },
+  {
+   "ticker": "AME",
+   "name": "Ametek",
+   "sector": "Industrials",
+   "price": 238.24,
+   "volume_usd": 355085164,
+   "market_cap": null,
+   "next_earnings": "2027-02-02",
+   "rank": 32
+  },
+  {
+   "ticker": "AMGN",
+   "name": "Amgen",
+   "sector": "Health Care",
+   "price": 465.23,
+   "volume_usd": 1142157799,
+   "market_cap": null,
+   "next_earnings": "2027-02-02",
+   "rank": 33
+  },
+  {
+   "ticker": "APH",
+   "name": "Amphenol",
+   "sector": "Information Technology",
+   "price": 80.71,
+   "volume_usd": 990224911,
+   "market_cap": null,
+   "next_earnings": "2027-01-27",
+   "rank": 34
+  },
+  {
+   "ticker": "ADI",
+   "name": "Analog Devices",
+   "sector": "Information Technology",
+   "price": 394.66,
+   "volume_usd": 1447690644,
+   "market_cap": null,
+   "next_earnings": "2026-11-24",
+   "rank": 35
+  },
+  {
+   "ticker": "AON",
+   "name": "Aon plc",
+   "sector": "Financials",
+   "price": 335.77,
+   "volume_usd": 498802326,
+   "market_cap": null,
+   "next_earnings": "2027-01-29",
+   "rank": 36
+  },
+  {
+   "ticker": "APA",
+   "name": "APA Corporation",
+   "sector": "Energy",
+   "price": 44.55,
+   "volume_usd": 255404511,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 37
+  },
+  {
+   "ticker": "APO",
+   "name": "Apollo Global Management",
+   "sector": "Financials",
+   "price": 122.2,
+   "volume_usd": 427809631,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 38
+  },
+  {
+   "ticker": "AAPL",
+   "name": "Apple Inc.",
+   "sector": "Information Technology",
+   "price": 350.69,
+   "volume_usd": 13674778458,
+   "market_cap": null,
+   "next_earnings": "2027-01-28",
+   "rank": 39
+  },
+  {
+   "ticker": "AMAT",
+   "name": "Applied Materials",
+   "sector": "Information Technology",
+   "price": 370.55,
+   "volume_usd": 2945698361,
+   "market_cap": null,
+   "next_earnings": "2026-11-12",
+   "rank": 40
+  },
+  {
+   "ticker": "APP",
+   "name": "AppLovin",
+   "sector": "Communication Services",
+   "price": 410.0,
+   "volume_usd": 1140004603,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 41
+  },
+  {
+   "ticker": "APTV",
+   "name": "Aptiv",
+   "sector": "Consumer Discretionary",
+   "price": 39.91,
+   "volume_usd": 115905845,
+   "market_cap": null,
+   "next_earnings": "2027-02-01",
+   "rank": 42
+  },
+  {
+   "ticker": "ACGL",
+   "name": "Arch Capital Group",
+   "sector": "Financials",
+   "price": 108.12,
+   "volume_usd": 231443722,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 43
+  },
+  {
+   "ticker": "ADM",
+   "name": "Archer Daniels Midland",
+   "sector": "Consumer Staples",
+   "price": 69.84,
+   "volume_usd": 241058191,
+   "market_cap": null,
+   "next_earnings": "2027-02-02",
+   "rank": 44
+  },
+  {
+   "ticker": "ARES",
+   "name": "Ares Management",
+   "sector": "Financials",
+   "price": 139.58,
+   "volume_usd": 274530471,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 45
+  },
+  {
+   "ticker": "ANET",
+   "name": "Arista Networks",
+   "sector": "Information Technology",
+   "price": 186.17,
+   "volume_usd": 1137274602,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 46
+  },
+  {
+   "ticker": "AJG",
+   "name": "Arthur J. Gallagher & Co.",
+   "sector": "Financials",
+   "price": 280.6,
+   "volume_usd": 431791493,
+   "market_cap": null,
+   "next_earnings": "2027-01-28",
+   "rank": 47
+  },
+  {
+   "ticker": "AIZ",
+   "name": "Assurant",
+   "sector": "Financials",
+   "price": 317.21,
+   "volume_usd": 94061773,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 48
+  },
+  {
+   "ticker": "T",
+   "name": "AT&T",
+   "sector": "Communication Services",
+   "price": 21.8,
+   "volume_usd": 1049656927,
+   "market_cap": null,
+   "next_earnings": "2027-01-27",
+   "rank": 49
+  },
+  {
+   "ticker": "ATO",
+   "name": "Atmos Energy",
+   "sector": "Utilities",
+   "price": 173.35,
+   "volume_usd": 168363363,
+   "market_cap": null,
+   "next_earnings": "2027-02-03",
+   "rank": 50
+  },
+  {
+   "ticker": "ADSK",
+   "name": "Autodesk",
+   "sector": "Information Technology",
+   "price": 263.35,
+   "volume_usd": 466646310,
+   "market_cap": null,
+   "next_earnings": "2026-11-24",
+   "rank": 51
+  },
+  {
+   "ticker": "ADP",
+   "name": "Automatic Data Processing",
+   "sector": "Industrials",
+   "price": 302.06,
+   "volume_usd": 634537658,
+   "market_cap": null,
+   "next_earnings": "2027-01-27",
+   "rank": 52
+  },
+  {
+   "ticker": "AZO",
+   "name": "AutoZone",
+   "sector": "Consumer Discretionary",
+   "price": 3251.27,
+   "volume_usd": 556227538,
+   "market_cap": null,
+   "next_earnings": "2026-12-08",
+   "rank": 53
+  },
+  {
+   "ticker": "AVY",
+   "name": "Avery Dennison",
+   "sector": "Materials",
+   "price": 188.05,
+   "volume_usd": 110080521,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 54
+  },
+  {
+   "ticker": "AXON",
+   "name": "Axon Enterprise",
+   "sector": "Industrials",
+   "price": 303.18,
+   "volume_usd": 383510559,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 55
+  },
+  {
+   "ticker": "BKR",
+   "name": "Baker Hughes",
+   "sector": "Energy",
+   "price": 48.45,
+   "volume_usd": 373979640,
+   "market_cap": null,
+   "next_earnings": "2027-01-25",
+   "rank": 56
+  },
+  {
+   "ticker": "BALL",
+   "name": "Ball Corporation",
+   "sector": "Materials",
+   "price": 66.81,
+   "volume_usd": 146421886,
+   "market_cap": null,
+   "next_earnings": "2027-02-02",
+   "rank": 57
+  },
+  {
+   "ticker": "BAC",
+   "name": "Bank of America",
+   "sector": "Financials",
+   "price": 50.55,
+   "volume_usd": 1887876425,
+   "market_cap": null,
+   "next_earnings": "2027-01-15",
+   "rank": 58
+  },
+  {
+   "ticker": "BAX",
+   "name": "Baxter International",
+   "sector": "Health Care",
+   "price": 26.41,
+   "volume_usd": 146893025,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 59
+  },
+  {
+   "ticker": "BDX",
+   "name": "Becton Dickinson",
+   "sector": "Health Care",
+   "price": 215.25,
+   "volume_usd": 316572837,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 60
+  },
+  {
+   "ticker": "BRK-B",
+   "name": "Berkshire Hathaway",
+   "sector": "Financials",
+   "price": 575.25,
+   "volume_usd": 2412679312,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 61
+  },
+  {
+   "ticker": "BBY",
+   "name": "Best Buy",
+   "sector": "Consumer Discretionary",
+   "price": 106.28,
+   "volume_usd": 265588129,
+   "market_cap": null,
+   "next_earnings": "2026-11-24",
+   "rank": 62
+  },
+  {
+   "ticker": "TECH",
+   "name": "Bio-Techne",
+   "sector": "Health Care",
+   "price": 72.83,
+   "volume_usd": 195307905,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 63
+  },
+  {
+   "ticker": "BIIB",
+   "name": "Biogen",
+   "sector": "Health Care",
+   "price": 254.87,
+   "volume_usd": 291615996,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 64
+  },
+  {
+   "ticker": "BLK",
+   "name": "BlackRock",
+   "sector": "Financials",
+   "price": 1214.71,
+   "volume_usd": 694628506,
+   "market_cap": null,
+   "next_earnings": "2027-01-14",
+   "rank": 65
+  },
+  {
+   "ticker": "BX",
+   "name": "Blackstone Inc.",
+   "sector": "Financials",
+   "price": 124.05,
+   "volume_usd": 639785422,
+   "market_cap": null,
+   "next_earnings": "2027-01-28",
+   "rank": 66
+  },
+  {
+   "ticker": "XYZ",
+   "name": "Block, Inc.",
+   "sector": "Financials",
+   "price": 88.56,
+   "volume_usd": 381676749,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 67
+  },
+  {
+   "ticker": "BE",
+   "name": "Bloom Energy",
+   "sector": "Industrials",
+   "price": 193.88,
+   "volume_usd": 3410678781,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 68
+  },
+  {
+   "ticker": "BNY",
+   "name": "BNY Mellon",
+   "sector": "Financials",
+   "price": 151.23,
+   "volume_usd": 493612523,
+   "market_cap": null,
+   "next_earnings": "2027-01-15",
+   "rank": 69
+  },
+  {
+   "ticker": "BA",
+   "name": "Boeing",
+   "sector": "Industrials",
+   "price": 172.38,
+   "volume_usd": 1431368220,
+   "market_cap": null,
+   "next_earnings": "2027-01-26",
+   "rank": 70
+  },
+  {
+   "ticker": "BKNG",
+   "name": "Booking Holdings",
+   "sector": "Consumer Discretionary",
+   "price": 163.49,
+   "volume_usd": 1132327223,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 71
+  },
+  {
+   "ticker": "BSX",
+   "name": "Boston Scientific",
+   "sector": "Health Care",
+   "price": 44.02,
+   "volume_usd": 691127647,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 72
+  },
+  {
+   "ticker": "BMY",
+   "name": "Bristol Myers Squibb",
+   "sector": "Health Care",
+   "price": 62.14,
+   "volume_usd": 681271329,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 73
+  },
+  {
+   "ticker": "AVGO",
+   "name": "Broadcom",
+   "sector": "Information Technology",
+   "price": 319.48,
+   "volume_usd": 7780171776,
+   "market_cap": null,
+   "next_earnings": "2026-12-09",
+   "rank": 74
+  },
+  {
+   "ticker": "BR",
+   "name": "Broadridge Financial Solutions",
+   "sector": "Industrials",
+   "price": 192.34,
+   "volume_usd": 137600454,
+   "market_cap": null,
+   "next_earnings": "2027-02-02",
+   "rank": 75
+  },
+  {
+   "ticker": "BRO",
+   "name": "Brown & Brown",
+   "sector": "Financials",
+   "price": 71.0,
+   "volume_usd": 166592269,
+   "market_cap": null,
+   "next_earnings": "2027-01-25",
+   "rank": 76
+  },
+  {
+   "ticker": "BF-B",
+   "name": "Brown\u2013Forman",
+   "sector": "Consumer Staples",
+   "price": 30.37,
+   "volume_usd": 66938886,
+   "market_cap": null,
+   "next_earnings": "2026-12-03",
+   "rank": 77
+  },
+  {
+   "ticker": "BG",
+   "name": "Bunge Global",
+   "sector": "Consumer Staples",
+   "price": 101.18,
+   "volume_usd": 172725671,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 78
+  },
+  {
+   "ticker": "BXP",
+   "name": "BXP, Inc.",
+   "sector": "Real Estate",
+   "price": 66.19,
+   "volume_usd": 85625832,
+   "market_cap": null,
+   "next_earnings": "2027-01-26",
+   "rank": 79
+  },
+  {
+   "ticker": "CHRW",
+   "name": "C.H. Robinson",
+   "sector": "Industrials",
+   "price": 128.99,
+   "volume_usd": 228634861,
+   "market_cap": null,
+   "next_earnings": "2027-01-27",
+   "rank": 80
+  },
+  {
+   "ticker": "CDNS",
+   "name": "Cadence Design Systems",
+   "sector": "Information Technology",
+   "price": 336.53,
+   "volume_usd": 736974823,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 81
+  },
+  {
+   "ticker": "CPT",
+   "name": "Camden Property Trust",
+   "sector": "Real Estate",
+   "price": 100.28,
+   "volume_usd": 88098261,
+   "market_cap": null,
+   "next_earnings": "2027-02-04",
+   "rank": 82
+  },
+  {
+   "ticker": "COF",
+   "name": "Capital One",
+   "sector": "Financials",
+   "price": 198.58,
+   "volume_usd": 771325472,
+   "market_cap": null,
+   "next_earnings": "2027-01-19",
+   "rank": 83
+  },
+  {
+   "ticker": "CAH",
+   "name": "Cardinal Health",
+   "sector": "Health Care",
+   "price": 274.29,
+   "volume_usd": 419792640,
+   "market_cap": null,
+   "next_earnings": "2027-02-04",
+   "rank": 84
+  },
+  {
+   "ticker": "CCL",
+   "name": "Carnival Corporation",
+   "sector": "Consumer Discretionary",
+   "price": 30.81,
+   "volume_usd": 574665524,
+   "market_cap": null,
+   "next_earnings": "2026-12-18",
+   "rank": 85
+  },
+  {
+   "ticker": "CARR",
+   "name": "Carrier Global",
+   "sector": "Industrials",
+   "price": 53.33,
+   "volume_usd": 319861450,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 86
+  },
+  {
+   "ticker": "CVNA",
+   "name": "Carvana",
+   "sector": "Consumer Discretionary",
+   "price": 76.26,
+   "volume_usd": 562453370,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 87
+  },
+  {
+   "ticker": "CASY",
+   "name": "Casey's",
+   "sector": "Consumer Staples",
+   "price": 692.13,
+   "volume_usd": 319087930,
+   "market_cap": null,
+   "next_earnings": "2026-12-08",
+   "rank": 88
+  },
+  {
+   "ticker": "CAT",
+   "name": "Caterpillar Inc.",
+   "sector": "Industrials",
+   "price": 598.88,
+   "volume_usd": 2136158585,
+   "market_cap": null,
+   "next_earnings": "2027-01-28",
+   "rank": 89
+  },
+  {
+   "ticker": "CBOE",
+   "name": "Cboe Global Markets",
+   "sector": "Financials",
+   "price": 352.78,
+   "volume_usd": 381463319,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 90
+  },
+  {
+   "ticker": "CBRE",
+   "name": "CBRE Group",
+   "sector": "Real Estate",
+   "price": 138.17,
+   "volume_usd": 321291312,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 91
+  },
+  {
+   "ticker": "CDW",
+   "name": "CDW Corporation",
+   "sector": "Information Technology",
+   "price": 164.61,
+   "volume_usd": 230705178,
+   "market_cap": null,
+   "next_earnings": "2027-02-03",
+   "rank": 92
+  },
+  {
+   "ticker": "COR",
+   "name": "Cencora",
+   "sector": "Health Care",
+   "price": 345.76,
+   "volume_usd": 388433574,
+   "market_cap": null,
+   "next_earnings": "2027-02-03",
+   "rank": 93
+  },
+  {
+   "ticker": "CNC",
+   "name": "Centene Corporation",
+   "sector": "Health Care",
+   "price": 68.54,
+   "volume_usd": 326249739,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 94
+  },
+  {
+   "ticker": "CNP",
+   "name": "CenterPoint Energy",
+   "sector": "Utilities",
+   "price": 40.81,
+   "volume_usd": 281711586,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 95
+  },
+  {
+   "ticker": "CF",
+   "name": "CF Industries",
+   "sector": "Materials",
+   "price": 119.28,
+   "volume_usd": 264704985,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 96
+  },
+  {
+   "ticker": "CRL",
+   "name": "Charles River Laboratories",
+   "sector": "Health Care",
+   "price": 353.34,
+   "volume_usd": 354868106,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 97
+  },
+  {
+   "ticker": "SCHW",
+   "name": "Charles Schwab Corporation",
+   "sector": "Financials",
+   "price": 92.73,
+   "volume_usd": 718187069,
+   "market_cap": null,
+   "next_earnings": "2027-01-21",
+   "rank": 98
+  },
+  {
+   "ticker": "CHTR",
+   "name": "Charter Communications",
+   "sector": "Communication Services",
+   "price": 121.2,
+   "volume_usd": 302056657,
+   "market_cap": null,
+   "next_earnings": "2027-01-29",
+   "rank": 99
+  },
+  {
+   "ticker": "CVX",
+   "name": "Chevron Corporation",
+   "sector": "Energy",
+   "price": 210.78,
+   "volume_usd": 1615897278,
+   "market_cap": null,
+   "next_earnings": "2027-01-29",
+   "rank": 100
+  },
+  {
+   "ticker": "CMG",
+   "name": "Chipotle Mexican Grill",
+   "sector": "Consumer Discretionary",
+   "price": 35.74,
+   "volume_usd": 580594290,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 101
+  },
+  {
+   "ticker": "CB",
+   "name": "Chubb Limited",
+   "sector": "Financials",
+   "price": 363.45,
+   "volume_usd": 539874187,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 102
+  },
+  {
+   "ticker": "CHD",
+   "name": "Church & Dwight",
+   "sector": "Consumer Staples",
+   "price": 111.31,
+   "volume_usd": 206703016,
+   "market_cap": null,
+   "next_earnings": "2027-01-29",
+   "rank": 103
+  },
+  {
+   "ticker": "CIEN",
+   "name": "Ciena",
+   "sector": "Information Technology",
+   "price": 269.33,
+   "volume_usd": 1054951198,
+   "market_cap": null,
+   "next_earnings": "2026-12-10",
+   "rank": 104
+  },
+  {
+   "ticker": "CI",
+   "name": "Cigna",
+   "sector": "Health Care",
+   "price": 295.6,
+   "volume_usd": 460991813,
+   "market_cap": null,
+   "next_earnings": "2027-02-04",
+   "rank": 105
+  },
+  {
+   "ticker": "CINF",
+   "name": "Cincinnati Financial",
+   "sector": "Financials",
+   "price": 186.18,
+   "volume_usd": 108834238,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 106
+  },
+  {
+   "ticker": "CTAS",
+   "name": "Cintas",
+   "sector": "Industrials",
+   "price": 223.16,
+   "volume_usd": 378635450,
+   "market_cap": null,
+   "next_earnings": "2026-12-17",
+   "rank": 107
+  },
+  {
+   "ticker": "CSCO",
+   "name": "Cisco",
+   "sector": "Information Technology",
+   "price": 98.65,
+   "volume_usd": 1865926052,
+   "market_cap": null,
+   "next_earnings": "2026-11-12",
+   "rank": 108
+  },
+  {
+   "ticker": "C",
+   "name": "Citigroup",
+   "sector": "Financials",
+   "price": 121.97,
+   "volume_usd": 1129792526,
+   "market_cap": null,
+   "next_earnings": "2027-01-14",
+   "rank": 109
+  },
+  {
+   "ticker": "CFG",
+   "name": "Citizens Financial Group",
+   "sector": "Financials",
+   "price": 65.1,
+   "volume_usd": 278080978,
+   "market_cap": null,
+   "next_earnings": "2027-01-15",
+   "rank": 110
+  },
+  {
+   "ticker": "CLX",
+   "name": "Clorox",
+   "sector": "Consumer Staples",
+   "price": 105.53,
+   "volume_usd": 226087447,
+   "market_cap": null,
+   "next_earnings": "2027-02-02",
+   "rank": 111
+  },
+  {
+   "ticker": "CME",
+   "name": "CME Group",
+   "sector": "Financials",
+   "price": 304.52,
+   "volume_usd": 585316648,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 112
+  },
+  {
+   "ticker": "CMS",
+   "name": "CMS Energy",
+   "sector": "Utilities",
+   "price": 69.55,
+   "volume_usd": 305574459,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 113
+  },
+  {
+   "ticker": "KO",
+   "name": "Coca-Cola Company (The)",
+   "sector": "Consumer Staples",
+   "price": 96.03,
+   "volume_usd": 1589793751,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 114
+  },
+  {
+   "ticker": "CTSH",
+   "name": "Cognizant",
+   "sector": "Information Technology",
+   "price": 63.6,
+   "volume_usd": 409946445,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 115
+  },
+  {
+   "ticker": "COHR",
+   "name": "Coherent Corp.",
+   "sector": "Information Technology",
+   "price": 225.19,
+   "volume_usd": 1855293473,
+   "market_cap": null,
+   "next_earnings": "2027-02-03",
+   "rank": 116
+  },
+  {
+   "ticker": "COIN",
+   "name": "Coinbase",
+   "sector": "Financials",
+   "price": 136.1,
+   "volume_usd": 1265362090,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 117
+  },
+  {
+   "ticker": "CL",
+   "name": "Colgate-Palmolive",
+   "sector": "Consumer Staples",
+   "price": 97.94,
+   "volume_usd": 444808031,
+   "market_cap": null,
+   "next_earnings": "2027-01-29",
+   "rank": 118
+  },
+  {
+   "ticker": "CMCSA",
+   "name": "Comcast",
+   "sector": "Communication Services",
+   "price": 24.51,
+   "volume_usd": 667703107,
+   "market_cap": null,
+   "next_earnings": "2027-01-28",
+   "rank": 119
+  },
+  {
+   "ticker": "FIX",
+   "name": "Comfort Systems USA",
+   "sector": "Industrials",
+   "price": 1113.23,
+   "volume_usd": 720273227,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 120
+  },
+  {
+   "ticker": "COP",
+   "name": "ConocoPhillips",
+   "sector": "Energy",
+   "price": 134.47,
+   "volume_usd": 813690143,
+   "market_cap": null,
+   "next_earnings": "2027-02-04",
+   "rank": 121
+  },
+  {
+   "ticker": "ED",
+   "name": "Consolidated Edison",
+   "sector": "Utilities",
+   "price": 118.39,
+   "volume_usd": 244763711,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 122
+  },
+  {
+   "ticker": "STZ",
+   "name": "Constellation Brands",
+   "sector": "Consumer Staples",
+   "price": 145.51,
+   "volume_usd": 297081089,
+   "market_cap": null,
+   "next_earnings": "2027-01-07",
+   "rank": 123
+  },
+  {
+   "ticker": "CEG",
+   "name": "Constellation Energy",
+   "sector": "Utilities",
+   "price": 276.09,
+   "volume_usd": 954108100,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 124
+  },
+  {
+   "ticker": "COO",
+   "name": "Cooper Companies (The)",
+   "sector": "Health Care",
+   "price": 63.93,
+   "volume_usd": 180141517,
+   "market_cap": null,
+   "next_earnings": "2026-12-03",
+   "rank": 125
+  },
+  {
+   "ticker": "CPRT",
+   "name": "Copart",
+   "sector": "Industrials",
+   "price": 32.45,
+   "volume_usd": 303801223,
+   "market_cap": null,
+   "next_earnings": "2026-11-19",
+   "rank": 126
+  },
+  {
+   "ticker": "GLW",
+   "name": "Corning Inc.",
+   "sector": "Information Technology",
+   "price": 115.95,
+   "volume_usd": 1219323381,
+   "market_cap": null,
+   "next_earnings": "2027-01-26",
+   "rank": 127
+  },
+  {
+   "ticker": "CPAY",
+   "name": "Corpay",
+   "sector": "Financials",
+   "price": 457.97,
+   "volume_usd": 192234600,
+   "market_cap": null,
+   "next_earnings": "2027-02-03",
+   "rank": 128
+  },
+  {
+   "ticker": "CSGP",
+   "name": "CoStar Group",
+   "sector": "Real Estate",
+   "price": 31.24,
+   "volume_usd": 178591826,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 129
+  },
+  {
+   "ticker": "COST",
+   "name": "Costco",
+   "sector": "Consumer Staples",
+   "price": 1066.1801,
+   "volume_usd": 2153855192,
+   "market_cap": null,
+   "next_earnings": "2026-12-10",
+   "rank": 130
+  },
+  {
+   "ticker": "CRH",
+   "name": "CRH plc",
+   "sector": "Materials",
+   "price": 97.73,
+   "volume_usd": 437641630,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 131
+  },
+  {
+   "ticker": "CRWD",
+   "name": "CrowdStrike",
+   "sector": "Information Technology",
+   "price": 228.58,
+   "volume_usd": 2213871003,
+   "market_cap": null,
+   "next_earnings": "2026-12-01",
+   "rank": 132
+  },
+  {
+   "ticker": "CCI",
+   "name": "Crown Castle",
+   "sector": "Real Estate",
+   "price": 87.83,
+   "volume_usd": 364597267,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 133
+  },
+  {
+   "ticker": "CSX",
+   "name": "CSX Corporation",
+   "sector": "Industrials",
+   "price": 50.48,
+   "volume_usd": 515988753,
+   "market_cap": null,
+   "next_earnings": "2027-01-28",
+   "rank": 134
+  },
+  {
+   "ticker": "CMI",
+   "name": "Cummins",
+   "sector": "Industrials",
+   "price": 466.47,
+   "volume_usd": 645044279,
+   "market_cap": null,
+   "next_earnings": "2027-02-04",
+   "rank": 135
+  },
+  {
+   "ticker": "CVS",
+   "name": "CVS Health",
+   "sector": "Health Care",
+   "price": 85.25,
+   "volume_usd": 794122068,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 136
+  },
+  {
+   "ticker": "DHR",
+   "name": "Danaher Corporation",
+   "sector": "Health Care",
+   "price": 235.12,
+   "volume_usd": 859223554,
+   "market_cap": null,
+   "next_earnings": "2027-01-27",
+   "rank": 137
+  },
+  {
+   "ticker": "DRI",
+   "name": "Darden Restaurants",
+   "sector": "Consumer Discretionary",
+   "price": 229.77,
+   "volume_usd": 220649153,
+   "market_cap": null,
+   "next_earnings": "2026-12-18",
+   "rank": 138
+  },
+  {
+   "ticker": "DDOG",
+   "name": "Datadog",
+   "sector": "Information Technology",
+   "price": 179.62,
+   "volume_usd": 790708879,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 139
+  },
+  {
+   "ticker": "DVA",
+   "name": "DaVita",
+   "sector": "Health Care",
+   "price": 185.54,
+   "volume_usd": 112551958,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 140
+  },
+  {
+   "ticker": "DECK",
+   "name": "Deckers Brands",
+   "sector": "Consumer Discretionary",
+   "price": 90.43,
+   "volume_usd": 251593870,
+   "market_cap": null,
+   "next_earnings": "2027-01-28",
+   "rank": 141
+  },
+  {
+   "ticker": "DE",
+   "name": "Deere & Company",
+   "sector": "Industrials",
+   "price": 691.28,
+   "volume_usd": 780107601,
+   "market_cap": null,
+   "next_earnings": "2026-11-25",
+   "rank": 142
+  },
+  {
+   "ticker": "DELL",
+   "name": "Dell Technologies",
+   "sector": "Information Technology",
+   "price": 346.31,
+   "volume_usd": 3029642876,
+   "market_cap": null,
+   "next_earnings": "2026-11-24",
+   "rank": 143
+  },
+  {
+   "ticker": "DAL",
+   "name": "Delta Air Lines",
+   "sector": "Industrials",
+   "price": 91.8,
+   "volume_usd": 541472850,
+   "market_cap": null,
+   "next_earnings": "2027-01-13",
+   "rank": 144
+  },
+  {
+   "ticker": "DVN",
+   "name": "Devon Energy",
+   "sector": "Energy",
+   "price": 42.4,
+   "volume_usd": 448783560,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 145
+  },
+  {
+   "ticker": "DXCM",
+   "name": "Dexcom",
+   "sector": "Health Care",
+   "price": 81.07,
+   "volume_usd": 322471474,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 146
+  },
+  {
+   "ticker": "FANG",
+   "name": "Diamondback Energy",
+   "sector": "Energy",
+   "price": 178.17,
+   "volume_usd": 410035110,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 147
+  },
+  {
+   "ticker": "DLR",
+   "name": "Digital Realty",
+   "sector": "Real Estate",
+   "price": 180.1,
+   "volume_usd": 371540710,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 148
+  },
+  {
+   "ticker": "DG",
+   "name": "Dollar General",
+   "sector": "Consumer Staples",
+   "price": 136.68,
+   "volume_usd": 276956636,
+   "market_cap": null,
+   "next_earnings": "2026-12-03",
+   "rank": 149
+  },
+  {
+   "ticker": "DLTR",
+   "name": "Dollar Tree",
+   "sector": "Consumer Staples",
+   "price": 137.23,
+   "volume_usd": 244916759,
+   "market_cap": null,
+   "next_earnings": "2026-11-24",
+   "rank": 150
+  },
+  {
+   "ticker": "D",
+   "name": "Dominion Energy",
+   "sector": "Utilities",
+   "price": 68.24,
+   "volume_usd": 264447935,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 151
+  },
+  {
+   "ticker": "DPZ",
+   "name": "Domino's",
+   "sector": "Consumer Discretionary",
+   "price": 334.18,
+   "volume_usd": 238135818,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 152
+  },
+  {
+   "ticker": "DASH",
+   "name": "DoorDash",
+   "sector": "Consumer Discretionary",
+   "price": 180.96,
+   "volume_usd": 740852281,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 153
+  },
+  {
+   "ticker": "DOV",
+   "name": "Dover Corporation",
+   "sector": "Industrials",
+   "price": 212.98,
+   "volume_usd": 243404135,
+   "market_cap": null,
+   "next_earnings": "2027-01-28",
+   "rank": 154
+  },
+  {
+   "ticker": "DOW",
+   "name": "Dow Inc.",
+   "sector": "Materials",
+   "price": 30.96,
+   "volume_usd": 242373571,
+   "market_cap": null,
+   "next_earnings": "2027-01-28",
+   "rank": 155
+  },
+  {
+   "ticker": "DHI",
+   "name": "D. R. Horton",
+   "sector": "Consumer Discretionary",
+   "price": 155.61,
+   "volume_usd": 448594496,
+   "market_cap": null,
+   "next_earnings": "2027-01-19",
+   "rank": 156
+  },
+  {
+   "ticker": "DTE",
+   "name": "DTE Energy",
+   "sector": "Utilities",
+   "price": 138.35,
+   "volume_usd": 177788767,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 157
+  },
+  {
+   "ticker": "DUK",
+   "name": "Duke Energy",
+   "sector": "Utilities",
+   "price": 128.1,
+   "volume_usd": 485612316,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 158
+  },
+  {
+   "ticker": "DD",
+   "name": "DuPont",
+   "sector": "Industrials",
+   "price": 155.14,
+   "volume_usd": 113813280,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 159
+  },
+  {
+   "ticker": "ETN",
+   "name": "Eaton Corporation",
+   "sector": "Industrials",
+   "price": 359.3,
+   "volume_usd": 1056354101,
+   "market_cap": null,
+   "next_earnings": "2027-02-02",
+   "rank": 160
+  },
+  {
+   "ticker": "EBAY",
+   "name": "eBay Inc.",
+   "sector": "Consumer Discretionary",
+   "price": 120.97,
+   "volume_usd": 409911268,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 161
+  },
+  {
+   "ticker": "ECHO",
+   "name": "EchoStar",
+   "sector": "Communication Services",
+   "price": 101.19,
+   "volume_usd": 422741020,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 162
+  },
+  {
+   "ticker": "ECL",
+   "name": "Ecolab",
+   "sector": "Materials",
+   "price": 306.74,
+   "volume_usd": 398411342,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 163
+  },
+  {
+   "ticker": "EIX",
+   "name": "Edison International",
+   "sector": "Utilities",
+   "price": 60.14,
+   "volume_usd": 240023096,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 164
+  },
+  {
+   "ticker": "EW",
+   "name": "Edwards Lifesciences",
+   "sector": "Health Care",
+   "price": 104.71,
+   "volume_usd": 305952271,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 165
+  },
+  {
+   "ticker": "ELV",
+   "name": "Elevance Health",
+   "sector": "Health Care",
+   "price": 418.25,
+   "volume_usd": 531386037,
+   "market_cap": null,
+   "next_earnings": "2027-01-28",
+   "rank": 166
+  },
+  {
+   "ticker": "EME",
+   "name": "Emcor",
+   "sector": "Industrials",
+   "price": 652.89,
+   "volume_usd": 307023159,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 167
+  },
+  {
+   "ticker": "EMR",
+   "name": "Emerson Electric",
+   "sector": "Industrials",
+   "price": 169.52,
+   "volume_usd": 464870245,
+   "market_cap": null,
+   "next_earnings": "2027-02-02",
+   "rank": 168
+  },
+  {
+   "ticker": "ETR",
+   "name": "Entergy",
+   "sector": "Utilities",
+   "price": 111.79,
+   "volume_usd": 301108228,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 169
+  },
+  {
+   "ticker": "EOG",
+   "name": "EOG Resources",
+   "sector": "Energy",
+   "price": 148.43,
+   "volume_usd": 418463283,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 170
+  },
+  {
+   "ticker": "EQT",
+   "name": "EQT Corporation",
+   "sector": "Energy",
+   "price": 49.91,
+   "volume_usd": 404118605,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 171
+  },
+  {
+   "ticker": "EFX",
+   "name": "Equifax",
+   "sector": "Industrials",
+   "price": 188.33,
+   "volume_usd": 329169903,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 172
+  },
+  {
+   "ticker": "EQIX",
+   "name": "Equinix",
+   "sector": "Real Estate",
+   "price": 1054.5,
+   "volume_usd": 625792368,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 173
+  },
+  {
+   "ticker": "ERIE",
+   "name": "Erie Indemnity",
+   "sector": "Financials",
+   "price": 270.52,
+   "volume_usd": 43289957,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 174
+  },
+  {
+   "ticker": "ESS",
+   "name": "Essex Property Trust",
+   "sector": "Real Estate",
+   "price": 275.54,
+   "volume_usd": 126272267,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 175
+  },
+  {
+   "ticker": "EL",
+   "name": "Est\u00e9e Lauder Companies (The)",
+   "sector": "Consumer Staples",
+   "price": 113.16,
+   "volume_usd": 329512630,
+   "market_cap": null,
+   "next_earnings": "2027-02-03",
+   "rank": 176
+  },
+  {
+   "ticker": "EG",
+   "name": "Everest Group",
+   "sector": "Financials",
+   "price": 412.75,
+   "volume_usd": 146238209,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 177
+  },
+  {
+   "ticker": "EVRG",
+   "name": "Evergy",
+   "sector": "Utilities",
+   "price": 87.99,
+   "volume_usd": 179580636,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 178
+  },
+  {
+   "ticker": "P",
+   "name": "Everpure",
+   "sector": "Information Technology",
+   "price": 102.84,
+   "volume_usd": 459304605,
+   "market_cap": null,
+   "next_earnings": "2026-11-18",
+   "rank": 179
+  },
+  {
+   "ticker": "ES",
+   "name": "Eversource Energy",
+   "sector": "Utilities",
+   "price": 69.49,
+   "volume_usd": 190534358,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 180
+  },
+  {
+   "ticker": "EXC",
+   "name": "Exelon",
+   "sector": "Utilities",
+   "price": 45.65,
+   "volume_usd": 327185515,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 181
+  },
+  {
+   "ticker": "EXE",
+   "name": "Expand Energy",
+   "sector": "Energy",
+   "price": 85.96,
+   "volume_usd": 280908768,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 182
+  },
+  {
+   "ticker": "EXPE",
+   "name": "Expedia Group",
+   "sector": "Consumer Discretionary",
+   "price": 259.16,
+   "volume_usd": 409129994,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 183
+  },
+  {
+   "ticker": "EXPD",
+   "name": "Expeditors International",
+   "sector": "Industrials",
+   "price": 189.59,
+   "volume_usd": 244796113,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 184
+  },
+  {
+   "ticker": "EXR",
+   "name": "Extra Space Storage",
+   "sector": "Real Estate",
+   "price": 160.16,
+   "volume_usd": 185207628,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 185
+  },
+  {
+   "ticker": "XOM",
+   "name": "ExxonMobil",
+   "sector": "Energy",
+   "price": 164.73,
+   "volume_usd": 2057912914,
+   "market_cap": null,
+   "next_earnings": "2027-01-29",
+   "rank": 186
+  },
+  {
+   "ticker": "FFIV",
+   "name": "F5, Inc.",
+   "sector": "Information Technology",
+   "price": 317.75,
+   "volume_usd": 262473680,
+   "market_cap": null,
+   "next_earnings": "2027-01-26",
+   "rank": 187
+  },
+  {
+   "ticker": "FDS",
+   "name": "FactSet",
+   "sector": "Financials",
+   "price": 326.72,
+   "volume_usd": 192512332,
+   "market_cap": null,
+   "next_earnings": "2026-12-17",
+   "rank": 188
+  },
+  {
+   "ticker": "FICO",
+   "name": "Fair Isaac",
+   "sector": "Information Technology",
+   "price": 723.76,
+   "volume_usd": 703887578,
+   "market_cap": null,
+   "next_earnings": "2027-01-27",
+   "rank": 189
+  },
+  {
+   "ticker": "FAST",
+   "name": "Fastenal",
+   "sector": "Industrials",
+   "price": 54.57,
+   "volume_usd": 352530140,
+   "market_cap": null,
+   "next_earnings": "2027-01-19",
+   "rank": 190
+  },
+  {
+   "ticker": "FRT",
+   "name": "Federal Realty Investment Trust",
+   "sector": "Real Estate",
+   "price": 113.81,
+   "volume_usd": 105281697,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 191
+  },
+  {
+   "ticker": "FDX",
+   "name": "FedEx",
+   "sector": "Industrials",
+   "price": 318.84,
+   "volume_usd": 360530387,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 192
+  },
+  {
+   "ticker": "FERG",
+   "name": "Ferguson Enterprises",
+   "sector": "Industrials",
+   "price": 259.93,
+   "volume_usd": 307915568,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 193
+  },
+  {
+   "ticker": "FIS",
+   "name": "Fidelity National Information Services",
+   "sector": "Financials",
+   "price": 28.34,
+   "volume_usd": 222178743,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 194
+  },
+  {
+   "ticker": "FITB",
+   "name": "Fifth Third Bancorp",
+   "sector": "Financials",
+   "price": 54.36,
+   "volume_usd": 345446700,
+   "market_cap": null,
+   "next_earnings": "2027-01-19",
+   "rank": 195
+  },
+  {
+   "ticker": "FSLR",
+   "name": "First Solar",
+   "sector": "Information Technology",
+   "price": 191.61,
+   "volume_usd": 389171729,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 196
+  },
+  {
+   "ticker": "FE",
+   "name": "FirstEnergy",
+   "sector": "Utilities",
+   "price": 46.62,
+   "volume_usd": 211479066,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 197
+  },
+  {
+   "ticker": "FISV",
+   "name": "Fiserv",
+   "sector": "Financials",
+   "price": 63.52,
+   "volume_usd": 266204772,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 198
+  },
+  {
+   "ticker": "FLEX",
+   "name": "Flex Ltd.",
+   "sector": "Information Technology",
+   "price": 78.17,
+   "volume_usd": 431514529,
+   "market_cap": null,
+   "next_earnings": "2027-01-27",
+   "rank": 199
+  },
+  {
+   "ticker": "F",
+   "name": "Ford Motor Company",
+   "sector": "Consumer Discretionary",
+   "price": 12.52,
+   "volume_usd": 503903571,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 200
+  },
+  {
+   "ticker": "FTNT",
+   "name": "Fortinet",
+   "sector": "Information Technology",
+   "price": 122.47,
+   "volume_usd": 682644812,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 201
+  },
+  {
+   "ticker": "FTV",
+   "name": "Fortive",
+   "sector": "Industrials",
+   "price": 67.1,
+   "volume_usd": 145270399,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 202
+  },
+  {
+   "ticker": "FOXA",
+   "name": "Fox Corporation (Class A)",
+   "sector": "Communication Services",
+   "price": 67.69,
+   "volume_usd": 315890661,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 203
+  },
+  {
+   "ticker": "FOX",
+   "name": "Fox Corporation (Class B)",
+   "sector": "Communication Services",
+   "price": 60.51,
+   "volume_usd": 45761172,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 204
+  },
+  {
+   "ticker": "BEN",
+   "name": "Franklin Resources",
+   "sector": "Financials",
+   "price": 35.87,
+   "volume_usd": 126186329,
+   "market_cap": null,
+   "next_earnings": "2027-01-29",
+   "rank": 205
+  },
+  {
+   "ticker": "FCX",
+   "name": "Freeport-McMoRan",
+   "sector": "Materials",
+   "price": 62.33,
+   "volume_usd": 739799524,
+   "market_cap": null,
+   "next_earnings": "2027-01-21",
+   "rank": 206
+  },
+  {
+   "ticker": "GRMN",
+   "name": "Garmin",
+   "sector": "Consumer Discretionary",
+   "price": 291.8,
+   "volume_usd": 235243385,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 207
+  },
+  {
+   "ticker": "IT",
+   "name": "Gartner",
+   "sector": "Information Technology",
+   "price": 191.02,
+   "volume_usd": 185381773,
+   "market_cap": null,
+   "next_earnings": "2027-02-02",
+   "rank": 208
+  },
+  {
+   "ticker": "GE",
+   "name": "GE Aerospace",
+   "sector": "Industrials",
+   "price": 335.54,
+   "volume_usd": 1556669426,
+   "market_cap": null,
+   "next_earnings": "2027-01-21",
+   "rank": 209
+  },
+  {
+   "ticker": "GEHC",
+   "name": "GE HealthCare",
+   "sector": "Health Care",
+   "price": 84.03,
+   "volume_usd": 258538021,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 210
+  },
+  {
+   "ticker": "GEN",
+   "name": "Gen Digital",
+   "sector": "Information Technology",
+   "price": 29.8,
+   "volume_usd": 190515009,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 211
+  },
+  {
+   "ticker": "GNRC",
+   "name": "Generac",
+   "sector": "Industrials",
+   "price": 188.75,
+   "volume_usd": 216680770,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 212
+  },
+  {
+   "ticker": "GD",
+   "name": "General Dynamics",
+   "sector": "Industrials",
+   "price": 362.07,
+   "volume_usd": 433095254,
+   "market_cap": null,
+   "next_earnings": "2027-01-27",
+   "rank": 213
+  },
+  {
+   "ticker": "GIS",
+   "name": "General Mills",
+   "sector": "Consumer Staples",
+   "price": 34.88,
+   "volume_usd": 304710597,
+   "market_cap": null,
+   "next_earnings": "2026-12-23",
+   "rank": 214
+  },
+  {
+   "ticker": "GM",
+   "name": "General Motors",
+   "sector": "Consumer Discretionary",
+   "price": 89.65,
+   "volume_usd": 637395604,
+   "market_cap": null,
+   "next_earnings": "2027-01-27",
+   "rank": 215
+  },
+  {
+   "ticker": "GPC",
+   "name": "Genuine Parts Company",
+   "sector": "Consumer Discretionary",
+   "price": 125.65,
+   "volume_usd": 112395851,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 216
+  },
+  {
+   "ticker": "GILD",
+   "name": "Gilead Sciences",
+   "sector": "Health Care",
+   "price": 169.32,
+   "volume_usd": 897132631,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 217
+  },
+  {
+   "ticker": "GPN",
+   "name": "Global Payments",
+   "sector": "Financials",
+   "price": 97.77,
+   "volume_usd": 183200663,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 218
+  },
+  {
+   "ticker": "GL",
+   "name": "Globe Life",
+   "sector": "Financials",
+   "price": 161.83,
+   "volume_usd": 77589330,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 219
+  },
+  {
+   "ticker": "GDDY",
+   "name": "GoDaddy",
+   "sector": "Information Technology",
+   "price": 111.71,
+   "volume_usd": 165363468,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 220
+  },
+  {
+   "ticker": "GS",
+   "name": "Goldman Sachs",
+   "sector": "Financials",
+   "price": 906.22,
+   "volume_usd": 1867507288,
+   "market_cap": null,
+   "next_earnings": "2027-01-19",
+   "rank": 221
+  },
+  {
+   "ticker": "HAL",
+   "name": "Halliburton",
+   "sector": "Energy",
+   "price": 31.88,
+   "volume_usd": 309044840,
+   "market_cap": null,
+   "next_earnings": "2027-01-20",
+   "rank": 222
+  },
+  {
+   "ticker": "HIG",
+   "name": "Hartford (The)",
+   "sector": "Financials",
+   "price": 134.86,
+   "volume_usd": 208012512,
+   "market_cap": null,
+   "next_earnings": "2027-01-28",
+   "rank": 223
+  },
+  {
+   "ticker": "HAS",
+   "name": "Hasbro",
+   "sector": "Consumer Discretionary",
+   "price": 120.92,
+   "volume_usd": 220822358,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 224
+  },
+  {
+   "ticker": "HCA",
+   "name": "HCA Healthcare",
+   "sector": "Health Care",
+   "price": 504.89,
+   "volume_usd": 505196801,
+   "market_cap": null,
+   "next_earnings": "2027-01-26",
+   "rank": 225
+  },
+  {
+   "ticker": "DOC",
+   "name": "Healthpeak Properties",
+   "sector": "Real Estate",
+   "price": 20.62,
+   "volume_usd": 111856596,
+   "market_cap": null,
+   "next_earnings": "2027-02-01",
+   "rank": 226
+  },
+  {
+   "ticker": "HSIC",
+   "name": "Henry Schein",
+   "sector": "Health Care",
+   "price": 88.41,
+   "volume_usd": 101645145,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 227
+  },
+  {
+   "ticker": "HSY",
+   "name": "Hershey Company (The)",
+   "sector": "Consumer Staples",
+   "price": 173.48,
+   "volume_usd": 287716265,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 228
+  },
+  {
+   "ticker": "HPE",
+   "name": "Hewlett Packard Enterprise",
+   "sector": "Information Technology",
+   "price": 47.54,
+   "volume_usd": 990997795,
+   "market_cap": null,
+   "next_earnings": "2026-11-23",
+   "rank": 229
+  },
+  {
+   "ticker": "HLT",
+   "name": "Hilton Worldwide",
+   "sector": "Consumer Discretionary",
+   "price": 373.23,
+   "volume_usd": 598039579,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 230
+  },
+  {
+   "ticker": "HD",
+   "name": "Home Depot (The)",
+   "sector": "Consumer Discretionary",
+   "price": 353.42,
+   "volume_usd": 1365247267,
+   "market_cap": null,
+   "next_earnings": "2026-11-17",
+   "rank": 231
+  },
+  {
+   "ticker": "HON",
+   "name": "Honeywell Technologies",
+   "sector": "Industrials",
+   "price": 229.0,
+   "volume_usd": 538572720,
+   "market_cap": null,
+   "next_earnings": "2027-01-28",
+   "rank": 232
+  },
+  {
+   "ticker": "HRL",
+   "name": "Hormel Foods",
+   "sector": "Consumer Staples",
+   "price": 22.26,
+   "volume_usd": 116188533,
+   "market_cap": null,
+   "next_earnings": "2026-12-03",
+   "rank": 233
+  },
+  {
+   "ticker": "HST",
+   "name": "Host Hotels & Resorts",
+   "sector": "Real Estate",
+   "price": 25.28,
+   "volume_usd": 218851212,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 234
+  },
+  {
+   "ticker": "HWM",
+   "name": "Howmet Aerospace",
+   "sector": "Industrials",
+   "price": 216.24,
+   "volume_usd": 749396903,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 235
+  },
+  {
+   "ticker": "HPQ",
+   "name": "HP Inc.",
+   "sector": "Information Technology",
+   "price": 28.25,
+   "volume_usd": 385568249,
+   "market_cap": null,
+   "next_earnings": "2026-11-24",
+   "rank": 236
+  },
+  {
+   "ticker": "HUBB",
+   "name": "Hubbell Incorporated",
+   "sector": "Industrials",
+   "price": 441.57,
+   "volume_usd": 255293207,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 237
+  },
+  {
+   "ticker": "HUM",
+   "name": "Humana",
+   "sector": "Health Care",
+   "price": 423.22,
+   "volume_usd": 577078540,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 238
+  },
+  {
+   "ticker": "HBAN",
+   "name": "Huntington Bancshares",
+   "sector": "Financials",
+   "price": 15.92,
+   "volume_usd": 355340493,
+   "market_cap": null,
+   "next_earnings": "2027-01-21",
+   "rank": 239
+  },
+  {
+   "ticker": "HII",
+   "name": "Huntington Ingalls Industries",
+   "sector": "Industrials",
+   "price": 304.36,
+   "volume_usd": 150340758,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 240
+  },
+  {
+   "ticker": "IBM",
+   "name": "IBM",
+   "sector": "Information Technology",
+   "price": 246.11,
+   "volume_usd": 1149175711,
+   "market_cap": null,
+   "next_earnings": "2027-01-27",
+   "rank": 241
+  },
+  {
+   "ticker": "IEX",
+   "name": "IDEX Corporation",
+   "sector": "Industrials",
+   "price": 235.93,
+   "volume_usd": 171711623,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 242
+  },
+  {
+   "ticker": "IDXX",
+   "name": "Idexx Laboratories",
+   "sector": "Health Care",
+   "price": 706.65,
+   "volume_usd": 294005642,
+   "market_cap": null,
+   "next_earnings": "2027-02-01",
+   "rank": 243
+  },
+  {
+   "ticker": "ITW",
+   "name": "Illinois Tool Works",
+   "sector": "Industrials",
+   "price": 286.73,
+   "volume_usd": 394257466,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 244
+  },
+  {
+   "ticker": "ILMN",
+   "name": "Illumina, Inc.",
+   "sector": "Health Care",
+   "price": 220.78,
+   "volume_usd": 602730523,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 245
+  },
+  {
+   "ticker": "INCY",
+   "name": "Incyte",
+   "sector": "Health Care",
+   "price": 121.89,
+   "volume_usd": 211539614,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 246
+  },
+  {
+   "ticker": "IR",
+   "name": "Ingersoll Rand",
+   "sector": "Industrials",
+   "price": 86.88,
+   "volume_usd": 336316489,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 247
+  },
+  {
+   "ticker": "PODD",
+   "name": "Insulet Corporation",
+   "sector": "Health Care",
+   "price": 149.81,
+   "volume_usd": 202772994,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 248
+  },
+  {
+   "ticker": "INTC",
+   "name": "Intel",
+   "sector": "Information Technology",
+   "price": 59.37,
+   "volume_usd": 10038440727,
+   "market_cap": null,
+   "next_earnings": "2027-01-28",
+   "rank": 249
+  },
+  {
+   "ticker": "IBKR",
+   "name": "Interactive Brokers",
+   "sector": "Financials",
+   "price": 77.57,
+   "volume_usd": 382279105,
+   "market_cap": null,
+   "next_earnings": "2027-01-26",
+   "rank": 250
+  },
+  {
+   "ticker": "ICE",
+   "name": "Intercontinental Exchange",
+   "sector": "Financials",
+   "price": 174.03,
+   "volume_usd": 469801220,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 251
+  },
+  {
+   "ticker": "IFF",
+   "name": "International Flavors & Fragrances",
+   "sector": "Materials",
+   "price": 84.43,
+   "volume_usd": 187230787,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 252
+  },
+  {
+   "ticker": "IP",
+   "name": "International Paper",
+   "sector": "Materials",
+   "price": 35.53,
+   "volume_usd": 189957892,
+   "market_cap": null,
+   "next_earnings": "2027-01-28",
+   "rank": 253
+  },
+  {
+   "ticker": "INTU",
+   "name": "Intuit",
+   "sector": "Information Technology",
+   "price": 338.23,
+   "volume_usd": 1000923946,
+   "market_cap": null,
+   "next_earnings": "2026-11-19",
+   "rank": 254
+  },
+  {
+   "ticker": "ISRG",
+   "name": "Intuitive Surgical",
+   "sector": "Health Care",
+   "price": 460.56,
+   "volume_usd": 864593445,
+   "market_cap": null,
+   "next_earnings": "2027-01-21",
+   "rank": 255
+  },
+  {
+   "ticker": "IVZ",
+   "name": "Invesco",
+   "sector": "Financials",
+   "price": 28.91,
+   "volume_usd": 144225223,
+   "market_cap": null,
+   "next_earnings": "2027-01-26",
+   "rank": 256
+  },
+  {
+   "ticker": "INVH",
+   "name": "Invitation Homes",
+   "sector": "Real Estate",
+   "price": 27.2,
+   "volume_usd": 128711670,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 257
+  },
+  {
+   "ticker": "IQV",
+   "name": "IQVIA",
+   "sector": "Health Care",
+   "price": 278.84,
+   "volume_usd": 363413384,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 258
+  },
+  {
+   "ticker": "IRM",
+   "name": "Iron Mountain",
+   "sector": "Real Estate",
+   "price": 110.85,
+   "volume_usd": 158768366,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 259
+  },
+  {
+   "ticker": "JBHT",
+   "name": "J.B. Hunt",
+   "sector": "Industrials",
+   "price": 224.32,
+   "volume_usd": 207793528,
+   "market_cap": null,
+   "next_earnings": "2027-01-15",
+   "rank": 260
+  },
+  {
+   "ticker": "JBL",
+   "name": "Jabil",
+   "sector": "Information Technology",
+   "price": 252.56,
+   "volume_usd": 376975225,
+   "market_cap": null,
+   "next_earnings": "2026-12-16",
+   "rank": 261
+  },
+  {
+   "ticker": "JKHY",
+   "name": "Jack Henry & Associates",
+   "sector": "Financials",
+   "price": 171.2,
+   "volume_usd": 134476581,
+   "market_cap": null,
+   "next_earnings": "2027-02-02",
+   "rank": 262
+  },
+  {
+   "ticker": "J",
+   "name": "Jacobs Solutions",
+   "sector": "Industrials",
+   "price": 156.39,
+   "volume_usd": 131220892,
+   "market_cap": null,
+   "next_earnings": "2026-11-23",
+   "rank": 263
+  },
+  {
+   "ticker": "JNJ",
+   "name": "Johnson & Johnson",
+   "sector": "Health Care",
+   "price": 282.11,
+   "volume_usd": 1839506997,
+   "market_cap": null,
+   "next_earnings": "2027-01-26",
+   "rank": 264
+  },
+  {
+   "ticker": "JCI",
+   "name": "Johnson Controls",
+   "sector": "Industrials",
+   "price": 141.49,
+   "volume_usd": 539598207,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 265
+  },
+  {
+   "ticker": "JPM",
+   "name": "JPMorgan Chase",
+   "sector": "Financials",
+   "price": 342.08,
+   "volume_usd": 2297123417,
+   "market_cap": null,
+   "next_earnings": "2027-01-14",
+   "rank": 266
+  },
+  {
+   "ticker": "KDP",
+   "name": "Keurig Dr Pepper",
+   "sector": "Consumer Staples",
+   "price": 36.94,
+   "volume_usd": 448061434,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 267
+  },
+  {
+   "ticker": "KEY",
+   "name": "KeyCorp",
+   "sector": "Financials",
+   "price": 21.41,
+   "volume_usd": 332601333,
+   "market_cap": null,
+   "next_earnings": "2027-01-20",
+   "rank": 268
+  },
+  {
+   "ticker": "KEYS",
+   "name": "Keysight Technologies",
+   "sector": "Information Technology",
+   "price": 288.97,
+   "volume_usd": 449016833,
+   "market_cap": null,
+   "next_earnings": "2026-11-19",
+   "rank": 269
+  },
+  {
+   "ticker": "KMB",
+   "name": "Kimberly-Clark",
+   "sector": "Consumer Staples",
+   "price": 111.93,
+   "volume_usd": 516063178,
+   "market_cap": null,
+   "next_earnings": "2027-02-02",
+   "rank": 270
+  },
+  {
+   "ticker": "KIM",
+   "name": "Kimco Realty",
+   "sector": "Real Estate",
+   "price": 25.78,
+   "volume_usd": 122952975,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 271
+  },
+  {
+   "ticker": "KMI",
+   "name": "Kinder Morgan",
+   "sector": "Energy",
+   "price": 30.57,
+   "volume_usd": 417572842,
+   "market_cap": null,
+   "next_earnings": "2027-01-27",
+   "rank": 272
+  },
+  {
+   "ticker": "KKR",
+   "name": "KKR & Co.",
+   "sector": "Financials",
+   "price": 98.09,
+   "volume_usd": 478198457,
+   "market_cap": null,
+   "next_earnings": "2027-02-04",
+   "rank": 273
+  },
+  {
+   "ticker": "KLAC",
+   "name": "KLA Corporation",
+   "sector": "Information Technology",
+   "price": 151.38,
+   "volume_usd": 1909861447,
+   "market_cap": null,
+   "next_earnings": "2027-01-28",
+   "rank": 274
+  },
+  {
+   "ticker": "KHC",
+   "name": "Kraft Heinz",
+   "sector": "Consumer Staples",
+   "price": 24.42,
+   "volume_usd": 303921079,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 275
+  },
+  {
+   "ticker": "KR",
+   "name": "Kroger",
+   "sector": "Consumer Staples",
+   "price": 68.01,
+   "volume_usd": 428040650,
+   "market_cap": null,
+   "next_earnings": "2026-12-03",
+   "rank": 276
+  },
+  {
+   "ticker": "LHX",
+   "name": "L3Harris",
+   "sector": "Industrials",
+   "price": 271.42,
+   "volume_usd": 430098206,
+   "market_cap": null,
+   "next_earnings": "2027-01-28",
+   "rank": 277
+  },
+  {
+   "ticker": "LH",
+   "name": "Labcorp",
+   "sector": "Health Care",
+   "price": 371.83,
+   "volume_usd": 218149419,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 278
+  },
+  {
+   "ticker": "LRCX",
+   "name": "Lam Research",
+   "sector": "Information Technology",
+   "price": 221.31,
+   "volume_usd": 2762483625,
+   "market_cap": null,
+   "next_earnings": "2027-01-27",
+   "rank": 279
+  },
+  {
+   "ticker": "LVS",
+   "name": "Las Vegas Sands",
+   "sector": "Consumer Discretionary",
+   "price": 40.18,
+   "volume_usd": 238045589,
+   "market_cap": null,
+   "next_earnings": "2027-01-27",
+   "rank": 280
+  },
+  {
+   "ticker": "LDOS",
+   "name": "Leidos",
+   "sector": "Industrials",
+   "price": 135.76,
+   "volume_usd": 131154313,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 281
+  },
+  {
+   "ticker": "LEN",
+   "name": "Lennar",
+   "sector": "Consumer Discretionary",
+   "price": 91.58,
+   "volume_usd": 375913705,
+   "market_cap": null,
+   "next_earnings": "2026-12-15",
+   "rank": 282
+  },
+  {
+   "ticker": "LII",
+   "name": "Lennox International",
+   "sector": "Industrials",
+   "price": 349.47,
+   "volume_usd": 195817703,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 283
+  },
+  {
+   "ticker": "LLY",
+   "name": "Lilly (Eli)",
+   "sector": "Health Care",
+   "price": 1411.95,
+   "volume_usd": 2965551117,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 284
+  },
+  {
+   "ticker": "LIN",
+   "name": "Linde plc",
+   "sector": "Materials",
+   "price": 520.33,
+   "volume_usd": 1017527901,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 285
+  },
+  {
+   "ticker": "LYV",
+   "name": "Live Nation Entertainment",
+   "sector": "Communication Services",
+   "price": 176.64,
+   "volume_usd": 314013979,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 286
+  },
+  {
+   "ticker": "LMT",
+   "name": "Lockheed Martin",
+   "sector": "Industrials",
+   "price": 588.19,
+   "volume_usd": 779076360,
+   "market_cap": null,
+   "next_earnings": "2027-01-26",
+   "rank": 287
+  },
+  {
+   "ticker": "L",
+   "name": "Loews Corporation",
+   "sector": "Financials",
+   "price": 109.94,
+   "volume_usd": 79639328,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 288
+  },
+  {
+   "ticker": "LOW",
+   "name": "Lowe's",
+   "sector": "Consumer Discretionary",
+   "price": 232.1,
+   "volume_usd": 640023946,
+   "market_cap": null,
+   "next_earnings": "2026-11-18",
+   "rank": 289
+  },
+  {
+   "ticker": "LULU",
+   "name": "Lululemon Athletica",
+   "sector": "Consumer Discretionary",
+   "price": 112.53,
+   "volume_usd": 368326343,
+   "market_cap": null,
+   "next_earnings": "2026-12-10",
+   "rank": 290
+  },
+  {
+   "ticker": "LITE",
+   "name": "Lumentum",
+   "sector": "Information Technology",
+   "price": 596.16,
+   "volume_usd": 4913368756,
+   "market_cap": null,
+   "next_earnings": "2027-02-02",
+   "rank": 291
+  },
+  {
+   "ticker": "LYB",
+   "name": "LyondellBasell",
+   "sector": "Materials",
+   "price": 59.5,
+   "volume_usd": 202850819,
+   "market_cap": null,
+   "next_earnings": "2027-01-29",
+   "rank": 292
+  },
+  {
+   "ticker": "MTB",
+   "name": "M&T Bank",
+   "sector": "Financials",
+   "price": 222.73,
+   "volume_usd": 194393628,
+   "market_cap": null,
+   "next_earnings": "2027-01-19",
+   "rank": 293
+  },
+  {
+   "ticker": "MPC",
+   "name": "Marathon Petroleum",
+   "sector": "Energy",
+   "price": 389.88,
+   "volume_usd": 917894664,
+   "market_cap": null,
+   "next_earnings": "2027-02-02",
+   "rank": 294
+  },
+  {
+   "ticker": "MAR",
+   "name": "Marriott International",
+   "sector": "Consumer Discretionary",
+   "price": 417.16,
+   "volume_usd": 521293699,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 295
+  },
+  {
+   "ticker": "MRSH",
+   "name": "Marsh McLennan",
+   "sector": "Financials",
+   "price": 204.37,
+   "volume_usd": 475054477,
+   "market_cap": null,
+   "next_earnings": "2027-01-28",
+   "rank": 296
+  },
+  {
+   "ticker": "MLM",
+   "name": "Martin Marietta Materials",
+   "sector": "Materials",
+   "price": 530.97,
+   "volume_usd": 417492382,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 297
+  },
+  {
+   "ticker": "MRVL",
+   "name": "Marvell Technology",
+   "sector": "Information Technology",
+   "price": 154.6,
+   "volume_usd": 5017144972,
+   "market_cap": null,
+   "next_earnings": "2026-12-01",
+   "rank": 298
+  },
+  {
+   "ticker": "MAS",
+   "name": "Masco",
+   "sector": "Industrials",
+   "price": 85.92,
+   "volume_usd": 164299357,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 299
+  },
+  {
+   "ticker": "MA",
+   "name": "Mastercard",
+   "sector": "Financials",
+   "price": 655.81,
+   "volume_usd": 1951991405,
+   "market_cap": null,
+   "next_earnings": "2027-01-28",
+   "rank": 300
+  },
+  {
+   "ticker": "MKC",
+   "name": "McCormick & Company",
+   "sector": "Consumer Staples",
+   "price": 47.88,
+   "volume_usd": 186914963,
+   "market_cap": null,
+   "next_earnings": "2027-01-21",
+   "rank": 301
+  },
+  {
+   "ticker": "MCD",
+   "name": "McDonald's",
+   "sector": "Consumer Discretionary",
+   "price": 281.44,
+   "volume_usd": 1308701912,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 302
+  },
+  {
+   "ticker": "MCK",
+   "name": "McKesson",
+   "sector": "Health Care",
+   "price": 1059.37,
+   "volume_usd": 704388253,
+   "market_cap": null,
+   "next_earnings": "2027-02-03",
+   "rank": 303
+  },
+  {
+   "ticker": "MDT",
+   "name": "Medtronic",
+   "sector": "Health Care",
+   "price": 102.79,
+   "volume_usd": 1549372566,
+   "market_cap": null,
+   "next_earnings": "2026-11-24",
+   "rank": 304
+  },
+  {
+   "ticker": "MRK",
+   "name": "Merck & Co.",
+   "sector": "Health Care",
+   "price": 148.76,
+   "volume_usd": 1349666389,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 305
+  },
+  {
+   "ticker": "META",
+   "name": "Meta Platforms",
+   "sector": "Communication Services",
+   "price": 641.37,
+   "volume_usd": 12349288530,
+   "market_cap": null,
+   "next_earnings": "2027-01-27",
+   "rank": 306
+  },
+  {
+   "ticker": "MET",
+   "name": "MetLife",
+   "sector": "Financials",
+   "price": 101.67,
+   "volume_usd": 304313506,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 307
+  },
+  {
+   "ticker": "MTD",
+   "name": "Mettler Toledo",
+   "sector": "Health Care",
+   "price": 1762.28,
+   "volume_usd": 317121601,
+   "market_cap": null,
+   "next_earnings": "2027-02-04",
+   "rank": 308
+  },
+  {
+   "ticker": "MGM",
+   "name": "MGM Resorts",
+   "sector": "Consumer Discretionary",
+   "price": 32.91,
+   "volume_usd": 159196948,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 309
+  },
+  {
+   "ticker": "MCHP",
+   "name": "Microchip Technology",
+   "sector": "Information Technology",
+   "price": 61.5,
+   "volume_usd": 741091079,
+   "market_cap": null,
+   "next_earnings": "2027-02-04",
+   "rank": 310
+  },
+  {
+   "ticker": "MU",
+   "name": "Micron Technology",
+   "sector": "Information Technology",
+   "price": 733.15,
+   "volume_usd": 25189426979,
+   "market_cap": null,
+   "next_earnings": "2026-12-23",
+   "rank": 311
+  },
+  {
+   "ticker": "MSFT",
+   "name": "Microsoft",
+   "sector": "Information Technology",
+   "price": 545.18,
+   "volume_usd": 11126899892,
+   "market_cap": null,
+   "next_earnings": "2027-01-27",
+   "rank": 312
+  },
+  {
+   "ticker": "MAA",
+   "name": "Mid-America Apartment Communities",
+   "sector": "Real Estate",
+   "price": 119.4,
+   "volume_usd": 130282688,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 313
+  },
+  {
+   "ticker": "MRNA",
+   "name": "Moderna",
+   "sector": "Health Care",
+   "price": 269.0,
+   "volume_usd": 3595744905,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 314
+  },
+  {
+   "ticker": "MDLZ",
+   "name": "Mondelez International",
+   "sector": "Consumer Staples",
+   "price": 66.44,
+   "volume_usd": 469350273,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 315
+  },
+  {
+   "ticker": "MPWR",
+   "name": "Monolithic Power Systems",
+   "sector": "Information Technology",
+   "price": 1388.05,
+   "volume_usd": 1014879086,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 316
+  },
+  {
+   "ticker": "MNST",
+   "name": "Monster Beverage",
+   "sector": "Consumer Staples",
+   "price": 45.64,
+   "volume_usd": 438376972,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 317
+  },
+  {
+   "ticker": "MCO",
+   "name": "Moody's Corporation",
+   "sector": "Financials",
+   "price": 511.08,
+   "volume_usd": 429995982,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 318
+  },
+  {
+   "ticker": "MS",
+   "name": "Morgan Stanley",
+   "sector": "Financials",
+   "price": 187.1,
+   "volume_usd": 1130954732,
+   "market_cap": null,
+   "next_earnings": "2027-01-14",
+   "rank": 319
+  },
+  {
+   "ticker": "MOS",
+   "name": "Mosaic Company (The)",
+   "sector": "Materials",
+   "price": 22.77,
+   "volume_usd": 198100875,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 320
+  },
+  {
+   "ticker": "MSI",
+   "name": "Motorola Solutions",
+   "sector": "Information Technology",
+   "price": 527.97,
+   "volume_usd": 389906978,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 321
+  },
+  {
+   "ticker": "MSCI",
+   "name": "MSCI",
+   "sector": "Financials",
+   "price": 646.45,
+   "volume_usd": 334084493,
+   "market_cap": null,
+   "next_earnings": "2027-01-26",
+   "rank": 322
+  },
+  {
+   "ticker": "NDAQ",
+   "name": "Nasdaq, Inc.",
+   "sector": "Financials",
+   "price": 108.5,
+   "volume_usd": 321280986,
+   "market_cap": null,
+   "next_earnings": "2027-01-28",
+   "rank": 323
+  },
+  {
+   "ticker": "NTAP",
+   "name": "NetApp",
+   "sector": "Information Technology",
+   "price": 176.07,
+   "volume_usd": 507882763,
+   "market_cap": null,
+   "next_earnings": "2026-12-01",
+   "rank": 324
+  },
+  {
+   "ticker": "NFLX",
+   "name": "Netflix",
+   "sector": "Communication Services",
+   "price": 63.95,
+   "volume_usd": 2595173832,
+   "market_cap": null,
+   "next_earnings": "2027-01-19",
+   "rank": 325
+  },
+  {
+   "ticker": "NEM",
+   "name": "Newmont",
+   "sector": "Materials",
+   "price": 125.16,
+   "volume_usd": 635758713,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 326
+  },
+  {
+   "ticker": "NWSA",
+   "name": "News Corp (Class A)",
+   "sector": "Communication Services",
+   "price": 26.57,
+   "volume_usd": 100515417,
+   "market_cap": null,
+   "next_earnings": "2027-02-04",
+   "rank": 327
+  },
+  {
+   "ticker": "NWS",
+   "name": "News Corp (Class B)",
+   "sector": "Communication Services",
+   "price": 29.33,
+   "volume_usd": 31016913,
+   "market_cap": null,
+   "next_earnings": "2027-02-04",
+   "rank": 328
+  },
+  {
+   "ticker": "NEE",
+   "name": "NextEra Energy",
+   "sector": "Utilities",
+   "price": 86.86,
+   "volume_usd": 1003403407,
+   "market_cap": null,
+   "next_earnings": "2027-01-27",
+   "rank": 329
+  },
+  {
+   "ticker": "NKE",
+   "name": "Nike, Inc.",
+   "sector": "Consumer Discretionary",
+   "price": 39.88,
+   "volume_usd": 1001880697,
+   "market_cap": null,
+   "next_earnings": "2026-12-17",
+   "rank": 330
+  },
+  {
+   "ticker": "NI",
+   "name": "NiSource",
+   "sector": "Utilities",
+   "price": 45.06,
+   "volume_usd": 241880977,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 331
+  },
+  {
+   "ticker": "NDSN",
+   "name": "Nordson Corporation",
+   "sector": "Industrials",
+   "price": 323.84,
+   "volume_usd": 110759079,
+   "market_cap": null,
+   "next_earnings": "2026-12-15",
+   "rank": 332
+  },
+  {
+   "ticker": "NSC",
+   "name": "Norfolk Southern",
+   "sector": "Industrials",
+   "price": 325.82,
+   "volume_usd": 260675975,
+   "market_cap": null,
+   "next_earnings": "2027-01-28",
+   "rank": 333
+  },
+  {
+   "ticker": "NTRS",
+   "name": "Northern Trust",
+   "sector": "Financials",
+   "price": 177.65,
+   "volume_usd": 188614619,
+   "market_cap": null,
+   "next_earnings": "2027-01-21",
+   "rank": 334
+  },
+  {
+   "ticker": "NOC",
+   "name": "Northrop Grumman",
+   "sector": "Industrials",
+   "price": 539.07,
+   "volume_usd": 524891420,
+   "market_cap": null,
+   "next_earnings": "2027-01-26",
+   "rank": 335
+  },
+  {
+   "ticker": "NCLH",
+   "name": "Norwegian Cruise Line Holdings",
+   "sector": "Consumer Discretionary",
+   "price": 18.43,
+   "volume_usd": 316660738,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 336
+  },
+  {
+   "ticker": "NRG",
+   "name": "NRG Energy",
+   "sector": "Utilities",
+   "price": 97.4,
+   "volume_usd": 314826543,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 337
+  },
+  {
+   "ticker": "NUE",
+   "name": "Nucor",
+   "sector": "Materials",
+   "price": 249.24,
+   "volume_usd": 348778074,
+   "market_cap": null,
+   "next_earnings": "2027-01-25",
+   "rank": 338
+  },
+  {
+   "ticker": "NVDA",
+   "name": "Nvidia",
+   "sector": "Information Technology",
+   "price": 178.67,
+   "volume_usd": 23580398676,
+   "market_cap": null,
+   "next_earnings": "2026-11-17",
+   "rank": 339
+  },
+  {
+   "ticker": "NVR",
+   "name": "NVR, Inc.",
+   "sector": "Consumer Discretionary",
+   "price": 6338.3799,
+   "volume_usd": 251229787,
+   "market_cap": null,
+   "next_earnings": "2027-01-27",
+   "rank": 340
+  },
+  {
+   "ticker": "NXPI",
+   "name": "NXP Semiconductors",
+   "sector": "Information Technology",
+   "price": 256.42,
+   "volume_usd": 941905773,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 341
+  },
+  {
+   "ticker": "ORLY",
+   "name": "O'Reilly Automotive",
+   "sector": "Consumer Discretionary",
+   "price": 89.79,
+   "volume_usd": 495334261,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 342
+  },
+  {
+   "ticker": "OXY",
+   "name": "Occidental Petroleum",
+   "sector": "Energy",
+   "price": 55.76,
+   "volume_usd": 513131599,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 343
+  },
+  {
+   "ticker": "OKTA",
+   "name": "Okta, Inc.",
+   "sector": "Information Technology",
+   "price": 177.57,
+   "volume_usd": 665934757,
+   "market_cap": null,
+   "next_earnings": "2026-12-01",
+   "rank": 344
+  },
+  {
+   "ticker": "ODFL",
+   "name": "Old Dominion",
+   "sector": "Industrials",
+   "price": 170.89,
+   "volume_usd": 346855613,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 345
+  },
+  {
+   "ticker": "OMC",
+   "name": "Omnicom Group",
+   "sector": "Communication Services",
+   "price": 88.5,
+   "volume_usd": 193343674,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 346
+  },
+  {
+   "ticker": "ON",
+   "name": "ON Semiconductor",
+   "sector": "Information Technology",
+   "price": 69.11,
+   "volume_usd": 805256879,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 347
+  },
+  {
+   "ticker": "OKE",
+   "name": "Oneok",
+   "sector": "Energy",
+   "price": 85.98,
+   "volume_usd": 288504026,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 348
+  },
+  {
+   "ticker": "ORCL",
+   "name": "Oracle Corporation",
+   "sector": "Information Technology",
+   "price": 119.79,
+   "volume_usd": 3994902752,
+   "market_cap": null,
+   "next_earnings": "2026-12-14",
+   "rank": 349
+  },
+  {
+   "ticker": "OTIS",
+   "name": "Otis Worldwide",
+   "sector": "Industrials",
+   "price": 78.77,
+   "volume_usd": 355646620,
+   "market_cap": null,
+   "next_earnings": "2027-01-27",
+   "rank": 350
+  },
+  {
+   "ticker": "PCAR",
+   "name": "Paccar",
+   "sector": "Industrials",
+   "price": 105.73,
+   "volume_usd": 400906557,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 351
+  },
+  {
+   "ticker": "PKG",
+   "name": "Packaging Corporation of America",
+   "sector": "Materials",
+   "price": 254.41,
+   "volume_usd": 151027241,
+   "market_cap": null,
+   "next_earnings": "2027-01-26",
+   "rank": 352
+  },
+  {
+   "ticker": "PLTR",
+   "name": "Palantir Technologies",
+   "sector": "Information Technology",
+   "price": 169.2,
+   "volume_usd": 4062552245,
+   "market_cap": null,
+   "next_earnings": "2027-02-01",
+   "rank": 353
+  },
+  {
+   "ticker": "PANW",
+   "name": "Palo Alto Networks",
+   "sector": "Information Technology",
+   "price": 330.89,
+   "volume_usd": 1979641827,
+   "market_cap": null,
+   "next_earnings": "2026-11-18",
+   "rank": 354
+  },
+  {
+   "ticker": "PH",
+   "name": "Parker Hannifin",
+   "sector": "Industrials",
+   "price": 956.59,
+   "volume_usd": 564553634,
+   "market_cap": null,
+   "next_earnings": "2027-01-28",
+   "rank": 355
+  },
+  {
+   "ticker": "PAYX",
+   "name": "Paychex",
+   "sector": "Industrials",
+   "price": 114.76,
+   "volume_usd": 318568251,
+   "market_cap": null,
+   "next_earnings": "2026-12-18",
+   "rank": 356
+  },
+  {
+   "ticker": "PYPL",
+   "name": "PayPal",
+   "sector": "Financials",
+   "price": 60.05,
+   "volume_usd": 578179461,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 357
+  },
+  {
+   "ticker": "PNR",
+   "name": "Pentair",
+   "sector": "Industrials",
+   "price": 70.2,
+   "volume_usd": 154287589,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 358
+  },
+  {
+   "ticker": "PEP",
+   "name": "PepsiCo",
+   "sector": "Consumer Staples",
+   "price": 141.88,
+   "volume_usd": 1243052565,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 359
+  },
+  {
+   "ticker": "PFE",
+   "name": "Pfizer",
+   "sector": "Health Care",
+   "price": 29.23,
+   "volume_usd": 930593049,
+   "market_cap": null,
+   "next_earnings": "2027-02-02",
+   "rank": 360
+  },
+  {
+   "ticker": "PCG",
+   "name": "PG&E Corporation",
+   "sector": "Utilities",
+   "price": 13.14,
+   "volume_usd": 386847038,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 361
+  },
+  {
+   "ticker": "PM",
+   "name": "Philip Morris International",
+   "sector": "Consumer Staples",
+   "price": 193.12,
+   "volume_usd": 901750802,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 362
+  },
+  {
+   "ticker": "PSX",
+   "name": "Phillips 66",
+   "sector": "Energy",
+   "price": 253.02,
+   "volume_usd": 736547417,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 363
+  },
+  {
+   "ticker": "PNW",
+   "name": "Pinnacle West Capital",
+   "sector": "Utilities",
+   "price": 105.26,
+   "volume_usd": 150886039,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 364
+  },
+  {
+   "ticker": "PNC",
+   "name": "PNC Financial Services",
+   "sector": "Financials",
+   "price": 231.3,
+   "volume_usd": 426989109,
+   "market_cap": null,
+   "next_earnings": "2027-01-15",
+   "rank": 365
+  },
+  {
+   "ticker": "PPG",
+   "name": "PPG Industries",
+   "sector": "Materials",
+   "price": 125.31,
+   "volume_usd": 191256356,
+   "market_cap": null,
+   "next_earnings": "2027-01-26",
+   "rank": 366
+  },
+  {
+   "ticker": "PPL",
+   "name": "PPL Corporation",
+   "sector": "Utilities",
+   "price": 35.7,
+   "volume_usd": 238351061,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 367
+  },
+  {
+   "ticker": "PFG",
+   "name": "Principal Financial Group",
+   "sector": "Financials",
+   "price": 115.39,
+   "volume_usd": 136947093,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 368
+  },
+  {
+   "ticker": "PG",
+   "name": "Procter & Gamble",
+   "sector": "Consumer Staples",
+   "price": 168.32,
+   "volume_usd": 1555030682,
+   "market_cap": null,
+   "next_earnings": "2027-01-21",
+   "rank": 369
+  },
+  {
+   "ticker": "PGR",
+   "name": "Progressive Corporation",
+   "sector": "Financials",
+   "price": 227.52,
+   "volume_usd": 542452758,
+   "market_cap": null,
+   "next_earnings": "2027-01-27",
+   "rank": 370
+  },
+  {
+   "ticker": "PLD",
+   "name": "Prologis",
+   "sector": "Real Estate",
+   "price": 130.55,
+   "volume_usd": 508088840,
+   "market_cap": null,
+   "next_earnings": "2027-01-20",
+   "rank": 371
+  },
+  {
+   "ticker": "PRU",
+   "name": "Prudential Financial",
+   "sector": "Financials",
+   "price": 122.05,
+   "volume_usd": 194847554,
+   "market_cap": null,
+   "next_earnings": "2027-02-02",
+   "rank": 372
+  },
+  {
+   "ticker": "PTC",
+   "name": "PTC Inc.",
+   "sector": "Information Technology",
+   "price": 195.87,
+   "volume_usd": 409602786,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 373
+  },
+  {
+   "ticker": "PEG",
+   "name": "Public Service Enterprise Group",
+   "sector": "Utilities",
+   "price": 75.03,
+   "volume_usd": 281661725,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 374
+  },
+  {
+   "ticker": "PSA",
+   "name": "Public Storage",
+   "sector": "Real Estate",
+   "price": 338.15,
+   "volume_usd": 274121489,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 375
+  },
+  {
+   "ticker": "PHM",
+   "name": "PulteGroup",
+   "sector": "Consumer Discretionary",
+   "price": 135.88,
+   "volume_usd": 244217086,
+   "market_cap": null,
+   "next_earnings": "2027-01-28",
+   "rank": 376
+  },
+  {
+   "ticker": "QCOM",
+   "name": "Qualcomm",
+   "sector": "Information Technology",
+   "price": 171.47,
+   "volume_usd": 1858667771,
+   "market_cap": null,
+   "next_earnings": "2027-02-03",
+   "rank": 377
+  },
+  {
+   "ticker": "PWR",
+   "name": "Quanta Services",
+   "sector": "Industrials",
+   "price": 591.48,
+   "volume_usd": 750469616,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 378
+  },
+  {
+   "ticker": "DGX",
+   "name": "Quest Diagnostics",
+   "sector": "Health Care",
+   "price": 259.67,
+   "volume_usd": 237365665,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 379
+  },
+  {
+   "ticker": "RL",
+   "name": "Ralph Lauren Corporation",
+   "sector": "Consumer Discretionary",
+   "price": 398.52,
+   "volume_usd": 187170134,
+   "market_cap": null,
+   "next_earnings": "2027-02-04",
+   "rank": 380
+  },
+  {
+   "ticker": "RJF",
+   "name": "Raymond James Financial",
+   "sector": "Financials",
+   "price": 167.8,
+   "volume_usd": 187506857,
+   "market_cap": null,
+   "next_earnings": "2027-01-27",
+   "rank": 381
+  },
+  {
+   "ticker": "O",
+   "name": "Realty Income",
+   "sector": "Real Estate",
+   "price": 59.5,
+   "volume_usd": 413237997,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 382
+  },
+  {
+   "ticker": "REG",
+   "name": "Regency Centers",
+   "sector": "Real Estate",
+   "price": 76.11,
+   "volume_usd": 89541743,
+   "market_cap": null,
+   "next_earnings": "2027-02-04",
+   "rank": 383
+  },
+  {
+   "ticker": "REGN",
+   "name": "Regeneron Pharmaceuticals",
+   "sector": "Health Care",
+   "price": 919.96,
+   "volume_usd": 554659388,
+   "market_cap": null,
+   "next_earnings": "2027-01-28",
+   "rank": 384
+  },
+  {
+   "ticker": "RF",
+   "name": "Regions Financial Corporation",
+   "sector": "Financials",
+   "price": 28.93,
+   "volume_usd": 291834057,
+   "market_cap": null,
+   "next_earnings": "2027-01-22",
+   "rank": 385
+  },
+  {
+   "ticker": "RSG",
+   "name": "Republic Services",
+   "sector": "Industrials",
+   "price": 246.78,
+   "volume_usd": 292836117,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 386
+  },
+  {
+   "ticker": "RMD",
+   "name": "ResMed",
+   "sector": "Health Care",
+   "price": 235.74,
+   "volume_usd": 258163065,
+   "market_cap": null,
+   "next_earnings": "2027-01-28",
+   "rank": 387
+  },
+  {
+   "ticker": "RVTY",
+   "name": "Revvity",
+   "sector": "Health Care",
+   "price": 160.72,
+   "volume_usd": 269016649,
+   "market_cap": null,
+   "next_earnings": "2027-02-01",
+   "rank": 388
+  },
+  {
+   "ticker": "HOOD",
+   "name": "Robinhood Markets",
+   "sector": "Financials",
+   "price": 83.32,
+   "volume_usd": 1808894838,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 389
+  },
+  {
+   "ticker": "ROK",
+   "name": "Rockwell Automation",
+   "sector": "Industrials",
+   "price": 389.36,
+   "volume_usd": 352656408,
+   "market_cap": null,
+   "next_earnings": "2027-02-04",
+   "rank": 390
+  },
+  {
+   "ticker": "ROL",
+   "name": "Rollins, Inc.",
+   "sector": "Industrials",
+   "price": 38.74,
+   "volume_usd": 242393075,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 391
+  },
+  {
+   "ticker": "ROP",
+   "name": "Roper Technologies",
+   "sector": "Information Technology",
+   "price": 471.64,
+   "volume_usd": 335465399,
+   "market_cap": null,
+   "next_earnings": "2027-01-26",
+   "rank": 392
+  },
+  {
+   "ticker": "ROST",
+   "name": "Ross Stores",
+   "sector": "Consumer Discretionary",
+   "price": 237.0,
+   "volume_usd": 479634263,
+   "market_cap": null,
+   "next_earnings": "2026-11-19",
+   "rank": 393
+  },
+  {
+   "ticker": "RCL",
+   "name": "Royal Caribbean Group",
+   "sector": "Consumer Discretionary",
+   "price": 336.98,
+   "volume_usd": 633341556,
+   "market_cap": null,
+   "next_earnings": "2027-01-26",
+   "rank": 394
+  },
+  {
+   "ticker": "RTX",
+   "name": "RTX Corporation",
+   "sector": "Industrials",
+   "price": 196.31,
+   "volume_usd": 879110078,
+   "market_cap": null,
+   "next_earnings": "2027-01-26",
+   "rank": 395
+  },
+  {
+   "ticker": "SPGI",
+   "name": "S&P Global",
+   "sector": "Financials",
+   "price": 471.09,
+   "volume_usd": 805035724,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 396
+  },
+  {
+   "ticker": "CRM",
+   "name": "Salesforce",
+   "sector": "Information Technology",
+   "price": 214.94,
+   "volume_usd": 1674204790,
+   "market_cap": null,
+   "next_earnings": "2026-12-02",
+   "rank": 397
+  },
+  {
+   "ticker": "SBAC",
+   "name": "SBA Communications",
+   "sector": "Real Estate",
+   "price": 190.35,
+   "volume_usd": 184999120,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 398
+  },
+  {
+   "ticker": "SLB",
+   "name": "Schlumberger",
+   "sector": "Energy",
+   "price": 50.38,
+   "volume_usd": 619701815,
+   "market_cap": null,
+   "next_earnings": "2027-01-22",
+   "rank": 399
+  },
+  {
+   "ticker": "STX",
+   "name": "Seagate Technology",
+   "sector": "Information Technology",
+   "price": 506.14,
+   "volume_usd": 3640286133,
+   "market_cap": null,
+   "next_earnings": "2027-01-26",
+   "rank": 400
+  },
+  {
+   "ticker": "SRE",
+   "name": "Sempra",
+   "sector": "Utilities",
+   "price": 78.77,
+   "volume_usd": 259535116,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 401
+  },
+  {
+   "ticker": "NOW",
+   "name": "ServiceNow",
+   "sector": "Information Technology",
+   "price": 102.76,
+   "volume_usd": 1709220321,
+   "market_cap": null,
+   "next_earnings": "2027-01-27",
+   "rank": 402
+  },
+  {
+   "ticker": "SHW",
+   "name": "Sherwin-Williams",
+   "sector": "Materials",
+   "price": 357.93,
+   "volume_usd": 546277679,
+   "market_cap": null,
+   "next_earnings": "2027-01-26",
+   "rank": 403
+  },
+  {
+   "ticker": "SPG",
+   "name": "Simon Property Group",
+   "sector": "Real Estate",
+   "price": 233.01,
+   "volume_usd": 246239956,
+   "market_cap": null,
+   "next_earnings": "2027-02-01",
+   "rank": 404
+  },
+  {
+   "ticker": "SKYD",
+   "name": "Skydance",
+   "sector": "Communication Services",
+   "price": 8.7,
+   "volume_usd": 220775473,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 405
+  },
+  {
+   "ticker": "SWKS",
+   "name": "Skyworks Solutions",
+   "sector": "Information Technology",
+   "price": 82.83,
+   "volume_usd": 392458745,
+   "market_cap": null,
+   "next_earnings": "2027-02-02",
+   "rank": 406
+  },
+  {
+   "ticker": "SJM",
+   "name": "J.M. Smucker Company (The)",
+   "sector": "Consumer Staples",
+   "price": 133.26,
+   "volume_usd": 138470539,
+   "market_cap": null,
+   "next_earnings": "2026-11-24",
+   "rank": 407
+  },
+  {
+   "ticker": "SW",
+   "name": "Smurfit Westrock",
+   "sector": "Materials",
+   "price": 44.19,
+   "volume_usd": 211874126,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 408
+  },
+  {
+   "ticker": "SNA",
+   "name": "Snap-on",
+   "sector": "Industrials",
+   "price": 373.82,
+   "volume_usd": 128704379,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 409
+  },
+  {
+   "ticker": "SO",
+   "name": "Southern Company",
+   "sector": "Utilities",
+   "price": 93.57,
+   "volume_usd": 565500642,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 410
+  },
+  {
+   "ticker": "LUV",
+   "name": "Southwest Airlines",
+   "sector": "Industrials",
+   "price": 46.3,
+   "volume_usd": 252836681,
+   "market_cap": null,
+   "next_earnings": "2027-01-27",
+   "rank": 411
+  },
+  {
+   "ticker": "SWK",
+   "name": "Stanley Black & Decker",
+   "sector": "Industrials",
+   "price": 118.1,
+   "volume_usd": 146648059,
+   "market_cap": null,
+   "next_earnings": "2027-02-03",
+   "rank": 412
+  },
+  {
+   "ticker": "SBUX",
+   "name": "Starbucks",
+   "sector": "Consumer Discretionary",
+   "price": 109.44,
+   "volume_usd": 830598835,
+   "market_cap": null,
+   "next_earnings": "2027-01-27",
+   "rank": 413
+  },
+  {
+   "ticker": "STT",
+   "name": "State Street Corporation",
+   "sector": "Financials",
+   "price": 170.88,
+   "volume_usd": 320053427,
+   "market_cap": null,
+   "next_earnings": "2027-01-15",
+   "rank": 414
+  },
+  {
+   "ticker": "STLD",
+   "name": "Steel Dynamics",
+   "sector": "Materials",
+   "price": 227.56,
+   "volume_usd": 217136220,
+   "market_cap": null,
+   "next_earnings": "2027-01-25",
+   "rank": 415
+  },
+  {
+   "ticker": "STE",
+   "name": "Steris",
+   "sector": "Health Care",
+   "price": 256.94,
+   "volume_usd": 140760482,
+   "market_cap": null,
+   "next_earnings": "2027-02-03",
+   "rank": 416
+  },
+  {
+   "ticker": "SYK",
+   "name": "Stryker Corporation",
+   "sector": "Health Care",
+   "price": 325.73,
+   "volume_usd": 805372177,
+   "market_cap": null,
+   "next_earnings": "2027-01-28",
+   "rank": 417
+  },
+  {
+   "ticker": "SMCI",
+   "name": "Supermicro",
+   "sector": "Information Technology",
+   "price": 28.6,
+   "volume_usd": 1199056554,
+   "market_cap": null,
+   "next_earnings": "2027-02-02",
+   "rank": 418
+  },
+  {
+   "ticker": "SYF",
+   "name": "Synchrony Financial",
+   "sector": "Financials",
+   "price": 73.22,
+   "volume_usd": 245355937,
+   "market_cap": null,
+   "next_earnings": "2027-01-26",
+   "rank": 419
+  },
+  {
+   "ticker": "SNPS",
+   "name": "Synopsys",
+   "sector": "Information Technology",
+   "price": 466.97,
+   "volume_usd": 1076048837,
+   "market_cap": null,
+   "next_earnings": "2026-12-08",
+   "rank": 420
+  },
+  {
+   "ticker": "SYY",
+   "name": "Sysco",
+   "sector": "Consumer Staples",
+   "price": 78.38,
+   "volume_usd": 246726035,
+   "market_cap": null,
+   "next_earnings": "2027-02-02",
+   "rank": 421
+  },
+  {
+   "ticker": "TMUS",
+   "name": "T-Mobile US",
+   "sector": "Communication Services",
+   "price": 168.71,
+   "volume_usd": 909578386,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 422
+  },
+  {
+   "ticker": "TROW",
+   "name": "T. Rowe Price",
+   "sector": "Financials",
+   "price": 110.82,
+   "volume_usd": 221414696,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 423
+  },
+  {
+   "ticker": "TTWO",
+   "name": "Take-Two Interactive",
+   "sector": "Communication Services",
+   "price": 207.4,
+   "volume_usd": 451952582,
+   "market_cap": null,
+   "next_earnings": "2027-02-09",
+   "rank": 424
+  },
+  {
+   "ticker": "TPR",
+   "name": "Tapestry, Inc.",
+   "sector": "Consumer Discretionary",
+   "price": 136.07,
+   "volume_usd": 318229295,
+   "market_cap": null,
+   "next_earnings": "2027-02-04",
+   "rank": 425
+  },
+  {
+   "ticker": "TRGP",
+   "name": "Targa Resources",
+   "sector": "Energy",
+   "price": 273.63,
+   "volume_usd": 343196331,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 426
+  },
+  {
+   "ticker": "TGT",
+   "name": "Target Corporation",
+   "sector": "Consumer Staples",
+   "price": 165.9,
+   "volume_usd": 631140848,
+   "market_cap": null,
+   "next_earnings": "2026-11-18",
+   "rank": 427
+  },
+  {
+   "ticker": "TEL",
+   "name": "TE Connectivity",
+   "sector": "Information Technology",
+   "price": 218.75,
+   "volume_usd": 385842420,
+   "market_cap": null,
+   "next_earnings": "2027-01-20",
+   "rank": 428
+  },
+  {
+   "ticker": "TDY",
+   "name": "Teledyne Technologies",
+   "sector": "Information Technology",
+   "price": 643.34,
+   "volume_usd": 184452676,
+   "market_cap": null,
+   "next_earnings": "2027-01-20",
+   "rank": 429
+  },
+  {
+   "ticker": "TER",
+   "name": "Teradyne",
+   "sector": "Information Technology",
+   "price": 246.0,
+   "volume_usd": 1080598683,
+   "market_cap": null,
+   "next_earnings": "2027-01-27",
+   "rank": 430
+  },
+  {
+   "ticker": "TSLA",
+   "name": "Tesla, Inc.",
+   "sector": "Consumer Discretionary",
+   "price": 378.05,
+   "volume_usd": 13815807480,
+   "market_cap": null,
+   "next_earnings": "2027-01-27",
+   "rank": 431
+  },
+  {
+   "ticker": "TXN",
+   "name": "Texas Instruments",
+   "sector": "Information Technology",
+   "price": 295.73,
+   "volume_usd": 2133208315,
+   "market_cap": null,
+   "next_earnings": "2027-01-26",
+   "rank": 432
+  },
+  {
+   "ticker": "TPL",
+   "name": "Texas Pacific Land Corporation",
+   "sector": "Energy",
+   "price": 278.28,
+   "volume_usd": 103023113,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 433
+  },
+  {
+   "ticker": "TXT",
+   "name": "Textron",
+   "sector": "Industrials",
+   "price": 85.41,
+   "volume_usd": 140378336,
+   "market_cap": null,
+   "next_earnings": "2027-01-27",
+   "rank": 434
+  },
+  {
+   "ticker": "TMO",
+   "name": "Thermo Fisher Scientific",
+   "sector": "Health Care",
+   "price": 721.63,
+   "volume_usd": 1455699950,
+   "market_cap": null,
+   "next_earnings": "2027-01-28",
+   "rank": 435
+  },
+  {
+   "ticker": "TJX",
+   "name": "TJX Companies",
+   "sector": "Consumer Discretionary",
+   "price": 138.13,
+   "volume_usd": 925003586,
+   "market_cap": null,
+   "next_earnings": "2026-11-18",
+   "rank": 436
+  },
+  {
+   "ticker": "TKO",
+   "name": "TKO Group Holdings",
+   "sector": "Communication Services",
+   "price": 199.65,
+   "volume_usd": 177528782,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 437
+  },
+  {
+   "ticker": "TSCO",
+   "name": "Tractor Supply",
+   "sector": "Consumer Discretionary",
+   "price": 37.4,
+   "volume_usd": 382891601,
+   "market_cap": null,
+   "next_earnings": "2027-01-28",
+   "rank": 438
+  },
+  {
+   "ticker": "TT",
+   "name": "Trane Technologies",
+   "sector": "Industrials",
+   "price": 420.56,
+   "volume_usd": 678555383,
+   "market_cap": null,
+   "next_earnings": "2027-01-28",
+   "rank": 439
+  },
+  {
+   "ticker": "TDG",
+   "name": "TransDigm Group",
+   "sector": "Industrials",
+   "price": 1218.85,
+   "volume_usd": 406751646,
+   "market_cap": null,
+   "next_earnings": "2026-11-10",
+   "rank": 440
+  },
+  {
+   "ticker": "TRV",
+   "name": "Travelers Companies (The)",
+   "sector": "Financials",
+   "price": 395.2,
+   "volume_usd": 523339369,
+   "market_cap": null,
+   "next_earnings": "2027-01-20",
+   "rank": 441
+  },
+  {
+   "ticker": "TRMB",
+   "name": "Trimble Inc.",
+   "sector": "Information Technology",
+   "price": 54.68,
+   "volume_usd": 128536889,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 442
+  },
+  {
+   "ticker": "TFC",
+   "name": "Truist Financial",
+   "sector": "Financials",
+   "price": 50.33,
+   "volume_usd": 373836323,
+   "market_cap": null,
+   "next_earnings": "2027-01-20",
+   "rank": 443
+  },
+  {
+   "ticker": "TWLO",
+   "name": "Twilio",
+   "sector": "Information Technology",
+   "price": 206.64,
+   "volume_usd": 640138602,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 444
+  },
+  {
+   "ticker": "TYL",
+   "name": "Tyler Technologies",
+   "sector": "Information Technology",
+   "price": 418.18,
+   "volume_usd": 260574183,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 445
+  },
+  {
+   "ticker": "TSN",
+   "name": "Tyson Foods",
+   "sector": "Consumer Staples",
+   "price": 59.87,
+   "volume_usd": 171367617,
+   "market_cap": null,
+   "next_earnings": "2026-11-16",
+   "rank": 446
+  },
+  {
+   "ticker": "USB",
+   "name": "U.S. Bancorp",
+   "sector": "Financials",
+   "price": 60.95,
+   "volume_usd": 436788452,
+   "market_cap": null,
+   "next_earnings": "2027-01-19",
+   "rank": 447
+  },
+  {
+   "ticker": "UBER",
+   "name": "Uber",
+   "sector": "Industrials",
+   "price": 71.17,
+   "volume_usd": 1155369725,
+   "market_cap": null,
+   "next_earnings": "2027-02-03",
+   "rank": 448
+  },
+  {
+   "ticker": "UDR",
+   "name": "UDR, Inc.",
+   "sector": "Real Estate",
+   "price": 36.71,
+   "volume_usd": 154009417,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 449
+  },
+  {
+   "ticker": "ULTA",
+   "name": "Ulta Beauty",
+   "sector": "Consumer Discretionary",
+   "price": 665.13,
+   "volume_usd": 269497018,
+   "market_cap": null,
+   "next_earnings": "2026-12-03",
+   "rank": 450
+  },
+  {
+   "ticker": "UNP",
+   "name": "Union Pacific Corporation",
+   "sector": "Industrials",
+   "price": 297.01,
+   "volume_usd": 711783639,
+   "market_cap": null,
+   "next_earnings": "2027-01-26",
+   "rank": 451
+  },
+  {
+   "ticker": "UAL",
+   "name": "United Airlines Holdings",
+   "sector": "Industrials",
+   "price": 120.38,
+   "volume_usd": 511365827,
+   "market_cap": null,
+   "next_earnings": "2027-01-26",
+   "rank": 452
+  },
+  {
+   "ticker": "UPS",
+   "name": "United Parcel Service",
+   "sector": "Industrials",
+   "price": 110.96,
+   "volume_usd": 467735982,
+   "market_cap": null,
+   "next_earnings": "2027-01-26",
+   "rank": 453
+  },
+  {
+   "ticker": "URI",
+   "name": "United Rentals",
+   "sector": "Industrials",
+   "price": 1128.17,
+   "volume_usd": 582460475,
+   "market_cap": null,
+   "next_earnings": "2027-01-27",
+   "rank": 454
+  },
+  {
+   "ticker": "UNH",
+   "name": "UnitedHealth Group",
+   "sector": "Health Care",
+   "price": 397.62,
+   "volume_usd": 2074689893,
+   "market_cap": null,
+   "next_earnings": "2027-01-12",
+   "rank": 455
+  },
+  {
+   "ticker": "UHS",
+   "name": "Universal Health Services",
+   "sector": "Health Care",
+   "price": 197.16,
+   "volume_usd": 107651535,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 456
+  },
+  {
+   "ticker": "VLO",
+   "name": "Valero Energy",
+   "sector": "Energy",
+   "price": 356.75,
+   "volume_usd": 1109718448,
+   "market_cap": null,
+   "next_earnings": "2027-01-28",
+   "rank": 457
+  },
+  {
+   "ticker": "VEEV",
+   "name": "Veeva Systems",
+   "sector": "Health Care",
+   "price": 306.4,
+   "volume_usd": 434032204,
+   "market_cap": null,
+   "next_earnings": "2026-11-25",
+   "rank": 458
+  },
+  {
+   "ticker": "VTR",
+   "name": "Ventas",
+   "sector": "Real Estate",
+   "price": 89.49,
+   "volume_usd": 331673829,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 459
+  },
+  {
+   "ticker": "VLTO",
+   "name": "Veralto",
+   "sector": "Industrials",
+   "price": 118.06,
+   "volume_usd": 187530121,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 460
+  },
+  {
+   "ticker": "VRSN",
+   "name": "Verisign",
+   "sector": "Information Technology",
+   "price": 305.84,
+   "volume_usd": 273864651,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 461
+  },
+  {
+   "ticker": "VRSK",
+   "name": "Verisk Analytics",
+   "sector": "Industrials",
+   "price": 200.6,
+   "volume_usd": 231789298,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 462
+  },
+  {
+   "ticker": "VZ",
+   "name": "Verizon",
+   "sector": "Communication Services",
+   "price": 46.06,
+   "volume_usd": 1164660762,
+   "market_cap": null,
+   "next_earnings": "2027-01-28",
+   "rank": 463
+  },
+  {
+   "ticker": "VRTX",
+   "name": "Vertex Pharmaceuticals",
+   "sector": "Health Care",
+   "price": 550.87,
+   "volume_usd": 674061932,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 464
+  },
+  {
+   "ticker": "VRT",
+   "name": "Vertiv",
+   "sector": "Industrials",
+   "price": 200.47,
+   "volume_usd": 1365956092,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 465
+  },
+  {
+   "ticker": "VTRS",
+   "name": "Viatris",
+   "sector": "Health Care",
+   "price": 20.49,
+   "volume_usd": 154273091,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 466
+  },
+  {
+   "ticker": "VICI",
+   "name": "Vici Properties",
+   "sector": "Real Estate",
+   "price": 25.16,
+   "volume_usd": 229594740,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 467
+  },
+  {
+   "ticker": "V",
+   "name": "Visa Inc.",
+   "sector": "Financials",
+   "price": 422.16,
+   "volume_usd": 2694978534,
+   "market_cap": null,
+   "next_earnings": "2027-01-26",
+   "rank": 468
+  },
+  {
+   "ticker": "VST",
+   "name": "Vistra Corp.",
+   "sector": "Utilities",
+   "price": 133.92,
+   "volume_usd": 965976582,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 469
+  },
+  {
+   "ticker": "VMRK",
+   "name": "Vivmark Residential",
+   "sector": "Real Estate",
+   "price": 66.14,
+   "volume_usd": 267521140,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 470
+  },
+  {
+   "ticker": "VMC",
+   "name": "Vulcan Materials Company",
+   "sector": "Materials",
+   "price": 289.44,
+   "volume_usd": 331581184,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 471
+  },
+  {
+   "ticker": "WRB",
+   "name": "W. R. Berkley Corporation",
+   "sector": "Financials",
+   "price": 75.92,
+   "volume_usd": 154778735,
+   "market_cap": null,
+   "next_earnings": "2027-01-25",
+   "rank": 472
+  },
+  {
+   "ticker": "GWW",
+   "name": "W. W. Grainger",
+   "sector": "Industrials",
+   "price": 1447.67,
+   "volume_usd": 318719815,
+   "market_cap": null,
+   "next_earnings": "2027-02-02",
+   "rank": 473
+  },
+  {
+   "ticker": "WAB",
+   "name": "Wabtec",
+   "sector": "Industrials",
+   "price": 298.19,
+   "volume_usd": 256105974,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 474
+  },
+  {
+   "ticker": "WMT",
+   "name": "Walmart",
+   "sector": "Consumer Staples",
+   "price": 125.66,
+   "volume_usd": 2438550237,
+   "market_cap": null,
+   "next_earnings": "2026-11-19",
+   "rank": 475
+  },
+  {
+   "ticker": "DIS",
+   "name": "Walt Disney Company (The)",
+   "sector": "Communication Services",
+   "price": 119.12,
+   "volume_usd": 864465950,
+   "market_cap": null,
+   "next_earnings": "2026-11-17",
+   "rank": 476
+  },
+  {
+   "ticker": "WM",
+   "name": "Waste Management",
+   "sector": "Industrials",
+   "price": 236.61,
+   "volume_usd": 513462756,
+   "market_cap": null,
+   "next_earnings": "2027-01-27",
+   "rank": 477
+  },
+  {
+   "ticker": "WAT",
+   "name": "Waters Corporation",
+   "sector": "Health Care",
+   "price": 476.7,
+   "volume_usd": 419989810,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 478
+  },
+  {
+   "ticker": "WEC",
+   "name": "WEC Energy Group",
+   "sector": "Utilities",
+   "price": 117.15,
+   "volume_usd": 299722099,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 479
+  },
+  {
+   "ticker": "WFC",
+   "name": "Wells Fargo",
+   "sector": "Financials",
+   "price": 85.49,
+   "volume_usd": 1191459439,
+   "market_cap": null,
+   "next_earnings": "2027-01-14",
+   "rank": 480
+  },
+  {
+   "ticker": "WELL",
+   "name": "Welltower",
+   "sector": "Real Estate",
+   "price": 247.35,
+   "volume_usd": 595539921,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 481
+  },
+  {
+   "ticker": "WST",
+   "name": "West Pharmaceutical Services",
+   "sector": "Health Care",
+   "price": 413.09,
+   "volume_usd": 227564179,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 482
+  },
+  {
+   "ticker": "WDC",
+   "name": "Western Digital",
+   "sector": "Information Technology",
+   "price": 289.78,
+   "volume_usd": 3136265416,
+   "market_cap": null,
+   "next_earnings": "2027-01-28",
+   "rank": 483
+  },
+  {
+   "ticker": "WY",
+   "name": "Weyerhaeuser",
+   "sector": "Real Estate",
+   "price": 21.13,
+   "volume_usd": 163458049,
+   "market_cap": null,
+   "next_earnings": "2027-01-28",
+   "rank": 484
+  },
+  {
+   "ticker": "WSM",
+   "name": "Williams-Sonoma, Inc.",
+   "sector": "Consumer Discretionary",
+   "price": 261.68,
+   "volume_usd": 267793835,
+   "market_cap": null,
+   "next_earnings": "2026-11-18",
+   "rank": 485
+  },
+  {
+   "ticker": "WMB",
+   "name": "Williams Companies",
+   "sector": "Energy",
+   "price": 66.45,
+   "volume_usd": 576316372,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 486
+  },
+  {
+   "ticker": "WTW",
+   "name": "Willis Towers Watson",
+   "sector": "Financials",
+   "price": 327.01,
+   "volume_usd": 163897173,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 487
+  },
+  {
+   "ticker": "WDAY",
+   "name": "Workday, Inc.",
+   "sector": "Information Technology",
+   "price": 190.21,
+   "volume_usd": 415687154,
+   "market_cap": null,
+   "next_earnings": "2026-11-24",
+   "rank": 488
+  },
+  {
+   "ticker": "WYNN",
+   "name": "Wynn Resorts",
+   "sector": "Consumer Discretionary",
+   "price": 86.7,
+   "volume_usd": 165562574,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 489
+  },
+  {
+   "ticker": "XEL",
+   "name": "Xcel Energy",
+   "sector": "Utilities",
+   "price": 80.17,
+   "volume_usd": 416647091,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 490
+  },
+  {
+   "ticker": "XYL",
+   "name": "Xylem Inc.",
+   "sector": "Industrials",
+   "price": 99.26,
+   "volume_usd": 250937982,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 491
+  },
+  {
+   "ticker": "YUM",
+   "name": "Yum! Brands",
+   "sector": "Consumer Discretionary",
+   "price": 160.88,
+   "volume_usd": 373933229,
+   "market_cap": null,
+   "next_earnings": "2027-02-03",
+   "rank": 492
+  },
+  {
+   "ticker": "ZBRA",
+   "name": "Zebra Technologies",
+   "sector": "Information Technology",
+   "price": 326.71,
+   "volume_usd": 185494500,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 493
+  },
+  {
+   "ticker": "ZBH",
+   "name": "Zimmer Biomet",
+   "sector": "Health Care",
+   "price": 108.33,
+   "volume_usd": 200643729,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 494
+  },
+  {
+   "ticker": "ZTS",
+   "name": "Zoetis",
+   "sector": "Health Care",
+   "price": 82.32,
+   "volume_usd": 309196119,
+   "market_cap": null,
+   "next_earnings": null,
+   "rank": 495
+  }
+ ],
+ "excluded": [
+  {
+   "ticker": "FDXF",
+   "name": "FedEx Freight",
+   "sector": "Industrials",
+   "reason": "only 167 days of history (the weekly stage needs about 3 years)"
+  },
+  {
+   "ticker": "GEV",
+   "name": "GE Vernova",
+   "sector": "Industrials",
+   "reason": "only 958 days of history (the weekly stage needs about 3 years)"
+  },
+  {
+   "ticker": "HONA",
+   "name": "Honeywell Aerospace",
+   "sector": "Industrials",
+   "reason": "only 148 days of history (the weekly stage needs about 3 years)"
+  },
+  {
+   "ticker": "Q",
+   "name": "Qnity Electronics",
+   "sector": "Information Technology",
+   "reason": "only 379 days of history (the weekly stage needs about 3 years)"
+  },
+  {
+   "ticker": "RDDT",
+   "name": "Reddit",
+   "sector": "Communication Services",
+   "reason": "only 964 days of history (the weekly stage needs about 3 years)"
+  },
+  {
+   "ticker": "SNDK",
+   "name": "Sandisk",
+   "sector": "Information Technology",
+   "reason": "only 635 days of history (the weekly stage needs about 3 years)"
+  },
+  {
+   "ticker": "SOLV",
+   "name": "Solventum",
+   "sector": "Health Care",
+   "reason": "only 959 days of history (the weekly stage needs about 3 years)"
+  },
+  {
+   "ticker": "VYLR",
+   "name": "Vylor",
+   "sector": "Consumer Staples",
+   "reason": "only 40 days of history (the weekly stage needs about 3 years)"
+  }
+ ]
+}
