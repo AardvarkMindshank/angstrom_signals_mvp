@@ -67,21 +67,34 @@ def top_coins(n: int) -> list[dict]:
     return rows[:n]
 
 
-LABELS = {"exchange-based-tokens": "another exchange's own token", "tokenized-treasury-bills": "tokenised fund",
-          "tokenized-treasury-bonds": "tokenised fund", "privacy-coins": "privacy coin"}
+NOT_TRADABLE_WORDS = {"exchange-based": "another exchange's own token", "treasury": "tokenised fund",
+                      "tokenized-stock": "tokenised share", "xstocks": "tokenised share",
+                      "tokenized-asset": "tokenised asset", "real-world-assets": "real-world asset token"}
+YAHOO_LEAVE_OUT = ("another exchange's own token", "tokenised fund", "tokenised share", "tokenised asset")
 
 
 def labels() -> dict[str, str]:
-    """{coingecko id: what it is} for categories that explain why a coin is not on Binance (wording only)."""
+    """{coingecko id: what it is} from CoinGecko's categories that explain a coin missing from Binance (the reason
+    text, and which coins the Yahoo fallback leaves out). Category ids are found by keyword in CoinGecko's list."""
+    try:
+        r = requests.get("https://api.coingecko.com/api/v3/coins/categories/list", headers=_HEADERS, timeout=30)
+        ids = [c["category_id"] for c in r.json()] if r.status_code == 200 else []
+    except Exception:
+        ids = []
+    wanted = [(cid, word) for cid in ids for key, word in NOT_TRADABLE_WORDS.items() if key in cid]
     out: dict[str, str] = {}
-    for category, word in LABELS.items():
+    for category, word in wanted[:12]:
         try:
             for page in (1, 2):
-                for row in _coingecko({"category": category, "per_page": 250, "page": page}):
+                rows = _coingecko({"category": category, "per_page": 250, "page": page})
+                for row in rows:
                     out.setdefault(row["id"], word)
+                if len(rows) < 250:
+                    break
         except Exception:
             pass
         time.sleep(3)
+    print(f"Categories used for wording: {', '.join(c for c, _ in wanted[:12]) or 'none found'}; {len(out)} coins")
     return out
 
 
@@ -117,6 +130,55 @@ def _quiet_hours(pair: str, now: pd.Timestamp, get) -> float:
     return round(((hours["volume"] <= 0).sum() + max(0, 168 - len(hours))) / 168, 4)
 
 
+YAHOO_MIN_VOLUME_USD = 1_000_000   # CoinGecko's 24h volume across all exchanges (Yahoo has no per-venue volume)
+YAHOO_MAX_MISSING_HOURS = 0.05     # share of the last week's hourly candles Yahoo does not have
+
+
+def yahoo_quality(ticker: str, now: pd.Timestamp) -> dict | None:
+    """Days of daily history, the last close and the share of missing hourly candles last week, from Yahoo Finance;
+    None when Yahoo has nothing for the ticker."""
+    import yfinance as yf
+
+    daily = yf.Ticker(ticker).history(period="max", interval="1d", auto_adjust=False)
+    if daily is None or daily.empty:
+        return None
+    hourly = yf.Ticker(ticker).history(period="8d", interval="1h", auto_adjust=False)
+    end = now.floor("h")
+    have = 0 if hourly is None or hourly.empty else int(((hourly.index.tz_convert("UTC") >= end - pd.Timedelta(hours=168))
+                                                          & (hourly.index.tz_convert("UTC") < end)).sum())
+    first = pd.Timestamp(daily.index[0]).tz_convert("UTC") if daily.index.tz else pd.Timestamp(daily.index[0], tz="UTC")
+    return {"days": int((now.normalize() - first.normalize()).days), "close": float(daily["Close"].iloc[-1]),
+            "listed_since": first.strftime("%Y-%m-%d"), "missing_hours": round(max(0, 168 - have) / 168, 4)}
+
+
+def yahoo_fallback(coin: dict, now: pd.Timestamp, check=yahoo_quality):
+    """(yahoo ticker, None, quality) when the coin can be read from Yahoo with credible data, else
+    (None, reason, None)."""
+    import data_fetchers
+
+    symbol = str(coin.get("symbol") or "").upper()
+    ticker = (data_fetchers.YF_BY_COINGECKO_ID.get(coin["id"]) or data_fetchers.YAHOO_TICKER_BY_ID.get(coin["id"])
+              or f"{symbol}-USD")
+    volume = float(coin.get("total_volume") or 0)
+    if volume < YAHOO_MIN_VOLUME_USD:
+        return None, f"not on Binance, and thin trading elsewhere (about ${volume / 1e3:,.0f}k a day)", None
+    try:
+        q = check(ticker, now)
+    except Exception as e:
+        return None, f"not on Binance, and Yahoo could not be read ({type(e).__name__})", None
+    if q is None:
+        return None, "not on Binance or Yahoo Finance", None
+    price = float(coin.get("current_price") or 0)
+    if not price or abs(q["close"] / price - 1) > bn.PRICE_TOLERANCE:
+        return None, f"not on Binance, and Yahoo's {ticker} is another coin (different price)", None
+    if q["days"] < MIN_DAYS:
+        return None, f"not on Binance, and only {q['days']} days on Yahoo (needs {MIN_DAYS})", None
+    if q["missing_hours"] > YAHOO_MAX_MISSING_HOURS:
+        return None, (f"not on Binance, and Yahoo's hourly candles are gappy ({q['missing_hours'] * 100:.0f}% of the "
+                      "last week missing)"), None
+    return ticker, None, q
+
+
 def quality(pair: str, now: pd.Timestamp, get=bn._get) -> dict:
     """Listing day, days of history, the median daily USDT volume and days without trading (last 30 closed days)."""
     first = get("/api/v3/klines", {"symbol": pair, "interval": "1d", "startTime": 0, "limit": 1})
@@ -133,7 +195,8 @@ def quality(pair: str, now: pd.Timestamp, get=bn._get) -> dict:
 
 
 def build(top: int = TOP, coins=None, excluded_ids=None, pairs=None, price_of=None, quality_of=None, now=None,
-          kinds=None) -> dict:
+          kinds=None, yahoo=None) -> dict:
+    """yahoo(coin, now) -> (ticker, reason, quality): the fallback for coins Binance does not list (None: off)."""
     now = pd.Timestamp.now(tz="UTC") if now is None else now
     coins = top_coins(top) if coins is None else coins
     excluded_ids = not_coins() if excluded_ids is None else excluded_ids
@@ -155,9 +218,21 @@ def build(top: int = TOP, coins=None, excluded_ids=None, pairs=None, price_of=No
             continue
         pair = bn.pair_for("crypto", coin["id"], None, coin, pairs=pairs, price_of=price_of)
         if pair is None:
-            what = f" ({kinds[coin['id']]})" if coin["id"] in kinds else ""
-            leave(f"not traded on Binance against USDT{what}" if base["symbol"] not in pairs
-                  else "Binance's coin with this ticker has a different price (another coin)")
+            what = kinds.get(coin["id"])
+            if base["symbol"] in pairs:
+                leave("Binance's coin with this ticker has a different price (another coin)")
+            elif what in YAHOO_LEAVE_OUT or yahoo is None:
+                leave(f"not traded on Binance against USDT" + (f" ({what})" if what else ""))
+            else:
+                ticker, why, q = yahoo(coin, now)
+                if ticker is None:
+                    leave(why)
+                elif f"yahoo:{ticker}" in used_pairs:
+                    leave(f"same Yahoo ticker as a bigger coin ({ticker})")
+                else:
+                    used_pairs.add(f"yahoo:{ticker}")
+                    included.append({**base, "pair": f"yahoo:{ticker}", "volume_usd": round(float(coin.get("total_volume") or 0)),
+                                     "listed_since": q["listed_since"], "days": q["days"]})
             continue
         if pair in used_pairs:
             leave(f"same Binance pair as a bigger coin ({pair})")
@@ -185,15 +260,37 @@ def build(top: int = TOP, coins=None, excluded_ids=None, pairs=None, price_of=No
 
 def summary(u: dict) -> str:
     def kind(reason: str) -> str:
-        if "days on Binance" in reason:
+        if "days on Binance" in reason or "days on Yahoo" in reason:
             return "short history"
+        if reason.startswith("not on Binance, and"):
+            return "not on Binance; Yahoo " + ("thin" if "thin" in reason else "gappy" if "gappy" in reason
+                                              else "another coin" if "another coin" in reason else "missing")
         return reason if reason.startswith("not traded") else reason.split(" (")[0]
 
     reasons = pd.Series([kind(e["reason"]) for e in u["excluded"]]).value_counts()
+    yahoo = sum(1 for c in u["included"] if str(c.get("pair") or "").startswith("yahoo:"))
     lines = [f"Universe: {len(u['included'])} coins usable of the top {u['rules']['top']} "
-             f"({len(u['excluded'])} left out)"]
+             f"({len(u['included']) - yahoo} on Binance, {yahoo} from Yahoo; {len(u['excluded'])} left out)"]
     lines += [f"  {n:4}  {r}" for r, n in reasons.items()]
     return "\n".join(lines)
+
+
+def register(rows) -> None:
+    """Tell the candle loaders about the universe's checked sources: a Binance pair, or a Yahoo ticker for coins
+    Binance does not list. rows: crypto_universe table rows (coin_id, pair) of included coins."""
+    import data_fetchers
+
+    binance, yahoo = {}, {}
+    for r in rows:
+        pair = str(r.get("pair") or "")
+        if pair.startswith("yahoo:"):
+            binance[r["coin_id"]] = None
+            yahoo[r["coin_id"]] = pair[6:]
+        elif pair:
+            binance[r["coin_id"]] = pair
+    bn.register(binance)
+    for coin_id, ticker in yahoo.items():
+        data_fetchers.YF_BY_COINGECKO_ID.setdefault(coin_id, ticker)
 
 
 def save(supabase, u: dict) -> int:
@@ -213,7 +310,7 @@ def save(supabase, u: dict) -> int:
 def main(argv: list[str]) -> int:
     out = Path(argv[0]) if argv else Path("out")
     top = int(argv[argv.index("--top") + 1]) if "--top" in argv else TOP
-    u = build(top)
+    u = build(top, yahoo=yahoo_fallback)
     out.mkdir(parents=True, exist_ok=True)
     (out / "crypto_universe.json").write_text(json.dumps(u, indent=1))
     print(summary(u))

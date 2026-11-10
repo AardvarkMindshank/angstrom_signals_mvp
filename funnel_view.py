@@ -35,6 +35,9 @@ def load_universe(supabase) -> dict[str, dict]:
                                                         "volume_usd, built_at").order("rank").execute().data or [])
     except Exception:
         return {}
+    import crypto_universe
+
+    crypto_universe.register([r for r in rows if r.get("included")])
     return {r["coin_id"]: r for r in rows}
 
 

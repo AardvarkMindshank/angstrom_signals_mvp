@@ -71,12 +71,22 @@ def trading_pairs(get=_get) -> dict[str, str]:
     return _PAIRS.get(make) or {}
 
 
+KNOWN_PAIRS: dict[str, str | None] = {}     # coin id -> pair, or None (not on Binance), from the crypto universe
+
+
+def register(pairs_by_id: dict[str, str | None]) -> None:
+    """Remember the crypto universe's checked pairs (crypto_universe.register), so no lookup is needed for them."""
+    KNOWN_PAIRS.update(pairs_by_id)
+
+
 def pair_for(kind: str, asset_id: str, yahoo_symbol: str | None = None, coingecko: dict | None = None,
              pairs: dict | None = None, price_of=None) -> str | None:
     """The Binance pair for a coin, or None. `coingecko` (optional): {"symbol", "current_price"} for coins without a
     Yahoo ticker; then the pair must agree on price."""
     if kind != "crypto":
         return None
+    if asset_id in KNOWN_PAIRS:
+        return KNOWN_PAIRS[asset_id]
     pairs = trading_pairs() if pairs is None else pairs
     if yahoo_symbol and yahoo_symbol.upper().endswith("-USD"):
         base = yahoo_symbol.upper()[:-4]
@@ -128,6 +138,8 @@ _COINS: dict = {}
 
 def coingecko_coin(asset_id: str) -> dict | None:
     """{"symbol", "current_price"} from CoinGecko for one coin id, kept for a day (for coins without a Yahoo ticker)."""
+    if asset_id in KNOWN_PAIRS:                 # already checked by the crypto universe
+        return None
     hit = _COINS.get(asset_id)
     if hit and time.time() - hit[0] < 86_400:
         return hit[1]

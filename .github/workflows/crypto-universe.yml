@@ -27,7 +27,7 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
-          pip install -q pandas requests supabase
+          pip install -q pandas requests supabase yfinance
           python crypto_universe.py out --top "${{ github.event.inputs.top || '500' }}" --save | tee out_summary.txt
           { echo '### Crypto universe'; echo '```'; cat out_summary.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
       - name: Save

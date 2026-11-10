@@ -133,8 +133,11 @@ class SupabaseStore:
         self.db = supabase
 
     def universe(self) -> dict[str, dict]:
-        rows = (self.db.table("crypto_universe").select("coin_id, symbol, name, rank").eq("included", True)
+        rows = (self.db.table("crypto_universe").select("coin_id, symbol, name, rank, pair").eq("included", True)
                 .order("rank").execute().data or [])
+        import crypto_universe
+
+        crypto_universe.register(rows)
         return {r["coin_id"]: r for r in rows}
 
     def active_funnels(self) -> list[dict]:

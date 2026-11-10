@@ -38,3 +38,36 @@ def test_gappy_hourly_candles_are_left_out():
                  quality_of=lambda p: {"listed_since": "2020-01-01", "days": 900, "volume_usd": 5e5, "gap_days": 0,
                                        "quiet_hours": 0.2})
     assert u["excluded"][0]["reason"].startswith("gappy hourly candles (20%")
+
+
+def test_yahoo_fallback_for_coins_binance_does_not_list():
+    import pandas as pd
+
+    now = pd.Timestamp("2026-11-10", tz="UTC")
+    coins = [_coin("monero", "xmr", 300), _coin("leo-token", "leo", 9), _coin("tiny", "tiny", 1),
+             _coin("impostor", "imp", 5)]
+    for c, vol in zip(coins, (5e7, 5e7, 2e5, 5e6)):
+        c["total_volume"] = vol
+    closes = {"XMR-USD": 301.0, "IMP-USD": 50.0}
+
+    def check(ticker, now):
+        return {"days": 3000, "close": closes[ticker], "listed_since": "2017-11-09", "missing_hours": 0.0}
+
+    u = cu.build(coins=coins, excluded_ids={}, pairs={}, price_of=lambda p: None, quality_of=None, now=now,
+                 kinds={"leo-token": "another exchange's own token"},
+                 yahoo=lambda coin, now: cu.yahoo_fallback(coin, now, check=check))
+    assert [(c["id"], c["pair"]) for c in u["included"]] == [("monero", "yahoo:XMR-USD")]
+    why = {e["id"]: e["reason"] for e in u["excluded"]}
+    assert "another exchange's own token" in why["leo-token"]
+    assert "thin trading elsewhere" in why["tiny"] and "another coin" in why["impostor"]
+    assert "1 from Yahoo" in cu.summary(u)
+
+
+def test_register_points_the_loaders_at_the_checked_source():
+    import binance_data as bn
+    import data_fetchers
+
+    cu.register([{"coin_id": "monero-x", "pair": "yahoo:XMR-USD"}, {"coin_id": "solana-x", "pair": "SOLUSDT"}])
+    assert bn.pair_for("crypto", "monero-x") is None and bn.coingecko_coin("monero-x") is None
+    assert bn.pair_for("crypto", "solana-x", pairs={}) == "SOLUSDT"
+    assert data_fetchers.YF_BY_COINGECKO_ID["monero-x"] == "XMR-USD"
