@@ -23,7 +23,25 @@ jobs:
     runs-on: ubuntu-24.04
     # A stuck download must not block every later run.
     timeout-minutes: 15
+    permissions:
+      contents: read
+      actions: write          # to start the hourly funnel job (below)
     steps:
+      - name: Start the hourly funnel job
+        # GitHub's own hourly schedule for funnel.yml has been unreliable, and this 5-minute worker runs dependably:
+        # a few minutes after each hour it starts funnel.yml, unless one started in the last 40 minutes. The funnel
+        # job claims each close once, so an extra start never repeats work.
+        if: github.event_name == 'schedule'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          m=$(date -u +%M)
+          if [ "$m" -ge 8 ] && [ "$m" -le 14 ]; then
+            since=$(date -u -d '40 minutes ago' +%Y-%m-%dT%H:%M:%SZ)
+            recent=$(gh run list -R "$GITHUB_REPOSITORY" --workflow funnel.yml -L 5 --json createdAt \
+                     -q "[.[] | select(.createdAt > \"$since\")] | length" || echo 1)
+            if [ "${recent:-1}" = "0" ]; then gh workflow run funnel.yml -R "$GITHUB_REPOSITORY" --ref main || true; fi
+          fi
       - name: Checkout repository
         uses: actions/checkout@v7
 
