@@ -7245,7 +7245,7 @@ earnings choices, and both save to your account.
   evidence always use finished daily bars and do not change with the chart.
 - Chart by TradingView Lightweight Charts™ (Apache 2.0 licence; the logo in the corner links to TradingView).
 
-**Plotly** is the original chart: daily candles over the **Days of history** in Settings, with the drag bar under
+**Plotly** is the original chart: daily candles over the last year, with the drag bar under
 it for height. Pinch zoom on an iPad is unreliable with Plotly, which is why the TradingView style was added.
 """)
         st.markdown("""
@@ -7561,6 +7561,9 @@ trade_crypto, trade_equities = _trade_flags(st.session_state.trade_markets)
 
 
 
+PLOTLY_DAYS = 365            # the Plotly chart's reach (the old "Days of history" setting's maximum)
+
+
 def _ensure_added(kind: str, asset_id: str, label: str) -> None:
     """Write the first shared prices and sentiment when this asset is new."""
     try:
@@ -7717,12 +7720,6 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
         st.session_state.show_extra_metrics = bool(settings.get("show_extra_metrics", True))
     if "show_period_changes" not in st.session_state:
         st.session_state.show_period_changes = bool(settings.get("show_period_changes", True))
-    if "days_history" not in st.session_state:
-        try:
-            saved_days = int(settings.get("days_history", 200))
-        except (TypeError, ValueError):
-            saved_days = 200
-        st.session_state.days_history = min(365, max(90, saved_days))
     # Keep these for the whole session. A partial redraw otherwise drops them,
     # and the next full run saves the blank defaults (90 days, toggles off, cryptos).
     st.markdown("**Markets you trade**")
@@ -7733,16 +7730,10 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
         persist_state="session",
         label_visibility="collapsed",
     )
-    st.divider()
-    st.markdown("**Days of history**")
-    days_history = st.slider(
-        "Days of history",
-        90,
-        365,
-        key="days_history",
-        persist_state="session",
-        label_visibility="collapsed",
-    )
+    # "Days of history" used to set how far back the Plotly chart reaches (90 to 365 days). Readings, studies and
+    # the TradingView chart never used it, so it was removed (10 Nov 2026): the Plotly chart shows the last year and
+    # its drag bar zooms in.
+    days_history = PLOTLY_DAYS
     st.divider()
     st.markdown("**Price chart**")
     if "price_chart" not in st.session_state:
@@ -9693,21 +9684,27 @@ def _render_why_panel(asset_type: str, asset_key: str, result: dict, column_spec
 
 def _open_in_lattice(raw: str) -> None:
     """A Group or Set cell in a table: open Angstrom Lattice on that Group (Signal Groups) or Set (Signal Sets)."""
+    # Widget keys (lattice_section, lattice_start, lattice_set_start) are only written through their "_next" keys:
+    # Streamlit forgets a widget's value in any run where the widget isn't drawn (a folded Lattice, or a click
+    # handled after Lattice was drawn), so writing them directly could be lost before the Set opened.
     _, part, ref = (raw.split("|", 2) + ["", ""])[:3]
     if part == "groups":
-        st.session_state["lattice_section"] = "groups"
+        st.session_state["_lattice_section_next"] = "groups"
+        st.session_state.pop("lattice_loaded", None)
         if ref.startswith("starter:"):
             # The Start-from list keys a provided starter as "starter:" + its alias, and the alias itself already
             # begins with "starter:" (for example "starter:starter:trend"); the bare alias was never found.
             st.session_state["_lattice_start_next"] = f"starter:{ref}"
         else:
-            st.session_state["lattice_start"] = f"saved:{ref}"
+            st.session_state["_lattice_start_next"] = f"saved:{ref}"
     elif part == "sets" and ref.startswith("demo:"):
-        st.session_state["lattice_section"] = "prism"        # provided Sets are run, not edited: Prism lists them
+        st.session_state["_lattice_section_next"] = "prism"   # provided Sets are run, not edited: Prism lists them
         st.session_state["prism_focus_set"] = {"key": ref, "token": str(time.time_ns())}   # shown open and outlined
     elif part == "sets":
-        st.session_state["lattice_section"] = "sets"
-        st.session_state["lattice_set_start"] = f"saved:{ref}"
+        st.session_state["_lattice_section_next"] = "sets"
+        st.session_state["_lattice_set_start_next"] = f"saved:{ref}"
+        st.session_state.pop("lattice_set_loaded", None)
+        st.session_state.pop("siggroups_saved", None)         # read the Sets afresh, so a new one is listed
     else:
         return
     _reveal_section("lattice_panel", "angstrom-lattice")
@@ -13829,7 +13826,8 @@ def _take_alert_pick() -> None:
             return
         perspectives.load_studies(supabase, force=True)
         _open_in_lattice(f"lattice|sets|{found[0]}")
-        return
+        st.rerun()                              # Lattice was already drawn in this run: draw it again on that Set
+
     kind_name, asset_id = raw.split("|")[:2]
     quiet = raw.endswith("|quiet")
     if kind_name == "Crypto":

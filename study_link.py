@@ -28,4 +28,11 @@ def find_set(configs: list[dict], set_hash: str, name: str = "") -> tuple[str, i
     for c in sets:
         if name and str(c.get("name") or "").strip() == name.strip():
             return c["id"], c.get("current_version") or 0
+    import re
+
+    m = re.match(r"^(.*?)\s+v(\d+)$", name.strip())          # older notes name the Set as "Name v2"
+    if m:
+        for c in sets:
+            if str(c.get("name") or "").strip() == m.group(1).strip():
+                return c["id"], int(m.group(2))
     return None

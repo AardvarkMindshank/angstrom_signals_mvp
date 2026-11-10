@@ -14,3 +14,10 @@ def test_finds_the_set_by_fingerprint_then_by_name():
     assert sl.find_set(configs, "", "Mine") == ("c1", 2)
     assert sl.find_set(configs, "nope", "Other") is None
     assert sl.pick_value({"asset_symbol": "study:abc", "asset_name": "My|Set"}) == "study|abc|My Set"
+
+
+def test_an_older_note_named_with_its_version_finds_the_set():
+    import study_link
+
+    configs = [{"id": "c1", "kind": "set", "name": "My Set", "current_version": 3, "versions": []}]
+    assert study_link.find_set(configs, "", "My Set v2") == ("c1", 2)
