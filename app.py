@@ -46,7 +46,7 @@ _POPOUT_SECTION_IDS = (
     "market_sentiment_panel",
     "signal_matrix",
 )
-_POPOUT_VIEWS = ("social",) + _POPOUT_SECTION_IDS + ("lattice_panel", "advisor", "video")   # Lattice, the AI Advisor and videos too
+_POPOUT_VIEWS = ("social",) + _POPOUT_SECTION_IDS + ("lattice_panel", "advisor", "video", "help_guides")   # Lattice, the AI Advisor, videos and Help too
 _POPOUT_VIEW = str(st.query_params.get("view") or "")
 if _POPOUT_VIEW not in _POPOUT_VIEWS:
     _POPOUT_VIEW = ""
@@ -7121,7 +7121,8 @@ if not _POPOUT_VIEW:
         save_account_settings,
     )
 
-with tracked_expander("📖 Help and guides", "help_guides", default=False):
+def _render_help_guides() -> None:
+    """📖 Help and guides: the tabs. Drawn in the sidebar, or alone in its own window (?view=help_guides)."""
     (
         tab_start, tab_scores, tab_chart, tab_sentiment, tab_lattice, tab_funnels, tab_alerts, tab_social, tab_layout,
     ) = st.tabs([
@@ -7624,7 +7625,8 @@ or your ⭐ favourites.
     with tab_layout:
         st.markdown("""
 **Sections.** Every section folds open or shut from its header. **Open all** and **Collapse all** sit
-by the page title. Each section's ↗ opens it in its own window, which follows the asset you pick.
+by the page title. Each section's ↗ opens it in its own window, which follows the asset you pick. **📖 Help and
+guides** has one too: open it beside the app and read while you work.
 
 **Layout.** ▢ stacks everything in one column; the wide layout puts the tables on top, then the chart and
 🧩 Angstrom Lattice across the full width, then market sentiment on the left and the chart's tools on the right.
@@ -7655,6 +7657,11 @@ panel, the asset on the chart, and your Groups, Sets and Prism Scans. They come 
 
 **Keep me signed in** (at login) remembers you on this device for 30 days. Logging out forgets it.
 """)
+
+
+if not _POPOUT_VIEW:
+    with tracked_expander("📖 Help and guides", "help_guides", default=False):
+        _render_help_guides()
 
 CRYPTO_WATCHLIST = prefs["crypto"]
 STOCK_WATCHLIST = prefs["stock"]
@@ -14278,7 +14285,7 @@ else:
     _popout_buttons(
         key="popout_buttons",
         data={
-            "ids": list(_POPOUT_SECTION_IDS) + ["lattice_panel"],
+            "ids": list(_POPOUT_SECTION_IDS) + ["lattice_panel", "help_guides"],
             "asWindow": bool(st.session_state.get("popouts_as_window", True)),
             "fold": bool(st.session_state.get("popouts_fold_section", True)),
         },
@@ -14324,6 +14331,12 @@ if _POPOUT_VIEW == "advisor":
     import lattice_panel
 
     lattice_panel.render_popout(st, supabase, str(user_id), str(st.query_params.get("from") or "lattice"))
+    st.stop()
+
+if _POPOUT_VIEW == "help_guides":
+    # Help and guides in its own window, to keep beside the app while you work.
+    with st.expander("📖 Help and guides", expanded=True, key="pop_help_guides"):
+        _render_help_guides()
     st.stop()
 
 if _POPOUT_VIEW == "lattice_panel":

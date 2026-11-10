@@ -183,8 +183,8 @@ def _help_text() -> str:
         src = (Path(__file__).resolve().parent / "app.py").read_text(encoding="utf-8")
         texts = []
         for node in ast.walk(ast.parse(src)):
-            if not (isinstance(node, ast.With) and "Help and guides" in (ast.get_source_segment(
-                    src, node.items[0].context_expr) or "")):
+            # The guide is the function _render_help_guides (drawn in the sidebar and in its own window).
+            if not (isinstance(node, ast.FunctionDef) and node.name == "_render_help_guides"):
                 continue
             for call in ast.walk(node):
                 if not (isinstance(call, ast.Call) and isinstance(call.func, ast.Attribute) and call.args
