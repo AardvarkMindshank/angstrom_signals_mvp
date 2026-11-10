@@ -42,7 +42,7 @@ const { chromium, devices } = require("playwright");
     await dialog.locator("summary", { hasText: "All videos" }).filter({ visible: true }).first().click(); await win.waitForTimeout(800);
     await dialog.locator("button", { hasText: "Overextended rally" }).filter({ visible: true }).first().click(); await win.waitForTimeout(1500);
     check(`${label}: the list jumps to a worked example`, (await srcNow()).includes("w2-overextended-rally"));
-    check(`${label}: worked examples count on their own`, (await dialog.innerText()).includes("2 of 3"));
+    check(`${label}: worked examples count on their own`, (await dialog.innerText()).includes("2 of 4"));
     await win.screenshot({ path: `${out}/${label}_example.png` });
     const wide = await win.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     check(`${label}: no sideways scrolling`, wide <= 1, `${wide} px`);
