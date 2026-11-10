@@ -1,0 +1,21 @@
+# Can GitHub's machines reach a market-data source? Run by hand (Actions → data-probe → Run workflow).
+name: data-probe
+on:
+  workflow_dispatch:
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Binance public market data
+        run: |
+          for url in \
+            "https://data-api.binance.vision/api/v3/klines?symbol=BTCUSDT&interval=12h&limit=2" \
+            "https://data-api.binance.vision/api/v3/exchangeInfo?permissions=SPOT" \
+            "https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=12h&limit=2" \
+            "https://api.binance.us/api/v3/klines?symbol=BTCUSDT&interval=12h&limit=2" \
+            "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&per_page=5&page=1"; do
+            code=$(curl -s -o body.txt -w "%{http_code}" -m 20 "$url" || echo "000")
+            echo "$code  $url  $(head -c 160 body.txt)" | tee -a "$GITHUB_STEP_SUMMARY"
+          done
+          curl -s -m 10 https://ipinfo.io/json | tee -a "$GITHUB_STEP_SUMMARY" || true
