@@ -10028,6 +10028,20 @@ def _share_market_rows(crypto_watchlist, stock_watchlist, crypto_results, stock_
     earlier = st.session_state.get("_shared_rows")
     # An asset with no saved row yet is simply missing, and reading again would not change that.
     reuse_shared = earlier is not None and not st.session_state.get("_shared_reread")
+    if reuse_shared:
+        # A Dynamic funnel table shows assets outside the watchlist: read their shared rows (logo, sentiment,
+        # prices) too, once per load, instead of showing them empty.
+        extra = [k for k in market_keys if k not in earlier]
+        tried = st.session_state.setdefault("_extra_rows_tried", {})
+        extra = [k for k in extra if time.time() - tried.get(k, 0.0) > 60]   # a missing row: ask again a minute on
+        for k in extra:
+            tried[k] = time.time()
+        if extra:
+            try:
+                earlier = {**earlier, **load_shared_market(supabase, extra)}
+                st.session_state["_shared_rows"] = earlier
+            except Exception as exc:
+                print(f"shared rows for funnel assets failed: {exc}")
     # Saving the closes is not needed to draw the page, so it runs behind the scenes, and only
     # for lines that changed since this server last saved them (prices move every 5 minutes,
     # but a page redraws far more often than that).

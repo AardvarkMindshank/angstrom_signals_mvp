@@ -185,3 +185,27 @@ def health(runs: list[dict | None], f: dict, now=None) -> str | None:
         if now - pd.Timestamp(r["cutoff"]) > 2 * step + pd.Timedelta(hours=1):
             return f"⚠️ The {stage['label']} stage has not been checked since {_when(r['cutoff'])}."
     return None
+
+
+def watched_by_funnels(supabase) -> dict[tuple[str, str], str]:
+    """{(kind, id): name} for every asset on a funnel's shortlist or beyond (Shortlist, Flagged, Candidate), in any
+    account. The background worker keeps their shared prices fresh like watchlist assets (run_alerts.py), so a
+    Dynamic funnel table fills in quickly. News sentiment stays with Candidates only (funnel_runner)."""
+    funnels = supabase.table("funnels").select("id, market, stages, stages_version").execute().data or []
+    out: dict[tuple[str, str], str] = {}
+    names = {"crypto": None, "equity": None}
+    for f in funnels:
+        market = f.get("market") or "crypto"
+        shortlist = max(1, len(f.get("stages") or []) - 2)       # holding the shortlist stage and those before it
+        rows = (supabase.table("funnel_coins").select("coin_id, depth, stages_version").eq("funnel_id", f["id"])
+                .gte("depth", shortlist).execute().data or [])
+        rows = [r for r in rows if r.get("stages_version") == (f.get("stages_version") or 1)]
+        if not rows:
+            continue
+        if names[market] is None:
+            names[market] = {k: (v.get("name") or k) for k, v in load_universe(supabase, market).items()}
+        for r in rows:
+            kind = "Crypto" if market == "crypto" else "Stock"
+            asset = r["coin_id"] if market == "crypto" else str(r["coin_id"]).upper()
+            out[(kind, asset)] = names[market].get(r["coin_id"], r["coin_id"])
+    return out

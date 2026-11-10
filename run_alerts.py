@@ -362,7 +362,14 @@ def run_background_checks() -> None:
         for ticker, name in stock_list.items():
             catalog[("Stock", str(ticker).upper())] = str(name)
 
-    frames = refresh_price_catalog(supabase, catalog, max_days)
+    price_catalog = dict(catalog)
+    try:
+        import funnel_view
+
+        price_catalog.update({k: v for k, v in funnel_view.watched_by_funnels(supabase).items() if k not in catalog})
+    except Exception as exc:          # funnel tables not installed, or unreadable: watchlists only, as before
+        print(f"Funnel assets skipped for prices: {str(exc)[:160]}")
+    frames = refresh_price_catalog(supabase, price_catalog, max_days)
     refresh_due_sentiment(supabase, catalog)
     try:
         # Observed capital flows: collected only, a few times a day. Never holds up the alert pass.
