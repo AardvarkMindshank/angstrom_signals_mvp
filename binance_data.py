@@ -99,6 +99,8 @@ def klines(pair: str, interval: str, start: pd.Timestamp | None, get=_get) -> pd
     start (UTC). The newest candle may still be forming (chart_data.mark_forming marks it)."""
     step = STEP_MS[interval]
     begin = max(pd.Timestamp(start) if start is not None else FIRST_DAY, FIRST_DAY)
+    reach = pd.Timestamp.now(tz="UTC") - pd.Timedelta(milliseconds=step * (LIMIT * MAX_REQUESTS - 1))
+    begin = max(begin, reach)               # paging runs forward, so start late enough to reach the newest candle
     since = int(begin.timestamp() * 1000)
     rows: list = []
     for _ in range(MAX_REQUESTS):

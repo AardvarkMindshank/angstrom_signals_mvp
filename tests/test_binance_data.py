@@ -59,3 +59,16 @@ def test_chart_data_prefers_binance_for_crypto(monkeypatch):
     monkeypatch.setattr(bn, "coingecko_coin", lambda asset_id: None)
     gone = chart_data.load_candles("crypto", "some-unlisted-coin", "12h", "3M")
     assert gone["error"] and "Binance" in gone["error"]
+
+
+def test_a_long_range_keeps_the_newest_candles():
+    step = bn.STEP_MS["15m"]
+    asked = []
+
+    def get(path, params):
+        asked.append(params["startTime"])
+        return []
+
+    bn.klines("BTCUSDT", "15m", pd.Timestamp("2018-01-01", tz="UTC"), get=get)
+    first = pd.to_datetime(asked[0], unit="ms", utc=True)
+    assert pd.Timestamp.now(tz="UTC") - first < pd.Timedelta(milliseconds=step * bn.LIMIT * bn.MAX_REQUESTS)
