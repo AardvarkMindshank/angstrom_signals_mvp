@@ -95,3 +95,15 @@ def test_funnels_tab_runs_inside_streamlit():
     assert not next(b for b in app.button if b.label == "Save and activate").disabled
     app.selectbox(key="funnel_edit").set_value("new:equity:long").run()
     assert not app.exception and "Create this funnel" in [b.label for b in app.button]
+
+
+def test_first_funnels_legacy_keys_name_the_library_sets():
+    assert fe.provided_key({"provided": "funnel:trend:12h:short"}) == "demo:ema_down_12h"
+    assert fe.provided_key({"provided": "funnel:entry:long"}) == "demo:entry_long_1h"
+    lib = prism.demo_sets()
+    old = fe.template("crypto", "long")
+    old["stages"][0]["set_source"] = {"provided": "funnel:trend:1D:long"}
+    old["stages"][0]["set_body"] = lib["demo:ema_up_1d"]
+    assert fe.upgrade_for(old["stages"][0], lib, {}) is None                  # the same Set as today: nothing to do
+    choices = fe._set_choices(lib, {})
+    assert fe._choice_of(old["stages"][0], choices) == "provided:demo:ema_up_1d"   # found in the list

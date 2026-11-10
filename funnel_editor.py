@@ -24,6 +24,17 @@ TF_LABELS = {"15m": "15 minutes", "30m": "30 minutes", "1h": "1 hour", "4h": "4 
              "1D": "1 day", "1W": "1 week"}
 NOTE = "Candidate means an asset matches your selected conditions. It is not a recommendation to trade."
 
+# A quiet funnel drawn behind the stages: wide at the top, narrowing down the page to a spout. Flat, low-contrast,
+# stretched to the stages' size (so it scales with the window), and behind the content (clicks pass through).
+_FUNNEL_SVG = ("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'>"
+               "<polygon points='0,0 100,0 60,84 60,100 40,100 40,84' fill='%23818cf8' fill-opacity='0.09'/>"
+               "<polygon points='6,3 94,3 58,82 42,82' fill='none' stroke='%23818cf8' stroke-opacity='0.12' "
+               "stroke-width='0.4' vector-effect='non-scaling-stroke'/></svg>")
+FUNNEL_CSS = ("<style>.st-key-funnel_stages_art{position:relative;}"
+              ".st-key-funnel_stages_art::before{content:'';position:absolute;inset:0;pointer-events:none;z-index:0;"
+              f"background:url(\"data:image/svg+xml;utf8,{_FUNNEL_SVG}\") center/100% 100% no-repeat;}}"
+              ".st-key-funnel_stages_art>div{position:relative;z-index:1;}</style>")
+
 
 # ----------------------------------------------------------------------------------------------- pure helpers
 
@@ -39,15 +50,29 @@ def provenance(f: dict, library: dict) -> str:
     if [s["set_body"] for s in f["stages"]] == [s["set_body"] for s in made["stages"]] and \
             [s["timeframe"] for s in f["stages"]] == [s["timeframe"] for s in made["stages"]]:
         return "Provided by Angstrom"
-    if any(str((s.get("set_source") or {}).get("provided") or "").startswith("demo:") for s in f["stages"]):
+    if any(str(provided_key(s.get("set_source")) or "").startswith("demo:") for s in f["stages"]):
         return "Customised"
     return "My funnel"
+
+
+def provided_key(src: dict | None) -> str | None:
+    """The library key of a provided stage Set. The first funnels (10 Nov) recorded "funnel:trend:<tf>:<direction>"
+    and "funnel:entry:<direction>"; those name the same Sets as today's keys."""
+    key = (src or {}).get("provided")
+    if not key:
+        return None
+    parts = str(key).split(":")
+    if parts[0] == "funnel" and len(parts) == 4 and parts[1] == "trend":
+        return ft.library_key(parts[2], parts[3])
+    if parts[0] == "funnel" and len(parts) == 3 and parts[1] == "entry":
+        return ft.library_key(None, parts[2])
+    return key
 
 
 def upgrade_for(stage: dict, library: dict, saved_sets: dict) -> tuple[str, dict, dict] | None:
     """(button text, newer Set body, its source) when the stage's Set has a newer version, else None."""
     src = stage.get("set_source") or {}
-    key = src.get("provided")
+    key = provided_key(src)
     if key and key in library and library[key] != stage.get("set_body"):
         return "⬆ Upgrade to the latest provided version", copy.deepcopy(library[key]), {"provided": key}
     cid = src.get("config_id")
@@ -116,8 +141,9 @@ def _set_choices(library: dict, saved_sets: dict) -> dict:
 
 def _choice_of(stage: dict, choices: dict) -> str | None:
     src = stage.get("set_source") or {}
-    if src.get("provided") and f"provided:{src['provided']}" in choices:
-        return f"provided:{src['provided']}"
+    key = provided_key(src)
+    if key and f"provided:{key}" in choices:
+        return f"provided:{key}"
     if src.get("config_id") and f"saved:{src['config_id']}" in choices:
         return f"saved:{src['config_id']}"
     return None
@@ -195,8 +221,23 @@ def render(st, supabase, user_id: str) -> None:
     if not alerts["first_matches"]:
         alerts.pop("first_matches")
     f["alerts"] = alerts
-    f["paused"] = st.toggle("Paused", value=bool(f.get("paused")), key=f"fe_pause_{pick}",
-                            help="A paused funnel isn't checked; it keeps its places until resumed.")
+    paused = bool(f.get("paused"))
+    if st.button("", icon=":material/play_arrow:" if paused else ":material/pause:", key=f"fe_pause_{pick}",
+                 help=("Paused: not checked; it keeps its places. Press to resume." if paused else
+                       "Pause: stop checking this funnel; it keeps its places until resumed.")):
+        f["paused"] = not paused
+        if saved:                                   # as in Prism: pausing applies at once, nothing else changes
+            live = {**copy.deepcopy(saved), "paused": f["paused"]}
+            try:
+                supabase.rpc("funnel_save", save_args(live)).execute()
+                saved["paused"] = f["paused"]
+                _refresh(st)
+                st.toast("Paused." if f["paused"] else "Resumed.")
+            except Exception as exc:
+                st.error(f"That didn't work: {str(exc)[:160]}")
+        lattice_panel.rerun(st)
+    if paused:
+        st.caption("⏸ Paused: not checked until resumed.")
 
     # ------------------------------------------------------------------ pool
     pool = dict(f.get("pool") or {})
@@ -230,8 +271,10 @@ def render(st, supabase, user_id: str) -> None:
                    "**when the stage is checked**; the Set's readings keep their own timeframes. To change a threshold, "
                    "edit a copy of the Set in Signal Sets, then pick it here.")
         keys_ = list(choices)
+        st.markdown(FUNNEL_CSS, unsafe_allow_html=True)
+        stages_box = st.container(key="funnel_stages_art")
         for i, stage in enumerate(list(f["stages"])):
-            box = st.container(border=True)
+            box = stages_box.container(border=True)
             a, b = box.columns([2, 1])
             stage["label"] = a.text_input(f"Stage {i + 1}", value=stage.get("label") or "", max_chars=40,
                                           key=f"fe_lab_{pick}_{i}")
