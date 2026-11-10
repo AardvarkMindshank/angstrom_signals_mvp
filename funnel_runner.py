@@ -126,10 +126,12 @@ def run_funnel(store, f: dict, universe: dict[str, dict], evaluate, now: pd.Time
             break
         market = f.get("market") or "crypto"
         cutoff = latest_close(stage["timeframe"], now, market)
+        coins = [c for c, st in states.items() if fn.reachable(st, k)]
+        if not coins:                             # nothing reaches this stage yet: leave the close unclaimed, so
+            continue                              # coins promoted later (at this close) are still checked
         run_id = store.claim(f["id"], k, cutoff, now)
         if run_id is None:
             continue
-        coins = [c for c, st in states.items() if fn.reachable(st, k)]
         began = time.monotonic()
         try:
             tally = {"yes": 0, "no": 0, "unknown": 0}
