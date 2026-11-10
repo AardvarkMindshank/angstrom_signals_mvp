@@ -7194,6 +7194,11 @@ because they measure different things and are never added together.
   if it trades at least $1M a day across exchanges with complete hourly candles. The Stage hover says which. The
   list is rebuilt every day.
 - Start from a ready-made funnel (*Trend longs ▲* or *Trend shorts ▼*). Longs and shorts are separate funnels.
+- **Shares** have the same switch above the Equity table. The pool is the **S&P 500** (price at least $5, at least
+  about $20M traded a day, about 3 years of history for the weekly stage), from Yahoo Finance. Shares trade 6½
+  hours a day, so the ready-made share funnels read **weekly → daily → 4-hour → 1-hour**: the 4-hour candles run
+  from the open (09:30–13:30 and 13:30–16:00 New York), and the stages are checked at New York closes only
+  (weekends and market holidays skipped). The Stage hover warns when a share reports earnings within two weeks.
 
 **The asset card** above the chart notes a *pullback inside an uptrend* or a *rally inside a downtrend* when the
 provided Sets of those names say Yes, and shows context chips (🌊 daily range, 💪 trend strength, 🧭 regime,
@@ -10645,38 +10650,47 @@ def render_dashboard(*args, **kwargs):
         _record_run("dashboard", started)
 
 
-def _dynamic_crypto():
-    """The crypto table's Dynamic view (funnel_view.py): None for My Watchlist, else the funnel's coins at the chosen
-    stage and everything the controls need. Cached for a minute per account."""
+_FUNNEL_KEYS = {
+    # market: (table mode widget, funnel pick, stage pick, saved setting, words)
+    "crypto": ("crypto_table_mode", "funnel_pick", "funnel_stage", "crypto_table",
+               {"coins": "coins", "coin": "coin", "pool": "the top 500 coins", "venue": "Binance spot or Yahoo"}),
+    "equity": ("equity_table_mode", "eq_funnel_pick", "eq_funnel_stage", "equity_table",
+               {"coins": "shares", "coin": "share", "pool": "the S&P 500", "venue": "Yahoo Finance"}),
+}
+
+
+def _dynamic_view(market: str):
+    """A table's Dynamic funnel view (funnel_view.py): None for My Watchlist, else the funnel's assets at the chosen
+    stage and everything the controls need. Cached for a minute per account and market."""
     import funnel_view as fv
 
+    mode_key, pick_key, stage_key, setting, _words = _FUNNEL_KEYS[market]
     user = st.session_state.get("user")
-    if user is not None and "crypto_table_mode" not in st.session_state:     # the choice saved on the account
-        saved = ((st.session_state.get("cloud_prefs") or {}).get("settings") or {}).get("crypto_table")
-        st.session_state["crypto_table_mode"] = next((m for m, c in fv.MODE_CODES.items() if c == saved), fv.MODES[0])
+    stored = (st.session_state.get("cloud_prefs") or {}).get("settings") or {}
+    if user is not None and mode_key not in st.session_state:     # the choice saved on the account
+        saved = stored.get(setting)
+        st.session_state[mode_key] = next((m for m, c in fv.MODE_CODES.items() if c == saved), fv.MODES[0])
         if saved == "funnel":
-            stored = (st.session_state.get("cloud_prefs") or {}).get("settings") or {}
-            for key in ("funnel_pick", "funnel_stage"):
+            for key in (pick_key, stage_key):
                 if stored.get(key):
                     st.session_state[key] = stored[key]
-    if user is None or st.session_state.get("crypto_table_mode") != "Dynamic funnel":
+    if user is None or st.session_state.get(mode_key) != "Dynamic funnel":
         return None
     memo = st.session_state.setdefault("_memo", {})
-    hit = memo.get("funnels")
-    if hit and time.time() - hit[0] < 60 and not st.session_state.pop("_funnels_reread", False):
+    hit = memo.get(f"funnels_{market}")
+    if hit and time.time() - hit[0] < 60 and not st.session_state.pop(f"_funnels_reread_{market}", False):
         funnels, universe = hit[1]
     else:
-        funnels, universe = fv.load_funnels(supabase, user.id), {}
-        if funnels:
-            universe = fv.load_universe(supabase)
-        memo["funnels"] = (time.time(), (funnels, universe))
-    out = {"funnels": funnels, "universe": universe, "watchlist": {}, "funnel": None}
+        funnels = [f for f in fv.load_funnels(supabase, user.id) if (f.get("market") or "crypto") == market]
+        universe = fv.load_universe(supabase, market) if funnels else {}
+        memo[f"funnels_{market}"] = (time.time(), (funnels, universe))
+    out = {"market": market, "funnels": funnels, "universe": universe, "watchlist": {}, "funnel": None}
     if not funnels:
         return out
     ids = [f["id"] for f in funnels]
-    if st.session_state.get("funnel_pick") not in ids:
-        st.session_state["funnel_pick"] = ids[0]
-    f = next(x for x in funnels if x["id"] == st.session_state["funnel_pick"])
+    if st.session_state.get(pick_key) not in ids:
+        st.session_state[pick_key] = ids[0]
+    f = next(x for x in funnels if x["id"] == st.session_state[pick_key])
     try:
         coins = fv.load_coins(supabase, f["id"])
         runs = fv.last_runs(supabase, f["id"], len(f["stages"]))
@@ -10687,30 +10701,56 @@ def _dynamic_crypto():
     pool = sum(1 for u in universe.values() if u.get("included"))
     choices = fv.picks(f, states, pool)
     keys = [k for k, _ in choices]
-    if st.session_state.get("funnel_stage") not in keys:
-        st.session_state["funnel_stage"] = f"stage:{len(f['stages']) - 2}"
-    shown = fv.coins_for(st.session_state["funnel_stage"], states)
+    if st.session_state.get(stage_key) not in keys:
+        st.session_state[stage_key] = f"stage:{len(f['stages']) - 2}"
+    shown = fv.coins_for(st.session_state[stage_key], states)
     out.update({"funnel": f, "states": states, "choices": choices, "pool": pool,
-                "line": fv.counts_line(f, states, pool), "health": fv.health(runs, f), "more": max(0, len(shown) - fv.SHOW_LIMIT),
+                "line": fv.counts_line(f, states, pool), "health": fv.health(runs, f),
+                "more": max(0, len(shown) - fv.SHOW_LIMIT),
                 "watchlist": {c: (universe.get(c) or {}).get("name") or c for c in shown[:fv.SHOW_LIMIT]}})
     return out
 
 
-def _funnel_controls(dyn) -> None:
-    """Above the crypto table: My Watchlist or Dynamic funnel, then (Dynamic funnel) the funnel, the stage picker and
-    its counts. The choice is saved on the account."""
+def _dynamic_crypto():
+    return _dynamic_view("crypto")
+
+
+def _create_funnel(market: str, direction: str) -> None:
+    import funnel_templates as ft
+
+    tpl = ft.trend_funnel(direction, market)
+    args = {"p_id": None, "p_name": tpl["name"], "p_direction": direction, "p_stages": tpl["stages"],
+            "p_flicker": True, "p_alerts": {"in_app": True, "email": False}, "p_paused": False}
+    if market != "crypto":
+        args["p_market"] = market                # needs sql/2026-11-18_equity_funnels.sql
+    try:
+        supabase.rpc("funnel_save", args).execute()
+        st.session_state[f"_funnels_reread_{market}"] = True
+        st.toast("Funnel added. It fills in at the next hourly check.")
+        st.rerun()
+    except Exception as exc:
+        text = str(exc)
+        missing = "funnel_save" in text and ("does not exist" in text or "PGRST" in text or "function" in text)
+        st.error(("The database update for share funnels hasn't been run yet." if market != "crypto" else
+                  "The funnel tables are not installed yet.") if missing else f"Could not create it: {text[:160]}")
+
+
+def _funnel_controls(dyn, market: str = "crypto") -> None:
+    """Above a table: My Watchlist or Dynamic funnel, then (Dynamic funnel) the funnel, the stage picker and its
+    counts. The choice is saved on the account."""
     import funnel_templates as ft
     import funnel_view as fv
 
     if st.session_state.get("user") is None:
         return
-    mode = st.radio("Crypto table", fv.MODES, key="crypto_table_mode", horizontal=True, label_visibility="collapsed",
-                    help="My Watchlist: the coins you picked. Dynamic funnel: the coins a funnel has narrowed down "
-                         "from the top 500 coins, stage by stage. Your choice is saved on your account.")
-    remember = {"crypto_table": fv.MODE_CODES.get(mode, "watchlist")}
+    mode_key, pick_key, stage_key, setting, words = _FUNNEL_KEYS[market]
+    mode = st.radio(f"{market} table", fv.MODES, key=mode_key, horizontal=True, label_visibility="collapsed",
+                    help=f"My Watchlist: the {words['coins']} you picked. Dynamic funnel: the {words['coins']} a "
+                         f"funnel has narrowed down from {words['pool']}, stage by stage. Your choice is saved on "
+                         "your account.")
+    remember = {setting: fv.MODE_CODES.get(mode, "watchlist")}
     if dyn is not None and dyn.get("funnel"):
-        remember.update({"funnel_pick": st.session_state.get("funnel_pick"),
-                         "funnel_stage": st.session_state.get("funnel_stage")})
+        remember.update({pick_key: st.session_state.get(pick_key), stage_key: st.session_state.get(stage_key)})
     try:
         save_account_settings(remember)          # writes only when something changed
     except Exception:
@@ -10720,51 +10760,44 @@ def _funnel_controls(dyn) -> None:
     if dyn.get("error"):
         st.warning(dyn["error"])
         return
+    stages_words = ("Daily, 12-hour and 4-hour" if market == "crypto" else "Weekly, daily and 4-hour")
     if not dyn["funnels"]:
-        st.caption("🔻 A funnel narrows the top coins on Binance down in stages, from the daily to the 1-hour, and "
-                   "keeps the list up to date by itself. Start from a ready-made one (you can change it later):")
+        st.caption(f"🔻 A funnel narrows {words['pool']} down in stages, to the 1-hour, and keeps the list up to "
+                   "date by itself. Start from a ready-made one (you can change it later):")
         a, b = st.columns(2)
         for col, direction in ((a, "long"), (b, "short")):
-            tpl = ft.trend_funnel(direction)
-            if col.button(f"Create “{tpl['name']}”", key=f"funnel_new_{direction}", use_container_width=True,
-                          help="Daily, 12-hour and 4-hour: EMA 20 " + ("above" if direction == "long" else "below")
+            tpl = ft.trend_funnel(direction, market)
+            if col.button(f"Create “{tpl['name']}”", key=f"funnel_new_{market}_{direction}", use_container_width=True,
+                          help=f"{stages_words}: EMA 20 " + ("above" if direction == "long" else "below")
                                + " EMA 50. Then the 1-hour pullback entry check (from Drew's script)."):
-                try:
-                    supabase.rpc("funnel_save", {"p_id": None, "p_name": tpl["name"], "p_direction": direction,
-                                                 "p_stages": tpl["stages"], "p_flicker": True,
-                                                 "p_alerts": {"in_app": True, "email": False},
-                                                 "p_paused": False}).execute()
-                    st.session_state["_funnels_reread"] = True
-                    st.rerun()
-                except Exception as exc:
-                    text = str(exc)
-                    st.error("The funnel tables are not installed yet." if "funnel_save" in text and
-                             ("does not exist" in text or "PGRST" in text) else f"Could not create it: {text[:160]}")
+                _create_funnel(market, direction)
         return
     funnels = dyn["funnels"]
     if len(funnels) > 1:
-        st.selectbox("Funnel", [f["id"] for f in funnels], key="funnel_pick",
+        st.selectbox("Funnel", [f["id"] for f in funnels], key=pick_key,
                      format_func=lambda i: next(f["name"] for f in funnels if f["id"] == i))
     f = dyn["funnel"]
     labels = dict(dyn["choices"])
-    st.radio("Stage", list(labels), key="funnel_stage", horizontal=True, format_func=labels.get,
+    st.radio("Stage", list(labels), key=stage_key, horizontal=True, format_func=labels.get,
              label_visibility="collapsed",
-             help="Each stage shows the coins that hold it and every stage before it. 🚩 Flagged: "
+             help=f"Each stage shows the {words['coins']} that hold it and every stage before it. 🚩 Flagged: "
                   + fr_hover(f)["flagged"] + " ✅ Candidate: " + fr_hover(f)["candidate"])
-    flicker = "a coin leaves a stage after two No closes in a row" if f.get("flicker", True) else \
-        "a coin leaves a stage on its first No close"
-    st.caption(f"{fv.fn.DIRECTION_ICONS[f['direction']]} **{f['name']}** · {dyn['line']} · from {dyn['pool']} coins on "
-               f"Binance spot · {flicker}. Hover a coin's stage icon for each stage's last answer."
+    flicker = (f"a {words['coin']} leaves a stage after two No closes in a row" if f.get("flicker", True) else
+               f"a {words['coin']} leaves a stage on its first No close")
+    when = ("a few minutes after each hour" if market == "crypto" else
+            "a few minutes after each hourly close while New York is open")
+    st.caption(f"{fv.fn.DIRECTION_ICONS[f['direction']]} **{f['name']}** · {dyn['line']} · from {dyn['pool']} "
+               f"{words['coins']} ({words['venue']}) · {flicker}. Hover a stage icon for each stage's last answer."
                + (f" Showing the first {fv.SHOW_LIMIT}; {dyn['more']} more hold this stage." if dyn["more"] else ""))
     if dyn.get("health"):
         st.caption(dyn["health"])
     if not dyn["states"]:
-        st.caption("⏳ Not checked yet: the funnel runs a few minutes after each hour.")
+        st.caption(f"⏳ Not checked yet: the funnel runs {when}.")
     with st.popover("⚙️ Funnels", help="Add, restart or delete a funnel"):
         def _call(fn_name, args, done):
             try:
                 supabase.rpc(fn_name, args).execute()
-                st.session_state["_funnels_reread"] = True
+                st.session_state[f"_funnels_reread_{market}"] = True
                 st.toast(done)
                 st.rerun()
             except Exception as exc:
@@ -10772,19 +10805,16 @@ def _funnel_controls(dyn) -> None:
 
         have = {x["direction"] for x in funnels}
         for direction in ("long", "short"):
-            if direction not in have and len(funnels) < 4:
-                tpl = ft.trend_funnel(direction)
-                if st.button(f"Add “{tpl['name']}”", key=f"funnel_add_{direction}"):
-                    _call("funnel_save", {"p_id": None, "p_name": tpl["name"], "p_direction": direction,
-                                          "p_stages": tpl["stages"], "p_flicker": True,
-                                          "p_alerts": {"in_app": True, "email": False}, "p_paused": False},
-                          "Funnel added. It fills in at the next hourly check.")
-        if st.button("↺ Start this funnel again", key="funnel_restart",
-                     help="Every coin goes back to the pool and is checked again from the first stage."):
-            _call("funnel_restart", {"p_id": f["id"]}, "Restarted. It fills in at the next hourly check.")
-        if st.toggle("Delete this funnel", key="funnel_delete_arm"):
-            if st.button(f"🗑 Delete “{f['name']}” for good", key="funnel_delete", type="primary"):
-                st.session_state.pop("funnel_pick", None)
+            if direction not in have and len(funnels) < 3:
+                tpl = ft.trend_funnel(direction, market)
+                if st.button(f"Add “{tpl['name']}”", key=f"funnel_add_{market}_{direction}"):
+                    _create_funnel(market, direction)
+        if st.button("↺ Start this funnel again", key=f"funnel_restart_{market}",
+                     help=f"Every {words['coin']} goes back to the pool and is checked again from the first stage."):
+            _call("funnel_restart", {"p_id": f["id"]}, "Restarted. It fills in at the next check.")
+        if st.toggle("Delete this funnel", key=f"funnel_delete_arm_{market}"):
+            if st.button(f"🗑 Delete “{f['name']}” for good", key=f"funnel_delete_{market}", type="primary"):
+                st.session_state.pop(pick_key, None)
                 _call("funnel_delete", {"p_id": f["id"]}, "Funnel deleted.")
 
 
@@ -10983,15 +11013,32 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             st.session_state["_dynamic"] = dynamic
             table_crypto = dynamic["watchlist"] if dynamic is not None else crypto_watchlist
             crypto_results = process_watchlist(table_crypto, is_crypto=True) if trade_crypto else []
-            if dynamic is not None and dynamic.get("funnel"):
-                import funnel_view as _fv
+            dynamic_eq = None
+            try:
+                dynamic_eq = _dynamic_view("equity") if trade_equities else None
+            except Exception as exc:
+                dynamic_eq = {"error": f"The funnel could not be read: {str(exc)[:160]}", "watchlist": {},
+                              "funnels": []}
+            st.session_state["_dynamic_equity"] = dynamic_eq
+            import funnel_view as _fv
 
-                for r in crypto_results:
-                    st_ = dynamic["states"].get(str(r.get("key")))
+            for dyn_, rows_ in ((dynamic, crypto_results),):
+                if dyn_ is not None and dyn_.get("funnel"):
+                    for r in rows_:
+                        st_ = dyn_["states"].get(str(r.get("key")))
+                        if st_ is not None:
+                            r["stage_icon"], r["stage_hover"], r["stage_sort"] = _fv.stage_cell(
+                                dyn_["funnel"], st_, (dyn_["universe"].get(str(r.get("key"))) or {}).get("pair"))
+            table_stocks = dynamic_eq["watchlist"] if dynamic_eq is not None else stock_watchlist
+            stock_results = process_watchlist(table_stocks, is_crypto=False) if trade_equities else []
+            if dynamic_eq is not None and dynamic_eq.get("funnel"):
+                for r in stock_results:
+                    st_ = dynamic_eq["states"].get(str(r.get("key")).upper())
                     if st_ is not None:
+                        info = dynamic_eq["universe"].get(str(r.get("key")).upper()) or {}
                         r["stage_icon"], r["stage_hover"], r["stage_sort"] = _fv.stage_cell(
-                            dynamic["funnel"], st_, (dynamic["universe"].get(str(r.get("key"))) or {}).get("pair"))
-            stock_results = process_watchlist(stock_watchlist, is_crypto=False) if trade_equities else []
+                            dynamic_eq["funnel"], st_, "yahoo:" + str(r.get("key")).upper(),
+                            earnings=info.get("next_earnings"))
         st.session_state["_perf"]["  of which loading saved prices"] = round(spent["bars"] * 1000)
         st.session_state["_perf"]["  of which indicator maths"] = round(spent["maths"] * 1000)
         st.session_state["_perf"]["  scores worked out fresh (0 means all remembered)"] = _SCORES_WORKED_OUT - worked_before
@@ -11288,11 +11335,11 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
 
     def style_and_show_table(results, title, kind, section_id, column_specs):
         with section_expander(title, section_id):
-            dynamic = st.session_state.get("_dynamic") if kind == "Crypto" else None
-            if kind == "Crypto":
-                _funnel_controls(dynamic)
+            dynamic = st.session_state.get("_dynamic" if kind == "Crypto" else "_dynamic_equity")
+            _funnel_controls(dynamic, "crypto" if kind == "Crypto" else "equity")
             if not results:
-                st.caption("No coins hold this stage right now." if dynamic is not None else "This watchlist is empty.")
+                st.caption(("No coins hold this stage right now." if kind == "Crypto" else "No shares hold this stage right now.")
+                           if dynamic is not None else "This watchlist is empty.")
                 return
             frame = pd.DataFrame(results).sort_values("trend", ascending=False, na_position="last")
             st.caption("Click a column title to sort. The table starts with the strongest Trend at the top. Click a name to show that asset on the chart. 📈 Trend, 🎯 Stretch and 🔊 Flow each run from -100 to +100 (positive means up); they describe the market and are not forecasts. Hover one to read it, and click it to open the breakdown. Click the sentiment score, the thumbs, or the crowd average to open its headlines. Watching is how many accounts hold that asset. The Crowd box is the average of personal scores. Hover the down thumb for the spread. A comment balloon, or the arrow on the right edge, opens the social signals and chat. The 30-day trend uses the same colors as 30d %.")

@@ -1,0 +1,30 @@
+# The equity funnels' universe (equity_universe.py): the S&P 500 with the quality gate, after the New York close on
+# weekdays, and by hand. Results go to the reports branch (equity-universe/latest/) and the job summary.
+name: equity-universe
+on:
+  schedule:
+    - cron: "41 22 * * 1-5"
+  push:
+    branches: [equity-universe]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          pip install -q pandas requests supabase yfinance lxml
+          python equity_universe.py out --save | tee out_summary.txt
+          { echo '### Equity universe'; echo '```'; cat out_summary.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      - name: Save
+        run: bash .github/scripts/save_to_reports.sh equity-universe/latest out/equity_universe.json

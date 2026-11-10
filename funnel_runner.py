@@ -32,13 +32,57 @@ ALERT_TYPE = "funnel"
 CHUNK = 40                                      # prism.MAX_ASSETS
 
 
-def latest_close(timeframe: str, now: pd.Timestamp) -> pd.Timestamp:
-    """The start of the newest closed-and-settled candle's successor, i.e. the moment the last candle closed."""
+NEW_YORK = "America/New_York"
+# NYSE full holidays and early closes (13:00). Extend each year; tests/test_funnel_runner.py fails when the coming
+# year is missing, so it can't be forgotten.
+US_HOLIDAYS = {
+    "2026-01-01", "2026-01-19", "2026-02-16", "2026-04-03", "2026-05-25", "2026-06-19", "2026-07-03", "2026-09-07",
+    "2026-11-26", "2026-12-25",
+    "2027-01-01", "2027-01-18", "2027-02-15", "2027-03-26", "2027-05-31", "2027-06-18", "2027-07-05", "2027-09-06",
+    "2027-11-25", "2027-12-24",
+}
+US_EARLY_CLOSE = {"2026-11-27", "2026-12-24", "2027-11-26"}
+STEP_MINUTES = {"15m": 15, "30m": 30, "1h": 60, "4h": 240, "12h": 720}
+
+
+def _session_closes(timeframe: str, day) -> list[pd.Timestamp]:
+    """The candle closes of one New York trading day (candles counted from the 09:30 open, as the chart builds them)."""
+    key = day.strftime("%Y-%m-%d")
+    if day.weekday() >= 5 or key in US_HOLIDAYS:
+        return []
+    open_ = pd.Timestamp(f"{key} 09:30", tz=NEW_YORK)
+    close = pd.Timestamp(f"{key} {'13:00' if key in US_EARLY_CLOSE else '16:00'}", tz=NEW_YORK)
+    if timeframe in ("1D", "1W"):
+        return [close]
+    step = pd.Timedelta(minutes=STEP_MINUTES[timeframe])
+    ends, t = [], open_ + step
+    while t < close:
+        ends.append(t)
+        t += step
+    return ends + [close]
+
+
+def latest_close(timeframe: str, now: pd.Timestamp, market: str = "crypto") -> pd.Timestamp:
+    """The moment the newest closed (and settled) candle closed. Crypto: UTC blocks, weeks from Monday. Shares: New
+    York sessions, holidays skipped; a week closes on its last trading day."""
     ready = now - SETTLE
-    if timeframe == "1W":
-        day = ready.floor("1D")
-        return day - pd.Timedelta(days=day.weekday())
-    return ready.floor(FREQ[timeframe])
+    if market != "equity":
+        if timeframe == "1W":
+            day = ready.floor("1D")
+            return day - pd.Timedelta(days=day.weekday())
+        return ready.floor(FREQ[timeframe])
+    local = ready.tz_convert(NEW_YORK)
+    for back in range(0, 15):
+        day = (local - pd.Timedelta(days=back)).date()
+        closes = [c for c in _session_closes(timeframe, pd.Timestamp(day)) if c <= local]
+        if not closes:
+            continue
+        if timeframe == "1W":                   # the last trading day of that week must be over
+            later = [pd.Timestamp(day) + pd.Timedelta(days=d) for d in range(1, 5 - pd.Timestamp(day).weekday())]
+            if any(_session_closes("1D", x) for x in later):
+                continue
+        return closes[-1].tz_convert("UTC")
+    raise ValueError("no New York close in the last two weeks")
 
 
 def hover(f: dict) -> dict:
@@ -71,7 +115,8 @@ def run_funnel(store, f: dict, universe: dict[str, dict], evaluate, now: pd.Time
         states[coin_id] = fn.CoinState.from_dict(row["state"] if same else None, n)
     summary = {"stages_run": 0, "failed": 0, "alerted": 0}
     for k, stage in enumerate(f["stages"]):
-        cutoff = latest_close(stage["timeframe"], now)
+        market = f.get("market") or "crypto"
+        cutoff = latest_close(stage["timeframe"], now, market)
         run_id = store.claim(f["id"], k, cutoff, now)
         if run_id is None:
             continue
@@ -79,7 +124,7 @@ def run_funnel(store, f: dict, universe: dict[str, dict], evaluate, now: pd.Time
         try:
             tally = {"yes": 0, "no": 0, "unknown": 0}
             for i in range(0, len(coins), CHUNK):
-                part = [("crypto", c, universe[c].get("name") or c) for c in coins[i:i + CHUNK]]
+                part = [(market, c, universe[c].get("name") or c) for c in coins[i:i + CHUNK]]
                 for row in evaluate(stage["set_body"], part, cutoff):
                     answer = row.get("answer") if row.get("answer") in tally else fn.UNKNOWN
                     tally[answer] += 1
@@ -96,7 +141,8 @@ def run_funnel(store, f: dict, universe: dict[str, dict], evaluate, now: pd.Time
     new = [c for c, st in states.items() if fn.alert_due(st)]
     if new and (f.get("alerts") or {}).get("in_app", True):
         store.notify([{"user_id": f["owner_id"], "asset_symbol": "", "asset_name": f["name"], "alert_type": ALERT_TYPE,
-                       "message": candidate_message(f, [(universe[c].get("symbol") or c, universe[c].get("name") or c)
+                       "message": candidate_message(f, [(universe[c].get("symbol") or universe[c].get("ticker") or c,
+                                                         universe[c].get("name") or c)
                                                         for c in new])}])
         summary["alerted"] = len(new)
     store.save_coins(f["id"], version, {c: st for c, st in states.items()
@@ -108,18 +154,25 @@ def run_all(store, evaluate, now=None, log=print, budget_seconds=BUDGET_SECONDS,
     now = pd.Timestamp(now or datetime.now(timezone.utc))
     now = now.tz_localize("UTC") if now.tzinfo is None else now.tz_convert("UTC")
     started = clock()
-    universe = store.universe()
     out = {"funnels": 0, "waiting": 0}
-    if not universe:
-        log("Funnel: the crypto universe is empty (has the crypto-universe job run?)")
-        return out
     funnels = store.active_funnels()
+    universes: dict[str, dict] = {}
     for i, f in enumerate(funnels):
         if clock() - started > budget_seconds:
             out["waiting"] = len(funnels) - i
             break
+        market = f.get("market") or "crypto"
+        if market not in universes:
+            try:
+                universes[market] = store.universe(market)
+            except Exception as exc:
+                log(f"Funnel: the {market} universe could not be read: {str(exc)[:160]}")
+                universes[market] = {}
+        if not universes[market]:
+            log(f"Funnel: the {market} universe is empty (has the {market}-universe job run?)")
+            continue
         try:
-            out[f["id"]] = run_funnel(store, f, universe, evaluate, now, log)
+            out[f["id"]] = run_funnel(store, f, universes[market], evaluate, now, log)
             out["funnels"] += 1
         except Exception as exc:
             log(f"Funnel {f['id']} failed: {str(exc)[:200]}")
@@ -132,7 +185,11 @@ class SupabaseStore:
     def __init__(self, supabase):
         self.db = supabase
 
-    def universe(self) -> dict[str, dict]:
+    def universe(self, market: str = "crypto") -> dict[str, dict]:
+        if market == "equity":
+            rows = (self.db.table("equity_universe").select("ticker, name, rank, sector, next_earnings")
+                    .eq("included", True).order("rank").execute().data or [])
+            return {r["ticker"]: {**r, "symbol": r["ticker"]} for r in rows}
         rows = (self.db.table("crypto_universe").select("coin_id, symbol, name, rank, pair").eq("included", True)
                 .order("rank").execute().data or [])
         import crypto_universe

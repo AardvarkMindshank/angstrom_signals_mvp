@@ -55,3 +55,14 @@ def test_the_funnel_uses_the_provided_library_sets():
         for stage in ft.trend_funnel(direction)["stages"]:
             key = stage["set_source"]["provided"]
             assert library[key] == stage["set_body"], key
+
+
+def test_the_share_funnel_reads_weekly_daily_4h_then_1h():
+    import prism
+
+    f = ft.trend_funnel("short", "equity")
+    assert [s["timeframe"] for s in f["stages"]] == ["1W", "1D", "4h", "1h"] and f["market"] == "equity"
+    library = prism.demo_sets()
+    for s in f["stages"]:
+        assert library[s["set_source"]["provided"]] == s["set_body"]
+        assert sg.validate_set(s["set_body"]) == []

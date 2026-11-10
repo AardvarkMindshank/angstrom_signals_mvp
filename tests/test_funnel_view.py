@@ -54,3 +54,12 @@ def test_the_hover_names_the_candle_source():
     assert hover.endswith("Candles: Binance spot (BTCUSDT).")
     _, hover, _ = fv.stage_cell(F, STATES["btc"], "yahoo:XMR-USD")
     assert "Yahoo Finance (XMR-USD)" in hover
+
+
+def test_share_hover_names_yahoo_and_earnings():
+    eq = {**ft.trend_funnel("long", "equity"), "id": "e", "stages_version": 1}
+    now = pd.Timestamp("2026-11-10", tz="UTC")
+    _, hover, _ = fv.stage_cell(eq, STATES["btc"], "yahoo:AAPL", earnings="2026-11-13", now=now)
+    assert "Reports earnings in 3 days (2026-11-13)" in hover and "Yahoo Finance (AAPL), New York" in hover
+    _, hover, _ = fv.stage_cell(eq, STATES["btc"], "yahoo:AAPL", earnings="2026-12-30", now=now)
+    assert "earnings" not in hover

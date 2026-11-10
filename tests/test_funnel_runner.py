@@ -18,8 +18,8 @@ class Store:
     def __init__(self):
         self.runs, self.saved, self.notes = {}, {}, []
 
-    def universe(self):
-        return UNIVERSE
+    def universe(self, market="crypto"):
+        return UNIVERSE if market == "crypto" else {"AAPL": {"symbol": "AAPL", "name": "Apple"}}
 
     def active_funnels(self):
         return [FUNNEL]
@@ -90,3 +90,38 @@ def test_closes_and_wording():
     h = fr.hover(FUNNEL)
     assert h["flagged"] == ("On the shortlist: the daily, 12-hour and 4-hour agree; waiting for the 1-hour entry "
                             "conditions.")
+
+
+def test_share_closes_follow_the_new_york_session():
+    ny = lambda t: pd.Timestamp(t, tz="America/New_York")
+    # Tuesday 10 Nov 2026, 12:00 New York: last hourly close 11:30, last 4-hour close the day before at 16:00.
+    now = ny("2026-11-10 12:00").tz_convert("UTC")
+    assert fr.latest_close("1h", now, "equity") == ny("2026-11-10 11:30").tz_convert("UTC")
+    assert fr.latest_close("4h", now, "equity") == ny("2026-11-09 16:00").tz_convert("UTC")
+    assert fr.latest_close("1D", now, "equity") == ny("2026-11-09 16:00").tz_convert("UTC")
+    # The week closes on Friday 6 Nov.
+    assert fr.latest_close("1W", now, "equity") == ny("2026-11-06 16:00").tz_convert("UTC")
+    # Thanksgiving (26 Nov) is skipped; the next day closes early at 13:00.
+    friday = ny("2026-11-27 18:00").tz_convert("UTC")
+    assert fr.latest_close("1D", friday, "equity") == ny("2026-11-27 13:00").tz_convert("UTC")
+    assert fr.latest_close("1D", ny("2026-11-26 18:00").tz_convert("UTC"), "equity") == ny("2026-11-25 16:00").tz_convert("UTC")
+    # A week with a Friday holiday (Good Friday, 3 Apr 2026) closes on Thursday.
+    assert fr.latest_close("1W", ny("2026-04-04 12:00").tz_convert("UTC"), "equity") == ny("2026-04-02 16:00").tz_convert("UTC")
+
+
+def test_the_holiday_list_covers_the_coming_year():
+    year = pd.Timestamp.now().year + (1 if pd.Timestamp.now().month >= 11 else 0)
+    assert any(d.startswith(str(year)) for d in fr.US_HOLIDAYS), f"Add the NYSE holidays for {year}"
+
+
+def test_an_equity_funnel_checks_shares():
+    store = Store()
+    seen = []
+
+    def ev(doc, assets, cutoff):
+        seen.extend(assets)
+        return [{"id": a[1], "answer": "yes"} for a in assets]
+    eq = {**FUNNEL, "id": "f2", "market": "equity"}
+    store.active_funnels = lambda: [eq]
+    fr.run_all(store, ev, now=pd.Timestamp("2026-11-10 22:00", tz="UTC"))
+    assert seen and all(a[0] == "equity" and a[1] == "AAPL" for a in seen)

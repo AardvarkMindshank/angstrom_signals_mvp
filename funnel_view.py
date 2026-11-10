@@ -30,8 +30,13 @@ def load_coins(supabase, funnel_id) -> dict[str, dict]:
     return {r["coin_id"]: r for r in rows}
 
 
-def load_universe(supabase) -> dict[str, dict]:
+def load_universe(supabase, market: str = "crypto") -> dict[str, dict]:
     try:
+        if market == "equity":
+            rows = (supabase.table("equity_universe").select("ticker, name, sector, rank, included, reason, "
+                                                            "volume_usd, next_earnings, built_at")
+                    .order("rank").execute().data or [])
+            return {r["ticker"]: r for r in rows}
         rows = (supabase.table("crypto_universe").select("coin_id, symbol, name, rank, included, reason, pair, "
                                                         "volume_usd, built_at").order("rank").execute().data or [])
     except Exception:
@@ -94,15 +99,32 @@ def coins_for(pick: str, coin_states: dict[str, fn.CoinState]) -> list[str]:
     return [c for _, c in sorted(chosen, key=lambda x: (-x[0], x[1]))]
 
 
-def source_line(pair: str | None) -> str | None:
+def source_line(pair: str | None, market: str = "crypto") -> str | None:
     if not pair:
         return None
+    if market == "equity":
+        return f"Candles: Yahoo Finance ({pair.split(':', 1)[-1]}), New York trading hours."
     if str(pair).startswith("yahoo:"):
         return f"Candles: Yahoo Finance ({pair[6:]}), as Binance does not list this coin."
     return f"Candles: Binance spot ({pair})."
 
 
-def stage_cell(f: dict, st: fn.CoinState, pair: str | None = None) -> tuple[str, str, int]:
+def earnings_line(day: str | None, now=None) -> str | None:
+    """Shares: the next earnings report, when it is within two weeks (prices can jump on a report)."""
+    if not day:
+        return None
+    try:
+        left = (pd.Timestamp(day).date() - (now or pd.Timestamp.now(tz="UTC")).date()).days
+    except Exception:
+        return None
+    if left < 0 or left > 14:
+        return None
+    when = "today" if left == 0 else "tomorrow" if left == 1 else f"in {left} days"
+    return f"⚠️ Reports earnings {when} ({day}): prices can jump on a report."
+
+
+def stage_cell(f: dict, st: fn.CoinState, pair: str | None = None, earnings: str | None = None,
+               now=None) -> tuple[str, str, int]:
     """(icon text, hover, sort value) for the Stage column."""
     p = fn.place(st)
     words = fr.hover(f)
@@ -131,8 +153,11 @@ def stage_cell(f: dict, st: fn.CoinState, pair: str | None = None) -> tuple[str,
         if s.line and s.answer in ("no", "unknown"):
             line += f" ({s.line})"
         lines.append(line + ".")
-    if source_line(pair):
-        lines.append(source_line(pair))
+    market = f.get("market") or "crypto"
+    if earnings_line(earnings, now):
+        lines.append(earnings_line(earnings, now))
+    if source_line(pair, market):
+        lines.append(source_line(pair, market))
     icon = fn.icon(st)
     return f"{arrow}{icon}", "\n".join(lines), p["depth"] * 2 + (1 if p["status"] == fn.CANDIDATE else 0)
 

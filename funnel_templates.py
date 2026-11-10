@@ -14,7 +14,9 @@ Descriptions, not forecasts: nobody has tested what followed these answers.
 
 from __future__ import annotations
 
-TIMEFRAMES = ("1D", "12h", "4h")
+TIMEFRAMES = ("1D", "12h", "4h")             # crypto: daily, 12-hour, 4-hour
+EQUITY_TIMEFRAMES = ("1W", "1D", "4h")        # shares trade 6.5 hours a day, so a 12-hour candle is the daily
+LIBRARY_TIMEFRAMES = ("1W", "1D", "12h", "4h")
 ENTRY_TIMEFRAME = "1h"
 BASE = {"schema": "angstrom.set/1", "lineage_version": 3, "score": None, "market_context": [], "groups": []}
 
@@ -62,7 +64,7 @@ def entry_set(direction: str, timeframe: str = ENTRY_TIMEFRAME) -> dict:
             ]}}}
 
 
-WORDS = {"1D": "daily", "12h": "12-hour", "4h": "4-hour", "1h": "1-hour"}
+WORDS = {"1W": "weekly", "1D": "daily", "12h": "12-hour", "4h": "4-hour", "1h": "1-hour"}
 
 
 def library_key(timeframe: str | None, direction: str) -> str:
@@ -75,7 +77,7 @@ def library_key(timeframe: str | None, direction: str) -> str:
 def library() -> dict[str, dict]:
     out = {}
     for direction in ("long", "short"):
-        for tf in TIMEFRAMES:
+        for tf in LIBRARY_TIMEFRAMES:
             out[library_key(tf, direction)] = trend_set(tf, direction)
         out[library_key(None, direction)] = entry_set(direction)
     return out
@@ -86,7 +88,7 @@ def explanations() -> dict[str, tuple[str, str, str, str]]:
     out = {}
     for direction in ("long", "short"):
         up = direction == "long"
-        for tf in TIMEFRAMES:
+        for tf in LIBRARY_TIMEFRAMES:
             out[library_key(tf, direction)] = (
                 f"An {'uptrend' if up else 'downtrend'} on the {WORDS[tf]} candles, as two averages see it.",
                 f"Yes when the {WORDS[tf]} EMA 20 is {'above' if up else 'below'} the EMA 50.",
@@ -106,13 +108,19 @@ def explanations() -> dict[str, tuple[str, str, str, str]]:
     return out
 
 
-def trend_funnel(direction: str) -> dict:
-    """{name, direction, stages: [{label, timeframe, set_body, set_source}]} ready for funnel_save."""
-    labels = ("Daily", "12-hour", "Shortlist (4-hour)")
+def trend_funnel(direction: str, market: str = "crypto") -> dict:
+    """{name, direction, market, stages: [{label, timeframe, set_body, set_source}]} ready for funnel_save.
+    Crypto: daily, 12-hour, 4-hour, then the 1-hour entry. Shares: weekly, daily, 4-hour (from the session open),
+    then the 1-hour entry."""
+    if market == "equity":
+        labels, tfs = ("Weekly", "Daily", "Shortlist (4-hour)"), EQUITY_TIMEFRAMES
+    else:
+        labels, tfs = ("Daily", "12-hour", "Shortlist (4-hour)"), TIMEFRAMES
     stages = [{"label": label, "timeframe": tf, "set_body": trend_set(tf, direction),
-               "set_source": {"provided": library_key(tf, direction)}} for label, tf in zip(labels, TIMEFRAMES)]
+               "set_source": {"provided": library_key(tf, direction)}} for label, tf in zip(labels, tfs)]
     stages.append({"label": "Entry (1-hour)", "timeframe": ENTRY_TIMEFRAME, "set_body": entry_set(direction),
                    "set_source": {"provided": library_key(None, direction)}})
     arrow = "▲" if direction == "long" else "▼"
-    return {"name": f"Trend {'longs' if direction == 'long' else 'shorts'} {arrow}", "direction": direction,
-            "stages": stages}
+    what = "share" if market == "equity" else ""
+    return {"name": f"Trend {what + ' ' if what else ''}{'longs' if direction == 'long' else 'shorts'} {arrow}",
+            "direction": direction, "market": market, "stages": stages}
