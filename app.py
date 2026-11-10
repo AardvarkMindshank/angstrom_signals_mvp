@@ -7183,6 +7183,10 @@ because they measure different things and are never added together.
   conditions. A Candidate is a coin to look at now, not a recommendation to buy or sell.
 - The **Stage** column shows where each coin is (▲ long or ▼ short funnel; 👁 first stage, 🔷 second, 📋 shortlist,
   🚩, ✅). Hover it for each stage's last answer and when it was checked.
+- **📈 Open candidates in chart** (next to the stage picker; it names whichever stage you picked) shows those
+  assets the Visualize History way: one large chart with candles on top and a thin row for each underneath, with
+  the funnel's daily stage drawn as green bands across each history. Tap a row to put it on top, then **Open on the
+  main price chart**. While a table shows a Dynamic funnel, its assets can also be picked on the main chart.
 - **Fails twice to leave:** a coin joins a stage on its first Yes, but leaves only after two No answers in a row,
   so it doesn't flicker in and out. When an earlier stage stops holding, the later ones drop at once.
 - **❔ Pending:** data was missing at the last check. A pending coin never moves up or alerts; after three
@@ -10794,6 +10798,7 @@ def _funnel_controls(dyn, market: str = "crypto") -> None:
         st.caption(dyn["health"])
     if not dyn["states"]:
         st.caption(f"⏳ Not checked yet: the funnel runs {when}.")
+    _funnel_chart(dyn, market, labels)
     with st.popover("⚙️ Funnels", help="Add, restart or delete a funnel"):
         def _call(fn_name, args, done):
             try:
@@ -10817,6 +10822,54 @@ def _funnel_controls(dyn, market: str = "crypto") -> None:
             if st.button(f"🗑 Delete “{f['name']}” for good", key=f"funnel_delete_{market}", type="primary"):
                 st.session_state.pop(pick_key, None)
                 _call("funnel_delete", {"p_id": f["id"]}, "Funnel deleted.")
+
+
+def _funnel_chart(dyn, market: str, labels: dict) -> None:
+    """📈 Open candidates in chart: the chosen stage's assets in the Visualize History view (one large chart on top,
+    a thin row per asset underneath), with the funnel's daily stage Set drawn as bands across each history."""
+    import prism_view
+    import set_history
+
+    f = dyn["funnel"]
+    _mode, _pick, stage_key, _setting, words = _FUNNEL_KEYS[market]
+    stage = st.session_state.get(stage_key) or ""
+    noun = ("candidates" if stage == "candidate" else "flagged" if stage == "flagged" else "pending"
+            if stage == "pending" else f["stages"][int(stage.split(":")[1])]["label"].lower() if stage.startswith(
+                "stage:") else words["coins"])
+    daily = next((i for i, s in enumerate(f["stages"]) if s["timeframe"] == "1D"), None)
+    state_key = f"funnel_hist_{market}"
+    shown = st.session_state.get(state_key)
+    if shown and (shown.get("funnel") != f["id"] or shown.get("stage") != stage):
+        st.session_state.pop(state_key, None)                 # another funnel or stage: close the old view
+        shown = None
+    assets = list(dyn["watchlist"].items())
+    if daily is None or not assets:
+        return
+    hover = (f"Every {words['coin']} in this view on one chart: one large with candles, a thin row each underneath, "
+             f"with the {f['stages'][daily]['label'].lower()} stage's answers as green bands across its history. Tap "
+             "a row to put it on top, then open it on the main price chart.")
+    if shown is None:
+        if st.button(f"Open {noun} in chart", icon=":material/candlestick_chart:", key=f"funnel_hist_open_{market}",
+                     help=hover):
+            doc = f["stages"][daily]["set_body"]
+            kind = "crypto" if market == "crypto" else "equity"
+            picked = [(kind, a, n) for a, n in assets]
+            bar = st.progress(0.0, text="Working out the last year…")
+            strip = set_history.quick_rows(supabase, doc, picked,
+                                           lambda n, total, name: bar.progress(
+                                               n / max(total, 1), text=f"Working out the last year: {name} "
+                                                                       f"({n + 1} of {total})"))
+            bar.empty()
+            st.session_state[state_key] = {"funnel": f["id"], "stage": stage, "strip": strip}
+            st.rerun()
+        return
+    if st.button(f"Close the chart of {noun}", icon=":material/close:", key=f"funnel_hist_close_{market}"):
+        st.session_state.pop(state_key, None)
+        st.rerun()
+    prism_view._SUPABASE[0] = supabase
+    scan = {"id": f"funnel-{f['id']}-{stage.replace(':', '')}", "name": f"{f['name']} · {f['stages'][daily]['label']}",
+            "set_body": f["stages"][daily]["set_body"], "set_source": f["stages"][daily].get("set_source") or {}}
+    prism_view._history_view(st, scan, shown["strip"])
 
 
 def fr_hover(f):
@@ -11030,6 +11083,14 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                         if st_ is not None:
                             r["stage_icon"], r["stage_hover"], r["stage_sort"] = _fv.stage_cell(
                                 dyn_["funnel"], st_, (dyn_["universe"].get(str(r.get("key"))) or {}).get("pair"))
+            # While a table shows a Dynamic funnel, its assets can be opened on the chart too (they are added after
+            # your own watchlist in the chart's asset list, for this page only; your watchlist is not changed).
+            if dynamic is not None and dynamic.get("watchlist"):
+                crypto_watchlist = {**crypto_watchlist, **{k: v for k, v in dynamic["watchlist"].items()
+                                                           if k not in crypto_watchlist}}
+            if dynamic_eq is not None and dynamic_eq.get("watchlist"):
+                stock_watchlist = {**stock_watchlist, **{k: v for k, v in dynamic_eq["watchlist"].items()
+                                                         if k not in stock_watchlist}}
             table_stocks = dynamic_eq["watchlist"] if dynamic_eq is not None else stock_watchlist
             stock_results = process_watchlist(table_stocks, is_crypto=False) if trade_equities else []
             if dynamic_eq is not None and dynamic_eq.get("funnel"):
