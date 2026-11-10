@@ -6564,7 +6564,9 @@ def notifications_panel() -> None:
     with tracked_expander(notifications_label, "notifications", sidebar=True):
         with tracked_expander("Alert Feed", "alert_feed"):
             if not notifications_list:
-                st.caption("No alerts yet. When a watchlist asset crosses a threshold, it shows up here.")
+                st.caption("No alerts yet. They arrive here when a watchlist asset crosses one of your alert lines, "
+                           "a market's sentiment crosses its line, a Prism scan finds a match, a funnel has new "
+                           "Candidates, or a study you started finishes.")
             else:
                 def _is_alert(note) -> bool:
                     return str(note.get("alert_type") or "") != "group_invite"
@@ -6648,8 +6650,8 @@ def notifications_panel() -> None:
                     ]
                     if asset_notes:
                         st.caption(
-                            "Click an alert to open it: an asset opens on the chart, "
-                            "a market alert opens that market's sentiment."
+                            "Click an alert to open it: an asset opens on the chart, a market alert opens that "
+                            "market's sentiment, a funnel note opens its funnel, a study note opens its Set."
                         )
                     for note in filtered_notifs:
                         name = html.escape(str(note.get("asset_name") or "Asset"))
@@ -7534,8 +7536,10 @@ plans from a Set or THEN box, with entries, exits and ladders.
 back (for example back to +30 after a +50 alert) and then crosses again. This applies to every alert.
 
 **The Alert Feed**
+- It collects every kind of alert: your watchlist's Trend, Stretch and Flow lines, market sentiment, Prism scan
+  matches, 🔻 funnel Candidates and 🔬 finished studies.
 - Unread alerts sit at the top. Click one to open it: an asset opens on the chart, a market alert opens
-  that market's sentiment. Clicking marks it read.
+  that market's sentiment, a funnel note opens its funnel, a study note opens its Set. Clicking marks it read.
 - ✅ marks all as read · 🧹 clears read alerts · 🗑️ clears all. Group invites stay until you answer them.
 
 **Built-in Prism scans.** The Trend, Stretch and Flow alerts are six built-in scans in 🧩 Angstrom Lattice →
