@@ -162,11 +162,15 @@ def run_funnel(store, f: dict, universe: dict[str, dict], evaluate, now: pd.Time
                                                          universe[c].get("name") or c)
                                                         for c in new])}])
         summary["alerted"] = len(new)
-    if new and hasattr(store, "refresh_sentiment"):  # only new Candidates get a fresh news-sentiment reading
+    # News sentiment only for Candidates: new ones first, then the others still Candidates (refreshed only when their
+    # reading is over 12 hours old). A coin that leaves the Candidates is no longer refreshed by the funnel.
+    current = new + sorted(c for c, st in states.items()
+                           if c not in new and fn.place(st)["status"] == fn.CANDIDATE and not fn.place(st)["pending"])
+    if current and hasattr(store, "refresh_sentiment"):
         market = f.get("market") or "crypto"
         try:
             summary["sentiment"] = store.refresh_sentiment(
-                market, [(c, universe[c].get("name") or c) for c in new[:MAX_SENTIMENT]], log)
+                market, [(c, universe[c].get("name") or c) for c in current[:MAX_SENTIMENT]], log)
         except Exception as exc:
             log(f"Funnel {f['name']}: sentiment for new Candidates failed: {str(exc)[:160]}")
     store.save_coins(f["id"], version, keep())                      # the alert latches

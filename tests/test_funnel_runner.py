@@ -76,7 +76,21 @@ def test_one_pass_narrows_and_alerts_once():
     checked.clear()
     out = fr.run_all(store, ev, now=pd.Timestamp("2026-11-10 01:20", tz="UTC"))
     assert out["f1"]["stages_run"] == 1 and sorted(checked[3]) == ["bitcoin", "solana"]
-    assert len(store.notes) == 1 and store.sentiment == ["bitcoin"]   # Bitcoin is still latched
+    # Bitcoin is still latched (no new alert) and still a Candidate, so it stays on the sentiment list (refreshed
+    # only when its reading is over 12 hours old); Solana, never a Candidate, never is.
+    assert len(store.notes) == 1 and store.sentiment == ["bitcoin"] * 3     # one per pass; the store skips fresh ones
+
+
+def test_a_coin_that_leaves_the_candidates_gets_no_more_sentiment():
+    store = Store()
+    ev, _ = _evaluate({0: {"bitcoin": "yes"}, 1: {"bitcoin": "yes"}, 2: {"bitcoin": "yes"}, 3: {"bitcoin": "yes"}})
+    fr.run_all(store, ev, now=pd.Timestamp("2026-11-10 00:20", tz="UTC"))
+    ev2, _ = _evaluate({3: {}})                                    # the 1-hour entry says No twice
+    fr.run_all(store, ev2, now=pd.Timestamp("2026-11-10 01:20", tz="UTC"))
+    fr.run_all(store, ev2, now=pd.Timestamp("2026-11-10 02:20", tz="UTC"))
+    before = list(store.sentiment)
+    fr.run_all(store, ev2, now=pd.Timestamp("2026-11-10 03:20", tz="UTC"))
+    assert store.sentiment == before
 
 
 def test_a_failed_stage_keeps_places_and_is_recorded():
