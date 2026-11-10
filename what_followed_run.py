@@ -220,7 +220,7 @@ def pick_step(args) -> int:
         ok, why = wf.studyable(body)
         if not ok:
             _update(db, r["set_hash"], status="refused", error=why, finished_at=_now())
-            _tell(db, r.get("requested_by"), r.get("set_name") or "", f"can't be studied: {why}")
+            _tell(db, r.get("requested_by"), r.get("set_name") or "", f"can't be studied: {why}", r["set_hash"])
             continue
         _update(db, r["set_hash"], status="running", started_at=_now())
         queue[r["set_hash"]] = {"body": body, "name": r.get("set_name") or "", "by": r.get("requested_by")}
@@ -233,13 +233,15 @@ def pick_step(args) -> int:
     return 0
 
 
-def _tell(db, user_id, name: str, what: str) -> None:
-    """🔬 A note in the person's notifications (the list on the left) when their study is done, refused or failed."""
+def _tell(db, user_id, name: str, what: str, set_hash: str = "") -> None:
+    """🔬 A note in the person's notifications (the list on the left) when their study is done, refused or failed.
+    asset_symbol "study:<hash>" lets a click on the note open that Set in Signal Sets."""
     if not user_id:
         return
     try:
         db.table("user_notifications").insert({
-            "user_id": user_id, "asset_symbol": "", "asset_name": name or "Your Set", "alert_type": "study",
+            "user_id": user_id, "asset_symbol": f"study:{set_hash}" if set_hash else "",
+            "asset_name": name or "Your Set", "alert_type": "study",
             "message": f"What followed for “{name or 'your Set'}” {what}"[:500]}).execute()
     except Exception as exc:                        # a note that can't be written never stops the study
         print(f"note not written: {exc}")
@@ -257,7 +259,8 @@ def finish_step(args) -> int:
         for key, item in queue.items():
             _update(db, key, status="failed", finished_at=_now(),
                     error="The study could not finish this time. Tap Study this Set to try again.")
-            _tell(db, item.get("by"), item.get("name"), "could not finish this time. Tap Study this Set to try again.")
+            _tell(db, item.get("by"), item.get("name"), "could not finish this time. Tap Study this Set to try again.",
+                  key)
         print("answers did not finish: marked failed")
         return 0
     tables: dict = {}
@@ -273,11 +276,12 @@ def finish_step(args) -> int:
                     method=wf.METHOD, finished_at=_now(), error=None)
             verdict = s.get("verdict") or s.get("note") or "ready"
             _tell(db, item.get("by"), item.get("name"),
-                  f"is ready: {verdict}. Open the Set in Signal Sets to read it.")
+                  f"is ready: {verdict}. Click to open the Set and read it.", key)
             _print(result)
         except Exception as exc:                                    # one Set never stops the others
             _update(db, key, status="failed", error=str(exc)[:480], finished_at=_now())
-            _tell(db, item.get("by"), item.get("name"), "could not finish this time. Tap Study this Set to try again.")
+            _tell(db, item.get("by"), item.get("name"), "could not finish this time. Tap Study this Set to try again.",
+                  key)
             print(f"{key}: failed: {exc}")
     return 0
 

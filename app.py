@@ -6666,6 +6666,19 @@ def notifications_panel() -> None:
                                 f"<div style='font-size:0.8rem;color:#374151;margin-top:2px;'>{message}</div>"
                                 f"<div style='font-size:0.75rem;color:#6b7280;margin-top:2px;'>{created}</div></div>"
                             )
+                            if kind == "study":          # opens the Set in Signal Sets, where the study shows
+                                import study_link
+
+                                note_ref = html.escape(str(note.get("id") or "") if not note.get("is_read") else "",
+                                                       quote=True)
+                                card = (
+                                    f"<button type='button' data-alert='1' data-note='{note_ref}' "
+                                    f"data-pick='{html.escape(study_link.pick_value(note), quote=True)}' "
+                                    "title='Open this Set and its study' "
+                                    "style='display:block;width:100%;margin:0;padding:0;border:none;"
+                                    "background:transparent;text-align:left;cursor:pointer;font:inherit;color:inherit;'>"
+                                    f"{card}</button>"
+                                )
                             _score_table(key=f"notif_{note.get('id') or name}", data=card)
                             if kind == "group_invite":
                                 invite_raw = str(note.get("asset_symbol") or "")
@@ -7430,7 +7443,7 @@ plans from a Set or THEN box, with entries, exits and ladders.
   summary (its own *Prism scans* section), in the app only, or off. See the 🧩 Lattice & Prism tab.
 
 - 🔬 **Study finished**: when a *What followed* study you started is ready (or couldn't finish), a note arrives
-  here. Open the Set in Signal Sets to read it.
+  here. Click it to open that Set in Signal Sets, with the study.
 
 **No repeats on a wobble.** After an alert, the same one can only fire again once the score has moved 20 points
 back (for example back to +30 after a +50 alert) and then crosses again. This applies to every alert.
@@ -13798,6 +13811,21 @@ def _take_alert_pick() -> None:
     raw_full, raw = raw, _mark_clicked_alert_read(raw)
     if not raw:
         st.session_state["_alert_pick_seen"] = raw_full
+        return
+    if raw.startswith("study|"):                # a Study finished note: open that Set in Signal Sets
+        st.session_state["_alert_pick_seen"] = raw_full
+        import perspectives
+        import signal_groups_inspector as gi
+        import study_link
+
+        _, set_hash, name = (raw.split("|", 2) + ["", ""])[:3]
+        configs, _err = gi.saved_configs(supabase)
+        found = study_link.find_set(configs, set_hash, name)
+        if found is None:
+            st.toast("That Set was changed or deleted, so its study can't be opened from here.")
+            return
+        perspectives.load_studies(supabase, force=True)
+        _open_in_lattice(f"lattice|sets|{found[0]}")
         return
     kind_name, asset_id = raw.split("|")[:2]
     quiet = raw.endswith("|quiet")

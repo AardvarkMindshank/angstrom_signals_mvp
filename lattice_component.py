@@ -750,7 +750,12 @@ export default function(component) {
     catalogue.filter((s) => !q || s.name.toLowerCase().indexOf(q) >= 0 || s.category_label.toLowerCase().indexOf(q) >= 0)
       .forEach((s) => {
         if (s.category_label !== last) { list.appendChild(el("div", "cat sub", s.category_label)); last = s.category_label; }
-        list.appendChild(chip(s.name, s.badge || "", s.hint, "signal|" + s.id, () => addSignal(s.id), "Add " + s.name + " to the Set"));
+        // The same lines under the name as in Signal Groups: the badge, then "condition only".
+        const c = chip(s.name, "", s.hint, "signal|" + s.id, () => addSignal(s.id), "Add " + s.name + " to the Set");
+        const nm = c.querySelector(".nm");
+        if (s.badge) nm.appendChild(el("div", "badge", s.badge));
+        if (!s.can_score) nm.appendChild(el("div", "muted", "condition only"));
+        list.appendChild(c);
       });
   }
   search.addEventListener("input", () => { query = search.value; window.__latSetQuery = query; drawLibrary(); });
