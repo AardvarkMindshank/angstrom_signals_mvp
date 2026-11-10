@@ -220,3 +220,12 @@ def test_pool_rules():
     assert set(fr.pool_members(uni, {"min_volume": 1e6})) == {"btc", "eth", "doge"}
     assert set(fr.pool_members(uni, {"watchlist_only": True}, {"doge", "tiny"})) == {"doge", "tiny"}
     assert fr.pool_members(uni, {}) == uni
+
+
+def test_the_account_switch_stops_funnel_alerts():
+    store = Store()
+    store.saved["dogecoin"] = (1, fn.CoinState.new(4))           # not the first pass
+    store.alerts_on = lambda owner: False
+    ev, _ = _evaluate({0: {"bitcoin": "yes"}, 1: {"bitcoin": "yes"}, 2: {"bitcoin": "yes"}, 3: {"bitcoin": "yes"}})
+    fr.run_all(store, ev, now=pd.Timestamp("2026-11-10 00:20", tz="UTC"))
+    assert store.notes == [] and fn.place(store.saved["bitcoin"][1])["status"] == "candidate"

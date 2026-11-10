@@ -181,7 +181,7 @@ def run_funnel(store, f: dict, universe: dict[str, dict], evaluate, now: pd.Time
         summary["bootstrap"] = len(new)
         log(f"Funnel {f['name']}: first pass of this version; {len(new)} Candidates set without alerts.")
         new = []
-    if new and (f.get("alerts") or {}).get("in_app", True):
+    if new and (f.get("alerts") or {}).get("in_app", True) and getattr(store, "alerts_on", lambda _o: True)(f["owner_id"]):
         store.notify([{"user_id": f["owner_id"], "asset_symbol": f"funnel:{f['id']}", "asset_name": f["name"],
                        "alert_type": ALERT_TYPE,
                        "message": candidate_message(f, [(universe[c].get("symbol") or universe[c].get("ticker") or c,
@@ -430,6 +430,14 @@ class SupabaseStore:
                 self.db.table("user_notifications").update({
                     "asset_name": new, "message": str(n.get("message") or "").replace(f"“{old}”", f"“{new}”")
                 }).eq("id", n["id"]).execute()
+
+    def alerts_on(self, owner_id: str) -> bool:
+        """The account's 🔻 Funnel alerts switch (Notifications → Configure Alert Rules); on unless switched off."""
+        try:
+            rows = (self.db.table("user_preferences").select("settings").eq("user_id", owner_id).execute().data or [])
+            return bool(((rows[0].get("settings") if rows else None) or {}).get("funnel_alerts", True))
+        except Exception:
+            return True
 
     def watchlist(self, owner_id: str, market: str) -> set[str]:
         rows = (self.db.table("user_preferences").select("crypto_watchlist, stock_watchlist").eq("user_id", owner_id)

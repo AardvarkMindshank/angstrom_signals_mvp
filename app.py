@@ -6873,6 +6873,20 @@ def notifications_panel() -> None:
                     "market_low_alert": market_low,
                 })
 
+            # 🔻 Funnel alerts: one switch for all of this account's funnels (each funnel also has its own, in
+            # Lattice → Funnels). Kept in the account settings, read by the funnel job.
+            funnel_on = st.checkbox(
+                "🔻 Funnel alerts",
+                value=bool(((st.session_state.get("cloud_prefs") or {}).get("settings") or {}).get("funnel_alerts", True)),
+                key="alert_funnel_cb",
+                help=("A note when assets newly become Candidates in one of your funnels (one note per hourly run). "
+                      "Off stops them for every funnel; on, each funnel's own setting in Lattice → Funnels decides."),
+            )
+            try:
+                save_account_settings({"funnel_alerts": bool(funnel_on)})        # writes only when it changed
+            except Exception:
+                pass
+
             # The email options need the digest columns from the latest supabase_rls.sql.
             # Until that has been run, show the old settings only.
             if "digest_enabled" not in alert_prefs:
@@ -7488,6 +7502,10 @@ plans from a Set or THEN box, with entries, exits and ladders.
 
 - 🔎 **Prism scan alerts** are set on each scan in **Angstrom Lattice → Prism Scan**: instant, in the daily
   summary (its own *Prism scans* section), in the app only, or off. See the 🧩 Lattice & Prism tab.
+
+- 🔻 **Funnel alerts**: a note when assets newly become Candidates in one of your funnels (one per hourly run;
+  a new or changed funnel starts quietly). Off stops them for every funnel; on, each funnel's own *Alert me on new
+  Candidates* in Lattice → Funnels decides. Click a note to open its funnel.
 
 - 🔬 **Study finished**: when a *What followed* study you started is ready (or couldn't finish), a note arrives
   here. Click it to open that Set in Signal Sets, with the study.
