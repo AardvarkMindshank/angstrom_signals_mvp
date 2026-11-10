@@ -3787,9 +3787,15 @@ def _chart_set_options() -> dict:
     extra = st.session_state.get("chart_band_extra")
     if extra:                                     # opened from Visualize History: the scan's own Set
         out[extra[0]] = (extra[1], extra[2])
+    import perspectives
+
+    def named(doc: dict, name: str, tail: str = "") -> str:      # the category icons, as in Lattice and Prism
+        icons = perspectives.icons(doc)
+        return f"{name} {icons}{tail}".replace("  ", " ") if icons else f"{name}{tail}"
+
     for key, doc in table_columns.provided_sets().items():
         if not doc["name"].endswith("(demo)"):
-            out[key] = (f"{doc['name']} (provided)", doc)
+            out[key] = (named(doc, doc["name"], " (provided)"), doc)
     cached = st.session_state.get("siggroups_saved")
     if not cached or time.time() - cached[0] > 60:
         try:
@@ -3802,7 +3808,7 @@ def _chart_set_options() -> dict:
             continue
         doc = c["versions"][-1].get("body") or {}
         if doc.get("decision") and set(column_answers.timeframes(doc)) <= {"1D", "1W"}:
-            out[f"saved:{c['id']}"] = (c["name"], doc)
+            out[f"saved:{c['id']}"] = (named(doc, c["name"]), doc)
     return out
 
 
@@ -3829,7 +3835,7 @@ def _chart_set_picker():
     with cols[0]:
         key = st.selectbox(
             "Show a Set on the chart", keys, key="chart_band_set",
-            format_func=lambda k: "No Set" if not k else options[k][0],
+            format_func=lambda k: "⊘ No Set" if not k else options[k][0],
             help=("Colours every day by the Set's answer at that day's close: green = Yes (conditions met), "
                   "amber = Unknown (data missing), clear = No. Worked out from the full daily history; a "
                   "description of the past, not a forecast."))
