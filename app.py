@@ -4864,6 +4864,9 @@ _ACCOUNT_STATE_KEYS = (
     "show_extra_metrics",
     "show_period_changes",
     "days_history",
+    "crypto_table_mode",
+    "funnel_pick",
+    "funnel_stage",
     "price_chart",
     "chart_interval",
     "chart_range",
@@ -7169,7 +7172,7 @@ because they measure different things and are never added together.
 - **Watching** shows how many accounts follow the asset. **30-day trend** is a small price line.
 
 **🔻 Dynamic watchlist (funnels).** Above the crypto table, switch **My Watchlist** (the coins you picked) to
-**Dynamic**: the coins a *funnel* has narrowed down for you, checked by itself a few minutes after every hour.
+**Dynamic funnel**: the coins a *funnel* has narrowed down for you, checked by itself a few minutes after every hour.
 - A funnel is a short list of stages, each a Set on its own timeframe, for example *EMA 20 above EMA 50* on the
   daily, then the 12-hour, then the 4-hour, then a 1-hour entry check. Each stage only checks the coins that hold
   every stage before it, so the list gets smaller at each step. A coin that isn't reached shows *not checked*,
@@ -10648,7 +10651,15 @@ def _dynamic_crypto():
     import funnel_view as fv
 
     user = st.session_state.get("user")
-    if user is None or st.session_state.get("crypto_table_mode") != "Dynamic":
+    if user is not None and "crypto_table_mode" not in st.session_state:     # the choice saved on the account
+        saved = ((st.session_state.get("cloud_prefs") or {}).get("settings") or {}).get("crypto_table")
+        st.session_state["crypto_table_mode"] = next((m for m, c in fv.MODE_CODES.items() if c == saved), fv.MODES[0])
+        if saved == "funnel":
+            stored = (st.session_state.get("cloud_prefs") or {}).get("settings") or {}
+            for key in ("funnel_pick", "funnel_stage"):
+                if stored.get(key):
+                    st.session_state[key] = stored[key]
+    if user is None or st.session_state.get("crypto_table_mode") != "Dynamic funnel":
         return None
     memo = st.session_state.setdefault("_memo", {})
     hit = memo.get("funnels")
@@ -10686,15 +10697,24 @@ def _dynamic_crypto():
 
 
 def _funnel_controls(dyn) -> None:
-    """Above the crypto table: My Watchlist or Dynamic, then (Dynamic) the funnel, the stage picker and its counts."""
+    """Above the crypto table: My Watchlist or Dynamic funnel, then (Dynamic funnel) the funnel, the stage picker and
+    its counts. The choice is saved on the account."""
     import funnel_templates as ft
     import funnel_view as fv
 
     if st.session_state.get("user") is None:
         return
-    st.radio("Crypto table", fv.MODES, key="crypto_table_mode", horizontal=True, label_visibility="collapsed",
-             help="My Watchlist: the coins you picked. Dynamic: the coins a funnel has narrowed down from the top "
-                  "coins on Binance, stage by stage.")
+    mode = st.radio("Crypto table", fv.MODES, key="crypto_table_mode", horizontal=True, label_visibility="collapsed",
+                    help="My Watchlist: the coins you picked. Dynamic funnel: the coins a funnel has narrowed down "
+                         "from the top 500 coins, stage by stage. Your choice is saved on your account.")
+    remember = {"crypto_table": fv.MODE_CODES.get(mode, "watchlist")}
+    if dyn is not None and dyn.get("funnel"):
+        remember.update({"funnel_pick": st.session_state.get("funnel_pick"),
+                         "funnel_stage": st.session_state.get("funnel_stage")})
+    try:
+        save_account_settings(remember)          # writes only when something changed
+    except Exception:
+        pass
     if dyn is None:
         return
     if dyn.get("error"):

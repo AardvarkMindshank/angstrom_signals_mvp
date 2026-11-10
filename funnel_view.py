@@ -11,7 +11,8 @@ import pandas as pd
 import funnel as fn
 import funnel_runner as fr
 
-MODES = ("My Watchlist", "Dynamic")
+MODES = ("My Watchlist", "Dynamic funnel")
+MODE_CODES = {"My Watchlist": "watchlist", "Dynamic funnel": "funnel"}   # saved on the account (names may change)
 SHOW_LIMIT = 60                         # coins in one view; the first loads fill shared prices for new coins
 
 
