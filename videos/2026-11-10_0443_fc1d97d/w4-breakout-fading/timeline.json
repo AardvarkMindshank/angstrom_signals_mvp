@@ -1,0 +1,51 @@
+{
+ "steps": [
+  {
+   "id": "idea",
+   "start": 2.12,
+   "say": "Some ideas happen in order. | First, price breaks out on heavy volume. | Then, within a few days, the volume dries up."
+  },
+  {
+   "id": "add",
+   "start": 10.311,
+   "say": "Add the Recent structure break Group, and the relative volume signal."
+  },
+  {
+   "id": "box",
+   "start": 15.407,
+   "say": "Then add a THEN box. | It has a First part, a Then part with a number of days, and an optional Cancel."
+  },
+  {
+   "id": "first",
+   "start": 21.945,
+   "say": "First: an upward break, | on at least one and a half times the usual volume."
+  },
+  {
+   "id": "then",
+   "start": 32.91,
+   "say": "Then, within five daily closes: volume is back below one and a half times usual."
+  },
+  {
+   "id": "words",
+   "start": 39.958,
+   "say": "The editor writes it out in plain words. | First and Then on the same day don't count: Then has to come later."
+  },
+  {
+   "id": "save",
+   "start": 47.138,
+   "say": "Save it, and run it on your coins at a past moment."
+  },
+  {
+   "id": "armed",
+   "start": 68.941,
+   "say": "Yes means both steps happened, in order. | A No with a skip mark is part-way: the breakout happened, and the drop can still come in time."
+  },
+  {
+   "id": "study",
+   "start": 77.393,
+   "say": "To see whether anything usually followed, | open the Set and tap Study this Set."
+  }
+ ],
+ "end": 84.41,
+ "trim": 2.12
+}

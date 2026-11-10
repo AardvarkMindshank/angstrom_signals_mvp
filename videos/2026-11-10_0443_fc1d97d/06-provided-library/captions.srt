@@ -1,0 +1,99 @@
+1
+00:00:00,000 --> 00:00:03,273
+Angstrom Signals comes with a library of Groups and Sets,
+
+2
+00:00:03,293 --> 00:00:05,847
+built around common trading situations.
+
+3
+00:00:05,897 --> 00:00:09,141
+In Prism, open Provided by Angstrom Signals.
+
+4
+00:00:09,593 --> 00:00:12,496
+Each one shows small icons for what it looks at.
+
+5
+00:00:12,546 --> 00:00:16,323
+Here: volume, and structure, the support and resistance levels.
+
+6
+00:00:16,772 --> 00:00:20,379
+Underneath, one line says what it describes, in plain words.
+
+7
+00:00:20,820 --> 00:00:22,699
+Tap more for three parts:
+
+8
+00:00:22,749 --> 00:00:24,201
+what it measures,
+
+9
+00:00:24,251 --> 00:00:26,044
+why traders watch it,
+
+10
+00:00:26,094 --> 00:00:27,866
+and what it doesn't prove.
+
+11
+00:00:28,303 --> 00:00:30,886
+The last icon is the evidence mark.
+
+12
+00:00:30,936 --> 00:00:33,369
+A microscope means not yet studied.
+
+13
+00:00:33,419 --> 00:00:37,004
+A balance means it was studied, and showed no clear difference.
+
+14
+00:00:37,054 --> 00:00:39,402
+The next two videos explain both.
+
+15
+00:00:39,834 --> 00:00:43,142
+To find one quickly, tap an icon in the filter row.
+
+16
+00:00:43,192 --> 00:00:45,945
+Here, only the Sets that look at volatility.
+
+17
+00:00:46,385 --> 00:00:51,058
+Tap plus, and a provided Set becomes one of your Prism scans, ready to run.
+
+18
+00:00:51,499 --> 00:00:54,914
+Every provided Set is built from the same blocks you use.
+
+19
+00:00:54,964 --> 00:00:57,632
+Look inside shows them, in plain words.
+
+20
+00:00:57,682 --> 00:01:00,239
+Make my own copy opens it in Signal Sets,
+
+21
+00:01:00,259 --> 00:01:03,891
+to change and save as yours; its study comes with it.
+
+22
+00:01:04,339 --> 00:01:08,074
+Signal Groups and Signal Sets have the same library at the top.
+
+23
+00:01:08,124 --> 00:01:12,242
+And the Start from list offers them too, after New, and before your own.
+
+24
+00:01:13,810 --> 00:01:17,289
+Once you know them, one setting hides everything provided.
+
+25
+00:01:17,339 --> 00:01:19,708
+Descriptive readings, not advice.
