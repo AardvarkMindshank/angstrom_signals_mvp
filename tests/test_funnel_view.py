@@ -93,3 +93,14 @@ def test_price_refresh_takes_candidates_then_the_largest_of_the_rest(monkeypatch
                 (("btc", 1), ("eth", 2), ("sol", 5), ("doge", 8), ("tiny", 400))]
     got = fv.watched_by_funnels(_DB(funnels, coins, universe))
     assert set(got) == {("Crypto", "sol"), ("Crypto", "btc"), ("Crypto", "eth")}
+
+
+def test_daily_summary_shows_each_funnel():
+    import digest
+
+    funnels = [{"name": "Trend crypto shorts ▼", "candidates": ["Bitcoin", "Aptos"], "more": 0, "count": 2,
+                "flagged": 7, "line": "197 → 40 → 12 → 9 → 2 ✅ / 7 🚩"}]
+    subject, page, plain = digest.render_digest([], [], {"digest_tz": "Asia/Bangkok"}, "https://x", funnels=funnels)
+    assert subject == "Angstrom daily summary: 2 funnel Candidates"
+    assert "Your funnels today" in plain and "2 Candidates: Bitcoin, Aptos · 7 Flagged" in plain
+    assert "not a recommendation to trade" in page

@@ -316,7 +316,26 @@ def _watchlist_section(results, config) -> tuple[str, str]:
 PRISM_TYPE = "prism"   # prism_scans.ALERT_TYPE: a scheduled Prism scan said Yes
 
 
-def render_digest(notes, results, config, app_url: str, markets=None, prism=None) -> tuple[str, str, str]:
+def _funnel_section(funnels: list[dict]) -> tuple[list[str], list[str]]:
+    """Your funnels today: each funnel's Candidates now (largest first) and how many are Flagged."""
+    parts, plain = [section_title("Your funnels today")], ["Your funnels today"]
+    for f in funnels:
+        if f["count"]:
+            who = ", ".join(f["candidates"]) + (f" and {f['more']} more" if f["more"] else "")
+            detail = f"{f['count']} Candidate{'s' if f['count'] != 1 else ''}: {who}"
+        else:
+            detail = "No Candidates right now"
+        detail += f" · {f['flagged']} Flagged · {f['line']}"
+        parts.append(list_row("🔻 " + html.escape(f["name"]), html.escape(detail), "up" if f["count"] else "info"))
+        plain.append(f"- {f['name']}: {detail}")
+    parts.append(f'<p style="margin:6px 0 0;font:400 13px/1.5 {_FONT};color:{_MUTED};">'
+                 "Candidate means an asset matches your selected conditions. It is not a recommendation to trade.</p>")
+    plain += ["Candidate means an asset matches your selected conditions. It is not a recommendation to trade.", ""]
+    return parts, plain
+
+
+def render_digest(notes, results, config, app_url: str, markets=None, prism=None,
+                  funnels=None) -> tuple[str, str, str]:
     """(subject, html, plain text). The alerts that crossed come first; then, if switched on,
     a colour-coded summary of the watchlist. markets: current market sentiment rows."""
     zone = safe_zone(config.get("digest_tz"))
@@ -411,6 +430,14 @@ def render_digest(notes, results, config, app_url: str, markets=None, prism=None
         plain.append("")
         if not total:
             subject = f"Angstrom daily summary: {len(prism)} Prism match{'' if len(prism) == 1 else 'es'}"
+
+    if funnels:
+        f_html, f_plain = _funnel_section(funnels)
+        html_parts += f_html
+        plain += f_plain
+        if not total and not prism:
+            n = sum(f["count"] for f in funnels)
+            subject = f"Angstrom daily summary: {n} funnel Candidate{'' if n == 1 else 's'}"
 
     if with_watchlist:
         section_html, section_plain = _watchlist_section(results, config)
@@ -507,7 +534,22 @@ def send_due_digest(
     except Exception as exc:
         print(f"Prism notes skipped in the digest for {user_id}: {str(exc)[:120]}")
 
-    if not notes and not prism and not (watchlist_on(config) and results):
+    funnels, funnel_notes = [], []
+    try:
+        prefs = (supabase.table("user_preferences").select("settings").eq("user_id", user_id).execute().data or [])
+        if ((prefs[0].get("settings") if prefs else None) or {}).get("digest_funnels", True):
+            import funnel_view
+
+            funnels = funnel_view.digest_lines(supabase, user_id)
+            funnel_notes = (supabase.table("user_notifications").select("id").eq("user_id", user_id)
+                            .eq("alert_type", "funnel").is_("digested_at", "null").gte("created_at", since)
+                            .execute().data or [])
+    except Exception as exc:
+        print(f"Funnels skipped in the digest for {user_id}: {str(exc)[:120]}")
+    if not any(f["count"] for f in funnels):
+        funnels = funnels if funnel_notes else []
+
+    if not notes and not prism and not funnels and not (watchlist_on(config) and results):
         # A quiet day. Record it so a crossing at 3pm waits for tomorrow's digest.
         try:
             _stamp(supabase, user_id, now)
@@ -515,7 +557,8 @@ def send_due_digest(
             print(f"Digest day could not be recorded for {user_id}: {exc}")
         return "quiet"
 
-    subject, page, plain = render_digest(notes, results, config, app_url, markets=markets, prism=prism)
+    subject, page, plain = render_digest(notes, results, config, app_url, markets=markets, prism=prism,
+                                         funnels=funnels)
     try:
         sent = bool(send_email(notify_email, subject, page, plain))
     except Exception as exc:
@@ -524,11 +567,11 @@ def send_due_digest(
     if not sent:
         return "error"
     try:
-        if notes or prism:
+        if notes or prism or funnel_notes:
             (
                 supabase.table("user_notifications")
                 .update({"digested_at": now.isoformat()})
-                .in_("id", [note["id"] for note in notes + prism])
+                .in_("id", [note["id"] for note in notes + prism + funnel_notes])
                 .execute()
             )
         _stamp(supabase, user_id, now)

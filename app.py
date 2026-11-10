@@ -6930,6 +6930,18 @@ def notifications_panel() -> None:
                             "With this on, the email comes every day; with it off, only on days with alerts."
                         ),
                     )
+                if digest_on:
+                    _, indent2 = st.columns([0.06, 0.94])
+                    stored = ((st.session_state.get("cloud_prefs") or {}).get("settings") or {})
+                    funnels_in_digest = indent2.checkbox(
+                        "🔻 Include funnels summary",
+                        value=bool(stored.get("digest_funnels", True)), key="alert_digest_funnels_cb",
+                        help=("Adds each of your funnels: its Candidates now (largest first), how many are Flagged, "
+                              "and the stage counts. Sent on days a funnel has Candidates."))
+                    try:
+                        save_account_settings({"digest_funnels": bool(funnels_in_digest)})
+                    except Exception:
+                        pass
                 saved_hour = alert_prefs.get("digest_hour")
                 saved_hour = 8 if saved_hour is None else int(saved_hour)
                 stored_zone = alert_prefs.get("digest_tz") or ""
@@ -7499,6 +7511,10 @@ plans from a Set or THEN box, with entries, exits and ladders.
   watchlist with price, today's move, the Trend, Stretch and Flow readings and sentiment for your strongest
   and weakest Trends. With it on,
   the email comes every day; with it off, only on days with alerts.
+
+- 🔻 **Include funnels summary** (under the daily summary, on by default): each of your funnels with its
+  Candidates now (largest first), how many are Flagged, and the stage counts. It's sent on days a funnel has
+  Candidates.
 
 - 🔎 **Prism scan alerts** are set on each scan in **Angstrom Lattice → Prism Scan**: instant, in the daily
   summary (its own *Prism scans* section), in the app only, or off. See the 🧩 Lattice & Prism tab.

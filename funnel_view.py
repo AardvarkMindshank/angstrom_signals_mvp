@@ -219,3 +219,28 @@ def watched_by_funnels(supabase) -> dict[tuple[str, str], str]:
             asset = r["coin_id"] if market == "crypto" else str(r["coin_id"]).upper()
             out[(kind, asset)] = names[market].get(r["coin_id"], (r["coin_id"], 0))[0]
     return out
+
+
+def digest_lines(supabase, user_id: str, limit_names: int = 8) -> list[dict]:
+    """Each active funnel of an account for the daily summary email: {name, candidates: [names], flagged: n, line}.
+    Funnels with nothing to show are left out."""
+    out = []
+    universes: dict[str, dict] = {}
+    for f in load_funnels(supabase, user_id):
+        if f.get("paused"):
+            continue
+        market = f.get("market") or "crypto"
+        if market not in universes:
+            universes[market] = load_universe(supabase, market)
+        uni = universes[market]
+        st = states(f, load_coins(supabase, f["id"]))
+        if not st:
+            continue
+        pool = sum(1 for u in uni.values() if u.get("included"))
+        cands = sorted(coins_for("candidate", st), key=lambda c: (uni.get(c) or {}).get("rank") or 10**6)
+        k = fn.counts(st, len(f["stages"]))
+        names = [str((uni.get(c) or {}).get("name") or c) + (f" ({(uni.get(c) or {}).get('symbol') or c})"
+                                                             if market == "equity" else "") for c in cands]
+        out.append({"name": f["name"], "candidates": names[:limit_names], "more": max(0, len(names) - limit_names),
+                    "count": len(cands), "flagged": k["flagged"], "line": counts_line(f, st, pool)})
+    return out
