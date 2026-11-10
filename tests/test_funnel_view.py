@@ -63,3 +63,33 @@ def test_share_hover_names_yahoo_and_earnings():
     assert "Reports earnings in 3 days (2026-11-13)" in hover and "Yahoo Finance (AAPL), New York" in hover
     _, hover, _ = fv.stage_cell(eq, STATES["btc"], "yahoo:AAPL", earnings="2026-12-30", now=now)
     assert "earnings" not in hover
+
+
+class _Q:
+    def __init__(self, rows):
+        self.rows = rows
+
+    def __getattr__(self, name):
+        return lambda *a, **k: self
+
+    def execute(self):
+        return type("R", (), {"data": self.rows})()
+
+
+class _DB:
+    def __init__(self, funnels, coins, universe):
+        self.t = {"funnels": funnels, "funnel_coins": coins, "crypto_universe": universe}
+
+    def table(self, name):
+        return _Q(self.t[name])
+
+
+def test_price_refresh_takes_candidates_then_the_largest_of_the_rest(monkeypatch):
+    monkeypatch.setattr(fv, "PRICE_LIMIT", 2)
+    funnels = [{"id": "f", "market": "crypto", "stages": [{}] * 4, "stages_version": 1}]
+    coins = [{"coin_id": c, "depth": d, "stages_version": 1} for c, d in
+             (("tiny", 3), ("btc", 3), ("eth", 3), ("sol", 4), ("doge", 3))]
+    universe = [{"coin_id": c, "name": c.upper(), "rank": r, "included": True, "pair": None} for c, r in
+                (("btc", 1), ("eth", 2), ("sol", 5), ("doge", 8), ("tiny", 400))]
+    got = fv.watched_by_funnels(_DB(funnels, coins, universe))
+    assert set(got) == {("Crypto", "sol"), ("Crypto", "btc"), ("Crypto", "eth")}

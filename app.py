@@ -10722,7 +10722,8 @@ def _dynamic_view(market: str):
     keys = [k for k, _ in choices]
     if st.session_state.get(stage_key) not in keys:
         st.session_state[stage_key] = f"stage:{len(f['stages']) - 2}"
-    shown = fv.coins_for(st.session_state[stage_key], states)
+    shown = sorted(fv.coins_for(st.session_state[stage_key], states),          # largest by market cap first
+                   key=lambda c: (-fv.fn.place(states[c])["depth"], (universe.get(c) or {}).get("rank") or 10**6))
     out.update({"funnel": f, "states": states, "choices": choices, "pool": pool,
                 "line": fv.counts_line(f, states, pool), "health": fv.health(runs, f),
                 "more": max(0, len(shown) - fv.SHOW_LIMIT),
@@ -10807,7 +10808,8 @@ def _funnel_controls(dyn, market: str = "crypto") -> None:
             "a few minutes after each hourly close while New York is open")
     st.caption(f"{fv.fn.DIRECTION_ICONS[f['direction']]} **{f['name']}** · {dyn['line']} · from {dyn['pool']} "
                f"{words['coins']} ({words['venue']}) · {flicker}. Hover a stage icon for each stage's last answer."
-               + (f" Showing the first {fv.SHOW_LIMIT}; {dyn['more']} more hold this stage." if dyn["more"] else ""))
+               + (f" Showing the {fv.SHOW_LIMIT} largest by market cap; {dyn['more']} more hold this stage."
+                  if dyn["more"] else ""))
     if dyn.get("health"):
         st.caption(dyn["health"])
     if not dyn["states"]:
@@ -10841,6 +10843,7 @@ def _funnel_controls(dyn, market: str = "crypto") -> None:
 def _funnel_chart(dyn, market: str, labels: dict) -> None:
     """📈 Open candidates in chart: the chosen stage's assets in the Visualize History view (one large chart on top,
     a thin row per asset underneath), with the funnel's daily stage Set drawn as bands across each history."""
+    import funnel_view as fv
     import prism_view
     import set_history
 
@@ -10856,15 +10859,21 @@ def _funnel_chart(dyn, market: str, labels: dict) -> None:
     if shown and (shown.get("funnel") != f["id"] or shown.get("stage") != stage):
         st.session_state.pop(state_key, None)                 # another funnel or stage: close the old view
         shown = None
-    assets = list(dyn["watchlist"].items())
+    universe = dyn.get("universe") or {}
+    every = sorted(dyn["watchlist"].items(), key=lambda kv: (universe.get(kv[0]) or {}).get("rank") or 10**6)
+    assets = every[:fv.CHART_LIMIT]                       # the biggest by market cap; a chart of 150 helps nobody
     if daily is None or not assets:
         return
     hover = (f"Every {words['coin']} in this view on one chart: one large with candles, a thin row each underneath, "
              f"with the {f['stages'][daily]['label'].lower()} stage's answers as green bands across its history. Tap "
              "a row to put it on top, then open it on the main price chart.")
+    total = len(every) + int(dyn.get("more") or 0)
+    if total > len(assets):
+        hover += (f" Shows the {len(assets)} largest by market cap of the {total} at this stage; pick a narrower "
+                  "stage (Candidates) for a closer look.")
     if shown is None:
-        if st.button(f"Open {noun} in chart", icon=":material/candlestick_chart:", key=f"funnel_hist_open_{market}",
-                     help=hover):
+        label = f"Open {noun} in chart" + (f" (largest {len(assets)} of {total})" if total > len(assets) else "")
+        if st.button(label, icon=":material/candlestick_chart:", key=f"funnel_hist_open_{market}", help=hover):
             doc = f["stages"][daily]["set_body"]
             kind = "crypto" if market == "crypto" else "equity"
             picked = [(kind, a, n) for a, n in assets]

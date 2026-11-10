@@ -13,7 +13,9 @@ import funnel_runner as fr
 
 MODES = ("My Watchlist", "Dynamic funnel")
 MODE_CODES = {"My Watchlist": "watchlist", "Dynamic funnel": "funnel"}   # saved on the account (names may change)
-SHOW_LIMIT = 60                         # coins in one view; the first loads fill shared prices for new coins
+SHOW_LIMIT = 30                         # assets in the table, largest by market cap (first loads fill shared prices)
+CHART_LIMIT = 12                        # assets in "Open … in chart" (the largest by market cap)
+PRICE_LIMIT = 40                        # per funnel, beyond its Candidates: assets whose prices the worker keeps fresh
 
 
 def load_funnels(supabase, user_id) -> list[dict]:
@@ -203,9 +205,15 @@ def watched_by_funnels(supabase) -> dict[tuple[str, str], str]:
         if not rows:
             continue
         if names[market] is None:
-            names[market] = {k: (v.get("name") or k) for k, v in load_universe(supabase, market).items()}
+            uni = load_universe(supabase, market)
+            names[market] = {k: (v.get("name") or k, v.get("rank") or 10**6) for k, v in uni.items()}
+        n = len(f.get("stages") or [])
+        # Every Candidate, then the deepest and largest of the rest up to PRICE_LIMIT: a wide shortlist (say 150
+        # coins in a falling market) must not turn the 5-minute price refresh into hundreds of lookups.
+        rows.sort(key=lambda r: (r["depth"] < n, -r["depth"], names[market].get(r["coin_id"], ("", 10**6))[1]))
+        rows = [r for i, r in enumerate(rows) if r["depth"] >= n or i < PRICE_LIMIT + sum(x["depth"] >= n for x in rows)]
         for r in rows:
             kind = "Crypto" if market == "crypto" else "Stock"
             asset = r["coin_id"] if market == "crypto" else str(r["coin_id"]).upper()
-            out[(kind, asset)] = names[market].get(r["coin_id"], r["coin_id"])
+            out[(kind, asset)] = names[market].get(r["coin_id"], (r["coin_id"], 0))[0]
     return out
