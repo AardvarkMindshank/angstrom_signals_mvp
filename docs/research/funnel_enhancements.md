@@ -14,6 +14,12 @@ Agreed direction with the owner; to be put to ChatGPT, Gemini and Grok as a brie
    (reviewers: not in version 1).
 1b. **Funnel notifications open the funnel** in the 🔻 Funnels tab (as Study finished notes open their Set). The
    notes already carry the funnel id (asset_symbol "funnel:<id>"). Until the tab exists, they are not clickable.
+1c. **"Open in chart" after the stage picker** (asked 10 Nov): the chosen stage's assets (e.g. the Candidates) in the
+   Visualize History view: one asset large with candles on top, a thin row per asset below, tap a row to put it on
+   top, and "move to the main chart" as for Sets. Reuses prism_view._history_view / history_chart / set_history.
+   Open question: which bands to draw. Visualize History is daily-only, while a funnel's stages run on several
+   timeframes. Options: (a) the daily stage's Set (its full history exists); (b) every stage as its own band row on
+   that stage's timeframe; (c) the main chart at the stage's timeframe (e.g. 1h for the entry) with the stage answers.
 5. **Sharing funnels.** A trader publishes a funnel for others to copy; must never read as trade recommendations.
 
 Done:
