@@ -4873,6 +4873,13 @@ _ACCOUNT_STATE_KEYS = (
     "crypto_table_mode",
     "funnel_pick",
     "funnel_stage",
+    "equity_table_mode",
+    "eq_funnel_pick",
+    "eq_funnel_stage",
+    "funnel_edit",
+    "_funnel_drafts",
+    "_dynamic",
+    "_dynamic_equity",
     "price_chart",
     "chart_interval",
     "chart_range",
@@ -4931,6 +4938,8 @@ def _use_account(account_id: str) -> None:
         st.session_state.pop(f"sec_{section_id}", None)
     st.session_state.pop("section_pins", None)
     st.session_state.pop("section_fold", None)
+    for memo_key in ("funnels_crypto", "funnels_equity", "funnel_sets"):   # the previous account's funnels and Sets
+        (st.session_state.get("_memo") or {}).pop(memo_key, None)
     st.session_state.pop("cloud_prefs", None)
     st.session_state.pop("profile", None)
     st.session_state.prefs_user = account_id
@@ -7114,9 +7123,9 @@ if not _POPOUT_VIEW:
 
 with tracked_expander("📖 Help and guides", "help_guides", default=False):
     (
-        tab_start, tab_scores, tab_chart, tab_sentiment, tab_lattice, tab_alerts, tab_social, tab_layout,
+        tab_start, tab_scores, tab_chart, tab_sentiment, tab_lattice, tab_funnels, tab_alerts, tab_social, tab_layout,
     ) = st.tabs([
-        "🚀 Start here", "📈 Signals", "📊 Chart & tools", "📰 Sentiment", "🧩 Lattice & Prism",
+        "🚀 Start here", "📈 Signals", "📊 Chart & tools", "📰 Sentiment", "🧩 Lattice & Prism", "🔻 Funnels",
         "🔔 Alerts", "💬 Social", "🧭 Layout & settings",
     ])
 
@@ -7219,55 +7228,9 @@ because they measure different things and are never added together.
   20-day average). Another tick box adds 1d % and 30d %.
 - **Watching** shows how many accounts follow the asset. **30-day trend** is a small price line.
 
-**🔻 Dynamic watchlist (funnels).** Above the crypto table, switch **My Watchlist** (the coins you picked) to
-**Dynamic funnel**: the coins a *funnel* has narrowed down for you, checked by itself a few minutes after every hour.
-- A funnel is a short list of stages, each a Set on its own timeframe, for example *EMA 20 above EMA 50* on the
-  daily, then the 12-hour, then the 4-hour, then a 1-hour entry check. Each stage only checks the coins that hold
-  every stage before it, so the list gets smaller at each step. A coin that isn't reached shows *not checked*,
-  never No.
-- The **stage picker** shows how many coins hold each stage. **🚩 Flagged**: on the shortlist (every stage holds
-  but the last), waiting for the entry conditions. **✅ Candidate**: every stage holds, including the entry
-  conditions. A Candidate is a coin to look at now, not a recommendation to buy or sell.
-- The **Stage** column shows where each coin is (▲ long or ▼ short funnel; 👁 first stage, 🔷 second, 📋 shortlist,
-  🚩, ✅). Hover it for each stage's last answer and when it was checked.
-- **📈 Open candidates in chart** (next to the stage picker; it names whichever stage you picked) shows those
-  assets the Visualize History way: one large chart with candles on top and a thin row for each underneath, with
-  the funnel's daily stage drawn as green bands across each history. Tap a row to put it on top, then **Open on the
-  main price chart**. While a table shows a Dynamic funnel, its assets can also be picked on the main chart.
-- **The ready-made funnels' daily stage** asks for more than the trend: the daily EMA 20 above the EMA 50 (below,
-  for shorts) **and** daily momentum turning back from an extreme within the last 5 days (Stochastic %K was 20 or
-  lower and is back above 20; for shorts 80 or higher and back below 80). In a one-way market the trend alone lets
-  most coins through. A funnel made before this change offers **⬆ Update to the latest ready-made version** under
-  ⚙️ Funnels.
-- **Fails twice to leave:** a coin joins a stage on its first Yes, but leaves only after two No answers in a row,
-  so it doesn't flicker in and out. When an earlier stage stops holding, the later ones drop at once.
-- **❔ Pending:** data was missing at the last check. A pending coin never moves up or alerts; after three
-  missing checks in a row it drops out.
-- **Alerts:** one message per run, only when coins newly become Candidates; a coin alerts again only after it has
-  left and come back.
-- **The coins** are the top 500 by market cap, without stablecoins, wrapped, staked or gold tokens, tokenised
-  shares or funds, or other exchanges' own tokens. Candles come from **Binance** spot (at least about $250k traded
-  a day, no gappy hours, 200 days of history); a real coin Binance doesn't list comes from **Yahoo Finance** instead
-  if it trades at least $1M a day across exchanges with complete hourly candles. The Stage hover says which. The
-  list is rebuilt every day.
-- **Provided funnels work like provided Groups and Sets:** Angstrom's *Trend crypto longs ▲* / *Trend crypto
-  shorts ▼* (and *Trend equity longs ▲* / *Trend equity shorts ▼*) can't be changed or deleted. To use one, press
-  **Make my own copy**: your copy runs for your account, with its own places and alerts, and is yours to change,
-  pause or delete. Longs and shorts are separate funnels.
-- **Change your funnels in Angstrom Lattice → 🔻 Funnels.** The picker lists your funnels, then the provided ones
-  (marked *provided*, read-only). For yours you can change the name, direction, leave rule, alerts and **pool** (top
-  50/100/200/500 by market cap, a minimum traded a day, or only your watchlist). Under **Stages (advanced)**: each
-  stage's Set (any provided Set or one of yours) and the close it's **checked at**; add, remove or move stages;
-  **⬆ Upgrade** when a stage's Set has a newer version. Nothing changes until you press **Save and activate**, which
-  first says what a save will reset (changing the stages or the pool starts every asset again, quietly). ⏸ pauses a
-  funnel at once. **Duplicate** a funnel to experiment. A funnel note in 🔔 opens its funnel here. Your copy shows
-  *Your copy of a provided funnel* until you change it, then *Customised*; one built from your own Sets is *My
-  funnel*. Changed ones are not reviewed or tested by Angstrom.
-- **Equities** have the same switch above the Equity table. The pool is the **S&P 500** (price at least $5, at least
-  about $20M traded a day, about 3 years of history for the weekly stage), from Yahoo Finance. Shares trade 6½
-  hours a day, so the ready-made equity funnels read **weekly → daily → 4-hour → 1-hour**: the 4-hour candles run
-  from the open (09:30–13:30 and 13:30–16:00 New York), and the stages are checked at New York closes only
-  (weekends and market holidays skipped). The Stage hover warns when an equity reports earnings within two weeks.
+**🔻 Dynamic funnel.** Above the crypto and equity tables, switch **My Watchlist** (the assets you picked) to
+**Dynamic funnel**: the assets one of your funnels has narrowed down for you, kept up to date every hour. See the
+**🔻 Funnels** tab of this guide.
 
 **The asset card** above the chart notes a *pullback inside an uptrend* or a *rally inside a downtrend* when the
 provided Sets of those names say Yes, and shows context chips (🌊 daily range, 💪 trend strength, 🧭 regime,
@@ -7411,6 +7374,8 @@ starter keep working, and built-in alerts that are on keep running.
 - The provided Sets include *Pullback in an uptrend*, *Rally in a downtrend*, *Trend alignment* (daily and
   weekly), *Breakout with volume*, *Volatility squeeze*, *Oversold in a range*, *Near support in a range*,
   *Bitcoin trend filter* and *Overextended*. Any of them can also be a column in the tables.
+- **🔻 Funnels** (the part after Prism Scan): build and change funnels that narrow a market down in stages, from
+  the longest timeframe to the hour. See the **🔻 Funnels** tab of this guide.
 """)
         _training.link(st, "01-angstrom-lattice-at-a-glance", key="tv_lat_01")
         _training.link(st, "02-signals", key="tv_lat_02")
@@ -7496,6 +7461,95 @@ hold, for example *Trend is Bullish* and *RSI is below 70*.
         st.markdown("""
 **Coming next:** a Set score and counting (*at least 2 of these 4*). **🛣️ Strategies** (later): tracking your own
 plans from a Set or THEN box, with entries, exits and ladders.
+""")
+
+    with tab_funnels:
+        st.markdown("""
+**🔻 Funnels narrow a market down in stages, by themselves.** A funnel starts from a pool (the top coins, or the
+S&P 500), checks every asset against a first Set on a long timeframe, then checks only the survivors against the
+next Set on a shorter timeframe, and so on down to the hour. What's left at the bottom are the **Candidates**.
+It runs every hour and keeps the list current; you don't press anything.
+
+A Candidate means an asset matches your selected conditions. It is not a recommendation to trade, and nobody has
+tested what usually followed these answers.
+
+**Words you'll see**
+- **Stage**: one step of the funnel, a Set checked at each close of its timeframe (for example *every 4 hours*).
+- **🚩 Flagged**: every stage holds but the last: on the shortlist, waiting for the entry conditions.
+- **✅ Candidate**: every stage holds, including the last.
+- **❔ Pending**: data was missing at the last check. A pending asset never moves up or alerts; after three
+  missing checks in a row it drops back.
+- **Fails twice to leave**: an asset joins a stage on its first Yes, but leaves only after two No answers in a row,
+  so it doesn't flicker in and out near a line. When an earlier stage stops holding, the later ones drop at once.
+- **Not checked**: an asset that hasn't reached a stage is never counted as a No there.
+
+**Provided funnels and your own** (the same idea as provided Groups and Sets)
+- Angstrom provides four: **Trend crypto longs ▲**, **Trend crypto shorts ▼**, **Trend equity longs ▲** and
+  **Trend equity shorts ▼**. They can't be changed or deleted. To use one, press **Make my own copy**: your copy
+  runs for your account, with its own places and alerts. Longs and shorts are separate funnels.
+- **Crypto:** daily → 12-hour → 4-hour (the shortlist) → 1-hour entry. **Equities:** weekly → daily → 4-hour →
+  1-hour entry (equities trade 6½ hours a day, so a 12-hour candle would just be the daily one).
+- The trend stages ask for **EMA 20 above EMA 50** (below, for shorts). The **daily** stage also asks for momentum
+  turning back from an extreme within the last 5 days (Stochastic %K was 20 or lower and is back above 20; for
+  shorts 80 or higher and back below 80): a pullback inside the trend. The **1-hour entry** is a pullback setup:
+  the candle came back to the EMA 20 and closed on the trend's side (or crossed back), momentum agrees, and volume
+  is at least 0.7 times usual. Each stage's Set is a provided Set you can open in Lattice or Prism.
+- Your copy is labelled *Your copy of a provided funnel* until you change it, then *Customised*; one built from
+  your own Sets is *My funnel*. Changed funnels are not reviewed or tested by Angstrom.
+
+**On the tables: Dynamic funnel**
+- Above the crypto or equity table, switch **My Watchlist** to **Dynamic funnel** (your choice is saved). With
+  more than one funnel, pick which.
+- The **stage picker** shows how many assets hold each stage, then 🚩 Flagged and ✅ Candidates; the line under it
+  shows the whole funnel (for example *197 → 40 → 12 → 9 → 2 ✅ / 7 🚩*) and when a check failed or ran late.
+- The **Stage** column: ▲ long or ▼ short, then 👁 first stage, 🔷 second, 📋 shortlist, 🚩 or ✅. **Hover it** for
+  each stage's last answer and when it was checked, where the candles come from, and (equities) earnings within
+  two weeks.
+- The table shows the 30 largest by market cap at the chosen stage. **➕** after an asset's name adds it to My
+  Watchlist.
+- **Open candidates in chart** (beside the stage picker; it names the stage you picked) shows the 12 largest the
+  Visualize History way: one large chart on top, a thin row for each underneath, with the daily stage drawn as
+  green bands. Tap a row to put it on top, then **Open on the main price chart**. 3Y, 10Y and All open one after
+  another as the older years are worked out.
+
+**Changing a funnel: Angstrom Lattice → 🔻 Funnels**
+- The picker lists your funnels, then the provided ones (marked *provided*, read-only).
+- For yours: the **name**, **direction**, the **leave rule** (two No closes in a row, or the first No), **alerts**,
+  and **⏸ pause** (at once; a paused funnel keeps its places).
+- **Pool:** all eligible, or the top 50 / 100 / 200 / 500 by market cap; a minimum traded a day; or **only my
+  watchlist**.
+- **Stages (advanced):** each stage's **Set** (any provided Set or one of yours) and when it's **checked** (each
+  15 minutes to each week); add, remove or move stages (3 to 5). The stage's timeframe sets *when* it's checked;
+  the Set's readings keep their own timeframes. To change a threshold, edit a copy of the Set in Signal Sets, then
+  pick it here. **⬆ Upgrade** appears when a stage's Set has a newer version.
+- Warnings appear for odd but allowed choices (stages not running from longest to shortest); mistakes block saving
+  (fewer than 3 stages, a Set without a Yes/No decision, a 12-hour stage on equities).
+- Nothing changes until **Save and activate**, which first says what a save will reset. Changing the stages or the
+  pool starts every asset again from the pool, **quietly**: the first run sets the places without alerts for
+  everything that already qualifies (switch on *…including the first run* if you want them).
+- **Duplicate** makes a copy to experiment with; **Delete** removes your funnel (never a provided one). At most 6.
+
+**The pools**
+- **Crypto:** the top 500 coins by market cap, without stablecoins, wrapped, staked, bridged or gold tokens,
+  tokenised shares or funds, and other exchanges' own tokens. Candles come from **Binance** spot (at least about
+  $250k traded a day, no hours without trades, 200 days of history). A real coin Binance doesn't list comes from
+  **Yahoo Finance** if it trades at least $1M a day across exchanges with complete hourly candles. Rebuilt daily.
+- **Equities:** the **S&P 500**: price at least $5, at least about $20M traded a day, about 3 years of history (for
+  the weekly stage), from Yahoo Finance. Checked at New York closes only; weekends and market holidays are skipped,
+  and the 4-hour candles run from the open (09:30–13:30 and 13:30–16:00).
+- An asset that drops out of the pool is recorded as *left the pool*, never as failing a stage, and never alerts.
+
+**Alerts and the daily summary**
+- One note per hourly run, only when assets **newly** become Candidates; an asset alerts again only after it has
+  left and come back. Click the note to open its funnel.
+- Each funnel's *Alert me on new Candidates* decides for that funnel; **🔔 → Configure Alert Rules → 🔻 Funnel
+  alerts** switches them all off or on.
+- New Candidates get a fresh news-sentiment reading, kept up to date while they stay Candidates.
+- The **📬 daily summary** email can include **🔻 Your funnels today**: each funnel's Candidates (largest first),
+  how many are Flagged, and the stage counts.
+
+**Behind the scenes:** each Set's answer for an asset at a close is worked out once and shared by every funnel
+that checks the same Set, so funnels stay quick as more people use them.
 """)
 
     with tab_alerts:
