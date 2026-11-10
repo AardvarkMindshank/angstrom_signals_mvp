@@ -1,0 +1,56 @@
+{
+ "title": "Breakout fading: a THEN box",
+ "series": "Worked example",
+ "next": "",
+ "slug": "w4-breakout-fading",
+ "section": "training",
+ "intro_say": "Angstrom Signals. | Worked example: a breakout that fades.",
+ "outro_say": "One idea, written down in order. | Descriptive readings, not advice.",
+ "steps": [
+  {
+   "id": "idea",
+   "screen": "The idea as a card: first a breakout on heavy volume, then the volume drops away within 5 days",
+   "say": "Some ideas happen in order. | First, price breaks out on heavy volume. | Then, within a few days, the volume dries up."
+  },
+  {
+   "id": "add",
+   "screen": "Set editor: add the Recent structure break Group and the Relative volume signal",
+   "say": "Add the Recent structure break Group, and the relative volume signal."
+  },
+  {
+   "id": "box",
+   "screen": "+ ⏭ THEN box: First, Then within, Cancel if",
+   "say": "Then add a THEN box. | It has a First part, a Then part with a number of days, and an optional Cancel."
+  },
+  {
+   "id": "first",
+   "screen": "1 · First: an upward break is met, and relative volume is at least 1.5",
+   "say": "First: an upward break, | on at least one and a half times the usual volume."
+  },
+  {
+   "id": "then",
+   "screen": "2 · Then, within 5 daily closes: relative volume is at most 1.5",
+   "say": "Then, within five daily closes: volume is back below one and a half times usual."
+  },
+  {
+   "id": "words",
+   "screen": "The sentence the editor writes under it",
+   "say": "The editor writes it out in plain words. | First and Then on the same day don't count: Then has to come later."
+  },
+  {
+   "id": "save",
+   "screen": "Save; Prism: run it on All crypto at a past moment",
+   "say": "Save it, and run it on your coins at a past moment."
+  },
+  {
+   "id": "armed",
+   "screen": "Results, with ⏭ marks beside some No answers",
+   "say": "Yes means both steps happened, in order. | A No with a skip mark is part-way: the breakout happened, and the drop can still come in time."
+  },
+  {
+   "id": "study",
+   "screen": "A card: study it",
+   "say": "To see whether anything usually followed, | open the Set and tap Study this Set."
+  }
+ ]
+}

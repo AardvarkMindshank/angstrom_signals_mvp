@@ -32,11 +32,15 @@ DESCRIPTIONS = {
     "w1-trend-with-volume": "A rising trend that volume backs up, built and scanned from start to finish.",
     "w2-overextended-rally": "A caution flag rather than an entry: a strong trend that has run very hot.",
     "w3-breakout-with-volume": "A breakout from rising structure, with a crowd turning up for it.",
+    "w4-breakout-fading": "Two steps in order: a breakout on heavy volume, then the volume drops away within 5 "
+                          "days. Built with a THEN box and scanned.",
     "06-provided-library": "The Groups and Sets that come with Angstrom Signals, built around common trading "
-                           "situations.",
+                           "situations, and how to look inside one and make your own copy.",
     "07-visualize-history": "What a Set said on every past day, as coloured bands behind the price.",
-    "08-what-followed": "When a Set turns Yes, does anything different tend to happen next? How the study works "
-                        "and what its verdicts mean.",
+    "08-what-followed": "When a Set turns Yes, does anything different tend to happen next? How the study works, "
+                        "what its verdicts mean, and the coins, equities, periods and asset-by-asset breakdowns.",
+    "a1-angstrom-assistant": "Ask the ✨ Assistant where things are and how to use them, get step-by-step help "
+                             "testing an idea, and paste a screenshot to ask what you're looking at.",
 }
 
 

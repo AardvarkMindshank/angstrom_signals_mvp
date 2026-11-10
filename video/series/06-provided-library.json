@@ -43,6 +43,11 @@
    "say": "Tap plus, and a provided Set becomes one of your Prism scans, ready to run."
   },
   {
+   "id": "inside",
+   "screen": "🔍 Look inside on Breakout with volume, then Make my own copy",
+   "say": "Every provided Set is built from the same blocks you use. | Look inside shows them, in plain words. | Make my own copy opens it in Signal Sets, to change and save as yours; its study comes with it."
+  },
+  {
    "id": "groups",
    "screen": "Signal Groups: the Start from list",
    "say": "Signal Groups and Signal Sets have the same library at the top. | And the Start from list offers them too, after New, and before your own."

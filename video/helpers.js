@@ -4,7 +4,7 @@
 const DIAGRAM = require("./diagram.js");
 
 module.exports = function makeHelpers(page, url) {
-  const h = { page };
+  const h = { page, url };
   page.setDefaultTimeout(10000);           // a missed element costs seconds, not half a minute
   h.wait = (ms) => page.waitForTimeout(ms);
   h.loc = (selector) => (typeof selector === "string" ? page.locator(selector).first() : selector);

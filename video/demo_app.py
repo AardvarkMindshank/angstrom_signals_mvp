@@ -6,6 +6,8 @@ Address options (all optional):
   ?section=groups | sets | prism     the part shown first (default prism)
   &seed=trend | pullback            already saved: My Trend (video 3); with pullback, also the Set from video 4
   &preset=1                         open the saved Group and Set in their editors (for quick looks)
+  ?view=advisor&from=lattice|app    the ✨ Angstrom Assistant window, with example answers (DEMO_ANSWERS below)
+                                    instead of a call to the AI, so a recording is the same every time
 
 With DEMO_PRICES set (a folder of saved daily prices), "Run at a past moment" reads those, cut before 30 Oct 2024.
 
@@ -130,10 +132,43 @@ class DemoDb:
         return Query([])
 
 
+# Example answers for the Assistant video, in the Assistant's own style (its rules are advisor.RULES). The video says
+# they are examples. Matched on words in the question; anything else gets the last one.
+DEMO_ANSWERS = [
+    ("breakout", """Good idea to test. Build it as a Set with a **THEN box**:
+
+1. In **Signal Sets**, add the **Recent structure break** Group and the **Relative volume** signal.
+2. Tap **+ ⏭ THEN box**. Under **1 · First**: *An upward break in the last 3 daily candles is met*, and *Relative volume is at least 1.5*.
+3. Under **2 · Then, within** 5 daily closes: *Relative volume is at most 1.5*.
+4. Save it, then tap **🔬 Study this Set**. It compares what happened after each fading breakout with comparable ordinary days, and says plainly if there was no clear difference.
+
+The worked example shows every step: [🎬 Breakout fading: a THEN box](?view=video&v=w4-breakout-fading)"""),
+    ("", """That's **Prism Scan**. On the left are your Sets and the ones **Provided by Angstrom Signals**: the small icons say what each looks at, and the last mark is its study (⚖️ means it was studied and showed no clear difference from comparable days).
+
+- Tap **+** on a Set, or drag it onto the board, to start a scan.
+- **▶** runs it now on your watchlist; **⏪** rebuilds a past moment.
+- Each scan can run on a schedule and alert you when an asset turns Yes.
+
+It describes conditions; it isn't a forecast. More in [🎬 Prism Scan](?view=video&v=05-prism-scan)"""),
+]
+
+
+def _demo_ask(history, question, system, post=None, images=None):
+    q = question.lower()
+    return next(a for key, a in DEMO_ANSWERS if key in q)
+
+
 st.set_page_config(page_title="Angstrom Signals", layout="wide")
 st.markdown("<style>header[data-testid='stHeader'],[data-testid='stToolbar'],[data-testid='stDecoration']"
             "{display:none!important} .block-container{padding-top:1.2rem!important}"
             "</style>", unsafe_allow_html=True)
+if st.query_params.get("view") == "advisor":
+    import advisor  # noqa: E402
+
+    advisor.available = lambda: True
+    advisor.ask = _demo_ask
+    lattice_panel.render_popout(st, DemoDb(), seed.USER, str(st.query_params.get("from") or "lattice"))
+    st.stop()
 store = _store()
 if "show_provided" not in st.session_state:
     st.session_state["show_provided"] = st.query_params.get("provided", "1") != "0"

@@ -12,6 +12,7 @@ const PLAY = ".lat.prism .scan button.play";
 const TABLE = ".lat.prism .scan table";
 
 const line = (h, i) => h.page.locator(".lat .rule").nth(i);
+const THEN_BOX = ".lat .fixed:has(> .hd > .lbl:text-is('⏭ THEN'))";
 
 // A line in the Set editor: reading (its key), comparison and value.
 async function setLine(h, i, reading, op, value) {
@@ -23,6 +24,12 @@ async function setLine(h, i, reading, op, value) {
     if (await box.count()) await h.type(box, value);
     else await h.choose(row().locator('select[aria-label="Value"]'), value);
   }
+}
+
+// The reading whose label contains `text` (its key depends on the name the Group was added under).
+async function readingKey(h, i, text) {
+  return line(h, i).locator('select[aria-label="Reading"] option').evaluateAll(
+    (opts, text) => (opts.find((o) => o.textContent.includes(text)) || {}).value, text);
 }
 
 async function newLine(h) {
@@ -418,6 +425,113 @@ module.exports = {
   },
 
   // ------------------------------------------------------------------------------------------ 6 · the provided library
+  "w4-breakout-fading": {
+    query: "?section=sets",
+    idea: async (h) => {
+      await h.card({ kicker: "Worked example", title: "Breakout fading",
+        lines: ["✓ First: price breaks out on heavy volume", "✓ Then, within 5 days: the volume drops away"],
+        foot: "Two steps, in order: one THEN box." });
+    },
+    add: async (h) => {
+      await h.clear();
+      for (const name of ["Recent structure break", "Relative volume"]) await h.press(SET_ADD(name));
+    },
+    box: async (h) => {
+      await h.press('.lat button[aria-label="A then B: First on an earlier close, then Then within N daily closes"]');
+      await h.wait(300);
+      await h.ring(THEN_BOX);
+    },
+    first: async (h) => {
+      await h.clear();
+      await setLine(h, 0, await readingKey(h, 0, "An upward break"), null, "met");
+      await h.press(h.page.locator(THEN_BOX).locator('button[aria-label="All of these held on an earlier daily close."]').first());
+      await setLine(h, 1, await readingKey(h, 1, "Relative volume"), "gte", "1.5");
+    },
+    then: async (h) => {
+      await h.glide('.lat input[aria-label="Within this many closed daily candles"]');
+      await h.ring('.lat input[aria-label="Within this many closed daily candles"]');
+      await setLine(h, 2, await readingKey(h, 2, "Relative volume"), "lte", "1.5");
+    },
+    words: async (h) => {
+      await h.clear();
+      const words = h.page.getByText("earlier close, then").first();
+      await h.show(words);
+      await h.ring(words);
+    },
+    save: async (h) => { await h.clear(); await saveAndScan(h, "Breakout fading", "All crypto", "2024-03-12"); },
+    armed: async (h) => {
+      await showResults(h);
+      const mark = h.page.locator(".lat.prism .armed").first();
+      if (await mark.count()) await h.tip(mark, "⏭ Armed: the breakout happened;\nthe drop can still come in time", "right");
+    },
+    study: async (h) => {
+      await h.clear();
+      await h.card({ kicker: "Next", title: "Does anything usually follow?",
+        lines: ["Signal Sets → open Breakout fading", "🔬 Study this Set", "A note arrives when it is ready"],
+        foot: "Video 8, What followed, explains the result." });
+    },
+  },
+  "a1-angstrom-assistant": {
+    query: "?section=prism",
+    setup: async (h) => {
+      h.shot = (await h.page.screenshot()).toString("base64");      // the Prism screen, to paste later
+    },
+    where: async (h) => {
+      await h.card({ kicker: "✨ Angstrom Assistant", title: "Two ways in, one window",
+        lines: ["✓ ✨ AI at the top right of the app", "✓ ✨ AI beside the Angstrom Lattice tabs"],
+        foot: "Both open the same window beside the app." });
+    },
+    button: async (h) => {
+      await h.clear();
+      await h.glide(".ang-ai-btn");
+      await h.ring(".ang-ai-btn");
+    },
+    open: async (h) => {
+      await h.clear();
+      await h.page.goto(h.url + "?view=advisor&from=lattice");
+      await h.page.waitForSelector('textarea[aria-label="Your question"]', { timeout: 120000 });
+      await h.settle();
+    },
+    ask: async (h) => {
+      await h.type('textarea[aria-label="Your question"]',
+        "I think a breakout that loses its volume often falls back. How do I check that?");
+      await h.press(h.page.getByRole("button", { name: "Ask" }).first());
+    },
+    answer: async (h) => {
+      const link = h.page.getByText("Breakout fading: a THEN box").first();
+      await h.show(link);
+      await h.ring(h.page.locator("[data-testid='stChatMessage']").last());
+      await h.wait(1500);
+      await h.ring(link);
+    },
+    paste: async (h) => {
+      await h.clear();
+      await h.glide(".ang-add");
+      await h.page.evaluate(async (b64) => {
+        const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+        const dt = new DataTransfer();
+        dt.items.add(new File([bytes], "screen.png", { type: "image/png" }));
+        document.dispatchEvent(new ClipboardEvent("paste", { clipboardData: dt, bubbles: true }));
+      }, h.shot);
+      await h.wait(1500);
+      await h.settle();
+      await h.ring(".ang-shot");
+    },
+    explain: async (h) => {
+      await h.clear();
+      await h.type('textarea[aria-label="Your question"]', "What am I looking at here?");
+      await h.press(h.page.getByRole("button", { name: "Ask" }).first());
+      await h.show(h.page.locator("[data-testid='stChatMessage']").last());
+      await h.ring(h.page.locator("[data-testid='stChatMessage']").last());
+    },
+    limits: async (h) => {
+      await h.clear();
+      await h.card({ kicker: "Good to know", title: "It explains; you do the clicks",
+        lines: ["✓ Where things are, and how to use them", "✓ Step-by-step help to build and test an idea",
+                "✓ No buy or sell calls"],
+        foot: "The answers in this video are examples." });
+    },
+  },
   "06-provided-library": {
     query: "?section=prism",
     open: async (h) => {
@@ -460,6 +574,19 @@ module.exports = {
       await h.press(provided(h, "Volatility squeeze").locator("button.sq").first());
       await h.wait(800);
       await h.ring(h.page.locator(".lat.prism .scan, .lat.prism .card").first());
+    },
+    inside: async (h) => {
+      await h.clear();
+      const chip = provided(h, "Breakout with volume");
+      await h.show(chip);
+      await h.press(chip.locator("details.inside > summary").first(), false);
+      await h.wait(500);
+      await h.ring(chip.locator("details.inside").first());
+      await h.wait(2500);
+      await h.clear();
+      await h.press(chip.locator("details.inside button", { hasText: "Make my own copy" }).first());
+      await h.wait(800);
+      await h.top();
     },
     groups: async (h) => {
       await h.clear();

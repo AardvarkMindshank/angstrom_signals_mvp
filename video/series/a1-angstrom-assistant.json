@@ -1,0 +1,51 @@
+{
+ "title": "The Angstrom Assistant",
+ "series": "Getting help",
+ "next": "",
+ "slug": "a1-angstrom-assistant",
+ "section": "training",
+ "intro_say": "Angstrom Signals. | The Angstrom Assistant.",
+ "outro_say": "It explains; you do the clicks. | No buy or sell calls.",
+ "steps": [
+  {
+   "id": "where",
+   "screen": "A card: two ways in, one window",
+   "say": "The Angstrom Assistant answers questions about the app, and helps you turn an idea into a test. | Open it with the AI button at the top right, or beside the Lattice tabs."
+  },
+  {
+   "id": "button",
+   "screen": "The ✨ AI button beside the Lattice tabs",
+   "say": "It opens in its own window beside the app, so it never covers what you're working on."
+  },
+  {
+   "id": "open",
+   "screen": "The Assistant window",
+   "say": "Ask anything, in your own words."
+  },
+  {
+   "id": "ask",
+   "screen": "Typing: I think a breakout that loses its volume often falls back. How do I check that?",
+   "say": "Here, an idea about breakouts that lose their volume."
+  },
+  {
+   "id": "answer",
+   "screen": "The answer: steps in Signal Sets, and a link to the worked-example video",
+   "say": "It answers with the steps, using the app's own names. | It knows your saved Groups and Sets, and links the video that shows it."
+  },
+  {
+   "id": "paste",
+   "screen": "Pasting a screenshot of Prism",
+   "say": "Stuck on a screen? Paste a screenshot, or drop one on the window."
+  },
+  {
+   "id": "explain",
+   "screen": "Asking what it is: the answer explains Prism Scan",
+   "say": "and ask what you're looking at."
+  },
+  {
+   "id": "limits",
+   "screen": "A card: what it does and doesn't do",
+   "say": "It explains, and you do the clicks. | It never makes buy or sell calls. | These answers are examples; yours depend on your question."
+  }
+ ]
+}
