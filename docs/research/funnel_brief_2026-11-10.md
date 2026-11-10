@@ -78,3 +78,19 @@ Please reply in this order, in plain words, under about 1,500 words:
 3. **Traps we missed,** most serious first.
 4. **Your recommended first version:** stages, timing, flapping rule, wording and alerts.
 5. **Sources:** links to any products or methods you cite.
+
+## Decision after review (10 Nov)
+
+Reviews: ChatGPT, Gemini and Grok, all "sound with changes". The owner chose the two open points.
+
+1. **Stages:** Universe → Daily → 12h → Shortlist (4h) → **Candidate** (1h entry rules hold) or **Flagged** (on the Shortlist, 1h not yet). A funnel has 3 or 4 narrowing stages; each is a saved Set pinned to its version. "Watchlist" is not a stage name.
+2. **Qualification:** a Candidate passes every stage. Stages are checked for the survivors of the stage before; a coin not reached shows "not checked", never No.
+3. **A higher stage fails:** the coin drops at once to the highest stage that still passes.
+4. **Flicker (owner's choice b):** entry is immediate; a coin leaves the Shortlist or Candidates only after two No closes in a row on that stage's timeframe, shown on screen ("stays until it fails twice"). Switchable per funnel.
+5. **Unknown:** ❔ Pending data. Never promotes, never alerts, keeps the last stage only as history; after a few closes of missing data the coin drops out.
+6. **Universe and quality gate:** Binance USDT spot pairs from CoinGecko's top coins, without stablecoins, wrapped and leveraged tokens; a minimum trading volume on Binance; enough closed history for every Set. Exclusions are listed with their reason. Start at the top 200; 500 after load is measured.
+7. **Long and short:** separate results and alerts per direction; a coin in both shows ▲ and ▼.
+8. **Wording (owner's choice):** "Candidate" (conditions met, not a recommendation) and "Flagged" with a hover: "On the shortlist: the daily, 12h and 4h agree; waiting for the 1-hour entry conditions."
+9. **Alerts:** only on newly becoming a Candidate; one batched message per run; latched until the coin leaves and returns; hourly cap.
+10. **Transparency:** per-stage last-checked times, the deciding line, data venue (Binance spot), a health mark for failed or late runs; counts always reconcile (Pending and not-checked included).
+11. **Not in version 1:** funnel studies (survivorship), the entry zone, a chart gallery (a link to each coin's chart instead), automation.
