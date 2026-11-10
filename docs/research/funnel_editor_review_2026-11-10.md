@@ -121,3 +121,291 @@ A pool should be **pinned on the funnel version** (as proposed). Optionally let 
 - [TradingView Pine Screener](https://www.tradingview.com/support/solutions/43000742436-tradingview-pine-screener-key-features-and-requirements/)  
 - [TradingView watchlist alerts](https://www.tradingview.com/support/solutions/43000739708-watchlist-alerts-your-trading-edge/)  
 - [TrendSpider Market Scanner](https://help.trendspider.com/kb/scanner/market-scanner)
+
+## ChatGPT
+
+# Angstrom Prism Funnels V2 — Design Review
+
+10 November 2026 · Reviewed against the V2 brief and the V1 decisions in GitHub
+
+## 1. Verdict
+
+Sound with changes. I support the funnel editor, reusable Set evaluations and configurable pools. These are logical extensions of the production V1 system.
+
+The biggest opportunity is shared computation, but it's also the biggest technical risk. Done correctly, Angstrom can support substantially more users without multiplying market-data requests. Done incorrectly, it could silently reuse an outdated or inappropriate answer.
+
+I'd approve the direction, with a few specific contracts defined before implementation.
+
+## 2. Answers to questions 1–9
+
+### 1. Editor — Keep pinned Set versions
+
+Strongly favour pinned versions, not automatic following of the latest Set.
+
+This is consistent with the accepted Groups/Sets architecture.
+
+If Drew changes his daily Trend Set, every funnel referencing its latest version shouldn't silently change behaviour. That undermines reproducibility and makes alert changes difficult to explain.
+
+I recommend:
+
+- Start from → customise → save as a new immutable funnel version.
+- Each stage references an immutable Set snapshot/version.
+- Show “A newer version of this Set is available” with an explicit upgrade action.
+- Provide Duplicate funnel for experimentation.
+- Show a summary of changes before activating a revised funnel.
+
+One refinement: saving and activating should be separate actions. A user should be able to prepare a new version without immediately resetting the active funnel's state.
+
+### 2. Validation — Block invalid configurations, warn about questionable ones
+
+| Block saving or activation                                        | Warn, but allow                              |
+| ----------------------------------------------------------------- | -------------------------------------------- |
+| Set has no decision rule                                          | Timeframes not ordered longest to shortest   |
+| Referenced Set version missing or inaccessible                    | Mixed timeframes inside a Set                |
+| Invalid timeframe, market or signal compatibility                 | Highly correlated evidence across stages     |
+| Unsupported pool filter or invalid threshold                      | Pool likely to contain few eligible assets   |
+| Required signal history cannot be satisfied by any eligible asset | Some assets lack sufficient history          |
+| Configuration exceeds hard resource limits                        | Slow estimated evaluation or repeated stages |
+
+Important distinction: a Set containing 4H and daily signals is not inherently invalid in a 1H funnel stage. The stage's 1H schedule determines when the Set is reevaluated; its members retain their explicitly configured timeframes.
+
+I'd rename the editor field from Stage timeframe to Check frequency / trigger timeframe, unless it genuinely overrides every signal's timeframe.
+
+Don't allow the interface to imply that a 1H stage automatically converts a daily indicator to 1H.
+
+### 3. Shared answers — Approve, with stricter cache identity
+
+This is the architectural centrepiece.
+
+A Set's answer is shareable only when all relevant evaluation inputs and semantics are identical.
+
+A safe conceptual key is:
+
+```
+Set evaluation fingerprint
++ subject asset identity
++ canonical evaluation cutoff T
++ evaluation/data mode
++ evaluator and signal code identity
++ market-data snapshot identity
++ provider/venue identity
++ fixed-subject dependency identities
+```
+
+The Set fingerprint must include the complete canonical logic, embedded Group versions, signal versions, parameters, lineage and evaluation-affecting settings.
+
+A logic fingerprint plus asset plus candle close is insufficient on its own.
+
+For example, a BTC Set might include COIN's daily trend. The key must account for COIN's actual input data and cutoff as well.
+
+Further requirements:
+
+- Never share incomplete evaluations as permanent cached answers.
+- Unknown can be cached only with explicit missing-data provenance and an expiry or invalidation rule.
+- Provider corrections and code changes must generate new cache identities or invalidate affected entries.
+- The result must include the evaluation's actual `available_at` boundaries.
+- Cache lookup must never bypass access controls on private Set configurations.
+
+I'd distinguish the immutable evaluation result cache from users' private funnel states, histories and alerts.
+
+Shared calculations, private decisions about what to do with them.
+
+### 4. Cost — Budget by unique work, not by user or funnel
+
+The proposed six-funnel limit is sensible, but it doesn't meaningfully bound total computation if everyone creates unique Sets.
+
+Illustrative worst-case demand
+
+# 100
+
+Users
+
+# 6
+
+Funnels each
+
+# 500
+
+Assets per pool
+
+# 300,000
+
+Potential funnel–asset combinations per cycle, before stage filtering or cache reuse.
+
+Not a runtime prediction: actual cost depends on unique Set evaluations, due stages, surviving assets and shared underlying signals.
+
+I'd use three resource controls:
+
+1. Global computation budget: unique Set evaluations and provider fetches within the worker's safe time allowance.
+2. Fairness budget: bounded work per account, so one user cannot monopolise the queue.
+3. Configuration limits: six active funnels, five stages, and a capped pool size.
+
+A per-Set budget alone is not sufficient; a highly expensive Set can dominate a shared worker.
+
+Use atomic jobs, leases and idempotent writes. Cache completed signal calculations as well as Set answers where safe.
+
+Most importantly, measure actual unique evaluations per minute before expanding limits.
+
+One technical correction: a funnel that needs 25 minutes of processing should resume from a checkpoint within the same logical scheduled run, rather than being treated as a fresh scan next hour. Progress must survive worker interruption.
+
+### 5. Pools — Start with four useful controls
+
+I'd prioritise:
+
+- Universe: eligible crypto, eligible S&P 500 shares, or My Watchlist.
+- Size: top 50, 100, 200 or 500 by market cap.
+- Liquidity: minimum quote-dollar volume, applied using the correct venue or market-specific definition.
+- Category/sector: optional inclusion or exclusion.
+
+I'd allow users to reuse a saved pool definition, but a funnel should reference a pinned pool-rule version. Pool membership itself should remain dynamic.
+
+That's a crucial distinction: a rule saying top 100 by market cap stays fixed, while the qualifying assets change over time.
+
+Show the difference between excluded by user filter, ineligible due to poor data, and removed from the dynamic universe.
+
+For the first build, saved reusable pools could be deferred. Embedded pool rules are simpler.
+
+### 6. Newcomers versus experts — Two editing depths
+
+I wouldn't create two different funnel engines.
+
+Use one engine with two interface levels.
+
+Funnel editor — concept
+
+Beginner view
+
+START FROM
+
+Crypto multi-timeframe trend
+
+Daily → 12H → 4H → 1H
+
+What would you like to change?
+
+Market direction
+
+Long
+
+Number of coins
+
+Top 200
+
+Exit after
+
+2 failed closes
+
+Advanced: edit stages and their Sets
+
+Concept only — not a working editor.
+
+Beginners change a supplied funnel's pool, direction and a few clearly exposed settings. Experts can replace stages, select their own Sets and adjust evaluation settings.
+
+For someone changing a signal threshold, provide Edit a copy of this Set, returning them to the existing Lattice Set editor. Don't build a second threshold editor inside Funnels.
+
+### 7. Wording and safety — Distinguish built-in from validated
+
+I'd label funnels:
+
+- Provided by Angstrom
+- Customised
+- My funnel
+
+But I would not label a provided funnel Tested unless it has actually undergone the relevant research validation.
+
+Similarly, Custom should not automatically imply something is defective or unsafe.
+
+A standard note is sufficient:
+
+> Candidate means this asset matches your selected conditions. It is not a recommendation to trade.
+
+Avoid High conviction, Strong buy, Winning setup, Proven and Trade ready.
+
+Keep Candidate and Flagged from V1 for consistency.
+
+### 8. Market practice — Copy accessibility, not complexity
+
+TradingView provides saved screens, editable filters, copies and custom columns. The useful lesson is that users can begin with a preset and progressively customise it without touching a programming language.&#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://th.tradingview.com\&sz=32)
+
+TradingView+1
+
+
+
+TrendSpider is the closer conceptual reference: custom multi-timeframe scanning, built-in scans, personal copies, scheduled results and Smart Watchlists.&#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://help.trendspider.com\&sz=32)
+
+TrendSpider+2
+
+
+
+3Commas provides configurable signal-driven bots. Its trading and exchange-execution controls are not an appropriate model for Prism Funnels, which remain analytical.&#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://help.3commas.io\&sz=32)
+
+3Commas Help Center
+
+
+
+The most useful design lesson is progressive disclosure: simple presets first, full rule editing only when needed.
+
+### 9. Simplification — What I'd leave out
+
+For V2, I would defer shared user-created pool libraries, complex sector/category combinations, cross-market funnels, automatic Set upgrades, public sharing, historical studies and execution features.
+
+I'd also avoid adding another generic visual rule language. Lattice already has Groups and Sets for that.
+
+## 3. Most serious traps missed
+
+1\. Flicker state versus new versions. When a funnel changes, resetting every asset can produce hundreds of apparent new Candidates. A new version needs a bootstrap evaluation that establishes initial state without automatically treating every qualifying asset as a new alert. Let the user explicitly request initial-match notifications.
+
+2\. Two-No rule ambiguity. Define whether two failures must be consecutive eligible closed candles of that stage's timeframe. Unknown must neither count as No nor silently reset the counter. I'd preserve the count through Unknown, but display that the evidence is pending. If a new Yes arrives, reset the count.
+
+3\. Cache permission leakage. Two users can produce identical logic, but that doesn't give either user access to the other's private configuration. Compute shared results within trusted server code; expose only results the caller is authorised to obtain. Don't expose fingerprint lookups as a way to discover private strategies.
+
+4\. A pool change can resemble a signal change. An asset disappearing because its market cap fell below a threshold is not the same as failing a Trend Set. Store the reason and distinguish left pool from failed condition. Removal should invalidate current eligibility without generating a misleading signal-transition alert.
+
+5\. Historical corrections and provider failures. A cached answer may be mathematically correct for an earlier data snapshot but wrong for the currently available dataset. Retain provenance, data revisions and certification identity. An operational outage must not become a confirmed No.
+
+6\. Equity schedules and stage clocks. A shares funnel using weekly, daily, 4H and 1H conditions must respect exchange sessions, half-days, holidays and the actual close of each aggregated bar. Fixed UTC hour arithmetic is not enough.
+
+7\. Limits that aren't enforceable globally. Six funnels per user is not a hard capacity guarantee. A flood of custom Sets can exhaust the shared worker even when everyone respects the limit. Add admission control and visible queue delays.
+
+## 4. My recommended V2
+
+| Area           | Decision                                                                                                     |
+| -------------- | ------------------------------------------------------------------------------------------------------------ |
+| Editor         | Start from template → customise → save immutable version → explicitly activate                               |
+| Stages         | 3–5, each with pinned Set logic and a separate evaluation trigger                                            |
+| Validation     | Block structural and unsupported configurations; warn about timeframe order, partial history and likely cost |
+| Shared answers | Trusted server-side cache keyed by full evaluation and data identity; private per-user state                 |
+| Pools          | Embedded versioned filters: market, top N, minimum liquidity, optional category/sector and My Watchlist      |
+| Limits         | Up to 6 active funnels, 5 stages, capped pool, global plus per-account work budgets                          |
+| Alerts         | Existing Candidate-only batched alerts, version-safe bootstrap, unchanged Yes/No/Unknown latch semantics     |
+
+### What I'd require before implementation
+
+Only four focused specifications:
+
+1. Cache identity and invalidation contract, including provider revisions, code changes, fixed-subject dependencies and authorisation.
+2. Version activation and state-transition contract, including the two-No rule, bootstrap alerts and pool-membership changes.
+3. Capacity benchmark and queue policy demonstrating how shared evaluations, fair scheduling and resumable jobs fit the worker budget.
+4. Editor validation and usability fixtures, ensuring saved documents are identical in meaning to the headless engine and custom Sets aren't silently rewritten.
+
+These don't require another broad architecture review.
+
+## 5. Sources
+
+- [TradingView — Create, save and copy custom screens](https://www.tradingview.com/support/solutions/43000718804/?utm_source=chatgpt.com)
+- [TradingView — Screener filters](https://www.tradingview.com/support/solutions/43000718745/?utm_source=chatgpt.com)
+- [TrendSpider — Market Scanner](https://help.trendspider.com/kb/scanner/market-scanner?utm_source=chatgpt.com)
+- [TrendSpider — Multiple timeframes](https://help.trendspider.com/kb/scanner/multiple-timeframes-and-the-current-candle?utm_source=chatgpt.com)
+- [3Commas — Signal Bot configuration](https://help.3commas.io/en/articles/16281112-signal-bot-comprehensive-json-guide?utm_source=chatgpt.com)
+
+Final recommendation: approve Funnels V2 in principle.
+
+I would keep the implementation deliberately focused on the editor, shared computation and configurable pools.
+
+There is no need to redesign Groups, Sets or Prism. The value of this release is letting users build their own multi-timeframe funnels without making Angstrom slower, more expensive or less trustworthy as the user base grows.

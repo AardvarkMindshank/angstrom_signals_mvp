@@ -93,3 +93,47 @@ Please reply in this order, in plain words, under about 1,500 words:
 3. **Traps we missed,** most serious first.
 4. **Your recommended version:** editor model, validation, shared answers, pools, limits.
 5. **Sources:** links to any products or methods you cite.
+
+## Decision after review (proposed, 10 Nov; awaiting the owner)
+
+Reviews: Gemini, Cursor/Grok and ChatGPT (`funnel_editor_review_2026-11-10.md`), all "sound with changes".
+
+1. **Editor.** A 🔻 Funnels section in Lattice: Start from (a provided funnel or one of your own) → change → save a
+   version → **activate** (saving and activating are separate, so a new version can be prepared without resetting the
+   live one). Duplicate a funnel to experiment. A summary of what changed is shown before activating.
+2. **Pinned Sets (2 of 3 reviewers).** Each stage pins a Set version. When a newer version of a stage's Set exists, the
+   stage shows "⬆ Upgrade available"; upgrading is a change like any other (assets start again from the pool). A Set
+   edited elsewhere never changes a running funnel. Changing a threshold = "Edit a copy of this Set" in the existing
+   Set editor; no second editor inside Funnels.
+3. **Two depths, one engine.** Beginners change direction, pool size and the leave rule of a provided funnel;
+   "Advanced" opens the stages (any Set, add, remove, reorder).
+4. **Validation.** Block: fewer than 3 or more than 5 stages, a Set without a decision, a Set or version not found,
+   history the pool cannot supply, a shares funnel without New York session timing (hard rule). Warn: timeframes not
+   longest to shortest, mixed timeframes inside a Set, a pool likely to leave few assets. The stage field is called
+   **"Checked at each … close"**: it sets when the stage is checked, not the timeframe of the Set's readings.
+5. **Shared answers (the main build).** Worked out once in trusted server code and stored; funnels keep only their own
+   state. Key: the Set's full logic fingerprint (embedded Groups, signal versions, parameters) + every fixed subject
+   (a line pinned to Bitcoin) + asset + timeframe + close + the certified signal-code identity + data venue. A renamed
+   Set keeps sharing; a changed rule does not. A stored answer for a past close is read, never recomputed. Failures are
+   stored as "unavailable", distinct from Unknown, with a retry; an outage is never a No. Nothing from a private Set is
+   exposed to other accounts.
+6. **State rules (written down and tested).** Two No closes in a row of that stage's timeframe to leave; Unknown neither
+   counts as No nor resets the count, and a Yes resets it. Reordering stages is a change (start again). **A new or
+   restarted funnel version starts silently**: its first full pass sets the places without Candidate alerts, unless
+   the person asks for "alert on first matches". **Leaving the pool** (market cap, volume, the daily list) is recorded
+   as "left the pool", never as failing a stage, and never alerts.
+7. **Pools, versioned with the funnel.** Universe (eligible crypto, eligible S&P 500, or My Watchlist only; the
+   Dynamic table then says "only your watchlist"), size (top 50 / 100 / 200 / 500), minimum daily volume on the
+   venue, simple excludes. Reusable named pools and sectors later.
+8. **Capacity.** Six active funnels per account, five stages, a capped pool. Work is scheduled by unique Set answers
+   (most-used first), with a per-account share so no one account fills the hour; a stage that cannot finish
+   continues from where it stopped. The page shows when a stage ran late. Measure unique answers per minute before
+   raising limits.
+9. **Wording.** "Provided by Angstrom", "Customised", "My funnel"; nothing is called "tested" unless studied. The
+   standard note: "Candidate means this asset matches your selected conditions. It is not a recommendation to trade."
+   No "strong", "proven" or "trade ready"; no buy-style styling.
+10. **Not in this version.** Public sharing, funnel studies, shared pool libraries, sector filters, cross-market
+    funnels, automatic Set upgrades, anything that trades.
+
+Before building, four short specifications (ChatGPT): the answer-cache key and invalidation; version activation and
+state transitions (the rules in 6); a capacity benchmark and queue policy; editor validation fixtures.
