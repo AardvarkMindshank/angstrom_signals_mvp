@@ -190,7 +190,13 @@ def main() -> int:
     from supabase import create_client
 
     supabase = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_ROLE_KEY"])
-    print(run_all(SupabaseStore(supabase), default_evaluate(supabase)))
+    try:
+        print(run_all(SupabaseStore(supabase), default_evaluate(supabase)))
+    except Exception as exc:
+        if "PGRST205" in str(exc) or "does not exist" in str(exc):
+            print("Funnel tables not installed yet (sql/2026-11-17_funnels.sql).")
+            return 0
+        raise
     return 0
 
 

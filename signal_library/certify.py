@@ -105,8 +105,10 @@ def synthetic_crypto(days: int = 500, seed: int = 11, end="2024-06-30 00:00") ->
     raw = pd.DataFrame({"open": o, "high": h, "low": l, "close": c, "volume": v}, index=index)
     src = {"provider": "synthetic crypto (15m random walk)", "quality": "reconstructed", "limitations": []}
     hist = {"15m": CandleHistory(raw, "15m", "crypto", None, src),
+            "30m": CandleHistory(chart_data.group_utc(raw, 30), "30m", "crypto", None, src),
             "1h": CandleHistory(chart_data.group_utc(raw, 60), "1h", "crypto", None, src),
             "4h": CandleHistory(chart_data.group_utc(raw, 240), "4h", "crypto", None, src),
+            "12h": CandleHistory(chart_data.group_utc(raw, 720), "12h", "crypto", None, src),
             "1D": CandleHistory(chart_data.group_daily(raw), "1D", "crypto", None, src),
             "1W": CandleHistory(chart_data.group_weekly(chart_data.group_daily(raw)), "1W", "crypto", None, src)}
     return Dataset(f"synthetic-crypto-s{seed}", "crypto", "synthetic-coin", hist,
@@ -127,8 +129,10 @@ def synthetic_equity(days: int = 500, seed: int = 23, end="2024-06-28") -> Datas
     src = {"provider": "synthetic share (15m random walk, New York session)", "quality": "reconstructed", "limitations": []}
     daily = chart_data.group_daily(raw)
     hist = {"15m": CandleHistory(raw, "15m", "equity", session, src),
+            "30m": CandleHistory(chart_data.group_session(raw, 30, session).tz_convert("UTC"), "30m", "equity", session, src),
             "1h": CandleHistory(chart_data.group_session(raw, 60, session).tz_convert("UTC"), "1h", "equity", session, src),
             "4h": CandleHistory(chart_data.group_session(raw, 240, session).tz_convert("UTC"), "4h", "equity", session, src),
+            "12h": CandleHistory(chart_data.group_session(raw, 720, session).tz_convert("UTC"), "12h", "equity", session, src),
             "1D": CandleHistory(daily, "1D", "equity", session, src),
             "1W": CandleHistory(chart_data.group_weekly(daily), "1W", "equity", session, src)}
     return Dataset(f"synthetic-equity-s{seed}", "equity", "SYNTH", hist,
@@ -569,7 +573,7 @@ def certify_dataset(dataset: Dataset, timeframe: str, *, cutoffs: int, pool, tal
            "refs": [r.as_dict() for r in refs], "steps": steps,
            "sessions": {tf: h.session for tf, h in dataset.histories.items()},
            "missing": {tf: dataset.candles(dataset.kind, dataset.asset_id, tf).get("error")
-                       for tf in ("15m", "1h", "4h", "1D", "1W") if tf not in dataset.histories},
+                       for tf in ("15m", "30m", "1h", "4h", "12h", "1D", "1W") if tf not in dataset.histories},
            "provider": next(iter(dataset.histories.values())).source.get("provider", "") if dataset.histories else ""}
     reference = pool.submit(_reference_worker, job).result()
 
@@ -778,7 +782,7 @@ def run_suite(datasets: list[Dataset], *, indicators: str, cutoffs: int = 50, ti
         sys.modules["__main__"] = real_main
     with pool:
         for ds in datasets:
-            tfs = ["1D"] if not ds.histories else [tf for tf in ("15m", "1h", "4h", "1D", "1W") if tf in ds.histories]
+            tfs = ["1D"] if not ds.histories else [tf for tf in ("15m", "30m", "1h", "4h", "12h", "1D", "1W") if tf in ds.histories]
             for tf in tfs:
                 if timeframes and tf not in timeframes:
                     continue

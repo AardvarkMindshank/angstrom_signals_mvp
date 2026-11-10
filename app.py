@@ -10608,6 +10608,112 @@ def render_dashboard(*args, **kwargs):
         _record_run("dashboard", started)
 
 
+def _dynamic_crypto():
+    """The crypto table's Dynamic view (funnel_view.py): None for My Watchlist, else the funnel's coins at the chosen
+    stage and everything the controls need. Cached for a minute per account."""
+    import funnel_view as fv
+
+    user = st.session_state.get("user")
+    if user is None or st.session_state.get("crypto_table_mode") != "Dynamic":
+        return None
+    memo = st.session_state.setdefault("_memo", {})
+    hit = memo.get("funnels")
+    if hit and time.time() - hit[0] < 60 and not st.session_state.pop("_funnels_reread", False):
+        funnels, universe = hit[1]
+    else:
+        funnels, universe = fv.load_funnels(supabase, user.id), {}
+        if funnels:
+            universe = fv.load_universe(supabase)
+        memo["funnels"] = (time.time(), (funnels, universe))
+    out = {"funnels": funnels, "universe": universe, "watchlist": {}, "funnel": None}
+    if not funnels:
+        return out
+    ids = [f["id"] for f in funnels]
+    if st.session_state.get("funnel_pick") not in ids:
+        st.session_state["funnel_pick"] = ids[0]
+    f = next(x for x in funnels if x["id"] == st.session_state["funnel_pick"])
+    try:
+        coins = fv.load_coins(supabase, f["id"])
+        runs = fv.last_runs(supabase, f["id"], len(f["stages"]))
+    except Exception as exc:
+        out["error"] = f"The funnel could not be read: {str(exc)[:160]}"
+        return out
+    states = fv.states(f, coins)
+    pool = sum(1 for u in universe.values() if u.get("included"))
+    choices = fv.picks(f, states, pool)
+    keys = [k for k, _ in choices]
+    if st.session_state.get("funnel_stage") not in keys:
+        st.session_state["funnel_stage"] = f"stage:{len(f['stages']) - 2}"
+    shown = fv.coins_for(st.session_state["funnel_stage"], states)
+    out.update({"funnel": f, "states": states, "choices": choices, "pool": pool,
+                "line": fv.counts_line(f, states, pool), "health": fv.health(runs, f), "more": max(0, len(shown) - fv.SHOW_LIMIT),
+                "watchlist": {c: (universe.get(c) or {}).get("name") or c for c in shown[:fv.SHOW_LIMIT]}})
+    return out
+
+
+def _funnel_controls(dyn) -> None:
+    """Above the crypto table: My Watchlist or Dynamic, then (Dynamic) the funnel, the stage picker and its counts."""
+    import funnel_templates as ft
+    import funnel_view as fv
+
+    if st.session_state.get("user") is None:
+        return
+    st.radio("Crypto table", fv.MODES, key="crypto_table_mode", horizontal=True, label_visibility="collapsed",
+             help="My Watchlist: the coins you picked. Dynamic: the coins a funnel has narrowed down from the top "
+                  "coins on Binance, stage by stage.")
+    if dyn is None:
+        return
+    if dyn.get("error"):
+        st.warning(dyn["error"])
+        return
+    if not dyn["funnels"]:
+        st.caption("🔻 A funnel narrows the top coins on Binance down in stages, from the daily to the 1-hour, and "
+                   "keeps the list up to date by itself. Start from a ready-made one (you can change it later):")
+        a, b = st.columns(2)
+        for col, direction in ((a, "long"), (b, "short")):
+            tpl = ft.trend_funnel(direction)
+            if col.button(f"Create “{tpl['name']}”", key=f"funnel_new_{direction}", use_container_width=True,
+                          help="Daily, 12-hour and 4-hour: EMA 20 " + ("above" if direction == "long" else "below")
+                               + " EMA 50. Then the 1-hour pullback entry check (from Drew's script)."):
+                try:
+                    supabase.rpc("funnel_save", {"p_id": None, "p_name": tpl["name"], "p_direction": direction,
+                                                 "p_stages": tpl["stages"], "p_flicker": True,
+                                                 "p_alerts": {"in_app": True, "email": False},
+                                                 "p_paused": False}).execute()
+                    st.session_state["_funnels_reread"] = True
+                    st.rerun()
+                except Exception as exc:
+                    text = str(exc)
+                    st.error("The funnel tables are not installed yet." if "funnel_save" in text and
+                             ("does not exist" in text or "PGRST" in text) else f"Could not create it: {text[:160]}")
+        return
+    funnels = dyn["funnels"]
+    if len(funnels) > 1:
+        st.selectbox("Funnel", [f["id"] for f in funnels], key="funnel_pick",
+                     format_func=lambda i: next(f["name"] for f in funnels if f["id"] == i))
+    f = dyn["funnel"]
+    labels = dict(dyn["choices"])
+    st.radio("Stage", list(labels), key="funnel_stage", horizontal=True, format_func=labels.get,
+             label_visibility="collapsed",
+             help="Each stage shows the coins that hold it and every stage before it. 🚩 Flagged: "
+                  + fr_hover(f)["flagged"] + " ✅ Candidate: " + fr_hover(f)["candidate"])
+    flicker = "a coin leaves a stage after two No closes in a row" if f.get("flicker", True) else \
+        "a coin leaves a stage on its first No close"
+    st.caption(f"{fv.fn.DIRECTION_ICONS[f['direction']]} **{f['name']}** · {dyn['line']} · from {dyn['pool']} coins on "
+               f"Binance spot · {flicker}. Hover a coin's stage icon for each stage's last answer."
+               + (f" Showing the first {fv.SHOW_LIMIT}; {dyn['more']} more hold this stage." if dyn["more"] else ""))
+    if dyn.get("health"):
+        st.caption(dyn["health"])
+    if not dyn["states"]:
+        st.caption("⏳ Not checked yet: the funnel runs a few minutes after each hour.")
+
+
+def fr_hover(f):
+    import funnel_runner
+
+    return funnel_runner.hover(f)
+
+
 def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show_reasons_flag, show_extra_metrics_flag, show_period_changes_flag, trade_crypto, trade_equities):
     st.session_state["_bar_run"] = {}
     column_specs = _table_column_specs()
@@ -10789,7 +10895,21 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
 
         worked_before = _SCORES_WORKED_OUT
         with _timed("scores for every asset"), _scoring_busy():
-            crypto_results = process_watchlist(crypto_watchlist, is_crypto=True) if trade_crypto else []
+            dynamic = None
+            try:
+                dynamic = _dynamic_crypto() if trade_crypto else None
+            except Exception as exc:
+                dynamic = {"error": f"The funnel could not be read: {str(exc)[:160]}", "watchlist": {}, "funnels": []}
+            st.session_state["_dynamic"] = dynamic
+            table_crypto = dynamic["watchlist"] if dynamic is not None else crypto_watchlist
+            crypto_results = process_watchlist(table_crypto, is_crypto=True) if trade_crypto else []
+            if dynamic is not None and dynamic.get("funnel"):
+                import funnel_view as _fv
+
+                for r in crypto_results:
+                    st_ = dynamic["states"].get(str(r.get("key")))
+                    if st_ is not None:
+                        r["stage_icon"], r["stage_hover"], r["stage_sort"] = _fv.stage_cell(dynamic["funnel"], st_)
             stock_results = process_watchlist(stock_watchlist, is_crypto=False) if trade_equities else []
         st.session_state["_perf"]["  of which loading saved prices"] = round(spent["bars"] * 1000)
         st.session_state["_perf"]["  of which indicator maths"] = round(spent["maths"] * 1000)
@@ -11087,8 +11207,11 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
 
     def style_and_show_table(results, title, kind, section_id, column_specs):
         with section_expander(title, section_id):
+            dynamic = st.session_state.get("_dynamic") if kind == "Crypto" else None
+            if kind == "Crypto":
+                _funnel_controls(dynamic)
             if not results:
-                st.caption("This watchlist is empty.")
+                st.caption("No coins hold this stage right now." if dynamic is not None else "This watchlist is empty.")
                 return
             frame = pd.DataFrame(results).sort_values("trend", ascending=False, na_position="last")
             st.caption("Click a column title to sort. The table starts with the strongest Trend at the top. Click a name to show that asset on the chart. 📈 Trend, 🎯 Stretch and 🔊 Flow each run from -100 to +100 (positive means up); they describe the market and are not forecasts. Hover one to read it, and click it to open the breakdown. Click the sentiment score, the thumbs, or the crowd average to open its headlines. Watching is how many accounts hold that asset. The Crowd box is the average of personal scores. Hover the down thumb for the spread. A comment balloon, or the arrow on the right edge, opens the social signals and chat. The 30-day trend uses the same colors as 30d %.")
@@ -11097,7 +11220,9 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             # the account's choice (table_columns.py): a Groups section, then a Sets section, each folding sideways.
             group_specs = [c for c in column_specs if c["part"] == "groups"]
             set_specs = [c for c in column_specs if c["part"] == "sets"]
-            layout = [("Asset", 1, ""), ("Watching", 1, "")] + ([("Rank", 1, "")] if kind == "Crypto" else [])
+            staged = any(r.get("stage_icon") for r in results)
+            layout = [("Asset", 1, "")] + ([("Stage", 1, "")] if staged else []) + [("Watching", 1, "")] + (
+                [("Rank", 1, "")] if kind == "Crypto" else [])
             layout += [(f"col:{c['key']}", 1, "g") for c in group_specs] + ([("fold:g", 1, "")] if group_specs else [])
             layout += [(f"col:{c['key']}", 1, "s") for c in set_specs] + ([("fold:s", 1, "")] if set_specs else [])
             layout += [("Price", 1, ""), ("RSI", 1, "")]
@@ -11249,7 +11374,11 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                     f"<td data-sort='{sort_token(row.get('symbol'))}' style='padding:10px;white-space:nowrap;'>"
                     "<span style='display:inline-flex;align-items:center;gap:8px;'>"
                     f"{asset_logo(row.get('logo_url'), row.get('symbol'))}{name_button}</span></td>"
-                    f"<td data-sort='{sort_token(row.get('holders'), numeric=True)}' "
+                    + (f"<td data-sort='{sort_token(row_dict.get('stage_sort'), numeric=True)}' "
+                       f"title='{html.escape(str(row_dict.get('stage_hover') or ''), quote=True)}' "
+                       f"style='padding:8px 10px;white-space:nowrap;cursor:help;'>"
+                       f"{html.escape(str(row_dict.get('stage_icon') or '—'))}</td>" if staged else "")
+                    + f"<td data-sort='{sort_token(row.get('holders'), numeric=True)}' "
                     f"style='padding:8px 10px;white-space:nowrap;'>{holders_mark(row.get('holders'))}</td>"
                     f"{rank_cell}"
                     f"{cluster_cells}"
