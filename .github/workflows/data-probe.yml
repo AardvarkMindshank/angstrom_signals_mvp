@@ -19,3 +19,11 @@ jobs:
             echo "$code  $url  $(head -c 160 body.txt)" | tee -a "$GITHUB_STEP_SUMMARY"
           done
           curl -s -m 10 https://ipinfo.io/json | tee -a "$GITHUB_STEP_SUMMARY" || true
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Binance vs Yahoo daily closes
+        run: |
+          pip install -q pandas requests yfinance
+          python binance_compare.py | tee -a "$GITHUB_STEP_SUMMARY"
