@@ -26,6 +26,7 @@ import funnel as fn
 SETTLE = timedelta(minutes=8)
 BUDGET_SECONDS = 35 * 60
 STALE_CLAIM = timedelta(minutes=60)
+MAX_SENTIMENT = 10                  # news-sentiment runs per funnel pass (each one is a paid AI call)
 FREQ = {"15m": "15min", "30m": "30min", "1h": "1h", "4h": "4h", "12h": "12h", "1D": "1D"}
 WORDS = {"15m": "15-minute", "30m": "30-minute", "1h": "1-hour", "4h": "4-hour", "12h": "12-hour", "1D": "daily",
          "1W": "weekly"}
@@ -161,6 +162,13 @@ def run_funnel(store, f: dict, universe: dict[str, dict], evaluate, now: pd.Time
                                                          universe[c].get("name") or c)
                                                         for c in new])}])
         summary["alerted"] = len(new)
+    if new and hasattr(store, "refresh_sentiment"):  # only new Candidates get a fresh news-sentiment reading
+        market = f.get("market") or "crypto"
+        try:
+            summary["sentiment"] = store.refresh_sentiment(
+                market, [(c, universe[c].get("name") or c) for c in new[:MAX_SENTIMENT]], log)
+        except Exception as exc:
+            log(f"Funnel {f['name']}: sentiment for new Candidates failed: {str(exc)[:160]}")
     store.save_coins(f["id"], version, keep())                      # the alert latches
     return summary
 
@@ -250,6 +258,34 @@ class SupabaseStore:
 
     def finish(self, run_id, fields: dict) -> None:
         self.db.table("funnel_runs").update(fields).eq("id", run_id).execute()
+
+    def refresh_sentiment(self, market: str, items: list[tuple[str, str]], log=print) -> int:
+        """News sentiment for new Candidates when their shared reading is missing or older than 12 hours (the
+        usual refresh window); the prices row is created first for an asset nobody watches yet. Returns how many
+        were refreshed."""
+        import shared_refresh as sr
+        from market_store import asset_market_key, load_market_columns, row_timestamp, sentiment_refresh_due
+        from sentiment import sentiment_ready
+
+        if not sentiment_ready():
+            return 0
+        kind = "Crypto" if market == "crypto" else "Stock"
+        done = 0
+        for asset_id, name in items:
+            key = asset_market_key(kind, asset_id)
+            try:
+                row = load_market_columns(self.db, [key], "sentiment_report, sentiment_updated_at").get(key)
+                if row is None:
+                    sr.ensure_new_asset(self.db, kind, asset_id, name, 400)     # prices and the first reading
+                    done += 1
+                    continue
+                if not sentiment_refresh_due(row_timestamp(row, "sentiment_updated_at")):
+                    continue
+                sr._save_asset_sentiment(self.db, kind, asset_id, name, previous=sr._previous_report(row))
+                done += 1
+            except Exception as exc:
+                log(f"Sentiment for {name} failed: {str(exc)[:160]}")
+        return done
 
     def notify(self, rows: list[dict]) -> None:
         if rows:

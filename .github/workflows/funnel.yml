@@ -26,4 +26,5 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          XAI_API_KEY: ${{ secrets.XAI_API_KEY }}           # news sentiment for new Candidates only
         run: python -u funnel_runner.py

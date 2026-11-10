@@ -40,6 +40,10 @@ class Store:
     def notify(self, rows):
         self.notes += rows
 
+    def refresh_sentiment(self, market, items, log=print):
+        self.sentiment = getattr(self, "sentiment", []) + [i[0] for i in items]
+        return len(items)
+
     def save_coins(self, fid, version, states):
         self.saved.update({c: (version, st) for c, st in states.items()})
 
@@ -65,13 +69,14 @@ def test_one_pass_narrows_and_alerts_once():
     places = {c: fn.place(st)["status"] for c, (_, st) in store.saved.items()}
     assert places == {"bitcoin": "candidate", "solana": "flagged", "dogecoin": "pool"}
     assert len(store.notes) == 1 and "Bitcoin (BTC)" in store.notes[0]["message"]
+    assert store.sentiment == ["bitcoin"]                         # news sentiment for the new Candidate only
     # The same closes again: nothing is claimed twice, nothing alerts twice.
     assert fr.run_all(store, ev, now=now)["f1"]["stages_run"] == 0 and len(store.notes) == 1
     # An hour on, only the 1-hour stage is due, for the coins holding the first three stages.
     checked.clear()
     out = fr.run_all(store, ev, now=pd.Timestamp("2026-11-10 01:20", tz="UTC"))
     assert out["f1"]["stages_run"] == 1 and sorted(checked[3]) == ["bitcoin", "solana"]
-    assert len(store.notes) == 1                                   # Bitcoin is still latched
+    assert len(store.notes) == 1 and store.sentiment == ["bitcoin"]   # Bitcoin is still latched
 
 
 def test_a_failed_stage_keeps_places_and_is_recorded():
