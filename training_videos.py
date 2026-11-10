@@ -27,11 +27,15 @@ SERIES = {
         ("w1-trend-with-volume", "Trend with volume behind it", "1:10"),
         ("w2-overextended-rally", "Overextended rally", "1:05"),
         ("w3-breakout-with-volume", "Breakout with volume", "1:08"),
+        ("w4-breakout-fading", "Breakout fading: a THEN box", "1:38"),
     ]),
     "evidence": ("Reading the evidence", [
-        ("06-provided-library", "The provided library", "1:18"),
+        ("06-provided-library", "The provided library", "1:31"),
         ("07-visualize-history", "Visualize History", "0:59"),
-        ("08-what-followed", "What followed", "1:35"),
+        ("08-what-followed", "What followed", "2:13"),
+    ]),
+    "help": ("Getting help", [
+        ("a1-angstrom-assistant", "The Angstrom Assistant", "1:03"),
     ]),
 }
 STATE = "training_video"

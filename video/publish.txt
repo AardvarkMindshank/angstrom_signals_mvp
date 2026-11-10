@@ -8,6 +8,8 @@
 2026-11-09_0725_134c93c/w1-trend-with-volume
 2026-11-09_0725_134c93c/w2-overextended-rally
 2026-11-09_0725_134c93c/w3-breakout-with-volume
-2026-11-09_0740_e8adb5d/06-provided-library
+2026-11-10_0531_39be737/w4-breakout-fading
+2026-11-10_0443_fc1d97d/06-provided-library
 2026-11-09_1434_d842120/07-visualize-history
-2026-11-09_0725_134c93c/08-what-followed
+2026-11-10_0522_843357f/08-what-followed
+2026-11-10_0443_fc1d97d/a1-angstrom-assistant

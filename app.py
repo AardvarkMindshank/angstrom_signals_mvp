@@ -7368,7 +7368,7 @@ hold, for example *Trend is Bullish* and *RSI is below 70*.
 """)
         _training.link(st, "05-prism-scan", key="tv_lat_05")
         st.markdown("**🎬 Worked examples**: one recognisable setup each, built and scanned from start to finish.")
-        for _slug in ("w1-trend-with-volume", "w2-overextended-rally", "w3-breakout-with-volume"):
+        for _slug in ("w1-trend-with-volume", "w2-overextended-rally", "w3-breakout-with-volume", "w4-breakout-fading"):
             _training.link(st, _slug, key=f"tv_lat_{_slug}")
         st.markdown("**🎬 Reading the evidence**: the Sets Angstrom Signals provides, a Set's answer on every past "
                     "day, and what usually followed its Yes.")
