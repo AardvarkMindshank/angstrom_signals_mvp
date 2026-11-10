@@ -3759,7 +3759,7 @@ def _tv_candles(asset_type: str, asset_key: str, interval: str, range_key: str, 
                 start = candles.index[0] if days is None else max(
                     candles.index[0], pd.Timestamp.now(tz="UTC") - pd.Timedelta(days=days))
                 loaded = {"candles": candles, "start": start, "session": None, "error": None,
-                          "source": "Shared daily prices (Yahoo has no candles for this coin)"
+                          "source": "Shared daily prices (neither Binance nor Yahoo has candles for this coin)"
                           + (", grouped into weeks" if interval == "1W" else "")}
     if loaded["error"]:
         return loaded
@@ -7191,6 +7191,9 @@ earnings choices, and both save to your account.
   the newest candle. Where you have zoomed to is kept when you change indicators or the page refreshes.
 - **Candle size**: 15m · 1h · 4h · 1D · 1W. **Range**: 7D · 1M · 3M · 1Y · All, which is where the chart
   opens. You can still scroll further back.
+- **Where the candles come from:** crypto from **Binance** (spot, priced in USDT, every candle size Binance's
+  own, UTC); a coin Binance doesn't list falls back to Yahoo Finance. Equities come from **Yahoo Finance**. The chart
+  names its source underneath. Binance's USDT prices sit about 0.1% from Yahoo's US-dollar prices, which is normal.
 - Yahoo keeps 15-minute candles for about 60 days and hourly candles for about 2 years, so longer ranges
   are marked ⊘ for those sizes and the chart says so instead of showing something else.
 - **4-hour candles** are built from hourly ones: crypto in fixed UTC blocks (00:00, 04:00, 08:00 ...), shares
