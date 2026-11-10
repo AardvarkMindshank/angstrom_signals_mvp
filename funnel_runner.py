@@ -119,6 +119,9 @@ def run_funnel(store, f: dict, universe: dict[str, dict], evaluate, now: pd.Time
         row = saved.get(coin_id)
         same = row is not None and row.get("stages_version") == version
         states[coin_id] = fn.CoinState.from_dict(row["state"] if same else None, n)
+    # A new or restarted version starts silently: its first pass sets every asset's place (and latches the Candidates
+    # it finds) without a flood of "new Candidate" alerts (reviews of 10 Nov; ask "alert on first matches" to opt in).
+    first_pass = not any(r.get("stages_version") == version for r in saved.values())
     summary = {"stages_run": 0, "failed": 0, "alerted": 0}
     keep = lambda: {c: st for c, st in states.items() if st.to_dict() != fn.CoinState.new(n).to_dict() or c in saved}
     for k, stage in enumerate(f["stages"]):
@@ -157,6 +160,10 @@ def run_funnel(store, f: dict, universe: dict[str, dict], evaluate, now: pd.Time
             store.finish(run_id, {"status": "failed", "error": str(exc)[:500],
                                   "finished_at": datetime.now(timezone.utc).isoformat()})
     new = [c for c, st in states.items() if fn.alert_due(st)]
+    if first_pass and not (f.get("alerts") or {}).get("first_matches"):
+        summary["bootstrap"] = len(new)
+        log(f"Funnel {f['name']}: first pass of this version; {len(new)} Candidates set without alerts.")
+        new = []
     if new and (f.get("alerts") or {}).get("in_app", True):
         store.notify([{"user_id": f["owner_id"], "asset_symbol": f"funnel:{f['id']}", "asset_name": f["name"],
                        "alert_type": ALERT_TYPE,

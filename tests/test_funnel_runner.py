@@ -60,6 +60,7 @@ def _evaluate(answers):
 
 def test_one_pass_narrows_and_alerts_once():
     store = Store()
+    store.saved["dogecoin"] = (1, fn.CoinState.new(4))          # the funnel has run before: not its first pass
     ev, checked = _evaluate({0: {"bitcoin": "yes", "solana": "yes"}, 1: {"bitcoin": "yes", "solana": "yes"},
                              2: {"bitcoin": "yes", "solana": "yes"}, 3: {"bitcoin": "yes"}})
     now = pd.Timestamp("2026-11-10 00:20", tz="UTC")              # every stage has a close at 00:00
@@ -79,6 +80,14 @@ def test_one_pass_narrows_and_alerts_once():
     # Bitcoin is still latched (no new alert) and still a Candidate, so it stays on the sentiment list (refreshed
     # only when its reading is over 12 hours old); Solana, never a Candidate, never is.
     assert len(store.notes) == 1 and store.sentiment == ["bitcoin"] * 3     # one per pass; the store skips fresh ones
+
+
+def test_a_new_version_starts_silently():
+    store = Store()                                              # nothing saved yet: the first pass of this version
+    ev, _ = _evaluate({0: {"bitcoin": "yes"}, 1: {"bitcoin": "yes"}, 2: {"bitcoin": "yes"}, 3: {"bitcoin": "yes"}})
+    out = fr.run_all(store, ev, now=pd.Timestamp("2026-11-10 00:20", tz="UTC"), log=lambda *_: None)
+    assert store.notes == [] and out["f1"]["bootstrap"] == 1
+    assert fn.place(store.saved["bitcoin"][1])["status"] == "candidate" and store.saved["bitcoin"][1].latched
 
 
 def test_a_coin_that_leaves_the_candidates_gets_no_more_sentiment():
