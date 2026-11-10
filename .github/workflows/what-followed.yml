@@ -11,7 +11,7 @@ permissions:
 env:
   SHARDS: "12"
   LIMIT: "0"
-  SETS: "demo:alignment"
+  SETS: ""                 # empty: the whole provided library (one Holm family)
 jobs:
   answers:
     runs-on: ubuntu-latest
