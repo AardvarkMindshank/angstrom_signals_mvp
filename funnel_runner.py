@@ -24,7 +24,8 @@ import pandas as pd
 import funnel as fn
 
 SETTLE = timedelta(minutes=8)
-BUDGET_SECONDS = 25 * 60
+BUDGET_SECONDS = 35 * 60
+STALE_CLAIM = timedelta(minutes=60)
 FREQ = {"15m": "15min", "30m": "30min", "1h": "1h", "4h": "4h", "12h": "12h", "1D": "1D"}
 WORDS = {"15m": "15-minute", "30m": "30-minute", "1h": "1-hour", "4h": "4-hour", "12h": "12-hour", "1D": "daily",
          "1W": "weekly"}
@@ -103,8 +104,11 @@ def candidate_message(f: dict, coins: list[tuple[str, str]]) -> str:
             "Every stage holds, including the entry conditions. A coin to look at, not a recommendation.")[:500]
 
 
-def run_funnel(store, f: dict, universe: dict[str, dict], evaluate, now: pd.Timestamp, log=print) -> dict:
-    """One pass of one funnel. universe: coin id -> {symbol, name}. evaluate(set_body, assets, cutoff) -> rows."""
+def run_funnel(store, f: dict, universe: dict[str, dict], evaluate, now: pd.Timestamp, log=print,
+               out_of_time=lambda: False) -> dict:
+    """One pass of one funnel. universe: coin id -> {symbol, name}. evaluate(set_body, assets, cutoff) -> rows.
+    Places are saved after every stage, and no new stage starts once out_of_time() says so (the next pass picks up
+    the stages left, at the same close)."""
     n = len(f["stages"])
     version = f.get("stages_version") or 1
     saved = store.coins(f["id"])
@@ -114,17 +118,25 @@ def run_funnel(store, f: dict, universe: dict[str, dict], evaluate, now: pd.Time
         same = row is not None and row.get("stages_version") == version
         states[coin_id] = fn.CoinState.from_dict(row["state"] if same else None, n)
     summary = {"stages_run": 0, "failed": 0, "alerted": 0}
+    keep = lambda: {c: st for c, st in states.items() if st.to_dict() != fn.CoinState.new(n).to_dict() or c in saved}
     for k, stage in enumerate(f["stages"]):
+        if out_of_time():
+            log(f"Funnel {f['name']}: out of time; stages from {k + 1} wait for the next pass.")
+            summary["waiting"] = True
+            break
         market = f.get("market") or "crypto"
         cutoff = latest_close(stage["timeframe"], now, market)
         run_id = store.claim(f["id"], k, cutoff, now)
         if run_id is None:
             continue
         coins = [c for c, st in states.items() if fn.reachable(st, k)]
+        began = time.monotonic()
         try:
             tally = {"yes": 0, "no": 0, "unknown": 0}
             for i in range(0, len(coins), CHUNK):
                 part = [(market, c, universe[c].get("name") or c) for c in coins[i:i + CHUNK]]
+                log(f"Funnel {f['name']} · stage {k + 1} ({stage['timeframe']}, close {cutoff:%d %b %H:%M} UTC): "
+                    f"{i}/{len(coins)} checked, {time.monotonic() - began:.0f}s")
                 for row in evaluate(stage["set_body"], part, cutoff):
                     answer = row.get("answer") if row.get("answer") in tally else fn.UNKNOWN
                     tally[answer] += 1
@@ -132,6 +144,8 @@ def run_funnel(store, f: dict, universe: dict[str, dict], evaluate, now: pd.Time
                               flicker=f.get("flicker", True))
             store.finish(run_id, {"status": "ok", "finished_at": datetime.now(timezone.utc).isoformat(),
                                   "checked": len(coins), "answers": tally})
+            store.save_coins(f["id"], version, keep())
+            log(f"Funnel {f['name']} · stage {k + 1}: {len(coins)} checked in {time.monotonic() - began:.0f}s, {tally}")
             summary["stages_run"] += 1
         except Exception as exc:                 # this stage only; its coins keep their places
             summary["failed"] += 1
@@ -145,8 +159,7 @@ def run_funnel(store, f: dict, universe: dict[str, dict], evaluate, now: pd.Time
                                                          universe[c].get("name") or c)
                                                         for c in new])}])
         summary["alerted"] = len(new)
-    store.save_coins(f["id"], version, {c: st for c, st in states.items()
-                                        if st.to_dict() != fn.CoinState.new(n).to_dict() or c in saved})
+    store.save_coins(f["id"], version, keep())                      # the alert latches
     return summary
 
 
@@ -172,7 +185,8 @@ def run_all(store, evaluate, now=None, log=print, budget_seconds=BUDGET_SECONDS,
             log(f"Funnel: the {market} universe is empty (has the {market}-universe job run?)")
             continue
         try:
-            out[f["id"]] = run_funnel(store, f, universes[market], evaluate, now, log)
+            out[f["id"]] = run_funnel(store, f, universes[market], evaluate, now, log,
+                                      out_of_time=lambda: clock() - started > budget_seconds)
             out["funnels"] += 1
         except Exception as exc:
             log(f"Funnel {f['id']} failed: {str(exc)[:200]}")
@@ -211,9 +225,26 @@ class SupabaseStore:
                                                          "started_at": started.isoformat()}).execute().data or [])
         except Exception as exc:
             if "duplicate" in str(exc).lower() or "23505" in str(exc):
-                return None
+                return self._take_over(funnel_id, stage, cutoff, started)
             raise
         return rows[0]["id"] if rows else None
+
+    def _take_over(self, funnel_id, stage, cutoff, started) -> int | None:
+        """A claim for this close already exists. Run it again only if it failed, or if it has been 'running' for
+        longer than STALE_CLAIM (the job that claimed it was stopped). The update is conditional on the row being
+        unchanged, so two jobs never both take it."""
+        rows = (self.db.table("funnel_runs").select("id, status, started_at").eq("funnel_id", funnel_id)
+                .eq("stage", stage).eq("cutoff", cutoff.isoformat()).execute().data or [])
+        if not rows:
+            return None
+        r = rows[0]
+        stale = r["status"] == "running" and pd.Timestamp(r["started_at"]) < started - STALE_CLAIM
+        if r["status"] != "failed" and not stale:
+            return None
+        got = (self.db.table("funnel_runs").update({"status": "running", "started_at": started.isoformat(),
+                                                     "error": None, "finished_at": None})
+               .eq("id", r["id"]).eq("started_at", r["started_at"]).execute().data or [])
+        return r["id"] if got else None
 
     def finish(self, run_id, fields: dict) -> None:
         self.db.table("funnel_runs").update(fields).eq("id", run_id).execute()
@@ -239,9 +270,32 @@ def default_evaluate(supabase):
     from signal_library.replay_display import display_run
 
     def evaluate(doc, assets, cutoff):
+        prefetch(doc, assets)
         run = display_run(supabase, max_steps=prism.steps_needed(doc), shortcut=True)
         return prism.run_now(doc, assets, live_context=None, replay=(run, cutoff))
     return evaluate
+
+
+def prefetch(doc: dict, assets, workers: int = 8) -> None:
+    """Load the candles every member needs for these assets at once (network-bound), into chart_data's cache, so the
+    reconstruction that follows reads them from memory instead of one asset at a time."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    from signal_library.replay_display import live_candles
+
+    timeframes = {m["ref"]["timeframe"] for m in doc.get("standalone") or []}
+    for g in doc.get("groups") or []:
+        timeframes |= {m["ref"]["timeframe"] for m in (g.get("snapshot") or {}).get("members") or []}
+    jobs = [(a[0], a[1], tf) for a in assets for tf in timeframes]
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        list(pool.map(lambda j: _quiet(live_candles, *j), jobs))
+
+
+def _quiet(fn_, *args):
+    try:
+        return fn_(*args)
+    except Exception:
+        return None
 
 
 def main() -> int:
@@ -251,7 +305,7 @@ def main() -> int:
 
     supabase = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_ROLE_KEY"])
     try:
-        print(run_all(SupabaseStore(supabase), default_evaluate(supabase)))
+        print(run_all(SupabaseStore(supabase), default_evaluate(supabase), log=lambda m: print(m, flush=True)))
     except Exception as exc:
         if "PGRST205" in str(exc) or "does not exist" in str(exc):
             print("Funnel tables not installed yet (sql/2026-11-17_funnels.sql).")
