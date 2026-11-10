@@ -149,7 +149,7 @@ def build(top: int = TOP, coins=None, excluded_ids=None, pairs=None, price_of=No
             used_pairs.add(pair)
             included.append({**base, "pair": pair, "volume_usd": round(q["volume_usd"]),
                              "listed_since": q["listed_since"], "days": q["days"]})
-    return {"built_at": now.isoformat(), "rules": RULES, "included": included, "excluded": excluded}
+    return {"built_at": now.isoformat(), "rules": {**RULES, "top": len(coins)}, "included": included, "excluded": excluded}
 
 
 def summary(u: dict) -> str:
@@ -161,6 +161,20 @@ def summary(u: dict) -> str:
     return "\n".join(lines)
 
 
+def save(supabase, u: dict) -> int:
+    """Replace the crypto_universe table (sql/2026-11-17_funnels.sql) with this build."""
+    rows = [{"coin_id": c["id"], "symbol": c["symbol"], "name": c["name"] or "", "rank": c["rank"], "included": True,
+             "pair": c["pair"], "reason": None, "volume_usd": c["volume_usd"], "listed_since": c["listed_since"],
+             "built_at": u["built_at"]} for c in u["included"]]
+    rows += [{"coin_id": c["id"], "symbol": c["symbol"], "name": c["name"] or "", "rank": c["rank"], "included": False,
+              "pair": None, "reason": c["reason"][:300], "volume_usd": None, "listed_since": None,
+              "built_at": u["built_at"]} for c in u["excluded"]]
+    for i in range(0, len(rows), 200):
+        supabase.table("crypto_universe").upsert(rows[i:i + 200]).execute()
+    supabase.table("crypto_universe").delete().lt("built_at", u["built_at"]).execute()   # coins no longer in the top
+    return len(rows)
+
+
 def main(argv: list[str]) -> int:
     out = Path(argv[0]) if argv else Path("out")
     top = int(argv[argv.index("--top") + 1]) if "--top" in argv else TOP
@@ -168,6 +182,16 @@ def main(argv: list[str]) -> int:
     out.mkdir(parents=True, exist_ok=True)
     (out / "crypto_universe.json").write_text(json.dumps(u, indent=1))
     print(summary(u))
+    if "--save" in argv and u["included"]:
+        import os
+
+        from supabase import create_client
+
+        try:
+            n = save(create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_ROLE_KEY"]), u)
+            print(f"Saved {n} rows to crypto_universe.")
+        except Exception as exc:          # the table may not be installed yet (sql/2026-11-17_funnels.sql)
+            print(f"Not saved to the database: {str(exc)[:200]}")
     return 0 if u["included"] else 1
 
 

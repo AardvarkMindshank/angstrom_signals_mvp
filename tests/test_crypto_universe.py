@@ -29,4 +29,4 @@ def test_rules_and_reasons():
     assert "different price" in why["pepe-impostor"]
     assert why["newcoin"].startswith("only 40 days") and why["thincoin"].startswith("thin trading")
     assert len(u["included"]) + len(u["excluded"]) == len(coins)          # every coin accounted for
-    assert "2 coins usable of the top 200" in cu.summary(u)
+    assert "2 coins usable of the top 8" in cu.summary(u)
