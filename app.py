@@ -10803,10 +10803,13 @@ def _funnel_controls(dyn, market: str = "crypto") -> None:
                      format_func=lambda i: next(f["name"] for f in funnels if f["id"] == i))
     f = dyn["funnel"]
     labels = dict(dyn["choices"])
-    st.radio("Stage", list(labels), key=stage_key, horizontal=True, format_func=labels.get,
-             label_visibility="collapsed",
-             help=f"Each stage shows the {words['coins']} that hold it and every stage before it. 🚩 Flagged: "
-                  + fr_hover(f)["flagged"] + " ✅ Candidate: " + fr_hover(f)["candidate"])
+    row = st.container(horizontal=True, vertical_alignment="center", gap="small")
+    with row:
+        st.radio("Stage", list(labels), key=stage_key, horizontal=True, format_func=labels.get,
+                 label_visibility="collapsed",
+                 help=f"Each stage shows the {words['coins']} that hold it and every stage before it. 🚩 Flagged: "
+                      + fr_hover(f)["flagged"] + " ✅ Candidate: " + fr_hover(f)["candidate"])
+        _funnel_chart(dyn, market, labels, part="button")
     flicker = (f"a {words['coin']} leaves a stage after two No closes in a row" if f.get("flicker", True) else
                f"a {words['coin']} leaves a stage on its first No close")
     when = ("a few minutes after each hour" if market == "crypto" else
@@ -10857,7 +10860,7 @@ def _funnel_controls(dyn, market: str = "crypto") -> None:
                 _call("funnel_delete", {"p_id": f["id"]}, "Funnel deleted.")
 
 
-def _funnel_chart(dyn, market: str, labels: dict) -> None:
+def _funnel_chart(dyn, market: str, labels: dict, part: str = "view") -> None:
     """📈 Open candidates in chart: the chosen stage's assets in the Visualize History view (one large chart on top,
     a thin row per asset underneath), with the funnel's daily stage Set drawn as bands across each history."""
     import funnel_view as fv
@@ -10888,24 +10891,34 @@ def _funnel_chart(dyn, market: str, labels: dict) -> None:
     if total > len(assets):
         hover += (f" Shows the {len(assets)} largest by market cap of the {total} at this stage; pick a narrower "
                   "stage (Candidates) for a closer look.")
-    if shown is None:
-        label = f"Open {noun} in chart" + (f" (largest {len(assets)} of {total})" if total > len(assets) else "")
-        if st.button(label, icon=":material/candlestick_chart:", key=f"funnel_hist_open_{market}", help=hover):
-            doc = f["stages"][daily]["set_body"]
-            kind = "crypto" if market == "crypto" else "equity"
-            picked = [(kind, a, n) for a, n in assets]
-            bar = st.progress(0.0, text="Working out the last year…")
-            strip = set_history.quick_rows(supabase, doc, picked,
-                                           lambda n, total, name: bar.progress(
-                                               n / max(total, 1), text=f"Working out the last year: {name} "
-                                                                       f"({n + 1} of {total})"))
-            bar.empty()
-            st.session_state[state_key] = {"funnel": f["id"], "stage": stage, "strip": strip}
+    asked = st.session_state.get(f"{state_key}_asked")
+    if part == "button":                                  # beside the stage picker
+        if shown is None and not asked:
+            label = f"Open {noun} in chart" + (f" (largest {len(assets)} of {total})" if total > len(assets) else "")
+            if st.button(label, icon=":material/candlestick_chart:", key=f"funnel_hist_open_{market}", help=hover):
+                st.session_state[f"{state_key}_asked"] = {"funnel": f["id"], "stage": stage}
+                st.rerun()
+        elif st.button(f"Close the chart of {noun}", icon=":material/close:", key=f"funnel_hist_close_{market}"):
+            st.session_state.pop(state_key, None)
+            st.session_state.pop(f"{state_key}_asked", None)
             st.rerun()
         return
-    if st.button(f"Close the chart of {noun}", icon=":material/close:", key=f"funnel_hist_close_{market}"):
-        st.session_state.pop(state_key, None)
-        st.rerun()
+    if shown is None:                                     # under the controls: work it out, then draw
+        if not asked or asked != {"funnel": f["id"], "stage": stage}:
+            st.session_state.pop(f"{state_key}_asked", None)
+            return
+        doc = f["stages"][daily]["set_body"]
+        kind = "crypto" if market == "crypto" else "equity"
+        picked = [(kind, a, n) for a, n in assets]
+        bar = st.progress(0.0, text="Working out the last year…")
+        strip = set_history.quick_rows(supabase, doc, picked,
+                                       lambda n, total, name: bar.progress(
+                                           n / max(total, 1), text=f"Working out the last year: {name} "
+                                                                   f"({n + 1} of {total})"))
+        bar.empty()
+        st.session_state.pop(f"{state_key}_asked", None)
+        shown = {"funnel": f["id"], "stage": stage, "strip": strip}
+        st.session_state[state_key] = shown
     prism_view._SUPABASE[0] = supabase
     scan = {"id": f"funnel-{f['id']}-{stage.replace(':', '')}", "name": f"{f['name']} · {f['stages'][daily]['label']}",
             "set_body": f["stages"][daily]["set_body"], "set_source": f["stages"][daily].get("set_source") or {}}
