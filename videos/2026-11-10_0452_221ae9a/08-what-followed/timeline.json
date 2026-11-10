@@ -1,0 +1,61 @@
+{
+ "steps": [
+  {
+   "id": "question",
+   "start": 2.198,
+   "say": "When a Set turns Yes, does anything different tend to happen next, compared with ordinary days?"
+  },
+  {
+   "id": "how",
+   "start": 8.272,
+   "say": "Each time a Set first turns Yes, we look at the next ten daily candles. | We compare them with ordinary days: the same asset, the same year, and the same side of its long-term average. | Twenty-five coins and sixty-one large US equities, from 2014 to October 2024."
+  },
+  {
+   "id": "find",
+   "start": 27.122,
+   "say": "Every provided Set carries the result. | Open more, and the last line is What followed."
+  },
+  {
+   "id": "card",
+   "start": 32.971,
+   "say": "Tap it for the numbers. | Breakout with volume turned Yes almost nineteen hundred times. | Price rose a typical move before falling one fifty-one percent of the time, against fifty percent on comparable days."
+  },
+  {
+   "id": "parts",
+   "start": 45.642,
+   "say": "Under it, coins and equities, each on its own: | here, no clear difference in either, and none between them."
+  },
+  {
+   "id": "verdicts",
+   "start": 52.293,
+   "say": "Every study ends in one of four verdicts: | too few to judge, | no clear difference, | some difference, not established, | or a consistent difference."
+  },
+  {
+   "id": "honest",
+   "start": 62.965,
+   "say": "Most simple setups show no clear difference. | That's an honest, useful answer: they describe a situation; they don't predict one."
+  },
+  {
+   "id": "alignment",
+   "start": 70.974,
+   "say": "Trend alignment is the interesting one. | After the daily and weekly trends first agree, price did a little worse than on comparable days. | Often the weekly trend confirms a move after much of it has happened."
+  },
+  {
+   "id": "copy",
+   "start": 83.214,
+   "say": "Make your own copy and save it: its study comes with it. | In Signal Sets, the card also shows the three periods side by side,"
+  },
+  {
+   "id": "assets",
+   "start": 104.076,
+   "say": "and every asset on its own, with a luck check. | Ten assets look unusual for this Set, where luck alone typically makes about four. | A place to look closer, not proof."
+  },
+  {
+   "id": "own",
+   "start": 114.269,
+   "say": "Your own Sets can be studied too: | open one in Signal Sets, and tap Study this Set. | When it's ready, a note arrives in your notifications."
+  }
+ ],
+ "end": 125.159,
+ "trim": 2.198
+}

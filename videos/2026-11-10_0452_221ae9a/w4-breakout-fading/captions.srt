@@ -1,0 +1,67 @@
+1
+00:00:00,000 --> 00:00:02,199
+Some ideas happen in order.
+
+2
+00:00:02,249 --> 00:00:04,874
+First, price breaks out on heavy volume.
+
+3
+00:00:04,924 --> 00:00:07,741
+Then, within a few days, the volume dries up.
+
+4
+00:00:08,205 --> 00:00:12,366
+Add the Recent structure break Group, and the relative volume signal.
+
+5
+00:00:13,332 --> 00:00:15,040
+Then add a THEN box.
+
+6
+00:00:15,090 --> 00:00:19,422
+It has a First part, a Then part with a number of days, and an optional Cancel.
+
+7
+00:00:19,875 --> 00:00:21,796
+First: an upward break,
+
+8
+00:00:21,846 --> 00:00:24,664
+on at least one and a half times the usual volume.
+
+9
+00:00:30,916 --> 00:00:36,016
+Then, within five daily closes: volume is back below one and a half times usual.
+
+10
+00:00:37,981 --> 00:00:40,585
+The editor writes it out in plain words.
+
+11
+00:00:40,635 --> 00:00:44,732
+First and Then on the same day don't count: Then has to come later.
+
+12
+00:00:45,175 --> 00:00:48,270
+Save it, and run it on your coins at a past moment.
+
+13
+00:01:10,529 --> 00:01:13,090
+Yes means both steps happened, in order.
+
+14
+00:01:13,140 --> 00:01:14,984
+A No with a skip mark is part-way:
+
+15
+00:01:15,004 --> 00:01:18,539
+the breakout happened, and the drop can still come in time.
+
+16
+00:01:19,003 --> 00:01:21,522
+To see whether anything usually followed,
+
+17
+00:01:21,572 --> 00:01:24,090
+open the Set and tap Study this Set.
