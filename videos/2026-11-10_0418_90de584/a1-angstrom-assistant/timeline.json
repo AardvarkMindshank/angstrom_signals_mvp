@@ -1,0 +1,46 @@
+{
+ "steps": [
+  {
+   "id": "where",
+   "start": 2.153,
+   "say": "The Angstrom Assistant answers questions about the app, and helps you turn an idea into a test. | Open it with the AI button at the top right, or beside the Lattice tabs."
+  },
+  {
+   "id": "button",
+   "start": 12.444,
+   "say": "It opens in its own window beside the app, so it never covers what you're working on."
+  },
+  {
+   "id": "open",
+   "start": 17.715,
+   "say": "Ask anything, in your own words."
+  },
+  {
+   "id": "ask",
+   "start": 20.28,
+   "say": "Here, an idea about breakouts that lose their volume."
+  },
+  {
+   "id": "answer",
+   "start": 27.715,
+   "say": "It answers with the steps, using the app's own names. | It knows your saved Groups and Sets, and links the video that shows it."
+  },
+  {
+   "id": "paste",
+   "start": 35.248,
+   "say": "Stuck on a screen? Paste a screenshot, or drop one on the window."
+  },
+  {
+   "id": "explain",
+   "start": 64.236,
+   "say": "and ask what you're looking at."
+  },
+  {
+   "id": "limits",
+   "start": 70.465,
+   "say": "It explains, and you do the clicks. | It never makes buy or sell calls. | These answers are examples; yours depend on your question."
+  }
+ ],
+ "end": 80.653,
+ "trim": 2.153
+}

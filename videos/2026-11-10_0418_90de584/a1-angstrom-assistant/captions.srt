@@ -1,0 +1,55 @@
+1
+00:00:00,000 --> 00:00:03,051
+The Angstrom Assistant answers questions about the app,
+
+2
+00:00:03,071 --> 00:00:05,548
+and helps you turn an idea into a test.
+
+3
+00:00:05,598 --> 00:00:09,845
+Open it with the AI button at the top right, or beside the Lattice tabs.
+
+4
+00:00:10,291 --> 00:00:12,543
+It opens in its own window beside the app,
+
+5
+00:00:12,563 --> 00:00:15,135
+so it never covers what you're working on.
+
+6
+00:00:15,562 --> 00:00:17,697
+Ask anything, in your own words.
+
+7
+00:00:18,127 --> 00:00:21,243
+Here, an idea about breakouts that lose their volume.
+
+8
+00:00:25,562 --> 00:00:28,593
+It answers with the steps, using the app's own names.
+
+9
+00:00:28,643 --> 00:00:32,655
+It knows your saved Groups and Sets, and links the video that shows it.
+
+10
+00:00:33,095 --> 00:00:36,915
+Stuck on a screen? Paste a screenshot, or drop one on the window.
+
+11
+00:01:02,083 --> 00:01:04,026
+and ask what you're looking at.
+
+12
+00:01:08,312 --> 00:01:10,489
+It explains, and you do the clicks.
+
+13
+00:01:10,539 --> 00:01:12,930
+It never makes buy or sell calls.
+
+14
+00:01:12,980 --> 00:01:16,565
+These answers are examples; yours depend on your question.

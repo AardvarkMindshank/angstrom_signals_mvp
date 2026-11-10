@@ -1,0 +1,58 @@
+
+Collecting usage statistics. To deactivate, set browser.gatherUsageStats to false.
+
+2026-11-10 04:11:34.336 Uvicorn server started on :::8601
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8601
+  Network URL: http://10.1.0.242:8601
+  External URL: http://20.29.189.78:8601
+
+2026-11-10 04:11:58.349 The widget with key "lattice_section" was created with a default value but also had its value set via the Session State API.
+Stack (most recent call last):
+  File "/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 436, in _run_script_thread
+    self._run_script(request.rerun_data)
+  File "/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 949, in _run_script
+    ) = exec_func_with_error_handling(code_to_exec, ctx)
+  File "/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 136, in exec_func_with_error_handling
+    result = func()
+  File "/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 924, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+  File "/home/runner/work/angstrom_signals_mvp/angstrom_signals_mvp/library_check_app.py", line 6, in <module>
+    runpy.run_path(str(Path(__file__).with_name("video") / "demo_app.py"), run_name="__main__")
+  File "<frozen runpy>", line 287, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/runner/work/angstrom_signals_mvp/angstrom_signals_mvp/video/demo_app.py", line 182, in <module>
+    lattice_panel.render(st, DemoDb(), ASSETS, user_id=seed.USER)
+  File "/home/runner/work/angstrom_signals_mvp/angstrom_signals_mvp/lattice_panel.py", line 79, in render
+    fragment(lambda: _render(st, supabase, assets, user_id))()
+  File "/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/streamlit/runtime/fragment.py", line 802, in wrap
+    return wrapped_fragment()
+  File "/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/streamlit/runtime/fragment.py", line 769, in wrapped_fragment
+    result = non_optional_func(*args, **kwargs)
+  File "/home/runner/work/angstrom_signals_mvp/angstrom_signals_mvp/lattice_panel.py", line 79, in <lambda>
+    fragment(lambda: _render(st, supabase, assets, user_id))()
+  File "/home/runner/work/angstrom_signals_mvp/angstrom_signals_mvp/lattice_panel.py", line 187, in _render
+    chosen = st.segmented_control("Lattice section", list(SECTIONS), format_func=label, default="groups",
+  File "/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/streamlit/runtime/metrics_util.py", line 725, in wrapped_func
+    result = non_optional_func(*args, **kwargs)
+  File "/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/streamlit/elements/widgets/button_group.py", line 1171, in segmented_control
+    return self._internal_button_group(
+  File "/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/streamlit/runtime/metrics_util.py", line 725, in wrapped_func
+    result = non_optional_func(*args, **kwargs)
+  File "/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/streamlit/elements/widgets/button_group.py", line 1329, in _internal_button_group
+    result: RegisterWidgetResult[Any] = self._button_group(
+  File "/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/streamlit/elements/widgets/button_group.py", line 1429, in _button_group
+    check_widget_policies(self.dg, key, on_change_callback, default_value=_default)
+  File "/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/streamlit/elements/lib/policies.py", line 146, in check_widget_policies
+    check_session_state_rules(
+  File "/opt/hostedtoolcache/Python/3.12.16/x64/lib/python3.12/site-packages/streamlit/elements/lib/policies.py", line 90, in check_session_state_rules
+    _LOGGER.warning(
