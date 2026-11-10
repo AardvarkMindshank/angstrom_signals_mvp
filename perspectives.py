@@ -274,7 +274,7 @@ def followed_card(doc: dict | None, key: str | None = None) -> dict | None:
         through = s.get("through") or data.get("through") or s["last"]
         title += f" · {_month(start)} to {_month(through)}"
         if s.get("coin_assets") is not None:
-            lines.append(f"Studied on {s['coin_assets']} major coins and {s['share_assets']} large US shares.")
+            lines.append(f"Studied on {s['coin_assets']} major coins and {s['share_assets']} large US equities.")
         sp = s.get("spread") or {}
         if sp.get("days"):
             lines.append(f"Turned Yes {s['episodes']:,} separate times, on {sp['days']:,} different days in "
@@ -296,10 +296,10 @@ def followed_card(doc: dict | None, key: str | None = None) -> dict | None:
                          f"({n['higher_usual']:.0%}).")
         top = s.get("top_assets") or []
         if top and top[0][1] >= 0.1:
-            lines.append(f"From {s['coins']:,} coin and {s['shares']:,} share episodes; most from "
+            lines.append(f"From {s['coins']:,} coin and {s['shares']:,} equity episodes; most from "
                          + ", ".join(f"{a.replace('-USD', '')} {v:.0%}" for a, v in top) + ".")
         else:
-            lines.append(f"From {s['coins']:,} coin and {s['shares']:,} share episodes, spread across assets "
+            lines.append(f"From {s['coins']:,} coin and {s['shares']:,} equity episodes, spread across assets "
                          f"(none above {max([v for _, v in top] or [0]):.0%}).")
         m = s.get("rests_on")
         test = ((s.get("tests") or {}).get(m) or {}) if m else {}
@@ -318,8 +318,8 @@ def followed_card(doc: dict | None, key: str | None = None) -> dict | None:
             markets = [c for c in ("coins", "shares") if c in cons["checked"]]
             both = all(c in cons["same_way"] for c in markets)
             lines.append(f"That difference pointed the same way in {len(same)} of {len(periods)} periods"
-                         + (", and in both coins and shares." if markets and both else
-                            ", but not in both coins and shares." if markets else "."))
+                         + (", and in both coins and equities." if markets and both else
+                            ", but not in both coins and equities." if markets else "."))
     else:
         lines.append("It has not turned Yes often enough in the saved history to study.")
     out = {"title": title, "lines": lines, "verdict": s.get("verdict"),

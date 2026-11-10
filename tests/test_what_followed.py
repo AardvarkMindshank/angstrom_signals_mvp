@@ -161,7 +161,7 @@ def test_card_belongs_to_the_exact_set(monkeypatch):
     s["tests"]["first"]["estimate"] = -0.1
     lines = perspectives.followed_card(doc, "demo:pullback")["lines"]
     assert lines[0].startswith("In short") and "worse" in lines[0]
-    assert any("1 of 3 periods" in line and "in both coins and shares" in line for line in lines)
+    assert any("1 of 3 periods" in line and "in both coins and equities" in line for line in lines)
 
 
 def json_copy(d):
