@@ -12,6 +12,8 @@ Agreed direction with the owner; to be put to ChatGPT, Gemini and Grok as a brie
    person's own watchlist.
 4. **Funnel studies.** What followed coins becoming Candidates. Mind survivorship and multi-stage selection
    (reviewers: not in version 1).
+1b. **Funnel notifications open the funnel** in the 🔻 Funnels tab (as Study finished notes open their Set). The
+   notes already carry the funnel id (asset_symbol "funnel:<id>"). Until the tab exists, they are not clickable.
 5. **Sharing funnels.** A trader publishes a funnel for others to copy; must never read as trade recommendations.
 
 Done:
