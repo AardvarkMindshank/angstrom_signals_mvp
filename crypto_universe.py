@@ -23,7 +23,7 @@ import requests
 import binance_data as bn
 
 TOP = 200
-MIN_VOLUME_USD = 3_000_000       # median daily USDT traded on Binance over the last 30 closed days
+MIN_VOLUME_USD = 1_000_000       # median daily USDT traded on Binance over the last 30 closed days (~$40k an hour)
 MIN_DAYS = 200                   # daily candles on Binance: enough for the daily Sets (EMA 50 needs ~150)
 MAX_GAP_DAYS = 0                 # closed days without trading in the last 30
 NOT_COINS = ("stablecoins", "wrapped-tokens", "liquid-staking-tokens", "tokenized-gold", "bridged-tokens")
@@ -34,7 +34,6 @@ REASON = {
     "tokenized-gold": "tracks gold",
     "bridged-tokens": "bridged copy of another coin",
 }
-LEVERAGED = ("UP", "DOWN", "BULL", "BEAR", "3L", "3S")
 RULES = {
     "top": TOP, "min_volume_usd": MIN_VOLUME_USD, "min_days": MIN_DAYS, "venue": "Binance spot, against USDT",
     "left_out": "stablecoins, wrapped, bridged and staked copies, gold tokens, leveraged tokens; coins not on "
@@ -86,8 +85,7 @@ def _named_copy(coin: dict) -> str | None:
                          ("staked", REASON["liquid-staking-tokens"])):
         if word in name:
             return reason
-    symbol = str(coin.get("symbol") or "").upper()
-    if any(symbol.endswith(x) for x in LEVERAGED) and len(symbol) > 4:
+    if "leverag" in name or any(f"{x}x " in name + " " for x in (2, 3, 5)):
         return "leveraged token"
     return None
 
