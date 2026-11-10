@@ -28,8 +28,8 @@ jobs:
       actions: write          # to start the funnel and universe jobs (below)
     steps:
       - name: Start the funnel and universe jobs
-        # GitHub's cron schedules never fire in this repository (this worker is itself started every 5 minutes from
-        # outside GitHub, as workflow_dispatch), so it starts the jobs that need a clock: the funnel job a few
+        # GitHub's own cron schedules are unreliable here (often hours late), which is why Supabase's clock (pg_cron)
+        # starts this worker every 5 minutes (README, HANDOVER). So the worker starts the jobs that need a clock: the funnel job a few
         # minutes after each hour, the crypto universe daily after 01:15 UTC, the equity universe after the New York
         # close on weekdays. Each is started only if it hasn't started recently; the funnel job claims each close
         # once, so an extra start never repeats work.
