@@ -404,4 +404,7 @@ def library_sets() -> dict[str, dict]:
             "groups": [_group("stretch", "starter:stretch")], "standalone": [],
             "decision": {"version": 1, "rule": {"group": "stretch", "outcome": {"eq": "stretched_up"}}}},
     }
+    import funnel_templates                     # the ready-made funnels' stage Sets (EMA trends, 1-hour entry)
+
+    out.update(funnel_templates.library())
     return out

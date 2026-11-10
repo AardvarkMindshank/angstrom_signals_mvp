@@ -167,6 +167,15 @@ EXPLAIN = {
 }
 
 
+def _funnel_explanations():
+    import funnel_templates
+
+    return funnel_templates.explanations()
+
+
+EXPLAIN.update(_funnel_explanations())
+
+
 # ----------------------------------------------------------------------------------------------- what followed
 # Results of the "What followed" study (what_followed.py, run in CI on saved prices before the hold-out). A result
 # counts only for the exact Set it was worked out for: change the Set and it goes back to "not yet studied".

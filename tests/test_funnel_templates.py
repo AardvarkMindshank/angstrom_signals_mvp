@@ -45,3 +45,13 @@ def test_the_entry_check_reads_every_line():
     ctx = DataContext("crypto", "bitcoin", candle_loader=lambda *a: {"frame": frame, "session": None, "source": "t"})
     result = sg.evaluate_set(ft.entry_set("long"), ctx)
     assert result["decision"]["answer"] in ("yes", "no")              # every member read: never Unknown here
+
+
+def test_the_funnel_uses_the_provided_library_sets():
+    import prism
+
+    library = prism.demo_sets()
+    for direction in ("long", "short"):
+        for stage in ft.trend_funnel(direction)["stages"]:
+            key = stage["set_source"]["provided"]
+            assert library[key] == stage["set_body"], key
