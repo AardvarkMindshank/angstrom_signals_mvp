@@ -428,8 +428,12 @@ def load_candles(kind: str, asset_id: str, interval: str, range_key: str, now=No
         out["error"] = reason
         return out
     symbol = yahoo_symbol(kind, asset_id)
+    binance = _binance_candles(kind, asset_id, symbol, interval, range_key, fetch) if kind == "crypto" else None
+    if binance is not None:                     # crypto: Binance spot candles (binance_data.py); Yahoo is the fallback
+        candles, session, symbol, source = binance
+        return _finish(out, candles, session, symbol, source, interval, kind, range_key, now)
     if not symbol:
-        out["error"] = "Yahoo Finance has no candles for this coin, so only the shared daily chart is available."
+        out["error"] = "Neither Binance nor Yahoo Finance has candles for this coin, so only the shared daily chart is available."
         return out
     yahoo_interval = _SOURCE[interval][0]
     start, period = fetch_window(interval, range_key, kind)
@@ -450,6 +454,53 @@ def load_candles(kind: str, asset_id: str, interval: str, range_key: str, now=No
         return out
 
     candles, session = build_candles(raw, interval, kind, meta)
+    if interval in ("4h", "12h"):
+        hours = interval[:-1]
+        how = f"fixed {hours}-hour UTC blocks" if kind == "crypto" else f"{hours}-hour blocks from the session open"
+        source = f"Yahoo Finance 1-hour candles grouped into {how}"
+    elif interval == "30m":
+        how = "fixed 30-minute UTC blocks" if kind == "crypto" else "30-minute blocks from the session open"
+        source = f"Yahoo Finance 15-minute candles grouped into {how}"
+    elif interval == "1W":
+        source = "Yahoo Finance daily candles grouped into Monday-to-Sunday weeks"
+    else:
+        source = f"Yahoo Finance {INTERVAL_LABELS[interval]} candles"
+    if kind != "crypto" and interval not in ("1D", "1W"):
+        source += ", regular trading hours only"
+    return _finish(out, candles, session, symbol, source, interval, kind, range_key, now)
+
+
+def _binance_candles(kind, asset_id, yahoo_ticker, interval, range_key, fetch=None):
+    """(candles, session, label, source) from Binance spot, or None (no pair, a test fetch, or Binance failed)."""
+    if fetch is not None:                       # tests pass their own Yahoo-shaped fetch
+        return None
+    try:
+        import binance_data as bn
+
+        pair = bn.pair_for(kind, asset_id, yahoo_ticker, None)
+        if pair is None:                        # no Yahoo ticker, or an odd one (UNI7083-USD): match by symbol and price
+            pair = bn.pair_for(kind, asset_id, None, bn.coingecko_coin(asset_id), price_of=bn.last_price)
+        if pair is None:
+            return None
+        days = RANGE_DAYS[range_key]
+        start = None if days is None else (pd.Timestamp.now(tz="UTC").normalize()
+                                           - pd.Timedelta(days=days + _warmup_days(interval, kind)))
+        key = ("binance", pair, interval, start)
+        cached = CACHE.get(key, _TTL.get(_SOURCE[interval][0], 120))
+        if cached is None:
+            cached = bn.klines(pair, interval, start)
+            if cached is not None and not cached.empty:
+                CACHE.put(key, cached)
+        if cached is None or cached.empty:
+            return None
+        label = pair.replace(bn.QUOTE, "/" + bn.QUOTE)
+        return cached.copy(), None, label, f"Binance spot {label} {INTERVAL_LABELS[interval]} candles (UTC)"
+    except Exception:
+        return None
+
+
+def _finish(out, candles, session, symbol, source, interval, kind, range_key, now):
+    """The part of load_candles shared by every source: mark the forming candle, cut to the range plus warm-up."""
     if candles.empty:
         out["error"] = f"No {INTERVAL_LABELS[interval]} candles for {symbol} in this range."
         return out
@@ -476,20 +527,6 @@ def load_candles(kind: str, asset_id: str, interval: str, range_key: str, now=No
     if len(candles) > MAX_CANDLES:
         candles = candles.iloc[-MAX_CANDLES:]
         first_shown = max(first_shown, candles.index[0])
-
-    if interval in ("4h", "12h"):
-        hours = interval[:-1]
-        how = f"fixed {hours}-hour UTC blocks" if kind == "crypto" else f"{hours}-hour blocks from the session open"
-        source = f"Yahoo Finance 1-hour candles grouped into {how}"
-    elif interval == "30m":
-        how = "fixed 30-minute UTC blocks" if kind == "crypto" else "30-minute blocks from the session open"
-        source = f"Yahoo Finance 15-minute candles grouped into {how}"
-    elif interval == "1W":
-        source = "Yahoo Finance daily candles grouped into Monday-to-Sunday weeks"
-    else:
-        source = f"Yahoo Finance {INTERVAL_LABELS[interval]} candles"
-    if kind != "crypto" and interval not in ("1D", "1W"):
-        source += ", regular trading hours only"
 
     out.update({"candles": candles, "start": first_shown, "session": session, "source": source})
     return out
