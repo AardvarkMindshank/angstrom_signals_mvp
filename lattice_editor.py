@@ -74,6 +74,9 @@ def catalogue() -> list[dict]:
             "category_label": CATEGORY.get(d.category, d.category.title()), "icon": CATEGORY_ICON.get(d.category, "trend"),
             "timeframes": list(d.timeframes), "hint": (d.interpretation or d.calculation or "")[:220],
             "badge": badge, "can_score": _score_transform(d.key) is not None, "operands": operands,
+            # Settings a person may change (such as an EMA's length): shown on the signal's card in the editors.
+            "params": {name: {"default": p.default, "kind": p.kind, "min": p.minimum, "max": p.maximum,
+                              "choices": list(p.choices), "doc": p.doc} for name, p in d.params.items()},
         })
     order = list(CATEGORY)
     return sorted(out, key=lambda s: (order.index(s["category"]) if s["category"] in order else 99, s["name"]))
@@ -160,7 +163,7 @@ def to_document(model: dict) -> dict:
     members = []
     score_keys = []
     for m in model.get("members") or []:
-        member = {"key": m["key"], "label": m.get("label") or _name_of(m["id"]),
+        member = {"key": m["key"], "label": m.get("label") or display_name(m),
                   "ref": {"id": m["id"], "version": m["version"], "timeframe": m["timeframe"],
                           "params": dict(m.get("params") or {})},
                   "role": m["role"], "category": _category_of(m["id"])}
@@ -193,6 +196,28 @@ def _name_of(signal_id: str) -> str:
         return sl.REGISTRY.get(signal_id).name
     except KeyError:
         return signal_id
+
+
+# Short names for signals whose settings are the point (an EMA 20 is not an EMA 50), used in lines and descriptions.
+SHORT = {
+    "ma.line": lambda p: f"{p['kind']} {p['length']}",
+    "ma.pair": lambda p: f"{p['kind']} {p['fast']} vs {p['slow']}",
+    "candle.shape": lambda p: "Candle",
+    "volatility.atr_trend": lambda p: f"ATR {p['length']} vs its {p['average']}-candle average",
+}
+
+
+def display_name(member: dict) -> str:
+    """A member's name with its settings where they matter: "EMA 20", "EMA 20 vs 50"."""
+    sid = member.get("id")
+    if sid in SHORT:
+        try:
+            d = sl.REGISTRY.get(sid, member.get("version") or 1)
+            params = {k: p.default for k, p in d.params.items()} | dict(member.get("params") or {})
+            return SHORT[sid](params)
+        except (KeyError, TypeError):
+            pass
+    return _name_of(sid)
 
 
 def _category_of(signal_id: str) -> str:
@@ -311,7 +336,7 @@ def checks(model: dict) -> dict:
 
     doc = to_document(model)
     if not blocks:
-        names = {m["key"]: f"{_name_of(m['id'])} ({m['timeframe']})" for m in members}
+        names = {m["key"]: f"{display_name(m)} ({m['timeframe']})" for m in members}
         for e in sg.validate_group(doc):
             blocks.append(_plain(e, names))
 
@@ -347,7 +372,7 @@ def checks(model: dict) -> dict:
         warns.append(f"Members use different timeframes ({', '.join(tfs)}). Each uses its own last closed candle, so "
                      "they update at different times.")
     for m in members:
-        name = _name_of(m["id"])
+        name = display_name(m)
         if m["role"] == "condition" and m["key"] not in used and m["key"] not in in_checks:
             warns.append(f"{name} is a Condition member, but no rule uses it, so it changes nothing.")
         if m["role"] == "score" and m["key"] in used:
@@ -386,7 +411,7 @@ def _clause_text(c: dict, members: dict) -> str:
         return f"the Group score {OPS.get(c['op'], c['op'])} {c.get('value')}"
     key, _, field = str(c.get("operand") or "").partition(":")
     m = members.get(key)
-    name = _name_of(m["id"]) if m else key
+    name = display_name(m) if m else key
     if m and m["timeframe"]:
         name += f" ({m['timeframe']})"
     if field and field != "standard_score":
@@ -404,7 +429,7 @@ def describe(model: dict) -> str:
     name = (model.get("name") or "").strip() or "This Group"
     parts = []
     if score:
-        listed = ", ".join(f"{_name_of(m['id'])} ({m['timeframe']})" for m in score)
+        listed = ", ".join(f"{display_name(m)} ({m['timeframe']})" for m in score)
         parts.append(f"{name} averages {len(score)} reading{'s' if len(score) > 1 else ''} ({listed}) into a score "
                      "from −100 to +100.")
     else:

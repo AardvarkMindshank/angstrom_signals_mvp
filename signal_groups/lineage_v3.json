@@ -25,8 +25,12 @@
     "positioning.liquidations": [
       "derivatives"
     ],
-    "positioning.funding": ["derivatives"],
-    "positioning.long_short": ["derivatives"],
+    "positioning.funding": [
+      "derivatives"
+    ],
+    "positioning.long_short": [
+      "derivatives"
+    ],
     "positioning.oi_price": [
       "derivatives",
       "price"
@@ -96,6 +100,18 @@
     ],
     "sentiment.asset": [
       "news_sentiment"
+    ],
+    "ma.line": [
+      "price"
+    ],
+    "ma.pair": [
+      "price"
+    ],
+    "candle.shape": [
+      "price"
+    ],
+    "volatility.atr_trend": [
+      "price"
     ]
   }
 }

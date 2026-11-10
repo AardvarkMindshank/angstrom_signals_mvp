@@ -223,7 +223,7 @@ def to_document(model: dict, choices: dict) -> dict:
         groups.append(entry)
     standalone = []
     for m in model.get("standalone") or []:
-        entry = {"key": m["key"], "label": le._name_of(m["id"]), "role": m["role"],
+        entry = {"key": m["key"], "label": le.display_name(m), "role": m["role"],
                  "ref": {"id": m["id"], "version": m["version"], "timeframe": m["timeframe"],
                          "params": dict(m.get("params") or {})}}
         if m.get("subject"):
@@ -292,7 +292,7 @@ def targets(model: dict, choices: dict) -> list[dict]:
             kind = "standard score" if o["field"] == "standard_score" else o["label"]
             out.append({"key": f"member:{m['key']}:{o['field']}", "target": "member", "member": m["key"],
                         "field": o["field"], "type": o["type"],
-                        "label": f"{s['name']} ({m['timeframe']}){subject_text(m.get('subject'))} · {kind}",
+                        "label": f"{le.display_name(m)} ({m['timeframe']}){subject_text(m.get('subject'))} · {kind}",
                         "scale": o["scale"], "values": [(l, l) for l in o["labels"]]})
     return out
 
@@ -325,7 +325,7 @@ def checks(model: dict, choices: dict) -> dict:
     if not blocks:
         doc = to_document(model, choices)
         names = {g["key"]: choices[g["source"]]["name"] for g in model.get("groups") or [] if g["source"] in choices}
-        names.update({m["key"]: f"{le._name_of(m['id'])} ({m['timeframe']})" for m in model.get("standalone") or []})
+        names.update({m["key"]: f"{le.display_name(m)} ({m['timeframe']})" for m in model.get("standalone") or []})
         for e in sg.validate_set(doc):
             text = e.replace("decision.rule: ", "").replace("decision: ", "")
             text = text.replace("outside the Group score range -1 to 1 (stored scale; +30 on screen is 0.30)",

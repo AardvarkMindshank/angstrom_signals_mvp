@@ -5,3 +5,4 @@ from .core import REGISTRY, SignalRef, SignalResult  # noqa: F401
 from .context import DataContext  # noqa: F401
 from .engine import evaluate  # noqa: F401
 from . import signals_basic, signals_components, signals_market, signals_sentiment, signals_ta  # noqa: F401  (registers the signals)
+from . import signals_candles  # noqa: F401,E402  (moving averages of any length, the candle, volatility)

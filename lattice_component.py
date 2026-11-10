@@ -108,6 +108,8 @@ html.angstrom-night .lat select option{color:#f3f4f6;background:#1f2937}
   border:1px solid rgba(127,127,127,.3);background:rgba(127,127,127,.05)}
 .lat .card .nm{flex:1 1 160px;min-width:0;font-weight:600}
 .lat .cat.sub{font-size:10px;opacity:.55;margin:8px 0 3px 4px}
+.lat .set{display:inline-flex;flex-wrap:wrap;align-items:center;gap:4px}
+.lat .set input,.lat .set select{padding:2px 4px}
 .lat .card .nm .sub{font-weight:400;font-size:12px;opacity:.7;margin-top:1px}
 .lat .muted{opacity:.72;font-size:12px}
 .lat .pv{display:inline-flex;gap:2px;margin-left:6px;font-size:13px;vertical-align:middle}
@@ -258,6 +260,50 @@ export default function(component) {
   group.appendChild(drop);
   const ROLE_TITLES = state.role_hints || {};
   if (!(model.members || []).length) drop.appendChild(el("div", "muted", "Drag signals here, or tap + in the list."));
+  // ⚙ A signal's own settings (such as an EMA's length): a small control for each, the usual value unless changed.
+  function settingsBox(m, s) {
+    const spec = s.params || {};
+    const names = Object.keys(spec);
+    const box = el("span", "set");
+    if (!names.length) {
+      if (m.params && Object.keys(m.params).length) {            // settings kept from a provided Set
+        box.appendChild(el("span", "tag", "⚙ " + Object.keys(m.params).sort().map((k) => k.replace(/_/g, " ") + " " + m.params[k]).join(", ")));
+      }
+      return box;
+    }
+    box.appendChild(el("span", "muted", "⚙"));
+    names.forEach((k) => {
+      const p = spec[k];
+      const now = (m.params || {})[k] !== undefined ? m.params[k] : p.default;
+      const word = k.replace(/_/g, " ");
+      let input;
+      if (p.kind === "choice") {
+        input = el("select");
+        p.choices.forEach((c) => { const o = el("option", "", String(c)); o.value = c; if (c === now) o.selected = true; input.appendChild(o); });
+      } else {
+        input = el("input");
+        input.type = "number"; input.value = now; input.style.width = "4.5em";
+        if (p.min !== null && p.min !== undefined) input.min = p.min;
+        if (p.max !== null && p.max !== undefined) input.max = p.max;
+        if (p.kind === "float") input.step = "any";
+        box.appendChild(el("span", "muted", word));
+      }
+      input.title = (p.doc || word) + " (usual: " + p.default + ")";
+      input.setAttribute("aria-label", word + " of " + s.name);
+      input.addEventListener("change", () => {
+        let v = input.value;
+        if (p.kind === "int") v = Math.round(Number(v));
+        if (p.kind === "float") v = Number(v);
+        if (p.kind !== "choice" && (!isFinite(v) || (p.min != null && v < p.min) || (p.max != null && v > p.max))) { input.value = now; return; }
+        m.params = Object.assign({}, m.params || {});
+        if (v === p.default) delete m.params[k]; else m.params[k] = v;
+        if (!Object.keys(m.params).length) delete m.params;
+        send();
+      });
+      box.appendChild(input);
+    });
+    return box;
+  }
   (model.members || []).forEach((m, i) => {
     const s = byId[m.id] || {name: m.id, timeframes: [m.timeframe], can_score: false};
     const card = el("div", "card");
@@ -274,6 +320,7 @@ export default function(component) {
     const tag = el("span", "tag", (state.member_tags || {})[m.key] || ((m.timeframe || "") + " · last closed candle"));
     tag.title = "What this member is read from. The candle still forming is never used.";
     card.appendChild(tag);
+    card.appendChild(settingsBox(m, s));
     ["score", "condition", "levels", "context"].forEach((r) => {
       const label = r.charAt(0).toUpperCase() + r.slice(1);
       const b = button(label, ROLE_TITLES[r] || label, () => { m.role = r; send(); }, m.role === r ? "on" : "");
@@ -747,6 +794,50 @@ export default function(component) {
       send(); }, "sq del"));
     drop.appendChild(card);
   });
+  // ⚙ A signal's own settings (such as an EMA's length): a small control for each, the usual value unless changed.
+  function settingsBox(m, s) {
+    const spec = s.params || {};
+    const names = Object.keys(spec);
+    const box = el("span", "set");
+    if (!names.length) {
+      if (m.params && Object.keys(m.params).length) {            // settings kept from a provided Set
+        box.appendChild(el("span", "tag", "⚙ " + Object.keys(m.params).sort().map((k) => k.replace(/_/g, " ") + " " + m.params[k]).join(", ")));
+      }
+      return box;
+    }
+    box.appendChild(el("span", "muted", "⚙"));
+    names.forEach((k) => {
+      const p = spec[k];
+      const now = (m.params || {})[k] !== undefined ? m.params[k] : p.default;
+      const word = k.replace(/_/g, " ");
+      let input;
+      if (p.kind === "choice") {
+        input = el("select");
+        p.choices.forEach((c) => { const o = el("option", "", String(c)); o.value = c; if (c === now) o.selected = true; input.appendChild(o); });
+      } else {
+        input = el("input");
+        input.type = "number"; input.value = now; input.style.width = "4.5em";
+        if (p.min !== null && p.min !== undefined) input.min = p.min;
+        if (p.max !== null && p.max !== undefined) input.max = p.max;
+        if (p.kind === "float") input.step = "any";
+        box.appendChild(el("span", "muted", word));
+      }
+      input.title = (p.doc || word) + " (usual: " + p.default + ")";
+      input.setAttribute("aria-label", word + " of " + s.name);
+      input.addEventListener("change", () => {
+        let v = input.value;
+        if (p.kind === "int") v = Math.round(Number(v));
+        if (p.kind === "float") v = Number(v);
+        if (p.kind !== "choice" && (!isFinite(v) || (p.min != null && v < p.min) || (p.max != null && v > p.max))) { input.value = now; return; }
+        m.params = Object.assign({}, m.params || {});
+        if (v === p.default) delete m.params[k]; else m.params[k] = v;
+        if (!Object.keys(m.params).length) delete m.params;
+        send();
+      });
+      box.appendChild(input);
+    });
+    return box;
+  }
   (model.standalone || []).forEach((m, i) => {
     const s = byId[m.id] || {name: m.id, timeframes: [m.timeframe]};
     const card = el("div", "card");
@@ -760,12 +851,7 @@ export default function(component) {
     tf.addEventListener("change", () => { m.timeframe = tf.value; send(); });
     card.appendChild(tf);
     card.appendChild(el("span", "tag", (state.member_tags || {})[m.key] || ""));
-    if (m.params && Object.keys(m.params).length) {        // its own settings (from a provided Set), kept as they are
-      const t = Object.keys(m.params).sort().map((k) => k.replace(/_/g, " ") + " " + m.params[k]).join(", ");
-      const chip = el("span", "tag", "⚙ " + t);
-      chip.title = "This signal's own settings, kept when you save (the usual settings otherwise)";
-      card.appendChild(chip);
-    }
+    card.appendChild(settingsBox(m, s));
     card.appendChild(subjectPicker(m, s.name));
     ["condition", "context"].forEach((r) => {
       const b = button(r.charAt(0).toUpperCase() + r.slice(1), r === "condition" ? "Used in the decision." : "Shown for context; changes nothing.",

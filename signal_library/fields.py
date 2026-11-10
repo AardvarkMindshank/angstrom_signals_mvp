@@ -36,6 +36,20 @@ def _other(unit: str) -> dict:
 
 FIELDS: dict[str, dict[str, dict]] = {
     # ---- the ten dashboard components (library_completion.md §2)
+    # ---- candle-level building blocks with settings (signals_candles.py)
+    "ma.line@1": {
+        "average": num("price", 0), "close": num("price", 0), "position": label("above", "below", "on"),
+        "distance_pct": num("% from the average", -100), "distance_atr": num("ATRs from the average"),
+        "retest_from_above": YES_NO, "retest_from_below": YES_NO, "crossed_up": YES_NO, "crossed_down": YES_NO,
+        "slope": label("up", "down", "flat"),
+    },
+    "ma.pair@1": {"fast": num("price", 0), "slow": num("price", 0), "order": label("fast_above", "fast_below"),
+                  "gap_pct": num("% fast above slow"), "crossed": label("up", "down", "none")},
+    "candle.shape@1": {"colour": label("green", "red", "flat"), "close_vs_previous": label("higher", "lower", "same"),
+                       "change_pct": num("% from the previous close", -100), "body_vs_average": num("times the average body", 0),
+                       "body_share_of_range": num("share of the candle's range", 0, 1)},
+    "volatility.atr_trend@1": {"atr": num("price", 0), "atr_pct": num("% of price", 0),
+                               "ratio": num("times its average ATR", 0), "expanding": YES_NO},
     "ma.position@1": {
         "close": num("price", 0), "sma_50": num("price", 0), "sma_200": num("price", 0),
         "vs_sma_50_pct": num("% from the 50-period average", -100), "vs_sma_200_pct": num("% from the 200-period average", -100),
