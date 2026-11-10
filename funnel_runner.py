@@ -243,6 +243,23 @@ def shared_evaluate(store, evaluate, doc: dict, assets: list[tuple], cutoff, sum
     return rows
 
 
+def pool_members(universe: dict[str, dict], pool: dict | None, watchlist: set[str] | None = None) -> dict[str, dict]:
+    """The funnel's own pool (spec: pools are versioned with the funnel): the eligible universe narrowed to the top N
+    by market cap, a minimum daily volume, or the owner's watchlist only. {} keeps the whole universe."""
+    pool = pool or {}
+    out = dict(universe)
+    if pool.get("watchlist_only"):
+        wanted = {str(w).lower() for w in (watchlist or set())}
+        out = {k: v for k, v in out.items() if str(k).lower() in wanted}
+    if pool.get("min_volume") is not None:
+        floor = float(pool["min_volume"])
+        out = {k: v for k, v in out.items() if float(v.get("volume_usd") or 0) >= floor}
+    if pool.get("top"):
+        ranked = sorted(out.items(), key=lambda kv: kv[1].get("rank") or 10**6)[: int(pool["top"])]
+        out = dict(ranked)
+    return out
+
+
 def fair_order(funnels: list[dict]) -> list[dict]:
     """Accounts take turns (spec part 3): each account's first funnel, then each one's second, and so on, so one
     account with many funnels cannot fill the hour. Within an account, funnels sharing their first stage's Set with
@@ -286,8 +303,17 @@ def run_all(store, evaluate, now=None, log=print, budget_seconds=BUDGET_SECONDS,
         if not universes[market]:
             log(f"Funnel: the {market} universe is empty (has the {market}-universe job run?)")
             continue
+        members = universes[market]
+        if f.get("pool"):
+            watch = None
+            if (f.get("pool") or {}).get("watchlist_only") and hasattr(store, "watchlist"):
+                try:
+                    watch = store.watchlist(f["owner_id"], market)
+                except Exception:
+                    watch = set()
+            members = pool_members(members, f.get("pool"), watch)
         try:
-            out[f["id"]] = run_funnel(store, f, universes[market], evaluate, now, log,
+            out[f["id"]] = run_funnel(store, f, members, evaluate, now, log,
                                       out_of_time=lambda: clock() - started > budget_seconds)
             out["funnels"] += 1
         except Exception as exc:
@@ -303,10 +329,11 @@ class SupabaseStore:
 
     def universe(self, market: str = "crypto") -> dict[str, dict]:
         if market == "equity":
-            rows = (self.db.table("equity_universe").select("ticker, name, rank, sector, next_earnings")
+            rows = (self.db.table("equity_universe").select("ticker, name, rank, sector, next_earnings, volume_usd")
                     .eq("included", True).order("rank").execute().data or [])
             return {r["ticker"]: {**r, "symbol": r["ticker"]} for r in rows}
-        rows = (self.db.table("crypto_universe").select("coin_id, symbol, name, rank, pair").eq("included", True)
+        rows = (self.db.table("crypto_universe").select("coin_id, symbol, name, rank, pair, volume_usd")
+                .eq("included", True)
                 .order("rank").execute().data or [])
         import crypto_universe
 
@@ -378,6 +405,14 @@ class SupabaseStore:
             except Exception as exc:
                 log(f"Sentiment for {name} failed: {str(exc)[:160]}")
         return done
+
+    def watchlist(self, owner_id: str, market: str) -> set[str]:
+        rows = (self.db.table("user_preferences").select("crypto_watchlist, stock_watchlist").eq("user_id", owner_id)
+                .execute().data or [])
+        if not rows:
+            return set()
+        lists = rows[0].get("crypto_watchlist" if market == "crypto" else "stock_watchlist") or {}
+        return {str(k) for k in (lists.keys() if isinstance(lists, dict) else lists)}
 
     def get_answers(self, logic_hash: str, code_id: str, asset_keys: list[str], cutoff) -> dict[str, dict]:
         out: dict[str, dict] = {}

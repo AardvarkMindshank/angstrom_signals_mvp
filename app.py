@@ -6654,7 +6654,7 @@ def notifications_panel() -> None:
                         if kind in ("invite_joined", "group_invite", "group_joined", "moderation_warning", "report_update",
                                     "study", "funnel"):
                             titles = {
-                                "funnel": f"🔻 {name}",      # not clickable yet: will open the funnel's own tab
+                                "funnel": f"🔻 {name}",      # opens the funnel in Lattice → Funnels
                                 "study": "🔬 Study finished",
                                 "invite_joined": "Invite accepted",
                                 "group_invite": "Community invite",
@@ -6670,6 +6670,19 @@ def notifications_panel() -> None:
                                 f"<div style='font-size:0.8rem;color:#374151;margin-top:2px;'>{message}</div>"
                                 f"<div style='font-size:0.75rem;color:#6b7280;margin-top:2px;'>{created}</div></div>"
                             )
+                            if kind == "funnel":         # opens that funnel in Lattice → Funnels
+                                note_ref = html.escape(str(note.get("id") or "") if not note.get("is_read") else "",
+                                                       quote=True)
+                                symbol = str(note.get("asset_symbol") or "")
+                                fid = symbol.split(":", 1)[1] if symbol.startswith("funnel:") else ""
+                                pick = f"funnel|{fid}|{str(note.get('asset_name') or '').replace('|', ' ')}"
+                                card = (
+                                    f"<button type='button' data-alert='1' data-note='{note_ref}' "
+                                    f"data-pick='{html.escape(pick, quote=True)}' title='Open this funnel' "
+                                    "style='display:block;width:100%;margin:0;padding:0;border:none;"
+                                    "background:transparent;text-align:left;cursor:pointer;font:inherit;color:inherit;'>"
+                                    f"{card}</button>"
+                                )
                             if kind == "study":          # opens the Set in Signal Sets, where the study shows
                                 import study_link
 
@@ -7204,6 +7217,13 @@ because they measure different things and are never added together.
   if it trades at least $1M a day across exchanges with complete hourly candles. The Stage hover says which. The
   list is rebuilt every day.
 - Start from a ready-made funnel (*Trend longs ▲* or *Trend shorts ▼*). Longs and shorts are separate funnels.
+- **Change a funnel in Angstrom Lattice → 🔻 Funnels.** Pick one of yours, or *Start from* a ready-made one. You can
+  change its name, direction, leave rule, alerts and **pool** (top 50/100/200/500 by market cap, a minimum traded a
+  day, or only your watchlist). Under **Stages (advanced)**: each stage's Set (any provided Set or one of yours) and
+  the close it's **checked at**; add, remove or move stages; **⬆ Upgrade** when a stage's Set has a newer version.
+  Nothing changes until you press **Save and activate**, which first says what a save will reset (changing the stages
+  or the pool starts every asset again, quietly). **Duplicate** a funnel to experiment. A funnel note in 🔔 opens its
+  funnel here. Funnels you change are marked *Customised* or *My funnel*: not reviewed or tested by Angstrom.
 - **Shares** have the same switch above the Equity table. The pool is the **S&P 500** (price at least $5, at least
   about $20M traded a day, about 3 years of history for the weekly stage), from Yahoo Finance. Shares trade 6½
   hours a day, so the ready-made share funnels read **weekly → daily → 4-hour → 1-hour**: the 4-hour candles run
@@ -13994,6 +14014,21 @@ def _take_alert_pick() -> None:
     if not raw:
         st.session_state["_alert_pick_seen"] = raw_full
         return
+    if raw.startswith("funnel|"):               # a funnel note: open that funnel in Lattice → Funnels
+        st.session_state["_alert_pick_seen"] = raw_full
+        import funnel_view as fv
+
+        _, fid, fname = (raw.split("|", 2) + ["", ""])[:3]
+        mine = fv.load_funnels(supabase, user_id) if user_id else []
+        f = next((x for x in mine if fid and x["id"] == fid), None) or next(
+            (x for x in mine if x["name"].strip() == fname.strip()), None)
+        if f is None:
+            st.toast("That funnel was deleted.")
+            return
+        st.session_state["_lattice_section_next"] = "funnels"
+        st.session_state["_funnel_edit_next"] = f["id"]
+        _reveal_section("lattice_panel", "angstrom-lattice")
+        st.rerun()                              # Lattice was already drawn in this run
     if raw.startswith("study|"):                # a Study finished note: open that Set in Signal Sets
         st.session_state["_alert_pick_seen"] = raw_full
         import perspectives

@@ -211,3 +211,12 @@ def test_accounts_take_turns():
     fs = [{"id": f"a{i}", "owner_id": "a", "stages": STAGES} for i in range(3)] + [{"id": "b0", "owner_id": "b",
                                                                                     "stages": STAGES}]
     assert [f["id"] for f in fr.fair_order(fs)][:2] in (["a0", "b0"], ["a1", "b0"], ["a2", "b0"])
+
+
+def test_pool_rules():
+    uni = {c: {"rank": r, "volume_usd": v} for c, r, v in (("btc", 1, 9e9), ("eth", 2, 5e9), ("tiny", 300, 3e5),
+                                                           ("doge", 9, 8e8))}
+    assert set(fr.pool_members(uni, {"top": 2})) == {"btc", "eth"}
+    assert set(fr.pool_members(uni, {"min_volume": 1e6})) == {"btc", "eth", "doge"}
+    assert set(fr.pool_members(uni, {"watchlist_only": True}, {"doge", "tiny"})) == {"doge", "tiny"}
+    assert fr.pool_members(uni, {}) == uni

@@ -16,6 +16,9 @@ SECTIONS = {
     "sets": (":material/account_tree:", "Signal Sets", "Connect Groups and signals into a Yes / No decision."),
     "prism": (":material/radar:", "Prism Scan", "Scan your Watchlist with a Set: now, at a past moment, or on a "
                                                 "schedule with alerts."),
+    "funnels": (":material/filter_alt:", "Funnels", "Narrow the top coins or shares down in stages, from the longest "
+                                                   "timeframe to the hour: Start from a ready-made funnel, change "
+                                                   "it, save it."),
     "strategies": (":material/route:", "Strategies", "Entries, exits and risk plans. Coming later."),
 }
 PENDING = {"strategies"}
@@ -196,6 +199,10 @@ def _render(st, supabase, assets: list[tuple[str, str, str]], user_id: str) -> N
         import lattice_set_view
 
         lattice_set_view.render(st, supabase, user_id)
+    elif chosen == "funnels":
+        import funnel_editor
+
+        funnel_editor.render(st, supabase, user_id)
     elif chosen == "prism":
         import prism_view
 
