@@ -14,7 +14,7 @@ def test_rules_and_reasons():
     pairs = {"BTC": "BTCUSDT", "PEPE": "PEPEUSDT", "NEW": "NEWUSDT", "THIN": "THINUSDT", "SOL": "SOLUSDT",
              "WBTC": "WBTCUSDT"}
     prices = {"BTCUSDT": 70100, "PEPEUSDT": 0.00001, "NEWUSDT": 2.0, "THINUSDT": 1.5, "SOLUSDT": 151}
-    q = {"BTCUSDT": (2500, 9e8, 0), "NEWUSDT": (40, 5e7, 0), "THINUSDT": (900, 4e5, 0), "SOLUSDT": (1800, 3e8, 0)}
+    q = {"BTCUSDT": (2500, 9e8, 0), "NEWUSDT": (40, 5e7, 0), "THINUSDT": (900, 1e5, 0), "SOLUSDT": (1800, 3e8, 0)}
 
     def quality(pair):
         days, vol, gaps = q[pair]
@@ -30,3 +30,11 @@ def test_rules_and_reasons():
     assert why["newcoin"].startswith("only 40 days") and why["thincoin"].startswith("thin trading")
     assert len(u["included"]) + len(u["excluded"]) == len(coins)          # every coin accounted for
     assert "2 coins usable of the top 8" in cu.summary(u)
+
+
+def test_gappy_hourly_candles_are_left_out():
+    coins = [_coin("gappy", "gap", 1.0)]
+    u = cu.build(coins=coins, excluded_ids={}, pairs={"GAP": "GAPUSDT"}, price_of={"GAPUSDT": 1.0}.get,
+                 quality_of=lambda p: {"listed_since": "2020-01-01", "days": 900, "volume_usd": 5e5, "gap_days": 0,
+                                       "quiet_hours": 0.2})
+    assert u["excluded"][0]["reason"].startswith("gappy hourly candles (20%")

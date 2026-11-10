@@ -23,7 +23,8 @@ import requests
 import binance_data as bn
 
 TOP = 500
-MIN_VOLUME_USD = 1_000_000       # median daily USDT traded on Binance over the last 30 closed days (~$40k an hour)
+MIN_VOLUME_USD = 250_000         # median daily USDT traded on Binance over the last 30 closed days (~$10k an hour)
+MAX_QUIET_HOURS = 0.05           # share of the last 7 days' hourly candles with no trade at all (gappy candles)
 MIN_DAYS = 200                   # daily candles on Binance: enough for the daily Sets (EMA 50 needs ~150)
 MAX_GAP_DAYS = 0                 # closed days without trading in the last 30
 NOT_COINS = ("stablecoins", "wrapped-tokens", "liquid-staking-tokens", "tokenized-gold", "bridged-tokens")
@@ -35,7 +36,7 @@ REASON = {
     "bridged-tokens": "bridged copy of another coin",
 }
 RULES = {
-    "top": TOP, "min_volume_usd": MIN_VOLUME_USD, "min_days": MIN_DAYS, "venue": "Binance spot, against USDT",
+    "top": TOP, "min_volume_usd": MIN_VOLUME_USD, "max_quiet_hours": MAX_QUIET_HOURS, "min_days": MIN_DAYS, "venue": "Binance spot, against USDT",
     "left_out": "stablecoins, wrapped, bridged and staked copies, gold tokens, leveraged tokens; coins not on "
                 "Binance; thin trading; short history; days without trading",
 }
@@ -109,6 +110,13 @@ def _named_copy(coin: dict) -> str | None:
     return None
 
 
+def _quiet_hours(pair: str, now: pd.Timestamp, get) -> float:
+    """Share of the last 7 days' closed hourly candles in which nothing traded (or that are missing)."""
+    hours = bn.klines(pair, "1h", now.floor("h") - pd.Timedelta(hours=169), get=get)
+    hours = hours[hours.index < now.floor("h")].tail(168)
+    return round(((hours["volume"] <= 0).sum() + max(0, 168 - len(hours))) / 168, 4)
+
+
 def quality(pair: str, now: pd.Timestamp, get=bn._get) -> dict:
     """Listing day, days of history, the median daily USDT volume and days without trading (last 30 closed days)."""
     first = get("/api/v3/klines", {"symbol": pair, "interval": "1d", "startTime": 0, "limit": 1})
@@ -120,6 +128,7 @@ def quality(pair: str, now: pd.Timestamp, get=bn._get) -> dict:
         "days": 0 if listed is None else int((now.normalize() - listed).days),
         "volume_usd": float(recent["volume"].median()) if len(recent) else 0.0,
         "gap_days": int((recent["volume"] <= 0).sum()) + max(0, 30 - len(recent)),
+        "quiet_hours": _quiet_hours(pair, now, get),
     }
 
 
@@ -161,10 +170,12 @@ def build(top: int = TOP, coins=None, excluded_ids=None, pairs=None, price_of=No
         if q["days"] < MIN_DAYS:
             leave(f"only {q['days']} days on Binance (needs {MIN_DAYS})")
         elif q["volume_usd"] < MIN_VOLUME_USD:
-            leave(f"thin trading on Binance (about ${q['volume_usd'] / 1e6:.1f}M a day; needs "
-                  f"${MIN_VOLUME_USD / 1e6:.0f}M)")
+            leave(f"thin trading on Binance (about ${q['volume_usd'] / 1e3:,.0f}k a day; needs "
+                  f"${MIN_VOLUME_USD / 1e3:,.0f}k)")
         elif q["gap_days"] > MAX_GAP_DAYS:
             leave(f"{q['gap_days']} of the last 30 days without trading")
+        elif q.get("quiet_hours", 0) > MAX_QUIET_HOURS:
+            leave(f"gappy hourly candles ({q['quiet_hours'] * 100:.0f}% of the last week's hours without a trade)")
         else:
             used_pairs.add(pair)
             included.append({**base, "pair": pair, "volume_usd": round(q["volume_usd"]),
