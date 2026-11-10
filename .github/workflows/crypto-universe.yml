@@ -2,6 +2,8 @@
 # quality gate. Daily, and by hand. Results go to the reports branch (crypto-universe/latest/) and the job summary.
 name: crypto-universe
 on:
+  push:
+    branches: [crypto-universe]
   schedule:
     - cron: "17 1 * * *"
   workflow_dispatch:
