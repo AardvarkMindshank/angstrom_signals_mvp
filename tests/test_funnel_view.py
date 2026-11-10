@@ -47,3 +47,10 @@ def test_health_warns_on_failed_or_late_runs():
     assert "failed" in fv.health(bad, F, now)
     late = [{"cutoff": "2026-11-07T00:00:00+00:00", "status": "ok"}, None, None, None]
     assert "has not been checked" in fv.health(late, F, now)
+
+
+def test_the_hover_names_the_candle_source():
+    _, hover, _ = fv.stage_cell(F, STATES["btc"], "BTCUSDT")
+    assert hover.endswith("Candles: Binance spot (BTCUSDT).")
+    _, hover, _ = fv.stage_cell(F, STATES["btc"], "yahoo:XMR-USD")
+    assert "Yahoo Finance (XMR-USD)" in hover

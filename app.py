@@ -7185,9 +7185,11 @@ because they measure different things and are never added together.
   missing checks in a row it drops out.
 - **Alerts:** one message per run, only when coins newly become Candidates; a coin alerts again only after it has
   left and come back.
-- **The coins** are the top 200 by market cap that trade on Binance against USDT, without stablecoins, wrapped,
-  staked or gold tokens, and only those with enough trading (about $1M a day) and history (200 days). The list is
-  rebuilt every day.
+- **The coins** are the top 500 by market cap, without stablecoins, wrapped, staked or gold tokens, tokenised
+  shares or funds, or other exchanges' own tokens. Candles come from **Binance** spot (at least about $250k traded
+  a day, no gappy hours, 200 days of history); a real coin Binance doesn't list comes from **Yahoo Finance** instead
+  if it trades at least $1M a day across exchanges with complete hourly candles. The Stage hover says which. The
+  list is rebuilt every day.
 - Start from a ready-made funnel (*Trend longs ▲* or *Trend shorts ▼*). Longs and shorts are separate funnels.
 
 **The asset card** above the chart notes a *pullback inside an uptrend* or a *rally inside a downtrend* when the
@@ -10970,7 +10972,8 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                 for r in crypto_results:
                     st_ = dynamic["states"].get(str(r.get("key")))
                     if st_ is not None:
-                        r["stage_icon"], r["stage_hover"], r["stage_sort"] = _fv.stage_cell(dynamic["funnel"], st_)
+                        r["stage_icon"], r["stage_hover"], r["stage_sort"] = _fv.stage_cell(
+                            dynamic["funnel"], st_, (dynamic["universe"].get(str(r.get("key"))) or {}).get("pair"))
             stock_results = process_watchlist(stock_watchlist, is_crypto=False) if trade_equities else []
         st.session_state["_perf"]["  of which loading saved prices"] = round(spent["bars"] * 1000)
         st.session_state["_perf"]["  of which indicator maths"] = round(spent["maths"] * 1000)

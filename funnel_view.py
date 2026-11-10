@@ -93,7 +93,15 @@ def coins_for(pick: str, coin_states: dict[str, fn.CoinState]) -> list[str]:
     return [c for _, c in sorted(chosen, key=lambda x: (-x[0], x[1]))]
 
 
-def stage_cell(f: dict, st: fn.CoinState) -> tuple[str, str, int]:
+def source_line(pair: str | None) -> str | None:
+    if not pair:
+        return None
+    if str(pair).startswith("yahoo:"):
+        return f"Candles: Yahoo Finance ({pair[6:]}), as Binance does not list this coin."
+    return f"Candles: Binance spot ({pair})."
+
+
+def stage_cell(f: dict, st: fn.CoinState, pair: str | None = None) -> tuple[str, str, int]:
     """(icon text, hover, sort value) for the Stage column."""
     p = fn.place(st)
     words = fr.hover(f)
@@ -122,6 +130,8 @@ def stage_cell(f: dict, st: fn.CoinState) -> tuple[str, str, int]:
         if s.line and s.answer in ("no", "unknown"):
             line += f" ({s.line})"
         lines.append(line + ".")
+    if source_line(pair):
+        lines.append(source_line(pair))
     icon = fn.icon(st)
     return f"{arrow}{icon}", "\n".join(lines), p["depth"] * 2 + (1 if p["status"] == fn.CANDIDATE else 0)
 
