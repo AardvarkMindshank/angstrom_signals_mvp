@@ -24,11 +24,14 @@ from .replay import (
 MAX_DISPLAY_STEPS = 90
 
 
-def live_candles(kind: str, asset_id: str, timeframe: str):
-    """The longest candle history the chart can load for this timeframe, without the forming candle."""
+def live_candles(kind: str, asset_id: str, timeframe: str, range_key: str | None = None):
+    """The longest candle history the chart can load for this timeframe (or the range asked for), without the forming
+    candle."""
     import chart_data
 
     ranges = [r for r in reversed(chart_data.RANGES) if chart_data.availability(timeframe, r)[0]]
+    if range_key and range_key in ranges:
+        ranges = [range_key]
     if not ranges:
         return {"error": f"No {timeframe} candles available."}
     loaded = chart_data.load_candles(kind, asset_id, timeframe, ranges[0])

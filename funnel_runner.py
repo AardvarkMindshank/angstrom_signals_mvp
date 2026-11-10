@@ -315,9 +315,21 @@ def default_evaluate(supabase):
 
     def evaluate(doc, assets, cutoff):
         prefetch(doc, assets)
-        run = display_run(supabase, max_steps=prism.steps_needed(doc), shortcut=True)
+        run = display_run(supabase, max_steps=prism.steps_needed(doc), shortcut=True, candles=short_candles)
         return prism.run_now(doc, assets, live_context=None, replay=(run, cutoff))
     return evaluate
+
+
+# How much history a funnel check loads per timeframe: enough for the longest average in the provided Sets (EMA 50
+# settles in ~150 candles) plus the chart's 260 warm-up candles, instead of the longest range the chart offers.
+# Loading a year of hourly candles per coin made the 1-hour stage take ~9 s a coin (10 Nov 2026).
+FUNNEL_RANGE = {"15m": "7D", "30m": "1M", "1h": "1M", "4h": "3M", "12h": "1Y", "1D": "1Y", "1W": "All"}
+
+
+def short_candles(kind: str, asset_id: str, timeframe: str):
+    from signal_library.replay_display import live_candles
+
+    return live_candles(kind, asset_id, timeframe, FUNNEL_RANGE.get(timeframe))
 
 
 def prefetch(doc: dict, assets, workers: int = 8) -> None:
@@ -325,14 +337,12 @@ def prefetch(doc: dict, assets, workers: int = 8) -> None:
     reconstruction that follows reads them from memory instead of one asset at a time."""
     from concurrent.futures import ThreadPoolExecutor
 
-    from signal_library.replay_display import live_candles
-
     timeframes = {m["ref"]["timeframe"] for m in doc.get("standalone") or []}
     for g in doc.get("groups") or []:
         timeframes |= {m["ref"]["timeframe"] for m in (g.get("snapshot") or {}).get("members") or []}
     jobs = [(a[0], a[1], tf) for a in assets for tf in timeframes]
     with ThreadPoolExecutor(max_workers=workers) as pool:
-        list(pool.map(lambda j: _quiet(live_candles, *j), jobs))
+        list(pool.map(lambda j: _quiet(short_candles, *j), jobs))
 
 
 def _quiet(fn_, *args):
