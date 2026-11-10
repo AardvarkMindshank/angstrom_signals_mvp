@@ -114,7 +114,8 @@ def build(shares=None, quality_of=None, now=None, pause: float = 0.0) -> dict:
 
 
 def summary(u: dict) -> str:
-    reasons = pd.Series([e["reason"].split(" (")[0] for e in u["excluded"]]).value_counts()
+    reasons = pd.Series(["short history" if "days of history" in e["reason"] else e["reason"].split(" (")[0]
+                         for e in u["excluded"]]).value_counts()
     lines = [f"Equity universe: {len(u['included'])} usable of {u['rules']['size']} ({len(u['excluded'])} left out)"]
     lines += [f"  {n:4}  {r}" for r, n in reasons.items()]
     return "\n".join(lines)
