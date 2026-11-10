@@ -60,8 +60,10 @@ def last_runs(supabase, funnel_id, n_stages: int) -> list[dict | None]:
 
 
 def states(f: dict, coins: dict[str, dict]) -> dict[str, fn.CoinState]:
+    """Places of the assets in the funnel's pool (one that left the pool is not shown at any stage)."""
     n, version = len(f["stages"]), f.get("stages_version") or 1
-    return {c: fn.CoinState.from_dict(r["state"], n) for c, r in coins.items() if r.get("stages_version") == version}
+    out = {c: fn.CoinState.from_dict(r["state"], n) for c, r in coins.items() if r.get("stages_version") == version}
+    return {c: st for c, st in out.items() if not st.left_pool}
 
 
 def picks(f: dict, coin_states: dict[str, fn.CoinState], pool_size: int) -> list[tuple[str, str]]:

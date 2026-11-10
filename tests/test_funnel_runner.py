@@ -153,3 +153,61 @@ def test_an_equity_funnel_checks_shares():
     store.active_funnels = lambda: [eq]
     fr.run_all(store, ev, now=pd.Timestamp("2026-11-10 22:00", tz="UTC"))
     assert seen and all(a[0] == "equity" and a[1] == "AAPL" for a in seen)
+
+
+def test_shared_answers_are_read_not_worked_out_again():
+    class Shared(Store):
+        def __init__(self):
+            super().__init__()
+            self.answers = {}
+
+        def get_answers(self, lh, code, keys, cutoff):
+            return {k: v for (h, c, k, t), v in self.answers.items() if (h, c, t) == (lh, code, cutoff.isoformat())
+                    and k in keys}
+
+        def put_answers(self, rows):
+            for r in rows:
+                self.answers[(r["logic_hash"], r["code_id"], r["asset_key"], r["cutoff"])] = r
+
+    store = Shared()
+    calls = []
+
+    def ev(doc, assets, cutoff):
+        calls.extend(a[1] for a in assets)
+        return [{"id": a[1], "answer": "yes" if a[1] != "dogecoin" else "unknown",
+                 "reason": "Not evaluated: provider down" if a[1] == "dogecoin" else "ok"} for a in assets]
+    now = pd.Timestamp("2026-11-10 00:20", tz="UTC")
+    stage = STAGES[0]["set_body"]
+    fr.shared_evaluate(store, ev, stage, [("crypto", c, c) for c in ("bitcoin", "dogecoin")], fr.latest_close("1D", now))
+    assert calls == ["bitcoin", "dogecoin"]
+    rows = fr.shared_evaluate(store, ev, stage, [("crypto", c, c) for c in ("bitcoin", "dogecoin")],
+                              fr.latest_close("1D", now))
+    assert calls == ["bitcoin", "dogecoin", "dogecoin"]         # the failure is tried again; Bitcoin is read
+    assert {r["id"]: r["answer"] for r in rows} == {"bitcoin": "yes", "dogecoin": "unknown"}
+    renamed = {**stage, "name": "Another name"}
+    fr.shared_evaluate(store, ev, renamed, [("crypto", "bitcoin", "b")], fr.latest_close("1D", now))
+    assert calls.count("bitcoin") == 1                          # a renamed copy shares the answer
+
+
+def test_leaving_the_pool_is_not_a_failure_and_returning_starts_again():
+    store = Store()
+    store.saved["dogecoin"] = (1, fn.CoinState.new(4))
+    ev, _ = _evaluate({0: {"bitcoin": "yes", "solana": "yes"}, 1: {"bitcoin": "yes", "solana": "yes"},
+                       2: {"bitcoin": "yes", "solana": "yes"}, 3: {"bitcoin": "yes", "solana": "yes"}})
+    fr.run_all(store, ev, now=pd.Timestamp("2026-11-10 00:20", tz="UTC"))
+    notes = len(store.notes)
+    gone = dict(UNIVERSE)
+    gone.pop("solana")
+    store.universe = lambda market="crypto": gone
+    fr.run_all(store, ev, now=pd.Timestamp("2026-11-10 01:20", tz="UTC"), log=lambda *_: None)
+    sol = store.saved["solana"][1]
+    assert sol.left_pool and fn.place(sol)["depth"] == 0 and len(store.notes) == notes
+    store.universe = lambda market="crypto": UNIVERSE
+    fr.run_all(store, ev, now=pd.Timestamp("2026-11-10 02:20", tz="UTC"), log=lambda *_: None)
+    assert not store.saved["solana"][1].left_pool
+
+
+def test_accounts_take_turns():
+    fs = [{"id": f"a{i}", "owner_id": "a", "stages": STAGES} for i in range(3)] + [{"id": "b0", "owner_id": "b",
+                                                                                    "stages": STAGES}]
+    assert [f["id"] for f in fr.fair_order(fs)][:2] in (["a0", "b0"], ["a1", "b0"], ["a2", "b0"])

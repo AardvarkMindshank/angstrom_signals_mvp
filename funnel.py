@@ -49,6 +49,7 @@ class StageState:
 class CoinState:
     stages: list[StageState] = field(default_factory=list)
     latched: bool = False                # a Candidate alert went out and the coin is still a Candidate
+    left_pool: bool = False              # no longer in the funnel's pool: not checked, never alerted, not a failure
 
     @classmethod
     def new(cls, n: int) -> "CoinState":
@@ -63,7 +64,7 @@ class CoinState:
             return cls.new(n)
         stages = [StageState(**s) for s in (d.get("stages") or [])][:n]
         stages += [StageState() for _ in range(n - len(stages))]
-        return cls(stages=stages, latched=bool(d.get("latched")))
+        return cls(stages=stages, latched=bool(d.get("latched")), left_pool=bool(d.get("left_pool")))
 
 
 def reachable(state: CoinState, k: int) -> bool:

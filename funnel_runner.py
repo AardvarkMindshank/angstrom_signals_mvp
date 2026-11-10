@@ -119,6 +119,19 @@ def run_funnel(store, f: dict, universe: dict[str, dict], evaluate, now: pd.Time
         row = saved.get(coin_id)
         same = row is not None and row.get("stages_version") == version
         states[coin_id] = fn.CoinState.from_dict(row["state"] if same else None, n)
+        if states[coin_id].left_pool:                       # back in the pool: start again
+            states[coin_id] = fn.CoinState.new(n)
+    # Assets that left the pool (the daily universe dropped them): kept as "left the pool", back to the start, never
+    # alerted and never counted as failing a stage. One that returns starts again from the pool.
+    gone = {}
+    for coin_id, row in saved.items():
+        if coin_id not in universe and row.get("stages_version") == version and not (row.get("state") or {}).get("left_pool"):
+            gone[coin_id] = fn.CoinState(stages=fn.CoinState.new(n).stages, left_pool=True)
+    if gone:
+        store.save_coins(f["id"], version, gone)
+        log(f"Funnel {f['name']}: {len(gone)} left the pool.")
+    for coin_id, st in states.items():
+        st.left_pool = False
     # A new or restarted version starts silently: its first pass sets every asset's place (and latches the Candidates
     # it finds) without a flood of "new Candidate" alerts (reviews of 10 Nov; ask "alert on first matches" to opt in).
     first_pass = not any(r.get("stages_version") == version for r in saved.values())
@@ -144,7 +157,7 @@ def run_funnel(store, f: dict, universe: dict[str, dict], evaluate, now: pd.Time
                 part = [(market, c, universe[c].get("name") or c) for c in coins[i:i + CHUNK]]
                 log(f"Funnel {f['name']} · stage {k + 1} ({stage['timeframe']}, close {cutoff:%d %b %H:%M} UTC): "
                     f"{i}/{len(coins)} checked, {time.monotonic() - began:.0f}s")
-                for row in evaluate(stage["set_body"], part, cutoff):
+                for row in shared_evaluate(store, evaluate, stage["set_body"], part, cutoff, summary):
                     answer = row.get("answer") if row.get("answer") in tally else fn.UNKNOWN
                     tally[answer] += 1
                     fn.record(states[row["id"]], k, answer, cutoff.isoformat(), row.get("reason"),
@@ -186,12 +199,78 @@ def run_funnel(store, f: dict, universe: dict[str, dict], evaluate, now: pd.Time
     return summary
 
 
+def _code_id() -> str:
+    try:
+        from signal_library import certification
+
+        return certification.code_hash()[:12]
+    except Exception:
+        return "uncertified"
+
+
+def shared_evaluate(store, evaluate, doc: dict, assets: list[tuple], cutoff, summary: dict | None = None) -> list[dict]:
+    """Answers for these assets at this close (docs/design/funnels_v2_spec.md, part 1): stored ones are read, the rest
+    worked out and stored when finished. A failed check ("Not evaluated") is returned as Unknown and not stored, so a
+    later funnel or pass at the same close tries again. Without a shared store (tests, or the table not installed yet)
+    everything is worked out."""
+    if not hasattr(store, "get_answers"):
+        return evaluate(doc, assets, cutoff)
+    import what_followed
+
+    lh, code = what_followed.logic_hash(doc), _code_id()
+    keys = {f"{kind}:{asset_id}": (kind, asset_id, name) for kind, asset_id, name in assets}
+    try:
+        stored = store.get_answers(lh, code, list(keys), cutoff)
+    except Exception:
+        stored = {}
+    rows = [{"id": keys[k][1], "answer": a["answer"], "reason": a.get("reason"), "shared": True}
+            for k, a in stored.items() if k in keys]
+    missing = [keys[k] for k in keys if k not in stored]
+    fresh = evaluate(doc, missing, cutoff) if missing else []
+    rows += fresh
+    key_of = {asset_id: f"{kind}:{asset_id}" for kind, asset_id, _ in missing}
+    keep = [{"logic_hash": lh, "code_id": code, "asset_key": key_of[r["id"]], "cutoff": cutoff.isoformat(),
+             "answer": r["answer"], "reason": (r.get("reason") or "")[:500] or None}
+            for r in fresh if r.get("id") in key_of and r.get("answer") in ("yes", "no", "unknown")
+            and not str(r.get("reason") or "").startswith("Not evaluated")]
+    if keep:
+        try:
+            store.put_answers(keep)
+        except Exception:
+            pass
+    if summary is not None:
+        summary["shared"] = summary.get("shared", 0) + len(stored)
+    return rows
+
+
+def fair_order(funnels: list[dict]) -> list[dict]:
+    """Accounts take turns (spec part 3): each account's first funnel, then each one's second, and so on, so one
+    account with many funnels cannot fill the hour. Within an account, funnels sharing their first stage's Set with
+    other accounts come first (their answers serve more people)."""
+    import what_followed
+
+    use: dict[str, int] = {}
+    for f in funnels:
+        if f.get("stages"):
+            h = what_followed.logic_hash(f["stages"][0].get("set_body") or {})
+            use[h] = use.get(h, 0) + 1
+    by_owner: dict[str, list[dict]] = {}
+    for f in funnels:
+        by_owner.setdefault(str(f.get("owner_id")), []).append(f)
+    for owner, mine in by_owner.items():
+        mine.sort(key=lambda f: -use.get(what_followed.logic_hash((f.get("stages") or [{}])[0].get("set_body") or {}), 0))
+    out = []
+    for turn in range(max((len(v) for v in by_owner.values()), default=0)):
+        out += [mine[turn] for mine in by_owner.values() if turn < len(mine)]
+    return out
+
+
 def run_all(store, evaluate, now=None, log=print, budget_seconds=BUDGET_SECONDS, clock=time.monotonic) -> dict:
     now = pd.Timestamp(now or datetime.now(timezone.utc))
     now = now.tz_localize("UTC") if now.tzinfo is None else now.tz_convert("UTC")
     started = clock()
     out = {"funnels": 0, "waiting": 0}
-    funnels = store.active_funnels()
+    funnels = fair_order(store.active_funnels())
     universes: dict[str, dict] = {}
     for i, f in enumerate(funnels):
         if clock() - started > budget_seconds:
@@ -299,6 +378,20 @@ class SupabaseStore:
             except Exception as exc:
                 log(f"Sentiment for {name} failed: {str(exc)[:160]}")
         return done
+
+    def get_answers(self, logic_hash: str, code_id: str, asset_keys: list[str], cutoff) -> dict[str, dict]:
+        out: dict[str, dict] = {}
+        for i in range(0, len(asset_keys), 150):
+            rows = (self.db.table("set_answers").select("asset_key, answer, reason").eq("logic_hash", logic_hash)
+                    .eq("code_id", code_id).eq("cutoff", cutoff.isoformat()).in_("asset_key", asset_keys[i:i + 150])
+                    .execute().data or [])
+            out.update({r["asset_key"]: r for r in rows})
+        return out
+
+    def put_answers(self, rows: list[dict]) -> None:
+        for i in range(0, len(rows), 200):
+            self.db.table("set_answers").upsert(rows[i:i + 200], on_conflict="logic_hash,code_id,asset_key,cutoff",
+                                                ignore_duplicates=True).execute()
 
     def notify(self, rows: list[dict]) -> None:
         if rows:

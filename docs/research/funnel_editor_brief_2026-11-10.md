@@ -94,7 +94,7 @@ Please reply in this order, in plain words, under about 1,500 words:
 4. **Your recommended version:** editor model, validation, shared answers, pools, limits.
 5. **Sources:** links to any products or methods you cite.
 
-## Decision after review (proposed, 10 Nov; awaiting the owner)
+## Decision after review (10 Nov) — approved by the owner
 
 Reviews: Gemini, Cursor/Grok and ChatGPT (`funnel_editor_review_2026-11-10.md`), all "sound with changes".
 
