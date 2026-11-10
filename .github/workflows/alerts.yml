@@ -28,10 +28,10 @@ jobs:
       actions: write          # to start the hourly funnel job (below)
     steps:
       - name: Start the hourly funnel job
-        # GitHub's own hourly schedule for funnel.yml has been unreliable, and this 5-minute worker runs dependably:
+        # GitHub's cron schedule for funnel.yml never fires here, but this 5-minute worker runs dependably:
         # a few minutes after each hour it starts funnel.yml, unless one started in the last 40 minutes. The funnel
-        # job claims each close once, so an extra start never repeats work.
-        if: github.event_name == 'schedule'
+        # job claims each close once, so an extra start never repeats work. (This worker is itself started every 5
+        # minutes from outside GitHub, as workflow_dispatch: GitHub's cron schedules don't fire in this repository.)
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
