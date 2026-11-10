@@ -14,7 +14,14 @@ jobs:
             "https://data-api.binance.vision/api/v3/exchangeInfo?permissions=SPOT" \
             "https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=12h&limit=2" \
             "https://api.binance.us/api/v3/klines?symbol=BTCUSDT&interval=12h&limit=2" \
-            "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&per_page=5&page=1"; do
+            "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&per_page=5&page=1" \
+            "https://fapi.binance.com/fapi/v1/klines?symbol=HYPEUSDT&interval=1h&limit=2" \
+            "https://fapi.binance.com/fapi/v1/exchangeInfo" \
+            "https://www.okx.com/api/v5/market/candles?instId=BTC-USDT-SWAP&bar=1H&limit=2" \
+            "https://api.bybit.com/v5/market/kline?category=linear&symbol=BTCUSDT&interval=60&limit=2" \
+            "https://api.kraken.com/0/public/OHLC?pair=XMRUSD&interval=60" \
+            "https://api.exchange.coinbase.com/products/BTC-USD/candles?granularity=3600" \
+            "https://api.coingecko.com/api/v3/coins/categories/list"; do
             code=$(curl -s -o body.txt -w "%{http_code}" -m 20 "$url" || echo "000")
             echo "$code  $url  $(head -c 160 body.txt)" | tee -a "$GITHUB_STEP_SUMMARY"
           done
