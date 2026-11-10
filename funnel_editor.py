@@ -199,21 +199,29 @@ def render(st, supabase, user_id: str) -> None:
                             help="A paused funnel isn't checked; it keeps its places until resumed.")
 
     # ------------------------------------------------------------------ pool
-    with st.expander("Pool: which assets the funnel starts from", icon=":material/filter_list:"):
-        pool = dict(f.get("pool") or {})
-        whole = "the top 500 coins (eligible on Binance or Yahoo)" if market == "crypto" else "the S&P 500"
-        sizes = [0, 50, 100, 200, 500]
-        top = st.selectbox("Size", sizes, index=sizes.index(int(pool.get("top") or 0)), key=f"fe_top_{pick}",
-                           format_func=lambda n: f"All eligible: {whole}" if n == 0 else f"Top {n} by market cap")
-        vol = st.number_input("Minimum traded a day (US$, 0 = no extra minimum)", min_value=0, max_value=10_000_000_000,
-                              value=int(pool.get("min_volume") or 0), step=250_000, key=f"fe_vol_{pick}",
-                              help="On the coin's venue (Binance) or across exchanges (Yahoo coins); equities: in New York.")
-        only = st.toggle("Only my watchlist", value=bool(pool.get("watchlist_only")), key=f"fe_watch_{pick}",
-                         help="The funnel checks only your own watchlist's eligible "
-                              f"{'coins' if market == 'crypto' else 'equities'}, not the market.")
-        pool = {k: v for k, v in (("top", top or None), ("min_volume", vol or None), ("watchlist_only", only or None))
-                if v}
-        f["pool"] = pool
+    pool = dict(f.get("pool") or {})
+    whole = "the top 500 coins" if market == "crypto" else "the S&P 500"
+    box = st.container(border=True)
+    box.markdown("**Pool** · which assets the funnel starts from", help=(
+        f"All eligible = {whole} that pass Angstrom's data checks. Narrow it by size, by how much trades a day "
+        "(on the coin's venue: Binance, or across exchanges for Yahoo coins; equities in New York), or to your own "
+        "watchlist. Changing the pool starts every asset again from the pool."))
+    p1, p2, p3 = box.columns([2, 2, 1.4], vertical_alignment="bottom")
+    sizes = [0, 50, 100, 200, 500]
+    top = p1.selectbox("Size", sizes, index=sizes.index(int(pool.get("top") or 0)), key=f"fe_top_{pick}",
+                       format_func=lambda n: "All eligible" if n == 0 else f"Top {n} by market cap")
+    floors = [0, 250_000, 1_000_000, 5_000_000, 20_000_000, 100_000_000]
+    current = int(pool.get("min_volume") or 0)
+    if current not in floors:
+        floors = sorted(floors + [current])
+    vol = p2.selectbox("Traded a day, at least", floors, index=floors.index(current), key=f"fe_vol_{pick}",
+                       format_func=lambda v: "No extra minimum" if v == 0 else
+                       (f"${v / 1e6:g}M" if v >= 1e6 else f"${v / 1e3:g}k"))
+    only = p3.toggle("Only my watchlist", value=bool(pool.get("watchlist_only")), key=f"fe_watch_{pick}",
+                     help="The funnel checks only your own watchlist's eligible "
+                          f"{'coins' if market == 'crypto' else 'equities'}, not the market.")
+    f["pool"] = {k: v for k, v in (("top", top or None), ("min_volume", vol or None), ("watchlist_only", only or None))
+                 if v}
 
     # ------------------------------------------------------------------ stages
     with st.expander(f"Stages (advanced): {' → '.join(s.get('label') or s['timeframe'] for s in f['stages'])}",
