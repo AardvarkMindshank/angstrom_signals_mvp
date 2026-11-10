@@ -7609,6 +7609,37 @@ trade_crypto, trade_equities = _trade_flags(st.session_state.trade_markets)
 PLOTLY_DAYS = 365            # the Plotly chart's reach (the old "Days of history" setting's maximum)
 
 
+def _add_from_funnel(kind: str, asset_id: str) -> None:
+    """+ in a Dynamic funnel table: the asset joins My Watchlist (named as the funnel's universe names it)."""
+    import funnel_view as fv
+
+    market = "crypto" if kind == "Crypto" else "equity"
+    universe = fv.load_universe(supabase, market)
+    info = universe.get(asset_id) or universe.get(str(asset_id).upper()) or {}
+    if kind == "Crypto":
+        symbol = str(info.get("symbol") or "").upper()
+        name = str(info.get("name") or asset_id)
+        label = f"{name} ({symbol})" if symbol and symbol not in name.upper() else name
+        if asset_id in CRYPTO_WATCHLIST:
+            st.toast(f"{label} is already on My Watchlist.")
+            return
+        CRYPTO_WATCHLIST[asset_id] = label
+        prefs["crypto"] = CRYPTO_WATCHLIST
+        save_preferences_to_cloud({"crypto_watchlist": CRYPTO_WATCHLIST})
+    else:
+        ticker = str(asset_id).upper()
+        label = f"{info.get('name') or ticker} ({ticker})"
+        if ticker in STOCK_WATCHLIST:
+            st.toast(f"{label} is already on My Watchlist.")
+            return
+        STOCK_WATCHLIST[ticker] = label
+        prefs["stock"] = STOCK_WATCHLIST
+        save_preferences_to_cloud({"stock_watchlist": STOCK_WATCHLIST})
+    (st.session_state.get("_memo") or {}).pop("counts", None)    # "Watching" counts afresh, so it shows at once
+    st.toast(f"Added {label} to My Watchlist.")
+    st.rerun()
+
+
 def _ensure_added(kind: str, asset_id: str, label: str) -> None:
     """Write the first shared prices and sentiment when this asset is new."""
     try:
@@ -11226,6 +11257,10 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             if str(raw).startswith("columns|"):          # the column icon in a table header
                 _COLUMNS_DIALOG()
                 return
+            if str(raw).startswith("watch|"):            # + beside a Dynamic funnel asset: add it to My Watchlist
+                _, kind_name, asset_id = (str(raw).split("|", 2) + ["", ""])[:3]
+                _add_from_funnel(kind_name, asset_id)
+                return
             parts = str(raw).split("|")
             if len(parts) < 2:
                 return
@@ -11609,6 +11644,17 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                     "cursor:pointer;white-space:nowrap;'>"
                     f"{html.escape(str(row['symbol']))}</button>"
                 )
+                own = CRYPTO_WATCHLIST if kind == "Crypto" else STOCK_WATCHLIST
+                if staged and str(asset_id) not in own and str(asset_id).upper() not in own:
+                    # A Dynamic funnel table: + adds the asset to My Watchlist (shown there when you switch back).
+                    add_pick = html.escape(f"watch|{kind}|{asset_id}", quote=True)
+                    add_tip = html.escape(f"Add {row['symbol']} to My Watchlist", quote=True)
+                    name_button += (
+                        f"<button type='button' data-pick='{add_pick}' title='{add_tip}' aria-label='{add_tip}' "
+                        "style='background:none;border:1px solid rgba(128,128,128,.45);border-radius:6px;"
+                        "padding:0 6px;margin-left:8px;color:inherit;font:inherit;font-weight:700;line-height:1.3;"
+                        "cursor:pointer;'>+</button>"
+                    )
                 rank_cell = ""
                 if kind == "Crypto":
                     rank_value = row.get("market_rank")
