@@ -26,7 +26,8 @@ def test_pair_from_yahoo_ticker_then_symbol_with_a_price_check():
 
 def test_klines_pages_through_and_uses_quote_volume():
     step = bn.STEP_MS["1h"]
-    start = int(pd.Timestamp("2024-01-01", tz="UTC").timestamp() * 1000)
+    begin = pd.Timestamp.now(tz="UTC").floor("h") - pd.Timedelta(hours=3000)
+    start = int(begin.timestamp() * 1000)
     calls = []
 
     def get(path, params):
@@ -35,7 +36,7 @@ def test_klines_pages_through_and_uses_quote_volume():
         n = min(bn.LIMIT, 2500 - done)
         return _rows(params["startTime"], step, n) if n > 0 else []
 
-    frame = bn.klines("BTCUSDT", "1h", pd.Timestamp("2024-01-01", tz="UTC"), get=get)
+    frame = bn.klines("BTCUSDT", "1h", begin, get=get)
     assert len(frame) == 2500 and len(calls) == 3
     assert frame.index.is_monotonic_increasing and str(frame.index.tz) == "UTC"
     assert frame["volume"].iloc[0] == 500.0                                                # USDT traded, not coins
