@@ -68,11 +68,15 @@ WORDS = {"first": "Gain first", "move": "Move after 10 candles", "higher": "Fini
 
 
 def logic_hash(doc: dict) -> str:
-    """Fingerprint of what a Set checks, ignoring its name and description: a renamed copy keeps its study, any
-    change to its logic does not."""
+    """Fingerprint of what a Set checks, ignoring its name and description, and where its Groups were copied from:
+    a renamed copy, or your own copy of a provided Set, keeps its study; any change to its logic does not."""
     from column_answers import def_hash
 
-    return def_hash({k: v for k, v in (doc or {}).items() if k not in ("name", "purpose", "description", "notes")})
+    body = {k: v for k, v in (doc or {}).items() if k not in ("name", "purpose", "description", "notes")}
+    if isinstance(body.get("groups"), list):
+        body["groups"] = [{k: v for k, v in g.items() if k != "provenance"} if isinstance(g, dict) else g
+                          for g in body["groups"]]
+    return def_hash(body)
 
 
 from study_history import SAVED_SINCE  # noqa: E402

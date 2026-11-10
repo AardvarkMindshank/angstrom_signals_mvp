@@ -237,3 +237,23 @@ def test_the_card_shows_breakdowns_without_marks():
     assert "luck alone typically makes about" in b["assets"]["line"]
     assert [r["Asset"] for r in b["assets"]["rows"]] == sorted(r["Asset"] for r in b["assets"]["rows"])
     assert "not proof" in b["assets"]["note"] and "Studied once" in b["history"]
+
+
+def test_your_own_copy_of_a_provided_set_keeps_its_study():
+    import sys
+
+    import lattice_sets as ls
+    import prism
+
+    sys.path.insert(0, "video")
+    import seed
+
+    saved = seed.starters()
+    choices = ls.group_choices(saved, seed.USER)
+    doc = prism.demo_sets()["demo:breakout"]
+    model, err = ls.from_document(doc, choices)
+    assert err is None
+    copy_ = ls.to_document(model, choices)
+    assert wf.logic_hash(copy_) == wf.logic_hash(doc)                     # only where its Groups came from differs
+    model["lines"][-1]["value"] = "2"
+    assert wf.logic_hash(ls.to_document(model, choices)) != wf.logic_hash(doc)

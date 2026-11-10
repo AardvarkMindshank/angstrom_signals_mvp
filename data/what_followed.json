@@ -98,7 +98,7 @@
     }
    },
    "name": "Pullback in an uptrend",
-   "hash": "2b7445918b49d3df06d0f1d0"
+   "hash": "e05bb081b2cf31339eed7e8a"
   },
   "demo:rally": {
    "type": "directional",
@@ -194,7 +194,7 @@
     }
    },
    "name": "Rally in a downtrend",
-   "hash": "9f6e6b788a6bcfe39740e353"
+   "hash": "04e275c027fa08c913a84655"
   },
   "demo:alignment": {
    "type": "directional",
@@ -290,7 +290,7 @@
     }
    },
    "name": "Trend alignment",
-   "hash": "cbde614cc5028407ada6e36d"
+   "hash": "bedd5d1baa594dad2a87c3c9"
   },
   "demo:breakout": {
    "type": "directional",
@@ -384,7 +384,7 @@
     }
    },
    "name": "Breakout with volume",
-   "hash": "c4f4ada4236641a35f6fa055"
+   "hash": "70c578d7feeecbbf64fde473"
   },
   "demo:squeeze": {
    "type": "neutral",
@@ -731,14 +731,14 @@
     }
    },
    "name": "Overextended",
-   "hash": "3ce72f3edff6263c2bd7b9f8"
+   "hash": "e905f41083bb89962e79f3ed"
   },
   "demo:btc_filter": {
    "type": "filter",
    "verdict": null,
    "note": "A filter for other Sets: it is not studied on its own.",
    "name": "Bitcoin trend filter",
-   "hash": "2a9f34326dd1e4d447c50653"
+   "hash": "6fdd5cfb40663ec6af9b6e3c"
   }
  },
  "through": "2024-10-29",

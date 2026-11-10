@@ -46,7 +46,14 @@ def my_trend_model() -> dict:
 
 
 def starters() -> list[dict]:
-    return [config(f"cfg-{a.split(':')[1]}", "group", sg.starter(a), owner="system", starter=a) for a in sg.STARTERS]
+    """The starter Groups, and the other provided Groups (as the live database holds them after
+    sql/2026-11-15_provided_groups.sql), such as Recent structure break."""
+    import prism
+
+    out = [config(f"cfg-{a.split(':')[1]}", "group", sg.starter(a), owner="system", starter=a) for a in sg.STARTERS]
+    out += [config(f"cfg-{k.split(':')[1]}", "group", body, owner="system", starter=k)
+            for k, (_, body) in prism.provided_groups().items() if k not in sg.STARTERS]
+    return out
 
 
 def pullback_model(choices: dict) -> dict:
