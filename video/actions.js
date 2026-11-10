@@ -450,9 +450,9 @@ module.exports = {
       await setLine(h, 1, await readingKey(h, 1, "Relative volume"), "gte", "1.5");
     },
     then: async (h) => {
+      await setLine(h, 2, await readingKey(h, 2, "Relative volume"), "lte", "1.5");
       await h.glide('.lat input[aria-label="Within this many closed daily candles"]');
       await h.ring('.lat input[aria-label="Within this many closed daily candles"]');
-      await setLine(h, 2, await readingKey(h, 2, "Relative volume"), "lte", "1.5");
     },
     words: async (h) => {
       await h.clear();
@@ -750,7 +750,14 @@ module.exports = {
       const chip = provided(h, "Breakout with volume");
       await h.press(chip.locator("details.inside > summary").first(), false);
       await h.wait(400);
-      await h.press(chip.locator("details.inside button", { hasText: "Make my own copy" }).first());
+      const copyButton = chip.locator("details.inside button", { hasText: "Make my own copy" }).first();
+      await h.glide(copyButton);
+      await h.ring(copyButton);
+      await h.wait(1200);
+      await h.clear();
+      // The same copy, opened from Start from in Signal Sets (as Make my own copy does), then saved as yours.
+      await h.section("Signal Sets");
+      await h.pick("Start from", "Breakout with volume");
       await h.wait(600);
       await h.type('.lat input[aria-label="Set name"]', "My breakout");
       await h.press('button:has-text("Save as a new Set")');
