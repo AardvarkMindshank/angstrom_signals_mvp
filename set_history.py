@@ -396,13 +396,13 @@ def complete_row(supabase, doc: dict, strip: dict, frames=full_daily) -> str | N
             first = pd.Timestamp(row["spans"][0][0])
             first = first.tz_localize(frame.index.tz) if first.tzinfo is None and frame.index.tz is not None else first
             older_frame = frame[frame.index < first]
-            start = frame.index[-1] - pd.Timedelta(days=365 * nxt + 35)
+            start = max(frame.index[-1] - pd.Timedelta(days=365 * nxt + 35),
+                        frame.index[min(60, len(frame.index) - 1)])    # daily_answers' warm-up, as a whole history
             subjects = {(sk, sid): frames(sk, sid) for sk, sid in subjects_of(doc)}
             subjects = {k: v for k, v in subjects.items() if v is not None}
             older = []
             if len(older_frame) and older_frame.index[-1] >= start:
-                older = daily_answers(doc, older_frame, row["kind"], row["id"], start=max(start, older_frame.index[0]),
-                                      subjects=subjects)
+                older = daily_answers(doc, older_frame, row["kind"], row["id"], start=start, subjects=subjects)
             joined = spans(older)
             for first_day, last_day, answer in row["spans"]:
                 if joined and joined[-1][2] == answer:

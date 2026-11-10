@@ -120,10 +120,16 @@ def test_first_look_is_the_last_year_then_older_years_fill_in():
     assert strip["pending"] == 2 and db.writes == 0                       # partial years are never saved
     first = pd.Timestamp(strip["start"])
     assert first >= f.index[-1].tz_localize(None) - pd.Timedelta(days=sh.QUICK_DAYS + 1)
-    assert sh.complete_row(db, doc, strip, frames) == "A" and strip["pending"] == 1 and db.writes == 1
+    # Older years come in steps, every asset in turn (A to 3 years, B to 3 years, ...); a finished one is saved.
+    assert sh.complete_row(db, doc, strip, frames) == "A"
     assert pd.Timestamp(strip["start"]) < first                          # A now reaches back further
-    assert sh.complete_row(db, doc, strip, frames) == "B" and strip["pending"] == 0
-    assert sh.complete_row(db, doc, strip, frames) is None
+    assert sh.complete_row(db, doc, strip, frames) == "B"
+    for _ in range(4):
+        sh.complete_row(db, doc, strip, frames)
+    assert strip["pending"] == 0 and db.writes == 2 and sh.complete_row(db, doc, strip, frames) is None
+    # Filled in by steps, the history is exactly the one worked out in one go.
+    whole = sh.spans(sh.daily_answers(doc, f, "crypto", "a"))
+    assert strip["rows"][0]["spans"] == whole
     # Next time both are saved: whole histories at once, nothing pending.
     again = sh.quick_rows(db, doc, [("crypto", "a", "A"), ("crypto", "b", "B")], frames=frames)
     assert again["pending"] == 0 and again["rows"][0]["spans"] == strip["rows"][0]["spans"]
