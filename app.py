@@ -7155,6 +7155,28 @@ because they measure different things and are never added together.
   20-day average). Another tick box adds 1d % and 30d %.
 - **Watching** shows how many accounts follow the asset. **30-day trend** is a small price line.
 
+**🔻 Dynamic watchlist (funnels).** Above the crypto table, switch **My Watchlist** (the coins you picked) to
+**Dynamic**: the coins a *funnel* has narrowed down for you, checked by itself a few minutes after every hour.
+- A funnel is a short list of stages, each a Set on its own timeframe, for example *EMA 20 above EMA 50* on the
+  daily, then the 12-hour, then the 4-hour, then a 1-hour entry check. Each stage only checks the coins that hold
+  every stage before it, so the list gets smaller at each step. A coin that isn't reached shows *not checked*,
+  never No.
+- The **stage picker** shows how many coins hold each stage. **🚩 Flagged**: on the shortlist (every stage holds
+  but the last), waiting for the entry conditions. **✅ Candidate**: every stage holds, including the entry
+  conditions. A Candidate is a coin to look at now, not a recommendation to buy or sell.
+- The **Stage** column shows where each coin is (▲ long or ▼ short funnel; 👁 first stage, 🔷 second, 📋 shortlist,
+  🚩, ✅). Hover it for each stage's last answer and when it was checked.
+- **Fails twice to leave:** a coin joins a stage on its first Yes, but leaves only after two No answers in a row,
+  so it doesn't flicker in and out. When an earlier stage stops holding, the later ones drop at once.
+- **❔ Pending:** data was missing at the last check. A pending coin never moves up or alerts; after three
+  missing checks in a row it drops out.
+- **Alerts:** one message per run, only when coins newly become Candidates; a coin alerts again only after it has
+  left and come back.
+- **The coins** are the top 200 by market cap that trade on Binance against USDT, without stablecoins, wrapped,
+  staked or gold tokens, and only those with enough trading (about $1M a day) and history (200 days). The list is
+  rebuilt every day.
+- Start from a ready-made funnel (*Trend longs ▲* or *Trend shorts ▼*). Longs and shorts are separate funnels.
+
 **The asset card** above the chart notes a *pullback inside an uptrend* or a *rally inside a downtrend* when the
 provided Sets of those names say Yes, and shows context chips (🌊 daily range, 💪 trend strength, 🧭 regime,
 🔈 volume against usual) read from the Regime evidence and Relative volume signals. They describe how the asset
