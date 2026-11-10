@@ -9,7 +9,7 @@ import prism
 def test_provenance_and_upgrade():
     lib = prism.demo_sets()
     f = fe.template("crypto", "long")
-    assert fe.provenance(f, lib) == "Provided by Angstrom"
+    assert fe.provenance(f, lib) == "Your copy of a provided funnel"
     old = copy.deepcopy(f)
     old["stages"][1]["set_body"]["decision"]["rule"]["eq"] = "fast_below"    # an older provided version
     assert fe.provenance(old, lib) == "Customised"
@@ -94,7 +94,8 @@ def test_funnels_tab_runs_inside_streamlit():
     assert not app.exception
     assert not next(b for b in app.button if b.label == "Save and activate").disabled
     app.selectbox(key="funnel_edit").set_value("new:equity:long").run()
-    assert not app.exception and "Create this funnel" in [b.label for b in app.button]
+    labels = [b.label for b in app.button]
+    assert not app.exception and "Make my own copy" in labels and "Delete" not in labels
 
 
 def test_first_funnels_legacy_keys_name_the_library_sets():

@@ -7248,15 +7248,19 @@ because they measure different things and are never added together.
   a day, no gappy hours, 200 days of history); a real coin Binance doesn't list comes from **Yahoo Finance** instead
   if it trades at least $1M a day across exchanges with complete hourly candles. The Stage hover says which. The
   list is rebuilt every day.
-- Start from a ready-made funnel (*Trend crypto longs ▲* or *Trend crypto shorts ▼*; for equities *Trend equity
-  longs ▲* or *Trend equity shorts ▼*). Longs and shorts are separate funnels.
-- **Change a funnel in Angstrom Lattice → 🔻 Funnels.** Pick one of yours, or *Start from* a ready-made one. You can
-  change its name, direction, leave rule, alerts and **pool** (top 50/100/200/500 by market cap, a minimum traded a
-  day, or only your watchlist). Under **Stages (advanced)**: each stage's Set (any provided Set or one of yours) and
-  the close it's **checked at**; add, remove or move stages; **⬆ Upgrade** when a stage's Set has a newer version.
-  Nothing changes until you press **Save and activate**, which first says what a save will reset (changing the stages
-  or the pool starts every asset again, quietly). **Duplicate** a funnel to experiment. A funnel note in 🔔 opens its
-  funnel here. Funnels you change are marked *Customised* or *My funnel*: not reviewed or tested by Angstrom.
+- **Provided funnels work like provided Groups and Sets:** Angstrom's *Trend crypto longs ▲* / *Trend crypto
+  shorts ▼* (and *Trend equity longs ▲* / *Trend equity shorts ▼*) can't be changed or deleted. To use one, press
+  **Make my own copy**: your copy runs for your account, with its own places and alerts, and is yours to change,
+  pause or delete. Longs and shorts are separate funnels.
+- **Change your funnels in Angstrom Lattice → 🔻 Funnels.** The picker lists your funnels, then the provided ones
+  (marked *provided*, read-only). For yours you can change the name, direction, leave rule, alerts and **pool** (top
+  50/100/200/500 by market cap, a minimum traded a day, or only your watchlist). Under **Stages (advanced)**: each
+  stage's Set (any provided Set or one of yours) and the close it's **checked at**; add, remove or move stages;
+  **⬆ Upgrade** when a stage's Set has a newer version. Nothing changes until you press **Save and activate**, which
+  first says what a save will reset (changing the stages or the pool starts every asset again, quietly). ⏸ pauses a
+  funnel at once. **Duplicate** a funnel to experiment. A funnel note in 🔔 opens its funnel here. Your copy shows
+  *Your copy of a provided funnel* until you change it, then *Customised*; one built from your own Sets is *My
+  funnel*. Changed ones are not reviewed or tested by Angstrom.
 - **Equities** have the same switch above the Equity table. The pool is the **S&P 500** (price at least $5, at least
   about $20M traded a day, about 3 years of history for the weekly stage), from Yahoo Finance. Shares trade 6½
   hours a day, so the ready-made equity funnels read **weekly → daily → 4-hour → 1-hour**: the 4-hour candles run
@@ -10880,11 +10884,12 @@ def _funnel_controls(dyn, market: str = "crypto") -> None:
     stages_words = ("Daily, 12-hour and 4-hour" if market == "crypto" else "Weekly, daily and 4-hour")
     if not dyn["funnels"]:
         st.caption(f"🔻 A funnel narrows {words['pool']} down in stages, to the 1-hour, and keeps the list up to "
-                   "date by itself. Start from a ready-made one (you can change it later):")
+                   "date by itself. Make your own copy of a provided one (you can change it later in Lattice → Funnels):")
         a, b = st.columns(2)
         for col, direction in ((a, "long"), (b, "short")):
             tpl = ft.trend_funnel(direction, market)
-            if col.button(f"Create “{tpl['name']}”", key=f"funnel_new_{market}_{direction}", use_container_width=True,
+            if col.button(f"Make my own copy of “{tpl['name']}”", key=f"funnel_new_{market}_{direction}",
+                          use_container_width=True,
                           help=f"{stages_words}: EMA 20 " + ("above" if direction == "long" else "below")
                                + " EMA 50. Then the 1-hour pullback entry check (from Drew's script)."):
                 _create_funnel(market, direction)
@@ -10929,7 +10934,7 @@ def _funnel_controls(dyn, market: str = "crypto") -> None:
         for direction in ("long", "short"):
             if direction not in have and len(funnels) < 3:
                 tpl = ft.trend_funnel(direction, market)
-                if st.button(f"Add “{tpl['name']}”", key=f"funnel_add_{market}_{direction}"):
+                if st.button(f"Make my own copy of “{tpl['name']}”", key=f"funnel_add_{market}_{direction}"):
                     _create_funnel(market, direction)
         latest = ft.trend_funnel(f["direction"], market)
         made_from = [(x.get("set_source") or {}).get("provided") for x in f["stages"]]

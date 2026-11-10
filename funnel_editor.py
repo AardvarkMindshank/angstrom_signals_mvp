@@ -45,11 +45,12 @@ def template(market: str, direction: str) -> dict:
 
 
 def provenance(f: dict, library: dict) -> str:
-    """'Provided by Angstrom' (a ready-made funnel, unchanged), 'Customised' (started from one, changed) or 'My funnel'."""
+    """For your own funnels: 'Your copy of a provided funnel' (unchanged), 'Customised' (started from one, changed) or
+    'My funnel'. (A provided original itself is shown read-only, as provided Groups and Sets are.)"""
     made = ft.trend_funnel(f["direction"], f.get("market") or "crypto")
     if [s["set_body"] for s in f["stages"]] == [s["set_body"] for s in made["stages"]] and \
             [s["timeframe"] for s in f["stages"]] == [s["timeframe"] for s in made["stages"]]:
-        return "Provided by Angstrom"
+        return "Your copy of a provided funnel"
     if any(str(provided_key(s.get("set_source")) or "").startswith("demo:") for s in f["stages"]):
         return "Customised"
     return "My funnel"
@@ -179,9 +180,14 @@ def render(st, supabase, user_id: str) -> None:
     names = {f["id"]: f"{'🪙' if (f.get('market') or 'crypto') == 'crypto' else '🏛️'} {f['name']}"
              + (" (paused)" if f.get("paused") else "") for f in funnels}
     for m, d in TEMPLATES:
-        names[f"new:{m}:{d}"] = f"➕ Start from: {template(m, d)['name']} ({MARKET_WORDS[m].lower()})"
+        names[f"new:{m}:{d}"] = (f"{'🪙' if m == 'crypto' else '🏛️'} {template(m, d)['name']} (provided)")
     pick = st.selectbox("Funnel", keys, format_func=names.get, key="funnel_edit",
-                        help="Your funnels, then the ready-made ones to start a new funnel from. At most 6.")
+                        help="Your own funnels first, then the provided ones (marked provided). As with provided "
+                             "Groups and Sets, a provided funnel can't be changed or deleted: make your own copy to "
+                             "use it. At most 6 of your own.")
+    if pick.startswith("new:"):
+        _provided_view(st, supabase, pick, funnels, library)
+        return
 
     saved = next((f for f in funnels if f["id"] == pick), None)
     drafts = st.session_state.setdefault("_funnel_drafts", {})
@@ -196,7 +202,7 @@ def render(st, supabase, user_id: str) -> None:
     badge = provenance(f, library)
     st.markdown(f"**{MARKET_WORDS[market]}** · {fn.DIRECTION_ICONS[f['direction']]} "
                 f"{'Long' if f['direction'] == 'long' else 'Short'} · *{badge}*"
-                + ("" if badge == "Provided by Angstrom" else " · not reviewed or tested by Angstrom"))
+                + ("" if badge.startswith("Your copy") else " · not reviewed or tested by Angstrom"))
 
     # ------------------------------------------------------------------ basics
     c1, c2 = st.columns(2)
@@ -206,7 +212,7 @@ def render(st, supabase, user_id: str) -> None:
                               format_func=lambda d: "▲ Long" if d == "long" else "▼ Short",
                               help="Long and short are separate funnels; a ready-made one has its own Sets for each.")
     c3, c4 = st.columns(2)
-    flick = c3.radio("A coin leaves a stage", ["two", "one"], index=0 if f.get("flicker", True) else 1,
+    flick = c3.radio(f"{'A coin' if market == 'crypto' else 'An equity'} leaves a stage", ["two", "one"], index=0 if f.get("flicker", True) else 1,
                      horizontal=True, key=f"fe_flick_{pick}",
                      format_func=lambda x: "after 2 No closes in a row" if x == "two" else "on the first No",
                      help="Two in a row stops coins flickering in and out near a threshold (recommended).")
@@ -352,6 +358,31 @@ def render(st, supabase, user_id: str) -> None:
                     lattice_panel.rerun_page(st)
                 except Exception as exc:
                     st.error(f"That didn't work: {str(exc)[:160]}")
+
+
+def _provided_view(st, supabase, pick: str, funnels: list[dict], library: dict) -> None:
+    """A provided funnel, read-only (as a provided Group or Set): what it does, and Make my own copy."""
+    _, market, direction = pick.split(":")
+    t = template(market, direction)
+    st.markdown(f"**{MARKET_WORDS[market]}** · {fn.DIRECTION_ICONS[direction]} "
+                f"{'Long' if direction == 'long' else 'Short'} · *Provided by Angstrom* · can't be changed or deleted")
+    pool = "the top 500 coins that pass Angstrom's data checks" if market == "crypto" else "the S&P 500"
+    st.caption(f"Starts from {pool}. {'A coin' if market == 'crypto' else 'An equity'} leaves a stage after two No "
+               "closes in a row. Alerts on new Candidates.")
+    for i, stage in enumerate(t["stages"], 1):
+        doc = stage["set_body"]
+        st.markdown(f"**{i}. {stage['label']}** · checked at each {fs.WORDS[stage['timeframe']]} close  \n"
+                    f"{doc['name']}: {doc.get('purpose') or ''}")
+    st.caption(NOTE)
+    mine = [f for f in funnels if f.get("market") == market and f.get("direction") == direction
+            and provenance(f, library) == "Your copy of a provided funnel"]
+    if mine:
+        st.caption(f"You already have an unchanged copy: **{mine[0]['name']}**.")
+    if st.button("Make my own copy", type="primary", icon=":material/content_copy:", key=f"fe_copy_{pick}",
+                 disabled=len(funnels) >= 6,
+                 help="Your copy runs for your account, with its own places and alerts. You can then change it, "
+                      "pause it or delete it; this provided one stays as it is."):
+        _save(st, supabase, t, None, {})
 
 
 def _refresh(st) -> None:
