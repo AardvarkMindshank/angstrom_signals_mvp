@@ -10728,6 +10728,32 @@ def _funnel_controls(dyn) -> None:
         st.caption(dyn["health"])
     if not dyn["states"]:
         st.caption("⏳ Not checked yet: the funnel runs a few minutes after each hour.")
+    with st.popover("⚙️ Funnels", help="Add, restart or delete a funnel"):
+        def _call(fn_name, args, done):
+            try:
+                supabase.rpc(fn_name, args).execute()
+                st.session_state["_funnels_reread"] = True
+                st.toast(done)
+                st.rerun()
+            except Exception as exc:
+                st.error(f"That didn't work: {str(exc)[:160]}")
+
+        have = {x["direction"] for x in funnels}
+        for direction in ("long", "short"):
+            if direction not in have and len(funnels) < 4:
+                tpl = ft.trend_funnel(direction)
+                if st.button(f"Add “{tpl['name']}”", key=f"funnel_add_{direction}"):
+                    _call("funnel_save", {"p_id": None, "p_name": tpl["name"], "p_direction": direction,
+                                          "p_stages": tpl["stages"], "p_flicker": True,
+                                          "p_alerts": {"in_app": True, "email": False}, "p_paused": False},
+                          "Funnel added. It fills in at the next hourly check.")
+        if st.button("↺ Start this funnel again", key="funnel_restart",
+                     help="Every coin goes back to the pool and is checked again from the first stage."):
+            _call("funnel_restart", {"p_id": f["id"]}, "Restarted. It fills in at the next hourly check.")
+        if st.toggle("Delete this funnel", key="funnel_delete_arm"):
+            if st.button(f"🗑 Delete “{f['name']}” for good", key="funnel_delete", type="primary"):
+                st.session_state.pop("funnel_pick", None)
+                _call("funnel_delete", {"p_id": f["id"]}, "Funnel deleted.")
 
 
 def fr_hover(f):
