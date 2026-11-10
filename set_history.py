@@ -237,7 +237,11 @@ def full_daily(kind: str, asset_id: str) -> pd.DataFrame | None:
     if kind == "crypto":             # a Yahoo pair such as BTC-USD (a bare "BTC" or "LINK" is a share, not the coin)
         coin = data_fetchers.resolve_crypto_id(asset_id)
         ticker = data_fetchers.YAHOO_TICKER_BY_ID.get(coin) or data_fetchers.YF_BY_COINGECKO_ID.get(coin)
-        if ticker is None:
+        import binance_data as bn
+
+        if ticker is None and bn.KNOWN_PAIRS.get(str(asset_id)):
+            pass                                  # a checked Binance pair: use it (a guessed Yahoo ticker can be
+        elif ticker is None:                      # another coin with the same symbol)
             try:
                 symbol = data_fetchers._coingecko_symbol(coin)
                 ticker = f"{symbol}-USD" if symbol else None
@@ -254,6 +258,18 @@ def full_daily(kind: str, asset_id: str) -> pd.DataFrame | None:
             pos = signals_v2.last_completed_position(raw.index, kind)
             if pos is not None:
                 frame = calculate_indicators(raw.iloc[: pos + 1])
+    if frame is None and kind == "crypto":       # no Yahoo history: Binance spot's daily candles (since 2017)
+        try:
+            import binance_data as bn
+
+            pair = bn.pair_for("crypto", str(asset_id), ticker, None)
+            raw = bn.klines(pair, "1D", None) if pair else None
+            if raw is not None and len(raw) >= 80:
+                pos = signals_v2.last_completed_position(raw.index, kind)
+                if pos is not None:
+                    frame = calculate_indicators(raw.iloc[: pos + 1])
+        except Exception:
+            frame = None
     if len(_FRAMES) > 64:
         _FRAMES.clear()
     _FRAMES[key] = frame
