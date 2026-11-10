@@ -7187,6 +7187,11 @@ because they measure different things and are never added together.
   assets the Visualize History way: one large chart with candles on top and a thin row for each underneath, with
   the funnel's daily stage drawn as green bands across each history. Tap a row to put it on top, then **Open on the
   main price chart**. While a table shows a Dynamic funnel, its assets can also be picked on the main chart.
+- **The ready-made funnels' daily stage** asks for more than the trend: the daily EMA 20 above the EMA 50 (below,
+  for shorts) **and** daily momentum turning back from an extreme within the last 5 days (Stochastic %K was 20 or
+  lower and is back above 20; for shorts 80 or higher and back below 80). In a one-way market the trend alone lets
+  most coins through. A funnel made before this change offers **⬆ Update to the latest ready-made version** under
+  ⚙️ Funnels.
 - **Fails twice to leave:** a coin joins a stage on its first Yes, but leaves only after two No answers in a row,
   so it doesn't flicker in and out. When an earlier stage stops holding, the later ones drop at once.
 - **❔ Pending:** data was missing at the last check. A pending coin never moves up or alerts; after three
@@ -10831,6 +10836,18 @@ def _funnel_controls(dyn, market: str = "crypto") -> None:
                 tpl = ft.trend_funnel(direction, market)
                 if st.button(f"Add “{tpl['name']}”", key=f"funnel_add_{market}_{direction}"):
                     _create_funnel(market, direction)
+        latest = ft.trend_funnel(f["direction"], market)
+        made_from = [(x.get("set_source") or {}).get("provided") for x in f["stages"]]
+        if all(str(k or "").startswith("demo:") for k in made_from) and made_from != [
+                x["set_source"]["provided"] for x in latest["stages"]]:
+            if st.button("⬆ Update to the latest ready-made version", key=f"funnel_update_{market}",
+                         help="This funnel came from a ready-made one that has changed since (the daily stage now "
+                              "also needs momentum turning back from an extreme). Every asset starts again from "
+                              "the pool."):
+                args = {"p_id": f["id"], "p_name": f["name"], "p_direction": f["direction"],
+                        "p_stages": latest["stages"], "p_flicker": f.get("flicker", True),
+                        "p_alerts": f.get("alerts") or {"in_app": True, "email": False}, "p_paused": False}
+                _call("funnel_save", args, "Updated. It fills in again at the next check.")
         if st.button("↺ Start this funnel again", key=f"funnel_restart_{market}",
                      help=f"Every {words['coin']} goes back to the pool and is checked again from the first stage."):
             _call("funnel_restart", {"p_id": f["id"]}, "Restarted. It fills in at the next check.")

@@ -37,6 +37,34 @@ def trend_set(timeframe: str, direction: str) -> dict:
                                                 "eq": "fast_above" if up else "fast_below"}}}
 
 
+TURN_WITHIN = 5          # daily closes
+OVERSOLD, OVERBOUGHT = 20, 80
+
+
+def turn_set(direction: str) -> dict:
+    """The daily stage since 10 Nov 2026 (the trend alone let most coins through in a one-way market): the daily trend,
+    and daily momentum turning back from an extreme against it in the last few days. Longs: EMA 20 above EMA 50, and
+    the Stochastic %K was 20 or lower (oversold) within the last 5 daily closes and is back above 20 now. Shorts mirror
+    it (80 or higher, back below 80). Drew's own daily read is momentum turning from oversold or overbought; his
+    WaveTrend oscillator is not in the library yet, so the Stochastic stands in."""
+    up = direction == "long"
+    side = "above" if up else "below"
+    extreme = ({"member": "stoch", "field": "stoch_k", "lte": OVERSOLD} if up
+               else {"member": "stoch", "field": "stoch_k", "gte": OVERBOUGHT})
+    back = ({"member": "stoch", "field": "stoch_k", "gte": OVERSOLD + 0.01} if up
+            else {"member": "stoch", "field": "stoch_k", "lte": OVERBOUGHT - 0.01})
+    return {**BASE, "name": f"Daily {'uptrend, momentum turning up' if up else 'downtrend, momentum turning down'}",
+            "purpose": (f"On the daily candles, EMA 20 {side} EMA 50, and the Stochastic %K was "
+                        f"{'20 or lower (oversold)' if up else '80 or higher (overbought)'} within the last "
+                        f"{TURN_WITHIN} daily closes and is back {'above 20' if up else 'below 80'} now: a pullback "
+                        f"inside the trend whose momentum has turned {'up' if up else 'down'} again."),
+            "standalone": [_item("emas", "EMA 20 vs 50", "ma.pair", "1D", kind="EMA", fast=20, slow=50),
+                           _item("stoch", "Stochastic %K", "stochastic.level", "1D")],
+            "decision": {"version": 1, "rule": {"all": [
+                {"member": "emas", "field": "order", "eq": "fast_above" if up else "fast_below"},
+                {"sequence": {"first": extreme, "then": back, "within": TURN_WITHIN}}]}}}
+
+
 def entry_set(direction: str, timeframe: str = ENTRY_TIMEFRAME) -> dict:
     up = direction == "long"
     side = "above" if up else "below"
@@ -69,6 +97,8 @@ WORDS = {"1W": "weekly", "1D": "daily", "12h": "12-hour", "4h": "4-hour", "1h": 
 
 def library_key(timeframe: str | None, direction: str) -> str:
     """The provided-library key of a funnel stage's Set (prism.library_sets embeds exactly these bodies)."""
+    if timeframe == "turn":
+        return f"demo:turn_{'up' if direction == 'long' else 'down'}_1d"
     if timeframe is None:
         return f"demo:entry_{direction}_1h"
     return f"demo:ema_{'up' if direction == 'long' else 'down'}_{timeframe.lower()}"
@@ -80,6 +110,7 @@ def library() -> dict[str, dict]:
         for tf in LIBRARY_TIMEFRAMES:
             out[library_key(tf, direction)] = trend_set(tf, direction)
         out[library_key(None, direction)] = entry_set(direction)
+        out[library_key("turn", direction)] = turn_set(direction)
     return out
 
 
@@ -105,6 +136,15 @@ def explanations() -> dict[str, tuple[str, str, str, str]]:
             "entry rules of a beta tester's own script. It is the last stage of the ready-made trend funnels.",
             "Pullbacks can turn into reversals, and one hourly candle says little on its own. Nobody has tested what "
             "followed these answers.")
+        out[library_key("turn", direction)] = (
+            f"A pullback inside a daily {'uptrend' if up else 'downtrend'} whose momentum has just turned back.",
+            f"Yes when the daily EMA 20 is {'above' if up else 'below'} the EMA 50 and the daily Stochastic %K was "
+            f"{'20 or lower' if up else '80 or higher'} within the last 5 closes and is back "
+            f"{'above 20' if up else 'below 80'} now.",
+            "Traders who follow the trend often wait for a pullback and enter when momentum turns back their way. "
+            "It is the daily stage of the ready-made trend funnels.",
+            "Momentum can turn back and forth several times before a move continues, and a pullback can become a "
+            "reversal. Nobody has tested what followed these answers.")
     return out
 
 
@@ -118,6 +158,10 @@ def trend_funnel(direction: str, market: str = "crypto") -> dict:
         labels, tfs = ("Daily", "12-hour", "Shortlist (4-hour)"), TIMEFRAMES
     stages = [{"label": label, "timeframe": tf, "set_body": trend_set(tf, direction),
                "set_source": {"provided": library_key(tf, direction)}} for label, tf in zip(labels, tfs)]
+    for st_ in stages:                     # the daily stage also needs momentum turning (10 Nov 2026)
+        if st_["timeframe"] == "1D":
+            st_.update({"label": "Daily (trend + momentum turn)", "set_body": turn_set(direction),
+                        "set_source": {"provided": library_key("turn", direction)}})
     stages.append({"label": "Entry (1-hour)", "timeframe": ENTRY_TIMEFRAME, "set_body": entry_set(direction),
                    "set_source": {"provided": library_key(None, direction)}})
     arrow = "▲" if direction == "long" else "▼"
