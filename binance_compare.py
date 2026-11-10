@@ -25,7 +25,7 @@ def main() -> int:
         gap = (both["binance"] / both["yahoo"] - 1).abs()
         worst = max(worst, gap.max())
         print(f"{ticker:9} {pair:9} days {len(both):3}  median gap {gap.median()*100:.3f}%  max {gap.max()*100:.3f}%")
-    print(f"Largest daily close gap: {worst*100:.3f}% (USDT vs USD, so a few hundredths of a percent is expected)")
+    print(f"Largest daily close gap: {worst*100:.3f}% (USDT vs USD and different venues, so about a tenth of a percent is normal)")
     return 0 if worst < 0.02 else 1
 
 
