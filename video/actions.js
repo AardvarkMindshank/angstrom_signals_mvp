@@ -434,6 +434,8 @@ module.exports = {
     },
     add: async (h) => {
       await h.clear();
+      const prov = h.page.locator(".lat details.prov").first();          // the provided Groups, folded at the top
+      if (!(await prov.evaluate((d) => d.open).catch(() => true))) await h.press(prov.locator("summary").first(), false);
       for (const name of ["Recent structure break", "Relative volume"]) await h.press(SET_ADD(name));
     },
     box: async (h) => {
@@ -474,6 +476,7 @@ module.exports = {
   "a1-angstrom-assistant": {
     query: "?section=prism",
     setup: async (h) => {
+      await h.settle();
       h.shot = (await h.page.screenshot()).toString("base64");      // the Prism screen, to paste later
     },
     where: async (h) => {
@@ -513,7 +516,7 @@ module.exports = {
         dt.items.add(new File([bytes], "screen.png", { type: "image/png" }));
         document.dispatchEvent(new ClipboardEvent("paste", { clipboardData: dt, bubbles: true }));
       }, h.shot);
-      await h.wait(1500);
+      await h.page.waitForSelector(".ang-shot img", { timeout: 30000 }).catch(() => {});
       await h.settle();
       await h.ring(".ang-shot");
     },
@@ -583,10 +586,12 @@ module.exports = {
       await h.wait(500);
       await h.ring(chip.locator("details.inside").first());
       await h.wait(2500);
+      const copyButton = chip.locator("details.inside button", { hasText: "Make my own copy" }).first();
+      await h.glide(copyButton);
+      await h.ring(copyButton);
+      await h.wait(1500);
       await h.clear();
-      await h.press(chip.locator("details.inside button", { hasText: "Make my own copy" }).first());
-      await h.wait(800);
-      await h.top();
+      await h.press(chip.locator("details.inside > summary").first(), false);     // fold it again
     },
     groups: async (h) => {
       await h.clear();
@@ -731,12 +736,51 @@ module.exports = {
       await h.show(chip.locator("details.wf").first());
       await h.ring(chip.locator("details.wf").first());
     },
+    parts: async (h) => {
+      await h.clear();
+      const chip = provided(h, "Breakout with volume");
+      const block = chip.locator("details.wf").first();
+      await h.show(block);
+      await h.ring(block.locator("div", { hasText: "Coins (" }).first());
+      await h.wait(1800);
+      await h.ring(block.locator("div", { hasText: "Coins and equities" }).last());
+    },
+    copy: async (h) => {
+      await h.clear();
+      const chip = provided(h, "Breakout with volume");
+      await h.press(chip.locator("details.inside > summary").first(), false);
+      await h.wait(400);
+      await h.press(chip.locator("details.inside button", { hasText: "Make my own copy" }).first());
+      await h.wait(600);
+      await h.type('.lat input[aria-label="Set name"]', "My breakout");
+      await h.press('button:has-text("Save as a new Set")');
+      await h.wait(900);
+      const card = h.page.locator("[data-testid='stExpander'] summary", { hasText: "What followed:" }).first();
+      await h.press(card);
+      await h.wait(500);
+      await h.show(h.page.getByText("By period").first());
+      await h.ring(h.page.getByText("By period").first());
+    },
+    assets: async (h) => {
+      await h.clear();
+      const luck = h.page.getByText("luck alone typically makes about").first();
+      await h.show(luck);
+      await h.ring(luck);
+      await h.wait(1500);
+      await h.press(h.page.getByText("Show every asset (a guide only)").first());
+      await h.wait(600);
+      await h.show(h.page.locator("[data-testid='stDataFrame']").last());
+      await h.ring(h.page.locator("[data-testid='stDataFrame']").last());
+    },
     own: async (h) => {
       await h.clear();
       await h.open("?section=sets&seed=trend,pullback&preset=1");
       const study = h.page.getByRole("button", { name: /Study this Set/ });
       if (await study.count()) { await h.press(study.first()); }
       else await h.ring(h.page.getByText("What followed · what happened after").first());
+      await h.wait(1200);
+      await h.card({ kicker: "When it's ready", title: "🔬 Study finished",
+        lines: ["A note arrives in your notifications", "Open the Set in Signal Sets to read it"] });
     },
   },
 };

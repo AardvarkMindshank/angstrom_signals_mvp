@@ -28,6 +28,11 @@
    "say": "Tap it for the numbers. | Breakout with volume turned Yes almost nineteen hundred times. | Price rose a typical move before falling one fifty-one percent of the time, against fifty percent on comparable days."
   },
   {
+   "id": "parts",
+   "screen": "The same card: coins and equities on their own",
+   "say": "Under it, coins and equities, each on its own: | here, no clear difference in either, and none between them."
+  },
+  {
    "id": "verdicts",
    "screen": "A card: the four verdicts",
    "say": "Every study ends in one of four verdicts: | too few to judge, | no clear difference, | some difference, not established, | or a consistent difference."
@@ -43,9 +48,19 @@
    "say": "Trend alignment is the interesting one. | After the daily and weekly trends first agree, price did a little worse than on comparable days. | Often the weekly trend confirms a move after much of it has happened."
   },
   {
+   "id": "copy",
+   "screen": "Look inside, Make my own copy, save: the full card in Signal Sets, with the three periods",
+   "say": "Make your own copy and save it: its study comes with it. | In Signal Sets, the card also shows the three periods side by side,"
+  },
+  {
+   "id": "assets",
+   "screen": "The luck line, then every asset in name order",
+   "say": "and every asset on its own, with a luck check. | Ten assets look unusual for this Set, where luck alone typically makes about four. | A place to look closer, not proof."
+  },
+  {
    "id": "own",
-   "screen": "Signal Sets: Study this Set",
-   "say": "Your own Sets can be studied too. | Open one in Signal Sets, and tap Study this Set. | It runs in the background, usually within the hour."
+   "screen": "Signal Sets: Study this Set, then a card: the 🔬 note",
+   "say": "Your own Sets can be studied too: | open one in Signal Sets, and tap Study this Set. | When it's ready, a note arrives in your notifications."
   }
  ]
 }
