@@ -52,12 +52,34 @@
   }
  ],
  "generated_by": {
-  "git_commit": "83a364151f9dc9e5fdfd307b88bdf1d0f9d7a066",
+  "git_commit": "1142b31fb85f1a2a48548bc59d8afc692b88301b",
   "note": "administrative; not compared",
-  "run_id": "42780390254"
+  "run_id": "42786149551"
  },
  "signals": {
   "bollinger.position@1": {
+   "12h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 218,
+     "reference": 109,
+     "slice": 109,
+     "timestamps": 109
+    },
+    "cutoffs": 109,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 109
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
    "15m": {
     "algorithm": "certified",
     "checks": {
@@ -78,7 +100,7 @@
      "ok": 113
     },
     "slice_equivalent": false,
-    "slice_reason": "synthetic-crypto-s11 T=2023-09-30T10:45:00+00:00: .value.lower: differs by 1.0e-06 (beyond the 1e-09 tolerance)"
+    "slice_reason": "synthetic-crypto-s11 T=2023-09-30T10:45:00+00:00: .value.standard_score: differs by 3.2e-09 (beyond the 1e-09 tolerance)"
    },
    "1D": {
     "algorithm": "certified",
@@ -154,6 +176,28 @@
     "slice_equivalent": false,
     "slice_reason": "synthetic-crypto-s11 T=2023-09-30T11:00:00+00:00: .value.standard_score: differs by 5.9e-09 (beyond the 1e-09 tolerance)"
    },
+   "30m": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": false,
+    "slice_reason": "synthetic-crypto-s11 T=2023-09-30T11:00:00+00:00: .value.standard_score: differs by 6.1e-09 (beyond the 1e-09 tolerance)"
+   },
    "4h": {
     "algorithm": "certified",
     "checks": {
@@ -178,6 +222,28 @@
    }
   },
   "candle.shape@1": {
+   "12h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 218,
+     "reference": 109,
+     "slice": 109,
+     "timestamps": 109
+    },
+    "cutoffs": 109,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 109
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
    "15m": {
     "algorithm": "certified",
     "checks": {
@@ -253,6 +319,28 @@
     "slice_reason": null
    },
    "1h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "30m": {
     "algorithm": "certified",
     "checks": {
      "cache": 46,
@@ -344,6 +432,28 @@
    }
   },
   "ichimoku.position@1": {
+   "12h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 218,
+     "reference": 109,
+     "slice": 109,
+     "timestamps": 109
+    },
+    "cutoffs": 109,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 109
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
    "15m": {
     "algorithm": "certified",
     "checks": {
@@ -440,6 +550,28 @@
     "slice_equivalent": true,
     "slice_reason": null
    },
+   "30m": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
    "4h": {
     "algorithm": "certified",
     "checks": {
@@ -464,6 +596,28 @@
    }
   },
   "levels.zones@1": {
+   "12h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 218,
+     "reference": 109,
+     "slice": 109,
+     "timestamps": 109
+    },
+    "cutoffs": 109,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 109
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
    "15m": {
     "algorithm": "certified",
     "checks": {
@@ -561,6 +715,28 @@
     "slice_equivalent": true,
     "slice_reason": null
    },
+   "30m": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
    "4h": {
     "algorithm": "certified",
     "checks": {
@@ -585,6 +761,28 @@
    }
   },
   "ma.line@1": {
+   "12h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 218,
+     "reference": 109,
+     "slice": 109,
+     "timestamps": 109
+    },
+    "cutoffs": 109,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 109
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
    "15m": {
     "algorithm": "certified",
     "checks": {
@@ -682,6 +880,28 @@
     "slice_equivalent": true,
     "slice_reason": null
    },
+   "30m": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
    "4h": {
     "algorithm": "certified",
     "checks": {
@@ -706,6 +926,28 @@
    }
   },
   "ma.pair@1": {
+   "12h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 218,
+     "reference": 109,
+     "slice": 109,
+     "timestamps": 109
+    },
+    "cutoffs": 109,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 109
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
    "15m": {
     "algorithm": "certified",
     "checks": {
@@ -803,6 +1045,28 @@
     "slice_equivalent": true,
     "slice_reason": null
    },
+   "30m": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
    "4h": {
     "algorithm": "certified",
     "checks": {
@@ -827,6 +1091,28 @@
    }
   },
   "ma.position@1": {
+   "12h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 218,
+     "reference": 109,
+     "slice": 109,
+     "timestamps": 109
+    },
+    "cutoffs": 109,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 109
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
    "15m": {
     "algorithm": "certified",
     "checks": {
@@ -924,6 +1210,28 @@
     "slice_equivalent": true,
     "slice_reason": null
    },
+   "30m": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
    "4h": {
     "algorithm": "certified",
     "checks": {
@@ -948,6 +1256,28 @@
    }
   },
   "macd.acceleration@1": {
+   "12h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 218,
+     "reference": 109,
+     "slice": 109,
+     "timestamps": 109
+    },
+    "cutoffs": 109,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 109
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
    "15m": {
     "algorithm": "certified",
     "checks": {
@@ -1045,6 +1375,28 @@
     "slice_equivalent": true,
     "slice_reason": null
    },
+   "30m": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
    "4h": {
     "algorithm": "certified",
     "checks": {
@@ -1069,6 +1421,28 @@
    }
   },
   "macd.level@1": {
+   "12h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 218,
+     "reference": 109,
+     "slice": 109,
+     "timestamps": 109
+    },
+    "cutoffs": 109,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 109
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
    "15m": {
     "algorithm": "certified",
     "checks": {
@@ -1166,6 +1540,28 @@
     "slice_equivalent": true,
     "slice_reason": null
    },
+   "30m": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
    "4h": {
     "algorithm": "certified",
     "checks": {
@@ -1190,6 +1586,28 @@
    }
   },
   "momentum.direction@1": {
+   "12h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 218,
+     "reference": 109,
+     "slice": 109,
+     "timestamps": 109
+    },
+    "cutoffs": 109,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 109
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
    "15m": {
     "algorithm": "certified",
     "checks": {
@@ -1287,6 +1705,28 @@
     "slice_equivalent": true,
     "slice_reason": null
    },
+   "30m": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
    "4h": {
     "algorithm": "certified",
     "checks": {
@@ -1311,6 +1751,28 @@
    }
   },
   "move.seven_day@1": {
+   "12h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 218,
+     "reference": 109,
+     "slice": 109,
+     "timestamps": 109
+    },
+    "cutoffs": 109,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 109
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
    "15m": {
     "algorithm": "certified",
     "checks": {
@@ -1407,6 +1869,28 @@
     "slice_equivalent": true,
     "slice_reason": null
    },
+   "30m": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
    "4h": {
     "algorithm": "certified",
     "checks": {
@@ -1459,6 +1943,28 @@
    }
   },
   "obv.balance@1": {
+   "12h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 218,
+     "reference": 109,
+     "slice": 109,
+     "timestamps": 109
+    },
+    "cutoffs": 109,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 109
+    },
+    "slice_equivalent": false,
+    "slice_reason": "synthetic-crypto-s11 T=2024-06-27T00:00:00+00:00: .value.obv: differs by 3.0e+03 (beyond the 1e-09 tolerance)"
+   },
    "15m": {
     "algorithm": "certified",
     "checks": {
@@ -1555,6 +2061,28 @@
     "slice_equivalent": false,
     "slice_reason": "synthetic-crypto-s11 T=2024-02-04T17:00:00+00:00: .value.obv: differs by 3.8e+05 (beyond the 1e-09 tolerance)"
    },
+   "30m": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": false,
+    "slice_reason": "synthetic-crypto-s11 T=2024-02-04T16:30:00+00:00: .value.obv: differs by 3.1e+05 (beyond the 1e-09 tolerance)"
+   },
    "4h": {
     "algorithm": "certified",
     "checks": {
@@ -1639,6 +2167,28 @@
    }
   },
   "regime.observation@1": {
+   "12h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 218,
+     "reference": 109,
+     "slice": 109,
+     "timestamps": 109
+    },
+    "cutoffs": 109,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 109
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
    "15m": {
     "algorithm": "certified",
     "checks": {
@@ -1736,6 +2286,28 @@
     "slice_equivalent": true,
     "slice_reason": null
    },
+   "30m": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
    "4h": {
     "algorithm": "certified",
     "checks": {
@@ -1760,6 +2332,28 @@
    }
   },
   "regime.state@1": {
+   "12h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 218,
+     "reference": 109,
+     "slice": 109,
+     "timestamps": 109
+    },
+    "cutoffs": 109,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 109
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
    "15m": {
     "algorithm": "certified",
     "checks": {
@@ -1835,6 +2429,28 @@
     "slice_reason": null
    },
    "1h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "30m": {
     "algorithm": "certified",
     "checks": {
      "cache": 46,
@@ -1880,6 +2496,28 @@
    }
   },
   "rsi.level@1": {
+   "12h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 218,
+     "reference": 109,
+     "slice": 109,
+     "timestamps": 109
+    },
+    "cutoffs": 109,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 109
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
    "15m": {
     "algorithm": "certified",
     "checks": {
@@ -1955,6 +2593,28 @@
     "slice_reason": null
    },
    "1h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "30m": {
     "algorithm": "certified",
     "checks": {
      "cache": 46,
@@ -2050,6 +2710,28 @@
    }
   },
   "stochastic.level@1": {
+   "12h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 218,
+     "reference": 109,
+     "slice": 109,
+     "timestamps": 109
+    },
+    "cutoffs": 109,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 109
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
    "15m": {
     "algorithm": "certified",
     "checks": {
@@ -2125,6 +2807,28 @@
     "slice_reason": null
    },
    "1h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "30m": {
     "algorithm": "certified",
     "checks": {
      "cache": 46,
@@ -2170,6 +2874,28 @@
    }
   },
   "structure.breaks@1": {
+   "12h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 218,
+     "reference": 109,
+     "slice": 109,
+     "timestamps": 109
+    },
+    "cutoffs": 109,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 109
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
    "15m": {
     "algorithm": "certified",
     "checks": {
@@ -2266,6 +2992,28 @@
     "slice_equivalent": true,
     "slice_reason": null
    },
+   "30m": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
    "4h": {
     "algorithm": "certified",
     "checks": {
@@ -2290,6 +3038,28 @@
    }
   },
   "structure.swings@1": {
+   "12h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 218,
+     "reference": 109,
+     "slice": 109,
+     "timestamps": 109
+    },
+    "cutoffs": 109,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 109
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
    "15m": {
     "algorithm": "certified",
     "checks": {
@@ -2387,6 +3157,28 @@
     "slice_equivalent": true,
     "slice_reason": null
    },
+   "30m": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
    "4h": {
     "algorithm": "certified",
     "checks": {
@@ -2411,6 +3203,28 @@
    }
   },
   "ta.divergence.macd@1": {
+   "12h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 218,
+     "reference": 109,
+     "slice": 109,
+     "timestamps": 109
+    },
+    "cutoffs": 109,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 109
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
    "15m": {
     "algorithm": "certified",
     "checks": {
@@ -2508,6 +3322,28 @@
     "slice_equivalent": true,
     "slice_reason": null
    },
+   "30m": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
    "4h": {
     "algorithm": "certified",
     "checks": {
@@ -2532,6 +3368,28 @@
    }
   },
   "ta.divergence.rsi@1": {
+   "12h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 218,
+     "reference": 109,
+     "slice": 109,
+     "timestamps": 109
+    },
+    "cutoffs": 109,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 109
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
    "15m": {
     "algorithm": "certified",
     "checks": {
@@ -2629,6 +3487,28 @@
     "slice_equivalent": true,
     "slice_reason": null
    },
+   "30m": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
    "4h": {
     "algorithm": "certified",
     "checks": {
@@ -2653,6 +3533,28 @@
    }
   },
   "trend.direction@1": {
+   "12h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 218,
+     "reference": 109,
+     "slice": 109,
+     "timestamps": 109
+    },
+    "cutoffs": 109,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 109
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
    "15m": {
     "algorithm": "certified",
     "checks": {
@@ -2750,6 +3652,28 @@
     "slice_equivalent": true,
     "slice_reason": null
    },
+   "30m": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
    "4h": {
     "algorithm": "certified",
     "checks": {
@@ -2774,6 +3698,28 @@
    }
   },
   "volatility.atr_trend@1": {
+   "12h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 218,
+     "reference": 109,
+     "slice": 109,
+     "timestamps": 109
+    },
+    "cutoffs": 109,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 109
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
    "15m": {
     "algorithm": "certified",
     "checks": {
@@ -2871,6 +3817,28 @@
     "slice_equivalent": true,
     "slice_reason": null
    },
+   "30m": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
    "4h": {
     "algorithm": "certified",
     "checks": {
@@ -2895,6 +3863,28 @@
    }
   },
   "volume.cmf@1": {
+   "12h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 218,
+     "reference": 109,
+     "slice": 109,
+     "timestamps": 109
+    },
+    "cutoffs": 109,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 109
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
    "15m": {
     "algorithm": "certified",
     "checks": {
@@ -2970,6 +3960,28 @@
     "slice_reason": null
    },
    "1h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "30m": {
     "algorithm": "certified",
     "checks": {
      "cache": 46,
@@ -3015,6 +4027,28 @@
    }
   },
   "volume.heavy_candle@1": {
+   "12h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 218,
+     "reference": 109,
+     "slice": 109,
+     "timestamps": 109
+    },
+    "cutoffs": 109,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 109
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
    "15m": {
     "algorithm": "certified",
     "checks": {
@@ -3090,6 +4124,28 @@
     "slice_reason": null
    },
    "1h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "30m": {
     "algorithm": "certified",
     "checks": {
      "cache": 46,
@@ -3135,6 +4191,28 @@
    }
   },
   "volume.relative@1": {
+   "12h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 218,
+     "reference": 109,
+     "slice": 109,
+     "timestamps": 109
+    },
+    "cutoffs": 109,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 109
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
    "15m": {
     "algorithm": "certified",
     "checks": {
@@ -3210,6 +4288,28 @@
     "slice_reason": null
    },
    "1h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "30m": {
     "algorithm": "certified",
     "checks": {
      "cache": 46,
