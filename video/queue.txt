@@ -1,3 +1,2 @@
 # Videos recorded when the "video" branch is pushed, one per line (names of files in video/series/, without .json).
-w4-breakout-fading
 08-what-followed

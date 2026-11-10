@@ -130,7 +130,9 @@ html.angstrom-night .lat select option{color:#f3f4f6;background:#1f2937}
   align-items:center;justify-content:center;font-family:ui-monospace,monospace}
 .lat .lbl{font-weight:600;padding:4px 8px;border-radius:6px;background:rgba(15,118,110,.12)}
 .lat .fixed{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px;border-radius:10px;
-  border:1px dashed rgba(127,127,127,.45);margin-bottom:8px}
+  border:1px dashed rgba(127,127,127,.45);margin-bottom:8px;min-width:0;max-width:100%;box-sizing:border-box}
+.lat .fixed .rule{min-width:0;max-width:100%;box-sizing:border-box}
+.lat .fixed .rule select{max-width:100%;min-width:0}
 .lat h3{font-size:14px;margin:0 0 8px}
 .lat .hd{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:8px}
 .lat .hd h3{margin:0}

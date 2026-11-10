@@ -233,13 +233,11 @@ def show_card(st, card: dict) -> None:
         st.markdown("**By period**")
         st.dataframe(card["periods"], hide_index=True, width="stretch")
     if card.get("assets"):
-        st.markdown("**Asset by asset**")
+        st.markdown("**Asset by asset** (a guide only)")
         st.markdown(card["assets"]["line"])
-        if st.toggle("Show every asset (a guide only)", key="wf_assets",
-                     help="Each asset's numbers beside its own comparable days, in name order. No asset is marked: "
-                          "with many assets, some always look unusual by luck."):
-            st.caption(card["assets"]["note"])
-            st.dataframe(card["assets"]["rows"], hide_index=True, width="stretch")
+        st.caption(card["assets"]["note"])
+        # Shown straight away: a switch here would redraw the page and fold the card it sits in.
+        st.dataframe(card["assets"]["rows"], hide_index=True, width="stretch", height=280)
     if card.get("history"):
         st.caption("🗂️ " + card["history"])
     st.caption(card["note"])
@@ -288,7 +286,7 @@ def study_block(st, supabase, source: dict) -> None:
     if status == "refused":
         return
     if st.button(f"🔬 Study this Set (version {version['version']})", key=f"lattice_study_{h}",
-                 help="Checks what happened after this Set turned Yes on 25 major coins and 61 large US shares, "
+                 help="Checks what happened after this Set turned Yes on 25 major coins and 61 large US equities, "
                       "Sep 2014 to Oct 2024, against comparable days. " + STUDY_WAIT):
         try:
             got = supabase.rpc("request_set_study", {"set_hash": h, "body": doc,

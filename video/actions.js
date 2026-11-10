@@ -774,8 +774,6 @@ module.exports = {
       await h.show(luck);
       await h.ring(luck);
       await h.wait(1500);
-      await h.press(h.page.getByText("Show every asset (a guide only)").first());
-      await h.wait(600);
       await h.show(h.page.locator("[data-testid='stDataFrame']").last());
       await h.ring(h.page.locator("[data-testid='stDataFrame']").last());
     },
