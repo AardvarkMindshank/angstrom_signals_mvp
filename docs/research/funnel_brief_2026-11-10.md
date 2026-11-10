@@ -40,18 +40,18 @@ Angstrom Signals is a dashboard for crypto and US equities. Repo: [github.com/Aa
 | 1 · Watchlist | Daily: EMA 20 above EMA 50 | each daily close | 👁 |
 | 2 · 12h | 12h: EMA 20 above EMA 50 | each 12h close | 🔷 |
 | 3 · Shortlist | 4h: EMA 20 above EMA 50 | each 4h close | 📋 |
-| 4 · Ready | 1h: the entry rules hold now | each 1h close | ✅ |
+| 4 · Candidate | 1h: the entry rules hold now | each 1h close | ✅ |
 | 4 · Flagged | on the shortlist, 1h rules not yet met | each 1h close | 🚩 |
 
 Each stage checks only the coins that passed the stage before. A coin's place is shown as an **icon column** in the table.
 
-**A stage picker** above the Dynamic table chooses what to show: *Watchlist · Shortlist · Ready · Flagged*, with counts, e.g. *312 → 41 → 9 → 2 ✅ / 7 🚩*.
+**A stage picker** above the Dynamic table chooses what to show: *Watchlist · Shortlist · Candidates · Flagged*, with counts, e.g. *312 → 41 → 9 → 2 ✅ / 7 🚩*.
 
 **Long and short.** A funnel has a direction. The person runs a long funnel, a short funnel, or both. The table shows ▲ / ▼ beside the stage icon.
 
-**Alerts** (optional, per stage): when a coin reaches Ready, and optionally when it is Flagged. They use the existing alert channels (in-app, instant email, daily summary).
+**Alerts** (optional, per stage): when a coin becomes a Candidate, and optionally when it is Flagged. They use the existing alert channels (in-app, instant email, daily summary).
 
-**A chart for each Ready and Flagged coin,** opened from the table, with the funnel's readings drawn, so the trader can check by eye (his request).
+**A chart for each Candidate and Flagged coin,** opened from the table, with the funnel's readings drawn, so the trader can check by eye (his request).
 
 **Transparency.** Hovering a coin's stage icon shows which stage it reached, which line stopped it, and when each stage was last checked.
 
@@ -61,11 +61,11 @@ Each stage checks only the coins that passed the stage before. A coin's place is
 2. **Timing:** Stages run at their own candle closes (daily, 12h, 4h, 1h). When the daily stage drops a coin, should it leave the shortlist at once, or at the next close of each lower stage?
 3. **Flapping:** Coins near a threshold will move in and out of stages. Should there be hysteresis (for example, a coin stays on the shortlist until it fails twice), and how would you explain that honestly?
 4. **Unknown:** A coin with missing data at one stage: drop it, hold it at its last stage, or show it as ❔? 
-5. **Wording:** "Trade now" reads like advice. Is "Ready" (entry conditions met) clear enough? Better words for each stage and icon, for both newcomers and experienced traders?
+5. **Wording:** "Trade now" reads like advice. We propose "Candidate" (entry conditions met: a coin to look at now, not a recommendation). Is it clear enough? Better words for each stage and icon, for both newcomers and experienced traders?
 6. **Credibility:** What minimum history, trading volume and data quality should a coin need before it can enter the pool? How should thinly traded coins be handled?
 7. **Noise:** With 300+ coins and hourly checks, how do we avoid alert floods (batching, limits, only on stage changes)?
 8. **Long and short:** One funnel with a direction switch, or two separate funnels? How should a coin in both (rare, but possible on mixed timeframes) be shown?
-9. **Evidence:** Should a funnel carry a study (what followed coins reaching Ready, in the past), as single Sets do? Any traps in studying a multi-stage selection?
+9. **Evidence:** Should a funnel carry a study (what followed coins becoming Candidates, in the past), as single Sets do? Any traps in studying a multi-stage selection?
 10. **Market practice:** How do comparable tools (TradingView screeners and alerts, TrendSpider, Coinigy, 3Commas, CryptoQuant screeners) present multi-timeframe screening? What should we copy or avoid?
 11. **Simplify:** What should the first version leave out?
 
