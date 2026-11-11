@@ -17,6 +17,7 @@ import funnel as fn
 import funnel_spec as fs
 import funnel_templates as ft
 import funnel_view as fv
+import drafts as dr
 
 TEMPLATES = [("crypto", "long"), ("crypto", "short"), ("equity", "long"), ("equity", "short")]
 MARKET_WORDS = {"crypto": "Crypto", "equity": "Equities"}
@@ -185,15 +186,27 @@ def render(st, supabase, user_id: str) -> None:
         return
 
     saved = next((f for f in funnels if f["id"] == pick), None)
+    st.session_state["_draft_user"] = user_id
     drafts = st.session_state.setdefault("_funnel_drafts", {})
+    bases = st.session_state.setdefault("_funnel_bases", {})
     if pick not in drafts:
         base = copy.deepcopy(saved) if saved else template(*pick.split(":")[1:3])
         base.setdefault("pool", {})
+        bases[pick] = copy.deepcopy(base)
         drafts[pick] = base
+        kept = dr.restore(st.session_state, supabase, user_id, "funnel", pick)   # changes left unsaved last time
+        if kept and kept[0].get("stages"):
+            drafts[pick] = kept[0]
+            st.session_state["_funnel_restored"] = (pick, kept[1])
     f = drafts[pick]
     market = f.get("market") or "crypto"
     choices = _set_choices(library, saved_sets)
 
+    restored = st.session_state.get("_funnel_restored")
+    if restored and restored[0] == pick:
+        st.info(f"Your unsaved changes from {dr.when(restored[1])} are back. Save to use them, or "
+                + ("Discard changes to go back to the saved funnel." if saved else "start again from another choice."),
+                icon=":material/history:")
     badge = provenance(f, library)
     st.markdown(f"**{MARKET_WORDS[market]}** · {fn.DIRECTION_ICONS[f['direction']]} "
                 f"{'Long' if f['direction'] == 'long' else 'Short'} · *{badge}*"
@@ -293,6 +306,8 @@ def render(st, supabase, user_id: str) -> None:
                     unsafe_allow_html=True)
         _stages_board(st, f, pick, configs, user_id, library, saved_sets)
 
+    dr.remember(st.session_state, supabase, user_id, "funnel", pick, f, bases.get(pick) or saved or f)
+
     # ------------------------------------------------------------------ check, summary, save
     blocks, warns = fs.validate(f)
     for b in blocks:
@@ -312,6 +327,8 @@ def render(st, supabase, user_id: str) -> None:
         _save(st, supabase, f, pick, drafts)
     if saved and bar.button("Discard changes", icon=":material/undo:", key=f"fe_discard_{pick}", disabled=not what):
         drafts.pop(pick, None)
+        dr.forget(st.session_state, supabase, user_id, "funnel", pick)
+        st.session_state.pop("_funnel_restored", None)
         for k in [k for k in st.session_state.keys() if str(k).startswith("fe_") and str(k).endswith(pick)]:
             st.session_state.pop(k, None)
         lattice_panel.rerun(st)
@@ -327,6 +344,7 @@ def render(st, supabase, user_id: str) -> None:
                 try:
                     supabase.rpc("funnel_delete", {"p_id": saved["id"]}).execute()
                     drafts.pop(pick, None)
+                    dr.forget(st.session_state, supabase, user_id, "funnel", pick)
                     st.session_state.pop("funnel_edit", None)
                     _refresh(st)
                     st.toast("Funnel deleted.")
@@ -508,6 +526,10 @@ def _save(st, supabase, f: dict, pick: str | None, drafts: dict) -> None:
     new_id = getattr(res, "data", None)
     if pick in drafts:
         drafts.pop(pick, None)
+    if pick:
+        dr.forget(st.session_state, supabase, st.session_state.get("_draft_user"), "funnel", pick)
+        st.session_state.get("_funnel_bases", {}).pop(pick, None)
+        st.session_state.pop("_funnel_restored", None)
     if isinstance(new_id, str):
         st.session_state["_funnel_edit_next"] = new_id
     _refresh(st)

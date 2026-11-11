@@ -12,6 +12,7 @@ from __future__ import annotations
 import json
 import time
 
+import drafts as dr
 import lattice_component
 import lattice_panel
 import lattice_editor as le
@@ -92,6 +93,7 @@ def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str = "") 
                 else:
                     model["name"] = cfg["name"]          # its current name (it may have been renamed since saving)
                 st.session_state["lattice_model"], st.session_state["lattice_source"] = model, cfg
+        dr.after_load(st.session_state, supabase, user_id, "group", start, "lattice_model", le.clean_model)
     model = st.session_state.get("lattice_model") or le.empty_model()
 
     early = lattice_panel.pending(st, "lattice_group_editor", "model")
@@ -102,6 +104,7 @@ def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str = "") 
         except ValueError:
             pass
         model = st.session_state["lattice_model"]
+    dr.track(st, supabase, user_id, "group", start, model, le.clean_model, "lattice_loaded", lattice_panel.rerun)
     screen = le.state_for_screen(model)
     try:
         result = lattice_component.component()(
@@ -350,6 +353,8 @@ def _save(st, supabase, model: dict, can_save: bool) -> None:
             new_id = supabase.rpc("analysis_create_config", {"kind": "group", "body": doc}).execute().data
             st.session_state.pop("siggroups_saved", None)
             # Open the Group just saved, so the next save offers "Save as version 2" instead of another new Group.
+            dr.saved(st.session_state, supabase, st.session_state.get("_lattice_user"), "group",
+                     st.session_state.get("lattice_start"))
             st.session_state["_lattice_start_next"] = f"saved:{new_id}"
             st.session_state.pop("lattice_loaded", None)
             st.session_state["lattice_flash_group"] = ("ok", "Saved as a new Group (version 1). It is private until "
@@ -365,6 +370,8 @@ def _save(st, supabase, model: dict, can_save: bool) -> None:
                                                        "body": doc}).execute().data
             st.session_state.pop("siggroups_saved", None)
             # Open the saved version, so everything below (such as Study this Set) is about version {v}.
+            dr.saved(st.session_state, supabase, st.session_state.get("_lattice_user"), "group",
+                     st.session_state.get("lattice_start"))
             st.session_state["_lattice_start_next"] = f"saved:{source['id']}"
             st.session_state.pop("lattice_loaded", None)
             st.session_state["lattice_flash_group"] = ("ok", f"Saved version {v}.")

@@ -12,6 +12,7 @@ import copy
 import json
 import time
 
+import drafts as dr
 import lattice_component
 import lattice_panel
 import lattice_editor as le
@@ -107,6 +108,8 @@ def render(st, supabase, user_id: str = "") -> None:
             else:
                 model["name"] = cfg["name"]               # its current name (it may have been renamed since saving)
                 st.session_state["lattice_set_model"], st.session_state["lattice_set_source"] = model, cfg
+        dr.after_load(st.session_state, supabase, user_id, "set", start, "lattice_set_model",
+                      lambda m: ls.clean_model(m or ls.empty_model(), choices))
     model = ls.clean_model(st.session_state.get("lattice_set_model") or ls.empty_model(), choices)
     lattice_view.show_flash(st, "lattice_flash_set")            # "Saved …", "Opened a copy of …"
 
@@ -118,6 +121,8 @@ def render(st, supabase, user_id: str = "") -> None:
         except ValueError:
             pass
         model = st.session_state["lattice_set_model"]
+    dr.track(st, supabase, user_id, "set", start, model, lambda m: ls.clean_model(m, choices), "lattice_set_loaded",
+             lattice_panel.rerun)
     screen = ls.state_for_screen(model, choices)
     screen["show_provided"] = lattice_panel.provided_shown(st)   # the library's "Provided" section
     screen["search"] = st.session_state.get("lattice_set_search")      # market matches for a fixed asset
@@ -184,6 +189,7 @@ def render(st, supabase, user_id: str = "") -> None:
             new_id = supabase.rpc("analysis_create_config", {"kind": "set", "body": doc}).execute().data
             st.session_state.pop("siggroups_saved", None)
             # Open the Set just saved, so the next save offers "Save as version 2" instead of another new Set.
+            dr.saved(st.session_state, supabase, user_id, "set", st.session_state.get("lattice_set_start"))
             st.session_state["_lattice_set_start_next"] = f"saved:{new_id}"
             st.session_state.pop("lattice_set_loaded", None)
             st.session_state["lattice_flash_set"] = ("ok", "Saved as a new Set (version 1)."
@@ -199,6 +205,7 @@ def render(st, supabase, user_id: str = "") -> None:
                                                        "body": doc}).execute().data
             st.session_state.pop("siggroups_saved", None)
             # Open the saved version, so everything below (such as Study this Set) is about version {v}.
+            dr.saved(st.session_state, supabase, user_id, "set", st.session_state.get("lattice_set_start"))
             st.session_state["_lattice_set_start_next"] = f"saved:{source['id']}"
             st.session_state.pop("lattice_set_loaded", None)
             st.session_state["lattice_flash_set"] = ("ok", f"Saved version {v}.")
