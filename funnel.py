@@ -78,6 +78,8 @@ def record(state: CoinState, k: int, answer: str, at: str, line: str | None = No
     if not reachable(state, k):
         return state
     s = state.stages[k]
+    if s.checked_at == at and s.answer == answer:  # the same close again (a re-run): counted once, not twice
+        return state
     s.answer, s.checked_at, s.line = answer, at, line
     if answer == YES:
         s.held, s.no_run, s.unknown_run = True, 0, 0

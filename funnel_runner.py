@@ -151,7 +151,7 @@ def run_funnel(store, f: dict, universe: dict[str, dict], evaluate, now: pd.Time
         coins = [c for c, st in states.items() if fn.reachable(st, k)]
         if not coins:                             # nothing reaches this stage yet: leave the close unclaimed, so
             continue                              # coins promoted later (at this close) are still checked
-        run_id = store.claim(f["id"], k, cutoff, now)
+        run_id = store.claim(f["id"], k, cutoff, now, version=version, saved_at=f.get("updated_at"))
         if run_id is None:
             continue
         began = time.monotonic()
@@ -167,7 +167,7 @@ def run_funnel(store, f: dict, universe: dict[str, dict], evaluate, now: pd.Time
                     fn.record(states[row["id"]], k, answer, cutoff.isoformat(), row.get("reason"),
                               flicker=f.get("flicker", True))
             store.finish(run_id, {"status": "ok", "finished_at": datetime.now(timezone.utc).isoformat(),
-                                  "checked": len(coins), "answers": tally})
+                                  "checked": len(coins), "answers": {**tally, "version": version}})
             store.save_coins(f["id"], version, keep())
             log(f"Funnel {f['name']} · stage {k + 1}: {len(coins)} checked in {time.monotonic() - began:.0f}s, {tally}")
             summary["stages_run"] += 1
@@ -330,6 +330,22 @@ def run_all(store, evaluate, now=None, log=print, budget_seconds=BUDGET_SECONDS,
     return out
 
 
+
+def earlier_version(run: dict, version, saved_at) -> bool:
+    """True when a finished run at this close belongs to an earlier version of the funnel. Runs record their version
+    (answers.version); older runs that don't are earlier when they started before the funnel was last saved."""
+    if version is None or run.get("status") != "ok":
+        return False
+    ran = (run.get("answers") or {}).get("version")
+    if ran is not None:
+        return ran != version
+    if not saved_at:
+        return False
+    try:
+        return pd.Timestamp(run["started_at"]) < pd.Timestamp(saved_at)
+    except (TypeError, ValueError, KeyError):
+        return False
+
 class SupabaseStore:
     """The funnel job's database access (service role)."""
 
@@ -356,35 +372,36 @@ class SupabaseStore:
         rows = self.db.table("funnel_coins").select("*").eq("funnel_id", funnel_id).execute().data or []
         return {r["coin_id"]: r for r in rows}
 
-    def claim(self, funnel_id, stage, cutoff, started) -> int | None:
+    def claim(self, funnel_id, stage, cutoff, started, version=None, saved_at=None) -> int | None:
         try:
             rows = (self.db.table("funnel_runs").insert({"funnel_id": funnel_id, "stage": stage,
                                                          "cutoff": cutoff.isoformat(),
                                                          "started_at": started.isoformat()}).execute().data or [])
         except Exception as exc:
             if "duplicate" in str(exc).lower() or "23505" in str(exc):
-                return self._take_over(funnel_id, stage, cutoff, started)
+                return self._take_over(funnel_id, stage, cutoff, started, version, saved_at)
             raise
         return rows[0]["id"] if rows else None
 
-    def _take_over(self, funnel_id, stage, cutoff, started) -> int | None:
-        """A claim for this close already exists. Run it again only if it failed, or if it has been 'running' for
-        longer than STALE_CLAIM (the job that claimed it was stopped). The update is conditional on the row being
-        unchanged, so two jobs never both take it."""
-        rows = (self.db.table("funnel_runs").select("id, status, started_at").eq("funnel_id", funnel_id)
+    def _take_over(self, funnel_id, stage, cutoff, started, version=None, saved_at=None) -> int | None:
+        """A claim for this close already exists. Run it again only if it failed, if it has been 'running' for
+        longer than STALE_CLAIM (the job that claimed it was stopped), or if an earlier version of the funnel ran it
+        (a saved change starts again from the pool, so the new version must check this close itself). The update is
+        conditional on the row being unchanged, so two jobs never both take it."""
+        rows = (self.db.table("funnel_runs").select("id, status, started_at, answers").eq("funnel_id", funnel_id)
                 .eq("stage", stage).eq("cutoff", cutoff.isoformat()).execute().data or [])
         if not rows:
             return None
         r = rows[0]
         stale = r["status"] == "running" and pd.Timestamp(r["started_at"]) < started - STALE_CLAIM
-        if r["status"] != "failed" and not stale:
+        if r["status"] != "failed" and not stale and not earlier_version(r, version, saved_at):
             return None
         got = (self.db.table("funnel_runs").update({"status": "running", "started_at": started.isoformat(),
                                                      "error": None, "finished_at": None})
                .eq("id", r["id"]).eq("started_at", r["started_at"]).execute().data or [])
         return r["id"] if got else None
 
-    def finish(self, run_id, fields: dict) -> None:
+    def finish(self, run_id, fields: dict) -> None:  # noqa: D401
         self.db.table("funnel_runs").update(fields).eq("id", run_id).execute()
 
     def refresh_sentiment(self, market: str, items: list[tuple[str, str]], log=print) -> int:

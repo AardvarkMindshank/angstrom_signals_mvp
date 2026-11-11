@@ -27,7 +27,7 @@ class Store:
     def coins(self, fid):
         return {c: {"stages_version": v, "state": st.to_dict()} for c, (v, st) in self.saved.items()}
 
-    def claim(self, fid, stage, cutoff, started):
+    def claim(self, fid, stage, cutoff, started, **kw):
         key = (fid, stage, cutoff)
         if key in self.runs:
             return None
@@ -229,3 +229,23 @@ def test_the_account_switch_stops_funnel_alerts():
     ev, _ = _evaluate({0: {"bitcoin": "yes"}, 1: {"bitcoin": "yes"}, 2: {"bitcoin": "yes"}, 3: {"bitcoin": "yes"}})
     fr.run_all(store, ev, now=pd.Timestamp("2026-11-10 00:20", tz="UTC"))
     assert store.notes == [] and fn.place(store.saved["bitcoin"][1])["status"] == "candidate"
+
+
+def test_a_new_version_checks_the_current_close_again():
+    run = {"status": "ok", "started_at": "2026-11-11T00:05:00+00:00", "answers": {"yes": 3, "version": 1}}
+    assert fr.earlier_version(run, 2, None) and not fr.earlier_version(run, 1, None)
+    old = {"status": "ok", "started_at": "2026-11-11T00:05:00+00:00", "answers": {"yes": 3}}      # before versions
+    assert fr.earlier_version(old, 2, "2026-11-11T16:00:00+00:00")
+    assert not fr.earlier_version(old, 2, "2026-11-10T16:00:00+00:00")       # ran after the last save
+    assert not fr.earlier_version({**run, "status": "running"}, 2, None)    # stale-claim rules handle running ones
+    assert not fr.earlier_version(run, None, None)
+
+
+def test_the_same_close_twice_counts_once():
+    st = fn.CoinState.new(4)
+    fn.record(st, 0, fn.YES, "2026-11-10T00:00:00+00:00")
+    fn.record(st, 0, fn.NO, "2026-11-11T00:00:00+00:00")
+    fn.record(st, 0, fn.NO, "2026-11-11T00:00:00+00:00")                     # a re-run of the same close
+    assert st.stages[0].held and st.stages[0].no_run == 1
+    fn.record(st, 0, fn.NO, "2026-11-12T00:00:00+00:00")
+    assert not st.stages[0].held
