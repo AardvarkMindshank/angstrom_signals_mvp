@@ -11,7 +11,8 @@ from signal_library import DataContext, engine
 def test_every_stage_is_a_valid_scannable_set():
     for direction in ("long", "short"):
         f = ft.trend_funnel(direction)
-        assert [s["timeframe"] for s in f["stages"]] == ["1D", "12h", "4h", "1h"]
+        assert [s["timeframe"] for s in f["stages"]] == ["1D", "1D", "12h", "4h", "1h"]     # wide daily trend first
+        assert f["stages"][0]["label"] == "Daily trend" and "WaveTrend" in f["stages"][1]["label"]
         for s in f["stages"]:
             assert sg.validate_set(s["set_body"]) == [] and sg.scannable(s["set_body"])
             assert all(m["ref"]["timeframe"] == s["timeframe"] for m in s["set_body"]["standalone"])

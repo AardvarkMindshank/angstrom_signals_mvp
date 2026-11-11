@@ -205,9 +205,14 @@ def explanations() -> dict[str, tuple[str, str, str, str]]:
     return out
 
 
+# The check timeframes of earlier provided funnels, so a copy of one is still recognised (and offered Update to the
+# latest provided version) after the provided funnel gains or loses a stage.
+EARLIER_SHAPES = {"crypto": [("1D", "12h", "4h", "1h")], "equity": []}
+
+
 def trend_funnel(direction: str, market: str = "crypto") -> dict:
     """{name, direction, market, stages: [{label, timeframe, set_body, set_source}]} ready for funnel_save.
-    Crypto: daily, 12-hour, 4-hour, then the 1-hour entry. Equities: weekly, daily, 4-hour (from the session open),
+    Crypto: the daily trend (wide), the daily WaveTrend turn, 12-hour, 4-hour, then the 1-hour entry. Equities: weekly, daily, 4-hour (from the session open),
     then the 1-hour entry."""
     if market == "equity":
         labels, tfs = ("Weekly", "Daily", "Shortlist (4-hour)"), EQUITY_TIMEFRAMES
@@ -219,6 +224,10 @@ def trend_funnel(direction: str, market: str = "crypto") -> dict:
         if st_["timeframe"] == "1D":
             st_.update({"label": "Daily (trend + WaveTrend turn)", "set_body": wave_turn_set(direction),
                         "set_source": {"provided": library_key("wave", direction)}})
+    if market != "equity":                 # crypto: a wide first stage, the daily trend alone (12 Nov 2026), so
+        stages.insert(0, {"label": "Daily trend", "timeframe": "1D",      # coins build towards the WaveTrend turn
+                          "set_body": trend_set("1D", direction),        # instead of the funnel being empty most days
+                          "set_source": {"provided": library_key("1D", direction)}})
     stages.append({"label": "Entry (1-hour)", "timeframe": ENTRY_TIMEFRAME, "set_body": entry_set(direction),
                    "set_source": {"provided": library_key(None, direction)}})
     arrow = "▲" if direction == "long" else "▼"

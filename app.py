@@ -7504,7 +7504,8 @@ tested what usually followed these answers.
 - Angstrom provides four: **Trend crypto longs ▲**, **Trend crypto shorts ▼**, **Trend equity longs ▲** and
   **Trend equity shorts ▼**. They can't be changed or deleted. To use one, press **Make my own copy**: your copy
   runs for your account, with its own places and alerts. Longs and shorts are separate funnels.
-- **Crypto:** daily → 12-hour → 4-hour (the shortlist) → 1-hour entry. **Equities:** weekly → daily → 4-hour →
+- **Crypto:** daily trend (wide) → daily WaveTrend turn → 12-hour → 4-hour (the shortlist) → 1-hour entry.
+  **Equities:** weekly → daily → 4-hour →
   1-hour entry (equities trade 6½ hours a day, so a 12-hour candle would just be the daily one).
 - The trend stages ask for **EMA 20 above EMA 50** (below, for shorts). The **daily** stage also asks for
   **WaveTrend** (the Market Cipher style momentum wave) to have turned up from oversold within the last 5 days and
@@ -10971,7 +10972,8 @@ def _funnel_controls(dyn, market: str = "crypto") -> None:
     if dyn.get("error"):
         st.warning(dyn["error"])
         return
-    stages_words = ("Daily, 12-hour and 4-hour" if market == "crypto" else "Weekly, daily and 4-hour")
+    stages_words = ("Daily trend, daily WaveTrend turn, 12-hour and 4-hour" if market == "crypto"
+                    else "Weekly, daily and 4-hour")
     if not dyn["funnels"]:
         st.caption(f"🔻 A funnel narrows {words['pool']} down in stages, to the 1-hour, and keeps the list up to "
                    "date by itself. Make your own copy of a provided one (you can change it later in Lattice → Funnels):")

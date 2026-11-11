@@ -7,7 +7,9 @@ import funnel_templates as ft
 import funnel_view as fv
 from funnel import NO, YES
 
-F = {**ft.trend_funnel("long"), "id": "f", "stages_version": 1}
+_CRYPTO = ft.trend_funnel("long")
+# The four-stage shape these tests were written for (the crypto funnel before its wide daily-trend stage).
+F = {**_CRYPTO, "stages": _CRYPTO["stages"][1:], "id": "f", "stages_version": 1}
 
 
 def _coin(answers):

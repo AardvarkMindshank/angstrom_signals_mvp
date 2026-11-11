@@ -44,8 +44,9 @@ def provenance(f: dict, library: dict) -> str:
             [s["timeframe"] for s in f["stages"]] == [s["timeframe"] for s in made["stages"]]:
         return "Your copy of a provided funnel"
     keys = [provided_key(s.get("set_source")) for s in f["stages"]]
+    shapes = [tuple(s["timeframe"] for s in made["stages"])] + ft.EARLIER_SHAPES.get(f.get("market") or "crypto", [])
     if all(k and k in library and library[k] == s.get("set_body") for k, s in zip(keys, f["stages"])) and \
-            [s["timeframe"] for s in f["stages"]] == [s["timeframe"] for s in made["stages"]]:
+            tuple(s["timeframe"] for s in f["stages"]) in shapes:
         return "Your copy of an earlier version of a provided funnel"
     if any(str(k or "").startswith("demo:") for k in keys):
         return "Customised"
@@ -214,9 +215,10 @@ def render(st, supabase, user_id: str) -> None:
     if badge.startswith("Your copy of an earlier version"):
         latest = template(market, f["direction"])
         if st.button("⬆ Update to the latest provided version", key=f"fe_latest_{pick}",
-                     help="Angstrom's provided funnel has changed since you made your copy (its daily stage now reads "
-                          "WaveTrend turning back from an extreme). This takes its stages; your name, pool and alerts "
-                          "stay. Then Save and activate: every asset starts again from the pool, quietly."):
+                     help="Angstrom's provided funnel has changed since you made your copy (its daily stage reads "
+                          "WaveTrend turning back from an extreme; crypto funnels now start with a wider daily-trend "
+                          "stage). This takes its stages; your name, pool and alerts stay. Then Save and activate: "
+                          "every asset starts again from the pool, quietly."):
             f["stages"] = copy.deepcopy(latest["stages"])
             lattice_panel.rerun(st)
 

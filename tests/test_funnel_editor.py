@@ -127,7 +127,7 @@ def _board():
 
 def test_stages_board_drop_add_move_remove_and_settings():
     lib, choices = _board()
-    f = fe.template("crypto", "long")
+    f = fe.template("equity", "long")      # 4 stages: room to add one
     n = len(f["stages"])
     assert fe.apply_action(f, {"op": "set", "stage": 0, "set": "saved:c1:2"}, choices, lib, {}) is None
     assert f["stages"][0]["set_source"] == {"config_id": "c1", "version": 2}
@@ -163,3 +163,11 @@ def test_stages_board_upgrade_and_data():
     assert data["timeframes"][0] == ["15m", "15 minutes"] and data["max_stages"] == fe.MAX_STAGES
     fe.apply_action(old, {"op": "upgrade", "stage": 1}, choices, lib, {})
     assert fe.upgrade_for(old["stages"][1], lib, {}) is None
+
+
+def test_a_copy_of_the_earlier_four_stage_crypto_funnel_is_offered_the_update():
+    lib = prism.demo_sets()
+    now = fe.template("crypto", "long")
+    old = {**now, "stages": now["stages"][1:]}              # the provided crypto funnel before its daily-trend stage
+    assert fe.provenance(old, lib) == "Your copy of an earlier version of a provided funnel"
+    assert fe.provenance(now, lib) == "Your copy of a provided funnel"
