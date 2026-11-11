@@ -284,6 +284,11 @@ def render(st, supabase, user_id: str) -> None:
         problem = st.session_state.pop("funnel_stages_flash", None)
         if problem:
             st.warning(problem, icon=":material/info:")
+        # Streamlit's expander can keep a minimum height from an earlier, taller moment (the board drawing for the
+        # first time), which left an empty band under the stages. Only this expander: the one holding the board.
+        st.markdown('<style>[data-testid="stExpanderDetails"]:has([class*="st-key-funnel_stages_"])'
+                    ':not(:has([data-testid="stExpander"])){min-height:0 !important}</style>',
+                    unsafe_allow_html=True)
         _stages_board(st, f, pick, configs, user_id, library, saved_sets)
 
     # ------------------------------------------------------------------ check, summary, save
