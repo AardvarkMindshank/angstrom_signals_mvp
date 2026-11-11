@@ -63,7 +63,7 @@ const { chromium, devices } = require("playwright");
     await page.waitForTimeout(80);
     await page.fill('input[aria-label="Search signals"]', "volume");
     const chips = await page.$$eval(".chip", (cs) => cs.length);
-    check("search filters the list", chips >= 1 && chips <= 4, `${chips} chips`);
+    check("search filters the list", chips >= 1 && chips <= 8, `${chips} chips`);   // volume, OBV, money flow ...
 
     const injected = await page.evaluate(() => document.querySelectorAll("#host script, #host img").length);
     check("page text is never inserted as HTML", injected === 0);

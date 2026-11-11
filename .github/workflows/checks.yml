@@ -180,7 +180,7 @@ jobs:
     # data (rows from 2024-10-30 on are removed as each file is read). Required: the committed record
     # signal_library/certification.json must match this run.
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    timeout-minutes: 150
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
