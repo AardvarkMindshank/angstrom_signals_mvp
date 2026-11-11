@@ -277,7 +277,9 @@ def render(st, supabase, user_id: str) -> None:
     # A fixed title: Streamlit treats a folding section with a new title as a new one and folds it, so naming the
     # stages in the title closed it whenever a stage was added, removed, moved or renamed.
     st.caption("Stages: " + " → ".join(s.get("label") or s["timeframe"] for s in f["stages"]))
-    with st.expander("Stages (advanced)", icon=":material/stacks:"):
+    # A key as well: without one Streamlit also treats it as new when anything above it changes (a pause note, the
+    # stage line, an Update button), and a new one starts folded.
+    with st.expander("Stages (advanced)", icon=":material/stacks:", key=f"fe_stages_open_{pick}"):
         st.caption("Each stage checks one Set, only for the assets that hold every stage before it. The timeframe is "
                    "**when the stage is checked**; the Set's readings keep their own timeframes. To change a threshold, "
                    "edit a copy of the Set in Signal Sets, then pick it here.")
