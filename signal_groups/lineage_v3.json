@@ -112,6 +112,18 @@
     ],
     "volatility.atr_trend": [
       "price"
+    ],
+    "osc.wavetrend": [
+      "price"
+    ],
+    "flow.money": [
+      "price"
+    ],
+    "osc.stoch_ohlc4": [
+      "price"
+    ],
+    "divergence.mtf": [
+      "price"
     ]
   }
 }

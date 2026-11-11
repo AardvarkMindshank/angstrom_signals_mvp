@@ -202,6 +202,10 @@ def _name_of(signal_id: str) -> str:
 SHORT = {
     "ma.line": lambda p: f"{p['kind']} {p['length']}",
     "ma.pair": lambda p: f"{p['kind']} {p['fast']} vs {p['slow']}",
+    "osc.wavetrend": lambda p: f"WaveTrend {p['channel']}/{p['average']}",
+    "flow.money": lambda p: f"Money flow {p['period']}",
+    "osc.stoch_ohlc4": lambda p: f"Stochastic OHLC4 {p['length']}",
+    "divergence.mtf": lambda p: f"Divergence ({p['set']}, {p['oscillator']})",
     "candle.shape": lambda p: "Candle",
     "volatility.atr_trend": lambda p: f"ATR {p['length']} vs its {p['average']}-candle average",
 }

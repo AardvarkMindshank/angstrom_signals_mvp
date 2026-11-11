@@ -37,6 +37,15 @@ Generated from the registry (`signal_library.REGISTRY.catalogue()`) by `signal_c
 - **Interpretation:** What the last candle did: a strong green candle has body_vs_average above 1 (bigger than usual). Descriptive; one candle says little on its own.
 - **Limitations:** One candle is noisy, and gaps between sessions (shares) make the previous close less comparable.
 
+### Divergence across timeframes — `divergence.mtf@1`
+
+- **Category:** momentum · **Output:** observation · **Unit:** mixed (labelled fields) · **Scope:** asset
+- **Timeframes:** 1D · **Data:** candles
+- **Parameters:** `set` = crypto (timeframes: crypto = daily, 12h, 4h, 1h; equity = weekly, daily, 4h, 1h; intraday = 4h, 1h, 30m, 15m); `oscillator` = wavetrend (the momentum line compared with price swings); `active_bars` = 10 (candles a confirmed divergence counts as recent)
+- **Calculation:** On each timeframe of the set, at its last closed candle: confirmed divergences between consecutive price swings (5 candles each side) and the oscillator's swings (WaveTrend WT2, or RSI 14), as the library's RSI divergence finds them; one counts when it was confirmed within the last `active_bars` candles and not invalidated. bullish_count = timeframes with a regular or hidden bullish one; bearish_count the same for bearish; regular_bullish_count, hidden_bullish_count, regular_bearish_count and hidden_bearish_count split them; timeframes_read = timeframes that could be read. A timeframe counts once per kind however many it has.
+- **Interpretation:** How many timeframes show momentum disagreeing with price at once, the multi-timeframe divergence Drew looks for. Regular divergence hints at exhaustion, hidden divergence at continuation. Descriptive; not a trade signal by itself.
+- **Limitations:** Swings are confirmed 5 candles late by design. A timeframe that cannot be read is left out of timeframes_read, never counted as no divergence. In strong trends regular divergence can repeat many times before any turn.
+
 ### MACD histogram — `macd.acceleration@1`
 
 - **Category:** momentum · **Output:** observation · **Unit:** price and ATRs · **Scope:** asset
@@ -60,6 +69,24 @@ Generated from the registry (`signal_library.REGISTRY.catalogue()`) by `signal_c
 - **Calculation:** Close-to-close change over 7 candles, and the same change in units of the expected move (ATR% x sqrt(7)). standard_score is the dashboard's 7-candle move component for this candle, on -1..+1 (positive = up or stretched up), computed by signals_v2.component_momentum (definitions fingerprint recorded in the evidence).
 - **Interpretation:** How large the recent move is for this asset. Standard score (dashboard Stretch part): tanh(change / expected). Descriptive; not a forecast.
 - **Limitations:** On daily candles this is the 7-day move; on other timeframes it is 7 of those candles. On timeframes other than 1D the standard score is daily-derived scaling.
+
+### Stochastic on OHLC4 — `osc.stoch_ohlc4@1`
+
+- **Category:** momentum · **Output:** observation · **Unit:** mixed (labelled fields) · **Scope:** asset
+- **Timeframes:** 15m, 30m, 1h, 4h, 12h, 1D, 1W · **Data:** candles
+- **Parameters:** `length` = 14 (candles in the high-low range); `smooth_k` = 3 (smoothing of %K); `smooth_d` = 3 (%D: the average of %K); `overbought` = 80 (overbought line); `oversold` = 20 (oversold line)
+- **Calculation:** On the last closed candle, with src = (open + high + low + close) / 4: %K = SMA(100 x (src - lowest low) / (highest high - lowest low), smooth_k) over `length` candles; %D = SMA(%K, smooth_d). zone = overbought at or above the line, oversold at or below; cross = %K crossing %D on this candle; turned_up_from_oversold = a cross up with %D at or below the oversold line (mirror for overbought).
+- **Interpretation:** Where the candle's average price sits in its recent range, smoothed, and whether it just turned. Descriptive.
+- **Limitations:** Stays pinned near 0 or 100 in strong trends; turns repeat in sideways markets.
+
+### WaveTrend momentum (Market Cipher style) — `osc.wavetrend@1`
+
+- **Category:** momentum · **Output:** observation · **Unit:** mixed (labelled fields) · **Scope:** asset
+- **Timeframes:** 15m, 30m, 1h, 4h, 12h, 1D, 1W · **Data:** candles
+- **Parameters:** `channel` = 9 (channel length (the EMA of price and of its distance)); `average` = 12 (average length (smooths the wave, WT1)); `signal` = 3 (signal line length (WT2 = simple average of WT1)); `overbought` = 53 (overbought line (Market Cipher B: 53; a stronger line at 60)); `oversold` = -53 (oversold line (Market Cipher B: -53; a stronger line at -60))
+- **Calculation:** LazyBear's WaveTrend on the last closed candle: ap = (high + low + close) / 3; esa = EMA(ap, channel); d = EMA(|ap - esa|, channel); ci = (ap - esa) / (0.015 x d); WT1 = EMA(ci, average); WT2 = SMA(WT1, signal). zone = overbought when WT2 is at or above the overbought line, oversold at or below the oversold line, else neutral. cross = up when WT1 moved above WT2 on this candle, down when below. turned_up_from_oversold = a cross up while WT2 is at or below the oversold line (Market Cipher's green dot); turned_down_from_overbought the mirror (red dot). Defaults are Market Cipher B's.
+- **Interpretation:** Where the momentum wave is and whether it just turned. A turn up from oversold is what many traders mark as a possible bounce point, to be read with the trend and other timeframes. Descriptive; not a forecast.
+- **Limitations:** Oscillators stay overbought or oversold for long stretches in strong trends, and turns repeat. Needs about 50 closed candles. Settings change the readings; the defaults follow the published Market Cipher B recreation, not any one trader's chart.
 
 ### RSI (14) — `rsi.level@1`
 
@@ -267,6 +294,15 @@ Generated from the registry (`signal_library.REGISTRY.catalogue()`) by `signal_c
 - **Calculation:** On the last closed candle: up when close > SMA 50 > SMA 200, down when close < SMA 50 < SMA 200, otherwise mixed. Without SMA 200 yet, close against SMA 50 decides. Same rule as the market regime.
 - **Interpretation:** Which way the moving-average stack points on this timeframe. Descriptive.
 - **Limitations:** Moving averages lag; after a sharp reversal this stays on the old direction for a while.
+
+### Money flow (Market Cipher style) — `flow.money@1`
+
+- **Category:** volume · **Output:** observation · **Unit:** mixed (labelled fields) · **Scope:** asset
+- **Timeframes:** 15m, 30m, 1h, 4h, 12h, 1D, 1W · **Data:** candles
+- **Parameters:** `period` = 60 (candles averaged); `multiplier` = 150 (scale (Market Cipher B: 150))
+- **Calculation:** On the last closed candle: value = the simple average over `period` candles of ((close - open) / (high - low)) x multiplier, less 2.5 (VuManChu Cipher B's money-flow area). direction = in when the value is above zero, out when below. rising = higher than one candle before.
+- **Interpretation:** Whether candles have, on balance, been closing above their opens (money flowing in, green) or below (flowing out, red), and whether that is growing. Agreement or disagreement across timeframes is how it is usually read. Descriptive.
+- **Limitations:** Built from candle shapes only; it does not see order flow or exchange volumes. A doji (open = close) counts as nothing. Slow by design (60 candles).
 
 ### On-balance volume balance — `obv.balance@1`
 
