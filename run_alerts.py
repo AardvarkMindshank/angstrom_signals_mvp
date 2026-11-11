@@ -372,6 +372,14 @@ def run_background_checks() -> None:
     frames = refresh_price_catalog(supabase, price_catalog, max_days)
     refresh_due_sentiment(supabase, catalog)
     try:
+        # Options max-pain snapshots (Bitcoin, Ethereum, watched and funnel equities): the history behind the max pain
+        # signal. Collected only; never holds up the alert pass.
+        from options_snapshots import refresh_due as refresh_options
+
+        refresh_options(supabase, price_catalog)
+    except Exception as exc:
+        print(f"Options snapshots skipped: {str(exc)[:160]}")
+    try:
         # Observed capital flows: collected only, a few times a day. Never holds up the alert pass.
         from capital_flows import refresh_due_flows
 

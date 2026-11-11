@@ -413,7 +413,8 @@ def _run(st, scan, obj, op, action, assets) -> tuple[str, str]:
         rows = prism.run_now(
             obj["set"], picked,
             live_context=lambda kind, aid: sl.DataContext(
-                kind, aid, derivatives_loader=_loader("derivatives"), sentiment_loader=_loader("sentiment")),
+                kind, aid, derivatives_loader=_loader("derivatives"), sentiment_loader=_loader("sentiment"),
+                options_loader=_loader("options")),
             market_context=lambda scope: sl.DataContext(
                 "market", scope.split(":", 1)[1], flows_loader=_loader("flows"), sentiment_loader=_loader("sentiment")),
             earlier_run=_earlier_run(obj["set"]))
@@ -444,7 +445,7 @@ _SUPABASE = [None]
 def _loader(which):
     db = _SUPABASE[0]
     return {"derivatives": loaders.derivatives_loader, "sentiment": loaders.sentiment_loader,
-            "flows": loaders.flows_loader}[which](db)
+            "flows": loaders.flows_loader, "options": loaders.options_loader}[which](db)
 
 
 # ----------------------------------------------------------------------------------------------- messages

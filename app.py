@@ -7300,6 +7300,10 @@ Columns that read 4-hour or hourly candles show their latest answer and when it 
 **🎯 Max pain** (stocks, Bitcoin, Ethereum): the options strike where open contracts would be worth the
 least at expiry. It opens on the next expiry after today; one with almost no open contracts says so.
 It is not a price target.
+A **Max pain** signal (Lattice, under Positioning) lets a Set use it: how far price is from max pain (%),
+above / below / at, days to expiry, expiry week, monthly expiry and the put/call ratio. Its history is our
+own snapshots (Bitcoin and Ethereum every 4 hours; watched and funnel equities once per trading day), so it
+answers Unknown before November 2026 and for coins other than Bitcoin and Ethereum.
 
 **🔥 Leverage & liquidations** (crypto): open interest, funding rate, long/short ratio and the last 24
 hours of liquidations, a ladder and table of the estimated liquidation levels with their change since
@@ -13640,7 +13644,8 @@ def show_max_pain(kind: str, asset_id: str, label: str, chart_price: float | Non
         st.caption(
             "This is where open contracts would be worth the least at expiry. "
             "It is not a price target, and it is not part of the technical readings. "
-            "Open interest is contracts for stocks, and coin amount for Bitcoin and Ethereum."
+            "Open interest is contracts for stocks, and coin amount for Bitcoin and Ethereum. "
+            "Sets can read it through the Max pain signal in Lattice (Positioning)."
         )
 
 

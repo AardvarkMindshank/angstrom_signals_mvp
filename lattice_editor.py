@@ -34,7 +34,7 @@ ROLE_HINT = {
     "context": "Shown alongside the result, but changes nothing.",
 }
 CATEGORY = {"trend": "Trend", "momentum": "Momentum", "regime": "Regime", "structure": "Structure",
-            "volume": "Volume", "sentiment": "Sentiment"}
+            "volume": "Volume", "sentiment": "Sentiment", "positioning": "Positioning"}
 CATEGORY_ICON = {"trend": "trend", "momentum": "momentum", "regime": "regime", "structure": "structure",
                  "volume": "volume", "sentiment": "sentiment"}
 DIRECTION_MAP = {"up": 1, "down": -1, "mixed": 0}
@@ -68,7 +68,7 @@ def catalogue() -> list[dict]:
                 path, label = path.replace("*", "0"), f"nearest {head} · {rest.replace('_', ' ')}"
             operands.append({"field": path, "type": desc["type"], "label": label, "scale": fields.scale_text(desc),
                              "labels": desc.get("labels") or [], "range": desc.get("range")})
-        badge = ("History from Nov 2026" if "sentiment" in d.requires else "")
+        badge = ("History from Nov 2026" if ("sentiment" in d.requires or "options" in d.requires) else "")
         out.append({
             "id": d.id, "version": d.version, "name": d.name, "category": d.category,
             "category_label": CATEGORY.get(d.category, d.category.title()), "icon": CATEGORY_ICON.get(d.category, "trend"),
@@ -207,6 +207,8 @@ SHORT = {
     "osc.stoch_ohlc4": lambda p: f"Stochastic OHLC4 {p['length']}",
     "divergence.mtf": lambda p: f"Divergence ({p['set']}, {p['oscillator']})",
     "candle.shape": lambda p: "Candle",
+    "options.max_pain": lambda p: "Max pain" + (" (monthly)" if p.get("monthly") else "")
+    + (f" ≥{p['min_days']}d" if p.get("min_days") else ""),
     "volatility.atr_trend": lambda p: f"ATR {p['length']} vs its {p['average']}-candle average",
 }
 
@@ -387,6 +389,9 @@ def checks(model: dict) -> dict:
             blocks.append(f"{name} is marked Context, so rules cannot use it. Make it a Condition.")
         if "sentiment" in sl.REGISTRY.get(m["id"]).requires:
             warns.append(f"{name}: sentiment history starts in November 2026, so earlier dates will show it as missing.")
+        if "options" in sl.REGISTRY.get(m["id"]).requires:
+            warns.append(f"{name}: options snapshots start in November 2026, so earlier dates show it as missing. Crypto "
+                         "covers Bitcoin and Ethereum only; other coins answer Unknown.")
     rules = model.get("rules") or []
     for i, r in enumerate(rules):
         if r.get("joiner") == "any" and len(r.get("clauses") or []) > 1 and len(rules) > 1:
@@ -477,6 +482,8 @@ def member_tag(member: dict) -> str:
     requires = sl.REGISTRY.get(member["id"]).requires
     if "sentiment" in requires:
         return "Latest score at the time"
+    if "options" in requires:
+        return "Latest options snapshot at the time"
     return f"{member['timeframe']} · last closed candle" + (" · custom settings" if member.get("params") else "")
 
 

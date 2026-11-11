@@ -65,3 +65,22 @@ def sentiment_loader(supabase):
             return {"error": f"No stored sentiment for {subject_key}."}
         return {"rows": list(reversed(rows))}
     return load
+
+
+OPTIONS_DAYS = 10        # days of options snapshots read per subject (the signal uses the newest one)
+OPTIONS_COLUMNS = "recorded_at, expiry, spot, max_pain, call_oi, put_oi, source, first_seen_at"
+
+
+def options_loader(supabase):
+    """options_pain rows for one subject (Crypto|bitcoin, Stock|AAPL), oldest first."""
+    def load(subject_key: str) -> dict:
+        since = (datetime.now(timezone.utc) - timedelta(days=OPTIONS_DAYS)).isoformat()
+        try:
+            rows = (supabase.table("options_pain").select(OPTIONS_COLUMNS).eq("asset_key", subject_key)
+                    .gte("recorded_at", since).order("recorded_at").limit(2000).execute().data or [])
+        except Exception:
+            return {"error": "Options snapshots could not be read (run sql/2026-11-21_options_pain.sql)."}
+        if not rows:
+            return {"error": f"No options snapshots stored for {subject_key.split('|', 1)[-1]} yet."}
+        return {"rows": rows}
+    return load

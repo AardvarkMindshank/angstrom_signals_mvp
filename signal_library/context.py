@@ -13,6 +13,8 @@ Data keys a definition can require:
     "capital_flows"  stored capital-flow observations (append-only, with first-seen times)
     "sentiment"      stored headline-sentiment observations (sentiment_history: score, recorded_at, model,
                      coverage, and first_seen_at once that column exists)
+    "options"        stored options max-pain snapshots (options_pain: one row per expiry per snapshot, with
+                     recorded_at, spot, max_pain, open interest and first_seen_at)
 """
 
 from __future__ import annotations
@@ -46,7 +48,7 @@ class DataContext:
 
     def __init__(self, kind: str, asset_id: str, *, candle_loader: Callable | None = None,
                  derivatives_loader: Callable | None = None, flows_loader: Callable | None = None, now=None,
-                 sentiment_loader: Callable | None = None):
+                 sentiment_loader: Callable | None = None, options_loader: Callable | None = None):
         self.kind = kind
         self.asset_id = asset_id
         self.now = pd.Timestamp(now) if now is not None else pd.Timestamp.now(tz="UTC")
@@ -56,6 +58,7 @@ class DataContext:
         self._derivatives_loader = derivatives_loader
         self._flows_loader = flows_loader
         self._sentiment_loader = sentiment_loader
+        self._options_loader = options_loader
         self._memo: dict = {}
 
     @property
@@ -106,6 +109,18 @@ class DataContext:
                     self._memo[key] = {"error": f"Could not load sentiment ({exc})"}
         return self._memo[key]
 
+    def options(self, subject_key: str) -> dict:
+        key = ("options", subject_key)
+        if key not in self._memo:
+            if self._options_loader is None:
+                self._memo[key] = {"error": "No options data source configured"}
+            else:
+                try:
+                    self._memo[key] = self._options_loader(subject_key)
+                except Exception as exc:
+                    self._memo[key] = {"error": f"Could not load options snapshots ({exc})"}
+        return self._memo[key]
+
     def fingerprint(self, requires: tuple, timeframe: str) -> str:
         """Changes when the data a signal depends on changes, so cached results expire correctly."""
         parts = []
@@ -118,6 +133,13 @@ class DataContext:
                 parts.append(f"{timeframe}:none")
         if "derivatives" in requires:
             parts.append(str((self.derivatives() or {}).get("updated_at")))
+        if "options" in requires:
+            from .signals_options import subject_key
+
+            key = subject_key(self)
+            rows = (self.options(key).get("rows") or []) if key else []
+            parts.append(f"options:{key}:{len(rows)}:{max((str(r.get('recorded_at')) for r in rows), default='')}"
+                         f":{self.now.value}")
         return "|".join(parts)
 
 

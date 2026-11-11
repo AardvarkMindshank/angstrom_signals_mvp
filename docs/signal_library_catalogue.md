@@ -122,6 +122,15 @@ Generated from the registry (`signal_library.REGISTRY.catalogue()`) by `signal_c
 - **Interpretation:** Regular divergence: price makes a new extreme the indicator does not confirm (possible exhaustion). Hidden divergence: price holds a higher low / lower high while the indicator overshoots (possible continuation). Each event lists the price and indicator swing points, when it was confirmed, the confirmation delay and the price that invalidates it. Not a trade signal by itself.
 - **Limitations:** Confirmation needs `right` closed candles after the swing, so events arrive late by design. In strong trends regular divergences can repeat many times before any turn. Swing settings change what counts.
 
+### Options max pain — `options.max_pain@1`
+
+- **Category:** positioning · **Output:** observation · **Unit:** % from max pain · **Scope:** asset
+- **Timeframes:** 1D, 4h · **Data:** options
+- **Parameters:** `min_days` = 0 (skip expiries closer than this many days (0 = the nearest expiry)); `monthly` = False (monthly expiries only (equities: third Friday; crypto: last Friday)); `near_pct` = 2.0 (within this % of max pain counts as at max pain)
+- **Calculation:** From the newest stored options snapshot at or before the evaluation time: the first expiry still ahead that is at least min_days away (monthly expiries only if monthly is on). max_pain = the strike at which that expiry's open calls and puts would be worth the least. distance_pct = (price - max_pain) / max_pain x 100, with price the underlying price recorded with the snapshot. side = at when |distance_pct| <= near_pct, else above or below. days_to_expiry = time to settlement (Deribit 08:00 UTC; US options 16:00 New York) in days. expiry_week = 7 days or fewer. put_call_ratio = put / call open interest. Stale after 12 hours (crypto) or 96 hours (equities).
+- **Interpretation:** How far price is from the strike where options would expire cheapest, and how soon. Some traders expect price to drift towards max pain into expiry; treat it as context.
+- **Limitations:** Max pain is a description of where open options would expire cheapest, not a price target; the evidence that price is drawn to it is thin and mixed. Crypto covers Bitcoin and Ethereum only (Deribit). Equities need a listed options chain. History starts when the snapshots began (November 2026) and is replayable only from when each snapshot first reached the database.
+
 ### Funding rate (daily) — `positioning.funding@1`
 
 - **Category:** positioning · **Output:** observation · **Unit:** % per funding interval · **Scope:** crypto_asset

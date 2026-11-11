@@ -88,7 +88,26 @@ def sentiment_as_of(supabase):
     return load
 
 
+def options_as_of(supabase):
+    """Stored options snapshots the database had received by T (first_seen_at), from the 10 days before T."""
+    from .loaders import OPTIONS_COLUMNS, OPTIONS_DAYS
+
+    def load(subject_key: str, as_of) -> dict:
+        t = utc(as_of)
+        try:
+            rows = (supabase.table("options_pain").select(OPTIONS_COLUMNS).eq("asset_key", subject_key)
+                    .gte("recorded_at", (t - pd.Timedelta(days=OPTIONS_DAYS)).isoformat())
+                    .lte("first_seen_at", t.isoformat()).order("recorded_at").limit(2000).execute().data or [])
+        except Exception:
+            return {"error": "Options snapshots could not be read."}
+        if not rows:
+            return {"error": f"No options snapshot for {subject_key.split('|', 1)[-1]} first seen by {t.isoformat()}."}
+        return {"rows": rows}
+    return load
+
+
 def display_run(supabase=None, *, max_steps: int = MAX_DISPLAY_STEPS, candles=None, **kwargs) -> ReplayRun:
     return ReplayRun(DISPLAY, candles or live_candles, flows=flows_as_of(supabase) if supabase is not None else None,
                      sentiment=sentiment_as_of(supabase) if supabase is not None else None,
+                     options=options_as_of(supabase) if supabase is not None else None,
                      max_steps=min(max_steps, MAX_DISPLAY_STEPS), **kwargs)

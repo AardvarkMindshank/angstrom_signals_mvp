@@ -22,7 +22,7 @@ SUITE_VERSION = 2   # 2: slice equivalence within a stated tolerance (point_in_t
 CODE_FILES = ("signal_library/core.py", "signal_library/context.py", "signal_library/engine.py",
               "signal_library/signals_basic.py", "signal_library/signals_ta.py", "signal_library/signals_market.py",
               "signal_library/swings.py", "signal_library/replay.py", "signal_library/signals_components.py",
-              "signal_library/signals_sentiment.py", "signal_library/signals_candles.py", "signal_library/signals_oscillators.py", "signals_v2.py", "score_colours.py", "scoring.py", "regime.py",
+              "signal_library/signals_sentiment.py", "signal_library/signals_candles.py", "signal_library/signals_oscillators.py", "signal_library/signals_options.py", "signals_v2.py", "score_colours.py", "scoring.py", "regime.py",
               "chart_data.py")
 
 

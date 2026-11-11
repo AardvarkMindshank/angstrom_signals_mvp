@@ -144,7 +144,7 @@ class ReplayRun:
     flows(source, series, subject, as_of) -> {"rows": [...]} or {"error": text}; rows must carry fetched_at
     """
 
-    def __init__(self, mode: str, candles, *, flows=None, sentiment=None, indicators=None,
+    def __init__(self, mode: str, candles, *, flows=None, sentiment=None, options=None, indicators=None,
                  dataset: dict | None = None,
                  max_steps: int | None = None, shortcut: bool = False, check_certification: bool | None = None,
                  reuse_frames: bool = False, slice_allow: set | None = None,
@@ -159,6 +159,7 @@ class ReplayRun:
         self.candles_source = candles
         self.flows_source = flows
         self.sentiment_source = sentiment
+        self.options_source = options
         self.indicators = indicators or default_indicators
         self.dataset = dataset if dataset is not None else {}
         self.max_steps = max_steps
@@ -374,6 +375,31 @@ class ReplayContext(DataContext):
                         "subject": self.subject, "source": "sentiment_history", "series": subject_key,
                         "cutoff": self.as_of.isoformat(), "rows": len(got["rows"]), "sha256": digest,
                         "quality": POINT_IN_TIME}
+        self._memo[key] = got
+        return got
+
+    def options(self, subject_key: str) -> dict:
+        key = ("options", subject_key)
+        if key in self._memo:
+            return self._memo[key]
+        if self.replay.options_source is None:
+            got = {"error": "No options source in this replay."}
+        else:
+            try:
+                got = self.replay.options_source(subject_key, self.as_of)
+            except Exception as exc:
+                got = {"error": f"Could not load options snapshots ({exc})"}
+        if not got.get("error"):
+            rows = cut_sentiment_rows(got.get("rows") or [], self.as_of)    # same rule: received by T, taken by T
+            if not rows:
+                got = {"error": f"No options snapshot first seen by {self.as_of.isoformat()}."}
+            else:
+                got = {"rows": rows}
+                digest = hashlib.sha256(json.dumps(rows, sort_keys=True, default=str).encode()).hexdigest()
+                self.replay.inputs[(self.subject, f"options/{subject_key}", self.as_of.value)] = {
+                    "subject": self.subject, "source": "options_pain", "series": subject_key,
+                    "cutoff": self.as_of.isoformat(), "rows": len(rows), "sha256": digest,
+                    "quality": POINT_IN_TIME}
         self._memo[key] = got
         return got
 

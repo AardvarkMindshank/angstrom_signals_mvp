@@ -383,7 +383,8 @@ def _try(st, supabase, model: dict, assets, can_save: bool) -> None:
         pick = st.selectbox("Asset", list(names), format_func=names.get, key="lattice_try_asset")
         if st.button("Try it", key="lattice_try"):
             kind, aid = pick.split(":", 1)
-            ctx = sl.DataContext(kind, aid, sentiment_loader=loaders.sentiment_loader(supabase))
+            ctx = sl.DataContext(kind, aid, sentiment_loader=loaders.sentiment_loader(supabase),
+                                 options_loader=loaders.options_loader(supabase))
             result = sg.evaluate_group(le.to_document(model), ctx)
             score = (result.get("score") or {}).get("value")
             outcome = (result.get("outcome") or {})

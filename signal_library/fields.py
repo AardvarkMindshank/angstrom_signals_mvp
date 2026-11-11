@@ -127,6 +127,16 @@ FIELDS: dict[str, dict[str, dict]] = {
         "ratio_rank": num("rank in the lookback, 0 to 100", 0, 100),
         "reading": label("more longs than usual", "more shorts than usual", "usual"), "days": num("days", 1, 60)},
     "volume.relative@1": {"": num("times the 20-candle average volume", 0)},
+    # ---- options max pain (signals_options.py)
+    "options.max_pain@1": {"max_pain": num("price", 0), "price": num("price", 0),
+                           "distance_pct": num("% price above max pain", -100),
+                           "side": label("above", "below", "at"), "days_to_expiry": num("days", 0),
+                           "expiry_week": YES_NO, "monthly_expiry": YES_NO,
+                           "put_call_ratio": num("puts per call (open interest)", 0),
+                           "call_open_interest": num("contracts", 0), "put_open_interest": num("contracts", 0),
+                           "expiry": _other("date label"),
+                           "recorded_at": _other("time"), "age_hours": num("hours", 0),
+                           "subject_key": _other("key"), "source": _other("text")},
     # ---- sentiment (library_completion.md §4) and flows
     "sentiment.market@1": {"score": num("sentiment, −100 to +100", -100, 100), "change_7d": num("sentiment points", -200, 200),
                            "age_hours": num("hours", 0), "thin_news": YES_NO, "coverage": _other("label")},

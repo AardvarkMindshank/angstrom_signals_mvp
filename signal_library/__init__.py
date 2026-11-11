@@ -7,3 +7,4 @@ from .engine import evaluate  # noqa: F401
 from . import signals_basic, signals_components, signals_market, signals_sentiment, signals_ta  # noqa: F401  (registers the signals)
 from . import signals_candles  # noqa: F401,E402  (moving averages of any length, the candle, volatility)
 from . import signals_oscillators  # noqa: F401,E402  (WaveTrend, money flow, Stochastic on OHLC4, divergence across timeframes)
+from . import signals_options  # noqa: F401,E402  (options max pain, from stored snapshots)

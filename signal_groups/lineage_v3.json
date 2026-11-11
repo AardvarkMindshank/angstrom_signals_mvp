@@ -1,7 +1,7 @@
 {
   "schema": "angstrom.lineage/1",
   "version": 3,
-  "note": "Analytical inputs per Signal Library signal, recorded by input, not by provider (price is 'price' whether it comes from Yahoo or Coinalyze). Disjoint root sets mean separate sources only, not statistical independence. 'price' = OHLC prices; 'volume' = candle volume; 'derivatives' = Coinalyze open interest, funding, long/short and liquidations. Version 2 adds 'price' to positioning.oi_price (uses price change) and positioning.liquidation_levels (uses the current price). Groups and Sets pin the lineage version they were validated with. Not editable by users. Version 3 adds the ten component signals behind Trend, Stretch and Flow ('price', plus 'volume' for OBV and the heavy candle) and the headline-sentiment signals ('news_sentiment').",
+  "note": "Analytical inputs per Signal Library signal, recorded by input, not by provider (price is 'price' whether it comes from Yahoo or Coinalyze). Disjoint root sets mean separate sources only, not statistical independence. 'price' = OHLC prices; 'volume' = candle volume; 'derivatives' = Coinalyze open interest, funding, long/short and liquidations. Version 2 adds 'price' to positioning.oi_price (uses price change) and positioning.liquidation_levels (uses the current price). Groups and Sets pin the lineage version they were validated with. Not editable by users. Version 3 adds the ten component signals behind Trend, Stretch and Flow ('price', plus 'volume' for OBV and the heavy candle) and the headline-sentiment signals ('news_sentiment'). New signals are added to version 3 without changing existing entries: 'options_open_interest' = stored options open interest by strike (Deribit, Yahoo), used by options.max_pain with the underlying price.",
   "roots": {
     "flows.btc_etf": [
       "tftc_btc_etf"
@@ -123,6 +123,10 @@
       "price"
     ],
     "divergence.mtf": [
+      "price"
+    ],
+    "options.max_pain": [
+      "options_open_interest",
       "price"
     ]
   }

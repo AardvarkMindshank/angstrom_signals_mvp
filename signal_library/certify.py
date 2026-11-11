@@ -60,6 +60,7 @@ class Dataset:
     flows: list | None = None        # stored flow rows (market datasets)
     flow_spec: tuple | None = None   # (source, series) the flow rows belong to
     sentiment: list | None = None    # stored sentiment rows (any subject key reads them)
+    options: list | None = None      # stored options max-pain snapshot rows (any subject key reads them)
     description: str = ""
 
     def candles(self, kind, asset_id, timeframe):
@@ -68,6 +69,13 @@ class Dataset:
 
     def sentiment_loader(self, rows=None):
         rows = self.sentiment if rows is None else rows
+
+        def load(subject_key, as_of):
+            return {"rows": [dict(r) for r in rows]} if rows else {"error": "none"}
+        return load if rows is not None else None
+
+    def options_loader(self, rows=None):
+        rows = self.options if rows is None else rows
 
         def load(subject_key, as_of):
             return {"rows": [dict(r) for r in rows]} if rows else {"error": "none"}
@@ -273,8 +281,12 @@ def _reference_worker(job: dict) -> list[dict]:
 
         rows = step.get("flows")
         feelings = step.get("sentiment")
+        snaps = step.get("options")
 
         def sentiment_loader(subject_key, rows=feelings):
+            return {"rows": [dict(r) for r in rows]} if rows else {"error": "none"}
+
+        def options_loader(subject_key, rows=snaps):
             return {"rows": [dict(r) for r in rows]} if rows else {"error": "none"}
 
         def flows_loader(source, series, subject, rows=rows):
@@ -284,7 +296,8 @@ def _reference_worker(job: dict) -> list[dict]:
                 else {"error": "none"}
         ctx = WorkerContext(job["kind"], job["asset_id"], candle_loader=candle_loader,
                             flows_loader=flows_loader if rows is not None else None, now=step["as_of"],
-                            sentiment_loader=sentiment_loader if feelings is not None else None)
+                            sentiment_loader=sentiment_loader if feelings is not None else None,
+                            options_loader=options_loader if snaps is not None else None)
         results = worker_engine.evaluate(refs, ctx)
         out.append({k: canonical(v) for k, v in results.items()})
     worker_engine.clear_cache()
@@ -517,6 +530,12 @@ def _refs_for(dataset: Dataset, timeframe: str, include=None, only=None) -> list
             continue
         if only and d.id not in only:
             continue
+        if dataset.options is not None:
+            if "options" in d.requires and timeframe in d.timeframes and d.scope == "asset" and dataset.kind != "market":
+                refs.append(SignalRef.make(d, timeframe))
+            continue
+        if "options" in d.requires:
+            continue
         if dataset.sentiment is not None:
             if "sentiment" in d.requires and timeframe in d.timeframes and (
                     (dataset.kind == "market" and d.scope.startswith("market:")
@@ -542,7 +561,8 @@ def certify_dataset(dataset: Dataset, timeframe: str, *, cutoffs: int, pool, tal
     keys = {r.instance_key: f"{r.id}@{r.version}" for r in refs}
     stored = not dataset.histories
     if stored:
-        rows = dataset.flows if dataset.flows is not None else dataset.sentiment
+        rows = dataset.flows if dataset.flows is not None else (
+            dataset.sentiment if dataset.sentiment is not None else dataset.options)
         day_key, seen_key = ("observed_date", "fetched_at") if dataset.flows is not None else ("recorded_at", "first_seen_at")
         days = sorted({str(r[day_key])[:10] for r in rows})
         lo = pd.Timestamp(days[len(days) // 3], tz="UTC")
@@ -568,6 +588,8 @@ def certify_dataset(dataset: Dataset, timeframe: str, *, cutoffs: int, pool, tal
             step["flows"] = cut_flow_rows_reference(dataset.flows, t)
         if dataset.sentiment is not None:
             step["sentiment"] = cut_sentiment_rows_reference(dataset.sentiment, t)
+        if dataset.options is not None:
+            step["options"] = cut_sentiment_rows_reference(dataset.options, t)
         steps.append(step)
     job = {"indicators": _INDICATORS["path"], "imports": list(imports), "kind": dataset.kind, "asset_id": dataset.asset_id,
            "refs": [r.as_dict() for r in refs], "steps": steps,
@@ -579,9 +601,11 @@ def certify_dataset(dataset: Dataset, timeframe: str, *, cutoffs: int, pool, tal
 
     flows = dataset.flow_loader() if dataset.flows is not None else None
     feeling = dataset.sentiment_loader()
-    clean_run = ReplayRun(CERTIFICATION, dataset.candles, flows=flows, sentiment=feeling, indicators=_INDICATORS["fn"])
-    slice_run = ReplayRun(CERTIFICATION, dataset.candles, flows=flows, sentiment=feeling, indicators=_INDICATORS["fn"],
-                          shortcut=True)
+    snaps = dataset.options_loader()
+    clean_run = ReplayRun(CERTIFICATION, dataset.candles, flows=flows, sentiment=feeling, options=snaps,
+                          indicators=_INDICATORS["fn"])
+    slice_run = ReplayRun(CERTIFICATION, dataset.candles, flows=flows, sentiment=feeling, options=snaps,
+                          indicators=_INDICATORS["fn"], shortcut=True)
     # The clean replay visits the cutoffs in a shuffled order, so state carried between evaluations (a later
     # cutoff seen first) shows up as a difference from the independent reference.
     order = np.random.default_rng(seed + 1).permutation(len(times))
@@ -594,6 +618,8 @@ def certify_dataset(dataset: Dataset, timeframe: str, *, cutoffs: int, pool, tal
             variants = [POISONS[(2 * i) % 5], POISONS[(2 * i + 1) % 5]]
         elif dataset.flows is not None:
             variants = [FLOW_POISONS[i % 3]]
+        elif dataset.options is not None:
+            variants = [OPTIONS_POISONS[(2 * i) % 3], OPTIONS_POISONS[(2 * i + 1) % 3]]
         else:
             variants = [SENTIMENT_POISONS[i % 3]]
         poisoned_results = []
@@ -601,6 +627,10 @@ def certify_dataset(dataset: Dataset, timeframe: str, *, cutoffs: int, pool, tal
             if stored and dataset.flows is not None:
                 rows = poisoned_flows(dataset.flows, t, v, seed + i)
                 prun = ReplayRun(CERTIFICATION, dataset.candles, flows=dataset.flow_loader(rows),
+                                 indicators=_INDICATORS["fn"])
+            elif stored and dataset.options is not None:
+                rows = poisoned_options(dataset.options, t, v, seed + i)
+                prun = ReplayRun(CERTIFICATION, dataset.candles, options=dataset.options_loader(rows),
                                  indicators=_INDICATORS["fn"])
             elif stored:
                 rows = poisoned_sentiment(dataset.sentiment, t, v, seed + i)
@@ -614,7 +644,7 @@ def certify_dataset(dataset: Dataset, timeframe: str, *, cutoffs: int, pool, tal
         cache_results = []
         if i % 5 == 0:
             later = [x for x in times if x > t][:2]
-            warm = ReplayRun(CERTIFICATION, dataset.candles, flows=flows, sentiment=feeling,
+            warm = ReplayRun(CERTIFICATION, dataset.candles, flows=flows, sentiment=feeling, options=snaps,
                              indicators=_INDICATORS["fn"])
             for x in later:
                 engine.evaluate(refs, warm.context(dataset.kind, dataset.asset_id, x))
@@ -727,6 +757,75 @@ def synthetic_sentiment(seed: int = 9, days: int = 150, end="2024-06-28") -> lis
                                 ("equity", "SYNTH"))]
 
 
+OPTIONS_POISONS = ("late_import", "later_snapshots", "future_first_seen")
+
+
+def poisoned_options(rows: list[dict], as_of, variant: str, seed: int) -> list[dict]:
+    """Snapshot rows that must not count at T: a backfilled snapshot (taken before T, received after T), snapshots
+    taken after T, and copies of earlier rows with a moved max pain that the database only received after T."""
+    t = utc(as_of)
+    rng = np.random.default_rng(seed)
+    out = [dict(r) for r in rows]
+    later = (t + pd.Timedelta(minutes=30)).isoformat()
+    keys = sorted({r["asset_key"] for r in rows})
+    if variant == "late_import":
+        when = (t - pd.Timedelta(minutes=int(rng.integers(1, 120)))).isoformat()
+        for key in keys:
+            for k in range(1, 6):
+                out.append({"asset_key": key, "recorded_at": when, "first_seen_at": later,
+                            "expiry": (t + pd.Timedelta(days=k)).date().isoformat(), "spot": 1.0,
+                            "max_pain": float(rng.uniform(1, 10)), "call_oi": 1.0, "put_oi": 99.0, "source": "import"})
+    elif variant == "later_snapshots":
+        for key in keys:
+            for k in range(1, 4):
+                when = (t + pd.Timedelta(hours=4 * k)).isoformat()
+                out.append({"asset_key": key, "recorded_at": when, "first_seen_at": when,
+                            "expiry": (t + pd.Timedelta(days=2)).date().isoformat(), "spot": 2.0, "max_pain": 1.0,
+                            "call_oi": 5.0, "put_oi": 5.0, "source": "later"})
+    elif variant == "future_first_seen":
+        for r in out[-12:]:
+            if utc(r["recorded_at"]) <= t:
+                out.append({**r, "max_pain": float(r["max_pain"]) * 3,
+                            "recorded_at": (utc(r["recorded_at"]) + pd.Timedelta(seconds=1)).isoformat(),
+                            "first_seen_at": later})
+    return out
+
+
+def synthetic_options(seed: int = 11, days: int = 150, end="2024-06-28") -> list[Dataset]:
+    """Options snapshots like the worker's: crypto every 4 hours (daily, weekly and monthly expiries, 08:00 UTC
+    settlement), an equity once per weekday (weekly and monthly expiries), with missed snapshots, late receipt and
+    a missing underlying price now and then."""
+    rng = np.random.default_rng(seed)
+    out = []
+    for kind, asset, every, key in (("crypto", "bitcoin", "4h", "Crypto|bitcoin"),
+                                     ("equity", "SYNTH", "1D", "Stock|SYNTH")):
+        rows, spot = [], 100.0
+        for when in pd.date_range(end=pd.Timestamp(end, tz="UTC"), periods=days * (6 if every == "4h" else 1),
+                                  freq=every):
+            if kind == "equity" and when.weekday() >= 5:
+                continue
+            if rng.random() < 0.07:
+                continue                                              # a missed snapshot: a gap, never a guess
+            spot = float(spot * np.exp(rng.normal(0, 0.02)))
+            taken = when + pd.Timedelta(minutes=int(rng.integers(0, 40)) + (15 * 60 if kind == "equity" else 0))
+            seen = taken + pd.Timedelta(seconds=int(rng.integers(1, 120)))
+            day = taken.normalize().tz_localize(None)
+            expiries = {(day + pd.Timedelta(days=k)).date() for k in range(0, 70)
+                        if (day + pd.Timedelta(days=k)).weekday() == 4}
+            if kind == "crypto":
+                expiries |= {(day + pd.Timedelta(days=k)).date() for k in (0, 1, 2)}
+            for d in sorted(set(expiries))[: (10 if kind == "crypto" else 7)]:
+                rows.append({"asset_key": key, "recorded_at": taken.isoformat(), "first_seen_at": seen.isoformat(),
+                             "expiry": d.isoformat(),
+                             "spot": None if rng.random() < 0.03 else round(spot, 4),
+                             "max_pain": round(spot * float(rng.uniform(0.9, 1.1)), 2),
+                             "call_oi": float(rng.integers(100, 5000)), "put_oi": float(rng.integers(100, 5000)),
+                             "source": "synthetic"})
+        text = f"synthetic options snapshots ({'every 4 hours' if every == '4h' else 'weekdays'}; seed {seed})"
+        out.append(Dataset(f"synthetic-options-{kind}-{asset}", kind, asset, options=rows, description=text))
+    return out
+
+
 def cut_flow_rows_reference(rows: list[dict], as_of) -> list[dict]:
     """Independent version of replay.cut_flow_rows: first seen by T, not backfilled, inside the day window."""
     t = utc(as_of)
@@ -782,7 +881,7 @@ def run_suite(datasets: list[Dataset], *, indicators: str, cutoffs: int = 50, ti
         sys.modules["__main__"] = real_main
     with pool:
         for ds in datasets:
-            tfs = ["1D"] if not ds.histories else [tf for tf in ("15m", "30m", "1h", "4h", "12h", "1D", "1W") if tf in ds.histories]
+            tfs = (["1D", "4h"] if ds.options is not None else ["1D"]) if not ds.histories else [tf for tf in ("15m", "30m", "1h", "4h", "12h", "1D", "1W") if tf in ds.histories]
             for tf in tfs:
                 if timeframes and tf not in timeframes:
                     continue
