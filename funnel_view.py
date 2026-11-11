@@ -244,3 +244,13 @@ def digest_lines(supabase, user_id: str, limit_names: int = 8) -> list[dict]:
         out.append({"name": f["name"], "candidates": names[:limit_names], "more": max(0, len(names) - limit_names),
                     "count": len(cands), "flagged": k["flagged"], "line": counts_line(f, st, pool)})
     return out
+
+
+def chart_view(f: dict, st: fn.CoinState) -> tuple[str, str] | None:
+    """(interval, range) to open an asset on the main chart: the timeframe of the deepest stage it holds (a Candidate:
+    the last stage), so the chart shows what it just passed. None when it holds no stage yet."""
+    depth = fn.place(st)["depth"]
+    if not depth:
+        return None
+    tf = f["stages"][min(depth, len(f["stages"])) - 1]["timeframe"]
+    return tf, fr.FUNNEL_RANGE.get(tf, "1Y")

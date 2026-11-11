@@ -349,12 +349,15 @@ def _history_view(st, scan, strip) -> None:
     st.caption(f"Green = Yes (conditions met), amber = Unknown, clear = No · {names[top]}: Yes {yes} times since "
                f"{since}. Tap a small chart to put it on top. A description of the past, not a forecast; each day "
                "uses only data up to its close.")
+    view = (scan.get("chart_views") or {}).get(next((r["id"] for r in rows if r["key"] == top), None))
     if st.button("Open on the main price chart", icon=":material/candlestick_chart:", key=f"hist_open_{sid}",
-                 help="Select this asset everywhere (tables, chart, analysis sections) with this Set's bands on."):
+                 help="Select this asset everywhere (tables, chart, analysis sections) with this Set's bands on."
+                 + (f" Opens on {view[0]} candles: the timeframe of the deepest stage it holds." if view else "")):
         r = next(r for r in rows if r["key"] == top)
         st.session_state["_chart_jump"] = {
             "pick": f"{'Crypto' if r['kind'] == 'crypto' else 'Stock'}|{r['id']}",
-            "band": (f"scan:{sid}", f"{obj['name']} (this scan)", obj["set"])}
+            "band": (f"scan:{sid}", f"{obj['name']} (this scan)", obj["set"]),
+            "view": (scan.get("chart_views") or {}).get(r["id"])}
         lattice_panel.rerun_page(st)
     if pending:                     # one more step of older years, then draw again
         step = {1: "3 years", 3: "10 years"}.get(strip.get("covered") or 0, "the whole history")

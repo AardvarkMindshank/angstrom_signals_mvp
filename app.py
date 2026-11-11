@@ -11100,7 +11100,11 @@ def _funnel_chart(dyn, market: str, labels: dict, part: str = "view") -> None:
         st.session_state[state_key] = shown
     prism_view._SUPABASE[0] = supabase
     scan = {"id": f"funnel-{f['id']}-{stage.replace(':', '')}", "name": f"{f['name']} · {f['stages'][daily]['label']}",
-            "set_body": f["stages"][daily]["set_body"], "set_source": f["stages"][daily].get("set_source") or {}}
+            "set_body": f["stages"][daily]["set_body"], "set_source": f["stages"][daily].get("set_source") or {},
+            # "Open on the main price chart" opens each asset on its deepest stage's timeframe (an entry stage on
+            # 1 hour opens the 1-hour chart), so you see what it just passed.
+            "chart_views": {a: v for a, v in ((a, fv.chart_view(f, s)) for a, s in (dyn.get("states") or {}).items())
+                            if v}}
     prism_view._history_view(st, scan, shown["strip"])
 
 
@@ -11418,6 +11422,11 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             _select_chart_asset(jump["pick"])
             st.session_state["chart_band_extra"] = jump["band"]
             st.session_state["chart_band_set"] = jump["band"][0]
+            view = jump.get("view")         # a funnel: the timeframe of the stage the asset just passed
+            if view and view[0] in chart_data.INTERVALS:
+                st.session_state["chart_interval"] = view[0]
+                if view[1] in chart_data.RANGES and chart_data.availability(view[0], view[1])[0]:
+                    st.session_state["chart_range"] = view[1]
 
         snapshot_cards = []
         if trade_crypto:
@@ -14180,7 +14189,8 @@ def _take_alert_pick() -> None:
         st.session_state["_alert_pick_seen"] = raw
         try:
             jump = json.loads(raw.split("|", 2)[2])
-            st.session_state["_chart_jump"] = {"pick": str(jump["pick"]), "band": tuple(jump["band"])}
+            st.session_state["_chart_jump"] = {"pick": str(jump["pick"]), "band": tuple(jump["band"]),
+                                               "view": tuple(jump["view"]) if jump.get("view") else None}
         except (ValueError, KeyError, TypeError, IndexError):
             return
         st.session_state.scroll_target = "interactive-chart"
@@ -14364,7 +14374,8 @@ if _POPOUT_VIEW == "lattice_panel":
     _jump = st.session_state.pop("_chart_jump", None)
     if _jump:      # Visualize History's "Open on the main price chart": the main window draws it
         _chart_send(key="chart_send", data={"token": str(time.time_ns()), "jump": {
-            "pick": _jump["pick"], "band": list(_jump["band"])}})
+            "pick": _jump["pick"], "band": list(_jump["band"]),
+            "view": list(_jump["view"]) if _jump.get("view") else None}})
         st.toast("Opened on the main window's price chart.", icon=":material/candlestick_chart:")
     with st.expander(":material/hub: Angstrom Lattice", expanded=True, key="pop_lattice_panel"):
         _render_lattice()

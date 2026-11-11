@@ -104,3 +104,12 @@ def test_daily_summary_shows_each_funnel():
     assert subject == "Angstrom daily summary: 2 funnel Candidates"
     assert "Your funnels today" in plain and "2 Candidates: Bitcoin, Aptos · 7 Flagged" in plain
     assert "not a recommendation to trade" in page
+
+
+def test_chart_view_opens_on_the_deepest_stage_timeframe():
+    tfs = [s["timeframe"] for s in F["stages"]]
+    assert fv.chart_view(F, STATES["doge"]) is None                              # holds no stage yet
+    assert fv.chart_view(F, STATES["eth"]) == (tfs[0], fv.fr.FUNNEL_RANGE[tfs[0]])
+    assert fv.chart_view(F, STATES["sol"])[0] == tfs[2]
+    cand = fv.chart_view(F, STATES["btc"])
+    assert cand == (tfs[-1], fv.fr.FUNNEL_RANGE[tfs[-1]]) and tfs[-1] == "1h"   # a Candidate: the entry stage
