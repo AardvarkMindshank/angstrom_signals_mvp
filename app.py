@@ -6660,7 +6660,7 @@ def notifications_panel() -> None:
                     if asset_notes:
                         st.caption(
                             "Click an alert to open it: an asset opens on the chart, a market alert opens that "
-                            "market's sentiment, a funnel note opens its funnel, a study note opens its Set."
+                            "market's sentiment, a funnel note shows its Candidates in the table, a study note opens its Set."
                         )
                     for note in filtered_notifs:
                         name = html.escape(str(note.get("asset_name") or "Asset"))
@@ -6671,7 +6671,7 @@ def notifications_panel() -> None:
                         if kind in ("invite_joined", "group_invite", "group_joined", "moderation_warning", "report_update",
                                     "study", "funnel"):
                             titles = {
-                                "funnel": f"🔻 {name}",      # opens the funnel in Lattice → Funnels
+                                "funnel": f"🔻 {name}",      # opens its table on the funnel's Candidates
                                 "study": "🔬 Study finished",
                                 "invite_joined": "Invite accepted",
                                 "group_invite": "Community invite",
@@ -6687,7 +6687,7 @@ def notifications_panel() -> None:
                                 f"<div style='font-size:0.8rem;color:#374151;margin-top:2px;'>{message}</div>"
                                 f"<div style='font-size:0.75rem;color:#6b7280;margin-top:2px;'>{created}</div></div>"
                             )
-                            if kind == "funnel":         # opens that funnel in Lattice → Funnels
+                            if kind == "funnel":         # opens its table, in Dynamic funnel, on its Candidates
                                 note_ref = html.escape(str(note.get("id") or "") if not note.get("is_read") else "",
                                                        quote=True)
                                 symbol = str(note.get("asset_symbol") or "")
@@ -6695,7 +6695,7 @@ def notifications_panel() -> None:
                                 pick = f"funnel|{fid}|{str(note.get('asset_name') or '').replace('|', ' ')}"
                                 card = (
                                     f"<button type='button' data-alert='1' data-note='{note_ref}' "
-                                    f"data-pick='{html.escape(pick, quote=True)}' title='Open this funnel' "
+                                    f"data-pick='{html.escape(pick, quote=True)}' title='Show these Candidates in the table' "
                                     "style='display:block;width:100%;margin:0;padding:0;border:none;"
                                     "background:transparent;text-align:left;cursor:pointer;font:inherit;color:inherit;'>"
                                     f"{card}</button>"
@@ -7542,7 +7542,7 @@ tested what usually followed these answers.
 
 **Alerts and the daily summary**
 - One note per hourly run, only when assets **newly** become Candidates; an asset alerts again only after it has
-  left and come back. Click the note to open its funnel.
+  left and come back. Click the note to see its Candidates in the table.
 - Each funnel's *Alert me on new Candidates* decides for that funnel; **🔔 → Configure Alert Rules → 🔻 Funnel
   alerts** switches them all off or on.
 - New Candidates get a fresh news-sentiment reading, kept up to date while they stay Candidates.
@@ -7582,7 +7582,7 @@ that checks the same Set, so funnels stay quick as more people use them.
 
 - 🔻 **Funnel alerts**: a note when assets newly become Candidates in one of your funnels (one per hourly run;
   a new or changed funnel starts quietly). Off stops them for every funnel; on, each funnel's own *Alert me on new
-  Candidates* in Lattice → Funnels decides. Click a note to open its funnel.
+  Candidates* in Lattice → Funnels decides. Click a note to see its Candidates in the table.
 
 - 🔬 **Study finished**: when a *What followed* study you started is ready (or couldn't finish), a note arrives
   here. Click it to open that Set in Signal Sets, with the study.
@@ -7594,7 +7594,7 @@ back (for example back to +30 after a +50 alert) and then crosses again. This ap
 - It collects every kind of alert: your watchlist's Trend, Stretch and Flow lines, market sentiment, Prism scan
   matches, 🔻 funnel Candidates and 🔬 finished studies.
 - Unread alerts sit at the top. Click one to open it: an asset opens on the chart, a market alert opens
-  that market's sentiment, a funnel note opens its funnel, a study note opens its Set. Clicking marks it read.
+  that market's sentiment, a funnel note shows its Candidates in the table, a study note opens its Set. Clicking marks it read.
 - ✅ marks all as read · 🧹 clears read alerts · 🗑️ clears all. Group invites stay until you answer them.
 
 **Built-in Prism scans.** The Trend, Stretch and Flow alerts are six built-in scans in 🧩 Angstrom Lattice →
@@ -10852,6 +10852,13 @@ def _dynamic_view(market: str):
     mode_key, pick_key, stage_key, setting, _words = _FUNNEL_KEYS[market]
     user = st.session_state.get("user")
     stored = (st.session_state.get("cloud_prefs") or {}).get("settings") or {}
+    asked = st.session_state.get("_funnel_open")
+    if asked and asked.get("market") == market:  # a funnel note was clicked: show that funnel's Candidates
+        st.session_state.pop("_funnel_open", None)
+        st.session_state[mode_key] = "Dynamic funnel"
+        st.session_state[pick_key] = asked["id"]
+        st.session_state[stage_key] = "candidate"
+        st.session_state[f"_funnels_reread_{market}"] = True
     if user is not None and mode_key not in st.session_state:     # the choice saved on the account
         saved = stored.get(setting)
         st.session_state[mode_key] = next((m for m, c in fv.MODE_CODES.items() if c == saved), fv.MODES[0])
@@ -11615,6 +11622,8 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
         return f"<td data-sort='{token}' style='padding:10px;white-space:nowrap;'>{inner}</td>"
 
     def style_and_show_table(results, title, kind, section_id, column_specs):
+        st.markdown(f"<div id='table-{'crypto' if kind == 'Crypto' else 'equity'}' style='scroll-margin-top:4.5rem;'>"
+                    "</div>", unsafe_allow_html=True)
         with section_expander(title, section_id):
             dynamic = st.session_state.get("_dynamic" if kind == "Crypto" else "_dynamic_equity")
             _funnel_controls(dynamic, "crypto" if kind == "Crypto" else "equity")
@@ -14171,7 +14180,7 @@ def _take_alert_pick() -> None:
     if not raw:
         st.session_state["_alert_pick_seen"] = raw_full
         return
-    if raw.startswith("funnel|"):               # a funnel note: open that funnel in Lattice → Funnels
+    if raw.startswith("funnel|"):               # a funnel note: its table, in Dynamic funnel, on its Candidates
         st.session_state["_alert_pick_seen"] = raw_full
         import funnel_view as fv
 
@@ -14182,10 +14191,10 @@ def _take_alert_pick() -> None:
         if f is None:
             st.toast("That funnel was deleted.")
             return
-        st.session_state["_lattice_section_next"] = "funnels"
-        st.session_state["_funnel_edit_next"] = f["id"]
-        _reveal_section("lattice_panel", "angstrom-lattice")
-        st.rerun()                              # Lattice was already drawn in this run
+        market = f.get("market") or "crypto"
+        st.session_state["_funnel_open"] = {"market": market, "id": f["id"]}   # applied before the table is drawn
+        _reveal_section("crypto_scores" if market == "crypto" else "equity_scores", f"table-{market}")
+        st.rerun()                              # the tables were already drawn in this run
     if raw.startswith("study|"):                # a Study finished note: open that Set in Signal Sets
         st.session_state["_alert_pick_seen"] = raw_full
         import perspectives
