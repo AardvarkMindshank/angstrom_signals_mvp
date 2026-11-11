@@ -51,7 +51,11 @@ def provenance(f: dict, library: dict) -> str:
     if [s["set_body"] for s in f["stages"]] == [s["set_body"] for s in made["stages"]] and \
             [s["timeframe"] for s in f["stages"]] == [s["timeframe"] for s in made["stages"]]:
         return "Your copy of a provided funnel"
-    if any(str(provided_key(s.get("set_source")) or "").startswith("demo:") for s in f["stages"]):
+    keys = [provided_key(s.get("set_source")) for s in f["stages"]]
+    if all(k and k in library and library[k] == s.get("set_body") for k, s in zip(keys, f["stages"])) and \
+            [s["timeframe"] for s in f["stages"]] == [s["timeframe"] for s in made["stages"]]:
+        return "Your copy of an earlier version of a provided funnel"
+    if any(str(k or "").startswith("demo:") for k in keys):
         return "Customised"
     return "My funnel"
 
@@ -203,6 +207,14 @@ def render(st, supabase, user_id: str) -> None:
     st.markdown(f"**{MARKET_WORDS[market]}** · {fn.DIRECTION_ICONS[f['direction']]} "
                 f"{'Long' if f['direction'] == 'long' else 'Short'} · *{badge}*"
                 + ("" if badge.startswith("Your copy") else " · not reviewed or tested by Angstrom"))
+    if badge.startswith("Your copy of an earlier version"):
+        latest = template(market, f["direction"])
+        if st.button("⬆ Update to the latest provided version", key=f"fe_latest_{pick}",
+                     help="Angstrom's provided funnel has changed since you made your copy (its daily stage now reads "
+                          "WaveTrend turning back from an extreme). This takes its stages; your name, pool and alerts "
+                          "stay. Then Save and activate: every asset starts again from the pool, quietly."):
+            f["stages"] = copy.deepcopy(latest["stages"])
+            lattice_panel.rerun(st)
 
     # ------------------------------------------------------------------ basics
     c1, c2 = st.columns(2)

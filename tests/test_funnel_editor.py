@@ -108,3 +108,11 @@ def test_first_funnels_legacy_keys_name_the_library_sets():
     assert fe.upgrade_for(old["stages"][0], lib, {}) is None                  # the same Set as today: nothing to do
     choices = fe._set_choices(lib, {})
     assert fe._choice_of(old["stages"][0], choices) == "provided:demo:ema_up_1d"   # found in the list
+
+
+def test_an_untouched_copy_of_an_older_provided_funnel_is_recognised():
+    lib = prism.demo_sets()
+    old = fe.template("crypto", "long")
+    old["stages"][0]["set_body"] = lib["demo:turn_up_1d"]                    # the Stochastic daily stage of 10 Nov
+    old["stages"][0]["set_source"] = {"provided": "demo:turn_up_1d"}
+    assert fe.provenance(old, lib) == "Your copy of an earlier version of a provided funnel"
