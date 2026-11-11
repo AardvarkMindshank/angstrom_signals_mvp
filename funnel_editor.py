@@ -24,16 +24,7 @@ TF_LABELS = {"15m": "15 minutes", "30m": "30 minutes", "1h": "1 hour", "4h": "4 
              "1D": "1 day", "1W": "1 week"}
 NOTE = "Candidate means an asset matches your selected conditions. It is not a recommendation to trade."
 
-# A quiet funnel drawn behind the stages: wide at the top, narrowing down the page to a spout. Flat, low-contrast,
-# stretched to the stages' size (so it scales with the window), and behind the content (clicks pass through).
-_FUNNEL_SVG = ("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'>"
-               "<polygon points='0,0 100,0 60,84 60,100 40,100 40,84' fill='%23818cf8' fill-opacity='0.09'/>"
-               "<polygon points='6,3 94,3 58,82 42,82' fill='none' stroke='%23818cf8' stroke-opacity='0.12' "
-               "stroke-width='0.4' vector-effect='non-scaling-stroke'/></svg>")
-FUNNEL_CSS = ("<style>.st-key-funnel_stages_art{position:relative;}"
-              ".st-key-funnel_stages_art::before{content:'';position:absolute;inset:0;pointer-events:none;z-index:0;"
-              f"background:url(\"data:image/svg+xml;utf8,{_FUNNEL_SVG}\") center/100% 100% no-repeat;}}"
-              ".st-key-funnel_stages_art>div{position:relative;z-index:1;}</style>")
+# The stages themselves are drawn by funnel_stages_component.py (the Set list as in Prism, the funnel beside it).
 
 
 # ----------------------------------------------------------------------------------------------- pure helpers
@@ -290,45 +281,10 @@ def render(st, supabase, user_id: str) -> None:
         st.caption("Each stage checks one Set, only for the assets that hold every stage before it. The timeframe is "
                    "**when the stage is checked**; the Set's readings keep their own timeframes. To change a threshold, "
                    "edit a copy of the Set in Signal Sets, then pick it here.")
-        keys_ = list(choices)
-        st.markdown(FUNNEL_CSS, unsafe_allow_html=True)
-        stages_box = st.container(key="funnel_stages_art")
-        for i, stage in enumerate(list(f["stages"])):
-            box = stages_box.container(border=True)
-            a, b = box.columns([2, 1])
-            stage["label"] = a.text_input(f"Stage {i + 1}", value=stage.get("label") or "", max_chars=40,
-                                          key=f"fe_lab_{pick}_{i}")
-            tfs = list(fs.TIMEFRAMES)
-            stage["timeframe"] = b.selectbox("Checked at each … close", tfs, index=tfs.index(stage["timeframe"]),
-                                             format_func=TF_LABELS.get, key=f"fe_tf_{pick}_{i}")
-            current = _choice_of(stage, choices)
-            options = keys_ if current else ["(kept as it is)"] + keys_
-            chosen = box.selectbox("Set", options, index=options.index(current) if current else 0,
-                                   format_func=lambda k: choices[k][0] if k in choices else
-                                   f"{stage['set_body'].get('name', 'This stage’s Set')} (kept as it is)",
-                                   key=f"fe_set_{pick}_{i}")
-            if chosen in choices and chosen != current:
-                stage["set_body"], stage["set_source"] = copy.deepcopy(choices[chosen][1]), choices[chosen][2]
-            up = upgrade_for(stage, library, saved_sets)
-            row = box.container(horizontal=True, gap="small")
-            if up and row.button(up[0], key=f"fe_up_{pick}_{i}",
-                                 help="Use the newer version of this Set. Saving then starts every asset again."):
-                stage["set_body"], stage["set_source"] = up[1], up[2]
-                lattice_panel.rerun(st)
-            if i > 0 and row.button("↑", key=f"fe_upmove_{pick}_{i}", help="Move this stage up"):
-                f["stages"][i - 1], f["stages"][i] = f["stages"][i], f["stages"][i - 1]
-                lattice_panel.rerun(st)
-            if i < len(f["stages"]) - 1 and row.button("↓", key=f"fe_down_{pick}_{i}", help="Move this stage down"):
-                f["stages"][i + 1], f["stages"][i] = f["stages"][i], f["stages"][i + 1]
-                lattice_panel.rerun(st)
-            if len(f["stages"]) > 3 and row.button("Remove", icon=":material/delete:", key=f"fe_rm_{pick}_{i}"):
-                f["stages"].pop(i)
-                lattice_panel.rerun(st)
-        if len(f["stages"]) < 5 and st.button("Add a stage", icon=":material/add:", key=f"fe_add_{pick}"):
-            last = copy.deepcopy(f["stages"][-1])
-            last["label"] = f"Stage {len(f['stages']) + 1}"
-            f["stages"].append(last)
-            lattice_panel.rerun(st)
+        problem = st.session_state.pop("funnel_stages_flash", None)
+        if problem:
+            st.warning(problem, icon=":material/info:")
+        _stages_board(st, f, pick, configs, user_id, library, saved_sets)
 
     # ------------------------------------------------------------------ check, summary, save
     blocks, warns = fs.validate(f)
@@ -370,6 +326,131 @@ def render(st, supabase, user_id: str) -> None:
                     lattice_panel.rerun_page(st)
                 except Exception as exc:
                     st.error(f"That didn't work: {str(exc)[:160]}")
+
+
+
+# ----------------------------------------------------------------------------------------------- the stages board
+
+MIN_STAGES, MAX_STAGES = 3, 5
+
+
+def board_choices(configs: list[dict], user_id: str) -> dict:
+    """The Sets a stage can use, exactly as Prism lists them: key -> {name, meta, doc, config, version, provided}."""
+    import prism_board as pb
+
+    return pb.set_choices(configs, user_id)
+
+
+def _from_choice(key: str, choices: dict) -> tuple[dict, dict] | None:
+    c = choices.get(key)
+    if c is None:
+        return None
+    if c.get("provided"):
+        return copy.deepcopy(c["doc"]), {"provided": key}
+    return copy.deepcopy(c["doc"]), {"config_id": c["config"], "version": c["version"]}
+
+
+def apply_action(f: dict, action: dict, choices: dict, library: dict, saved_sets: dict) -> str | None:
+    """Apply one press on the stages board to the working copy f. Returns an error to show, or None."""
+    op, stages = action.get("op"), f["stages"]
+    i = action.get("stage")
+    if op in ("set", "move", "remove", "tf", "label", "upgrade") and not (isinstance(i, int) and 0 <= i < len(stages)):
+        return "That stage no longer exists."
+    if op in ("set", "add"):
+        got = _from_choice(str(action.get("set")), choices)
+        if got is None:
+            return "That Set is no longer available."
+        if op == "set":
+            stages[i]["set_body"], stages[i]["set_source"] = got
+            return None
+        if len(stages) >= MAX_STAGES:
+            return f"A funnel has at most {MAX_STAGES} stages: select a stage to replace its Set instead."
+        stages.append({"label": f"Stage {len(stages) + 1}", "timeframe": stages[-1]["timeframe"],
+                       "set_body": got[0], "set_source": got[1]})
+        return None
+    if op == "move":
+        j = i + (1 if action.get("dir") == 1 else -1)
+        if 0 <= j < len(stages):
+            stages[i], stages[j] = stages[j], stages[i]
+        return None
+    if op == "remove":
+        if len(stages) <= MIN_STAGES:
+            return f"A funnel needs at least {MIN_STAGES} stages."
+        stages.pop(i)
+        return None
+    if op == "tf":
+        if action.get("tf") not in fs.TIMEFRAMES:
+            return "That timeframe isn't available."
+        stages[i]["timeframe"] = action["tf"]
+        return None
+    if op == "label":
+        stages[i]["label"] = str(action.get("label") or "").strip()[:40]
+        return None
+    if op == "upgrade":
+        up = upgrade_for(stages[i], library, saved_sets)
+        if up:
+            stages[i]["set_body"], stages[i]["set_source"] = up[1], up[2]
+        return None
+    return None
+
+
+def board_data(f: dict, choices: dict, library: dict, saved_sets: dict, show_provided: bool, scope: str) -> dict:
+    import perspectives
+    import prism_board as pb
+
+    stages = []
+    for i, stage in enumerate(f["stages"]):
+        doc = stage.get("set_body") or {}
+        up = upgrade_for(stage, library, saved_sets)
+        stages.append({"label": stage.get("label") or "", "timeframe": stage["timeframe"],
+                       "icon": fn.STAGE_ICONS[min(i, len(fn.STAGE_ICONS) - 1)],
+                       "set_name": doc.get("name") or "This stage's Set", "set_line": str(doc.get("purpose") or ""),
+                       "icons": perspectives.chips(doc), "upgrade": up[0] if up else None})
+    return {"library": {"sets": [pb._set_entry(k, c) for k, c in choices.items()],
+                        "perspectives": [{"key": k, "icon": i, "hover": h} for k, i, h in perspectives.ICONS]},
+            "show_provided": show_provided, "stages": stages, "scope": scope,
+            "timeframes": [[tf, TF_LABELS[tf]] for tf in fs.TIMEFRAMES],
+            "min_stages": MIN_STAGES, "max_stages": MAX_STAGES,
+            "intro": "Widest at the top: each stage checks only what passed the ones above it."}
+
+
+def _stages_board(st, f: dict, pick: str, configs: list[dict], user_id: str, library: dict, saved_sets: dict) -> None:
+    import json
+
+    import funnel_stages_component
+    import lattice_panel
+
+    choices = board_choices(configs, user_id)
+    data = board_data(f, choices, library, saved_sets, lattice_panel.provided_shown(st), str(pick))
+    try:
+        result = funnel_stages_component.component()(key=f"funnel_stages_{pick}", data=data,
+                                                     on_action_change=lambda: None)
+    except Exception as exc:
+        st.info(f"The stages board could not load here ({str(exc)[:120]}).")
+        return
+    raw = getattr(result, "action", None)
+    if not raw or raw == st.session_state.get("funnel_stages_seen"):
+        return
+    st.session_state["funnel_stages_seen"] = raw
+    try:
+        action = json.loads(raw)
+    except ValueError:
+        return
+    if action.get("op") == "open_set":
+        c = choices.get(action.get("set"))
+        if c is not None:
+            st.session_state["_lattice_section_next"] = "sets"
+            st.session_state["_lattice_set_start_next"] = action["set"] if c.get("provided") else f"saved:{c['config']}"
+            st.session_state.pop("lattice_set_loaded", None)
+            st.session_state["lattice_flash_set"] = ("ok", (
+                f"Opened a copy of “{c['name']}”: change it and save it as your own." if c.get("provided")
+                else f"Opened “{c['name']}”."))
+        lattice_panel.rerun(st)
+        return
+    problem = apply_action(f, action, choices, library, saved_sets)
+    if problem:
+        st.session_state["funnel_stages_flash"] = problem
+    lattice_panel.rerun(st)
 
 
 def _provided_view(st, supabase, pick: str, funnels: list[dict], library: dict) -> None:

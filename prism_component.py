@@ -91,6 +91,151 @@ CSS = lattice_component.CSS + """
   .lat.prism .ctl button{flex:1 1 0;width:auto;min-height:44px}}
 """
 
+SET_LIBRARY_JS = r"""
+  // The saved-Set list shared by Prism and the funnel stages: filter, perspective icons, "Provided by Angstrom
+  // Signals" folded, then Your Sets. Each chip drags as {type: "set", key} and has a + button.
+  // opts: sets, perspectives, showProvided, focus, title, hint, empty, addTitle(s), onAdd(s), addDisabled(s),
+  // onOpen(s), mem (an object kept on window for the session: filter text, icon filter, folded state).
+  function setLibrary(libCol, opts) {
+    const M = opts.mem;
+    libCol.appendChild(el("h3", "", opts.title || "Saved Sets"));
+    libCol.appendChild(el("div", "muted", opts.hint || ""));
+  const fs = el("input", "wide"); fs.placeholder = "Filter Sets"; fs.setAttribute("aria-label", "Filter Sets"); fs.value = M.q || "";
+  libCol.appendChild(fs);
+  // Filter by what a Set looks at: tap an icon, tap it again to show all.
+  const pvf = el("div", "pvf");
+  (opts.perspectives || []).forEach((p) => {
+    const b = button(p.icon, p.hover + " (tap to filter)", () => {
+      M.pv = M.pv === p.key ? "" : p.key;
+      pvf.querySelectorAll("button").forEach((x) => x.classList.toggle("on", x.dataset.k === M.pv));
+      drawSets();
+    });
+    b.dataset.k = p.key; b.setAttribute("aria-label", p.hover);
+    if (M.pv === p.key) b.classList.add("on");
+    pvf.appendChild(b);
+  });
+  libCol.appendChild(pvf);
+  const setList = el("div", "");
+  libCol.appendChild(setList);
+  function setChip(s) {
+      const c = el("div", "chip");
+      c.draggable = true;
+      c.addEventListener("dragstart", (e) => e.dataTransfer.setData("text/plain", JSON.stringify({type: "set", key: s.key})));
+      const nm = el("div", "nm");
+      const title = el("div", "", s.name);
+      const pv = el("span", "pv");
+      (s.icons || []).forEach((p) => { const i = el("span", "", p.icon); i.title = p.hover; i.setAttribute("aria-label", p.hover); pv.appendChild(i); });
+      title.appendChild(pv);
+      if (s.evidence) { const ev = el("span", "ev", s.evidence.icon); ev.title = s.evidence.hover; ev.setAttribute("aria-label", s.evidence.hover); title.appendChild(ev); }
+      nm.appendChild(title);
+      if (s.line) nm.appendChild(el("div", "line", s.line));
+      if (s.more) {
+        const d = el("details", "more");
+        const sm = el("summary", "");
+        sm.appendChild(el("span", "m", "more…")); sm.appendChild(el("span", "l", "less…"));
+        d.appendChild(sm);
+        [["What it measures", s.more.measures], ["Why traders watch it", s.more.why], ["What it doesn't prove", s.more.not_proven]]
+          .forEach(([h, t]) => { const p = el("p", ""); const b = el("b", "", h + ": "); p.appendChild(b); p.appendChild(document.createTextNode(t)); d.appendChild(p); });
+        if (s.followed) d.appendChild(followedBlock(s.followed, s.evidence && s.evidence.icon));
+        d.addEventListener("click", (e) => e.stopPropagation());
+        nm.appendChild(d);
+      }
+      if (s.followed && !s.more) nm.appendChild(followedBlock(s.followed, s.evidence && s.evidence.icon));
+      if (s.key && s.key === (opts.focus || {}).key) {
+        c.classList.add("focus");
+        const more = nm.querySelector("details.more");
+        if (more) more.open = true;
+        const token = opts.focus.token;
+        if (M.focusToken !== token) {          // scroll to it once per Open in Lattice
+          M.focusToken = token;
+          window.setTimeout(() => c.scrollIntoView({behavior: "smooth", block: "center"}), 700);
+        }
+      }
+      if (s.inside) nm.appendChild(insideBlock(s));
+      if (!s.provided) nm.appendChild(el("div", "muted", s.meta));
+      c.appendChild(nm);
+      const plus = button("+", opts.addTitle(s), () => opts.onAdd(s), "sq");
+      if (opts.addDisabled && opts.addDisabled(s)) plus.disabled = true;
+      c.appendChild(plus);
+      return c;
+  }
+  function insideBlock(s) {   // 🔍 the building blocks: Groups (signals, labels), single signals, the decision
+    const b = el("details", "inside");
+    const sm = el("summary", "", "🔍 Look inside");
+    sm.title = "The Groups and signals this Set is made of, and when it says Yes";
+    b.appendChild(sm);
+    const x = s.inside;
+    (x.groups || []).forEach((g) => {
+      const p = el("div", "part");
+      p.appendChild(el("b", "", "Group · " + g.name));
+      if (g.labels && g.labels.length) p.appendChild(el("div", "muted", "Labels: " + g.labels.join(", ")));
+      (g.signals || []).forEach((t) => p.appendChild(el("div", "sig", "• " + t)));
+      b.appendChild(p);
+    });
+    (x.signals || []).forEach((t) => {
+      const p = el("div", "part");
+      p.appendChild(el("b", "", "Signal · " + t.name));
+      if (t.settings) p.appendChild(el("div", "muted", "Settings: " + t.settings));
+      b.appendChild(p);
+    });
+    if (x.decision) b.appendChild(el("div", "part dec", x.decision));
+    if (s.open) {
+      const go = button(s.open === "copy" ? "Make my own copy" : "Open in Signal Sets",
+        s.open === "copy" ? "Opens a copy in Signal Sets that you can change and save as your own"
+                          : "Opens this Set in Signal Sets", () => opts.onOpen(s));
+      b.appendChild(go);
+    }
+    b.addEventListener("click", (e) => e.stopPropagation());
+    return b;
+  }
+  function followedBlock(f, mark) {   // "What followed", folded to one line: the verdict; tap for the plain numbers (muted, no colours)
+    const b = el("details", "wf");
+    const sm = el("summary", "");
+    sm.appendChild(el("b", "", (mark ? mark + " " : "") + "What followed: "));
+    sm.appendChild(document.createTextNode(f.verdict || "not studied on its own"));
+    b.appendChild(sm);
+    b.appendChild(el("div", "muted", f.title.replace(/^What followed · /, "")));
+    (f.lines || []).forEach((t) => b.appendChild(el("div", "", t)));
+    (f.parts || []).forEach((p) => b.appendChild(el("div", "", p.line)));
+    if (f.compare) b.appendChild(el("div", "", f.compare));
+    if (f.parts_note) b.appendChild(el("div", "muted", f.parts_note));
+    if (f.assets) b.appendChild(el("div", "", f.assets.line + " Asset by asset: open the Set in Signal Sets."));
+    if (f.note) b.appendChild(el("div", "muted", f.note));
+    b.addEventListener("click", (e) => e.stopPropagation());
+    return b;
+  }
+  function drawSets() {
+    setList.innerHTML = "";
+    const q = (M.q || "").toLowerCase();
+    const showProvided = opts.showProvided !== false;
+    const focus = (opts.focus || {}).key || "";          // Open in Lattice on a provided Set
+    const usable = (opts.sets || []).filter((s) => showProvided || !s.provided || s.key === focus);
+    const pick = M.pv || "";
+    const shown = usable.filter((s) => (!q || (s.name + " " + s.meta + " " + (s.line || "")).toLowerCase().includes(q))
+      && (!pick || (s.icons || []).some((p) => p.key === pick)));
+    const given = shown.filter((s) => s.provided), mine = shown.filter((s) => !s.provided);
+    if (given.length) {
+      // What Angstrom Signals provides sits in its own folded section at the top (hidden with the setting).
+      const box = el("details", "prov");
+      box.open = !!M.provOpen || !!q || !!pick || given.some((s) => s.key === focus);
+      box.addEventListener("toggle", () => { if (!q) M.provOpen = box.open; });
+      const sum = el("summary", "", "Provided by Angstrom Signals · " + given.length);
+      sum.title = "Example Sets made by Angstrom Signals. Hide them in ⚙️ Settings → Show provided starters and examples.";
+      box.appendChild(sum);
+      given.forEach((s) => box.appendChild(setChip(s)));
+      setList.appendChild(box);
+    }
+    if (given.length && mine.length) setList.appendChild(el("div", "cat", "Your Sets"));
+    mine.forEach((s) => setList.appendChild(setChip(s)));
+    if (!shown.length) setList.appendChild(el("div", "muted", usable.length ? "No Set matches." : (opts.empty || "No Sets with a decision yet: make one in Signal Sets.")));
+  }
+  fs.addEventListener("input", () => { M.q = fs.value; drawSets(); });
+  drawSets();
+
+    return drawSets;
+  }
+"""
+
 JS = r"""
 export default function(component) {
   const { data, setTriggerValue, parentElement } = component;
@@ -104,12 +249,12 @@ export default function(component) {
   if (state.open_new) window.__prismSel = state.open_new;
   let sel = window.__prismSel || null;
   if (sel && !scans.some((s) => s.id === sel)) sel = null;
-  let qSets = window.__prismQS || "", qAssets = window.__prismQA || "";
+  let qAssets = window.__prismQA || "";
 
   Array.from(parentElement.children).filter((c) => c.classList && c.classList.contains("lat")).forEach((c) => c.remove());
   const root = el("div", "lat prism");
   parentElement.appendChild(root);
-""" + lattice_component.SPLITTER_JS + r"""
+""" + lattice_component.SPLITTER_JS + SET_LIBRARY_JS + r"""
 
   function el(tag, cls, text) {
     const n = document.createElement(tag);
@@ -156,137 +301,12 @@ export default function(component) {
   // ------------------------------------------------------------------ library
   const libCol = el("div", "col lib");
   root.appendChild(libCol);
-  libCol.appendChild(el("h3", "", "Saved Sets"));
-  libCol.appendChild(el("div", "muted", "Drag a Set onto the scans, or tap + to start a scan."));
-  const fs = el("input", "wide"); fs.placeholder = "Filter Sets"; fs.setAttribute("aria-label", "Filter Sets"); fs.value = qSets;
-  libCol.appendChild(fs);
-  // Filter by what a Set looks at: tap an icon, tap it again to show all.
-  const pvf = el("div", "pvf");
-  (lib.perspectives || []).forEach((p) => {
-    const b = button(p.icon, p.hover + " (tap to filter)", () => {
-      window.__prismPv = window.__prismPv === p.key ? "" : p.key;
-      pvf.querySelectorAll("button").forEach((x) => x.classList.toggle("on", x.dataset.k === window.__prismPv));
-      drawSets();
-    });
-    b.dataset.k = p.key; b.setAttribute("aria-label", p.hover);
-    if (window.__prismPv === p.key) b.classList.add("on");
-    pvf.appendChild(b);
-  });
-  libCol.appendChild(pvf);
-  const setList = el("div", "");
-  libCol.appendChild(setList);
-  function setChip(s) {
-      const c = el("div", "chip");
-      c.draggable = true;
-      c.addEventListener("dragstart", (e) => e.dataTransfer.setData("text/plain", JSON.stringify({type: "set", key: s.key})));
-      const nm = el("div", "nm");
-      const title = el("div", "", s.name);
-      const pv = el("span", "pv");
-      (s.icons || []).forEach((p) => { const i = el("span", "", p.icon); i.title = p.hover; i.setAttribute("aria-label", p.hover); pv.appendChild(i); });
-      title.appendChild(pv);
-      if (s.evidence) { const ev = el("span", "ev", s.evidence.icon); ev.title = s.evidence.hover; ev.setAttribute("aria-label", s.evidence.hover); title.appendChild(ev); }
-      nm.appendChild(title);
-      if (s.line) nm.appendChild(el("div", "line", s.line));
-      if (s.more) {
-        const d = el("details", "more");
-        const sm = el("summary", "");
-        sm.appendChild(el("span", "m", "more…")); sm.appendChild(el("span", "l", "less…"));
-        d.appendChild(sm);
-        [["What it measures", s.more.measures], ["Why traders watch it", s.more.why], ["What it doesn't prove", s.more.not_proven]]
-          .forEach(([h, t]) => { const p = el("p", ""); const b = el("b", "", h + ": "); p.appendChild(b); p.appendChild(document.createTextNode(t)); d.appendChild(p); });
-        if (s.followed) d.appendChild(followedBlock(s.followed, s.evidence && s.evidence.icon));
-        d.addEventListener("click", (e) => e.stopPropagation());
-        nm.appendChild(d);
-      }
-      if (s.followed && !s.more) nm.appendChild(followedBlock(s.followed, s.evidence && s.evidence.icon));
-      if (s.key && s.key === (state.focus_set || {}).key) {
-        c.classList.add("focus");
-        const more = nm.querySelector("details.more");
-        if (more) more.open = true;
-        const token = state.focus_set.token;
-        if (window.__prismFocusToken !== token) {          // scroll to it once per Open in Lattice
-          window.__prismFocusToken = token;
-          window.setTimeout(() => c.scrollIntoView({behavior: "smooth", block: "center"}), 700);
-        }
-      }
-      if (s.inside) nm.appendChild(insideBlock(s));
-      if (!s.provided) nm.appendChild(el("div", "muted", s.meta));
-      c.appendChild(nm);
-      c.appendChild(button("+", "Start a scan with " + s.name, () => act("create", {set: s.key}), "sq"));
-      return c;
-  }
-  function insideBlock(s) {   // 🔍 the building blocks: Groups (signals, labels), single signals, the decision
-    const b = el("details", "inside");
-    const sm = el("summary", "", "🔍 Look inside");
-    sm.title = "The Groups and signals this Set is made of, and when it says Yes";
-    b.appendChild(sm);
-    const x = s.inside;
-    (x.groups || []).forEach((g) => {
-      const p = el("div", "part");
-      p.appendChild(el("b", "", "Group · " + g.name));
-      if (g.labels && g.labels.length) p.appendChild(el("div", "muted", "Labels: " + g.labels.join(", ")));
-      (g.signals || []).forEach((t) => p.appendChild(el("div", "sig", "• " + t)));
-      b.appendChild(p);
-    });
-    (x.signals || []).forEach((t) => {
-      const p = el("div", "part");
-      p.appendChild(el("b", "", "Signal · " + t.name));
-      if (t.settings) p.appendChild(el("div", "muted", "Settings: " + t.settings));
-      b.appendChild(p);
-    });
-    if (x.decision) b.appendChild(el("div", "part dec", x.decision));
-    if (s.open) {
-      const go = button(s.open === "copy" ? "Make my own copy" : "Open in Signal Sets",
-        s.open === "copy" ? "Opens a copy in Signal Sets that you can change and save as your own"
-                          : "Opens this Set in Signal Sets", () => act("open_set", {set: s.key}));
-      b.appendChild(go);
-    }
-    b.addEventListener("click", (e) => e.stopPropagation());
-    return b;
-  }
-  function followedBlock(f, mark) {   // "What followed", folded to one line: the verdict; tap for the plain numbers (muted, no colours)
-    const b = el("details", "wf");
-    const sm = el("summary", "");
-    sm.appendChild(el("b", "", (mark ? mark + " " : "") + "What followed: "));
-    sm.appendChild(document.createTextNode(f.verdict || "not studied on its own"));
-    b.appendChild(sm);
-    b.appendChild(el("div", "muted", f.title.replace(/^What followed · /, "")));
-    (f.lines || []).forEach((t) => b.appendChild(el("div", "", t)));
-    (f.parts || []).forEach((p) => b.appendChild(el("div", "", p.line)));
-    if (f.compare) b.appendChild(el("div", "", f.compare));
-    if (f.parts_note) b.appendChild(el("div", "muted", f.parts_note));
-    if (f.assets) b.appendChild(el("div", "", f.assets.line + " Asset by asset: open the Set in Signal Sets."));
-    if (f.note) b.appendChild(el("div", "muted", f.note));
-    b.addEventListener("click", (e) => e.stopPropagation());
-    return b;
-  }
-  function drawSets() {
-    setList.innerHTML = "";
-    const q = qSets.toLowerCase();
-    const showProvided = state.show_provided !== false;
-    const focus = (state.focus_set || {}).key || "";          // Open in Lattice on a provided Set
-    const usable = lib.sets.filter((s) => showProvided || !s.provided || s.key === focus);
-    const pick = window.__prismPv || "";
-    const shown = usable.filter((s) => (!q || (s.name + " " + s.meta + " " + (s.line || "")).toLowerCase().includes(q))
-      && (!pick || (s.icons || []).some((p) => p.key === pick)));
-    const given = shown.filter((s) => s.provided), mine = shown.filter((s) => !s.provided);
-    if (given.length) {
-      // What Angstrom Signals provides sits in its own folded section at the top (hidden with the setting).
-      const box = el("details", "prov");
-      box.open = !!window.__prismProvOpen || !!q || !!pick || given.some((s) => s.key === focus);
-      box.addEventListener("toggle", () => { if (!q) window.__prismProvOpen = box.open; });
-      const sum = el("summary", "", "Provided by Angstrom Signals · " + given.length);
-      sum.title = "Example Sets made by Angstrom Signals. Hide them in ⚙️ Settings → Show provided starters and examples.";
-      box.appendChild(sum);
-      given.forEach((s) => box.appendChild(setChip(s)));
-      setList.appendChild(box);
-    }
-    if (given.length && mine.length) setList.appendChild(el("div", "cat", "Your Sets"));
-    mine.forEach((s) => setList.appendChild(setChip(s)));
-    if (!shown.length) setList.appendChild(el("div", "muted", usable.length ? "No Set matches." : "No Sets with a decision yet: make one in Signal Sets."));
-  }
-  fs.addEventListener("input", () => { qSets = fs.value; window.__prismQS = qSets; drawSets(); });
-  drawSets();
+  window.__prismLib = window.__prismLib || {q: window.__prismQS || ""};
+  setLibrary(libCol, {sets: lib.sets, perspectives: lib.perspectives, showProvided: state.show_provided,
+    focus: state.focus_set, mem: window.__prismLib, title: "Saved Sets",
+    hint: "Drag a Set onto the scans, or tap + to start a scan.",
+    addTitle: (s) => "Start a scan with " + s.name, onAdd: (s) => act("create", {set: s.key}),
+    onOpen: (s) => act("open_set", {set: s.key})});
 
   libCol.appendChild(el("h3", "", "Watchlist"));
   const fa = el("input", "wide"); fa.placeholder = "Filter assets"; fa.setAttribute("aria-label", "Filter assets"); fa.value = qAssets;

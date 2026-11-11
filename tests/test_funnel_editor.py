@@ -116,3 +116,50 @@ def test_an_untouched_copy_of_an_older_provided_funnel_is_recognised():
     old["stages"][0]["set_body"] = lib["demo:turn_up_1d"]                    # the Stochastic daily stage of 10 Nov
     old["stages"][0]["set_source"] = {"provided": "demo:turn_up_1d"}
     assert fe.provenance(old, lib) == "Your copy of an earlier version of a provided funnel"
+
+
+def _board():
+    lib = prism.demo_sets()
+    saved = [{"id": "c1", "kind": "set", "name": "Mine", "owner_id": "u1",
+              "versions": [{"version": 2, "body": lib["demo:ema_up_1d"]}]}]
+    return lib, fe.board_choices(saved, "u1")
+
+
+def test_stages_board_drop_add_move_remove_and_settings():
+    lib, choices = _board()
+    f = fe.template("crypto", "long")
+    n = len(f["stages"])
+    assert fe.apply_action(f, {"op": "set", "stage": 0, "set": "saved:c1:2"}, choices, lib, {}) is None
+    assert f["stages"][0]["set_source"] == {"config_id": "c1", "version": 2}
+    assert fe.apply_action(f, {"op": "set", "stage": 1, "set": "demo:ema_up_1d"}, choices, lib, {}) is None
+    assert f["stages"][1]["set_source"] == {"provided": "demo:ema_up_1d"} and f["stages"][1]["set_body"] is not lib["demo:ema_up_1d"]
+    assert fe.apply_action(f, {"op": "add", "set": "demo:ema_up_1d"}, choices, lib, {}) is None
+    assert len(f["stages"]) == n + 1 and f["stages"][-1]["timeframe"] == f["stages"][-2]["timeframe"]
+    while len(f["stages"]) < fe.MAX_STAGES:
+        fe.apply_action(f, {"op": "add", "set": "demo:ema_up_1d"}, choices, lib, {})
+    assert "at most" in fe.apply_action(f, {"op": "add", "set": "demo:ema_up_1d"}, choices, lib, {})
+    first = f["stages"][0]
+    fe.apply_action(f, {"op": "move", "stage": 0, "dir": 1}, choices, lib, {})
+    assert f["stages"][1] is first
+    fe.apply_action(f, {"op": "tf", "stage": 1, "tf": "4h"}, choices, lib, {})
+    fe.apply_action(f, {"op": "label", "stage": 1, "label": "  Mine first " + "x" * 50}, choices, lib, {})
+    assert f["stages"][1]["timeframe"] == "4h" and f["stages"][1]["label"].startswith("Mine first") \
+        and len(f["stages"][1]["label"]) == 40
+    assert fe.apply_action(f, {"op": "tf", "stage": 1, "tf": "2h"}, choices, lib, {})
+    while len(f["stages"]) > fe.MIN_STAGES:
+        assert fe.apply_action(f, {"op": "remove", "stage": 0}, choices, lib, {}) is None
+    assert "at least" in fe.apply_action(f, {"op": "remove", "stage": 0}, choices, lib, {})
+    assert "no longer" in fe.apply_action(f, {"op": "set", "stage": 9, "set": "demo:ema_up_1d"}, choices, lib, {})
+    assert "no longer" in fe.apply_action(f, {"op": "set", "stage": 0, "set": "gone"}, choices, lib, {})
+
+
+def test_stages_board_upgrade_and_data():
+    lib, choices = _board()
+    old = fe.template("crypto", "long")
+    old["stages"][1]["set_body"]["decision"]["rule"]["eq"] = "fast_below"
+    data = fe.board_data(old, choices, lib, {}, True, "f1")
+    assert data["stages"][1]["upgrade"] and not data["stages"][0]["upgrade"]
+    assert {s["key"] for s in data["library"]["sets"]} >= {"demo:ema_up_1d", "saved:c1:2"}
+    assert data["timeframes"][0] == ["15m", "15 minutes"] and data["max_stages"] == fe.MAX_STAGES
+    fe.apply_action(old, {"op": "upgrade", "stage": 1}, choices, lib, {})
+    assert fe.upgrade_for(old["stages"][1], lib, {}) is None
