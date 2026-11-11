@@ -95,8 +95,46 @@ def entry_set(direction: str, timeframe: str = ENTRY_TIMEFRAME) -> dict:
 WORDS = {"1W": "weekly", "1D": "daily", "12h": "12-hour", "4h": "4-hour", "1h": "1-hour"}
 
 
+def wave_turn_set(direction: str) -> dict:
+    """The daily stage since 11 Nov 2026: the daily trend, and Drew's own daily read, WaveTrend turning back from an
+    extreme in the last few days (his yellow arrows; it replaces the Stochastic stand-in). Longs: EMA 20 above EMA 50,
+    WaveTrend crossed up while oversold within the last 5 daily closes, and the wave is still rising. Shorts mirror it
+    (crossed down while overbought, still falling)."""
+    up = direction == "long"
+    side = "above" if up else "below"
+    return {**BASE, "name": f"Daily {'uptrend, WaveTrend turned up' if up else 'downtrend, WaveTrend turned down'}",
+            "purpose": (f"On the daily candles, EMA 20 {side} EMA 50, and WaveTrend turned "
+                        f"{'up from oversold' if up else 'down from overbought'} within the last {TURN_WITHIN} daily "
+                        f"closes and is still {'rising' if up else 'falling'}: a pullback inside the trend whose "
+                        "momentum wave has turned back (Market Cipher style)."),
+            "standalone": [_item("emas", "EMA 20 vs 50", "ma.pair", "1D", kind="EMA", fast=20, slow=50),
+                           _item("wave", "WaveTrend", "osc.wavetrend", "1D")],
+            "decision": {"version": 1, "rule": {"all": [
+                {"member": "emas", "field": "order", "eq": "fast_above" if up else "fast_below"},
+                {"sequence": {"first": {"member": "wave", "field": "turned_up_from_oversold" if up
+                                        else "turned_down_from_overbought", "eq": True},
+                              "then": {"member": "wave", "field": "direction", "eq": "rising" if up else "falling"},
+                              "within": TURN_WITHIN}}]}}}
+
+
+def divergence_set(direction: str, at_least: int = 2) -> dict:
+    up = direction == "long"
+    word = "bullish" if up else "bearish"
+    return {**BASE, "name": f"{word.title()} divergence on {at_least}+ timeframes",
+            "purpose": (f"Regular or hidden {word} divergence between price swings and WaveTrend on at least "
+                        f"{at_least} of the daily, 12-hour, 4-hour and 1-hour timeframes at once (crypto set; equities "
+                        "read weekly, daily, 4-hour and 1-hour)."),
+            "standalone": [_item("div", "Divergence across timeframes", "divergence.mtf", "1D", set="crypto",
+                                 oscillator="wavetrend")],
+            "decision": {"version": 1, "rule": {"member": "div", "field": f"{word}_count", "gte": at_least}}}
+
+
 def library_key(timeframe: str | None, direction: str) -> str:
     """The provided-library key of a funnel stage's Set (prism.library_sets embeds exactly these bodies)."""
+    if timeframe == "wave":
+        return f"demo:wave_turn_{'up' if direction == 'long' else 'down'}_1d"
+    if timeframe == "divergence":
+        return f"demo:divergence_{'bullish' if direction == 'long' else 'bearish'}_mtf"
     if timeframe == "turn":
         return f"demo:turn_{'up' if direction == 'long' else 'down'}_1d"
     if timeframe is None:
@@ -111,6 +149,8 @@ def library() -> dict[str, dict]:
             out[library_key(tf, direction)] = trend_set(tf, direction)
         out[library_key(None, direction)] = entry_set(direction)
         out[library_key("turn", direction)] = turn_set(direction)
+        out[library_key("wave", direction)] = wave_turn_set(direction)
+        out[library_key("divergence", direction)] = divergence_set(direction)
     return out
 
 
@@ -145,6 +185,23 @@ def explanations() -> dict[str, tuple[str, str, str, str]]:
             "It is the daily stage of the ready-made trend funnels.",
             "Momentum can turn back and forth several times before a move continues, and a pullback can become a "
             "reversal. Nobody has tested what followed these answers.")
+        out[library_key("wave", direction)] = (
+            f"A pullback inside a daily {'uptrend' if up else 'downtrend'} whose WaveTrend has just turned back.",
+            f"Yes when the daily EMA 20 is {'above' if up else 'below'} the EMA 50 and WaveTrend crossed "
+            f"{'up while oversold' if up else 'down while overbought'} within the last 5 closes and is still "
+            f"{'rising' if up else 'falling'}.",
+            "WaveTrend (the Market Cipher style oscillator) turning from an extreme is a common way to time a re-entry "
+            "into a trend. It is the daily stage of the ready-made trend funnels.",
+            "Oscillators can turn several times before a move continues. Nobody has tested what followed these "
+            "answers.")
+        out[library_key("divergence", direction)] = (
+            f"{'Bullish' if up else 'Bearish'} momentum divergence on several timeframes at once.",
+            f"Yes when at least 2 of the daily, 12-hour, 4-hour and 1-hour timeframes show a recent regular or "
+            f"hidden {'bullish' if up else 'bearish'} divergence between price swings and WaveTrend.",
+            "Divergence that shows up on more than one timeframe is what multi-timeframe traders look for before a "
+            "turn (regular) or a continuation (hidden).",
+            "Divergences are confirmed late (5 candles) and repeat in strong trends. Nobody has tested what followed "
+            "these answers.")
     return out
 
 
@@ -158,10 +215,10 @@ def trend_funnel(direction: str, market: str = "crypto") -> dict:
         labels, tfs = ("Daily", "12-hour", "Shortlist (4-hour)"), TIMEFRAMES
     stages = [{"label": label, "timeframe": tf, "set_body": trend_set(tf, direction),
                "set_source": {"provided": library_key(tf, direction)}} for label, tf in zip(labels, tfs)]
-    for st_ in stages:                     # the daily stage also needs momentum turning (10 Nov 2026)
+    for st_ in stages:                     # the daily stage also needs momentum turning: WaveTrend (11 Nov 2026)
         if st_["timeframe"] == "1D":
-            st_.update({"label": "Daily (trend + momentum turn)", "set_body": turn_set(direction),
-                        "set_source": {"provided": library_key("turn", direction)}})
+            st_.update({"label": "Daily (trend + WaveTrend turn)", "set_body": wave_turn_set(direction),
+                        "set_source": {"provided": library_key("wave", direction)}})
     stages.append({"label": "Entry (1-hour)", "timeframe": ENTRY_TIMEFRAME, "set_body": entry_set(direction),
                    "set_source": {"provided": library_key(None, direction)}})
     arrow = "▲" if direction == "long" else "▼"

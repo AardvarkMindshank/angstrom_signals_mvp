@@ -7372,6 +7372,10 @@ starter keep working, and built-in alerts that are on keep running.
 - **🔍 Look inside** on a provided Set (in Prism, on its chip or on a scan) shows the Groups and signals it is made
   of, in plain words. **Make my own copy** opens it in Signal Sets as your own, to change and save; the provided
   one stays as it is.
+- **Oscillators in the Market Cipher style** (signals you can use in Groups and Sets): **WaveTrend** (the momentum
+  wave, overbought and oversold, its turns), **Money flow** (money flowing in, green, or out, red), the
+  **Stochastic on OHLC4**, and **Divergence across timeframes** (regular and hidden divergence counted over four
+  timeframes). They use the published Market Cipher B defaults; every setting can be changed with ⚙.
 - The provided Sets include *Pullback in an uptrend*, *Rally in a downtrend*, *Trend alignment* (daily and
   weekly), *Breakout with volume*, *Volatility squeeze*, *Oversold in a range*, *Near support in a range*,
   *Bitcoin trend filter* and *Overextended*. Any of them can also be a column in the tables.
@@ -7490,9 +7494,11 @@ tested what usually followed these answers.
   runs for your account, with its own places and alerts. Longs and shorts are separate funnels.
 - **Crypto:** daily → 12-hour → 4-hour (the shortlist) → 1-hour entry. **Equities:** weekly → daily → 4-hour →
   1-hour entry (equities trade 6½ hours a day, so a 12-hour candle would just be the daily one).
-- The trend stages ask for **EMA 20 above EMA 50** (below, for shorts). The **daily** stage also asks for momentum
-  turning back from an extreme within the last 5 days (Stochastic %K was 20 or lower and is back above 20; for
-  shorts 80 or higher and back below 80): a pullback inside the trend. The **1-hour entry** is a pullback setup:
+- The trend stages ask for **EMA 20 above EMA 50** (below, for shorts). The **daily** stage also asks for
+  **WaveTrend** (the Market Cipher style momentum wave) to have turned up from oversold within the last 5 days and
+  still be rising (for shorts: turned down from overbought, still falling): a pullback inside the trend whose
+  momentum has turned back. Funnels made before 11 Nov used the Stochastic for this; ⚙️ Funnels → *Update to the
+  latest ready-made version* switches yours over. The **1-hour entry** is a pullback setup:
   the candle came back to the EMA 20 and closed on the trend's side (or crossed back), momentum agrees, and volume
   is at least 0.7 times usual. Each stage's Set is a provided Set you can open in Lattice or Prism.
 - Your copy is labelled *Your copy of a provided funnel* until you change it, then *Customised*; one built from
@@ -11014,8 +11020,8 @@ def _funnel_controls(dyn, market: str = "crypto") -> None:
                 x["set_source"]["provided"] for x in latest["stages"]]:
             if st.button("⬆ Update to the latest ready-made version", key=f"funnel_update_{market}",
                          help="This funnel came from a ready-made one that has changed since (the daily stage now "
-                              "also needs momentum turning back from an extreme). Every asset starts again from "
-                              "the pool."):
+                              "reads WaveTrend turning back from an extreme). Every asset starts again from the "
+                              "pool, quietly."):
                 args = {"p_id": f["id"], "p_name": f["name"], "p_direction": f["direction"],
                         "p_stages": latest["stages"], "p_flicker": f.get("flicker", True),
                         "p_alerts": f.get("alerts") or {"in_app": True, "email": False}, "p_paused": False}
