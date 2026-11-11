@@ -21,8 +21,7 @@ CSS = prism_component.CSS + """
 .lat.fun .stages::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:0;
   background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'><polygon points='0,0 100,0 60,88 60,100 40,100 40,88' fill='%23818cf8' fill-opacity='0.09'/></svg>") center/100% 100% no-repeat}
 .lat.fun .stage{position:relative;z-index:1;border:1px solid rgba(127,127,127,.35);border-radius:12px;
-  background:var(--ang-card,rgba(255,255,255,.92));padding:8px 10px;display:flex;flex-direction:column;gap:6px;cursor:pointer}
-html.angstrom-night .lat.fun .stage{background:rgba(30,33,40,.94)}
+  background:rgba(127,127,127,.07);padding:8px 10px;display:flex;flex-direction:column;gap:6px;cursor:pointer}
 .lat.fun .stage.sel{border-color:#0f766e;box-shadow:0 0 0 1px #0f766e inset}
 .lat.fun .stage.over,.lat.fun .addstage.over{background:rgba(15,118,110,.12);border-color:#0f766e}
 .lat.fun .stage .top{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
@@ -35,11 +34,9 @@ html.angstrom-night .lat.fun .stage{background:rgba(30,33,40,.94)}
 .lat.fun .stage .ctl button{width:36px;min-height:32px;padding:0}
 .lat.fun .stage .ctl button.del{border-color:rgba(220,38,38,.6);color:#dc2626}
 .lat.fun .addstage{position:relative;z-index:1;border:1px dashed rgba(127,127,127,.55);border-radius:12px;padding:12px;
-  text-align:center;font-size:13px;opacity:.85;background:var(--ang-card,rgba(255,255,255,.7))}
-html.angstrom-night .lat.fun .addstage{background:rgba(30,33,40,.8)}
+  text-align:center;font-size:13px;opacity:.85;background:transparent}
 .lat.fun .spout{position:relative;z-index:1;align-self:center;font-size:13px;padding:4px 12px;border-radius:999px;
-  border:1px solid rgba(127,127,127,.4);background:var(--ang-card,rgba(255,255,255,.92));cursor:help}
-html.angstrom-night .lat.fun .spout{background:rgba(30,33,40,.94)}
+  border:1px solid rgba(127,127,127,.4);background:rgba(16,185,129,.12);cursor:help}
 @media (max-width:640px){.lat.fun .stage{margin-left:0 !important;margin-right:0 !important}
   .lat.fun .stage .setrow{padding-left:0}.lat.fun .stage .ctl button{min-height:44px;width:44px}}
 """

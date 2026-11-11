@@ -27,12 +27,12 @@ def board_data() -> dict:
     return fe.board_data(f, fe.board_choices(saved, "me"), lib, {}, True, "f1")
 
 
-def page(data: dict) -> str:
+def page(data: dict, night: bool = False) -> str:
     script = fc.JS.replace("export default function funnelStages(component)",
                            "window.funnelStages = function funnelStages(component)")
-    return f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Funnel stages check</title>
+    return f"""<!doctype html><html lang="en"{' class="angstrom-night"' if night else ""}><head><meta charset="utf-8"><title>Funnel stages check</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<style>{fc.CSS} body{{font-family:system-ui,sans-serif;margin:16px;background:#fff;color:#111}}</style></head>
+<style>{fc.CSS} body{{font-family:system-ui,sans-serif;margin:16px;background:{'#1e2028' if night else '#fff'};color:{'#e5e7eb' if night else '#111'}}}</style></head>
 <body><div id="host"></div><script>
 {script}
 window.sent = [];
@@ -49,6 +49,7 @@ def main() -> None:
     out = Path(parser.parse_args().out)
     out.mkdir(parents=True, exist_ok=True)
     (out / "board.html").write_text(page(board_data()))
+    (out / "board_night.html").write_text(page(board_data(), night=True))
     print(f"wrote {out / 'board.html'}")
 
 

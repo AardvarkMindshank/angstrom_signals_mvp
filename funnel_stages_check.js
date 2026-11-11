@@ -72,6 +72,20 @@ const { chromium, devices } = require("playwright");
     check("the Set filter narrows the list", (await page.$$(".lib .chip")).length === 1);
     check("no browser errors", errors.length === 0, errors.join(" | "));
 
+    const night = await browser.newPage({ viewport: { width: 1400, height: 1000 } });
+    await night.goto("file://" + path.resolve(dir, "board_night.html"));
+    await night.waitForFunction(() => window.ready);
+    const contrast = await night.evaluate(() => {
+      const lum = (c) => { const m = c.match(/[\d.]+/g).map(Number); const [r, g, b] = m.slice(0, 3).map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.04045) / 1.055, 2.4); }); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+      const name = document.querySelector(".stage .setnm"), card = document.querySelector(".stage");
+      const bg = getComputedStyle(card).backgroundColor, a = Number((bg.match(/[\d.]+/g) || [0, 0, 0, 0])[3] || 1);
+      const page = lum(getComputedStyle(document.body).backgroundColor), text = lum(getComputedStyle(name).color);
+      return { alpha: a, ratio: (Math.max(page, text) + 0.05) / (Math.min(page, text) + 0.05) };
+    });
+    check("dark mode: stage cards let the dark page through and text stays readable",
+      contrast.alpha <= 0.2 && contrast.ratio >= 7, JSON.stringify(contrast));
+    await night.screenshot({ path: path.join(dir, "stages_night.png"), fullPage: true });
+
     const phone = await browser.newPage({ ...devices["iPhone 13"] });
     await phone.goto(url);
     await phone.waitForFunction(() => window.ready);
