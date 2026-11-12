@@ -11322,6 +11322,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             except Exception as exc:
                 dynamic = {"error": f"The funnel could not be read: {str(exc)[:160]}", "watchlist": {}, "funnels": []}
             st.session_state["_dynamic"] = dynamic
+            own_crypto, own_stock = dict(crypto_watchlist), dict(stock_watchlist)   # Quick Snapshot reads these
             table_crypto = dynamic["watchlist"] if dynamic is not None else crypto_watchlist
             crypto_results = process_watchlist(table_crypto, is_crypto=True) if trade_crypto else []
             dynamic_eq = None
@@ -11392,8 +11393,14 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             ordered = sorted(valid, key=lambda row: row["trend"], reverse=True)
             return ordered[0], ordered[-1]
 
-        crypto_top, crypto_bot = get_top_bottom(crypto_results)
-        stock_top, stock_bot = get_top_bottom(stock_results)
+        # Quick Snapshot always summarises your own watchlist, whatever the tables show (a Dynamic funnel table can
+        # be empty, or hold assets that are still being priced).
+        snap_crypto = crypto_results if dynamic is None else (
+            process_watchlist(own_crypto, is_crypto=True) if trade_crypto and own_crypto else [])
+        snap_stock = stock_results if dynamic_eq is None else (
+            process_watchlist(own_stock, is_crypto=False) if trade_equities and own_stock else [])
+        crypto_top, crypto_bot = get_top_bottom(snap_crypto)
+        stock_top, stock_bot = get_top_bottom(snap_stock)
 
         def _select_chart_asset(raw):
             """Point the chart at one asset. The click already reran this section, so draw it once."""
@@ -11601,8 +11608,8 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             show_snapshot(column, card_title, card_row, card_kind, card_key)
         st.caption("Click a change or a box to open that asset on the chart.")
 
+    show_tides()                        # overview content: directly under Quick Snapshot, in both layouts
     if not wide_layout:
-        show_tides()
         show_market_moods(trade_crypto, trade_equities)
 
     def sort_token(value, numeric=False):
@@ -12552,7 +12559,6 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
     if not _POPOUT_VIEW:
         _lattice_section()
     if wide_layout:
-        show_tides()                    # full width: Tides needs the room
         mood_col, asset_col = st.columns([split, 1 - split], gap="medium", vertical_alignment="top")
         with mood_col:
             show_market_moods(trade_crypto, trade_equities)
