@@ -29,7 +29,7 @@ CSS = """
 <style>
 .tides{--t-line:rgba(127,127,127,.28);--t-soft:rgba(127,127,127,.08);font-size:14px;line-height:1.4}
 .tides .hero{position:relative;border-radius:14px;overflow:hidden;min-height:190px;border:1px solid var(--t-line)}
-.tides .hero svg.sea{position:absolute;inset:0;width:100%;height:100%}
+.tides .hero img.sea{position:absolute;inset:0;width:100%;height:100%;object-fit:fill}
 .tides .hero .over{position:relative;z-index:1;display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;
   padding:16px 18px;color:#0f172a}
 .tides .hero.dark .over{color:#f8fafc}
@@ -42,9 +42,6 @@ CSS = """
   font-weight:600;background:rgba(255,255,255,.8);color:#0f172a;cursor:help;white-space:nowrap}
 .tides .chip.head{box-shadow:inset 0 0 0 1.5px #dc2626}.tides .chip.tail{box-shadow:inset 0 0 0 1.5px #16a34a}
 .tides .chip.warn{background:#fee2e2;color:#7f1d1d}
-@keyframes tides-drift{from{transform:translateX(0)}to{transform:translateX(-500px)}}
-.tides .wave{animation:tides-drift linear infinite}
-@media (prefers-reduced-motion: reduce){.tides .wave{animation:none}}
 .tides .card{border:1px solid var(--t-line);border-radius:12px;padding:10px 12px;background:var(--t-soft)}
 .tides .note{margin-top:12px}.tides .note li{margin:2px 0}
 .tides .note .who{font-weight:700}
@@ -64,14 +61,24 @@ CSS = """
 .tides .cur .dir{font-size:13px;margin-top:4px}
 .tides .cur .dir.pos{color:#16a34a}.tides .cur .dir.neg{color:#dc2626}
 .tides .cur .meta{font-size:12px;opacity:.75;margin-top:2px}
-.tides .cur svg{display:block;width:100%;height:30px;margin-top:4px}
+.tides .cur img.sp{display:block;width:100%;height:30px;margin-top:4px}
 .tides .cur.mute{opacity:.92;border-style:dashed}
-.tides .waves svg{width:100%;height:auto;display:block}
+.tides .waves img.wv{width:100%;height:auto;display:block}
 .tides .foot{margin-top:12px;font-size:12px;opacity:.75}
 .tides .pv{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;font-size:11px;font-weight:700;
   background:#fef3c7;color:#92400e;vertical-align:middle}
 </style>
 """
+
+
+def img(svg: str, cls: str, alt: str = "") -> str:
+    """An SVG drawing as an image (the page's HTML filter removes inline SVG; images pass)."""
+    import base64
+
+    if "xmlns=" not in svg[:200]:
+        svg = svg.replace("<svg ", "<svg xmlns='http://www.w3.org/2000/svg' ", 1)
+    data = base64.b64encode(svg.encode("utf-8")).decode("ascii")
+    return f"<img class='{cls}' alt='{esc(alt)}' src='data:image/svg+xml;base64,{data}'/>"
 
 
 def esc(x) -> str:
@@ -109,9 +116,9 @@ def spark(values: list[float], positive_good: bool) -> str:
     pts = " ".join(f"{i * 200 / (len(vals) - 1):.1f},{28 - (v - lo) / span * 26:.1f}" for i, v in enumerate(vals))
     up = vals[-1] >= vals[0]
     colour = "#16a34a" if up == positive_good else "#dc2626"
-    return (f"<svg viewBox='0 0 200 30' preserveAspectRatio='none' aria-hidden='true'>"
-            f"<polyline points='{pts}' fill='none' stroke='{colour}' stroke-width='1.6' "
-            f"vector-effect='non-scaling-stroke'/></svg>")
+    return img(f"<svg viewBox='0 0 200 30' preserveAspectRatio='none'>"
+               f"<polyline points='{pts}' fill='none' stroke='{colour}' stroke-width='1.6' "
+               f"vector-effect='non-scaling-stroke'/></svg>", "sp")
 
 
 def wave_path(amplitude: float, y: float, length: float = 125, width: float = 1500) -> str:
@@ -154,8 +161,9 @@ def hero(snap: dict, warning: dict | None, now: datetime) -> str:
                    + ("<path d='M602 70 L638 82 L602 94Z' fill='#dc2626'/>" if warning["tier"] in (2, "flag") else "")
                    + "</g>")
     gauge = ""
-    svg = (f"<svg class='sea' viewBox='0 0 1000 200' preserveAspectRatio='none' role='img' "
-           f"aria-label='Sea {esc(state)}, tide {esc(t.get('label', ''))}'><defs><linearGradient id='tides-sky' "
+    motion = ("<style>@keyframes d{from{transform:translateX(0)}to{transform:translateX(-500px)}}"
+              ".wave{animation:d linear infinite}@media (prefers-reduced-motion: reduce){.wave{animation:none}}</style>")
+    svg = (f"<svg viewBox='0 0 1000 200' preserveAspectRatio='none'>{motion}<defs><linearGradient id='tides-sky' "
            f"x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='{sky_top}'/><stop offset='1' "
            f"stop-color='{sky_bottom}'/></linearGradient></defs><rect width='1000' height='200' fill='url(#tides-sky)'/>"
            f"{extras}{layers}{gauge}</svg>")
@@ -188,7 +196,8 @@ def hero(snap: dict, warning: dict | None, now: datetime) -> str:
         chips.append(f"<span class='chip warn' title='{esc(tip)}'>{mc.pennants(warning['tier'])} Storm warning: "
                      f"{esc(warning['short'])} {esc(mc.when_words(warning['at'], now))}</span>")
     dark = " dark" if state in ("rough", "storm") else ""
-    return (f"<div class='hero{dark}'>{svg}<div class='over'><div>{title}</div>"
+    sea_img = img(svg, "sea", f"Sea {state}, tide {t.get('label', '')}")
+    return (f"<div class='hero{dark}'>{sea_img}<div class='over'><div>{title}</div>"
             f"<div class='chips'>{''.join(chips)}</div></div></div>")
 
 
@@ -249,8 +258,10 @@ def waves(snap: dict) -> str:
                     f"stroke-width='1.5'/>")
         body.append(f"<text x='12' y='{cy + 4}' font-size='12' fill='currentColor'>{esc(c['icon'])} "
                     f"{esc(c['name'])}</text>")
-    svg = (f"<svg viewBox='0 0 1000 {height}' role='img' aria-label='Each current over the past year and the swell'>"
-           + "".join(body) + "</svg>")
+    svg = img(f"<svg viewBox='0 0 1000 {height}' font-family='Source Sans Pro, Segoe UI, Helvetica, Arial, sans-serif'>" + "".join(body).replace("fill='currentColor'", "fill='#64748b'")
+              .replace("rgba(127,127,127,.12)", "#94a3b8' fill-opacity='.18").replace("stroke='rgba(127,127,127,.35)'",
+              "stroke='#94a3b8'").replace("stroke='rgba(127,127,127,.22)'", "stroke='#94a3b8' stroke-opacity='.5'")
+              + "</svg>", "wv", "Each current over the past year and the swell")
     return ("<h4>〰️ The waves: each current's pull over the past year, and the swell they make together</h4>"
             "<div class='card waves'>" + svg + "<div class='foot' style='margin-top:4px'>Above the line pulls towards "
             "risk-taking, below pulls away. The swell is the Tide's score: each family's average, weighted "
@@ -336,7 +347,7 @@ def side_readings(snap: dict) -> str:
 
 def page(snap: dict, now: datetime | None = None) -> str:
     now = now or datetime.now(timezone.utc)
-    upcoming = mc.upcoming(now)
+    upcoming = mc.upcoming(now, days=35)
     warning = mc.storm_warning(now)
     stamp = snap.get("computed_at", "")[:16].replace("T", " ")
     foot = (f"<div class='foot'>Preview for review. Readings from Yahoo Finance and FRED (St. Louis Fed), updated "

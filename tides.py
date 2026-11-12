@@ -65,7 +65,7 @@ CURRENTS = (
      "a stronger dollar, usually a weight on crypto, gold and global equities", "a weaker dollar"),
     ("inflation", "Inflation", "money", "🛒", ("fred_yoy", "CPIAUCSL"), -1, 1, "pts",
      "Consumer prices, change over 12 months (monthly release)",
-     "inflation rising: pressure on the Fed to keep rates high", "inflation easing"),
+     "more pressure on the Fed to keep rates high", "less pressure on the Fed"),
     ("gold", "Gold", "havens", "🥇", ("yahoo", "GC=F"), 1, 0, "%",
      "Gold price: fear, inflation worry or a weak dollar; hurt by rising real rates",
      "gold rising", "gold falling"),

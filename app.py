@@ -12542,9 +12542,9 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
     if not _POPOUT_VIEW:
         _lattice_section()
     if wide_layout:
+        show_tides()                    # full width: Tides needs the room
         mood_col, asset_col = st.columns([split, 1 - split], gap="medium", vertical_alignment="top")
         with mood_col:
-            show_tides()
             show_market_moods(trade_crypto, trade_equities)
             # The chart asset's own sentiment sits under the market sentiments, so every
             # sentiment section is in the left column. It is filled in once the chart has
