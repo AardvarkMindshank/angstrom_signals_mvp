@@ -1,0 +1,29 @@
+# Tides against the live sources (Yahoo, FRED, CoinGecko). Run by hand: Actions → tides-probe → Run workflow.
+name: tides-probe
+on:
+  workflow_dispatch:
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -q pandas numpy requests yfinance
+      - name: Snapshot
+        run: |
+          python - <<'PY' | tee -a "$GITHUB_STEP_SUMMARY"
+          import json, tides as td, macro_calendar as mc
+          raw = td.fetch_all()
+          print("series:", {k: len(v) for k, v in raw.items()})
+          snap = td.snapshot(raw, btc_dominance=None, fear_greed=None)
+          for k, c in snap["currents"].items():
+              print(k, c["status"], c.get("value"), c.get("as_of"), c.get("band"), c.get("direction"), c.get("contribution"))
+          print("tide", {k: v for k, v in snap["tide"].items() if k not in ("history", "labels")})
+          print("sea", snap["sea"])
+          print("winds", snap["winds"])
+          print("extras", snap["extras"])
+          print("\n".join(td.summary(snap, mc.upcoming())))
+          PY
