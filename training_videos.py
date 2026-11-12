@@ -34,6 +34,12 @@ SERIES = {
         ("07-visualize-history", "Visualize History", "0:59"),
         ("08-what-followed", "What followed", "2:13"),
     ]),
+    "funnels": ("Funnels", [
+        ("f1-funnels", "Funnels", "1:29"),
+    ]),
+    "tides": ("Tides", [
+        ("t1-tides", "Tides", "1:47"),
+    ]),
     "help": ("Getting help", [
         ("a1-angstrom-assistant", "The AI Navigator (recorded as the Angstrom Assistant)", "1:03"),
     ]),

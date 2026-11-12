@@ -7417,6 +7417,7 @@ same line under the asset's name in the chart section.
     with tab_tides:
         import tides as _td
 
+        _training.link(st, "t1-tides", key="tv_tides_01")
         st.markdown("""
 **🌊 Tides is the macro layer: the big money flows that sit behind every chart.** Rates, the dollar, inflation,
 fear, credit and where money is rotating move slowly, but they set the conditions every asset trades in. Tides
@@ -7595,6 +7596,7 @@ plans from a Set or THEN box, with entries, exits and ladders.
 """)
 
     with tab_funnels:
+        _training.link(st, "f1-funnels", key="tv_funnels_01")
         st.markdown("""
 **🔻 Funnels narrow a market down in stages, by themselves.** A funnel starts from a pool (the top coins, or the
 S&P 500), checks every asset against a first Set on a long timeframe, then checks only the survivors against the

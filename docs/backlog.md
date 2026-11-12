@@ -18,8 +18,7 @@ Agreed work that is not built yet, so nothing gets forgotten between sessions. N
 - Funnel studies (how past Candidates did afterwards, on development data only).
 - Drew's exact oscillator settings against the published defaults (needs a certification run).
 - OKX perpetuals as a futures source (funding and open interest for more coins).
-- A funnel video for Help & Guides: recorded 12 Nov 2026 (f1-funnels), waiting for review; then publish and
-  add it to training_videos.SERIES and the Funnels help tab.
+- Funnel and Tides training videos: published 12 Nov 2026 (f1-funnels, t1-tides).
 
 ## Done (12 Nov 2026)
 

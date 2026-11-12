@@ -13,3 +13,5 @@
 2026-11-09_1434_d842120/07-visualize-history
 2026-11-10_0522_843357f/08-what-followed
 2026-11-10_0443_fc1d97d/a1-angstrom-assistant
+2026-11-12_1236_d124155/f1-funnels
+2026-11-12_1330_0a05a84/t1-tides
