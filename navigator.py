@@ -24,8 +24,9 @@ import tides as td
 
 PASSAGE_KIND = "passage_plan"
 
-TIDES_RULES = """Tides (the macro layer) is open with you. Its readings are below, with this person's watchlist and
-funnels. When they ask about the currents, the tide, the sea state, the winds or the macro calendar:
+TIDES_RULES = """Tides (the macro layer): its readings and the macro calendar are below, and this person's watchlist
+and funnels are in their part. When they ask about the currents, the tide, the sea state, the winds or the macro
+calendar, from any entry point:
 - Answer only from these readings and events. Quote the reading behind each statement (for example "dollar: rising,
   band high, 30-day change +2.1%"). If something is not in the readings, say so; never bring in outside news, prices
   or forecasts.
@@ -145,6 +146,34 @@ def portfolio_context(supabase, user_id: str, watchlist: dict | None) -> str:
     return "\n".join(lines)
 
 
+def market_context(snap: dict | None) -> str:
+    """The Tides part of every Navigator briefing (the same for everyone, so it is cached with the shared part)."""
+    return TIDES_RULES + "\n\n" + tides_context(snap)
+
+
+def briefing(st, supabase, user_id: str, watchlist: dict | None) -> tuple[dict | None, str, str]:
+    """(snap, market part, person part) for any Navigator question. The Tides record is read once in 10 minutes."""
+    import time
+
+    import tides
+
+    memo = st.session_state.setdefault("_memo", {})
+    hit = memo.get("navigator_tides")
+    if hit and time.time() - hit[0] < 600:
+        snap = hit[1]
+    else:
+        try:
+            snap = tides.latest(supabase)
+        except Exception:
+            snap = None
+        memo["navigator_tides"] = (time.time(), snap)
+    try:
+        mine = portfolio_context(supabase, user_id, watchlist)
+    except Exception:
+        mine = ""
+    return snap, market_context(snap), mine
+
+
 # ------------------------------------------------------------------------------------------------ the logbook
 
 def today() -> str:
@@ -193,9 +222,8 @@ def passage_plan(st, supabase, user_id: str, watchlist: dict | None, snap: dict 
     import signal_groups_inspector as gi
 
     saved = gi.saved_configs(supabase)[0] or []
-    system = advisor.system_parts(saved, user_id, "tides",
-                                  extra=TIDES_RULES + "\n\n" + tides_context(snap) + "\n\n"
-                                  + portfolio_context(supabase, user_id, watchlist))
+    system = advisor.system_parts(saved, user_id, "tides", extra=portfolio_context(supabase, user_id, watchlist),
+                                  market=market_context(snap))
     import ai_providers
 
     body = advisor.ask([], PASSAGE_REQUEST, system, max_tokens=4000, provider=provider)

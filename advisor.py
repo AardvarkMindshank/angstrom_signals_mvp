@@ -218,15 +218,24 @@ START = {
     "tides": "The person opened you from 🌊 Tides, the macro layer: expect questions about the currents, the tide, the "
              "sea state and the macro calendar first, and how they bear on their own assets, Sets and funnels.",
 }
+# Wherever you are opened from, you are the same Navigator with the same knowledge: the opening only says what to
+# expect first. Every entry point gets the app's help, the videos, the signals, the provided and own Groups and Sets,
+# the day's Tides readings and the macro calendar, and the person's watchlist and funnels.
+ANY_QUESTION = ("Whichever button opened you, answer any question about the app, the person's ideas, their "
+                "Groups, Sets, Prism scans and funnels, or the Tides readings, with the same care and depth: "
+                "everything you need is below.")
 
 
-def system_parts(saved: list[dict], user_id: str, start: str = "lattice", extra: str = "") -> tuple[str, str]:
-    """(the part that is the same for everyone, so it can be cached; the part about this person). `extra`: more about
-    this person's view, such as the day's Tides readings with their watchlist and funnels (navigator.py)."""
+def system_parts(saved: list[dict], user_id: str, start: str = "lattice", extra: str = "",
+                 market: str = "") -> tuple[str, str]:
+    """(the part that is the same for everyone, so it can be cached; the part about this person). `market`: the
+    day's Tides readings and calendar, the same for everyone (navigator.market_context). `extra`: more about this
+    person, such as their watchlist and funnels (navigator.portfolio_context)."""
     shared = "\n".join([RULES, "Help and guides (the app's own help text):", _help_text(), "",
                         "🎬 Training videos:", *_videos(), "",
-                        "Signals (name, readings and their ranges):", *_signals(), "", *_provided()])
-    mine = "\n".join([START.get(start, START["lattice"]), "", "The person's own Groups and Sets:",
+                        "Signals (name, readings and their ranges):", *_signals(), "", *_provided()]
+                       + (["", market] if market else []))
+    mine = "\n".join([START.get(start, START["lattice"]), ANY_QUESTION, "", "The person's own Groups and Sets:",
                       *_mine(saved, user_id)] + (["", extra] if extra else []))
     return shared, mine
 
@@ -451,15 +460,11 @@ def render(st, supabase, user_id: str = "", start: str = "lattice", watchlist: d
         st.caption(f"Answering with {ai_providers.label(provider)}, your choice in Settings.")
     chat = st.session_state.setdefault("advisor_chat", [])
     day = time.strftime("%Y-%m-%d")
-    extra = ""
-    snap = None
-    if start == "tides":
-        import navigator
-        import tides
+    import navigator
 
-        snap = tides.latest(supabase)
-        extra = (navigator.TIDES_RULES + "\n\n" + navigator.tides_context(snap) + "\n\n"
-                 + navigator.portfolio_context(supabase, user_id, watchlist))
+    # The same knowledge from every entry point: the day's Tides readings, and this person's watchlist and funnels.
+    snap, market, extra = navigator.briefing(st, supabase, user_id, watchlist)
+    if start == "tides":
         if auto == "passage" and not st.session_state.get("_passage_shown"):
             st.session_state["_passage_shown"] = True
             with st.spinner("Charting today's passage…"):
@@ -507,7 +512,8 @@ def render(st, supabase, user_id: str = "", start: str = "lattice", watchlist: d
             st.session_state["siggroups_saved"] = cached
         with st.spinner("Thinking…"):
             try:
-                answer = ask(chat, question.strip()[:4000], system_parts(cached[1] or [], user_id, start, extra),
+                answer = ask(chat, question.strip()[:4000],
+                             system_parts(cached[1] or [], user_id, start, extra, market=market),
                              images=images, provider=provider)
             except Exception as exc:
                 st.error(f"The Navigator couldn't answer just now ({str(exc)[:200]}).")

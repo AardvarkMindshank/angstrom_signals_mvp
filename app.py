@@ -7210,7 +7210,9 @@ because they measure different things and are never added together.
 7. **✨ AI** (top right, and beside the Lattice tabs) opens the AI Navigator in its own window: ask where
    things are, how to use them or what a reading means, or get step-by-step help building and testing an idea.
    Paste a screenshot (Ctrl+V), drop one on the window or tap 🖼 to add one, and ask what you're looking at. It
-   links the right training video when there is one. It explains; you do the clicks.
+   links the right training video when there is one. Wherever you open it from (top bar, Lattice, Tides or the
+   Passage Plan), it is the same Navigator: it knows the whole app, your watchlist, Groups, Sets and funnels, and
+   today's Tides readings, so you can ask it anything. It explains; you do the clicks.
 8. **🌊 Tides (preview)** is the macro layer: twelve currents (rates, the dollar, inflation, gold, fear, copper
    against gold, oil, credit, equities against bonds, crypto rotation), each scored against its own last 5 years.
    Together they give the **Tide** (coming in = risk-supportive, slack = mixed, going out = risk-defensive; a change

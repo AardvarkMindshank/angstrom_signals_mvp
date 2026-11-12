@@ -25,11 +25,18 @@ def test_tides_context_carries_every_current_the_winds_and_the_calendar():
     assert nv.tides_context(None) == "Tides readings: not available right now."
 
 
-def test_the_navigator_gets_tides_only_when_opened_from_tides():
-    shared, mine = advisor.system_parts([], "u1", "tides", extra=nv.TIDES_RULES)
-    assert "🌊 Tides" in mine and "never bring in outside news" in mine and "AI Navigator" in shared
-    _shared, plain = advisor.system_parts([], "u1", "app")
-    assert "Tides (the macro layer)" not in plain
+def test_every_entry_point_gets_the_same_knowledge():
+    """Wherever the Navigator is opened (top bar, Lattice, Tides, the passage plan), it is told the same things: only
+    the line about what to expect first differs."""
+    market = nv.market_context(_snap())
+    briefs = {start: advisor.system_parts([], "u1", start, extra="watchlist: Bitcoin", market=market)
+              for start in advisor.START}
+    shared = {b[0] for b in briefs.values()}
+    assert len(shared) == 1                                   # one cached part for every entry point
+    (one,) = shared
+    assert "Tides (the macro layer)" in one and "never bring in outside news" in one and "Tide:" in one
+    for start, (_s, mine) in briefs.items():
+        assert advisor.ANY_QUESTION in mine and "watchlist: Bitcoin" in mine and advisor.START[start] in mine
 
 
 class _Q:
