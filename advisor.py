@@ -251,6 +251,25 @@ def image_blocks(images: list[str] | None) -> list[dict]:
 
 def ask(history: list[dict], question: str, system, post=requests.post, images: list[str] | None = None,
         max_tokens: int = MAX_TOKENS, provider: str = "claude") -> str:
+    """The answer from the chosen AI; when another AI than Claude can't answer (no credit left, a key problem, busy),
+    Claude answers instead, with a note saying so."""
+    if provider == "claude":
+        return _ask(history, question, system, post, images, max_tokens, "claude")
+    try:
+        return _ask(history, question, system, post, images, max_tokens, provider)
+    except Exception as exc:
+        import ai_providers
+
+        if not ai_providers.available("claude"):
+            raise
+        print(f"AI Navigator: {provider} failed, Claude answered instead: {str(exc)[:200]}", flush=True)
+        text = _ask(history, question, system, post, images, max_tokens, "claude")
+        return text + (f"\n\n*({ai_providers.label(provider)} couldn't answer just now, so Claude answered "
+                       "instead.)*")
+
+
+def _ask(history: list[dict], question: str, system, post=requests.post, images: list[str] | None = None,
+         max_tokens: int = MAX_TOKENS, provider: str = "claude") -> str:
     """The Advisor's answer to `question` (with any pasted screenshots), given the conversation so far
     ([{role, content}]; earlier screenshots are not sent again). provider: which AI (ai_providers.py; the
     person's choice in Settings), Claude by default."""

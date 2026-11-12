@@ -117,3 +117,24 @@ def test_sentiment_uses_the_admins_choice_when_its_key_is_there(monkeypatch):
         assert sentiment.scoring_provider() == "grok"
     finally:
         sentiment.set_provider(None)
+
+
+def test_the_navigator_falls_back_to_claude_when_another_ai_fails(monkeypatch):
+    import advisor
+
+    monkeypatch.setenv("OPENAI_API_KEY", "o")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "k")
+
+    class Fail:
+        status_code = 429
+
+        def json(self):
+            return {"error": {"message": "You have no credits remaining."}}
+
+    def post(url, timeout, headers, data):
+        if "openai" in url:
+            return Fail()
+        return R({"content": [{"type": "text", "text": "Claude here."}], "stop_reason": "end_turn"})
+
+    out = advisor.ask([], "hi", "sys", post=post, provider="chatgpt")
+    assert out.startswith("Claude here.") and "Claude answered instead" in out
