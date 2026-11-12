@@ -196,28 +196,29 @@ def demo_passage(snap: dict, watchlist: dict) -> str:
     t, sea = snap["tide"], snap.get("sea") or {}
     name, plain, _ = td.TIDE_WORDS[t["label"]]
     fams = ", ".join(f"{td.FAMILIES[f][0].lower()} {v:+.2f}" for f, v in (t.get("families") or {}).items())
-    out = ["**⚓ Conditions**",
+    out = ["**⚓ Conditions**", "",
            f"{name} ({plain}), score {t['score']:+.2f}, held {t['held_days']} trading days. Sea "
            f"{sea.get('state', 'unknown')} ({sea.get('plain', '')}). Family pulls: {fams}.", "",
-           "**🌦️ Weather on the route**"]
+           "**🌦️ Weather on the route**", ""]
     week = [e for e in mc.upcoming(now, days=7) if e["at"] >= now]
     out += [f"- {e['short']} ({e['reference']}), {mc.when_words(e['at'], now)}: tends to move rates, the dollar "
             "and fear." for e in week] or ["- No major scheduled release in the next 7 days."]
-    out += ["", "**⛵ Your vessels**"]
+    out += ["", "**⛵ Your vessels**", ""]
+    wind_words = {"tailwind": "tailwind", "headwind": "headwind"}
     for market, names in (("crypto", ", ".join(watchlist["crypto"].values())),
                           ("equity", ", ".join(watchlist["stock"].values()))):
         w = (snap.get("winds") or {}).get(market)
         if w:
-            out.append(f"- {w['name']} ({names}): {w['wind']}, led by "
+            out.append(f"- {w['name']} ({names}): {wind_words.get(w['wind'], 'no clear wind')}, led by "
                        + ", ".join(td.SPEC[k]["name"] for k in w["drivers"]) + ".")
     extreme = [c for c in (snap.get("currents") or {}).values()
                if c.get("status") == "ok" and c.get("band") in ("very high", "very low")]
-    out += ["", "**🪨 Hazards**"]
+    out += ["", "**🪨 Hazards**", ""]
     out += [f"- {c['name']} is {c['band']} against its last 5 years ({c['score']:.0f}/100)." for c in extreme[:3]] \
         or ["- No current is at an extreme band."]
-    out += ["", "**🔭 Things to watch**",
-            f"- Expectation: the reading stays {name.lower()} for 5 more closes. A score back across ±0.20 would "
-            "show it wrong (5 trading days)."]
+    out += ["", "**🔭 Things to watch**", "",
+            f"- Expectation: the Tide stays at \"{name.lower()}\" for the next 5 closes. A score back across the "
+            "±0.20 line would show it wrong (5 trading days)."]
     return "\n".join(out)
 
 

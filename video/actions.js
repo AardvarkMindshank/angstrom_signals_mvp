@@ -661,7 +661,7 @@ module.exports = {
       await h.page.goto(h.url + "?view=advisor&from=tides&ask=passage");
       await h.page.waitForSelector("[data-testid='stChatMessage']", { timeout: 120000 }).catch(() => {});
       await h.settle();
-      await h.tip(h.page.locator("[data-testid='stChatMessage']").last(), "An example plan, written from the same readings", "above");
+      await h.tip(h.page.locator("[data-testid='stChatMessage']").first(), "An example plan, written from the same readings", "below");
     },
     note: async (h) => {
       await h.clear();
