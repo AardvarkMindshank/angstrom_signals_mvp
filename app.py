@@ -13250,7 +13250,18 @@ def show_tides() -> None:
         import lattice_panel as _lp
 
         st.html(tides_view.hero_part(snap))
-        note_col, ai_col = st.columns([5, 1], vertical_alignment="center")
+        # The note and the two AI buttons share a row when there is room; on a narrow screen the buttons wrap to a
+        # row of their own instead of squashing their labels.
+        st.markdown(
+            "<style>.st-key-tides_note_row [data-testid='stHorizontalBlock']{flex-wrap:wrap;row-gap:8px}"
+            ".st-key-tides_note_row [data-testid='stColumn']:first-child{flex:1 1 420px !important;"
+            "min-width:min(420px,100%) !important}"
+            ".st-key-tides_note_row [data-testid='stColumn']:last-child{flex:0 1 auto !important;width:auto !important;"
+            "min-width:0 !important}"
+            ".st-key-tides_note_row [data-testid='stColumn']:last-child [data-testid='stElementContainer']"
+            "{width:auto !important}</style>", unsafe_allow_html=True)
+        row = st.container(key="tides_note_row")
+        note_col, ai_col = row.columns([5, 1], vertical_alignment="center")
         with note_col:
             st.html(tides_view.note_part(snap))
         with ai_col:

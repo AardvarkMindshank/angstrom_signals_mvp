@@ -136,7 +136,7 @@ _ADVISOR_HTML = (
     "<span>AI</span></button>")
 
 _ADVISOR_CSS = """
-.ang-ai-btn{display:inline-flex;align-items:center;gap:6px;height:2.5rem;padding:0 14px;border-radius:.5rem;
+.ang-ai-btn{display:inline-flex;align-items:center;gap:6px;height:2.5rem;padding:0 14px;border-radius:.5rem;white-space:nowrap;
   border:1px solid var(--st-border-color, rgba(128,128,128,.35));background:transparent;color:inherit;font:inherit;
   cursor:pointer}
 .ang-ai-btn svg{color:#f5a524;filter:drop-shadow(0 0 2px rgba(245,165,36,.35))}
