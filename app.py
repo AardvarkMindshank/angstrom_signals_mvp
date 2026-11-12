@@ -34,6 +34,7 @@ from supabase import create_client
 # A pop-out tab shows one part of the dashboard on its own: ?view=social
 _POPOUT_SECTION_IDS = (
     "quick_snapshot",
+    "tides",
     "crypto_scores",
     "equity_scores",
     "interactive_chart",
@@ -11591,6 +11592,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
         st.caption("Click a change or a box to open that asset on the chart.")
 
     if not wide_layout:
+        show_tides()
         show_market_moods(trade_crypto, trade_equities)
 
     def sort_token(value, numeric=False):
@@ -12542,6 +12544,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
     if wide_layout:
         mood_col, asset_col = st.columns([split, 1 - split], gap="medium", vertical_alignment="top")
         with mood_col:
+            show_tides()
             show_market_moods(trade_crypto, trade_equities)
             # The chart asset's own sentiment sits under the market sentiments, so every
             # sentiment section is in the left column. It is filled in once the chart has
@@ -13207,6 +13210,34 @@ def _mood_card(spec: dict, row: dict | None) -> None:
         "(scores made before 30 Oct counted the news articles only). "
         "This is not a technical reading, and it is not advice."
     )
+
+
+@st.cache_data(ttl=6 * 3600, show_spinner="Reading the macro currents…")
+def _tides_live() -> dict:
+    """Tides worked out on the page, when the background worker has not saved a recent one."""
+    import tides
+
+    return tides.build(supabase)
+
+
+def show_tides() -> None:
+    """🌊 Tides (preview): the macro layer. The worker saves a snapshot every 6 hours (tides_snapshots); the page
+    reads the latest, and works it out itself only when none is recent."""
+    import tides
+    import tides_view
+
+    with section_expander("🌊 Tides (preview)", "tides"):
+        snap = tides.latest(supabase)
+        if tides.age_hours(snap) > 12:
+            try:
+                snap = _tides_live()
+            except Exception as exc:
+                st.info(f"Tides could not be read right now ({str(exc)[:120]}).")
+                return
+        if not snap or (snap.get("tide") or {}).get("status") != "ok":
+            st.info("Tides has not got enough data yet.")
+            return
+        st.html(tides_view.page(snap))
 
 
 def show_market_moods(trade_crypto: bool = True, trade_equities: bool = True) -> None:

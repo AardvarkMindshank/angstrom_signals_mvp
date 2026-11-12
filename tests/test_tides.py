@@ -41,7 +41,7 @@ def test_snapshot_is_complete_and_json_ready():
     assert t["status"] == "ok" and t["label"] in ("in", "slack", "out") and -1 <= t["score"] <= 1
     assert snap["sea"]["state"] in ("calm", "moderate", "rough", "storm")
     assert set(snap["winds"]) == {"crypto", "equity"}
-    assert any("Tide" in line for line in td.summary(snap))
+    assert any("tide" in line.lower() for line in td.summary(snap))
 
 
 def test_non_voting_currents_do_not_move_the_tide():
@@ -96,3 +96,15 @@ def test_calendar_and_storm_warning():
     soon = mc.upcoming(datetime(2026, 11, 12, tzinfo=timezone.utc))
     assert [e["kind"] for e in soon][:1] == ["ppi"] and mc.pennants(2) == "🚩🚩"
     assert mc.when_words(cpi["at"], cpi["at"] - timedelta(hours=5)) == "in 5 hours"
+
+
+def test_the_tide_never_reads_a_date_after_today():
+    raw = _raw()
+    future = pd.Timestamp.now().normalize() + pd.Timedelta(days=40)
+    raw["fred:CPIAUCSL"] = pd.concat([raw["fred:CPIAUCSL"], pd.Series([330.0], index=[future])])
+    snap = td.snapshot(raw)
+    assert snap["tide"]["history"][-1][0] <= pd.Timestamp.now().date().isoformat()
+    fam = snap["tide"]["families"]
+    weights = {f: td.FAMILIES[f][1] for f in fam}
+    expect = sum(fam[f] * weights[f] for f in fam) / sum(weights.values())
+    assert abs(snap["tide"]["score"] - expect) < 0.02          # today's score is all four families, not one

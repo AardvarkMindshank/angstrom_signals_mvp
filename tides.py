@@ -178,7 +178,11 @@ def series_for(key: str, raw: dict[str, pd.Series]) -> pd.Series:
         s = None if a is None or b is None or a.empty or b.empty else (a / b).dropna()
     if s is None or s.empty:
         return pd.Series(dtype=float)
-    days = pd.bdate_range(s.index.min(), max(s.index.max(), pd.Timestamp.now().normalize()))
+    today = pd.Timestamp.now().normalize()
+    s = s[s.index <= today]           # never a date ahead of today (inflation's release-date shift can run ahead)
+    if s.empty:
+        return pd.Series(dtype=float)
+    days = pd.bdate_range(s.index.min(), today)
     return s.reindex(s.index.union(days)).ffill(limit=40 if src[0] == "fred_yoy" else 5).reindex(days).dropna()
 
 
