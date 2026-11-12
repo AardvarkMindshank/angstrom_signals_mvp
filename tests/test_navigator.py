@@ -74,15 +74,15 @@ class _St:
 
 def test_passage_plan_is_written_once_a_day_and_kept(monkeypatch):
     calls = []
-    monkeypatch.setattr(advisor, "ask", lambda history, q, system, **k: calls.append((q, system)) or "PLAN")
+    monkeypatch.setattr(advisor, "ask", lambda history, q, system, **k: calls.append((q, system)) or "PLAN.")
     monkeypatch.setattr(nv, "portfolio_context", lambda *a: "This person's watchlist: Bitcoin")
     import signal_groups_inspector as gi
 
     monkeypatch.setattr(gi, "saved_configs", lambda supabase: ([], None))
     db = _DB()
     snap = _snap()
-    assert nv.passage_plan(_St, db, "u1", {}, snap) == "PLAN"
-    assert nv.passage_plan(_St, db, "u1", {}, snap) == "PLAN" and len(calls) == 1     # the second read is the logbook
+    assert nv.passage_plan(_St, db, "u1", {}, snap) == "PLAN."
+    assert nv.passage_plan(_St, db, "u1", {}, snap) == "PLAN." and len(calls) == 1     # the second read is the logbook
     q, system = calls[0]
     assert "⚓ Conditions" in q and "Expectation" in q and "No buy or sell" in q
     assert "Tides readings" in system[1] and "Bitcoin" in system[1]
