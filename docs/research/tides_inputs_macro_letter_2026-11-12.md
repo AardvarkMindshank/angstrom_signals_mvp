@@ -35,3 +35,17 @@ conclusions. Feeds the Tides brief (macro layer, debated with ChatGPT, Gemini an
 Already in the plan from 11 Nov: oil (with copper), the dollar, gold, copper/gold, equities vs bonds, credit
 spreads, the VIX, Fear & Greed on its own, crypto rotation (Bitcoin share, ETH/BTC, breadth), equity rotation
 (cyclical vs defensive, small vs large).
+
+## Decisions from the user (12 Nov 2026)
+
+- Pick out dimensions from sources like this one; do not adopt their conclusions.
+- **Gold is its own current**, not folded into risk appetite or rates (it may still be *shown* next to real rates).
+- **The macro calendar is in scope**: upcoming high-impact events, with their expected and actual results.
+- **The point is the "so what?"**: AI analysis of the key indicators and events that turns the data set into
+  actionable insights for the trader. Design questions for the brief:
+  - grounded only in the recorded Tides data and calendar (every claim traceable to a reading, no outside guesses);
+  - written for the trader's own Sets, funnels and watchlist ("what this means for your crypto longs");
+  - framed as context and risk, not buy/sell advice;
+  - kept on the record and graded afterwards, as the letter does with its "On the Record" section, so we learn
+    which kinds of insight hold up;
+  - frequency and cost (daily summary plus event-driven notes?), and which model.
