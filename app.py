@@ -3507,6 +3507,14 @@ export default function(component) {
   link.onclick = (event) => {
     if (!url) return;
     event.preventDefault();
+    // Keep me signed in: the page is left for Google, so the tick goes with it as the choice cookie (no token).
+    const keep = document.querySelector(".st-key-login_keep input[type='checkbox']");
+    if (keep) {
+      const secure = location.protocol === "https:" ? "; Secure" : "";
+      document.cookie = keep.checked
+        ? "angstrom_keep_pref=1; Path=/; Max-Age=31536000; SameSite=Lax" + secure
+        : "angstrom_keep_pref=; Path=/; Max-Age=0; SameSite=Lax" + secure;
+    }
     if (verifier) {
       try { sessionStorage.setItem("angstrom-pkce", verifier); } catch (err) {}
       try { localStorage.setItem("angstrom-pkce", verifier); } catch (err) {}
@@ -5067,6 +5075,9 @@ def _take_password_reset(google_verifier: str = "") -> None:
                 st.session_state.user = session.user
                 st.session_state.access_token = session.access_token
                 st.session_state.refresh_token = session.refresh_token
+                # Google sign-ins honour Keep me signed in too (the tick travels as the choice cookie).
+                st.session_state["_keep_signed_in"] = _keep_pref_read()
+                st.session_state["_keep_write_pending"] = True
                 st.session_state.pop("recovery_access", None)
                 st.session_state.pop("recovery_refresh", None)
                 st.session_state.pop("recovery_error", None)
@@ -5320,7 +5331,8 @@ if st.session_state.user is None:
                         keep_me = st.checkbox(
                             "Keep me signed in on this device",
                             key="login_keep",
-                            help="Stay signed in for up to 30 days, even after you close this tab. Do not tick this on a shared computer.",
+                            help="Stay signed in for up to 30 days, even after you close this tab or the app updates. Works for "
+                                 "Continue with Google too. Do not tick this on a shared computer.",
                         )
                         st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
                         submitted = st.form_submit_button("Log In", type="primary", use_container_width=True)
