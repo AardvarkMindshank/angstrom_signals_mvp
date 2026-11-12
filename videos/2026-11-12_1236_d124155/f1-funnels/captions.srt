@@ -1,0 +1,91 @@
+1
+00:00:00,000 --> 00:00:03,649
+A funnel narrows a whole market down to a short list, by itself.
+
+2
+00:00:03,699 --> 00:00:06,828
+It starts from a pool, such as the top five hundred coins,
+
+3
+00:00:06,848 --> 00:00:10,677
+and checks them in stages, from the daily chart down to the hour.
+
+4
+00:00:11,125 --> 00:00:13,452
+Funnels live in Angstrom Lattice.
+
+5
+00:00:13,502 --> 00:00:18,196
+Angstrom provides four to start from: crypto and equities, longs and shorts.
+
+6
+00:00:18,634 --> 00:00:22,625
+Each stage checks one Set, at each close of its own timeframe.
+
+7
+00:00:22,675 --> 00:00:26,793
+Only the assets that hold every stage before it are checked at the next one.
+
+8
+00:00:27,235 --> 00:00:29,668
+A provided funnel can't be changed.
+
+9
+00:00:29,718 --> 00:00:33,944
+Press Make my own copy, and your copy runs for your account, every hour.
+
+10
+00:00:34,390 --> 00:00:36,033
+In your copy, choose the pool:
+
+11
+00:00:36,053 --> 00:00:39,789
+the top fifty, a minimum daily volume, or just your watchlist.
+
+12
+00:00:39,839 --> 00:00:43,733
+By default an asset leaves a stage only after two No answers in a row,
+
+13
+00:00:43,753 --> 00:00:45,899
+so it doesn't flicker in and out.
+
+14
+00:00:46,345 --> 00:00:49,824
+Under Stages, your Sets sit on the left, as in Prism Scan.
+
+15
+00:00:49,874 --> 00:00:52,715
+Drag one onto a stage, or press plus to add a stage,
+
+16
+00:00:52,735 --> 00:00:55,016
+and pick when each stage is checked.
+
+17
+00:00:55,465 --> 00:00:59,562
+Flagged means every stage holds but the last: it's on the shortlist.
+
+18
+00:00:59,612 --> 00:01:02,110
+Candidate means every stage holds.
+
+19
+00:01:02,160 --> 00:01:04,998
+Pending means data was missing, so it waits.
+
+20
+00:01:05,454 --> 00:01:07,602
+Your funnel shows up on the dashboard:
+
+21
+00:01:07,622 --> 00:01:10,627
+as Dynamic funnel above the crypto and equity tables,
+
+22
+00:01:10,647 --> 00:01:12,773
+and as a tile in Quick Snapshot.
+
+23
+00:01:12,823 --> 00:01:15,619
+Turn on alerts to hear about new Candidates.
