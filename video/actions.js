@@ -608,6 +608,65 @@ module.exports = {
   },
 
   // ------------------------------------------------------------------------------------------ 7 · Visualize History
+  // ------------------------------------------------------------------------------------------ Funnels
+  "f1-funnels": {
+    query: "?section=prism",
+    idea: async (h) => {
+      await h.card({ kicker: "🔻 Funnels", title: "From 500 coins to a short list",
+        lines: ["Pool: the top 500 coins (or the S&P 500)",
+                "① Daily trend → ② Daily turn → ③ 12-hour → ④ 4-hour → ⑤ 1-hour",
+                "✓ Candidates: the assets that hold every stage"],
+        foot: "Checked every hour, by itself." });
+    },
+    open: async (h) => {
+      await h.clear();
+      await h.section("Funnels");
+      await h.ring(h.page.locator('[data-testid="stSelectbox"]').filter({ hasText: "Funnel" }).first());
+      await h.pick("Funnel", null);                       // open the list so the four provided funnels are seen
+    },
+    stages: async (h) => {
+      await h.clear();
+      await h.ring(h.page.locator('[data-testid="stMarkdownContainer"]').filter({ hasText: "checked at each" }));
+    },
+    copy: async (h) => {
+      await h.clear();
+      await h.press(h.page.getByRole("button", { name: "Make my own copy" }).first());
+      await h.page.waitForSelector('input[aria-label="Name"]', { timeout: 60000 }).catch(() => {});
+      await h.settle();
+      await h.top();
+    },
+    pool: async (h, dur) => {
+      await h.ring(h.page.getByText("which assets the funnel starts from").first()
+        .locator('xpath=ancestor::div[@data-testid="stVerticalBlock"][1]'));
+      await h.wait(Math.max(1500, dur * 450));
+      await h.clear();
+      await h.ring(h.page.locator('[data-testid="stRadio"]').filter({ hasText: "leaves a stage" }).first());
+    },
+    board: async (h) => {
+      await h.clear();
+      await h.press(h.page.locator("summary").filter({ hasText: "Stages (advanced)" }).first());
+      await h.page.waitForSelector(".lat.fun", { timeout: 60000 }).catch(() => {});
+      await h.settle();
+      await h.show(".lat.fun");
+      await h.ring(".lat.fun");
+    },
+    words: async (h) => {
+      await h.clear();
+      await h.card({ kicker: "Words you'll see", title: "Where an asset is",
+        lines: ["🚩 Flagged: every stage holds but the last (the shortlist)",
+                "✅ Candidate: every stage holds",
+                "❔ Pending: data was missing, so it waits"],
+        foot: "An asset that hasn't reached a stage is never counted as a No there." });
+    },
+    where: async (h) => {
+      await h.clear();
+      await h.card({ kicker: "On your dashboard", title: "Where your funnel shows up",
+        lines: ["✓ Dynamic funnel, above the crypto and equity tables",
+                "✓ A tile in Quick Snapshot: Candidates, Flagged, what changed",
+                "✓ Alerts on new Candidates, if you switch them on"],
+        foot: "A Candidate matches your conditions. It is not a recommendation to trade." });
+    },
+  },
   "07-visualize-history": {
     query: "?section=prism",
     setup: async (h) => {

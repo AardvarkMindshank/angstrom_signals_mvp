@@ -1,0 +1,51 @@
+{
+ "title": "Funnels",
+ "series": "Funnels",
+ "next": "",
+ "slug": "f1-funnels",
+ "section": "training",
+ "intro_say": "Angstrom Signals. | Funnels.",
+ "outro_say": "That's funnels. | A Candidate matches your conditions. It is not a recommendation to trade.",
+ "steps": [
+  {
+   "id": "idea",
+   "screen": "A card: from the top 500 coins to a short list",
+   "say": "A funnel narrows a whole market down to a short list, by itself. | It starts from a pool, such as the top five hundred coins, and checks them in stages, from the daily chart down to the hour."
+  },
+  {
+   "id": "open",
+   "screen": "Angstrom Lattice, Funnels",
+   "say": "Funnels live in Angstrom Lattice. | Angstrom provides four to start from: crypto and equities, longs and shorts."
+  },
+  {
+   "id": "stages",
+   "screen": "The provided crypto longs funnel and its stages",
+   "say": "Each stage checks one Set, at each close of its own timeframe. | Only the assets that hold every stage before it are checked at the next one."
+  },
+  {
+   "id": "copy",
+   "screen": "Pressing Make my own copy",
+   "say": "A provided funnel can't be changed. | Press Make my own copy, and your copy runs for your account, every hour."
+  },
+  {
+   "id": "pool",
+   "screen": "Your copy: the pool, and how an asset leaves a stage",
+   "say": "In your copy, choose the pool: the top fifty, a minimum daily volume, or just your watchlist. | By default an asset leaves a stage only after two No answers in a row, so it doesn't flicker in and out."
+  },
+  {
+   "id": "board",
+   "screen": "Stages (advanced): the Set list beside the funnel",
+   "say": "Under Stages, your Sets sit on the left, as in Prism Scan. | Drag one onto a stage, or press plus to add a stage, and pick when each stage is checked."
+  },
+  {
+   "id": "words",
+   "screen": "A card: Flagged, Candidate, Pending",
+   "say": "Flagged means every stage holds but the last: it's on the shortlist. | Candidate means every stage holds. | Pending means data was missing, so it waits."
+  },
+  {
+   "id": "where",
+   "screen": "A card: where your funnel shows up",
+   "say": "Your funnel shows up on the dashboard: as Dynamic funnel above the crypto and equity tables, and as a tile in Quick Snapshot. | Turn on alerts to hear about new Candidates."
+  }
+ ]
+}

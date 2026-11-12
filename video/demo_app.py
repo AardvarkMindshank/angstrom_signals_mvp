@@ -3,7 +3,7 @@ Demo page for training videos: the real Angstrom Lattice section with made-up ac
 database; everything saved lives in this browser session) and live prices. Not part of the dashboard.
 
 Address options (all optional):
-  ?section=groups | sets | prism     the part shown first (default prism)
+  ?section=groups | sets | prism | funnels    the part shown first (default prism)
   &seed=trend | pullback            already saved: My Trend (video 3); with pullback, also the Set from video 4
   &preset=1                         open the saved Group and Set in their editors (for quick looks)
   ?view=advisor&from=lattice|app    the ✨ Angstrom Assistant window, with example answers (DEMO_ANSWERS below)
@@ -97,6 +97,8 @@ class DemoDb:
             return Query(list(s["scans"].values()))
         if name == "set_studies":
             return Query(list(s.setdefault("studies", {}).values()))
+        if name == "funnels":                    # the funnel video: funnels made on this page
+            return Query(list(s.setdefault("funnels", {}).values()))
         return Query([])                 # run history and anything else: nothing yet
 
     def rpc(self, name, params=None):
@@ -126,6 +128,17 @@ class DemoDb:
         if name == "request_set_study":          # queued, never worked out on this page
             s.setdefault("studies", {})[params["set_hash"]] = {"set_hash": params["set_hash"], "status": "queued"}
             return Query("queued")
+        if name == "funnel_save":
+            fid = params.get("p_id") or str(uuid.uuid4())
+            s.setdefault("funnels", {})[fid] = {
+                "id": fid, "owner_id": seed.USER, "name": params["p_name"], "direction": params["p_direction"],
+                "market": params.get("p_market") or "crypto", "stages": copy.deepcopy(params["p_stages"]),
+                "flicker": params["p_flicker"], "alerts": params["p_alerts"], "paused": params["p_paused"],
+                "pool": params.get("p_pool") or {}, "stages_version": 1, "created_at": str(len(s["funnels"]))}
+            return Query(fid)
+        if name == "funnel_delete":
+            s.setdefault("funnels", {}).pop(params["p_id"], None)
+            return Query(None)
         if name == "prism_delete_scan":
             s["scans"].pop(params["p_id"], None)
             return Query(None)
