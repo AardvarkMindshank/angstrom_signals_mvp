@@ -124,6 +124,18 @@ def funnel_tiles(tiles: list[dict]) -> str:
     return "".join(out)
 
 
+def no_funnels_tile(market: str = "crypto") -> str:
+    """When the account has no funnels: one quiet tile that opens a table in Dynamic funnel, to copy a provided one."""
+    tip = ("A funnel narrows the market down in stages by itself, to a short list of Candidates. Click to open the "
+           "table in Dynamic funnel and make your own copy of a provided funnel.")
+    return (f"<button type='button' data-pick='{_e('funnel_new|' + market)}' title='{_e(tip)}' style='{_BUTTON}'>"
+            "<div class='ang-card' style='display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;"
+            "padding-top:10px;padding-bottom:10px;'>"
+            "<span style='font-weight:600;'>🔻 Your funnels</span>"
+            "<span class='ang-kicker' style='margin:0;'>none yet: a funnel narrows the market to Candidates by "
+            "itself</span><span style='margin-left:auto;opacity:.6;'>Make one ›</span></div></button>")
+
+
 def candidate_changes(before: list[str] | None, now: list[str]) -> tuple[list[str], list[str]]:
     """(new, gone) Candidates against the last visit. No last visit: nothing is new."""
     if before is None:

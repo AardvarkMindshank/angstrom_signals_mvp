@@ -44,3 +44,8 @@ def test_funnel_tiles_open_their_funnel_and_show_changes():
     assert "no change" in out and "paused" in out
     assert "Equity &lt;shorts&gt;" in out           # names are escaped
     assert sv.funnel_tiles([]) == ""
+
+
+def test_no_funnels_tile_opens_the_table_in_dynamic_funnel():
+    out = sv.no_funnels_tile("equity")
+    assert "data-pick='funnel_new|equity'" in out and "Make one" in out

@@ -11663,6 +11663,11 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                 _reveal_section("tides", "tides")
             elif raw.startswith("funnel|"):
                 _open_funnel_table(raw.split("|", 2)[1])
+            elif raw.startswith("funnel_new|"):         # no funnels yet: the table, in Dynamic funnel, to copy one
+                market = raw.split("|", 1)[1]
+                st.session_state[_FUNNEL_KEYS[market][0]] = "Dynamic funnel"
+                _reveal_section("crypto_scores" if market == "crypto" else "equity_scores", f"table-{market}")
+                st.rerun()
             elif raw:
                 _select_chart_asset(raw)
 
@@ -11674,7 +11679,8 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
         if line:
             _snapshot_click(_score_table(key="snapshot_tides", data=line, on_picked_change=lambda: None).picked)
         try:
-            tiles_html = _sv.funnel_tiles(_snapshot_funnels())
+            tiles_html = _sv.funnel_tiles(_snapshot_funnels()) or _sv.no_funnels_tile(
+                "crypto" if trade_crypto else "equity")
         except Exception as exc:
             print(f"Quick Snapshot funnels failed: {exc}")
             tiles_html = ""
@@ -13408,8 +13414,8 @@ def show_tides() -> None:
     import tides
     import tides_view
 
+    st.html("<div id='tides' style='scroll-margin-top:4.5rem;'></div>")    # before the section: the jump opens it
     with section_expander("🌊 Tides (preview)", "tides"):
-        st.html("<div id='tides' style='scroll-margin-top:4.5rem;'></div>")
         try:
             snap = _tides_snap()
         except Exception as exc:
