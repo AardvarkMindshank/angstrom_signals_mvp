@@ -1,0 +1,91 @@
+1
+00:00:00,000 --> 00:00:04,417
+Tides is the macro layer: the big money flows behind every chart.
+
+2
+00:00:04,467 --> 00:00:08,757
+Rates, the dollar, inflation, fear, credit, and where money is rotating.
+
+3
+00:00:08,807 --> 00:00:12,797
+They move slowly, but they set the conditions every asset trades in.
+
+4
+00:00:13,265 --> 00:00:15,485
+The Tide sums up twelve currents.
+
+5
+00:00:15,535 --> 00:00:20,742
+Coming in means risk-supportive. Slack means mixed. Going out means risk-defensive.
+
+6
+00:00:20,792 --> 00:00:24,142
+A new Tide only counts after five daily closes.
+
+7
+00:00:24,575 --> 00:00:29,056
+The Sea state is how rough the water is: calm, moderate, rough, or storm.
+
+8
+00:00:29,106 --> 00:00:33,161
+That's low to extreme volatility, from the VIX and Bitcoin.
+
+9
+00:00:33,609 --> 00:00:36,277
+The winds apply the currents to each market.
+
+10
+00:00:36,327 --> 00:00:40,595
+A tailwind helps longs in that market. A headwind works against them.
+
+11
+00:00:41,058 --> 00:00:45,795
+The calendar flags the big scheduled releases: the Fed, inflation, and jobs.
+
+12
+00:00:45,845 --> 00:00:49,772
+A storm warning means an event is near. It isn't a forecast.
+
+13
+00:00:50,207 --> 00:00:54,411
+The waves draw each current over time, with the swell they make together.
+
+14
+00:00:54,461 --> 00:00:57,918
+Dashed lines mark past Fed, inflation and jobs days.
+
+15
+00:00:58,369 --> 00:01:03,384
+Each current is scored against its own last five years, from very low to very high.
+
+16
+00:01:03,434 --> 00:01:08,384
+Its pull says whether it's rising, falling, or flat, and which way that pushes risk.
+
+17
+00:01:08,823 --> 00:01:13,731
+Beside the daily note, the AI Navigator answers questions about these readings.
+
+18
+00:01:13,781 --> 00:01:18,241
+Today's AI Passage Plan applies them to your own assets and funnels.
+
+19
+00:01:18,672 --> 00:01:22,445
+The plan covers the conditions, the week's events, the winds for your assets,
+
+20
+00:01:22,465 --> 00:01:24,391
+the hazards, and things to watch.
+
+21
+00:01:24,441 --> 00:01:26,789
+One plan a day, kept in your logbook.
+
+22
+00:01:27,222 --> 00:01:29,997
+Macro conditions frame risk over weeks.
+
+23
+00:01:30,047 --> 00:01:34,805
+They don't time trades, and a coin can rise on its own news while the tide goes out.
