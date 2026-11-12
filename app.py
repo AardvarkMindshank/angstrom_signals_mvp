@@ -47,7 +47,7 @@ _POPOUT_SECTION_IDS = (
     "market_sentiment_panel",
     "signal_matrix",
 )
-_POPOUT_VIEWS = ("social",) + _POPOUT_SECTION_IDS + ("lattice_panel", "advisor", "video", "help_guides")   # Lattice, the AI Advisor, videos and Help too
+_POPOUT_VIEWS = ("social",) + _POPOUT_SECTION_IDS + ("lattice_panel", "advisor", "video", "help_guides")   # Lattice, the AI Navigator, videos and Help too
 _POPOUT_VIEW = str(st.query_params.get("view") or "")
 if _POPOUT_VIEW not in _POPOUT_VIEWS:
     _POPOUT_VIEW = ""
@@ -7069,7 +7069,7 @@ with st.container(horizontal=True, vertical_alignment="center", horizontal_align
         if not _POPOUT_VIEW:
             import lattice_panel as _lp
 
-            _lp.advisor_button(st, "app", key="assistant_open")    # ✨ Angstrom Assistant: help with the whole app
+            _lp.advisor_button(st, "app", key="assistant_open")    # ✨ AI Navigator: help with the whole app
         single_layout = st.button(
             "Single column",
             key="layout_single",
@@ -7168,10 +7168,20 @@ because they measure different things and are never added together.
 6. **🧩 Angstrom Lattice** (preview), right under the chart, is your research workspace: build your own readings
    and rules from the same signals, scan your watchlist with them in **Prism**, now or on a schedule with alerts,
    and study what followed a Set's Yes in the past. See the 🧩 Lattice & Prism tab.
-7. **✨ AI** (top right, and beside the Lattice tabs) opens the Angstrom Assistant in its own window: ask where
+7. **✨ AI** (top right, and beside the Lattice tabs) opens the AI Navigator in its own window: ask where
    things are, how to use them or what a reading means, or get step-by-step help building and testing an idea.
    Paste a screenshot (Ctrl+V), drop one on the window or tap 🖼 to add one, and ask what you're looking at. It
    links the right training video when there is one. It explains; you do the clicks.
+8. **🌊 Tides (preview)** is the macro layer: twelve currents (rates, the dollar, inflation, gold, fear, copper
+   against gold, oil, credit, equities against bonds, crypto rotation), each scored against its own last 5 years.
+   Together they give the **Tide** (coming in = risk-supportive, slack = mixed, going out = risk-defensive; a change
+   counts after 5 daily closes) and, separately, the **Sea state** (calm to storm = low to extreme volatility).
+   Headwind or tailwind is shown per market. Storm warnings flag scheduled events (Fed, CPI, jobs, producer prices)
+   from 24 hours before to 24 hours after: an event is near, not a forecast. The waves show each current over time
+   (3M to 2Y), with past Fed, CPI and jobs dates as dashed lines. **✨ AI Navigator** beside the daily note answers
+   questions about the currents from the readings; **Today's AI Passage Plan** charts today's conditions, the week's
+   events and the winds for your own watchlist and funnels, with things to watch: one plan a day, kept in your
+   logbook. Descriptions, never buy or sell calls.
 """)
         st.markdown("**🎬 Training videos**: short videos with captions, about a minute or two each. Each opens in "
                     "its own window beside the app; Back, Next and Start move through a series, and 📌 Keep on top "
@@ -7366,7 +7376,7 @@ same line under the asset's name in the chart section.
         st.markdown("""
 **Angstrom Lattice** (preview) is the research workspace right under the chart. Open it and pick a part from
 the bar at the top; hover the bar for what each part does. ↗ opens it in its own window, and anything it opens on
-a chart (such as Visualize History) shows on the main window's chart. ✨ AI beside the bar opens the Assistant.
+a chart (such as Visualize History) shows on the main window's chart. ✨ AI beside the bar opens the Navigator.
 Drag the dividers between the library, the editor and the checks to give each more room. Like the rest of the app, it describes
 conditions; nothing in it is a forecast or advice.
 
@@ -7652,10 +7662,10 @@ guides** has one too: open it beside the app and read while you work.
 🧩 Angstrom Lattice across the full width, then market sentiment on the left and the chart's tools on the right.
 Drag the line between the columns to resize.
 
-**Windows of their own.** ✨ AI (the Assistant) and 🎬 training videos open in small windows beside the app, so
+**Windows of their own.** ✨ AI (the Navigator) and 🎬 training videos open in small windows beside the app, so
 they never cover what you're working on; opening another reuses the same window. In Chrome, Edge or Safari, 📌 Keep
 on top floats a video above every other window. On Windows, the free PowerToys *Always on Top* (Windows + Ctrl + T)
-keeps any window, the Assistant included, on top. On a phone they open as tabs.
+keeps any window, the Navigator included, on top. On a phone they open as tabs.
 
 **Chart height.** Drag the small bar under the chart up or down to make the price chart shorter or taller
 (the panels below keep their size). Your height is saved to your account. Double-click the bar to reset.
@@ -13237,7 +13247,20 @@ def show_tides() -> None:
         if not snap or (snap.get("tide") or {}).get("status") != "ok":
             st.info("Tides has not got enough data yet.")
             return
-        st.html(tides_view.top_part(snap))
+        import lattice_panel as _lp
+
+        st.html(tides_view.hero_part(snap))
+        note_col, ai_col = st.columns([5, 1], vertical_alignment="center")
+        with note_col:
+            st.html(tides_view.note_part(snap))
+        with ai_col:
+            _lp.advisor_button(st, "tides", key="tides_navigator", label="AI Navigator")
+            _lp.advisor_button(st, "tides", key="tides_passage", label="Today's AI Passage Plan", ask="passage",
+                               tip="📜 Today's AI Passage Plan (opens in its own window): the AI Navigator charts "
+                                   "today's conditions, the week's events and the winds for your own assets, Sets "
+                                   "and funnels, with things to watch. One plan a day, kept in your logbook. "
+                                   "Descriptions, not buy or sell calls.")
+        st.html(tides_view.strip_part(snap))
         ranges = list(tides_view.RANGES)
         saved = (prefs.get("settings") or {}).get("tides_range")
         if st.session_state.get("tides_range") not in ranges:
@@ -14408,10 +14431,12 @@ if _POPOUT_VIEW == "video":
     st.stop()
 
 if _POPOUT_VIEW == "advisor":
-    # The AI Advisor in its own window beside the app, so it never covers the pages you are working on.
+    # The AI Navigator in its own window beside the app, so it never covers the pages you are working on.
     import lattice_panel
 
-    lattice_panel.render_popout(st, supabase, str(user_id), str(st.query_params.get("from") or "lattice"))
+    lattice_panel.render_popout(st, supabase, str(user_id), str(st.query_params.get("from") or "lattice"),
+                                watchlist={"crypto": prefs.get("crypto") or {}, "stock": prefs.get("stock") or {}},
+                                auto=str(st.query_params.get("ask") or ""))
     st.stop()
 
 if _POPOUT_VIEW == "help_guides":

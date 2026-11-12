@@ -423,6 +423,21 @@ def top_part(snap: dict, now: datetime | None = None) -> str:
             + strip(upcoming, now) + WAVES_TITLE + "</div>")
 
 
+def hero_part(snap: dict, now: datetime | None = None) -> str:
+    now = now or datetime.now(timezone.utc)
+    return CSS + "<div class='tides'>" + hero(snap, mc.storm_warning(now), now) + "</div>"
+
+
+def note_part(snap: dict, now: datetime | None = None) -> str:
+    now = now or datetime.now(timezone.utc)
+    return CSS + "<div class='tides'>" + note(snap, mc.upcoming(now, days=35), now) + "</div>"
+
+
+def strip_part(snap: dict, now: datetime | None = None) -> str:
+    now = now or datetime.now(timezone.utc)
+    return "<div class='tides'>" + strip(mc.upcoming(now, days=35), now) + WAVES_TITLE + "</div>"
+
+
 def waves_part(snap: dict, range_key: str = "1Y") -> str:
     return "<div class='tides'>" + waves(snap, range_key) + "</div>"
 

@@ -1,5 +1,5 @@
 """
-✨ Angstrom Assistant (it started as the Lattice AI Advisor), phase 0: one assistant for the whole app. It answers
+✨ AI Navigator (it started as the Lattice AI Advisor, then the Angstrom Assistant), phase 0: one assistant for the whole app. It answers
 questions about where things are and how to use them, and explains in plain words how to build and test an idea in
 Lattice. Opened from the top bar it starts as the app guide; opened from Lattice, as the research coach; it answers
 either kind of question in the same conversation. Both buttons open the same window (?view=advisor&from=...).
@@ -30,7 +30,7 @@ MAX_TOKENS = 1600
 MAX_TURNS = 12                         # earlier turns are dropped from what is sent, oldest first
 DAILY_LIMIT = 60                       # questions per person per day (this browser session's count)
 
-RULES = """You are the ✨ Angstrom Assistant inside Angstrom Signals, a market research app for crypto and stocks. You
+RULES = """You are the ✨ AI Navigator inside Angstrom Signals, a market research app for crypto and stocks. You
 have two jobs, and the person can ask about either at any time:
 1. App guide: where things are and how to use them (sections, buttons, settings, alerts, watchlists, the chart,
    what a reading or score means). Answer from the Help and guides text below, which is the app's own help; when
@@ -62,7 +62,7 @@ How you answer:
 
 How Lattice works (the screens):
 - Tabs: Signal Groups, Signal Sets, Prism Scan, Strategies (coming later; nothing to build there yet). You, the
-  AI Advisor, open in your own window from the ✨ AI button beside those tabs, so the person can follow your steps
+  AI Navigator, open in your own window from the ✨ AI button beside those tabs, so the person can follow your steps
   in the app beside you.
 - A Signal is one measurement from finished candles (each has readings, listed below with their ranges).
 - Signal Groups tab: "Start from" (➕ New Group, provided starters, your own). Left panel "Signals": tap + or drag a
@@ -215,16 +215,19 @@ def _videos() -> list[str]:
 START = {
     "app": "The person opened you from the top bar of the app: expect questions about the app itself first.",
     "lattice": "The person opened you from Angstrom Lattice: expect questions about building and testing ideas first.",
+    "tides": "The person opened you from 🌊 Tides, the macro layer: expect questions about the currents, the tide, the "
+             "sea state and the macro calendar first, and how they bear on their own assets, Sets and funnels.",
 }
 
 
-def system_parts(saved: list[dict], user_id: str, start: str = "lattice") -> tuple[str, str]:
-    """(the part that is the same for everyone, so it can be cached; the part about this person)."""
+def system_parts(saved: list[dict], user_id: str, start: str = "lattice", extra: str = "") -> tuple[str, str]:
+    """(the part that is the same for everyone, so it can be cached; the part about this person). `extra`: more about
+    this person's view, such as the day's Tides readings with their watchlist and funnels (navigator.py)."""
     shared = "\n".join([RULES, "Help and guides (the app's own help text):", _help_text(), "",
                         "🎬 Training videos:", *_videos(), "",
                         "Signals (name, readings and their ranges):", *_signals(), "", *_provided()])
     mine = "\n".join([START.get(start, START["lattice"]), "", "The person's own Groups and Sets:",
-                      *_mine(saved, user_id)])
+                      *_mine(saved, user_id)] + (["", extra] if extra else []))
     return shared, mine
 
 
@@ -251,7 +254,7 @@ def ask(history: list[dict], question: str, system, post=requests.post, images: 
     ([{role, content}]; earlier screenshots are not sent again)."""
     key = api_key()
     if not key:
-        raise RuntimeError("The AI Advisor needs ANTHROPIC_API_KEY in the app's environment.")
+        raise RuntimeError("The AI Navigator needs ANTHROPIC_API_KEY in the app's environment.")
     messages = [{"role": m["role"], "content": m["content"] + (" [screenshot attached]" if m.get("images") else "")}
                 for m in history if m.get("role") in ("user", "assistant")][-2 * MAX_TURNS:]
     pictures = image_blocks(images)
@@ -389,7 +392,8 @@ def _show_images(st, images: list[str]) -> None:
             pass
 
 
-def render(st, supabase, user_id: str = "", start: str = "lattice") -> None:
+def render(st, supabase, user_id: str = "", start: str = "lattice", watchlist: dict | None = None,
+           auto: str = "") -> None:
     import time
 
     import signal_groups_inspector as gi
@@ -398,11 +402,29 @@ def render(st, supabase, user_id: str = "", start: str = "lattice") -> None:
                "trading idea in plain words and get step-by-step help building and testing it in Angstrom Lattice. "
                "It explains; you do the clicks. No buy or sell calls.")
     if not available():
-        st.info("The Angstrom Assistant isn't switched on yet: it needs an Anthropic API key in the app's settings "
+        st.info("The AI Navigator isn't switched on yet: it needs an Anthropic API key in the app's settings "
                 "(ANTHROPIC_API_KEY on Render).")
         return
     chat = st.session_state.setdefault("advisor_chat", [])
     day = time.strftime("%Y-%m-%d")
+    extra = ""
+    snap = None
+    if start == "tides":
+        import navigator
+        import tides
+
+        snap = tides.latest(supabase)
+        extra = (navigator.TIDES_RULES + "\n\n" + navigator.tides_context(snap) + "\n\n"
+                 + navigator.portfolio_context(supabase, user_id, watchlist))
+        if auto == "passage" and not st.session_state.get("_passage_shown"):
+            st.session_state["_passage_shown"] = True
+            with st.spinner("Charting today's passage…"):
+                try:
+                    plan = navigator.passage_plan(st, supabase, user_id, watchlist, snap)
+                    chat.extend([{"role": "user", "content": "📜 Today's AI Passage Plan"},
+                                 {"role": "assistant", "content": plan}])
+                except Exception as exc:
+                    st.error(f"The AI Navigator couldn't write the passage plan just now ({str(exc)[:200]}).")
     used = st.session_state.setdefault("advisor_used", {}).get(day, 0)
     for m in chat:
         with st.chat_message(m["role"], avatar="🧑" if m["role"] == "user" else ":material/auto_awesome:"):
@@ -411,6 +433,9 @@ def render(st, supabase, user_id: str = "", start: str = "lattice") -> None:
     if not chat:
         if start == "app":
             st.markdown("Try: *“Where do I change which emails I get?”* or *“What does a Stretch of +60 mean?”*")
+        elif start == "tides":
+            st.markdown("Try: *“Why is the tide going out?”* or *“What is pulling against crypto longs right now?”* "
+                        "or *“Which of my funnel Candidates face a headwind?”*")
         else:
             st.markdown("Try: *“I think price often drops a few days after a breakout on heavy volume fizzles out. "
                         "How do I check that?”*")
@@ -430,7 +455,7 @@ def render(st, supabase, user_id: str = "", start: str = "lattice") -> None:
         st.warning("Add a question to go with the screenshot, such as “what am I looking at here?”")
     if sent and question.strip():
         if used >= DAILY_LIMIT:
-            st.warning(f"That's {DAILY_LIMIT} questions today: the Assistant is resting until tomorrow.")
+            st.warning(f"That's {DAILY_LIMIT} questions today: the Navigator is resting until tomorrow.")
             return
         cached = st.session_state.get("siggroups_saved")
         if not cached or time.time() - cached[0] > 60:
@@ -438,10 +463,10 @@ def render(st, supabase, user_id: str = "", start: str = "lattice") -> None:
             st.session_state["siggroups_saved"] = cached
         with st.spinner("Thinking…"):
             try:
-                answer = ask(chat, question.strip()[:4000], system_parts(cached[1] or [], user_id, start),
+                answer = ask(chat, question.strip()[:4000], system_parts(cached[1] or [], user_id, start, extra),
                              images=images)
             except Exception as exc:
-                st.error(f"The Assistant couldn't answer just now ({str(exc)[:200]}).")
+                st.error(f"The Navigator couldn't answer just now ({str(exc)[:200]}).")
                 return
         chat.extend([{"role": "user", "content": question.strip(), "images": images[:MAX_IMAGES]},
                      {"role": "assistant", "content": answer}])

@@ -107,11 +107,14 @@ export default function(component) {
   // Beside the Lattice tabs it matches their smaller height (less padding; the icon keeps its size).
   if (button.dataset.start === "lattice") button.classList.add("compact"); else button.classList.remove("compact");
   if (data && data.tip) { button.title = data.tip; button.setAttribute("aria-label", data.tip); }
+  const word = button.querySelector("span");
+  if (word && data && data.label) word.textContent = data.label;
+  button.dataset.ask = (data && data.ask) || "";
   if (button.dataset.ready) return;
   button.dataset.ready = "1";
   button.addEventListener("click", () => {
     const address = window.location.origin + window.location.pathname + "?view=advisor&from="
-      + encodeURIComponent(button.dataset.start);
+      + encodeURIComponent(button.dataset.start) + (button.dataset.ask ? "&ask=" + encodeURIComponent(button.dataset.ask) : "");
     // One small window beside the app, shared by every ✨ button. If it is already open it is brought to the front
     // as it is, so the conversation carries on; if pop-ups are blocked, a tab.
     const left = Math.max(0, (window.screenX || 0) + (window.outerWidth || 1200) - 540);
@@ -119,7 +122,7 @@ export default function(component) {
     if (!opened) { window.open(address, "_blank"); return; }
     let blank = true;
     try { blank = !opened.location.href || opened.location.href === "about:blank"; } catch (e) { blank = false; }
-    if (blank) opened.location.href = address;
+    if (blank || button.dataset.ask) opened.location.href = address;   // a set request (the passage plan) always loads
     opened.focus();
   });
 }
@@ -143,17 +146,20 @@ _ADVISOR_CSS = """
 
 
 TIPS = {
-    "lattice": "✨ Angstrom Assistant (opens in its own window): describe a trading idea in plain words and get "
+    "lattice": "✨ AI Navigator (opens in its own window): describe a trading idea in plain words and get "
                "step-by-step help building and testing it. It also answers questions about the rest of the app. It "
                "explains; you do the clicks.",
-    "app": "✨ Angstrom Assistant (opens in its own window): ask anything about the app, such as where things are, "
+    "tides": "✨ AI Navigator (opens in its own window), with today's Tides readings, your watchlist and your funnels: "
+             "ask about the currents, the tide, the sea state or the macro calendar.",
+    "app": "✨ AI Navigator (opens in its own window): ask anything about the app, such as where things are, "
            "how to use them, or what a reading means, or get help building and testing an idea. It explains; you do "
            "the clicks.",
 }
 
 
-def advisor_button(st, start: str = "lattice", key: str = "advisor_open") -> None:
-    """A ✨ AI button: opens the Angstrom Assistant in a pop-out window, so the pages under it stay free to work on.
+def advisor_button(st, start: str = "lattice", key: str = "advisor_open", label: str = "AI", ask: str = "",
+                   tip: str = "") -> None:
+    """A ✨ AI button: opens the AI Navigator in a pop-out window, so the pages under it stay free to work on.
     Every ✨ button opens the same window; `start` says where it was opened from."""
     import html
 
@@ -161,18 +167,21 @@ def advisor_button(st, start: str = "lattice", key: str = "advisor_open") -> Non
         _ADVISOR.append(st.components.v2.component(
             "advisor_popout", html=_ADVISOR_HTML.replace("{tip}", html.escape(TIPS["lattice"], quote=True)),
             css=_ADVISOR_CSS, js=_ADVISOR_JS, isolate_styles=False))
-    _ADVISOR[0](key=key, data={"start": start, "tip": TIPS.get(start, TIPS["lattice"])})
+    _ADVISOR[0](key=key, data={"start": start, "tip": tip or TIPS.get(start, TIPS["lattice"]), "label": label,
+                               "ask": ask})
 
 
 _advisor_button = advisor_button
 
 
-def render_popout(st, supabase, user_id: str, start: str = "lattice") -> None:
-    """The Angstrom Assistant alone in its own window (?view=advisor&from=app|lattice)."""
+def render_popout(st, supabase, user_id: str, start: str = "lattice", watchlist: dict | None = None,
+                  auto: str = "") -> None:
+    """The AI Navigator alone in its own window (?view=advisor&from=app|lattice)."""
     import advisor
 
-    st.markdown("#### ✨ Angstrom Assistant")
-    advisor.render(st, supabase, user_id, start if start in advisor.START else "lattice")
+    st.markdown("#### ✨ AI Navigator")
+    advisor.render(st, supabase, user_id, start if start in advisor.START else "lattice", watchlist=watchlist,
+                   auto=auto)
 
 
 def _render(st, supabase, assets: list[tuple[str, str, str]], user_id: str) -> None:

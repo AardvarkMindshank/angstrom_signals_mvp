@@ -35,7 +35,7 @@ SERIES = {
         ("08-what-followed", "What followed", "2:13"),
     ]),
     "help": ("Getting help", [
-        ("a1-angstrom-assistant", "The Angstrom Assistant", "1:03"),
+        ("a1-angstrom-assistant", "The AI Navigator (recorded as the Angstrom Assistant)", "1:03"),
     ]),
 }
 STATE = "training_video"
