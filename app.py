@@ -7793,9 +7793,8 @@ panel, the asset on the chart, and your Groups, Sets and Prism Scans. They come 
 **Keep me signed in** (at login) remembers you on this device for 30 days. Logging out forgets it.
 
 **🤖 AI choices** (Settings): pick which AI answers as your ✨ AI Navigator and writes your Passage Plan (Claude
-by default; ChatGPT, Gemini or Grok when their keys are added). The 📰 news sentiment scores are shared by everyone,
-so an admin picks that AI for the whole app (Grok by default). *How to add an AI key* there walks an admin through
-adding a key safely, on Render and GitHub, never in a chat.
+by default; others when they are switched on). The 📰 news summaries and sentiment scores are shared by everyone, so
+the admin picks that AI for the whole app; Settings shows which one is used.
 """)
 
 
@@ -8052,12 +8051,11 @@ To use a newer model of the same AI later, add a second variable with the model 
 
 
 def _ai_settings(settings: dict) -> None:
-    """🤖 Which AI does which job (ai_providers.py): the Navigator per person, news scores for the whole app."""
+    """🤖 The person's own AI choice (the AI Navigator), and which AI the admin picked for the news scores."""
     import ai_providers as ap
 
     st.markdown("**🤖 AI choices**")
     on = [p for p in ap.PROVIDERS if ap.available(p)]
-    off = [p for p in ap.PROVIDERS if p not in on]
     label, default, _who, tip = ap.USES["navigator"]
     if on:
         saved = ap.pick("navigator", settings.get("ai_navigator"))
@@ -8067,27 +8065,33 @@ def _ai_settings(settings: dict) -> None:
         if chosen != settings.get("ai_navigator", default):
             save_account_settings({"ai_navigator": chosen})
     else:
-        st.caption(f"{label}: no AI is switched on yet.")
+        st.caption(f"{label}: not switched on yet.")
+    current = ap.app_choice(supabase, "sentiment") or ap.USES["sentiment"][1]
+    st.caption(f"📰 News summaries and sentiment scores are written by {ap.label(current)} "
+               f"({ap.model(current)}), the same for everyone.")
+
+
+def _admin_ai() -> None:
+    """Admin only: which AI writes the shared news scores, and how to add an AI key."""
+    import ai_providers as ap
+
+    st.markdown("**🤖 AI**")
+    on = [p for p in ap.PROVIDERS if ap.available(p)]
     label, default, _who, tip = ap.USES["sentiment"]
     current = ap.app_choice(supabase, "sentiment") or default
-    if str((load_profile() or {}).get("role") or "") == "admin" and on:
-        options = [p for p in on]
-        if current not in options:
-            options = [current] + options
-        picked = st.selectbox(f"{label} (admin: for everyone)", options, index=options.index(current),
-                              key="ai_sentiment", format_func=ap.label, help=tip)
-        if picked != current:
-            problem = ap.save_app_choice(supabase, "sentiment", picked)
-            if problem:
-                st.warning(problem)
-            else:
-                st.toast(f"News sentiment will be scored by {ap.label(picked)} from its next refresh.")
-                _sentiment_ai_choice.clear()
-    else:
-        st.caption(f"{label}: {ap.label(current)}, chosen for everyone by the admin.")
+    options = list(dict.fromkeys([current] + on))
+    picked = st.selectbox(f"{label}, for everyone", options, index=0, key="admin_ai_sentiment",
+                          format_func=lambda p: ap.label(p) + ("" if p in on else " (no key)"), help=tip)
+    if picked != current:
+        problem = ap.save_app_choice(supabase, "sentiment", picked)
+        if problem:
+            st.warning(problem)
+        else:
+            st.toast(f"News sentiment will be scored by {ap.label(picked)} from its next refresh.")
+            _sentiment_ai_choice.clear()
+    off = [p for p in ap.PROVIDERS if p not in on]
     if off:
-        st.caption("Not switched on yet: " + ", ".join(ap.label(p) for p in off) + ". An admin adds its key "
-                   "(see below).")
+        st.caption("Not switched on yet: " + ", ".join(ap.label(p) for p in off) + ".")
     with st.expander("How to add an AI key"):
         st.markdown(AI_KEY_STEPS)
         st.dataframe(
@@ -8763,6 +8767,8 @@ def admin_panel() -> None:
     feedback = _admin_rows("admin_feedback")
     reports = _admin_rows("admin_reports")
     with tracked_expander("Admin", "admin_panel"):
+        _admin_ai()
+        st.divider()
         if feedback is None or reports is None:
             st.caption("Admin tools are not ready yet. Run the latest supabase_rls.sql in the Supabase SQL editor.")
             return
