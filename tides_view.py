@@ -81,6 +81,15 @@ def img(svg: str, cls: str, alt: str = "") -> str:
     return f"<img class='{cls}' alt='{esc(alt)}' src='data:image/svg+xml;base64,{data}'/>"
 
 
+def pull_of(c: dict) -> tuple[str, str, str]:
+    """(word, css class, colour) for a current's pull. Flat is always neutral, so the two words never disagree."""
+    if c.get("direction") not in ("rising", "falling"):
+        return "neutral", "", "#64748b"
+    if (c.get("contribution") or 0) > 0:
+        return "risk-supportive", "pos", "#16a34a"
+    return "risk-defensive", "neg", "#dc2626"
+
+
 def esc(x) -> str:
     return html.escape(str(x), quote=True)
 
@@ -270,6 +279,10 @@ def waves(snap: dict, range_key: str = "1Y") -> str:
         return " ".join(out)
 
     swell_y = 60
+    t = snap.get("tide") or {}
+    name, plain, _ = td.TIDE_WORDS.get(t.get("label"), ("Tide", "", ""))
+    tide_state = f"{ {'in': '▲', 'out': '▼'}.get(t.get('label'), '▶') } {name.lower()} · {plain}"
+    tide_tone = {"in": "#16a34a", "out": "#dc2626"}.get(t.get("label"), "#64748b")
     body = []
     # month ticks (first trading day of each month; every other month when the range is long)
     step = 1 if days <= 130 else 2 if days <= 260 else 3
@@ -302,14 +315,17 @@ def waves(snap: dict, range_key: str = "1Y") -> str:
              f"<line x1='{x0}' x2='{x1}' y1='{swell_y}' y2='{swell_y}' stroke='#94a3b8'/>",
              f"<path d='{path(dict(hist), swell_y, 45)}' fill='none' stroke='#2563eb' stroke-width='2.5'/>",
              f"<text x='12' y='{swell_y - 4}' font-size='13' font-weight='700' fill='#64748b'>Swell = the Tide</text>",
-             f"<text x='12' y='{swell_y + 12}' font-size='11' fill='#64748b'>grey band: slack</text>"]
+             f"<text x='12' y='{swell_y + 12}' font-size='11' fill='{tide_tone}'>{esc(tide_state)}</text>"]
     colours = ("#f97316", "#10b981", "#8b5cf6", "#ec4899", "#14b8a6", "#eab308", "#64748b", "#ef4444", "#0ea5e9")
     for i, c in enumerate(cur):
         cy = top + lane * i + lane / 2
         body.append(f"<line x1='{x0}' x2='{x1}' y1='{cy}' y2='{cy}' stroke='#94a3b8' stroke-opacity='.5'/>")
         body.append(f"<path d='{path(_dated(c['wave'], all_dates), cy, 13)}' fill='none' "
                     f"stroke='{colours[i % len(colours)]}' stroke-width='1.5'/>")
-        body.append(f"<text x='12' y='{cy + 4}' font-size='12' fill='#64748b'>{esc(c['icon'])} {esc(c['name'])}</text>")
+        pull, _cls, tone = pull_of(c)
+        body.append(f"<text x='12' y='{cy - 2}' font-size='12' fill='#64748b'>{esc(c['icon'])} {esc(c['name'])}</text>")
+        body.append(f"<text x='30' y='{cy + 12}' font-size='10.5' fill='{tone}'>{ARROW[c['direction']]} "
+                    f"{esc(c['direction'])} · {pull}</text>")
     first, last = dates[0], dates[-1]
     svg = img(f"<svg viewBox='0 0 1000 {height}' font-family='Source Sans Pro, Segoe UI, Helvetica, Arial, "
               f"sans-serif'>" + "".join(body) + "</svg>", "wv",
@@ -328,14 +344,12 @@ def card(c: dict) -> str:
     if c.get("status") != "ok":
         return (f"<div class='card cur mute' title='{esc(spec['measures'])}'><div class='nm'>{esc(spec['icon'])} "
                 f"{esc(spec['name'])}</div><div class='meta'>No data right now.</div></div>")
-    contrib = c.get("contribution") or 0
-    cls = "pos" if contrib > 0.2 else "neg" if contrib < -0.2 else ""
+    pull, cls, _tone = pull_of(c)
     meaning = spec[c["direction"]] if c["direction"] in ("rising", "falling") else "little change over 30 days"
     votes = "Votes in the Tide." if c["weight"] else "Shown on its own; does not vote in the Tide."
     tip = (f"{spec['measures']}. {c['direction'].capitalize()}: {meaning}. Today's level is {c['band']} for the past "
            f"5 years (score {c['score']:.0f}/100). {votes} Change: 7 days {fmt_change(c, 'change_7')}, 30 days "
            f"{fmt_change(c)}. As of {c['as_of']}.")
-    pull = "risk-supportive" if contrib > 0.2 else "risk-defensive" if contrib < -0.2 else "neutral"
     return (f"<div class='card cur{'' if c['weight'] else ' mute'}' title='{esc(tip)}'>"
             f"<div class='top'><span class='nm'>{esc(spec['icon'])} {esc(spec['name'])}</span>"
             f"<span class='val'>{esc(fmt_value(c))}</span></div>"

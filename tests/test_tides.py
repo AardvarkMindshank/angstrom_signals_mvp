@@ -131,3 +131,11 @@ def test_waves_timeline_has_month_ticks_fed_markers_and_ranges():
             c["wave"] = [v for _d, v in c["wave"]][-260:]
     assert "<path" in base64.b64decode(re.search(r"base64,([^']+)'", tv.waves(old, "1Y")).group(1)).decode()
     assert "tides" in tv.top_part(snap) and "Navigator" in tv.top_part(snap) and "Credit" in tv.bottom_part(snap)
+
+
+def test_flat_is_always_neutral():
+    import tides_view as tv
+
+    assert tv.pull_of({"direction": "flat", "contribution": -0.4})[0] == "neutral"
+    assert tv.pull_of({"direction": "rising", "contribution": -0.6})[0] == "risk-defensive"
+    assert tv.pull_of({"direction": "falling", "contribution": 0.6})[0] == "risk-supportive"
