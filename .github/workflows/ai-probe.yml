@@ -1,0 +1,47 @@
+# One short test call to each AI whose key is in the GitHub secrets (ai_providers.py), to check the key and the model
+# name. Prints only the model, whether it answered, and the answer's first words; keys are never printed.
+# Run by hand (Actions → ai-probe → Run workflow) or by pushing the "ai-probe" branch.
+name: ai-probe
+on:
+  workflow_dispatch:
+  push:
+    branches: [ai-probe]
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -q requests
+      - name: Test each AI
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          python - <<'PY' | tee -a "$GITHUB_STEP_SUMMARY"
+          import json, requests
+          import ai_providers as ap
+          for p in ap.PROVIDERS:
+              if not ap.available(p):
+                  print(f"- {ap.label(p)}: no key in the GitHub secrets ({ap.PROVIDERS[p]['env']})")
+                  continue
+              try:
+                  text, done = ap.chat(p, "Reply with one short sentence.", [{"role": "user", "content": "Say hello and name the model you are."}], 60, timeout=60)
+                  print(f"- {ap.label(p)}: OK with model {ap.model(p)}. Answer: {text.strip()[:120]!r}")
+              except Exception as exc:
+                  print(f"- {ap.label(p)}: FAILED with model {ap.model(p)}: {str(exc)[:300]}")
+                  if p == "chatgpt":           # which models this key can use, to pick the right name
+                      r = requests.get("https://api.openai.com/v1/models", headers={"Authorization": f"Bearer {ap.key(p)}"}, timeout=30)
+                      if r.status_code == 200:
+                          ids = sorted(m["id"] for m in r.json().get("data", []) if m["id"].startswith(("gpt", "o")))
+                          print("  models this key can use:", ", ".join(ids[-40:]))
+                  if p == "claude":
+                      r = requests.get("https://api.anthropic.com/v1/models", headers={"x-api-key": ap.key(p), "anthropic-version": "2023-06-01"}, timeout=30)
+                      if r.status_code == 200:
+                          print("  models this key can use:", ", ".join(m["id"] for m in r.json().get("data", [])))
+          PY
