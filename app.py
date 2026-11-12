@@ -7438,12 +7438,13 @@ It describes conditions; it does not time trades and it never says buy or sell. 
   hours before to 24 hours after: an event is near, not a forecast of what it will do.
 """)
         st.markdown("**The twelve currents**")
-        st.dataframe(
-            pd.DataFrame([{"": c["icon"], "Current": c["name"], "Family": _td.FAMILIES[c["family"]][0],
-                           "What it measures": c["measures"],
-                           "Votes in the Tide": "yes" if c["weight"] else "shown only"}
-                          for c in _td.SPEC.values()]),
-            hide_index=True, use_container_width=True)
+        # A plain table (not a data grid): it follows the light or dark theme, shows every row without scrolling,
+        # and wraps the longer descriptions.
+        st.markdown(
+            "| Current | Family | What it measures | Votes in the Tide |\n|---|---|---|---|\n"
+            + "\n".join(f"| {c['icon']} **{c['name']}** | {_td.FAMILIES[c['family']][2]} {_td.FAMILIES[c['family']][0]} "
+                        f"| {c['measures'].replace('|', '/')} | {'✅ yes' if c['weight'] else 'shown only'} |"
+                        for c in _td.SPEC.values()))
         fam = ", ".join(f"{icon} {name} {weight:.0%}" for name, weight, icon in _td.FAMILIES.values())
         st.markdown(f"""
 **How each current is read** (fixed rules, the same for everyone)
