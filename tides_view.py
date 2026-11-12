@@ -258,7 +258,7 @@ def waves(snap: dict, range_key: str = "1Y") -> str:
         return ""
     dates = [d for d, _v in hist]
     all_dates = [d for d, _v in (snap.get("tide") or {}).get("history") or []]
-    x0, x1, lane, top = 170, 980, 34, 110
+    x0, x1, lane, top = 170, 980, 34, 140
     rows_bottom = top + lane * len(cur)
     height = rows_bottom + 46
     n = len(dates)
@@ -278,7 +278,7 @@ def waves(snap: dict, range_key: str = "1Y") -> str:
             pen = "L"
         return " ".join(out)
 
-    swell_y = 60
+    swell_y = 92
     t = snap.get("tide") or {}
     name, plain, _ = td.TIDE_WORDS.get(t.get("label"), ("Tide", "", ""))
     tide_state = f"{ {'in': '▲', 'out': '▼'}.get(t.get('label'), '▶') } {name.lower()} · {plain}"
@@ -297,19 +297,21 @@ def waves(snap: dict, range_key: str = "1Y") -> str:
         seen.append((i, d))
     for i, d in seen:
         label = MONTHS[int(d[5:7]) - 1] + (f" '{d[2:4]}" if d[5:7] == "01" or i == seen[0][0] else "")
-        body.append(f"<line x1='{X(i):.1f}' x2='{X(i):.1f}' y1='30' y2='{rows_bottom}' stroke='#94a3b8' "
+        body.append(f"<line x1='{X(i):.1f}' x2='{X(i):.1f}' y1='48' y2='{rows_bottom}' stroke='#94a3b8' "
                     f"stroke-opacity='.25'/>")
         body.append(f"<text x='{X(i):.1f}' y='{rows_bottom + 18}' font-size='12' text-anchor='middle' "
                     f"fill='#64748b'>{label}</text>")
-    # past Fed decisions
+    # past Fed decisions, CPI and jobs releases: one colour and one label row each, so they never pile up
+    marks = {"fomc": ("Fed", "#dc2626", 12), "cpi": ("CPI", "#d97706", 26), "jobs": ("Jobs", "#7c3aed", 40)}
     for e in mc.events():
         d = e["at"].date().isoformat()
-        if e["kind"] != "fomc" or d not in pos:
+        if e["kind"] not in marks or d not in pos:
             continue
+        word, colour, row = marks[e["kind"]]
         x = X(pos[d])
-        body.append(f"<line x1='{x:.1f}' x2='{x:.1f}' y1='22' y2='{rows_bottom}' stroke='#dc2626' "
-                    f"stroke-opacity='.55' stroke-dasharray='3 4'/>")
-        body.append(f"<text x='{x:.1f}' y='18' font-size='11' text-anchor='middle' fill='#dc2626'>Fed</text>")
+        body.append(f"<line x1='{x:.1f}' x2='{x:.1f}' y1='{row + 4}' y2='{rows_bottom}' stroke='{colour}' "
+                    f"stroke-opacity='.45' stroke-dasharray='3 4'/>")
+        body.append(f"<text x='{x:.1f}' y='{row}' font-size='10' text-anchor='middle' fill='{colour}'>{word}</text>")
     body += [f"<rect x='{x0}' y='{swell_y - 0.2 * 45:.1f}' width='{x1 - x0}' height='{0.4 * 45:.1f}' "
              f"fill='#94a3b8' fill-opacity='.18'/>",
              f"<line x1='{x0}' x2='{x1}' y1='{swell_y}' y2='{swell_y}' stroke='#94a3b8'/>",
@@ -333,7 +335,7 @@ def waves(snap: dict, range_key: str = "1Y") -> str:
     return ("<div class='card waves'>" + svg + "<div class='foot' style='margin-top:4px'>Above a lane's line pulls "
             "towards risk-taking, below pulls away. The swell is the Tide's score: each family's average, weighted "
             "(money and rates 30%, growth and credit 30%, safe havens 20%, rotation 20%); the grey band is slack. "
-            "Red dashes mark Fed rate decisions. Drawn from the readings, nothing added.</div></div>")
+            "Dashed lines mark past releases: red Fed rate decisions, amber CPI inflation, purple jobs reports. Drawn from the readings, nothing added.</div></div>")
 
 
 WAVES_TITLE = "<h4>〰️ The waves: each current's pull, and the swell they make together</h4>"

@@ -123,6 +123,7 @@ def test_waves_timeline_has_month_ticks_fed_markers_and_ranges():
         out = tv.waves(snap, key)
         svg = base64.b64decode(re.search(r"base64,([^']+)'", out).group(1)).decode()
         sizes[key] = svg.count(">Fed<")
+        assert svg.count(">CPI<") >= 2 and svg.count(">Jobs<") >= 2
         assert re.search(r">(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)( \d\d)?<", svg)
     assert sizes["2Y"] >= sizes["1Y"] >= sizes["3M"] and sizes["1Y"] >= 6        # about 8 Fed meetings a year
     old = json.loads(json.dumps(snap))
