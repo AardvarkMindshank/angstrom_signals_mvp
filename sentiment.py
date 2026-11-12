@@ -35,6 +35,22 @@ _HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; SignalsDashboard/1.0)"}
 _BUSY_UNTIL: dict[str, float] = {}
 _SCORE_CACHE: dict[str, tuple[float, dict]] = {}
 _KEY_REJECTED = False
+_PROVIDER: str | None = None            # the admin's choice (ai_providers.py, app_settings); None = Grok
+
+
+def set_provider(provider: str | None) -> None:
+    """Which AI scores headlines from now on (the page and the worker read the admin's choice and set it)."""
+    global _PROVIDER
+    _PROVIDER = provider or None
+
+
+def scoring_provider() -> str:
+    """The AI that will score: the admin's choice when its key is there, else Grok."""
+    import ai_providers
+
+    if _PROVIDER and _PROVIDER != "grok" and ai_providers.available(_PROVIDER):
+        return _PROVIDER
+    return "grok"
 
 
 def _api_key() -> str:
@@ -179,7 +195,10 @@ def fetch_market_headlines(query: str, limit: int = 8) -> list[dict]:
 
 
 def sentiment_ready() -> bool:
-    """True when an xAI key is available. Copies a Streamlit secret into the environment once."""
+    """True when an AI key for scoring is available (the admin's choice, or xAI for Grok). Copies a Streamlit
+    secret into the environment once."""
+    if scoring_provider() != "grok":
+        return True
     if (os.getenv("XAI_API_KEY") or "").strip():
         return True
     try:
@@ -643,8 +662,39 @@ def _scored_report(parsed: dict, headlines: list[dict]) -> dict | None:
     }
 
 
+def _summarize_with(provider: str, query: str, headlines: list[dict], prompt: str) -> dict:
+    """The score from another AI than Grok (the admin's choice): the same prompt and the same reading of the reply."""
+    import ai_providers
+
+    try:
+        text, _done = ai_providers.chat(provider, "You score headlines and reply with one JSON object only.",
+                                        [{"role": "user", "content": prompt}], 1800, json_only=True, timeout=60)
+    except Exception as exc:
+        words = str(exc)
+        print(f"{ai_providers.label(provider)} did not return a score: {words[:200]}", flush=True)
+        if " 401" in words or " 403" in words:
+            return {"ok": False, "reason": "bad_key"}
+        _BUSY_UNTIL[query] = time.time() + 60
+        return {"ok": False, "reason": "model_busy"}
+    for parsed in reversed(_json_objects(text)):
+        read = _read_parsed(parsed, len(headlines))
+        if read.get("ok"):
+            report = _scored_report(read, headlines)
+            if report:
+                report["model"] = f"{provider}:{ai_providers.model(provider)}"
+                _BUSY_UNTIL.pop(query, None)
+                return report
+    print(f"{ai_providers.label(provider)} gave no usable score.", flush=True)
+    return {"ok": False, "reason": "model_error"}
+
+
 def _summarize(query: str, headlines: list[dict], prompt: str | None = None) -> dict:
     global _KEY_REJECTED
+    provider = scoring_provider()
+    if provider != "grok":
+        if time.time() < _BUSY_UNTIL.get(query, 0):
+            return {"ok": False, "reason": "model_busy"}
+        return _summarize_with(provider, query, headlines, prompt or _prompt(query, headlines))
     key = _api_key()
     if not key:
         return {"ok": False, "reason": "missing_key"}

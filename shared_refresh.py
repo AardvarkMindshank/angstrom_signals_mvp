@@ -232,8 +232,15 @@ def refresh_due_sentiment(supabase, catalog: dict) -> None:
     watchlist does not hold up the price and alert pass. A run started with
     FORCE_MARKET_MOOD also rewrites the crypto and stock reports immediately.
     """
+    try:                                # the admin's choice of AI for the scores (ai_providers.py)
+        import ai_providers
+        import sentiment as _sentiment
+
+        _sentiment.set_provider(ai_providers.app_choice(supabase, "sentiment"))
+    except Exception as exc:
+        print(f"Sentiment AI choice not read: {exc}")
     if not sentiment_ready():
-        print("Shared sentiment skipped: set the XAI_API_KEY secret for the background worker.")
+        print("Shared sentiment skipped: set the XAI_API_KEY secret (or the chosen AI's key) for the background worker.")
         return
     slots = SENTIMENT_BATCH
     force_moods = _force_market_mood()

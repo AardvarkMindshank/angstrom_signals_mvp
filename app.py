@@ -5136,6 +5136,21 @@ if "data_nonce" not in st.session_state:
 
 supabase = get_supabase()
 
+
+@st.cache_data(ttl=300, show_spinner=False)
+def _sentiment_ai_choice() -> str | None:
+    import ai_providers
+
+    return ai_providers.app_choice(supabase, "sentiment")
+
+
+try:
+    import sentiment as _sentiment_mod
+
+    _sentiment_mod.set_provider(_sentiment_ai_choice())
+except Exception:
+    pass
+
 if st.session_state.user is not None and _session_is_barred():
     _end_barred_session()
 
@@ -7773,6 +7788,11 @@ only that section.
 panel, the asset on the chart, and your Groups, Sets and Prism Scans. They come back on any device.
 
 **Keep me signed in** (at login) remembers you on this device for 30 days. Logging out forgets it.
+
+**🤖 AI choices** (Settings): pick which AI answers as your ✨ AI Navigator and writes your Passage Plan (Claude
+by default; ChatGPT, Gemini or Grok when their keys are added). The 📰 news sentiment scores are shared by everyone,
+so an admin picks that AI for the whole app (Grok by default). *How to add an AI key* there walks an admin through
+adding a key safely, on Render and GitHub, never in a chat.
 """)
 
 
@@ -8009,6 +8029,73 @@ def _signals_info_popover() -> None:
 
 
 
+AI_KEY_STEPS = """
+**Adding an AI key** (an admin does this once per AI; a key is like a password, so it never goes in a chat,
+an email or the app itself):
+
+1. **Get the key** from the AI's own site (links below). Sign in, create an API key, and copy it. Most charge
+   per use, so set a monthly spending limit there first.
+2. **Render (the app):** open the Render dashboard → the *angstrom* web service → **Environment** →
+   **Add Environment Variable**. Name it exactly as listed below (for example `OPENAI_API_KEY`), paste the key as
+   the value, and **Save changes**. Render restarts the app with it (a minute or two).
+3. **GitHub (the background worker, which writes the shared news scores):** open the repository on GitHub →
+   **Settings** → **Secrets and variables** → **Actions** → **New repository secret**. Same name, same key.
+   Only needed for an AI that scores news; the AI Navigator runs in the app.
+4. Come back here: the AI shows as switched on, and can be picked.
+
+To use a newer model of the same AI later, add a second variable with the model name (for example
+`OPENAI_MODEL` = the name from its website); without it, the model listed here is used.
+"""
+
+
+def _ai_settings(settings: dict) -> None:
+    """🤖 Which AI does which job (ai_providers.py): the Navigator per person, news scores for the whole app."""
+    import ai_providers as ap
+
+    st.markdown("**🤖 AI choices**")
+    on = [p for p in ap.PROVIDERS if ap.available(p)]
+    off = [p for p in ap.PROVIDERS if p not in on]
+    label, default, _who, tip = ap.USES["navigator"]
+    if on:
+        saved = ap.pick("navigator", settings.get("ai_navigator"))
+        if st.session_state.get("ai_navigator") not in on:
+            st.session_state["ai_navigator"] = saved if saved in on else on[0]
+        chosen = st.selectbox(label, on, key="ai_navigator", format_func=ap.label, help=tip)
+        if chosen != settings.get("ai_navigator", default):
+            save_account_settings({"ai_navigator": chosen})
+    else:
+        st.caption(f"{label}: no AI is switched on yet.")
+    label, default, _who, tip = ap.USES["sentiment"]
+    current = ap.app_choice(supabase, "sentiment") or default
+    if str((load_profile() or {}).get("role") or "") == "admin" and on:
+        options = [p for p in on]
+        if current not in options:
+            options = [current] + options
+        picked = st.selectbox(f"{label} (admin: for everyone)", options, index=options.index(current),
+                              key="ai_sentiment", format_func=ap.label, help=tip)
+        if picked != current:
+            problem = ap.save_app_choice(supabase, "sentiment", picked)
+            if problem:
+                st.warning(problem)
+            else:
+                st.toast(f"News sentiment will be scored by {ap.label(picked)} from its next refresh.")
+                _sentiment_ai_choice.clear()
+    else:
+        st.caption(f"{label}: {ap.label(current)}, chosen for everyone by the admin.")
+    if off:
+        st.caption("Not switched on yet: " + ", ".join(ap.label(p) for p in off) + ". An admin adds its key "
+                   "(see below).")
+    with st.expander("How to add an AI key"):
+        st.markdown(AI_KEY_STEPS)
+        st.dataframe(
+            pd.DataFrame([{"AI": ap.label(p), "Secret name": spec["env"], "Model (secret to change it)":
+                           f"{ap.model(p)} ({spec['model_env']})", "Get a key": spec["keys_at"],
+                           "Status": "✅ on" if p in on else "not yet"}
+                          for p, spec in ap.PROVIDERS.items()]),
+            hide_index=True, use_container_width=True,
+            column_config={"Get a key": st.column_config.LinkColumn("Get a key")})
+
+
 with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
     if "show_reasons" not in st.session_state:
         st.session_state.show_reasons = bool(settings.get("show_reasons", True))
@@ -8093,6 +8180,8 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
             "on keep running."
         ),
     )
+    st.divider()
+    _ai_settings(settings)
     st.divider()
     st.markdown("**UI pop-out options**")
     if "popouts_close_on_logout" not in st.session_state:
@@ -14648,7 +14737,8 @@ if _POPOUT_VIEW == "advisor":
 
     lattice_panel.render_popout(st, supabase, str(user_id), str(st.query_params.get("from") or "lattice"),
                                 watchlist={"crypto": prefs.get("crypto") or {}, "stock": prefs.get("stock") or {}},
-                                auto=str(st.query_params.get("ask") or ""))
+                                auto=str(st.query_params.get("ask") or ""),
+                                provider=str((prefs.get("settings") or {}).get("ai_navigator") or "claude"))
     st.stop()
 
 if _POPOUT_VIEW == "help_guides":

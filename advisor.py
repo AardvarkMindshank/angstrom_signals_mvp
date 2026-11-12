@@ -25,7 +25,7 @@ import os
 import requests
 
 API_URL = "https://api.anthropic.com/v1/messages"
-MODEL = "claude-sonnet-5-5"            # fast and capable; a model choice in Settings comes later
+MODEL = "claude-sonnet-5-5"            # Claude, the default; other AIs via ai_providers.py (Settings)
 MAX_TOKENS = 2500                      # an answer that reaches this is continued once (never cut off silently)
 MAX_TURNS = 12                         # earlier turns are dropped from what is sent, oldest first
 DAILY_LIMIT = 60                       # questions per person per day (this browser session's count)
@@ -250,12 +250,16 @@ def image_blocks(images: list[str] | None) -> list[dict]:
 
 
 def ask(history: list[dict], question: str, system, post=requests.post, images: list[str] | None = None,
-        max_tokens: int = MAX_TOKENS) -> str:
+        max_tokens: int = MAX_TOKENS, provider: str = "claude") -> str:
     """The Advisor's answer to `question` (with any pasted screenshots), given the conversation so far
-    ([{role, content}]; earlier screenshots are not sent again)."""
-    key = api_key()
+    ([{role, content}]; earlier screenshots are not sent again). provider: which AI (ai_providers.py; the
+    person's choice in Settings), Claude by default."""
+    import ai_providers
+
+    key = api_key() if provider == "claude" else ai_providers.key(provider)
     if not key:
-        raise RuntimeError("The AI Navigator needs ANTHROPIC_API_KEY in the app's environment.")
+        raise RuntimeError(f"The AI Navigator needs {ai_providers.PROVIDERS[provider]['env']} in the app's "
+                           "environment.")
     messages = [{"role": m["role"], "content": m["content"] + (" [screenshot attached]" if m.get("images") else "")}
                 for m in history if m.get("role") in ("user", "assistant")][-2 * MAX_TURNS:]
     pictures = image_blocks(images)
@@ -265,6 +269,9 @@ def ask(history: list[dict], question: str, system, post=requests.post, images: 
         system = [{"type": "text", "text": system[0], "cache_control": {"type": "ephemeral"}},
                   {"type": "text", "text": system[1]}]
     def call(msgs):
+        if provider != "claude":
+            text, done = ai_providers.chat(provider, system, msgs, max_tokens, post=post)
+            return text, None if done else "max_tokens"
         response = post(API_URL, timeout=120, headers={
             "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json"},
             data=json.dumps({"model": MODEL, "max_tokens": max_tokens, "system": system, "messages": msgs}))
@@ -406,18 +413,23 @@ def _show_images(st, images: list[str]) -> None:
 
 
 def render(st, supabase, user_id: str = "", start: str = "lattice", watchlist: dict | None = None,
-           auto: str = "") -> None:
+           auto: str = "", provider: str = "claude") -> None:
     import time
+
+    import ai_providers
 
     import signal_groups_inspector as gi
 
     st.caption("Ask anything about the app: where things are, how to use them, what a reading means. Or describe a "
                "trading idea in plain words and get step-by-step help building and testing it in Angstrom Lattice. "
                "It explains; you do the clicks. No buy or sell calls.")
-    if not available():
-        st.info("The AI Navigator isn't switched on yet: it needs an Anthropic API key in the app's settings "
-                "(ANTHROPIC_API_KEY on Render).")
+    provider = ai_providers.pick("navigator", provider)
+    if not ai_providers.available(provider):
+        st.info("The AI Navigator isn't switched on yet: it needs an AI key in the app's settings "
+                "(ANTHROPIC_API_KEY on Render for Claude).")
         return
+    if provider != "claude":
+        st.caption(f"Answering with {ai_providers.label(provider)}, your choice in Settings.")
     chat = st.session_state.setdefault("advisor_chat", [])
     day = time.strftime("%Y-%m-%d")
     extra = ""
@@ -433,7 +445,7 @@ def render(st, supabase, user_id: str = "", start: str = "lattice", watchlist: d
             st.session_state["_passage_shown"] = True
             with st.spinner("Charting today's passage…"):
                 try:
-                    plan = navigator.passage_plan(st, supabase, user_id, watchlist, snap)
+                    plan = navigator.passage_plan(st, supabase, user_id, watchlist, snap, provider=provider)
                     chat.extend([{"role": "user", "content": "📜 Today's AI Passage Plan"},
                                  {"role": "assistant", "content": plan}])
                 except Exception as exc:
@@ -477,7 +489,7 @@ def render(st, supabase, user_id: str = "", start: str = "lattice", watchlist: d
         with st.spinner("Thinking…"):
             try:
                 answer = ask(chat, question.strip()[:4000], system_parts(cached[1] or [], user_id, start, extra),
-                             images=images)
+                             images=images, provider=provider)
             except Exception as exc:
                 st.error(f"The Navigator couldn't answer just now ({str(exc)[:200]}).")
                 return

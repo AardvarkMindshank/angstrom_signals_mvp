@@ -175,13 +175,13 @@ _advisor_button = advisor_button
 
 
 def render_popout(st, supabase, user_id: str, start: str = "lattice", watchlist: dict | None = None,
-                  auto: str = "") -> None:
+                  auto: str = "", provider: str = "claude") -> None:
     """The AI Navigator alone in its own window (?view=advisor&from=app|lattice)."""
     import advisor
 
     st.markdown("#### ✨ AI Navigator")
     advisor.render(st, supabase, user_id, start if start in advisor.START else "lattice", watchlist=watchlist,
-                   auto=auto)
+                   auto=auto, provider=provider)
 
 
 def _render(st, supabase, assets: list[tuple[str, str, str]], user_id: str) -> None:

@@ -180,7 +180,8 @@ def complete(body: str) -> bool:
     return end.endswith((".", "!", "?", ")", "”", "\""))
 
 
-def passage_plan(st, supabase, user_id: str, watchlist: dict | None, snap: dict | None, fresh: bool = False) -> str:
+def passage_plan(st, supabase, user_id: str, watchlist: dict | None, snap: dict | None, fresh: bool = False,
+                 provider: str = "claude") -> str:
     """Today's plan: from the logbook when already written today, else written now (and saved)."""
     import advisor
 
@@ -195,7 +196,10 @@ def passage_plan(st, supabase, user_id: str, watchlist: dict | None, snap: dict 
     system = advisor.system_parts(saved, user_id, "tides",
                                   extra=TIDES_RULES + "\n\n" + tides_context(snap) + "\n\n"
                                   + portfolio_context(supabase, user_id, watchlist))
-    body = advisor.ask([], PASSAGE_REQUEST, system, max_tokens=4000)
-    if not save_plan(supabase, user_id, body, snap, advisor.MODEL):
+    import ai_providers
+
+    body = advisor.ask([], PASSAGE_REQUEST, system, max_tokens=4000, provider=provider)
+    used = advisor.MODEL if provider == "claude" else f"{provider}:{ai_providers.model(provider)}"
+    if not save_plan(supabase, user_id, body, snap, used):
         st.session_state.setdefault("_passage_plan", {})[today()] = body
     return body
