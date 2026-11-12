@@ -107,6 +107,64 @@ def _report_day_index(times_local: pd.DatetimeIndex, day) -> int | None:
     return None
 
 
+# Macro events (macro_calendar.py) as dashed lines: the same colours and label rows as the Tides waves.
+EVENT_MARKS = {"fomc": ("Fed", "#dc2626", 16), "cpi": ("CPI", "#d97706", 30), "jobs": ("Jobs", "#7c3aed", 44)}
+_STEP = {"1h": pd.Timedelta(hours=1), "4h": pd.Timedelta(hours=4), "12h": pd.Timedelta(hours=12),
+         "1D": pd.Timedelta(days=1), "1W": pd.Timedelta(days=7)}
+
+
+def event_lines(index: pd.DatetimeIndex, interval: str, kind: str, events, ahead_days: int = 14) -> tuple[list, int]:
+    """([vline], bars to leave on the right) for Fed, CPI and jobs events on this chart. A past event sits on the
+    candle that contains it; an upcoming one (within two weeks) is placed past the last candle, labelled with its
+    date. Equities: the event lands on the trading day it moves (a release before the open moves that day)."""
+    if not len(index):
+        return [], 0
+    idx = index.tz_convert("UTC") if index.tz is not None else index.tz_localize("UTC")
+    daily = interval in ("1D", "1W")
+    zone = "America/New_York" if kind == "equity" else "UTC"
+    if daily:       # compare calendar days, in the market's own time zone
+        keys = idx.tz_convert(zone).tz_localize(None).normalize()
+    else:
+        keys = idx
+    last = idx[-1]
+    step = _STEP.get(interval, pd.Timedelta(days=1))
+    now = pd.Timestamp.now(tz="UTC")
+    out, ahead_max = [], 0
+    for e in events:
+        mark = EVENT_MARKS.get(e.get("kind"))
+        if not mark:
+            continue
+        name, colour, row = mark
+        at = pd.Timestamp(e["at"]).tz_convert("UTC")
+        key = at.tz_convert(zone).tz_localize(None).normalize() if daily else at
+        if key < keys[0]:
+            continue
+        if at <= now:                    # happened: on the candle that holds it
+            pos = int(np.searchsorted(keys.values, key.to_datetime64(), side="right")) - 1
+            if pos >= 0:
+                out.append({"index": pos, "color": colour, "style": "dashed", "width": 1, "label": name,
+                            "label_y": row, "event": True})
+            continue
+        if (at - now) > pd.Timedelta(days=ahead_days):
+            continue
+        if kind == "equity" and not daily:
+            continue                     # session candles: no reliable count of candles ahead
+        if kind == "equity" and interval == "1D":
+            ahead = int(np.busday_count(keys[-1].date(), key.date()))
+        elif daily:
+            ahead = int(math.ceil((key - keys[-1]) / step))
+        else:
+            ahead = int(math.ceil((at - last) / step))
+        if ahead <= 0:                   # in the candle still forming
+            out.append({"index": len(idx) - 1, "color": colour, "style": "dashed", "width": 1.5,
+                        "label": f"{name} {at:%d %b}", "label_y": row, "event": True})
+            continue
+        out.append({"index": len(idx) - 1 + ahead, "color": colour, "style": "dashed", "width": 1.5,
+                    "label": f"{name} {at:%d %b}", "label_y": row, "event": True})
+        ahead_max = max(ahead_max, ahead)
+    return out, (ahead_max + max(2, ahead_max // 10)) if ahead_max else 0
+
+
 def build_payload(
     df: pd.DataFrame,
     layout: dict,
@@ -124,6 +182,7 @@ def build_payload(
     liquidation: dict | None = None,
     source: str = "",
     title: str = "",
+    events=(),
 ) -> dict:
     """Everything the browser needs to draw one chart. `df` holds candles with indicators
     and a `forming` column (True for an unfinished last candle)."""
@@ -246,6 +305,11 @@ def build_payload(
                 vlines.append({"index": len(df) - 1 + ahead, "color": "#f59e0b", "style": "dashed", "width": 2,
                                "label": f"Earnings {target:%d %b}"})
                 right_offset = ahead + max(3, ahead // 10)
+
+    if events:
+        marks, extra = event_lines(df.index, interval, kind, events)
+        vlines += marks
+        right_offset = max(right_offset, extra)
 
     # Liquidation levels: brighter and thicker where more money would be force-closed.
     price_lines: list[dict] = []

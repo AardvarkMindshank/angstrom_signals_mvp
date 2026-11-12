@@ -3892,8 +3892,15 @@ def _band_payload(band_set, asset_type: str, asset_key: str, frame: pd.DataFrame
                        f"{span_list[0][0][:4]}), amber = Unknown" + (", red = No" if show_no else ""))}
 
 
+def _chart_events() -> list[dict]:
+    """Fed, CPI and jobs events for the chart's dashed lines (macro_calendar.py)."""
+    import macro_calendar as mc
+
+    return [e for e in mc.events() if e.get("kind") in ("fomc", "cpi", "jobs")]
+
+
 def _tv_chart(asset_type, asset_key, title, layout, tv, interval, range_key, price_px,
-              liq_record, show_earnings, stock_watchlist, band_set=None) -> None:
+              liq_record, show_earnings, stock_watchlist, band_set=None, show_events=False) -> None:
     """Draw the TradingView chart from candles already loaded by _tv_candles."""
     frame = tv["frame"]
     bands = _band_payload(band_set, asset_type, asset_key, frame)
@@ -3916,6 +3923,7 @@ def _tv_chart(asset_type, asset_key, title, layout, tv, interval, range_key, pri
         price_px=price_px, dark=_active_theme() == "dark",
         past_reports=past_reports, next_report=next_report,
         liquidation=liq_record, source=tv.get("source") or "", title=title,
+        events=_chart_events() if show_events else (),
     )
     if bands:
         payload["zones"] = bands["colors"]
@@ -7287,6 +7295,9 @@ The icon row adds more:
   red below the price for longs, green above for shorts. Brighter means more money.
 - **CoinGlass liquidation heatmap ↗** (crypto), under the icons, opens CoinGlass's own heatmap in a new tab.
 - **Overlay** draws RSI, Stochastic and ADX on the price chart; **earnings dates** (stocks) mark report days.
+- **Fed, CPI and jobs days** draws dashed lines on the big scheduled US releases (red Fed, amber CPI, purple jobs,
+  as on the 🌊 Tides waves); the next ones within two weeks appear ahead of the last candle with their date.
+  On by default; untick it to hide them. Your choice is saved.
 
 - **Show a Set on the chart** colours the background on every past day the Set said Yes (green) or couldn't
   tell (amber), across the whole history. 🕰️ Visualize History in Prism opens the same view.
@@ -12362,6 +12373,8 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                 st.session_state["chart_overlay"] = bool(saved_chart.get("chart_overlay", False))
             if "chart_earnings" not in st.session_state:
                 st.session_state["chart_earnings"] = bool(saved_chart.get("chart_earnings", True))
+            if "chart_events" not in st.session_state:
+                st.session_state["chart_events"] = bool(saved_chart.get("chart_events", True))
             chosen_indicators = []
             # Crypto only: a link to CoinGlass's liquidation heatmap for the coin on the chart.
             heatmap_url = coinglass_heatmap_url(asset_key) if asset_type == "Crypto" else ""
@@ -12424,6 +12437,16 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                         "if it is months away and you want the chart to end at today."
                     ),
                 )
+            show_events = st.checkbox(
+                "Show Fed, CPI and jobs days",
+                key="chart_events",
+                help=(
+                    "Dashed lines on the days of the big scheduled US releases, the same as on the Tides waves: "
+                    "red = Fed rate decision, amber = CPI inflation, purple = jobs report. The next ones within two "
+                    "weeks are drawn ahead of the last candle, with their date. Prices often move more around these "
+                    "days. The chart stretches to the right to fit an upcoming one."
+                ),
+            )
             band_set = _chart_set_picker() if use_tv else None
             wanted_picks = [k for k in saved_picks if k not in indicator_keys] + [
                 k for k in chosen_indicators if k in chart_plan.INDICATORS
@@ -12432,6 +12455,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                 "chart_indicators": [k for k in chart_plan.INDICATORS if k in wanted_picks],
                 "chart_overlay": bool(overlay_curves),
                 "chart_liq": bool(st.session_state.get("_chart_liq_on")),
+                "chart_events": bool(show_events),
             }
             if asset_type != "Crypto":
                 chart_choices["chart_earnings"] = bool(show_earnings)
@@ -12443,7 +12467,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                 if tv and not tv.get("error"):
                     _tv_chart(
                         asset_type, asset_key, title, layout, tv, tv_interval, tv_range, price_px,
-                        liq_record, show_earnings, stock_watchlist, band_set=band_set,
+                        liq_record, show_earnings, stock_watchlist, band_set=band_set, show_events=show_events,
                     )
                     _chart_resize_handle(price_px)
             else:
