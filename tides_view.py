@@ -315,7 +315,7 @@ def waves(snap: dict, range_key: str = "1Y") -> str:
              f"<line x1='{x0}' x2='{x1}' y1='{swell_y}' y2='{swell_y}' stroke='#94a3b8'/>",
              f"<path d='{path(dict(hist), swell_y, 45)}' fill='none' stroke='#2563eb' stroke-width='2.5'/>",
              f"<text x='12' y='{swell_y - 4}' font-size='13' font-weight='700' fill='#64748b'>Swell = the Tide</text>",
-             f"<text x='12' y='{swell_y + 12}' font-size='11' fill='{tide_tone}'>{esc(tide_state)}</text>"]
+             f"<text x='12' y='{swell_y + 12}' font-size='9.5' fill='{tide_tone}'>{esc(tide_state)}</text>"]
     colours = ("#f97316", "#10b981", "#8b5cf6", "#ec4899", "#14b8a6", "#eab308", "#64748b", "#ef4444", "#0ea5e9")
     for i, c in enumerate(cur):
         cy = top + lane * i + lane / 2
@@ -324,7 +324,7 @@ def waves(snap: dict, range_key: str = "1Y") -> str:
                     f"stroke='{colours[i % len(colours)]}' stroke-width='1.5'/>")
         pull, _cls, tone = pull_of(c)
         body.append(f"<text x='12' y='{cy - 2}' font-size='12' fill='#64748b'>{esc(c['icon'])} {esc(c['name'])}</text>")
-        body.append(f"<text x='30' y='{cy + 12}' font-size='10.5' fill='{tone}'>{ARROW[c['direction']]} "
+        body.append(f"<text x='30' y='{cy + 12}' font-size='9' fill='{tone}'>{ARROW[c['direction']]} "
                     f"{esc(c['direction'])} · {pull}</text>")
     first, last = dates[0], dates[-1]
     svg = img(f"<svg viewBox='0 0 1000 {height}' font-family='Source Sans Pro, Segoe UI, Helvetica, Arial, "
