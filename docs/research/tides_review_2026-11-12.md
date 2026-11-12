@@ -186,3 +186,260 @@ Glassnode Compass teaches **named bands + change rates + “map not signal.”**
 ---
 
 **Bottom line for Angus/Drew:** Approve **Tides as a macro signal family + calendar + optional regime condition**. Hold the sailor’s forecast UI and personal AI logbook until the currents are boringly correct. If you want a follow-up, I can turn this into a one-page “Decision after review” checklist for stage 1 Record only.
+## ChatGPT
+
+# Angstrom Tides — Design Review
+
+12 November 2026 · Review of the 12-page design brief
+
+## Verdict: Strong concept, approve with changes before Stage 1
+
+I support adding Tides to Angstrom Signals. It addresses a genuine gap: Lattice, Prism and Funnels can analyse individual assets extremely thoroughly, but they don't yet provide a coherent view of the broader conditions affecting those assets.
+
+I particularly like three aspects of the proposal:
+
+- Record → Show → Use → Explain is a sensible architecture.
+- Separating market-derived macro readings from news sentiment avoids automatically counting the same information twice.
+- Recording AI interpretations and evaluating them later is more credible than simply displaying persuasive commentary.
+
+The diagram on page 7 gets the architecture right: one recorded analytical foundation feeding the display, Sets, Funnels and AI. Those should not become four independently calculated versions of the macro picture.
+
+My principal concern is the proposed overall Tide regime. We need to define that carefully before building it, because a deceptively simple Risk-On/Risk-Off classification could undermine the integrity of an otherwise excellent system.
+
+## 1. The twelve currents
+
+I would retain most of the proposed currents, but I wouldn't treat all twelve as equally independent votes.
+
+| Family                               | Recommendation  | Reason                                                                                        |
+| ------------------------------------ | --------------- | --------------------------------------------------------------------------------------------- |
+| Short rates, long rates, yield curve | Keep            | Useful, but heavily related. Don't give rates three independent votes.                        |
+| US dollar                            | Keep            | Important cross-asset context, particularly for crypto.                                       |
+| Inflation                            | Keep separately | Monthly releases have different timing and revision characteristics from daily market prices. |
+| Gold                                 | Definitely keep | Important in its own right, but rising gold isn't automatically Risk-Off.                     |
+| VIX / Fear                           | Keep            | VIX and crypto Fear & Greed should remain distinct observations.                              |
+| Copper / copper-gold                 | Keep            | Useful growth proxy, although copper and the ratio share evidence.                            |
+| Oil                                  | Keep            | Direction alone is ambiguous: rising demand and a supply shock have different implications.   |
+| Credit                               | Keep            | Potentially one of the most informative measures of financial stress.                         |
+| Equity rotation                      | Keep            | Valuable, but overlaps with other risk-appetite measures.                                     |
+| Crypto rotation                      | Keep            | Particularly relevant to Angstrom's users.                                                    |
+
+### What's missing?
+
+Real interest rates deserve serious consideration. The inflation-adjusted 10-year Treasury yield is particularly relevant when interpreting gold, long-duration equities and financial conditions.
+
+I'd also consider a broader liquidity measure in a later version. Credit conditions and Treasury yields are useful, but don't fully describe liquidity.
+
+I wouldn't expand the first build to 15 or 20 currents, though. Start with the twelve, investigate real yields as an addition, and establish which inputs are genuinely useful.
+
+One important correction to the brief: these are not all simple market-price trends. Inflation surprises, the yield curve, VIX levels and crypto breadth need different measurement methods.
+
+## 2. How the currents should combine
+
+My recommendation: a transparent, fixed, family-balanced model. Not a learned model initially.
+
+Each current should produce a standardised reading with:
+
+- Its actual observed value and unit.
+- Its change or momentum over a defined period.
+- A normalised contribution where an economically meaningful direction can be specified.
+- A data-quality/availability status.
+- A clear explanation of the interpretation.
+
+Then combine related currents within their families before calculating an overall regime.
+
+TIDES
+
+## Overall regime
+
+Risk-supportive · Mixed · Risk-defensive
+
+Money & Rates
+
+Rates · Curve · Dollar · Inflation
+
+Safe Havens / Stress
+
+Gold · VIX
+
+Growth & Credit
+
+Copper · Oil · Credit
+
+Market Rotation
+
+Equity · Crypto
+
+Conceptual hierarchy only. No weights or economic relationships are approved yet.
+
+I'd also distinguish the broad macro regime from its implications for a specific market.
+
+For example, rising yields may be negative for some growth stocks, while reflecting stronger economic expectations that support other sectors.
+
+So a single universal label of tailwind for risk-taking should not be treated as equally applicable to Bitcoin, gold and all equities.
+
+The overall Tide can summarise the broad backdrop. The headwind/tailwind interpretation should be asset-class and direction specific, with uncertainty visible.
+
+### What about cycle stages?
+
+I'd defer the business-cycle label.
+
+The notion that bonds turn before equities, followed by commodities, is a useful historical framework, but not a sufficiently reliable mechanical sequence to label today's economy Late Cycle or Early Cycle without a separate, tested methodology.
+
+Show the current market evidence first. Add cycle-stage estimates later if they prove useful.
+
+## 3. Point-in-time integrity: the biggest technical requirement
+
+The brief correctly insists that Tides be replayable and certified. However, recording today's observations does not automatically make historical observations point-in-time correct.
+
+There are three distinct cases:
+
+Market prices and yields. These require a clearly defined observation time, publication/availability time, source, revision identity and evaluation cutoff. Historical daily data from Yahoo or FRED cannot simply be assumed to match what a trader knew at each historical cutoff.
+
+Economic releases. CPI, jobs and GDP require first-published data and historical revisions. ALFRED supports vintage observations, which makes it an appropriate starting point, but timestamps still matter: a release at 08:30 New York time was not available at 08:00 that day.&#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://fred.stlouisfed.org\&sz=32)
+
+fred.stlouisfed.org+2
+
+
+
+Forecast surprises. To calculate actual minus expected, Angstrom must possess the market consensus as recorded before the release. The first-published CPI figure alone is insufficient. Historical analyst-consensus data may also have licensing or cost implications.
+
+I'd require each Tides observation to carry a source, observation period, `available_at`, `first_seen_at`, revision information and a qualification indicating whether it is usable for strict historical research.
+
+Where credible historical point-in-time evidence is unavailable, say so. Don't silently substitute reconstructed modern data.
+
+This is entirely consistent with Angstrom's existing replay architecture.
+
+The protected hold-out remains untouched. Historical reconstruction for display and research certification must retain their established separation. No regime thresholds, weights or AI grading criteria should be selected using data from 30 October 2024 onwards.
+
+## 4. The maritime presentation
+
+Review of the display concepts on pages 7–9
+
+I actually really like the Tides visual direction. It gives Angstrom another distinctive identity without losing the scientific basis.
+
+The sea-state header, current cards, event pennants and Logbook fit together well.
+
+My one significant objection concerns the proposed animated swell.
+
+The illustration on page 8 shows several oscillating currents whose waves combine into a larger wave. Visually, that's excellent.
+
+But economic data doesn't naturally behave like synchronised ocean waves. We must avoid making the picture appear more periodic or predictive than the underlying evidence warrants.
+
+I'd require:
+
+1. Each lane plots an actual, labelled historical reading or standardised contribution.
+2. Every contribution uses a documented scale and time alignment.
+3. The overall swell is calculated from those contributions using fixed, visible aggregation rules.
+4. Animation changes presentation only; it never adds oscillation, phase or patterns absent from the data.
+
+In other words, make the waves beautiful, but make the underlying numbers authoritative.
+
+I'd also separate two ideas:
+
+- Tide: how supportive or defensive broader market conditions appear.
+- Sea state: how turbulent or uncertain those conditions are.
+
+They aren't identical. Markets can be strongly risk-supportive but volatile. Equally, a quiet market can have deteriorating underlying conditions.
+
+A storm-warning pennant should indicate a scheduled high-impact event, not necessarily that volatility or a negative outcome is guaranteed.
+
+## 5. Macro calendar
+
+I approve the calendar concept, including dated chart markers and upcoming event warnings.
+
+For V1, I would prioritise Fed decisions, CPI, employment reports, GDP and major Treasury auctions.
+
+The default event-risk window could be 24 hours before through 2 hours after major releases, but make it configurable and describe it as an event-proximity flag, not a prediction of market volatility.
+
+Most importantly, a Set or Funnel should initially be able to check the calendar condition without Tides automatically pausing or changing the user's existing configurations.
+
+For example:
+
+> Major macro event within 24 hours: Yes.
+
+That is an objective statement.
+
+Whether to exclude Candidate alerts around such an event should remain a user-defined Set or Funnel decision.
+
+## 6. AI insights and the Logbook
+
+This is potentially Tides' most differentiated feature, but it needs a carefully bounded first version.
+
+I strongly support the brief's four rules: grounded, personal, contextual rather than advisory, and on the record.
+
+However, I'd make an important distinction between explanation and forecasting.
+
+Descriptive insight
+
+“The dollar and long yields have risen over the past month. Your crypto-long funnel currently has three Candidates.”
+
+Can be verified against recorded inputs.
+
+Testable hypothesis
+
+“Historically, similar conditions have been associated with weaker subsequent crypto returns over a defined horizon.”
+
+Requires real supporting research and a predefined measurement horizon.
+
+Not every AI paragraph should receive a performance grade. A factual explanation should be graded for correctness, grounding and completeness. A predictive claim can be evaluated against its predefined outcome.
+
+For forecast-like insights, record the exact claim, timestamp, horizon, target, baseline, model/prompt version and evaluation rule at creation time. Don't let an AI write a vague prediction today and invent a favourable grading method later.
+
+I'd start with deterministic templates for factual summaries, using an inexpensive AI model to improve presentation only. Cache the shared macro narrative once per daily record, then add lightweight, permission-controlled user-specific context.
+
+This would help keep costs predictable.
+
+News tagging and talk against walk are interesting additions, but belong after the core macro measurements work. A disagreement between headlines and prices is not automatically a predictive signal.
+
+## 7. My recommended build sequence
+
+I would retain the proposed four stages, with slightly tighter scope.
+
+| Stage      | What I'd approve                                                                                                                                             |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1. Record  | Source feasibility, canonical data model, market currents, publication timestamps, immutable daily records and replay certification. No AI.                  |
+| 2. Show    | Tides dashboard, current cards, historical readings, calendar and chart markers. Introduce the sea-state visuals once their underlying measures are defined. |
+| 3. Use     | Expose certified currents and the regime to Lattice as ordinary signals. Users explicitly choose whether and how they affect Sets and Funnels.               |
+| 4. Explain | Grounded daily summaries, personalised explanations and a graded Logbook, with costs measured before general release.                                        |
+
+### What I'd require before Stage 1
+
+Five focused decisions:
+
+1. Define the current calculations. Each source, formula, frequency, normalisation, warm-up requirement and meaning of rising/falling/flat.
+2. Specify the regime algorithm. Fixed family weights, treatment of ambiguous readings, missing-data rules and historical thresholds. No learned model initially.
+3. Complete the data-source feasibility audit. Verify source availability, licensing, historical depth, release timestamps and actual point-in-time support.
+4. Define the research boundary. Make clear which data can be explored, what is display-only, and how the protected hold-out remains untouched.
+5. Define the daily-record contract. Record identities, publication and first-seen times, revisions, computation version, source provenance and certification requirements.
+
+None requires designing the AI assistant or final animated interface now.
+
+## 8. Answers to the remaining open decisions
+
+| Question           | My recommendation                                                                                   |
+| ------------------ | --------------------------------------------------------------------------------------------------- |
+| Crypto rotation    | Begin with BTC dominance, ETH/BTC and eligible-universe breadth. Ask Drew which he actually uses.   |
+| AI model           | Choose after a small quality/cost evaluation; don't tie the architecture to one model.              |
+| Acceptable AI cost | Set a budget per active user, measure daily generation and caching, then choose a commercial limit. |
+| Automatic effects  | No automatic modification of existing Sets/Funnels. Explicit user-configured conditions only.       |
+| Maritime wording   | Keep it, accompanied by ordinary financial terminology.                                             |
+| Current scores     | Yes to descriptive, history-relative bands, with predefined calibration and meaningful units.       |
+| Forecast grading   | Predeclared horizons, actual outcomes, baseline comparisons and transparent failure rates.          |
+
+## Final recommendation
+
+Approve Tides as a product direction, but request a focused Stage 1 technical specification before Claude starts implementation.
+
+I particularly support the positioning:
+
+Lattice constructs the analytical logic. Prism identifies matches. Funnels narrow the universe. Tides provides the wider backdrop. Navigator helps people understand it all.
+
+That is a coherent product family.
+
+The greatest strength of Tides won't be its illustrations or even its AI commentary. It will be having a recorded, explainable macro framework whose claims can be examined against historical evidence.
+
+If we protect that foundation, the excellent visual and AI concepts in the brief will have something genuinely credible underneath them.
+
+For external technical references, the [FRED observations and vintages](https://fred.stlouisfed.org/docs/api/fred/series_observations.html?utm_source=chatgpt.com), [US Treasury yield data](https://home.treasury.gov/treasury-daily-interest-rate-xml-feed?utm_source=chatgpt.com) and [Glassnode Market Compass](https://glassnode.com/products/studio/market-compass?utm_source=chatgpt.com) are useful starting points.
