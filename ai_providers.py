@@ -55,8 +55,20 @@ URLS = {"claude": "https://api.anthropic.com/v1/messages",
         "gemini": "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"}
 
 
+def _secret(env: str) -> str:
+    """A key kept in the app's Streamlit secrets instead of the environment ([ai] xai_api_key, or the same name)."""
+    try:
+        import streamlit as st
+
+        ai = st.secrets.get("ai", {}) if hasattr(st.secrets, "get") else {}
+        return str(ai.get(env.lower()) or st.secrets.get(env) or "")
+    except Exception:
+        return ""
+
+
 def key(provider: str) -> str:
-    raw = (os.getenv(PROVIDERS[provider]["env"]) or "").strip().strip('"').strip("'")
+    env = PROVIDERS[provider]["env"]
+    raw = (os.getenv(env) or _secret(env) or "").strip().strip('"').strip("'")
     return raw[7:].strip() if raw.lower().startswith("bearer ") else raw
 
 
