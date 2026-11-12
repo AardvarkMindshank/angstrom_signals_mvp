@@ -315,7 +315,7 @@ export default function(component) {
       "html.angstrom-night .st-key-layout_single button[data-testid='stBaseButton-primary'],html.angstrom-night .st-key-layout_wide button[data-testid='stBaseButton-primary']{background:#f3f4f6 !important;color:#111827 !important;border-color:#f3f4f6 !important;}",
       ".st-key-open_all_sections button{--mark:" + openMark + ";}",
       ".st-key-collapse_all_sections button{--mark:" + closeMark + ";}",
-      "[data-testid='stElementContainer']:not(:has([data-testid='stElementContainer'])):is(:has(#interactive-chart),:has(#market-mood-crypto),:has(#market-mood-stock),:has(#market-sentiment),:has(#score-breakdown),:has(#angstrom-lattice),:has(#table-crypto),:has(#table-equity)),[class*='st-key-scroll_to_chart'],[class*='st-key-wide_column_split']{position:absolute !important;width:0 !important;height:0 !important;min-height:0 !important;margin:0 !important;padding:0 !important;overflow:visible !important;}",
+      "[data-testid='stElementContainer']:not(:has([data-testid='stElementContainer'])):is(:has(#interactive-chart),:has(#market-mood-crypto),:has(#market-mood-stock),:has(#market-sentiment),:has(#score-breakdown),:has(#angstrom-lattice),:has(#table-crypto),:has(#table-equity),:has(#tides)),[class*='st-key-scroll_to_chart'],[class*='st-key-wide_column_split']{position:absolute !important;width:0 !important;height:0 !important;min-height:0 !important;margin:0 !important;padding:0 !important;overflow:visible !important;}",
       "[class*='st-key-favourite_watch'],[class*='st-key-alert_asset_pick'],[class*='st-key-section_toggle_watch'],[class*='st-key-colour_copy'],[data-testid='stLayoutWrapper']:has(> [data-testid='stVerticalBlock'] > [class*='st-key-favourite_watch']),[data-testid='stLayoutWrapper']:has(> [data-testid='stVerticalBlock'] > [class*='st-key-section_toggle_watch']),[data-testid='stLayoutWrapper']:has(> [data-testid='stVerticalBlock'] > [class*='st-key-colour_copy']){position:absolute !important;width:0 !important;height:0 !important;min-height:0 !important;margin:0 !important;padding:0 !important;overflow:hidden !important;border:0 !important;}",
       "[class*='st-key-colour_'].ang-colour-drop{outline:2px solid #2563eb;outline-offset:2px;border-radius:8px;}",
       "[class*='st-key-colour_'] button[draggable='true']{cursor:grab;}",
@@ -7133,10 +7133,11 @@ if not _POPOUT_VIEW:
 def _render_help_guides() -> None:
     """📖 Help and guides: the tabs. Drawn in the sidebar, or alone in its own window (?view=help_guides)."""
     (
-        tab_start, tab_scores, tab_chart, tab_sentiment, tab_lattice, tab_funnels, tab_alerts, tab_social, tab_layout,
+        tab_start, tab_scores, tab_chart, tab_sentiment, tab_tides, tab_lattice, tab_funnels, tab_alerts, tab_social,
+        tab_layout,
     ) = st.tabs([
-        "🚀 Start here", "📈 Signals", "📊 Chart & tools", "📰 Sentiment", "🧩 Lattice & Prism", "🔻 Funnels",
-        "🔔 Alerts", "💬 Social", "🧭 Layout & settings",
+        "🚀 Start here", "📈 Signals", "📊 Chart & tools", "📰 Sentiment", "🌊 Tides", "🧩 Lattice & Prism",
+        "🔻 Funnels", "🔔 Alerts", "💬 Social", "🧭 Layout & settings",
     ])
 
     with tab_start:
@@ -7153,7 +7154,10 @@ because they measure different things and are never added together.
 **A quick tour**
 1. **Quick Snapshot** opens with 🌍 **Markets**: the major indices, VIX, the US 10-year yield, the dollar,
    gold, oil and crypto totals, each with today's move and a 30-day line (a green dot means that exchange is
-   open; hover a card for what it measures). Then *What changed*: Trend readings that crossed your alert line
+   open; hover a card for what it measures). Under it: the 🌊 **Tides line** (tide, sea state and the next big
+   event; click it for the Tides panel), 🔻 **your funnels** (Candidates, Flagged, the stage counts and what came in
+   or left since your last visit; click one to open its table), and 📈📉 the **strongest and weakest Trend** in
+   your own watchlist, whatever your tables show. Then *What changed*: Trend readings that crossed your alert line
    and the biggest Trend moves, each with the reading before and now, the price and today's move, a 7-day line, and
    badges for 📅 earnings within two weeks, 📰 headline sentiment and 🎯 how close it is to an alert line.
 2. **Crypto Signals** and **Equity Signals** list your watchlists, strongest Trend first. The reading columns are
@@ -7371,6 +7375,66 @@ same line under the asset's name in the chart section.
 """)
         with st.expander("🔬 How a sentiment score is built (full method)"):
             st.markdown(SENTIMENT_METHOD)
+
+    with tab_tides:
+        import tides as _td
+
+        st.markdown("""
+**🌊 Tides is the macro layer: the big money flows that sit behind every chart.** Rates, the dollar, inflation,
+fear, credit and where money is rotating move slowly, but they set the conditions every asset trades in. Tides
+reads twelve of them each day and sums them up in sailing words, with the normal trading words beside them.
+It describes conditions; it does not time trades and it never says buy or sell. It is a preview.
+
+**The four readings, top of the panel**
+- **🌊 The Tide** is the overall direction: **coming in** = *risk-supportive* (conditions help riskier assets
+  such as crypto and growth equities), **slack** = *mixed*, **going out** = *risk-defensive* (conditions favour
+  caution and safe havens). A new Tide counts only once the readings have pointed that way for **5 daily closes**,
+  so it doesn't flip on one noisy day; until then the panel says it is *turning*.
+- **⛵ The Sea state** is how rough the water is, separately from its direction: **calm, moderate, rough, storm**
+  = low, normal, high, extreme volatility. It averages the VIX's and Bitcoin's 30-day volatility, each scored
+  against its last 5 years. A rising tide in a rough sea means a helpful backdrop with big swings.
+- **🧭 Winds** apply the currents to each market: a **tailwind** helps that market and direction, a **headwind**
+  works against it. Hover a wind for the currents behind it and those pushing the other way.
+- **🚩 Storm warnings** flag scheduled events from the official calendars: 🚩🚩 Fed decisions, CPI (inflation) and
+  the jobs report, 🚩 producer prices, 🟥 deadlines (such as a government funding date). A warning shows from 24
+  hours before to 24 hours after: an event is near, not a forecast of what it will do.
+""")
+        st.markdown("**The twelve currents**")
+        st.dataframe(
+            pd.DataFrame([{"": c["icon"], "Current": c["name"], "Family": _td.FAMILIES[c["family"]][0],
+                           "What it measures": c["measures"],
+                           "Votes in the Tide": "yes" if c["weight"] else "shown only"}
+                          for c in _td.SPEC.values()]),
+            hide_index=True, use_container_width=True)
+        fam = ", ".join(f"{icon} {name} {weight:.0%}" for name, weight, icon in _td.FAMILIES.values())
+        st.markdown(f"""
+**How each current is read** (fixed rules, the same for everyone)
+- **Band**: where today's level sits against its own last 5 years, from 0 to 100: very low (under 20), low,
+  normal, high, very high (80 and over). Glassnode and similar tools use the same idea.
+- **Pull**: its 30-day move against the usual size of such a move. A move bigger than half the usual size is
+  **rising** or **falling**; anything smaller is **flat**, and a flat current is always *neutral*. Whether rising is
+  risk-supportive or risk-defensive depends on the current (rising rates or a rising dollar pull risk down;
+  rising credit appetite pulls it up). The line under each current's name says this in words.
+- **The Tide's score**: each family averages its voting currents, then the families are weighted: {fam}. Above
+  +0.20 is coming in, below -0.20 going out, in between slack. Gold, oil and the yield curve are shown for context
+  but don't vote. Crypto Fear & Greed is shown on its own and never votes.
+
+**The waves** draw each current over time (3 months to 2 years; your choice is saved on your account), with past
+Fed decisions, CPI and jobs days as dashed lines, so you can see how a current behaved around an event.
+
+**✨ AI Navigator and 📜 Today's AI Passage Plan** (the buttons beside the daily note) open in their own window.
+The Navigator answers questions about the currents, the tide and the calendar from these readings only, quoting
+the reading behind each statement. The Passage Plan charts today's conditions, the week's events, the winds for
+your own watchlist and funnels, hazards and things to watch, each expectation labelled with what would show it
+right or wrong. One plan a day, kept in your logbook. Facts stay apart from expectations; never buy or sell calls.
+
+**How often it updates**: a fresh reading every 6 hours (most currents use daily closes, so it changes once a day
+in practice). Event dates come from the official Fed and US Bureau of Labor Statistics schedules.
+
+**Limits**: macro conditions frame risk over weeks; they don't say what any one asset does tomorrow. Nobody has yet
+tested what usually followed each Tide, so treat it as context, not a signal. The 🌊 Tides line in Quick Snapshot
+is the one-glance version.
+""")
 
     with tab_lattice:
         st.markdown("""
@@ -10938,6 +11002,74 @@ def _dynamic_crypto():
     return _dynamic_view("crypto")
 
 
+def _snapshot_funnels() -> list[dict]:
+    """Quick Snapshot's funnel tiles (snapshot_view.funnel_tiles), for every funnel of this account in a market it
+    trades. The Candidates are compared with the last visit (account setting funnel_seen, saved once a session).
+    Read once a minute at most."""
+    import funnel as fn
+    import funnel_view as fv
+    import snapshot_view as sv
+
+    user = st.session_state.get("user")
+    if user is None:
+        return []
+    memo = st.session_state.setdefault("_memo", {})
+    hit = memo.get("snapshot_funnels")
+    if hit and time.time() - hit[0] < 60:
+        return hit[1]
+    trading = {"crypto": trade_crypto, "equity": trade_equities}
+    funnels = [f for f in fv.load_funnels(supabase, user.id) if trading.get(f.get("market") or "crypto")]
+    if "funnel_seen_baseline" not in st.session_state:
+        stored = (prefs.get("settings") or {}).get("funnel_seen")
+        st.session_state.funnel_seen_baseline = stored if isinstance(stored, dict) else {}
+    baseline = st.session_state.funnel_seen_baseline
+    universes, tiles, now_seen = {}, [], {}
+    for f in funnels:
+        market = f.get("market") or "crypto"
+        if market not in universes:
+            universes[market] = fv.load_universe(supabase, market)
+        uni = universes[market]
+        try:
+            states = fv.states(f, fv.load_coins(supabase, f["id"]))
+        except Exception:
+            continue
+        pool = sum(1 for u in uni.values() if u.get("included"))
+        cands = sorted(fv.coins_for("candidate", states), key=lambda c: (uni.get(c) or {}).get("rank") or 10**6)
+        label = {c: str((uni.get(c) or {}).get("symbol") or c).upper() if market == "crypto" else str(c).upper()
+                 for c in cands}
+        before = baseline.get(str(f["id"])) if str(f["id"]) in baseline else None
+        new, gone = sv.candidate_changes(before, cands)
+        k = fn.counts(states, len(f["stages"]))
+        tiles.append({"id": f["id"], "name": f["name"], "market": market, "direction": f.get("direction"),
+                      "paused": f.get("paused"), "line": fv.counts_line(f, states, pool),
+                      "candidates": k["candidate"], "flagged": k["flagged"],
+                      "candidate_names": [label[c] for c in cands],
+                      "new": [label.get(c, str(c).upper()) for c in new],
+                      "gone": [str((uni.get(c) or {}).get("symbol") or c).upper() for c in gone],
+                      "seen": before is not None})
+        now_seen[str(f["id"])] = cands
+    if now_seen and not st.session_state.get("funnel_seen_saved") and isinstance(st.session_state.get("cloud_prefs"), dict):
+        save_account_settings({"funnel_seen": now_seen})
+        st.session_state.funnel_seen_saved = True
+    memo["snapshot_funnels"] = (time.time(), tiles)
+    return tiles
+
+
+def _open_funnel_table(fid: str) -> None:
+    """A funnel tile was clicked: that funnel's table, in Dynamic funnel, on its Candidates."""
+    import funnel_view as fv
+
+    user = st.session_state.get("user")
+    f = next((x for x in (fv.load_funnels(supabase, user.id) if user else []) if str(x["id"]) == str(fid)), None)
+    if f is None:
+        st.toast("That funnel was deleted.")
+        return
+    market = f.get("market") or "crypto"
+    st.session_state["_funnel_open"] = {"market": market, "id": f["id"]}
+    _reveal_section("crypto_scores" if market == "crypto" else "equity_scores", f"table-{market}")
+    st.rerun()
+
+
 def _create_funnel(market: str, direction: str) -> None:
     import funnel_templates as ft
 
@@ -11378,7 +11510,13 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             earnings = load_earnings(tuple(stock_watchlist), st.session_state.get("_shared_rows"))
             for row in stock_results:
                 row["next_earnings"] = earnings.get(str(row.get("key") or "").upper())
-        change_rows = crypto_results + stock_results
+        # Quick Snapshot always summarises your own watchlist, whatever the tables show (a Dynamic funnel table can
+        # be empty, or hold assets that are still being priced).
+        snap_crypto = crypto_results if dynamic is None else (
+            process_watchlist(own_crypto, is_crypto=True) if trade_crypto and own_crypto else [])
+        snap_stock = stock_results if dynamic_eq is None else (
+            process_watchlist(own_stock, is_crypto=False) if trade_equities and own_stock else [])
+        change_rows = snap_crypto + snap_stock
         change_baseline, change_seen = _remember_score_visit(change_rows)
         with _timed("shared rows, crowd and comments"):
             _share_market_rows(crypto_watchlist, stock_watchlist, crypto_results, stock_results)
@@ -11393,12 +11531,6 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             ordered = sorted(valid, key=lambda row: row["trend"], reverse=True)
             return ordered[0], ordered[-1]
 
-        # Quick Snapshot always summarises your own watchlist, whatever the tables show (a Dynamic funnel table can
-        # be empty, or hold assets that are still being priced).
-        snap_crypto = crypto_results if dynamic is None else (
-            process_watchlist(own_crypto, is_crypto=True) if trade_crypto and own_crypto else [])
-        snap_stock = stock_results if dynamic_eq is None else (
-            process_watchlist(own_stock, is_crypto=False) if trade_equities and own_stock else [])
         crypto_top, crypto_bot = get_top_bottom(snap_crypto)
         stock_top, stock_bot = get_top_bottom(snap_stock)
 
@@ -11456,13 +11588,6 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                 if view[1] in chart_data.RANGES and chart_data.availability(view[0], view[1])[0]:
                     st.session_state["chart_range"] = view[1]
 
-        snapshot_cards = []
-        if trade_crypto:
-            snapshot_cards.append(("📈 Strongest Trend · Crypto", crypto_top, "Crypto", "snapshot_crypto_top"))
-            snapshot_cards.append(("📉 Weakest Trend · Crypto", crypto_bot, "Crypto", "snapshot_crypto_weak"))
-        if trade_equities:
-            snapshot_cards.append(("📈 Strongest Trend · Stocks", stock_top, "Stock", "snapshot_stock_top"))
-            snapshot_cards.append(("📉 Weakest Trend · Stocks", stock_bot, "Stock", "snapshot_stock_weak"))
 
         def render_mood_snapshot(label, score, summary, mood_key, voice):
             safe_label = html.escape(label)
@@ -11517,6 +11642,70 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                 f"{summary_html}{crowd}</div></div></button>"
             )
 
+        # ---- the reworked Quick Snapshot (snapshot_view.py): Tides headline, your funnels, strongest and weakest
+        import snapshot_view as _sv
+
+        def _snapshot_click(raw):
+            raw = str(raw or "")
+            if raw == "tides":
+                _reveal_section("tides", "tides")
+            elif raw.startswith("funnel|"):
+                _open_funnel_table(raw.split("|", 2)[1])
+            elif raw:
+                _select_chart_asset(raw)
+
+        try:
+            line = _sv.tides_line(_tides_snap())
+        except Exception as exc:
+            print(f"Quick Snapshot Tides line failed: {exc}")
+            line = ""
+        if line:
+            _snapshot_click(_score_table(key="snapshot_tides", data=line, on_picked_change=lambda: None).picked)
+        try:
+            tiles_html = _sv.funnel_tiles(_snapshot_funnels())
+        except Exception as exc:
+            print(f"Quick Snapshot funnels failed: {exc}")
+            tiles_html = ""
+        if tiles_html:
+            _snapshot_click(_score_table(key="snapshot_funnels", data=tiles_html, on_picked_change=lambda: None).picked)
+
+        def _trend_row(icon, word, row, kind):
+            if not row or not row.get("key"):
+                return (f"<div style='display:flex;align-items:center;gap:8px;padding:6px 0;'>{icon} "
+                        f"<span class='ang-kicker' style='margin:0;'>{word}</span><span>—</span></div>")
+            score = row.get("trend")
+            color, bg, arrow, _bar = reading_tone(score)
+            name = str(row.get("symbol") or row["key"])
+            pick = html.escape(f"{kind}|{row['key']}", quote=True)
+            return (
+                f"<button type='button' data-pick='{pick}' title='{html.escape(f'Open {name} on the chart', quote=True)}' "
+                "style='display:block;width:100%;margin:0;padding:6px 0;border:none;border-top:1px solid var(--ang-border);"
+                "background:transparent;text-align:left;cursor:pointer;font:inherit;color:inherit;'>"
+                "<div style='display:flex;align-items:center;gap:8px;min-width:0;'>"
+                f"<span title='{word} Trend in your watchlist'>{icon}</span>"
+                f"{asset_logo(row.get('logo_url'), name, size=20)}"
+                "<span style='flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
+                f"font-weight:600;'>{html.escape(name)}</span>"
+                "<span title='Trend reading, -100 to +100: where price sits against its longer averages. "
+                f"A description, not a forecast.' style='flex:none;background:{bg};color:{color};padding:2px 8px;"
+                f"border-radius:4px;font-size:0.85rem;font-weight:600;'>{arrow} Trend {score:+.0f}</span>"
+                "</div></button>")
+
+        trend_cards = []
+        if trade_crypto:
+            trend_cards.append(("🪙 Crypto · your watchlist", crypto_top, crypto_bot, "Crypto", "snapshot_trend_crypto"))
+        if trade_equities:
+            trend_cards.append(("🏛️ Equities · your watchlist", stock_top, stock_bot, "Stock", "snapshot_trend_stock"))
+        if trend_cards:
+            for column, (title, top, bot, kind, key) in zip(st.columns(len(trend_cards)), trend_cards):
+                body = ("<div class='ang-card'>"
+                        f"<div class='ang-kicker' style='margin-bottom:4px;'>{html.escape(title)}</div>"
+                        + _trend_row("📈", "Strongest", top, kind)
+                        + (_trend_row("📉", "Weakest", bot, kind) if bot is not top else "")
+                        + "</div>")
+                with column:
+                    _snapshot_click(_score_table(key=key, data=body, on_picked_change=lambda: None).picked)
+
         changed = _score_table(
             key="snapshot_changes",
             data=_what_changed_html(change_rows, change_baseline, change_seen),
@@ -11555,58 +11744,8 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                         ),
                     )
 
-        snapshot_columns = st.columns(len(snapshot_cards))
-
-        def render_snapshot_card(title, name, score, pick, logo_url=None):
-            color, bg, arrow, _bar = reading_tone(score)
-            score_str = f"Trend {score:+.0f}" if score is not None and not pd.isna(score) else "—"
-            safe_title = html.escape(str(title))
-            safe_name = html.escape(str(name))
-            logo = asset_logo(logo_url, name) if name and name != "—" else ""
-            body = (
-                "<div class='ang-card'>"
-                f"<div class='ang-kicker'>{safe_title}</div>"
-                "<div class='ang-title' style='display:flex;align-items:center;gap:8px;font-size:1.1rem;"
-                "margin-bottom:8px;white-space:nowrap;overflow:hidden;'>"
-                f"{logo}<span style='overflow:hidden;text-overflow:ellipsis;'>{safe_name}</span></div>"
-                "<div title='Trend reading, -100 to +100: where price sits against its longer averages. "
-                "A description, not a forecast.' "
-                f"style='display: inline-flex; align-items: center; gap: 4px; background: {bg}; "
-                f"color: {color}; padding: 2px 8px; border-radius: 4px; font-size: 0.85rem; font-weight: 600;'>"
-                f"{arrow} {score_str}</div></div>"
-            )
-            if not pick:
-                return body
-            safe_pick = html.escape(pick, quote=True)
-            return (
-                f"<button type='button' data-pick='{safe_pick}' "
-                "style='display:block;width:100%;margin:0;padding:0;border:none;background:transparent;"
-                "text-align:left;cursor:pointer;font:inherit;color:inherit;'>"
-                f"{body}</button>"
-            )
-
-        def show_snapshot(column, title, row, kind, widget_key):
-            pick = None
-            name = "—"
-            score = None
-            logo_url = None
-            if row and row.get("key"):
-                name = row["symbol"]
-                score = row.get("trend")
-                pick = f"{kind}|{row['key']}"
-                logo_url = row.get("logo_url")
-            with column:
-                picked = _score_table(
-                    key=widget_key,
-                    data=render_snapshot_card(title, name, score, pick, logo_url),
-                    on_picked_change=lambda: None,
-                ).picked
-                if picked:
-                    _select_chart_asset(str(picked))
-
-        for column, (card_title, card_row, card_kind, card_key) in zip(snapshot_columns, snapshot_cards):
-            show_snapshot(column, card_title, card_row, card_kind, card_key)
-        st.caption("Click a change or a box to open that asset on the chart.")
+        st.caption("Click an asset to open it on the chart, a funnel to open its table, or the Tides line for "
+                   "the macro picture.")
 
     show_tides()                        # overview content: directly under Quick Snapshot, in both layouts
     if not wide_layout:
@@ -13236,6 +13375,21 @@ def _tides_live() -> dict:
     return tides.build(supabase)
 
 
+def _tides_snap() -> dict | None:
+    """The latest Tides record (the worker saves one every 6 hours), else worked out here. Read once in 5 minutes."""
+    import tides
+
+    memo = st.session_state.setdefault("_memo", {})
+    hit = memo.get("tides_snap")
+    if hit and time.time() - hit[0] < 300:
+        return hit[1]
+    snap = tides.latest(supabase)
+    if tides.age_hours(snap) > 12 or (snap or {}).get("version") != tides.VERSION:
+        snap = _tides_live()
+    memo["tides_snap"] = (time.time(), snap)
+    return snap
+
+
 def show_tides() -> None:
     """🌊 Tides (preview): the macro layer. The worker saves a snapshot every 6 hours (tides_snapshots); the page
     reads the latest, and works it out itself only when none is recent."""
@@ -13243,13 +13397,12 @@ def show_tides() -> None:
     import tides_view
 
     with section_expander("🌊 Tides (preview)", "tides"):
-        snap = tides.latest(supabase)
-        if tides.age_hours(snap) > 12 or (snap or {}).get("version") != tides.VERSION:
-            try:
-                snap = _tides_live()
-            except Exception as exc:
-                st.info(f"Tides could not be read right now ({str(exc)[:120]}).")
-                return
+        st.html("<div id='tides' style='scroll-margin-top:4.5rem;'></div>")
+        try:
+            snap = _tides_snap()
+        except Exception as exc:
+            st.info(f"Tides could not be read right now ({str(exc)[:120]}).")
+            return
         if not snap or (snap.get("tide") or {}).get("status") != "ok":
             st.info("Tides has not got enough data yet.")
             return
