@@ -620,20 +620,29 @@ module.exports = {
     },
     open: async (h) => {
       await h.clear();
-      await h.section("Funnels");
+      // The Funnels tab (h.section waits for a Lattice board, which a provided funnel's page doesn't have).
+      await h.press(h.page.locator("button").filter({ hasText: "Funnels" }).first());
+      await h.page.waitForSelector('[data-testid="stSelectbox"]:has-text("Funnel")', { timeout: 60000 }).catch(() => {});
+      await h.settle();
       await h.ring(h.page.locator('[data-testid="stSelectbox"]').filter({ hasText: "Funnel" }).first());
       await h.pick("Funnel", null);                       // open the list so the four provided funnels are seen
     },
     stages: async (h) => {
       await h.clear();
-      await h.ring(h.page.locator('[data-testid="stMarkdownContainer"]').filter({ hasText: "checked at each" }));
+      const stages = h.page.locator('[data-testid="stMarkdownContainer"]').filter({ hasText: "checked at each" });
+      await stages.nth(2).evaluate((n) => n.scrollIntoView({ block: "center", behavior: "smooth" })).catch(() => {});
+      await h.wait(700);
+      await h.ring(stages);
     },
     copy: async (h) => {
       await h.clear();
       await h.press(h.page.getByRole("button", { name: "Make my own copy" }).first());
       await h.page.waitForSelector('input[aria-label="Name"]', { timeout: 60000 }).catch(() => {});
       await h.settle();
-      await h.top();
+      const name = h.page.locator('input[aria-label="Name"]').first();
+      await name.evaluate((n) => n.scrollIntoView({ block: "center", behavior: "smooth" })).catch(() => {});
+      await h.wait(700);
+      await h.ring(h.page.getByText("Your copy of a provided funnel").first());
     },
     pool: async (h, dur) => {
       await h.ring(h.page.getByText("which assets the funnel starts from").first()
