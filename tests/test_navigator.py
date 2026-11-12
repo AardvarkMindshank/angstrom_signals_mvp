@@ -88,3 +88,33 @@ def test_passage_plan_is_written_once_a_day_and_kept(monkeypatch):
     assert "Tides readings" in system[1] and "Bitcoin" in system[1]
     row = db.rows[0]
     assert row["kind"] == "passage_plan" and row["readings"]["tide"] == snap["tide"]["label"]
+
+
+def test_an_answer_that_runs_out_of_room_is_continued(monkeypatch):
+    replies = [{"content": [{"type": "text", "text": "the tide changes to slack only if the score stays above"}],
+                "stop_reason": "max_tokens"},
+               {"content": [{"type": "text", "text": " -0.20 for 5 closes."}], "stop_reason": "end_turn"}]
+    sent = []
+
+    class R:
+        status_code = 200
+
+        def __init__(self, body):
+            self.body = body
+
+        def json(self):
+            return self.body
+
+    def post(url, timeout, headers, data):
+        sent.append(json.loads(data))
+        return R(replies[len(sent) - 1])
+
+    monkeypatch.setattr(advisor, "api_key", lambda: "k")
+    out = advisor.ask([], "plan", ("a", "b"), post=post, max_tokens=50)
+    assert out == "the tide changes to slack only if the score stays above -0.20 for 5 closes."
+    assert sent[1]["messages"][-1]["role"] == "assistant"          # it carried on from its own words
+
+
+def test_a_plan_cut_mid_sentence_is_written_again():
+    assert nv.complete("**🔭 Things to watch**\n- Expectation: the tide holds for 5 closes.")
+    assert not nv.complete("- **Expectation:** the tide changes to slack only if the score stays above")

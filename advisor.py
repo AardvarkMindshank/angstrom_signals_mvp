@@ -26,7 +26,7 @@ import requests
 
 API_URL = "https://api.anthropic.com/v1/messages"
 MODEL = "claude-sonnet-5-5"            # fast and capable; a model choice in Settings comes later
-MAX_TOKENS = 1600
+MAX_TOKENS = 2500                      # an answer that reaches this is continued once (never cut off silently)
 MAX_TURNS = 12                         # earlier turns are dropped from what is sent, oldest first
 DAILY_LIMIT = 60                       # questions per person per day (this browser session's count)
 
@@ -249,7 +249,8 @@ def image_blocks(images: list[str] | None) -> list[dict]:
     return out
 
 
-def ask(history: list[dict], question: str, system, post=requests.post, images: list[str] | None = None) -> str:
+def ask(history: list[dict], question: str, system, post=requests.post, images: list[str] | None = None,
+        max_tokens: int = MAX_TOKENS) -> str:
     """The Advisor's answer to `question` (with any pasted screenshots), given the conversation so far
     ([{role, content}]; earlier screenshots are not sent again)."""
     key = api_key()
@@ -263,17 +264,29 @@ def ask(history: list[dict], question: str, system, post=requests.post, images: 
     if isinstance(system, (tuple, list)):         # the shared part is cached by the API, so each question costs less
         system = [{"type": "text", "text": system[0], "cache_control": {"type": "ephemeral"}},
                   {"type": "text", "text": system[1]}]
-    response = post(API_URL, timeout=90, headers={
-        "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json"},
-        data=json.dumps({"model": MODEL, "max_tokens": MAX_TOKENS, "system": system, "messages": messages}))
-    if response.status_code != 200:
-        try:
-            detail = response.json().get("error", {}).get("message", "")
-        except ValueError:
-            detail = response.text[:200]
-        raise RuntimeError(f"The AI service answered {response.status_code}: {detail[:200]}")
-    data = response.json()
-    return "".join(part.get("text", "") for part in data.get("content") or [] if part.get("type") == "text").strip()
+    def call(msgs):
+        response = post(API_URL, timeout=120, headers={
+            "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json"},
+            data=json.dumps({"model": MODEL, "max_tokens": max_tokens, "system": system, "messages": msgs}))
+        if response.status_code != 200:
+            try:
+                detail = response.json().get("error", {}).get("message", "")
+            except ValueError:
+                detail = response.text[:200]
+            raise RuntimeError(f"The AI service answered {response.status_code}: {detail[:200]}")
+        data = response.json()
+        text = "".join(part.get("text", "") for part in data.get("content") or [] if part.get("type") == "text")
+        return text, data.get("stop_reason")
+
+    text, stop = call(messages)
+    if stop == "max_tokens" and text.strip():
+        # It ran out of room mid-answer: ask it to carry on from exactly where it stopped, once.
+        more, stop = call(messages + [{"role": "assistant", "content": text.rstrip()}])
+        text = text.rstrip() + more if more[:1] in (" ", "\n", ",", ".", ";", ":", ")") else text.rstrip() + " " + more
+    text = text.strip()
+    if stop == "max_tokens":
+        text += "\n\n*(This answer was long and was cut short. Ask the Navigator to finish it.)*"
+    return text
 
 
 # ----------------------------------------------------------------------------------------------- the window

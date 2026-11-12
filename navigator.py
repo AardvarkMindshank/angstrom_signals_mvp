@@ -56,7 +56,8 @@ and direction (tailwind, headwind or neither) and the currents behind it. Name t
 **🔭 Things to watch** - what would change the picture (for example the tide holding 5 closes, a current turning),
 each as a labelled Expectation with what would show it right or wrong and over what time (5 or 20 trading days).
 
-Facts from the readings only, each with the reading behind it. No buy or sell calls. Under 350 words."""
+Facts from the readings only, each with the reading behind it. No buy or sell calls. Under 450 words, and always
+finish every sentence."""
 
 
 def _fmt(c: dict) -> str:
@@ -173,21 +174,28 @@ def save_plan(supabase, user_id: str, body: str, snap: dict | None, model: str) 
         return False
 
 
+def complete(body: str) -> bool:
+    """A plan ends with a finished sentence (or the cut-short note), never mid-sentence."""
+    end = body.rstrip().rstrip("*_ ")
+    return end.endswith((".", "!", "?", ")", "”", "\""))
+
+
 def passage_plan(st, supabase, user_id: str, watchlist: dict | None, snap: dict | None, fresh: bool = False) -> str:
     """Today's plan: from the logbook when already written today, else written now (and saved)."""
     import advisor
 
     if not fresh:
         kept = saved_plan(supabase, user_id) or st.session_state.get("_passage_plan", {}).get(today())
-        if kept:
-            return kept["body"] if isinstance(kept, dict) else kept
+        body = (kept["body"] if isinstance(kept, dict) else kept) if kept else ""
+        if body and complete(body):
+            return body                     # a plan that stopped mid-sentence (before 12 Nov's fix) is written again
     import signal_groups_inspector as gi
 
     saved = gi.saved_configs(supabase)[0] or []
     system = advisor.system_parts(saved, user_id, "tides",
                                   extra=TIDES_RULES + "\n\n" + tides_context(snap) + "\n\n"
                                   + portfolio_context(supabase, user_id, watchlist))
-    body = advisor.ask([], PASSAGE_REQUEST, system)
+    body = advisor.ask([], PASSAGE_REQUEST, system, max_tokens=4000)
     if not save_plan(supabase, user_id, body, snap, advisor.MODEL):
         st.session_state.setdefault("_passage_plan", {})[today()] = body
     return body
