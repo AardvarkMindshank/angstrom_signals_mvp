@@ -608,6 +608,69 @@ module.exports = {
   },
 
   // ------------------------------------------------------------------------------------------ 7 · Visualize History
+  // ------------------------------------------------------------------------------------------ Tides
+  "t1-tides": {
+    query: "?view=tides",
+    ready: ".tides .hero",
+    idea: async (h) => {
+      await h.card({ kicker: "🌊 Tides", title: "The macro layer",
+        lines: ["Money and rates · the dollar · inflation", "Safe havens and fear · growth and credit",
+                "Rotation: equities against bonds, Bitcoin against altcoins"],
+        foot: "Slow currents that set the conditions every asset trades in." });
+    },
+    tide: async (h) => {
+      await h.clear();
+      await h.ring(".tides .hero .big");
+    },
+    sea: async (h) => {
+      await h.clear();
+      await h.ring(h.page.locator(".tides .hero .sub").filter({ hasText: "Sea" }).first());
+    },
+    winds: async (h) => {
+      await h.clear();
+      await h.ring(h.page.locator(".tides .hero .chip:not(.warn)"));
+    },
+    storm: async (h) => {
+      await h.clear();
+      await h.page.locator(".tides .strip").first().evaluate((n) => n.scrollIntoView({ block: "center", behavior: "smooth" }));
+      await h.wait(700);
+      await h.ring(".tides .strip");
+    },
+    waves: async (h, dur) => {
+      await h.clear();
+      await h.press(h.page.locator("button:visible", { hasText: /^\s*2Y\s*$/ }).first());
+      await h.page.locator("img.wv").first().evaluate((n) => n.scrollIntoView({ block: "start", behavior: "smooth" }));
+      await h.wait(Math.max(1200, dur * 300));
+      await h.ring("img.wv");
+    },
+    currents: async (h) => {
+      await h.clear();
+      const cur = h.page.locator(".tides .card.cur");
+      await cur.first().evaluate((n) => n.scrollIntoView({ block: "start", behavior: "smooth" }));
+      await h.wait(800);
+      await h.ring([cur.nth(0), cur.nth(1), cur.nth(2)]);
+    },
+    buttons: async (h) => {
+      await h.clear();
+      await h.page.locator(".tides .card.note").first().evaluate((n) => n.scrollIntoView({ block: "center", behavior: "smooth" }));
+      await h.wait(800);
+      await h.ring(h.page.locator(".ang-ai-btn"));
+    },
+    plan: async (h) => {
+      await h.clear();
+      await h.page.goto(h.url + "?view=advisor&from=tides&ask=passage");
+      await h.page.waitForSelector("[data-testid='stChatMessage']", { timeout: 120000 }).catch(() => {});
+      await h.settle();
+      await h.tip(h.page.locator("[data-testid='stChatMessage']").last(), "An example plan, written from the same readings", "above");
+    },
+    note: async (h) => {
+      await h.clear();
+      await h.card({ kicker: "Remember", title: "Context, not a signal",
+        lines: ["✓ Describes the macro conditions, with plain trading words", "✓ Frames risk over weeks",
+                "Never a buy or sell call, and not a forecast"],
+        foot: "The passage plan in this video is an example, written from the same readings." });
+    },
+  },
   // ------------------------------------------------------------------------------------------ Funnels
   "f1-funnels": {
     query: "?section=prism",

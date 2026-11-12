@@ -468,3 +468,41 @@ def page(snap: dict, now: datetime | None = None, range_key: str = "1Y") -> str:
     return (CSS + "<div class='tides'>" + hero(snap, warning, now) + note(snap, upcoming, now)
             + strip(upcoming, now) + WAVES_TITLE + waves(snap, range_key) + cards(snap) + side_readings(snap)
             + foot + "</div>")
+
+
+PASSAGE_TIP = ("📜 Today's AI Passage Plan (opens in its own window): the AI Navigator charts today's conditions, the "
+               "week's events and the winds for your own assets, Sets and funnels, with things to watch. One plan a "
+               "day, kept in your logbook. Descriptions, not buy or sell calls.")
+
+
+def render_panel(st, snap: dict, saved_range: str | None, save_range, buttons) -> None:
+    """The Tides panel in Streamlit (the app's 🌊 Tides section, and the training-video demo page): the hero, the
+    note with the AI buttons beside it (buttons() draws them), the calendar, the range picker (saved_range, and
+    save_range(picked) when it changes), the waves and the currents."""
+    st.html(hero_part(snap))
+    # The note and the two AI buttons share a row when there is room; on a narrow screen the buttons wrap to a
+    # row of their own instead of squashing their labels.
+    st.markdown(
+        "<style>.st-key-tides_note_row [data-testid='stHorizontalBlock']{flex-wrap:wrap;row-gap:8px}"
+        ".st-key-tides_note_row [data-testid='stColumn']:first-child{flex:1 1 420px !important;"
+        "min-width:min(420px,100%) !important}"
+        ".st-key-tides_note_row [data-testid='stColumn']:last-child{flex:0 1 auto !important;width:auto !important;"
+        "min-width:0 !important}"
+        ".st-key-tides_note_row [data-testid='stColumn']:last-child [data-testid='stElementContainer']"
+        "{width:auto !important}</style>", unsafe_allow_html=True)
+    row = st.container(key="tides_note_row")
+    note_col, ai_col = row.columns([5, 1], vertical_alignment="center")
+    with note_col:
+        st.html(note_part(snap))
+    with ai_col:
+        buttons()
+    st.html(strip_part(snap))
+    ranges = list(RANGES)
+    if st.session_state.get("tides_range") not in ranges:
+        st.session_state["tides_range"] = saved_range if saved_range in ranges else "1Y"
+    picked = st.segmented_control("Time range", ranges, key="tides_range", label_visibility="collapsed",
+                                  help="How far back the waves go: 3 months, 6 months, 1 year or 2 years.")
+    if picked and picked != saved_range:
+        save_range(picked)
+    st.html(waves_part(snap, picked or "1Y"))
+    st.html(bottom_part(snap))

@@ -18,7 +18,7 @@ module.exports = function makeHelpers(page, url) {
   };
   h.open = async (query) => {
     await page.goto(url + (query || ""));
-    await page.waitForSelector(".lat", { timeout: 180000 });
+    await page.waitForSelector(h.ready || ".lat", { timeout: 180000 });
     await h.settle();
     await page.mouse.move(640, 300, { steps: 2 });
   };

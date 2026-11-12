@@ -24,7 +24,7 @@ const ACTIONS = require("./actions.js");
   const noZoom = script.zoom === "none";
   const view = { width: 1280, height: 610 };
   const warm = await browser.newPage({ viewport: view });
-  await warm.goto(url + (actions.query || "")); await warm.waitForSelector(".lat", { timeout: 180000 }); await warm.close();
+  await warm.goto(url + (actions.query || "")); await warm.waitForSelector(actions.ready || ".lat", { timeout: 300000 }); await warm.close();
   // The app is recorded at 1280 x 610, zoomed to 125% (text 25% larger, sharp); build.py adds a 110-pixel caption
   // band underneath for a 1280 x 720 video. Only the page body is zoomed: the pointer, diagrams, cards and notes are
   // drawn outside the zoom, at real pixels.
@@ -71,6 +71,7 @@ const ACTIONS = require("./actions.js");
   const t0 = Date.now();
   const now = () => (Date.now() - t0) / 1000;
   const h = makeHelpers(page, url);
+  h.ready = actions.ready || ".lat";      // what shows the page is drawn (a video can name its own)
   await h.open(actions.query || "");
   if (actions.setup) await actions.setup(h);
   const trim = now();

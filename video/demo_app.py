@@ -8,6 +8,9 @@ Address options (all optional):
   &preset=1                         open the saved Group and Set in their editors (for quick looks)
   ?view=advisor&from=lattice|app    the ✨ Angstrom Assistant window, with example answers (DEMO_ANSWERS below)
                                     instead of a call to the AI, so a recording is the same every time
+  ?view=tides                       the 🌊 Tides panel, from today's readings (worked out once per process)
+  ?view=advisor&from=tides&ask=passage   Today's AI Passage Plan: an example written from the same readings by
+                                    fixed templates (demo_passage below), not by an AI
 
 With DEMO_PRICES set (a folder of saved daily prices), "Run at a past moment" reads those, cut before 30 Oct 2024.
 
@@ -84,9 +87,24 @@ class HistoryQuery(Query):
         return self
 
 
+@st.cache_resource(show_spinner="Reading the macro currents…")
+def _tides_snap() -> dict:
+    """Today's Tides readings, worked out once for the whole process (as the worker saves one for everyone)."""
+    import tides
+
+    return tides.build(None)
+
+
+DEMO_WATCHLIST = {"crypto": {"bitcoin": "Bitcoin", "ethereum": "Ethereum", "solana": "Solana"},
+                  "stock": {"AAPL": "Apple", "NVDA": "NVIDIA", "JPM": "JPMorgan"}}
+
+
 class DemoDb:
     def table(self, name):
         s = _store()
+        if name == "tides_snapshots":
+            snap = _tides_snap()
+            return Query([{"body": snap, "computed_at": snap.get("computed_at")}])
         if name == "set_history":
             return HistoryQuery()
         if name == "analysis_configs":
@@ -166,7 +184,46 @@ It describes conditions; it isn't a forecast. More in [🎬 Prism Scan](?view=vi
 ]
 
 
-def _demo_ask(history, question, system, post=None, images=None):
+def demo_passage(snap: dict, watchlist: dict) -> str:
+    """An example passage plan in the Navigator's layout, written from the readings by fixed templates (the video
+    says it is an example)."""
+    from datetime import datetime, timezone
+
+    import macro_calendar as mc
+    import tides as td
+
+    now = datetime.now(timezone.utc)
+    t, sea = snap["tide"], snap.get("sea") or {}
+    name, plain, _ = td.TIDE_WORDS[t["label"]]
+    fams = ", ".join(f"{td.FAMILIES[f][0].lower()} {v:+.2f}" for f, v in (t.get("families") or {}).items())
+    out = ["**⚓ Conditions**",
+           f"{name} ({plain}), score {t['score']:+.2f}, held {t['held_days']} trading days. Sea "
+           f"{sea.get('state', 'unknown')} ({sea.get('plain', '')}). Family pulls: {fams}.", "",
+           "**🌦️ Weather on the route**"]
+    week = [e for e in mc.upcoming(now, days=7) if e["at"] >= now]
+    out += [f"- {e['short']} ({e['reference']}), {mc.when_words(e['at'], now)}: tends to move rates, the dollar "
+            "and fear." for e in week] or ["- No major scheduled release in the next 7 days."]
+    out += ["", "**⛵ Your vessels**"]
+    for market, names in (("crypto", ", ".join(watchlist["crypto"].values())),
+                          ("equity", ", ".join(watchlist["stock"].values()))):
+        w = (snap.get("winds") or {}).get(market)
+        if w:
+            out.append(f"- {w['name']} ({names}): {w['wind']}, led by "
+                       + ", ".join(td.SPEC[k]["name"] for k in w["drivers"]) + ".")
+    extreme = [c for c in (snap.get("currents") or {}).values()
+               if c.get("status") == "ok" and c.get("band") in ("very high", "very low")]
+    out += ["", "**🪨 Hazards**"]
+    out += [f"- {c['name']} is {c['band']} against its last 5 years ({c['score']:.0f}/100)." for c in extreme[:3]] \
+        or ["- No current is at an extreme band."]
+    out += ["", "**🔭 Things to watch**",
+            f"- Expectation: the reading stays {name.lower()} for 5 more closes. A score back across ±0.20 would "
+            "show it wrong (5 trading days)."]
+    return "\n".join(out)
+
+
+def _demo_ask(history, question, system, post=None, images=None, **kwargs):
+    if "Passage Plan" in question:
+        return demo_passage(_tides_snap(), DEMO_WATCHLIST)
     q = question.lower()
     return next(a for key, a in DEMO_ANSWERS if key in q)
 
@@ -177,10 +234,27 @@ st.markdown("<style>header[data-testid='stHeader'],[data-testid='stToolbar'],[da
             "</style>", unsafe_allow_html=True)
 if st.query_params.get("view") == "advisor":
     import advisor  # noqa: E402
+    import ai_providers  # noqa: E402
 
     advisor.available = lambda: True
+    ai_providers.available = lambda provider: True       # no AI is called: the answers are the examples above
+    ai_providers.pick = lambda use, chosen: "claude"
     advisor.ask = _demo_ask
-    lattice_panel.render_popout(st, DemoDb(), seed.USER, str(st.query_params.get("from") or "lattice"))
+    lattice_panel.render_popout(st, DemoDb(), seed.USER, str(st.query_params.get("from") or "lattice"),
+                                watchlist=DEMO_WATCHLIST, auto=str(st.query_params.get("ask") or ""))
+    st.stop()
+if st.query_params.get("view") == "tides":
+    import tides_view  # noqa: E402
+
+    st.markdown("<div class='tides-demo'></div>", unsafe_allow_html=True)
+    st.subheader("🌊 Tides (preview)")
+
+    def _buttons():
+        lattice_panel.advisor_button(st, "tides", key="tides_navigator", label="AI Navigator")
+        lattice_panel.advisor_button(st, "tides", key="tides_passage", label="Today's AI Passage Plan",
+                                     ask="passage", tip=tides_view.PASSAGE_TIP)
+
+    tides_view.render_panel(st, _tides_snap(), "1Y", lambda picked: None, _buttons)
     st.stop()
 store = _store()
 if "show_provided" not in st.session_state:

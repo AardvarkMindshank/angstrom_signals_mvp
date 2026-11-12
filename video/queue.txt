@@ -1,2 +1,2 @@
 # Videos recorded when the "video" branch is pushed, one per line (names of files in video/series/, without .json).
-f1-funnels
+t1-tides

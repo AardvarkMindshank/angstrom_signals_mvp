@@ -1,0 +1,61 @@
+{
+ "title": "Tides",
+ "series": "Tides",
+ "next": "",
+ "slug": "t1-tides",
+ "section": "training",
+ "intro_say": "Angstrom Signals. | Tides.",
+ "outro_say": "That's Tides. | It describes conditions. It never says buy or sell.",
+ "steps": [
+  {
+   "id": "idea",
+   "screen": "A card: the macro layer",
+   "say": "Tides is the macro layer: the big money flows behind every chart. | Rates, the dollar, inflation, fear, credit, and where money is rotating. | They move slowly, but they set the conditions every asset trades in."
+  },
+  {
+   "id": "tide",
+   "screen": "The Tide, at the top of the panel",
+   "say": "The Tide sums up twelve currents. | Coming in means risk-supportive. Slack means mixed. Going out means risk-defensive. | A new Tide only counts after five daily closes."
+  },
+  {
+   "id": "sea",
+   "screen": "The Sea state",
+   "say": "The Sea state is how rough the water is: calm, moderate, rough, or storm. | That's low to extreme volatility, from the VIX and Bitcoin."
+  },
+  {
+   "id": "winds",
+   "screen": "The winds for crypto and equities",
+   "say": "The winds apply the currents to each market. | A tailwind helps longs in that market. A headwind works against them."
+  },
+  {
+   "id": "storm",
+   "screen": "The macro calendar: storm warnings",
+   "say": "The calendar flags the big scheduled releases: the Fed, inflation, and jobs. | A storm warning means an event is near. It isn't a forecast."
+  },
+  {
+   "id": "waves",
+   "screen": "The waves, over two years",
+   "say": "The waves draw each current over time, with the swell they make together. | Dashed lines mark past Fed, inflation and jobs days."
+  },
+  {
+   "id": "currents",
+   "screen": "The currents, each with its band and pull",
+   "say": "Each current is scored against its own last five years, from very low to very high. | Its pull says whether it's rising, falling, or flat, and which way that pushes risk."
+  },
+  {
+   "id": "buttons",
+   "screen": "The two AI buttons beside the daily note",
+   "say": "Beside the daily note, the AI Navigator answers questions about these readings. | Today's AI Passage Plan applies them to your own assets and funnels."
+  },
+  {
+   "id": "plan",
+   "screen": "Today's AI Passage Plan (an example)",
+   "say": "The plan covers the conditions, the week's events, the winds for your assets, the hazards, and things to watch. | One plan a day, kept in your logbook."
+  },
+  {
+   "id": "note",
+   "screen": "A card: what Tides is, and isn't",
+   "say": "Macro conditions frame risk over weeks. | They don't time trades, and a coin can rise on its own news while the tide goes out."
+  }
+ ]
+}

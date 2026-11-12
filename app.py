@@ -13539,39 +13539,13 @@ def show_tides() -> None:
             return
         import lattice_panel as _lp
 
-        st.html(tides_view.hero_part(snap))
-        # The note and the two AI buttons share a row when there is room; on a narrow screen the buttons wrap to a
-        # row of their own instead of squashing their labels.
-        st.markdown(
-            "<style>.st-key-tides_note_row [data-testid='stHorizontalBlock']{flex-wrap:wrap;row-gap:8px}"
-            ".st-key-tides_note_row [data-testid='stColumn']:first-child{flex:1 1 420px !important;"
-            "min-width:min(420px,100%) !important}"
-            ".st-key-tides_note_row [data-testid='stColumn']:last-child{flex:0 1 auto !important;width:auto !important;"
-            "min-width:0 !important}"
-            ".st-key-tides_note_row [data-testid='stColumn']:last-child [data-testid='stElementContainer']"
-            "{width:auto !important}</style>", unsafe_allow_html=True)
-        row = st.container(key="tides_note_row")
-        note_col, ai_col = row.columns([5, 1], vertical_alignment="center")
-        with note_col:
-            st.html(tides_view.note_part(snap))
-        with ai_col:
+        def _buttons():
             _lp.advisor_button(st, "tides", key="tides_navigator", label="AI Navigator")
             _lp.advisor_button(st, "tides", key="tides_passage", label="Today's AI Passage Plan", ask="passage",
-                               tip="📜 Today's AI Passage Plan (opens in its own window): the AI Navigator charts "
-                                   "today's conditions, the week's events and the winds for your own assets, Sets "
-                                   "and funnels, with things to watch. One plan a day, kept in your logbook. "
-                                   "Descriptions, not buy or sell calls.")
-        st.html(tides_view.strip_part(snap))
-        ranges = list(tides_view.RANGES)
-        saved = (prefs.get("settings") or {}).get("tides_range")
-        if st.session_state.get("tides_range") not in ranges:
-            st.session_state["tides_range"] = saved if saved in ranges else "1Y"
-        picked = st.segmented_control("Time range", ranges, key="tides_range", label_visibility="collapsed",
-                                      help="How far back the waves go: 3 months, 6 months, 1 year or 2 years.")
-        if picked and picked != saved:
-            save_account_settings({"tides_range": picked})
-        st.html(tides_view.waves_part(snap, picked or "1Y"))
-        st.html(tides_view.bottom_part(snap))
+                               tip=tides_view.PASSAGE_TIP)
+
+        tides_view.render_panel(st, snap, (prefs.get("settings") or {}).get("tides_range"),
+                                lambda picked: save_account_settings({"tides_range": picked}), _buttons)
 
 
 def show_market_moods(trade_crypto: bool = True, trade_equities: bool = True) -> None:
