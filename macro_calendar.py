@@ -38,6 +38,23 @@ KINDS = {
 
 # (kind, date, New York time, reference, note)
 EVENTS = (
+    # Past Fed decisions, for the markers on the Tides timeline (Fed calendars 2024 to 2026).
+    ("fomc", "2024-12-18", "14:00", "December 2024 meeting", ""),
+    ("fomc", "2025-01-29", "14:00", "January 2025 meeting", ""),
+    ("fomc", "2025-03-19", "14:00", "March 2025 meeting", ""),
+    ("fomc", "2025-05-07", "14:00", "May 2025 meeting", ""),
+    ("fomc", "2025-06-18", "14:00", "June 2025 meeting", ""),
+    ("fomc", "2025-07-30", "14:00", "July 2025 meeting", ""),
+    ("fomc", "2025-09-17", "14:00", "September 2025 meeting", ""),
+    ("fomc", "2025-10-29", "14:00", "October 2025 meeting", ""),
+    ("fomc", "2025-12-10", "14:00", "December 2025 meeting", ""),
+    ("fomc", "2026-01-28", "14:00", "January meeting", ""),
+    ("fomc", "2026-03-18", "14:00", "March meeting", ""),
+    ("fomc", "2026-04-29", "14:00", "April meeting", ""),
+    ("fomc", "2026-06-17", "14:00", "June meeting", ""),
+    ("fomc", "2026-07-29", "14:00", "July meeting", ""),
+    ("fomc", "2026-09-16", "14:00", "September meeting", ""),
+    ("fomc", "2026-10-28", "14:00", "October meeting", ""),
     ("fomc", "2026-12-09", "14:00", "December meeting", ""),
     ("fomc", "2027-01-27", "14:00", "January meeting", "tentative"),
     ("fomc", "2027-03-17", "14:00", "March meeting", "tentative"),

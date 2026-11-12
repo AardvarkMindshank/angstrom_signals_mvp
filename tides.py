@@ -32,6 +32,7 @@ from datetime import datetime, timezone
 import numpy as np
 import pandas as pd
 
+VERSION = 2                     # 2: each current's wave carries its dates (for the timeline)
 YEARS = 5                       # each current is scored against its own last 5 years
 MOMENTUM_DAYS = 30              # trading days
 FLAT = 0.5                      # |momentum| below this = flat
@@ -351,13 +352,13 @@ def snapshot(raw: dict[str, pd.Series], btc_dominance: float | None = None, fear
     """Everything the panel shows, from the raw series. JSON-ready (the histories are cut to lists)."""
     readings = {k: read_current(k, series_for(k, raw)) for k in CURRENT_KEYS}
     t = tide(readings)
-    out = {"computed_at": (now or datetime.now(timezone.utc)).isoformat(), "version": 1, "tide": t,
+    out = {"computed_at": (now or datetime.now(timezone.utc)).isoformat(), "version": VERSION, "tide": t,
            "sea": sea_state(raw), "winds": winds(readings), "extras": extras(raw),
            "btc_dominance": btc_dominance, "fear_greed": fear_greed, "currents": {}}
     for k, r in readings.items():
         hist = r.pop("history", None)
         if hist is not None:
-            r["wave"] = [round(float(v), 3) for v in hist.iloc[-260:].tolist()]
+            r["wave"] = [[d.date().isoformat(), round(float(v), 3)] for d, v in hist.iloc[-520:].items()]
         out["currents"][k] = r
     return out
 
@@ -454,7 +455,8 @@ def refresh_due(supabase, log=print) -> bool:
     except Exception as exc:
         log(f"Tides skipped (run sql/2026-11-23_tides.sql): {str(exc)[:120]}")
         return False
-    if age_hours(latest(supabase)) < REFRESH_HOURS - 0.25:
+    last = latest(supabase)
+    if age_hours(last) < REFRESH_HOURS - 0.25 and (last or {}).get("version") == VERSION:
         return False
     snap = build(supabase, log)
     if (snap.get("tide") or {}).get("status") != "ok":

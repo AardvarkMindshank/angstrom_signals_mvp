@@ -108,3 +108,26 @@ def test_the_tide_never_reads_a_date_after_today():
     weights = {f: td.FAMILIES[f][1] for f in fam}
     expect = sum(fam[f] * weights[f] for f in fam) / sum(weights.values())
     assert abs(snap["tide"]["score"] - expect) < 0.02          # today's score is all four families, not one
+
+
+def test_waves_timeline_has_month_ticks_fed_markers_and_ranges():
+    import base64
+    import re
+
+    import tides_view as tv
+
+    snap = json.loads(json.dumps(td.snapshot(_raw())))
+    assert snap["version"] == td.VERSION and isinstance(snap["currents"]["dollar"]["wave"][0], list)
+    sizes = {}
+    for key in tv.RANGES:
+        out = tv.waves(snap, key)
+        svg = base64.b64decode(re.search(r"base64,([^']+)'", out).group(1)).decode()
+        sizes[key] = svg.count(">Fed<")
+        assert re.search(r">(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)( \d\d)?<", svg)
+    assert sizes["2Y"] >= sizes["1Y"] >= sizes["3M"] and sizes["1Y"] >= 6        # about 8 Fed meetings a year
+    old = json.loads(json.dumps(snap))
+    for c in old["currents"].values():                                              # an older snapshot's plain list
+        if c.get("wave"):
+            c["wave"] = [v for _d, v in c["wave"]][-260:]
+    assert "<path" in base64.b64decode(re.search(r"base64,([^']+)'", tv.waves(old, "1Y")).group(1)).decode()
+    assert "tides" in tv.top_part(snap) and "Navigator" in tv.top_part(snap) and "Credit" in tv.bottom_part(snap)

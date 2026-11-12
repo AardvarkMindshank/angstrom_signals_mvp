@@ -13228,7 +13228,7 @@ def show_tides() -> None:
 
     with section_expander("🌊 Tides (preview)", "tides"):
         snap = tides.latest(supabase)
-        if tides.age_hours(snap) > 12:
+        if tides.age_hours(snap) > 12 or (snap or {}).get("version") != tides.VERSION:
             try:
                 snap = _tides_live()
             except Exception as exc:
@@ -13237,7 +13237,17 @@ def show_tides() -> None:
         if not snap or (snap.get("tide") or {}).get("status") != "ok":
             st.info("Tides has not got enough data yet.")
             return
-        st.html(tides_view.page(snap))
+        st.html(tides_view.top_part(snap))
+        ranges = list(tides_view.RANGES)
+        saved = (prefs.get("settings") or {}).get("tides_range")
+        if st.session_state.get("tides_range") not in ranges:
+            st.session_state["tides_range"] = saved if saved in ranges else "1Y"
+        picked = st.segmented_control("Time range", ranges, key="tides_range", label_visibility="collapsed",
+                                      help="How far back the waves go: 3 months, 6 months, 1 year or 2 years.")
+        if picked and picked != saved:
+            save_account_settings({"tides_range": picked})
+        st.html(tides_view.waves_part(snap, picked or "1Y"))
+        st.html(tides_view.bottom_part(snap))
 
 
 def show_market_moods(trade_crypto: bool = True, trade_equities: bool = True) -> None:

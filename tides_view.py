@@ -227,46 +227,100 @@ def strip(upcoming: list[dict], now: datetime) -> str:
             "major, one: notable, square flag: extreme)</span></h4><div class='strip'>" + "".join(cards) + "</div>")
 
 
-def waves(snap: dict) -> str:
-    """Each voting current's contribution (-1 to +1) over the past year, and the swell: the Tide's score."""
+RANGES = {"3M": 63, "6M": 126, "1Y": 252, "2Y": 504}
+MONTHS = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+
+
+def _dated(wave, dates: list[str]) -> dict[str, float]:
+    """{date: value} for a current's wave. Older snapshots kept a plain list ending on the Tide's last day."""
+    if wave and isinstance(wave[0], (list, tuple)):
+        return {d: v for d, v in wave}
+    return dict(zip(dates[-len(wave):], wave)) if wave else {}
+
+
+def waves(snap: dict, range_key: str = "1Y") -> str:
+    """Each voting current's pull (-1 to +1) and the swell (the Tide's score) on one time axis, like the charts:
+    month ticks along the bottom and past Fed decisions as dashed lines."""
+    days = RANGES.get(range_key, 252)
     cur = [c for k in td.CURRENT_KEYS if (c := (snap.get("currents") or {}).get(k)) and c.get("status") == "ok"
            and c.get("weight") and c.get("wave")]
-    hist = [v for _d, v in (snap.get("tide") or {}).get("history") or []][-260:]
+    hist = ((snap.get("tide") or {}).get("history") or [])[-days:]
     if not cur or len(hist) < 20:
         return ""
+    dates = [d for d, _v in hist]
+    all_dates = [d for d, _v in (snap.get("tide") or {}).get("history") or []]
     x0, x1, lane, top = 170, 980, 34, 110
-    height = top + lane * len(cur) + 20
+    rows_bottom = top + lane * len(cur)
+    height = rows_bottom + 46
+    n = len(dates)
+    pos = {d: i for i, d in enumerate(dates)}
 
-    def path(vals, cy, amp):
-        n = len(vals)
-        return " ".join(f"{'M' if i == 0 else 'L'}{x0 + (x1 - x0) * i / (n - 1):.1f} {cy - amp * v:.1f}"
-                        for i, v in enumerate(vals))
+    def X(i):
+        return x0 + (x1 - x0) * i / max(n - 1, 1)
+
+    def path(points, cy, amp):
+        out, pen = [], "M"
+        for i, d in enumerate(dates):
+            v = points.get(d)
+            if v is None:
+                pen = "M"
+                continue
+            out.append(f"{pen}{X(i):.1f} {cy - amp * v:.1f}")
+            pen = "L"
+        return " ".join(out)
 
     swell_y = 60
-    body = [f"<rect x='{x0}' y='{swell_y - 0.2 * 45:.1f}' width='{x1 - x0}' height='{0.4 * 45:.1f}' "
-            f"fill='rgba(127,127,127,.12)'/>",
-            f"<line x1='{x0}' x2='{x1}' y1='{swell_y}' y2='{swell_y}' stroke='rgba(127,127,127,.35)'/>",
-            f"<path d='{path(hist, swell_y, 45)}' fill='none' stroke='#2563eb' stroke-width='2.5'/>",
-            f"<text x='12' y='{swell_y - 4}' font-size='13' font-weight='700' fill='currentColor'>Swell = the Tide</text>",
-            f"<text x='12' y='{swell_y + 12}' font-size='11' fill='currentColor' opacity='.7'>band: slack (mixed)</text>"]
+    body = []
+    # month ticks (first trading day of each month; every other month when the range is long)
+    step = 1 if days <= 130 else 2 if days <= 260 else 3
+    seen = []
+    for i, d in enumerate(dates):
+        ym = d[:7]
+        if i and ym == dates[i - 1][:7]:
+            continue
+        month = int(d[5:7])
+        if i == 0 or (month - 1) % step:
+            continue
+        seen.append((i, d))
+    for i, d in seen:
+        label = MONTHS[int(d[5:7]) - 1] + (f" '{d[2:4]}" if d[5:7] == "01" or i == seen[0][0] else "")
+        body.append(f"<line x1='{X(i):.1f}' x2='{X(i):.1f}' y1='30' y2='{rows_bottom}' stroke='#94a3b8' "
+                    f"stroke-opacity='.25'/>")
+        body.append(f"<text x='{X(i):.1f}' y='{rows_bottom + 18}' font-size='12' text-anchor='middle' "
+                    f"fill='#64748b'>{label}</text>")
+    # past Fed decisions
+    for e in mc.events():
+        d = e["at"].date().isoformat()
+        if e["kind"] != "fomc" or d not in pos:
+            continue
+        x = X(pos[d])
+        body.append(f"<line x1='{x:.1f}' x2='{x:.1f}' y1='22' y2='{rows_bottom}' stroke='#dc2626' "
+                    f"stroke-opacity='.55' stroke-dasharray='3 4'/>")
+        body.append(f"<text x='{x:.1f}' y='18' font-size='11' text-anchor='middle' fill='#dc2626'>Fed</text>")
+    body += [f"<rect x='{x0}' y='{swell_y - 0.2 * 45:.1f}' width='{x1 - x0}' height='{0.4 * 45:.1f}' "
+             f"fill='#94a3b8' fill-opacity='.18'/>",
+             f"<line x1='{x0}' x2='{x1}' y1='{swell_y}' y2='{swell_y}' stroke='#94a3b8'/>",
+             f"<path d='{path(dict(hist), swell_y, 45)}' fill='none' stroke='#2563eb' stroke-width='2.5'/>",
+             f"<text x='12' y='{swell_y - 4}' font-size='13' font-weight='700' fill='#64748b'>Swell = the Tide</text>",
+             f"<text x='12' y='{swell_y + 12}' font-size='11' fill='#64748b'>grey band: slack</text>"]
     colours = ("#f97316", "#10b981", "#8b5cf6", "#ec4899", "#14b8a6", "#eab308", "#64748b", "#ef4444", "#0ea5e9")
     for i, c in enumerate(cur):
         cy = top + lane * i + lane / 2
-        vals = c["wave"][-len(hist):]
-        body.append(f"<line x1='{x0}' x2='{x1}' y1='{cy}' y2='{cy}' stroke='rgba(127,127,127,.22)'/>")
-        body.append(f"<path d='{path(vals, cy, 13)}' fill='none' stroke='{colours[i % len(colours)]}' "
-                    f"stroke-width='1.5'/>")
-        body.append(f"<text x='12' y='{cy + 4}' font-size='12' fill='currentColor'>{esc(c['icon'])} "
-                    f"{esc(c['name'])}</text>")
-    svg = img(f"<svg viewBox='0 0 1000 {height}' font-family='Source Sans Pro, Segoe UI, Helvetica, Arial, sans-serif'>" + "".join(body).replace("fill='currentColor'", "fill='#64748b'")
-              .replace("rgba(127,127,127,.12)", "#94a3b8' fill-opacity='.18").replace("stroke='rgba(127,127,127,.35)'",
-              "stroke='#94a3b8'").replace("stroke='rgba(127,127,127,.22)'", "stroke='#94a3b8' stroke-opacity='.5'")
-              + "</svg>", "wv", "Each current over the past year and the swell")
-    return ("<h4>〰️ The waves: each current's pull over the past year, and the swell they make together</h4>"
-            "<div class='card waves'>" + svg + "<div class='foot' style='margin-top:4px'>Above the line pulls towards "
-            "risk-taking, below pulls away. The swell is the Tide's score: each family's average, weighted "
+        body.append(f"<line x1='{x0}' x2='{x1}' y1='{cy}' y2='{cy}' stroke='#94a3b8' stroke-opacity='.5'/>")
+        body.append(f"<path d='{path(_dated(c['wave'], all_dates), cy, 13)}' fill='none' "
+                    f"stroke='{colours[i % len(colours)]}' stroke-width='1.5'/>")
+        body.append(f"<text x='12' y='{cy + 4}' font-size='12' fill='#64748b'>{esc(c['icon'])} {esc(c['name'])}</text>")
+    first, last = dates[0], dates[-1]
+    svg = img(f"<svg viewBox='0 0 1000 {height}' font-family='Source Sans Pro, Segoe UI, Helvetica, Arial, "
+              f"sans-serif'>" + "".join(body) + "</svg>", "wv",
+              f"Each current and the swell from {first} to {last}")
+    return ("<div class='card waves'>" + svg + "<div class='foot' style='margin-top:4px'>Above a lane's line pulls "
+            "towards risk-taking, below pulls away. The swell is the Tide's score: each family's average, weighted "
             "(money and rates 30%, growth and credit 30%, safe havens 20%, rotation 20%); the grey band is slack. "
-            "Drawn from the readings, nothing added.</div></div>")
+            "Red dashes mark Fed rate decisions. Drawn from the readings, nothing added.</div></div>")
+
+
+WAVES_TITLE = "<h4>〰️ The waves: each current's pull, and the swell they make together</h4>"
 
 
 def card(c: dict) -> str:
@@ -345,7 +399,32 @@ def side_readings(snap: dict) -> str:
     return "<h4>🔭 Also on the horizon (shown, not voting)</h4><div class='grid'>" + "".join(bits) + "</div>"
 
 
-def page(snap: dict, now: datetime | None = None) -> str:
+def top_part(snap: dict, now: datetime | None = None) -> str:
+    """Header, note and storm warnings (then the app puts its range picker above the waves)."""
+    now = now or datetime.now(timezone.utc)
+    upcoming = mc.upcoming(now, days=35)
+    return (CSS + "<div class='tides'>" + hero(snap, mc.storm_warning(now), now) + note(snap, upcoming, now)
+            + strip(upcoming, now) + WAVES_TITLE + "</div>")
+
+
+def waves_part(snap: dict, range_key: str = "1Y") -> str:
+    return "<div class='tides'>" + waves(snap, range_key) + "</div>"
+
+
+def bottom_part(snap: dict) -> str:
+    stamp = snap.get("computed_at", "")[:16].replace("T", " ")
+    return "<div class='tides'>" + cards(snap) + side_readings(snap) + footer(stamp) + "</div>"
+
+
+def footer(stamp: str) -> str:
+    return (f"<div class='foot'>Preview for review. Readings from Yahoo Finance and FRED (St. Louis Fed), updated "
+            f"{esc(stamp)} UTC. Each current is scored against its own last 5 years; its pull is its 30-day move "
+            f"against the usual size of such a move. History before the daily record began is rebuilt from today's "
+            f"data, and inflation uses revised figures, not first releases. Macro conditions frame risk; they do "
+            f"not time trades, and a coin can rise on its own news while the tide goes out. Not advice.</div>")
+
+
+def page(snap: dict, now: datetime | None = None, range_key: str = "1Y") -> str:
     now = now or datetime.now(timezone.utc)
     upcoming = mc.upcoming(now, days=35)
     warning = mc.storm_warning(now)
@@ -356,4 +435,5 @@ def page(snap: dict, now: datetime | None = None) -> str:
             f"data, and inflation uses revised figures, not first releases. Macro conditions frame risk; they do "
             f"not time trades, and a coin can rise on its own news while the tide goes out. Not advice.</div>")
     return (CSS + "<div class='tides'>" + hero(snap, warning, now) + note(snap, upcoming, now)
-            + strip(upcoming, now) + waves(snap) + cards(snap) + side_readings(snap) + foot + "</div>")
+            + strip(upcoming, now) + WAVES_TITLE + waves(snap, range_key) + cards(snap) + side_readings(snap)
+            + foot + "</div>")
