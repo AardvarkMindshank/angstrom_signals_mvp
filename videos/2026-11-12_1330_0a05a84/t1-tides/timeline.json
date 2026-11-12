@@ -1,0 +1,56 @@
+{
+ "steps": [
+  {
+   "id": "idea",
+   "start": 2.195,
+   "say": "Tides is the macro layer: the big money flows behind every chart. | Rates, the dollar, inflation, fear, credit, and where money is rotating. | They move slowly, but they set the conditions every asset trades in."
+  },
+  {
+   "id": "tide",
+   "start": 15.447,
+   "say": "The Tide sums up twelve currents. | Coming in means risk-supportive. Slack means mixed. Going out means risk-defensive. | A new Tide only counts after five daily closes."
+  },
+  {
+   "id": "sea",
+   "start": 26.788,
+   "say": "The Sea state is how rough the water is: calm, moderate, rough, or storm. | That's low to extreme volatility, from the VIX and Bitcoin."
+  },
+  {
+   "id": "winds",
+   "start": 35.802,
+   "say": "The winds apply the currents to each market. | A tailwind helps longs in that market. A headwind works against them."
+  },
+  {
+   "id": "storm",
+   "start": 43.241,
+   "say": "The calendar flags the big scheduled releases: the Fed, inflation, and jobs. | A storm warning means an event is near. It isn't a forecast."
+  },
+  {
+   "id": "waves",
+   "start": 52.386,
+   "say": "The waves draw each current over time, with the swell they make together. | Dashed lines mark past Fed, inflation and jobs days."
+  },
+  {
+   "id": "currents",
+   "start": 60.558,
+   "say": "Each current is scored against its own last five years, from very low to very high. | Its pull says whether it's rising, falling, or flat, and which way that pushes risk."
+  },
+  {
+   "id": "buttons",
+   "start": 71.006,
+   "say": "Beside the daily note, the AI Navigator answers questions about these readings. | Today's AI Passage Plan applies them to your own assets and funnels."
+  },
+  {
+   "id": "plan",
+   "start": 80.864,
+   "say": "The plan covers the conditions, the week's events, the winds for your assets, the hazards, and things to watch. | One plan a day, kept in your logbook."
+  },
+  {
+   "id": "note",
+   "start": 89.412,
+   "say": "Macro conditions frame risk over weeks. | They don't time trades, and a coin can rise on its own news while the tide goes out."
+  }
+ ],
+ "end": 98.937,
+ "trim": 2.195
+}
