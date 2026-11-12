@@ -372,6 +372,13 @@ def run_background_checks() -> None:
     frames = refresh_price_catalog(supabase, price_catalog, max_days)
     refresh_due_sentiment(supabase, catalog)
     try:
+        # Tides: the daily macro record (12 currents, Tide, Sea state), every 6 hours. Never holds up the alert pass.
+        import tides
+
+        tides.refresh_due(supabase)
+    except Exception as exc:
+        print(f"Tides skipped: {str(exc)[:160]}")
+    try:
         # Options max-pain snapshots (Bitcoin, Ethereum, watched and funnel equities): the history behind the max pain
         # signal. Collected only; never holds up the alert pass.
         from options_snapshots import refresh_due as refresh_options

@@ -319,9 +319,12 @@ def winds(readings: dict[str, dict]) -> dict[str, dict]:
             continue
         v = float(np.mean(vals))
         word = "tailwind" if v > 0.2 else "headwind" if v < -0.2 else "neither"
-        strongest = sorted(((readings[k]["contribution"], k) for k in keys
-                            if readings.get(k, {}).get("contribution") is not None), key=lambda x: -abs(x[0]))[:2]
-        out[market] = {"name": name, "score": round(v, 3), "wind": word, "drivers": [k for _, k in strongest]}
+        sign = 1 if v >= 0 else -1          # drivers = the currents pushing the same way as the wind
+        pushing = sorted(((readings[k]["contribution"], k) for k in keys
+                          if (readings.get(k, {}).get("contribution") or 0) * sign > 0), key=lambda x: -abs(x[0]))
+        against = [k for k in keys if (readings.get(k, {}).get("contribution") or 0) * sign < -0.2]
+        out[market] = {"name": name, "score": round(v, 3), "wind": word,
+                       "drivers": [k for _, k in pushing[:2]], "against": against}
     return out
 
 
@@ -379,17 +382,82 @@ def summary(snap: dict, upcoming: list[dict] | None = None, now: datetime | None
     if strong:
         bits = []
         for c in strong:
-            word = SPEC[c["key"]][c["direction"]] if c["direction"] in ("rising", "falling") else "flat"
-            pull = "supportive" if (c["contribution"] or 0) > 0 else "defensive"
-            bits.append(f"{c['name'].lower()} {c['direction']} ({word}; {pull})")
-        lines.append("Strongest currents: " + "; ".join(bits) + ".")
+            meaning = SPEC[c["key"]][c["direction"]] if c["direction"] in ("rising", "falling") else "little change"
+            pull = "risk-supportive" if (c["contribution"] or 0) > 0 else "risk-defensive"
+            bits.append(f"{c['name']} {c['direction']}: {meaning} ({pull})")
+        lines.append("Strongest currents. " + ". ".join(bits) + ".")
     for w in (snap.get("winds") or {}).values():
         if w["wind"] != "neither":
-            lines.append(f"A {w['wind']} for {w['name'].lower()}, led by "
-                         + " and ".join(SPEC[k]["name"].lower() for k in w["drivers"]) + ".")
+            line = (f"A {w['wind']} for {w['name'].lower()}, led by "
+                    + " and ".join(SPEC[k]["name"].lower() for k in w["drivers"]))
+            if w.get("against"):
+                line += "; pushing the other way: " + ", ".join(SPEC[k]["name"].lower() for k in w["against"])
+            lines.append(line + ".")
     if upcoming:
         import macro_calendar as mc
 
         e = upcoming[0]
         lines.append(f"Next scheduled event: {e['name']} ({e['reference']}), {mc.when_words(e['at'], now)}.")
     return lines
+
+
+# ------------------------------------------------------------------------------------------------ the daily record
+
+REFRESH_HOURS = 6
+
+
+def extra_inputs(supabase) -> tuple[float | None, float | None]:
+    """Bitcoin's share of the crypto market and crypto Fear & Greed, from the saved market overview."""
+    try:
+        import market_overview
+
+        items = (market_overview.load_overview(supabase) or {}).get("items") or {}
+    except Exception:
+        return None, None
+    dom = (items.get("btc_dom") or {}).get("value")
+    fng = (items.get("fng") or {}).get("value")
+    return (float(dom) if dom is not None else None), (float(fng) if fng is not None else None)
+
+
+def latest(supabase) -> dict | None:
+    try:
+        rows = (supabase.table("tides_snapshots").select("body, computed_at").order("computed_at", desc=True)
+                .limit(1).execute().data or [])
+    except Exception:
+        return None
+    return rows[0]["body"] if rows and isinstance(rows[0].get("body"), dict) else None
+
+
+def age_hours(snap: dict | None, now: datetime | None = None) -> float:
+    if not snap:
+        return float("inf")
+    try:
+        at = datetime.fromisoformat(str(snap["computed_at"]).replace("Z", "+00:00"))
+    except (KeyError, ValueError):
+        return float("inf")
+    return ((now or datetime.now(timezone.utc)) - at).total_seconds() / 3600
+
+
+def build(supabase=None, log=print) -> dict:
+    dom, fng = extra_inputs(supabase) if supabase is not None else (None, None)
+    return snapshot(fetch_all(log), btc_dominance=dom, fear_greed=fng)
+
+
+def refresh_due(supabase, log=print) -> bool:
+    """Background worker: save a new snapshot when the latest is older than REFRESH_HOURS."""
+    try:
+        supabase.table("tides_snapshots").select("id").limit(1).execute()
+    except Exception as exc:
+        log(f"Tides skipped (run sql/2026-11-23_tides.sql): {str(exc)[:120]}")
+        return False
+    if age_hours(latest(supabase)) < REFRESH_HOURS - 0.25:
+        return False
+    snap = build(supabase, log)
+    if (snap.get("tide") or {}).get("status") != "ok":
+        log("Tides: not enough data for a snapshot")
+        return False
+    supabase.table("tides_snapshots").insert({"computed_at": snap["computed_at"], "version": snap["version"],
+                                              "body": snap}).execute()
+    t = snap["tide"]
+    log(f"Tides saved: tide {t['label']} ({t['score']:+.2f}), sea {snap['sea'].get('state')}")
+    return True

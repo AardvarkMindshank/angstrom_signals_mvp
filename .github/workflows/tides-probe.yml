@@ -26,4 +26,9 @@ jobs:
           print("winds", snap["winds"])
           print("extras", snap["extras"])
           print("\n".join(td.summary(snap, mc.upcoming())))
+          json.dump(snap, open("tides_snapshot.json", "w"))
           PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tides-snapshot
+          path: tides_snapshot.json
