@@ -108,7 +108,8 @@ def _report_day_index(times_local: pd.DatetimeIndex, day) -> int | None:
 
 
 # Macro events (macro_calendar.py) as dashed lines: the same colours and label rows as the Tides waves.
-EVENT_MARKS = {"fomc": ("Fed", "#dc2626", 16), "cpi": ("CPI", "#d97706", 30), "jobs": ("Jobs", "#7c3aed", 44)}
+# The last number is the label's row, counted up from the bottom of the price pane (clear of the legend at the top).
+EVENT_MARKS = {"fomc": ("Fed", "#dc2626", -34), "cpi": ("CPI", "#d97706", -21), "jobs": ("Jobs", "#7c3aed", -8)}
 _STEP = {"1h": pd.Timedelta(hours=1), "4h": pd.Timedelta(hours=4), "12h": pd.Timedelta(hours=12),
          "1D": pd.Timedelta(days=1), "1W": pd.Timedelta(days=7)}
 

@@ -156,7 +156,8 @@ class VerticalLines {
                 ctx.font = `${12 * scope.verticalPixelRatio}px sans-serif`;
                 ctx.textAlign = "right";
                 ctx.font = `${(line.event ? 10 : 12) * scope.verticalPixelRatio}px sans-serif`;
-                ctx.fillText(line.label, px - 4 * scope.horizontalPixelRatio, (line.label_y || 78) * scope.verticalPixelRatio);
+                const y = line.label_y < 0 ? scope.mediaSize.height + line.label_y : (line.label_y || 78);   // below 0: from the bottom
+                ctx.fillText(line.label, px - 4 * scope.horizontalPixelRatio, y * scope.verticalPixelRatio);
               }
               ctx.restore();
             }
