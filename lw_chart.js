@@ -502,7 +502,8 @@ function draw(L, root, data) {
       const pane = Number(label.dataset.pane);
       const parts = (paneSeries[pane] || []).map((s) => {
         const v = s.values[i];
-        const shown = s.id === "volume" || s.id === "obv" || s.id === "obv_avg" ? fmtBig(v) : fmt(v, v);
+        const shown = s.id === "volume" || s.id === "obv" || s.id === "obv_avg" ? fmtBig(v)
+          : fmt(v, ["rsi", "stoch", "stochrsi_k", "stochrsi_d", "adx"].includes(s.id) ? 100 : v);   // 0-100: 2 decimals
         const single = (paneSeries[pane] || []).length === 1;
         const name = single ? "" : s.name.replace("MACD histogram", "Hist");
         return name ? `<span style="color:${s.colors ? theme.muted : s.color}">${name}</span> ${shown}` : shown;
