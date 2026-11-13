@@ -375,26 +375,34 @@ function draw(L, root, data) {
         const a = s.a[i], b = s.b[i];
         rows.push(a === null || b === null ? { time: data.times[i] } : { time: data.times[i], a, b });
       }
-      api = chart.addCustomSeries(new BandSeries(L), {
-        fill: s.fill, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false,
-      }, s.pane);
+      const bandOptions = { fill: s.fill, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false };
+      const bandPane = data.panes[s.pane];
+      if (s.pane > 0 && bandPane && bandPane.fixed) bandOptions.autoscaleInfoProvider = () => ({ priceRange: { minValue: bandPane.fixed[0], maxValue: bandPane.fixed[1] } });
+      api = chart.addCustomSeries(new BandSeries(L), bandOptions, s.pane);
     } else if (s.type === "hist") {
       for (let i = 0; i < n; i++) {
         const v = s.values[i];
         rows.push(v === null ? { time: data.times[i] } : { time: data.times[i], value: v, color: s.colors ? s.colors[i] : undefined });
       }
-      options = { priceLineVisible: false, lastValueVisible: false, base: 0 };
+      options = { priceLineVisible: false, lastValueVisible: false, base: s.base ?? 0 };
       if (s.id === "volume") options.priceFormat = { type: "volume" };
+      const histPane = data.panes[s.pane];
+      if (histPane && histPane.fixed) options.autoscaleInfoProvider = () => ({ priceRange: { minValue: histPane.fixed[0], maxValue: histPane.fixed[1] } });
       api = chart.addSeries(L.HistogramSeries, options, s.pane);
     } else {
       for (let i = 0; i < n; i++) {
         const v = s.values[i];
-        rows.push(v === null ? { time: data.times[i] } : { time: data.times[i], value: v });
+        if (v === null) rows.push({ time: data.times[i] });
+        else rows.push(s.colors ? { time: data.times[i], value: v, color: s.colors[i] } : { time: data.times[i], value: v });
       }
       options = {
         color: withAlpha(s.color, s.alpha || 1), lineWidth: s.width >= 1.5 ? 2 : 1, lineStyle: STYLE[s.style] || 0,
         priceLineVisible: false, lastValueVisible: s.pane > 0, crosshairMarkerVisible: s.pane > 0,
       };
+      if (s.type === "dots") {     // points only (Market Cipher dots): no line between them
+        Object.assign(options, { lineVisible: false, pointMarkersVisible: true, pointMarkersRadius: s.radius || 3,
+                                 lastValueVisible: false, crosshairMarkerVisible: false, color: s.colors ? s.colors[0] : "#888" });
+      }
       if (s.scale === "osc") {
         options.priceScaleId = "left";
         options.autoscaleInfoProvider = () => ({ priceRange: { minValue: 0, maxValue: 100 } });
@@ -404,7 +412,7 @@ function draw(L, root, data) {
       api = chart.addSeries(L.LineSeries, options, s.pane);
     }
     api.setData(rows);
-    if (data.log_scale && s.type === "line" && s.pane > 0) { try { api.priceScale().applyOptions({ mode: 1 }); } catch (e) { /* older library */ } }
+    if (data.log_scale && s.type === "line" && s.pane > 0 && !String(s.id).startsWith("mc_")) { try { api.priceScale().applyOptions({ mode: 1 }); } catch (e) { /* older library */ } }
     if (s.zones && s.zones.some((c) => c)) api.attachPrimitive(new ZoneBlocks(s.zones));
     made[s.id] = api;
     if (paneFirst[s.pane] === undefined) paneFirst[s.pane] = api;
@@ -412,7 +420,7 @@ function draw(L, root, data) {
 
   for (const g of data.guides) {
     const api = made[g.series];
-    if (api) api.createPriceLine({ price: g.value, color: g.color, lineWidth: 1, lineStyle: STYLE[g.style] || 2, axisLabelVisible: false, title: "" });
+    if (api) api.createPriceLine({ price: g.value, color: g.color, lineWidth: 1, lineStyle: STYLE[g.style] ?? 2, axisLabelVisible: false, title: "" });
   }
   for (const p of data.price_lines) {
     candles.createPriceLine({ price: p.price, color: p.color, lineWidth: p.width, lineStyle: 0, axisLabelVisible: false, title: "" });
@@ -467,7 +475,7 @@ function draw(L, root, data) {
   const lastClosed = data.forming ? n - 2 : n - 1;
   const legendSeries = data.series.filter((s) => s.type === "line" && s.legend !== false && s.pane === 0);
   const paneSeries = {};
-  data.series.filter((s) => s.pane > 0 && s.type !== "band").forEach((s) => { (paneSeries[s.pane] = paneSeries[s.pane] || []).push(s); });
+  data.series.filter((s) => s.pane > 0 && s.type !== "band" && s.legend !== false).forEach((s) => { (paneSeries[s.pane] = paneSeries[s.pane] || []).push(s); });
 
   const swatch = (colour) => `<span style="display:inline-block;width:9px;height:2px;background:${colour};vertical-align:middle;margin-right:3px"></span>`;
   const paintLegend = (index, hovering) => {
@@ -503,7 +511,7 @@ function draw(L, root, data) {
       const parts = (paneSeries[pane] || []).map((s) => {
         const v = s.values[i];
         const shown = s.id === "volume" || s.id === "obv" || s.id === "obv_avg" ? fmtBig(v)
-          : fmt(v, ["rsi", "stoch", "stochrsi_k", "stochrsi_d", "adx"].includes(s.id) ? 100 : v);   // 0-100: 2 decimals
+          : fmt(v, ["rsi", "stoch", "stochrsi_k", "stochrsi_d", "adx", "mc_rsi", "mc_sk"].includes(s.id) ? 100 : v);   // 0-100: 2 decimals
         const single = (paneSeries[pane] || []).length === 1;
         const name = single ? "" : s.name.replace("MACD histogram", "Hist");
         return name ? `<span style="color:${s.colors ? theme.muted : s.color}">${name}</span> ${shown}` : shown;

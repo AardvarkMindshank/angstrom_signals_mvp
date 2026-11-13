@@ -30,7 +30,7 @@ DOWN_FADED = "rgba(239,83,80,0.35)"
 
 PANEL_TITLES = {
     "volume": "Volume", "rsi": "RSI (14)", "macd": "MACD", "stoch": "Stochastic (14, 3)",
-    "stochrsi": "Stoch RSI (3, 3, 14, 14, OHLC4)", "adx": "ADX (14)", "obv": "On-balance volume",
+    "stochrsi": "Stoch RSI (3, 3, 14, 14, OHLC4)", "cipher": "Market Cipher B (VuManChu)", "adx": "ADX (14)", "obv": "On-balance volume",
 }
 # Lower panels that read on a fixed 0 to 100 scale.
 FIXED_0_100 = ("rsi", "stoch", "stochrsi")
@@ -74,7 +74,7 @@ def pane_heights(price_px: int, panels: list[str]) -> list[int]:
     old_height = 750 + 150 * (len(panels) - 2) if len(panels) > 2 else 750 - 100 * (2 - len(panels))
     panels_px = (old_height - 210) * 0.5
     each = max(MIN_PANEL_PX, int(panels_px / len(panels)))
-    return [int(price_px)] + [each] * len(panels)
+    return [int(price_px)] + [max(each * 2, 200) if name == "cipher" else each for name in panels]
 
 
 def _line(sid, name, pane, values, colour, width=1.5, style="solid", scale=None, legend=True, alpha=1.0):
@@ -166,6 +166,53 @@ def event_lines(index: pd.DatetimeIndex, interval: str, kind: str, events, ahead
     return out, (ahead_max + max(2, ahead_max // 10)) if ahead_max else 0
 
 
+def cipher_series(df: pd.DataFrame, pane: int, dark: bool = False) -> list[dict]:
+    """The Market Cipher B strip, drawn as Drew's chart draws it (colours from his Style settings): the light-blue
+    and blue waves, the yellow VWAP area, the green / red money flow, the bar along the bottom, the magenta RSI, the
+    green / red Stoch RSI, the small cross dots and the big buy (and sell) dots. Columns from chart_indicators."""
+    n = len(df)
+    zero = [0.0] * n
+
+    def col(name):
+        return pd.to_numeric(df[name], errors="coerce")
+
+    def flag(name):
+        return df[name].fillna(False).astype(bool).tolist() if name in df.columns else [False] * n
+
+    def area(sid, name, values, fill):
+        return {"id": sid, "type": "band", "name": name, "pane": pane, "legend": False,
+                "a": _values(values, 2), "b": zero, "fill": fill}
+
+    mf = col("mc_mf")
+    out = [
+        area("mc_wt1", "Light-blue wave", col("mc_wt1"), "rgba(144,202,249,0.95)"),
+        area("mc_wt2", "Blue wave", col("mc_wt2"), "rgba(13,71,161,0.9)" if dark else "rgba(21,101,192,0.85)"),
+        area("mc_vwap", "VWAP", col("mc_vwap"), "rgba(225,212,60,0.6)"),
+        area("mc_mf_in", "Money flow in", mf.clip(lower=0), "rgba(56,160,40,0.55)"),
+        area("mc_mf_out", "Money flow out", mf.clip(upper=0), "rgba(190,30,30,0.5)"),
+    ]
+    flow_in = df["mc_mf_in"].tolist() if "mc_mf_in" in df.columns else [True] * n
+    out.append({"id": "mc_bar", "type": "hist", "name": "Money flow bar", "pane": pane, "legend": False,
+                "base": -100, "values": [None if v != v else -93.0 for v in mf.tolist()],
+                "colors": ["rgba(40,130,40,0.85)" if f else "rgba(130,25,25,0.85)" for f in flow_in]})
+    out.append(_line("mc_rsi", "RSI", pane, _values(col("mc_rsi"), 2), "#e100e1", width=1))
+    k, d = col("mc_sk"), col("mc_sd")
+    stoch = _line("mc_sk", "Stoch RSI", pane, _values(k, 2), "#39ff14", width=2)
+    stoch["colors"] = ["#39ff14" if (a == a and b == b and a >= b) else "#ff2a1a" for a, b in zip(k.tolist(), d.tolist())]
+    out.append(stoch)
+    w2 = col("mc_wt2").tolist()
+    cross = pd.to_numeric(df["mc_cross"], errors="coerce").fillna(0).tolist()
+    out.append({"id": "mc_dots", "type": "dots", "name": "Wave crosses", "pane": pane, "legend": False, "radius": 3, "color": "#1fbf75",
+                "values": [round(w, 2) if c and w == w else None for c, w in zip(cross, w2)],
+                "colors": ["#1fbf75" if c > 0 else "#e0474c" for c in cross]})
+    buy, sell = flag("mc_buy"), flag("mc_sell")
+    out.append({"id": "mc_buy", "type": "dots", "name": "Buy", "pane": pane, "legend": False, "radius": 5, "color": "#3fff00",
+                "values": [-96.5 if b else None for b in buy], "colors": ["#3fff00"] * n})
+    out.append({"id": "mc_sell", "type": "dots", "name": "Sell", "pane": pane, "legend": False, "radius": 5, "color": "#ff2a1a",
+                "values": [100.0 if s else None for s in sell], "colors": ["#ff2a1a"] * n})
+    return out
+
+
 def build_payload(
     df: pd.DataFrame,
     layout: dict,
@@ -232,6 +279,15 @@ def build_payload(
         return pane_of.get(key), None
 
     guides: list[dict] = []
+    if "cipher" in pane_of and "mc_wt1" in columns:
+        series += cipher_series(df, pane_of["cipher"], dark)
+        ink = "#e5e7eb" if dark else "#6b7280"
+        guides += [{"series": "mc_rsi", "value": 0, "color": ink, "style": "solid"},
+                   {"series": "mc_rsi", "value": 60, "color": "#bdbdbd", "style": "solid"},
+                   {"series": "mc_rsi", "value": -60, "color": "#bdbdbd", "style": "solid"},
+                   {"series": "mc_rsi", "value": 53, "color": "#9e9e9e", "style": "dotted"},
+                   {"series": "mc_rsi", "value": -53, "color": "#9e9e9e", "style": "dotted"},
+                   {"series": "mc_rsi", "value": 100, "color": "#9e9e9e", "style": "dotted"}]
     if "volume" in pane_of:
         volume = pd.to_numeric(df["volume"], errors="coerce").fillna(0.0)
         up = (df["close"] >= df["open"]).tolist()
@@ -299,7 +355,7 @@ def build_payload(
     panes[0]["height"] = heights[0]
     for index, name in enumerate(panels):
         panes.append({"title": PANEL_TITLES.get(name, name), "height": heights[index + 1],
-                      "fixed": [0, 100] if name in FIXED_0_100 else None})
+                      "fixed": [0, 100] if name in FIXED_0_100 else [-105, 105] if name == "cipher" else None})
 
     # Earnings: dotted lines on past report days, a dashed line on the next one.
     vlines: list[dict] = []
