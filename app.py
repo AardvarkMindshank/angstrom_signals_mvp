@@ -7207,7 +7207,7 @@ because they measure different things and are never added together.
    gold, oil and crypto totals, each with today's move and a 30-day line (a green dot means that exchange is
    open; hover a card for what it measures). Under it: the 🌊 **Tides line** (tide, sea state and the next big
    event; click it for the Tides panel), 🔻 **your funnels** (Candidates, Flagged, the stage counts and what came in
-   or left since your last visit; click one to open its table), and 📈📉 the **strongest and weakest Trend** in
+   or left since your last visit; click one to open its table), and 📈📉 the **highest and lowest Trend** in
    your own watchlist, whatever your tables show. Then *What changed*: Trend readings that crossed your alert line
    and the biggest Trend moves, each with the reading before and now, the price and today's move, a 7-day line, and
    badges for 📅 earnings within two weeks, 📰 headline sentiment and 🎯 how close it is to an alert line.
@@ -11831,7 +11831,8 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                 "style='display:block;width:100%;margin:0;padding:6px 0;border:none;border-top:1px solid var(--ang-border);"
                 "background:transparent;text-align:left;cursor:pointer;font:inherit;color:inherit;'>"
                 "<div style='display:flex;align-items:center;gap:8px;min-width:0;'>"
-                f"<span title='{word} Trend in your watchlist'>{icon}</span>"
+                f"<span title='The {word.lower()} Trend reading in your watchlist'>{icon}</span>"
+                f"<span class='ang-kicker' style='margin:0;flex:none;width:52px;'>{word}</span>"
                 f"{asset_logo(row.get('logo_url'), name, size=20)}"
                 "<span style='flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
                 f"font-weight:600;'>{html.escape(name)}</span>"
@@ -11842,15 +11843,17 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
 
         trend_cards = []
         if trade_crypto:
-            trend_cards.append(("🪙 Crypto · your watchlist", crypto_top, crypto_bot, "Crypto", "snapshot_trend_crypto"))
+            trend_cards.append(("🪙 Crypto · highest and lowest Trend in your watchlist", crypto_top, crypto_bot, "Crypto",
+                                "snapshot_trend_crypto"))
         if trade_equities:
-            trend_cards.append(("🏛️ Equities · your watchlist", stock_top, stock_bot, "Stock", "snapshot_trend_stock"))
+            trend_cards.append(("🏛️ Equities · highest and lowest Trend in your watchlist", stock_top, stock_bot, "Stock",
+                                "snapshot_trend_stock"))
         if trend_cards:
             for column, (title, top, bot, kind, key) in zip(st.columns(len(trend_cards)), trend_cards):
                 body = ("<div class='ang-card'>"
                         f"<div class='ang-kicker' style='margin-bottom:4px;'>{html.escape(title)}</div>"
-                        + _trend_row("📈", "Strongest", top, kind)
-                        + (_trend_row("📉", "Weakest", bot, kind) if bot is not top else "")
+                        + _trend_row("📈", "Highest", top, kind)
+                        + (_trend_row("📉", "Lowest", bot, kind) if bot is not top else "")
                         + "</div>")
                 with column:
                     _snapshot_click(_score_table(key=key, data=body, on_picked_change=lambda: None).picked)
