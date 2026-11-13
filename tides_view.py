@@ -501,7 +501,13 @@ def render_panel(st, snap: dict, saved_range: str | None, save_range, buttons, t
         ".st-key-tides_note_row > [data-testid='stHorizontalBlock'] > [data-testid='stColumn']:first-child"
         "{flex:1 1 440px !important;min-width:min(440px,100%) !important}"
         ".st-key-tides_note_row > [data-testid='stHorizontalBlock'] > [data-testid='stColumn']:last-child"
-        "{flex:1 1 320px !important;min-width:min(320px,100%) !important}</style>", unsafe_allow_html=True)
+        "{flex:1 1 320px !important;min-width:min(320px,100%) !important}"
+        # The calendar scrolls inside the note's column instead of running on under Your take.
+        ".st-key-tides_note_row [data-testid='stColumn']:first-child [data-testid='stVerticalBlock'],"
+        ".st-key-tides_note_row [data-testid='stColumn']:first-child [data-testid='stElementContainer'],"
+        ".st-key-tides_note_row [data-testid='stColumn']:first-child [data-testid='stHtml']{min-width:0;max-width:100%}"
+        ".st-key-tides_note_row [data-testid='stColumn']:first-child{overflow:hidden}"
+        ".st-key-tides_note_row .tides .strip{max-width:100%}</style>", unsafe_allow_html=True)
     st.html(hero_part(snap))
     with st.container(horizontal=True, key="tides_ai_buttons", gap="small"):
         buttons()

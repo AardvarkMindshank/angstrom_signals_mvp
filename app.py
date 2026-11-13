@@ -13134,12 +13134,13 @@ def _sentiment_thumbs(
         }}
         .take-faces {{
             display: flex;
+            flex-wrap: wrap;            /* a narrow box: two rows, never squashed on top of each other */
             gap: 4px;
             margin-top: 4px;
         }}
         .take-face {{
-            flex: 1;
-            min-width: 0;
+            flex: 1 0 1.9rem;
+            min-width: 1.9rem;
             padding: 0.15rem 0;
             font: inherit;
             font-size: 1rem;
