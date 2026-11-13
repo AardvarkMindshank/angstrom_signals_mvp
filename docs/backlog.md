@@ -18,6 +18,11 @@ Agreed work that is not built yet, so nothing gets forgotten between sessions. N
 - Funnel studies (how past Candidates did afterwards, on development data only).
 - Drew's exact oscillator settings against the published defaults (needs a certification run).
 - OKX perpetuals as a futures source (funding and open interest for more coins).
+- Multi-language app, as one separate exercise before a public launch (after Strategies and tiers settle): pull all
+  on-screen text into per-language files, translate Help and guides as whole documents, a language setting per
+  account, notifications and emails in each person's language, a trading-terms glossary, native-speaker review, and
+  a check that flags new text without translations. Major languages only; first wave likely English, Spanish,
+  Portuguese (Brazil), Chinese (Simplified), Japanese, Korean, German, French; right-to-left (Arabic) later.
 - Funnel and Tides training videos: published 12 Nov 2026 (f1-funnels, t1-tides).
 
 ## Done (12 Nov 2026)
