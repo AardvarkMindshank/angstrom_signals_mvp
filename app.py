@@ -3706,6 +3706,7 @@ _INTERVAL_TIPS = {
     "12h": "12-hour candles: crypto in 00:00 and 12:00 UTC blocks; for shares, one per session",
     "1D": "Daily candles",
     "1W": "Weekly candles (Monday to Sunday)",
+    "1Mo": "Monthly candles (calendar months; pick 1Y or All)",
 }
 
 
@@ -3716,9 +3717,9 @@ def _set_chart_range(value: str) -> None:
 def _chart_timeframe_controls() -> tuple[str, str]:
     """Candle interval and range for the TradingView chart, saved to the account."""
     saved = (st.session_state.get("cloud_prefs") or {}).get("settings") or {}
-    if st.session_state.get("chart_interval") not in chart_data.INTERVALS:
+    if st.session_state.get("chart_interval") not in chart_candles.INTERVALS:
         wanted = saved.get("chart_interval")
-        st.session_state["chart_interval"] = wanted if wanted in chart_data.INTERVALS else chart_data.INTERVAL_DEFAULT
+        st.session_state["chart_interval"] = wanted if wanted in chart_candles.INTERVALS else chart_data.INTERVAL_DEFAULT
     if st.session_state.get("chart_range") not in chart_data.RANGES:
         wanted = saved.get("chart_range")
         st.session_state["chart_range"] = wanted if wanted in chart_data.RANGES else chart_data.RANGE_DEFAULT
@@ -3726,14 +3727,14 @@ def _chart_timeframe_controls() -> tuple[str, str]:
     with st.container(horizontal=True, gap="small", key="chart_timeframe"):
         interval = st.segmented_control(
             "Candle interval",
-            chart_data.INTERVALS,
+            chart_candles.INTERVALS,
             key="chart_interval",
             label_visibility="collapsed",
             help="Candle size. " + " · ".join(f"{k}: {v}" for k, v in _INTERVAL_TIPS.items()),
         ) or current_interval
 
         def _range_label(option):
-            usable, _reason = chart_data.availability(interval, option)
+            usable, _reason = chart_candles.availability(interval, option)
             return option if usable else f"{option} ⊘"
 
         range_key = st.segmented_control(
@@ -3744,7 +3745,8 @@ def _chart_timeframe_controls() -> tuple[str, str]:
             label_visibility="collapsed",
             help=(
                 "How much history the chart opens on. You can still zoom and scroll beyond it. "
-                "⊘ means this interval has no candles that far back."
+                "⊘ means that range doesn't work with this candle size: too few candles to read (weekly needs 3 "
+                "months or more, monthly 1 year or more), or the short candles don't go back that far."
             ),
         ) or st.session_state.get("_chart_range_last") or chart_data.RANGE_DEFAULT
     st.session_state["_chart_range_last"] = range_key
@@ -3757,20 +3759,23 @@ def _tv_candles(asset_type: str, asset_key: str, interval: str, range_key: str, 
     candles with the same calculate_indicators as everywhere else (never daily values on
     intraday candles). Kept for the session until a new candle or price arrives."""
     kind = "crypto" if asset_type == "Crypto" else "equity"
-    loaded = chart_data.load_candles(kind, asset_key, interval, range_key)
-    if loaded["error"] and interval in ("1D", "1W") and daily_bars is not None and not daily_bars.empty:
+    loaded = chart_candles.load_candles(kind, asset_key, interval, range_key)
+    if loaded["error"] and interval in ("1D", "1W", "1Mo") and daily_bars is not None and not daily_bars.empty:
         # Yahoo has no candles for this coin: the shared daily prices (the Plotly chart's data) still work.
-        if chart_data.availability(interval, range_key)[0]:
+        if chart_candles.availability(interval, range_key)[0]:
             base = daily_bars[["open", "high", "low", "close", "volume"]]
-            candles = chart_data.group_daily(base) if interval == "1D" else chart_data.group_weekly(base)
+            candles = (chart_data.group_daily(base) if interval == "1D" else chart_data.group_weekly(base)
+                       if interval == "1W" else chart_candles.group_monthly(base))
             if len(candles) >= chart_data.MIN_CANDLES:
-                candles = chart_data.mark_forming(candles, interval, kind)
+                candles = (chart_candles.mark_forming(candles) if interval == "1Mo"
+                           else chart_data.mark_forming(candles, interval, kind))
                 days = chart_data.RANGE_DAYS[range_key]
                 start = candles.index[0] if days is None else max(
                     candles.index[0], pd.Timestamp.now(tz="UTC") - pd.Timedelta(days=days))
                 loaded = {"candles": candles, "start": start, "session": None, "error": None,
                           "source": "Shared daily prices (neither Binance nor Yahoo has candles for this coin)"
-                          + (", grouped into weeks" if interval == "1W" else "")}
+                          + (", grouped into weeks" if interval == "1W" else
+                             ", grouped into months" if interval == "1Mo" else "")}
     if loaded["error"]:
         return loaded
     candles = loaded["candles"]
@@ -4167,6 +4172,7 @@ from email_brand import render_email
 import beta_emails
 import chart_plan
 import chart_data
+import chart_candles
 import lw_chart
 import news_filter
 import group_readings
@@ -7363,8 +7369,10 @@ earnings choices, and both save to your account.
 - **Zoom** with the mouse wheel or a two-finger pinch; **drag** sideways to go back in time; drag the
   price scale to stretch it and double-click it to reset. ⟲ goes back to the chosen range, ⇥ jumps to
   the newest candle. Where you have zoomed to is kept when you change indicators or the page refreshes.
-- **Candle size**: 15m · 1h · 4h · 1D · 1W. **Range**: 7D · 1M · 3M · 1Y · All, which is where the chart
-  opens. You can still scroll further back.
+- **Candle size**: 15m · 30m · 1h · 4h · 12h · 1D · 1W · 1Mo (monthly). **Range**: 7D · 1M · 3M · 1Y · All,
+  which is where the chart opens. You can still scroll further back. A range marked ⊘ doesn't work with that
+  candle size: weekly candles need 3 months or more and monthly ones 1 year or more (fewer candles than that are
+  too few to read), and 15- and 30-minute candles only go back about 60 days.
 - **Where the candles come from:** crypto from **Binance** (spot, priced in USDT, every candle size Binance's
   own, UTC); a coin Binance doesn't list falls back to Yahoo Finance. Equities come from **Yahoo Finance**. The chart
   names its source underneath. Binance's USDT prices sit about 0.1% from Yahoo's US-dollar prices, which is normal.
@@ -11750,9 +11758,9 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             st.session_state["chart_band_extra"] = jump["band"]
             st.session_state["chart_band_set"] = jump["band"][0]
             view = jump.get("view")         # a funnel: the timeframe of the stage the asset just passed
-            if view and view[0] in chart_data.INTERVALS:
+            if view and view[0] in chart_candles.INTERVALS:
                 st.session_state["chart_interval"] = view[0]
-                if view[1] in chart_data.RANGES and chart_data.availability(view[0], view[1])[0]:
+                if view[1] in chart_data.RANGES and chart_candles.availability(view[0], view[1])[0]:
                     st.session_state["chart_range"] = view[1]
 
 
@@ -12474,8 +12482,8 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                 tv = _tv_candles(asset_type, asset_key, tv_interval, tv_range, daily_chart)
                 if tv.get("error"):
                     st.info(tv["error"], icon=":material/info:")
-                    if not chart_data.availability(tv_interval, tv_range)[0]:
-                        suggestion = chart_data.nearest_range(tv_interval, tv_range)
+                    if not chart_candles.availability(tv_interval, tv_range)[0]:
+                        suggestion = chart_candles.nearest_range(tv_interval, tv_range)
                         st.button(
                             f"Show {chart_data.RANGE_LABELS[suggestion]} instead", key="chart_range_fix",
                             on_click=_set_chart_range, args=(suggestion,),

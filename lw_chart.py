@@ -19,6 +19,7 @@ from datetime import date
 import numpy as np
 import pandas as pd
 
+import chart_candles
 import chart_data
 
 LIBRARY_PATH = "/app/static/lwc/lightweight-charts.standalone.production.js"
@@ -92,6 +93,8 @@ def _bars_ahead(last: pd.Timestamp, target: pd.Timestamp, interval: str) -> int 
         return int(np.busday_count(last_day.date(), target_day.date()))
     if interval == "1W":
         return max(1, int((target_day - last_day).days // 7))
+    if interval == "1Mo":
+        return max(1, (target_day.year - last_day.year) * 12 + target_day.month - last_day.month)
     return None
 
 
@@ -111,7 +114,8 @@ def _report_day_index(times_local: pd.DatetimeIndex, day) -> int | None:
 # The last number is the label's row, counted up from the bottom of the price pane (clear of the legend at the top).
 EVENT_MARKS = {"fomc": ("Fed", "#dc2626", -34), "cpi": ("CPI", "#d97706", -21), "jobs": ("Jobs", "#7c3aed", -8)}
 _STEP = {"1h": pd.Timedelta(hours=1), "4h": pd.Timedelta(hours=4), "12h": pd.Timedelta(hours=12),
-         "1D": pd.Timedelta(days=1), "1W": pd.Timedelta(days=7)}
+         "1D": pd.Timedelta(days=1), "1W": pd.Timedelta(days=7),
+         "1Mo": pd.Timedelta(days=30)}
 
 
 def event_lines(index: pd.DatetimeIndex, interval: str, kind: str, events, ahead_days: int = 14) -> tuple[list, int]:
@@ -121,7 +125,7 @@ def event_lines(index: pd.DatetimeIndex, interval: str, kind: str, events, ahead
     if not len(index):
         return [], 0
     idx = index.tz_convert("UTC") if index.tz is not None else index.tz_localize("UTC")
-    daily = interval in ("1D", "1W")
+    daily = interval in ("1D", "1W", "1Mo")
     zone = "America/New_York" if kind == "equity" else "UTC"
     if daily:       # compare calendar days, in the market's own time zone
         keys = idx.tz_convert(zone).tz_localize(None).normalize()
@@ -236,7 +240,7 @@ def build_payload(
     and a `forming` column (True for an unfinished last candle)."""
     columns = list(df.columns)
     times = chart_data.display_seconds(df.index, interval, kind, session)
-    if interval in ("1D", "1W") or kind == "crypto" or not session:
+    if interval in ("1D", "1W", "1Mo") or kind == "crypto" or not session:
         local = df.index.tz_convert("UTC") if df.index.tz is not None else df.index
     else:
         local = df.index.tz_convert(session[0])
@@ -349,7 +353,7 @@ def build_payload(
     for guide in guides:
         guide.setdefault("style", "dashed")
 
-    panes = [{"title": f"{title} · {chart_data.INTERVAL_LABELS.get(interval, interval)}".strip(" ·"),
+    panes = [{"title": f"{title} · {chart_candles.INTERVAL_LABELS.get(interval, interval)}".strip(" ·"),
               "height": 0, "fixed": None}]
     heights = pane_heights(price_px, panels)
     panes[0]["height"] = heights[0]
@@ -420,7 +424,7 @@ def build_payload(
         "key": view_key,
         "interval": interval,
         "range": range_key,
-        "intraday": interval not in ("1D", "1W"),
+        "intraday": interval not in ("1D", "1W", "1Mo"),
         "theme": theme(dark),
         "times": times,
         "ohlc": [open_, high, low_, close],
@@ -434,7 +438,7 @@ def build_payload(
         "start_index": start_index,
         "right_offset": int(right_offset),
         "source": source,
-        "clock": "" if interval in ("1D", "1W") else ("UTC" if (kind == "crypto" or not session) else _clock_name(session[0])),
+        "clock": "" if interval in ("1D", "1W", "1Mo") else ("UTC" if (kind == "crypto" or not session) else _clock_name(session[0])),
     }
 
 
