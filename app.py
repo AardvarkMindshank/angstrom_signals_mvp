@@ -7208,8 +7208,8 @@ because they measure different things and are never added together.
    open; hover a card for what it measures). Under it: the 🌊 **Tides line** (tide, sea state and the next big
    event; click it for the Tides panel), 🔻 **your funnels** (Candidates, Flagged, the stage counts and what came in
    or left since your last visit; click one to open its table), and 📈📉 the **highest and lowest Trend** in
-   your own watchlist, whatever your tables show. Then *What changed*: Trend readings that crossed your alert line
-   and the biggest Trend moves, each with the reading before and now, the price and today's move, a 7-day line, and
+   your own watchlist, whatever your tables show. Then *What changed*: Trend readings that crossed a colour border you
+   alert on, and the biggest Trend moves, each with the reading before and now, the price and today's move, a 7-day line, and
    badges for 📅 earnings within two weeks, 📰 headline sentiment and 🎯 how close it is to an alert line.
 2. **Crypto Signals** and **Equity Signals** list your watchlists, strongest Trend first. The reading columns are
    the Groups and Sets you choose with the column icon in the table header (📈 Trend, 🎯 Stretch and 🔊 Flow to start). Click a name to open it
