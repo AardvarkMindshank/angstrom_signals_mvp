@@ -36,6 +36,7 @@ def test_strip_sits_between_price_and_volume():
             "mc_buy"} <= set(ids)
     assert len(ids["mc_sk"]["colors"]) == len(df)
     assert all(v is None or v == -96.5 for v in ids["mc_buy"]["values"])
+    assert [v is not None for v in ids["mc_sell"]["values"]] == df["mc_sell"].tolist()
     assert any(g["value"] == 60 for g in payload["guides"])
 
 
