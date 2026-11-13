@@ -7332,9 +7332,9 @@ so they change once a day; price, today's move and RSI in the table are live.
 
     with tab_chart:
         st.markdown("""
-**Interactive Chart.** Candles with SMA 20 and 50 and Bollinger Bands, plus volume and RSI underneath.
+**Interactive Chart.** Candles with SMA 20 and 50 and Bollinger Bands, plus volume underneath.
 The icon row adds more:
-- 📏 SMA 200 · ☁️ Ichimoku cloud · 〰️ MACD · 🎚️ Stochastic · 🎛️ Stoch RSI · 🧭 ADX · 📊 OBV
+- 📏 SMA 200 · ☁️ Ichimoku cloud · 🌡️ RSI · 〰️ MACD · 🎚️ Stochastic · 🎛️ Stoch RSI · 🧭 ADX · 📊 OBV
 - 🎛️ **Stoch RSI** is set up as on TradingView with K 3, D 3, RSI length 14, Stochastic length 14 and RSI source
   (O + H + L + C)/4: where the RSI sits in its own range over the last 14 candles, 0 to 100. %K is blue, %D orange;
   above 80 the RSI is near the top of its recent range, below 20 near the bottom.
@@ -12487,7 +12487,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             except Exception:
                 pass
             indicator_keys = chart_plan.available(df_chart.columns)
-            indicator_icons = {"sma200": "📏", "ichimoku": "☁️", "macd": "〰️", "stoch": "🎚️", "stochrsi": "🎛️",
+            indicator_icons = {"sma200": "📏", "ichimoku": "☁️", "rsi": "🌡️", "macd": "〰️", "stoch": "🎚️", "stochrsi": "🎛️",
                                "adx": "🧭", "obv": "📊"}
             # Crypto charts also offer estimated liquidation levels, drawn by this page, not chart_plan.
             if asset_type == "Crypto":
@@ -12748,7 +12748,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                            showlegend=False),
                     row=row_of["volume"], col=1,
                 )
-                if "rsi" in df_chart.columns:
+                if "rsi" in layout["panels"] + layout["secondary"]:
                     _put(go.Scatter(x=df_chart.index, y=df_chart["rsi"], name="RSI", line=dict(color="purple", width=1.5)), "rsi")
                     _guide("rsi", 70, "red")
                     _guide("rsi", 30, "green")

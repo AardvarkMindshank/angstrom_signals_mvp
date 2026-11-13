@@ -18,7 +18,7 @@ def _payload(**kw):
     df = kw.pop("df", None)
     if df is None:
         df = fx.crypto_4h()
-    picks = kw.pop("picks", ["sma200", "ichimoku", "macd", "stoch", "adx", "obv"])
+    picks = kw.pop("picks", ["sma200", "ichimoku", "rsi", "macd", "stoch", "adx", "obv"])
     overlay = kw.pop("overlay", False)
     layout = chart_plan.plan(picks, df.columns, overlay_curves=overlay)
     args = dict(kind="crypto", interval="4h", range_key="1M", range_start=df.index[-180], view_key="k")
@@ -63,7 +63,7 @@ def test_panes_follow_chart_plan():
 
 
 def test_overlay_mode_puts_bounded_curves_on_price_pane():
-    payload, _, layout = _payload(picks=["stoch", "adx"], overlay=True)
+    payload, _, layout = _payload(picks=["rsi", "stoch", "adx"], overlay=True)
     by_id = {s["id"]: s for s in payload["series"]}
     for key in ("rsi", "stoch", "adx"):
         assert by_id[key]["pane"] == 0 and by_id[key]["scale"] == "osc"
@@ -184,3 +184,9 @@ def test_component_keeps_attribution_logo():
     js = (ROOT / "lw_chart.js").read_text(encoding="utf-8")
     assert "attributionLogo: true" in js
     assert "pinch: true" in js and "mouseWheel: true" in js
+
+
+def test_rsi_panel_only_when_picked():
+    payload, _, layout = _payload(picks=["stoch"])
+    assert "rsi" not in layout["panels"]
+    assert not any(s["id"] == "rsi" for s in payload["series"])

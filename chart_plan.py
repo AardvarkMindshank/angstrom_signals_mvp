@@ -1,7 +1,7 @@
 """Which panels the chart shows, decided without touching the drawing library.
 
-The price panel always shows. Volume and RSI always show below it. The extra
-indicators are chosen by the user. An indicator whose data is missing (a new
+The price panel always shows, with volume below it. The other indicators, RSI
+included (an icon since 13 Nov 2026, off unless picked), are chosen by the user. An indicator whose data is missing (a new
 asset with too little history, say) is left out instead of drawing an empty panel.
 """
 
@@ -11,6 +11,7 @@ from __future__ import annotations
 INDICATORS = {
     "sma200": {"label": "SMA 200", "where": "price", "needs": ("sma_200",)},
     "ichimoku": {"label": "Ichimoku cloud", "where": "price", "needs": ("ichi_span_a", "ichi_span_b")},
+    "rsi": {"label": "RSI", "where": "panel", "needs": ("rsi",)},
     "macd": {"label": "MACD", "where": "panel", "needs": ("MACD_",), "prefix": True},
     "stoch": {"label": "Stochastic", "where": "panel", "needs": ("stoch_k",)},
     "stochrsi": {"label": "Stoch RSI", "where": "panel", "needs": ("stochrsi_k", "stochrsi_d")},
@@ -18,8 +19,8 @@ INDICATORS = {
     "obv": {"label": "OBV", "where": "panel", "needs": ("obv",)},
 }
 
-BASE_PANELS = ("volume", "rsi")
-MAX_EXTRA_PANELS = 4
+BASE_PANELS = ("volume",)
+MAX_EXTRA_PANELS = 5
 PRICE_SHARE = 0.5
 
 
@@ -59,11 +60,9 @@ def plan(selected, columns, overlay_curves: bool = False) -> dict:
         extra = extra[:MAX_EXTRA_PANELS]
     secondary = []
     if overlay_curves:
-        if "rsi" in [str(name) for name in columns]:
-            secondary.append("rsi")
         secondary += [key for key in extra if key in BOUNDED]
         extra = [key for key in extra if key not in BOUNDED]
-    panels = [name for name in BASE_PANELS if not (overlay_curves and name == "rsi" and "rsi" in secondary)] + extra
+    panels = list(BASE_PANELS) + extra
     each = (1 - PRICE_SHARE) / len(panels)
     return {
         "overlays": overlays,
