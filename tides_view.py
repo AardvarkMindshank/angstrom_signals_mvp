@@ -480,10 +480,13 @@ PASSAGE_TIP = ("📜 Today's AI Passage Plan (opens in its own window): the AI N
                "day, kept in your logbook. Descriptions, not buy or sell calls.")
 
 
+ROW = ".st-key-tides_note_row [data-testid='stHorizontalBlock']:has(> [data-testid='stColumn'] .st-key-tides_take_col)"
+
 def render_panel(st, snap: dict, saved_range: str | None, save_range, buttons, take=None) -> None:
     """The Tides panel in Streamlit (the app's 🌊 Tides section, and the training-video demo page): the hero with the
     two AI buttons (buttons() draws them) on its lower right, then the daily note with the storm-warnings calendar
-    under it, beside Your take (take() draws it, when given), then the range picker (saved_range, and save_range(picked) when it
+    under it, beside Your take (take() draws it, when given; on a narrow screen: note, Your take, calendar), then the
+    range picker (saved_range, and save_range(picked) when it
     changes), the waves and the currents."""
     # The AI buttons sit over the hero's waves, bottom right (their wrapper is pulled up over it, with a solid
     # backing so they read on the waves); on a phone they drop just under it. Below, the note and Your take share
@@ -497,17 +500,23 @@ def render_panel(st, snap: dict, saved_range: str | None, save_range, buttons, t
         "box-shadow:0 1px 4px rgba(0,0,0,.18)}"
         "@media (max-width:640px){[data-testid='stLayoutWrapper']:has(> .st-key-tides_ai_buttons){margin-top:0}"
         ".st-key-tides_ai_buttons{padding:0;justify-content:flex-start}}"
-        ".st-key-tides_note_row > [data-testid='stHorizontalBlock']{flex-wrap:wrap;row-gap:12px}"
-        ".st-key-tides_note_row > [data-testid='stHorizontalBlock'] > [data-testid='stColumn']:first-child"
-        "{flex:1 1 440px !important;min-width:min(440px,100%) !important}"
-        ".st-key-tides_note_row > [data-testid='stHorizontalBlock'] > [data-testid='stColumn']:last-child"
-        "{flex:1 1 320px !important;min-width:min(320px,100%) !important}"
-        # The calendar scrolls inside the note's column instead of running on under Your take.
-        ".st-key-tides_note_row [data-testid='stColumn']:first-child [data-testid='stVerticalBlock'],"
-        ".st-key-tides_note_row [data-testid='stColumn']:first-child [data-testid='stElementContainer'],"
-        ".st-key-tides_note_row [data-testid='stColumn']:first-child [data-testid='stHtml']{min-width:0;max-width:100%}"
-        ".st-key-tides_note_row [data-testid='stColumn']:first-child{overflow:hidden}"
-        ".st-key-tides_note_row .tides .strip{max-width:100%}</style>", unsafe_allow_html=True)
+        # Note and Your take row. Wide: the calendar sits under the note, beside Your take. Narrow (the row under
+        # 760 px, whatever the screen): one column, in the order note, Your take, calendar. The calendar is drawn in
+        # both places and the row's own width picks which one shows.
+        ".st-key-tides_note_row{container-type:inline-size}"
+        ".st-key-tides_strip_below{display:none}"
+        + ROW + "{align-items:flex-start}"
+        + ROW + " > [data-testid='stColumn']{min-width:0 !important}"
+        + ROW + " > [data-testid='stColumn'] [data-testid='stVerticalBlock'],"
+        + ROW + " > [data-testid='stColumn'] [data-testid='stElementContainer'],"
+        + ROW + " > [data-testid='stColumn'] [data-testid='stHtml']{min-width:0;max-width:100%}"
+        ".st-key-tides_note_row .tides .strip{max-width:100%}"
+        "@container (max-width:760px){"
+        + ROW + "{flex-direction:column;align-items:stretch;row-gap:12px}"
+        + ROW + " > [data-testid='stColumn']{width:100% !important;flex:1 1 auto !important}"
+        ".st-key-tides_strip_in_note{display:none}"
+        ".st-key-tides_strip_below{display:block}}"
+        "</style>", unsafe_allow_html=True)
     st.html(hero_part(snap))
     with st.container(horizontal=True, key="tides_ai_buttons", gap="small"):
         buttons()
@@ -517,12 +526,17 @@ def render_panel(st, snap: dict, saved_range: str | None, save_range, buttons, t
     else:
         # The calendar sits under the note, beside Your take, so the space under the note isn't left empty.
         row = st.container(key="tides_note_row")
-        note_col, take_col = row.columns([3, 2], vertical_alignment="top")
-        with note_col:
-            st.html(note_part(snap))
-            st.html(strip_part(snap, title=False))
-        with take_col:
-            take()
+        with row:
+            note_col, take_col = st.columns([3, 2], vertical_alignment="top")
+            with note_col:
+                st.html(note_part(snap))
+                with st.container(key="tides_strip_in_note"):
+                    st.html(strip_part(snap, title=False))
+            with take_col:
+                with st.container(key="tides_take_col"):
+                    take()
+            with st.container(key="tides_strip_below"):
+                st.html(strip_part(snap, title=False))
     st.html(waves_title_part())
     ranges = list(RANGES)
     if st.session_state.get("tides_range") not in ranges:
