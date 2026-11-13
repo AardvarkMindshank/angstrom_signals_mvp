@@ -4879,6 +4879,9 @@ def _session_is_barred() -> bool:
 # Widget values stay in the browser session after logout. The next person to
 # sign in on that same page would otherwise see them and save them as their own.
 _ACCOUNT_STATE_KEYS = (
+    "alert_ticks_trend",
+    "alert_ticks_stretch",
+    "alert_ticks_flow",
     "explain_mode",
     "show_provided",
     "popouts_close_on_logout",
@@ -6839,7 +6842,12 @@ def notifications_panel() -> None:
                     "width:min(680px,100vw) !important;min-width:min(680px,100vw) !important;"
                     "max-width:100vw !important;transition:width .2s ease,min-width .2s ease}</style>",
                     unsafe_allow_html=True)
-                ticks = al_reading_crossings(account_settings, reading)
+                # The ticks as last pressed in this session win over the settings read at the start of the run:
+                # a press saves, then the board redraws at once from the new ticks (else it flicked back).
+                mine_key = f"alert_ticks_{reading}"
+                ticks = st.session_state.get(mine_key)
+                if ticks is None:
+                    ticks = al_reading_crossings(account_settings, reading)
                 try:
                     result = _bands.component()(key=f"alert_bands_{reading}", data=_bands.board_data(reading, ticks),
                                                 on_change_change=lambda: None)
@@ -6847,10 +6855,12 @@ def notifications_panel() -> None:
                     st.info(f"The alert borders could not load here ({str(exc)[:120]}).")
                     return
                 picked = _bands.read_change(result, f"alert_bands_seen_{reading}", st.session_state)
-                if picked is not None and picked != ticks:
+                if picked is not None and picked != list(ticks):
+                    st.session_state[mine_key] = picked
                     save_account_settings({f"{reading}_crossings": picked})
-                    if not picked:
-                        st.caption("Nothing ticked: no alerts for this reading.")
+                    st.rerun()
+                if not ticks:
+                    st.caption("Nothing ticked: no alerts for this reading.")
 
             alert_enabled = st.checkbox(
                 "📈 Trend alerts",
