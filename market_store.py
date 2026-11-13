@@ -27,7 +27,7 @@ except Exception:                                # older client, or tests withou
 
 SPARKLINE_POINTS = 31
 COMMENT_LIMIT = 160
-COMMENT_EMOTICONS = ("😀", "🙂", "😐", "🙁", "😮", "🔥", "💩", "🚀", "📈", "📉")
+COMMENT_EMOTICONS = ("😀", "🙂", "😐", "🙁", "😮", "🔥", "💩", "🚀", "🌕", "📈", "📉")
 _SIDEWAYS_PERCENT = 2.0
 _AUTHOR_ID = re.compile(
     r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
