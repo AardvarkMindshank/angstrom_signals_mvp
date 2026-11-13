@@ -13236,7 +13236,9 @@ def _sentiment_thumbs(
             )
             st.caption(
                 f"Up to {COMMENT_LIMIT} characters. Tap one to add it. "
-                "Posting again replaces yours. Each comment stays for 12 hours."
+                "Posting again replaces yours. "
+                + ("Comments stay until the Tide changes." if str(kind) == "Tides"
+                   else "Each comment stays for 12 hours.")
             )
             st.form_submit_button(
                 "Post comment",

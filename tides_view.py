@@ -480,19 +480,24 @@ def render_panel(st, snap: dict, saved_range: str | None, save_range, buttons, t
     two AI buttons (buttons() draws them) on its lower right, then the daily note and Your take (take() draws it,
     when given) side by side, then the calendar, the range picker (saved_range, and save_range(picked) when it
     changes), the waves and the currents."""
-    st.html(hero_part(snap))
-    # The AI buttons sit over the hero's waves, bottom right; on a phone they drop just under it. Below, the note
-    # and Your take share a row; on a narrow screen Your take moves under the note.
+    # The AI buttons sit over the hero's waves, bottom right (their wrapper is pulled up over it, with a solid
+    # backing so they read on the waves); on a phone they drop just under it. Below, the note and Your take share
+    # a row; on a narrow screen Your take moves under the note. The style comes first so it adds no gap.
     st.markdown(
-        "<style>.st-key-tides_ai_buttons{justify-content:flex-end;flex-wrap:wrap;margin-top:-64px;padding:0 14px;"
-        "position:relative;z-index:2;pointer-events:none}"
+        "<style>[data-testid='stLayoutWrapper']:has(> .st-key-tides_ai_buttons){margin-top:-68px;position:relative;"
+        "z-index:2;pointer-events:none}"
+        ".st-key-tides_ai_buttons{justify-content:flex-end;flex-wrap:wrap;padding:0 14px}"
         ".st-key-tides_ai_buttons > *{pointer-events:auto;flex:0 0 auto !important;width:auto !important}"
-        "@media (max-width:640px){.st-key-tides_ai_buttons{margin-top:0;padding:0;justify-content:flex-start}}"
+        ".st-key-tides_ai_buttons .ang-ai-btn{background:var(--st-background-color,#fff);"
+        "box-shadow:0 1px 4px rgba(0,0,0,.18)}"
+        "@media (max-width:640px){[data-testid='stLayoutWrapper']:has(> .st-key-tides_ai_buttons){margin-top:0}"
+        ".st-key-tides_ai_buttons{padding:0;justify-content:flex-start}}"
         ".st-key-tides_note_row > [data-testid='stHorizontalBlock']{flex-wrap:wrap;row-gap:12px}"
         ".st-key-tides_note_row > [data-testid='stHorizontalBlock'] > [data-testid='stColumn']:first-child"
         "{flex:1 1 440px !important;min-width:min(440px,100%) !important}"
         ".st-key-tides_note_row > [data-testid='stHorizontalBlock'] > [data-testid='stColumn']:last-child"
         "{flex:1 1 320px !important;min-width:min(320px,100%) !important}</style>", unsafe_allow_html=True)
+    st.html(hero_part(snap))
     with st.container(horizontal=True, key="tides_ai_buttons", gap="small"):
         buttons()
     if take is None:
