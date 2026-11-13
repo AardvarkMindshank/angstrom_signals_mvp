@@ -169,7 +169,7 @@ def event_lines(index: pd.DatetimeIndex, interval: str, kind: str, events, ahead
 def cipher_series(df: pd.DataFrame, pane: int, dark: bool = False) -> list[dict]:
     """The Market Cipher B strip, drawn as Drew's chart draws it (colours from his Style settings): the light-blue
     and blue waves, the yellow VWAP area, the green / red money flow, the bar along the bottom, the magenta RSI, the
-    green / red Stoch RSI, the small cross dots and the big buy (and sell) dots. Columns from chart_indicators."""
+    green / red Stoch RSI, the small cross dots and the big buy dots. Columns from chart_indicators."""
     n = len(df)
     zero = [0.0] * n
 
@@ -205,11 +205,9 @@ def cipher_series(df: pd.DataFrame, pane: int, dark: bool = False) -> list[dict]
     out.append({"id": "mc_dots", "type": "dots", "name": "Wave crosses", "pane": pane, "legend": False, "radius": 3, "color": "#1fbf75",
                 "values": [round(w, 2) if c and w == w else None for c, w in zip(cross, w2)],
                 "colors": ["#1fbf75" if c > 0 else "#e0474c" for c in cross]})
-    buy, sell = flag("mc_buy"), flag("mc_sell")
+    buy = flag("mc_buy")      # Drew's chart has big green Buy dots only (no big red ones)
     out.append({"id": "mc_buy", "type": "dots", "name": "Buy", "pane": pane, "legend": False, "radius": 5, "color": "#3fff00",
                 "values": [-96.5 if b else None for b in buy], "colors": ["#3fff00"] * n})
-    out.append({"id": "mc_sell", "type": "dots", "name": "Sell", "pane": pane, "legend": False, "radius": 5, "color": "#ff2a1a",
-                "values": [100.0 if s else None for s in sell], "colors": ["#ff2a1a"] * n})
     return out
 
 

@@ -7335,8 +7335,8 @@ The icon row adds more:
   Market Cipher B, drawn in its colours: the light-blue and blue **waves** (WaveTrend momentum), the yellow
   **VWAP** area (the gap between the two waves), the green or red **money flow** area and the bar along the bottom
   (money flowing in or out), the magenta **RSI** and the green or red **Stoch RSI**. **Small dots** mark the waves
-  crossing (green up, red down). A **big green dot** is a cross up from deep down (−53 or lower), a strong
-  possible entry; a **big red dot** the mirror from high up. Readings describe momentum; they are not trade calls.
+  crossing (green up, red down: a possible entry or exit). A **big green dot** is a cross up from deep down
+  (−53 or lower), a strong possible entry. Readings describe momentum; they are not trade calls.
 - 🎛️ **Stoch RSI** is set up as on TradingView with K 3, D 3, RSI length 14, Stochastic length 14 and RSI source
   (O + H + L + C)/4: where the RSI sits in its own range over the last 14 candles, 0 to 100. %K is blue, %D orange;
   above 80 the RSI is near the top of its recent range, below 20 near the bottom.
