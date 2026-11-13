@@ -25,7 +25,7 @@ jobs:
           mkdir -p prices
           for f in $(git ls-tree -r --name-only origin/reports data/prices); do git show origin/reports:$f > prices/$(basename $f); done
       - name: Replay
-        run: python research/alerts_replay.py prices > replay.json && cat replay.json >> "$GITHUB_STEP_SUMMARY"
+        run: python research/alerts_replay.py prices | tee replay.json
       - uses: actions/upload-artifact@v4
         with:
           name: alerts-replay
