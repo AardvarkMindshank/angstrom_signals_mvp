@@ -6818,6 +6818,14 @@ def notifications_panel() -> None:
 
 
         with tracked_expander("Configure Alert Rules", "alert_rules"):
+            # While this section is open the sidebar widens so the colour boxes sit side by side; closed, the
+            # sidebar goes back to the width it had (the rule only holds while the section is open).
+            st.markdown(
+                "<div class='alert-rules-open'></div><style>"
+                "section[data-testid='stSidebar']:has(details[open] .alert-rules-open){"
+                "width:min(680px,100vw) !important;min-width:min(680px,100vw) !important;max-width:100vw !important;"
+                "transition:width .2s ease,min-width .2s ease}</style>",
+                unsafe_allow_html=True)
             st.caption(
                 "Readings describe current conditions and are not forecasts. Tick the colour borders you want to "
                 "hear about: ▲ when a reading rises past one, ▼ when it falls past one. A new colour counts once it "

@@ -4,7 +4,8 @@ bearish to strongly bullish, with tick boxes on each border between them, ▲ fo
 plus the two flips (one side straight to the other between two closes). alerts.CROSSINGS names each tick.
 
 The board only draws and reports: a tick sends the whole list of ticks to Python ({ticks, nonce}), which saves it in
-the account settings ("<reading>_crossings"). On a narrow screen the boxes stack, strongly bullish on top.
+the account settings ("<reading>_crossings"). Where the board has less than 520 px (a phone, or a narrow sidebar)
+the boxes stack, strongly bullish on top.
 """
 
 from __future__ import annotations
@@ -12,7 +13,7 @@ from __future__ import annotations
 import json
 
 CSS = """
-.ab{font:13px/1.35 inherit;color:inherit;margin:2px 0 6px}
+.ab{font:13px/1.35 inherit;color:inherit;margin:2px 0 6px;container:alertbands / inline-size}
 .ab .line{display:flex;align-items:stretch;gap:0}
 .ab .zone{flex:1 1 0;min-width:0;border-radius:8px;padding:8px 6px;text-align:center;display:flex;flex-direction:column;
   justify-content:center;gap:2px}
@@ -27,7 +28,7 @@ CSS = """
 .ab label.tick input{margin:0;width:14px;height:14px;accent-color:#0f766e;cursor:pointer}
 .ab .flips{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:8px}
 .ab .flips .what{font-size:12px;opacity:.8}
-@media (max-width:560px){
+@container alertbands (max-width:520px){
   .ab .line{flex-direction:column-reverse}
   .ab .border{flex:0 0 auto;flex-direction:row;padding:4px 0;gap:8px}
   .ab .zone{flex:0 0 auto;padding:6px 8px}
