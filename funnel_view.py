@@ -176,12 +176,16 @@ def _when(iso: str | None) -> str:
     return f"{t.day} {t.strftime('%b %H:%M')} UTC"
 
 
-def health(runs: list[dict | None], f: dict, now=None) -> str | None:
-    """A plain warning when a stage's last run failed or is late (more than two of its candles), else None."""
+def health(runs: list[dict | None], f: dict, now=None, states: dict | None = None) -> str | None:
+    """A plain warning when a stage's last run failed or is late (more than two of its candles), else None.
+    states: when given, a stage no coin reaches (none holds every stage before it) is not late: it has nothing to
+    check, so its closes go unclaimed by design (funnel_runner.run_funnel)."""
     now = pd.Timestamp.now(tz="UTC") if now is None else now
     for i, r in enumerate(runs):
         stage = f["stages"][i]
         if r is None:
+            continue
+        if states is not None and i > 0 and not any(fn.reachable(st, i) for st in states.values()):
             continue
         if r.get("status") == "failed":
             return f"⚠️ The last {stage['label']} check failed: {(r.get('error') or '')[:120]}"

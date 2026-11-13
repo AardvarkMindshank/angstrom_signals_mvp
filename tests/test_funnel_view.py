@@ -49,6 +49,13 @@ def test_health_warns_on_failed_or_late_runs():
     assert "failed" in fv.health(bad, F, now)
     late = [{"cutoff": "2026-11-07T00:00:00+00:00", "status": "ok"}, None, None, None]
     assert "has not been checked" in fv.health(late, F, now)
+    # a later stage that no coin reaches has nothing to check, so an old last check is not a warning
+    late_second = [{"cutoff": "2026-11-10T00:00:00+00:00", "status": "ok"},
+                   {"cutoff": "2026-11-07T00:00:00+00:00", "status": "ok"}, None, None]
+    nobody = {"a": fn.CoinState.new(len(F["stages"]))}
+    assert fv.health(late_second, F, now, states=nobody) is None
+    reached = {c: s for c, s in STATES.items() if fn.reachable(s, 1)}
+    assert reached and "has not been checked" in fv.health(late_second, F, now, states=reached)
 
 
 def test_the_hover_names_the_candle_source():

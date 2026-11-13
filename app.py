@@ -11135,7 +11135,7 @@ def _dynamic_view(market: str):
     shown = sorted(fv.coins_for(st.session_state[stage_key], states),          # largest by market cap first
                    key=lambda c: (-fv.fn.place(states[c])["depth"], (universe.get(c) or {}).get("rank") or 10**6))
     out.update({"funnel": f, "states": states, "choices": choices, "pool": pool,
-                "line": fv.counts_line(f, states, pool), "health": fv.health(runs, f),
+                "line": fv.counts_line(f, states, pool), "health": fv.health(runs, f, states=states),
                 "more": max(0, len(shown) - fv.SHOW_LIMIT),
                 "watchlist": {c: (universe.get(c) or {}).get("name") or c for c in shown[:fv.SHOW_LIMIT]}})
     return out
