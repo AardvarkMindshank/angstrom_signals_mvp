@@ -64,7 +64,76 @@ READING_ALERTS = {
              "name": "Flow"},
 }
 READING_REARM = TREND_REARM
-SETTINGS_KEYS = ("trend_alert_level", "stretch_alert_on", "stretch_alert_level", "flow_alert_on", "flow_alert_level")
+
+# ------------------------------------------------------------------------------- border-crossing alerts (13 Nov 2026)
+# An alert when a reading crosses one of the colour borders the tables show (-50, -20, +20, +50), in the directions
+# the account ticks, once the new colour holds at the next daily close (research/alerts_replay.md). A jump from one
+# side straight to the other between two closes is one "flip" alert. Zones: -2 strongly bearish .. +2 strongly bullish.
+BORDERS = (("m50", -50), ("m20", -20), ("p20", 20), ("p50", 50))      # border i sits between zone i-2 and i-1
+CROSSINGS = {   # key: (border, direction, plain words)
+    "up_p50": ("p50", 1, "gets strongly bullish"),
+    "dn_p50": ("p50", -1, "fades back from strongly bullish"),
+    "up_p20": ("p20", 1, "turns bullish (leaves neutral)"),
+    "dn_p20": ("p20", -1, "falls back into neutral"),
+    "up_m20": ("m20", 1, "rises back into neutral"),
+    "dn_m20": ("m20", -1, "turns bearish (leaves neutral)"),
+    "up_m50": ("m50", 1, "fades back from strongly bearish"),
+    "dn_m50": ("m50", -1, "gets strongly bearish"),
+    "flip_up": (None, 1, "flips from bearish to bullish"),
+    "flip_dn": (None, -1, "flips from bullish to bearish"),
+}
+DEFAULT_CROSSINGS = {
+    "trend": ("up_p20", "dn_m20", "up_p50", "dn_m50", "flip_up", "flip_dn"),
+    "stretch": ("up_p50", "dn_m50", "dn_p50", "up_m50"),
+    "flow": ("up_p20", "dn_m20", "flip_up", "flip_dn"),
+}
+SETTINGS_KEYS = ("trend_alert_level", "stretch_alert_on", "stretch_alert_level", "flow_alert_on", "flow_alert_level",
+                 "trend_crossings", "stretch_crossings", "flow_crossings")
+
+
+def zone(value) -> int | None:
+    """The colour zone of a -100..+100 reading, as the tables colour it: -2 .. +2 (None: no reading)."""
+    from score_colours import reading_step
+
+    return {"strong_up": 2, "up": 1, "mixed": 0, "down": -1, "strong_down": -2}.get(reading_step(value))
+
+
+def reading_crossings(alerts_config: dict, reading: str) -> list[str]:
+    """The crossings this account ticked for a reading (its saved list, else the defaults)."""
+    saved = (alerts_config or {}).get(f"{reading}_crossings")
+    if isinstance(saved, (list, tuple)):
+        return [k for k in saved if k in CROSSINGS]
+    return list(DEFAULT_CROSSINGS[reading])
+
+
+def crossing_for(before: int | None, after: int | None, ticked) -> str | None:
+    """The one alert for a move from zone `before` to zone `after`, or None. A flip (one side straight to the other)
+    is its own alert when ticked; otherwise the ticked border furthest along the move speaks for it."""
+    if before is None or after is None or before == after:
+        return None
+    up = after > before
+    ticked = set(ticked or ())
+    if (before <= -1 and after >= 1) or (before >= 1 and after <= -1):
+        flip = "flip_up" if up else "flip_dn"
+        if flip in ticked:
+            return flip
+    # border i lies between zone i-2 and zone i-1: crossed going up when before <= i-2 < after
+    crossed = [name for i, (name, _) in enumerate(BORDERS) if min(before, after) <= i - 2 < max(before, after)]
+    if not up:
+        crossed.reverse()
+    keys = [("up_" if up else "dn_") + name for name in crossed]
+    chosen = [k for k in keys if k in ticked]
+    return chosen[-1] if chosen else None
+
+
+def crossing_message(reading: str, key: str, value: float, before: int, after: int) -> str:
+    """'Trend gets strongly bullish: +56 (Strong uptrend), was Uptrend.'"""
+    import signals_v2
+
+    words = signals_v2.CLUSTER_WORDS[reading]            # strongest up first
+    name = READING_ALERTS[reading]["name"]
+    return (f"{name} {CROSSINGS[key][2]}: {value:+.0f} ({words[2 - after]}), was {words[2 - before].lower()}. "
+            "Readings describe conditions, not forecasts.")
 
 
 def reading_alert_on(alerts_config: dict, reading: str) -> bool:

@@ -4178,6 +4178,7 @@ BETA_REQUEST_URL = "https://angstromsignals.com/beta.html"
 
 try:
     from alerts import HELD_TYPES, READING_ALERTS, dismiss_read_alerts, reading_alert_level, reading_alert_on
+    from alerts import reading_crossings as al_reading_crossings
     from data_fetchers import (
         crypto_logo_urls,
         crypto_market_caps,
@@ -6818,41 +6819,46 @@ def notifications_panel() -> None:
 
         with tracked_expander("Configure Alert Rules", "alert_rules"):
             st.caption(
-                "Readings describe current conditions and are not forecasts. Each alert is sent once when the "
-                f"reading crosses your line, and again only after it moves {signals_v2.TREND_ALERT_REARM} "
-                "points back and crosses again."
+                "Readings describe current conditions and are not forecasts. Tick the colour borders you want to "
+                "hear about: ▲ when a reading rises past one, ▼ when it falls past one. A new colour counts once it "
+                "holds at the next daily close, so a one-day wobble never alerts."
             )
+            import alert_bands_component as _bands
+
+            account_settings = prefs.get("settings") or {}
+
+            def _bands_for(reading: str) -> None:
+                ticks = al_reading_crossings(account_settings, reading)
+                try:
+                    result = _bands.component()(key=f"alert_bands_{reading}", data=_bands.board_data(reading, ticks),
+                                                on_change_change=lambda: None)
+                except Exception as exc:
+                    st.info(f"The alert borders could not load here ({str(exc)[:120]}).")
+                    return
+                picked = _bands.read_change(result, f"alert_bands_seen_{reading}", st.session_state)
+                if picked is not None and picked != ticks:
+                    save_account_settings({f"{reading}_crossings": picked})
+                    if not picked:
+                        st.caption("Nothing ticked: no alerts for this reading.")
+
             alert_enabled = st.checkbox(
                 "📈 Trend alerts",
                 value=alert_prefs.get("enabled", True) is not False,
                 key="alert_enabled_cb",
                 help=(
-                    "Alert when the Trend reading (-100 to +100) of an asset on your watchlists turns up through "
-                    "your line or down through minus your line. Readings use finished daily bars and are "
-                    "checked at each daily close (crypto 00:10 UTC, shares 10 minutes after the New York close)."
+                    "Alert when the Trend reading (-100 to +100) of an asset on your watchlists crosses one of the "
+                    "colour borders you tick. Readings use finished daily bars and are checked at each daily close "
+                    "(crypto 00:10 UTC, equities 10 minutes after the New York close)."
                 ),
             )
-            old_level = _trend_alert_level()
-            trend_level = int(old_level)
             if alert_enabled:
-                trend_level = st.slider(
-                    "📈 Trend alert line (±)",
-                    10, 95, trend_level, step=5,
-                    key="trend_level_slider",
-                    help=(
-                        f"Trend turned up: the reading rises to +line or above. Trend turned down: it falls to "
-                        f"-line or below. The default is {signals_v2.TREND_ALERT_DEFAULT}."
-                    ),
-                )
-            if float(trend_level) != old_level:
-                save_account_settings({"trend_alert_level": int(trend_level)})
+                _bands_for("trend")
 
-            # Optional alerts on the other two readings. Saved in the account settings, off by default.
-            account_settings = prefs.get("settings") or {}
+            # Stretch and Flow: off by default; the same borders when switched on.
             extra_on = {}
-            for reading, hint_up, hint_down in (
-                ("stretch", "price has run up within its recent range", "price has run down within its recent range"),
-                ("flow", "volume is backing rises", "volume is backing falls"),
+            for reading, hint in (
+                ("stretch", "how far price has run up or down within its recent range"),
+                ("flow", "whether volume is backing rises or falls"),
             ):
                 spec = READING_ALERTS[reading]
                 icon = signals_v2.CLUSTERS[reading]["icon"]
@@ -6862,27 +6868,16 @@ def notifications_panel() -> None:
                     value=was_on,
                     key=f"alert_{reading}_cb",
                     help=(
-                        f"Alert when the {spec['name']} reading (-100 to +100) reaches your line ({hint_up}) or "
-                        f"minus your line ({hint_down}). Off unless you switch it on. When switched on, assets "
-                        "already past the line are noted quietly; only new crossings alert."
+                        f"Alert when the {spec['name']} reading ({hint}) crosses one of the colour borders you tick. "
+                        "Off unless you switch it on. When switched on, the current colours are noted quietly; only "
+                        "new crossings alert."
                     ),
                 )
                 extra_on[reading] = now_on
-                updates = {}
                 if now_on != was_on:
-                    updates[spec["on"]] = bool(now_on)
+                    save_account_settings({spec["on"]: bool(now_on)})
                 if now_on:
-                    old_line = reading_alert_level(account_settings, reading)
-                    line = st.slider(
-                        f"{icon} {spec['name']} alert line (±)",
-                        10, 95, int(old_line), step=5,
-                        key=f"{reading}_level_slider",
-                        help=f"The default is {int(spec['default'])}.",
-                    )
-                    if float(line) != old_line:
-                        updates[spec["level"]] = int(line)
-                if updates:
-                    save_account_settings(updates)
+                    _bands_for(reading)
 
             new_alert_settings = {
                 "enabled": alert_enabled,
@@ -6959,7 +6954,7 @@ def notifications_panel() -> None:
                     "⚡ Instant alerts",
                     value=alert_prefs.get("instant_email") is not False,
                     key="alert_instant_cb",
-                    help="One email as soon as a reading or market sentiment crosses your line.",
+                    help="One email as soon as a reading crosses a border you ticked, or market sentiment crosses your line.",
                     disabled=emails_off,
                 )
                 watchlist_column = "digest_watchlist" in alert_prefs
@@ -7693,13 +7688,17 @@ that checks the same Set, so funnels stay quick as more people use them.
     with tab_alerts:
         st.markdown("""
 **Setting up** (Notifications → Configure Alert Rules)
-- 📈 **Trend alerts** (on by default): an alert when an asset's Trend reading turns up to your line (default
-  +50) or down to minus your line (default -50). Readings use finished daily bars, so they are checked once at
-  each daily close: crypto at 00:10 UTC, shares 10 minutes after the New York close on weekdays.
-- 🎯 **Stretch alerts** and 🔊 **Flow alerts** (off until you switch them on): the same for the Stretch reading
-  (default ±65: price has run unusually far up or down within its recent range) and the Flow reading (default
-  ±40: volume is unusually strongly backing rises or falls). Switching one on notes the assets already past the
-  line quietly; only new crossings alert.
+- 📈 **Trend alerts** (on by default): an alert when an asset's Trend reading crosses one of the colour borders
+  you tick, the same borders the tables colour by (−50, −20, +20, +50). Each reading shows its five colour boxes,
+  from strongly bearish to strongly bullish, with ▲ (rises past) and ▼ (falls past) on each border, plus
+  **Flips** for a jump from one side straight to the other. Ticked to start: leaving neutral either way, getting
+  strongly bullish or bearish, and flips.
+- A new colour counts once it **holds at the next daily close**, so a one-day wobble across a border never
+  alerts. Readings use finished daily bars, checked once at each daily close: crypto at 00:10 UTC, equities 10
+  minutes after the New York close on weekdays.
+- 🎯 **Stretch alerts** and 🔊 **Flow alerts** (off until you switch them on): the same boxes for the Stretch
+  reading (ticked to start: getting strongly stretched and easing back from it) and the Flow reading (leaving
+  neutral and flips). Switching one on notes the current colours quietly; only new crossings alert.
 - 🌐 **Market sentiment alerts**: the same for the crypto or stock market sentiment (default ±30), for the
   markets you trade. Updated about every 12 hours.
 - **Emails**: ⚡ **Instant** (one email per alert, straight away) and/or 📬 **Daily alerts summary** (one
@@ -10803,11 +10802,12 @@ def _change_extras(row: dict, previous_score: float, current_score: float, bull:
 
 
 def _what_changed_html(rows, baseline, seen: bool) -> str:
-    """Crossings since the last visit, then the largest other moves."""
-    bull = _trend_alert_level()
-    bear = -bull
-    bull_label = _boundary_text(bull)
-    bear_label = _boundary_text(bear)
+    """Colour-border crossings since the last visit (the Trend borders ticked in the alert settings), then the
+    largest other moves."""
+    import alerts as _al
+
+    bull, bear = 20.0, -20.0
+    trend_ticks = _al.reading_crossings(prefs.get("settings") or {}, "trend")
     parts = [
         "<div class='ang-card' style='margin-bottom:12px;'>",
         "<div class='ang-kicker'>What changed</div>",
@@ -10846,7 +10846,8 @@ def _what_changed_html(rows, baseline, seen: bool) -> str:
         delta = round(current_score - previous_score, 1)
         color = "#15803d" if delta > 0 else "#b91c1c" if delta < 0 else "#6b7280"
         symbol = str(row.get("symbol") or asset_id)
-        cross = _boundary_cross(previous_score, current_score, bull, bear)
+        crossed = _al.crossing_for(_al.zone(previous_score), _al.zone(current_score), trend_ticks)
+        cross = None if not crossed else ("above" if _al.CROSSINGS[crossed][1] > 0 else "below")
         try:
             extras = _change_extras(
                 row, previous_score, current_score, bull, bear, cross in ("above", "below"),
@@ -10864,11 +10865,8 @@ def _what_changed_html(rows, baseline, seen: bool) -> str:
             "logo": asset_logo(logos.get(asset_market_key(kind, asset_id)), symbol, size=20),
             "extras": extras,
         }
-        if cross == "above":
-            item["title"] = f"{item['symbol']} Trend turned up (above {bull_label})"
-            crossings.append(item)
-        elif cross == "below":
-            item["title"] = f"{item['symbol']} Trend turned down (below {bear_label})"
+        if crossed:
+            item["title"] = f"{item['symbol']} Trend {_al.CROSSINGS[crossed][2]}"
             crossings.append(item)
         elif abs(delta) >= 5:
             item["title"] = f"{item['symbol']} Trend moved"
@@ -10879,7 +10877,8 @@ def _what_changed_html(rows, baseline, seen: bool) -> str:
     moves = moves[:3]
     if not crossings:
         parts.append(
-            "<div style='margin-top:8px;'>No Trend reading crossed your alert lines since your last visit.</div>"
+            "<div style='margin-top:8px;'>No Trend reading crossed a colour border you alert on since your "
+            "last visit.</div>"
         )
     for item in crossings:
         parts.append(_change_button(item["pick"], item["title"], item["detail"], item["color"], item["logo"], item["extras"]))

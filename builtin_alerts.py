@@ -1,6 +1,12 @@
 """
 The Trend, Stretch and Flow alerts as built-in Prism scans (docs/design/prism_builtin_alerts.md).
 
+Since 13 Nov 2026 they alert on the colour borders (alerts.CROSSINGS): each run notes every asset's colour zone at
+the close, and a new zone counts once it holds at the next close (its "held" zone, kept in the run's results). A
+change of held zone that crosses a border the account ticked sends one alert; the "up" scan sends the upward moves,
+the "down" scan the downward ones. The first run after the switch notes the zones quietly. The older text below
+describes the single-line alerts these replaced; the scan rows, claims and quiet first runs are unchanged.
+
 Every account has six: Trend, Stretch and Flow, each turning up and turning down. Each is a Prism scan whose Set is
 the starter Group with the account's line ("Trend score is at least +50"), with a re-arm rule 20 points back
 ("Trend score is at most +30"), on the whole Watchlist, at each daily close. They are worked out on the stored daily
@@ -83,17 +89,28 @@ def rearm_doc(builtin: str, line: float) -> dict:
                 reading, "lte" if direction > 0 else "gte", direction * back)
 
 
+BORDER_LINE = 20.0          # the scan's own Set (kept for the Prism record): "at least +20" / "at most -20"
+
+
+def ticked(alert_config: dict, builtin: str) -> list[str]:
+    """The crossings this scan sends: the account's ticks for its reading, in its direction."""
+    reading, direction, _ = BUILTINS[builtin]
+    return [k for k in al.reading_crossings(alert_config, reading) if al.CROSSINGS[k][1] == direction]
+
+
 def wanted(alert_config: dict) -> dict:
-    """builtin -> (line, on) from the account's alert settings."""
+    """builtin -> (line, on, crossings) from the account's alert settings."""
     out = {}
     for builtin, (reading, _, _) in BUILTINS.items():
-        out[builtin] = (al.reading_alert_level(alert_config, reading), al.reading_alert_on(alert_config, reading))
+        mine = ticked(alert_config, builtin)
+        out[builtin] = (BORDER_LINE, al.reading_alert_on(alert_config, reading) and bool(mine), mine)
     return out
 
 
-def scan_row(owner, builtin: str, line: float, on: bool) -> dict:
+def scan_row(owner, builtin: str, line: float, on: bool, crossings=()) -> dict:
     return {"owner_id": owner, "builtin": builtin, "name": name(builtin), "set_body": set_doc(builtin, line),
-            "rearm": rearm_doc(builtin, line), "set_source": {"builtin": builtin, "line": line},
+            "rearm": rearm_doc(builtin, line),
+            "set_source": {"builtin": builtin, "line": line, "mode": "borders", "crossings": list(crossings)},
             "schedule": SCHEDULE, "assets": ASSETS, "paused": False, "quiet_next": True,
             "notify": {"channel": "account" if on else "off", "on_yes": True, "on_no": False, "on_fail": False}}
 
@@ -102,15 +119,18 @@ def plan_sync(owner, existing: dict, alert_config: dict) -> tuple[list, list]:
     """(rows to create, (id, changes) to update) so the account's six built-in scans match its alert settings.
     existing: builtin -> scan row. A line change re-writes the Sets; switching on records quietly first."""
     creates, updates = [], []
-    for builtin, (line, on) in wanted(alert_config).items():
+    for builtin, (line, on, crossings) in wanted(alert_config).items():
         scan = existing.get(builtin)
         if scan is None:
-            creates.append(scan_row(owner, builtin, line, on))
+            creates.append(scan_row(owner, builtin, line, on, crossings))
             continue
         changes = {}
-        if float((scan.get("set_source") or {}).get("line") or -1) != float(line):
+        source = scan.get("set_source") or {}
+        if (float(source.get("line") or -1) != float(line) or source.get("mode") != "borders"
+                or list(source.get("crossings") or []) != list(crossings)):
             changes.update(set_body=set_doc(builtin, line), rearm=rearm_doc(builtin, line),
-                           set_source={"builtin": builtin, "line": line},
+                           set_source={"builtin": builtin, "line": line, "mode": "borders",
+                                       "crossings": list(crossings)},
                            set_version=int(scan.get("set_version") or 1) + 1)
         channel = (scan.get("notify") or {}).get("channel")
         if (channel == "off") == on:
@@ -200,6 +220,50 @@ def evaluate(doc: dict, rearm: dict | None, builtin: str, assets, readings: Read
     return rows
 
 
+def zones(builtin: str, assets, readings: Readings) -> list[dict]:
+    """Per asset: the reading's value (-100..+100) at the close and its colour zone (-2..+2, None without one)."""
+    reading = BUILTINS[builtin][0]
+    group = sg.starter(READINGS[reading])
+    rows = []
+    for kind, asset_id, label in assets:
+        got = readings.context(kind, asset_id)
+        value = None
+        if got is not None:
+            try:
+                value = (sg.evaluate_group(group, got[0]).get("score") or {}).get("value")
+            except Exception:
+                value = None
+        value = None if value is None else value * 100
+        rows.append({"kind": kind, "id": asset_id, "asset": label, "value": value, "zone": al.zone(value)})
+    return rows
+
+
+def crossings(builtin: str, rows: list[dict], before: dict | None, mine) -> tuple[list[dict], list[dict]]:
+    """(rows with this close's held zone, alerts as (row, crossing key)). before: asset key -> the last run's row
+    ({zone, held}), or None on the first run (everything is noted quietly). A new zone becomes the held zone once it
+    holds at a second close; a change of held zone that crosses a ticked border, in this scan's direction, alerts."""
+    direction = BUILTINS[builtin][1]
+    out, alerts = [], []
+    for r in rows:
+        key = f"{r['kind']}:{r['id']}"
+        last = (before or {}).get(key)
+        if last is None or "held" not in last:
+            held = r["zone"]
+        elif r["zone"] is None:
+            held = last.get("held")
+        else:
+            held = r["zone"] if r["zone"] == last.get("zone") else last.get("held")
+        row = {**r, "held": held}
+        out.append(row)
+        if before is None or last is None:
+            continue
+        was = last.get("held")
+        hit = al.crossing_for(was, held, mine)
+        if hit and al.CROSSINGS[hit][1] == direction:
+            alerts.append((row, hit, was))
+    return out, alerts
+
+
 def plan(rows: list[dict], latched: set) -> tuple[list, list]:
     """(open, release) asset keys: a Yes opens once; the re-arm Set's Yes (or, without one, a No) releases."""
     opens, releases = [], []
@@ -210,6 +274,19 @@ def plan(rows: list[dict], latched: set) -> tuple[list, list]:
         elif key in latched and (r["rearm"] == "yes" if r.get("rearm") is not None else r["answer"] == "no"):
             releases.append(key)
     return opens, releases
+
+
+def crossing_note(owner, builtin: str, row: dict, key: str, was: int, channel: str, now_iso: str) -> dict:
+    """A border-crossing alert: the up or down type of its reading (feed colours and emails as before), in words."""
+    reading, _, alert_type = BUILTINS[builtin]
+    out = {"user_id": owner, "asset_symbol": al.latch_symbol(row["id"]), "asset_name": row["asset"],
+           "alert_type": alert_type,
+           "message": al.crossing_message(reading, key, row["value"] or 0.0, was, row["held"])}
+    if channel in ("app", "digest"):
+        out["emailed_at"] = now_iso
+    if channel == "app":
+        out["digested_at"] = now_iso
+    return out
 
 
 def note(owner, builtin: str, row: dict, channel: str, now_iso: str) -> dict:
@@ -252,32 +329,34 @@ def run_account(db, owner, scans: list[dict], watchlist: tuple[dict, dict], read
             if run_id is None:
                 continue
             try:
-                rows = evaluate(scan["set_body"], scan.get("rearm"), builtin, assets, readings)
+                mine = list((scan.get("set_source") or {}).get("crossings") or [])
+                before = db.last_zones(scan["id"], market)
+                rows, hits = crossings(builtin, zones(builtin, assets, readings), before, mine)
                 latched = db.latches(scan["id"])
-                opens, releases = plan(rows, latched)
-                db.open_latches(scan["id"], opens, cutoff)
-                db.release_latches(scan["id"], releases)
-                if releases:
-                    db.resolve(owner, BUILTINS[builtin][2], [k.split(":", 1)[1] for k in releases])
-                quiet = bool(scan.get("quiet_next"))
+                if latched:                    # the single-line latches are not used any more
+                    db.release_latches(scan["id"], sorted(latched))
+                quiet = bool(scan.get("quiet_next")) or before is None
                 muted = ps.snoozed(scan, now)
-                by_key = {f"{r['kind']}:{r['id']}": r for r in rows}
-                fresh = [] if quiet else [note(owner, builtin, by_key[k], channel, now.isoformat())
-                                          for k in opens if k not in muted]
+                hits = [(r, k, was) for r, k, was in hits if f"{r['kind']}:{r['id']}" not in muted]
+                if hits and not quiet:
+                    db.retire(owner, BUILTINS[builtin][0], [r["id"] for r, _, _ in hits])
+                fresh = [] if quiet else [crossing_note(owner, builtin, r, k, was, channel, now.isoformat())
+                                          for r, k, was in hits]
                 inserted = db.notes(fresh)
                 out["notes"] += inserted
-                out["opened"] += len(opens)
+                out["opened"] += len(fresh)
                 out["instant"] = out["instant"] or (channel == "instant" and bool(inserted))
-                if quiet:
+                if scan.get("quiet_next"):
                     db.clear_quiet(scan["id"])
                     scan["quiet_next"] = False
                 db.finish(run_id, {
                     "status": "ok", "finished_at": datetime.now(timezone.utc).isoformat(),
                     "late_seconds": max(0, int((now - cutoff - ps.SETTLE).total_seconds())),
-                    "results": [{k: r[k] for k in ("kind", "id", "asset", "answer", "how_sure", "reason", "available")}
-                                for r in rows],
-                    "opened": opens, "released": releases, "set_version": scan.get("set_version"),
-                    "record": {"source": "stored daily bars", "builtin": builtin, "quiet": quiet}})
+                    "results": [{k: r[k] for k in ("kind", "id", "asset", "value", "zone", "held")} for r in rows],
+                    "opened": [f"{r['kind']}:{r['id']}:{k}" for r, k, _ in hits], "released": [],
+                    "set_version": scan.get("set_version"),
+                    "record": {"source": "stored daily bars", "builtin": builtin, "quiet": quiet, "mode": "borders",
+                               "crossings": mine}})
                 db.touch(scan["id"], now)
                 out["ran"] += 1
             except Exception as exc:
@@ -310,6 +389,23 @@ class Store:
         except Exception:                 # a database without the digest column
             return self.db.table("user_notifications").insert(
                 [{k: v for k, v in r.items() if k != "digested_at"} for r in rows]).execute().data or []
+
+    def last_zones(self, scan_id, market: str) -> dict | None:
+        """asset key -> {zone, held} from this scan's last finished run in this market under the border rules, or
+        None (the first such run, which notes the zones quietly)."""
+        rows = (self.db.table("prism_scan_runs").select("results, record").eq("scan_id", scan_id)
+                .eq("market", market).eq("status", "ok").order("cutoff", desc=True).limit(1).execute().data or [])
+        if not rows or (rows[0].get("record") or {}).get("mode") != "borders":
+            return None
+        return {f"{r.get('kind')}:{r.get('id')}": r for r in rows[0].get("results") or []}
+
+    def retire(self, owner, reading: str, asset_ids: list[str]) -> None:
+        """A new crossing replaces the asset's older, already-read crossings of the same reading in the feed."""
+        for asset_id in asset_ids:
+            for open_type in al.READING_ALERTS[reading]["types"]:
+                (self.db.table("user_notifications").update({"alert_type": f"{open_type}_resolved"})
+                 .eq("user_id", owner).eq("asset_symbol", al.latch_symbol(asset_id))
+                 .eq("alert_type", al._HELD[open_type]).execute())
 
     def resolve(self, owner, alert_type: str, asset_ids: list[str]) -> None:
         """Re-armed: the feed stops showing the old crossing, as before."""
