@@ -50,7 +50,7 @@ FIELDS: dict[str, dict[str, dict]] = {
                        "body_share_of_range": num("share of the candle's range", 0, 1)},
     "volatility.atr_trend@1": {"atr": num("price", 0), "atr_pct": num("% of price", 0),
                                "ratio": num("times its average ATR", 0), "expanding": YES_NO},
-    # ---- oscillators in the Market Cipher style (signals_oscillators.py)
+    # ---- 📡 Sonar oscillators (signals_oscillators.py)
     "osc.wavetrend@1": {"wt1": num("WaveTrend points"), "wt2": num("WaveTrend points"),
                         "zone": label("overbought", "oversold", "neutral"), "cross": label("up", "down", "none"),
                         "turned_up_from_oversold": YES_NO, "turned_down_from_overbought": YES_NO,

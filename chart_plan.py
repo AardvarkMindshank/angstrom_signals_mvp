@@ -11,7 +11,7 @@ from __future__ import annotations
 INDICATORS = {
     "sma200": {"label": "SMA 200", "where": "price", "needs": ("sma_200",)},
     "ichimoku": {"label": "Ichimoku cloud", "where": "price", "needs": ("ichi_span_a", "ichi_span_b")},
-    "cipher": {"label": "Market Cipher B", "where": "panel", "needs": ("mc_wt1", "mc_wt2")},
+    "cipher": {"label": "Sonar", "where": "panel", "needs": ("mc_wt1", "mc_wt2")},
     "rsi": {"label": "RSI", "where": "panel", "needs": ("rsi",)},
     "macd": {"label": "MACD", "where": "panel", "needs": ("MACD_",), "prefix": True},
     "stoch": {"label": "Stochastic", "where": "panel", "needs": ("stoch_k",)},
@@ -63,7 +63,7 @@ def plan(selected, columns, overlay_curves: bool = False) -> dict:
     if overlay_curves:
         secondary += [key for key in extra if key in BOUNDED]
         extra = [key for key in extra if key not in BOUNDED]
-    # Market Cipher B sits straight under the price chart, above volume (Drew's layout).
+    # 📡 Sonar sits straight under the price chart, above volume (Drew's layout).
     lead = [key for key in extra if key == "cipher"]
     panels = lead + list(BASE_PANELS) + [key for key in extra if key != "cipher"]
     each = (1 - PRICE_SHARE) / len(panels)

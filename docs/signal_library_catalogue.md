@@ -79,14 +79,14 @@ Generated from the registry (`signal_library.REGISTRY.catalogue()`) by `signal_c
 - **Interpretation:** Where the candle's average price sits in its recent range, smoothed, and whether it just turned. Descriptive.
 - **Limitations:** Stays pinned near 0 or 100 in strong trends; turns repeat in sideways markets.
 
-### WaveTrend momentum (Market Cipher style) — `osc.wavetrend@1`
+### WaveTrend momentum (Sonar) — `osc.wavetrend@1`
 
 - **Category:** momentum · **Output:** observation · **Unit:** mixed (labelled fields) · **Scope:** asset
 - **Timeframes:** 15m, 30m, 1h, 4h, 12h, 1D, 1W · **Data:** candles
-- **Parameters:** `channel` = 9 (channel length (the EMA of price and of its distance)); `average` = 12 (average length (smooths the wave, WT1)); `signal` = 3 (signal line length (WT2 = simple average of WT1)); `overbought` = 53 (overbought line (Market Cipher B: 53; a stronger line at 60)); `oversold` = -53 (oversold line (Market Cipher B: -53; a stronger line at -60))
-- **Calculation:** LazyBear's WaveTrend on the last closed candle: ap = (high + low + close) / 3; esa = EMA(ap, channel); d = EMA(|ap - esa|, channel); ci = (ap - esa) / (0.015 x d); WT1 = EMA(ci, average); WT2 = SMA(WT1, signal). zone = overbought when WT2 is at or above the overbought line, oversold at or below the oversold line, else neutral. cross = up when WT1 moved above WT2 on this candle, down when below. turned_up_from_oversold = a cross up while WT2 is at or below the oversold line (Market Cipher's green dot); turned_down_from_overbought the mirror (red dot). Defaults are Market Cipher B's.
+- **Parameters:** `channel` = 9 (channel length (the EMA of price and of its distance)); `average` = 12 (average length (smooths the wave, WT1)); `signal` = 3 (signal line length (WT2 = simple average of WT1)); `overbought` = 53 (overbought line (default 53; a stronger line at 60)); `oversold` = -53 (oversold line (default -53; a stronger line at -60))
+- **Calculation:** LazyBear's WaveTrend on the last closed candle: ap = (high + low + close) / 3; esa = EMA(ap, channel); d = EMA(|ap - esa|, channel); ci = (ap - esa) / (0.015 x d); WT1 = EMA(ci, average); WT2 = SMA(WT1, signal). zone = overbought when WT2 is at or above the overbought line, oversold at or below the oversold line, else neutral. cross = up when WT1 moved above WT2 on this candle, down when below. turned_up_from_oversold = a cross up while WT2 is at or below the oversold line (Sonar's green ping); turned_down_from_overbought the mirror (red ping). Defaults are the published open-source ones.
 - **Interpretation:** Where the momentum wave is and whether it just turned. A turn up from oversold is what many traders mark as a possible bounce point, to be read with the trend and other timeframes. Descriptive; not a forecast.
-- **Limitations:** Oscillators stay overbought or oversold for long stretches in strong trends, and turns repeat. Needs about 50 closed candles. Settings change the readings; the defaults follow the published Market Cipher B recreation, not any one trader's chart.
+- **Limitations:** Oscillators stay overbought or oversold for long stretches in strong trends, and turns repeat. Needs about 50 closed candles. Settings change the readings; the defaults follow the published open-source recreation, not any one trader's chart.
 
 ### RSI (14) — `rsi.level@1`
 
@@ -304,12 +304,12 @@ Generated from the registry (`signal_library.REGISTRY.catalogue()`) by `signal_c
 - **Interpretation:** Which way the moving-average stack points on this timeframe. Descriptive.
 - **Limitations:** Moving averages lag; after a sharp reversal this stays on the old direction for a while.
 
-### Money flow (Market Cipher style) — `flow.money@1`
+### Money flow (Sonar) — `flow.money@1`
 
 - **Category:** volume · **Output:** observation · **Unit:** mixed (labelled fields) · **Scope:** asset
 - **Timeframes:** 15m, 30m, 1h, 4h, 12h, 1D, 1W · **Data:** candles
-- **Parameters:** `period` = 60 (candles averaged); `multiplier` = 150 (scale (Market Cipher B: 150))
-- **Calculation:** On the last closed candle: value = the simple average over `period` candles of ((close - open) / (high - low)) x multiplier, less 2.5 (VuManChu Cipher B's money-flow area). direction = in when the value is above zero, out when below. rising = higher than one candle before.
+- **Parameters:** `period` = 60 (candles averaged); `multiplier` = 150 (scale (default 150))
+- **Calculation:** On the last closed candle: value = the simple average over `period` candles of ((close - open) / (high - low)) x multiplier, less 2.5 (the published open-source money-flow area). direction = in when the value is above zero, out when below. rising = higher than one candle before.
 - **Interpretation:** Whether candles have, on balance, been closing above their opens (money flowing in, green) or below (flowing out, red), and whether that is growing. Agreement or disagreement across timeframes is how it is usually read. Descriptive.
 - **Limitations:** Built from candle shapes only; it does not see order flow or exchange volumes. A doji (open = close) counts as nothing. Slow by design (60 candles).
 

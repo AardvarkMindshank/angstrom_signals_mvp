@@ -399,7 +399,7 @@ function draw(L, root, data) {
         color: withAlpha(s.color, s.alpha || 1), lineWidth: s.width >= 1.5 ? 2 : 1, lineStyle: STYLE[s.style] || 0,
         priceLineVisible: false, lastValueVisible: s.pane > 0, crosshairMarkerVisible: s.pane > 0,
       };
-      if (s.type === "dots") {     // points only (Market Cipher dots): no line between them
+      if (s.type === "dots") {     // points only (Sonar pings): no line between them
         Object.assign(options, { lineVisible: false, pointMarkersVisible: true, pointMarkersRadius: s.radius || 3,
                                  lastValueVisible: false, crosshairMarkerVisible: false, color: s.colors ? s.colors[0] : "#888" });
       }

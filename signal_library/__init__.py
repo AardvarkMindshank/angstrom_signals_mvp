@@ -2,6 +2,9 @@
 and nothing here changes the existing Trend, Stretch and Flow readings or alerts."""
 
 from .core import REGISTRY, SignalRef, SignalResult  # noqa: F401
+from .display_names import install as _display_names
+
+_display_names(REGISTRY)    # "Sonar", not the trademarked "Market Cipher", on every page (display_names.py)
 from .context import DataContext  # noqa: F401
 from .engine import evaluate  # noqa: F401
 from . import signals_basic, signals_components, signals_market, signals_sentiment, signals_ta  # noqa: F401  (registers the signals)

@@ -106,7 +106,7 @@ def wave_turn_set(direction: str) -> dict:
             "purpose": (f"On the daily candles, EMA 20 {side} EMA 50, and WaveTrend turned "
                         f"{'up from oversold' if up else 'down from overbought'} within the last {TURN_WITHIN} daily "
                         f"closes and is still {'rising' if up else 'falling'}: a pullback inside the trend whose "
-                        "momentum wave has turned back (Market Cipher style)."),
+                        "momentum wave has turned back (the 📡 Sonar waves)."),
             "standalone": [_item("emas", "EMA 20 vs 50", "ma.pair", "1D", kind="EMA", fast=20, slow=50),
                            _item("wave", "WaveTrend", "osc.wavetrend", "1D")],
             "decision": {"version": 1, "rule": {"all": [
@@ -190,7 +190,7 @@ def explanations() -> dict[str, tuple[str, str, str, str]]:
             f"Yes when the daily EMA 20 is {'above' if up else 'below'} the EMA 50 and WaveTrend crossed "
             f"{'up while oversold' if up else 'down while overbought'} within the last 5 closes and is still "
             f"{'rising' if up else 'falling'}.",
-            "WaveTrend (the Market Cipher style oscillator) turning from an extreme is a common way to time a re-entry "
+            "WaveTrend (the 📡 Sonar momentum wave) turning from an extreme is a common way to time a re-entry "
             "into a trend. It is the daily stage of the ready-made trend funnels.",
             "Oscillators can turn several times before a move continues. Nobody has tested what followed these "
             "answers.")

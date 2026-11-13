@@ -31,7 +31,7 @@ DOWN_FADED = "rgba(239,83,80,0.35)"
 
 PANEL_TITLES = {
     "volume": "Volume", "rsi": "RSI (14)", "macd": "MACD", "stoch": "Stochastic (14, 3)",
-    "stochrsi": "Stoch RSI (3, 3, 14, 14, OHLC4)", "cipher": "Market Cipher B (VuManChu)", "adx": "ADX (14)", "obv": "On-balance volume",
+    "stochrsi": "Stoch RSI (3, 3, 14, 14, OHLC4)", "cipher": "Sonar", "adx": "ADX (14)", "obv": "On-balance volume",
 }
 # Lower panels that read on a fixed 0 to 100 scale.
 FIXED_0_100 = ("rsi", "stoch", "stochrsi")
@@ -171,7 +171,7 @@ def event_lines(index: pd.DatetimeIndex, interval: str, kind: str, events, ahead
 
 
 def cipher_series(df: pd.DataFrame, pane: int, dark: bool = False) -> list[dict]:
-    """The Market Cipher B strip, drawn as Drew's chart draws it (colours from his Style settings): the light-blue
+    """The 📡 Sonar strip (our version of the oscillator strip Drew reads), drawn as his chart draws it (colours from his Style settings): the light-blue
     and blue waves, the yellow VWAP area, the green / red money flow, the bar along the bottom, the magenta RSI, the
     green / red Stoch RSI, the small cross dots and the big buy and sell dots. Columns from chart_indicators."""
     n = len(df)

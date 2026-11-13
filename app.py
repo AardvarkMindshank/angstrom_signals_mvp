@@ -3910,7 +3910,7 @@ def _tv_chart(asset_type, asset_key, title, layout, tv, interval, range_key, pri
     """Draw the TradingView chart from candles already loaded by _tv_candles."""
     frame = tv["frame"]
     if "mc_wt1" not in frame.columns:
-        frame = add_chart_only(frame)          # 🎛️ Stoch RSI and Market Cipher B: chart only, not scored
+        frame = add_chart_only(frame)          # 🎛️ Stoch RSI and 📡 Sonar: chart only, not scored
     bands = _band_payload(band_set, asset_type, asset_key, frame)
     past_reports, next_report = [], None
     if show_earnings and asset_type != "Crypto":
@@ -7336,14 +7336,15 @@ so they change once a day; price, today's move and RSI in the table are live.
         st.markdown("""
 **Interactive Chart.** Candles with SMA 20 and 50 and Bollinger Bands, plus volume underneath.
 The icon row adds more:
-- 📏 SMA 200 · ☁️ Ichimoku cloud · 🌀 Market Cipher B · 🌡️ RSI · 〰️ MACD · 🎚️ Stochastic · 🎛️ Stoch RSI · 🧭 ADX · 📊 OBV
-- 🌀 **Market Cipher B** (a strip between the price chart and volume) is the free VuManChu Cipher B version of
-  Market Cipher B, drawn in its colours: the light-blue and blue **waves** (WaveTrend momentum), the yellow
-  **VWAP** area (the gap between the two waves), the green or red **money flow** area and the bar along the bottom
-  (money flowing in or out), the magenta **RSI** and the green or red **Stoch RSI**. **Small dots** mark the waves
-  crossing (green up, red down: a possible entry or exit). A **big green dot** is a cross up from deep down
-  (−53 or lower), a strong possible entry; a **big red dot** along the top is the mirror, a cross down from high
-  up (+53 or higher), a strong possible exit. Readings describe momentum; they are not trade calls.
+- 📏 SMA 200 · ☁️ Ichimoku cloud · 📡 Sonar · 🌡️ RSI · 〰️ MACD · 🎚️ Stochastic · 🎛️ Stoch RSI · 🧭 ADX · 📊 OBV
+- 📡 **Sonar** (a strip between the price chart and volume) reads what is moving under the price, using the
+  published open-source formulas: the light-blue and blue **waves** (WaveTrend momentum), the yellow **VWAP** area
+  (the gap between the two waves), the green or red **money flow** area and the bar along the bottom (money flowing
+  in or out), the magenta **RSI** and the green or red **Stoch RSI**. **Pings** mark the waves turning: a small
+  green ping where they cross up (a possible entry), a small red one where they cross down (a possible exit). A
+  **big green ping** is a cross up from deep down (−53 or lower), a strong possible entry; a **big red ping** along
+  the top is the mirror, a cross down from high up (+53 or higher), a strong possible exit. Readings describe
+  momentum; they are not trade calls.
 - 🎛️ **Stoch RSI** is set up as on TradingView with K 3, D 3, RSI length 14, Stochastic length 14 and RSI source
   (O + H + L + C)/4: where the RSI sits in its own range over the last 14 candles, 0 to 100. %K is blue, %D orange;
   above 80 the RSI is near the top of its recent range, below 20 near the bottom.
@@ -7546,10 +7547,10 @@ starter keep working, and built-in alerts that are on keep running.
 - **🔍 Look inside** on a provided Set (in Prism, on its chip or on a scan) shows the Groups and signals it is made
   of, in plain words. **Make my own copy** opens it in Signal Sets as your own, to change and save; the provided
   one stays as it is.
-- **Oscillators in the Market Cipher style** (signals you can use in Groups and Sets): **WaveTrend** (the momentum
+- **📡 Sonar oscillators** (signals you can use in Groups and Sets): **WaveTrend** (the momentum
   wave, overbought and oversold, its turns), **Money flow** (money flowing in, green, or out, red), the
   **Stochastic on OHLC4**, and **Divergence across timeframes** (regular and hidden divergence counted over four
-  timeframes). They use the published Market Cipher B defaults; every setting can be changed with ⚙.
+  timeframes). They use the published open-source defaults; every setting can be changed with ⚙.
 - The provided Sets include *Pullback in an uptrend*, *Rally in a downtrend*, *Trend alignment* (daily and
   weekly), *Breakout with volume*, *Volatility squeeze*, *Oversold in a range*, *Near support in a range*,
   *Bitcoin trend filter* and *Overextended*. Any of them can also be a column in the tables.
@@ -7671,7 +7672,7 @@ tested what usually followed these answers.
   **Equities:** weekly → daily → 4-hour →
   1-hour entry (equities trade 6½ hours a day, so a 12-hour candle would just be the daily one).
 - The trend stages ask for **EMA 20 above EMA 50** (below, for shorts). The **daily** stage also asks for
-  **WaveTrend** (the Market Cipher style momentum wave) to have turned up from oversold within the last 5 days and
+  **WaveTrend** (the 📡 Sonar momentum wave) to have turned up from oversold within the last 5 days and
   still be rising (for shorts: turned down from overbought, still falling): a pullback inside the trend whose
   momentum has turned back. Funnels made before 11 Nov used the Stochastic for this; ⚙️ Funnels → *Update to the
   latest ready-made version* switches yours over. The **1-hour entry** is a pullback setup:
@@ -12491,9 +12492,9 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                 else:
                     # The chart's indicators are worked out on the chosen interval's candles.
                     df_chart = tv["frame"]
-            df_chart = add_chart_only(df_chart)     # 🎛️ Stoch RSI and Market Cipher B: chart only, not scored
+            df_chart = add_chart_only(df_chart)     # 🎛️ Stoch RSI and 📡 Sonar: chart only, not scored
             indicator_keys = chart_plan.available(df_chart.columns)
-            indicator_icons = {"sma200": "📏", "ichimoku": "☁️", "cipher": "🌀", "rsi": "🌡️", "macd": "〰️", "stoch": "🎚️", "stochrsi": "🎛️",
+            indicator_icons = {"sma200": "📏", "ichimoku": "☁️", "cipher": "📡", "rsi": "🌡️", "macd": "〰️", "stoch": "🎚️", "stochrsi": "🎛️",
                                "adx": "🧭", "obv": "📊"}
             # Crypto charts also offer estimated liquidation levels, drawn by this page, not chart_plan.
             if asset_type == "Crypto":
@@ -12632,7 +12633,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                     "volume": "Volume", "rsi": "RSI (14)", "macd": "MACD", "stoch": "Stochastic (14, 3)",
                     "stochrsi": "Stoch RSI (3, 3, 14, 14, OHLC4)", "adx": "ADX (14)", "obv": "On-balance volume",
                 }
-                # The Market Cipher B strip is drawn by the fast chart only.
+                # The 📡 Sonar strip is drawn by the fast chart only.
                 layout["panels"] = [name for name in layout["panels"] if name != "cipher"]
                 panels = layout["panels"]
                 row_of = {name: index + 2 for index, name in enumerate(panels)}

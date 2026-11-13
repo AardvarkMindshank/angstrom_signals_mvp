@@ -30,9 +30,9 @@ def stoch_rsi(df: pd.DataFrame, rsi_length: int = 14, stoch_length: int = 14, k:
     return _stoch_of(rsi(src, rsi_length), stoch_length, k, d)
 
 
-# ------------------------------------------------------------------------------ Market Cipher B (VuManChu, free)
+# ------------------------------------------------------------------------------ 📡 Sonar (open-source VuManChu formulas)
 
-CIPHER = {   # the free VuManChu Cipher B defaults; every one can be changed to match Drew's paid Market Cipher B
+CIPHER = {   # the open-source VuManChu defaults; every one can be changed to match the paid indicator Drew uses
     "wt_channel": 9, "wt_average": 12, "wt_signal": 3,
     "ob1": 53, "ob2": 60, "os1": -53, "os2": -60,
     "mf_period": 60, "mf_multiplier": 150.0, "mf_shift": 2.5,
@@ -42,7 +42,7 @@ CIPHER = {   # the free VuManChu Cipher B defaults; every one can be changed to 
 
 
 def cipher_b(df: pd.DataFrame, cfg: dict | None = None) -> pd.DataFrame:
-    """The Market Cipher B strip, worked out with the open-source VuManChu Cipher B formulas (signal_library has
+    """The 📡 Sonar strip, worked out with the open-source VuManChu Cipher B formulas (signal_library has
     the same WaveTrend and money flow the Sets use):
 
     mc_wt1, mc_wt2   the light-blue and blue waves (WaveTrend WT1 and its signal line WT2)
@@ -74,7 +74,7 @@ def cipher_b(df: pd.DataFrame, cfg: dict | None = None) -> pd.DataFrame:
 
 
 def add_chart_only(df: pd.DataFrame) -> pd.DataFrame:
-    """The chart frame with the chart-only columns added (Stoch RSI, Market Cipher B). Quiet on failure."""
+    """The chart frame with the chart-only columns added (Stoch RSI, Sonar). Quiet on failure."""
     extra = {}
     try:
         sr = stoch_rsi(df)
