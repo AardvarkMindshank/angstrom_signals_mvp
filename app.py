@@ -8072,8 +8072,10 @@ To use a newer model of the same AI later, add a second variable with the model 
 """
 
 
+@st.fragment
 def _ai_settings(settings: dict) -> None:
-    """🤖 The person's own AI choice (the AI Navigator), and which AI the admin picked for the news scores."""
+    """🤖 The person's own AI choice (the AI Navigator), and which AI the admin picked for the news scores. A choice
+    here only saves (the Navigator reads it when it opens), so it redraws this part, not the page."""
     import ai_providers as ap
 
     st.markdown("**🤖 AI choices**")
