@@ -172,6 +172,43 @@ export default function(component) {
       document.documentElement.style.setProperty(name, value);
     }
   };
+  // 💩 in brown in the social stream's comments and chat: Windows draws part of it in the text colour, which made it
+  // white on dark pages. Only text our own script draws is touched (never text Streamlit's React owns, which must
+  // not be edited from outside); each new piece of text is checked once and the emoji wrapped in a brown span.
+  if (!window.__angPoop) {
+    window.__angPoop = true;
+    const POOP = "\\u{1F4A9}";
+    const tint = (node) => {
+      if (!node) return;
+      const walker = document.createTreeWalker(node.nodeType === 3 ? node.parentNode || node : node, NodeFilter.SHOW_TEXT);
+      const hits = [];
+      for (let t = walker.nextNode(); t; t = walker.nextNode()) {
+        const parent = t.parentNode;
+        if (t.nodeValue && t.nodeValue.includes(POOP) && parent && !(parent.classList && parent.classList.contains("ang-poop"))
+            && !["TEXTAREA", "INPUT", "SCRIPT", "STYLE", "OPTION"].includes(parent.nodeName)
+            && parent.closest && parent.closest("#social-stream-root")) hits.push(t);
+      }
+      for (const t of hits) {
+        const parts = t.nodeValue.split(POOP);
+        const frag = document.createDocumentFragment();
+        parts.forEach((part, i) => {
+          if (part) frag.appendChild(document.createTextNode(part));
+          if (i < parts.length - 1) {
+            const span = document.createElement("span");
+            span.className = "ang-poop";
+            span.style.color = "#7b4a1e";
+            span.textContent = POOP;
+            frag.appendChild(span);
+          }
+        });
+        t.parentNode.replaceChild(frag, t);
+      }
+    };
+    tint(document.body);
+    new MutationObserver((changes) => {
+      for (const c of changes) for (const n of c.addedNodes) if (n.nodeType === 1 || n.nodeType === 3) tint(n);
+    }).observe(document.body, { childList: true, subtree: true });
+  }
   paintColour("--ang-page-day", chosen.pageDay);
   paintColour("--ang-page-night", chosen.pageNight);
   paintColour("--ang-heading-day", chosen.headingDay);
@@ -1320,7 +1357,7 @@ export default function(component) {
         "#social-stream-root .chat-box{width:100%;box-sizing:border-box;min-height:58px;max-height:120px;resize:vertical;font:inherit;font-size:.9rem;border:1px solid #d1d5db;border-radius:8px;padding:8px;}",
         "#social-stream-root .faces{display:flex;gap:4px;margin-top:6px;}",
         "#social-stream-root .faces button{flex:1;min-width:0;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:2px 0;cursor:pointer;font-size:1rem;line-height:1.2;}",
-        "#social-stream-root .faces button.face-poop{font-size:1.45rem;line-height:1;}",
+        "#social-stream-root .faces button.face-poop{font-size:1.45rem;line-height:1;color:#7b4a1e !important;}",
         "#social-stream-root .composer-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px;}",
         "#social-stream-root .chars{color:#6b7280;font-size:.75rem;}",
         "#social-stream-root .post{background:#111827;color:#fff;border:0;border-radius:999px;padding:6px 14px;font:inherit;font-weight:600;cursor:pointer;}",
@@ -13287,9 +13324,12 @@ def _sentiment_thumbs(
             background: #f0f2f6;
             color: inherit;
         }}
-        .take-face-poop {{
+        .take-face-poop,
+        html.angstrom-night .take-face.take-face-poop {{
             font-size: 1.45rem;
             line-height: 1;
+            /* Windows draws part of 💩 in the text colour: brown, so it isn't white in dark mode */
+            color: #7b4a1e !important;
         }}
         .take-face:hover {{
             border-color: #ff4b4b;
