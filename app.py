@@ -6830,9 +6830,12 @@ def notifications_panel() -> None:
             def _bands_for(reading: str) -> None:
                 # While this section is open and shows a board (Trend, Stretch or Flow alerts on), the sidebar
                 # widens so the colour boxes sit side by side; closed, or with none on, it keeps the width it had.
+                # Every section around the marker must be open (it sits inside 🔔 Notifications too), and the
+                # sidebar expanded: Streamlit hides it by sliding it left by its own width.
                 st.markdown(
                     "<div class='alert-rules-open'></div><style>"
-                    "section[data-testid='stSidebar']:has(details[open] .alert-rules-open){"
+                    "section[data-testid='stSidebar'][data-collapsed='false']:has(.alert-rules-open)"
+                    ":not(:has(details:not([open]) .alert-rules-open)){"
                     "width:min(680px,100vw) !important;min-width:min(680px,100vw) !important;"
                     "max-width:100vw !important;transition:width .2s ease,min-width .2s ease}</style>",
                     unsafe_allow_html=True)
