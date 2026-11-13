@@ -4,7 +4,7 @@ import glob, json, os, sys
 from collections import Counter, defaultdict
 import pandas as pd
 
-sys.path.insert(0, "/root/angstrom_signals_mvp")
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import scoring, signals_v2 as sv
 
 PRICES = sys.argv[1]
