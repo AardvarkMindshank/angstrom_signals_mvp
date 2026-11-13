@@ -245,14 +245,13 @@ function candleCountdown(root, host, chart, candles, data, theme) {
   if (old) old.remove();
   if (!data.forming || !data.closes_at) return;
   const n = data.times.length;
-  const close = data.ohlc[3][n - 1], open = data.ohlc[0][n - 1];
-  if (close === null || close === undefined) return;
+  if (data.ohlc[3][n - 1] === null || data.ohlc[3][n - 1] === undefined) return;
   const tag = document.createElement("div");
   tag.className = "ang-lwc-countdown";
   tag.title = "Time left until this candle closes";
   tag.style.cssText = "position:absolute;right:0;z-index:4;pointer-events:none;text-align:center;" +
     "font:11px/15px system-ui,-apple-system,Segoe UI,sans-serif;font-variant-numeric:tabular-nums;color:#fff;" +
-    `background:${close >= open ? theme.up : theme.down};border-radius:0 0 2px 2px;`;
+    "border-radius:0 0 2px 2px;";
   host.appendChild(tag);
   const two = (v) => String(v).padStart(2, "0");
   const words = (ms) => {
@@ -265,6 +264,14 @@ function candleCountdown(root, host, chart, candles, data, theme) {
   };
   const tick = () => {
     if (!tag.isConnected) { clearInterval(root.__countdown); root.__countdown = null; return; }
+    // The price label on the right shows the last candle in view (the newest one, or an older one when the chart is
+    // scrolled back), so the countdown follows that candle's close and colour.
+    let i = n - 1;
+    const range = chart.timeScale().getVisibleLogicalRange();
+    if (range) i = Math.max(0, Math.min(n - 1, Math.floor(range.to)));
+    while (i > 0 && (data.ohlc[3][i] === null || data.ohlc[3][i] === undefined)) i -= 1;
+    const close = data.ohlc[3][i], open = data.ohlc[0][i];
+    tag.style.background = close >= open ? theme.up : theme.down;
     const y = candles.priceToCoordinate(close);
     let width = 56;
     try { width = chart.priceScale("right").width() || width; } catch (e) { /* older library */ }
@@ -276,7 +283,8 @@ function candleCountdown(root, host, chart, candles, data, theme) {
   };
   tick();
   root.__countdown = setInterval(tick, 1000);
-  chart.timeScale().subscribeVisibleLogicalRangeChange(() => requestAnimationFrame(tick));
+  // After a scroll or zoom the price scale re-fits on the next frame: place the countdown once it has.
+  chart.timeScale().subscribeVisibleLogicalRangeChange(() => requestAnimationFrame(() => requestAnimationFrame(tick)));
 }
 
 function indexOfTime(times, t) {
