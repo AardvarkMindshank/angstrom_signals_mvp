@@ -1,0 +1,32 @@
+# One-off research run: how often the proposed border-crossing alerts would fire (research/alerts_replay.py),
+# on the saved daily prices from the reports branch, 30 Oct 2023 to 29 Oct 2024 (before the protected hold-out).
+# Run by pushing the "alerts-replay" branch, or from Actions.
+name: alerts-replay
+on:
+  workflow_dispatch:
+  push:
+    branches: [alerts-replay]
+jobs:
+  replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12.15"
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install --no-deps -r requirements-research.lock
+      - name: Saved prices
+        run: |
+          git fetch --depth 1 origin reports
+          mkdir -p prices
+          for f in $(git ls-tree -r --name-only origin/reports data/prices); do git show origin/reports:$f > prices/$(basename $f); done
+      - name: Replay
+        run: python research/alerts_replay.py prices > replay.json && cat replay.json >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: alerts-replay
+          path: replay.json
