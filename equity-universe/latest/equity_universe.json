@@ -1,5 +1,5 @@
 {
- "built_at": "2026-11-12T22:40:30.486931+00:00",
+ "built_at": "2026-11-13T02:53:44.666247+00:00",
  "rules": {
   "list": "S&P 500",
   "min_price": 5.0,
@@ -134,7 +134,7 @@
    "name": "Akamai Technologies",
    "sector": "Information Technology",
    "price": 86.56,
-   "volume_usd": 461931800,
+   "volume_usd": 461938769,
    "market_cap": null,
    "next_earnings": null,
    "rank": 13
@@ -224,7 +224,7 @@
    "name": "Altria",
    "sector": "Consumer Staples",
    "price": 77.92,
-   "volume_usd": 566616481,
+   "volume_usd": 566867916,
    "market_cap": null,
    "next_earnings": "2027-01-28",
    "rank": 22
@@ -304,7 +304,7 @@
    "name": "American Water Works",
    "sector": "Utilities",
    "price": 147.58,
-   "volume_usd": 270520492,
+   "volume_usd": 270525731,
    "market_cap": null,
    "next_earnings": null,
    "rank": 30
@@ -334,7 +334,7 @@
    "name": "Amgen",
    "sector": "Health Care",
    "price": 467.06,
-   "volume_usd": 1104483199,
+   "volume_usd": 1125137046,
    "market_cap": null,
    "next_earnings": "2027-02-02",
    "rank": 33
@@ -406,7 +406,7 @@
    "price": 380.95,
    "volume_usd": 2921378194,
    "market_cap": null,
-   "next_earnings": "2026-11-12",
+   "next_earnings": null,
    "rank": 40
   },
   {
@@ -424,7 +424,7 @@
    "name": "Aptiv",
    "sector": "Consumer Discretionary",
    "price": 38.81,
-   "volume_usd": 115889730,
+   "volume_usd": 115893087,
    "market_cap": null,
    "next_earnings": "2027-02-01",
    "rank": 42
@@ -484,7 +484,7 @@
    "name": "Assurant",
    "sector": "Financials",
    "price": 321.09,
-   "volume_usd": 100865746,
+   "volume_usd": 100870883,
    "market_cap": null,
    "next_earnings": null,
    "rank": 48
@@ -534,7 +534,7 @@
    "name": "AutoZone",
    "sector": "Consumer Discretionary",
    "price": 3252.1899,
-   "volume_usd": 499435787,
+   "volume_usd": 505047195,
    "market_cap": null,
    "next_earnings": "2026-12-08",
    "rank": 53
@@ -1086,7 +1086,7 @@
    "price": 102.01,
    "volume_usd": 1936795420,
    "market_cap": null,
-   "next_earnings": "2026-11-12",
+   "next_earnings": null,
    "rank": 108
   },
   {
@@ -1164,7 +1164,7 @@
    "name": "Coherent Corp.",
    "sector": "Information Technology",
    "price": 232.08,
-   "volume_usd": 1887527995,
+   "volume_usd": 1887774345,
    "market_cap": null,
    "next_earnings": "2027-02-03",
    "rank": 116
@@ -1263,7 +1263,7 @@
    "ticker": "CPRT",
    "name": "Copart",
    "sector": "Industrials",
-   "price": 31.995,
+   "price": 32.0,
    "volume_usd": 306065634,
    "market_cap": null,
    "next_earnings": "2026-11-19",
@@ -1364,7 +1364,7 @@
    "name": "CVS Health",
    "sector": "Health Care",
    "price": 89.79,
-   "volume_usd": 909317857,
+   "volume_usd": 911038104,
    "market_cap": null,
    "next_earnings": null,
    "rank": 136
@@ -1454,7 +1454,7 @@
    "name": "Devon Energy",
    "sector": "Energy",
    "price": 46.23,
-   "volume_usd": 458435147,
+   "volume_usd": 458546723,
    "market_cap": null,
    "next_earnings": null,
    "rank": 145
@@ -1464,7 +1464,7 @@
    "name": "Dexcom",
    "sector": "Health Care",
    "price": 81.39,
-   "volume_usd": 332110119,
+   "volume_usd": 332469375,
    "market_cap": null,
    "next_earnings": null,
    "rank": 146
@@ -1744,7 +1744,7 @@
    "name": "Erie Indemnity",
    "sector": "Financials",
    "price": 270.0,
-   "volume_usd": 43474563,
+   "volume_usd": 43480098,
    "market_cap": null,
    "next_earnings": null,
    "rank": 174
@@ -1804,7 +1804,7 @@
    "name": "Eversource Energy",
    "sector": "Utilities",
    "price": 71.15,
-   "volume_usd": 207722949,
+   "volume_usd": 207723162,
    "market_cap": null,
    "next_earnings": null,
    "rank": 180
@@ -1864,7 +1864,7 @@
    "name": "ExxonMobil",
    "sector": "Energy",
    "price": 169.78,
-   "volume_usd": 2067225762,
+   "volume_usd": 2068646905,
    "market_cap": null,
    "next_earnings": "2027-01-29",
    "rank": 186
@@ -2264,7 +2264,7 @@
    "name": "Healthpeak Properties",
    "sector": "Real Estate",
    "price": 20.12,
-   "volume_usd": 110545324,
+   "volume_usd": 110545807,
    "market_cap": null,
    "next_earnings": "2027-02-01",
    "rank": 226
@@ -2404,7 +2404,7 @@
    "name": "Huntington Ingalls Industries",
    "sector": "Industrials",
    "price": 308.33,
-   "volume_usd": 148722734,
+   "volume_usd": 149025247,
    "market_cap": null,
    "next_earnings": null,
    "rank": 240
@@ -2524,7 +2524,7 @@
    "name": "International Flavors & Fragrances",
    "sector": "Materials",
    "price": 80.38,
-   "volume_usd": 194733968,
+   "volume_usd": 194734370,
    "market_cap": null,
    "next_earnings": null,
    "rank": 252
@@ -2714,7 +2714,7 @@
    "name": "Kimco Realty",
    "sector": "Real Estate",
    "price": 25.46,
-   "volume_usd": 131013616,
+   "volume_usd": 131092822,
    "market_cap": null,
    "next_earnings": null,
    "rank": 271
@@ -2844,7 +2844,7 @@
    "name": "Lilly (Eli)",
    "sector": "Health Care",
    "price": 1427.28,
-   "volume_usd": 3230222581,
+   "volume_usd": 3234783455,
    "market_cap": null,
    "next_earnings": null,
    "rank": 284
@@ -2954,7 +2954,7 @@
    "name": "Marriott International",
    "sector": "Consumer Discretionary",
    "price": 424.66,
-   "volume_usd": 550708962,
+   "volume_usd": 569237557,
    "market_cap": null,
    "next_earnings": null,
    "rank": 295
@@ -3134,7 +3134,7 @@
    "name": "Mid-America Apartment Communities",
    "sector": "Real Estate",
    "price": 116.55,
-   "volume_usd": 123105731,
+   "volume_usd": 123103982,
    "market_cap": null,
    "next_earnings": null,
    "rank": 313
@@ -3214,7 +3214,7 @@
    "name": "Motorola Solutions",
    "sector": "Information Technology",
    "price": 530.4,
-   "volume_usd": 419183577,
+   "volume_usd": 423357029,
    "market_cap": null,
    "next_earnings": null,
    "rank": 321
@@ -3314,7 +3314,7 @@
    "name": "NiSource",
    "sector": "Utilities",
    "price": 45.81,
-   "volume_usd": 236157676,
+   "volume_usd": 239372988,
    "market_cap": null,
    "next_earnings": null,
    "rank": 331
@@ -3454,7 +3454,7 @@
    "name": "Old Dominion",
    "sector": "Industrials",
    "price": 171.66,
-   "volume_usd": 332333823,
+   "volume_usd": 332337514,
    "market_cap": null,
    "next_earnings": null,
    "rank": 345
@@ -3544,7 +3544,7 @@
    "name": "Palo Alto Networks",
    "sector": "Information Technology",
    "price": 322.66,
-   "volume_usd": 1937822153,
+   "volume_usd": 1940845638,
    "market_cap": null,
    "next_earnings": "2026-11-18",
    "rank": 354
@@ -3604,7 +3604,7 @@
    "name": "Pfizer",
    "sector": "Health Care",
    "price": 28.83,
-   "volume_usd": 895363444,
+   "volume_usd": 895691068,
    "market_cap": null,
    "next_earnings": "2027-02-02",
    "rank": 360
@@ -3874,7 +3874,7 @@
    "name": "ResMed",
    "sector": "Health Care",
    "price": 238.89,
-   "volume_usd": 258163065,
+   "volume_usd": 259956934,
    "market_cap": null,
    "next_earnings": "2027-01-28",
    "rank": 387
@@ -3964,7 +3964,7 @@
    "name": "S&P Global",
    "sector": "Financials",
    "price": 468.51,
-   "volume_usd": 677783820,
+   "volume_usd": 678583855,
    "market_cap": null,
    "next_earnings": null,
    "rank": 396
@@ -4044,7 +4044,7 @@
    "name": "Simon Property Group",
    "sector": "Real Estate",
    "price": 233.61,
-   "volume_usd": 255114536,
+   "volume_usd": 255115471,
    "market_cap": null,
    "next_earnings": "2027-02-01",
    "rank": 404
@@ -4124,7 +4124,7 @@
    "name": "Stanley Black & Decker",
    "sector": "Industrials",
    "price": 113.02,
-   "volume_usd": 152160870,
+   "volume_usd": 152162905,
    "market_cap": null,
    "next_earnings": "2027-02-03",
    "rank": 412
@@ -4284,7 +4284,7 @@
    "name": "TE Connectivity",
    "sector": "Information Technology",
    "price": 217.82,
-   "volume_usd": 389554663,
+   "volume_usd": 394334935,
    "market_cap": null,
    "next_earnings": "2027-01-20",
    "rank": 428
@@ -4364,7 +4364,7 @@
    "name": "TJX Companies",
    "sector": "Consumer Discretionary",
    "price": 135.98,
-   "volume_usd": 885218128,
+   "volume_usd": 897938026,
    "market_cap": null,
    "next_earnings": "2026-11-18",
    "rank": 436
@@ -4424,7 +4424,7 @@
    "name": "Trimble Inc.",
    "sector": "Information Technology",
    "price": 55.83,
-   "volume_usd": 131055282,
+   "volume_usd": 131120942,
    "market_cap": null,
    "next_earnings": null,
    "rank": 442
@@ -4814,7 +4814,7 @@
    "name": "Welltower",
    "sector": "Real Estate",
    "price": 244.93,
-   "volume_usd": 585845071,
+   "volume_usd": 585852542,
    "market_cap": null,
    "next_earnings": null,
    "rank": 481
@@ -4965,49 +4965,49 @@
    "ticker": "FDXF",
    "name": "FedEx Freight",
    "sector": "Industrials",
-   "reason": "only 169 days of history (the weekly stage needs about 3 years)"
+   "reason": "only 170 days of history (the weekly stage needs about 3 years)"
   },
   {
    "ticker": "GEV",
    "name": "GE Vernova",
    "sector": "Industrials",
-   "reason": "only 960 days of history (the weekly stage needs about 3 years)"
+   "reason": "only 961 days of history (the weekly stage needs about 3 years)"
   },
   {
    "ticker": "HONA",
    "name": "Honeywell Aerospace",
    "sector": "Industrials",
-   "reason": "only 150 days of history (the weekly stage needs about 3 years)"
+   "reason": "only 151 days of history (the weekly stage needs about 3 years)"
   },
   {
    "ticker": "Q",
    "name": "Qnity Electronics",
    "sector": "Information Technology",
-   "reason": "only 381 days of history (the weekly stage needs about 3 years)"
+   "reason": "only 382 days of history (the weekly stage needs about 3 years)"
   },
   {
    "ticker": "RDDT",
    "name": "Reddit",
    "sector": "Communication Services",
-   "reason": "only 966 days of history (the weekly stage needs about 3 years)"
+   "reason": "only 967 days of history (the weekly stage needs about 3 years)"
   },
   {
    "ticker": "SNDK",
    "name": "Sandisk",
    "sector": "Information Technology",
-   "reason": "only 637 days of history (the weekly stage needs about 3 years)"
+   "reason": "only 638 days of history (the weekly stage needs about 3 years)"
   },
   {
    "ticker": "SOLV",
    "name": "Solventum",
    "sector": "Health Care",
-   "reason": "only 961 days of history (the weekly stage needs about 3 years)"
+   "reason": "only 962 days of history (the weekly stage needs about 3 years)"
   },
   {
    "ticker": "VYLR",
    "name": "Vylor",
    "sector": "Consumer Staples",
-   "reason": "only 42 days of history (the weekly stage needs about 3 years)"
+   "reason": "only 43 days of history (the weekly stage needs about 3 years)"
   }
  ]
 }
