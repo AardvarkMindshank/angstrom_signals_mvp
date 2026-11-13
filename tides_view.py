@@ -433,9 +433,14 @@ def note_part(snap: dict, now: datetime | None = None) -> str:
     return CSS + "<div class='tides'>" + note(snap, mc.upcoming(now, days=35), now) + "</div>"
 
 
-def strip_part(snap: dict, now: datetime | None = None) -> str:
+def strip_part(snap: dict, now: datetime | None = None, title: bool = True) -> str:
+    """The storm-warnings calendar (and, unless title=False, the waves' heading under it)."""
     now = now or datetime.now(timezone.utc)
-    return "<div class='tides'>" + strip(mc.upcoming(now, days=35), now) + WAVES_TITLE + "</div>"
+    return "<div class='tides'>" + strip(mc.upcoming(now, days=35), now) + (WAVES_TITLE if title else "") + "</div>"
+
+
+def waves_title_part() -> str:
+    return "<div class='tides'>" + WAVES_TITLE + "</div>"
 
 
 def waves_part(snap: dict, range_key: str = "1Y") -> str:
@@ -477,8 +482,8 @@ PASSAGE_TIP = ("📜 Today's AI Passage Plan (opens in its own window): the AI N
 
 def render_panel(st, snap: dict, saved_range: str | None, save_range, buttons, take=None) -> None:
     """The Tides panel in Streamlit (the app's 🌊 Tides section, and the training-video demo page): the hero with the
-    two AI buttons (buttons() draws them) on its lower right, then the daily note and Your take (take() draws it,
-    when given) side by side, then the calendar, the range picker (saved_range, and save_range(picked) when it
+    two AI buttons (buttons() draws them) on its lower right, then the daily note with the storm-warnings calendar
+    under it, beside Your take (take() draws it, when given), then the range picker (saved_range, and save_range(picked) when it
     changes), the waves and the currents."""
     # The AI buttons sit over the hero's waves, bottom right (their wrapper is pulled up over it, with a solid
     # backing so they read on the waves); on a phone they drop just under it. Below, the note and Your take share
@@ -502,14 +507,17 @@ def render_panel(st, snap: dict, saved_range: str | None, save_range, buttons, t
         buttons()
     if take is None:
         st.html(note_part(snap))
+        st.html(strip_part(snap, title=False))
     else:
+        # The calendar sits under the note, beside Your take, so the space under the note isn't left empty.
         row = st.container(key="tides_note_row")
         note_col, take_col = row.columns([3, 2], vertical_alignment="top")
         with note_col:
             st.html(note_part(snap))
+            st.html(strip_part(snap, title=False))
         with take_col:
             take()
-    st.html(strip_part(snap))
+    st.html(waves_title_part())
     ranges = list(RANGES)
     if st.session_state.get("tides_range") not in ranges:
         st.session_state["tides_range"] = saved_range if saved_range in ranges else "1Y"
