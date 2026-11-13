@@ -263,6 +263,23 @@ def persist(raw_labels: pd.Series, days: int = PERSIST) -> pd.Series:
     return pd.Series(shown, index=raw_labels.index)
 
 
+def since(snap: dict | None) -> str | None:
+    """The date the Tide's current reading began (its first close). Records saved before 13 Nov 2026 lack it: it is
+    worked out from their score history with the same rules (label_for, persist)."""
+    t = (snap or {}).get("tide") or {}
+    if t.get("since"):
+        return t["since"]
+    hist = t.get("history") or []
+    if not hist or t.get("label") is None:
+        return None
+    score = pd.Series([v for _, v in hist], index=pd.to_datetime([d for d, _ in hist]))
+    shown = persist(score.apply(label_for))
+    if shown.iloc[-1] != t["label"]:
+        return None
+    held = int((shown[::-1] != t["label"]).argmax()) if (shown != t["label"]).any() else len(shown)
+    return shown.index[-held].date().isoformat()
+
+
 def tide(readings: dict[str, dict]) -> dict:
     """Family scores, the Tide's score history, its shown label (with persistence) and how long it has held."""
     fam_hist, fam_now = {}, {}
@@ -284,7 +301,9 @@ def tide(readings: dict[str, dict]) -> dict:
     now_label = shown.iloc[-1]
     held = int((shown[::-1] != now_label).argmax()) if (shown != now_label).any() else len(shown)
     raw_now = label_for(float(score.iloc[-1]))
+    since = shown.index[-held].date().isoformat() if 0 < held <= len(shown) else shown.index[0].date().isoformat()
     return {"status": "ok", "score": round(float(score.iloc[-1]), 3), "label": now_label, "held_days": held,
+            "since": since,
             "raw_label": raw_now, "pending": raw_now != now_label,
             "families": {f: round(v, 3) for f, v in fam_now.items()},
             "history": [[d.date().isoformat(), round(float(v), 3)] for d, v in score.iloc[-520:].items()],

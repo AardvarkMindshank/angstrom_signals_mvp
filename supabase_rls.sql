@@ -754,7 +754,8 @@ security definer
 set search_path = public
 as $$
     delete from public.sentiment_comments
-    where created_at < now() - interval '12 hours';
+    where created_at < now() - interval '12 hours'
+      and asset_key <> 'Tides|macro';
 $$;
 
 revoke all on function public.drop_expired_sentiment_comments() from public;
@@ -1236,7 +1237,7 @@ as $$
         cardinality(asset_keys) = 0
         or comments.asset_key = any(asset_keys)
       )
-      and comments.created_at > now() - interval '12 hours'
+      and (comments.created_at > now() - interval '12 hours' or comments.asset_key = 'Tides|macro')
     order by comments.created_at desc;
 $$;
 
@@ -1304,8 +1305,8 @@ as $$
       on profiles.user_id = replies.user_id
     left join auth.users as users
       on users.id = replies.user_id
-    where comments.created_at > now() - interval '12 hours'
-      and replies.created_at > now() - interval '12 hours'
+    where (comments.created_at > now() - interval '12 hours' or comments.asset_key = 'Tides|macro')
+      and (replies.created_at > now() - interval '12 hours' or comments.asset_key = 'Tides|macro')
     order by replies.created_at asc;
 $$;
 

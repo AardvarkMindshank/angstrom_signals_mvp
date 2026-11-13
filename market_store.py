@@ -148,6 +148,53 @@ def market_mood_crowd(supabase, keys: list[str]) -> dict[str, dict]:
     return counts
 
 
+def tides_crowd(supabase, since: str) -> dict:
+    """Agree and disagree counts for the Tide's current reading, which began on `since`
+    (sql/2026-11-26_tides_takes.sql), in the same shape as market_mood_crowd. Empty if the function is missing."""
+    try:
+        rows = supabase.rpc("tides_crowd", {"p_since": str(since)}).execute().data or []
+    except Exception as exc:
+        _warn(exc)
+        return {}
+    row = rows[0] if rows else {}
+    try:
+        mine = int(row.get("my_vote"))
+    except (TypeError, ValueError):
+        mine = None
+    try:
+        alt_count = int(row.get("alt_count") or 0)
+    except (TypeError, ValueError):
+        alt_count = 0
+    return {"up": int(row.get("thumbs_up") or 0), "down": int(row.get("thumbs_down") or 0), "mine": mine,
+            "alt_count": alt_count, "alt_avg": _optional_number(row.get("alt_avg")),
+            "alt_spread": _optional_number(row.get("alt_spread")), "alt": _optional_number(row.get("my_alt"))}
+
+
+def set_tides_vote(supabase, user_id, since: str, vote, alt_score=None) -> None:
+    """Save this account's take on the Tide's current reading (which began on `since`). None clears it; on 👎 an
+    own score (0..100 stored)."""
+    if vote not in (1, -1):
+        supabase.table("tides_votes").delete().eq("user_id", str(user_id)).eq("since", str(since)).execute()
+        return
+    score = None
+    if vote == -1 and alt_score is not None:
+        number = _optional_number(alt_score)
+        if number is not None and 0 <= number <= 100:
+            score = int(number)
+    supabase.table("tides_votes").upsert(
+        {"user_id": str(user_id), "since": str(since), "vote": int(vote), "alt_score": score},
+        on_conflict="user_id,since",
+    ).execute()
+
+
+def tides_reset(supabase, since: str) -> None:
+    """Clear the takes and comments on earlier Tide readings (the Tide changed). Quiet if the function is missing."""
+    try:
+        supabase.rpc("tides_reset", {"p_since": str(since)}).execute()
+    except Exception as exc:
+        _warn(exc)
+
+
 def set_market_mood_vote(supabase, user_id, market_key: str, sentiment_at, vote, alt_score=None) -> None:
     """Save this account's thumb for the current market sentiment. None clears it."""
     if market_key not in ("crypto", "stock"):

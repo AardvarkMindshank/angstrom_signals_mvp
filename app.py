@@ -1902,7 +1902,7 @@ export default function(component) {
       const items = window.socialStreamItems || [];
       const assets = [];
       const seenAssets = {};
-      const marketKeys = { "Mood|crypto": true, "Mood|stock": true };
+      const marketKeys = { "Mood|crypto": true, "Mood|stock": true, "Tides|macro": true };
       items.forEach((item) => {
         if (item.key && !seenAssets[item.key] && !marketKeys[item.key]) {
           seenAssets[item.key] = true;
@@ -1933,7 +1933,8 @@ export default function(component) {
           ["crypto", "My Crypto Watchlist"],
           ["stock", "My Equities Watchlist"],
           ["Mood|crypto", "Crypto market"],
-          ["Mood|stock", "Stock market"]
+          ["Mood|stock", "Stock market"],
+          ["Tides|macro", "🌊 Tides"]
         ],
         true
       );
@@ -1953,7 +1954,7 @@ export default function(component) {
         personChoices
       );
       const streamScopes = {
-        watchlist: true, crypto: true, stock: true, "Mood|crypto": true, "Mood|stock": true
+        watchlist: true, crypto: true, stock: true, "Mood|crypto": true, "Mood|stock": true, "Tides|macro": true
       };
       if (!streamScopes[state.asset] && !seenAssets[state.asset]) state.asset = "";
       const keptPeople = { favourites: true, me: true };
@@ -4210,6 +4211,9 @@ try:
         load_chat,
         load_market_moods,
         market_mood_crowd,
+        tides_crowd,
+        set_tides_vote,
+        tides_reset,
         frame_from_row,
         load_shared_market,
         earnings_from_rows,
@@ -7486,6 +7490,10 @@ the reading behind each statement. The Passage Plan charts today's conditions, t
 your own watchlist and funnels, hazards and things to watch, each expectation labelled with what would show it
 right or wrong. One plan a day, kept in your logbook. Facts stay apart from expectations; never buy or sell calls.
 
+**👍 Your take**, beside the daily note: agree or disagree with the Tide's current reading; on 👎 give your own Tide
+score (−100 going out to +100 coming in), and add a short comment. Tides moves slowly, so takes and comments stay
+until the Tide changes to another reading, then start afresh. Comments show in the social panel under 🌊 Tides.
+
 **How often it updates**: a fresh reading every 6 hours (most currents use daily closes, so it changes once a day
 in practice). Event dates come from the official Fed and US Bureau of Labor Statistics schedules.
 
@@ -10404,6 +10412,7 @@ def _social_stream_json(crypto_watchlist, stock_watchlist, shared, logos, feed) 
             stream_names[market_key] = shown or str(asset_id)
     stream_names["Mood|crypto"] = "Crypto market"
     stream_names["Mood|stock"] = "Stock market"
+    stream_names["Tides|macro"] = "🌊 Tides"
     return json.dumps(
         social_stream_items(
             feed, shared, stream_names, logos, market_keys,
@@ -12926,6 +12935,15 @@ def _store_mood_vote(market_key: str, sentiment_at, vote, alt_score=None) -> boo
     return True
 
 
+def _store_tides_vote(vote, alt_score=None) -> bool:
+    """Save a take on the Tide's current reading (sql/2026-11-26_tides_takes.sql). The take box reruns on its own."""
+    try:
+        set_tides_vote(supabase, user_id, st.session_state.get("_tides_since") or "", vote, alt_score)
+    except Exception:
+        return False
+    return True
+
+
 def _store_sentiment_vote(kind: str, asset_id: str, sentiment_at, vote, alt_score=None) -> bool:
     """Save an asset thumb. The take box reruns on its own, so this does not refresh the page."""
     try:
@@ -12970,6 +12988,8 @@ def _sentiment_thumbs(
     key = asset_market_key(kind, asset_id)
     if str(kind) == "Mood":
         voice = market_mood_crowd(supabase, [str(asset_id)]).get(str(asset_id)) or {}
+    elif str(kind) == "Tides":                     # one take per Tide reading, kept until the Tide changes
+        voice = tides_crowd(supabase, st.session_state.get("_tides_since") or "")
     else:
         voice = sentiment_crowd(supabase, [key]).get(key) or {}
     if on_vote is None:
@@ -13228,8 +13248,8 @@ def _sentiment_thumbs(
 
 def _sentiment_alt_score(kind: str, asset_id: str, sentiment_at, mine_score, selected, prefix: str, on_vote) -> None:
     """Score controls under Disagree. A click saves, then only this box redraws."""
-    del kind, asset_id, sentiment_at
-    st.markdown("**Your score**")
+    del asset_id, sentiment_at
+    st.markdown("**Your Tide score** (−100 going out, +100 coming in)" if str(kind) == "Tides" else "**Your score**")
     typed_key = f"{prefix}_alt_typed"
 
     def _pick(value: int, saver=on_vote, box=prefix, typed=typed_key) -> None:
@@ -13580,8 +13600,28 @@ def show_tides() -> None:
             _lp.advisor_button(st, "tides", key="tides_passage", label="Today's AI Passage Plan", ask="passage",
                                tip=tides_view.PASSAGE_TIP)
 
+        tide = snap.get("tide") or {}
+        tide_score = None if tide.get("score") is None else round(float(tide["score"]) * 100)
+        tide_words = " ".join(tides.TIDE_WORDS.get(tide.get("label"), ("", "", ""))[:2])
+        since = tides.since(snap) or datetime.now(timezone.utc).date().isoformat()
+        st.session_state["_tides_since"] = since
+        tide_at = f"{since}T00:00:00+00:00"       # takes and comments belong to the reading, from the day it began
+        if st.session_state.get("_tides_reset_done") != since:
+            # The Tide changed since the last check: clear takes and comments on earlier readings (once a session).
+            tides_reset(supabase, since)
+            st.session_state["_tides_reset_done"] = since
+
+        def _take():
+            # Your take on the current Tide: 👍 / 👎 (and on 👎 your own Tide score), then a short comment.
+            _sentiment_thumbs(
+                "Tides", "macro", tide_at, "Tides", tide_score, tide_words,
+                prefix="tides", on_vote=_store_tides_vote,
+                on_comment=lambda text, at=tide_at, answered=tide_score, words=tide_words: _store_sentiment_comment(
+                    "Tides", "macro", at, text, answered, words),
+            )
+
         tides_view.render_panel(st, snap, (prefs.get("settings") or {}).get("tides_range"),
-                                lambda picked: save_account_settings({"tides_range": picked}), _buttons)
+                                lambda picked: save_account_settings({"tides_range": picked}), _buttons, _take)
 
 
 def show_market_moods(trade_crypto: bool = True, trade_equities: bool = True) -> None:
