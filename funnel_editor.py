@@ -256,7 +256,7 @@ def render(st, supabase, user_id: str) -> None:
                 supabase.rpc("funnel_save", save_args(live)).execute()
                 saved["paused"] = f["paused"]
                 _refresh(st)
-                st.toast("Paused." if f["paused"] else "Resumed.")
+                st.toast("Paused." if f["paused"] else checking_now(saved.get("id"), "Resumed."))
             except Exception as exc:
                 st.error(f"That didn't work: {str(exc)[:160]}")
         lattice_panel.rerun(st)
@@ -505,6 +505,18 @@ def _provided_view(st, supabase, pick: str, funnels: list[dict], library: dict) 
         _save(st, supabase, t, None, {})
 
 
+def checking_now(funnel_id, done: str, paused: bool = False) -> str:
+    """Start the funnel's check on GitHub now (study_nudge.run_funnel_now) and say what happens next. A paused
+    funnel isn't checked, so nothing is started."""
+    import study_nudge
+
+    if paused:
+        return f"{done} It's paused, so it isn't checked until you resume it."
+    if study_nudge.run_funnel_now(str(funnel_id or "")):
+        return f"{done} Checking it now: it fills in within a few minutes."
+    return f"{done} It fills in at the next hourly check."
+
+
 def _refresh(st) -> None:
     for market in ("crypto", "equity"):
         st.session_state[f"_funnels_reread_{market}"] = True
@@ -535,5 +547,5 @@ def _save(st, supabase, f: dict, pick: str | None, drafts: dict) -> None:
     if isinstance(new_id, str):
         st.session_state["_funnel_edit_next"] = new_id
     _refresh(st)
-    st.toast("Saved. The funnel fills in at the next hourly check.")
+    st.toast(checking_now(new_id if isinstance(new_id, str) else f.get("id"), "Saved.", bool(f.get("paused"))))
     lattice_panel.rerun_page(st)

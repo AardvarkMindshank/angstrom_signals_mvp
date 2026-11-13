@@ -7656,6 +7656,8 @@ tested what usually followed these answers.
 
 **Words you'll see**
 - **Stage**: one step of the funnel, a Set checked at each close of its timeframe (for example *every 4 hours*).
+- **When it's checked**: every hour, a few minutes after the hour. Saving, restarting or resuming a funnel also
+  starts a check of that funnel straight away, so it fills in within a few minutes instead of at the next hour.
 - **🚩 Flagged**: every stage holds but the last: on the shortlist, waiting for the entry conditions.
 - **✅ Candidate**: every stage holds, including the last.
 - **❔ Pending**: data was missing at the last check. A pending asset never moves up or alerts; after three
@@ -11255,9 +11257,12 @@ def _create_funnel(market: str, direction: str) -> None:
     if market != "crypto":
         args["p_market"] = market                # needs sql/2026-11-18_equity_funnels.sql
     try:
-        supabase.rpc("funnel_save", args).execute()
+        res = supabase.rpc("funnel_save", args).execute()
         st.session_state[f"_funnels_reread_{market}"] = True
-        st.toast("Funnel added. It fills in at the next hourly check.")
+        import funnel_editor
+
+        new_id = getattr(res, "data", None)
+        st.toast(funnel_editor.checking_now(new_id if isinstance(new_id, str) else "", "Funnel added."))
         st.rerun()
     except Exception as exc:
         text = str(exc)
@@ -11336,6 +11341,10 @@ def _funnel_controls(dyn, market: str = "crypto") -> None:
             try:
                 supabase.rpc(fn_name, args).execute()
                 st.session_state[f"_funnels_reread_{market}"] = True
+                if fn_name in ("funnel_save", "funnel_restart"):     # check it now, not at the next hourly run
+                    import funnel_editor
+
+                    done = funnel_editor.checking_now(f["id"], done.split(" It fills")[0])
                 st.toast(done)
                 st.rerun()
             except Exception as exc:

@@ -286,7 +286,9 @@ def fair_order(funnels: list[dict]) -> list[dict]:
     return out
 
 
-def run_all(store, evaluate, now=None, log=print, budget_seconds=BUDGET_SECONDS, clock=time.monotonic) -> dict:
+def run_all(store, evaluate, now=None, log=print, budget_seconds=BUDGET_SECONDS, clock=time.monotonic,
+            only: str | None = None) -> dict:
+    """Every active funnel (or `only` that one: the app asks for it straight after a save)."""
     now = pd.Timestamp(now or datetime.now(timezone.utc))
     now = now.tz_localize("UTC") if now.tzinfo is None else now.tz_convert("UTC")
     started = clock()
@@ -297,6 +299,9 @@ def run_all(store, evaluate, now=None, log=print, budget_seconds=BUDGET_SECONDS,
         except Exception as exc:
             log(f"Renaming ready-made funnels failed: {str(exc)[:160]}")
     funnels = fair_order(store.active_funnels())
+    if only:
+        funnels = [f for f in funnels if str(f.get("id")) == str(only)]
+        log(f"Checking one funnel now: {funnels[0]['name'] if funnels else only + ' (not active)'}")
     universes: dict[str, dict] = {}
     for i, f in enumerate(funnels):
         if clock() - started > budget_seconds:
@@ -544,7 +549,8 @@ def main() -> int:
 
     supabase = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_ROLE_KEY"])
     try:
-        print(run_all(SupabaseStore(supabase), default_evaluate(supabase), log=lambda m: print(m, flush=True)))
+        print(run_all(SupabaseStore(supabase), default_evaluate(supabase), log=lambda m: print(m, flush=True),
+                      only=(os.environ.get("FUNNEL_ID") or "").strip() or None))
     except Exception as exc:
         if "PGRST205" in str(exc) or "does not exist" in str(exc):
             print("Funnel tables not installed yet (sql/2026-11-17_funnels.sql).")

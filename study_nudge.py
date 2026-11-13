@@ -25,6 +25,30 @@ def token() -> str:
     return (os.getenv("GITHUB_DISPATCH_TOKEN") or "").strip().strip('"').strip("'")
 
 
+def run_workflow(workflow: str, inputs: dict | None = None, post=requests.post) -> bool:
+    """Ask GitHub to run one of this repository's workflows now (it must allow workflow_dispatch). True when GitHub
+    accepted; False without GITHUB_DISPATCH_TOKEN or on any error. Never raises."""
+    key = token()
+    if not key:
+        return False
+    body = {"ref": "main"}
+    if inputs:
+        body["inputs"] = {k: str(v) for k, v in inputs.items()}
+    try:
+        r = post(f"https://api.github.com/repos/{REPO}/actions/workflows/{workflow}/dispatches", timeout=10,
+                 headers={"Authorization": f"Bearer {key}", "Accept": "application/vnd.github+json",
+                          "X-GitHub-Api-Version": "2022-11-28"},
+                 json=body)
+        return r.status_code == 204
+    except Exception:
+        return False
+
+
+def run_funnel_now(funnel_id: str, post=requests.post) -> bool:
+    """Check one funnel straight away (after a save, restart or resume) instead of at the next hourly run."""
+    return bool(funnel_id) and run_workflow("funnel.yml", {"funnel_id": funnel_id}, post=post)
+
+
 def nudge(force: bool = True, post=requests.post, now=time.time) -> bool:
     """Ask GitHub to run the studies now. True when GitHub accepted. Never raises."""
     key = token()
