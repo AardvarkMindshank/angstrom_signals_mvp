@@ -3696,7 +3696,8 @@ def _chart_resize_handle(current: int) -> None:
 # TradingView Lightweight Charts price chart (chosen in Settings; Plotly stays available).
 # Candles: chart_data.py. Payload: lw_chart.py. Drawing: lw_chart.js. Library: static/lwc/.
 # ---------------------------------------------------------------------------
-_LW_CHART_JS = (Path(__file__).resolve().parent / "lw_chart.js").read_text(encoding="utf-8")
+_LW_CHART_JS = ((Path(__file__).resolve().parent / "lw_draw.js").read_text(encoding="utf-8") + "\n"
+                + (Path(__file__).resolve().parent / "lw_chart.js").read_text(encoding="utf-8"))
 _lw_chart = st.components.v2.component("lw_chart", js=_LW_CHART_JS, isolate_styles=False)
 _INTERVAL_TIPS = {
     "15m": "15-minute candles (about the last 60 days)",
@@ -3717,6 +3718,11 @@ def _set_chart_range(value: str) -> None:
 def _chart_timeframe_controls() -> tuple[str, str]:
     """Candle interval and range for the TradingView chart, saved to the account."""
     saved = (st.session_state.get("cloud_prefs") or {}).get("settings") or {}
+    if st.session_state.get("_chart_interval_next") in chart_candles.INTERVALS:     # a shared chart's candle size
+        st.session_state["chart_interval"] = st.session_state.pop("_chart_interval_next")
+        if not chart_candles.availability(st.session_state["chart_interval"], st.session_state.get("chart_range"))[0]:
+            st.session_state["chart_range"] = chart_candles.nearest_range(st.session_state["chart_interval"],
+                                                                         st.session_state.get("chart_range") or "3M")
     if st.session_state.get("chart_interval") not in chart_candles.INTERVALS:
         wanted = saved.get("chart_interval")
         st.session_state["chart_interval"] = wanted if wanted in chart_candles.INTERVALS else chart_data.INTERVAL_DEFAULT
@@ -3938,7 +3944,105 @@ def _tv_chart(asset_type, asset_key, title, layout, tv, interval, range_key, pri
         payload["zones_legend"] = bands["legend"]
         payload["zones_answers"] = bands["answers"]
         payload["zones_name"] = bands["name"]
-    _lw_chart(key="lw_chart", data=payload)
+    draw_key = None
+    if st.session_state.get("user") is not None:     # ✏️ drawings: this account's, on this asset (lw_draw.js)
+        draw_key = drawing_key(asset_type, asset_key)
+        items, updated = load_drawings(supabase, user_id, draw_key)
+        shared = st.session_state.get("_shared_chart")
+        payload["draw"] = {
+            "asset": draw_key, "items": items, "updated": updated, "share": True,
+            "shared": (shared or {}).get("items") if (shared or {}).get("asset_key") == draw_key else None,
+            "rest": {"url": _secret("url") or "", "key": _secret("anon_key") or _secret("key") or "",
+                     "token": st.session_state.get("access_token") or "", "user": str(user_id)},
+        }
+    result = _lw_chart(key="lw_chart", data=payload, on_drawings_change=lambda: None, on_share_change=lambda: None)
+    if draw_key:
+        _chart_drawing_events(result, draw_key, title, interval)
+
+
+def _shared_chart_banner(asset_type: str, asset_key: str) -> None:
+    """A shared chart is open: whose drawings these are, their note, Copy to my drawings, and ✕ to stop showing them."""
+    shared = st.session_state.get("_shared_chart")
+    if not shared:
+        return
+    key = drawing_key(asset_type, asset_key)
+    if shared.get("asset_key") != key:
+        return
+    with st.container(horizontal=True, vertical_alignment="center", gap="small", key="shared_chart_bar"):
+        note = " ".join(str(shared.get("note") or "").split())
+        st.markdown(f"📤 Showing **{html.escape(shared.get('owner_name') or 'their')}'s drawings**"
+                    + (f": “{html.escape(note)}”" if note else ""))
+        if st.button("Copy to my drawings", key="shared_copy", icon=":material/content_copy:",
+                     help="Add their drawings to your own on this asset, so they stay after you close this view."):
+            mine, _ = load_drawings(supabase, user_id, key)
+            have = {str(x.get("id")) for x in mine}
+            extra = [{**x, "id": f"{x.get('id')}-{shared.get('id')}"} for x in shared.get("items") or []
+                     if f"{x.get('id')}-{shared.get('id')}" not in have]
+            try:
+                save_drawings(supabase, user_id, key, mine + extra)
+                st.session_state.pop("_shared_chart", None)
+                st.toast(f"Copied {len(extra)} drawing{'s' if len(extra) != 1 else ''} to yours.")
+                st.rerun()
+            except Exception as exc:
+                st.error(f"Could not copy them: {str(exc)[:160]}")
+        if st.button("", key="shared_close", icon=":material/close:", help="Stop showing their drawings"):
+            st.session_state.pop("_shared_chart", None)
+            st.rerun()
+
+
+def _chart_drawing_events(result, draw_key: str, title: str, interval: str) -> None:
+    """What the drawing toolbar sent: drawings to save (when the browser couldn't save them itself), or a Share."""
+    raw = getattr(result, "drawings", None)
+    if raw and raw != st.session_state.get("_drawings_seen"):
+        st.session_state["_drawings_seen"] = raw
+        try:
+            sent = json.loads(raw)
+            if sent.get("asset") == draw_key:
+                save_drawings(supabase, user_id, draw_key, sent.get("items") or [])
+        except Exception as exc:
+            st.caption(f"Your drawings could not be saved: {str(exc)[:120]}")
+    raw = getattr(result, "share", None)
+    if raw and raw != st.session_state.get("_share_seen"):
+        st.session_state["_share_seen"] = raw
+        try:
+            sent = json.loads(raw)
+        except ValueError:
+            return
+        if sent.get("asset") == draw_key and sent.get("items"):
+            _SHARE_DIALOG(draw_key, title, interval, sent["items"])
+
+
+def _share_chart_dialog(draw_key: str, title: str, interval: str, items: list) -> None:
+    """📤 Share this chart's drawings with communities: their members get a notification that opens it."""
+    try:
+        groups = supabase.rpc("my_groups").execute().data or []
+    except Exception:
+        groups = []
+    if not groups:
+        st.info("You aren't in any community yet. Communities are in the sidebar under 👥 Communities.")
+        return
+    names = {int(g["id"]): " ".join(str(g.get("name") or "Community").split()) for g in groups}
+    st.caption(f"{len(items)} drawing{'s' if len(items) != 1 else ''} on **{title}** "
+               f"({chart_candles.INTERVAL_LABELS.get(interval, interval)} candles). Members of the communities you "
+               "pick get a notification; it opens this chart with your drawings on it.")
+    picked = st.multiselect("Communities", list(names), format_func=lambda g: names[g], key="share_groups",
+                            placeholder="Choose one or more communities")
+    note = st.text_input("A short note (optional)", max_chars=160, key="share_note",
+                         placeholder="What should they look at?")
+    if st.button("📤 Share", type="primary", disabled=not picked, key="share_go"):
+        try:
+            share_chart(supabase, draw_key, title, interval, items, note, picked)
+            st.toast("Shared with " + ", ".join(names[g] for g in picked) + ".")
+            st.rerun()
+        except Exception as exc:
+            text = str(exc)
+            if "share_chart" in text and ("does not exist" in text or "PGRST" in text):
+                st.error("The database update for drawings hasn't been run yet (sql/2026-11-27_chart_drawings.sql).")
+            else:
+                st.error(f"Could not share it: {text[:160]}")
+
+
+_SHARE_DIALOG = st.dialog("Share this chart", width="medium")(_share_chart_dialog)
 
 
 def _section_timer(updated_at: float | None, interval: float, widget_key: str, help_text: str,
@@ -4222,6 +4326,11 @@ try:
         tides_crowd,
         set_tides_vote,
         tides_reset,
+        drawing_key,
+        load_drawings,
+        save_drawings,
+        share_chart,
+        load_chart_share,
         frame_from_row,
         load_shared_market,
         earnings_from_rows,
@@ -6730,9 +6839,10 @@ def notifications_panel() -> None:
                         weight = "700" if not note.get("is_read") else "500"
                         kind = str(note.get("alert_type") or "")
                         if kind in ("invite_joined", "group_invite", "group_joined", "moderation_warning", "report_update",
-                                    "study", "funnel"):
+                                    "study", "funnel", "chart_share"):
                             titles = {
                                 "funnel": f"🔻 {name}",      # opens its table on the funnel's Candidates
+                                "chart_share": f"📤 Shared chart · {name}",   # opens the chart with their drawings
                                 "study": "🔬 Study finished",
                                 "invite_joined": "Invite accepted",
                                 "group_invite": "Community invite",
@@ -6757,6 +6867,19 @@ def notifications_panel() -> None:
                                 card = (
                                     f"<button type='button' data-alert='1' data-note='{note_ref}' "
                                     f"data-pick='{html.escape(pick, quote=True)}' title='Show these Candidates in the table' "
+                                    "style='display:block;width:100%;margin:0;padding:0;border:none;"
+                                    "background:transparent;text-align:left;cursor:pointer;font:inherit;color:inherit;'>"
+                                    f"{card}</button>"
+                                )
+                            if kind == "chart_share":    # opens the asset's chart with the shared drawings on it
+                                note_ref = html.escape(str(note.get("id") or "") if not note.get("is_read") else "",
+                                                       quote=True)
+                                symbol = str(note.get("asset_symbol") or "")
+                                sid = symbol.split(":", 1)[1] if symbol.startswith("chartshare:") else ""
+                                pick = f"chartshare|{sid}|{str(note.get('asset_name') or '').replace('|', ' ')}"
+                                card = (
+                                    f"<button type='button' data-alert='1' data-note='{note_ref}' "
+                                    f"data-pick='{html.escape(pick, quote=True)}' title='Open this chart with their drawings' "
                                     "style='display:block;width:100%;margin:0;padding:0;border:none;"
                                     "background:transparent;text-align:left;cursor:pointer;font:inherit;color:inherit;'>"
                                     f"{card}</button>"
@@ -7370,6 +7493,18 @@ earnings choices, and both save to your account.
 - **Zoom** with the mouse wheel or a two-finger pinch; **drag** sideways to go back in time; drag the
   price scale to stretch it and double-click it to reset. ⟲ goes back to the chosen range, ⇥ jumps to
   the newest candle. Where you have zoomed to is kept when you change indicators or the page refreshes.
+- ✏️ **Drawing** (top right of the chart) opens the drawing toolbar above the chart: ✋ move the chart, ✏️ pen,
+  🖍️ highlighter, 🧽 eraser (tap a drawing to remove it, or drag across several), ╱ trend line, ↗ ray, ━ horizontal
+  line (with its price), ┃ vertical line, ⫽ parallel channel (drag the first line, then tap where the parallel one
+  goes), ➚ arrow, ▭ box or zone, ◯ circle, ✖ markers (✖ ✔ ★ ▲ ▼ ● ? !), 🔤 text notes, 📐 Fibonacci retracement
+  (drag from swing low to swing high; the golden pocket, 0.618 to 0.65, is shaded), 📏 measure (% change and number
+  of candles) and 🎯 long / short position (drag from the entry to the stop, then tap the target; it shows the
+  risk-to-reward). Pick a colour and a thickness; ↶ undoes, 🗑 clears this asset's drawings (press twice). A
+  two-point tool also works tap, tap. Choose ✋ to pan and zoom the chart again.
+- Drawings belong to the **asset**, so they show on every candle size, and they're **saved to your account** as you
+  draw, so they're there on your other devices too. 👁 hides or shows them.
+- 📤 **Share** sends the chart and your drawings to one or more of your communities, with a short note. Members get
+  a notification that opens the chart with your drawings on it; **Copy to my drawings** keeps them.
 - **Candle size**: 15m · 30m · 1h · 4h · 12h · 1D · 1W · 1Mo (monthly). **Range**: 7D · 1M · 3M · 1Y · All,
   which is where the chart opens. You can still scroll further back. A range marked ⊘ doesn't work with that
   candle size: weekly candles need 3 months or more and monthly ones 1 year or more (fewer candles than that are
@@ -12632,6 +12767,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             liq_record = _liquidation_record(asset_key) if liq_on else None
             if use_tv:
                 if tv and not tv.get("error"):
+                    _shared_chart_banner(asset_type, asset_key)
                     _tv_chart(
                         asset_type, asset_key, title, layout, tv, tv_interval, tv_range, price_px,
                         liq_record, show_earnings, stock_watchlist, band_set=band_set, show_events=show_events,
@@ -14690,6 +14826,30 @@ def _take_alert_pick() -> None:
         st.session_state["_funnel_open"] = {"market": market, "id": f["id"]}   # applied before the table is drawn
         _reveal_section("crypto_scores" if market == "crypto" else "equity_scores", f"table-{market}")
         st.rerun()                              # the tables were already drawn in this run
+    if raw.startswith("chartshare|"):           # a shared chart: its asset on the chart, with their drawings
+        st.session_state["_alert_pick_seen"] = raw_full
+        sid = (raw.split("|") + ["", ""])[1]
+        share = load_chart_share(supabase, int(sid)) if sid.isdigit() else None
+        if not share:
+            st.toast("That shared chart was deleted.")
+            return
+        kind_, _, asset_ = str(share.get("asset_key") or "").partition(":")
+        kind_name = "Crypto" if kind_ == "crypto" else "Stock"
+        watch = CRYPTO_WATCHLIST if kind_name == "Crypto" else STOCK_WATCHLIST
+        match = next((a for a in watch if str(a).lower() == asset_.lower()), None)
+        if match is None:
+            st.toast(f"Add {share.get('asset_name') or asset_} to your watchlist to open this shared chart.")
+            return
+        owner = ""
+        try:
+            prof = supabase.table("profiles").select("display_name").eq("user_id", share["owner_id"]).limit(1).execute()
+            owner = " ".join(str((prof.data or [{}])[0].get("display_name") or "").split())
+        except Exception:
+            owner = ""
+        st.session_state["_shared_chart"] = {**share, "owner_name": owner or "A community member"}
+        if share.get("timeframe") in chart_candles.INTERVALS:
+            st.session_state["_chart_interval_next"] = share["timeframe"]     # applied before the picker is drawn
+        raw = f"{kind_name}|{match}"
     if raw.startswith("study|"):                # a Study finished note: open that Set in Signal Sets
         st.session_state["_alert_pick_seen"] = raw_full
         import perspectives

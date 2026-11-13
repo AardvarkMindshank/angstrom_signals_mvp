@@ -1588,3 +1588,52 @@ def sentiment_from_row(row: dict | None) -> tuple[dict | None, float | None]:
 
 def _age_expired(stored_at: float) -> bool:
     return datetime.now(timezone.utc).timestamp() - stored_at >= SENTIMENT_REFRESH_SECONDS
+
+
+# ------------------------------------------------------------------ ✏️ chart drawings (sql/2026-11-27_chart_drawings.sql)
+
+def drawing_key(kind: str, asset_id: str) -> str:
+    """The asset a drawing belongs to: "crypto:bitcoin", "equity:AAPL" (every candle size shares it)."""
+    k = "crypto" if str(kind).lower() in ("crypto", "coin") else "equity"
+    a = str(asset_id or "").strip()
+    return f"{k}:{a.lower() if k == 'crypto' else a.upper()}"
+
+
+def load_drawings(supabase, user_id, asset_key: str) -> tuple[list, str]:
+    """(items, updated_at) of this account's drawings on one asset; ([], "") when none or the table is missing."""
+    try:
+        rows = (supabase.table("chart_drawings").select("items, updated_at").eq("user_id", str(user_id))
+                .eq("asset_key", asset_key).limit(1).execute().data or [])
+    except Exception:
+        return [], ""
+    if not rows:
+        return [], ""
+    items = rows[0].get("items")
+    return (items if isinstance(items, list) else []), str(rows[0].get("updated_at") or "")
+
+
+def save_drawings(supabase, user_id, asset_key: str, items: list) -> None:
+    supabase.table("chart_drawings").upsert(
+        {"user_id": str(user_id), "asset_key": asset_key, "items": list(items or [])[:400],
+         "updated_at": datetime.now(timezone.utc).isoformat()},
+        on_conflict="user_id,asset_key").execute()
+
+
+def share_chart(supabase, asset_key: str, asset_name: str, timeframe: str, items: list, note: str,
+                group_ids: list[int]) -> int:
+    """Share drawings with communities (their members get a notification). Returns the share's id."""
+    res = supabase.rpc("share_chart", {"p_asset_key": asset_key, "p_asset_name": asset_name[:80],
+                                       "p_timeframe": timeframe[:8], "p_items": list(items or [])[:400],
+                                       "p_note": " ".join(str(note or "").split())[:160],
+                                       "p_groups": [int(g) for g in group_ids]}).execute()
+    return int(res.data) if res.data is not None else 0
+
+
+def load_chart_share(supabase, share_id: int) -> dict | None:
+    """One shared chart (members of its communities can read it), with who shared it; None when gone."""
+    try:
+        rows = (supabase.table("chart_shares").select("id, owner_id, asset_key, asset_name, timeframe, items, note")
+                .eq("id", int(share_id)).limit(1).execute().data or [])
+    except Exception:
+        return None
+    return rows[0] if rows else None

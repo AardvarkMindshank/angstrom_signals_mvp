@@ -253,11 +253,16 @@ function buildShell(parent) {
   root.className = "ang-lwc";
   root.style.cssText = "position:relative;width:100%;touch-action:pan-y;";
   root.innerHTML =
+    "<div class='ang-lwc-drawbar' style='display:none;flex-wrap:wrap;gap:4px;align-items:center;margin:0 0 6px;'></div>" +
+    // The chart and what floats on it (legend, pane titles, buttons) share one box, so the drawing toolbar above
+    // can grow to any number of rows without covering them.
+    "<div class='ang-lwc-stage' style='position:relative;width:100%;'>" +
     "<div class='ang-lwc-host' style='position:relative;width:100%;'></div>" +
     "<div class='ang-lwc-legend' style='position:absolute;left:8px;top:6px;z-index:3;pointer-events:none;" +
-    "font:12px/1.45 system-ui,-apple-system,Segoe UI,sans-serif;max-width:calc(100% - 90px);'></div>" +
+    "font:12px/1.45 system-ui,-apple-system,Segoe UI,sans-serif;max-width:calc(100% - 160px);'></div>" +
     "<div class='ang-lwc-panes'></div>" +
     "<div class='ang-lwc-tools' style='position:absolute;right:82px;top:6px;z-index:4;display:flex;gap:4px;'></div>" +
+    "</div>" +
     "<div class='ang-lwc-note' style='font:12px/1.4 system-ui,sans-serif;margin:4px 2px 0;'></div>";
   parent.appendChild(root);
   return root;
@@ -576,6 +581,8 @@ function draw(L, root, data) {
     `${data.source}. ${data.clock ? "Times in " + data.clock + ". " : ""}${formingText}` +
     "Scroll or pinch to zoom, drag to move back in time, double-click the price scale to reset it.";
 
+  try { setupDrawing(L, root, host, chart, candles, data, theme, hasOsc); } catch (e) { /* drawings are extra: never break the chart */ }
+
   root.__chart = chart;
   root.__times = data.times;
   root.__key = data.key;
@@ -590,7 +597,10 @@ export default function (component) {
   if (!root) root = buildShell(parentElement);
   root.__trigger = component.setTriggerValue;
   const sig = signature(data);
-  if (root.__chart && root.__sig === sig) return; // nothing changed: keep the chart exactly as it is
+  if (root.__chart && root.__sig === sig) {        // nothing changed: keep the chart exactly as it is
+    try { refreshDrawing(root, data); } catch (e) { /* drawings are extra */ }
+    return;
+  }
   loadLibrary(data.lib)
     .then((L) => draw(L, root, data))
     .catch(() => {
