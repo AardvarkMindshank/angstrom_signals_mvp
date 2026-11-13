@@ -6818,14 +6818,6 @@ def notifications_panel() -> None:
 
 
         with tracked_expander("Configure Alert Rules", "alert_rules"):
-            # While this section is open the sidebar widens so the colour boxes sit side by side; closed, the
-            # sidebar goes back to the width it had (the rule only holds while the section is open).
-            st.markdown(
-                "<div class='alert-rules-open'></div><style>"
-                "section[data-testid='stSidebar']:has(details[open] .alert-rules-open){"
-                "width:min(680px,100vw) !important;min-width:min(680px,100vw) !important;max-width:100vw !important;"
-                "transition:width .2s ease,min-width .2s ease}</style>",
-                unsafe_allow_html=True)
             st.caption(
                 "Readings describe current conditions and are not forecasts. Tick the colour borders you want to "
                 "hear about: ▲ when a reading rises past one, ▼ when it falls past one. A new colour counts once it "
@@ -6836,6 +6828,14 @@ def notifications_panel() -> None:
             account_settings = prefs.get("settings") or {}
 
             def _bands_for(reading: str) -> None:
+                # While this section is open and shows a board (Trend, Stretch or Flow alerts on), the sidebar
+                # widens so the colour boxes sit side by side; closed, or with none on, it keeps the width it had.
+                st.markdown(
+                    "<div class='alert-rules-open'></div><style>"
+                    "section[data-testid='stSidebar']:has(details[open] .alert-rules-open){"
+                    "width:min(680px,100vw) !important;min-width:min(680px,100vw) !important;"
+                    "max-width:100vw !important;transition:width .2s ease,min-width .2s ease}</style>",
+                    unsafe_allow_html=True)
                 ticks = al_reading_crossings(account_settings, reading)
                 try:
                     result = _bands.component()(key=f"alert_bands_{reading}", data=_bands.board_data(reading, ticks),
