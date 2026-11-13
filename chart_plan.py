@@ -13,6 +13,7 @@ INDICATORS = {
     "ichimoku": {"label": "Ichimoku cloud", "where": "price", "needs": ("ichi_span_a", "ichi_span_b")},
     "macd": {"label": "MACD", "where": "panel", "needs": ("MACD_",), "prefix": True},
     "stoch": {"label": "Stochastic", "where": "panel", "needs": ("stoch_k",)},
+    "stochrsi": {"label": "Stoch RSI", "where": "panel", "needs": ("stochrsi_k", "stochrsi_d")},
     "adx": {"label": "ADX", "where": "panel", "needs": ("adx",)},
     "obv": {"label": "OBV", "where": "panel", "needs": ("obv",)},
 }
@@ -39,7 +40,7 @@ def available(columns) -> list[str]:
 
 
 # Curves that always run 0 to 100, so they can share one right-hand axis on the price panel.
-BOUNDED = ("rsi", "stoch", "adx")
+BOUNDED = ("rsi", "stoch", "stochrsi", "adx")
 
 
 def plan(selected, columns, overlay_curves: bool = False) -> dict:

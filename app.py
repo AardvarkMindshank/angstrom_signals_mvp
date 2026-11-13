@@ -4248,6 +4248,7 @@ try:
 
     _market_store.enable_row_cache()          # shared rows re-read only when they change (database egress)
     from scoring import calculate_indicators, find_column
+    from chart_indicators import stoch_rsi
     from shared_refresh import (
         create_price_row,
         ensure_new_asset,
@@ -7327,11 +7328,14 @@ so they change once a day; price, today's move and RSI in the table are live.
         st.markdown("""
 **Interactive Chart.** Candles with SMA 20 and 50 and Bollinger Bands, plus volume and RSI underneath.
 The icon row adds more:
-- 📏 SMA 200 · ☁️ Ichimoku cloud · 〰️ MACD · 🎚️ Stochastic · 🧭 ADX · 📊 OBV
+- 📏 SMA 200 · ☁️ Ichimoku cloud · 〰️ MACD · 🎚️ Stochastic · 🎛️ Stoch RSI · 🧭 ADX · 📊 OBV
+- 🎛️ **Stoch RSI** is set up as on TradingView with K 3, D 3, RSI length 14, Stochastic length 14 and RSI source
+  (O + H + L + C)/4: where the RSI sits in its own range over the last 14 candles, 0 to 100. %K is blue, %D orange;
+  above 80 the RSI is near the top of its recent range, below 20 near the bottom.
 - 🔥 **Liquidation levels** (crypto): estimated prices where leveraged positions would be force-closed,
   red below the price for longs, green above for shorts. Brighter means more money.
 - **CoinGlass liquidation heatmap ↗** (crypto), under the icons, opens CoinGlass's own heatmap in a new tab.
-- **Overlay** draws RSI, Stochastic and ADX on the price chart; **earnings dates** (stocks) mark report days.
+- **Overlay** draws RSI, Stochastic, Stoch RSI and ADX on the price chart; **earnings dates** (stocks) mark report days.
 - **Fed, CPI and jobs days** draws dashed lines on the big scheduled US releases (red Fed, amber CPI, purple jobs,
   as on the 🌊 Tides waves); the next ones within two weeks appear ahead of the last candle with their date.
   On by default; untick it to hide them. Your choice is saved.
@@ -12470,8 +12474,15 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                 else:
                     # The chart's indicators are worked out on the chosen interval's candles.
                     df_chart = tv["frame"]
+            try:
+                # 🎛️ Stoch RSI is for the chart only (not part of the scored indicators).
+                _sr = stoch_rsi(df_chart)
+                df_chart = df_chart.assign(stochrsi_k=_sr["k"], stochrsi_d=_sr["d"])
+            except Exception:
+                pass
             indicator_keys = chart_plan.available(df_chart.columns)
-            indicator_icons = {"sma200": "📏", "ichimoku": "☁️", "macd": "〰️", "stoch": "🎚️", "adx": "🧭", "obv": "📊"}
+            indicator_icons = {"sma200": "📏", "ichimoku": "☁️", "macd": "〰️", "stoch": "🎚️", "stochrsi": "🎛️",
+                               "adx": "🧭", "obv": "📊"}
             # Crypto charts also offer estimated liquidation levels, drawn by this page, not chart_plan.
             if asset_type == "Crypto":
                 indicator_keys = list(indicator_keys) + [LIQ_KEY]
@@ -12553,7 +12564,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             liq_on = LIQ_KEY in chosen_indicators
             chosen_indicators = [k for k in chosen_indicators if k != LIQ_KEY]
             overlay_curves = st.checkbox(
-                "Overlay RSI, Stochastic and ADX on the price chart",
+                "Overlay RSI, Stochastic, Stoch RSI and ADX on the price chart",
                 key="chart_overlay",
                 help=(
                     "Draws these curves on the price chart against a 0 to 100 scale on the right, "
@@ -12607,7 +12618,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             else:
                 panel_titles = {
                     "volume": "Volume", "rsi": "RSI (14)", "macd": "MACD", "stoch": "Stochastic (14, 3)",
-                    "adx": "ADX (14)", "obv": "On-balance volume",
+                    "stochrsi": "Stoch RSI (3, 3, 14, 14, OHLC4)", "adx": "ADX (14)", "obv": "On-balance volume",
                 }
                 panels = layout["panels"]
                 row_of = {name: index + 2 for index, name in enumerate(panels)}
@@ -12761,6 +12772,15 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                     if "stoch" not in layout["secondary"]:
                         _guide("stoch", 80, "red")
                         _guide("stoch", 20, "green")
+                if "stochrsi" in layout["panels"] + layout["secondary"]:
+                    _put(go.Scatter(x=df_chart.index, y=df_chart["stochrsi_k"], name="Stoch RSI %K",
+                                    line=dict(color="#2962ff", width=1.5)), "stochrsi")
+                    _put(go.Scatter(x=df_chart.index, y=df_chart["stochrsi_d"], name="Stoch RSI %D",
+                                    line=dict(color="#ff6d00", width=1.5)), "stochrsi")
+                    if "stochrsi" not in layout["secondary"]:
+                        _guide("stochrsi", 80, "gray")
+                        _guide("stochrsi", 50, "gray", "dot")
+                        _guide("stochrsi", 20, "gray")
                 if "adx" in layout["panels"] + layout["secondary"]:
                     _put(go.Scatter(x=df_chart.index, y=df_chart["adx"], name="ADX",
                                     line=dict(color="#a16207", width=1.5)), "adx")
@@ -12835,6 +12855,8 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                     fig.update_yaxes(title_text="RSI", range=[0, 100], row=row_of["rsi"], col=1)
                 if "stoch" in row_of:
                     fig.update_yaxes(range=[0, 100], row=row_of["stoch"], col=1)
+                if "stochrsi" in row_of:
+                    fig.update_yaxes(range=[0, 100], row=row_of["stochrsi"], col=1)
                 if layout["secondary"]:
                     fig.update_yaxes(
                         title_text="0 to 100", range=[0, 100], showgrid=False,

@@ -30,10 +30,10 @@ DOWN_FADED = "rgba(239,83,80,0.35)"
 
 PANEL_TITLES = {
     "volume": "Volume", "rsi": "RSI (14)", "macd": "MACD", "stoch": "Stochastic (14, 3)",
-    "adx": "ADX (14)", "obv": "On-balance volume",
+    "stochrsi": "Stoch RSI (3, 3, 14, 14, OHLC4)", "adx": "ADX (14)", "obv": "On-balance volume",
 }
 # Lower panels that read on a fixed 0 to 100 scale.
-FIXED_0_100 = ("rsi", "stoch")
+FIXED_0_100 = ("rsi", "stoch", "stochrsi")
 MIN_PANEL_PX = 70
 
 
@@ -264,6 +264,21 @@ def build_payload(
                             width=1.1 if scale else 1.5, alpha=0.6 if scale else 1.0))
         if not scale:
             guides += [{"series": "stoch", "value": 80, "color": "#ef4444"}, {"series": "stoch", "value": 20, "color": "#22c55e"}]
+    if {"stochrsi_k", "stochrsi_d"} <= set(columns) and ("stochrsi" in pane_of or "stochrsi" in secondary):
+        # As TradingView draws it: %K blue, %D orange, a shaded 20 to 80 band with lines at 80, 50 and 20.
+        pane, scale = place("stochrsi")
+        if not scale:
+            n = len(df)
+            series.append({"id": "stochrsi_band", "type": "band", "name": "Stoch RSI band", "pane": pane,
+                           "legend": False, "a": [80.0] * n, "b": [20.0] * n, "fill": "rgba(41,98,255,0.08)"})
+        series.append(_line("stochrsi_k", "Stoch RSI %K", pane, _values(df["stochrsi_k"], 2), "#2962ff",
+                            scale=scale, width=1.1 if scale else 1.5, alpha=0.6 if scale else 1.0))
+        series.append(_line("stochrsi_d", "Stoch RSI %D", pane, _values(df["stochrsi_d"], 2), "#ff6d00",
+                            scale=scale, width=1.1 if scale else 1.5, alpha=0.6 if scale else 1.0))
+        if not scale:
+            guides += [{"series": "stochrsi_k", "value": 80, "color": "#9ca3af"},
+                       {"series": "stochrsi_k", "value": 50, "color": "#9ca3af", "style": "dotted"},
+                       {"series": "stochrsi_k", "value": 20, "color": "#9ca3af"}]
     if "adx" in columns and ("adx" in pane_of or "adx" in secondary):
         pane, scale = place("adx")
         series.append(_line("adx", "ADX", pane, _values(df["adx"], 2), "#a16207", scale=scale,
