@@ -237,6 +237,48 @@ function loadView(key) {
   return null;
 }
 
+// ⏱ Under the latest price on the right: the time left until the forming candle closes, counting down each second
+// (as TradingView shows it). data.closes_at is that moment in milliseconds (lw_chart.candle_closes_at).
+function candleCountdown(root, host, chart, candles, data, theme) {
+  if (root.__countdown) { clearInterval(root.__countdown); root.__countdown = null; }
+  const old = host.querySelector(".ang-lwc-countdown");
+  if (old) old.remove();
+  if (!data.forming || !data.closes_at) return;
+  const n = data.times.length;
+  const close = data.ohlc[3][n - 1], open = data.ohlc[0][n - 1];
+  if (close === null || close === undefined) return;
+  const tag = document.createElement("div");
+  tag.className = "ang-lwc-countdown";
+  tag.title = "Time left until this candle closes";
+  tag.style.cssText = "position:absolute;right:0;z-index:4;pointer-events:none;text-align:center;" +
+    "font:11px/15px system-ui,-apple-system,Segoe UI,sans-serif;font-variant-numeric:tabular-nums;color:#fff;" +
+    `background:${close >= open ? theme.up : theme.down};border-radius:0 0 2px 2px;`;
+  host.appendChild(tag);
+  const two = (v) => String(v).padStart(2, "0");
+  const words = (ms) => {
+    if (ms <= 0) return "closing…";
+    const t = Math.floor(ms / 1000);
+    const d = Math.floor(t / 86400), h = Math.floor((t % 86400) / 3600), m = Math.floor((t % 3600) / 60), sec = t % 60;
+    if (d > 0) return `${d}d ${two(h)}h`;
+    if (h > 0) return `${h}:${two(m)}:${two(sec)}`;
+    return `${two(m)}:${two(sec)}`;
+  };
+  const tick = () => {
+    if (!tag.isConnected) { clearInterval(root.__countdown); root.__countdown = null; return; }
+    const y = candles.priceToCoordinate(close);
+    let width = 56;
+    try { width = chart.priceScale("right").width() || width; } catch (e) { /* older library */ }
+    const paneH = (data.panes[0] || {}).height || 0;
+    tag.style.width = width + "px";
+    tag.style.display = y === null || y < 0 || y > paneH - 10 ? "none" : "block";
+    tag.style.top = Math.round((y || 0) + 9) + "px";      // just under the price label (about 18 px tall)
+    tag.textContent = words(data.closes_at - Date.now());
+  };
+  tick();
+  root.__countdown = setInterval(tick, 1000);
+  chart.timeScale().subscribeVisibleLogicalRangeChange(() => requestAnimationFrame(tick));
+}
+
 function indexOfTime(times, t) {
   let lo = 0, hi = times.length - 1;
   while (lo < hi) {
@@ -582,6 +624,7 @@ function draw(L, root, data) {
     "Scroll or pinch to zoom, drag to move back in time, double-click the price scale to reset it.";
 
   try { setupDrawing(L, root, host, chart, candles, data, theme, hasOsc); } catch (e) { /* drawings are extra: never break the chart */ }
+  try { candleCountdown(root, host, chart, candles, data, theme); } catch (e) { /* the countdown is extra too */ }
 
   root.__chart = chart;
   root.__times = data.times;

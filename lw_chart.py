@@ -217,6 +217,31 @@ def cipher_series(df: pd.DataFrame, pane: int, dark: bool = False) -> list[dict]
     return out
 
 
+def candle_closes_at(start, interval: str, kind: str, session=None) -> int | None:
+    """When the forming candle that started at `start` closes, in milliseconds since 1970 (UTC), for the countdown
+    under the price on the right. Equities' day, week and month candles close at the US market close (16:00 New York)."""
+    try:
+        start = pd.Timestamp(start)
+        start = start.tz_localize("UTC") if start.tzinfo is None else start.tz_convert("UTC")
+        stock_day = kind != "crypto" and interval in ("1D", "1W", "1Mo")
+        if stock_day and not session:
+            session = ("America/New_York", 570, 960)
+        if interval == "1Mo":
+            if not stock_day:
+                end = start + pd.offsets.MonthBegin(1)
+            else:
+                zone, _open, close_minute = session
+                last = pd.Timestamp(start.date(), tz=zone) + pd.offsets.MonthEnd(0)     # the candle's own month
+                while last.weekday() >= 5:
+                    last -= pd.Timedelta(days=1)
+                end = (last + pd.Timedelta(minutes=close_minute)).tz_convert("UTC")
+        else:
+            end = chart_data.candle_end(start, interval, kind, session if (stock_day or kind != "crypto") else None)
+        return int(pd.Timestamp(end).timestamp() * 1000)
+    except Exception:
+        return None
+
+
 def build_payload(
     df: pd.DataFrame,
     layout: dict,
@@ -245,6 +270,7 @@ def build_payload(
     else:
         local = df.index.tz_convert(session[0])
     forming = bool(df["forming"].iloc[-1]) if "forming" in df.columns and len(df) else False
+    closes_at = candle_closes_at(df.index[-1], interval, kind, session) if forming else None
 
     panels = list(layout.get("panels") or [])
     overlays = list(layout.get("overlays") or [])
@@ -430,6 +456,7 @@ def build_payload(
         "ohlc": [open_, high, low_, close],
         "volume": _values(pd.to_numeric(df.get("volume", pd.Series(0.0, index=df.index)), errors="coerce").fillna(0.0), 2),
         "forming": forming,
+        "closes_at": closes_at,
         "series": series,
         "guides": guides,
         "panes": panes,

@@ -190,3 +190,15 @@ def test_rsi_panel_only_when_picked():
     payload, _, layout = _payload(picks=["stoch"])
     assert "rsi" not in layout["panels"]
     assert not any(s["id"] == "rsi" for s in payload["series"])
+
+
+def test_countdown_closes_at():
+    import pandas as pd
+
+    ms = lambda s: int(pd.Timestamp(s).timestamp() * 1000)
+    assert lw_chart.candle_closes_at(pd.Timestamp("2026-11-13 12:00", tz="UTC"), "4h", "crypto") == ms("2026-11-13 16:00Z")
+    assert lw_chart.candle_closes_at(pd.Timestamp("2026-11-13", tz="UTC"), "1D", "crypto") == ms("2026-11-14 00:00Z")
+    assert lw_chart.candle_closes_at(pd.Timestamp("2026-11-01", tz="UTC"), "1Mo", "crypto") == ms("2026-12-01 00:00Z")
+    # An equity's day closes at 16:00 New York (21:00 UTC in November); its month on the last weekday
+    assert lw_chart.candle_closes_at(pd.Timestamp("2026-11-13", tz="UTC"), "1D", "equity") == ms("2026-11-13 21:00Z")
+    assert lw_chart.candle_closes_at(pd.Timestamp("2026-11-01", tz="UTC"), "1Mo", "equity") == ms("2026-11-30 21:00Z")
