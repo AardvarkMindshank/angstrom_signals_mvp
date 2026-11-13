@@ -239,6 +239,8 @@ function loadView(key) {
 
 // ⏱ Under the latest price on the right: the time left until the forming candle closes, counting down each second
 // (as TradingView shows it). data.closes_at is that moment in milliseconds (lw_chart.candle_closes_at).
+const LABEL_HALF = 8;
+
 function candleCountdown(root, host, chart, candles, data, theme) {
   if (root.__countdown) { clearInterval(root.__countdown); root.__countdown = null; }
   const old = host.querySelector(".ang-lwc-countdown");
@@ -250,7 +252,7 @@ function candleCountdown(root, host, chart, candles, data, theme) {
   tag.className = "ang-lwc-countdown";
   tag.title = "Time left until this candle closes";
   tag.style.cssText = "position:absolute;right:0;z-index:4;pointer-events:none;text-align:center;" +
-    "font:11px/15px system-ui,-apple-system,Segoe UI,sans-serif;font-variant-numeric:tabular-nums;color:#fff;" +
+    "font:11px/16px system-ui,-apple-system,Segoe UI,sans-serif;font-variant-numeric:tabular-nums;color:#fff;" +
     "border-radius:0 0 2px 2px;";
   host.appendChild(tag);
   const two = (v) => String(v).padStart(2, "0");
@@ -265,20 +267,25 @@ function candleCountdown(root, host, chart, candles, data, theme) {
   const tick = () => {
     if (!tag.isConnected) { clearInterval(root.__countdown); root.__countdown = null; return; }
     // The price label on the right shows the last candle in view (the newest one, or an older one when the chart is
-    // scrolled back), so the countdown follows that candle's close and colour.
-    let i = n - 1;
-    const range = chart.timeScale().getVisibleLogicalRange();
-    if (range) i = Math.max(0, Math.min(n - 1, Math.floor(range.to)));
-    while (i > 0 && (data.ohlc[3][i] === null || data.ohlc[3][i] === undefined)) i -= 1;
-    const close = data.ohlc[3][i], open = data.ohlc[0][i];
-    tag.style.background = close >= open ? theme.up : theme.down;
-    const y = candles.priceToCoordinate(close);
+    // scrolled back). Ask the chart for exactly that label's price and colour, so the countdown always matches it.
+    let price = data.ohlc[3][n - 1], colour = data.ohlc[3][n - 1] >= data.ohlc[0][n - 1] ? theme.up : theme.down;
+    try {
+      const shown = candles.lastValueData(false);
+      if (shown && !shown.noData) {
+        price = shown.price;
+        // The forming candle is drawn faded; its price label is solid, so drop the fade here too.
+        if (shown.color) colour = String(shown.color).replace(/rgba\(([^,]+),([^,]+),([^,]+),[^)]+\)/, "rgb($1,$2,$3)");
+      }
+    } catch (e) { /* older library: the newest candle */ }
+    tag.style.background = colour;
+    const y = candles.priceToCoordinate(price);
     let width = 56;
     try { width = chart.priceScale("right").width() || width; } catch (e) { /* older library */ }
     const paneH = (data.panes[0] || {}).height || 0;
     tag.style.width = width + "px";
     tag.style.display = y === null || y < 0 || y > paneH - 10 ? "none" : "block";
-    tag.style.top = Math.round((y || 0) + 9) + "px";      // just under the price label (about 18 px tall)
+    // Just under the price label: it is centred on the price and about 1.4 × the 11 px font tall.
+    tag.style.top = (Math.round(y || 0) + LABEL_HALF) + "px";
     tag.textContent = words(data.closes_at - Date.now());
   };
   tick();
