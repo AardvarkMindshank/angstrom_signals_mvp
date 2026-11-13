@@ -45,8 +45,9 @@ CSS = """
 .tides .card{border:1px solid var(--t-line);border-radius:12px;padding:10px 12px;background:var(--t-soft)}
 .tides .note{margin-top:12px}.tides .note li{margin:2px 0}
 .tides .note .who{font-weight:700}
-.tides .strip{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;margin-top:12px}
-.tides .ev{flex:0 0 auto;min-width:150px;border:1px dashed var(--t-line);border-radius:10px;padding:6px 10px;
+.tides .strip{display:flex;flex-wrap:wrap;gap:8px;padding:2px 0 0;margin-top:4px}
+.tides .storm{margin-top:12px}.tides .storm h4{margin:0 0 6px}
+.tides .ev{flex:1 1 150px;min-width:150px;max-width:260px;border:1px dashed var(--t-line);border-radius:10px;padding:6px 10px;
   cursor:help;background:var(--t-soft)}
 .tides .ev.past{border-style:solid;opacity:.75}.tides .ev.now{border:1.5px solid #dc2626}
 .tides .ev .flag{font-size:13px}.tides .ev .nm{font-weight:600}.tides .ev .wh{font-size:12px;opacity:.8}
@@ -232,8 +233,9 @@ def strip(upcoming: list[dict], now: datetime) -> str:
         cards.append(f"<div class='ev {cls}' title='{esc(tip)}'><div class='flag'>{mc.pennants(e['tier'])} {e['icon']}</div>"
                      f"<div class='nm'>{esc(e['short'])} · {esc(e['reference'])}</div>"
                      f"<div class='wh'>{local:%a %d %b} · {esc(mc.when_words(e['at'], now))}</div></div>")
-    return ("<h4>⚑ Storm warnings: the macro calendar <span style='font-weight:400;font-size:12px'>(two pennants: "
-            "major, one: notable, square flag: extreme)</span></h4><div class='strip'>" + "".join(cards) + "</div>")
+    return ("<div class='card storm'><h4>⚑ Storm warnings: the macro calendar <span style='font-weight:400;"
+            "font-size:12px'>(two pennants: major, one: notable, square flag: extreme)</span></h4><div class='strip'>"
+            + "".join(cards) + "</div></div>")
 
 
 RANGES = {"3M": 63, "6M": 126, "1Y": 252, "2Y": 504}
