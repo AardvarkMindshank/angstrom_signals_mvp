@@ -3904,6 +3904,12 @@ def _tv_chart(asset_type, asset_key, title, layout, tv, interval, range_key, pri
               liq_record, show_earnings, stock_watchlist, band_set=None, show_events=False) -> None:
     """Draw the TradingView chart from candles already loaded by _tv_candles."""
     frame = tv["frame"]
+    if "stochrsi_k" not in frame.columns:
+        try:                                    # 🎛️ Stoch RSI: for the chart only, not a scored indicator
+            _sr = stoch_rsi(frame)
+            frame = frame.assign(stochrsi_k=_sr["k"], stochrsi_d=_sr["d"])
+        except Exception:
+            pass
     bands = _band_payload(band_set, asset_type, asset_key, frame)
     past_reports, next_report = [], None
     if show_earnings and asset_type != "Crypto":
