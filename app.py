@@ -6858,7 +6858,7 @@ def notifications_panel() -> None:
                 if picked is not None and picked != list(ticks):
                     st.session_state[mine_key] = picked
                     save_account_settings({f"{reading}_crossings": picked})
-                    st.rerun()
+                    _rerun_fragment()      # this panel only (it is a fragment), never the whole page
                 if not ticks:
                     st.caption("Nothing ticked: no alerts for this reading.")
 
