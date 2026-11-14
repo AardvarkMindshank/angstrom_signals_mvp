@@ -248,7 +248,7 @@ if st.query_params.get("view") == "tides":
     import tides_view  # noqa: E402
 
     st.markdown("<div class='tides-demo'></div>", unsafe_allow_html=True)
-    st.subheader("🌊 Tides (preview)")
+    st.subheader("🌊 Tides")
 
     def _buttons():
         lattice_panel.advisor_button(st, "tides", key="tides_navigator", label="AI Navigator")

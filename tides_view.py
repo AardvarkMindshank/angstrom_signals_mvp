@@ -1,5 +1,5 @@
 """
-🌊 Tides on the page (preview): the sea-state header, the Navigator's factual note, storm warnings, the waves view
+🌊 Tides on the page: the sea-state header, the Navigator's factual note, storm warnings, the waves view
 and the current cards. Pure HTML and SVG from a snapshot (tides.snapshot), so it is tested without Streamlit.
 
 The header is a drawing driven by the readings: the sky and the waves follow the Sea state (calm, moderate, rough,
@@ -455,7 +455,7 @@ def bottom_part(snap: dict) -> str:
 
 
 def footer(stamp: str) -> str:
-    return (f"<div class='foot'>Preview for review. Readings from Yahoo Finance and FRED (St. Louis Fed), updated "
+    return (f"<div class='foot'>Readings from Yahoo Finance and FRED (St. Louis Fed), updated "
             f"{esc(stamp)} UTC. Each current is scored against its own last 5 years; its pull is its 30-day move "
             f"against the usual size of such a move. History before the daily record began is rebuilt from today's "
             f"data, and inflation uses revised figures, not first releases. Macro conditions frame risk; they do "
@@ -467,7 +467,7 @@ def page(snap: dict, now: datetime | None = None, range_key: str = "1Y") -> str:
     upcoming = mc.upcoming(now, days=35)
     warning = mc.storm_warning(now)
     stamp = snap.get("computed_at", "")[:16].replace("T", " ")
-    foot = (f"<div class='foot'>Preview for review. Readings from Yahoo Finance and FRED (St. Louis Fed), updated "
+    foot = (f"<div class='foot'>Readings from Yahoo Finance and FRED (St. Louis Fed), updated "
             f"{esc(stamp)} UTC. Each current is scored against its own last 5 years; its pull is its 30-day move "
             f"against the usual size of such a move. History before the daily record began is rebuilt from today's "
             f"data, and inflation uses revised figures, not first releases. Macro conditions frame risk; they do "

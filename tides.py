@@ -1,5 +1,5 @@
 """
-Tides: the macro layer (preview, 12 Nov 2026; brief https://claude.ai/artifact/HLR3SoaRRuXE11EF5kzCxy).
+Tides: the macro layer (first built 12 Nov 2026; brief https://claude.ai/artifact/HLR3SoaRRuXE11EF5kzCxy).
 
 Twelve currents, each read from public daily data, give two separate readings:
 - the Tide: how supportive or defensive conditions are for risk-taking (coming in, slack, going out);

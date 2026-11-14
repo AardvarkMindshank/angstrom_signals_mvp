@@ -7571,7 +7571,7 @@ because they measure different things and are never added together.
    links the right training video when there is one. Wherever you open it from (top bar, Lattice, Tides or the
    Passage Plan), it is the same Navigator: it knows the whole app, your watchlist, Groups, Sets and funnels, and
    today's Tides readings, so you can ask it anything. It explains; you do the clicks.
-8. **🌊 Tides (preview)** is the macro layer: twelve currents (rates, the dollar, inflation, gold, fear, copper
+8. **🌊 Tides** is the macro layer: twelve currents (rates, the dollar, inflation, gold, fear, copper
    against gold, oil, credit, equities against bonds, crypto rotation), each scored against its own last 5 years.
    Together they give the **Tide** (coming in = risk-supportive, slack = mixed, going out = risk-defensive; a change
    counts after 5 daily closes) and, separately, the **Sea state** (calm to storm = low to extreme volatility).
@@ -7807,7 +7807,7 @@ same line under the asset's name in the chart section.
 **🌊 Tides is the macro layer: the big money flows that sit behind every chart.** Rates, the dollar, inflation,
 fear, credit and where money is rotating move slowly, but they set the conditions every asset trades in. Tides
 reads twelve of them each day and sums them up in sailing words, with the normal trading words beside them.
-It describes conditions; it does not time trades and it never says buy or sell. It is a preview.
+It describes conditions; it does not time trades and it never says buy or sell.
 
 **The four readings, top of the panel**
 - **🌊 The Tide** is the overall direction: **coming in** = *risk-supportive* (conditions help riskier assets
@@ -14017,13 +14017,13 @@ def _tides_snap() -> dict | None:
 
 
 def show_tides() -> None:
-    """🌊 Tides (preview): the macro layer. The worker saves a snapshot every 6 hours (tides_snapshots); the page
+    """🌊 Tides: the macro layer. The worker saves a snapshot every 6 hours (tides_snapshots); the page
     reads the latest, and works it out itself only when none is recent."""
     import tides
     import tides_view
 
     st.html("<div id='tides' style='scroll-margin-top:4.5rem;'></div>")    # before the section: the jump opens it
-    with section_expander("🌊 Tides (preview)", "tides"):
+    with section_expander("🌊 Tides", "tides"):
         try:
             snap = _tides_snap()
         except Exception as exc:
