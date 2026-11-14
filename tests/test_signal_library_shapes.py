@@ -96,3 +96,17 @@ def test_chart_draws_recent_shapes_only():
     drawn = lw_chart.shape_overlay(f)
     assert any(s["kind"] == "head_shoulders" and s["stage"] == "confirmed" for s in drawn)
     assert all("Head and shoulders" in s["words"] or s["kind"] != "head_shoulders" for s in drawn)
+
+
+def test_golden_and_death_crosses():
+    from signal_library.signals_shapes import crosses
+
+    down_up = np.r_[np.linspace(200, 100, 260), np.linspace(100, 190, 120)]
+    golden, death = crosses(_frame(down_up).iloc[:-1])
+    assert golden.sum() == 1 and death.sum() == 0
+    r = _run("shape.classic", _frame(np.r_[down_up, 0]), lookback=150)
+    assert r.value["golden_cross_ago"] < 150 and r.value["death_cross_ago"] == 150
+    import lw_chart
+
+    stars = lw_chart.cross_symbols(_frame(np.r_[down_up, 0]))
+    assert len(stars) == 1 and stars[0][1] == "star" and "Golden" in stars[0][5]

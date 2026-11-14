@@ -255,6 +255,13 @@ class SonarSymbols {
               else if (shape === "triangle_down") { ctx.moveTo(X, Y + R); ctx.lineTo(X + R, Y - R * 0.8); ctx.lineTo(X - R, Y - R * 0.8); ctx.closePath(); ctx.fill(); }
               else if (shape === "diamond") { ctx.moveTo(X, Y - R); ctx.lineTo(X + R * 0.8, Y); ctx.lineTo(X, Y + R); ctx.lineTo(X - R * 0.8, Y); ctx.closePath(); ctx.fill(); }
               else if (shape === "circle") { ctx.arc(X, Y, R * 0.75, 0, Math.PI * 2); ctx.fill(); }
+              else if (shape === "star") {
+                for (let k = 0; k < 10; k++) {
+                  const a = -Math.PI / 2 + k * Math.PI / 5, rr = k % 2 ? R * 0.42 : R;
+                  if (k) ctx.lineTo(X + rr * Math.cos(a), Y + rr * Math.sin(a)); else ctx.moveTo(X + rr * Math.cos(a), Y + rr * Math.sin(a));
+                }
+                ctx.closePath(); ctx.fill();
+              }
               else if (shape === "x") {
                 ctx.lineWidth = Math.max(2, R * 0.38); ctx.lineCap = "round";
                 ctx.moveTo(X - R * 0.8, Y - R * 0.8); ctx.lineTo(X + R * 0.8, Y + R * 0.8);

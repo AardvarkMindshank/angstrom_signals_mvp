@@ -141,6 +141,23 @@ def find_shapes(frame: pd.DataFrame, left: int = 5, right: int = 5, tolerance_at
     return sorted(out, key=lambda s: (s["ready"], s["points"][0][0]))
 
 
+def crosses(frame: pd.DataFrame) -> tuple[pd.Series, pd.Series]:
+    """Golden cross: the 50-candle simple average closes above the 200 (it was at or below on the candle before);
+    death cross: the reverse. Without 200 candles there is no 200 average, so no cross."""
+    fast = frame["close"].rolling(50, min_periods=50).mean()
+    slow = frame["close"].rolling(200, min_periods=200).mean()
+    golden = (fast > slow) & (fast.shift(1) <= slow.shift(1))
+    death = (fast < slow) & (fast.shift(1) >= slow.shift(1))
+    return golden, death
+
+
+def candles_ago_flags(flags: pd.Series, lookback: int) -> int:
+    """Candles since the last True in the last `lookback` rows (0 = the last row); `lookback` when none."""
+    recent = flags.iloc[-lookback:].fillna(False).astype(bool).to_numpy()
+    hits = np.flatnonzero(recent)
+    return int(len(recent) - 1 - hits[-1]) if len(hits) else int(lookback)
+
+
 SHAPE_PARAMS = {
     "left": Param(5, "int", 2, 20, doc="candles before a swing point that must be lower (peaks) / higher (troughs)"),
     "right": Param(5, "int", 2, 20, doc="candles after it needed to confirm it; this is the confirmation delay"),
@@ -166,8 +183,10 @@ SHAPE_PARAMS = {
                  "the break; with neither within `wait` candles it lapses. For each kind, the latest shape found in the last `lookback` candles gives stage (forming, "
                  "confirmed, failed, or none), neckline and target (the head's distance from the neckline, from the "
                  "break); confirmed_ago = candles since one of that kind was last confirmed (0 = the last closed "
-                 "candle, `lookback` = none in the window). ATR = Wilder's 14."),
-    interpretation=("Which classic chart shapes are on this timeframe and where they stand. Traders read a confirmed "
+                 "candle, `lookback` = none in the window). ATR = Wilder's 14. Golden cross / death cross: the 50-candle "
+                 "simple average of the close crosses above / below the 200-candle one (it needs 200 candles; none "
+                 "before that), read as candles ago."),
+    interpretation=("Which classic chart shapes (and the golden and death crosses) are on this timeframe and where they stand. Traders read a confirmed "
                     "head and shoulders or double top as a possible turn down, the inverse and the double bottom as a "
                     "possible turn up, with the measured move as a rough first target. Descriptive; not a forecast."),
     limitations=("Shapes are a matter of judgement: the rules here are one fixed reading of them, and two traders "
@@ -180,6 +199,7 @@ def chart_shapes(ctx, timeframe, params):
     if failed:
         return failed
     lookback = params["lookback"]
+    golden, death = crosses(frame.iloc[-(lookback + 220):])         # the 200 average needs its own 200 candles
     window = lookback + params["max_span"] + params["right"] + 40
     frame = frame.iloc[-window:]
     shapes = find_shapes(frame, params["left"], params["right"], params["tolerance_atr"], params["max_span"],
@@ -197,4 +217,6 @@ def chart_shapes(ctx, timeframe, params):
         value[f"{kind}_ago"] = int(last - max(confirmed)) if confirmed else int(lookback)
         value[f"{kind}_neckline"] = _r(latest["neckline"]) if latest and stage != "none" else None
         value[f"{kind}_target"] = _r(latest["target"]) if latest and stage != "none" else None
+    value["golden_cross_ago"] = candles_ago_flags(golden, lookback)
+    value["death_cross_ago"] = candles_ago_flags(death, lookback)
     return _ok(ctx, loaded, timeframe, frame, value, {**params, "shapes_found": len(shapes)})

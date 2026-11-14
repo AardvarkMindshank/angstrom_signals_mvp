@@ -270,6 +270,23 @@ def shape_overlay(df: pd.DataFrame) -> list[dict]:
         return []
 
 
+def cross_symbols(df: pd.DataFrame) -> list[list]:
+    """Golden and death crosses (50 and 200 simple averages, as the shape.classic signal) as stars: gold under the
+    candle, slate over it."""
+    try:
+        from signal_library.signals_shapes import crosses
+
+        closed = df[~df["forming"].fillna(False).astype(bool)] if "forming" in df.columns else df
+        golden, death = crosses(closed)
+        out = [[int(i), "star", "#d4a017", False, 1.5, "Golden cross: the 50 average crossed above the 200 (a "
+                "long-term turn up, often late)"] for i in np.flatnonzero(golden.fillna(False).to_numpy())]
+        out += [[int(i), "star", "#64748b", True, 1.5, "Death cross: the 50 average crossed below the 200 (a "
+                 "long-term turn down, often late)"] for i in np.flatnonzero(death.fillna(False).to_numpy())]
+        return out
+    except Exception:
+        return []
+
+
 def sonar_band(df: pd.DataFrame, dark: bool = False) -> list[dict]:
     """The grey band of eight averages (5 to 34), lighter for the slower ones, with a faint fill between the fastest
     and the slowest."""
@@ -395,6 +412,8 @@ def build_payload(
 
     symbols: list = []
     shapes = shape_overlay(df) if "shapes" in overlays else []
+    if "shapes" in overlays:
+        symbols += cross_symbols(df)
     if "sonar_marks" in overlays and "sm_ema_5" in columns:
         series += sonar_band(df, dark)
         symbols = sonar_symbols(df, layout.get("sonar_marks"))

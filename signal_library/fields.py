@@ -66,10 +66,11 @@ FIELDS: dict[str, dict[str, dict]] = {
         "yellow_cross", "strength_candle", "big_green_dot", "big_red_dot", "snake_eyes_green", "snake_eyes_red")},
         "band": label("above", "inside", "below"), "band_order": label("rising", "falling", "mixed"),
         "close": num("price", 0)},
-    "shape.classic@1": {f"{kind}_{part}": desc for kind in (
+    "shape.classic@1": {**{f"{kind}_{part}": desc for kind in (
         "head_shoulders", "inverse_head_shoulders", "double_top", "double_bottom") for part, desc in (
         ("stage", label("forming", "confirmed", "failed", "none")), ("ago", num(CANDLES_AGO, 0)),
         ("neckline", num("price", 0)), ("target", num("price", 0)))},
+        "golden_cross_ago": num(CANDLES_AGO, 0), "death_cross_ago": num(CANDLES_AGO, 0)},
     "osc.stoch_rsi@1": {"k": num("%K", 0, 100), "d": num("%D", 0, 100), "pair": label("both_high", "both_low", "apart"),
                         "cross": label("up", "down", "none"), "cross_up_ago": num(CANDLES_AGO, 0),
                         "cross_down_ago": num(CANDLES_AGO, 0), "cross_up_from_low_ago": num(CANDLES_AGO, 0),

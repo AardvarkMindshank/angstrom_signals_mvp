@@ -7817,8 +7817,9 @@ The icon row adds more:
 - 📐 **Chart shapes** outline classic shapes found by code: head and shoulders and double tops (red, possible turn
   down), their mirrors, the inverse head and shoulders and double bottoms (green, possible turn up). A dashed outline
   with "?" is still forming; a solid one closed through its neckline (the dashed line), with a short dotted line at
-  the usual first target; grey ones failed. Point at a shape to read about it. The same shapes are signals in
-  Lattice ("an inverse head and shoulders confirmed in the last 3 candles").
+  the usual first target; grey ones failed. Gold ★ marks a golden cross (the 50 average crossing above the 200),
+  a slate ★ a death cross. Point at a shape to read about it. The same shapes and crosses are signals in Lattice
+  ("an inverse head and shoulders confirmed in the last 3 candles", "a golden cross in the last 10").
 - 📡 **Sonar** (a strip between the price chart and volume) reads what is moving under the price, using the
   published open-source formulas: the light-blue and blue **waves** (WaveTrend momentum), the yellow **VWAP** area
   (the gap between the two waves), the green or red **money flow** area and the bar along the bottom (money flowing
