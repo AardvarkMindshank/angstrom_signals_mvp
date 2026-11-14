@@ -1,0 +1,2 @@
+funnel stages browser check
+training video and Advisor windows
