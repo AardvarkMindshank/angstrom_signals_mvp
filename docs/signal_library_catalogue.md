@@ -79,6 +79,15 @@ Generated from the registry (`signal_library.REGISTRY.catalogue()`) by `signal_c
 - **Interpretation:** Where the candle's average price sits in its recent range, smoothed, and whether it just turned. Descriptive.
 - **Limitations:** Stays pinned near 0 or 100 in strong trends; turns repeat in sideways markets.
 
+### Stoch RSI pair (OHLC4) — `osc.stoch_rsi@1`
+
+- **Category:** momentum · **Output:** observation · **Unit:** mixed (labelled fields) · **Scope:** asset
+- **Timeframes:** 15m, 30m, 1h, 4h, 12h, 1D, 1W · **Data:** candles
+- **Parameters:** `rsi_length` = 14 (RSI length); `stoch_length` = 14 (candles in the RSI's high-low range); `smooth_k` = 3 (smoothing of %K); `smooth_d` = 3 (%D: the average of %K); `high` = 80 (both curves at or above this: both high); `low` = 20 (both curves at or below this: both low); `lookback` = 50 (candles searched for each marker; one not found reads this number)
+- **Calculation:** RSI (Wilder) of OHLC4 = (open + high + low + close) / 4; its position in its own range over stoch_length candles, 0 to 100, smoothed into %K (SMA smooth_k) and %D (SMA of %K, smooth_d). pair = both_high when %K and %D are both at or above `high`, both_low when both at or below `low`, else apart. cross = %K crossing %D on the last closed candle. Candles ago (0 = the last closed candle, `lookback` = none in the window) for: any cross up, any cross down, a cross up while both were low (on the cross candle or the one before), a cross down while both were high.
+- **Interpretation:** Where the two Stoch RSI curves sit and when they last crossed, the way Drew reads them: a cross up from both low, or down from both high, then a look up the chart for a printed dot. Descriptive; not a forecast.
+- **Limitations:** Pinned near 0 or 100 in strong trends, where crosses repeat. Needs about 40 closed candles.
+
 ### WaveTrend momentum (Sonar) — `osc.wavetrend@1`
 
 - **Category:** momentum · **Output:** observation · **Unit:** mixed (labelled fields) · **Scope:** asset
@@ -95,6 +104,15 @@ Generated from the registry (`signal_library.REGISTRY.catalogue()`) by `signal_c
 - **Calculation:** Relative Strength Index over 14 candles. standard_score is the dashboard's RSI (14) component for this candle, on -1..+1 (positive = up or stretched up), computed by signals_v2.component_rsi (definitions fingerprint recorded in the evidence).
 - **Interpretation:** How strongly recent closes have risen versus fallen. Standard score (dashboard Stretch part): (RSI - 50) / 30, clipped to -1..+1 (80 = +1, 20 = -1). Descriptive; not a forecast.
 - **Limitations:** Stays stretched for long periods in strong trends. On timeframes other than 1D the standard score is daily-derived scaling.
+
+### Sonar markers — `sonar.markers@1`
+
+- **Category:** momentum · **Output:** observation · **Unit:** mixed (labelled fields) · **Scope:** asset
+- **Timeframes:** 15m, 30m, 1h, 4h, 12h, 1D, 1W · **Data:** candles
+- **Parameters:** `lookback` = 50 (candles searched for each marker; one not found reads this number)
+- **Calculation:** Closed candles. Band: exponential averages of the close over 5, 11, 15, 18, 21, 24, 28 and 34 candles. Markers (the published open-source formulas): trend turn up = EMA 11 crosses above EMA 15 (down: below); long cross = EMA 11 above EMA 34; short cross = EMA 34 above EMA 11; red cross = EMA 5 below EMA 11; red diamond = WaveTrend (9, 13, 3) WT1 crosses below WT2; blood diamond = red diamond and red cross together; yellow cross = red diamond with WT2 between −80 and 45, RSI 14 between 15 and 30 and money flow (SMA 60 of (close − open) / range × 150) below −5; strength candle = open above EMA 11 and EMA 34, this and the previous candle green, no red diamond or red cross. Big green / red dot (the Sonar strip): WaveTrend (9, 12, 3) crosses up with WT2 at or below −53 / down at or above +53. Each marker reads candles ago: 0 = on the last closed candle, `lookback` = not in the last `lookback` candles. band = above when the close is above every average, below when below every one, else inside; band_order = rising when each average is above the next slower one, falling when below, else mixed.
+- **Interpretation:** Which of the symbols traders read on the price chart (and the Sonar strip's big dots) were printed, and how recently, so a rule can say "a big green dot in the last 3 candles". A yellow cross is a warning of a sharp flush, not proof of manipulation. Descriptive; not a forecast.
+- **Limitations:** Recreations of a paid, closed indicator: they may differ from it on some candles. Moving-average crosses repeat often in sideways markets and on short timeframes. Needs about 70 closed candles.
 
 ### Stochastic %K (14, 3) — `stochastic.level@1`
 

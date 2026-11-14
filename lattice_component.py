@@ -343,7 +343,7 @@ export default function(component) {
   const opByKey = {};
   operands.forEach((o) => { opByKey[o.key] = o; });
   const OPS = {number: [["gte", "is at least"], ["lte", "is at most"], ["exists", "has a value"]], "yes/no": [["yes", "is yes"], ["no", "is no"]],
-               label: [["is", "is"], ["is_not", "is not"]]};
+               label: [["is", "is"], ["is_not", "is not"]], recency: [["within", "in the last"], ["not_within", "not in the last"]]};
   // Reorder rules by dragging the ⠿ handle (mouse, pen or finger): the rows move apart to show where it will land.
   function dragHandle(row, from) {
     const h = el("span", "grip", "⠿");
@@ -412,7 +412,7 @@ export default function(component) {
         c.operand = pick.value;
         const n = opByKey[c.operand] || {type: "number", labels: []};
         c.op = OPS[n.type] ? OPS[n.type][0][0] : "gte";
-        c.value = n.type === "label" ? (n.labels[0] || "") : n.type === "yes/no" ? "" : "";
+        c.value = n.type === "label" ? (n.labels[0] || "") : n.type === "recency" ? "3" : "";
         send();
       });
       cl.appendChild(pick);
@@ -421,11 +421,11 @@ export default function(component) {
       (OPS[o.type] || OPS.number).forEach(([k, t]) => { const op = el("option", "", t); op.value = k; if (k === c.op) op.selected = true; ops.appendChild(op); });
       ops.addEventListener("change", () => { c.op = ops.value; send(); });
       cl.appendChild(ops);
-      if (o.type === "number" && c.op !== "exists") {
-        const v = el("input"); v.value = c.value || ""; v.size = 6; v.setAttribute("aria-label", "Value");
+      if ((o.type === "number" && c.op !== "exists") || o.type === "recency") {
+        const v = el("input"); v.value = c.value || ""; v.size = o.type === "recency" ? 3 : 6; v.setAttribute("aria-label", "Value");
         v.addEventListener("change", () => { c.value = v.value; send(); });
         cl.appendChild(v);
-        cl.appendChild(el("span", "muted", o.scale || ""));
+        cl.appendChild(el("span", "muted", o.type === "recency" ? "candles" : (o.scale || "")));
       } else if (o.type === "label") {
         const v = el("select"); v.setAttribute("aria-label", "Label");
         (o.labels || []).forEach((l) => { const op = el("option", "", l); op.value = l; if (l === c.value) op.selected = true; v.appendChild(op); });
@@ -503,7 +503,7 @@ export default function(component) {
         x.operand = pick.value;
         const n = opByKey[x.operand] || {type: "number", labels: []};
         x.op = OPS[n.type] ? OPS[n.type][0][0] : "gte";
-        x.value = n.type === "label" ? (n.labels[0] || "") : "";
+        x.value = n.type === "label" ? (n.labels[0] || "") : n.type === "recency" ? "3" : "";
         send();
       });
       cl.appendChild(pick);
@@ -512,11 +512,11 @@ export default function(component) {
       (OPS[o.type] || OPS.number).forEach(([k, t]) => { const op = el("option", "", t); op.value = k; if (k === x.op) op.selected = true; ops.appendChild(op); });
       ops.addEventListener("change", () => { x.op = ops.value; send(); });
       cl.appendChild(ops);
-      if (o.type === "number") {
-        const v = el("input"); v.value = x.value || ""; v.size = 6; v.setAttribute("aria-label", "Value");
+      if (o.type === "number" || o.type === "recency") {
+        const v = el("input"); v.value = x.value || ""; v.size = o.type === "recency" ? 3 : 6; v.setAttribute("aria-label", "Value");
         v.addEventListener("change", () => { x.value = v.value; send(); });
         cl.appendChild(v);
-        cl.appendChild(el("span", "muted", o.scale || ""));
+        cl.appendChild(el("span", "muted", o.type === "recency" ? "candles" : (o.scale || "")));
       } else if (o.type === "label") {
         const v = el("select"); v.setAttribute("aria-label", "Label");
         (o.labels || []).forEach((l) => { const op = el("option", "", l); op.value = l; if (l === x.value) op.selected = true; v.appendChild(op); });
@@ -883,12 +883,12 @@ export default function(component) {
   const tkey = (l) => l.target === "member" ? "member:" + l.member + ":" + (l.field || "")
     : l.target === "condition" ? "condition:" + l.group + ":" + l.condition : l.target + ":" + l.group;
   const OPS = {number: [["gte", "is at least"], ["lte", "is at most"], ["exists", "has a value"]], "yes/no": [["yes", "is yes"], ["no", "is no"]],
-               label: [["is", "is"], ["is_not", "is not"]]};
+               label: [["is", "is"], ["is_not", "is not"]], recency: [["within", "in the last"], ["not_within", "not in the last"]]};
   function fresh() {
     const t = targets[0];
     if (!t) return null;
     return {target: t.target, group: t.group, member: t.member, field: t.field, condition: t.condition,
-            op: (OPS[t.type] || OPS.number)[0][0], value: t.type === "number" ? "+30" : t.values.length ? t.values[0][0] : ""};
+            op: (OPS[t.type] || OPS.number)[0][0], value: t.type === "number" ? "+30" : t.type === "recency" ? "3" : t.values.length ? t.values[0][0] : ""};
   }
   function lineRow(l, onRemove) {
     const row = el("div", "rule");
@@ -900,7 +900,7 @@ export default function(component) {
       const n = tByKey[pick.value];
       l.target = n.target; l.group = n.group; l.member = n.member; l.field = n.field; l.condition = n.condition;
       l.op = (OPS[n.type] || OPS.number)[0][0];
-      l.value = n.type === "number" ? "" : n.values.length ? n.values[0][0] : "";
+      l.value = n.type === "number" ? "" : n.type === "recency" ? "3" : n.values.length ? n.values[0][0] : "";
       send();
     });
     row.appendChild(pick);
@@ -909,11 +909,11 @@ export default function(component) {
     (OPS[t.type] || OPS.number).forEach(([k, txt]) => { const o = el("option", "", txt); o.value = k; if (k === l.op) o.selected = true; ops.appendChild(o); });
     ops.addEventListener("change", () => { l.op = ops.value; send(); });
     row.appendChild(ops);
-    if (t.type === "number" && l.op !== "exists") {
-      const v = el("input"); v.value = l.value || ""; v.size = 6; v.setAttribute("aria-label", "Value");
+    if ((t.type === "number" && l.op !== "exists") || t.type === "recency") {
+      const v = el("input"); v.value = l.value || ""; v.size = t.type === "recency" ? 3 : 6; v.setAttribute("aria-label", "Value");
       v.addEventListener("change", () => { l.value = v.value; send(); });
       row.appendChild(v);
-      row.appendChild(el("span", "muted", t.scale || ""));
+      row.appendChild(el("span", "muted", t.type === "recency" ? "candles" : (t.scale || "")));
     } else if (t.type === "label") {
       const v = el("select"); v.setAttribute("aria-label", "Value");
       t.values.forEach(([id, label]) => { const o = el("option", "", label); o.value = id; if (id === l.value) o.selected = true; v.appendChild(o); });

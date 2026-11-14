@@ -69,7 +69,7 @@ function signature(data) {
     data.volume[n - 1], data.forming, data.series.map((s) => s.id + ":" + s.pane + ":" + (s.scale || "")),
     data.panes.map((p) => p.height), data.vlines.length, data.price_lines.length, data.theme.dark, data.right_offset,
     (data.zones || []).map((z) => z || "").join("|").length, data.series.map((s) => (s.zones || []).filter((z) => z).length),
-    data.zones_name || "",
+    data.zones_name || "", (data.symbols || []).length,
   ]);
 }
 
@@ -203,6 +203,63 @@ class ZoneBlocks {
               ctx.fillStyle = colour;
               const left = Math.round(x0 * scope.horizontalPixelRatio);
               ctx.fillRect(left, 0, Math.max(1, Math.round(x1 * scope.horizontalPixelRatio) - left), scope.bitmapSize.height);
+            }
+          });
+        },
+      }),
+    }];
+  }
+}
+
+// ------------------------------------------------------------------ 🛰️ Sonar markers (drawn over the candles)
+
+class SonarSymbols {
+  // symbols: [candle index, shape, colour, above, size, words]; highs and lows place them clear of the wicks.
+  constructor(symbols, highs, lows) {
+    this.symbols = symbols; this.highs = highs; this.lows = lows;
+    this.chart = null; this.series = null;
+  }
+  attached(params) { this.chart = params.chart; this.series = params.series; }
+  detached() { this.chart = null; this.series = null; }
+  updateAllViews() {}
+  paneViews() {
+    const self = this;
+    return [{
+      zOrder: () => "top",
+      renderer: () => ({
+        draw: (target) => {
+          if (!self.chart || !self.series) return;
+          const scale = self.chart.timeScale();
+          const spacing = scale.options().barSpacing || 6;
+          const base = Math.max(4.5, Math.min(8, spacing * 0.5));
+          const stack = {};
+          target.useBitmapCoordinateSpace((scope) => {
+            const ctx = scope.context, hr = scope.horizontalPixelRatio, vr = scope.verticalPixelRatio;
+            for (const [i, shape, colour, above, size] of self.symbols) {
+              const x = scale.logicalToCoordinate(i);
+              if (x === null || x < -10 || x > scope.mediaSize.width + 10) continue;
+              const price = above ? self.highs[i] : self.lows[i];
+              if (price === null || price === undefined) continue;
+              const yEdge = self.series.priceToCoordinate(price);
+              if (yEdge === null) continue;
+              const r = base * size;
+              const slot = `${i}:${above ? 1 : 0}`;
+              const k = stack[slot] || 0;
+              stack[slot] = k + 1;
+              const gap = 4 + r + k * (2 * base + 3);
+              const y = above ? yEdge - gap : yEdge + gap;
+              const X = x * hr, Y = y * vr, R = r * hr;
+              ctx.fillStyle = colour; ctx.strokeStyle = colour;
+              ctx.beginPath();
+              if (shape === "triangle_up") { ctx.moveTo(X, Y - R); ctx.lineTo(X + R, Y + R * 0.8); ctx.lineTo(X - R, Y + R * 0.8); ctx.closePath(); ctx.fill(); }
+              else if (shape === "triangle_down") { ctx.moveTo(X, Y + R); ctx.lineTo(X + R, Y - R * 0.8); ctx.lineTo(X - R, Y - R * 0.8); ctx.closePath(); ctx.fill(); }
+              else if (shape === "diamond") { ctx.moveTo(X, Y - R); ctx.lineTo(X + R * 0.8, Y); ctx.lineTo(X, Y + R); ctx.lineTo(X - R * 0.8, Y); ctx.closePath(); ctx.fill(); }
+              else if (shape === "circle") { ctx.arc(X, Y, R * 0.75, 0, Math.PI * 2); ctx.fill(); }
+              else if (shape === "x") {
+                ctx.lineWidth = Math.max(2, R * 0.38); ctx.lineCap = "round";
+                ctx.moveTo(X - R * 0.8, Y - R * 0.8); ctx.lineTo(X + R * 0.8, Y + R * 0.8);
+                ctx.moveTo(X + R * 0.8, Y - R * 0.8); ctx.lineTo(X - R * 0.8, Y + R * 0.8); ctx.stroke();
+              }
             }
           });
         },
@@ -425,6 +482,9 @@ function draw(L, root, data) {
     host.title = "Tap a small chart to put that asset on top";
   }
   if (data.zones && data.zones.some((c) => c)) candles.attachPrimitive(new ZoneBlocks(data.zones));
+  if (data.symbols && data.symbols.length) candles.attachPrimitive(new SonarSymbols(data.symbols, H, Lo));
+  const symbolWords = {};
+  (data.symbols || []).forEach(([i, shape, colour, above, size, words]) => { (symbolWords[i] = symbolWords[i] || []).push([colour, words]); });
 
   const made = { candles };
   const paneFirst = { 0: candles };
@@ -558,6 +618,9 @@ function draw(L, root, data) {
       ` V <b style="color:${theme.ink}">${fmtBig(data.volume[i])}</b></div>`;
     const bits = legendSeries.map((s) => `${swatch(s.color)}<span style="color:${theme.muted}">${s.name}</span> <span style="color:${theme.ink}">${fmt(s.values[i], C[i])}</span>`);
     if (bits.length) html += `<div>${bits.join(" &nbsp;")}</div>`;
+    (symbolWords[i] || []).forEach(([colour, words]) => {
+      html += `<div style="color:${theme.ink}"><span style="color:${colour}">●</span> ${words}</div>`;
+    });
     if (data.zones_answers) {
       const a = data.zones_answers[i];
       const word = a === "yes" ? "Yes" : a === "no" ? "No" : a === "unknown" ? "Unknown" : "not worked out";

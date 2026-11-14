@@ -164,6 +164,20 @@ EXPLAIN = {
         "Yes when the Stretch is +50 or more.",
         "A caution against chasing: buying after a big run often means buying near a short-term top.",
         "It is not a signal to sell; strong trends can stay overextended for weeks."),
+    "demo:sonar_long": (
+        "Drew's 4-hour checklist for a long, all at once.",
+        "Yes when the Stoch RSI curves crossed up from both low in the last 2 candles, a big green Sonar dot was "
+        "printed in the last 3, the wave is rising and there was no yellow cross in the last 3.",
+        "Several readings agreeing at a turn is what Drew looks for by eye; written as a Set it can be tested on "
+        "history.",
+        "It is one trader's way of reading a chart, built from recreations of a paid indicator. Untested until you "
+        "run it on history."),
+    "demo:sonar_short": (
+        "Drew's 4-hour checklist for a short, all at once.",
+        "Yes when the Stoch RSI curves crossed down from both high in the last 2 candles, a big red Sonar dot was "
+        "printed in the last 3 and the wave is falling.",
+        "The mirror of the long checklist: momentum turning down from a stretched high, confirmed by the wave.",
+        "Short setups in a rising market often fail. Untested until you run it on history."),
 }
 
 

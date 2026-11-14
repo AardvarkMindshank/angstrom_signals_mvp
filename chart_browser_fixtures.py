@@ -88,7 +88,7 @@ def equity_1h():
 def payloads() -> dict:
     out = {}
     df = crypto_4h()
-    every = ["sma200", "ichimoku", "macd", "stoch", "adx", "obv"]
+    every = ["sma200", "ichimoku", "rsi", "macd", "stoch", "adx", "obv"]   # RSI is a choice since 13 Nov 2026
     layout = chart_plan.plan(every, df.columns, overlay_curves=False)
     out["crypto_4h_all"] = lw_chart.build_payload(
         df, layout, kind="crypto", interval="4h", range_key="1M", range_start=df.index[-180],
@@ -102,7 +102,7 @@ def payloads() -> dict:
         view_key="crypto:bitcoin|4h|1M", price_px=380, dark=True, title="Bitcoin", source="Test candles",
     )
     eq = equity_daily()
-    layout_eq = chart_plan.plan([], eq.columns, overlay_curves=False)
+    layout_eq = chart_plan.plan(["rsi"], eq.columns, overlay_curves=False)
     out["equity_daily_earnings"] = lw_chart.build_payload(
         eq, layout_eq, kind="equity", interval="1D", range_key="3M", range_start=eq.index[-65],
         view_key="equity:AAPL|1D|3M", price_px=380, title="Apple (AAPL)", source="Test candles",
@@ -134,7 +134,7 @@ def live_payloads() -> dict:
 
     out = {}
     df, info = frame("crypto", "bitcoin", "4h", "1M")
-    every = ["sma200", "ichimoku", "macd", "stoch", "adx", "obv"]
+    every = ["sma200", "ichimoku", "rsi", "macd", "stoch", "adx", "obv"]   # RSI is a choice since 13 Nov 2026
     out["crypto_4h_all"] = lw_chart.build_payload(
         df, chart_plan.plan(every, df.columns), kind="crypto", interval="4h", range_key="1M",
         range_start=info["start"], view_key="crypto:bitcoin|4h|1M", title="Bitcoin", source=info["source"])

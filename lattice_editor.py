@@ -39,7 +39,9 @@ CATEGORY_ICON = {"trend": "trend", "momentum": "momentum", "regime": "regime", "
                  "volume": "volume", "sentiment": "sentiment"}
 DIRECTION_MAP = {"up": 1, "down": -1, "mixed": 0}
 OPS = {"gte": "is at least", "lte": "is at most", "yes": "is yes", "no": "is no", "is": "is", "is_not": "is not",
-       "exists": "has a value"}     # "exists": there is one (for example a support zone at all)
+       "exists": "has a value",     # "exists": there is one (for example a support zone at all)
+       "within": "in the last", "not_within": "not in the last"}   # a "candles ago" field: within N candles
+RECENCY = "recency"      # what the screen calls a "candles ago" field (fields.CANDLES_AGO): offers within / not within
 TF_WORDS = {"15m": "15-minute", "30m": "30-minute", "1h": "hourly", "4h": "4-hour", "12h": "12-hour", "1D": "daily", "1W": "weekly"}
 SUGGESTED_LABELS = [("bullish", "Bullish"), ("bearish", "Bearish"), ("stretched_up", "Stretched up"),
                     ("stretched_down", "Stretched down"), ("buying", "Buying"), ("selling", "Selling")]
@@ -66,7 +68,10 @@ def catalogue() -> list[dict]:
             if "*" in path:                       # a list: offer its first item ("support.0" = the nearest support)
                 head, _, rest = path.partition(".*.")
                 path, label = path.replace("*", "0"), f"nearest {head} · {rest.replace('_', ' ')}"
-            operands.append({"field": path, "type": desc["type"], "label": label, "scale": fields.scale_text(desc),
+            kind = desc["type"]
+            if desc.get("unit") == fields.CANDLES_AGO:      # "yellow cross · in the last 3 candles"
+                kind, label = RECENCY, label.removesuffix(" ago")
+            operands.append({"field": path, "type": kind, "label": label, "scale": fields.scale_text(desc),
                              "labels": desc.get("labels") or [], "range": desc.get("range")})
         badge = ("History from Nov 2026" if ("sentiment" in d.requires or "options" in d.requires) else "")
         out.append({
@@ -124,6 +129,29 @@ def _number(text):
         return None
 
 
+def _candles(value) -> bool:
+    """A whole number of candles, 1 or more."""
+    n = _number(value)
+    return n is not None and n >= 1 and float(n).is_integer()
+
+
+def recency_problem(member: dict | None, value) -> str | None:
+    """Plain words when "in the last N candles" asks further back than the signal searches (its lookback)."""
+    if not member or not _candles(value):
+        return None
+    try:
+        spec = sl.REGISTRY.get(member["id"], member["version"]).params.get("lookback")
+    except KeyError:
+        return None
+    if spec is None:
+        return None
+    limit = int((member.get("params") or {}).get("lookback") or spec.default)
+    if int(_number(value)) > limit:
+        return (f"{display_name(member)} looks back {limit} candles, so it can't answer “in the last "
+                f"{int(_number(value))}”. Use {limit} or fewer, or raise its lookback setting.")
+    return None
+
+
 def _predicate(clause: dict) -> dict:
     op, value = clause.get("op"), clause.get("value")
     if clause.get("operand") == "score":
@@ -136,7 +164,14 @@ def _predicate(clause: dict) -> dict:
     pred = {"member": key}
     if field:
         pred["field"] = field
-    if op in ("gte", "lte"):
+    if op in ("within", "not_within"):              # candles ago: 0 = on the last closed candle
+        number = _number(value)
+        n = int(number) if number is not None else value
+        if op == "within":
+            pred["lte"] = n - 1 if isinstance(n, int) else n
+        else:
+            pred["gte"] = n
+    elif op in ("gte", "lte"):
         number = _number(value)
         pred[op] = number if number is not None else value
     elif op in ("yes", "no"):
@@ -205,6 +240,8 @@ SHORT = {
     "osc.wavetrend": lambda p: f"WaveTrend {p['channel']}/{p['average']}",
     "flow.money": lambda p: f"Money flow {p['period']}",
     "osc.stoch_ohlc4": lambda p: f"Stochastic OHLC4 {p['length']}",
+    "osc.stoch_rsi": lambda p: "Stoch RSI",
+    "sonar.markers": lambda p: "Sonar markers",
     "divergence.mtf": lambda p: f"Divergence ({p['set']}, {p['oscillator']})",
     "candle.shape": lambda p: "Candle",
     "options.max_pain": lambda p: "Max pain" + (" (monthly)" if p.get("monthly") else "")
@@ -280,6 +317,11 @@ def _clause(pred: dict) -> dict | None:
     if "member" not in pred or "events" in pred:
         return None
     operand = pred["member"] + (f":{pred['field']}" if pred.get("field") else ":")
+    if str(pred.get("field") or "").endswith("_ago"):          # candles ago: read back as in / not in the last N
+        if "lte" in pred and isinstance(pred["lte"], (int, float)):
+            return {"operand": operand, "op": "within", "value": f"{pred['lte'] + 1:g}"}
+        if "gte" in pred and isinstance(pred["gte"], (int, float)):
+            return {"operand": operand, "op": "not_within", "value": f"{pred['gte']:g}"}
     for op in ("gte", "lte"):
         if op in pred:
             return {"operand": operand, "op": op, "value": f"{pred[op]:g}"}
@@ -320,6 +362,7 @@ def checks(model: dict) -> dict:
     if len(set(rule_ids)) != len(rule_ids):
         blocks.append("Two rules use the same label; each label must be different.")
     kinds = {o["key"]: o["type"] for o in operands(model)}
+    by_key = {m["key"]: m for m in members}
     keys = [c["key"] for c in model.get("conditions") or []]
     if len(set(keys)) != len(keys):
         blocks.append("Two confirmations or vetoes have the same name; each must be different.")
@@ -331,6 +374,10 @@ def checks(model: dict) -> dict:
                 blocks.append(f"The {c['kind']} {c['label']!r} uses a reading that is no longer in the Group.")
             elif kinds[cl["operand"]] == fields.NUMBER and cl.get("op") in ("gte", "lte") and _number(cl.get("value")) is None:
                 blocks.append(f"The {c['kind']} {c['label']!r}: {cl.get('value')!r} is not a number.")
+            elif cl.get("op") in ("within", "not_within") and not _candles(cl.get("value")):
+                blocks.append(f"The {c['kind']} {c['label']!r}: say how many candles, 1 or more.")
+            elif cl.get("op") in ("within", "not_within") and recency_problem(by_key.get(cl["operand"].partition(":")[0]), cl.get("value")):
+                blocks.append(recency_problem(by_key.get(cl["operand"].partition(":")[0]), cl.get("value")))
     for i, r in enumerate(model.get("rules") or []):
         if not r.get("clauses"):
             blocks.append(f"Rule {i + 1} ({r['label']}) has no condition yet.")
@@ -339,6 +386,10 @@ def checks(model: dict) -> dict:
                 blocks.append(f"Rule {i + 1} ({r['label']}) uses a reading that is no longer in the Group.")
             elif kinds[c["operand"]] == fields.NUMBER and c.get("op") in ("gte", "lte") and _number(c.get("value")) is None:
                 blocks.append(f"Rule {i + 1} ({r['label']}): {c.get('value')!r} is not a number.")
+            elif c.get("op") in ("within", "not_within") and not _candles(c.get("value")):
+                blocks.append(f"Rule {i + 1} ({r['label']}): say how many candles, 1 or more.")
+            elif c.get("op") in ("within", "not_within") and recency_problem(by_key.get(c["operand"].partition(":")[0]), c.get("value")):
+                blocks.append(recency_problem(by_key.get(c["operand"].partition(":")[0]), c.get("value")))
 
     doc = to_document(model)
     if not blocks:
@@ -424,11 +475,14 @@ def _clause_text(c: dict, members: dict) -> str:
     if m and m["timeframe"]:
         name += f" ({m['timeframe']})"
     if field and field != "standard_score":
-        name += f" {field.replace('_', ' ')}"
+        name += f" {field.removesuffix('_ago').replace('_', ' ')}"
     elif field == "standard_score":
         name += " standard score"
     if c["op"] in ("yes", "no", "exists"):
         return f"{name} {OPS[c['op']]}"
+    if c["op"] in ("within", "not_within"):
+        n = c.get("value")
+        return f"{name} {OPS[c['op']]} {n} candle{'' if str(n) == '1' else 's'}"
     return f"{name} {OPS.get(c['op'], c['op'])} {c.get('value')}"
 
 

@@ -322,6 +322,13 @@ def checks(model: dict, choices: dict) -> dict:
             if l["target"] == "score" or (l["target"] == "member" and l["op"] in ("gte", "lte")):
                 if le._number(l.get("value")) is None:
                     blocks.append(f"Line {i + 1}: {l.get('value')!r} is not a number.")
+            if l["target"] == "member" and l["op"] in ("within", "not_within") and not le._candles(l.get("value")):
+                blocks.append(f"Line {i + 1}: say how many candles, 1 or more.")
+            if l["target"] == "member" and l["op"] in ("within", "not_within"):
+                problem = le.recency_problem(next((m for m in model.get("standalone") or [] if m["key"] == l["member"]),
+                                                  None), l.get("value"))
+                if problem:
+                    blocks.append(f"Line {i + 1}: {problem}")
     if not blocks:
         doc = to_document(model, choices)
         names = {g["key"]: choices[g["source"]]["name"] for g in model.get("groups") or [] if g["source"] in choices}

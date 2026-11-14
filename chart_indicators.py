@@ -73,6 +73,15 @@ def cipher_b(df: pd.DataFrame, cfg: dict | None = None) -> pd.DataFrame:
     }, index=df.index)
 
 
+def sonar_marks(df: pd.DataFrame) -> pd.DataFrame:
+    """🛰️ Sonar markers for the price chart: the band (sm_ema_5 … sm_ema_34) and a True/False column per marker
+    (sm_trend_turn_up …), from the same code as the sonar.markers signal, so the chart and the Sets agree."""
+    from signal_library.signals_sonar import markers_frame
+
+    mk = markers_frame(df)
+    return mk.add_prefix("sm_")
+
+
 def add_chart_only(df: pd.DataFrame) -> pd.DataFrame:
     """The chart frame with the chart-only columns added (Stoch RSI, Sonar). Quiet on failure."""
     extra = {}
@@ -84,6 +93,11 @@ def add_chart_only(df: pd.DataFrame) -> pd.DataFrame:
     try:
         mc = cipher_b(df)
         extra.update({name: mc[name] for name in mc.columns})
+    except Exception:
+        pass
+    try:
+        sm = sonar_marks(df)
+        extra.update({name: sm[name] for name in sm.columns})
     except Exception:
         pass
     return df.assign(**extra) if extra else df

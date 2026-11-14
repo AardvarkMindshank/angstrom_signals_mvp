@@ -337,6 +337,38 @@ def provided_groups() -> dict[str, tuple[str, dict]]:
     }
 
 
+def sonar_confluence_sets() -> dict[str, dict]:
+    """Drew's way of reading his 4-hour chart, written as Sets to test on history (14 Nov 2026): the two Stoch RSI
+    curves cross from both low (or both high), a big Sonar dot was printed in the last few candles, the wave points
+    the same way, and (long) no yellow-cross warning in the last few candles."""
+    base = {"schema": "angstrom.set/1", "lineage_version": 3, "score": None, "market_context": [], "groups": []}
+    items = [_item("srsi", "Stoch RSI pair", "osc.stoch_rsi", "4h"), _item("marks", "Sonar markers", "sonar.markers", "4h"),
+             _item("wave", "Sonar wave", "osc.wavetrend", "4h")]
+    return {
+        "demo:sonar_long": {
+            **base, "name": "Sonar confluence ▲",
+            "purpose": "On the 4-hour chart: the Stoch RSI curves crossed up from both low (20 or under) in the last 2 "
+                       "candles, a big green Sonar dot was printed in the last 3, the wave is rising, and no yellow "
+                       "cross in the last 3. Drew's checklist, to test on history before trusting it.",
+            "standalone": items,
+            "decision": {"version": 1, "rule": {"all": [
+                {"member": "srsi", "field": "cross_up_from_low_ago", "lte": 1},
+                {"member": "marks", "field": "big_green_dot_ago", "lte": 2},
+                {"member": "wave", "field": "direction", "eq": "rising"},
+                {"member": "marks", "field": "yellow_cross_ago", "gte": 3}]}}},
+        "demo:sonar_short": {
+            **base, "name": "Sonar confluence ▼",
+            "purpose": "On the 4-hour chart: the Stoch RSI curves crossed down from both high (80 or over) in the last "
+                       "2 candles, a big red Sonar dot was printed in the last 3, and the wave is falling. The mirror "
+                       "of Sonar confluence ▲.",
+            "standalone": items,
+            "decision": {"version": 1, "rule": {"all": [
+                {"member": "srsi", "field": "cross_down_from_high_ago", "lte": 1},
+                {"member": "marks", "field": "big_red_dot_ago", "lte": 2},
+                {"member": "wave", "field": "direction", "eq": "falling"}]}}},
+    }
+
+
 def library_sets() -> dict[str, dict]:
     base = {"schema": "angstrom.set/1", "lineage_version": 3, "score": None, "market_context": []}
     weekly = _weekly("starter:trend")
@@ -404,6 +436,7 @@ def library_sets() -> dict[str, dict]:
             "groups": [_group("stretch", "starter:stretch")], "standalone": [],
             "decision": {"version": 1, "rule": {"group": "stretch", "outcome": {"eq": "stretched_up"}}}},
     }
+    out.update(sonar_confluence_sets())
     import funnel_templates                     # the ready-made funnels' stage Sets (EMA trends, 1-hour entry)
 
     out.update(funnel_templates.library())

@@ -24,6 +24,7 @@ def label(*labels: str) -> dict:
     return {"type": LABEL, "unit": "label", "labels": list(labels)}
 
 
+CANDLES_AGO = "candles ago"   # 0 = on the last closed candle; the editor offers "in the last N candles"
 YES_NO = {"type": YESNO, "unit": "yes/no"}
 EVENT_LIST = {"type": EVENTS, "unit": "events"}
 STANDARD = num("standard score", -1, 1)
@@ -59,6 +60,16 @@ FIELDS: dict[str, dict[str, dict]] = {
     "osc.stoch_ohlc4@1": {"k": num("%K", 0, 100), "d": num("%D", 0, 100),
                           "zone": label("overbought", "oversold", "neutral"), "cross": label("up", "down", "none"),
                           "turned_up_from_oversold": YES_NO, "turned_down_from_overbought": YES_NO},
+    # ---- 🛰️ Sonar markers and the Stoch RSI pair (signals_sonar.py): "candles ago" fields read as "in the last N"
+    "sonar.markers@1": {**{f"{name}_ago": num(CANDLES_AGO, 0) for name in (
+        "trend_turn_up", "trend_turn_down", "long_cross", "short_cross", "red_cross", "red_diamond", "blood_diamond",
+        "yellow_cross", "strength_candle", "big_green_dot", "big_red_dot")},
+        "band": label("above", "inside", "below"), "band_order": label("rising", "falling", "mixed"),
+        "close": num("price", 0)},
+    "osc.stoch_rsi@1": {"k": num("%K", 0, 100), "d": num("%D", 0, 100), "pair": label("both_high", "both_low", "apart"),
+                        "cross": label("up", "down", "none"), "cross_up_ago": num(CANDLES_AGO, 0),
+                        "cross_down_ago": num(CANDLES_AGO, 0), "cross_up_from_low_ago": num(CANDLES_AGO, 0),
+                        "cross_down_from_high_ago": num(CANDLES_AGO, 0)},
     "divergence.mtf@1": {"bullish_count": num("timeframes", 0, 5), "bearish_count": num("timeframes", 0, 5),
                          "timeframes_read": num("timeframes", 0, 5),
                          "regular_bullish_count": num("timeframes", 0, 5), "hidden_bullish_count": num("timeframes", 0, 5),

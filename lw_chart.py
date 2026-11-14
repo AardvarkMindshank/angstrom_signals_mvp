@@ -217,6 +217,61 @@ def cipher_series(df: pd.DataFrame, pane: int, dark: bool = False) -> list[dict]
     return out
 
 
+# 🛰️ Sonar markers on the price chart: (shape, colour, above the candle?, size, hover words). The price chart shows
+# the markers drawn over candles; the big dots stay on the 📡 Sonar strip.
+SONAR_MARKS = {
+    "trend_turn_up": ("triangle_up", "#6366f1", False, 1.1, "Trend turn up: the 11 average crossed above the 15"),
+    "trend_turn_down": ("triangle_down", "#6366f1", True, 1.1, "Trend turn down: the 11 average crossed below the 15"),
+    "long_cross": ("circle", "#22c55e", False, 1.0, "Green dot: the 11 average crossed above the 34"),
+    "short_cross": ("circle", "#ef4444", True, 1.0, "Red dot: the 34 average crossed above the 11"),
+    "red_cross": ("x", "#ef4444", True, 0.9, "Red cross: the 5 average crossed below the 11"),
+    "red_diamond": ("diamond", "#dc2626", True, 0.9, "Red diamond: the wave turned down"),
+    "blood_diamond": ("diamond", "#7f1d1d", True, 1.35, "Blood diamond: a red diamond and a red cross together"),
+    "yellow_cross": ("x", "#facc15", True, 1.35, "Yellow cross: the wave turned down while RSI was 15 to 30 and "
+                                                 "money flowed out. A warning of a sharp flush"),
+    "strength_candle": ("diamond", "#eab308", True, 0.7, "Strength: two green candles opening above the 11 and 34"),
+}
+SONAR_DEFAULT = tuple(k for k in SONAR_MARKS if k != "strength_candle")     # the yellow diamonds are the noisiest
+
+
+def sonar_band(df: pd.DataFrame, dark: bool = False) -> list[dict]:
+    """The grey band of eight averages (5 to 34), lighter for the slower ones, with a faint fill between the fastest
+    and the slowest."""
+    from signal_library.signals_sonar import RIBBON
+
+    out = [{"id": "sm_fill", "type": "band", "name": "Sonar band", "pane": 0, "legend": False,
+            "a": _values(df["sm_ema_5"]), "b": _values(df["sm_ema_34"]),
+            "fill": "rgba(148,163,184,0.16)" if dark else "rgba(100,116,139,0.12)"}]
+    for i, n in enumerate(RIBBON):
+        alpha = 0.85 - 0.07 * i
+        colour = f"rgba(203,213,225,{alpha:.2f})" if dark else f"rgba(100,116,139,{alpha:.2f})"
+        line = _line(f"sm_ema_{n}", f"Band {n}", 0, _values(df[f"sm_ema_{n}"]), colour, width=1)
+        line["legend"] = False
+        out.append(line)
+    return out
+
+
+def sonar_symbols(df: pd.DataFrame, chosen=None) -> list[list]:
+    """[candle index, shape, colour, above, size, words] for each marker printed, closed candles only. A blood
+    diamond stands for its own red diamond and red cross."""
+    keys = [k for k in (chosen if chosen is not None else SONAR_DEFAULT) if k in SONAR_MARKS]
+    forming = df["forming"].fillna(False).astype(bool).tolist() if "forming" in df.columns else [False] * len(df)
+    blood = df["sm_blood_diamond"].fillna(False).astype(bool).tolist() if "sm_blood_diamond" in df.columns else []
+    out = []
+    for key in keys:
+        col = f"sm_{key}"
+        if col not in df.columns:
+            continue
+        shape, colour, above, size, words = SONAR_MARKS[key]
+        for i, hit in enumerate(df[col].fillna(False).astype(bool).tolist()):
+            if not hit or forming[i]:
+                continue
+            if key in ("red_diamond", "red_cross") and blood and blood[i] and "blood_diamond" in keys:
+                continue
+            out.append([i, shape, colour, above, size, words])
+    return out
+
+
 def candle_closes_at(start, interval: str, kind: str, session=None) -> int | None:
     """When the forming candle that started at `start` closes, in milliseconds since 1970 (UTC), for the countdown
     under the price on the right. Equities' day, week and month candles close at the US market close (16:00 New York)."""
@@ -301,6 +356,11 @@ def build_payload(
             series.append(_line("tenkan", "Tenkan", 0, _values(df["ichi_tenkan"]), "#0ea5e9", width=1))
         if "ichi_kijun" in columns:
             series.append(_line("kijun", "Kijun", 0, _values(df["ichi_kijun"]), "#f43f5e", width=1))
+
+    symbols: list = []
+    if "sonar_marks" in overlays and "sm_ema_5" in columns:
+        series += sonar_band(df, dark)
+        symbols = sonar_symbols(df, layout.get("sonar_marks"))
 
     # Lower panes (or the price pane's 0 to 100 scale when the account overlays them).
     def place(key):
@@ -462,6 +522,7 @@ def build_payload(
         "panes": panes,
         "vlines": vlines,
         "price_lines": price_lines,
+        "symbols": symbols,
         "start_index": start_index,
         "right_offset": int(right_offset),
         "source": source,

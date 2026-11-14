@@ -11633,6 +11633,12 @@ def render_dashboard(*args, **kwargs):
         _record_run("dashboard", started)
 
 
+_SONAR_MARK_LABELS = {      # 🛰️ Sonar markers picker on the chart (lw_chart.SONAR_MARKS)
+    "trend_turn_up": "🔺 Trend turn up", "trend_turn_down": "🔻 Trend turn down", "long_cross": "🟢 Green dot",
+    "short_cross": "🔴 Red dot", "red_cross": "❌ Red cross", "red_diamond": "♦️ Red diamond",
+    "blood_diamond": "🩸 Blood diamond", "yellow_cross": "⚠️ Yellow cross", "strength_candle": "🔶 Strength",
+}
+
 _FUNNEL_KEYS = {
     # market: (table mode widget, funnel pick, stage pick, saved setting, words)
     "crypto": ("crypto_table_mode", "funnel_pick", "funnel_stage", "crypto_table",
@@ -13089,7 +13095,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                     df_chart = tv["frame"]
             df_chart = add_chart_only(df_chart)     # 🎛️ Stoch RSI and 📡 Sonar: chart only, not scored
             indicator_keys = chart_plan.available(df_chart.columns)
-            indicator_icons = {"sma200": "📏", "ichimoku": "☁️", "cipher": "📡", "rsi": "🌡️", "macd": "〰️", "stoch": "🎚️", "stochrsi": "🎛️",
+            indicator_icons = {"sma200": "📏", "ichimoku": "☁️", "cipher": "📡", "sonar_marks": "🛰️", "rsi": "🌡️", "macd": "〰️", "stoch": "🎚️", "stochrsi": "🎛️",
                                "adx": "🧭", "obv": "📊"}
             # Crypto charts also offer estimated liquidation levels, drawn by this page, not chart_plan.
             if asset_type == "Crypto":
@@ -13200,6 +13206,19 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                     "days. The chart stretches to the right to fit an upcoming one."
                 ),
             )
+            sonar_shown = None
+            if "sonar_marks" in chosen_indicators and use_tv:
+                if "chart_sonar_marks" not in st.session_state:
+                    kept = saved_chart.get("chart_sonar_marks")
+                    st.session_state["chart_sonar_marks"] = ([k for k in kept if k in lw_chart.SONAR_MARKS]
+                                                             if isinstance(kept, list) else list(lw_chart.SONAR_DEFAULT))
+                sonar_shown = st.pills(
+                    "🛰️ Markers shown", list(lw_chart.SONAR_MARKS), selection_mode="multi", key="chart_sonar_marks",
+                    format_func=lambda k: _SONAR_MARK_LABELS.get(k, k),
+                    help="The symbols drawn over the candles (open-source formulas of the indicator Drew reads). "
+                         "Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip. "
+                         + " ".join(f"{_SONAR_MARK_LABELS[k]}: {v[4]}." for k, v in lw_chart.SONAR_MARKS.items()),
+                ) or []
             band_set = _chart_set_picker() if use_tv else None
             wanted_picks = [k for k in saved_picks if k not in indicator_keys] + [
                 k for k in chosen_indicators if k in chart_plan.INDICATORS
@@ -13212,8 +13231,11 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             }
             if asset_type != "Crypto":
                 chart_choices["chart_earnings"] = bool(show_earnings)
+            if sonar_shown is not None:
+                chart_choices["chart_sonar_marks"] = list(sonar_shown)
             save_account_settings(chart_choices)
             layout = chart_plan.plan(chosen_indicators, df_chart.columns, overlay_curves=overlay_curves)
+            layout["sonar_marks"] = sonar_shown
             price_px = _chart_price_height()
             liq_record = _liquidation_record(asset_key) if liq_on else None
             if use_tv:

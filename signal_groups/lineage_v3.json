@@ -128,6 +128,12 @@
     "options.max_pain": [
       "options_open_interest",
       "price"
+    ],
+    "sonar.markers": [
+      "price"
+    ],
+    "osc.stoch_rsi": [
+      "price"
     ]
   }
 }
