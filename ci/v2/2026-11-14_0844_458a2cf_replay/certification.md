@@ -1,0 +1,246 @@
+# Replay certification (suite v2)
+
+Code hash 306f33f5c85a; 14 datasets; at least 50 cutoffs per dataset; 19.8 minutes.
+
+| Signal | Timeframe | Algorithm | Slice shortcut | Cutoffs | Checks (reference/poison/cache/timestamps) | Readings | Reason |
+|---|---|---|---|---|---|---|---|
+| bollinger.position@1 | 15m | certified | no | 113 | 113/226/46/113 | {'ok': 113} | synthetic-crypto-s11 T=2023-09-30T10:45:00+00:00: .value.lower: differs by 1.0e-06 (beyond the 1e-09 tolerance) |
+| bollinger.position@1 | 30m | certified | no | 113 | 113/226/46/113 | {'ok': 113} | synthetic-crypto-s11 T=2023-09-30T11:00:00+00:00: .value.standard_score: differs by 7.8e-09 (beyond the 1e-09 tolerance) |
+| bollinger.position@1 | 1h | certified | no | 113 | 113/226/46/113 | {'ok': 113} | synthetic-crypto-s11 T=2023-09-30T11:00:00+00:00: .value.standard_score: differs by 5.9e-09 (beyond the 1e-09 tolerance) |
+| bollinger.position@1 | 4h | certified | yes | 112 | 112/224/46/112 | {'ok': 112} |  |
+| bollinger.position@1 | 12h | certified | yes | 109 | 109/218/46/109 | {'ok': 109} |  |
+| bollinger.position@1 | 1D | certified | yes | 342 | 342/684/142/342 | {'ok': 342} |  |
+| bollinger.position@1 | 1W | certified | yes | 334 | 334/668/136/334 | {'ok': 334} |  |
+| candle.shape@1 | 15m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| candle.shape@1 | 30m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| candle.shape@1 | 1h | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| candle.shape@1 | 4h | certified | yes | 112 | 112/224/46/112 | {'ok': 112} |  |
+| candle.shape@1 | 12h | certified | yes | 109 | 109/218/46/109 | {'ok': 109} |  |
+| candle.shape@1 | 1D | certified | yes | 342 | 342/684/142/342 | {'ok': 342} |  |
+| candle.shape@1 | 1W | certified | yes | 334 | 334/668/136/334 | {'ok': 334} |  |
+| divergence.mtf@1 | 1D | certified | yes | 342 | 342/684/142/342 | {'ok': 342} |  |
+| flow.money@1 | 15m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| flow.money@1 | 30m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| flow.money@1 | 1h | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| flow.money@1 | 4h | certified | yes | 112 | 112/224/46/112 | {'ok': 112} |  |
+| flow.money@1 | 12h | certified | yes | 109 | 109/218/46/109 | {'ok': 109} |  |
+| flow.money@1 | 1D | certified | yes | 342 | 342/684/142/342 | {'ok': 342} |  |
+| flow.money@1 | 1W | certified | yes | 334 | 334/668/136/334 | {'insufficient_data': 74, 'ok': 260} |  |
+| flows.btc_etf@1 | 1D | certified | no | 70 | 70/70/14/70 | {'ok': 70} | not tested |
+| flows.stablecoin_supply@1 | 1D | certified | no | 70 | 70/70/14/70 | {'ok': 70} | not tested |
+| ichimoku.position@1 | 15m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| ichimoku.position@1 | 30m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| ichimoku.position@1 | 1h | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| ichimoku.position@1 | 4h | certified | yes | 112 | 112/224/46/112 | {'ok': 112} |  |
+| ichimoku.position@1 | 12h | certified | yes | 109 | 109/218/46/109 | {'ok': 109} |  |
+| ichimoku.position@1 | 1D | certified | yes | 342 | 342/684/142/342 | {'ok': 342} |  |
+| ichimoku.position@1 | 1W | certified | yes | 334 | 334/668/136/334 | {'ok': 334} |  |
+| levels.zones@1 | 15m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| levels.zones@1 | 30m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| levels.zones@1 | 1h | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| levels.zones@1 | 4h | certified | yes | 112 | 112/224/46/112 | {'ok': 112} |  |
+| levels.zones@1 | 12h | certified | yes | 109 | 109/218/46/109 | {'ok': 109} |  |
+| levels.zones@1 | 1D | certified | yes | 342 | 342/684/142/342 | {'ok': 342} |  |
+| levels.zones@1 | 1W | certified | yes | 334 | 334/668/136/334 | {'insufficient_data': 69, 'ok': 265} |  |
+| ma.line@1 | 15m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| ma.line@1 | 30m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| ma.line@1 | 1h | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| ma.line@1 | 4h | certified | yes | 112 | 112/224/46/112 | {'ok': 112} |  |
+| ma.line@1 | 12h | certified | yes | 109 | 109/218/46/109 | {'ok': 109} |  |
+| ma.line@1 | 1D | certified | yes | 342 | 342/684/142/342 | {'ok': 342} |  |
+| ma.line@1 | 1W | certified | yes | 334 | 334/668/136/334 | {'insufficient_data': 74, 'ok': 260} |  |
+| ma.pair@1 | 15m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| ma.pair@1 | 30m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| ma.pair@1 | 1h | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| ma.pair@1 | 4h | certified | yes | 112 | 112/224/46/112 | {'ok': 112} |  |
+| ma.pair@1 | 12h | certified | yes | 109 | 109/218/46/109 | {'ok': 109} |  |
+| ma.pair@1 | 1D | certified | yes | 342 | 342/684/142/342 | {'ok': 342} |  |
+| ma.pair@1 | 1W | certified | yes | 334 | 334/668/136/334 | {'insufficient_data': 115, 'ok': 219} |  |
+| ma.position@1 | 15m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| ma.position@1 | 30m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| ma.position@1 | 1h | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| ma.position@1 | 4h | certified | yes | 112 | 112/224/46/112 | {'ok': 112} |  |
+| ma.position@1 | 12h | certified | yes | 109 | 109/218/46/109 | {'ok': 109} |  |
+| ma.position@1 | 1D | certified | yes | 342 | 342/684/142/342 | {'ok': 342} |  |
+| ma.position@1 | 1W | certified | yes | 334 | 334/668/136/334 | {'insufficient_data': 46, 'ok': 288} |  |
+| macd.acceleration@1 | 15m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| macd.acceleration@1 | 30m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| macd.acceleration@1 | 1h | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| macd.acceleration@1 | 4h | certified | yes | 112 | 112/224/46/112 | {'ok': 112} |  |
+| macd.acceleration@1 | 12h | certified | yes | 109 | 109/218/46/109 | {'ok': 109} |  |
+| macd.acceleration@1 | 1D | certified | yes | 342 | 342/684/142/342 | {'ok': 342} |  |
+| macd.acceleration@1 | 1W | certified | yes | 334 | 334/668/136/334 | {'insufficient_data': 7, 'ok': 327} |  |
+| macd.level@1 | 15m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| macd.level@1 | 30m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| macd.level@1 | 1h | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| macd.level@1 | 4h | certified | yes | 112 | 112/224/46/112 | {'ok': 112} |  |
+| macd.level@1 | 12h | certified | yes | 109 | 109/218/46/109 | {'ok': 109} |  |
+| macd.level@1 | 1D | certified | yes | 342 | 342/684/142/342 | {'ok': 342} |  |
+| macd.level@1 | 1W | certified | no | 334 | 334/668/136/334 | {'insufficient_data': 7, 'ok': 327} | synthetic-crypto-s11 T=2023-10-02T00:00:00+00:00: .available_at: different kinds of value |
+| momentum.direction@1 | 15m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| momentum.direction@1 | 30m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| momentum.direction@1 | 1h | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| momentum.direction@1 | 4h | certified | yes | 112 | 112/224/46/112 | {'ok': 112} |  |
+| momentum.direction@1 | 12h | certified | yes | 109 | 109/218/46/109 | {'ok': 109} |  |
+| momentum.direction@1 | 1D | certified | yes | 342 | 342/684/142/342 | {'ok': 342} |  |
+| momentum.direction@1 | 1W | certified | yes | 334 | 334/668/136/334 | {'insufficient_data': 23, 'ok': 311} |  |
+| move.seven_day@1 | 15m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| move.seven_day@1 | 30m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| move.seven_day@1 | 1h | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| move.seven_day@1 | 4h | certified | yes | 112 | 112/224/46/112 | {'ok': 112} |  |
+| move.seven_day@1 | 12h | certified | yes | 109 | 109/218/46/109 | {'ok': 109} |  |
+| move.seven_day@1 | 1D | certified | yes | 342 | 342/684/142/342 | {'ok': 342} |  |
+| move.seven_day@1 | 1W | certified | yes | 334 | 334/668/136/334 | {'ok': 334} |  |
+| mtf.alignment@1 | 1D | certified | yes | 342 | 342/684/142/342 | {'ok': 342} |  |
+| obv.balance@1 | 15m | certified | no | 113 | 113/226/46/113 | {'ok': 113} | synthetic-crypto-s11 T=2024-02-04T16:30:00+00:00: .value.obv: differs by 4.4e+04 (beyond the 1e-09 tolerance) |
+| obv.balance@1 | 30m | certified | no | 113 | 113/226/46/113 | {'ok': 113} | synthetic-crypto-s11 T=2024-02-04T16:30:00+00:00: .value.obv: differs by 3.1e+05 (beyond the 1e-09 tolerance) |
+| obv.balance@1 | 1h | certified | no | 113 | 113/226/46/113 | {'ok': 113} | synthetic-crypto-s11 T=2024-02-04T17:00:00+00:00: .value.obv: differs by 3.8e+05 (beyond the 1e-09 tolerance) |
+| obv.balance@1 | 4h | certified | no | 112 | 112/224/46/112 | {'ok': 112} | synthetic-crypto-s11 T=2024-06-18T08:00:00+00:00: .value.obv: differs by 5.2e+05 (beyond the 1e-09 tolerance) |
+| obv.balance@1 | 12h | certified | no | 109 | 109/218/46/109 | {'ok': 109} | synthetic-crypto-s11 T=2024-06-27T00:00:00+00:00: .value.obv: differs by 3.0e+03 (beyond the 1e-09 tolerance) |
+| obv.balance@1 | 1D | certified | no | 342 | 342/684/142/342 | {'ok': 342} | dev-BTC-USD T=2022-06-28T00:00:00+00:00: .value.obv: differs by 1.2e+12 (beyond the 1e-09 tolerance) |
+| obv.balance@1 | 1W | certified | yes | 334 | 334/668/136/334 | {'ok': 334} |  |
+| options.max_pain@1 | 4h | certified | no | 140 | 140/280/28/140 | {'ok': 138, 'stale': 2} | not tested |
+| options.max_pain@1 | 1D | certified | no | 140 | 140/280/28/140 | {'ok': 138, 'stale': 2} | not tested |
+| osc.stoch_ohlc4@1 | 15m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| osc.stoch_ohlc4@1 | 30m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| osc.stoch_ohlc4@1 | 1h | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| osc.stoch_ohlc4@1 | 4h | certified | yes | 112 | 112/224/46/112 | {'ok': 112} |  |
+| osc.stoch_ohlc4@1 | 12h | certified | yes | 109 | 109/218/46/109 | {'ok': 109} |  |
+| osc.stoch_ohlc4@1 | 1D | certified | yes | 342 | 342/684/142/342 | {'ok': 342} |  |
+| osc.stoch_ohlc4@1 | 1W | certified | yes | 334 | 334/668/136/334 | {'ok': 334} |  |
+| osc.stoch_rsi@1 | 15m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| osc.stoch_rsi@1 | 30m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| osc.stoch_rsi@1 | 1h | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| osc.stoch_rsi@1 | 4h | certified | yes | 112 | 112/224/46/112 | {'ok': 112} |  |
+| osc.stoch_rsi@1 | 12h | certified | yes | 109 | 109/218/46/109 | {'ok': 109} |  |
+| osc.stoch_rsi@1 | 1D | certified | yes | 342 | 342/684/142/342 | {'ok': 342} |  |
+| osc.stoch_rsi@1 | 1W | certified | yes | 334 | 334/668/136/334 | {'insufficient_data': 18, 'ok': 316} |  |
+| osc.wavetrend@1 | 15m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| osc.wavetrend@1 | 30m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| osc.wavetrend@1 | 1h | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| osc.wavetrend@1 | 4h | certified | yes | 112 | 112/224/46/112 | {'ok': 112} |  |
+| osc.wavetrend@1 | 12h | certified | yes | 109 | 109/218/46/109 | {'ok': 109} |  |
+| osc.wavetrend@1 | 1D | certified | yes | 342 | 342/684/142/342 | {'ok': 342} |  |
+| osc.wavetrend@1 | 1W | certified | yes | 334 | 334/668/136/334 | {'insufficient_data': 103, 'ok': 231} |  |
+| positioning.funding@1 | 1D | not_certified | no | 0 | 0/0/0/0 | {} | Derivatives have no stored history (live only); see decision E. |
+| positioning.liquidation_levels@1 | 1h | not_certified | no | 0 | 0/0/0/0 | {} | Derivatives have no stored history (live only); see decision E. |
+| positioning.liquidations@1 | 1h | not_certified | no | 0 | 0/0/0/0 | {} | Derivatives have no stored history (live only); see decision E. |
+| positioning.long_short@1 | 1D | not_certified | no | 0 | 0/0/0/0 | {} | Derivatives have no stored history (live only); see decision E. |
+| positioning.oi_price@1 | 1h | not_certified | no | 0 | 0/0/0/0 | {} | Derivatives have no stored history (live only); see decision E. |
+| regime.observation@1 | 15m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| regime.observation@1 | 30m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| regime.observation@1 | 1h | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| regime.observation@1 | 4h | certified | yes | 112 | 112/224/46/112 | {'ok': 112} |  |
+| regime.observation@1 | 12h | certified | yes | 109 | 109/218/46/109 | {'ok': 109} |  |
+| regime.observation@1 | 1D | certified | yes | 342 | 342/684/142/342 | {'ok': 342} |  |
+| regime.observation@1 | 1W | certified | yes | 334 | 334/668/136/334 | {'insufficient_data': 69, 'ok': 265} |  |
+| regime.state@1 | 15m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| regime.state@1 | 30m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| regime.state@1 | 1h | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| regime.state@1 | 4h | certified | yes | 112 | 112/224/46/112 | {'ok': 112} |  |
+| regime.state@1 | 12h | certified | yes | 109 | 109/218/46/109 | {'ok': 109} |  |
+| regime.state@1 | 1D | certified | yes | 342 | 342/684/142/342 | {'ok': 342} |  |
+| regime.state@1 | 1W | certified | yes | 334 | 334/668/136/334 | {'ok': 334} |  |
+| rsi.level@1 | 15m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| rsi.level@1 | 30m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| rsi.level@1 | 1h | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| rsi.level@1 | 4h | certified | yes | 112 | 112/224/46/112 | {'ok': 112} |  |
+| rsi.level@1 | 12h | certified | yes | 109 | 109/218/46/109 | {'ok': 109} |  |
+| rsi.level@1 | 1D | certified | yes | 342 | 342/684/142/342 | {'ok': 342} |  |
+| rsi.level@1 | 1W | certified | yes | 334 | 334/668/136/334 | {'ok': 334} |  |
+| sentiment.asset@1 | 1D | certified | no | 140 | 140/140/28/140 | {'ok': 138, 'stale': 2} | not tested |
+| sentiment.market@1 | 1D | certified | no | 140 | 140/140/28/140 | {'ok': 138, 'stale': 2} | not tested |
+| sonar.markers@1 | 15m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| sonar.markers@1 | 30m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| sonar.markers@1 | 1h | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| sonar.markers@1 | 4h | certified | yes | 112 | 112/224/46/112 | {'ok': 112} |  |
+| sonar.markers@1 | 12h | certified | yes | 109 | 109/218/46/109 | {'ok': 109} |  |
+| sonar.markers@1 | 1D | certified | yes | 342 | 342/684/142/342 | {'ok': 342} |  |
+| sonar.markers@1 | 1W | certified | yes | 334 | 334/668/136/334 | {'insufficient_data': 97, 'ok': 237} |  |
+| stochastic.level@1 | 15m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| stochastic.level@1 | 30m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| stochastic.level@1 | 1h | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| stochastic.level@1 | 4h | certified | yes | 112 | 112/224/46/112 | {'ok': 112} |  |
+| stochastic.level@1 | 12h | certified | yes | 109 | 109/218/46/109 | {'ok': 109} |  |
+| stochastic.level@1 | 1D | certified | yes | 342 | 342/684/142/342 | {'ok': 342} |  |
+| stochastic.level@1 | 1W | certified | yes | 334 | 334/668/136/334 | {'ok': 334} |  |
+| structure.breaks@1 | 15m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| structure.breaks@1 | 30m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| structure.breaks@1 | 1h | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| structure.breaks@1 | 4h | certified | yes | 112 | 112/224/46/112 | {'ok': 112} |  |
+| structure.breaks@1 | 12h | certified | yes | 109 | 109/218/46/109 | {'ok': 109} |  |
+| structure.breaks@1 | 1D | certified | yes | 342 | 342/684/142/342 | {'ok': 342} |  |
+| structure.breaks@1 | 1W | certified | yes | 334 | 334/668/136/334 | {'ok': 334} |  |
+| structure.swings@1 | 15m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| structure.swings@1 | 30m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| structure.swings@1 | 1h | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| structure.swings@1 | 4h | certified | yes | 112 | 112/224/46/112 | {'ok': 112} |  |
+| structure.swings@1 | 12h | certified | yes | 109 | 109/218/46/109 | {'ok': 109} |  |
+| structure.swings@1 | 1D | certified | yes | 342 | 342/684/142/342 | {'ok': 342} |  |
+| structure.swings@1 | 1W | certified | yes | 334 | 334/668/136/334 | {'insufficient_data': 24, 'ok': 310} |  |
+| ta.divergence.macd@1 | 15m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| ta.divergence.macd@1 | 30m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| ta.divergence.macd@1 | 1h | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| ta.divergence.macd@1 | 4h | certified | yes | 112 | 112/224/46/112 | {'ok': 112} |  |
+| ta.divergence.macd@1 | 12h | certified | yes | 109 | 109/218/46/109 | {'ok': 109} |  |
+| ta.divergence.macd@1 | 1D | certified | yes | 342 | 342/684/142/342 | {'ok': 342} |  |
+| ta.divergence.macd@1 | 1W | certified | yes | 334 | 334/668/136/334 | {'insufficient_data': 69, 'ok': 265} |  |
+| ta.divergence.rsi@1 | 15m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| ta.divergence.rsi@1 | 30m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| ta.divergence.rsi@1 | 1h | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| ta.divergence.rsi@1 | 4h | certified | yes | 112 | 112/224/46/112 | {'ok': 112} |  |
+| ta.divergence.rsi@1 | 12h | certified | yes | 109 | 109/218/46/109 | {'ok': 109} |  |
+| ta.divergence.rsi@1 | 1D | certified | no | 342 | 342/684/142/342 | {'ok': 342} | dev-AAPL T=2024-02-20T20:59:59+00:00: .value.events[0].indicator_pivots[0].time: 2023-05-15T00:00:00+00:00 vs 2023-05-16T00:00:00+00:00 |
+| ta.divergence.rsi@1 | 1W | certified | yes | 334 | 334/668/136/334 | {'insufficient_data': 69, 'ok': 265} |  |
+| trend.direction@1 | 15m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| trend.direction@1 | 30m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| trend.direction@1 | 1h | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| trend.direction@1 | 4h | certified | yes | 112 | 112/224/46/112 | {'ok': 112} |  |
+| trend.direction@1 | 12h | certified | yes | 109 | 109/218/46/109 | {'ok': 109} |  |
+| trend.direction@1 | 1D | certified | yes | 342 | 342/684/142/342 | {'ok': 342} |  |
+| trend.direction@1 | 1W | certified | yes | 334 | 334/668/136/334 | {'insufficient_data': 46, 'ok': 288} |  |
+| volatility.atr_trend@1 | 15m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| volatility.atr_trend@1 | 30m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| volatility.atr_trend@1 | 1h | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| volatility.atr_trend@1 | 4h | certified | yes | 112 | 112/224/46/112 | {'ok': 112} |  |
+| volatility.atr_trend@1 | 12h | certified | yes | 109 | 109/218/46/109 | {'ok': 109} |  |
+| volatility.atr_trend@1 | 1D | certified | yes | 342 | 342/684/142/342 | {'ok': 342} |  |
+| volatility.atr_trend@1 | 1W | certified | yes | 334 | 334/668/136/334 | {'insufficient_data': 74, 'ok': 260} |  |
+| volume.cmf@1 | 15m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| volume.cmf@1 | 30m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| volume.cmf@1 | 1h | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| volume.cmf@1 | 4h | certified | yes | 112 | 112/224/46/112 | {'ok': 112} |  |
+| volume.cmf@1 | 12h | certified | yes | 109 | 109/218/46/109 | {'ok': 109} |  |
+| volume.cmf@1 | 1D | certified | yes | 342 | 342/684/142/342 | {'ok': 342} |  |
+| volume.cmf@1 | 1W | certified | yes | 334 | 334/668/136/334 | {'ok': 334} |  |
+| volume.heavy_candle@1 | 15m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| volume.heavy_candle@1 | 30m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| volume.heavy_candle@1 | 1h | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| volume.heavy_candle@1 | 4h | certified | yes | 112 | 112/224/46/112 | {'ok': 112} |  |
+| volume.heavy_candle@1 | 12h | certified | yes | 109 | 109/218/46/109 | {'ok': 109} |  |
+| volume.heavy_candle@1 | 1D | certified | yes | 342 | 342/684/142/342 | {'ok': 342} |  |
+| volume.heavy_candle@1 | 1W | certified | yes | 334 | 334/668/136/334 | {'ok': 334} |  |
+| volume.relative@1 | 15m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| volume.relative@1 | 30m | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| volume.relative@1 | 1h | certified | yes | 113 | 113/226/46/113 | {'ok': 113} |  |
+| volume.relative@1 | 4h | certified | yes | 112 | 112/224/46/112 | {'ok': 112} |  |
+| volume.relative@1 | 12h | certified | yes | 109 | 109/218/46/109 | {'ok': 109} |  |
+| volume.relative@1 | 1D | certified | yes | 342 | 342/684/142/342 | {'ok': 342} |  |
+| volume.relative@1 | 1W | certified | yes | 334 | 334/668/136/334 | {'ok': 334} |  |
+
+Certified: 218 of 223 signal/timeframe pairs.
+
+- synthetic-crypto-s11: 500 days of synthetic 15-minute crypto bars (seed 11), grouped like the chart
+- synthetic-equity-s23: 357 sessions of synthetic 15-minute share bars (seed 23), New York hours
+- synthetic-etf-flows-s5: synthetic stored ETF flows with first-seen times, next-day revisions and a backfill (seed 5)
+- synthetic-stablecoins-s5: synthetic stored stablecoin supply with first-seen times, next-day revisions and a backfill (seed 5)
+- synthetic-sentiment-market-crypto: synthetic stored sentiment, twice daily with gaps and thin-news days (seed 9)
+- synthetic-sentiment-market-stocks: synthetic stored sentiment, twice daily with gaps and thin-news days (seed 9)
+- synthetic-sentiment-crypto-synthetic-coin: synthetic stored sentiment, twice daily with gaps and thin-news days (seed 9)
+- synthetic-sentiment-equity-SYNTH: synthetic stored sentiment, twice daily with gaps and thin-news days (seed 9)
+- synthetic-options-crypto-bitcoin: synthetic options snapshots (every 4 hours; seed 11)
+- synthetic-options-equity-SYNTH: synthetic options snapshots (weekdays; seed 11)
+- dev-BTC-USD: frozen development daily data for BTC-USD, before 2024-10-30
+- dev-SOL-USD: frozen development daily data for SOL-USD, before 2024-10-30
+- dev-AAPL: frozen development daily data for AAPL, before 2024-10-30
+- dev-JPM: frozen development daily data for JPM, before 2024-10-30
