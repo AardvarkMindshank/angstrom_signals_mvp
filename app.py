@@ -11647,36 +11647,62 @@ def _dynamic_view(market: str):
                     st.session_state[key] = stored[key]
     if user is None or st.session_state.get(mode_key) != "Dynamic funnel":
         return None
+    import funnel_rows
+    import snapshot_view as sv
+
     memo = st.session_state.setdefault("_memo", {})
     hit = memo.get(f"funnels_{market}")
     if hit and time.time() - hit[0] < 60 and not st.session_state.pop(f"_funnels_reread_{market}", False):
-        funnels, universe = hit[1]
+        funnels, universe, places = hit[1]
     else:
         funnels = [f for f in fv.load_funnels(supabase, user.id) if (f.get("market") or "crypto") == market]
         universe = fv.load_universe(supabase, market) if funnels else {}
-        memo[f"funnels_{market}"] = (time.time(), (funnels, universe))
-    out = {"market": market, "funnels": funnels, "universe": universe, "watchlist": {}, "funnel": None}
+        places = {}                                  # every funnel's places and last runs, for the list of funnels
+        for f in funnels:
+            try:
+                places[f["id"]] = (fv.load_coins(supabase, f["id"]), fv.last_runs(supabase, f["id"], len(f["stages"])))
+            except Exception as exc:
+                places[f["id"]] = exc
+        memo[f"funnels_{market}"] = (time.time(), (funnels, universe, places))
+    out = {"market": market, "funnels": funnels, "universe": universe, "watchlist": {}, "funnel": None, "rows": []}
     if not funnels:
         return out
-    ids = [f["id"] for f in funnels]
-    if st.session_state.get(pick_key) not in ids:
-        st.session_state[pick_key] = ids[0]
-    f = next(x for x in funnels if x["id"] == st.session_state[pick_key])
-    try:
-        coins = fv.load_coins(supabase, f["id"])
-        runs = fv.last_runs(supabase, f["id"], len(f["stages"]))
-    except Exception as exc:
-        out["error"] = f"The funnel could not be read: {str(exc)[:160]}"
-        return out
-    states = fv.states(f, coins)
+    if "funnel_seen_baseline" not in st.session_state:       # the Candidates at the last visit (Quick Snapshot)
+        seen = (stored or {}).get("funnel_seen")
+        st.session_state.funnel_seen_baseline = seen if isinstance(seen, dict) else {}
+    baseline = st.session_state.funnel_seen_baseline
     pool = sum(1 for u in universe.values() if u.get("included"))
+    rows, all_states = [], {}
+    for f in funnels:
+        got = places.get(f["id"])
+        if isinstance(got, Exception) or got is None:
+            continue
+        coins, runs = got
+        states = fv.states(f, coins)
+        all_states[f["id"]] = (states, runs)
+        before = baseline.get(str(f["id"])) if str(f["id"]) in baseline else None
+        new, _gone = sv.candidate_changes(before, fv.coins_for("candidate", states))
+        rows.append({"id": f["id"], "name": f["name"], "direction": f["direction"],
+                     "dir_icon": fv.fn.DIRECTION_ICONS.get(f["direction"], ""), "paused": bool(f.get("paused")),
+                     "checked": funnel_rows.ago(funnel_rows.last_checked(runs)),
+                     "chips": funnel_rows.chips(f, states, len(new), fr_hover(f))})
+    rows = funnel_rows.order(rows)
+    out["rows"] = rows
+    if not rows:
+        out["error"] = "The funnels could not be read just now. Try again in a minute."
+        return out
+    ids = [r["id"] for r in rows]
+    if st.session_state.get(pick_key) not in ids:
+        st.session_state[pick_key], st.session_state[stage_key] = funnel_rows.default_pick(rows)
+    f = next(x for x in funnels if x["id"] == st.session_state[pick_key])
+    states, runs = all_states[f["id"]]
     choices = fv.picks(f, states, pool)
     keys = [k for k, _ in choices]
     if st.session_state.get(stage_key) not in keys:
-        st.session_state[stage_key] = f"stage:{len(f['stages']) - 2}"
+        st.session_state[stage_key] = "candidate" if fv.coins_for("candidate", states) else f"stage:{len(f['stages']) - 2}"
     shown = sorted(fv.coins_for(st.session_state[stage_key], states),          # largest by market cap first
                    key=lambda c: (-fv.fn.place(states[c])["depth"], (universe.get(c) or {}).get("rank") or 10**6))
-    out.update({"funnel": f, "states": states, "choices": choices, "pool": pool,
+    out.update({"funnel": f, "states": states, "choices": choices, "pool": pool, "count": len(shown),
                 "line": fv.counts_line(f, states, pool), "health": fv.health(runs, f, states=states),
                 "more": max(0, len(shown) - fv.SHOW_LIMIT),
                 "watchlist": {c: (universe.get(c) or {}).get("name") or c for c in shown[:fv.SHOW_LIMIT]}})
@@ -11817,71 +11843,98 @@ def _funnel_controls(dyn, market: str = "crypto") -> None:
                                + " EMA 50. Then the 1-hour pullback entry check (from Drew's script)."):
                 _create_funnel(market, direction)
         return
-    funnels = dyn["funnels"]
-    if len(funnels) > 1:
-        st.selectbox("Funnel", [f["id"] for f in funnels], key=pick_key,
-                     format_func=lambda i: next(f["name"] for f in funnels if f["id"] == i))
     f = dyn["funnel"]
     labels = dict(dyn["choices"])
+    _funnel_list(dyn, market)
+    stage = st.session_state.get(stage_key) or ""
+    chip = next((c for r in dyn.get("rows") or [] if r["id"] == f["id"] for c in r["chips"] if c["key"] == stage), None)
     row = st.container(horizontal=True, vertical_alignment="center", gap="small")
     with row:
-        st.radio("Stage", list(labels), key=stage_key, horizontal=True, format_func=labels.get,
-                 label_visibility="collapsed",
-                 help=f"Each stage shows the {words['coins']} that hold it and every stage before it. 🚩 Flagged: "
-                      + fr_hover(f)["flagged"] + " ✅ Candidate: " + fr_hover(f)["candidate"])
+        st.markdown(f"<span style='opacity:.8'>Showing:</span> **{fv.fn.DIRECTION_ICONS[f['direction']]} "
+                    f"{html.escape(f['name'])}** · {chip['icon'] + ' ' + chip['label'] if chip else stage} "
+                    f"({dyn.get('count', len(dyn['watchlist']))})", unsafe_allow_html=True)
         _funnel_chart(dyn, market, labels, part="button")
+        latest = ft.trend_funnel(f["direction"], market)
+        made_from = [(x.get("set_source") or {}).get("provided") for x in f["stages"]]
+        if all(str(k or "").startswith("demo:") for k in made_from) and made_from != [
+                x["set_source"]["provided"] for x in latest["stages"]]:
+            if st.button("", icon=":material/upgrade:", key=f"funnel_update_{market}",
+                         help="Update to the latest ready-made version: this funnel came from a ready-made one that "
+                              "has changed since. Every asset starts again from the pool, quietly."):
+                args = {"p_id": f["id"], "p_name": f["name"], "p_direction": f["direction"],
+                        "p_stages": latest["stages"], "p_flicker": f.get("flicker", True),
+                        "p_alerts": f.get("alerts") or {"in_app": True, "email": False}, "p_paused": False}
+                _funnel_call(market, f["id"], "funnel_save", args, "Updated.")
+        if st.button("", icon=":material/add:", key=f"funnel_add_{market}",
+                     help="Add a funnel: make your own copy of a provided one, or a new one, in Lattice → Funnels"):
+            _funnel_edit(f"new:{market}:" + ("short" if f["direction"] == "long" else "long"))
     flicker = (f"a {words['coin']} leaves a stage after two No closes in a row" if f.get("flicker", True) else
                f"a {words['coin']} leaves a stage on its first No close")
     when = ("a few minutes after each hour" if market == "crypto" else
             "a few minutes after each hourly close while New York is open")
-    st.caption(f"{fv.fn.DIRECTION_ICONS[f['direction']]} **{f['name']}** · {dyn['line']} · from {dyn['pool']} "
-               f"{words['coins']} ({words['venue']}) · {flicker}. Hover a stage icon for each stage's last answer."
-               + (f" Showing the {fv.SHOW_LIMIT} largest by market cap; {dyn['more']} more hold this stage."
-                  if dyn["more"] else ""))
+    st.caption(f"From {dyn['pool']} {words['coins']} ({words['venue']}) · {flicker}. Hover a stage chip for what it "
+               "means." + (f" Showing the {fv.SHOW_LIMIT} largest by market cap; {dyn['more']} more hold this stage."
+                           if dyn["more"] else ""))
     if dyn.get("health"):
         st.caption(dyn["health"])
     if not dyn["states"]:
         st.caption(f"⏳ Not checked yet: the funnel runs {when}.")
     _funnel_chart(dyn, market, labels)
-    with st.popover("⚙️ Funnels", help="Add, restart or delete a funnel"):
-        def _call(fn_name, args, done):
-            try:
-                supabase.rpc(fn_name, args).execute()
-                st.session_state[f"_funnels_reread_{market}"] = True
-                if fn_name in ("funnel_save", "funnel_restart"):     # check it now, not at the next hourly run
-                    import funnel_editor
 
-                    done = funnel_editor.checking_now(f["id"], done.split(" It fills")[0])
-                st.toast(done)
-                st.rerun()
-            except Exception as exc:
-                st.error(f"That didn't work: {str(exc)[:160]}")
 
-        have = {x["direction"] for x in funnels}
-        for direction in ("long", "short"):
-            if direction not in have and len(funnels) < 3:
-                tpl = ft.trend_funnel(direction, market)
-                if st.button(f"Make my own copy of “{tpl['name']}”", key=f"funnel_add_{market}_{direction}"):
-                    _create_funnel(market, direction)
-        latest = ft.trend_funnel(f["direction"], market)
-        made_from = [(x.get("set_source") or {}).get("provided") for x in f["stages"]]
-        if all(str(k or "").startswith("demo:") for k in made_from) and made_from != [
-                x["set_source"]["provided"] for x in latest["stages"]]:
-            if st.button("⬆ Update to the latest ready-made version", key=f"funnel_update_{market}",
-                         help="This funnel came from a ready-made one that has changed since (the daily stage now "
-                              "reads WaveTrend turning back from an extreme). Every asset starts again from the "
-                              "pool, quietly."):
-                args = {"p_id": f["id"], "p_name": f["name"], "p_direction": f["direction"],
-                        "p_stages": latest["stages"], "p_flicker": f.get("flicker", True),
-                        "p_alerts": f.get("alerts") or {"in_app": True, "email": False}, "p_paused": False}
-                _call("funnel_save", args, "Updated. It fills in again at the next check.")
-        if st.button("↺ Start this funnel again", key=f"funnel_restart_{market}",
-                     help=f"Every {words['coin']} goes back to the pool and is checked again from the first stage."):
-            _call("funnel_restart", {"p_id": f["id"]}, "Restarted. It fills in at the next check.")
-        if st.toggle("Delete this funnel", key=f"funnel_delete_arm_{market}"):
-            if st.button(f"🗑 Delete “{f['name']}” for good", key=f"funnel_delete_{market}", type="primary"):
-                st.session_state.pop(pick_key, None)
-                _call("funnel_delete", {"p_id": f["id"]}, "Funnel deleted.")
+def _funnel_call(market: str, fid, fn_name: str, args: dict, done: str) -> None:
+    """Run one funnel change (pause, resume, restart, update), then check it at once rather than at the next hour."""
+    try:
+        supabase.rpc(fn_name, args).execute()
+    except Exception as exc:
+        st.toast(f"That didn't work: {str(exc)[:160]}")
+        return
+    st.session_state[f"_funnels_reread_{market}"] = True
+    st.session_state.get("_memo", {}).pop("snapshot_funnels", None)
+    if not (fn_name == "funnel_save" and args.get("p_paused")):
+        import funnel_editor
+
+        done = funnel_editor.checking_now(fid, done)
+    st.toast(done)
+    _rerun_fragment()
+
+
+def _funnel_edit(target) -> None:
+    """Open Lattice → Funnels on one funnel (or a provided one to copy: "new:<market>:<direction>")."""
+    st.session_state["_funnel_edit_next"] = target
+    st.session_state["_lattice_section_next"] = "funnels"
+    _reveal_section("lattice_panel", "angstrom-lattice")
+    st.rerun()
+
+
+def _funnel_list(dyn, market: str) -> None:
+    """The list of this market's funnels (funnel_rows.py): a row each, with stage chips and actions."""
+    import funnel_editor
+    import funnel_rows
+
+    _mode, pick_key, stage_key, _setting, _words = _FUNNEL_KEYS[market]
+    result = funnel_rows.component()(
+        key=f"funnel_rows_{market}",
+        data={"rows": dyn.get("rows") or [],
+              "selected": {"funnel": st.session_state.get(pick_key), "stage": st.session_state.get(stage_key)}},
+        on_go_change=lambda: None)
+    event = funnel_rows.read_event(result, f"_funnel_rows_seen_{market}", st.session_state)
+    if not event:
+        return
+    f = next((x for x in dyn["funnels"] if str(x["id"]) == str(event["funnel"])), None)
+    if f is None:
+        return
+    if event["kind"] == "pick":
+        st.session_state[pick_key], st.session_state[stage_key] = f["id"], event["stage"]
+        _rerun_fragment()
+    elif event["action"] in ("pause", "resume"):
+        paused = event["action"] == "pause"
+        _funnel_call(market, f["id"], "funnel_save", funnel_editor.save_args({**f, "paused": paused}),
+                     "Paused." if paused else "Resumed.")
+    elif event["action"] == "restart":
+        _funnel_call(market, f["id"], "funnel_restart", {"p_id": f["id"]}, "Restarted.")
+    elif event["action"] == "edit":
+        _funnel_edit(f["id"])
 
 
 def _funnel_chart(dyn, market: str, labels: dict, part: str = "view") -> None:
