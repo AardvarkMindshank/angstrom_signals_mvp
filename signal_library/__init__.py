@@ -12,3 +12,4 @@ from . import signals_candles  # noqa: F401,E402  (moving averages of any length
 from . import signals_oscillators  # noqa: F401,E402  (WaveTrend, money flow, Stochastic on OHLC4, divergence across timeframes)
 from . import signals_options  # noqa: F401,E402  (options max pain, from stored snapshots)
 from . import signals_sonar  # noqa: F401,E402  (Sonar markers on the price chart, Stoch RSI pair)
+from . import signals_shapes  # noqa: F401,E402  (chart shapes: head and shoulders, double tops and bottoms)

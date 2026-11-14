@@ -7814,6 +7814,11 @@ The icon row adds more:
   of a sharp flush). On the 📡 Sonar strip, a soft halo marks **snake eyes**: two dots of one colour close
   together (the wave turned, dipped and turned again). Point at a candle to see what its symbols mean, and choose which ones show. The same markers are
   signals in Lattice, so a Set can ask for one "in the last N candles".
+- 📐 **Chart shapes** outline classic shapes found by code: head and shoulders and double tops (red, possible turn
+  down), their mirrors, the inverse head and shoulders and double bottoms (green, possible turn up). A dashed outline
+  with "?" is still forming; a solid one closed through its neckline (the dashed line), with a short dotted line at
+  the usual first target; grey ones failed. Point at a shape to read about it. The same shapes are signals in
+  Lattice ("an inverse head and shoulders confirmed in the last 3 candles").
 - 📡 **Sonar** (a strip between the price chart and volume) reads what is moving under the price, using the
   published open-source formulas: the light-blue and blue **waves** (WaveTrend momentum), the yellow **VWAP** area
   (the gap between the two waves), the green or red **money flow** area and the bar along the bottom (money flowing
@@ -13101,7 +13106,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                     df_chart = tv["frame"]
             df_chart = add_chart_only(df_chart)     # 🎛️ Stoch RSI and 📡 Sonar: chart only, not scored
             indicator_keys = chart_plan.available(df_chart.columns)
-            indicator_icons = {"sma200": "📏", "ichimoku": "☁️", "cipher": "📡", "sonar_marks": "🛰️", "rsi": "🌡️", "macd": "〰️", "stoch": "🎚️", "stochrsi": "🎛️",
+            indicator_icons = {"sma200": "📏", "ichimoku": "☁️", "cipher": "📡", "sonar_marks": "🛰️", "shapes": "📐", "rsi": "🌡️", "macd": "〰️", "stoch": "🎚️", "stochrsi": "🎛️",
                                "adx": "🧭", "obv": "📊"}
             # Crypto charts also offer estimated liquidation levels, drawn by this page, not chart_plan.
             if asset_type == "Crypto":

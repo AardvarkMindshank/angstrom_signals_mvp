@@ -242,6 +242,7 @@ SHORT = {
     "osc.stoch_ohlc4": lambda p: f"Stochastic OHLC4 {p['length']}",
     "osc.stoch_rsi": lambda p: "Stoch RSI",
     "sonar.markers": lambda p: "Sonar markers",
+    "shape.classic": lambda p: "Chart shapes",
     "divergence.mtf": lambda p: f"Divergence ({p['set']}, {p['oscillator']})",
     "candle.shape": lambda p: "Candle",
     "options.max_pain": lambda p: "Max pain" + (" (monthly)" if p.get("monthly") else "")

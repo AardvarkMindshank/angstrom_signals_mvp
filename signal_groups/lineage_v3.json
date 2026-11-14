@@ -134,6 +134,9 @@
     ],
     "osc.stoch_rsi": [
       "price"
+    ],
+    "shape.classic": [
+      "price"
     ]
   }
 }

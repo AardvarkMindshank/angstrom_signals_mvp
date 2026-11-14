@@ -69,7 +69,7 @@ function signature(data) {
     data.volume[n - 1], data.forming, data.series.map((s) => s.id + ":" + s.pane + ":" + (s.scale || "")),
     data.panes.map((p) => p.height), data.vlines.length, data.price_lines.length, data.theme.dark, data.right_offset,
     (data.zones || []).map((z) => z || "").join("|").length, data.series.map((s) => (s.zones || []).filter((z) => z).length),
-    data.zones_name || "", (data.symbols || []).length,
+    data.zones_name || "", (data.symbols || []).length, (data.shapes || []).length,
   ]);
 }
 
@@ -260,6 +260,66 @@ class SonarSymbols {
                 ctx.moveTo(X - R * 0.8, Y - R * 0.8); ctx.lineTo(X + R * 0.8, Y + R * 0.8);
                 ctx.moveTo(X + R * 0.8, Y - R * 0.8); ctx.lineTo(X - R * 0.8, Y + R * 0.8); ctx.stroke();
               }
+            }
+          });
+        },
+      }),
+    }];
+  }
+}
+
+// ------------------------------------------------------------------ 📐 chart shapes (outline, neckline, target)
+
+class ShapeLines {
+  constructor(shapes, dark) { this.shapes = shapes; this.dark = dark; this.chart = null; this.series = null; }
+  attached(params) { this.chart = params.chart; this.series = params.series; }
+  detached() { this.chart = null; this.series = null; }
+  updateAllViews() {}
+  paneViews() {
+    const self = this;
+    return [{
+      zOrder: () => "top",
+      renderer: () => ({
+        draw: (target) => {
+          if (!self.chart || !self.series) return;
+          const scale = self.chart.timeScale();
+          const xy = ([i, p]) => [scale.logicalToCoordinate(i), self.series.priceToCoordinate(p)];
+          target.useBitmapCoordinateSpace((scope) => {
+            const ctx = scope.context, hr = scope.horizontalPixelRatio, vr = scope.verticalPixelRatio;
+            for (const s of self.shapes) {
+              const failed = s.stage === "failed";
+              const colour = failed ? "rgba(148,163,184,0.85)" : s.bear ? "#e11d48" : "#059669";
+              const pts = s.points.map(xy);
+              if (pts.some(([x, y]) => x === null || y === null)) continue;
+              ctx.save();
+              ctx.globalAlpha = failed ? 0.6 : 0.95;
+              ctx.strokeStyle = colour; ctx.lineWidth = 2 * hr; ctx.lineJoin = "round";
+              ctx.setLineDash(s.stage === "forming" ? [6 * hr, 4 * hr] : []);
+              ctx.beginPath();
+              pts.forEach(([x, y], k) => { if (k) ctx.lineTo(x * hr, y * vr); else ctx.moveTo(x * hr, y * vr); });
+              ctx.stroke();
+              const [n0, n1] = s.neck.map(xy);
+              if (n0[0] !== null && n1[0] !== null && n0[1] !== null && n1[1] !== null) {
+                ctx.setLineDash([3 * hr, 3 * hr]); ctx.lineWidth = 1.5 * hr;
+                ctx.beginPath(); ctx.moveTo(n0[0] * hr, n0[1] * vr); ctx.lineTo(n1[0] * hr, n1[1] * vr); ctx.stroke();
+              }
+              if (s.at !== null && s.at !== undefined && !failed) {
+                const [tx0, ty] = xy([s.at, s.target]), [tx1] = xy([s.at + 12, s.target]);
+                if (tx0 !== null && ty !== null && tx1 !== null) {
+                  ctx.setLineDash([2 * hr, 4 * hr]); ctx.lineWidth = 1.25 * hr;
+                  ctx.beginPath(); ctx.moveTo(tx0 * hr, ty * vr); ctx.lineTo(tx1 * hr, ty * vr); ctx.stroke();
+                }
+              }
+              const top = s.points.reduce((a, b) => (s.bear ? (b[1] > a[1] ? b : a) : (b[1] < a[1] ? b : a)));
+              const [lx, ly] = xy(top);
+              if (lx !== null && ly !== null) {
+                const tag = { head_shoulders: "H&S", inverse_head_shoulders: "Inv H&S", double_top: "Double top", double_bottom: "Double bottom" }[s.kind];
+                ctx.setLineDash([]); ctx.globalAlpha = 1;
+                ctx.font = `600 ${11 * vr}px sans-serif`; ctx.textAlign = "center";
+                ctx.fillStyle = colour;
+                ctx.fillText(tag + (s.stage === "forming" ? " ?" : ""), lx * hr, (ly + (s.bear ? -12 : 20)) * vr);
+              }
+              ctx.restore();
             }
           });
         },
@@ -483,6 +543,7 @@ function draw(L, root, data) {
   }
   if (data.zones && data.zones.some((c) => c)) candles.attachPrimitive(new ZoneBlocks(data.zones));
   if (data.symbols && data.symbols.length) candles.attachPrimitive(new SonarSymbols(data.symbols, H, Lo));
+  if (data.shapes && data.shapes.length) candles.attachPrimitive(new ShapeLines(data.shapes, theme.dark));
   const symbolWords = {};
   (data.symbols || []).forEach(([i, shape, colour, above, size, words]) => { (symbolWords[i] = symbolWords[i] || []).push([colour, words]); });
 
@@ -618,6 +679,10 @@ function draw(L, root, data) {
       ` V <b style="color:${theme.ink}">${fmtBig(data.volume[i])}</b></div>`;
     const bits = legendSeries.map((s) => `${swatch(s.color)}<span style="color:${theme.muted}">${s.name}</span> <span style="color:${theme.ink}">${fmt(s.values[i], C[i])}</span>`);
     if (bits.length) html += `<div>${bits.join(" &nbsp;")}</div>`;
+    (data.shapes || []).forEach((s) => {
+      const from = s.points[0][0], to = Math.max(s.points[s.points.length - 1][0], s.at ?? 0) + 3;
+      if (i >= from && i <= to) html += `<div style="color:${theme.ink}"><span style="color:${s.stage === "failed" ? "#94a3b8" : s.bear ? "#e11d48" : "#059669"}">📐</span> ${s.words}</div>`;
+    });
     (symbolWords[i] || []).forEach(([colour, words]) => {
       html += `<div style="color:${theme.ink}"><span style="color:${colour}">●</span> ${words}</div>`;
     });

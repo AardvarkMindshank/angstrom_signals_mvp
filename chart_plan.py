@@ -13,6 +13,7 @@ INDICATORS = {
     "ichimoku": {"label": "Ichimoku cloud", "where": "price", "needs": ("ichi_span_a", "ichi_span_b")},
     "cipher": {"label": "Sonar", "where": "panel", "needs": ("mc_wt1", "mc_wt2")},
     "sonar_marks": {"label": "Sonar markers", "where": "price", "needs": ("sm_ema_5", "sm_ema_34")},
+    "shapes": {"label": "Chart shapes", "where": "price", "needs": ("high", "low", "close")},
     "rsi": {"label": "RSI", "where": "panel", "needs": ("rsi",)},
     "macd": {"label": "MACD", "where": "panel", "needs": ("MACD_",), "prefix": True},
     "stoch": {"label": "Stochastic", "where": "panel", "needs": ("stoch_k",)},

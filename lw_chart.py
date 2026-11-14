@@ -241,6 +241,35 @@ SONAR_MARKS = {
 SONAR_DEFAULT = tuple(k for k in SONAR_MARKS if k != "strength_candle")     # the yellow diamonds are the noisiest
 
 
+SHAPE_NAMES = {"head_shoulders": "Head and shoulders", "inverse_head_shoulders": "Inverse head and shoulders",
+               "double_top": "Double top", "double_bottom": "Double bottom"}
+STAGE_WORDS = {"forming": "forming (no break yet)", "confirmed": "confirmed (closed through the neckline)",
+               "failed": "failed (price went back beyond it)"}
+
+
+def shape_overlay(df: pd.DataFrame) -> list[dict]:
+    """📐 Chart shapes on the closed candles, as the shape.classic signal finds them (same code and defaults):
+    {kind, stage, points [[index, price]…], neck [[index, price], [index, price]], target, at (break index or
+    None), bear, words}. Lapsed shapes, and shapes that failed more than 30 candles ago, are left out."""
+    try:
+        from signal_library.signals_shapes import BEARISH, WORDS, find_shapes
+
+        closed = df[~df["forming"].fillna(False).astype(bool)] if "forming" in df.columns else df
+        out = []
+        for s in find_shapes(closed[["open", "high", "low", "close"]].astype(float)):
+            if s["stage"] == "lapsed" or (s["stage"] == "failed" and s["failed_index"] < len(closed) - 30):
+                continue                                   # failed long ago: left out, so the chart stays readable
+            out.append({"kind": s["kind"], "stage": s["stage"], "bear": s["kind"] in BEARISH,
+                        "points": [[int(i), round(float(p), 6)] for i, p in s["points"]],
+                        "neck": [[int(i), round(float(p), 6)] for i, p in s["neck"]],
+                        "target": round(float(s["target"]), 6), "at": s["confirmed_index"],
+                        "words": f"{SHAPE_NAMES[s['kind']]}, {STAGE_WORDS.get(s['stage'], s['stage'])}. "
+                                 f"{WORDS[s['kind']].split(': ', 1)[1].capitalize()}."})
+        return out[-12:]                                   # the latest dozen keep the chart readable
+    except Exception:
+        return []
+
+
 def sonar_band(df: pd.DataFrame, dark: bool = False) -> list[dict]:
     """The grey band of eight averages (5 to 34), lighter for the slower ones, with a faint fill between the fastest
     and the slowest."""
@@ -365,6 +394,7 @@ def build_payload(
             series.append(_line("kijun", "Kijun", 0, _values(df["ichi_kijun"]), "#f43f5e", width=1))
 
     symbols: list = []
+    shapes = shape_overlay(df) if "shapes" in overlays else []
     if "sonar_marks" in overlays and "sm_ema_5" in columns:
         series += sonar_band(df, dark)
         symbols = sonar_symbols(df, layout.get("sonar_marks"))
@@ -530,6 +560,7 @@ def build_payload(
         "vlines": vlines,
         "price_lines": price_lines,
         "symbols": symbols,
+        "shapes": shapes,
         "start_index": start_index,
         "right_offset": int(right_offset),
         "source": source,
