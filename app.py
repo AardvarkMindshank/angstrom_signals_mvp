@@ -7335,10 +7335,45 @@ def notifications_panel() -> None:
 notifications_panel()
 
 
+# 📱 Phones get one column: there, Wide only stacked the same sections with extra gaps. The browser reports whether
+# the window is narrower than 760 px (and again if that changes: a folding phone opened, a window resized); until it
+# has, a phone's user agent is the guess. The saved choice is kept, so a computer still opens in Wide.
+_SCREEN_PROBE_JS = r"""
+export default function screenProbe(component) {
+  const { data, setTriggerValue } = component;
+  const report = () => {
+    const narrow = window.innerWidth < 760 ? "1" : "0";
+    if (narrow !== (data || {}).known) setTriggerValue("narrow", narrow);
+  };
+  report();
+  let timer = null;
+  const onResize = () => { clearTimeout(timer); timer = setTimeout(report, 400); };
+  window.addEventListener("resize", onResize);
+  return () => window.removeEventListener("resize", onResize);
+}
+"""
+if "_screen_narrow" not in st.session_state:
+    try:
+        _ua = str(st.context.headers.get("User-Agent") or "")
+    except Exception:
+        _ua = ""
+    st.session_state["_screen_narrow"] = "1" if ("iPhone" in _ua or ("Android" in _ua and "Mobile" in _ua)) else "0"
+if not _POPOUT_VIEW:
+    with st.container(key="screen_probe"):
+        _probe = st.components.v2.component("screen_probe", js=_SCREEN_PROBE_JS)(
+            key="screen_probe_box", data={"known": st.session_state["_screen_narrow"]}, on_narrow_change=lambda: None)
+    if str(getattr(_probe, "narrow", "") or "") in ("0", "1"):
+        st.session_state["_screen_narrow"] = str(_probe.narrow)
+NARROW_SCREEN = st.session_state["_screen_narrow"] == "1"
+st.markdown("<style>.st-key-screen_probe{display:none !important;}"
+            "@media (max-width:759px){.st-key-layout_single,.st-key-layout_wide{display:none !important;}}</style>",
+            unsafe_allow_html=True)
+
 if st.session_state.get("section_layout") not in ("Single column", "Wide"):
     saved_layout = (prefs.get("settings") or {}).get("section_layout")
     st.session_state.section_layout = saved_layout if saved_layout in ("Single column", "Wide") else "Single column"
 wide_on = st.session_state.section_layout == "Wide"
+WIDE_LAYOUT = wide_on and not NARROW_SCREEN        # what is drawn: never Wide on a phone-width screen
 # A market or settings change rebuilds sections and can arrive as a click on
 # Single column. Extra metrics only changes the score table, so it never does.
 # Either way, that rerun must leave the wide or single choice alone.
@@ -11806,7 +11841,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
     }
     _moods_now = moods_now
 
-    wide_layout = st.session_state.get("section_layout") == "Wide" and not _POPOUT_VIEW
+    wide_layout = WIDE_LAYOUT and not _POPOUT_VIEW
     allowed_kinds = []
     if trade_crypto:
         allowed_kinds.append("Crypto")
@@ -13791,7 +13826,7 @@ def _mood_reading_board(market_key: str, label: str, report: dict | None) -> str
 def _score_and_take():
     """Where the score card and Your take go: side by side, or Your take underneath when the
     sentiment sits in the narrow left column of the wide layout."""
-    narrow = st.session_state.get("section_layout") == "Wide" and not _POPOUT_VIEW
+    narrow = WIDE_LAYOUT and not _POPOUT_VIEW
     if narrow:
         return st.container(), st.container()
     return st.columns([3.5, 2.1], vertical_alignment="top")
