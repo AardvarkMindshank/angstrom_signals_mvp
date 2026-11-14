@@ -6808,6 +6808,21 @@ def _paint_tides_header(snap: dict) -> None:
                                                     "background": background, "title": title})
 
 
+def _paint_candidates_header(market: str, section_id: str) -> None:
+    """🔻 Candidates now across this account's funnels in this market, in the signal table's header."""
+    try:
+        tiles = [t for t in _snapshot_funnels() if t.get("market") == market and not t.get("paused")]
+    except Exception:
+        tiles = []
+    if not tiles:
+        return
+    total = sum(int(t.get("candidates") or 0) for t in tiles)
+    colour, background = ("#166534", "#dcfce7") if total else ("#475569", "#e2e8f0")
+    title = "Candidates now: " + "; ".join(f"{t['name']} {int(t.get('candidates') or 0)}" for t in tiles)
+    _header_score(key=f"section_score_{section_id}", data={"score": 0, "text": f"🔻 Candidates: {total}",
+                                                           "color": colour, "background": background, "title": title})
+
+
 def _paint_snapshot_header() -> None:
     """📸 Quick Snapshot's header: what changed since your last visit, at a glance (Trend colour borders crossed)."""
     counts = st.session_state.get("_what_changed")
@@ -12376,6 +12391,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
         st.markdown(f"<div id='table-{'crypto' if kind == 'Crypto' else 'equity'}' style='scroll-margin-top:4.5rem;'>"
                     "</div>", unsafe_allow_html=True)
         with section_expander(title, section_id):
+            _paint_candidates_header("crypto" if kind == "Crypto" else "equity", section_id)
             dynamic = st.session_state.get("_dynamic" if kind == "Crypto" else "_dynamic_equity")
             _funnel_controls(dynamic, "crypto" if kind == "Crypto" else "equity")
             if not results:
