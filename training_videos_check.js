@@ -53,7 +53,7 @@ const { chromium, devices } = require("playwright");
       const [adv] = await Promise.all([page.waitForEvent("popup", { timeout: 30000 }), ai.click()]);
       await adv.waitForTimeout(5000);
       check("desktop: ✨ AI opens the Assistant in its own window", adv.url().includes("view=advisor")
-        && (await adv.locator("body").innerText()).includes("Angstrom Assistant"), adv.url());
+        && (await adv.locator("body").innerText()).includes("AI Navigator"), adv.url());
       // A pasted screenshot shows as a thumbnail ready to send (simulated paste of a small PNG).
       await adv.waitForSelector(".ang-add", { timeout: 30000 }).catch(() => null);
       await adv.evaluate(async () => {

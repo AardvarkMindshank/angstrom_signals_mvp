@@ -23,6 +23,7 @@ def board_data() -> dict:
     saved = [{"id": "cfg1", "kind": "set", "name": "My daily trend", "owner_id": "me",
               "versions": [{"version": 1, "body": lib["demo:ema_up_1d"]}]}]
     f = fe.template("crypto", "long")
+    del f["stages"][1]            # four stages (the provided one has five, the most allowed): Add a stage shows
     f["stages"][1]["set_body"]["decision"]["rule"]["eq"] = "fast_below"        # an older version: ⬆ shows
     return fe.board_data(f, fe.board_choices(saved, "me"), lib, {}, True, "f1")
 
