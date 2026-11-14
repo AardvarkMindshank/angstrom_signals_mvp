@@ -6808,6 +6808,26 @@ def _paint_tides_header(snap: dict) -> None:
                                                     "background": background, "title": title})
 
 
+def _paint_snapshot_header() -> None:
+    """📸 Quick Snapshot's header: what changed since your last visit, at a glance (Trend colour borders crossed)."""
+    counts = st.session_state.get("_what_changed")
+    if not counts:
+        return
+    up, down, moves = counts["up"], counts["down"], counts["moves"]
+    if up or down:
+        text = "🔔 " + " ".join(p for p in (f"▲{up}" if up else "", f"▼{down}" if down else "") if p)
+        colour, background = ("#166534", "#dcfce7") if up and not down else ("#991b1b", "#fee2e2") if down and not up \
+            else ("#1e3a8a", "#dbeafe")
+        title = (f"Since your last visit: {up} Trend reading{'s' if up != 1 else ''} crossed a colour border upward, "
+                 f"{down} downward. Open the section for which ones.")
+    else:
+        text, colour, background = ("✓ Quiet" if not moves else f"〰 {moves} moved"), "#475569", "#e2e8f0"
+        title = ("No Trend reading crossed a colour border you alert on since your last visit"
+                 + (f"; {moves} moved 5 points or more." if moves else "."))
+    _header_score(key="section_score_snapshot", data={"score": 0, "text": text, "color": colour,
+                                                       "background": background, "title": title})
+
+
 def _paint_section_score(section_key: str, score, ready: bool, reading: bool = False) -> None:
     """Put this section's sentiment score in its header, using the same colors as the body.
     reading=True is for a -100..+100 signals reading (the Trend in the Why these readings header)."""
@@ -11213,6 +11233,7 @@ def _what_changed_html(rows, baseline, seen: bool) -> str:
         "<div class='ang-card' style='margin-bottom:12px;'>",
         "<div class='ang-kicker'>What changed</div>",
     ]
+    st.session_state["_what_changed"] = None
     if not seen:
         parts.append("<div style='margin-top:8px;'>Changes show here from your next visit.</div></div>")
         return "".join(parts)
@@ -11275,6 +11296,9 @@ def _what_changed_html(rows, baseline, seen: bool) -> str:
 
     crossings.sort(key=lambda item: abs(item["delta"]), reverse=True)
     moves.sort(key=lambda item: abs(item["delta"]), reverse=True)
+    st.session_state["_what_changed"] = {"up": sum(1 for i in crossings if i["delta"] > 0),
+                                         "down": sum(1 for i in crossings if i["delta"] <= 0),
+                                         "moves": len(moves)}
     moves = moves[:3]
     if not crossings:
         parts.append(
@@ -12252,6 +12276,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
         ).picked
         if changed:
             _select_chart_asset(str(changed))
+        _paint_snapshot_header()
 
         mood_specs = []
         if trade_crypto:
