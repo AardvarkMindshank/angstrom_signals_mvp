@@ -246,6 +246,11 @@ def render(st, supabase, user_id: str) -> None:
         alerts.pop("first_matches")
     f["alerts"] = alerts
     paused = bool(f.get("paused"))
+    st.markdown("<style>[class*='st-key-fe_pause_'] button{color:#fff !important;border:1px solid #4a6a95 !important;"
+                "border-radius:8px !important;background:linear-gradient(180deg,#86a5cc,#557aa6) !important;"
+                "box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 1px 2px rgba(0,0,0,.18) !important;}"
+                "[class*='st-key-fe_pause_'] button:hover{background:linear-gradient(180deg,#7898c2,#486d9b) !important;}"
+                "</style>", unsafe_allow_html=True)
     if st.button("", icon=":material/play_arrow:" if paused else ":material/pause:", key=f"fe_pause_{pick}",
                  help=("Paused: not checked; it keeps its places. Press to resume." if paused else
                        "Pause: stop checking this funnel; it keeps its places until resumed.")):

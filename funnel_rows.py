@@ -23,7 +23,7 @@ CSS = """
 .angfr .frow{display:flex;align-items:center;gap:10px;padding:6px 10px;border-radius:10px;
   border:1px solid rgba(127,127,127,.25);background:rgba(127,127,127,.05);min-height:30px}
 .angfr .frow.on{border-color:rgba(15,118,110,.6);background:rgba(15,118,110,.07)}
-.angfr .frow.paused{opacity:.62}
+.angfr .frow.paused > :not(.acts){opacity:.62}
 .angfr .name{flex:0 1 210px;min-width:110px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .angfr .dir{font-weight:700;margin-right:5px}
 .angfr .dir.long{color:#16a34a}.angfr .dir.short{color:#dc2626}
@@ -39,10 +39,13 @@ CSS = """
   background:#0f766e;color:#fff;font-weight:700}
 .angfr .meta{opacity:.62;font-size:12px;white-space:nowrap}
 .angfr .acts{display:flex;gap:2px;margin-left:auto}
-.angfr .act{font:inherit;color:inherit;border:1px solid transparent;background:transparent;border-radius:8px;
-  width:30px;height:28px;cursor:pointer;font-size:15px;line-height:1}
-.angfr .act:hover{border-color:rgba(127,127,127,.45);background:rgba(127,127,127,.1)}
-.angfr .act.arm{border-color:#dc2626;background:rgba(220,38,38,.14)}
+.angfr .acts{gap:6px}
+.angfr .act{width:30px;height:28px;padding:0;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;
+  color:#fff;border:1px solid #4a6a95;border-radius:8px;background:linear-gradient(180deg,#86a5cc,#557aa6);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 1px 2px rgba(0,0,0,.18)}
+.angfr .act:hover{background:linear-gradient(180deg,#7898c2,#486d9b)}
+.angfr .act.arm{border-color:#b91c1c;background:linear-gradient(180deg,#ef6b6b,#c62828)}
+.angfr .act svg{width:16px;height:16px}
 @container (max-width: 620px){
   .angfr .list{max-height:330px}
   .angfr .frow{flex-wrap:wrap;row-gap:6px}
@@ -67,6 +70,13 @@ export default function angFunnelRows(component) {
   const send = (body) => setTriggerValue("go", JSON.stringify({ ...body, nonce: Date.now() + Math.random() }));
   const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
   const sel = d.selected || {};
+  // The same blue tiles as the scan buttons in Prism (prism_component.py), drawn here so they look alike on every device.
+  const ICONS = {
+    pause: '<rect x="6.5" y="5" width="3.6" height="14" rx="1" fill="currentColor" stroke="none"/><rect x="13.9" y="5" width="3.6" height="14" rx="1" fill="currentColor" stroke="none"/>',
+    play: '<path d="M8 5v14l11-7z" fill="currentColor" stroke="none"/>',
+    restart: '<path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v5h-5"/>',
+    edit: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>',
+  };
   let selectedRow = null;
 
   (d.rows || []).forEach((r) => {
@@ -95,16 +105,20 @@ export default function angFunnelRows(component) {
     if (r.checked) row.appendChild(el("div", "meta", r.checked));
 
     const acts = el("div", "acts");
-    const act = (icon, tip, onClick) => { const b = el("button", "act", icon); b.type = "button"; b.title = tip; b.onclick = onClick; acts.appendChild(b); return b; };
-    if (r.paused) act("▶", "Resume: check this funnel again every hour", () => send({ kind: "act", action: "resume", funnel: r.id }));
-    else act("⏸", "Pause: stop checking this funnel; it keeps its places until resumed", () => send({ kind: "act", action: "pause", funnel: r.id }));
-    const again = act("↻", "Start again: every asset goes back to the pool and is checked from the first stage", () => {
+    const act = (icon, tip, onClick) => {
+      const b = el("button", "act"); b.type = "button"; b.title = tip; b.setAttribute("aria-label", tip); b.onclick = onClick;
+      b.innerHTML = "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'>" + ICONS[icon] + "</svg>";
+      acts.appendChild(b); return b;
+    };
+    if (r.paused) act("play", "Resume: check this funnel again every hour", () => send({ kind: "act", action: "resume", funnel: r.id }));
+    else act("pause", "Pause: stop checking this funnel; it keeps its places until resumed", () => send({ kind: "act", action: "pause", funnel: r.id }));
+    const again = act("restart", "Start again: every asset goes back to the pool and is checked from the first stage", () => {
       if (again.classList.contains("arm")) { send({ kind: "act", action: "restart", funnel: r.id }); return; }
       again.classList.add("arm");
       again.title = "Press again to start this funnel again from the pool";
       setTimeout(() => { again.classList.remove("arm"); again.title = "Start again: every asset goes back to the pool and is checked from the first stage"; }, 4000);
     });
-    act("✏️", "Edit in Lattice → Funnels (delete it there too)", () => send({ kind: "act", action: "edit", funnel: r.id }));
+    act("edit", "Edit in Lattice → Funnels (delete it there too)", () => send({ kind: "act", action: "edit", funnel: r.id }));
     row.appendChild(acts);
     list.appendChild(row);
     if (row.classList.contains("on")) selectedRow = row;

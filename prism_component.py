@@ -67,10 +67,13 @@ CSS = lattice_component.CSS + """
 .lat.prism .dot.yes{background:#10b981}.lat.prism .dot.no{background:#f97316}
 .lat.prism .dot.failed{background:transparent;border:2px solid #dc2626;width:8px;height:8px}
 .lat.prism .ctl{display:flex;gap:6px;margin-left:auto}
-.lat.prism .ctl button{width:40px;padding:0;display:inline-flex;align-items:center;justify-content:center}
-.lat.prism .ctl button.play{border-color:#0f766e;color:#0f766e;background:rgba(15,118,110,.12)}
-.lat.prism .ctl button.del{border-color:rgba(220,38,38,.6);color:#dc2626}
-.lat.prism .ctl button.del.arm{background:#dc2626;color:#fff;width:auto;padding:0 10px}
+.lat.prism .ctl button{width:40px;padding:0;display:inline-flex;align-items:center;justify-content:center;color:#fff;
+  border:1px solid #4a6a95;border-radius:8px;background:linear-gradient(180deg,#86a5cc,#557aa6);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 1px 2px rgba(0,0,0,.18)}
+.lat.prism .ctl button:hover{background:linear-gradient(180deg,#7898c2,#486d9b);color:#fff}
+.lat.prism .ctl button.del{border-color:#b91c1c;background:linear-gradient(180deg,#ef6b6b,#c62828)}
+.lat.prism .ctl button.del:hover{background:linear-gradient(180deg,#e35d5d,#b42020)}
+.lat.prism .ctl button.del.arm{width:auto;padding:0 10px}
 .lat.prism .pill{font-size:12px;padding:2px 8px;border-radius:999px;border:1px solid rgba(127,127,127,.45)}
 .lat.prism .pill.upd{border-color:#d97706;color:#b45309;cursor:pointer;background:transparent;min-height:0}
 .lat.prism .body{border-top:1px solid rgba(127,127,127,.25);padding:8px 0 4px 44px;display:flex;flex-direction:column;gap:10px}
@@ -274,7 +277,7 @@ export default function(component) {
       play: '<path d="M7 4.5v15l12-7.5z" fill="currentColor" stroke="none"/>',
       past: '<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 8v4l3 2"/>',
       pause: '<rect x="6" y="5" width="4" height="14" rx="1" fill="currentColor" stroke="none"/><rect x="14" y="5" width="4" height="14" rx="1" fill="currentColor" stroke="none"/>',
-      resume: '<path d="M7 4.5v15l12-7.5z"/>',
+      resume: '<path d="M7 4.5v15l12-7.5z" fill="currentColor" stroke="none"/>',
       inside: '<circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/>',
       copy: '<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>',
       del: '<path d="M6 6l12 12M18 6L6 18"/>',
