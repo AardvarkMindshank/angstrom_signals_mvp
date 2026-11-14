@@ -95,7 +95,9 @@ st.markdown(
     "{position:absolute !important;width:0 !important;height:0 !important;min-height:0 !important;margin:0 !important;"
     "padding:0 !important;overflow:visible !important;}"
     "[data-testid='stElementContainer']:has(.ang-page-top){position:absolute !important;height:0 !important;margin:0 !important;}"
-    ".st-key-page_header{margin-top:-0.4rem !important;}</style>",
+    ".st-key-page_header{margin-top:-0.4rem !important;}"
+    # When the title fills a narrow screen, the AI and expand/collapse buttons wrap to their own line: keep them on the right.
+    ".st-key-page_header_tools,[data-testid='stLayoutWrapper']:has(> .st-key-page_header_tools){margin-left:auto !important;}</style>",
     unsafe_allow_html=True,
 )
 
@@ -7597,7 +7599,8 @@ with st.container(horizontal=True, vertical_alignment="center", horizontal_align
         "Market sentiment and technical signals, with the crowd alongside.</span></div></div>",
         unsafe_allow_html=True,
     )
-    with st.container(horizontal=True, vertical_alignment="center", gap="xsmall", width="content"):
+    with st.container(horizontal=True, vertical_alignment="center", gap="xsmall", width="content",
+                      key="page_header_tools"):
         if not _POPOUT_VIEW:
             import lattice_panel as _lp
 
