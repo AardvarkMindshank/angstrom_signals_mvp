@@ -1,5 +1,5 @@
 {
- "built_at": "2026-11-14T01:15:35.670875+00:00",
+ "built_at": "2026-11-14T07:36:38.134433+00:00",
  "rules": {
   "top": 500,
   "min_volume_usd": 250000,
@@ -80,24 +80,24 @@
    "days": 2795
   },
   {
+   "id": "monero",
+   "symbol": "XMR",
+   "name": "Monero",
+   "rank": 12,
+   "pair": "yahoo:XMR-USD",
+   "volume_usd": 119474940,
+   "listed_since": "2017-11-09",
+   "days": 3292
+  },
+  {
    "id": "dogecoin",
    "symbol": "DOGE",
    "name": "Dogecoin",
-   "rank": 12,
+   "rank": 13,
    "pair": "DOGEUSDT",
    "volume_usd": 35685242,
    "listed_since": "2019-07-05",
    "days": 2689
-  },
-  {
-   "id": "monero",
-   "symbol": "XMR",
-   "name": "Monero",
-   "rank": 13,
-   "pair": "yahoo:XMR-USD",
-   "volume_usd": 148714380,
-   "listed_since": "2017-11-09",
-   "days": 3292
   },
   {
    "id": "chainlink",
@@ -133,7 +133,7 @@
    "id": "near",
    "symbol": "NEAR",
    "name": "NEAR Protocol",
-   "rank": 21,
+   "rank": 22,
    "pair": "NEARUSDT",
    "volume_usd": 93591227,
    "listed_since": "2020-10-14",
@@ -173,7 +173,7 @@
    "id": "uniswap",
    "symbol": "UNI",
    "name": "Uniswap",
-   "rank": 26,
+   "rank": 27,
    "pair": "UNIUSDT",
    "volume_usd": 37998828,
    "listed_since": "2020-09-17",
@@ -193,31 +193,31 @@
    "id": "hedera-hashgraph",
    "symbol": "HBAR",
    "name": "Hedera",
-   "rank": 33,
+   "rank": 35,
    "pair": "HBARUSDT",
    "volume_usd": 7356170,
    "listed_since": "2019-09-29",
    "days": 2603
   },
   {
-   "id": "bittensor",
-   "symbol": "TAO",
-   "name": "Bittensor",
-   "rank": 37,
-   "pair": "TAOUSDT",
-   "volume_usd": 14556771,
-   "listed_since": "2024-04-11",
-   "days": 947
-  },
-  {
    "id": "shiba-inu",
    "symbol": "SHIB",
    "name": "Shiba Inu",
-   "rank": 38,
+   "rank": 37,
    "pair": "SHIBUSDT",
    "volume_usd": 2238613,
    "listed_since": "2021-05-10",
    "days": 2014
+  },
+  {
+   "id": "bittensor",
+   "symbol": "TAO",
+   "name": "Bittensor",
+   "rank": 38,
+   "pair": "TAOUSDT",
+   "volume_usd": 14556771,
+   "listed_since": "2024-04-11",
+   "days": 947
   },
   {
    "id": "quant-network",
@@ -273,7 +273,7 @@
    "id": "ondo-finance",
    "symbol": "ONDO",
    "name": "Ondo",
-   "rank": 52,
+   "rank": 54,
    "pair": "ONDOUSDT",
    "volume_usd": 9258320,
    "listed_since": "2025-04-11",
@@ -300,24 +300,24 @@
    "days": 439
   },
   {
-   "id": "polkadot",
-   "symbol": "DOT",
-   "name": "Polkadot",
-   "rank": 58,
-   "pair": "DOTUSDT",
-   "volume_usd": 4964591,
-   "listed_since": "2020-08-18",
-   "days": 2279
-  },
-  {
    "id": "morpho",
    "symbol": "MORPHO",
    "name": "Morpho",
-   "rank": 59,
+   "rank": 58,
    "pair": "MORPHOUSDT",
    "volume_usd": 1693706,
    "listed_since": "2025-10-03",
    "days": 407
+  },
+  {
+   "id": "polkadot",
+   "symbol": "DOT",
+   "name": "Polkadot",
+   "rank": 59,
+   "pair": "DOTUSDT",
+   "volume_usd": 4964591,
+   "listed_since": "2020-08-18",
+   "days": 2279
   },
   {
    "id": "internet-computer",
@@ -383,7 +383,7 @@
    "id": "polygon-ecosystem-token",
    "symbol": "POL",
    "name": "POL (ex-MATIC)",
-   "rank": 76,
+   "rank": 74,
    "pair": "POLUSDT",
    "volume_usd": 2921690,
    "listed_since": "2024-09-13",
@@ -413,7 +413,7 @@
    "id": "injective-protocol",
    "symbol": "INJ",
    "name": "Injective",
-   "rank": 80,
+   "rank": 79,
    "pair": "INJUSDT",
    "volume_usd": 13275485,
    "listed_since": "2020-10-21",
@@ -425,7 +425,7 @@
    "name": "Kaspa",
    "rank": 82,
    "pair": "yahoo:KAS-USD",
-   "volume_usd": 12652175,
+   "volume_usd": 10081216,
    "listed_since": "2022-06-01",
    "days": 1627
   },
@@ -463,7 +463,7 @@
    "id": "nexo",
    "symbol": "NEXO",
    "name": "NEXO",
-   "rank": 86,
+   "rank": 87,
    "pair": "NEXOUSDT",
    "volume_usd": 482693,
    "listed_since": "2022-04-29",
@@ -480,10 +480,20 @@
    "days": 877
   },
   {
+   "id": "beldex",
+   "symbol": "BDX",
+   "name": "Beldex",
+   "rank": 91,
+   "pair": "yahoo:BDX-USD",
+   "volume_usd": 9924101,
+   "listed_since": "2019-06-07",
+   "days": 2717
+  },
+  {
    "id": "filecoin",
    "symbol": "FIL",
    "name": "Filecoin",
-   "rank": 90,
+   "rank": 92,
    "pair": "FILUSDT",
    "volume_usd": 7218820,
    "listed_since": "2020-10-15",
@@ -493,29 +503,19 @@
    "id": "pancakeswap-token",
    "symbol": "CAKE",
    "name": "PancakeSwap",
-   "rank": 91,
+   "rank": 94,
    "pair": "CAKEUSDT",
    "volume_usd": 2412205,
    "listed_since": "2021-02-19",
    "days": 2094
   },
   {
-   "id": "beldex",
-   "symbol": "BDX",
-   "name": "Beldex",
-   "rank": 92,
-   "pair": "yahoo:BDX-USD",
-   "volume_usd": 10739475,
-   "listed_since": "2019-06-07",
-   "days": 2717
-  },
-  {
    "id": "xdce-crowd-sale",
    "symbol": "XDC",
    "name": "XDC Network",
-   "rank": 94,
+   "rank": 95,
    "pair": "yahoo:XDC-USD",
-   "volume_usd": 11992440,
+   "volume_usd": 10855122,
    "listed_since": "2018-04-13",
    "days": 3137
   },
@@ -543,7 +543,7 @@
    "id": "dash",
    "symbol": "DASH",
    "name": "Dash",
-   "rank": 99,
+   "rank": 100,
    "pair": "DASHUSDT",
    "volume_usd": 4770170,
    "listed_since": "2019-03-28",
@@ -553,41 +553,41 @@
    "id": "pyth-network",
    "symbol": "PYTH",
    "name": "Pyth Network",
-   "rank": 101,
+   "rank": 102,
    "pair": "PYTHUSDT",
    "volume_usd": 3005677,
    "listed_since": "2024-02-02",
    "days": 1016
   },
   {
-   "id": "aptos",
-   "symbol": "APT",
-   "name": "Aptos",
-   "rank": 105,
-   "pair": "APTUSDT",
-   "volume_usd": 4699207,
-   "listed_since": "2022-10-19",
-   "days": 1487
+   "id": "pieverse",
+   "symbol": "PIEVERSE",
+   "name": "Pieverse",
+   "rank": 106,
+   "pair": "yahoo:PIEVERSE-USD",
+   "volume_usd": 14722096,
+   "listed_since": "2025-11-14",
+   "days": 365
   },
   {
    "id": "bianrensheng",
    "symbol": "\u5e01\u5b89\u4eba\u751f",
    "name": "\u5e01\u5b89\u4eba\u751f (BinanceLife)",
-   "rank": 106,
+   "rank": 108,
    "pair": "\u5e01\u5b89\u4eba\u751fUSDT",
    "volume_usd": 1188732,
    "listed_since": "2026-01-07",
    "days": 311
   },
   {
-   "id": "pieverse",
-   "symbol": "PIEVERSE",
-   "name": "Pieverse",
+   "id": "aptos",
+   "symbol": "APT",
+   "name": "Aptos",
    "rank": 109,
-   "pair": "yahoo:PIEVERSE-USD",
-   "volume_usd": 13587348,
-   "listed_since": "2025-11-14",
-   "days": 365
+   "pair": "APTUSDT",
+   "volume_usd": 4699207,
+   "listed_since": "2022-10-19",
+   "days": 1487
   },
   {
    "id": "flare-networks",
@@ -595,7 +595,7 @@
    "name": "Flare",
    "rank": 110,
    "pair": "yahoo:FLR-USD",
-   "volume_usd": 5117559,
+   "volume_usd": 4102078,
    "listed_since": "2023-01-10",
    "days": 1404
   },
@@ -623,7 +623,7 @@
    "id": "pudgy-penguins",
    "symbol": "PENGU",
    "name": "Pudgy Penguins",
-   "rank": 114,
+   "rank": 115,
    "pair": "PENGUUSDT",
    "volume_usd": 4214471,
    "listed_since": "2024-12-17",
@@ -650,30 +650,30 @@
    "days": 2282
   },
   {
-   "id": "fetch-ai",
-   "symbol": "FET",
-   "name": "Artificial Superintelligence Alliance",
-   "rank": 119,
-   "pair": "FETUSDT",
-   "volume_usd": 9237494,
-   "listed_since": "2019-02-28",
-   "days": 2816
-  },
-  {
    "id": "virtual-protocol",
    "symbol": "VIRTUAL",
    "name": "Virtuals Protocol",
-   "rank": 121,
+   "rank": 120,
    "pair": "VIRTUALUSDT",
    "volume_usd": 1933099,
    "listed_since": "2025-04-11",
    "days": 582
   },
   {
+   "id": "fetch-ai",
+   "symbol": "FET",
+   "name": "Artificial Superintelligence Alliance",
+   "rank": 122,
+   "pair": "FETUSDT",
+   "volume_usd": 9237494,
+   "listed_since": "2019-02-28",
+   "days": 2816
+  },
+  {
    "id": "falcon-finance-ff",
    "symbol": "FF",
    "name": "Falcon Finance",
-   "rank": 123,
+   "rank": 121,
    "pair": "FFUSDT",
    "volume_usd": 941650,
    "listed_since": "2025-09-29",
@@ -683,9 +683,9 @@
    "id": "bittorrent",
    "symbol": "BTT",
    "name": "BitTorrent",
-   "rank": 126,
+   "rank": 124,
    "pair": "yahoo:BTT-USD",
-   "volume_usd": 29312226,
+   "volume_usd": 22168682,
    "listed_since": "2019-01-31",
    "days": 2844
   },
@@ -700,24 +700,24 @@
    "days": 376
   },
   {
+   "id": "bitcoin-cash-sv",
+   "symbol": "BSV",
+   "name": "Bitcoin SV",
+   "rank": 128,
+   "pair": "yahoo:BSV-USD",
+   "volume_usd": 7581150,
+   "listed_since": "2018-11-09",
+   "days": 2927
+  },
+  {
    "id": "official-trump",
    "symbol": "TRUMP",
    "name": "Official Trump",
-   "rank": 128,
+   "rank": 130,
    "pair": "TRUMPUSDT",
    "volume_usd": 8118834,
    "listed_since": "2025-01-19",
    "days": 664
-  },
-  {
-   "id": "bitcoin-cash-sv",
-   "symbol": "BSV",
-   "name": "Bitcoin SV",
-   "rank": 129,
-   "pair": "yahoo:BSV-USD",
-   "volume_usd": 6342629,
-   "listed_since": "2018-11-09",
-   "days": 2927
   },
   {
    "id": "sun-token",
@@ -730,34 +730,34 @@
    "days": 2245
   },
   {
-   "id": "starknet",
-   "symbol": "STRK",
-   "name": "Starknet",
+   "id": "akedo",
+   "symbol": "AKE",
+   "name": "Akedo",
    "rank": 133,
-   "pair": "STRKUSDT",
-   "volume_usd": 5529861,
-   "listed_since": "2024-02-20",
-   "days": 998
+   "pair": "yahoo:AKE-USD",
+   "volume_usd": 519285010,
+   "listed_since": "2025-08-21",
+   "days": 450
   },
   {
    "id": "sei-network",
    "symbol": "SEI",
    "name": "Sei",
-   "rank": 134,
+   "rank": 136,
    "pair": "SEIUSDT",
    "volume_usd": 2905511,
    "listed_since": "2023-08-15",
    "days": 1187
   },
   {
-   "id": "akedo",
-   "symbol": "AKE",
-   "name": "Akedo",
+   "id": "starknet",
+   "symbol": "STRK",
+   "name": "Starknet",
    "rank": 137,
-   "pair": "yahoo:AKE-USD",
-   "volume_usd": 550264610,
-   "listed_since": "2025-08-21",
-   "days": 450
+   "pair": "STRKUSDT",
+   "volume_usd": 5529861,
+   "listed_since": "2024-02-20",
+   "days": 998
   },
   {
    "id": "pendle",
@@ -773,7 +773,7 @@
    "id": "tezos",
    "symbol": "XTZ",
    "name": "Tezos",
-   "rank": 141,
+   "rank": 143,
    "pair": "XTZUSDT",
    "volume_usd": 356615,
    "listed_since": "2019-09-24",
@@ -793,7 +793,7 @@
    "id": "plasma",
    "symbol": "XPL",
    "name": "Plasma",
-   "rank": 145,
+   "rank": 146,
    "pair": "XPLUSDT",
    "volume_usd": 5254235,
    "listed_since": "2025-09-25",
@@ -803,7 +803,7 @@
    "id": "bonk",
    "symbol": "BONK",
    "name": "Bonk",
-   "rank": 146,
+   "rank": 147,
    "pair": "BONKUSDT",
    "volume_usd": 1887418,
    "listed_since": "2023-12-15",
@@ -833,7 +833,7 @@
    "id": "terra-luna",
    "symbol": "LUNC",
    "name": "Terra Luna Classic",
-   "rank": 155,
+   "rank": 157,
    "pair": "LUNCUSDT",
    "volume_usd": 877187,
    "listed_since": "2022-09-09",
@@ -850,24 +850,14 @@
    "days": 744
   },
   {
-   "id": "monad",
-   "symbol": "MON",
-   "name": "Monad",
-   "rank": 159,
-   "pair": "yahoo:MON-USD",
-   "volume_usd": 15728324,
-   "listed_since": "2021-10-15",
-   "days": 1856
-  },
-  {
-   "id": "arweave",
-   "symbol": "AR",
-   "name": "Arweave",
-   "rank": 161,
-   "pair": "ARUSDT",
-   "volume_usd": 1809501,
-   "listed_since": "2021-05-14",
-   "days": 2010
+   "id": "the-graph",
+   "symbol": "GRT",
+   "name": "The Graph",
+   "rank": 162,
+   "pair": "GRTUSDT",
+   "volume_usd": 523985,
+   "listed_since": "2020-12-17",
+   "days": 2158
   },
   {
    "id": "compound-governance-token",
@@ -880,50 +870,40 @@
    "days": 2333
   },
   {
+   "id": "monad",
+   "symbol": "MON",
+   "name": "Monad",
+   "rank": 164,
+   "pair": "yahoo:MON-USD",
+   "volume_usd": 13965753,
+   "listed_since": "2021-10-15",
+   "days": 1856
+  },
+  {
    "id": "floki",
    "symbol": "FLOKI",
    "name": "FLOKI",
-   "rank": 165,
+   "rank": 167,
    "pair": "FLOKIUSDT",
    "volume_usd": 771031,
    "listed_since": "2023-05-05",
    "days": 1289
   },
   {
-   "id": "the-graph",
-   "symbol": "GRT",
-   "name": "The Graph",
-   "rank": 166,
-   "pair": "GRTUSDT",
-   "volume_usd": 523985,
-   "listed_since": "2020-12-17",
-   "days": 2158
-  },
-  {
-   "id": "shuffle-2",
-   "symbol": "SHFL",
-   "name": "Shuffle",
-   "rank": 169,
-   "pair": "yahoo:SHFL-USD",
-   "volume_usd": 1425504,
-   "listed_since": "2024-03-19",
-   "days": 970
-  },
-  {
-   "id": "zebec-network",
-   "symbol": "ZBCN",
-   "name": "Zebec Network",
+   "id": "arweave",
+   "symbol": "AR",
+   "name": "Arweave",
    "rank": 170,
-   "pair": "yahoo:ZBCN-USD",
-   "volume_usd": 9151348,
-   "listed_since": "2024-04-06",
-   "days": 952
+   "pair": "ARUSDT",
+   "volume_usd": 1809501,
+   "listed_since": "2021-05-14",
+   "days": 2010
   },
   {
    "id": "kamino",
    "symbol": "KMNO",
    "name": "Kamino",
-   "rank": 173,
+   "rank": 171,
    "pair": "KMNOUSDT",
    "volume_usd": 840945,
    "listed_since": "2025-05-06",
@@ -933,31 +913,31 @@
    "id": "thorchain",
    "symbol": "RUNE",
    "name": "THORChain",
-   "rank": 174,
+   "rank": 173,
    "pair": "RUNEUSDT",
    "volume_usd": 2119874,
    "listed_since": "2020-09-04",
    "days": 2262
   },
   {
+   "id": "zebec-network",
+   "symbol": "ZBCN",
+   "name": "Zebec Network",
+   "rank": 175,
+   "pair": "yahoo:ZBCN-USD",
+   "volume_usd": 8527419,
+   "listed_since": "2024-04-06",
+   "days": 952
+  },
+  {
    "id": "ethereum-name-service",
    "symbol": "ENS",
    "name": "Ethereum Name Service",
-   "rank": 176,
+   "rank": 177,
    "pair": "ENSUSDT",
    "volume_usd": 510944,
    "listed_since": "2021-11-10",
    "days": 1830
-  },
-  {
-   "id": "jito-governance-token",
-   "symbol": "JTO",
-   "name": "Jito",
-   "rank": 181,
-   "pair": "JTOUSDT",
-   "volume_usd": 1283350,
-   "listed_since": "2023-12-07",
-   "days": 1073
   },
   {
    "id": "jasmycoin",
@@ -970,10 +950,30 @@
    "days": 1818
   },
   {
+   "id": "jito-governance-token",
+   "symbol": "JTO",
+   "name": "Jito",
+   "rank": 184,
+   "pair": "JTOUSDT",
+   "volume_usd": 1283350,
+   "listed_since": "2023-12-07",
+   "days": 1073
+  },
+  {
+   "id": "instadapp",
+   "symbol": "FLUID",
+   "name": "Fluid",
+   "rank": 186,
+   "pair": "yahoo:FLUID-USD",
+   "volume_usd": 1191719,
+   "listed_since": "2021-11-16",
+   "days": 1824
+  },
+  {
    "id": "meteora",
    "symbol": "MET",
    "name": "Meteora",
-   "rank": 184,
+   "rank": 188,
    "pair": "METUSDT",
    "volume_usd": 1369844,
    "listed_since": "2025-11-13",
@@ -983,87 +983,77 @@
    "id": "iota",
    "symbol": "IOTA",
    "name": "IOTA",
-   "rank": 183,
+   "rank": 187,
    "pair": "IOTAUSDT",
    "volume_usd": 410077,
    "listed_since": "2018-05-31",
    "days": 3089
   },
   {
-   "id": "akash-network",
-   "symbol": "AKT",
-   "name": "Akash Network",
-   "rank": 187,
-   "pair": "yahoo:AKT-USD",
-   "volume_usd": 5408064,
-   "listed_since": "2020-10-20",
-   "days": 2216
-  },
-  {
    "id": "basic-attention-token",
    "symbol": "BAT",
    "name": "Basic Attention",
-   "rank": 189,
+   "rank": 190,
    "pair": "BATUSDT",
    "volume_usd": 1415737,
    "listed_since": "2019-03-04",
    "days": 2812
   },
   {
+   "id": "akash-network",
+   "symbol": "AKT",
+   "name": "Akash Network",
+   "rank": 189,
+   "pair": "yahoo:AKT-USD",
+   "volume_usd": 4291548,
+   "listed_since": "2020-10-20",
+   "days": 2216
+  },
+  {
    "id": "trust-wallet-token",
    "symbol": "TWT",
    "name": "Trust Wallet",
-   "rank": 190,
+   "rank": 192,
    "pair": "TWTUSDT",
    "volume_usd": 424077,
    "listed_since": "2021-01-27",
    "days": 2117
   },
   {
-   "id": "instadapp",
-   "symbol": "FLUID",
-   "name": "Fluid",
-   "rank": 191,
-   "pair": "yahoo:FLUID-USD",
-   "volume_usd": 1391204,
-   "listed_since": "2021-11-16",
-   "days": 1824
-  },
-  {
    "id": "eigenlayer",
    "symbol": "EIGEN",
    "name": "EigenCloud (prev. EigenLayer)",
-   "rank": 193,
+   "rank": 194,
    "pair": "EIGENUSDT",
    "volume_usd": 1610534,
    "listed_since": "2024-10-01",
    "days": 774
   },
   {
+   "id": "gmt-token",
+   "symbol": "GOMINING",
+   "name": "GoMining Token",
+   "rank": 196,
+   "pair": "yahoo:GOMINING-USD",
+   "volume_usd": 15870536,
+   "listed_since": "2024-04-28",
+   "days": 930
+  },
+  {
    "id": "convex-finance",
    "symbol": "CVX",
    "name": "Convex Finance",
-   "rank": 196,
+   "rank": 197,
    "pair": "CVXUSDT",
    "volume_usd": 720796,
    "listed_since": "2021-12-23",
    "days": 1787
   },
   {
-   "id": "gmt-token",
-   "symbol": "GOMINING",
-   "name": "GoMining Token",
-   "rank": 197,
-   "pair": "yahoo:GOMINING-USD",
-   "volume_usd": 15224134,
-   "listed_since": "2024-04-28",
-   "days": 930
-  },
-  {
    "id": "zama",
    "symbol": "ZAMA",
    "name": "Zama",
-   "rank": 199,
+   "rank": 198,
    "pair": "ZAMAUSDT",
    "volume_usd": 3907869,
    "listed_since": "2026-02-02",
@@ -1073,7 +1063,7 @@
    "id": "dogwifcoin",
    "symbol": "WIF",
    "name": "dogwifhat",
-   "rank": 198,
+   "rank": 199,
    "pair": "WIFUSDT",
    "volume_usd": 1139797,
    "listed_since": "2024-03-05",
@@ -1090,6 +1080,16 @@
    "days": 667
   },
   {
+   "id": "origintrail",
+   "symbol": "TRAC",
+   "name": "OriginTrail",
+   "rank": 202,
+   "pair": "yahoo:TRAC-USD",
+   "volume_usd": 2510687,
+   "listed_since": "2018-01-25",
+   "days": 3215
+  },
+  {
    "id": "theta-token",
    "symbol": "THETA",
    "name": "Theta Network",
@@ -1103,7 +1103,7 @@
    "id": "syrup",
    "symbol": "SYRUP",
    "name": "Maple Finance",
-   "rank": 210,
+   "rank": 214,
    "pair": "SYRUPUSDT",
    "volume_usd": 1193890,
    "listed_since": "2025-05-06",
@@ -1113,21 +1113,11 @@
    "id": "axie-infinity",
    "symbol": "AXS",
    "name": "Axie Infinity",
-   "rank": 212,
+   "rank": 215,
    "pair": "AXSUSDT",
    "volume_usd": 742073,
    "listed_since": "2020-11-04",
    "days": 2201
-  },
-  {
-   "id": "celium",
-   "symbol": "SN51",
-   "name": "lium",
-   "rank": 215,
-   "pair": "yahoo:SN51-USD",
-   "volume_usd": 1521125,
-   "listed_since": "2025-06-20",
-   "days": 512
   },
   {
    "id": "decentraland",
@@ -1140,10 +1130,20 @@
    "days": 2291
   },
   {
+   "id": "celium",
+   "symbol": "SN51",
+   "name": "lium",
+   "rank": 217,
+   "pair": "yahoo:SN51-USD",
+   "volume_usd": 1305139,
+   "listed_since": "2025-06-20",
+   "days": 512
+  },
+  {
    "id": "sentient",
    "symbol": "SENT",
    "name": "Sentient",
-   "rank": 224,
+   "rank": 223,
    "pair": "SENTUSDT",
    "volume_usd": 813169,
    "listed_since": "2026-01-22",
@@ -1153,17 +1153,27 @@
    "id": "neo",
    "symbol": "NEO",
    "name": "NEO",
-   "rank": 225,
+   "rank": 224,
    "pair": "NEOUSDT",
    "volume_usd": 277694,
    "listed_since": "2017-11-20",
    "days": 3281
   },
   {
+   "id": "stp-network",
+   "symbol": "AWE",
+   "name": "AWE Network",
+   "rank": 226,
+   "pair": "AWEUSDT",
+   "volume_usd": 281662,
+   "listed_since": "2025-05-21",
+   "days": 542
+  },
+  {
    "id": "vaulta",
    "symbol": "A",
    "name": "Vaulta",
-   "rank": 226,
+   "rank": 227,
    "pair": "AUSDT",
    "volume_usd": 426513,
    "listed_since": "2025-05-28",
@@ -1173,27 +1183,17 @@
    "id": "the-sandbox",
    "symbol": "SAND",
    "name": "The Sandbox",
-   "rank": 228,
+   "rank": 233,
    "pair": "SANDUSDT",
    "volume_usd": 1461876,
    "listed_since": "2020-08-14",
    "days": 2283
   },
   {
-   "id": "stp-network",
-   "symbol": "AWE",
-   "name": "AWE Network",
-   "rank": 229,
-   "pair": "AWEUSDT",
-   "volume_usd": 281662,
-   "listed_since": "2025-05-21",
-   "days": 542
-  },
-  {
    "id": "chiliz",
    "symbol": "CHZ",
    "name": "Chiliz",
-   "rank": 235,
+   "rank": 238,
    "pair": "CHZUSDT",
    "volume_usd": 570449,
    "listed_since": "2019-09-06",
@@ -1203,29 +1203,19 @@
    "id": "fartcoin",
    "symbol": "FARTCOIN",
    "name": "Fartcoin",
-   "rank": 244,
+   "rank": 248,
    "pair": "yahoo:FARTCOIN-USD",
-   "volume_usd": 14174984,
+   "volume_usd": 11678618,
    "listed_since": "2024-10-23",
    "days": 752
-  },
-  {
-   "id": "build-on",
-   "symbol": "B",
-   "name": "BUILDon",
-   "rank": 249,
-   "pair": "yahoo:B-USD",
-   "volume_usd": 3466571,
-   "listed_since": "2025-05-16",
-   "days": 547
   },
   {
    "id": "sosovalue",
    "symbol": "SOSO",
    "name": "SoSoValue",
-   "rank": 250,
+   "rank": 249,
    "pair": "yahoo:SOSO-USD",
-   "volume_usd": 2601106,
+   "volume_usd": 2516915,
    "listed_since": "2025-04-01",
    "days": 592
   },
@@ -1233,77 +1223,97 @@
    "id": "yellow",
    "symbol": "YELLOW",
    "name": "Yellow",
-   "rank": 253,
+   "rank": 250,
    "pair": "yahoo:YELLOW-USD",
-   "volume_usd": 5303721,
+   "volume_usd": 4405545,
    "listed_since": "2026-03-08",
    "days": 251
+  },
+  {
+   "id": "build-on",
+   "symbol": "B",
+   "name": "BUILDon",
+   "rank": 252,
+   "pair": "yahoo:B-USD",
+   "volume_usd": 3099630,
+   "listed_since": "2025-05-16",
+   "days": 547
   },
   {
    "id": "aioz-network",
    "symbol": "AIOZ",
    "name": "AIOZ Network",
-   "rank": 255,
+   "rank": 256,
    "pair": "yahoo:AIOZ-USD",
-   "volume_usd": 3897210,
+   "volume_usd": 3794933,
    "listed_since": "2021-04-02",
    "days": 2052
-  },
-  {
-   "id": "zksync",
-   "symbol": "ZK",
-   "name": "ZKsync",
-   "rank": 254,
-   "pair": "ZKUSDT",
-   "volume_usd": 1324953,
-   "listed_since": "2024-06-17",
-   "days": 880
   },
   {
    "id": "1inch",
    "symbol": "1INCH",
    "name": "1INCH",
-   "rank": 258,
+   "rank": 257,
    "pair": "1INCHUSDT",
    "volume_usd": 317964,
    "listed_since": "2020-12-25",
    "days": 2150
   },
   {
+   "id": "zksync",
+   "symbol": "ZK",
+   "name": "ZKsync",
+   "rank": 258,
+   "pair": "ZKUSDT",
+   "volume_usd": 1324953,
+   "listed_since": "2024-06-17",
+   "days": 880
+  },
+  {
    "id": "zero-gravity",
    "symbol": "0G",
    "name": "0G",
-   "rank": 259,
+   "rank": 261,
    "pair": "0GUSDT",
    "volume_usd": 623286,
    "listed_since": "2025-09-22",
    "days": 418
   },
   {
-   "id": "doublezero",
-   "symbol": "2Z",
-   "name": "DoubleZero",
-   "rank": 261,
-   "pair": "2ZUSDT",
-   "volume_usd": 663883,
-   "listed_since": "2025-10-02",
-   "days": 408
-  },
-  {
    "id": "superfarm",
    "symbol": "SUPER",
    "name": "SuperVerse",
-   "rank": 262,
+   "rank": 264,
    "pair": "SUPERUSDT",
    "volume_usd": 752575,
    "listed_since": "2021-03-25",
    "days": 2060
   },
   {
+   "id": "doublezero",
+   "symbol": "2Z",
+   "name": "DoubleZero",
+   "rank": 265,
+   "pair": "2ZUSDT",
+   "volume_usd": 663883,
+   "listed_since": "2025-10-02",
+   "days": 408
+  },
+  {
+   "id": "prometeus",
+   "symbol": "PROM",
+   "name": "Prom",
+   "rank": 269,
+   "pair": "PROMUSDT",
+   "volume_usd": 1785432,
+   "listed_since": "2023-03-17",
+   "days": 1338
+  },
+  {
    "id": "immutable-x",
    "symbol": "IMX",
    "name": "Immutable",
-   "rank": 265,
+   "rank": 273,
    "pair": "IMXUSDT",
    "volume_usd": 281161,
    "listed_since": "2022-01-10",
@@ -1313,57 +1323,37 @@
    "id": "plume",
    "symbol": "PLUME",
    "name": "Plume",
-   "rank": 271,
+   "rank": 275,
    "pair": "PLUMEUSDT",
    "volume_usd": 2022897,
    "listed_since": "2025-08-18",
    "days": 453
   },
   {
-   "id": "kinetiq",
-   "symbol": "KNTQ",
-   "name": "Kinetiq",
-   "rank": 274,
-   "pair": "yahoo:KNTQ-USD",
-   "volume_usd": 6693847,
-   "listed_since": "2025-11-30",
-   "days": 349
-  },
-  {
-   "id": "prometeus",
-   "symbol": "PROM",
-   "name": "Prom",
-   "rank": 276,
-   "pair": "PROMUSDT",
-   "volume_usd": 1785432,
-   "listed_since": "2023-03-17",
-   "days": 1338
-  },
-  {
-   "id": "apecoin",
-   "symbol": "APE",
-   "name": "ApeCoin",
-   "rank": 277,
-   "pair": "APEUSDT",
-   "volume_usd": 870724,
-   "listed_since": "2022-03-17",
-   "days": 1703
-  },
-  {
    "id": "reserve-rights-token",
    "symbol": "RSR",
    "name": "Reserve Rights",
-   "rank": 279,
+   "rank": 277,
    "pair": "RSRUSDT",
    "volume_usd": 1025938,
    "listed_since": "2020-08-27",
    "days": 2270
   },
   {
+   "id": "apecoin",
+   "symbol": "APE",
+   "name": "ApeCoin",
+   "rank": 278,
+   "pair": "APEUSDT",
+   "volume_usd": 870724,
+   "listed_since": "2022-03-17",
+   "days": 1703
+  },
+  {
    "id": "elrond-erd-2",
    "symbol": "EGLD",
    "name": "MultiversX",
-   "rank": 281,
+   "rank": 280,
    "pair": "EGLDUSDT",
    "volume_usd": 259345,
    "listed_since": "2020-09-03",
@@ -1373,21 +1363,21 @@
    "id": "okzoo",
    "symbol": "AIOT",
    "name": "OKZOO",
-   "rank": 285,
+   "rank": 283,
    "pair": "yahoo:AIOT-USD",
-   "volume_usd": 4697258,
+   "volume_usd": 3517392,
    "listed_since": "2025-04-25",
    "days": 568
   },
   {
-   "id": "zencash",
-   "symbol": "ZEN",
-   "name": "Horizen",
-   "rank": 286,
-   "pair": "ZENUSDT",
-   "volume_usd": 1548343,
-   "listed_since": "2020-07-06",
-   "days": 2322
+   "id": "kinetiq",
+   "symbol": "KNTQ",
+   "name": "Kinetiq",
+   "rank": 284,
+   "pair": "yahoo:KNTQ-USD",
+   "volume_usd": 6605537,
+   "listed_since": "2025-11-30",
+   "days": 349
   },
   {
    "id": "gmx",
@@ -1400,14 +1390,14 @@
    "days": 1501
   },
   {
-   "id": "ultima",
-   "symbol": "ULTIMA",
-   "name": "Ultima",
-   "rank": 302,
-   "pair": "yahoo:ULTIMA-USD",
-   "volume_usd": 4049048,
-   "listed_since": "2023-10-26",
-   "days": 1115
+   "id": "zencash",
+   "symbol": "ZEN",
+   "name": "Horizen",
+   "rank": 288,
+   "pair": "ZENUSDT",
+   "volume_usd": 1548343,
+   "listed_since": "2020-07-06",
+   "days": 2322
   },
   {
    "id": "four",
@@ -1423,77 +1413,87 @@
    "id": "gala",
    "symbol": "GALA",
    "name": "GALA",
-   "rank": 307,
+   "rank": 310,
    "pair": "GALAUSDT",
    "volume_usd": 834681,
    "listed_since": "2021-09-13",
    "days": 1888
   },
   {
-   "id": "dydx-chain",
-   "symbol": "DYDX",
-   "name": "dYdX",
-   "rank": 308,
-   "pair": "DYDXUSDT",
-   "volume_usd": 477249,
-   "listed_since": "2021-09-09",
-   "days": 1892
-  },
-  {
-   "id": "orca",
-   "symbol": "ORCA",
-   "name": "Orca",
-   "rank": 312,
-   "pair": "ORCAUSDT",
-   "volume_usd": 601038,
-   "listed_since": "2024-12-06",
-   "days": 708
-  },
-  {
    "id": "kava",
    "symbol": "KAVA",
    "name": "Kava",
-   "rank": 316,
+   "rank": 311,
    "pair": "KAVAUSDT",
    "volume_usd": 528587,
    "listed_since": "2019-10-25",
    "days": 2577
   },
   {
+   "id": "orca",
+   "symbol": "ORCA",
+   "name": "Orca",
+   "rank": 313,
+   "pair": "ORCAUSDT",
+   "volume_usd": 601038,
+   "listed_since": "2024-12-06",
+   "days": 708
+  },
+  {
+   "id": "dydx-chain",
+   "symbol": "DYDX",
+   "name": "dYdX",
+   "rank": 314,
+   "pair": "DYDXUSDT",
+   "volume_usd": 477249,
+   "listed_since": "2021-09-09",
+   "days": 1892
+  },
+  {
+   "id": "ultima",
+   "symbol": "ULTIMA",
+   "name": "Ultima",
+   "rank": 323,
+   "pair": "yahoo:ULTIMA-USD",
+   "volume_usd": 3549460,
+   "listed_since": "2023-10-26",
+   "days": 1115
+  },
+  {
    "id": "targon",
    "symbol": "SN4",
    "name": "Targon",
-   "rank": 321,
+   "rank": 324,
    "pair": "yahoo:SN4-USD",
-   "volume_usd": 1145904,
+   "volume_usd": 1104440,
    "listed_since": "2025-06-20",
    "days": 512
-  },
-  {
-   "id": "walrus-2",
-   "symbol": "WAL",
-   "name": "Walrus",
-   "rank": 329,
-   "pair": "WALUSDT",
-   "volume_usd": 566390,
-   "listed_since": "2025-10-10",
-   "days": 400
   },
   {
    "id": "redstone-oracles",
    "symbol": "RED",
    "name": "RedStone",
-   "rank": 331,
+   "rank": 333,
    "pair": "REDUSDT",
    "volume_usd": 593579,
    "listed_since": "2025-02-28",
    "days": 624
   },
   {
+   "id": "walrus-2",
+   "symbol": "WAL",
+   "name": "Walrus",
+   "rank": 335,
+   "pair": "WALUSDT",
+   "volume_usd": 566390,
+   "listed_since": "2025-10-10",
+   "days": 400
+  },
+  {
    "id": "arkham",
    "symbol": "ARKM",
    "name": "Arkham",
-   "rank": 336,
+   "rank": 337,
    "pair": "ARKMUSDT",
    "volume_usd": 536087,
    "listed_since": "2023-07-18",
@@ -1503,27 +1503,47 @@
    "id": "holotoken",
    "symbol": "HOT",
    "name": "Holo",
-   "rank": 343,
+   "rank": 347,
    "pair": "HOTUSDT",
    "volume_usd": 432875,
    "listed_since": "2019-02-18",
    "days": 2826
   },
   {
+   "id": "impossible-cloud-network-token",
+   "symbol": "ICNT",
+   "name": "Impossible Cloud Network Token",
+   "rank": 348,
+   "pair": "yahoo:ICNT-USD",
+   "volume_usd": 3646573,
+   "listed_since": "2025-07-03",
+   "days": 499
+  },
+  {
    "id": "wormhole",
    "symbol": "W",
    "name": "Wormhole",
-   "rank": 345,
+   "rank": 351,
    "pair": "WUSDT",
    "volume_usd": 1768793,
    "listed_since": "2024-04-03",
    "days": 955
   },
   {
+   "id": "allora",
+   "symbol": "ALLO",
+   "name": "Allora",
+   "rank": 352,
+   "pair": "ALLOUSDT",
+   "volume_usd": 414916,
+   "listed_since": "2025-11-11",
+   "days": 368
+  },
+  {
    "id": "ordinals",
    "symbol": "ORDI",
    "name": "ORDI",
-   "rank": 348,
+   "rank": 355,
    "pair": "ORDIUSDT",
    "volume_usd": 811576,
    "listed_since": "2023-11-07",
@@ -1533,7 +1553,7 @@
    "id": "mina-protocol",
    "symbol": "MINA",
    "name": "Mina Protocol",
-   "rank": 349,
+   "rank": 356,
    "pair": "MINAUSDT",
    "volume_usd": 644599,
    "listed_since": "2021-08-10",
@@ -1543,51 +1563,31 @@
    "id": "peaq-2",
    "symbol": "PEAQ",
    "name": "peaq",
-   "rank": 353,
+   "rank": 357,
    "pair": "yahoo:PEAQ-USD",
-   "volume_usd": 2613343,
+   "volume_usd": 1338945,
    "listed_since": "2024-11-13",
    "days": 731
-  },
-  {
-   "id": "impossible-cloud-network-token",
-   "symbol": "ICNT",
-   "name": "Impossible Cloud Network Token",
-   "rank": 352,
-   "pair": "yahoo:ICNT-USD",
-   "volume_usd": 4166282,
-   "listed_since": "2025-07-03",
-   "days": 499
   },
   {
    "id": "yearn-finance",
    "symbol": "YFI",
    "name": "yearn.finance",
-   "rank": 357,
+   "rank": 360,
    "pair": "YFIUSDT",
    "volume_usd": 254887,
    "listed_since": "2020-08-10",
    "days": 2287
   },
   {
-   "id": "chip-2",
-   "symbol": "CHIP",
-   "name": "USD.AI",
-   "rank": 359,
-   "pair": "CHIPUSDT",
-   "volume_usd": 2476583,
-   "listed_since": "2026-04-21",
-   "days": 207
-  },
-  {
-   "id": "allora",
-   "symbol": "ALLO",
-   "name": "Allora",
-   "rank": 362,
-   "pair": "ALLOUSDT",
-   "volume_usd": 414916,
-   "listed_since": "2025-11-11",
-   "days": 368
+   "id": "magma-finance",
+   "symbol": "MAGMA",
+   "name": "Magma Finance",
+   "rank": 361,
+   "pair": "yahoo:MAGMA-USD",
+   "volume_usd": 13475915,
+   "listed_since": "2025-12-16",
+   "days": 333
   },
   {
    "id": "numeraire",
@@ -1600,154 +1600,134 @@
    "days": 2278
   },
   {
-   "id": "magma-finance",
-   "symbol": "MAGMA",
-   "name": "Magma Finance",
-   "rank": 368,
-   "pair": "yahoo:MAGMA-USD",
-   "volume_usd": 19857118,
-   "listed_since": "2025-12-16",
-   "days": 333
+   "id": "chip-2",
+   "symbol": "CHIP",
+   "name": "USD.AI",
+   "rank": 367,
+   "pair": "CHIPUSDT",
+   "volume_usd": 2476583,
+   "listed_since": "2026-04-21",
+   "days": 207
   },
   {
    "id": "livepeer",
    "symbol": "LPT",
    "name": "Livepeer",
-   "rank": 370,
+   "rank": 376,
    "pair": "LPTUSDT",
    "volume_usd": 313846,
    "listed_since": "2021-05-28",
    "days": 1996
   },
   {
-   "id": "espresso",
-   "symbol": "ESP",
-   "name": "Espresso",
-   "rank": 386,
-   "pair": "ESPUSDT",
-   "volume_usd": 454978,
-   "listed_since": "2026-02-12",
-   "days": 275
-  },
-  {
-   "id": "spark-2",
-   "symbol": "SPK",
-   "name": "Spark",
-   "rank": 396,
-   "pair": "SPKUSDT",
-   "volume_usd": 600690,
-   "listed_since": "2025-06-17",
-   "days": 515
-  },
-  {
-   "id": "zetachain",
-   "symbol": "ZETA",
-   "name": "ZetaChain",
-   "rank": 397,
-   "pair": "yahoo:ZETA-USD",
-   "volume_usd": 3113391,
-   "listed_since": "2023-11-29",
-   "days": 1081
-  },
-  {
-   "id": "velo",
-   "symbol": "VELO",
-   "name": "Velo",
-   "rank": 398,
-   "pair": "yahoo:VELO-USD",
-   "volume_usd": 1988026,
-   "listed_since": "2020-09-21",
-   "days": 2245
-  },
-  {
-   "id": "proton",
-   "symbol": "XPR",
-   "name": "XPR Network",
-   "rank": 401,
-   "pair": "yahoo:XPR-USD",
-   "volume_usd": 4628575,
-   "listed_since": "2020-04-06",
-   "days": 2413
-  },
-  {
    "id": "amp-token",
    "symbol": "AMP",
    "name": "Amp",
-   "rank": 402,
+   "rank": 386,
    "pair": "AMPUSDT",
    "volume_usd": 930809,
    "listed_since": "2021-11-23",
    "days": 1817
   },
   {
+   "id": "espresso",
+   "symbol": "ESP",
+   "name": "Espresso",
+   "rank": 391,
+   "pair": "ESPUSDT",
+   "volume_usd": 454978,
+   "listed_since": "2026-02-12",
+   "days": 275
+  },
+  {
+   "id": "velo",
+   "symbol": "VELO",
+   "name": "Velo",
+   "rank": 396,
+   "pair": "yahoo:VELO-USD",
+   "volume_usd": 1730282,
+   "listed_since": "2020-09-21",
+   "days": 2245
+  },
+  {
+   "id": "spark-2",
+   "symbol": "SPK",
+   "name": "Spark",
+   "rank": 399,
+   "pair": "SPKUSDT",
+   "volume_usd": 600690,
+   "listed_since": "2025-06-17",
+   "days": 515
+  },
+  {
+   "id": "proton",
+   "symbol": "XPR",
+   "name": "XPR Network",
+   "rank": 400,
+   "pair": "yahoo:XPR-USD",
+   "volume_usd": 4311985,
+   "listed_since": "2020-04-06",
+   "days": 2413
+  },
+  {
    "id": "wink",
    "symbol": "WIN",
    "name": "WINkLink",
-   "rank": 405,
+   "rank": 401,
    "pair": "WINUSDT",
    "volume_usd": 301045,
    "listed_since": "2019-08-01",
    "days": 2662
   },
   {
+   "id": "zetachain",
+   "symbol": "ZETA",
+   "name": "ZetaChain",
+   "rank": 403,
+   "pair": "yahoo:ZETA-USD",
+   "volume_usd": 2824552,
+   "listed_since": "2023-11-29",
+   "days": 1081
+  },
+  {
+   "id": "newton-project",
+   "symbol": "AB",
+   "name": "AB",
+   "rank": 408,
+   "pair": "yahoo:AB-USD",
+   "volume_usd": 1006980,
+   "listed_since": "2024-04-29",
+   "days": 929
+  },
+  {
    "id": "vethor-token",
    "symbol": "VTHO",
    "name": "VeThor",
-   "rank": 412,
+   "rank": 411,
    "pair": "VTHOUSDT",
    "volume_usd": 259131,
    "listed_since": "2020-07-17",
    "days": 2311
   },
   {
-   "id": "qubic-network",
-   "symbol": "QUBIC",
-   "name": "Qubic",
-   "rank": 413,
-   "pair": "yahoo:QUBIC-USD",
-   "volume_usd": 1064551,
-   "listed_since": "2024-01-25",
-   "days": 1024
-  },
-  {
-   "id": "helium",
-   "symbol": "HNT",
-   "name": "Helium",
-   "rank": 421,
-   "pair": "yahoo:HNT-USD",
-   "volume_usd": 3408893,
-   "listed_since": "2020-06-08",
-   "days": 2350
-  },
-  {
-   "id": "nexpace",
-   "symbol": "NXPC",
-   "name": "Nexpace",
+   "id": "zignaly",
+   "symbol": "ZIG",
+   "name": "ZIG Finance",
    "rank": 422,
-   "pair": "NXPCUSDT",
-   "volume_usd": 528551,
-   "listed_since": "2025-05-15",
-   "days": 548
+   "pair": "yahoo:ZIG-USD",
+   "volume_usd": 40350063,
+   "listed_since": "2021-04-16",
+   "days": 2038
   },
   {
    "id": "linea",
    "symbol": "LINEA",
    "name": "Linea",
-   "rank": 423,
+   "rank": 426,
    "pair": "LINEAUSDT",
    "volume_usd": 387738,
    "listed_since": "2025-09-10",
    "days": 430
-  },
-  {
-   "id": "zignaly",
-   "symbol": "ZIG",
-   "name": "ZIG Finance",
-   "rank": 425,
-   "pair": "yahoo:ZIG-USD",
-   "volume_usd": 26702861,
-   "listed_since": "2021-04-16",
-   "days": 2038
   },
   {
    "id": "kaito",
@@ -1760,14 +1740,24 @@
    "days": 632
   },
   {
-   "id": "babylon",
-   "symbol": "BABY",
-   "name": "Babylon",
+   "id": "helium",
+   "symbol": "HNT",
+   "name": "Helium",
    "rank": 432,
-   "pair": "BABYUSDT",
-   "volume_usd": 628151,
-   "listed_since": "2025-04-10",
-   "days": 583
+   "pair": "yahoo:HNT-USD",
+   "volume_usd": 2770804,
+   "listed_since": "2020-06-08",
+   "days": 2350
+  },
+  {
+   "id": "goplus-security",
+   "symbol": "GPS",
+   "name": "GoPlus Security",
+   "rank": 433,
+   "pair": "GPSUSDT",
+   "volume_usd": 253569,
+   "listed_since": "2025-03-04",
+   "days": 620
   },
   {
    "id": "threshold-network-token",
@@ -1780,180 +1770,200 @@
    "days": 1723
   },
   {
-   "id": "berachain-bera",
-   "symbol": "BERA",
-   "name": "Berachain",
-   "rank": 440,
-   "pair": "BERAUSDT",
-   "volume_usd": 811653,
-   "listed_since": "2025-02-06",
-   "days": 646
+   "id": "nexpace",
+   "symbol": "NXPC",
+   "name": "Nexpace",
+   "rank": 442,
+   "pair": "NXPCUSDT",
+   "volume_usd": 528551,
+   "listed_since": "2025-05-15",
+   "days": 548
+  },
+  {
+   "id": "babylon",
+   "symbol": "BABY",
+   "name": "Babylon",
+   "rank": 445,
+   "pair": "BABYUSDT",
+   "volume_usd": 628151,
+   "listed_since": "2025-04-10",
+   "days": 583
   },
   {
    "id": "io",
    "symbol": "IO",
    "name": "io.net",
-   "rank": 436,
+   "rank": 448,
    "pair": "IOUSDT",
    "volume_usd": 742070,
    "listed_since": "2024-06-11",
    "days": 886
   },
   {
-   "id": "goplus-security",
-   "symbol": "GPS",
-   "name": "GoPlus Security",
-   "rank": 443,
-   "pair": "GPSUSDT",
-   "volume_usd": 253569,
-   "listed_since": "2025-03-04",
-   "days": 620
+   "id": "merlin-chain",
+   "symbol": "MERL",
+   "name": "Merlin Chain",
+   "rank": 452,
+   "pair": "yahoo:MERL-USD",
+   "volume_usd": 7067351,
+   "listed_since": "2024-04-19",
+   "days": 939
   },
   {
    "id": "nervos-network",
    "symbol": "CKB",
    "name": "Nervos Network",
-   "rank": 448,
+   "rank": 453,
    "pair": "CKBUSDT",
    "volume_usd": 309031,
    "listed_since": "2021-01-26",
    "days": 2118
   },
   {
-   "id": "humanity",
-   "symbol": "H",
-   "name": "Humanity",
-   "rank": 452,
-   "pair": "yahoo:H-USD",
-   "volume_usd": 8100565,
-   "listed_since": "2025-06-25",
-   "days": 507
+   "id": "proprietary-trading-network",
+   "symbol": "VANTA",
+   "name": "Vanta Network",
+   "rank": 457,
+   "pair": "yahoo:VANTA-USD",
+   "volume_usd": 1626201,
+   "listed_since": "2026-04-23",
+   "days": 205
   },
   {
    "id": "axelar",
    "symbol": "AXL",
    "name": "Axelar",
-   "rank": 453,
+   "rank": 459,
    "pair": "AXLUSDT",
    "volume_usd": 447373,
    "listed_since": "2024-03-01",
    "days": 988
   },
   {
-   "id": "proprietary-trading-network",
-   "symbol": "VANTA",
-   "name": "Vanta Network",
-   "rank": 456,
-   "pair": "yahoo:VANTA-USD",
-   "volume_usd": 1768359,
-   "listed_since": "2026-04-23",
-   "days": 205
-  },
-  {
-   "id": "merlin-chain",
-   "symbol": "MERL",
-   "name": "Merlin Chain",
+   "id": "humanity",
+   "symbol": "H",
+   "name": "Humanity",
    "rank": 461,
-   "pair": "yahoo:MERL-USD",
-   "volume_usd": 5357281,
-   "listed_since": "2024-04-19",
-   "days": 939
+   "pair": "yahoo:H-USD",
+   "volume_usd": 7955653,
+   "listed_since": "2025-06-25",
+   "days": 507
   },
   {
    "id": "aztec",
    "symbol": "AZTEC",
    "name": "Aztec",
-   "rank": 462,
+   "rank": 465,
    "pair": "yahoo:AZTEC-USD",
-   "volume_usd": 1782790,
+   "volume_usd": 1714245,
    "listed_since": "2026-02-11",
    "days": 276
-  },
-  {
-   "id": "space-and-time",
-   "symbol": "SXT",
-   "name": "Space and Time",
-   "rank": 463,
-   "pair": "SXTUSDT",
-   "volume_usd": 436652,
-   "listed_since": "2025-05-08",
-   "days": 555
-  },
-  {
-   "id": "lisk",
-   "symbol": "LSK",
-   "name": "Lisk",
-   "rank": 464,
-   "pair": "LSKUSDT",
-   "volume_usd": 1827350,
-   "listed_since": "2020-02-06",
-   "days": 2473
   },
   {
    "id": "dexe",
    "symbol": "DEXE",
    "name": "DeXe",
-   "rank": 466,
+   "rank": 469,
    "pair": "DEXEUSDT",
    "volume_usd": 959596,
    "listed_since": "2021-07-23",
    "days": 1940
   },
   {
-   "id": "oasis-network",
-   "symbol": "ROSE",
-   "name": "Oasis",
-   "rank": 475,
-   "pair": "ROSEUSDT",
-   "volume_usd": 605432,
-   "listed_since": "2020-11-19",
-   "days": 2186
+   "id": "lisk",
+   "symbol": "LSK",
+   "name": "Lisk",
+   "rank": 470,
+   "pair": "LSKUSDT",
+   "volume_usd": 1827350,
+   "listed_since": "2020-02-06",
+   "days": 2473
+  },
+  {
+   "id": "folks",
+   "symbol": "FOLKS",
+   "name": "FOLKS",
+   "rank": 476,
+   "pair": "yahoo:FOLKS-USD",
+   "volume_usd": 1346760,
+   "listed_since": "2025-11-06",
+   "days": 373
+  },
+  {
+   "id": "space-and-time",
+   "symbol": "SXT",
+   "name": "Space and Time",
+   "rank": 477,
+   "pair": "SXTUSDT",
+   "volume_usd": 436652,
+   "listed_since": "2025-05-08",
+   "days": 555
   },
   {
    "id": "enjincoin",
    "symbol": "ENJ",
    "name": "Enjin Coin",
-   "rank": 476,
+   "rank": 480,
    "pair": "ENJUSDT",
    "volume_usd": 282058,
    "listed_since": "2019-04-18",
    "days": 2767
   },
   {
+   "id": "berachain-bera",
+   "symbol": "BERA",
+   "name": "Berachain",
+   "rank": 481,
+   "pair": "BERAUSDT",
+   "volume_usd": 811653,
+   "listed_since": "2025-02-06",
+   "days": 646
+  },
+  {
    "id": "creditcoin-2",
    "symbol": "CTC",
    "name": "Creditcoin",
-   "rank": 482,
+   "rank": 484,
    "pair": "yahoo:CTC-USD",
-   "volume_usd": 3680354,
+   "volume_usd": 2583560,
    "listed_since": "2020-01-31",
    "days": 2479
   },
   {
-   "id": "folks",
-   "symbol": "FOLKS",
-   "name": "FOLKS",
-   "rank": 483,
-   "pair": "yahoo:FOLKS-USD",
-   "volume_usd": 1288932,
-   "listed_since": "2025-11-06",
-   "days": 373
+   "id": "oasis-network",
+   "symbol": "ROSE",
+   "name": "Oasis",
+   "rank": 485,
+   "pair": "ROSEUSDT",
+   "volume_usd": 605432,
+   "listed_since": "2020-11-19",
+   "days": 2186
   },
   {
    "id": "tellor",
    "symbol": "TRB",
    "name": "Tellor Tributes",
-   "rank": 486,
+   "rank": 488,
    "pair": "TRBUSDT",
    "volume_usd": 531460,
    "listed_since": "2020-08-29",
    "days": 2268
   },
   {
+   "id": "dusk-network",
+   "symbol": "DUSK",
+   "name": "DUSK",
+   "rank": 491,
+   "pair": "DUSKUSDT",
+   "volume_usd": 587398,
+   "listed_since": "2019-07-22",
+   "days": 2672
+  },
+  {
    "id": "bio-protocol",
    "symbol": "BIO",
    "name": "Bio Protocol",
-   "rank": 488,
+   "rank": 495,
    "pair": "BIOUSDT",
    "volume_usd": 681135,
    "listed_since": "2025-01-03",
@@ -1963,41 +1973,21 @@
    "id": "celo",
    "symbol": "CELO",
    "name": "Celo",
-   "rank": 489,
+   "rank": 496,
    "pair": "CELOUSDT",
    "volume_usd": 839207,
    "listed_since": "2021-01-05",
    "days": 2139
   },
   {
-   "id": "dusk-network",
-   "symbol": "DUSK",
-   "name": "DUSK",
-   "rank": 493,
-   "pair": "DUSKUSDT",
-   "volume_usd": 587398,
-   "listed_since": "2019-07-22",
-   "days": 2672
-  },
-  {
    "id": "jelly-my-jelly",
    "symbol": "JELLYJELLY",
    "name": "Jelly-My-Jelly",
-   "rank": 495,
+   "rank": 497,
    "pair": "yahoo:JELLYJELLY-USD",
-   "volume_usd": 2384938,
+   "volume_usd": 2360903,
    "listed_since": "2025-03-18",
    "days": 606
-  },
-  {
-   "id": "altlayer",
-   "symbol": "ALT",
-   "name": "AltLayer",
-   "rank": 501,
-   "pair": "ALTUSDT",
-   "volume_usd": 1518784,
-   "listed_since": "2024-01-25",
-   "days": 1024
   }
  ],
  "excluded": [
@@ -2061,14 +2051,14 @@
    "id": "dai",
    "symbol": "DAI",
    "name": "Dai",
-   "rank": 22,
+   "rank": 21,
    "reason": "stablecoin (follows a currency)"
   },
   {
    "id": "canton-network",
    "symbol": "CC",
    "name": "Canton",
-   "rank": 27,
+   "rank": 26,
    "reason": "not on Binance or Yahoo Finance"
   },
   {
@@ -2100,18 +2090,18 @@
    "reason": "stablecoin (follows a currency)"
   },
   {
+   "id": "rain",
+   "symbol": "RAIN",
+   "name": "Rain",
+   "rank": 33,
+   "reason": "not on Binance or Yahoo Finance"
+  },
+  {
    "id": "global-dollar",
    "symbol": "USDG",
    "name": "Global Dollar",
    "rank": 34,
    "reason": "stablecoin (follows a currency)"
-  },
-  {
-   "id": "rain",
-   "symbol": "RAIN",
-   "name": "Rain",
-   "rank": 35,
-   "reason": "not on Binance or Yahoo Finance"
   },
   {
    "id": "paypal-usd",
@@ -2142,25 +2132,25 @@
    "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
   },
   {
-   "id": "okb",
-   "symbol": "OKB",
-   "name": "OKB",
-   "rank": 43,
-   "reason": "not traded on Binance against USDT (another exchange's own token)"
-  },
-  {
    "id": "spiko-amundi-overnight-swap-fund-eur",
    "symbol": "EURSAFO",
    "name": "Spiko Amundi Overnight Swap Fund (EUR)",
-   "rank": 44,
+   "rank": 43,
    "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
+  },
+  {
+   "id": "okb",
+   "symbol": "OKB",
+   "name": "OKB",
+   "rank": 44,
+   "reason": "not traded on Binance against USDT (another exchange's own token)"
   },
   {
    "id": "memecore",
    "symbol": "M",
    "name": "MemeCore",
    "rank": 45,
-   "reason": "not on Binance, and Yahoo's M-USD is another coin (different price)"
+   "reason": "not on Binance, and thin trading elsewhere (about $904k a day)"
   },
   {
    "id": "pax-gold",
@@ -2180,14 +2170,14 @@
    "id": "blackrock-usd-institutional-digital-liquidity-fund",
    "symbol": "BUIDL",
    "name": "BlackRock USD Institutional Digital Liquidity Fund",
-   "rank": 53,
+   "rank": 52,
    "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
   },
   {
    "id": "united-stables",
    "symbol": "U",
    "name": "United Stables",
-   "rank": 54,
+   "rank": 53,
    "reason": "stablecoin (follows a currency)"
   },
   {
@@ -2247,37 +2237,37 @@
    "reason": "stablecoin (follows a currency)"
   },
   {
+   "id": "kucoin-shares",
+   "symbol": "KCS",
+   "name": "KuCoin",
+   "rank": 73,
+   "reason": "not traded on Binance against USDT (another exchange's own token)"
+  },
+  {
    "id": "venice-token",
    "symbol": "VVV",
    "name": "Venice Token",
-   "rank": 73,
+   "rank": 75,
    "reason": "not on Binance or Yahoo Finance"
   },
   {
    "id": "gatechain-token",
    "symbol": "GT",
    "name": "Gate",
-   "rank": 74,
+   "rank": 76,
    "reason": "not traded on Binance against USDT (another exchange's own token)"
-  },
-  {
-   "id": "kucoin-shares",
-   "symbol": "KCS",
-   "name": "KuCoin",
-   "rank": 75,
-   "reason": "not traded on Binance against USDT (another exchange's own token)"
-  },
-  {
-   "id": "lighter",
-   "symbol": "LIT",
-   "name": "Lighter",
-   "rank": 79,
-   "reason": "not on Binance or Yahoo Finance"
   },
   {
    "id": "pi-network",
    "symbol": "PI",
    "name": "Pi Network",
+   "rank": 80,
+   "reason": "not on Binance or Yahoo Finance"
+  },
+  {
+   "id": "lighter",
+   "symbol": "LIT",
+   "name": "Lighter",
    "rank": 81,
    "reason": "not on Binance or Yahoo Finance"
   },
@@ -2285,7 +2275,7 @@
    "id": "gho",
    "symbol": "GHO",
    "name": "GHO",
-   "rank": 87,
+   "rank": 86,
    "reason": "stablecoin (follows a currency)"
   },
   {
@@ -2296,18 +2286,18 @@
    "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
   },
   {
+   "id": "pearl-2",
+   "symbol": "PEARL",
+   "name": "Pearl",
+   "rank": 90,
+   "reason": "not on Binance or Yahoo Finance"
+  },
+  {
    "id": "janus-henderson-anemoy-aaa-clo-fund",
    "symbol": "JAAA",
    "name": "Janus Henderson Anemoy AAA CLO Fund",
    "rank": 93,
    "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
-  },
-  {
-   "id": "pearl-2",
-   "symbol": "PEARL",
-   "name": "Pearl",
-   "rank": 95,
-   "reason": "not on Binance or Yahoo Finance"
   },
   {
    "id": "usual-usd",
@@ -2320,14 +2310,14 @@
    "id": "euro-coin",
    "symbol": "EURC",
    "name": "EURC",
-   "rank": 100,
+   "rank": 99,
    "reason": "stablecoin (follows a currency)"
   },
   {
    "id": "true-usd",
    "symbol": "TUSD",
    "name": "TrueUSD",
-   "rank": 102,
+   "rank": 101,
    "reason": "stablecoin (follows a currency)"
   },
   {
@@ -2345,6 +2335,13 @@
    "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
   },
   {
+   "id": "stable-2",
+   "symbol": "STABLE",
+   "name": "\u200b\u200bStable",
+   "rank": 105,
+   "reason": "not on Binance or Yahoo Finance"
+  },
+  {
    "id": "a7a5",
    "symbol": "A7A5",
    "name": "A7A5",
@@ -2352,24 +2349,17 @@
    "reason": "stablecoin (follows a currency)"
   },
   {
-   "id": "stable-2",
-   "symbol": "STABLE",
-   "name": "\u200b\u200bStable",
-   "rank": 108,
-   "reason": "not on Binance or Yahoo Finance"
-  },
-  {
    "id": "hash-2",
    "symbol": "HASH",
    "name": "Provenance Blockchain",
    "rank": 113,
-   "reason": "not on Binance, and thin trading elsewhere (about $5k a day)"
+   "reason": "not on Binance, and thin trading elsewhere (about $4k a day)"
   },
   {
    "id": "re-protocol-reusd",
    "symbol": "REUSD",
    "name": "Re Protocol reUSD",
-   "rank": 115,
+   "rank": 114,
    "reason": "stablecoin (follows a currency)"
   },
   {
@@ -2383,22 +2373,15 @@
    "id": "aero",
    "symbol": "AERO",
    "name": "Aero",
-   "rank": 120,
+   "rank": 119,
    "reason": "only 120 days on Binance (needs 200)"
   },
   {
    "id": "sofiusd",
    "symbol": "SOFID",
    "name": "SoFiUSD",
-   "rank": 122,
+   "rank": 123,
    "reason": "stablecoin (follows a currency)"
-  },
-  {
-   "id": "spx6900",
-   "symbol": "SPX",
-   "name": "SPX6900",
-   "rank": 124,
-   "reason": "bridged copy of another coin"
   },
   {
    "id": "ousg",
@@ -2408,10 +2391,17 @@
    "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
   },
   {
+   "id": "spx6900",
+   "symbol": "SPX",
+   "name": "SPX6900",
+   "rank": 126,
+   "reason": "bridged copy of another coin"
+  },
+  {
    "id": "grass",
    "symbol": "GRASS",
    "name": "Grass",
-   "rank": 130,
+   "rank": 129,
    "reason": "not on Binance or Yahoo Finance"
   },
   {
@@ -2425,14 +2415,14 @@
    "id": "derive",
    "symbol": "DRV",
    "name": "Derive",
-   "rank": 135,
+   "rank": 134,
    "reason": "not on Binance or Yahoo Finance"
   },
   {
    "id": "first-digital-usd",
    "symbol": "FDUSD",
    "name": "First Digital USD",
-   "rank": 136,
+   "rank": 135,
    "reason": "stablecoin (follows a currency)"
   },
   {
@@ -2443,32 +2433,32 @@
    "reason": "not on Binance or Yahoo Finance"
   },
   {
-   "id": "gnosis",
-   "symbol": "GNO",
-   "name": "Gnosis",
-   "rank": 140,
-   "reason": "thin trading on Binance (about $80k a day; needs $250k)"
-  },
-  {
    "id": "ape-and-pepe",
    "symbol": "APEPE",
    "name": "Ape and Pepe",
-   "rank": 142,
+   "rank": 140,
    "reason": "not on Binance or Yahoo Finance"
+  },
+  {
+   "id": "gnosis",
+   "symbol": "GNO",
+   "name": "Gnosis",
+   "rank": 141,
+   "reason": "thin trading on Binance (about $80k a day; needs $250k)"
   },
   {
    "id": "safo",
    "symbol": "SAFO",
    "name": "Spiko Amundi Overnight Swap Fund",
-   "rank": 143,
+   "rank": 142,
    "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
   },
   {
    "id": "olympus",
    "symbol": "OHM",
    "name": "Olympus",
-   "rank": 147,
-   "reason": "not on Binance, and thin trading elsewhere (about $227k a day)"
+   "rank": 145,
+   "reason": "not on Binance, and thin trading elsewhere (about $182k a day)"
   },
   {
    "id": "tradable-na-rent-financing-platform-sstn",
@@ -2478,11 +2468,11 @@
    "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
   },
   {
-   "id": "ozone-chain",
-   "symbol": "OZO",
-   "name": "Ozone Chain",
+   "id": "frax",
+   "symbol": "FRAX",
+   "name": "Legacy Frax Dollar",
    "rank": 149,
-   "reason": "not on Binance, and thin trading elsewhere (about $414k a day)"
+   "reason": "stablecoin (follows a currency)"
   },
   {
    "id": "beam-2",
@@ -2492,32 +2482,39 @@
    "reason": "not on Binance, and Yahoo's BEAM-USD is another coin (different price)"
   },
   {
+   "id": "ozone-chain",
+   "symbol": "OZO",
+   "name": "Ozone Chain",
+   "rank": 151,
+   "reason": "not on Binance, and thin trading elsewhere (about $361k a day)"
+  },
+  {
    "id": "backpack",
    "symbol": "BP",
    "name": "Backpack",
-   "rank": 151,
-   "reason": "not traded on Binance against USDT (another exchange's own token)"
-  },
-  {
-   "id": "frax",
-   "symbol": "FRAX",
-   "name": "Legacy Frax Dollar",
    "rank": 152,
-   "reason": "stablecoin (follows a currency)"
+   "reason": "not traded on Binance against USDT (another exchange's own token)"
   },
   {
    "id": "spacex-bstocks-tokenized-stock",
    "symbol": "SPCXB",
    "name": "SpaceX (bStocks Tokenized Stock)",
-   "rank": 156,
+   "rank": 155,
    "reason": "only 155 days on Binance (needs 200)"
   },
   {
    "id": "usx",
    "symbol": "USX",
    "name": "USX",
-   "rank": 157,
+   "rank": 156,
    "reason": "stablecoin (follows a currency)"
+  },
+  {
+   "id": "apenft",
+   "symbol": "NFT",
+   "name": "AINFT",
+   "rank": 159,
+   "reason": "not on Binance or Yahoo Finance"
   },
   {
    "id": "decred",
@@ -2527,38 +2524,38 @@
    "reason": "thin trading on Binance (about $121k a day; needs $250k)"
   },
   {
-   "id": "apenft",
-   "symbol": "NFT",
-   "name": "AINFT",
-   "rank": 162,
-   "reason": "not on Binance or Yahoo Finance"
-  },
-  {
    "id": "bnb48-club-token",
    "symbol": "KOGE",
    "name": "KOGE",
-   "rank": 164,
-   "reason": "not on Binance, and thin trading elsewhere (about $11k a day)"
+   "rank": 161,
+   "reason": "not on Binance, and thin trading elsewhere (about $12k a day)"
   },
   {
    "id": "societe-generale-forge-eurcv",
    "symbol": "EURCV",
    "name": "EUR CoinVertible",
-   "rank": 167,
+   "rank": 165,
    "reason": "stablecoin (follows a currency)"
   },
   {
    "id": "midas-fasanara-global-open",
    "symbol": "MGLO",
    "name": "Midas Fasanara Global Open",
-   "rank": 168,
+   "rank": 166,
    "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
+  },
+  {
+   "id": "shuffle-2",
+   "symbol": "SHFL",
+   "name": "Shuffle",
+   "rank": 168,
+   "reason": "not on Binance, and thin trading elsewhere (about $669k a day)"
   },
   {
    "id": "btse-token",
    "symbol": "BTSE",
    "name": "BTSE Token",
-   "rank": 171,
+   "rank": 169,
    "reason": "not traded on Binance against USDT (another exchange's own token)"
   },
   {
@@ -2566,40 +2563,40 @@
    "symbol": "KAG",
    "name": "Kinesis Silver",
    "rank": 172,
-   "reason": "not on Binance, and thin trading elsewhere (about $839k a day)"
+   "reason": "not on Binance, and thin trading elsewhere (about $805k a day)"
   },
   {
    "id": "usa",
    "symbol": "USAT",
    "name": "USAT",
-   "rank": 175,
+   "rank": 174,
    "reason": "stablecoin (follows a currency)"
-  },
-  {
-   "id": "spiko-us-t-bills-money-market-fund",
-   "symbol": "USTBL",
-   "name": "Spiko US T-Bills Money Market Fund",
-   "rank": 177,
-   "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
   },
   {
    "id": "nvidia-bstocks",
    "symbol": "NVDAB",
    "name": "NVIDIA (bStocks Tokenized Stock)",
-   "rank": 178,
+   "rank": 176,
    "reason": "only 156 days on Binance (needs 200)"
   },
   {
-   "id": "collector-crypt",
-   "symbol": "CARDS",
-   "name": "Collector Crypt",
-   "rank": 179,
-   "reason": "not on Binance or Yahoo Finance"
+   "id": "spiko-us-t-bills-money-market-fund",
+   "symbol": "USTBL",
+   "name": "Spiko US T-Bills Money Market Fund",
+   "rank": 178,
+   "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
   },
   {
    "id": "cap-4",
    "symbol": "CAP",
    "name": "Cap",
+   "rank": 179,
+   "reason": "not on Binance or Yahoo Finance"
+  },
+  {
+   "id": "collector-crypt",
+   "symbol": "CARDS",
+   "name": "Collector Crypt",
    "rank": 180,
    "reason": "not on Binance or Yahoo Finance"
   },
@@ -2607,35 +2604,35 @@
    "id": "geodnet",
    "symbol": "GEOD",
    "name": "Geodnet",
-   "rank": 185,
-   "reason": "not on Binance, and thin trading elsewhere (about $547k a day)"
+   "rank": 181,
+   "reason": "not on Binance, and thin trading elsewhere (about $684k a day)"
   },
   {
    "id": "tradable-apac-diversified-finance-provider-sstn",
    "symbol": "PC0000033",
    "name": "Tradable APAC Diversified Finance Provider SSTN",
-   "rank": 186,
+   "rank": 183,
    "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
   },
   {
    "id": "anvil",
    "symbol": "ANVL",
    "name": "Anvil",
-   "rank": 188,
-   "reason": "not on Binance, and thin trading elsewhere (about $183k a day)"
+   "rank": 185,
+   "reason": "not on Binance, and thin trading elsewhere (about $165k a day)"
   },
   {
    "id": "usdai",
    "symbol": "USDAI",
    "name": "USDai",
-   "rank": 192,
-   "reason": "not on Binance, and thin trading elsewhere (about $122k a day)"
+   "rank": 191,
+   "reason": "not on Binance, and thin trading elsewhere (about $113k a day)"
   },
   {
    "id": "agora-dollar",
    "symbol": "AUSD",
    "name": "AUSD",
-   "rank": 194,
+   "rank": 193,
    "reason": "stablecoin (follows a currency)"
   },
   {
@@ -2649,50 +2646,43 @@
    "id": "apyusd",
    "symbol": "APYUSD",
    "name": "apyUSD",
-   "rank": 202,
-   "reason": "not on Binance, and thin trading elsewhere (about $315k a day)"
+   "rank": 201,
+   "reason": "not on Binance, and thin trading elsewhere (about $136k a day)"
   },
   {
    "id": "quack-ai",
    "symbol": "Q",
    "name": "Quack AI",
-   "rank": 201,
+   "rank": 206,
    "reason": "not on Binance or Yahoo Finance"
-  },
-  {
-   "id": "origintrail",
-   "symbol": "TRAC",
-   "name": "OriginTrail",
-   "rank": 204,
-   "reason": "not on Binance, and thin trading elsewhere (about $928k a day)"
   },
   {
    "id": "coco-2",
    "symbol": "COCO",
    "name": "coco",
    "rank": 205,
-   "reason": "not on Binance, and thin trading elsewhere (about $67k a day)"
-  },
-  {
-   "id": "circle-internet-group-bstock",
-   "symbol": "CRCLB",
-   "name": "Circle Internet Group (bStocks Tokenized Stock)",
-   "rank": 206,
-   "reason": "only 156 days on Binance (needs 200)"
+   "reason": "not on Binance, and thin trading elsewhere (about $62k a day)"
   },
   {
    "id": "crvusd",
    "symbol": "CRVUSD",
    "name": "crvUSD",
-   "rank": 207,
+   "rank": 204,
    "reason": "stablecoin (follows a currency)"
   },
   {
    "id": "tradable-latam-fintech-sstn",
    "symbol": "PC0000097",
    "name": "Tradable LatAm Fintech SSTN",
-   "rank": 208,
+   "rank": 207,
    "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
+  },
+  {
+   "id": "circle-internet-group-bstock",
+   "symbol": "CRCLB",
+   "name": "Circle Internet Group (bStocks Tokenized Stock)",
+   "rank": 208,
+   "reason": "only 156 days on Binance (needs 200)"
   },
   {
    "id": "cash-4",
@@ -2702,53 +2692,60 @@
    "reason": "stablecoin (follows a currency)"
   },
   {
-   "id": "swissborg",
-   "symbol": "BORG",
-   "name": "SwissBorg",
-   "rank": 211,
-   "reason": "not on Binance, and thin trading elsewhere (about $301k a day)"
+   "id": "bedrock-token",
+   "symbol": "BR",
+   "name": "Bedrock",
+   "rank": 210,
+   "reason": "not on Binance, and Yahoo's BR-USD is another coin (different price)"
   },
   {
    "id": "3jane-usd3",
    "symbol": "USD3",
    "name": "3Jane USD3",
-   "rank": 213,
-   "reason": "not on Binance, and thin trading elsewhere (about $424k a day)"
+   "rank": 211,
+   "reason": "not on Binance, and thin trading elsewhere (about $127k a day)"
   },
   {
-   "id": "bedrock-token",
-   "symbol": "BR",
-   "name": "Bedrock",
-   "rank": 214,
-   "reason": "not on Binance, and Yahoo's BR-USD is another coin (different price)"
+   "id": "swissborg",
+   "symbol": "BORG",
+   "name": "SwissBorg",
+   "rank": 212,
+   "reason": "not on Binance, and thin trading elsewhere (about $257k a day)"
   },
   {
    "id": "mx-token",
    "symbol": "MX",
    "name": "MX",
-   "rank": 217,
+   "rank": 213,
    "reason": "not traded on Binance against USDT (another exchange's own token)"
+  },
+  {
+   "id": "jpysc",
+   "symbol": "JPYSC",
+   "name": "JPYSC",
+   "rank": 218,
+   "reason": "stablecoin (follows a currency)"
   },
   {
    "id": "aerodrome-finance",
    "symbol": "AERO",
    "name": "Aerodrome Finance",
-   "rank": 218,
+   "rank": 219,
    "reason": "only 120 days on Binance (needs 200)"
   },
   {
    "id": "chain-2",
    "symbol": "XCN",
    "name": "Onyxcoin",
-   "rank": 219,
+   "rank": 220,
    "reason": "not on Binance, and Yahoo's XCN-USD is another coin (different price)"
   },
   {
-   "id": "jpysc",
-   "symbol": "JPYSC",
-   "name": "JPYSC",
-   "rank": 220,
-   "reason": "stablecoin (follows a currency)"
+   "id": "bc-token",
+   "symbol": "BC",
+   "name": "BCGame Coin",
+   "rank": 222,
+   "reason": "not on Binance, and thin trading elsewhere (about $132k a day)"
   },
   {
    "id": "vision-3",
@@ -2758,32 +2755,39 @@
    "reason": "not on Binance or Yahoo Finance"
   },
   {
-   "id": "useless-3",
-   "symbol": "USELESS",
-   "name": "Useless Coin",
-   "rank": 222,
-   "reason": "not on Binance or Yahoo Finance"
-  },
-  {
-   "id": "bc-token",
-   "symbol": "BC",
-   "name": "BCGame Coin",
-   "rank": 223,
-   "reason": "not on Binance, and thin trading elsewhere (about $123k a day)"
-  },
-  {
-   "id": "strategy-pp-variable-xstock",
-   "symbol": "STRCX",
-   "name": "Strategy PP Variable xStock",
-   "rank": 227,
-   "reason": "not traded on Binance against USDT (tokenised share)"
-  },
-  {
    "id": "theo-short-duration-us-treasury-fund",
    "symbol": "THBILL",
    "name": "Theo Short Duration US Treasury Fund",
+   "rank": 225,
+   "reason": "not on Binance, and thin trading elsewhere (about $1k a day)"
+  },
+  {
+   "id": "tradable-singapore-fintech-ssl-2",
+   "symbol": "PC0000023",
+   "name": "Tradable Singapore Fintech SSL",
+   "rank": 228,
+   "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
+  },
+  {
+   "id": "onyc",
+   "symbol": "ONYC",
+   "name": "OnRe Tokenized Reinsurance",
+   "rank": 229,
+   "reason": "not on Binance or Yahoo Finance"
+  },
+  {
+   "id": "alpha-bulgaria-warrants",
+   "symbol": "ALFW",
+   "name": "Alpha Bulgaria Warrants",
    "rank": 230,
-   "reason": "not on Binance, and thin trading elsewhere (about $5k a day)"
+   "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
+  },
+  {
+   "id": "useless-3",
+   "symbol": "USELESS",
+   "name": "Useless Coin",
+   "rank": 231,
+   "reason": "not on Binance or Yahoo Finance"
   },
   {
    "id": "edgex",
@@ -2793,45 +2797,31 @@
    "reason": "not traded on Binance against USDT (another exchange's own token)"
   },
   {
-   "id": "onyc",
-   "symbol": "ONYC",
-   "name": "OnRe Tokenized Reinsurance",
-   "rank": 231,
-   "reason": "not on Binance or Yahoo Finance"
-  },
-  {
-   "id": "tradable-singapore-fintech-ssl-2",
-   "symbol": "PC0000023",
-   "name": "Tradable Singapore Fintech SSL",
-   "rank": 233,
-   "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
-  },
-  {
-   "id": "alpha-bulgaria-warrants",
-   "symbol": "ALFW",
-   "name": "Alpha Bulgaria Warrants",
+   "id": "strategy-pp-variable-xstock",
+   "symbol": "STRCX",
+   "name": "Strategy PP Variable xStock",
    "rank": 234,
-   "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
+   "reason": "not traded on Binance against USDT (tokenised share)"
   },
   {
    "id": "hastra-auto",
    "symbol": "AUTO",
    "name": "Hastra AUTO",
-   "rank": 236,
-   "reason": "not on Binance, and thin trading elsewhere (about $103k a day)"
+   "rank": 235,
+   "reason": "not on Binance, and thin trading elsewhere (about $105k a day)"
   },
   {
    "id": "tradable-latam-middle-market-lender-sstl",
    "symbol": "PC0000085",
    "name": "Tradable LatAm Middle-Market Lender SSTL",
-   "rank": 237,
+   "rank": 236,
    "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
   },
   {
    "id": "astherus-usdf",
    "symbol": "USDF",
    "name": "Aster USDF",
-   "rank": 238,
+   "rank": 237,
    "reason": "stablecoin (follows a currency)"
   },
   {
@@ -2849,52 +2839,52 @@
    "reason": "not on Binance or Yahoo Finance"
   },
   {
+   "id": "dgrid-ai",
+   "symbol": "DGAI",
+   "name": "DGrid AI",
+   "rank": 242,
+   "reason": "not on Binance, and only 82 days on Yahoo (needs 200)"
+  },
+  {
    "id": "microstrategy-xstock",
    "symbol": "MSTRX",
    "name": "MicroStrategy xStock",
-   "rank": 241,
+   "rank": 243,
    "reason": "not traded on Binance against USDT (tokenised share)"
   },
   {
    "id": "ecash",
    "symbol": "XEC",
    "name": "eCash",
-   "rank": 242,
+   "rank": 241,
    "reason": "thin trading on Binance (about $185k a day; needs $250k)"
-  },
-  {
-   "id": "dgrid-ai",
-   "symbol": "DGAI",
-   "name": "DGrid AI",
-   "rank": 243,
-   "reason": "not on Binance, and only 82 days on Yahoo (needs 200)"
   },
   {
    "id": "tradable-na-third-party-online-merchant-sstn",
    "symbol": "PC0000015",
    "name": "Tradable NA Third Party Online Merchant SSTN",
-   "rank": 245,
+   "rank": 244,
    "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
   },
   {
    "id": "rollbit-coin",
    "symbol": "RLB",
    "name": "Rollbit Coin",
-   "rank": 246,
-   "reason": "not on Binance, and thin trading elsewhere (about $366k a day)"
+   "rank": 245,
+   "reason": "not on Binance, and thin trading elsewhere (about $314k a day)"
   },
   {
    "id": "nest-blackopal-liquidstone-ii-vault",
    "symbol": "NOPAL",
    "name": "Nest BlackOpal LiquidStone II Vault",
-   "rank": 247,
+   "rank": 246,
    "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
   },
   {
    "id": "securitize-tokenized-aaa-clo-fund",
    "symbol": "STAC",
    "name": "Securitize Tokenized AAA CLO Fund",
-   "rank": 248,
+   "rank": 247,
    "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
   },
   {
@@ -2902,61 +2892,68 @@
    "symbol": "RAIL",
    "name": "Railgun",
    "rank": 251,
-   "reason": "not on Binance, and thin trading elsewhere (about $197k a day)"
+   "reason": "not on Binance, and thin trading elsewhere (about $127k a day)"
   },
   {
    "id": "saturn-dollar",
    "symbol": "USDAT",
    "name": "Saturn Dollar",
-   "rank": 252,
+   "rank": 253,
    "reason": "stablecoin (follows a currency)"
   },
   {
    "id": "tradable-singapore-fintech-ssl",
    "symbol": "PC0000077",
    "name": "Tradable Singapore Fintech SSL",
-   "rank": 256,
+   "rank": 254,
    "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
   },
   {
    "id": "unity-usd",
    "symbol": "UUSD",
    "name": "Unity USD",
-   "rank": 257,
+   "rank": 255,
    "reason": "stablecoin (follows a currency)"
   },
   {
    "id": "golem",
    "symbol": "GLM",
    "name": "Golem",
-   "rank": 260,
+   "rank": 259,
    "reason": "thin trading on Binance (about $116k a day; needs $250k)"
   },
   {
-   "id": "pons",
-   "symbol": "PONS",
-   "name": "Pons",
-   "rank": 263,
-   "reason": "not on Binance, and only 117 days on Yahoo (needs 200)"
-  },
-  {
-   "id": "safepal",
-   "symbol": "SFP",
-   "name": "SafePal",
-   "rank": 264,
-   "reason": "thin trading on Binance (about $85k a day; needs $250k)"
+   "id": "nvidia-xstock",
+   "symbol": "NVDAX",
+   "name": "NVIDIA xStock",
+   "rank": 260,
+   "reason": "not traded on Binance against USDT (tokenised share)"
   },
   {
    "id": "avant-usd",
    "symbol": "AVUSD",
    "name": "Avant USD",
-   "rank": 266,
+   "rank": 262,
    "reason": "stablecoin (follows a currency)"
   },
   {
    "id": "usda-2",
    "symbol": "USDA",
    "name": "USDa",
+   "rank": 263,
+   "reason": "stablecoin (follows a currency)"
+  },
+  {
+   "id": "havven",
+   "symbol": "SNX",
+   "name": "Synthetix",
+   "rank": 266,
+   "reason": "thin trading on Binance (about $218k a day; needs $250k)"
+  },
+  {
+   "id": "frax-usd",
+   "symbol": "FRXUSD",
+   "name": "Frax USD",
    "rank": 267,
    "reason": "stablecoin (follows a currency)"
   },
@@ -2968,87 +2965,80 @@
    "reason": "wrapped copy of another coin"
   },
   {
-   "id": "nvidia-xstock",
-   "symbol": "NVDAX",
-   "name": "NVIDIA xStock",
+   "id": "alphabet-bstocks-tokenized-stock",
+   "symbol": "GOOGLB",
+   "name": "Alphabet (bStocks Tokenized Stock)",
    "rank": 270,
-   "reason": "not traded on Binance against USDT (tokenised share)"
-  },
-  {
-   "id": "havven",
-   "symbol": "SNX",
-   "name": "Synthetix",
-   "rank": 269,
-   "reason": "thin trading on Binance (about $218k a day; needs $250k)"
-  },
-  {
-   "id": "frax-usd",
-   "symbol": "FRXUSD",
-   "name": "Frax USD",
-   "rank": 272,
-   "reason": "stablecoin (follows a currency)"
+   "reason": "only 130 days on Binance (needs 200)"
   },
   {
    "id": "genius-3",
    "symbol": "GENIUS",
    "name": "Genius",
-   "rank": 273,
+   "rank": 271,
    "reason": "only 176 days on Binance (needs 200)"
   },
   {
-   "id": "alphabet-bstocks-tokenized-stock",
-   "symbol": "GOOGLB",
-   "name": "Alphabet (bStocks Tokenized Stock)",
-   "rank": 275,
-   "reason": "only 130 days on Binance (needs 200)"
+   "id": "safepal",
+   "symbol": "SFP",
+   "name": "SafePal",
+   "rank": 272,
+   "reason": "thin trading on Binance (about $85k a day; needs $250k)"
   },
   {
    "id": "baby-claw",
    "symbol": "BABYCLAW",
    "name": "Baby Claw",
-   "rank": 278,
+   "rank": 274,
    "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
+  },
+  {
+   "id": "pons",
+   "symbol": "PONS",
+   "name": "Pons",
+   "rank": 276,
+   "reason": "not on Binance, and only 117 days on Yahoo (needs 200)"
   },
   {
    "id": "aethir",
    "symbol": "ATH",
    "name": "Aethir",
-   "rank": 280,
+   "rank": 279,
    "reason": "not on Binance or Yahoo Finance"
   },
   {
    "id": "yzy",
    "symbol": "YZY",
    "name": "YZY",
-   "rank": 282,
+   "rank": 281,
    "reason": "not on Binance, and thin trading elsewhere (about $1k a day)"
   },
   {
    "id": "debridge",
    "symbol": "DBR",
    "name": "deBridge",
-   "rank": 283,
+   "rank": 282,
    "reason": "not on Binance, and Yahoo's DBR-USD is another coin (different price)"
   },
   {
    "id": "chutes",
    "symbol": "SN64",
    "name": "Chutes",
-   "rank": 284,
-   "reason": "not on Binance, and thin trading elsewhere (about $147k a day)"
+   "rank": 285,
+   "reason": "not on Binance, and thin trading elsewhere (about $135k a day)"
   },
   {
    "id": "jpycoin",
    "symbol": "JPYC",
    "name": "JPY Coin",
-   "rank": 289,
+   "rank": 286,
    "reason": "stablecoin (follows a currency)"
   },
   {
    "id": "o1-exchange",
    "symbol": "O",
    "name": "o1.exchange",
-   "rank": 288,
+   "rank": 289,
    "reason": "not on Binance, and Yahoo's O-USD is another coin (different price)"
   },
   {
@@ -3059,32 +3049,32 @@
    "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
   },
   {
-   "id": "meta-2-2",
-   "symbol": "META",
-   "name": "MetaDAO",
-   "rank": 291,
-   "reason": "not on Binance, and thin trading elsewhere (about $921k a day)"
-  },
-  {
    "id": "spacex-xstocks",
    "symbol": "SPCXX",
    "name": "SpaceX xStock",
-   "rank": 292,
+   "rank": 291,
    "reason": "not traded on Binance against USDT (tokenised share)"
   },
   {
    "id": "goldfish-gold",
    "symbol": "GGBR",
    "name": "Goldfish Gold",
-   "rank": 293,
+   "rank": 292,
    "reason": "tracks gold"
   },
   {
    "id": "soon-2",
    "symbol": "SOON",
    "name": "SOON",
-   "rank": 294,
+   "rank": 293,
    "reason": "not on Binance or Yahoo Finance"
+  },
+  {
+   "id": "ondo-u-s-dollar-token",
+   "symbol": "USDON",
+   "name": "Ondo U.S. Dollar Token",
+   "rank": 294,
+   "reason": "stablecoin (follows a currency)"
   },
   {
    "id": "nxm",
@@ -3094,18 +3084,18 @@
    "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
   },
   {
-   "id": "ondo-u-s-dollar-token",
-   "symbol": "USDON",
-   "name": "Ondo U.S. Dollar Token",
+   "id": "usda-3",
+   "symbol": "USDA",
+   "name": "USDA",
    "rank": 296,
    "reason": "stablecoin (follows a currency)"
   },
   {
-   "id": "usda-3",
-   "symbol": "USDA",
-   "name": "USDA",
+   "id": "meta-2-2",
+   "symbol": "META",
+   "name": "MetaDAO",
    "rank": 297,
-   "reason": "stablecoin (follows a currency)"
+   "reason": "not on Binance, and thin trading elsewhere (about $562k a day)"
   },
   {
    "id": "tori-trusd",
@@ -3115,373 +3105,380 @@
    "reason": "stablecoin (follows a currency)"
   },
   {
-   "id": "sandisk-bstocks-tokenized-stock",
-   "symbol": "SNDKB",
-   "name": "SanDisk (bStocks Tokenized Stock)",
-   "rank": 299,
-   "reason": "only 156 days on Binance (needs 200)"
-  },
-  {
    "id": "na-post-settlement-legal-financing-receivables",
    "symbol": "PC0000101",
    "name": "Tradable NA Post-Settlement Legal Financing Receivables",
-   "rank": 300,
+   "rank": 299,
    "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
   },
   {
    "id": "apollo-diversified-credit-securitize-fund",
    "symbol": "ACRED",
    "name": "Apollo Diversified Credit Securitize Fund",
-   "rank": 301,
+   "rank": 300,
    "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
   },
   {
    "id": "pleasing-gold",
    "symbol": "PGOLD",
    "name": "Pleasing Gold",
-   "rank": 305,
+   "rank": 301,
    "reason": "tracks gold"
+  },
+  {
+   "id": "cygnus-finance-global-usd",
+   "symbol": "CGUSD",
+   "name": "Cygnus Finance Global USD",
+   "rank": 302,
+   "reason": "stablecoin (follows a currency)"
   },
   {
    "id": "stronghold-token",
    "symbol": "SHX",
    "name": "Stronghold",
    "rank": 304,
-   "reason": "not on Binance, and thin trading elsewhere (about $828k a day)"
-  },
-  {
-   "id": "cygnus-finance-global-usd",
-   "symbol": "CGUSD",
-   "name": "Cygnus Finance Global USD",
-   "rank": 306,
-   "reason": "stablecoin (follows a currency)"
+   "reason": "not on Binance, and thin trading elsewhere (about $565k a day)"
   },
   {
    "id": "felix-feusd",
    "symbol": "FEUSD",
    "name": "Felix feUSD",
-   "rank": 309,
+   "rank": 305,
    "reason": "stablecoin (follows a currency)"
   },
   {
    "id": "sp500-xstock",
    "symbol": "SPYX",
    "name": "SP500 xStock",
-   "rank": 310,
+   "rank": 306,
    "reason": "not traded on Binance against USDT (tokenised share)"
   },
   {
    "id": "numa-x",
    "symbol": "CRX",
    "name": "NUMA-X",
-   "rank": 311,
-   "reason": "not on Binance, and thin trading elsewhere (about $130k a day)"
+   "rank": 307,
+   "reason": "not on Binance, and thin trading elsewhere (about $135k a day)"
   },
   {
    "id": "helio-protocol-hay",
    "symbol": "LISUSD",
    "name": "Lista USD",
-   "rank": 313,
+   "rank": 308,
    "reason": "stablecoin (follows a currency)"
-  },
-  {
-   "id": "mag7-ssi",
-   "symbol": "MAG7.SSI",
-   "name": "MAG7.ssi",
-   "rank": 314,
-   "reason": "not on Binance, and thin trading elsewhere (about $471k a day)"
   },
   {
    "id": "nasdaq-xstock",
    "symbol": "QQQX",
    "name": "Nasdaq xStock",
-   "rank": 315,
+   "rank": 309,
    "reason": "not traded on Binance against USDT (tokenised share)"
   },
   {
-   "id": "0x",
-   "symbol": "ZRX",
-   "name": "0x Protocol",
-   "rank": 317,
-   "reason": "thin trading on Binance (about $113k a day; needs $250k)"
+   "id": "sandisk-bstocks-tokenized-stock",
+   "symbol": "SNDKB",
+   "name": "SanDisk (bStocks Tokenized Stock)",
+   "rank": 312,
+   "reason": "only 156 days on Binance (needs 200)"
   },
   {
    "id": "midas-mtbill",
    "symbol": "MTBILL",
    "name": "Midas mTBILL",
-   "rank": 319,
+   "rank": 315,
    "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
   },
   {
-   "id": "dog-go-to-the-moon-rune",
-   "symbol": "DOG",
-   "name": "Dog (Bitcoin)",
-   "rank": 320,
-   "reason": "not on Binance, and thin trading elsewhere (about $444k a day)"
-  },
-  {
-   "id": "cheems-token",
-   "symbol": "CHEEMS",
-   "name": "Cheems Token",
-   "rank": 318,
-   "reason": "not on Binance, and thin trading elsewhere (about $555k a day)"
-  },
-  {
-   "id": "circle-internet-group-ondo-tokenized-stock",
-   "symbol": "CRCLON",
-   "name": "Circle Internet Group (Ondo Tokenized Stock)",
-   "rank": 322,
-   "reason": "not traded on Binance against USDT (tokenised asset)"
+   "id": "mag7-ssi",
+   "symbol": "MAG7.SSI",
+   "name": "MAG7.ssi",
+   "rank": 316,
+   "reason": "not on Binance, and thin trading elsewhere (about $371k a day)"
   },
   {
    "id": "usdsui",
    "symbol": "USDSUI",
    "name": "USDsui",
-   "rank": 323,
+   "rank": 317,
    "reason": "stablecoin (follows a currency)"
   },
   {
    "id": "apes-2-2",
    "symbol": "APES",
    "name": "APES",
-   "rank": 324,
+   "rank": 318,
    "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
+  },
+  {
+   "id": "circle-internet-group-ondo-tokenized-stock",
+   "symbol": "CRCLON",
+   "name": "Circle Internet Group (Ondo Tokenized Stock)",
+   "rank": 319,
+   "reason": "not traded on Binance against USDT (tokenised asset)"
   },
   {
    "id": "quantum-resistant-ledger",
    "symbol": "QRL",
    "name": "Quantum Resistant Ledger",
-   "rank": 325,
-   "reason": "not on Binance, and thin trading elsewhere (about $43k a day)"
+   "rank": 320,
+   "reason": "not on Binance, and thin trading elsewhere (about $48k a day)"
+  },
+  {
+   "id": "0x",
+   "symbol": "ZRX",
+   "name": "0x Protocol",
+   "rank": 321,
+   "reason": "thin trading on Binance (about $113k a day; needs $250k)"
   },
   {
    "id": "tradable-eu-latam-pos-financing-sstl",
    "symbol": "PC0000049",
    "name": "Tradable Eu/LatAm PoS Financing SSTL",
-   "rank": 327,
+   "rank": 322,
    "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
-  },
-  {
-   "id": "ritual",
-   "symbol": "RITUAL",
-   "name": "Ritual",
-   "rank": 326,
-   "reason": "not on Binance, and only 18 days on Yahoo (needs 200)"
-  },
-  {
-   "id": "seeker",
-   "symbol": "SKR",
-   "name": "Seeker",
-   "rank": 328,
-   "reason": "not on Binance or Yahoo Finance"
   },
   {
    "id": "infinifi-usd",
    "symbol": "IUSD",
    "name": "InfiniFi USD",
-   "rank": 330,
-   "reason": "not on Binance, and thin trading elsewhere (about $1k a day)"
+   "rank": 325,
+   "reason": "not on Binance, and thin trading elsewhere (about $5k a day)"
+  },
+  {
+   "id": "cheems-token",
+   "symbol": "CHEEMS",
+   "name": "Cheems Token",
+   "rank": 326,
+   "reason": "not on Binance, and thin trading elsewhere (about $516k a day)"
+  },
+  {
+   "id": "dog-go-to-the-moon-rune",
+   "symbol": "DOG",
+   "name": "Dog (Bitcoin)",
+   "rank": 327,
+   "reason": "not on Binance, and thin trading elsewhere (about $415k a day)"
   },
   {
    "id": "wrappedm-by-m0",
    "symbol": "WM",
    "name": "WrappedM by M0",
-   "rank": 332,
+   "rank": 328,
    "reason": "wrapped copy of another coin"
-  },
-  {
-   "id": "ozapay",
-   "symbol": "OZA",
-   "name": "Ozapay",
-   "rank": 333,
-   "reason": "not on Binance, and thin trading elsewhere (about $2k a day)"
   },
   {
    "id": "axis-usd",
    "symbol": "USDX",
    "name": "Axis USD",
-   "rank": 334,
+   "rank": 329,
    "reason": "stablecoin (follows a currency)"
+  },
+  {
+   "id": "ritual",
+   "symbol": "RITUAL",
+   "name": "Ritual",
+   "rank": 330,
+   "reason": "not on Binance, and only 18 days on Yahoo (needs 200)"
   },
   {
    "id": "qtum",
    "symbol": "QTUM",
    "name": "Qtum",
-   "rank": 335,
+   "rank": 331,
    "reason": "thin trading on Binance (about $78k a day; needs $250k)"
   },
   {
-   "id": "pharos-network",
-   "symbol": "PROS",
-   "name": "Pharos",
-   "rank": 338,
+   "id": "seeker",
+   "symbol": "SKR",
+   "name": "Seeker",
+   "rank": 332,
    "reason": "not on Binance or Yahoo Finance"
   },
   {
    "id": "tesla-xstock",
    "symbol": "TSLAX",
    "name": "Tesla xStock",
-   "rank": 337,
+   "rank": 334,
    "reason": "not traded on Binance against USDT (tokenised share)"
   },
   {
-   "id": "adi-token",
-   "symbol": "ADI",
-   "name": "ADI",
-   "rank": 339,
+   "id": "pharos-network",
+   "symbol": "PROS",
+   "name": "Pharos",
+   "rank": 336,
    "reason": "not on Binance or Yahoo Finance"
-  },
-  {
-   "id": "tagger",
-   "symbol": "TAG",
-   "name": "TAGGER",
-   "rank": 340,
-   "reason": "not on Binance, and Yahoo's TAG-USD is another coin (different price)"
   },
   {
    "id": "dola-usd",
    "symbol": "DOLA",
    "name": "DOLA",
-   "rank": 342,
+   "rank": 338,
    "reason": "stablecoin (follows a currency)"
   },
   {
    "id": "matrixdock-gold",
    "symbol": "XAUM",
    "name": "Matrixdock Gold",
-   "rank": 341,
+   "rank": 339,
    "reason": "tracks gold"
+  },
+  {
+   "id": "ozapay",
+   "symbol": "OZA",
+   "name": "Ozapay",
+   "rank": 340,
+   "reason": "not on Binance, and thin trading elsewhere (about $2k a day)"
+  },
+  {
+   "id": "tagger",
+   "symbol": "TAG",
+   "name": "TAGGER",
+   "rank": 341,
+   "reason": "not on Binance, and Yahoo's TAG-USD is another coin (different price)"
   },
   {
    "id": "alphabet-xstock",
    "symbol": "GOOGLX",
    "name": "Alphabet xStock",
-   "rank": 344,
+   "rank": 342,
    "reason": "not traded on Binance against USDT (tokenised share)"
+  },
+  {
+   "id": "marscat-token",
+   "symbol": "MCAT",
+   "name": "Marscat Token",
+   "rank": 343,
+   "reason": "not on Binance, and thin trading elsewhere (about $689k a day)"
+  },
+  {
+   "id": "adi-token",
+   "symbol": "ADI",
+   "name": "ADI",
+   "rank": 344,
+   "reason": "not on Binance or Yahoo Finance"
   },
   {
    "id": "midas-mf-one",
    "symbol": "MF-ONE",
    "name": "Midas mF-ONE",
-   "rank": 346,
+   "rank": 345,
    "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
   },
   {
    "id": "mindwavedao",
    "symbol": "NILA",
    "name": "MindWaveDAO",
-   "rank": 347,
-   "reason": "not on Binance, and thin trading elsewhere (about $315k a day)"
-  },
-  {
-   "id": "marscat-token",
-   "symbol": "MCAT",
-   "name": "Marscat Token",
-   "rank": 350,
-   "reason": "not on Binance, and thin trading elsewhere (about $883k a day)"
-  },
-  {
-   "id": "gas",
-   "symbol": "GAS",
-   "name": "Gas",
-   "rank": 351,
-   "reason": "thin trading on Binance (about $116k a day; needs $250k)"
+   "rank": 346,
+   "reason": "not on Binance, and thin trading elsewhere (about $319k a day)"
   },
   {
    "id": "crown-brlv",
    "symbol": "BRLV",
    "name": "Crown BRLV",
-   "rank": 354,
+   "rank": 349,
    "reason": "stablecoin (follows a currency)"
   },
   {
    "id": "escoin-token",
    "symbol": "ELG",
    "name": "Escoin",
-   "rank": 355,
-   "reason": "not on Binance, and thin trading elsewhere (about $305k a day)"
+   "rank": 350,
+   "reason": "not on Binance, and thin trading elsewhere (about $216k a day)"
   },
   {
-   "id": "safe",
-   "symbol": "SAFE",
-   "name": "Safe",
-   "rank": 356,
-   "reason": "not on Binance or Yahoo Finance"
+   "id": "gas",
+   "symbol": "GAS",
+   "name": "Gas",
+   "rank": 353,
+   "reason": "thin trading on Binance (about $116k a day; needs $250k)"
   },
   {
    "id": "temple",
    "symbol": "TEMPLE",
    "name": "TempleDAO",
-   "rank": 358,
+   "rank": 354,
    "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
+  },
+  {
+   "id": "safe",
+   "symbol": "SAFE",
+   "name": "Safe",
+   "rank": 358,
+   "reason": "not on Binance or Yahoo Finance"
   },
   {
    "id": "cap-usd",
    "symbol": "CUSD",
    "name": "Cap USD",
-   "rank": 360,
+   "rank": 359,
    "reason": "stablecoin (follows a currency)"
-  },
-  {
-   "id": "niu-lai",
-   "symbol": "\u725b\u6765",
-   "name": "\u725b\u6765 (Niu Lai)",
-   "rank": 361,
-   "reason": "only 66 days on Binance (needs 200)"
   },
   {
    "id": "cross-2",
    "symbol": "ONE",
    "name": "ONEchain",
-   "rank": 363,
+   "rank": 362,
    "reason": "Binance's coin with this ticker has a different price (another coin)"
   },
   {
    "id": "royal-euro",
    "symbol": "REUR",
    "name": "Royal Euro",
-   "rank": 364,
+   "rank": 363,
    "reason": "stablecoin (follows a currency)"
   },
   {
    "id": "swop-2",
    "symbol": "SWOP",
    "name": "Swop",
-   "rank": 366,
+   "rank": 364,
    "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
   },
   {
    "id": "apex-4",
    "symbol": "AP3X",
    "name": "APEX",
-   "rank": 367,
+   "rank": 366,
    "reason": "not on Binance, and thin trading elsewhere (about $1k a day)"
   },
   {
    "id": "tradable-latam-bnpl-sstn",
    "symbol": "PC0000027",
    "name": "Tradable LatAm BNPL SSTN",
-   "rank": 369,
+   "rank": 368,
    "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
   },
   {
    "id": "wemix-token",
    "symbol": "WEMIX",
    "name": "WEMIX",
-   "rank": 371,
-   "reason": "not on Binance, and thin trading elsewhere (about $468k a day)"
+   "rank": 369,
+   "reason": "not on Binance, and thin trading elsewhere (about $591k a day)"
+  },
+  {
+   "id": "ishares-core-s-p-500-etf-ondo-tokenized-etf",
+   "symbol": "IVVON",
+   "name": "iShares Core S&P 500 ETF (Ondo Tokenized ETF)",
+   "rank": 370,
+   "reason": "not traded on Binance against USDT (tokenised asset)"
   },
   {
    "id": "spiko-amundi-overnight-swap-fund-gbp",
    "symbol": "GBPSAFO",
    "name": "Spiko Amundi Overnight Swap Fund (GBP)",
-   "rank": 372,
+   "rank": 371,
    "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
   },
   {
    "id": "tradable-na-legal-receivables-ssl",
    "symbol": "PC0000081",
    "name": "Tradable NA Legal Receivables SSL",
+   "rank": 372,
+   "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
+  },
+  {
+   "id": "na-capital-as-a-service-sstn",
+   "symbol": "PC0016245",
+   "name": "NA Capital-as-a-Service SSTN",
    "rank": 373,
    "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
   },
@@ -3493,172 +3490,165 @@
    "reason": "not on Binance, and thin trading elsewhere (about $112k a day)"
   },
   {
-   "id": "ishares-core-s-p-500-etf-ondo-tokenized-etf",
-   "symbol": "IVVON",
-   "name": "iShares Core S&P 500 ETF (Ondo Tokenized ETF)",
+   "id": "niu-lai",
+   "symbol": "\u725b\u6765",
+   "name": "\u725b\u6765 (Niu Lai)",
    "rank": 375,
-   "reason": "not traded on Binance against USDT (tokenised asset)"
-  },
-  {
-   "id": "na-capital-as-a-service-sstn",
-   "symbol": "PC0016245",
-   "name": "NA Capital-as-a-Service SSTN",
-   "rank": 376,
-   "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
-  },
-  {
-   "id": "diem",
-   "symbol": "DIEM",
-   "name": "Diem",
-   "rank": 377,
-   "reason": "not on Binance, and thin trading elsewhere (about $867k a day)"
+   "reason": "only 66 days on Binance (needs 200)"
   },
   {
    "id": "noxo",
    "symbol": "NOXO",
    "name": "NOXO",
-   "rank": 379,
+   "rank": 377,
    "reason": "not on Binance, and thin trading elsewhere (about $15k a day)"
-  },
-  {
-   "id": "cow-protocol",
-   "symbol": "COW",
-   "name": "CoW Protocol",
-   "rank": 380,
-   "reason": "thin trading on Binance (about $185k a day; needs $250k)"
   },
   {
    "id": "lido-earnusd",
    "symbol": "EARNUSD",
    "name": "Lido EarnUSD",
-   "rank": 381,
-   "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
-  },
-  {
-   "id": "kusama",
-   "symbol": "KSM",
-   "name": "Kusama",
    "rank": 378,
-   "reason": "thin trading on Binance (about $151k a day; needs $250k)"
+   "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
   },
   {
    "id": "usd-infra",
    "symbol": "USD.INFRA",
    "name": "USD.infra",
-   "rank": 382,
+   "rank": 379,
    "reason": "stablecoin (follows a currency)"
   },
   {
    "id": "acurast",
    "symbol": "ACU",
    "name": "Acurast",
-   "rank": 383,
+   "rank": 380,
    "reason": "not on Binance or Yahoo Finance"
-  },
-  {
-   "id": "digibyte",
-   "symbol": "DGB",
-   "name": "DigiByte",
-   "rank": 384,
-   "reason": "thin trading on Binance (about $138k a day; needs $250k)"
   },
   {
    "id": "fx-usd-saving",
    "symbol": "FXSAVE",
    "name": "f(x) USD Saving",
-   "rank": 385,
-   "reason": "not on Binance, and thin trading elsewhere (about $441k a day)"
+   "rank": 381,
+   "reason": "not on Binance, and thin trading elsewhere (about $339k a day)"
+  },
+  {
+   "id": "kusama",
+   "symbol": "KSM",
+   "name": "Kusama",
+   "rank": 382,
+   "reason": "thin trading on Binance (about $151k a day; needs $250k)"
   },
   {
    "id": "zano",
    "symbol": "ZANO",
    "name": "Zano",
-   "rank": 388,
-   "reason": "not on Binance, and thin trading elsewhere (about $658k a day)"
+   "rank": 383,
+   "reason": "not on Binance, and thin trading elsewhere (about $688k a day)"
   },
   {
    "id": "vaneck-treasury-fund",
    "symbol": "VBILL",
    "name": "VanEck Treasury Fund",
-   "rank": 389,
+   "rank": 384,
    "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
   },
   {
-   "id": "lombard-protocol",
-   "symbol": "BARD",
-   "name": "Lombard",
+   "id": "cow-protocol",
+   "symbol": "COW",
+   "name": "CoW Protocol",
+   "rank": 385,
+   "reason": "thin trading on Binance (about $185k a day; needs $250k)"
+  },
+  {
+   "id": "digibyte",
+   "symbol": "DGB",
+   "name": "DigiByte",
    "rank": 387,
-   "reason": "thin trading on Binance (about $178k a day; needs $250k)"
+   "reason": "thin trading on Binance (about $138k a day; needs $250k)"
+  },
+  {
+   "id": "metal-blockchain",
+   "symbol": "METAL",
+   "name": "Metal Blockchain",
+   "rank": 388,
+   "reason": "not on Binance, and thin trading elsewhere (about $517k a day)"
+  },
+  {
+   "id": "purr-2",
+   "symbol": "PURR",
+   "name": "Purr",
+   "rank": 389,
+   "reason": "not on Binance or Yahoo Finance"
+  },
+  {
+   "id": "diem",
+   "symbol": "DIEM",
+   "name": "Diem",
+   "rank": 390,
+   "reason": "not on Binance, and thin trading elsewhere (about $811k a day)"
   },
   {
    "id": "rif-token",
    "symbol": "RIF",
    "name": "Rootstock Infrastructure Framework",
-   "rank": 390,
+   "rank": 392,
    "reason": "thin trading on Binance (about $141k a day; needs $250k)"
   },
   {
    "id": "moolah",
    "symbol": "MOOLAH",
    "name": "Moolah",
-   "rank": 391,
-   "reason": "not on Binance, and thin trading elsewhere (about $218k a day)"
-  },
-  {
-   "id": "purr-2",
-   "symbol": "PURR",
-   "name": "Purr",
-   "rank": 392,
-   "reason": "not on Binance or Yahoo Finance"
-  },
-  {
-   "id": "metal-blockchain",
-   "symbol": "METAL",
-   "name": "Metal Blockchain",
    "rank": 393,
-   "reason": "not on Binance, and thin trading elsewhere (about $536k a day)"
-  },
-  {
-   "id": "theta-fuel",
-   "symbol": "TFUEL",
-   "name": "Theta Fuel",
-   "rank": 394,
-   "reason": "thin trading on Binance (about $80k a day; needs $250k)"
-  },
-  {
-   "id": "unitywallet-token",
-   "symbol": "UNT",
-   "name": "UnityWallet Token",
-   "rank": 395,
-   "reason": "not on Binance, and thin trading elsewhere (about $2k a day)"
+   "reason": "not on Binance, and thin trading elsewhere (about $209k a day)"
   },
   {
    "id": "strategy-stretch-preferred-ondo-tokenized",
    "symbol": "STRCON",
    "name": "Strategy Stretch Preferred (Ondo Tokenized)",
-   "rank": 400,
+   "rank": 394,
    "reason": "not traded on Binance against USDT (tokenised asset)"
   },
   {
    "id": "nusd-2",
    "symbol": "NUSD",
    "name": "Neutrl USD",
-   "rank": 399,
+   "rank": 395,
    "reason": "stablecoin (follows a currency)"
-  },
-  {
-   "id": "micron-technology-bstock",
-   "symbol": "MUB",
-   "name": "Micron Technology (bStocks Tokenized Stock)",
-   "rank": 403,
-   "reason": "only 156 days on Binance (needs 200)"
   },
   {
    "id": "dai-on-pulsechain",
    "symbol": "DAI",
    "name": "DAI on PulseChain",
-   "rank": 404,
+   "rank": 397,
    "reason": "bridged copy of another coin"
+  },
+  {
+   "id": "theta-fuel",
+   "symbol": "TFUEL",
+   "name": "Theta Fuel",
+   "rank": 398,
+   "reason": "thin trading on Binance (about $80k a day; needs $250k)"
+  },
+  {
+   "id": "flying-tulip",
+   "symbol": "FT",
+   "name": "Flying Tulip",
+   "rank": 402,
+   "reason": "not on Binance, and thin trading elsewhere (about $11k a day)"
+  },
+  {
+   "id": "reental",
+   "symbol": "RNT",
+   "name": "Rnt",
+   "rank": 404,
+   "reason": "not on Binance, and thin trading elsewhere (about $14k a day)"
+  },
+  {
+   "id": "unitywallet-token",
+   "symbol": "UNT",
+   "name": "UnityWallet Token",
+   "rank": 405,
+   "reason": "not on Binance, and thin trading elsewhere (about $2k a day)"
   },
   {
    "id": "project-galaxy",
@@ -3668,213 +3658,220 @@
    "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
   },
   {
-   "id": "intel-tokenized-bstocks",
-   "symbol": "INTCB",
-   "name": "Intel (bStocks Tokenized Stock)",
-   "rank": 407,
-   "reason": "only 144 days on Binance (needs 200)"
-  },
-  {
-   "id": "ecomi",
-   "symbol": "OMI",
-   "name": "ECOMI",
-   "rank": 408,
-   "reason": "not on Binance, and thin trading elsewhere (about $777k a day)"
-  },
-  {
    "id": "melania-meme",
    "symbol": "MELANIA",
    "name": "Melania Meme",
-   "rank": 409,
+   "rank": 407,
    "reason": "not on Binance, and Yahoo's MELANIA-USD is another coin (different price)"
-  },
-  {
-   "id": "reental",
-   "symbol": "RNT",
-   "name": "Rnt",
-   "rank": 410,
-   "reason": "not on Binance, and thin trading elsewhere (about $15k a day)"
-  },
-  {
-   "id": "flying-tulip",
-   "symbol": "FT",
-   "name": "Flying Tulip",
-   "rank": 411,
-   "reason": "not on Binance, and thin trading elsewhere (about $19k a day)"
   },
   {
    "id": "anemoy-tokenized-apollo-diversified-credit-fund",
    "symbol": "ACRDX",
    "name": "Anemoy Tokenized Apollo Diversified Credit Fund",
-   "rank": 414,
+   "rank": 409,
    "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
-  },
-  {
-   "id": "newton-project",
-   "symbol": "AB",
-   "name": "AB",
-   "rank": 415,
-   "reason": "not on Binance, and thin trading elsewhere (about $984k a day)"
   },
   {
    "id": "megaeth",
    "symbol": "MEGA",
    "name": "MegaETH",
-   "rank": 416,
+   "rank": 410,
    "reason": "only 198 days on Binance (needs 200)"
+  },
+  {
+   "id": "qubic-network",
+   "symbol": "QUBIC",
+   "name": "Qubic",
+   "rank": 412,
+   "reason": "not on Binance, and thin trading elsewhere (about $865k a day)"
+  },
+  {
+   "id": "blackrock-daily-reinvestment-stablecoin-reserve-vehicle",
+   "symbol": "BRSRV",
+   "name": "BlackRock Daily Reinvestment Stablecoin Reserve Vehicle",
+   "rank": 413,
+   "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
+  },
+  {
+   "id": "ecomi",
+   "symbol": "OMI",
+   "name": "ECOMI",
+   "rank": 414,
+   "reason": "not on Binance, and thin trading elsewhere (about $899k a day)"
+  },
+  {
+   "id": "usdkg",
+   "symbol": "USDKG",
+   "name": "USDKG",
+   "rank": 415,
+   "reason": "stablecoin (follows a currency)"
+  },
+  {
+   "id": "intel-tokenized-bstocks",
+   "symbol": "INTCB",
+   "name": "Intel (bStocks Tokenized Stock)",
+   "rank": 416,
+   "reason": "only 144 days on Binance (needs 200)"
+  },
+  {
+   "id": "micron-technology-bstock",
+   "symbol": "MUB",
+   "name": "Micron Technology (bStocks Tokenized Stock)",
+   "rank": 417,
+   "reason": "only 156 days on Binance (needs 200)"
   },
   {
    "id": "baby-doge-coin",
    "symbol": "BABYDOGE",
    "name": "Baby Doge Coin",
-   "rank": 417,
+   "rank": 418,
    "reason": "not on Binance, and Yahoo's hourly candles are gappy (100% of the last week missing)"
   },
   {
    "id": "prize-protocol",
    "symbol": "PRIZE",
    "name": "Prize Protocol",
-   "rank": 418,
-   "reason": "not on Binance, and thin trading elsewhere (about $106k a day)"
-  },
-  {
-   "id": "blackrock-daily-reinvestment-stablecoin-reserve-vehicle",
-   "symbol": "BRSRV",
-   "name": "BlackRock Daily Reinvestment Stablecoin Reserve Vehicle",
    "rank": 419,
-   "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
-  },
-  {
-   "id": "usdkg",
-   "symbol": "USDKG",
-   "name": "USDKG",
-   "rank": 420,
-   "reason": "stablecoin (follows a currency)"
+   "reason": "not on Binance, and thin trading elsewhere (about $105k a day)"
   },
   {
    "id": "meme-horse",
    "symbol": "MHORSE",
    "name": "MEME HORSE",
-   "rank": 424,
+   "rank": 420,
    "reason": "not on Binance or Yahoo Finance"
   },
   {
-   "id": "novachargex-coin",
-   "symbol": "NCX",
-   "name": "NovaChargeX Coin",
-   "rank": 426,
-   "reason": "not on Binance or Yahoo Finance"
-  },
-  {
-   "id": "ore",
-   "symbol": "ORE",
-   "name": "ORE",
-   "rank": 427,
-   "reason": "not on Binance, and thin trading elsewhere (about $979k a day)"
+   "id": "stader-sftmx",
+   "symbol": "SFTMX",
+   "name": "BeethovenX sFTMX",
+   "rank": 421,
+   "reason": "not on Binance, and thin trading elsewhere (about $1k a day)"
   },
   {
    "id": "fidelity-digital-dollar",
    "symbol": "FIDD",
    "name": "Fidelity Digital Dollar",
-   "rank": 428,
+   "rank": 423,
    "reason": "stablecoin (follows a currency)"
   },
   {
-   "id": "precious-metals-usd",
-   "symbol": "PMUSD",
-   "name": "Precious Metals USD",
-   "rank": 429,
-   "reason": "stablecoin (follows a currency)"
+   "id": "lombard-protocol",
+   "symbol": "BARD",
+   "name": "Lombard",
+   "rank": 424,
+   "reason": "thin trading on Binance (about $178k a day; needs $250k)"
   },
   {
    "id": "manadia",
    "symbol": "UMXM",
    "name": "Manadia",
-   "rank": 431,
-   "reason": "not on Binance, and thin trading elsewhere (about $261k a day)"
+   "rank": 425,
+   "reason": "not on Binance, and thin trading elsewhere (about $227k a day)"
+  },
+  {
+   "id": "novachargex-coin",
+   "symbol": "NCX",
+   "name": "NovaChargeX Coin",
+   "rank": 427,
+   "reason": "not on Binance or Yahoo Finance"
   },
   {
    "id": "sygnum-fiusd-liquidity-fund",
    "symbol": "FIUSD",
    "name": "Sygnum FIUSD Liquidity Fund",
-   "rank": 433,
+   "rank": 428,
    "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
-  },
-  {
-   "id": "sushi",
-   "symbol": "SUSHI",
-   "name": "Sushi",
-   "rank": 434,
-   "reason": "thin trading on Binance (about $208k a day; needs $250k)"
-  },
-  {
-   "id": "gekko",
-   "symbol": "GEKKO",
-   "name": "GEKKO",
-   "rank": 438,
-   "reason": "not on Binance, and thin trading elsewhere (about $36k a day)"
-  },
-  {
-   "id": "aleo",
-   "symbol": "ALEO",
-   "name": "ALEO",
-   "rank": 437,
-   "reason": "not on Binance, and thin trading elsewhere (about $695k a day)"
   },
   {
    "id": "brla-digital-brla",
    "symbol": "BRLA",
    "name": "BRLA Digital BRLA",
-   "rank": 439,
+   "rank": 429,
    "reason": "stablecoin (follows a currency)"
   },
   {
-   "id": "mantis",
-   "symbol": "M",
-   "name": "Mantis",
-   "rank": 441,
-   "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
+   "id": "meet48",
+   "symbol": "IDOL",
+   "name": "MEET48",
+   "rank": 431,
+   "reason": "not on Binance or Yahoo Finance"
   },
   {
-   "id": "brz",
-   "symbol": "BRZ",
-   "name": "Brazilian Digital",
-   "rank": 442,
+   "id": "gekko",
+   "symbol": "GEKKO",
+   "name": "GEKKO",
+   "rank": 434,
+   "reason": "not on Binance, and thin trading elsewhere (about $37k a day)"
+  },
+  {
+   "id": "precious-metals-usd",
+   "symbol": "PMUSD",
+   "name": "Precious Metals USD",
+   "rank": 436,
    "reason": "stablecoin (follows a currency)"
   },
   {
    "id": "sharex-2",
    "symbol": "SHARE",
    "name": "ShareX",
-   "rank": 444,
+   "rank": 437,
    "reason": "not on Binance or Yahoo Finance"
   },
   {
-   "id": "fonq",
-   "symbol": "FONQ",
-   "name": "FONQ",
-   "rank": 445,
-   "reason": "not on Binance, and thin trading elsewhere (about $86k a day)"
+   "id": "mantis",
+   "symbol": "M",
+   "name": "Mantis",
+   "rank": 438,
+   "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
+  },
+  {
+   "id": "aleo",
+   "symbol": "ALEO",
+   "name": "ALEO",
+   "rank": 439,
+   "reason": "not on Binance, and thin trading elsewhere (about $577k a day)"
+  },
+  {
+   "id": "brz",
+   "symbol": "BRZ",
+   "name": "Brazilian Digital",
+   "rank": 440,
+   "reason": "stablecoin (follows a currency)"
   },
   {
    "id": "spdr-s-p-500-etf-ondo-tokenized-etf",
    "symbol": "SPYON",
    "name": "SPDR S&P 500 ETF (Ondo Tokenized ETF)",
-   "rank": 446,
+   "rank": 441,
    "reason": "not traded on Binance against USDT (tokenised asset)"
   },
   {
-   "id": "cash-cat",
-   "symbol": "CASHCAT",
-   "name": "Cash Cat",
-   "rank": 447,
-   "reason": "not on Binance, and only 136 days on Yahoo (needs 200)"
+   "id": "sushi",
+   "symbol": "SUSHI",
+   "name": "Sushi",
+   "rank": 443,
+   "reason": "thin trading on Binance (about $208k a day; needs $250k)"
+  },
+  {
+   "id": "fonq",
+   "symbol": "FONQ",
+   "name": "FONQ",
+   "rank": 444,
+   "reason": "not on Binance, and thin trading elsewhere (about $100k a day)"
+  },
+  {
+   "id": "ore",
+   "symbol": "ORE",
+   "name": "ORE",
+   "rank": 446,
+   "reason": "not on Binance, and thin trading elsewhere (about $848k a day)"
   },
   {
    "id": "exod",
    "symbol": "EXOD",
    "name": "EXOD",
-   "rank": 450,
+   "rank": 447,
    "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
   },
   {
@@ -3885,11 +3882,18 @@
    "reason": "not on Binance, and Yahoo's ARX-USD is another coin (different price)"
   },
   {
-   "id": "meet48",
-   "symbol": "IDOL",
-   "name": "MEET48",
+   "id": "wintermute-usdc-select",
+   "symbol": "ARMUSDCS",
+   "name": "Wintermute USDC Select",
+   "rank": 450,
+   "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
+  },
+  {
+   "id": "cash-cat",
+   "symbol": "CASHCAT",
+   "name": "Cash Cat",
    "rank": 451,
-   "reason": "not on Binance or Yahoo Finance"
+   "reason": "not on Binance, and only 136 days on Yahoo (needs 200)"
   },
   {
    "id": "turbo",
@@ -3899,214 +3903,207 @@
    "reason": "thin trading on Binance (about $212k a day; needs $250k)"
   },
   {
-   "id": "wintermute-usdc-select",
-   "symbol": "ARMUSDCS",
-   "name": "Wintermute USDC Select",
-   "rank": 455,
-   "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
-  },
-  {
-   "id": "aelf",
-   "symbol": "ELF",
-   "name": "aelf",
-   "rank": 457,
-   "reason": "not on Binance, and Yahoo's ELF-USD is another coin (different price)"
-  },
-  {
    "id": "usdu",
    "symbol": "USDU",
    "name": "USDu",
-   "rank": 458,
-   "reason": "not on Binance, and thin trading elsewhere (about $289k a day)"
-  },
-  {
-   "id": "holoworld",
-   "symbol": "HOLO",
-   "name": "Holoworld",
-   "rank": 459,
-   "reason": "thin trading on Binance (about $163k a day; needs $250k)"
+   "rank": 455,
+   "reason": "not on Binance, and thin trading elsewhere (about $75k a day)"
   },
   {
    "id": "ebtc-2",
    "symbol": "EBTC",
    "name": "eBTC",
-   "rank": 460,
+   "rank": 456,
    "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
   },
   {
-   "id": "infinity-gaming",
-   "symbol": "$INF8",
-   "name": "Infinity Gaming",
-   "rank": 465,
-   "reason": "not on Binance, and thin trading elsewhere (about $167k a day)"
+   "id": "banana-for-scale-2",
+   "symbol": "BANANAS31",
+   "name": "Banana For Scale",
+   "rank": 458,
+   "reason": "thin trading on Binance (about $154k a day; needs $250k)"
+  },
+  {
+   "id": "holoworld",
+   "symbol": "HOLO",
+   "name": "Holoworld",
+   "rank": 460,
+   "reason": "thin trading on Binance (about $163k a day; needs $250k)"
   },
   {
    "id": "allunity-chf",
    "symbol": "CHFAU",
    "name": "AllUnity CHF",
-   "rank": 467,
+   "rank": 462,
    "reason": "stablecoin (follows a currency)"
   },
   {
-   "id": "astar",
-   "symbol": "ASTR",
-   "name": "Astar",
-   "rank": 468,
-   "reason": "thin trading on Binance (about $163k a day; needs $250k)"
-  },
-  {
-   "id": "concordium",
-   "symbol": "CCD",
-   "name": "Concordium",
-   "rank": 469,
-   "reason": "not on Binance, and thin trading elsewhere (about $173k a day)"
-  },
-  {
-   "id": "comedian",
-   "symbol": "BAN",
-   "name": "Comedian",
-   "rank": 471,
-   "reason": "not on Binance, and Yahoo's BAN-USD is another coin (different price)"
-  },
-  {
-   "id": "venus",
-   "symbol": "XVS",
-   "name": "Venus",
-   "rank": 470,
-   "reason": "thin trading on Binance (about $77k a day; needs $250k)"
+   "id": "infinity-gaming",
+   "symbol": "$INF8",
+   "name": "Infinity Gaming",
+   "rank": 463,
+   "reason": "not on Binance, and thin trading elsewhere (about $168k a day)"
   },
   {
    "id": "ai-analysis-token",
    "symbol": "AIAT",
    "name": "AI Analysis Token",
-   "rank": 472,
-   "reason": "not on Binance, and thin trading elsewhere (about $35k a day)"
+   "rank": 464,
+   "reason": "not on Binance, and thin trading elsewhere (about $36k a day)"
   },
   {
-   "id": "metronome-synth-usd",
-   "symbol": "MSUSD",
-   "name": "Metronome Synth USD",
-   "rank": 474,
-   "reason": "stablecoin (follows a currency)"
+   "id": "concordium",
+   "symbol": "CCD",
+   "name": "Concordium",
+   "rank": 466,
+   "reason": "not on Binance, and thin trading elsewhere (about $187k a day)"
   },
   {
    "id": "nano",
    "symbol": "XNO",
    "name": "Nano",
-   "rank": 473,
-   "reason": "thin trading on Binance (about $90k a day; needs $250k)"
+   "rank": 467,
+   "reason": "Binance's coin with this ticker has a different price (another coin)"
+  },
+  {
+   "id": "metronome-synth-usd",
+   "symbol": "MSUSD",
+   "name": "Metronome Synth USD",
+   "rank": 468,
+   "reason": "stablecoin (follows a currency)"
   },
   {
    "id": "token-pocket",
    "symbol": "TPT",
    "name": "TokenPocket Token",
-   "rank": 477,
-   "reason": "not on Binance, and thin trading elsewhere (about $27k a day)"
+   "rank": 471,
+   "reason": "not on Binance, and thin trading elsewhere (about $14k a day)"
+  },
+  {
+   "id": "astar",
+   "symbol": "ASTR",
+   "name": "Astar",
+   "rank": 472,
+   "reason": "thin trading on Binance (about $163k a day; needs $250k)"
+  },
+  {
+   "id": "venus",
+   "symbol": "XVS",
+   "name": "Venus",
+   "rank": 473,
+   "reason": "thin trading on Binance (about $77k a day; needs $250k)"
+  },
+  {
+   "id": "comedian",
+   "symbol": "BAN",
+   "name": "Comedian",
+   "rank": 474,
+   "reason": "not on Binance, and Yahoo's BAN-USD is another coin (different price)"
   },
   {
    "id": "pentagon-chain",
    "symbol": "PC",
    "name": "Pentagon Chain",
+   "rank": 475,
+   "reason": "not on Binance, and thin trading elsewhere (about $2k a day)"
+  },
+  {
+   "id": "straitsx-xusd",
+   "symbol": "XUSD",
+   "name": "StraitsX XUSD",
    "rank": 478,
-   "reason": "not on Binance, and thin trading elsewhere (about $3k a day)"
+   "reason": "stablecoin (follows a currency)"
   },
   {
    "id": "fastx-network-token",
    "symbol": "FXNW",
    "name": "FastX Network Token",
    "rank": 479,
-   "reason": "not on Binance, and thin trading elsewhere (about $168k a day)"
-  },
-  {
-   "id": "straitsx-xusd",
-   "symbol": "XUSD",
-   "name": "StraitsX XUSD",
-   "rank": 480,
-   "reason": "stablecoin (follows a currency)"
+   "reason": "not on Binance, and thin trading elsewhere (about $160k a day)"
   },
   {
    "id": "nesa",
    "symbol": "NES",
    "name": "Nesa",
-   "rank": 481,
+   "rank": 482,
    "reason": "not on Binance, and only 143 days on Yahoo (needs 200)"
-  },
-  {
-   "id": "main-street-usd",
-   "symbol": "MSUSD",
-   "name": "Main Street USD",
-   "rank": 484,
-   "reason": "stablecoin (follows a currency)"
   },
   {
    "id": "jupusd",
    "symbol": "JUPUSD",
    "name": "JupUSD",
-   "rank": 485,
+   "rank": 483,
    "reason": "stablecoin (follows a currency)"
   },
   {
    "id": "ontology",
    "symbol": "ONT",
    "name": "Ontology",
-   "rank": 487,
+   "rank": 486,
    "reason": "thin trading on Binance (about $213k a day; needs $250k)"
+  },
+  {
+   "id": "main-street-usd",
+   "symbol": "MSUSD",
+   "name": "Main Street USD",
+   "rank": 487,
+   "reason": "stablecoin (follows a currency)"
+  },
+  {
+   "id": "securitize-corp",
+   "symbol": "SECZ",
+   "name": "Securitize",
+   "rank": 489,
+   "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
+  },
+  {
+   "id": "re",
+   "symbol": "RE",
+   "name": "RE",
+   "rank": 490,
+   "reason": "only 149 days on Binance (needs 200)"
   },
   {
    "id": "marscoin-4",
    "symbol": "MARSCOIN",
    "name": "MarsCoin",
-   "rank": 491,
+   "rank": 492,
    "reason": "only 71 days on Binance (needs 200)"
   },
   {
    "id": "strategy-tokenized-bstocks",
    "symbol": "MSTRB",
    "name": "Strategy (bStocks Tokenized Stock)",
-   "rank": 490,
+   "rank": 493,
    "reason": "only 144 days on Binance (needs 200)"
-  },
-  {
-   "id": "affine",
-   "symbol": "SN120",
-   "name": "affine",
-   "rank": 492,
-   "reason": "not on Binance, and thin trading elsewhere (about $245k a day)"
-  },
-  {
-   "id": "re",
-   "symbol": "RE",
-   "name": "RE",
-   "rank": 494,
-   "reason": "only 149 days on Binance (needs 200)"
-  },
-  {
-   "id": "securitize-corp",
-   "symbol": "SECZ",
-   "name": "Securitize",
-   "rank": 497,
-   "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
-  },
-  {
-   "id": "unitas",
-   "symbol": "UP",
-   "name": "Unitas",
-   "rank": 496,
-   "reason": "not on Binance or Yahoo Finance"
-  },
-  {
-   "id": "aria-chain",
-   "symbol": "ARIAX",
-   "name": "ARIA NETWORK",
-   "rank": 498,
-   "reason": "not on Binance, and thin trading elsewhere (about $643k a day)"
   },
   {
    "id": "resupply-usd",
    "symbol": "REUSD",
    "name": "Resupply USD",
-   "rank": 500,
+   "rank": 494,
    "reason": "stablecoin (follows a currency)"
+  },
+  {
+   "id": "venom",
+   "symbol": "VENOM",
+   "name": "Venom",
+   "rank": 498,
+   "reason": "not on Binance, and thin trading elsewhere (about $0k a day)"
+  },
+  {
+   "id": "arcs",
+   "symbol": "ARX",
+   "name": "ARCS",
+   "rank": 499,
+   "reason": "not on Binance, and thin trading elsewhere (about $25k a day)"
+  },
+  {
+   "id": "affine",
+   "symbol": "SN120",
+   "name": "affine",
+   "rank": 500,
+   "reason": "not on Binance, and thin trading elsewhere (about $283k a day)"
   }
  ]
 }
