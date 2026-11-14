@@ -80,7 +80,13 @@ _PAGE_SHELL = st.empty()
 # settings). Angstrom has its own refresh and settings, so these only clutter the top of the app.
 st.markdown(
     "<style>[data-testid='stStatusWidget'],[data-testid='stMainMenu'],[data-testid='stAppDeployButton']"
-    "{display:none !important;}</style>",
+    "{display:none !important;}"
+    # With those gone, Streamlit's top bar is an empty strip, and the page starts well below it. Remove the bar and
+    # start the page near the top. The sidebar and social tabs (fixed at the screen edges) move up with it.
+    "[data-testid='stHeader'],[data-testid='stDecoration']{display:none !important;}"
+    "[data-testid='stMainBlockContainer'],.stMainBlockContainer"
+    "{padding-top:calc(2.75rem + env(safe-area-inset-top, 0px)) !important;}"
+    "[data-testid='stSidebarHeader']{height:2.75rem !important;min-height:0 !important;}</style>",
     unsafe_allow_html=True,
 )
 
@@ -354,7 +360,7 @@ export default function(component) {
     sideStyle.id = "angstrom-sidebar-tab-style";
     sideStyle.dataset.layout = "match";
     sideStyle.textContent = [
-      ".angstrom-sidebar-tab{position:fixed;top:4.75rem;left:0;z-index:10000001;display:flex;align-items:center;justify-content:center;width:2rem;height:2rem;padding:0;border:1px solid rgba(49,51,63,.2);border-left:0;border-radius:0 .5rem .5rem 0;background:#fff;color:#808495;cursor:pointer;box-shadow:1px 1px 4px rgba(0,0,0,.08);transition:background .15s ease,color .15s ease;}",
+      ".angstrom-sidebar-tab{position:fixed;top:calc(.5rem + env(safe-area-inset-top, 0px));left:0;z-index:10000001;display:flex;align-items:center;justify-content:center;width:2rem;height:2rem;padding:0;border:1px solid rgba(49,51,63,.2);border-left:0;border-radius:0 .5rem .5rem 0;background:#fff;color:#808495;cursor:pointer;box-shadow:1px 1px 4px rgba(0,0,0,.08);transition:background .15s ease,color .15s ease;}",
       ".angstrom-sidebar-tab:hover{background:#f0f2f6;color:#ff4b4b;}",
       ".angstrom-sidebar-tab.is-closed svg{transform:scaleX(-1);}",
       "html.angstrom-night .angstrom-sidebar-tab{background:#262730;color:#c5c8d0;border-color:#4b5563;}",
@@ -1370,7 +1376,7 @@ export default function(component) {
         "#social-stream-root .head-actions{display:flex;gap:6px;flex:none;}",
         "#social-stream-root .close,#social-stream-root .pin{background:#f3f4f6;border:0;border-radius:999px;padding:6px 12px;font:inherit;font-weight:600;cursor:pointer;color:#111827;}",
         "#social-stream-root .pin.is-on{background:#111827;color:#fff;}",
-        "#social-stream-root .edge{position:fixed;top:4.75rem;right:0;z-index:2;pointer-events:auto;display:flex;align-items:center;justify-content:center;width:2rem;height:2rem;padding:0;border:1px solid rgba(49,51,63,.2);border-right:0;border-radius:.5rem 0 0 .5rem;background:#fff;color:#808495;cursor:pointer;box-shadow:-1px 1px 4px rgba(0,0,0,.08);transition:right .22s ease,background .15s ease,color .15s ease;}",
+        "#social-stream-root .edge{position:fixed;top:calc(.5rem + env(safe-area-inset-top, 0px));right:0;z-index:2;pointer-events:auto;display:flex;align-items:center;justify-content:center;width:2rem;height:2rem;padding:0;border:1px solid rgba(49,51,63,.2);border-right:0;border-radius:.5rem 0 0 .5rem;background:#fff;color:#808495;cursor:pointer;box-shadow:-1px 1px 4px rgba(0,0,0,.08);transition:right .22s ease,background .15s ease,color .15s ease;}",
         "#social-stream-root .edge:hover{background:#f0f2f6;color:#ff4b4b;}",
         "#social-stream-root.is-open .edge{right:min(var(--social-width,420px),calc(100vw - 2.25rem));}",
         "#social-stream-root.is-open .edge svg{transform:scaleX(-1);}",
