@@ -8436,8 +8436,6 @@ def _admin_ai() -> None:
     off = [p for p in ap.PROVIDERS if p not in on]
     if off:
         st.caption("Not switched on yet: " + ", ".join(ap.label(p) for p in off) + ".")
-    with st.expander("How to add an AI key"):
-        st.markdown(AI_KEY_STEPS)
         st.dataframe(
             pd.DataFrame([{"AI": ap.label(p), "Secret name": spec["env"], "Model (secret to change it)":
                            f"{ap.model(p)} ({spec['model_env']})", "Get a key": spec["keys_at"],
@@ -9112,8 +9110,11 @@ def admin_panel() -> None:
     reports = _admin_rows("admin_reports")
     with tracked_expander("Admin", "admin_panel"):
         _admin_ai()
-        st.divider()
-        _admin_push_keys()
+        with st.expander("🔑 APIs and keys"):
+            st.markdown("**🤖 How to add an AI key**")
+            st.markdown(AI_KEY_STEPS)
+            st.divider()
+            _admin_push_keys()
         st.divider()
         if feedback is None or reports is None:
             st.caption("Admin tools are not ready yet. Run the latest supabase_rls.sql in the Supabase SQL editor.")
