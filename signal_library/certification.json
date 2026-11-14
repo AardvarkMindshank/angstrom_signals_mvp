@@ -1,5 +1,5 @@
 {
- "code_sha256": "306f33f5c85a6d8fb1746ea64c24229aa74c4456625382d2c238f45ba9f14024",
+ "code_sha256": "03fadef94ee7c3ac30bf280ed3f66c1ae15504c587be75d2eff532e232812e13",
  "cutoffs_per_dataset_minimum": 50,
  "datasets": [
   {
@@ -60,9 +60,9 @@
   }
  ],
  "generated_by": {
-  "git_commit": "458a2cf1efd587aefc83a23c044cc3f4e2593677",
+  "git_commit": "a50d6b616c43c17e95cedd8d0225700d8ef545e3",
   "note": "administrative; not compared",
-  "run_id": "43572308653"
+  "run_id": "43582622154"
  },
  "signals": {
   "bollinger.position@1": {
@@ -3450,6 +3450,171 @@
     },
     "slice_equivalent": false,
     "slice_reason": "not tested"
+   }
+  },
+  "shape.classic@1": {
+   "12h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 218,
+     "reference": 109,
+     "slice": 109,
+     "timestamps": 109
+    },
+    "cutoffs": 109,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 109
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "15m": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1D": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 142,
+     "poison": 684,
+     "reference": 342,
+     "slice": 342,
+     "timestamps": 342
+    },
+    "cutoffs": 342,
+    "cutoffs_per_dataset": {
+     "dev-AAPL": 66,
+     "dev-BTC-USD": 53,
+     "dev-JPM": 64,
+     "dev-SOL-USD": 50,
+     "synthetic-crypto-s11": 51,
+     "synthetic-equity-s23": 58
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 342
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1W": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 136,
+     "poison": 668,
+     "reference": 334,
+     "slice": 334,
+     "timestamps": 334
+    },
+    "cutoffs": 334,
+    "cutoffs_per_dataset": {
+     "dev-AAPL": 65,
+     "dev-BTC-USD": 51,
+     "dev-JPM": 65,
+     "dev-SOL-USD": 50,
+     "synthetic-crypto-s11": 50,
+     "synthetic-equity-s23": 53
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "insufficient_data": 69,
+     "ok": 265
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "1h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "30m": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 226,
+     "reference": 113,
+     "slice": 113,
+     "timestamps": 113
+    },
+    "cutoffs": 113,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 60
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 113
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
+   },
+   "4h": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 46,
+     "poison": 224,
+     "reference": 112,
+     "slice": 112,
+     "timestamps": 112
+    },
+    "cutoffs": 112,
+    "cutoffs_per_dataset": {
+     "synthetic-crypto-s11": 53,
+     "synthetic-equity-s23": 59
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 112
+    },
+    "slice_equivalent": true,
+    "slice_reason": null
    }
   },
   "sonar.markers@1": {
