@@ -73,3 +73,14 @@ jobs:
           COINALYZE_API_KEY: ${{ secrets.COINALYZE_API_KEY }}
           FORCE_MARKET_MOOD: ${{ github.event.inputs.refresh_moods == 'true' && '1' || '' }}
         run: python run_alerts.py
+
+      - name: Send push notifications
+        # 📱 Every new notification goes to its owner's phones and computers (push_notify.py), once.
+        if: always()
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          VAPID_SUBJECT: ${{ secrets.VAPID_SUBJECT }}
+        run: python push_notify.py

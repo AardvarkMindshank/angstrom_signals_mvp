@@ -209,6 +209,29 @@ export default function(component) {
       for (const c of changes) for (const n of c.addedNodes) if (n.nodeType === 1 || n.nodeType === 3) tint(n);
     }).observe(document.body, { childList: true, subtree: true });
   }
+  // 📱 Installable web app: the home-screen icon, name and full-screen look (static/manifest.json), and the
+  // service worker that shows push notifications (static/sw.js; it caches nothing, so the app is always the live site).
+  if (!window.__angApp) {
+    window.__angApp = true;
+    const head = document.head;
+    const put = (tag, attrs) => {
+      const key = attrs.rel ? `${tag}[rel="${attrs.rel}"]` : `${tag}[name="${attrs.name}"]`;
+      let el = head.querySelector(key);
+      if (!el) { el = document.createElement(tag); head.appendChild(el); }
+      Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v));
+    };
+    put("link", { rel: "manifest", href: "/app/static/manifest.json" });
+    put("link", { rel: "apple-touch-icon", href: "/app/static/icons/apple-touch-icon.png" });
+    put("meta", { name: "apple-mobile-web-app-capable", content: "yes" });
+    put("meta", { name: "mobile-web-app-capable", content: "yes" });
+    put("meta", { name: "apple-mobile-web-app-title", content: "Angstrom" });
+    put("meta", { name: "apple-mobile-web-app-status-bar-style", content: "default" });
+    put("meta", { name: "theme-color", content: "#0b2d72" });
+    if ("serviceWorker" in navigator) {
+      window.__angSw = navigator.serviceWorker.register("/app/static/sw.js", { scope: "/app/static/" })
+        .catch(() => null);
+    }
+  }
   paintColour("--ang-page-day", chosen.pageDay);
   paintColour("--ang-page-night", chosen.pageNight);
   paintColour("--ang-heading-day", chosen.headingDay);
@@ -4114,6 +4137,52 @@ def _section_timer(updated_at: float | None, interval: float, widget_key: str, h
             _rerun_fragment()
 
 
+def _push_settings() -> None:
+    """📱 Notifications on this phone or computer (the installable web app): turn on, test, turn off, per device."""
+    import push_component
+    import push_notify
+
+    st.markdown("**📱 Phone and desktop notifications**")
+    try:
+        rows = (supabase.table("push_subscriptions").select("endpoint, device").eq("user_id", str(user_id))
+                .execute().data or [])
+    except Exception:
+        st.caption("Notifications need a database update: sql/2026-11-28_push_notifications.sql.")
+        return
+    result = push_component.component()(
+        key="push_box", data={"key": push_notify.public_key(), "endpoints": [r["endpoint"] for r in rows]},
+        on_push_change=lambda: None)
+    event = push_component.read_event(result, "_push_seen", st.session_state)
+    if event:
+        try:
+            if event["action"] == "on":
+                sub = event.get("sub") or {}
+                keys = sub.get("keys") or {}
+                supabase.rpc("push_subscribe", {"p_endpoint": sub.get("endpoint"), "p_p256dh": keys.get("p256dh"),
+                                                "p_auth": keys.get("auth"),
+                                                "p_device": str(event.get("device") or "")[:60]}).execute()
+                st.toast("📱 Notifications are on for this device.")
+                _rerun_fragment()
+            elif event["action"] == "off":
+                supabase.rpc("push_unsubscribe", {"p_endpoint": event.get("endpoint")}).execute()
+                st.toast("Notifications are off for this device.")
+                _rerun_fragment()
+            elif event["action"] == "test":
+                if not push_notify.ready():
+                    st.toast("Push isn't fully set up on the server yet (the private push key is missing).")
+                else:
+                    sent = push_notify.send_to_user(supabase, user_id, {
+                        "title": "📱 Angstrom", "url": "/", "tag": "test",
+                        "body": "Notifications work. Alerts, funnel Candidates and shared charts will arrive like this."})
+                    st.toast(f"Test sent to {sent} device{'s' if sent != 1 else ''}." if sent
+                             else "The test couldn't be delivered. Try turning notifications off and on again.")
+        except Exception as exc:
+            st.caption(f"Could not change notifications: {str(exc)[:160]}")
+    if rows:
+        devices = sorted({str(r.get("device") or "a device") for r in rows})
+        st.caption("On for: " + ", ".join(devices) + ". Each new notification arrives within a few minutes.")
+
+
 def _rerun_fragment() -> None:
     """Rerun the current section, or the whole page when that is not allowed.
 
@@ -7241,6 +7310,8 @@ def notifications_panel() -> None:
                 elif not instant_on and not digest_on:
                     st.caption("Both are off, so alerts only appear in the dashboard.")
 
+            _push_settings()
+
             changed = new_alert_settings != {name: alert_prefs.get(name) for name in new_alert_settings}
             if changed:
                 to_save = dict(new_alert_settings)
@@ -7929,6 +8000,12 @@ that checks the same Set, so funnels stay quick as more people use them.
 - **Emails**: ⚡ **Instant** (one email per alert, straight away) and/or 📬 **Daily alerts summary** (one
   email a day at your chosen hour and time zone). Each alert shows the price, the asset's sentiment and its
   market's mood.
+- 📱 **Phone and desktop notifications**: every notification (alerts, funnel Candidates, shared charts, community
+  news) can also pop up on your phone or computer, within a few minutes. Turn them on **per device** with 🔔 under
+  Notifications, and use 📨 to send yourself a test. On an **iPhone or iPad**, first add Angstrom to your Home Screen
+  (Safari → Share → **Add to Home Screen**, iOS 16.4 or later), open it from the new icon and turn them on there.
+  On a computer or Android phone they work straight from the browser, and Chrome and Edge also offer to install
+  Angstrom as an app (the install icon in the address bar).
 - 📋 **Include watchlist summary** (under the daily summary, on by default): adds a colour-coded look at your
   watchlist with price, today's move, the Trend, Stretch and Flow readings and sentiment for your strongest
   and weakest Trends. With it on,
@@ -8297,6 +8374,37 @@ def _ai_settings(settings: dict) -> None:
     current = ap.app_choice(supabase, "sentiment") or ap.USES["sentiment"][1]
     st.caption(f"📰 News summaries and sentiment scores are written by {ap.label(current)} "
                f"({ap.model(current)}), the same for everyone.")
+
+
+def _admin_push_keys() -> None:
+    """Admin only: the key pair that signs push notifications (push_notify.py). Made here and shown once, to the
+    admin only; the app never stores it. The admin adds it to Render and GitHub."""
+    import push_notify
+
+    st.markdown("**📱 Push notification keys**")
+    if push_notify.ready():
+        st.caption(f"Set up: push notifications can be sent (public key …{push_notify.public_key()[-8:]}).")
+        return
+    if push_notify.public_key():
+        st.caption("The public key is set, but the private key (VAPID_PRIVATE_KEY) is missing here.")
+    st.caption("Push notifications need a key pair. Make one here, then add the three values to Render → "
+               "Environment and to GitHub → Settings → Secrets and variables → Actions. Render restarts the app.")
+    if st.button("Make a key pair", key="admin_push_make", icon=":material/key:"):
+        st.session_state["_push_keys_made"] = push_notify.generate_keys()
+    made = st.session_state.get("_push_keys_made")
+    if made:
+        public, private = made
+        st.warning("Copy these now: they are shown only this once and aren't saved anywhere. Keep the private key "
+                   "secret (never paste it into a chat or a file in the repository).")
+        st.text("VAPID_PUBLIC_KEY")
+        st.code(public, language=None)
+        st.text("VAPID_PRIVATE_KEY")
+        st.code(private, language=None)
+        st.text("VAPID_SUBJECT")
+        st.code("mailto:info@angstromsignals.com", language=None)
+        if st.button("I've copied them", key="admin_push_done"):
+            st.session_state.pop("_push_keys_made", None)
+            _rerun_fragment()
 
 
 def _admin_ai() -> None:
@@ -8996,6 +9104,8 @@ def admin_panel() -> None:
     reports = _admin_rows("admin_reports")
     with tracked_expander("Admin", "admin_panel"):
         _admin_ai()
+        st.divider()
+        _admin_push_keys()
         st.divider()
         if feedback is None or reports is None:
             st.caption("Admin tools are not ready yet. Run the latest supabase_rls.sql in the Supabase SQL editor.")
