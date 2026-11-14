@@ -76,6 +76,14 @@ st.set_page_config(
 # page straight away, instead of the old page lingering above the new one while it builds.
 _PAGE_SHELL = st.empty()
 
+# Streamlit's own top-right items: the "running" figure with Stop, and the ⋮ menu (rerun, print, developer
+# settings). Angstrom has its own refresh and settings, so these only clutter the top of the app.
+st.markdown(
+    "<style>[data-testid='stStatusWidget'],[data-testid='stMainMenu'],[data-testid='stAppDeployButton']"
+    "{display:none !important;}</style>",
+    unsafe_allow_html=True,
+)
+
 
 if _POPOUT_VIEW:
     st.markdown(
