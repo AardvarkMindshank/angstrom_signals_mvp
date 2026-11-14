@@ -31,6 +31,10 @@ Agreed work that is not built yet, so nothing gets forgotten between sessions. N
   shape on the chart with a hover explanation. Built on the confirmed swing points the structure signals already
   use, so a shape is only reported once it is complete (no peeking ahead), then certified and tested on history
   like every other signal. Start with the few Drew actually uses.
+- Signal families in the Lattice picker (agreed 14 Nov 2026): show about 15 families instead of 42 signals
+  (Stochastics, Moving averages, Money flow, Divergence, Sonar, Positioning, ...), each with a variant picker and a
+  one-line "which one when". Done in the editor only: signal ids, saved Groups and Sets, history replays and the
+  certification stay as they are.
 
 ## Done (12 Nov 2026)
 
