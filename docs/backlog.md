@@ -24,6 +24,13 @@ Agreed work that is not built yet, so nothing gets forgotten between sessions. N
   a check that flags new text without translations. Major languages only; first wave likely English, Spanish,
   Portuguese (Brazil), Chinese (Simplified), Japanese, Korean, German, French; right-to-left (Arabic) later.
 - Funnel and Tides training videos: published 12 Nov 2026 (f1-funnels, t1-tides).
+- Chart shapes as signals (asked 14 Nov 2026): find the common trading patterns in the candles by code, one
+  signal family with a picker (like Sonar markers), each read as "candles ago" so Sets, funnels and notifications
+  can use them: head and shoulders (and inverse), double top and bottom, triangles, wedges, flags, channels,
+  well-known average crosses (golden and death cross), and candle patterns (engulfing, hammer, doji). Draw each found
+  shape on the chart with a hover explanation. Built on the confirmed swing points the structure signals already
+  use, so a shape is only reported once it is complete (no peeking ahead), then certified and tested on history
+  like every other signal. Start with the few Drew actually uses.
 
 ## Done (12 Nov 2026)
 
