@@ -86,7 +86,16 @@ st.markdown(
     "[data-testid='stHeader'],[data-testid='stDecoration']{display:none !important;}"
     "[data-testid='stMainBlockContainer'],.stMainBlockContainer"
     "{padding-top:calc(2.75rem + env(safe-area-inset-top, 0px)) !important;}"
-    "[data-testid='stSidebarHeader']{height:2.75rem !important;min-height:0 !important;}</style>",
+    "[data-testid='stSidebarHeader']{height:2.75rem !important;min-height:0 !important;}"
+    # Above the logo sit a dozen invisible helpers (style blocks, watchers, the screen probe). Each still took a slot
+    # and a gap, pushing the logo down. Take the invisible ones out of the flow; messages and buttons stay.
+    ":is([data-testid='stElementContainer'],[data-testid='stLayoutWrapper'])"
+    ":not(:has([data-testid='stAlert'],[data-testid='stButton'],p,h1,h2,h3,img,canvas,input))"
+    ":has(~ [data-testid='stElementContainer'] .ang-page-top)"
+    "{position:absolute !important;width:0 !important;height:0 !important;min-height:0 !important;margin:0 !important;"
+    "padding:0 !important;overflow:visible !important;}"
+    "[data-testid='stElementContainer']:has(.ang-page-top){position:absolute !important;height:0 !important;margin:0 !important;}"
+    ".st-key-page_header{margin-top:-0.4rem !important;}</style>",
     unsafe_allow_html=True,
 )
 
@@ -7576,6 +7585,7 @@ for _seen_name, _state_name in _layout_watched:
     if _seen_value is not None and st.session_state[_state_name] != _seen_value:
         hold_layout = True
         break
+st.markdown("<div class='ang-page-top'></div>", unsafe_allow_html=True)   # marks the top of the page (CSS above)
 with st.container(horizontal=True, vertical_alignment="center", horizontal_alignment="distribute", key="page_header"):
     st.markdown(
         "<div style='display:flex;align-items:center;gap:0.85rem;margin:0.4rem 0;'>"
