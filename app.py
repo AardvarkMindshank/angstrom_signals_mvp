@@ -3357,6 +3357,7 @@ export default function(component) {
   badge.textContent = Number.isFinite(score) ? ((payload && payload.text) || String(Math.round(score))) : "—";
   badge.style.color = color;
   badge.style.background = Number.isFinite(score) ? background : "transparent";
+  if (payload && payload.title) badge.title = payload.title; else badge.removeAttribute("title");
   return () => badge.remove();
 }
 """
@@ -6786,6 +6787,25 @@ def _trend_alert_level() -> float:
     except (TypeError, ValueError):
         level = float(signals_v2.TREND_ALERT_DEFAULT)
     return max(10.0, min(95.0, level))
+
+
+TIDE_HEADER = {"in": ("🌊⬆ In", "#166534", "#dcfce7"), "slack": ("🌊↔ Slack", "#92400e", "#fef3c7"),
+               "out": ("🌊⬇ Out", "#991b1b", "#fee2e2")}
+SEA_HEADER = {"calm": "☀️ Calm", "moderate": "⛅ Moderate", "rough": "🌧️ Rough", "storm": "⛈️ Storm"}
+
+
+def _paint_tides_header(snap: dict) -> None:
+    """🌊 The Tide and the sea state in the Tides header, like the score boxes on the sentiment sections."""
+    import tides
+
+    tide, sea = snap.get("tide") or {}, snap.get("sea") or {}
+    words, colour, background = TIDE_HEADER.get(tide.get("label"), ("🌊", "#6b7280", "transparent"))
+    state = sea.get("state") if sea.get("status") == "ok" else None
+    text = words + (f" · {SEA_HEADER[state]}" if state in SEA_HEADER else "")
+    name, plain, _icon = tides.TIDE_WORDS.get(tide.get("label"), ("Tide", "", ""))
+    title = f"{name} ({plain})" + (f"; sea {state} ({sea.get('plain')})" if state else "")
+    _header_score(key="section_score_tides", data={"score": 0, "text": text, "color": colour,
+                                                    "background": background, "title": title})
 
 
 def _paint_section_score(section_key: str, score, ready: bool, reading: bool = False) -> None:
@@ -13971,6 +13991,7 @@ def show_tides() -> None:
         if not snap or (snap.get("tide") or {}).get("status") != "ok":
             st.info("Tides has not got enough data yet.")
             return
+        _paint_tides_header(snap)
         import lattice_panel as _lp
 
         def _buttons():
