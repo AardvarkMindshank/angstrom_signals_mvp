@@ -40,6 +40,8 @@ MARKERS = (
     ("strength_candle", "Strength candle (yellow diamond): two green candles in a row opening above the 11 and 34"),
     ("big_green_dot", "Big green dot (Sonar strip): the wave turned up at or below −53"),
     ("big_red_dot", "Big red dot (Sonar strip): the wave turned down at or above +53"),
+    ("snake_eyes_green", "Green snake eyes: two green wave dots close together (the wave turned up, dipped, turned up again)"),
+    ("snake_eyes_red", "Red snake eyes: two red wave dots close together"),
 )
 
 
@@ -47,7 +49,17 @@ def _up(a: pd.Series, b: pd.Series) -> pd.Series:
     return (a > b) & (a.shift(1) <= b.shift(1))
 
 
-def markers_frame(frame: pd.DataFrame) -> pd.DataFrame:
+def _pair(dots: pd.Series, levels: pd.Series, gap: int, extreme) -> pd.Series:
+    """True on a dot that comes within `gap` candles after the previous dot (both beyond `extreme` when set)."""
+    dots = dots.fillna(False).astype(bool)
+    if extreme is not None:
+        dots = dots & extreme(levels)
+    pos = pd.Series(np.where(dots.to_numpy(), np.arange(len(dots)), np.nan), index=dots.index)
+    previous = pos.ffill().shift(1)
+    return dots & ((pos - previous) <= gap)
+
+
+def markers_frame(frame: pd.DataFrame, snake_gap: int = 4, snake_zone: str = "any") -> pd.DataFrame:
     """One row per candle: the band (ema_5 … ema_34) and a True/False column per marker (MARKERS). Shared with
     the chart overlay, so the chart and the Sets agree."""
     close, open_ = frame["close"], frame["open"]
@@ -73,6 +85,10 @@ def markers_frame(frame: pd.DataFrame) -> pd.DataFrame:
         "red_cross": red_cross, "red_diamond": red_diamond, "blood_diamond": red_diamond & red_cross,
         "yellow_cross": yellow, "strength_candle": strength,
         "big_green_dot": _up(b1, b2) & (b2 <= -53), "big_red_dot": _up(b2, b1) & (b2 >= 53),
+        # Snake eyes: two of the strip's wave dots of one colour close together (traders' name, no fixed rule;
+        # the gap and whether both must be beyond ±53 are settings)
+        "snake_eyes_green": _pair(_up(b1, b2), b2, snake_gap, (lambda x: x <= -53) if snake_zone == "extreme" else None),
+        "snake_eyes_red": _pair(_up(b2, b1), b2, snake_gap, (lambda x: x >= 53) if snake_zone == "extreme" else None),
     })
     return pd.DataFrame(out, index=frame.index)
 
@@ -90,7 +106,11 @@ LOOKBACK = Param(50, "int", 5, 300, doc="candles searched for each marker; one n
 @signal(
     id="sonar.markers", version=1, name="Sonar markers", category="momentum",
     output=OBSERVATION, unit="mixed (labelled fields)", scope=SCOPE_ASSET, timeframes=TIMEFRAMES, requires=("candles",),
-    params={"lookback": LOOKBACK},
+    params={"lookback": LOOKBACK,
+            "snake_gap": Param(4, "int", 1, 20, doc="snake eyes: the second dot comes at most this many candles after "
+                                                   "the first"),
+            "snake_zone": Param("any", "choice", choices=("any", "extreme"),
+                                doc="snake eyes: any two dots, or only dots beyond ±53 (oversold / overbought)")},
     calculation=("Closed candles. Band: exponential averages of the close over 5, 11, 15, 18, 21, 24, 28 and 34 "
                  "candles. Markers (the published open-source formulas): trend turn up = EMA 11 crosses above EMA 15 "
                  "(down: below); long cross = EMA 11 above EMA 34; short cross = EMA 34 above EMA 11; red cross = "
@@ -99,7 +119,9 @@ LOOKBACK = Param(50, "int", 5, 300, doc="candles searched for each marker; one n
                  "between 15 and 30 and money flow (SMA 60 of (close − open) / range × 150) below −5; strength "
                  "candle = open above EMA 11 and EMA 34, this and the previous candle green, no red diamond or red "
                  "cross. Big green / red dot (the Sonar strip): WaveTrend (9, 12, 3) crosses up "
-                 "with WT2 at or below −53 / down at or above +53. Each marker reads candles ago: 0 = on the last "
+                 "with WT2 at or below −53 / down at or above +53. Snake eyes = a WaveTrend (9, 12, 3) cross of one direction "
+                 "(a wave dot) at most snake_gap candles after the previous one of that direction (both beyond ±53 "
+                 "when snake_zone is extreme). Each marker reads candles ago: 0 = on the last "
                  "closed candle, `lookback` = not in the last `lookback` candles. band = above when the close is "
                  "above every average, below when below every one, else inside; band_order = rising when each "
                  "average is above the next slower one, falling when below, else mixed."),
@@ -115,7 +137,7 @@ def sonar_markers(ctx, timeframe, params):
     frame, loaded, failed = closed_candles(ctx, timeframe, 70)
     if failed:
         return failed
-    mk = markers_frame(frame)
+    mk = markers_frame(frame, params["snake_gap"], params["snake_zone"])
     last = mk.iloc[-1]
     close = float(frame["close"].iloc[-1])
     band = [_r(last[f"ema_{n}"]) for n in RIBBON]
@@ -126,7 +148,7 @@ def sonar_markers(ctx, timeframe, params):
              "falling" if all(a < b for a, b in zip(band, band[1:])) else "mixed")
     value = {f"{name}_ago": candles_ago(mk[name], lookback) for name, _words in MARKERS}
     value.update({"band": position, "band_order": order, "close": _r(close)})
-    return _ok(ctx, loaded, timeframe, frame, value, {"lookback": lookback, "band": dict(zip(map(str, RIBBON), band))})
+    return _ok(ctx, loaded, timeframe, frame, value, {**params, "band": dict(zip(map(str, RIBBON), band))})
 
 
 # ----------------------------------------------------------------------------------------------- Stoch RSI pair

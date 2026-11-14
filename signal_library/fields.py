@@ -63,7 +63,7 @@ FIELDS: dict[str, dict[str, dict]] = {
     # ---- 🛰️ Sonar markers and the Stoch RSI pair (signals_sonar.py): "candles ago" fields read as "in the last N"
     "sonar.markers@1": {**{f"{name}_ago": num(CANDLES_AGO, 0) for name in (
         "trend_turn_up", "trend_turn_down", "long_cross", "short_cross", "red_cross", "red_diamond", "blood_diamond",
-        "yellow_cross", "strength_candle", "big_green_dot", "big_red_dot")},
+        "yellow_cross", "strength_candle", "big_green_dot", "big_red_dot", "snake_eyes_green", "snake_eyes_red")},
         "band": label("above", "inside", "below"), "band_order": label("rising", "falling", "mixed"),
         "close": num("price", 0)},
     "osc.stoch_rsi@1": {"k": num("%K", 0, 100), "d": num("%D", 0, 100), "pair": label("both_high", "both_low", "apart"),

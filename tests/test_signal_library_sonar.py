@@ -86,3 +86,15 @@ def test_offered_in_the_editor():
     assert "sonar.markers" in by_id and "osc.stoch_rsi" in by_id
     fields = {o["field"] for o in by_id["sonar.markers"]["operands"]}
     assert "yellow_cross_ago" in fields and "big_green_dot_ago" in fields
+
+
+def test_snake_eyes_are_two_dots_close_together():
+    from signal_library.signals_sonar import _pair
+
+    dots = pd.Series([False, True, False, False, True, False, False, False, False, False, True])
+    level = pd.Series([0.0] * 11)
+    hits = _pair(dots, level, 4, None)
+    assert hits.tolist()[4] and not hits.tolist()[1] and not hits.tolist()[10]    # 3 apart: yes; 6 apart: no
+    assert not _pair(dots, level, 4, lambda x: x <= -53).any()                     # none beyond −53
+    r = _run("sonar.markers", _frame(_walk(400, seed=7)), snake_gap=10)
+    assert "snake_eyes_green_ago" in r.value and "snake_eyes_red_ago" in r.value

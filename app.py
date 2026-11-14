@@ -7807,7 +7807,13 @@ so they change once a day; price, today's move and RSI in the table are live.
         st.markdown("""
 **Interactive Chart.** Candles with SMA 20 and 50 and Bollinger Bands, plus volume underneath.
 The icon row adds more:
-- 📏 SMA 200 · ☁️ Ichimoku cloud · 📡 Sonar · 🌡️ RSI · 〰️ MACD · 🎚️ Stochastic · 🎛️ Stoch RSI · 🧭 ADX · 📊 OBV
+- 📏 SMA 200 · ☁️ Ichimoku cloud · 📡 Sonar · 🛰️ Sonar markers · 🌡️ RSI · 〰️ MACD · 🎚️ Stochastic · 🎛️ Stoch RSI · 🧭 ADX · 📊 OBV
+- 🛰️ **Sonar markers** draw a grey band of eight moving averages over the candles, with symbols where something
+  happened: 🔺 a trend turn, 🟢 / 🔴 dots (a bigger turn up or down), ❌ red cross, ♦️ red diamond (the wave turned
+  down), 🩸 blood diamond (both together) and ⚠️ yellow cross (the wave turned down while already oversold: a warning
+  of a sharp flush). On the 📡 Sonar strip, a soft halo marks **snake eyes**: two dots of one colour close
+  together (the wave turned, dipped and turned again). Point at a candle to see what its symbols mean, and choose which ones show. The same markers are
+  signals in Lattice, so a Set can ask for one "in the last N candles".
 - 📡 **Sonar** (a strip between the price chart and volume) reads what is moving under the price, using the
   published open-source formulas: the light-blue and blue **waves** (WaveTrend momentum), the yellow **VWAP** area
   (the gap between the two waves), the green or red **money flow** area and the bar along the bottom (money flowing

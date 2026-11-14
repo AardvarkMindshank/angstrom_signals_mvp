@@ -206,6 +206,13 @@ def cipher_series(df: pd.DataFrame, pane: int, dark: bool = False) -> list[dict]
     out.append(stoch)
     w2 = col("mc_wt2").tolist()
     cross = pd.to_numeric(df["mc_cross"], errors="coerce").fillna(0).tolist()
+    for sid, col, tint in (("mc_snake_g", "sm_snake_eyes_green", "rgba(57,255,20,0.35)"),
+                           ("mc_snake_r", "sm_snake_eyes_red", "rgba(255,42,26,0.35)")):
+        if col in df.columns:        # snake eyes: a soft halo behind the second of two dots close together
+            hits = flag(col)
+            out.append({"id": sid, "type": "dots", "name": "Snake eyes", "pane": pane, "legend": False, "radius": 7,
+                        "color": tint, "values": [round(w, 2) if h and w == w else None for h, w in zip(hits, w2)],
+                        "colors": [tint] * n})
     out.append({"id": "mc_dots", "type": "dots", "name": "Wave crosses", "pane": pane, "legend": False, "radius": 3, "color": "#1fbf75",
                 "values": [round(w, 2) if c and w == w else None for c, w in zip(cross, w2)],
                 "colors": ["#1fbf75" if c > 0 else "#e0474c" for c in cross]})
