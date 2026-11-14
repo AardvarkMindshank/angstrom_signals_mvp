@@ -3350,6 +3350,24 @@ export default function(component) {
     if (slot) summary.insertBefore(badge, slot);
     else summary.appendChild(badge);
   }
+  if (payload && Array.isArray(payload.items)) {     // several small boxes side by side (e.g. Trend, Stretch, Flow)
+    badge.textContent = "";
+    badge.style.background = "transparent";
+    badge.style.padding = "0";
+    badge.style.minWidth = "0";
+    badge.removeAttribute("title");
+    payload.items.forEach((item, i) => {
+      const box = document.createElement("span");
+      box.textContent = item.text || "";
+      if (item.title) box.title = item.title;
+      box.style.cssText = `display:inline-block;border-radius:4px;padding:2px 7px;margin-left:${i ? 4 : 0}px;` +
+        `color:${item.color || "#475569"};background:${item.background || "#e2e8f0"};`;
+      badge.appendChild(box);
+    });
+    return () => badge.remove();
+  }
+  badge.style.padding = "";
+  badge.style.minWidth = "";
   const raw = payload ? payload.score : null;
   const score = raw === null || raw === undefined || raw === "" ? NaN : Number(raw);
   const color = (payload && payload.color) || "#6b7280";
@@ -6815,6 +6833,102 @@ def _paint_tides_header(snap: dict) -> None:
         title += f". Storm warning: {warning['name']} ({warning['reference']}), {mc.when_words(warning['at'])}."
     _header_score(key="section_score_tides", data={"score": 0, "text": text, "color": colour,
                                                     "background": background, "title": title})
+
+
+def _header_box(key: str, text: str, colour: str, background: str, title: str = "") -> None:
+    """One small summary box at the right of a section header."""
+    _header_score(key=f"section_score_{key}", data={"score": 0, "text": text, "color": colour,
+                                                     "background": background, "title": title})
+
+
+def _header_boxes(key: str, items: list[dict]) -> None:
+    """Several small boxes side by side: [{"text", "color", "background", "title"}]."""
+    if items:
+        _header_score(key=f"section_score_{key}", data={"items": items})
+
+
+def _paint_chart_header(kind: str, asset_id: str, rows) -> None:
+    """📊 Interactive Chart: today's move for the asset on the chart."""
+    row = next((r for r in rows or [] if str(r.get("key")) == str(asset_id)), None)
+    try:
+        change = float((row or {}).get("change_1d"))
+    except (TypeError, ValueError):
+        return
+    if change != change:
+        return
+    up = change >= 0
+    _header_box("chart", f"{'▲' if up else '▼'} {abs(change):.1f}%", "#166534" if up else "#991b1b",
+                "#dcfce7" if up else "#fee2e2", "Price change over the last day")
+
+
+def _paint_readings_header(result: dict) -> None:
+    """🔍 Why these readings: the Trend, Stretch and Flow boxes side by side."""
+    clusters = result.get("clusters") or {}
+    items = []
+    for name, icon, word in (("trend", "📈", "Trend"), ("stretch", "🎯", "Stretch"), ("flow", "🔊", "Flow")):
+        value = (clusters.get(name) or {}).get("percent")
+        try:
+            value = float(value)
+        except (TypeError, ValueError):
+            continue
+        fg, bg, _a, _b = reading_tone(value)
+        items.append({"text": f"{icon} {round(value):+d}", "color": fg, "background": bg,
+                      "title": f"{word} {round(value):+d} (-100 to +100)"})
+    _header_boxes("breakdown", items)
+
+
+def _paint_lattice_header() -> None:
+    """🧩 Angstrom Lattice: how many assets your Prism scans answer Yes for at their latest run."""
+    user = st.session_state.get("user")
+    if user is None:
+        return
+    memo = st.session_state.setdefault("_memo", {})
+    hit = memo.get("lattice_header")
+    if not hit or time.time() - hit[0] > 120:
+        found = None
+        try:
+            ids = [r["id"] for r in (supabase.table("prism_scans").select("id").eq("owner_id", str(user.id))
+                                     .execute().data or [])]
+            if ids:
+                rows = (supabase.table("prism_scan_runs").select("scan_id, market, cutoff, status, results")
+                        .in_("scan_id", ids).eq("status", "ok").order("cutoff", desc=True).limit(4 * len(ids))
+                        .execute().data or [])
+                latest = {}
+                for r in rows:
+                    latest.setdefault((r["scan_id"], r["market"]), r)
+                found = (len(ids), sum(1 for r in latest.values() for a in (r.get("results") or [])
+                                       if isinstance(a, dict) and a.get("answer") == "yes"))
+        except Exception:
+            found = None
+        hit = (time.time(), found)
+        memo["lattice_header"] = hit
+    found = hit[1]
+    if not found:
+        return
+    scans, yes = found
+    _header_box("lattice", f"🔎 {yes} match{'es' if yes != 1 else ''}",
+                "#166534" if yes else "#475569", "#dcfce7" if yes else "#e2e8f0",
+                f"Assets your {scans} Prism scan{'s' if scans != 1 else ''} answer Yes for at their latest run")
+
+
+def _paint_matrix_header(matrix: dict) -> None:
+    """▦ Signal matrix: how many signals read bullish and bearish today (beyond ±20, the colour borders)."""
+    latest = []
+    for row in matrix.get("rows") or []:
+        values = [v for v in row.get("values") or [] if v is not None]
+        if values:
+            try:
+                latest.append(float(values[-1]))
+            except (TypeError, ValueError):
+                continue
+    if not latest:
+        return
+    up, down = sum(v >= 20 for v in latest), sum(v <= -20 for v in latest)
+    colour, background = ("#166534", "#dcfce7") if up > down else ("#991b1b", "#fee2e2") if down > up \
+        else ("#475569", "#e2e8f0")
+    _header_box("signal_matrix", f"▲{up} ▼{down}", colour, background,
+                f"Today: {up} signal{'s' if up != 1 else ''} bullish (+20 or more), {down} bearish (-20 or less), "
+                f"{len(latest) - up - down} in between")
 
 
 def _paint_candidates_header(market: str, section_id: str) -> None:
@@ -12788,6 +12902,11 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             "<div id='interactive-chart' style='scroll-margin-top:4.5rem;'></div>"
         )
         with section_expander(chart_label, "interactive_chart"):
+            try:
+                _paint_chart_header(chart_kind, chart_asset,
+                                    crypto_results if chart_kind == "Crypto" else stock_results)
+            except Exception:
+                pass
             mark_col, chart_top = st.columns([5.2, 0.9], vertical_alignment="center")
             with mark_col:
                 if chart_name:
@@ -13332,7 +13451,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             st.html("<div id='score-breakdown' style='scroll-margin-top:4.5rem;'></div>")
             with section_expander(f"🔍 Why these readings — {title}", "score_breakdown"):
                 trend_now = ((result.get("clusters") or {}).get("trend") or {}).get("percent")
-                _paint_section_score("breakdown", trend_now, trend_now is not None, reading=True)
+                _paint_readings_header(result)
                 _signals_info_popover()
                 st.markdown(
                     f"<div class='ang-copy' style='margin:0 0 8px;'>{html.escape(result.get('summary') or '')}</div>",
@@ -14291,6 +14410,14 @@ def show_leverage(kind: str, asset_id: str, label: str, chart_price: float | Non
         # The headline numbers.
         oi_now, oi_then = latest("oi"), day_ago("oi")
         funding_now = latest("funding")
+        if funding_now is not None:              # 💰 in the header: how crowded the longs or shorts are
+            hot = funding_now >= 0.03
+            cold = funding_now < 0
+            _header_box("leverage", f"{'🔥' if hot else '🧊' if cold else '💰'} {funding_now:+.3f}%",
+                        "#9a3412" if hot else "#1e40af" if cold else "#475569",
+                        "#ffedd5" if hot else "#dbeafe" if cold else "#e2e8f0",
+                        "Funding rate: " + ("high, longs crowded" if hot else "negative, shorts paying"
+                                            if cold else "normal"))
         ratio_now = latest("ls")
         long_24 = sum(v or 0 for v in (series.get("liq_long") or [])[-24:])
         short_24 = sum(v or 0 for v in (series.get("liq_short") or [])[-24:])
@@ -14481,6 +14608,10 @@ def show_max_pain(kind: str, asset_id: str, label: str, chart_price: float | Non
         price_col, pain_col, expiry_col = st.columns(3)
         price_col.metric(spot_name, _price_text(spot) if spot else "—")
         pain_col.metric("Max pain", _price_text(level) if level is not None else "—")
+        if level is not None and spot:              # 🎯 in the header: how far max pain is from the price
+            gap = (float(level) / float(spot) - 1) * 100
+            _header_box("max_pain", f"🎯 {gap:+.1f}%", "#475569", "#e2e8f0",
+                        f"Max pain is {abs(gap):.1f}% {'above' if gap >= 0 else 'below'} the price for this expiry")
         expiry_col.metric("Expiry", labels.get(expiry, expiry))
         shown = window_strikes(list(calls) + list(puts), spot, level)
         full_count = len(set(calls) | set(puts))
@@ -14745,6 +14876,7 @@ def show_signal_matrix(kind: str, asset_id: str, label: str, indicated) -> None:
         if len(dates) < 2:
             st.caption("Not enough daily prices yet to draw this matrix.")
             return
+        _paint_matrix_header(matrix)
         st.caption(
             f"The last {len(dates)} daily closes, then each signal on those same dates. "
             f"Lead is how closely that signal lined up with the price change over the next {int(horizon)} "
@@ -15303,6 +15435,7 @@ def _lattice_section() -> None:
     """Angstrom Lattice (preview), for every signed-in account, full width under the Interactive Chart."""
     st.markdown("<div id='angstrom-lattice' style='scroll-margin-top:4.5rem;'></div>", unsafe_allow_html=True)
     with tracked_expander(":material/hub: Angstrom Lattice", "lattice_panel"):
+        _paint_lattice_header()
         _render_lattice()
 
 
