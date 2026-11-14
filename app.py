@@ -6804,6 +6804,15 @@ def _paint_tides_header(snap: dict) -> None:
     text = words + (f" · {SEA_HEADER[state]}" if state in SEA_HEADER else "")
     name, plain, _icon = tides.TIDE_WORDS.get(tide.get("label"), ("Tide", "", ""))
     title = f"{name} ({plain})" + (f"; sea {state} ({sea.get('plain')})" if state else "")
+    try:                                        # a storm warning is up: its flag(s) at the end, no words
+        import macro_calendar as mc
+
+        warning = mc.storm_warning(datetime.now(timezone.utc))
+    except Exception:
+        warning = None
+    if warning:
+        text += f" {mc.pennants(warning['tier'])}"
+        title += f". Storm warning: {warning['name']} ({warning['reference']}), {mc.when_words(warning['at'])}."
     _header_score(key="section_score_tides", data={"score": 0, "text": text, "color": colour,
                                                     "background": background, "title": title})
 
