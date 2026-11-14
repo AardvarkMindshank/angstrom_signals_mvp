@@ -4150,7 +4150,6 @@ def _push_settings() -> None:
     import push_component
     import push_notify
 
-    st.markdown("**📱 Phone and desktop notifications**")
     try:
         rows = (supabase.table("push_subscriptions").select("endpoint, device").eq("user_id", str(user_id))
                 .execute().data or [])
@@ -7070,6 +7069,9 @@ def notifications_panel() -> None:
                         )
 
 
+        with tracked_expander("📱 Phone and desktop notifications", "push_panel"):
+            _push_settings()
+
         with tracked_expander("Configure Alert Rules", "alert_rules"):
             st.caption(
                 "Readings describe current conditions and are not forecasts. Tick the colour borders you want to "
@@ -7317,8 +7319,6 @@ def notifications_panel() -> None:
                     st.caption("Tick an alert type above to choose how its emails arrive.")
                 elif not instant_on and not digest_on:
                     st.caption("Both are off, so alerts only appear in the dashboard.")
-
-            _push_settings()
 
             changed = new_alert_settings != {name: alert_prefs.get(name) for name in new_alert_settings}
             if changed:
@@ -9115,7 +9115,6 @@ def admin_panel() -> None:
             st.markdown(AI_KEY_STEPS)
             st.divider()
             _admin_push_keys()
-        st.divider()
         if feedback is None or reports is None:
             st.caption("Admin tools are not ready yet. Run the latest supabase_rls.sql in the Supabase SQL editor.")
             return
@@ -14948,12 +14947,61 @@ def _mark_clicked_alert_read(raw: str) -> str:
     return pick
 
 
+def _note_pick(note: dict) -> str:
+    """Where a notification leads, as the click value its card in the Alert Feed carries (without the note id)."""
+    import study_link
+
+    kind = str(note.get("alert_type") or "")
+    symbol = str(note.get("asset_symbol") or "").strip()
+    name = str(note.get("asset_name") or "").replace("|", " ")
+    if kind == "funnel":
+        return f"funnel|{symbol.split(':', 1)[1] if symbol.startswith('funnel:') else ''}|{name}"
+    if kind == "chart_share":
+        return f"chartshare|{symbol.split(':', 1)[1] if symbol.startswith('chartshare:') else ''}|{name}"
+    if kind == "study":
+        return study_link.pick_value(note)
+    if symbol.lower() in ("market:crypto", "market:stock"):
+        return "mood|" + symbol.lower().split(":", 1)[1]
+    for kind_name, chosen in (("Crypto", CRYPTO_WATCHLIST), ("Stock", STOCK_WATCHLIST)):
+        match = next((a for a in chosen if str(a).lower() == symbol.lower()), None)
+        if symbol and match is not None:
+            return f"{kind_name}|{match}"
+    return ""
+
+
+def _take_push_open() -> None:
+    """📱 A tapped phone notification opens the app at ?note=<id>: go where that notification's card goes."""
+    note_id = str(st.query_params.get("note") or "")
+    if not note_id:
+        return
+    try:
+        del st.query_params["note"]
+    except Exception:
+        pass
+    if not note_id.isdigit() or not user_id:
+        return
+    try:
+        rows = (supabase.table("user_notifications").select("id, alert_type, asset_symbol, asset_name")
+                .eq("user_id", user_id).eq("id", int(note_id)).limit(1).execute().data or [])
+    except Exception:
+        rows = []
+    if not rows:
+        return
+    pick = _note_pick(rows[0])
+    _handle_alert_pick(f"{pick}|note:{note_id}" if pick else f"read|{note_id}")
+
+
 def _take_alert_pick() -> None:
     """An alert click names an asset. This pass draws that chart. It does not run again."""
     reported = _asset_pick(key="alert_asset_pick", on_picked_change=lambda: None)
     raw = str(getattr(reported, "picked", "") or "")
     if "|" not in raw or st.session_state.get("_alert_pick_seen") == raw:
         return
+    _handle_alert_pick(raw)
+
+
+def _handle_alert_pick(raw: str) -> None:
+    """Open what a clicked (or tapped) notification points at: a chart, a funnel, a shared chart, a study."""
     if raw.startswith("jump|"):                 # from a Lattice pop-out: its Visualize History opens this chart
         st.session_state["_alert_pick_seen"] = raw
         try:
@@ -14969,6 +15017,13 @@ def _take_alert_pick() -> None:
     raw_full, raw = raw, _mark_clicked_alert_read(raw)
     if not raw:
         st.session_state["_alert_pick_seen"] = raw_full
+        return
+    if raw.startswith("mood|"):                 # a market alert: open that market's sentiment
+        st.session_state["_alert_pick_seen"] = raw_full
+        market = raw.split("|")[1]
+        if market in ("crypto", "stock"):
+            _remember_section("market_mood", True)
+            _reveal_section(f"market_mood_{market}", f"market-mood-{market}")
         return
     if raw.startswith("funnel|"):               # a funnel note: its table, in Dynamic funnel, on its Candidates
         st.session_state["_alert_pick_seen"] = raw_full
@@ -15114,6 +15169,7 @@ else:
         },
     )
 remember_favourites()
+_take_push_open()
 _take_alert_pick()
 _training.install(st)          # 🎬 links open the player in its own window
 if _POPOUT_VIEW:

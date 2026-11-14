@@ -79,7 +79,10 @@ def note_payload(note: dict) -> dict:
     body = " ".join(str(note.get("message") or "").split())
     if len(body) > 220:
         body = body[:217].rstrip() + "…"
-    return {"title": title, "body": body, "url": "/", "tag": f"note-{note.get('id')}" if note.get("id") else ""}
+    note_id = note.get("id")
+    # Tapping it opens the app where the notification's card in the Alert Feed would go (app.py _take_push_open).
+    return {"title": title, "body": body, "url": f"/?note={note_id}" if note_id else "/",
+            "tag": f"note-{note_id}" if note_id else ""}
 
 
 def send(sub: dict, payload: dict, webpush=None) -> str:
