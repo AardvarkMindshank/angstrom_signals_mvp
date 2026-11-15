@@ -26,7 +26,7 @@ SECTIONS = {
 PENDING = {"strategies"}
 
 HEADER = "### :material/hub: Angstrom Lattice"
-SUBTITLE = "Your market research workspace · preview: descriptive readings, not forecasts or advice"
+SUBTITLE = mark("Your market research workspace · preview: descriptive readings, not forecasts or advice")
 
 
 def label(key: str) -> str:
@@ -191,7 +191,7 @@ def _render(st, supabase, assets: list[tuple[str, str, str]], user_id: str) -> N
 
     perspectives.load_studies(supabase)              # "What followed" on people's own Sets, shared by Set logic
     st.markdown(HEADER)
-    st.caption(SUBTITLE)
+    st.caption(t(SUBTITLE))
     state = getattr(st, "session_state", None)
     if state is not None and "_lattice_section_next" in state:   # a button elsewhere in Lattice asked for another tab
         state["lattice_section"] = state.pop("_lattice_section_next")

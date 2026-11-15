@@ -16,6 +16,8 @@ A storm warning means "a scheduled event is near"; it never forecasts what the e
 
 from __future__ import annotations
 
+from i18n import t
+
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
@@ -191,10 +193,10 @@ def when_words(at: datetime, now: datetime | None = None) -> str:
     seconds = (at - now).total_seconds()
     if seconds < 0:
         hours = -seconds / 3600
-        return f"{hours:.0f} hours ago" if hours < 48 else f"{hours / 24:.0f} days ago"
+        return t("{n:.0f} hours ago", n=hours) if hours < 48 else t("{n:.0f} days ago", n=hours / 24)
     hours = seconds / 3600
     if hours < 1:
-        return "within the hour"
+        return t("within the hour")
     if hours < 48:
-        return f"in {hours:.0f} hours"
-    return f"in {hours / 24:.0f} days"
+        return t("in {n:.0f} hours", n=hours)
+    return t("in {n:.0f} days", n=hours / 24)

@@ -9,7 +9,7 @@ always sit beside the sailing words (decision 6). Motion is gentle and stops for
 
 from __future__ import annotations
 
-from i18n import t
+from i18n import mark, t
 
 import html
 import math
@@ -204,9 +204,9 @@ def hero(snap: dict, warning: dict | None, now: datetime) -> str:
         chips.append(f"<span class='chip {cls}' title='{esc(tip)}'>{WIND_ICON[w['wind']]} {esc(t(w['name']))}: "
                      f"{esc(t(w['wind']) if w['wind'] != 'neither' else t('no clear wind'))}</span>")
     if warning:
-        tip = t('{warning_name} ({warning_reference}): {warning_why} A scheduled event, not a forecast.', warning_name=warning['name'], warning_reference=warning['reference'], warning_why=warning['why'])
+        tip = t('{warning_name} ({warning_reference}): {warning_why} A scheduled event, not a forecast.', warning_name=t(warning['name']), warning_reference=warning['reference'], warning_why=t(warning['why']))
         chips.append(f"<span class='chip warn' title='{esc(tip)}'>{mc.pennants(warning['tier'])} {esc(t('Storm warning:'))} "
-                     f"{esc(warning['short'])} {esc(mc.when_words(warning['at'], now))}</span>")
+                     f"{esc(t(warning['short']))} {esc(mc.when_words(warning['at'], now))}</span>")
     dark = " dark" if state in ("rough", "storm") else ""
     sea_img = img(svg, "sea", f"Sea {state}, tide {t_.get('label', '')}")
     return (f"<div class='hero{dark}'>{sea_img}<div class='over'><div>{title}</div>"
@@ -229,10 +229,10 @@ def strip(upcoming: list[dict], now: datetime) -> str:
         delta = (e["at"] - now).total_seconds()
         cls = "past" if delta < 0 else "now" if delta < 24 * 3600 else ""
         local = e["at"].astimezone(mc.NEW_YORK)
-        tip = (t("{name} ({ref}) at {time} New York.", name=e["name"], ref=e["reference"], time=f"{local:%H:%M}")
-               + f" {e['why']}" + (f" ({e['note']})" if e["note"] else "") + " " + t("A scheduled event, not a forecast."))
+        tip = (t("{name} ({ref}) at {time} New York.", name=t(e["name"]), ref=e["reference"], time=f"{local:%H:%M}")
+               + f" {t(e['why'])}" + (f" ({e['note']})" if e["note"] else "") + " " + t("A scheduled event, not a forecast."))
         cards.append(f"<div class='ev {cls}' title='{esc(tip)}'><div class='flag'>{mc.pennants(e['tier'])} {e['icon']}</div>"
-                     f"<div class='nm'>{esc(e['short'])} · {esc(e['reference'])}</div>"
+                     f"<div class='nm'>{esc(t(e['short']))} · {esc(e['reference'])}</div>"
                      f"<div class='wh'>{local:%a %d %b} · {esc(mc.when_words(e['at'], now))}</div></div>")
     return ("<div class='card storm'><h4>" + t("⚑ Storm warnings: the macro calendar") + " <span style='font-weight:400;"
             "font-size:12px'>" + t("(two pennants: major, one: notable, square flag: extreme)") + "</span></h4><div class='strip'>"
@@ -343,7 +343,7 @@ def waves(snap: dict, range_key: str = "1Y") -> str:
                 "inflation, purple jobs reports. Drawn from the readings, nothing added.") + "</div></div>")
 
 
-WAVES_TITLE = "<h4>〰️ The waves: each current's pull, and the swell they make together</h4>"
+WAVES_TITLE = mark("<h4>〰️ The waves: each current's pull, and the swell they make together</h4>")
 
 
 def card(c: dict) -> str:
@@ -414,7 +414,7 @@ def top_part(snap: dict, now: datetime | None = None) -> str:
     now = now or datetime.now(timezone.utc)
     upcoming = mc.upcoming(now, days=35)
     return (CSS + "<div class='tides'>" + hero(snap, mc.storm_warning(now), now) + note(snap, upcoming, now)
-            + strip(upcoming, now) + WAVES_TITLE + "</div>")
+            + strip(upcoming, now) + t(WAVES_TITLE) + "</div>")
 
 
 def hero_part(snap: dict, now: datetime | None = None) -> str:
@@ -430,11 +430,11 @@ def note_part(snap: dict, now: datetime | None = None) -> str:
 def strip_part(snap: dict, now: datetime | None = None, title: bool = True) -> str:
     """The storm-warnings calendar (and, unless title=False, the waves' heading under it)."""
     now = now or datetime.now(timezone.utc)
-    return "<div class='tides'>" + strip(mc.upcoming(now, days=35), now) + (WAVES_TITLE if title else "") + "</div>"
+    return "<div class='tides'>" + strip(mc.upcoming(now, days=35), now) + (t(WAVES_TITLE) if title else "") + "</div>"
 
 
 def waves_title_part() -> str:
-    return "<div class='tides'>" + WAVES_TITLE + "</div>"
+    return "<div class='tides'>" + t(WAVES_TITLE) + "</div>"
 
 
 def waves_part(snap: dict, range_key: str = "1Y") -> str:
@@ -457,7 +457,7 @@ def page(snap: dict, now: datetime | None = None, range_key: str = "1Y") -> str:
     stamp = snap.get("computed_at", "")[:16].replace("T", " ")
     foot = (t("<div class='foot'>Readings from Yahoo Finance and FRED (St. Louis Fed), updated {esc_stamp} UTC. Each current is scored against its own last 5 years; its pull is its 30-day move against the usual size of such a move. History before the daily record began is rebuilt from today's data, and inflation uses revised figures, not first releases. Macro conditions frame risk; they do not time trades, and a coin can rise on its own news while the tide goes out. Not advice.</div>", esc_stamp=esc(stamp)))
     return (CSS + "<div class='tides'>" + hero(snap, warning, now) + note(snap, upcoming, now)
-            + strip(upcoming, now) + WAVES_TITLE + waves(snap, range_key) + cards(snap) + side_readings(snap)
+            + strip(upcoming, now) + t(WAVES_TITLE) + waves(snap, range_key) + cards(snap) + side_readings(snap)
             + foot + "</div>")
 
 

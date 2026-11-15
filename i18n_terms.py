@@ -27,6 +27,13 @@ def terms() -> list[str]:
     except Exception:
         pass
     try:
+        import macro_calendar as mc                   # the macro calendar's event names
+
+        for k in mc.KINDS.values():
+            add(k["name"], k["short"], k["why"])
+    except Exception:
+        pass
+    try:
         import chart_plan                             # the chart's indicator picker
 
         for spec in chart_plan.INDICATORS.values():

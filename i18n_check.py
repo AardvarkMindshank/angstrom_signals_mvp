@@ -39,7 +39,7 @@ def texts_in(source: str) -> list[str]:
             continue
         name = node.func.id if isinstance(node.func, ast.Name) else (
             node.func.attr if isinstance(node.func, ast.Attribute) else "")
-        if name in ("t", "mark") and isinstance(node.args[0], ast.Constant) and isinstance(node.args[0].value, str):
+        if name in ("t", "tr", "mark") and isinstance(node.args[0], ast.Constant) and isinstance(node.args[0].value, str):
             found.append(node.args[0].value)
     return found
 

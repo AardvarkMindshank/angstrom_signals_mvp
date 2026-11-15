@@ -390,38 +390,47 @@ TIDE_WORDS = {"in": ("Tide coming in", "risk-supportive", "🌊⬆"),
 
 
 def summary(snap: dict, upcoming: list[dict] | None = None, now: datetime | None = None) -> list[str]:
-    """The factual daily note, from fixed templates (decision 16: facts from templates, checked for accuracy)."""
+    """The factual daily note, from fixed templates (decision 16: facts from templates, checked for accuracy), in
+    the visit's language (i18n.t)."""
+    from i18n import t as tr
+
     lines = []
     t, sea = snap.get("tide") or {}, snap.get("sea") or {}
     if t.get("status") == "ok":
         name, plain, _ = TIDE_WORDS[t["label"]]
-        line = f"{name} ({plain}) for {t['held_days']} trading days."
+        line = tr("{name} ({plain}) for {n} trading days.", name=tr(name), plain=tr(plain), n=t["held_days"])
         if t.get("pending"):
-            line += f" Readings now point to {TIDE_WORDS[t['raw_label']][0].lower()}; it changes once that holds 5 closes."
+            line += " " + tr("Readings now point to {where}; it changes once that holds 5 closes.",
+                             where=tr(TIDE_WORDS[t["raw_label"]][0]).lower())
         lines.append(line)
     if sea.get("status") == "ok":
-        lines.append(f"Sea state {sea['state']} ({sea['plain']}).")
+        lines.append(tr("Sea state {state} ({plain}).", state=tr(sea["state"]), plain=tr(sea["plain"])))
     cur = [c for c in (snap.get("currents") or {}).values() if c.get("status") == "ok" and c.get("weight")]
     strong = sorted(cur, key=lambda c: -abs(c.get("contribution") or 0))[:3]
     if strong:
         bits = []
         for c in strong:
-            meaning = SPEC[c["key"]][c["direction"]] if c["direction"] in ("rising", "falling") else "little change"
-            pull = "risk-supportive" if (c["contribution"] or 0) > 0 else "risk-defensive"
-            bits.append(f"{c['name']} {c['direction']}: {meaning} ({pull})")
-        lines.append("Strongest currents. " + ". ".join(bits) + ".")
+            meaning = (tr(SPEC[c["key"]][c["direction"]]) if c["direction"] in ("rising", "falling")
+                       else tr("little change"))
+            pull = tr("risk-supportive") if (c["contribution"] or 0) > 0 else tr("risk-defensive")
+            bits.append(tr("{name} {direction}: {meaning} ({pull})", name=tr(c["name"]), direction=tr(c["direction"]),
+                           meaning=meaning, pull=pull))
+        lines.append(tr("Strongest currents.") + " " + ". ".join(bits) + ".")
     for w in (snap.get("winds") or {}).values():
         if w["wind"] != "neither":
-            line = (f"A {w['wind']} for {w['name'].lower()}, led by "
-                    + " and ".join(SPEC[k]["name"].lower() for k in w["drivers"]))
+            led = tr(" and ").join(tr(SPEC[k]["name"]).lower() for k in w["drivers"])
+            line = (tr("A headwind for {who}, led by {led}", who=tr(w["name"]).lower(), led=led) if w["wind"] == "headwind"
+                    else tr("A tailwind for {who}, led by {led}", who=tr(w["name"]).lower(), led=led))
             if w.get("against"):
-                line += "; pushing the other way: " + ", ".join(SPEC[k]["name"].lower() for k in w["against"])
+                line += tr("; pushing the other way: {what}",
+                           what=", ".join(tr(SPEC[k]["name"]).lower() for k in w["against"]))
             lines.append(line + ".")
     if upcoming:
         import macro_calendar as mc
 
         e = upcoming[0]
-        lines.append(f"Next scheduled event: {e['name']} ({e['reference']}), {mc.when_words(e['at'], now)}.")
+        lines.append(tr("Next scheduled event: {name} ({ref}), {when}.", name=tr(e["name"]), ref=e["reference"],
+                        when=mc.when_words(e["at"], now)))
     return lines
 
 
