@@ -4159,7 +4159,7 @@ def _shared_chart_banner(asset_type: str, asset_key: str) -> None:
             try:
                 save_drawings(supabase, user_id, key, mine + extra)
                 st.session_state.pop("_shared_chart", None)
-                st.toast(t('Copied {len_extra} drawing{s_if_len_extra_1_else} to yours.', len_extra=len(extra), s_if_len_extra_1_else='s' if len(extra) != 1 else ''))
+                st.toast(t('Copied {n} drawing to yours.', n=1) if len(extra) == 1 else t('Copied {n} drawings to yours.', n=len(extra)))
                 st.rerun()
             except Exception as exc:
                 st.error(t('Could not copy them: {str_exc_160}', str_exc_160=str(exc)[:160]))
@@ -14720,14 +14720,14 @@ def show_max_pain(kind: str, asset_id: str, label: str, chart_price: float | Non
             return
         level = pain_strike(calls, puts)
         spot = underlying if underlying else chart_price
-        spot_name = "Index" if underlying else "Latest price"
+        spot_name = t("Index") if underlying else t("Latest price")
         price_col, pain_col, expiry_col = st.columns(3)
         price_col.metric(spot_name, _price_text(spot) if spot else "—")
         pain_col.metric(t("Max pain"), _price_text(level) if level is not None else "—")
         if level is not None and spot:              # 🎯 in the header: how far max pain is from the price
             gap = (float(level) / float(spot) - 1) * 100
             _header_box("max_pain", f"🎯 {gap:+.1f}%", "#475569", "#e2e8f0",
-                        t('Max pain is {abs_gap:.1f}% {above_if_gap_0_else_belo} the price for this expiry', abs_gap=abs(gap), above_if_gap_0_else_belo='above' if gap >= 0 else 'below'))
+                        (t('Max pain is {abs_gap:.1f}% above the price for this expiry', abs_gap=abs(gap)) if gap >= 0 else t('Max pain is {abs_gap:.1f}% below the price for this expiry', abs_gap=abs(gap))))
         expiry_col.metric(t("Expiry"), labels.get(expiry, expiry))
         shown = window_strikes(list(calls) + list(puts), spot, level)
         full_count = len(set(calls) | set(puts))
@@ -14762,10 +14762,13 @@ def show_max_pain(kind: str, asset_id: str, label: str, chart_price: float | Non
         st.plotly_chart(fig, width="stretch")
         if spot and level is not None and spot != 0:
             gap = (level - spot) / spot * 100
-            side = "above" if gap > 0 else "below"
-            st.caption(
-                t('Max pain is {abs_gap:.1f}% {side} the {spot_name_lower}. The violet line is that strike. The orange line is the price.', abs_gap=abs(gap), side=side, spot_name_lower=spot_name.lower())
-            )
+            _mp_lines = {
+                (True, True): i18n.mark("Max pain is {abs_gap:.1f}% above the index. The violet line is that strike. The orange line is the price."),
+                (True, False): i18n.mark("Max pain is {abs_gap:.1f}% above the latest price. The violet line is that strike. The orange line is the price."),
+                (False, True): i18n.mark("Max pain is {abs_gap:.1f}% below the index. The violet line is that strike. The orange line is the price."),
+                (False, False): i18n.mark("Max pain is {abs_gap:.1f}% below the latest price. The violet line is that strike. The orange line is the price."),
+            }
+            st.caption(t(_mp_lines[(gap > 0, bool(underlying))], abs_gap=abs(gap)))
         else:
             st.caption(t("The violet line is max pain. The orange line is the price."))
         if len(shown) < full_count:

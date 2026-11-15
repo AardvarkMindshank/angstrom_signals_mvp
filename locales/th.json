@@ -2036,5 +2036,15 @@
   "{n} news articles and {m} public readings": "บทความข่าว {n} รายการ และค่าสาธารณะ {m} รายการ",
   "{n} articles": "{n} บทความ",
   "{n} sources": "{n} แหล่ง",
-  "⚠️ thin news": "⚠️ ข่าวน้อย"
+  "⚠️ thin news": "⚠️ ข่าวน้อย",
+  "Index": "ดัชนี",
+  "Latest price": "ราคาล่าสุด",
+  "Max pain is {abs_gap:.1f}% above the index. The violet line is that strike. The orange line is the price.": "Max pain อยู่สูงกว่าดัชนี {abs_gap:.1f}% เส้นสีม่วงคือราคาใช้สิทธิ์นั้น เส้นสีส้มคือราคา",
+  "Max pain is {abs_gap:.1f}% above the latest price. The violet line is that strike. The orange line is the price.": "Max pain อยู่สูงกว่าราคาล่าสุด {abs_gap:.1f}% เส้นสีม่วงคือราคาใช้สิทธิ์นั้น เส้นสีส้มคือราคา",
+  "Max pain is {abs_gap:.1f}% below the index. The violet line is that strike. The orange line is the price.": "Max pain อยู่ต่ำกว่าดัชนี {abs_gap:.1f}% เส้นสีม่วงคือราคาใช้สิทธิ์นั้น เส้นสีส้มคือราคา",
+  "Max pain is {abs_gap:.1f}% below the latest price. The violet line is that strike. The orange line is the price.": "Max pain อยู่ต่ำกว่าราคาล่าสุด {abs_gap:.1f}% เส้นสีม่วงคือราคาใช้สิทธิ์นั้น เส้นสีส้มคือราคา",
+  "Max pain is {abs_gap:.1f}% above the price for this expiry": "สำหรับวันหมดอายุนี้ max pain อยู่สูงกว่าราคา {abs_gap:.1f}%",
+  "Max pain is {abs_gap:.1f}% below the price for this expiry": "สำหรับวันหมดอายุนี้ max pain อยู่ต่ำกว่าราคา {abs_gap:.1f}%",
+  "Copied {n} drawing to yours.": "คัดลอกภาพวาด {n} ชิ้นไปยังของคุณแล้ว",
+  "Copied {n} drawings to yours.": "คัดลอกภาพวาด {n} ชิ้นไปยังของคุณแล้ว"
 }
