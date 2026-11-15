@@ -32,7 +32,8 @@ def test_choice_order_never_location():
     assert i18n.choose(saved="th", browser="en", admin=False) == "th"     # Thai is live (15 Nov 2026)
     # then the browser's list, first language the app offers
     assert i18n.choose(browser="th-TH,th;q=0.9,en;q=0.8", admin=True) == "th"
-    assert i18n.choose(browser="ja,de;q=0.9") == "en"                       # not offered yet: English
+    assert i18n.choose(browser="ja,de;q=0.9") == "ja"                       # live since 15 Nov 2026
+    assert i18n.choose(browser="ru,ar;q=0.9") == "en"                       # not offered: English
     assert i18n.choose() == "en"
 
 
@@ -66,10 +67,10 @@ def test_every_language_has_a_flag_image():
 
 
 def test_offered_languages(monkeypatch):
-    assert [x["code"] for x in i18n.offered()] == ["en", "th"]
+    assert [x["code"] for x in i18n.offered()] == [lang["code"] for lang in i18n.LANGUAGES]   # all live
     # a beta language: admins and ?lang= links only
     monkeypatch.setitem(i18n.BY_CODE["th"], "status", "beta")
-    assert [x["code"] for x in i18n.offered()] == ["en"]
+    assert "th" not in [x["code"] for x in i18n.offered()]
     assert "th" in [x["code"] for x in i18n.offered(admin=True)]
     assert "th" in [x["code"] for x in i18n.offered(extra="th")]
     assert i18n.choose(saved="th", browser="en", admin=False) == "en"
@@ -82,9 +83,13 @@ def test_the_check_finds_texts_in_code():
     assert "Welcome Back" in texts and "Quick Snapshot" in texts
 
 
-def test_thai_covers_the_converted_screens():
-    r = i18n_check.report("th")
-    assert r["total"] > 50 and not r["missing"], r["missing"][:5]
+def test_every_live_language_is_complete():
+    texts = i18n_check.all_texts()
+    for lang in i18n.LANGUAGES:
+        if lang["code"] == i18n.BASE or lang["status"] != "live":
+            continue
+        r = i18n_check.report(lang["code"], texts)
+        assert r["total"] > 50 and not r["missing"], (lang["code"], r["missing"][:5])
 
 
 def test_picker_payload_and_events():
