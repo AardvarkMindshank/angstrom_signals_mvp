@@ -2045,5 +2045,11 @@
   "Max pain is {abs_gap:.1f}% above the price for this expiry": "이 만기의 맥스 페인은 가격보다 {abs_gap:.1f}% 위",
   "Max pain is {abs_gap:.1f}% below the price for this expiry": "이 만기의 맥스 페인은 가격보다 {abs_gap:.1f}% 아래",
   "Copied {n} drawing to yours.": "그림 {n}개를 내 그림으로 복사했습니다.",
-  "Copied {n} drawings to yours.": "그림 {n}개를 내 그림으로 복사했습니다."
+  "Copied {n} drawings to yours.": "그림 {n}개를 내 그림으로 복사했습니다.",
+  "Add at most {n} screenshots.": "스크린샷은 최대 {n}장까지 추가하세요.",
+  "Screenshots (optional)": "스크린샷 (선택)",
+  "Up to {n} pictures, to show where in the app it happened. On a phone, take a screenshot first, then pick it from your photos.": "앱의 어디에서 일어났는지 보여 주는 이미지 최대 {n}장. 휴대폰에서는 먼저 스크린샷을 찍은 다음 사진에서 고르세요.",
+  "A picture could not be read, so it was left out.": "이미지 하나를 읽을 수 없어 제외했습니다.",
+  "The screenshots could not be stored yet, so the note was saved without them.": "아직 스크린샷을 저장할 수 없어 메모만 저장했습니다.",
+  "Open full size": "원본 크기로 열기"
 }

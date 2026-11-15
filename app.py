@@ -14,6 +14,7 @@ import math
 import re
 import threading
 import time
+import uuid
 
 import app_version
 from score_colours import SENTIMENT_SHOWN_STEPS, reading_tone, sentiment_category_score, sentiment_spread, sentiment_stored, sentiment_text, sentiment_tone, sentiment_tone_js, sentiment_value
@@ -9044,8 +9045,9 @@ def _email_invite(address: str, inviter_name: str) -> tuple[bool, str]:
     return False, _resend_reason(response)
 
 
-def _email_feedback(kind: str, body: str, user_email: str, user_id: str) -> tuple[bool, str]:
-    """Mail one saved note. The reason is empty when the send is accepted."""
+def _email_feedback(kind: str, body: str, user_email: str, user_id: str,
+                    shots: list[bytes] | None = None) -> tuple[bool, str]:
+    """Mail one saved note, with its screenshots attached. The reason is empty when the send is accepted."""
     api_key, sender, inbox = _feedback_mail_settings()
     if not api_key and not inbox:
         return False, "the Resend key and feedback inbox are missing from the Streamlit secrets"
@@ -9063,8 +9065,12 @@ def _email_feedback(kind: str, body: str, user_email: str, user_id: str) -> tupl
             f"<p><strong>{label}</strong> from {html.escape(user_email or 'unknown account')}</p>"
             f"<p>User {html.escape(user_id)} · status submitted</p>"
             f"<p>{safe_body}</p>"
+            + (f"<p>{len(shots)} screenshot(s) attached; also in the app's admin area.</p>" if shots else "")
         ),
     }
+    if shots:
+        payload["attachments"] = [{"filename": f"screenshot-{i}.jpg", "content": base64.b64encode(data).decode()}
+                                  for i, data in enumerate(shots, start=1)]
     if "@" in user_email:
         payload["reply_to"] = user_email
     try:
@@ -9762,6 +9768,35 @@ def _feedback_sort_value(row: dict, key: str) -> str:
     return str(row.get("created_at") or "")
 
 
+def _feedback_shots_html(paths) -> str:
+    """Thumbnails of a note's screenshots, each opening full size in a new tab. The bucket is private: the links are
+    signed for an hour, for this admin only, and remembered for 50 minutes so redrawing the page doesn't re-sign."""
+    paths = [str(p) for p in (paths or []) if p]
+    if not paths:
+        return ""
+    store = st.session_state.setdefault("_feedback_shot_links", {})
+    now = time.time()
+    missing = [p for p in paths if not (p in store and store[p][1] > now)]
+    if missing:
+        try:
+            for item in supabase.storage.from_(FEEDBACK_BUCKET).create_signed_urls(missing, 3600):
+                if item.get("signedURL"):
+                    store[item.get("path")] = (item["signedURL"], now + 3000)
+        except Exception:
+            pass
+    tiles = []
+    for i, p in enumerate(paths, start=1):
+        link = (store.get(p) or ("", 0))[0]
+        if not link:
+            tiles.append(f"<span class='ang-kicker' title='{html.escape(p, quote=True)}'>🖼️ {i}?</span>")
+            continue
+        safe = html.escape(link, quote=True)
+        tiles.append(f"<a href='{safe}' target='_blank' rel='noopener' title='{html.escape(t('Open full size'), quote=True)}'>"
+                     f"<img src='{safe}' alt='' style='height:64px;max-width:120px;object-fit:cover;border-radius:6px;"
+                     "border:1px solid var(--ang-border, rgba(127,127,127,.35));'></a>")
+    return "<div style='display:flex;gap:6px;flex-wrap:wrap;margin-top:6px'>" + "".join(tiles) + "</div>"
+
+
 def _show_feedback(rows) -> None:
     clean = [row for row in rows if isinstance(row, dict)]
     if not clean:
@@ -9854,6 +9889,9 @@ def _show_feedback(rows) -> None:
             cells = st.columns(widths, vertical_alignment="center")
             cells[0].write(kind)
             cells[1].markdown(comment or "—", unsafe_allow_html=True)
+            shots_html = _feedback_shots_html(row.get("images"))
+            if shots_html:
+                cells[1].html(shots_html)
             cells[2].write(_admin_when(row.get("created_at")))
             cells[3].markdown(
                 _admin_face(_feedback_username(row), str(row.get("avatar") or "")),
@@ -10227,28 +10265,74 @@ def _show_reports(rows) -> None:
             _rerun_fragment()
 
 
-def _store_feedback(kind: str, body: str) -> str:
-    """Save one note as submitted and email it. The message says which part worked."""
+FEEDBACK_BUCKET = "feedback"          # private storage for feedback screenshots (sql/2026-11-30_feedback_screenshots.sql)
+FEEDBACK_MAX_SHOTS = 3
+
+
+def _feedback_shot(uploaded) -> bytes:
+    """A screenshot as a JPEG at most 1600 px on its long side (sharp enough to read, small to store and mail)."""
+    from PIL import Image, ImageOps
+
+    if uploaded.size > 20_000_000:
+        raise ValueError("too large")
+    image = ImageOps.exif_transpose(Image.open(io.BytesIO(uploaded.getvalue())))
+    image.thumbnail((1600, 1600))
+    if image.mode in ("RGBA", "LA", "P"):
+        image = image.convert("RGBA")
+        backdrop = Image.new("RGB", image.size, (255, 255, 255))
+        backdrop.paste(image, mask=image.split()[-1])
+        image = backdrop
+    buffer = io.BytesIO()
+    image.convert("RGB").save(buffer, format="JPEG", quality=85, optimize=True)
+    return buffer.getvalue()
+
+
+def _store_feedback(kind: str, body: str, files=None) -> tuple[str, str]:
+    """Save one note as submitted, with its screenshots, and email it. ("ok" | "partial" | "error", the message):
+    the level says how it went in any language (the words are translated)."""
     text = body.strip()
     if not text:
-        return t("Write a few words first.")
+        return "error", t("Write a few words first.")
+    files = list(files or [])
+    if len(files) > FEEDBACK_MAX_SHOTS:
+        return "error", t("Add at most {n} screenshots.", n=FEEDBACK_MAX_SHOTS)
     user = st.session_state.user
     user_id = str(getattr(user, "id", "") or "")
     user_email = str(getattr(user, "email", "") or "")
+    shots, paths, shot_problem = [], [], ""
+    for uploaded in files:
+        try:
+            shots.append(_feedback_shot(uploaded))
+        except Exception:
+            shot_problem = t("A picture could not be read, so it was left out.")
+    if shots:
+        bucket = supabase.storage.from_(FEEDBACK_BUCKET)
+        for data in shots:
+            path = f"{user_id}/{time.strftime('%Y%m%d')}-{uuid.uuid4().hex[:12]}.jpg"
+            try:
+                bucket.upload(path, data, {"content-type": "image/jpeg"})
+                paths.append(path)
+            except Exception:
+                shot_problem = t("The screenshots could not be stored yet, so the note was saved without them.")
+                paths = []
+                break
+    note = {"user_id": user_id, "user_email": user_email or "unknown", "kind": kind, "body": text[:4000],
+            "status": "submitted"}
     try:
-        supabase.table("feedback_notes").insert({
-            "user_id": user_id,
-            "user_email": user_email or "unknown",
-            "kind": kind,
-            "body": text[:4000],
-            "status": "submitted",
-        }).execute()
+        supabase.table("feedback_notes").insert({**note, "images": paths} if paths else note).execute()
     except Exception:
-        return t("That could not be saved. Please try again.")
-    sent, reason = _email_feedback(kind, text[:4000], user_email, user_id)
-    if sent:
-        return t("Saved and emailed. Thank you.")
-    return t('Saved. The email was not sent: {reason}.', reason=reason)
+        if not paths:
+            return "error", t("That could not be saved. Please try again.")
+        try:                                   # the images column is not installed yet: keep the words at least
+            supabase.table("feedback_notes").insert(note).execute()
+            shot_problem = t("The screenshots could not be stored yet, so the note was saved without them.")
+        except Exception:
+            return "error", t("That could not be saved. Please try again.")
+    sent, reason = _email_feedback(kind, text[:4000], user_email, user_id, shots)
+    if sent and not shot_problem:
+        return "ok", t("Saved and emailed. Thank you.")
+    words = t("Saved and emailed. Thank you.") if sent else t('Saved. The email was not sent: {reason}.', reason=reason)
+    return "partial", (words + " " + shot_problem).strip()
 
 
 @st.fragment
@@ -10271,21 +10355,30 @@ def feedback_form() -> None:
         key="feedback_body",
         placeholder=t("What happened, or what would you like?"),
     )
+    shots = st.file_uploader(
+        "🖼️ " + t("Screenshots (optional)"),
+        type=["png", "jpg", "jpeg", "webp"],
+        accept_multiple_files=True,
+        key=f"feedback_shots_{st.session_state.get('feedback_shots_n', 0)}",   # a new key empties it after sending
+        help=t("Up to {n} pictures, to show where in the app it happened. On a phone, take a screenshot first, "
+               "then pick it from your photos.", n=FEEDBACK_MAX_SHOTS),
+    )
     if st.button(t("Submit"), key="feedback_submit", use_container_width=True):
-        st.session_state.feedback_notice = _store_feedback(
+        level, words = _store_feedback(
             "enhancement" if feedback_kind == "Enhancement" else "issue",
             feedback_body,
+            shots,
         )
-        if str(st.session_state.feedback_notice).startswith("Saved"):
+        st.session_state.feedback_notice = (level, words)
+        if level != "error":
             st.session_state.feedback_clear = True
+            st.session_state.feedback_shots_n = st.session_state.get("feedback_shots_n", 0) + 1
         _rerun_fragment()
-    feedback_notice = st.session_state.pop("feedback_notice", "")
-    if feedback_notice.startswith("Saved and emailed"):
-        st.success(feedback_notice)
-    elif feedback_notice.startswith("Saved"):
-        st.warning(feedback_notice)
-    elif feedback_notice:
-        st.warning(feedback_notice)
+    level, words = st.session_state.pop("feedback_notice", ("", ""))
+    if level == "ok":
+        st.success(words)
+    elif words:
+        st.warning(words)
 
 
 with tracked_expander("📝 " + t("Feedback"), "feedback", sidebar=True):

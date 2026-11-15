@@ -2045,5 +2045,11 @@
   "Max pain is {abs_gap:.1f}% above the price for this expiry": "Max pain cao hơn giá {abs_gap:.1f}% cho kỳ đáo hạn này",
   "Max pain is {abs_gap:.1f}% below the price for this expiry": "Max pain thấp hơn giá {abs_gap:.1f}% cho kỳ đáo hạn này",
   "Copied {n} drawing to yours.": "Đã sao chép {n} hình vẽ vào của bạn.",
-  "Copied {n} drawings to yours.": "Đã sao chép {n} hình vẽ vào của bạn."
+  "Copied {n} drawings to yours.": "Đã sao chép {n} hình vẽ vào của bạn.",
+  "Add at most {n} screenshots.": "Thêm tối đa {n} ảnh chụp màn hình.",
+  "Screenshots (optional)": "Ảnh chụp màn hình (không bắt buộc)",
+  "Up to {n} pictures, to show where in the app it happened. On a phone, take a screenshot first, then pick it from your photos.": "Tối đa {n} ảnh, để cho thấy sự việc xảy ra ở đâu trong ứng dụng. Trên điện thoại, hãy chụp màn hình trước rồi chọn ảnh từ thư viện.",
+  "A picture could not be read, so it was left out.": "Không đọc được một ảnh nên ảnh đó đã bị bỏ qua.",
+  "The screenshots could not be stored yet, so the note was saved without them.": "Chưa lưu được ảnh chụp màn hình, nên ghi chú đã được lưu mà không kèm ảnh.",
+  "Open full size": "Mở kích thước đầy đủ"
 }

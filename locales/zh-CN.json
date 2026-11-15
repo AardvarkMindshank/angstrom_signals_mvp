@@ -2045,5 +2045,11 @@
   "Max pain is {abs_gap:.1f}% above the price for this expiry": "此到期日的最大痛点比价格高 {abs_gap:.1f}%",
   "Max pain is {abs_gap:.1f}% below the price for this expiry": "此到期日的最大痛点比价格低 {abs_gap:.1f}%",
   "Copied {n} drawing to yours.": "已将 {n} 个绘图复制到您的绘图中。",
-  "Copied {n} drawings to yours.": "已将 {n} 个绘图复制到您的绘图中。"
+  "Copied {n} drawings to yours.": "已将 {n} 个绘图复制到您的绘图中。",
+  "Add at most {n} screenshots.": "最多添加 {n} 张截图。",
+  "Screenshots (optional)": "截图（可选）",
+  "Up to {n} pictures, to show where in the app it happened. On a phone, take a screenshot first, then pick it from your photos.": "最多 {n} 张图片，用来说明问题出现在应用的哪个位置。在手机上，请先截图，然后从相册中选择。",
+  "A picture could not be read, so it was left out.": "有一张图片无法读取，已略过。",
+  "The screenshots could not be stored yet, so the note was saved without them.": "截图暂时无法保存，因此备注已在不含截图的情况下保存。",
+  "Open full size": "查看原图"
 }

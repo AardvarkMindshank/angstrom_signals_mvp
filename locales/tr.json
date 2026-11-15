@@ -2045,5 +2045,11 @@
   "Max pain is {abs_gap:.1f}% above the price for this expiry": "Bu vade için max pain fiyatın %{abs_gap:.1f} üzerinde",
   "Max pain is {abs_gap:.1f}% below the price for this expiry": "Bu vade için max pain fiyatın %{abs_gap:.1f} altında",
   "Copied {n} drawing to yours.": "{n} çizim sizinkilere kopyalandı.",
-  "Copied {n} drawings to yours.": "{n} çizim sizinkilere kopyalandı."
+  "Copied {n} drawings to yours.": "{n} çizim sizinkilere kopyalandı.",
+  "Add at most {n} screenshots.": "En fazla {n} ekran görüntüsü ekleyin.",
+  "Screenshots (optional)": "Ekran görüntüleri (isteğe bağlı)",
+  "Up to {n} pictures, to show where in the app it happened. On a phone, take a screenshot first, then pick it from your photos.": "Uygulamanın neresinde olduğunu göstermek için en fazla {n} resim. Telefonda önce ekran görüntüsü alın, sonra fotoğraflarınızdan seçin.",
+  "A picture could not be read, so it was left out.": "Bir resim okunamadı, bu yüzden dışarıda bırakıldı.",
+  "The screenshots could not be stored yet, so the note was saved without them.": "Ekran görüntüleri henüz saklanamadı, bu yüzden not onlarsız kaydedildi.",
+  "Open full size": "Tam boyutta aç"
 }

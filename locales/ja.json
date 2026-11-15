@@ -2045,5 +2045,11 @@
   "Max pain is {abs_gap:.1f}% above the price for this expiry": "この満期のマックスペインは価格より {abs_gap:.1f}% 上",
   "Max pain is {abs_gap:.1f}% below the price for this expiry": "この満期のマックスペインは価格より {abs_gap:.1f}% 下",
   "Copied {n} drawing to yours.": "{n} 件の描画をあなたの描画にコピーしました。",
-  "Copied {n} drawings to yours.": "{n} 件の描画をあなたの描画にコピーしました。"
+  "Copied {n} drawings to yours.": "{n} 件の描画をあなたの描画にコピーしました。",
+  "Add at most {n} screenshots.": "スクリーンショットは最大 {n} 枚までです。",
+  "Screenshots (optional)": "スクリーンショット（任意）",
+  "Up to {n} pictures, to show where in the app it happened. On a phone, take a screenshot first, then pick it from your photos.": "アプリのどこで起きたかを示す画像を最大 {n} 枚。スマートフォンでは、先にスクリーンショットを撮ってから写真から選んでください。",
+  "A picture could not be read, so it was left out.": "読み込めない画像があったため、除外しました。",
+  "The screenshots could not be stored yet, so the note was saved without them.": "スクリーンショットをまだ保存できなかったため、メモは画像なしで保存されました。",
+  "Open full size": "原寸で開く"
 }

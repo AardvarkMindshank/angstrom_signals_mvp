@@ -2045,5 +2045,11 @@
   "Max pain is {abs_gap:.1f}% above the price for this expiry": "Max pain {abs_gap:.1f}% di atas harga untuk kedaluwarsa ini",
   "Max pain is {abs_gap:.1f}% below the price for this expiry": "Max pain {abs_gap:.1f}% di bawah harga untuk kedaluwarsa ini",
   "Copied {n} drawing to yours.": "{n} gambar disalin ke milik Anda.",
-  "Copied {n} drawings to yours.": "{n} gambar disalin ke milik Anda."
+  "Copied {n} drawings to yours.": "{n} gambar disalin ke milik Anda.",
+  "Add at most {n} screenshots.": "Tambahkan paling banyak {n} tangkapan layar.",
+  "Screenshots (optional)": "Tangkapan layar (opsional)",
+  "Up to {n} pictures, to show where in the app it happened. On a phone, take a screenshot first, then pick it from your photos.": "Hingga {n} gambar, untuk menunjukkan di bagian mana aplikasi hal itu terjadi. Di ponsel, ambil tangkapan layar dulu, lalu pilih dari foto Anda.",
+  "A picture could not be read, so it was left out.": "Satu gambar tidak dapat dibaca, jadi tidak disertakan.",
+  "The screenshots could not be stored yet, so the note was saved without them.": "Tangkapan layar belum dapat disimpan, jadi catatan disimpan tanpa gambar.",
+  "Open full size": "Buka ukuran penuh"
 }

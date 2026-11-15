@@ -2045,5 +2045,11 @@
   "Max pain is {abs_gap:.1f}% above the price for this expiry": "Le max pain est {abs_gap:.1f}% au-dessus du prix pour cette échéance",
   "Max pain is {abs_gap:.1f}% below the price for this expiry": "Le max pain est {abs_gap:.1f}% en dessous du prix pour cette échéance",
   "Copied {n} drawing to yours.": "{n} dessin copié dans les vôtres.",
-  "Copied {n} drawings to yours.": "{n} dessins copiés dans les vôtres."
+  "Copied {n} drawings to yours.": "{n} dessins copiés dans les vôtres.",
+  "Add at most {n} screenshots.": "Ajoutez au maximum {n} captures d'écran.",
+  "Screenshots (optional)": "Captures d'écran (facultatif)",
+  "Up to {n} pictures, to show where in the app it happened. On a phone, take a screenshot first, then pick it from your photos.": "Jusqu'à {n} images, pour montrer où dans l'app cela s'est produit. Sur un téléphone, faites d'abord une capture d'écran, puis choisissez-la dans vos photos.",
+  "A picture could not be read, so it was left out.": "Une image n'a pas pu être lue, elle a donc été ignorée.",
+  "The screenshots could not be stored yet, so the note was saved without them.": "Les captures n'ont pas encore pu être enregistrées, la note a donc été enregistrée sans elles.",
+  "Open full size": "Ouvrir en taille réelle"
 }

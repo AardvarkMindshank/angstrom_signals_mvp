@@ -641,6 +641,40 @@ create policy "read own feedback" on public.feedback_notes
 grant select, insert on public.feedback_notes to authenticated;
 grant usage, select on sequence public.feedback_notes_id_seq to authenticated;
 
+-- Screenshots with feedback (sql/2026-11-30_feedback_screenshots.sql).
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('feedback', 'feedback', false, 5242880, array['image/jpeg', 'image/png', 'image/webp'])
+on conflict (id) do update
+    set public = false,
+        file_size_limit = 5242880,
+        allowed_mime_types = array['image/jpeg', 'image/png', 'image/webp'];
+
+-- A signed-in person uploads into their own folder (feedback/<their id>/...), and can see their own pictures.
+drop policy if exists "users upload own feedback images" on storage.objects;
+create policy "users upload own feedback images" on storage.objects
+    for insert
+    to authenticated
+    with check (
+        bucket_id = 'feedback'
+        and (storage.foldername(name))[1] = auth.uid()::text
+    );
+
+drop policy if exists "users read own feedback images" on storage.objects;
+create policy "users read own feedback images" on storage.objects
+    for select
+    to authenticated
+    using (
+        bucket_id = 'feedback'
+        and (storage.foldername(name))[1] = auth.uid()::text
+    );
+
+-- The pictures of a note: their places in the bucket, at most 3.
+alter table public.feedback_notes add column if not exists images text[] not null default '{}';
+alter table public.feedback_notes drop constraint if exists feedback_notes_images_check;
+alter table public.feedback_notes
+    add constraint feedback_notes_images_check check (coalesce(array_length(images, 1), 0) <= 3);
+
+
 -- One short comment per account per asset.
 -- It keeps the sentiment it was answering, and lasts 12 hours from created_at.
 -- A newer sentiment score does not delete it.
@@ -2323,6 +2357,13 @@ revoke all on function public.is_admin() from public;
 revoke all on function public.is_admin() from anon;
 grant execute on function public.is_admin() to authenticated;
 
+-- Admins can see every feedback picture.
+drop policy if exists "admins read feedback images" on storage.objects;
+create policy "admins read feedback images" on storage.objects
+    for select
+    to authenticated
+    using (bucket_id = 'feedback' and public.is_admin());
+
 -- No admin is created here. Make the first one by hand in the SQL editor, once:
 --   update public.profiles set role = 'admin'
 --   where user_id = (select id from auth.users where lower(email) = lower('you@example.com'));
@@ -2374,6 +2415,7 @@ begin
                 notes.status,
                 notes.user_email as email,
                 notes.created_at,
+                coalesce(notes.images, '{}') as images,
                 coalesce(
                     nullif(btrim(profiles.display_name), ''),
                     nullif(split_part(notes.user_email, '@', 1), ''),
