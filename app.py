@@ -75,6 +75,17 @@ import i18n
 from i18n import t
 
 
+def _copyright() -> None:
+    """The © line at the foot of the page: signed in, and on the sign-in page."""
+    st.markdown(
+        t("<div style='margin-top:2.5rem;padding-top:1rem;border-top:1px solid #e5e7eb;"
+          "text-align:center;color:#6b7280;font-size:0.8rem;'>"
+          "© 2026 Angstrom Signals. All rights reserved."
+          "</div>"),
+        unsafe_allow_html=True,
+    )
+
+
 def _set_language(account: bool) -> None:
     """🌐 Which language this visit shows (i18n.choose): a ?lang= link, a choice made this visit, the account's
     saved choice, the one this browser remembers, the browser's own language list, English. Never by location."""
@@ -5785,6 +5796,7 @@ if st.session_state.user is None:
         st.markdown("<div style='height:18px'></div>", unsafe_allow_html=True)
         _language_button("lang_signin", account=False, up=True)
 
+    _copyright()
     st.stop()
 
 
@@ -15573,13 +15585,7 @@ if str((load_profile() or {}).get("role") or "") == "admin":
     admin_panel()
 _page_top(key="page_back_to_top")
 
-st.markdown(
-    t("<div style='margin-top:2.5rem;padding-top:1rem;border-top:1px solid #e5e7eb;"
-    "text-align:center;color:#6b7280;font-size:0.8rem;'>"
-    "© 2026 Angstrom Signals. All rights reserved."
-    "</div>"),
-    unsafe_allow_html=True,
-)
+_copyright()
 
 st.sidebar.markdown("---")
 st.sidebar.info(t("Prices are saved about every 5 minutes, and market sentiment about every 12 hours, for every account. This page reads those saved results. Alert checks use the same prices and continue after you leave."))
