@@ -26,6 +26,7 @@ CSS = """
 .anglang .list{position:absolute;z-index:1000;left:0;top:calc(100% + 6px);min-width:220px;max-height:340px;overflow:auto;
   padding:6px;border-radius:12px;border:1px solid var(--ang-border,rgba(127,127,127,.35));
   background:var(--ang-surface,#fff);color:var(--ang-text,inherit);box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.anglang .list.up{top:auto;bottom:calc(100% + 6px)}
 .anglang .opt{display:flex;align-items:center;gap:10px;width:100%;padding:7px 9px;border-radius:8px;border:0;
   background:transparent;color:inherit;font:inherit;cursor:pointer;text-align:left}
 .anglang .opt:hover{background:rgba(127,127,127,.12)}
@@ -67,10 +68,11 @@ export default function angLang(component) {
   root.appendChild(button);
   let list = null;
   const close = () => { if (list) { list.remove(); list = null; document.removeEventListener("mousedown", outside, true); } };
-  const outside = (e) => { if (!root.contains(e.target)) close(); };
+  // The box lives in a shadow root: a page-level event's target is the host, so test the event's path instead.
+  const outside = (e) => { const path = e.composedPath ? e.composedPath() : [e.target]; if (!path.includes(root)) close(); };
   button.onclick = () => {
     if (list) { close(); return; }
-    list = document.createElement("div"); list.className = "list"; list.setAttribute("role", "listbox");
+    list = document.createElement("div"); list.className = "list" + (d.up ? " up" : ""); list.setAttribute("role", "listbox");
     options.forEach((o) => {
       const b = document.createElement("button"); b.type = "button";
       b.className = "opt" + (o.code === cur.code ? " on" : "");
@@ -101,9 +103,9 @@ def component():
     return _COMPONENT
 
 
-def payload(current: str, options: list[dict], ask: bool, chosen: bool) -> dict:
+def payload(current: str, options: list[dict], ask: bool, chosen: bool, up: bool = False) -> dict:
     """What the button draws: the current language and the ones offered, each with its flag image."""
-    return {"current": current, "ask": bool(ask), "chosen": bool(chosen),
+    return {"current": current, "ask": bool(ask), "chosen": bool(chosen), "up": bool(up),
             "tip": i18n.t("Language"), "beta_tip": i18n.t("Being checked: some text may still be in English"),
             "options": [{"code": o["code"], "name": o["name"], "english": o["english"], "beta": o["status"] == "beta",
                          "flag": i18n.flag_svg(o["flag"])} for o in options]}

@@ -98,7 +98,7 @@ def _set_language(account: bool) -> None:
         save_account_settings({"language": picked})          # chosen on the sign-in page: keep it with the account
 
 
-def _language_button(key: str, account: bool) -> None:
+def _language_button(key: str, account: bool, up: bool = False) -> None:
     """🌐 The language button (lang_picker.py): shown when there is more than one language to pick from."""
     import lang_picker
 
@@ -111,7 +111,7 @@ def _language_button(key: str, account: bool) -> None:
     chosen = bool(st.session_state.get("lang_chosen") or settings.get("language"))
     ask = not (chosen or st.session_state.get("lang_link") or st.session_state.get("lang_remembered"))
     result = lang_picker.component()(
-        key=key, data=lang_picker.payload(st.session_state.get("lang") or i18n.BASE, options, ask, chosen),
+        key=key, data=lang_picker.payload(st.session_state.get("lang") or i18n.BASE, options, ask, chosen, up=up),
         on_lang_change=lambda: None)
     event = lang_picker.read_event(result, f"_seen_{key}", st.session_state)
     if not event:
@@ -5587,7 +5587,6 @@ if st.session_state.user is None:
         _, col_center, _ = st.columns([1, 1.2, 1])
 
     with col_center:
-        _language_button("lang_signin", account=False)
         st.markdown(_brand_mark(200), unsafe_allow_html=True)
         st.title(t("angstrom signals"))
         st.caption(t("Market sentiment and technical signals, with the crowd alongside."))
@@ -5781,6 +5780,10 @@ if st.session_state.user is None:
                 key="google_sign_in",
                 data={"url": google_url, "verifier": google_verifier, "label": t("Continue with Google")},
             )
+
+        # 🌐 At the foot of the page, lined up with the form; its list opens upwards.
+        st.markdown("<div style='height:18px'></div>", unsafe_allow_html=True)
+        _language_button("lang_signin", account=False, up=True)
 
     st.stop()
 
