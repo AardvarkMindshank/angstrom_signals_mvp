@@ -1898,5 +1898,16 @@
   "Michigan inflation expectation": "เงินเฟ้อคาดการณ์ Michigan",
   "Share of the total crypto market cap": "สัดส่วนของมูลค่าตลาดคริปโตทั้งหมด",
   "Crypto market cap, 24h": "มูลค่าตลาดคริปโต 24 ชม.",
-  "Change in total crypto market cap over the last 24 hours": "การเปลี่ยนแปลงของมูลค่าตลาดคริปโตรวมใน 24 ชั่วโมงล่าสุด"
+  "Change in total crypto market cap over the last 24 hours": "การเปลี่ยนแปลงของมูลค่าตลาดคริปโตรวมใน 24 ชั่วโมงล่าสุด",
+  "| Current | Family | What it measures | Votes in the Tide |": "| กระแส | กลุ่ม | สิ่งที่วัด | โหวตใน Tide |",
+  "✅ yes": "✅ ใช่",
+  "shown only": "แสดงเท่านั้น",
+  "🚀 Start here": "🚀 เริ่มที่นี่",
+  "📈 Signals": "📈 สัญญาณ",
+  "📊 Chart & tools": "📊 กราฟและเครื่องมือ",
+  "📰 Sentiment": "📰 Sentiment",
+  "🧩 Lattice & Prism": "🧩 Lattice และ Prism",
+  "🔔 Alerts": "🔔 การแจ้งเตือน",
+  "💬 Social": "💬 โซเชียล",
+  "🧭 Layout & settings": "🧭 เลย์เอาต์และการตั้งค่า"
 }

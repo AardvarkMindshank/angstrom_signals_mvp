@@ -200,8 +200,10 @@ def _help_text() -> str:
                     texts.append(arg.value)
                 elif isinstance(arg, ast.JoinedStr):
                     texts.append("".join(v.value if isinstance(v, ast.Constant) else "…" for v in arg.values))
-                elif isinstance(arg, ast.List):
-                    texts.append("Help tabs: " + " | ".join(e.value for e in arg.elts if isinstance(e, ast.Constant)))
+                elif isinstance(arg, (ast.List, ast.ListComp)):
+                    # [t(x) for x in (i18n.mark("🚀 Start here"), "🌊 Tides", …)]: the names inside, marked or not
+                    names = [e for e in ast.walk(arg) if isinstance(e, ast.Constant) and isinstance(e.value, str)]
+                    texts.append("Help tabs: " + " | ".join(e.value for e in names))
             break
         _HELP.append("\n\n".join(t.strip() for t in texts if t.strip()))
     return _HELP[0]

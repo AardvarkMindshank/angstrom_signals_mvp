@@ -7718,10 +7718,11 @@ def _render_help_guides() -> None:
     (
         tab_start, tab_scores, tab_chart, tab_sentiment, tab_tides, tab_lattice, tab_funnels, tab_alerts, tab_social,
         tab_layout,
-    ) = st.tabs([
-        "🚀 Start here", "📈 Signals", "📊 Chart & tools", "📰 Sentiment", "🌊 Tides", "🧩 Lattice & Prism",
-        "🔻 Funnels", "🔔 Alerts", "💬 Social", "🧭 Layout & settings",
-    ])
+    ) = st.tabs([t(x) for x in (
+        i18n.mark("🚀 Start here"), i18n.mark("📈 Signals"), i18n.mark("📊 Chart & tools"), i18n.mark("📰 Sentiment"),
+        "🌊 Tides", i18n.mark("🧩 Lattice & Prism"), "🔻 Funnels", i18n.mark("🔔 Alerts"), i18n.mark("💬 Social"),
+        i18n.mark("🧭 Layout & settings"),
+    )])
 
     with tab_start:
         st.markdown(t("""
@@ -8029,11 +8030,11 @@ It describes conditions; it does not time trades and it never says buy or sell.
         # A plain table (not a data grid): it follows the light or dark theme, shows every row without scrolling,
         # and wraps the longer descriptions.
         st.markdown(
-            "| Current | Family | What it measures | Votes in the Tide |\n|---|---|---|---|\n"
-            + "\n".join(f"| {c['icon']} **{c['name']}** | {_td.FAMILIES[c['family']][2]} {_td.FAMILIES[c['family']][0]} "
-                        f"| {c['measures'].replace('|', '/')} | {'✅ yes' if c['weight'] else 'shown only'} |"
+            t("| Current | Family | What it measures | Votes in the Tide |") + "\n|---|---|---|---|\n"
+            + "\n".join(f"| {c['icon']} **{t(c['name'])}** | {_td.FAMILIES[c['family']][2]} {t(_td.FAMILIES[c['family']][0])} "
+                        f"| {t(c['measures']).replace('|', '/')} | {t('✅ yes') if c['weight'] else t('shown only')} |"
                         for c in _td.SPEC.values()))
-        fam = ", ".join(f"{icon} {name} {weight:.0%}" for name, weight, icon in _td.FAMILIES.values())
+        fam = ", ".join(f"{icon} {t(name)} {weight:.0%}" for name, weight, icon in _td.FAMILIES.values())
         st.markdown(t("\n**How each current is read** (fixed rules, the same for everyone)\n- **Band**: where today's level sits against its own last 5 years, from 0 to 100: very low (under 20), low,\n  normal, high, very high (80 and over). Glassnode and similar tools use the same idea.\n- **Pull**: its 30-day move against the usual size of such a move. A move bigger than half the usual size is\n  **rising** or **falling**; anything smaller is **flat**, and a flat current is always *neutral*. Whether rising is\n  risk-supportive or risk-defensive depends on the current (rising rates or a rising dollar pull risk down;\n  rising credit appetite pulls it up). The line under each current's name says this in words.\n- **The Tide's score**: each family averages its voting currents, then the families are weighted: {fam}. Above\n  +0.20 is coming in, below -0.20 going out, in between slack. Gold, oil and the yield curve are shown for context\n  but don't vote. Crypto Fear & Greed is shown on its own and never votes.\n\n**The waves** draw each current over time (3 months to 2 years; your choice is saved on your account), with past\nFed decisions, CPI and jobs days as dashed lines, so you can see how a current behaved around an event.\n\n**✨ AI Navigator and 📜 Today's AI Passage Plan** (the buttons beside the daily note) open in their own window.\nThe Navigator answers questions about the currents, the tide and the calendar from these readings only, quoting\nthe reading behind each statement. The Passage Plan charts today's conditions, the week's events, the winds for\nyour own watchlist and funnels, hazards and things to watch, each expectation labelled with what would show it\nright or wrong. One plan a day, kept in your logbook. Facts stay apart from expectations; never buy or sell calls.\n\n**👍 Your take**, beside the daily note: agree or disagree with the Tide's current reading; on 👎 give your own Tide\nscore (−100 going out to +100 coming in), and add a short comment. Tides moves slowly, so takes and comments stay\nuntil the Tide changes to another reading, then start afresh. Comments show in the social panel under 🌊 Tides.\n\n**How often it updates**: a fresh reading every 6 hours (most currents use daily closes, so it changes once a day\nin practice). Event dates come from the official Fed and US Bureau of Labor Statistics schedules.\n\n**Limits**: macro conditions frame risk over weeks; they don't say what any one asset does tomorrow. Nobody has yet\ntested what usually followed each Tide, so treat it as context, not a signal. The 🌊 Tides line in Quick Snapshot\nis the one-glance version.\n", fam=fam))
 
     with tab_lattice:
