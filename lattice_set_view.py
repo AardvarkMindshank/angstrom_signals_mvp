@@ -8,6 +8,8 @@ in 🔎 Prism straight away, for Run now and Scheduled scans.
 
 from __future__ import annotations
 
+from i18n import t
+
 import copy
 import json
 import time
@@ -65,9 +67,9 @@ def fixed_asset_matches(raw: str, search_crypto=None, search_stock=None) -> dict
 
 
 def render(st, supabase, user_id: str = "") -> None:
-    st.caption("Combine saved Groups and single signals, then say when the Set answers Yes. A Group goes in exactly "
+    st.caption(t("Combine saved Groups and single signals, then say when the Set answers Yes. A Group goes in exactly "
                "as saved; save a Group with labels in Signal Groups "
-               "first to test its label here.")
+               "first to test its label here."))
     import signal_groups_inspector as gi
 
     cached = st.session_state.get("siggroups_saved")
@@ -92,7 +94,7 @@ def render(st, supabase, user_id: str = "") -> None:
         st.session_state["lattice_set_start"] = st.session_state.pop("_lattice_set_start_next")
     if st.session_state.get("lattice_set_start") not in starts:
         st.session_state.pop("lattice_set_start", None)
-    start = st.selectbox("Start from", list(starts), format_func=starts.get, key="lattice_set_start")
+    start = st.selectbox(t("Start from"), list(starts), format_func=starts.get, key="lattice_set_start")
     if st.session_state.get("lattice_set_loaded") != start:
         st.session_state["lattice_set_loaded"] = start
         st.session_state["lattice_set_model"], st.session_state["lattice_set_source"] = ls.empty_model(), None
@@ -104,7 +106,7 @@ def render(st, supabase, user_id: str = "") -> None:
             cfg = next(c for c in mine if f"saved:{c['id']}" == start)
             model, why = ls.from_document(cfg["versions"][-1]["body"], choices)
             if model is None:
-                st.warning(f"{why} Starting a new Set instead.")
+                st.warning(t('{why} Starting a new Set instead.', why=why))
             else:
                 model["name"] = cfg["name"]               # its current name (it may have been renamed since saving)
                 st.session_state["lattice_set_model"], st.session_state["lattice_set_source"] = model, cfg
@@ -131,7 +133,7 @@ def render(st, supabase, user_id: str = "") -> None:
             key="lattice_set_editor", data={**screen, "catalogue": le.catalogue()}, on_model_change=lambda: None,
             on_search_change=lambda: None)
     except Exception as exc:
-        st.info(f"The editor could not load here ({str(exc)[:120]}).")
+        st.info(t('The editor could not load here ({str_exc_120}).', str_exc_120=str(exc)[:120]))
         result = None
     asked = getattr(result, "search", None)
     if asked and asked != st.session_state.get("lattice_set_search_seen"):
@@ -151,29 +153,29 @@ def render(st, supabase, user_id: str = "") -> None:
     # (the widths follow the divider as it is dragged; lattice_component.SPLITTER_JS).
     left, right = st.container(key="lat_checks_set").columns([3, 2])
     with left:
-        st.markdown("**Checks**")
+        st.markdown(t("**Checks**"))
         for b in screen["checks"]["blocks"]:
-            st.error(f"⛔ Can't save: {b}")
+            st.error(t("⛔ Can't save: {b}", b=b))
         for w in screen["checks"]["warnings"]:
             st.warning(f"⚠️ {w}")
         if not screen["checks"]["blocks"] and not screen["checks"]["warnings"]:
-            st.success("✅ No problems found.")
+            st.success(t("✅ No problems found."))
     with right:
-        st.markdown("**What this Set returns**")
-        st.markdown("- **Answer**: Yes, No, or Unknown when a needed reading is missing.\n"
+        st.markdown(t("**What this Set returns**"))
+        st.markdown(t("- **Answer**: Yes, No, or Unknown when a needed reading is missing.\n"
                     "- **Lines**: each line's reading, and the deciding reason.\n"
                     "- **Data available**: Complete or Partial, separate from how sure the answer is.\n"
-                    "- No combined Set score.")
-        st.markdown("**Description** · written automatically")
+                    "- No combined Set score."))
+        st.markdown(t("**Description** · written automatically"))
         st.caption(screen["description"])
 
     doc = ls.to_document(model, choices)
     source = st.session_state.get("lattice_set_source")
     mine = bool(source and source.get("owner_id") == user_id)
     cols = lattice_view.action_row(st, 1 + bool(source) + 2 * mine)
-    new = cols[0].button("💾 Save as a new Set", disabled=not screen["can_save"], key="lattice_set_save_new",
-                         type="primary", width="stretch", help="Saves version 1. It is private until you publish it.")
-    nxt = bool(source) and cols[1].button(f"💾 Save as version {source['current_version'] + 1} of {source['name']}",
+    new = cols[0].button(t("💾 Save as a new Set"), disabled=not screen["can_save"], key="lattice_set_save_new",
+                         type="primary", width="stretch", help=t("Saves version 1. It is private until you publish it."))
+    nxt = bool(source) and cols[1].button(t('💾 Save as version {source_current_version_1} of {source_name}', source_current_version_1=source['current_version'] + 1, source_name=source['name']),
                                           disabled=not screen["can_save"], key="lattice_set_save_next",
                                           width="stretch")
     if mine:
@@ -198,7 +200,7 @@ def render(st, supabase, user_id: str = "") -> None:
         except Exception as exc:
             if "Rerun" in type(exc).__name__:
                 raise
-            st.error(f"Refused: {gi._rpc_error(exc)}")
+            st.error(t('Refused: {gi_rpc_error_exc}', gi_rpc_error_exc=gi._rpc_error(exc)))
     if nxt:
         try:
             v = supabase.rpc("analysis_save_version", {"cfg": source["id"], "expected_version": source["current_version"],
@@ -213,11 +215,11 @@ def render(st, supabase, user_id: str = "") -> None:
         except Exception as exc:
             if "Rerun" in type(exc).__name__:
                 raise
-            st.error(f"Refused: {gi._rpc_error(exc)}")
+            st.error(t('Refused: {gi_rpc_error_exc}', gi_rpc_error_exc=gi._rpc_error(exc)))
     if source and source.get("owner_id") == user_id and source.get("versions"):
         study_block(st, supabase, source)
     if problem:
-        st.caption(f"Saved Groups and Sets could not be read: {problem}")
+        st.caption(t('Saved Groups and Sets could not be read: {problem}', problem=problem))
 
 
 STUDY_WAIT = "Studies run in the background, usually within an hour; you can leave this page."
@@ -229,7 +231,7 @@ def show_card(st, card: dict) -> None:
     for line in card["lines"]:
         st.markdown(f"- {line}")
     if card.get("parts"):
-        st.markdown("**Coins and equities**")
+        st.markdown(t("**Coins and equities**"))
         for p in card["parts"]:
             st.markdown(f"- {p['line']}")
         if card.get("compare"):
@@ -237,10 +239,10 @@ def show_card(st, card: dict) -> None:
         if card.get("parts_note"):
             st.caption(card["parts_note"])
     if card.get("periods"):
-        st.markdown("**By period**")
+        st.markdown(t("**By period**"))
         st.dataframe(card["periods"], hide_index=True, width="stretch")
     if card.get("assets"):
-        st.markdown("**Asset by asset** (a guide only)")
+        st.markdown(t("**Asset by asset** (a guide only)"))
         st.markdown(card["assets"]["line"])
         st.caption(card["assets"]["note"])
         # Shown straight away: a switch here would redraw the page and fold the card it sits in.
@@ -258,16 +260,16 @@ def study_block(st, supabase, source: dict) -> None:
 
     version = source["versions"][-1]
     doc = version["body"]
-    st.markdown("**What followed** · what happened after this Set turned Yes in the past")
+    st.markdown(t("**What followed** · what happened after this Set turned Yes in the past"))
     card = perspectives.followed_card(doc)
     if card:
         icon, _ = perspectives.evidence(doc)
-        with st.expander(f"{icon} What followed: {card['verdict'] or 'not studied on its own'}"):
+        with st.expander(t('{icon} What followed: {card_verdict_or_not_stud}', icon=icon, card_verdict_or_not_stud=card['verdict'] or 'not studied on its own')):
             show_card(st, card)
         return
     ok, why = wf.studyable(doc)
     if not ok:
-        st.caption(f"🔬 Can't be studied: {why}")
+        st.caption(t("🔬 Can't be studied: {why}", why=why))
         return
     h = wf.logic_hash(doc)
     try:
@@ -282,17 +284,17 @@ def study_block(st, supabase, source: dict) -> None:
             import study_nudge
 
             study_nudge.nudge(force=False)       # GitHub's timer can be hours late: start the job now
-        st.info(f"⏳ The study of version {version['version']} {word}. {STUDY_WAIT}")
+        st.info(t('⏳ The study of version {version_version} {word}. {STUDY_WAIT}', version_version=version['version'], word=word, STUDY_WAIT=STUDY_WAIT))
         return
     if status == "done":                         # finished since this page last looked
         perspectives.load_studies(supabase, force=True)
-        st.caption("✅ The study is ready: reopen this Set to see it.")
+        st.caption(t("✅ The study is ready: reopen this Set to see it."))
         return
     if status in ("refused", "failed") and row.get("error"):
-        st.caption(f"Last try: {row['error']}")
+        st.caption(t('Last try: {row_error}', row_error=row['error']))
     if status == "refused":
         return
-    if st.button(f"🔬 Study this Set (version {version['version']})", key=f"lattice_study_{h}",
+    if st.button(t('🔬 Study this Set (version {version_version})', version_version=version['version']), key=f"lattice_study_{h}",
                  help="Checks what happened after this Set turned Yes on 25 major coins and 61 large US equities, "
                       "Sep 2014 to Oct 2024, against comparable days. " + STUDY_WAIT):
         try:

@@ -3898,7 +3898,7 @@ def _chart_timeframe_controls() -> tuple[str, str]:
     current_interval = st.session_state["chart_interval"]
     with st.container(horizontal=True, gap="small", key="chart_timeframe"):
         interval = st.segmented_control(
-            "Candle interval",
+            t("Candle interval"),
             chart_candles.INTERVALS,
             key="chart_interval",
             label_visibility="collapsed",
@@ -3910,15 +3910,15 @@ def _chart_timeframe_controls() -> tuple[str, str]:
             return option if usable else f"{option} ⊘"
 
         range_key = st.segmented_control(
-            "Range",
+            t("Range"),
             chart_data.RANGES,
             key="chart_range",
             format_func=_range_label,
             label_visibility="collapsed",
             help=(
-                "How much history the chart opens on. You can still zoom and scroll beyond it. "
+                t("How much history the chart opens on. You can still zoom and scroll beyond it. "
                 "⊘ means that range doesn't work with this candle size: too few candles to read (weekly needs 3 "
-                "months or more, monthly 1 year or more), or the short candles don't go back that far."
+                "months or more, monthly 1 year or more), or the short candles don't go back that far.")
             ),
         ) or st.session_state.get("_chart_range_last") or chart_data.RANGE_DEFAULT
     st.session_state["_chart_range_last"] = range_key
@@ -4021,14 +4021,14 @@ def _chart_set_picker():
     cols = st.columns([3, 2], vertical_alignment="center")
     with cols[0]:
         key = st.selectbox(
-            "Show a Set on the chart", keys, key="chart_band_set",
+            t("Show a Set on the chart"), keys, key="chart_band_set",
             format_func=lambda k: "⊘ No Set" if not k else options[k][0],
-            help=("Colours every day by the Set's answer at that day's close: green = Yes (conditions met), "
+            help=(t("Colours every day by the Set's answer at that day's close: green = Yes (conditions met), "
                   "amber = Unknown (data missing), clear = No. Worked out from the full daily history; a "
-                  "description of the past, not a forecast."))
+                  "description of the past, not a forecast.")))
     with cols[1]:
-        show_no = st.toggle("Show No as faint red", key="chart_band_no", disabled=not key,
-                            help="Tint the No days too. Off keeps the chart clear, since most days are No.")
+        show_no = st.toggle(t("Show No as faint red"), key="chart_band_no", disabled=not key,
+                            help=t("Tint the No days too. Off keeps the chart clear, since most days are No."))
     return (key, options[key][1], bool(show_no)) if key else None
 
 
@@ -4054,13 +4054,13 @@ def _band_payload(band_set, asset_type: str, asset_key: str, frame: pd.DataFrame
     asset_id = str(asset_key) if kind == "crypto" else str(asset_key).upper()
     try:
         last = pd.Timestamp.now(tz="UTC").strftime("%Y-%m-%d")
-        with st.spinner("Working out the Set's answer on every past day (first time only)…"):
+        with st.spinner(t("Working out the Set's answer on every past day (first time only)…")):
             span_list = _set_spans(column_answers.def_hash(doc), kind, asset_id, last, doc)
     except Exception as exc:
-        st.caption(f"Could not work out the Set's history: {str(exc)[:160]}")
+        st.caption(t("Could not work out the Set's history: {str_exc_160}", str_exc_160=str(exc)[:160]))
         return None
     if not span_list:
-        st.caption("No long daily history is available for this asset, so the Set can't be shown on the chart.")
+        st.caption(t("No long daily history is available for this asset, so the Set can't be shown on the chart."))
         return None
     days = [pd.Timestamp(t).strftime("%Y-%m-%d") for t in frame.index]
     stats = set_history.summary(span_list)
@@ -4138,8 +4138,8 @@ def _shared_chart_banner(asset_type: str, asset_key: str) -> None:
         note = " ".join(str(shared.get("note") or "").split())
         st.markdown(f"📤 Showing **{html.escape(shared.get('owner_name') or 'their')}'s drawings**"
                     + (f": “{html.escape(note)}”" if note else ""))
-        if st.button("Copy to my drawings", key="shared_copy", icon=":material/content_copy:",
-                     help="Add their drawings to your own on this asset, so they stay after you close this view."):
+        if st.button(t("Copy to my drawings"), key="shared_copy", icon=":material/content_copy:",
+                     help=t("Add their drawings to your own on this asset, so they stay after you close this view.")):
             mine, _ = load_drawings(supabase, user_id, key)
             have = {str(x.get("id")) for x in mine}
             extra = [{**x, "id": f"{x.get('id')}-{shared.get('id')}"} for x in shared.get("items") or []
@@ -4147,11 +4147,11 @@ def _shared_chart_banner(asset_type: str, asset_key: str) -> None:
             try:
                 save_drawings(supabase, user_id, key, mine + extra)
                 st.session_state.pop("_shared_chart", None)
-                st.toast(f"Copied {len(extra)} drawing{'s' if len(extra) != 1 else ''} to yours.")
+                st.toast(t('Copied {len_extra} drawing{s_if_len_extra_1_else} to yours.', len_extra=len(extra), s_if_len_extra_1_else='s' if len(extra) != 1 else ''))
                 st.rerun()
             except Exception as exc:
-                st.error(f"Could not copy them: {str(exc)[:160]}")
-        if st.button("", key="shared_close", icon=":material/close:", help="Stop showing their drawings"):
+                st.error(t('Could not copy them: {str_exc_160}', str_exc_160=str(exc)[:160]))
+        if st.button("", key="shared_close", icon=":material/close:", help=t("Stop showing their drawings")):
             st.session_state.pop("_shared_chart", None)
             st.rerun()
 
@@ -4166,7 +4166,7 @@ def _chart_drawing_events(result, draw_key: str, title: str, interval: str) -> N
             if sent.get("asset") == draw_key:
                 save_drawings(supabase, user_id, draw_key, sent.get("items") or [])
         except Exception as exc:
-            st.caption(f"Your drawings could not be saved: {str(exc)[:120]}")
+            st.caption(t('Your drawings could not be saved: {str_exc_120}', str_exc_120=str(exc)[:120]))
     raw = getattr(result, "share", None)
     if raw and raw != st.session_state.get("_share_seen"):
         st.session_state["_share_seen"] = raw
@@ -4185,17 +4185,15 @@ def _share_chart_dialog(draw_key: str, title: str, interval: str, items: list) -
     except Exception:
         groups = []
     if not groups:
-        st.info("You aren't in any community yet. Communities are in the sidebar under 👥 Communities.")
+        st.info(t("You aren't in any community yet. Communities are in the sidebar under 👥 Communities."))
         return
     names = {int(g["id"]): " ".join(str(g.get("name") or "Community").split()) for g in groups}
-    st.caption(f"{len(items)} drawing{'s' if len(items) != 1 else ''} on **{title}** "
-               f"({chart_candles.INTERVAL_LABELS.get(interval, interval)} candles). Members of the communities you "
-               "pick get a notification; it opens this chart with your drawings on it.")
-    picked = st.multiselect("Communities", list(names), format_func=lambda g: names[g], key="share_groups",
-                            placeholder="Choose one or more communities")
-    note = st.text_input("A short note (optional)", max_chars=160, key="share_note",
-                         placeholder="What should they look at?")
-    if st.button("📤 Share", type="primary", disabled=not picked, key="share_go"):
+    st.caption(t('{len_items} drawing{s_if_len_items_1_else} on **{title}** ({chart_candles_interval_l} candles). Members of the communities you pick get a notification; it opens this chart with your drawings on it.', len_items=len(items), s_if_len_items_1_else='s' if len(items) != 1 else '', title=title, chart_candles_interval_l=chart_candles.INTERVAL_LABELS.get(interval, interval)))
+    picked = st.multiselect(t("Communities"), list(names), format_func=lambda g: names[g], key="share_groups",
+                            placeholder=t("Choose one or more communities"))
+    note = st.text_input(t("A short note (optional)"), max_chars=160, key="share_note",
+                         placeholder=t("What should they look at?"))
+    if st.button(t("📤 Share"), type="primary", disabled=not picked, key="share_go"):
         try:
             share_chart(supabase, draw_key, title, interval, items, note, picked)
             st.toast("Shared with " + ", ".join(names[g] for g in picked) + ".")
@@ -4203,9 +4201,9 @@ def _share_chart_dialog(draw_key: str, title: str, interval: str, items: list) -
         except Exception as exc:
             text = str(exc)
             if "share_chart" in text and ("does not exist" in text or "PGRST" in text):
-                st.error("The database update for drawings hasn't been run yet (sql/2026-11-27_chart_drawings.sql).")
+                st.error(t("The database update for drawings hasn't been run yet (sql/2026-11-27_chart_drawings.sql)."))
             else:
-                st.error(f"Could not share it: {text[:160]}")
+                st.error(t('Could not share it: {text_160}', text_160=text[:160]))
 
 
 _SHARE_DIALOG = st.dialog("Share this chart", width="medium")(_share_chart_dialog)
@@ -4252,7 +4250,7 @@ def _push_settings() -> None:
         rows = (supabase.table("push_subscriptions").select("endpoint, device").eq("user_id", str(user_id))
                 .execute().data or [])
     except Exception:
-        st.caption("Notifications need a database update: sql/2026-11-28_push_notifications.sql.")
+        st.caption(t("Notifications need a database update: sql/2026-11-28_push_notifications.sql."))
         return
     result = push_component.component()(
         key="push_box", data={"key": push_notify.public_key(), "endpoints": [r["endpoint"] for r in rows]},
@@ -4266,15 +4264,15 @@ def _push_settings() -> None:
                 supabase.rpc("push_subscribe", {"p_endpoint": sub.get("endpoint"), "p_p256dh": keys.get("p256dh"),
                                                 "p_auth": keys.get("auth"),
                                                 "p_device": str(event.get("device") or "")[:60]}).execute()
-                st.toast("📱 Notifications are on for this device.")
+                st.toast(t("📱 Notifications are on for this device."))
                 _rerun_fragment()
             elif event["action"] == "off":
                 supabase.rpc("push_unsubscribe", {"p_endpoint": event.get("endpoint")}).execute()
-                st.toast("Notifications are off for this device.")
+                st.toast(t("Notifications are off for this device."))
                 _rerun_fragment()
             elif event["action"] == "test":
                 if not push_notify.ready():
-                    st.toast("Push isn't fully set up on the server yet (the private push key is missing).")
+                    st.toast(t("Push isn't fully set up on the server yet (the private push key is missing)."))
                 else:
                     sent = push_notify.send_to_user(supabase, user_id, {
                         "title": "📱 Angstrom", "url": "/", "tag": "test",
@@ -4282,7 +4280,7 @@ def _push_settings() -> None:
                     st.toast(f"Test sent to {sent} device{'s' if sent != 1 else ''}." if sent
                              else "The test couldn't be delivered. Try turning notifications off and on again.")
         except Exception as exc:
-            st.caption(f"Could not change notifications: {str(exc)[:160]}")
+            st.caption(t('Could not change notifications: {str_exc_160}', str_exc_160=str(exc)[:160]))
     if rows:
         devices = sorted({str(r.get("device") or "a device") for r in rows})
         st.caption("On for: " + ", ".join(devices) + ". Each new notification arrives within a few minutes.")
@@ -4606,7 +4604,7 @@ try:
         TECHNICAL_REFRESH_SECONDS,
     )
 except Exception:
-    st.error("The dashboard could not load its scoring code.")
+    st.error(t("The dashboard could not load its scoring code."))
     st.code(traceback.format_exc())
     st.stop()
 
@@ -5047,16 +5045,16 @@ def get_supabase():
 
     if not url or not key:
         st.error(
-            "Add your Supabase URL and anon key to `.streamlit/secrets.toml` "
-            "under `[supabase]` as `url` and `anon_key`."
+            t("Add your Supabase URL and anon key to `.streamlit/secrets.toml` "
+            "under `[supabase]` as `url` and `anon_key`.")
         )
         st.stop()
 
     if jwt_role(key) == "service_role":
         st.error(
-            "This app is using the Supabase service-role key. Put the anon key in "
+            t("This app is using the Supabase service-role key. Put the anon key in "
             "`.streamlit/secrets.toml` as `anon_key`. Keep the service-role key only "
-            "on the alert worker."
+            "on the alert worker.")
         )
         st.stop()
 
@@ -5522,8 +5520,8 @@ def _signing_in(shell) -> None:
     """Replace the login page with one calm line while the dashboard builds."""
     with shell.container():
         st.markdown(
-            "<div style='height:30vh;'></div><div style='text-align:center;font-size:1.1rem;"
-            "color:var(--ang-muted,#6b7280);'>Signing you in…</div>",
+            t("<div style='height:30vh;'></div><div style='text-align:center;font-size:1.1rem;"
+            "color:var(--ang-muted,#6b7280);'>Signing you in…</div>"),
             unsafe_allow_html=True,
         )
 
@@ -5554,7 +5552,7 @@ def _take_handoff() -> None:
     if getattr(reported, "none", None):
         st.session_state.popout_handoff_failed = True
         st.rerun()
-    st.caption("Connecting this tab to your signed-in dashboard tab...")
+    st.caption(t("Connecting this tab to your signed-in dashboard tab..."))
     st.stop()
 
 
@@ -5590,7 +5588,7 @@ if st.session_state.user is None:
     with col_center:
         _language_button("lang_signin", account=False)
         st.markdown(_brand_mark(200), unsafe_allow_html=True)
-        st.title("angstrom signals")
+        st.title(t("angstrom signals"))
         st.caption(t("Market sentiment and technical signals, with the crowd alongside."))
 
         if st.session_state.get("recovery_access"):
@@ -5910,7 +5908,7 @@ def load_user_preferences():
         return prefs_dict
 
     except Exception as exc:
-        st.error(f"Error loading cloud preferences: {exc}")
+        st.error(t('Error loading cloud preferences: {exc}', exc=exc))
         return {
             "crypto": default_crypto,
             "stock": default_stock,
@@ -5925,7 +5923,7 @@ def save_preferences_to_cloud(updates: dict):
     try:
         supabase.table("user_preferences").update(updates).eq("user_id", user_id).execute()
     except Exception as exc:
-        st.error(f"Error saving preferences to cloud: {exc}")
+        st.error(t('Error saving preferences to cloud: {exc}', exc=exc))
 
 
 def save_account_settings(updates: dict) -> None:
@@ -5972,7 +5970,7 @@ def save_alert_preferences_to_cloud(updates: dict):
     try:
         supabase.table("alert_preferences").update(updates).eq("user_id", user_id).execute()
     except Exception as exc:
-        st.error(f"Error saving alert preferences: {exc}")
+        st.error(t('Error saving alert preferences: {exc}', exc=exc))
 
 
 def _member_ids(raw) -> list[str]:
@@ -6267,7 +6265,7 @@ def _save_colour_slot() -> None:
         for key, default in _THEME_COLOURS
     }
     save_account_settings({"colours_saved": chosen})
-    st.toast("Saved. Back to saved will return to these colours.")
+    st.toast(t("Saved. Back to saved will return to these colours."))
 
 
 def _take_colour_copy() -> None:
@@ -6324,13 +6322,7 @@ account_colours = _active_colours()
 _brand_watch(key="brand_watch", data=_colour_payload(account_colours))
 _version_watch(key="version_watch", data=app_version.BOOT_ID)
 st.sidebar.markdown(
-    "<div style='margin:0.4rem 0 0.75rem;'>"
-    "<div style='display:flex;align-items:center;gap:0.85rem;'>"
-    f"{_brand_mark(58, align='left')}"
-    "<h1 style='margin:0;padding:0;line-height:1.15;font-size:2.25rem;font-weight:700;'>"
-    "angstrom<br>signals</h1></div>"
-    "<div style='margin-top:0.55rem;font-size:0.82rem;font-weight:500;line-height:1.35;opacity:0.72;'>"
-    f"{html.escape(t('Market sentiment and technical signals, with the crowd alongside.'))}</div></div>",
+    t("<div style='margin:0.4rem 0 0.75rem;'><div style='display:flex;align-items:center;gap:0.85rem;'>{brand_mark_58_align_left}<h1 style='margin:0;padding:0;line-height:1.15;font-size:2.25rem;font-weight:700;'>angstrom<br>signals</h1></div><div style='margin-top:0.55rem;font-size:0.82rem;font-weight:500;line-height:1.35;opacity:0.72;'>{html_escape_t_market_sen}</div></div>", brand_mark_58_align_left=_brand_mark(58, align='left'), html_escape_t_market_sen=html.escape(t('Market sentiment and technical signals, with the crowd alongside.'))),
     unsafe_allow_html=True,
 )
 with st.sidebar:
@@ -6339,26 +6331,26 @@ with st.sidebar:
 @st.fragment
 def invite_someone() -> None:
     """Send one invite. This form redraws on its own."""
-    st.caption("Know an experienced trader who would suit the beta? We will email them. Seats are approved by our team, and you get 100 social points once they join.")
+    st.caption(t("Know an experienced trader who would suit the beta? We will email them. Seats are approved by our team, and you get 100 social points once they join."))
     address_text = st.text_input(
-        "Their email",
+        t("Their email"),
         key="invite_email",
-        placeholder="name@example.com",
+        placeholder=t("name@example.com"),
     )
-    if st.button("Send invite", key="invite_send", use_container_width=True):
+    if st.button(t("Send invite"), key="invite_send", use_container_width=True):
         address = _clean_invite_email(address_text)
         own = _clean_invite_email(getattr(st.session_state.user, "email", "") or "")
         if not address:
-            st.warning("Enter a valid email address.")
+            st.warning(t("Enter a valid email address."))
         elif address == own:
-            st.warning("Use someone else's email address.")
+            st.warning(t("Use someone else's email address."))
         else:
             stored = _store_invite(address)
             if stored == "limit":
-                st.warning("The day's invites are used. Try again tomorrow.")
+                st.warning(t("The day's invites are used. Try again tomorrow."))
             elif stored == "error":
                 st.warning(
-                    "That invite could not be saved. Run the latest supabase_rls.sql in Supabase, then try again."
+                    t("That invite could not be saved. Run the latest supabase_rls.sql in Supabase, then try again.")
                 )
             else:
                 inviter = (st.session_state.get("profile") or {}).get("display_name")
@@ -6366,13 +6358,13 @@ def invite_someone() -> None:
                     inviter = own.split("@")[0] if own else "Someone"
                 sent, reason = _email_invite(address, str(inviter))
                 if sent and stored == "exists":
-                    st.success("That invite was already saved. The email was sent again.")
+                    st.success(t("That invite was already saved. The email was sent again."))
                 elif sent:
-                    st.success("Invite sent.")
+                    st.success(t("Invite sent."))
                 elif stored == "exists":
-                    st.warning(f"That invite is already saved. The email was not sent: {reason}.")
+                    st.warning(t('That invite is already saved. The email was not sent: {reason}.', reason=reason))
                 else:
-                    st.warning(f"Invite saved. The email was not sent: {reason}.")
+                    st.warning(t('Invite saved. The email was not sent: {reason}.', reason=reason))
     for row in _my_invites():
         state = "Joined" if row.get("credited_at") else "Waiting"
         st.caption(f"{row.get('email') or ''} · {state}")
@@ -6444,7 +6436,7 @@ def _group_member_list(row, group_id: int) -> None:
     """Faces and names inside one group. The leader can remove anyone except themselves."""
     people = _group_people(row)
     if not people:
-        st.caption("The member list is not ready yet. Run the latest supabase_rls.sql in the Supabase SQL editor.")
+        st.caption(t("The member list is not ready yet. Run the latest supabase_rls.sql in the Supabase SQL editor."))
         return
     leader_id = str(row.get("leader_id") or "").strip().lower()
     is_leader = bool(row.get("is_leader"))
@@ -6465,7 +6457,7 @@ def _group_member_list(row, group_id: int) -> None:
             st.markdown(html.escape(person["name"]), width="stretch")
             if person["id"] == leader_id:
                 st.markdown(
-                    "<span style='color:var(--ang-muted);font-size:0.85rem;'>Leader</span>",
+                    t("<span style='color:var(--ang-muted);font-size:0.85rem;'>Leader</span>"),
                     unsafe_allow_html=True,
                     width="content",
                 )
@@ -6473,7 +6465,7 @@ def _group_member_list(row, group_id: int) -> None:
                 remove = st.button(
                     "×",
                     key=f"group_remove_{group_id}_{person['id']}",
-                    help="Remove from the community",
+                    help=t("Remove from the community"),
                     type="tertiary",
                 )
         if not remove:
@@ -6490,12 +6482,12 @@ def my_groups_panel() -> None:
     """Groups you lead, and groups you belong to. Delete and Leave redraw this section."""
     groups = _load_my_groups()
     if groups is None:
-        st.caption("Communities are not ready yet. Run the latest supabase_rls.sql in the Supabase SQL editor.")
+        st.caption(t("Communities are not ready yet. Run the latest supabase_rls.sql in the Supabase SQL editor."))
         return
     led = [row for row in groups if row.get("is_leader")]
     joined = [row for row in groups if not row.get("is_leader")]
     if not led and not joined:
-        st.caption("You have no communities yet. Use the people icon beside a name in the social stream.")
+        st.caption(t("You have no communities yet. Use the people icon beside a name in the social stream."))
         return
     st.markdown(
         "<style>"
@@ -6519,7 +6511,7 @@ def my_groups_panel() -> None:
         unsafe_allow_html=True,
     )
     if led:
-        st.caption("Communities you lead")
+        st.caption(t("Communities you lead"))
         for row in led:
             try:
                 gid = int(row.get("id"))
@@ -6535,27 +6527,27 @@ def my_groups_panel() -> None:
                 delete_group = st.button(
                     "×",
                     key=f"group_xdelete_{gid}",
-                    help="Delete this community",
+                    help=t("Delete this community"),
                     type="tertiary",
                 )
             if delete_group:
                 st.session_state["group_delete_id"] = gid
             if st.session_state.get("group_delete_id") == gid:
-                st.caption("Delete this community? Members will lose it.")
+                st.caption(t("Delete this community? Members will lose it."))
                 yes, no = st.columns(2)
-                if yes.button("Delete community", key=f"group_delete_yes_{gid}", use_container_width=True):
+                if yes.button(t("Delete community"), key=f"group_delete_yes_{gid}", use_container_width=True):
                     try:
                         supabase.rpc("delete_my_group", {"chosen_group": gid}).execute()
                     except Exception:
-                        st.warning("That community could not be deleted. Run the latest supabase_rls.sql, then try again.")
+                        st.warning(t("That community could not be deleted. Run the latest supabase_rls.sql, then try again."))
                     else:
                         st.session_state.pop("group_delete_id", None)
                         st.rerun()
-                if no.button("Cancel", key=f"group_delete_no_{gid}", use_container_width=True):
+                if no.button(t("Cancel"), key=f"group_delete_no_{gid}", use_container_width=True):
                     st.session_state.pop("group_delete_id", None)
                     _rerun_fragment()
     if joined:
-        st.caption("Communities you belong to")
+        st.caption(t("Communities you belong to"))
         for row in joined:
             try:
                 gid = int(row.get("id"))
@@ -6569,57 +6561,57 @@ def my_groups_panel() -> None:
                 with st.expander(label, expanded=False, key=f"group_fold_{gid}"):
                     _group_member_list(row, gid)
                 leave_group = st.button(
-                    "Leave",
+                    t("Leave"),
                     key=f"group_leave_{gid}",
-                    help="Leave community",
+                    help=t("Leave community"),
                     type="tertiary",
                 )
             if leave_group:
                 st.session_state["group_leave_id"] = gid
             if st.session_state.get("group_leave_id") == gid:
-                st.caption("Leave this community?")
+                st.caption(t("Leave this community?"))
                 yes, no = st.columns(2)
-                if yes.button("Leave community", key=f"group_leave_yes_{gid}", use_container_width=True):
+                if yes.button(t("Leave community"), key=f"group_leave_yes_{gid}", use_container_width=True):
                     try:
                         supabase.rpc("leave_group", {"chosen_group": gid}).execute()
                     except Exception:
-                        st.warning("Could not leave that community. Run the latest supabase_rls.sql, then try again.")
+                        st.warning(t("Could not leave that community. Run the latest supabase_rls.sql, then try again."))
                     else:
                         st.session_state.pop("group_leave_id", None)
                         st.rerun()
-                if no.button("Cancel", key=f"group_leave_no_{gid}", use_container_width=True):
+                if no.button(t("Cancel"), key=f"group_leave_no_{gid}", use_container_width=True):
                     st.session_state.pop("group_leave_id", None)
                     _rerun_fragment()
 
 
 with tracked_expander("👤 " + t("Account"), "account", sidebar=True):
     if profile is None:
-        st.warning("Profile storage is not ready yet. Run the latest supabase_rls.sql in the Supabase SQL editor.")
+        st.warning(t("Profile storage is not ready yet. Run the latest supabase_rls.sql in the Supabase SQL editor."))
         profile = {}
     st.markdown(profile_card(profile, st.session_state.user.email or ""), unsafe_allow_html=True)
     with tracked_expander(t("Edit profile"), "edit_profile"):
         profile_name = st.text_input(
-            "Display name",
+            t("Display name"),
             value=profile.get("display_name") or "",
             max_chars=40,
             key="profile_display_name",
         )
         profile_bio = st.text_area(
-            "Short bio",
+            t("Short bio"),
             value=profile.get("bio") or "",
             max_chars=160,
             height=80,
             key="profile_bio",
-            placeholder="A line about you, for when social features arrive.",
+            placeholder=t("A line about you, for when social features arrive."),
         )
         profile_photo = st.file_uploader(
-            "Profile photo",
+            t("Profile photo"),
             type=["png", "jpg", "jpeg", "webp"],
             key="profile_photo",
         )
         if profile.get("avatar_url"):
-            st.caption("A new photo replaces the current one.")
-        if st.button("Save profile", use_container_width=True):
+            st.caption(t("A new photo replaces the current one."))
+        if st.button(t("Save profile"), use_container_width=True):
             updates = {
                 "display_name": profile_name.strip() or None,
                 "bio": profile_bio.strip() or None,
@@ -6629,18 +6621,17 @@ with tracked_expander("👤 " + t("Account"), "account", sidebar=True):
                     updates["avatar_url"] = upload_avatar(profile_photo)
                 save_profile(updates)
                 st.session_state.profile = {**profile, **updates}
-                st.success("Profile saved.")
+                st.success(t("Profile saved."))
                 st.rerun()
             except Exception as exc:
                 st.error(
-                    "Could not save the profile. If this is the first time, "
-                    f"run the latest supabase_rls.sql in Supabase. {exc}"
+                    t('Could not save the profile. If this is the first time, run the latest supabase_rls.sql in Supabase. {exc}', exc=exc)
                 )
 
     with tracked_expander(t("Invite"), "invite"):
         invite_someone()
 
-    if st.button("Log Out", use_container_width=True):
+    if st.button(t("Log Out"), use_container_width=True):
         try:
             supabase.auth.sign_out()
         except Exception:
@@ -7117,9 +7108,9 @@ def notifications_panel() -> None:
     with tracked_expander(notifications_label, "notifications", sidebar=True):
         with tracked_expander(t("Alert Feed"), "alert_feed"):
             if not notifications_list:
-                st.caption("No alerts yet. They arrive here when a watchlist asset crosses one of your alert lines, "
+                st.caption(t("No alerts yet. They arrive here when a watchlist asset crosses one of your alert lines, "
                            "a market's sentiment crosses its line, a Prism scan finds a match, a funnel has new "
-                           "Candidates, or a study you started finishes.")
+                           "Candidates, or a study you started finishes."))
             else:
                 def _is_alert(note) -> bool:
                     return str(note.get("alert_type") or "") != "group_invite"
@@ -7141,15 +7132,15 @@ def notifications_panel() -> None:
                 with st.container(horizontal=True, gap="small", key="alert_feed_tools"):
                     read_all = st.button(
                         "✅", key="alerts_read_all", disabled=not has_unread,
-                        help="Mark all as read",
+                        help=t("Mark all as read"),
                     )
                     clear_read = st.button(
                         "🧹", key="alerts_clear_read", disabled=not has_read,
-                        help="Clear read alerts",
+                        help=t("Clear read alerts"),
                     )
                     clear_all = st.button(
                         "🗑️", key="alerts_clear_all", disabled=not has_any,
-                        help="Clear all alerts. Each one was already sent by email or in your digest.",
+                        help=t("Clear all alerts. Each one was already sent by email or in your digest."),
                     )
                 if read_all or clear_read or clear_all:
                     try:
@@ -7159,7 +7150,7 @@ def notifications_panel() -> None:
                             dismiss_read_alerts(supabase, user_id)
                         _rerun_fragment()
                     except Exception as exc:
-                        st.error(f"Could not update your alerts: {exc}")
+                        st.error(t('Could not update your alerts: {exc}', exc=exc))
 
                 # Unread first, then newest first. Read alerts are shown faded.
                 filtered_notifs = sorted(
@@ -7168,7 +7159,7 @@ def notifications_panel() -> None:
                 filtered_notifs.sort(key=lambda note: bool(note.get("is_read", False)) and _is_alert(note))
 
                 if not filtered_notifs:
-                    st.caption("No notifications.")
+                    st.caption(t("No notifications."))
                 else:
                     crypto_list = prefs.get("crypto") or {}
                     stock_list = prefs.get("stock") or {}
@@ -7203,8 +7194,8 @@ def notifications_panel() -> None:
                     ]
                     if asset_notes:
                         st.caption(
-                            "Click an alert to open it: an asset opens on the chart, a market alert opens that "
-                            "market's sentiment, a funnel note shows its Candidates in the table, a study note opens its Set."
+                            t("Click an alert to open it: an asset opens on the chart, a market alert opens that "
+                            "market's sentiment, a funnel note shows its Candidates in the table, a study note opens its Set.")
                         )
                     for note in filtered_notifs:
                         name = html.escape(str(note.get("asset_name") or "Asset"))
@@ -7282,13 +7273,13 @@ def notifications_panel() -> None:
                                         invite_id = None
                                 if invite_id:
                                     yes, no = st.columns(2)
-                                    if yes.button("Accept", key=f"group_accept_{invite_id}", use_container_width=True):
+                                    if yes.button(t("Accept"), key=f"group_accept_{invite_id}", use_container_width=True):
                                         answer = _respond_group_invite(invite_id, True)
                                         if answer:
                                             st.warning(answer)
                                         else:
                                             _rerun_fragment()
-                                    if no.button("Dismiss", key=f"group_dismiss_{invite_id}", use_container_width=True):
+                                    if no.button(t("Dismiss"), key=f"group_dismiss_{invite_id}", use_container_width=True):
                                         _respond_group_invite(invite_id, False)
                                         _rerun_fragment()
                             continue
@@ -7335,9 +7326,9 @@ def notifications_panel() -> None:
 
         with tracked_expander(t("Configure Alert Rules"), "alert_rules"):
             st.caption(
-                "Readings describe current conditions and are not forecasts. Tick the colour borders you want to "
+                t("Readings describe current conditions and are not forecasts. Tick the colour borders you want to "
                 "hear about: ▲ when a reading rises past one, ▼ when it falls past one. A new colour counts once it "
-                "holds at the next daily close, so a one-day wobble never alerts."
+                "holds at the next daily close, so a one-day wobble never alerts.")
             )
             import alert_bands_component as _bands
 
@@ -7365,7 +7356,7 @@ def notifications_panel() -> None:
                     result = _bands.component()(key=f"alert_bands_{reading}", data=_bands.board_data(reading, ticks),
                                                 on_change_change=lambda: None)
                 except Exception as exc:
-                    st.info(f"The alert borders could not load here ({str(exc)[:120]}).")
+                    st.info(t('The alert borders could not load here ({str_exc_120}).', str_exc_120=str(exc)[:120]))
                     return
                 picked = _bands.read_change(result, f"alert_bands_seen_{reading}", st.session_state)
                 if picked is not None and picked != list(ticks):
@@ -7373,16 +7364,16 @@ def notifications_panel() -> None:
                     save_account_settings({f"{reading}_crossings": picked})
                     _rerun_fragment()      # this panel only (it is a fragment), never the whole page
                 if not ticks:
-                    st.caption("Nothing ticked: no alerts for this reading.")
+                    st.caption(t("Nothing ticked: no alerts for this reading."))
 
             alert_enabled = st.checkbox(
-                "📈 Trend alerts",
+                t("📈 Trend alerts"),
                 value=alert_prefs.get("enabled", True) is not False,
                 key="alert_enabled_cb",
                 help=(
-                    "Alert when the Trend reading (-100 to +100) of an asset on your watchlists crosses one of the "
+                    t("Alert when the Trend reading (-100 to +100) of an asset on your watchlists crosses one of the "
                     "colour borders you tick. Readings use finished daily bars and are checked at each daily close "
-                    "(crypto 00:10 UTC, equities 10 minutes after the New York close)."
+                    "(crypto 00:10 UTC, equities 10 minutes after the New York close).")
                 ),
             )
             if alert_enabled:
@@ -7398,13 +7389,11 @@ def notifications_panel() -> None:
                 icon = signals_v2.CLUSTERS[reading]["icon"]
                 was_on = reading_alert_on(account_settings, reading)
                 now_on = st.checkbox(
-                    f"{icon} {spec['name']} alerts",
+                    t('{icon} {spec_name} alerts', icon=icon, spec_name=spec['name']),
                     value=was_on,
                     key=f"alert_{reading}_cb",
                     help=(
-                        f"Alert when the {spec['name']} reading ({hint}) crosses one of the colour borders you tick. "
-                        "Off unless you switch it on. When switched on, the current colours are noted quietly; only "
-                        "new crossings alert."
+                        t('Alert when the {spec_name} reading ({hint}) crosses one of the colour borders you tick. Off unless you switch it on. When switched on, the current colours are noted quietly; only new crossings alert.', spec_name=spec['name'], hint=hint)
                     ),
                 )
                 extra_on[reading] = now_on
@@ -7420,12 +7409,12 @@ def notifications_panel() -> None:
             # Market sentiment alerts need the columns from the latest supabase_rls.sql.
             if "market_alerts_enabled" in alert_prefs:
                 market_on = st.checkbox(
-                    "🌐 Market sentiment alerts",
+                    t("🌐 Market sentiment alerts"),
                     value=bool(alert_prefs.get("market_alerts_enabled")),
                     key="alert_market_cb",
                     help=(
-                        "Alert when the crypto or stock market sentiment score crosses one of your lines. "
-                        "It covers the markets you have switched on. Market sentiment updates about every 12 hours."
+                        t("Alert when the crypto or stock market sentiment score crosses one of your lines. "
+                        "It covers the markets you have switched on. Market sentiment updates about every 12 hours.")
                     ),
                 )
                 # Stored as two 0..100 lines (default 65 and 35); shown as one +/- line on the -100..+100 scale.
@@ -7437,12 +7426,12 @@ def notifications_panel() -> None:
                 market_line = old_line
                 if market_on:
                     market_line = st.slider(
-                        "🌐 Market sentiment alert line (±)",
+                        t("🌐 Market sentiment alert line (±)"),
                         10, 80, old_line, step=2,
                         key="market_line_slider",
                         help=(
-                            "Positive alert when market sentiment reaches +line or above; negative alert at -line or "
-                            "below (on the -100 to +100 scale). The default is 30."
+                            t("Positive alert when market sentiment reaches +line or above; negative alert at -line or "
+                            "below (on the -100 to +100 scale). The default is 30.")
                         ),
                     )
                 if market_line == old_line:
@@ -7460,11 +7449,11 @@ def notifications_panel() -> None:
             # 🔻 Funnel alerts: one switch for all of this account's funnels (each funnel also has its own, in
             # Lattice → Funnels). Kept in the account settings, read by the funnel job.
             funnel_on = st.checkbox(
-                "🔻 Funnel alerts",
+                t("🔻 Funnel alerts"),
                 value=bool(((st.session_state.get("cloud_prefs") or {}).get("settings") or {}).get("funnel_alerts", True)),
                 key="alert_funnel_cb",
-                help=("A note when assets newly become Candidates in one of your funnels (one note per hourly run). "
-                      "Off stops them for every funnel; on, each funnel's own setting in Lattice → Funnels decides."),
+                help=(t("A note when assets newly become Candidates in one of your funnels (one note per hourly run). "
+                      "Off stops them for every funnel; on, each funnel's own setting in Lattice → Funnels decides.")),
             )
             try:
                 save_account_settings({"funnel_alerts": bool(funnel_on)})        # writes only when it changed
@@ -7475,53 +7464,53 @@ def notifications_panel() -> None:
             # Until that has been run, show the old settings only.
             if "digest_enabled" not in alert_prefs:
                 st.caption(
-                    "Email options (instant alerts and a daily digest) appear after the latest "
-                    "supabase_rls.sql has been run in Supabase."
+                    t("Email options (instant alerts and a daily digest) appear after the latest "
+                    "supabase_rls.sql has been run in Supabase.")
                 )
             else:
                 # With every alert type off there is nothing to email, so the email
                 # choices are greyed out. Their saved values are kept for later.
                 emails_off = (not alert_enabled and not any(extra_on.values())
                               and not new_alert_settings.get("market_alerts_enabled"))
-                st.markdown("**Emails**")
+                st.markdown(t("**Emails**"))
                 instant_on = st.checkbox(
-                    "⚡ Instant alerts",
+                    t("⚡ Instant alerts"),
                     value=alert_prefs.get("instant_email") is not False,
                     key="alert_instant_cb",
-                    help="One email as soon as a reading crosses a border you ticked, or market sentiment crosses your line.",
+                    help=t("One email as soon as a reading crosses a border you ticked, or market sentiment crosses your line."),
                     disabled=emails_off,
                 )
                 watchlist_column = "digest_watchlist" in alert_prefs
                 digest_on = st.checkbox(
-                    "📬 Daily alerts summary",
+                    t("📬 Daily alerts summary"),
                     value=bool(alert_prefs.get("digest_enabled")),
                     key="alert_digest_cb",
                     help=(
-                        "One email a day with everything that crossed your lines. "
-                        "You can use this with or without instant alerts."
+                        t("One email a day with everything that crossed your lines. "
+                        "You can use this with or without instant alerts.")
                     ),
                 )
                 watchlist_on = alert_prefs.get("digest_watchlist") is not False
                 if digest_on and watchlist_column:
                     _, indent = st.columns([0.06, 0.94])
                     watchlist_on = indent.checkbox(
-                        "📋 Include watchlist summary",
+                        t("📋 Include watchlist summary"),
                         value=watchlist_on,
                         key="alert_digest_watchlist_cb",
                         help=(
-                            "Adds a colour-coded summary of your watchlist below the alerts: price, today's move, "
+                            t("Adds a colour-coded summary of your watchlist below the alerts: price, today's move, "
                             "score and sentiment for your strongest and weakest assets (up to 10). "
-                            "With this on, the email comes every day; with it off, only on days with alerts."
+                            "With this on, the email comes every day; with it off, only on days with alerts.")
                         ),
                     )
                 if digest_on:
                     _, indent2 = st.columns([0.06, 0.94])
                     stored = ((st.session_state.get("cloud_prefs") or {}).get("settings") or {})
                     funnels_in_digest = indent2.checkbox(
-                        "🔻 Include funnels summary",
+                        t("🔻 Include funnels summary"),
                         value=bool(stored.get("digest_funnels", True)), key="alert_digest_funnels_cb",
-                        help=("Adds each of your funnels: its Candidates now (largest first), how many are Flagged, "
-                              "and the stage counts. Sent on days a funnel has Candidates."))
+                        help=(t("Adds each of your funnels: its Candidates now (largest first), how many are Flagged, "
+                              "and the stage counts. Sent on days a funnel has Candidates.")))
                     try:
                         save_account_settings({"digest_funnels": bool(funnels_in_digest)})
                     except Exception:
@@ -7549,7 +7538,7 @@ def notifications_panel() -> None:
                 if digest_on:
                     hour_col, zone_col = st.columns(2)
                     digest_hour_choice = hour_col.selectbox(
-                        "Send at",
+                        t("Send at"),
                         list(range(24)),
                         index=saved_hour if 0 <= saved_hour <= 23 else 8,
                         format_func=lambda hour: f"{hour:02d}:00",
@@ -7557,13 +7546,13 @@ def notifications_panel() -> None:
                     )
                     start_zone = saved_zone or "UTC"
                     digest_zone_choice = zone_col.selectbox(
-                        "Time zone",
+                        t("Time zone"),
                         zone_choices,
                         index=zone_choices.index(start_zone) if start_zone in zone_choices else 0,
                         key="alert_digest_zone",
                     )
                     if browser_zone and digest_zone_choice != browser_zone:
-                        st.caption(f"Your browser's time zone is {browser_zone}.")
+                        st.caption(t("Your browser's time zone is {browser_zone}.", browser_zone=browser_zone))
                 if digest_on and not stored_zone and not browser_zone and digest_zone_choice == "UTC":
                     # The browser has not reported its zone yet. Leave the zone unset
                     # rather than storing a guess; a later run fills it in.
@@ -7577,9 +7566,9 @@ def notifications_panel() -> None:
                     "digest_tz": digest_zone_choice,
                 })
                 if emails_off and not (digest_on and watchlist_on):
-                    st.caption("Tick an alert type above to choose how its emails arrive.")
+                    st.caption(t("Tick an alert type above to choose how its emails arrive."))
                 elif not instant_on and not digest_on:
-                    st.caption("Both are off, so alerts only appear in the dashboard.")
+                    st.caption(t("Both are off, so alerts only appear in the dashboard."))
 
             changed = new_alert_settings != {name: alert_prefs.get(name) for name in new_alert_settings}
             if changed:
@@ -7656,13 +7645,7 @@ for _seen_name, _state_name in _layout_watched:
 st.markdown("<div class='ang-page-top'></div>", unsafe_allow_html=True)   # marks the top of the page (CSS above)
 with st.container(horizontal=True, vertical_alignment="center", horizontal_alignment="distribute", key="page_header"):
     st.markdown(
-        "<div style='display:flex;align-items:center;gap:0.85rem;margin:0.4rem 0;'>"
-        f"{_brand_mark(58, align='left')}"
-        "<div style='display:flex;align-items:baseline;flex-wrap:wrap;gap:0.35rem 0.85rem;'>"
-        "<h1 style='margin:0;padding:0;line-height:1.15;font-size:2.25rem;font-weight:700;white-space:nowrap;'>"
-        "angstrom signals</h1>"
-        "<span style='font-size:0.82rem;font-weight:500;line-height:1;opacity:0.72;'>"
-        "Market sentiment and technical signals, with the crowd alongside.</span></div></div>",
+        t("<div style='display:flex;align-items:center;gap:0.85rem;margin:0.4rem 0;'>{brand_mark_58_align_left}<div style='display:flex;align-items:baseline;flex-wrap:wrap;gap:0.35rem 0.85rem;'><h1 style='margin:0;padding:0;line-height:1.15;font-size:2.25rem;font-weight:700;white-space:nowrap;'>angstrom signals</h1><span style='font-size:0.82rem;font-weight:500;line-height:1;opacity:0.72;'>Market sentiment and technical signals, with the crowd alongside.</span></div></div>", brand_mark_58_align_left=_brand_mark(58, align='left')),
         unsafe_allow_html=True,
     )
     with st.container(horizontal=True, vertical_alignment="center", gap="xsmall", width="content",
@@ -7672,23 +7655,23 @@ with st.container(horizontal=True, vertical_alignment="center", horizontal_align
 
             _lp.advisor_button(st, "app", key="assistant_open")    # ✨ AI Navigator: help with the whole app
         single_layout = st.button(
-            "Single column",
+            t("Single column"),
             key="layout_single",
             type="primary" if not wide_on else "secondary",
-            help="Stack every section in one column, with Quick Snapshot first.",
+            help=t("Stack every section in one column, with Quick Snapshot first."),
         )
         wide_layout_click = st.button(
-            "Wide",
+            t("Wide"),
             key="layout_wide",
             type="primary" if wide_on else "secondary",
             help=(
-                "Snapshot and signal tables across the top, market sentiment on the left, "
+                t("Snapshot and signal tables across the top, market sentiment on the left, "
                 "and the chart sections on the right. The two bottom columns start equal. "
-                "Drag the line between them to resize."
+                "Drag the line between them to resize.")
             ),
         )
-        open_sections = st.button("Open all", key="open_all_sections", width="content", help="Open all sections")
-        collapse_sections = st.button("Collapse all", key="collapse_all_sections", width="content", help="Collapse all sections")
+        open_sections = st.button(t("Open all"), key="open_all_sections", width="content", help=t("Open all sections"))
+        collapse_sections = st.button(t("Collapse all"), key="collapse_all_sections", width="content", help=t("Collapse all sections"))
         # A layout button on this same run must not win. The buttons normally
         # fold the sections in the browser. This covers a click that still
         # reaches Streamlit, and the wide or single choice stays as it was.
@@ -7742,7 +7725,7 @@ def _render_help_guides() -> None:
     ])
 
     with tab_start:
-        st.markdown("""
+        st.markdown(t("""
 **Angstrom Signals reads current market conditions for the crypto and stocks on your watchlists.**
 Each asset gets three technical readings (📈 Trend, 🎯 Stretch, 🔊 Flow), a 📰 news sentiment score, and
 tools to look closer. It is a research tool, not financial advice. The readings and sentiment describe
@@ -7789,13 +7772,13 @@ because they measure different things and are never added together.
    questions about the currents from the readings; **Today's AI Passage Plan** charts today's conditions, the week's
    events and the winds for your own watchlist and funnels, with things to watch: one plan a day, kept in your
    logbook. Descriptions, never buy or sell calls.
-""")
-        st.markdown("**🎬 Training videos**: short videos with captions, about a minute or two each. Each opens in "
+"""))
+        st.markdown(t("**🎬 Training videos**: short videos with captions, about a minute or two each. Each opens in "
                     "its own window beside the app; Back, Next and Start move through a series, and 📌 Keep on top "
-                    "floats the video above your other windows while you follow along.")
+                    "floats the video above your other windows while you follow along."))
         _training.all_links(st, key="start")
-        if st.button("🚀 Show the getting-started checklist", key="onboarding_show_again",
-                     help="Brings back the checklist at the top of the page."):
+        if st.button(t("🚀 Show the getting-started checklist"), key="onboarding_show_again",
+                     help=t("Brings back the checklist at the top of the page.")):
             _onboarding.show_again(prefs.get("settings") or {}, save_account_settings)
             st.rerun()
 
@@ -7826,16 +7809,16 @@ because they measure different things and are never added together.
             ("Strongly negative", f"{_s['down'] - 1:+d} and below", *sentiment_tone(sentiment_stored(_s["down"] - 2))[:2]),
         ])
         st.caption(
-            "Both use the same five shades, here and in the emails, but each keeps its own lines: sentiment's "
+            t("Both use the same five shades, here and in the emails, but each keeps its own lines: sentiment's "
             "categories are the ones it has always had, converted to the -100 to +100 scale, so a mildly positive "
             "news reading is not held to the technical readings' bar. Indicators with their own well-known scale "
             "keep it so they match other sites: RSI and Stochastic (0 to 100) on the chart, and Fear & Greed "
-            "(0 to 100) in market sentiment."
+            "(0 to 100) in market sentiment.")
         )
 
     with tab_scores:
         st.markdown(signals_view.EXPLAINER)
-        st.markdown("""
+        st.markdown(t("""
 **The tables**
 - Click a column title to sort. Hover any reading to read it; click it to open **🔍 Why these readings** for
   that asset at that column, part by part.
@@ -7867,10 +7850,10 @@ is moving, never which way it will go.
 **Freshness.** Prices are saved about every 5 minutes and sentiment about every 12 hours, for everyone.
 The readings use the last *finished* daily bar (crypto: the UTC day; stocks: after the New York close),
 so they change once a day; price, today's move and RSI in the table are live.
-""")
+"""))
 
     with tab_chart:
-        st.markdown("""
+        st.markdown(t("""
 **Interactive Chart.** Candles with SMA 20 and 50 and Bollinger Bands, plus volume underneath.
 The icon row adds more:
 - 📏 SMA 200 · ☁️ Ichimoku cloud · 📡 Sonar · 🛰️ Sonar markers · 🌡️ RSI · 〰️ MACD · 🎚️ Stochastic · 🎛️ Stoch RSI · 🧭 ADX · 📊 OBV
@@ -7909,9 +7892,9 @@ The icon row adds more:
   tell (amber), across the whole history. 🕰️ Visualize History in Prism opens the same view.
 
 Your choices are saved on your account.
-""")
-        with st.expander("Two chart styles: TradingView or Plotly"):
-            st.markdown("""
+"""))
+        with st.expander(t("Two chart styles: TradingView or Plotly")):
+            st.markdown(t("""
 Pick the chart style in **⚙️ Settings → Price chart**. Both use the same indicator icons, overlay and
 earnings choices, and both save to your account.
 
@@ -7954,8 +7937,8 @@ earnings choices, and both save to your account.
 
 **Plotly** is the original chart: daily candles over the last year, with the drag bar under
 it for height. Pinch zoom on an iPad is unreliable with Plotly, which is why the TradingView style was added.
-""")
-        st.markdown("""
+"""))
+        st.markdown(t("""
 
 **🔍 Why these readings** has one folded block for each column in the tables. A Group block shows every part
 with its own reading in plain words and its share of the score; a Set block shows each line with ✓ or ✕ and
@@ -7979,10 +7962,10 @@ the last update, and 7 days of hourly charts. Estimated from Coinalyze data, ref
 up with the price change that followed. The evidence view shows the long-run test for this asset.
 
 None of these tools change the technical readings.
-""")
+"""))
 
     with tab_sentiment:
-        st.markdown("""
+        st.markdown(t("""
 **What it is.** An AI reads recent headlines and scores each one from -100 (very negative) to +100 (very
 positive), with 0 meaning mixed or unclear. The sentiment score is their average. It is separate from the
 technical readings and never added to them. The lines between its categories are its own: **positive** from
@@ -8015,15 +7998,15 @@ A new sentiment update clears the takes, because they belonged to the old score.
 Sentiment updates about every 12 hours for everyone. The 🕒 line under each sentiment section's title shows
 when it was last updated and when the next update is due; prices and the chart (every 5 minutes) have the
 same line under the asset's name in the chart section.
-""")
-        with st.expander("🔬 How a sentiment score is built (full method)"):
+"""))
+        with st.expander(t("🔬 How a sentiment score is built (full method)")):
             st.markdown(SENTIMENT_METHOD)
 
     with tab_tides:
         import tides as _td
 
         _training.link(st, "t1-tides", key="tv_tides_01")
-        st.markdown("""
+        st.markdown(t("""
 **🌊 Tides is the macro layer: the big money flows that sit behind every chart.** Rates, the dollar, inflation,
 fear, credit and where money is rotating move slowly, but they set the conditions every asset trades in. Tides
 reads twelve of them each day and sums them up in sailing words, with the normal trading words beside them.
@@ -8042,8 +8025,8 @@ It describes conditions; it does not time trades and it never says buy or sell.
 - **🚩 Storm warnings** flag scheduled events from the official calendars: 🚩🚩 Fed decisions, CPI (inflation) and
   the jobs report, 🚩 producer prices, 🟥 deadlines (such as a government funding date). A warning shows from 24
   hours before to 24 hours after: an event is near, not a forecast of what it will do.
-""")
-        st.markdown("**The twelve currents**")
+"""))
+        st.markdown(t("**The twelve currents**"))
         # A plain table (not a data grid): it follows the light or dark theme, shows every row without scrolling,
         # and wraps the longer descriptions.
         st.markdown(
@@ -8052,41 +8035,10 @@ It describes conditions; it does not time trades and it never says buy or sell.
                         f"| {c['measures'].replace('|', '/')} | {'✅ yes' if c['weight'] else 'shown only'} |"
                         for c in _td.SPEC.values()))
         fam = ", ".join(f"{icon} {name} {weight:.0%}" for name, weight, icon in _td.FAMILIES.values())
-        st.markdown(f"""
-**How each current is read** (fixed rules, the same for everyone)
-- **Band**: where today's level sits against its own last 5 years, from 0 to 100: very low (under 20), low,
-  normal, high, very high (80 and over). Glassnode and similar tools use the same idea.
-- **Pull**: its 30-day move against the usual size of such a move. A move bigger than half the usual size is
-  **rising** or **falling**; anything smaller is **flat**, and a flat current is always *neutral*. Whether rising is
-  risk-supportive or risk-defensive depends on the current (rising rates or a rising dollar pull risk down;
-  rising credit appetite pulls it up). The line under each current's name says this in words.
-- **The Tide's score**: each family averages its voting currents, then the families are weighted: {fam}. Above
-  +0.20 is coming in, below -0.20 going out, in between slack. Gold, oil and the yield curve are shown for context
-  but don't vote. Crypto Fear & Greed is shown on its own and never votes.
-
-**The waves** draw each current over time (3 months to 2 years; your choice is saved on your account), with past
-Fed decisions, CPI and jobs days as dashed lines, so you can see how a current behaved around an event.
-
-**✨ AI Navigator and 📜 Today's AI Passage Plan** (the buttons beside the daily note) open in their own window.
-The Navigator answers questions about the currents, the tide and the calendar from these readings only, quoting
-the reading behind each statement. The Passage Plan charts today's conditions, the week's events, the winds for
-your own watchlist and funnels, hazards and things to watch, each expectation labelled with what would show it
-right or wrong. One plan a day, kept in your logbook. Facts stay apart from expectations; never buy or sell calls.
-
-**👍 Your take**, beside the daily note: agree or disagree with the Tide's current reading; on 👎 give your own Tide
-score (−100 going out to +100 coming in), and add a short comment. Tides moves slowly, so takes and comments stay
-until the Tide changes to another reading, then start afresh. Comments show in the social panel under 🌊 Tides.
-
-**How often it updates**: a fresh reading every 6 hours (most currents use daily closes, so it changes once a day
-in practice). Event dates come from the official Fed and US Bureau of Labor Statistics schedules.
-
-**Limits**: macro conditions frame risk over weeks; they don't say what any one asset does tomorrow. Nobody has yet
-tested what usually followed each Tide, so treat it as context, not a signal. The 🌊 Tides line in Quick Snapshot
-is the one-glance version.
-""")
+        st.markdown(t("\n**How each current is read** (fixed rules, the same for everyone)\n- **Band**: where today's level sits against its own last 5 years, from 0 to 100: very low (under 20), low,\n  normal, high, very high (80 and over). Glassnode and similar tools use the same idea.\n- **Pull**: its 30-day move against the usual size of such a move. A move bigger than half the usual size is\n  **rising** or **falling**; anything smaller is **flat**, and a flat current is always *neutral*. Whether rising is\n  risk-supportive or risk-defensive depends on the current (rising rates or a rising dollar pull risk down;\n  rising credit appetite pulls it up). The line under each current's name says this in words.\n- **The Tide's score**: each family averages its voting currents, then the families are weighted: {fam}. Above\n  +0.20 is coming in, below -0.20 going out, in between slack. Gold, oil and the yield curve are shown for context\n  but don't vote. Crypto Fear & Greed is shown on its own and never votes.\n\n**The waves** draw each current over time (3 months to 2 years; your choice is saved on your account), with past\nFed decisions, CPI and jobs days as dashed lines, so you can see how a current behaved around an event.\n\n**✨ AI Navigator and 📜 Today's AI Passage Plan** (the buttons beside the daily note) open in their own window.\nThe Navigator answers questions about the currents, the tide and the calendar from these readings only, quoting\nthe reading behind each statement. The Passage Plan charts today's conditions, the week's events, the winds for\nyour own watchlist and funnels, hazards and things to watch, each expectation labelled with what would show it\nright or wrong. One plan a day, kept in your logbook. Facts stay apart from expectations; never buy or sell calls.\n\n**👍 Your take**, beside the daily note: agree or disagree with the Tide's current reading; on 👎 give your own Tide\nscore (−100 going out to +100 coming in), and add a short comment. Tides moves slowly, so takes and comments stay\nuntil the Tide changes to another reading, then start afresh. Comments show in the social panel under 🌊 Tides.\n\n**How often it updates**: a fresh reading every 6 hours (most currents use daily closes, so it changes once a day\nin practice). Event dates come from the official Fed and US Bureau of Labor Statistics schedules.\n\n**Limits**: macro conditions frame risk over weeks; they don't say what any one asset does tomorrow. Nobody has yet\ntested what usually followed each Tide, so treat it as context, not a signal. The 🌊 Tides line in Quick Snapshot\nis the one-glance version.\n", fam=fam))
 
     with tab_lattice:
-        st.markdown("""
+        st.markdown(t("""
 **Angstrom Lattice** (preview) is the research workspace right under the chart. Open it and pick a part from
 the bar at the top; hover the bar for what each part does. ↗ opens it in its own window, and anything it opens on
 a chart (such as Visualize History) shows on the main window's chart. ✨ AI beside the bar opens the Navigator.
@@ -8117,10 +8069,10 @@ starter keep working, and built-in alerts that are on keep running.
   *Bitcoin trend filter* and *Overextended*. Any of them can also be a column in the tables.
 - **🔻 Funnels** (the part after Prism Scan): build and change funnels that narrow a market down in stages, from
   the longest timeframe to the hour. See the **🔻 Funnels** tab of this guide.
-""")
+"""))
         _training.link(st, "01-angstrom-lattice-at-a-glance", key="tv_lat_01")
         _training.link(st, "02-signals", key="tv_lat_02")
-        st.markdown("""
+        st.markdown(t("""
 **🧩 Signal Groups: your own reading.** Combine signals into one score from -100 to +100, then give it labels.
 - Start from a starter Group (📈 Trend, 🎯 Stretch, 🔊 Flow, Trend agreement and Reversal evidence; the
   dashboard's three readings *are* these starter Groups) or a new one. Drag signals in, or tap **+** on a phone or
@@ -8136,9 +8088,9 @@ starter keep working, and built-in alerts that are on keep running.
   automatically. Save as a new Group, or as a new version of yours; earlier versions stay as they were. Names
   must be unique among yours. **✏️ Rename** changes the name everywhere at once; **🗑 Delete** removes every version,
   only when nothing else uses it.
-""")
+"""))
         _training.link(st, "03-signal-groups", key="tv_lat_03")
-        st.markdown("""
+        st.markdown(t("""
 **🗂️ Signal Sets: a Yes / No decision.** Combine saved Groups and single signals, then write the lines that must
 hold, for example *Trend is Bullish* and *RSI is below 70*.
 - **Answer:** Yes (every line holds), No (at least one fails, even if other data is missing) or Unknown (nothing
@@ -8159,9 +8111,9 @@ hold, for example *Trend is Bullish* and *RSI is below 70*.
   equities on their own, the three periods side by side, and asset by asset with a luck check (with many assets,
   some always look unusual by chance, so an unusual asset is a place to look closer, not proof). Past patterns
   before costs, never a forecast.
-""")
+"""))
         _training.link(st, "04-signal-sets", key="tv_lat_04")
-        st.markdown("""
+        st.markdown(t("""
 **🔎 Prism Scan: scan your watchlist.** Your saved scans, each a Set plus its assets, schedule and alerts.
 - **Start a scan:** drag a saved Set onto the board, or tap **+**. It starts on your whole watchlist and runs
   only when you press ▶. **🔍 Look inside** shows the Set a scan uses; **⧉ Duplicate** copies the scan (same
@@ -8190,23 +8142,23 @@ hold, for example *Trend is Bullish* and *RSI is below 70*.
   quiet: its first run records the answers without alerting.
 - **"vN available"** appears when you have saved a newer version of the scan's Set; tap it to switch. Until
   then the scan keeps the version it was saved with.
-""")
+"""))
         _training.link(st, "05-prism-scan", key="tv_lat_05")
-        st.markdown("**🎬 Worked examples**: one recognisable setup each, built and scanned from start to finish.")
+        st.markdown(t("**🎬 Worked examples**: one recognisable setup each, built and scanned from start to finish."))
         for _slug in ("w1-trend-with-volume", "w2-overextended-rally", "w3-breakout-with-volume", "w4-breakout-fading"):
             _training.link(st, _slug, key=f"tv_lat_{_slug}")
-        st.markdown("**🎬 Reading the evidence**: the Sets Angstrom Signals provides, a Set's answer on every past "
-                    "day, and what usually followed its Yes.")
+        st.markdown(t("**🎬 Reading the evidence**: the Sets Angstrom Signals provides, a Set's answer on every past "
+                    "day, and what usually followed its Yes."))
         for _slug in ("06-provided-library", "07-visualize-history", "08-what-followed"):
             _training.link(st, _slug, key=f"tv_lat_{_slug}")
-        st.markdown("""
+        st.markdown(t("""
 **Coming next:** a Set score and counting (*at least 2 of these 4*). **🛣️ Strategies** (later): tracking your own
 plans from a Set or THEN box, with entries, exits and ladders.
-""")
+"""))
 
     with tab_funnels:
         _training.link(st, "f1-funnels", key="tv_funnels_01")
-        st.markdown("""
+        st.markdown(t("""
 **🔻 Funnels narrow a market down in stages, by themselves.** A funnel starts from a pool (the top coins, or the
 S&P 500), checks every asset against a first Set on a long timeframe, then checks only the survivors against the
 next Set on a shorter timeframe, and so on down to the hour. What's left at the bottom are the **Candidates**.
@@ -8245,16 +8197,16 @@ tested what usually followed these answers.
   your own Sets is *My funnel*. Changed funnels are not reviewed or tested by Angstrom.
 
 **On the tables: Dynamic funnel**
-- Above the crypto or equity table, switch **My Watchlist** to **Dynamic funnel** (your choice is saved). With
-  more than one funnel, pick which.
-- The **stage picker** shows how many assets hold each stage, then 🚩 Flagged and ✅ Candidates; the line under it
-  shows the whole funnel (for example *197 → 40 → 12 → 9 → 2 ✅ / 7 🚩*) and when a check failed or ran late.
+- Above the crypto or equity table, switch **My Watchlist** to **Dynamic funnel** (your choice is saved). Each of
+  that market's funnels is one row.
+- The **stage chips** show how many assets hold each stage, then 🚩 Flagged and ✅ Candidates. Click a chip to show
+  that stage's assets in the table, and +n marks Candidates new since your last visit.
 - The **Stage** column: ▲ long or ▼ short, then 👁 first stage, 🔷 second, 📋 shortlist, 🚩 or ✅. **Hover it** for
   each stage's last answer and when it was checked, where the candles come from, and (equities) earnings within
   two weeks.
 - The table shows the 30 largest by market cap at the chosen stage. **➕** after an asset's name adds it to My
   Watchlist.
-- **Open candidates in chart** (beside the stage picker; it names the stage you picked) shows the 12 largest the
+- **Open candidates in chart** (beside the line that says what is showing) shows the 12 largest the
   Visualize History way: one large chart on top, a thin row for each underneath, with the daily stage drawn as
   green bands. Tap a row to put it on top, then **Open on the main price chart**. 3Y, 10Y and All open one after
   another as the older years are worked out.
@@ -8297,10 +8249,10 @@ tested what usually followed these answers.
 
 **Behind the scenes:** each Set's answer for an asset at a close is worked out once and shared by every funnel
 that checks the same Set, so funnels stay quick as more people use them.
-""")
+"""))
 
     with tab_alerts:
-        st.markdown("""
+        st.markdown(t("""
 **Setting up** (Notifications → Configure Alert Rules)
 - 📈 **Trend alerts** (on by default): an alert when an asset's Trend reading crosses one of the colour borders
   you tick, the same borders the tables colour by (−50, −20, +20, +50). Each reading shows its five colour boxes,
@@ -8359,10 +8311,10 @@ your own scans, on the same readings as the dashboard, and don't count towards y
 
 **Always on.** Alerts are checked in the background, whether or not this page is open. Emails go only
 to your account's address; the digest also lists market sentiment and your strongest and weakest assets.
-""")
+"""))
 
     with tab_social:
-        st.markdown("""
+        st.markdown(t("""
 **Open it** with the arrow on the right edge, or a 💬 speech balloon. Drag its left edge to resize,
 drag the bar in the middle to split it, and 📌 **Pin** keeps it open while you use the page.
 
@@ -8376,10 +8328,10 @@ or your ⭐ favourites.
 🚩 report a comment that breaks the socials policy · 🗑️ delete your own note.
 
 **Search**, at the top, filters both halves by words, names or assets.
-""")
+"""))
 
     with tab_layout:
-        st.markdown("""
+        st.markdown(t("""
 **Sections.** Every section folds open or shut from its header. **Open all** and **Collapse all** sit
 by the page title. Each section's ↗ opens it in its own window, which follows the asset you pick. **📖 Help and
 guides** has one too: open it beside the app and read while you work.
@@ -8416,7 +8368,7 @@ panel, the asset on the chart, and your Groups, Sets and Prism Scans. They come 
 **🤖 AI choices** (Settings): pick which AI answers as your ✨ AI Navigator and writes your Passage Plan (Claude
 by default; others when they are switched on). The 📰 news summaries and sentiment scores are shared by everyone, so
 the admin picks that AI for the whole app; Settings shows which one is used.
-""")
+"""))
 
 
 if not _POPOUT_VIEW:
@@ -8484,7 +8436,7 @@ def _add_from_funnel(kind: str, asset_id: str) -> None:
         name = str(info.get("name") or asset_id)
         label = f"{name} ({symbol})" if symbol and symbol not in name.upper() else name
         if asset_id in CRYPTO_WATCHLIST:
-            st.toast(f"{label} is already on My Watchlist.")
+            st.toast(t('{label} is already on My Watchlist.', label=label))
             return
         CRYPTO_WATCHLIST[asset_id] = label
         prefs["crypto"] = CRYPTO_WATCHLIST
@@ -8493,13 +8445,13 @@ def _add_from_funnel(kind: str, asset_id: str) -> None:
         ticker = str(asset_id).upper()
         label = f"{info.get('name') or ticker} ({ticker})"
         if ticker in STOCK_WATCHLIST:
-            st.toast(f"{label} is already on My Watchlist.")
+            st.toast(t('{label} is already on My Watchlist.', label=label))
             return
         STOCK_WATCHLIST[ticker] = label
         prefs["stock"] = STOCK_WATCHLIST
         save_preferences_to_cloud({"stock_watchlist": STOCK_WATCHLIST})
     (st.session_state.get("_memo") or {}).pop("counts", None)    # "Watching" counts afresh, so it shows at once
-    st.toast(f"Added {label} to My Watchlist.")
+    st.toast(t('Added {label} to My Watchlist.', label=label))
     st.rerun()
 
 
@@ -8510,7 +8462,7 @@ def _ensure_added(kind: str, asset_id: str, label: str) -> None:
     except (TypeError, ValueError):
         days = 200
     try:
-        with st.spinner(f"Saving the first shared reading for {label}..."):
+        with st.spinner(t('Saving the first shared reading for {label}...', label=label)):
             ensure_new_asset(supabase, kind, asset_id, label, days)
     except Exception as exc:
         print(f"First shared reading failed for {asset_id}: {exc}")
@@ -8519,10 +8471,10 @@ def _ensure_added(kind: str, asset_id: str, label: str) -> None:
 with tracked_expander("⭐ " + t("Watchlists"), "watchlists", sidebar=True):
     if trade_crypto:
         with tracked_expander(t("Edit Crypto"), "edit_crypto"):
-            st.caption("Type a name or ticker, press Enter, then pick the match.")
+            st.caption(t("Type a name or ticker, press Enter, then pick the match."))
             if st.session_state.pop("_clear_new_crypto", False):
                 st.session_state["new_crypto"] = ""
-            new_crypto = st.text_input("Add crypto", key="new_crypto", placeholder="e.g. XLM or Stellar")
+            new_crypto = st.text_input(t("Add crypto"), key="new_crypto", placeholder=t("e.g. XLM or Stellar"))
             crypto_query = (new_crypto or "").strip()
             crypto_choice = None
             if crypto_query:
@@ -8543,7 +8495,7 @@ with tracked_expander("⭐ " + t("Watchlists"), "watchlists", sidebar=True):
                         return f"{match['name']}{symbol}{rank}"
 
                     picked_id = st.selectbox(
-                        "Pick the coin",
+                        t("Pick the coin"),
                         list(crypto_options),
                         format_func=_crypto_option,
                         key="pick_crypto",
@@ -8551,8 +8503,8 @@ with tracked_expander("⭐ " + t("Watchlists"), "watchlists", sidebar=True):
                     )
                     crypto_choice = crypto_options.get(picked_id)
                 else:
-                    st.warning(f"No coin found for '{crypto_query}'. Check the spelling, or try the ticker, such as XLM.")
-            if st.button("Add Crypto", disabled=crypto_choice is None):
+                    st.warning(t("No coin found for '{crypto_query}'. Check the spelling, or try the ticker, such as XLM.", crypto_query=crypto_query))
+            if st.button(t("Add Crypto"), disabled=crypto_choice is None):
                 cid = crypto_choice["id"]
                 symbol = crypto_choice["symbol"]
                 label = f"{crypto_choice['name']} ({symbol})" if symbol and symbol not in crypto_choice["name"].upper() else crypto_choice["name"]
@@ -8574,10 +8526,10 @@ with tracked_expander("⭐ " + t("Watchlists"), "watchlists", sidebar=True):
                     st.session_state["_clear_new_crypto"] = True
                     st.rerun()
                 else:
-                    st.info(f"{label} is already on your list.")
+                    st.info(t('{label} is already on your list.', label=label))
             if CRYPTO_WATCHLIST:
-                to_remove = st.selectbox("Remove crypto", [""] + list(CRYPTO_WATCHLIST.keys()), key="rm_crypto")
-                if to_remove and st.button("Remove Crypto"):
+                to_remove = st.selectbox(t("Remove crypto"), [""] + list(CRYPTO_WATCHLIST.keys()), key="rm_crypto")
+                if to_remove and st.button(t("Remove Crypto")):
                     CRYPTO_WATCHLIST.pop(to_remove, None)
                     prefs["crypto"] = CRYPTO_WATCHLIST
                     save_preferences_to_cloud({"crypto_watchlist": CRYPTO_WATCHLIST})
@@ -8585,10 +8537,10 @@ with tracked_expander("⭐ " + t("Watchlists"), "watchlists", sidebar=True):
 
     if trade_equities:
         with tracked_expander(t("Edit Stocks"), "edit_stocks"):
-            st.caption("Type a company name or ticker, press Enter, then pick the match.")
+            st.caption(t("Type a company name or ticker, press Enter, then pick the match."))
             if st.session_state.pop("_clear_new_stock", False):
                 st.session_state["new_stock"] = ""
-            new_stock = st.text_input("Add stock or ETF", key="new_stock", placeholder="e.g. Apple, GOOGL or SIE.DE")
+            new_stock = st.text_input(t("Add stock or ETF"), key="new_stock", placeholder=t("e.g. Apple, GOOGL or SIE.DE"))
             stock_query = (new_stock or "").strip()
             stock_choice = None
             if stock_query:
@@ -8613,7 +8565,7 @@ with tracked_expander("⭐ " + t("Watchlists"), "watchlists", sidebar=True):
                         return "  ·  ".join(parts)
 
                     picked_symbol = st.selectbox(
-                        "Pick the stock",
+                        t("Pick the stock"),
                         list(stock_options),
                         format_func=_stock_option,
                         key="pick_stock",
@@ -8621,13 +8573,13 @@ with tracked_expander("⭐ " + t("Watchlists"), "watchlists", sidebar=True):
                     )
                     stock_choice = stock_options.get(picked_symbol)
                     if unchecked:
-                        st.caption("Search is not available right now, so this ticker has not been checked.")
+                        st.caption(t("Search is not available right now, so this ticker has not been checked."))
                 else:
-                    st.warning(f"No stock found for '{stock_query}'. Try the company name or the ticker.")
-            if st.button("Add Stock", disabled=stock_choice is None):
+                    st.warning(t("No stock found for '{stock_query}'. Try the company name or the ticker.", stock_query=stock_query))
+            if st.button(t("Add Stock"), disabled=stock_choice is None):
                 tic = stock_choice["symbol"]
                 if tic in STOCK_WATCHLIST:
-                    st.info(f"{tic} is already on your list.")
+                    st.info(t('{tic} is already on your list.', tic=tic))
                 else:
                     label = stock_choice["name"] or tic
                     STOCK_WATCHLIST[tic] = label
@@ -8637,8 +8589,8 @@ with tracked_expander("⭐ " + t("Watchlists"), "watchlists", sidebar=True):
                     st.session_state["_clear_new_stock"] = True
                     st.rerun()
             if STOCK_WATCHLIST:
-                to_remove = st.selectbox("Remove stock", [""] + list(STOCK_WATCHLIST.keys()), key="rm_stock")
-                if to_remove and st.button("Remove Stock"):
+                to_remove = st.selectbox(t("Remove stock"), [""] + list(STOCK_WATCHLIST.keys()), key="rm_stock")
+                if to_remove and st.button(t("Remove Stock")):
                     STOCK_WATCHLIST.pop(to_remove, None)
                     prefs["stock"] = STOCK_WATCHLIST
                     save_preferences_to_cloud({"stock_watchlist": STOCK_WATCHLIST})
@@ -8647,7 +8599,7 @@ with tracked_expander("⭐ " + t("Watchlists"), "watchlists", sidebar=True):
 def _signals_info_popover() -> None:
     """How the technical readings work, in plain words: a full-width fold-out, closed until opened (a pop-up was
     cramped on phones)."""
-    with st.expander("ℹ️ How the technical signals work", expanded=False, key="signals_info"):
+    with st.expander(t("ℹ️ How the technical signals work"), expanded=False, key="signals_info"):
         st.markdown(signals_view.EXPLAINER)
 
 
@@ -8677,7 +8629,7 @@ def _ai_settings(settings: dict) -> None:
     here only saves (the Navigator reads it when it opens), so it redraws this part, not the page."""
     import ai_providers as ap
 
-    st.markdown("**🤖 AI choices**")
+    st.markdown(t("**🤖 AI choices**"))
     on = [p for p in ap.PROVIDERS if ap.available(p)]
     label, default, _who, tip = ap.USES["navigator"]
     if on:
@@ -8688,10 +8640,9 @@ def _ai_settings(settings: dict) -> None:
         if chosen != settings.get("ai_navigator", default):
             save_account_settings({"ai_navigator": chosen})
     else:
-        st.caption(f"{label}: not switched on yet.")
+        st.caption(t('{label}: not switched on yet.', label=label))
     current = ap.app_choice(supabase, "sentiment") or ap.USES["sentiment"][1]
-    st.caption(f"📰 News summaries and sentiment scores are written by {ap.label(current)} "
-               f"({ap.model(current)}), the same for everyone.")
+    st.caption(t('📰 News summaries and sentiment scores are written by {ap_label_current} ({ap_model_current}), the same for everyone.', ap_label_current=ap.label(current), ap_model_current=ap.model(current)))
 
 
 def _admin_push_keys() -> None:
@@ -8764,9 +8715,9 @@ with tracked_expander("⚙️ " + t("Settings"), "settings_panel", sidebar=True)
         st.session_state.show_period_changes = bool(settings.get("show_period_changes", True))
     # Keep these for the whole session. A partial redraw otherwise drops them,
     # and the next full run saves the blank defaults (90 days, toggles off, cryptos).
-    st.markdown("**Markets you trade**")
+    st.markdown(t("**Markets you trade**"))
     st.radio(
-        "Markets you trade",
+        t("Markets you trade"),
         _TRADE_CHOICES,
         key="trade_markets",
         persist_state="session",
@@ -8777,72 +8728,72 @@ with tracked_expander("⚙️ " + t("Settings"), "settings_panel", sidebar=True)
     # its drag bar zooms in.
     days_history = PLOTLY_DAYS
     st.divider()
-    st.markdown("**Price chart**")
+    st.markdown(t("**Price chart**"))
     if "price_chart" not in st.session_state:
         saved_engine = settings.get(CHART_ENGINE_SETTING)
         st.session_state.price_chart = saved_engine if saved_engine in CHART_ENGINES else CHART_ENGINE_DEFAULT
     chart_engine = st.radio(
-        "Price chart",
+        t("Price chart"),
         CHART_ENGINES,
         key="price_chart",
         persist_state="session",
         label_visibility="collapsed",
         help=(
-            "TradingView: zoom with the mouse wheel or a pinch, drag to scroll back, and pick 15-minute to "
-            "weekly candles. Plotly: the original chart. Both use the same indicators."
+            t("TradingView: zoom with the mouse wheel or a pinch, drag to scroll back, and pick 15-minute to "
+            "weekly candles. Plotly: the original chart. Both use the same indicators.")
         ),
     )
     st.divider()
-    st.markdown("**TA analysis**")
+    st.markdown(t("**TA analysis**"))
     show_reasons = st.checkbox(
-        "Show signals breakdown",
+        t("Show signals breakdown"),
         key="show_reasons",
         persist_state="session",
     )
     show_extra_metrics = st.checkbox(
-        "Show extra metrics (7d, market cap, ATR, volume)",
+        t("Show extra metrics (7d, market cap, ATR, volume)"),
         key="show_extra_metrics",
         persist_state="session",
     )
     show_period_changes = st.checkbox(
-        "Show 1-day and 30-day changes",
+        t("Show 1-day and 30-day changes"),
         key="show_period_changes",
         persist_state="session",
     )
     st.divider()
-    st.markdown("**Help**")
+    st.markdown(t("**Help**"))
     if "explain_mode" not in st.session_state:
         st.session_state.explain_mode = bool(settings.get("explain_mode", False))
     explain_mode = st.toggle(
-        "❓ Explain mode",
+        t("❓ Explain mode"),
         key="explain_mode",
         persist_state="session",
         help=(
-            "When on, tapping or clicking an icon, reading or button shows what it means instead of doing it. "
+            t("When on, tapping or clicking an icon, reading or button shows what it means instead of doing it. "
             "Switch off to use the app normally. Without it, a tap explains icons and readings, and a long press "
-            "explains buttons."
+            "explains buttons.")
         ),
     )
     st.divider()
-    st.markdown("**Angstrom Lattice**")
+    st.markdown(t("**Angstrom Lattice**"))
     if "show_provided" not in st.session_state:
         st.session_state.show_provided = settings.get("show_provided", True) is not False
     show_provided = st.toggle(
-        "Show provided starters and examples",
+        t("Show provided starters and examples"),
         key="show_provided",
         persist_state="session",
         help=(
-            "What Angstrom Signals provides (the starter Groups, the example Sets and the built-in alerts) sits in a "
+            t("What Angstrom Signals provides (the starter Groups, the example Sets and the built-in alerts) sits in a "
             "folded \"Provided by Angstrom Signals\" section at the top of Signal Groups, Signal Sets and Prism "
             "Scan. Switch off to hide those sections and keep only your own. Hiding never "
             "changes anything: your Groups and Sets built from a starter keep working, and built-in alerts that are "
-            "on keep running."
+            "on keep running.")
         ),
     )
     st.divider()
     _ai_settings(settings)
     st.divider()
-    st.markdown("**UI pop-out options**")
+    st.markdown(t("**UI pop-out options**"))
     if "popouts_close_on_logout" not in st.session_state:
         st.session_state.popouts_close_on_logout = bool(settings.get("popouts_close_on_logout", True))
     if "popouts_as_window" not in st.session_state:
@@ -8850,57 +8801,57 @@ with tracked_expander("⚙️ " + t("Settings"), "settings_panel", sidebar=True)
     if "popouts_fold_section" not in st.session_state:
         st.session_state.popouts_fold_section = bool(settings.get("popouts_fold_section", True))
     popouts_as_window = st.checkbox(
-        "Open pop-outs in a new window",
+        t("Open pop-outs in a new window"),
         key="popouts_as_window",
         persist_state="session",
-        help="Off opens them in a new browser tab instead.",
+        help=t("Off opens them in a new browser tab instead."),
     )
     popouts_fold_section = st.checkbox(
-        "Fold a section here when I pop it out",
+        t("Fold a section here when I pop it out"),
         key="popouts_fold_section",
         persist_state="session",
-        help="The section closes on the main page while it is open in its own window.",
+        help=t("The section closes on the main page while it is open in its own window."),
     )
     close_popouts_on_logout = st.checkbox(
-        "Close pop-out tabs when I log out",
+        t("Close pop-out tabs when I log out"),
         key="popouts_close_on_logout",
         persist_state="session",
         help=(
-            "Switch this off to keep your pop-out windows where they are. "
+            t("Switch this off to keep your pop-out windows where they are. "
             "They reconnect when you log in again on the main tab, as long as "
-            "that is within about an hour. Leave it on if other people use this computer."
+            "that is within about an hour. Leave it on if other people use this computer.")
         ),
     )
 
     st.divider()
     with tracked_expander(t("UI Colours"), "colours"):
-        st.caption("Your colours save on this account as you change them. Press a theme's button to try a different colour scheme.")
+        st.caption(t("Your colours save on this account as you change them. Press a theme's button to try a different colour scheme."))
         slot = _saved_colour_slot()
-        st.markdown("**My saved colours**")
+        st.markdown(t("**My saved colours**"))
         if slot:
             st.html(
                 "<div class='theme-pick' style='width:8.5rem;'>" + colour_themes.swatch_html(slot)
                 + "<div class='theme-name'>Saved</div></div>"
             )
         else:
-            st.caption("Nothing saved yet. Press the disk icon to keep these colours.")
+            st.caption(t("Nothing saved yet. Press the disk icon to keep these colours."))
         with st.container(horizontal=True, gap="xsmall", width="content", key="themepick_icons"):
             st.button(
-                ":material/save:", key="colours_save_slot", on_click=_save_colour_slot, width="content",
-                help="Save current: keeps the colours you have now, so you can come back to them after experimenting.",
+                t(":material/save:"), key="colours_save_slot", on_click=_save_colour_slot, width="content",
+                help=t("Save current: keeps the colours you have now, so you can come back to them after experimenting."),
             )
             st.button(
-                ":material/undo:", key="colours_back_slot", on_click=_use_colours, args=(slot or {},),
+                t(":material/undo:"), key="colours_back_slot", on_click=_use_colours, args=(slot or {},),
                 disabled=not slot, width="content",
-                help="Back to saved: puts the pickers back to your saved colours.",
+                help=t("Back to saved: puts the pickers back to your saved colours."),
             )
-            if st.button(":material/restart_alt:", key="reset_colours", width="content",
-                         help="Reset to default: the original Angstrom colours."):
+            if st.button(t(":material/restart_alt:"), key="reset_colours", width="content",
+                         help=t("Reset to default: the original Angstrom colours.")):
                 st.session_state._reset_colours = True
                 save_account_settings({"colours": {key: default for key, default in _THEME_COLOURS}})
                 st.rerun()
-        st.markdown("**Ready-made themes**")
-        st.caption("Press a theme's button to try it. You can still change any colour afterwards, and the undo arrow returns to your saved colours.")
+        st.markdown(t("**Ready-made themes**"))
+        st.caption(t("Press a theme's button to try it. You can still change any colour afterwards, and the undo arrow returns to your saved colours."))
         theme_names = list(colour_themes.THEMES)
         for start in range(0, len(theme_names), 2):
             for column, name in zip(st.columns(2, gap="small"), theme_names[start:start + 2]):
@@ -8909,15 +8860,15 @@ with tracked_expander("⚙️ " + t("Settings"), "settings_panel", sidebar=True)
                     st.button(
                         name, key=f"theme_use_{name.lower().replace(' ', '_')}",
                         on_click=_use_colours, args=(colour_themes.THEMES[name],), use_container_width=True,
-                        help=f"Try the {name} colours",
+                        help=t('Try the {name} colours', name=name),
                     )
-        st.markdown("**Fine tune**")
-        st.caption("Change the colour of individual UI elements. Drag and drop colours to copy them. Save and reset using the icons above.")
+        st.markdown(t("**Fine tune**"))
+        st.caption(t("Change the colour of individual UI elements. Drag and drop colours to copy them. Save and reset using the icons above."))
         widths = [1.5, 1, 1]
         with st.container(key="palette_table", gap=0):
             head = st.columns(widths, gap="xsmall", vertical_alignment="center")
-            head[1].caption("**Day**")
-            head[2].caption("**Night**")
+            head[1].caption(t("**Day**"))
+            head[2].caption(t("**Night**"))
             for label, day_key, night_key in (
                 ("Page", "page_day", "page_night"),
                 ("Section heading", "heading_day", "heading_night"),
@@ -9359,7 +9310,7 @@ def _ago(seconds) -> str:
 
 def _show_overview_status() -> None:
     """What the Quick Snapshot market strip is doing, for when it does not show."""
-    with st.expander("Market overview (status)", expanded=False):
+    with st.expander(t("Market overview (status)"), expanded=False):
         now = time.time()
         saved, own = _OVERVIEW.get("saved"), _OVERVIEW.get("own")
         def line(name, copy):
@@ -9370,11 +9321,11 @@ def _show_overview_status() -> None:
         st.write(line("Saved by the worker", saved))
         st.write(line("Fetched by this server", own))
         if _OVERVIEW.get("busy"):
-            st.write(f"A fetch is running, started {_ago(now - float(_OVERVIEW.get('started') or now))}.")
+            st.write(t('A fetch is running, started {ago_now_float_overview_g}.', ago_now_float_overview_g=_ago(now - float(_OVERVIEW.get('started') or now))))
         elif _OVERVIEW.get("own_at"):
-            st.write(f"Last fetch here finished {_ago(now - float(_OVERVIEW['own_at']))}.")
+            st.write(t('Last fetch here finished {ago_now_float_overview_o}.', ago_now_float_overview_o=_ago(now - float(_OVERVIEW['own_at']))))
         else:
-            st.write("This server has not fetched yet.")
+            st.write(t("This server has not fetched yet."))
         problems = list((own or {}).get("errors") or []) + list((saved or {}).get("errors") or [])
         if _OVERVIEW.get("error"):
             problems.insert(0, _OVERVIEW["error"])
@@ -9384,24 +9335,22 @@ def _show_overview_status() -> None:
 
 def _show_earnings_status() -> None:
     """Whether the earnings date lookups are working. Stocks that were never checked stand out."""
-    with st.expander("Earnings dates (lookup status)", expanded=False):
+    with st.expander(t("Earnings dates (lookup status)"), expanded=False):
         status = load_earnings_status(supabase)
         if status is None:
-            st.caption("The saved earnings dates could not be read.")
+            st.caption(t("The saved earnings dates could not be read."))
             return
         if not status["stocks"]:
-            st.caption("No stocks have been saved yet.")
+            st.caption(t("No stocks have been saved yet."))
             return
         st.write(
-            f"{status['stocks']} stocks: {status['with_date']} with a date, "
-            f"{status['none_known']} with none known, {status['never_checked']} never checked."
+            t('{status_stocks} stocks: {status_with_date} with a date, {status_none_known} with none known, {status_never_checked} never checked.', status_stocks=status['stocks'], status_with_date=status['with_date'], status_none_known=status['none_known'], status_never_checked=status['never_checked'])
         )
         st.write(
-            f"Last check: {_ago(status['newest_check_ago'])}. "
-            f"Oldest check: {_ago(status['oldest_check_ago'])}. A lookup runs about every 12 hours."
+            t('Last check: {ago_status_newest_check_}. Oldest check: {ago_status_oldest_check_}. A lookup runs about every 12 hours.', ago_status_newest_check_=_ago(status['newest_check_ago']), ago_status_oldest_check_=_ago(status['oldest_check_ago']))
         )
         if status["with_date"] == 0 and status["stocks"] >= 3:
-            st.warning("No stock has a date. The lookups may be failing, so check the Finnhub key and the app log.")
+            st.warning(t("No stock has a date. The lookups may be failing, so check the Finnhub key and the app log."))
         st.dataframe(
             [
                 {"Stock": line["ticker"], "Next report": line["next_earnings"] or "-",
@@ -9576,9 +9525,9 @@ def _show_beta() -> None:
     """Beta access requests from the website. Approve to let someone create an account."""
     rows = _admin_rows("admin_beta_requests")
     pending = [r for r in (rows or []) if isinstance(r, dict) and str(r.get("status") or "") == "pending"]
-    with tracked_expander(f"Beta requests ({len(pending)} pending)", "admin_beta"):
+    with tracked_expander(t('Beta requests ({len_pending} pending)', len_pending=len(pending)), "admin_beta"):
         if rows is None:
-            st.caption("Beta access is not ready yet. Run the latest supabase_rls.sql in the Supabase SQL editor.")
+            st.caption(t("Beta access is not ready yet. Run the latest supabase_rls.sql in the Supabase SQL editor."))
             return
         notice = st.session_state.pop("admin_beta_notice", "")
         if notice.startswith("ok\n"):
@@ -9586,9 +9535,9 @@ def _show_beta() -> None:
         elif notice.startswith("warn\n"):
             st.warning(notice[5:])
         st.caption(
-            "Requests arrive from the website form. ✓ approves, which lets that email create an account "
+            t("Requests arrive from the website form. ✓ approves, which lets that email create an account "
             "and sends a welcome email. ✗ declines, or takes approval back. "
-            "People who already have an account keep it either way."
+            "People who already have an account keep it either way.")
         )
         if "admin_beta_open" not in st.session_state:
             try:
@@ -9597,30 +9546,30 @@ def _show_beta() -> None:
                 opened = False
             st.session_state["admin_beta_open"] = opened
         st.toggle(
-            "Open sign-up to everyone (public launch)",
+            t("Open sign-up to everyone (public launch)"),
             key="admin_beta_open",
             on_change=_beta_set_open,
-            help="Off keeps the closed beta. On puts the Sign Up tab back and lets anyone create an account.",
+            help=t("Off keeps the closed beta. On puts the Sign Up tab back and lets anyone create an account."),
         )
         if st.session_state.pop("admin_beta_clear", False):
             st.session_state["admin_beta_email"] = ""
         add = st.columns([4.2, 1.2], vertical_alignment="center")
         add[0].text_input(
-            "Email to approve",
+            t("Email to approve"),
             key="admin_beta_email",
-            placeholder="Approve an email directly: name@example.com",
+            placeholder=t("Approve an email directly: name@example.com"),
             label_visibility="collapsed",
         )
-        add[1].button("Approve email", key="admin_beta_add", on_click=_beta_add)
+        add[1].button(t("Approve email"), key="admin_beta_add", on_click=_beta_add)
         clean_rows = [row for row in rows if isinstance(row, dict)]
         if not clean_rows:
-            st.caption("No requests yet.")
+            st.caption(t("No requests yet."))
             return
-        show_decided = st.toggle("Show decided", key="admin_beta_show_decided")
+        show_decided = st.toggle(t("Show decided"), key="admin_beta_show_decided")
         query = " ".join(str(st.text_input(
-            "Search the requests",
+            t("Search the requests"),
             key="admin_beta_search",
-            placeholder="Search names, emails, tools or reasons",
+            placeholder=t("Search names, emails, tools or reasons"),
             label_visibility="collapsed",
         ) or "").split()).casefold()
         visible = []
@@ -9681,43 +9630,41 @@ def _show_beta() -> None:
                 )
                 if status != "approved":
                     cells[1].button(
-                        "✓", key=f"admin_beta_yes_{request_id}", help="Approve and send the welcome email",
+                        "✓", key=f"admin_beta_yes_{request_id}", help=t("Approve and send the welcome email"),
                         on_click=_beta_review, args=(request_id, "approved", email, name), use_container_width=True,
                     )
                 if status != "declined":
                     cells[2].button(
-                        "✗", key=f"admin_beta_no_{request_id}", help="Decline, or take approval back",
+                        "✗", key=f"admin_beta_no_{request_id}", help=t("Decline, or take approval back"),
                         on_click=_beta_review, args=(request_id, "declined", email, name), use_container_width=True,
                     )
         signed = [r for r in clean_rows if r.get("nda_id")]
-        if current_nda is not None and st.button("👀 Preview the NDA page", key="admin_nda_preview",
-                                                 help="See and try the signing page testers get. Nothing is recorded."):
+        if current_nda is not None and st.button(t("👀 Preview the NDA page"), key="admin_nda_preview",
+                                                 help=t("See and try the signing page testers get. Nothing is recorded.")):
             st.session_state["nda_preview"] = True
             st.rerun()
         if current_nda is not None and not current_nda["enforce"]:
-            st.caption(f"✍️ NDA version {current_nda['version']} is set up but switched off: testers are not asked to "
-                       "sign yet.")
+            st.caption(t('✍️ NDA version {current_nda_version} is set up but switched off: testers are not asked to sign yet.', current_nda_version=current_nda['version']))
         elif current_nda is not None:
-            st.caption(f"✍️ NDA version {current_nda['version']}: {sum(1 for r in signed if r.get('nda_version') == current_nda['version'])} signed. "
-                       "Testers sign at their first sign-in after approval; a signed copy is emailed to them and to admins.")
+            st.caption(t('✍️ NDA version {current_nda_version}: {sum_1_for_r_in_signed_if} signed. Testers sign at their first sign-in after approval; a signed copy is emailed to them and to admins.', current_nda_version=current_nda['version'], sum_1_for_r_in_signed_if=sum(1 for r in signed if r.get('nda_version') == current_nda['version'])))
         if signed:
             pick = st.selectbox(
-                "Signed NDA copy",
+                t("Signed NDA copy"),
                 [int(r["nda_id"]) for r in signed],
                 format_func=lambda i: next(f"{r.get('name')} · {r.get('email')} · v{r.get('nda_version')} · {str(r.get('nda_signed_at'))[:10]}"
                                            for r in signed if int(r["nda_id"]) == i),
                 key="admin_nda_pick",
             )
-            if st.button("📄 Get the signed copy", key="admin_nda_get"):
+            if st.button(t("📄 Get the signed copy"), key="admin_nda_get"):
                 try:
                     copy = supabase.rpc("admin_nda_copy", {"p_id": pick}).execute().data or {}
                     st.session_state["admin_nda_copy"] = (pick, base64.b64decode(copy.get("pdf") or ""),
                                                           f"NDA-signed-{copy.get('email', 'tester')}-v{copy.get('nda_version')}.pdf")
                 except Exception as exc:
-                    st.warning(f"The copy could not be read: {str(exc)[:120]}")
+                    st.warning(t('The copy could not be read: {str_exc_120}', str_exc_120=str(exc)[:120]))
             held = st.session_state.get("admin_nda_copy")
             if held and held[0] == pick and held[1]:
-                st.download_button("⬇️ Download", held[1], file_name=held[2], mime="application/pdf", key="admin_nda_dl")
+                st.download_button(t("⬇️ Download"), held[1], file_name=held[2], mime="application/pdf", key="admin_nda_dl")
 
 
 def _feedback_username(row: dict) -> str:
@@ -9773,19 +9720,19 @@ def _feedback_sort_value(row: dict, key: str) -> str:
 def _show_feedback(rows) -> None:
     clean = [row for row in rows if isinstance(row, dict)]
     if not clean:
-        st.caption("No feedback yet.")
+        st.caption(t("No feedback yet."))
         return
     notice = st.session_state.pop("admin_feedback_notice", "")
     if notice:
         st.warning(notice)
     tools = st.columns([4.2, 1.2], vertical_alignment="center")
     query = " ".join(str(tools[0].text_input(
-        "Search feedback",
+        t("Search feedback"),
         key="admin_feedback_search",
-        placeholder="Search feedback",
+        placeholder=t("Search feedback"),
         label_visibility="collapsed",
     ) or "").split()).casefold()
-    show_closed = tools[1].checkbox("Show closed", key="admin_feedback_show_closed")
+    show_closed = tools[1].checkbox(t("Show closed"), key="admin_feedback_show_closed")
     visible = []
     for row in clean:
         status = str(row.get("status") or "")
@@ -9829,7 +9776,7 @@ def _show_feedback(rows) -> None:
                 if column.button(
                     title + mark,
                     key=f"admin_feedback_sort_{key}",
-                    help=f"Sort by {title}",
+                    help=t('Sort by {title}', title=title),
                     type="tertiary",
                     width="stretch",
                 ):
@@ -9875,7 +9822,7 @@ def _show_feedback(rows) -> None:
             elif st.session_state.get(choice_key) not in options:
                 st.session_state[choice_key] = status
             picked = cells[5].selectbox(
-                "Status",
+                t("Status"),
                 options,
                 format_func=lambda value: _FEEDBACK_STATUS.get(value, value),
                 key=choice_key,
@@ -9887,16 +9834,16 @@ def _show_feedback(rows) -> None:
             reason = ""
             if picked == "rejected":
                 reason = cells[5].text_input(
-                    "Rejection reason",
+                    t("Rejection reason"),
                     key=f"admin_feedback_reason_{item_id}",
                     max_chars=500,
-                    placeholder="Rejection reason",
+                    placeholder=t("Rejection reason"),
                     label_visibility="collapsed",
                 )
-                if not cells[5].button("Save rejection", key=f"admin_feedback_reject_{item_id}"):
+                if not cells[5].button(t("Save rejection"), key=f"admin_feedback_reject_{item_id}"):
                     continue
                 if len(" ".join(str(reason).split())) < 4:
-                    cells[5].caption("Write a short reason first.")
+                    cells[5].caption(t("Write a short reason first."))
                     continue
             problem = _admin_review("review_feedback", {
                 "note_id": item_id,
@@ -9956,11 +9903,11 @@ def _show_blacklist() -> None:
     """Add, search, and remove barred emails. Only the admin panel calls this."""
     rows = _admin_rows("admin_blacklist")
     with tracked_expander(
-        f"Blacklist ({len(rows) if rows is not None else 0})",
+        t('Blacklist ({len_rows_if_rows_is_not_})', len_rows_if_rows_is_not_=len(rows) if rows is not None else 0),
         "admin_blacklist",
     ):
         if rows is None:
-            st.caption("The blacklist is not ready yet. Run the latest supabase_rls.sql in the Supabase SQL editor.")
+            st.caption(t("The blacklist is not ready yet. Run the latest supabase_rls.sql in the Supabase SQL editor."))
             return
         notice = st.session_state.pop("admin_blacklist_notice", "")
         if notice.startswith("ok\n"):
@@ -9968,29 +9915,29 @@ def _show_blacklist() -> None:
         elif notice.startswith("warn\n"):
             st.warning(notice[5:])
         st.caption(
-            "Click a column title to sort. The list scrolls inside this section once it is long. "
+            t("Click a column title to sort. The list scrolls inside this section once it is long. "
             "Search filters the rows. A barred email cannot log in or sign up. "
             "An open session is closed, and that address is emailed. "
-            "The × removes an email and lets that person log in again."
+            "The × removes an email and lets that person log in again.")
         )
         if st.session_state.pop("admin_blacklist_clear", False):
             st.session_state["admin_blacklist_email"] = ""
         add = st.columns([4.2, 1.2], vertical_alignment="center")
         add[0].text_input(
-            "Email to bar",
+            t("Email to bar"),
             key="admin_blacklist_email",
-            placeholder="name@example.com",
+            placeholder=t("name@example.com"),
             label_visibility="collapsed",
         )
-        add[1].button("Add to blacklist", key="admin_blacklist_add", on_click=_blacklist_add)
+        add[1].button(t("Add to blacklist"), key="admin_blacklist_add", on_click=_blacklist_add)
         clean_rows = [row for row in rows if isinstance(row, dict)]
         if not clean_rows:
-            st.caption("No barred emails.")
+            st.caption(t("No barred emails."))
             return
         query = " ".join(str(st.text_input(
-            "Search the blacklist",
+            t("Search the blacklist"),
             key="admin_blacklist_search",
-            placeholder="Search emails",
+            placeholder=t("Search emails"),
             label_visibility="collapsed",
         ) or "").split()).casefold()
         visible = [
@@ -9998,7 +9945,7 @@ def _show_blacklist() -> None:
             if not query or query in str(row.get("email") or "").casefold()
         ]
         if not visible:
-            st.caption("No email matches that search.")
+            st.caption(t("No email matches that search."))
             return
         sort_key = st.session_state.get("admin_blacklist_sort", "date")
         sort_desc = bool(st.session_state.get("admin_blacklist_sort_desc", True))
@@ -10016,7 +9963,7 @@ def _show_blacklist() -> None:
                     if column.button(
                         title + mark,
                         key=f"admin_blacklist_sort_{key}",
-                        help=f"Sort by {title}",
+                        help=t('Sort by {title}', title=title),
                         type="tertiary",
                         width="stretch",
                     ):
@@ -10043,7 +9990,7 @@ def _show_blacklist() -> None:
                 cells[2].button(
                     "×",
                     key=f"admin_blacklist_remove_{email}",
-                    help="Remove from the blacklist",
+                    help=t("Remove from the blacklist"),
                     on_click=_blacklist_remove,
                     args=(email,),
                 )
@@ -10087,19 +10034,19 @@ def _report_sort_value(row: dict, key: str) -> str:
 def _show_reports(rows) -> None:
     clean = [row for row in rows if isinstance(row, dict)]
     if not clean:
-        st.caption("No reports yet.")
+        st.caption(t("No reports yet."))
         return
     notice = st.session_state.pop("admin_report_notice", "")
     if notice:
         st.warning(notice)
     tools = st.columns([4.2, 1.3], vertical_alignment="center")
     query = " ".join(str(tools[0].text_input(
-        "Search reports",
+        t("Search reports"),
         key="admin_reports_search",
-        placeholder="Search reports",
+        placeholder=t("Search reports"),
         label_visibility="collapsed",
     ) or "").split()).casefold()
-    show_decided = tools[1].checkbox("Show decided", key="admin_reports_show_decided")
+    show_decided = tools[1].checkbox(t("Show decided"), key="admin_reports_show_decided")
     visible = []
     for row in clean:
         status = str(row.get("status") or "")
@@ -10146,7 +10093,7 @@ def _show_reports(rows) -> None:
                 if column.button(
                     title + mark,
                     key=f"admin_reports_sort_{key}",
-                    help=f"Sort by {title}",
+                    help=t('Sort by {title}', title=title),
                     type="tertiary",
                     width="stretch",
                 ):
@@ -10211,7 +10158,7 @@ def _show_reports(rows) -> None:
             elif st.session_state.get(choice_key) not in options:
                 st.session_state[choice_key] = status
             picked = cells[5].selectbox(
-                "Status",
+                t("Status"),
                 options,
                 format_func=lambda value: _REPORT_STATUS.get(value, value),
                 key=choice_key,
@@ -10221,7 +10168,7 @@ def _show_reports(rows) -> None:
             if picked == status:
                 continue
             if picked == "upheld" and not cells[5].button(
-                "Remove comment",
+                t("Remove comment"),
                 key=f"admin_report_uphold_{item_id}",
             ):
                 continue
@@ -10264,21 +10211,21 @@ def feedback_form() -> None:
     """Issue or enhancement. Choosing one redraws this form, not the page."""
     if st.session_state.pop("feedback_clear", False):
         st.session_state["feedback_body"] = ""
-    st.caption("An issue or an idea. It is stored as submitted, with your account and the date.")
+    st.caption(t("An issue or an idea. It is stored as submitted, with your account and the date."))
     feedback_kind = st.radio(
-        "Type",
+        t("Type"),
         ["Issue", "Enhancement"],
         horizontal=True,
         key="feedback_kind",
     )
     feedback_body = st.text_area(
-        "Details",
+        t("Details"),
         max_chars=4000,
         height=120,
         key="feedback_body",
-        placeholder="What happened, or what would you like?",
+        placeholder=t("What happened, or what would you like?"),
     )
-    if st.button("Submit", key="feedback_submit", use_container_width=True):
+    if st.button(t("Submit"), key="feedback_submit", use_container_width=True):
         st.session_state.feedback_notice = _store_feedback(
             "enhancement" if feedback_kind == "Enhancement" else "issue",
             feedback_body,
@@ -10300,84 +10247,84 @@ with tracked_expander("📝 " + t("Feedback"), "feedback", sidebar=True):
 
 with tracked_expander("ℹ️ " + t("About"), "about", sidebar=True):
     st.markdown(_brand_mark(72), unsafe_allow_html=True)
-    st.markdown("**angstrom signals**")
-    st.caption("Market sentiment and technical signals, with the crowd alongside.")
+    st.markdown(t("**angstrom signals**"))
+    st.caption(t("Market sentiment and technical signals, with the crowd alongside."))
     st.markdown(
-        "Angstrom Signals is a platform for traders who want aggregated signals "
+        t("Angstrom Signals is a platform for traders who want aggregated signals "
         "for whole markets and for individual assets. Technical scores and market "
         "sentiment sit together and update as conditions change. A real-time social "
-        "stream lets the crowd react alongside those signals."
+        "stream lets the crowd react alongside those signals.")
     )
     st.markdown(
-        "General: [info@angstromsignals.com](mailto:info@angstromsignals.com)  \n"
+        t("General: [info@angstromsignals.com](mailto:info@angstromsignals.com)  \n"
         "Support: [support@angstromsignals.com](mailto:support@angstromsignals.com)  \n"
-        "Investors: [investors@angstromsignals.com](mailto:investors@angstromsignals.com)"
+        "Investors: [investors@angstromsignals.com](mailto:investors@angstromsignals.com)")
     )
     with tracked_expander(t("Socials policy"), "socials_policy"):
         st.markdown(
-            "The social signals stream and the general chat are for reacting to the signals on this page."
+            t("The social signals stream and the general chat are for reacting to the signals on this page.")
         )
         st.markdown(
-            "Nothing on this site is financial advice. A comment, a reply, a thumb, or a crowd score "
-            "is one person's reaction. It is not a recommendation to buy, sell, or hold any asset."
+            t("Nothing on this site is financial advice. A comment, a reply, a thumb, or a crowd score "
+            "is one person's reaction. It is not a recommendation to buy, sell, or hold any asset.")
         )
         st.markdown(
-            "Do not promote an asset. That includes telling people to buy or sell, posting a tip or a "
-            "referral link, or pushing a coin or ticker the note is not answering."
+            t("Do not promote an asset. That includes telling people to buy or sell, posting a tip or a "
+            "referral link, or pushing a coin or ticker the note is not answering.")
         )
         st.markdown(
-            "Be civil. No harassment, threats, or personal attacks. No spam, and no posting the same note over and over."
+            t("Be civil. No harassment, threats, or personal attacks. No spam, and no posting the same note over and over.")
         )
         st.markdown(
-            "Use the flag on a comment that breaks these rules. The form opens at the top of the social panel. "
+            t("Use the flag on a comment that breaks these rules. The form opens at the top of the social panel. "
             "It is emailed to [report@angstromsignals.com](mailto:report@angstromsignals.com) "
-            "and is not shown to the crowd. A comment that breaks these rules can be removed."
+            "and is not shown to the crowd. A comment that breaks these rules can be removed.")
         )
     with tracked_expander(t("Terms"), "terms"):
-        st.markdown("Last updated 26 October 2026.")
+        st.markdown(t("Last updated 26 October 2026."))
         st.markdown(
-            "Using Angstrom Signals means you accept these terms and the socials policy above. "
-            "If you do not accept them, do not use the site."
+            t("Using Angstrom Signals means you accept these terms and the socials policy above. "
+            "If you do not accept them, do not use the site.")
         )
         st.markdown(
-            "The site is a research tool. Scores, sentiment, alerts, and comments are information "
+            t("The site is a research tool. Scores, sentiment, alerts, and comments are information "
             "for you to read. They are not financial advice, not a recommendation to buy, sell, or hold, "
-            "and not an offer from us. We do not hold your money or place trades for you."
+            "and not an offer from us. We do not hold your money or place trades for you.")
         )
         st.markdown(
-            "Figures can be late, missing, or wrong. A past score is not a promise of what happens next. "
-            "You decide what to do with your own money, and you carry that risk."
+            t("Figures can be late, missing, or wrong. A past score is not a promise of what happens next. "
+            "You decide what to do with your own money, and you carry that risk.")
         )
         st.markdown(
-            "Keep your sign-in to yourself. You are responsible for what is posted from your account. "
+            t("Keep your sign-in to yourself. You are responsible for what is posted from your account. "
             "We can remove a comment that breaks the socials policy, and we can close an account that "
-            "breaks these terms or is barred."
+            "breaks these terms or is barred.")
         )
         st.markdown(
-            "The site can change, pause, or stop. These terms can change too. The date above is the version "
-            "on the site. Questions go to [info@angstromsignals.com](mailto:info@angstromsignals.com)."
+            t("The site can change, pause, or stop. These terms can change too. The date above is the version "
+            "on the site. Questions go to [info@angstromsignals.com](mailto:info@angstromsignals.com).")
         )
     with tracked_expander(t("Privacy"), "privacy"):
-        st.markdown("Last updated 26 October 2026.")
+        st.markdown(t("Last updated 26 October 2026."))
         st.markdown(
-            "We keep the details needed to run your account. That is your email, and if you sign in with "
+            t("We keep the details needed to run your account. That is your email, and if you sign in with "
             "Google, the name and email Google shares for that sign-in. A password is stored by the sign-in "
-            "service, not on this page."
+            "service, not on this page.")
         )
         st.markdown(
-            "We also keep what you add: display name, bio, picture, watchlists, colours, and other "
+            t("We also keep what you add: display name, bio, picture, watchlists, colours, and other "
             "settings. Comments, chat, replies, favourites, communities, feedback, and reports of comments are "
-            "stored with your account. If you turn alerts on, we store those alerts and email the ones you asked for."
+            "stored with your account. If you turn alerts on, we store those alerts and email the ones you asked for.")
         )
         st.markdown(
-            "The account and the page are stored with Supabase. Mail is sent with Resend. Google is used only "
+            t("The account and the page are stored with Supabase. Mail is sent with Resend. Google is used only "
             "if you choose that sign-in. Market prices and sentiment come from data providers and are not your "
-            "personal details. A short-lived cookie is used to finish a Google sign-in. If you tick Keep me signed in, one more cookie holds your sign-in on that device for up to 30 days, and logging out removes it. A small cookie also remembers whether you ticked the box, for up to a year, and holds no sign-in details. We do not sell personal information."
+            "personal details. A short-lived cookie is used to finish a Google sign-in. If you tick Keep me signed in, one more cookie holds your sign-in on that device for up to 30 days, and logging out removes it. A small cookie also remembers whether you ticked the box, for up to a year, and holds no sign-in details. We do not sell personal information.")
         )
         st.markdown(
-            "Email [support@angstromsignals.com](mailto:support@angstromsignals.com) to ask what we hold, "
+            t("Email [support@angstromsignals.com](mailto:support@angstromsignals.com) to ask what we hold, "
             "to correct it, or to close the account. Reports of comments go to "
-            "[report@angstromsignals.com](mailto:report@angstromsignals.com)."
+            "[report@angstromsignals.com](mailto:report@angstromsignals.com).")
         )
 
 
@@ -10706,14 +10653,14 @@ def _render_why_panel(asset_type: str, asset_key: str, result: dict, column_spec
 
     frame, err = _stored_bars(asset_type, asset_key, signals_v2.SCORING_BARS)
     if err or frame is None or frame.empty:
-        st.caption("No stored daily bars for this asset yet.")
+        st.caption(t("No stored daily bars for this asset yet."))
         return
     stamp = (len(frame), str(frame.index[-1]), float(frame["close"].iloc[-1]))
     try:
         items = _why_items(asset_type, str(asset_key), table_columns.fingerprint(column_specs), stamp, frame,
                            column_specs, result.get("readings") or {})
     except Exception as exc:
-        st.caption(f"Could not work these out: {str(exc)[:160]}")
+        st.caption(t('Could not work these out: {str_exc_160}', str_exc_160=str(exc)[:160]))
         return
     akey = f"{'crypto' if asset_type == 'Crypto' else 'equity'}:{asset_key if asset_type == 'Crypto' else str(asset_key).upper()}"
     by_key = {s["key"]: s for s in column_specs}
@@ -10726,8 +10673,8 @@ def _render_why_panel(asset_type: str, asset_key: str, result: dict, column_spec
             item = why_panel.background_item(spec, (intraday or {}).get((column_answers.def_hash(spec["doc"]), akey)))
         with st.expander(item["title"], expanded=item["key"] == focus, key=f"why_{item['key']}_{token}"):
             st.html(why_panel.block_html(item))
-            if st.button("Open in Lattice", icon=":material/hub:", type="tertiary", key=f"why_open_{item['key']}",
-                         help=f"See or change how {item['name']} is built, in Angstrom Lattice"):
+            if st.button(t("Open in Lattice"), icon=":material/hub:", type="tertiary", key=f"why_open_{item['key']}",
+                         help=t('See or change how {item_name} is built, in Angstrom Lattice', item_name=item['name'])):
                 _open_in_lattice(item["lattice"])
                 st.rerun()
 
@@ -10774,16 +10721,16 @@ def _column_order(key: str, names: dict, word: str) -> None:
     chosen = [k for k in st.session_state.get(key) or [] if k in names]
     if len(chosen) < 2:
         return
-    st.caption(f"{word} in table order, left to right:")
+    st.caption(t('{word} in table order, left to right:', word=word))
     for i, k in enumerate(chosen):
         # A horizontal container keeps the arrows beside the name on a phone (columns would stack).
         box = st.container(horizontal=True, vertical_alignment="center", gap="small")
         row = [box, box, box]
         row[0].markdown(f"{i + 1}. {names[k]}", width="stretch")
         row[1].button("", icon=":material/arrow_upward:", key=f"{key}_up_{k}", disabled=i == 0, type="tertiary",
-                      help="Move left in the table", on_click=_move_column, args=(key, i, -1))
+                      help=t("Move left in the table"), on_click=_move_column, args=(key, i, -1))
         row[2].button("", icon=":material/arrow_downward:", key=f"{key}_down_{k}", disabled=i == len(chosen) - 1,
-                      type="tertiary", help="Move right in the table", on_click=_move_column, args=(key, i, 1))
+                      type="tertiary", help=t("Move right in the table"), on_click=_move_column, args=(key, i, 1))
 
 
 def _choose_columns_dialog():
@@ -10797,22 +10744,22 @@ def _choose_columns_dialog():
         cached = (time.time(), *gi.saved_configs(supabase))
         st.session_state["siggroups_saved"] = cached
     group_opts, set_opts = table_columns.options(cached[1], str(user_id))
-    st.caption("Pick the readings each watchlist table shows; change their order with ↑ ↓ under the lists. Groups show their score "
+    st.caption(t("Pick the readings each watchlist table shows; change their order with ↑ ↓ under the lists. Groups show their score "
                "or label; Sets show ✓ Yes, ✕ No or ? Unknown. Daily ones work out on the latest finished daily bar; ones that read 4-hour or "
                "hourly candles are worked out in the background at each close and show ⏳ if a close has passed "
-               "since. Fold either section sideways with ◂ in its first column title.")
-    groups = st.multiselect("Signal Groups", list(group_opts), default=[k for k in now["groups"] if k in group_opts],
+               "since. Fold either section sideways with ◂ in its first column title."))
+    groups = st.multiselect(t("Signal Groups"), list(group_opts), default=[k for k in now["groups"] if k in group_opts],
                             format_func=group_opts.get, max_selections=table_columns.MAX_EACH, key="tc_groups")
-    sets = st.multiselect("Signal Sets", list(set_opts), default=[k for k in now["sets"] if k in set_opts],
+    sets = st.multiselect(t("Signal Sets"), list(set_opts), default=[k for k in now["sets"] if k in set_opts],
                           format_func=set_opts.get, max_selections=table_columns.MAX_EACH, key="tc_sets",
                           placeholder="Your Sets with a decision" if set_opts else "No Sets with a decision yet")
     _column_order("tc_groups", group_opts, "Groups")
     _column_order("tc_sets", set_opts, "Sets")
     cols = st.columns(2)
-    if cols[0].button("Save", type="primary", icon=":material/check:", key="tc_save", width="stretch"):
+    if cols[0].button(t("Save"), type="primary", icon=":material/check:", key="tc_save", width="stretch"):
         save_account_settings({"table_columns": {"groups": groups, "sets": sets}})
         st.rerun()
-    if cols[1].button("Back to Trend, Stretch and Flow", key="tc_default", width="stretch"):
+    if cols[1].button(t("Back to Trend, Stretch and Flow"), key="tc_default", width="stretch"):
         save_account_settings({"table_columns": dict(table_columns.DEFAULT)})
         st.rerun()
 
@@ -11247,7 +11194,7 @@ def _stored_bars(kind: str, asset_id: str, days: int):
         result = (pd.DataFrame(), "Shared prices are not ready yet.")
         run[token] = result
         return result
-    with st.spinner(f"Saving shared prices for {asset_id}..."):
+    with st.spinner(t('Saving shared prices for {asset_id}...', asset_id=asset_id)):
         frame, err, saved = create_price_row(supabase, kind, asset_id, days)
     if err or frame is None or getattr(frame, "empty", True):
         st.session_state[flag] = True
@@ -11876,7 +11823,7 @@ def _open_funnel_table(fid: str) -> None:
     user = st.session_state.get("user")
     f = next((x for x in (fv.load_funnels(supabase, user.id) if user else []) if str(x["id"]) == str(fid)), None)
     if f is None:
-        st.toast("That funnel was deleted.")
+        st.toast(t("That funnel was deleted."))
         return
     market = f.get("market") or "crypto"
     st.session_state["_funnel_open"] = {"market": market, "id": f["id"]}
@@ -11916,10 +11863,8 @@ def _funnel_controls(dyn, market: str = "crypto") -> None:
     if st.session_state.get("user") is None:
         return
     mode_key, pick_key, stage_key, setting, words = _FUNNEL_KEYS[market]
-    mode = st.radio(f"{market} table", fv.MODES, key=mode_key, horizontal=True, label_visibility="collapsed",
-                    help=f"My Watchlist: the {words['coins']} you picked. Dynamic funnel: the {words['coins']} a "
-                         f"funnel has narrowed down from {words['pool']}, stage by stage. Your choice is saved on "
-                         "your account.")
+    mode = st.radio(t('{market} table', market=market), fv.MODES, key=mode_key, horizontal=True, label_visibility="collapsed",
+                    help=t('My Watchlist: the {words_coins} you picked. Dynamic funnel: the {words_coins} a funnel has narrowed down from {words_pool}, stage by stage. Your choice is saved on your account.', words_coins=words['coins'], words_pool=words['pool']))
     remember = {setting: fv.MODE_CODES.get(mode, "watchlist")}
     if dyn is not None and dyn.get("funnel"):
         remember.update({pick_key: st.session_state.get(pick_key), stage_key: st.session_state.get(stage_key)})
@@ -11935,12 +11880,11 @@ def _funnel_controls(dyn, market: str = "crypto") -> None:
     stages_words = ("Daily trend, daily WaveTrend turn, 12-hour and 4-hour" if market == "crypto"
                     else "Weekly, daily and 4-hour")
     if not dyn["funnels"]:
-        st.caption(f"🔻 A funnel narrows {words['pool']} down in stages, to the 1-hour, and keeps the list up to "
-                   "date by itself. Make your own copy of a provided one (you can change it later in Lattice → Funnels):")
+        st.caption(t('🔻 A funnel narrows {words_pool} down in stages, to the 1-hour, and keeps the list up to date by itself. Make your own copy of a provided one (you can change it later in Lattice → Funnels):', words_pool=words['pool']))
         a, b = st.columns(2)
         for col, direction in ((a, "long"), (b, "short")):
             tpl = ft.trend_funnel(direction, market)
-            if col.button(f"Make my own copy of “{tpl['name']}”", key=f"funnel_new_{market}_{direction}",
+            if col.button(t('Make my own copy of “{tpl_name}”', tpl_name=tpl['name']), key=f"funnel_new_{market}_{direction}",
                           use_container_width=True,
                           help=f"{stages_words}: EMA 20 " + ("above" if direction == "long" else "below")
                                + " EMA 50. Then the 1-hour pullback entry check (from Drew's script)."):
@@ -11953,23 +11897,21 @@ def _funnel_controls(dyn, market: str = "crypto") -> None:
     chip = next((c for r in dyn.get("rows") or [] if r["id"] == f["id"] for c in r["chips"] if c["key"] == stage), None)
     row = st.container(horizontal=True, vertical_alignment="center", gap="small")
     with row:
-        st.markdown(f"<span style='opacity:.8'>Showing:</span> **{fv.fn.DIRECTION_ICONS[f['direction']]} "
-                    f"{html.escape(f['name'])}** · {chip['icon'] + ' ' + chip['label'] if chip else stage} "
-                    f"({dyn.get('count', len(dyn['watchlist']))})", unsafe_allow_html=True)
+        st.markdown(t("<span style='opacity:.8'>Showing:</span> **{fv_fn_direction_icons_f_} {html_escape_f_name}** · {chip_icon_chip_label_if_} ({dyn_get_count_len_dyn_wa})", fv_fn_direction_icons_f_=fv.fn.DIRECTION_ICONS[f['direction']], html_escape_f_name=html.escape(f['name']), chip_icon_chip_label_if_=chip['icon'] + ' ' + chip['label'] if chip else stage, dyn_get_count_len_dyn_wa=dyn.get('count', len(dyn['watchlist']))), unsafe_allow_html=True)
         _funnel_chart(dyn, market, labels, part="button")
         latest = ft.trend_funnel(f["direction"], market)
         made_from = [(x.get("set_source") or {}).get("provided") for x in f["stages"]]
         if all(str(k or "").startswith("demo:") for k in made_from) and made_from != [
                 x["set_source"]["provided"] for x in latest["stages"]]:
             if st.button("", icon=":material/upgrade:", key=f"funnel_update_{market}",
-                         help="Update to the latest ready-made version: this funnel came from a ready-made one that "
-                              "has changed since. Every asset starts again from the pool, quietly."):
+                         help=t("Update to the latest ready-made version: this funnel came from a ready-made one that "
+                              "has changed since. Every asset starts again from the pool, quietly.")):
                 args = {"p_id": f["id"], "p_name": f["name"], "p_direction": f["direction"],
                         "p_stages": latest["stages"], "p_flicker": f.get("flicker", True),
                         "p_alerts": f.get("alerts") or {"in_app": True, "email": False}, "p_paused": False}
                 _funnel_call(market, f["id"], "funnel_save", args, "Updated.")
         if st.button("", icon=":material/add:", key=f"funnel_add_{market}",
-                     help="Add a funnel: make your own copy of a provided one, or a new one, in Lattice → Funnels"):
+                     help=t("Add a funnel: make your own copy of a provided one, or a new one, in Lattice → Funnels")):
             _funnel_edit(f"new:{market}:" + ("short" if f["direction"] == "long" else "long"))
     flicker = (f"a {words['coin']} leaves a stage after two No closes in a row" if f.get("flicker", True) else
                f"a {words['coin']} leaves a stage on its first No close")
@@ -11981,7 +11923,7 @@ def _funnel_controls(dyn, market: str = "crypto") -> None:
     if dyn.get("health"):
         st.caption(dyn["health"])
     if not dyn["states"]:
-        st.caption(f"⏳ Not checked yet: the funnel runs {when}.")
+        st.caption(t('⏳ Not checked yet: the funnel runs {when}.', when=when))
     _funnel_chart(dyn, market, labels)
 
 
@@ -11990,7 +11932,7 @@ def _funnel_call(market: str, fid, fn_name: str, args: dict, done: str) -> None:
     try:
         supabase.rpc(fn_name, args).execute()
     except Exception as exc:
-        st.toast(f"That didn't work: {str(exc)[:160]}")
+        st.toast(t("That didn't work: {str_exc_160}", str_exc_160=str(exc)[:160]))
         return
     st.session_state[f"_funnels_reread_{market}"] = True
     st.session_state.get("_memo", {}).pop("snapshot_funnels", None)
@@ -12078,7 +12020,7 @@ def _funnel_chart(dyn, market: str, labels: dict, part: str = "view") -> None:
             if st.button(label, icon=":material/candlestick_chart:", key=f"funnel_hist_open_{market}", help=hover):
                 st.session_state[f"{state_key}_asked"] = {"funnel": f["id"], "stage": stage}
                 st.rerun()
-        elif st.button(f"Close the chart of {noun}", icon=":material/close:", key=f"funnel_hist_close_{market}"):
+        elif st.button(t('Close the chart of {noun}', noun=noun), icon=":material/close:", key=f"funnel_hist_close_{market}"):
             st.session_state.pop(state_key, None)
             st.session_state.pop(f"{state_key}_asked", None)
             st.rerun()
@@ -12204,7 +12146,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                 )
                 st.markdown(strip, unsafe_allow_html=True)
             elif trade_crypto or trade_equities:
-                st.caption("🌍 Market overview is loading. It appears on the next update.")
+                st.caption(t("🌍 Market overview is loading. It appears on the next update."))
         # Market cap still uses a short cache. Prices and sentiment come from the shared rows.
         nonce = st.session_state.data_nonce
 
@@ -12602,8 +12544,8 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                         ),
                     )
 
-        st.caption("Click an asset to open it on the chart, a funnel to open its table, or the Tides line for "
-                   "the macro picture.")
+        st.caption(t("Click an asset to open it on the chart, a funnel to open its table, or the Tides line for "
+                   "the macro picture."))
 
     show_tides()                        # overview content: directly under Quick Snapshot, in both layouts
     if not wide_layout:
@@ -12678,7 +12620,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                            if dynamic is not None else "This watchlist is empty.")
                 return
             frame = pd.DataFrame(results).sort_values("trend", ascending=False, na_position="last")
-            st.caption("Click a column title to sort. The table starts with the strongest Trend at the top. Click a name to show that asset on the chart. 📈 Trend, 🎯 Stretch and 🔊 Flow each run from -100 to +100 (positive means up); they describe the market and are not forecasts. Hover one to read it, and click it to open the breakdown. Click the sentiment score, the thumbs, or the crowd average to open its headlines. Watching is how many accounts hold that asset. The Crowd box is the average of personal scores. Hover the down thumb for the spread. A comment balloon, or the arrow on the right edge, opens the social signals and chat. The 30-day trend uses the same colors as 30d %.")
+            st.caption(t("Click a column title to sort. The table starts with the strongest Trend at the top. Click a name to show that asset on the chart. 📈 Trend, 🎯 Stretch and 🔊 Flow each run from -100 to +100 (positive means up); they describe the market and are not forecasts. Hover one to read it, and click it to open the breakdown. Click the sentiment score, the thumbs, or the crowd average to open its headlines. Watching is how many accounts hold that asset. The Crowd box is the average of personal scores. Hover the down thumb for the spread. A comment balloon, or the arrow on the right edge, opens the social signals and chat. The 30-day trend uses the same colors as 30d %."))
 
             # Columns in order, as (title, cells it takes, extra header attributes). The reading columns come from
             # the account's choice (table_columns.py): a Groups section, then a Sets section, each folding sideways.
@@ -13087,7 +13029,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             if len(allowed_kinds) > 1:
                 col1, col2 = st.columns([1, 3])
                 with col1:
-                    asset_type = st.selectbox("Type", allowed_kinds, key="asset_type")
+                    asset_type = st.selectbox(t("Type"), allowed_kinds, key="asset_type")
                 asset_box = col2
             else:
                 asset_type = allowed_kinds[0]
@@ -13100,14 +13042,14 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                     st.session_state[asset_state_key] = options[0]
                 if options:
                     asset_key = st.selectbox(
-                        "Asset",
+                        t("Asset"),
                         options,
                         format_func=lambda item: watchlist[item] if asset_type == "Crypto" else f"{watchlist[item]} ({item})",
                         key=asset_state_key,
                     )
                 else:
                     asset_key = None
-                    st.caption("This watchlist is empty.")
+                    st.caption(t("This watchlist is empty."))
 
             wanted = (asset_type, asset_key)
             pick_now = st.session_state.get("chart_pick")
@@ -13135,7 +13077,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                 st.session_state.pop("_chart_sync_hold", None)
 
             if not asset_key:
-                st.info("Add an asset to this watchlist to see a chart.")
+                st.info(t("Add an asset to this watchlist to see a chart."))
                 st.session_state.pop("_chart_from_row", None)
                 st.session_state.pop("_chart_row_quiet", None)
                 return
@@ -13165,7 +13107,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                     if not chart_candles.availability(tv_interval, tv_range)[0]:
                         suggestion = chart_candles.nearest_range(tv_interval, tv_range)
                         st.button(
-                            f"Show {chart_data.RANGE_LABELS[suggestion]} instead", key="chart_range_fix",
+                            t('Show {chart_data_range_labels_} instead', chart_data_range_labels_=chart_data.RANGE_LABELS[suggestion]), key="chart_range_fix",
                             on_click=_set_chart_range, args=(suggestion,),
                         )
                 else:
@@ -13218,7 +13160,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             if indicator_keys:
                 if hasattr(st, "pills"):
                     chosen_indicators = st.pills(
-                        "Chart indicators",
+                        t("Chart indicators"),
                         indicator_keys,
                         selection_mode="multi",
                         format_func=_indicator_label,
@@ -13227,7 +13169,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                     ) or []
                 else:
                     chosen_indicators = st.multiselect(
-                        "Chart indicators",
+                        t("Chart indicators"),
                         indicator_keys,
                         format_func=_indicator_label,
                         key="chart_indicators",
@@ -13241,14 +13183,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                     quote=True,
                 )
                 st.markdown(
-                    f"<a href='{html.escape(heatmap_url, quote=True)}' target='_blank' rel='noopener' "
-                    f"title='{tip}' style='display:inline-flex;align-items:center;gap:5px;"
-                    "font-size:0.9rem;text-decoration:none;'>"
-                    "CoinGlass liquidation heatmap"
-                    "<svg viewBox='0 0 24 24' width='14' height='14' aria-hidden='true' fill='none' "
-                    "stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>"
-                    "<path d='M14 4h6v6'/><path d='M20 4 10 14'/>"
-                    "<path d='M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5'/></svg></a>",
+                    t("<a href='{html_escape_heatmap_url_}' target='_blank' rel='noopener' title='{tip}' style='display:inline-flex;align-items:center;gap:5px;font-size:0.9rem;text-decoration:none;'>CoinGlass liquidation heatmap<svg viewBox='0 0 24 24' width='14' height='14' aria-hidden='true' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M14 4h6v6'/><path d='M20 4 10 14'/><path d='M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5'/></svg></a>", html_escape_heatmap_url_=html.escape(heatmap_url, quote=True), tip=tip),
                     unsafe_allow_html=True,
                 )
             if LIQ_KEY in indicator_keys:
@@ -13256,32 +13191,32 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             liq_on = LIQ_KEY in chosen_indicators
             chosen_indicators = [k for k in chosen_indicators if k != LIQ_KEY]
             overlay_curves = st.checkbox(
-                "Overlay RSI, Stochastic, Stoch RSI and ADX on the price chart",
+                t("Overlay RSI, Stochastic, Stoch RSI and ADX on the price chart"),
                 key="chart_overlay",
                 help=(
-                    "Draws these curves on the price chart against a 0 to 100 scale on the right, "
-                    "instead of in panels underneath. MACD and OBV have no fixed range, so they stay in their own panels."
+                    t("Draws these curves on the price chart against a 0 to 100 scale on the right, "
+                    "instead of in panels underneath. MACD and OBV have no fixed range, so they stay in their own panels.")
                 ),
             )
             show_earnings = False
             if asset_type != "Crypto":
                 show_earnings = st.checkbox(
-                    "Show earnings report dates",
+                    t("Show earnings report dates"),
                     key="chart_earnings",
                     help=(
-                        "Marks past report days with dotted lines and the next one with a dashed line. "
+                        t("Marks past report days with dotted lines and the next one with a dashed line. "
                         "The chart stretches to the right to fit the next date (only when it is within 6 weeks), so switch this off "
-                        "if it is months away and you want the chart to end at today."
+                        "if it is months away and you want the chart to end at today.")
                     ),
                 )
             show_events = st.checkbox(
-                "Show Fed, CPI and jobs days",
+                t("Show Fed, CPI and jobs days"),
                 key="chart_events",
                 help=(
-                    "Dashed lines on the days of the big scheduled US releases, the same as on the Tides waves: "
+                    t("Dashed lines on the days of the big scheduled US releases, the same as on the Tides waves: "
                     "red = Fed rate decision, amber = CPI inflation, purple = jobs report. The next ones within two "
                     "weeks are drawn ahead of the last candle, with their date. Prices often move more around these "
-                    "days. The chart stretches to the right to fit an upcoming one."
+                    "days. The chart stretches to the right to fit an upcoming one.")
                 ),
             )
             sonar_shown = None
@@ -13291,7 +13226,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                     st.session_state["chart_sonar_marks"] = ([k for k in kept if k in lw_chart.SONAR_MARKS]
                                                              if isinstance(kept, list) else list(lw_chart.SONAR_DEFAULT))
                 sonar_shown = st.pills(
-                    "🛰️ Markers shown", list(lw_chart.SONAR_MARKS), selection_mode="multi", key="chart_sonar_marks",
+                    t("🛰️ Markers shown"), list(lw_chart.SONAR_MARKS), selection_mode="multi", key="chart_sonar_marks",
                     format_func=lambda k: _SONAR_MARK_LABELS.get(k, k),
                     help="The symbols drawn over the candles (open-source formulas of the indicator Drew reads). "
                          "Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip. "
@@ -13598,9 +13533,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             if change is not None:
                 change_color = "#15803d" if change > 0 else "#b91c1c" if change < 0 else "#6b7280"
                 change_col.markdown(
-                    "<div style='font-size: 0.85rem; color: #6b7280; margin-bottom: 2px;'>7-Day Change</div>"
-                    f"<div style='font-size: 2.2rem; font-weight: 600; line-height: 1.1; color: {change_color};'>"
-                    f"{change:+.1f}%</div>",
+                    t("<div style='font-size: 0.85rem; color: #6b7280; margin-bottom: 2px;'>7-Day Change</div><div style='font-size: 2.2rem; font-weight: 600; line-height: 1.1; color: {change_color};'>{change:+.1f}%</div>", change_color=change_color, change=change),
                     unsafe_allow_html=True,
                 )
 
@@ -13716,7 +13649,7 @@ def _sentiment_thumbs(
     """Agree or disagree, then one short comment. A click redraws only this box."""
     del title, voice
     if not sentiment_at:
-        st.caption("Thumbs and comments open once this sentiment is saved.")
+        st.caption(t("Thumbs and comments open once this sentiment is saved."))
         return
     key = asset_market_key(kind, asset_id)
     if str(kind) == "Mood":
@@ -13876,7 +13809,7 @@ def _sentiment_thumbs(
     )
     st.session_state[f"{prefix}_saved_vote"] = mine
     with st.container(border=True, key=f"{prefix}_take_box"):
-        st.markdown("**Your take**")
+        st.markdown(t("**Your take**"))
         problem = st.session_state.get(f"{prefix}_take_error")
         if problem:
             st.warning(problem)
@@ -13898,14 +13831,14 @@ def _sentiment_thumbs(
             )
 
         st.button(
-            "👍 Agree",
+            t("👍 Agree"),
             key=f"{prefix}_agree",
             use_container_width=True,
             type="primary" if mine == 1 else "secondary",
             on_click=_click_agree,
         )
         st.button(
-            "👎 Disagree",
+            t("👎 Disagree"),
             key=f"{prefix}_disagree",
             use_container_width=True,
             type="primary" if mine == -1 else "secondary",
@@ -13955,11 +13888,11 @@ def _sentiment_thumbs(
 
         with st.form(f"{prefix}_comment_form", clear_on_submit=False, border=False):
             st.text_input(
-                "Comment",
+                t("Comment"),
                 max_chars=COMMENT_LIMIT,
                 key=box_key,
                 label_visibility="collapsed",
-                placeholder="Add a short comment",
+                placeholder=t("Add a short comment"),
             )
             faces = []
             for index, emoticon in enumerate(COMMENT_EMOTICONS):
@@ -13978,7 +13911,7 @@ def _sentiment_thumbs(
                    else "Each comment stays for 12 hours.")
             )
             st.form_submit_button(
-                "Post comment",
+                t("Post comment"),
                 key=f"{prefix}_comment_post",
                 use_container_width=True,
                 on_click=_post_comment,
@@ -14025,7 +13958,7 @@ def _sentiment_alt_score(kind: str, asset_id: str, sentiment_at, mine_score, sel
     }
     if typed_key not in st.session_state:
         number_kwargs["value"] = None
-    st.number_input("Your score", label_visibility="collapsed", **number_kwargs)
+    st.number_input(t("Your score"), label_visibility="collapsed", **number_kwargs)
 
 
 def _published_label(value) -> str:
@@ -14203,7 +14136,7 @@ def _mood_card(spec: dict, row: dict | None) -> None:
     if not (report and report.get("ok")):
         flag = f"mood_fill_{key}"
         if not st.session_state.get(flag):
-            with st.spinner(f"Reading the {label.lower()}..."):
+            with st.spinner(t('Reading the {label_lower}...', label_lower=label.lower())):
                 report = analyze_market_mood(key, label, query, sentiment_ready())
             if report.get("reason") != "model_busy":
                 st.session_state[flag] = True
@@ -14273,23 +14206,23 @@ def _mood_card(spec: dict, row: dict | None) -> None:
                 ),
             )
     elif (report or {}).get("reason") == "missing_key":
-        st.info("Headlines are in. Add an xAI API key so Grok can score them.")
+        st.info(t("Headlines are in. Add an xAI API key so Grok can score them."))
     elif (report or {}).get("reason") == "no_headlines":
-        st.info("No recent headlines turned up for this market.")
+        st.info(t("No recent headlines turned up for this market."))
     elif (report or {}).get("reason") == "model_busy":
-        st.info("Grok is busy right now. The score will be tried again in about a minute.")
+        st.info(t("Grok is busy right now. The score will be tried again in about a minute."))
     elif (report or {}).get("reason") == "bad_key":
-        st.warning("The xAI API key was rejected. Check the key in the Streamlit secrets.")
+        st.warning(t("The xAI API key was rejected. Check the key in the Streamlit secrets."))
     else:
-        st.info("The market score could not be built this time.")
+        st.info(t("The market score could not be built this time."))
     _article_box(f"mood_{key}_readings", _mood_reading_board(key, label, report if isinstance(report, dict) else None))
     if headlines:
         _article_box(f"mood_{key}_news", headline_table(headlines, "AI Score"))
     st.caption(
-        "The rows above the Google headlines are public readings, each scored on its own. "
+        t("The rows above the Google headlines are public readings, each scored on its own. "
         "The score at the top is the average of every scored row, readings and news articles alike "
         "(scores made before 30 Oct counted the news articles only). "
-        "This is not a technical reading, and it is not advice."
+        "This is not a technical reading, and it is not advice.")
     )
 
 
@@ -14323,14 +14256,14 @@ def show_tides() -> None:
     import tides_view
 
     st.html("<div id='tides' style='scroll-margin-top:4.5rem;'></div>")    # before the section: the jump opens it
-    with section_expander("🌊 Tides", "tides"):
+    with section_expander(t("🌊 Tides"), "tides"):
         try:
             snap = _tides_snap()
         except Exception as exc:
-            st.info(f"Tides could not be read right now ({str(exc)[:120]}).")
+            st.info(t('Tides could not be read right now ({str_exc_120}).', str_exc_120=str(exc)[:120]))
             return
         if not snap or (snap.get("tide") or {}).get("status") != "ok":
-            st.info("Tides has not got enough data yet.")
+            st.info(t("Tides has not got enough data yet."))
             return
         _paint_tides_header(snap)
         import lattice_panel as _lp
@@ -14369,7 +14302,7 @@ def show_market_moods(trade_crypto: bool = True, trade_equities: bool = True) ->
     stored = load_market_moods(supabase)
     if stored is None:
         with section_expander("🌤️ " + t("Market sentiment"), "market_mood"):
-            st.info("Market sentiment storage is not ready yet. Run the latest supabase_rls.sql in the Supabase SQL editor.")
+            st.info(t("Market sentiment storage is not ready yet. Run the latest supabase_rls.sql in the Supabase SQL editor."))
         return
     for spec in MACRO_MOODS:
         if spec["key"] == "crypto" and not trade_crypto:
@@ -14438,9 +14371,9 @@ def _show_short_interest(si: dict) -> None:
         parts.append(f"{arrow} {si['change'] * 100:+.0f}% vs the month before")
     as_of = f" (as of {si['as_of'].strftime('%d %b')})" if si.get("as_of") else ""
     st.markdown("🩳 Short interest: " + " · ".join(parts) + as_of, help=(
-        "Shares borrowed and sold, betting on a fall. A high share of the float or many days to cover "
+        t("Shares borrowed and sold, betting on a fall. A high share of the float or many days to cover "
         "means more fuel for a squeeze if the price rises. Published twice a month, about a week late. "
-        "Data: Yahoo Finance."
+        "Data: Yahoo Finance.")
     ))
 
 
@@ -14456,11 +14389,11 @@ def _show_options_positioning(ticker: str, chart_price: float | None) -> None:
         return
     kept = options_levels.last_stale_from()
     if kept:
-        st.caption(f"⏳ Yahoo is showing no contracts just now, so these are the last figures it gave ({_ago(time.time() - kept)}).")
+        st.caption(t('⏳ Yahoo is showing no contracts just now, so these are the last figures it gave ({ago_time_time_kept}).', ago_time_time_kept=_ago(time.time() - kept)))
     spot = float(chart_price or 0)
     summary = options_levels.summarize(rows, spot, today)
     if not summary.get("ok"):
-        st.caption("Not enough options data to show positioning yet.")
+        st.caption(t("Not enough options data to show positioning yet."))
         return
 
     def gap(level):
@@ -14474,36 +14407,36 @@ def _show_options_positioning(ticker: str, chart_price: float | None) -> None:
     c1, c2, c3, c4, c5 = st.columns(5)
     pcr = summary.get("pcr_oi")
     c1.metric(
-        "Put/call ratio", f"{pcr:.2f}" if pcr is not None else "—",
-        help="Open put contracts for each open call. Above 1 leans bearish or hedged, below 1 leans bullish.",
+        t("Put/call ratio"), f"{pcr:.2f}" if pcr is not None else "—",
+        help=t("Open put contracts for each open call. Above 1 leans bearish or hedged, below 1 leans bullish."),
     )
     pcr_v = summary.get("pcr_volume")
     c2.metric(
-        "Put/call, today's trades", f"{pcr_v:.2f}" if pcr_v is not None else "—",
-        help="The same ratio for contracts traded today. It moves faster than open interest.",
+        t("Put/call, today's trades"), f"{pcr_v:.2f}" if pcr_v is not None else "—",
+        help=t("The same ratio for contracts traded today. It moves faster than open interest."),
     )
     c3.metric(
-        "Call wall", _price_text(summary["call_wall"]) if summary.get("call_wall") else "—",
+        t("Call wall"), _price_text(summary["call_wall"]) if summary.get("call_wall") else "—",
         gap(summary.get("call_wall")), delta_color="off",
-        help="The strike with the most open call contracts near the price. Rallies often stall near it.",
+        help=t("The strike with the most open call contracts near the price. Rallies often stall near it."),
     )
     c4.metric(
-        "Put wall", _price_text(summary["put_wall"]) if summary.get("put_wall") else "—",
+        t("Put wall"), _price_text(summary["put_wall"]) if summary.get("put_wall") else "—",
         gap(summary.get("put_wall")), delta_color="off",
-        help="The strike with the most open put contracts near the price. Falls often slow near it.",
+        help=t("The strike with the most open put contracts near the price. Falls often slow near it."),
     )
     c5.metric(
-        "Net gamma", money(net) + " per 1%",
+        t("Net gamma"), money(net) + " per 1%",
         "calming" if net >= 0 else "amplifying", delta_color="normal" if net >= 0 else "inverse",
         help=(
-            "How much stock the market makers would trade to hedge a 1% move. Positive: they trade against "
-            "the move, which tends to calm prices. Negative: they trade with it, which tends to speed moves up."
+            t("How much stock the market makers would trade to hedge a 1% move. Positive: they trade against "
+            "the move, which tends to calm prices. Negative: they trade with it, which tends to speed moves up.")
         ),
     )
 
     strikes = summary.get("strikes") or []
     if strikes:
-        st.markdown("**Gamma by strike**")
+        st.markdown(t("**Gamma by strike**"))
         ordered = sorted(strikes, key=lambda row: row["strike"], reverse=True)
         bars = go.Figure(go.Bar(
             x=[row["gex"] for row in ordered],
@@ -14529,7 +14462,7 @@ def _show_options_positioning(ticker: str, chart_price: float | None) -> None:
             + "Above the flip, moves tend to be damped; below it, they tend to run."
         )
 
-        st.markdown("**Biggest strikes**")
+        st.markdown(t("**Biggest strikes**"))
         top = sorted(strikes, key=lambda row: row["call_oi"] + row["put_oi"], reverse=True)[:8]
         table = pd.DataFrame([
             {
@@ -14544,10 +14477,7 @@ def _show_options_positioning(ticker: str, chart_price: float | None) -> None:
         st.table(table.set_index("Strike"))
     labels = ", ".join(datetime.strptime(e, "%Y-%m-%d").strftime("%d %b") for e in expiries)
     st.caption(
-        f"🧲 From the {len(expiries)} nearest expiries ({labels}), {summary['contracts']:,.0f} open contracts. "
-        "Gamma is worked out with Black-Scholes from each contract's implied volatility, assuming market makers "
-        "are long calls and short puts (the usual convention). Open interest updates once a day. "
-        "Not part of the score. Data: Yahoo Finance."
+        t("🧲 From the {len_expiries} nearest expiries ({labels}), {summary_contracts:,.0f} open contracts. Gamma is worked out with Black-Scholes from each contract's implied volatility, assuming market makers are long calls and short puts (the usual convention). Open interest updates once a day. Not part of the score. Data: Yahoo Finance.", len_expiries=len(expiries), labels=labels, summary_contracts=summary['contracts'])
     )
 
 
@@ -14561,7 +14491,7 @@ def show_leverage(kind: str, asset_id: str, label: str, chart_price: float | Non
     heading = "🔥 " + (t("Leverage & liquidations - {name}", name=label) if label else t("Leverage & liquidations"))
     with section_expander(heading, "leverage"):
         if kind != "Crypto":
-            st.caption("Leverage and liquidation data covers crypto futures. Pick a coin on the chart to see it.")
+            st.caption(t("Leverage and liquidation data covers crypto futures. Pick a coin on the chart to see it."))
             return
         record = _liquidation_record(asset_id)
         if not record or record.get("status") != "ok":
@@ -14595,25 +14525,25 @@ def show_leverage(kind: str, asset_id: str, label: str, chart_price: float | Non
         short_24 = sum(v or 0 for v in (series.get("liq_short") or [])[-24:])
         c1, c2, c3, c4 = st.columns(4)
         c1.metric(
-            "Open interest", _short_usd(oi_now) if oi_now else "—",
+            t("Open interest"), _short_usd(oi_now) if oi_now else "—",
             f"{(oi_now / oi_then - 1) * 100:+.1f}% in 24h" if oi_now and oi_then else None,
-            help="The value of all open futures positions on Binance, Bybit and OKX. Rising means new money is betting.",
+            help=t("The value of all open futures positions on Binance, Bybit and OKX. Rising means new money is betting."),
         )
         c2.metric(
-            "Funding rate", f"{funding_now:+.4f}%" if funding_now is not None else "—",
+            t("Funding rate"), f"{funding_now:+.4f}%" if funding_now is not None else "—",
             help=(
-                "What one side pays the other to hold its position, each funding period. Positive: longs pay shorts, "
-                "so traders lean long. Negative: shorts pay longs. Large either way is a sign of a crowded side."
+                t("What one side pays the other to hold its position, each funding period. Positive: longs pay shorts, "
+                "so traders lean long. Negative: shorts pay longs. Large either way is a sign of a crowded side.")
             ),
         )
         c3.metric(
-            "Long/short ratio", f"{ratio_now:.2f}" if ratio_now else "—",
-            help="Accounts holding longs for each account holding shorts. Above 1 means more traders are long.",
+            t("Long/short ratio"), f"{ratio_now:.2f}" if ratio_now else "—",
+            help=t("Accounts holding longs for each account holding shorts. Above 1 means more traders are long."),
         )
         c4.metric(
-            "Liquidated, 24h", f"{_short_usd(long_24 + short_24)}",
+            t("Liquidated, 24h"), f"{_short_usd(long_24 + short_24)}",
             f"longs {_short_usd(long_24)} · shorts {_short_usd(short_24)}", delta_color="off",
-            help="Positions actually force-closed in the last 24 hours, longs and shorts.",
+            help=t("Positions actually force-closed in the last 24 hours, longs and shorts."),
         )
 
         # The ladder: estimated levels as bars either side of the price.
@@ -14635,7 +14565,7 @@ def show_leverage(kind: str, asset_id: str, label: str, chart_price: float | Non
         # its amount and change columns.
         ladder_col, table_col = st.container(), st.container()
         with ladder_col:
-            st.markdown("**Estimated liquidation levels**")
+            st.markdown(t("**Estimated liquidation levels**"))
             if rows:
                 ladder = go.Figure(go.Bar(
                     x=[row["usd"] for row in rows],
@@ -14661,7 +14591,7 @@ def show_leverage(kind: str, asset_id: str, label: str, chart_price: float | Non
                     if price else ""
                 )
         with table_col:
-            st.markdown("**Levels and changes**")
+            st.markdown(t("**Levels and changes**"))
             table = pd.DataFrame([
                 {
                     "Side": "▲ Shorts" if row["side"] == "shorts" else "▼ Longs",
@@ -14674,7 +14604,7 @@ def show_leverage(kind: str, asset_id: str, label: str, chart_price: float | Non
             ])
             if not table.empty:
                 st.table(table.set_index("Side"))
-            st.caption("Since last: change since the previous update, about an hour ago. New is a level that was not there.")
+            st.caption(t("Since last: change since the previous update, about an hour ago. New is a level that was not there."))
 
         # Seven days of the inputs, hour by hour.
         if len(stamps):
@@ -14704,10 +14634,10 @@ def show_leverage(kind: str, asset_id: str, label: str, chart_price: float | Non
             _paint_chart(trend)
             st.plotly_chart(trend, width="stretch")
             st.caption(
-                "Rising open interest with a rising price means new money is buying in; rising open interest with a "
+                t("Rising open interest with a rising price means new money is buying in; rising open interest with a "
                 "falling price means new shorts. A ratio far above 1, or funding far from zero, means one side is "
                 "crowded, which is when liquidations can cascade. In the bottom panel, red bars below the line are "
-                "longs force-closed that hour and green bars above are shorts."
+                "longs force-closed that hour and green bars above are shorts.")
             )
         st.caption(_liquidation_caption(record))
 
@@ -14720,8 +14650,8 @@ def show_max_pain(kind: str, asset_id: str, label: str, chart_price: float | Non
         market = options_market(kind, asset_id)
         if not market:
             st.caption(
-                "This asset has no listed options chain here. "
-                "Max pain is available for stocks, Bitcoin, and Ethereum."
+                t("This asset has no listed options chain here. "
+                "Max pain is available for stocks, Bitcoin, and Ethereum.")
             )
             return
         expiries, error = list_expiries(market, force=force)
@@ -14735,7 +14665,7 @@ def show_max_pain(kind: str, asset_id: str, label: str, chart_price: float | Non
                 later = [item for item in labels if str(item) > today_iso]
                 st.session_state[expiry_key] = later[0] if later else next(iter(labels))
             expiry = st.selectbox(
-                "Expiry",
+                t("Expiry"),
                 list(labels),
                 format_func=lambda item: labels[item],
                 key=f"max_pain_expiry_{market}",
@@ -14746,7 +14676,7 @@ def show_max_pain(kind: str, asset_id: str, label: str, chart_price: float | Non
             st.warning(error)
             return
         if not expiry:
-            st.caption("No listed expiries for this asset right now.")
+            st.caption(t("No listed expiries for this asset right now."))
             return
         calls, puts, underlying, chain_error = load_open_interest(
             market, expiry, force=force and market.startswith("stock:"),
@@ -14756,22 +14686,20 @@ def show_max_pain(kind: str, asset_id: str, label: str, chart_price: float | Non
             return
         if not calls and not puts:
             st.caption(
-                "This expiry shows no open interest right now. The data source sometimes reports none "
+                t("This expiry shows no open interest right now. The data source sometimes reports none "
                 "for a while (often outside US trading hours, and on an option's last day). Try a later "
-                "expiry, or check back later."
+                "expiry, or check back later.")
             )
             return
         kept = stale_since(market, expiry)
         if kept:
-            st.caption(f"⏳ The data source is showing no contracts just now, so these are the last figures it gave ({_ago(time.time() - kept)}).")
+            st.caption(t('⏳ The data source is showing no contracts just now, so these are the last figures it gave ({ago_time_time_kept}).', ago_time_time_kept=_ago(time.time() - kept)))
         total_open = sum(calls.values()) + sum(puts.values())
         if market.startswith("stock:") and total_open < 500:
             # A handful of contracts gives a meaningless answer. Yahoo also sends near-empty
             # chains for a while at times, outside US trading hours especially.
             st.caption(
-                f"This expiry shows only {total_open:,.0f} open contracts, too few for a meaningful max pain. "
-                "The data source sometimes reports only a handful for a while (often outside US trading hours). "
-                "Try another expiry, or check back later."
+                t('This expiry shows only {total_open:,.0f} open contracts, too few for a meaningful max pain. The data source sometimes reports only a handful for a while (often outside US trading hours). Try another expiry, or check back later.', total_open=total_open)
             )
             return
         level = pain_strike(calls, puts)
@@ -14779,12 +14707,12 @@ def show_max_pain(kind: str, asset_id: str, label: str, chart_price: float | Non
         spot_name = "Index" if underlying else "Latest price"
         price_col, pain_col, expiry_col = st.columns(3)
         price_col.metric(spot_name, _price_text(spot) if spot else "—")
-        pain_col.metric("Max pain", _price_text(level) if level is not None else "—")
+        pain_col.metric(t("Max pain"), _price_text(level) if level is not None else "—")
         if level is not None and spot:              # 🎯 in the header: how far max pain is from the price
             gap = (float(level) / float(spot) - 1) * 100
             _header_box("max_pain", f"🎯 {gap:+.1f}%", "#475569", "#e2e8f0",
                         f"Max pain is {abs(gap):.1f}% {'above' if gap >= 0 else 'below'} the price for this expiry")
-        expiry_col.metric("Expiry", labels.get(expiry, expiry))
+        expiry_col.metric(t("Expiry"), labels.get(expiry, expiry))
         shown = window_strikes(list(calls) + list(puts), spot, level)
         full_count = len(set(calls) | set(puts))
         fig = go.Figure()
@@ -14820,18 +14748,17 @@ def show_max_pain(kind: str, asset_id: str, label: str, chart_price: float | Non
             gap = (level - spot) / spot * 100
             side = "above" if gap > 0 else "below"
             st.caption(
-                f"Max pain is {abs(gap):.1f}% {side} the {spot_name.lower()}. "
-                "The violet line is that strike. The orange line is the price."
+                t('Max pain is {abs_gap:.1f}% {side} the {spot_name_lower}. The violet line is that strike. The orange line is the price.', abs_gap=abs(gap), side=side, spot_name_lower=spot_name.lower())
             )
         else:
-            st.caption("The violet line is max pain. The orange line is the price.")
+            st.caption(t("The violet line is max pain. The orange line is the price."))
         if len(shown) < full_count:
-            st.caption("The bars are the strikes nearest the price. Max pain is calculated from the full chain.")
+            st.caption(t("The bars are the strikes nearest the price. Max pain is calculated from the full chain."))
         st.caption(
-            "This is where open contracts would be worth the least at expiry. "
+            t("This is where open contracts would be worth the least at expiry. "
             "It is not a price target, and it is not part of the technical readings. "
             "Open interest is contracts for stocks, and coin amount for Bitcoin and Ethereum. "
-            "Sets can read it through the Max pain signal in Lattice (Positioning)."
+            "Sets can read it through the Max pain signal in Lattice (Positioning).")
         )
 
 
@@ -14898,27 +14825,25 @@ def show_signal_evidence(kind: str, asset_id: str, shown: str) -> None:
     record = load_evidence(supabase, asset_market_key(kind, asset_id))
     if not record:
         st.info(
-            f"The long-run test for {shown} has not been prepared for the current signals yet. The background "
-            "worker adds it within a few minutes of an asset being watched, then refreshes it daily. Check back soon."
+            t('The long-run test for {shown} has not been prepared for the current signals yet. The background worker adds it within a few minutes of an asset being watched, then refreshes it daily. Check back soon.', shown=shown)
         )
         return
     if record.get("too_short"):
         st.info(
-            f"{shown} does not have enough price history to test yet. The test needs about two and a half "
-            "years of daily prices."
+            t('{shown} does not have enough price history to test yet. The test needs about two and a half years of daily prices.', shown=shown)
         )
         return
     verdict = record.get("verdict") or {}
     level = verdict.get("level", "none")
     reverse = bool(verdict.get("reverse"))
     if level == "holds" and not reverse:
-        st.success("Held up in this test. Still not a forecast: check it on similar assets.")
+        st.success(t("Held up in this test. Still not a forecast: check it on similar assets."))
     elif level == "holds" and reverse:
-        st.warning("Held up in reverse: a high Trend reading was followed by weaker prices.")
+        st.warning(t("Held up in reverse: a high Trend reading was followed by weaker prices."))
     elif level == "hint":
-        st.warning("A faint hint at one time frame. Not enough to rely on.")
+        st.warning(t("A faint hint at one time frame. Not enough to rely on."))
     else:
-        st.info("No evidence the Trend reading has helped for this asset.")
+        st.info(t("No evidence the Trend reading has helped for this asset."))
 
     st.write(record.get("ai_text") or record.get("text") or "")
 
@@ -14945,8 +14870,8 @@ def show_signal_evidence(kind: str, asset_id: str, shown: str) -> None:
     if rows:
         st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")
     st.caption(
-        "Link to later price runs from -1 to +1. Anything inside the chance level cannot be told apart from luck. "
-        "High and low Trend readings are compared with an average day because most assets drift one way over time."
+        t("Link to later price runs from -1 to +1. Anything inside the chance level cannot be told apart from luck. "
+        "High and low Trend readings are compared with an average day because most assets drift one way over time.")
     )
     from evidence import volatility_text
     from funding import funding_text
@@ -14967,16 +14892,10 @@ def show_signal_evidence(kind: str, asset_id: str, shown: str) -> None:
     strategy = record.get("strategy") or {}
     if strategy.get("strategy_return_pct") is not None and strategy.get("buy_hold_return_pct") is not None:
         st.caption(
-            f"Holding from a Trend reading of +50 until it fell below 0 returned {strategy['strategy_return_pct']:+.0f}% "
-            f"against {strategy['buy_hold_return_pct']:+.0f}% for buy and hold, after costs and with a one-day delay "
-            f"(in the market {strategy.get('exposure_pct') or 0:.0f}% of days)."
+            t('Holding from a Trend reading of +50 until it fell below 0 returned {strategy_strategy_return:+.0f}% against {strategy_buy_hold_return:+.0f}% for buy and hold, after costs and with a one-day delay (in the market {strategy_get_exposure_pc:.0f}% of days).', strategy_strategy_return=strategy['strategy_return_pct'], strategy_buy_hold_return=strategy['buy_hold_return_pct'], strategy_get_exposure_pc=strategy.get('exposure_pct') or 0)
         )
     st.caption(
-        f"Daily prices from {record.get('first_scored', '?')} to {record.get('asof', '?')} "
-        f"({record.get('scored_days', 0)} days). Tested without looking ahead, on this asset's own history "
-        "(in-sample: not a held-back validation). "
-        f"Definitions ref {record.get('signals_fingerprint', '?')}. "
-        "A description of the past, not advice and not a forecast."
+        t("Daily prices from {record_get_first_scored} to {record_get_asof} ({record_get_scored_days_0} days). Tested without looking ahead, on this asset's own history (in-sample: not a held-back validation). Definitions ref {record_get_signals_finge}. A description of the past, not advice and not a forecast.", record_get_first_scored=record.get('first_scored', '?'), record_get_asof=record.get('asof', '?'), record_get_scored_days_0=record.get('scored_days', 0), record_get_signals_finge=record.get('signals_fingerprint', '?'))
     )
 
 
@@ -14998,10 +14917,10 @@ def show_signal_matrix(kind: str, asset_id: str, label: str, indicated) -> None:
     shown = " ".join(str(label or "").split()) or t("Selected asset")
     with section_expander("▦ " + t("Signal matrix - {name}", name=shown), "signal_matrix"):
         if indicated is None or getattr(indicated, "empty", True):
-            st.caption("Price history is not ready for this asset yet.")
+            st.caption(t("Price history is not ready for this asset yet."))
             return
         section = st.radio(
-            "Signal view",
+            t("Signal view"),
             ["Recent 30 days", "Evidence"],
             horizontal=True,
             label_visibility="collapsed",
@@ -15011,14 +14930,14 @@ def show_signal_matrix(kind: str, asset_id: str, label: str, indicated) -> None:
             show_signal_evidence(kind, asset_id, shown)
             return
         view = st.radio(
-            "Matrix display",
+            t("Matrix display"),
             ["Lines", "Numbers"],
             horizontal=True,
             label_visibility="collapsed",
             key="signal_matrix_view",
         )
         horizon = st.radio(
-            "Lead window",
+            t("Lead window"),
             list(LEAD_HORIZONS),
             format_func=lambda days: f"Next {days} day" if days == 1 else f"Next {days} days",
             horizontal=True,
@@ -15046,7 +14965,7 @@ def show_signal_matrix(kind: str, asset_id: str, label: str, indicated) -> None:
         )
         dates = matrix["dates"]
         if len(dates) < 2:
-            st.caption("Not enough daily prices yet to draw this matrix.")
+            st.caption(t("Not enough daily prices yet to draw this matrix."))
             return
         _paint_matrix_header(matrix)
         st.caption(
@@ -15094,10 +15013,7 @@ def show_signal_matrix(kind: str, asset_id: str, label: str, indicated) -> None:
                     f"{''.join(cells)}</tr>"
                 )
             st.markdown(
-                "<div style='width:100%;overflow-x:auto;'><table style='border-collapse:collapse;font-size:0.8rem;'>"
-                "<thead><tr><th style='padding:4px 8px;text-align:left;'>Signal</th>"
-                "<th style='padding:4px 6px;text-align:right;'>Lead</th>"
-                f"{head}</tr></thead><tbody>{''.join(body)}</tbody></table></div>",
+                t("<div style='width:100%;overflow-x:auto;'><table style='border-collapse:collapse;font-size:0.8rem;'><thead><tr><th style='padding:4px 8px;text-align:left;'>Signal</th><th style='padding:4px 6px;text-align:right;'>Lead</th>{head}</tr></thead><tbody>{join_body}</tbody></table></div>", head=head, join_body=''.join(body)),
                 unsafe_allow_html=True,
             )
         else:
@@ -15209,22 +15125,13 @@ def show_signal_matrix(kind: str, asset_id: str, label: str, indicated) -> None:
                 f"<td style='padding:4px 8px;vertical-align:top;width:100%;'>{record}</td></tr>"
             )
         st.markdown(
-            "<div style='width:100%;'><table style='width:100%;border-collapse:collapse;font-size:0.9rem;margin-top:8px;'>"
-            "<thead><tr><th style='padding:4px 8px;text-align:left;min-width:5.5em;max-width:9em;'>Signal</th>"
-            "<th style='padding:4px 8px;text-align:right;white-space:nowrap;'>Rank</th>"
-            "<th style='padding:4px 8px;text-align:right;white-space:nowrap;'>Lead</th>"
-            "<th style='padding:4px 8px;text-align:left;width:100%;'>30-day record</th></tr></thead>"
-            f"<tbody>{''.join(summary)}</tbody></table></div>",
+            t("<div style='width:100%;'><table style='width:100%;border-collapse:collapse;font-size:0.9rem;margin-top:8px;'><thead><tr><th style='padding:4px 8px;text-align:left;min-width:5.5em;max-width:9em;'>Signal</th><th style='padding:4px 8px;text-align:right;white-space:nowrap;'>Rank</th><th style='padding:4px 8px;text-align:right;white-space:nowrap;'>Lead</th><th style='padding:4px 8px;text-align:left;width:100%;'>30-day record</th></tr></thead><tbody>{join_summary}</tbody></table></div>", join_summary=''.join(summary)),
             unsafe_allow_html=True,
         )
         effective = [row.get("effective_n") for row in rows if row.get("effective_n")]
         if effective:
             st.caption(
-                f"About {max(effective):.0f} independent observations per signal at this window. "
-                "Only leads that clear the noise level for that count are ranked. "
-                "Read the record beside the all-days figure: a rising asset is higher most days whatever the score says. "
-                "This is a lookback over 30 days, far too short to show that any reading predicts prices. "
-                "It does not change the readings or alerts."
+                t('About {max_effective:.0f} independent observations per signal at this window. Only leads that clear the noise level for that count are ranked. Read the record beside the all-days figure: a rising asset is higher most days whatever the score says. This is a lookback over 30 days, far too short to show that any reading predicts prices. It does not change the readings or alerts.', max_effective=max(effective))
             )
 
 
@@ -15269,7 +15176,7 @@ def show_market_sentiment(kind: str, asset_id: str, label: str, ticker: str | No
         if not (report and report.get("ok")):
             flag = f"sentiment_fill_{asset_market_key(kind, asset_id)}"
             if not st.session_state.get(flag):
-                with st.spinner("Reading recent headlines..."):
+                with st.spinner(t("Reading recent headlines...")):
                     report = analyze_market_sentiment(query, sentiment_ready())
                 if report.get("reason") != "model_busy":
                     st.session_state[flag] = True
@@ -15305,20 +15212,20 @@ def show_market_sentiment(kind: str, asset_id: str, label: str, ticker: str | No
                     kind, asset_id, sentiment_at, shown_name or asset_id, score, report.get("summary") or "",
                 )
         elif report.get("reason") == "missing_key":
-            st.info("Headlines are in. Add an xAI API key so Grok can score them. See the README under Market sentiment.")
+            st.info(t("Headlines are in. Add an xAI API key so Grok can score them. See the README under Market sentiment."))
         elif report.get("reason") == "no_headlines":
-            st.info("No recent headlines turned up for this asset.")
+            st.info(t("No recent headlines turned up for this asset."))
         elif report.get("reason") == "model_busy":
-            st.info("Grok is busy right now. The articles are below, and the score will be tried again in about a minute.")
+            st.info(t("Grok is busy right now. The articles are below, and the score will be tried again in about a minute."))
         elif report.get("reason") == "bad_key":
-            st.warning("The xAI API key was rejected. Check the key in the Streamlit secrets.")
+            st.warning(t("The xAI API key was rejected. Check the key in the Streamlit secrets."))
         else:
-            st.info("The sentiment score could not be built this time. The articles are below.")
+            st.info(t("The sentiment score could not be built this time. The articles are below."))
 
         if headlines:
             asset_key = "".join(ch if ch.isalnum() else "_" for ch in f"{kind}_{asset_id}").strip("_") or "asset"
             _article_box(f"asset_{asset_key}", headline_table(headlines))
-        st.caption("This reads recent coverage. It is not a technical reading, and it is not advice.")
+        st.caption(t("This reads recent coverage. It is not a technical reading, and it is not advice."))
 
 
 _ASSET_PICK_JS = """
@@ -15444,7 +15351,7 @@ def _handle_alert_pick(raw: str) -> None:
         f = next((x for x in mine if fid and x["id"] == fid), None) or next(
             (x for x in mine if x["name"].strip() == fname.strip()), None)
         if f is None:
-            st.toast("That funnel was deleted.")
+            st.toast(t("That funnel was deleted."))
             return
         market = f.get("market") or "crypto"
         st.session_state["_funnel_open"] = {"market": market, "id": f["id"]}   # applied before the table is drawn
@@ -15455,14 +15362,14 @@ def _handle_alert_pick(raw: str) -> None:
         sid = (raw.split("|") + ["", ""])[1]
         share = load_chart_share(supabase, int(sid)) if sid.isdigit() else None
         if not share:
-            st.toast("That shared chart was deleted.")
+            st.toast(t("That shared chart was deleted."))
             return
         kind_, _, asset_ = str(share.get("asset_key") or "").partition(":")
         kind_name = "Crypto" if kind_ == "crypto" else "Stock"
         watch = CRYPTO_WATCHLIST if kind_name == "Crypto" else STOCK_WATCHLIST
         match = next((a for a in watch if str(a).lower() == asset_.lower()), None)
         if match is None:
-            st.toast(f"Add {share.get('asset_name') or asset_} to your watchlist to open this shared chart.")
+            st.toast(t('Add {share_get_asset_name_or_} to your watchlist to open this shared chart.', share_get_asset_name_or_=share.get('asset_name') or asset_))
             return
         owner = ""
         try:
@@ -15484,7 +15391,7 @@ def _handle_alert_pick(raw: str) -> None:
         configs, _err = gi.saved_configs(supabase)
         found = study_link.find_set(configs, set_hash, name)
         if found is None:
-            st.toast("That Set was changed or deleted, so its study can't be opened from here.")
+            st.toast(t("That Set was changed or deleted, so its study can't be opened from here."))
             return
         perspectives.load_studies(supabase, force=True)
         _open_in_lattice(f"lattice|sets|{found[0]}")
@@ -15628,7 +15535,7 @@ if _POPOUT_VIEW == "advisor":
 
 if _POPOUT_VIEW == "help_guides":
     # Help and guides in its own window, to keep beside the app while you work.
-    with st.expander("📖 Help and guides", expanded=True, key="pop_help_guides"):
+    with st.expander(t("📖 Help and guides"), expanded=True, key="pop_help_guides"):
         _render_help_guides()
     st.stop()
 
@@ -15639,7 +15546,7 @@ if _POPOUT_VIEW == "lattice_panel":
         _chart_send(key="chart_send", data={"token": str(time.time_ns()), "jump": {
             "pick": _jump["pick"], "band": list(_jump["band"]),
             "view": list(_jump["view"]) if _jump.get("view") else None}})
-        st.toast("Opened on the main window's price chart.", icon=":material/candlestick_chart:")
+        st.toast(t("Opened on the main window's price chart."), icon=":material/candlestick_chart:")
     with st.expander(":material/hub: Angstrom Lattice", expanded=True, key="pop_lattice_panel"):
         _render_lattice()
     st.stop()
@@ -15663,12 +15570,12 @@ if str((load_profile() or {}).get("role") or "") == "admin":
 _page_top(key="page_back_to_top")
 
 st.markdown(
-    "<div style='margin-top:2.5rem;padding-top:1rem;border-top:1px solid #e5e7eb;"
+    t("<div style='margin-top:2.5rem;padding-top:1rem;border-top:1px solid #e5e7eb;"
     "text-align:center;color:#6b7280;font-size:0.8rem;'>"
     "© 2026 Angstrom Signals. All rights reserved."
-    "</div>",
+    "</div>"),
     unsafe_allow_html=True,
 )
 
 st.sidebar.markdown("---")
-st.sidebar.info("Prices are saved about every 5 minutes, and market sentiment about every 12 hours, for every account. This page reads those saved results. Alert checks use the same prices and continue after you leave.")
+st.sidebar.info(t("Prices are saved about every 5 minutes, and market sentiment about every 12 hours, for every account. This page reads those saved results. Alert checks use the same prices and continue after you leave."))

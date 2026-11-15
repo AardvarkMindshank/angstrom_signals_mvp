@@ -14,6 +14,8 @@ act, on any device, until it is switched off.
 
 from __future__ import annotations
 
+from i18n import t
+
 STEPS = (
     ("markets", "⚙️", "Choose the markets you trade",
      "In ⚙️ Settings in the sidebar: cryptos, equities or both. The other market's sections hide."),
@@ -56,10 +58,10 @@ def render(st, settings: dict, auto: dict, save) -> None:
     count = sum(1 for r in rows if r[4])
     with st.container(border=True, key="onboarding_card"):
         head = st.columns([6, 1.4], vertical_alignment="center")
-        head[0].markdown(f"**🚀 Getting started** (optional) · {count} of {len(rows)} done")
-        if head[1].button("Skip", key="onboarding_hide",
-                          help="Optional: skip this guide. Nothing depends on it; Help and guides → Start here brings it "
-                               "back."):
+        head[0].markdown(t('**🚀 Getting started** (optional) · {count} of {len_rows} done', count=count, len_rows=len(rows)))
+        if head[1].button(t("Skip"), key="onboarding_hide",
+                          help=t("Optional: skip this guide. Nothing depends on it; Help and guides → Start here brings it "
+                               "back.")):
             save({"onboarding": {**saved, "hidden": True}})
             st.rerun()
         st.progress(count / len(rows))
@@ -70,8 +72,8 @@ def render(st, settings: dict, auto: dict, save) -> None:
                 done_now = [k for k in saved["done"] if k != key] + ([key] if ticked else [])
                 save({"onboarding": {**saved, "done": done_now}})
                 st.rerun()
-        st.caption("Tip: tap any icon or reading to see what it means. ❓ Explain mode in ⚙️ Settings explains every "
-                   "tap instead of acting on it.")
+        st.caption(t("Tip: tap any icon or reading to see what it means. ❓ Explain mode in ⚙️ Settings explains every "
+                   "tap instead of acting on it."))
 
 
 def show_again(settings: dict, save) -> None:

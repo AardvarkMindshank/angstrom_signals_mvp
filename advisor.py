@@ -19,6 +19,8 @@ the tab says so and the rest of Lattice is unaffected.
 
 from __future__ import annotations
 
+from i18n import t
+
 import json
 import os
 
@@ -191,6 +193,9 @@ def _help_text() -> str:
                         and call.func.attr in ("markdown", "caption", "tabs", "info", "write", "expander")):
                     continue
                 arg = call.args[0]
+                if (isinstance(arg, ast.Call) and isinstance(arg.func, ast.Name) and arg.func.id == "t"
+                        and arg.args):
+                    arg = arg.args[0]                      # on-screen text goes through t("…") (i18n.py)
                 if isinstance(arg, ast.Constant) and isinstance(arg.value, str):
                     texts.append(arg.value)
                 elif isinstance(arg, ast.JoinedStr):
@@ -236,8 +241,21 @@ def system_parts(saved: list[dict], user_id: str, start: str = "lattice", extra:
                         "Signals (name, readings and their ranges):", *_signals(), "", *_provided()]
                        + (["", market] if market else []))
     mine = "\n".join([START.get(start, START["lattice"]), ANY_QUESTION, "", "The person's own Groups and Sets:",
-                      *_mine(saved, user_id)] + (["", extra] if extra else []))
+                      *_mine(saved, user_id)] + (["", extra] if extra else []) + language_line())
     return shared, mine
+
+
+def language_line(code: str | None = None) -> list[str]:
+    """🌐 The person's language (i18n.py): answer in it. Product names stay in English, as on screen."""
+    import i18n
+
+    code = code or i18n.current()
+    lang = i18n.BY_CODE.get(code)
+    if not lang or code == i18n.BASE:
+        return []
+    return ["", f"Language: the person uses the app in {lang['english']} ({lang['name']}). Write your whole answer "
+                f"in {lang['english']}. Keep product names in English (Angstrom, Lattice, Prism, Funnels, Tides, "
+                "Sonar, Navigator) and quote the names of signals, Groups and Sets as they are written."]
 
 
 def system_prompt(saved: list[dict], user_id: str, start: str = "lattice") -> str:
@@ -448,16 +466,16 @@ def render(st, supabase, user_id: str = "", start: str = "lattice", watchlist: d
 
     import signal_groups_inspector as gi
 
-    st.caption("Ask anything about the app: where things are, how to use them, what a reading means. Or describe a "
+    st.caption(t("Ask anything about the app: where things are, how to use them, what a reading means. Or describe a "
                "trading idea in plain words and get step-by-step help building and testing it in Angstrom Lattice. "
-               "It explains; you do the clicks. No buy or sell calls.")
+               "It explains; you do the clicks. No buy or sell calls."))
     provider = ai_providers.pick("navigator", provider)
     if not ai_providers.available(provider):
-        st.info("The AI Navigator isn't switched on yet: it needs an AI key in the app's settings "
-                "(ANTHROPIC_API_KEY on Render for Claude).")
+        st.info(t("The AI Navigator isn't switched on yet: it needs an AI key in the app's settings "
+                "(ANTHROPIC_API_KEY on Render for Claude)."))
         return
     if provider != "claude":
-        st.caption(f"Answering with {ai_providers.label(provider)}, your choice in Settings.")
+        st.caption(t('Answering with {ai_providers_label_provi}, your choice in Settings.', ai_providers_label_provi=ai_providers.label(provider)))
     chat = st.session_state.setdefault("advisor_chat", [])
     day = time.strftime("%Y-%m-%d")
     import navigator
@@ -467,13 +485,13 @@ def render(st, supabase, user_id: str = "", start: str = "lattice", watchlist: d
     if start == "tides":
         if auto == "passage" and not st.session_state.get("_passage_shown"):
             st.session_state["_passage_shown"] = True
-            with st.spinner("Charting today's passage…"):
+            with st.spinner(t("Charting today's passage…")):
                 try:
                     plan = navigator.passage_plan(st, supabase, user_id, watchlist, snap, provider=provider)
                     chat.extend([{"role": "user", "content": "📜 Today's AI Passage Plan"},
                                  {"role": "assistant", "content": plan}])
                 except Exception as exc:
-                    st.error(f"The AI Navigator couldn't write the passage plan just now ({str(exc)[:200]}).")
+                    st.error(t("The AI Navigator couldn't write the passage plan just now ({str_exc_200}).", str_exc_200=str(exc)[:200]))
     used = st.session_state.setdefault("advisor_used", {}).get(day, 0)
     for m in chat:
         with st.chat_message(m["role"], avatar="🧑" if m["role"] == "user" else ":material/auto_awesome:"):
@@ -481,42 +499,42 @@ def render(st, supabase, user_id: str = "", start: str = "lattice", watchlist: d
             st.markdown(m["content"])
     if not chat:
         if start == "app":
-            st.markdown("Try: *“Where do I change which emails I get?”* or *“What does a Stretch of +60 mean?”*")
+            st.markdown(t("Try: *“Where do I change which emails I get?”* or *“What does a Stretch of +60 mean?”*"))
         elif start == "tides":
-            st.markdown("Try: *“Why is the tide going out?”* or *“What is pulling against crypto longs right now?”* "
-                        "or *“Which of my funnel Candidates face a headwind?”*")
+            st.markdown(t("Try: *“Why is the tide going out?”* or *“What is pulling against crypto longs right now?”* "
+                        "or *“Which of my funnel Candidates face a headwind?”*"))
         else:
-            st.markdown("Try: *“I think price often drops a few days after a breakout on heavy volume fizzles out. "
-                        "How do I check that?”*")
+            st.markdown(t("Try: *“I think price often drops a few days after a breakout on heavy volume fizzles out. "
+                        "How do I check that?”*"))
     images = _paste_box(st)              # outside the form: adding a picture must not count as pressing Ask
     with st.form("advisor_form", clear_on_submit=True, border=False):
-        question = st.text_area("Your question", key="advisor_q", height=90, label_visibility="collapsed",
-                                placeholder="Ask about the app, an idea, a Set, or a result…")
+        question = st.text_area(t("Your question"), key="advisor_q", height=90, label_visibility="collapsed",
+                                placeholder=t("Ask about the app, an idea, a Set, or a result…"))
         cols = st.columns([1, 1, 3])
-        sent = cols[0].form_submit_button("Ask", type="primary", icon=":material/send:", width="stretch")
-        fresh = cols[1].form_submit_button("New chat", icon=":material/refresh:", width="stretch")
+        sent = cols[0].form_submit_button(t("Ask"), type="primary", icon=":material/send:", width="stretch")
+        fresh = cols[1].form_submit_button(t("New chat"), icon=":material/refresh:", width="stretch")
     if fresh:
         st.session_state["advisor_chat"] = []
         import lattice_panel
 
         lattice_panel.rerun(st)
     if sent and not question.strip() and images:
-        st.warning("Add a question to go with the screenshot, such as “what am I looking at here?”")
+        st.warning(t("Add a question to go with the screenshot, such as “what am I looking at here?”"))
     if sent and question.strip():
         if used >= DAILY_LIMIT:
-            st.warning(f"That's {DAILY_LIMIT} questions today: the Navigator is resting until tomorrow.")
+            st.warning(t("That's {DAILY_LIMIT} questions today: the Navigator is resting until tomorrow.", DAILY_LIMIT=DAILY_LIMIT))
             return
         cached = st.session_state.get("siggroups_saved")
         if not cached or time.time() - cached[0] > 60:
             cached = (time.time(), *gi.saved_configs(supabase))
             st.session_state["siggroups_saved"] = cached
-        with st.spinner("Thinking…"):
+        with st.spinner(t("Thinking…")):
             try:
                 answer = ask(chat, question.strip()[:4000],
                              system_parts(cached[1] or [], user_id, start, extra, market=market),
                              images=images, provider=provider)
             except Exception as exc:
-                st.error(f"The Navigator couldn't answer just now ({str(exc)[:200]}).")
+                st.error(t("The Navigator couldn't answer just now ({str_exc_200}).", str_exc_200=str(exc)[:200]))
                 return
         chat.extend([{"role": "user", "content": question.strip(), "images": images[:MAX_IMAGES]},
                      {"role": "assistant", "content": answer}])

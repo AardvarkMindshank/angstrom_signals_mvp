@@ -12,6 +12,8 @@ table, or offline, editing works exactly as before, just without the safety net.
 
 from __future__ import annotations
 
+from i18n import t
+
 import hashlib
 import json
 from datetime import datetime, timezone
@@ -78,10 +80,10 @@ def forget(state, supabase, user_id, kind: str, key: str) -> None:
 def when(stamp: str) -> str:
     """'11 Nov 22:10 UTC' for the restored notice."""
     try:
-        t = datetime.fromisoformat(stamp.replace("Z", "+00:00")).astimezone(timezone.utc)
+        t_ = datetime.fromisoformat(stamp.replace("Z", "+00:00")).astimezone(timezone.utc)
     except (ValueError, AttributeError):
         return "earlier"
-    return f"{t.day} {t.strftime('%b %H:%M')} UTC"
+    return f"{t_.day} {t_.strftime('%b %H:%M')} UTC"
 
 
 # ----------------------------------------------------------------------------------- Group and Set editors
@@ -109,9 +111,9 @@ def track(st, supabase, user_id, kind: str, key: str, model, clean, loaded_key: 
     restored = st.session_state.get(f"_draft_restored_{kind}")
     if restored and restored[0] == key:
         box = st.container(horizontal=True, vertical_alignment="center")
-        box.info(f"Your unsaved changes from {when(restored[1])} are back.", icon=":material/history:")
-        if box.button("Discard them", icon=":material/undo:", key=f"draft_discard_{kind}",
-                      help="Go back to the saved version (or the starting point) and forget these changes."):
+        box.info(t('Your unsaved changes from {when_restored_1} are back.', when_restored_1=when(restored[1])), icon=":material/history:")
+        if box.button(t("Discard them"), icon=":material/undo:", key=f"draft_discard_{kind}",
+                      help=t("Go back to the saved version (or the starting point) and forget these changes.")):
             forget(st.session_state, supabase, user_id, kind, key)
             st.session_state.pop(f"_draft_restored_{kind}", None)
             st.session_state.pop(loaded_key, None)        # load the starting point again

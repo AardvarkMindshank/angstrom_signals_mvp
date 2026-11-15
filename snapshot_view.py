@@ -46,14 +46,14 @@ def tides_line(snap: dict | None, now: datetime | None = None) -> str:
     import tides as td
 
     now = now or datetime.now(timezone.utc)
-    t = (snap or {}).get("tide") or {}
-    if t.get("status") != "ok" or t.get("label") not in td.TIDE_WORDS:
+    t_ = (snap or {}).get("tide") or {}
+    if t_.get("status") != "ok" or t_.get("label") not in td.TIDE_WORDS:
         return ""
-    name, plain, icon = td.TIDE_WORDS[t["label"]]
-    colour = {"in": GREEN, "out": RED}.get(t["label"], GREY)
+    name, plain, icon = td.TIDE_WORDS[t_["label"]]
+    colour = {"in": GREEN, "out": RED}.get(t_["label"], GREY)
     bits = [f"<span style='font-weight:700;color:{colour};'>{_e(icon)} {_e(name)}</span>"
             f"<span class='ang-kicker' style='margin:0;'>&nbsp;{_e(plain)}"
-            + (f", {t.get('held_days')} days" if t.get("held_days") else "") + "</span>"]
+            + (f", {t_.get('held_days')} days" if t_.get("held_days") else "") + "</span>"]
     sea = (snap or {}).get("sea") or {}
     if sea.get("status") == "ok":
         bits.append(f"<span>⛵ Sea {_e(sea['state'])}</span>"
@@ -87,11 +87,11 @@ def funnel_tiles(tiles: list[dict]) -> str:
         return ""
     out = ["<div class='ang-kicker' style='margin:2px 0 6px;'>🔻 Your funnels</div>",
            "<div style='display:flex;flex-wrap:wrap;gap:10px;'>"]
-    for t in tiles:
-        mark, market = MARKET_WORDS.get(t.get("market") or "crypto", MARKET_WORDS["crypto"])
-        direction = DIRECTION_WORDS.get(t.get("direction"), t.get("direction") or "")
-        kicker = f"{mark} {market} · {direction}" + (" · ⏸️ paused" if t.get("paused") else "")
-        new, gone = t.get("new") or [], t.get("gone") or []
+    for t_ in tiles:
+        mark, market = MARKET_WORDS.get(t_.get("market") or "crypto", MARKET_WORDS["crypto"])
+        direction = DIRECTION_WORDS.get(t_.get("direction"), t_.get("direction") or "")
+        kicker = f"{mark} {market} · {direction}" + (" · ⏸️ paused" if t_.get("paused") else "")
+        new, gone = t_.get("new") or [], t_.get("gone") or []
         badges = []
         if new:
             badges.append(f"<span title='{_e('New Candidates since your last visit: ' + _names(new))}' "
@@ -99,26 +99,26 @@ def funnel_tiles(tiles: list[dict]) -> str:
         if gone:
             badges.append(f"<span title='{_e('No longer Candidates since your last visit: ' + _names(gone))}' "
                           f"style='color:{GREY};font-weight:700;'>－{len(gone)} left</span>")
-        if not badges and t.get("seen"):
+        if not badges and t_.get("seen"):
             badges.append(f"<span style='color:{GREY};'>no change</span>")
-        cands = t.get("candidate_names") or []
-        tip = (f"Open {t['name']} in its table, on its Candidates. "
+        cands = t_.get("candidate_names") or []
+        tip = (f"Open {t_['name']} in its table, on its Candidates. "
                + (f"Candidates now: {_names(cands, 12)}. " if cands else "No Candidates right now. ")
                + "Stage counts: the pool, then the assets holding each stage in a row.")
         out.append(
-            f"<button type='button' data-pick='{_e('funnel|' + str(t['id']) + '|' + t['name'])}' title='{_e(tip)}' "
+            f"<button type='button' data-pick='{_e('funnel|' + str(t_['id']) + '|' + t_['name'])}' title='{_e(tip)}' "
             f"style='{_BUTTON}flex:1 1 230px;max-width:100%;'>"
             "<div class='ang-card' style='height:100%;box-sizing:border-box;'>"
             f"<div class='ang-kicker'>{_e(kicker)}</div>"
             "<div class='ang-title' style='font-size:1.05rem;margin:2px 0 6px;white-space:nowrap;overflow:hidden;"
-            f"text-overflow:ellipsis;'>{_e(t['name'])}</div>"
+            f"text-overflow:ellipsis;'>{_e(t_['name'])}</div>"
             "<div style='display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;'>"
-            f"<span style='font-weight:700;font-size:1.05rem;'>✅ {t.get('candidates', 0)}"
+            f"<span style='font-weight:700;font-size:1.05rem;'>✅ {t_.get('candidates', 0)}"
             "<span class='ang-kicker' style='margin:0;font-weight:400;'>&nbsp;Candidates</span></span>"
-            f"<span style='font-weight:600;'>🚩 {t.get('flagged', 0)}"
+            f"<span style='font-weight:600;'>🚩 {t_.get('flagged', 0)}"
             "<span class='ang-kicker' style='margin:0;font-weight:400;'>&nbsp;Flagged</span></span>"
             + "".join(badges) + "</div>"
-            f"<div class='ang-kicker' style='margin:6px 0 0;'>{_e(t.get('line') or '')}</div>"
+            f"<div class='ang-kicker' style='margin:6px 0 0;'>{_e(t_.get('line') or '')}</div>"
             "</div></button>")
     out.append("</div>")
     return "".join(out)

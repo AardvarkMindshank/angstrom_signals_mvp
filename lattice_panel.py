@@ -8,6 +8,8 @@ and Prism only does real work when Run now is pressed.
 
 from __future__ import annotations
 
+from i18n import t
+
 TITLE = "Angstrom Lattice"
 ICON = ":material/hub:"
 # (icon, name, one line on what it is for); the lines make the bar's hover note.
@@ -179,7 +181,7 @@ def render_popout(st, supabase, user_id: str, start: str = "lattice", watchlist:
     """The AI Navigator alone in its own window (?view=advisor&from=app|lattice)."""
     import advisor
 
-    st.markdown("#### ✨ AI Navigator")
+    st.markdown(t("#### ✨ AI Navigator"))
     advisor.render(st, supabase, user_id, start if start in advisor.START else "lattice", watchlist=watchlist,
                    auto=auto, provider=provider)
 
@@ -196,7 +198,7 @@ def _render(st, supabase, assets: list[tuple[str, str, str]], user_id: str) -> N
     hover = "\n\n".join(f"**{SECTIONS[k][1]}**: {SECTIONS[k][2]}" for k in SECTIONS)
     bar = st.container(horizontal=True, vertical_alignment="center", gap="small") if hasattr(st, "container") else None
     with (bar if bar is not None else _nothing()):
-        chosen = st.segmented_control("Lattice section", list(SECTIONS), format_func=label, default="groups",
+        chosen = st.segmented_control(t("Lattice section"), list(SECTIONS), format_func=label, default="groups",
                                       key="lattice_section", label_visibility="collapsed", help=hover) or "groups"
         if hasattr(st, "components") and hasattr(st.components, "v2"):
             advisor_button(st, "lattice")
@@ -217,6 +219,6 @@ def _render(st, supabase, assets: list[tuple[str, str, str]], user_id: str) -> N
 
         prism_view.render(st, supabase, assets, user_id)
     else:
-        st.info("🛣️ **Strategies are coming later.** A strategy will turn a Set's Yes into a plan: when to enter, "
+        st.info(t("🛣️ **Strategies are coming later.** A strategy will turn a Set's Yes into a plan: when to enter, "
                 "when to exit, and how much risk to take, including sequences such as \"A, then B within N days\". "
-                "They will be designed with Drew's trading rules.")
+                "They will be designed with Drew's trading rules."))

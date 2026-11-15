@@ -9,6 +9,8 @@ through prism_put_scan (sql/2026-11-08_prism_scan_objects.sql). ▶ runs a scan 
 
 from __future__ import annotations
 
+from i18n import t
+
 import time
 
 import pandas as pd
@@ -54,7 +56,7 @@ def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str = "") 
 
     _SUPABASE[0] = supabase
     if not assets:
-        st.info("No assets in the watchlists.")
+        st.info(t("No assets in the watchlists."))
         return
     cached = st.session_state.get("siggroups_saved")
     if not cached or time.time() - cached[0] > 60:
@@ -109,7 +111,7 @@ def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str = "") 
     try:
         result = prism_component.component()(key="prism_board", data=data, on_action_change=lambda: None)
     except Exception as exc:
-        st.info(f"The Prism board could not load here ({str(exc)[:120]}).")
+        st.info(t('The Prism board could not load here ({str_exc_120}).', str_exc_120=str(exc)[:120]))
         result = None
     raw = getattr(result, "action", None)
     if raw and raw != st.session_state.get("prism_action_seen"):
@@ -126,10 +128,10 @@ def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str = "") 
         strip = st.session_state.get("prism_history", {}).get(s["id"])
         if strip:
             _history_view(st, s, strip)
-    st.caption("Answers are descriptive readings, not forecasts or advice. ▶ uses the latest finished candles; ⏪ "
-               "rebuilds a past moment from today's data providers (a reconstruction, not a record).")
+    st.caption(t("Answers are descriptive readings, not forecasts or advice. ▶ uses the latest finished candles; ⏪ "
+               "rebuilds a past moment from today's data providers (a reconstruction, not a record)."))
     if problem:
-        st.caption(f"Saved Sets could not be read: {problem}")
+        st.caption(t('Saved Sets could not be read: {problem}', problem=problem))
 
 
 CHANNEL_WORDS = {"account": "as your alert settings", "instant": "instantly (app and email)", "digest": "daily summary",
@@ -147,12 +149,9 @@ def _builtin_section(st, supabase, builtins: list) -> None:
     builtins = sorted(builtins, key=lambda r: order.get(r.get("builtin"), 99))
     _, latches = _history(supabase, [b["id"] for b in builtins])
     on = sum((b.get("notify") or {}).get("channel") != "off" for b in builtins)
-    with st.expander(f"Provided by Angstrom Signals · built-in alerts, {on} of {len(builtins)} on",
+    with st.expander(t('Provided by Angstrom Signals · built-in alerts, {on} of {len_builtins} on', on=on, len_builtins=len(builtins)),
                      icon=":material/notifications_active:"):
-        st.caption("Trend, Stretch and Flow alerts, checked at each daily close (crypto 00:10 UTC, shares 10 minutes "
-                   "after the New York close) on the same readings as the dashboard. Change the lines and switch "
-                   "them on or off in Notifications → Configure Alert Rules. They don't count towards your "
-                   f"{MAX_SCANS_TEXT} scheduled scans.")
+        st.caption(t("Trend, Stretch and Flow alerts, checked at each daily close (crypto 00:10 UTC, shares 10 minutes after the New York close) on the same readings as the dashboard. Change the lines and switch them on or off in Notifications → Configure Alert Rules. They don't count towards your {MAX_SCANS_TEXT} scheduled scans.", MAX_SCANS_TEXT=MAX_SCANS_TEXT))
         rows = []
         for b in builtins:
             reading, direction, _ = ba.BUILTINS[b["builtin"]]
@@ -303,9 +302,9 @@ def _history_view(st, scan, strip) -> None:
     obj = pb.scan_object(scan)
     sid = scan["id"]
     rows = [r for r in strip.get("rows") or [] if r.get("spans")]
-    st.markdown(f"##### 🕰️ Visualize History · {obj['name']}")
+    st.markdown(t('##### 🕰️ Visualize History · {obj_name}', obj_name=obj['name']))
     if not rows:
-        st.caption("No long daily history was available for these assets.")
+        st.caption(t("No long daily history was available for these assets."))
         return
     names = {r["key"]: r["name"] for r in rows}
     pending = int(strip.get("pending") or 0)
@@ -314,29 +313,28 @@ def _history_view(st, scan, strip) -> None:
         st.session_state[f"hist_top_{sid}"] = nxt
     cols = st.columns([3, 3, 2], vertical_alignment="bottom")
     with cols[0]:
-        top = st.selectbox("On top", list(names), format_func=lambda k: names[k], key=f"hist_top_{sid}",
-                           help="The asset drawn large with candles. Tap any small chart to put it on top.")
+        top = st.selectbox(t("On top"), list(names), format_func=lambda k: names[k], key=f"hist_top_{sid}",
+                           help=t("The asset drawn large with candles. Tap any small chart to put it on top."))
     years_of = {"1Y": 1, "3Y": 3, "10Y": 10, "All": 0}
     ready = {o: (not pending) or set_history.covers(strip, y) for o, y in years_of.items()}
     with cols[1]:
         span = st.segmented_control(
-            "Years", list(years_of), default="1Y" if pending else "10Y", key=f"hist_years_{sid}",
+            t("Years"), list(years_of), default="1Y" if pending else "10Y", key=f"hist_years_{sid}",
             format_func=lambda o: o if ready[o] else f"⏳ {o}",
-            help="How far back the chart opens; you can also zoom and drag along the time axis. ⏳ = still being "
-                 "worked out: 3Y opens when every asset has 3 years, then 10Y, then All.") or "1Y"
+            help=t("How far back the chart opens; you can also zoom and drag along the time axis. ⏳ = still being "
+                 "worked out: 3Y opens when every asset has 3 years, then 10Y, then All.")) or "1Y"
     with cols[2]:
-        show_no = st.toggle("No as faint red", key=f"hist_no_{sid}",
-                            help="Tint the No days too. Off keeps the chart clear, since most days are No.")
+        show_no = st.toggle(t("No as faint red"), key=f"hist_no_{sid}",
+                            help=t("Tint the No days too. Off keeps the chart clear, since most days are No."))
     if not ready[span]:
         best = max((o for o in ("1Y", "3Y", "10Y") if ready[o]), key=lambda o: years_of[o])
-        st.caption(f"⏳ {span} is still being worked out ({len(strip['rows']) - pending} of {len(strip['rows'])} "
-                   f"assets complete); showing {best} until then.")
+        st.caption(t('⏳ {span} is still being worked out ({len_strip_rows_pending} of {len_strip_rows} assets complete); showing {best} until then.', span=span, len_strip_rows_pending=len(strip['rows']) - pending, len_strip_rows=len(strip['rows']), best=best))
         span = best
     years = {"1Y": 1, "3Y": 3, "10Y": 10, "All": 0}[span]
     dark = str(getattr(getattr(st.context, "theme", None), "type", "") or "") == "dark"
     data = history_chart.payload(strip, top, years, dark=dark, show_no=show_no, set_name=obj["name"])
     if not data:
-        st.caption("The chosen asset's daily history could not be loaded.")
+        st.caption(t("The chosen asset's daily history could not be loaded."))
         return
     result = _history_component(st)(key=f"lw_history_{sid}", data=data, on_pane_change=lambda: None)
     tapped = getattr(result, "pane", None)
@@ -346,11 +344,9 @@ def _history_view(st, scan, strip) -> None:
         lattice_panel.rerun(st)
     yes = sum(1 for x in next(r for r in rows if r["key"] == top)["spans"] if x[2] == "yes")
     since = next(r for r in rows if r["key"] == top)["spans"][0][0][:4]
-    st.caption(f"Green = Yes (conditions met), amber = Unknown, clear = No · {names[top]}: Yes {yes} times since "
-               f"{since}. Tap a small chart to put it on top. A description of the past, not a forecast; each day "
-               "uses only data up to its close.")
+    st.caption(t('Green = Yes (conditions met), amber = Unknown, clear = No · {names_top}: Yes {yes} times since {since}. Tap a small chart to put it on top. A description of the past, not a forecast; each day uses only data up to its close.', names_top=names[top], yes=yes, since=since))
     view = (scan.get("chart_views") or {}).get(next((r["id"] for r in rows if r["key"] == top), None))
-    if st.button("Open on the main price chart", icon=":material/candlestick_chart:", key=f"hist_open_{sid}",
+    if st.button(t("Open on the main price chart"), icon=":material/candlestick_chart:", key=f"hist_open_{sid}",
                  help="Select this asset everywhere (tables, chart, analysis sections) with this Set's bands on."
                  + (f" Opens on {view[0]} candles: the timeframe of the deepest stage it holds." if view else "")):
         r = next(r for r in rows if r["key"] == top)
@@ -361,7 +357,7 @@ def _history_view(st, scan, strip) -> None:
         lattice_panel.rerun_page(st)
     if pending:                     # one more step of older years, then draw again
         step = {1: "3 years", 3: "10 years"}.get(strip.get("covered") or 0, "the whole history")
-        with st.spinner(f"Working out older years: {step} for every asset…"):
+        with st.spinner(t('Working out older years: {step} for every asset…', step=step)):
             set_history.complete_row(_SUPABASE[0], obj["set"], strip)
         lattice_panel.rerun(st)
 

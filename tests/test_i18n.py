@@ -43,7 +43,7 @@ def test_lookup_falls_back_and_keeps_values(tmp_path, monkeypatch):
     assert i18n.translate("Hello", "th") == "สวัสดี"
     assert i18n.translate("Not there", "th") == "Not there"
     assert i18n.translate("{n} new", "th", n=3) == "ใหม่ 3"
-    assert i18n.translate("Bad {n}", "th", n=2) == "Bad 2"                  # a translation that lost {n}: English
+    assert i18n.translate("Bad {n}", "th", n=2) == "เสีย"                   # a translation may leave a value out
     assert i18n.translate("Hello", "en") == "Hello"
 
 
@@ -57,7 +57,7 @@ def test_every_language_file_is_sound():
             if english.startswith("_"):
                 continue
             assert isinstance(words, str) and words.strip(), (name, english)
-            assert set(re.findall(r"{(\w+)}", english)) == set(re.findall(r"{(\w+)}", words)), (name, english)
+            assert set(i18n._FIELD.findall(words)) <= set(i18n._FIELD.findall(english)), (name, english)
 
 
 def test_every_language_has_a_flag_image():
@@ -96,3 +96,11 @@ def test_picker_payload_and_events():
 
 
 _FIELD = re.compile(r"{(\w+)}")
+
+
+def test_the_navigator_answers_in_the_visits_language():
+    import advisor
+
+    assert advisor.language_line("en") == []
+    line = " ".join(advisor.language_line("th"))
+    assert "Thai" in line and "ไทย" in line and "Lattice" in line

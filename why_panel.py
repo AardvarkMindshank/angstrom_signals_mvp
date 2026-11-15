@@ -115,16 +115,16 @@ def status_marks(answer: str, available: str | None, detail: str | None = None, 
             perspectives.evidence(doc, key)]
 
 
-def with_trend(item: dict, t: dict) -> None:
+def with_trend(item: dict, t_: dict) -> None:
     """Add the 30-day line, the week's change and the plain sentence to a block."""
-    item["trend"] = t
+    item["trend"] = t_
     if item["part"] == "groups":
-        item["change"] = week_change(t["scores"])
+        item["change"] = week_change(t_["scores"])
         item["sentence"] = group_sentence(item["name"], item.get("percent"), item.get("label"), item["change"])
         for r in item["rows"]:
-            r["change"] = week_change(t["parts"].get(r.get("key"), []))
+            r["change"] = week_change(t_["parts"].get(r.get("key"), []))
     else:
-        item["sentence"] = set_sentence(t["answers"], t["dates"])
+        item["sentence"] = set_sentence(t_["answers"], t_["dates"])
 
 
 def background_item(spec: dict, cell: dict | None) -> dict:
@@ -300,16 +300,16 @@ def _change(change) -> str:
 
 def head_html(item: dict) -> str:
     """The card's top: the line or strip for the last 30 days, the week's change and one plain sentence."""
-    t = item.get("trend")
-    if not t:
+    t_ = item.get("trend")
+    if not t_:
         return ""
     if item["part"] == "groups":
-        visual = sparkline(t["scores"])
+        visual = sparkline(t_["scores"])
         side = _change(item.get("change"))
     else:
-        visual = strip(t["answers"], t["dates"])
+        visual = strip(t_["answers"], t_["dates"])
         side = ""
-    days = len(t["dates"])
+    days = len(t_["dates"])
     return ("<div style='display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:2px 0 6px'>"
             f"<span title='The last {days} daily closes'>{visual}</span>{side}</div>"
             + (f"<div style='margin:0 0 8px'>{_esc(item['sentence'])}</div>" if item.get("sentence") else ""))

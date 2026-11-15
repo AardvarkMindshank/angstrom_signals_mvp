@@ -49,7 +49,7 @@ LANGUAGES = [
 ]
 BY_CODE = {lang["code"]: lang for lang in LANGUAGES}
 
-_FIELD = re.compile(r"{(\w+)}")
+_FIELD = re.compile(r"{(\w+)(?:![rsa])?(?::[^{}]*)?}")
 
 
 def offered(admin: bool = False, extra: str | None = None) -> list[dict]:
@@ -149,11 +149,12 @@ def current() -> str:
 
 
 def translate(text: str, code: str, **values) -> str:
-    """`text` in language `code`, with {fields} filled in. A translation that lost or invented a {field} is not
-    trusted: the English is used instead, so a value is never missing."""
+    """`text` in language `code`, with {fields} filled in. A translation that invents a {field} is not trusted:
+    the English is used instead."""
     words = catalogue(code).get(text, text) if code != BASE else text
-    if words != text and set(_FIELD.findall(words)) != set(_FIELD.findall(text)):
-        words = text
+    if words != text and not set(_FIELD.findall(words)) <= set(_FIELD.findall(text)):
+        words = text                                   # a translation may leave out a value (an English plural
+                                                       # "s"), never invent one
     if values:
         try:
             return words.format(**values)

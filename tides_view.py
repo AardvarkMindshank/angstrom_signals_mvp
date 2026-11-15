@@ -9,6 +9,8 @@ always sit beside the sailing words (decision 6). Motion is gentle and stops for
 
 from __future__ import annotations
 
+from i18n import t
+
 import html
 import math
 from datetime import datetime, timezone
@@ -143,10 +145,10 @@ def wave_path(amplitude: float, y: float, length: float = 125, width: float = 15
 
 
 def hero(snap: dict, warning: dict | None, now: datetime) -> str:
-    t, sea, winds = snap.get("tide") or {}, snap.get("sea") or {}, snap.get("winds") or {}
+    t_, sea, winds = snap.get("tide") or {}, snap.get("sea") or {}, snap.get("winds") or {}
     state = sea.get("state") or "moderate"
     sky_top, sky_bottom = SKY[state]
-    score = t.get("score") or 0.0
+    score = t_.get("score") or 0.0
     water = 150 - 45 * max(-1.0, min(1.0, score / 0.6))       # high water when the tide is in
     amp = AMPLITUDE[state]
     seas = SEA[state]
@@ -177,15 +179,15 @@ def hero(snap: dict, warning: dict | None, now: datetime) -> str:
            f"x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='{sky_top}'/><stop offset='1' "
            f"stop-color='{sky_bottom}'/></linearGradient></defs><rect width='1000' height='200' fill='url(#tides-sky)'/>"
            f"{extras}{layers}{gauge}</svg>")
-    if t.get("status") == "ok":
-        name, plain, _ = td.TIDE_WORDS[t["label"]]
-        held = f"for {t['held_days']} trading days"
+    if t_.get("status") == "ok":
+        name, plain, _ = td.TIDE_WORDS[t_["label"]]
+        held = f"for {t_['held_days']} trading days"
         pending = ""
-        if t.get("pending"):
-            pending = (f" · turning: readings point to {td.TIDE_WORDS[t['raw_label']][0].lower()}, "
+        if t_.get("pending"):
+            pending = (f" · turning: readings point to {td.TIDE_WORDS[t_['raw_label']][0].lower()}, "
                        "confirmed after 5 closes")
         title = (f"<div class='big'>{esc(name)}<span class='plain'>{esc(plain)}</span></div>"
-                 f"<div class='sub'>{esc(held)}{esc(pending)} · score {t['score']:+.2f}</div>")
+                 f"<div class='sub'>{esc(held)}{esc(pending)} · score {t_['score']:+.2f}</div>")
     else:
         title = "<div class='big'>Tide unknown</div><div class='sub'>Not enough data yet.</div>"
     if sea.get("status") == "ok":
@@ -206,7 +208,7 @@ def hero(snap: dict, warning: dict | None, now: datetime) -> str:
         chips.append(f"<span class='chip warn' title='{esc(tip)}'>{mc.pennants(warning['tier'])} Storm warning: "
                      f"{esc(warning['short'])} {esc(mc.when_words(warning['at'], now))}</span>")
     dark = " dark" if state in ("rough", "storm") else ""
-    sea_img = img(svg, "sea", f"Sea {state}, tide {t.get('label', '')}")
+    sea_img = img(svg, "sea", f"Sea {state}, tide {t_.get('label', '')}")
     return (f"<div class='hero{dark}'>{sea_img}<div class='over'><div>{title}</div>"
             f"<div class='chips'>{''.join(chips)}</div></div></div>")
 
@@ -281,10 +283,10 @@ def waves(snap: dict, range_key: str = "1Y") -> str:
         return " ".join(out)
 
     swell_y = 92
-    t = snap.get("tide") or {}
-    name, plain, _ = td.TIDE_WORDS.get(t.get("label"), ("Tide", "", ""))
-    tide_state = f"{ {'in': '▲', 'out': '▼'}.get(t.get('label'), '▶') } {name.lower()} · {plain}"
-    tide_tone = {"in": "#16a34a", "out": "#dc2626"}.get(t.get("label"), "#64748b")
+    t_ = snap.get("tide") or {}
+    name, plain, _ = td.TIDE_WORDS.get(t_.get("label"), ("Tide", "", ""))
+    tide_state = f"{ {'in': '▲', 'out': '▼'}.get(t_.get('label'), '▶') } {name.lower()} · {plain}"
+    tide_tone = {"in": "#16a34a", "out": "#dc2626"}.get(t_.get("label"), "#64748b")
     body = []
     # month ticks (first trading day of each month; every other month when the range is long)
     step = 1 if days <= 130 else 2 if days <= 260 else 3
@@ -543,8 +545,8 @@ def render_panel(st, snap: dict, saved_range: str | None, save_range, buttons, t
     ranges = list(RANGES)
     if st.session_state.get("tides_range") not in ranges:
         st.session_state["tides_range"] = saved_range if saved_range in ranges else "1Y"
-    picked = st.segmented_control("Time range", ranges, key="tides_range", label_visibility="collapsed",
-                                  help="How far back the waves go: 3 months, 6 months, 1 year or 2 years.")
+    picked = st.segmented_control(t("Time range"), ranges, key="tides_range", label_visibility="collapsed",
+                                  help=t("How far back the waves go: 3 months, 6 months, 1 year or 2 years."))
     if picked and picked != saved_range:
         save_range(picked)
     st.html(waves_part(snap, picked or "1Y"))

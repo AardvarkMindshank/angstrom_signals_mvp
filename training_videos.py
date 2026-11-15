@@ -11,6 +11,8 @@ line to SERIES below.
 
 from __future__ import annotations
 
+from i18n import t
+
 BASE_URL = "https://www.angstromsignals.com/videos/training/"
 ICON = ":material/smart_display:"
 
@@ -137,20 +139,20 @@ def _draw_player(st, on_top: bool = False) -> None:
     st.markdown(f"**{v['label']}** · {v['length']}")
     st.caption(f"{v['series_name']} · {v['position']} of {v['count']}")
     row = st.container(horizontal=True, horizontal_alignment="center", gap="small")   # one row, even on a phone
-    if row.button("Start", icon=":material/first_page:", key="tv_first", disabled=near["previous"] is None,
-                  help="Back to the first video of this series"):
+    if row.button(t("Start"), icon=":material/first_page:", key="tv_first", disabled=near["previous"] is None,
+                  help=t("Back to the first video of this series")):
         _go(st, near["first"])
-    if row.button("Back", icon=":material/chevron_left:", key="tv_prev", disabled=near["previous"] is None,
+    if row.button(t("Back"), icon=":material/chevron_left:", key="tv_prev", disabled=near["previous"] is None,
                   help=("Previous: " + info(near["previous"])["label"]) if near["previous"] else "This is the first video"):
         _go(st, near["previous"])
-    if row.button("Next", icon=":material/chevron_right:", key="tv_next", disabled=near["next"] is None,
+    if row.button(t("Next"), icon=":material/chevron_right:", key="tv_next", disabled=near["next"] is None,
                   help=("Next: " + info(near["next"])["label"]) if near["next"] else "This is the last video"):
         _go(st, near["next"])
     if on_top and hasattr(st, "components") and hasattr(st.components, "v2"):
         with row:
             _keep_on_top(st)
     st.video(v["url"], autoplay=True)
-    with st.expander("All videos", icon=ICON):
+    with st.expander(t("All videos"), icon=ICON):
         for key, (series, videos) in SERIES.items():
             st.markdown(f"**{series}**")
             for slug, _, length in videos:
@@ -208,7 +210,7 @@ def render_popout(st, name: str | None) -> None:
             st.session_state[STATE] = name
         except KeyError:
             pass
-    st.markdown("#### 🎬 Training video")
+    st.markdown(t("#### 🎬 Training video"))
     _draw_player(st, on_top=True)
 
 

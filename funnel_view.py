@@ -170,10 +170,10 @@ def _when(iso: str | None) -> str:
     if not iso:
         return ""
     try:
-        t = pd.Timestamp(iso).tz_convert("UTC")
+        t_ = pd.Timestamp(iso).tz_convert("UTC")
     except Exception:
         return ""
-    return f"{t.day} {t.strftime('%b %H:%M')} UTC"
+    return f"{t_.day} {t_.strftime('%b %H:%M')} UTC"
 
 
 def health(runs: list[dict | None], f: dict, now=None, states: dict | None = None) -> str | None:

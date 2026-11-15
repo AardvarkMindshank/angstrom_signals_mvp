@@ -9,6 +9,8 @@ embedded in a Set and, with a decision, scanned in Prism.
 
 from __future__ import annotations
 
+from i18n import t
+
 import json
 import time
 
@@ -58,8 +60,8 @@ def _sources(saved: list[dict], user_id: str, current: str | None = None, provid
 
 
 def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str = "") -> None:
-    st.caption("Drag signals in, or tap + on a tablet. Rules give the Group labels such as Bullish; the checks "
-               "below say what blocks saving and what is only a warning.")
+    st.caption(t("Drag signals in, or tap + on a tablet. Rules give the Group labels such as Bullish; the checks "
+               "below say what blocks saving and what is only a warning."))
     import signal_groups_inspector as gi
 
     cached = st.session_state.get("siggroups_saved")
@@ -76,7 +78,7 @@ def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str = "") 
         st.session_state.pop("lattice_start", None)
     if lattice_panel.provided_shown(st):
         _provided_starters(st)
-    start = st.selectbox("Start from", list(labels), format_func=labels.get, key="lattice_start")
+    start = st.selectbox(t("Start from"), list(labels), format_func=labels.get, key="lattice_start")
     if st.session_state.get("lattice_loaded") != start:
         st.session_state["lattice_loaded"] = start
         if start == START_NEW:
@@ -86,7 +88,7 @@ def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str = "") 
             model, why = le.from_document(doc)
             if model is None:
                 st.session_state["lattice_model"], st.session_state["lattice_source"] = le.empty_model(), None
-                st.warning(f"{why} Starting a new Group instead; the raw inspector (Groups & Sets tab) can still open it.")
+                st.warning(t('{why} Starting a new Group instead; the raw inspector (Groups & Sets tab) can still open it.', why=why))
             else:
                 if cfg is None:
                     model["name"] = f"{model['name']} (my copy)"
@@ -114,7 +116,7 @@ def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str = "") 
             on_model_change=lambda: None,
         )
     except Exception as exc:          # the page still works; only the editor is missing
-        st.info(f"The editor could not load here ({str(exc)[:120]}).")
+        st.info(t('The editor could not load here ({str_exc_120}).', str_exc_120=str(exc)[:120]))
         result = None
     raw = getattr(result, "model", None)
     if raw and raw != st.session_state.get("lattice_seen"):
@@ -129,28 +131,28 @@ def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str = "") 
     # (the widths follow the divider as it is dragged; lattice_component.SPLITTER_JS).
     left, right = st.container(key="lat_checks_group").columns([3, 2])
     with left:
-        st.markdown("**Checks**")
+        st.markdown(t("**Checks**"))
         for b in screen["checks"]["blocks"]:
-            st.error(f"⛔ Can't save: {b}")
+            st.error(t("⛔ Can't save: {b}", b=b))
         for w in screen["checks"]["warnings"]:
             st.warning(f"⚠️ {w}")
         if not screen["checks"]["blocks"] and not screen["checks"]["warnings"]:
-            st.success("✅ No problems found.")
+            st.success(t("✅ No problems found."))
     with right:
-        st.markdown("**What this Group returns**")
+        st.markdown(t("**What this Group returns**"))
         st.markdown(
             ("- **Score**: an average from −100 to +100 (a number).\n" if screen["returns"]["score"] else
              "- **Score**: none (no Score members).\n")
             + "- **Label**: " + (", ".join(screen["returns"]["labels"][:-1]) + " or " if len(screen["returns"]["labels"]) > 1
                                  else "") + f"{screen['returns']['labels'][-1]}, or Unknown if a rule can't be checked.\n"
             + "- **Completeness**: Complete, Partial or Limited, listing anything missing.")
-        st.markdown("**Description** · written automatically")
+        st.markdown(t("**Description** · written automatically"))
         st.caption(screen["description"])
 
     _save(st, supabase, model, screen["can_save"])
     _try(st, supabase, model, assets, screen["can_save"])
     if problem:
-        st.caption(f"Saved Groups could not be read: {problem}")
+        st.caption(t('Saved Groups could not be read: {problem}', problem=problem))
 
 
 def starters_html() -> str:
@@ -186,8 +188,8 @@ def starters_html() -> str:
 def _provided_starters(st) -> None:
     """The starter Groups, in their own folded section: copy one to start from it."""
     with st.expander(lattice_panel.PROVIDED_TITLE + " · Groups", icon=":material/inventory_2:"):
-        st.caption("The dashboard's own readings, as Groups. Pick one in **Start from** below to open your own copy; "
-                   "the original stays as it is. Hide these in ⚙️ Settings → Show provided starters and examples.")
+        st.caption(t("The dashboard's own readings, as Groups. Pick one in **Start from** below to open your own copy; "
+                   "the original stays as it is. Hide these in ⚙️ Settings → Show provided starters and examples."))
         st.html(starters_html())
 
 
@@ -199,25 +201,25 @@ def _rename(st, supabase, kind: str, source: dict) -> None:
     word = "Group" if kind == "group" else "Set"
     saved = (st.session_state.get("siggroups_saved") or (0, []))[1]
     with _popover(st, "Rename", icon=":material/edit:", help=f"Give {source['name']} a new name."):
-        new = st.text_input(f"New name for this {word}", value=source["name"], max_chars=80,
+        new = st.text_input(t('New name for this {word}', word=word), value=source["name"], max_chars=80,
                             key=f"lattice_rename_{kind}_{source['id']}")
         clean = " ".join(str(new or "").split())
         same = clean.casefold() == " ".join(str(source["name"]).split()).casefold()
         taken = not same and name_taken(saved, st.session_state.get("_lattice_user"), kind, clean)
         if taken:
-            st.warning(f"You already have a {word} called **{clean}**.")
-        if st.button("Rename", type="primary", disabled=not clean or same or taken,
+            st.warning(t('You already have a {word} called **{clean}**.', word=word, clean=clean))
+        if st.button(t("Rename"), type="primary", disabled=not clean or same or taken,
                      key=f"lattice_rename_go_{kind}_{source['id']}"):
             try:
                 supabase.rpc("analysis_rename_config", {"cfg": source["id"], "new_name": clean}).execute()
             except Exception as exc:
                 text = str(getattr(exc, "message", "") or exc)
                 if "analysis_rename_config" in text or "PGRST202" in text:
-                    st.error("Renaming needs a one-off database update first (sql/2026-11-15_provided_groups.sql).")
+                    st.error(t("Renaming needs a one-off database update first (sql/2026-11-15_provided_groups.sql)."))
                 elif "name_taken" in text:
-                    st.warning(f"You already have a {word} called **{clean}**.")
+                    st.warning(t('You already have a {word} called **{clean}**.', word=word, clean=clean))
                 else:
-                    st.error(f"Refused: {gi._rpc_error(exc)}")
+                    st.error(t('Refused: {gi_rpc_error_exc}', gi_rpc_error_exc=gi._rpc_error(exc)))
                 return
             st.session_state.pop("siggroups_saved", None)
             st.session_state.pop("lattice_loaded" if kind == "group" else "lattice_set_loaded", None)
@@ -252,13 +254,12 @@ def _delete(st, supabase, kind: str, source: dict) -> None:
         if users:
             st.warning(ld.blocked_message(kind, users))
             return
-        st.markdown(f"Delete **{source['name']}**? It disappears from your lists; if it is a column in your tables, "
-                    "that column is removed too. You can undo this straight after.")
-        if st.button(f"Delete {source['name']}", type="primary", key=f"lattice_delete_{kind}_{source['id']}"):
+        st.markdown(t('Delete **{source_name}**? It disappears from your lists; if it is a column in your tables, that column is removed too. You can undo this straight after.', source_name=source['name']))
+        if st.button(t('Delete {source_name}', source_name=source['name']), type="primary", key=f"lattice_delete_{kind}_{source['id']}"):
             try:
                 supabase.rpc("analysis_archive_config", {"cfg": source["id"]}).execute()
             except Exception as exc:
-                st.error(f"Refused: {gi._rpc_error(exc)}")
+                st.error(t('Refused: {gi_rpc_error_exc}', gi_rpc_error_exc=gi._rpc_error(exc)))
                 return
             st.session_state["_drop_column"] = f"saved:{source['id']}"
             st.session_state["_lattice_undo"] = {"id": source["id"], "name": source["name"], "kind": kind}
@@ -285,13 +286,12 @@ def undo_bar(st, supabase, kind: str) -> None:
     if not undo or undo["kind"] != kind:
         return
     cols = st.columns([4, 1], vertical_alignment="center")
-    cols[0].info(f"Deleted **{undo['name']}**.", icon=":material/delete:")
-    if cols[1].button("Undo", icon=":material/undo:", key=f"lattice_undo_{kind}", width="stretch"):
+    cols[0].info(t('Deleted **{undo_name}**.', undo_name=undo['name']), icon=":material/delete:")
+    if cols[1].button(t("Undo"), icon=":material/undo:", key=f"lattice_undo_{kind}", width="stretch"):
         try:
             supabase.rpc("analysis_restore_config", {"cfg": undo["id"]}).execute()
         except Exception as exc:
-            st.error(f"Could not undo: {gi._rpc_error(exc)}. If it says the function is missing, run "
-                     "sql/2026-11-13_restore_config.sql once.")
+            st.error(t('Could not undo: {gi_rpc_error_exc}. If it says the function is missing, run sql/2026-11-13_restore_config.sql once.', gi_rpc_error_exc=gi._rpc_error(exc)))
             return
         st.session_state.pop("_lattice_undo", None)
         st.session_state.pop("siggroups_saved", None)
@@ -333,11 +333,11 @@ def _save(st, supabase, model: dict, can_save: bool) -> None:
     source = st.session_state.get("lattice_source")
     mine = bool(source and source.get("owner_id") == st.session_state.get("_lattice_user"))
     cols = action_row(st, 1 + bool(source) + 2 * mine)
-    new = cols[0].button("💾 Save as a new Group", disabled=not can_save, key="lattice_save_new", type="primary",
-                         width="stretch", help="Saves version 1 of a new Group. It is private until you publish it.")
-    nxt = bool(source) and cols[1].button(f"💾 Save as version {source['current_version'] + 1} of {source['name']}",
+    new = cols[0].button(t("💾 Save as a new Group"), disabled=not can_save, key="lattice_save_new", type="primary",
+                         width="stretch", help=t("Saves version 1 of a new Group. It is private until you publish it."))
+    nxt = bool(source) and cols[1].button(t('💾 Save as version {source_current_version_1} of {source_name}', source_current_version_1=source['current_version'] + 1, source_name=source['name']),
                                           disabled=not can_save, key="lattice_save_next", width="stretch",
-                                          help="Saves a new version. Earlier versions stay as they were.")
+                                          help=t("Saves a new version. Earlier versions stay as they were."))
     if mine:
         with cols[-2]:
             _rename(st, supabase, "group", source)
@@ -363,7 +363,7 @@ def _save(st, supabase, model: dict, can_save: bool) -> None:
         except Exception as exc:
             if "Rerun" in type(exc).__name__:
                 raise
-            st.error(f"Refused: {gi._rpc_error(exc)}")
+            st.error(t('Refused: {gi_rpc_error_exc}', gi_rpc_error_exc=gi._rpc_error(exc)))
     if nxt:
         try:
             v = supabase.rpc("analysis_save_version", {"cfg": source["id"], "expected_version": source["current_version"],
@@ -379,16 +379,16 @@ def _save(st, supabase, model: dict, can_save: bool) -> None:
         except Exception as exc:
             if "Rerun" in type(exc).__name__:
                 raise
-            st.error(f"Refused: {gi._rpc_error(exc)}")
+            st.error(t('Refused: {gi_rpc_error_exc}', gi_rpc_error_exc=gi._rpc_error(exc)))
 
 
 def _try(st, supabase, model: dict, assets, can_save: bool) -> None:
     if not assets or not can_save:
         return
-    with st.expander("▶️ Try it on one asset (live)"):
+    with st.expander(t("▶️ Try it on one asset (live)")):
         names = {f"{k}:{i}": n for k, i, n in assets}
-        pick = st.selectbox("Asset", list(names), format_func=names.get, key="lattice_try_asset")
-        if st.button("Try it", key="lattice_try"):
+        pick = st.selectbox(t("Asset"), list(names), format_func=names.get, key="lattice_try_asset")
+        if st.button(t("Try it"), key="lattice_try"):
             kind, aid = pick.split(":", 1)
             ctx = sl.DataContext(kind, aid, sentiment_loader=loaders.sentiment_loader(supabase),
                                  options_loader=loaders.options_loader(supabase))

@@ -11,6 +11,8 @@ first.
 
 from __future__ import annotations
 
+from i18n import t
+
 import copy
 
 import funnel as fn
@@ -31,8 +33,8 @@ NOTE = "Candidate means an asset matches your selected conditions. It is not a r
 # ----------------------------------------------------------------------------------------------- pure helpers
 
 def template(market: str, direction: str) -> dict:
-    t = ft.trend_funnel(direction, market)
-    return {"id": None, "name": t["name"], "direction": direction, "market": market, "stages": t["stages"],
+    t_ = ft.trend_funnel(direction, market)
+    return {"id": None, "name": t_["name"], "direction": direction, "market": market, "stages": t_["stages"],
             "flicker": True, "alerts": {"in_app": True, "email": False}, "pool": {}, "paused": False}
 
 
@@ -178,10 +180,10 @@ def render(st, supabase, user_id: str) -> None:
              + (" (paused)" if f.get("paused") else "") for f in funnels}
     for m, d in TEMPLATES:
         names[f"new:{m}:{d}"] = (f"{'🪙' if m == 'crypto' else '🏛️'} {template(m, d)['name']} (provided)")
-    pick = st.selectbox("Funnel", keys, format_func=names.get, key="funnel_edit",
-                        help="Your own funnels first, then the provided ones (marked provided). As with provided "
+    pick = st.selectbox(t("Funnel"), keys, format_func=names.get, key="funnel_edit",
+                        help=t("Your own funnels first, then the provided ones (marked provided). As with provided "
                              "Groups and Sets, a provided funnel can't be changed or deleted: make your own copy to "
-                             "use it. At most 6 of your own.")
+                             "use it. At most 6 of your own."))
     if pick.startswith("new:"):
         _provided_view(st, supabase, pick, funnels, library)
         return
@@ -214,34 +216,34 @@ def render(st, supabase, user_id: str) -> None:
                 + ("" if badge.startswith("Your copy") else " · not reviewed or tested by Angstrom"))
     if badge.startswith("Your copy of an earlier version"):
         latest = template(market, f["direction"])
-        if st.button("⬆ Update to the latest provided version", key=f"fe_latest_{pick}",
-                     help="Angstrom's provided funnel has changed since you made your copy (its daily stage reads "
+        if st.button(t("⬆ Update to the latest provided version"), key=f"fe_latest_{pick}",
+                     help=t("Angstrom's provided funnel has changed since you made your copy (its daily stage reads "
                           "WaveTrend turning back from an extreme; crypto funnels now start with a wider daily-trend "
                           "stage). This takes its stages; your name, pool and alerts stay. Then Save and activate: "
-                          "every asset starts again from the pool, quietly."):
+                          "every asset starts again from the pool, quietly.")):
             f["stages"] = copy.deepcopy(latest["stages"])
             lattice_panel.rerun(st)
 
     # ------------------------------------------------------------------ basics
     c1, c2 = st.columns(2)
-    f["name"] = c1.text_input("Name", value=f["name"], max_chars=80, key=f"fe_name_{pick}")
-    f["direction"] = c2.radio("Direction", ["long", "short"], index=0 if f["direction"] == "long" else 1,
+    f["name"] = c1.text_input(t("Name"), value=f["name"], max_chars=80, key=f"fe_name_{pick}")
+    f["direction"] = c2.radio(t("Direction"), ["long", "short"], index=0 if f["direction"] == "long" else 1,
                               horizontal=True, key=f"fe_dir_{pick}",
                               format_func=lambda d: "▲ Long" if d == "long" else "▼ Short",
-                              help="Long and short are separate funnels; a ready-made one has its own Sets for each.")
+                              help=t("Long and short are separate funnels; a ready-made one has its own Sets for each."))
     c3, c4 = st.columns(2)
-    flick = c3.radio(f"{'A coin' if market == 'crypto' else 'An equity'} leaves a stage", ["two", "one"], index=0 if f.get("flicker", True) else 1,
+    flick = c3.radio(t('{a_coin_if_market_crypto_} leaves a stage', a_coin_if_market_crypto_='A coin' if market == 'crypto' else 'An equity'), ["two", "one"], index=0 if f.get("flicker", True) else 1,
                      horizontal=True, key=f"fe_flick_{pick}",
                      format_func=lambda x: "after 2 No closes in a row" if x == "two" else "on the first No",
-                     help="Two in a row stops coins flickering in and out near a threshold (recommended).")
+                     help=t("Two in a row stops coins flickering in and out near a threshold (recommended)."))
     f["flicker"] = flick == "two"
     alerts = dict(f.get("alerts") or {"in_app": True, "email": False})
-    alerts["in_app"] = c4.toggle("Alert me on new Candidates", value=bool(alerts.get("in_app", True)),
-                                 key=f"fe_alert_{pick}", help="One message per hourly run, only for new Candidates.")
-    alerts["first_matches"] = c4.toggle("…including the first run", value=bool(alerts.get("first_matches")),
+    alerts["in_app"] = c4.toggle(t("Alert me on new Candidates"), value=bool(alerts.get("in_app", True)),
+                                 key=f"fe_alert_{pick}", help=t("One message per hourly run, only for new Candidates."))
+    alerts["first_matches"] = c4.toggle(t("…including the first run"), value=bool(alerts.get("first_matches")),
                                         key=f"fe_first_{pick}",
-                                        help="Off (recommended): a new or changed funnel starts quietly, without "
-                                             "alerts for everything that already qualifies.")
+                                        help=t("Off (recommended): a new or changed funnel starts quietly, without "
+                                             "alerts for everything that already qualifies."))
     if not alerts["first_matches"]:
         alerts.pop("first_matches")
     f["alerts"] = alerts
@@ -263,33 +265,30 @@ def render(st, supabase, user_id: str) -> None:
                 _refresh(st)
                 st.toast("Paused." if f["paused"] else checking_now(saved.get("id"), "Resumed."))
             except Exception as exc:
-                st.error(f"That didn't work: {str(exc)[:160]}")
+                st.error(t("That didn't work: {str_exc_160}", str_exc_160=str(exc)[:160]))
         lattice_panel.rerun(st)
     if paused:
-        st.caption("⏸ Paused: not checked until resumed.")
+        st.caption(t("⏸ Paused: not checked until resumed."))
 
     # ------------------------------------------------------------------ pool
     pool = dict(f.get("pool") or {})
     whole = "the top 500 coins" if market == "crypto" else "the S&P 500"
     box = st.container(border=True)
-    box.markdown("**Pool** · which assets the funnel starts from", help=(
-        f"All eligible = {whole} that pass Angstrom's data checks. Narrow it by size, by how much trades a day "
-        "(on the coin's venue: Binance, or across exchanges for Yahoo coins; equities in New York), or to your own "
-        "watchlist. Changing the pool starts every asset again from the pool."))
+    box.markdown(t("**Pool** · which assets the funnel starts from"), help=(
+        t("All eligible = {whole} that pass Angstrom's data checks. Narrow it by size, by how much trades a day (on the coin's venue: Binance, or across exchanges for Yahoo coins; equities in New York), or to your own watchlist. Changing the pool starts every asset again from the pool.", whole=whole)))
     p1, p2, p3 = box.columns([2, 2, 1.4], vertical_alignment="bottom")
     sizes = [0, 50, 100, 200, 500]
-    top = p1.selectbox("Size", sizes, index=sizes.index(int(pool.get("top") or 0)), key=f"fe_top_{pick}",
+    top = p1.selectbox(t("Size"), sizes, index=sizes.index(int(pool.get("top") or 0)), key=f"fe_top_{pick}",
                        format_func=lambda n: "All eligible" if n == 0 else f"Top {n} by market cap")
     floors = [0, 250_000, 1_000_000, 5_000_000, 20_000_000, 100_000_000]
     current = int(pool.get("min_volume") or 0)
     if current not in floors:
         floors = sorted(floors + [current])
-    vol = p2.selectbox("Traded a day, at least", floors, index=floors.index(current), key=f"fe_vol_{pick}",
+    vol = p2.selectbox(t("Traded a day, at least"), floors, index=floors.index(current), key=f"fe_vol_{pick}",
                        format_func=lambda v: "No extra minimum" if v == 0 else
                        (f"${v / 1e6:g}M" if v >= 1e6 else f"${v / 1e3:g}k"))
-    only = p3.toggle("Only my watchlist", value=bool(pool.get("watchlist_only")), key=f"fe_watch_{pick}",
-                     help="The funnel checks only your own watchlist's eligible "
-                          f"{'coins' if market == 'crypto' else 'equities'}, not the market.")
+    only = p3.toggle(t("Only my watchlist"), value=bool(pool.get("watchlist_only")), key=f"fe_watch_{pick}",
+                     help=t("The funnel checks only your own watchlist's eligible {coins_if_market_crypto_e}, not the market.", coins_if_market_crypto_e='coins' if market == 'crypto' else 'equities'))
     f["pool"] = {k: v for k, v in (("top", top or None), ("min_volume", vol or None), ("watchlist_only", only or None))
                  if v}
 
@@ -299,10 +298,10 @@ def render(st, supabase, user_id: str) -> None:
     st.caption("Stages: " + " → ".join(s.get("label") or s["timeframe"] for s in f["stages"]))
     # A key as well: without one Streamlit also treats it as new when anything above it changes (a pause note, the
     # stage line, an Update button), and a new one starts folded.
-    with st.expander("Stages (advanced)", icon=":material/stacks:", key=f"fe_stages_open_{pick}"):
-        st.caption("Each stage checks one Set, only for the assets that hold every stage before it. The timeframe is "
+    with st.expander(t("Stages (advanced)"), icon=":material/stacks:", key=f"fe_stages_open_{pick}"):
+        st.caption(t("Each stage checks one Set, only for the assets that hold every stage before it. The timeframe is "
                    "**when the stage is checked**; the Set's readings keep their own timeframes. To change a threshold, "
-                   "edit a copy of the Set in Signal Sets, then pick it here.")
+                   "edit a copy of the Set in Signal Sets, then pick it here."))
         problem = st.session_state.pop("funnel_stages_flash", None)
         if problem:
             st.warning(problem, icon=":material/info:")
@@ -323,7 +322,7 @@ def render(st, supabase, user_id: str) -> None:
         st.warning(w, icon=":material/info:")
     what, reset = changes(saved, f)
     if saved and not what:
-        st.caption("No changes.")
+        st.caption(t("No changes."))
     else:
         st.caption("**If you save:** " + " ".join(what)
                    + (" Every asset starts again from the pool, quietly (no alerts for what already qualifies)."
@@ -332,32 +331,32 @@ def render(st, supabase, user_id: str) -> None:
     if bar.button("Save and activate" if saved else "Create this funnel", type="primary", icon=":material/save:",
                   disabled=bool(blocks) or (saved is not None and not what), key=f"fe_save_{pick}"):
         _save(st, supabase, f, pick, drafts)
-    if saved and bar.button("Discard changes", icon=":material/undo:", key=f"fe_discard_{pick}", disabled=not what):
+    if saved and bar.button(t("Discard changes"), icon=":material/undo:", key=f"fe_discard_{pick}", disabled=not what):
         drafts.pop(pick, None)
         dr.forget(st.session_state, supabase, user_id, "funnel", pick)
         st.session_state.pop("_funnel_restored", None)
         for k in [k for k in st.session_state.keys() if str(k).startswith("fe_") and str(k).endswith(pick)]:
             st.session_state.pop(k, None)
         lattice_panel.rerun(st)
-    if saved and bar.button("Duplicate", icon=":material/content_copy:", key=f"fe_dup_{pick}",
-                            disabled=len(funnels) >= 6, help="A copy to experiment with; this one keeps running."):
+    if saved and bar.button(t("Duplicate"), icon=":material/content_copy:", key=f"fe_dup_{pick}",
+                            disabled=len(funnels) >= 6, help=t("A copy to experiment with; this one keeps running.")):
         copy_ = copy.deepcopy(saved)
         copy_["id"], copy_["name"] = None, f"{saved['name']} (copy)"[:80]
         _save(st, supabase, copy_, None, drafts)
     if saved:
-        with bar.popover("Delete", icon=":material/delete:"):
-            st.caption("The funnel and its places are deleted for good.")
-            if st.button(f"Delete “{saved['name']}”", type="primary", key=f"fe_del_{pick}"):
+        with bar.popover(t("Delete"), icon=":material/delete:"):
+            st.caption(t("The funnel and its places are deleted for good."))
+            if st.button(t('Delete “{saved_name}”', saved_name=saved['name']), type="primary", key=f"fe_del_{pick}"):
                 try:
                     supabase.rpc("funnel_delete", {"p_id": saved["id"]}).execute()
                     drafts.pop(pick, None)
                     dr.forget(st.session_state, supabase, user_id, "funnel", pick)
                     st.session_state.pop("funnel_edit", None)
                     _refresh(st)
-                    st.toast("Funnel deleted.")
+                    st.toast(t("Funnel deleted."))
                     lattice_panel.rerun_page(st)
                 except Exception as exc:
-                    st.error(f"That didn't work: {str(exc)[:160]}")
+                    st.error(t("That didn't work: {str_exc_160}", str_exc_160=str(exc)[:160]))
 
 
 
@@ -458,7 +457,7 @@ def _stages_board(st, f: dict, pick: str, configs: list[dict], user_id: str, lib
         result = funnel_stages_component.component()(key=f"funnel_stages_{pick}", data=data,
                                                      on_action_change=lambda: None)
     except Exception as exc:
-        st.info(f"The stages board could not load here ({str(exc)[:120]}).")
+        st.info(t('The stages board could not load here ({str_exc_120}).', str_exc_120=str(exc)[:120]))
         return
     raw = getattr(result, "action", None)
     if not raw or raw == st.session_state.get("funnel_stages_seen"):
@@ -488,26 +487,23 @@ def _stages_board(st, f: dict, pick: str, configs: list[dict], user_id: str, lib
 def _provided_view(st, supabase, pick: str, funnels: list[dict], library: dict) -> None:
     """A provided funnel, read-only (as a provided Group or Set): what it does, and Make my own copy."""
     _, market, direction = pick.split(":")
-    t = template(market, direction)
-    st.markdown(f"**{MARKET_WORDS[market]}** · {fn.DIRECTION_ICONS[direction]} "
-                f"{'Long' if direction == 'long' else 'Short'} · *Provided by Angstrom* · can't be changed or deleted")
+    t_ = template(market, direction)
+    st.markdown(t("**{market_words_market}** · {fn_direction_icons_direc} {long_if_direction_long_e} · *Provided by Angstrom* · can't be changed or deleted", market_words_market=MARKET_WORDS[market], fn_direction_icons_direc=fn.DIRECTION_ICONS[direction], long_if_direction_long_e='Long' if direction == 'long' else 'Short'))
     pool = "the top 500 coins that pass Angstrom's data checks" if market == "crypto" else "the S&P 500"
-    st.caption(f"Starts from {pool}. {'A coin' if market == 'crypto' else 'An equity'} leaves a stage after two No "
-               "closes in a row. Alerts on new Candidates.")
-    for i, stage in enumerate(t["stages"], 1):
+    st.caption(t('Starts from {pool}. {a_coin_if_market_crypto_} leaves a stage after two No closes in a row. Alerts on new Candidates.', pool=pool, a_coin_if_market_crypto_='A coin' if market == 'crypto' else 'An equity'))
+    for i, stage in enumerate(t_["stages"], 1):
         doc = stage["set_body"]
-        st.markdown(f"**{i}. {stage['label']}** · checked at each {fs.WORDS[stage['timeframe']]} close  \n"
-                    f"{doc['name']}: {doc.get('purpose') or ''}")
+        st.markdown(t('**{i}. {stage_label}** · checked at each {fs_words_stage_timeframe} close  \n{doc_name}: {doc_get_purpose_or}', i=i, stage_label=stage['label'], fs_words_stage_timeframe=fs.WORDS[stage['timeframe']], doc_name=doc['name'], doc_get_purpose_or=doc.get('purpose') or ''))
     st.caption(NOTE)
     mine = [f for f in funnels if f.get("market") == market and f.get("direction") == direction
             and provenance(f, library) == "Your copy of a provided funnel"]
     if mine:
-        st.caption(f"You already have an unchanged copy: **{mine[0]['name']}**.")
-    if st.button("Make my own copy", type="primary", icon=":material/content_copy:", key=f"fe_copy_{pick}",
+        st.caption(t('You already have an unchanged copy: **{mine_0_name}**.', mine_0_name=mine[0]['name']))
+    if st.button(t("Make my own copy"), type="primary", icon=":material/content_copy:", key=f"fe_copy_{pick}",
                  disabled=len(funnels) >= 6,
-                 help="Your copy runs for your account, with its own places and alerts. You can then change it, "
-                      "pause it or delete it; this provided one stays as it is."):
-        _save(st, supabase, t, None, {})
+                 help=t("Your copy runs for your account, with its own places and alerts. You can then change it, "
+                      "pause it or delete it; this provided one stays as it is.")):
+        _save(st, supabase, t_, None, {})
 
 
 def checking_now(funnel_id, done: str, paused: bool = False) -> str:
@@ -536,11 +532,11 @@ def _save(st, supabase, f: dict, pick: str | None, drafts: dict) -> None:
     except Exception as exc:
         text = str(exc)
         if "too_many_funnels" in text:
-            st.error("You already have 6 funnels: delete one first.")
+            st.error(t("You already have 6 funnels: delete one first."))
         elif "p_pool" in text or ("funnel_save" in text and "function" in text.lower()):
-            st.error("The database update for funnel pools hasn't been run yet (sql/2026-11-20_funnel_pools.sql).")
+            st.error(t("The database update for funnel pools hasn't been run yet (sql/2026-11-20_funnel_pools.sql)."))
         else:
-            st.error(f"Could not save it: {text[:200]}")
+            st.error(t('Could not save it: {text_200}', text_200=text[:200]))
         return
     new_id = getattr(res, "data", None)
     if pick in drafts:
