@@ -76,7 +76,7 @@ def test_tap_to_explain_never_presses_a_button_on_a_plain_tap_and_explain_mode_i
     assert "e.preventDefault(); e.stopPropagation(); show(n)" in js          # Explain mode explains instead of acting
     assert ".st-key-explain_mode" in js                                     # the switch itself always works
     app = (ROOT / "app.py").read_text()
-    settings = app[app.index('with tracked_expander("⚙️ Settings"'):app.index("def _feedback_setting")]
+    settings = app[app.index('with tracked_expander("⚙️ " + t("Settings")'):app.index("def _feedback_setting")]
     assert '"❓ Explain mode"' in settings and '"explain_mode": bool(explain_mode)' in settings
     assert '"explain_mode",' in app[app.index("_ACCOUNT_STATE_KEYS = ("):app.index("_ACCOUNT_STATE_KEYS = (") + 200]
     assert "_onboarding.tap_explain(st" in app and "_onboarding.render(" in app

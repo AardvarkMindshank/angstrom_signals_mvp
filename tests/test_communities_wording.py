@@ -5,7 +5,7 @@ APP = (ROOT / "app.py").read_text(encoding="utf-8")
 
 
 def test_social_groups_are_called_communities():
-    assert '"👥 Communities", "my_groups"' in APP  # same section id, so saved open/closed state is kept
+    assert '"👥 " + t("Communities"), "my_groups"' in APP  # same section id, so saved open/closed state is kept
     assert "My Groups" not in APP
 
 

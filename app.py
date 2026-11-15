@@ -71,6 +71,68 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+import i18n
+from i18n import t
+
+
+def _set_language(account: bool) -> None:
+    """🌐 Which language this visit shows (i18n.choose): a ?lang= link, a choice made this visit, the account's
+    saved choice, the one this browser remembers, the browser's own language list, English. Never by location."""
+    link = i18n.normalise(st.query_params.get("lang"))
+    if link and link in i18n.BY_CODE:
+        st.session_state["lang_link"] = link
+    settings = ((st.session_state.get("cloud_prefs") or {}).get("settings") or {}) if account else {}
+    profile_now = st.session_state.get("profile") or {}
+    admin = account and str(profile_now.get("role") or "") == "admin"
+    saved = st.session_state.get("lang_chosen") or settings.get("language") or st.session_state.get("lang_remembered")
+    header = ""
+    try:
+        header = st.context.headers.get("Accept-Language") or ""
+        if not header and getattr(st.context, "locale", None):
+            header = str(st.context.locale)
+    except Exception:
+        header = ""
+    st.session_state["lang"] = i18n.choose(st.session_state.get("lang_link"), saved, header, admin)
+    picked = st.session_state.get("lang_chosen")
+    if account and picked and settings.get("language") != picked and st.session_state.get("user"):
+        save_account_settings({"language": picked})          # chosen on the sign-in page: keep it with the account
+
+
+def _language_button(key: str, account: bool) -> None:
+    """🌐 The language button (lang_picker.py): shown when there is more than one language to pick from."""
+    import lang_picker
+
+    profile_now = st.session_state.get("profile") or {}
+    admin = account and str(profile_now.get("role") or "") == "admin"
+    options = i18n.offered(admin, st.session_state.get("lang_link"))
+    if len(options) < 2:
+        return
+    settings = ((st.session_state.get("cloud_prefs") or {}).get("settings") or {}) if account else {}
+    chosen = bool(st.session_state.get("lang_chosen") or settings.get("language"))
+    ask = not (chosen or st.session_state.get("lang_link") or st.session_state.get("lang_remembered"))
+    result = lang_picker.component()(
+        key=key, data=lang_picker.payload(st.session_state.get("lang") or i18n.BASE, options, ask, chosen),
+        on_lang_change=lambda: None)
+    event = lang_picker.read_event(result, f"_seen_{key}", st.session_state)
+    if not event:
+        return
+    if event["how"] == "remembered":
+        st.session_state["lang_remembered"] = event["code"]
+    else:
+        st.session_state["lang_chosen"] = event["code"]
+        st.session_state.pop("lang_link", None)
+        try:
+            if "lang" in st.query_params:
+                del st.query_params["lang"]
+        except Exception:
+            pass
+        if account:
+            save_account_settings({"language": event["code"]})
+    st.rerun()
+
+
+_set_language(account=False)
+
 # The first slot on the page. The login page is drawn in it; a signed-in page leaves it empty.
 # Because both pages use this same slot, the dashboard's first update replaces a leftover login
 # page straight away, instead of the old page lingering above the new one while it builds.
@@ -3602,7 +3664,7 @@ export default function(component) {
   if (!link) {
     link = document.createElement("a");
     link.className = "angstrom-google";
-    link.textContent = "Continue with Google";
+    link.textContent = (data && data.label) || "Continue with Google";
     shell.appendChild(link);
   }
   link.removeAttribute("target");
@@ -4576,10 +4638,10 @@ def _optional_secret(*names: str) -> str:
         return ""
 
 
-_BARRED_NOTICE = (
+_BARRED_NOTICE = i18n.mark(
     "This account is barred at this time. You can email report@angstromsignals.com."
 )
-_CLOSED_BETA_NOTICE = (
+_CLOSED_BETA_NOTICE = i18n.mark(
     "Angstrom Signals is in closed beta, and that email has not been approved yet. "
     "Use the email you applied with, or request access at angstromsignals.com."
 )
@@ -5526,22 +5588,23 @@ if st.session_state.user is None:
         _, col_center, _ = st.columns([1, 1.2, 1])
 
     with col_center:
+        _language_button("lang_signin", account=False)
         st.markdown(_brand_mark(200), unsafe_allow_html=True)
         st.title("angstrom signals")
-        st.caption("Market sentiment and technical signals, with the crowd alongside.")
+        st.caption(t("Market sentiment and technical signals, with the crowd alongside."))
 
         if st.session_state.get("recovery_access"):
-            st.markdown("### Choose a new password")
-            new_password = st.text_input("New password", type="password", key="recover_password")
+            st.markdown("### " + t("Choose a new password"))
+            new_password = st.text_input(t("New password"), type="password", key="recover_password")
             new_password_again = st.text_input(
-                "Repeat the new password", type="password", key="recover_password_again",
+                t("Repeat the new password"), type="password", key="recover_password_again",
             )
             st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
-            if st.button("Save password", type="primary", use_container_width=True, key="recover_save"):
+            if st.button(t("Save password"), type="primary", use_container_width=True, key="recover_save"):
                 if len(new_password) < 6:
-                    st.error("Use at least 6 characters.")
+                    st.error(t("Use at least 6 characters."))
                 elif new_password != new_password_again:
-                    st.error("Those passwords do not match.")
+                    st.error(t("Those passwords do not match."))
                 else:
                     try:
                         supabase.auth.set_session(
@@ -5563,11 +5626,11 @@ if st.session_state.user is None:
                     except Exception as exc:
                         code = str(getattr(exc, "code", "") or "")
                         if code == "weak_password":
-                            st.error("Choose a longer password.")
+                            st.error(t("Choose a longer password."))
                         elif code == "same_password":
                             st.session_state.pop("recovery_access", None)
                             st.session_state.pop("recovery_refresh", None)
-                            st.session_state.recovery_error = "That is already the password. Log in with it."
+                            st.session_state.recovery_error = t("That is already the password. Log in with it.")
                             st.rerun()
                         else:
                             st.session_state.pop("recovery_access", None)
@@ -5576,21 +5639,21 @@ if st.session_state.user is None:
                             st.rerun()
         else:
             signup_open = _signup_open()
-            auth_tab1, auth_tab2 = st.tabs(["🔑 Log In", "📝 Sign Up" if signup_open else "✅ Beta Access Accepted?"])
+            auth_tab1, auth_tab2 = st.tabs(["🔑 " + t("Log In"), "📝 " + t("Sign Up") if signup_open else "✅ " + t("Beta Access Accepted?")])
 
         if not st.session_state.get("recovery_access"):
             with auth_tab1:
                 if st.session_state.get("recovery_error") and not st.session_state.get("show_recover"):
                     st.error(st.session_state.recovery_error)
                 if st.session_state.get("show_recover"):
-                    st.markdown("### Reset password")
-                    st.caption("We'll email a link. Check junk mail if it does not arrive.")
-                    recover_email = st.text_input("Email", key="recover_email")
+                    st.markdown("### " + t("Reset password"))
+                    st.caption(t("We'll email a link. Check junk mail if it does not arrive."))
+                    recover_email = st.text_input(t("Email"), key="recover_email")
                     st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
-                    if st.button("Send reset link", type="primary", use_container_width=True, key="recover_send"):
+                    if st.button(t("Send reset link"), type="primary", use_container_width=True, key="recover_send"):
                         email = " ".join(str(recover_email or "").split())
                         if not email:
-                            st.error("Enter the email on the account.")
+                            st.error(t("Enter the email on the account."))
                         else:
                             try:
                                 supabase.auth.reset_password_for_email(email, {"redirect_to": _app_url()})
@@ -5598,20 +5661,20 @@ if st.session_state.user is None:
                             except Exception as exc:
                                 code = str(getattr(exc, "code", "") or "")
                                 if code == "over_email_send_rate_limit":
-                                    st.error("The reset mail is limited for a while. Wait a few minutes and try again.")
+                                    st.error(t("The reset mail is limited for a while. Wait a few minutes and try again."))
                                 else:
-                                    st.error("The reset mail could not be sent. Try again in a few minutes.")
+                                    st.error(t("The reset mail could not be sent. Try again in a few minutes."))
                     if st.session_state.get("recover_sent"):
-                        st.success("If that email has an account, the reset link is on its way.")
-                    if st.button("Back to log in", use_container_width=True, key="recover_back"):
+                        st.success(t("If that email has an account, the reset link is on its way."))
+                    if st.button(t("Back to log in"), use_container_width=True, key="recover_back"):
                         st.session_state.show_recover = False
                         st.session_state.recover_sent = False
                         st.rerun()
                 else:
-                    st.markdown("### Welcome Back")
+                    st.markdown("### " + t("Welcome Back"))
                     with st.form("login", border=False):
                         login_email = st.text_input(
-                            "Email",
+                            t("Email"),
                             key="login_email",
                             type="email",
                             autocomplete="username",
@@ -5619,7 +5682,7 @@ if st.session_state.user is None:
                             placeholder="",
                         )
                         login_password = st.text_input(
-                            "Password",
+                            t("Password"),
                             type="password",
                             key="login_password",
                             autocomplete="current-password",
@@ -5627,13 +5690,13 @@ if st.session_state.user is None:
                         if "login_keep" not in st.session_state:
                             st.session_state["login_keep"] = _keep_pref_read()
                         keep_me = st.checkbox(
-                            "Keep me signed in on this device",
+                            t("Keep me signed in on this device"),
                             key="login_keep",
-                            help="Stay signed in for up to 30 days, even after you close this tab or the app updates. Works for "
-                                 "Continue with Google too. Do not tick this on a shared computer.",
+                            help=t("Stay signed in for up to 30 days, even after you close this tab or the app updates. Works "
+                                   "for Continue with Google too. Do not tick this on a shared computer."),
                         )
                         st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
-                        submitted = st.form_submit_button("Log In", type="primary", use_container_width=True)
+                        submitted = st.form_submit_button(t("Log In"), type="primary", use_container_width=True)
                     if submitted:
                         try:
                             response = supabase.auth.sign_in_with_password({
@@ -5642,7 +5705,7 @@ if st.session_state.user is None:
                             })
                             session = response.session
                             if session is None:
-                                st.error("Login did not return a session. Confirm your email, then try again.")
+                                st.error(t("Login did not return a session. Confirm your email, then try again."))
                             else:
                                 st.session_state.user = response.user
                                 st.session_state.access_token = session.access_token
@@ -5653,10 +5716,10 @@ if st.session_state.user is None:
                                 st.rerun()
                         except Exception as exc:
                             if "banned" in str(exc).lower():
-                                st.error(_BARRED_NOTICE)
+                                st.error(t(_BARRED_NOTICE))
                             else:
-                                st.error("Login failed. Check your email and password.")
-                    if st.button("Forgot password?", use_container_width=True, key="forgot_password"):
+                                st.error(t("Login failed. Check your email and password."))
+                    if st.button(t("Forgot password?"), use_container_width=True, key="forgot_password"):
                         st.session_state.recover_email = st.session_state.get("login_email", "")
                         st.session_state.show_recover = True
                         st.session_state.recover_sent = False
@@ -5665,17 +5728,17 @@ if st.session_state.user is None:
 
             with auth_tab2:
                 if signup_open:
-                    st.markdown("### Create New Account")
+                    st.markdown("### " + t("Create New Account"))
                 else:
-                    st.markdown("### Invited to the beta?")
-                    st.caption(
+                    st.markdown("### " + t("Invited to the beta?"))
+                    st.caption(t(
                         "Angstrom Signals is invite-only while we build with experienced traders. "
                         "If you have been accepted, create your account here with the email you applied with. "
                         "Not invited yet? Request access at angstromsignals.com."
-                    )
+                    ))
                 with st.form("signup", border=False):
                     signup_email = st.text_input(
-                        "Email",
+                        t("Email"),
                         key="signup_email",
                         type="email",
                         autocomplete="email",
@@ -5683,41 +5746,41 @@ if st.session_state.user is None:
                         placeholder="",
                     )
                     signup_password = st.text_input(
-                        "Password",
+                        t("Password"),
                         type="password",
                         key="signup_password",
                         autocomplete="new-password",
                     )
                     st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
                     created = st.form_submit_button(
-                        "Create Account" if signup_open else "Create my account",
+                        t("Create Account") if signup_open else t("Create my account"),
                         type="primary",
                         use_container_width=True,
                     )
                 if created:
                     if _email_is_barred(signup_email):
-                        st.error(_BARRED_NOTICE)
+                        st.error(t(_BARRED_NOTICE))
                     else:
                         try:
                             supabase.auth.sign_up({
                                 "email": signup_email,
                                 "password": signup_password,
                             })
-                            st.success("Account created. Confirm the email if required, then log in.")
+                            st.success(t("Account created. Confirm the email if required, then log in."))
                         except Exception as exc:
                             if "banned" in str(exc).lower():
-                                st.error(_BARRED_NOTICE)
+                                st.error(t(_BARRED_NOTICE))
                             elif not signup_open:
-                                st.error(_CLOSED_BETA_NOTICE)
+                                st.error(t(_CLOSED_BETA_NOTICE))
                             else:
-                                st.error("Sign up failed. Try a different email, or a longer password.")
+                                st.error(t("Sign up failed. Try a different email, or a longer password."))
 
             if st.session_state.get("auth_error"):
                 st.error(st.session_state.auth_error)
-            st.caption("Or continue with")
+            st.caption(t("Or continue with"))
             _google_button(
                 key="google_sign_in",
-                data={"url": google_url, "verifier": google_verifier},
+                data={"url": google_url, "verifier": google_verifier, "label": t("Continue with Google")},
             )
 
     st.stop()
@@ -6134,6 +6197,7 @@ if "cloud_prefs" not in st.session_state:
 if "profile" not in st.session_state:
     st.session_state.profile = load_profile()
 _settle_social_score()
+_set_language(account=True)
 
 prefs = st.session_state.cloud_prefs
 alert_prefs = prefs.get("alerts", {})
@@ -6266,9 +6330,11 @@ st.sidebar.markdown(
     "<h1 style='margin:0;padding:0;line-height:1.15;font-size:2.25rem;font-weight:700;'>"
     "angstrom<br>signals</h1></div>"
     "<div style='margin-top:0.55rem;font-size:0.82rem;font-weight:500;line-height:1.35;opacity:0.72;'>"
-    "Market sentiment and technical signals, with the crowd alongside.</div></div>",
+    f"{html.escape(t('Market sentiment and technical signals, with the crowd alongside.'))}</div></div>",
     unsafe_allow_html=True,
 )
+with st.sidebar:
+    _language_button("lang_side", account=True)
 
 @st.fragment
 def invite_someone() -> None:
@@ -6526,12 +6592,12 @@ def my_groups_panel() -> None:
                     _rerun_fragment()
 
 
-with tracked_expander("👤 Account", "account", sidebar=True):
+with tracked_expander("👤 " + t("Account"), "account", sidebar=True):
     if profile is None:
         st.warning("Profile storage is not ready yet. Run the latest supabase_rls.sql in the Supabase SQL editor.")
         profile = {}
     st.markdown(profile_card(profile, st.session_state.user.email or ""), unsafe_allow_html=True)
-    with tracked_expander("Edit profile", "edit_profile"):
+    with tracked_expander(t("Edit profile"), "edit_profile"):
         profile_name = st.text_input(
             "Display name",
             value=profile.get("display_name") or "",
@@ -6571,7 +6637,7 @@ with tracked_expander("👤 Account", "account", sidebar=True):
                     f"run the latest supabase_rls.sql in Supabase. {exc}"
                 )
 
-    with tracked_expander("Invite", "invite"):
+    with tracked_expander(t("Invite"), "invite"):
         invite_someone()
 
     if st.button("Log Out", use_container_width=True):
@@ -6582,7 +6648,7 @@ with tracked_expander("👤 Account", "account", sidebar=True):
         clear_session()
         st.rerun()
 
-with tracked_expander("👥 Communities", "my_groups", sidebar=True):
+with tracked_expander("👥 " + t("Communities"), "my_groups", sidebar=True):
     my_groups_panel()
 
 def tone(score):
@@ -7046,10 +7112,10 @@ def notifications_panel() -> None:
     """Alerts and alert rules. A filter, a button, or a slider redraws this section, not the page."""
     notifications_list = fetch_user_notifications()
     unread_count = sum(1 for note in notifications_list if not note.get("is_read", False))
-    notifications_label = "🔔 Notifications" + (f" ({unread_count})" if unread_count else "")
+    notifications_label = "🔔 " + t("Notifications") + (f" ({unread_count})" if unread_count else "")
 
     with tracked_expander(notifications_label, "notifications", sidebar=True):
-        with tracked_expander("Alert Feed", "alert_feed"):
+        with tracked_expander(t("Alert Feed"), "alert_feed"):
             if not notifications_list:
                 st.caption("No alerts yet. They arrive here when a watchlist asset crosses one of your alert lines, "
                            "a market's sentiment crosses its line, a Prism scan finds a match, a funnel has new "
@@ -7264,10 +7330,10 @@ def notifications_panel() -> None:
                         )
 
 
-        with tracked_expander("📱 Phone and desktop notifications", "push_panel"):
+        with tracked_expander("📱 " + t("Phone and desktop notifications"), "push_panel"):
             _push_settings()
 
-        with tracked_expander("Configure Alert Rules", "alert_rules"):
+        with tracked_expander(t("Configure Alert Rules"), "alert_rules"):
             st.caption(
                 "Readings describe current conditions and are not forecasts. Tick the colour borders you want to "
                 "hear about: ▲ when a reading rises past one, ▼ when it falls past one. A new colour counts once it "
@@ -8354,7 +8420,7 @@ the admin picks that AI for the whole app; Settings shows which one is used.
 
 
 if not _POPOUT_VIEW:
-    with tracked_expander("📖 Help and guides", "help_guides", default=False):
+    with tracked_expander("📖 " + t("Help and guides"), "help_guides", default=False):
         _render_help_guides()
 
 CRYPTO_WATCHLIST = prefs["crypto"]
@@ -8450,9 +8516,9 @@ def _ensure_added(kind: str, asset_id: str, label: str) -> None:
         print(f"First shared reading failed for {asset_id}: {exc}")
 
 
-with tracked_expander("⭐ Watchlists", "watchlists", sidebar=True):
+with tracked_expander("⭐ " + t("Watchlists"), "watchlists", sidebar=True):
     if trade_crypto:
-        with tracked_expander("Edit Crypto", "edit_crypto"):
+        with tracked_expander(t("Edit Crypto"), "edit_crypto"):
             st.caption("Type a name or ticker, press Enter, then pick the match.")
             if st.session_state.pop("_clear_new_crypto", False):
                 st.session_state["new_crypto"] = ""
@@ -8518,7 +8584,7 @@ with tracked_expander("⭐ Watchlists", "watchlists", sidebar=True):
                     st.rerun()
 
     if trade_equities:
-        with tracked_expander("Edit Stocks", "edit_stocks"):
+        with tracked_expander(t("Edit Stocks"), "edit_stocks"):
             st.caption("Type a company name or ticker, press Enter, then pick the match.")
             if st.session_state.pop("_clear_new_stock", False):
                 st.session_state["new_stock"] = ""
@@ -8689,7 +8755,7 @@ def _admin_ai() -> None:
             column_config={"Get a key": st.column_config.LinkColumn("Get a key")})
 
 
-with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
+with tracked_expander("⚙️ " + t("Settings"), "settings_panel", sidebar=True):
     if "show_reasons" not in st.session_state:
         st.session_state.show_reasons = bool(settings.get("show_reasons", True))
     if "show_extra_metrics" not in st.session_state:
@@ -8807,7 +8873,7 @@ with tracked_expander("⚙️ Settings", "settings_panel", sidebar=True):
     )
 
     st.divider()
-    with tracked_expander("UI Colours", "colours"):
+    with tracked_expander(t("UI Colours"), "colours"):
         st.caption("Your colours save on this account as you change them. Press a theme's button to try a different colour scheme.")
         slot = _saved_colour_slot()
         st.markdown("**My saved colours**")
@@ -10229,10 +10295,10 @@ def feedback_form() -> None:
         st.warning(feedback_notice)
 
 
-with tracked_expander("📝 Feedback", "feedback", sidebar=True):
+with tracked_expander("📝 " + t("Feedback"), "feedback", sidebar=True):
     feedback_form()
 
-with tracked_expander("ℹ️ About", "about", sidebar=True):
+with tracked_expander("ℹ️ " + t("About"), "about", sidebar=True):
     st.markdown(_brand_mark(72), unsafe_allow_html=True)
     st.markdown("**angstrom signals**")
     st.caption("Market sentiment and technical signals, with the crowd alongside.")
@@ -10247,7 +10313,7 @@ with tracked_expander("ℹ️ About", "about", sidebar=True):
         "Support: [support@angstromsignals.com](mailto:support@angstromsignals.com)  \n"
         "Investors: [investors@angstromsignals.com](mailto:investors@angstromsignals.com)"
     )
-    with tracked_expander("Socials policy", "socials_policy"):
+    with tracked_expander(t("Socials policy"), "socials_policy"):
         st.markdown(
             "The social signals stream and the general chat are for reacting to the signals on this page."
         )
@@ -10267,7 +10333,7 @@ with tracked_expander("ℹ️ About", "about", sidebar=True):
             "It is emailed to [report@angstromsignals.com](mailto:report@angstromsignals.com) "
             "and is not shown to the crowd. A comment that breaks these rules can be removed."
         )
-    with tracked_expander("Terms", "terms"):
+    with tracked_expander(t("Terms"), "terms"):
         st.markdown("Last updated 26 October 2026.")
         st.markdown(
             "Using Angstrom Signals means you accept these terms and the socials policy above. "
@@ -10291,7 +10357,7 @@ with tracked_expander("ℹ️ About", "about", sidebar=True):
             "The site can change, pause, or stop. These terms can change too. The date above is the version "
             "on the site. Questions go to [info@angstromsignals.com](mailto:info@angstromsignals.com)."
         )
-    with tracked_expander("Privacy", "privacy"):
+    with tracked_expander(t("Privacy"), "privacy"):
         st.markdown("Last updated 26 October 2026.")
         st.markdown(
             "We keep the details needed to run your account. That is your email, and if you sign in with "
@@ -12119,7 +12185,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
         allowed_kinds.append("Crypto")
     if trade_equities:
         allowed_kinds.append("Stock")
-    with section_expander("📸 Quick Snapshot", "quick_snapshot"):
+    with section_expander("📸 " + t("Quick Snapshot"), "quick_snapshot"):
         with _timed("market overview"):
             try:
                 import market_overview
@@ -12508,9 +12574,9 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
 
         mood_specs = []
         if trade_crypto:
-            mood_specs.append(("crypto", "Crypto market"))
+            mood_specs.append(("crypto", i18n.mark("Crypto market")))
         if trade_equities:
-            mood_specs.append(("stock", "Stock market"))
+            mood_specs.append(("stock", i18n.mark("Stock market")))
         stored_moods = load_market_moods(supabase)
         mood_voices = market_mood_crowd(supabase, [key for key, _label in mood_specs]) if mood_specs else {}
         if stored_moods is not None and mood_specs:
@@ -12908,9 +12974,9 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
         st.session_state.asset_type = pick[0]
 
     if trade_crypto:
-        style_and_show_table(crypto_results, "₿ Crypto Signals", "Crypto", "crypto_scores", column_specs)
+        style_and_show_table(crypto_results, "₿ " + t("Crypto Signals"), "Crypto", "crypto_scores", column_specs)
     if trade_equities:
-        style_and_show_table(stock_results, "📈 Equity Signals", "Stock", "equity_scores", column_specs)
+        style_and_show_table(stock_results, "📈 " + t("Equity Signals"), "Stock", "equity_scores", column_specs)
 
     pick = st.session_state.get("chart_pick")
     if pick and pick[0] in allowed_kinds and (
@@ -12956,7 +13022,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
     if chart_kind in ("Crypto", "Stock") and chart_asset:
         save_account_settings({"chart_kind": chart_kind, "chart_asset": str(chart_asset)})
     chart_logo = (st.session_state.get("asset_logos") or {}).get(asset_market_key(chart_kind, chart_asset))
-    chart_label = f"📊 Interactive Chart - {chart_name}" if chart_name else "📊 Interactive Chart"
+    chart_label = "📊 " + (t("Interactive Chart - {name}", name=chart_name) if chart_name else t("Interactive Chart"))
     if wide_layout:
         # Tops stay level. Do not put a widget above the chart expander in asset_col.
         if "wide_split" not in st.session_state:
@@ -13555,7 +13621,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
         reveal_breakdown = st.session_state.get("scroll_target") == "score-breakdown"
         if (show_reasons_flag or reveal_breakdown) and result and result.get("status") == "ok":
             st.html("<div id='score-breakdown' style='scroll-margin-top:4.5rem;'></div>")
-            with section_expander(f"🔍 Why these readings — {title}", "score_breakdown"):
+            with section_expander("🔍 " + t("Why these readings — {name}", name=title), "score_breakdown"):
                 trend_now = ((result.get("clusters") or {}).get("trend") or {}).get("percent")
                 _paint_readings_header(result)
                 _signals_info_popover()
@@ -14302,7 +14368,7 @@ def show_market_moods(trade_crypto: bool = True, trade_equities: bool = True) ->
     """Crypto market, then the stock market. Each uses the asset sentiment layout."""
     stored = load_market_moods(supabase)
     if stored is None:
-        with section_expander("🌤️ Market sentiment", "market_mood"):
+        with section_expander("🌤️ " + t("Market sentiment"), "market_mood"):
             st.info("Market sentiment storage is not ready yet. Run the latest supabase_rls.sql in the Supabase SQL editor.")
         return
     for spec in MACRO_MOODS:
@@ -14314,7 +14380,7 @@ def show_market_moods(trade_crypto: bool = True, trade_equities: bool = True) ->
         st.html(
             f"<div id='market-mood-{spec['key']}' style='scroll-margin-top:4.5rem;'></div>"
         )
-        with section_expander(f"{mood_icon} Market sentiment - {spec['label']}", f"market_mood_{spec['key']}"):
+        with section_expander(f"{mood_icon} " + t("Market sentiment - {market}", market=t(spec["label"])), f"market_mood_{spec['key']}"):
             _mood_card(spec, stored.get(spec["key"]))
 
 
@@ -14488,11 +14554,11 @@ def _show_options_positioning(ticker: str, chart_price: float | None) -> None:
 def show_leverage(kind: str, asset_id: str, label: str, chart_price: float | None = None) -> None:
     """Estimated liquidation levels for a coin, or options positioning for a stock."""
     if kind == "Stock":
-        heading = f"🧲 Options positioning - {label}" if label else "🧲 Options positioning"
+        heading = "🧲 " + (t("Options positioning - {name}", name=label) if label else t("Options positioning"))
         with section_expander(heading, "leverage"):
             _show_options_positioning(asset_id, chart_price)
         return
-    heading = f"🔥 Leverage & liquidations - {label}" if label else "🔥 Leverage & liquidations"
+    heading = "🔥 " + (t("Leverage & liquidations - {name}", name=label) if label else t("Leverage & liquidations"))
     with section_expander(heading, "leverage"):
         if kind != "Crypto":
             st.caption("Leverage and liquidation data covers crypto futures. Pick a coin on the chart to see it.")
@@ -14649,7 +14715,7 @@ def show_leverage(kind: str, asset_id: str, label: str, chart_price: float | Non
 def show_max_pain(kind: str, asset_id: str, label: str, chart_price: float | None) -> None:
     """Options max pain for the open asset. A positioning chart, not part of the score."""
     force = bool(st.session_state.pop("max_pain_force", False))
-    heading = f"🎯 Max pain - {label}" if label else "🎯 Max pain"
+    heading = "🎯 " + (t("Max pain - {name}", name=label) if label else t("Max pain"))
     with section_expander(heading, "max_pain"):
         market = options_market(kind, asset_id)
         if not market:
@@ -14929,8 +14995,8 @@ def show_signal_matrix(kind: str, asset_id: str, label: str, indicated) -> None:
     """Price across 30 days, with each signal set on those same dates."""
     from signal_matrix import LEAD_HORIZONS, MATRIX_DAYS, boundary_lines, build_matrix, weekend_edges
 
-    shown = " ".join(str(label or "").split()) or "Selected asset"
-    with section_expander(f"▦ Signal matrix - {shown}", "signal_matrix"):
+    shown = " ".join(str(label or "").split()) or t("Selected asset")
+    with section_expander("▦ " + t("Signal matrix - {name}", name=shown), "signal_matrix"):
         if indicated is None or getattr(indicated, "empty", True):
             st.caption("Price history is not ready for this asset yet.")
             return
@@ -15176,7 +15242,7 @@ def show_market_sentiment(kind: str, asset_id: str, label: str, ticker: str | No
     if kind == "Stock" and ticker and ticker.upper() not in shown_name.upper():
         shown_name = f"{shown_name} ({ticker})" if shown_name else ticker
     sentiment_heading = (
-        f"📰 Market sentiment - {shown_name}" if shown_name else "📰 Market sentiment"
+        "📰 " + (t("Market sentiment - {name}", name=shown_name) if shown_name else t("Market sentiment"))
     )
     sentiment_logo = (stored or {}).get("logo_url") if isinstance(stored, dict) else ""
     if not sentiment_logo:
