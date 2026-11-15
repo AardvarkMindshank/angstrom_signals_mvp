@@ -7,6 +7,8 @@ the same five colours the site already uses. Every number shown is on -100..+100
 
 from __future__ import annotations
 
+from i18n import t
+
 import html
 
 import group_readings as gr
@@ -43,7 +45,7 @@ def row_fields(frame, kind: str, now=None) -> dict:
     out = dict(gr.flat_fields(result))
     out["signals"] = result
     out["label"] = "" if result.get("status") == "ok" else "No data"
-    out["reasons"] = [] if result.get("status") == "ok" else [result.get("message") or "Not enough data yet"]
+    out["reasons"] = [] if result.get("status") == "ok" else [result.get("message") or t("Not enough data yet")]
     trend = (result.get("clusters") or {}).get("trend") or {}
     out["trend_parts"] = {v2.COMPONENT_NAMES[k]: info.get("percent")
                           for k, info in (trend.get("components") or {}).items() if info.get("percent") is not None}
@@ -103,10 +105,9 @@ def cluster_hint(key: str, cluster: dict | None) -> str:
     if not cluster or cluster.get("value") is None:
         return f"{spec['name']}: not enough data. {spec['question']}"
     have, total = cluster.get("coverage") or (0, 0)
-    part = f" Uses {have} of {total} parts." if have < total else ""
+    part = t(' Uses {have} of {total} parts.', have=have, total=total) if have < total else ""
     extra = STRETCH_NOTE if key == "stretch" else ""
-    return (f"{spec['name']} ({spec['horizon']}): {cluster.get('label')}. {spec['question']}{part}{extra} "
-            "A description, not a forecast.")
+    return (t('{spec_name} ({spec_horizon}): {cluster_get_label}. {spec_question}{part}{extra} A description, not a forecast.', spec_name=spec['name'], spec_horizon=spec['horizon'], cluster_get_label=cluster.get('label'), spec_question=spec['question'], part=part, extra=extra))
 
 
 def table_cell(key: str, row: dict, pick: str | None = None, section: str = "") -> str:
@@ -160,9 +161,7 @@ def group_tag(cluster: dict) -> str:
         return ""
     have, total = (cluster.get("coverage") or [0, 0])[:2]
     icon = "🧩" if group.get("completeness") == "Complete" else "🧩◐"
-    hint = (f"Worked out by the starter {group.get('name')} Group, "
-            f"which you can copy and change in Lattice. Data: {group.get('completeness', '').lower()}, "
-            f"{have} of {total} parts available.")
+    hint = (t('Worked out by the starter {group_get_name} Group, which you can copy and change in Lattice. Data: {group_get_completeness_l}, {have} of {total} parts available.', group_get_name=group.get('name'), group_get_completeness_l=group.get('completeness', '').lower(), have=have, total=total))
     return f"<span title='{_esc(hint)}' style='cursor:help;font-size:0.85rem;'>{icon}</span>"
 
 
@@ -187,17 +186,17 @@ def context_chips(result: dict) -> str:
                            "Typical daily range (ATR%). " + status["note"], status["status"]))
     strength = ctx.get("trend_strength") or {}
     if strength.get("adx") is not None:
-        chips.append(_chip("💪", f"Trend strength {strength['label'].lower()} (ADX {strength['adx']:.0f})",
-                           "ADX measures how strongly price is trending, whichever way. It has no direction."))
+        chips.append(_chip("💪", t('Trend strength {strength_label_lower} (ADX {strength_adx:.0f})', strength_label_lower=strength['label'].lower(), strength_adx=strength['adx']),
+                           t("ADX measures how strongly price is trending, whichever way. It has no direction.")))
     regime = ctx.get("regime") or {}
     if regime.get("state"):
-        words = {"trending": "Trending", "ranging": "Ranging", "transitional": "Between trend and range"}
+        words = {"trending": "Trending", "ranging": "Ranging", "transitional": t("Between trend and range")}
         chips.append(_chip("🧭", words.get(regime["state"], str(regime["state"]).title()),
-                           "Regime from ADX and the 50/200-day averages. Context only."))
+                           t("Regime from ADX and the 50/200-day averages. Context only.")))
     ratio = (ctx.get("participation") or {}).get("volume_ratio")
     if ratio is not None:
-        chips.append(_chip("🔈", f"Volume {ratio:.1f}x usual", "Today's volume against its 20-day average. "
-                                                              "How active, not which way."))
+        chips.append(_chip("🔈", f"Volume {ratio:.1f}x usual", t("Today's volume against its 20-day average. "
+                                                              "How active, not which way.")))
     for warning in ctx.get("warnings") or []:
         chips.append(_chip("⚠️", warning.split(":")[0].split(",")[0], warning))
     return "<div style='display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;'>" + "".join(chips) + "</div>"
@@ -215,7 +214,7 @@ def asset_card(result: dict) -> str:
     if result.get("status") != "ok":
         return f"<div class='ang-card'>{_esc(result.get('message') or 'Not enough data yet')}</div>"
     when = result.get("as_of")
-    note = "Daily close of " + _esc(when) + (" (today's bar is still forming)" if result.get("unfinished_bar_skipped") else "")
+    note = "Daily close of " + _esc(when) + (t(" (today's bar is still forming)") if result.get("unfinished_bar_skipped") else "")
     return (
         "<div class='ang-card' style='margin-bottom:8px;'>"
         f"<div class='ang-kicker'>Technical signals · {note}</div>"
@@ -237,7 +236,7 @@ def breakdown(result: dict) -> str:
         )
         for comp, info in (c.get("components") or {}).items():
             pct = info.get("percent")
-            reading = v2.component_reading(comp, readings) if pct is not None else "No data from this source"
+            reading = v2.component_reading(comp, readings) if pct is not None else t("No data from this source")
             parts.append(
                 "<div style='display:flex;align-items:center;gap:10px;padding:4px 0 4px 18px;flex-wrap:wrap;'>"
                 f"<span style='width:210px;'>{_esc(v2.COMPONENT_NAMES[comp])}</span>{mini_bar(pct, 90)}"
@@ -245,9 +244,7 @@ def breakdown(result: dict) -> str:
                 f"<span class='ang-kicker'>{_esc(reading)}</span></div>"
             )
     parts.append(
-        f"<div class='ang-kicker' style='margin-top:12px;' title='Identifies the exact indicator definitions behind "
-        f"these readings'>Definitions ref {result.get('fingerprint')}"
-        f" · as of the {_esc(result.get('as_of'))} close</div>"
+        t("<div class='ang-kicker' style='margin-top:12px;' title='Identifies the exact indicator definitions behind these readings'>Definitions ref {result_get_fingerprint} · as of the {esc_result_get_as_of} close</div>", result_get_fingerprint=result.get('fingerprint'), esc_result_get_as_of=_esc(result.get('as_of')))
     )
     return "".join(parts)
 

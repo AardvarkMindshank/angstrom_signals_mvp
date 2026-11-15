@@ -13,6 +13,8 @@ and the table cell always agree. Each block links to Angstrom Lattice, where the
 
 from __future__ import annotations
 
+from i18n import t
+
 import html
 
 import pandas as pd
@@ -46,7 +48,7 @@ def plain_reading(member: dict, readings: dict) -> str:
     wording (the same numbers); anything else shows the signal's own measurements."""
     signal = member.get("signal") or {}
     if member.get("state") != "observed":
-        return (signal.get("reason") or signal.get("status") or "No data from this source").replace("_", " ")
+        return (signal.get("reason") or signal.get("status") or t("No data from this source")).replace("_", " ")
     ref = signal.get("ref") or {}
     comp = (signal.get("evidence") or {}).get("component")
     if comp in v2.COMPONENT_NAMES and ref.get("timeframe", "1D") == "1D" and not ref.get("params") and readings:
@@ -137,15 +139,15 @@ def background_item(spec: dict, cell: dict | None) -> dict:
     else:
         answer = (cell or {}).get("answer") if (cell or {}).get("answer") in tc.ANSWER_MARK else None
         head = (f"{tc.ANSWER_MARK[answer][0]} {spec['name']} · {tc.ANSWER_MARK[answer][1]}" if answer
-                else f"— {spec['name']} · no answer yet")
+                else t('— {spec_name} · no answer yet', spec_name=spec['name']))
     if stale:
         head += " ⏳"
     if cell is None:
-        note = "Reads 4-hour or hourly candles, so it is worked out in the background at each close; the first answer appears within the hour."
+        note = t("Reads 4-hour or hourly candles, so it is worked out in the background at each close; the first answer appears within the hour.")
     else:
         note = " · ".join(x for x in ((cell.get("why") or cell.get("error") or ""), when) if x)
     return {"key": spec["key"], "part": spec["part"], "title": head, "rows": [], "note": note,
-            "detail_note": "Part-by-part detail is shown for daily columns; this one keeps only its answer.",
+            "detail_note": t("Part-by-part detail is shown for daily columns; this one keeps only its answer."),
             "lattice": lattice_pick(spec), "name": spec["name"]}
 
 
@@ -218,7 +220,7 @@ def set_sentence(answers: list, dates: list) -> str:
         when = pd.Timestamp(dates[max(i for i, a in enumerate(answers) if a == "yes")]).strftime("%-d %b")
         text += f"; last Yes on {when}"
     if run < len(answers):
-        text += f" (Yes on {yes} of the last {len(answers)} days)"
+        text += t(' (Yes on {yes} of the last {len_answers} days)', yes=yes, len_answers=len(answers))
     return text + "."
 
 
@@ -249,7 +251,7 @@ def items(specs: list[dict], ctx, readings: dict, subject_context=None, backgrou
                     pass
             out.append(item)
         except Exception as exc:          # one block never breaks the panel
-            out.append({"key": spec["key"], "part": spec["part"], "title": f"{spec['name']} · could not be worked out",
+            out.append({"key": spec["key"], "part": spec["part"], "title": t('{spec_name} · could not be worked out', spec_name=spec['name']),
                         "rows": [], "note": str(exc)[:200], "lattice": lattice_pick(spec), "name": spec["name"]})
     return out
 
@@ -323,7 +325,7 @@ def block_html(item: dict) -> str:
     if item["part"] == "groups":
         for r in item["rows"]:
             if r["role"] == "score":
-                share = f"{r['share'] * 100:.0f}% of the score" if r.get("share") else ""
+                share = t('{r_share_100:.0f}% of the score', r_share_100=r['share'] * 100) if r.get("share") else ""
                 parts.append(
                     "<div style='display:flex;align-items:center;gap:10px;padding:4px 0;flex-wrap:wrap;'>"
                     f"<span style='width:210px;'>{_esc(r['name'])}</span>{mini_bar(r['percent'], 90)}"
@@ -357,4 +359,4 @@ def block_html(item: dict) -> str:
         parts.append(f"<div class='ang-kicker' style='margin-top:8px;'>{_esc(item['note'])}</div>")
     if item.get("detail_note"):
         parts.append(f"<div class='ang-kicker' style='margin-top:4px;opacity:.8;'>{_esc(item['detail_note'])}</div>")
-    return "".join(parts) or "<div class='ang-kicker'>Nothing to show yet.</div>"
+    return "".join(parts) or t("<div class='ang-kicker'>Nothing to show yet.</div>")

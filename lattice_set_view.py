@@ -195,7 +195,7 @@ def render(st, supabase, user_id: str = "") -> None:
             st.session_state["_lattice_set_start_next"] = f"saved:{new_id}"
             st.session_state.pop("lattice_set_loaded", None)
             st.session_state["lattice_flash_set"] = ("ok", "Saved as a new Set (version 1)."
-                                                     + (" It now appears in 🔎 Prism." if screen["scannable"] else ""))
+                                                     + (t(" It now appears in 🔎 Prism.") if screen["scannable"] else ""))
             lattice_panel.rerun(st)
         except Exception as exc:
             if "Rerun" in type(exc).__name__:
@@ -309,5 +309,5 @@ def study_block(st, supabase, source: dict) -> None:
             import signal_groups_inspector as gi
 
             msg = gi._rpc_error(exc)
-            st.error("You already have 5 studies waiting; try again when one finishes." if "too_many_waiting" in msg
-                     else f"Could not queue the study: {msg}")
+            st.error(t("You already have 5 studies waiting; try again when one finishes.") if "too_many_waiting" in msg
+                     else t('Could not queue the study: {msg}', msg=msg))

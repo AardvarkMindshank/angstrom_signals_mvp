@@ -141,8 +141,8 @@ def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str = "") 
     with right:
         st.markdown(t("**What this Group returns**"))
         st.markdown(
-            ("- **Score**: an average from −100 to +100 (a number).\n" if screen["returns"]["score"] else
-             "- **Score**: none (no Score members).\n")
+            (t("- **Score**: an average from −100 to +100 (a number).\n") if screen["returns"]["score"] else
+             t("- **Score**: none (no Score members).\n"))
             + "- **Label**: " + (", ".join(screen["returns"]["labels"][:-1]) + " or " if len(screen["returns"]["labels"]) > 1
                                  else "") + f"{screen['returns']['labels'][-1]}, or Unknown if a rule can't be checked.\n"
             + "- **Completeness**: Complete, Partial or Limited, listing anything missing.")
@@ -200,7 +200,7 @@ def _rename(st, supabase, kind: str, source: dict) -> None:
 
     word = "Group" if kind == "group" else "Set"
     saved = (st.session_state.get("siggroups_saved") or (0, []))[1]
-    with _popover(st, "Rename", icon=":material/edit:", help=f"Give {source['name']} a new name."):
+    with _popover(st, "Rename", icon=":material/edit:", help=t('Give {source_name} a new name.', source_name=source['name'])):
         new = st.text_input(t('New name for this {word}', word=word), value=source["name"], max_chars=80,
                             key=f"lattice_rename_{kind}_{source['id']}")
         clean = " ".join(str(new or "").split())
@@ -228,7 +228,7 @@ def _rename(st, supabase, kind: str, source: dict) -> None:
             st.session_state["_lattice_start_next" if kind == "group" else "_lattice_set_start_next"] = \
                 f"saved:{source['id']}"
             st.session_state["lattice_flash_group" if kind == "group" else "lattice_flash_set"] = (
-                "ok", f"Renamed to “{clean}”. It shows under the new name everywhere.")
+                "ok", t('Renamed to “{clean}”. It shows under the new name everywhere.', clean=clean))
             lattice_panel.rerun_page(st)
 
 
@@ -250,7 +250,7 @@ def _delete(st, supabase, kind: str, source: dict) -> None:
         users = ld.scans_using(source["id"], scans)
     word = "Group" if kind == "group" else "Set"
     with _popover(st, f"Delete this {word}", icon=":material/delete:",
-                  help=f"Remove {source['name']} from your {word}s. You can undo it straight after."):
+                  help=t('Remove {source_name} from your {word}s. You can undo it straight after.', source_name=source['name'], word=word)):
         if users:
             st.warning(ld.blocked_message(kind, users))
             return
@@ -315,8 +315,7 @@ def taken_message(word: str, name: str, source: dict | None) -> str:
     more = (f" or use **Save as version {source['current_version'] + 1}** to update the one you have open"
             if source and " ".join(str(source.get('name') or '').split()).casefold()
             == " ".join(name.split()).casefold() else "")
-    return (f"You already have a {word} called **{name}**. Give this one a different name{more}, so the lists never "
-            f"show two {word}s with the same name.")
+    return (t('You already have a {word} called **{name}**. Give this one a different name{more}, so the lists never show two {word}s with the same name.', word=word, name=name, more=more))
 
 
 def show_flash(st, key: str) -> None:
@@ -357,8 +356,8 @@ def _save(st, supabase, model: dict, can_save: bool) -> None:
                      st.session_state.get("lattice_start"))
             st.session_state["_lattice_start_next"] = f"saved:{new_id}"
             st.session_state.pop("lattice_loaded", None)
-            st.session_state["lattice_flash_group"] = ("ok", "Saved as a new Group (version 1). It is private until "
-                                                             "you publish it.")
+            st.session_state["lattice_flash_group"] = ("ok", t("Saved as a new Group (version 1). It is private until "
+                                                             "you publish it."))
             lattice_panel.rerun(st)
         except Exception as exc:
             if "Rerun" in type(exc).__name__:

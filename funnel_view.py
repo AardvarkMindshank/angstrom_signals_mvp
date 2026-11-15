@@ -6,6 +6,8 @@ sql/2026-11-17_funnels.sql; the funnel job writes them. Nothing here touches Str
 
 from __future__ import annotations
 
+from i18n import t
+
 import pandas as pd
 
 import funnel as fn
@@ -107,10 +109,10 @@ def source_line(pair: str | None, market: str = "crypto") -> str | None:
     if not pair:
         return None
     if market == "equity":
-        return f"Candles: Yahoo Finance ({pair.split(':', 1)[-1]}), New York trading hours."
+        return t('Candles: Yahoo Finance ({pair_split_1_1}), New York trading hours.', pair_split_1_1=pair.split(':', 1)[-1])
     if str(pair).startswith("yahoo:"):
-        return f"Candles: Yahoo Finance ({pair[6:]}), as Binance does not list this coin."
-    return f"Candles: Binance spot ({pair})."
+        return t('Candles: Yahoo Finance ({pair_6}), as Binance does not list this coin.', pair_6=pair[6:])
+    return t('Candles: Binance spot ({pair}).', pair=pair)
 
 
 def earnings_line(day: str | None, now=None) -> str | None:
@@ -124,7 +126,7 @@ def earnings_line(day: str | None, now=None) -> str | None:
     if left < 0 or left > 14:
         return None
     when = "today" if left == 0 else "tomorrow" if left == 1 else f"in {left} days"
-    return f"⚠️ Reports earnings {when} ({day}): prices can jump on a report."
+    return t('⚠️ Reports earnings {when} ({day}): prices can jump on a report.', when=when, day=day)
 
 
 def stage_cell(f: dict, st: fn.CoinState, pair: str | None = None, earnings: str | None = None,
@@ -140,13 +142,13 @@ def stage_cell(f: dict, st: fn.CoinState, pair: str | None = None, earnings: str
     elif p["status"] == fn.FLAGGED:
         lines.append("Flagged: " + words["flagged"])
     elif p["depth"]:
-        lines.append(f"Holds {p['depth']} of {len(stages)} stages, up to {stages[p['depth'] - 1]['label']}.")
+        lines.append(t('Holds {p_depth} of {len_stages} stages, up to {stages_p_depth_1_label}.', p_depth=p['depth'], len_stages=len(stages), stages_p_depth_1_label=stages[p['depth'] - 1]['label']))
     else:
-        lines.append("In the pool: the first stage does not hold yet.")
+        lines.append(t("In the pool: the first stage does not hold yet."))
     if p["pending"]:
-        lines.append("❔ Pending: data was missing at the last check, so it cannot move up until it is back.")
+        lines.append(t("❔ Pending: data was missing at the last check, so it cannot move up until it is back."))
     if p["leaving"]:
-        lines.append("One No at the last check: it stays until it fails twice in a row.")
+        lines.append(t("One No at the last check: it stays until it fails twice in a row."))
     for i, s in enumerate(st.stages):
         if i > p["depth"]:
             lines.append(f"{stages[i]['label']}: not checked (an earlier stage must hold first).")
@@ -188,10 +190,10 @@ def health(runs: list[dict | None], f: dict, now=None, states: dict | None = Non
         if states is not None and i > 0 and not any(fn.reachable(st, i) for st in states.values()):
             continue
         if r.get("status") == "failed":
-            return f"⚠️ The last {stage['label']} check failed: {(r.get('error') or '')[:120]}"
+            return t('⚠️ The last {stage_label} check failed: {r_get_error_or_120}', stage_label=stage['label'], r_get_error_or_120=(r.get('error') or '')[:120])
         step = pd.Timedelta(fr.FREQ.get(stage["timeframe"], "7D")) if stage["timeframe"] != "1W" else pd.Timedelta(days=7)
         if now - pd.Timestamp(r["cutoff"]) > 2 * step + pd.Timedelta(hours=1):
-            return f"⚠️ The {stage['label']} stage has not been checked since {_when(r['cutoff'])}."
+            return t('⚠️ The {stage_label} stage has not been checked since {when_r_cutoff}.', stage_label=stage['label'], when_r_cutoff=_when(r['cutoff']))
     return None
 
 

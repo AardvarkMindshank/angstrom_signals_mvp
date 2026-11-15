@@ -4062,7 +4062,7 @@ def _band_payload(band_set, asset_type: str, asset_key: str, frame: pd.DataFrame
     if not span_list:
         st.caption(t("No long daily history is available for this asset, so the Set can't be shown on the chart."))
         return None
-    days = [pd.Timestamp(t).strftime("%Y-%m-%d") for t in frame.index]
+    days = [pd.Timestamp(t_).strftime("%Y-%m-%d") for t_ in frame.index]
     stats = set_history.summary(span_list)
     return {"colors": set_history.colours_for(days, span_list, show_no),
             "answers": set_history.answers_for(days, span_list), "name": doc.get("name") or "Set",
@@ -4276,9 +4276,9 @@ def _push_settings() -> None:
                 else:
                     sent = push_notify.send_to_user(supabase, user_id, {
                         "title": "📱 Angstrom", "url": "/", "tag": "test",
-                        "body": "Notifications work. Alerts, funnel Candidates and shared charts will arrive like this."})
-                    st.toast(f"Test sent to {sent} device{'s' if sent != 1 else ''}." if sent
-                             else "The test couldn't be delivered. Try turning notifications off and on again.")
+                        "body": t("Notifications work. Alerts, funnel Candidates and shared charts will arrive like this.")})
+                    st.toast(t('Test sent to {sent} device{s_if_sent_1_else}.', sent=sent, s_if_sent_1_else='s' if sent != 1 else '') if sent
+                             else t("The test couldn't be delivered. Try turning notifications off and on again."))
         except Exception as exc:
             st.caption(t('Could not change notifications: {str_exc_160}', str_exc_160=str(exc)[:160]))
     if rows:
@@ -5132,7 +5132,7 @@ def _session_failed(exc: Exception) -> None:
     st.session_state["_keep_signed_in"] = False
     for name in ("cloud_prefs", "profile", "prefs_user"):
         st.session_state.pop(name, None)
-    st.session_state.auth_error = "You were signed out because this account was opened in another tab. Log in again here."
+    st.session_state.auth_error = t("You were signed out because this account was opened in another tab. Log in again here.")
     st.rerun()
 
 
@@ -5317,7 +5317,7 @@ def _app_url() -> str:
 
 
 def _reset_link_error(raw: str) -> str:
-    return "That reset link has expired. Request a new one."
+    return t("That reset link has expired. Request a new one.")
 
 
 def _google_oauth() -> tuple[str, str]:
@@ -5359,7 +5359,7 @@ def _note_auth_error(raw: str, link_type: str = "") -> None:
         st.session_state.recovery_error = _reset_link_error(raw)
         return
     st.session_state.auth_error = (
-        "That sign-in did not finish. Switch this provider on in Supabase, then try again."
+        t("That sign-in did not finish. Switch this provider on in Supabase, then try again.")
     )
 
 
@@ -5429,9 +5429,9 @@ def _take_password_reset(google_verifier: str = "") -> None:
                 st.session_state.pop("google_verifier", None)
                 st.rerun()
             else:
-                st.session_state.auth_error = "Google sign-in did not finish. Please try again."
+                st.session_state.auth_error = t("Google sign-in did not finish. Please try again.")
         elif code:
-            st.session_state.auth_error = "Google sign-in did not finish. Please try again."
+            st.session_state.auth_error = t("Google sign-in did not finish. Please try again.")
     payload = getattr(result, "recovery", None)
     if not payload or st.session_state.get("recovery_access"):
         return
@@ -5458,7 +5458,7 @@ def _take_password_reset(google_verifier: str = "") -> None:
             _sign_in_from_tokens(access, refresh)
         except Exception:
             st.session_state.auth_error = (
-                "That sign-in did not finish. Switch this provider on in Supabase, then try again."
+                t("That sign-in did not finish. Switch this provider on in Supabase, then try again.")
             )
 
 
@@ -6072,7 +6072,7 @@ def save_profile(updates: dict):
 
 def upload_avatar(uploaded) -> str:
     if uploaded.size > 5_000_000:
-        raise ValueError("Use a photo smaller than 5 MB.")
+        raise ValueError(t("Use a photo smaller than 5 MB."))
     from PIL import Image
 
     image = Image.open(io.BytesIO(uploaded.getvalue())).convert("RGB")
@@ -6423,13 +6423,13 @@ def _remove_group_member(group_id: int, person_id: str) -> str:
             "person": person_id,
         }).execute()
     except Exception:
-        return "That person could not be removed. Run the latest supabase_rls.sql, then try again."
+        return t("That person could not be removed. Run the latest supabase_rls.sql, then try again.")
     code = str(result.data or "").strip().strip('"')
     if code == "ok":
         return ""
     if code == "self":
-        return "The leader stays until the community is deleted."
-    return "That person could not be removed. Run the latest supabase_rls.sql, then try again."
+        return t("The leader stays until the community is deleted.")
+    return t("That person could not be removed. Run the latest supabase_rls.sql, then try again.")
 
 
 def _group_member_list(row, group_id: int) -> None:
@@ -6691,7 +6691,7 @@ def crowd_average_badge(average, count, spread, active: bool = True) -> str:
         return "<span style='color:#6b7280;'>—</span>"
     title = f"Average of {scored} personal score" + ("s." if scored != 1 else ".")
     if scored >= 2 and spread is not None and not pd.isna(spread):
-        title += f" The spread is ±{round(sentiment_spread(spread))}."
+        title += t(' The spread is ±{round_sentiment_spread_s}.', round_sentiment_spread_s=round(sentiment_spread(spread)))
     return f"<span title='{html.escape(title)}'>{sentiment_badge(average)}</span>"
 
 
@@ -6774,9 +6774,9 @@ def _liquidation_caption(record) -> str:
         return "🔥 Estimated liquidation levels appear within about an hour of a coin being watched. " + credit
     status = record.get("status")
     if status == "no_market":
-        return "🔥 No futures market for this coin on Binance, Bybit or OKX, so there are no liquidation levels."
+        return t("🔥 No futures market for this coin on Binance, Bybit or OKX, so there are no liquidation levels.")
     if status != "ok":
-        return "🔥 The liquidation levels could not be worked out on the last try. They are retried about hourly."
+        return t("🔥 The liquidation levels could not be worked out on the last try. They are retried about hourly.")
     when = str(record.get("updated_at") or "")[:16].replace("T", " ")
     return (
         "🔥 Estimated liquidation levels (not part of the score). Red lines below the price are where long "
@@ -6932,7 +6932,7 @@ def _paint_chart_header(kind: str, asset_id: str, rows) -> None:
         return
     up = change >= 0
     _header_box("chart", f"{'▲' if up else '▼'} {abs(change):.1f}%", "#166534" if up else "#991b1b",
-                "#dcfce7" if up else "#fee2e2", "Price change over the last day")
+                "#dcfce7" if up else "#fee2e2", t("Price change over the last day"))
 
 
 def _paint_readings_header(result: dict) -> None:
@@ -6982,7 +6982,7 @@ def _paint_lattice_header() -> None:
     scans, yes = found
     _header_box("lattice", f"🔎 {yes} match{'es' if yes != 1 else ''}",
                 "#166534" if yes else "#475569", "#dcfce7" if yes else "#e2e8f0",
-                f"Assets your {scans} Prism scan{'s' if scans != 1 else ''} answer Yes for at their latest run")
+                t('Assets your {scans} Prism scan{s_if_scans_1_else} answer Yes for at their latest run', scans=scans, s_if_scans_1_else='s' if scans != 1 else ''))
 
 
 def _paint_matrix_header(matrix: dict) -> None:
@@ -7001,8 +7001,7 @@ def _paint_matrix_header(matrix: dict) -> None:
     colour, background = ("#166534", "#dcfce7") if up > down else ("#991b1b", "#fee2e2") if down > up \
         else ("#475569", "#e2e8f0")
     _header_box("signal_matrix", f"▲{up} ▼{down}", colour, background,
-                f"Today: {up} signal{'s' if up != 1 else ''} bullish (+20 or more), {down} bearish (-20 or less), "
-                f"{len(latest) - up - down} in between")
+                t('Today: {up} signal{s_if_up_1_else} bullish (+20 or more), {down} bearish (-20 or less), {len_latest_up_down} in between', up=up, s_if_up_1_else='s' if up != 1 else '', down=down, len_latest_up_down=len(latest) - up - down))
 
 
 def _paint_candidates_header(market: str, section_id: str) -> None:
@@ -7030,8 +7029,7 @@ def _paint_snapshot_header() -> None:
         text = "🔔 " + " ".join(p for p in (f"▲{up}" if up else "", f"▼{down}" if down else "") if p)
         colour, background = ("#166534", "#dcfce7") if up and not down else ("#991b1b", "#fee2e2") if down and not up \
             else ("#1e3a8a", "#dbeafe")
-        title = (f"Since your last visit: {up} Trend reading{'s' if up != 1 else ''} crossed a colour border upward, "
-                 f"{down} downward. Open the section for which ones.")
+        title = (t('Since your last visit: {up} Trend reading{s_if_up_1_else} crossed a colour border upward, {down} downward. Open the section for which ones.', up=up, s_if_up_1_else='s' if up != 1 else '', down=down))
     else:
         text, colour, background = ("✓ Quiet" if not moves else f"〰 {moves} moved"), "#475569", "#e2e8f0"
         title = ("No Trend reading crossed a colour border you alert on since your last visit"
@@ -7087,15 +7085,15 @@ def _respond_group_invite(invite_id: int, accept: bool) -> str:
             "accept": accept,
         }).execute()
     except Exception:
-        return "That invite could not be updated. Run the latest supabase_rls.sql, then try again."
+        return t("That invite could not be updated. Run the latest supabase_rls.sql, then try again.")
     code = str(result.data or "").strip().strip('"')
     if code in ("ok", "dismissed", "gone"):
         return ""
     if code == "expired":
-        return "That invite has expired."
+        return t("That invite has expired.")
     if code == "full":
-        return "That community already has 50 members."
-    return "That invite could not be updated. Run the latest supabase_rls.sql, then try again."
+        return t("That community already has 50 members.")
+    return t("That invite could not be updated. Run the latest supabase_rls.sql, then try again.")
 
 
 @st.fragment
@@ -7793,7 +7791,7 @@ because they measure different things and are never added together.
                     unsafe_allow_html=True,
                 )
 
-        _band_row("**📈 Trend · 🎯 Stretch · 🔊 Flow**", [
+        _band_row(t("**📈 Trend · 🎯 Stretch · 🔊 Flow**"), [
             ("Strongly up", "+50 and above", *reading_tone(60)[:2]),
             ("Up", "+20 to +49", *reading_tone(30)[:2]),
             ("Mixed", "-19 to +19", *reading_tone(0)[:2]),
@@ -8956,7 +8954,7 @@ def _resend_reason(response) -> str:
         message = ""
     message = " ".join(message.split())
     if not message or "re_" in message.lower():
-        return f"Resend returned status {response.status_code}"
+        return t('Resend returned status {response_status_code}', response_status_code=response.status_code)
     return message[:180]
 
 
@@ -8970,17 +8968,16 @@ def _email_invite(address: str, inviter_name: str) -> tuple[bool, str]:
     page, plain = render_email(
         f"{safe_name} invited you to Angstrom Signals",
         [
-            "Angstrom Signals is market sentiment and technical signals, with the crowd alongside.",
-            "It is invite-only while we build with experienced traders. If you are not in yet, "
-            f"you can <a href=\"{BETA_REQUEST_URL}\" style=\"color:#1d5fd1;\">ask for a seat</a>.",
+            t("Angstrom Signals is market sentiment and technical signals, with the crowd alongside."),
+            t('It is invite-only while we build with experienced traders. If you are not in yet, you can <a href="{BETA_REQUEST_URL}" style="color:#1d5fd1;">ask for a seat</a>.', BETA_REQUEST_URL=BETA_REQUEST_URL),
         ],
-        button=("Open Angstrom Signals", _app_url()),
+        button=(t("Open Angstrom Signals"), _app_url()),
         preheader=f"{inviter_name or 'Someone'} invited you to Angstrom Signals.",
     )
     payload = {
         "from": sender,
         "to": [address],
-        "subject": "You are invited to Angstrom Signals",
+        "subject": t("You are invited to Angstrom Signals"),
         "html": page,
         "text": plain,
     }
@@ -8992,7 +8989,7 @@ def _email_invite(address: str, inviter_name: str) -> tuple[bool, str]:
             timeout=15,
         )
     except Exception:
-        return False, "Resend could not be reached"
+        return False, t("Resend could not be reached")
     if response.status_code < 300:
         return True, ""
     return False, _resend_reason(response)
@@ -9029,7 +9026,7 @@ def _email_feedback(kind: str, body: str, user_email: str, user_id: str) -> tupl
             timeout=15,
         )
     except Exception:
-        return False, "Resend could not be reached"
+        return False, t("Resend could not be reached")
     if response.status_code < 300:
         return True, ""
     return False, _resend_reason(response)
@@ -9089,7 +9086,7 @@ def _email_report(reason: str, note: str, place: str, kind: str, row: dict, asse
             timeout=15,
         )
     except Exception:
-        return False, "Resend could not be reached"
+        return False, t("Resend could not be reached")
     if response.status_code < 300:
         return True, ""
     return False, _resend_reason(response)
@@ -9102,18 +9099,17 @@ def _email_barred(address: str) -> tuple[bool, str]:
     if not api_key:
         return False, "the Resend key is missing from the Streamlit secrets"
     page, plain = render_email(
-        "Your account is barred",
+        t("Your account is barred"),
         [
-            "Your Angstrom Signals account is barred at this time.",
-            f"You can email <a href=\"mailto:{html.escape(inbox, quote=True)}\" style=\"color:#1d5fd1;\">"
-            f"{html.escape(inbox)}</a>.",
+            t("Your Angstrom Signals account is barred at this time."),
+            t('You can email <a href="mailto:{html_escape_inbox_quote_}" style="color:#1d5fd1;">{html_escape_inbox}</a>.', html_escape_inbox_quote_=html.escape(inbox, quote=True), html_escape_inbox=html.escape(inbox)),
         ],
         tone="down",
     )
     payload = {
         "from": sender,
         "to": [address],
-        "subject": "Your Angstrom Signals account is barred",
+        "subject": t("Your Angstrom Signals account is barred"),
         "html": page,
         "text": plain,
     }
@@ -9125,7 +9121,7 @@ def _email_barred(address: str) -> tuple[bool, str]:
             timeout=15,
         )
     except Exception:
-        return False, "Resend could not be reached"
+        return False, t("Resend could not be reached")
     if response.status_code < 300:
         return True, ""
     return False, _resend_reason(response)
@@ -9179,20 +9175,20 @@ def _apply_comment_report(action) -> str:
     reason = str(action.get("reason") or "")
     note = " ".join(str(action.get("note") or "").split())[:500]
     if reason == "other" and len(note) < 4:
-        return "Report needs a few words when the reason is Something else."
+        return t("Report needs a few words when the reason is Something else.")
     try:
         message_id = int(action.get("message") or 0)
     except (TypeError, ValueError):
-        return "Report could not be sent."
+        return t("Report could not be sent.")
     try:
         row = _reported_comment(place, kind, message_id)
     except Exception:
-        return "Report could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again."
+        return t("Report could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again.")
     if not row or not str(row.get("body") or "").strip():
-        return "Report could not find that comment. It may already have expired."
+        return t("Report could not find that comment. It may already have expired.")
     author_id = str(row.get("user_id") or "")
     if author_id and author_id == str(user_id):
-        return "Report your own comment by deleting it."
+        return t("Report your own comment by deleting it.")
     asset = " ".join(str(row.get("asset_key") or action.get("asset") or "").split())[:200]
     user = st.session_state.user
     user_email = str(getattr(user, "email", "") or "")
@@ -9215,12 +9211,12 @@ def _apply_comment_report(action) -> str:
     except Exception as exc:
         text = str(exc).lower()
         if "duplicate" in text or "23505" in text:
-            return "Report already sent for this comment."
-        return "Report could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again."
+            return t("Report already sent for this comment.")
+        return t("Report could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again.")
     sent, why = _email_report(reason, note, place, kind, row, asset)
     if sent:
-        return "Report sent. Thank you."
-    return f"Report saved. The email was not sent: {why}."
+        return t("Report sent. Thank you.")
+    return t('Report saved. The email was not sent: {why}.', why=why)
 
 
 _FEEDBACK_STATUS = {
@@ -9318,8 +9314,8 @@ def _show_overview_status() -> None:
                 return f"{name}: none yet."
             return (f"{name}: {len(copy.get('items') or {})} readings, fetched "
                     f"{_ago(now - float(copy.get('fetched_at') or 0))}.")
-        st.write(line("Saved by the worker", saved))
-        st.write(line("Fetched by this server", own))
+        st.write(line(t("Saved by the worker"), saved))
+        st.write(line(t("Fetched by this server"), own))
         if _OVERVIEW.get("busy"):
             st.write(t('A fetch is running, started {ago_now_float_overview_g}.', ago_now_float_overview_g=_ago(now - float(_OVERVIEW.get('started') or now))))
         elif _OVERVIEW.get("own_at"):
@@ -9451,7 +9447,7 @@ def _email_beta_welcome(address: str, name: str) -> tuple[bool, str]:
             timeout=15,
         )
     except Exception:
-        return False, "Resend could not be reached"
+        return False, t("Resend could not be reached")
     if response.status_code < 300:
         return True, ""
     return False, _resend_reason(response)
@@ -9474,8 +9470,8 @@ def _beta_review(request_id: int, decision: str, email: str, name: str) -> None:
     code = _beta_call("review_beta_request", {"request_id": int(request_id), "decision": decision})
     if code != "ok":
         _beta_note("warn", {
-            "missing": "That request is no longer there.",
-            "forbidden": "This account cannot change beta requests.",
+            "missing": t("That request is no longer there."),
+            "forbidden": t("This account cannot change beta requests."),
         }.get(code, "That could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again."))
         return
     if decision == "approved":
@@ -9491,14 +9487,14 @@ def _beta_review(request_id: int, decision: str, email: str, name: str) -> None:
 def _beta_add() -> None:
     clean = _clean_invite_email(st.session_state.get("admin_beta_email"))
     if not clean:
-        _beta_note("warn", "Enter a valid email.")
+        _beta_note("warn", t("Enter a valid email."))
         return
     code = _beta_call("add_beta_email", {"address": clean})
     if code != "ok":
         _beta_note("warn", {
-            "exists": "That email is already approved.",
-            "email": "Enter a valid email.",
-            "forbidden": "This account cannot change beta access.",
+            "exists": t("That email is already approved."),
+            "email": t("Enter a valid email."),
+            "forbidden": t("This account cannot change beta access."),
         }.get(code, "That could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again."))
         return
     sent, why = _email_beta_welcome(clean, "")
@@ -9515,9 +9511,9 @@ def _beta_set_open() -> None:
     st.session_state.pop("_signup_open_seen", None)
     if code != "ok":
         st.session_state["admin_beta_open"] = not wanted
-        _beta_note("warn", "That could not be saved.")
+        _beta_note("warn", t("That could not be saved."))
     else:
-        _beta_note("ok", "Sign-up is open to everyone." if wanted else "Sign-up is closed. Only approved emails can create accounts.")
+        _beta_note("ok", t("Sign-up is open to everyone.") if wanted else t("Sign-up is closed. Only approved emails can create accounts."))
 
 
 @st.fragment
@@ -9581,7 +9577,7 @@ def _show_beta() -> None:
                 continue
             visible.append(row)
         if not visible:
-            st.caption("Nothing pending." if not show_decided else "No request matches that search.")
+            st.caption("Nothing pending." if not show_decided else t("No request matches that search."))
             return
         titles = ["Applied", "Name", "Email", "Phone", "Markets", "Years", "Active", "Tools", "Why", "Status", "NDA"]
         current_nda = _nda.current()
@@ -9751,7 +9747,7 @@ def _show_feedback(rows) -> None:
                 continue
         visible.append(row)
     if not visible:
-        st.caption("No feedback matches that search." if query else "No open feedback.")
+        st.caption(t("No feedback matches that search.") if query else t("No open feedback."))
         return
     sort_key = st.session_state.get("admin_feedback_sort", "date")
     sort_desc = bool(st.session_state.get("admin_feedback_sort_desc", True))
@@ -9873,10 +9869,10 @@ def _blacklist_add() -> None:
     code = _blacklist_call("add_blacklist_email", clean)
     if code != "ok":
         st.session_state["admin_blacklist_notice"] = "warn\n" + {
-            "exists": "That email is already on the list.",
-            "self": "That is the admin account. It stays able to log in.",
-            "email": "Enter a valid email.",
-            "forbidden": "This account cannot change the blacklist.",
+            "exists": t("That email is already on the list."),
+            "self": t("That is the admin account. It stays able to log in."),
+            "email": t("Enter a valid email."),
+            "forbidden": t("This account cannot change the blacklist."),
         }.get(code, "That could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again.")
         return
     sent, why = _email_barred(clean)
@@ -10068,7 +10064,7 @@ def _show_reports(rows) -> None:
                 continue
         visible.append(row)
     if not visible:
-        st.caption("No reports match that search." if query else "No open reports.")
+        st.caption(t("No reports match that search.") if query else t("No open reports."))
         return
     sort_key = st.session_state.get("admin_reports_sort", "date")
     sort_desc = bool(st.session_state.get("admin_reports_sort_desc", True))
@@ -10186,7 +10182,7 @@ def _store_feedback(kind: str, body: str) -> str:
     """Save one note as submitted and email it. The message says which part worked."""
     text = body.strip()
     if not text:
-        return "Write a few words first."
+        return t("Write a few words first.")
     user = st.session_state.user
     user_id = str(getattr(user, "id", "") or "")
     user_email = str(getattr(user, "email", "") or "")
@@ -10199,11 +10195,11 @@ def _store_feedback(kind: str, body: str) -> str:
             "status": "submitted",
         }).execute()
     except Exception:
-        return "That could not be saved. Please try again."
+        return t("That could not be saved. Please try again.")
     sent, reason = _email_feedback(kind, text[:4000], user_email, user_id)
     if sent:
-        return "Saved and emailed. Thank you."
-    return f"Saved. The email was not sent: {reason}."
+        return t("Saved and emailed. Thank you.")
+    return t('Saved. The email was not sent: {reason}.', reason=reason)
 
 
 @st.fragment
@@ -10628,7 +10624,7 @@ def _subject_context(engine_kind, subject_id):
     stored_kind = "Crypto" if engine_kind == "crypto" else "Stock"
     frame, err = _stored_bars(stored_kind, subject_id, signals_v2.SCORING_BARS)
     if err or frame is None or len(frame) < 15:
-        raise ValueError(f"No stored daily bars for {subject_id}.")
+        raise ValueError(t('No stored daily bars for {subject_id}.', subject_id=subject_id))
     return stored_context(calculate_indicators(frame), stored_kind, asset_id=subject_id)[0]
 
 
@@ -10752,7 +10748,7 @@ def _choose_columns_dialog():
                             format_func=group_opts.get, max_selections=table_columns.MAX_EACH, key="tc_groups")
     sets = st.multiselect(t("Signal Sets"), list(set_opts), default=[k for k in now["sets"] if k in set_opts],
                           format_func=set_opts.get, max_selections=table_columns.MAX_EACH, key="tc_sets",
-                          placeholder="Your Sets with a decision" if set_opts else "No Sets with a decision yet")
+                          placeholder=t("Your Sets with a decision") if set_opts else t("No Sets with a decision yet"))
     _column_order("tc_groups", group_opts, "Groups")
     _column_order("tc_sets", set_opts, "Sets")
     cols = st.columns(2)
@@ -10869,7 +10865,7 @@ def _apply_favourite(data) -> str:
             save_account_settings({"favourites": current})
         return ""
     except Exception:
-        return "That favourite could not be saved. Try again."
+        return t("That favourite could not be saved. Try again.")
 
 
 def _apply_group_invite(data) -> str:
@@ -10889,16 +10885,16 @@ def _apply_group_invite(data) -> str:
             "chosen_group": chosen or None,
         }).execute()
     except Exception:
-        return "That invite could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again."
+        return t("That invite could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again.")
     code = str(result.data or "").strip().strip('"')
     return {
         "ok": "Invite sent.",
-        "member": "They are already in that community.",
-        "pending": "They already have an invite to that group.",
-        "limit": "You already have 20 groups.",
-        "full": "That group already has 50 members.",
-        "name": "Enter a community name of up to 40 characters.",
-        "missing": "Choose a community you lead, or enter a new name.",
+        "member": t("They are already in that community."),
+        "pending": t("They already have an invite to that group."),
+        "limit": t("You already have 20 groups."),
+        "full": t("That group already has 50 members."),
+        "name": t("Enter a community name of up to 40 characters."),
+        "missing": t("Choose a community you lead, or enter a new name."),
         "self": "",
     }.get(code, "That invite could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again.")
 
@@ -10937,7 +10933,7 @@ def _apply_chat_action(action) -> str:
         set_chat_vote(supabase, user_id, message_id, vote)
         return ""
     except Exception:
-        return "That could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again."
+        return t("That could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again.")
 
 
 def _apply_signal_action(action) -> str:
@@ -10963,7 +10959,7 @@ def _apply_signal_action(action) -> str:
         )
         return ""
     except Exception:
-        return "That could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again."
+        return t("That could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again.")
 
 
 def _social_stream_json(crypto_watchlist, stock_watchlist, shared, logos, feed) -> str:
@@ -11191,14 +11187,14 @@ def _stored_bars(kind: str, asset_id: str, days: int):
         return result
     flag = f"price_fill_{key}"
     if st.session_state.get(flag):
-        result = (pd.DataFrame(), "Shared prices are not ready yet.")
+        result = (pd.DataFrame(), t("Shared prices are not ready yet."))
         run[token] = result
         return result
     with st.spinner(t('Saving shared prices for {asset_id}...', asset_id=asset_id)):
         frame, err, saved = create_price_row(supabase, kind, asset_id, days)
     if err or frame is None or getattr(frame, "empty", True):
         st.session_state[flag] = True
-        result = (pd.DataFrame(), err or "Shared prices are not ready yet.")
+        result = (pd.DataFrame(), err or t("Shared prices are not ready yet."))
         run[token] = result
         return result
     memory[key] = frame
@@ -11350,11 +11346,11 @@ def _change_extras(row: dict, previous_score: float, current_score: float, bull:
             change = float(change)
             if change == change:
                 if abs(change) < 0.05:
-                    pill = _mini_badge("0.0%", "#6b7280", "#f3f4f6", "Today's price move")
+                    pill = _mini_badge("0.0%", "#6b7280", "#f3f4f6", t("Today's price move"))
                 elif change > 0:
-                    pill = _mini_badge(f"▲ {change:.1f}%", "#15803d", "#dcfce7", "Today's price move")
+                    pill = _mini_badge(f"▲ {change:.1f}%", "#15803d", "#dcfce7", t("Today's price move"))
                 else:
-                    pill = _mini_badge(f"▼ {abs(change):.1f}%", "#b91c1c", "#fee2e2", "Today's price move")
+                    pill = _mini_badge(f"▼ {abs(change):.1f}%", "#b91c1c", "#fee2e2", t("Today's price move"))
         except (TypeError, ValueError):
             pass
         parts.append(
@@ -11385,7 +11381,7 @@ def _change_extras(row: dict, previous_score: float, current_score: float, bull:
         mood = None
     if mood is not None and mood == mood:
         fg, bg, _a, _b = tone(mood)
-        badges.append(_mini_badge(f"📰 {sentiment_text(mood)}", fg, bg, "Headline sentiment for this asset, -100 to +100"))
+        badges.append(_mini_badge(f"📰 {sentiment_text(mood)}", fg, bg, t("Headline sentiment for this asset, -100 to +100")))
     if not crossed:
         gap_up = bull - current_score
         gap_down = current_score - bear
@@ -11417,7 +11413,7 @@ def _what_changed_html(rows, baseline, seen: bool) -> str:
     ]
     st.session_state["_what_changed"] = None
     if not seen:
-        parts.append("<div style='margin-top:8px;'>Changes show here from your next visit.</div></div>")
+        parts.append(t("<div style='margin-top:8px;'>Changes show here from your next visit.</div></div>"))
         return "".join(parts)
 
     crossings = []
@@ -11484,8 +11480,8 @@ def _what_changed_html(rows, baseline, seen: bool) -> str:
     moves = moves[:3]
     if not crossings:
         parts.append(
-            "<div style='margin-top:8px;'>No Trend reading crossed a colour border you alert on since your "
-            "last visit.</div>"
+            t("<div style='margin-top:8px;'>No Trend reading crossed a colour border you alert on since your "
+            "last visit.</div>")
         )
     for item in crossings:
         parts.append(_change_button(item["pick"], item["title"], item["detail"], item["color"], item["logo"], item["extras"]))
@@ -11739,7 +11735,7 @@ def _dynamic_view(market: str):
     rows = funnel_rows.order(rows)
     out["rows"] = rows
     if not rows:
-        out["error"] = "The funnels could not be read just now. Try again in a minute."
+        out["error"] = t("The funnels could not be read just now. Try again in a minute.")
         return out
     ids = [r["id"] for r in rows]
     if st.session_state.get(pick_key) not in ids:
@@ -11850,8 +11846,8 @@ def _create_funnel(market: str, direction: str) -> None:
     except Exception as exc:
         text = str(exc)
         missing = "funnel_save" in text and ("does not exist" in text or "PGRST" in text or "function" in text)
-        st.error(("The database update for equity funnels hasn't been run yet." if market != "crypto" else
-                  "The funnel tables are not installed yet.") if missing else f"Could not create it: {text[:160]}")
+        st.error((t("The database update for equity funnels hasn't been run yet.") if market != "crypto" else
+                  t("The funnel tables are not installed yet.")) if missing else t('Could not create it: {text_160}', text_160=text[:160]))
 
 
 def _funnel_controls(dyn, market: str = "crypto") -> None:
@@ -11877,8 +11873,8 @@ def _funnel_controls(dyn, market: str = "crypto") -> None:
     if dyn.get("error"):
         st.warning(dyn["error"])
         return
-    stages_words = ("Daily trend, daily WaveTrend turn, 12-hour and 4-hour" if market == "crypto"
-                    else "Weekly, daily and 4-hour")
+    stages_words = (t("Daily trend, daily WaveTrend turn, 12-hour and 4-hour") if market == "crypto"
+                    else t("Weekly, daily and 4-hour"))
     if not dyn["funnels"]:
         st.caption(t('🔻 A funnel narrows {words_pool} down in stages, to the 1-hour, and keeps the list up to date by itself. Make your own copy of a provided one (you can change it later in Lattice → Funnels):', words_pool=words['pool']))
         a, b = st.columns(2)
@@ -11918,7 +11914,7 @@ def _funnel_controls(dyn, market: str = "crypto") -> None:
     when = ("a few minutes after each hour" if market == "crypto" else
             "a few minutes after each hourly close while New York is open")
     st.caption(f"From {dyn['pool']} {words['coins']} ({words['venue']}) · {flicker}. Hover a stage chip for what it "
-               "means." + (f" Showing the {fv.SHOW_LIMIT} largest by market cap; {dyn['more']} more hold this stage."
+               "means." + (t(' Showing the {fv_show_limit} largest by market cap; {dyn_more} more hold this stage.', fv_show_limit=fv.SHOW_LIMIT, dyn_more=dyn['more'])
                            if dyn["more"] else ""))
     if dyn.get("health"):
         st.caption(dyn["health"])
@@ -12006,13 +12002,10 @@ def _funnel_chart(dyn, market: str, labels: dict, part: str = "view") -> None:
     assets = every[:fv.CHART_LIMIT]                       # the biggest by market cap; a chart of 150 helps nobody
     if daily is None or not assets:
         return
-    hover = (f"Every {words['coin']} in this view on one chart: one large with candles, a thin row each underneath, "
-             f"with the {f['stages'][daily]['label'].lower()} stage's answers as green bands across its history. Tap "
-             "a row to put it on top, then open it on the main price chart.")
+    hover = (t("Every {words_coin} in this view on one chart: one large with candles, a thin row each underneath, with the {f_stages_daily_label_low} stage's answers as green bands across its history. Tap a row to put it on top, then open it on the main price chart.", words_coin=words['coin'], f_stages_daily_label_low=f['stages'][daily]['label'].lower()))
     total = len(every) + int(dyn.get("more") or 0)
     if total > len(assets):
-        hover += (f" Shows the {len(assets)} largest by market cap of the {total} at this stage; pick a narrower "
-                  "stage (Candidates) for a closer look.")
+        hover += (t(' Shows the {len_assets} largest by market cap of the {total} at this stage; pick a narrower stage (Candidates) for a closer look.', len_assets=len(assets), total=total))
     asked = st.session_state.get(f"{state_key}_asked")
     if part == "button":                                  # beside the stage picker
         if shown is None and not asked:
@@ -12032,11 +12025,10 @@ def _funnel_chart(dyn, market: str, labels: dict, part: str = "view") -> None:
         doc = f["stages"][daily]["set_body"]
         kind = "crypto" if market == "crypto" else "equity"
         picked = [(kind, a, n) for a, n in assets]
-        bar = st.progress(0.0, text="Working out the last year…")
+        bar = st.progress(0.0, text=t("Working out the last year…"))
         strip = set_history.quick_rows(supabase, doc, picked,
                                        lambda n, total, name: bar.progress(
-                                           n / max(total, 1), text=f"Working out the last year: {name} "
-                                                                   f"({n + 1} of {total})"))
+                                           n / max(total, 1), text=t('Working out the last year: {name} ({n_1} of {total})', name=name, n_1=n + 1, total=total)))
         bar.empty()
         st.session_state.pop(f"{state_key}_asked", None)
         shown = {"funnel": f["id"], "stage": stage, "strip": strip}
@@ -12140,8 +12132,8 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                 _section_timer(
                     float((overview or {}).get("fetched_at") or 0) or None,
                     market_overview.REFRESH_SECONDS, "timer_markets",
-                    "Hover a card for what it measures. Shared for everyone and refreshed about every "
-                    "15 minutes. Stock prices can be delayed about 15 minutes; gold and oil are futures prices.",
+                    t("Hover a card for what it measures. Shared for everyone and refreshed about every "
+                    "15 minutes. Stock prices can be delayed about 15 minutes; gold and oil are futures prices."),
                     prefix="🌍 Markets",
                 )
                 st.markdown(strip, unsafe_allow_html=True)
@@ -12242,7 +12234,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             try:
                 dynamic = _dynamic_crypto() if trade_crypto else None
             except Exception as exc:
-                dynamic = {"error": f"The funnel could not be read: {str(exc)[:160]}", "watchlist": {}, "funnels": []}
+                dynamic = {"error": t('The funnel could not be read: {str_exc_160}', str_exc_160=str(exc)[:160]), "watchlist": {}, "funnels": []}
             st.session_state["_dynamic"] = dynamic
             own_crypto, own_stock = dict(crypto_watchlist), dict(stock_watchlist)   # Quick Snapshot reads these
             table_crypto = dynamic["watchlist"] if dynamic is not None else crypto_watchlist
@@ -12251,7 +12243,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             try:
                 dynamic_eq = _dynamic_view("equity") if trade_equities else None
             except Exception as exc:
-                dynamic_eq = {"error": f"The funnel could not be read: {str(exc)[:160]}", "watchlist": {},
+                dynamic_eq = {"error": t('The funnel could not be read: {str_exc_160}', str_exc_160=str(exc)[:160]), "watchlist": {},
                               "funnels": []}
             st.session_state["_dynamic_equity"] = dynamic_eq
             import funnel_view as _fv
@@ -12384,7 +12376,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             scored = score is not None and not pd.isna(score)
             if not scored:
                 badge = sentiment_badge(None)
-                status = "<div style='margin-top:8px;color:#6b7280;font-weight:600;'>Not scored yet</div>"
+                status = t("<div style='margin-top:8px;color:#6b7280;font-weight:600;'>Not scored yet</div>")
             else:
                 color = tone(score)[0]
                 badge = sentiment_badge(score)
@@ -12490,10 +12482,10 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
 
         trend_cards = []
         if trade_crypto:
-            trend_cards.append(("🪙 Crypto · highest and lowest Trend in your watchlist", crypto_top, crypto_bot, "Crypto",
+            trend_cards.append((t("🪙 Crypto · highest and lowest Trend in your watchlist"), crypto_top, crypto_bot, "Crypto",
                                 "snapshot_trend_crypto"))
         if trade_equities:
-            trend_cards.append(("🏛️ Equities · highest and lowest Trend in your watchlist", stock_top, stock_bot, "Stock",
+            trend_cards.append((t("🏛️ Equities · highest and lowest Trend in your watchlist"), stock_top, stock_bot, "Stock",
                                 "snapshot_trend_stock"))
         if trend_cards:
             for column, (title, top, bot, kind, key) in zip(st.columns(len(trend_cards)), trend_cards):
@@ -12584,7 +12576,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
         when = "today" if left == 0 else "tomorrow" if left == 1 else f"in {left}d"
         soon = left <= 7
         style = "color:#b45309;font-weight:700;" if soon else ""
-        hint = "Reports soon. Scores can swing around earnings." if soon else "Next earnings report."
+        hint = t("Reports soon. Scores can swing around earnings.") if soon else t("Next earnings report.")
         return (
             f"<td data-sort='{float(left):.8f}' title='{hint}' style='padding:10px;white-space:nowrap;'>"
             f"<span style='{style}'>{day.strftime('%b')} {day.day} · {when}</span></td>"
@@ -12616,8 +12608,9 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             dynamic = st.session_state.get("_dynamic" if kind == "Crypto" else "_dynamic_equity")
             _funnel_controls(dynamic, "crypto" if kind == "Crypto" else "equity")
             if not results:
-                st.caption(("No coins hold this stage right now." if kind == "Crypto" else "No equities hold this stage right now.")
-                           if dynamic is not None else "This watchlist is empty.")
+                st.caption((t("No coins hold this stage right now.") if kind == "Crypto"
+                            else t("No equities hold this stage right now.")) if dynamic is not None
+                           else t("This watchlist is empty."))
                 return
             frame = pd.DataFrame(results).sort_values("trend", ascending=False, na_position="last")
             st.caption(t("Click a column title to sort. The table starts with the strongest Trend at the top. Click a name to show that asset on the chart. 📈 Trend, 🎯 Stretch and 🔊 Flow each run from -100 to +100 (positive means up); they describe the market and are not forecasts. Hover one to read it, and click it to open the breakdown. Click the sentiment score, the thumbs, or the crowd average to open its headlines. Watching is how many accounts hold that asset. The Crowd box is the average of personal scores. Hover the down thumb for the spread. A comment balloon, or the arrow on the right edge, opens the social signals and chat. The 30-day trend uses the same colors as 30d %."))
@@ -12627,6 +12620,10 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             group_specs = [c for c in column_specs if c["part"] == "groups"]
             set_specs = [c for c in column_specs if c["part"] == "sets"]
             staged = any(r.get("stage_icon") for r in results)
+            # Column names are English keys (sorting and alignment read them); header_button shows them with t().
+            i18n.mark("Asset"), i18n.mark("Stage"), i18n.mark("Watching"), i18n.mark("Rank"), i18n.mark("Price")
+            i18n.mark("Earnings"), i18n.mark("Market Cap"), i18n.mark("Vol"), i18n.mark("Sentiment"), i18n.mark("Crowd")
+            i18n.mark("Comments"), i18n.mark("30-day trend")
             layout = [("Asset", 1, "")] + ([("Stage", 1, "")] if staged else []) + [("Watching", 1, "")] + (
                 [("Rank", 1, "")] if kind == "Crypto" else [])
             layout += [(f"col:{c['key']}", 1, "g") for c in group_specs] + ([("fold:g", 1, "")] if group_specs else [])
@@ -12655,13 +12652,14 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             spec_by = {f"col:{c['key']}": c for c in column_specs}
             first_of = {"g": f"col:{group_specs[0]['key']}" if group_specs else None,
                         "s": f"col:{set_specs[0]['key']}" if set_specs else None}
-            fold_words = {"g": ("Groups", "Signal Groups"), "s": ("Sets", "Signal Sets")}
+            fold_words = {"g": (t("Groups"), "Signal Groups"), "s": (t("Sets"), "Signal Sets")}
             # The column chooser sits in a thin row of its own above the titles, over the fold arrow of the first
             # section (Groups, else Sets), so the titles stay on one line.
             chooser_at = "g" if group_specs else "s"
             chooser = (
-                f"<button type='button' data-pick='columns|{kind}' title='Choose which Signal Groups and Signal Sets "
-                "the tables show' aria-label='Choose table columns' style='background:none;border:none;"
+                f"<button type='button' data-pick='columns|{kind}' title='"
+                f"{html.escape(t('Choose which Signal Groups and Signal Sets the tables show'), quote=True)}' "
+                f"aria-label='{html.escape(t('Choose table columns'), quote=True)}' style='background:none;border:none;"
                 "padding:0;margin:0;color:inherit;cursor:pointer;opacity:.7;line-height:0;'>"
                 "<svg width='16' height='16' viewBox='0 0 24 24' fill='currentColor' aria-hidden='true'>"
                 "<path d='M4 5h4v14H4zM10 5h4v14h-4zM16 5h4v14h-4z' opacity='.35'/>"
@@ -12674,12 +12672,13 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                 span = f" colspan='{colspan}'" if colspan > 1 else ""
                 sec = f" data-sec='{section}'" if section else ""
                 hint = ""
-                shown = name
+                shown = t(name)
                 if name.startswith("fold:"):
                     part = name[5:]
                     word, long = fold_words[part]
                     return (f"<th data-sec-folded='{part}' style='padding:8px 10px;white-space:nowrap;'>"
-                            f"<button type='button' data-fold='{part}' title='Show the {long} columns' "
+                            f"<button type='button' data-fold='{part}' title='"
+                            f"{html.escape(t('Show the {name} columns', name=long), quote=True)}' "
                             "style='background:none;border:none;padding:0;margin:0;color:inherit;font:inherit;"
                             f"font-weight:600;cursor:pointer;'>▸ {word}</button></th>")
                 if cluster_key:
@@ -12691,7 +12690,8 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                 fold = ""
                 if section and first_of.get(section) == name:
                     word, long = fold_words[section]
-                    fold = (f"<button type='button' data-fold='{section}' title='Fold the {long} columns' "
+                    fold = (f"<button type='button' data-fold='{section}' title='"
+                            f"{html.escape(t('Fold the {name} columns', name=long), quote=True)}' "
                             "style='background:none;border:none;padding:0 6px 0 0;margin:0;color:inherit;"
                             "font:inherit;cursor:pointer;opacity:.6;'>◂</button>")
                 return (
@@ -12749,7 +12749,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                 if staged and str(asset_id) not in own and str(asset_id).upper() not in own:
                     # A Dynamic funnel table: + adds the asset to My Watchlist (shown there when you switch back).
                     add_pick = html.escape(f"watch|{kind}|{asset_id}", quote=True)
-                    add_tip = html.escape(f"Add {row['symbol']} to My Watchlist", quote=True)
+                    add_tip = html.escape(t("Add {symbol} to My Watchlist", symbol=row["symbol"]), quote=True)
                     name_button += (
                         f"<button type='button' data-pick='{add_pick}' title='{add_tip}' aria-label='{add_tip}' "
                         "style='background:none;border:1px solid rgba(128,128,128,.45);border-radius:6px;"
@@ -12828,7 +12828,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                 if sentiment_pick:
                     jump_attr = (
                         f" data-sentiment-pick='{html.escape(sentiment_pick, quote=True)}'"
-                        " title='Open market sentiment for this asset'"
+                        f" title='{html.escape(t('Open market sentiment for this asset'), quote=True)}'"
                     )
                     pointer = "cursor:pointer;"
                 rows_html += (
@@ -13022,8 +13022,8 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                     row_timestamp((st.session_state.get("_shared_rows") or {}).get(
                         asset_market_key(chart_kind, chart_asset)), "prices_updated_at"),
                     TECHNICAL_REFRESH_SECONDS, "timer_technical",
-                    "Prices, the chart and the technical readings are shared by everyone and updated about "
-                    "every 5 minutes. The page picks them up by itself when they are due.",
+                    t("Prices, the chart and the technical readings are shared by everyone and updated about "
+                    "every 5 minutes. The page picks them up by itself when they are due."),
                 )
 
             if len(allowed_kinds) > 1:
@@ -13089,7 +13089,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                 title = f"{stock_watchlist[asset_key]} ({asset_key})"
 
             if chart_err or df_chart.empty:
-                st.warning(chart_err or "Could not load chart data. Check your internet connection.")
+                st.warning(chart_err or t("Could not load chart data. Check your internet connection."))
                 st.session_state.pop("_chart_from_row", None)
                 st.session_state.pop("_chart_row_quiet", None)
                 return
@@ -13178,8 +13178,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                 # A plain link with the usual "opens elsewhere" mark, so it does not look like
                 # one more chart toggle.
                 tip = html.escape(
-                    f"CoinGlass's liquidation heatmap for {title}, in a new tab. "
-                    "CoinGlass asks you to log in, free, to see the full data.",
+                    t("CoinGlass's liquidation heatmap for {title}, in a new tab. CoinGlass asks you to log in, free, to see the full data.", title=title),
                     quote=True,
                 )
                 st.markdown(
@@ -13262,7 +13261,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             else:
                 panel_titles = {
                     "volume": "Volume", "rsi": "RSI (14)", "macd": "MACD", "stoch": "Stochastic (14, 3)",
-                    "stochrsi": "Stoch RSI (3, 3, 14, 14, OHLC4)", "adx": "ADX (14)", "obv": "On-balance volume",
+                    "stochrsi": t("Stoch RSI (3, 3, 14, 14, OHLC4)"), "adx": "ADX (14)", "obv": "On-balance volume",
                 }
                 # The 📡 Sonar strip is drawn by the fast chart only.
                 layout["panels"] = [name for name in layout["panels"] if name != "cipher"]
@@ -13819,7 +13818,7 @@ def _sentiment_thumbs(
             _take_result(
                 box,
                 bool(saver(None if current == 1 else 1)),
-                "That thumb could not be saved. Please try again.",
+                t("That thumb could not be saved. Please try again."),
             )
 
         def _click_disagree(saver=on_vote, box=prefix) -> None:
@@ -13827,7 +13826,7 @@ def _sentiment_thumbs(
             _take_result(
                 box,
                 bool(saver(None if current == -1 else -1)),
-                "That thumb could not be saved. Please try again.",
+                t("That thumb could not be saved. Please try again."),
             )
 
         st.button(
@@ -13884,7 +13883,7 @@ def _sentiment_thumbs(
             previous = str(st.session_state.get(f"{box}_saved_comment") or "")
             if not text and not previous:
                 return
-            _take_result(box, bool(saver(text)), "That comment could not be saved. Please try again.")
+            _take_result(box, bool(saver(text)), t("That comment could not be saved. Please try again."))
 
         with st.form(f"{prefix}_comment_form", clear_on_submit=False, border=False):
             st.text_input(
@@ -13907,8 +13906,8 @@ def _sentiment_thumbs(
             st.caption(
                 f"Up to {COMMENT_LIMIT} characters. Tap one to add it. "
                 "Posting again replaces yours. "
-                + ("Comments stay until the Tide changes." if str(kind) == "Tides"
-                   else "Each comment stays for 12 hours.")
+                + (t("Comments stay until the Tide changes.") if str(kind) == "Tides"
+                   else t("Each comment stays for 12 hours."))
             )
             st.form_submit_button(
                 t("Post comment"),
@@ -13921,12 +13920,12 @@ def _sentiment_thumbs(
 def _sentiment_alt_score(kind: str, asset_id: str, sentiment_at, mine_score, selected, prefix: str, on_vote) -> None:
     """Score controls under Disagree. A click saves, then only this box redraws."""
     del asset_id, sentiment_at
-    st.markdown("**Your Tide score** (−100 going out, +100 coming in)" if str(kind) == "Tides" else "**Your score**")
+    st.markdown(t("**Your Tide score** (−100 going out, +100 coming in)") if str(kind) == "Tides" else "**Your score**")
     typed_key = f"{prefix}_alt_typed"
 
     def _pick(value: int, saver=on_vote, box=prefix, typed=typed_key) -> None:
         st.session_state[typed] = int(round(sentiment_value(value)))
-        _take_result(box, bool(saver(-1, int(value))), "That thumb could not be saved. Please try again.")
+        _take_result(box, bool(saver(-1, int(value))), t("That thumb could not be saved. Please try again."))
 
     def _typed(saver=on_vote, box=prefix, typed=typed_key) -> None:
         # Typed on the shown -100..+100 scale; stored on 0..100 like every sentiment score.
@@ -13934,7 +13933,7 @@ def _sentiment_alt_score(kind: str, asset_id: str, sentiment_at, mine_score, sel
         if raw is None:
             return
         stored = sentiment_stored(raw)
-        _take_result(box, bool(saver(-1, int(round(stored)))), "That thumb could not be saved. Please try again.")
+        _take_result(box, bool(saver(-1, int(round(stored)))), t("That thumb could not be saved. Please try again."))
 
     for column, value in zip(st.columns(6, gap="xxsmall", wrap=False), (0, 20, 40, 60, 80, 100)):
         with column:
@@ -13985,12 +13984,7 @@ def headline_table(headlines: list, score_label: str = "Score") -> str:
     """Article, the date, a one-sentence AI summary, then the score. A dash until a summary exists."""
     sheet = " class='headline-ai'" if score_label != "Score" else ""
     rows = [
-        "<div class='headline-head'>"
-        "<div class='headline-title'>Article</div>"
-        "<div class='headline-date'>Published</div>"
-        "<div class='headline-note'>AI Summary</div>"
-        f"<div class='headline-score'>{html.escape(score_label)}</div>"
-        "</div>"
+        t("<div class='headline-head'><div class='headline-title'>Article</div><div class='headline-date'>Published</div><div class='headline-note'>AI Summary</div><div class='headline-score'>{html_escape_score_label}</div></div>", html_escape_score_label=html.escape(score_label))
     ]
     for item in headlines:
         source = (
@@ -14055,11 +14049,11 @@ def _mood_coverage(score: float) -> str:
     if score >= 60:
         return "Bullish coverage"
     if score >= 53:
-        return "Mildly bullish coverage"
+        return t("Mildly bullish coverage")
     if score >= 47:
         return "Mixed coverage"
     if score >= 40:
-        return "Mildly bearish coverage"
+        return t("Mildly bearish coverage")
     return "Bearish coverage"
 
 
@@ -14162,8 +14156,8 @@ def _mood_card(spec: dict, row: dict | None) -> None:
     _section_timer(
         row_timestamp(row, "sentiment_updated_at") if isinstance(row, dict) else None,
         SENTIMENT_REFRESH_SECONDS, f"timer_mood_{key}",
-        "Market sentiment is shared by everyone and updated about every 12 hours. "
-        "The page picks up the new score by itself when it is due.",
+        t("Market sentiment is shared by everyone and updated about every 12 hours. "
+        "The page picks up the new score by itself when it is due."),
     )
     headlines = newest_first((report or {}).get("headlines") or [])
     score = (report or {}).get("score")
@@ -14173,13 +14167,12 @@ def _mood_card(spec: dict, row: dict | None) -> None:
         parts = report.get("score_parts") or {}
         if parts.get("readings"):
             note = (
-                f"Average of all {parts['readings'] + parts['news']} scores below: "
-                f"{parts['readings']} public readings and {parts['news']} news articles"
+                t('Average of all {parts_readings_parts_new} scores below: {parts_readings} public readings and {parts_news} news articles', parts_readings_parts_new=parts['readings'] + parts['news'], parts_readings=parts['readings'], parts_news=parts['news'])
             )
         elif any(item.get("score") is not None for item in headlines):
-            note = "Average of the news article scores below, from the last 7 days"
+            note = t("Average of the news article scores below, from the last 7 days")
         else:
-            note = "Score for these headlines, from the last 7 days"
+            note = t("Score for these headlines, from the last 7 days")
         score_card, vote_card = _score_and_take()
         with score_card:
             st.markdown(
@@ -14226,7 +14219,7 @@ def _mood_card(spec: dict, row: dict | None) -> None:
     )
 
 
-@st.cache_data(ttl=6 * 3600, show_spinner="Reading the macro currents…")
+@st.cache_data(ttl=6 * 3600, show_spinner=t("Reading the macro currents…"))
 def _tides_live() -> dict:
     """Tides worked out on the page, when the background worker has not saved a recent one."""
     import tides
@@ -14270,7 +14263,7 @@ def show_tides() -> None:
 
         def _buttons():
             _lp.advisor_button(st, "tides", key="tides_navigator", label="AI Navigator")
-            _lp.advisor_button(st, "tides", key="tides_passage", label="Today's AI Passage Plan", ask="passage",
+            _lp.advisor_button(st, "tides", key="tides_passage", label=t("Today's AI Passage Plan"), ask="passage",
                                tip=tides_view.PASSAGE_TIP)
 
         tide = snap.get("tide") or {}
@@ -14363,12 +14356,12 @@ def _show_short_interest(si: dict) -> None:
     if not si:
         return
     pct = si.get("pct_float")
-    parts = [f"**{pct * 100:.1f}%** of tradable shares sold short" if pct else f"**{_short_usd(si['shares'])[1:]}** shares sold short"]
+    parts = [t('**{pct_100:.1f}%** of tradable shares sold short', pct_100=pct * 100) if pct else t('**{short_usd_si_shares_1}** shares sold short', short_usd_si_shares_1=_short_usd(si['shares'])[1:])]
     if si.get("days_to_cover"):
-        parts.append(f"**{si['days_to_cover']:.1f}** days to cover")
+        parts.append(t('**{si_days_to_cover:.1f}** days to cover', si_days_to_cover=si['days_to_cover']))
     if si.get("change") is not None:
         arrow = ":red[▲]" if si["change"] > 0 else ":green[▼]"
-        parts.append(f"{arrow} {si['change'] * 100:+.0f}% vs the month before")
+        parts.append(t('{arrow} {si_change_100:+.0f}% vs the month before', arrow=arrow, si_change_100=si['change'] * 100))
     as_of = f" (as of {si['as_of'].strftime('%d %b')})" if si.get("as_of") else ""
     st.markdown("🩳 Short interest: " + " · ".join(parts) + as_of, help=(
         t("Shares borrowed and sold, betting on a fall. A high share of the float or many days to cover "
@@ -14444,21 +14437,20 @@ def _show_options_positioning(ticker: str, chart_price: float | None) -> None:
             orientation="h",
             marker_color=["#22c55e" if row["gex"] >= 0 else "#ef4444" for row in ordered],
             hovertext=[
-                f"Strike {_price_text(row['strike'])}: gamma {money(row['gex'])} per 1% · "
-                f"calls {row['call_oi']:,.0f} · puts {row['put_oi']:,.0f}" for row in ordered
+                t('Strike {price_text_row_strike}: gamma {money_row_gex} per 1% · calls {row_call_oi:,.0f} · puts {row_put_oi:,.0f}', price_text_row_strike=_price_text(row['strike']), money_row_gex=money(row['gex']), row_call_oi=row['call_oi'], row_put_oi=row['put_oi']) for row in ordered
             ],
             hoverinfo="text",
         ))
         bars.update_layout(
             height=max(260, 16 * len(ordered) + 60), margin=dict(t=10, b=10, l=10, r=10), showlegend=False,
-            yaxis=dict(type="category", title=None), xaxis=dict(title="Gamma, $ per 1% move"),
+            yaxis=dict(type="category", title=None), xaxis=dict(title=t("Gamma, $ per 1% move")),
         )
         _paint_chart(bars)
         st.plotly_chart(bars, width="stretch")
         flip = summary.get("flip")
         st.caption(
             f"Price now {_price_text(spot)}. Green strikes calm moves, red strikes amplify them. "
-            + (f"The gamma flip, where the total changes sign, is near {_price_text(flip)}. " if flip else "")
+            + (t('The gamma flip, where the total changes sign, is near {price_text_flip}. ', price_text_flip=_price_text(flip)) if flip else "")
             + "Above the flip, moves tend to be damped; below it, they tend to run."
         )
 
@@ -14586,8 +14578,7 @@ def show_leverage(kind: str, asset_id: str, label: str, chart_price: float | Non
                 _paint_chart(ladder)
                 st.plotly_chart(ladder, width="stretch")
                 st.caption(
-                    f"Price now {price:,.4g}. Green bars above are shorts that would be force-closed if the price "
-                    "rose there; red bars below are longs if it fell. The longer bar is the more crowded side."
+                    t('Price now {price:,.4g}. Green bars above are shorts that would be force-closed if the price rose there; red bars below are longs if it fell. The longer bar is the more crowded side.', price=price)
                     if price else ""
                 )
         with table_col:
@@ -14611,7 +14602,7 @@ def show_leverage(kind: str, asset_id: str, label: str, chart_price: float | Non
             trend = make_subplots(
                 rows=4, cols=1, shared_xaxes=True, vertical_spacing=0.06,
                 row_heights=[0.34, 0.22, 0.22, 0.22],
-                subplot_titles=("Price and open interest", "Long/short ratio", "Funding rate (%)", "Liquidated per hour"),
+                subplot_titles=(t("Price and open interest"), "Long/short ratio", "Funding rate (%)", t("Liquidated per hour")),
                 specs=[[{"secondary_y": True}], [{}], [{}], [{}]],
             )
             trend.add_trace(go.Scatter(x=stamps, y=series.get("price"), name="Price", line=dict(color="#f97316", width=1.6)), row=1, col=1)
@@ -14711,7 +14702,7 @@ def show_max_pain(kind: str, asset_id: str, label: str, chart_price: float | Non
         if level is not None and spot:              # 🎯 in the header: how far max pain is from the price
             gap = (float(level) / float(spot) - 1) * 100
             _header_box("max_pain", f"🎯 {gap:+.1f}%", "#475569", "#e2e8f0",
-                        f"Max pain is {abs(gap):.1f}% {'above' if gap >= 0 else 'below'} the price for this expiry")
+                        t('Max pain is {abs_gap:.1f}% {above_if_gap_0_else_belo} the price for this expiry', abs_gap=abs(gap), above_if_gap_0_else_belo='above' if gap >= 0 else 'below'))
         expiry_col.metric(t("Expiry"), labels.get(expiry, expiry))
         shown = window_strikes(list(calls) + list(puts), spot, level)
         full_count = len(set(calls) | set(puts))
@@ -14855,7 +14846,7 @@ def show_signal_evidence(kind: str, asset_id: str, shown: str) -> None:
             if not bucket.get("n"):
                 return "no cases"
             excess = bucket.get("excess")
-            tail = "" if excess is None else f" ({excess:+.2f}% vs an average day)"
+            tail = "" if excess is None else t(' ({excess:+.2f}% vs an average day)', excess=excess)
             thin = " - few cases" if (bucket.get("effective_n") or 0) < 10 else ""
             return f"{bucket['n']} days{tail}{thin}"
 
@@ -15098,7 +15089,7 @@ def show_signal_matrix(kind: str, asset_id: str, label: str, indicated) -> None:
             values = row.get("values") or []
             present = sum(value is not None for value in values)
             if present == 0:
-                lines = ["No saved readings in this window yet."]
+                lines = [t("No saved readings in this window yet.")]
             else:
                 lines = boundary_lines(values, matrix["closes"], bull_line, bear_line)
                 quiet = all(" of " not in line for line in lines)
@@ -15109,13 +15100,12 @@ def show_signal_matrix(kind: str, asset_id: str, label: str, indicated) -> None:
                     )
                     if crossed:
                         lines.append(
-                            "A saved score crossed your boundary, but no later price is in this window yet."
+                            t("A saved score crossed your boundary, but no later price is in this window yet.")
                         )
                     else:
                         day_word = "day" if present == 1 else "days"
                         lines.append(
-                            f"The saved score covers {present} {day_word} in this window "
-                            "and stayed between your negative and positive lines."
+                            t('The saved score covers {present} {day_word} in this window and stayed between your negative and positive lines.', present=present, day_word=day_word)
                         )
             record = "<br>".join(html.escape(line) for line in lines)
             summary.append(
@@ -15170,8 +15160,8 @@ def show_market_sentiment(kind: str, asset_id: str, label: str, ticker: str | No
         _section_timer(
             row_timestamp(stored, "sentiment_updated_at") if isinstance(stored, dict) else None,
             SENTIMENT_REFRESH_SECONDS, "timer_sentiment",
-            "Headline sentiment is shared by everyone and updated about every 12 hours. "
-            "The page picks up the new score by itself when it is due.",
+            t("Headline sentiment is shared by everyone and updated about every 12 hours. "
+            "The page picks up the new score by itself when it is due."),
         )
         if not (report and report.get("ok")):
             flag = f"sentiment_fill_{asset_market_key(kind, asset_id)}"
@@ -15196,9 +15186,9 @@ def show_market_sentiment(kind: str, asset_id: str, label: str, ticker: str | No
         if report.get("ok") and score is not None:
             color, background, arrow, _bar = tone(score)
             note = (
-                "Average of the article scores below, from the last 7 days"
+                t("Average of the article scores below, from the last 7 days")
                 if any(item.get("score") is not None for item in headlines)
-                else "Score for these headlines, from the last 7 days"
+                else t("Score for these headlines, from the last 7 days")
             )
             sentiment_at = (stored or {}).get("sentiment_updated_at") if isinstance(stored, dict) else None
             score_card, vote_card = _score_and_take()

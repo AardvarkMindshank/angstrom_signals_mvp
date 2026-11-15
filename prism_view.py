@@ -204,24 +204,24 @@ def handle(st, supabase, action: dict, by_id: dict, choices: dict, assets, now) 
         if op == "open_set":             # 🔍 Look inside → open it in Signal Sets (a provided Set as your copy)
             c = choices.get(action.get("set"))
             if c is None:
-                return "error", "That Set is no longer available."
+                return "error", t("That Set is no longer available.")
             st.session_state["_lattice_section_next"] = "sets"
             st.session_state["_lattice_set_start_next"] = action["set"] if c.get("provided") else f"saved:{c['config']}"
             st.session_state.pop("lattice_set_loaded", None)
             st.session_state["lattice_flash_set"] = ("ok", (
-                f"Opened a copy of “{c['name']}”: change it and save it as your own." if c.get("provided")
+                t('Opened a copy of “{c_name}”: change it and save it as your own.', c_name=c['name']) if c.get("provided")
                 else f"Opened “{c['name']}”."))
             return None
         if op == "create":
             if action.get("set") not in choices:
-                return "error", "That Set is no longer available."
+                return "error", t("That Set is no longer available.")
             fresh = pb.new_scan(action["set"], choices)
             fresh["name"] = pb.unique_name(fresh["name"], [s.get("name") for s in by_id.values()])
             new_id = _put(supabase, None, fresh)
             st.session_state["prism_open_new"] = new_id
-            return "ok", "Scan added. Press ▶ to run it, or open it to choose its assets, schedule and alerts."
+            return "ok", t("Scan added. Press ▶ to run it, or open it to choose its assets, schedule and alerts.")
         if scan is None:
-            return "error", "That scan no longer exists."
+            return "error", t("That scan no longer exists.")
         obj = pb.tidy_snoozes(pb.scan_object(scan), now)
         if op in ("run", "run_past"):
             return _run(st, scan, obj, op, action, assets)
@@ -235,7 +235,7 @@ def handle(st, supabase, action: dict, by_id: dict, choices: dict, assets, now) 
             st.session_state["_chart_jump"] = {
                 "pick": f"{'Crypto' if kind == 'crypto' else 'Stock'}|{asset_id}",
                 "band": (f"scan:{scan['id']}", f"{obj['name']} (this scan)", obj["set"])}
-            return "ok", f"Showing {obj['name']} on the {action.get('name') or asset_id} chart."
+            return "ok", t('Showing {obj_name} on the {action_get_name_or_asset} chart.', obj_name=obj['name'], action_get_name_or_asset=action.get('name') or asset_id)
         if op == "delete":
             supabase.rpc("prism_delete_scan", {"p_id": scan["id"]}).execute()
             st.session_state.get("prism_results", {}).pop(scan["id"], None)
@@ -243,11 +243,11 @@ def handle(st, supabase, action: dict, by_id: dict, choices: dict, assets, now) 
         if op == "duplicate":
             new_id = _put(supabase, None, pb.duplicate(obj, [s.get("name") for s in by_id.values()]))
             st.session_state["prism_open_new"] = new_id
-            return "ok", "Copied. The copy runs only when you press ▶ until you give it a schedule."
+            return "ok", t("Copied. The copy runs only when you press ▶ until you give it a schedule.")
         if op in ("pause", "resume"):
             _put(supabase, scan["id"], {**obj, "paused": op == "pause"})
-            return "ok", ("Paused: no runs and no alerts until you resume." if op == "pause" else
-                          "Resumed. The first run records answers without alerting, so resuming never sends a burst.")
+            return "ok", (t("Paused: no runs and no alerts until you resume.") if op == "pause" else
+                          t("Resumed. The first run records answers without alerting, so resuming never sends a burst."))
         if op == "add_asset":
             obj, problem = pb.add_asset(obj, action.get("item") or {})
         elif op == "remove_asset":
@@ -264,7 +264,7 @@ def handle(st, supabase, action: dict, by_id: dict, choices: dict, assets, now) 
             obj, problem = pb.unsnooze(obj, str(action.get("key"))), None
         elif op == "update_set":
             if action.get("key") not in choices:
-                return "error", "That version is no longer available."
+                return "error", t("That version is no longer available.")
             obj, problem = pb.switch_set(obj, action["key"], choices), None
         else:
             return "error", "Unknown action."
@@ -348,7 +348,7 @@ def _history_view(st, scan, strip) -> None:
     view = (scan.get("chart_views") or {}).get(next((r["id"] for r in rows if r["key"] == top), None))
     if st.button(t("Open on the main price chart"), icon=":material/candlestick_chart:", key=f"hist_open_{sid}",
                  help="Select this asset everywhere (tables, chart, analysis sections) with this Set's bands on."
-                 + (f" Opens on {view[0]} candles: the timeframe of the deepest stage it holds." if view else "")):
+                 + (t(' Opens on {view_0} candles: the timeframe of the deepest stage it holds.', view_0=view[0]) if view else "")):
         r = next(r for r in rows if r["key"] == top)
         st.session_state["_chart_jump"] = {
             "pick": f"{'Crypto' if r['kind'] == 'crypto' else 'Stock'}|{r['id']}",
@@ -371,19 +371,19 @@ def _history_strip(st, scan, obj, assets) -> tuple[str, str]:
     markets = pb.scan_markets(obj, assets)
     picked = [(k if k == "crypto" else "equity", i, n) for m in ("crypto", "equity") for k, i, n in markets[m]]
     if not picked:
-        return "error", "This scan has no assets on your Watchlist right now."
-    bar = st.progress(0.0, text="Working out the last year…")
+        return "error", t("This scan has no assets on your Watchlist right now.")
+    bar = st.progress(0.0, text=t("Working out the last year…"))
 
     def progress(n, total, name):
-        bar.progress(n / max(total, 1), text=f"Working out the last year: {name} ({n + 1} of {total})")
+        bar.progress(n / max(total, 1), text=t('Working out the last year: {name} ({n_1} of {total})', name=name, n_1=n + 1, total=total))
 
     strip = set_history.quick_rows(_SUPABASE[0], obj["set"], picked, progress)
     bar.empty()
     st.session_state["prism_history"] = {scan["id"]: strip}          # one at a time, drawn under the scans
     st.session_state.pop(f"hist_years_{scan['id']}", None)
     shown = sum(1 for r in strip["rows"] if r["spans"])
-    more = " Older years are being filled in." if strip["pending"] else ""
-    return "ok", f"History for {shown} of {len(picked)} assets: see the chart under the scans.{more}"
+    more = t(" Older years are being filled in.") if strip["pending"] else ""
+    return "ok", t('History for {shown} of {len_picked} assets: see the chart under the scans.{more}', shown=shown, len_picked=len(picked), more=more)
 
 
 def _earlier_run(doc: dict):
@@ -399,14 +399,13 @@ def _run(st, scan, obj, op, action, assets) -> tuple[str, str]:
     import prism_board as pb
 
     if time.time() - st.session_state.get("prism_last_run", 0.0) < COOLDOWN_SECONDS:
-        return "error", f"Please wait a few seconds between runs (at most one every {COOLDOWN_SECONDS} seconds)."
+        return "error", t('Please wait a few seconds between runs (at most one every {COOLDOWN_SECONDS} seconds).', COOLDOWN_SECONDS=COOLDOWN_SECONDS)
     markets = pb.scan_markets(obj, assets)
     picked = [(k if k == "crypto" else "equity", i, n) for m in ("crypto", "equity") for k, i, n in markets[m]]
     if not picked:
-        return "error", "This scan has no assets on your Watchlist right now."
+        return "error", t("This scan has no assets on your Watchlist right now.")
     if len(picked) > prism.MAX_ASSETS:
-        return "error", (f"This scan covers {len(picked)} assets; ▶ checks up to {prism.MAX_ASSETS} at a time. "
-                         "Narrow its assets (for example All crypto), or let its schedule run them all.")
+        return "error", (t('This scan covers {len_picked} assets; ▶ checks up to {prism_max_assets} at a time. Narrow its assets (for example All crypto), or let its schedule run them all.', len_picked=len(picked), prism_max_assets=prism.MAX_ASSETS))
     st.session_state["prism_last_run"] = time.time()
     if op == "run":
         rows = prism.run_now(
@@ -417,25 +416,25 @@ def _run(st, scan, obj, op, action, assets) -> tuple[str, str]:
             market_context=lambda scope: sl.DataContext(
                 "market", scope.split(":", 1)[1], flows_loader=_loader("flows"), sentiment_loader=_loader("sentiment")),
             earlier_run=_earlier_run(obj["set"]))
-        title = f"Run now at {pd.Timestamp.now(tz='UTC'):%d %b %H:%M} UTC"
+        title = t('Run now at {pd_timestamp_now_tz_utc:%d %b %H:%M} UTC', pd_timestamp_now_tz_utc=pd.Timestamp.now(tz='UTC'))
     else:
         try:
             as_of = pd.Timestamp(f"{action.get('date')} {action.get('time') or '00:05'}", tz="UTC")
         except (ValueError, TypeError):
-            return "error", "Choose a date and time."
+            return "error", t("Choose a date and time.")
         if as_of >= pd.Timestamp.now(tz="UTC"):
-            return "error", "Choose a moment in the past."
+            return "error", t("Choose a moment in the past.")
         from signal_library.replay_display import display_run
 
         run = display_run(_SUPABASE[0], max_steps=prism.steps_needed(obj["set"]), shortcut=True)
         rows = prism.run_now(obj["set"], picked, live_context=None, replay=(run, as_of))
-        title = f"Reconstruction at {as_of:%d %b %Y %H:%M} UTC: today's data providers, not a record of what was shown"
+        title = t("Reconstruction at {as_of:%d %b %Y %H:%M} UTC: today's data providers, not a record of what was shown", as_of=as_of)
     counts = {a: sum(r["answer"] == a for r in rows) for a in ("yes", "no", "unknown")}
     st.session_state.setdefault("prism_results", {})[scan["id"]] = {
         "title": f"{title} · Yes {counts['yes']} · No {counts['no']} · ? {counts['unknown']}",
         "rows": [{"asset": r["asset"], "answer": r["answer"], "reason": r["reason"],
                   **({"armed": r["armed"]} if r.get("armed") else {})} for r in rows]}
-    return "ok", f"“{scan['name']}”: Yes {counts['yes']} · No {counts['no']} · Unknown {counts['unknown']}."
+    return "ok", t('“{scan_name}”: Yes {counts_yes} · No {counts_no} · Unknown {counts_unknown}.', scan_name=scan['name'], counts_yes=counts['yes'], counts_no=counts['no'], counts_unknown=counts['unknown'])
 
 
 _SUPABASE = [None]

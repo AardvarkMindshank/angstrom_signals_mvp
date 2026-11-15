@@ -44,12 +44,12 @@ def provenance(f: dict, library: dict) -> str:
     made = ft.trend_funnel(f["direction"], f.get("market") or "crypto")
     if [s["set_body"] for s in f["stages"]] == [s["set_body"] for s in made["stages"]] and \
             [s["timeframe"] for s in f["stages"]] == [s["timeframe"] for s in made["stages"]]:
-        return "Your copy of a provided funnel"
+        return t("Your copy of a provided funnel")
     keys = [provided_key(s.get("set_source")) for s in f["stages"]]
     shapes = [tuple(s["timeframe"] for s in made["stages"])] + ft.EARLIER_SHAPES.get(f.get("market") or "crypto", [])
     if all(k and k in library and library[k] == s.get("set_body") for k, s in zip(keys, f["stages"])) and \
             tuple(s["timeframe"] for s in f["stages"]) in shapes:
-        return "Your copy of an earlier version of a provided funnel"
+        return t("Your copy of an earlier version of a provided funnel")
     if any(str(k or "").startswith("demo:") for k in keys):
         return "Customised"
     return "My funnel"
@@ -74,12 +74,12 @@ def upgrade_for(stage: dict, library: dict, saved_sets: dict) -> tuple[str, dict
     src = stage.get("set_source") or {}
     key = provided_key(src)
     if key and key in library and library[key] != stage.get("set_body"):
-        return "⬆ Upgrade to the latest provided version", copy.deepcopy(library[key]), {"provided": key}
+        return t("⬆ Upgrade to the latest provided version"), copy.deepcopy(library[key]), {"provided": key}
     cid = src.get("config_id")
     if cid and cid in saved_sets:
         latest = saved_sets[cid]["versions"][-1]
         if int(latest["version"]) > int(src.get("version") or 0):
-            return (f"⬆ Upgrade to version {latest['version']}", copy.deepcopy(latest["body"]),
+            return (t('⬆ Upgrade to version {latest_version}', latest_version=latest['version']), copy.deepcopy(latest["body"]),
                     {"config_id": cid, "version": latest["version"]})
     return None
 
@@ -87,21 +87,21 @@ def upgrade_for(stage: dict, library: dict, saved_sets: dict) -> tuple[str, dict
 def changes(old: dict | None, new: dict) -> tuple[list[str], bool]:
     """(what changed, in words; does saving start every asset again from the pool?)"""
     if not old:
-        return ["A new funnel: it starts quietly, without alerts for what already qualifies."], False
+        return [t("A new funnel: it starts quietly, without alerts for what already qualifies.")], False
     out, reset = [], False
     if [s["set_body"] for s in old["stages"]] != [s["set_body"] for s in new["stages"]] or \
             [s["timeframe"] for s in old["stages"]] != [s["timeframe"] for s in new["stages"]]:
-        out.append("The stages changed (a Set, a check timeframe, a stage added, removed or moved).")
+        out.append(t("The stages changed (a Set, a check timeframe, a stage added, removed or moved)."))
         reset = True
     if (old.get("pool") or {}) != (new.get("pool") or {}):
-        out.append("The pool changed.")
+        out.append(t("The pool changed."))
         reset = True
     if old.get("direction") != new.get("direction"):
-        out.append("The direction changed.")
+        out.append(t("The direction changed."))
     if bool(old.get("flicker", True)) != bool(new.get("flicker", True)):
-        out.append("The leave rule changed.")
+        out.append(t("The leave rule changed."))
     if (old.get("alerts") or {}) != (new.get("alerts") or {}):
-        out.append("The alerts changed.")
+        out.append(t("The alerts changed."))
     if old.get("name") != new.get("name") or [s.get("label") for s in old["stages"]] != [s.get("label") for s in
                                                                                           new["stages"]]:
         out.append("Names changed.")
@@ -208,12 +208,12 @@ def render(st, supabase, user_id: str) -> None:
     restored = st.session_state.get("_funnel_restored")
     if restored and restored[0] == pick:
         st.info(f"Your unsaved changes from {dr.when(restored[1])} are back. Save to use them, or "
-                + ("Discard changes to go back to the saved funnel." if saved else "start again from another choice."),
+                + (t("Discard changes to go back to the saved funnel.") if saved else "start again from another choice."),
                 icon=":material/history:")
     badge = provenance(f, library)
     st.markdown(f"**{MARKET_WORDS[market]}** · {fn.DIRECTION_ICONS[f['direction']]} "
                 f"{'Long' if f['direction'] == 'long' else 'Short'} · *{badge}*"
-                + ("" if badge.startswith("Your copy") else " · not reviewed or tested by Angstrom"))
+                + ("" if badge.startswith("Your copy") else t(" · not reviewed or tested by Angstrom")))
     if badge.startswith("Your copy of an earlier version"):
         latest = template(market, f["direction"])
         if st.button(t("⬆ Update to the latest provided version"), key=f"fe_latest_{pick}",
@@ -254,8 +254,8 @@ def render(st, supabase, user_id: str) -> None:
                 "[class*='st-key-fe_pause_'] button:hover{background:linear-gradient(180deg,#7898c2,#486d9b) !important;}"
                 "</style>", unsafe_allow_html=True)
     if st.button("", icon=":material/play_arrow:" if paused else ":material/pause:", key=f"fe_pause_{pick}",
-                 help=("Paused: not checked; it keeps its places. Press to resume." if paused else
-                       "Pause: stop checking this funnel; it keeps its places until resumed.")):
+                 help=(t("Paused: not checked; it keeps its places. Press to resume.") if paused else
+                       t("Pause: stop checking this funnel; it keeps its places until resumed."))):
         f["paused"] = not paused
         if saved:                                   # as in Prism: pausing applies at once, nothing else changes
             live = {**copy.deepcopy(saved), "paused": f["paused"]}
@@ -279,13 +279,13 @@ def render(st, supabase, user_id: str) -> None:
     p1, p2, p3 = box.columns([2, 2, 1.4], vertical_alignment="bottom")
     sizes = [0, 50, 100, 200, 500]
     top = p1.selectbox(t("Size"), sizes, index=sizes.index(int(pool.get("top") or 0)), key=f"fe_top_{pick}",
-                       format_func=lambda n: "All eligible" if n == 0 else f"Top {n} by market cap")
+                       format_func=lambda n: "All eligible" if n == 0 else t('Top {n} by market cap', n=n))
     floors = [0, 250_000, 1_000_000, 5_000_000, 20_000_000, 100_000_000]
     current = int(pool.get("min_volume") or 0)
     if current not in floors:
         floors = sorted(floors + [current])
     vol = p2.selectbox(t("Traded a day, at least"), floors, index=floors.index(current), key=f"fe_vol_{pick}",
-                       format_func=lambda v: "No extra minimum" if v == 0 else
+                       format_func=lambda v: t("No extra minimum") if v == 0 else
                        (f"${v / 1e6:g}M" if v >= 1e6 else f"${v / 1e3:g}k"))
     only = p3.toggle(t("Only my watchlist"), value=bool(pool.get("watchlist_only")), key=f"fe_watch_{pick}",
                      help=t("The funnel checks only your own watchlist's eligible {coins_if_market_crypto_e}, not the market.", coins_if_market_crypto_e='coins' if market == 'crypto' else 'equities'))
@@ -325,10 +325,10 @@ def render(st, supabase, user_id: str) -> None:
         st.caption(t("No changes."))
     else:
         st.caption("**If you save:** " + " ".join(what)
-                   + (" Every asset starts again from the pool, quietly (no alerts for what already qualifies)."
+                   + (t(" Every asset starts again from the pool, quietly (no alerts for what already qualifies).")
                       if reset else ""))
     bar = st.container(horizontal=True, gap="small")
-    if bar.button("Save and activate" if saved else "Create this funnel", type="primary", icon=":material/save:",
+    if bar.button(t("Save and activate") if saved else t("Create this funnel"), type="primary", icon=":material/save:",
                   disabled=bool(blocks) or (saved is not None and not what), key=f"fe_save_{pick}"):
         _save(st, supabase, f, pick, drafts)
     if saved and bar.button(t("Discard changes"), icon=":material/undo:", key=f"fe_discard_{pick}", disabled=not what):
@@ -386,16 +386,16 @@ def apply_action(f: dict, action: dict, choices: dict, library: dict, saved_sets
     op, stages = action.get("op"), f["stages"]
     i = action.get("stage")
     if op in ("set", "move", "remove", "tf", "label", "upgrade") and not (isinstance(i, int) and 0 <= i < len(stages)):
-        return "That stage no longer exists."
+        return t("That stage no longer exists.")
     if op in ("set", "add"):
         got = _from_choice(str(action.get("set")), choices)
         if got is None:
-            return "That Set is no longer available."
+            return t("That Set is no longer available.")
         if op == "set":
             stages[i]["set_body"], stages[i]["set_source"] = got
             return None
         if len(stages) >= MAX_STAGES:
-            return f"A funnel has at most {MAX_STAGES} stages: select a stage to replace its Set instead."
+            return t('A funnel has at most {MAX_STAGES} stages: select a stage to replace its Set instead.', MAX_STAGES=MAX_STAGES)
         stages.append({"label": f"Stage {len(stages) + 1}", "timeframe": stages[-1]["timeframe"],
                        "set_body": got[0], "set_source": got[1]})
         return None
@@ -406,12 +406,12 @@ def apply_action(f: dict, action: dict, choices: dict, library: dict, saved_sets
         return None
     if op == "remove":
         if len(stages) <= MIN_STAGES:
-            return f"A funnel needs at least {MIN_STAGES} stages."
+            return t('A funnel needs at least {MIN_STAGES} stages.', MIN_STAGES=MIN_STAGES)
         stages.pop(i)
         return None
     if op == "tf":
         if action.get("tf") not in fs.TIMEFRAMES:
-            return "That timeframe isn't available."
+            return t("That timeframe isn't available.")
         stages[i]["timeframe"] = action["tf"]
         return None
     if op == "label":
@@ -435,14 +435,14 @@ def board_data(f: dict, choices: dict, library: dict, saved_sets: dict, show_pro
         up = upgrade_for(stage, library, saved_sets)
         stages.append({"label": stage.get("label") or "", "timeframe": stage["timeframe"],
                        "icon": fn.STAGE_ICONS[min(i, len(fn.STAGE_ICONS) - 1)],
-                       "set_name": doc.get("name") or "This stage's Set", "set_line": str(doc.get("purpose") or ""),
+                       "set_name": doc.get("name") or t("This stage's Set"), "set_line": str(doc.get("purpose") or ""),
                        "icons": perspectives.chips(doc), "upgrade": up[0] if up else None})
     return {"library": {"sets": [pb._set_entry(k, c) for k, c in choices.items()],
                         "perspectives": [{"key": k, "icon": i, "hover": h} for k, i, h in perspectives.ICONS]},
             "show_provided": show_provided, "stages": stages, "scope": scope,
             "timeframes": [[tf, TF_LABELS[tf]] for tf in fs.TIMEFRAMES],
             "min_stages": MIN_STAGES, "max_stages": MAX_STAGES,
-            "intro": "Widest at the top: each stage checks only what passed the ones above it."}
+            "intro": t("Widest at the top: each stage checks only what passed the ones above it.")}
 
 
 def _stages_board(st, f: dict, pick: str, configs: list[dict], user_id: str, library: dict, saved_sets: dict) -> None:
@@ -474,7 +474,7 @@ def _stages_board(st, f: dict, pick: str, configs: list[dict], user_id: str, lib
             st.session_state["_lattice_set_start_next"] = action["set"] if c.get("provided") else f"saved:{c['config']}"
             st.session_state.pop("lattice_set_loaded", None)
             st.session_state["lattice_flash_set"] = ("ok", (
-                f"Opened a copy of “{c['name']}”: change it and save it as your own." if c.get("provided")
+                t('Opened a copy of “{c_name}”: change it and save it as your own.', c_name=c['name']) if c.get("provided")
                 else f"Opened “{c['name']}”."))
         lattice_panel.rerun(st)
         return
@@ -512,10 +512,10 @@ def checking_now(funnel_id, done: str, paused: bool = False) -> str:
     import study_nudge
 
     if paused:
-        return f"{done} It's paused, so it isn't checked until you resume it."
+        return t("{done} It's paused, so it isn't checked until you resume it.", done=done)
     if study_nudge.run_funnel_now(str(funnel_id or "")):
-        return f"{done} Checking it now: it fills in within a few minutes."
-    return f"{done} It fills in at the next hourly check."
+        return t('{done} Checking it now: it fills in within a few minutes.', done=done)
+    return t('{done} It fills in at the next hourly check.', done=done)
 
 
 def _refresh(st) -> None:

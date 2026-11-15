@@ -6,6 +6,8 @@ to), and its decision written out, from the Set document itself, so it always sh
 
 from __future__ import annotations
 
+from i18n import t
+
 import re
 
 import lattice_editor as le
@@ -98,7 +100,7 @@ def decision_words(doc: dict, rule: dict) -> str:
         if "sequence" in r:
             q = r["sequence"]
             text = f"{words(q['first'])} on an earlier close, then {words(q['then'])} within {q['within']} daily closes"
-            return text + (f" (unless {words(q['cancel'])} in between)" if q.get("cancel") else "")
+            return text + (t(' (unless {words_q_cancel} in between)', words_q_cancel=words(q['cancel'])) if q.get("cancel") else "")
         if "group" in r:
             k = r["group"]
             if "outcome" in r:

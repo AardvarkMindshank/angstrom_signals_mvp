@@ -2,6 +2,7 @@
 🌐 Puts on-screen text through t() in bulk (15 Nov 2026): the labels, captions, messages and help of Streamlit calls.
 
     python i18n_wrap.py app.py tides_view.py …     rewrites the files in place, prints how many texts it wrapped
+    python i18n_wrap.py --display tides_view.py   also the sentences inside functions (HTML, hover text, notes)
 
 What it wraps: the first argument (the label or the text) and help= / placeholder= of the calls in UI, when that is a
 plain string or an f-string with real words in it. An f-string becomes a template with named values, so the
@@ -135,18 +136,102 @@ def edits(source: str) -> list[tuple[int, int, str]]:
     return sorted(set(out), reverse=True)
 
 
-def wrap(source: str) -> tuple[str, int]:
-    changes = edits(source)
+SKIP_CALLS = {"print", "getattr", "setattr", "hasattr", "isinstance", "get", "pop", "setdefault", "startswith",
+              "endswith", "split", "rsplit", "replace", "strip", "lstrip", "rstrip", "join", "format", "strftime",
+              "strptime", "rpc", "table", "select", "eq", "order", "execute", "upsert", "insert", "update", "delete",
+              "mark", "t", "info", "debug", "warning", "exception", "log", "compile", "match", "search", "sub",
+              "findall", "fullmatch", "html", "component", "markdown_to", "encode", "decode", "loads", "dumps",
+              "read_text", "open", "Path", "query_params", "secrets", "environ", "getenv", "translate", "Timestamp",
+              "to_datetime", "date_range", "fromisoformat", "rename", "astype", "agg", "groupby", "sort_values"}
+SKIP_KEYWORDS = {"key", "data", "type", "kind", "format", "unsafe_allow_html", "language", "mime", "file_name",
+                 "icon", "color", "anchor", "help_key", "on_change", "orient", "how", "errors", "name", "id"}
+
+
+def _many_words(text: str) -> bool:
+    """At least three real words outside markup: short words are often codes or labels that code compares."""
+    if not _words(text):
+        return False
+    plain = _TAG.sub(" ", text).strip()
+    if not plain or plain[0] in ",;:.)" or plain[0].islower():   # a piece of a sentence glued to another
+        return False
+    words = [w for w in plain.split() if re.search(r"[A-Za-z]{2}", w) and not re.fullmatch(r"[\w.@/-]+_[\w.@/-]*", w)]
+    return len(words) >= 3
+
+
+def display_edits(source: str) -> list[tuple[int, int, str]]:
+    """Every display text inside functions (not only Streamlit calls): sentences of three words or more, left alone
+    when they are compared, used as keys, given to a database or string method, or are docstrings."""
+    tree = ast.parse(source)
+    lines = source.splitlines(keepends=True)
+    starts = [0]
+    for line in lines:
+        starts.append(starts[-1] + len(line))
+
+    def offset(lineno, col):
+        return starts[lineno - 1] + len(lines[lineno - 1].encode("utf-8")[:col].decode("utf-8", "ignore"))
+
+    parent: dict = {}
+    for node in ast.walk(tree):
+        for child in ast.iter_child_nodes(node):
+            parent[child] = node
+    out = []
+
+    def skipped(node) -> bool:
+        up = parent.get(node)
+        if isinstance(up, ast.JoinedStr) or isinstance(up, ast.FormattedValue):
+            return True
+        if isinstance(up, ast.Expr):                       # a docstring or a bare string
+            return True
+        if isinstance(up, (ast.Compare, ast.Subscript, ast.Assert, ast.Raise)):
+            return True
+        if isinstance(up, ast.Dict) and node in up.keys:
+            return True
+        if isinstance(up, ast.keyword) and up.arg in SKIP_KEYWORDS:
+            return True
+        if isinstance(up, ast.Call):
+            name = up.func.attr if isinstance(up.func, ast.Attribute) else (
+                up.func.id if isinstance(up.func, ast.Name) else "")
+            if name in SKIP_CALLS or name in UI:
+                return True
+        if isinstance(up, ast.Attribute):                  # "…".join(...)
+            return True
+        if isinstance(up, ast.BinOp):                      # glued to other text: translate the whole by hand
+            return True
+        if isinstance(up, (ast.Tuple, ast.List, ast.Set)) and isinstance(parent.get(up), ast.Compare):
+            return True
+        return False
+
+    def visit(node, stack, inside):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            stack, inside = stack + [node.name], True
+        if inside and not _admin(stack) and isinstance(node, (ast.Constant, ast.JoinedStr)) and not skipped(node):
+            text = node.value if isinstance(node, ast.Constant) else "".join(
+                str(v.value) for v in node.values if isinstance(v, ast.Constant))
+            if isinstance(text, str) and _many_words(text):
+                new = _replacement(node, source)
+                if new:
+                    out.append((offset(node.lineno, node.col_offset), offset(node.end_lineno, node.end_col_offset), new))
+            return
+        for child in ast.iter_child_nodes(node):
+            visit(child, stack, inside)
+
+    visit(tree, [], False)
+    return sorted(set(out), reverse=True)
+
+
+def wrap(source: str, display: bool = False) -> tuple[str, int]:
+    changes = display_edits(source) if display else edits(source)
     for start, end, new in changes:
         source = source[:start] + new + source[end:]
     return source, len(changes)
 
 
 def main(paths: list[str]) -> int:
-    for path in paths:
+    display = "--display" in paths
+    for path in [p for p in paths if not p.startswith("--")]:
         with open(path, encoding="utf-8") as fh:
             before = fh.read()
-        after, n = wrap(before)
+        after, n = wrap(before, display)
         if n:
             if "from i18n import t" not in after and "import i18n" not in after:
                 after = _add_import(after)

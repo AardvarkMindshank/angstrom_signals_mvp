@@ -16,6 +16,8 @@ Pure functions apart from the engine, so they can be tested anywhere.
 
 from __future__ import annotations
 
+from i18n import t
+
 import hashlib
 import html
 import json
@@ -148,8 +150,8 @@ def _group_why(result: dict) -> str:
     missing = [m.get("key") for m in members if m.get("state") not in ("observed", None)]
     status = result.get("status")
     if status and status != "ok":
-        return {"vetoed": "Vetoed by one of its rules.", "veto_unknown": "A veto could not be checked.",
-                "insufficient": "Not enough data."}.get(status, str(status))
+        return {"vetoed": t("Vetoed by one of its rules."), "veto_unknown": t("A veto could not be checked."),
+                "insufficient": t("Not enough data.")}.get(status, str(status))
     return ("Missing: " + ", ".join(missing[:4])) if missing else ""
 
 
@@ -177,15 +179,15 @@ def freshness(spec: dict, cell: dict, now=None) -> tuple[str, bool]:
     import column_answers as ca
 
     try:
-        t = pd.Timestamp(as_of)
-        t = t.tz_localize("UTC") if t.tzinfo is None else t.tz_convert("UTC")
+        t_ = pd.Timestamp(as_of)
+        t_ = t_.tz_localize("UTC") if t_.tzinfo is None else t_.tz_convert("UTC")
     except (ValueError, TypeError):
         return "", False
     now = pd.Timestamp(now or pd.Timestamp.now(tz="UTC"))
     step = ca.cadence(spec["doc"])
-    stale = now - t > pd.Timedelta(minutes=2 * step + 20)
-    words = f"as of {t:%H:%M} UTC, {t:%-d %b} ({_tf_words(step)} close)"
-    return words + (" · may be out of date: a newer close has passed" if stale else ""), stale
+    stale = now - t_ > pd.Timedelta(minutes=2 * step + 20)
+    words = f"as of {t_:%H:%M} UTC, {t_:%-d %b} ({_tf_words(step)} close)"
+    return words + (t(" · may be out of date: a newer close has passed") if stale else ""), stale
 
 
 def _tf_words(minutes: int) -> str:
@@ -235,7 +237,7 @@ def group_cell(spec: dict, cell: dict | None, row_pick: str | None = None) -> st
     if cell.get("why"):
         tip += f" · {cell['why']}"
     if cell.get("error"):
-        tip += f" · could not be worked out ({cell['error']})"
+        tip += t(' · could not be worked out ({cell_error})', cell_error=cell['error'])
     if when:
         tip += f" · {when}"
     inner = (f"<span style='display:inline-flex;align-items:center;gap:6px;'>{mini_bar(value, 48)}"
@@ -264,7 +266,7 @@ def set_cell(spec: dict, cell: dict | None, row_pick: str | None = None) -> str:
         tip += " · " + " ".join(perspectives.data_mark(cell["available"]))
     tip += " · " + " ".join(perspectives.evidence(spec.get("doc"), spec.get("key")))
     if cell.get("error"):
-        tip += f" · could not be worked out ({cell['error']})"
+        tip += t(' · could not be worked out ({cell_error})', cell_error=cell['error'])
     if when:
         tip += f" · {when}"
     inner = (f"<span aria-label='{_esc(word)}' style='display:inline-flex;align-items:center;justify-content:center;"

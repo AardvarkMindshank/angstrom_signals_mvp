@@ -14,6 +14,8 @@ data-pick, read by the app's click component.
 
 from __future__ import annotations
 
+from i18n import t
+
 import html
 from datetime import datetime, timezone
 
@@ -63,8 +65,8 @@ def tides_line(snap: dict | None, now: datetime | None = None) -> str:
         bits.append(f"<span>{_e(mc.pennants(e['tier']) or '📅')} {_e(e.get('short') or e['name'])}</span>"
                     f"<span class='ang-kicker' style='margin:0;'>&nbsp;{_e(mc.when_words(e['at'], now))}</span>")
     sep = "<span style='opacity:.35;padding:0 4px;'>|</span>"
-    tip = ("🌊 Tides: the macro picture (money and rates, safe havens, growth and credit, rotation) and the next "
-           "scheduled event. Open the Tides panel for the currents and the waves. A description, not a forecast.")
+    tip = (t("🌊 Tides: the macro picture (money and rates, safe havens, growth and credit, rotation) and the next "
+           "scheduled event. Open the Tides panel for the currents and the waves. A description, not a forecast."))
     return (f"<button type='button' data-pick='tides' title='{_e(tip)}' style='{_BUTTON}'>"
             "<div class='ang-card' style='display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;"
             "padding-top:10px;padding-bottom:10px;'>"
@@ -103,7 +105,7 @@ def funnel_tiles(tiles: list[dict]) -> str:
             badges.append(f"<span style='color:{GREY};'>no change</span>")
         cands = t_.get("candidate_names") or []
         tip = (f"Open {t_['name']} in its table, on its Candidates. "
-               + (f"Candidates now: {_names(cands, 12)}. " if cands else "No Candidates right now. ")
+               + (f"Candidates now: {_names(cands, 12)}. " if cands else t("No Candidates right now. "))
                + "Stage counts: the pool, then the assets holding each stage in a row.")
         out.append(
             f"<button type='button' data-pick='{_e('funnel|' + str(t_['id']) + '|' + t_['name'])}' title='{_e(tip)}' "
@@ -126,14 +128,9 @@ def funnel_tiles(tiles: list[dict]) -> str:
 
 def no_funnels_tile(market: str = "crypto") -> str:
     """When the account has no funnels: one quiet tile that opens a table in Dynamic funnel, to copy a provided one."""
-    tip = ("A funnel narrows the market down in stages by itself, to a short list of Candidates. Click to open the "
-           "table in Dynamic funnel and make your own copy of a provided funnel.")
-    return (f"<button type='button' data-pick='{_e('funnel_new|' + market)}' title='{_e(tip)}' style='{_BUTTON}'>"
-            "<div class='ang-card' style='display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;"
-            "padding-top:10px;padding-bottom:10px;'>"
-            "<span style='font-weight:600;'>🔻 Your funnels</span>"
-            "<span class='ang-kicker' style='margin:0;'>none yet: a funnel narrows the market to Candidates by "
-            "itself</span><span style='margin-left:auto;opacity:.6;'>Make one ›</span></div></button>")
+    tip = (t("A funnel narrows the market down in stages by itself, to a short list of Candidates. Click to open the "
+           "table in Dynamic funnel and make your own copy of a provided funnel."))
+    return (t("<button type='button' data-pick='{e_funnel_new_market}' title='{e_tip}' style='{_BUTTON}'><div class='ang-card' style='display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;padding-top:10px;padding-bottom:10px;'><span style='font-weight:600;'>🔻 Your funnels</span><span class='ang-kicker' style='margin:0;'>none yet: a funnel narrows the market to Candidates by itself</span><span style='margin-left:auto;opacity:.6;'>Make one ›</span></div></button>", e_funnel_new_market=_e('funnel_new|' + market), e_tip=_e(tip), _BUTTON=_BUTTON))
 
 
 def candidate_changes(before: list[str] | None, now: list[str]) -> tuple[list[str], list[str]]:

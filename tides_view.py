@@ -184,12 +184,11 @@ def hero(snap: dict, warning: dict | None, now: datetime) -> str:
         held = f"for {t_['held_days']} trading days"
         pending = ""
         if t_.get("pending"):
-            pending = (f" · turning: readings point to {td.TIDE_WORDS[t_['raw_label']][0].lower()}, "
-                       "confirmed after 5 closes")
+            pending = (t(' · turning: readings point to {td_tide_words_t_raw_labe}, confirmed after 5 closes', td_tide_words_t_raw_labe=td.TIDE_WORDS[t_['raw_label']][0].lower()))
         title = (f"<div class='big'>{esc(name)}<span class='plain'>{esc(plain)}</span></div>"
                  f"<div class='sub'>{esc(held)}{esc(pending)} · score {t_['score']:+.2f}</div>")
     else:
-        title = "<div class='big'>Tide unknown</div><div class='sub'>Not enough data yet.</div>"
+        title = t("<div class='big'>Tide unknown</div><div class='sub'>Not enough data yet.</div>")
     if sea.get("status") == "ok":
         title += (f"<div class='sub'>Sea {esc(sea['state'])} <span class='plain'>{esc(sea['plain'])}</span></div>")
     chips = []
@@ -199,12 +198,12 @@ def hero(snap: dict, warning: dict | None, now: datetime) -> str:
                 "neither": "no clear wind"}[w["wind"]]
         why = ", ".join(td.SPEC[k]["name"] for k in w["drivers"]) or "no single current"
         tip = f"{w['name']}: {word}. Led by {why}." + (
-            f" Pushing the other way: {', '.join(td.SPEC[k]['name'] for k in w.get('against') or [])}."
+            t(' Pushing the other way: {join_td_spec_k_name_for_}.', join_td_spec_k_name_for_=', '.join(td.SPEC[k]['name'] for k in w.get('against') or []))
             if w.get("against") else "")
         chips.append(f"<span class='chip {cls}' title='{esc(tip)}'>{WIND_ICON[w['wind']]} {esc(w['name'])}: "
                      f"{esc(w['wind'] if w['wind'] != 'neither' else 'no clear wind')}</span>")
     if warning:
-        tip = f"{warning['name']} ({warning['reference']}): {warning['why']} A scheduled event, not a forecast."
+        tip = t('{warning_name} ({warning_reference}): {warning_why} A scheduled event, not a forecast.', warning_name=warning['name'], warning_reference=warning['reference'], warning_why=warning['why'])
         chips.append(f"<span class='chip warn' title='{esc(tip)}'>{mc.pennants(warning['tier'])} Storm warning: "
                      f"{esc(warning['short'])} {esc(mc.when_words(warning['at'], now))}</span>")
     dark = " dark" if state in ("rough", "storm") else ""
@@ -218,8 +217,7 @@ def note(snap: dict, upcoming: list[dict], now: datetime) -> str:
     if not lines:
         return ""
     items = "".join(f"<li>{esc(line)}</li>" for line in lines)
-    return (f"<div class='card note'><span class='who'>🧭 Navigator</span> · today's note, facts only, written "
-            f"from the readings below<ul style='margin:6px 0 0 18px;padding:0'>{items}</ul></div>")
+    return (t("<div class='card note'><span class='who'>🧭 Navigator</span> · today's note, facts only, written from the readings below<ul style='margin:6px 0 0 18px;padding:0'>{items}</ul></div>", items=items))
 
 
 def strip(upcoming: list[dict], now: datetime) -> str:
@@ -320,7 +318,7 @@ def waves(snap: dict, range_key: str = "1Y") -> str:
              f"fill='#94a3b8' fill-opacity='.18'/>",
              f"<line x1='{x0}' x2='{x1}' y1='{swell_y}' y2='{swell_y}' stroke='#94a3b8'/>",
              f"<path d='{path(dict(hist), swell_y, 45)}' fill='none' stroke='#2563eb' stroke-width='2.5'/>",
-             f"<text x='12' y='{swell_y - 4}' font-size='13' font-weight='700' fill='#64748b'>Swell = the Tide</text>",
+             t("<text x='12' y='{swell_y_4}' font-size='13' font-weight='700' fill='#64748b'>Swell = the Tide</text>", swell_y_4=swell_y - 4),
              f"<text x='12' y='{swell_y + 12}' font-size='9.5' fill='{tide_tone}'>{esc(tide_state)}</text>"]
     colours = ("#f97316", "#10b981", "#8b5cf6", "#ec4899", "#14b8a6", "#eab308", "#64748b", "#ef4444", "#0ea5e9")
     for i, c in enumerate(cur):
@@ -335,7 +333,7 @@ def waves(snap: dict, range_key: str = "1Y") -> str:
     first, last = dates[0], dates[-1]
     svg = img(f"<svg viewBox='0 0 1000 {height}' font-family='Source Sans Pro, Segoe UI, Helvetica, Arial, "
               f"sans-serif'>" + "".join(body) + "</svg>", "wv",
-              f"Each current and the swell from {first} to {last}")
+              t('Each current and the swell from {first} to {last}', first=first, last=last))
     return ("<div class='card waves'>" + svg + "<div class='foot' style='margin-top:4px'>Above a lane's line pulls "
             "towards risk-taking, below pulls away. The swell is the Tide's score: each family's average, weighted "
             "(money and rates 30%, growth and credit 30%, safe havens 20%, rotation 20%); the grey band is slack. "
@@ -348,11 +346,10 @@ WAVES_TITLE = "<h4>〰️ The waves: each current's pull, and the swell they mak
 def card(c: dict) -> str:
     spec = td.SPEC[c["key"]]
     if c.get("status") != "ok":
-        return (f"<div class='card cur mute' title='{esc(spec['measures'])}'><div class='nm'>{esc(spec['icon'])} "
-                f"{esc(spec['name'])}</div><div class='meta'>No data right now.</div></div>")
+        return (t("<div class='card cur mute' title='{esc_spec_measures}'><div class='nm'>{esc_spec_icon} {esc_spec_name}</div><div class='meta'>No data right now.</div></div>", esc_spec_measures=esc(spec['measures']), esc_spec_icon=esc(spec['icon']), esc_spec_name=esc(spec['name'])))
     pull, cls, _tone = pull_of(c)
     meaning = spec[c["direction"]] if c["direction"] in ("rising", "falling") else "little change over 30 days"
-    votes = "Votes in the Tide." if c["weight"] else "Shown on its own; does not vote in the Tide."
+    votes = t("Votes in the Tide.") if c["weight"] else t("Shown on its own; does not vote in the Tide.")
     tip = (f"{spec['measures']}. {c['direction'].capitalize()}: {meaning}. Today's level is {c['band']} for the past "
            f"5 years (score {c['score']:.0f}/100). {votes} Change: 7 days {fmt_change(c, 'change_7')}, 30 days "
            f"{fmt_change(c)}. As of {c['as_of']}.")
@@ -385,35 +382,23 @@ def side_readings(snap: dict) -> str:
     if fng is not None:
         mood = ("extreme fear" if fng < 25 else "fear" if fng < 45 else "neutral" if fng <= 55
                 else "greed" if fng <= 75 else "extreme greed")
-        bits.append(f"<div class='card cur' title='Alternative.me crypto Fear and Greed. Shown on its own: it already "
-                    f"sits inside the crypto sentiment score, so it never votes in the Tide.'><div class='nm'>😱 Crypto "
-                    f"Fear &amp; Greed</div><div class='val'>{fng:.0f}/100 · {esc(mood)}</div>"
-                    f"<div class='meta'>not in the Tide</div></div>")
+        bits.append(t("<div class='card cur' title='Alternative.me crypto Fear and Greed. Shown on its own: it already sits inside the crypto sentiment score, so it never votes in the Tide.'><div class='nm'>😱 Crypto Fear &amp; Greed</div><div class='val'>{fng:.0f}/100 · {esc_mood}</div><div class='meta'>not in the Tide</div></div>", fng=fng, esc_mood=esc(mood)))
     dom = snap.get("btc_dominance")
     if dom is not None:
-        bits.append(f"<div class='card cur' title=\"Bitcoin's share of the whole crypto market (CoinGecko). Rising often "
-                    f"means money retreating to Bitcoin; falling, money moving out to altcoins. Our own daily history "
-                    f"of it is still short, so it is shown, not scored.\"><div class='nm'>₿ Bitcoin share</div>"
-                    f"<div class='val'>{dom:.1f}%</div><div class='meta'>crypto rotation, shown</div></div>")
+        bits.append(t('<div class=\'card cur\' title="Bitcoin\'s share of the whole crypto market (CoinGecko). Rising often means money retreating to Bitcoin; falling, money moving out to altcoins. Our own daily history of it is still short, so it is shown, not scored."><div class=\'nm\'>₿ Bitcoin share</div><div class=\'val\'>{dom:.1f}%</div><div class=\'meta\'>crypto rotation, shown</div></div>', dom=dom))
     ex = snap.get("extras") or {}
     if ex.get("long_30y"):
-        bits.append(f"<div class='card cur' title='30-year Treasury yield, shown beside long rates (the 10-year votes).'>"
-                    f"<div class='nm'>📏 30-year yield</div><div class='val'>{ex['long_30y']['value']:.2f}%</div>"
-                    f"<div class='meta'>30 days {ex['long_30y']['change_30']:+.2f} pts</div></div>")
+        bits.append(t("<div class='card cur' title='30-year Treasury yield, shown beside long rates (the 10-year votes).'><div class='nm'>📏 30-year yield</div><div class='val'>{ex_long_30y_value:.2f}%</div><div class='meta'>30 days {ex_long_30y_change_30:+.2f} pts</div></div>", ex_long_30y_value=ex['long_30y']['value'], ex_long_30y_change_30=ex['long_30y']['change_30']))
     if ex.get("copper"):
-        bits.append(f"<div class='card cur' title='Copper on its own (copper against gold votes).'>"
-                    f"<div class='nm'>🔶 Copper</div><div class='val'>${ex['copper']['value']:.2f}/lb</div>"
-                    f"<div class='meta'>30 days {ex['copper']['change_30']:+.1f}%</div></div>")
-    for key, name, tip in (("cyclical_defensive", "🛍️ Cyclical vs defensive",
-                            "Consumer discretionary against consumer staples (XLY vs XLP): rises when money favours "
-                            "growth-sensitive sectors."),
-                           ("small_large", "🐟 Small vs large", "Small companies against large (IWM vs SPY): rises "
-                            "with broad risk appetite.")):
+        bits.append(t("<div class='card cur' title='Copper on its own (copper against gold votes).'><div class='nm'>🔶 Copper</div><div class='val'>${ex_copper_value:.2f}/lb</div><div class='meta'>30 days {ex_copper_change_30:+.1f}%</div></div>", ex_copper_value=ex['copper']['value'], ex_copper_change_30=ex['copper']['change_30']))
+    for key, name, tip in (("cyclical_defensive", t("🛍️ Cyclical vs defensive"),
+                            t("Consumer discretionary against consumer staples (XLY vs XLP): rises when money favours "
+                            "growth-sensitive sectors.")),
+                           ("small_large", t("🐟 Small vs large"), t("Small companies against large (IWM vs SPY): rises "
+                            "with broad risk appetite."))):
         r = ex.get(key)
         if r and r.get("change_30") is not None:
-            bits.append(f"<div class='card cur' title='{esc(tip)}'><div class='nm'>{name}</div>"
-                        f"<div class='val'>30 days {r['change_30']:+.1f}%</div>"
-                        f"<div class='meta'>{esc(td.band(r.get('score')) or '')} for 5 years</div></div>")
+            bits.append(t("<div class='card cur' title='{esc_tip}'><div class='nm'>{name}</div><div class='val'>30 days {r_change_30:+.1f}%</div><div class='meta'>{esc_td_band_r_get_score_} for 5 years</div></div>", esc_tip=esc(tip), name=name, r_change_30=r['change_30'], esc_td_band_r_get_score_=esc(td.band(r.get('score')) or '')))
     if not bits:
         return ""
     return "<h4>🔭 Also on the horizon (shown, not voting)</h4><div class='grid'>" + "".join(bits) + "</div>"
@@ -457,11 +442,7 @@ def bottom_part(snap: dict) -> str:
 
 
 def footer(stamp: str) -> str:
-    return (f"<div class='foot'>Readings from Yahoo Finance and FRED (St. Louis Fed), updated "
-            f"{esc(stamp)} UTC. Each current is scored against its own last 5 years; its pull is its 30-day move "
-            f"against the usual size of such a move. History before the daily record began is rebuilt from today's "
-            f"data, and inflation uses revised figures, not first releases. Macro conditions frame risk; they do "
-            f"not time trades, and a coin can rise on its own news while the tide goes out. Not advice.</div>")
+    return (t("<div class='foot'>Readings from Yahoo Finance and FRED (St. Louis Fed), updated {esc_stamp} UTC. Each current is scored against its own last 5 years; its pull is its 30-day move against the usual size of such a move. History before the daily record began is rebuilt from today's data, and inflation uses revised figures, not first releases. Macro conditions frame risk; they do not time trades, and a coin can rise on its own news while the tide goes out. Not advice.</div>", esc_stamp=esc(stamp)))
 
 
 def page(snap: dict, now: datetime | None = None, range_key: str = "1Y") -> str:
@@ -469,11 +450,7 @@ def page(snap: dict, now: datetime | None = None, range_key: str = "1Y") -> str:
     upcoming = mc.upcoming(now, days=35)
     warning = mc.storm_warning(now)
     stamp = snap.get("computed_at", "")[:16].replace("T", " ")
-    foot = (f"<div class='foot'>Readings from Yahoo Finance and FRED (St. Louis Fed), updated "
-            f"{esc(stamp)} UTC. Each current is scored against its own last 5 years; its pull is its 30-day move "
-            f"against the usual size of such a move. History before the daily record began is rebuilt from today's "
-            f"data, and inflation uses revised figures, not first releases. Macro conditions frame risk; they do "
-            f"not time trades, and a coin can rise on its own news while the tide goes out. Not advice.</div>")
+    foot = (t("<div class='foot'>Readings from Yahoo Finance and FRED (St. Louis Fed), updated {esc_stamp} UTC. Each current is scored against its own last 5 years; its pull is its 30-day move against the usual size of such a move. History before the daily record began is rebuilt from today's data, and inflation uses revised figures, not first releases. Macro conditions frame risk; they do not time trades, and a coin can rise on its own news while the tide goes out. Not advice.</div>", esc_stamp=esc(stamp)))
     return (CSS + "<div class='tides'>" + hero(snap, warning, now) + note(snap, upcoming, now)
             + strip(upcoming, now) + WAVES_TITLE + waves(snap, range_key) + cards(snap) + side_readings(snap)
             + foot + "</div>")
