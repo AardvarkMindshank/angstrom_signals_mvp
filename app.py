@@ -563,6 +563,7 @@ export default function(component) {
       if (night) night.toggleAttribute("aria-hidden", !dark);
     });
   };
+  window.__angstromSidebarWords = [T("Expand sidebar"), T("Collapse sidebar")];   // this run's language
   apply();
   if (!window.angstromBrandWatch) {
     window.angstromBrandWatch = true;
@@ -619,7 +620,8 @@ export default function(component) {
       tab.hidden = false;
       const collapsed = sidebar.getAttribute("data-collapsed") === "true";
       tab.classList.toggle("is-closed", collapsed);
-      const label = collapsed ? T("Expand sidebar") : T("Collapse sidebar");
+      const words = window.__angstromSidebarWords || [T("Expand sidebar"), T("Collapse sidebar")];
+      const label = collapsed ? words[0] : words[1];
       tab.title = label;
       tab.setAttribute("aria-label", label);
       tab.setAttribute("aria-expanded", collapsed ? "false" : "true");
@@ -1007,13 +1009,17 @@ export default function(component) {
     if (el && (el.tagName === "TEXTAREA" || (el.tagName === "INPUT" && /^(text|search|email|password|)$/.test(el.type || "")))) return true;
     return Array.from(window.__angstromTyped).some((t) => t.isConnected && t.value && t.value.trim());
   };
+  window.__angstromVersionWords = [T("🔄 A new version is ready. Tap to reload."),
+    T("The app was updated or restarted. Reloading reconnects this page.")];          // this run's language
   const showBanner = () => {
     if (document.getElementById("angstrom-new-version")) return;
     const bar = document.createElement("button");
     bar.id = "angstrom-new-version";
     bar.type = "button";
-    bar.textContent = T("🔄 A new version is ready. Tap to reload.");
-    bar.title = T("The app was updated or restarted. Reloading reconnects this page.");
+    const words = window.__angstromVersionWords || [T("🔄 A new version is ready. Tap to reload."),
+      T("The app was updated or restarted. Reloading reconnects this page.")];
+    bar.textContent = words[0];
+    bar.title = words[1];
     bar.style.cssText = "position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:100000;"
       + "padding:10px 18px;border-radius:999px;border:none;background:#1e3a8a;color:#fff;font-size:14px;"
       + "box-shadow:0 4px 16px rgba(0,0,0,.25);cursor:pointer;";
@@ -1612,7 +1618,10 @@ export default function(component) {
       document.head.appendChild(style);
     }
     let root = document.getElementById("social-stream-root");
-    if (root && root.dataset.layout !== "member") {
+    // The panel is built once and kept; its words are written while it is built. After a language switch it is
+    // built again, so it never keeps the old language's words.
+    const wordsMark = T("<div class='report-title'>Report this comment</div>") + "|" + T("Reply");
+    if (root && (root.dataset.layout !== "member" || root.dataset.words !== wordsMark)) {
       root.remove();
       root = null;
     }
@@ -1623,6 +1632,7 @@ export default function(component) {
       root = document.createElement("div");
       root.id = "social-stream-root";
       root.dataset.layout = "member";
+      root.dataset.words = wordsMark;
       root.innerHTML = [
         "<div class='scrim'></div>",
         "<aside class='panel' role='dialog' aria-label='Social signals and chat'>",
@@ -3068,9 +3078,9 @@ export default function(component) {
     button = document.createElement("button");
     button.id = "angstrom-page-top";
     button.type = "button";
-    button.textContent = T("↑ Top");
     document.body.appendChild(button);
   }
+  button.textContent = T("↑ Top");     // every run: the button outlives a language switch, so its words must follow
   const scrollers = () => document.querySelectorAll(
     "[data-testid='stMain'], [data-testid='stAppViewContainer'], [data-testid='stAppScrollToBottomContainer']"
   );
@@ -3683,9 +3693,9 @@ export default function(component) {
   if (!link) {
     link = document.createElement("a");
     link.className = "angstrom-google";
-    link.textContent = (data && data.label) || T("Continue with Google");
     shell.appendChild(link);
   }
+  link.textContent = (data && data.label) || T("Continue with Google");     // every run: follows a language switch
   link.removeAttribute("target");
   const url = data && data.url ? String(data.url) : "";
   const verifier = data && data.verifier ? String(data.verifier) : "";
