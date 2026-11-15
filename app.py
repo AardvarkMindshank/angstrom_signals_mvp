@@ -5318,6 +5318,17 @@ def _use_account(account_id: str) -> None:
     st.session_state.prefs_user = account_id
 
 
+def _reset_mail_client():
+    """A client that sends the reset mail with the link carrying the session itself (#access_token...&type=recovery,
+    read by _RECOVERY_JS), so the link works on any device (15 Nov 2026). The app's normal client uses Supabase's
+    default "pkce" flow: its reset link brings back a ?code that only the server copy that sent the mail could redeem,
+    and that copy is gone by then, so the link landed on the log-in page instead of the new-password page."""
+    from supabase import ClientOptions
+
+    return create_client(_secret("url"), _secret("anon_key") or _secret("key"),
+                         options=ClientOptions(flow_type="implicit"))
+
+
 def _app_url() -> str:
     """The address in the browser, without a query or hash. Used in the reset mail."""
     try:
@@ -5666,7 +5677,7 @@ if st.session_state.user is None:
                             st.error(t("Enter the email on the account."))
                         else:
                             try:
-                                supabase.auth.reset_password_for_email(email, {"redirect_to": _app_url()})
+                                _reset_mail_client().auth.reset_password_for_email(email, {"redirect_to": _app_url()})
                                 st.session_state.recover_sent = True
                             except Exception as exc:
                                 code = str(getattr(exc, "code", "") or "")
