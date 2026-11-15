@@ -8,6 +8,8 @@ under 10 (under 20 on the shown scale), mixed 10 to 20 (20 to 40 shown), split a
 
 from __future__ import annotations
 
+from i18n import mark, t
+
 import html
 import math
 
@@ -49,10 +51,11 @@ def spread_word(values: list[float]) -> tuple[str, float]:
 
 
 _MEANING = {
-    "agree": "they mostly read the same way",
-    "mixed": "they lean different ways",
-    "split": "they disagree strongly; the average hides two camps",
+    "agree": mark("they mostly read the same way"),
+    "mixed": mark("they lean different ways"),
+    "split": mark("they disagree strongly; the average hides two camps"),
 }
+_WORD = {"agree": mark("agree"), "mixed": mark("mixed"), "split": mark("split")}
 
 
 def coverage_badge(report: dict | None) -> str:
@@ -62,12 +65,11 @@ def coverage_badge(report: dict | None) -> str:
     if not isinstance(cover, dict) or cover.get("level") != "thin":
         return ""
     events, sources = int(cover.get("events") or 0), int(cover.get("sources") or 0)
-    hint = (f"Based on only {events} separate news {'story' if events == 1 else 'stories'} from {sources} "
-            f"{'publisher' if sources == 1 else 'publishers'} (repeats of the same story count once). "
-            "Treat this score as a weak reading.")
+    hint = t("Based on only {events} separate news stories from {sources} publishers (repeats of the same story "
+             "count once). Treat this score as a weak reading.", events=events, sources=sources)
     return (f"<span title='{html.escape(hint, quote=True)}' style='display:inline-block;padding:1px 7px;"
             "border-radius:999px;background:#fef3c7;color:#92400e;font-size:0.75rem;font-weight:700;cursor:help;'>"
-            "⚠️ thin news</span>")
+            + html.escape(t("⚠️ thin news")) + "</span>")
 
 
 def spread_html(report: dict | None, average: float | None = None, width: int = 190) -> str:
@@ -117,23 +119,23 @@ def spread_html(report: dict | None, average: float | None = None, width: int = 
         1 for group in (report or {}).get("gauges") or [] if isinstance(group, dict)
         for item in group.get("items") or [] if isinstance(item, dict) and item.get("score") is not None
     )
-    what = f"{len(values) - readings} news articles and {readings} public readings" if readings else f"{len(values)} articles"
-    noun = "sources" if readings else "articles"
-    title = (
-        f"{what}, each scored from -100 (very negative) to +100 (very positive). Each dot is one; the marker is "
-        f"the average ({sentiment_text(mean)}). Spread ±{sd * 2:.0f} points: {word}, {_MEANING[word]}."
-    )
+    what = (t("{n} news articles and {m} public readings", n=len(values) - readings, m=readings) if readings
+            else t("{n} articles", n=len(values)))
+    count = t("{n} sources", n=len(values)) if readings else t("{n} articles", n=len(values))
+    title = t("{what}, each scored from -100 (very negative) to +100 (very positive). Each dot is one; the marker is "
+              "the average ({avg}). Spread ±{sd:.0f} points: {word}, {meaning}.", what=what, avg=sentiment_text(mean),
+              sd=sd * 2, word=t(_WORD[word]), meaning=t(_MEANING[word]))
     colours = {"agree": ("#15803d", "#dcfce7"), "mixed": ("#b45309", "#fef3c7"), "split": ("#b91c1c", "#fee2e2")}
     fg, bg = colours[word]
     label = (
         f"<span style='display:inline-block;padding:1px 7px;border-radius:999px;background:{bg};color:{fg};"
-        f"font-size:0.75rem;font-weight:700;'>{word}</span>"
+        f"font-size:0.75rem;font-weight:700;'>{html.escape(t(_WORD[word]))}</span>"
     )
     return (
         f"<span class='sentiment-spread' title='{html.escape(title, quote=True)}' "
         "style='display:inline-flex;align-items:center;gap:8px;cursor:help;'>"
         f"{svg}<span style='display:inline-flex;flex-direction:column;align-items:flex-start;line-height:1.2;'>"
-        f"{label}<span style='font-size:0.7rem;color:var(--ang-muted,#6b7280);'>{len(values)} {noun}</span>"
+        f"{label}<span style='font-size:0.7rem;color:var(--ang-muted,#6b7280);'>{html.escape(count)}</span>"
         "</span></span>"
         + (f"<span style='margin-left:8px;'>{thin}</span>" if thin else "")
     )

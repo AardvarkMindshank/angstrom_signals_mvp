@@ -2021,5 +2021,20 @@
   "PPI": "PPI",
   "Prices paid by producers: an early read on inflation in the pipeline.": "ราคาที่ผู้ผลิตจ่าย: สัญญาณเงินเฟ้อล่วงหน้า",
   "Deadline": "กำหนดเส้นตาย",
-  "A one-off deadline with no regular schedule (added by hand).": "กำหนดเส้นตายครั้งเดียวที่ไม่มีตารางประจำ (เพิ่มด้วยมือ)"
+  "A one-off deadline with no regular schedule (added by hand).": "กำหนดเส้นตายครั้งเดียวที่ไม่มีตารางประจำ (เพิ่มด้วยมือ)",
+  "Bearish coverage": "ข่าวเชิงลบ",
+  "Bullish coverage": "ข่าวเชิงบวก",
+  "Mixed coverage": "ข่าวผสม",
+  "↑ Top": "↑ บนสุด",
+  "they mostly read the same way": "ส่วนใหญ่อ่านไปทางเดียวกัน",
+  "they lean different ways": "เอียงไปคนละทาง",
+  "they disagree strongly; the average hides two camps": "เห็นต่างกันมาก ค่าเฉลี่ยซ่อนสองฝ่ายไว้",
+  "agree": "เห็นตรงกัน",
+  "split": "แตกเป็นสองฝ่าย",
+  "Based on only {events} separate news stories from {sources} publishers (repeats of the same story count once). Treat this score as a weak reading.": "อิงจากข่าวแยกกันเพียง {events} เรื่องจากสำนักข่าว {sources} แห่ง (ข่าวเดียวกันซ้ำนับครั้งเดียว) ให้ถือว่าคะแนนนี้เป็นค่าที่อ่อน",
+  "{what}, each scored from -100 (very negative) to +100 (very positive). Each dot is one; the marker is the average ({avg}). Spread ±{sd:.0f} points: {word}, {meaning}.": "{what} แต่ละรายการให้คะแนนตั้งแต่ -100 (ลบมาก) ถึง +100 (บวกมาก) จุดหนึ่งจุดคือหนึ่งรายการ เครื่องหมายคือค่าเฉลี่ย ({avg}) การกระจาย ±{sd:.0f} จุด: {word} {meaning}",
+  "{n} news articles and {m} public readings": "บทความข่าว {n} รายการ และค่าสาธารณะ {m} รายการ",
+  "{n} articles": "{n} บทความ",
+  "{n} sources": "{n} แหล่ง",
+  "⚠️ thin news": "⚠️ ข่าวน้อย"
 }

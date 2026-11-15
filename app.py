@@ -3010,7 +3010,7 @@ export default function(component) {
   host.style.textAlign = "right";
   host.innerHTML = "<button type='button' data-back-to-top "
     + "style='background:none;border:none;padding:4px 0;margin:0;color:#6b7280;"
-    + "font:inherit;font-weight:600;cursor:pointer;white-space:nowrap;'>↑ Top</button>";
+    + "font:inherit;font-weight:600;cursor:pointer;white-space:nowrap;'>" + T("↑ Top") + "</button>";
   host.querySelector("button").addEventListener("click", (event) => {
     event.preventDefault();
     const scroller = document.querySelector('[data-testid="stMain"]')
@@ -3020,11 +3020,11 @@ export default function(component) {
   });
 }
 """
-_back_to_top = st.components.v2.component(
+_back_to_top = i18n.with_words(st.components.v2.component(
     "back_to_top",
-    js=_BACK_TO_TOP_JS,
+    js=i18n.js_ready(_BACK_TO_TOP_JS),
     isolate_styles=False,
-)
+), _BACK_TO_TOP_JS)
 
 # One floating ↑ Top for the whole page. Hidden until the main page has been scrolled.
 _PAGE_TOP_JS = """
@@ -3061,7 +3061,7 @@ export default function(component) {
     button = document.createElement("button");
     button.id = "angstrom-page-top";
     button.type = "button";
-    button.textContent = "↑ Top";
+    button.textContent = T("↑ Top");
     document.body.appendChild(button);
   }
   const scrollers = () => document.querySelectorAll(
@@ -3113,11 +3113,11 @@ export default function(component) {
   };
 }
 """
-_page_top = st.components.v2.component(
+_page_top = i18n.with_words(st.components.v2.component(
     "page_top",
-    js=_PAGE_TOP_JS,
+    js=i18n.js_ready(_PAGE_TOP_JS),
     isolate_styles=False,
-)
+), _PAGE_TOP_JS)
 
 # The wide layout's two bottom columns. 0.5 is an even split of that pair only.
 _WIDE_SPLIT_MIN = 0.2
@@ -13042,7 +13042,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                         unsafe_allow_html=True,
                     )
             with chart_top:
-                _back_to_top(key="chart_back_to_top")
+                _back_to_top(key="chart_back_to_top", data={})
             if chart_kind in ("Crypto", "Stock") and chart_asset:
                 _section_timer(
                     row_timestamp((st.session_state.get("_shared_rows") or {}).get(
@@ -14072,14 +14072,14 @@ def _mood_coverage(score: float) -> str:
     # Same words and lines as market_store._coverage_label, judged on the number shown.
     score = sentiment_category_score(score)
     if score >= 60:
-        return "Bullish coverage"
+        return t("Bullish coverage")
     if score >= 53:
         return t("Mildly bullish coverage")
     if score >= 47:
-        return "Mixed coverage"
+        return t("Mixed coverage")
     if score >= 40:
         return t("Mildly bearish coverage")
-    return "Bearish coverage"
+    return t("Bearish coverage")
 
 
 def _reading_articles(group: dict) -> list[dict]:
@@ -14155,7 +14155,7 @@ def _mood_card(spec: dict, row: dict | None) -> None:
     if not (report and report.get("ok")):
         flag = f"mood_fill_{key}"
         if not st.session_state.get(flag):
-            with st.spinner(t('Reading the {label_lower}...', label_lower=label.lower())):
+            with st.spinner(t('Reading the {label_lower}...', label_lower=t(label).lower())):
                 report = analyze_market_mood(key, label, query, sentiment_ready())
             if report.get("reason") != "model_busy":
                 st.session_state[flag] = True
@@ -14173,11 +14173,11 @@ def _mood_card(spec: dict, row: dict | None) -> None:
     with head_col:
         mood_icon = "🪙" if key == "crypto" else "📈"
         st.markdown(
-            _section_mark(_emoji_mark(mood_icon), label),
+            _section_mark(_emoji_mark(mood_icon), t(label)),
             unsafe_allow_html=True,
         )
     with top_col:
-        _back_to_top(key=f"mood_top_{key}")
+        _back_to_top(key=f"mood_top_{key}", data={})
     _section_timer(
         row_timestamp(row, "sentiment_updated_at") if isinstance(row, dict) else None,
         SENTIMENT_REFRESH_SECONDS, f"timer_mood_{key}",
@@ -15183,7 +15183,7 @@ def show_market_sentiment(kind: str, asset_id: str, label: str, ticker: str | No
                     unsafe_allow_html=True,
                 )
         with sentiment_top:
-            _back_to_top(key="sentiment_back_to_top")
+            _back_to_top(key="sentiment_back_to_top", data={})
         _section_timer(
             row_timestamp(stored, "sentiment_updated_at") if isinstance(stored, dict) else None,
             SENTIMENT_REFRESH_SECONDS, "timer_sentiment",
@@ -15584,7 +15584,7 @@ _record_run("whole page", _RUN_STARTED)
 # Angstrom Lattice is drawn inside the dashboard, straight under the Interactive Chart (_lattice_section).
 if str((load_profile() or {}).get("role") or "") == "admin":
     admin_panel()
-_page_top(key="page_back_to_top")
+_page_top(key="page_back_to_top", data={})
 
 _copyright()
 
