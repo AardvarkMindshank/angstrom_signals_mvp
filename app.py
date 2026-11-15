@@ -14080,11 +14080,11 @@ def _reading_articles(group: dict) -> list[dict]:
         elif name.startswith("CBOE"):
             source = "CBOE"
         articles.append({
-            "title": f"{name}, {value}" if value else name,
+            "title": f"{t(name)}, {value}" if value else t(name),
             "source": source,
             "published": item.get("published") or "",
             "link": link,
-            "note": item.get("note") or item.get("detail") or "",
+            "note": t(item.get("note") or item.get("detail") or ""),
             "score": item.get("score"),
         })
     return articles
@@ -14109,10 +14109,10 @@ def _mood_reading_board(market_key: str, label: str, report: dict | None) -> str
     blocks = []
     for group in groups or []:
         articles = _reading_articles(group)
-        note = str(group.get("note") or "").strip()
+        note = t(str(group.get("note") or "").strip())
         if not articles and not note:
             continue
-        title = f"<div class='headline-group'>{html.escape(str(group.get('title') or ''))}</div>"
+        title = f"<div class='headline-group'>{html.escape(t(str(group.get('title') or '')))}</div>"
         table = headline_table(articles, "AI Score") if articles else ""
         aside = f"<div class='headline-aside'>{html.escape(note)}</div>" if note else ""
         blocks.append(title + table + aside)

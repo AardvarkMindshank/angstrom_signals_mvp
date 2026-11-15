@@ -7,6 +7,8 @@ stable free feed is left as a short note, never a made-up number.
 
 from __future__ import annotations
 
+from i18n import mark
+
 import os
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -370,7 +372,7 @@ def _alpha_items(payload) -> list[dict]:
         if stamp:
             detail = f"{detail} · {stamp}"
         return [_reading(
-            "Market news sentiment",
+            mark("Market news sentiment"),
             _alpha_label(score),
             detail,
             "Alpha Vantage",
@@ -381,12 +383,12 @@ def _alpha_items(payload) -> list[dict]:
     if payload.get("kind") != "active":
         return []
     rows = []
-    for name, count in (("Most active higher", payload.get("higher")), ("Most active lower", payload.get("lower"))):
+    for name, count in ((mark("Most active higher"), payload.get("higher")), (mark("Most active lower"), payload.get("lower"))):
         try:
             count = int(count)
         except (TypeError, ValueError):
             continue
-        detail = "Of the most actively traded US stocks"
+        detail = mark("Of the most actively traded US stocks")
         if stamp:
             detail = f"{detail} · {stamp}"
         rows.append(_reading(
@@ -503,7 +505,7 @@ def _polygon_items(payload) -> list[dict]:
         if total <= 0:
             return []
         rows = []
-        for name, count in (("US stocks higher", payload.get("up")), ("US stocks lower", payload.get("down"))):
+        for name, count in ((mark("US stocks higher"), payload.get("up")), (mark("US stocks lower"), payload.get("down"))):
             try:
                 count = int(count)
             except (TypeError, ValueError):
@@ -544,39 +546,39 @@ def _polygon_items(payload) -> list[dict]:
 def _crypto_groups(raw: dict) -> list[dict]:
     return [
         {
-            "title": "Global liquidity & central bank trackers",
+            "title": mark("Global liquidity & central bank trackers"),
             "items": _present(
                 _money_item(
-                    "US M2 money supply",
+                    mark("US M2 money supply"),
                     raw.get("M2SL"),
                     "month",
                     lambda value: f"${value / 1000:.1f}T",
                     "https://fred.stlouisfed.org/series/M2SL",
                 ),
                 _money_item(
-                    "Fed balance sheet",
+                    mark("Fed balance sheet"),
                     raw.get("WALCL"),
                     "week",
                     lambda value: f"${value / 1_000_000:.2f}T",
                     "https://fred.stlouisfed.org/series/WALCL",
                 ),
                 _rate_item(
-                    "Federal funds rate",
+                    mark("Federal funds rate"),
                     raw.get("DFF"),
                     "day",
                     "https://fred.stlouisfed.org/series/DFF",
                 ),
             ),
             "note": (
-                "A current four-bank global M2 composite (Fed, ECB, Bank of Japan, and PBOC) "
-                "is not a free series, so this group uses the Fed's own published figures."
+                mark("A current four-bank global M2 composite (Fed, ECB, Bank of Japan, and PBOC) "
+                "is not a free series, so this group uses the Fed's own published figures.")
             ),
         },
         {
-            "title": "Currency & yield indicators",
+            "title": mark("Currency & yield indicators"),
             "items": _present(
                 _level_item(
-                    "US Dollar Index (DXY)",
+                    mark("US Dollar Index (DXY)"),
                     raw.get("DXY"),
                     "session",
                     lambda value: f"{value:.2f}",
@@ -584,7 +586,7 @@ def _crypto_groups(raw: dict) -> list[dict]:
                     "https://finance.yahoo.com/quote/DX-Y.NYB/",
                 ),
                 _rate_item(
-                    "10-year Treasury yield",
+                    mark("10-year Treasury yield"),
                     raw.get("DGS10"),
                     "day",
                     "https://fred.stlouisfed.org/series/DGS10",
@@ -593,11 +595,11 @@ def _crypto_groups(raw: dict) -> list[dict]:
             "note": "",
         },
         {
-            "title": "Crypto-specific sentiment & flows",
+            "title": mark("Crypto-specific sentiment & flows"),
             "items": _present(_fear_item(raw.get("FNG")), *_coin_items(raw.get("CG"))),
             "note": (
-                "Funding rates, open interest, liquidations, and ETF flows need Coinglass or Arkham, "
-                "which are not connected."
+                mark("Funding rates, open interest, liquidations, and ETF flows need Coinglass or Arkham, "
+                "which are not connected.")
             ),
         },
     ]
@@ -606,22 +608,22 @@ def _crypto_groups(raw: dict) -> list[dict]:
 def _stock_groups(raw: dict) -> list[dict]:
     return [
         {
-            "title": "Macroeconomic policy & inflation trackers",
+            "title": mark("Macroeconomic policy & inflation trackers"),
             "items": _present(
                 _rate_item(
-                    "Federal funds rate",
+                    mark("Federal funds rate"),
                     raw.get("DFF"),
                     "day",
                     "https://fred.stlouisfed.org/series/DFF",
                 ),
                 _rate_item(
-                    "10-year breakeven inflation",
+                    mark("10-year breakeven inflation"),
                     raw.get("T10YIE"),
                     "day",
                     "https://fred.stlouisfed.org/series/T10YIE",
                 ),
                 _points_item(
-                    "Michigan consumer sentiment",
+                    mark("Michigan consumer sentiment"),
                     raw.get("UMCSENT"),
                     "month",
                     lambda value: f"{value:.1f}",
@@ -629,7 +631,7 @@ def _stock_groups(raw: dict) -> list[dict]:
                     "Michigan",
                 ),
                 _rate_item(
-                    "Michigan inflation expectation",
+                    mark("Michigan inflation expectation"),
                     raw.get("MICH"),
                     "month",
                     "https://fred.stlouisfed.org/series/MICH",
@@ -637,12 +639,12 @@ def _stock_groups(raw: dict) -> list[dict]:
                 ),
             ),
             "note": (
-                "CME FedWatch probabilities and the Conference Board survey are not on a free feed here. "
-                "The Michigan survey is the consumer reading that is."
+                mark("CME FedWatch probabilities and the Conference Board survey are not on a free feed here. "
+                "The Michigan survey is the consumer reading that is.")
             ),
         },
         {
-            "title": "Market-wide sentiment & breadth indicators",
+            "title": mark("Market-wide sentiment & breadth indicators"),
             "items": _present(
                 _cnn_item(raw.get("CNN")),
                 _points_item(
@@ -657,9 +659,9 @@ def _stock_groups(raw: dict) -> list[dict]:
             "note": "",
         },
         {
-            "title": "Institutional & professional data providers",
+            "title": mark("Institutional & professional data providers"),
             "items": _present(*_alpha_items(raw.get("AV")), *_polygon_items(raw.get("POLY"))),
-            "note": "Bloomberg Terminal and Refinitiv are not connected.",
+            "note": mark("Bloomberg Terminal and Refinitiv are not connected."),
         },
     ]
 
@@ -727,7 +729,7 @@ def _fear_item(rows):
         detail = f"{detail} · {stamp}" if detail else stamp
     shown = f"{value:.0f}" + (f" · {label}" if label else "")
     return _reading(
-        "Crypto Fear & Greed",
+        mark("Crypto Fear & Greed"),
         shown,
         detail,
         "Alternative.me",
@@ -747,7 +749,7 @@ def _coin_items(payload):
             items.append(_reading(
                 "Bitcoin dominance",
                 f"{float(dominance):.1f}%",
-                "Share of the total crypto market cap",
+                mark("Share of the total crypto market cap"),
                 "CoinGecko",
                 "https://www.coingecko.com/en/global-charts",
                 "",
@@ -762,9 +764,9 @@ def _coin_items(payload):
             moved = None
         if moved is not None:
             items.append(_reading(
-                "Crypto market cap, 24h",
+                mark("Crypto market cap, 24h"),
                 f"{moved:+.1f}%",
-                "Change in total crypto market cap over the last 24 hours",
+                mark("Change in total crypto market cap over the last 24 hours"),
                 "CoinGecko",
                 "https://www.coingecko.com/en/global-charts",
                 "",
@@ -791,7 +793,7 @@ def _cnn_item(block):
     if len(iso) < 10 or iso[4] != "-" or iso[7] != "-":
         iso = ""
     return _reading(
-        "CNN Fear & Greed",
+        mark("CNN Fear & Greed"),
         shown,
         detail,
         "CNN",
