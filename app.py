@@ -12769,9 +12769,11 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             set_specs = [c for c in column_specs if c["part"] == "sets"]
             staged = any(r.get("stage_icon") for r in results)
             # Column names are English keys (sorting and alignment read them); header_button shows them with t().
-            i18n.mark("Asset"), i18n.mark("Stage"), i18n.mark("Watching"), i18n.mark("Rank"), i18n.mark("Price")
-            i18n.mark("Earnings"), i18n.mark("Market Cap"), i18n.mark("Vol"), i18n.mark("Sentiment"), i18n.mark("Crowd")
-            i18n.mark("Comments"), i18n.mark("30-day trend")
+            # Kept in a variable: a bare tuple on its own line is printed onto the page by Streamlit's "magic".
+            _column_words = (i18n.mark("Asset"), i18n.mark("Stage"), i18n.mark("Watching"), i18n.mark("Rank"),
+                             i18n.mark("Price"), i18n.mark("Earnings"), i18n.mark("Market Cap"), i18n.mark("Vol"),
+                             i18n.mark("Sentiment"), i18n.mark("Crowd"), i18n.mark("Comments"),
+                             i18n.mark("30-day trend"))
             layout = [("Asset", 1, "")] + ([("Stage", 1, "")] if staged else []) + [("Watching", 1, "")] + (
                 [("Rank", 1, "")] if kind == "Crypto" else [])
             layout += [(f"col:{c['key']}", 1, "g") for c in group_specs] + ([("fold:g", 1, "")] if group_specs else [])
