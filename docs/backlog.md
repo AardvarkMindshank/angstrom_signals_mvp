@@ -35,6 +35,38 @@ entity, Paddle); a data-licence review alongside; then tiers and payments, harde
 6. **Before outsiders arrive:** make the GitHub repo private (check the effect on free GitHub Actions minutes),
    database backups, and error alerts.
 
+## Forex and commodities (proposed by Drew; ChatGPT and Claude views, 15 Nov 2026)
+
+Idea: add currencies (EUR/USD, GBP/USD, USD/JPY, USD/CHF, AUD/USD, USD/CAD, NZD/USD; later EUR/GBP, EUR/JPY) and
+commodities (gold, silver, WTI and Brent crude, copper, natural gas; agricultural later) to Angstrom, as an
+extension of the existing engine (Signals → Groups → Sets → Prism → Funnels), not as separate systems. ChatGPT
+supports it: broader market understanding, cross-market research, wider commercial audience; start with a small
+list; decide data sources and licences first; don't let it displace beta readiness or the data-licence review.
+
+Claude's view (agrees, and adds):
+1. **Bigger than two more tables.** The app is built for exactly two markets: 109 crypto-or-equity checks across
+   44 files (tables, funnels, data, charts, alerts, studies). Full support means turning that into a list of markets,
+   each declaring its data source, trading hours, candle sizes and whether volume means anything. Weeks of work,
+   worth doing once and properly.
+2. **A cheap first step gives most of the research value.** Gold, oil, copper and the dollar index are already
+   fetched daily for Tides, and Sets can already read a second, pinned asset (as in "Coinbase leads Bitcoin"). Make
+   key commodities and currency pairs usable as conditions in Groups and Sets ("Bitcoin's trend when gold is
+   rising") without new tables; fits the backlog item "Tides readings in Sets and funnels".
+3. **Licensing applies today.** Tides takes gold and oil from Yahoo futures (GC=F, CL=F, HG=F, DX-Y.NYB), under the
+   same no-commercial-use terms as Yahoo equities: the data-licence review must cover them. Free reference rates
+   (e.g. European Central Bank daily currency rates) suit context but are daily only; licensed intraday currencies
+   and commodities come from paid providers (to be researched and priced for the owner's approval).
+4. **Market differences.** Forex trades 24 hours, 5 days a week, with the daily close conventionally at 5pm New
+   York (not midnight UTC), which every daily signal and study depends on. Commodity futures roll between contracts,
+   creating false jumps unless the series is stitched properly. Missing volume already shows as Unknown, never zero.
+5. **Upside:** long, clean daily histories, good for honest studies.
+
+Suggested order: add these sources to the data-licence review now; after Strategies step 2, make key commodities
+and currency pairs usable as conditions in Groups, Sets and Tides; decide on full Forex and Commodities tables only
+once it is clear whether users want to trade them directly. Open question for the owner and Drew (ChatGPT's): are
+these markets to trade, or context for crypto and equities? A practical test: does Drew trade gold, oil or
+currencies himself, or watch them to judge crypto and equities?
+
 **Decided 15 Nov 2026:** ready-made (provided) Groups, Sets and funnels keep their English names in every language;
 users who copy one can rename it in their own language.
 
