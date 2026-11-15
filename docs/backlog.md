@@ -2,6 +2,42 @@
 
 Agreed work that is not built yet, so nothing gets forgotten between sessions. Newest first.
 
+## Plan agreed 15 Nov 2026: remaining product work and the road to a commercial launch
+
+Suggested order: Strategies step 2 spec and build (Claude) while the owner starts the slow outside steps (legal
+entity, Paddle); a data-licence review alongside; then tiers and payments, hardening, and the beta roll-out.
+
+**Product**
+1. **Strategies, step 2: tracked plans.** Entry (a Set or sequence), ladder in, exits and ladder out, in typical
+   moves and shares of the plan (never money); each watched asset moves Watching → Armed → Building in → Managing →
+   Done with alerts at each step; the ladder drawn on the chart. First: a short build spec for review by the owner,
+   Drew and the three AIs. Step 1 (sequences in Sets) was built 9 Nov; step 3 (plan studies, same honesty rules as
+   What followed) follows. Design: `docs/research/strategies_brief_2026-11-09.md`.
+2. **Smaller open items:** "tell me when Armed" alert for sequences; signal families in the Lattice picker; more
+   chart shapes (candle patterns, triangles, wedges, flags; head and shoulders, double tops/bottoms and crosses are
+   done); Tides readings in Sets and funnels; the monthly macro-calendar check; funnel studies; Drew's oscillator
+   settings; OKX perpetuals (all detailed below).
+3. **Housekeeping:** email service (proper SMTP for Supabase auth mail, e.g. Resend: the built-in sender allows only
+   a few mails an hour); a test login for Claude (the owner's Google account, a normal user, signed in once in the
+   desktop app's built-in browser); training videos for the rest of the site (extend the video demo page); translate
+   "Max pain" and "0 matches" (left for now).
+
+**Commercial track** (some steps wait on outside parties, so start early)
+1. **Legal entity:** Paddle, the final NDA, terms and privacy pages all need the company's legal name.
+2. **Paddle:** merchant of record (collects sales tax and VAT worldwide). Approval can take days to weeks and needs
+   a live website with pricing, terms and a refund policy. The owner signs up; Claude prepares the website pages.
+3. **Data licences (important):** Yahoo Finance (via yfinance) does not allow commercial use. Before taking money,
+   review every source's licence and plan licensed replacements, with options and costs for the owner's approval.
+4. **Membership tiers in the app:** turn the planned free + 2–3 paid tiers into concrete limits, add a plan per
+   account with feature checks, then connect Paddle so payments switch tiers automatically.
+5. **Beta roll-out:** the invite flow exists (request form, Drew's approval, NDA); still needed: the final NDA,
+   the email service, a welcome / onboarding path for testers, and the videos.
+6. **Before outsiders arrive:** make the GitHub repo private (check the effect on free GitHub Actions minutes),
+   database backups, and error alerts.
+
+**Decided 15 Nov 2026:** ready-made (provided) Groups, Sets and funnels keep their English names in every language;
+users who copy one can rename it in their own language.
+
 ## Tides
 
 - **Monthly macro-calendar check** (agreed 12 Nov 2026, after Drew's feedback). A GitHub job once a month reads
@@ -18,11 +54,6 @@ Agreed work that is not built yet, so nothing gets forgotten between sessions. N
 - Funnel studies (how past Candidates did afterwards, on development data only).
 - Drew's exact oscillator settings against the published defaults (needs a certification run).
 - OKX perpetuals as a futures source (funding and open interest for more coins).
-- Multi-language app, as one separate exercise before a public launch (after Strategies and tiers settle): pull all
-  on-screen text into per-language files, translate Help and guides as whole documents, a language setting per
-  account, notifications and emails in each person's language, a trading-terms glossary, native-speaker review, and
-  a check that flags new text without translations. Major languages only; first wave likely English, Spanish,
-  Portuguese (Brazil), Chinese (Simplified), Japanese, Korean, German, French; right-to-left (Arabic) later.
 - Funnel and Tides training videos: published 12 Nov 2026 (f1-funnels, t1-tides).
 - Chart shapes as signals (asked 14 Nov 2026): find the common trading patterns in the candles by code, one
   signal family with a picker (like Sonar markers), each read as "candles ago" so Sets, funnels and notifications
@@ -35,6 +66,12 @@ Agreed work that is not built yet, so nothing gets forgotten between sessions. N
   (Stochastics, Moving averages, Money flow, Divergence, Sonar, Positioning, ...), each with a variant picker and a
   one-line "which one when". Done in the editor only: signal ids, saved Groups and Sets, history replays and the
   certification stay as they are.
+
+## Done (15 Nov 2026)
+
+- Multi-language app: 12 languages live (English, Thai, Spanish, Portuguese (Brazil), German, French, Turkish,
+  Vietnamese, Indonesian, Japanese, Korean, Chinese (Simplified)); AI sentiment text in the languages accounts use;
+  a test requires every live language to be complete.
 
 ## Done (12 Nov 2026)
 
