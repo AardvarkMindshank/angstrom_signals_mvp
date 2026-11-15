@@ -32,6 +32,8 @@ Breakdowns (decided after the reviews of 10 Nov, docs/research/study_enhancement
 
 from __future__ import annotations
 
+from i18n import t
+
 import math
 
 import numpy as np
@@ -93,24 +95,23 @@ def studyable(doc: dict | None) -> tuple[bool, str]:
     import signal_library as sl
 
     if not doc:
-        return False, "There is no saved Set to study."
+        return False, t("There is no saved Set to study.")
     if not (doc.get("groups") or doc.get("standalone") or doc.get("members")):
-        return False, "This Set has no parts yet."
+        return False, t("This Set has no parts yet.")
     for ref, _ in perspectives._refs(doc):
         tf = (ref or {}).get("timeframe", "1D")
         if tf not in ("1D", "1W"):
-            return False, (f"It reads {tf} candles; studies use saved daily prices, so only Sets that read daily or "
-                           "weekly candles can be studied.")
+            return False, (t('It reads {tf} candles; studies use saved daily prices, so only Sets that read daily or weekly candles can be studied.', tf=tf))
         try:
             definition = sl.REGISTRY.get(ref["id"], ref.get("version", 1))
         except Exception:
-            return False, f"One of its parts ({(ref or {}).get('id', '?')}) is not in the signal library."
+            return False, t('One of its parts ({ref_or_get_id}) is not in the signal library.', ref_or_get_id=(ref or {}).get('id', '?'))
         if ref["id"] in SAVED_SINCE:              # daily positioning: filled in from Coinalyze (study_history.py)
             continue
         if definition.category in NO_HISTORY:
-            return False, f"It uses {NO_HISTORY[definition.category]}, which has no saved history to study yet."
+            return False, t('It uses {no_history_definition_ca}, which has no saved history to study yet.', no_history_definition_ca=NO_HISTORY[definition.category])
         if str(getattr(definition, "scope", "") or "").startswith("market:"):
-            return False, "It uses a market-wide reading, which has no saved history to study."
+            return False, t("It uses a market-wide reading, which has no saved history to study.")
     return True, ""
 
 

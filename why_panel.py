@@ -196,13 +196,18 @@ def week_change(values: list) -> int | None:
 
 def group_sentence(name: str, pct, label, change) -> str:
     if pct is None:
-        return f"{name} has no reading today."
-    now = f"{name} reads {label.lower() if label else 'neutral'} ({pct:+d})"
+        return t("{name} has no reading today.", name=name)
+    words = t(label).lower() if label else t("neutral")
     if change is None:
-        return now + "."
+        return t("{name} reads {words} ({pct}).", name=name, words=words, pct=f"{pct:+d}")
     if abs(change) < 5:
-        return now + "; it has barely changed over the past week."
-    return now + f"; it has {'risen' if change > 0 else 'fallen'} {abs(change)} points over the past week."
+        return t("{name} reads {words} ({pct}); it has barely changed over the past week.", name=name, words=words,
+                 pct=f"{pct:+d}")
+    if change > 0:
+        return t("{name} reads {words} ({pct}); it has risen {n} points over the past week.", name=name, words=words,
+                 pct=f"{pct:+d}", n=abs(change))
+    return t("{name} reads {words} ({pct}); it has fallen {n} points over the past week.", name=name, words=words,
+             pct=f"{pct:+d}", n=abs(change))
 
 
 def set_sentence(answers: list, dates: list) -> str:

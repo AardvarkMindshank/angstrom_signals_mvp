@@ -8,26 +8,26 @@
 
 const DRAW_TOOLS = [
   // [id, icon, tip, kind]   kind: free | erase | one | two | three | text
-  ["pan", "✋", "Move the chart (no drawing tool)", "none"],
-  ["pen", "✏️", "Pen: draw freely with a finger, Pencil or mouse", "free"],
-  ["hl", "🖍️", "Highlighter: a wide, see-through pen", "free"],
-  ["erase", "🧽", "Eraser: tap or drag across a drawing to remove it", "erase"],
-  ["trend", "╱", "Trend line: drag from one point to another", "two"],
-  ["ray", "↗", "Ray: a line from a point that runs on into the future", "two"],
-  ["hline", "━", "Horizontal line: a price level across the chart", "one"],
-  ["vline", "┃", "Vertical line: marks a date or time", "one"],
-  ["channel", "⫽", "Parallel channel: drag the first line, then tap where the parallel line goes", "three"],
-  ["arrow", "➚", "Arrow: drag from the tail to the point", "two"],
-  ["box", "▭", "Box / zone: drag from one corner to the other", "two"],
-  ["circle", "◯", "Circle: drag across what to circle", "two"],
-  ["marker", "✖", "Marker: tap to stamp the mark chosen beside it", "one"],
-  ["text", "🔤", "Text note: tap where the note goes, then type", "text"],
-  ["fib", "📐", "Fibonacci retracement: drag from the swing low to the swing high (or high to low)", "two"],
-  ["measure", "📏", "Measure: drag between two points to see the % change and the number of candles", "two"],
-  ["position", "🎯", "Long / short position: drag from the entry to the stop, then tap the target", "three"],
+  ["pan", "✋", TM("Move the chart (no drawing tool)"), "none"],
+  ["pen", "✏️", TM("Pen: draw freely with a finger, Pencil or mouse"), "free"],
+  ["hl", "🖍️", TM("Highlighter: a wide, see-through pen"), "free"],
+  ["erase", "🧽", TM("Eraser: tap or drag across a drawing to remove it"), "erase"],
+  ["trend", "╱", TM("Trend line: drag from one point to another"), "two"],
+  ["ray", "↗", TM("Ray: a line from a point that runs on into the future"), "two"],
+  ["hline", "━", TM("Horizontal line: a price level across the chart"), "one"],
+  ["vline", "┃", TM("Vertical line: marks a date or time"), "one"],
+  ["channel", "⫽", TM("Parallel channel: drag the first line, then tap where the parallel line goes"), "three"],
+  ["arrow", "➚", TM("Arrow: drag from the tail to the point"), "two"],
+  ["box", "▭", TM("Box / zone: drag from one corner to the other"), "two"],
+  ["circle", "◯", TM("Circle: drag across what to circle"), "two"],
+  ["marker", "✖", TM("Marker: tap to stamp the mark chosen beside it"), "one"],
+  ["text", "🔤", TM("Text note: tap where the note goes, then type"), "text"],
+  ["fib", "📐", TM("Fibonacci retracement: drag from the swing low to the swing high (or high to low)"), "two"],
+  ["measure", "📏", TM("Measure: drag between two points to see the % change and the number of candles"), "two"],
+  ["position", "🎯", TM("Long / short position: drag from the entry to the stop, then tap the target"), "three"],
 ];
 const DRAW_COLOURS = ["#2962ff", "#f23645", "#089981", "#ff9800", "#9c27b0", "#00bcd4", "#e91e63", "#ffffff", "#131722"];
-const DRAW_WIDTHS = [[1, "Thin"], [2, "Medium"], [4, "Thick"]];
+const DRAW_WIDTHS = [[1, TM("Thin lines")], [2, TM("Medium lines")], [4, TM("Thick lines")]];
 const DRAW_MARKS = ["✖", "✔", "★", "▲", "▼", "●", "?", "!"];
 const FIB_LEVELS = [0, 0.236, 0.382, 0.5, 0.618, 0.65, 0.786, 1];
 const DRAW_MAX_ITEMS = 400;
@@ -280,7 +280,7 @@ function hitItem(s, it, x, y, size) {
 
 function saveDrawings(s) {
   clearTimeout(s.saveTimer);
-  s.status("Saving…");
+  s.status(T("Saving…"));
   s.saveTimer = setTimeout(async () => {
     const record = DRAW_STORE.assets.get(s.asset);
     if (record) record.savedAt = Date.now();
@@ -297,15 +297,15 @@ function saveDrawings(s) {
           body: JSON.stringify({ user_id: rest.user, asset_key: s.asset, items: s.items, updated_at: new Date().toISOString() }),
         });
         ok = r.ok;
-        if (!ok && r.status === 404) { s.status("Drawings can't be saved yet: the database update hasn't been run."); return; }
+        if (!ok && r.status === 404) { s.status(T("Drawings can't be saved yet: the database update hasn't been run.")); return; }
       } catch (e) { ok = false; }
     }
     if (!ok && s.trigger) {         // the app saves them instead (its session is refreshed on every run)
       s.trigger("drawings", JSON.stringify({ asset: s.asset, items: s.items, nonce: Date.now() + Math.random() }));
-      s.status("Saved");
+      s.status(T("Saved"));
       return;
     }
-    s.status(ok ? "Saved" : "Not saved: sign in again to keep these drawings.");
+    s.status(ok ? T("Saved") : T("Not saved: sign in again to keep these drawings."));
   }, 700);
 }
 
@@ -502,7 +502,7 @@ function setupDrawing(L, root, host, chart, candles, data, theme, hasOsc) {
     const box = document.createElement("textarea");
     box.rows = 2;
     box.maxLength = 200;
-    box.placeholder = "Type a note, then Enter";
+    box.placeholder = T("Type a note, then Enter");
     box.style.cssText = `position:absolute;z-index:6;left:${Math.min(x, overlay.clientWidth - 200) + parseFloat(overlay.style.left || 0)}px;` +
       `top:${y}px;width:190px;font:13px system-ui,sans-serif;padding:4px 6px;border-radius:6px;` +
       `border:1px solid ${theme.grid};background:${theme.bg};color:${theme.ink};`;
@@ -560,38 +560,38 @@ function setupDrawing(L, root, host, chart, candles, data, theme, hasOsc) {
     bar.style.display = open ? "flex" : "none";
     if (!open) return;
     for (const [id, icon, tip] of DRAW_TOOLS) {
-      bar.appendChild(btn(icon, tip, (s.tool || "pan") === id, () => setTool(id)));
+      bar.appendChild(btn(icon, T(tip), (s.tool || "pan") === id, () => setTool(id)));
       if (id === "erase" || id === "circle") bar.appendChild(gap());
     }
     if (s.tool === "marker") {
       bar.appendChild(gap());
-      for (const m of DRAW_MARKS) bar.appendChild(btn(m, `Stamp ${m}`, s.mark === m, () => { s.mark = m; setDrawPref("mark", m); paintBar(); }));
+      for (const m of DRAW_MARKS) bar.appendChild(btn(m, T("Stamp {mark}", {mark: m}), s.mark === m, () => { s.mark = m; setDrawPref("mark", m); paintBar(); }));
     }
     bar.appendChild(gap());
     for (const c of DRAW_COLOURS) {
-      const b = btn("", `Colour ${c}`, s.colour === c, () => { s.colour = c; setDrawPref("colour", c); paintBar(); },
+      const b = btn("", T("Colour {c}", {c: c}), s.colour === c, () => { s.colour = c; setDrawPref("colour", c); paintBar(); },
         `min-width:22px;width:22px;height:22px;padding:0;align-self:center;border-radius:50%;background:${c};` +
         (s.colour === c ? "outline:2px solid #2962ff;outline-offset:2px;" : ""));
       bar.appendChild(b);
     }
     bar.appendChild(gap());
     for (const [w, words] of DRAW_WIDTHS) {
-      bar.appendChild(btn(["─", "━", "▬"][DRAW_WIDTHS.findIndex((x) => x[0] === w)], `${words} lines`, s.width === w,
+      bar.appendChild(btn(["─", "━", "▬"][DRAW_WIDTHS.findIndex((x) => x[0] === w)], T(words), s.width === w,
         () => { s.width = w; setDrawPref("width", w); paintBar(); }));
     }
     bar.appendChild(gap());
-    bar.appendChild(btn("↶", "Undo", false, () => {
+    bar.appendChild(btn("↶", T("Undo"), false, () => {
       if (!s.history.length) return;
       s.items = s.history.pop(); record.items = s.items; repaint(); saveDrawings(s); paintBar();
     }, s.history.length ? "" : "opacity:.45;"));
-    bar.appendChild(btn(confirmClear ? "Clear all?" : "🗑", confirmClear ? "Press again to remove every drawing on this asset" :
-      "Remove every drawing on this asset", confirmClear, () => {
+    bar.appendChild(btn(confirmClear ? T("Clear all?") : "🗑", confirmClear ? T("Press again to remove every drawing on this asset") :
+      T("Remove every drawing on this asset"), confirmClear, () => {
       if (!confirmClear) { confirmClear = true; paintBar(); setTimeout(() => { confirmClear = false; paintBar(); }, 3000); return; }
       confirmClear = false; setItems([]);
     }));
     if (conf.share) {
-      bar.appendChild(btn("📤", "Share this chart and its drawings with your communities", false, () => {
-        if (!s.items.length) { s.status("Draw something first."); return; }
+      bar.appendChild(btn("📤", T("Share this chart and its drawings with your communities"), false, () => {
+        if (!s.items.length) { s.status(T("Draw something first.")); return; }
         if (s.trigger) s.trigger("share", JSON.stringify({ asset: s.asset, items: s.items, nonce: Date.now() + Math.random() }));
       }));
     }
@@ -599,12 +599,12 @@ function setupDrawing(L, root, host, chart, candles, data, theme, hasOsc) {
   };
 
   // ---- ✏️ and 👁 beside ⟲ and ⇥
-  const pen = toolButton("✏️", "Drawing tools: lines, shapes, pen, notes, Fibonacci and more", theme);
+  const pen = toolButton("✏️", T("Drawing tools: lines, shapes, pen, notes, Fibonacci and more"), theme);
   pen.onclick = () => { const open = !drawPref("open", false); setDrawPref("open", open); if (!open) setTool("pan"); paintBar(); };
   const eye = toolButton("👁", "", theme);
   const paintEye = () => {
     eye.textContent = s.hidden ? "🙈" : "👁";
-    eye.title = s.hidden ? "Drawings are hidden: press to show them" : "Hide the drawings";
+    eye.title = s.hidden ? T("Drawings are hidden: press to show them") : T("Hide the drawings");
     eye.setAttribute("aria-label", eye.title);
   };
   eye.onclick = () => { s.hidden = !s.hidden; setDrawPref("hidden", s.hidden); paintEye(); repaint(); };

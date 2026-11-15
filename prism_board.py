@@ -9,6 +9,8 @@ library lists hold (saved Sets, Watchlist), and how a button press becomes a new
 
 from __future__ import annotations
 
+from i18n import mark, t
+
 import copy
 from datetime import timedelta
 
@@ -22,7 +24,7 @@ import signal_groups as sg
 MAX_SCHEDULED = ps.MAX_ACTIVE_SCANS
 MAX_ASSET_ITEMS = 60
 SNOOZE_DAYS = (1, 3, 7)
-GROUPS = {"watchlist": "Whole Watchlist", "crypto": "All crypto", "shares": "All equities"}   # "shares" is the stored id; "equities" is the word used across the app
+GROUPS = {"watchlist": mark("Whole Watchlist"), "crypto": mark("All crypto"), "shares": mark("All equities")}   # "shares" is the stored id; "equities" is the word used across the app
 MARKET_OF = {"crypto": "crypto", "shares": "equity"}            # a market group -> the kind of asset it covers
 CHANNELS = {"instant": "Instant (app and email)", "digest": "Daily digest", "app": "App only", "off": "Off",
             "account": "As my alert settings"}
@@ -40,7 +42,7 @@ def set_choices(saved: list[dict], user_id: str) -> dict[str, dict]:
     key -> {name, meta, doc, config, version, latest}."""
     out = {}
     for key, doc in prism.demo_sets().items():
-        out[key] = {"name": doc["name"], "meta": "example Set", "doc": doc, "config": None, "version": None,
+        out[key] = {"name": doc["name"], "meta": t("example Set"), "doc": doc, "config": None, "version": None,
                     "provided": True}
     for c in saved:
         if c.get("kind") != "set":
@@ -49,12 +51,14 @@ def set_choices(saved: list[dict], user_id: str) -> dict[str, dict]:
         if not usable:
             continue
         v = max(usable, key=lambda v: v["version"])
-        owner = "yours" if c.get("owner_id") == user_id else "shared"
+        mine = c.get("owner_id") == user_id
+        owner = t("yours") if mine else t("shared")
         doc = v["body"]
         parts = len(doc.get("groups") or []) + len(doc.get("standalone") or [])
         out[f"saved:{c['id']}:{v['version']}"] = {
-            "name": c["name"], "meta": f"v{v['version']} · {parts} part{'s' * (parts != 1)} · {owner}", "doc": doc,
-            "config": c["id"], "version": v["version"]}
+            "name": c["name"], "meta": (t("v{v} · 1 part · {owner}", v=v["version"], owner=owner) if parts == 1 else
+                     t("v{v} · {n} parts · {owner}", v=v["version"], n=parts, owner=owner)), "doc": doc,
+            "config": c["id"], "version": v["version"], "mine": mine}
     return out
 
 
@@ -84,7 +88,7 @@ def _set_entry(key: str, c: dict) -> dict:
             "evidence": {"icon": icon, "hover": words},
             "inside": _inside(doc),
             # Provided Sets open in Signal Sets as your own copy; yours open as they are.
-            "open": "copy" if c.get("provided") else ("open" if c.get("config") and "yours" in c.get("meta", "") else None)}
+            "open": "copy" if c.get("provided") else ("open" if c.get("config") and c.get("mine") else None)}
 
 
 def _inside(doc: dict) -> dict | None:
@@ -101,9 +105,9 @@ def library(choices: dict, assets: list[tuple[str, str, str]]) -> dict:
     return {
         "sets": [_set_entry(k, c) for k, c in choices.items()],
         "perspectives": [{"key": k, "icon": i, "hover": h} for k, i, h in perspectives.ICONS],
-        "groups": [{"group": "watchlist", "name": GROUPS["watchlist"], "count": len(crypto) + len(stocks)},
-                   {"group": "crypto", "name": GROUPS["crypto"], "count": len(crypto)},
-                   {"group": "shares", "name": GROUPS["shares"], "count": len(stocks)}],
+        "groups": [{"group": "watchlist", "name": t(GROUPS["watchlist"]), "count": len(crypto) + len(stocks)},
+                   {"group": "crypto", "name": t(GROUPS["crypto"]), "count": len(crypto)},
+                   {"group": "shares", "name": t(GROUPS["shares"]), "count": len(stocks)}],
         "assets": [{"kind": "crypto" if kind == "crypto" else "equity", "id": aid, "name": name,
                     "market": "crypto" if kind == "crypto" else "equity"} for kind, aid, name in assets],
     }
@@ -143,7 +147,7 @@ def new_scan(choice_key: str, choices: dict) -> dict:
 
 def asset_label(item: dict, names: dict) -> str:
     if item.get("group"):
-        return GROUPS.get(item["group"], item["group"])
+        return t(GROUPS.get(item["group"], item["group"]))
     key = f"{item.get('kind')}:{item.get('id')}"
     return names.get(key) or str(item.get("id"))
 
@@ -154,7 +158,7 @@ def add_asset(obj: dict, item: dict) -> tuple[dict, str | None]:
              {"kind": item.get("kind"), "id": str(item.get("id") or "")[:60]}
              if item.get("kind") in ("crypto", "equity") and item.get("id") else None)
     if clean is None:
-        return obj, "That can't be added to a scan."
+        return obj, t("That can't be added to a scan.")
     if clean == {"group": "watchlist"}:
         out["assets"] = [clean]                       # covers everything else
         return out, None
@@ -175,7 +179,7 @@ def add_asset(obj: dict, item: dict) -> tuple[dict, str | None]:
         out["assets"] = [clean]
         return out, None
     if len(out["assets"]) >= MAX_ASSET_ITEMS:
-        return obj, f"A scan holds at most {MAX_ASSET_ITEMS} entries."
+        return obj, t('A scan holds at most {MAX_ASSET_ITEMS} entries.', MAX_ASSET_ITEMS=MAX_ASSET_ITEMS)
     out["assets"].append(clean)
     return out, None
 
@@ -184,16 +188,16 @@ def _covered_by(assets: list, item: dict) -> str | None:
     """A message when an entry already in the scan covers the new one (one coin while All crypto is in)."""
     group = next((g for g, m in MARKET_OF.items() if m == item.get("kind")), None)
     if group and {"group": group} in assets:
-        return f"{GROUPS[group]} already covers it."
+        return t("{name} already covers it.", name=t(GROUPS[group]))
     if item.get("kind") and {"group": "watchlist"} in assets and len(assets) > 1:
-        return "Whole Watchlist already covers it."
+        return t("Whole Watchlist already covers it.")
     return None
 
 
 def remove_asset(obj: dict, index: int) -> tuple[dict, str | None]:
     if len(obj["assets"]) <= 1:
-        return obj, ("A scan needs at least one asset or group. To scan something else, drop it here (or tap + "
-                     "beside it in the Watchlist list): it takes the place of this one.")
+        return obj, (t("A scan needs at least one asset or group. To scan something else, drop it here (or tap + "
+                     "beside it in the Watchlist list): it takes the place of this one."))
     out = copy.deepcopy(obj)
     if 0 <= index < len(out["assets"]):
         out["assets"].pop(index)
@@ -234,20 +238,20 @@ def next_run(schedule: dict, markets: list[str], now) -> pd.Timestamp | None:
 def _until(when, now) -> str:
     mins = max(0, int((pd.Timestamp(when) - pd.Timestamp(now)).total_seconds() // 60))
     if mins < 60:
-        return f"next in {mins} min"
+        return t("next in {mins} min", mins=mins)
     hours, mins = divmod(mins, 60)
     if hours < 48:
-        return f"next in {hours}h {mins:02d}m"
-    return f"next in {hours // 24} days"
+        return t("next in {hours}h {mins}m", hours=hours, mins=f"{mins:02d}")
+    return t("next in {days} days", days=hours // 24)
 
 
 def _ago(when, now) -> str:
     mins = max(0, int((pd.Timestamp(now) - pd.Timestamp(when)).total_seconds() // 60))
     if mins < 60:
-        return f"{mins} min ago"
+        return t("{mins} min ago", mins=mins)
     if mins < 48 * 60:
-        return f"{mins // 60} h ago"
-    return f"{mins // 1440} days ago"
+        return t("{h} h ago", h=mins // 60)
+    return t("{days} days ago", days=mins // 1440)
 
 
 def run_dot(run: dict) -> str:
@@ -272,11 +276,11 @@ def view(scan: dict, runs: list[dict], latched: list[str], choices: dict, assets
     paused = obj["paused"]
     when = None if paused else next_run(sched, in_use, now)
     if sched.get("kind") == "manual":
-        next_text = "runs when you press Play"
+        next_text = t("runs when you press Play")
     elif paused:
-        next_text = "paused"
+        next_text = t("paused")
     else:
-        next_text = _until(when, now) if when is not None else "no assets to scan"
+        next_text = _until(when, now) if when is not None else t("no assets to scan")
 
     runs = sorted(runs, key=lambda r: str(r.get("cutoff")), reverse=True)
     latest, seen = [], set()
@@ -290,7 +294,7 @@ def view(scan: dict, runs: list[dict], latched: list[str], choices: dict, assets
         for row in r.get("results") or []:
             counts[row.get("answer") if row.get("answer") in counts else "unknown"] += 1
             stored.append(row)
-    last_text = (f"Last scheduled run {_ago(runs[0]['cutoff'], now)}" if runs else "Not run on a schedule yet")
+    last_text = (t('Last scheduled run {ago_runs_0_cutoff_now}', ago_runs_0_cutoff_now=_ago(runs[0]['cutoff'], now)) if runs else t("Not run on a schedule yet"))
 
     source = obj["source"] or {}
     newer = latest_by_config(choices).get(source.get("config")) if source.get("config") else None
@@ -307,7 +311,7 @@ def view(scan: dict, runs: list[dict], latched: list[str], choices: dict, assets
     notify = obj["notify"]
     return {
         "id": scan["id"], "name": obj["name"],
-        "version": f"v{source['version']}" if source.get("version") else "example",
+        "version": f"v{source['version']}" if source.get("version") else t("example"),
         "update": update, "paused": paused, "scheduled": sched.get("kind") != "manual",
         "schedule": sched, "schedule_text": ps.describe_schedule(sched), "next_text": next_text,
         "notify": {"channel": notify.get("channel", "instant"), "on_yes": notify.get("on_yes", True),
@@ -361,7 +365,7 @@ def schedule_from(raw: dict) -> tuple[dict | None, str | None]:
         schedule = {"kind": "times", "times": times, "days": days, "tz": tz}
         errors = ps.validate_schedule(schedule)
         return (None, errors[0]) if errors else (schedule, None)
-    return None, "Choose when the scan runs."
+    return None, t("Choose when the scan runs.")
 
 
 def notify_from(raw: dict) -> dict:

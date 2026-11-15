@@ -13,6 +13,8 @@ viewing only). Outcome studies, which measure, use only days before it (research
 
 from __future__ import annotations
 
+from i18n import t
+
 import pandas as pd
 
 import group_readings as gr
@@ -81,7 +83,7 @@ def daily_answers(doc: dict, frame: pd.DataFrame, kind: str, asset_id: str, *, s
         def subject(k, i):
             other = subjects.get((k, i))
             if other is None:
-                raise ValueError(f"No saved daily history for {i}.")
+                raise ValueError(t('No saved daily history for {i}.', i=i))
             return context_at(other, k, day, i)[0]
         return subject
 

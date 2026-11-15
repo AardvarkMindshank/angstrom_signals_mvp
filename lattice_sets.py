@@ -22,6 +22,8 @@ line:
 
 from __future__ import annotations
 
+from i18n import t
+
 import copy
 import re
 
@@ -302,28 +304,27 @@ def targets(model: dict, choices: dict) -> list[dict]:
 def checks(model: dict, choices: dict) -> dict:
     blocks, warns = [], []
     if len(model.get("groups") or []) + len(model.get("standalone") or []) == 0:
-        blocks.append("Add at least one Group or signal.")
+        blocks.append(t("Add at least one Group or signal."))
     for g in model.get("groups") or []:
         if g["source"] not in choices:
-            blocks.append("A Group in this Set can no longer be read.")
+            blocks.append(t("A Group in this Set can no longer be read."))
     known = {t["key"] for t in targets(model, choices)}
     for i, line in enumerate(model.get("lines") or []):
         if "seq" in line:
             if not line["seq"].get("first"):
-                blocks.append(f"Line {i + 1}: the THEN box needs at least one First line.")
+                blocks.append(t('Line {i_1}: the THEN box needs at least one First line.', i_1=i + 1))
             if not line["seq"].get("then"):
-                blocks.append(f"Line {i + 1}: the THEN box needs at least one Then line.")
+                blocks.append(t('Line {i_1}: the THEN box needs at least one Then line.', i_1=i + 1))
         for l in _flat(line):
             key = (f"member:{l['member']}:{l.get('field') or ''}" if l["target"] == "member" else
                    f"condition:{l['group']}:{l['condition']}" if l["target"] == "condition" else f"{l['target']}:{l['group']}")
             if key not in known:
-                blocks.append(f"Line {i + 1} tests something this Set no longer has (or a Context item, which "
-                              "rules cannot use).")
+                blocks.append(t('Line {i_1} tests something this Set no longer has (or a Context item, which rules cannot use).', i_1=i + 1))
             if l["target"] == "score" or (l["target"] == "member" and l["op"] in ("gte", "lte")):
                 if le._number(l.get("value")) is None:
-                    blocks.append(f"Line {i + 1}: {l.get('value')!r} is not a number.")
+                    blocks.append(t('Line {i_1}: {l_get_value!r} is not a number.', i_1=i + 1, l_get_value=l.get('value')))
             if l["target"] == "member" and l["op"] in ("within", "not_within") and not le._candles(l.get("value")):
-                blocks.append(f"Line {i + 1}: say how many candles, 1 or more.")
+                blocks.append(t('Line {i_1}: say how many candles, 1 or more.', i_1=i + 1))
             if l["target"] == "member" and l["op"] in ("within", "not_within"):
                 problem = le.recency_problem(next((m for m in model.get("standalone") or [] if m["key"] == l["member"]),
                                                   None), l.get("value"))
@@ -339,15 +340,15 @@ def checks(model: dict, choices: dict) -> dict:
                                 "outside the Group score scale, −100 to +100")
             blocks.append(le._plain(text, names))
         if not model.get("lines"):
-            warns.append("This Set has no decision yet, so Prism cannot scan it. Add at least one line.")
+            warns.append(t("This Set has no decision yet, so Prism cannot scan it. Add at least one line."))
         warns += _shared(model, choices)
     fixed = [x for x in (model.get("groups") or []) + (model.get("standalone") or []) if x.get("subject")]
     if fixed:
-        warns.append("Fixed assets are read at the same moment as the scanned asset: at each close, the value known "
-                     "then (a share reads Friday's close over a weekend).")
+        warns.append(t("Fixed assets are read at the same moment as the scanned asset: at each close, the value known "
+                     "then (a share reads Friday's close over a weekend)."))
     if any("seq" in line for line in model.get("lines") or []):
-        warns.append("A THEN box counts closed daily candles of the scanned asset: every day for coins, trading days "
-                     "for shares. Each earlier close is read as it was known then, so scans take a little longer.")
+        warns.append(t("A THEN box counts closed daily candles of the scanned asset: every day for coins, trading days "
+                     "for shares. Each earlier close is read as it was known then, so scans take a little longer."))
     used = {l.get("member") for line in model.get("lines") or [] for l in _flat(line)}
     for m in model.get("standalone") or []:
         name = le._name_of(m["id"])
@@ -421,7 +422,7 @@ def describe(model: dict, choices: dict) -> str:
             text = (f"{words('first')} held on an earlier close, then {words('then')} holds, within "
                     f"{q['within']} closed daily candle{'s' if q['within'] != 1 else ''}")
             if q.get("cancel"):
-                text += f" (unless {words('cancel')} happened in between)"
+                text += t(' (unless {words_cancel} happened in between)', words_cancel=words('cancel'))
             parts.append(text)
         elif "any" in line:
             parts.append("any of (" + "; ".join(_line_text(l, model, choices) for l in line["any"]) + ")")
@@ -498,10 +499,10 @@ def from_document(doc: dict, choices: dict) -> tuple[dict | None, str | None]:
             source = next((k for k in same if str(choices[k]["provenance"]["source_config"])
                            == str(prov.get("source_config"))), same[0] if same else None)
         if source is None:
-            return None, f"Group {g['key']!r} comes from a version you cannot read here."
+            return None, t('Group {g_key!r} comes from a version you cannot read here.', g_key=g['key'])
         model["groups"].append({"key": g["key"], "source": source, **({"subject": g["subject"]} if g.get("subject") else {})})
     if doc.get("market_context"):
-        return None, "This Set has market context items, which the editor cannot show yet."
+        return None, t("This Set has market context items, which the editor cannot show yet.")
     for m in doc.get("standalone") or []:
         ref = m["ref"]
         if not fields.described(f"{ref['id']}@{ref['version']}") or m["role"] not in ("condition", "context"):
@@ -522,16 +523,16 @@ def from_document(doc: dict, choices: dict) -> tuple[dict | None, str | None]:
                     preds = [] if sub is None else sub["all"] if "all" in sub else [sub]
                     parts[part] = [_line(p) for p in preds]
                     if None in parts[part]:
-                        return None, "The decision is more complex than the editor can show yet."
+                        return None, t("The decision is more complex than the editor can show yet.")
                 model["lines"].append({"seq": {**parts, "within": q["within"]}})
             elif "any" in item:
                 inner = [_line(p) for p in item["any"]]
                 if None in inner:
-                    return None, "The decision is more complex than the editor can show yet."
+                    return None, t("The decision is more complex than the editor can show yet.")
                 model["lines"].append({"any": inner})
             else:
                 line = _line(item)
                 if line is None:
-                    return None, "The decision is more complex than the editor can show yet."
+                    return None, t("The decision is more complex than the editor can show yet.")
                 model["lines"].append(line)
     return model, None

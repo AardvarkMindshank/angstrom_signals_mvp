@@ -15,6 +15,8 @@ asset_evidence. The dashboard only reads it.
 
 from __future__ import annotations
 
+from i18n import t
+
 import math
 import re
 import time
@@ -231,7 +233,7 @@ def volatility_text(record: dict) -> str | None:
     else:
         where = "about usual"
     text = (
-        f"Recent typical daily range: {now:.1f}% of price ({where} for this asset; its median is {median:.1f}%)."
+        t('Recent typical daily range: {now:.1f}% of price ({where} for this asset; its median is {median:.1f}%).', now=now, where=where, median=median)
     )
     # This per-asset check is in-sample. The one tested result (large US stocks, held-back data) is a
     # pooled finding about move size; nothing here is a validated test for this asset.
@@ -241,12 +243,12 @@ def volatility_text(record: dict) -> str | None:
     ]
     if len(held) >= 2:
         text += (
-            " In this asset's own history, wide recent ranges have tended to be followed by bigger moves over the "
+            t(" In this asset's own history, wide recent ranges have tended to be followed by bigger moves over the "
             "next days, beyond what closing prices alone showed. That is about size, not direction, and it is a "
-            "look back over this asset, not a separate validated test."
+            "look back over this asset, not a separate validated test.")
         )
     else:
-        text += " On this asset the link between recent range and later move size was not clear in this test."
+        text += t(" On this asset the link between recent range and later move size was not clear in this test.")
     return text
 
 
@@ -336,11 +338,7 @@ def plain_text(record: dict) -> str:
     ics, noise = _range_text(record)
     if verdict["level"] == "none":
         text = (
-            f"Over {span} of this asset's history, the Trend reading showed no evidence of lining up "
-            f"with what price did next. Its rank correlation with later returns ran from {ics}, against a "
-            f"noise band of up to ±{noise}, so the pattern "
-            f"cannot be told apart from chance. Treat the reading as a description of current conditions, "
-            f"not a forecast."
+            t("Over {span} of this asset's history, the Trend reading showed no evidence of lining up with what price did next. Its rank correlation with later returns ran from {ics}, against a noise band of up to ±{noise}, so the pattern cannot be told apart from chance. Treat the reading as a description of current conditions, not a forecast.", span=span, ics=ics, noise=noise)
         )
     else:
         way = ("in reverse (a high Trend reading was followed by weaker prices)" if verdict["reverse"]
@@ -348,10 +346,7 @@ def plain_text(record: dict) -> str:
         horizons = ", ".join(str(h) for h in verdict["horizons"])
         strength = "held up" if verdict["level"] == "holds" else "showed a hint"
         text = (
-            f"Over {span}, the Trend reading {strength} {way} at the {horizons}-day horizon"
-            f"{'s' if len(verdict['horizons']) > 1 else ''}, in both halves of the history and beyond the noise band. "
-            f"Even so, one asset over one period can look good by luck, and the link was weak "
-            f"(rank correlation {ics}). Check that it also holds on similar assets before relying on it."
+            t('Over {span}, the Trend reading {strength} {way} at the {horizons}-day horizon{s_if_len_verdict_horizon}, in both halves of the history and beyond the noise band. Even so, one asset over one period can look good by luck, and the link was weak (rank correlation {ics}). Check that it also holds on similar assets before relying on it.', span=span, strength=strength, way=way, horizons=horizons, s_if_len_verdict_horizon='s' if len(verdict['horizons']) > 1 else '', ics=ics)
         )
     if verdict["factors"]:
         text += (
@@ -371,14 +366,13 @@ def facts_for_model(record: dict, label: str) -> str:
     ]
     for horizon, info in record["horizons"].items():
         lines.append(
-            f"{horizon}-day horizon: rank correlation {_signed(info['ic'])}, noise band ±{info['noise']:.2f}"
-            if info.get("noise") is not None else f"{horizon}-day horizon: no data"
+            t('{horizon}-day horizon: rank correlation {signed_info_ic}, noise band ±{info_noise:.2f}', horizon=horizon, signed_info_ic=_signed(info['ic']), info_noise=info['noise'])
+            if info.get("noise") is not None else t('{horizon}-day horizon: no data', horizon=horizon)
         )
     strategy = record.get("strategy") or {}
     if strategy.get("strategy_return_pct") is not None and strategy.get("buy_hold_return_pct") is not None:
         lines.append(
-            f"Holding only from a Trend reading of +50 until it fell below 0 returned {strategy['strategy_return_pct']:.0f}% "
-            f"against {strategy['buy_hold_return_pct']:.0f}% for buy and hold."
+            t('Holding only from a Trend reading of +50 until it fell below 0 returned {strategy_strategy_return:.0f}% against {strategy_buy_hold_return:.0f}% for buy and hold.', strategy_strategy_return=strategy['strategy_return_pct'], strategy_buy_hold_return=strategy['buy_hold_return_pct'])
         )
     if verdict["factors"]:
         lines.append("Other readings that cleared the noise band at two or more horizons: " + ", ".join(verdict["factors"]))

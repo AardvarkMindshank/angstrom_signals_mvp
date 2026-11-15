@@ -111,7 +111,7 @@ def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str = "") 
     try:
         result = lattice_component.component()(
             key="lattice_group_editor",
-            data={**screen, "catalogue": le.catalogue(), "role_hints": le.ROLE_HINT,
+            data={**screen, "catalogue": le.catalogue(), "role_hints": {k: t(v) for k, v in le.ROLE_HINT.items()},
                   "suggested_labels": le.SUGGESTED_LABELS},
             on_model_change=lambda: None,
         )
@@ -143,9 +143,11 @@ def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str = "") 
         st.markdown(
             (t("- **Score**: an average from −100 to +100 (a number).\n") if screen["returns"]["score"] else
              t("- **Score**: none (no Score members).\n"))
-            + "- **Label**: " + (", ".join(screen["returns"]["labels"][:-1]) + " or " if len(screen["returns"]["labels"]) > 1
-                                 else "") + f"{screen['returns']['labels'][-1]}, or Unknown if a rule can't be checked.\n"
-            + "- **Completeness**: Complete, Partial or Limited, listing anything missing.")
+            + t("- **Label**: {labels}, or Unknown if a rule can't be checked.\n",
+                labels=(t("{some} or {last}", some=", ".join(screen["returns"]["labels"][:-1]),
+                          last=screen["returns"]["labels"][-1]) if len(screen["returns"]["labels"]) > 1
+                        else screen["returns"]["labels"][-1]))
+            + t("- **Completeness**: Complete, Partial or Limited, listing anything missing."))
         st.markdown(t("**Description** · written automatically"))
         st.caption(screen["description"])
 
@@ -187,7 +189,7 @@ def starters_html() -> str:
 
 def _provided_starters(st) -> None:
     """The starter Groups, in their own folded section: copy one to start from it."""
-    with st.expander(lattice_panel.PROVIDED_TITLE + " · Groups", icon=":material/inventory_2:"):
+    with st.expander(t(lattice_panel.PROVIDED_TITLE) + " · Groups", icon=":material/inventory_2:"):
         st.caption(t("The dashboard's own readings, as Groups. Pick one in **Start from** below to open your own copy; "
                    "the original stays as it is. Hide these in ⚙️ Settings → Show provided starters and examples."))
         st.html(starters_html())
@@ -394,8 +396,8 @@ def _try(st, supabase, model: dict, assets, can_save: bool) -> None:
             result = sg.evaluate_group(le.to_document(model), ctx)
             score = (result.get("score") or {}).get("value")
             outcome = (result.get("outcome") or {})
-            st.markdown(f"**{names[pick]}**: score "
-                        + ("—" if score is None else f"{score * 100:+.0f}")
-                        + (f" · label **{outcome.get('label')}**" + (" (qualified)" if outcome.get("qualified") else "")
+            st.markdown(t("**{name}**: score {score}", name=names[pick],
+                          score="—" if score is None else f"{score * 100:+.0f}")
+                        + (t(" · label **{label}**", label=outcome.get("label")) + (t(" (qualified)") if outcome.get("qualified") else "")
                            if outcome else "")
-                        + f" · status {result.get('status')}")
+                        + t(" · status {status}", status=result.get("status")))

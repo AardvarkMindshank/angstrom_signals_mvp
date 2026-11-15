@@ -50,11 +50,32 @@ def all_texts() -> list[str]:
     for path in _python_files():
         try:
             with open(path, encoding="utf-8") as fh:
-                for text in texts_in(fh.read()):
-                    seen.setdefault(text, None)
+                source = fh.read()
+            for text in texts_in(source) + i18n.js_texts(source):     # JS inside Python strings too
+                seen.setdefault(text, None)
         except (OSError, SyntaxError, UnicodeDecodeError):
             continue
+    try:
+        import i18n_terms
+
+        for text in i18n_terms.terms():
+            seen.setdefault(text, None)
+    except Exception:
+        pass
+    for path in _js_files():
+        try:
+            with open(path, encoding="utf-8") as fh:
+                for text in i18n.js_texts(fh.read()):
+                    seen.setdefault(text, None)
+        except (OSError, UnicodeDecodeError):
+            continue
     return list(seen)
+
+
+def _js_files() -> list[str]:
+    """The browser code the app ships (not the *_check.js test scripts)."""
+    return sorted(os.path.join(HERE, f) for f in os.listdir(HERE)
+                  if f.endswith(".js") and not f.endswith("_check.js"))
 
 
 def report(code: str, texts: list[str] | None = None) -> dict:

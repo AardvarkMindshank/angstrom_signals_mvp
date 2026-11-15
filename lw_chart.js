@@ -320,7 +320,7 @@ class ShapeLines {
               const top = s.points.reduce((a, b) => (s.bear ? (b[1] > a[1] ? b : a) : (b[1] < a[1] ? b : a)));
               const [lx, ly] = xy(top);
               if (lx !== null && ly !== null) {
-                const tag = { head_shoulders: "H&S", inverse_head_shoulders: "Inv H&S", double_top: "Double top", double_bottom: "Double bottom" }[s.kind];
+                const tag = { head_shoulders: "H&S", inverse_head_shoulders: "Inv H&S", double_top: T("Double top"), double_bottom: T("Double bottom") }[s.kind];
                 ctx.setLineDash([]); ctx.globalAlpha = 1;
                 ctx.font = `600 ${11 * vr}px sans-serif`; ctx.textAlign = "center";
                 ctx.fillStyle = colour;
@@ -374,7 +374,7 @@ function candleCountdown(root, host, chart, candles, data, theme) {
   if (data.ohlc[3][n - 1] === null || data.ohlc[3][n - 1] === undefined) return;
   const tag = document.createElement("div");
   tag.className = "ang-lwc-countdown";
-  tag.title = "Time left until this candle closes";
+  tag.title = T("Time left until this candle closes");
   tag.style.cssText = "position:absolute;right:0;z-index:4;pointer-events:none;text-align:center;" +
     "font:11px/16px system-ui,-apple-system,Segoe UI,sans-serif;font-variant-numeric:tabular-nums;color:#fff;" +
     "border-radius:0 0 2px 2px;";
@@ -484,7 +484,7 @@ function draw(L, root, data) {
   tools.innerHTML = "";
 
   if (!n) {
-    note.textContent = "No candles to draw.";
+    note.textContent = T("No candles to draw.");
     return;
   }
 
@@ -546,7 +546,7 @@ function draw(L, root, data) {
       const key = data.pane_keys[pane];
       if (pane > 0 && key && root.__trigger) root.__trigger("pane", key);
     });
-    host.title = "Tap a small chart to put that asset on top";
+    host.title = T("Tap a small chart to put that asset on top");
   }
   if (data.zones && data.zones.some((c) => c)) candles.attachPrimitive(new ZoneBlocks(data.zones));
   if (data.symbols && data.symbols.length) candles.attachPrimitive(new SonarSymbols(data.symbols, H, Lo));
@@ -676,8 +676,8 @@ function draw(L, root, data) {
     const change = prev ? ((C[i] - prev) / prev) * 100 : null;
     const forming = data.forming && i === n - 1;
     const state = forming
-      ? `<span style="color:#f59e0b;font-weight:600" title="This candle has not closed yet, so its values will still change.">● forming</span>`
-      : (!hovering ? `<span style="color:${theme.muted}">last closed</span>` : "");
+      ? `<span style="color:#f59e0b;font-weight:600" title="${T("This candle has not closed yet, so its values will still change.")}">● ${T("forming")}</span>`
+      : (!hovering ? `<span style="color:${theme.muted}">${T("last closed")}</span>` : "");
     let html =
       `<div style="color:${theme.ink}"><b>${data.panes[0].title}</b> &nbsp;${timeText(data.times[i], data.intraday)} ${state}</div>` +
       `<div style="color:${theme.muted}">O <b style="color:${tone}">${fmt(O[i], C[i])}</b> H <b style="color:${tone}">${fmt(H[i], C[i])}</b> ` +
@@ -695,7 +695,7 @@ function draw(L, root, data) {
     });
     if (data.zones_answers) {
       const a = data.zones_answers[i];
-      const word = a === "yes" ? "Yes" : a === "no" ? "No" : a === "unknown" ? "Unknown" : "not worked out";
+      const word = a === "yes" ? T("Yes") : a === "no" ? T("No") : a === "unknown" ? T("Unknown") : T("not worked out");
       const tint = a === "yes" ? "#16a34a" : a === "unknown" ? "#d97706" : theme.muted;
       html += `<div><span style="color:${theme.muted}">${data.zones_name}</span> <b style="color:${tint}">${word}</b></div>`;
     }
@@ -752,26 +752,26 @@ function draw(L, root, data) {
   root.__ro = ro;
 
   // ---------------------------------------------------------------- buttons
-  const reset = toolButton("⟲", "Back to the chosen range", theme);
+  const reset = toolButton("⟲", T("Back to the chosen range"), theme);
   reset.onclick = () => {
     STORE.views.delete(data.key);
     try { sessionStorage.removeItem("ang-lwc:" + data.key); } catch (e) { /* private mode */ }
     defaultView();
   };
-  const latest = toolButton("⇥", "Scroll to the newest candle", theme);
+  const latest = toolButton("⇥", T("Scroll to the newest candle"), theme);
   latest.onclick = () => chart.timeScale().scrollToRealTime();
   tools.appendChild(reset);
   tools.appendChild(latest);
 
   // ---------------------------------------------------------------- the line under the chart
   const formingText = data.forming
-    ? "The newest candle is still forming (drawn faded); the legend shows the last closed candle until you point at it. "
+    ? T("The newest candle is still forming (drawn faded); the legend shows the last closed candle until you point at it.") + " "
     : "";
   note.style.color = theme.muted;
   note.textContent =
     (data.zones_legend ? data.zones_legend + ". " : "") +
-    `${data.source}. ${data.clock ? "Times in " + data.clock + ". " : ""}${formingText}` +
-    "Scroll or pinch to zoom, drag to move back in time, double-click the price scale to reset it.";
+    `${data.source}. ${data.clock ? T("Times in {clock}.", {clock: data.clock}) + " " : ""}${formingText}` +
+    T("Scroll or pinch to zoom, drag to move back in time, double-click the price scale to reset it.");
 
   try { setupDrawing(L, root, host, chart, candles, data, theme, hasOsc); } catch (e) { /* drawings are extra: never break the chart */ }
   try { candleCountdown(root, host, chart, candles, data, theme); } catch (e) { /* the countdown is extra too */ }
@@ -783,9 +783,19 @@ function draw(L, root, data) {
   root.__sig = signature(data);
 }
 
+// 🌐 Text in the visit's language (i18n.py): T(“English”) looks it up in the words the page sent (data.tr);
+// TM(“…”) only marks text kept in a constant, translated with T(…) where it is shown.
+var __angTR = {};
+function T(s, v) {
+  const w = (__angTR && __angTR[s]) || s;
+  return v ? w.replace(/\{(\w+)\}/g, (m, k) => (k in v ? v[k] : m)) : w;
+}
+function TM(s) { return s; }
+
 export default function (component) {
   const { data, parentElement } = component;
   if (!data || !data.times) return;
+  __angTR = data.tr || {};
   let root = parentElement.querySelector(".ang-lwc");
   if (!root) root = buildShell(parentElement);
   root.__trigger = component.setTriggerValue;
@@ -798,6 +808,6 @@ export default function (component) {
     .then((L) => draw(L, root, data))
     .catch(() => {
       const note = root.querySelector(".ang-lwc-note");
-      if (note) note.textContent = "The TradingView chart could not load. You can switch to the Plotly chart in Settings.";
+      if (note) note.textContent = T("The TradingView chart could not load. You can switch to the Plotly chart in Settings.");
     });
 }

@@ -9,6 +9,8 @@ is inserted with textContent, never as HTML.
 
 from __future__ import annotations
 
+import i18n
+
 # The left panel (signals, Groups, Sets, Watchlist) can be dragged wider or narrower on a computer; the width is
 # remembered in this browser and shared by the Group, Set and Prism pages. Double-click the divider to reset it.
 SPLITTER_JS = """
@@ -33,7 +35,7 @@ SPLITTER_JS = """
     requestAnimationFrame(share);
     const bar = document.createElement("div");
     bar.className = "split";
-    bar.title = "Drag to make this panel wider or narrower (double-click to reset)";
+    bar.title = T("Drag to make this panel wider or narrower (double-click to reset)");
     bar.setAttribute("role", "separator");
     bar.setAttribute("aria-orientation", "vertical");
     root.insertBefore(bar, mid);
@@ -200,11 +202,11 @@ export default function(component) {
   const lib = el("div", "col lib");
   root.appendChild(lib);
   lib.appendChild(el("h3", "", "Signals"));
-  lib.appendChild(el("div", "muted", "Drag a signal into the Group, or tap + (works on iPad). Hover for what it measures."));
+  lib.appendChild(el("div", "muted", T("Drag a signal into the Group, or tap + (works on iPad). Hover for what it measures.")));
   const search = el("input", "wide");
-  search.placeholder = "Search: RSI, volume, sentiment…";
+  search.placeholder = T("Search: RSI, volume, sentiment…");
   search.value = query;
-  search.setAttribute("aria-label", "Search signals");
+  search.setAttribute("aria-label", T("Search signals"));
   lib.appendChild(search);
   const list = el("div");
   lib.appendChild(list);
@@ -240,15 +242,15 @@ export default function(component) {
   const head = el("div", "hd");
   const name = el("input", "wide");
   name.value = model.name || "";
-  name.placeholder = "Group name";
-  name.setAttribute("aria-label", "Group name");
+  name.placeholder = T("Group name");
+  name.setAttribute("aria-label", T("Group name"));
   name.addEventListener("change", () => { model.name = name.value; send(); });
   head.appendChild(name);
   group.appendChild(head);
   const question = el("input", "wide");
   question.value = model.question || "";
-  question.placeholder = "The question it answers (optional), e.g. Is the trend up and not overstretched?";
-  question.setAttribute("aria-label", "Question");
+  question.placeholder = T("The question it answers (optional), e.g. Is the trend up and not overstretched?");
+  question.setAttribute("aria-label", T("Question"));
   question.addEventListener("change", () => { model.question = question.value; send(); });
   group.appendChild(question);
 
@@ -259,7 +261,7 @@ export default function(component) {
   drop.addEventListener("drop", (e) => { e.preventDefault(); drop.classList.remove("over"); addSignal(e.dataTransfer.getData("text/plain")); });
   group.appendChild(drop);
   const ROLE_TITLES = state.role_hints || {};
-  if (!(model.members || []).length) drop.appendChild(el("div", "muted", "Drag signals here, or tap + in the list."));
+  if (!(model.members || []).length) drop.appendChild(el("div", "muted", T("Drag signals here, or tap + in the list.")));
   // ⚙ A signal's own settings (such as an EMA's length): a small control for each, the usual value unless changed.
   function settingsBox(m, s) {
     const spec = s.params || {};
@@ -312,23 +314,24 @@ export default function(component) {
     if (s.category_label) nm.appendChild(el("div", "sub", s.category_label));
     card.appendChild(nm);
     const tf = el("select");
-    tf.setAttribute("aria-label", "Timeframe of " + s.name);
-    tf.title = "Timeframe this member is read on (always its last closed candle)";
+    tf.setAttribute("aria-label", T("Timeframe of {name}", {name: s.name}));
+    tf.title = T("Timeframe this member is read on (always its last closed candle)");
     s.timeframes.forEach((t) => { const o = el("option", "", t); o.value = t; if (t === m.timeframe) o.selected = true; tf.appendChild(o); });
     tf.addEventListener("change", () => { m.timeframe = tf.value; send(); });
     card.appendChild(tf);
-    const tag = el("span", "tag", (state.member_tags || {})[m.key] || ((m.timeframe || "") + " · last closed candle"));
-    tag.title = "What this member is read from. The candle still forming is never used.";
+    const tag = el("span", "tag", (state.member_tags || {})[m.key] || T("{tf} · last closed candle", {tf: m.timeframe || ""}));
+    tag.title = T("What this member is read from. The candle still forming is never used.");
     card.appendChild(tag);
     card.appendChild(settingsBox(m, s));
+    // T("Score") T("Condition") T("Levels") T("Context")
     ["score", "condition", "levels", "context"].forEach((r) => {
-      const label = r.charAt(0).toUpperCase() + r.slice(1);
+      const label = T(r.charAt(0).toUpperCase() + r.slice(1));
       const b = button(label, ROLE_TITLES[r] || label, () => { m.role = r; send(); }, m.role === r ? "on" : "");
       b.setAttribute("aria-pressed", m.role === r ? "true" : "false");
-      if (r === "score" && !s.can_score) { b.disabled = true; b.title = s.name + " has no standard score: use it as a Condition."; }
+      if (r === "score" && !s.can_score) { b.disabled = true; b.title = T("{name} has no standard score: use it as a Condition.", {name: s.name}); }
       card.appendChild(b);
     });
-    card.appendChild(button("✕", "Remove " + s.name, () => { model.members.splice(i, 1); send(); }, "sq del"));
+    card.appendChild(button("✕", T("Remove {name}", {name: s.name}), () => { model.members.splice(i, 1); send(); }, "sq del"));
     drop.appendChild(card);
   });
 
@@ -336,19 +339,19 @@ export default function(component) {
   const rules = el("div", "col");
   mid.appendChild(rules);
   const rh = el("div", "hd");
-  rh.appendChild(el("h3", "", "Rules: what the Group says"));
-  rh.appendChild(el("span", "muted", "Checked top to bottom · first match wins · drag ⠿ to reorder"));
+  rh.appendChild(el("h3", "", T("Rules: what the Group says")));
+  rh.appendChild(el("span", "muted", T("Checked top to bottom · first match wins · drag ⠿ to reorder")));
   rules.appendChild(rh);
   const operands = state.operands || [];
   const opByKey = {};
   operands.forEach((o) => { opByKey[o.key] = o; });
-  const OPS = {number: [["gte", "is at least"], ["lte", "is at most"], ["exists", "has a value"]], "yes/no": [["yes", "is yes"], ["no", "is no"]],
-               label: [["is", "is"], ["is_not", "is not"]], recency: [["within", "in the last"], ["not_within", "not in the last"]]};
+  const OPS = {number: [["gte", T("is at least")], ["lte", T("is at most")], ["exists", T("has a value")]], "yes/no": [["yes", T("is yes")], ["no", T("is no")]],
+               label: [["is", T("is")], ["is_not", T("is not")]], recency: [["within", T("in the last")], ["not_within", T("not in the last")]]};
   // Reorder rules by dragging the ⠿ handle (mouse, pen or finger): the rows move apart to show where it will land.
   function dragHandle(row, from) {
     const h = el("span", "grip", "⠿");
-    h.title = "Drag to check this rule earlier or later";
-    h.setAttribute("aria-label", "Drag to reorder rule " + (from + 1));
+    h.title = T("Drag to check this rule earlier or later");
+    h.setAttribute("aria-label", T("Drag to reorder rule {n}", {n: from + 1}));
     h.setAttribute("role", "button"); h.tabIndex = 0;
     h.addEventListener("keydown", (e) => {          // keyboard: arrow keys move it one place
       const to = e.key === "ArrowUp" ? from - 1 : e.key === "ArrowDown" ? from + 1 : -1;
@@ -389,8 +392,8 @@ export default function(component) {
     if (model.rules.length > 1) row.appendChild(dragHandle(row, ri));
     row.appendChild(el("span", "num", ri + 1));
     const lab = el("input");
-    lab.value = r.label; lab.size = 12; lab.title = "The label this rule gives (for example Bullish)";
-    lab.setAttribute("aria-label", "Label of rule " + (ri + 1));
+    lab.value = r.label; lab.size = 12; lab.title = T("The label this rule gives (for example Bullish)");
+    lab.setAttribute("aria-label", T("Label of rule {n}", {n: ri + 1}));
     lab.addEventListener("change", () => { r.label = lab.value; r.id = slug(lab.value); send(); });
     row.appendChild(lab);
     row.appendChild(el("span", "muted", "when"));
@@ -398,16 +401,16 @@ export default function(component) {
       const cl = el("div", "clause");
       row.appendChild(cl);
       if (ci > 0) {
-        const j = button(r.joiner === "any" ? "OR" : "AND", "Switch between AND (all must hold) and OR (any may hold)",
+        const j = button(r.joiner === "any" ? "OR" : "AND", T("Switch between AND (all must hold) and OR (any may hold)"),
                          () => { r.joiner = r.joiner === "any" ? "all" : "any"; send(); });
         cl.appendChild(j);
       }
-      cl.appendChild(button("✕", "Remove this condition", () => { r.clauses.splice(ci, 1); send(); }, "sq del"));
+      cl.appendChild(button("✕", T("Remove this condition"), () => { r.clauses.splice(ci, 1); send(); }, "sq del"));
       const o = opByKey[c.operand] || {type: "number", scale: "", labels: []};
       const pick = el("select");
-      pick.setAttribute("aria-label", "Reading");
+      pick.setAttribute("aria-label", T("Reading"));
       operands.forEach((x) => { const op = el("option", "", x.label); op.value = x.key; if (x.key === c.operand) op.selected = true; pick.appendChild(op); });
-      if (!opByKey[c.operand]) { const op = el("option", "", "(removed reading)"); op.value = c.operand; op.selected = true; pick.appendChild(op); }
+      if (!opByKey[c.operand]) { const op = el("option", "", T("(removed reading)")); op.value = c.operand; op.selected = true; pick.appendChild(op); }
       pick.addEventListener("change", () => {
         c.operand = pick.value;
         const n = opByKey[c.operand] || {type: "number", labels: []};
@@ -417,45 +420,45 @@ export default function(component) {
       });
       cl.appendChild(pick);
       const ops = el("select");
-      ops.setAttribute("aria-label", "Comparison");
+      ops.setAttribute("aria-label", T("Comparison"));
       (OPS[o.type] || OPS.number).forEach(([k, t]) => { const op = el("option", "", t); op.value = k; if (k === c.op) op.selected = true; ops.appendChild(op); });
       ops.addEventListener("change", () => { c.op = ops.value; send(); });
       cl.appendChild(ops);
       if ((o.type === "number" && c.op !== "exists") || o.type === "recency") {
-        const v = el("input"); v.value = c.value || ""; v.size = o.type === "recency" ? 3 : 6; v.setAttribute("aria-label", "Value");
+        const v = el("input"); v.value = c.value || ""; v.size = o.type === "recency" ? 3 : 6; v.setAttribute("aria-label", T("Value"));
         v.addEventListener("change", () => { c.value = v.value; send(); });
         cl.appendChild(v);
-        cl.appendChild(el("span", "muted", o.type === "recency" ? "candles" : (o.scale || "")));
+        cl.appendChild(el("span", "muted", o.type === "recency" ? T("candles") : (o.scale || "")));
       } else if (o.type === "label") {
-        const v = el("select"); v.setAttribute("aria-label", "Label");
+        const v = el("select"); v.setAttribute("aria-label", T("Label"));
         (o.labels || []).forEach((l) => { const op = el("option", "", l); op.value = l; if (l === c.value) op.selected = true; v.appendChild(op); });
         v.addEventListener("change", () => { c.value = v.value; send(); });
         cl.appendChild(v);
       }
     });
-    row.appendChild(button("+ condition", "Add another condition to this rule",
+    row.appendChild(button(T("+ condition"), T("Add another condition to this rule"),
       () => { r.clauses = r.clauses || []; r.clauses.push({operand: "score", op: "gte", value: "+30"}); send(); }));
-    row.appendChild(button("🗑", "Remove this rule", () => { model.rules.splice(ri, 1); send(); }, "sq"));
+    row.appendChild(button("🗑", T("Remove this rule"), () => { model.rules.splice(ri, 1); send(); }, "sq"));
     rules.appendChild(row);
   });
   const unknown = el("div", "fixed");
-  unknown.appendChild(el("span", "lbl", "Unknown"));
-  unknown.appendChild(el("span", "", "if a rule cannot be checked because a reading is missing. Later rules are not tried."));
-  unknown.title = "Fixed: missing data never becomes a confident label.";
+  unknown.appendChild(el("span", "lbl", T("Unknown")));
+  unknown.appendChild(el("span", "", T("if a rule cannot be checked because a reading is missing. Later rules are not tried.")));
+  unknown.title = T("Fixed: missing data never becomes a confident label.");
   rules.appendChild(unknown);
   const other = el("div", "fixed");
   const ol = el("input"); ol.value = (model.otherwise || {}).label || "Neutral"; ol.size = 12;
-  ol.setAttribute("aria-label", "Label when no rule matches");
+  ol.setAttribute("aria-label", T("Label when no rule matches"));
   ol.addEventListener("change", () => { model.otherwise = {id: slug(ol.value), label: ol.value}; send(); });
   other.appendChild(ol);
-  other.appendChild(el("span", "", "otherwise: every rule was checked and none matched."));
+  other.appendChild(el("span", "", T("otherwise: every rule was checked and none matched.")));
   rules.appendChild(other);
   const add = el("div", "hd");
   const suggest = el("select");
-  suggest.setAttribute("aria-label", "Label for a new rule");
+  suggest.setAttribute("aria-label", T("Label for a new rule"));
   (state.suggested_labels || []).forEach(([id, label]) => { const o = el("option", "", label); o.value = label; suggest.appendChild(o); });
   add.appendChild(suggest);
-  add.appendChild(button("+ Add rule", "Add a rule that gives this label",
+  add.appendChild(button(T("+ Add rule"), T("Add a rule that gives this label"),
     () => { model.rules = model.rules || []; model.rules.push({id: slug(suggest.value), label: suggest.value, joiner: "all",
              clauses: [{operand: "score", op: suggest.value.toLowerCase().indexOf("bear") >= 0 || suggest.value.toLowerCase().indexOf("down") >= 0 || suggest.value.toLowerCase().indexOf("sell") >= 0 ? "lte" : "gte",
                         value: suggest.value.toLowerCase().indexOf("bear") >= 0 || suggest.value.toLowerCase().indexOf("down") >= 0 || suggest.value.toLowerCase().indexOf("sell") >= 0 ? "−30" : "+30"}]}); send(); }));
@@ -465,7 +468,7 @@ export default function(component) {
   const checksBox = el("div", "col");
   mid.appendChild(checksBox);
   const chh = el("div", "hd");
-  chh.appendChild(el("h3", "", "Confirmations and vetoes"));
+  chh.appendChild(el("h3", "", T("Confirmations and vetoes")));
   chh.appendChild(el("span", "muted", "Optional. A confirmation is reported as met or not met; a veto that fires makes every label Vetoed."));
   checksBox.appendChild(chh);
   function slugKey(text) {
@@ -478,27 +481,27 @@ export default function(component) {
   (model.conditions || []).forEach((c, ci) => {
     const row = el("div", "rule");
     ["confirmation", "veto"].forEach((k) => {
-      const b = button(k === "veto" ? "⛔ Veto" : "✅ Confirmation", k === "veto" ? "When true, the Group is vetoed." : "Reported as met or not met.",
+      const b = button(k === "veto" ? T("⛔ Veto") : T("✅ Confirmation"), k === "veto" ? T("When true, the Group is vetoed.") : T("Reported as met or not met."),
                        () => { c.kind = k; send(); }, c.kind === k ? "on" : "");
       b.setAttribute("aria-pressed", c.kind === k ? "true" : "false");
       row.appendChild(b);
     });
     const lab = el("input");
-    lab.value = c.label || ""; lab.size = 24; lab.setAttribute("aria-label", "Name of this " + c.kind);
+    lab.value = c.label || ""; lab.size = 24; lab.setAttribute("aria-label", c.kind === "veto" ? T("Name of this veto") : T("Name of this confirmation"));
     lab.addEventListener("change", () => { c.label = lab.value; send(); });
     row.appendChild(lab);
     row.appendChild(el("span", "muted", "when"));
     (c.clauses || []).forEach((x, xi) => {
       const cl = el("div", "clause");
       row.appendChild(cl);
-      if (xi > 0) cl.appendChild(button(c.joiner === "any" ? "OR" : "AND", "Switch between AND and OR",
+      if (xi > 0) cl.appendChild(button(c.joiner === "any" ? "OR" : "AND", T("Switch between AND and OR"),
                                          () => { c.joiner = c.joiner === "any" ? "all" : "any"; send(); }));
-      cl.appendChild(button("✕", "Remove this condition", () => { c.clauses.splice(xi, 1); send(); }, "sq del"));
+      cl.appendChild(button("✕", T("Remove this condition"), () => { c.clauses.splice(xi, 1); send(); }, "sq del"));
       const o = opByKey[x.operand] || {type: "number", scale: "", labels: []};
       const pick = el("select");
-      pick.setAttribute("aria-label", "Reading");
+      pick.setAttribute("aria-label", T("Reading"));
       operands.forEach((y) => { const op = el("option", "", y.label); op.value = y.key; if (y.key === x.operand) op.selected = true; pick.appendChild(op); });
-      if (!opByKey[x.operand]) { const op = el("option", "", "(removed reading)"); op.value = x.operand; op.selected = true; pick.appendChild(op); }
+      if (!opByKey[x.operand]) { const op = el("option", "", T("(removed reading)")); op.value = x.operand; op.selected = true; pick.appendChild(op); }
       pick.addEventListener("change", () => {
         x.operand = pick.value;
         const n = opByKey[x.operand] || {type: "number", labels: []};
@@ -508,33 +511,33 @@ export default function(component) {
       });
       cl.appendChild(pick);
       const ops = el("select");
-      ops.setAttribute("aria-label", "Comparison");
+      ops.setAttribute("aria-label", T("Comparison"));
       (OPS[o.type] || OPS.number).forEach(([k, t]) => { const op = el("option", "", t); op.value = k; if (k === x.op) op.selected = true; ops.appendChild(op); });
       ops.addEventListener("change", () => { x.op = ops.value; send(); });
       cl.appendChild(ops);
       if (o.type === "number" || o.type === "recency") {
-        const v = el("input"); v.value = x.value || ""; v.size = o.type === "recency" ? 3 : 6; v.setAttribute("aria-label", "Value");
+        const v = el("input"); v.value = x.value || ""; v.size = o.type === "recency" ? 3 : 6; v.setAttribute("aria-label", T("Value"));
         v.addEventListener("change", () => { x.value = v.value; send(); });
         cl.appendChild(v);
-        cl.appendChild(el("span", "muted", o.type === "recency" ? "candles" : (o.scale || "")));
+        cl.appendChild(el("span", "muted", o.type === "recency" ? T("candles") : (o.scale || "")));
       } else if (o.type === "label") {
-        const v = el("select"); v.setAttribute("aria-label", "Label");
+        const v = el("select"); v.setAttribute("aria-label", T("Label"));
         (o.labels || []).forEach((l) => { const op = el("option", "", l); op.value = l; if (l === x.value) op.selected = true; v.appendChild(op); });
         v.addEventListener("change", () => { x.value = v.value; send(); });
         cl.appendChild(v);
       }
     });
-    row.appendChild(button("+ condition", "Add another condition",
+    row.appendChild(button(T("+ condition"), T("Add another condition"),
       () => { c.clauses = c.clauses || []; c.clauses.push({operand: "score", op: "gte", value: "+30"}); send(); }));
-    row.appendChild(button("🗑", "Remove this " + c.kind, () => { model.conditions.splice(ci, 1); send(); }, "sq"));
+    row.appendChild(button("🗑", c.kind === "veto" ? T("Remove this veto") : T("Remove this confirmation"), () => { model.conditions.splice(ci, 1); send(); }, "sq"));
     checksBox.appendChild(row);
   });
   const addChecks = el("div", "hd");
-  addChecks.appendChild(button("+ Confirmation", "Add a confirmation (reported as met or not met)", () => {
+  addChecks.appendChild(button(T("+ Confirmation"), T("Add a confirmation (reported as met or not met)"), () => {
     model.conditions = model.conditions || [];
     model.conditions.push({key: slugKey("confirmation"), label: "Confirmation", kind: "confirmation", joiner: "all",
                            clauses: [{operand: "score", op: "gte", value: "+50"}]}); send(); }));
-  addChecks.appendChild(button("+ Veto", "Add a veto (when true, every label becomes Vetoed)", () => {
+  addChecks.appendChild(button(T("+ Veto"), T("Add a veto (when true, every label becomes Vetoed)"), () => {
     model.conditions = model.conditions || [];
     model.conditions.push({key: slugKey("veto"), label: "Veto", kind: "veto", joiner: "all",
                            clauses: [{operand: "score", op: "lte", value: "0"}]}); send(); }));
@@ -551,7 +554,7 @@ def component():
     if _COMPONENT is None:
         import streamlit as st
 
-        _COMPONENT = st.components.v2.component("lattice_group_editor", js=JS, css=CSS)
+        _COMPONENT = i18n.with_words(st.components.v2.component("lattice_group_editor", js=i18n.js_ready(JS), css=CSS), JS)
     return _COMPONENT
 
 
@@ -627,20 +630,20 @@ export default function(component) {
     const wrap = el("span", "hd");
     wrap.style.margin = "0";
     const kind = el("select");
-    kind.setAttribute("aria-label", "Which asset " + name + " is read on");
-    kind.title = "Read on the asset being scanned, or always on one fixed asset (for example COIN), at the same moment.";
+    kind.setAttribute("aria-label", T("Which asset {name} is read on", {name: name}));
+    kind.title = T("Read on the asset being scanned, or always on one fixed asset (for example COIN), at the same moment.");
     // Until a match is picked the line has no fixed asset yet, so the chosen kind is remembered here; otherwise the
     // redraw after a search would put the list back to "the scanned asset".
     const pending = (window.__latFixedKind || {})[item.key] || "";
     const shownKind = item.subject ? item.subject.kind : pending;
-    [["", "📌 the scanned asset"], ["crypto", "📌 fixed crypto"], ["equity", "📌 fixed equity"]].forEach(([v, t]) => {
+    [["", T("📌 the scanned asset")], ["crypto", T("📌 fixed crypto")], ["equity", T("📌 fixed equity")]].forEach(([v, t]) => {
       const o = el("option", "", t); o.value = v;
       if (shownKind === v) o.selected = true;
       kind.appendChild(o);
     });
     const id = el("input");
-    id.size = 12; id.placeholder = "Name or ticker, then Enter"; id.setAttribute("aria-label", "Fixed asset for " + name);
-    id.title = "Type a name or ticker and press Enter (or 🔍) to search the market, as in the Watchlist editor.";
+    id.size = 12; id.placeholder = T("Name or ticker, then Enter"); id.setAttribute("aria-label", T("Fixed asset for {name}", {name: name}));
+    id.title = T("Type a name or ticker and press Enter (or 🔍) to search the market, as in the Watchlist editor.");
     id.value = item.subject ? item.subject.id : ((state.search || {}).slot === item.key ? state.search.q : "");
     id.style.display = item.subject || shownKind ? "" : "none";
     const slot = item.key;
@@ -662,17 +665,17 @@ export default function(component) {
     kind.addEventListener("change", apply);
     id.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); search(); } });
     wrap.appendChild(kind); wrap.appendChild(id);
-    const go = button("🔍", "Search the market for this name or ticker", search, "sq");
+    const go = button("🔍", T("Search the market for this name or ticker"), search, "sq");
     go.style.display = id.style.display;
     wrap.appendChild(go);
     const found = state.search || {};
     if (found.slot === slot && found.kind === kind.value && found.nonce !== window.__latSearchUsed) {
       const list = el("div", "found");
-      if (!(found.results || []).length) list.appendChild(el("div", "muted", "No match for “" + found.q + "”. Try another name or ticker."));
+      if (!(found.results || []).length) list.appendChild(el("div", "muted", T("No match for “{q}”. Try another name or ticker.", {q: found.q})));
       (found.results || []).forEach((r) => {
         const b = el("button", "pick", r.label);
         b.type = "button";
-        b.title = "Read this line on " + r.label;
+        b.title = T("Read this line on {name}", {name: r.label});
         b.addEventListener("click", () => {
           window.__latSearchUsed = found.nonce;
           item.subject = {kind: found.kind, id: r.id};
@@ -692,12 +695,12 @@ export default function(component) {
   // ---------------------------------------------------------------- library
   const lib = el("div", "col lib");
   root.appendChild(lib);
-  lib.appendChild(el("h3", "", "Groups and signals"));
-  lib.appendChild(el("div", "muted", "Drag into the Set, or tap +. A Group goes in exactly as saved."));
+  lib.appendChild(el("h3", "", T("Groups and signals")));
+  lib.appendChild(el("div", "muted", T("Drag into the Set, or tap +. A Group goes in exactly as saved.")));
   const search = el("input", "wide");
-  search.placeholder = "Search…";
+  search.placeholder = T("Search…");
   search.value = query;
-  search.setAttribute("aria-label", "Search Groups and signals");
+  search.setAttribute("aria-label", T("Search Groups and signals"));
   lib.appendChild(search);
   const list = el("div");
   lib.appendChild(list);
@@ -735,16 +738,16 @@ export default function(component) {
       const box = el("details", "prov");
       box.open = !!window.__latProvOpen || !!q;
       box.addEventListener("toggle", () => { if (!q) window.__latProvOpen = box.open; });
-      const sum = el("summary", "", "Provided by Angstrom Signals · " + given.length);
-      sum.title = "The starter Groups: the dashboard's own readings. Hide them in ⚙️ Settings → Show provided starters and examples.";
+      const sum = el("summary", "", T("Provided by Angstrom Signals · {n}", {n: given.length}));
+      sum.title = T("The starter Groups: the dashboard's own readings. Hide them in ⚙️ Settings → Show provided starters and examples.");
       box.appendChild(sum);
       given.forEach((g) => box.appendChild(groupChip(g)));
       list.appendChild(box);
     }
-    list.appendChild(el("div", "cat", "Your Groups"));
-    if (!mine.length) list.appendChild(el("div", "muted", "No saved Groups yet: save one in Signal Groups."));
+    list.appendChild(el("div", "cat", T("Your Groups")));
+    if (!mine.length) list.appendChild(el("div", "muted", T("No saved Groups yet: save one in Signal Groups.")));
     mine.forEach((g) => list.appendChild(groupChip(g)));
-    list.appendChild(el("div", "cat", "Single signals"));
+    list.appendChild(el("div", "cat", T("Single signals")));
     // Clustered under a heading for each kind, as in Signal Groups.
     let last = null;
     catalogue.filter((s) => !q || s.name.toLowerCase().indexOf(q) >= 0 || s.category_label.toLowerCase().indexOf(q) >= 0)
@@ -768,12 +771,12 @@ export default function(component) {
   const box = el("div", "col");
   mid.appendChild(box);
   const name = el("input", "wide");
-  name.value = model.name || ""; name.placeholder = "Set name"; name.setAttribute("aria-label", "Set name");
+  name.value = model.name || ""; name.placeholder = T("Set name"); name.setAttribute("aria-label", T("Set name"));
   name.addEventListener("change", () => { model.name = name.value; send(); });
   box.appendChild(name);
   const purpose = el("input", "wide");
-  purpose.value = model.purpose || ""; purpose.placeholder = "What it looks for (optional)";
-  purpose.setAttribute("aria-label", "Purpose");
+  purpose.value = model.purpose || ""; purpose.placeholder = T("What it looks for (optional)");
+  purpose.setAttribute("aria-label", T("Purpose"));
   purpose.addEventListener("change", () => { model.purpose = purpose.value; send(); });
   box.appendChild(purpose);
   const drop = el("div", "drop");
@@ -782,9 +785,9 @@ export default function(component) {
   drop.addEventListener("dragleave", () => drop.classList.remove("over"));
   drop.addEventListener("drop", (e) => { e.preventDefault(); drop.classList.remove("over"); onDrop(e.dataTransfer.getData("text/plain")); });
   box.appendChild(drop);
-  if (!(model.groups || []).length && !(model.standalone || []).length) drop.appendChild(el("div", "muted", "Drag Groups or signals here, or tap +."));
+  if (!(model.groups || []).length && !(model.standalone || []).length) drop.appendChild(el("div", "muted", T("Drag Groups or signals here, or tap +.")));
   (model.groups || []).forEach((g, i) => {
-    const info = bySource[g.source] || {name: "(no longer readable)", labels: [], has_score: false};
+    const info = bySource[g.source] || {name: T("(no longer readable)"), labels: [], has_score: false};
     const card = el("div", "card");
     card.appendChild(el("span", "tag", "Group"));
     const gName = el("div", "nm", info.name);          // what it looks at, in small text, as in the signal list
@@ -851,7 +854,7 @@ export default function(component) {
     if (s.category_label) sName.appendChild(el("div", "sub", s.category_label));
     card.appendChild(sName);
     const tf = el("select");
-    tf.setAttribute("aria-label", "Timeframe of " + s.name);
+    tf.setAttribute("aria-label", T("Timeframe of {name}", {name: s.name}));
     s.timeframes.forEach((t) => { const o = el("option", "", t); o.value = t; if (t === m.timeframe) o.selected = true; tf.appendChild(o); });
     tf.addEventListener("change", () => { m.timeframe = tf.value; send(); });
     card.appendChild(tf);
@@ -859,12 +862,12 @@ export default function(component) {
     card.appendChild(settingsBox(m, s));
     card.appendChild(subjectPicker(m, s.name));
     ["condition", "context"].forEach((r) => {
-      const b = button(r.charAt(0).toUpperCase() + r.slice(1), r === "condition" ? "Used in the decision." : "Shown for context; changes nothing.",
+      const b = button(T(r.charAt(0).toUpperCase() + r.slice(1)), r === "condition" ? T("Used in the decision.") : T("Shown for context; changes nothing."),
                        () => { m.role = r; send(); }, m.role === r ? "on" : "");
       b.setAttribute("aria-pressed", m.role === r ? "true" : "false");
       card.appendChild(b);
     });
-    card.appendChild(button("✕", "Remove " + s.name, () => {
+    card.appendChild(button("✕", T("Remove {name}", {name: s.name}), () => {
       model.standalone.splice(i, 1);
       model.lines = dropLines(model.lines, (x) => x.member === m.key);
       send(); }, "sq del"));
@@ -875,15 +878,15 @@ export default function(component) {
   const dec = el("div", "col");
   mid.appendChild(dec);
   const dh = el("div", "hd");
-  dh.appendChild(el("h3", "", "Decision: when does this Set say Yes?"));
+  dh.appendChild(el("h3", "", T("Decision: when does this Set say Yes?")));
   dec.appendChild(dh);
   const targets = state.targets || [];
   const tByKey = {};
   targets.forEach((t) => { tByKey[t.key] = t; });
   const tkey = (l) => l.target === "member" ? "member:" + l.member + ":" + (l.field || "")
     : l.target === "condition" ? "condition:" + l.group + ":" + l.condition : l.target + ":" + l.group;
-  const OPS = {number: [["gte", "is at least"], ["lte", "is at most"], ["exists", "has a value"]], "yes/no": [["yes", "is yes"], ["no", "is no"]],
-               label: [["is", "is"], ["is_not", "is not"]], recency: [["within", "in the last"], ["not_within", "not in the last"]]};
+  const OPS = {number: [["gte", T("is at least")], ["lte", T("is at most")], ["exists", T("has a value")]], "yes/no": [["yes", T("is yes")], ["no", T("is no")]],
+               label: [["is", T("is")], ["is_not", T("is not")]], recency: [["within", T("in the last")], ["not_within", T("not in the last")]]};
   function fresh() {
     const t = targets[0];
     if (!t) return null;
@@ -894,7 +897,7 @@ export default function(component) {
     const row = el("div", "rule");
     const t = tByKey[tkey(l)] || {type: "number", values: [], scale: ""};
     const pick = el("select");
-    pick.setAttribute("aria-label", "Reading");
+    pick.setAttribute("aria-label", T("Reading"));
     targets.forEach((x) => { const o = el("option", "", x.label); o.value = x.key; if (x.key === tkey(l)) o.selected = true; pick.appendChild(o); });
     pick.addEventListener("change", () => {
       const n = tByKey[pick.value];
@@ -905,29 +908,29 @@ export default function(component) {
     });
     row.appendChild(pick);
     const ops = el("select");
-    ops.setAttribute("aria-label", "Comparison");
+    ops.setAttribute("aria-label", T("Comparison"));
     (OPS[t.type] || OPS.number).forEach(([k, txt]) => { const o = el("option", "", txt); o.value = k; if (k === l.op) o.selected = true; ops.appendChild(o); });
     ops.addEventListener("change", () => { l.op = ops.value; send(); });
     row.appendChild(ops);
     if ((t.type === "number" && l.op !== "exists") || t.type === "recency") {
-      const v = el("input"); v.value = l.value || ""; v.size = t.type === "recency" ? 3 : 6; v.setAttribute("aria-label", "Value");
+      const v = el("input"); v.value = l.value || ""; v.size = t.type === "recency" ? 3 : 6; v.setAttribute("aria-label", T("Value"));
       v.addEventListener("change", () => { l.value = v.value; send(); });
       row.appendChild(v);
-      row.appendChild(el("span", "muted", t.type === "recency" ? "candles" : (t.scale || "")));
+      row.appendChild(el("span", "muted", t.type === "recency" ? T("candles") : (t.scale || "")));
     } else if (t.type === "label") {
-      const v = el("select"); v.setAttribute("aria-label", "Value");
+      const v = el("select"); v.setAttribute("aria-label", T("Value"));
       t.values.forEach(([id, label]) => { const o = el("option", "", label); o.value = id; if (id === l.value) o.selected = true; v.appendChild(o); });
       v.addEventListener("change", () => { l.value = v.value; send(); });
       row.appendChild(v);
     }
-    row.appendChild(button("✕", "Remove this line", onRemove, "sq del"));
+    row.appendChild(button("✕", T("Remove this line"), onRemove, "sq del"));
     return row;
   }
   const all = el("div", "col");
   all.style.borderColor = "#0f766e";
   const ah = el("div", "hd");
-  ah.appendChild(el("span", "lbl", "ALL · AND"));
-  ah.appendChild(el("span", "muted", "Every line in this box must hold. An ANY box inside counts as one line."));
+  ah.appendChild(el("span", "lbl", T("ALL · AND")));
+  ah.appendChild(el("span", "muted", T("Every line in this box must hold. An ANY box inside counts as one line.")));
   all.appendChild(ah);
   if (!targets.length) all.appendChild(el("div", "muted", "Add a Group or a Condition signal first; then its readings can be tested here."));
   (model.lines || []).forEach((line, i) => {
@@ -938,7 +941,7 @@ export default function(component) {
       const head = el("div", "hd");
       head.appendChild(el("span", "lbl", "⏭ THEN"));
       head.appendChild(el("span", "muted", "First, on an earlier close; then, within the days you choose."));
-      head.appendChild(button("🗑", "Remove this THEN box", () => { model.lines.splice(i, 1); send(); }, "sq"));
+      head.appendChild(button("🗑", T("Remove this THEN box"), () => { model.lines.splice(i, 1); send(); }, "sq"));
       box.appendChild(head);
       const part = (key, title, hint, addText) => {
         const h = el("div", "hd");
@@ -949,21 +952,21 @@ export default function(component) {
         q[key].forEach((l, j) => box.appendChild(lineRow(l, () => { q[key].splice(j, 1); send(); })));
         box.appendChild(button(addText, hint, () => { const f = fresh(); if (f) { q[key].push(f); send(); } }));
       };
-      part("first", "1 · First", "All of these held on an earlier daily close.", "+ First line");
+      part("first", T("1 · First"), T("All of these held on an earlier daily close."), T("+ First line"));
       const w = el("div", "hd");
-      w.appendChild(el("span", "lbl", "2 · Then, within"));
+      w.appendChild(el("span", "lbl", T("2 · Then, within")));
       const days = el("input"); days.type = "number"; days.min = 1; days.max = 20; days.value = q.within || 5;
-      days.style.width = "4em"; days.setAttribute("aria-label", "Within this many closed daily candles");
-      days.title = "Closed daily candles of the scanned asset: every day for coins, trading days for shares (1 to 20).";
+      days.style.width = "4em"; days.setAttribute("aria-label", T("Within this many closed daily candles"));
+      days.title = T("Closed daily candles of the scanned asset: every day for coins, trading days for shares (1 to 20).");
       days.addEventListener("change", () => { q.within = Math.min(20, Math.max(1, parseInt(days.value, 10) || 5)); send(); });
       w.appendChild(days);
-      w.appendChild(el("span", "muted", "daily closes"));
+      w.appendChild(el("span", "muted", T("daily closes")));
       box.appendChild(w);
-      part("then", "", "All of these hold on a later close.", "+ Then line");
+      part("then", "", T("All of these hold on a later close."), T("+ Then line"));
       if ((q.cancel || []).length) {
-        part("cancel", "3 · Cancel if", "If all of these hold on a close after First, that First no longer counts.", "+ Cancel line");
+        part("cancel", T("3 · Cancel if"), T("If all of these hold on a close after First, that First no longer counts."), T("+ Cancel line"));
       } else {
-        box.appendChild(button("+ Cancel if…", "Optional: a reading that, if it happens after First, cancels it",
+        box.appendChild(button(T("+ Cancel if…"), T("Optional: a reading that, if it happens after First, cancels it"),
                                () => { const f = fresh(); if (f) { q.cancel = [f]; send(); } }));
       }
       all.appendChild(box);
@@ -971,23 +974,23 @@ export default function(component) {
       const anyBox = el("div", "fixed");
       anyBox.style.flexDirection = "column"; anyBox.style.alignItems = "stretch";
       const head = el("div", "hd");
-      head.appendChild(el("span", "lbl", "ANY · OR"));
-      head.appendChild(el("span", "muted", "This box holds if any of its lines holds."));
-      head.appendChild(button("🗑", "Remove this ANY box", () => { model.lines.splice(i, 1); send(); }, "sq"));
+      head.appendChild(el("span", "lbl", T("ANY · OR")));
+      head.appendChild(el("span", "muted", T("This box holds if any of its lines holds.")));
+      head.appendChild(button("🗑", T("Remove this ANY box"), () => { model.lines.splice(i, 1); send(); }, "sq"));
       anyBox.appendChild(head);
       line.any.forEach((l, j) => anyBox.appendChild(lineRow(l, () => { line.any.splice(j, 1); if (!line.any.length) model.lines.splice(i, 1); send(); })));
-      anyBox.appendChild(button("+ line in this box", "Add a line to this ANY box", () => { const f = fresh(); if (f) { line.any.push(f); send(); } }));
+      anyBox.appendChild(button(T("+ line in this box"), T("Add a line to this ANY box"), () => { const f = fresh(); if (f) { line.any.push(f); send(); } }));
       all.appendChild(anyBox);
     } else {
       all.appendChild(lineRow(line, () => { model.lines.splice(i, 1); send(); }));
     }
   });
   const adds = el("div", "hd");
-  const addLine = button("+ Line", "Add a line that must hold", () => { const f = fresh(); if (f) { model.lines = model.lines || []; model.lines.push(f); send(); } });
-  const addAny = button("+ ANY (OR) box", "Add a box where any one of its lines is enough", () => { const f = fresh(); if (f) { model.lines = model.lines || []; model.lines.push({any: [f]}); send(); } });
+  const addLine = button(T("+ Line"), T("Add a line that must hold"), () => { const f = fresh(); if (f) { model.lines = model.lines || []; model.lines.push(f); send(); } });
+  const addAny = button(T("+ ANY (OR) box"), T("Add a box where any one of its lines is enough"), () => { const f = fresh(); if (f) { model.lines = model.lines || []; model.lines.push({any: [f]}); send(); } });
   const seqCount = (model.lines || []).filter((l) => l.seq).length;
-  const addSeq = button("+ ⏭ THEN box", seqCount >= 2 ? "At most 2 THEN boxes in a Set"
-                        : "A then B: First on an earlier close, then Then within N daily closes",
+  const addSeq = button(T("+ ⏭ THEN box"), seqCount >= 2 ? T("At most 2 THEN boxes in a Set")
+                        : T("A then B: First on an earlier close, then Then within N daily closes"),
                         () => { const f = fresh(), g = fresh(); if (f) { model.lines = model.lines || [];
                                 model.lines.push({seq: {first: [f], then: [g], within: 5, cancel: []}}); send(); } });
   addLine.disabled = addAny.disabled = !targets.length;
@@ -997,10 +1000,10 @@ export default function(component) {
   dec.appendChild(all);
   const how = el("div", "fixed");
   how.style.flexDirection = "column"; how.style.alignItems = "flex-start";
-  how.appendChild(el("div", "", "🔒 How the answer is decided (fixed)"));
-  how.appendChild(el("div", "muted", "Yes: every line holds (an ANY box: at least one of its lines; a THEN box: First on an earlier close, then Then, in time)."));
-  how.appendChild(el("div", "muted", "No: at least one line fails, even if others are missing: missing data cannot rescue it."));
-  how.appendChild(el("div", "muted", "Unknown: nothing fails, but something needed is missing; it names what."));
+  how.appendChild(el("div", "", T("🔒 How the answer is decided (fixed)")));
+  how.appendChild(el("div", "muted", T("Yes: every line holds (an ANY box: at least one of its lines; a THEN box: First on an earlier close, then Then, in time).")));
+  how.appendChild(el("div", "muted", T("No: at least one line fails, even if others are missing: missing data cannot rescue it.")));
+  how.appendChild(el("div", "muted", T("Unknown: nothing fails, but something needed is missing; it names what.")));
   dec.appendChild(how);
 }
 """
@@ -1013,7 +1016,7 @@ def set_component():
     if _SET_COMPONENT is None:
         import streamlit as st
 
-        _SET_COMPONENT = st.components.v2.component("lattice_set_editor", js=SET_JS, css=CSS)
+        _SET_COMPONENT = i18n.with_words(st.components.v2.component("lattice_set_editor", js=i18n.js_ready(SET_JS), css=CSS), SET_JS)
     return _SET_COMPONENT
 
 
@@ -1035,5 +1038,5 @@ def _instant(js: str, name: str) -> str:
   }}""", 1)
 
 
-JS = _instant(JS, "latticeGroup")
-SET_JS = _instant(SET_JS, "latticeSet")
+JS = i18n.js_ready(_instant(JS, "latticeGroup"))
+SET_JS = i18n.js_ready(_instant(SET_JS, "latticeSet"))

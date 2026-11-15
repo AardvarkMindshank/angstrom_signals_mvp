@@ -9,6 +9,7 @@ open is remembered in the browser for the session. Data comes from prism_board.p
 
 from __future__ import annotations
 
+import i18n
 import lattice_component
 
 CSS = lattice_component.CSS + """
@@ -101,14 +102,14 @@ SET_LIBRARY_JS = r"""
   // onOpen(s), mem (an object kept on window for the session: filter text, icon filter, folded state).
   function setLibrary(libCol, opts) {
     const M = opts.mem;
-    libCol.appendChild(el("h3", "", opts.title || "Saved Sets"));
+    libCol.appendChild(el("h3", "", opts.title || T("Saved Sets")));
     libCol.appendChild(el("div", "muted", opts.hint || ""));
-  const fs = el("input", "wide"); fs.placeholder = "Filter Sets"; fs.setAttribute("aria-label", "Filter Sets"); fs.value = M.q || "";
+  const fs = el("input", "wide"); fs.placeholder = T("Filter Sets"); fs.setAttribute("aria-label", T("Filter Sets")); fs.value = M.q || "";
   libCol.appendChild(fs);
   // Filter by what a Set looks at: tap an icon, tap it again to show all.
   const pvf = el("div", "pvf");
   (opts.perspectives || []).forEach((p) => {
-    const b = button(p.icon, p.hover + " (tap to filter)", () => {
+    const b = button(p.icon, T("{what} (tap to filter)", {what: p.hover}), () => {
       M.pv = M.pv === p.key ? "" : p.key;
       pvf.querySelectorAll("button").forEach((x) => x.classList.toggle("on", x.dataset.k === M.pv));
       drawSets();
@@ -135,9 +136,9 @@ SET_LIBRARY_JS = r"""
       if (s.more) {
         const d = el("details", "more");
         const sm = el("summary", "");
-        sm.appendChild(el("span", "m", "more…")); sm.appendChild(el("span", "l", "less…"));
+        sm.appendChild(el("span", "m", T("more…"))); sm.appendChild(el("span", "l", T("less…")));
         d.appendChild(sm);
-        [["What it measures", s.more.measures], ["Why traders watch it", s.more.why], ["What it doesn't prove", s.more.not_proven]]
+        [[T("What it measures"), s.more.measures], [T("Why traders watch it"), s.more.why], [T("What it doesn't prove"), s.more.not_proven]]
           .forEach(([h, t]) => { const p = el("p", ""); const b = el("b", "", h + ": "); p.appendChild(b); p.appendChild(document.createTextNode(t)); d.appendChild(p); });
         if (s.followed) d.appendChild(followedBlock(s.followed, s.evidence && s.evidence.icon));
         d.addEventListener("click", (e) => e.stopPropagation());
@@ -164,28 +165,28 @@ SET_LIBRARY_JS = r"""
   }
   function insideBlock(s) {   // 🔍 the building blocks: Groups (signals, labels), single signals, the decision
     const b = el("details", "inside");
-    const sm = el("summary", "", "🔍 Look inside");
-    sm.title = "The Groups and signals this Set is made of, and when it says Yes";
+    const sm = el("summary", "", T("🔍 Look inside"));
+    sm.title = T("The Groups and signals this Set is made of, and when it says Yes");
     b.appendChild(sm);
     const x = s.inside;
     (x.groups || []).forEach((g) => {
       const p = el("div", "part");
-      p.appendChild(el("b", "", "Group · " + g.name));
-      if (g.labels && g.labels.length) p.appendChild(el("div", "muted", "Labels: " + g.labels.join(", ")));
+      p.appendChild(el("b", "", T("Group · {name}", {name: g.name})));
+      if (g.labels && g.labels.length) p.appendChild(el("div", "muted", T("Labels: {labels}", {labels: g.labels.join(", ")})));
       (g.signals || []).forEach((t) => p.appendChild(el("div", "sig", "• " + t)));
       b.appendChild(p);
     });
     (x.signals || []).forEach((t) => {
       const p = el("div", "part");
-      p.appendChild(el("b", "", "Signal · " + t.name));
-      if (t.settings) p.appendChild(el("div", "muted", "Settings: " + t.settings));
+      p.appendChild(el("b", "", T("Signal · {name}", {name: t.name})));
+      if (t.settings) p.appendChild(el("div", "muted", T("Settings: {settings}", {settings: t.settings})));
       b.appendChild(p);
     });
     if (x.decision) b.appendChild(el("div", "part dec", x.decision));
     if (s.open) {
-      const go = button(s.open === "copy" ? "Make my own copy" : "Open in Signal Sets",
-        s.open === "copy" ? "Opens a copy in Signal Sets that you can change and save as your own"
-                          : "Opens this Set in Signal Sets", () => opts.onOpen(s));
+      const go = button(s.open === "copy" ? T("Make my own copy") : T("Open in Signal Sets"),
+        s.open === "copy" ? T("Opens a copy in Signal Sets that you can change and save as your own")
+                          : T("Opens this Set in Signal Sets"), () => opts.onOpen(s));
       b.appendChild(go);
     }
     b.addEventListener("click", (e) => e.stopPropagation());
@@ -194,15 +195,15 @@ SET_LIBRARY_JS = r"""
   function followedBlock(f, mark) {   // "What followed", folded to one line: the verdict; tap for the plain numbers (muted, no colours)
     const b = el("details", "wf");
     const sm = el("summary", "");
-    sm.appendChild(el("b", "", (mark ? mark + " " : "") + "What followed: "));
-    sm.appendChild(document.createTextNode(f.verdict || "not studied on its own"));
+    sm.appendChild(el("b", "", (mark ? mark + " " : "") + T("What followed: ")));
+    sm.appendChild(document.createTextNode(f.verdict || T("not studied on its own")));
     b.appendChild(sm);
-    b.appendChild(el("div", "muted", f.title.replace(/^What followed · /, "")));
+    b.appendChild(el("div", "muted", (f.subtitle || f.title.replace(/^What followed · /, ""))));
     (f.lines || []).forEach((t) => b.appendChild(el("div", "", t)));
     (f.parts || []).forEach((p) => b.appendChild(el("div", "", p.line)));
     if (f.compare) b.appendChild(el("div", "", f.compare));
     if (f.parts_note) b.appendChild(el("div", "muted", f.parts_note));
-    if (f.assets) b.appendChild(el("div", "", f.assets.line + " Asset by asset: open the Set in Signal Sets."));
+    if (f.assets) b.appendChild(el("div", "", f.assets.line + " " + T("Asset by asset: open the Set in Signal Sets.")));
     if (f.note) b.appendChild(el("div", "muted", f.note));
     b.addEventListener("click", (e) => e.stopPropagation());
     return b;
@@ -222,15 +223,15 @@ SET_LIBRARY_JS = r"""
       const box = el("details", "prov");
       box.open = !!M.provOpen || !!q || !!pick || given.some((s) => s.key === focus);
       box.addEventListener("toggle", () => { if (!q) M.provOpen = box.open; });
-      const sum = el("summary", "", "Provided by Angstrom Signals · " + given.length);
-      sum.title = "Example Sets made by Angstrom Signals. Hide them in ⚙️ Settings → Show provided starters and examples.";
+      const sum = el("summary", "", T("Provided by Angstrom Signals · {n}", {n: given.length}));
+      sum.title = T("Example Sets made by Angstrom Signals. Hide them in ⚙️ Settings → Show provided starters and examples.");
       box.appendChild(sum);
       given.forEach((s) => box.appendChild(setChip(s)));
       setList.appendChild(box);
     }
-    if (given.length && mine.length) setList.appendChild(el("div", "cat", "Your Sets"));
+    if (given.length && mine.length) setList.appendChild(el("div", "cat", T("Your Sets")));
     mine.forEach((s) => setList.appendChild(setChip(s)));
-    if (!shown.length) setList.appendChild(el("div", "muted", usable.length ? "No Set matches." : (opts.empty || "No Sets with a decision yet: make one in Signal Sets.")));
+    if (!shown.length) setList.appendChild(el("div", "muted", usable.length ? T("No Set matches.") : (opts.empty || T("No Sets with a decision yet: make one in Signal Sets."))));
   }
   fs.addEventListener("input", () => { M.q = fs.value; drawSets(); });
   drawSets();
@@ -306,15 +307,15 @@ export default function(component) {
   root.appendChild(libCol);
   window.__prismLib = window.__prismLib || {q: window.__prismQS || ""};
   setLibrary(libCol, {sets: lib.sets, perspectives: lib.perspectives, showProvided: state.show_provided,
-    focus: state.focus_set, mem: window.__prismLib, title: "Saved Sets",
-    hint: "Drag a Set onto the scans, or tap + to start a scan.",
-    addTitle: (s) => "Start a scan with " + s.name, onAdd: (s) => act("create", {set: s.key}),
+    focus: state.focus_set, mem: window.__prismLib, title: T("Saved Sets"),
+    hint: T("Drag a Set onto the scans, or tap + to start a scan."),
+    addTitle: (s) => T("Start a scan with {name}", {name: s.name}), onAdd: (s) => act("create", {set: s.key}),
     onOpen: (s) => act("open_set", {set: s.key})});
 
-  libCol.appendChild(el("h3", "", "Watchlist"));
-  const fa = el("input", "wide"); fa.placeholder = "Filter assets"; fa.setAttribute("aria-label", "Filter assets"); fa.value = qAssets;
+  libCol.appendChild(el("h3", "", T("Watchlist")));
+  const fa = el("input", "wide"); fa.placeholder = T("Filter assets"); fa.setAttribute("aria-label", T("Filter assets")); fa.value = qAssets;
   libCol.appendChild(fa);
-  libCol.appendChild(el("div", "cat", "Groups · follow the Watchlist"));
+  libCol.appendChild(el("div", "cat", T("Groups · follow the Watchlist")));
   const grpRow = el("div", "");
   libCol.appendChild(grpRow);
   lib.groups.forEach((g) => {
@@ -322,12 +323,12 @@ export default function(component) {
     c.draggable = true;
     c.addEventListener("dragstart", (e) => e.dataTransfer.setData("text/plain", JSON.stringify({type: "asset", item: {group: g.group}})));
     c.appendChild(el("span", "", g.name + " · " + g.count));
-    const b = button("+", sel ? "Add " + g.name + " to the selected scan" : "Open a scan first", () => sel && act("add_asset", {scan: sel, item: {group: g.group}}));
+    const b = button("+", sel ? T("Add {name} to the selected scan", {name: g.name}) : T("Open a scan first"), () => sel && act("add_asset", {scan: sel, item: {group: g.group}}));
     b.disabled = !sel;
     c.appendChild(b);
     grpRow.appendChild(c);
   });
-  libCol.appendChild(el("div", "cat", "Single assets"));
+  libCol.appendChild(el("div", "cat", T("Single assets")));
   const assetList = el("div", "");
   libCol.appendChild(assetList);
   function drawAssets() {
@@ -339,7 +340,7 @@ export default function(component) {
       c.addEventListener("dragstart", (e) => e.dataTransfer.setData("text/plain", JSON.stringify({type: "asset", item: {kind: a.kind, id: a.id}})));
       c.appendChild(el("span", "nm", a.name));
       c.appendChild(el("span", "muted", a.market));
-      const b = button("+", sel ? "Add " + a.name + " to the selected scan" : "Open a scan first", () => sel && act("add_asset", {scan: sel, item: {kind: a.kind, id: a.id}}), "sq");
+      const b = button("+", sel ? T("Add {name} to the selected scan", {name: a.name}) : T("Open a scan first"), () => sel && act("add_asset", {scan: sel, item: {kind: a.kind, id: a.id}}), "sq");
       b.disabled = !sel;
       c.appendChild(b);
       assetList.appendChild(c);
@@ -353,15 +354,15 @@ export default function(component) {
   root.appendChild(mid);
   addSplitter(root, libCol, mid);
   const hd = el("div", "hd");
-  hd.appendChild(el("h3", "", "Prism Scans"));
-  hd.appendChild(el("span", "muted", (state.scheduled || 0) + " of " + (state.max_scheduled || 5) + " scheduled · paused and Play-only scans don't count"));
+  hd.appendChild(el("h3", "", T("Prism Scans")));
+  hd.appendChild(el("span", "muted", T("{n} of {max} scheduled · paused and Play-only scans don't count", {n: state.scheduled || 0, max: state.max_scheduled || 5})));
   const all = el("div", "row"); all.style.marginLeft = "auto";
-  all.appendChild(button("Expand all", "Open every scan", () => { scans.forEach((s) => { window.__prismOpen[s.id] = true; }); redraw(); }));
-  all.appendChild(button("Collapse all", "Close every scan", () => { scans.forEach((s) => { window.__prismOpen[s.id] = false; }); redraw(); }));
+  all.appendChild(button(T("Expand all"), T("Open every scan"), () => { scans.forEach((s) => { window.__prismOpen[s.id] = true; }); redraw(); }));
+  all.appendChild(button(T("Collapse all"), T("Close every scan"), () => { scans.forEach((s) => { window.__prismOpen[s.id] = false; }); redraw(); }));
   hd.appendChild(all);
   mid.appendChild(hd);
 
-  const drop = el("div", "drop newdrop", "Drop a Set here to start a new scan. It scans your whole Watchlist until you change its assets, and runs when you press Play until you give it a schedule.");
+  const drop = el("div", "drop newdrop", T("Drop a Set here to start a new scan. It scans your whole Watchlist until you change its assets, and runs when you press Play until you give it a schedule."));
   drop.classList.add("muted");
   drop.addEventListener("dragover", (e) => { e.preventDefault(); drop.classList.add("over"); });
   drop.addEventListener("dragleave", () => drop.classList.remove("over"));
@@ -373,7 +374,7 @@ export default function(component) {
 
   const list = el("div", "scans");
   mid.appendChild(list);
-  if (!scans.length) list.appendChild(el("div", "muted", "No scans yet."));
+  if (!scans.length) list.appendChild(el("div", "muted", T("No scans yet.")));
   scans.forEach((s) => list.appendChild(card(s)));
 
   function card(s) {
@@ -389,25 +390,25 @@ export default function(component) {
     });
 
     const head = el("div", "head");
-    const chev = iconButton("chev", open ? "Hide details" : "Show details", (e) => { e.stopPropagation(); window.__prismOpen[s.id] = !open; window.__prismSel = s.id; redraw(); }, "chev" + (open ? " open" : ""));
+    const chev = iconButton("chev", open ? T("Hide details") : T("Show details"), (e) => { e.stopPropagation(); window.__prismOpen[s.id] = !open; window.__prismSel = s.id; redraw(); }, "chev" + (open ? " open" : ""));
     chev.setAttribute("aria-expanded", open ? "true" : "false");
     head.appendChild(chev);
     const sum = el("div", "sum");
     sum.appendChild(el("span", "nm", s.name));
     sum.appendChild(el("span", "tag", s.version));
     if (s.update) {
-      const u = button("v" + s.update.version + " available", "Switch this scan to version " + s.update.version + " of its Set", (e) => { e.stopPropagation(); act("update_set", {scan: s.id, key: s.update.key}); }, "pill upd");
+      const u = button(T("v{v} available", {v: s.update.version}), T("Switch this scan to version {v} of its Set", {v: s.update.version}), (e) => { e.stopPropagation(); act("update_set", {scan: s.id, key: s.update.key}); }, "pill upd");
       sum.appendChild(u);
     }
-    if (s.paused) sum.appendChild(el("span", "pill", "Paused"));
+    if (s.paused) sum.appendChild(el("span", "pill", T("Paused")));
     const counts = el("span", "row");
-    counts.appendChild(el("span", "y", "Yes " + s.counts.yes));
-    counts.appendChild(el("span", "n", "No " + s.counts.no));
+    counts.appendChild(el("span", "y", T("Yes {n}", {n: s.counts.yes})));
+    counts.appendChild(el("span", "n", T("No {n}", {n: s.counts.no})));
     counts.appendChild(el("span", "u", "? " + s.counts.unknown));
     sum.appendChild(counts);
     if (s.dots.length) {
-      const d = el("span", "dots"); d.setAttribute("role", "img"); d.setAttribute("aria-label", "Last " + s.dots.length + " scheduled runs");
-      d.title = "Last " + s.dots.length + " scheduled runs: green had a Yes, orange all No, grey mostly Unknown, red ring failed";
+      const d = el("span", "dots"); d.setAttribute("role", "img"); d.setAttribute("aria-label", T("Last {n} scheduled runs", {n: s.dots.length}));
+      d.title = T("Last {n} scheduled runs: green had a Yes, orange all No, grey mostly Unknown, red ring failed", {n: s.dots.length});
       s.dots.forEach((x) => d.appendChild(el("span", "dot " + x)));
       sum.appendChild(d);
     }
@@ -417,23 +418,23 @@ export default function(component) {
 
     const ctl = el("div", "ctl");
     ctl.addEventListener("click", (e) => e.stopPropagation());
-    ctl.appendChild(iconButton("play", "Run now on " + s.asset_count + " assets", () => { window.__prismOpen[s.id] = true; act("run", {scan: s.id}); }, "play"));
-    ctl.appendChild(iconButton("past", "Run at a past moment", () => { window.__prismPast[s.id] = !window.__prismPast[s.id]; window.__prismOpen[s.id] = true; redraw(); }));
-    const hb = button("🕰️", s.history ? "Close Visualize History" : "Visualize History: this Set on every past day, for each asset, on a chart under the scans", () => {
+    ctl.appendChild(iconButton("play", T("Run now on {n} assets", {n: s.asset_count}), () => { window.__prismOpen[s.id] = true; act("run", {scan: s.id}); }, "play"));
+    ctl.appendChild(iconButton("past", T("Run at a past moment"), () => { window.__prismPast[s.id] = !window.__prismPast[s.id]; window.__prismOpen[s.id] = true; redraw(); }));
+    const hb = button("🕰️", s.history ? T("Close Visualize History") : T("Visualize History: this Set on every past day, for each asset, on a chart under the scans"), () => {
       window.__prismOpen[s.id] = true; act(s.history ? "history_close" : "history", {scan: s.id}); }, "sq hist");
     if (s.history) hb.classList.add("on");
     ctl.appendChild(hb);
-    ctl.appendChild(iconButton(s.paused ? "resume" : "pause", s.paused ? "Resume: the first run after resuming records answers without alerting" : "Pause: keeps the scan, stops runs and alerts", () => act(s.paused ? "resume" : "pause", {scan: s.id})));
+    ctl.appendChild(iconButton(s.paused ? "resume" : "pause", s.paused ? T("Resume: the first run after resuming records answers without alerting") : T("Pause: keeps the scan, stops runs and alerts"), () => act(s.paused ? "resume" : "pause", {scan: s.id})));
     if (s.inside) {
-      const ib = iconButton("inside", "Look inside: the Groups and signals this scan's Set is made of, and when it says Yes",
+      const ib = iconButton("inside", T("Look inside: the Groups and signals this scan's Set is made of, and when it says Yes"),
         () => { window.__prismInside[s.id] = !window.__prismInside[s.id]; window.__prismOpen[s.id] = true; redraw(); });
       if (window.__prismInside[s.id]) ib.classList.add("on");
       ctl.appendChild(ib);
     }
-    ctl.appendChild(iconButton("copy", "Duplicate this scan: same Set, to run on other assets or with another schedule or alerts (the copy runs only when you press Play until you schedule it). To change what the Set checks, use 🔍 Look inside → Make my own copy", () => act("duplicate", {scan: s.id})));
-    const del = iconButton("del", "Delete this scan", () => {
+    ctl.appendChild(iconButton("copy", T("Duplicate this scan: same Set, to run on other assets or with another schedule or alerts (the copy runs only when you press Play until you schedule it). To change what the Set checks, use 🔍 Look inside → Make my own copy"), () => act("duplicate", {scan: s.id})));
+    const del = iconButton("del", T("Delete this scan"), () => {
       if (del.classList.contains("arm")) { act("delete", {scan: s.id}); return; }
-      del.classList.add("arm"); del.textContent = "Delete?"; del.title = "Press again to delete";
+      del.classList.add("arm"); del.textContent = T("Delete?"); del.title = T("Press again to delete");
       setTimeout(() => { if (del.isConnected) redraw(); }, 4000);
     }, "del");
     ctl.appendChild(del);
@@ -445,7 +446,7 @@ export default function(component) {
     if (s.inside && window.__prismInside[s.id]) {
       const box = insideBlock({key: s.set_key, inside: s.inside, open: s.set_key ? s.set_open : null});
       box.open = true;
-      box.querySelector("summary").textContent = "🔍 Inside this scan's Set";
+      box.querySelector("summary").textContent = T("🔍 Inside this scan's Set");
       box.classList.add("scan");
       body.appendChild(box);
     }
@@ -453,9 +454,9 @@ export default function(component) {
 
     if (window.__prismPast[s.id]) {
       const r = el("div", "row");
-      r.appendChild(el("b", "", "Past moment"));
-      const d = el("input"); d.type = "date"; d.setAttribute("aria-label", "Date (UTC)");
-      const t = el("input"); t.type = "time"; t.value = "00:05"; t.setAttribute("aria-label", "Time (UTC)");
+      r.appendChild(el("b", "", T("Past moment")));
+      const d = el("input"); d.type = "date"; d.setAttribute("aria-label", T("Date (UTC)"));
+      const t = el("input"); t.type = "time"; t.value = "00:05"; t.setAttribute("aria-label", T("Time (UTC)"));
       const day = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10);
       const kept = (window.__prismPastAt || {})[s.id] || {};          // keep the chosen moment when the board redraws
       d.value = kept.date || day; d.max = new Date().toISOString().slice(0, 10);
@@ -463,39 +464,39 @@ export default function(component) {
       const keep = () => { window.__prismPastAt = window.__prismPastAt || {}; window.__prismPastAt[s.id] = {date: d.value, time: t.value}; };
       d.addEventListener("change", keep); t.addEventListener("change", keep);
       r.appendChild(d); r.appendChild(t); r.appendChild(el("span", "muted", "UTC"));
-      r.appendChild(button("⏪ Run at this moment", "Rebuild what was known then, using only data available at that time", () => { keep(); act("run_past", {scan: s.id, date: d.value, time: t.value}); }, "on"));
+      r.appendChild(button(T("⏪ Run at this moment"), T("Rebuild what was known then, using only data available at that time"), () => { keep(); act("run_past", {scan: s.id, date: d.value, time: t.value}); }, "on"));
       body.appendChild(r);
     }
 
     const ar = el("div", "row");
-    ar.appendChild(el("b", "", "Assets"));
+    ar.appendChild(el("b", "", T("Assets")));
     s.assets.forEach((a, i) => {
       const ch = el("span", "achip" + (a.group ? " grp" : ""));
       ch.appendChild(el("span", "", a.label));
       // The only entry has no ×: a scan always scans something. Adding another replaces it.
-      if (s.assets.length > 1) ch.appendChild(button("×", "Remove " + a.label, () => act("remove_asset", {scan: s.id, index: i})));
+      if (s.assets.length > 1) ch.appendChild(button("×", T("Remove {name}", {name: a.label}), () => act("remove_asset", {scan: s.id, index: i})));
       ar.appendChild(ch);
     });
     const only = s.assets.length === 1;
-    ar.appendChild(el("span", "muted", s.asset_count + " assets now · " + (only
+    ar.appendChild(el("span", "muted", T("{n} assets now · {hint}", {n: s.asset_count, hint: (only
       ? (s.assets[0].watchlist
-        ? "to scan less, drop assets or a group here (or tap + in the list): they take the Watchlist's place"
-        : "drop more assets or a group here, or tap + in the list (a scan keeps at least one)")
-      : "drop assets or a group here, or tap + in the list")));
+        ? T("to scan less, drop assets or a group here (or tap + in the list): they take the Watchlist's place")
+        : T("drop more assets or a group here, or tap + in the list (a scan keeps at least one)"))
+      : T("drop assets or a group here, or tap + in the list"))})));
     body.appendChild(ar);
 
     const rr = el("div", "row");
-    rr.appendChild(el("b", "", "Runs"));
-    const runs = el("select"); runs.setAttribute("aria-label", "When the scan runs");
-    const choices = [["manual", "Only when I press Play"], ["4H", "Each 4-hour close"], ["1D", "Each daily close"], ["1W", "Each weekly close"], ["times", "At set times"]];
+    rr.appendChild(el("b", "", T("Runs")));
+    const runs = el("select"); runs.setAttribute("aria-label", T("When the scan runs"));
+    const choices = [["manual", T("Only when I press Play")], ["4H", T("Each 4-hour close")], ["1D", T("Each daily close")], ["1W", T("Each weekly close")], ["times", T("At set times")]];
     const cur = s.schedule.kind === "manual" ? "manual" : s.schedule.kind === "close" ? s.schedule.timeframe : "times";
     choices.forEach(([v, l]) => { const o = el("option", "", l); o.value = v; if (v === cur) o.selected = true; runs.appendChild(o); });
     rr.appendChild(runs);
-    const times = el("input"); times.placeholder = "08:00, 20:00"; times.setAttribute("aria-label", "Times of day");
+    const times = el("input"); times.placeholder = "08:00, 20:00"; times.setAttribute("aria-label", T("Times of day"));
     times.value = (s.schedule.times || ["08:00"]).join(", "); times.style.width = "130px";
-    const days = el("select"); days.setAttribute("aria-label", "Days");
-    [["all", "Every day"], ["weekdays", "Weekdays"]].forEach(([v, l]) => { const o = el("option", "", l); o.value = v; if ((s.schedule.days || "all") === v) o.selected = true; days.appendChild(o); });
-    const tz = el("select"); tz.setAttribute("aria-label", "Time zone");
+    const days = el("select"); days.setAttribute("aria-label", T("Days"));
+    [["all", T("Every day")], ["weekdays", T("Weekdays")]].forEach(([v, l]) => { const o = el("option", "", l); o.value = v; if ((s.schedule.days || "all") === v) o.selected = true; days.appendChild(o); });
+    const tz = el("select"); tz.setAttribute("aria-label", T("Time zone"));
     (state.zones || []).forEach((z) => { const o = el("option", "", z); o.value = z; if ((s.schedule.tz || state.zones[0]) === z) o.selected = true; tz.appendChild(o); });
     const timeBits = [times, days, tz];
     function showTimes() { timeBits.forEach((x) => { x.style.display = runs.value === "times" ? "" : "none"; }); }
@@ -508,37 +509,37 @@ export default function(component) {
     tz.addEventListener("change", () => { if (runs.value === "times") saveSchedule(); });
     showTimes();
     body.appendChild(rr);
-    if (s.warning) body.appendChild(el("div", "muted", "Note: " + s.warning));
+    if (s.warning) body.appendChild(el("div", "muted", T("Note: {text}", {text: s.warning})));
 
     const al = el("div", "row");
-    al.appendChild(el("b", "", "Alerts"));
-    const ch = el("select"); ch.setAttribute("aria-label", "Where alerts go");
-    const chans = [["instant", "Instant (app and email)"], ["digest", "Daily digest"], ["app", "App only"], ["off", "Off"]];
-    if (s.notify.channel === "account") chans.unshift(["account", "As my alert settings"]);
+    al.appendChild(el("b", "", T("Alerts")));
+    const ch = el("select"); ch.setAttribute("aria-label", T("Where alerts go"));
+    const chans = [["instant", T("Instant (app and email)")], ["digest", T("Daily digest")], ["app", T("App only")], ["off", T("Off")]];
+    if (s.notify.channel === "account") chans.unshift(["account", T("As my alert settings")]);
     chans.forEach(([v, l]) => { const o = el("option", "", l); o.value = v; if (v === s.notify.channel) o.selected = true; ch.appendChild(o); });
     al.appendChild(ch);
     const boxes = {};
-    [["on_yes", "Turns Yes"], ["on_no", "Turns No"], ["on_fail", "Can't run"]].forEach(([k, l]) => {
+    [["on_yes", T("Turns Yes")], ["on_no", T("Turns No")], ["on_fail", T("Can't run")]].forEach(([k, l]) => {
       const lab = el("label", "row"); lab.style.gap = "4px";
       const b = el("input"); b.type = "checkbox"; b.checked = !!s.notify[k]; boxes[k] = b;
       lab.appendChild(b); lab.appendChild(el("span", "", l));
-      lab.title = {on_yes: "The first Yes for an asset; not again until it has said No", on_no: "When an asset that was Yes turns No", on_fail: "When a run fails, or at least half its answers are Unknown"}[k];
+      lab.title = {on_yes: T("The first Yes for an asset; not again until it has said No"), on_no: T("When an asset that was Yes turns No"), on_fail: T("When a run fails, or at least half its answers are Unknown")}[k];
       al.appendChild(lab);
     });
     function sendAlerts() { act("alerts", {scan: s.id, channel: ch.value, on_yes: boxes.on_yes.checked, on_no: boxes.on_no.checked, on_fail: boxes.on_fail.checked}); }
     ch.addEventListener("change", sendAlerts);
     Object.values(boxes).forEach((b) => b.addEventListener("change", sendAlerts));
     body.appendChild(al);
-    if (s.notify.channel === "digest") body.appendChild(el("div", "muted", "Daily digest alerts arrive with your daily summary email (switch it on in your alert settings)."));
+    if (s.notify.channel === "digest") body.appendChild(el("div", "muted", T("Daily digest alerts arrive with your daily summary email (switch it on in your alert settings).")));
 
     const yr = el("div", "row");
-    yr.appendChild(el("b", "", "Yes now"));
-    if (!s.yes_now.length) yr.appendChild(el("span", "muted", "none on the last scheduled runs"));
+    yr.appendChild(el("b", "", T("Yes now")));
+    if (!s.yes_now.length) yr.appendChild(el("span", "muted", T("none on the last scheduled runs")));
     s.yes_now.forEach((a) => {
       const chp = el("span", "achip");
       chp.appendChild(el("span", "", a.name));
-      const sz = el("select"); sz.setAttribute("aria-label", "Snooze " + a.name); sz.style.minHeight = "28px"; sz.style.padding = "0 4px";
-      [["", "Snooze…"], ["1", "1 day"], ["3", "3 days"], ["7", "7 days"]].forEach(([v, l]) => { const o = el("option", "", l); o.value = v; sz.appendChild(o); });
+      const sz = el("select"); sz.setAttribute("aria-label", T("Snooze {name}", {name: a.name})); sz.style.minHeight = "28px"; sz.style.padding = "0 4px";
+      [["", T("Snooze…")], ["1", T("1 day")], ["3", T("{n} days", {n: 3})], ["7", T("{n} days", {n: 7})]].forEach(([v, l]) => { const o = el("option", "", l); o.value = v; sz.appendChild(o); });
       sz.addEventListener("change", () => sz.value && act("snooze", {scan: s.id, key: a.key, days: Number(sz.value)}));
       chp.appendChild(sz);
       yr.appendChild(chp);
@@ -546,34 +547,33 @@ export default function(component) {
     body.appendChild(yr);
     if (s.snoozes.length) {
       const sr = el("div", "row");
-      sr.appendChild(el("b", "", "Snoozed"));
+      sr.appendChild(el("b", "", T("Snoozed")));
       s.snoozes.forEach((a) => {
         const chp = el("span", "achip");
-        chp.appendChild(el("span", "", a.name + " until " + a.until));
-        chp.appendChild(button("×", "Stop snoozing " + a.name, () => act("unsnooze", {scan: s.id, key: a.key})));
+        chp.appendChild(el("span", "", T("{name} until {when}", {name: a.name, when: a.until})));
+        chp.appendChild(button("×", T("Stop snoozing {name}", {name: a.name}), () => act("unsnooze", {scan: s.id, key: a.key})));
         sr.appendChild(chp);
       });
       body.appendChild(sr);
     }
 
     const res = el("div", "");
-    const rt = el("div", "muted", s.results_title || (s.last_text + ". Press ▶ to run it now."));
+    const rt = el("div", "muted", s.results_title || (s.last_text + ". " + T("Press ▶ to run it now.")));
     if (s.evidence) { const ev = el("span", "ev", s.evidence.icon); ev.title = s.evidence.hover; ev.setAttribute("aria-label", s.evidence.hover); rt.appendChild(ev); }
     res.appendChild(rt);
     if (s.results.length) {
       const tb = el("table");
-      const tr = el("tr"); ["Asset", "Answer", "Deciding line"].forEach((h) => tr.appendChild(el("th", "", h)));
+      const tr = el("tr"); [T("Asset"), T("Answer"), T("Deciding line")].forEach((h) => tr.appendChild(el("th", "", h)));
       tb.appendChild(tr);
       s.results.forEach((r) => {
         const row = el("tr");
         row.appendChild(el("td", "", r.asset));
-        const ans = el("td", r.answer === "yes" ? "y" : r.answer === "no" ? "n" : "u", r.answer === "yes" ? "Yes" : r.answer === "no" ? "No" : "Unknown");
-        ans.title = {yes: "Yes: conditions met", no: "No: a condition failed"}[r.answer] || "Unknown: nothing failed, but some data is missing";
+        const ans = el("td", r.answer === "yes" ? "y" : r.answer === "no" ? "n" : "u", r.answer === "yes" ? T("Yes") : r.answer === "no" ? T("No") : T("Unknown"));
+        ans.title = {yes: T("Yes: conditions met"), no: T("No: a condition failed")}[r.answer] || T("Unknown: nothing failed, but some data is missing");
         if (r.data) { const d = el("span", "ev", r.data.icon); d.title = r.data.hover; d.setAttribute("aria-label", r.data.hover); ans.appendChild(d); }
         if (r.armed) {
           const a = el("span", "armed", "⏭ " + r.armed.left);
-          const hover = "Armed: the first step was seen; the next can still come in time (" + r.armed.left +
-                        " close" + (r.armed.left === 1 ? "" : "s") + " left). Not a match yet. " + r.armed.text;
+          const hover = T("Armed: the first step was seen; the next can still come in time ({n} closes left). Not a match yet.", {n: r.armed.left}) + " " + r.armed.text;
           a.title = hover; a.setAttribute("aria-label", hover);
           ans.appendChild(a);
         }
@@ -595,6 +595,7 @@ export default function(component) {
 JS = JS.replace("export default function(component) {", """export default function prismBoard(component) {
   component.__redraw = () => prismBoard(component);""", 1)
 
+JS = i18n.js_ready(JS)
 _COMPONENT = None
 
 
@@ -603,5 +604,5 @@ def component():
     if _COMPONENT is None:
         import streamlit as st
 
-        _COMPONENT = st.components.v2.component("prism_board", js=JS, css=CSS)
+        _COMPONENT = i18n.with_words(st.components.v2.component("prism_board", js=i18n.js_ready(JS), css=CSS), JS)
     return _COMPONENT

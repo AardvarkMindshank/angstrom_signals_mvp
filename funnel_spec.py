@@ -5,6 +5,8 @@ Used by the Funnels editor and by the tests; the database repeats the structural
 
 from __future__ import annotations
 
+from i18n import t
+
 import signal_groups as sg
 
 TIMEFRAMES = ("15m", "30m", "1h", "4h", "12h", "1D", "1W")
@@ -28,9 +30,9 @@ def validate(funnel: dict) -> tuple[list[str], list[str]]:
     stages = funnel.get("stages") or []
     market = funnel.get("market") or "crypto"
     if funnel.get("direction") not in ("long", "short"):
-        blocks.append("Choose long or short.")
+        blocks.append(t("Choose long or short."))
     if not 3 <= len(stages) <= 5:
-        blocks.append(f"A funnel has 3 to 5 stages (this one has {len(stages)}).")
+        blocks.append(t('A funnel has 3 to 5 stages (this one has {len_stages}).', len_stages=len(stages)))
     for n, stage in enumerate(stages, 1):
         label = stage.get("label") or f"Stage {n}"
         tf = stage.get("timeframe")
@@ -57,11 +59,11 @@ def validate(funnel: dict) -> tuple[list[str], list[str]]:
                          "allowed: the stage sets when it is checked, not what the Set reads.")
     tfs = [s.get("timeframe") for s in stages if s.get("timeframe") in ORDER]
     if any(ORDER[a] < ORDER[b] for a, b in zip(tfs, tfs[1:])):
-        warns.append("The stages don't run from the longest timeframe to the shortest. A funnel usually narrows from "
-                     "weekly or daily down to the hour.")
+        warns.append(t("The stages don't run from the longest timeframe to the shortest. A funnel usually narrows from "
+                     "weekly or daily down to the hour."))
     pool = funnel.get("pool") or {}
     if pool.get("top") is not None and pool.get("top") not in POOL_SIZES:
-        blocks.append("Pool size: choose the top 50, 100, 200 or 500.")
+        blocks.append(t("Pool size: choose the top 50, 100, 200 or 500."))
     if pool.get("min_volume") is not None and not (0 <= float(pool.get("min_volume")) <= 1e10):
-        blocks.append("Minimum daily volume: choose a value from 0 to $10 billion.")
+        blocks.append(t("Minimum daily volume: choose a value from 0 to $10 billion."))
     return blocks, warns

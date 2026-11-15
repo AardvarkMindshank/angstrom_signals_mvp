@@ -9,6 +9,8 @@ No Streamlit here: prism_view draws the payload with lw_chart.js.
 
 from __future__ import annotations
 
+from i18n import t
+
 import pandas as pd
 
 import lw_chart
@@ -35,7 +37,7 @@ def payload(strip: dict, selected: str, years: int, frames=sh.full_daily, dark: 
     out = lw_chart.build_payload(
         df, {"panels": [], "overlays": [], "secondary": []}, kind=main["kind"], interval="1D",
         range_key="All", view_key=f"history|{selected}|{years}|{len(rows)}", price_px=MAIN_PX, dark=dark,
-        source="Daily prices from Yahoo", title=f"{main['name']} · {set_name}")
+        source=t("Daily prices from Yahoo"), title=f"{main['name']} · {set_name}")
     out["pane_keys"] = [main["key"]]
     out["log_scale"] = True                   # ten years of prices span a huge range: equal steps are equal % moves
     out["zones"] = sh.colours_for(days, main["spans"], show_no)

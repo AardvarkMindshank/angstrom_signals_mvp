@@ -13,6 +13,7 @@ Like the Prism board, the board only draws and reports: every press goes to Pyth
 
 from __future__ import annotations
 
+import i18n
 import lattice_component
 import prism_component
 
@@ -96,11 +97,11 @@ export default function funnelStages(component) {
   root.appendChild(libCol);
   window.__funLib = window.__funLib || {};
   setLibrary(libCol, {sets: lib.sets, perspectives: lib.perspectives, showProvided: state.show_provided,
-    mem: window.__funLib, title: "Sets",
-    hint: "Drag a Set onto a stage, or select a stage and tap +. With no stage selected, + adds a new stage.",
-    addTitle: (s) => sel !== null ? "Use " + s.name + " in stage " + (sel + 1)
-                    : (full ? "Select a stage first (a funnel has at most " + (state.max_stages || 5) + " stages)"
-                            : "Add a stage that checks " + s.name),
+    mem: window.__funLib, title: T("Sets"),
+    hint: T("Drag a Set onto a stage, or select a stage and tap +. With no stage selected, + adds a new stage."),
+    addTitle: (s) => sel !== null ? T("Use {name} in stage {n}", {name: s.name, n: sel + 1})
+                    : (full ? T("Select a stage first (a funnel has at most {n} stages)", {n: state.max_stages || 5})
+                            : T("Add a stage that checks {name}", {name: s.name})),
     addDisabled: () => sel === null && full,
     onAdd: (s) => sel !== null ? act("set", {stage: sel, set: s.key}) : act("add", {set: s.key}),
     onOpen: (s) => act("open_set", {set: s.key})});
@@ -110,7 +111,7 @@ export default function funnelStages(component) {
   root.appendChild(mid);
   addSplitter(root, libCol, mid);
   const hd = el("div", "hd");
-  hd.appendChild(el("h3", "", "Stages"));
+  hd.appendChild(el("h3", "", T("Stages")));
   hd.appendChild(el("span", "muted", state.intro || ""));
   mid.appendChild(hd);
   const box = el("div", "stages");
@@ -121,39 +122,39 @@ export default function funnelStages(component) {
     const card = el("div", "stage" + (sel === i ? " sel" : ""));
     const inset = Math.round(i * 4 * (5 / Math.max(n, 3)));            // narrower down the funnel
     card.style.marginLeft = inset + "%"; card.style.marginRight = inset + "%";
-    card.title = sel === i ? "Selected: tap + on a Set to use it here (tap again to unselect)"
-                           : "Tap to select this stage, then + on a Set to use it here";
+    card.title = sel === i ? T("Selected: tap + on a Set to use it here (tap again to unselect)")
+                           : T("Tap to select this stage, then + on a Set to use it here");
     card.addEventListener("click", (e) => { if (!e.target.closest("input,select,button,details")) select(i); });
     dropZone(card, (key) => act("set", {stage: i, set: key}));
     const top = el("div", "top");
     const num = el("span", "num", st.icon || String(i + 1));
-    num.title = "Stage " + (i + 1) + " of " + n; num.setAttribute("aria-label", num.title);
+    num.title = T("Stage {i} of {n}", {i: i + 1, n: n}); num.setAttribute("aria-label", num.title);
     top.appendChild(num);
     const lab = el("input", "lab"); lab.value = st.label || ""; lab.maxLength = 40;
-    lab.setAttribute("aria-label", "Name of stage " + (i + 1)); lab.placeholder = "Stage " + (i + 1);
+    lab.setAttribute("aria-label", T("Name of stage {i}", {i: i + 1})); lab.placeholder = T("Stage {i}", {i: i + 1});
     lab.addEventListener("change", () => act("label", {stage: i, label: lab.value}));
     top.appendChild(lab);
     const tf = el("select", "");
-    tf.title = "When this stage is checked: at each close of this candle (the Set's readings keep their own timeframes)";
+    tf.title = T("When this stage is checked: at each close of this candle (the Set’s readings keep their own timeframes)");
     tf.setAttribute("aria-label", tf.title);
     tfs.forEach(([k, words]) => { const o = el("option", "", "⏱ " + words); o.value = k; if (k === st.timeframe) o.selected = true; tf.appendChild(o); });
     tf.addEventListener("change", () => act("tf", {stage: i, tf: tf.value}));
     top.appendChild(tf);
     const ctl = el("div", "ctl");
-    if (i > 0) ctl.appendChild(button("↑", "Move this stage up", () => { window.__funSel[scope] = null; act("move", {stage: i, dir: -1}); }));
-    if (i < n - 1) ctl.appendChild(button("↓", "Move this stage down", () => { window.__funSel[scope] = null; act("move", {stage: i, dir: 1}); }));
-    if (n > (state.min_stages || 3)) ctl.appendChild(button("✖", "Remove this stage", () => { window.__funSel[scope] = null; act("remove", {stage: i}); }, "del"));
+    if (i > 0) ctl.appendChild(button("↑", T("Move this stage up"), () => { window.__funSel[scope] = null; act("move", {stage: i, dir: -1}); }));
+    if (i < n - 1) ctl.appendChild(button("↓", T("Move this stage down"), () => { window.__funSel[scope] = null; act("move", {stage: i, dir: 1}); }));
+    if (n > (state.min_stages || 3)) ctl.appendChild(button("✖", T("Remove this stage"), () => { window.__funSel[scope] = null; act("remove", {stage: i}); }, "del"));
     top.appendChild(ctl);
     card.appendChild(top);
     const row = el("div", "setrow");
-    const nm = el("span", "setnm", st.set_name || "No Set");
+    const nm = el("span", "setnm", st.set_name || T("No Set"));
     if (st.set_line) nm.title = st.set_line;
     row.appendChild(nm);
     const pv = el("span", "pv");
     (st.icons || []).forEach((p) => { const x = el("span", "", p.icon); x.title = p.hover; x.setAttribute("aria-label", p.hover); pv.appendChild(x); });
     row.appendChild(pv);
     if (st.upgrade) {
-      const up = button(st.upgrade, "Use the newer version of this Set. Saving then starts every asset again.",
+      const up = button(st.upgrade, T("Use the newer version of this Set. Saving then starts every asset again."),
                         () => act("upgrade", {stage: i}), "pill upd");
       row.appendChild(up);
     }
@@ -161,17 +162,18 @@ export default function funnelStages(component) {
     box.appendChild(card);
   });
   if (!full) {
-    const add = el("div", "addstage", "➕ Drop a Set here to add a stage");
-    add.title = "Or tap + on a Set with no stage selected";
+    const add = el("div", "addstage", T("➕ Drop a Set here to add a stage"));
+    add.title = T("Or tap + on a Set with no stage selected");
     dropZone(add, (key) => act("add", {set: key}));
     box.appendChild(add);
   }
-  const spout = el("div", "spout", "✅ Candidates");
-  spout.title = "Assets that hold every stage";
+  const spout = el("div", "spout", T("✅ Candidates"));
+  spout.title = T("Assets that hold every stage");
   box.appendChild(spout);
 }
 """
 
+JS = i18n.js_ready(JS)
 _COMPONENT = None
 
 
@@ -180,5 +182,5 @@ def component():
     if _COMPONENT is None:
         import streamlit as st
 
-        _COMPONENT = st.components.v2.component("funnel_stages", js=JS, css=CSS)
+        _COMPONENT = i18n.with_words(st.components.v2.component("funnel_stages", js=i18n.js_ready(JS), css=CSS), JS)
     return _COMPONENT

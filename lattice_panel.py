@@ -8,7 +8,7 @@ and Prism only does real work when Run now is pressed.
 
 from __future__ import annotations
 
-from i18n import t
+from i18n import mark, t
 
 TITLE = "Angstrom Lattice"
 ICON = ":material/hub:"
@@ -61,7 +61,7 @@ def pending(st, key: str, field: str):
     return getattr(value, field, None)
 
 
-PROVIDED_TITLE = "Provided by Angstrom Signals"     # the folded section that holds starters, examples and alerts
+PROVIDED_TITLE = mark("Provided by Angstrom Signals")     # the folded section that holds starters, examples and alerts
 
 
 def provided_shown(st) -> bool:

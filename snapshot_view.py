@@ -14,14 +14,14 @@ data-pick, read by the app's click component.
 
 from __future__ import annotations
 
-from i18n import t
+from i18n import mark, t
 
 import html
 from datetime import datetime, timezone
 
 GREEN, RED, GREY = "#15803d", "#b91c1c", "#6b7280"
-MARKET_WORDS = {"crypto": ("🪙", "Crypto"), "equity": ("🏛️", "Equities")}
-DIRECTION_WORDS = {"long": "longs", "short": "shorts"}
+MARKET_WORDS = {"crypto": ("🪙", mark("Crypto")), "equity": ("🏛️", mark("Equities"))}
+DIRECTION_WORDS = {"long": mark("longs"), "short": mark("shorts")}
 _BUTTON = ("display:block;width:100%;margin:0;padding:0;border:none;background:transparent;text-align:left;"
            "cursor:pointer;font:inherit;color:inherit;")
 
@@ -72,14 +72,14 @@ def tides_line(snap: dict | None, now: datetime | None = None) -> str:
             "padding-top:10px;padding-bottom:10px;'>"
             + sep.join(f"<span style='display:inline-flex;align-items:baseline;white-space:nowrap;'>{b}</span>"
                        for b in bits)
-            + "<span style='margin-left:auto;opacity:.6;'>Tides ›</span></div></button>")
+            + "<span style='margin-left:auto;opacity:.6;'>" + t("Tides ›") + "</span></div></button>")
 
 
 # ------------------------------------------------------------------------------------------------ 2. funnel tiles
 
 def _names(names: list[str], limit: int = 6) -> str:
     shown = ", ".join(names[:limit])
-    return shown + (f" and {len(names) - limit} more" if len(names) > limit else "")
+    return shown + (t(" and {n} more", n=len(names) - limit) if len(names) > limit else "")
 
 
 def funnel_tiles(tiles: list[dict]) -> str:
@@ -87,26 +87,26 @@ def funnel_tiles(tiles: list[dict]) -> str:
     tile: {id, name, market, direction, paused, line, candidates, flagged, candidate_names, new, gone, seen}."""
     if not tiles:
         return ""
-    out = ["<div class='ang-kicker' style='margin:2px 0 6px;'>🔻 Your funnels</div>",
+    out = ["<div class='ang-kicker' style='margin:2px 0 6px;'>" + t("🔻 Your funnels") + "</div>",
            "<div style='display:flex;flex-wrap:wrap;gap:10px;'>"]
     for t_ in tiles:
         mark, market = MARKET_WORDS.get(t_.get("market") or "crypto", MARKET_WORDS["crypto"])
-        direction = DIRECTION_WORDS.get(t_.get("direction"), t_.get("direction") or "")
-        kicker = f"{mark} {market} · {direction}" + (" · ⏸️ paused" if t_.get("paused") else "")
+        direction = t(DIRECTION_WORDS.get(t_.get("direction"), t_.get("direction") or ""))
+        kicker = f"{mark} {t(market)} · {direction}" + (t(" · ⏸️ paused") if t_.get("paused") else "")
         new, gone = t_.get("new") or [], t_.get("gone") or []
         badges = []
         if new:
-            badges.append(f"<span title='{_e('New Candidates since your last visit: ' + _names(new))}' "
-                          f"style='color:{GREEN};font-weight:700;'>＋{len(new)} new</span>")
+            badges.append(f"<span title='{_e(t('New Candidates since your last visit: {names}', names=_names(new)))}' "
+                          f"style='color:{GREEN};font-weight:700;'>＋{_e(t('{n} new', n=len(new)))}</span>")
         if gone:
-            badges.append(f"<span title='{_e('No longer Candidates since your last visit: ' + _names(gone))}' "
-                          f"style='color:{GREY};font-weight:700;'>－{len(gone)} left</span>")
+            badges.append(f"<span title='{_e(t('No longer Candidates since your last visit: {names}', names=_names(gone)))}' "
+                          f"style='color:{GREY};font-weight:700;'>－{_e(t('{n} left', n=len(gone)))}</span>")
         if not badges and t_.get("seen"):
-            badges.append(f"<span style='color:{GREY};'>no change</span>")
+            badges.append(f"<span style='color:{GREY};'>{_e(t('no change'))}</span>")
         cands = t_.get("candidate_names") or []
-        tip = (f"Open {t_['name']} in its table, on its Candidates. "
-               + (f"Candidates now: {_names(cands, 12)}. " if cands else t("No Candidates right now. "))
-               + "Stage counts: the pool, then the assets holding each stage in a row.")
+        tip = (t("Open {name} in its table, on its Candidates.", name=t_["name"]) + " "
+               + (t("Candidates now: {names}.", names=_names(cands, 12)) + " " if cands else t("No Candidates right now. "))
+               + t("Stage counts: the pool, then the assets holding each stage in a row."))
         out.append(
             f"<button type='button' data-pick='{_e('funnel|' + str(t_['id']) + '|' + t_['name'])}' title='{_e(tip)}' "
             f"style='{_BUTTON}flex:1 1 230px;max-width:100%;'>"
@@ -116,9 +116,9 @@ def funnel_tiles(tiles: list[dict]) -> str:
             f"text-overflow:ellipsis;'>{_e(t_['name'])}</div>"
             "<div style='display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;'>"
             f"<span style='font-weight:700;font-size:1.05rem;'>✅ {t_.get('candidates', 0)}"
-            "<span class='ang-kicker' style='margin:0;font-weight:400;'>&nbsp;Candidates</span></span>"
+            f"<span class='ang-kicker' style='margin:0;font-weight:400;'>&nbsp;{_e(t('Candidates'))}</span></span>"
             f"<span style='font-weight:600;'>🚩 {t_.get('flagged', 0)}"
-            "<span class='ang-kicker' style='margin:0;font-weight:400;'>&nbsp;Flagged</span></span>"
+            f"<span class='ang-kicker' style='margin:0;font-weight:400;'>&nbsp;{_e(t('Flagged'))}</span></span>"
             + "".join(badges) + "</div>"
             f"<div class='ang-kicker' style='margin:6px 0 0;'>{_e(t_.get('line') or '')}</div>"
             "</div></button>")

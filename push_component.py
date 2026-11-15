@@ -12,6 +12,8 @@ from __future__ import annotations
 
 import json
 
+import i18n
+
 CSS = """
 .angpush{font:13px/1.45 inherit;color:inherit;display:flex;flex-direction:column;gap:8px;margin:2px 0 4px}
 .angpush .row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
@@ -43,21 +45,23 @@ export default function anglePush(component) {
   const standalone = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
   const device = apple ? (/iPad/.test(ua) || navigator.maxTouchPoints > 1 && !/iPhone/.test(ua) ? "iPad" : "iPhone")
     : /Android/.test(ua) ? "Android device" : /Windows/.test(ua) ? "Windows computer" : /Mac/.test(ua) ? "Mac" : "computer";
+  const shown = T(device);
   const supported = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
 
   if (apple && !standalone) {
-    line("On an " + device + ", notifications work in the <b>Angstrom app on your Home Screen</b>:");
+    line(T("On an {device}, notifications work in the <b>Angstrom app on your Home Screen</b>:", {device: shown}));
     const ol = document.createElement("ol");
-    ol.innerHTML = "<li>Open this site in <b>Safari</b>.</li><li>Tap <b>Share</b> (the square with an arrow), then " +
-      "<b>Add to Home Screen</b>.</li><li>Open Angstrom from its new icon, sign in, and turn notifications on here.</li>";
+    ol.innerHTML = "<li>" + T("Open this site in <b>Safari</b>.") + "</li><li>" +
+      T("Tap <b>Share</b> (the square with an arrow), then <b>Add to Home Screen</b>.") + "</li><li>" +
+      T("Open Angstrom from its new icon, sign in, and turn notifications on here.") + "</li>";
     root.appendChild(ol);
-    line("Needs iOS 16.4 or later.", "quiet");
+    line(T("Needs iOS 16.4 or later."), "quiet");
     return;
   }
-  if (!supported) { line("This browser can't show notifications from websites. Try Chrome, Edge, Firefox or Safari."); return; }
-  if (!d.key) { line("Notifications aren't set up on the server yet."); return; }
+  if (!supported) { line(T("This browser can't show notifications from websites. Try Chrome, Edge, Firefox or Safari.")); return; }
+  if (!d.key) { line(T("Notifications aren't set up on the server yet.")); return; }
   if (Notification.permission === "denied") {
-    line("Notifications are <b>blocked</b> for this site in your browser's settings. Allow them there, then reload.");
+    line(T("Notifications are <b>blocked</b> for this site in your browser's settings. Allow them there, then reload."));
     return;
   }
 
@@ -73,40 +77,40 @@ export default function anglePush(component) {
     if (w) await new Promise((ok) => { w.addEventListener("statechange", () => { if (w.state === "activated") ok(); }); setTimeout(ok, 4000); });
     return reg;
   };
-  const status = line("Checking this device…");
+  const status = line(T("Checking this device…"));
   const row = document.createElement("div"); row.className = "row"; root.appendChild(row);
   const note = line("", "quiet");
   const saved = new Set(d.endpoints || []);
 
   (async () => {
     let reg;
-    try { reg = await activeWorker(); } catch (e) { status.textContent = "Notifications couldn't start on this device."; return; }
+    try { reg = await activeWorker(); } catch (e) { status.textContent = T("Notifications couldn't start on this device."); return; }
     let sub = await reg.pushManager.getSubscription();
     if (sub && !saved.has(sub.endpoint)) {          // signed up before, but the app doesn't know it (or another account)
       send({ action: "on", sub: sub.toJSON(), device });
-      status.innerHTML = "Turning notifications on for this " + device + "…";
+      status.innerHTML = T("Turning notifications on for this {device}…", {device: shown});
       return;
     }
     if (sub) {
-      status.innerHTML = "✅ Notifications are <b>on</b> for this " + device + ".";
-      button(row, "📨 Send a test", "Send a test notification to your devices", false, () => { send({ action: "test" }); note.textContent = "Test sent. It should arrive in a few seconds."; });
-      button(row, "Turn off", "Stop notifications on this device", false, async () => {
+      status.innerHTML = T("✅ Notifications are <b>on</b> for this {device}.", {device: shown});
+      button(row, T("📨 Send a test"), T("Send a test notification to your devices"), false, () => { send({ action: "test" }); note.textContent = T("Test sent. It should arrive in a few seconds."); });
+      button(row, T("Turn off"), T("Stop notifications on this device"), false, async () => {
         try { await sub.unsubscribe(); } catch (e) { /* already gone */ }
         send({ action: "off", endpoint: sub.endpoint });
       });
       return;
     }
-    status.innerHTML = "Get your alerts, funnel Candidates and shared charts as notifications on this " + device + ".";
-    const on = button(row, "🔔 Turn on for this device", "Your browser will ask to allow notifications", true, async () => {
+    status.innerHTML = T("Get your alerts, funnel Candidates and shared charts as notifications on this {device}.", {device: shown});
+    const on = button(row, T("🔔 Turn on for this device"), T("Your browser will ask to allow notifications"), true, async () => {
       on.disabled = true;
       try {
         const ok = await Notification.requestPermission();
-        if (ok !== "granted") { note.textContent = "Notifications weren't allowed, so nothing changed."; on.disabled = false; return; }
+        if (ok !== "granted") { note.textContent = T("Notifications weren't allowed, so nothing changed."); on.disabled = false; return; }
         sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(d.key) });
         send({ action: "on", sub: sub.toJSON(), device });
-        note.textContent = "Turning on…";
+        note.textContent = T("Turning on…");
       } catch (e) {
-        note.textContent = "Couldn't turn them on: " + (e && e.message ? e.message : e);
+        note.textContent = T("Couldn't turn them on: {why}", {why: e && e.message ? e.message : e});
         on.disabled = false;
       }
     });
@@ -115,6 +119,8 @@ export default function anglePush(component) {
 }
 """
 
+JS = i18n.js_ready(JS)
+_DEVICES = 'T("iPad") T("iPhone") T("Android device") T("Windows computer") T("Mac") T("computer")'
 _COMPONENT = None
 
 
@@ -123,7 +129,7 @@ def component():
     if _COMPONENT is None:
         import streamlit as st
 
-        _COMPONENT = st.components.v2.component("angstrom_push", js=JS, css=CSS)
+        _COMPONENT = i18n.with_words(st.components.v2.component("angstrom_push", js=i18n.js_ready(JS), css=CSS), JS + _DEVICES)
     return _COMPONENT
 
 

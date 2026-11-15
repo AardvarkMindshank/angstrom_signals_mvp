@@ -174,6 +174,69 @@ def t(text: str, **values) -> str:
     return translate(text, current(), **values)
 
 
+# Text drawn by the browser (component JavaScript, lw_chart.js): written as T(“English”) or T(“{n} rows”, {n: 3}) in
+# the JS. The page gets the translations it needs in its data (data.tr, from js_words), and JS_T is the small T helper
+# each component puts at the top of its code. Keep JS texts free of quotes and backslashes.
+_JS_TEXT = re.compile(r"""\bTM?\((["'])((?:(?!\1)[^\\\n])+)\1""")
+JS_T = ("const T = (s, v) => { const src = (typeof data === 'object' && data) || (typeof component === 'object' &&"
+        " component && component.data) || {}; const tr = (src && src.tr) || {}; let w = tr[s] || s;"
+        " return v ? w.replace(/\\{(\\w+)\\}/g, (m, k) => (k in v ? v[k] : m)) : w; };")
+
+
+_JS_ENTRY = re.compile(r"(const \{[^}]*\} = component;)")
+
+
+def js_ready(js: str) -> str:
+    """Component JavaScript with the T helper put in after each `const { … } = component;`."""
+    if JS_T in js:                                     # already has it
+        return js
+    return _JS_ENTRY.sub(lambda m: m.group(1) + "\n  " + JS_T, js)
+
+
+def js_texts(source: str) -> list[str]:
+    """The texts a piece of JavaScript gives to T(“…”), each once, in order."""
+    seen: dict[str, None] = {}
+    for _q, text in _JS_TEXT.findall(source or ""):
+        seen.setdefault(text, None)
+    return list(seen)
+
+
+def js_words(*sources: str, code: str | None = None) -> dict:
+    """English → translation for the T(“…”) texts in these JavaScript sources, in the visit's language (only the
+    ones translated; a translation that invents a {field} is left out)."""
+    code = code or current()
+    if code == BASE:
+        return {}
+    have = catalogue(code)
+    out = {}
+    for source in sources:
+        for text in js_texts(source):
+            words = have.get(text)
+            if words and set(_FIELD.findall(words)) <= set(_FIELD.findall(text)):
+                out[text] = words
+    return out
+
+
+def with_words(mount, *sources: str):
+    """A Streamlit component that also hands its JavaScript the translations it needs (data.tr), so each place that
+    shows it needs no change."""
+    def show(*args, **kwargs):
+        data = kwargs.get("data")
+        as_text = isinstance(data, str)
+        if as_text:                                    # some components get their data as JSON text
+            try:
+                data = json.loads(data)
+            except ValueError:
+                data = None
+        if isinstance(data, dict):
+            words = js_words(*sources)
+            if words:
+                data = {**data, "tr": words}
+                kwargs["data"] = json.dumps(data) if as_text else data
+        return mount(*args, **kwargs)
+    return show
+
+
 def flag_svg(country: str) -> str:
     """A flag as SVG markup (static/flags, from the MIT-licensed flag-icons set): flag emojis don't show on Windows."""
     try:

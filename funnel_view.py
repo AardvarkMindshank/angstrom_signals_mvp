@@ -138,9 +138,9 @@ def stage_cell(f: dict, st: fn.CoinState, pair: str | None = None, earnings: str
     stages = f["stages"]
     lines = []
     if p["status"] == fn.CANDIDATE:
-        lines.append("Candidate: " + words["candidate"])
+        lines.append(t("Candidate: {why}", why=words["candidate"]))
     elif p["status"] == fn.FLAGGED:
-        lines.append("Flagged: " + words["flagged"])
+        lines.append(t("Flagged: {why}", why=words["flagged"]))
     elif p["depth"]:
         lines.append(t('Holds {p_depth} of {len_stages} stages, up to {stages_p_depth_1_label}.', p_depth=p['depth'], len_stages=len(stages), stages_p_depth_1_label=stages[p['depth'] - 1]['label']))
     else:

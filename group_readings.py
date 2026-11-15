@@ -15,6 +15,8 @@ describes yet.
 
 from __future__ import annotations
 
+from i18n import mark
+
 import copy
 import hashlib
 import json
@@ -129,14 +131,14 @@ def context_from_signals(ctx, kind: str, warnings: list | None = None) -> dict:
     return {
         "volatility": {
             "atr_pct": obs.get("atr_pct"), "percentile": pct,
-            "label": ("Higher than usual" if pct is not None and pct >= 80 else
-                      "Lower than usual" if pct is not None and pct <= 20 else
-                      "About usual" if pct is not None else "Not enough history"),
+            "label": (mark("Higher than usual") if pct is not None and pct >= 80 else
+                      mark("Lower than usual") if pct is not None and pct <= 20 else
+                      mark("About usual") if pct is not None else mark("Not enough history")),
             "validation": "volatility_stock" if stock else "volatility_crypto",
         },
-        "trend_strength": {"adx": adx, "label": ("Strong" if adx is not None and adx >= strong else
-                                                  "Weak" if adx is not None and adx < weak else
-                                                  "Developing" if adx is not None else "Not enough data")},
+        "trend_strength": {"adx": adx, "label": (mark("Strong") if adx is not None and adx >= strong else
+                                                  mark("Weak") if adx is not None and adx < weak else
+                                                  mark("Developing") if adx is not None else mark("Not enough data"))},
         "regime": ({"state": obs["state"], "direction": obs.get("direction"),
                     "label": obs["state"] if obs["state"] != "trending" else f"trending_{obs.get('direction')}"} if obs.get("state") else None),
         "participation": {"volume_ratio": volume_sig.value if volume_sig.status == "ok" else None},

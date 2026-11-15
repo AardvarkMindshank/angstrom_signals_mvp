@@ -180,22 +180,22 @@ def context_chips(result: dict) -> str:
     vol = ctx.get("volatility") or {}
     if vol.get("atr_pct") is not None:
         pct = vol.get("percentile")
-        where = f", {vol.get('label', '').lower()} for this asset" if pct is not None else ""
+        where = t(", {label} for this asset", label=t(vol.get("label", "")).lower()) if pct is not None else ""
         status = v2.VALIDATION[vol.get("validation", "volatility_crypto")]
-        chips.append(_chip("🌊", f"Range {vol['atr_pct']:.2f}%{where}",
-                           "Typical daily range (ATR%). " + status["note"], status["status"]))
+        chips.append(_chip("🌊", t("Range {pct:.2f}%", pct=vol["atr_pct"]) + where,
+                           t("Typical daily range (ATR%).") + " " + status["note"], status["status"]))
     strength = ctx.get("trend_strength") or {}
     if strength.get("adx") is not None:
-        chips.append(_chip("💪", t('Trend strength {strength_label_lower} (ADX {strength_adx:.0f})', strength_label_lower=strength['label'].lower(), strength_adx=strength['adx']),
+        chips.append(_chip("💪", t('Trend strength {strength_label_lower} (ADX {strength_adx:.0f})', strength_label_lower=t(strength['label']).lower(), strength_adx=strength['adx']),
                            t("ADX measures how strongly price is trending, whichever way. It has no direction.")))
     regime = ctx.get("regime") or {}
     if regime.get("state"):
-        words = {"trending": "Trending", "ranging": "Ranging", "transitional": t("Between trend and range")}
+        words = {"trending": t("Trending"), "ranging": t("Ranging"), "transitional": t("Between trend and range")}
         chips.append(_chip("🧭", words.get(regime["state"], str(regime["state"]).title()),
                            t("Regime from ADX and the 50/200-day averages. Context only.")))
     ratio = (ctx.get("participation") or {}).get("volume_ratio")
     if ratio is not None:
-        chips.append(_chip("🔈", f"Volume {ratio:.1f}x usual", t("Today's volume against its 20-day average. "
+        chips.append(_chip("🔈", t("Volume {ratio:.1f}x usual", ratio=ratio), t("Today's volume against its 20-day average. "
                                                               "How active, not which way.")))
     for warning in ctx.get("warnings") or []:
         chips.append(_chip("⚠️", warning.split(":")[0].split(",")[0], warning))
@@ -214,7 +214,7 @@ def asset_card(result: dict) -> str:
     if result.get("status") != "ok":
         return f"<div class='ang-card'>{_esc(result.get('message') or 'Not enough data yet')}</div>"
     when = result.get("as_of")
-    note = "Daily close of " + _esc(when) + (t(" (today's bar is still forming)") if result.get("unfinished_bar_skipped") else "")
+    note = t("Daily close of {when}", when=_esc(when)) + (t(" (today's bar is still forming)") if result.get("unfinished_bar_skipped") else "")
     return (
         "<div class='ang-card' style='margin-bottom:8px;'>"
         f"<div class='ang-kicker'>Technical signals · {note}</div>"

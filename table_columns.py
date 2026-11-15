@@ -152,7 +152,7 @@ def _group_why(result: dict) -> str:
     if status and status != "ok":
         return {"vetoed": t("Vetoed by one of its rules."), "veto_unknown": t("A veto could not be checked."),
                 "insufficient": t("Not enough data.")}.get(status, str(status))
-    return ("Missing: " + ", ".join(missing[:4])) if missing else ""
+    return t("Missing: {what}", what=", ".join(missing[:4])) if missing else ""
 
 
 # ----------------------------------------------------------------------------------------------- cells

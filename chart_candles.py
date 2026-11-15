@@ -9,6 +9,8 @@ until the certification suite ran again. Only the chart uses monthly candles; no
 
 from __future__ import annotations
 
+from i18n import t
+
 from datetime import datetime, timezone
 
 import pandas as pd
@@ -72,7 +74,7 @@ def from_daily(daily: pd.DataFrame, range_key: str, now=None) -> tuple[pd.DataFr
     """(monthly candles with `forming`, first candle of the range, error or "")."""
     candles = mark_forming(group_monthly(daily[["open", "high", "low", "close", "volume"]]), now)
     if candles.empty:
-        return candles, None, "No monthly candles."
+        return candles, None, t("No monthly candles.")
     days = chart_data.RANGE_DAYS[range_key]
     if days is None:
         start = candles.index[0]
@@ -82,8 +84,7 @@ def from_daily(daily: pd.DataFrame, range_key: str, now=None) -> tuple[pd.DataFr
         start = clock - pd.Timedelta(days=days)
     shown = candles[candles.index >= start]
     if len(shown) < chart_data.MIN_CANDLES:
-        return candles, None, (f"Only {len(shown)} monthly candles in {chart_data.RANGE_LABELS[range_key]}. "
-                               "Pick a longer range.")
+        return candles, None, (t('Only {len_shown} monthly candles in {chart_data_range_labels_}. Pick a longer range.', len_shown=len(shown), chart_data_range_labels_=chart_data.RANGE_LABELS[range_key]))
     return candles, shown.index[0], ""
 
 

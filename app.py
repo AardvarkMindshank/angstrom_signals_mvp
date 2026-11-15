@@ -601,7 +601,7 @@ export default function(component) {
       tab.hidden = false;
       const collapsed = sidebar.getAttribute("data-collapsed") === "true";
       tab.classList.toggle("is-closed", collapsed);
-      const label = collapsed ? "Expand sidebar" : "Collapse sidebar";
+      const label = collapsed ? T("Expand sidebar") : T("Collapse sidebar");
       tab.title = label;
       tab.setAttribute("aria-label", label);
       tab.setAttribute("aria-expanded", collapsed ? "false" : "true");
@@ -692,11 +692,11 @@ export default function(component) {
   return () => {};
 }
 """
-_brand_watch = st.components.v2.component(
+_brand_watch = i18n.with_words(st.components.v2.component(
     "brand_watch",
-    js=_BRAND_JS,
+    js=i18n.js_ready(_BRAND_JS),
     isolate_styles=False,
-)
+), _BRAND_JS)
 
 # A drag from one colour block onto another copies that colour. The click still opens the picker.
 _COLOUR_COPY_JS = """
@@ -729,7 +729,7 @@ export default function(component) {
       const handle = picker.querySelector("button");
       if (!handle || handle.getAttribute("draggable") === "true") return;
       handle.setAttribute("draggable", "true");
-      handle.title = "Drag onto another colour to copy it";
+      handle.title = T("Drag onto another colour to copy it");
     });
   };
   const pointAt = (el, clientX, clientY) => {
@@ -944,11 +944,11 @@ export default function(component) {
   return () => {};
 }
 """
-_colour_copy = st.components.v2.component(
+_colour_copy = i18n.with_words(st.components.v2.component(
     "colour_copy",
-    js=_COLOUR_COPY_JS,
+    js=i18n.js_ready(_COLOUR_COPY_JS),
     isolate_styles=False,
-)
+), _COLOUR_COPY_JS)
 
 # A normal link starts a new Streamlit session and logs the user out.
 # This stays on the page and reports the clicked name back to Python.
@@ -994,8 +994,8 @@ export default function(component) {
     const bar = document.createElement("button");
     bar.id = "angstrom-new-version";
     bar.type = "button";
-    bar.textContent = "🔄 A new version is ready. Tap to reload.";
-    bar.title = "The app was updated or restarted. Reloading reconnects this page.";
+    bar.textContent = T("🔄 A new version is ready. Tap to reload.");
+    bar.title = T("The app was updated or restarted. Reloading reconnects this page.");
     bar.style.cssText = "position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:100000;"
       + "padding:10px 18px;border-radius:999px;border:none;background:#1e3a8a;color:#fff;font-size:14px;"
       + "box-shadow:0 4px 16px rgba(0,0,0,.25);cursor:pointer;";
@@ -1032,7 +1032,7 @@ export default function(component) {
   }, true);
 }
 """
-_version_watch = st.components.v2.component("version_watch", js=_VERSION_WATCH_JS)
+_version_watch = i18n.with_words(st.components.v2.component("version_watch", js=i18n.js_ready(_VERSION_WATCH_JS)), _VERSION_WATCH_JS)
 _SCORE_TABLE_JS = """
 export default function(component) {
   const { data, setTriggerValue, parentElement } = component;
@@ -1329,6 +1329,7 @@ export default function(component) {
       window.socialFavourites = Array.isArray(parsed.favourites) ? parsed.favourites.map(String) : [];
       window.socialGroups = Array.isArray(parsed.groups) ? parsed.groups : [];
       window.socialChatNotice = typeof parsed.notice === "string" ? parsed.notice : "";
+      window.socialChatNoticeKind = String(parsed.notice_kind || "");
       window.socialChatFaces = Array.isArray(parsed.faces) ? parsed.faces : [];
       window.socialChatLimit = Number(parsed.limit) || 160;
       account = String(parsed.account || "");
@@ -1401,11 +1402,11 @@ export default function(component) {
     if (typeof window.socialStreamState.pinned !== "boolean") {
       window.socialStreamState.pinned = !!window.socialPanelPinned;
     }
-    if (String(window.socialChatNotice || "") === "Invite sent.") {
+    if (String(window.socialChatNotice || "") === T("Invite sent.")) {
       window.socialStreamState.groupFor = null;
     }
     const reportNotice = String(window.socialChatNotice || "");
-    if (reportNotice.indexOf("Report sent") === 0 || reportNotice.indexOf("Report already") === 0) {
+    if (reportNotice === T("Report sent. Thank you.") || reportNotice === T("Report already sent for this comment.")) {
       window.socialStreamState.report = null;
     }
     let style = document.getElementById("social-stream-style");
@@ -1610,29 +1611,29 @@ export default function(component) {
         "<div class='width-grip' role='separator' aria-orientation='vertical' title='Drag to resize the panel'></div>",
         "<div class='finder'><input id='panel-search' type='search' placeholder='Search the stream and the chat' aria-label='Search the stream and the chat'></div>",
         "<div class='report-box' hidden>",
-        "<div class='report-title'>Report this comment</div>",
+        T("<div class='report-title'>Report this comment</div>"),
         "<div class='report-quote'></div>",
         "<label class='report-label'>Reason<select class='report-reason' aria-label='Reason'>",
-        "<option value='promotion'>Promoting an asset</option>",
-        "<option value='advice'>Presented as financial advice</option>",
-        "<option value='harassment'>Harassment or a personal attack</option>",
-        "<option value='spam'>Spam</option>",
-        "<option value='other'>Something else</option>",
+        T("<option value='promotion'>Promoting an asset</option>"),
+        T("<option value='advice'>Presented as financial advice</option>"),
+        T("<option value='harassment'>Harassment or a personal attack</option>"),
+        T("<option value='spam'>Spam</option>"),
+        T("<option value='other'>Something else</option>"),
         "</select></label>",
         "<textarea class='report-note' maxlength='500' placeholder='What should we look at? Add a note for Something else.'></textarea>",
         "<div class='report-hint'></div>",
-        "<div class='group-box-actions'><button type='button' class='group-send report-send'>Send report</button><button type='button' class='group-cancel report-cancel'>Cancel</button></div>",
+        T("<div class='group-box-actions'><button type='button' class='group-send report-send'>Send report</button><button type='button' class='group-cancel report-cancel'>Cancel</button></div>"),
         "</div>",
         "<div class='stream-pane'>",
         "<header class='head'><div>",
-        "<div class='kicker'>Social signals</div>",
-        "<h2>Social signals stream</h2>",
+        T("<div class='kicker'>Social signals</div>"),
+        T("<h2>Social signals stream</h2>"),
         "</div><div class='head-actions'><button type='button' class='follow tool' hidden title='Follow the asset picked in the main tab' aria-label='Follow the asset picked in the main tab'><svg viewBox='0 0 24 24' width='15' height='15' aria-hidden='true' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1'/><path d='M14 10a4 4 0 0 0-5.7 0l-3 3A4 4 0 0 0 11 18.7l1-1'/></svg></button><button type='button' class='layout-btn tool' data-layout='stacked' hidden title='Stream above chat' aria-label='Stream above chat'><svg viewBox='0 0 24 24' width='15' height='15' aria-hidden='true' fill='none' stroke='currentColor' stroke-width='2'><rect x='2.4' y='2.4' width='19.2' height='19.2'/><path d='M2.4 12H21.6'/></svg></button><button type='button' class='layout-btn tool' data-layout='side' hidden title='Stream beside chat' aria-label='Stream beside chat'><svg viewBox='0 0 24 24' width='15' height='15' aria-hidden='true' fill='none' stroke='currentColor' stroke-width='2'><rect x='2.4' y='2.4' width='19.2' height='19.2'/><path d='M12 2.4V21.6'/></svg></button><button type='button' class='popout-btn' title='Open this panel in its own window' aria-label='Open this panel in its own window'><svg viewBox='0 0 24 24' width='15' height='15' aria-hidden='true' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M14 4h6v6'/><path d='M20 4 10 14'/><path d='M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5'/></svg></button><button type='button' class='pin' title='Pin the panel' aria-label='Pin the panel'><svg viewBox='0 0 24 24' width='15' height='15' aria-hidden='true' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M9 4h6l-1 6 3 3H7l3-3z'/><path d='M12 13v7'/></svg></button><button type='button' class='close' title='Close' aria-label='Close'><svg viewBox='0 0 24 24' width='15' height='15' aria-hidden='true' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M6 6l12 12'/><path d='M18 6 6 18'/></svg></button></div></header>",
         "<div class='filters'><div class='chips'>",
-        "<button type='button' data-side=''>All</button>",
-        "<button type='button' data-side='positive'>Positive</button>",
-        "<button type='button' data-side='negative'>Negative</button>",
-        "<button type='button' data-side='mixed'>Mixed</button>",
+        "<button type='button' data-side=''>" + T("All") + "</button>",
+        "<button type='button' data-side='positive'>" + T("Positive") + "</button>",
+        "<button type='button' data-side='negative'>" + T("Negative") + "</button>",
+        "<button type='button' data-side='mixed'>" + T("Mixed") + "</button>",
         "</div><div class='picks'>",
         "<label>Asset<select id='stream-asset'></select></label>",
         "<label>Person<select id='stream-person'></select></label>",
@@ -1643,23 +1644,23 @@ export default function(component) {
         "<input class='group-name' maxlength='40' placeholder='New community name' aria-label='New community name'>",
         "<select class='group-pick' aria-label='Community you lead'></select>",
         "<div class='group-hint'></div>",
-        "<div class='group-box-actions'><button type='button' class='group-send'>Invite</button><button type='button' class='group-cancel'>Cancel</button></div>",
+        T("<div class='group-box-actions'><button type='button' class='group-send'>Invite</button><button type='button' class='group-cancel'>Cancel</button></div>"),
         "</div>",
         "<div class='list'></div></div>",
         "<div class='splitter' role='separator' aria-orientation='horizontal' title='Drag to resize the stream and the chat'></div>",
         "<div class='chat-pane'>",
-        "<header class='chat-head'><div class='kicker'>Chat</div>",
-        "<h2>General chat</h2>",
+        "<header class='chat-head'><div class='kicker'>" + T("Chat") + "</div>",
+        T("<h2>General chat</h2>"),
         "<div class='chat-filters'><div class='picks'>",
         "<label>Person<select id='chat-person'></select></label>",
         "</div></div></header>",
         "<div class='chat-list'></div>",
         "<form class='composer'>",
-        "<div class='replying' hidden><span class='replying-label'></span><button type='button' class='reply-cancel'>Cancel</button></div>",
+        "<div class='replying' hidden><span class='replying-label'></span><button type='button' class='reply-cancel'>" + T("Cancel") + "</button></div>",
         "<div class='chat-notice' hidden></div>",
         "<textarea class='chat-box' maxlength='160' placeholder='Write a comment'></textarea>",
         "<div class='faces'></div>",
-        "<div class='composer-row'><span class='chars'>0/160</span><button type='submit' class='post'>Post comment</button></div>",
+        "<div class='composer-row'><span class='chars'>0/160</span><button type='submit' class='post'>" + T("Post comment") + "</button></div>",
         "</form></div></aside>",
         "<button type='button' class='edge' aria-label='Open social signals and chat' aria-expanded='false'>",
         "<svg viewBox='0 0 24 24' width='22' height='22' aria-hidden='true'>",
@@ -1731,7 +1732,7 @@ export default function(component) {
         const name = nameBox ? nameBox.value.replace(/\\s+/g, " ").trim() : "";
         const group = pick ? pick.value : "";
         if (!name && !group) {
-          if (hint) hint.textContent = "Enter a name or choose a community.";
+          if (hint) hint.textContent = T("Enter a name or choose a community.");
           return;
         }
         if (hint) hint.textContent = "";
@@ -2020,8 +2021,8 @@ export default function(component) {
         followBtn.classList.toggle("is-on", !!state.follow);
         followBtn.setAttribute("aria-pressed", state.follow ? "true" : "false");
         followBtn.title = state.follow
-          ? "Following the asset picked in your main tab. Press to stop."
-          : "Not following. Press to follow the asset picked in your main tab.";
+          ? T("Following the asset picked in your main tab. Press to stop.")
+          : T("Not following. Press to follow the asset picked in your main tab.");
         followBtn.setAttribute("aria-label", followBtn.title);
       }
       const app = document.querySelector(".stApp");
@@ -2035,13 +2036,13 @@ export default function(component) {
       const pin = panel.querySelector(".pin");
       if (pin) {
         pin.classList.toggle("is-on", !!state.pinned);
-        pin.title = state.pinned ? "Unpin the panel" : "Pin the panel";
+        pin.title = state.pinned ? T("Unpin the panel") : T("Pin the panel");
         pin.setAttribute("aria-label", pin.title);
         pin.setAttribute("aria-pressed", state.pinned ? "true" : "false");
       }
       const edge = panel.querySelector(".edge");
       if (edge) {
-        const edgeLabel = state.open ? "Close social signals and chat" : "Open social signals and chat";
+        const edgeLabel = state.open ? T("Close social signals and chat") : T("Open social signals and chat");
         edge.setAttribute("aria-label", edgeLabel);
         edge.setAttribute("title", edgeLabel);
         edge.setAttribute("aria-expanded", state.open ? "true" : "false");
@@ -2072,15 +2073,15 @@ export default function(component) {
       people.sort((a, b) => a.localeCompare(b));
       fillStreamSelect(
         panel.querySelector("#stream-asset"),
-        "All Assets & Sentiments",
+        T("All Assets & Sentiments"),
         assets,
         state.asset,
         [
-          ["watchlist", "My watchlists"],
-          ["crypto", "My Crypto Watchlist"],
-          ["stock", "My Equities Watchlist"],
-          ["Mood|crypto", "Crypto market"],
-          ["Mood|stock", "Stock market"],
+          ["watchlist", T("My watchlists")],
+          ["crypto", T("My Crypto Watchlist")],
+          ["stock", T("My Equities Watchlist")],
+          ["Mood|crypto", T("Crypto market")],
+          ["Mood|stock", T("Stock market")],
           ["Tides|macro", "🌊 Tides"]
         ],
         true
@@ -2088,14 +2089,14 @@ export default function(component) {
       const personChoices = [["me", "Me"]].concat(groupChoices(), [["favourites", "Favourites"]]);
       fillStreamSelect(
         panel.querySelector("#stream-person"),
-        "All people",
+        T("All people"),
         people.map((name) => [name, name + "  ✦ " + (streamScores[name] || 0)]),
         state.person,
         personChoices
       );
       fillStreamSelect(
         panel.querySelector("#chat-person"),
-        "All people",
+        T("All people"),
         chatPeople.map((name) => [name, name + "  ✦ " + (chatScores[name] || 0)]),
         state.chatPerson || "",
         personChoices
@@ -2140,14 +2141,14 @@ export default function(component) {
           const empty = document.createElement("div");
           empty.className = "empty";
           empty.textContent = state.person === "me"
-            ? "No comments from you yet."
+            ? T("No comments from you yet.")
             : String(state.person || "").indexOf("group:") === 0
-            ? "No comments from that community yet."
+            ? T("No comments from that community yet.")
             : state.person === "favourites" && !favouriteSet().size
-            ? "No favourites yet. Press the star beside a name."
+            ? T("No favourites yet. Press the star beside a name.")
             : items.length
-            ? "No comments match these filters."
-            : "No comments yet. Each one stays for 12 hours after it is posted.";
+            ? T("No comments match these filters.")
+            : T("No comments yet. Each one stays for 12 hours after it is posted.");
           list.appendChild(empty);
         } else {
           shown.forEach((item) => list.appendChild(streamCard(item)));
@@ -2214,15 +2215,15 @@ export default function(component) {
     if (!report) return;
     const quote = box.querySelector(".report-quote");
     const text = String(report.text || "").replace(/\\s+/g, " ").trim();
-    const where = report.place === "chat" ? "General chat" : "Social signals";
+    const where = report.place === "chat" ? T("General chat") : T("Social signals");
     const asset = report.asset ? " on " + report.asset : "";
     if (quote) quote.textContent = where + asset + " · " + report.name + ": " + text;
     const hint = box.querySelector(".report-hint");
     const notice = String(window.socialChatNotice || "");
-    if (hint && notice.indexOf("Report") === 0 && notice.indexOf("Report sent") !== 0) {
+    if (hint && window.socialChatNoticeKind === "report" && notice !== T("Report sent. Thank you.")) {
       hint.textContent = notice;
     } else if (hint && !hint.textContent) {
-      hint.textContent = "This follows the socials policy in About. It is not shown on the stream.";
+      hint.textContent = T("This follows the socials policy in About. It is not shown on the stream.");
     }
   }
 
@@ -2235,10 +2236,10 @@ export default function(component) {
     const reason = reasonBox ? reasonBox.value : "";
     const note = noteBox ? noteBox.value.replace(/\\s+/g, " ").trim() : "";
     if (reason === "other" && note.length < 4) {
-      if (hint) hint.textContent = "Add a few words for Something else.";
+      if (hint) hint.textContent = T("Add a few words for Something else.");
       return;
     }
-    if (hint) hint.textContent = "Sending the report.";
+    if (hint) hint.textContent = T("Sending the report.");
     window.socialStreamReport("report", JSON.stringify({
       n: Date.now(),
       place: report.place,
@@ -2256,8 +2257,8 @@ export default function(component) {
     button.type = "button";
     button.className = "report-flag";
     button.innerHTML = "<svg width='16' height='16' viewBox='0 0 16 16' aria-hidden='true'><path d='M3.2 1.8h1.1v12.4H3.2z' fill='currentColor'/><path d='M4.3 2.2h8l-1.7 2.5 1.7 2.5H4.3z' fill='currentColor'/></svg>";
-    button.title = "Report";
-    button.setAttribute("aria-label", "Report");
+    button.title = T("Report");
+    button.setAttribute("aria-label", T("Report"));
     button.addEventListener("click", () => {
       window.socialStreamState.reply = null;
       window.socialStreamState.report = {
@@ -2288,7 +2289,7 @@ export default function(component) {
     row.hidden = !reply;
     label.replaceChildren();
     if (reply) {
-      label.append("Replying to " + reply.name + " ");
+      label.append(T("Replying to {name}", {name: reply.name}) + " ");
       label.appendChild(socialMark(reply.social));
     }
     const composer = panel.querySelector(".composer");
@@ -2367,8 +2368,8 @@ export default function(component) {
     button.type = "button";
     button.className = "delete-note";
     button.textContent = "🗑️";
-    button.title = "Delete";
-    button.setAttribute("aria-label", "Delete");
+    button.title = T("Delete");
+    button.setAttribute("aria-label", T("Delete"));
     button.addEventListener("click", () => {
       if (window.confirm(prompt)) onDelete();
     });
@@ -2430,7 +2431,7 @@ export default function(component) {
     box.hidden = !invite;
     if (!invite) return;
     const title = box.querySelector(".group-box-title");
-    if (title) title.textContent = "Invite " + invite.name + " to a community";
+    if (title) title.textContent = T("Invite {name} to a community", {name: invite.name});
     const switched = box.dataset.user !== String(invite.id);
     if (switched) {
       box.dataset.user = String(invite.id);
@@ -2439,7 +2440,7 @@ export default function(component) {
       if (nameBox) nameBox.value = "";
       if (hint) hint.textContent = "";
     }
-    const memberWarning = "They are already in that community.";
+    const memberWarning = T("They are already in that community.");
     if (String(window.socialChatNotice || "") === memberWarning) {
       const hint = box.querySelector(".group-hint");
       if (hint) hint.textContent = memberWarning;
@@ -2459,7 +2460,7 @@ export default function(component) {
     select.replaceChildren();
     const blank = document.createElement("option");
     blank.value = "";
-    blank.textContent = "Or choose a community you lead";
+    blank.textContent = T("Or choose a community you lead");
     select.appendChild(blank);
     (window.socialGroups || []).filter((group) => group.lead).forEach((group) => {
       const option = document.createElement("option");
@@ -2478,7 +2479,7 @@ export default function(component) {
     button.type = "button";
     button.className = "group-invite";
     button.innerHTML = "<svg width='16' height='16' viewBox='0 0 16 16' aria-hidden='true'><circle cx='6' cy='5' r='2' fill='currentColor'/><circle cx='11' cy='5.5' r='1.6' fill='currentColor'/><path d='M1.8 13.2c.6-2.2 2.1-3.3 4.2-3.3s3.6 1.1 4.2 3.3' fill='currentColor'/><path d='M9.2 13.2c.3-1.2 1.1-2 2.3-2 1.1 0 1.9.7 2.3 2' fill='currentColor'/></svg>";
-    button.title = "Invite to a community";
+    button.title = T("Invite to a community");
     button.setAttribute("aria-label", button.title);
     button.addEventListener("click", () => {
       window.socialStreamState.groupFor = { id: id, name: String(item.name || "Member") };
@@ -2517,7 +2518,7 @@ export default function(component) {
     const on = favouriteSet().has(id);
     button.classList.toggle("is-on", on);
     button.textContent = on ? "★" : "☆";
-    button.title = on ? "Remove from favourites" : "Add to favourites";
+    button.title = on ? T("Remove from favourites") : T("Add to favourites");
     button.setAttribute("aria-label", button.title);
     button.addEventListener("click", () => toggleFavourite(id));
     return button;
@@ -2528,7 +2529,7 @@ export default function(component) {
     const mark = document.createElement("span");
     mark.className = "social-score";
     mark.textContent = "✦ " + points;
-    mark.title = "Social score " + points;
+    mark.title = T("Social score {n}", {n: points});
     return mark;
   }
 
@@ -2645,8 +2646,8 @@ export default function(component) {
       reply.type = "button";
       reply.className = "reply-note";
       reply.textContent = "↩️";
-      reply.title = "Reply";
-      reply.setAttribute("aria-label", "Reply");
+      reply.title = T("Reply");
+      reply.setAttribute("aria-label", T("Reply"));
       reply.addEventListener("click", () => {
         window.socialStreamState.reply = { id: rootId, name: String(item.name || "Member"), social: item.social };
         paintReply(document.getElementById("social-stream-root"));
@@ -2658,7 +2659,7 @@ export default function(component) {
     if (item.mine && !item.pending && Number(item.id) > 0) {
       const top = item.id === rootId;
       actions.appendChild(deleteNoteButton(
-        top ? "Delete this comment and its replies?" : "Delete this reply?",
+        top ? T("Delete this comment and its replies?") : T("Delete this reply?"),
         () => {
           window.socialChat = dropMessage(window.socialChat, item.id);
           const panel = document.getElementById("social-stream-root");
@@ -2683,7 +2684,7 @@ export default function(component) {
     if (!ready) {
       const empty = document.createElement("div");
       empty.className = "empty";
-      empty.textContent = "Chat storage is not ready yet. Run the latest supabase_rls.sql in the Supabase SQL editor.";
+      empty.textContent = T("Chat storage is not ready yet. Run the latest supabase_rls.sql in the Supabase SQL editor.");
       list.appendChild(empty);
       return;
     }
@@ -2694,18 +2695,18 @@ export default function(component) {
     if (!threads.length) {
       const empty = document.createElement("div");
       empty.className = "empty";
-      empty.textContent = "No chat comments yet. Post the first one below.";
+      empty.textContent = T("No chat comments yet. Post the first one below.");
       list.appendChild(empty);
     } else if (!shownThreads.length) {
       const empty = document.createElement("div");
       empty.className = "empty";
       empty.textContent = chatPerson === "me"
-        ? "No chat comments from you yet."
+        ? T("No chat comments from you yet.")
         : String(chatPerson || "").indexOf("group:") === 0
-        ? "No chat comments from that community yet."
+        ? T("No chat comments from that community yet.")
         : chatPerson === "favourites" && !favouriteSet().size && !String(query).trim()
-        ? "No favourites yet. Press the star beside a name."
-        : "No chat comments match.";
+        ? T("No favourites yet. Press the star beside a name.")
+        : T("No chat comments match.");
       list.appendChild(empty);
     } else {
       shownThreads.forEach((item) => list.appendChild(chatCard(item, item.id)));
@@ -2796,7 +2797,7 @@ export default function(component) {
     context.className = "context";
     const label = document.createElement("div");
     label.className = "context-label";
-    label.textContent = "Responding to";
+    label.textContent = T("Responding to");
     const head = document.createElement("div");
     head.className = "context-head";
     if (item.logo) {
@@ -2809,7 +2810,7 @@ export default function(component) {
     }
     const asset = document.createElement("span");
     asset.className = "asset";
-    asset.textContent = String(item.asset || "This asset");
+    asset.textContent = String(item.asset || T("This asset"));
     head.appendChild(asset);
     const tone = streamTone(item.score);
     if (tone) {
@@ -2873,8 +2874,8 @@ export default function(component) {
       reply.type = "button";
       reply.className = "reply-note";
       reply.textContent = "↩️";
-      reply.title = "Reply";
-      reply.setAttribute("aria-label", "Reply");
+      reply.title = T("Reply");
+      reply.setAttribute("aria-label", T("Reply"));
       reply.addEventListener("click", () => {
         window.socialStreamState.reply = { id: rootId, name: String(item.name || "Member"), social: item.social, kind: "signal" };
         const panel = document.getElementById("social-stream-root");
@@ -2886,7 +2887,7 @@ export default function(component) {
     }
     if (item.mine && !item.pending && Number(item.id) > 0) {
       actions.appendChild(deleteNoteButton(
-        kind === "reply" ? "Delete this reply?" : "Delete this comment and its replies?",
+        kind === "reply" ? T("Delete this reply?") : T("Delete this comment and its replies?"),
         () => {
           window.socialStreamItems = dropMessage(window.socialStreamItems, item.id);
           if (window.renderSocialStream) window.renderSocialStream();
@@ -2911,11 +2912,11 @@ export default function(component) {
   }
 }
 """
-_social_stream = st.components.v2.component(
+_social_stream = i18n.with_words(st.components.v2.component(
     "social_member",
-    js=_SOCIAL_STREAM_JS,
+    js=i18n.js_ready(_SOCIAL_STREAM_JS),
     isolate_styles=False,
-)
+), _SOCIAL_STREAM_JS)
 
 _SCROLL_JS = """
 export default function(component) {
@@ -3128,7 +3129,7 @@ export default function(component) {
   const handle = document.createElement("div");
   handle.id = "angstrom-wide-split";
   handle.dataset.drive = "local";
-  handle.title = "Drag to resize these two columns";
+  handle.title = T("Drag to resize these two columns");
   const grip = document.createElement("div");
   grip.className = "grip";
   handle.appendChild(grip);
@@ -3244,11 +3245,11 @@ export default function(component) {
   };
 }
 """
-_wide_split_handle = st.components.v2.component(
+_wide_split_handle = i18n.with_words(st.components.v2.component(
     "wide_split",
-    js=_WIDE_SPLIT_JS,
+    js=i18n.js_ready(_WIDE_SPLIT_JS),
     isolate_styles=False,
-)
+), _WIDE_SPLIT_JS)
 
 _COUNTDOWN_JS = """
 export default function(component) {
@@ -3377,7 +3378,7 @@ export default function(component) {
     const clock = hours + ":" + String(minutes).padStart(2, "0") + ":" + seconds;
     const title = (data && data.label) || "Refresh";
     const lead = (data && data.lead) || "";
-    if (left <= 0) text.textContent = title + " (update due)";
+    if (left <= 0) text.textContent = T("{title} (update due)", {title: title});
     else if (lead) text.textContent = title + " (" + lead + " " + clock + ")";
     else text.textContent = title + " (" + clock + ")";
     const seenKey = timerKey + "_seen";
@@ -3664,7 +3665,7 @@ export default function(component) {
   if (!link) {
     link = document.createElement("a");
     link.className = "angstrom-google";
-    link.textContent = (data && data.label) || "Continue with Google";
+    link.textContent = (data && data.label) || T("Continue with Google");
     shell.appendChild(link);
   }
   link.removeAttribute("target");
@@ -3695,11 +3696,11 @@ export default function(component) {
   };
 }
 """
-_google_button = st.components.v2.component(
+_google_button = i18n.with_words(st.components.v2.component(
     "google_sign_in",
-    js=_GOOGLE_BUTTON_JS,
+    js=i18n.js_ready(_GOOGLE_BUTTON_JS),
     isolate_styles=False,
-)
+), _GOOGLE_BUTTON_JS)
 
 
 def _countdown_due(
@@ -3776,7 +3777,7 @@ export default function(component) {
       "font-size:.75rem;color:var(--ang-muted,#6b7280);display:none;'></span>";
     parentElement.appendChild(bar);
   }
-  bar.title = "Drag up or down to change the chart's height. Double-click to reset.";
+  bar.title = T("Drag up or down to change the chart's height. Double-click to reset.");
   bar.onpointerenter = () => { if (!dragging) grip.style.background = "#111827"; };
   bar.onpointerleave = () => { if (!dragging) grip.style.background = "#9ca3af"; };
   const grip = bar.querySelector(".ang-resize-grip");
@@ -3811,7 +3812,7 @@ export default function(component) {
   bar.onpointermove = (event) => {
     if (!dragging) return;
     now = size(h0 + (event.clientY - y0));
-    tip.textContent = "Chart height " + now + " px";
+    tip.textContent = T("Chart height {n} px", {n: now});
     if (box && base && holder) {
       // A preview while dragging: the whole chart stretches or squeezes to the new size, and the
       // space around it follows. It redraws properly, with only the price chart changed, on release.
@@ -3835,7 +3836,7 @@ export default function(component) {
   bar.ondblclick = () => { if (start !== fallback) setTriggerValue("height", String(fallback)); };
 }
 """
-_chart_resize = st.components.v2.component("chart_resize", js=_CHART_RESIZE_JS, isolate_styles=False)
+_chart_resize = i18n.with_words(st.components.v2.component("chart_resize", js=i18n.js_ready(_CHART_RESIZE_JS), isolate_styles=False), _CHART_RESIZE_JS)
 
 
 def _chart_resize_handle(current: int) -> None:
@@ -3864,16 +3865,16 @@ def _chart_resize_handle(current: int) -> None:
 # ---------------------------------------------------------------------------
 _LW_CHART_JS = ((Path(__file__).resolve().parent / "lw_draw.js").read_text(encoding="utf-8") + "\n"
                 + (Path(__file__).resolve().parent / "lw_chart.js").read_text(encoding="utf-8"))
-_lw_chart = st.components.v2.component("lw_chart", js=_LW_CHART_JS, isolate_styles=False)
+_lw_chart = i18n.with_words(st.components.v2.component("lw_chart", js=_LW_CHART_JS, isolate_styles=False), _LW_CHART_JS)
 _INTERVAL_TIPS = {
-    "15m": "15-minute candles (about the last 60 days)",
-    "30m": "30-minute candles, built from 15-minute ones (about the last 60 days)",
-    "1h": "1-hour candles (about the last 2 years)",
-    "4h": "4-hour candles: crypto in fixed UTC blocks, shares from the market open",
-    "12h": "12-hour candles: crypto in 00:00 and 12:00 UTC blocks; for shares, one per session",
-    "1D": "Daily candles",
-    "1W": "Weekly candles (Monday to Sunday)",
-    "1Mo": "Monthly candles (calendar months; pick 1Y or All)",
+    "15m": i18n.mark("15-minute candles (about the last 60 days)"),
+    "30m": i18n.mark("30-minute candles, built from 15-minute ones (about the last 60 days)"),
+    "1h": i18n.mark("1-hour candles (about the last 2 years)"),
+    "4h": i18n.mark("4-hour candles: crypto in fixed UTC blocks, shares from the market open"),
+    "12h": i18n.mark("12-hour candles: crypto in 00:00 and 12:00 UTC blocks; for shares, one per session"),
+    "1D": i18n.mark("Daily candles"),
+    "1W": i18n.mark("Weekly candles (Monday to Sunday)"),
+    "1Mo": i18n.mark("Monthly candles (calendar months; pick 1Y or All)"),
 }
 
 
@@ -3902,7 +3903,7 @@ def _chart_timeframe_controls() -> tuple[str, str]:
             chart_candles.INTERVALS,
             key="chart_interval",
             label_visibility="collapsed",
-            help="Candle size. " + " · ".join(f"{k}: {v}" for k, v in _INTERVAL_TIPS.items()),
+            help=t("Candle size.") + " " + " · ".join(f"{k}: {t(v)}" for k, v in _INTERVAL_TIPS.items()),
         ) or current_interval
 
         def _range_label(option):
@@ -3945,9 +3946,9 @@ def _tv_candles(asset_type: str, asset_key: str, interval: str, range_key: str, 
                 start = candles.index[0] if days is None else max(
                     candles.index[0], pd.Timestamp.now(tz="UTC") - pd.Timedelta(days=days))
                 loaded = {"candles": candles, "start": start, "session": None, "error": None,
-                          "source": "Shared daily prices (neither Binance nor Yahoo has candles for this coin)"
-                          + (", grouped into weeks" if interval == "1W" else
-                             ", grouped into months" if interval == "1Mo" else "")}
+                          "source": t("Shared daily prices (neither Binance nor Yahoo has candles for this coin)")
+                          + (t(", grouped into weeks") if interval == "1W" else
+                             t(", grouped into months") if interval == "1Mo" else "")}
     if loaded["error"]:
         return loaded
     candles = loaded["candles"]
@@ -4066,8 +4067,8 @@ def _band_payload(band_set, asset_type: str, asset_key: str, frame: pd.DataFrame
     stats = set_history.summary(span_list)
     return {"colors": set_history.colours_for(days, span_list, show_no),
             "answers": set_history.answers_for(days, span_list), "name": doc.get("name") or "Set",
-            "legend": (f"{doc.get('name')}: green = Yes ({stats['episodes']['yes']} times since "
-                       f"{span_list[0][0][:4]}), amber = Unknown" + (", red = No" if show_no else ""))}
+            "legend": (t("{name}: green = Yes ({n} times since {year}), amber = Unknown", name=doc.get("name"),
+                         n=stats["episodes"]["yes"], year=span_list[0][0][:4]) + (t(", red = No") if show_no else ""))}
 
 
 def _chart_events() -> list[dict]:
@@ -4136,7 +4137,7 @@ def _shared_chart_banner(asset_type: str, asset_key: str) -> None:
         return
     with st.container(horizontal=True, vertical_alignment="center", gap="small", key="shared_chart_bar"):
         note = " ".join(str(shared.get("note") or "").split())
-        st.markdown(f"📤 Showing **{html.escape(shared.get('owner_name') or 'their')}'s drawings**"
+        st.markdown(t("📤 Showing **{name}'s drawings**", name=html.escape(shared.get("owner_name") or t("their")))
                     + (f": “{html.escape(note)}”" if note else ""))
         if st.button(t("Copy to my drawings"), key="shared_copy", icon=":material/content_copy:",
                      help=t("Add their drawings to your own on this asset, so they stay after you close this view.")):
@@ -4196,7 +4197,7 @@ def _share_chart_dialog(draw_key: str, title: str, interval: str, items: list) -
     if st.button(t("📤 Share"), type="primary", disabled=not picked, key="share_go"):
         try:
             share_chart(supabase, draw_key, title, interval, items, note, picked)
-            st.toast("Shared with " + ", ".join(names[g] for g in picked) + ".")
+            st.toast(t("Shared with {names}.", names=", ".join(names[g] for g in picked)))
             st.rerun()
         except Exception as exc:
             text = str(exc)
@@ -4282,8 +4283,8 @@ def _push_settings() -> None:
         except Exception as exc:
             st.caption(t('Could not change notifications: {str_exc_160}', str_exc_160=str(exc)[:160]))
     if rows:
-        devices = sorted({str(r.get("device") or "a device") for r in rows})
-        st.caption("On for: " + ", ".join(devices) + ". Each new notification arrives within a few minutes.")
+        devices = sorted({t(str(r.get("device") or "a device")) for r in rows})
+        st.caption(t("On for: {devices}. Each new notification arrives within a few minutes.", devices=", ".join(devices)))
 
 
 def _rerun_fragment() -> None:
@@ -4871,8 +4872,8 @@ export default function(component) {
       const button = document.createElement("button");
       button.type = "button";
       button.className = "ang-popout";
-      button.title = "Open this section in its own window";
-      button.setAttribute("aria-label", "Open this section in its own window");
+      button.title = T("Open this section in its own window");
+      button.setAttribute("aria-label", T("Open this section in its own window"));
       button.innerHTML = "<svg viewBox='0 0 24 24' width='14' height='14' aria-hidden='true' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M14 4h6v6'/><path d='M20 4 10 14'/><path d='M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5'/></svg>";
       button.addEventListener("click", (event) => {
         event.preventDefault();
@@ -4899,11 +4900,11 @@ export default function(component) {
   window.__angstromPopoutTimer = window.setInterval(add, 1500);
 }
 """
-_popout_buttons = st.components.v2.component(
+_popout_buttons = i18n.with_words(st.components.v2.component(
     "pop_out_buttons",
-    js=_POPOUT_BUTTONS_JS,
+    js=i18n.js_ready(_POPOUT_BUTTONS_JS),
     isolate_styles=False,
-)
+), _POPOUT_BUTTONS_JS)
 
 _ASSET_FOLLOW_JS = """
 export default function(component) {
@@ -6689,7 +6690,7 @@ def crowd_average_badge(average, count, spread, active: bool = True) -> str:
         scored = 0
     if not active or scored < 1 or average is None or pd.isna(average):
         return "<span style='color:#6b7280;'>—</span>"
-    title = f"Average of {scored} personal score" + ("s." if scored != 1 else ".")
+    title = t("Average of {n} personal scores.", n=scored) if scored != 1 else t("Average of 1 personal score.")
     if scored >= 2 and spread is not None and not pd.isna(spread):
         title += t(' The spread is ±{round_sentiment_spread_s}.', round_sentiment_spread_s=round(sentiment_spread(spread)))
     return f"<span title='{html.escape(title)}'>{sentiment_badge(average)}</span>"
@@ -6771,7 +6772,7 @@ def _draw_liquidation_levels(fig, record, last_x) -> None:
 def _liquidation_caption(record) -> str:
     credit = "Data: [Coinalyze](https://coinalyze.net)."
     if not record:
-        return "🔥 Estimated liquidation levels appear within about an hour of a coin being watched. " + credit
+        return t("🔥 Estimated liquidation levels appear within about an hour of a coin being watched.") + " " + credit
     status = record.get("status")
     if status == "no_market":
         return t("🔥 No futures market for this coin on Binance, Bybit or OKX, so there are no liquidation levels.")
@@ -6779,10 +6780,10 @@ def _liquidation_caption(record) -> str:
         return t("🔥 The liquidation levels could not be worked out on the last try. They are retried about hourly.")
     when = str(record.get("updated_at") or "")[:16].replace("T", " ")
     return (
-        "🔥 Estimated liquidation levels (not part of the score). Red lines below the price are where long "
-        "positions would be force-closed, green lines above are shorts. Brighter means more money. "
-        "Worked out from the last 7 days of open interest, assuming a typical leverage mix"
-        + (f", updated {when} UTC" if when else "")
+        t("🔥 Estimated liquidation levels (not part of the score). Red lines below the price are where long "
+          "positions would be force-closed, green lines above are shorts. Brighter means more money. "
+          "Worked out from the last 7 days of open interest, assuming a typical leverage mix")
+        + (t(", updated {when} UTC", when=when) if when else "")
         + ". "
         + credit
     )
@@ -7012,10 +7013,10 @@ def _paint_candidates_header(market: str, section_id: str) -> None:
         tiles = []
     if not tiles:
         return
-    total = sum(int(t.get("candidates") or 0) for t in tiles)
+    total = sum(int(x.get("candidates") or 0) for x in tiles)
     colour, background = ("#166534", "#dcfce7") if total else ("#475569", "#e2e8f0")
-    title = "Candidates now: " + "; ".join(f"{t['name']} {int(t.get('candidates') or 0)}" for t in tiles)
-    _header_score(key=f"section_score_{section_id}", data={"score": 0, "text": f"🔻 Candidates: {total}",
+    title = t("Candidates now: {list}", list="; ".join(f"{x['name']} {int(x.get('candidates') or 0)}" for x in tiles))
+    _header_score(key=f"section_score_{section_id}", data={"score": 0, "text": t("🔻 Candidates: {n}", n=total),
                                                            "color": colour, "background": background, "title": title})
 
 
@@ -7031,9 +7032,9 @@ def _paint_snapshot_header() -> None:
             else ("#1e3a8a", "#dbeafe")
         title = (t('Since your last visit: {up} Trend reading{s_if_up_1_else} crossed a colour border upward, {down} downward. Open the section for which ones.', up=up, s_if_up_1_else='s' if up != 1 else '', down=down))
     else:
-        text, colour, background = ("✓ Quiet" if not moves else f"〰 {moves} moved"), "#475569", "#e2e8f0"
-        title = ("No Trend reading crossed a colour border you alert on since your last visit"
-                 + (f"; {moves} moved 5 points or more." if moves else "."))
+        text, colour, background = (t("✓ Quiet") if not moves else t("〰 {n} moved", n=moves)), "#475569", "#e2e8f0"
+        title = (t("No Trend reading crossed a colour border you alert on since your last visit; {n} moved 5 points or more.", n=moves)
+                 if moves else t("No Trend reading crossed a colour border you alert on since your last visit."))
     _header_score(key="section_score_snapshot", data={"score": 0, "text": text, "color": colour,
                                                        "background": background, "title": title})
 
@@ -10580,10 +10581,11 @@ _SCORES_WORKED_OUT = 0
 
 
 @st.cache_data(ttl=900, max_entries=4000, show_spinner=False)
-def _column_cells(kind: str, asset_id: str, fingerprint: str, stamp: tuple, _df, _specs):
+def _column_cells(kind: str, asset_id: str, fingerprint: str, stamp: tuple, _df, _specs, lang: str = "en"):
     """The chosen Group and Set columns for one asset (table_columns.py), on its stored daily bars. The same
-    prices and the same definitions give the same answer, so it is worked out once and shared."""
-    del fingerprint, stamp
+    prices and the same definitions give the same answer, so it is worked out once and shared (per language: the
+    hover words are in it)."""
+    del fingerprint, stamp, lang
     from group_readings import stored_context
 
     ctx, last = stored_context(calculate_indicators(_df), kind, asset_id=asset_id)
@@ -10629,9 +10631,9 @@ def _subject_context(engine_kind, subject_id):
 
 
 @st.cache_data(ttl=900, max_entries=500, show_spinner=False)
-def _why_items(kind: str, asset_id: str, fingerprint: str, stamp: tuple, _df, _specs, _readings):
-    """🔍 Why these readings for one asset (why_panel.py), on the same stored daily bars as the table."""
-    del fingerprint, stamp
+def _why_items(kind: str, asset_id: str, fingerprint: str, stamp: tuple, _df, _specs, _readings, lang: str = "en"):
+    """🔍 Why these readings for one asset (why_panel.py), on the same stored daily bars as the table (per language)."""
+    del fingerprint, stamp, lang
     import why_panel
     from group_readings import stored_context
 
@@ -10654,7 +10656,7 @@ def _render_why_panel(asset_type: str, asset_key: str, result: dict, column_spec
     stamp = (len(frame), str(frame.index[-1]), float(frame["close"].iloc[-1]))
     try:
         items = _why_items(asset_type, str(asset_key), table_columns.fingerprint(column_specs), stamp, frame,
-                           column_specs, result.get("readings") or {})
+                           column_specs, result.get("readings") or {}, lang=i18n.current())
     except Exception as exc:
         st.caption(t('Could not work these out: {str_exc_160}', str_exc_160=str(exc)[:160]))
         return
@@ -10888,7 +10890,7 @@ def _apply_group_invite(data) -> str:
         return t("That invite could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again.")
     code = str(result.data or "").strip().strip('"')
     return {
-        "ok": "Invite sent.",
+        "ok": t("Invite sent."),
         "member": t("They are already in that community."),
         "pending": t("They already have an invite to that group."),
         "limit": t("You already have 20 groups."),
@@ -10896,7 +10898,7 @@ def _apply_group_invite(data) -> str:
         "name": t("Enter a community name of up to 40 characters."),
         "missing": t("Choose a community you lead, or enter a new name."),
         "self": "",
-    }.get(code, "That invite could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again.")
+    }.get(code, t("That invite could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again."))
 
 
 def _chat_action(raw):
@@ -11496,6 +11498,7 @@ def _what_changed_html(rows, baseline, seen: bool) -> str:
 def _draw_social_stream(stream_items, scope, *, popout: bool = False):
     """Draw the social panel with the comments, chat and saved panel choices."""
     chat_notice = st.session_state.pop("chat_notice", "")
+    notice_kind = st.session_state.pop("chat_notice_kind", "")
     return _social_stream(
         key="social_stream_host",
         data=json.dumps(
@@ -11507,6 +11510,7 @@ def _draw_social_stream(stream_items, scope, *, popout: bool = False):
                 "favourites": _favourite_ids((prefs.get("settings") or {}).get("favourites")),
                 "groups": _groups_for_stream(),
                 "notice": chat_notice,
+                "notice_kind": notice_kind,
                 "faces": list(COMMENT_EMOTICONS),
                 "limit": COMMENT_LIMIT,
                 "account": str(user_id),
@@ -11561,6 +11565,7 @@ def _handle_stream_events(stream_state) -> None:
     if report_event and report_event.get("n") != st.session_state.get("report_done"):
         st.session_state["report_done"] = report_event.get("n")
         st.session_state["chat_notice"] = _apply_comment_report(report_event)
+        st.session_state["chat_notice_kind"] = "report"
         _rerun_fragment()
     if group_event and group_event.get("n") != st.session_state.get("group_done"):
         st.session_state["group_done"] = group_event.get("n")
@@ -11663,9 +11668,9 @@ _SONAR_MARK_LABELS = {      # 🛰️ Sonar markers picker on the chart (lw_char
 _FUNNEL_KEYS = {
     # market: (table mode widget, funnel pick, stage pick, saved setting, words)
     "crypto": ("crypto_table_mode", "funnel_pick", "funnel_stage", "crypto_table",
-               {"coins": "coins", "coin": "coin", "pool": "the top 500 coins", "venue": "Binance spot or Yahoo"}),
+               {"coins": i18n.mark("coins"), "coin": i18n.mark("coin"), "pool": "the top 500 coins", "venue": "Binance spot or Yahoo"}),
     "equity": ("equity_table_mode", "eq_funnel_pick", "eq_funnel_stage", "equity_table",
-               {"coins": "equities", "coin": "equity", "pool": "the S&P 500", "venue": "Yahoo Finance"}),
+               {"coins": i18n.mark("equities"), "coin": i18n.mark("equity"), "pool": "the S&P 500", "venue": "Yahoo Finance"}),
 }
 
 
@@ -11882,8 +11887,9 @@ def _funnel_controls(dyn, market: str = "crypto") -> None:
             tpl = ft.trend_funnel(direction, market)
             if col.button(t('Make my own copy of “{tpl_name}”', tpl_name=tpl['name']), key=f"funnel_new_{market}_{direction}",
                           use_container_width=True,
-                          help=f"{stages_words}: EMA 20 " + ("above" if direction == "long" else "below")
-                               + " EMA 50. Then the 1-hour pullback entry check (from Drew's script)."):
+                          help=(t("{stages}: EMA 20 above EMA 50. Then the 1-hour pullback entry check (from Drew's script).", stages=stages_words)
+                                if direction == "long" else
+                                t("{stages}: EMA 20 below EMA 50. Then the 1-hour pullback entry check (from Drew's script).", stages=stages_words))):
                 _create_funnel(market, direction)
         return
     f = dyn["funnel"]
@@ -11909,12 +11915,12 @@ def _funnel_controls(dyn, market: str = "crypto") -> None:
         if st.button("", icon=":material/add:", key=f"funnel_add_{market}",
                      help=t("Add a funnel: make your own copy of a provided one, or a new one, in Lattice → Funnels")):
             _funnel_edit(f"new:{market}:" + ("short" if f["direction"] == "long" else "long"))
-    flicker = (f"a {words['coin']} leaves a stage after two No closes in a row" if f.get("flicker", True) else
-               f"a {words['coin']} leaves a stage on its first No close")
-    when = ("a few minutes after each hour" if market == "crypto" else
-            "a few minutes after each hourly close while New York is open")
-    st.caption(f"From {dyn['pool']} {words['coins']} ({words['venue']}) · {flicker}. Hover a stage chip for what it "
-               "means." + (t(' Showing the {fv_show_limit} largest by market cap; {dyn_more} more hold this stage.', fv_show_limit=fv.SHOW_LIMIT, dyn_more=dyn['more'])
+    flicker = (t("a {coin} leaves a stage after two No closes in a row", coin=t(words["coin"])) if f.get("flicker", True) else
+               t("a {coin} leaves a stage on its first No close", coin=t(words["coin"])))
+    when = (t("a few minutes after each hour") if market == "crypto" else
+            t("a few minutes after each hourly close while New York is open"))
+    st.caption(t("From {n} {coins} ({venue}) · {flicker}. Hover a stage chip for what it means.", n=dyn["pool"],
+                 coins=t(words["coins"]), venue=words["venue"], flicker=flicker) + (t(' Showing the {fv_show_limit} largest by market cap; {dyn_more} more hold this stage.', fv_show_limit=fv.SHOW_LIMIT, dyn_more=dyn['more'])
                            if dyn["more"] else ""))
     if dyn.get("health"):
         st.caption(dyn["health"])
@@ -11988,9 +11994,9 @@ def _funnel_chart(dyn, market: str, labels: dict, part: str = "view") -> None:
     f = dyn["funnel"]
     _mode, _pick, stage_key, _setting, words = _FUNNEL_KEYS[market]
     stage = st.session_state.get(stage_key) or ""
-    noun = ("candidates" if stage == "candidate" else "flagged" if stage == "flagged" else "pending"
+    noun = (t("candidates") if stage == "candidate" else t("flagged") if stage == "flagged" else t("pending")
             if stage == "pending" else f["stages"][int(stage.split(":")[1])]["label"].lower() if stage.startswith(
-                "stage:") else words["coins"])
+                "stage:") else t(words["coins"]))
     daily = next((i for i, s in enumerate(f["stages"]) if s["timeframe"] == "1D"), None)
     state_key = f"funnel_hist_{market}"
     shown = st.session_state.get(state_key)
@@ -12002,14 +12008,14 @@ def _funnel_chart(dyn, market: str, labels: dict, part: str = "view") -> None:
     assets = every[:fv.CHART_LIMIT]                       # the biggest by market cap; a chart of 150 helps nobody
     if daily is None or not assets:
         return
-    hover = (t("Every {words_coin} in this view on one chart: one large with candles, a thin row each underneath, with the {f_stages_daily_label_low} stage's answers as green bands across its history. Tap a row to put it on top, then open it on the main price chart.", words_coin=words['coin'], f_stages_daily_label_low=f['stages'][daily]['label'].lower()))
+    hover = (t("Every {words_coin} in this view on one chart: one large with candles, a thin row each underneath, with the {f_stages_daily_label_low} stage's answers as green bands across its history. Tap a row to put it on top, then open it on the main price chart.", words_coin=t(words['coin']), f_stages_daily_label_low=f['stages'][daily]['label'].lower()))
     total = len(every) + int(dyn.get("more") or 0)
     if total > len(assets):
         hover += (t(' Shows the {len_assets} largest by market cap of the {total} at this stage; pick a narrower stage (Candidates) for a closer look.', len_assets=len(assets), total=total))
     asked = st.session_state.get(f"{state_key}_asked")
     if part == "button":                                  # beside the stage picker
         if shown is None and not asked:
-            label = f"Open {noun} in chart" + (f" (largest {len(assets)} of {total})" if total > len(assets) else "")
+            label = t("Open {noun} in chart", noun=noun) + (t(" (largest {n} of {total})", n=len(assets), total=total) if total > len(assets) else "")
             if st.button(label, icon=":material/candlestick_chart:", key=f"funnel_hist_open_{market}", help=hover):
                 st.session_state[f"{state_key}_asked"] = {"funnel": f["id"], "stage": stage}
                 st.rerun()
@@ -12206,7 +12212,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                             if extra_columns:
                                 try:
                                     result["columns"] = _column_cells(kind, str(key), column_print, stamp, df,
-                                                                      extra_columns)
+                                                                      extra_columns, lang=i18n.current())
                                 except Exception as exc:
                                     result["columns"] = {c["key"]: {"error": str(exc)[:160]} for c in extra_columns}
                                 if intraday:
@@ -13227,8 +13233,8 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                 sonar_shown = st.pills(
                     t("🛰️ Markers shown"), list(lw_chart.SONAR_MARKS), selection_mode="multi", key="chart_sonar_marks",
                     format_func=lambda k: _SONAR_MARK_LABELS.get(k, k),
-                    help="The symbols drawn over the candles (open-source formulas of the indicator Drew reads). "
-                         "Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip. "
+                    help=t("The symbols drawn over the candles (open-source formulas of the indicator Drew reads). "
+                           "Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.") + " "
                          + " ".join(f"{_SONAR_MARK_LABELS[k]}: {v[4]}." for k, v in lw_chart.SONAR_MARKS.items()),
                 ) or []
             band_set = _chart_set_picker() if use_tv else None
@@ -13904,8 +13910,7 @@ def _sentiment_thumbs(
                 f"<div class='take-faces' data-limit='{COMMENT_LIMIT}'>{''.join(faces)}</div>"
             )
             st.caption(
-                f"Up to {COMMENT_LIMIT} characters. Tap one to add it. "
-                "Posting again replaces yours. "
+                t("Up to {n} characters. Tap one to add it. Posting again replaces yours.", n=COMMENT_LIMIT) + " "
                 + (t("Comments stay until the Tide changes.") if str(kind) == "Tides"
                    else t("Each comment stays for 12 hours."))
             )
@@ -14362,8 +14367,8 @@ def _show_short_interest(si: dict) -> None:
     if si.get("change") is not None:
         arrow = ":red[▲]" if si["change"] > 0 else ":green[▼]"
         parts.append(t('{arrow} {si_change_100:+.0f}% vs the month before', arrow=arrow, si_change_100=si['change'] * 100))
-    as_of = f" (as of {si['as_of'].strftime('%d %b')})" if si.get("as_of") else ""
-    st.markdown("🩳 Short interest: " + " · ".join(parts) + as_of, help=(
+    as_of = t(" (as of {when})", when=si["as_of"].strftime("%d %b")) if si.get("as_of") else ""
+    st.markdown(t("🩳 Short interest:") + " " + " · ".join(parts) + as_of, help=(
         t("Shares borrowed and sold, betting on a fall. A high share of the float or many days to cover "
         "means more fuel for a squeeze if the price rises. Published twice a month, about a week late. "
         "Data: Yahoo Finance.")
@@ -14419,8 +14424,8 @@ def _show_options_positioning(ticker: str, chart_price: float | None) -> None:
         help=t("The strike with the most open put contracts near the price. Falls often slow near it."),
     )
     c5.metric(
-        t("Net gamma"), money(net) + " per 1%",
-        "calming" if net >= 0 else "amplifying", delta_color="normal" if net >= 0 else "inverse",
+        t("Net gamma"), t("{money} per 1%", money=money(net)),
+        t("calming") if net >= 0 else t("amplifying"), delta_color="normal" if net >= 0 else "inverse",
         help=(
             t("How much stock the market makers would trade to hedge a 1% move. Positive: they trade against "
             "the move, which tends to calm prices. Negative: they trade with it, which tends to speed moves up.")
@@ -14449,9 +14454,9 @@ def _show_options_positioning(ticker: str, chart_price: float | None) -> None:
         st.plotly_chart(bars, width="stretch")
         flip = summary.get("flip")
         st.caption(
-            f"Price now {_price_text(spot)}. Green strikes calm moves, red strikes amplify them. "
+            t("Price now {price}. Green strikes calm moves, red strikes amplify them.", price=_price_text(spot)) + " "
             + (t('The gamma flip, where the total changes sign, is near {price_text_flip}. ', price_text_flip=_price_text(flip)) if flip else "")
-            + "Above the flip, moves tend to be damped; below it, they tend to run."
+            + t("Above the flip, moves tend to be damped; below it, they tend to run.")
         )
 
         st.markdown(t("**Biggest strikes**"))
@@ -14510,8 +14515,8 @@ def show_leverage(kind: str, asset_id: str, label: str, chart_price: float | Non
             _header_box("leverage", f"{'🔥' if hot else '🧊' if cold else '💰'} {funding_now:+.3f}%",
                         "#9a3412" if hot else "#1e40af" if cold else "#475569",
                         "#ffedd5" if hot else "#dbeafe" if cold else "#e2e8f0",
-                        "Funding rate: " + ("high, longs crowded" if hot else "negative, shorts paying"
-                                            if cold else "normal"))
+                        t("Funding rate: {state}", state=(t("high, longs crowded") if hot else t("negative, shorts paying")
+                                                          if cold else t("normal"))))
         ratio_now = latest("ls")
         long_24 = sum(v or 0 for v in (series.get("liq_long") or [])[-24:])
         short_24 = sum(v or 0 for v in (series.get("liq_short") or [])[-24:])
@@ -14876,9 +14881,8 @@ def show_signal_evidence(kind: str, asset_id: str, shown: str) -> None:
     factors = verdict.get("factors") or []
     if factors:
         st.caption(
-            "Other readings that cleared the chance level at two or more time frames: "
-            + ", ".join(str(item) for item in factors)
-            + ". With this many comparisons that is worth a closer look, not proof."
+            t("Other readings that cleared the chance level at two or more time frames: {list}. With this many "
+              "comparisons that is worth a closer look, not proof.", list=", ".join(str(item) for item in factors))
         )
     strategy = record.get("strategy") or {}
     if strategy.get("strategy_return_pct") is not None and strategy.get("buy_hold_return_pct") is not None:
@@ -14960,16 +14964,17 @@ def show_signal_matrix(kind: str, asset_id: str, label: str, indicated) -> None:
             return
         _paint_matrix_header(matrix)
         st.caption(
-            f"The last {len(dates)} daily closes, then each signal on those same dates. "
-            f"Lead is how closely that signal lined up with the price change over the next {int(horizon)} "
-            + ("day" if int(horizon) == 1 else "days")
-            + ". Positive means a high reading came before a rise. "
-            + "Every row runs from -100 to +100: 📈 Trend, 🎯 Stretch, 🔊 Flow and each day use only the bars up to that day. "
-            + "A blank sentiment day is before the first saved reading. After that, the last saved score stays until the next one. "
-            + "The 30-day record in the table below uses your Trend alert line (plus and minus) for the technical rows "
-            + "and your market sentiment lines for sentiment. "
-            + "† marks a lead that is too thin to tell from chance. Price changes over the next few days overlap, "
-            + "so 30 days holds far fewer independent observations than it looks."
+            (t("The last {n} daily closes, then each signal on those same dates. Lead is how closely that signal lined "
+               "up with the price change over the next day.", n=len(dates)) if int(horizon) == 1 else
+             t("The last {n} daily closes, then each signal on those same dates. Lead is how closely that signal lined "
+               "up with the price change over the next {days} days.", n=len(dates), days=int(horizon)))
+            + " " + t("Positive means a high reading came before a rise.") + " "
+            + t("Every row runs from -100 to +100: 📈 Trend, 🎯 Stretch, 🔊 Flow and each day use only the bars up to that day. "
+                "A blank sentiment day is before the first saved reading. After that, the last saved score stays until the next one. "
+                "The 30-day record in the table below uses your Trend alert line (plus and minus) for the technical rows "
+                "and your market sentiment lines for sentiment. "
+                "† marks a lead that is too thin to tell from chance. Price changes over the next few days overlap, "
+                "so 30 days holds far fewer independent observations than it looks.")
         )
         rows = matrix["rows"]
         plot_rows = list(rows)

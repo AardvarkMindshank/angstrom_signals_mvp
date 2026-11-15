@@ -16,6 +16,8 @@ import json
 from datetime import datetime, timezone
 
 import funnel as fn
+import i18n
+from i18n import t
 
 CSS = """
 .angfr{font:13px/1.35 inherit;color:inherit;container-type:inline-size;margin:2px 0 4px}
@@ -83,10 +85,10 @@ export default function angFunnelRows(component) {
     const row = el("div", "frow" + (r.paused ? " paused" : "") + (String(r.id) === String(sel.funnel) ? " on" : ""));
     const name = el("div", "name");
     const dir = el("span", "dir " + (r.direction || ""), r.dir_icon || "");
-    dir.title = r.direction === "short" ? "Short funnel" : "Long funnel";
+    dir.title = r.direction === "short" ? T("Short funnel") : T("Long funnel");
     name.appendChild(dir);
     name.appendChild(document.createTextNode(r.name));
-    name.title = r.name + (r.paused ? " (paused)" : "");
+    name.title = r.paused ? T("{name} (paused)", { name: r.name }) : r.name;
     row.appendChild(name);
 
     const chips = el("div", "chips");
@@ -96,7 +98,7 @@ export default function angFunnelRows(component) {
       const empty = !c.count && !picked;
       const b = el("button", "chip" + (picked ? " sel" : "") + (empty ? " empty" : ""), c.icon + " " + c.count);
       b.type = "button";
-      b.title = c.label + ": " + c.count + (c.hover ? " · " + c.hover : "") + (c.new ? " · " + c.new + " new since your last visit" : "");
+      b.title = c.label + ": " + c.count + (c.hover ? " · " + c.hover : "") + (c.new ? " · " + T("{n} new since your last visit", { n: c.new }) : "");
       if (c.new) b.appendChild(el("span", "new", "+" + c.new));
       if (!empty && !picked) b.onclick = () => send({ kind: "pick", funnel: r.id, stage: c.key });
       chips.appendChild(b);
@@ -110,15 +112,15 @@ export default function angFunnelRows(component) {
       b.innerHTML = "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'>" + ICONS[icon] + "</svg>";
       acts.appendChild(b); return b;
     };
-    if (r.paused) act("play", "Resume: check this funnel again every hour", () => send({ kind: "act", action: "resume", funnel: r.id }));
-    else act("pause", "Pause: stop checking this funnel; it keeps its places until resumed", () => send({ kind: "act", action: "pause", funnel: r.id }));
-    const again = act("restart", "Start again: every asset goes back to the pool and is checked from the first stage", () => {
+    if (r.paused) act("play", T("Resume: check this funnel again every hour"), () => send({ kind: "act", action: "resume", funnel: r.id }));
+    else act("pause", T("Pause: stop checking this funnel; it keeps its places until resumed"), () => send({ kind: "act", action: "pause", funnel: r.id }));
+    const again = act("restart", T("Start again: every asset goes back to the pool and is checked from the first stage"), () => {
       if (again.classList.contains("arm")) { send({ kind: "act", action: "restart", funnel: r.id }); return; }
       again.classList.add("arm");
-      again.title = "Press again to start this funnel again from the pool";
-      setTimeout(() => { again.classList.remove("arm"); again.title = "Start again: every asset goes back to the pool and is checked from the first stage"; }, 4000);
+      again.title = T("Press again to start this funnel again from the pool");
+      setTimeout(() => { again.classList.remove("arm"); again.title = T("Start again: every asset goes back to the pool and is checked from the first stage"); }, 4000);
     });
-    act("edit", "Edit in Lattice → Funnels (delete it there too)", () => send({ kind: "act", action: "edit", funnel: r.id }));
+    act("edit", T("Edit in Lattice → Funnels (delete it there too)"), () => send({ kind: "act", action: "edit", funnel: r.id }));
     row.appendChild(acts);
     list.appendChild(row);
     if (row.classList.contains("on")) selectedRow = row;
@@ -130,6 +132,7 @@ export default function angFunnelRows(component) {
 }
 """
 
+JS = _JS = i18n.js_ready(JS)
 _COMPONENT = None
 
 
@@ -138,7 +141,7 @@ def component():
     if _COMPONENT is None:
         import streamlit as st
 
-        _COMPONENT = st.components.v2.component("angstrom_funnel_rows", js=JS, css=CSS)
+        _COMPONENT = i18n.with_words(st.components.v2.component("angstrom_funnel_rows", js=_JS, css=CSS), JS)
     return _COMPONENT
 
 
@@ -154,12 +157,12 @@ def ago(ts, now: datetime | None = None) -> str:
         when = when.replace(tzinfo=timezone.utc)
     mins = max(0, int(((now or datetime.now(timezone.utc)) - when).total_seconds() // 60))
     if mins < 1:
-        return "checked just now"
+        return t("checked just now")
     if mins < 60:
-        return f"checked {mins} min ago"
+        return t("checked {mins} min ago", mins=mins)
     if mins < 48 * 60:
-        return f"checked {mins // 60} h ago"
-    return f"checked {mins // 1440} days ago"
+        return t("checked {h} h ago", h=mins // 60)
+    return t("checked {days} days ago", days=mins // 1440)
 
 
 def last_checked(runs: list) -> str | None:
@@ -176,12 +179,12 @@ def chips(f: dict, states: dict, new: int = 0, hover: dict | None = None) -> lis
     for i, stage in enumerate(f["stages"][:-1]):
         out.append({"key": f"stage:{i}", "icon": fn.STAGE_ICONS[min(i, len(fn.STAGE_ICONS) - 1)],
                     "label": stage["label"], "count": k["reached"][i]})
-    out.append({"key": "flagged", "icon": "🚩", "label": "Flagged", "count": k["flagged"],
+    out.append({"key": "flagged", "icon": "🚩", "label": t("Flagged"), "count": k["flagged"],
                 "hover": hover.get("flagged", "")})
-    out.append({"key": "candidate", "icon": "✅", "label": "Candidates", "count": k["candidate"],
+    out.append({"key": "candidate", "icon": "✅", "label": t("Candidates"), "count": k["candidate"],
                 "hover": hover.get("candidate", ""), "new": int(new or 0)})
     if k["pending"]:
-        out.append({"key": "pending", "icon": "❔", "label": "Pending (no answer yet)", "count": k["pending"]})
+        out.append({"key": "pending", "icon": "❔", "label": t("Pending (no answer yet)"), "count": k["pending"]})
     return out
 
 

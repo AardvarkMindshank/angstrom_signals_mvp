@@ -8,7 +8,7 @@ in 🔎 Prism straight away, for Run now and Scheduled scans.
 
 from __future__ import annotations
 
-from i18n import t
+from i18n import mark, t
 
 import copy
 import json
@@ -194,7 +194,7 @@ def render(st, supabase, user_id: str = "") -> None:
             dr.saved(st.session_state, supabase, user_id, "set", st.session_state.get("lattice_set_start"))
             st.session_state["_lattice_set_start_next"] = f"saved:{new_id}"
             st.session_state.pop("lattice_set_loaded", None)
-            st.session_state["lattice_flash_set"] = ("ok", "Saved as a new Set (version 1)."
+            st.session_state["lattice_flash_set"] = ("ok", t("Saved as a new Set (version 1).")
                                                      + (t(" It now appears in 🔎 Prism.") if screen["scannable"] else ""))
             lattice_panel.rerun(st)
         except Exception as exc:
@@ -222,7 +222,7 @@ def render(st, supabase, user_id: str = "") -> None:
         st.caption(t('Saved Groups and Sets could not be read: {problem}', problem=problem))
 
 
-STUDY_WAIT = "Studies run in the background, usually within an hour; you can leave this page."
+STUDY_WAIT = mark("Studies run in the background, usually within an hour; you can leave this page.")
 
 
 def show_card(st, card: dict) -> None:
@@ -295,8 +295,8 @@ def study_block(st, supabase, source: dict) -> None:
     if status == "refused":
         return
     if st.button(t('🔬 Study this Set (version {version_version})', version_version=version['version']), key=f"lattice_study_{h}",
-                 help="Checks what happened after this Set turned Yes on 25 major coins and 61 large US equities, "
-                      "Sep 2014 to Oct 2024, against comparable days. " + STUDY_WAIT):
+                 help=t("Checks what happened after this Set turned Yes on 25 major coins and 61 large US equities, "
+                        "Sep 2014 to Oct 2024, against comparable days.") + " " + t(STUDY_WAIT)):
         try:
             got = supabase.rpc("request_set_study", {"set_hash": h, "body": doc,
                                                      "name": source.get("name") or ""}).execute().data
@@ -304,7 +304,7 @@ def study_block(st, supabase, source: dict) -> None:
                 import study_nudge
 
                 study_nudge.nudge()
-            st.success("⏳ Queued. " + STUDY_WAIT if got in ("queued", "running") else f"Status: {got}.")
+            st.success(t("⏳ Queued.") + " " + t(STUDY_WAIT) if got in ("queued", "running") else t("Status: {got}.", got=got))
         except Exception as exc:
             import signal_groups_inspector as gi
 

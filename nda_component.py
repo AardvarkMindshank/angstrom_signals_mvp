@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import i18n
+
 CSS = """
 .sigpad{display:flex;flex-direction:column;gap:6px;max-width:520px}
 .sigpad canvas{width:100%;height:170px;border:1px solid rgba(127,127,127,.5);border-radius:10px;background:#fff;
@@ -19,14 +21,14 @@ export default function(component) {
   const box = document.createElement("div");
   box.className = "sigpad";
   const cv = document.createElement("canvas");
-  cv.setAttribute("aria-label", "Signature pad: draw your signature");
+  cv.setAttribute("aria-label", T("Signature pad: draw your signature"));
   cv.setAttribute("role", "img");
   const bar = document.createElement("div");
   bar.className = "bar";
   const clear = document.createElement("button");
-  clear.type = "button"; clear.textContent = "Clear";
+  clear.type = "button"; clear.textContent = T("Clear");
   const note = document.createElement("span");
-  note.textContent = "Sign inside the box.";
+  note.textContent = T("Sign inside the box.");
   bar.appendChild(clear); bar.appendChild(note);
   box.appendChild(cv); box.appendChild(bar);
   parentElement.appendChild(box);
@@ -57,7 +59,7 @@ export default function(component) {
     if (!drawing) return;
     drawing = false;
     if (inked > 60 * ratio) {
-      note.textContent = "Signature captured.";
+      note.textContent = T("Signature captured.");
       window.__sigPng = cv.toDataURL("image/png");
       send(window.__sigPng.split(",")[1]);
     }
@@ -65,15 +67,16 @@ export default function(component) {
   cv.addEventListener("pointerup", finish);
   cv.addEventListener("pointercancel", finish);
   cv.addEventListener("pointerleave", finish);
-  clear.addEventListener("click", () => { size(); inked = 0; window.__sigPng = null; note.textContent = "Sign inside the box."; send(""); });
+  clear.addEventListener("click", () => { size(); inked = 0; window.__sigPng = null; note.textContent = T("Sign inside the box."); send(""); });
   if (window.__sigPng) {            // the page redrew (for example while typing the name): keep the drawing
     const img = new Image();
-    img.onload = () => { g.drawImage(img, 0, 0, cv.width, cv.height); inked = 1e9; note.textContent = "Signature captured."; };
+    img.onload = () => { g.drawImage(img, 0, 0, cv.width, cv.height); inked = 1e9; note.textContent = T("Signature captured."); };
     img.src = window.__sigPng;
   }
 }
 """
 
+JS = i18n.js_ready(JS)
 _COMPONENT = None
 
 
@@ -82,8 +85,8 @@ def pad(key: str):
     if _COMPONENT is None:
         import streamlit as st
 
-        _COMPONENT = st.components.v2.component("nda_signature_pad", js=JS, css=CSS)
+        _COMPONENT = i18n.with_words(st.components.v2.component("nda_signature_pad", js=JS, css=CSS), JS)
     try:
-        return _COMPONENT(key=key, on_png_change=lambda: None)
+        return _COMPONENT(key=key, data={}, on_png_change=lambda: None)
     except Exception:
         return None

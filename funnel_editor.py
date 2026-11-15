@@ -11,7 +11,7 @@ first.
 
 from __future__ import annotations
 
-from i18n import t
+from i18n import mark, t
 
 import copy
 
@@ -22,10 +22,10 @@ import funnel_view as fv
 import drafts as dr
 
 TEMPLATES = [("crypto", "long"), ("crypto", "short"), ("equity", "long"), ("equity", "short")]
-MARKET_WORDS = {"crypto": "Crypto", "equity": "Equities"}
+MARKET_WORDS = {"crypto": mark("Crypto"), "equity": mark("Equities")}
 TF_LABELS = {"15m": "15 minutes", "30m": "30 minutes", "1h": "1 hour", "4h": "4 hours", "12h": "12 hours",
              "1D": "1 day", "1W": "1 week"}
-NOTE = "Candidate means an asset matches your selected conditions. It is not a recommendation to trade."
+NOTE = mark("Candidate means an asset matches your selected conditions. It is not a recommendation to trade.")
 
 # The stages themselves are drawn by funnel_stages_component.py (the Set list as in Prism, the funnel beside it).
 
@@ -156,9 +156,9 @@ def render(st, supabase, user_id: str) -> None:
     import prism
     import signal_groups_inspector as gi
 
-    st.caption("🔻 A funnel narrows the top coins or equities down in stages, from the longest timeframe to the hour, and "
-               "keeps the list up to date by itself. It shows as **Dynamic funnel** above the crypto and equity "
-               "tables. " + NOTE)
+    st.caption(t("🔻 A funnel narrows the top coins or equities down in stages, from the longest timeframe to the hour, and "
+                 "keeps the list up to date by itself. It shows as **Dynamic funnel** above the crypto and equity "
+                 "tables.") + " " + t(NOTE))
     funnels = fv.load_funnels(supabase, user_id)
     library = prism.demo_sets()
     memo = st.session_state.setdefault("_memo", {})
@@ -207,11 +207,12 @@ def render(st, supabase, user_id: str) -> None:
 
     restored = st.session_state.get("_funnel_restored")
     if restored and restored[0] == pick:
-        st.info(f"Your unsaved changes from {dr.when(restored[1])} are back. Save to use them, or "
-                + (t("Discard changes to go back to the saved funnel.") if saved else "start again from another choice."),
+        st.info(t("Your unsaved changes from {when} are back.", when=dr.when(restored[1])) + " "
+                + (t("Save to use them, or Discard changes to go back to the saved funnel.") if saved
+                   else t("Save to use them, or start again from another choice.")),
                 icon=":material/history:")
     badge = provenance(f, library)
-    st.markdown(f"**{MARKET_WORDS[market]}** · {fn.DIRECTION_ICONS[f['direction']]} "
+    st.markdown(f"**{t(MARKET_WORDS[market])}** · {fn.DIRECTION_ICONS[f['direction']]} "
                 f"{'Long' if f['direction'] == 'long' else 'Short'} · *{badge}*"
                 + ("" if badge.startswith("Your copy") else t(" · not reviewed or tested by Angstrom")))
     if badge.startswith("Your copy of an earlier version"):
@@ -295,7 +296,7 @@ def render(st, supabase, user_id: str) -> None:
     # ------------------------------------------------------------------ stages
     # A fixed title: Streamlit treats a folding section with a new title as a new one and folds it, so naming the
     # stages in the title closed it whenever a stage was added, removed, moved or renamed.
-    st.caption("Stages: " + " → ".join(s.get("label") or s["timeframe"] for s in f["stages"]))
+    st.caption(t("Stages: {list}", list=" → ".join(s.get("label") or s["timeframe"] for s in f["stages"])))
     # A key as well: without one Streamlit also treats it as new when anything above it changes (a pause note, the
     # stage line, an Update button), and a new one starts folded.
     with st.expander(t("Stages (advanced)"), icon=":material/stacks:", key=f"fe_stages_open_{pick}"):
@@ -324,7 +325,7 @@ def render(st, supabase, user_id: str) -> None:
     if saved and not what:
         st.caption(t("No changes."))
     else:
-        st.caption("**If you save:** " + " ".join(what)
+        st.caption(t("**If you save:**") + " " + " ".join(what)
                    + (t(" Every asset starts again from the pool, quietly (no alerts for what already qualifies).")
                       if reset else ""))
     bar = st.container(horizontal=True, gap="small")
@@ -488,13 +489,13 @@ def _provided_view(st, supabase, pick: str, funnels: list[dict], library: dict) 
     """A provided funnel, read-only (as a provided Group or Set): what it does, and Make my own copy."""
     _, market, direction = pick.split(":")
     t_ = template(market, direction)
-    st.markdown(t("**{market_words_market}** · {fn_direction_icons_direc} {long_if_direction_long_e} · *Provided by Angstrom* · can't be changed or deleted", market_words_market=MARKET_WORDS[market], fn_direction_icons_direc=fn.DIRECTION_ICONS[direction], long_if_direction_long_e='Long' if direction == 'long' else 'Short'))
+    st.markdown(t("**{market_words_market}** · {fn_direction_icons_direc} {long_if_direction_long_e} · *Provided by Angstrom* · can't be changed or deleted", market_words_market=t(MARKET_WORDS[market]), fn_direction_icons_direc=fn.DIRECTION_ICONS[direction], long_if_direction_long_e='Long' if direction == 'long' else 'Short'))
     pool = "the top 500 coins that pass Angstrom's data checks" if market == "crypto" else "the S&P 500"
     st.caption(t('Starts from {pool}. {a_coin_if_market_crypto_} leaves a stage after two No closes in a row. Alerts on new Candidates.', pool=pool, a_coin_if_market_crypto_='A coin' if market == 'crypto' else 'An equity'))
     for i, stage in enumerate(t_["stages"], 1):
         doc = stage["set_body"]
         st.markdown(t('**{i}. {stage_label}** · checked at each {fs_words_stage_timeframe} close  \n{doc_name}: {doc_get_purpose_or}', i=i, stage_label=stage['label'], fs_words_stage_timeframe=fs.WORDS[stage['timeframe']], doc_name=doc['name'], doc_get_purpose_or=doc.get('purpose') or ''))
-    st.caption(NOTE)
+    st.caption(t(NOTE))
     mine = [f for f in funnels if f.get("market") == market and f.get("direction") == direction
             and provenance(f, library) == "Your copy of a provided funnel"]
     if mine:

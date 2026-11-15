@@ -13,6 +13,8 @@ as the licence's notice asks.
 
 from __future__ import annotations
 
+from i18n import t
+
 import math
 from datetime import date
 
@@ -192,11 +194,11 @@ def cipher_series(df: pd.DataFrame, pane: int, dark: bool = False) -> list[dict]
         area("mc_wt1", "Light-blue wave", col("mc_wt1"), "rgba(144,202,249,0.95)"),
         area("mc_wt2", "Blue wave", col("mc_wt2"), "rgba(13,71,161,0.9)" if dark else "rgba(21,101,192,0.85)"),
         area("mc_vwap", "VWAP", col("mc_vwap"), "rgba(225,212,60,0.6)"),
-        area("mc_mf_in", "Money flow in", mf.clip(lower=0), "rgba(56,160,40,0.55)"),
-        area("mc_mf_out", "Money flow out", mf.clip(upper=0), "rgba(190,30,30,0.5)"),
+        area("mc_mf_in", t("Money flow in"), mf.clip(lower=0), "rgba(56,160,40,0.55)"),
+        area("mc_mf_out", t("Money flow out"), mf.clip(upper=0), "rgba(190,30,30,0.5)"),
     ]
     flow_in = df["mc_mf_in"].tolist() if "mc_mf_in" in df.columns else [True] * n
-    out.append({"id": "mc_bar", "type": "hist", "name": "Money flow bar", "pane": pane, "legend": False,
+    out.append({"id": "mc_bar", "type": "hist", "name": t("Money flow bar"), "pane": pane, "legend": False,
                 "base": -100, "values": [None if v != v else -93.0 for v in mf.tolist()],
                 "colors": ["rgba(40,130,40,0.85)" if f else "rgba(130,25,25,0.85)" for f in flow_in]})
     out.append(_line("mc_rsi", "RSI", pane, _values(col("mc_rsi"), 2), "#e100e1", width=1))
@@ -278,10 +280,10 @@ def cross_symbols(df: pd.DataFrame) -> list[list]:
 
         closed = df[~df["forming"].fillna(False).astype(bool)] if "forming" in df.columns else df
         golden, death = crosses(closed)
-        out = [[int(i), "star", "#d4a017", False, 1.5, "Golden cross: the 50 average crossed above the 200 (a "
-                "long-term turn up, often late)"] for i in np.flatnonzero(golden.fillna(False).to_numpy())]
-        out += [[int(i), "star", "#64748b", True, 1.5, "Death cross: the 50 average crossed below the 200 (a "
-                 "long-term turn down, often late)"] for i in np.flatnonzero(death.fillna(False).to_numpy())]
+        out = [[int(i), "star", "#d4a017", False, 1.5, t("Golden cross: the 50 average crossed above the 200 (a "
+                "long-term turn up, often late)")] for i in np.flatnonzero(golden.fillna(False).to_numpy())]
+        out += [[int(i), "star", "#64748b", True, 1.5, t("Death cross: the 50 average crossed below the 200 (a "
+                 "long-term turn down, often late)")] for i in np.flatnonzero(death.fillna(False).to_numpy())]
         return out
     except Exception:
         return []
@@ -471,7 +473,7 @@ def build_payload(
         pane, scale = place("stochrsi")
         if not scale:
             n = len(df)
-            series.append({"id": "stochrsi_band", "type": "band", "name": "Stoch RSI band", "pane": pane,
+            series.append({"id": "stochrsi_band", "type": "band", "name": t("Stoch RSI band"), "pane": pane,
                            "legend": False, "a": [80.0] * n, "b": [20.0] * n, "fill": "rgba(41,98,255,0.08)"})
         series.append(_line("stochrsi_k", "Stoch RSI %K", pane, _values(df["stochrsi_k"], 2), "#2962ff",
                             scale=scale, width=1.1 if scale else 1.5, alpha=0.6 if scale else 1.0))
@@ -588,8 +590,8 @@ def build_payload(
 
 
 def _clock_name(zone: str) -> str:
-    names = {"America/New_York": "New York time", "Europe/London": "London time", "Asia/Tokyo": "Tokyo time",
-             "Asia/Hong_Kong": "Hong Kong time", "Europe/Berlin": "Frankfurt time", "Europe/Paris": "Paris time",
+    names = {"America/New_York": t("New York time"), "Europe/London": "London time", "Asia/Tokyo": "Tokyo time",
+             "Asia/Hong_Kong": t("Hong Kong time"), "Europe/Berlin": "Frankfurt time", "Europe/Paris": "Paris time",
              "Australia/Sydney": "Sydney time", "Asia/Bangkok": "Bangkok time"}
     return names.get(zone, zone.replace("_", " ") + " time")
 

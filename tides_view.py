@@ -181,30 +181,31 @@ def hero(snap: dict, warning: dict | None, now: datetime) -> str:
            f"{extras}{layers}{gauge}</svg>")
     if t_.get("status") == "ok":
         name, plain, _ = td.TIDE_WORDS[t_["label"]]
-        held = f"for {t_['held_days']} trading days"
+        name, plain = t(name), t(plain)
+        held = t("for {n} trading days", n=t_["held_days"])
         pending = ""
         if t_.get("pending"):
-            pending = (t(' · turning: readings point to {td_tide_words_t_raw_labe}, confirmed after 5 closes', td_tide_words_t_raw_labe=td.TIDE_WORDS[t_['raw_label']][0].lower()))
+            pending = (t(' · turning: readings point to {td_tide_words_t_raw_labe}, confirmed after 5 closes', td_tide_words_t_raw_labe=t(td.TIDE_WORDS[t_['raw_label']][0]).lower()))
         title = (f"<div class='big'>{esc(name)}<span class='plain'>{esc(plain)}</span></div>"
-                 f"<div class='sub'>{esc(held)}{esc(pending)} · score {t_['score']:+.2f}</div>")
+                 f"<div class='sub'>{esc(held)}{esc(pending)} · {esc(t('score {s:+.2f}', s=t_['score']))}</div>")
     else:
         title = t("<div class='big'>Tide unknown</div><div class='sub'>Not enough data yet.</div>")
     if sea.get("status") == "ok":
-        title += (f"<div class='sub'>Sea {esc(sea['state'])} <span class='plain'>{esc(sea['plain'])}</span></div>")
+        title += (f"<div class='sub'>{esc(t('Sea {state}', state=t(sea['state'])))} <span class='plain'>{esc(t(sea['plain']))}</span></div>")
     chips = []
     for w in winds.values():
         cls = "head" if w["wind"] == "headwind" else "tail" if w["wind"] == "tailwind" else ""
-        word = {"headwind": "headwind (risk against)", "tailwind": "tailwind (risk with)",
-                "neither": "no clear wind"}[w["wind"]]
-        why = ", ".join(td.SPEC[k]["name"] for k in w["drivers"]) or "no single current"
-        tip = f"{w['name']}: {word}. Led by {why}." + (
-            t(' Pushing the other way: {join_td_spec_k_name_for_}.', join_td_spec_k_name_for_=', '.join(td.SPEC[k]['name'] for k in w.get('against') or []))
+        word = {"headwind": t("headwind (risk against)"), "tailwind": t("tailwind (risk with)"),
+                "neither": t("no clear wind")}[w["wind"]]
+        why = ", ".join(t(td.SPEC[k]["name"]) for k in w["drivers"]) or t("no single current")
+        tip = t("{name}: {word}. Led by {why}.", name=t(w["name"]), word=word, why=why) + (
+            t(' Pushing the other way: {join_td_spec_k_name_for_}.', join_td_spec_k_name_for_=', '.join(t(td.SPEC[k]['name']) for k in w.get('against') or []))
             if w.get("against") else "")
-        chips.append(f"<span class='chip {cls}' title='{esc(tip)}'>{WIND_ICON[w['wind']]} {esc(w['name'])}: "
-                     f"{esc(w['wind'] if w['wind'] != 'neither' else 'no clear wind')}</span>")
+        chips.append(f"<span class='chip {cls}' title='{esc(tip)}'>{WIND_ICON[w['wind']]} {esc(t(w['name']))}: "
+                     f"{esc(t(w['wind']) if w['wind'] != 'neither' else t('no clear wind'))}</span>")
     if warning:
         tip = t('{warning_name} ({warning_reference}): {warning_why} A scheduled event, not a forecast.', warning_name=warning['name'], warning_reference=warning['reference'], warning_why=warning['why'])
-        chips.append(f"<span class='chip warn' title='{esc(tip)}'>{mc.pennants(warning['tier'])} Storm warning: "
+        chips.append(f"<span class='chip warn' title='{esc(tip)}'>{mc.pennants(warning['tier'])} {esc(t('Storm warning:'))} "
                      f"{esc(warning['short'])} {esc(mc.when_words(warning['at'], now))}</span>")
     dark = " dark" if state in ("rough", "storm") else ""
     sea_img = img(svg, "sea", f"Sea {state}, tide {t_.get('label', '')}")
@@ -228,13 +229,13 @@ def strip(upcoming: list[dict], now: datetime) -> str:
         delta = (e["at"] - now).total_seconds()
         cls = "past" if delta < 0 else "now" if delta < 24 * 3600 else ""
         local = e["at"].astimezone(mc.NEW_YORK)
-        tip = (f"{e['name']} ({e['reference']}) at {local:%H:%M} New York. {e['why']}"
-               + (f" ({e['note']})" if e["note"] else "") + " A scheduled event, not a forecast.")
+        tip = (t("{name} ({ref}) at {time} New York.", name=e["name"], ref=e["reference"], time=f"{local:%H:%M}")
+               + f" {e['why']}" + (f" ({e['note']})" if e["note"] else "") + " " + t("A scheduled event, not a forecast."))
         cards.append(f"<div class='ev {cls}' title='{esc(tip)}'><div class='flag'>{mc.pennants(e['tier'])} {e['icon']}</div>"
                      f"<div class='nm'>{esc(e['short'])} · {esc(e['reference'])}</div>"
                      f"<div class='wh'>{local:%a %d %b} · {esc(mc.when_words(e['at'], now))}</div></div>")
-    return ("<div class='card storm'><h4>⚑ Storm warnings: the macro calendar <span style='font-weight:400;"
-            "font-size:12px'>(two pennants: major, one: notable, square flag: extreme)</span></h4><div class='strip'>"
+    return ("<div class='card storm'><h4>" + t("⚑ Storm warnings: the macro calendar") + " <span style='font-weight:400;"
+            "font-size:12px'>" + t("(two pennants: major, one: notable, square flag: extreme)") + "</span></h4><div class='strip'>"
             + "".join(cards) + "</div></div>")
 
 
@@ -283,6 +284,7 @@ def waves(snap: dict, range_key: str = "1Y") -> str:
     swell_y = 92
     t_ = snap.get("tide") or {}
     name, plain, _ = td.TIDE_WORDS.get(t_.get("label"), ("Tide", "", ""))
+    name, plain = t(name), (t(plain) if plain else "")
     tide_state = f"{ {'in': '▲', 'out': '▼'}.get(t_.get('label'), '▶') } {name.lower()} · {plain}"
     tide_tone = {"in": "#16a34a", "out": "#dc2626"}.get(t_.get("label"), "#64748b")
     body = []
@@ -327,17 +329,18 @@ def waves(snap: dict, range_key: str = "1Y") -> str:
         body.append(f"<path d='{path(_dated(c['wave'], all_dates), cy, 13)}' fill='none' "
                     f"stroke='{colours[i % len(colours)]}' stroke-width='1.5'/>")
         pull, _cls, tone = pull_of(c)
-        body.append(f"<text x='12' y='{cy - 2}' font-size='12' fill='#64748b'>{esc(c['icon'])} {esc(c['name'])}</text>")
+        body.append(f"<text x='12' y='{cy - 2}' font-size='12' fill='#64748b'>{esc(c['icon'])} {esc(t(c['name']))}</text>")
         body.append(f"<text x='30' y='{cy + 12}' font-size='9' fill='{tone}'>{ARROW[c['direction']]} "
-                    f"{esc(c['direction'])} · {pull}</text>")
+                    f"{esc(t(c['direction']))} · {esc(t(pull))}</text>")
     first, last = dates[0], dates[-1]
     svg = img(f"<svg viewBox='0 0 1000 {height}' font-family='Source Sans Pro, Segoe UI, Helvetica, Arial, "
               f"sans-serif'>" + "".join(body) + "</svg>", "wv",
               t('Each current and the swell from {first} to {last}', first=first, last=last))
-    return ("<div class='card waves'>" + svg + "<div class='foot' style='margin-top:4px'>Above a lane's line pulls "
-            "towards risk-taking, below pulls away. The swell is the Tide's score: each family's average, weighted "
-            "(money and rates 30%, growth and credit 30%, safe havens 20%, rotation 20%); the grey band is slack. "
-            "Dashed lines mark past releases: red Fed rate decisions, amber CPI inflation, purple jobs reports. Drawn from the readings, nothing added.</div></div>")
+    return ("<div class='card waves'>" + svg + "<div class='foot' style='margin-top:4px'>"
+            + t("Above a lane's line pulls towards risk-taking, below pulls away. The swell is the Tide's score: each "
+                "family's average, weighted (money and rates 30%, growth and credit 30%, safe havens 20%, rotation "
+                "20%); the grey band is slack. Dashed lines mark past releases: red Fed rate decisions, amber CPI "
+                "inflation, purple jobs reports. Drawn from the readings, nothing added.") + "</div></div>")
 
 
 WAVES_TITLE = "<h4>〰️ The waves: each current's pull, and the swell they make together</h4>"
@@ -346,32 +349,34 @@ WAVES_TITLE = "<h4>〰️ The waves: each current's pull, and the swell they mak
 def card(c: dict) -> str:
     spec = td.SPEC[c["key"]]
     if c.get("status") != "ok":
-        return (t("<div class='card cur mute' title='{esc_spec_measures}'><div class='nm'>{esc_spec_icon} {esc_spec_name}</div><div class='meta'>No data right now.</div></div>", esc_spec_measures=esc(spec['measures']), esc_spec_icon=esc(spec['icon']), esc_spec_name=esc(spec['name'])))
+        return (t("<div class='card cur mute' title='{esc_spec_measures}'><div class='nm'>{esc_spec_icon} {esc_spec_name}</div><div class='meta'>No data right now.</div></div>", esc_spec_measures=esc(t(spec['measures'])), esc_spec_icon=esc(spec['icon']), esc_spec_name=esc(t(spec['name']))))
     pull, cls, _tone = pull_of(c)
-    meaning = spec[c["direction"]] if c["direction"] in ("rising", "falling") else "little change over 30 days"
+    meaning = t(spec[c["direction"]]) if c["direction"] in ("rising", "falling") else t("little change over 30 days")
     votes = t("Votes in the Tide.") if c["weight"] else t("Shown on its own; does not vote in the Tide.")
-    tip = (f"{spec['measures']}. {c['direction'].capitalize()}: {meaning}. Today's level is {c['band']} for the past "
-           f"5 years (score {c['score']:.0f}/100). {votes} Change: 7 days {fmt_change(c, 'change_7')}, 30 days "
-           f"{fmt_change(c)}. As of {c['as_of']}.")
+    tip = (t(spec["measures"]) + ". " + t("{direction}: {meaning}. Today's level is {band} for the past 5 years "
+                                          "(score {score:.0f}/100).", direction=t(c["direction"]).capitalize(),
+                                          meaning=meaning, band=t(c["band"]), score=c["score"])
+           + " " + votes + " " + t("Change: 7 days {c7}, 30 days {c30}. As of {when}.", c7=fmt_change(c, "change_7"),
+                                   c30=fmt_change(c), when=c["as_of"]))
     return (f"<div class='card cur{'' if c['weight'] else ' mute'}' title='{esc(tip)}'>"
-            f"<div class='top'><span class='nm'>{esc(spec['icon'])} {esc(spec['name'])}</span>"
+            f"<div class='top'><span class='nm'>{esc(spec['icon'])} {esc(t(spec['name']))}</span>"
             f"<span class='val'>{esc(fmt_value(c))}</span></div>"
-            f"<span class='band'>{esc(c['band'])} · {c['score']:.0f}/100</span>"
-            f"<div class='dir {cls}'>{ARROW[c['direction']]} {esc(c['direction'])} · {esc(pull)}</div>"
-            f"<div class='meta'>30 days {esc(fmt_change(c))}{'' if c['weight'] else ' · not voting'}</div>"
+            f"<span class='band'>{esc(t(c['band']))} · {c['score']:.0f}/100</span>"
+            f"<div class='dir {cls}'>{ARROW[c['direction']]} {esc(t(c['direction']))} · {esc(t(pull))}</div>"
+            f"<div class='meta'>{esc(t('30 days {change}', change=fmt_change(c)))}{'' if c['weight'] else esc(t(' · not voting'))}</div>"
             f"{spark(c.get('spark') or [], spec['sign'] > 0)}</div>")
 
 
 def cards(snap: dict) -> str:
     cur = snap.get("currents") or {}
-    out = ["<h4>🧭 The currents</h4>"]
+    out = ["<h4>" + t("🧭 The currents") + "</h4>"]
     for fam in FAMILY_ORDER:
         name, weight, icon = td.FAMILIES[fam]
         members = [cur[k] for k in td.CURRENT_KEYS if td.SPEC[k]["family"] == fam and k in cur]
         score = ((snap.get("tide") or {}).get("families") or {}).get(fam)
-        pull = "" if score is None else f" · pull {score:+.2f}"
-        out.append(f"<div class='fam'><div class='fh'>{icon} {esc(name)} <span style='font-weight:400;opacity:.75'>"
-                   f"(weight {weight:.0%}{pull})</span></div><div class='grid'>"
+        pull = "" if score is None else t(" · pull {score:+.2f}", score=score)
+        out.append(f"<div class='fam'><div class='fh'>{icon} {esc(t(name))} <span style='font-weight:400;opacity:.75'>"
+                   f"({esc(t('weight {w:.0%}', w=weight))}{pull})</span></div><div class='grid'>"
                    + "".join(card(c) for c in members) + "</div></div>")
     return "".join(out)
 
@@ -401,7 +406,7 @@ def side_readings(snap: dict) -> str:
             bits.append(t("<div class='card cur' title='{esc_tip}'><div class='nm'>{name}</div><div class='val'>30 days {r_change_30:+.1f}%</div><div class='meta'>{esc_td_band_r_get_score_} for 5 years</div></div>", esc_tip=esc(tip), name=name, r_change_30=r['change_30'], esc_td_band_r_get_score_=esc(td.band(r.get('score')) or '')))
     if not bits:
         return ""
-    return "<h4>🔭 Also on the horizon (shown, not voting)</h4><div class='grid'>" + "".join(bits) + "</div>"
+    return "<h4>" + t("🔭 Also on the horizon (shown, not voting)") + "</h4><div class='grid'>" + "".join(bits) + "</div>"
 
 
 def top_part(snap: dict, now: datetime | None = None) -> str:

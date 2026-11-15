@@ -8,6 +8,8 @@ market-wide reading) adds 🔭. The same rule works for anyone's own Groups and 
 
 from __future__ import annotations
 
+from i18n import t
+
 import signal_library as sl
 
 # (key, icon, hover) in display order.
@@ -297,7 +299,7 @@ def followed_card(doc: dict | None, key: str | None = None) -> dict | None:
         through = s.get("through") or data.get("through") or s["last"]
         title += f" · {_month(start)} to {_month(through)}"
         if s.get("coin_assets") is not None:
-            lines.append(f"Studied on {s['coin_assets']} major coins and {s['share_assets']} large US equities.")
+            lines.append(t('Studied on {s_coin_assets} major coins and {s_share_assets} large US equities.', s_coin_assets=s['coin_assets'], s_share_assets=s['share_assets']))
         sp = s.get("spread") or {}
         if sp.get("days"):
             lines.append(f"Turned Yes {s['episodes']:,} separate times, on {sp['days']:,} different days in "
@@ -305,25 +307,19 @@ def followed_card(doc: dict | None, key: str | None = None) -> dict | None:
                          + (f"; the busiest week holds {sp['top_week_share']:.0%} of them." if sp.get("top_week_share", 0)
                             >= 0.05 else "."))
         else:
-            lines.append(f"Turned Yes {s['episodes']:,} separate times, in {s['weeks']:,} different weeks.")
+            lines.append(t('Turned Yes {s_episodes:,} separate times, in {s_weeks:,} different weeks.', s_episodes=s['episodes'], s_weeks=s['weeks']))
         n = s["plain"]
         if s["type"] == "neutral":
-            lines.append(f"Size of the move after 10 daily candles, either way: {n['size']:.1f} typical moves on "
-                         f"average (comparable days {n['size_usual']:.1f}).")
+            lines.append(t('Size of the move after 10 daily candles, either way: {n_size:.1f} typical moves on average (comparable days {n_size_usual:.1f}).', n_size=n['size'], n_size_usual=n['size_usual']))
         else:
-            lines.append(f"Rose a typical move before falling one: {n['gain_first']:.0%} of the time "
-                         f"(comparable days {n['gain_first_usual']:.0%}); fell one first: {n['loss_first']:.0%} "
-                         f"({n['loss_first_usual']:.0%}).")
-            lines.append(f"After 10 daily candles: {_signed(n['move'])} typical moves on average (comparable days "
-                         f"{_signed(n['move_usual'])}); finished higher {n['higher']:.0%} of the time "
-                         f"({n['higher_usual']:.0%}).")
+            lines.append(t('Rose a typical move before falling one: {n_gain_first:.0%} of the time (comparable days {n_gain_first_usual:.0%}); fell one first: {n_loss_first:.0%} ({n_loss_first_usual:.0%}).', n_gain_first=n['gain_first'], n_gain_first_usual=n['gain_first_usual'], n_loss_first=n['loss_first'], n_loss_first_usual=n['loss_first_usual']))
+            lines.append(t('After 10 daily candles: {signed_n_move} typical moves on average (comparable days {signed_n_move_usual}); finished higher {n_higher:.0%} of the time ({n_higher_usual:.0%}).', signed_n_move=_signed(n['move']), signed_n_move_usual=_signed(n['move_usual']), n_higher=n['higher'], n_higher_usual=n['higher_usual']))
         top = s.get("top_assets") or []
         if top and top[0][1] >= 0.1:
             lines.append(f"From {s['coins']:,} coin and {s['shares']:,} equity episodes; most from "
                          + ", ".join(f"{a.replace('-USD', '')} {v:.0%}" for a, v in top) + ".")
         else:
-            lines.append(f"From {s['coins']:,} coin and {s['shares']:,} equity episodes, spread across assets "
-                         f"(none above {max([v for _, v in top] or [0]):.0%}).")
+            lines.append(t('From {s_coins:,} coin and {s_shares:,} equity episodes, spread across assets (none above {max_v_for_v_in_top_or_0:.0%}).', s_coins=s['coins'], s_shares=s['shares'], max_v_for_v_in_top_or_0=max([v for _, v in top] or [0])))
         m = s.get("rests_on")
         test = ((s.get("tests") or {}).get(m) or {}) if m else {}
         cons = test.get("consistency") or {}
@@ -344,7 +340,7 @@ def followed_card(doc: dict | None, key: str | None = None) -> dict | None:
                          + (", and in both coins and equities." if markets and both else
                             ", but not in both coins and equities." if markets else "."))
     else:
-        lines.append("It has not turned Yes often enough in the saved history to study.")
+        lines.append(t("It has not turned Yes often enough in the saved history to study."))
     out = {"title": title, "lines": lines, "verdict": s.get("verdict"),
            "note": "Past patterns, measured from the close after each Yes, before costs. Not a forecast. " + TYPICAL}
     out.update(breakdown(s))
@@ -372,8 +368,7 @@ def breakdown(s: dict) -> dict:
     out: dict = {}
     parts = []
     for name, p in (s.get("parts") or {}).items():
-        head = f"{PART_NAMES.get(name, name)} ({p.get('assets', 0)} assets): {p['episodes']:,} episodes in " \
-               f"{p['weeks']:,} weeks"
+        head = t('{part_names_get_name_name} ({p_get_assets_0} assets): {p_episodes:,} episodes in {p_weeks:,} weeks', part_names_get_name_name=PART_NAMES.get(name, name), p_get_assets_0=p.get('assets', 0), p_episodes=p['episodes'], p_weeks=p['weeks'])
         verdict = p.get("verdict")
         if verdict:
             head += f" · {VERDICT_MARK.get(verdict, ('', ''))[0]} {verdict}".replace("  ", " ")
@@ -389,14 +384,14 @@ def breakdown(s: dict) -> dict:
             else:
                 how = "better" if c["estimate"] > 0 else "worse"
                 what = f"price did {how} after coins' Yes than after equities'"
-            out["compare"] = f"Coins and equities clearly differ here: {what}, by more than luck usually gives."
+            out["compare"] = t('Coins and equities clearly differ here: {what}, by more than luck usually gives.', what=what)
         elif c:
-            out["compare"] = "Coins and equities: no clear difference between them."
+            out["compare"] = t("Coins and equities: no clear difference between them.")
         else:
-            out["compare"] = "Coins and equities can't be compared yet: one has too few weeks of episodes."
+            out["compare"] = t("Coins and equities can't be compared yet: one has too few weeks of episodes.")
         if not any(p.get("verdict") and p["verdict"] != VERDICTS_FEW for p in parts):
-            out["parts_note"] = ("Same method, fewer episodes each. A part can look different by luck, so these are "
-                                 "numbers to read, not verdicts.")
+            out["parts_note"] = (t("Same method, fewer episodes each. A part can look different by luck, so these are "
+                                 "numbers to read, not verdicts."))
     if s.get("periods"):
         out["periods"] = [{"Period": p["name"], "Episodes": p["episodes"], "What followed": _numbers(p.get("plain"),
                                                                                                     kind)}
@@ -410,13 +405,13 @@ def breakdown(s: dict) -> dict:
             line = (f"{lk['unusual']} of the {lk['checked']} assets with enough episodes look unusual for this Set; "
                     f"luck alone typically makes about {lk['chance']} look this way (up to {lk['chance_high']}).")
         else:
-            line = "Too few assets have enough episodes for a luck check."
+            line = t("Too few assets have enough episodes for a luck check.")
         out["assets"] = {"line": line, "rows": table,
-                         "note": ("A guide only, in name order. An asset that looks unusual is a place to look closer, "
-                                  "not proof that the Set works on it: with many assets, some always look unusual.")}
+                         "note": (t("A guide only, in name order. An asset that looks unusual is a place to look closer, "
+                                  "not proof that the Set works on it: with many assets, some always look unusual."))}
     if s.get("episodes"):
-        out["history"] = ("Studied once, on every studied asset and year. Choosing assets or years isn't offered, so "
-                          "a lucky slice can't be picked out.")
+        out["history"] = (t("Studied once, on every studied asset and year. Choosing assets or years isn't offered, so "
+                          "a lucky slice can't be picked out."))
     return out
 
 
@@ -443,4 +438,4 @@ def data_mark(available: str | None) -> tuple[str, str]:
     for k, v in DATA.items():
         if word.startswith(k):
             return v
-    return ("◐", word or "Data completeness unknown")
+    return ("◐", word or t("Data completeness unknown"))

@@ -17,6 +17,8 @@ Ops: "gte" (is at least), "lte" (is at most) for numbers; "yes", "no" for yes/no
 
 from __future__ import annotations
 
+from i18n import mark, t
+
 import copy
 import re
 
@@ -28,13 +30,13 @@ from signal_library import fields
 LINEAGE = 3
 ROLES = ("score", "condition", "levels", "context")
 ROLE_HINT = {
-    "score": "Counts towards the Group score (−100 to +100), using the signal's standard score.",
-    "condition": "Used only in the rules, not in the score.",
-    "levels": "Supplies price levels (support, resistance) for later strategies.",
-    "context": "Shown alongside the result, but changes nothing.",
+    "score": mark("Counts towards the Group score (−100 to +100), using the signal's standard score."),
+    "condition": mark("Used only in the rules, not in the score."),
+    "levels": mark("Supplies price levels (support, resistance) for later strategies."),
+    "context": mark("Shown alongside the result, but changes nothing."),
 }
-CATEGORY = {"trend": "Trend", "momentum": "Momentum", "regime": "Regime", "structure": "Structure",
-            "volume": "Volume", "sentiment": "Sentiment", "positioning": "Positioning"}
+CATEGORY = {"trend": mark("Trend"), "momentum": mark("Momentum"), "regime": mark("Regime"), "structure": mark("Structure"),
+            "volume": mark("Volume"), "sentiment": mark("Sentiment"), "positioning": mark("Positioning")}
 CATEGORY_ICON = {"trend": "trend", "momentum": "momentum", "regime": "regime", "structure": "structure",
                  "volume": "volume", "sentiment": "sentiment"}
 DIRECTION_MAP = {"up": 1, "down": -1, "mixed": 0}
@@ -73,18 +75,20 @@ def catalogue() -> list[dict]:
                 kind, label = RECENCY, label.removesuffix(" ago")
             operands.append({"field": path, "type": kind, "label": label, "scale": fields.scale_text(desc),
                              "labels": desc.get("labels") or [], "range": desc.get("range")})
-        badge = ("History from Nov 2026" if ("sentiment" in d.requires or "options" in d.requires) else "")
+        badge = (t("History from Nov 2026") if ("sentiment" in d.requires or "options" in d.requires) else "")
         out.append({
-            "id": d.id, "version": d.version, "name": d.name, "category": d.category,
-            "category_label": CATEGORY.get(d.category, d.category.title()), "icon": CATEGORY_ICON.get(d.category, "trend"),
-            "timeframes": list(d.timeframes), "hint": (d.interpretation or d.calculation or "")[:220],
+            "id": d.id, "version": d.version, "name": t(d.name), "category": d.category,
+            "category_label": t(CATEGORY.get(d.category, d.category.title())), "icon": CATEGORY_ICON.get(d.category, "trend"),
+            "timeframes": list(d.timeframes), "hint": t(d.interpretation or d.calculation or "")[:220],
             "badge": badge, "can_score": _score_transform(d.key) is not None, "operands": operands,
             # Settings a person may change (such as an EMA's length): shown on the signal's card in the editors.
             "params": {name: {"default": p.default, "kind": p.kind, "min": p.minimum, "max": p.maximum,
                               "choices": list(p.choices), "doc": p.doc} for name, p in d.params.items()},
         })
     order = list(CATEGORY)
-    return sorted(out, key=lambda s: (order.index(s["category"]) if s["category"] in order else 99, s["name"]))
+    english = {d.id: d.name for d in sl.REGISTRY.latest()}       # the same order in every language
+    return sorted(out, key=lambda s: (order.index(s["category"]) if s["category"] in order else 99,
+                                      english.get(s["id"], s["name"])))
 
 
 def _score_transform(signal_key: str) -> dict | None:
@@ -279,7 +283,7 @@ def from_document(doc: dict) -> tuple[dict | None, str | None]:
     for c in doc.get("conditions") or []:
         parsed = _clauses(c["rule"])
         if parsed is None:
-            return None, f"The {c['kind']} {c.get('label') or c['key']!r} is more complex than the editor can show yet."
+            return None, t('The {c_kind} {c_get_label_or_c_key!r} is more complex than the editor can show yet.', c_kind=c['kind'], c_get_label_or_c_key=c.get('label') or c['key'])
         joiner, clauses = parsed
         conditions.append({"key": c["key"], "label": c.get("label") or c["key"], "kind": c["kind"], "joiner": joiner,
                            "clauses": clauses})
@@ -287,7 +291,7 @@ def from_document(doc: dict) -> tuple[dict | None, str | None]:
     for m in doc.get("members") or []:
         ref = m["ref"]
         if not fields.described(f"{ref['id']}@{ref['version']}"):
-            return None, f"{m['key']} ({ref['id']}) is not in the editor's signal list yet."
+            return None, t("{m_key} ({ref_id}) is not in the editor's signal list yet.", m_key=m['key'], ref_id=ref['id'])
         if m["role"] == "score" and m.get("weight") not in (1, 1.0):
             return None, f"{m['key']} has weight {m.get('weight')}; the editor uses equal weights."
         members.append({"key": m["key"], "id": ref["id"], "version": ref["version"], "timeframe": ref["timeframe"],
@@ -302,7 +306,7 @@ def from_document(doc: dict) -> tuple[dict | None, str | None]:
         for r in spec["rules"]:
             parsed = _clauses(r["when"])
             if parsed is None:
-                return None, f"Rule {r['label']!r} is more complex than the editor can show yet."
+                return None, t('Rule {r_label!r} is more complex than the editor can show yet.', r_label=r['label'])
             joiner, clauses = parsed
             model["rules"].append({"id": r["id"], "label": r["label"], "joiner": joiner, "clauses": clauses})
     return model, None
@@ -351,44 +355,44 @@ def checks(model: dict) -> dict:
     blocks, warns = [], []
     members = model.get("members") or []
     if not members:
-        blocks.append("Add at least one signal.")
+        blocks.append(t("Add at least one signal."))
     score = [m for m in members if m["role"] == "score"]
     for m in score:
         if not m.get("transform") and _score_transform(_signal_key(m)) is None:
             blocks.append(f"{_name_of(m['id'])} has no standard score, so it cannot be a Score member. "
                           "Use it as a Condition.")
     if members and not score and not model.get("rules"):
-        blocks.append("Add a Score member, or a rule, so the Group says something.")
+        blocks.append(t("Add a Score member, or a rule, so the Group says something."))
     rule_ids = [r["id"] for r in model.get("rules") or []]
     if len(set(rule_ids)) != len(rule_ids):
-        blocks.append("Two rules use the same label; each label must be different.")
+        blocks.append(t("Two rules use the same label; each label must be different."))
     kinds = {o["key"]: o["type"] for o in operands(model)}
     by_key = {m["key"]: m for m in members}
     keys = [c["key"] for c in model.get("conditions") or []]
     if len(set(keys)) != len(keys):
-        blocks.append("Two confirmations or vetoes have the same name; each must be different.")
+        blocks.append(t("Two confirmations or vetoes have the same name; each must be different."))
     for c in model.get("conditions") or []:
         if not c.get("clauses"):
-            blocks.append(f"The {c['kind']} {c['label']!r} has no condition yet.")
+            blocks.append(t('The {c_kind} {c_label!r} has no condition yet.', c_kind=c['kind'], c_label=c['label']))
         for cl in c.get("clauses") or []:
             if cl.get("operand") not in kinds:
-                blocks.append(f"The {c['kind']} {c['label']!r} uses a reading that is no longer in the Group.")
+                blocks.append(t('The {c_kind} {c_label!r} uses a reading that is no longer in the Group.', c_kind=c['kind'], c_label=c['label']))
             elif kinds[cl["operand"]] == fields.NUMBER and cl.get("op") in ("gte", "lte") and _number(cl.get("value")) is None:
-                blocks.append(f"The {c['kind']} {c['label']!r}: {cl.get('value')!r} is not a number.")
+                blocks.append(t('The {c_kind} {c_label!r}: {cl_get_value!r} is not a number.', c_kind=c['kind'], c_label=c['label'], cl_get_value=cl.get('value')))
             elif cl.get("op") in ("within", "not_within") and not _candles(cl.get("value")):
-                blocks.append(f"The {c['kind']} {c['label']!r}: say how many candles, 1 or more.")
+                blocks.append(t('The {c_kind} {c_label!r}: say how many candles, 1 or more.', c_kind=c['kind'], c_label=c['label']))
             elif cl.get("op") in ("within", "not_within") and recency_problem(by_key.get(cl["operand"].partition(":")[0]), cl.get("value")):
                 blocks.append(recency_problem(by_key.get(cl["operand"].partition(":")[0]), cl.get("value")))
     for i, r in enumerate(model.get("rules") or []):
         if not r.get("clauses"):
-            blocks.append(f"Rule {i + 1} ({r['label']}) has no condition yet.")
+            blocks.append(t('Rule {i_1} ({r_label}) has no condition yet.', i_1=i + 1, r_label=r['label']))
         for c in r.get("clauses") or []:
             if c.get("operand") not in kinds:
-                blocks.append(f"Rule {i + 1} ({r['label']}) uses a reading that is no longer in the Group.")
+                blocks.append(t('Rule {i_1} ({r_label}) uses a reading that is no longer in the Group.', i_1=i + 1, r_label=r['label']))
             elif kinds[c["operand"]] == fields.NUMBER and c.get("op") in ("gte", "lte") and _number(c.get("value")) is None:
-                blocks.append(f"Rule {i + 1} ({r['label']}): {c.get('value')!r} is not a number.")
+                blocks.append(t('Rule {i_1} ({r_label}): {c_get_value!r} is not a number.', i_1=i + 1, r_label=r['label'], c_get_value=c.get('value')))
             elif c.get("op") in ("within", "not_within") and not _candles(c.get("value")):
-                blocks.append(f"Rule {i + 1} ({r['label']}): say how many candles, 1 or more.")
+                blocks.append(t('Rule {i_1} ({r_label}): say how many candles, 1 or more.', i_1=i + 1, r_label=r['label']))
             elif c.get("op") in ("within", "not_within") and recency_problem(by_key.get(c["operand"].partition(":")[0]), c.get("value")):
                 blocks.append(recency_problem(by_key.get(c["operand"].partition(":")[0]), c.get("value")))
 
@@ -411,8 +415,8 @@ def checks(model: dict) -> dict:
             if key != "score":
                 in_checks.add(key)
     if any(c["kind"] == "veto" for c in model.get("conditions") or []) and model.get("rules"):
-        warns.append("When a veto fires, every label becomes Vetoed; when a veto cannot be checked, labels are marked "
-                     "qualified and a Set treats them as uncertain.")
+        warns.append(t("When a veto fires, every label becomes Vetoed; when a veto cannot be checked, labels are marked "
+                     "qualified and a Set treats them as uncertain."))
     by_cat: dict = {}
     for m in score:
         by_cat.setdefault(_category_of(m["id"]), []).append(_name_of(m["id"]))
@@ -424,11 +428,10 @@ def checks(model: dict) -> dict:
             warns.append(f"{listed} {verb} {CATEGORY.get(cat, cat).lower()}. The score may count the same move "
                          f"{'twice' if len(names) == 2 else 'several times'}.")
     if len(score) >= 3 and all("candles" in sl.REGISTRY.get(m["id"]).requires for m in score):
-        warns.append("Every score member comes from price and volume alone, so they will often agree.")
+        warns.append(t("Every score member comes from price and volume alone, so they will often agree."))
     tfs = sorted({m["timeframe"] for m in members if "candles" in sl.REGISTRY.get(m["id"]).requires})
     if len(tfs) > 1:
-        warns.append(f"Members use different timeframes ({', '.join(tfs)}). Each uses its own last closed candle, so "
-                     "they update at different times.")
+        warns.append(t('Members use different timeframes ({join_tfs}). Each uses its own last closed candle, so they update at different times.', join_tfs=', '.join(tfs)))
     for m in members:
         name = display_name(m)
         if m["role"] == "condition" and m["key"] not in used and m["key"] not in in_checks:
@@ -447,8 +450,7 @@ def checks(model: dict) -> dict:
     rules = model.get("rules") or []
     for i, r in enumerate(rules):
         if r.get("joiner") == "any" and len(r.get("clauses") or []) > 1 and len(rules) > 1:
-            warns.append(f"Rule {i + 1} uses OR, so it can be true at the same time as another rule. The higher rule "
-                         "wins; reorder with the arrows if that is wrong.")
+            warns.append(t('Rule {i_1} uses OR, so it can be true at the same time as another rule. The higher rule wins; reorder with the arrows if that is wrong.', i_1=i + 1))
     return {"blocks": list(dict.fromkeys(blocks)), "warnings": list(dict.fromkeys(warns))}
 
 
@@ -503,15 +505,14 @@ def describe(model: dict) -> str:
         joint = " and " if r.get("joiner") != "any" else " or "
         parts.append(f"Rule {i + 1}: {r['label']} when " + joint.join(_clause_text(c, members) for c in r["clauses"]) + ".")
     if rules:
-        parts.append(f"If a rule cannot be checked, the label is Unknown. If none match, "
-                     f"{(model.get('otherwise') or {}).get('label', 'Neutral')}.")
+        parts.append(t('If a rule cannot be checked, the label is Unknown. If none match, {model_get_otherwise_or_g}.', model_get_otherwise_or_g=(model.get('otherwise') or {}).get('label', 'Neutral')))
     for c in model.get("conditions") or []:
         if c.get("clauses"):
             joint = " and " if c.get("joiner") != "any" else " or "
             what = "Veto" if c["kind"] == "veto" else "Confirmation"
             parts.append(f"{what} “{c['label']}”: " + joint.join(_clause_text(x, members) for x in c["clauses"]) + ".")
     if score:
-        parts.append(f"A score is given when at least 1 of its {len(score)} readings is available.")
+        parts.append(t('A score is given when at least 1 of its {len_score} readings is available.', len_score=len(score)))
     return " ".join(parts)
 
 
@@ -536,10 +537,10 @@ def member_tag(member: dict) -> str:
     """What a member is read from, generated from its timeframe and source."""
     requires = sl.REGISTRY.get(member["id"]).requires
     if "sentiment" in requires:
-        return "Latest score at the time"
+        return t("Latest score at the time")
     if "options" in requires:
-        return "Latest options snapshot at the time"
-    return f"{member['timeframe']} · last closed candle" + (" · custom settings" if member.get("params") else "")
+        return t("Latest options snapshot at the time")
+    return t("{tf} · last closed candle", tf=member["timeframe"]) + (t(" · custom settings") if member.get("params") else "")
 
 
 def state_for_screen(model: dict) -> dict:

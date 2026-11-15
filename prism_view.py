@@ -9,7 +9,7 @@ through prism_put_scan (sql/2026-11-08_prism_scan_objects.sql). ▶ runs a scan 
 
 from __future__ import annotations
 
-from i18n import t
+from i18n import mark, t
 
 import time
 
@@ -285,7 +285,9 @@ def _history_component(st):
         from pathlib import Path
 
         js = (Path(__file__).resolve().parent / "lw_chart.js").read_text(encoding="utf-8")
-        _HISTORY_CHART.append(st.components.v2.component("lw_history", js=js, isolate_styles=False))
+        import i18n
+
+        _HISTORY_CHART.append(i18n.with_words(st.components.v2.component("lw_history", js=js, isolate_styles=False), js))
     return _HISTORY_CHART[0]
 
 
@@ -347,7 +349,7 @@ def _history_view(st, scan, strip) -> None:
     st.caption(t('Green = Yes (conditions met), amber = Unknown, clear = No · {names_top}: Yes {yes} times since {since}. Tap a small chart to put it on top. A description of the past, not a forecast; each day uses only data up to its close.', names_top=names[top], yes=yes, since=since))
     view = (scan.get("chart_views") or {}).get(next((r["id"] for r in rows if r["key"] == top), None))
     if st.button(t("Open on the main price chart"), icon=":material/candlestick_chart:", key=f"hist_open_{sid}",
-                 help="Select this asset everywhere (tables, chart, analysis sections) with this Set's bands on."
+                 help=t("Select this asset everywhere (tables, chart, analysis sections) with this Set's bands on.")
                  + (t(' Opens on {view_0} candles: the timeframe of the deepest stage it holds.', view_0=view[0]) if view else "")):
         r = next(r for r in rows if r["key"] == top)
         st.session_state["_chart_jump"] = {
@@ -451,15 +453,15 @@ def _loader(which):
 SQL_HINT = ("Prism Scans need their tables. Run sql/2026-11-06_prism_scans.sql and "
             "sql/2026-11-08_prism_scan_objects.sql in the Supabase SQL editor.")
 RPC_ERRORS = {
-    "too_many_active_scans": "You already have 5 scheduled scans. Pause one, or set it to run only when you press Play.",
-    "set_not_scannable": "This Set has no decision, so it cannot be scanned.",
-    "bad_schedule": "The schedule is not valid.",
-    "bad_assets": "A scan needs 1 to 60 assets or Watchlist groups.",
-    "bad_alerts": "The alert setting is not valid.",
-    "bad_name": "A scan needs a name of 1 to 80 characters.",
-    "not_owner": "This scan is not yours.",
-    "too_large": "This Set is too large.",
-    "prism_put_scan": "Prism Scans need a database update: run sql/2026-11-08_prism_scan_objects.sql.",
+    "too_many_active_scans": mark("You already have 5 scheduled scans. Pause one, or set it to run only when you press Play."),
+    "set_not_scannable": mark("This Set has no decision, so it cannot be scanned."),
+    "bad_schedule": mark("The schedule is not valid."),
+    "bad_assets": mark("A scan needs 1 to 60 assets or Watchlist groups."),
+    "bad_alerts": mark("The alert setting is not valid."),
+    "bad_name": mark("A scan needs a name of 1 to 80 characters."),
+    "not_owner": mark("This scan is not yours."),
+    "too_large": mark("This Set is too large."),
+    "prism_put_scan": mark("Prism Scans need a database update: run sql/2026-11-08_prism_scan_objects.sql."),
 }
 
 
@@ -467,5 +469,5 @@ def _rpc_message(exc) -> str:
     text = str(getattr(exc, "message", "") or exc)
     for code, words in RPC_ERRORS.items():
         if code in text:
-            return words
+            return t(words)
     return text[:200]

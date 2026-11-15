@@ -12,6 +12,9 @@ from __future__ import annotations
 
 import json
 
+import i18n
+from i18n import t
+
 CSS = """
 .ab{font:13px/1.35 inherit;color:inherit;margin:2px 0 6px;container:alertbands / inline-size}
 .ab .line{display:flex;align-items:stretch;gap:0}
@@ -103,6 +106,7 @@ export default function alertBands(component) {
 }
 """
 
+JS = i18n.js_ready(JS)
 _COMPONENT = None
 
 
@@ -111,7 +115,7 @@ def component():
     if _COMPONENT is None:
         import streamlit as st
 
-        _COMPONENT = st.components.v2.component("alert_bands", js=JS, css=CSS)
+        _COMPONENT = i18n.with_words(st.components.v2.component("alert_bands", js=JS, css=CSS), JS)
     return _COMPONENT
 
 
@@ -122,29 +126,29 @@ def board_data(reading: str, ticks) -> dict:
     import signals_v2
     from score_colours import STEPS
 
-    name = al.READING_ALERTS[reading]["name"]
-    words = signals_v2.CLUSTER_WORDS[reading]                      # strongest up first
+    name = t(al.READING_ALERTS[reading]["name"])
+    words = [t(w) for w in signals_v2.CLUSTER_WORDS[reading]]      # strongest up first
     steps = ("strong_down", "down", "mixed", "up", "strong_up")
-    ranges = ("−50 or below", "−50 to −20", "−20 to +20", "+20 to +50", "+50 or above")
+    ranges = (t("−50 or below"), "−50 – −20", "−20 – +20", "+20 – +50", t("+50 or above"))
     zones = [{"name": words[4 - i], "range": ranges[i], "fg": STEPS[s][0], "bg": STEPS[s][1],
-              "tip": f"{name} {ranges[i]}: {words[4 - i].lower()}."} for i, s in enumerate(steps)]
+              "tip": t("{name} {range}: {words}.", name=name, range=ranges[i], words=words[4 - i].lower())} for i, s in enumerate(steps)]
     borders = []
     for i, (code, value) in enumerate(al.BORDERS):
         below, above = words[4 - i].lower(), words[3 - i].lower()
         borders.append({
             "label": f"{value:+d}".replace("-", "−"),
             "up": {"key": f"up_{code}",
-                   "tip": f"▲ Alert when {name} rises past {value:+d}: from {below} into {above}."},
+                   "tip": t("▲ Alert when {name} rises past {value}: from {below} into {above}.", name=name, value=f"{value:+d}", below=below, above=above)},
             "down": {"key": f"dn_{code}",
-                     "tip": f"▼ Alert when {name} falls past {value:+d}: from {above} into {below}."},
+                     "tip": t("▼ Alert when {name} falls past {value}: from {above} into {below}.", name=name, value=f"{value:+d}", below=below, above=above)},
         })
-    flips = [{"key": "flip_up", "icon": "⇧ to the up side",
-              "tip": f"Alert when {name} jumps from the down side straight to the up side between two daily "
-                     "closes (one alert, not one per border)."},
-             {"key": "flip_dn", "icon": "⇩ to the down side",
-              "tip": f"Alert when {name} jumps from the up side straight to the down side between two daily "
-                     "closes (one alert, not one per border)."}]
-    return {"zones": zones, "borders": borders, "flips": flips, "flips_label": "Flips:",
+    flips = [{"key": "flip_up", "icon": t("⇧ to the up side"),
+              "tip": t("Alert when {name} jumps from the down side straight to the up side between two daily "
+                       "closes (one alert, not one per border).", name=name)},
+             {"key": "flip_dn", "icon": t("⇩ to the down side"),
+              "tip": t("Alert when {name} jumps from the up side straight to the down side between two daily "
+                       "closes (one alert, not one per border).", name=name)}]
+    return {"zones": zones, "borders": borders, "flips": flips, "flips_label": t("Flips:"),
             "ticks": [k for k in ticks if k in al.CROSSINGS]}
 
 
