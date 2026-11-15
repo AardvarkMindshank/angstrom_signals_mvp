@@ -34,20 +34,20 @@ FLAGS = os.path.join(HERE, "static", "flags")
 BASE = "en"
 
 # code, the language's own name, its English name, flag (country of its main market), status, writing direction
-LANGUAGES = [
+LANGUAGES = [                         # English first, then the rest by English name (the menu order)
     {"code": "en", "name": "English", "english": "English", "flag": "gb", "status": "live", "dir": "ltr"},
-    {"code": "th", "name": "ไทย", "english": "Thai", "flag": "th", "status": "live", "dir": "ltr"},
-    {"code": "es", "name": "Español", "english": "Spanish", "flag": "es", "status": "live", "dir": "ltr"},
-    {"code": "pt-BR", "name": "Português (Brasil)", "english": "Portuguese (Brazil)", "flag": "br", "status": "live",
-     "dir": "ltr"},
     {"code": "zh-CN", "name": "简体中文", "english": "Chinese (Simplified)", "flag": "cn", "status": "live", "dir": "ltr"},
+    {"code": "fr", "name": "Français", "english": "French", "flag": "fr", "status": "live", "dir": "ltr"},
+    {"code": "de", "name": "Deutsch", "english": "German", "flag": "de", "status": "live", "dir": "ltr"},
+    {"code": "id", "name": "Bahasa Indonesia", "english": "Indonesian", "flag": "id", "status": "live", "dir": "ltr"},
     {"code": "ja", "name": "日本語", "english": "Japanese", "flag": "jp", "status": "live", "dir": "ltr"},
     {"code": "ko", "name": "한국어", "english": "Korean", "flag": "kr", "status": "live", "dir": "ltr"},
-    {"code": "de", "name": "Deutsch", "english": "German", "flag": "de", "status": "live", "dir": "ltr"},
-    {"code": "fr", "name": "Français", "english": "French", "flag": "fr", "status": "live", "dir": "ltr"},
+    {"code": "pt-BR", "name": "Português (Brasil)", "english": "Portuguese (Brazil)", "flag": "br", "status": "live",
+     "dir": "ltr"},
+    {"code": "es", "name": "Español", "english": "Spanish", "flag": "es", "status": "live", "dir": "ltr"},
+    {"code": "th", "name": "ไทย", "english": "Thai", "flag": "th", "status": "live", "dir": "ltr"},
     {"code": "tr", "name": "Türkçe", "english": "Turkish", "flag": "tr", "status": "live", "dir": "ltr"},
     {"code": "vi", "name": "Tiếng Việt", "english": "Vietnamese", "flag": "vn", "status": "live", "dir": "ltr"},
-    {"code": "id", "name": "Bahasa Indonesia", "english": "Indonesian", "flag": "id", "status": "live", "dir": "ltr"},
 ]
 BY_CODE = {lang["code"]: lang for lang in LANGUAGES}
 
