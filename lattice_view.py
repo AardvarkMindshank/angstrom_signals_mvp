@@ -78,7 +78,7 @@ def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str = "") 
         st.session_state.pop("lattice_start", None)
     if lattice_panel.provided_shown(st):
         _provided_starters(st)
-    start = st.selectbox(t("Start from"), list(labels), format_func=labels.get, key="lattice_start")
+    start = st.selectbox(t("Start from"), list(labels), format_func=labels.get, key="lattice_start", placeholder=t("Choose an option"))
     if st.session_state.get("lattice_loaded") != start:
         st.session_state["lattice_loaded"] = start
         if start == START_NEW:
@@ -388,7 +388,7 @@ def _try(st, supabase, model: dict, assets, can_save: bool) -> None:
         return
     with st.expander(t("▶️ Try it on one asset (live)")):
         names = {f"{k}:{i}": n for k, i, n in assets}
-        pick = st.selectbox(t("Asset"), list(names), format_func=names.get, key="lattice_try_asset")
+        pick = st.selectbox(t("Asset"), list(names), format_func=names.get, key="lattice_try_asset", placeholder=t("Choose an option"))
         if st.button(t("Try it"), key="lattice_try"):
             kind, aid = pick.split(":", 1)
             ctx = sl.DataContext(kind, aid, sentiment_loader=loaders.sentiment_loader(supabase),

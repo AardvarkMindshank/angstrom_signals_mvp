@@ -217,13 +217,14 @@ def set_sentence(answers: list, dates: list) -> str:
     run = 1
     while run < len(answers) and answers[-1 - run] == last:
         run += 1
-    word = {"yes": "Yes", "no": "No"}.get(last, "Unknown")
-    days = f"{run} day{'s' if run > 1 else ''}" if run < len(answers) else f"all of the last {len(answers)} days"
-    text = f"{word} for {days}"
+    word = {"yes": t("Yes"), "no": t("No")}.get(last, t("Unknown"))
+    days = ((t("1 day") if run == 1 else t("{n} days", n=run)) if run < len(answers)
+            else t("all of the last {n} days", n=len(answers)))
+    text = t("{word} for {days}", word=word, days=days)
     yes = sum(a == "yes" for a in answers)
     if last != "yes" and yes:
         when = pd.Timestamp(dates[max(i for i, a in enumerate(answers) if a == "yes")]).strftime("%-d %b")
-        text += f"; last Yes on {when}"
+        text += t("; last Yes on {when}", when=when)
     if run < len(answers):
         text += t(' (Yes on {yes} of the last {len_answers} days)', yes=yes, len_answers=len(answers))
     return text + "."

@@ -94,7 +94,7 @@ def render(st, supabase, user_id: str = "") -> None:
         st.session_state["lattice_set_start"] = st.session_state.pop("_lattice_set_start_next")
     if st.session_state.get("lattice_set_start") not in starts:
         st.session_state.pop("lattice_set_start", None)
-    start = st.selectbox(t("Start from"), list(starts), format_func=starts.get, key="lattice_set_start")
+    start = st.selectbox(t("Start from"), list(starts), format_func=starts.get, key="lattice_set_start", placeholder=t("Choose an option"))
     if st.session_state.get("lattice_set_loaded") != start:
         st.session_state["lattice_set_loaded"] = start
         st.session_state["lattice_set_model"], st.session_state["lattice_set_source"] = ls.empty_model(), None

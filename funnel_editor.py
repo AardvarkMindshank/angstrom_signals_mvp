@@ -183,7 +183,7 @@ def render(st, supabase, user_id: str) -> None:
     pick = st.selectbox(t("Funnel"), keys, format_func=names.get, key="funnel_edit",
                         help=t("Your own funnels first, then the provided ones (marked provided). As with provided "
                              "Groups and Sets, a provided funnel can't be changed or deleted: make your own copy to "
-                             "use it. At most 6 of your own."))
+                             "use it. At most 6 of your own."), placeholder=t("Choose an option"))
     if pick.startswith("new:"):
         _provided_view(st, supabase, pick, funnels, library)
         return
@@ -280,14 +280,14 @@ def render(st, supabase, user_id: str) -> None:
     p1, p2, p3 = box.columns([2, 2, 1.4], vertical_alignment="bottom")
     sizes = [0, 50, 100, 200, 500]
     top = p1.selectbox(t("Size"), sizes, index=sizes.index(int(pool.get("top") or 0)), key=f"fe_top_{pick}",
-                       format_func=lambda n: "All eligible" if n == 0 else t('Top {n} by market cap', n=n))
+                       format_func=lambda n: "All eligible" if n == 0 else t('Top {n} by market cap', n=n), placeholder=t("Choose an option"))
     floors = [0, 250_000, 1_000_000, 5_000_000, 20_000_000, 100_000_000]
     current = int(pool.get("min_volume") or 0)
     if current not in floors:
         floors = sorted(floors + [current])
     vol = p2.selectbox(t("Traded a day, at least"), floors, index=floors.index(current), key=f"fe_vol_{pick}",
                        format_func=lambda v: t("No extra minimum") if v == 0 else
-                       (f"${v / 1e6:g}M" if v >= 1e6 else f"${v / 1e3:g}k"))
+                       (f"${v / 1e6:g}M" if v >= 1e6 else f"${v / 1e3:g}k"), placeholder=t("Choose an option"))
     only = p3.toggle(t("Only my watchlist"), value=bool(pool.get("watchlist_only")), key=f"fe_watch_{pick}",
                      help=t("The funnel checks only your own watchlist's eligible {coins_if_market_crypto_e}, not the market.", coins_if_market_crypto_e='coins' if market == 'crypto' else 'equities'))
     f["pool"] = {k: v for k, v in (("top", top or None), ("min_volume", vol or None), ("watchlist_only", only or None))

@@ -4037,7 +4037,7 @@ def _chart_set_picker():
             format_func=lambda k: t("⊘ No Set") if not k else options[k][0],
             help=(t("Colours every day by the Set's answer at that day's close: green = Yes (conditions met), "
                   "amber = Unknown (data missing), clear = No. Worked out from the full daily history; a "
-                  "description of the past, not a forecast.")))
+                  "description of the past, not a forecast.")), placeholder=t("Choose an option"))
     with cols[1]:
         show_no = st.toggle(t("Show No as faint red"), key="chart_band_no", disabled=not key,
                             help=t("Tint the No days too. Off keeps the chart clear, since most days are No."))
@@ -6535,7 +6535,7 @@ def my_groups_panel() -> None:
                 continue
             name = " ".join(str(row.get("name") or "").split()) or "Community"
             count = _group_member_count(row)
-            detail = f"{count} member" if count == 1 else f"{count} members"
+            detail = t("1 member") if count == 1 else t("{n} members", n=count)
             delete_group = False
             with st.container(horizontal=True, vertical_alignment="center", gap="small"):
                 with st.expander(f"{name} · {detail}", expanded=False, key=f"group_fold_{gid}"):
@@ -7556,14 +7556,14 @@ def notifications_panel() -> None:
                         list(range(24)),
                         index=saved_hour if 0 <= saved_hour <= 23 else 8,
                         format_func=lambda hour: f"{hour:02d}:00",
-                        key="alert_digest_hour",
+                        key="alert_digest_hour", placeholder=t("Choose an option")
                     )
                     start_zone = saved_zone or "UTC"
                     digest_zone_choice = zone_col.selectbox(
                         t("Time zone"),
                         zone_choices,
                         index=zone_choices.index(start_zone) if start_zone in zone_choices else 0,
-                        key="alert_digest_zone",
+                        key="alert_digest_zone",placeholder=t("Choose an option")
                     )
                     if browser_zone and digest_zone_choice != browser_zone:
                         st.caption(t("Your browser's time zone is {browser_zone}.", browser_zone=browser_zone))
@@ -8514,7 +8514,7 @@ with tracked_expander("⭐ " + t("Watchlists"), "watchlists", sidebar=True):
                         list(crypto_options),
                         format_func=_crypto_option,
                         key="pick_crypto",
-                        label_visibility="collapsed",
+                        label_visibility="collapsed",placeholder=t("Choose an option")
                     )
                     crypto_choice = crypto_options.get(picked_id)
                 else:
@@ -8543,7 +8543,7 @@ with tracked_expander("⭐ " + t("Watchlists"), "watchlists", sidebar=True):
                 else:
                     st.info(t('{label} is already on your list.', label=label))
             if CRYPTO_WATCHLIST:
-                to_remove = st.selectbox(t("Remove crypto"), [""] + list(CRYPTO_WATCHLIST.keys()), key="rm_crypto")
+                to_remove = st.selectbox(t("Remove crypto"), [""] + list(CRYPTO_WATCHLIST.keys()), key="rm_crypto", placeholder=t("Choose an option"))
                 if to_remove and st.button(t("Remove Crypto")):
                     CRYPTO_WATCHLIST.pop(to_remove, None)
                     prefs["crypto"] = CRYPTO_WATCHLIST
@@ -8584,7 +8584,7 @@ with tracked_expander("⭐ " + t("Watchlists"), "watchlists", sidebar=True):
                         list(stock_options),
                         format_func=_stock_option,
                         key="pick_stock",
-                        label_visibility="collapsed",
+                        label_visibility="collapsed",placeholder=t("Choose an option")
                     )
                     stock_choice = stock_options.get(picked_symbol)
                     if unchecked:
@@ -8604,7 +8604,7 @@ with tracked_expander("⭐ " + t("Watchlists"), "watchlists", sidebar=True):
                     st.session_state["_clear_new_stock"] = True
                     st.rerun()
             if STOCK_WATCHLIST:
-                to_remove = st.selectbox(t("Remove stock"), [""] + list(STOCK_WATCHLIST.keys()), key="rm_stock")
+                to_remove = st.selectbox(t("Remove stock"), [""] + list(STOCK_WATCHLIST.keys()), key="rm_stock", placeholder=t("Choose an option"))
                 if to_remove and st.button(t("Remove Stock")):
                     STOCK_WATCHLIST.pop(to_remove, None)
                     prefs["stock"] = STOCK_WATCHLIST
@@ -8651,7 +8651,7 @@ def _ai_settings(settings: dict) -> None:
         saved = ap.pick("navigator", settings.get("ai_navigator"))
         if st.session_state.get("ai_navigator") not in on:
             st.session_state["ai_navigator"] = saved if saved in on else on[0]
-        chosen = st.selectbox(label, on, key="ai_navigator", format_func=ap.label, help=tip)
+        chosen = st.selectbox(label, on, key="ai_navigator", format_func=ap.label, help=tip, placeholder=t("Choose an option"))
         if chosen != settings.get("ai_navigator", default):
             save_account_settings({"ai_navigator": chosen})
     else:
@@ -8701,7 +8701,7 @@ def _admin_ai() -> None:
     current = ap.app_choice(supabase, "sentiment") or default
     options = list(dict.fromkeys([current] + on))
     picked = st.selectbox(f"{label}, for everyone", options, index=0, key="admin_ai_sentiment",
-                          format_func=lambda p: ap.label(p) + ("" if p in on else " (no key)"), help=tip)
+                          format_func=lambda p: ap.label(p) + ("" if p in on else " (no key)"), help=tip, placeholder=t("Choose an option"))
     if picked != current:
         problem = ap.save_app_choice(supabase, "sentiment", picked)
         if problem:
@@ -9312,15 +9312,15 @@ def _admin_review(function: str, arguments: dict) -> str:
 
 def _ago(seconds) -> str:
     if seconds is None:
-        return "never"
+        return t("never")
     seconds = float(seconds)
     if seconds < 90:
-        return "just now"
+        return t("just now")
     if seconds < 5400:
-        return f"{round(seconds / 60)} min ago"
+        return t("{mins} min ago", mins=round(seconds / 60))
     if seconds < 172800:
-        return f"{seconds / 3600:.1f} hours ago"
-    return f"{seconds / 86400:.1f} days ago"
+        return t("{h:.1f} hours ago", h=seconds / 3600)
+    return t("{d:.1f} days ago", d=seconds / 86400)
 
 
 def _show_overview_status() -> None:
@@ -9668,7 +9668,7 @@ def _show_beta() -> None:
                 [int(r["nda_id"]) for r in signed],
                 format_func=lambda i: next(f"{r.get('name')} · {r.get('email')} · v{r.get('nda_version')} · {str(r.get('nda_signed_at'))[:10]}"
                                            for r in signed if int(r["nda_id"]) == i),
-                key="admin_nda_pick",
+                key="admin_nda_pick",placeholder=t("Choose an option")
             )
             if st.button(t("📄 Get the signed copy"), key="admin_nda_get"):
                 try:
@@ -9842,7 +9842,7 @@ def _show_feedback(rows) -> None:
                 format_func=lambda value: _FEEDBACK_STATUS.get(value, value),
                 key=choice_key,
                 label_visibility="collapsed",
-                disabled=len(options) < 2,
+                disabled=len(options) < 2,placeholder=t("Choose an option")
             )
             if picked == status:
                 continue
@@ -10178,7 +10178,7 @@ def _show_reports(rows) -> None:
                 format_func=lambda value: _REPORT_STATUS.get(value, value),
                 key=choice_key,
                 label_visibility="collapsed",
-                disabled=len(options) < 2,
+                disabled=len(options) < 2,placeholder=t("Choose an option")
             )
             if picked == status:
                 continue
@@ -10766,7 +10766,7 @@ def _choose_columns_dialog():
                "hourly candles are worked out in the background at each close and show ⏳ if a close has passed "
                "since. Fold either section sideways with ◂ in its first column title."))
     groups = st.multiselect(t("Signal Groups"), list(group_opts), default=[k for k in now["groups"] if k in group_opts],
-                            format_func=group_opts.get, max_selections=table_columns.MAX_EACH, key="tc_groups")
+                            format_func=group_opts.get, max_selections=table_columns.MAX_EACH, key="tc_groups", placeholder=t("Choose options"))
     sets = st.multiselect(t("Signal Sets"), list(set_opts), default=[k for k in now["sets"] if k in set_opts],
                           format_func=set_opts.get, max_selections=table_columns.MAX_EACH, key="tc_sets",
                           placeholder=t("Your Sets with a decision") if set_opts else t("No Sets with a decision yet"))
@@ -11408,13 +11408,13 @@ def _change_extras(row: dict, previous_score: float, current_score: float, bull:
         gap_down = current_score - bear
         if 0 < gap_up <= 5:
             badges.append(_mini_badge(
-                f"🎯 {gap_up:.0f} to {bull:+.0f}", "#14532d", "#bbf7d0",
-                f"{gap_up:.1f} points below your Trend-up alert line ({bull:+.0f})",
+                t("🎯 {gap:.0f} to {line}", gap=gap_up, line=f"{bull:+.0f}"), "#14532d", "#bbf7d0",
+                t("{gap:.1f} points below your Trend-up alert line ({line})", gap=gap_up, line=f"{bull:+.0f}"),
             ))
         elif 0 < gap_down <= 5:
             badges.append(_mini_badge(
-                f"🎯 {gap_down:.0f} to {bear:+.0f}", "#7f1d1d", "#fecaca",
-                f"{gap_down:.1f} points above your Trend-down alert line ({bear:+.0f})",
+                t("🎯 {gap:.0f} to {line}", gap=gap_down, line=f"{bear:+.0f}"), "#7f1d1d", "#fecaca",
+                t("{gap:.1f} points above your Trend-down alert line ({line})", gap=gap_down, line=f"{bear:+.0f}"),
             ))
     if badges:
         parts.append("<span style='display:inline-flex;flex-wrap:wrap;gap:4px;'>" + "".join(badges) + "</span>")
@@ -13054,7 +13054,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             if len(allowed_kinds) > 1:
                 col1, col2 = st.columns([1, 3])
                 with col1:
-                    asset_type = st.selectbox(t("Type"), allowed_kinds, key="asset_type")
+                    asset_type = st.selectbox(t("Type"), allowed_kinds, key="asset_type", placeholder=t("Choose an option"))
                 asset_box = col2
             else:
                 asset_type = allowed_kinds[0]
@@ -13070,7 +13070,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                         t("Asset"),
                         options,
                         format_func=lambda item: watchlist[item] if asset_type == "Crypto" else f"{watchlist[item]} ({item})",
-                        key=asset_state_key,
+                        key=asset_state_key,placeholder=t("Choose an option")
                     )
                 else:
                     asset_key = None
@@ -13197,7 +13197,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                         t("Chart indicators"),
                         indicator_keys,
                         format_func=_indicator_label,
-                        key="chart_indicators",
+                        key="chart_indicators",placeholder=t("Choose options")
                     )
             if heatmap_url:
                 # A plain link with the usual "opens elsewhere" mark, so it does not look like
@@ -14683,7 +14683,7 @@ def show_max_pain(kind: str, asset_id: str, label: str, chart_price: float | Non
                 t("Expiry"),
                 list(labels),
                 format_func=lambda item: labels[item],
-                key=f"max_pain_expiry_{market}",
+                key=f"max_pain_expiry_{market}",placeholder=t("Choose an option")
             )
         else:
             expiry = None
@@ -14868,19 +14868,19 @@ def show_signal_evidence(kind: str, asset_id: str, shown: str) -> None:
 
         def move(bucket):
             if not bucket.get("n"):
-                return "no cases"
+                return t("no cases")
             excess = bucket.get("excess")
             tail = "" if excess is None else t(' ({excess:+.2f}% vs an average day)', excess=excess)
-            thin = " - few cases" if (bucket.get("effective_n") or 0) < 10 else ""
-            return f"{bucket['n']} days{tail}{thin}"
+            thin = t(" - few cases") if (bucket.get("effective_n") or 0) < 10 else ""
+            return t("{n} days", n=bucket["n"]) + tail + thin
 
         ic, noise = info.get("ic"), info.get("noise")
         rows.append({
-            "Next": f"{horizon} day" + ("" if str(horizon) == "1" else "s"),
-            "Link to later price": "n/a" if ic is None else f"{ic:+.2f}",
-            "Chance level": "n/a" if noise is None else f"±{noise:.2f}",
-            "Trend +50 or above": move(high),
-            "Trend -50 or below": move(low),
+            t("Next"): t("1 day") if str(horizon) == "1" else t("{n} days", n=horizon),
+            t("Link to later price"): t("n/a") if ic is None else f"{ic:+.2f}",
+            t("Chance level"): t("n/a") if noise is None else f"±{noise:.2f}",
+            t("Trend +50 or above"): move(high),
+            t("Trend -50 or below"): move(low),
         })
     if rows:
         st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")

@@ -316,7 +316,7 @@ def _history_view(st, scan, strip) -> None:
     cols = st.columns([3, 3, 2], vertical_alignment="bottom")
     with cols[0]:
         top = st.selectbox(t("On top"), list(names), format_func=lambda k: names[k], key=f"hist_top_{sid}",
-                           help=t("The asset drawn large with candles. Tap any small chart to put it on top."))
+                           help=t("The asset drawn large with candles. Tap any small chart to put it on top."), placeholder=t("Choose an option"))
     years_of = {"1Y": 1, "3Y": 3, "10Y": 10, "All": 0}
     ready = {o: (not pending) or set_history.covers(strip, y) for o, y in years_of.items()}
     with cols[1]:
