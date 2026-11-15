@@ -29,7 +29,7 @@ def test_choice_order_never_location():
     assert i18n.choose(query="th", saved="en", browser="en") == "th"
     # a saved choice next, if offered to this person
     assert i18n.choose(saved="th", browser="en", admin=True) == "th"
-    assert i18n.choose(saved="th", browser="en", admin=False) == "en"     # beta: not for everyone yet
+    assert i18n.choose(saved="th", browser="en", admin=False) == "th"     # Thai is live (15 Nov 2026)
     # then the browser's list, first language the app offers
     assert i18n.choose(browser="th-TH,th;q=0.9,en;q=0.8", admin=True) == "th"
     assert i18n.choose(browser="ja,de;q=0.9") == "en"                       # not offered yet: English
@@ -65,10 +65,14 @@ def test_every_language_has_a_flag_image():
         assert i18n.flag_svg(lang["flag"]).lstrip().startswith("<svg"), lang["code"]
 
 
-def test_offered_languages():
+def test_offered_languages(monkeypatch):
+    assert [x["code"] for x in i18n.offered()] == ["en", "th"]
+    # a beta language: admins and ?lang= links only
+    monkeypatch.setitem(i18n.BY_CODE["th"], "status", "beta")
     assert [x["code"] for x in i18n.offered()] == ["en"]
     assert "th" in [x["code"] for x in i18n.offered(admin=True)]
     assert "th" in [x["code"] for x in i18n.offered(extra="th")]
+    assert i18n.choose(saved="th", browser="en", admin=False) == "en"
 
 
 def test_the_check_finds_texts_in_code():
@@ -85,7 +89,7 @@ def test_thai_covers_the_converted_screens():
 
 def test_picker_payload_and_events():
     data = lang_picker.payload("th", i18n.offered(admin=True), ask=False, chosen=True)
-    assert data["current"] == "th" and any(o["code"] == "th" and o["beta"] for o in data["options"])
+    assert data["current"] == "th" and any(o["code"] == "th" for o in data["options"])
     assert all(o["flag"].lstrip().startswith("<svg") for o in data["options"])
     state = {}
     ev = SimpleNamespace(lang=json.dumps({"code": "th-TH", "how": "pick", "nonce": 1}))

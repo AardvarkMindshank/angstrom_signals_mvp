@@ -36,7 +36,7 @@ BASE = "en"
 # code, the language's own name, its English name, flag (country of its main market), status, writing direction
 LANGUAGES = [
     {"code": "en", "name": "English", "english": "English", "flag": "gb", "status": "live", "dir": "ltr"},
-    {"code": "th", "name": "ไทย", "english": "Thai", "flag": "th", "status": "beta", "dir": "ltr"},
+    {"code": "th", "name": "ไทย", "english": "Thai", "flag": "th", "status": "live", "dir": "ltr"},
     {"code": "es", "name": "Español", "english": "Spanish", "flag": "es", "status": "planned", "dir": "ltr"},
     {"code": "pt-BR", "name": "Português (Brasil)", "english": "Portuguese (Brazil)", "flag": "br", "status": "planned",
      "dir": "ltr"},
