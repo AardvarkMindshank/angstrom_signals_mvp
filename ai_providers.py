@@ -23,6 +23,8 @@ chat() takes the conversation in one shape (Anthropic's: role + text, or text an
 
 from __future__ import annotations
 
+from i18n import mark
+
 import json
 import os
 
@@ -41,12 +43,12 @@ PROVIDERS = {
 }
 
 USES = {   # key: (label, default provider, who chooses, help)
-    "navigator": ("✨ AI Navigator and Passage Plan", "claude", "you",
-                  "Answers your questions about the app, your ideas and the Tides readings, and writes Today's AI "
-                  "Passage Plan."),
-    "sentiment": ("📰 News sentiment scores", "grok", "admin",
-                  "Scores the headlines for every asset and both markets. Shared by everyone, so an admin picks it "
-                  "for the whole app; new scores use it from their next refresh (every 12 hours)."),
+    "navigator": (mark("✨ AI Navigator and Passage Plan"), "claude", "you",
+                  mark("Answers your questions about the app, your ideas and the Tides readings, and writes Today's "
+                       "AI Passage Plan.")),
+    "sentiment": (mark("📰 News sentiment scores"), "grok", "admin",
+                  mark("Scores the headlines for every asset and both markets. Shared by everyone, so an admin picks "
+                       "it for the whole app; new scores use it from their next refresh (every 12 hours).")),
 }
 
 URLS = {"claude": "https://api.anthropic.com/v1/messages",

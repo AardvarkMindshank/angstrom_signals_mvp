@@ -10,6 +10,8 @@ Sources: Yahoo Finance (indices, VIX, yields, dollar, gold, oil, Bitcoin, Ether)
 
 from __future__ import annotations
 
+from i18n import mark, t
+
 import html
 import math
 import time
@@ -25,44 +27,44 @@ SPARK_POINTS = 30
 
 # key, label, Yahoo symbol, group, unit, exchange (for the open/closed dot), invert colours
 SPECS = (
-    ("spx", "S&P 500", "^GSPC", "stocks", "index", "nyse", False),
-    ("ndx", "Nasdaq", "^IXIC", "stocks", "index", "nyse", False),
-    ("dji", "Dow Jones", "^DJI", "stocks", "index", "nyse", False),
-    ("ftse", "FTSE 100", "^FTSE", "stocks", "index", "lse", False),
-    ("dax", "DAX", "^GDAXI", "stocks", "index", "xetra", False),
-    ("n225", "Nikkei 225", "^N225", "stocks", "index", "tse", False),
-    ("hsi", "Hang Seng", "^HSI", "stocks", "index", "hkex", False),
-    ("vix", "VIX", "^VIX", "macro", "index", "", True),
-    ("us10y", "US 10-year", "^TNX", "macro", "yield", "", False),
-    ("dxy", "US dollar", "DX-Y.NYB", "macro", "index", "", False),
-    ("gold", "Gold", "GC=F", "macro", "usd", "", False),
-    ("oil", "Oil (WTI)", "CL=F", "macro", "usd", "", False),
-    ("btc", "Bitcoin", "BTC-USD", "crypto", "usd", "", False),
-    ("eth", "Ether", "ETH-USD", "crypto", "usd", "", False),
+    ("spx", mark("S&P 500"), "^GSPC", "stocks", "index", "nyse", False),
+    ("ndx", mark("Nasdaq"), "^IXIC", "stocks", "index", "nyse", False),
+    ("dji", mark("Dow Jones"), "^DJI", "stocks", "index", "nyse", False),
+    ("ftse", mark("FTSE 100"), "^FTSE", "stocks", "index", "lse", False),
+    ("dax", mark("DAX"), "^GDAXI", "stocks", "index", "xetra", False),
+    ("n225", mark("Nikkei 225"), "^N225", "stocks", "index", "tse", False),
+    ("hsi", mark("Hang Seng"), "^HSI", "stocks", "index", "hkex", False),
+    ("vix", mark("VIX"), "^VIX", "macro", "index", "", True),
+    ("us10y", mark("US 10-year"), "^TNX", "macro", "yield", "", False),
+    ("dxy", mark("US dollar"), "DX-Y.NYB", "macro", "index", "", False),
+    ("gold", mark("Gold"), "GC=F", "macro", "usd", "", False),
+    ("oil", mark("Oil (WTI)"), "CL=F", "macro", "usd", "", False),
+    ("btc", mark("Bitcoin"), "BTC-USD", "crypto", "usd", "", False),
+    ("eth", mark("Ether"), "ETH-USD", "crypto", "usd", "", False),
 )
 
 HINTS = {
-    "spx": "The 500 largest US companies. The usual yardstick for the US stock market.",
-    "ndx": "Nasdaq Composite: US stocks with a heavy tilt to technology.",
-    "dji": "Dow Jones Industrial Average: 30 large US companies.",
-    "ftse": "The 100 largest companies on the London Stock Exchange.",
-    "dax": "The 40 largest German companies.",
-    "n225": "Japan's main stock index.",
-    "hsi": "Hong Kong's main stock index.",
-    "vix": "The 'fear index': how big a move options traders expect in the S&P 500 over the next month. "
-           "Rising means more fear; under about 15 is calm, over about 25 is stressed.",
-    "us10y": "The US 10-year government bond yield, in percent. Rising yields tend to weigh on stocks "
-             "and crypto. The change is in percentage points.",
-    "dxy": "The US dollar against six major currencies. A stronger dollar often weighs on crypto and commodities.",
-    "gold": "Gold, US dollars per ounce (front-month future). Often bought as a safe haven.",
-    "oil": "US crude oil (WTI), US dollars per barrel (front-month future).",
-    "btc": "Bitcoin in US dollars.",
-    "eth": "Ether in US dollars.",
-    "crypto_cap": "The value of all cryptocurrencies together, with the change over 24 hours. "
-                  "The line is our own daily record, so it grows a day at a time.",
-    "btc_dom": "Bitcoin's share of the whole crypto market. Rising often means money moving to safety within crypto. "
-               "The line is our own daily record, so it grows a day at a time; the change is in percentage points.",
-    "fng": "Crypto Fear & Greed, 0 to 100: below 25 extreme fear, above 75 extreme greed.",
+    "spx": mark("The 500 largest US companies. The usual yardstick for the US stock market."),
+    "ndx": mark("Nasdaq Composite: US stocks with a heavy tilt to technology."),
+    "dji": mark("Dow Jones Industrial Average: 30 large US companies."),
+    "ftse": mark("The 100 largest companies on the London Stock Exchange."),
+    "dax": mark("The 40 largest German companies."),
+    "n225": mark("Japan's main stock index."),
+    "hsi": mark("Hong Kong's main stock index."),
+    "vix": mark("The 'fear index': how big a move options traders expect in the S&P 500 over the next month. "
+           "Rising means more fear; under about 15 is calm, over about 25 is stressed."),
+    "us10y": mark("The US 10-year government bond yield, in percent. Rising yields tend to weigh on stocks "
+             "and crypto. The change is in percentage points."),
+    "dxy": mark("The US dollar against six major currencies. A stronger dollar often weighs on crypto and commodities."),
+    "gold": mark("Gold, US dollars per ounce (front-month future). Often bought as a safe haven."),
+    "oil": mark("US crude oil (WTI), US dollars per barrel (front-month future)."),
+    "btc": mark("Bitcoin in US dollars."),
+    "eth": mark("Ether in US dollars."),
+    "crypto_cap": mark("The value of all cryptocurrencies together, with the change over 24 hours. "
+                  "The line is our own daily record, so it grows a day at a time."),
+    "btc_dom": mark("Bitcoin's share of the whole crypto market. Rising often means money moving to safety within crypto. "
+               "The line is our own daily record, so it grows a day at a time; the change is in percentage points."),
+    "fng": mark("Crypto Fear & Greed, 0 to 100: below 25 extreme fear, above 75 extreme greed."),
 }
 
 # Trading hours, local time. Weekends are closed; public holidays are not tracked.
@@ -280,7 +282,7 @@ def change_pill(change, unit: str, invert: bool = False) -> str:
     if change is None:
         return ""
     if unit in ("yield", "pct"):
-        text = f"{change:+.2f} pt"
+        text = t("{change:+.2f} pt", change=change)
     elif unit == "points":
         text = f"{change:+.0f}"
     else:
@@ -325,30 +327,31 @@ def spark_svg(values, invert: bool = False, width: int = 84, height: int = 24) -
 
 def _fng_word(value: float) -> str:
     if value < 25:
-        return "Extreme fear"
+        return mark("Extreme fear")
     if value < 45:
-        return "Fear"
+        return mark("Fear")
     if value <= 55:
-        return "Neutral"
+        return mark("Neutral")
     if value <= 75:
-        return "Greed"
-    return "Extreme greed"
+        return mark("Greed")
+    return mark("Extreme greed")
 
 
 # Display groups, in order: (name, heading).
 GROUPS = (
-    ("stocks", "📈 Stock markets"),
-    ("rates", "🏦 Rates & dollar"),
-    ("commodities", "🛢️ Commodities"),
-    ("crypto", "🪙 Crypto"),
-    ("risk", "🧭 Sentiment & risk"),
+    ("stocks", mark("📈 Stock markets")),
+    ("rates", mark("🏦 Rates & dollar")),
+    ("commodities", mark("🛢️ Commodities")),
+    ("crypto", mark("🪙 Crypto")),
+    ("risk", mark("🧭 Sentiment & risk")),
 )
 _GROUP_OF = {
     "spx": "stocks", "ndx": "stocks", "dji": "stocks", "ftse": "stocks", "dax": "stocks", "n225": "stocks",
     "hsi": "stocks", "us10y": "rates", "dxy": "rates", "gold": "commodities", "oil": "commodities",
     "btc": "crypto", "eth": "crypto", "crypto_cap": "crypto", "btc_dom": "crypto", "vix": "risk", "fng": "risk",
 }
-_EXTRA = (("crypto_cap", "Crypto market cap", "usd"), ("btc_dom", "Bitcoin share", "pct"), ("fng", "Fear & Greed", "points"))
+_EXTRA = (("crypto_cap", mark("Crypto market cap"), "usd"), ("btc_dom", mark("Bitcoin share"), "pct"),
+          ("fng", mark("Fear & Greed"), "points"))
 
 
 def _wanted(key: str, crypto: bool, stocks: bool) -> bool:
@@ -392,27 +395,28 @@ def card_list(overview: dict | None, crypto: bool, stocks: bool, now: datetime |
 
 def _card_html(card: dict) -> str:
     key, unit = card["key"], card["unit"]
-    hint = HINTS.get(key, "")
+    hint = t(HINTS.get(key, ""))
     dot = ""
     if card["open"] is not None:
         place = EXCHANGES[card["exchange"]][3]
-        state = "open" if card["open"] else "closed"
+        state = t("{place} is open", place=place) if card["open"] else t("{place} is closed", place=place)
         dot = (
-            f"<span title='{html.escape(place)} is {state}' style='display:inline-block;width:8px;height:8px;"
+            f"<span title='{html.escape(state)}' style='display:inline-block;width:8px;height:8px;"
             f"border-radius:50%;margin-right:5px;vertical-align:1px;"
             f"background:{'#22c55e' if card['open'] else '#cbd5e1'};'></span>"
         )
-        hint = f"{hint} {place} is {state} now (public holidays are not shown)."
+        hint = f"{hint} " + (t("{place} is open now (public holidays are not shown).", place=place) if card["open"]
+                             else t("{place} is closed now (public holidays are not shown).", place=place))
     value = value_text(key, unit, card["value"])
     sub = ""
     if key == "fng":
-        sub = f"<span style='font-size:0.75rem;color:{_GREY};'>{_fng_word(card['value'])}</span>"
+        sub = f"<span style='font-size:0.75rem;color:{_GREY};'>{html.escape(t(_fng_word(card['value'])))}</span>"
     pill = change_pill(card.get("change"), unit, card["invert"])
     spark = spark_svg(card.get("spark"), card["invert"])
     return (
         f"<div class='ang-card' title='{html.escape(hint, quote=True)}' "
         "style='min-width:0;padding:8px 10px;margin:0;'>"
-        f"<div class='ang-kicker' style='white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>{dot}{html.escape(card['label'])}</div>"
+        f"<div class='ang-kicker' style='white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>{dot}{html.escape(t(card['label']))}</div>"
         "<div style='display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;margin:2px 0;'>"
         f"<span style='font-weight:700;font-size:1.05rem;'>{html.escape(value)}</span>{pill}{sub}</div>"
         f"{spark}</div>"
@@ -446,7 +450,7 @@ def overview_html(overview: dict | None, crypto: bool, stocks: bool, now: dateti
         parts.append(
             # Grows in proportion to its number of cards; never narrower than they need.
             f"<div class='ang-mkt-group' style='flex:{count} 1 {count * 136 - 8}px;'>"
-            f"<div class='ang-kicker' style='font-weight:600;margin:0 0 4px;'>{html.escape(heading)}</div>"
+            f"<div class='ang-kicker' style='font-weight:600;margin:0 0 4px;'>{html.escape(t(heading))}</div>"
             "<div class='ang-mkt-cards'>" + "".join(_card_html(card) for card in members) + "</div></div>"
         )
     parts.append("</div>")

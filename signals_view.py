@@ -7,7 +7,7 @@ the same five colours the site already uses. Every number shown is on -100..+100
 
 from __future__ import annotations
 
-from i18n import t
+from i18n import mark, t
 
 import html
 
@@ -249,7 +249,7 @@ def breakdown(result: dict) -> str:
     return "".join(parts)
 
 
-EXPLAINER = f"""
+EXPLAINER = mark("""
 **How the technical signals work**
 
 The ten classic indicators are read as **three separate descriptions**, never added into one score:
@@ -277,4 +277,4 @@ When the Trend and the Stretch point opposite ways, the app calls it a pullback 
 **What is and isn't shown by evidence:** none of the directional readings has been shown to predict price moves.
 For large US stocks, a higher-than-usual ATR% has been followed by bigger moves, up or down (tested once on
 held-back data).
-"""
+""")

@@ -3287,20 +3287,20 @@ export default function(component) {
     const tokenNow = String(data.token || "");
     const ago = (ms) => {
       const secs = Math.max(0, Math.round((Date.now() - ms) / 1000));
-      if (secs < 90) return "just now";
-      if (secs < 5400) return Math.round(secs / 60) + " min ago";
+      if (secs < 90) return T("just now");
+      if (secs < 5400) return T("{mins} min ago", {mins: Math.round(secs / 60)});
       const h = Math.floor(secs / 3600), m = Math.round((secs % 3600) / 60);
-      return h + " h " + m + " min ago";
+      return T("{h} h {m} min ago", {h: h, m: m});
     };
     const paint = () => {
       const left = endAt ? Math.max(0, Math.round((endAt - Date.now()) / 1000)) : -1;
       const parts = [];
-      if (updatedAt) parts.push("Updated " + ago(updatedAt));
+      if (updatedAt) parts.push(T("Updated {when}", {when: ago(updatedAt)}));
       if (left > 0) {
         const hh = Math.floor(left / 3600), mm = Math.floor((left % 3600) / 60), ss = String(left % 60).padStart(2, "0");
-        parts.push("next update in " + hh + ":" + String(mm).padStart(2, "0") + ":" + ss);
+        parts.push(T("next update in {time}", {time: hh + ":" + String(mm).padStart(2, "0") + ":" + ss}));
       } else if (left === 0 || !updatedAt) {
-        parts.push("update due");
+        parts.push(T("update due"));
       }
       const lead = String(data.prefix || "");
       line.textContent = (lead ? lead + " · " : "🕒 ") + parts.join(" · ");
@@ -3413,11 +3413,11 @@ export default function(component) {
   };
 }
 """
-_countdown = st.components.v2.component(
+_countdown = i18n.with_words(st.components.v2.component(
     "refresh_countdown",
-    js=_COUNTDOWN_JS,
+    js=i18n.js_ready(_COUNTDOWN_JS),
     isolate_styles=False,
-)
+), _COUNTDOWN_JS)
 
 _HEADER_SCORE_JS = """
 export default function(component) {
@@ -7832,7 +7832,7 @@ because they measure different things and are never added together.
         )
 
     with tab_scores:
-        st.markdown(signals_view.EXPLAINER)
+        st.markdown(t(signals_view.EXPLAINER))
         st.markdown(t("""
 **The tables**
 - Click a column title to sort. Hover any reading to read it; click it to open **🔍 Why these readings** for
@@ -8615,7 +8615,7 @@ def _signals_info_popover() -> None:
     """How the technical readings work, in plain words: a full-width fold-out, closed until opened (a pop-up was
     cramped on phones)."""
     with st.expander(t("ℹ️ How the technical signals work"), expanded=False, key="signals_info"):
-        st.markdown(signals_view.EXPLAINER)
+        st.markdown(t(signals_view.EXPLAINER))
 
 
 
@@ -8647,6 +8647,7 @@ def _ai_settings(settings: dict) -> None:
     st.markdown(t("**🤖 AI choices**"))
     on = [p for p in ap.PROVIDERS if ap.available(p)]
     label, default, _who, tip = ap.USES["navigator"]
+    label, tip = t(label), t(tip)
     if on:
         saved = ap.pick("navigator", settings.get("ai_navigator"))
         if st.session_state.get("ai_navigator") not in on:
@@ -11430,7 +11431,7 @@ def _what_changed_html(rows, baseline, seen: bool) -> str:
     trend_ticks = _al.reading_crossings(prefs.get("settings") or {}, "trend")
     parts = [
         "<div class='ang-card' style='margin-bottom:12px;'>",
-        "<div class='ang-kicker'>What changed</div>",
+        "<div class='ang-kicker'>" + t("What changed") + "</div>",
     ]
     st.session_state["_what_changed"] = None
     if not seen:
@@ -11507,7 +11508,7 @@ def _what_changed_html(rows, baseline, seen: bool) -> str:
     for item in crossings:
         parts.append(_change_button(item["pick"], item["title"], item["detail"], item["color"], item["logo"], item["extras"]))
     if moves:
-        parts.append("<div class='ang-kicker' style='margin-top:10px;'>Largest moves</div>")
+        parts.append("<div class='ang-kicker' style='margin-top:10px;'>" + t("Largest moves") + "</div>")
         for item in moves:
             parts.append(_change_button(item["pick"], item["title"], item["detail"], item["color"], item["logo"], item["extras"]))
     parts.append("</div>")
@@ -12159,7 +12160,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                     market_overview.REFRESH_SECONDS, "timer_markets",
                     t("Hover a card for what it measures. Shared for everyone and refreshed about every "
                     "15 minutes. Stock prices can be delayed about 15 minutes; gold and oil are futures prices."),
-                    prefix="🌍 Markets",
+                    prefix=t("🌍 Markets"),
                 )
                 st.markdown(strip, unsafe_allow_html=True)
             elif trade_crypto or trade_equities:
@@ -12553,7 +12554,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                     _score_table(
                         key=f"snapshot_mood_{mood_key}",
                         data=render_mood_snapshot(
-                            mood_label,
+                            t(mood_label),
                             mood_score,
                             (report or {}).get("summary"),
                             mood_key,
