@@ -22,6 +22,8 @@ readings are worked out once per asset per pass, shared by every account.
 
 from __future__ import annotations
 
+from i18n import t
+
 from datetime import datetime, timedelta, timezone
 
 import pandas as pd
@@ -77,7 +79,7 @@ def set_doc(builtin: str, line: float) -> dict:
     """Yes when the reading is past the line: "Trend score is at least +50" (up) or "at most -50" (down)."""
     reading, direction, _ = BUILTINS[builtin]
     level = abs(line)
-    return _set(name(builtin), f"Alerts when {TITLES[reading]} reaches {direction * level:+.0f}.", reading,
+    return _set(name(builtin), t('Alerts when {titles_reading} reaches {direction_level:+.0f}.', titles_reading=TITLES[reading], direction_level=direction * level), reading,
                 "gte" if direction > 0 else "lte", direction * level)
 
 
@@ -85,7 +87,7 @@ def rearm_doc(builtin: str, line: float) -> dict:
     """Yes once the reading is back 20 points: then the next crossing can alert again."""
     reading, direction, _ = BUILTINS[builtin]
     back = rearm_level(abs(line))
-    return _set(f"{name(builtin)}: re-arm", f"Re-arms when {TITLES[reading]} is back at {direction * back:+.0f}.",
+    return _set(f"{name(builtin)}: re-arm", t('Re-arms when {titles_reading} is back at {direction_back:+.0f}.', titles_reading=TITLES[reading], direction_back=direction * back),
                 reading, "lte" if direction > 0 else "gte", direction * back)
 
 
@@ -208,11 +210,11 @@ def evaluate(doc: dict, rearm: dict | None, builtin: str, assets, readings: Read
         got = readings.context(kind, asset_id)
         if got is None:
             rows.append({"kind": kind, "id": asset_id, "asset": label, "answer": "unknown", "rearm": None,
-                         "value": None, "reason": "No stored daily bars yet.", "how_sure": "—", "available": "None"})
+                         "value": None, "reason": t("No stored daily bars yet."), "how_sure": "—", "available": "None"})
             continue
         ctx, _ = got
         result = sg.evaluate_set(doc, ctx)
-        row = prism.row(label, result, "Stored daily bars (as the dashboard)")
+        row = prism.row(label, result, t("Stored daily bars (as the dashboard)"))
         again = prism.row(label, sg.evaluate_set(rearm, ctx), "") if rearm else None
         value = (sg.evaluate_group(group, ctx).get("score") or {}).get("value")
         rows.append({**row, "kind": kind, "id": asset_id, "rearm": again["answer"] if again else None,

@@ -10,6 +10,8 @@ release that latch. The background worker is the only writer.
 
 from __future__ import annotations
 
+from i18n import mark, t
+
 from datetime import datetime, timedelta, timezone
 
 from score_colours import sentiment_text
@@ -71,16 +73,16 @@ READING_REARM = TREND_REARM
 # side straight to the other between two closes is one "flip" alert. Zones: -2 strongly bearish .. +2 strongly bullish.
 BORDERS = (("m50", -50), ("m20", -20), ("p20", 20), ("p50", 50))      # border i sits between zone i-2 and i-1
 CROSSINGS = {   # key: (border, direction, plain words)
-    "up_p50": ("p50", 1, "gets strongly bullish"),
-    "dn_p50": ("p50", -1, "fades back from strongly bullish"),
-    "up_p20": ("p20", 1, "turns bullish (leaves neutral)"),
-    "dn_p20": ("p20", -1, "falls back into neutral"),
-    "up_m20": ("m20", 1, "rises back into neutral"),
-    "dn_m20": ("m20", -1, "turns bearish (leaves neutral)"),
-    "up_m50": ("m50", 1, "fades back from strongly bearish"),
-    "dn_m50": ("m50", -1, "gets strongly bearish"),
-    "flip_up": (None, 1, "flips from bearish to bullish"),
-    "flip_dn": (None, -1, "flips from bullish to bearish"),
+    "up_p50": ("p50", 1, mark("gets strongly bullish")),
+    "dn_p50": ("p50", -1, mark("fades back from strongly bullish")),
+    "up_p20": ("p20", 1, mark("turns bullish (leaves neutral)")),
+    "dn_p20": ("p20", -1, mark("falls back into neutral")),
+    "up_m20": ("m20", 1, mark("rises back into neutral")),
+    "dn_m20": ("m20", -1, mark("turns bearish (leaves neutral)")),
+    "up_m50": ("m50", 1, mark("fades back from strongly bearish")),
+    "dn_m50": ("m50", -1, mark("gets strongly bearish")),
+    "flip_up": (None, 1, mark("flips from bearish to bullish")),
+    "flip_dn": (None, -1, mark("flips from bullish to bearish")),
 }
 DEFAULT_CROSSINGS = {
     "trend": ("up_p20", "dn_m20", "up_p50", "dn_m50", "flip_up", "flip_dn"),
@@ -132,8 +134,9 @@ def crossing_message(reading: str, key: str, value: float, before: int, after: i
 
     words = signals_v2.CLUSTER_WORDS[reading]            # strongest up first
     name = READING_ALERTS[reading]["name"]
-    return (f"{name} {CROSSINGS[key][2]}: {value:+.0f} ({words[2 - after]}), was {words[2 - before].lower()}. "
-            "Readings describe conditions, not forecasts.")
+    return (t("{name} {what}: {value} ({now}), was {before}.", name=t(name), what=t(CROSSINGS[key][2]),
+              value=f"{value:+.0f}", now=t(words[2 - after]), before=t(words[2 - before]).lower())
+            + " " + t("Readings describe conditions, not forecasts."))
 
 
 def reading_alert_on(alerts_config: dict, reading: str) -> bool:
@@ -185,8 +188,8 @@ def is_market_symbol(symbol) -> bool:
 
 def asset_message(score: float, alert_type: str) -> str:
     if alert_type == BULLISH:
-        return f"Score reached {score:.1f}/100 (strongly positive reading)"
-    return f"Score dropped to {score:.1f}/100 (strongly negative reading)"
+        return t('Score reached {score:.1f}/100 (strongly positive reading)', score=score)
+    return t('Score dropped to {score:.1f}/100 (strongly negative reading)', score=score)
 
 
 _READING_WORDS = {
@@ -210,8 +213,8 @@ reading_message = trend_message
 
 def market_message(score: float, alert_type: str) -> str:
     if alert_type == BULLISH:
-        return f"Market sentiment turned positive: {sentiment_text(score)} on the -100 to +100 scale (strongly positive mood)"
-    return f"Market sentiment turned negative: {sentiment_text(score)} on the -100 to +100 scale (strongly negative mood)"
+        return t('Market sentiment turned positive: {sentiment_text_score} on the -100 to +100 scale (strongly positive mood)', sentiment_text_score=sentiment_text(score))
+    return t('Market sentiment turned negative: {sentiment_text_score} on the -100 to +100 scale (strongly negative mood)', sentiment_text_score=sentiment_text(score))
 
 
 def market_rows(scores: dict, markets) -> list[dict]:

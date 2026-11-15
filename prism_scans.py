@@ -28,6 +28,9 @@ A failure is recorded for that scan only. Missed cutoffs are not back-filled: a 
 
 from __future__ import annotations
 
+import i18n
+from i18n import t
+
 import time
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
@@ -163,9 +166,7 @@ def schedule_warning(schedule: dict, doc: dict) -> str | None:
         return None
     fastest = min(tfs, key=TF_ORDER.get)
     if TF_ORDER[schedule["timeframe"]] < TF_ORDER[fastest]:
-        return (f"This Set reads {TF_WORDS.get(fastest.upper(), fastest)} candles at the fastest, so running every "
-                f"{TF_WORDS[schedule['timeframe']]} close gives the same answer until the next "
-                f"{TF_WORDS.get(fastest.upper(), fastest)} close.")
+        return (t('This Set reads {tf_words_get_fastest_upp} candles at the fastest, so running every {tf_words_schedule_timefr} close gives the same answer until the next {tf_words_get_fastest_upp} close.', tf_words_get_fastest_upp=TF_WORDS.get(fastest.upper(), fastest), tf_words_schedule_timefr=TF_WORDS[schedule['timeframe']]))
     return None
 
 
@@ -188,8 +189,8 @@ def plan_alerts(answers: dict, latched: set, mode: str) -> tuple[list, list, lis
 
 def message(scan_name: str, row: dict, ended: bool = False) -> str:
     if ended:
-        return f"Prism: “{scan_name}” no longer says Yes. {row['reason']}"[:500]
-    return f"Prism: “{scan_name}” says Yes. {row['reason']}"[:500]
+        return (t("Prism: “{name}” no longer says Yes.", name=scan_name) + f" {row['reason']}")[:500]
+    return (t("Prism: “{name}” says Yes.", name=scan_name) + f" {row['reason']}")[:500]
 
 
 CHANNELS = ("instant", "digest", "app", "off")
@@ -340,7 +341,7 @@ def default_evaluate(supabase):
 
 
 def run_due_scans(store, *, watchlists: dict, prefs: dict, evaluate, now=None, budget_seconds=BUDGET_SECONDS,
-                  send_email=None, email_of=None, log=print, clock=time.monotonic) -> dict:
+                  send_email=None, email_of=None, log=print, clock=time.monotonic, languages=None) -> dict:
     """Run every due scan that fits in the budget. watchlists: owner -> (crypto {id: name}, stocks {ticker: name});
     prefs: owner -> alert preferences row; evaluate(doc, assets, cutoff) -> (rows, record)."""
     now = _ts(now or datetime.now(timezone.utc))
@@ -356,6 +357,7 @@ def run_due_scans(store, *, watchlists: dict, prefs: dict, evaluate, now=None, b
             summary["waiting"] = len(items) - n
             log(f"Prism: {summary['waiting']} scan runs wait for the next pass (time budget used).")
             break
+        i18n.set_language((languages or {}).get(scan["owner_id"]))     # its alerts in the owner's language
         run_id = store.claim(scan["id"], market, cutoff, now)
         if run_id is None:
             summary["skipped_claimed"] += 1
@@ -406,11 +408,12 @@ def run_due_scans(store, *, watchlists: dict, prefs: dict, evaluate, now=None, b
                                       "finished_at": datetime.now(timezone.utc).isoformat()})
                 settings = alert_settings(scan)
                 if settings["on_fail"] and settings["channel"] != "off":
-                    inserted = store.notify([_fail_note(scan, f"The run failed: {str(exc)[:160]}")])
+                    inserted = store.notify([_fail_note(scan, t('The run failed: {str_exc_160}', str_exc_160=str(exc)[:160]))])
                     _deliver(store, scan, settings, inserted, prefs.get(scan["owner_id"]) or {}, send_email,
                              email_of, now, log)
             except Exception:
                 pass
+    i18n.set_language(None)
     return summary
 
 
@@ -421,7 +424,7 @@ def _note(scan: dict, row: dict, ended: bool) -> dict:
 
 def _fail_note(scan: dict, why: str) -> dict:
     return {"user_id": scan["owner_id"], "asset_symbol": None, "asset_name": scan["name"], "alert_type": ALERT_TYPE,
-            "message": f"Prism: “{scan['name']}” could not run properly. {why}"[:500]}
+            "message": (t("Prism: “{name}” could not run properly.", name=scan["name"]) + f" {why}")[:500]}
 
 
 def _deliver(store, scan, settings, notes, pref, send_email, email_of, now, log) -> None:
@@ -461,15 +464,16 @@ def _instant_emails(store, scan, notes, pref, send_email, email_of, now, log) ->
 
 def run_from_worker(supabase, user_prefs: list[dict], alert_rows: dict, send_email, email_of, log=print) -> dict:
     """Entry point for run_alerts.py, called after the existing alert and digest work."""
-    watchlists = {}
+    watchlists, languages = {}, {}
     for p in user_prefs:
+        languages[p["user_id"]] = i18n.account_language(p.get("settings") if isinstance(p.get("settings"), dict) else {})
         crypto = p.get("crypto_watchlist") if isinstance(p.get("crypto_watchlist"), dict) else {}
         stocks = p.get("stock_watchlist") if isinstance(p.get("stock_watchlist"), dict) else {}
         watchlists[p["user_id"]] = (crypto, stocks)
     store = SupabaseStore(supabase)
     try:
         return run_due_scans(store, watchlists=watchlists, prefs=alert_rows, evaluate=default_evaluate(supabase),
-                             send_email=send_email, email_of=email_of, log=log)
+                             send_email=send_email, email_of=email_of, log=log, languages=languages)
     except Exception as exc:
         text = str(exc)
         if "prism_scans" in text and ("does not exist" in text or "relation" in text or "PGRST" in text):

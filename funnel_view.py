@@ -6,14 +6,14 @@ sql/2026-11-17_funnels.sql; the funnel job writes them. Nothing here touches Str
 
 from __future__ import annotations
 
-from i18n import t
+from i18n import mark, t
 
 import pandas as pd
 
 import funnel as fn
 import funnel_runner as fr
 
-MODES = ("My Watchlist", "Dynamic funnel")
+MODES = (mark("My Watchlist"), mark("Dynamic funnel"))
 MODE_CODES = {"My Watchlist": "watchlist", "Dynamic funnel": "funnel"}   # saved on the account (names may change)
 SHOW_LIMIT = 30                         # assets in the table, largest by market cap (first loads fill shared prices)
 CHART_LIMIT = 12                        # assets in "Open … in chart" (the largest by market cap)

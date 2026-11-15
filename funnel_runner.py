@@ -16,6 +16,8 @@ only; its coins keep their places.
 
 from __future__ import annotations
 
+from i18n import t
+
 import time
 from datetime import datetime, timedelta, timezone
 
@@ -103,11 +105,16 @@ def hover(f: dict) -> dict:
 def candidate_message(f: dict, coins: list[tuple[str, str]]) -> str:
     arrow = fn.DIRECTION_ICONS[f["direction"]]
     names = ", ".join(f"{name} ({symbol})" for symbol, name in coins[:12])
-    more = f" and {len(coins) - 12} more" if len(coins) > 12 else ""
-    side = "long" if f["direction"] == "long" else "short"
+    more = t(" and {n} more", n=len(coins) - 12) if len(coins) > 12 else ""
     label = f["name"] if f["name"].rstrip().endswith(arrow) else f"{f['name']} {arrow}"
-    return (f"Funnel “{label}”: new {side} Candidate{'s' if len(coins) > 1 else ''}: {names}{more}. "
-            "Every stage holds, including the entry conditions. A coin to look at, not a recommendation.")[:500]
+    if f["direction"] == "long":
+        head = (t("Funnel “{label}”: new long Candidates: {names}.", label=label, names=names + more) if len(coins) > 1
+                else t("Funnel “{label}”: new long Candidate: {names}.", label=label, names=names + more))
+    else:
+        head = (t("Funnel “{label}”: new short Candidates: {names}.", label=label, names=names + more) if len(coins) > 1
+                else t("Funnel “{label}”: new short Candidate: {names}.", label=label, names=names + more))
+    return (head + " " + t("Every stage holds, including the entry conditions. A coin to look at, not a "
+                           "recommendation."))[:500]
 
 
 def run_funnel(store, f: dict, universe: dict[str, dict], evaluate, now: pd.Timestamp, log=print,
@@ -182,11 +189,16 @@ def run_funnel(store, f: dict, universe: dict[str, dict], evaluate, now: pd.Time
         log(f"Funnel {f['name']}: first pass of this version; {len(new)} Candidates set without alerts.")
         new = []
     if new and (f.get("alerts") or {}).get("in_app", True) and getattr(store, "alerts_on", lambda _o: True)(f["owner_id"]):
-        store.notify([{"user_id": f["owner_id"], "asset_symbol": f"funnel:{f['id']}", "asset_name": f["name"],
-                       "alert_type": ALERT_TYPE,
-                       "message": candidate_message(f, [(universe[c].get("symbol") or universe[c].get("ticker") or c,
-                                                         universe[c].get("name") or c)
-                                                        for c in new])}])
+        try:
+            store.notify([{"user_id": f["owner_id"], "asset_symbol": f"funnel:{f['id']}", "asset_name": f["name"],
+                           "alert_type": ALERT_TYPE,
+                           "message": candidate_message(f, [(universe[c].get("symbol") or universe[c].get("ticker") or c,
+                                                             universe[c].get("name") or c)
+                                                            for c in new])}])
+        finally:
+            import i18n
+
+            i18n.set_language(None)
         summary["alerted"] = len(new)
     # News sentiment only for Candidates: new ones first, then the others still Candidates (refreshed only when their
     # reading is over 12 hours old). A coin that leaves the Candidates is no longer refreshed by the funnel.
@@ -454,10 +466,15 @@ class SupabaseStore:
                 }).eq("id", n["id"]).execute()
 
     def alerts_on(self, owner_id: str) -> bool:
-        """The account's 🔻 Funnel alerts switch (Notifications → Configure Alert Rules); on unless switched off."""
+        """The account's 🔻 Funnel alerts switch (Notifications → Configure Alert Rules); on unless switched off.
+        Also sets the language of the alert text to the account's own (i18n.account_language)."""
         try:
             rows = (self.db.table("user_preferences").select("settings").eq("user_id", owner_id).execute().data or [])
-            return bool(((rows[0].get("settings") if rows else None) or {}).get("funnel_alerts", True))
+            settings = (rows[0].get("settings") if rows else None) or {}
+            import i18n
+
+            i18n.set_language(i18n.account_language(settings))
+            return bool(settings.get("funnel_alerts", True))
         except Exception:
             return True
 

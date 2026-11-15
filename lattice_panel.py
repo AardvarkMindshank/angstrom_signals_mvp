@@ -31,7 +31,7 @@ SUBTITLE = "Your market research workspace · preview: descriptive readings, not
 
 def label(key: str) -> str:
     icon, name, _ = SECTIONS[key]
-    return f"{icon} {name}" + (" (soon)" if key in PENDING else "")
+    return f"{icon} {name}" + (t(" (soon)") if key in PENDING else "")
 
 
 def rerun(st) -> None:

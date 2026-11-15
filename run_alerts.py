@@ -7,6 +7,9 @@ in the Streamlit app.
 
 from __future__ import annotations
 
+import i18n
+from i18n import t
+
 import base64
 from datetime import datetime, timezone
 import html
@@ -125,15 +128,15 @@ def send_alert_email(to_email: str, asset_name: str, message: str, logo_url: str
     page, plain = render_email(
         f"{asset_logo(logo_url, size=26)}{safe_name} crossed an alert boundary",
         [
-            "This email is sent once for that crossing. "
+            t("This email is sent once for that crossing. "
             "It is sent again only after the score moves 20 points back from your line (on the -100 to +100 scale) "
-            "and then crosses it again. Readings describe the market; they are not forecasts.",
+            "and then crosses it again. Readings describe the market; they are not forecasts."),
         ],
         callout=safe_message + (
             f'<br><span style="font-weight:400;font-size:15px;">Now: {html.escape(facts)}</span>' if facts else ""
         ),
         tone=alert_tone(message),
-        button=("Open the dashboard", app_url),
+        button=(t("Open the dashboard"), app_url),
         preheader=" ".join(str(message).split())[:120],
     )
     try:
@@ -464,6 +467,7 @@ def run_background_checks() -> None:
             "digest_hour": 8,
         })
         settings = user_pref.get("settings") if isinstance(user_pref.get("settings"), dict) else {}
+        i18n.set_language(i18n.account_language(settings))      # this account's alerts and emails in its language
         alert_config = {**alert_config, **{key: settings.get(key) for key in READING_SETTINGS_KEYS}}
         crypto_list, stock_list, _days_history = _watchlist(user_pref)
         builtin_out = {"notes": []}
@@ -559,6 +563,7 @@ def run_background_checks() -> None:
         if digest_state in ("sent", "error", "start"):
             print(f"Daily digest for user {user_id}: {digest_state}")
 
+    i18n.set_language(None)
     # Prism scheduled scans (docs/design/lattice_prism.md §5.2): after all existing work, in the time left.
     try:
         import prism_scans

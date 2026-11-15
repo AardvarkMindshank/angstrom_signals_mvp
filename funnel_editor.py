@@ -230,12 +230,12 @@ def render(st, supabase, user_id: str) -> None:
     f["name"] = c1.text_input(t("Name"), value=f["name"], max_chars=80, key=f"fe_name_{pick}")
     f["direction"] = c2.radio(t("Direction"), ["long", "short"], index=0 if f["direction"] == "long" else 1,
                               horizontal=True, key=f"fe_dir_{pick}",
-                              format_func=lambda d: "▲ Long" if d == "long" else "▼ Short",
+                              format_func=lambda d: t("▲ Long") if d == "long" else t("▼ Short"),
                               help=t("Long and short are separate funnels; a ready-made one has its own Sets for each."))
     c3, c4 = st.columns(2)
     flick = c3.radio(t('{a_coin_if_market_crypto_} leaves a stage', a_coin_if_market_crypto_='A coin' if market == 'crypto' else 'An equity'), ["two", "one"], index=0 if f.get("flicker", True) else 1,
                      horizontal=True, key=f"fe_flick_{pick}",
-                     format_func=lambda x: "after 2 No closes in a row" if x == "two" else "on the first No",
+                     format_func=lambda x: t("after 2 No closes in a row") if x == "two" else t("on the first No"),
                      help=t("Two in a row stops coins flickering in and out near a threshold (recommended)."))
     f["flicker"] = flick == "two"
     alerts = dict(f.get("alerts") or {"in_app": True, "email": False})

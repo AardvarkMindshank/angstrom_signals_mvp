@@ -24,6 +24,8 @@ from __future__ import annotations
 import json
 import os
 import re
+import threading
+from contextlib import contextmanager
 from functools import lru_cache
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -138,8 +140,37 @@ def catalogue(code: str) -> dict:
     return _catalogue(code, stamp)
 
 
+_OVERRIDE = threading.local()
+
+
+@contextmanager
+def using(code: str | None):
+    """Text in another language for a while, such as an email in its recipient's language from a background job:
+        with i18n.using(account_language(settings)): body = compose(...)"""
+    before = getattr(_OVERRIDE, "code", None)
+    _OVERRIDE.code = code if code in BY_CODE else BASE
+    try:
+        yield
+    finally:
+        _OVERRIDE.code = before
+
+
+def set_language(code: str | None) -> None:
+    """Like using(), for a loop over recipients: text in `code` until set_language(None)."""
+    _OVERRIDE.code = (code if code in BY_CODE else BASE) if code else None
+
+
+def account_language(settings: dict | None) -> str:
+    """The language an account chose (its "language" setting), for what is sent to it; English when none."""
+    code = normalise((settings or {}).get("language"))
+    return code if code in BY_CODE and BY_CODE[code]["status"] in ("live", "beta") else BASE
+
+
 def current() -> str:
-    """The language of this visit (set by app.py each run); English outside Streamlit."""
+    """The language of this visit (set by app.py each run), or of an i18n.using() block; English outside Streamlit."""
+    forced = getattr(_OVERRIDE, "code", None)
+    if forced:
+        return forced
     try:
         import streamlit as st
 

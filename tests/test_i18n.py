@@ -104,3 +104,33 @@ def test_the_navigator_answers_in_the_visits_language():
     assert advisor.language_line("en") == []
     line = " ".join(advisor.language_line("th"))
     assert "Thai" in line and "ไทย" in line and "Lattice" in line
+
+
+def test_background_jobs_write_in_the_recipients_language():
+    assert i18n.account_language({"language": "th"}) == "th"
+    assert i18n.account_language({"language": "xx"}) == "en" and i18n.account_language(None) == "en"
+    with i18n.using("th"):
+        assert i18n.t("Open the dashboard") == "เปิดแดชบอร์ด"
+    assert i18n.t("Open the dashboard") == "Open the dashboard"
+    i18n.set_language("th")
+    try:
+        assert i18n.current() == "th"
+    finally:
+        i18n.set_language(None)
+    assert i18n.current() == "en"
+
+
+def test_browser_text_helper():
+    js = "export default function(component) {\n  const { data, parentElement } = component;\n  x(T(\"Saved\"));\n}"
+    ready = i18n.js_ready(js)
+    assert ready.count("const T = ") == 1 and i18n.js_ready(ready) == ready
+    assert i18n.js_texts('T("Saved") TM("Thin lines") T("{n} days", {n: 3})') == ["Saved", "Thin lines", "{n} days"]
+    assert i18n.js_words('T("Saved")', code="th") == {"Saved": "บันทึกแล้ว"}
+    assert i18n.js_words('T("Saved")', code="en") == {}
+    seen = {}
+    show = i18n.with_words(lambda **kw: seen.update(kw), 'T("Saved")')
+    with i18n.using("th"):
+        show(data={"a": 1})
+        assert seen["data"]["tr"] == {"Saved": "บันทึกแล้ว"}
+        show(data=json.dumps({"a": 1}))
+        assert json.loads(seen["data"])["tr"] == {"Saved": "บันทึกแล้ว"}

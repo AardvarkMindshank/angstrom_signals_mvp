@@ -4023,7 +4023,7 @@ def _chart_set_picker():
     with cols[0]:
         key = st.selectbox(
             t("Show a Set on the chart"), keys, key="chart_band_set",
-            format_func=lambda k: "⊘ No Set" if not k else options[k][0],
+            format_func=lambda k: t("⊘ No Set") if not k else options[k][0],
             help=(t("Colours every day by the Set's answer at that day's close: green = Yes (conditions met), "
                   "amber = Unknown (data missing), clear = No. Worked out from the full daily history; a "
                   "description of the past, not a forecast.")))
@@ -8377,13 +8377,13 @@ if not _POPOUT_VIEW:
 CRYPTO_WATCHLIST = prefs["crypto"]
 STOCK_WATCHLIST = prefs["stock"]
 settings = prefs["settings"]
-_TRADE_CRYPTOS = "I trade cryptos"
-_TRADE_EQUITIES = "I trade equities"
-_TRADE_BOTH = "I trade both"
+_TRADE_CRYPTOS = i18n.mark("I trade cryptos")
+_TRADE_EQUITIES = i18n.mark("I trade equities")
+_TRADE_BOTH = i18n.mark("I trade both")
 _TRADE_CHOICES = (_TRADE_CRYPTOS, _TRADE_EQUITIES, _TRADE_BOTH)
 # Price chart engines. TradingView is the default; Plotly stays available in Settings.
 CHART_ENGINE_TV = "TradingView"
-CHART_ENGINE_PLOTLY = "Plotly (original)"
+CHART_ENGINE_PLOTLY = i18n.mark("Plotly (original)")
 CHART_ENGINES = (CHART_ENGINE_TV, CHART_ENGINE_PLOTLY)
 CHART_ENGINE_DEFAULT = CHART_ENGINE_TV
 # Saved under this key. The earlier keys ("chart_engine", then "chart_style") were written on every visit while Plotly was
@@ -8718,6 +8718,7 @@ with tracked_expander("⚙️ " + t("Settings"), "settings_panel", sidebar=True)
     st.radio(
         t("Markets you trade"),
         _TRADE_CHOICES,
+        format_func=t,
         key="trade_markets",
         persist_state="session",
         label_visibility="collapsed",
@@ -8734,6 +8735,7 @@ with tracked_expander("⚙️ " + t("Settings"), "settings_panel", sidebar=True)
     chart_engine = st.radio(
         t("Price chart"),
         CHART_ENGINES,
+        format_func=t,
         key="price_chart",
         persist_state="session",
         label_visibility="collapsed",
@@ -10211,7 +10213,8 @@ def feedback_form() -> None:
     st.caption(t("An issue or an idea. It is stored as submitted, with your account and the date."))
     feedback_kind = st.radio(
         t("Type"),
-        ["Issue", "Enhancement"],
+        [i18n.mark("Issue"), i18n.mark("Enhancement")],
+        format_func=t,
         horizontal=True,
         key="feedback_kind",
     )
@@ -11864,7 +11867,7 @@ def _funnel_controls(dyn, market: str = "crypto") -> None:
     if st.session_state.get("user") is None:
         return
     mode_key, pick_key, stage_key, setting, words = _FUNNEL_KEYS[market]
-    mode = st.radio(t('{market} table', market=market), fv.MODES, key=mode_key, horizontal=True, label_visibility="collapsed",
+    mode = st.radio(t('{market} table', market=market), fv.MODES, format_func=t, key=mode_key, horizontal=True, label_visibility="collapsed",
                     help=t('My Watchlist: the {words_coins} you picked. Dynamic funnel: the {words_coins} a funnel has narrowed down from {words_pool}, stage by stage. Your choice is saved on your account.', words_coins=words['coins'], words_pool=words['pool']))
     remember = {setting: fv.MODE_CODES.get(mode, "watchlist")}
     if dyn is not None and dyn.get("funnel"):
@@ -13129,8 +13132,8 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
 
             def _indicator_label(key):
                 if key == LIQ_KEY:
-                    return "🔥 Liquidation levels"
-                return f"{indicator_icons.get(key, '')} {chart_plan.INDICATORS[key]['label']}".strip()
+                    return t("🔥 Liquidation levels")
+                return f"{indicator_icons.get(key, '')} {t(chart_plan.INDICATORS[key]['label'])}".strip()
 
             # The chart choices belong to the account. Start from what was saved, and keep a saved
             # choice this asset cannot draw (too little history) so it comes back on the next asset.
@@ -14916,7 +14919,8 @@ def show_signal_matrix(kind: str, asset_id: str, label: str, indicated) -> None:
             return
         section = st.radio(
             t("Signal view"),
-            ["Recent 30 days", "Evidence"],
+            [i18n.mark("Recent 30 days"), i18n.mark("Evidence")],
+            format_func=t,
             horizontal=True,
             label_visibility="collapsed",
             key="signal_matrix_section",
@@ -14926,7 +14930,8 @@ def show_signal_matrix(kind: str, asset_id: str, label: str, indicated) -> None:
             return
         view = st.radio(
             t("Matrix display"),
-            ["Lines", "Numbers"],
+            [i18n.mark("Lines"), i18n.mark("Numbers")],
+            format_func=t,
             horizontal=True,
             label_visibility="collapsed",
             key="signal_matrix_view",
@@ -14934,7 +14939,7 @@ def show_signal_matrix(kind: str, asset_id: str, label: str, indicated) -> None:
         horizon = st.radio(
             t("Lead window"),
             list(LEAD_HORIZONS),
-            format_func=lambda days: f"Next {days} day" if days == 1 else f"Next {days} days",
+            format_func=lambda days: t("Next 1 day") if days == 1 else t("Next {n} days", n=days),
             horizontal=True,
             key="signal_matrix_horizon",
         )

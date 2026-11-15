@@ -5,6 +5,9 @@ Every piece of text passed in must already be HTML-safe (use html.escape on anyt
 """
 from __future__ import annotations
 
+import i18n
+from i18n import t
+
 import html
 import re
 
@@ -114,7 +117,7 @@ def render_email(
         else ""
     )
     page = f"""<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="{i18n.html_lang(i18n.current())}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{html.escape(re.sub('<[^>]+>', '', heading))}</title></head>
 <body style="margin:0;padding:0;background:{_PAPER};">{hidden}
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:{_PAPER};padding:24px 12px;">
@@ -130,7 +133,7 @@ def render_email(
 </td></tr>
 <tr><td style="padding:6px 28px 26px;border-top:1px solid {_RULE};">
 <p style="margin:16px 0 6px;">{note}</p>
-<p style="margin:0;font:400 12px/1.5 {_FONT};color:{_MUTED};">Angstrom Signals is a research tool, not financial advice. Past data is not a forecast, and you can lose money trading.
+<p style="margin:0;font:400 12px/1.5 {_FONT};color:{_MUTED};">{t("Angstrom Signals is a research tool, not financial advice. Past data is not a forecast, and you can lose money trading.")}
 <a href="{SITE_URL}" style="color:{_MUTED};">angstromsignals.com</a></p>
 </td></tr>
 </table>
@@ -150,7 +153,7 @@ def _plain(heading, paragraphs, callout, button, footnote, extra_plain="") -> st
         lines += ["", f"{button[0]}: {button[1]}"]
     if footnote:
         lines += ["", _strip(footnote)]
-    lines += ["", "Angstrom Signals is a research tool, not financial advice.", SITE_URL]
+    lines += ["", t("Angstrom Signals is a research tool, not financial advice."), SITE_URL]
     return "\n".join(lines)
 
 

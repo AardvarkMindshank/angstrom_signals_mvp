@@ -8,6 +8,8 @@ so neither can send or hide the other's alerts.
 
 from __future__ import annotations
 
+from i18n import t
+
 import html
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
@@ -251,7 +253,7 @@ def _watchlist_row(row: dict) -> tuple[str, str]:
     sentiment = _number(row.get("sentiment"))
     mood_text, mood_bg = _mood_colour(sentiment)
     sentiment_html = (
-        f'<span style="font:400 13px/1.5 {_FONT};color:{_MUTED};">Sentiment</span> '
+        f'<span style="font:400 13px/1.5 {_FONT};color:{_MUTED};">{t("Sentiment")}</span> '
         + _pill(sentiment_text(sentiment), mood_text, mood_bg)
         if sentiment is not None else ""
     )
@@ -289,7 +291,7 @@ def _watchlist_section(results, config) -> tuple[str, str]:
                 mood, _number(config.get("market_high_alert")) or 65.0, _number(config.get("market_low_alert")) or 35.0,
             )
             mood_html = (
-                f'<span style="font:400 13px/1.5 {_FONT};color:{_MUTED};">Market mood</span> '
+                f'<span style="font:400 13px/1.5 {_FONT};color:{_MUTED};">{t("Market mood")}</span> '
                 + _pill(sentiment_text(mood), text, bg)
             )
         html_parts.append(
@@ -305,8 +307,7 @@ def _watchlist_section(results, config) -> tuple[str, str]:
             plain.append(row_plain)
         if total > len(rows):
             top = (len(rows) + 1) // 2
-            note = (f"Your {top} strongest and {len(rows) - top} weakest Trend readings of {total}. "
-                    "The rest are on the dashboard.")
+            note = (t('Your {top} strongest and {len_rows_top} weakest Trend readings of {total}. The rest are on the dashboard.', top=top, len_rows_top=len(rows) - top, total=total))
             html_parts.append(f'<p style="margin:2px 0 4px;font:400 12px/1.5 {_FONT};color:{_MUTED};">{note}</p>')
             plain.append(note)
         plain.append("")
@@ -318,19 +319,18 @@ PRISM_TYPE = "prism"   # prism_scans.ALERT_TYPE: a scheduled Prism scan said Yes
 
 def _funnel_section(funnels: list[dict]) -> tuple[list[str], list[str]]:
     """Your funnels today: each funnel's Candidates now (largest first) and how many are Flagged."""
-    parts, plain = [section_title("Your funnels today")], ["Your funnels today"]
+    parts, plain = [section_title(t("Your funnels today"))], [t("Your funnels today")]
     for f in funnels:
         if f["count"]:
             who = ", ".join(f["candidates"]) + (f" and {f['more']} more" if f["more"] else "")
             detail = f"{f['count']} Candidate{'s' if f['count'] != 1 else ''}: {who}"
         else:
-            detail = "No Candidates right now"
+            detail = t("No Candidates right now")
         detail += f" · {f['flagged']} Flagged · {f['line']}"
         parts.append(list_row("🔻 " + html.escape(f["name"]), html.escape(detail), "up" if f["count"] else "info"))
         plain.append(f"- {f['name']}: {detail}")
-    parts.append(f'<p style="margin:6px 0 0;font:400 13px/1.5 {_FONT};color:{_MUTED};">'
-                 "Candidate means an asset matches your selected conditions. It is not a recommendation to trade.</p>")
-    plain += ["Candidate means an asset matches your selected conditions. It is not a recommendation to trade.", ""]
+    parts.append(t('<p style="margin:6px 0 0;font:400 13px/1.5 {_FONT};color:{_MUTED};">Candidate means an asset matches your selected conditions. It is not a recommendation to trade.</p>', _FONT=_FONT, _MUTED=_MUTED))
+    plain += [t("Candidate means an asset matches your selected conditions. It is not a recommendation to trade."), ""]
     return parts, plain
 
 
@@ -347,9 +347,9 @@ def render_digest(notes, results, config, app_url: str, markets=None, prism=None
     plural = "" if total == 1 else "s"
     with_watchlist = watchlist_on(config) and bool(results)
     if total:
-        subject = f"Angstrom daily summary: {total} alert{plural}"
+        subject = t('Angstrom daily summary: {total} alert{plural}', total=total, plural=plural)
     else:
-        subject = "Angstrom daily summary: no new alerts"
+        subject = t("Angstrom daily summary: no new alerts")
 
     html_parts: list[str] = []
     plain: list[str] = []
@@ -378,7 +378,7 @@ def render_digest(notes, results, config, app_url: str, markets=None, prism=None
             facts = facts_for_symbol.get(symbol) or facts_for_name.get(name, "")
             detail = html.escape(message) + (f" · {html.escape(when)}" if when else "")
             if facts:
-                detail += "<br>Now: " + html.escape(facts)
+                detail += "<br>" + html.escape(t("Now: {facts}", facts=facts))
             logo = logo_for_symbol.get(symbol) or logo_for_name.get(name, "")
             html_parts.append(list_row(asset_logo(logo) + html.escape(name), detail, tone))
             plain.append(f"- {name}: {message}" + (f" ({when})" if when else "") + (f". Now: {facts}" if facts else ""))
@@ -386,8 +386,8 @@ def render_digest(notes, results, config, app_url: str, markets=None, prism=None
 
     readings = list(markets or []) if config.get("market_alerts_enabled") else []
     if market_notes or readings:
-        html_parts.append(section_title("Market sentiment"))
-        plain.append("Market sentiment")
+        html_parts.append(section_title(t("Market sentiment")))
+        plain.append(t("Market sentiment"))
         for note in market_up + market_down:
             name = " ".join(str(note.get("asset_name") or "Market").split())
             message = " ".join(str(note.get("message") or "").split())
@@ -402,23 +402,22 @@ def render_digest(notes, results, config, app_url: str, markets=None, prism=None
                 continue
             name = str(row.get("symbol") or "")
             score = float(row.get("score"))
-            html_parts.append(list_row(html.escape(name), f"Now {sentiment_text(score)}, no alert", "info"))
-            plain.append(f"- {name}: now {sentiment_text(score)}, no alert")
+            html_parts.append(list_row(html.escape(name), t('Now {sentiment_text_score}, no alert', sentiment_text_score=sentiment_text(score)), "info"))
+            plain.append(t('- {name}: now {sentiment_text_score}, no alert', name=name, sentiment_text_score=sentiment_text(score)))
         plain.append("")
 
-    crossing_rows("Turned up", up, "up")
-    crossing_rows("Turned down", down, "down")
+    crossing_rows(t("Turned up"), up, "up")
+    crossing_rows(t("Turned down"), down, "down")
     if not asset_notes and config.get("enabled", True) is not False:
         html_parts.append(
-            f'<p style="margin:8px 0 0;font:400 15px/1.5 {_FONT};color:{_MUTED};">'
-            "No reading crossed your alert lines since the last summary.</p>"
+            t('<p style="margin:8px 0 0;font:400 15px/1.5 {_FONT};color:{_MUTED};">No reading crossed your alert lines since the last summary.</p>', _FONT=_FONT, _MUTED=_MUTED)
         )
-        plain += ["No reading crossed your alert lines since the last summary.", ""]
+        plain += [t("No reading crossed your alert lines since the last summary."), ""]
 
     if prism:
         # Prism scans that said Yes since the last summary (only when there are some: otherwise nothing changes).
-        html_parts.append(section_title(f"Prism scans ({len(prism)})"))
-        plain.append(f"Prism scans ({len(prism)})")
+        html_parts.append(section_title(t("Prism scans ({n})", n=len(prism))))
+        plain.append(t("Prism scans ({n})", n=len(prism)))
         for note in sorted(prism, key=lambda n: str(n.get("created_at") or "")):
             name = " ".join(str(note.get("asset_name") or "Asset").split())
             text = " ".join(str(note.get("message") or "").split())
@@ -429,7 +428,7 @@ def render_digest(notes, results, config, app_url: str, markets=None, prism=None
             plain.append(f"- {name}: {text}" + (f" ({when})" if when else ""))
         plain.append("")
         if not total:
-            subject = f"Angstrom daily summary: {len(prism)} Prism match{'' if len(prism) == 1 else 'es'}"
+            subject = t('Angstrom daily summary: {len_prism} Prism match{if_len_prism_1_else_es}', len_prism=len(prism), if_len_prism_1_else_es='' if len(prism) == 1 else 'es')
 
     if funnels:
         f_html, f_plain = _funnel_section(funnels)
@@ -437,31 +436,31 @@ def render_digest(notes, results, config, app_url: str, markets=None, prism=None
         plain += f_plain
         if not total and not prism:
             n = sum(f["count"] for f in funnels)
-            subject = f"Angstrom daily summary: {n} funnel Candidate{'' if n == 1 else 's'}"
+            subject = t('Angstrom daily summary: {n} funnel Candidate{if_n_1_else_s}', n=n, if_n_1_else_s='' if n == 1 else 's')
 
     if with_watchlist:
         section_html, section_plain = _watchlist_section(results, config)
         if section_html:
             html_parts.append(f'<hr style="border:none;border-top:2px solid {_RULE};margin:22px 0 4px;">')
-            html_parts.append(section_title("Your watchlist today"))
+            html_parts.append(section_title(t("Your watchlist today")))
             html_parts.append(section_html)
-            plain += ["----------------------------------------", "Your watchlist today", section_plain]
+            plain += ["----------------------------------------", t("Your watchlist today"), section_plain]
 
     hour = digest_hour(config)
     zone_name = str(config.get("digest_tz") or DEFAULT_ZONE)
     when_sent = (
-        f"Sent every day at {hour:02d}:00 ({html.escape(zone_name)})."
+        t('Sent every day at {hour:02d}:00 ({html_escape_zone_name}).', hour=hour, html_escape_zone_name=html.escape(zone_name))
         if watchlist_on(config) else
-        f"Sent once a day at {hour:02d}:00 ({html.escape(zone_name)}), and only on days with at least one alert."
+        t('Sent once a day at {hour:02d}:00 ({html_escape_zone_name}), and only on days with at least one alert.', hour=hour, html_escape_zone_name=html.escape(zone_name))
     )
     page, text = render_email(
-        f"Your daily summary: {total} alert{plural}" if total else "Your daily summary",
+        t('Your daily summary: {total} alert{plural}', total=total, plural=plural) if total else t("Your daily summary"),
         [
-            "What crossed your alert lines since your last summary"
-            + (", then how your watchlist looks today." if with_watchlist else ".")
-            + " Scores describe current conditions and are not forecasts.",
+            (t("What crossed your alert lines since your last summary, then how your watchlist looks today.")
+             if with_watchlist else t("What crossed your alert lines since your last summary."))
+            + " " + t("Scores describe current conditions and are not forecasts."),
         ],
-        button=("Open the dashboard", app_url),
+        button=(t("Open the dashboard"), app_url),
         footnote=when_sent + " Change this under Configure Alert Rules.",
         preheader=(
             f"{len(up)} turned positive, {len(down)} turned negative"

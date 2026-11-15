@@ -27,6 +27,13 @@ def terms() -> list[str]:
     except Exception:
         pass
     try:
+        import chart_plan                             # the chart's indicator picker
+
+        for spec in chart_plan.INDICATORS.values():
+            add(spec.get("label"))
+    except Exception:
+        pass
+    try:
         import tides as td                            # Tides words (tides_view shows them through t())
 
         for _top, name, plain in td.SEA_BANDS:
