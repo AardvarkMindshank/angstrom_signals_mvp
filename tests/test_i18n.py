@@ -143,3 +143,53 @@ def test_browser_text_helper():
         assert seen["data"]["tr"] == {"Saved": "บันทึกแล้ว"}
         show(data=json.dumps({"a": 1}))
         assert json.loads(seen["data"])["tr"] == {"Saved": "บันทึกแล้ว"}
+
+
+def test_choice_widgets_keep_their_value_when_their_words_change():
+    """Switching to Thai once reset 'I trade both' to the first option: Streamlit remembers a choice by the words it
+    showed. The guard writes the value back when the words for it change (i18n.reseed_choice / note_choice)."""
+    options = ("I trade cryptos", "I trade equities", "I trade both")
+    thai = {"I trade cryptos": "ฉันเทรดคริปโต", "I trade equities": "ฉันเทรดหุ้น", "I trade both": "ฉันเทรดทั้งสองอย่าง"}
+    state = {}
+    # first draw, in English: nothing to write back, the words are noted
+    assert not i18n.reseed_choice(state, "trade_markets", str, options)
+    state["trade_markets"] = "I trade both"
+    i18n.note_choice(state, "trade_markets", str, "I trade both")
+    # same words next run: left alone
+    assert not i18n.reseed_choice(state, "trade_markets", str, options)
+    # the visitor switches to Thai: the words differ, so the value is written back
+    writes = []
+
+    class Watch(dict):
+        def __setitem__(self, k, v):
+            writes.append((k, v))
+            super().__setitem__(k, v)
+    watched = Watch(state)
+    assert i18n.reseed_choice(watched, "trade_markets", thai.get, options)
+    assert writes == [("trade_markets", "I trade both")]
+    i18n.note_choice(watched, "trade_markets", thai.get, "I trade both")
+    assert not i18n.reseed_choice(watched, "trade_markets", thai.get, options)
+    # a value no longer offered is not forced back; multi-choice values compare as lists
+    watched["trade_markets"] = "gone"
+    assert not i18n.reseed_choice(watched, "trade_markets", str.upper, options)
+    watched["marks"] = ["a", "b"]
+    i18n.note_choice(watched, "marks", str, ["a", "b"])
+    assert i18n.reseed_choice(watched, "marks", str.upper, ["a", "b", "c"])
+
+
+def test_every_choice_widget_has_a_key():
+    """The guard can only keep a choice that has a key; a choice widget without one would reset on a language change."""
+    import ast
+    import glob
+
+    names = set(i18n._CHOICE_WIDGETS)
+    missing = []
+    for path in glob.glob(os.path.join(os.path.dirname(i18n.__file__), "*.py")):
+        if path.endswith(("i18n_wrap.py", "chart_streamlit_app.py")):
+            continue
+        tree = ast.parse(open(path, encoding="utf-8").read())
+        for node in ast.walk(tree):
+            if (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr in names
+                    and not any(k.arg == "key" for k in node.keywords)):
+                missing.append(f"{os.path.basename(path)}:{node.lineno}")
+    assert not missing, missing

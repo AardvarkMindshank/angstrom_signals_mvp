@@ -280,3 +280,105 @@ def flag_svg(country: str) -> str:
 def html_lang(code: str) -> str:
     """The code for the page's lang attribute (screen readers, fonts, browser translation offers)."""
     return code if code in BY_CODE else BASE
+
+
+# ---- Choice widgets keep their value when their words change (15 Nov 2026) ---------------------------------------
+# Streamlit remembers a radio, selectbox, multiselect, pills, segmented control or select slider choice as the text it
+# showed, not as the value behind it. When that text changes (the visitor switches language and format_func is t, or
+# a label gains a ⏳), the remembered text matches no option, and Streamlit silently falls back to the first option:
+# switching to Thai turned "I trade both" into "I trade cryptos", and the settings auto-save kept it. So, just before
+# such a widget is drawn, the current value is written back to session state whenever its words differ from the words
+# drawn last time; Streamlit then shows the same choice in the new words.
+_CHOICE_WIDGETS = ("radio", "selectbox", "multiselect", "pills", "segmented_control", "select_slider")
+_CHOICE_WORDS = "_choice_words"
+
+
+def _words_of(value, format_func):
+    """The text a widget shows for a value (a list for a multi-choice value); None when it cannot be worked out."""
+    try:
+        if isinstance(value, (list, tuple)):
+            return [str(format_func(v)) for v in value]
+        return None if value is None else str(format_func(value))
+    except Exception:
+        return None
+
+
+def _in_options(value, options) -> bool:
+    try:
+        items = list(options)
+    except Exception:
+        return False
+    if isinstance(value, (list, tuple)):
+        return all(v in items for v in value)
+    if isinstance(value, tuple) and len(value) == 2:            # a select_slider range
+        return all(v in items for v in value)
+    return value in items
+
+
+def reseed_choice(state, key, format_func, options) -> bool:
+    """Before drawing the choice widget `key`: write its value back when the words it would show now differ from the
+    words it showed last time. Returns True when it did. `state` is st.session_state (or a dict in tests)."""
+    if key is None or key not in state:
+        return False
+    try:
+        value = state[key]
+    except Exception:
+        return False
+    store = state.get(_CHOICE_WORDS) if hasattr(state, "get") else None
+    before = (store or {}).get(key)
+    now = _words_of(value, format_func)
+    if before is None or now is None or now == before or not _in_options(value, options):
+        return False
+    state[key] = value
+    return True
+
+
+def note_choice(state, key, format_func, value) -> None:
+    """After drawing: the words shown for the value, for the next comparison."""
+    if key is None:
+        return
+    words = _words_of(value, format_func)
+    if words is None:
+        return
+    store = state.get(_CHOICE_WORDS) if hasattr(state, "get") else None
+    if not isinstance(store, dict):
+        store = {}
+    store[key] = words
+    state[_CHOICE_WORDS] = store
+
+
+def keep_choices() -> None:
+    """Install the guard on every Streamlit choice widget (st.radio, a column's .selectbox …). Safe to call twice."""
+    import streamlit as st
+    from streamlit.delta_generator import DeltaGenerator
+
+    for name in _CHOICE_WIDGETS:
+        original = getattr(DeltaGenerator, name, None)
+        if original is None or getattr(original, "_keeps_choice", False):
+            continue
+
+        def guarded(self, *args, _original=original, **kwargs):
+            key = kwargs.get("key")
+            format_func = kwargs.get("format_func") or str
+            options = args[1] if len(args) > 1 else kwargs.get("options", ())
+            key = None if key is None else str(key)
+            try:
+                if reseed_choice(st.session_state, key, format_func, options):
+                    for starting in ("index", "default", "value"):    # the value now comes from session state;
+                        kwargs.pop(starting, None)                    # both at once makes Streamlit warn on screen
+            except Exception:
+                pass
+            result = _original(self, *args, **kwargs)
+            try:
+                note_choice(st.session_state, key, format_func, result)
+            except Exception:
+                pass
+            return result
+
+        guarded._keeps_choice = True
+        guarded.__doc__ = original.__doc__
+        guarded.__name__ = name
+        setattr(DeltaGenerator, name, guarded)
+        main = getattr(st, "_main", None)                   # st.radio … were bound to the main area at import time
+        if main is not None:
+            setattr(st, name, getattr(main, name))

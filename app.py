@@ -74,6 +74,8 @@ st.set_page_config(
 import i18n
 from i18n import t
 
+i18n.keep_choices()      # choice widgets keep their value when their words change (switching language, a ⏳ label)
+
 
 def _copyright() -> None:
     """The © line at the foot of the page: signed in, and on the sign-in page."""
