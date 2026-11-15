@@ -23,7 +23,7 @@ CSS = """
 .anglang .fl{width:22px;height:16px;border-radius:3px;overflow:hidden;flex:0 0 auto;display:inline-flex;
   box-shadow:0 0 0 1px rgba(0,0,0,.12)}
 .anglang .fl svg{width:100%;height:100%;display:block}
-.anglang .list{position:absolute;z-index:1000;left:0;top:calc(100% + 6px);min-width:220px;max-height:340px;overflow:auto;
+.anglang .list{position:absolute;z-index:1000;left:0;top:calc(100% + 6px);min-width:280px;max-width:calc(100vw - 32px);max-height:340px;overflow:auto;
   padding:6px;border-radius:12px;border:1px solid var(--ang-border,rgba(127,127,127,.35));
   background:var(--ang-surface,#fff);color:var(--ang-text,inherit);box-shadow:0 8px 24px rgba(0,0,0,.18)}
 .anglang .list.up{top:auto;bottom:calc(100% + 6px)}
@@ -31,7 +31,8 @@ CSS = """
   background:transparent;color:inherit;font:inherit;cursor:pointer;text-align:left}
 .anglang .opt:hover{background:rgba(127,127,127,.12)}
 .anglang .opt.on{background:rgba(15,118,110,.16);font-weight:600}
-.anglang .en{opacity:.6;font-size:12px;margin-left:auto;padding-left:10px}
+.anglang .nm{white-space:nowrap}
+.anglang .en{opacity:.6;font-size:12px;margin-left:auto;padding-left:10px;text-align:right}
 .anglang .beta{font-size:10px;font-weight:700;padding:1px 6px;border-radius:999px;background:#b45309;color:#fff;margin-left:6px}
 """
 
@@ -78,7 +79,7 @@ export default function angLang(component) {
       b.className = "opt" + (o.code === cur.code ? " on" : "");
       b.setAttribute("role", "option"); b.title = o.english;
       b.appendChild(flag(o));
-      const n = document.createElement("span"); n.textContent = o.name; b.appendChild(n);
+      const n = document.createElement("span"); n.className = "nm"; n.textContent = o.name; b.appendChild(n);
       if (o.beta) { const t = document.createElement("span"); t.className = "beta"; t.textContent = "beta"; t.title = d.beta_tip || "Being checked"; b.appendChild(t); }
       if (o.english !== o.name) { const e = document.createElement("span"); e.className = "en"; e.textContent = o.english; b.appendChild(e); }
       b.onclick = () => { write(o.code); close(); if (o.code !== cur.code) send(o.code, "pick"); };
