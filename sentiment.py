@@ -36,12 +36,120 @@ _BUSY_UNTIL: dict[str, float] = {}
 _SCORE_CACHE: dict[str, tuple[float, dict]] = {}
 _KEY_REJECTED = False
 _PROVIDER: str | None = None            # the admin's choice (ai_providers.py, app_settings); None = Grok
+# 🌐 The languages accounts have chosen, besides English (15 Nov 2026). The worker sets them before it scores; the same
+# AI call then also writes the summary, the two sides, the drivers and each headline's note in those languages, kept
+# in the report under "tr". Only languages someone uses are asked for; a new one fills in at each report's next refresh.
+_LANGUAGES: tuple[str, ...] = ()
 
 
 def set_provider(provider: str | None) -> None:
     """Which AI scores headlines from now on (the page and the worker read the admin's choice and set it)."""
     global _PROVIDER
     _PROVIDER = provider or None
+
+
+def set_languages(codes) -> None:
+    """The languages to write the AI text in as well as English (the worker: every account's chosen language)."""
+    global _LANGUAGES
+    _LANGUAGES = tuple(sorted({str(c) for c in (codes or []) if c and str(c) != "en"}))
+
+
+def languages() -> tuple[str, ...]:
+    return _LANGUAGES
+
+
+def _language_names(codes) -> str:
+    try:
+        import i18n
+
+        return ", ".join(f"{c} ({i18n.BY_CODE[c]['english']})" if c in i18n.BY_CODE else c for c in codes)
+    except Exception:
+        return ", ".join(codes)
+
+
+def _with_translations(prompt: str, langs, notes_only: bool = False) -> str:
+    """The prompt, asking as well for the English text in each of `langs` (none: the prompt as it was)."""
+    if not langs:
+        return prompt
+    shape = '{"notes":{"1":"..."}}' if notes_only else (
+        '{"summary":"...","positive":"...","negative":"...","drivers":["..."],"notes":{"1":"..."}}')
+    return (
+        prompt
+        + "\nAlso add a key \"tr\" to the same JSON object, with one entry per language code listed below, each in "
+        f"this shape: {shape}. Each is a faithful translation of the English fields above into that language "
+        "(notes keyed by the same index numbers). Keep asset names, tickers and numbers unchanged. "
+        "Write the English fields first, then tr. Languages: " + _language_names(langs) + "."
+    )
+
+
+def _read_translations(raw, langs) -> dict:
+    """{code: {summary, positive, negative, drivers, notes: {index: text}}} for the asked languages, cleaned."""
+    out = {}
+    if not isinstance(raw, dict):
+        return out
+    for code in langs or ():
+        entry = raw.get(code)
+        if not isinstance(entry, dict):
+            continue
+        clean = {}
+        for name in ("summary", "positive", "negative"):
+            text = " ".join(str(entry.get(name) or "").split())
+            if text:
+                clean[name] = text
+        drivers = entry.get("drivers")
+        if isinstance(drivers, str):
+            drivers = [drivers]
+        if isinstance(drivers, list):
+            kept = [" ".join(str(d).split())[:160] for d in drivers if str(d).strip()][:3]
+            if kept:
+                clean["drivers"] = kept
+        notes = {}
+        raw_notes = entry.get("notes")
+        if isinstance(raw_notes, list):
+            raw_notes = {str(i): v for i, v in enumerate(raw_notes, start=1)}
+        if isinstance(raw_notes, dict):
+            for key, value in raw_notes.items():
+                try:
+                    index = int(str(key).strip())
+                except ValueError:
+                    continue
+                text = _short_note(value)
+                if text:
+                    notes[index] = text
+        if notes:
+            clean["notes"] = notes
+        if clean:
+            out[code] = clean
+    return out
+
+
+def has_languages(report, langs=None) -> bool:
+    """True when a stored report already holds every language asked for (so it can be reused as it is)."""
+    langs = _LANGUAGES if langs is None else langs
+    have = (report or {}).get("tr") if isinstance(report, dict) else None
+    return all(isinstance(have, dict) and have.get(code) for code in langs)
+
+
+def localised(report, code: str | None):
+    """A copy of a report with its AI text in `code` where it was translated; the English otherwise."""
+    if not isinstance(report, dict) or not code or code == "en":
+        return report
+    tr = (report.get("tr") or {}).get(code) if isinstance(report.get("tr"), dict) else None
+
+    def note_of(row):
+        words = (row.get("tr") or {}).get(code) if isinstance(row, dict) and isinstance(row.get("tr"), dict) else None
+        return {**row, "note": words} if words else row
+
+    out = dict(report)
+    if isinstance(tr, dict):
+        for name in ("summary", "positive", "negative", "drivers"):
+            if tr.get(name):
+                out[name] = tr[name]
+    out["headlines"] = [note_of(row) for row in report.get("headlines") or []]
+    if report.get("gauges"):
+        out["gauges"] = [{**g, "items": [note_of(i) for i in (g.get("items") or [])]} if isinstance(g, dict) else g
+                         for g in report.get("gauges") or []]
+    return out
 
 
 def scoring_provider() -> str:
@@ -527,6 +635,7 @@ def _read_parsed(parsed: dict, headline_count: int) -> dict:
         "positive": _paragraph(_field(parsed, "positive", "positives", "bullish")),
         "negative": _paragraph(_field(parsed, "negative", "negatives", "bearish")),
         "drivers": drivers,
+        "tr": _field(parsed, "tr", "translations"),
     }
 
 
@@ -546,7 +655,7 @@ def _read_model_text(response: requests.Response, headline_count: int) -> dict:
     return {"ok": False, "reason": "model_error"}
 
 
-def _post_grok(key: str, prompt: str, attempt: dict, structured: bool = True) -> requests.Response:
+def _post_grok(key: str, prompt: str, attempt: dict, structured: bool = True, langs=()) -> requests.Response:
     """Ask Grok for the score. The plain retry drops fields a model may reject."""
     body = {
         "model": attempt["model"],
@@ -557,7 +666,7 @@ def _post_grok(key: str, prompt: str, attempt: dict, structured: bool = True) ->
             },
             {"role": "user", "content": prompt},
         ],
-        "max_completion_tokens": 1800,
+        "max_completion_tokens": _max_tokens(langs),
     }
     if structured:
         body["temperature"] = 0.2
@@ -568,7 +677,7 @@ def _post_grok(key: str, prompt: str, attempt: dict, structured: bool = True) ->
         _CHAT_URL,
         headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
         json=body,
-        timeout=40,
+        timeout=40 + 20 * len(langs or ()),
     )
 
 
@@ -662,13 +771,27 @@ def _scored_report(parsed: dict, headlines: list[dict]) -> dict | None:
     }
 
 
-def _summarize_with(provider: str, query: str, headlines: list[dict], prompt: str) -> dict:
+def _add_translations(report: dict, raw, langs) -> dict:
+    """Put the translated text on a report: per-headline notes on each row, the rest under report["tr"]."""
+    tr = _read_translations(raw, langs)
+    if not tr:
+        return report
+    for index, row in enumerate(report.get("headlines") or [], start=1):
+        words = {code: entry["notes"][index] for code, entry in tr.items() if index in (entry.get("notes") or {})}
+        if words:
+            row["tr"] = words
+    report["tr"] = {code: {k: v for k, v in entry.items() if k != "notes"} for code, entry in tr.items()}
+    return report
+
+
+def _summarize_with(provider: str, query: str, headlines: list[dict], prompt: str, langs=()) -> dict:
     """The score from another AI than Grok (the admin's choice): the same prompt and the same reading of the reply."""
     import ai_providers
 
     try:
         text, _done = ai_providers.chat(provider, "You score headlines and reply with one JSON object only.",
-                                        [{"role": "user", "content": prompt}], 1800, json_only=True, timeout=60)
+                                        [{"role": "user", "content": prompt}], _max_tokens(langs), json_only=True,
+                                        timeout=60 + 20 * len(langs))
     except Exception as exc:
         words = str(exc)
         print(f"{ai_providers.label(provider)} did not return a score: {words[:200]}", flush=True)
@@ -681,6 +804,7 @@ def _summarize_with(provider: str, query: str, headlines: list[dict], prompt: st
         if read.get("ok"):
             report = _scored_report(read, headlines)
             if report:
+                _add_translations(report, read.get("tr"), langs)
                 report["model"] = f"{provider}:{ai_providers.model(provider)}"
                 _BUSY_UNTIL.pop(query, None)
                 return report
@@ -688,13 +812,31 @@ def _summarize_with(provider: str, query: str, headlines: list[dict], prompt: st
     return {"ok": False, "reason": "model_error"}
 
 
-def _summarize(query: str, headlines: list[dict], prompt: str | None = None) -> dict:
+def _max_tokens(langs) -> int:
+    """Room for the reply: the English, plus about as much again for each language asked for."""
+    return min(16000, 1800 + 1300 * len(langs or ()))
+
+
+def _summarize(query: str, headlines: list[dict], prompt: str | None = None, notes_only: bool = False) -> dict:
+    """The score and text, also in the languages accounts use (set_languages). If the longer reply with translations
+    fails, it is asked again in English only, so a translation problem never costs the score."""
+    langs = _LANGUAGES
+    base = prompt or _prompt(query, headlines)
+    if langs:
+        report = _summarize_once(query, headlines, _with_translations(base, langs, notes_only), langs)
+        if report.get("ok") or report.get("reason") != "model_error":
+            return report
+        print(f"Scoring with translations failed for {query}; asking again in English only.", flush=True)
+    return _summarize_once(query, headlines, base, ())
+
+
+def _summarize_once(query: str, headlines: list[dict], prompt: str, langs) -> dict:
     global _KEY_REJECTED
     provider = scoring_provider()
     if provider != "grok":
         if time.time() < _BUSY_UNTIL.get(query, 0):
             return {"ok": False, "reason": "model_busy"}
-        return _summarize_with(provider, query, headlines, prompt or _prompt(query, headlines))
+        return _summarize_with(provider, query, headlines, prompt, langs)
     key = _api_key()
     if not key:
         return {"ok": False, "reason": "missing_key"}
@@ -703,13 +845,12 @@ def _summarize(query: str, headlines: list[dict], prompt: str | None = None) -> 
     if time.time() < _BUSY_UNTIL.get(query, 0):
         return {"ok": False, "reason": "model_busy"}
 
-    prompt = prompt or _prompt(query, headlines)
     saw_busy = False
     saw_auth = False
     notes = []
     for attempt in _MODELS:
         try:
-            response = _post_grok(key, prompt, attempt)
+            response = _post_grok(key, prompt, attempt, langs=langs)
         except requests.RequestException as exc:
             notes.append(f"{attempt['model']} network {exc.__class__.__name__}")
             saw_busy = True
@@ -720,7 +861,7 @@ def _summarize(query: str, headlines: list[dict], prompt: str | None = None) -> 
             break
         if response.status_code in (400, 422):
             try:
-                response = _post_grok(key, prompt, attempt, structured=False)
+                response = _post_grok(key, prompt, attempt, structured=False, langs=langs)
             except requests.RequestException as exc:
                 notes.append(f"{attempt['model']} plain network {exc.__class__.__name__}")
                 saw_busy = True
@@ -737,6 +878,7 @@ def _summarize(query: str, headlines: list[dict], prompt: str | None = None) -> 
             if parsed.get("ok"):
                 report = _scored_report(parsed, headlines)
                 if report:
+                    _add_translations(report, parsed.get("tr"), langs)
                     report["model"] = attempt["model"]
                     _BUSY_UNTIL.pop(query, None)
                     return report
@@ -820,6 +962,8 @@ def reuse_scores(report: dict, previous: dict | None) -> dict:
         row["score"] = old["score"]
         if old.get("note"):
             row["note"] = old["note"]
+            if isinstance(old.get("tr"), dict):          # the old note's own translations, new languages added
+                row["tr"] = {**(row.get("tr") or {}), **old["tr"]}
         reused += 1
     if reused:
         values = _scores_in(report.get("headlines"))
@@ -860,7 +1004,7 @@ def analyze_market_sentiment(query: str, enabled: bool, force: bool = False, pre
         return {"ok": False, "reason": "no_headlines", "headlines": [], "filtered": stats}
     if not enabled:
         return {"ok": False, "reason": "missing_key", "headlines": headlines}
-    if (isinstance(previous, dict) and previous.get("ok") and previous.get("model")
+    if (isinstance(previous, dict) and previous.get("ok") and previous.get("model") and has_languages(previous)
             and sorted(_ids(previous.get("headlines"))) == sorted(_ids(headlines))):
         summary = copy.deepcopy(previous)
         summary["reused_report"] = True
@@ -944,7 +1088,7 @@ def score_market_readings(market_key: str, label: str, groups: list[dict]) -> li
                 "link": item.get("href") or "https://fred.stlouisfed.org/",
             })
     try:
-        report = _summarize(f"readings:{market_key}", headlines, _readings_prompt(label, groups))
+        report = _summarize(f"readings:{market_key}", headlines, _readings_prompt(label, groups), notes_only=True)
     except Exception:
         return groups
     scored_rows = report.get("headlines") or []
@@ -958,6 +1102,8 @@ def score_market_readings(market_key: str, label: str, groups: list[dict]) -> li
         note = " ".join(str(row.get("note") or "").split())
         if note:
             item["note"] = note
+        if row.get("tr"):
+            item["tr"] = row["tr"]
     if any(item.get("score") is not None for item in flat):
         _READING_CACHE[market_key] = (time.time(), fingerprint, scored)
         return scored

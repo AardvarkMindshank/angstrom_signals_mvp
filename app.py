@@ -4608,6 +4608,7 @@ try:
         MACRO_MOODS,
         MIN_SCORED_SHARE,
         cached_sentiment_score,
+        localised as sentiment_localised,
         newest_first,
         remember_sentiment,
         sentiment_query,
@@ -14101,7 +14102,7 @@ def _reading_articles(group: dict) -> list[dict]:
             "source": source,
             "published": item.get("published") or "",
             "link": link,
-            "note": t(item.get("note") or item.get("detail") or ""),
+            "note": t(item.get("note") or item.get("detail") or ""),       # an AI note already localised stays as is
             "score": item.get("score"),
         })
     return articles
@@ -14169,6 +14170,7 @@ def _mood_card(spec: dict, row: dict | None) -> None:
                     st.session_state["_shared_reread"] = True
     if report and stored_at is not None:
         remember_sentiment(cache_key, report, stored_at)
+    shown = sentiment_localised(report, i18n.current())      # the AI text in this visit's language, when written
     head_col, top_col = st.columns([5.1, 0.85], vertical_alignment="center")
     with head_col:
         mood_icon = "🪙" if key == "crypto" else "📈"
@@ -14184,7 +14186,7 @@ def _mood_card(spec: dict, row: dict | None) -> None:
         t("Market sentiment is shared by everyone and updated about every 12 hours. "
         "The page picks up the new score by itself when it is due."),
     )
-    headlines = newest_first((report or {}).get("headlines") or [])
+    headlines = newest_first((shown or {}).get("headlines") or [])
     score = (report or {}).get("score")
     _paint_section_score(f"mood_{key}", score, bool(report and report.get("ok") and score is not None))
     if report and report.get("ok") and score is not None:
@@ -14201,7 +14203,7 @@ def _mood_card(spec: dict, row: dict | None) -> None:
         score_card, vote_card = _score_and_take()
         with score_card:
             st.markdown(
-                _sentiment_story(report, _mood_coverage(score), score, color, background, arrow, note),
+                _sentiment_story(shown, _mood_coverage(score), score, color, background, arrow, note),
                 unsafe_allow_html=True,
             )
         with vote_card:
@@ -14233,7 +14235,7 @@ def _mood_card(spec: dict, row: dict | None) -> None:
         st.warning(t("The xAI API key was rejected. Check the key in the Streamlit secrets."))
     else:
         st.info(t("The market score could not be built this time."))
-    _article_box(f"mood_{key}_readings", _mood_reading_board(key, label, report if isinstance(report, dict) else None))
+    _article_box(f"mood_{key}_readings", _mood_reading_board(key, label, shown if isinstance(shown, dict) else None))
     if headlines:
         _article_box(f"mood_{key}_news", headline_table(headlines, "AI Score"))
     st.caption(
@@ -15210,7 +15212,8 @@ def show_market_sentiment(kind: str, asset_id: str, label: str, ticker: str | No
                     ).isoformat()
                     st.session_state["_shared_reread"] = True
         report = report or {}
-        headlines = newest_first(report.get("headlines") or [])
+        shown = sentiment_localised(report, i18n.current())      # the AI text in this visit's language, when written
+        headlines = newest_first(shown.get("headlines") or [])
         score = report.get("score")
         _paint_section_score("asset", score, bool(report.get("ok") and score is not None))
         if report.get("ok") and score is not None:
@@ -15224,7 +15227,7 @@ def show_market_sentiment(kind: str, asset_id: str, label: str, ticker: str | No
             score_card, vote_card = _score_and_take()
             with score_card:
                 st.markdown(
-                    _sentiment_story(report, _mood_coverage(score), score, color, background, arrow, note),
+                    _sentiment_story(shown, _mood_coverage(score), score, color, background, arrow, note),
                     unsafe_allow_html=True,
                 )
             with vote_card:

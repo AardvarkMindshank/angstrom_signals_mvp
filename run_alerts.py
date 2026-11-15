@@ -373,6 +373,15 @@ def run_background_checks() -> None:
     except Exception as exc:          # funnel tables not installed, or unreadable: watchlists only, as before
         print(f"Funnel assets skipped for prices: {str(exc)[:160]}")
     frames = refresh_price_catalog(supabase, price_catalog, max_days)
+    try:      # 🌐 the AI text is also written in each language an account has chosen (sentiment.set_languages)
+        import i18n
+        import sentiment as _sentiment
+
+        _sentiment.set_languages({i18n.account_language(p.get("settings") if isinstance(p.get("settings"), dict) else {})
+                                  for p in all_user_prefs})
+        print(f"Sentiment languages besides English: {', '.join(_sentiment.languages()) or 'none'}")
+    except Exception as exc:
+        print(f"Sentiment languages not read: {exc}")
     refresh_due_sentiment(supabase, catalog)
     try:
         # Tides: the daily macro record (12 currents, Tide, Sea state), every 6 hours. Never holds up the alert pass.
