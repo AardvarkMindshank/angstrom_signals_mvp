@@ -2051,5 +2051,7 @@
   "Up to {n} pictures, to show where in the app it happened. On a phone, take a screenshot first, then pick it from your photos.": "Bis zu {n} Bilder, um zu zeigen, wo in der App es passiert ist. Auf dem Handy zuerst einen Screenshot machen und ihn dann aus deinen Fotos wählen.",
   "A picture could not be read, so it was left out.": "Ein Bild konnte nicht gelesen werden und wurde weggelassen.",
   "The screenshots could not be stored yet, so the note was saved without them.": "Die Screenshots konnten noch nicht gespeichert werden, daher wurde die Notiz ohne sie gespeichert.",
-  "Open full size": "In voller Größe öffnen"
+  "Open full size": "In voller Größe öffnen",
+  "✓ up to date": "✓ aktuell",
+  "market shut": "Markt geschlossen"
 }

@@ -58,3 +58,23 @@ def test_read_event_once_and_validated():
     assert fr.read_event(bad, "seen", state) is None
     ok = SimpleNamespace(go=json.dumps({"kind": "act", "action": "restart", "funnel": "f1", "nonce": 3}))
     assert fr.read_event(ok, "seen", state)["action"] == "restart"
+
+
+def test_status_line_says_up_to_date_and_market_shut():
+    """16 Nov 2026: over a weekend an equity funnel's 'checked' time stands still (each close is checked once); the
+    line says it is up to date and the market is shut, so it doesn't look stalled."""
+    from datetime import datetime, timezone
+
+    import funnel_rows as fr
+
+    sunday = datetime(2026, 11, 16, 2, 29, tzinfo=timezone.utc)       # Sunday night, New York
+    eq = {"market": "equity", "stages": [{"timeframe": "4h"}], "paused": False}
+    runs = [{"status": "ok", "cutoff": "2026-11-13T21:00:00+00:00", "finished_at": "2026-11-13T21:12:00+00:00"}]
+    assert fr.status(eq, runs, sunday) == "✓ up to date · market shut · checked 2 days ago"
+    assert fr.status({**eq, "paused": True}, runs, sunday) == "checked 2 days ago"
+    behind = [{"status": "ok", "cutoff": "2026-11-12T21:00:00+00:00", "finished_at": "2026-11-12T21:12:00+00:00"}]
+    assert fr.status(eq, behind, sunday) == "checked 3 days ago"          # a newer close is waiting: no tick
+    cr = {"market": "crypto", "stages": [{"timeframe": "4h"}]}
+    assert fr.status(cr, [{"status": "ok", "cutoff": "2026-11-16T00:00:00+00:00",
+                           "finished_at": "2026-11-16T00:20:00+00:00"}], sunday) == "✓ up to date · checked 2 h ago"
+    assert fr.status(cr, [], sunday) == ""

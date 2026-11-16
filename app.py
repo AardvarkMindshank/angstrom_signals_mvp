@@ -11877,7 +11877,7 @@ def _dynamic_view(market: str):
         new, _gone = sv.candidate_changes(before, fv.coins_for("candidate", states))
         rows.append({"id": f["id"], "name": f["name"], "direction": f["direction"],
                      "dir_icon": fv.fn.DIRECTION_ICONS.get(f["direction"], ""), "paused": bool(f.get("paused")),
-                     "checked": funnel_rows.ago(funnel_rows.last_checked(runs)),
+                     "checked": funnel_rows.status(f, runs),
                      "chips": funnel_rows.chips(f, states, len(new), fr_hover(f))})
     rows = funnel_rows.order(rows)
     out["rows"] = rows

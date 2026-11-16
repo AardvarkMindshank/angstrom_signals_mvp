@@ -2052,5 +2052,7 @@
   "Up to {n} pictures, to show where in the app it happened. On a phone, take a screenshot first, then pick it from your photos.": "ได้สูงสุด {n} ภาพ เพื่อแสดงว่าเกิดขึ้นตรงไหนในแอป บนโทรศัพท์ ให้จับภาพหน้าจอก่อน แล้วเลือกจากรูปภาพของคุณ",
   "A picture could not be read, so it was left out.": "อ่านรูปภาพหนึ่งไม่ได้ จึงไม่ได้แนบไป",
   "The screenshots could not be stored yet, so the note was saved without them.": "ยังเก็บภาพหน้าจอไม่ได้ จึงบันทึกข้อความไว้โดยไม่มีภาพ",
-  "Open full size": "เปิดขนาดเต็ม"
+  "Open full size": "เปิดขนาดเต็ม",
+  "✓ up to date": "✓ อัปเดตแล้ว",
+  "market shut": "ตลาดปิด"
 }

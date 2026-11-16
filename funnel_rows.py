@@ -165,6 +165,35 @@ def ago(ts, now: datetime | None = None) -> str:
     return t("checked {days} days ago", days=mins // 1440)
 
 
+def status(f: dict, runs: list, now: datetime | None = None) -> str:
+    """The small line under a funnel (16 Nov 2026): when it was last checked, and whether that is the newest close.
+    A stage checks each candle close once, so over a weekend an equity funnel's "checked" time stands still; the
+    line says it is up to date and that the market is shut, rather than looking stalled."""
+    words = ago(last_checked(runs), now)
+    if not words or f.get("paused"):
+        return words
+    try:
+        import pandas as pd
+
+        from funnel_runner import latest_close
+
+        clock = pd.Timestamp(now or datetime.now(timezone.utc))
+        market = f.get("market") or "crypto"
+        first = (runs or [None])[0]              # the first stage always has the whole pool to check
+        stage = (f.get("stages") or [{}])[0]
+        if not first or first.get("status") != "ok" or not first.get("cutoff") or not stage.get("timeframe"):
+            return words
+        newest = latest_close(stage["timeframe"], clock, market)
+        if pd.Timestamp(first["cutoff"]) < newest:
+            return words                         # a newer close is waiting for the next pass
+        parts = [t("✓ up to date")]
+        if market == "equity" and clock - latest_close("1h", clock, "equity") > pd.Timedelta(minutes=75):
+            parts.append(t("market shut"))       # no hourly close for over an hour: outside New York trading
+        return " · ".join(parts + [words])
+    except Exception:
+        return words
+
+
 def last_checked(runs: list) -> str | None:
     """The latest finish time among a funnel's stage runs."""
     times = [r.get("finished_at") for r in runs or [] if r and r.get("finished_at")]

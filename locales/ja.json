@@ -2051,5 +2051,7 @@
   "Up to {n} pictures, to show where in the app it happened. On a phone, take a screenshot first, then pick it from your photos.": "アプリのどこで起きたかを示す画像を最大 {n} 枚。スマートフォンでは、先にスクリーンショットを撮ってから写真から選んでください。",
   "A picture could not be read, so it was left out.": "読み込めない画像があったため、除外しました。",
   "The screenshots could not be stored yet, so the note was saved without them.": "スクリーンショットをまだ保存できなかったため、メモは画像なしで保存されました。",
-  "Open full size": "原寸で開く"
+  "Open full size": "原寸で開く",
+  "✓ up to date": "✓ 最新",
+  "market shut": "市場は休場中"
 }
