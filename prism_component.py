@@ -100,6 +100,37 @@ SET_LIBRARY_JS = r"""
   // Signals" folded, then Your Sets. Each chip drags as {type: "set", key} and has a + button.
   // opts: sets, perspectives, showProvided, focus, title, hint, empty, addTitle(s), onAdd(s), addDisabled(s),
   // onOpen(s), mem (an object kept on window for the session: filter text, icon filter, folded state).
+  // Shared by the Saved Sets list and the scan cards (a scan's 🔍 Look inside), so it sits outside setLibrary: inside
+  // it, a scan card could not reach it and the board stopped drawing (16 Nov 2026).
+  function insideBlock(s, onOpen) {   // 🔍 the building blocks: Groups (signals, labels), single signals, the decision
+    const b = el("details", "inside");
+    const sm = el("summary", "", T("🔍 Look inside"));
+    sm.title = T("The Groups and signals this Set is made of, and when it says Yes");
+    b.appendChild(sm);
+    const x = s.inside;
+    (x.groups || []).forEach((g) => {
+      const p = el("div", "part");
+      p.appendChild(el("b", "", T("Group · {name}", {name: g.name})));
+      if (g.labels && g.labels.length) p.appendChild(el("div", "muted", T("Labels: {labels}", {labels: g.labels.join(", ")})));
+      (g.signals || []).forEach((t) => p.appendChild(el("div", "sig", "• " + t)));
+      b.appendChild(p);
+    });
+    (x.signals || []).forEach((t) => {
+      const p = el("div", "part");
+      p.appendChild(el("b", "", T("Signal · {name}", {name: t.name})));
+      if (t.settings) p.appendChild(el("div", "muted", T("Settings: {settings}", {settings: t.settings})));
+      b.appendChild(p);
+    });
+    if (x.decision) b.appendChild(el("div", "part dec", x.decision));
+    if (s.open) {
+      const go = button(s.open === "copy" ? T("Make my own copy") : T("Open in Signal Sets"),
+        s.open === "copy" ? T("Opens a copy in Signal Sets that you can change and save as your own")
+                          : T("Opens this Set in Signal Sets"), () => onOpen(s));
+      b.appendChild(go);
+    }
+    b.addEventListener("click", (e) => e.stopPropagation());
+    return b;
+  }
   function setLibrary(libCol, opts) {
     const M = opts.mem;
     libCol.appendChild(el("h3", "", opts.title || T("Saved Sets")));
@@ -155,42 +186,13 @@ SET_LIBRARY_JS = r"""
           window.setTimeout(() => c.scrollIntoView({behavior: "smooth", block: "center"}), 700);
         }
       }
-      if (s.inside) nm.appendChild(insideBlock(s));
+      if (s.inside) nm.appendChild(insideBlock(s, opts.onOpen));
       if (!s.provided) nm.appendChild(el("div", "muted", s.meta));
       c.appendChild(nm);
       const plus = button("+", opts.addTitle(s), () => opts.onAdd(s), "sq");
       if (opts.addDisabled && opts.addDisabled(s)) plus.disabled = true;
       c.appendChild(plus);
       return c;
-  }
-  function insideBlock(s) {   // 🔍 the building blocks: Groups (signals, labels), single signals, the decision
-    const b = el("details", "inside");
-    const sm = el("summary", "", T("🔍 Look inside"));
-    sm.title = T("The Groups and signals this Set is made of, and when it says Yes");
-    b.appendChild(sm);
-    const x = s.inside;
-    (x.groups || []).forEach((g) => {
-      const p = el("div", "part");
-      p.appendChild(el("b", "", T("Group · {name}", {name: g.name})));
-      if (g.labels && g.labels.length) p.appendChild(el("div", "muted", T("Labels: {labels}", {labels: g.labels.join(", ")})));
-      (g.signals || []).forEach((t) => p.appendChild(el("div", "sig", "• " + t)));
-      b.appendChild(p);
-    });
-    (x.signals || []).forEach((t) => {
-      const p = el("div", "part");
-      p.appendChild(el("b", "", T("Signal · {name}", {name: t.name})));
-      if (t.settings) p.appendChild(el("div", "muted", T("Settings: {settings}", {settings: t.settings})));
-      b.appendChild(p);
-    });
-    if (x.decision) b.appendChild(el("div", "part dec", x.decision));
-    if (s.open) {
-      const go = button(s.open === "copy" ? T("Make my own copy") : T("Open in Signal Sets"),
-        s.open === "copy" ? T("Opens a copy in Signal Sets that you can change and save as your own")
-                          : T("Opens this Set in Signal Sets"), () => opts.onOpen(s));
-      b.appendChild(go);
-    }
-    b.addEventListener("click", (e) => e.stopPropagation());
-    return b;
   }
   function followedBlock(f, mark) {   // "What followed", folded to one line: the verdict; tap for the plain numbers (muted, no colours)
     const b = el("details", "wf");
@@ -444,7 +446,8 @@ export default function(component) {
     if (!open) return c;
     const body = el("div", "body");
     if (s.inside && window.__prismInside[s.id]) {
-      const box = insideBlock({key: s.set_key, inside: s.inside, open: s.set_key ? s.set_open : null});
+      const box = insideBlock({key: s.set_key, inside: s.inside, open: s.set_key ? s.set_open : null},
+        (x) => act("open_set", {set: x.key}));
       box.open = true;
       box.querySelector("summary").textContent = T("🔍 Inside this scan's Set");
       box.classList.add("scan");

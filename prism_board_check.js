@@ -20,6 +20,7 @@ const { chromium } = require("playwright");
     await page.waitForFunction(() => window.ready);
     const last = async () => { await page.waitForTimeout(60); return page.evaluate(() => (window.sent.length ? window.sent[window.sent.length - 1][1] : null)); };
     const bodies = () => page.$$eval(".scan .body", (b) => b.length);
+    let a = null;
 
     check("three scans, all collapsed at first", (await page.$$(".scan")).length === 3 && (await bodies()) === 0);
     const summary = await page.$eval(".scan", (c) => c.querySelector(".head").innerText);
@@ -32,9 +33,14 @@ const { chromium } = require("playwright");
     check("Collapse all closes every scan", (await bodies()) === 0);
     await page.click('.scan[data-scan="s1"] button.chev');
     check("the arrow opens one scan", (await bodies()) === 1 && await page.$('.scan[data-scan="s1"] .body'));
+    // 🔍 Look inside on a scan card: once stopped the board drawing (insideBlock out of reach, 16 Nov 2026)
+    await page.click('.scan[data-scan="s1"] button[aria-label^="Look inside"]');
+    check("Look inside on a scan shows its parts and keeps every scan", (await page.$$("article.scan")).length === 3
+      && await page.$('.scan[data-scan="s1"] details.inside.scan[open]') && !errors.some((e) => /insideBlock/.test(e)),
+      errors.join(" | "));
 
     await page.click('button[aria-label="Start a scan with COIN leads BTC"]');
-    let a = await last();
+    a = await last();
     check("tap + on a Set starts a scan", a && a.op === "create" && a.set === "saved:cfg1:2");
 
     await page.evaluate(() => {
