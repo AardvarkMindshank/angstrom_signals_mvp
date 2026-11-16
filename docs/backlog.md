@@ -131,3 +131,13 @@ users who copy one can rename it in their own language.
 - Event markers on the price chart (Fed, CPI, jobs), with a toggle remembered per account.
 - Settings → 🤖 AI choices: the AI Navigator per person; news sentiment app-wide by an admin
   (sql/2026-11-25_app_settings.sql); a walkthrough for adding keys as Render and GitHub secrets.
+
+## Non-US share trading hours (found 16 Nov 2026)
+
+chart_data.build_candles gives daily share candles New York's hours (09:30-16:00) in the exchange's own time zone
+whenever Yahoo's daily metadata has no trading period, as it does for SIE.DE (Xetra really trades 09:00-17:30
+Berlin). So a European share's day counts as finished at 16:00 local while it still trades for 90 minutes, and Sets
+and funnels can read a part-day candle as closed. Fix: a table of regular hours by exchange time zone (Frankfurt,
+London, Paris, Amsterdam, Tokyo, Hong Kong, …), New York's only for US zones. chart_data.py is in the replay
+certification hash, so the change needs replay_certify.py re-run and certification.json committed with it.
+Also: SIE.DE has no stored logo (the logo source covers US tickers).
