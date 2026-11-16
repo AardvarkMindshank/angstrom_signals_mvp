@@ -11,6 +11,7 @@ line to SERIES below.
 
 from __future__ import annotations
 
+import i18n
 from i18n import t
 
 BASE_URL = "https://www.angstromsignals.com/videos/training/"
@@ -88,8 +89,39 @@ export default function(component) {
   shell.style.display = "none";
   const holder = shell.closest('[data-testid="stElementContainer"]');
   if (holder) holder.style.display = "none";
+  window.__angstromVideoWords = { close: T("Close") };     // the words follow a language switch
   if (window.__angstromVideoLinks) return;
   window.__angstromVideoLinks = true;
+  // The player page in a full-screen sheet with ✕ to close (a frame of this signed-in page, like the ✨ AI panel).
+  const openSheet = (href, label) => {
+    let sheet = document.getElementById("ang-video-sheet");
+    if (!sheet) {
+      sheet = document.createElement("div");
+      sheet.id = "ang-video-sheet";
+      sheet.setAttribute("role", "dialog");
+      sheet.innerHTML = "<div class='vs-head'><span class='vs-title'></span><button type='button' class='vs-close'></button></div><div class='vs-body'></div>";
+      document.body.appendChild(sheet);
+      sheet.querySelector(".vs-close").addEventListener("click", () => {
+        sheet.classList.remove("is-open");
+        sheet.querySelector(".vs-body").innerHTML = "";        // stops the video
+        document.documentElement.style.overflow = "";
+      });
+    }
+    const words = window.__angstromVideoWords || { close: "Close" };
+    sheet.querySelector(".vs-title").textContent = "🎬 " + label.replace(/^Watch:\s*/, "");
+    sheet.querySelector(".vs-close").textContent = "✕ " + words.close;
+    sheet.querySelector(".vs-close").setAttribute("aria-label", words.close);
+    const frame = document.createElement("iframe");
+    frame.title = label;
+    frame.setAttribute("allow", "autoplay; fullscreen; picture-in-picture");
+    frame.setAttribute("allowfullscreen", "");
+    frame.src = href + (href.includes("?") ? "&" : "?") + "inpanel=1";
+    const body = sheet.querySelector(".vs-body");
+    body.innerHTML = "";
+    body.appendChild(frame);
+    sheet.classList.add("is-open");
+    document.documentElement.style.overflow = "hidden";
+  };
   // Every 🎬 link opens the player in one small window of its own beside the app (reused for the next video).
   document.addEventListener("click", (event) => {
     // 🎬 links, and links to a video written by the Angstrom Assistant (…?view=video&v=…)
@@ -97,6 +129,10 @@ export default function(component) {
     if (!a) return;
     event.preventDefault();
     event.stopPropagation();
+    // A phone, or a web app on the home screen: no second window to switch to, so the player opens over the page.
+    const phone = window.matchMedia("(max-width: 640px), (display-mode: standalone) and (pointer: coarse)").matches
+      || window.navigator.standalone === true;
+    if (phone) { openSheet(a.href, (a.textContent || "").trim()); return; }
     const left = Math.max(0, (window.screenX || 0) + (window.outerWidth || 1200) - 940);
     const opened = window.open(a.href, "ang_video", "popup=yes,width=900,height=720,top=60,left=" + left);
     if (opened) opened.focus(); else window.open(a.href, "_blank");
@@ -104,6 +140,20 @@ export default function(component) {
 }
 """
 _WINDOW = []
+
+_SHEET_CSS = """
+#ang-video-sheet{position:fixed;inset:0;z-index:10000002;display:none;flex-direction:column;background:var(--ang-section,#fff);
+  padding-top:env(safe-area-inset-top, 0px);}
+#ang-video-sheet.is-open{display:flex;}
+#ang-video-sheet .vs-head{flex:none;display:flex;align-items:center;gap:8px;padding:10px 12px 8px 16px;
+  border-bottom:1px solid rgba(127,127,127,.25);}
+#ang-video-sheet .vs-title{font-weight:650;font-size:1rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+#ang-video-sheet .vs-close{margin-left:auto;flex:none;background:rgba(127,127,127,.15);border:0;border-radius:999px;
+  padding:6px 12px;font:inherit;font-weight:600;cursor:pointer;color:inherit;}
+#ang-video-sheet .vs-body{flex:1;min-height:0;position:relative;}
+#ang-video-sheet iframe{position:absolute;inset:0;width:100%;height:100%;border:0;}
+html.angstrom-night #ang-video-sheet{background:#0e1117;color:#fafafa;}
+"""
 
 _LINK_CSS = (".ang-tv-link{display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:inherit;"
              "padding:2px 0;font-size:.95rem}.ang-tv-link:hover{color:var(--st-primary-color,#ff4b4b)}"
@@ -114,10 +164,12 @@ _ICON_SVG = ("<svg viewBox='0 0 24 24' width='18' height='18' fill='currentColor
 
 
 def install(st) -> None:
-    """The small script that makes 🎬 links open the player in its own window. Draw it once per page."""
+    """The small script that makes 🎬 links open the player in its own window (over the page on a phone). Draw it once
+    per page."""
     if not _WINDOW:
-        _WINDOW.append(st.components.v2.component("training_video_window", js=_WINDOW_JS, isolate_styles=False))
-    _WINDOW[0](key="training_video_window")
+        _WINDOW.append(i18n.with_words(st.components.v2.component(
+            "training_video_window", js=i18n.js_ready(_WINDOW_JS), css=_SHEET_CSS, isolate_styles=False), _WINDOW_JS))
+    _WINDOW[0](key="training_video_window", data={})
 
 
 def address(name: str) -> str:

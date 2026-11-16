@@ -173,7 +173,11 @@ st.markdown(
     "[data-testid='stElementContainer']:has(.ang-page-top){position:absolute !important;height:0 !important;margin:0 !important;}"
     ".st-key-page_header{margin-top:-0.4rem !important;}"
     # When the title fills a narrow screen, the AI and expand/collapse buttons wrap to their own line: keep them on the right.
-    ".st-key-page_header_tools,[data-testid='stLayoutWrapper']:has(> .st-key-page_header_tools){margin-left:auto !important;}</style>",
+    ".st-key-page_header_tools,[data-testid='stLayoutWrapper']:has(> .st-key-page_header_tools){margin-left:auto !important;}"
+    # Phones and home-screen web apps: no "open in its own window" buttons. A phone shows one page at a time, and a
+    # web app on the home screen can't hand its sign-in to a new window, so sections open in place (16 Nov 2026).
+    "@media (max-width: 640px), (display-mode: standalone) and (pointer: coarse)"
+    "{.ang-popout,#social-stream-root .popout-btn{display:none !important;}}</style>",
     unsafe_allow_html=True,
 )
 
