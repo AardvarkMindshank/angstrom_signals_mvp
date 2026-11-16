@@ -2053,5 +2053,7 @@
   "✨ AI Navigator: ask anything about the app, the asset you have selected, your ideas, Groups, Sets and funnels, or today's Tides. It explains; you do the clicks. No buy or sell calls.": "✨ AI Navigator: hỏi bất cứ điều gì về ứng dụng, tài sản đang chọn, ý tưởng, Groups, Sets và phễu của bạn, hoặc Tides hôm nay. Nó giải thích; bạn là người bấm. Không bao giờ khuyến nghị mua hay bán.",
   "✨ AI Navigator": "✨ AI Navigator",
   "Close": "Đóng",
-  "📜 Today's AI Passage Plan (opens in the ✨ AI panel on the right edge): the AI Navigator charts today's conditions, the week's events and the winds for your own assets, Sets and funnels, with things to watch. One plan a day, kept in your logbook. Descriptions, not buy or sell calls.": "📜 Today's AI Passage Plan (mở trong bảng ✨ AI ở mép phải): AI Navigator vạch ra điều kiện hôm nay, các sự kiện trong tuần và chiều gió cho tài sản, Sets và phễu của bạn, kèm những điều cần theo dõi. Mỗi ngày một kế hoạch, lưu trong nhật ký hành trình. Chỉ là mô tả, không phải khuyến nghị mua hay bán."
+  "📜 Today's AI Passage Plan (opens in the ✨ AI panel on the right edge): the AI Navigator charts today's conditions, the week's events and the winds for your own assets, Sets and funnels, with things to watch. One plan a day, kept in your logbook. Descriptions, not buy or sell calls.": "📜 Today's AI Passage Plan (mở trong bảng ✨ AI ở mép phải): AI Navigator vạch ra điều kiện hôm nay, các sự kiện trong tuần và chiều gió cho tài sản, Sets và phễu của bạn, kèm những điều cần theo dõi. Mỗi ngày một kế hoạch, lưu trong nhật ký hành trình. Chỉ là mô tả, không phải khuyến nghị mua hay bán.",
+  "Checking {n} assets…": "Đang kiểm tra {n} tài sản…",
+  "Checked {name} ({done} of {total})": "Đã kiểm tra {name} ({done}/{total})"
 }

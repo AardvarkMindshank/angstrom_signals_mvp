@@ -2053,5 +2053,7 @@
   "✨ AI Navigator: ask anything about the app, the asset you have selected, your ideas, Groups, Sets and funnels, or today's Tides. It explains; you do the clicks. No buy or sell calls.": "✨ AI Navigator: uygulama, seçtiğiniz varlık, fikirleriniz, Groups, Sets ve hunileriniz ya da bugünün Tides'ı hakkında her şeyi sorun. O açıklar; tıklamaları siz yaparsınız. Asla al-sat önerisi yok.",
   "✨ AI Navigator": "✨ AI Navigator",
   "Close": "Kapat",
-  "📜 Today's AI Passage Plan (opens in the ✨ AI panel on the right edge): the AI Navigator charts today's conditions, the week's events and the winds for your own assets, Sets and funnels, with things to watch. One plan a day, kept in your logbook. Descriptions, not buy or sell calls.": "📜 Today's AI Passage Plan (sağ kenardaki ✨ AI panelinde açılır): AI Navigator bugünün koşullarını, haftanın olaylarını ve varlıklarınız, Sets ve hunileriniz için rüzgârları, izlenecek noktalarla birlikte çizer. Günde bir plan, seyir defterinizde saklanır. Betimlemeler, al-sat önerisi değil."
+  "📜 Today's AI Passage Plan (opens in the ✨ AI panel on the right edge): the AI Navigator charts today's conditions, the week's events and the winds for your own assets, Sets and funnels, with things to watch. One plan a day, kept in your logbook. Descriptions, not buy or sell calls.": "📜 Today's AI Passage Plan (sağ kenardaki ✨ AI panelinde açılır): AI Navigator bugünün koşullarını, haftanın olaylarını ve varlıklarınız, Sets ve hunileriniz için rüzgârları, izlenecek noktalarla birlikte çizer. Günde bir plan, seyir defterinizde saklanır. Betimlemeler, al-sat önerisi değil.",
+  "Checking {n} assets…": "{n} varlık kontrol ediliyor…",
+  "Checked {name} ({done} of {total})": "{name} kontrol edildi ({done}/{total})"
 }

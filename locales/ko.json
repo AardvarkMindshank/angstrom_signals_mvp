@@ -2053,5 +2053,7 @@
   "✨ AI Navigator: ask anything about the app, the asset you have selected, your ideas, Groups, Sets and funnels, or today's Tides. It explains; you do the clicks. No buy or sell calls.": "✨ AI Navigator: 앱, 선택한 자산, 내 아이디어, Groups, Sets, 퍼널, 오늘의 Tides에 대해 무엇이든 물어보세요. 설명은 하지만 클릭은 직접 하세요. 매수·매도 권유는 하지 않습니다.",
   "✨ AI Navigator": "✨ AI Navigator",
   "Close": "닫기",
-  "📜 Today's AI Passage Plan (opens in the ✨ AI panel on the right edge): the AI Navigator charts today's conditions, the week's events and the winds for your own assets, Sets and funnels, with things to watch. One plan a day, kept in your logbook. Descriptions, not buy or sell calls.": "📜 Today's AI Passage Plan(오른쪽 가장자리의 ✨ AI 패널에서 열림): AI Navigator가 오늘의 상황, 이번 주 이벤트, 내 자산·Sets·퍼널에 부는 바람을 주목할 점과 함께 보여 줍니다. 하루 한 개의 계획이 항해 일지에 저장됩니다. 설명일 뿐이며 매수·매도 권유가 아닙니다."
+  "📜 Today's AI Passage Plan (opens in the ✨ AI panel on the right edge): the AI Navigator charts today's conditions, the week's events and the winds for your own assets, Sets and funnels, with things to watch. One plan a day, kept in your logbook. Descriptions, not buy or sell calls.": "📜 Today's AI Passage Plan(오른쪽 가장자리의 ✨ AI 패널에서 열림): AI Navigator가 오늘의 상황, 이번 주 이벤트, 내 자산·Sets·퍼널에 부는 바람을 주목할 점과 함께 보여 줍니다. 하루 한 개의 계획이 항해 일지에 저장됩니다. 설명일 뿐이며 매수·매도 권유가 아닙니다.",
+  "Checking {n} assets…": "자산 {n}개 확인 중…",
+  "Checked {name} ({done} of {total})": "{name} 확인 완료 ({done}/{total})"
 }

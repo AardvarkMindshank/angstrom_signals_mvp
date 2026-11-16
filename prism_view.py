@@ -411,6 +411,13 @@ def _run(st, scan, obj, op, action, assets) -> tuple[str, str]:
     if len(picked) > prism.MAX_ASSETS:
         return "error", (t('This scan covers {len_picked} assets; ▶ checks up to {prism_max_assets} at a time. Narrow its assets (for example All crypto), or let its schedule run them all.', len_picked=len(picked), prism_max_assets=prism.MAX_ASSETS))
     st.session_state["prism_last_run"] = time.time()
+    # A bar while it works, as Visualize History has: the board only greys out otherwise (16 Nov 2026).
+    bar = st.progress(0.0, text=t("Checking {n} assets…", n=len(picked)))
+
+    def progress(done, total):
+        name = picked[done - 1][2] if 0 < done <= len(picked) else ""
+        bar.progress(done / max(total, 1), text=t("Checked {name} ({done} of {total})", name=name, done=done, total=total))
+
     if op == "run":
         rows = prism.run_now(
             obj["set"], picked,
@@ -419,20 +426,23 @@ def _run(st, scan, obj, op, action, assets) -> tuple[str, str]:
                 options_loader=_loader("options")),
             market_context=lambda scope: sl.DataContext(
                 "market", scope.split(":", 1)[1], flows_loader=_loader("flows"), sentiment_loader=_loader("sentiment")),
-            earlier_run=_earlier_run(obj["set"]))
+            earlier_run=_earlier_run(obj["set"]), progress=progress)
         title = t('Run now at {pd_timestamp_now_tz_utc:%d %b %H:%M} UTC', pd_timestamp_now_tz_utc=pd.Timestamp.now(tz='UTC'))
     else:
         try:
             as_of = pd.Timestamp(f"{action.get('date')} {action.get('time') or '00:05'}", tz="UTC")
         except (ValueError, TypeError):
+            bar.empty()
             return "error", t("Choose a date and time.")
         if as_of >= pd.Timestamp.now(tz="UTC"):
+            bar.empty()
             return "error", t("Choose a moment in the past.")
         from signal_library.replay_display import display_run
 
         run = display_run(_SUPABASE[0], max_steps=prism.steps_needed(obj["set"]), shortcut=True)
-        rows = prism.run_now(obj["set"], picked, live_context=None, replay=(run, as_of))
+        rows = prism.run_now(obj["set"], picked, live_context=None, replay=(run, as_of), progress=progress)
         title = t("Reconstruction at {as_of:%d %b %Y %H:%M} UTC: today's data providers, not a record of what was shown", as_of=as_of)
+    bar.empty()
     counts = {a: sum(r["answer"] == a for r in rows) for a in ("yes", "no", "unknown")}
     st.session_state.setdefault("prism_results", {})[scan["id"]] = {
         "title": f"{title} · Yes {counts['yes']} · No {counts['no']} · ? {counts['unknown']}",

@@ -2053,5 +2053,7 @@
   "✨ AI Navigator: ask anything about the app, the asset you have selected, your ideas, Groups, Sets and funnels, or today's Tides. It explains; you do the clicks. No buy or sell calls.": "✨ AI Navigator: ถามอะไรก็ได้เกี่ยวกับแอป สินทรัพย์ที่คุณเลือก ไอเดีย Groups, Sets และ funnel ของคุณ หรือ Tides วันนี้ มันอธิบาย ส่วนคุณเป็นคนคลิก ไม่มีคำแนะนำให้ซื้อหรือขาย",
   "✨ AI Navigator": "✨ AI Navigator",
   "Close": "ปิด",
-  "📜 Today's AI Passage Plan (opens in the ✨ AI panel on the right edge): the AI Navigator charts today's conditions, the week's events and the winds for your own assets, Sets and funnels, with things to watch. One plan a day, kept in your logbook. Descriptions, not buy or sell calls.": "📜 Today's AI Passage Plan (เปิดในแผง ✨ AI ที่ขอบขวา): AI Navigator วางแผนสภาพวันนี้ เหตุการณ์ของสัปดาห์ และทิศลมสำหรับสินทรัพย์ Sets และ funnel ของคุณ พร้อมสิ่งที่ควรจับตา วันละหนึ่งแผน เก็บไว้ในสมุดบันทึก เป็นคำบรรยาย ไม่ใช่คำแนะนำให้ซื้อหรือขาย"
+  "📜 Today's AI Passage Plan (opens in the ✨ AI panel on the right edge): the AI Navigator charts today's conditions, the week's events and the winds for your own assets, Sets and funnels, with things to watch. One plan a day, kept in your logbook. Descriptions, not buy or sell calls.": "📜 Today's AI Passage Plan (เปิดในแผง ✨ AI ที่ขอบขวา): AI Navigator วางแผนสภาพวันนี้ เหตุการณ์ของสัปดาห์ และทิศลมสำหรับสินทรัพย์ Sets และ funnel ของคุณ พร้อมสิ่งที่ควรจับตา วันละหนึ่งแผน เก็บไว้ในสมุดบันทึก เป็นคำบรรยาย ไม่ใช่คำแนะนำให้ซื้อหรือขาย",
+  "Checking {n} assets…": "กำลังตรวจ {n} สินทรัพย์…",
+  "Checked {name} ({done} of {total})": "ตรวจแล้ว {name} ({done} จาก {total})"
 }

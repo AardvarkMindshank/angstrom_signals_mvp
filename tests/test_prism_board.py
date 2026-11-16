@@ -123,6 +123,19 @@ class FakeDb:
 class St:
     def __init__(self):
         self.session_state = {}
+        self.bars = []
+
+    def progress(self, value, text=""):
+        st = self
+
+        class Bar:
+            def progress(self, v, text=""):
+                st.bars.append((v, text))
+
+            def empty(self):
+                st.bars.append(("cleared", ""))
+        self.bars.append((value, text))
+        return Bar()
 
 
 def test_board_actions_write_through_prism_put_scan():
@@ -155,6 +168,7 @@ def test_play_runs_the_scan_assets_with_a_cooldown_and_a_size_limit(monkeypatch)
     out = pv.handle(st, FakeDb(), {"op": "run", "scan": "s1"}, by_id, {}, ASSETS, NOW)
     assert out[0] == "ok" and seen[0] == [("crypto", "bitcoin", "Bitcoin"), ("crypto", "solana", "Solana")]
     assert st.session_state["prism_results"]["s1"]["rows"][0]["answer"] == "yes"
+    assert st.bars[0][0] == 0.0 and st.bars[-1] == ("cleared", "")        # a bar while it works, gone after
     again = pv.handle(st, FakeDb(), {"op": "run", "scan": "s1"}, by_id, {}, ASSETS, NOW)
     assert again[0] == "error" and "wait" in again[1]
     many = [("crypto", f"c{i}", f"C{i}") for i in range(prism.MAX_ASSETS + 1)]
