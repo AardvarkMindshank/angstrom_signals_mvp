@@ -67,6 +67,27 @@ once it is clear whether users want to trade them directly. Open question for th
 these markets to trade, or context for crypto and equities? A practical test: does Drew trade gold, oil or
 currencies himself, or watch them to judge crypto and equities?
 
+## Stock indices for equity funnels (Drew's idea, 16 Nov 2026)
+
+Drew: traders tend to focus on one market or index (he named the Dow, Nasdaq, FTSE and DAX), so a single S&P 500
+pool for equity funnels could be improved. Today every equity funnel starts from the S&P 500 with a quality gate
+(price, dollar volume, about 3 years of history; `equity_universe.py`). Two development approaches:
+
+1. **Quick: choose the US index per funnel** (do soon). Let a funnel's pool be S&P 500, Nasdaq-100 or Dow 30. The Dow
+   is almost entirely inside the S&P 500 and the Nasdaq-100 mostly is, so the data source (Yahoo), New York trading
+   hours and signals stay as they are; funnels already have a "pool" setting for this. Work: the two extra member
+   lists in the equity universe job (plus the few Nasdaq-100 members outside the S&P 500 through the same quality
+   gate), and an index picker in the funnel editor.
+2. **Bigger: indices outside the US** (FTSE 100, DAX; possibly Nikkei 225 or others later), built together with the
+   markets work in "Forex and commodities" (turning the two built-in markets into a list of markets, each with its own
+   hours and data source), after the data-licence review. Needs per exchange: its own trading calendar (opening hours,
+   holidays, closing time; funnels currently work out closes on New York hours only), price units (London quotes in
+   pence), Yahoo ticker endings (.L, .DE …), and licensing: exchange data is often licensed separately, and index
+   member lists belong to the index providers (S&P, FTSE Russell, STOXX); Wikipedia lists are fine for development but
+   need checking for a paid product.
+
+Open: ask Drew which indices matter most to him.
+
 **Decided 15 Nov 2026:** ready-made (provided) Groups, Sets and funnels keep their English names in every language;
 users who copy one can rename it in their own language.
 
