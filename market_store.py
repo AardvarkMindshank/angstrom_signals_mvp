@@ -443,6 +443,32 @@ def _short_summary(text, limit: int = 220) -> str:
     return (cut or cleaned[:limit]).rstrip(".,;:") + "…"
 
 
+CHAT_NOTE_KEYS = ("id", "user", "name", "social", "avatar", "text", "at", "mine", "up", "down", "vote",
+                  "audience", "group", "group_name", "to", "to_name")
+CHAT_AUDIENCES = ("public", "group", "direct")
+
+
+def _chat_audience(row) -> dict:
+    """Who a chat note is for (17 Nov 2026): everyone, one community, or one person. Older feeds have no audience:
+    public."""
+    audience = str((row or {}).get("audience") or "public")
+    if audience not in CHAT_AUDIENCES:
+        audience = "public"
+    try:
+        group = int(row.get("group_id")) if row.get("group_id") is not None else None
+    except (TypeError, ValueError):
+        group = None
+    to = str(row.get("recipient_id") or "").strip().lower()
+    return {
+        "audience": audience,
+        "group": group if audience == "group" else None,
+        "group_name": " ".join(str(row.get("group_name") or "").split())[:60] if audience == "group" else "",
+        "to": to if audience == "direct" and _AUTHOR_ID.fullmatch(to) else "",
+        "to_name": (" ".join(str(row.get("recipient_name") or "Member").split())[:40] or "Member")
+        if audience == "direct" else "",
+    }
+
+
 def load_chat(supabase) -> list[dict] | None:
     """Newest chat threads, replies oldest first. None when the chat tables are missing."""
     try:
@@ -482,13 +508,14 @@ def load_chat(supabase) -> list[dict] | None:
             "up": int(row.get("thumbs_up") or 0),
             "down": int(row.get("thumbs_down") or 0),
             "vote": vote,
+            **_chat_audience(row),
         })
     roots: dict[int, dict] = {}
     ordered = []
     for note in notes:
         if note["parent"] is not None:
             continue
-        item = {key: note[key] for key in ("id", "user", "name", "social", "avatar", "text", "at", "mine", "up", "down", "vote")}
+        item = {key: note[key] for key in CHAT_NOTE_KEYS}
         item["replies"] = []
         roots[note["id"]] = item
         ordered.append(item)
@@ -497,7 +524,7 @@ def load_chat(supabase) -> list[dict] | None:
         if parent is None:
             continue
         parent["replies"].append({
-            key: note[key] for key in ("id", "user", "name", "social", "avatar", "text", "at", "mine", "up", "down", "vote")
+            key: note[key] for key in CHAT_NOTE_KEYS
         })
     ordered.sort(key=lambda item: item["at"], reverse=True)
     for item in ordered:
@@ -505,12 +532,39 @@ def load_chat(supabase) -> list[dict] | None:
     return ordered
 
 
-def post_chat(supabase, user_id, body: str, parent_id: int | None = None) -> None:
-    """Add a chat comment, or a reply to a top-level comment. Blank does nothing."""
+def chat_audience_fields(to) -> dict:
+    """The audience columns for a new top-level chat note, from the panel's {"kind", "id"}: everyone (the default),
+    a community, or one person. Anything malformed falls back to everyone only when it asked for everyone; a bad
+    community or person is refused, so a private note is never posted publicly by mistake."""
+    to = to if isinstance(to, dict) else {}
+    kind = str(to.get("kind") or "public")
+    if kind == "group":
+        try:
+            group = int(to.get("id"))
+        except (TypeError, ValueError):
+            raise ValueError("That community could not be found.")
+        if group <= 0:
+            raise ValueError("That community could not be found.")
+        return {"audience": "group", "group_id": group}
+    if kind == "direct":
+        person = str(to.get("id") or "").strip().lower()
+        if not _AUTHOR_ID.fullmatch(person):
+            raise ValueError("That person could not be found.")
+        return {"audience": "direct", "recipient_id": person}
+    if kind != "public":
+        raise ValueError("Choose who the comment is for.")
+    return {}
+
+
+def post_chat(supabase, user_id, body: str, parent_id: int | None = None, to=None) -> None:
+    """Add a chat comment, or a reply to a top-level comment. Blank does nothing. `to` picks the audience of a new
+    comment; a reply always keeps the audience of the comment it answers (the database sets it)."""
     text = " ".join(str(body or "").split())[:COMMENT_LIMIT]
     if not text:
         return
     payload = {"user_id": str(user_id), "body": text}
+    if not parent_id:
+        payload.update(chat_audience_fields(to))
     if parent_id:
         found = (
             supabase.table("chat_messages")
@@ -524,6 +578,25 @@ def post_chat(supabase, user_id, body: str, parent_id: int | None = None) -> Non
             raise ValueError("Reply to a top-level comment.")
         payload["parent_id"] = int(parent_id)
     supabase.table("chat_messages").insert(payload).execute()
+
+
+def find_people(supabase, typed: str) -> list[dict]:
+    """Members whose display name matches what was typed (two letters or more), for starting a private chat."""
+    typed = " ".join(str(typed or "").split())[:40]
+    if len(typed) < 2:
+        return []
+    try:
+        rows = supabase.rpc("chat_find_people", {"typed": typed}).execute().data or []
+    except Exception:
+        return []
+    out = []
+    for row in rows:
+        person = str(row.get("id") or "").strip().lower()
+        if not _AUTHOR_ID.fullmatch(person):
+            continue
+        out.append({"id": person, "name": " ".join(str(row.get("name") or "Member").split())[:40] or "Member",
+                    "avatar": _public_avatar(row.get("avatar_url")), "social": _social_points(row)})
+    return out[:10]
 
 
 def delete_chat_message(supabase, user_id, message_id: int) -> None:

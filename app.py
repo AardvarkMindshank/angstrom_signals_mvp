@@ -1357,6 +1357,12 @@ export default function(component) {
       window.socialMe = parsed.me && typeof parsed.me === "object" ? parsed.me : {};
       window.socialFavourites = Array.isArray(parsed.favourites) ? parsed.favourites.map(String) : [];
       window.socialGroups = Array.isArray(parsed.groups) ? parsed.groups : [];
+      // Private conversations (17 Nov 2026): names of favourites, people you blocked, "Find a person" results.
+      window.socialPeople = Object.assign(window.socialPeople || {}, parsed.people && typeof parsed.people === "object" ? parsed.people : {});
+      window.socialBlocked = Array.isArray(parsed.blocked) ? parsed.blocked.map(String) : [];
+      window.socialFound = Array.isArray(parsed.found) ? parsed.found : [];
+      window.socialFoundQ = String(parsed.found_q || "");
+      window.socialFound.forEach((p) => { if (p && p.id) window.socialPeople[String(p.id)] = String(p.name || "Member"); });
       window.socialChatNotice = typeof parsed.notice === "string" ? parsed.notice : "";
       window.socialChatNoticeKind = String(parsed.notice_kind || "");
       window.socialChatFaces = Array.isArray(parsed.faces) ? parsed.faces : [];
@@ -1494,6 +1500,19 @@ export default function(component) {
         "#social-stream-root .list,#social-stream-root .chat-list{flex:1;overflow:auto;min-height:0;padding:8px 18px 12px;}",
         "#social-stream-root .chat-head{padding:10px 18px 0;}",
         "#social-stream-root .composer{padding:8px 18px 14px;border-top:1px solid #f3f4f6;}",
+        "#social-stream-root .find-person{flex:1 1 140px;min-width:0;font:inherit;font-size:.85rem;border:1px solid #d1d5db;border-radius:8px;padding:5px 8px;}",
+        "#social-stream-root .found{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}",
+        "#social-stream-root .found[hidden]{display:none;}",
+        "#social-stream-root .found-person{border:1px solid #d1d5db;background:#f9fafb;border-radius:999px;padding:3px 10px;font:inherit;font-size:.85rem;cursor:pointer;color:inherit;}",
+        "#social-stream-root .chat-to{font-size:.8rem;opacity:.8;margin:2px 0 4px;}",
+        "#social-stream-root .chat-to[data-kind='direct'],#social-stream-root .chat-to[data-kind='group']{opacity:1;font-weight:600;color:#7c3aed;}",
+        "#social-stream-root .aud{margin-left:4px;font-size:.85em;cursor:default;}",
+        "#social-stream-root .dm-link{cursor:pointer;}",
+        "#social-stream-root .dm-link:hover{text-decoration:underline;}",
+        "#social-stream-root .block-person{background:none;border:0;cursor:pointer;font-size:.85rem;opacity:.55;padding:2px;}",
+        "#social-stream-root .block-person:hover{opacity:1;}",
+        "#social-stream-root.is-dark .find-person,#social-stream-root.is-dark .found-person{background:#262730;color:#fafafa;border-color:#4b5563;}",
+        "#social-stream-root.is-dark .chat-to[data-kind='direct'],#social-stream-root.is-dark .chat-to[data-kind='group']{color:#c4b5fd;}",
         "#social-stream-root .chat-box{width:100%;box-sizing:border-box;min-height:58px;max-height:120px;resize:vertical;font:inherit;font-size:.9rem;border:1px solid #d1d5db;border-radius:8px;padding:8px;}",
         "#social-stream-root .faces{display:flex;gap:4px;margin-top:6px;}",
         "#social-stream-root .faces button{flex:1;min-width:0;background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:2px 0;cursor:pointer;font-size:1rem;line-height:1.2;}",
@@ -1685,12 +1704,14 @@ export default function(component) {
         "<header class='chat-head'><div class='kicker'>" + T("Chat") + "</div>",
         T("<h2>General chat</h2>"),
         "<div class='chat-filters'><div class='picks'>",
-        "<label>Person<select id='chat-person'></select></label>",
-        "</div></div></header>",
+        "<label>" + T("Person") + "<select id='chat-person' title='" + T("Who you are talking to: everyone (public), one of your communities, or one person (private)") + "'></select></label>",
+        "<input type='search' class='find-person' maxlength='40' placeholder='" + T("🔍 Find a person") + "' aria-label='" + T("Find a person to message privately") + "'>",
+        "</div><div class='found' hidden></div></div></header>",
         "<div class='chat-list'></div>",
         "<form class='composer'>",
         "<div class='replying' hidden><span class='replying-label'></span><button type='button' class='reply-cancel'>" + T("Cancel") + "</button></div>",
         "<div class='chat-notice' hidden></div>",
+        "<div class='chat-to'></div>",
         "<textarea class='chat-box' maxlength='160' placeholder='Write a comment'></textarea>",
         "<div class='faces'></div>",
         "<div class='composer-row'><span class='chars'>0/160</span><button type='submit' class='post'>" + T("Post comment") + "</button></div>",
@@ -1754,8 +1775,19 @@ export default function(component) {
       });
       root.querySelector("#chat-person").addEventListener("change", (event) => {
         window.socialStreamState.chatPerson = event.target.value;
+        window.socialStreamState.reply = null;
         window.renderSocialStream();
       });
+      const personFinder = root.querySelector(".find-person");
+      if (personFinder) {
+        let findTimer = null;
+        personFinder.addEventListener("input", () => {
+          clearTimeout(findTimer);
+          const typed = personFinder.value.trim();
+          if (typed.length < 2) { const box = root.querySelector(".found"); if (box) box.hidden = true; return; }
+          findTimer = setTimeout(() => reportChat({ action: "find", text: typed }), 450);
+        });
+      }
       const sendGroupInvite = () => {
         const invite = (window.socialStreamState || {}).groupFor;
         if (!invite || !window.socialStreamReport) return;
@@ -2094,10 +2126,9 @@ export default function(component) {
       const seenPeople = {};
       people.forEach((name) => { seenPeople[name] = true; });
       const streamScores = personScores(items);
-      const chatPeople = collectPeople(window.socialChat || []);
+      const chatPeople = chatPeopleChoices();
       const seenChatPeople = {};
-      chatPeople.forEach((name) => { seenChatPeople[name] = true; });
-      const chatScores = personScores(window.socialChat || []);
+      chatPeople.forEach((pair) => { seenChatPeople[pair[0]] = true; });
       if (state.linked && state.linked.key === state.asset && !seenAssets[state.asset]) {
         seenAssets[state.asset] = true;
         assets.push([state.linked.key, state.linked.label]);
@@ -2129,8 +2160,8 @@ export default function(component) {
       );
       fillStreamSelect(
         panel.querySelector("#chat-person"),
-        T("All people"),
-        chatPeople.map((name) => [name, name + "  ✦ " + (chatScores[name] || 0)]),
+        T("🌐 All people (public)"),
+        chatPeople,
         state.chatPerson || "",
         personChoices
       );
@@ -2141,7 +2172,8 @@ export default function(component) {
       const keptPeople = { favourites: true, me: true };
       (window.socialGroups || []).forEach((group) => { keptPeople["group:" + group.id] = true; });
       if (!keptPeople[state.person] && !seenPeople[state.person]) state.person = "";
-      if (!keptPeople[state.chatPerson || ""] && !seenChatPeople[state.chatPerson || ""]) state.chatPerson = "";
+      if (!keptPeople[state.chatPerson || ""] && !seenChatPeople[state.chatPerson || ""]
+          && String(state.chatPerson || "").indexOf("user:") !== 0) state.chatPerson = "";
       panel.querySelector("#stream-asset").value = state.asset;
       panel.querySelector("#stream-person").value = state.person;
       const chatPerson = panel.querySelector("#chat-person");
@@ -2200,7 +2232,11 @@ export default function(component) {
       text: action.text || "",
       parent: action.parent || 0,
       message: action.message || 0,
-      vote: action.vote || 0
+      vote: action.vote || 0,
+      to: action.to || null,
+      person: action.person || "",
+      name: action.name || "",
+      on: action.on !== false
     }));
   }
 
@@ -2314,6 +2350,25 @@ export default function(component) {
     return button;
   }
 
+  function paintTo(panel) {      // the line above the send box: who a new message or a reply goes to
+    const toLine = panel.querySelector(".chat-to");
+    if (toLine) {
+      const reply = (window.socialStreamState || {}).reply;
+      const host = reply && reply.id && reply.kind !== "signal" ? (window.socialChat || []).find((item) => item.id === reply.id) : null;
+      if (host && host.audience === "direct") {
+        const other = otherParty(host);
+        toLine.textContent = "🔒 " + T("Reply stays private between you and {name}", { name: (other && other.name) || "Member" });
+      } else if (host && host.audience === "group") {
+        toLine.textContent = "👥 " + T("Reply stays in {name}", { name: host.group_name || "the community" });
+      } else if (host || (reply && reply.kind === "signal")) {
+        toLine.textContent = "🌐 " + T("Reply is public");
+      } else {
+        toLine.textContent = chatTarget().label;
+      }
+      toLine.dataset.kind = host ? (host.audience || "public") : (reply && reply.kind === "signal") ? "public" : chatTarget().kind;
+    }
+  }
+
   function paintReply(panel) {
     const row = panel.querySelector(".replying");
     const label = panel.querySelector(".replying-label");
@@ -2327,6 +2382,7 @@ export default function(component) {
     }
     const composer = panel.querySelector(".composer");
     if (composer) composer.hidden = window.socialChatReady === false && !(reply && reply.kind === "signal");
+    paintTo(panel);
   }
 
   function submitChat(panel) {
@@ -2359,6 +2415,11 @@ export default function(component) {
       reportSignal({ action: "post", text: text, parent: parent });
       return;
     }
+    const target = chatTarget();
+    const host0 = parent ? (window.socialChat || []).find((item) => item.id === parent) : null;
+    const audienceOf = host0 || { audience: target.kind, group: target.kind === "group" ? target.id : null,
+      group_name: "", to: target.kind === "direct" ? target.id : "",
+      to_name: target.kind === "direct" ? ((window.socialPeople || {})[target.id] || "Member") : "" };
     const note = {
       id: "local-" + Date.now(),
       user: (window.socialMe || {}).id || "",
@@ -2372,6 +2433,11 @@ export default function(component) {
       down: 0,
       vote: 0,
       pending: true,
+      audience: audienceOf.audience || "public",
+      group: audienceOf.group || null,
+      group_name: audienceOf.group_name || "",
+      to: audienceOf.to || "",
+      to_name: audienceOf.to_name || "",
       replies: []
     };
     const threads = Array.isArray(window.socialChat) ? window.socialChat.slice() : [];
@@ -2386,7 +2452,8 @@ export default function(component) {
     box.value = "";
     if (window.socialStreamState) window.socialStreamState.reply = null;
     renderChat(panel);
-    reportChat({ action: "post", text: text, parent: parent });
+    reportChat({ action: "post", text: text, parent: parent,
+                 to: parent ? null : (target.kind === "public" ? { kind: "public" } : { kind: target.kind, id: target.id }) });
   }
 
   function dropMessage(list, messageId) {
@@ -2578,6 +2645,16 @@ export default function(component) {
     const label = document.createElement("span");
     label.className = "name";
     label.textContent = name;
+    const myId = String((window.socialMe || {}).id || "");
+    if (place === "chat" && item.user && !item.mine && String(item.user) !== myId) {
+      label.classList.add("dm-link");
+      label.setAttribute("role", "button");
+      label.tabIndex = 0;
+      label.title = T("Message {name} privately", { name: name });
+      const go = () => openPrivateChat(String(item.user), name);
+      label.addEventListener("click", go);
+      label.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+    }
     who.appendChild(label);
     who.appendChild(socialMark(item.social));
     const when = document.createElement("div");
@@ -2593,6 +2670,10 @@ export default function(component) {
     tools.className = "person-tools";
     const flag = reportButton(item, place, kind);
     if (flag) tools.appendChild(flag);
+    if (place === "chat") {
+      const block = blockButton(item);
+      if (block) tools.appendChild(block);
+    }
     const group = groupButton(item);
     if (group) tools.appendChild(group);
     const star = favouriteButton(item);
@@ -2611,6 +2692,164 @@ export default function(component) {
     };
     (rows || []).forEach(visit);
     return scores;
+  }
+
+  // ---- Private conversations (17 Nov 2026). The chat's Person list says who you are talking to: everyone
+  // (public), one of your communities, or one person (private between the two of you). The database keeps each
+  // message to its audience; these only choose the view and the audience of a new message.
+  function otherParty(note) {
+    const mine = String((window.socialMe || {}).id || "");
+    if (!note || note.audience !== "direct") return null;
+    const fromMe = note.mine || (mine && String(note.user || "") === mine);
+    return fromMe ? { id: String(note.to || ""), name: String(note.to_name || "Member") }
+                  : { id: String(note.user || ""), name: String(note.name || "Member") };
+  }
+
+  function chatPeopleChoices() {
+    // Favourites, the people you have private conversations with, and anyone picked through Find a person.
+    const names = {};
+    (window.socialFavourites || []).forEach((id) => {
+      names[id] = (window.socialPeople || {})[id] || names[id] || "";
+    });
+    (window.socialChat || []).forEach((item) => {
+      const other = otherParty(item);
+      if (other && other.id) names[other.id] = other.name;
+      [item].concat(item.replies || []).forEach((note) => {
+        if (note.user && (window.socialFavourites || []).indexOf(String(note.user)) >= 0) names[String(note.user)] = note.name;
+      });
+    });
+    const chosen = String((window.socialStreamState || {}).chatPerson || "");
+    if (chosen.indexOf("user:") === 0) {
+      const id = chosen.slice(5);
+      names[id] = names[id] || (window.socialPeople || {})[id] || "Member";
+    }
+    const blocked = new Set(window.socialBlocked || []);
+    return Object.keys(names)
+      .filter((id) => id && !blocked.has(id))
+      .map((id) => ["user:" + id, "🔒 " + (names[id] || (window.socialPeople || {})[id] || "Member")])
+      .sort((a, b) => a[1].localeCompare(b[1]));
+  }
+
+  function chatMatches(item, choice) {
+    const mine = String((window.socialMe || {}).id || "");
+    const notes = [item].concat(item.replies || []);
+    if (!choice) return true;
+    if (choice === "me") return notes.some((note) => note.mine || (mine && String(note.user || "") === mine));
+    if (choice === "favourites") {
+      const stars = favouriteSet();
+      return notes.some((note) => stars.has(String(note.user || "")));
+    }
+    if (choice.indexOf("group:") === 0) return item.audience === "group" && String(item.group) === choice.slice(6);
+    if (choice.indexOf("user:") === 0) {
+      const other = otherParty(item);
+      return !!other && other.id === choice.slice(5);
+    }
+    return true;
+  }
+
+  function chatTarget() {
+    // Who a new message goes to: a community or a person when one is picked; otherwise everyone.
+    const choice = String((window.socialStreamState || {}).chatPerson || "");
+    if (choice.indexOf("group:") === 0) {
+      const id = choice.slice(6);
+      const group = (window.socialGroups || []).find((g) => String(g.id) === id);
+      return { kind: "group", id: Number(id), label: "👥 " + T("To {name} (community members only)", { name: (group && group.name) || "Community" }) };
+    }
+    if (choice.indexOf("user:") === 0) {
+      const id = choice.slice(5);
+      const name = (window.socialPeople || {})[id] || (chatPeopleChoices().find((p) => p[0] === choice) || [0, "🔒 Member"])[1].replace(/^🔒\\s*/, "");
+      return { kind: "direct", id: id, label: "🔒 " + T("To {name} (private, just the two of you)", { name: name }) };
+    }
+    return { kind: "public", label: "🌐 " + T("To everyone (public)") };
+  }
+
+  function audienceMark(item) {
+    if (item.audience === "direct") {
+      const other = otherParty(item);
+      const mark = document.createElement("span");
+      mark.className = "aud";
+      mark.textContent = "🔒";
+      mark.title = T("Private: only you and {name} can see this", { name: (other && other.name) || "Member" });
+      mark.setAttribute("aria-label", mark.title);
+      return mark;
+    }
+    if (item.audience === "group") {
+      const mark = document.createElement("span");
+      mark.className = "aud";
+      mark.textContent = "👥";
+      mark.title = T("Only members of {name} can see this", { name: item.group_name || "the community" });
+      mark.setAttribute("aria-label", mark.title);
+      return mark;
+    }
+    return null;
+  }
+
+  function openPrivateChat(id, name) {
+    if (!id) return;
+    window.socialPeople = window.socialPeople || {};
+    window.socialPeople[id] = name || window.socialPeople[id] || "Member";
+    window.socialStreamState.chatPerson = "user:" + id;
+    window.socialStreamState.reply = null;
+    if (window.renderSocialStream) window.renderSocialStream();
+    const box = document.querySelector("#social-stream-root .chat-box");
+    if (box) box.focus();
+  }
+
+  function blockButton(item) {
+    const mine = String((window.socialMe || {}).id || "");
+    if (item.mine || !item.user || String(item.user) === mine || item.pending) return null;
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "block-person";
+    button.textContent = "🚫";
+    const name = String(item.name || "Member");
+    button.title = T("Block {name}: hide their messages and stop private messages between you", { name: name });
+    button.setAttribute("aria-label", button.title);
+    button.addEventListener("click", () => {
+      if (!window.confirm(T("Block {name}? You won't see their messages, and neither of you can message the other privately. You can unblock them in 👤 Account → Private messages.", { name: name }))) return;
+      const who = String(item.user);
+      window.socialBlocked = (window.socialBlocked || []).concat([who]);
+      window.socialChat = (window.socialChat || []).filter((t) => String(t.user) !== who).map((t) => {
+        t.replies = (t.replies || []).filter((r) => String(r.user) !== who);
+        return t;
+      });
+      if (String((window.socialStreamState || {}).chatPerson || "") === "user:" + who) window.socialStreamState.chatPerson = "";
+      if (window.renderSocialStream) window.renderSocialStream();
+      reportChat({ action: "block", person: who, name: name, on: true });
+    });
+    return button;
+  }
+
+  function paintFound(panel) {
+    const box = panel.querySelector(".found");
+    if (!box) return;
+    box.replaceChildren();
+    const finder = panel.querySelector(".find-person");
+    const typed = finder ? finder.value.trim() : "";
+    const found = window.socialFound || [];
+    if (!typed || typed.length < 2 || typed !== window.socialFoundQ) { box.hidden = true; return; }
+    box.hidden = false;
+    if (!found.length) {
+      const none = document.createElement("div");
+      none.className = "empty";
+      none.textContent = T("No one by that name.");
+      box.appendChild(none);
+      return;
+    }
+    found.forEach((person) => {
+      const pick = document.createElement("button");
+      pick.type = "button";
+      pick.className = "found-person";
+      pick.textContent = "🔒 " + String(person.name || "Member");
+      pick.title = T("Message {name} privately", { name: String(person.name || "Member") });
+      pick.addEventListener("click", () => {
+        if (finder) finder.value = "";
+        window.socialFoundQ = "";
+        box.hidden = true;
+        openPrivateChat(String(person.id), String(person.name || "Member"));
+      });
+      box.appendChild(pick);
+    });
   }
 
   function collectPeople(rows) {
@@ -2663,6 +2902,11 @@ export default function(component) {
     const card = document.createElement("article");
     card.className = item.id === rootId ? "chat-card" : "reply";
     const person = personRow(item, "chat", item.id === rootId ? "comment" : "reply");
+    if (item.id === rootId) {
+      const mark = audienceMark(item);
+      const who = person.querySelector(".who");
+      if (mark && who) who.appendChild(mark);
+    }
     const saying = document.createElement("p");
     saying.className = "saying";
     saying.textContent = String(item.text || "");
@@ -2724,7 +2968,7 @@ export default function(component) {
     const threads = window.socialChat || [];
     const chatPerson = (window.socialStreamState || {}).chatPerson || "";
     const query = (window.socialStreamState || {}).query || "";
-    const shownThreads = threads.filter((item) => matchesPerson(item, chatPerson) && matchesQuery(item, query));
+    const shownThreads = threads.filter((item) => chatMatches(item, chatPerson) && matchesQuery(item, query));
     if (!threads.length) {
       const empty = document.createElement("div");
       empty.className = "empty";
@@ -2735,8 +2979,10 @@ export default function(component) {
       empty.className = "empty";
       empty.textContent = chatPerson === "me"
         ? T("No chat comments from you yet.")
+        : String(chatPerson || "").indexOf("user:") === 0
+        ? T("No private messages with this person yet. Write the first one below: only the two of you will see it.")
         : String(chatPerson || "").indexOf("group:") === 0
-        ? T("No chat comments from that community yet.")
+        ? T("No messages in this community yet. Write one below: only its members will see it.")
         : chatPerson === "favourites" && !favouriteSet().size && !String(query).trim()
         ? T("No favourites yet. Press the star beside a name.")
         : T("No chat comments match.");
@@ -2767,6 +3013,7 @@ export default function(component) {
     }
     paintReply(panel);
     updateChatCount(panel);
+    paintFound(panel);
     list.scrollTop = keptScroll;
   }
 
@@ -4345,6 +4592,7 @@ _SECTION_IDS = _MAIN_SECTION_IDS + (
     "account",
     "my_groups",
     "edit_profile",
+    "private_messages",
     "invite",
     "notifications",
     "alert_feed",
@@ -4592,6 +4840,7 @@ try:
         set_signal_vote,
         set_market_mood_vote,
         post_chat,
+        find_people,
         save_price_paths,
         post_signal_reply,
         save_sentiment,
@@ -6686,6 +6935,34 @@ with tracked_expander("👤 " + t("Account"), "account", sidebar=True):
                     t('Could not save the profile. If this is the first time, run the latest supabase_rls.sql in Supabase. {exc}', exc=exc)
                 )
 
+    with tracked_expander("🔒 " + t("Private messages"), "private_messages"):
+        _dm_choices = {"everyone": t("Everyone"), "favourites": t("Only my ⭐ favourites"), "nobody": t("No one")}
+        _dm_now = str((prefs.get("settings") or {}).get("dm_from") or "everyone")
+        _dm_pick = st.radio(
+            t("Who can message me privately"),
+            list(_dm_choices),
+            index=list(_dm_choices).index(_dm_now) if _dm_now in _dm_choices else 0,
+            format_func=lambda k: _dm_choices[k],
+            key="dm_from_pick",
+            help=t("In the chat, a message to one person is private between the two of you. This decides who can "
+                   "start or carry on one with you. Reported messages can be read by admins, and private messages "
+                   "are not encrypted."),
+        )
+        if _dm_pick != _dm_now:
+            save_account_settings({"dm_from": _dm_pick})
+        _blocked_now = _chat_blocked()
+        _blocked_names = (prefs.get("settings") or {}).get("blocked_names") or {}
+        st.caption(t("Blocked people: you don't see their chat messages, and neither of you can message the other "
+                     "privately. They aren't told."))
+        if not _blocked_now:
+            st.caption(t("No one blocked. Press 🚫 beside a name in the chat to block someone."))
+        for _person in _blocked_now:
+            _row = st.columns([3, 1])
+            _row[0].markdown(html.escape(str(_blocked_names.get(_person) or "Member")))
+            if _row[1].button(t("Unblock"), key=f"unblock_{_person}"):
+                _set_chat_block(_person, "", False)
+                st.rerun()
+
     with tracked_expander(t("Invite"), "invite"):
         invite_someone()
 
@@ -8379,10 +8656,14 @@ drag the bar in the middle to split it, and 📌 **Pin** keeps it open while you
 replies. Filter by Positive / Negative / Mixed, by asset or watchlist, and by person: Me, your communities,
 or your ⭐ favourites.
 
-**General chat** (bottom): a shared room not tied to an asset. Enter posts; Shift+Enter adds a line.
+**General chat** (bottom): choose who you're talking to in **Person**: 🌐 everyone (public), one of your 👥
+communities (only its members see it), or one person 🔒 (private, just the two of you). Click a name, or use
+🔍 Find a person, to start a private chat. The line above the box always says who a message goes to, and a reply
+stays with its thread. Enter posts; Shift+Enter adds a line. In 👤 Account → Private messages, choose who can
+message you privately.
 
 **On any note**: 👍 / 👎 · ↩ reply · ⭐ add the person to favourites · 👥 invite them to a community ·
-🚩 report a comment that breaks the socials policy · 🗑️ delete your own note.
+🚩 report a comment that breaks the socials policy · 🚫 block the person · 🗑️ delete your own note.
 
 **Search**, at the top, filters both halves by words, names or assets.
 """))
@@ -11066,7 +11347,7 @@ def _chat_action(raw):
         data = json.loads(raw) if isinstance(raw, str) else raw
     except (TypeError, json.JSONDecodeError):
         return None
-    if not isinstance(data, dict) or data.get("action") not in ("post", "vote", "delete"):
+    if not isinstance(data, dict) or data.get("action") not in ("post", "vote", "delete", "find", "block"):
         return None
     try:
         token = int(data.get("n") or 0)
@@ -11077,12 +11358,68 @@ def _chat_action(raw):
     return data
 
 
+def _chat_blocked() -> list[str]:
+    """Accounts this account blocked in chat (settings.blocked): their messages are hidden, and private messages
+    between the two are refused by the database."""
+    return _favourite_ids((prefs.get("settings") or {}).get("blocked"))
+
+
+def _chat_people_names(ids) -> dict:
+    """Display names for these accounts (favourites and blocked people), for the panel's lists."""
+    ids = [i for i in ids if i]
+    if not ids:
+        return {}
+    try:
+        rows = supabase.table("profiles").select("user_id, display_name").in_("user_id", ids).execute().data or []
+    except Exception:
+        return {}
+    return {str(r.get("user_id") or "").lower(): " ".join(str(r.get("display_name") or "").split())[:40] or "Member"
+            for r in rows}
+
+
+def _set_chat_block(person: str, name: str, on: bool) -> None:
+    """Block or unblock one account, and keep its name for the Account list."""
+    stored = prefs.setdefault("settings", {})
+    blocked = _chat_blocked()
+    names = dict(stored.get("blocked_names") or {}) if isinstance(stored.get("blocked_names"), dict) else {}
+    if on and person not in blocked:
+        blocked.append(person)
+        names[person] = " ".join(str(name or "Member").split())[:40] or "Member"
+    if not on:
+        blocked = [b for b in blocked if b != person]
+        names.pop(person, None)
+    save_account_settings({"blocked": blocked, "blocked_names": names})
+
+
 def _apply_chat_action(action) -> str:
     """Save a chat post or thumb. The returned note is shown once in the panel."""
     try:
+        if action.get("action") == "find":                 # "Find a person": results show in the panel
+            typed = " ".join(str(action.get("text") or "").split())[:40]
+            blocked = set(_chat_blocked())
+            st.session_state["chat_found"] = {"q": typed, "people": [p for p in find_people(supabase, typed)
+                                                                      if p["id"] not in blocked]}
+            return ""
+        if action.get("action") == "block":
+            person = _favourite_ids([str(action.get("person") or "")])
+            if not person:
+                return ""
+            _set_chat_block(person[0], str(action.get("name") or ""), bool(action.get("on", True)))
+            return (t("Blocked. You won't see their messages, and you can't message each other privately. Unblock "
+                      "them in 👤 Account → Private messages.") if action.get("on", True) else t("Unblocked."))
         if action.get("action") == "post":
             parent = int(action.get("parent") or 0)
-            post_chat(supabase, user_id, action.get("text") or "", parent or None)
+            to = action.get("to") if isinstance(action.get("to"), dict) else {}
+            try:
+                post_chat(supabase, user_id, action.get("text") or "", parent or None, to=to)
+            except ValueError:
+                return t("That couldn't be sent. Choose who it is for in the Person list, then try again.")
+            except Exception:
+                if not parent and to.get("kind") == "direct":
+                    return t("That person isn't taking private messages from you, so it wasn't sent.")
+                if not parent and to.get("kind") == "group":
+                    return t("Only members of that community can post there, so it wasn't sent.")
+                raise
             return ""
         if action.get("action") == "delete":
             delete_chat_message(supabase, user_id, int(action.get("message") or 0))
@@ -11669,6 +12006,16 @@ def _what_changed_html(rows, baseline, seen: bool) -> str:
     return "".join(parts)
 
 
+def _chat_people_data() -> dict:
+    """For the chat's Person picker and its private conversations: names of your favourites, the people you
+    blocked, and the latest "Find a person" results."""
+    favourites = _favourite_ids((prefs.get("settings") or {}).get("favourites"))
+    blocked = _chat_blocked()
+    found = st.session_state.get("chat_found") or {}
+    return {"people": _chat_people_names(favourites), "blocked": blocked,
+            "found": found.get("people") or [], "found_q": found.get("q") or ""}
+
+
 def _draw_social_stream(stream_items, scope, *, popout: bool = False):
     """Draw the social panel with the comments, chat and saved panel choices."""
     chat_notice = st.session_state.pop("chat_notice", "")
@@ -11683,6 +12030,7 @@ def _draw_social_stream(stream_items, scope, *, popout: bool = False):
                 "me": _chat_viewer(),
                 "favourites": _favourite_ids((prefs.get("settings") or {}).get("favourites")),
                 "groups": _groups_for_stream(),
+                **_chat_people_data(),
                 "notice": chat_notice,
                 "notice_kind": notice_kind,
                 "faces": list(COMMENT_EMOTICONS),
