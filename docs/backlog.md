@@ -23,6 +23,11 @@ entity, Paddle); a data-licence review alongside; then tiers and payments, harde
    "Max pain" and "0 matches" (left for now).
 
 **Commercial track** (some steps wait on outside parties, so start early)
+Decided 17 Nov 2026 (tiers document "Angstrom Signals: membership tiers proposal", Rollout section): build the tiers
+and connect Paddle (sandbox only) now, but charge nobody yet: an invite-only free beta, then possibly a free public
+launch with the AI Navigator capped per user, then tiers and payments as the user base grows. Show the tiers from the
+start with paid features marked "free during the beta". The data-licence review is needed before any public launch,
+not only before payments. All four tiers launch together; limits and names live in the database, editable in Admin.
 1. **Legal entity:** Paddle, the final NDA, terms and privacy pages all need the company's legal name.
 2. **Paddle:** merchant of record (collects sales tax and VAT worldwide). Approval can take days to weeks and needs
    a live website with pricing, terms and a refund policy. The owner signs up; Claude prepares the website pages.
