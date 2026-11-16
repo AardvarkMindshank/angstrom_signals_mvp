@@ -9472,9 +9472,11 @@ def admin_panel() -> None:
             with st.expander("Page timing (last load of the dashboard)", expanded=False):
                 memory_now, memory_peak = _memory_mb()
                 if memory_now:
+                    limit = _memory_limit_mb()
                     st.write(
-                        f"Server memory now {memory_now:.0f} MB, peak {memory_peak:.0f} MB, "
-                        "of the 512 MB the Render plan allows (for every user together)."
+                        f"Server memory now {memory_now:.0f} MB, peak {memory_peak:.0f} MB"
+                        + (f", of the {limit:,.0f} MB this server has (for every user together)." if limit else
+                           " (for every user together).")
                     )
                 st.caption("Milliseconds spent on each step the last time the dashboard drew. Slowest first.")
                 for label, spent in sorted(perf.items(), key=lambda item: item[1], reverse=True):
@@ -11802,6 +11804,19 @@ def _memory_mb() -> tuple[float | None, float | None]:
     except OSError:
         pass
     return now, peak
+
+
+def _memory_limit_mb() -> float | None:
+    """The memory this server may use, read from the server itself (the Render plan's size), in MB."""
+    for path in ("/sys/fs/cgroup/memory.max", "/sys/fs/cgroup/memory/memory.limit_in_bytes"):
+        try:
+            with open(path) as fh:
+                value = fh.read().strip()
+            if value.isdigit() and int(value) < 1 << 50:      # "max" or a huge number: no limit set
+                return int(value) / (1024 * 1024)
+        except OSError:
+            continue
+    return None
 
 
 def _give_back_memory() -> None:
