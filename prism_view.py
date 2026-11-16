@@ -89,6 +89,8 @@ def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str = "") 
         st.session_state["prism_flash"] = handle(st, supabase, action, by_id, choices, assets, now)
         if st.session_state.get("_chart_jump"):
             lattice_panel.rerun_page(st)              # the chart is outside this section
+        if "_lattice_section_next" in st.session_state:
+            lattice_panel.rerun(st)                   # 🔍 Open in Signal Sets: the tabs are already drawn, so go there now
         scans = load()
         by_id = {s["id"]: s for s in scans}
     runs, latches = _history(supabase, list(by_id))
