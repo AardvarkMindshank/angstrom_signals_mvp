@@ -461,9 +461,10 @@ def page(snap: dict, now: datetime | None = None, range_key: str = "1Y") -> str:
             + foot + "</div>")
 
 
-PASSAGE_TIP = ("📜 Today's AI Passage Plan (opens in its own window): the AI Navigator charts today's conditions, the "
-               "week's events and the winds for your own assets, Sets and funnels, with things to watch. One plan a "
-               "day, kept in your logbook. Descriptions, not buy or sell calls.")
+PASSAGE_TIP = mark("📜 Today's AI Passage Plan (opens in the ✨ AI panel on the right edge): the AI Navigator "
+                        "charts today's conditions, the week's events and the winds for your own assets, Sets and "
+                        "funnels, with things to watch. One plan a day, kept in your logbook. Descriptions, not buy "
+                        "or sell calls.")
 
 
 ROW = ".st-key-tides_note_row [data-testid='stHorizontalBlock']:has(> [data-testid='stColumn'] .st-key-tides_take_col)"

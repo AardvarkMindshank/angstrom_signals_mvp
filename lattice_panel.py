@@ -115,6 +115,10 @@ export default function(component) {
   if (button.dataset.ready) return;
   button.dataset.ready = "1";
   button.addEventListener("click", () => {
+    if (window.angstromOpenAI) {           // the ✨ AI panel on the right edge (ai_panel.py), when on this page
+      window.angstromOpenAI({ from: button.dataset.start, ask: button.dataset.ask });
+      return;
+    }
     const address = window.location.origin + window.location.pathname + "?view=advisor&from="
       + encodeURIComponent(button.dataset.start) + (button.dataset.ask ? "&ask=" + encodeURIComponent(button.dataset.ask) : "");
     // One small window beside the app, shared by every ✨ button. If it is already open it is brought to the front
@@ -147,29 +151,19 @@ _ADVISOR_CSS = """
 """
 
 
-TIPS = {
-    "lattice": "✨ AI Navigator (opens in its own window): describe a trading idea in plain words and get "
-               "step-by-step help building and testing it. It also answers questions about the rest of the app. It "
-               "explains; you do the clicks.",
-    "tides": "✨ AI Navigator (opens in its own window), with today's Tides readings, your watchlist and your funnels: "
-             "ask about the currents, the tide, the sea state or the macro calendar.",
-    "app": "✨ AI Navigator (opens in its own window): ask anything about the app, such as where things are, "
-           "how to use them, or what a reading means, or get help building and testing an idea. It explains; you do "
-           "the clicks.",
-}
 
 
 def advisor_button(st, start: str = "lattice", key: str = "advisor_open", label: str = "AI", ask: str = "",
                    tip: str = "") -> None:
-    """A ✨ AI button: opens the AI Navigator in a pop-out window, so the pages under it stay free to work on.
-    Every ✨ button opens the same window; `start` says where it was opened from."""
+    """A button that opens the AI Navigator with a request (Tides' 📜 Today's AI Passage Plan): in the ✨ AI panel on
+    the right edge (ai_panel.py) when the page has it, else in a pop-out window. `start` says where it came from."""
     import html
 
     if not _ADVISOR:
         _ADVISOR.append(st.components.v2.component(
-            "advisor_popout", html=_ADVISOR_HTML.replace("{tip}", html.escape(TIPS["lattice"], quote=True)),
+            "advisor_popout", html=_ADVISOR_HTML.replace("{tip}", ""),
             css=_ADVISOR_CSS, js=_ADVISOR_JS, isolate_styles=False))
-    _ADVISOR[0](key=key, data={"start": start, "tip": tip or TIPS.get(start, TIPS["lattice"]), "label": label,
+    _ADVISOR[0](key=key, data={"start": start, "tip": tip, "label": label,
                                "ask": ask})
 
 
@@ -177,13 +171,15 @@ _advisor_button = advisor_button
 
 
 def render_popout(st, supabase, user_id: str, start: str = "lattice", watchlist: dict | None = None,
-                  auto: str = "", provider: str = "claude") -> None:
-    """The AI Navigator alone in its own window (?view=advisor&from=app|lattice)."""
+                  auto: str = "", provider: str = "claude", embed: bool = False, focus=None) -> None:
+    """The AI Navigator alone (?view=advisor&from=panel|tides…): in the ✨ AI panel's frame (embed: the panel
+    shows the title), or in a window of its own."""
     import advisor
 
-    st.markdown(t("#### ✨ AI Navigator"))
-    advisor.render(st, supabase, user_id, start if start in advisor.START else "lattice", watchlist=watchlist,
-                   auto=auto, provider=provider)
+    if not embed:
+        st.markdown(t("#### ✨ AI Navigator"))
+    advisor.render(st, supabase, user_id, start if start in advisor.START else "panel", watchlist=watchlist,
+                   auto=auto, provider=provider, focus=focus)
 
 
 def _render(st, supabase, assets: list[tuple[str, str, str]], user_id: str) -> None:
@@ -196,12 +192,9 @@ def _render(st, supabase, assets: list[tuple[str, str, str]], user_id: str) -> N
     if state is not None and "_lattice_section_next" in state:   # a button elsewhere in Lattice asked for another tab
         state["lattice_section"] = state.pop("_lattice_section_next")
     hover = "\n\n".join(f"**{SECTIONS[k][1]}**: {SECTIONS[k][2]}" for k in SECTIONS)
-    bar = st.container(horizontal=True, vertical_alignment="center", gap="small") if hasattr(st, "container") else None
-    with (bar if bar is not None else _nothing()):
-        chosen = st.segmented_control(t("Lattice section"), list(SECTIONS), format_func=label, default="groups",
-                                      key="lattice_section", label_visibility="collapsed", help=hover) or "groups"
-        if hasattr(st, "components") and hasattr(st.components, "v2"):
-            advisor_button(st, "lattice")
+    # The ✨ AI Navigator is the pull-out on the right edge (ai_panel.py), on every page.
+    chosen = st.segmented_control(t("Lattice section"), list(SECTIONS), format_func=label, default="groups",
+                                  key="lattice_section", label_visibility="collapsed", help=hover) or "groups"
     if chosen == "groups":
         import lattice_view
 

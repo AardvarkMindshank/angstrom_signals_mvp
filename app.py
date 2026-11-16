@@ -7695,9 +7695,9 @@ with st.container(horizontal=True, vertical_alignment="center", horizontal_align
     with st.container(horizontal=True, vertical_alignment="center", gap="xsmall", width="content",
                       key="page_header_tools"):
         if not _POPOUT_VIEW:
-            import lattice_panel as _lp
+            import ai_panel as _ai_panel
 
-            _lp.advisor_button(st, "app", key="assistant_open")    # ✨ AI Navigator: help with the whole app
+            _ai_panel.mount(st)        # ✨ AI Navigator: the pull-out on the right edge, under the social arrow
         single_layout = st.button(
             t("Single column"),
             key="layout_single",
@@ -7801,22 +7801,22 @@ because they measure different things and are never added together.
 6. **🧩 Angstrom Lattice** (preview), right under the chart, is your research workspace: build your own readings
    and rules from the same signals, scan your watchlist with them in **Prism**, now or on a schedule with alerts,
    and study what followed a Set's Yes in the past. See the 🧩 Lattice & Prism tab.
-7. **✨ AI** (top right, and beside the Lattice tabs) opens the AI Navigator in its own window: ask where
-   things are, how to use them or what a reading means, or get step-by-step help building and testing an idea.
-   Paste a screenshot (Ctrl+V), drop one on the window or tap 🖼 to add one, and ask what you're looking at. It
-   links the right training video when there is one. Wherever you open it from (top bar, Lattice, Tides or the
-   Passage Plan), it is the same Navigator: it knows the whole app, your watchlist, Groups, Sets and funnels, and
-   today's Tides readings, so you can ask it anything. It explains; you do the clicks.
+7. **✨ AI**, the handle on the right edge just under the social arrow, slides out the AI Navigator on every page:
+   ask where things are, how to use them or what a reading means, or get step-by-step help building and testing
+   an idea. Paste a screenshot (Ctrl+V), drop one on the panel or tap 🖼 to add one, and ask what you're looking at.
+   It links the right training video when there is one. It knows the whole app, your watchlist, Groups, Sets and
+   funnels, today's Tides readings and the asset you have selected, so you can ask it anything. The conversation
+   stays when you close the panel. It explains; you do the clicks.
 8. **🌊 Tides** is the macro layer: twelve currents (rates, the dollar, inflation, gold, fear, copper
    against gold, oil, credit, equities against bonds, crypto rotation), each scored against its own last 5 years.
    Together they give the **Tide** (coming in = risk-supportive, slack = mixed, going out = risk-defensive; a change
    counts after 5 daily closes) and, separately, the **Sea state** (calm to storm = low to extreme volatility).
    Headwind or tailwind is shown per market. Storm warnings flag scheduled events (Fed, CPI, jobs, producer prices)
    from 24 hours before to 24 hours after: an event is near, not a forecast. The waves show each current over time
-   (3M to 2Y), with past Fed, CPI and jobs dates as dashed lines. **✨ AI Navigator** beside the daily note answers
-   questions about the currents from the readings; **Today's AI Passage Plan** charts today's conditions, the week's
-   events and the winds for your own watchlist and funnels, with things to watch: one plan a day, kept in your
-   logbook. Descriptions, never buy or sell calls.
+   (3M to 2Y), with past Fed, CPI and jobs dates as dashed lines. The **✨ AI** panel answers questions about the
+   currents from the readings; **Today's AI Passage Plan**, beside the daily note, opens in that panel and charts
+   today's conditions, the week's events and the winds for your own watchlist and funnels, with things to watch:
+   one plan a day, kept in your logbook. Descriptions, never buy or sell calls.
 """))
         st.markdown(t("**🎬 Training videos**: short videos with captions, about a minute or two each. Each opens in "
                     "its own window beside the app; Back, Next and Start move through a series, and 📌 Keep on top "
@@ -8080,13 +8080,13 @@ It describes conditions; it does not time trades and it never says buy or sell.
                         f"| {t(c['measures']).replace('|', '/')} | {t('✅ yes') if c['weight'] else t('shown only')} |"
                         for c in _td.SPEC.values()))
         fam = ", ".join(f"{icon} {t(name)} {weight:.0%}" for name, weight, icon in _td.FAMILIES.values())
-        st.markdown(t("\n**How each current is read** (fixed rules, the same for everyone)\n- **Band**: where today's level sits against its own last 5 years, from 0 to 100: very low (under 20), low,\n  normal, high, very high (80 and over). Glassnode and similar tools use the same idea.\n- **Pull**: its 30-day move against the usual size of such a move. A move bigger than half the usual size is\n  **rising** or **falling**; anything smaller is **flat**, and a flat current is always *neutral*. Whether rising is\n  risk-supportive or risk-defensive depends on the current (rising rates or a rising dollar pull risk down;\n  rising credit appetite pulls it up). The line under each current's name says this in words.\n- **The Tide's score**: each family averages its voting currents, then the families are weighted: {fam}. Above\n  +0.20 is coming in, below -0.20 going out, in between slack. Gold, oil and the yield curve are shown for context\n  but don't vote. Crypto Fear & Greed is shown on its own and never votes.\n\n**The waves** draw each current over time (3 months to 2 years; your choice is saved on your account), with past\nFed decisions, CPI and jobs days as dashed lines, so you can see how a current behaved around an event.\n\n**✨ AI Navigator and 📜 Today's AI Passage Plan** (the buttons beside the daily note) open in their own window.\nThe Navigator answers questions about the currents, the tide and the calendar from these readings only, quoting\nthe reading behind each statement. The Passage Plan charts today's conditions, the week's events, the winds for\nyour own watchlist and funnels, hazards and things to watch, each expectation labelled with what would show it\nright or wrong. One plan a day, kept in your logbook. Facts stay apart from expectations; never buy or sell calls.\n\n**👍 Your take**, beside the daily note: agree or disagree with the Tide's current reading; on 👎 give your own Tide\nscore (−100 going out to +100 coming in), and add a short comment. Tides moves slowly, so takes and comments stay\nuntil the Tide changes to another reading, then start afresh. Comments show in the social panel under 🌊 Tides.\n\n**How often it updates**: a fresh reading every 6 hours (most currents use daily closes, so it changes once a day\nin practice). Event dates come from the official Fed and US Bureau of Labor Statistics schedules.\n\n**Limits**: macro conditions frame risk over weeks; they don't say what any one asset does tomorrow. Nobody has yet\ntested what usually followed each Tide, so treat it as context, not a signal. The 🌊 Tides line in Quick Snapshot\nis the one-glance version.\n", fam=fam))
+        st.markdown(t("\n**How each current is read** (fixed rules, the same for everyone)\n- **Band**: where today's level sits against its own last 5 years, from 0 to 100: very low (under 20), low,\n  normal, high, very high (80 and over). Glassnode and similar tools use the same idea.\n- **Pull**: its 30-day move against the usual size of such a move. A move bigger than half the usual size is\n  **rising** or **falling**; anything smaller is **flat**, and a flat current is always *neutral*. Whether rising is\n  risk-supportive or risk-defensive depends on the current (rising rates or a rising dollar pull risk down;\n  rising credit appetite pulls it up). The line under each current's name says this in words.\n- **The Tide's score**: each family averages its voting currents, then the families are weighted: {fam}. Above\n  +0.20 is coming in, below -0.20 going out, in between slack. Gold, oil and the yield curve are shown for context\n  but don't vote. Crypto Fear & Greed is shown on its own and never votes.\n\n**The waves** draw each current over time (3 months to 2 years; your choice is saved on your account), with past\nFed decisions, CPI and jobs days as dashed lines, so you can see how a current behaved around an event.\n\n**✨ AI Navigator** (the pull-out on the right edge) and **📜 Today's AI Passage Plan** (the button beside the daily\nnote, which opens in that panel). The Navigator answers questions about the currents, the tide and the calendar from these readings only, quoting\nthe reading behind each statement. The Passage Plan charts today's conditions, the week's events, the winds for\nyour own watchlist and funnels, hazards and things to watch, each expectation labelled with what would show it\nright or wrong. One plan a day, kept in your logbook. Facts stay apart from expectations; never buy or sell calls.\n\n**👍 Your take**, beside the daily note: agree or disagree with the Tide's current reading; on 👎 give your own Tide\nscore (−100 going out to +100 coming in), and add a short comment. Tides moves slowly, so takes and comments stay\nuntil the Tide changes to another reading, then start afresh. Comments show in the social panel under 🌊 Tides.\n\n**How often it updates**: a fresh reading every 6 hours (most currents use daily closes, so it changes once a day\nin practice). Event dates come from the official Fed and US Bureau of Labor Statistics schedules.\n\n**Limits**: macro conditions frame risk over weeks; they don't say what any one asset does tomorrow. Nobody has yet\ntested what usually followed each Tide, so treat it as context, not a signal. The 🌊 Tides line in Quick Snapshot\nis the one-glance version.\n", fam=fam))
 
     with tab_lattice:
         st.markdown(t("""
 **Angstrom Lattice** (preview) is the research workspace right under the chart. Open it and pick a part from
 the bar at the top; hover the bar for what each part does. ↗ opens it in its own window, and anything it opens on
-a chart (such as Visualize History) shows on the main window's chart. ✨ AI beside the bar opens the Navigator.
+a chart (such as Visualize History) shows on the main window's chart. The ✨ AI handle on the right edge opens the Navigator.
 Drag the dividers between the library, the editor and the checks to give each more room. Like the rest of the app, it describes
 conditions; nothing in it is a forecast or advice.
 
@@ -8385,10 +8385,10 @@ guides** has one too: open it beside the app and read while you work.
 🧩 Angstrom Lattice across the full width, then market sentiment on the left and the chart's tools on the right.
 Drag the line between the columns to resize.
 
-**Windows of their own.** ✨ AI (the Navigator) and 🎬 training videos open in small windows beside the app, so
-they never cover what you're working on; opening another reuses the same window. In Chrome, Edge or Safari, 📌 Keep
-on top floats a video above every other window. On Windows, the free PowerToys *Always on Top* (Windows + Ctrl + T)
-keeps any window, the Navigator included, on top. On a phone they open as tabs.
+**Windows of their own.** 🎬 Training videos open in a small window beside the app, so they never cover what you're
+working on; opening another reuses the same window. In Chrome, Edge or Safari, 📌 Keep on top floats a video above
+every other window. On Windows, the free PowerToys *Always on Top* (Windows + Ctrl + T) keeps any window on top. On a
+phone they open as tabs. The ✨ AI Navigator slides out from the right edge instead, on every page.
 
 **Chart height.** Drag the small bar under the chart up or down to make the price chart shorter or taller
 (the panels below keep their size). Your height is saved to your account. Double-click the bar to reset.
@@ -14409,10 +14409,9 @@ def show_tides() -> None:
         _paint_tides_header(snap)
         import lattice_panel as _lp
 
-        def _buttons():
-            _lp.advisor_button(st, "tides", key="tides_navigator", label="AI Navigator")
+        def _buttons():          # the ✨ AI Navigator itself is the pull-out on the right edge (ai_panel.py)
             _lp.advisor_button(st, "tides", key="tides_passage", label=t("Today's AI Passage Plan"), ask="passage",
-                               tip=tides_view.PASSAGE_TIP)
+                               tip=t(tides_view.PASSAGE_TIP))
 
         tide = snap.get("tide") or {}
         tide_score = None if tide.get("score") is None else round(float(tide["score"]) * 100)
@@ -15667,14 +15666,36 @@ if _POPOUT_VIEW == "video":
     _training.render_popout(st, str(st.query_params.get("v") or ""))
     st.stop()
 
+def _on_screen_focus(user_id: str) -> str:
+    """What the person has on screen in the main page, for the AI Navigator (which runs in a page of its own): the
+    asset they last picked, read fresh from their account when they ask."""
+    try:
+        row = (supabase.table("user_preferences").select("settings, crypto, stock").eq("user_id", user_id)
+               .limit(1).execute().data or [{}])[0]
+    except Exception:
+        return ""
+    settings = row.get("settings") or {}
+    kind, asset = str(settings.get("chart_kind") or ""), str(settings.get("chart_asset") or "")
+    if kind not in ("Crypto", "Stock") or not asset:
+        return ""
+    names = row.get("crypto" if kind == "Crypto" else "stock") or {}
+    name = str(names.get(asset) or asset)
+    shown = f"{name} ({asset}), an equity" if kind == "Stock" else f"{name}, a crypto asset"
+    return (f"On their screen now: the asset selected in their tables and chart is {shown}. When they say \"this "
+            "asset\" or \"it\", they mean this one. You don't see its current readings: if you need them, ask them to "
+            "read them out or paste a screenshot.")
+
+
 if _POPOUT_VIEW == "advisor":
     # The AI Navigator in its own window beside the app, so it never covers the pages you are working on.
     import lattice_panel
 
-    lattice_panel.render_popout(st, supabase, str(user_id), str(st.query_params.get("from") or "lattice"),
+    lattice_panel.render_popout(st, supabase, str(user_id), str(st.query_params.get("from") or "panel"),
                                 watchlist={"crypto": prefs.get("crypto") or {}, "stock": prefs.get("stock") or {}},
                                 auto=str(st.query_params.get("ask") or ""),
-                                provider=str((prefs.get("settings") or {}).get("ai_navigator") or "claude"))
+                                provider=str((prefs.get("settings") or {}).get("ai_navigator") or "claude"),
+                                embed=str(st.query_params.get("inpanel") or "") == "1",
+                                focus=lambda: _on_screen_focus(str(user_id)))
     st.stop()
 
 if _POPOUT_VIEW == "help_guides":

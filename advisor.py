@@ -64,8 +64,8 @@ How you answer:
 
 How Lattice works (the screens):
 - Tabs: Signal Groups, Signal Sets, Prism Scan, Strategies (coming later; nothing to build there yet). You, the
-  AI Navigator, open in your own window from the ✨ AI button beside those tabs, so the person can follow your steps
-  in the app beside you.
+  AI Navigator, open in the ✨ AI panel that slides out from the right edge of every page (under the social arrow),
+  so the person can follow your steps in the app beside you.
 - A Signal is one measurement from finished candles (each has readings, listed below with their ranges).
 - Signal Groups tab: "Start from" (➕ New Group, provided starters, your own). Left panel "Signals": tap + or drag a
   signal in. Each member has a role: Score (counts toward the -100..+100 score), Condition (used only in rules),
@@ -220,6 +220,9 @@ def _videos() -> list[str]:
 
 
 START = {
+    "panel": "The person opened you from the ✨ AI panel on the right edge of the app, which is always at hand on "
+             "every page: expect questions about whatever they are looking at (the asset they have selected, their "
+             "tables and funnels, Lattice, Tides) or about the app itself.",
     "app": "The person opened you from the top bar of the app: expect questions about the app itself first.",
     "lattice": "The person opened you from Angstrom Lattice: expect questions about building and testing ideas first.",
     "tides": "The person opened you from 🌊 Tides, the macro layer: expect questions about the currents, the tide, the "
@@ -461,7 +464,9 @@ def _show_images(st, images: list[str]) -> None:
 
 
 def render(st, supabase, user_id: str = "", start: str = "lattice", watchlist: dict | None = None,
-           auto: str = "", provider: str = "claude") -> None:
+           auto: str = "", provider: str = "claude", focus=None) -> None:
+    """`focus`: a function giving what is on the person's screen right now (the asset they have selected), read
+    when they ask, since the page they are looking at runs apart from this one."""
     import time
 
     import ai_providers
@@ -500,7 +505,7 @@ def render(st, supabase, user_id: str = "", start: str = "lattice", watchlist: d
             _show_images(st, m.get("images"))
             st.markdown(m["content"])
     if not chat:
-        if start == "app":
+        if start in ("app", "panel"):
             st.markdown(t("Try: *“Where do I change which emails I get?”* or *“What does a Stretch of +60 mean?”*"))
         elif start == "tides":
             st.markdown(t("Try: *“Why is the tide going out?”* or *“What is pulling against crypto longs right now?”* "
@@ -530,6 +535,13 @@ def render(st, supabase, user_id: str = "", start: str = "lattice", watchlist: d
         if not cached or time.time() - cached[0] > 60:
             cached = (time.time(), *gi.saved_configs(supabase))
             st.session_state["siggroups_saved"] = cached
+        if focus is not None:
+            try:
+                on_screen = focus() or ""
+            except Exception:
+                on_screen = ""
+            if on_screen:
+                extra = (extra + "\n\n" + on_screen).strip()
         with st.spinner(t("Thinking…")):
             try:
                 answer = ask(chat, question.strip()[:4000],
