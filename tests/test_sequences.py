@@ -224,3 +224,36 @@ def test_armed_shows_beside_no():
     result["decision"]["sequences"][0]["state"] = "waiting"
     assert "armed" not in prism.row("X", result, "")
 
+
+
+def _fading():
+    """The Breakout fading idea: an upward break on heavy volume, then volume back under 1.5x within 5 closes (it
+    uses a Group condition in its first step)."""
+    base = copy.deepcopy(prism.library_sets()["demo:breakout"])
+    base["decision"]["rule"] = {"sequence": {"first": base["decision"]["rule"],
+                                             "then": {"member": "volume", "lte": 1.5}, "within": 5}}
+    return base
+
+
+@pytest.mark.parametrize("make", [_doc, _fading])
+def test_run_now_reads_earlier_closes_like_the_history(make):
+    """▶ Run now reads today live and the earlier closes as reconstructions. Those were once read as live, so their
+    Groups answered "unsupported" and a Group condition in the first step was never decided: crypto read Unknown on
+    any day with heavy volume in the window (16 Nov 2026). The answers must match the daily history."""
+    from signal_library import replay as rp
+
+    ds = cf.synthetic_crypto(days=330, seed=11)
+    doc = make()
+    history = ds.histories["1D"]
+    frame = full_indicators(history.raw)
+    daily = dict(sh.daily_answers(doc, frame, "crypto", "x"))
+    seen = set()
+    for i in range(240, 329, 4):
+        day = history.raw.index[i]
+        live, _ = sh.context_at(frame, "crypto", day, "x")
+        run = rp.ReplayRun(rp.DISPLAY, ds.candles, max_steps=prism.steps_needed(doc), reuse_frames=True,
+                           indicators=full_indicators)
+        rows = prism.run_now(doc, [("crypto", "x", "X")], live_context=lambda k, a: live, earlier_run=run)
+        assert rows[0]["answer"] == daily[day.strftime("%Y-%m-%d")], day
+        seen.add(rows[0]["answer"])
+    assert seen - {"unknown"}

@@ -118,7 +118,12 @@ def _past(doc: dict, ctx, earlier, data_mode: str, pit: bool, table, cache: dict
             continue
         try:
             past_ctx, past_subjects = earlier(day)
-            groups, items, refs, results_for = _parts(doc, past_ctx, past_subjects, data_mode, pit, keep)
+            # An earlier close is a reconstruction, read as known at that close, even when today is read live (▶ Run
+            # now). Read live, its Groups answered "unsupported", so a Group condition in a sequence's first step was
+            # never decided and the Set read Unknown on any day the rest of that step held (16 Nov 2026).
+            rebuilt = getattr(past_ctx, "replay", None) is not None
+            groups, items, refs, results_for = _parts(
+                doc, past_ctx, past_subjects, replay.POINT_IN_TIME_MODE if rebuilt else data_mode, pit or rebuilt, keep)
             got = ({g["key"]: g["result"] for g in groups}, _members(items, refs, results_for, table))
         except Exception:
             got = None
