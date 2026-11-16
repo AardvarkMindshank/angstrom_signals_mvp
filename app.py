@@ -4962,7 +4962,10 @@ export default function(component) {
   };
   channel.onmessage = (event) => {
     const msg = event.data || {};
-    if (msg.type === "asset" && msg.kind && msg.id) pick(String(msg.kind), String(msg.id), 0);
+    // Never its own news (this page's own announcement once came back here and drew the whole page a second time on
+    // every load and every pick), and the main page follows pop-outs only, not another main tab.
+    const own = msg.from && msg.from === window.__angstromTabId;
+    if (msg.type === "asset" && msg.kind && msg.id && !own && (!quiet || msg.popout)) pick(String(msg.kind), String(msg.id), 0);
     // Visualize History in a Lattice pop-out: open the asset here, on the main window's chart, with the Set's bands.
     if (msg.type === "chart_jump" && msg.jump && msg.token && quiet) {
       const send = (tries) => {
@@ -5041,6 +5044,8 @@ export default function(component) {
   if (holder) holder.style.display = "none";
   if (!("BroadcastChannel" in window)) return;
   window.__angstromLinkRefresh = setTriggerValue;
+  window.__angstromTabId = window.__angstromTabId || Math.random().toString(36).slice(2);
+  const fromPopout = !!(data && data.popout);
   const key = String((data && data.key) || "");
   const label = String((data && data.label) || key);
   const kind = String((data && data.kind) || "");
@@ -5053,7 +5058,8 @@ export default function(component) {
       const msg = event.data || {};
       const now = window.__angstromLinkCurrent;
       if (msg.type === "hello" && now && now.key) {
-        channel.postMessage({ type: "asset", key: now.key, label: now.label, kind: now.kind, id: now.id });
+        channel.postMessage({ type: "asset", key: now.key, label: now.label, kind: now.kind, id: now.id,
+                              from: window.__angstromTabId, popout: fromPopout });
       }
       if (msg.type === "changed" && msg.from !== window.__angstromTabId && window.__angstromLinkRefresh) {
         window.__angstromLinkRefresh("refresh", String(Date.now()));
@@ -5062,7 +5068,8 @@ export default function(component) {
   }
   if (key && window.__angstromLinkSent !== key) {
     window.__angstromLinkSent = key;
-    window.__angstromLinkTx.postMessage({ type: "asset", key: key, label: label, kind: kind, id: assetId });
+    window.__angstromLinkTx.postMessage({ type: "asset", key: key, label: label, kind: kind, id: assetId,
+                                          from: window.__angstromTabId, popout: fromPopout });
   }
 }
 """
@@ -13110,6 +13117,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                 "label": " ".join(str(chart_name or chart_asset).split()),
                 "kind": chart_kind,
                 "id": str(chart_asset),
+                "popout": bool(_POPOUT_VIEW),
             },
             on_refresh_change=lambda: None,
         )
