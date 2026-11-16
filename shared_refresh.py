@@ -144,7 +144,7 @@ def refresh_price_catalog(supabase, catalog: dict, days: int) -> dict:
             if err:
                 print(err)
             elif fetched is not None and len(fetched) >= 15:
-                if save_price_frame(supabase, kind, asset_id, fetched):
+                if save_price_frame(supabase, kind, asset_id, fetched, with_readings=True):
                     refreshed += 1
                 frame = fetched
         if frame is not None and len(frame) >= 15:

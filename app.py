@@ -4525,6 +4525,7 @@ import news_filter
 import group_readings
 import signals_v2
 import signals_view
+import stored_readings
 import table_columns
 from digest import COMMON_ZONES
 import session_guard
@@ -9480,7 +9481,8 @@ def admin_panel() -> None:
                     )
                 st.caption("Milliseconds spent on each step the last time the dashboard drew. Slowest first.")
                 for label, spent in sorted(perf.items(), key=lambda item: item[1], reverse=True):
-                    st.write(f"{label}: {spent}" if ("worked out" in label or "one at a time" in label) else f"{label}: {spent} ms")
+                    st.write(f"{label}: {spent}" if ("worked out" in label or "one at a time" in label
+                                                      or "background worker" in label) else f"{label}: {spent} ms")
                 runs = st.session_state.get("_perf_runs") or []
                 if runs:
                     st.caption(
@@ -12331,7 +12333,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
         # Market cap still uses a short cache. Prices and sentiment come from the shared rows.
         nonce = st.session_state.data_nonce
 
-        spent = {"bars": 0.0, "maths": 0.0}
+        spent = {"bars": 0.0, "maths": 0.0, "stored": 0}
 
         def process_watchlist(watchlist, is_crypto=True):
             results = []
@@ -12385,10 +12387,15 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                             datetime.now(timezone.utc).strftime("%Y-%m-%d %H"),
                         )
                         maths_from = time.perf_counter()
-                        try:
-                            scored = _scored_asset(kind, str(key), group_readings.FINGERPRINT, stamp, df)
-                        except Exception:
-                            scored = signals_view.row_fields(calculate_indicators(df), kind)
+                        # Worked out by the background worker from these same bars (stored_readings.py), if it has.
+                        scored = stored_readings.use(shared_row, df)
+                        if scored is not None:
+                            spent["stored"] += 1
+                        else:
+                            try:
+                                scored = _scored_asset(kind, str(key), group_readings.FINGERPRINT, stamp, df)
+                            except Exception:
+                                scored = signals_view.row_fields(calculate_indicators(df), kind)
                         spent["maths"] += time.perf_counter() - maths_from
                         if isinstance(scored, dict):
                             result.update(scored)
@@ -12471,6 +12478,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
         st.session_state["_perf"]["  price rows read one at a time (should be 0)"] = (
             st.session_state.get("_bar_run") or {}).get("_trips", 0)
         st.session_state["_perf"]["  scores worked out fresh (0 means all remembered)"] = _SCORES_WORKED_OUT - worked_before
+        st.session_state["_perf"]["  scores ready from the background worker"] = spent["stored"]
         # Crypto ranks always show, so crypto is always asked about. Stock caps only when extra metrics are on.
         stock_for_caps = tuple(stock_watchlist) if (trade_equities and show_extra_metrics_flag) else ()
         crypto_for_caps = tuple(crypto_watchlist) if trade_crypto else ()

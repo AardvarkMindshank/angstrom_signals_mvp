@@ -996,8 +996,9 @@ def technical_refresh_due(stored_at: float | None) -> bool:
     return datetime.now(timezone.utc).timestamp() - stored_at >= TECHNICAL_REFRESH_SECONDS
 
 
-def save_price_frame(supabase, kind: str, asset_id: str, frame) -> bool:
-    """Store daily bars and the sparkline closes. Leaves sentiment and the logo in place."""
+def save_price_frame(supabase, kind: str, asset_id: str, frame, with_readings: bool = False) -> bool:
+    """Store daily bars and the sparkline closes. Leaves sentiment and the logo in place. with_readings (the worker):
+    also the readings worked out from these very bars (stored_readings.py), in the same write."""
     records = records_from_frame(frame)
     if len(records) < 15:
         return False
@@ -1015,6 +1016,21 @@ def save_price_frame(supabase, kind: str, asset_id: str, frame) -> bool:
         "prices": records,
         "prices_updated_at": now,
     }
+    if with_readings:
+        try:
+            import signals_v2
+            import stored_readings
+
+            readings = stored_readings.build(frame_from_records(records).tail(max(15, signals_v2.SCORING_BARS)), kind)
+            if readings:
+                try:
+                    supabase.table("asset_market").upsert({**payload, "readings": readings}, on_conflict="asset_key",
+                                                          returning=MINIMAL).execute()
+                    return True
+                except Exception as exc:      # the readings column not added yet (sql/2026-12-01_stored_readings.sql)
+                    print(f"Readings not saved for {identity}: {str(exc)[:160]}")
+        except Exception as exc:
+            print(f"Readings not worked out for {identity}: {str(exc)[:160]}")
     try:
         supabase.table("asset_market").upsert(payload, on_conflict="asset_key", returning=MINIMAL).execute()
     except Exception as exc:
@@ -1305,7 +1321,7 @@ def load_shared_market(supabase, keys: list[str]) -> dict[str, dict]:
 
 def _load_rows(supabase, wanted: list[str]) -> dict[str, dict]:
     global _COLUMN_TIER, _COLUMN_TIER_SINCE
-    tiers = (_SHARED_COLUMNS_STATS, _SHARED_COLUMNS, _SHARED_COLUMNS_LEGACY)
+    tiers = (_SHARED_COLUMNS_STATS + ", readings", _SHARED_COLUMNS_STATS, _SHARED_COLUMNS, _SHARED_COLUMNS_LEGACY)
     # A fall-back to fewer columns is not for life: one odd error must not hide market caps and
     # earnings dates until the next restart. Try the full set again every few minutes.
     if _COLUMN_TIER and time.time() - _COLUMN_TIER_SINCE > _COLUMN_TIER_RETRY_SECONDS:
@@ -1324,7 +1340,7 @@ def _load_rows(supabase, wanted: list[str]) -> dict[str, dict]:
         except Exception as exc:
             last_error = exc
             text = str(exc).lower()
-            if "prices" in text or "market_" in text or "column" in text:
+            if "prices" in text or "market_" in text or "column" in text or "readings" in text:
                 continue
             _warn(exc)
             return {}

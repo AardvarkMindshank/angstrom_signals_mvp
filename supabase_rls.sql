@@ -316,6 +316,8 @@ alter table public.asset_market
 alter table public.asset_market
     add column if not exists earnings_checked_at timestamptz;
 
+alter table public.asset_market add column if not exists readings jsonb;   -- stored_readings.py (16 Nov 2026)
+
 alter table public.asset_market enable row level security;
 
 drop policy if exists "signed-in users read shared market data" on public.asset_market;
@@ -387,9 +389,12 @@ begin
         raise exception 'timestamps cannot be in the future';
     end if;
 
+    -- Readings (stored_readings.py) come from the background worker only: a signed-in session cannot set them.
     if tg_op = 'INSERT' then
+        new.readings := null;
         return new;
     end if;
+    new.readings := old.readings;
 
     new.asset_key := old.asset_key;
     new.kind := old.kind;
