@@ -478,7 +478,6 @@
   "Headline sentiment for this asset, -100 to +100": "此资产的标题情绪，-100 到 +100",
   "What changed": "变化内容",
   "Make my own copy of “{tpl_name}”": "制作“{tpl_name}”的我的副本",
-  "Add a funnel: make your own copy of a provided one, or a new one, in Lattice → Funnels": "添加漏斗：在 Lattice → Funnels 中为提供的漏斗制作您自己的副本，或新建一个",
   " Showing the {fv_show_limit} largest by market cap; {dyn_more} more hold this stage.": " 显示市值最大的 {fv_show_limit} 个；另有 {dyn_more} 个满足此阶段。",
   "That didn't work: {str_exc_160}": "未成功：{str_exc_160}",
   "pending": "待定",

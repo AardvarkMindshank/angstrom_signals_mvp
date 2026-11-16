@@ -478,7 +478,6 @@
   "Headline sentiment for this asset, -100 to +100": "Tâm lý tiêu đề cho tài sản này, từ -100 đến +100",
   "What changed": "Những gì đã thay đổi",
   "Make my own copy of “{tpl_name}”": "Tạo bản sao của tôi từ “{tpl_name}”",
-  "Add a funnel: make your own copy of a provided one, or a new one, in Lattice → Funnels": "Thêm phễu: tạo bản sao của riêng bạn từ phễu được cung cấp, hoặc tạo mới, trong Lattice → Funnels",
   " Showing the {fv_show_limit} largest by market cap; {dyn_more} more hold this stage.": " Đang hiển thị {fv_show_limit} tài sản lớn nhất theo vốn hóa; còn {dyn_more} tài sản khác thỏa giai đoạn này.",
   "That didn't work: {str_exc_160}": "Không thành công: {str_exc_160}",
   "pending": "đang chờ",

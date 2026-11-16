@@ -478,7 +478,6 @@
   "Headline sentiment for this asset, -100 to +100": "この資産の見出しセンチメント（-100〜+100）",
   "What changed": "変更点",
   "Make my own copy of “{tpl_name}”": "「{tpl_name}」を自分用にコピー",
-  "Add a funnel: make your own copy of a provided one, or a new one, in Lattice → Funnels": "ファネルを追加：Lattice → Funnelsで提供ファネルを自分用にコピーするか、新規作成します",
   " Showing the {fv_show_limit} largest by market cap; {dyn_more} more hold this stage.": " 時価総額上位{fv_show_limit}を表示中。ほかに{dyn_more}件がこのステージを満たしています。",
   "That didn't work: {str_exc_160}": "うまくいきませんでした：{str_exc_160}",
   "pending": "保留中",

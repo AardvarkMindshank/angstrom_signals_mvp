@@ -478,7 +478,6 @@
   "Headline sentiment for this asset, -100 to +100": "Schlagzeilen-Stimmung für diesen Wert, -100 bis +100",
   "What changed": "Was sich geändert hat",
   "Make my own copy of “{tpl_name}”": "Eigene Kopie von „{tpl_name}“ erstellen",
-  "Add a funnel: make your own copy of a provided one, or a new one, in Lattice → Funnels": "Funnel hinzufügen: erstelle deine eigene Kopie eines bereitgestellten oder einen neuen in Lattice → Funnels",
   " Showing the {fv_show_limit} largest by market cap; {dyn_more} more hold this stage.": " Angezeigt werden die {fv_show_limit} größten nach Marktkapitalisierung; {dyn_more} weitere erfüllen diese Stufe.",
   "That didn't work: {str_exc_160}": "Das hat nicht geklappt: {str_exc_160}",
   "pending": "ausstehend",

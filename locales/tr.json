@@ -478,7 +478,6 @@
   "Headline sentiment for this asset, -100 to +100": "Bu varlık için başlık duyarlılığı, -100 ile +100 arası",
   "What changed": "Neler değişti",
   "Make my own copy of “{tpl_name}”": "“{tpl_name}” için kendi kopyamı oluştur",
-  "Add a funnel: make your own copy of a provided one, or a new one, in Lattice → Funnels": "Huni ekle: Lattice → Funnels'ta sağlanan birinin kendi kopyanızı ya da yeni bir tane oluşturun",
   " Showing the {fv_show_limit} largest by market cap; {dyn_more} more hold this stage.": " Piyasa değerine göre en büyük {fv_show_limit} gösteriliyor; {dyn_more} tane daha bu aşamayı karşılıyor.",
   "That didn't work: {str_exc_160}": "Olmadı: {str_exc_160}",
   "pending": "bekliyor",

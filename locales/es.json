@@ -478,7 +478,6 @@
   "Headline sentiment for this asset, -100 to +100": "Sentimiento de los titulares para este activo, de -100 a +100",
   "What changed": "Qué ha cambiado",
   "Make my own copy of “{tpl_name}”": "Hacer mi propia copia de “{tpl_name}”",
-  "Add a funnel: make your own copy of a provided one, or a new one, in Lattice → Funnels": "Añade un embudo: haz tu propia copia de uno proporcionado, o uno nuevo, en Lattice → Funnels",
   " Showing the {fv_show_limit} largest by market cap; {dyn_more} more hold this stage.": " Se muestran los {fv_show_limit} mayores por capitalización; {dyn_more} más cumplen esta etapa.",
   "That didn't work: {str_exc_160}": "No ha funcionado: {str_exc_160}",
   "pending": "pendiente",

@@ -478,7 +478,6 @@
   "Headline sentiment for this asset, -100 to +100": "이 자산의 헤드라인 심리, -100~+100",
   "What changed": "변경 사항",
   "Make my own copy of “{tpl_name}”": "“{tpl_name}”의 내 사본 만들기",
-  "Add a funnel: make your own copy of a provided one, or a new one, in Lattice → Funnels": "퍼널 추가: Lattice → Funnels에서 제공 퍼널의 내 사본을 만들거나 새로 만드세요",
   " Showing the {fv_show_limit} largest by market cap; {dyn_more} more hold this stage.": " 시가총액 상위 {fv_show_limit}개를 표시합니다. {dyn_more}개가 더 이 단계를 충족합니다.",
   "That didn't work: {str_exc_160}": "잘 되지 않았습니다: {str_exc_160}",
   "pending": "대기",

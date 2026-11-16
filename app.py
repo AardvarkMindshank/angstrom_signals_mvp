@@ -12054,9 +12054,7 @@ def _funnel_controls(dyn, market: str = "crypto") -> None:
                         "p_stages": latest["stages"], "p_flicker": f.get("flicker", True),
                         "p_alerts": f.get("alerts") or {"in_app": True, "email": False}, "p_paused": False}
                 _funnel_call(market, f["id"], "funnel_save", args, "Updated.")
-        if st.button("", icon=":material/add:", key=f"funnel_add_{market}",
-                     help=t("Add a funnel: make your own copy of a provided one, or a new one, in Lattice → Funnels")):
-            _funnel_edit(f"new:{market}:" + ("short" if f["direction"] == "long" else "long"))
+        # New funnels are made in Lattice → Funnels (the table's own + was removed as clutter, 16 Nov 2026).
     flicker = (t("a {coin} leaves a stage after two No closes in a row", coin=t(words["coin"])) if f.get("flicker", True) else
                t("a {coin} leaves a stage on its first No close", coin=t(words["coin"])))
     when = (t("a few minutes after each hour") if market == "crypto" else

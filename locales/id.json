@@ -478,7 +478,6 @@
   "Headline sentiment for this asset, -100 to +100": "Sentimen judul berita untuk aset ini, -100 hingga +100",
   "What changed": "Apa yang berubah",
   "Make my own copy of “{tpl_name}”": "Buat salinan saya dari “{tpl_name}”",
-  "Add a funnel: make your own copy of a provided one, or a new one, in Lattice → Funnels": "Tambah corong: buat salinan Anda sendiri dari yang disediakan, atau yang baru, di Lattice → Funnels",
   " Showing the {fv_show_limit} largest by market cap; {dyn_more} more hold this stage.": " Menampilkan {fv_show_limit} terbesar menurut kapitalisasi pasar; {dyn_more} lainnya memenuhi tahap ini.",
   "That didn't work: {str_exc_160}": "Itu tidak berhasil: {str_exc_160}",
   "pending": "tertunda",
