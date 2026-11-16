@@ -123,7 +123,7 @@ SET_LIBRARY_JS = r"""
     });
     if (x.decision) b.appendChild(el("div", "part dec", x.decision));
     if (s.open) {
-      const go = button(s.open === "copy" ? T("Make my own copy") : T("Open in Signal Sets"),
+      const go = button(T("Open in Signal Sets"),       // a provided Set opens there as your own copy
         s.open === "copy" ? T("Opens a copy in Signal Sets that you can change and save as your own")
                           : T("Opens this Set in Signal Sets"), () => onOpen(s));
       b.appendChild(go);
@@ -433,7 +433,7 @@ export default function(component) {
       if (window.__prismInside[s.id]) ib.classList.add("on");
       ctl.appendChild(ib);
     }
-    ctl.appendChild(iconButton("copy", T("Duplicate this scan: same Set, to run on other assets or with another schedule or alerts (the copy runs only when you press Play until you schedule it). To change what the Set checks, use 🔍 Look inside → Make my own copy"), () => act("duplicate", {scan: s.id})));
+    ctl.appendChild(iconButton("copy", T("Duplicate this scan: same Set, to run on other assets or with another schedule or alerts (the copy runs only when you press Play until you schedule it). To change what the Set checks, use 🔍 Look inside → Open in Signal Sets"), () => act("duplicate", {scan: s.id})));
     const del = iconButton("del", T("Delete this scan"), () => {
       if (del.classList.contains("arm")) { act("delete", {scan: s.id}); return; }
       del.classList.add("arm"); del.textContent = T("Delete?"); del.title = T("Press again to delete");

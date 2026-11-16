@@ -89,7 +89,7 @@ How Lattice works (the screens):
   🧭 Consistent difference. Measures: rose a typical move before falling one (and the reverse), average move after
   10 candles in typical moves, finished higher.
 - Prism Scan tab: left panel lists Saved Sets (provided ones under "Provided by Angstrom Signals", each with
-  "more…" and "🔍 Look inside" → "Make my own copy") and the Watchlist (groups Whole Watchlist, All crypto, All
+  "more…" and "🔍 Look inside" → "Open in Signal Sets", which opens a provided one as their own copy) and the Watchlist (groups Whole Watchlist, All crypto, All
   equities; single assets). Drop a Set or tap + to start a scan. A scan has Assets (adding something replaces Whole
   Watchlist; All crypto takes in single coins), Runs (Only when I press Play, each 4-hour/daily/weekly close, at
   set times), Alerts (Instant, Daily digest, App only, Off; Turns Yes, Turns No, Can't run). Buttons: ▶ run now,
@@ -136,7 +136,7 @@ def _provided() -> list[str]:
         conds = [c.get("label") or c["key"] for c in body.get("conditions") or []]
         out.append(f"- {name}: signals {members}" + (f"; labels {', '.join(labels)}" if labels else "")
                    + (f"; conditions: {'; '.join(conds)}" if conds else ""))
-    out.append("Provided Sets (Prism → Provided by Angstrom Signals; open with 🔍 Look inside → Make my own copy):")
+    out.append("Provided Sets (Prism → Provided by Angstrom Signals; open with 🔍 Look inside → Open in Signal Sets, as their own copy):")
     for key, doc in prism.demo_sets().items():
         inside = set_inside.parts(doc)
         card = perspectives.followed_card(doc, key)

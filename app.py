@@ -8115,7 +8115,7 @@ starter keep working, and built-in alerts that are on keep running.
   it doesn't prove, and its study mark: **🔬** not yet studied (it describes conditions only), or the study's
   verdict (⚖️ 〰️ 🧭).
 - **🔍 Look inside** on a provided Set (in Prism, on its chip or on a scan) shows the Groups and signals it is made
-  of, in plain words. **Make my own copy** opens it in Signal Sets as your own, to change and save; the provided
+  of, in plain words. **Open in Signal Sets** opens it there as your own copy, to change and save; the provided
   one stays as it is.
 - **📡 Sonar oscillators** (signals you can use in Groups and Sets): **WaveTrend** (the momentum
   wave, overbought and oversold, its turns), **Money flow** (money flowing in, green, or out, red), the
