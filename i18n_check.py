@@ -8,6 +8,8 @@ changed or went away, so its translation is no longer used).
     python i18n_check.py            a summary per language
     python i18n_check.py th         the missing texts for Thai, one per line
     python i18n_check.py th --json  the missing texts as a JSON object ready to fill in
+    python i18n_check.py --prune    remove translations no longer used, from every language file (16 Nov 2026:
+                                    keeps the files matching the app; a test fails while any are left over)
 """
 
 from __future__ import annotations
@@ -88,8 +90,35 @@ def report(code: str, texts: list[str] | None = None) -> dict:
             "done": len(texts) - len(missing), "total": len(texts)}
 
 
+def prune(texts: list[str] | None = None) -> dict[str, int]:
+    """Remove the translations whose English text the app no longer shows, from every language file.
+    {code: how many removed}. Entries starting with _ (notes in the file) are kept."""
+    texts = all_texts() if texts is None else texts
+    wanted = set(texts)
+    removed = {}
+    for lang in i18n.LANGUAGES:
+        if lang["code"] == i18n.BASE:
+            continue
+        path = os.path.join(i18n.LOCALES, f"{lang['code']}.json")
+        try:
+            with open(path, encoding="utf-8") as fh:
+                data = json.load(fh)
+        except (OSError, ValueError):
+            continue
+        keep = {k: v for k, v in data.items() if k.startswith("_") or k in wanted}
+        if len(keep) != len(data):
+            removed[lang["code"]] = len(data) - len(keep)
+            with open(path, "w", encoding="utf-8") as fh:
+                json.dump(keep, fh, ensure_ascii=False, indent=2)
+    return removed
+
+
 def main(argv: list[str]) -> int:
     texts = all_texts()
+    if "--prune" in argv:
+        removed = prune(texts)
+        print(", ".join(f"{code}: {n} removed" for code, n in removed.items()) or "Nothing left over.")
+        return 0
     if argv and argv[0] in i18n.BY_CODE:
         r = report(argv[0], texts)
         if "--json" in argv:

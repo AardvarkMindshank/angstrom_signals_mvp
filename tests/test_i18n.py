@@ -193,3 +193,12 @@ def test_every_choice_widget_has_a_key():
                     and not any(k.arg == "key" for k in node.keywords)):
                 missing.append(f"{os.path.basename(path)}:{node.lineno}")
     assert not missing, missing
+
+
+def test_no_translations_left_over():
+    """When on-screen wording changes, the old translations are removed too (python i18n_check.py --prune), so the
+    language files match the app."""
+    texts = i18n_check.all_texts()
+    left = {lang["code"]: i18n_check.report(lang["code"], texts)["unused"][:3]
+            for lang in i18n.LANGUAGES if lang["code"] != i18n.BASE}
+    assert not any(left.values()), left
