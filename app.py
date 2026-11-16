@@ -9478,7 +9478,7 @@ def admin_panel() -> None:
                     )
                 st.caption("Milliseconds spent on each step the last time the dashboard drew. Slowest first.")
                 for label, spent in sorted(perf.items(), key=lambda item: item[1], reverse=True):
-                    st.write(f"{label}: {spent}" if "worked out" in label else f"{label}: {spent} ms")
+                    st.write(f"{label}: {spent}" if ("worked out" in label or "one at a time" in label) else f"{label}: {spent} ms")
                 runs = st.session_state.get("_perf_runs") or []
                 if runs:
                     st.caption(
@@ -11319,6 +11319,22 @@ def _ticker_label(kind: str, asset_id: str, fallback: str) -> str:
     return " ".join(str(fallback or "").split())
 
 
+def _fetch_missing_rows(kind: str, asset_ids) -> None:
+    """Read in one go the shared rows of assets not loaded with the watchlist (a Dynamic funnel's assets), instead of
+    one database trip per asset inside _stored_bars (16 Nov 2026: those trips were about 2 seconds of each load)."""
+    shared = st.session_state.get("_shared_rows")
+    if not isinstance(shared, dict):
+        return
+    missing = [k for k in (asset_market_key(kind, a) for a in asset_ids) if k and k not in shared]
+    if not missing:
+        return
+    st.session_state.setdefault("_bar_run", {}).setdefault("_asked", set()).update(missing)   # no second trip each
+    try:
+        shared.update(load_shared_market(supabase, missing))
+    except Exception as exc:
+        print(f"shared rows for the table failed: {exc}")
+
+
 def _stored_bars(kind: str, asset_id: str, days: int):
     """Bars saved for every account. A missing row is written once, then only read."""
     token = (str(kind), str(asset_id), int(days))
@@ -11328,7 +11344,8 @@ def _stored_bars(kind: str, asset_id: str, days: int):
     key = asset_market_key(kind, asset_id)
     shared = st.session_state.get("_shared_rows") or {}
     frame = frame_from_row(shared.get(key))
-    if frame is None or frame.empty:
+    if (frame is None or frame.empty) and key not in run.get("_asked", ()):
+        run["_trips"] = run.get("_trips", 0) + 1
         frame = frame_from_row(load_shared_market(supabase, [key]).get(key))
     if frame is not None and len(frame) >= 15:
         result = (slice_history(frame, days), None)
@@ -12395,6 +12412,8 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             st.session_state["_dynamic"] = dynamic
             own_crypto, own_stock = dict(crypto_watchlist), dict(stock_watchlist)   # Quick Snapshot reads these
             table_crypto = dynamic["watchlist"] if dynamic is not None else crypto_watchlist
+            if trade_crypto:
+                _fetch_missing_rows("Crypto", list(table_crypto) + list(crypto_watchlist))
             crypto_results = process_watchlist(table_crypto, is_crypto=True) if trade_crypto else []
             dynamic_eq = None
             try:
@@ -12421,6 +12440,8 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                 stock_watchlist = {**stock_watchlist, **{k: v for k, v in dynamic_eq["watchlist"].items()
                                                          if k not in stock_watchlist}}
             table_stocks = dynamic_eq["watchlist"] if dynamic_eq is not None else stock_watchlist
+            if trade_equities:
+                _fetch_missing_rows("Stock", list(table_stocks) + list(stock_watchlist))
             stock_results = process_watchlist(table_stocks, is_crypto=False) if trade_equities else []
             if dynamic_eq is not None and dynamic_eq.get("funnel"):
                 for r in stock_results:
@@ -12432,6 +12453,8 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                             earnings=info.get("next_earnings"))
         st.session_state["_perf"]["  of which loading saved prices"] = round(spent["bars"] * 1000)
         st.session_state["_perf"]["  of which indicator maths"] = round(spent["maths"] * 1000)
+        st.session_state["_perf"]["  price rows read one at a time (should be 0)"] = (
+            st.session_state.get("_bar_run") or {}).get("_trips", 0)
         st.session_state["_perf"]["  scores worked out fresh (0 means all remembered)"] = _SCORES_WORKED_OUT - worked_before
         # Crypto ranks always show, so crypto is always asked about. Stock caps only when extra metrics are on.
         stock_for_caps = tuple(stock_watchlist) if (trade_equities and show_extra_metrics_flag) else ()
