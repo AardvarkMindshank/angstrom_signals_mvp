@@ -40,6 +40,17 @@ def loud_past(doc_, ctx, earlier, *a, **k):
 
 
 sets._past = loud_past
+from signal_groups import sequence as _seq
+real_judge = _seq.judge
+
+
+def loud_judge(spec, a, b, c):
+    out = real_judge(spec, a, b, c)
+    print("    judge: first at c0..c5 =", a, "| then at c0 =", b, "| cancel =", c, "->", out)
+    return out
+
+
+_seq.judge = loud_judge
 
 for kind, aid in (("crypto", "bitcoin"), ("equity", "SIE.DE"), ("equity", "AAPL")):
     print(f"\n===== {kind} {aid}")
