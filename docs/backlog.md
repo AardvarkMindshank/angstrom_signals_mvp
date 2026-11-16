@@ -140,4 +140,5 @@ Berlin). So a European share's day counts as finished at 16:00 local while it st
 and funnels can read a part-day candle as closed. Fix: a table of regular hours by exchange time zone (Frankfurt,
 London, Paris, Amsterdam, Tokyo, Hong Kong, …), New York's only for US zones. chart_data.py is in the replay
 certification hash, so the change needs replay_certify.py re-run and certification.json committed with it.
-Also: SIE.DE has no stored logo (the logo source covers US tickers).
+Also: SIE.DE has no stored logo. Share logos come from Finnhub's company profile (stock_logo_url), whose free tier
+mostly covers US listings; a fallback source for European shares would fill these.
