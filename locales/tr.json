@@ -762,7 +762,6 @@
   "Push isn't fully set up on the server yet (the private push key is missing).": "Anlık bildirimler sunucuda henüz tam kurulmadı (özel push anahtarı eksik).",
   "Enter the email on the account.": "Hesaptaki e-postayı girin.",
   "Stay signed in for up to 30 days, even after you close this tab or the app updates. Works for Continue with Google too. Do not tick this on a shared computer.": "Bu sekmeyi kapattıktan ya da uygulama güncellendikten sonra bile 30 güne kadar oturumunuz açık kalsın. Google ile devam et için de çalışır. Ortak bir bilgisayarda işaretlemeyin.",
-  "Account created. Confirm the email if required, then log in.": "Hesap oluşturuldu. Gerekirse e-postayı onaylayın, sonra giriş yapın.",
   "That invite was already saved. The email was sent again.": "Bu davet zaten kaydedilmişti. E-posta yeniden gönderildi.",
   "That community could not be deleted. Run the latest supabase_rls.sql, then try again.": "Bu topluluk silinemedi. En son supabase_rls.sql dosyasını çalıştırın, sonra yeniden deneyin.",
   "Could not leave that community. Run the latest supabase_rls.sql, then try again.": "Bu topluluktan ayrılınamadı. En son supabase_rls.sql dosyasını çalıştırın, sonra yeniden deneyin.",
@@ -2168,5 +2167,6 @@
   "{stages}: EMA 20 below EMA 50. Then the 1-hour pullback entry check.": "{stages}: EMA 20, EMA 50'nin altında. Ardından 1 saatlik geri çekilme giriş kontrolü.",
   "The symbols drawn over the candles (open-source formulas of a popular charting indicator). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "Mumların üzerine çizilen semboller (popüler bir grafik göstergesinin açık kaynak formülleri). Her birinin ne anlama geldiğini görmek için bir muma gelin; büyük noktalar 📡 Sonar şeridindedir.",
   "Expand all: open every scan": "Tümünü genişlet: her taramayı aç",
-  "Collapse all: close every scan": "Tümünü daralt: her taramayı kapat"
+  "Collapse all: close every scan": "Tümünü daralt: her taramayı kapat",
+  "✅ Account created for **{email}**. We've sent a confirmation email: open it (check junk mail too), then log in here on the 🔑 Log In tab.": "✅ **{email}** için hesap oluşturuldu. Bir onay e-postası gönderdik: açın (gereksiz klasörünü de kontrol edin), sonra buradan 🔑 Giriş sekmesinde oturum açın."
 }

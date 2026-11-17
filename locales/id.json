@@ -762,7 +762,6 @@
   "Push isn't fully set up on the server yet (the private push key is missing).": "Push belum sepenuhnya disiapkan di server (kunci push privat belum ada).",
   "Enter the email on the account.": "Masukkan email akun.",
   "Stay signed in for up to 30 days, even after you close this tab or the app updates. Works for Continue with Google too. Do not tick this on a shared computer.": "Tetap masuk hingga 30 hari, bahkan setelah Anda menutup tab ini atau aplikasi diperbarui. Berlaku juga untuk Lanjutkan dengan Google. Jangan centang ini di komputer bersama.",
-  "Account created. Confirm the email if required, then log in.": "Akun dibuat. Konfirmasi email jika diminta, lalu masuk.",
   "That invite was already saved. The email was sent again.": "Undangan itu sudah tersimpan. Email dikirim lagi.",
   "That community could not be deleted. Run the latest supabase_rls.sql, then try again.": "Komunitas itu tidak dapat dihapus. Jalankan supabase_rls.sql terbaru, lalu coba lagi.",
   "Could not leave that community. Run the latest supabase_rls.sql, then try again.": "Tidak dapat keluar dari komunitas itu. Jalankan supabase_rls.sql terbaru, lalu coba lagi.",
@@ -2168,5 +2167,6 @@
   "{stages}: EMA 20 below EMA 50. Then the 1-hour pullback entry check.": "{stages}: EMA 20 di bawah EMA 50. Lalu pemeriksaan entri koreksi 1 jam.",
   "The symbols drawn over the candles (open-source formulas of a popular charting indicator). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "Simbol yang digambar di atas candle (rumus sumber terbuka dari indikator grafik yang populer). Arahkan ke candle untuk melihat arti masing-masing; titik besar ada di strip 📡 Sonar.",
   "Expand all: open every scan": "Buka semua: buka setiap pemindaian",
-  "Collapse all: close every scan": "Tutup semua: tutup setiap pemindaian"
+  "Collapse all: close every scan": "Tutup semua: tutup setiap pemindaian",
+  "✅ Account created for **{email}**. We've sent a confirmation email: open it (check junk mail too), then log in here on the 🔑 Log In tab.": "✅ Akun dibuat untuk **{email}**. Kami telah mengirim email konfirmasi: buka email itu (periksa juga folder spam), lalu masuk di sini pada tab 🔑 Masuk."
 }

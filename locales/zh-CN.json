@@ -762,7 +762,6 @@
   "Push isn't fully set up on the server yet (the private push key is missing).": "服务器上的推送尚未完全设置（缺少私有推送密钥）。",
   "Enter the email on the account.": "请输入账户的电子邮件。",
   "Stay signed in for up to 30 days, even after you close this tab or the app updates. Works for Continue with Google too. Do not tick this on a shared computer.": "即使关闭此标签页或应用更新，也可保持登录最多 30 天。使用 Google 继续登录时同样有效。请勿在共用电脑上勾选。",
-  "Account created. Confirm the email if required, then log in.": "账户已创建。如有需要请确认邮箱，然后登录。",
   "That invite was already saved. The email was sent again.": "该邀请已保存过。邮件已重新发送。",
   "That community could not be deleted. Run the latest supabase_rls.sql, then try again.": "无法删除该社区。请运行最新的 supabase_rls.sql，然后重试。",
   "Could not leave that community. Run the latest supabase_rls.sql, then try again.": "无法退出该社区。请运行最新的 supabase_rls.sql，然后重试。",
@@ -2168,5 +2167,6 @@
   "{stages}: EMA 20 below EMA 50. Then the 1-hour pullback entry check.": "{stages}：EMA 20 低于 EMA 50。然后进行 1 小时反弹入场检查。",
   "The symbols drawn over the candles (open-source formulas of a popular charting indicator). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "绘制在K线上的符号（一款流行图表指标的开源公式）。指向一根K线即可查看每个符号的含义；大圆点在 📡 Sonar 条上。",
   "Expand all: open every scan": "全部展开：打开每个扫描",
-  "Collapse all: close every scan": "全部收起：关闭每个扫描"
+  "Collapse all: close every scan": "全部收起：关闭每个扫描",
+  "✅ Account created for **{email}**. We've sent a confirmation email: open it (check junk mail too), then log in here on the 🔑 Log In tab.": "✅ 已为 **{email}** 创建账户。我们已发送确认邮件：请打开它（也请查看垃圾邮件），然后在此处的 🔑 登录 标签页登录。"
 }

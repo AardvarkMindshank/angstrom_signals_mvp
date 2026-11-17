@@ -762,7 +762,6 @@
   "Push isn't fully set up on the server yet (the private push key is missing).": "Les notifications push ne sont pas encore entièrement configurées sur le serveur (la clé push privée manque).",
   "Enter the email on the account.": "Saisissez l'e-mail du compte.",
   "Stay signed in for up to 30 days, even after you close this tab or the app updates. Works for Continue with Google too. Do not tick this on a shared computer.": "Restez connecté jusqu'à 30 jours, même après avoir fermé cet onglet ou après une mise à jour de l'appli. Fonctionne aussi avec Continuer avec Google. Ne cochez pas ceci sur un ordinateur partagé.",
-  "Account created. Confirm the email if required, then log in.": "Compte créé. Confirmez l'e-mail si demandé, puis connectez-vous.",
   "That invite was already saved. The email was sent again.": "Cette invitation était déjà enregistrée. L'e-mail a été renvoyé.",
   "That community could not be deleted. Run the latest supabase_rls.sql, then try again.": "Cette communauté n'a pas pu être supprimée. Exécutez le dernier supabase_rls.sql, puis réessayez.",
   "Could not leave that community. Run the latest supabase_rls.sql, then try again.": "Impossible de quitter cette communauté. Exécutez le dernier supabase_rls.sql, puis réessayez.",
@@ -2168,5 +2167,6 @@
   "{stages}: EMA 20 below EMA 50. Then the 1-hour pullback entry check.": "{stages} : EMA 20 sous l'EMA 50. Puis la vérification d'entrée sur repli en 1 heure.",
   "The symbols drawn over the candles (open-source formulas of a popular charting indicator). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "Les symboles dessinés sur les bougies (formules open source d'un indicateur graphique populaire). Pointez une bougie pour voir ce que chacun signifie ; les gros points sont sur la bande 📡 Sonar.",
   "Expand all: open every scan": "Tout déplier : ouvrir chaque scan",
-  "Collapse all: close every scan": "Tout replier : fermer chaque scan"
+  "Collapse all: close every scan": "Tout replier : fermer chaque scan",
+  "✅ Account created for **{email}**. We've sent a confirmation email: open it (check junk mail too), then log in here on the 🔑 Log In tab.": "✅ Compte créé pour **{email}**. Nous avons envoyé un e-mail de confirmation : ouvrez-le (vérifiez aussi les courriers indésirables), puis connectez-vous ici dans l'onglet 🔑 Connexion."
 }

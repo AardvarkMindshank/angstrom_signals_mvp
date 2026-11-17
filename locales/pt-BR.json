@@ -762,7 +762,6 @@
   "Push isn't fully set up on the server yet (the private push key is missing).": "As notificações push ainda não estão totalmente configuradas no servidor (falta a chave privada de push).",
   "Enter the email on the account.": "Digite o e-mail da conta.",
   "Stay signed in for up to 30 days, even after you close this tab or the app updates. Works for Continue with Google too. Do not tick this on a shared computer.": "Fique conectado por até 30 dias, mesmo depois de fechar esta aba ou o app ser atualizado. Funciona também com Continuar com o Google. Não marque isto num computador compartilhado.",
-  "Account created. Confirm the email if required, then log in.": "Conta criada. Confirme o e-mail se for pedido e depois entre.",
   "That invite was already saved. The email was sent again.": "Esse convite já estava salvo. O e-mail foi enviado de novo.",
   "That community could not be deleted. Run the latest supabase_rls.sql, then try again.": "Não foi possível excluir essa comunidade. Execute o supabase_rls.sql mais recente e tente de novo.",
   "Could not leave that community. Run the latest supabase_rls.sql, then try again.": "Não foi possível sair dessa comunidade. Execute o supabase_rls.sql mais recente e tente de novo.",
@@ -2168,5 +2167,6 @@
   "{stages}: EMA 20 below EMA 50. Then the 1-hour pullback entry check.": "{stages}: EMA 20 abaixo da EMA 50. Depois, a verificação de entrada por recuo em 1 hora.",
   "The symbols drawn over the candles (open-source formulas of a popular charting indicator). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "Os símbolos desenhados sobre os candles (fórmulas de código aberto de um indicador gráfico popular). Aponte para um candle para ver o que cada um significa; os pontos grandes ficam na faixa 📡 Sonar.",
   "Expand all: open every scan": "Expandir tudo: abrir cada varredura",
-  "Collapse all: close every scan": "Recolher tudo: fechar cada varredura"
+  "Collapse all: close every scan": "Recolher tudo: fechar cada varredura",
+  "✅ Account created for **{email}**. We've sent a confirmation email: open it (check junk mail too), then log in here on the 🔑 Log In tab.": "✅ Conta criada para **{email}**. Enviamos um e-mail de confirmação: abra-o (veja também o lixo eletrônico) e depois entre aqui na aba 🔑 Entrar."
 }

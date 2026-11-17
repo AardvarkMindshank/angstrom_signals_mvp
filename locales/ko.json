@@ -762,7 +762,6 @@
   "Push isn't fully set up on the server yet (the private push key is missing).": "서버에 푸시가 아직 완전히 설정되지 않았습니다(비공개 푸시 키 없음).",
   "Enter the email on the account.": "계정의 이메일을 입력하세요.",
   "Stay signed in for up to 30 days, even after you close this tab or the app updates. Works for Continue with Google too. Do not tick this on a shared computer.": "이 탭을 닫거나 앱이 업데이트되어도 최대 30일 동안 로그인 상태를 유지합니다. Google로 계속에도 적용됩니다. 공용 컴퓨터에서는 체크하지 마세요.",
-  "Account created. Confirm the email if required, then log in.": "계정을 만들었습니다. 필요하면 이메일을 확인한 뒤 로그인하세요.",
   "That invite was already saved. The email was sent again.": "그 초대는 이미 저장되어 있었습니다. 이메일을 다시 보냈습니다.",
   "That community could not be deleted. Run the latest supabase_rls.sql, then try again.": "그 커뮤니티를 삭제하지 못했습니다. 최신 supabase_rls.sql을 실행한 뒤 다시 시도하세요.",
   "Could not leave that community. Run the latest supabase_rls.sql, then try again.": "그 커뮤니티에서 나가지 못했습니다. 최신 supabase_rls.sql을 실행한 뒤 다시 시도하세요.",
@@ -2168,5 +2167,6 @@
   "{stages}: EMA 20 below EMA 50. Then the 1-hour pullback entry check.": "{stages}: EMA 20이 EMA 50 아래. 그다음 1시간 되돌림 진입 확인.",
   "The symbols drawn over the candles (open-source formulas of a popular charting indicator). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "캔들 위에 그려지는 기호(인기 차트 지표의 오픈소스 공식). 캔들을 가리키면 각 기호의 뜻이 보이며, 큰 점은 📡 Sonar 띠에 있습니다.",
   "Expand all: open every scan": "모두 펼치기: 모든 스캔 열기",
-  "Collapse all: close every scan": "모두 접기: 모든 스캔 닫기"
+  "Collapse all: close every scan": "모두 접기: 모든 스캔 닫기",
+  "✅ Account created for **{email}**. We've sent a confirmation email: open it (check junk mail too), then log in here on the 🔑 Log In tab.": "✅ **{email}** 계정을 만들었습니다. 확인 이메일을 보냈습니다. 이메일을 열고(스팸함도 확인하세요) 여기 🔑 로그인 탭에서 로그인하세요."
 }

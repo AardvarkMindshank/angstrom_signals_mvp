@@ -69,7 +69,6 @@
   "Create my account": "สร้างบัญชีของฉัน",
   "Enter the email on the account.": "กรอกอีเมลของบัญชี",
   "Stay signed in for up to 30 days, even after you close this tab or the app updates. Works for Continue with Google too. Do not tick this on a shared computer.": "อยู่ในระบบได้นานสูงสุด 30 วัน แม้จะปิดแท็บนี้หรือแอปมีการอัปเดต ใช้ได้กับการเข้าสู่ระบบด้วย Google ด้วย อย่าเลือกตัวเลือกนี้บนคอมพิวเตอร์ที่ใช้ร่วมกับผู้อื่น",
-  "Account created. Confirm the email if required, then log in.": "สร้างบัญชีแล้ว ยืนยันอีเมลหากจำเป็น แล้วเข้าสู่ระบบ",
   "Login did not return a session. Confirm your email, then try again.": "เข้าสู่ระบบไม่สำเร็จ โปรดยืนยันอีเมลของคุณ แล้วลองอีกครั้ง",
   "Choose a longer password.": "โปรดตั้งรหัสผ่านที่ยาวขึ้น",
   "That is already the password. Log in with it.": "นี่คือรหัสผ่านปัจจุบันอยู่แล้ว เข้าสู่ระบบด้วยรหัสผ่านนี้ได้เลย",
@@ -2168,5 +2167,6 @@
   "{stages}: EMA 20 below EMA 50. Then the 1-hour pullback entry check.": "{stages}: EMA 20 อยู่ใต้ EMA 50 จากนั้นตรวจจุดเข้าแบบย่อตัว 1 ชั่วโมง",
   "The symbols drawn over the candles (open-source formulas of a popular charting indicator). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "สัญลักษณ์ที่วาดบนแท่งเทียน (สูตรโอเพนซอร์สของตัวชี้วัดกราฟยอดนิยม) ชี้ที่แท่งเพื่อดูความหมายของแต่ละตัว จุดใหญ่อยู่บนแถบ 📡 Sonar",
   "Expand all: open every scan": "ขยายทั้งหมด: เปิดทุกการสแกน",
-  "Collapse all: close every scan": "ยุบทั้งหมด: ปิดทุกการสแกน"
+  "Collapse all: close every scan": "ยุบทั้งหมด: ปิดทุกการสแกน",
+  "✅ Account created for **{email}**. We've sent a confirmation email: open it (check junk mail too), then log in here on the 🔑 Log In tab.": "✅ สร้างบัญชีสำหรับ **{email}** แล้ว เราได้ส่งอีเมลยืนยันไปแล้ว เปิดอีเมลนั้น (ตรวจในโฟลเดอร์จดหมายขยะด้วย) แล้วเข้าสู่ระบบที่แท็บ 🔑 เข้าสู่ระบบ"
 }

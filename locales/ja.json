@@ -762,7 +762,6 @@
   "Push isn't fully set up on the server yet (the private push key is missing).": "サーバーでプッシュ通知の設定がまだ完了していません（プライベートプッシュキーがありません）。",
   "Enter the email on the account.": "アカウントのメールアドレスを入力してください。",
   "Stay signed in for up to 30 days, even after you close this tab or the app updates. Works for Continue with Google too. Do not tick this on a shared computer.": "このタブを閉じたりアプリが更新されたりしても、最大30日間ログイン状態を保持します。Googleで続行にも有効です。共有のパソコンではチェックしないでください。",
-  "Account created. Confirm the email if required, then log in.": "アカウントを作成しました。必要に応じてメールを確認してから、ログインしてください。",
   "That invite was already saved. The email was sent again.": "その招待はすでに保存済みでした。メールを再送しました。",
   "That community could not be deleted. Run the latest supabase_rls.sql, then try again.": "そのコミュニティを削除できませんでした。最新のsupabase_rls.sqlを実行してから、もう一度お試しください。",
   "Could not leave that community. Run the latest supabase_rls.sql, then try again.": "そのコミュニティから退出できませんでした。最新のsupabase_rls.sqlを実行してから、もう一度お試しください。",
@@ -2168,5 +2167,6 @@
   "{stages}: EMA 20 below EMA 50. Then the 1-hour pullback entry check.": "{stages}：EMA 20がEMA 50の下。その後、1時間足の戻りエントリーチェック。",
   "The symbols drawn over the candles (open-source formulas of a popular charting indicator). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "ローソク足の上に描かれる記号（人気のチャートインジケーターのオープンソースの式）。ローソク足を指すと各記号の意味が表示されます。大きな点は📡 Sonarの帯にあります。",
   "Expand all: open every scan": "すべて展開：すべてのスキャンを開く",
-  "Collapse all: close every scan": "すべて折りたたむ：すべてのスキャンを閉じる"
+  "Collapse all: close every scan": "すべて折りたたむ：すべてのスキャンを閉じる",
+  "✅ Account created for **{email}**. We've sent a confirmation email: open it (check junk mail too), then log in here on the 🔑 Log In tab.": "✅ **{email}** のアカウントを作成しました。確認メールを送信しました。メールを開いて（迷惑メールも確認してください）、ここの 🔑 ログイン タブからログインしてください。"
 }

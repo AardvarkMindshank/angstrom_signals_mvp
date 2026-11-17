@@ -762,7 +762,6 @@
   "Push isn't fully set up on the server yet (the private push key is missing).": "Las notificaciones push aún no están del todo configuradas en el servidor (falta la clave privada de push).",
   "Enter the email on the account.": "Introduce el correo de la cuenta.",
   "Stay signed in for up to 30 days, even after you close this tab or the app updates. Works for Continue with Google too. Do not tick this on a shared computer.": "Mantén la sesión iniciada hasta 30 días, incluso después de cerrar esta pestaña o de que la app se actualice. También funciona con Continuar con Google. No lo marques en un ordenador compartido.",
-  "Account created. Confirm the email if required, then log in.": "Cuenta creada. Confirma el correo si se pide y luego inicia sesión.",
   "That invite was already saved. The email was sent again.": "Esa invitación ya estaba guardada. Se volvió a enviar el correo.",
   "That community could not be deleted. Run the latest supabase_rls.sql, then try again.": "No se pudo eliminar esa comunidad. Ejecuta el supabase_rls.sql más reciente y vuelve a intentarlo.",
   "Could not leave that community. Run the latest supabase_rls.sql, then try again.": "No se pudo salir de esa comunidad. Ejecuta el supabase_rls.sql más reciente y vuelve a intentarlo.",
@@ -2168,5 +2167,6 @@
   "{stages}: EMA 20 below EMA 50. Then the 1-hour pullback entry check.": "{stages}: EMA 20 por debajo de EMA 50. Después, la comprobación de entrada por retroceso en 1 hora.",
   "The symbols drawn over the candles (open-source formulas of a popular charting indicator). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "Los símbolos dibujados sobre las velas (fórmulas de código abierto de un indicador de gráficos popular). Señala una vela para ver qué significa cada uno; los puntos grandes están en la banda 📡 Sonar.",
   "Expand all: open every scan": "Expandir todo: abrir cada escaneo",
-  "Collapse all: close every scan": "Contraer todo: cerrar cada escaneo"
+  "Collapse all: close every scan": "Contraer todo: cerrar cada escaneo",
+  "✅ Account created for **{email}**. We've sent a confirmation email: open it (check junk mail too), then log in here on the 🔑 Log In tab.": "✅ Cuenta creada para **{email}**. Te hemos enviado un correo de confirmación: ábrelo (revisa también el correo no deseado) y luego inicia sesión aquí en la pestaña 🔑 Iniciar sesión."
 }

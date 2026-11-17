@@ -762,7 +762,6 @@
   "Push isn't fully set up on the server yet (the private push key is missing).": "Push ist auf dem Server noch nicht vollständig eingerichtet (der private Push-Schlüssel fehlt).",
   "Enter the email on the account.": "Gib die E-Mail des Kontos ein.",
   "Stay signed in for up to 30 days, even after you close this tab or the app updates. Works for Continue with Google too. Do not tick this on a shared computer.": "Bis zu 30 Tage angemeldet bleiben, auch nachdem du diesen Tab schließt oder die App aktualisiert wird. Funktioniert auch mit Weiter mit Google. Nicht auf einem gemeinsam genutzten Computer ankreuzen.",
-  "Account created. Confirm the email if required, then log in.": "Konto erstellt. Bestätige die E-Mail, falls nötig, und melde dich dann an.",
   "That invite was already saved. The email was sent again.": "Diese Einladung war bereits gespeichert. Die E-Mail wurde erneut gesendet.",
   "That community could not be deleted. Run the latest supabase_rls.sql, then try again.": "Diese Community konnte nicht gelöscht werden. Führe die neueste supabase_rls.sql aus und versuche es erneut.",
   "Could not leave that community. Run the latest supabase_rls.sql, then try again.": "Diese Community konnte nicht verlassen werden. Führe die neueste supabase_rls.sql aus und versuche es erneut.",
@@ -2168,5 +2167,6 @@
   "{stages}: EMA 20 below EMA 50. Then the 1-hour pullback entry check.": "{stages}: EMA 20 unter EMA 50. Dann die 1-Stunden-Rücksetzer-Einstiegsprüfung.",
   "The symbols drawn over the candles (open-source formulas of a popular charting indicator). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "Die Symbole über den Kerzen (Open-Source-Formeln eines beliebten Chart-Indikators). Zeige auf eine Kerze, um zu sehen, was jedes bedeutet; die großen Punkte sind auf dem 📡 Sonar-Streifen.",
   "Expand all: open every scan": "Alle ausklappen: jeden Scan öffnen",
-  "Collapse all: close every scan": "Alle einklappen: jeden Scan schließen"
+  "Collapse all: close every scan": "Alle einklappen: jeden Scan schließen",
+  "✅ Account created for **{email}**. We've sent a confirmation email: open it (check junk mail too), then log in here on the 🔑 Log In tab.": "✅ Konto erstellt für **{email}**. Wir haben eine Bestätigungs-E-Mail gesendet: öffne sie (sieh auch im Spam nach) und melde dich dann hier im Tab 🔑 Anmelden an."
 }

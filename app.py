@@ -5956,6 +5956,12 @@ if st.session_state.user is None:
                             st.rerun()
         else:
             signup_open = _signup_open()
+            # A new account: say so above the tabs, whichever tab shows after the page refreshes (18 Nov 2026).
+            if st.session_state.get("signup_done"):
+                st.success(t("✅ Account created for **{email}**. We've sent a confirmation email: open it (check junk "
+                             "mail too), then log in here on the 🔑 Log In tab.", email=st.session_state["signup_done"]))
+            if "_prefill_login" in st.session_state:
+                st.session_state["login_email"] = st.session_state.pop("_prefill_login")
             auth_tab1, auth_tab2 = st.tabs(["🔑 " + t("Log In"), "📝 " + t("Sign Up") if signup_open else "✅ " + t("Beta Access Accepted?")])
 
         if not st.session_state.get("recovery_access"):
@@ -6083,7 +6089,9 @@ if st.session_state.user is None:
                                 "email": signup_email,
                                 "password": signup_password,
                             })
-                            st.success(t("Account created. Confirm the email if required, then log in."))
+                            st.session_state["signup_done"] = " ".join(str(signup_email or "").split())
+                            st.session_state["_prefill_login"] = st.session_state["signup_done"]
+                            st.rerun()
                         except Exception as exc:
                             if "banned" in str(exc).lower():
                                 st.error(t(_BARRED_NOTICE))

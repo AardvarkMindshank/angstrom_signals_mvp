@@ -762,7 +762,6 @@
   "Push isn't fully set up on the server yet (the private push key is missing).": "Thông báo đẩy chưa được thiết lập đầy đủ trên máy chủ (thiếu khóa push riêng).",
   "Enter the email on the account.": "Nhập email của tài khoản.",
   "Stay signed in for up to 30 days, even after you close this tab or the app updates. Works for Continue with Google too. Do not tick this on a shared computer.": "Duy trì đăng nhập tối đa 30 ngày, kể cả sau khi bạn đóng thẻ này hoặc ứng dụng cập nhật. Cũng áp dụng cho Tiếp tục với Google. Không đánh dấu trên máy tính dùng chung.",
-  "Account created. Confirm the email if required, then log in.": "Đã tạo tài khoản. Xác nhận email nếu được yêu cầu, rồi đăng nhập.",
   "That invite was already saved. The email was sent again.": "Lời mời đó đã được lưu trước đó. Email đã được gửi lại.",
   "That community could not be deleted. Run the latest supabase_rls.sql, then try again.": "Không xóa được cộng đồng đó. Hãy chạy supabase_rls.sql mới nhất, rồi thử lại.",
   "Could not leave that community. Run the latest supabase_rls.sql, then try again.": "Không rời được cộng đồng đó. Hãy chạy supabase_rls.sql mới nhất, rồi thử lại.",
@@ -2168,5 +2167,6 @@
   "{stages}: EMA 20 below EMA 50. Then the 1-hour pullback entry check.": "{stages}: EMA 20 dưới EMA 50. Sau đó kiểm tra điểm vào điều chỉnh khung 1 giờ.",
   "The symbols drawn over the candles (open-source formulas of a popular charting indicator). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "Các ký hiệu vẽ trên nến (công thức mã nguồn mở của một chỉ báo biểu đồ phổ biến). Trỏ vào một nến để xem ý nghĩa của từng ký hiệu; các chấm lớn nằm trên dải 📡 Sonar.",
   "Expand all: open every scan": "Mở rộng tất cả: mở mọi lần quét",
-  "Collapse all: close every scan": "Thu gọn tất cả: đóng mọi lần quét"
+  "Collapse all: close every scan": "Thu gọn tất cả: đóng mọi lần quét",
+  "✅ Account created for **{email}**. We've sent a confirmation email: open it (check junk mail too), then log in here on the 🔑 Log In tab.": "✅ Đã tạo tài khoản cho **{email}**. Chúng tôi đã gửi email xác nhận: hãy mở email đó (kiểm tra cả thư rác), rồi đăng nhập tại tab 🔑 Đăng nhập."
 }
