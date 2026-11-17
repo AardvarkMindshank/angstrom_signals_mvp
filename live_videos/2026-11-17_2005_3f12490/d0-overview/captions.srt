@@ -1,0 +1,127 @@
+1
+00:00:00,000 --> 00:00:03,948
+Angstrom Signals helps you navigate the crypto and stock markets.
+
+2
+00:00:03,998 --> 00:00:08,095
+Clear readings, AI guidance and alerts, with a community alongside.
+
+3
+00:00:08,145 --> 00:00:10,344
+Here's a quick tour of the dashboard.
+
+4
+00:00:10,792 --> 00:00:12,863
+On the left is the sidebar.
+
+5
+00:00:12,913 --> 00:00:17,266
+Your account, your communities, notifications, your watchlists, and settings.
+
+6
+00:00:17,703 --> 00:00:22,270
+A new account gets a short getting-started checklist: five first steps.
+
+7
+00:00:22,320 --> 00:00:24,945
+The day-one videos walk through each of them.
+
+8
+00:00:25,387 --> 00:00:27,948
+Quick Snapshot is the market at a glance.
+
+9
+00:00:27,998 --> 00:00:30,901
+Anything unusual today shows up here first.
+
+10
+00:00:31,358 --> 00:00:35,818
+Tides is the big picture: rates, the dollar, fear, and where money is flowing.
+
+11
+00:00:35,868 --> 00:00:38,643
+It sets the conditions every asset trades in.
+
+12
+00:00:39,094 --> 00:00:42,906
+Market sentiment scores the news headlines, for crypto and for stocks,
+
+13
+00:00:42,926 --> 00:00:45,581
+from minus one hundred to plus one hundred.
+
+14
+00:00:46,022 --> 00:00:48,391
+The signal tables list your watchlist.
+
+15
+00:00:48,441 --> 00:00:51,984
+Each asset gets three readings: Trend, Stretch, and Flow.
+
+16
+00:00:52,034 --> 00:00:54,851
+They describe the market. They don't forecast it.
+
+17
+00:00:55,308 --> 00:00:58,104
+Click a name to bring that asset into focus.
+
+18
+00:00:58,154 --> 00:01:00,673
+The sections below the tables follow it.
+
+19
+00:01:01,130 --> 00:01:05,201
+The interactive chart shows its candles, with the readings drawn over time,
+
+20
+00:01:05,221 --> 00:01:06,721
+and your own drawings.
+
+21
+00:01:08,706 --> 00:01:11,543
+Why these readings explains each score in plain words:
+
+22
+00:01:11,563 --> 00:01:14,297
+what's pushing it, and what's holding it back.
+
+23
+00:01:15,001 --> 00:01:17,882
+Angstrom Lattice is your research workspace.
+
+24
+00:01:17,932 --> 00:01:21,838
+Signal Groups and Signal Sets turn signals into your own questions.
+
+25
+00:01:21,888 --> 00:01:26,719
+Prism Scan checks them across your assets, and Funnels narrow the whole market down,
+
+26
+00:01:26,739 --> 00:01:27,905
+stage by stage.
+
+27
+00:01:31,519 --> 00:01:34,742
+The AI Navigator slides out from the right edge.
+
+28
+00:01:34,792 --> 00:01:37,353
+Ask it anything about what's on your screen.
+
+29
+00:01:37,805 --> 00:01:43,033
+The arrow above it opens the community: social signals and chat about each asset.
+
+30
+00:01:43,470 --> 00:01:45,093
+That's the dashboard.
+
+31
+00:01:45,143 --> 00:01:46,456
+Next, the day-one guides:
+
+32
+00:01:46,476 --> 00:01:50,349
+add your assets, then build your first Group, Set, scan and funnel.
