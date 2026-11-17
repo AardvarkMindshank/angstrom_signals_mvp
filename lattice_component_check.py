@@ -15,6 +15,7 @@ from pathlib import Path
 
 import lattice_component as lc
 import lattice_editor as le
+import signal_families
 import prism
 
 
@@ -28,6 +29,7 @@ def harness_model() -> dict:
 
 def page(model: dict) -> str:
     data = {**le.state_for_screen(model), "catalogue": le.catalogue(), "role_hints": le.ROLE_HINT,
+            "families": signal_families.build(le.catalogue(), "plus", "grey"),
             "suggested_labels": le.SUGGESTED_LABELS}
     script = lc.JS.replace("export default function latticeGroup(component)", "window.renderLattice = function latticeGroup(component)")
     return f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Lattice editor check</title>
@@ -77,7 +79,8 @@ def harness_set() -> tuple[dict, dict]:
 def set_page(model: dict, choices: dict) -> str:
     import lattice_sets as ls
 
-    data = {**ls.state_for_screen(model, choices), "catalogue": le.catalogue()}
+    data = {**ls.state_for_screen(model, choices), "catalogue": le.catalogue(),
+            "families": signal_families.build(le.catalogue(), "plus", "grey")}
     script = lc.SET_JS.replace("export default function latticeSet(component)", "window.renderLattice = function latticeSet(component)")
     return page_shell(script, data, "Lattice Set editor check")
 

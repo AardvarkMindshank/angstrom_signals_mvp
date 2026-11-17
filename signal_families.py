@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from i18n import mark, t
 
+import perspectives
 import plans
 
 # (family key, title, question, [(signal name, what it measures, [variant ids, the first is the default])])
@@ -81,9 +82,12 @@ def build(catalogue: list[dict], user_plan: str, display: str) -> list[dict]:
                                  "tag_hover": t(plans.WHY.get(need, "")) if locked else ""})
             if not variants:
                 continue
+            seen = {perspectives.CATEGORY.get(have[v["id"]].get("category")) for v in variants} - {None}
+            icons = [{"key": k, "icon": i, "hover": t(h)} for k, i, h in perspectives.ICONS if k in seen]
             best = min((v["plan"] for v in variants), key=lambda p: plans.RANK[p])
             locked = not plans.includes(user_plan, best)
             signals.append({"name": t(name), "what": t(what), "variants": variants, "plan": best, "locked": locked,
+                            "icons": icons,
                             "tag": t(plans.LABEL[best]) if locked else "", "tag_colour": plans.COLOUR.get(best, ""),
                             "tag_hover": t(plans.WHY.get(best, "")) if locked else ""})
         if signals:

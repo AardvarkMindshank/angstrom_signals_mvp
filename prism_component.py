@@ -217,6 +217,15 @@ SET_LIBRARY_JS = r"""
       if (!card.locked) c.addEventListener("dragstart", (e) => e.dataTransfer.setData("text/plain", JSON.stringify({type: "set", key: member.key})));
       const nm = el("div", "nm");
       const top = el("div", card.locked ? "dim" : "", card.name);
+      const kinds = [];                     // what the card's Sets look at, as on every other Set
+      card.members.forEach((m) => ((bySet[m.key] || {}).icons || []).forEach((p) => {
+        if (!kinds.some((k) => k.key === p.key)) kinds.push(p);
+      }));
+      if (kinds.length) {
+        const pv = el("span", "pv");
+        kinds.forEach((p) => { const i = el("span", "", p.icon); i.title = p.hover; i.setAttribute("aria-label", p.hover); pv.appendChild(i); });
+        top.appendChild(pv);
+      }
       const ev = s.evidence;
       if (ev) { const x = el("span", "ev", ev.icon); x.title = ev.hover; x.setAttribute("aria-label", ev.hover); top.appendChild(x); }
       nm.appendChild(top);

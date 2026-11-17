@@ -85,3 +85,13 @@ def test_cards_follow_the_plan_and_the_display_setting():
     locked = [c for c in grey if c["locked"]]
     assert locked and all(c["tag"] in ("Plus", "Pro") for c in locked)
     assert all(c["tag"] == "" for c in grey if not c["locked"])               # no label on what you can use
+
+
+def test_signals_carry_the_perspective_icons():
+    import lattice_editor as le
+    import signal_families
+
+    fams = signal_families.build(le.catalogue(), "pro", "hide")
+    by = {g["name"]: [p["key"] for p in g["icons"]] for f in fams for g in f["signals"]}
+    assert by["Volume"] == ["volume"] and by["Moving averages"] == ["trend"]
+    assert "volume" in by["Sonar"] and all(by.values())

@@ -139,6 +139,10 @@ html.angstrom-night .lat select option{color:#f3f4f6;background:#1f2937}
 .lat .set input,.lat .set select{padding:2px 4px}
 .lat .card .nm .sub{font-weight:400;font-size:12px;opacity:.7;margin-top:1px}
 .lat .muted{opacity:.72;font-size:12px}
+.lat .pvf{display:flex;flex-wrap:wrap;gap:4px;margin:4px 0 6px}
+.lat .pvf button{min-width:36px;min-height:32px;padding:2px 6px;font-size:15px;border-radius:8px;
+  border:1px solid rgba(127,127,127,.35);background:transparent;cursor:pointer}
+.lat .pvf button.on{border-color:#0f766e;background:rgba(15,118,110,.12)}
 .lat .pv{display:inline-flex;gap:2px;margin-left:6px;font-size:13px;vertical-align:middle}
 .lat .pv span{cursor:help}
 .lat .tag{font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid rgba(127,127,127,.4);
@@ -186,11 +190,33 @@ FAMILY_JS = r"""
     });
     return s;
   }
-  function drawFamilies(list, families, catalogue, q, mem, onAdd, payload) {
+  function drawFamilies(outer, families, catalogue, q, mem, onAdd, payload) {
+    const list = el("div", "");            // its own box: the Set editor's list also holds the Groups
+    outer.appendChild(list);
     const byId = {}; catalogue.forEach((s) => { byId[s.id] = s; });
     mem.v = mem.v || {}; mem.tf = mem.tf || {}; mem.shut = mem.shut || {};
-    const fams = families.map((f) => ({...f, signals: f.signals.filter((g) => !q
-      || (f.title + " " + f.question + " " + g.name + " " + g.what + " " + g.variants.map((v) => v.name).join(" ")).toLowerCase().indexOf(q) >= 0)}))
+    // Filter by what a signal looks at, as the Set lists do: tap an icon, tap it again to show all.
+    const kinds = [];
+    families.forEach((f) => f.signals.forEach((g) => (g.icons || []).forEach((p) => {
+      if (!kinds.some((k) => k.key === p.key)) kinds.push(p);
+    })));
+    const ORDER = ["trend", "stretch", "volume", "structure", "volatility", "other", "sentiment", "positioning"];
+    kinds.sort((a, b) => ORDER.indexOf(a.key) - ORDER.indexOf(b.key));
+    const pvf = el("div", "pvf");
+    kinds.forEach((p) => {
+      const b = button(p.icon, T("{what} (tap to filter)", {what: p.hover}), () => {
+        mem.pv = mem.pv === p.key ? "" : p.key;
+        const fresh = el("div", ""); list.replaceWith(fresh); drawFamilies(fresh, families, catalogue, q, mem, onAdd, payload);
+      });
+      b.dataset.k = p.key; b.setAttribute("aria-label", p.hover);
+      if (mem.pv === p.key) b.classList.add("on");
+      pvf.appendChild(b);
+    });
+    if (kinds.length) list.appendChild(pvf);
+    const pick = mem.pv || "";
+    const fams = families.map((f) => ({...f, signals: f.signals.filter((g) => (!q
+      || (f.title + " " + f.question + " " + g.name + " " + g.what + " " + g.variants.map((v) => v.name).join(" ")).toLowerCase().indexOf(q) >= 0)
+      && (!pick || (g.icons || []).some((p) => p.key === pick)))}))
       .filter((f) => f.signals.length);
     const head = el("div", "provhead");
     head.appendChild(el("span", "", T("Signals · {f} families · {n} signals", {f: fams.length, n: fams.reduce((a, f) => a + f.signals.length, 0)})));
@@ -215,8 +241,8 @@ FAMILY_JS = r"""
       holder.replaceChildren();
       fams.forEach((f) => {
         const box = el("details", "idea fam");
-        box.open = !!q || !mem.shut[f.key];
-        box.addEventListener("toggle", () => { if (!q) mem.shut[f.key] = !box.open; });
+        box.open = !!q || !!pick || !mem.shut[f.key];
+        box.addEventListener("toggle", () => { if (!q && !pick) mem.shut[f.key] = !box.open; });
         const sum = el("summary", "");
         sum.appendChild(el("span", "n", String(f.signals.length)));
         sum.appendChild(el("span", "t", f.title));
@@ -235,6 +261,11 @@ FAMILY_JS = r"""
           if (!g.locked) c.addEventListener("dragstart", (e) => e.dataTransfer.setData("text/plain", payload(vid, tf)));
           const nm = el("div", "nm");
           const top = el("div", g.locked ? "dim" : "", g.name);
+          if ((g.icons || []).length) {
+            const pv = el("span", "pv");
+            g.icons.forEach((p) => { const i = el("span", "", p.icon); i.title = p.hover; i.setAttribute("aria-label", p.hover); pv.appendChild(i); });
+            top.appendChild(pv);
+          }
           if (s.badge) top.appendChild(el("span", "badge", " " + s.badge));
           nm.appendChild(top);
           const body = el("div", g.locked ? "dim" : "");
