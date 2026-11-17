@@ -1478,8 +1478,6 @@
   "Prism Scans": "Prism Scans",
   "{n} of {max} scheduled · paused and Play-only scans don't count": "{n} dari {max} terjadwal · pemindaian yang dijeda dan yang hanya Play tidak dihitung",
   "Expand all": "Bentangkan semua",
-  "Open every scan": "Buka semua pemindaian",
-  "Close every scan": "Tutup semua pemindaian",
   "Drop a Set here to start a new scan. It scans your whole Watchlist until you change its assets, and runs when you press Play until you give it a schedule.": "Letakkan Set di sini untuk memulai pemindaian baru. Pemindaian ini memindai seluruh daftar pantau Anda sampai Anda mengubah asetnya, dan berjalan saat Anda menekan Play sampai Anda memberinya jadwal.",
   "No scans yet.": "Belum ada pemindaian.",
   "Hide details": "Sembunyikan detail",
@@ -2168,5 +2166,7 @@
   "🛣️ **Strategies are coming later.** A strategy will turn a Set's Yes into a plan: when to enter, when to exit, and how much risk to take, including sequences such as \"A, then B within N days\". They will be designed with insights from beta testers' trading rules.": "🛣️ **Strategi akan hadir nanti.** Strategi akan mengubah Ya dari sebuah Set menjadi rencana: kapan masuk, kapan keluar, dan berapa risiko yang diambil, termasuk urutan seperti \"A, lalu B dalam N hari\". Strategi akan dirancang dengan wawasan dari aturan trading para penguji beta.",
   "{stages}: EMA 20 above EMA 50. Then the 1-hour pullback entry check.": "{stages}: EMA 20 di atas EMA 50. Lalu pemeriksaan entri koreksi 1 jam.",
   "{stages}: EMA 20 below EMA 50. Then the 1-hour pullback entry check.": "{stages}: EMA 20 di bawah EMA 50. Lalu pemeriksaan entri koreksi 1 jam.",
-  "The symbols drawn over the candles (open-source formulas of a popular charting indicator). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "Simbol yang digambar di atas candle (rumus sumber terbuka dari indikator grafik yang populer). Arahkan ke candle untuk melihat arti masing-masing; titik besar ada di strip 📡 Sonar."
+  "The symbols drawn over the candles (open-source formulas of a popular charting indicator). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "Simbol yang digambar di atas candle (rumus sumber terbuka dari indikator grafik yang populer). Arahkan ke candle untuk melihat arti masing-masing; titik besar ada di strip 📡 Sonar.",
+  "Expand all: open every scan": "Buka semua: buka setiap pemindaian",
+  "Collapse all: close every scan": "Tutup semua: tutup setiap pemindaian"
 }

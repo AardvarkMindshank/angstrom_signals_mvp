@@ -1478,8 +1478,6 @@
   "Prism Scans": "Prism Scans",
   "{n} of {max} scheduled · paused and Play-only scans don't count": "已计划 {n}/{max} · 已暂停和仅 Play 的扫描不计入",
   "Expand all": "全部展开",
-  "Open every scan": "打开所有扫描",
-  "Close every scan": "关闭所有扫描",
   "Drop a Set here to start a new scan. It scans your whole Watchlist until you change its assets, and runs when you press Play until you give it a schedule.": "将 Set 拖到这里开始新扫描。在您更改资产之前，它会扫描整个关注列表；在您设置计划之前，它会在您按下 Play 时运行。",
   "No scans yet.": "还没有扫描。",
   "Hide details": "隐藏详情",
@@ -2168,5 +2166,7 @@
   "🛣️ **Strategies are coming later.** A strategy will turn a Set's Yes into a plan: when to enter, when to exit, and how much risk to take, including sequences such as \"A, then B within N days\". They will be designed with insights from beta testers' trading rules.": "🛣️ **策略稍后推出。** 策略会把 Set 的“是”变成计划：何时入场、何时离场、承担多少风险，包括“先 A，然后 N 天内 B”这样的序列。它们将借鉴 Beta 测试者的交易规则来设计。",
   "{stages}: EMA 20 above EMA 50. Then the 1-hour pullback entry check.": "{stages}：EMA 20 高于 EMA 50。然后进行 1 小时回调入场检查。",
   "{stages}: EMA 20 below EMA 50. Then the 1-hour pullback entry check.": "{stages}：EMA 20 低于 EMA 50。然后进行 1 小时反弹入场检查。",
-  "The symbols drawn over the candles (open-source formulas of a popular charting indicator). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "绘制在K线上的符号（一款流行图表指标的开源公式）。指向一根K线即可查看每个符号的含义；大圆点在 📡 Sonar 条上。"
+  "The symbols drawn over the candles (open-source formulas of a popular charting indicator). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "绘制在K线上的符号（一款流行图表指标的开源公式）。指向一根K线即可查看每个符号的含义；大圆点在 📡 Sonar 条上。",
+  "Expand all: open every scan": "全部展开：打开每个扫描",
+  "Collapse all: close every scan": "全部收起：关闭每个扫描"
 }

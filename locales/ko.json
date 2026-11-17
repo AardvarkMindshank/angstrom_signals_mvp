@@ -1478,8 +1478,6 @@
   "Prism Scans": "Prism Scans",
   "{n} of {max} scheduled · paused and Play-only scans don't count": "{max}개 중 {n}개 예약됨 · 일시 중지 및 Play 전용 스캔은 제외",
   "Expand all": "모두 펼치기",
-  "Open every scan": "모든 스캔 열기",
-  "Close every scan": "모든 스캔 닫기",
   "Drop a Set here to start a new scan. It scans your whole Watchlist until you change its assets, and runs when you press Play until you give it a schedule.": "여기에 Set을 놓으면 새 스캔이 시작됩니다. 자산을 바꾸기 전까지 관심 목록 전체를 스캔하고, 일정을 정하기 전까지 Play를 누를 때 실행됩니다.",
   "No scans yet.": "아직 스캔이 없습니다.",
   "Hide details": "세부 정보 숨기기",
@@ -2168,5 +2166,7 @@
   "🛣️ **Strategies are coming later.** A strategy will turn a Set's Yes into a plan: when to enter, when to exit, and how much risk to take, including sequences such as \"A, then B within N days\". They will be designed with insights from beta testers' trading rules.": "🛣️ **전략은 나중에 제공됩니다.** 전략은 Set의 예를 계획으로 바꿉니다: 언제 진입하고, 언제 나오며, 얼마나 위험을 질지, \"A 다음 N일 안에 B\" 같은 순서도 포함합니다. 베타 테스터들의 매매 규칙에서 얻은 통찰로 설계합니다.",
   "{stages}: EMA 20 above EMA 50. Then the 1-hour pullback entry check.": "{stages}: EMA 20이 EMA 50 위. 그다음 1시간 눌림 진입 확인.",
   "{stages}: EMA 20 below EMA 50. Then the 1-hour pullback entry check.": "{stages}: EMA 20이 EMA 50 아래. 그다음 1시간 되돌림 진입 확인.",
-  "The symbols drawn over the candles (open-source formulas of a popular charting indicator). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "캔들 위에 그려지는 기호(인기 차트 지표의 오픈소스 공식). 캔들을 가리키면 각 기호의 뜻이 보이며, 큰 점은 📡 Sonar 띠에 있습니다."
+  "The symbols drawn over the candles (open-source formulas of a popular charting indicator). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "캔들 위에 그려지는 기호(인기 차트 지표의 오픈소스 공식). 캔들을 가리키면 각 기호의 뜻이 보이며, 큰 점은 📡 Sonar 띠에 있습니다.",
+  "Expand all: open every scan": "모두 펼치기: 모든 스캔 열기",
+  "Collapse all: close every scan": "모두 접기: 모든 스캔 닫기"
 }

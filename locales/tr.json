@@ -1478,8 +1478,6 @@
   "Prism Scans": "Prism Scans",
   "{n} of {max} scheduled · paused and Play-only scans don't count": "{max} içinden {n} zamanlanmış · duraklatılmış ve yalnızca Play taramaları sayılmaz",
   "Expand all": "Tümünü genişlet",
-  "Open every scan": "Tüm taramaları aç",
-  "Close every scan": "Tüm taramaları kapat",
   "Drop a Set here to start a new scan. It scans your whole Watchlist until you change its assets, and runs when you press Play until you give it a schedule.": "Yeni bir tarama başlatmak için buraya bir Set bırakın. Varlıklarını değiştirene kadar tüm izleme listenizi tarar ve ona bir zamanlama verene kadar Play'e bastığınızda çalışır.",
   "No scans yet.": "Henüz tarama yok.",
   "Hide details": "Ayrıntıları gizle",
@@ -2168,5 +2166,7 @@
   "🛣️ **Strategies are coming later.** A strategy will turn a Set's Yes into a plan: when to enter, when to exit, and how much risk to take, including sequences such as \"A, then B within N days\". They will be designed with insights from beta testers' trading rules.": "🛣️ **Stratejiler daha sonra gelecek.** Bir strateji, bir Set'in Evet'ini bir plana dönüştürecek: ne zaman girilir, ne zaman çıkılır ve ne kadar risk alınır, \"A, sonra N gün içinde B\" gibi sıralar dahil. Beta test kullanıcılarının işlem kurallarından edinilen içgörülerle tasarlanacaklar.",
   "{stages}: EMA 20 above EMA 50. Then the 1-hour pullback entry check.": "{stages}: EMA 20, EMA 50'nin üstünde. Ardından 1 saatlik geri çekilme giriş kontrolü.",
   "{stages}: EMA 20 below EMA 50. Then the 1-hour pullback entry check.": "{stages}: EMA 20, EMA 50'nin altında. Ardından 1 saatlik geri çekilme giriş kontrolü.",
-  "The symbols drawn over the candles (open-source formulas of a popular charting indicator). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "Mumların üzerine çizilen semboller (popüler bir grafik göstergesinin açık kaynak formülleri). Her birinin ne anlama geldiğini görmek için bir muma gelin; büyük noktalar 📡 Sonar şeridindedir."
+  "The symbols drawn over the candles (open-source formulas of a popular charting indicator). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "Mumların üzerine çizilen semboller (popüler bir grafik göstergesinin açık kaynak formülleri). Her birinin ne anlama geldiğini görmek için bir muma gelin; büyük noktalar 📡 Sonar şeridindedir.",
+  "Expand all: open every scan": "Tümünü genişlet: her taramayı aç",
+  "Collapse all: close every scan": "Tümünü daralt: her taramayı kapat"
 }

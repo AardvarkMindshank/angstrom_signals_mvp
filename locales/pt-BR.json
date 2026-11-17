@@ -1478,8 +1478,6 @@
   "Prism Scans": "Prism Scans",
   "{n} of {max} scheduled · paused and Play-only scans don't count": "{n} de {max} agendadas · as pausadas e as só de Play não contam",
   "Expand all": "Expandir tudo",
-  "Open every scan": "Abrir todas as varreduras",
-  "Close every scan": "Fechar todas as varreduras",
   "Drop a Set here to start a new scan. It scans your whole Watchlist until you change its assets, and runs when you press Play until you give it a schedule.": "Solte um Set aqui para iniciar uma nova varredura. Ela varre sua lista inteira até você mudar os ativos, e roda quando você pressiona Play até você definir uma agenda.",
   "No scans yet.": "Ainda não há varreduras.",
   "Hide details": "Ocultar detalhes",
@@ -2168,5 +2166,7 @@
   "🛣️ **Strategies are coming later.** A strategy will turn a Set's Yes into a plan: when to enter, when to exit, and how much risk to take, including sequences such as \"A, then B within N days\". They will be designed with insights from beta testers' trading rules.": "🛣️ **As estratégias virão depois.** Uma estratégia vai transformar o Sim de um Set num plano: quando entrar, quando sair e quanto risco assumir, incluindo sequências como \"A, depois B em até N dias\". Elas serão criadas com ideias das regras de trading dos testadores beta.",
   "{stages}: EMA 20 above EMA 50. Then the 1-hour pullback entry check.": "{stages}: EMA 20 acima da EMA 50. Depois, a verificação de entrada por recuo em 1 hora.",
   "{stages}: EMA 20 below EMA 50. Then the 1-hour pullback entry check.": "{stages}: EMA 20 abaixo da EMA 50. Depois, a verificação de entrada por recuo em 1 hora.",
-  "The symbols drawn over the candles (open-source formulas of a popular charting indicator). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "Os símbolos desenhados sobre os candles (fórmulas de código aberto de um indicador gráfico popular). Aponte para um candle para ver o que cada um significa; os pontos grandes ficam na faixa 📡 Sonar."
+  "The symbols drawn over the candles (open-source formulas of a popular charting indicator). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "Os símbolos desenhados sobre os candles (fórmulas de código aberto de um indicador gráfico popular). Aponte para um candle para ver o que cada um significa; os pontos grandes ficam na faixa 📡 Sonar.",
+  "Expand all: open every scan": "Expandir tudo: abrir cada varredura",
+  "Collapse all: close every scan": "Recolher tudo: fechar cada varredura"
 }

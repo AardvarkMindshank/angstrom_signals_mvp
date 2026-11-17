@@ -1478,8 +1478,6 @@
   "Prism Scans": "Prism Scans",
   "{n} of {max} scheduled · paused and Play-only scans don't count": "{n}/{max} theo lịch · lần quét tạm dừng và chỉ Play không tính",
   "Expand all": "Mở rộng tất cả",
-  "Open every scan": "Mở mọi lần quét",
-  "Close every scan": "Đóng mọi lần quét",
   "Drop a Set here to start a new scan. It scans your whole Watchlist until you change its assets, and runs when you press Play until you give it a schedule.": "Thả một Set vào đây để bắt đầu lần quét mới. Nó quét toàn bộ danh sách theo dõi cho đến khi bạn đổi tài sản, và chạy khi bạn nhấn Play cho đến khi bạn đặt lịch.",
   "No scans yet.": "Chưa có lần quét nào.",
   "Hide details": "Ẩn chi tiết",
@@ -2168,5 +2166,7 @@
   "🛣️ **Strategies are coming later.** A strategy will turn a Set's Yes into a plan: when to enter, when to exit, and how much risk to take, including sequences such as \"A, then B within N days\". They will be designed with insights from beta testers' trading rules.": "🛣️ **Chiến lược sẽ có sau.** Một chiến lược sẽ biến câu Có của một Set thành kế hoạch: khi nào vào lệnh, khi nào thoát và chấp nhận bao nhiêu rủi ro, kể cả các chuỗi như \"A, rồi B trong vòng N ngày\". Chúng sẽ được thiết kế dựa trên hiểu biết từ quy tắc giao dịch của những người thử nghiệm beta.",
   "{stages}: EMA 20 above EMA 50. Then the 1-hour pullback entry check.": "{stages}: EMA 20 trên EMA 50. Sau đó kiểm tra điểm vào điều chỉnh khung 1 giờ.",
   "{stages}: EMA 20 below EMA 50. Then the 1-hour pullback entry check.": "{stages}: EMA 20 dưới EMA 50. Sau đó kiểm tra điểm vào điều chỉnh khung 1 giờ.",
-  "The symbols drawn over the candles (open-source formulas of a popular charting indicator). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "Các ký hiệu vẽ trên nến (công thức mã nguồn mở của một chỉ báo biểu đồ phổ biến). Trỏ vào một nến để xem ý nghĩa của từng ký hiệu; các chấm lớn nằm trên dải 📡 Sonar."
+  "The symbols drawn over the candles (open-source formulas of a popular charting indicator). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "Các ký hiệu vẽ trên nến (công thức mã nguồn mở của một chỉ báo biểu đồ phổ biến). Trỏ vào một nến để xem ý nghĩa của từng ký hiệu; các chấm lớn nằm trên dải 📡 Sonar.",
+  "Expand all: open every scan": "Mở rộng tất cả: mở mọi lần quét",
+  "Collapse all: close every scan": "Thu gọn tất cả: đóng mọi lần quét"
 }

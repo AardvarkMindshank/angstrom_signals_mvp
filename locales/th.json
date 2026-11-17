@@ -1169,8 +1169,6 @@
   "Prism Scans": "Prism Scans",
   "{n} of {max} scheduled · paused and Play-only scans don't count": "ตั้งเวลาไว้ {n} จาก {max} · การสแกนที่หยุดชั่วคราวและที่รันเมื่อกด Play เท่านั้นไม่นับ",
   "Expand all": "ขยายทั้งหมด",
-  "Open every scan": "เปิดทุกการสแกน",
-  "Close every scan": "ปิดทุกการสแกน",
   "Drop a Set here to start a new scan. It scans your whole Watchlist until you change its assets, and runs when you press Play until you give it a schedule.": "วาง Set ที่นี่เพื่อเริ่มการสแกนใหม่ จะสแกนรายการเฝ้าดูทั้งหมดจนกว่าคุณจะเปลี่ยนสินทรัพย์ และรันเมื่อคุณกด Play จนกว่าจะตั้งกำหนดเวลา",
   "No scans yet.": "ยังไม่มีการสแกน",
   "Hide details": "ซ่อนรายละเอียด",
@@ -2168,5 +2166,7 @@
   "🛣️ **Strategies are coming later.** A strategy will turn a Set's Yes into a plan: when to enter, when to exit, and how much risk to take, including sequences such as \"A, then B within N days\". They will be designed with insights from beta testers' trading rules.": "🛣️ **Strategies จะมาในภายหลัง** กลยุทธ์จะเปลี่ยนคำตอบ “ใช่” ของ Set ให้เป็นแผน: เมื่อไรควรเข้า เมื่อไรควรออก และรับความเสี่ยงเท่าใด รวมถึงลำดับเช่น \"A แล้วตามด้วย B ภายใน N วัน\" จะออกแบบโดยอาศัยข้อคิดจากกฎการเทรดของผู้ทดสอบเบต้า",
   "{stages}: EMA 20 above EMA 50. Then the 1-hour pullback entry check.": "{stages}: EMA 20 อยู่เหนือ EMA 50 จากนั้นตรวจจุดเข้าแบบย่อตัว 1 ชั่วโมง",
   "{stages}: EMA 20 below EMA 50. Then the 1-hour pullback entry check.": "{stages}: EMA 20 อยู่ใต้ EMA 50 จากนั้นตรวจจุดเข้าแบบย่อตัว 1 ชั่วโมง",
-  "The symbols drawn over the candles (open-source formulas of a popular charting indicator). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "สัญลักษณ์ที่วาดบนแท่งเทียน (สูตรโอเพนซอร์สของตัวชี้วัดกราฟยอดนิยม) ชี้ที่แท่งเพื่อดูความหมายของแต่ละตัว จุดใหญ่อยู่บนแถบ 📡 Sonar"
+  "The symbols drawn over the candles (open-source formulas of a popular charting indicator). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "สัญลักษณ์ที่วาดบนแท่งเทียน (สูตรโอเพนซอร์สของตัวชี้วัดกราฟยอดนิยม) ชี้ที่แท่งเพื่อดูความหมายของแต่ละตัว จุดใหญ่อยู่บนแถบ 📡 Sonar",
+  "Expand all: open every scan": "ขยายทั้งหมด: เปิดทุกการสแกน",
+  "Collapse all: close every scan": "ยุบทั้งหมด: ปิดทุกการสแกน"
 }

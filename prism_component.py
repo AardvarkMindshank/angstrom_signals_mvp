@@ -489,9 +489,23 @@ export default function(component) {
   const hd = el("div", "hd");
   hd.appendChild(el("h3", "", T("Prism Scans")));
   hd.appendChild(el("span", "muted", T("{n} of {max} scheduled · paused and Play-only scans don't count", {n: state.scheduled || 0, max: state.max_scheduled || 5})));
-  const all = el("div", "row"); all.style.marginLeft = "auto";
-  all.appendChild(button(T("Expand all"), T("Open every scan"), () => { scans.forEach((s) => { window.__prismOpen[s.id] = true; }); redraw(); }));
-  all.appendChild(button(T("Collapse all"), T("Close every scan"), () => { scans.forEach((s) => { window.__prismOpen[s.id] = false; }); redraw(); }));
+  // The standard tiny Expand all / Collapse all icons, as on the lists (hover says which).
+  const all = el("span", "ec scanec"); all.style.marginLeft = "auto";
+  [[T("Expand all: open every scan"), ["M4 6 L8 2 L12 6", "M4 10 L8 14 L12 10"], true],
+   [T("Collapse all: close every scan"), ["M4 2 L8 6 L12 2", "M4 14 L8 10 L12 14"], false]].forEach(([title, ds, open]) => {
+    const b = button("", title, () => { scans.forEach((s) => { window.__prismOpen[s.id] = open; }); redraw(); });
+    const ns = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(ns, "svg");
+    svg.setAttribute("width", "12"); svg.setAttribute("height", "12"); svg.setAttribute("viewBox", "0 0 16 16"); svg.setAttribute("aria-hidden", "true");
+    ds.forEach((d) => {
+      const pth = document.createElementNS(ns, "path");
+      pth.setAttribute("d", d); pth.setAttribute("fill", "none"); pth.setAttribute("stroke", "currentColor");
+      pth.setAttribute("stroke-width", "1.8"); pth.setAttribute("stroke-linecap", "round"); pth.setAttribute("stroke-linejoin", "round");
+      svg.appendChild(pth);
+    });
+    b.appendChild(svg);
+    all.appendChild(b);
+  });
   hd.appendChild(all);
   mid.appendChild(hd);
 

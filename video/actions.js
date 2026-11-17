@@ -342,7 +342,7 @@ module.exports = {
     tidy: async (h) => {
       await h.clear();
       await h.top();
-      await h.press('.lat.prism button:has-text("Collapse all")');
+      await h.press('.lat.prism .scanec button[title^=\"Collapse all\"]');
     },
   },
 

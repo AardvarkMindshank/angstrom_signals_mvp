@@ -1478,8 +1478,6 @@
   "Prism Scans": "Prism Scans",
   "{n} of {max} scheduled · paused and Play-only scans don't count": "{max} 件中 {n} 件がスケジュール済み · 一時停止中と Play のみのスキャンは数えません",
   "Expand all": "すべて展開",
-  "Open every scan": "すべてのスキャンを開く",
-  "Close every scan": "すべてのスキャンを閉じる",
   "Drop a Set here to start a new scan. It scans your whole Watchlist until you change its assets, and runs when you press Play until you give it a schedule.": "ここに Set をドロップすると新しいスキャンを開始します。銘柄を変更するまではウォッチリスト全体をスキャンし、スケジュールを設定するまでは Play を押したときに実行されます。",
   "No scans yet.": "スキャンはまだありません。",
   "Hide details": "詳細を隠す",
@@ -2168,5 +2166,7 @@
   "🛣️ **Strategies are coming later.** A strategy will turn a Set's Yes into a plan: when to enter, when to exit, and how much risk to take, including sequences such as \"A, then B within N days\". They will be designed with insights from beta testers' trading rules.": "🛣️ **戦略は後日登場します。** 戦略はSetの「はい」を計画に変えます：いつ入り、いつ出て、どれだけリスクを取るか。「A、その後N日以内にB」のような順序も含みます。ベータテスターのトレードルールから得た知見をもとに設計します。",
   "{stages}: EMA 20 above EMA 50. Then the 1-hour pullback entry check.": "{stages}：EMA 20がEMA 50の上。その後、1時間足の押し目エントリーチェック。",
   "{stages}: EMA 20 below EMA 50. Then the 1-hour pullback entry check.": "{stages}：EMA 20がEMA 50の下。その後、1時間足の戻りエントリーチェック。",
-  "The symbols drawn over the candles (open-source formulas of a popular charting indicator). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "ローソク足の上に描かれる記号（人気のチャートインジケーターのオープンソースの式）。ローソク足を指すと各記号の意味が表示されます。大きな点は📡 Sonarの帯にあります。"
+  "The symbols drawn over the candles (open-source formulas of a popular charting indicator). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "ローソク足の上に描かれる記号（人気のチャートインジケーターのオープンソースの式）。ローソク足を指すと各記号の意味が表示されます。大きな点は📡 Sonarの帯にあります。",
+  "Expand all: open every scan": "すべて展開：すべてのスキャンを開く",
+  "Collapse all: close every scan": "すべて折りたたむ：すべてのスキャンを閉じる"
 }

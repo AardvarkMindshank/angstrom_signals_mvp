@@ -1478,8 +1478,6 @@
   "Prism Scans": "Prism Scans",
   "{n} of {max} scheduled · paused and Play-only scans don't count": "{n} sur {max} planifiés · les scans en pause et en Play seul ne comptent pas",
   "Expand all": "Tout déplier",
-  "Open every scan": "Ouvrir tous les scans",
-  "Close every scan": "Fermer tous les scans",
   "Drop a Set here to start a new scan. It scans your whole Watchlist until you change its assets, and runs when you press Play until you give it a schedule.": "Déposez un Set ici pour lancer un nouveau scan. Il scanne toute votre liste jusqu'à ce que vous changiez ses actifs, et tourne quand vous appuyez sur Play jusqu'à ce que vous lui donniez un calendrier.",
   "No scans yet.": "Aucun scan pour l'instant.",
   "Hide details": "Masquer les détails",
@@ -2168,5 +2166,7 @@
   "🛣️ **Strategies are coming later.** A strategy will turn a Set's Yes into a plan: when to enter, when to exit, and how much risk to take, including sequences such as \"A, then B within N days\". They will be designed with insights from beta testers' trading rules.": "🛣️ **Les stratégies arriveront plus tard.** Une stratégie transformera le Oui d'un Set en plan : quand entrer, quand sortir et quel risque prendre, y compris des séquences comme \"A, puis B dans les N jours\". Elles seront conçues à partir des règles de trading des bêta-testeurs.",
   "{stages}: EMA 20 above EMA 50. Then the 1-hour pullback entry check.": "{stages} : EMA 20 au-dessus de l'EMA 50. Puis la vérification d'entrée sur repli en 1 heure.",
   "{stages}: EMA 20 below EMA 50. Then the 1-hour pullback entry check.": "{stages} : EMA 20 sous l'EMA 50. Puis la vérification d'entrée sur repli en 1 heure.",
-  "The symbols drawn over the candles (open-source formulas of a popular charting indicator). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "Les symboles dessinés sur les bougies (formules open source d'un indicateur graphique populaire). Pointez une bougie pour voir ce que chacun signifie ; les gros points sont sur la bande 📡 Sonar."
+  "The symbols drawn over the candles (open-source formulas of a popular charting indicator). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "Les symboles dessinés sur les bougies (formules open source d'un indicateur graphique populaire). Pointez une bougie pour voir ce que chacun signifie ; les gros points sont sur la bande 📡 Sonar.",
+  "Expand all: open every scan": "Tout déplier : ouvrir chaque scan",
+  "Collapse all: close every scan": "Tout replier : fermer chaque scan"
 }

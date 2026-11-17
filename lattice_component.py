@@ -72,6 +72,8 @@ CSS = """
 /* Set cards: trading ideas, options on the card, plan labels (18 Nov 2026) */
 .lat .provhead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:6px 0 2px;font-weight:600}
 .lat .provhead .ec{display:inline-flex;gap:4px}
+.lat .scanec{display:inline-flex;gap:4px}
+.lat .scanec button{width:26px;height:26px;min-height:26px;padding:0;display:inline-flex;align-items:center;justify-content:center}
 .lat .provhead .ec button{width:26px;height:26px;min-height:26px;padding:0;display:inline-flex;align-items:center;justify-content:center}
 .lat details.idea{margin:2px 0 6px}
 .lat details.idea>summary{list-style:none;cursor:pointer;padding:6px 2px;border-bottom:1px solid rgba(127,127,127,.3);margin-bottom:6px}
