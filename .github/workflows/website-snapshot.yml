@@ -1,0 +1,20 @@
+name: Website snapshot
+# Copies the live angstromsignals.com pages (HTML and styles) into a downloadable artifact, so edits start from what is live.
+on:
+  workflow_dispatch:
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch pages
+        run: |
+          mkdir site && cd site
+          for p in index features evidence faq contact beta disclaimer privacy terms investors; do
+            curl -sfL "https://angstromsignals.com/$p.html" -o "$p.html" || echo "missing $p"
+          done
+          curl -sfL https://angstromsignals.com/styles.css -o styles.css
+          ls -la
+      - uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: site
