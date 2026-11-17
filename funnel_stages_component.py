@@ -29,6 +29,9 @@ CSS = prism_component.CSS + """
 .lat.fun .stage .num{font-size:16px;min-width:26px;text-align:center;cursor:help}
 .lat.fun .stage input.lab{flex:1 1 140px;min-width:0;font-weight:600}
 .lat.fun .stage select{min-height:32px}
+.lat.fun .stage .q{display:flex;flex-wrap:wrap;gap:8px;align-items:baseline;padding-left:34px;margin:2px 0 4px}
+.lat.fun .stage .q .qq{font-weight:700}
+.lat.fun .stage .q .qo{font-size:.85em;opacity:.75}
 .lat.fun .stage .setrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding-left:34px}
 .lat.fun .stage .setnm{font-weight:600}
 .lat.fun .stage .ctl{display:flex;gap:6px;margin-left:auto}
@@ -96,9 +99,9 @@ export default function funnelStages(component) {
   const libCol = el("div", "col lib");
   root.appendChild(libCol);
   window.__funLib = window.__funLib || {};
-  setLibrary(libCol, {sets: lib.sets, cards: lib.cards, perspectives: lib.perspectives, showProvided: state.show_provided,
-    mem: window.__funLib, title: T("Sets"),
-    hint: T("Drag a Set onto a stage, or select a stage and tap +. With no stage selected, + adds a new stage."),
+  setLibrary(libCol, {sets: lib.sets, cards: lib.cards, noOptions: true, perspectives: lib.perspectives, showProvided: state.show_provided,
+    mem: window.__funLib, title: T("What should each stage check?"),
+    hint: T("Drag a Set onto a stage, or select a stage and tap +. Direction and timeframe come from the funnel and the stage."),
     addTitle: (s) => sel !== null ? T("Use {name} in stage {n}", {name: s.name, n: sel + 1})
                     : (full ? T("Select a stage first (a funnel has at most {n} stages)", {n: state.max_stages || 5})
                             : T("Add a stage that checks {name}", {name: s.name})),
@@ -146,6 +149,12 @@ export default function funnelStages(component) {
     if (n > (state.min_stages || 3)) ctl.appendChild(button("✖", T("Remove this stage"), () => { window.__funSel[scope] = null; act("remove", {stage: i}); }, "del"));
     top.appendChild(ctl);
     card.appendChild(top);
+    if (st.question) {                       // the stage's question in plain words, and what passing it makes an asset
+      const q = el("div", "q");
+      q.appendChild(el("span", "qq", st.question));
+      if (st.outcome) q.appendChild(el("span", "qo", "→ " + st.outcome));
+      card.appendChild(q);
+    }
     const row = el("div", "setrow");
     const nm = el("span", "setnm", st.set_name || T("No Set"));
     if (st.set_line) nm.title = st.set_line;

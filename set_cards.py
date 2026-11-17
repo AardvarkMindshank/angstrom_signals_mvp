@@ -131,3 +131,26 @@ def build(entries: list[dict], docs: dict, user_plan: str, display: str) -> dict
              and not (e["locked"] and display == "hide")]
     mine = [e for e in entries if not e.get("provided") and not (e["locked"] and display == "hide")]
     return {"ideas": ideas, "loose": [e["key"] for e in loose], "mine": [e["key"] for e in mine]}
+
+
+# Funnel stages say when they're checked as "1W", "1D", "12h", "4h", "1h"; the cards say "1w", "1d", ...
+_STAGE_TF = {"1W": "1w", "1D": "1d", "12h": "12h", "4h": "4h", "1h": "1h"}
+
+
+def resolve(key: str, direction: str | None = None, stage_tf: str | None = None) -> str:
+    """The provided Set a card option points at: the twin of `key` for this direction and, when the card has
+    timeframe versions, the one for this timeframe. Anything that isn't one of the merged cards comes back as it
+    is (your own Sets, single provided Sets)."""
+    for spec in MERGED:
+        members = spec["members"]
+        mine = next((m for m in members if m[2] == key), None)
+        if not mine:
+            continue
+        want_dir = direction if direction in ("long", "short") and mine[0] else mine[0]
+        tf = _STAGE_TF.get(str(stage_tf or ""), "")
+        has_tf = any(m[1] for m in members)
+        want_tf = tf if has_tf and any(m[1] == tf for m in members) else mine[1]
+        hit = next((m for m in members if m[0] == want_dir and m[1] == want_tf), None) \
+            or next((m for m in members if m[0] == want_dir and m[1] == mine[1]), None)
+        return hit[2] if hit else key
+    return key

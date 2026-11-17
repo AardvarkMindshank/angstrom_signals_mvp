@@ -171,19 +171,26 @@ def render(st, supabase, user_id: str) -> None:
     saved_sets = {c["id"]: c for c in configs if c.get("kind") == "set" and str(c.get("owner_id")) == str(user_id)}
 
     nxt = st.session_state.pop("_funnel_edit_next", None)
-    keys = [f["id"] for f in funnels] + [f"new:{m}:{d}" for m, d in TEMPLATES]
+    for k in ("funnel_edit",):                   # the four provided funnels are one choice now (18 Nov 2026)
+        old = st.session_state.get(k)
+        if isinstance(old, str) and old.startswith("new:") and old != "new:trend":
+            st.session_state[k] = "new:trend"
+    if isinstance(nxt, str) and nxt.startswith("new:") and nxt != "new:trend":
+        _m, _d = (nxt.split(":") + ["crypto", "long"])[1:3]
+        st.session_state["fe_prov_market"], st.session_state["fe_prov_dir"] = _m, _d
+        nxt = "new:trend"
+    keys = [f["id"] for f in funnels] + ["new:trend"]
     if nxt in keys:
         st.session_state["funnel_edit"] = nxt
     if st.session_state.get("funnel_edit") not in keys:
         st.session_state["funnel_edit"] = keys[0]
     names = {f["id"]: f"{'🪙' if (f.get('market') or 'crypto') == 'crypto' else '🏛️'} {f['name']}"
              + (" (paused)" if f.get("paused") else "") for f in funnels}
-    for m, d in TEMPLATES:
-        names[f"new:{m}:{d}"] = (f"{'🪙' if m == 'crypto' else '🏛️'} {template(m, d)['name']} (provided)")
+    names["new:trend"] = "🔻 " + t("Trend funnel (provided)")
     pick = st.selectbox(t("Funnel"), keys, format_func=names.get, key="funnel_edit",
                         help=t("Your own funnels first, then the provided ones (marked provided). As with provided "
                              "Groups and Sets, a provided funnel can't be changed or deleted: make your own copy to "
-                             "use it. At most 6 of your own."), placeholder=t("Choose an option"))
+                             "use it."), placeholder=t("Choose an option"))
     if pick.startswith("new:"):
         _provided_view(st, supabase, pick, funnels, library)
         return
@@ -228,10 +235,13 @@ def render(st, supabase, user_id: str) -> None:
     # ------------------------------------------------------------------ basics
     c1, c2 = st.columns(2)
     f["name"] = c1.text_input(t("Name"), value=f["name"], max_chars=80, key=f"fe_name_{pick}")
+    _was = f["direction"]
     f["direction"] = c2.radio(t("Direction"), ["long", "short"], index=0 if f["direction"] == "long" else 1,
                               horizontal=True, key=f"fe_dir_{pick}",
                               format_func=lambda d: t("▲ Long") if d == "long" else t("▼ Short"),
-                              help=t("Long and short are separate funnels; a ready-made one has its own Sets for each."))
+                              help=t("For every stage: provided Sets switch to their long or short version with it."))
+    if f["direction"] != _was:
+        follow_all(f, library)
     c3, c4 = st.columns(2)
     flick = c3.radio(t('{a_coin_if_market_crypto_} leaves a stage', a_coin_if_market_crypto_='A coin' if market == 'crypto' else 'An equity'), ["two", "one"], index=0 if f.get("flicker", True) else 1,
                      horizontal=True, key=f"fe_flick_{pick}",
@@ -340,7 +350,8 @@ def render(st, supabase, user_id: str) -> None:
             st.session_state.pop(k, None)
         lattice_panel.rerun(st)
     if saved and bar.button(t("Duplicate"), icon=":material/content_copy:", key=f"fe_dup_{pick}",
-                            disabled=len(funnels) >= 6, help=t("A copy to experiment with; this one keeps running.")):
+                            disabled=len(funnels) >= own_limit(st),
+                            help=t("A copy to experiment with; this one keeps running.")):
         copy_ = copy.deepcopy(saved)
         copy_["id"], copy_["name"] = None, f"{saved['name']} (copy)"[:80]
         _save(st, supabase, copy_, None, drafts)
@@ -366,6 +377,27 @@ def render(st, supabase, user_id: str) -> None:
 MIN_STAGES, MAX_STAGES = 3, 5
 
 
+def next_timeframe(tf: str) -> str:
+    """A new stage suggests the next shorter timeframe (it can be changed; stages needn't step down)."""
+    order = [x for x in ("1W", "1D", "12h", "4h", "1h") if x in fs.TIMEFRAMES] or list(fs.TIMEFRAMES)
+    return order[min(order.index(tf) + 1, len(order) - 1)] if tf in order else tf
+
+
+def stage_question(i: int, stages: list[dict]) -> tuple[str, str]:
+    """(the stage's question in plain words, what passing it makes an asset)."""
+    n = len(stages)
+    if i == 0:
+        q = t("Is the big picture right?")
+    elif i == n - 1:
+        q = t("Is there an entry now?")
+    elif stages[i - 1]["timeframe"] == stages[i]["timeframe"]:
+        q = t("What else must be true on this chart?")
+    else:
+        q = t("Does it still hold on the {tf} chart?", tf=t(fs.WORDS.get(stages[i]["timeframe"], stages[i]["timeframe"])))
+    out = t("Candidate") if i == n - 1 else (t("Shortlist") if i == n - 2 else t("Watchlist"))
+    return q, out
+
+
 def board_choices(configs: list[dict], user_id: str) -> dict:
     """The Sets a stage can use, exactly as Prism lists them: key -> {name, meta, doc, config, version, provided}."""
     import prism_board as pb
@@ -382,6 +414,24 @@ def _from_choice(key: str, choices: dict) -> tuple[dict, dict] | None:
     return copy.deepcopy(c["doc"]), {"config_id": c["config"], "version": c["version"]}
 
 
+def follow(stage: dict, direction: str, library: dict) -> None:
+    """Keep a stage's provided Set in step with the funnel (18 Nov 2026): the long or short twin for the funnel's
+    direction and, for Sets with timeframe versions (EMA 20 vs EMA 50), the one for the stage's timeframe."""
+    import set_cards
+
+    key = provided_key(stage.get("set_source"))
+    if not key or key not in library:
+        return
+    want = set_cards.resolve(key, direction, stage.get("timeframe"))
+    if want != key and want in library:
+        stage["set_body"], stage["set_source"] = copy.deepcopy(library[want]), {"provided": want}
+
+
+def follow_all(f: dict, library: dict) -> None:
+    for stage in f["stages"]:
+        follow(stage, f.get("direction") or "long", library)
+
+
 def apply_action(f: dict, action: dict, choices: dict, library: dict, saved_sets: dict) -> str | None:
     """Apply one press on the stages board to the working copy f. Returns an error to show, or None."""
     op, stages = action.get("op"), f["stages"]
@@ -394,11 +444,13 @@ def apply_action(f: dict, action: dict, choices: dict, library: dict, saved_sets
             return t("That Set is no longer available.")
         if op == "set":
             stages[i]["set_body"], stages[i]["set_source"] = got
+            follow(stages[i], f.get("direction") or "long", library)
             return None
         if len(stages) >= MAX_STAGES:
             return t('A funnel has at most {MAX_STAGES} stages: select a stage to replace its Set instead.', MAX_STAGES=MAX_STAGES)
-        stages.append({"label": f"Stage {len(stages) + 1}", "timeframe": stages[-1]["timeframe"],
+        stages.append({"label": f"Stage {len(stages) + 1}", "timeframe": next_timeframe(stages[-1]["timeframe"]),
                        "set_body": got[0], "set_source": got[1]})
+        follow(stages[-1], f.get("direction") or "long", library)
         return None
     if op == "move":
         j = i + (1 if action.get("dir") == 1 else -1)
@@ -414,6 +466,7 @@ def apply_action(f: dict, action: dict, choices: dict, library: dict, saved_sets
         if action.get("tf") not in fs.TIMEFRAMES:
             return t("That timeframe isn't available.")
         stages[i]["timeframe"] = action["tf"]
+        follow(stages[i], f.get("direction") or "long", library)
         return None
     if op == "label":
         stages[i]["label"] = str(action.get("label") or "").strip()[:40]
@@ -435,7 +488,9 @@ def board_data(f: dict, choices: dict, library: dict, saved_sets: dict, show_pro
     for i, stage in enumerate(f["stages"]):
         doc = stage.get("set_body") or {}
         up = upgrade_for(stage, library, saved_sets)
+        question, outcome = stage_question(i, f["stages"])
         stages.append({"label": stage.get("label") or "", "timeframe": stage["timeframe"],
+                       "question": question, "outcome": outcome,
                        "icon": fn.STAGE_ICONS[min(i, len(fn.STAGE_ICONS) - 1)],
                        "set_name": doc.get("name") or t("This stage's Set"), "set_line": str(doc.get("purpose") or ""),
                        "icons": perspectives.chips(doc), "upgrade": up[0] if up else None})
@@ -489,9 +544,23 @@ def _stages_board(st, f: dict, pick: str, configs: list[dict], user_id: str, lib
     lattice_panel.rerun(st)
 
 
+def own_limit(st) -> int:
+    """How many funnels of your own the plan includes (plans.LIMITS)."""
+    import plans
+
+    return int(plans.LIMITS[plans.normalise(st.session_state.get("plan_effective"))]["funnels"] or 0)
+
+
 def _provided_view(st, supabase, pick: str, funnels: list[dict], library: dict) -> None:
-    """A provided funnel, read-only (as a provided Group or Set): what it does, and Make my own copy."""
-    _, market, direction = pick.split(":")
+    """The provided Trend funnel, read-only (as a provided Group or Set): choose the market and direction, see what
+    it does, and Make my own copy."""
+    import plans
+
+    c1, c2 = st.columns(2)
+    market = c1.radio(t("Market"), ["crypto", "equity"], horizontal=True, key="fe_prov_market",
+                      format_func=lambda m: t(MARKET_WORDS[m]))
+    direction = c2.radio(t("Direction"), ["long", "short"], horizontal=True, key="fe_prov_dir",
+                         format_func=lambda d: t("▲ Long") if d == "long" else t("▼ Short"))
     t_ = template(market, direction)
     st.markdown(t("**{market_words_market}** · {fn_direction_icons_direc} {long_if_direction_long_e} · *Provided by Angstrom* · can't be changed or deleted", market_words_market=t(MARKET_WORDS[market]), fn_direction_icons_direc=fn.DIRECTION_ICONS[direction], long_if_direction_long_e='Long' if direction == 'long' else 'Short'))
     pool = "the top 500 coins that pass Angstrom's data checks" if market == "crypto" else "the S&P 500"
@@ -504,8 +573,15 @@ def _provided_view(st, supabase, pick: str, funnels: list[dict], library: dict) 
             and provenance(f, library) == "Your copy of a provided funnel"]
     if mine:
         st.caption(t('You already have an unchanged copy: **{mine_0_name}**.', mine_0_name=mine[0]['name']))
+    limit = own_limit(st)
+    if limit == 0:
+        st.caption(t("You can watch this funnel's Candidates and Flagged assets. Making your own funnel starts on Plus."))
+        if plans.display_mode({"plan_display": st.session_state.get("plan_display_effective")}) == "hide":
+            return
+    elif len(funnels) >= limit:
+        st.caption(t("Your plan includes {n} funnels of your own.", n=limit))
     if st.button(t("Make my own copy"), type="primary", icon=":material/content_copy:", key=f"fe_copy_{pick}",
-                 disabled=len(funnels) >= 6,
+                 disabled=len(funnels) >= limit,
                  help=t("Your copy runs for your account, with its own places and alerts. You can then change it, "
                       "pause it or delete it; this provided one stays as it is.")):
         _save(st, supabase, t_, None, {})

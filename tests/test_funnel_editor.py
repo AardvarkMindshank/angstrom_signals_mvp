@@ -93,9 +93,33 @@ def test_funnels_tab_runs_inside_streamlit():
     app.text_input(key="fe_name_f1").set_value("Shorts").run()
     assert not app.exception
     assert not next(b for b in app.button if b.label == "Save and activate").disabled
-    app.selectbox(key="funnel_edit").set_value("new:equity:long").run()
+    app.selectbox(key="funnel_edit").set_value("new:trend").run()      # the provided funnel: one choice
+    app.radio(key="fe_prov_market").set_value("equity").run()
     labels = [b.label for b in app.button]
     assert not app.exception and "Make my own copy" in labels and "Delete" not in labels
+
+
+def test_stages_follow_the_funnels_direction_and_timeframe():
+    lib = prism.demo_sets()
+    f = fe.template("crypto", "long")
+    ema = next(s for s in f["stages"] if (s.get("set_source") or {}).get("provided") == "demo:ema_up_12h")
+    ema["timeframe"] = "4h"
+    fe.follow(ema, "long", lib)
+    assert ema["set_source"] == {"provided": "demo:ema_up_4h"}                 # the stage's timeframe
+    f["direction"] = "short"
+    fe.follow_all(f, lib)
+    keys = [s["set_source"].get("provided") for s in f["stages"]]
+    assert "demo:ema_down_4h" in keys and "demo:entry_short_1h" in keys      # every stage turned short
+    assert not any(k and ("_up_" in k or k.endswith("_long_1h")) for k in keys)
+
+
+def test_stage_questions():
+    stages = [{"timeframe": "1D"}, {"timeframe": "1D"}, {"timeframe": "12h"}, {"timeframe": "1h"}]
+    qs = [fe.stage_question(i, stages) for i in range(4)]
+    assert qs[0] == ("Is the big picture right?", "Watchlist")
+    assert qs[1][0] == "What else must be true on this chart?"
+    assert qs[2] == ("Does it still hold on the 12-hour chart?", "Shortlist")
+    assert qs[3] == ("Is there an entry now?", "Candidate")
 
 
 def test_first_funnels_legacy_keys_name_the_library_sets():

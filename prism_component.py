@@ -242,7 +242,7 @@ SET_LIBRARY_JS = r"""
       nm.appendChild(top);
       const body = el("div", card.locked ? "dim" : "");
       if (card.line) body.appendChild(el("div", "line", card.line));
-      if (card.dirs.length > 1 || card.tfs.length > 1) {
+      if (!opts.noOptions && (card.dirs.length > 1 || card.tfs.length > 1)) {
         const row = el("div", "opts");
         const seg = (items, now, pick, label) => {
           const g = el("div", "seg"); g.setAttribute("role", "group"); g.setAttribute("aria-label", label);
