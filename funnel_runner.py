@@ -387,6 +387,9 @@ class SupabaseStore:
 
     def coins(self, funnel_id) -> dict[str, dict]:
         rows = self.db.table("funnel_coins").select("*").eq("funnel_id", funnel_id).execute().data or []
+        self._stored = getattr(self, "_stored", {})
+        for r in rows:
+            self._stored[(funnel_id, r["coin_id"])] = _coin_fields(r)
         return {r["coin_id"]: r for r in rows}
 
     def claim(self, funnel_id, stage, cutoff, started, version=None, saved_at=None) -> int | None:
@@ -505,15 +508,29 @@ class SupabaseStore:
             self.db.table("user_notifications").insert(rows).execute()
 
     def save_coins(self, funnel_id, version, states: dict) -> None:
+        self._stored = getattr(self, "_stored", {})
         now = datetime.now(timezone.utc).isoformat()
         rows = []
         for coin_id, st in states.items():
             p = fn.place(st)
-            rows.append({"funnel_id": funnel_id, "coin_id": coin_id, "stages_version": version,
-                         "state": st.to_dict(), "status": p["status"], "depth": p["depth"],
-                         "pending": p["pending"], "updated_at": now})
+            row = {"funnel_id": funnel_id, "coin_id": coin_id, "stages_version": version,
+                   "state": st.to_dict(), "status": p["status"], "depth": p["depth"],
+                   "pending": p["pending"], "updated_at": now}
+            # Only the coins whose place changed, and nothing sent back (17 Nov 2026: each pass rewrote every coin
+            # after every stage and downloaded them all again, about 2 MB an hour).
+            if self._stored.get((funnel_id, coin_id)) == _coin_fields(row):
+                continue
+            self._stored[(funnel_id, coin_id)] = _coin_fields(row)
+            rows.append(row)
         for i in range(0, len(rows), 200):
-            self.db.table("funnel_coins").upsert(rows[i:i + 200]).execute()
+            self.db.table("funnel_coins").upsert(rows[i:i + 200], returning="minimal").execute()
+
+
+def _coin_fields(row: dict) -> tuple:
+    import json
+
+    return (row.get("stages_version"), json.dumps(row.get("state"), sort_keys=True, default=str), row.get("status"),
+            row.get("depth"), json.dumps(row.get("pending"), sort_keys=True, default=str))
 
 
 def default_evaluate(supabase):

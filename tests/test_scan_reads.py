@@ -70,3 +70,42 @@ def test_a_claim_already_made_is_not_asked_for_again():
     assert store.claim(5, "crypto", made + pd.Timedelta(hours=1), now) == 99
     assert store.claim(5, "crypto", made + pd.Timedelta(hours=1), now) is None   # this run just claimed it
     assert [c[0] for c in db.calls] == ["select", "insert"]
+
+
+def test_the_funnel_saves_only_coins_whose_place_changed():
+    import funnel as fn
+    import funnel_runner as fr
+
+    sent = []
+
+    class Q:
+        def select(self, *_):
+            return self
+
+        def eq(self, *_):
+            return self
+
+        def upsert(self, rows, **kw):
+            sent.append((rows, kw))
+            return self
+
+        def execute(self):
+            class R:
+                data = [{"coin_id": "btc", "stages_version": 1, "state": fn.CoinState.new(2).to_dict(),
+                         **{k: v for k, v in fn.place(fn.CoinState.new(2)).items() if k in ("status", "depth", "pending")}}]
+            return R()
+
+    class Db:
+        def table(self, _):
+            return Q()
+
+    store = fr.SupabaseStore(Db())
+    store.coins(7)
+    store.save_coins(7, 1, {"btc": fn.CoinState.new(2)})
+    assert sent == []                                            # unchanged: nothing written
+    moved = fn.CoinState.new(2)
+    fn.record(moved, 0, "yes", "2026-11-17T08:00:00+00:00", None)
+    store.save_coins(7, 1, {"btc": moved, "eth": fn.CoinState.new(2)})
+    assert [r["coin_id"] for r in sent[0][0]] == ["btc", "eth"] and sent[0][1] == {"returning": "minimal"}
+    store.save_coins(7, 1, {"btc": moved})
+    assert len(sent) == 1
