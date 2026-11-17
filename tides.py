@@ -478,12 +478,13 @@ def build(supabase=None, log=print) -> dict:
 
 def refresh_due(supabase, log=print) -> bool:
     """Background worker: save a new snapshot when the latest is older than REFRESH_HOURS."""
-    try:
-        supabase.table("tides_snapshots").select("id").limit(1).execute()
+    try:      # only the time and version of the newest snapshot, not its body (17 Nov 2026: data out)
+        rows = (supabase.table("tides_snapshots").select("computed_at, version").order("computed_at", desc=True)
+                .limit(1).execute().data or [])
     except Exception as exc:
         log(f"Tides skipped (run sql/2026-11-23_tides.sql): {str(exc)[:120]}")
         return False
-    last = latest(supabase)
+    last = rows[0] if rows else None
     if age_hours(last) < REFRESH_HOURS - 0.25 and (last or {}).get("version") == VERSION:
         return False
     snap = build(supabase, log)

@@ -223,16 +223,48 @@ def snoozed(scan: dict, now) -> set:
 
 # ----------------------------------------------------------------------------------------------- storage
 
+# Every column but the two Set bodies (set_body, rearm), which are tens of KB per scan: the worker reads the scans
+# every 5 minutes to see what is due, and fetches a scan's bodies only when it runs (17 Nov 2026: data out).
+SCAN_LIGHT = ("id, owner_id, name, set_source, set_version, schedule, alert_mode, notify, paused, last_run_at, "
+              "latches_reset_at, created_at, updated_at, assets, builtin, quiet_next, snoozes")
+CLAIM_MEMORY = timedelta(days=8)        # the longest gap between closes a schedule can have, with room
+
+
 class SupabaseStore:
     """Database access for the worker (service role). Every table is defined in sql/2026-11-06_prism_scans.sql."""
 
     def __init__(self, supabase):
         self.db = supabase
+        self._claimed: set | None = None
 
     def active_scans(self) -> list[dict]:
-        return (self.db.table("prism_scans").select("*").eq("paused", False).execute().data or [])
+        try:
+            return (self.db.table("prism_scans").select(SCAN_LIGHT).eq("paused", False).execute().data or [])
+        except Exception:                 # an older table without one of these columns: every column, as before
+            return (self.db.table("prism_scans").select("*").eq("paused", False).execute().data or [])
+
+    def bodies(self, scan_id) -> dict:
+        """The Set bodies of one scan, read when it runs."""
+        rows = self.db.table("prism_scans").select("set_body, rearm").eq("id", scan_id).limit(1).execute().data or []
+        return rows[0] if rows else {}
+
+    def _already_claimed(self, scan_id, market, cutoff) -> bool:
+        """One read per worker run of the recent claims, so a run already made isn't asked for again every 5 minutes
+        (each refused claim was a request and a log line)."""
+        if self._claimed is None:
+            since = (datetime.now(timezone.utc) - CLAIM_MEMORY).isoformat()
+            try:
+                rows = (self.db.table("prism_scan_runs").select("scan_id, market, cutoff").gte("cutoff", since)
+                        .execute().data or [])
+                self._claimed = {(str(r["scan_id"]), str(r["market"]), _ts(r["cutoff"])) for r in rows}
+            except Exception:
+                self._claimed = set()
+        return (str(scan_id), str(market), _ts(cutoff)) in self._claimed
 
     def claim(self, scan_id, market, cutoff, started) -> int | None:
+        if self._already_claimed(scan_id, market, cutoff):
+            return None
+        self._claimed.add((str(scan_id), str(market), _ts(cutoff)))
         try:
             rows = (self.db.table("prism_scan_runs")
                     .insert({"scan_id": scan_id, "market": market, "cutoff": cutoff.isoformat(),
@@ -365,6 +397,8 @@ def run_due_scans(store, *, watchlists: dict, prefs: dict, evaluate, now=None, b
         due_at = cutoff + (SETTLE if scan["schedule"]["kind"] == "close" else timedelta(0))
         late = max(0, int((now - due_at).total_seconds()))
         try:
+            if "set_body" not in scan and hasattr(store, "bodies"):
+                scan.update(store.bodies(scan["id"]))          # read only now that it runs
             rows, record = evaluate(scan["set_body"], assets, cutoff)
             answers = {f"{r['kind']}:{r['id']}": r["answer"] for r in rows}
             latched = store.latches(scan["id"])

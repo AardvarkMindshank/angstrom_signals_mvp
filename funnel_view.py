@@ -212,7 +212,17 @@ def watched_by_funnels(supabase) -> dict[tuple[str, str], str]:
         rows = [r for r in rows if r.get("stages_version") == (f.get("stages_version") or 1)]
         if not rows:
             continue
-        if names[market] is None:
+        if market == "equity":       # just these tickers' names and ranks, not the whole universe (17 Nov 2026)
+            names[market] = names[market] or {}
+            wanted = [r["coin_id"] for r in rows if r["coin_id"] not in names[market]]
+            try:
+                for i in range(0, len(wanted), 200):
+                    for v in (supabase.table("equity_universe").select("ticker, name, rank")
+                              .in_("ticker", wanted[i:i + 200]).execute().data or []):
+                        names[market][v["ticker"]] = (v.get("name") or v["ticker"], v.get("rank") or 10**6)
+            except Exception:
+                pass
+        elif names[market] is None:
             uni = load_universe(supabase, market)
             names[market] = {k: (v.get("name") or k, v.get("rank") or 10**6) for k, v in uni.items()}
         n = len(f.get("stages") or [])

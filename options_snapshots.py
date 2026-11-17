@@ -139,7 +139,10 @@ def refresh_due(supabase, catalog, now: datetime | None = None, chain=None, cryp
     now = now or datetime.now(timezone.utc)
     started = time.time()
     try:
-        last = latest_snapshots(supabase, now - timedelta(days=4))
+        # Only as far back as a snapshot can still count: today's for equities, the last few hours for crypto
+        # (17 Nov 2026: this read ran every 5 minutes over four days of rows).
+        midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        last = latest_snapshots(supabase, min(midnight, now - timedelta(hours=CRYPTO_EVERY_HOURS)))
     except Exception as exc:
         log(f"Options snapshots skipped (run sql/2026-11-21_options_pain.sql): {str(exc)[:120]}")
         return {"saved": 0}

@@ -417,7 +417,12 @@ class Store:
              .in_("alert_type", al.stored_types(alert_type)).execute())
 
     def builtin_scans(self) -> dict:
-        rows = (self.db.table("prism_scans").select("*").not_.is_("builtin", "null").execute().data or [])
+        import prism_scans as ps
+
+        try:            # without the Set bodies: the built-in alerts compare their lines in set_source (17 Nov 2026)
+            rows = (self.db.table("prism_scans").select(ps.SCAN_LIGHT).not_.is_("builtin", "null").execute().data or [])
+        except Exception:
+            rows = (self.db.table("prism_scans").select("*").not_.is_("builtin", "null").execute().data or [])
         out: dict = {}
         for r in rows:
             out.setdefault(r["owner_id"], {})[r["builtin"]] = r
