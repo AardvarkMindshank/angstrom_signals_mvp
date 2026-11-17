@@ -1385,16 +1385,89 @@ def load_shared_market(supabase, keys: list[str]) -> dict[str, dict]:
     stale = [k for k in stamps if k not in _ROW_CACHE or _ROW_CACHE[k][0] != stamps[k]
              or now - _ROW_CACHE[k][2] > _ROW_CACHE_MAX_AGE]
     if stale:
-        fresh = _load_rows(supabase, stale)
+        # A row this server already holds is brought up to date without its price history: every other column,
+        # plus only the newest few bars, spliced onto the history it has (17 Nov 2026: whole histories, re-read
+        # after each price refresh and every half hour, were most of the database's data out). A whole row is
+        # read when it is new here, every few hours, or when the newest bars don't join on.
+        whole = [k for k in stale if not _ROW_CACHE.get(k) or not isinstance(_ROW_CACHE[k][1].get("prices"), list)
+                 or now - _FULL_AT.get(k, 0.0) > _FULL_EVERY_SECONDS]
+        light = [k for k in stale if k not in whole]
+        prices_for = {k: _ROW_CACHE[k][1].get("prices") for k in light}
+        moved = [k for k in light if _ROW_CACHE[k][0][0] != stamps[k][0]]       # its prices were refreshed
+        recent = _recent_prices(supabase, moved) if moved else {}
+        for k in moved:
+            prices_for[k] = _join_recent(prices_for[k], recent.get(k))
+            if prices_for[k] is None:                                             # read the whole row instead
+                whole.append(k)
+        light = [k for k in light if k not in whole]
+        fresh = {}
+        if light:
+            rows = _load_rows(supabase, light, light=True)
+            for k in light:
+                if k in rows:
+                    fresh[k] = {**rows[k], "prices": prices_for[k]}
+        if whole:
+            full = _load_rows(supabase, whole)
+            fresh.update(full)
+            for k in full:
+                _FULL_AT[k] = now
         for k in stale:
             if k in fresh:
                 _ROW_CACHE[k] = (stamps[k], fresh[k], now)
     return {k: dict(_ROW_CACHE[k][1]) for k in wanted if k in stamps and k in _ROW_CACHE}
 
 
-def _load_rows(supabase, wanted: list[str]) -> dict[str, dict]:
+_FULL_AT: dict[str, float] = {}
+_FULL_EVERY_SECONDS = 6 * 3600       # a whole history now and then, so a revised older bar comes through
+_RECENT_BARS = 5
+_RECENT_DOWN_UNTIL = [0.0]
+
+
+def _recent_prices(supabase, keys: list[str]) -> dict[str, list] | None:
+    """The newest few bars per asset (sql/2026-12-03_recent_prices.sql), or {} when that function isn't installed
+    (then whole rows are read, as before)."""
+    if not keys or time.time() < _RECENT_DOWN_UNTIL[0]:
+        return {}
+    try:
+        rows = supabase.rpc("asset_recent_prices", {"wanted": keys, "bars": _RECENT_BARS}).execute().data or []
+    except Exception:
+        _RECENT_DOWN_UNTIL[0] = time.time() + 600
+        return {}
+    out = {}
+    for row in rows:
+        recent = row.get("recent")
+        if isinstance(recent, str):
+            try:
+                recent = json.loads(recent)
+            except json.JSONDecodeError:
+                recent = None
+        if isinstance(recent, list):
+            out[str(row.get("asset_key"))] = recent
+    return out
+
+
+def _join_recent(held, recent) -> list | None:
+    """The held history with its newest bars replaced by `recent`, or None when they don't join on (then the whole
+    history is read). The first recent bar must be one the held history already has, so no day goes missing."""
+    if not isinstance(held, list) or not isinstance(recent, list) or not recent:
+        return None
+    days = [str(item.get("t")) for item in recent if isinstance(item, dict) and item.get("t")]
+    if len(days) != len(recent):
+        return None
+    first = days[0]
+    held_days = {str(item.get("t")) for item in held if isinstance(item, dict)}
+    if first not in held_days:
+        return None
+    joined = [item for item in held if isinstance(item, dict) and str(item.get("t")) < first] + list(recent)
+    return joined[-_PRICE_LIMIT:]
+
+
+def _load_rows(supabase, wanted: list[str], light: bool = False) -> dict[str, dict]:
+    """Whole shared rows; light: every column but the price history."""
     global _COLUMN_TIER, _COLUMN_TIER_SINCE
     tiers = (_SHARED_COLUMNS_STATS + ", readings", _SHARED_COLUMNS_STATS, _SHARED_COLUMNS, _SHARED_COLUMNS_LEGACY)
+    if light:
+        tiers = tuple(tier.replace(", prices,", ",") for tier in tiers)
     # A fall-back to fewer columns is not for life: one odd error must not hide market caps and
     # earnings dates until the next restart. Try the full set again every few minutes.
     if _COLUMN_TIER and time.time() - _COLUMN_TIER_SINCE > _COLUMN_TIER_RETRY_SECONDS:
