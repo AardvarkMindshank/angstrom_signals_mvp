@@ -235,3 +235,10 @@ figure.shot.tall img, figure.shot.mid img { width: 100%; }
 .pillars h3 { margin-bottom: 0.35em; }
 .pillars p { color: var(--muted); margin: 0; }
 @media (max-width: 860px) { .pillars { grid-template-columns: minmax(0, 1fr); gap: 28px; } }
+
+/* Angstrom's own product names (website/brand_terms.py marks them) */
+b.bt { font-weight: 700; color: var(--navy); }
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  b.bt { background: linear-gradient(90deg, var(--blue), var(--green)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+}
+h1 b.bt, h2 b.bt, h3 b.bt { font-weight: inherit; }
