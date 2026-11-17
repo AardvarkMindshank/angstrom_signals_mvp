@@ -1893,7 +1893,6 @@
   "Candle (colour, close vs previous, body size)": "Candle (cor, fechamento vs anterior, tamanho do corpo)",
   "What the last candle did: a strong green candle has body_vs_average above 1 (bigger than usual). Descriptive; one candle says little on its own.": "O que o último candle fez: um candle verde forte tem body_vs_average acima de 1 (maior que o usual). Descritivo; um candle sozinho diz pouco.",
   "Divergence across timeframes": "Divergência entre timeframes",
-  "How many timeframes show momentum disagreeing with price at once, the multi-timeframe divergence Drew looks for. Regular divergence hints at exhaustion, hidden divergence at continuation. Descriptive; not a trade signal by itself.": "Quantos timeframes mostram ao mesmo tempo momentum discordando do preço, a divergência multi-timeframe que o Drew procura. Divergência regular sugere exaustão; oculta, continuação. Descritivo; não é um sinal de trade por si só.",
   "MACD histogram": "Histograma MACD",
   "Whether momentum is speeding up or slowing. Standard score (dashboard Stretch part): tanh(histogram / (ATR/4)). Descriptive; not a forecast.": "Se o momentum está acelerando ou desacelerando. Pontuação padrão (parte Stretch do painel): tanh(histograma / (ATR/4)). Descritivo; não é uma previsão.",
   "Momentum direction": "Direção do momentum",
@@ -1903,7 +1902,6 @@
   "Stochastic on OHLC4": "Estocástico em OHLC4",
   "Where the candle's average price sits in its recent range, smoothed, and whether it just turned. Descriptive.": "Onde o preço médio do candle está dentro da faixa recente, suavizado, e se acabou de virar. Descritivo.",
   "Stoch RSI pair (OHLC4)": "Par Stoch RSI (OHLC4)",
-  "Where the two Stoch RSI curves sit and when they last crossed, the way Drew reads them: a cross up from both low, or down from both high, then a look up the chart for a printed dot. Descriptive; not a forecast.": "Onde estão as duas curvas do Stoch RSI e quando cruzaram pela última vez, como o Drew as lê: um cruzamento para cima com ambas baixas, ou para baixo com ambas altas, e depois olhar o gráfico em busca de um ponto impresso. Descritivo; não é uma previsão.",
   "WaveTrend momentum (Sonar)": "Momentum WaveTrend (Sonar)",
   "Where the momentum wave is and whether it just turned. A turn up from oversold is what many traders mark as a possible bounce point, to be read with the trend and other timeframes. Descriptive; not a forecast.": "Onde está a onda de momentum e se acabou de virar. Uma virada para cima a partir de sobrevenda é o que muitos traders marcam como possível ponto de repique, a ser lido junto com a tendência e outros timeframes. Descritivo; não é uma previsão.",
   "RSI (14)": "RSI (14)",
@@ -2168,5 +2166,7 @@
   "The symbols drawn over the candles (open-source formulas of a popular charting indicator). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "Os símbolos desenhados sobre os candles (fórmulas de código aberto de um indicador gráfico popular). Aponte para um candle para ver o que cada um significa; os pontos grandes ficam na faixa 📡 Sonar.",
   "Expand all: open every scan": "Expandir tudo: abrir cada varredura",
   "Collapse all: close every scan": "Recolher tudo: fechar cada varredura",
-  "✅ Account created for **{email}**. We've sent a confirmation email: open it (check junk mail too), then log in here on the 🔑 Log In tab.": "✅ Conta criada para **{email}**. Enviamos um e-mail de confirmação: abra-o (veja também o lixo eletrônico) e depois entre aqui na aba 🔑 Entrar."
+  "✅ Account created for **{email}**. We've sent a confirmation email: open it (check junk mail too), then log in here on the 🔑 Log In tab.": "✅ Conta criada para **{email}**. Enviamos um e-mail de confirmação: abra-o (veja também o lixo eletrônico) e depois entre aqui na aba 🔑 Entrar.",
+  "How many timeframes show momentum disagreeing with price at once, the multi-timeframe divergence many traders look for. Regular divergence hints at exhaustion, hidden divergence at continuation. Descriptive; not a trade signal by itself.": "Quantos timeframes mostram ao mesmo tempo momentum discordando do preço, a divergência multi-timeframe que muitos traders procuram. Divergência regular sugere exaustão; oculta, continuação. Descritivo; não é um sinal de trade por si só.",
+  "Where the two Stoch RSI curves sit and when they last crossed, the way many traders read them: a cross up from both low, or down from both high, then a look up the chart for a printed dot. Descriptive; not a forecast.": "Onde estão as duas curvas do Stoch RSI e quando cruzaram pela última vez, como muitos traders as leem: um cruzamento para cima com ambas baixas, ou para baixo com ambas altas, e depois olhar o gráfico em busca de um ponto impresso. Descritivo; não é uma previsão."
 }

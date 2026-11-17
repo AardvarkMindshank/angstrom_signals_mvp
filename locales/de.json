@@ -1893,7 +1893,6 @@
   "Candle (colour, close vs previous, body size)": "Kerze (Farbe, Schluss gegenüber vorher, Körpergröße)",
   "What the last candle did: a strong green candle has body_vs_average above 1 (bigger than usual). Descriptive; one candle says little on its own.": "Was die letzte Kerze getan hat: eine starke grüne Kerze hat body_vs_average über 1 (größer als üblich). Beschreibend; eine einzelne Kerze sagt allein wenig.",
   "Divergence across timeframes": "Divergenz über Zeitebenen",
-  "How many timeframes show momentum disagreeing with price at once, the multi-timeframe divergence Drew looks for. Regular divergence hints at exhaustion, hidden divergence at continuation. Descriptive; not a trade signal by itself.": "Wie viele Zeitebenen gleichzeitig ein Momentum zeigen, das dem Kurs widerspricht, die Divergenz über mehrere Zeitebenen, nach der Drew sucht. Reguläre Divergenz deutet auf Erschöpfung, versteckte auf Fortsetzung. Beschreibend; allein kein Handelssignal.",
   "MACD histogram": "MACD-Histogramm",
   "Whether momentum is speeding up or slowing. Standard score (dashboard Stretch part): tanh(histogram / (ATR/4)). Descriptive; not a forecast.": "Ob das Momentum zunimmt oder nachlässt. Standardwert (Stretch-Teil des Dashboards): tanh(Histogramm / (ATR/4)). Beschreibend; keine Prognose.",
   "Momentum direction": "Momentum-Richtung",
@@ -1903,7 +1902,6 @@
   "Stochastic on OHLC4": "Stochastik auf OHLC4",
   "Where the candle's average price sits in its recent range, smoothed, and whether it just turned. Descriptive.": "Wo der Durchschnittskurs der Kerze in ihrer jüngsten Spanne liegt, geglättet, und ob er gerade gedreht hat. Beschreibend.",
   "Stoch RSI pair (OHLC4)": "Stoch-RSI-Paar (OHLC4)",
-  "Where the two Stoch RSI curves sit and when they last crossed, the way Drew reads them: a cross up from both low, or down from both high, then a look up the chart for a printed dot. Descriptive; not a forecast.": "Wo die beiden Stoch-RSI-Kurven liegen und wann sie sich zuletzt gekreuzt haben, so wie Drew sie liest: ein Kreuzen nach oben, wenn beide tief sind, oder nach unten, wenn beide hoch sind, dann ein Blick nach oben im Chart nach einem gedruckten Punkt. Beschreibend; keine Prognose.",
   "WaveTrend momentum (Sonar)": "WaveTrend-Momentum (Sonar)",
   "Where the momentum wave is and whether it just turned. A turn up from oversold is what many traders mark as a possible bounce point, to be read with the trend and other timeframes. Descriptive; not a forecast.": "Wo die Momentumwelle steht und ob sie gerade gedreht hat. Eine Wende nach oben aus dem überverkauften Bereich markieren viele Trader als möglichen Erholungspunkt, zu lesen zusammen mit dem Trend und anderen Zeitebenen. Beschreibend; keine Prognose.",
   "RSI (14)": "RSI (14)",
@@ -2168,5 +2166,7 @@
   "The symbols drawn over the candles (open-source formulas of a popular charting indicator). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "Die Symbole über den Kerzen (Open-Source-Formeln eines beliebten Chart-Indikators). Zeige auf eine Kerze, um zu sehen, was jedes bedeutet; die großen Punkte sind auf dem 📡 Sonar-Streifen.",
   "Expand all: open every scan": "Alle ausklappen: jeden Scan öffnen",
   "Collapse all: close every scan": "Alle einklappen: jeden Scan schließen",
-  "✅ Account created for **{email}**. We've sent a confirmation email: open it (check junk mail too), then log in here on the 🔑 Log In tab.": "✅ Konto erstellt für **{email}**. Wir haben eine Bestätigungs-E-Mail gesendet: öffne sie (sieh auch im Spam nach) und melde dich dann hier im Tab 🔑 Anmelden an."
+  "✅ Account created for **{email}**. We've sent a confirmation email: open it (check junk mail too), then log in here on the 🔑 Log In tab.": "✅ Konto erstellt für **{email}**. Wir haben eine Bestätigungs-E-Mail gesendet: öffne sie (sieh auch im Spam nach) und melde dich dann hier im Tab 🔑 Anmelden an.",
+  "How many timeframes show momentum disagreeing with price at once, the multi-timeframe divergence many traders look for. Regular divergence hints at exhaustion, hidden divergence at continuation. Descriptive; not a trade signal by itself.": "Wie viele Zeitebenen gleichzeitig ein Momentum zeigen, das dem Kurs widerspricht, die Divergenz über mehrere Zeitebenen, nach der viele Trader suchen. Reguläre Divergenz deutet auf Erschöpfung, versteckte auf Fortsetzung. Beschreibend; allein kein Handelssignal.",
+  "Where the two Stoch RSI curves sit and when they last crossed, the way many traders read them: a cross up from both low, or down from both high, then a look up the chart for a printed dot. Descriptive; not a forecast.": "Wo die beiden Stoch-RSI-Kurven liegen und wann sie sich zuletzt gekreuzt haben, so wie viele Trader sie lesen: ein Kreuzen nach oben, wenn beide tief sind, oder nach unten, wenn beide hoch sind, dann ein Blick nach oben im Chart nach einem gedruckten Punkt. Beschreibend; keine Prognose."
 }

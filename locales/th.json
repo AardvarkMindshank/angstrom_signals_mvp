@@ -1300,7 +1300,6 @@
   "Candle (colour, close vs previous, body size)": "แท่งเทียน (สี, ราคาปิดเทียบแท่งก่อน, ขนาดตัวแท่ง)",
   "What the last candle did: a strong green candle has body_vs_average above 1 (bigger than usual). Descriptive; one candle says little on its own.": "แท่งเทียนล่าสุดทำอะไร: แท่งเขียวแรงจะมี body_vs_average มากกว่า 1 (ใหญ่กว่าปกติ) เป็นการอธิบาย แท่งเดียวบอกได้น้อย",
   "Divergence across timeframes": "Divergence ข้ามกรอบเวลา",
-  "How many timeframes show momentum disagreeing with price at once, the multi-timeframe divergence Drew looks for. Regular divergence hints at exhaustion, hidden divergence at continuation. Descriptive; not a trade signal by itself.": "มีกี่กรอบเวลาที่โมเมนตัมขัดแย้งกับราคาพร้อมกัน ซึ่งเป็น divergence หลายกรอบเวลาที่ Drew มองหา Regular divergence บ่งบอกถึงการหมดแรง hidden divergence บ่งบอกถึงการไปต่อ เป็นการอธิบาย ไม่ใช่สัญญาณเทรดด้วยตัวเอง",
   "MACD histogram": "MACD histogram",
   "Whether momentum is speeding up or slowing. Standard score (dashboard Stretch part): tanh(histogram / (ATR/4)). Descriptive; not a forecast.": "โมเมนตัมกำลังเร่งขึ้นหรือช้าลง คะแนนมาตรฐาน (ส่วนหนึ่งของ Stretch บนแดชบอร์ด): tanh(histogram / (ATR/4)) เป็นการอธิบาย ไม่ใช่การพยากรณ์",
   "Momentum direction": "ทิศทางโมเมนตัม",
@@ -1310,7 +1309,6 @@
   "Stochastic on OHLC4": "Stochastic บน OHLC4",
   "Where the candle's average price sits in its recent range, smoothed, and whether it just turned. Descriptive.": "ราคาเฉลี่ยของแท่งอยู่ตรงไหนในช่วงล่าสุด (ปรับให้เรียบ) และเพิ่งหันตัวหรือไม่ เป็นการอธิบาย",
   "Stoch RSI pair (OHLC4)": "คู่ Stoch RSI (OHLC4)",
-  "Where the two Stoch RSI curves sit and when they last crossed, the way Drew reads them: a cross up from both low, or down from both high, then a look up the chart for a printed dot. Descriptive; not a forecast.": "เส้น Stoch RSI ทั้งสองอยู่ตรงไหนและตัดกันครั้งล่าสุดเมื่อไร แบบที่ Drew อ่าน: ตัดขึ้นขณะที่ทั้งคู่อยู่ต่ำ หรือตัดลงขณะที่ทั้งคู่อยู่สูง แล้วดูกราฟด้านบนว่ามีจุดปรากฏหรือไม่ เป็นการอธิบาย ไม่ใช่การพยากรณ์",
   "WaveTrend momentum (Sonar)": "โมเมนตัม WaveTrend (Sonar)",
   "Where the momentum wave is and whether it just turned. A turn up from oversold is what many traders mark as a possible bounce point, to be read with the trend and other timeframes. Descriptive; not a forecast.": "คลื่นโมเมนตัมอยู่ตรงไหนและเพิ่งหันตัวหรือไม่ การหันขึ้นจากโซน oversold เป็นจุดที่เทรดเดอร์หลายคนมองว่าอาจเด้ง ควรอ่านคู่กับเทรนด์และกรอบเวลาอื่น เป็นการอธิบาย ไม่ใช่การพยากรณ์",
   "RSI (14)": "RSI (14)",
@@ -2168,5 +2166,7 @@
   "The symbols drawn over the candles (open-source formulas of a popular charting indicator). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "สัญลักษณ์ที่วาดบนแท่งเทียน (สูตรโอเพนซอร์สของตัวชี้วัดกราฟยอดนิยม) ชี้ที่แท่งเพื่อดูความหมายของแต่ละตัว จุดใหญ่อยู่บนแถบ 📡 Sonar",
   "Expand all: open every scan": "ขยายทั้งหมด: เปิดทุกการสแกน",
   "Collapse all: close every scan": "ยุบทั้งหมด: ปิดทุกการสแกน",
-  "✅ Account created for **{email}**. We've sent a confirmation email: open it (check junk mail too), then log in here on the 🔑 Log In tab.": "✅ สร้างบัญชีสำหรับ **{email}** แล้ว เราได้ส่งอีเมลยืนยันไปแล้ว เปิดอีเมลนั้น (ตรวจในโฟลเดอร์จดหมายขยะด้วย) แล้วเข้าสู่ระบบที่แท็บ 🔑 เข้าสู่ระบบ"
+  "✅ Account created for **{email}**. We've sent a confirmation email: open it (check junk mail too), then log in here on the 🔑 Log In tab.": "✅ สร้างบัญชีสำหรับ **{email}** แล้ว เราได้ส่งอีเมลยืนยันไปแล้ว เปิดอีเมลนั้น (ตรวจในโฟลเดอร์จดหมายขยะด้วย) แล้วเข้าสู่ระบบที่แท็บ 🔑 เข้าสู่ระบบ",
+  "How many timeframes show momentum disagreeing with price at once, the multi-timeframe divergence many traders look for. Regular divergence hints at exhaustion, hidden divergence at continuation. Descriptive; not a trade signal by itself.": "มีกี่กรอบเวลาที่โมเมนตัมขัดแย้งกับราคาพร้อมกัน ซึ่งเป็น divergence หลายกรอบเวลาที่เทรดเดอร์หลายคนมองหา Regular divergence บ่งบอกถึงการหมดแรง hidden divergence บ่งบอกถึงการไปต่อ เป็นการอธิบาย ไม่ใช่สัญญาณเทรดด้วยตัวเอง",
+  "Where the two Stoch RSI curves sit and when they last crossed, the way many traders read them: a cross up from both low, or down from both high, then a look up the chart for a printed dot. Descriptive; not a forecast.": "เส้น Stoch RSI ทั้งสองอยู่ตรงไหนและตัดกันครั้งล่าสุดเมื่อไร แบบที่เทรดเดอร์หลายคนอ่าน: ตัดขึ้นขณะที่ทั้งคู่อยู่ต่ำ หรือตัดลงขณะที่ทั้งคู่อยู่สูง แล้วดูกราฟด้านบนว่ามีจุดปรากฏหรือไม่ เป็นการอธิบาย ไม่ใช่การพยากรณ์"
 }

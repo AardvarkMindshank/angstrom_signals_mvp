@@ -1893,7 +1893,6 @@
   "Candle (colour, close vs previous, body size)": "K 线（颜色、收盘与前一根比较、实体大小）",
   "What the last candle did: a strong green candle has body_vs_average above 1 (bigger than usual). Descriptive; one candle says little on its own.": "最近一根 K 线的表现：强阳线的 body_vs_average 大于 1（比平常大）。仅为描述；单根 K 线本身说明不了太多。",
   "Divergence across timeframes": "跨时间周期背离",
-  "How many timeframes show momentum disagreeing with price at once, the multi-timeframe divergence Drew looks for. Regular divergence hints at exhaustion, hidden divergence at continuation. Descriptive; not a trade signal by itself.": "有多少个时间周期同时显示动量与价格背离，即 Drew 寻找的多周期背离。常规背离提示衰竭，隐藏背离提示延续。仅为描述；本身不是交易信号。",
   "MACD histogram": "MACD 柱状图",
   "Whether momentum is speeding up or slowing. Standard score (dashboard Stretch part): tanh(histogram / (ATR/4)). Descriptive; not a forecast.": "动量是在加速还是放缓。标准分数（仪表板 Stretch 部分）：tanh(柱状图 / (ATR/4))。仅为描述；不是预测。",
   "Momentum direction": "动量方向",
@@ -1903,7 +1902,6 @@
   "Stochastic on OHLC4": "OHLC4 随机指标",
   "Where the candle's average price sits in its recent range, smoothed, and whether it just turned. Descriptive.": "K 线平均价格在近期区间中的位置（经平滑），以及是否刚刚转向。仅为描述。",
   "Stoch RSI pair (OHLC4)": "Stoch RSI 双线（OHLC4）",
-  "Where the two Stoch RSI curves sit and when they last crossed, the way Drew reads them: a cross up from both low, or down from both high, then a look up the chart for a printed dot. Descriptive; not a forecast.": "两条 Stoch RSI 曲线的位置以及最近一次交叉的时间，按 Drew 的读法：两者都处于低位时向上交叉，或都处于高位时向下交叉，然后在图表上方查看是否打出圆点。仅为描述；不是预测。",
   "WaveTrend momentum (Sonar)": "WaveTrend 动量（Sonar）",
   "Where the momentum wave is and whether it just turned. A turn up from oversold is what many traders mark as a possible bounce point, to be read with the trend and other timeframes. Descriptive; not a forecast.": "动量波处于何处以及是否刚刚转向。从超卖区向上拐头是许多交易者标记的可能反弹点，需要结合趋势和其他时间周期来看。仅为描述；不是预测。",
   "RSI (14)": "RSI (14)",
@@ -2168,5 +2166,7 @@
   "The symbols drawn over the candles (open-source formulas of a popular charting indicator). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "绘制在K线上的符号（一款流行图表指标的开源公式）。指向一根K线即可查看每个符号的含义；大圆点在 📡 Sonar 条上。",
   "Expand all: open every scan": "全部展开：打开每个扫描",
   "Collapse all: close every scan": "全部收起：关闭每个扫描",
-  "✅ Account created for **{email}**. We've sent a confirmation email: open it (check junk mail too), then log in here on the 🔑 Log In tab.": "✅ 已为 **{email}** 创建账户。我们已发送确认邮件：请打开它（也请查看垃圾邮件），然后在此处的 🔑 登录 标签页登录。"
+  "✅ Account created for **{email}**. We've sent a confirmation email: open it (check junk mail too), then log in here on the 🔑 Log In tab.": "✅ 已为 **{email}** 创建账户。我们已发送确认邮件：请打开它（也请查看垃圾邮件），然后在此处的 🔑 登录 标签页登录。",
+  "How many timeframes show momentum disagreeing with price at once, the multi-timeframe divergence many traders look for. Regular divergence hints at exhaustion, hidden divergence at continuation. Descriptive; not a trade signal by itself.": "有多少个时间周期同时显示动量与价格背离，即许多交易者寻找的多周期背离。常规背离提示衰竭，隐藏背离提示延续。仅为描述；本身不是交易信号。",
+  "Where the two Stoch RSI curves sit and when they last crossed, the way many traders read them: a cross up from both low, or down from both high, then a look up the chart for a printed dot. Descriptive; not a forecast.": "两条 Stoch RSI 曲线的位置以及最近一次交叉的时间，按许多交易者的读法：两者都处于低位时向上交叉，或都处于高位时向下交叉，然后在图表上方查看是否打出圆点。仅为描述；不是预测。"
 }

@@ -1,5 +1,5 @@
 """
-Candle-level building blocks with adjustable settings (asked for 10 Nov 2026 to write setups such as Drew's
+Candle-level building blocks with adjustable settings (asked for 10 Nov 2026 to write setups such as a beta tester's
 "BTC Hybrid" entry rules as Sets):
 
 * ma.line      a moving average of any length, EMA or SMA: where the close sits, and whether this candle touched it and

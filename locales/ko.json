@@ -1893,7 +1893,6 @@
   "Candle (colour, close vs previous, body size)": "캔들(색, 이전 대비 종가, 몸통 크기)",
   "What the last candle did: a strong green candle has body_vs_average above 1 (bigger than usual). Descriptive; one candle says little on its own.": "마지막 캔들의 움직임: 강한 양봉은 body_vs_average가 1보다 큽니다(평소보다 큼). 설명이며, 캔들 하나만으로는 말해 주는 것이 적습니다.",
   "Divergence across timeframes": "타임프레임 간 다이버전스",
-  "How many timeframes show momentum disagreeing with price at once, the multi-timeframe divergence Drew looks for. Regular divergence hints at exhaustion, hidden divergence at continuation. Descriptive; not a trade signal by itself.": "동시에 몇 개의 타임프레임에서 모멘텀이 가격과 엇갈리는지, Drew가 찾는 다중 타임프레임 다이버전스입니다. 일반 다이버전스는 소진을, 히든 다이버전스는 지속을 시사합니다. 설명이며 그 자체로 매매 신호가 아닙니다.",
   "MACD histogram": "MACD 히스토그램",
   "Whether momentum is speeding up or slowing. Standard score (dashboard Stretch part): tanh(histogram / (ATR/4)). Descriptive; not a forecast.": "모멘텀이 빨라지는지 느려지는지. 표준 점수(대시보드 Stretch 부분): tanh(히스토그램 / (ATR/4)). 설명이며 예측이 아닙니다.",
   "Momentum direction": "모멘텀 방향",
@@ -1903,7 +1902,6 @@
   "Stochastic on OHLC4": "OHLC4 스토캐스틱",
   "Where the candle's average price sits in its recent range, smoothed, and whether it just turned. Descriptive.": "캔들의 평균 가격이 최근 범위에서 어디에 있는지(평활화)와 방금 방향을 바꿨는지. 설명입니다.",
   "Stoch RSI pair (OHLC4)": "Stoch RSI 쌍 (OHLC4)",
-  "Where the two Stoch RSI curves sit and when they last crossed, the way Drew reads them: a cross up from both low, or down from both high, then a look up the chart for a printed dot. Descriptive; not a forecast.": "두 Stoch RSI 곡선의 위치와 마지막 교차 시점을 Drew의 방식대로 읽습니다: 둘 다 낮을 때 위로 교차하거나 둘 다 높을 때 아래로 교차한 뒤, 차트 위쪽에 점이 찍혔는지 확인합니다. 설명이며 예측이 아닙니다.",
   "WaveTrend momentum (Sonar)": "WaveTrend 모멘텀 (Sonar)",
   "Where the momentum wave is and whether it just turned. A turn up from oversold is what many traders mark as a possible bounce point, to be read with the trend and other timeframes. Descriptive; not a forecast.": "모멘텀 파동이 어디에 있고 방금 방향을 바꿨는지. 과매도에서 위로 꺾이는 지점은 많은 트레이더가 반등 가능 지점으로 표시하는 곳이며, 추세와 다른 타임프레임과 함께 읽어야 합니다. 설명이며 예측이 아닙니다.",
   "RSI (14)": "RSI (14)",
@@ -2168,5 +2166,7 @@
   "The symbols drawn over the candles (open-source formulas of a popular charting indicator). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "캔들 위에 그려지는 기호(인기 차트 지표의 오픈소스 공식). 캔들을 가리키면 각 기호의 뜻이 보이며, 큰 점은 📡 Sonar 띠에 있습니다.",
   "Expand all: open every scan": "모두 펼치기: 모든 스캔 열기",
   "Collapse all: close every scan": "모두 접기: 모든 스캔 닫기",
-  "✅ Account created for **{email}**. We've sent a confirmation email: open it (check junk mail too), then log in here on the 🔑 Log In tab.": "✅ **{email}** 계정을 만들었습니다. 확인 이메일을 보냈습니다. 이메일을 열고(스팸함도 확인하세요) 여기 🔑 로그인 탭에서 로그인하세요."
+  "✅ Account created for **{email}**. We've sent a confirmation email: open it (check junk mail too), then log in here on the 🔑 Log In tab.": "✅ **{email}** 계정을 만들었습니다. 확인 이메일을 보냈습니다. 이메일을 열고(스팸함도 확인하세요) 여기 🔑 로그인 탭에서 로그인하세요.",
+  "How many timeframes show momentum disagreeing with price at once, the multi-timeframe divergence many traders look for. Regular divergence hints at exhaustion, hidden divergence at continuation. Descriptive; not a trade signal by itself.": "동시에 몇 개의 타임프레임에서 모멘텀이 가격과 엇갈리는지, 많은 트레이더가 찾는 다중 타임프레임 다이버전스입니다. 일반 다이버전스는 소진을, 히든 다이버전스는 지속을 시사합니다. 설명이며 그 자체로 매매 신호가 아닙니다.",
+  "Where the two Stoch RSI curves sit and when they last crossed, the way many traders read them: a cross up from both low, or down from both high, then a look up the chart for a printed dot. Descriptive; not a forecast.": "두 Stoch RSI 곡선의 위치와 마지막 교차 시점을 많은 트레이더의 방식대로 읽습니다: 둘 다 낮을 때 위로 교차하거나 둘 다 높을 때 아래로 교차한 뒤, 차트 위쪽에 점이 찍혔는지 확인합니다. 설명이며 예측이 아닙니다."
 }

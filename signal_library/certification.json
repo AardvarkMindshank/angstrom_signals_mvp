@@ -1,5 +1,5 @@
 {
- "code_sha256": "03fadef94ee7c3ac30bf280ed3f66c1ae15504c587be75d2eff532e232812e13",
+ "code_sha256": "5d66f1b88062def656fcd2796cf126d43f90619c8688325a09840ef92e8762e9",
  "cutoffs_per_dataset_minimum": 50,
  "datasets": [
   {
@@ -60,9 +60,9 @@
   }
  ],
  "generated_by": {
-  "git_commit": "a50d6b616c43c17e95cedd8d0225700d8ef545e3",
+  "git_commit": "3c27e80b83ff4f9f80ad60815bd05997d476796a",
   "note": "administrative; not compared",
-  "run_id": "43582622154"
+  "run_id": "44147607084"
  },
  "signals": {
   "bollinger.position@1": {

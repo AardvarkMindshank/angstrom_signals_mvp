@@ -1893,7 +1893,6 @@
   "Candle (colour, close vs previous, body size)": "Candle (warna, penutupan vs sebelumnya, ukuran badan)",
   "What the last candle did: a strong green candle has body_vs_average above 1 (bigger than usual). Descriptive; one candle says little on its own.": "Apa yang dilakukan candle terakhir: candle hijau kuat punya body_vs_average di atas 1 (lebih besar dari biasanya). Deskriptif; satu candle saja tidak banyak berarti.",
   "Divergence across timeframes": "Divergensi lintas timeframe",
-  "How many timeframes show momentum disagreeing with price at once, the multi-timeframe divergence Drew looks for. Regular divergence hints at exhaustion, hidden divergence at continuation. Descriptive; not a trade signal by itself.": "Berapa banyak timeframe yang sekaligus menunjukkan momentum berlawanan dengan harga, divergensi multi-timeframe yang dicari Drew. Divergensi reguler mengisyaratkan kelelahan, divergensi tersembunyi mengisyaratkan kelanjutan. Deskriptif; bukan sinyal trading dengan sendirinya.",
   "MACD histogram": "Histogram MACD",
   "Whether momentum is speeding up or slowing. Standard score (dashboard Stretch part): tanh(histogram / (ATR/4)). Descriptive; not a forecast.": "Apakah momentum sedang menguat atau melambat. Skor standar (bagian Stretch dasbor): tanh(histogram / (ATR/4)). Deskriptif; bukan prakiraan.",
   "Momentum direction": "Arah momentum",
@@ -1903,7 +1902,6 @@
   "Stochastic on OHLC4": "Stochastic pada OHLC4",
   "Where the candle's average price sits in its recent range, smoothed, and whether it just turned. Descriptive.": "Di mana harga rata-rata candle berada dalam rentang terkininya, dihaluskan, dan apakah baru saja berbalik. Deskriptif.",
   "Stoch RSI pair (OHLC4)": "Pasangan Stoch RSI (OHLC4)",
-  "Where the two Stoch RSI curves sit and when they last crossed, the way Drew reads them: a cross up from both low, or down from both high, then a look up the chart for a printed dot. Descriptive; not a forecast.": "Di mana dua kurva Stoch RSI berada dan kapan terakhir bersilangan, seperti cara Drew membacanya: silang naik saat keduanya rendah, atau silang turun saat keduanya tinggi, lalu melihat ke atas grafik mencari titik yang tercetak. Deskriptif; bukan prakiraan.",
   "WaveTrend momentum (Sonar)": "Momentum WaveTrend (Sonar)",
   "Where the momentum wave is and whether it just turned. A turn up from oversold is what many traders mark as a possible bounce point, to be read with the trend and other timeframes. Descriptive; not a forecast.": "Di mana gelombang momentum berada dan apakah baru saja berbalik. Berbalik naik dari jenuh jual adalah yang ditandai banyak trader sebagai kemungkinan titik pantulan, dibaca bersama tren dan timeframe lain. Deskriptif; bukan prakiraan.",
   "RSI (14)": "RSI (14)",
@@ -2168,5 +2166,7 @@
   "The symbols drawn over the candles (open-source formulas of a popular charting indicator). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "Simbol yang digambar di atas candle (rumus sumber terbuka dari indikator grafik yang populer). Arahkan ke candle untuk melihat arti masing-masing; titik besar ada di strip 📡 Sonar.",
   "Expand all: open every scan": "Buka semua: buka setiap pemindaian",
   "Collapse all: close every scan": "Tutup semua: tutup setiap pemindaian",
-  "✅ Account created for **{email}**. We've sent a confirmation email: open it (check junk mail too), then log in here on the 🔑 Log In tab.": "✅ Akun dibuat untuk **{email}**. Kami telah mengirim email konfirmasi: buka email itu (periksa juga folder spam), lalu masuk di sini pada tab 🔑 Masuk."
+  "✅ Account created for **{email}**. We've sent a confirmation email: open it (check junk mail too), then log in here on the 🔑 Log In tab.": "✅ Akun dibuat untuk **{email}**. Kami telah mengirim email konfirmasi: buka email itu (periksa juga folder spam), lalu masuk di sini pada tab 🔑 Masuk.",
+  "How many timeframes show momentum disagreeing with price at once, the multi-timeframe divergence many traders look for. Regular divergence hints at exhaustion, hidden divergence at continuation. Descriptive; not a trade signal by itself.": "Berapa banyak timeframe yang sekaligus menunjukkan momentum berlawanan dengan harga, divergensi multi-timeframe yang dicari banyak trader. Divergensi reguler mengisyaratkan kelelahan, divergensi tersembunyi mengisyaratkan kelanjutan. Deskriptif; bukan sinyal trading dengan sendirinya.",
+  "Where the two Stoch RSI curves sit and when they last crossed, the way many traders read them: a cross up from both low, or down from both high, then a look up the chart for a printed dot. Descriptive; not a forecast.": "Di mana dua kurva Stoch RSI berada dan kapan terakhir bersilangan, seperti cara banyak trader membacanya: silang naik saat keduanya rendah, atau silang turun saat keduanya tinggi, lalu melihat ke atas grafik mencari titik yang tercetak. Deskriptif; bukan prakiraan."
 }

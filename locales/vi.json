@@ -1893,7 +1893,6 @@
   "Candle (colour, close vs previous, body size)": "Nến (màu, giá đóng cửa so với nến trước, kích thước thân)",
   "What the last candle did: a strong green candle has body_vs_average above 1 (bigger than usual). Descriptive; one candle says little on its own.": "Nến gần nhất đã làm gì: một nến xanh mạnh có body_vs_average trên 1 (lớn hơn thường lệ). Mang tính mô tả; một nến riêng lẻ nói lên ít điều.",
   "Divergence across timeframes": "Phân kỳ trên nhiều khung thời gian",
-  "How many timeframes show momentum disagreeing with price at once, the multi-timeframe divergence Drew looks for. Regular divergence hints at exhaustion, hidden divergence at continuation. Descriptive; not a trade signal by itself.": "Bao nhiêu khung thời gian cùng lúc cho thấy động lượng trái ngược với giá, loại phân kỳ đa khung mà Drew tìm kiếm. Phân kỳ thường gợi ý cạn kiệt, phân kỳ ẩn gợi ý tiếp diễn. Mang tính mô tả; tự nó không phải tín hiệu giao dịch.",
   "MACD histogram": "Histogram MACD",
   "Whether momentum is speeding up or slowing. Standard score (dashboard Stretch part): tanh(histogram / (ATR/4)). Descriptive; not a forecast.": "Động lượng đang tăng tốc hay chậm lại. Điểm chuẩn (phần Stretch của bảng điều khiển): tanh(histogram / (ATR/4)). Mang tính mô tả; không phải dự báo.",
   "Momentum direction": "Hướng động lượng",
@@ -1903,7 +1902,6 @@
   "Stochastic on OHLC4": "Stochastic trên OHLC4",
   "Where the candle's average price sits in its recent range, smoothed, and whether it just turned. Descriptive.": "Giá trung bình của nến nằm ở đâu trong vùng gần đây, đã làm mượt, và liệu nó vừa đổi chiều. Mang tính mô tả.",
   "Stoch RSI pair (OHLC4)": "Cặp Stoch RSI (OHLC4)",
-  "Where the two Stoch RSI curves sit and when they last crossed, the way Drew reads them: a cross up from both low, or down from both high, then a look up the chart for a printed dot. Descriptive; not a forecast.": "Hai đường Stoch RSI nằm ở đâu và lần cắt nhau gần nhất là khi nào, theo cách Drew đọc: cắt lên khi cả hai đều thấp, hoặc cắt xuống khi cả hai đều cao, rồi nhìn lên biểu đồ tìm một chấm đã in. Mang tính mô tả; không phải dự báo.",
   "WaveTrend momentum (Sonar)": "Động lượng WaveTrend (Sonar)",
   "Where the momentum wave is and whether it just turned. A turn up from oversold is what many traders mark as a possible bounce point, to be read with the trend and other timeframes. Descriptive; not a forecast.": "Sóng động lượng đang ở đâu và liệu nó vừa đổi chiều. Một cú quay lên từ vùng quá bán là điều nhiều nhà giao dịch đánh dấu là điểm có thể bật lại, cần đọc cùng xu hướng và các khung thời gian khác. Mang tính mô tả; không phải dự báo.",
   "RSI (14)": "RSI (14)",
@@ -2168,5 +2166,7 @@
   "The symbols drawn over the candles (open-source formulas of a popular charting indicator). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "Các ký hiệu vẽ trên nến (công thức mã nguồn mở của một chỉ báo biểu đồ phổ biến). Trỏ vào một nến để xem ý nghĩa của từng ký hiệu; các chấm lớn nằm trên dải 📡 Sonar.",
   "Expand all: open every scan": "Mở rộng tất cả: mở mọi lần quét",
   "Collapse all: close every scan": "Thu gọn tất cả: đóng mọi lần quét",
-  "✅ Account created for **{email}**. We've sent a confirmation email: open it (check junk mail too), then log in here on the 🔑 Log In tab.": "✅ Đã tạo tài khoản cho **{email}**. Chúng tôi đã gửi email xác nhận: hãy mở email đó (kiểm tra cả thư rác), rồi đăng nhập tại tab 🔑 Đăng nhập."
+  "✅ Account created for **{email}**. We've sent a confirmation email: open it (check junk mail too), then log in here on the 🔑 Log In tab.": "✅ Đã tạo tài khoản cho **{email}**. Chúng tôi đã gửi email xác nhận: hãy mở email đó (kiểm tra cả thư rác), rồi đăng nhập tại tab 🔑 Đăng nhập.",
+  "How many timeframes show momentum disagreeing with price at once, the multi-timeframe divergence many traders look for. Regular divergence hints at exhaustion, hidden divergence at continuation. Descriptive; not a trade signal by itself.": "Bao nhiêu khung thời gian cùng lúc cho thấy động lượng trái ngược với giá, loại phân kỳ đa khung mà nhiều nhà giao dịch tìm kiếm. Phân kỳ thường gợi ý cạn kiệt, phân kỳ ẩn gợi ý tiếp diễn. Mang tính mô tả; tự nó không phải tín hiệu giao dịch.",
+  "Where the two Stoch RSI curves sit and when they last crossed, the way many traders read them: a cross up from both low, or down from both high, then a look up the chart for a printed dot. Descriptive; not a forecast.": "Hai đường Stoch RSI nằm ở đâu và lần cắt nhau gần nhất là khi nào, theo cách nhiều nhà giao dịch đọc: cắt lên khi cả hai đều thấp, hoặc cắt xuống khi cả hai đều cao, rồi nhìn lên biểu đồ tìm một chấm đã in. Mang tính mô tả; không phải dự báo."
 }
