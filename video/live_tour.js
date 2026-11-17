@@ -52,6 +52,11 @@ const W = 1280, H = 720;
     await page.fill('input[autocomplete="username"]', email);
     await page.fill('input[autocomplete="current-password"]', password);
     await page.locator("button").filter({ hasText: "Log In" }).first().click();
+    // What the page shows in the seconds after Log In, every 120 ms (to see any flicker of the sign-in form).
+    for (let i = 0; i < 70; i += 1) {
+      await page.screenshot({ path: path.join(OUT, `burst_${String(i).padStart(2, "0")}.png`), scale: "css" }).catch(() => {});
+      await page.waitForTimeout(120);
+    }
     await page.waitForFunction(() => !document.querySelector('input[autocomplete="current-password"]'), null, { timeout: 120000 })
       .catch(() => {});
     await settle(3000);
