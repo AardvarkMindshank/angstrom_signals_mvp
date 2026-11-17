@@ -1055,7 +1055,14 @@ export default function(component) {
       .catch(() => {});
   };
   window.__angstromBootTimer = window.setInterval(check, 20000);
-  document.addEventListener("visibilitychange", () => { if (!document.hidden) check(); });
+  // Coming back to the page. A home-screen app on Android is frozen in the background and, on its return, may give
+  // only one of these signals, sometimes before the network is back: so listen for all of them, and look again a
+  // few seconds later (17 Nov 2026: a home-screen app kept an old page after an update until it was swiped away).
+  const wake = () => { check(); window.setTimeout(check, 2500); window.setTimeout(check, 8000); };
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) wake(); });
+  document.addEventListener("resume", wake);
+  window.addEventListener("pageshow", wake);
+  window.addEventListener("online", wake);
   window.addEventListener("focus", check);
   // After an update, a click inside a part that redraws on its own (Angstrom Lattice tabs, for example) is ignored
   // by the new server until the page reloads. So any click also checks (at most every 3 seconds): an update found
