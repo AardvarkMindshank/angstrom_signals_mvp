@@ -85,7 +85,7 @@ const W = 1280, H = 720;
       await settle(2500);
       await shot("lattice");
       for (const part of ["Signal Groups", "Signal Sets", "Prism Scan", "Funnels"]) {
-        const tab = page.locator("button").filter({ hasText: part }).first();
+        const tab = page.locator("button").filter({ hasText: part, visible: true }).first();
         if (!(await tab.count())) { note(`no ${part} tab found`); continue; }
         await glideTo(tab);
         await tab.click();

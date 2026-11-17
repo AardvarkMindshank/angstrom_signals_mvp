@@ -1,5 +1,5 @@
 # A test recording of the live site as the demo account (video/live_tour.js): a raw video and screenshots, kept as
-# a workflow artifact (not on the reports branch). The login comes from the DEMO_EMAIL and DEMO_PASSWORD secrets.
+# a workflow artifact and on the reports branch (live_tour/...), so it can be looked at without downloads. The login comes from the DEMO_EMAIL and DEMO_PASSWORD secrets.
 # Run by hand from the Actions page, or by pushing the "live-tour" branch.
 name: live-tour
 on:
@@ -7,7 +7,7 @@ on:
     branches: [live-tour]
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
   tour:
     runs-on: ubuntu-latest
@@ -34,6 +34,9 @@ jobs:
           if [ -f out/live_tour/tour.webm ]; then
             ffmpeg -loglevel error -y -i out/live_tour/tour.webm -c:v libx264 -preset veryfast -crf 23 -pix_fmt yuv420p out/live_tour/tour.mp4 || true
           fi
+      - name: Save to reports branch
+        if: always()
+        run: bash .github/scripts/save_to_reports.sh "live_tour/$(date -u +%Y-%m-%d_%H%M)_${GITHUB_SHA::7}" out/live_tour/*.png out/live_tour/tour.mp4 out/live_tour/log.txt
       - uses: actions/upload-artifact@v5
         if: always()
         with:
