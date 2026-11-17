@@ -1281,7 +1281,6 @@
   "💾 Save as a new Group": "💾 另存为新 Group",
   "**What this Group returns**": "**此 Group 返回什么**",
   "Saved Groups could not be read: {problem}": "无法读取已保存的 Groups：{problem}",
-  "The dashboard's own readings, as Groups. Pick one in **Start from** below to open your own copy; the original stays as it is. Hide these in ⚙️ Settings → Show provided starters and examples.": "仪表板自身的读数，以 Groups 形式提供。在下方**起点**中选择一个即可打开您自己的副本；原件保持不变。可在 ⚙️ 设置 → 显示提供的入门项和示例中隐藏它们。",
   "New name for this {word}": "此{word}的新名称",
   "Rename": "重命名",
   "Delete **{source_name}**? It disappears from your lists; if it is a column in your tables, that column is removed too. You can undo this straight after.": "删除 **{source_name}**？它会从您的列表中消失；如果它是表格中的一列，该列也会被移除。您可以在之后立即撤销。",

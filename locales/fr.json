@@ -1281,7 +1281,6 @@
   "💾 Save as a new Group": "💾 Enregistrer comme nouveau Group",
   "**What this Group returns**": "**Ce que renvoie ce Group**",
   "Saved Groups could not be read: {problem}": "Les Groups enregistrés n'ont pas pu être lus : {problem}",
-  "The dashboard's own readings, as Groups. Pick one in **Start from** below to open your own copy; the original stays as it is. Hide these in ⚙️ Settings → Show provided starters and examples.": "Les lectures du tableau de bord, sous forme de Groups. Choisissez-en un dans **Partir de** ci-dessous pour ouvrir votre propre copie ; l'original reste tel quel. Masquez-les dans ⚙️ Paramètres → Afficher les modèles de départ et exemples fournis.",
   "New name for this {word}": "Nouveau nom pour ce {word}",
   "Rename": "Renommer",
   "Delete **{source_name}**? It disappears from your lists; if it is a column in your tables, that column is removed too. You can undo this straight after.": "Supprimer **{source_name}** ? Il disparaît de vos listes ; s'il s'agit d'une colonne de vos tableaux, cette colonne est aussi retirée. Vous pourrez annuler juste après.",

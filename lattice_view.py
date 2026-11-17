@@ -76,8 +76,6 @@ def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str = "") 
     labels, docs = _sources(saved, user_id, st.session_state.get("lattice_start"), lattice_panel.provided_shown(st))
     if st.session_state.get("lattice_start") not in labels:
         st.session_state.pop("lattice_start", None)
-    if lattice_panel.provided_shown(st):
-        _provided_starters(st)
     start = st.selectbox(t("Start from"), list(labels), format_func=labels.get, key="lattice_start", placeholder=t("Choose an option"))
     if st.session_state.get("lattice_loaded") != start:
         st.session_state["lattice_loaded"] = start
@@ -155,44 +153,6 @@ def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str = "") 
     _try(st, supabase, model, assets, screen["can_save"])
     if problem:
         st.caption(t('Saved Groups could not be read: {problem}', problem=problem))
-
-
-def starters_html() -> str:
-    """Each starter Group: name, what it looks at, evidence status, one line and "more…" (perspectives.py)."""
-    import html
-
-    import perspectives
-
-    esc = lambda t: html.escape(str(t), quote=True)
-    rows = []
-    for alias, name, doc in provided_groups():
-        doc, more = dict(doc, name=name), perspectives.explain(alias)
-        icons = "".join(f"<span title='{esc(c['hover'])}' aria-label='{esc(c['hover'])}' style='cursor:help'>{c['icon']}"
-                        "</span>" for c in perspectives.chips(doc))
-        ev_icon, ev_words = perspectives.EVIDENCE["untested"]
-        body = ""
-        if more:
-            body = (f"<div style='font-size:13px;opacity:.85'>{esc(more['line'])}</div>"
-                    "<details class='more' style='font-size:13px'><summary style='cursor:pointer;opacity:.75;"
-                    "list-style:none'><span class='m'>more…</span><span class='l'>less…</span></summary>"
-                    f"<p style='margin:4px 0'><b>What it measures:</b> {esc(more['measures'])}</p>"
-                    f"<p style='margin:4px 0'><b>Why traders watch it:</b> {esc(more['why'])}</p>"
-                    f"<p style='margin:4px 0'><b>What it doesn't prove:</b> {esc(more['not_proven'])}</p></details>")
-        rows.append(f"<div style='padding:6px 0;border-bottom:1px solid rgba(127,127,127,.2)'>"
-                    f"<div><b>{esc(doc['name'])}</b> <span style='margin-left:4px'>{icons}</span>"
-                    f"<span title='{esc(ev_words)}' aria-label='{esc(ev_words)}' style='margin-left:6px;opacity:.75;"
-                    f"cursor:help'>{ev_icon}</span></div>{body}</div>")
-    style = ("<style>details.more[open] .m,details.more:not([open]) .l{display:none}"
-             "details.more summary::-webkit-details-marker{display:none}</style>")
-    return style + "<div>" + "".join(rows) + "</div>"
-
-
-def _provided_starters(st) -> None:
-    """The starter Groups, in their own folded section: copy one to start from it."""
-    with st.expander(t(lattice_panel.PROVIDED_TITLE) + " · Groups", icon=":material/inventory_2:"):
-        st.caption(t("The dashboard's own readings, as Groups. Pick one in **Start from** below to open your own copy; "
-                   "the original stays as it is. Hide these in ⚙️ Settings → Show provided starters and examples."))
-        st.html(starters_html())
 
 
 def _rename(st, supabase, kind: str, source: dict) -> None:

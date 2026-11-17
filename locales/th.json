@@ -574,7 +574,6 @@
   "💾 Save as a new Group": "💾 บันทึกเป็น Group ใหม่",
   "**What this Group returns**": "**สิ่งที่ Group นี้ให้ผลลัพธ์**",
   "Saved Groups could not be read: {problem}": "อ่าน Group ที่บันทึกไว้ไม่ได้: {problem}",
-  "The dashboard's own readings, as Groups. Pick one in **Start from** below to open your own copy; the original stays as it is. Hide these in ⚙️ Settings → Show provided starters and examples.": "ค่าที่แดชบอร์ดใช้เอง ในรูปแบบ Group เลือกหนึ่งอันใน **เริ่มจาก** ด้านล่างเพื่อเปิดสำเนาของคุณ ต้นฉบับยังคงเดิม ซ่อนสิ่งเหล่านี้ได้ใน ⚙️ การตั้งค่า → แสดงชุดเริ่มต้นและตัวอย่างที่เตรียมไว้ให้",
   "New name for this {word}": "ชื่อใหม่สำหรับ{word}นี้",
   "Rename": "เปลี่ยนชื่อ",
   "Delete **{source_name}**? It disappears from your lists; if it is a column in your tables, that column is removed too. You can undo this straight after.": "ลบ **{source_name}**? จะหายไปจากรายการของคุณ หากเป็นคอลัมน์ในตารางของคุณ คอลัมน์นั้นจะถูกลบด้วย คุณย้อนกลับได้ทันทีหลังจากนี้",

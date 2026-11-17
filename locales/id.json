@@ -1281,7 +1281,6 @@
   "💾 Save as a new Group": "💾 Simpan sebagai Group baru",
   "**What this Group returns**": "**Apa yang dihasilkan Group ini**",
   "Saved Groups could not be read: {problem}": "Groups tersimpan tidak dapat dibaca: {problem}",
-  "The dashboard's own readings, as Groups. Pick one in **Start from** below to open your own copy; the original stays as it is. Hide these in ⚙️ Settings → Show provided starters and examples.": "Pembacaan dasbor itu sendiri, sebagai Groups. Pilih salah satu di **Mulai dari** di bawah untuk membuka salinan Anda; aslinya tetap seperti semula. Sembunyikan di ⚙️ Pengaturan → Tampilkan pemula dan contoh yang disediakan.",
   "New name for this {word}": "Nama baru untuk {word} ini",
   "Rename": "Ganti nama",
   "Delete **{source_name}**? It disappears from your lists; if it is a column in your tables, that column is removed too. You can undo this straight after.": "Hapus **{source_name}**? Item ini hilang dari daftar Anda; jika menjadi kolom di tabel Anda, kolom itu juga dihapus. Anda bisa mengurungkannya segera setelahnya.",

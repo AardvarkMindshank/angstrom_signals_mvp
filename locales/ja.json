@@ -1281,7 +1281,6 @@
   "💾 Save as a new Group": "💾 新しいGroupとして保存",
   "**What this Group returns**": "**このGroupが返すもの**",
   "Saved Groups could not be read: {problem}": "保存したGroupsを読み込めませんでした：{problem}",
-  "The dashboard's own readings, as Groups. Pick one in **Start from** below to open your own copy; the original stays as it is. Hide these in ⚙️ Settings → Show provided starters and examples.": "ダッシュボード自身の指標をGroupsにしたものです。下の**開始元**で1つ選ぶと自分用のコピーが開き、元はそのまま残ります。⚙️ 設定 → 提供スターターと例を表示で非表示にできます。",
   "New name for this {word}": "この{word}の新しい名前",
   "Rename": "名前を変更",
   "Delete **{source_name}**? It disappears from your lists; if it is a column in your tables, that column is removed too. You can undo this straight after.": "**{source_name}**を削除しますか？リストから消え、表の列になっている場合はその列も削除されます。直後なら元に戻せます。",

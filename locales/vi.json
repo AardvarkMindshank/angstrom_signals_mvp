@@ -1281,7 +1281,6 @@
   "💾 Save as a new Group": "💾 Lưu thành Group mới",
   "**What this Group returns**": "**Group này trả về gì**",
   "Saved Groups could not be read: {problem}": "Không đọc được các Groups đã lưu: {problem}",
-  "The dashboard's own readings, as Groups. Pick one in **Start from** below to open your own copy; the original stays as it is. Hide these in ⚙️ Settings → Show provided starters and examples.": "Chính các chỉ số của bảng điều khiển, dưới dạng Groups. Chọn một trong **Bắt đầu từ** bên dưới để mở bản sao của bạn; bản gốc giữ nguyên. Ẩn chúng trong ⚙️ Cài đặt → Hiển thị mẫu khởi đầu và ví dụ được cung cấp.",
   "New name for this {word}": "Tên mới cho {word} này",
   "Rename": "Đổi tên",
   "Delete **{source_name}**? It disappears from your lists; if it is a column in your tables, that column is removed too. You can undo this straight after.": "Xóa **{source_name}**? Nó sẽ biến mất khỏi danh sách của bạn; nếu nó là một cột trong bảng, cột đó cũng bị xóa. Bạn có thể hoàn tác ngay sau đó.",

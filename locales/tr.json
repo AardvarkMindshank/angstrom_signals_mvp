@@ -1281,7 +1281,6 @@
   "💾 Save as a new Group": "💾 Yeni Group olarak kaydet",
   "**What this Group returns**": "**Bu Group ne döndürür**",
   "Saved Groups could not be read: {problem}": "Kayıtlı Groups okunamadı: {problem}",
-  "The dashboard's own readings, as Groups. Pick one in **Start from** below to open your own copy; the original stays as it is. Hide these in ⚙️ Settings → Show provided starters and examples.": "Panonun kendi okumaları, Groups olarak. Kendi kopyanızı açmak için aşağıdaki **Şununla başla** bölümünden birini seçin; asıl olduğu gibi kalır. ⚙️ Ayarlar → Sağlanan başlangıçları ve örnekleri göster'den gizleyin.",
   "New name for this {word}": "Bu {word} için yeni ad",
   "Rename": "Yeniden adlandır",
   "Delete **{source_name}**? It disappears from your lists; if it is a column in your tables, that column is removed too. You can undo this straight after.": "**{source_name}** silinsin mi? Listelerinizden kaybolur; tablolarınızda bir sütunsa o sütun da kaldırılır. Hemen ardından geri alabilirsiniz.",

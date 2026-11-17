@@ -1281,7 +1281,6 @@
   "💾 Save as a new Group": "💾 새 Group으로 저장",
   "**What this Group returns**": "**이 Group이 돌려주는 것**",
   "Saved Groups could not be read: {problem}": "저장한 Groups를 읽지 못했습니다: {problem}",
-  "The dashboard's own readings, as Groups. Pick one in **Start from** below to open your own copy; the original stays as it is. Hide these in ⚙️ Settings → Show provided starters and examples.": "대시보드 자체의 지표를 Groups로 만든 것입니다. 아래 **시작점**에서 하나를 고르면 내 사본이 열리며, 원본은 그대로 남습니다. ⚙️ 설정 → 제공된 시작용 항목과 예시 표시에서 숨기세요.",
   "New name for this {word}": "이 {word}의 새 이름",
   "Rename": "이름 바꾸기",
   "Delete **{source_name}**? It disappears from your lists; if it is a column in your tables, that column is removed too. You can undo this straight after.": "**{source_name}**을(를) 삭제할까요? 목록에서 사라지고, 표의 열이라면 그 열도 제거됩니다. 바로 직후에는 되돌릴 수 있습니다.",
