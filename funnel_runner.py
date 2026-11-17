@@ -577,4 +577,10 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    import db_meter
+
+    db_meter.install()
+    try:
+        raise SystemExit(main())
+    finally:
+        db_meter.report("funnel run")

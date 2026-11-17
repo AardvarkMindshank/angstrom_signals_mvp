@@ -300,4 +300,12 @@ def main(argv=None) -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    import sys
+
+    import db_meter
+
+    db_meter.install()
+    try:
+        raise SystemExit(main())
+    finally:
+        db_meter.report("studies " + " ".join(sys.argv[1:2]))

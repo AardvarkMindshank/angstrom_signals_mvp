@@ -596,4 +596,10 @@ def run_background_checks() -> None:
 
 
 if __name__ == "__main__":
-    run_background_checks()
+    import db_meter
+
+    db_meter.install()
+    try:
+        run_background_checks()
+    finally:
+        db_meter.report("alerts run")

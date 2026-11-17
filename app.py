@@ -56,6 +56,14 @@ _POPOUT_MARK = "popout-tab"
 
 _RUN_STARTED = time.perf_counter()
 
+# 📏 Database requests and bytes, per page load and since the server started (db_meter.py; Admin → Page timing).
+import db_meter
+
+db_meter.install()
+_DB_BEFORE = db_meter.snapshot()
+_DB_SERVER_START = getattr(db_meter, "_server_start", None) or time.time()
+db_meter._server_start = _DB_SERVER_START
+
 # Helper threads that read the database are not attached to a page, and Streamlit logs a
 # harmless "missing ScriptRunContext" warning for each one. Hide that so real errors stand out.
 import logging as _logging
@@ -9760,6 +9768,18 @@ def admin_panel() -> None:
                         + (f", of the {limit:,.0f} MB this server has (for every user together)." if limit else
                            " (for every user together).")
                     )
+                _db_load = st.session_state.get("_db_last_load") or {}
+                _n, _kb = db_meter.totals(_db_load)
+                _all = db_meter.snapshot()
+                _n_all, _b_all = db_meter.totals(_all)
+                _hours = max((time.time() - _DB_SERVER_START) / 3600, 0.01)
+                st.write(f"Database, your last page load: {_n} requests, {_kb / 1024:,.0f} KB. Since this server "
+                         f"started {_hours:,.1f} h ago, all users: {_n_all:,} requests, {_b_all / 1048576:,.1f} MB "
+                         f"(about {_b_all / 1048576 / _hours * 24:,.0f} MB and {_n_all / _hours * 24:,.0f} requests a "
+                         "day at this rate). The free plan allows about 165 MB a day.")
+                with st.expander("Database use by table, since this server started", expanded=False, key="db_meter_tables"):
+                    for _line in db_meter.lines(_all, top=25):
+                        st.write(_line)
                 st.caption("Milliseconds spent on each step the last time the dashboard drew. Slowest first.")
                 for label, spent in sorted(perf.items(), key=lambda item: item[1], reverse=True):
                     st.write(f"{label}: {spent}" if ("worked out" in label or "one at a time" in label
@@ -16135,6 +16155,7 @@ render_dashboard(
 if _POPOUT_VIEW:
     st.stop()
 _record_run("whole page", _RUN_STARTED)
+st.session_state["_db_last_load"] = db_meter.since(_DB_BEFORE)
 # Angstrom Lattice is drawn inside the dashboard, straight under the Interactive Chart (_lattice_section).
 if str((load_profile() or {}).get("role") or "") == "admin":
     admin_panel()
