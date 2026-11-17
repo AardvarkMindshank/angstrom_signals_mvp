@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Features | Angstrom Signals</title>
+<meta name="description" content="Technical scores, AI market sentiment, the crowd's view, a social stream and chat, alerts and testing, all in one dashboard.">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html"><img src="logo.png" alt="" width="34" height="36">Angstrom Signals</a>
+    <nav class="nav" aria-label="Main"><a href="index.html">Home</a><a href="features.html" aria-current="page">Features</a><a href="evidence.html">Evidence</a><a href="faq.html">FAQ</a><a href="pricing.html">Pricing</a><a href="contact.html">Contact</a><a href="https://app.angstromsignals.com" target="_blank" rel="noopener">Beta log-in</a><a class="btn" href="beta.html">Request beta access</a></nav>
+  </div>
+</header>
+<main>
+
+<div class="page-head"><div class="wrap">
+  <h1>Features</h1>
+  <p>Technical scores, market sentiment, the crowd's view and a social stream, for whole markets and for single assets.</p>
+</div></div>
+<div class="prose"><div class="narrow">
+  <h2>Your watchlists</h2>
+  <p>Choose whether you trade crypto, stocks or both. Add coins by ticker or name and stocks by ticker. Watchlists, weights, alert rules, chart choices and settings are saved on your account, and every section can be opened or folded away. Each name shows its logo, a 30-day trend line and how many accounts have it on a watchlist, without saying who.</p>
+  <figure class="shot tall"><img src="screenshots/watchlists.png" alt="The watchlist editor in the sidebar" width="407" height="1282" loading="lazy"><figcaption>Add coins by ticker or name and stocks by ticker.</figcaption></figure>
+
+  <h2>Technical scores</h2>
+  <p>Every score starts at 50 and each indicator adds or subtracts points, kept between 0 and 100. It describes current conditions and is not a forecast.</p>
+  <ul class="plain">
+    <li><strong>RSI and Stochastic</strong> mark oversold and overbought readings.</li>
+    <li><strong>Moving averages, ADX and Ichimoku</strong> describe trend and its strength.</li>
+    <li><strong>MACD and Bollinger Bands</strong> describe momentum and range.</li>
+    <li><strong>Volume and OBV</strong> describe how much trading backs a move.</li>
+    <li><strong>The 7-day move</strong> adds recent performance.</li>
+  </ul>
+  <p>Sliders scale each factor, and zero turns one off. Built-in sets such as trend following and mean reversion are included, and you can save your own. Hover a score to read why it landed there, and click it for the full breakdown. Optional columns add market cap, volatility (ATR %), relative volume and 1, 7 and 30-day changes.</p>
+  <figure class="shot"><img src="screenshots/scores-table.png" alt="Crypto scores table with score bars, sentiment and trend lines" width="1700" height="536" loading="lazy"><figcaption>Scores for a watchlist, sortable by any column.</figcaption></figure>
+  <figure class="shot tall"><img src="screenshots/weights.png" alt="Factor weight sliders and named weight sets" width="380" height="1757" loading="lazy"><figcaption>Slide each factor up or down, or save a named set.</figcaption></figure>
+  <figure class="shot"><img src="screenshots/score-breakdown.png" alt="Score breakdown for one asset showing what moved the score" width="1700" height="669" loading="lazy"><figcaption>Why a score landed where it did.</figcaption></figure>
+
+  <h2>What changed</h2>
+  <p>The first block in the Quick Snapshot lists scores that crossed your bullish or bearish line since you last opened the page, then other large moves, and the factor that moved each one most. Click a row to open that asset on the chart.</p>
+  <figure class="shot"><img src="screenshots/quick-snapshot.png" alt="The Quick Snapshot with what changed and market sentiment boxes" width="1700" height="736" loading="lazy"><figcaption>Quick Snapshot.</figcaption></figure>
+
+  <h2>Market sentiment</h2>
+  <p>An AI reads headlines from the last seven days for each asset, and for the crypto market and the stock market as a whole. Each headline gets a score from 0 to 100 and a one-sentence summary, and a positive and a negative paragraph are drawn from the same headlines.</p>
+  <p>Market readings add a second layer: liquidity and central banks, the dollar and yields, and crypto sentiment for crypto; policy and inflation, market breadth and institutional feeds for stocks. Scores are shared by everyone and refreshed about every twelve hours.</p>
+  <figure class="shot"><img src="screenshots/asset-sentiment.png" alt="Sentiment for a single asset with scored headlines" width="1700" height="1073" loading="lazy"><figcaption>Sentiment for the open asset.</figcaption></figure>
+
+  <h2>Your take, and the crowd's</h2>
+  <p>Agree or disagree with a sentiment score, choose your own score from 0 to 100 and add a short comment. Everyone's scores are averaged into a crowd reading shown next to the AI's, in the tables and in each section.</p>
+  <figure class="shot mid"><img src="screenshots/your-take.png" alt="A sentiment score with thumbs, a personal score and the crowd average" width="812" height="725" loading="lazy"><figcaption>Agree, disagree or add your own score.</figcaption></figure>
+
+  <h2>Social stream and chat</h2>
+  <p>A side panel has two halves. The stream carries short notes tied to an asset and to the sentiment they respond to, and each note and its replies stay for twelve hours. The chat is a shared room with the newest sixty conversations.</p>
+  <ul class="plain">
+    <li>Filter the stream by coverage (positive, negative or mixed), by asset or watchlist, and by person.</li>
+    <li>Star people to follow them, and invite them into groups.</li>
+    <li>Reply, give a thumb up or down, and report comments that break the rules.</li>
+    <li>One search box covers the stream and the chat together.</li>
+    <li>Pin the panel open and resize it while you work.</li>
+  </ul>
+  <figure class="shot"><img src="screenshots/social-stream.png" alt="The social signals stream and chat" width="1700" height="1351" loading="lazy"><figcaption>Stream and chat.</figcaption></figure>
+
+  <h2>Evidence</h2>
+  <p>A long-run test of each asset's technical score, with a verdict in plain words. <a href="evidence.html">How it works</a>.</p>
+  <figure class="shot"><img src="screenshots/evidence.png" alt="The Evidence view with a plain-language verdict and results table" width="1700" height="595" loading="lazy"><figcaption>Evidence view: a verdict in plain words.</figcaption></figure>
+
+  <h2>Signal matrix</h2>
+  <p>Lines each signal up with the price change that came after it over the last 30 days, at one, three and seven days. It flags a link as unreliable when there is too little data behind it, so a lucky streak is not taken for a pattern.</p>
+  <figure class="shot"><img src="screenshots/signal-matrix.png" alt="The signal matrix lining up signals with later price changes" width="1700" height="1269" loading="lazy"><figcaption>Signal matrix.</figcaption></figure>
+
+  <h2>Max pain</h2>
+  <p>The options strike where open calls and puts would be worth the least at expiry, shown with call and put open interest and the current price. It describes where contracts are parked and is not a price target. Stocks use the Yahoo options chain, and Bitcoin and Ethereum use Deribit's public options book.</p>
+  <figure class="shot"><img src="screenshots/max-pain.png" alt="Max pain chart with call and put open interest" width="1288" height="1033" loading="lazy"><figcaption>Max pain for the open asset.</figcaption></figure>
+
+  <h2>Interactive chart</h2>
+  <p>Price with moving averages and Bollinger Bands, plus volume and RSI, for the asset you have open. Click any name, snapshot box or alert to load it.</p>
+  <figure class="shot"><img src="screenshots/chart.png" alt="The interactive chart with indicators" width="1700" height="932" loading="lazy"><figcaption>Interactive chart.</figcaption></figure>
+
+  <h2>Alerts</h2>
+  <p>Get one email when a technical score crosses a level you set (70 and 30 by default). It is not sent again until the score has left that level and crossed it later. Alert checks run every few minutes in the background, even when you are logged out, and crossings also wait under Notifications when you next sign in.</p>
+  <figure class="shot tall"><img src="screenshots/alert-notification.png" alt="The notifications panel showing a score crossing a level" width="392" height="1760" loading="lazy"><figcaption>Crossings wait in Notifications.</figcaption></figure>
+
+  <h2>Feedback</h2>
+  <p>A Feedback box in the dashboard's sidebar sends us an idea or an issue, saved with your account and the date. We are a start-up and keen for new ideas, and we will do our best to respond.</p>
+
+  <h2>How fresh is the data?</h2>
+  <p>Prices for every watched asset are saved about every five minutes. Sentiment is refreshed about every twelve hours. Both are shared across accounts, so the numbers match what other people see.</p>
+  <p style="margin-top:32px"><a class="btn" href="beta.html">Request beta access</a></p>
+</div></div>
+
+</main>
+<footer class="site-footer">
+  <div class="wrap">
+    <div>
+      <strong style="color:#fff;font-family:var(--serif);font-size:1.2rem">Angstrom Signals</strong>
+      <p style="margin:8px 0 0;max-width:24em">Market sentiment and technical signals, with the crowd alongside.</p>
+    </div>
+    <div>
+      <h4>Site</h4>
+      <ul>
+        <li><a href="features.html">Features</a></li>
+        <li><a href="evidence.html">Evidence</a></li>
+        <li><a href="faq.html">FAQ</a></li>
+        <li><a href="pricing.html">Pricing</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a href="beta.html">Request beta access</a></li>
+        <li><a href="https://app.angstromsignals.com" target="_blank" rel="noopener">Beta log-in</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Legal</h4>
+      <ul>
+        <li><a href="disclaimer.html">Not financial advice</a></li>
+        <li><a href="privacy.html">Privacy</a></li>
+        <li><a href="terms.html">Terms of use</a></li>
+        <li><a href="refund.html">Refund policy</a></li>
+      </ul>
+    </div>
+    <p class="legal">Angstrom Signals is a research tool. Nothing on this site or in the dashboard is financial advice, and past data is not a forecast. Markets can fall as well as rise, and you can lose money.</p>
+  </div>
+</footer>
+</body>
+</html>

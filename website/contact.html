@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contact | Angstrom Signals</title>
+<meta name="description" content="Contact Angstrom Signals with a question, partnership or press enquiry.">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html"><img src="logo.png" alt="" width="34" height="36">Angstrom Signals</a>
+    <nav class="nav" aria-label="Main"><a href="index.html">Home</a><a href="features.html">Features</a><a href="evidence.html">Evidence</a><a href="faq.html">FAQ</a><a href="pricing.html">Pricing</a><a href="contact.html" aria-current="page">Contact</a><a href="https://app.angstromsignals.com" target="_blank" rel="noopener">Beta log-in</a><a class="btn" href="beta.html">Request beta access</a></nav>
+  </div>
+</header>
+<main>
+
+<div class="page-head"><div class="wrap">
+  <h1>Contact</h1>
+  <p>Send us a message and we will reply by email.</p>
+</div></div>
+<div class="prose"><div class="wrap">
+  <form class="form" method="post" action="send-message.php">
+    <div class="trap" aria-hidden="true"><label>Leave this empty <input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
+    <label for="name">Name</label>
+    <input id="name" name="name" type="text" required maxlength="100" autocomplete="name">
+    <label for="email">Email address</label>
+    <input id="email" name="email" type="email" required maxlength="150" autocomplete="email">
+    <div class="row">
+      <div>
+        <label for="phone">Phone <span class="hint">(optional)</span></label>
+        <input id="phone" name="phone" type="tel" maxlength="40" autocomplete="tel">
+      </div>
+      <div>
+        <label for="country">Country</label>
+        <input id="country" name="country" type="text" maxlength="80" autocomplete="country-name">
+      </div>
+    </div>
+    <label for="topic">What is it about?</label>
+    <select id="topic" name="topic">
+      <option>General question</option>
+      <option>Partnership</option>
+      <option>Press and media</option>
+      <option>Account help</option>
+      <option>Something else</option>
+    </select>
+    <label for="message">Message</label>
+    <textarea id="message" name="message" required minlength="10" maxlength="5000"></textarea>
+    <div class="check">
+      <input id="consent" name="consent" type="checkbox" value="yes" required>
+      <label for="consent">I agree that Angstrom Signals may use these details to reply to me. See the <a href="privacy.html">privacy notice</a>.</label>
+    </div>
+    <button class="btn" type="submit">Send message</button>
+  </form>
+</div></div>
+
+</main>
+<footer class="site-footer">
+  <div class="wrap">
+    <div>
+      <strong style="color:#fff;font-family:var(--serif);font-size:1.2rem">Angstrom Signals</strong>
+      <p style="margin:8px 0 0;max-width:24em">Market sentiment and technical signals, with the crowd alongside.</p>
+    </div>
+    <div>
+      <h4>Site</h4>
+      <ul>
+        <li><a href="features.html">Features</a></li>
+        <li><a href="evidence.html">Evidence</a></li>
+        <li><a href="faq.html">FAQ</a></li>
+        <li><a href="pricing.html">Pricing</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a href="beta.html">Request beta access</a></li>
+        <li><a href="https://app.angstromsignals.com" target="_blank" rel="noopener">Beta log-in</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Legal</h4>
+      <ul>
+        <li><a href="disclaimer.html">Not financial advice</a></li>
+        <li><a href="privacy.html">Privacy</a></li>
+        <li><a href="terms.html">Terms of use</a></li>
+        <li><a href="refund.html">Refund policy</a></li>
+      </ul>
+    </div>
+    <p class="legal">Angstrom Signals is a research tool. Nothing on this site or in the dashboard is financial advice, and past data is not a forecast. Markets can fall as well as rise, and you can lose money.</p>
+  </div>
+</footer>
+</body>
+</html>

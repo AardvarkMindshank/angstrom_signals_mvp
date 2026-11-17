@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Evidence: how scores are tested | Angstrom Signals</title>
+<meta name="description" content="How Angstrom Signals tests each score against years of price history, with no look-ahead, and what its verdicts mean.">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html"><img src="logo.png" alt="" width="34" height="36">Angstrom Signals</a>
+    <nav class="nav" aria-label="Main"><a href="index.html">Home</a><a href="features.html">Features</a><a href="evidence.html" aria-current="page">Evidence</a><a href="faq.html">FAQ</a><a href="pricing.html">Pricing</a><a href="contact.html">Contact</a><a href="https://app.angstromsignals.com" target="_blank" rel="noopener">Beta log-in</a><a class="btn" href="beta.html">Request beta access</a></nav>
+  </div>
+</header>
+<main>
+
+<div class="page-head"><div class="wrap">
+  <h1>Evidence: how scores are tested</h1>
+  <p>A score is only useful if higher scores really went with better prices afterwards. The Evidence view checks, asset by asset.</p>
+</div></div>
+<div class="prose"><div class="narrow">
+  <h2>The test</h2>
+  <ul class="plain">
+    <li><strong>No looking ahead.</strong> Each day's score uses only the prices known on that day.</li>
+    <li><strong>A one-day delay.</strong> A trade is assumed to happen the day after the signal, with costs taken out.</li>
+    <li><strong>Long history.</strong> Up to five years of daily prices per asset, tested at 1, 3, 7 and 14 days ahead.</li>
+    <li><strong>A chance level.</strong> The link between score and later price is compared with how large a link luck alone can produce. Forward returns overlap, so the data counts for fewer independent observations than it has days, and the chance level allows for that.</li>
+    <li><strong>Both halves of history.</strong> A result has to point the same way in the first and second halves, not only on average.</li>
+    <li><strong>Compared with simply holding.</strong> Most assets drift one way, so high and low scores are compared with an average day.</li>
+  </ul>
+
+  <h2>What the verdict means</h2>
+  <p>The verdict is chosen by fixed rules, not by opinion. It reads "holds up" only when the link clears the chance level at two or more horizons and keeps its sign. One horizon is called a hint. Anything else is "no evidence the score has helped for this asset". An AI helps word the paragraph, but it may only use numbers from the test, and if anything it writes does not match, the dashboard falls back to a rule-based sentence.</p>
+
+  <h2>Size, not direction</h2>
+  <p>Some things predict how big the next moves will be without saying which way. Wide recent daily ranges have often been followed by bigger moves. The dashboard tests this separately for each asset, after allowing for the fact that volatility tends to persist, and labels it as being about size, not direction.</p>
+
+  <h2>New information is tested first</h2>
+  <p>New kinds of information, such as crypto funding rates, are tested on years of history before they are shown. If a test is unclear, the dashboard says it was not clear, rather than hinting at an effect.</p>
+
+  <h2>Limits</h2>
+  <ul class="plain">
+    <li>History is not the future. A link that held can stop holding.</li>
+    <li>A result is for one asset over one stretch of time.</li>
+    <li>Short histories give weak tests, and the dashboard says when that is the case.</li>
+  </ul>
+  <p style="margin-top:32px"><a class="btn" href="beta.html">Request beta access</a></p>
+</div></div>
+
+</main>
+<footer class="site-footer">
+  <div class="wrap">
+    <div>
+      <strong style="color:#fff;font-family:var(--serif);font-size:1.2rem">Angstrom Signals</strong>
+      <p style="margin:8px 0 0;max-width:24em">Market sentiment and technical signals, with the crowd alongside.</p>
+    </div>
+    <div>
+      <h4>Site</h4>
+      <ul>
+        <li><a href="features.html">Features</a></li>
+        <li><a href="evidence.html">Evidence</a></li>
+        <li><a href="faq.html">FAQ</a></li>
+        <li><a href="pricing.html">Pricing</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a href="beta.html">Request beta access</a></li>
+        <li><a href="https://app.angstromsignals.com" target="_blank" rel="noopener">Beta log-in</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Legal</h4>
+      <ul>
+        <li><a href="disclaimer.html">Not financial advice</a></li>
+        <li><a href="privacy.html">Privacy</a></li>
+        <li><a href="terms.html">Terms of use</a></li>
+        <li><a href="refund.html">Refund policy</a></li>
+      </ul>
+    </div>
+    <p class="legal">Angstrom Signals is a research tool. Nothing on this site or in the dashboard is financial advice, and past data is not a forecast. Markets can fall as well as rise, and you can lose money.</p>
+  </div>
+</footer>
+</body>
+</html>
