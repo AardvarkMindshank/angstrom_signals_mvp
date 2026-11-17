@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Angstrom Signals: market sentiment and technical signals, with the crowd alongside</title>
-<meta name="description" content="A dashboard for crypto and stock traders: technical scores, AI-read news sentiment, a crowd view and a live social stream, with every signal tested against history.">
+<title>Angstrom Signals: build, scan and test your own market signals</title>
+<meta name="description" content="A research workspace for crypto and equity traders: clear readings on one scale, your own rules turned into scans and funnels, studies of what followed, the macro tide, an AI navigator and a community alongside.">
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
@@ -21,87 +21,75 @@
 <section class="hero">
   <div class="wrap">
     <div>
-      <h1>Market sentiment and technical signals, with the crowd alongside.</h1>
-      <p class="lead">One dashboard for the crypto coins and stocks you follow. It scores each asset from ten technical factors, reads the news for sentiment, and lets traders add their own view and talk about it in a live stream.</p>
+      <h1>Build, scan and test your own market signals, with a community alongside.</h1>
+      <p class="lead">A research workspace for crypto and equity traders. Read every asset on one clear scale, turn your own rules into scans and funnels that run while you sleep, check what followed in the past, and talk it through with other traders and an AI that knows the whole app.</p>
       <div class="actions">
         <a class="btn" href="beta.html">Request beta access</a>
         <a class="btn quiet" href="features.html">See how it works</a>
       </div>
       <p class="fine" style="margin-top:18px">Invite-only while we build with experienced traders. Already accepted? <a href="https://app.angstromsignals.com" target="_blank" rel="noopener">Log in</a>.</p>
     </div>
-    <div class="lenses" aria-label="Three readings on every market">
-      <div class="lens"><i class="t"></i><div><strong>Technical score</strong><span>Ten factors combined into one number from 0 to 100, for whole watchlists and single assets.</span></div></div>
-      <div class="lens"><i class="s"></i><div><strong>Market sentiment</strong><span>An AI reads the latest headlines and scores each one, for crypto, for stocks and for each asset.</span></div></div>
-      <div class="lens"><i class="c"></i><div><strong>The crowd</strong><span>Agree, disagree or add your own score. Everyone's takes are averaged beside the AI's.</span></div></div>
-      <p class="note">Three readings, kept separate. Nothing is blended into one mystery number.</p>
+    <div class="lenses" aria-label="Three readings on every asset">
+      <div class="lens"><i class="t"></i><div><strong>📈 Trend</strong><span>Which way the asset is moving, and how firmly, from moving averages, ADX, Ichimoku and more.</span></div></div>
+      <div class="lens"><i class="s"></i><div><strong>🎯 Stretch</strong><span>How far it has run: overbought, oversold or in between, from RSI, Stochastic and Bollinger Bands.</span></div></div>
+      <div class="lens"><i class="c"></i><div><strong>🔊 Flow</strong><span>Whether volume and money flow back the move or fade it.</span></div></div>
+      <p class="note">Every reading, sentiment score and Group you build uses one scale, −100 to +100. They are shown side by side and never blended into one mystery number.</p>
     </div>
   </div>
 </section>
 
-<section class="wide-shot" style="padding-top:56px;border-top:0"><div class="wrap"><figure class="shot"><img src="screenshots/dashboard-overview.png" alt="The Angstrom Signals dashboard showing crypto and equity score tables" width="1700" height="1280" loading="lazy"><figcaption>The dashboard: scores, sentiment and the crowd's view for your watchlists.</figcaption></figure></div></section>
-
 <section>
   <div class="wrap">
-    <h2>Everything for following a market, in one place</h2>
-    <div class="three">
-      <div>
-        <h3>See where things stand</h3>
-        <p>Scored tables for your crypto and stock watchlists, a snapshot of what changed since you last looked, and a chart with a full breakdown of why each score landed where it did.</p>
-      </div>
-      <div>
-        <h3>Know what the news is saying</h3>
-        <p>Sentiment for the crypto market, the stock market and each asset, with every headline scored and summarised in a sentence, and wider market readings behind it.</p>
-      </div>
-      <div>
-        <h3>Hear from other traders</h3>
-        <p>Give your own read on any reading, see the crowd's average, and follow a live stream of short notes and a shared chat, filtered by asset, person or group.</p>
-      </div>
+    <h2>From a watchlist to a short list worth a closer look</h2>
+    <div class="pillars">
+      <div><span class="ico" aria-hidden="true">📊</span><h3>Read the market</h3><p>Trend, Stretch and Flow for every asset on your watchlists, news sentiment read by AI, and a Quick Snapshot of what changed since you last looked.</p></div>
+      <div><span class="ico" aria-hidden="true">🧩</span><h3>Build your own rules</h3><p>In the Lattice workspace, combine signals into Groups (your own reading) and Sets (a Yes or No decision), including "this, then that within N candles".</p></div>
+      <div><span class="ico" aria-hidden="true">🔎</span><h3>Scan and filter</h3><p>Prism scans your watchlist with any Set, now or on a schedule, with alerts. Funnels narrow a whole market from the daily chart down to the hour.</p></div>
+      <div><span class="ico" aria-hidden="true">🔬</span><h3>Check what followed</h3><p>Study any Set against ten years of history, with a luck check, and see its past Yes days as bands on the chart. Recent data is held back so tests stay honest.</p></div>
+      <div><span class="ico" aria-hidden="true">🌊</span><h3>Know the tide</h3><p>Tides tracks twelve macro currents (rates, the dollar, gold, credit, oil, crypto rotation and more), the sea state, and the events on the calendar.</p></div>
+      <div><span class="ico" aria-hidden="true">💬</span><h3>Trade ideas with people</h3><p>A live stream and chat, communities, private messages, and community votes beside every AI sentiment score.</p></div>
     </div>
   </div>
 </section>
 
 <section class="band">
-  <div class="wrap">
-    <div class="feature has-shot"><div class="text"><h3>Scores for whole watchlists</h3><p>Each asset gets a technical score from 0 to 100, built from RSI, Stochastic, moving averages, ADX, MACD, Ichimoku, Bollinger Bands, volume, OBV and the 7-day move. 50 is neutral, 70 and above is a strong bullish setup, 30 and below a strong bearish one.</p><p>Hover a score to read why it landed there. Slide each factor up or down, or switch it off, and save your own mix as a named set.</p></div><figure class="shot"><img src="screenshots/scores-table.png" alt="A table of crypto assets with technical score bars, sentiment and crowd columns" width="1700" height="536" loading="lazy"><figcaption>Sortable tables with a 30-day trend for every row.</figcaption></figure></div>
+  <div class="wrap split">
+    <div>
+      <h2>✨ AI Navigator</h2>
+      <p class="fine">Built in, on every page.</p>
+    </div>
+    <div>
+      <p>Ask where something is, what a reading means, or how to turn an idea into a Group, Set or scan, and the Navigator walks you through it. It knows the whole app, your watchlist, your Groups, Sets and funnels, today's Tides and the asset you have open. Paste a screenshot and ask what you are looking at.</p>
+      <p>Each morning, <strong>Today's AI Passage Plan</strong> sets out the conditions, the week's events and what to watch on your own watchlist and funnels. It describes. It never tells you to buy or sell.</p>
+    </div>
   </div>
 </section>
 
 <section>
   <div class="wrap">
-    <div class="feature has-shot flip"><div class="text"><h3>Market sentiment for crypto, stocks and single assets</h3><p>An AI reads the last seven days of headlines for each asset and scores every one from 0 to 100, with a one-sentence summary beside it. The average becomes the asset's sentiment score. The same is done for the crypto market and the stock market, alongside public readings such as liquidity, the dollar and yields, policy and inflation, and market breadth.</p><p>Sentiment stays separate from the technical score, so you can see when the two agree and when they do not.</p></div><figure class="shot"><img src="screenshots/market-sentiment.png" alt="Market sentiment panel with scored headlines and summaries" width="1700" height="1262" loading="lazy"><figcaption>Scored headlines with a one-line summary each.</figcaption></figure></div>
-  </div>
-</section>
-
-<section class="band">
-  <div class="wrap">
-    <div class="feature has-shot"><div class="text"><h3>Add your own read, and see the crowd's</h3><p>Beside every sentiment score you can agree, disagree, or give your own score from 0 to 100 with a short comment. The dashboard averages everyone's scores into a crowd reading that sits next to the AI's, so you can see where traders think the headlines are right and where they are not.</p></div><figure class="shot mid"><img src="screenshots/your-take.png" alt="Sentiment score with thumbs, a personal score and the crowd average" width="812" height="725" loading="lazy"><figcaption>Your take, and the crowd's average, beside the AI's score.</figcaption></figure></div>
-  </div>
-</section>
-
-<section>
-  <div class="wrap">
-    <div class="feature has-shot flip"><div class="text"><h3>A live social stream and chat</h3><p>A side panel holds a stream of short notes tied to assets and to the sentiment readings people are responding to, and a shared chat room below it. Filter by asset, by coverage (positive, negative or mixed) or by person. Star people to follow them, form groups, reply, give a note a thumb, and report anything that breaks the rules.</p></div><figure class="shot"><img src="screenshots/social-stream.png" alt="The social signals stream and chat panel" width="1700" height="1351" loading="lazy"><figcaption>Stream on top, chat below, one search across both.</figcaption></figure></div>
-  </div>
-</section>
-
-<section class="band">
-  <div class="wrap">
-    <div class="feature has-shot"><div class="text"><h3>Signals that are tested, not just shown</h3><p>For each asset, the Evidence view replays the technical score over up to five years of daily prices, without looking ahead, and shows whether higher scores really went with better prices afterwards. The verdict is in plain words, and it says so when there is no evidence.</p><p><a href="evidence.html">How the testing works</a></p></div><figure class="shot"><img src="screenshots/evidence.png" alt="The Evidence view for Bitcoin with a plain-language verdict and results table" width="1700" height="595" loading="lazy"><figcaption>A real result: no evidence the score helped for this asset.</figcaption></figure></div>
-  </div>
-</section>
-
-<section>
-  <div class="wrap">
-    <h2>And the rest of the toolbox</h2>
+    <h2>Built for traders who like to check</h2>
     <div class="more">
-      <div><strong>What changed</strong><span>Scores that crossed your bullish or bearish line since you last looked, and the factor behind each.</span></div>
-      <div><strong>Email alerts</strong><span>One email when a score crosses a level you set. They keep running after you close the page.</span></div>
-      <div><strong>Signal matrix</strong><span>Lines each signal up with the price change that followed, and flags links with too little data behind them.</span></div>
-      <div><strong>Max pain</strong><span>Where open options contracts would be worth the least at expiry, for stocks, Bitcoin and Ethereum.</span></div>
-      <div><strong>Interactive chart</strong><span>Price, moving averages, Bollinger Bands, volume and RSI, with a score breakdown beneath.</span></div>
-      <div><strong>Your layout</strong><span>Open or fold any section, choose your own colours for day and night, and save watchlists and weights to your account.</span></div>
+      <div><strong>🔻 Funnels</strong><span>Layered filters, longs or shorts, from the daily down to the 1-hour, with Candidates and Flagged assets and an alert when one arrives.</span></div>
+      <div><strong>🕰️ Visualize History</strong><span>A Set's past answers drawn as coloured bands behind the price chart, across the whole history.</span></div>
+      <div><strong>📡 Sonar oscillators</strong><span>WaveTrend, money flow and divergence across four timeframes, ready to use in your own Groups and Sets.</span></div>
+      <div><strong>🎯 Positioning</strong><span>Max pain from recorded options snapshots, plus leverage and liquidation levels for crypto.</span></div>
+      <div><strong>🕯️ Interactive charts</strong><span>Candles from 15 minutes to weekly, indicators, and drawing tools saved to your account.</span></div>
+      <div><strong>🔔 Alerts</strong><span>In the app and by email, as they happen or as a daily summary. Checks run every few minutes, even when you are logged out.</span></div>
+      <div><strong>📚 Provided library</strong><span>Ready-made Groups, Sets, scans and funnels built around real trading setups. Look inside any of them, copy it and make it yours.</span></div>
+      <div><strong>🌐 Twelve languages</strong><span>English, Chinese, Japanese, Korean, Thai, Spanish and more. The app follows your browser's language, and a flag switches it.</span></div>
     </div>
     <p style="margin-top:24px"><a href="features.html">All the features</a></p>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap cols">
+    <div>
+      <h2>Honest by design</h2>
+    </div>
+    <div>
+      <p>Readings describe conditions now. None of them has been shown to predict which way price goes next, and the app says so. When you study a Set, the verdict comes from fixed rules and a luck check, not from opinion, and "too few to tell" is a common answer. <a href="evidence.html">How the testing works</a>.</p>
+    </div>
   </div>
 </section>
 
@@ -111,7 +99,7 @@
       <h2>Built with the people who use it</h2>
     </div>
     <div>
-      <p>Angstrom Signals is a start-up, and we are keen for new ideas and input. Send an idea or an issue from the Feedback box inside the dashboard, and we will do our best to respond.</p>
+      <p>Angstrom Signals is a start-up building alongside experienced traders. Send an idea or an issue from the Feedback box inside the app, and we will do our best to respond.</p>
     </div>
   </div>
 </section>
@@ -131,7 +119,7 @@
   <div class="wrap">
     <div>
       <strong style="color:#fff;font-family:var(--serif);font-size:1.2rem">Angstrom Signals</strong>
-      <p style="margin:8px 0 0;max-width:24em">Market sentiment and technical signals, with the crowd alongside.</p>
+      <p style="margin:8px 0 0;max-width:24em">Build, scan and test your own market signals, with a community alongside.</p>
     </div>
     <div>
       <h4>Site</h4>

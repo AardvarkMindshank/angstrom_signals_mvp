@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Evidence: how scores are tested | Angstrom Signals</title>
-<meta name="description" content="How Angstrom Signals tests each score against years of price history, with no look-ahead, and what its verdicts mean.">
+<title>Evidence | Angstrom Signals</title>
+<meta name="description" content="How Angstrom Signals studies what followed a rule in the past: no look-ahead, ordinary-day comparisons, a luck check and a protected hold-out.">
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
@@ -19,34 +19,48 @@
 <main>
 
 <div class="page-head"><div class="wrap">
-  <h1>Evidence: how scores are tested</h1>
-  <p>A score is only useful if higher scores really went with better prices afterwards. The Evidence view checks, asset by asset.</p>
+  <h1>Evidence: how ideas are tested</h1>
+  <p>A rule is only worth watching if what followed it in the past was different from an ordinary day. Angstrom Signals lets you check, and tells you plainly when it can't.</p>
 </div></div>
 <div class="prose"><div class="narrow">
-  <h2>The test</h2>
-  <ul class="plain">
-    <li><strong>No looking ahead.</strong> Each day's score uses only the prices known on that day.</li>
-    <li><strong>A one-day delay.</strong> A trade is assumed to happen the day after the signal, with costs taken out.</li>
-    <li><strong>Long history.</strong> Up to five years of daily prices per asset, tested at 1, 3, 7 and 14 days ahead.</li>
-    <li><strong>A chance level.</strong> The link between score and later price is compared with how large a link luck alone can produce. Forward returns overlap, so the data counts for fewer independent observations than it has days, and the chance level allows for that.</li>
-    <li><strong>Both halves of history.</strong> A result has to point the same way in the first and second halves, not only on average.</li>
-    <li><strong>Compared with simply holding.</strong> Most assets drift one way, so high and low scores are compared with an average day.</li>
-  </ul>
+  <h2>Readings describe, they don't predict</h2>
+  <p>Trend, Stretch, Flow and sentiment describe conditions now. None of them has been shown to predict which way price goes next, and the app says so beside them. Testing is how you find out whether a combination of them has meant anything in the past.</p>
+
+  <h2>🔬 What followed: studying a Set</h2>
+  <p>Press <strong>Study this Set</strong> on any Set to see what happened after it turned Yes in the past.</p>
+  <dl class="measures">
+    <div><dt>No looking ahead</dt><dd>Every past answer is worked out again using only the prices known at that moment, the same way the Set would have answered live.</dd></div>
+    <div><dt>Ten years, many assets</dt><dd>September 2014 to October 2024, on every studied coin and equity, at several horizons afterwards.</dd></div>
+    <div><dt>Against ordinary days</dt><dd>Moves after a Yes are compared with comparable ordinary days, because most assets drift one way and a raw average flatters any rule.</dd></div>
+    <div><dt>Three periods side by side</dt><dd>A result has to hold across separate stretches of history, not only on average.</dd></div>
+    <div><dt>Coins and equities apart</dt><dd>Each market is shown on its own, so one cannot hide the other.</dd></div>
+    <div><dt>A luck check</dt><dd>With many assets, some always look unusual by chance. Asset by asset, the study marks which results stand out beyond what luck alone produces, and treats those as a place to look closer, not as proof.</dd></div>
+  </dl>
 
   <h2>What the verdict means</h2>
-  <p>The verdict is chosen by fixed rules, not by opinion. It reads "holds up" only when the link clears the chance level at two or more horizons and keeps its sign. One horizon is called a hint. Anything else is "no evidence the score has helped for this asset". An AI helps word the paragraph, but it may only use numbers from the test, and if anything it writes does not match, the dashboard falls back to a rule-based sentence.</p>
+  <p>The verdict comes from fixed rules applied to the numbers, not from opinion or AI. It is one of:</p>
+  <ul class="plain">
+    <li><strong>Too few to judge</strong>: the Set said Yes too rarely to tell anything.</li>
+    <li><strong>No clear difference</strong>: what followed a Yes looked like an ordinary day.</li>
+    <li><strong>Some difference, not established</strong>: there is a difference, but it does not hold up across periods or clear the luck check.</li>
+    <li><strong>Consistent difference</strong>: the difference held across periods and cleared the luck check.</li>
+  </ul>
+  <p>Each provided Group and Set carries its study mark, or 🔬 when it has not been studied yet and only describes conditions.</p>
 
-  <h2>Size, not direction</h2>
-  <p>Some things predict how big the next moves will be without saying which way. Wide recent daily ranges have often been followed by bigger moves. The dashboard tests this separately for each asset, after allowing for the fact that volatility tends to persist, and labels it as being about size, not direction.</p>
+  <h2>🔒 A protected hold-out</h2>
+  <p>Studies stop at the end of October 2024. Everything after that is held back and never used to measure or tune anything, so there is always fresh history for a final, honest check of an idea that looks promising. You can still view recent history on the chart; it just isn't used for testing.</p>
 
-  <h2>New information is tested first</h2>
-  <p>New kinds of information, such as crypto funding rates, are tested on years of history before they are shown. If a test is unclear, the dashboard says it was not clear, rather than hinting at an effect.</p>
+  <h2>🕰️ Seeing it on the chart</h2>
+  <p>Visualize History draws a Set's past answers as coloured bands behind the price chart, green for Yes and amber for Unknown, across the whole history, so you can see with your own eyes where a rule fired and what price did next.</p>
+
+  <h2>New data is tested before it is used</h2>
+  <p>New kinds of information, such as funding rates or options positioning, are checked on history before they appear as signals. If a test is unclear, the app says it was not clear, rather than hinting at an effect.</p>
 
   <h2>Limits</h2>
   <ul class="plain">
-    <li>History is not the future. A link that held can stop holding.</li>
-    <li>A result is for one asset over one stretch of time.</li>
-    <li>Short histories give weak tests, and the dashboard says when that is the case.</li>
+    <li>History is not the future. A difference that held can stop holding.</li>
+    <li>Studies show past patterns before trading costs.</li>
+    <li>Short histories and rare signals give weak tests, and the study says when that is the case.</li>
   </ul>
   <p style="margin-top:32px"><a class="btn" href="beta.html">Request beta access</a></p>
 </div></div>
@@ -56,7 +70,7 @@
   <div class="wrap">
     <div>
       <strong style="color:#fff;font-family:var(--serif);font-size:1.2rem">Angstrom Signals</strong>
-      <p style="margin:8px 0 0;max-width:24em">Market sentiment and technical signals, with the crowd alongside.</p>
+      <p style="margin:8px 0 0;max-width:24em">Build, scan and test your own market signals, with a community alongside.</p>
     </div>
     <div>
       <h4>Site</h4>

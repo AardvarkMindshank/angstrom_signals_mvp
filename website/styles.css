@@ -225,3 +225,13 @@ figure.shot.tall img, figure.shot.mid img { width: 100%; }
 .compare td { color: var(--muted); }
 @media (max-width: 960px) { .plans { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 560px) { .plans { grid-template-columns: minmax(0, 1fr); } .plan .who { min-height: 0; } }
+
+/* six pillars on the home page (17 Nov 2026) */
+.pillars { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 36px 40px; margin-top: 12px; }
+.pillars > div { border-top: 4px solid var(--blue); padding-top: 14px; }
+.pillars > div:nth-child(3n+2) { border-top-color: var(--navy); }
+.pillars > div:nth-child(3n) { border-top-color: var(--green); }
+.pillars .ico { font-size: 1.6rem; line-height: 1; display: block; margin-bottom: 10px; }
+.pillars h3 { margin-bottom: 0.35em; }
+.pillars p { color: var(--muted); margin: 0; }
+@media (max-width: 860px) { .pillars { grid-template-columns: minmax(0, 1fr); gap: 28px; } }
