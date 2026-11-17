@@ -1,0 +1,55 @@
+1
+00:00:00,000 --> 00:00:03,047
+A funnel narrows a whole market down, stage by stage,
+
+2
+00:00:03,067 --> 00:00:05,740
+and keeps the list up to date every hour.
+
+3
+00:00:06,199 --> 00:00:07,715
+Open Funnels.
+
+4
+00:00:07,765 --> 00:00:10,023
+Angstrom's Trend funnel is ready to copy:
+
+5
+00:00:10,043 --> 00:00:13,398
+the pool at the top, then each stage narrowing it down.
+
+6
+00:00:16,964 --> 00:00:20,336
+Choose the market and direction, then make your own copy.
+
+7
+00:00:28,363 --> 00:00:29,772
+Give it a name.
+
+8
+00:00:33,048 --> 00:00:37,743
+At the top of the funnel, the pool: here, the top one hundred coins by market cap.
+
+9
+00:00:38,198 --> 00:00:41,143
+Each stage asks one question on its own chart.
+
+10
+00:00:41,193 --> 00:00:44,949
+Drag a Set onto a stage to change it, even one of your own.
+
+11
+00:00:45,421 --> 00:00:47,150
+Save and activate.
+
+12
+00:00:47,200 --> 00:00:49,676
+It's checked straight away, then every hour.
+
+13
+00:00:50,141 --> 00:00:53,549
+Your funnel shows as Dynamic funnel above the signal tables,
+
+14
+00:00:53,569 --> 00:00:55,582
+with alerts on new Candidates.

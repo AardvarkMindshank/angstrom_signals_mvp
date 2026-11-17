@@ -1,0 +1,46 @@
+{
+ "steps": [
+  {
+   "id": "idea",
+   "start": 23.344,
+   "say": "A Signal Set asks a yes-or-no question about an asset. | Ours: is it dipping inside an uptrend?"
+  },
+  {
+   "id": "open",
+   "start": 29.974,
+   "say": "Open Signal Sets. | Your Groups and the signals are on the left."
+  },
+  {
+   "id": "group",
+   "start": 38.674,
+   "say": "Add the Group you just made: My Trend."
+  },
+  {
+   "id": "signal",
+   "start": 41.705,
+   "say": "Then a signal from the Momentum family: R S I, which measures how far price has run."
+  },
+  {
+   "id": "lines",
+   "start": 47.693,
+   "say": "Now the lines that must hold. | My Trend is Bullish. | And R S I is forty or less: a dip."
+  },
+  {
+   "id": "answer",
+   "start": 60.875,
+   "say": "Every line must hold for a Yes. | If a reading is missing, the answer is Unknown, never a guess."
+  },
+  {
+   "id": "save",
+   "start": 67.261,
+   "say": "Name it, Dip in my uptrend, and save it."
+  },
+  {
+   "id": "summary",
+   "start": 75.118,
+   "say": "Your Set gives Yes, No or Unknown for any asset, with the line that decided it."
+  }
+ ],
+ "end": 81.929,
+ "trim": 23.344
+}

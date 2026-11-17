@@ -1,0 +1,46 @@
+{
+ "steps": [
+  {
+   "id": "idea",
+   "start": 23.485,
+   "say": "A funnel narrows a whole market down, stage by stage, and keeps the list up to date every hour."
+  },
+  {
+   "id": "open",
+   "start": 29.684,
+   "say": "Open Funnels. | Angstrom's Trend funnel is ready to copy: the pool at the top, then each stage narrowing it down."
+  },
+  {
+   "id": "copy",
+   "start": 40.449,
+   "say": "Choose the market and direction, then make your own copy."
+  },
+  {
+   "id": "name",
+   "start": 51.848,
+   "say": "Give it a name."
+  },
+  {
+   "id": "pool",
+   "start": 56.533,
+   "say": "At the top of the funnel, the pool: here, the top one hundred coins by market cap."
+  },
+  {
+   "id": "stages",
+   "start": 61.683,
+   "say": "Each stage asks one question on its own chart. | Drag a Set onto a stage to change it, even one of your own."
+  },
+  {
+   "id": "save",
+   "start": 68.906,
+   "say": "Save and activate. | It's checked straight away, then every hour."
+  },
+  {
+   "id": "summary",
+   "start": 73.626,
+   "say": "Your funnel shows as Dynamic funnel above the signal tables, with alerts on new Candidates."
+  }
+ ],
+ "end": 81.045,
+ "trim": 23.485
+}

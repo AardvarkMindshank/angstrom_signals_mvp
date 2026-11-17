@@ -1,0 +1,63 @@
+1
+00:00:00,000 --> 00:00:02,568
+Your watchlists decide what the dashboard shows:
+
+2
+00:00:02,588 --> 00:00:05,313
+the signal tables, the chart, and your scans.
+
+3
+00:00:05,363 --> 00:00:06,901
+Let's set them up.
+
+4
+00:00:07,361 --> 00:00:11,358
+First, open Settings in the sidebar and choose the markets you trade:
+
+5
+00:00:11,378 --> 00:00:13,250
+cryptos, equities, or both.
+
+6
+00:00:13,300 --> 00:00:15,542
+The other market's sections hide.
+
+7
+00:00:15,995 --> 00:00:19,026
+Then tick that step on the getting-started checklist.
+
+8
+00:00:20,343 --> 00:00:23,054
+Now open Watchlists, then Edit Crypto.
+
+9
+00:00:23,104 --> 00:00:26,476
+Type a name or a ticker, press Enter, and pick the match.
+
+10
+00:00:26,526 --> 00:00:28,084
+Here, Chainlink.
+
+11
+00:00:48,668 --> 00:00:51,208
+Shares work the same way, in Edit Stocks.
+
+12
+00:00:51,258 --> 00:00:54,395
+Type a company or a ticker. Here, AMD.
+
+13
+00:01:18,042 --> 00:01:22,694
+Both now appear in the signal tables, with their Trend, Stretch and Flow readings.
+
+14
+00:01:25,701 --> 00:01:29,094
+To take one off, choose it under Remove, in the same place.
+
+15
+00:01:29,542 --> 00:01:32,743
+Three or more assets ticks the watchlist step by itself.
+
+16
+00:01:32,793 --> 00:01:36,187
+Your watchlists are saved on your account, on every device.

@@ -1,0 +1,43 @@
+1
+00:00:00,000 --> 00:00:04,119
+Prism Scan runs a Set across your assets, and can keep watching for you.
+
+2
+00:00:04,582 --> 00:00:06,311
+Open Prism Scan.
+
+3
+00:00:06,361 --> 00:00:10,843
+Your Sets are on the left, with Angstrom's examples, grouped by trading idea.
+
+4
+00:00:13,961 --> 00:00:16,202
+Tap plus on Dip in my uptrend.
+
+5
+00:00:16,252 --> 00:00:18,963
+A new scan starts, on your whole watchlist.
+
+6
+00:00:19,613 --> 00:00:23,006
+Press play to run it now, on the latest finished candles.
+
+7
+00:00:30,200 --> 00:00:34,020
+Each asset gets Yes, No, or Unknown, with the reason beside it.
+
+8
+00:00:34,485 --> 00:00:36,982
+To keep watching, give the scan a schedule.
+
+9
+00:00:37,032 --> 00:00:39,146
+Here, at every daily close.
+
+10
+00:00:39,600 --> 00:00:43,484
+And choose where its alerts go: in the app, by email, or both.
+
+11
+00:00:43,949 --> 00:00:48,985
+Your scan now checks every day by itself, and tells you when an answer turns to Yes.
