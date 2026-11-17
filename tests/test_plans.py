@@ -59,3 +59,29 @@ def test_the_plans_table_is_read_only_for_members():
     sql = open(os.path.join(ROOT, "sql", "2026-12-04_user_plans.sql"), encoding="utf-8").read()
     assert "revoke insert, update, delete on public.user_plans from anon, authenticated" in sql
     assert "using (user_id = auth.uid())" in sql
+
+
+def test_set_cards_merge_twins_and_keep_every_provided_set():
+    import prism_board as pb
+    import set_cards
+
+    listed = pb.set_list(pb.set_choices([], "me"), "pro", "hide")
+    ideas = listed["cards"]["ideas"]
+    assert [i["title"] for i in ideas][:2] == ["Follow the trend", "Buy the dip / sell the rally"]
+    cards = [c for i in ideas for c in i["cards"]]
+    keys = {m["key"] for c in cards for m in c["members"]}
+    assert keys == set_cards.placed_keys()                         # every provided Set is reachable from a card
+    ema = next(c for c in cards if c["id"] == "ema")
+    assert ema["dirs"] == ["long", "short"] and ema["tfs"] == ["1w", "1d", "12h", "4h"] and len(ema["members"]) == 8
+
+
+def test_cards_follow_the_plan_and_the_display_setting():
+    import prism_board as pb
+
+    choices = pb.set_choices([], "me")
+    hidden = pb.set_list(choices, "free", "hide")["cards"]["ideas"]
+    assert all(not c["locked"] for i in hidden for c in i["cards"])         # Hide: only what Free includes
+    grey = [c for i in pb.set_list(choices, "free", "grey")["cards"]["ideas"] for c in i["cards"]]
+    locked = [c for c in grey if c["locked"]]
+    assert locked and all(c["tag"] in ("Plus", "Pro") for c in locked)
+    assert all(c["tag"] == "" for c in grey if not c["locked"])               # no label on what you can use

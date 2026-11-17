@@ -13,6 +13,27 @@ import i18n
 import lattice_component
 
 CSS = lattice_component.CSS + """
+/* Set cards: trading ideas, options on the card, plan labels (18 Nov 2026) */
+.lat .provhead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:6px 0 2px;font-weight:600}
+.lat .provhead .ec{display:inline-flex;gap:4px}
+.lat .provhead .ec button{width:26px;height:26px;min-height:26px;padding:0;display:inline-flex;align-items:center;justify-content:center}
+.lat details.idea{margin:2px 0 6px}
+.lat details.idea>summary{list-style:none;cursor:pointer;padding:6px 2px;border-bottom:1px solid rgba(127,127,127,.3);margin-bottom:6px}
+.lat details.idea>summary::-webkit-details-marker{display:none}
+.lat details.idea>summary .t{font-weight:700}
+.lat details.idea>summary .t::before{content:"▸ ";opacity:.7}
+.lat details.idea[open]>summary .t::before{content:"▾ "}
+.lat details.idea>summary .s{display:block;font-size:.85em;opacity:.75;padding-left:1.1em}
+.lat details.idea>summary .n{float:right;font-size:.8em;opacity:.6}
+.lat .chip .opts{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.lat .chip .seg{display:inline-flex;border:1px solid rgba(127,127,127,.45);border-radius:6px;overflow:hidden}
+.lat .chip .seg button{border:0;border-radius:0;min-height:28px;padding:2px 8px;font-size:.8em;background:transparent}
+.lat .chip .seg button.on{background:#0f766e;color:#fff}
+.lat .ptag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+  border-radius:999px;padding:2px 7px;color:#fff;margin-left:6px;vertical-align:middle;cursor:help}
+.lat .chip.locked{border-style:dashed;cursor:not-allowed}
+.lat .chip.locked .dim{opacity:.32;filter:grayscale(1)}
+
 .lat.prism .pv{display:inline-flex;gap:2px;margin-left:6px;font-size:13px;vertical-align:middle}
 .lat.prism .pv span{cursor:help}
 .lat.prism .ev{margin-left:6px;font-size:13px;opacity:.75;cursor:help}
@@ -152,11 +173,18 @@ SET_LIBRARY_JS = r"""
   libCol.appendChild(pvf);
   const setList = el("div", "");
   libCol.appendChild(setList);
+  function planTag(item) {             // a small PLUS or PRO label, only on what this account's plan doesn't include
+    if (!item.locked || !item.tag) return null;
+    const g = el("span", "ptag", item.tag);
+    g.style.background = item.tag_colour || "#7c3aed";
+    g.title = item.tag_hover || ""; g.setAttribute("aria-label", item.tag_hover || item.tag);
+    return g;
+  }
   function setChip(s) {
-      const c = el("div", "chip");
-      c.draggable = true;
-      c.addEventListener("dragstart", (e) => e.dataTransfer.setData("text/plain", JSON.stringify({type: "set", key: s.key})));
-      const nm = el("div", "nm");
+      const c = el("div", "chip" + (s.locked ? " locked" : ""));
+      c.draggable = !s.locked;
+      if (!s.locked) c.addEventListener("dragstart", (e) => e.dataTransfer.setData("text/plain", JSON.stringify({type: "set", key: s.key})));
+      const nm = el("div", "nm" + (s.locked ? " dim" : ""));
       const title = el("div", "", s.name);
       const pv = el("span", "pv");
       (s.icons || []).forEach((p) => { const i = el("span", "", p.icon); i.title = p.hover; i.setAttribute("aria-label", p.hover); pv.appendChild(i); });
@@ -189,10 +217,81 @@ SET_LIBRARY_JS = r"""
       if (s.inside) nm.appendChild(insideBlock(s, opts.onOpen));
       if (!s.provided) nm.appendChild(el("div", "muted", s.meta));
       c.appendChild(nm);
+      const tg = planTag(s);
+      if (tg) c.appendChild(tg);
       const plus = button("+", opts.addTitle(s), () => opts.onAdd(s), "sq");
-      if (opts.addDisabled && opts.addDisabled(s)) plus.disabled = true;
+      if (s.locked || (opts.addDisabled && opts.addDisabled(s))) plus.disabled = true;
       c.appendChild(plus);
       return c;
+  }
+  // One card for a trading idea: long/short twins and timeframe versions are options on the card, and the option
+  // picked decides which provided Set a drag or + hands over (set_cards.py).
+  function cardChip(card, bySet) {
+      M.opt = M.opt || {};
+      const o = M.opt[card.id] || {dir: card.dirs[0] || "", tf: card.tfs.indexOf("1d") >= 0 ? "1d" : (card.tfs[0] || "")};
+      const member = card.members.find((m) => m.dir === o.dir && m.tf === o.tf)
+        || card.members.find((m) => m.dir === o.dir) || card.members[0];
+      const s = bySet[member.key] || {key: member.key, name: card.name};
+      const c = el("div", "chip card" + (card.locked ? " locked" : ""));
+      c.draggable = !card.locked;
+      if (!card.locked) c.addEventListener("dragstart", (e) => e.dataTransfer.setData("text/plain", JSON.stringify({type: "set", key: member.key})));
+      const nm = el("div", "nm");
+      const top = el("div", card.locked ? "dim" : "", card.name);
+      const ev = s.evidence;
+      if (ev) { const x = el("span", "ev", ev.icon); x.title = ev.hover; x.setAttribute("aria-label", ev.hover); top.appendChild(x); }
+      nm.appendChild(top);
+      const body = el("div", card.locked ? "dim" : "");
+      if (card.line) body.appendChild(el("div", "line", card.line));
+      if (card.dirs.length > 1 || card.tfs.length > 1) {
+        const row = el("div", "opts");
+        const seg = (items, now, pick, label) => {
+          const g = el("div", "seg"); g.setAttribute("role", "group"); g.setAttribute("aria-label", label);
+          items.forEach(([v, text]) => {
+            const b = button(text, "", () => { pick(v); drawSets(); });
+            if (v === now) { b.classList.add("on"); b.setAttribute("aria-pressed", "true"); }
+            b.disabled = !!card.locked;
+            g.appendChild(b);
+          });
+          row.appendChild(g);
+        };
+        if (card.dirs.length > 1) seg(card.dirs.map((d) => [d, d === "long" ? T("▲ Long") : T("▼ Short")]), o.dir,
+          (v) => { M.opt[card.id] = Object.assign({}, o, {dir: v}); }, T("Direction"));
+        if (card.tfs.length > 1) seg(card.tfs.map((tf) => [tf, (card.members.find((m) => m.tf === tf) || {}).tf_label || tf]), o.tf,
+          (v) => { M.opt[card.id] = Object.assign({}, o, {tf: v}); }, T("Timeframe"));
+        body.appendChild(row);
+      }
+      if (s.more) {
+        const d = el("details", "more");
+        const sm = el("summary", "");
+        sm.appendChild(el("span", "m", T("more…"))); sm.appendChild(el("span", "l", T("less…")));
+        d.appendChild(sm);
+        [[T("What it measures"), s.more.measures], [T("Why traders watch it"), s.more.why], [T("What it doesn't prove"), s.more.not_proven]]
+          .forEach(([h, t]) => { const p = el("p", ""); p.appendChild(el("b", "", h + ": ")); p.appendChild(document.createTextNode(t)); d.appendChild(p); });
+        if (s.followed) d.appendChild(followedBlock(s.followed, s.evidence && s.evidence.icon));
+        d.addEventListener("click", (e) => e.stopPropagation());
+        body.appendChild(d);
+      }
+      if (s.inside && !card.locked) body.appendChild(insideBlock(s, opts.onOpen));
+      nm.appendChild(body);
+      if (s.key && s.key === (opts.focus || {}).key) c.classList.add("focus");
+      c.appendChild(nm);
+      const tg = planTag(card);
+      if (tg) c.appendChild(tg);
+      const plus = button("+", opts.addTitle(s), () => opts.onAdd(s), "sq");
+      if (card.locked || (opts.addDisabled && opts.addDisabled(s))) plus.disabled = true;
+      c.appendChild(plus);
+      return c;
+  }
+  function ecButtons(onOpenAll) {         // tiny Expand all / Collapse all
+    const box = el("span", "ec");
+    const mk = (title, d, open) => {
+      const b = button("", title, () => onOpenAll(open));
+      b.innerHTML = '<svg width="12" height="12" viewBox="0 0 16 16" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + d + '</g></svg>';
+      box.appendChild(b);
+    };
+    mk(T("Expand all"), '<path d="M4 6 L8 2 L12 6"/><path d="M4 10 L8 14 L12 10"/>', true);
+    mk(T("Collapse all"), '<path d="M4 2 L8 6 L12 2"/><path d="M4 14 L8 10 L12 14"/>', false);
+    return box;
   }
   function followedBlock(f, mark) {   // "What followed", folded to one line: the verdict; tap for the plain numbers (muted, no colours)
     const b = el("details", "wf");
@@ -220,6 +319,40 @@ SET_LIBRARY_JS = r"""
     const shown = usable.filter((s) => (!q || (s.name + " " + s.meta + " " + (s.line || "")).toLowerCase().includes(q))
       && (!pick || (s.icons || []).some((p) => p.key === pick)));
     const given = shown.filter((s) => s.provided), mine = shown.filter((s) => !s.provided);
+    if (opts.cards && showProvided) {                 // the card view: trading ideas, twins on one card
+      const bySet = {}; (opts.sets || []).forEach((s) => { bySet[s.key] = s; });
+      const matches = (card) => card.members.some((m) => shown.some((s) => s.key === m.key))
+        || (!pick && q && (card.name + " " + card.line).toLowerCase().includes(q));
+      const ideas = opts.cards.ideas.map((i) => ({...i, cards: i.cards.filter(matches)})).filter((i) => i.cards.length);
+      const n = ideas.reduce((a, i) => a + i.cards.length, 0);
+      if (n) {
+        M.ideaShut = M.ideaShut || {};
+        const head = el("div", "provhead");
+        const lab = el("span", "", T("Provided by Angstrom Signals · {n}", {n: n}));
+        lab.title = T("Example Sets made by Angstrom Signals. Hide them in ⚙️ Settings → Show provided starters and examples.");
+        head.appendChild(lab);
+        head.appendChild(ecButtons((open) => { ideas.forEach((i) => { M.ideaShut[i.key] = !open; }); drawSets(); }));
+        setList.appendChild(head);
+        ideas.forEach((i) => {
+          const box = el("details", "idea");
+          box.open = !!q || !!pick || !M.ideaShut[i.key] || i.cards.some((c) => c.members.some((m) => m.key === focus));
+          box.addEventListener("toggle", () => { if (!q && !pick) M.ideaShut[i.key] = !box.open; });
+          const sum = el("summary", "");
+          sum.appendChild(el("span", "n", String(i.cards.length)));
+          sum.appendChild(el("span", "t", i.title));
+          sum.appendChild(el("span", "s", i.sub));
+          box.appendChild(sum);
+          i.cards.forEach((card) => box.appendChild(cardChip(card, bySet)));
+          setList.appendChild(box);
+        });
+      }
+      const loose = shown.filter((s) => s.provided && (opts.cards.loose || []).indexOf(s.key) >= 0);
+      loose.forEach((s) => setList.appendChild(setChip(s)));
+      const own = mine.filter((s) => (opts.cards.mine || []).indexOf(s.key) >= 0);
+      if (own.length) { setList.appendChild(el("div", "cat", T("Your Sets"))); own.forEach((s) => setList.appendChild(setChip(s))); }
+      if (!n && !loose.length && !own.length) setList.appendChild(el("div", "muted", usable.length ? T("No Set matches.") : (opts.empty || T("No Sets with a decision yet: make one in Signal Sets."))));
+      return;
+    }
     if (given.length) {
       // What Angstrom Signals provides sits in its own folded section at the top (hidden with the setting).
       const box = el("details", "prov");
@@ -308,7 +441,7 @@ export default function(component) {
   const libCol = el("div", "col lib");
   root.appendChild(libCol);
   window.__prismLib = window.__prismLib || {q: window.__prismQS || ""};
-  setLibrary(libCol, {sets: lib.sets, perspectives: lib.perspectives, showProvided: state.show_provided,
+  setLibrary(libCol, {sets: lib.sets, cards: lib.cards, perspectives: lib.perspectives, showProvided: state.show_provided,
     focus: state.focus_set, mem: window.__prismLib, title: T("Saved Sets"),
     hint: T("Drag a Set onto the scans, or tap + to start a scan."),
     addTitle: (s) => T("Start a scan with {name}", {name: s.name}), onAdd: (s) => act("create", {set: s.key}),

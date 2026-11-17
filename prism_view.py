@@ -102,7 +102,9 @@ def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str = "") 
     if shown:                                         # provided by Angstrom Signals: at the top, folded
         _builtin_section(st, supabase, builtins)
     data = {
-        "library": pb.library(choices, assets), "zones": pb.ZONES, "show_provided": shown,
+        "library": pb.library(choices, assets, st.session_state.get("plan_effective") or "pro",
+                              st.session_state.get("plan_display_effective") or "hide"),
+        "zones": pb.ZONES, "show_provided": shown,
         "scheduled": pb.scheduled_count(scans), "max_scheduled": pb.MAX_SCHEDULED,
         "open_new": st.session_state.pop("prism_open_new", None),
         "focus_set": st.session_state.pop("prism_focus_set", None),

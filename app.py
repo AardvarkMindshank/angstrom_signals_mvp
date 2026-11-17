@@ -6588,6 +6588,10 @@ def plan_display() -> str:
     """'hide' or 'grey': what to do with features the plan doesn't include."""
     return plans.display_mode(prefs.get("settings"))
 
+
+st.session_state["plan_effective"] = current_plan()            # read by the Lattice pages (prism_view, funnels)
+st.session_state["plan_display_effective"] = plan_display()
+
 _THEME_COLOURS = (
     ("page_day", "#d6e8f8"),
     ("page_night", "#0e1117"),

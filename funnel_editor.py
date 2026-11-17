@@ -426,7 +426,8 @@ def apply_action(f: dict, action: dict, choices: dict, library: dict, saved_sets
     return None
 
 
-def board_data(f: dict, choices: dict, library: dict, saved_sets: dict, show_provided: bool, scope: str) -> dict:
+def board_data(f: dict, choices: dict, library: dict, saved_sets: dict, show_provided: bool, scope: str,
+               plan: str = "pro", display: str = "hide") -> dict:
     import perspectives
     import prism_board as pb
 
@@ -438,7 +439,8 @@ def board_data(f: dict, choices: dict, library: dict, saved_sets: dict, show_pro
                        "icon": fn.STAGE_ICONS[min(i, len(fn.STAGE_ICONS) - 1)],
                        "set_name": doc.get("name") or t("This stage's Set"), "set_line": str(doc.get("purpose") or ""),
                        "icons": perspectives.chips(doc), "upgrade": up[0] if up else None})
-    return {"library": {"sets": [pb._set_entry(k, c) for k, c in choices.items()],
+    listed = pb.set_list(choices, plan or "pro", display or "hide")
+    return {"library": {"sets": listed["sets"], "cards": listed["cards"],
                         "perspectives": [{"key": k, "icon": i, "hover": h} for k, i, h in perspectives.ICONS]},
             "show_provided": show_provided, "stages": stages, "scope": scope,
             "timeframes": [[tf, TF_LABELS[tf]] for tf in fs.TIMEFRAMES],
@@ -453,7 +455,9 @@ def _stages_board(st, f: dict, pick: str, configs: list[dict], user_id: str, lib
     import lattice_panel
 
     choices = board_choices(configs, user_id)
-    data = board_data(f, choices, library, saved_sets, lattice_panel.provided_shown(st), str(pick))
+    data = board_data(f, choices, library, saved_sets, lattice_panel.provided_shown(st), str(pick),
+                      st.session_state.get("plan_effective") or "pro",
+                      st.session_state.get("plan_display_effective") or "hide")
     try:
         result = funnel_stages_component.component()(key=f"funnel_stages_{pick}", data=data,
                                                      on_action_change=lambda: None)

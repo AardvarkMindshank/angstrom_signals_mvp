@@ -96,7 +96,7 @@ export default function funnelStages(component) {
   const libCol = el("div", "col lib");
   root.appendChild(libCol);
   window.__funLib = window.__funLib || {};
-  setLibrary(libCol, {sets: lib.sets, perspectives: lib.perspectives, showProvided: state.show_provided,
+  setLibrary(libCol, {sets: lib.sets, cards: lib.cards, perspectives: lib.perspectives, showProvided: state.show_provided,
     mem: window.__funLib, title: T("Sets"),
     hint: T("Drag a Set onto a stage, or select a stage and tap +. With no stage selected, + adds a new stage."),
     addTitle: (s) => sel !== null ? T("Use {name} in stage {n}", {name: s.name, n: sel + 1})

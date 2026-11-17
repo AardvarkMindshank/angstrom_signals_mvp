@@ -100,10 +100,20 @@ def _inside(doc: dict) -> dict | None:
         return None
 
 
-def library(choices: dict, assets: list[tuple[str, str, str]]) -> dict:
+def set_list(choices: dict, user_plan: str = "pro", display: str = "hide") -> dict:
+    """The Set entries plus the card view (set_cards.py): trading ideas, twins on one card, plan labels."""
+    import set_cards
+
+    sets = [_set_entry(k, c) for k, c in choices.items()]
+    cards = set_cards.build(sets, {k: c.get("doc") for k, c in choices.items()}, user_plan, display)
+    return {"sets": sets, "cards": cards}
+
+
+def library(choices: dict, assets: list[tuple[str, str, str]], user_plan: str = "pro", display: str = "hide") -> dict:
     crypto, stocks = watchlist(assets)
+    listed = set_list(choices, user_plan, display)
     return {
-        "sets": [_set_entry(k, c) for k, c in choices.items()],
+        "sets": listed["sets"], "cards": listed["cards"],
         "perspectives": [{"key": k, "icon": i, "hover": h} for k, i, h in perspectives.ICONS],
         "groups": [{"group": "watchlist", "name": t(GROUPS["watchlist"]), "count": len(crypto) + len(stocks)},
                    {"group": "crypto", "name": t(GROUPS["crypto"]), "count": len(crypto)},
