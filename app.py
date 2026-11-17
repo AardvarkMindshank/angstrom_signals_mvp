@@ -5899,7 +5899,7 @@ if st.session_state.user is None:
     with col_center:
         st.markdown(_brand_mark(200), unsafe_allow_html=True)
         st.title(t("angstrom signals"))
-        st.caption(t("Market sentiment and technical signals, with the crowd alongside."))
+        st.caption(t("Navigate the markets with AI-guided analysis and alerts, with a community alongside."))
 
         if st.session_state.get("recovery_access"):
             st.markdown("### " + t("Choose a new password"))
@@ -6637,7 +6637,7 @@ account_colours = _active_colours()
 _brand_watch(key="brand_watch", data=_colour_payload(account_colours))
 _version_watch(key="version_watch", data=app_version.BOOT_ID)
 st.sidebar.markdown(
-    t("<div style='margin:0.4rem 0 0.75rem;'><div style='display:flex;align-items:center;gap:0.85rem;'>{brand_mark_58_align_left}<h1 style='margin:0;padding:0;line-height:1.15;font-size:2.25rem;font-weight:700;'>angstrom<br>signals</h1></div><div style='margin-top:0.55rem;font-size:0.82rem;font-weight:500;line-height:1.35;opacity:0.72;'>{html_escape_t_market_sen}</div></div>", brand_mark_58_align_left=_brand_mark(58, align='left'), html_escape_t_market_sen=html.escape(t('Market sentiment and technical signals, with the crowd alongside.'))),
+    t("<div style='margin:0.4rem 0 0.75rem;'><div style='display:flex;align-items:center;gap:0.85rem;'>{brand_mark_58_align_left}<h1 style='margin:0;padding:0;line-height:1.15;font-size:2.25rem;font-weight:700;'>angstrom<br>signals</h1></div><div style='margin-top:0.55rem;font-size:0.82rem;font-weight:500;line-height:1.35;opacity:0.72;'>{html_escape_t_market_sen}</div></div>", brand_mark_58_align_left=_brand_mark(58, align='left'), html_escape_t_market_sen=html.escape(t('Navigate the markets with AI-guided analysis and alerts, with a community alongside.'))),
     unsafe_allow_html=True,
 )
 with st.sidebar:
@@ -7986,7 +7986,7 @@ for _seen_name, _state_name in _layout_watched:
 st.markdown("<div class='ang-page-top'></div>", unsafe_allow_html=True)   # marks the top of the page (CSS above)
 with st.container(horizontal=True, vertical_alignment="center", horizontal_alignment="distribute", key="page_header"):
     st.markdown(
-        t("<div style='display:flex;align-items:center;gap:0.85rem;margin:0.4rem 0;'>{brand_mark_58_align_left}<div style='display:flex;align-items:baseline;flex-wrap:wrap;gap:0.35rem 0.85rem;'><h1 style='margin:0;padding:0;line-height:1.15;font-size:2.25rem;font-weight:700;white-space:nowrap;'>angstrom signals</h1><span style='font-size:0.82rem;font-weight:500;line-height:1;opacity:0.72;'>Market sentiment and technical signals, with the crowd alongside.</span></div></div>", brand_mark_58_align_left=_brand_mark(58, align='left')),
+        t("<div style='display:flex;align-items:center;gap:0.85rem;margin:0.4rem 0;'>{brand_mark_58_align_left}<div style='display:flex;align-items:baseline;flex-wrap:wrap;gap:0.35rem 0.85rem;'><h1 style='margin:0;padding:0;line-height:1.15;font-size:2.25rem;font-weight:700;white-space:nowrap;'>angstrom signals</h1><span style='font-size:0.82rem;font-weight:500;line-height:1;opacity:0.72;'>Navigate the markets with AI-guided analysis and alerts, with a community alongside.</span></div></div>", brand_mark_58_align_left=_brand_mark(58, align='left')),
         unsafe_allow_html=True,
     )
     with st.container(horizontal=True, vertical_alignment="center", gap="xsmall", width="content",
@@ -9319,7 +9319,7 @@ def _email_invite(address: str, inviter_name: str) -> tuple[bool, str]:
     page, plain = render_email(
         f"{safe_name} invited you to Angstrom Signals",
         [
-            t("Angstrom Signals is market sentiment and technical signals, with the crowd alongside."),
+            t("Angstrom Signals helps you navigate the markets with AI-guided analysis and alerts, with a community alongside."),
             t('It is invite-only while we build with experienced traders. If you are not in yet, you can <a href="{BETA_REQUEST_URL}" style="color:#1d5fd1;">ask for a seat</a>.', BETA_REQUEST_URL=BETA_REQUEST_URL),
         ],
         button=(t("Open Angstrom Signals"), _app_url()),
@@ -10703,7 +10703,7 @@ with tracked_expander("📝 " + t("Feedback"), "feedback", sidebar=True):
 with tracked_expander("ℹ️ " + t("About"), "about", sidebar=True):
     st.markdown(_brand_mark(72), unsafe_allow_html=True)
     st.markdown(t("**angstrom signals**"))
-    st.caption(t("Market sentiment and technical signals, with the crowd alongside."))
+    st.caption(t("Navigate the markets with AI-guided analysis and alerts, with a community alongside."))
     st.markdown(
         t("Angstrom Signals is a platform for traders who want aggregated signals "
         "for whole markets and for individual assets. Technical scores and market "

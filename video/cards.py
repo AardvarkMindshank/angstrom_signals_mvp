@@ -46,7 +46,7 @@ def main(out: Path) -> None:
     script = json.loads(Path(os.environ.get("SCRIPT", ROOT / "video" / "series" / "05-prism-scan.json")).read_text())
     series = [(script["series"], 22, True, GREY, 34)] if script.get("series") else []
     card([("angstrom signals", 58, True, NAVY, 0),
-          ("Market sentiment and technical signals, with the crowd alongside.", 22, False, GREY, 14),
+          ("Navigate the markets with AI-guided analysis and alerts, with a community alongside.", 22, False, GREY, 14),
           *series,
           (script["title"], 34, True, GREEN, 10 if series else 40)], 210).save(out / "intro.png")
     following = [(script["next"], 24, True, GREEN, 30)] if script.get("next") else []

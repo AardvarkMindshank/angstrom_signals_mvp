@@ -1,7 +1,7 @@
 {
   "name": "Angstrom Signals",
   "short_name": "Angstrom",
-  "description": "Market sentiment and technical signals for crypto and equities, with the crowd alongside.",
+  "description": "Navigate crypto and equity markets with AI-guided analysis and alerts, with a community alongside.",
   "id": "/",
   "start_url": "/?source=homescreen",
   "scope": "/",
