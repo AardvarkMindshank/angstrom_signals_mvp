@@ -2088,8 +2088,6 @@
   "No private messages with this person yet. Write the first one below: only the two of you will see it.": "你和此人还没有私信。在下方写第一条：只有你们两人能看到。",
   "No messages in this community yet. Write one below: only its members will see it.": "这个社区还没有消息。在下方写一条：只有成员能看到。",
   "\n**Open it** with the arrow on the right edge, or a 💬 speech balloon. Drag its left edge to resize,\ndrag the bar in the middle to split it, and 📌 **Pin** keeps it open while you use the page.\n\n**Social signals** (top): comments on sentiment scores, newest first, kept for 12 hours with their\nreplies. Filter by Positive / Negative / Mixed, by asset or watchlist, and by person: Me, your communities,\nor your ⭐ favourites.\n\n**General chat** (bottom): choose who you're talking to in **Person**: 🌐 everyone (public), one of your 👥\ncommunities (only its members see it), or one person 🔒 (private, just the two of you). Click a name, or use\n🔍 Find a person, to start a private chat. The line above the box always says who a message goes to, and a reply\nstays with its thread. Enter posts; Shift+Enter adds a line. In 👤 Account → Private messages, choose who can\nmessage you privately.\n\n**On any note**: 👍 / 👎 · ↩ reply · ⭐ add the person to favourites · 👥 invite them to a community ·\n🚩 report a comment that breaks the socials policy · 🚫 block the person · 🗑️ delete your own note.\n\n**Search**, at the top, filters both halves by words, names or assets.\n": "\n用右边缘的箭头或 💬 对话气泡**打开它**。拖动其左边缘可调整大小，\n拖动中间的横条可将其分成两半，📌 **固定**可在您使用页面时保持打开。\n\n**社交信号**（上方）：对情绪得分的评论，最新的在前，连同回复\n保留 12 小时。可按正面 / 负面 / 好坏参半、按资产或关注列表、按人筛选：我、您的社区\n或您的 ⭐ 收藏。\n\n**综合聊天**（下方）：在 **人员** 中选择聊天对象：🌐 所有人（公开）、你的某个 👥 社区（仅成员可见），或 🔒 某一个人（私密，仅你们两人）。点击名字或使用 🔍 查找某人即可开始私聊。输入框上方的一行始终显示消息发给谁，回复会留在原话题中。Enter 发布；Shift+Enter 换行。在 👤 账户 → 私信 中选择谁可以给你发私信。\n\n**在任意笔记上**：👍 / 👎 · ↩ 回复 · ⭐ 将此人加入收藏 · 👥 邀请其加入社区 ·\n🚩 举报违反社交政策的评论 · 🚫 屏蔽此人 · 🗑️ 删除自己的笔记。\n\n顶部的**搜索**按词语、名称或资产筛选上下两部分。\n",
-  "Plan: **{plan}**": "方案：**{plan}**",
-  "free during the beta": "公测期间免费",
   "Upgrade": "升级",
   "See what each plan includes.": "查看各方案包含的内容。",
   "Hide": "隐藏",
@@ -2118,5 +2116,7 @@
   "The daily trend holds, then short-term momentum turns back with it.": "日线趋势保持，随后短期动能随之回转。",
   "The Sonar WaveTrend crosses back after a dip, inside the daily trend.": "在日线趋势中，回调之后Sonar的WaveTrend再次交叉。",
   "Price makes a new extreme but momentum doesn't, on two or more timeframes.": "在两个或更多时间周期上，价格创出新极值而动能没有。",
-  "WaveTrend, money flow and markers agree across timeframes.": "多个时间周期上WaveTrend、资金流和标记一致。"
+  "WaveTrend, money flow and markers agree across timeframes.": "多个时间周期上WaveTrend、资金流和标记一致。",
+  "Account level: {plan}": "账户等级：{plan}",
+  "Free during the beta.": "公测期间免费。"
 }

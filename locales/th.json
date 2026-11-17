@@ -2088,8 +2088,6 @@
   "No private messages with this person yet. Write the first one below: only the two of you will see it.": "ยังไม่มีข้อความส่วนตัวกับคนนี้ เขียนข้อความแรกด้านล่าง: มีแค่คุณสองคนที่เห็น",
   "No messages in this community yet. Write one below: only its members will see it.": "ยังไม่มีข้อความในชุมชนนี้ เขียนด้านล่าง: เฉพาะสมาชิกที่เห็น",
   "\n**Open it** with the arrow on the right edge, or a 💬 speech balloon. Drag its left edge to resize,\ndrag the bar in the middle to split it, and 📌 **Pin** keeps it open while you use the page.\n\n**Social signals** (top): comments on sentiment scores, newest first, kept for 12 hours with their\nreplies. Filter by Positive / Negative / Mixed, by asset or watchlist, and by person: Me, your communities,\nor your ⭐ favourites.\n\n**General chat** (bottom): choose who you're talking to in **Person**: 🌐 everyone (public), one of your 👥\ncommunities (only its members see it), or one person 🔒 (private, just the two of you). Click a name, or use\n🔍 Find a person, to start a private chat. The line above the box always says who a message goes to, and a reply\nstays with its thread. Enter posts; Shift+Enter adds a line. In 👤 Account → Private messages, choose who can\nmessage you privately.\n\n**On any note**: 👍 / 👎 · ↩ reply · ⭐ add the person to favourites · 👥 invite them to a community ·\n🚩 report a comment that breaks the socials policy · 🚫 block the person · 🗑️ delete your own note.\n\n**Search**, at the top, filters both halves by words, names or assets.\n": "\n**เปิด** ด้วยลูกศรที่ขอบขวา หรือบอลลูนข้อความ 💬 ลากขอบซ้ายเพื่อปรับขนาด\nลากแถบตรงกลางเพื่อแบ่ง และ 📌 **ปักหมุด** ทำให้เปิดค้างไว้ขณะใช้หน้าเว็บ\n\n**สัญญาณโซเชียล** (ด้านบน): ความเห็นต่อคะแนนอารมณ์ตลาด ใหม่สุดก่อน เก็บไว้ 12 ชั่วโมงพร้อม\nการตอบกลับ กรองตาม บวก / ลบ / ปะปน ตามสินทรัพย์หรือรายการเฝ้าดู และตามบุคคล: ฉัน ชุมชนของคุณ\nหรือ ⭐ รายการโปรดของคุณ\n\n**แชตทั่วไป** (ด้านล่าง): เลือกคู่สนทนาใน **บุคคล**: 🌐 ทุกคน (สาธารณะ) 👥 ชุมชนของคุณ (เห็นเฉพาะสมาชิก) หรือ 🔒 คนเดียว (ส่วนตัว เฉพาะคุณสองคน) คลิกชื่อหรือใช้ 🔍 ค้นหาบุคคล เพื่อเริ่มแชตส่วนตัว บรรทัดเหนือช่องพิมพ์บอกเสมอว่าข้อความส่งถึงใคร และคำตอบจะอยู่ในเธรดเดิม Enter เพื่อโพสต์ Shift+Enter เพื่อขึ้นบรรทัดใหม่ เลือกว่าใครส่งข้อความส่วนตัวถึงคุณได้ที่ 👤 บัญชี → ข้อความส่วนตัว\n\n**บนข้อความใดก็ได้**: 👍 / 👎 · ↩ ตอบกลับ · ⭐ เพิ่มคนนั้นในรายการโปรด · 👥 เชิญเข้าชุมชน ·\n🚩 รายงานความเห็นที่ผิดนโยบายโซเชียล · 🚫 บล็อกคนนั้น · 🗑️ ลบข้อความของคุณเอง\n\n**ค้นหา** ที่ด้านบน กรองทั้งสองส่วนด้วยคำ ชื่อ หรือสินทรัพย์\n",
-  "Plan: **{plan}**": "แพ็กเกจ: **{plan}**",
-  "free during the beta": "ใช้ฟรีระหว่างช่วงเบต้า",
   "Upgrade": "อัปเกรด",
   "See what each plan includes.": "ดูว่าแต่ละแพ็กเกจมีอะไรบ้าง",
   "Hide": "ซ่อน",
@@ -2118,5 +2116,7 @@
   "The daily trend holds, then short-term momentum turns back with it.": "เทรนด์รายวันยังคงอยู่ แล้วโมเมนตัมระยะสั้นกลับมาไปทางเดียวกัน",
   "The Sonar WaveTrend crosses back after a dip, inside the daily trend.": "WaveTrend ของ Sonar ตัดกลับหลังการย่อตัว ภายในเทรนด์รายวัน",
   "Price makes a new extreme but momentum doesn't, on two or more timeframes.": "ราคาทำจุดสุดใหม่แต่โมเมนตัมไม่ทำตาม ในสองกรอบเวลาขึ้นไป",
-  "WaveTrend, money flow and markers agree across timeframes.": "WaveTrend กระแสเงิน และเครื่องหมายต่าง ๆ สอดคล้องกันในหลายกรอบเวลา"
+  "WaveTrend, money flow and markers agree across timeframes.": "WaveTrend กระแสเงิน และเครื่องหมายต่าง ๆ สอดคล้องกันในหลายกรอบเวลา",
+  "Account level: {plan}": "ระดับบัญชี: {plan}",
+  "Free during the beta.": "ใช้ฟรีระหว่างช่วงเบต้า"
 }

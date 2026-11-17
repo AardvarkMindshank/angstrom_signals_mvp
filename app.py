@@ -4609,6 +4609,7 @@ _SECTION_IDS = _MAIN_SECTION_IDS + (
     "my_groups",
     "edit_profile",
     "private_messages",
+    "account_level",
     "invite",
     "notifications",
     "alert_feed",
@@ -6981,37 +6982,36 @@ with tracked_expander("👤 " + t("Account"), "account", sidebar=True):
         profile = {}
     st.markdown(profile_card(profile, st.session_state.user.email or ""), unsafe_allow_html=True)
     _plan_now = current_plan()
-    _plan_row = st.columns([3, 2])
-    _plan_row[0].markdown(t("Plan: **{plan}**", plan=t(plans.LABEL[_plan_now]))
-                          + (" · " + t("free during the beta") if st.session_state.get("plan_stored") == plans.BETA_PLAN
-                             else ""))
-    _plan_row[1].link_button(t("Upgrade"), "https://www.angstromsignals.com/pricing.html", use_container_width=True,
-                             help=t("See what each plan includes."))
-    _display_choices = {"hide": t("Hide"), "grey": t("Grey out")}
-    _display_now = plan_display()
-    _display_pick = st.radio(
-        t("Features not in my plan"),
-        list(_display_choices),
-        index=list(_display_choices).index(_display_now),
-        format_func=lambda k: _display_choices[k],
-        horizontal=True,
-        key="plan_display_pick",
-        help=t("Hide keeps the screens simple: you only see what your plan includes. Grey out shows everything, with "
-               "a small Plus or Pro label on what needs a higher plan."),
-    )
-    if _display_pick != _display_now:
-        save_account_settings({"plan_display": _display_pick})
-        st.rerun()
-    if is_admin():
-        _preview_opts = ["", *plans.PLANS]
-        st.selectbox(
-            t("Preview the app as"),
-            _preview_opts,
-            index=_preview_opts.index(st.session_state.get("plan_preview") or ""),
-            format_func=lambda k: t("My own plan") if not k else t(plans.LABEL[k]),
-            key="plan_preview",
-            help=t("Admins only: see the screens as a member on that plan would. Nothing is saved."),
+    with tracked_expander("🏷️ " + t("Account level: {plan}", plan=t(plans.LABEL[_plan_now])), "account_level"):
+        if st.session_state.get("plan_stored") == plans.BETA_PLAN and not st.session_state.get("plan_preview"):
+            st.caption(t("Free during the beta."))
+        st.link_button(t("Upgrade"), "https://www.angstromsignals.com/pricing.html", use_container_width=True,
+                       help=t("See what each plan includes."))
+        _display_choices = {"hide": t("Hide"), "grey": t("Grey out")}
+        _display_now = plan_display()
+        _display_pick = st.radio(
+            t("Features not in my plan"),
+            list(_display_choices),
+            index=list(_display_choices).index(_display_now),
+            format_func=lambda k: _display_choices[k],
+            horizontal=True,
+            key="plan_display_pick",
+            help=t("Hide keeps the screens simple: you only see what your plan includes. Grey out shows everything, "
+                   "with a small Plus or Pro label on what needs a higher plan."),
         )
+        if _display_pick != _display_now:
+            save_account_settings({"plan_display": _display_pick})
+            st.rerun()
+        if is_admin():
+            _preview_opts = ["", *plans.PLANS]
+            st.selectbox(
+                t("Preview the app as"),
+                _preview_opts,
+                index=_preview_opts.index(st.session_state.get("plan_preview") or ""),
+                format_func=lambda k: t("My own plan") if not k else t(plans.LABEL[k]),
+                key="plan_preview",
+                help=t("Admins only: see the screens as a member on that plan would. Nothing is saved."),
+            )
     with tracked_expander(t("Edit profile"), "edit_profile"):
         profile_name = st.text_input(
             t("Display name"),

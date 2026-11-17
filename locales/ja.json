@@ -2088,8 +2088,6 @@
   "No private messages with this person yet. Write the first one below: only the two of you will see it.": "この人との個別メッセージはまだありません。下に最初のメッセージを書いてください：二人だけが見られます。",
   "No messages in this community yet. Write one below: only its members will see it.": "このコミュニティにはまだメッセージがありません。下に書いてください：メンバーだけが見られます。",
   "\n**Open it** with the arrow on the right edge, or a 💬 speech balloon. Drag its left edge to resize,\ndrag the bar in the middle to split it, and 📌 **Pin** keeps it open while you use the page.\n\n**Social signals** (top): comments on sentiment scores, newest first, kept for 12 hours with their\nreplies. Filter by Positive / Negative / Mixed, by asset or watchlist, and by person: Me, your communities,\nor your ⭐ favourites.\n\n**General chat** (bottom): choose who you're talking to in **Person**: 🌐 everyone (public), one of your 👥\ncommunities (only its members see it), or one person 🔒 (private, just the two of you). Click a name, or use\n🔍 Find a person, to start a private chat. The line above the box always says who a message goes to, and a reply\nstays with its thread. Enter posts; Shift+Enter adds a line. In 👤 Account → Private messages, choose who can\nmessage you privately.\n\n**On any note**: 👍 / 👎 · ↩ reply · ⭐ add the person to favourites · 👥 invite them to a community ·\n🚩 report a comment that breaks the socials policy · 🚫 block the person · 🗑️ delete your own note.\n\n**Search**, at the top, filters both halves by words, names or assets.\n": "\n右端の矢印、または💬 吹き出しで**開きます**。左端をドラッグしてサイズを変え、\n中央のバーをドラッグして分割し、📌 **固定**でページを使う間も開いたままにします。\n\n**ソーシャルシグナル**（上）：センチメントスコアへのコメント。新しい順に、返信とともに12時間\n保存されます。ポジティブ／ネガティブ／混在、資産やウォッチリスト、人（自分、コミュニティ、\n⭐ お気に入り）で絞り込めます。\n\n**一般チャット**（下）：**人** で話す相手を選びます：🌐 全員（公開）、👥 あなたのコミュニティ（メンバーだけが見られます）、または 🔒 一人（非公開、二人だけ）。名前をクリックするか 🔍 人を探す を使うと、個別のチャットを始められます。入力欄の上の行に、メッセージの宛先がいつも表示されます。返信は元のスレッドに残ります。Enterで投稿、Shift+Enterで改行します。👤 アカウント → 個別メッセージ で、誰があなたに個別メッセージを送れるかを選べます。\n\n**各ノートで**：👍 / 👎 · ↩ 返信 · ⭐ その人をお気に入りに追加 · 👥 コミュニティに招待 ·\n🚩 ソーシャルポリシーに反するコメントを報告 · 🚫 その人をブロック · 🗑️ 自分のノートを削除。\n\n上部の**検索**は、両方の欄を語句、名前、資産で絞り込みます。\n",
-  "Plan: **{plan}**": "プラン：**{plan}**",
-  "free during the beta": "ベータ期間中は無料",
   "Upgrade": "アップグレード",
   "See what each plan includes.": "各プランの内容を見る。",
   "Hide": "非表示",
@@ -2118,5 +2116,7 @@
   "The daily trend holds, then short-term momentum turns back with it.": "日足のトレンドが保たれ、その後短期のモメンタムが同じ方向へ戻る。",
   "The Sonar WaveTrend crosses back after a dip, inside the daily trend.": "日足トレンドの中で、押しの後にSonarのWaveTrendが再びクロスする。",
   "Price makes a new extreme but momentum doesn't, on two or more timeframes.": "2つ以上の時間軸で、価格は新たな極値をつけたがモメンタムはつけていない。",
-  "WaveTrend, money flow and markers agree across timeframes.": "複数の時間軸でWaveTrend、資金フロー、マーカーがそろう。"
+  "WaveTrend, money flow and markers agree across timeframes.": "複数の時間軸でWaveTrend、資金フロー、マーカーがそろう。",
+  "Account level: {plan}": "アカウントレベル：{plan}",
+  "Free during the beta.": "ベータ期間中は無料です。"
 }
