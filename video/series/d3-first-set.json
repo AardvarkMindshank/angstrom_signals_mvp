@@ -1,0 +1,52 @@
+{
+ "title": "Your first Signal Set",
+ "series": "Day one",
+ "next": "Next: scan your assets with Prism",
+ "slug": "d3-first-set",
+ "section": "training",
+ "zoom": "1.1",
+ "intro_say": "Angstrom Signals. | Day one: your first Signal Set.",
+ "outro_say": "That's your first Set. | Next, scan your assets with it.",
+ "steps": [
+  {
+   "id": "idea",
+   "screen": "A card: what a Set is",
+   "say": "A Signal Set asks a yes-or-no question about an asset. | Ours: is it dipping inside an uptrend?"
+  },
+  {
+   "id": "open",
+   "screen": "Signal Sets",
+   "say": "Open Signal Sets. | Your Groups and the signals are on the left."
+  },
+  {
+   "id": "group",
+   "screen": "Adding My Trend",
+   "say": "Add the Group you just made: My Trend."
+  },
+  {
+   "id": "signal",
+   "screen": "Adding RSI",
+   "say": "Then a signal from the Momentum family: R S I, which measures how far price has run."
+  },
+  {
+   "id": "lines",
+   "screen": "The two lines that must hold",
+   "say": "Now the lines that must hold. | My Trend is Bullish. | And R S I is forty or less: a dip."
+  },
+  {
+   "id": "answer",
+   "screen": "How the answer is decided",
+   "say": "Every line must hold for a Yes. | If a reading is missing, the answer is Unknown, never a guess."
+  },
+  {
+   "id": "save",
+   "screen": "Naming and saving the Set",
+   "say": "Name it, Dip in my uptrend, and save it."
+  },
+  {
+   "id": "summary",
+   "screen": "A card: what you built",
+   "say": "Your Set gives Yes, No or Unknown for any asset, with the line that decided it."
+  }
+ ]
+}

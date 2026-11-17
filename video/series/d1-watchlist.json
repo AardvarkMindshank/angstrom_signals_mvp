@@ -1,0 +1,52 @@
+{
+ "title": "Add the assets you follow",
+ "series": "Day one",
+ "next": "Next: build your first Signal Group",
+ "slug": "d1-watchlist",
+ "section": "training",
+ "zoom": "1.1",
+ "intro_say": "Angstrom Signals. | Day one: add the assets you follow.",
+ "outro_say": "That's your watchlist set up. | Next, your first Signal Group.",
+ "steps": [
+  {
+   "id": "idea",
+   "screen": "A card: your watchlists decide what you see",
+   "say": "Your watchlists decide what the dashboard shows: the signal tables, the chart, and your scans. | Let's set them up."
+  },
+  {
+   "id": "markets",
+   "screen": "Settings: the markets you trade",
+   "say": "First, open Settings in the sidebar and choose the markets you trade: cryptos, equities, or both. | The other market's sections hide."
+  },
+  {
+   "id": "tick",
+   "screen": "Ticking the first step of the checklist",
+   "say": "Then tick that step on the getting-started checklist."
+  },
+  {
+   "id": "crypto",
+   "screen": "Watchlists: adding Chainlink",
+   "say": "Now open Watchlists, then Edit Crypto. | Type a name or a ticker, press Enter, and pick the match. | Here, Chainlink."
+  },
+  {
+   "id": "stock",
+   "screen": "Watchlists: adding AMD",
+   "say": "Shares work the same way, in Edit Stocks. | Type a company or a ticker. Here, AMD."
+  },
+  {
+   "id": "table",
+   "screen": "The new assets in the signal tables",
+   "say": "Both now appear in the signal tables, with their Trend, Stretch and Flow readings."
+  },
+  {
+   "id": "remove",
+   "screen": "Removing an asset",
+   "say": "To take one off, choose it under Remove, in the same place."
+  },
+  {
+   "id": "summary",
+   "screen": "A card: what you did",
+   "say": "Three or more assets ticks the watchlist step by itself. | Your watchlists are saved on your account, on every device."
+  }
+ ]
+}

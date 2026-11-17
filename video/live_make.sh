@@ -4,7 +4,8 @@
 set -uo pipefail
 URL="${APP_URL:-https://app.angstromsignals.com/}"
 failed=""
-for slug in $(grep -v '^#' video/live_queue.txt | grep -v '^\s*$'); do
+list="${QUEUE:-$(grep -v '^#' video/live_queue.txt | grep -v '^\s*$')}"
+for slug in $list; do
   dir="out/video/$slug"
   mkdir -p "$dir/voice"
   ln -sfn "$(pwd)/out/video/voice_model" "$dir/voice_model"

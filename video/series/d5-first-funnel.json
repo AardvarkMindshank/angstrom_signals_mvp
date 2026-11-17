@@ -1,0 +1,52 @@
+{
+ "title": "Make your own funnel",
+ "series": "Day one",
+ "next": "",
+ "slug": "d5-first-funnel",
+ "section": "training",
+ "zoom": "1.1",
+ "intro_say": "Angstrom Signals. | Day one: your own funnel.",
+ "outro_say": "That's day one done. | A Candidate matches your conditions. It is not a recommendation to trade.",
+ "steps": [
+  {
+   "id": "idea",
+   "screen": "A card: what a funnel does",
+   "say": "A funnel narrows a whole market down, stage by stage, and keeps the list up to date every hour."
+  },
+  {
+   "id": "open",
+   "screen": "Funnels: the provided Trend funnel",
+   "say": "Open Funnels. | Angstrom's Trend funnel is ready to copy: the pool at the top, then each stage narrowing it down."
+  },
+  {
+   "id": "copy",
+   "screen": "Making your own copy",
+   "say": "Choose the market and direction, then make your own copy."
+  },
+  {
+   "id": "name",
+   "screen": "Naming it",
+   "say": "Give it a name."
+  },
+  {
+   "id": "pool",
+   "screen": "Choosing the pool",
+   "say": "At the top of the funnel, the pool: here, the top one hundred coins by market cap."
+  },
+  {
+   "id": "stages",
+   "screen": "The stages",
+   "say": "Each stage asks one question on its own chart. | Drag a Set onto a stage to change it, even one of your own."
+  },
+  {
+   "id": "save",
+   "screen": "Saving and activating",
+   "say": "Save and activate. | It's checked straight away, then every hour."
+  },
+  {
+   "id": "summary",
+   "screen": "A card: where it shows up",
+   "say": "Your funnel shows as Dynamic funnel above the signal tables, with alerts on new Candidates."
+  }
+ ]
+}

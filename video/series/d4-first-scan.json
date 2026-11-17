@@ -1,0 +1,52 @@
+{
+ "title": "Scan your assets with Prism",
+ "series": "Day one",
+ "next": "Next: make your own funnel",
+ "slug": "d4-first-scan",
+ "section": "training",
+ "zoom": "1.1",
+ "intro_say": "Angstrom Signals. | Day one: your first Prism scan.",
+ "outro_say": "That's Prism Scan. | Next, your own funnel.",
+ "steps": [
+  {
+   "id": "idea",
+   "screen": "A card: what a scan does",
+   "say": "Prism Scan runs a Set across your assets, and can keep watching for you."
+  },
+  {
+   "id": "open",
+   "screen": "Prism Scan",
+   "say": "Open Prism Scan. | Your Sets are on the left, with Angstrom's examples, grouped by trading idea."
+  },
+  {
+   "id": "create",
+   "screen": "Starting a scan",
+   "say": "Tap plus on Dip in my uptrend. | A new scan starts, on your whole watchlist."
+  },
+  {
+   "id": "play",
+   "screen": "Running it now",
+   "say": "Press play to run it now, on the latest finished candles."
+  },
+  {
+   "id": "results",
+   "screen": "The results",
+   "say": "Each asset gets Yes, No, or Unknown, with the reason beside it."
+  },
+  {
+   "id": "schedule",
+   "screen": "Choosing when it runs",
+   "say": "To keep watching, give the scan a schedule. | Here, at every daily close."
+  },
+  {
+   "id": "alerts",
+   "screen": "Where alerts go",
+   "say": "And choose where its alerts go: in the app, by email, or both."
+  },
+  {
+   "id": "summary",
+   "screen": "A card: what you set up",
+   "say": "Your scan now checks every day by itself, and tells you when an answer turns to Yes."
+  }
+ ]
+}
