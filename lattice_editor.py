@@ -91,6 +91,14 @@ def catalogue() -> list[dict]:
                                       english.get(s["id"], s["name"])))
 
 
+def families_for(st) -> list[dict]:
+    """The signal families for the editors' lists, following this account's plan and display setting."""
+    import signal_families
+
+    return signal_families.build(catalogue(), st.session_state.get("plan_effective") or "pro",
+                                 st.session_state.get("plan_display_effective") or "hide")
+
+
 def _score_transform(signal_key: str) -> dict | None:
     if fields.field(signal_key, "standard_score"):
         return {"kind": "clip", "version": 1, "field": "standard_score", "low": -1, "high": 1}

@@ -13,26 +13,6 @@ import i18n
 import lattice_component
 
 CSS = lattice_component.CSS + """
-/* Set cards: trading ideas, options on the card, plan labels (18 Nov 2026) */
-.lat .provhead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:6px 0 2px;font-weight:600}
-.lat .provhead .ec{display:inline-flex;gap:4px}
-.lat .provhead .ec button{width:26px;height:26px;min-height:26px;padding:0;display:inline-flex;align-items:center;justify-content:center}
-.lat details.idea{margin:2px 0 6px}
-.lat details.idea>summary{list-style:none;cursor:pointer;padding:6px 2px;border-bottom:1px solid rgba(127,127,127,.3);margin-bottom:6px}
-.lat details.idea>summary::-webkit-details-marker{display:none}
-.lat details.idea>summary .t{font-weight:700}
-.lat details.idea>summary .t::before{content:"▸ ";opacity:.7}
-.lat details.idea[open]>summary .t::before{content:"▾ "}
-.lat details.idea>summary .s{display:block;font-size:.85em;opacity:.75;padding-left:1.1em}
-.lat details.idea>summary .n{float:right;font-size:.8em;opacity:.6}
-.lat .chip .opts{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
-.lat .chip .seg{display:inline-flex;border:1px solid rgba(127,127,127,.45);border-radius:6px;overflow:hidden}
-.lat .chip .seg button{border:0;border-radius:0;min-height:28px;padding:2px 8px;font-size:.8em;background:transparent}
-.lat .chip .seg button.on{background:#0f766e;color:#fff}
-.lat .ptag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
-  border-radius:999px;padding:2px 7px;color:#fff;margin-left:6px;vertical-align:middle;cursor:help}
-.lat .chip.locked{border-style:dashed;cursor:not-allowed}
-.lat .chip.locked .dim{opacity:.32;filter:grayscale(1)}
 
 .lat.prism .pv{display:inline-flex;gap:2px;margin-left:6px;font-size:13px;vertical-align:middle}
 .lat.prism .pv span{cursor:help}
@@ -284,13 +264,22 @@ SET_LIBRARY_JS = r"""
   }
   function ecButtons(onOpenAll) {         // tiny Expand all / Collapse all
     const box = el("span", "ec");
-    const mk = (title, d, open) => {
+    const mk = (title, ds, open) => {
       const b = button("", title, () => onOpenAll(open));
-      b.innerHTML = '<svg width="12" height="12" viewBox="0 0 16 16" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + d + '</g></svg>';
+      const ns = "http://www.w3.org/2000/svg";
+      const s = document.createElementNS(ns, "svg");
+      s.setAttribute("width", "12"); s.setAttribute("height", "12"); s.setAttribute("viewBox", "0 0 16 16"); s.setAttribute("aria-hidden", "true");
+      ds.forEach((d) => {
+        const p = document.createElementNS(ns, "path");
+        p.setAttribute("d", d); p.setAttribute("fill", "none"); p.setAttribute("stroke", "currentColor");
+        p.setAttribute("stroke-width", "1.8"); p.setAttribute("stroke-linecap", "round"); p.setAttribute("stroke-linejoin", "round");
+        s.appendChild(p);
+      });
+      b.appendChild(s);
       box.appendChild(b);
     };
-    mk(T("Expand all"), '<path d="M4 6 L8 2 L12 6"/><path d="M4 10 L8 14 L12 10"/>', true);
-    mk(T("Collapse all"), '<path d="M4 2 L8 6 L12 2"/><path d="M4 14 L8 10 L12 14"/>', false);
+    mk(T("Expand all"), ["M4 6 L8 2 L12 6", "M4 10 L8 14 L12 10"], true);
+    mk(T("Collapse all"), ["M4 2 L8 6 L12 2", "M4 14 L8 10 L12 14"], false);
     return box;
   }
   function followedBlock(f, mark) {   // "What followed", folded to one line: the verdict; tap for the plain numbers (muted, no colours)

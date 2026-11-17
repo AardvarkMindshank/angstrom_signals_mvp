@@ -8663,8 +8663,8 @@ tested what usually followed these answers.
 
 **Changing a funnel: Angstrom Lattice → 🔻 Funnels**
 - The picker lists your funnels, then the provided ones (marked *provided*, read-only).
-- For yours: the **name**, **direction**, the **leave rule** (two No closes in a row, or the first No), **alerts**,
-  and **⏸ pause** (at once; a paused funnel keeps its places).
+- For yours: the **name**, **direction**, the **leave rule** (two No closes in a row, or the first No) and
+  **alerts**. Pause and resume a funnel from its row on the Dynamic funnel page.
 - **Pool:** all eligible, or the top 50 / 100 / 200 / 500 by market cap; a minimum traded a day; or **only my
   watchlist**.
 - **Stages (advanced):** each stage's **Set** (any provided Set or one of yours) and when it's **checked** (each

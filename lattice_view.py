@@ -111,7 +111,7 @@ def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str = "") 
     try:
         result = lattice_component.component()(
             key="lattice_group_editor",
-            data={**screen, "catalogue": le.catalogue(), "role_hints": {k: t(v) for k, v in le.ROLE_HINT.items()},
+            data={**screen, "catalogue": le.catalogue(), "families": le.families_for(st), "role_hints": {k: t(v) for k, v in le.ROLE_HINT.items()},
                   "suggested_labels": le.SUGGESTED_LABELS},
             on_model_change=lambda: None,
         )

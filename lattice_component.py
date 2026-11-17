@@ -69,6 +69,31 @@ SPLITTER_JS = """
 """
 
 CSS = """
+/* Set cards: trading ideas, options on the card, plan labels (18 Nov 2026) */
+.lat .provhead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:6px 0 2px;font-weight:600}
+.lat .provhead .ec{display:inline-flex;gap:4px}
+.lat .provhead .ec button{width:26px;height:26px;min-height:26px;padding:0;display:inline-flex;align-items:center;justify-content:center}
+.lat details.idea{margin:2px 0 6px}
+.lat details.idea>summary{list-style:none;cursor:pointer;padding:6px 2px;border-bottom:1px solid rgba(127,127,127,.3);margin-bottom:6px}
+.lat details.idea>summary::-webkit-details-marker{display:none}
+.lat details.idea>summary .t{font-weight:700}
+.lat details.idea>summary .t::before{content:"▸ ";opacity:.7}
+.lat details.idea[open]>summary .t::before{content:"▾ "}
+.lat details.idea>summary .s{display:block;font-size:.85em;opacity:.75;padding-left:1.1em}
+.lat details.idea>summary .n{float:right;font-size:.8em;opacity:.6}
+.lat .chip .opts{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.lat .chip .seg{display:inline-flex;border:1px solid rgba(127,127,127,.45);border-radius:6px;overflow:hidden}
+.lat .chip .seg button{border:0;border-radius:0;min-height:28px;padding:2px 8px;font-size:.8em;background:transparent}
+.lat .chip .seg button.on{background:#0f766e;color:#fff}
+.lat .ptag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+  border-radius:999px;padding:2px 7px;color:#fff;margin-left:6px;vertical-align:middle;cursor:help}
+.lat .chip.locked{border-style:dashed;cursor:not-allowed}
+.lat .chip.locked .dim{opacity:.32;filter:grayscale(1)}
+.lat .fam .what{font-size:.85em;opacity:.8}
+.lat .chip .vars{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.lat .chip .vars button{min-height:28px;padding:2px 9px;border-radius:999px;font-size:.8em}
+.lat .chip .vars button.on{background:#0f766e;color:#fff;border-color:#0f766e}
+.lat .chip .vars button.lk{border-style:dashed;opacity:.5}
 .lat{font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;color:inherit;display:flex;flex-wrap:wrap;gap:14px}
 .lat *{box-sizing:border-box}
 .lat .col{background:rgba(127,127,127,.06);border:1px solid rgba(127,127,127,.25);border-radius:12px;padding:12px}
@@ -146,6 +171,112 @@ html.angstrom-night .lat select option{color:#f3f4f6;background:#1f2937}
 @media (max-width:640px){.lat .lib{max-width:none;flex-basis:100%;max-height:380px}.lat .mid{flex-basis:100%}.lat .split{display:none}}
 """
 
+FAMILY_JS = r"""
+  // Signal families (18 Nov 2026): family -> signal -> variant. Each signal is a card with its variants and
+  // timeframes; + or a drag adds the chosen variant at the chosen timeframe. mem keeps choices for the session.
+  function chevrons(ds) {                 // a tiny two-chevron icon, built node by node
+    const ns = "http://www.w3.org/2000/svg";
+    const s = document.createElementNS(ns, "svg");
+    s.setAttribute("width", "12"); s.setAttribute("height", "12"); s.setAttribute("viewBox", "0 0 16 16"); s.setAttribute("aria-hidden", "true");
+    ds.forEach((d) => {
+      const p = document.createElementNS(ns, "path");
+      p.setAttribute("d", d); p.setAttribute("fill", "none"); p.setAttribute("stroke", "currentColor");
+      p.setAttribute("stroke-width", "1.8"); p.setAttribute("stroke-linecap", "round"); p.setAttribute("stroke-linejoin", "round");
+      s.appendChild(p);
+    });
+    return s;
+  }
+  function drawFamilies(list, families, catalogue, q, mem, onAdd, payload) {
+    const byId = {}; catalogue.forEach((s) => { byId[s.id] = s; });
+    mem.v = mem.v || {}; mem.tf = mem.tf || {}; mem.shut = mem.shut || {};
+    const fams = families.map((f) => ({...f, signals: f.signals.filter((g) => !q
+      || (f.title + " " + f.question + " " + g.name + " " + g.what + " " + g.variants.map((v) => v.name).join(" ")).toLowerCase().indexOf(q) >= 0)}))
+      .filter((f) => f.signals.length);
+    const head = el("div", "provhead");
+    head.appendChild(el("span", "", T("Signals · {f} families · {n} signals", {f: fams.length, n: fams.reduce((a, f) => a + f.signals.length, 0)})));
+    const ec = el("span", "ec");
+    [[T("Expand all"), ["M4 6 L8 2 L12 6", "M4 10 L8 14 L12 10"], false],
+     [T("Collapse all"), ["M4 2 L8 6 L12 2", "M4 14 L8 10 L12 14"], true]].forEach(([title, ds, shut]) => {
+      const b = button("", title, () => { fams.forEach((f) => { mem.shut[f.key] = shut; }); redrawFamilies(); });
+      b.appendChild(chevrons(ds));
+      ec.appendChild(b);
+    });
+    head.appendChild(ec);
+    list.appendChild(head);
+    const holder = el("div", "");
+    list.appendChild(holder);
+    function tag(item) {
+      if (!item.locked || !item.tag) return null;
+      const g = el("span", "ptag", item.tag);
+      g.style.background = item.tag_colour || "#7c3aed"; g.title = item.tag_hover || "";
+      return g;
+    }
+    function redrawFamilies() {
+      holder.replaceChildren();
+      fams.forEach((f) => {
+        const box = el("details", "idea fam");
+        box.open = !!q || !mem.shut[f.key];
+        box.addEventListener("toggle", () => { if (!q) mem.shut[f.key] = !box.open; });
+        const sum = el("summary", "");
+        sum.appendChild(el("span", "n", String(f.signals.length)));
+        sum.appendChild(el("span", "t", f.title));
+        sum.appendChild(el("span", "s", f.question));
+        box.appendChild(sum);
+        f.signals.forEach((g) => {
+          const usable = g.variants.filter((v) => !v.locked);
+          let vid = mem.v[g.name];
+          if (!usable.some((v) => v.id === vid)) vid = (usable[0] || g.variants[0]).id;
+          const s = byId[vid] || {timeframes: ["1D"], name: g.name};
+          let tf = mem.tf[g.name];
+          if ((s.timeframes || []).indexOf(tf) < 0) tf = (s.timeframes || []).indexOf("1D") >= 0 ? "1D" : (s.timeframes || [])[0];
+          const c = el("div", "chip card" + (g.locked ? " locked" : ""));
+          c.draggable = !g.locked;
+          c.title = s.hint || "";
+          if (!g.locked) c.addEventListener("dragstart", (e) => e.dataTransfer.setData("text/plain", payload(vid, tf)));
+          const nm = el("div", "nm");
+          const top = el("div", g.locked ? "dim" : "", g.name);
+          if (s.badge) top.appendChild(el("span", "badge", " " + s.badge));
+          nm.appendChild(top);
+          const body = el("div", g.locked ? "dim" : "");
+          body.appendChild(el("div", "what", g.what));
+          if (g.variants.length > 1) {
+            const vs = el("div", "vars"); vs.setAttribute("role", "group"); vs.setAttribute("aria-label", T("Variant"));
+            g.variants.forEach((v) => {
+              const b = button(v.name, v.locked ? v.tag_hover : "", () => { mem.v[g.name] = v.id; redrawFamilies(); });
+              if (v.id === vid && !v.locked) { b.classList.add("on"); b.setAttribute("aria-pressed", "true"); }
+              if (v.locked) { b.classList.add("lk"); b.disabled = true; const tg = tag(v); if (tg) b.appendChild(tg); }
+              vs.appendChild(b);
+            });
+            body.appendChild(vs);
+          }
+          if ((s.timeframes || []).length > 1 && !g.locked) {
+            const row = el("div", "opts");
+            const seg = el("div", "seg"); seg.setAttribute("role", "group"); seg.setAttribute("aria-label", T("Timeframe"));
+            s.timeframes.forEach((x) => {
+              const b = button(x, "", () => { mem.tf[g.name] = x; redrawFamilies(); });
+              if (x === tf) { b.classList.add("on"); b.setAttribute("aria-pressed", "true"); }
+              seg.appendChild(b);
+            });
+            row.appendChild(seg);
+            body.appendChild(row);
+          }
+          if (!s.can_score && !g.locked) body.appendChild(el("div", "muted", T("condition only")));
+          nm.appendChild(body);
+          c.appendChild(nm);
+          const tg = tag(g);
+          if (tg) c.appendChild(tg);
+          const plus = button("+", T("Add {name}", {name: s.name}), () => onAdd(vid, tf), "sq");
+          plus.disabled = !!g.locked;
+          c.appendChild(plus);
+          box.appendChild(c);
+        });
+        holder.appendChild(box);
+      });
+    }
+    redrawFamilies();
+  }
+"""
+
 JS = r"""
 export default function(component) {
   const { data, setTriggerValue, parentElement } = component;
@@ -158,7 +289,7 @@ export default function(component) {
 
   Array.from(parentElement.children).filter((c) => c.classList && c.classList.contains("lat")).forEach((c) => c.remove());
   const root = el("div", "lat");
-""" + SPLITTER_JS + r"""
+""" + SPLITTER_JS + FAMILY_JS + r"""
   parentElement.appendChild(root);
 
   function el(tag, cls, text) {
@@ -188,10 +319,11 @@ export default function(component) {
     while (taken.has(key)) { key = base + "_" + n; n += 1; }
     return key;
   }
-  function addSignal(id) {
+  function addSignal(id, want) {
+    if (String(id).indexOf("@") > 0) { want = String(id).split("@")[1]; id = String(id).split("@")[0]; }
     const s = byId[id];
     if (!s) return;
-    const tf = s.timeframes.indexOf("1D") >= 0 ? "1D" : s.timeframes[0];
+    const tf = s.timeframes.indexOf(want) >= 0 ? want : (s.timeframes.indexOf("1D") >= 0 ? "1D" : s.timeframes[0]);
     model.members = model.members || [];
     model.members.push({key: memberKey(id, tf), id: s.id, version: s.version, timeframe: tf,
                         role: s.can_score ? "score" : "condition"});
@@ -213,6 +345,11 @@ export default function(component) {
   function drawLibrary() {
     list.replaceChildren();
     const q = query.toLowerCase();
+    if (state.families) {
+      window.__latFam = window.__latFam || {};
+      drawFamilies(list, state.families, catalogue, q, window.__latFam, (id, tf) => addSignal(id, tf), (id, tf) => id + "@" + tf);
+      return;
+    }
     let last = null;
     catalogue.filter((s) => !q || s.name.toLowerCase().indexOf(q) >= 0 || s.category_label.toLowerCase().indexOf(q) >= 0)
       .forEach((s) => {
@@ -585,7 +722,7 @@ export default function(component) {
 
   Array.from(parentElement.children).filter((c) => c.classList && c.classList.contains("lat")).forEach((c) => c.remove());
   const root = el("div", "lat");
-""" + SPLITTER_JS + r"""
+""" + SPLITTER_JS + FAMILY_JS + r"""
   parentElement.appendChild(root);
 
   function el(tag, cls, text) {
@@ -617,10 +754,11 @@ export default function(component) {
     model.groups.push({key: key(g.name.split(" v")[0]), source: source});
     send();
   }
-  function addSignal(id) {
+  function addSignal(id, want) {
+    if (String(id).indexOf("@") > 0) { want = String(id).split("@")[1]; id = String(id).split("@")[0]; }
     const s = byId[id];
     if (!s) return;
-    const tf = s.timeframes.indexOf("1D") >= 0 ? "1D" : s.timeframes[0];
+    const tf = s.timeframes.indexOf(want) >= 0 ? want : (s.timeframes.indexOf("1D") >= 0 ? "1D" : s.timeframes[0]);
     model.standalone = model.standalone || [];
     model.standalone.push({key: key(id.split(".").slice(-1)[0] + "_" + tf), id: s.id, version: s.version, timeframe: tf, role: "condition"});
     send();
@@ -747,6 +885,11 @@ export default function(component) {
     list.appendChild(el("div", "cat", T("Your Groups")));
     if (!mine.length) list.appendChild(el("div", "muted", T("No saved Groups yet: save one in Signal Groups.")));
     mine.forEach((g) => list.appendChild(groupChip(g)));
+    if (state.families) {
+      window.__latSetFam = window.__latSetFam || {};
+      drawFamilies(list, state.families, catalogue, q, window.__latSetFam, (id, tf) => addSignal(id, tf), (id, tf) => "signal|" + id + "@" + tf);
+      return;
+    }
     list.appendChild(el("div", "cat", T("Single signals")));
     // Clustered under a heading for each kind, as in Signal Groups.
     let last = null;

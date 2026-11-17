@@ -130,7 +130,7 @@ def render(st, supabase, user_id: str = "") -> None:
     screen["search"] = st.session_state.get("lattice_set_search")      # market matches for a fixed asset
     try:
         result = lattice_component.set_component()(
-            key="lattice_set_editor", data={**screen, "catalogue": le.catalogue()}, on_model_change=lambda: None,
+            key="lattice_set_editor", data={**screen, "catalogue": le.catalogue(), "families": le.families_for(st)}, on_model_change=lambda: None,
             on_search_change=lambda: None)
     except Exception as exc:
         st.info(t('The editor could not load here ({str_exc_120}).', str_exc_120=str(exc)[:120]))

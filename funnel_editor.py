@@ -258,28 +258,9 @@ def render(st, supabase, user_id: str) -> None:
     if not alerts["first_matches"]:
         alerts.pop("first_matches")
     f["alerts"] = alerts
-    paused = bool(f.get("paused"))
-    st.markdown("<style>[class*='st-key-fe_pause_'] button{color:#fff !important;border:1px solid #4a6a95 !important;"
-                "border-radius:8px !important;background:linear-gradient(180deg,#86a5cc,#557aa6) !important;"
-                "box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 1px 2px rgba(0,0,0,.18) !important;}"
-                "[class*='st-key-fe_pause_'] button:hover{background:linear-gradient(180deg,#7898c2,#486d9b) !important;}"
-                "</style>", unsafe_allow_html=True)
-    if st.button("", icon=":material/play_arrow:" if paused else ":material/pause:", key=f"fe_pause_{pick}",
-                 help=(t("Paused: not checked; it keeps its places. Press to resume.") if paused else
-                       t("Pause: stop checking this funnel; it keeps its places until resumed."))):
-        f["paused"] = not paused
-        if saved:                                   # as in Prism: pausing applies at once, nothing else changes
-            live = {**copy.deepcopy(saved), "paused": f["paused"]}
-            try:
-                supabase.rpc("funnel_save", save_args(live)).execute()
-                saved["paused"] = f["paused"]
-                _refresh(st)
-                st.toast("Paused." if f["paused"] else checking_now(saved.get("id"), "Resumed."))
-            except Exception as exc:
-                st.error(t("That didn't work: {str_exc_160}", str_exc_160=str(exc)[:160]))
-        lattice_panel.rerun(st)
-    if paused:
-        st.caption(t("⏸ Paused: not checked until resumed."))
+    # Pause and resume live on the Dynamic funnel page, with the funnel's other run controls (Angus, 18 Nov 2026).
+    if f.get("paused"):
+        st.caption(t("⏸ Paused: not checked until resumed on the Dynamic funnel page."))
 
     # ------------------------------------------------------------------ pool
     pool = dict(f.get("pool") or {})
