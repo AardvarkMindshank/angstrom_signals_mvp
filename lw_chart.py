@@ -173,7 +173,7 @@ def event_lines(index: pd.DatetimeIndex, interval: str, kind: str, events, ahead
 
 
 def cipher_series(df: pd.DataFrame, pane: int, dark: bool = False) -> list[dict]:
-    """The 📡 Sonar strip (our version of the oscillator strip Drew reads), drawn as his chart draws it (colours from his Style settings): the light-blue
+    """The 📡 Sonar strip (our version of a popular oscillator strip), drawn as that chart draws it (colours from its Style settings): the light-blue
     and blue waves, the yellow VWAP area, the green / red money flow, the bar along the bottom, the magenta RSI, the
     green / red Stoch RSI, the small cross dots and the big buy and sell dots. Columns from chart_indicators."""
     n = len(df)

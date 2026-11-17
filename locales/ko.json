@@ -689,8 +689,6 @@
   "{gap:.1f} points above your Trend-down alert line ({line})": "Trend 하락 알림선({line})보다 {gap:.1f}점 위",
   "The database update for equity funnels hasn't been run yet.": "주식 퍼널용 데이터베이스 업데이트가 아직 실행되지 않았습니다.",
   "The funnel tables are not installed yet.": "퍼널 테이블이 아직 설치되지 않았습니다.",
-  "{stages}: EMA 20 above EMA 50. Then the 1-hour pullback entry check (from Drew's script).": "{stages}: EMA 20이 EMA 50 위. 그다음 1시간 눌림 진입 확인(Drew의 스크립트).",
-  "{stages}: EMA 20 below EMA 50. Then the 1-hour pullback entry check (from Drew's script).": "{stages}: EMA 20이 EMA 50 아래. 그다음 1시간 되돌림 진입 확인(Drew의 스크립트).",
   "Working out the last year: {name} ({n_1} of {total})": "지난 1년 계산 중: {name}({total}개 중 {n_1}번째)",
   "🌍 Markets": "🌍 시장",
   "🌍 Market overview is loading. It appears on the next update.": "🌍 시장 개요를 불러오는 중입니다. 다음 업데이트에 나타납니다.",
@@ -785,7 +783,6 @@
   "shown only": "표시만",
   "Search feedback": "피드백 검색",
   "Search reports": "신고 검색",
-  "The symbols drawn over the candles (open-source formulas of the indicator Drew reads). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "캔들 위에 그려지는 기호(Drew가 읽는 지표의 오픈소스 공식). 캔들을 가리키면 각 기호의 뜻이 보이며, 큰 점은 📡 Sonar 띠에 있습니다.",
   "Choose a longer password.": "더 긴 비밀번호를 정하세요.",
   "That is already the password. Log in with it.": "이미 그 비밀번호입니다. 그 비밀번호로 로그인하세요.",
   "Login failed. Check your email and password.": "로그인에 실패했습니다. 이메일과 비밀번호를 확인하세요.",
@@ -2168,5 +2165,8 @@
   "at least {v} traded a day": "하루 거래대금 {v} 이상",
   "Pool": "풀",
   "Which assets the funnel starts from": "퍼널이 시작하는 자산",
-  "🛣️ **Strategies are coming later.** A strategy will turn a Set's Yes into a plan: when to enter, when to exit, and how much risk to take, including sequences such as \"A, then B within N days\". They will be designed with insights from beta testers' trading rules.": "🛣️ **전략은 나중에 제공됩니다.** 전략은 Set의 예를 계획으로 바꿉니다: 언제 진입하고, 언제 나오며, 얼마나 위험을 질지, \"A 다음 N일 안에 B\" 같은 순서도 포함합니다. 베타 테스터들의 매매 규칙에서 얻은 통찰로 설계합니다."
+  "🛣️ **Strategies are coming later.** A strategy will turn a Set's Yes into a plan: when to enter, when to exit, and how much risk to take, including sequences such as \"A, then B within N days\". They will be designed with insights from beta testers' trading rules.": "🛣️ **전략은 나중에 제공됩니다.** 전략은 Set의 예를 계획으로 바꿉니다: 언제 진입하고, 언제 나오며, 얼마나 위험을 질지, \"A 다음 N일 안에 B\" 같은 순서도 포함합니다. 베타 테스터들의 매매 규칙에서 얻은 통찰로 설계합니다.",
+  "{stages}: EMA 20 above EMA 50. Then the 1-hour pullback entry check.": "{stages}: EMA 20이 EMA 50 위. 그다음 1시간 눌림 진입 확인.",
+  "{stages}: EMA 20 below EMA 50. Then the 1-hour pullback entry check.": "{stages}: EMA 20이 EMA 50 아래. 그다음 1시간 되돌림 진입 확인.",
+  "The symbols drawn over the candles (open-source formulas of a popular charting indicator). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "캔들 위에 그려지는 기호(인기 차트 지표의 오픈소스 공식). 캔들을 가리키면 각 기호의 뜻이 보이며, 큰 점은 📡 Sonar 띠에 있습니다."
 }

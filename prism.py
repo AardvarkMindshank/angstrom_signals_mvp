@@ -338,7 +338,7 @@ def provided_groups() -> dict[str, tuple[str, dict]]:
 
 
 def sonar_confluence_sets() -> dict[str, dict]:
-    """Drew's way of reading his 4-hour chart, written as Sets to test on history (14 Nov 2026): the two Stoch RSI
+    """A beta tester's way of reading the 4-hour chart, written as Sets to test on history (14 Nov 2026): the two Stoch RSI
     curves cross from both low (or both high), a big Sonar dot was printed in the last few candles, the wave points
     the same way, and (long) no yellow-cross warning in the last few candles."""
     base = {"schema": "angstrom.set/1", "lineage_version": 3, "score": None, "market_context": [], "groups": []}
@@ -349,7 +349,7 @@ def sonar_confluence_sets() -> dict[str, dict]:
             **base, "name": "Sonar confluence ▲",
             "purpose": "On the 4-hour chart: the Stoch RSI curves crossed up from both low (20 or under) in the last 2 "
                        "candles, a big green Sonar dot was printed in the last 3, the wave is rising, and no yellow "
-                       "cross in the last 3. Drew's checklist, to test on history before trusting it.",
+                       "cross in the last 3. A 4-hour checklist, to test on history before trusting it.",
             "standalone": items,
             "decision": {"version": 1, "rule": {"all": [
                 {"member": "srsi", "field": "cross_up_from_low_ago", "lte": 1},

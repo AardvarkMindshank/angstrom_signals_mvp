@@ -689,8 +689,6 @@
   "{gap:.1f} points above your Trend-down alert line ({line})": "Trend düşüş uyarı çizginizin ({line}) {gap:.1f} puan üstünde",
   "The database update for equity funnels hasn't been run yet.": "Hisse hunileri için veritabanı güncellemesi henüz çalıştırılmadı.",
   "The funnel tables are not installed yet.": "Huni tabloları henüz kurulmadı.",
-  "{stages}: EMA 20 above EMA 50. Then the 1-hour pullback entry check (from Drew's script).": "{stages}: EMA 20, EMA 50'nin üstünde. Ardından 1 saatlik geri çekilme giriş kontrolü (Drew'un betiğinden).",
-  "{stages}: EMA 20 below EMA 50. Then the 1-hour pullback entry check (from Drew's script).": "{stages}: EMA 20, EMA 50'nin altında. Ardından 1 saatlik geri çekilme giriş kontrolü (Drew'un betiğinden).",
   "Working out the last year: {name} ({n_1} of {total})": "Son bir yıl hesaplanıyor: {name} ({total} içinden {n_1})",
   "🌍 Markets": "🌍 Piyasalar",
   "🌍 Market overview is loading. It appears on the next update.": "🌍 Piyasa genel görünümü yükleniyor. Bir sonraki güncellemede görünecek.",
@@ -785,7 +783,6 @@
   "shown only": "yalnızca gösterilir",
   "Search feedback": "Geri bildirimlerde ara",
   "Search reports": "Bildirimlerde ara",
-  "The symbols drawn over the candles (open-source formulas of the indicator Drew reads). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "Mumların üzerine çizilen semboller (Drew'un okuduğu göstergenin açık kaynak formülleri). Her birinin ne anlama geldiğini görmek için bir muma gelin; büyük noktalar 📡 Sonar şeridindedir.",
   "Choose a longer password.": "Daha uzun bir parola seçin.",
   "That is already the password. Log in with it.": "Bu zaten parolanız. Onunla giriş yapın.",
   "Login failed. Check your email and password.": "Giriş başarısız. E-postanızı ve parolanızı kontrol edin.",
@@ -2168,5 +2165,8 @@
   "at least {v} traded a day": "günde en az {v} işlem",
   "Pool": "Havuz",
   "Which assets the funnel starts from": "Huninin başladığı varlıklar",
-  "🛣️ **Strategies are coming later.** A strategy will turn a Set's Yes into a plan: when to enter, when to exit, and how much risk to take, including sequences such as \"A, then B within N days\". They will be designed with insights from beta testers' trading rules.": "🛣️ **Stratejiler daha sonra gelecek.** Bir strateji, bir Set'in Evet'ini bir plana dönüştürecek: ne zaman girilir, ne zaman çıkılır ve ne kadar risk alınır, \"A, sonra N gün içinde B\" gibi sıralar dahil. Beta test kullanıcılarının işlem kurallarından edinilen içgörülerle tasarlanacaklar."
+  "🛣️ **Strategies are coming later.** A strategy will turn a Set's Yes into a plan: when to enter, when to exit, and how much risk to take, including sequences such as \"A, then B within N days\". They will be designed with insights from beta testers' trading rules.": "🛣️ **Stratejiler daha sonra gelecek.** Bir strateji, bir Set'in Evet'ini bir plana dönüştürecek: ne zaman girilir, ne zaman çıkılır ve ne kadar risk alınır, \"A, sonra N gün içinde B\" gibi sıralar dahil. Beta test kullanıcılarının işlem kurallarından edinilen içgörülerle tasarlanacaklar.",
+  "{stages}: EMA 20 above EMA 50. Then the 1-hour pullback entry check.": "{stages}: EMA 20, EMA 50'nin üstünde. Ardından 1 saatlik geri çekilme giriş kontrolü.",
+  "{stages}: EMA 20 below EMA 50. Then the 1-hour pullback entry check.": "{stages}: EMA 20, EMA 50'nin altında. Ardından 1 saatlik geri çekilme giriş kontrolü.",
+  "The symbols drawn over the candles (open-source formulas of a popular charting indicator). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "Mumların üzerine çizilen semboller (popüler bir grafik göstergesinin açık kaynak formülleri). Her birinin ne anlama geldiğini görmek için bir muma gelin; büyük noktalar 📡 Sonar şeridindedir."
 }

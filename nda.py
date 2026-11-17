@@ -1,7 +1,7 @@
 """
 Beta NDA signing (docs/design/beta_nda.md, sql/2026-11-09_beta_nda.sql).
 
-After Drew approves a beta request, the person creates their account as before. On every sign-in, until they have
+After an admin approves a beta request, the person creates their account as before. On every sign-in, until they have
 signed the current NDA, the dashboard shows only the NDA page: the document, a tick, their typed full name and a
 drawn signature. Signing stores a record (account, email, typed name, drawing, server time, IP address, browser, NDA
 version and the PDF's SHA-256 fingerprint) and a signed copy: the NDA with a signature page added. The worker emails

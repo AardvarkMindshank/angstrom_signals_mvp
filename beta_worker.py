@@ -1,4 +1,4 @@
-"""The part of the alert worker that emails beta applicants after Drew decides from the link in the request email."""
+"""The part of the alert worker that emails beta applicants after an admin decides from the link in the request email."""
 from __future__ import annotations
 
 import os

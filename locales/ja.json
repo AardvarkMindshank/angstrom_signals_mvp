@@ -689,8 +689,6 @@
   "{gap:.1f} points above your Trend-down alert line ({line})": "Trend下降アラートライン（{line}）より{gap:.1f}ポイント上",
   "The database update for equity funnels hasn't been run yet.": "株式ファネル用のデータベース更新がまだ実行されていません。",
   "The funnel tables are not installed yet.": "ファネルのテーブルがまだインストールされていません。",
-  "{stages}: EMA 20 above EMA 50. Then the 1-hour pullback entry check (from Drew's script).": "{stages}：EMA 20がEMA 50の上。その後、1時間足の押し目エントリーチェック（Drewのスクリプトより）。",
-  "{stages}: EMA 20 below EMA 50. Then the 1-hour pullback entry check (from Drew's script).": "{stages}：EMA 20がEMA 50の下。その後、1時間足の戻りエントリーチェック（Drewのスクリプトより）。",
   "Working out the last year: {name} ({n_1} of {total})": "過去1年を計算中：{name}（{total}件中{n_1}件目）",
   "🌍 Markets": "🌍 マーケット",
   "🌍 Market overview is loading. It appears on the next update.": "🌍 市場概要を読み込み中です。次回の更新で表示されます。",
@@ -785,7 +783,6 @@
   "shown only": "表示のみ",
   "Search feedback": "フィードバックを検索",
   "Search reports": "報告を検索",
-  "The symbols drawn over the candles (open-source formulas of the indicator Drew reads). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "ローソク足の上に描かれる記号（Drewが読むインジケーターのオープンソースの式）。ローソク足を指すと各記号の意味が表示されます。大きな点は📡 Sonarの帯にあります。",
   "Choose a longer password.": "もっと長いパスワードを選んでください。",
   "That is already the password. Log in with it.": "それはすでに現在のパスワードです。そのパスワードでログインしてください。",
   "Login failed. Check your email and password.": "ログインに失敗しました。メールアドレスとパスワードを確認してください。",
@@ -2168,5 +2165,8 @@
   "at least {v} traded a day": "1日の売買代金 {v} 以上",
   "Pool": "プール",
   "Which assets the funnel starts from": "ファネルが最初に見る資産",
-  "🛣️ **Strategies are coming later.** A strategy will turn a Set's Yes into a plan: when to enter, when to exit, and how much risk to take, including sequences such as \"A, then B within N days\". They will be designed with insights from beta testers' trading rules.": "🛣️ **戦略は後日登場します。** 戦略はSetの「はい」を計画に変えます：いつ入り、いつ出て、どれだけリスクを取るか。「A、その後N日以内にB」のような順序も含みます。ベータテスターのトレードルールから得た知見をもとに設計します。"
+  "🛣️ **Strategies are coming later.** A strategy will turn a Set's Yes into a plan: when to enter, when to exit, and how much risk to take, including sequences such as \"A, then B within N days\". They will be designed with insights from beta testers' trading rules.": "🛣️ **戦略は後日登場します。** 戦略はSetの「はい」を計画に変えます：いつ入り、いつ出て、どれだけリスクを取るか。「A、その後N日以内にB」のような順序も含みます。ベータテスターのトレードルールから得た知見をもとに設計します。",
+  "{stages}: EMA 20 above EMA 50. Then the 1-hour pullback entry check.": "{stages}：EMA 20がEMA 50の上。その後、1時間足の押し目エントリーチェック。",
+  "{stages}: EMA 20 below EMA 50. Then the 1-hour pullback entry check.": "{stages}：EMA 20がEMA 50の下。その後、1時間足の戻りエントリーチェック。",
+  "The symbols drawn over the candles (open-source formulas of a popular charting indicator). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "ローソク足の上に描かれる記号（人気のチャートインジケーターのオープンソースの式）。ローソク足を指すと各記号の意味が表示されます。大きな点は📡 Sonarの帯にあります。"
 }

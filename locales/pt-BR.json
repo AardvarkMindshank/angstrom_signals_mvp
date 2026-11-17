@@ -689,8 +689,6 @@
   "{gap:.1f} points above your Trend-down alert line ({line})": "{gap:.1f} pontos acima da sua linha de alerta de Trend em baixa ({line})",
   "The database update for equity funnels hasn't been run yet.": "A atualização do banco de dados para funis de ações ainda não foi executada.",
   "The funnel tables are not installed yet.": "As tabelas de funis ainda não estão instaladas.",
-  "{stages}: EMA 20 above EMA 50. Then the 1-hour pullback entry check (from Drew's script).": "{stages}: EMA 20 acima da EMA 50. Depois, a verificação de entrada por recuo em 1 hora (do script do Drew).",
-  "{stages}: EMA 20 below EMA 50. Then the 1-hour pullback entry check (from Drew's script).": "{stages}: EMA 20 abaixo da EMA 50. Depois, a verificação de entrada por recuo em 1 hora (do script do Drew).",
   "Working out the last year: {name} ({n_1} of {total})": "Calculando o último ano: {name} ({n_1} de {total})",
   "🌍 Markets": "🌍 Mercados",
   "🌍 Market overview is loading. It appears on the next update.": "🌍 A visão geral do mercado está carregando. Ela aparece na próxima atualização.",
@@ -785,7 +783,6 @@
   "shown only": "só exibido",
   "Search feedback": "Buscar feedback",
   "Search reports": "Buscar denúncias",
-  "The symbols drawn over the candles (open-source formulas of the indicator Drew reads). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "Os símbolos desenhados sobre os candles (fórmulas de código aberto do indicador que o Drew lê). Aponte para um candle para ver o que cada um significa; os pontos grandes ficam na faixa 📡 Sonar.",
   "Choose a longer password.": "Escolha uma senha mais longa.",
   "That is already the password. Log in with it.": "Essa já é a senha. Entre com ela.",
   "Login failed. Check your email and password.": "Falha no login. Verifique seu e-mail e senha.",
@@ -2168,5 +2165,8 @@
   "at least {v} traded a day": "pelo menos {v} negociados por dia",
   "Pool": "Universo",
   "Which assets the funnel starts from": "Com quais ativos o funil começa",
-  "🛣️ **Strategies are coming later.** A strategy will turn a Set's Yes into a plan: when to enter, when to exit, and how much risk to take, including sequences such as \"A, then B within N days\". They will be designed with insights from beta testers' trading rules.": "🛣️ **As estratégias virão depois.** Uma estratégia vai transformar o Sim de um Set num plano: quando entrar, quando sair e quanto risco assumir, incluindo sequências como \"A, depois B em até N dias\". Elas serão criadas com ideias das regras de trading dos testadores beta."
+  "🛣️ **Strategies are coming later.** A strategy will turn a Set's Yes into a plan: when to enter, when to exit, and how much risk to take, including sequences such as \"A, then B within N days\". They will be designed with insights from beta testers' trading rules.": "🛣️ **As estratégias virão depois.** Uma estratégia vai transformar o Sim de um Set num plano: quando entrar, quando sair e quanto risco assumir, incluindo sequências como \"A, depois B em até N dias\". Elas serão criadas com ideias das regras de trading dos testadores beta.",
+  "{stages}: EMA 20 above EMA 50. Then the 1-hour pullback entry check.": "{stages}: EMA 20 acima da EMA 50. Depois, a verificação de entrada por recuo em 1 hora.",
+  "{stages}: EMA 20 below EMA 50. Then the 1-hour pullback entry check.": "{stages}: EMA 20 abaixo da EMA 50. Depois, a verificação de entrada por recuo em 1 hora.",
+  "The symbols drawn over the candles (open-source formulas of a popular charting indicator). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "Os símbolos desenhados sobre os candles (fórmulas de código aberto de um indicador gráfico popular). Aponte para um candle para ver o que cada um significa; os pontos grandes ficam na faixa 📡 Sonar."
 }

@@ -65,7 +65,7 @@ def plan(selected, columns, overlay_curves: bool = False) -> dict:
     if overlay_curves:
         secondary += [key for key in extra if key in BOUNDED]
         extra = [key for key in extra if key not in BOUNDED]
-    # 📡 Sonar sits straight under the price chart, above volume (Drew's layout).
+    # 📡 Sonar sits straight under the price chart, above volume (a beta tester's layout).
     lead = [key for key in extra if key == "cipher"]
     panels = lead + list(BASE_PANELS) + [key for key in extra if key != "cipher"]
     each = (1 - PRICE_SHARE) / len(panels)

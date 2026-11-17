@@ -1465,8 +1465,6 @@
   " (largest {n} of {total})": " ({n} อันดับใหญ่สุดจาก {total})",
   "🩳 Short interest:": "🩳 Short interest:",
   "Shared daily prices (neither Binance nor Yahoo has candles for this coin)": "ราคารายวันที่ใช้ร่วมกัน (ทั้ง Binance และ Yahoo ไม่มีแท่งเทียนของเหรียญนี้)",
-  "{stages}: EMA 20 above EMA 50. Then the 1-hour pullback entry check (from Drew's script).": "{stages}: EMA 20 อยู่เหนือ EMA 50 จากนั้นตรวจจุดเข้าแบบย่อตัว 1 ชั่วโมง (จากสคริปต์ของ Drew)",
-  "{stages}: EMA 20 below EMA 50. Then the 1-hour pullback entry check (from Drew's script).": "{stages}: EMA 20 อยู่ใต้ EMA 50 จากนั้นตรวจจุดเข้าแบบย่อตัว 1 ชั่วโมง (จากสคริปต์ของ Drew)",
   "Up to {n} characters. Tap one to add it. Posting again replaces yours.": "ไม่เกิน {n} ตัวอักษร แตะเพื่อเพิ่ม โพสต์อีกครั้งจะแทนที่ของคุณ",
   "Price now {price}. Green strikes calm moves, red strikes amplify them.": "ราคาตอนนี้ {price} ราคาใช้สิทธิ์สีเขียวช่วยหน่วงการเคลื่อนไหว สีแดงขยายการเคลื่อนไหว",
   "Positive means a high reading came before a rise.": "ค่าบวกหมายถึงค่าที่สูงมาก่อนการขึ้น",
@@ -1479,7 +1477,6 @@
   "normal": "ปกติ",
   "The last {n} daily closes, then each signal on those same dates. Lead is how closely that signal lined up with the price change over the next day.": "ราคาปิดรายวัน {n} ครั้งล่าสุด แล้วแต่ละสัญญาณในวันเดียวกัน ความนำคือความสอดคล้องของสัญญาณกับการเปลี่ยนแปลงราคาในวันถัดไป",
   "The last {n} daily closes, then each signal on those same dates. Lead is how closely that signal lined up with the price change over the next {days} days.": "ราคาปิดรายวัน {n} ครั้งล่าสุด แล้วแต่ละสัญญาณในวันเดียวกัน ความนำคือความสอดคล้องของสัญญาณกับการเปลี่ยนแปลงราคาใน {days} วันถัดไป",
-  "The symbols drawn over the candles (open-source formulas of the indicator Drew reads). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "สัญลักษณ์ที่วาดบนแท่งเทียน (สูตรโอเพนซอร์สของตัวชี้วัดที่ Drew ใช้) ชี้ที่แท่งเพื่อดูความหมายของแต่ละตัว จุดใหญ่อยู่บนแถบ 📡 Sonar",
   "Expand sidebar": "ขยายแถบด้านข้าง",
   "Collapse sidebar": "ย่อแถบด้านข้าง",
   "Drag onto another colour to copy it": "ลากไปวางบนสีอื่นเพื่อคัดลอก",
@@ -2168,5 +2165,8 @@
   "at least {v} traded a day": "ซื้อขายอย่างน้อย {v} ต่อวัน",
   "Pool": "กลุ่มสินทรัพย์ตั้งต้น",
   "Which assets the funnel starts from": "ฟันเนลเริ่มจากสินทรัพย์ใดบ้าง",
-  "🛣️ **Strategies are coming later.** A strategy will turn a Set's Yes into a plan: when to enter, when to exit, and how much risk to take, including sequences such as \"A, then B within N days\". They will be designed with insights from beta testers' trading rules.": "🛣️ **Strategies จะมาในภายหลัง** กลยุทธ์จะเปลี่ยนคำตอบ “ใช่” ของ Set ให้เป็นแผน: เมื่อไรควรเข้า เมื่อไรควรออก และรับความเสี่ยงเท่าใด รวมถึงลำดับเช่น \"A แล้วตามด้วย B ภายใน N วัน\" จะออกแบบโดยอาศัยข้อคิดจากกฎการเทรดของผู้ทดสอบเบต้า"
+  "🛣️ **Strategies are coming later.** A strategy will turn a Set's Yes into a plan: when to enter, when to exit, and how much risk to take, including sequences such as \"A, then B within N days\". They will be designed with insights from beta testers' trading rules.": "🛣️ **Strategies จะมาในภายหลัง** กลยุทธ์จะเปลี่ยนคำตอบ “ใช่” ของ Set ให้เป็นแผน: เมื่อไรควรเข้า เมื่อไรควรออก และรับความเสี่ยงเท่าใด รวมถึงลำดับเช่น \"A แล้วตามด้วย B ภายใน N วัน\" จะออกแบบโดยอาศัยข้อคิดจากกฎการเทรดของผู้ทดสอบเบต้า",
+  "{stages}: EMA 20 above EMA 50. Then the 1-hour pullback entry check.": "{stages}: EMA 20 อยู่เหนือ EMA 50 จากนั้นตรวจจุดเข้าแบบย่อตัว 1 ชั่วโมง",
+  "{stages}: EMA 20 below EMA 50. Then the 1-hour pullback entry check.": "{stages}: EMA 20 อยู่ใต้ EMA 50 จากนั้นตรวจจุดเข้าแบบย่อตัว 1 ชั่วโมง",
+  "The symbols drawn over the candles (open-source formulas of a popular charting indicator). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "สัญลักษณ์ที่วาดบนแท่งเทียน (สูตรโอเพนซอร์สของตัวชี้วัดกราฟยอดนิยม) ชี้ที่แท่งเพื่อดูความหมายของแต่ละตัว จุดใหญ่อยู่บนแถบ 📡 Sonar"
 }

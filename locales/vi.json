@@ -689,8 +689,6 @@
   "{gap:.1f} points above your Trend-down alert line ({line})": "Cao hơn đường cảnh báo Trend đi xuống của bạn ({line}) {gap:.1f} điểm",
   "The database update for equity funnels hasn't been run yet.": "Bản cập nhật cơ sở dữ liệu cho phễu cổ phiếu chưa được chạy.",
   "The funnel tables are not installed yet.": "Các bảng phễu chưa được cài đặt.",
-  "{stages}: EMA 20 above EMA 50. Then the 1-hour pullback entry check (from Drew's script).": "{stages}: EMA 20 trên EMA 50. Sau đó kiểm tra điểm vào điều chỉnh khung 1 giờ (từ script của Drew).",
-  "{stages}: EMA 20 below EMA 50. Then the 1-hour pullback entry check (from Drew's script).": "{stages}: EMA 20 dưới EMA 50. Sau đó kiểm tra điểm vào điều chỉnh khung 1 giờ (từ script của Drew).",
   "Working out the last year: {name} ({n_1} of {total})": "Đang tính năm vừa qua: {name} ({n_1}/{total})",
   "🌍 Markets": "🌍 Thị trường",
   "🌍 Market overview is loading. It appears on the next update.": "🌍 Tổng quan thị trường đang tải. Nó sẽ xuất hiện ở lần cập nhật tới.",
@@ -785,7 +783,6 @@
   "shown only": "chỉ hiển thị",
   "Search feedback": "Tìm góp ý",
   "Search reports": "Tìm báo cáo",
-  "The symbols drawn over the candles (open-source formulas of the indicator Drew reads). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "Các ký hiệu vẽ trên nến (công thức mã nguồn mở của chỉ báo mà Drew đọc). Trỏ vào một nến để xem ý nghĩa của từng ký hiệu; các chấm lớn nằm trên dải 📡 Sonar.",
   "Choose a longer password.": "Hãy chọn mật khẩu dài hơn.",
   "That is already the password. Log in with it.": "Đó đã là mật khẩu hiện tại. Hãy đăng nhập bằng nó.",
   "Login failed. Check your email and password.": "Đăng nhập thất bại. Kiểm tra email và mật khẩu.",
@@ -2168,5 +2165,8 @@
   "at least {v} traded a day": "giao dịch ít nhất {v} mỗi ngày",
   "Pool": "Nhóm",
   "Which assets the funnel starts from": "Phễu bắt đầu từ những tài sản nào",
-  "🛣️ **Strategies are coming later.** A strategy will turn a Set's Yes into a plan: when to enter, when to exit, and how much risk to take, including sequences such as \"A, then B within N days\". They will be designed with insights from beta testers' trading rules.": "🛣️ **Chiến lược sẽ có sau.** Một chiến lược sẽ biến câu Có của một Set thành kế hoạch: khi nào vào lệnh, khi nào thoát và chấp nhận bao nhiêu rủi ro, kể cả các chuỗi như \"A, rồi B trong vòng N ngày\". Chúng sẽ được thiết kế dựa trên hiểu biết từ quy tắc giao dịch của những người thử nghiệm beta."
+  "🛣️ **Strategies are coming later.** A strategy will turn a Set's Yes into a plan: when to enter, when to exit, and how much risk to take, including sequences such as \"A, then B within N days\". They will be designed with insights from beta testers' trading rules.": "🛣️ **Chiến lược sẽ có sau.** Một chiến lược sẽ biến câu Có của một Set thành kế hoạch: khi nào vào lệnh, khi nào thoát và chấp nhận bao nhiêu rủi ro, kể cả các chuỗi như \"A, rồi B trong vòng N ngày\". Chúng sẽ được thiết kế dựa trên hiểu biết từ quy tắc giao dịch của những người thử nghiệm beta.",
+  "{stages}: EMA 20 above EMA 50. Then the 1-hour pullback entry check.": "{stages}: EMA 20 trên EMA 50. Sau đó kiểm tra điểm vào điều chỉnh khung 1 giờ.",
+  "{stages}: EMA 20 below EMA 50. Then the 1-hour pullback entry check.": "{stages}: EMA 20 dưới EMA 50. Sau đó kiểm tra điểm vào điều chỉnh khung 1 giờ.",
+  "The symbols drawn over the candles (open-source formulas of a popular charting indicator). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "Các ký hiệu vẽ trên nến (công thức mã nguồn mở của một chỉ báo biểu đồ phổ biến). Trỏ vào một nến để xem ý nghĩa của từng ký hiệu; các chấm lớn nằm trên dải 📡 Sonar."
 }

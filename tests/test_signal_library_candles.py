@@ -1,5 +1,5 @@
 """Candle-level building blocks (signal_library/signals_candles.py), checked against the Pine formulas they mirror
-(Drew's BTC Hybrid script: ta.ema, ta.sma, ta.rma, retest = low <= EMA and close > EMA, early = close[1] < EMA and close >
+(the BTC Hybrid script: ta.ema, ta.sma, ta.rma, retest = low <= EMA and close > EMA, early = close[1] < EMA and close >
 EMA, body > ta.sma(body, 10), atr > ta.sma(atr, 20))."""
 
 import numpy as np

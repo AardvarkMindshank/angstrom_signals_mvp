@@ -1,5 +1,5 @@
 """
-Ready-made funnels (a starting point to copy and change), written from Drew's description and his "BTC Hybrid" Pine
+Ready-made funnels (a starting point to copy and change), written from a beta tester's description and a "BTC Hybrid" Pine
 script (10 Nov 2026):
 
 * the narrowing stages: EMA 20 above EMA 50 on the daily, then the 12-hour, then the 4-hour (below, for shorts);
@@ -45,7 +45,7 @@ def turn_set(direction: str) -> dict:
     """The daily stage since 10 Nov 2026 (the trend alone let most coins through in a one-way market): the daily trend,
     and daily momentum turning back from an extreme against it in the last few days. Longs: EMA 20 above EMA 50, and
     the Stochastic %K was 20 or lower (oversold) within the last 5 daily closes and is back above 20 now. Shorts mirror
-    it (80 or higher, back below 80). Drew's own daily read is momentum turning from oversold or overbought; his
+    it (80 or higher, back below 80). The tester's own daily read is momentum turning from oversold or overbought; his
     WaveTrend oscillator is not in the library yet, so the Stochastic stands in."""
     up = direction == "long"
     side = "above" if up else "below"
@@ -96,7 +96,7 @@ WORDS = {"1W": "weekly", "1D": "daily", "12h": "12-hour", "4h": "4-hour", "1h": 
 
 
 def wave_turn_set(direction: str) -> dict:
-    """The daily stage since 11 Nov 2026: the daily trend, and Drew's own daily read, WaveTrend turning back from an
+    """The daily stage since 11 Nov 2026: the daily trend, and the tester's own daily read, WaveTrend turning back from an
     extreme in the last few days (his yellow arrows; it replaces the Stochastic stand-in). Longs: EMA 20 above EMA 50,
     WaveTrend crossed up while oversold within the last 5 daily closes, and the wave is still rising. Shorts mirror it
     (crossed down while overbought, still falling)."""

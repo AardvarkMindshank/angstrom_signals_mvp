@@ -689,8 +689,6 @@
   "{gap:.1f} points above your Trend-down alert line ({line})": "比您的 Trend 下降提醒线（{line}）高 {gap:.1f} 分",
   "The database update for equity funnels hasn't been run yet.": "股票漏斗的数据库更新尚未运行。",
   "The funnel tables are not installed yet.": "漏斗数据表尚未安装。",
-  "{stages}: EMA 20 above EMA 50. Then the 1-hour pullback entry check (from Drew's script).": "{stages}：EMA 20 高于 EMA 50。然后进行 1 小时回调入场检查（来自 Drew 的脚本）。",
-  "{stages}: EMA 20 below EMA 50. Then the 1-hour pullback entry check (from Drew's script).": "{stages}：EMA 20 低于 EMA 50。然后进行 1 小时反弹入场检查（来自 Drew 的脚本）。",
   "Working out the last year: {name} ({n_1} of {total})": "正在计算过去一年：{name}（{total} 个中的第 {n_1} 个）",
   "🌍 Markets": "🌍 市场",
   "🌍 Market overview is loading. It appears on the next update.": "🌍 市场概览正在加载。它会在下次更新时出现。",
@@ -785,7 +783,6 @@
   "shown only": "仅显示",
   "Search feedback": "搜索反馈",
   "Search reports": "搜索举报",
-  "The symbols drawn over the candles (open-source formulas of the indicator Drew reads). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "绘制在K线上的符号（Drew 所读指标的开源公式）。指向一根K线即可查看每个符号的含义；大圆点在 📡 Sonar 条上。",
   "Choose a longer password.": "请选择更长的密码。",
   "That is already the password. Log in with it.": "这已经是当前密码。请用它登录。",
   "Login failed. Check your email and password.": "登录失败。请检查您的邮箱和密码。",
@@ -2168,5 +2165,8 @@
   "at least {v} traded a day": "每日成交至少 {v}",
   "Pool": "池",
   "Which assets the funnel starts from": "漏斗从哪些资产开始",
-  "🛣️ **Strategies are coming later.** A strategy will turn a Set's Yes into a plan: when to enter, when to exit, and how much risk to take, including sequences such as \"A, then B within N days\". They will be designed with insights from beta testers' trading rules.": "🛣️ **策略稍后推出。** 策略会把 Set 的“是”变成计划：何时入场、何时离场、承担多少风险，包括“先 A，然后 N 天内 B”这样的序列。它们将借鉴 Beta 测试者的交易规则来设计。"
+  "🛣️ **Strategies are coming later.** A strategy will turn a Set's Yes into a plan: when to enter, when to exit, and how much risk to take, including sequences such as \"A, then B within N days\". They will be designed with insights from beta testers' trading rules.": "🛣️ **策略稍后推出。** 策略会把 Set 的“是”变成计划：何时入场、何时离场、承担多少风险，包括“先 A，然后 N 天内 B”这样的序列。它们将借鉴 Beta 测试者的交易规则来设计。",
+  "{stages}: EMA 20 above EMA 50. Then the 1-hour pullback entry check.": "{stages}：EMA 20 高于 EMA 50。然后进行 1 小时回调入场检查。",
+  "{stages}: EMA 20 below EMA 50. Then the 1-hour pullback entry check.": "{stages}：EMA 20 低于 EMA 50。然后进行 1 小时反弹入场检查。",
+  "The symbols drawn over the candles (open-source formulas of a popular charting indicator). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "绘制在K线上的符号（一款流行图表指标的开源公式）。指向一根K线即可查看每个符号的含义；大圆点在 📡 Sonar 条上。"
 }

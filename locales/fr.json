@@ -689,8 +689,6 @@
   "{gap:.1f} points above your Trend-down alert line ({line})": "{gap:.1f} points au-dessus de votre ligne d'alerte Trend à la baisse ({line})",
   "The database update for equity funnels hasn't been run yet.": "La mise à jour de la base de données pour les entonnoirs actions n'a pas encore été exécutée.",
   "The funnel tables are not installed yet.": "Les tables des entonnoirs ne sont pas encore installées.",
-  "{stages}: EMA 20 above EMA 50. Then the 1-hour pullback entry check (from Drew's script).": "{stages} : EMA 20 au-dessus de l'EMA 50. Puis la vérification d'entrée sur repli en 1 heure (du script de Drew).",
-  "{stages}: EMA 20 below EMA 50. Then the 1-hour pullback entry check (from Drew's script).": "{stages} : EMA 20 sous l'EMA 50. Puis la vérification d'entrée sur repli en 1 heure (du script de Drew).",
   "Working out the last year: {name} ({n_1} of {total})": "Calcul de la dernière année : {name} ({n_1} sur {total})",
   "🌍 Markets": "🌍 Marchés",
   "🌍 Market overview is loading. It appears on the next update.": "🌍 L'aperçu du marché se charge. Il apparaîtra à la prochaine mise à jour.",
@@ -785,7 +783,6 @@
   "shown only": "affiché seulement",
   "Search feedback": "Rechercher dans les commentaires",
   "Search reports": "Rechercher dans les signalements",
-  "The symbols drawn over the candles (open-source formulas of the indicator Drew reads). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "Les symboles dessinés sur les bougies (formules open source de l'indicateur que lit Drew). Pointez une bougie pour voir ce que chacun signifie ; les gros points sont sur la bande 📡 Sonar.",
   "Choose a longer password.": "Choisissez un mot de passe plus long.",
   "That is already the password. Log in with it.": "C'est déjà le mot de passe. Connectez-vous avec.",
   "Login failed. Check your email and password.": "Échec de la connexion. Vérifiez votre e-mail et votre mot de passe.",
@@ -2168,5 +2165,8 @@
   "at least {v} traded a day": "au moins {v} échangés par jour",
   "Pool": "Univers",
   "Which assets the funnel starts from": "Les actifs de départ de l'entonnoir",
-  "🛣️ **Strategies are coming later.** A strategy will turn a Set's Yes into a plan: when to enter, when to exit, and how much risk to take, including sequences such as \"A, then B within N days\". They will be designed with insights from beta testers' trading rules.": "🛣️ **Les stratégies arriveront plus tard.** Une stratégie transformera le Oui d'un Set en plan : quand entrer, quand sortir et quel risque prendre, y compris des séquences comme \"A, puis B dans les N jours\". Elles seront conçues à partir des règles de trading des bêta-testeurs."
+  "🛣️ **Strategies are coming later.** A strategy will turn a Set's Yes into a plan: when to enter, when to exit, and how much risk to take, including sequences such as \"A, then B within N days\". They will be designed with insights from beta testers' trading rules.": "🛣️ **Les stratégies arriveront plus tard.** Une stratégie transformera le Oui d'un Set en plan : quand entrer, quand sortir et quel risque prendre, y compris des séquences comme \"A, puis B dans les N jours\". Elles seront conçues à partir des règles de trading des bêta-testeurs.",
+  "{stages}: EMA 20 above EMA 50. Then the 1-hour pullback entry check.": "{stages} : EMA 20 au-dessus de l'EMA 50. Puis la vérification d'entrée sur repli en 1 heure.",
+  "{stages}: EMA 20 below EMA 50. Then the 1-hour pullback entry check.": "{stages} : EMA 20 sous l'EMA 50. Puis la vérification d'entrée sur repli en 1 heure.",
+  "The symbols drawn over the candles (open-source formulas of a popular charting indicator). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "Les symboles dessinés sur les bougies (formules open source d'un indicateur graphique populaire). Pointez une bougie pour voir ce que chacun signifie ; les gros points sont sur la bande 📡 Sonar."
 }

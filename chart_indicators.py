@@ -32,7 +32,7 @@ def stoch_rsi(df: pd.DataFrame, rsi_length: int = 14, stoch_length: int = 14, k:
 
 # ------------------------------------------------------------------------------ 📡 Sonar (open-source VuManChu formulas)
 
-CIPHER = {   # the open-source VuManChu defaults; every one can be changed to match the paid indicator Drew uses
+CIPHER = {   # the open-source VuManChu defaults; every one can be changed to match the paid indicator
     "wt_channel": 9, "wt_average": 12, "wt_signal": 3,
     "ob1": 53, "ob2": 60, "os1": -53, "os2": -60,
     "mf_period": 60, "mf_multiplier": 150.0, "mf_shift": 2.5,

@@ -12517,9 +12517,9 @@ def _funnel_controls(dyn, market: str = "crypto") -> None:
             tpl = ft.trend_funnel(direction, market)
             if col.button(t('Make my own copy of “{tpl_name}”', tpl_name=tpl['name']), key=f"funnel_new_{market}_{direction}",
                           use_container_width=True,
-                          help=(t("{stages}: EMA 20 above EMA 50. Then the 1-hour pullback entry check (from Drew's script).", stages=stages_words)
+                          help=(t("{stages}: EMA 20 above EMA 50. Then the 1-hour pullback entry check.", stages=stages_words)
                                 if direction == "long" else
-                                t("{stages}: EMA 20 below EMA 50. Then the 1-hour pullback entry check (from Drew's script).", stages=stages_words))):
+                                t("{stages}: EMA 20 below EMA 50. Then the 1-hour pullback entry check.", stages=stages_words))):
                 _create_funnel(market, direction)
         return
     f = dyn["funnel"]
@@ -13876,7 +13876,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                 sonar_shown = st.pills(
                     t("🛰️ Markers shown"), list(lw_chart.SONAR_MARKS), selection_mode="multi", key="chart_sonar_marks",
                     format_func=lambda k: _SONAR_MARK_LABELS.get(k, k),
-                    help=t("The symbols drawn over the candles (open-source formulas of the indicator Drew reads). "
+                    help=t("The symbols drawn over the candles (open-source formulas of a popular charting indicator). "
                            "Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.") + " "
                          + " ".join(f"{_SONAR_MARK_LABELS[k]}: {v[4]}." for k, v in lw_chart.SONAR_MARKS.items()),
                 ) or []
