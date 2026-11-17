@@ -1,0 +1,42 @@
+# A test recording of the live site as the demo account (video/live_tour.js): a raw video and screenshots, kept as
+# a workflow artifact (not on the reports branch). The login comes from the DEMO_EMAIL and DEMO_PASSWORD secrets.
+# Run by hand from the Actions page, or by pushing the "live-tour" branch.
+name: live-tour
+on:
+  push:
+    branches: [live-tour]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  tour:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install
+        run: |
+          need=""
+          fc-list | grep -qi "Noto Color Emoji" || need="$need fonts-noto-color-emoji"
+          if [ -n "$need" ]; then
+            sudo apt-get -o Acquire::Retries=3 update -q
+            sudo apt-get -o Acquire::Retries=3 install -y -q --no-install-recommends $need
+          fi
+          npm install --no-save --silent playwright@1.63.0 && npx playwright install --with-deps chromium > /dev/null
+      - name: Record
+        env:
+          DEMO_EMAIL: ${{ secrets.DEMO_EMAIL }}
+          DEMO_PASSWORD: ${{ secrets.DEMO_PASSWORD }}
+        run: node video/live_tour.js out/live_tour
+      - name: Make the video an MP4
+        if: always()
+        run: |
+          if [ -f out/live_tour/tour.webm ]; then
+            ffmpeg -loglevel error -y -i out/live_tour/tour.webm -c:v libx264 -preset veryfast -crf 23 -pix_fmt yuv420p out/live_tour/tour.mp4 || true
+          fi
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: live-tour
+          path: out/live_tour/
+          retention-days: 14
