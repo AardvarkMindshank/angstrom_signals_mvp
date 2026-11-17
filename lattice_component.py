@@ -80,7 +80,7 @@ CSS = """
 .lat details.idea>summary .t::before{content:"▸ ";opacity:.7}
 .lat details.idea[open]>summary .t::before{content:"▾ "}
 .lat details.idea>summary .s{display:block;font-size:.85em;opacity:.75;padding-left:1.1em}
-.lat details.idea>summary .n{float:right;font-size:.8em;opacity:.6}
+.lat details.idea>summary .cnt{float:right;font-size:.8em;opacity:.6}
 .lat .chip .opts{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .lat .chip .seg{display:inline-flex;border:1px solid rgba(127,127,127,.45);border-radius:6px;overflow:hidden}
 .lat .chip .seg button{border:0;border-radius:0;min-height:28px;padding:2px 8px;font-size:.8em;background:transparent}
@@ -244,7 +244,7 @@ FAMILY_JS = r"""
         box.open = !!q || !!pick || !mem.shut[f.key];
         box.addEventListener("toggle", () => { if (!q && !pick) mem.shut[f.key] = !box.open; });
         const sum = el("summary", "");
-        sum.appendChild(el("span", "n", String(f.signals.length)));
+        sum.appendChild(el("span", "cnt", String(f.signals.length)));
         sum.appendChild(el("span", "t", f.title));
         sum.appendChild(el("span", "s", f.question));
         box.appendChild(sum);

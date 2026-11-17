@@ -336,7 +336,7 @@ SET_LIBRARY_JS = r"""
           box.open = !!q || !!pick || !M.ideaShut[i.key] || i.cards.some((c) => c.members.some((m) => m.key === focus));
           box.addEventListener("toggle", () => { if (!q && !pick) M.ideaShut[i.key] = !box.open; });
           const sum = el("summary", "");
-          sum.appendChild(el("span", "n", String(i.cards.length)));
+          sum.appendChild(el("span", "cnt", String(i.cards.length)));
           sum.appendChild(el("span", "t", i.title));
           sum.appendChild(el("span", "s", i.sub));
           box.appendChild(sum);
