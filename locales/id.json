@@ -189,7 +189,6 @@
   "The dashboard could not load its scoring code.": "Dasbor tidak bisa memuat kode penilaiannya.",
   "Add your Supabase URL and anon key to `.streamlit/secrets.toml` under `[supabase]` as `url` and `anon_key`.": "Tambahkan URL Supabase dan kunci anon Anda ke `.streamlit/secrets.toml` di bawah `[supabase]` sebagai `url` dan `anon_key`.",
   "This app is using the Supabase service-role key. Put the anon key in `.streamlit/secrets.toml` as `anon_key`. Keep the service-role key only on the alert worker.": "Aplikasi ini memakai kunci service-role Supabase. Taruh kunci anon di `.streamlit/secrets.toml` sebagai `anon_key`. Simpan kunci service-role hanya di worker peringatan.",
-  "<div style='height:30vh;'></div><div style='text-align:center;font-size:1.1rem;color:var(--ang-muted,#6b7280);'>Signing you in…</div>": "<div style='height:30vh;'></div><div style='text-align:center;font-size:1.1rem;color:var(--ang-muted,#6b7280);'>Sedang masuk…</div>",
   "angstrom signals": "angstrom signals",
   "Use a photo smaller than 5 MB.": "Gunakan foto yang lebih kecil dari 5 MB.",
   "name@example.com": "nama@contoh.com",

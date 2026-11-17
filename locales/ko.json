@@ -189,7 +189,6 @@
   "The dashboard could not load its scoring code.": "대시보드가 점수 계산 코드를 불러오지 못했습니다.",
   "Add your Supabase URL and anon key to `.streamlit/secrets.toml` under `[supabase]` as `url` and `anon_key`.": "Supabase URL과 anon 키를 `.streamlit/secrets.toml`의 `[supabase]` 아래에 `url`과 `anon_key`로 추가하세요.",
   "This app is using the Supabase service-role key. Put the anon key in `.streamlit/secrets.toml` as `anon_key`. Keep the service-role key only on the alert worker.": "이 앱은 Supabase service-role 키를 사용하고 있습니다. anon 키를 `.streamlit/secrets.toml`에 `anon_key`로 넣으세요. service-role 키는 알림 작업기에만 두세요.",
-  "<div style='height:30vh;'></div><div style='text-align:center;font-size:1.1rem;color:var(--ang-muted,#6b7280);'>Signing you in…</div>": "<div style='height:30vh;'></div><div style='text-align:center;font-size:1.1rem;color:var(--ang-muted,#6b7280);'>로그인하는 중…</div>",
   "angstrom signals": "angstrom signals",
   "Use a photo smaller than 5 MB.": "5MB보다 작은 사진을 사용하세요.",
   "name@example.com": "name@example.com",

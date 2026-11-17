@@ -189,7 +189,6 @@
   "The dashboard could not load its scoring code.": "O painel não conseguiu carregar seu código de pontuação.",
   "Add your Supabase URL and anon key to `.streamlit/secrets.toml` under `[supabase]` as `url` and `anon_key`.": "Adicione a URL do Supabase e a chave anon em `.streamlit/secrets.toml` sob `[supabase]` como `url` e `anon_key`.",
   "This app is using the Supabase service-role key. Put the anon key in `.streamlit/secrets.toml` as `anon_key`. Keep the service-role key only on the alert worker.": "Este app está usando a chave service-role do Supabase. Coloque a chave anon em `.streamlit/secrets.toml` como `anon_key`. Mantenha a chave service-role só no worker de alertas.",
-  "<div style='height:30vh;'></div><div style='text-align:center;font-size:1.1rem;color:var(--ang-muted,#6b7280);'>Signing you in…</div>": "<div style='height:30vh;'></div><div style='text-align:center;font-size:1.1rem;color:var(--ang-muted,#6b7280);'>Entrando…</div>",
   "angstrom signals": "angstrom signals",
   "Use a photo smaller than 5 MB.": "Use uma foto com menos de 5 MB.",
   "name@example.com": "nome@exemplo.com",

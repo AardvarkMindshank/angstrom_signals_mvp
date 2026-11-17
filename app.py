@@ -5836,14 +5836,25 @@ if st.session_state.user is None and not _POPOUT_VIEW and not st.session_state.g
         except Exception:
             _keep_cookie_write("")  # that saved sign-in no longer works
 
-def _signing_in(shell) -> None:
-    """Replace the login page with one calm line while the dashboard builds."""
-    with shell.container():
-        st.markdown(
-            t("<div style='height:30vh;'></div><div style='text-align:center;font-size:1.1rem;"
-            "color:var(--ang-muted,#6b7280);'>Signing you in…</div>"),
-            unsafe_allow_html=True,
-        )
+def _password_login() -> None:
+    """Log In, run before the page redraws (a button callback), so after a good login the next run draws the
+    dashboard straight away: the login page is never drawn a second time (the flicker Angus saw, 18 Nov 2026)."""
+    email = str(st.session_state.get("login_email") or "")
+    password = str(st.session_state.get("login_password") or "")
+    try:
+        response = supabase.auth.sign_in_with_password({"email": email, "password": password})
+        session = response.session
+        if session is None:
+            st.session_state["login_error"] = t("Login did not return a session. Confirm your email, then try again.")
+            return
+        st.session_state.user = response.user
+        st.session_state.access_token = session.access_token
+        st.session_state.refresh_token = session.refresh_token
+        st.session_state["_keep_signed_in"] = bool(st.session_state.get("login_keep"))
+        st.session_state["_keep_write_pending"] = True
+    except Exception as exc:
+        st.session_state["login_error"] = (t(_BARRED_NOTICE) if "banned" in str(exc).lower()
+                                           else t("Login failed. Check your email and password."))
 
 
 def _take_handoff() -> None:
@@ -6019,29 +6030,11 @@ if st.session_state.user is None:
                                    "for Continue with Google too. Do not tick this on a shared computer."),
                         )
                         st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
-                        submitted = st.form_submit_button(t("Log In"), type="primary", use_container_width=True)
-                    if submitted:
-                        try:
-                            response = supabase.auth.sign_in_with_password({
-                                "email": login_email,
-                                "password": login_password,
-                            })
-                            session = response.session
-                            if session is None:
-                                st.error(t("Login did not return a session. Confirm your email, then try again."))
-                            else:
-                                st.session_state.user = response.user
-                                st.session_state.access_token = session.access_token
-                                st.session_state.refresh_token = session.refresh_token
-                                st.session_state["_keep_signed_in"] = bool(keep_me)
-                                st.session_state["_keep_write_pending"] = True
-                                _signing_in(_login_shell)
-                                st.rerun()
-                        except Exception as exc:
-                            if "banned" in str(exc).lower():
-                                st.error(t(_BARRED_NOTICE))
-                            else:
-                                st.error(t("Login failed. Check your email and password."))
+                        # The login itself runs in the button's callback, before the page redraws (_password_login).
+                        st.form_submit_button(t("Log In"), type="primary", use_container_width=True,
+                                              on_click=_password_login)
+                    if st.session_state.get("login_error"):
+                        st.error(st.session_state.pop("login_error"))
                     if st.button(t("Forgot password?"), use_container_width=True, key="forgot_password"):
                         st.session_state.recover_email = st.session_state.get("login_email", "")
                         st.session_state.show_recover = True
