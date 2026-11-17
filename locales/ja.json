@@ -1896,7 +1896,6 @@
   "Candle (colour, close vs previous, body size)": "ローソク足（色、前の足との終値比較、実体の大きさ）",
   "What the last candle did: a strong green candle has body_vs_average above 1 (bigger than usual). Descriptive; one candle says little on its own.": "直近のローソク足の動き: 強い陽線は body_vs_average が 1 を超えます（通常より大きい）。説明であり、1 本の足だけでは多くを語りません。",
   "Divergence across timeframes": "複数時間足のダイバージェンス",
-  "How many timeframes show momentum disagreeing with price at once, the multi-timeframe divergence Drew looks for. Regular divergence hints at exhaustion, hidden divergence at continuation. Descriptive; not a trade signal by itself.": "いくつの時間足で同時にモメンタムが価格と食い違っているか。Drew が探す複数時間足のダイバージェンスです。通常のダイバージェンスは勢いの衰え、隠れたダイバージェンスは継続を示唆します。説明であり、それ自体は売買シグナルではありません。",
   "MACD histogram": "MACD ヒストグラム",
   "Whether momentum is speeding up or slowing. Standard score (dashboard Stretch part): tanh(histogram / (ATR/4)). Descriptive; not a forecast.": "モメンタムが加速しているか減速しているか。標準スコア（ダッシュボードの Stretch 部分）: tanh(ヒストグラム / (ATR/4))。説明であり、予測ではありません。",
   "Momentum direction": "モメンタムの方向",
@@ -1906,7 +1905,6 @@
   "Stochastic on OHLC4": "OHLC4 のストキャスティクス",
   "Where the candle's average price sits in its recent range, smoothed, and whether it just turned. Descriptive.": "ローソク足の平均価格が直近レンジのどこにあるか（平滑化済み）と、反転したばかりかどうか。説明です。",
   "Stoch RSI pair (OHLC4)": "Stoch RSI ペア（OHLC4）",
-  "Where the two Stoch RSI curves sit and when they last crossed, the way Drew reads them: a cross up from both low, or down from both high, then a look up the chart for a printed dot. Descriptive; not a forecast.": "2 本の Stoch RSI 曲線がどこにあり、最後にいつクロスしたか。Drew の読み方と同じく、両方が低い位置からの上抜け、または両方が高い位置からの下抜けを見て、チャート上にドットが表示されているか確認します。説明であり、予測ではありません。",
   "WaveTrend momentum (Sonar)": "WaveTrend モメンタム（Sonar）",
   "Where the momentum wave is and whether it just turned. A turn up from oversold is what many traders mark as a possible bounce point, to be read with the trend and other timeframes. Descriptive; not a forecast.": "モメンタムの波がどこにあり、反転したばかりかどうか。売られすぎからの上向き反転は、多くのトレーダーが反発の可能性がある地点として注目するもので、トレンドや他の時間足とあわせて読みます。説明であり、予測ではありません。",
   "RSI (14)": "RSI (14)",
@@ -2168,5 +2166,7 @@
   "🛣️ **Strategies are coming later.** A strategy will turn a Set's Yes into a plan: when to enter, when to exit, and how much risk to take, including sequences such as \"A, then B within N days\". They will be designed with insights from beta testers' trading rules.": "🛣️ **戦略は後日登場します。** 戦略はSetの「はい」を計画に変えます：いつ入り、いつ出て、どれだけリスクを取るか。「A、その後N日以内にB」のような順序も含みます。ベータテスターのトレードルールから得た知見をもとに設計します。",
   "{stages}: EMA 20 above EMA 50. Then the 1-hour pullback entry check.": "{stages}：EMA 20がEMA 50の上。その後、1時間足の押し目エントリーチェック。",
   "{stages}: EMA 20 below EMA 50. Then the 1-hour pullback entry check.": "{stages}：EMA 20がEMA 50の下。その後、1時間足の戻りエントリーチェック。",
-  "The symbols drawn over the candles (open-source formulas of a popular charting indicator). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "ローソク足の上に描かれる記号（人気のチャートインジケーターのオープンソースの式）。ローソク足を指すと各記号の意味が表示されます。大きな点は📡 Sonarの帯にあります。"
+  "The symbols drawn over the candles (open-source formulas of a popular charting indicator). Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.": "ローソク足の上に描かれる記号（人気のチャートインジケーターのオープンソースの式）。ローソク足を指すと各記号の意味が表示されます。大きな点は📡 Sonarの帯にあります。",
+  "How many timeframes show momentum disagreeing with price at once, the multi-timeframe divergence many traders look for. Regular divergence hints at exhaustion, hidden divergence at continuation. Descriptive; not a trade signal by itself.": "いくつの時間足で同時にモメンタムが価格と食い違っているか。多くのトレーダーが探す複数時間足のダイバージェンスです。通常のダイバージェンスは勢いの衰え、隠れたダイバージェンスは継続を示唆します。説明であり、それ自体は売買シグナルではありません。",
+  "Where the two Stoch RSI curves sit and when they last crossed, the way many traders read them: a cross up from both low, or down from both high, then a look up the chart for a printed dot. Descriptive; not a forecast.": "2 本の Stoch RSI 曲線がどこにあり、最後にいつクロスしたか。多くのトレーダーの読み方と同じく、両方が低い位置からの上抜け、または両方が高い位置からの下抜けを見て、チャート上にドットが表示されているか確認します。説明であり、予測ではありません。"
 }

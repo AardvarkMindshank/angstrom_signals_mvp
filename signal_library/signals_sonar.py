@@ -1,7 +1,7 @@
 """
-🛰️ Sonar markers and the Stoch RSI pair (14 Nov 2026), from Drew's charts.
+🛰️ Sonar markers and the Stoch RSI pair (14 Nov 2026), from a beta tester's charts.
 
-Drew reads Market Cipher A's symbols on the price chart (the grey band of eight moving averages, a triangle for a
+A beta tester reads Market Cipher A's symbols on the price chart (the grey band of eight moving averages, a triangle for a
 trend change, a yellow cross he calls manipulation, dots, crosses and diamonds), the big dots on the Cipher B strip,
 and where the two Stoch RSI curves cross while both are high or both low. The open-source recreations (VuManChu
 Cipher A and B) publish the formulas; the defaults below are theirs.
@@ -155,7 +155,7 @@ def sonar_markers(ctx, timeframe, params):
 
 def stoch_rsi_frame(frame: pd.DataFrame, rsi_length: int = 14, stoch_length: int = 14, k: int = 3,
                     d: int = 3) -> pd.DataFrame:
-    """Stoch RSI with RSI source OHLC4 (TradingView's setting Drew uses, and the chart panel's): %K and %D."""
+    """Stoch RSI with RSI source OHLC4 (TradingView's setting, and the chart panel's): %K and %D."""
     src = (frame["open"] + frame["high"] + frame["low"] + frame["close"]) / 4
     delta = src.diff()
     gain = delta.clip(lower=0).ewm(alpha=1 / rsi_length, adjust=False, min_periods=rsi_length).mean()
@@ -183,7 +183,7 @@ def stoch_rsi_frame(frame: pd.DataFrame, rsi_length: int = 14, stoch_length: int
                  "apart. cross = %K crossing %D on the last closed candle. Candles ago (0 = the last closed candle, "
                  "`lookback` = none in the window) for: any cross up, any cross down, a cross up while both were low "
                  "(on the cross candle or the one before), a cross down while both were high."),
-    interpretation=("Where the two Stoch RSI curves sit and when they last crossed, the way Drew reads them: a cross "
+    interpretation=("Where the two Stoch RSI curves sit and when they last crossed, the way many traders read them: a cross "
                     "up from both low, or down from both high, then a look up the chart for a printed dot. "
                     "Descriptive; not a forecast."),
     limitations="Pinned near 0 or 100 in strong trends, where crosses repeat. Needs about 40 closed candles.",

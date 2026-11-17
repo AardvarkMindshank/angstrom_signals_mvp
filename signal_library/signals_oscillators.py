@@ -1,5 +1,5 @@
 """
-Momentum oscillators in the style Drew reads (asked 10 Nov 2026; his charts: docs/research/drew_charts_2026-11-10.md),
+Momentum oscillators in the style a beta tester reads (asked 10 Nov 2026; the charts: docs/research/drew_charts_2026-11-10.md),
 with the openly published formulas and default settings of LazyBear's WaveTrend and its open-source "Market Cipher B"
 recreation (VuManChu Cipher B). Every setting is a parameter, so his own settings can be matched later without a
 rebuild.
@@ -223,7 +223,7 @@ def _rsi_series(frame: pd.DataFrame, length: int = 14) -> pd.Series:
                  "regular_bearish_count and hidden_bearish_count split them; timeframes_read = timeframes that could be "
                  "read. A timeframe counts once per kind however many it has."),
     interpretation=("How many timeframes show momentum disagreeing with price at once, the multi-timeframe divergence "
-                    "Drew looks for. Regular divergence hints at exhaustion, hidden divergence at continuation. "
+                    "many traders look for. Regular divergence hints at exhaustion, hidden divergence at continuation. "
                     "Descriptive; not a trade signal by itself."),
     limitations=("Swings are confirmed 5 candles late by design. A timeframe that cannot be read is left out of "
                  "timeframes_read, never counted as no divergence. In strong trends regular divergence can repeat many "
