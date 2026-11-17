@@ -195,3 +195,20 @@ def test_a_copy_of_the_earlier_four_stage_crypto_funnel_is_offered_the_update():
     old = {**now, "stages": now["stages"][1:]}              # the provided crypto funnel before its daily-trend stage
     assert fe.provenance(old, lib) == "Your copy of an earlier version of a provided funnel"
     assert fe.provenance(now, lib) == "Your copy of a provided funnel"
+
+
+def test_the_pool_sits_in_the_board_and_a_provided_funnel_is_read_only():
+    lib, choices = _board()
+    f = fe.template("crypto", "long")
+    data = fe.board_data(f, choices, lib, {}, True, "f1")
+    pool = data["pool"]
+    assert not data["readonly"] and pool["top"] == 0 and [0, "All eligible"] in pool["sizes"]
+    assert fe.apply_action(f, {"op": "pool", "top": 100, "min_volume": 1_000_000, "watchlist_only": False},
+                           choices, lib, {}) is None
+    assert f["pool"] == {"top": 100, "min_volume": 1_000_000}
+    assert fe.apply_action(f, {"op": "pool", "top": 7}, choices, lib, {}) and f["pool"]["top"] == 100
+    fe.apply_action(f, {"op": "pool", "top": 0, "min_volume": 0, "watchlist_only": True}, choices, lib, {})
+    assert f["pool"] == {"watchlist_only": True}
+    ro = fe.board_data(fe.template("equity", "short"), {}, {}, {}, False, "p", readonly=True)
+    assert ro["readonly"] and ro["library"]["sets"] == [] and "S&P 500" in ro["pool"]["summary"]
+    assert all(s["upgrade"] is None for s in ro["stages"])

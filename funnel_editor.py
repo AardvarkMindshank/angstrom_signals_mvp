@@ -3,8 +3,8 @@
 docs/design/funnels_v2_spec.md).
 
 Start from a ready-made funnel or one of your own → change it → save and activate. Beginners change the direction,
-the pool and the leave rule; "Stages (advanced)" opens the stages themselves: any provided or saved Set, the close it
-is checked at, add, remove and reorder, and ⬆ Upgrade when a stage's Set has a newer version. Changes are kept as a
+the pool (at the wide top of the funnel) and the leave rule; the stages below it take any provided or saved Set, the
+close it is checked at, add, remove and reorder, and ⬆ Upgrade when a stage's Set has a newer version. Changes are kept as a
 working copy until they are saved, so the live funnel is never reset by accident; what a save will reset is shown
 first.
 """
@@ -262,47 +262,15 @@ def render(st, supabase, user_id: str) -> None:
     if f.get("paused"):
         st.caption(t("⏸ Paused: not checked until resumed on the Dynamic funnel page."))
 
-    # ------------------------------------------------------------------ pool
-    pool = dict(f.get("pool") or {})
-    whole = "the top 500 coins" if market == "crypto" else "the S&P 500"
-    box = st.container(border=True)
-    box.markdown(t("**Pool** · which assets the funnel starts from"), help=(
-        t("All eligible = {whole} that pass Angstrom's data checks. Narrow it by size, by how much trades a day (on the coin's venue: Binance, or across exchanges for Yahoo coins; equities in New York), or to your own watchlist. Changing the pool starts every asset again from the pool.", whole=whole)))
-    p1, p2, p3 = box.columns([2, 2, 1.4], vertical_alignment="bottom")
-    sizes = [0, 50, 100, 200, 500]
-    top = p1.selectbox(t("Size"), sizes, index=sizes.index(int(pool.get("top") or 0)), key=f"fe_top_{pick}",
-                       format_func=lambda n: "All eligible" if n == 0 else t('Top {n} by market cap', n=n), placeholder=t("Choose an option"))
-    floors = [0, 250_000, 1_000_000, 5_000_000, 20_000_000, 100_000_000]
-    current = int(pool.get("min_volume") or 0)
-    if current not in floors:
-        floors = sorted(floors + [current])
-    vol = p2.selectbox(t("Traded a day, at least"), floors, index=floors.index(current), key=f"fe_vol_{pick}",
-                       format_func=lambda v: t("No extra minimum") if v == 0 else
-                       (f"${v / 1e6:g}M" if v >= 1e6 else f"${v / 1e3:g}k"), placeholder=t("Choose an option"))
-    only = p3.toggle(t("Only my watchlist"), value=bool(pool.get("watchlist_only")), key=f"fe_watch_{pick}",
-                     help=t("The funnel checks only your own watchlist's eligible {coins_if_market_crypto_e}, not the market.", coins_if_market_crypto_e='coins' if market == 'crypto' else 'equities'))
-    f["pool"] = {k: v for k, v in (("top", top or None), ("min_volume", vol or None), ("watchlist_only", only or None))
-                 if v}
-
-    # ------------------------------------------------------------------ stages
-    # A fixed title: Streamlit treats a folding section with a new title as a new one and folds it, so naming the
-    # stages in the title closed it whenever a stage was added, removed, moved or renamed.
-    st.caption(t("Stages: {list}", list=" → ".join(s.get("label") or s["timeframe"] for s in f["stages"])))
-    # A key as well: without one Streamlit also treats it as new when anything above it changes (a pause note, the
-    # stage line, an Update button), and a new one starts folded.
-    with st.expander(t("Stages (advanced)"), icon=":material/stacks:", key=f"fe_stages_open_{pick}"):
-        st.caption(t("Each stage checks one Set, only for the assets that hold every stage before it. The timeframe is "
-                   "**when the stage is checked**; the Set's readings keep their own timeframes. To change a threshold, "
-                   "edit a copy of the Set in Signal Sets, then pick it here."))
-        problem = st.session_state.pop("funnel_stages_flash", None)
-        if problem:
-            st.warning(problem, icon=":material/info:")
-        # Streamlit's expander can keep a minimum height from an earlier, taller moment (the board drawing for the
-        # first time), which left an empty band under the stages. Only this expander: the one holding the board.
-        st.markdown('<style>[data-testid="stExpanderDetails"]:has([class*="st-key-funnel_stages_"])'
-                    ':not(:has([data-testid="stExpander"])){min-height:0 !important}</style>',
-                    unsafe_allow_html=True)
-        _stages_board(st, f, pick, configs, user_id, library, saved_sets)
+    # ------------------------------------------------------------------ pool and stages
+    # The pool sits at the wide top of the funnel, in the board (Angus, 18 Nov 2026, as in the mockup).
+    st.caption(t("Each stage checks one Set, only for the assets that hold every stage before it. The timeframe is "
+                 "**when the stage is checked**; the Set's readings keep their own timeframes. To change a threshold, "
+                 "edit a copy of the Set in Signal Sets, then pick it here."))
+    problem = st.session_state.pop("funnel_stages_flash", None)
+    if problem:
+        st.warning(problem, icon=":material/info:")
+    _stages_board(st, f, pick, configs, user_id, library, saved_sets)
 
     dr.remember(st.session_state, supabase, user_id, "funnel", pick, f, bases.get(pick) or saved or f)
 
@@ -417,6 +385,8 @@ def apply_action(f: dict, action: dict, choices: dict, library: dict, saved_sets
     """Apply one press on the stages board to the working copy f. Returns an error to show, or None."""
     op, stages = action.get("op"), f["stages"]
     i = action.get("stage")
+    if op == "pool":
+        return set_pool(f, action)
     if op in ("set", "move", "remove", "tf", "label", "upgrade") and not (isinstance(i, int) and 0 <= i < len(stages)):
         return t("That stage no longer exists.")
     if op in ("set", "add"):
@@ -460,25 +430,68 @@ def apply_action(f: dict, action: dict, choices: dict, library: dict, saved_sets
     return None
 
 
+POOL_SIZES = (0, 50, 100, 200, 500)
+POOL_FLOORS = (0, 250_000, 1_000_000, 5_000_000, 20_000_000, 100_000_000)
+
+
+def _money(v: int) -> str:
+    return f"${v / 1e6:g}M" if v >= 1e6 else f"${v / 1e3:g}k"
+
+
+def pool_data(f: dict, readonly: bool = False) -> dict:
+    """The pool band at the top of the funnel: its choices, the current values, and its hover notes."""
+    market = f.get("market") or "crypto"
+    pool = dict(f.get("pool") or {})
+    top, vol, only = int(pool.get("top") or 0), int(pool.get("min_volume") or 0), bool(pool.get("watchlist_only"))
+    whole = t("the top 500 coins") if market == "crypto" else t("the S&P 500")
+    floors = sorted(set(POOL_FLOORS) | {vol})
+    size_words = lambda n: t("All eligible") if n == 0 else t("Top {n} by market cap", n=n)
+    vol_words = lambda v: t("No extra minimum") if v == 0 else _money(v)
+    if only:
+        summary = t("Only your watchlist's eligible assets")
+    else:
+        summary = size_words(top) + (f" · {t('at least {v} traded a day', v=_money(vol))}" if vol else "")
+    if readonly:
+        summary = t("All eligible = {whole} that pass Angstrom's data checks.", whole=whole)
+    return {"top": top, "min_volume": vol, "watchlist_only": only, "summary": summary,
+            "sizes": [[n, size_words(n)] for n in POOL_SIZES], "floors": [[v, vol_words(v)] for v in floors],
+            "help": t("All eligible = {whole} that pass Angstrom's data checks. Narrow it by size, by how much trades a day (on the coin's venue: Binance, or across exchanges for Yahoo coins; equities in New York), or to your own watchlist. Changing the pool starts every asset again from the pool.", whole=whole),
+            "watch_help": t("The funnel checks only your own watchlist's eligible {coins_if_market_crypto_e}, not the market.",
+                            coins_if_market_crypto_e='coins' if market == 'crypto' else 'equities')}
+
+
+def set_pool(f: dict, action: dict) -> str | None:
+    try:
+        top, vol = int(action.get("top") or 0), int(action.get("min_volume") or 0)
+    except (TypeError, ValueError):
+        return t("That pool choice isn't available.")
+    if top not in POOL_SIZES or vol < 0:
+        return t("That pool choice isn't available.")
+    only = bool(action.get("watchlist_only"))
+    f["pool"] = {k: v for k, v in (("top", top or None), ("min_volume", vol or None), ("watchlist_only", only or None)) if v}
+    return None
+
+
 def board_data(f: dict, choices: dict, library: dict, saved_sets: dict, show_provided: bool, scope: str,
-               plan: str = "pro", display: str = "hide") -> dict:
+               plan: str = "pro", display: str = "hide", readonly: bool = False) -> dict:
     import perspectives
     import prism_board as pb
 
     stages = []
     for i, stage in enumerate(f["stages"]):
         doc = stage.get("set_body") or {}
-        up = upgrade_for(stage, library, saved_sets)
+        up = None if readonly else upgrade_for(stage, library, saved_sets)
         question, outcome = stage_question(i, f["stages"])
         stages.append({"label": stage.get("label") or "", "timeframe": stage["timeframe"],
                        "question": question, "outcome": outcome,
                        "icon": fn.STAGE_ICONS[min(i, len(fn.STAGE_ICONS) - 1)],
                        "set_name": doc.get("name") or t("This stage's Set"), "set_line": str(doc.get("purpose") or ""),
                        "icons": perspectives.chips(doc), "upgrade": up[0] if up else None})
-    listed = pb.set_list(choices, plan or "pro", display or "hide")
+    listed = {"sets": [], "cards": None} if readonly else pb.set_list(choices, plan or "pro", display or "hide")
     return {"library": {"sets": listed["sets"], "cards": listed["cards"],
                         "perspectives": [{"key": k, "icon": i, "hover": h} for k, i, h in perspectives.ICONS]},
-            "show_provided": show_provided, "stages": stages, "scope": scope,
+            "show_provided": show_provided, "stages": stages, "scope": scope, "readonly": readonly,
+            "pool": pool_data(f, readonly),
             "timeframes": [[tf, TF_LABELS[tf]] for tf in fs.TIMEFRAMES],
             "min_stages": MIN_STAGES, "max_stages": MAX_STAGES,
             "intro": t("Widest at the top: each stage checks only what passed the ones above it.")}
@@ -525,6 +538,17 @@ def _stages_board(st, f: dict, pick: str, configs: list[dict], user_id: str, lib
     lattice_panel.rerun(st)
 
 
+def _readonly_board(st, f: dict, scope: str) -> None:
+    """A provided funnel drawn like your own (pool on top, stages narrowing), with nothing to change."""
+    import funnel_stages_component
+
+    data = board_data(f, {}, {}, {}, False, scope, readonly=True)
+    try:
+        funnel_stages_component.component()(key=f"funnel_ro_{scope}", data=data, on_action_change=lambda: None)
+    except Exception as exc:
+        st.info(t('The stages board could not load here ({str_exc_120}).', str_exc_120=str(exc)[:120]))
+
+
 def own_limit(st) -> int:
     """How many funnels of your own the plan includes (plans.LIMITS)."""
     import plans
@@ -544,11 +568,9 @@ def _provided_view(st, supabase, pick: str, funnels: list[dict], library: dict) 
                          format_func=lambda d: t("▲ Long") if d == "long" else t("▼ Short"))
     t_ = template(market, direction)
     st.markdown(t("**{market_words_market}** · {fn_direction_icons_direc} {long_if_direction_long_e} · *Provided by Angstrom* · can't be changed or deleted", market_words_market=t(MARKET_WORDS[market]), fn_direction_icons_direc=fn.DIRECTION_ICONS[direction], long_if_direction_long_e='Long' if direction == 'long' else 'Short'))
-    pool = "the top 500 coins that pass Angstrom's data checks" if market == "crypto" else "the S&P 500"
-    st.caption(t('Starts from {pool}. {a_coin_if_market_crypto_} leaves a stage after two No closes in a row. Alerts on new Candidates.', pool=pool, a_coin_if_market_crypto_='A coin' if market == 'crypto' else 'An equity'))
-    for i, stage in enumerate(t_["stages"], 1):
-        doc = stage["set_body"]
-        st.markdown(t('**{i}. {stage_label}** · checked at each {fs_words_stage_timeframe} close  \n{doc_name}: {doc_get_purpose_or}', i=i, stage_label=stage['label'], fs_words_stage_timeframe=fs.WORDS[stage['timeframe']], doc_name=doc['name'], doc_get_purpose_or=doc.get('purpose') or ''))
+    st.caption(t('{a_coin_if_market_crypto_} leaves a stage after two No closes in a row. Alerts on new Candidates.',
+                 a_coin_if_market_crypto_='A coin' if market == 'crypto' else 'An equity'))
+    _readonly_board(st, t_, f"{pick}:{market}:{direction}")
     st.caption(t(NOTE))
     mine = [f for f in funnels if f.get("market") == market and f.get("direction") == direction
             and provenance(f, library) == "Your copy of a provided funnel"]

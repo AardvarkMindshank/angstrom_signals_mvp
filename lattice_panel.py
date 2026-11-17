@@ -214,4 +214,4 @@ def _render(st, supabase, assets: list[tuple[str, str, str]], user_id: str) -> N
     else:
         st.info(t("🛣️ **Strategies are coming later.** A strategy will turn a Set's Yes into a plan: when to enter, "
                 "when to exit, and how much risk to take, including sequences such as \"A, then B within N days\". "
-                "They will be designed with Drew's trading rules."))
+                "They will be designed with insights from beta testers' trading rules."))

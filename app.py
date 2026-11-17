@@ -8667,7 +8667,7 @@ tested what usually followed these answers.
   **alerts**. Pause and resume a funnel from its row on the Dynamic funnel page.
 - **Pool:** all eligible, or the top 50 / 100 / 200 / 500 by market cap; a minimum traded a day; or **only my
   watchlist**.
-- **Stages (advanced):** each stage's **Set** (any provided Set or one of yours) and when it's **checked** (each
+- **Stages:** each stage's **Set** (any provided Set or one of yours) and when it's **checked** (each
   15 minutes to each week); add, remove or move stages (3 to 5). The stage's timeframe sets *when* it's checked;
   the Set's readings keep their own timeframes. To change a threshold, edit a copy of the Set in Signal Sets, then
   pick it here. **⬆ Upgrade** appears when a stage's Set has a newer version.

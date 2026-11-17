@@ -51,6 +51,8 @@ def main() -> None:
     out.mkdir(parents=True, exist_ok=True)
     (out / "board.html").write_text(page(board_data()))
     (out / "board_night.html").write_text(page(board_data(), night=True))
+    ro = fe.board_data(fe.template("crypto", "long"), {}, {}, {}, False, "p", readonly=True)
+    (out / "provided_night.html").write_text(page(ro, night=True))
     print(f"wrote {out / 'board.html'}")
 
 

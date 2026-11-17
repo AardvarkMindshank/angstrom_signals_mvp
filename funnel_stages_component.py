@@ -1,7 +1,8 @@
 """
-🔻 Funnel stages board (Lattice → Funnels → Stages (advanced)): the saved-Set list on the left, exactly as in Prism
+🔻 Funnel stages board (Lattice → Funnels): the saved-Set list on the left, exactly as in Prism
 (filter, perspective icons, "Provided by Angstrom Signals" folded, Your Sets), the funnel's stages on the right, with
-the same vertical divider between them.
+the same vertical divider between them. The pool sits at the wide top of the funnel. A provided funnel is drawn the
+same way with "readonly": no Set list, nothing to change.
 
 Each stage holds one Set. Drag a Set onto a stage to put it there (it replaces the one before), or onto "Add a stage"
 to add one. On a phone, tap a stage to select it, then + on a Set; with no stage selected, + adds a new stage.
@@ -41,7 +42,22 @@ CSS = prism_component.CSS + """
   text-align:center;font-size:13px;opacity:.85;background:transparent}
 .lat.fun .spout{position:relative;z-index:1;align-self:center;font-size:13px;padding:4px 12px;border-radius:999px;
   border:1px solid rgba(127,127,127,.4);background:rgba(16,185,129,.12);cursor:help}
-@media (max-width:640px){.lat.fun .stage{margin-left:0 !important;margin-right:0 !important}
+.lat.fun .pool{position:relative;z-index:1;border:1px solid rgba(127,127,127,.35);border-radius:12px 12px 4px 4px;
+  background:rgba(127,127,127,.10);padding:8px 12px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+.lat.fun .pool .pk{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;opacity:.7}
+.lat.fun .pool .pq{font-weight:700}
+.lat.fun .pool .hlp{cursor:help;opacity:.6;font-size:13px;border:1px solid currentColor;border-radius:999px;width:18px;
+  height:18px;display:inline-flex;align-items:center;justify-content:center}
+.lat.fun .pool .ctrls{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;flex:1 1 100%}
+.lat.fun .pool label{display:inline-flex;align-items:center;gap:6px;font-size:13px}
+.lat.fun .pool select{min-height:32px}
+.lat.fun .pool input[type=checkbox]{width:18px;height:18px;accent-color:#0f766e}
+.lat.fun .pool .ro{font-size:13px;opacity:.85}
+.lat.fun.ro .stage{cursor:default}
+.lat.fun .stage .tfro{font-size:13px;opacity:.8}
+.lat.fun .stage .labro{flex:1 1 140px;font-weight:600}
+@media (max-width:640px){.lat.fun .pool .ctrls{flex-direction:column;align-items:stretch}.lat.fun .pool select{min-height:44px}
+  .lat.fun .stage{margin-left:0 !important;margin-right:0 !important}
   .lat.fun .stage .setrow{padding-left:0}.lat.fun .stage .ctl button{min-height:44px;width:44px}}
 """
 
@@ -58,7 +74,8 @@ export default function funnelStages(component) {
   if (sel === undefined || sel === null || sel >= stages.length) sel = null;
 
   Array.from(parentElement.children).filter((c) => c.classList && c.classList.contains("lat")).forEach((c) => c.remove());
-  const root = el("div", "lat prism fun");
+  const ro = !!state.readonly;            // a provided funnel: shown the same way, nothing can be changed
+  const root = el("div", "lat prism fun" + (ro ? " ro" : ""));
   parentElement.appendChild(root);
 """ + lattice_component.SPLITTER_JS + prism_component.SET_LIBRARY_JS + r"""
 
@@ -97,6 +114,7 @@ export default function funnelStages(component) {
 
   // ------------------------------------------------------------------ the Set list (shared with Prism)
   const libCol = el("div", "col lib");
+  if (!ro) {
   root.appendChild(libCol);
   window.__funLib = window.__funLib || {};
   setLibrary(libCol, {sets: lib.sets, cards: lib.cards, noOptions: true, perspectives: lib.perspectives, showProvided: state.show_provided,
@@ -108,11 +126,12 @@ export default function funnelStages(component) {
     addDisabled: () => sel === null && full,
     onAdd: (s) => sel !== null ? act("set", {stage: sel, set: s.key}) : act("add", {set: s.key}),
     onOpen: (s) => act("open_set", {set: s.key})});
+  }
 
   // ------------------------------------------------------------------ the funnel
   const mid = el("div", "mid");
   root.appendChild(mid);
-  addSplitter(root, libCol, mid);
+  if (!ro) addSplitter(root, libCol, mid);
   const hd = el("div", "hd");
   hd.appendChild(el("h3", "", T("Stages")));
   hd.appendChild(el("span", "muted", state.intro || ""));
@@ -121,18 +140,59 @@ export default function funnelStages(component) {
   mid.appendChild(box);
   const tfs = state.timeframes || [];
   const n = stages.length;
+
+  // ------------------------------------------------------------------ the pool, at the wide top of the funnel
+  const pl = state.pool;
+  if (pl) {
+    const pb = el("div", "pool");
+    pb.appendChild(el("span", "pk", T("Pool")));
+    pb.appendChild(el("span", "pq", T("Which assets the funnel starts from")));
+    if (pl.help) { const h = el("span", "hlp", "?"); h.title = pl.help; h.setAttribute("aria-label", pl.help); pb.appendChild(h); }
+    const ctrls = el("div", "ctrls");
+    if (ro) {
+      ctrls.appendChild(el("span", "ro", pl.summary || ""));
+    } else {
+      const send = () => act("pool", {top: Number(size.value), min_volume: Number(vol.value), watchlist_only: wl.checked});
+      const pick = (labelText, opts, cur) => {
+        const lab = el("label", "", labelText);
+        const sel_ = el("select", "");
+        opts.forEach(([v, words]) => { const o = el("option", "", words); o.value = String(v); if (v === cur) o.selected = true; sel_.appendChild(o); });
+        sel_.addEventListener("change", send);
+        lab.appendChild(sel_); ctrls.appendChild(lab);
+        return sel_;
+      };
+      const size = pick(T("Size"), pl.sizes || [], pl.top || 0);
+      const vol = pick(T("Traded a day, at least"), pl.floors || [], pl.min_volume || 0);
+      const wlab = el("label", "");
+      const wl = el("input", ""); wl.type = "checkbox"; wl.checked = !!pl.watchlist_only;
+      wl.addEventListener("change", send);
+      wlab.appendChild(wl); wlab.appendChild(document.createTextNode(T("Only my watchlist")));
+      if (pl.watch_help) wlab.title = pl.watch_help;
+      ctrls.appendChild(wlab);
+    }
+    pb.appendChild(ctrls);
+    box.appendChild(pb);
+  }
+
   stages.forEach((st, i) => {
     const card = el("div", "stage" + (sel === i ? " sel" : ""));
     const inset = Math.round(i * 4 * (5 / Math.max(n, 3)));            // narrower down the funnel
     card.style.marginLeft = inset + "%"; card.style.marginRight = inset + "%";
+    if (!ro) {
     card.title = sel === i ? T("Selected: tap + on a Set to use it here (tap again to unselect)")
                            : T("Tap to select this stage, then + on a Set to use it here");
     card.addEventListener("click", (e) => { if (!e.target.closest("input,select,button,details")) select(i); });
     dropZone(card, (key) => act("set", {stage: i, set: key}));
+    }
     const top = el("div", "top");
     const num = el("span", "num", st.icon || String(i + 1));
     num.title = T("Stage {i} of {n}", {i: i + 1, n: n}); num.setAttribute("aria-label", num.title);
     top.appendChild(num);
+    if (ro) {
+      top.appendChild(el("span", "labro", st.label || T("Stage {i}", {i: i + 1})));
+      const w = tfs.find(([k]) => k === st.timeframe);
+      top.appendChild(el("span", "tfro", "⏱ " + (w ? w[1] : st.timeframe)));
+    } else {
     const lab = el("input", "lab"); lab.value = st.label || ""; lab.maxLength = 40;
     lab.setAttribute("aria-label", T("Name of stage {i}", {i: i + 1})); lab.placeholder = T("Stage {i}", {i: i + 1});
     lab.addEventListener("change", () => act("label", {stage: i, label: lab.value}));
@@ -148,6 +208,7 @@ export default function funnelStages(component) {
     if (i < n - 1) ctl.appendChild(button("↓", T("Move this stage down"), () => { window.__funSel[scope] = null; act("move", {stage: i, dir: 1}); }));
     if (n > (state.min_stages || 3)) ctl.appendChild(button("✖", T("Remove this stage"), () => { window.__funSel[scope] = null; act("remove", {stage: i}); }, "del"));
     top.appendChild(ctl);
+    }
     card.appendChild(top);
     if (st.question) {                       // the stage's question in plain words, and what passing it makes an asset
       const q = el("div", "q");
@@ -162,7 +223,7 @@ export default function funnelStages(component) {
     const pv = el("span", "pv");
     (st.icons || []).forEach((p) => { const x = el("span", "", p.icon); x.title = p.hover; x.setAttribute("aria-label", p.hover); pv.appendChild(x); });
     row.appendChild(pv);
-    if (st.upgrade) {
+    if (st.upgrade && !ro) {
       const up = button(st.upgrade, T("Use the newer version of this Set. Saving then starts every asset again."),
                         () => act("upgrade", {stage: i}), "pill upd");
       row.appendChild(up);
@@ -170,7 +231,7 @@ export default function funnelStages(component) {
     card.appendChild(row);
     box.appendChild(card);
   });
-  if (!full) {
+  if (!full && !ro) {
     const add = el("div", "addstage", T("➕ Drop a Set here to add a stage"));
     add.title = T("Or tap + on a Set with no stage selected");
     dropZone(add, (key) => act("add", {set: key}));
