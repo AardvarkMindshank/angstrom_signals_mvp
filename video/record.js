@@ -8,7 +8,8 @@ const fs = require("fs");
 const path = require("path");
 const { chromium } = require("playwright");
 const makeHelpers = require("./helpers.js");
-const ACTIONS = require("./actions.js");
+// The live-site videos (signed in as the demo account) keep their steps in live_actions.js: ACTIONS=live_actions.js
+const ACTIONS = require("./" + (process.env.ACTIONS || "actions.js"));
 
 (async () => {
   const url = process.argv[2];
@@ -22,9 +23,12 @@ const ACTIONS = require("./actions.js");
   // A video can ask for no page zoom ("zoom": "none" in its series file): the page is then recorded at its normal
   // size (smaller text). Charts drawn on a canvas (Visualize History) measure themselves wrongly under CSS zoom.
   const noZoom = script.zoom === "none";
+  const zoomBy = noZoom ? "1" : String(script.zoom || "1.25");     // a number in the series file sets its own zoom
   const view = { width: 1280, height: 610 };
-  const warm = await browser.newPage({ viewport: view });
-  await warm.goto(url + (actions.query || "")); await warm.waitForSelector(actions.ready || ".lat", { timeout: 300000 }); await warm.close();
+  if (!actions.login) {
+    const warm = await browser.newPage({ viewport: view });
+    await warm.goto(url + (actions.query || "")); await warm.waitForSelector(actions.ready || ".lat", { timeout: 300000 }); await warm.close();
+  }
   // The app is recorded at 1280 x 610, zoomed to 125% (text 25% larger, sharp); build.py adds a 110-pixel caption
   // band underneath for a 1280 x 720 video. Only the page body is zoomed: the pointer, diagrams, cards and notes are
   // drawn outside the zoom, at real pixels.
@@ -34,12 +38,12 @@ const ACTIONS = require("./actions.js");
     // Zoom, and never scroll sideways: bringing a narrow column's content into view must not shift the page.
     const zoom = () => {
       if (document.body) {
-        if (zoomed) document.body.style.zoom = "1.25";
+        if (zoomed && zoomed !== "1") document.body.style.zoom = zoomed;
         document.documentElement.style.overflowX = "clip"; document.body.style.overflowX = "clip";
       } else requestAnimationFrame(zoom);
     };
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", zoom); else zoom();
-  }, !noZoom);
+  }, zoomBy);
   // A visible pointer, and a ripple on every click (recordings do not show the real pointer).
   await ctx.addInitScript(() => {
     const ready = () => {
@@ -72,7 +76,8 @@ const ACTIONS = require("./actions.js");
   const now = () => (Date.now() - t0) / 1000;
   const h = makeHelpers(page, url);
   h.ready = actions.ready || ".lat";      // what shows the page is drawn (a video can name its own)
-  await h.open(actions.query || "");
+  if (actions.login) await actions.login(h);         // the live site: sign in first (cut from the video)
+  else await h.open(actions.query || "");
   if (actions.setup) await actions.setup(h);
   const trim = now();
   const timeline = [];

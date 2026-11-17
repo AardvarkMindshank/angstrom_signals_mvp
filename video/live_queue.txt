@@ -1,0 +1,3 @@
+# Live-site videos (signed in as the demo account), recorded in this order by the "live-videos" workflow.
+# The demo account is reset to a new account first, so the day-one videos build on each other.
+d0-overview
