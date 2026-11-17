@@ -17,6 +17,7 @@ jobs:
       - name: Install
         run: |
           need=""
+          command -v ffmpeg >/dev/null || need="$need ffmpeg"
           fc-list | grep -qi "Noto Color Emoji" || need="$need fonts-noto-color-emoji"
           if [ -n "$need" ]; then
             sudo apt-get -o Acquire::Retries=3 update -q
