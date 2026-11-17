@@ -144,7 +144,7 @@ export default function funnelStages(component) {
   // ------------------------------------------------------------------ the pool, at the wide top of the funnel
   const pl = state.pool;
   if (pl) {
-    const pb = el("div", "pool");
+    const pb = el("section", "pool");      // not a div, so the stages keep their nth-of-type numbers
     pb.appendChild(el("span", "pk", T("Pool")));
     pb.appendChild(el("span", "pq", T("Which assets the funnel starts from")));
     if (pl.help) { const h = el("span", "hlp", "?"); h.title = pl.help; h.setAttribute("aria-label", pl.help); pb.appendChild(h); }

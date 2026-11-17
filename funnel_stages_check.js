@@ -28,9 +28,9 @@ const { chromium, devices } = require("playwright");
 
     const n = (await page.$$(".stage")).length;
     check("the funnel's stages show, with the Set list beside them", n === 4 && await page.$(".lib") && await page.$(".split"), n + " stages");
-    const prov = await page.$("details.prov");
-    check("provided Sets are folded, Your Sets below", prov && !(await prov.evaluate((d) => d.open)) &&
+    check("provided Sets show as cards by trading idea, Your Sets below", (await page.$$(".lib details.idea")).length >= 3 &&
       (await page.$$eval(".lib .cat", (c) => c.map((x) => x.textContent))).includes("Your Sets"));
+    check("the pool sits at the top of the funnel", await page.$(".stages > section.pool:first-child"));
     const widths = await page.$$eval(".stage", (s) => s.map((x) => x.getBoundingClientRect().width));
     check("the stages narrow down the funnel", widths.every((w, i) => i === 0 || w < widths[i - 1]), widths.map(Math.round).join(" > "));
     check("an older Set shows ⬆", (await page.$$(".stage .pill.upd")).length === 1);
