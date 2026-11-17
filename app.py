@@ -6441,7 +6441,7 @@ def profile_card(profile: dict, email: str) -> str:
         if bio else ""
     )
     return (
-        "<div class='ang-card'>"
+        "<div class='ang-card' style='margin-bottom:10px;'>"
         "<div style='display:flex;gap:10px;align-items:center;'>"
         f"{face}<div><div class='ang-title' style='display:flex;align-items:center;gap:6px;'>"
         f"{safe_name}<span title='Social score {social_score}' "
