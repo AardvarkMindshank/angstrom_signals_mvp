@@ -393,7 +393,7 @@ def refresh_due(supabase, catalog: dict, api_key: str, crypto_ticker, budget: in
         try:
             (
                 supabase.table("asset_market")
-                .update({"liq_levels": record, "liq_updated_at": stored_at})
+                .update({"liq_levels": record, "liq_updated_at": stored_at}, returning="minimal")
                 .eq("asset_key", key)
                 .execute()
             )
