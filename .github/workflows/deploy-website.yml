@@ -1,0 +1,31 @@
+name: Deploy website
+# Copies the website/ folder to angstromsignals.com on HostGator by FTP. The FTP account only reaches the website folder.
+# Secrets (set in GitHub, never in code): FTP_SERVER, FTP_USERNAME, FTP_PASSWORD.
+on:
+  push:
+    branches: [main]
+    paths: ["website/**"]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Only connect and list the changes, upload nothing"
+        type: boolean
+        default: false
+concurrency: deploy-website
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          local-dir: ./website/
+          server-dir: ./
+          exclude: |
+            README.md
+          dry-run: ${{ github.event.inputs.dry_run == 'true' }}
+          log-level: standard
