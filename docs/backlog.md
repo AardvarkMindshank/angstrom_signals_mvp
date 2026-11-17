@@ -2,6 +2,15 @@
 
 Agreed work that is not built yet, so nothing gets forgotten between sessions. Newest first.
 
+## "When it turned No" study (asked 18 Nov 2026, for later)
+
+What followed only studies fresh Yes moments against ordinary No days. Add a second study beside it: fresh No moments
+(a No after several Yes candles in a row) against days the Set stayed Yes, to show whether the move tends to fade once
+a Set switches off (a possible exit cue). Same machinery and honesty rules as What followed (`what_followed.py`):
+comparable days, calendar-block resampling, Holm correction, consistency checks, and every window ending before the
+protected hold-out (30 Oct 2024). Needs one calibration run (as `what_followed_calibrate.py`) before any verdict is
+shown. Shown as a second line under each Set's What followed. Expect many "No clear difference" results.
+
 ## Plan agreed 15 Nov 2026: remaining product work and the road to a commercial launch
 
 Suggested order: Strategies step 2 spec and build (Claude) while the owner starts the slow outside steps (legal
