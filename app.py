@@ -6512,6 +6512,40 @@ if "profile" not in st.session_state:
 _settle_social_score()
 _set_language(account=True)
 
+
+def _chat_blocked() -> list[str]:
+    """Accounts this account blocked in chat (settings.blocked): their messages are hidden, and private messages
+    between the two are refused by the database."""
+    return _favourite_ids((prefs.get("settings") or {}).get("blocked"))
+
+
+def _chat_people_names(ids) -> dict:
+    """Display names for these accounts (favourites and blocked people), for the panel's lists."""
+    ids = [i for i in ids if i]
+    if not ids:
+        return {}
+    try:
+        rows = supabase.table("profiles").select("user_id, display_name").in_("user_id", ids).execute().data or []
+    except Exception:
+        return {}
+    return {str(r.get("user_id") or "").lower(): " ".join(str(r.get("display_name") or "").split())[:40] or "Member"
+            for r in rows}
+
+
+def _set_chat_block(person: str, name: str, on: bool) -> None:
+    """Block or unblock one account, and keep its name for the Account list."""
+    stored = prefs.setdefault("settings", {})
+    blocked = _chat_blocked()
+    names = dict(stored.get("blocked_names") or {}) if isinstance(stored.get("blocked_names"), dict) else {}
+    if on and person not in blocked:
+        blocked.append(person)
+        names[person] = " ".join(str(name or "Member").split())[:40] or "Member"
+    if not on:
+        blocked = [b for b in blocked if b != person]
+        names.pop(person, None)
+    save_account_settings({"blocked": blocked, "blocked_names": names})
+
+
 prefs = st.session_state.cloud_prefs
 alert_prefs = prefs.get("alerts", {})
 profile = st.session_state.profile
@@ -11376,39 +11410,6 @@ def _chat_action(raw):
     if token <= 0:
         return None
     return data
-
-
-def _chat_blocked() -> list[str]:
-    """Accounts this account blocked in chat (settings.blocked): their messages are hidden, and private messages
-    between the two are refused by the database."""
-    return _favourite_ids((prefs.get("settings") or {}).get("blocked"))
-
-
-def _chat_people_names(ids) -> dict:
-    """Display names for these accounts (favourites and blocked people), for the panel's lists."""
-    ids = [i for i in ids if i]
-    if not ids:
-        return {}
-    try:
-        rows = supabase.table("profiles").select("user_id, display_name").in_("user_id", ids).execute().data or []
-    except Exception:
-        return {}
-    return {str(r.get("user_id") or "").lower(): " ".join(str(r.get("display_name") or "").split())[:40] or "Member"
-            for r in rows}
-
-
-def _set_chat_block(person: str, name: str, on: bool) -> None:
-    """Block or unblock one account, and keep its name for the Account list."""
-    stored = prefs.setdefault("settings", {})
-    blocked = _chat_blocked()
-    names = dict(stored.get("blocked_names") or {}) if isinstance(stored.get("blocked_names"), dict) else {}
-    if on and person not in blocked:
-        blocked.append(person)
-        names[person] = " ".join(str(name or "Member").split())[:40] or "Member"
-    if not on:
-        blocked = [b for b in blocked if b != person]
-        names.pop(person, None)
-    save_account_settings({"blocked": blocked, "blocked_names": names})
 
 
 def _apply_chat_action(action) -> str:
