@@ -46,6 +46,17 @@ LEVERAGED = re.compile(r"(UP|DOWN|BULL|BEAR)USDT$")
 COLUMNS = ["open_time", "open", "high", "low", "close", "volume", "close_time", "quote_volume", "trades",
            "taker_base", "taker_quote", "ignore"]
 MIN_DAYS = 400
+GAP_DAYS = 10            # a longer break in trading splits a pair: Binance reused LUNA for Terra 2.0 after Terra fell
+
+
+def segments(d: pd.DataFrame) -> list[pd.DataFrame]:
+    """The pair's candles split at long breaks in trading, so a coin relisted under an old ticker is never joined
+    onto the coin that collapsed (LUNA, May 2022). The first part keeps the ticker; later parts get 2, 3..."""
+    if d.empty:
+        return []
+    dates = pd.to_datetime(d["date"])
+    cut = (dates.diff().dt.days >= GAP_DAYS).cumsum()
+    return [part for _, part in d.groupby(cut.values)]
 
 
 def list_pairs(session: requests.Session) -> list[str]:
@@ -148,18 +159,25 @@ def main() -> int:
     for pair, vol, seen in ranked:
         if len(chosen) >= args.top:
             break
-        d = history(session, pair, end)
-        if len(d) < MIN_DAYS:
-            print(f"  {pair}: only {len(d)} candles before the end, left out", flush=True)
+        whole = history(session, pair, end)
+        parts = segments(whole)
+        if not any(len(p) >= MIN_DAYS for p in parts):
+            print(f"  {pair}: only {len(whole)} candles before the end, left out", flush=True)
             continue
-        sym = pair[:-4] + "-USD"
-        d.to_csv(folder / f"{sym}.csv.gz", index=False)
-        delisted = pd.Timestamp(d["date"].iloc[-1]) < end - pd.Timedelta(days=5)
-        manifest["files"][sym] = {"pair": pair, "bars": len(d), "first": d["date"].iloc[0], "last": d["date"].iloc[-1],
-                                  "avg_volume_sampled": round(vol), "months_sampled": seen, "stopped_early": delisted}
-        chosen.append(sym)
-        print(f"{len(chosen):>3} {sym:<12} {d['date'].iloc[0]} to {d['date'].iloc[-1]}"
-              f"{'  (stopped trading before the end)' if delisted else ''}", flush=True)
+        for n, d in enumerate(parts):
+            if len(d) < MIN_DAYS or len(chosen) >= args.top:
+                continue
+            sym = pair[:-4] + ("" if n == 0 else str(n + 1)) + "-USD"
+            d.to_csv(folder / f"{sym}.csv.gz", index=False)
+            delisted = pd.Timestamp(d["date"].iloc[-1]) < end - pd.Timedelta(days=5)
+            manifest["files"][sym] = {"pair": pair, "bars": len(d), "first": d["date"].iloc[0],
+                                      "last": d["date"].iloc[-1], "avg_volume_sampled": round(vol),
+                                      "months_sampled": seen, "stopped_early": delisted,
+                                      "part": n + 1, "parts": len(parts)}
+            chosen.append(sym)
+            print(f"{len(chosen):>3} {sym:<12} {d['date'].iloc[0]} to {d['date'].iloc[-1]}"
+                  f"{'  (stopped trading before the end)' if delisted else ''}"
+                  f"{'  (a later listing under the same ticker)' if n else ''}", flush=True)
     (folder / "manifest.json").write_text(json.dumps(manifest, indent=1))
     stopped = [s for s, m in manifest["files"].items() if m["stopped_early"]]
     print(f"\n{len(chosen)} coins saved; {len(stopped)} stopped trading before the end: {', '.join(stopped)}")
