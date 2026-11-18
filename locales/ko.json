@@ -2236,5 +2236,7 @@
   "This Soundings run is still being checked. It will show here soon.": "이 Soundings 실행은 아직 확인 중입니다. 곧 여기에 표시됩니다.",
   "- **Equities**: a fixed random sample of {n} companies from the S&P 500 as it stood at the start of 2016, including companies that later left the index, so the results are not flattered by looking only at today's winners.": "- **주식**: 2016년 초 S&P 500에서 고정 무작위로 뽑은 {n}개 기업. 이후 지수에서 빠진 기업도 포함해, 오늘의 승자만 보고 결과가 좋아 보이지 않도록 했습니다.",
   "🏛️ Equities": "🏛️ 주식",
-  "✨ Starting the AI Navigator…": "✨ AI Navigator를 시작하는 중…"
+  "✨ Starting the AI Navigator…": "✨ AI Navigator를 시작하는 중…",
+  "Pin the panel beside the page: the page makes room for it and it stays open": "패널을 페이지 옆에 고정: 페이지가 공간을 내주고 패널은 열린 채로 유지됩니다",
+  "Drag to resize the panel": "끌어서 패널 크기 조절"
 }

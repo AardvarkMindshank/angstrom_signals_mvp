@@ -387,6 +387,9 @@ export default function(component) {
       // Angstrom Lattice open: a tab switch redraws it and for a moment it is nearly empty. It sits mid-page now
       // (under the chart), so a modest floor is enough to keep the page from jumping; a full screen left a gap.
       ".st-key-sec_lattice_panel [data-testid='stExpanderDetails']{min-height:60vh;}",
+      // A pinned right-hand panel (✨ AI Navigator, or social and chat) docks: the page makes room for it and follows
+      // its width, instead of sitting under it (ai_panel.py and the social panel set these widths).
+      "[data-testid='stMain']{padding-right:max(var(--ang-dock-ai,0px),var(--ang-dock-social,0px));transition:padding-right .22s ease;}",
       // Plotly's toolbar hints (Zoom, Pan, Reset...) show above the buttons, not under the mouse pointer.
       ".js-plotly-plot .plotly .modebar [data-title]:before,.js-plotly-plot .plotly .modebar [data-title]:after{top:auto !important;bottom:110% !important;}",
       ".js-plotly-plot .plotly .modebar [data-title]:before{border-bottom-color:transparent !important;border-top-color:#69738a !important;margin-bottom:-12px;}",
@@ -1884,6 +1887,10 @@ export default function(component) {
         const next = Math.min(max, Math.max(320, Math.round(px)));
         root.style.setProperty("--social-width", next + "px");
         window.socialPanelWidth = next;
+        if (window.socialStreamState && window.socialStreamState.open && window.socialStreamState.pinned
+            && window.innerWidth >= 900) {
+          document.documentElement.style.setProperty("--ang-dock-social", next + "px");
+        }
       };
       applyWidth(Number(window.socialPanelWidth) >= 320 ? Number(window.socialPanelWidth) : 420);
       const grip = root.querySelector(".width-grip");
@@ -2096,6 +2103,10 @@ export default function(component) {
         panel.classList.add("is-open");
         panel.classList.remove("is-pinned");
       }
+      // Pinned and open on a wide screen: the page makes room for the panel (docked), following its width.
+      const docked = !window.socialPopout && state.open && state.pinned && window.innerWidth >= 900;
+      document.documentElement.style.setProperty("--ang-dock-social",
+        docked ? (Number(window.socialPanelWidth) || 420) + "px" : "0px");
       window.socialApplyLayout(panel);
       panel.querySelectorAll(".layout-btn").forEach((button) => {
         const mine = (button.getAttribute("data-layout") || "") === state.layout;

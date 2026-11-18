@@ -20,6 +20,7 @@ from i18n import t
 
 _COMPONENT: list = []
 
+# The page makes room for a pinned right-hand panel (this one or social and chat): see app.py's --ang-dock-* rule.
 TIP = i18n.mark("✨ AI Navigator: ask anything about the app, the asset you have selected, your ideas, Groups, Sets "
                 "and funnels, or today's Tides. It explains; you do the clicks. No buy or sell calls.")
 
@@ -36,17 +37,30 @@ CSS = """
   cursor:pointer;box-shadow:-1px 1px 4px rgba(0,0,0,.08);transition:right .22s ease,background .15s ease;}
 #ang-ai-root .ai-edge svg{filter:drop-shadow(0 0 2px rgba(245,165,36,.35));}
 #ang-ai-root .ai-edge:hover{background:#f0f2f6;}
-#ang-ai-root .ai-panel{position:absolute;top:0;right:0;height:100%;width:min(460px,100vw);display:flex;
+#ang-ai-root .ai-panel{position:absolute;top:0;right:0;height:100%;width:min(var(--ai-width,460px),100vw);display:flex;
   flex-direction:column;background:var(--ang-section,#fff);color:inherit;box-shadow:-12px 0 40px rgba(17,24,39,.18);
   transform:translateX(100%);transition:transform .22s ease;pointer-events:auto;visibility:hidden;}
 #ang-ai-root.is-open .ai-panel{transform:none;visibility:visible;}
-#ang-ai-root.is-open .ai-edge{right:min(460px,calc(100vw - 2.25rem));}
+#ang-ai-root.is-open .ai-edge{right:min(var(--ai-width,460px),calc(100vw - 2.25rem));}
+#ang-ai-root .ai-grip{position:absolute;top:0;bottom:0;left:0;width:12px;z-index:3;cursor:col-resize;touch-action:none;
+  user-select:none;}
+#ang-ai-root .ai-grip::before{content:'';position:absolute;top:50%;left:3px;width:4px;height:48px;margin-top:-24px;
+  border-radius:999px;background:#9ca3af;}
+#ang-ai-root .ai-grip:hover::before,#ang-ai-root .ai-grip.is-dragging::before{background:#111827;}
+html.angstrom-night #ang-ai-root .ai-grip::before{background:#6b7280;}
+html.angstrom-night #ang-ai-root .ai-grip:hover::before,html.angstrom-night #ang-ai-root .ai-grip.is-dragging::before{background:#e5e7eb;}
+#ang-ai-root.is-width-dragging .ai-body iframe{pointer-events:none;}
+#ang-ai-root.is-width-dragging,#ang-ai-root.is-width-dragging *{cursor:col-resize !important;user-select:none !important;}
+#ang-ai-root .ai-head .ai-actions{margin-left:auto;display:flex;gap:6px;}
+#ang-ai-root .ai-head .ai-pin,#ang-ai-root .ai-head .ai-close{width:28px;height:28px;padding:0;display:inline-flex;
+  align-items:center;justify-content:center;background:rgba(127,127,127,.15);border:0;border-radius:999px;cursor:pointer;
+  color:inherit;}
+#ang-ai-root .ai-head .ai-pin.is-on{background:#111827;color:#fff;}
+html.angstrom-night #ang-ai-root .ai-head .ai-pin.is-on{background:#f3f4f6;color:#111827;}
 #ang-ai-root .ai-head{flex:none;display:flex;align-items:center;gap:8px;padding:10px 12px 8px 16px;
   border-bottom:1px solid rgba(127,127,127,.25);}
 #ang-ai-root .ai-head .ai-title{font-weight:650;font-size:1.05rem;display:flex;align-items:center;gap:6px;}
 #ang-ai-root .ai-head .ai-title svg{color:#f5a524;}
-#ang-ai-root .ai-head .ai-close{margin-left:auto;background:rgba(127,127,127,.15);border:0;border-radius:999px;
-  padding:6px 12px;font:inherit;font-weight:600;cursor:pointer;color:inherit;}
 #ang-ai-root .ai-body{flex:1;min-height:0;position:relative;}
 #ang-ai-root .ai-body iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent;}
 #ang-ai-root.social-open:not(.is-open) .ai-edge{display:none;}
@@ -54,6 +68,7 @@ html.angstrom-night #ang-ai-root .ai-edge{background:#262730;border-color:rgba(2
 html.angstrom-night #ang-ai-root .ai-edge:hover{background:#31333f;}
 @media (max-width: 640px){
   #ang-ai-root .ai-panel{width:100vw;}
+  #ang-ai-root .ai-grip,#ang-ai-root .ai-pin{display:none !important;}
   #ang-ai-root.is-open .ai-edge{display:none;}
 }
 """
@@ -62,7 +77,11 @@ JS = """
 export default function(component) {
   const { data } = component;
   const d = data || {};
-  const words = { tip: d.tip || "AI Navigator", title: T("✨ AI Navigator").replace(/^✨\\s*/, ""), close: T("Close") };
+  const words = { tip: d.tip || "AI Navigator", title: T("✨ AI Navigator").replace(/^✨\\s*/, ""), close: T("Close"),
+                  pin: T("Pin the panel beside the page: the page makes room for it and it stays open"),
+                  resize: T("Drag to resize the panel") };
+  const PIN_SVG = "<svg viewBox='0 0 24 24' width='15' height='15' aria-hidden='true' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M9 4h6l-1 6 3 3H7l3-3z'/><path d='M12 13v7'/></svg>";
+  const CLOSE_SVG = "<svg viewBox='0 0 24 24' width='15' height='15' aria-hidden='true' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M6 6l12 12'/><path d='M18 6 6 18'/></svg>";
   let root = document.getElementById("ang-ai-root");
   if (!root) {
     root = document.createElement("div");
@@ -78,17 +97,84 @@ export default function(component) {
     head.className = "ai-head";
     const title = document.createElement("div");
     title.className = "ai-title";
+    const actions = document.createElement("div");
+    actions.className = "ai-actions";
+    const pin = document.createElement("button");
+    pin.type = "button";
+    pin.className = "ai-pin";
+    pin.innerHTML = PIN_SVG;
     const close = document.createElement("button");
     close.type = "button";
     close.className = "ai-close";
-    head.append(title, close);
+    close.innerHTML = CLOSE_SVG;
+    actions.append(pin, close);
+    head.append(title, actions);
+    const grip = document.createElement("div");
+    grip.className = "ai-grip";
+    grip.setAttribute("role", "separator");
+    grip.setAttribute("aria-orientation", "vertical");
     const body = document.createElement("div");
     body.className = "ai-body";
-    panel.append(head, body);
+    panel.append(grip, head, body);
     root.append(panel, edge);
     document.body.appendChild(root);
     edge.addEventListener("click", () => (root.classList.contains("is-open") ? window.angstromCloseAI() : window.angstromOpenAI()));
     close.addEventListener("click", () => window.angstromCloseAI());
+    // Pinned (the default, as before): it stays open while you use the page. Unpinned: a click on the page
+    // outside it closes it, as the social panel does.
+    const store = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } };
+    root.__pinned = store("angAiPinned") !== "0";
+    const paintPin = () => {
+      pin.classList.toggle("is-on", root.__pinned);
+      pin.setAttribute("aria-pressed", root.__pinned ? "true" : "false");
+    };
+    // Pinned and open on a wide screen: the page makes room for it (docked) instead of sitting under it.
+    root.__dock = () => {
+      const on = root.__pinned && root.classList.contains("is-open") && window.innerWidth >= 900;
+      const w = getComputedStyle(root).getPropertyValue("--ai-width").trim() || "460px";
+      document.documentElement.style.setProperty("--ang-dock-ai", on ? w : "0px");
+    };
+    paintPin();
+    pin.addEventListener("click", () => {
+      root.__pinned = !root.__pinned; store("angAiPinned", root.__pinned ? "1" : "0"); paintPin(); root.__dock();
+    });
+    window.addEventListener("resize", () => root.__dock());
+    document.addEventListener("pointerdown", (e) => {
+      if (root.__pinned || !root.classList.contains("is-open")) return;
+      if (panel.contains(e.target) || edge.contains(e.target)) return;
+      window.angstromCloseAI();
+    });
+    // Width: drag the grip on its left edge (320 to 900 px), remembered in this browser.
+    const applyWidth = (px) => {
+      const max = Math.max(320, Math.min(900, window.innerWidth - 36));
+      const next = Math.min(max, Math.max(320, Math.round(px)));
+      root.style.setProperty("--ai-width", next + "px");
+      if (root.__dock) root.__dock();
+      return next;
+    };
+    const saved = Number(store("angAiWidth"));
+    applyWidth(saved >= 320 ? saved : 460);
+    grip.addEventListener("pointerdown", (event) => {
+      if (event.button !== 0) return;
+      event.preventDefault();
+      root.classList.add("is-width-dragging");
+      grip.classList.add("is-dragging");
+      try { grip.setPointerCapture(event.pointerId); } catch (error) {}
+      let last = saved >= 320 ? saved : 460;
+      const move = (m) => { last = applyWidth(window.innerWidth - m.clientX); };
+      const stop = (end) => {
+        root.classList.remove("is-width-dragging");
+        grip.classList.remove("is-dragging");
+        window.removeEventListener("pointermove", move);
+        window.removeEventListener("pointerup", stop);
+        window.removeEventListener("pointercancel", stop);
+        try { grip.releasePointerCapture(end.pointerId); } catch (error) {}
+        store("angAiWidth", String(last));
+      };
+      window.addEventListener("pointermove", move);
+      window.addEventListener("pointerup", stop);
+      window.addEventListener("pointercancel", stop);
+    });
   }
   // Words every run: the panel outlives a language switch.
   const edge = root.querySelector(".ai-edge");
@@ -96,7 +182,11 @@ export default function(component) {
   edge.setAttribute("aria-label", words.tip);
   root.querySelector(".ai-title").innerHTML = (d.sparkle || "✨") + "<span></span>";
   root.querySelector(".ai-title span").textContent = words.title;
-  root.querySelector(".ai-close").textContent = "✕ " + words.close;
+  root.querySelector(".ai-close").title = words.close;
+  root.querySelector(".ai-close").setAttribute("aria-label", words.close);
+  root.querySelector(".ai-pin").title = words.pin;
+  root.querySelector(".ai-pin").setAttribute("aria-label", words.pin);
+  root.querySelector(".ai-grip").title = words.resize;
   root.querySelector(".ai-panel").setAttribute("aria-label", words.title);
 
   const address = (from, ask) => window.location.origin + window.location.pathname + "?view=advisor&inpanel=1&from="
@@ -121,8 +211,9 @@ export default function(component) {
       if (window.renderSocialStream) window.renderSocialStream();
     }
     root.classList.add("is-open");
+    if (root.__dock) root.__dock();
   };
-  window.angstromCloseAI = () => root.classList.remove("is-open");
+  window.angstromCloseAI = () => { root.classList.remove("is-open"); if (root.__dock) root.__dock(); };
 
   // Opening social and chat closes the AI panel. The social panel can be rebuilt, so watch whichever is there now.
   const stream = document.getElementById("social-stream-root");

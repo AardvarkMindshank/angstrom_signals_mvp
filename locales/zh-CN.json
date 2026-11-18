@@ -2236,5 +2236,7 @@
   "This Soundings run is still being checked. It will show here soon.": "此次 Soundings 运行仍在检查中，很快会显示在这里。",
   "- **Equities**: a fixed random sample of {n} companies from the S&P 500 as it stood at the start of 2016, including companies that later left the index, so the results are not flattered by looking only at today's winners.": "- **股票**：从 2016 年初的标普 500 中固定随机抽取的 {n} 家公司，包括后来退出指数的公司，以免只看今天的赢家而美化结果。",
   "🏛️ Equities": "🏛️ 股票",
-  "✨ Starting the AI Navigator…": "✨ 正在启动 AI Navigator…"
+  "✨ Starting the AI Navigator…": "✨ 正在启动 AI Navigator…",
+  "Pin the panel beside the page: the page makes room for it and it stays open": "将面板固定在页面旁：页面会为它让出空间，面板保持打开",
+  "Drag to resize the panel": "拖动以调整面板大小"
 }

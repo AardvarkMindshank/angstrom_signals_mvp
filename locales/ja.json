@@ -2236,5 +2236,7 @@
   "This Soundings run is still being checked. It will show here soon.": "このSoundingsの実行はまだ確認中です。まもなくここに表示されます。",
   "- **Equities**: a fixed random sample of {n} companies from the S&P 500 as it stood at the start of 2016, including companies that later left the index, so the results are not flattered by looking only at today's winners.": "- **株式**：2016年初めのS&P 500から固定の無作為抽出で選んだ{n}社。その後指数から外れた企業も含めているので、今日の勝ち組だけを見て結果がよく見えることはありません。",
   "🏛️ Equities": "🏛️ 株式",
-  "✨ Starting the AI Navigator…": "✨ AI Navigatorを起動しています…"
+  "✨ Starting the AI Navigator…": "✨ AI Navigatorを起動しています…",
+  "Pin the panel beside the page: the page makes room for it and it stays open": "パネルをページの横に固定：ページが場所を空け、パネルは開いたままになります",
+  "Drag to resize the panel": "ドラッグしてパネルの幅を変更"
 }

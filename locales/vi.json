@@ -2236,5 +2236,7 @@
   "This Soundings run is still being checked. It will show here soon.": "Lần chạy Soundings này vẫn đang được kiểm tra. Sẽ sớm hiển thị ở đây.",
   "- **Equities**: a fixed random sample of {n} companies from the S&P 500 as it stood at the start of 2016, including companies that later left the index, so the results are not flattered by looking only at today's winners.": "- **Cổ phiếu**: mẫu ngẫu nhiên cố định gồm {n} công ty từ S&P 500 như đầu năm 2016, gồm cả những công ty sau đó rời chỉ số, để kết quả không đẹp lên do chỉ nhìn những người thắng hôm nay.",
   "🏛️ Equities": "🏛️ Cổ phiếu",
-  "✨ Starting the AI Navigator…": "✨ Đang khởi động AI Navigator…"
+  "✨ Starting the AI Navigator…": "✨ Đang khởi động AI Navigator…",
+  "Pin the panel beside the page: the page makes room for it and it stays open": "Ghim bảng bên cạnh trang: trang sẽ chừa chỗ và bảng luôn mở",
+  "Drag to resize the panel": "Kéo để đổi kích thước bảng"
 }

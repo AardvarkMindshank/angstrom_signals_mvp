@@ -2236,5 +2236,7 @@
   "This Soundings run is still being checked. It will show here soon.": "Cette exécution de Soundings est encore en cours de vérification. Elle apparaîtra bientôt ici.",
   "- **Equities**: a fixed random sample of {n} companies from the S&P 500 as it stood at the start of 2016, including companies that later left the index, so the results are not flattered by looking only at today's winners.": "- **Actions** : un échantillon aléatoire fixe de {n} sociétés du S&P 500 tel qu'il était début 2016, y compris celles qui ont quitté l'indice depuis, pour que les résultats ne soient pas embellis en ne regardant que les gagnantes d'aujourd'hui.",
   "🏛️ Equities": "🏛️ Actions",
-  "✨ Starting the AI Navigator…": "✨ Démarrage de l'AI Navigator…"
+  "✨ Starting the AI Navigator…": "✨ Démarrage de l'AI Navigator…",
+  "Pin the panel beside the page: the page makes room for it and it stays open": "Épingler le panneau à côté de la page : la page lui laisse de la place et il reste ouvert",
+  "Drag to resize the panel": "Faites glisser pour redimensionner le panneau"
 }
