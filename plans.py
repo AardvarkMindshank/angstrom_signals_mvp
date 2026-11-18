@@ -51,6 +51,7 @@ SIGNAL_PLAN = {
     "volume.heavy_candle": "plus", "macd.level": "plus", "macd.acceleration": "plus", "obv.balance": "plus",
     "volume.cmf": "plus", "structure.swings": "plus", "shape.classic": "plus", "regime.state": "plus",
     "volatility.atr_trend": "plus", "regime.observation": "plus", "candle.shape": "plus", "move.seven_day": "plus", "momentum.direction": "plus",
+    "tides.tide": "plus", "tides.current": "plus", "tides.storm": "plus",
     # Pro
     "osc.stoch_rsi": "pro", "osc.stoch_ohlc4": "pro", "structure.breaks": "pro",
     "divergence.mtf": "pro", "ta.divergence.rsi": "pro", "ta.divergence.macd": "pro", "osc.wavetrend": "pro",

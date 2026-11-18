@@ -13,6 +13,8 @@ Data keys a definition can require:
     "capital_flows"  stored capital-flow observations (append-only, with first-seen times)
     "sentiment"      stored headline-sentiment observations (sentiment_history: score, recorded_at, model,
                      coverage, and first_seen_at once that column exists)
+    "tides"          the daily Tides readings (tides_store.py: the saved history, then the daily record), each row
+                     with recorded_at and first_seen_at, plus the scheduled major release days (Fed, CPI, jobs)
     "options"        stored options max-pain snapshots (options_pain: one row per expiry per snapshot, with
                      recorded_at, spot, max_pain, open interest and first_seen_at)
 """
@@ -48,7 +50,8 @@ class DataContext:
 
     def __init__(self, kind: str, asset_id: str, *, candle_loader: Callable | None = None,
                  derivatives_loader: Callable | None = None, flows_loader: Callable | None = None, now=None,
-                 sentiment_loader: Callable | None = None, options_loader: Callable | None = None):
+                 sentiment_loader: Callable | None = None, options_loader: Callable | None = None,
+                 tides_loader: Callable | None = None):
         self.kind = kind
         self.asset_id = asset_id
         self.now = pd.Timestamp(now) if now is not None else pd.Timestamp.now(tz="UTC")
@@ -59,6 +62,7 @@ class DataContext:
         self._flows_loader = flows_loader
         self._sentiment_loader = sentiment_loader
         self._options_loader = options_loader
+        self._tides_loader = tides_loader
         self._memo: dict = {}
 
     @property
@@ -121,6 +125,19 @@ class DataContext:
                     self._memo[key] = {"error": f"Could not load options snapshots ({exc})"}
         return self._memo[key]
 
+    def tides(self) -> dict:
+        if "tides" not in self._memo:
+            try:
+                if self._tides_loader is None:
+                    import tides_store
+
+                    self._memo["tides"] = tides_store.load()
+                else:
+                    self._memo["tides"] = self._tides_loader()
+            except Exception as exc:
+                self._memo["tides"] = {"error": f"Could not load Tides readings ({exc})"}
+        return self._memo["tides"]
+
     def fingerprint(self, requires: tuple, timeframe: str) -> str:
         """Changes when the data a signal depends on changes, so cached results expire correctly."""
         parts = []
@@ -140,6 +157,9 @@ class DataContext:
             rows = (self.options(key).get("rows") or []) if key else []
             parts.append(f"options:{key}:{len(rows)}:{max((str(r.get('recorded_at')) for r in rows), default='')}"
                          f":{self.now.value}")
+        if "tides" in requires:
+            rows = self.tides().get("rows") or []
+            parts.append(f"tides:{len(rows)}:{rows[-1].get('first_seen_at') if rows else ''}:{self.now.value}")
         return "|".join(parts)
 
 

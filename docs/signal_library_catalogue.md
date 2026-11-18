@@ -43,7 +43,7 @@ Generated from the registry (`signal_library.REGISTRY.catalogue()`) by `signal_c
 - **Timeframes:** 1D · **Data:** candles
 - **Parameters:** `set` = crypto (timeframes: crypto = daily, 12h, 4h, 1h; equity = weekly, daily, 4h, 1h; intraday = 4h, 1h, 30m, 15m); `oscillator` = wavetrend (the momentum line compared with price swings); `active_bars` = 10 (candles a confirmed divergence counts as recent)
 - **Calculation:** On each timeframe of the set, at its last closed candle: confirmed divergences between consecutive price swings (5 candles each side) and the oscillator's swings (WaveTrend WT2, or RSI 14), as the library's RSI divergence finds them; one counts when it was confirmed within the last `active_bars` candles and not invalidated. bullish_count = timeframes with a regular or hidden bullish one; bearish_count the same for bearish; regular_bullish_count, hidden_bullish_count, regular_bearish_count and hidden_bearish_count split them; timeframes_read = timeframes that could be read. A timeframe counts once per kind however many it has.
-- **Interpretation:** How many timeframes show momentum disagreeing with price at once, the multi-timeframe divergence Drew looks for. Regular divergence hints at exhaustion, hidden divergence at continuation. Descriptive; not a trade signal by itself.
+- **Interpretation:** How many timeframes show momentum disagreeing with price at once, the multi-timeframe divergence many traders look for. Regular divergence hints at exhaustion, hidden divergence at continuation. Descriptive; not a trade signal by itself.
 - **Limitations:** Swings are confirmed 5 candles late by design. A timeframe that cannot be read is left out of timeframes_read, never counted as no divergence. In strong trends regular divergence can repeat many times before any turn.
 
 ### MACD histogram — `macd.acceleration@1`
@@ -85,7 +85,7 @@ Generated from the registry (`signal_library.REGISTRY.catalogue()`) by `signal_c
 - **Timeframes:** 15m, 30m, 1h, 4h, 12h, 1D, 1W · **Data:** candles
 - **Parameters:** `rsi_length` = 14 (RSI length); `stoch_length` = 14 (candles in the RSI's high-low range); `smooth_k` = 3 (smoothing of %K); `smooth_d` = 3 (%D: the average of %K); `high` = 80 (both curves at or above this: both high); `low` = 20 (both curves at or below this: both low); `lookback` = 50 (candles searched for each marker; one not found reads this number)
 - **Calculation:** RSI (Wilder) of OHLC4 = (open + high + low + close) / 4; its position in its own range over stoch_length candles, 0 to 100, smoothed into %K (SMA smooth_k) and %D (SMA of %K, smooth_d). pair = both_high when %K and %D are both at or above `high`, both_low when both at or below `low`, else apart. cross = %K crossing %D on the last closed candle. Candles ago (0 = the last closed candle, `lookback` = none in the window) for: any cross up, any cross down, a cross up while both were low (on the cross candle or the one before), a cross down while both were high.
-- **Interpretation:** Where the two Stoch RSI curves sit and when they last crossed, the way Drew reads them: a cross up from both low, or down from both high, then a look up the chart for a printed dot. Descriptive; not a forecast.
+- **Interpretation:** Where the two Stoch RSI curves sit and when they last crossed, the way many traders read them: a cross up from both low, or down from both high, then a look up the chart for a printed dot. Descriptive; not a forecast.
 - **Limitations:** Pinned near 0 or 100 in strong trends, where crosses repeat. Needs about 40 closed candles.
 
 ### WaveTrend momentum (Sonar) — `osc.wavetrend@1`
@@ -210,6 +210,32 @@ Generated from the registry (`signal_library.REGISTRY.catalogue()`) by `signal_c
 - **Calculation:** ADX(14) >= 25 trending, < 20 ranging, otherwise transitional; a new state is accepted after it holds for `confirm` closed candles in a row. Same rules as the existing regime feature.
 - **Interpretation:** Whether the asset is trending or ranging on this timeframe, with the evidence behind it.
 - **Limitations:** ADX thresholds are conventions; ADX says how strong a move is, not which way.
+
+### Tides: one current — `tides.current@1`
+
+- **Category:** regime · **Output:** observation · **Unit:** label · **Scope:** asset
+- **Timeframes:** 1D · **Data:** tides
+- **Parameters:** `current` = dollar (Which of the twelve currents to read)
+- **Calculation:** One current from the day's Tides record: its direction (the 30-day change over its typical size in the past 5 years: rising above +0.5, falling below -0.5, else flat), its level against its own last 5 years of daily readings (0-100: very low under 20, low, normal, high, very high from 80), its push on risk (sign x tanh of that momentum, -100..+100; helping above +20, hurting below -20) and its latest value.
+- **Interpretation:** Which way one macro input is moving and how unusual its level is. Descriptive.
+- **Limitations:** Market-wide, not about this asset. Daily: reflects the previous US close. The history to Oct 2024 is reconstructed from data that is not revised later (closes, yields, unadjusted CPI), each value dated when it was first known; afterwards each day is recorded as it happens. The Tide's rules are fixed in advance, not fitted to returns. Few Tide turns per year, so studies of it rest on few spells.
+
+### Tides: storm warning — `tides.storm@1`
+
+- **Category:** regime · **Output:** observation · **Unit:** days · **Scope:** asset
+- **Timeframes:** 1D · **Data:** tides
+- **Parameters:** `days` = 2 (A warning when a major release is this many days away or fewer)
+- **Calculation:** Days from this close to the next scheduled major release (Fed rate decision, CPI inflation, jobs report; release days from the Fed and BLS schedules), for each kind and the nearest, and a warning when the nearest is within the chosen number of days. A release on the day of this close has already happened by the close and counts as 'today'.
+- **Interpretation:** That a scheduled market-moving release is close. It says nothing about what it will show.
+- **Limitations:** Market-wide, not about this asset. Daily: reflects the previous US close. The history to Oct 2024 is reconstructed from data that is not revised later (closes, yields, unadjusted CPI), each value dated when it was first known; afterwards each day is recorded as it happens. The Tide's rules are fixed in advance, not fitted to returns. Few Tide turns per year, so studies of it rest on few spells.
+
+### Tides: tide and sea state — `tides.tide@1`
+
+- **Category:** regime · **Output:** observation · **Unit:** label · **Scope:** asset
+- **Timeframes:** 1D · **Data:** tides
+- **Calculation:** The day's Tides record (tides.py rules): the Tide (coming in above +0.20, going out below -0.20, else slack; a new label counts after 5 closes), its score on -100..+100, days since it last turned, the sea state (calm, moderate, rough, storm: VIX and Bitcoin volatility against their 5 years), and the wind for this asset's market (crypto or equity: the average push of the currents declared for it; tailwind above +20, headwind below -20).
+- **Interpretation:** Whether broad conditions support risk-taking, how turbulent they are, and whether they push for or against this market. Descriptive; it does not forecast.
+- **Limitations:** Market-wide, not about this asset. Daily: reflects the previous US close. The history to Oct 2024 is reconstructed from data that is not revised later (closes, yields, unadjusted CPI), each value dated when it was first known; afterwards each day is recorded as it happens. The Tide's rules are fixed in advance, not fitted to returns. Few Tide turns per year, so studies of it rest on few spells.
 
 ### Volatility vs its average (ATR) — `volatility.atr_trend@1`
 

@@ -75,7 +75,8 @@ def catalogue() -> list[dict]:
                 kind, label = RECENCY, label.removesuffix(" ago")
             operands.append({"field": path, "type": kind, "label": label, "scale": fields.scale_text(desc),
                              "labels": desc.get("labels") or [], "range": desc.get("range")})
-        badge = (t("History from Nov 2026") if ("sentiment" in d.requires or "options" in d.requires) else "")
+        badge = (t("History from Nov 2026") if ("sentiment" in d.requires or "options" in d.requires) else
+                 t("Market-wide") if "tides" in d.requires else "")
         out.append({
             "id": d.id, "version": d.version, "name": t(d.name), "category": d.category,
             "category_label": t(CATEGORY.get(d.category, d.category.title())), "icon": CATEGORY_ICON.get(d.category, "trend"),

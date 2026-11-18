@@ -33,6 +33,7 @@ def datasets(prices: str | None, days: int):
     out += cf.synthetic_flows(seed=5)
     out += cf.synthetic_sentiment(seed=9)
     out += cf.synthetic_options(seed=11)
+    out += cf.synthetic_tides(seed=13)
     if prices and Path(prices, "manifest.json").exists():
         out += cf.development_datasets(prices)
     return out

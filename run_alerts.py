@@ -391,6 +391,14 @@ def run_background_checks() -> None:
     except Exception as exc:
         print(f"Tides skipped: {str(exc)[:160]}")
     try:
+        # Tides daily readings for Sets and funnels: one row per finished US business day. Tried twice an hour.
+        if datetime.now(timezone.utc).minute % 30 < 5:
+            import tides_history
+
+            tides_history.refresh_daily(supabase)
+    except Exception as exc:
+        print(f"Tides daily skipped: {str(exc)[:160]}")
+    try:
         # Options max-pain snapshots (Bitcoin, Ethereum, watched and funnel equities): the history behind the max pain
         # signal. Collected only; never holds up the alert pass.
         from options_snapshots import refresh_due as refresh_options

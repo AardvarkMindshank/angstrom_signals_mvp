@@ -45,6 +45,8 @@ FAMILIES = (
         (mark("Headline sentiment"), mark("What the news is saying"), ["sentiment.asset", "sentiment.market"]),
         (mark("Regime and volatility"), mark("Trending or ranging, calm or wild"),
          ["regime.state", "volatility.atr_trend", "regime.observation"]),
+        (mark("Tides"), mark("The macro backdrop: the Tide, one current, or a big release coming"),
+         ["tides.tide", "tides.current", "tides.storm"]),
     ]),
     ("positioning", mark("Positioning and flows"), mark("Where are other traders betting, and where is money moving?"), [
         (mark("Positioning and flows"), mark("Options, leverage and fund flows"),

@@ -13,3 +13,4 @@ from . import signals_oscillators  # noqa: F401,E402  (WaveTrend, money flow, St
 from . import signals_options  # noqa: F401,E402  (options max pain, from stored snapshots)
 from . import signals_sonar  # noqa: F401,E402  (Sonar markers on the price chart, Stoch RSI pair)
 from . import signals_shapes  # noqa: F401,E402  (chart shapes: head and shoulders, double tops and bottoms)
+from . import signals_tides  # noqa: F401,E402  (Tides: the tide, one current, storm warnings)

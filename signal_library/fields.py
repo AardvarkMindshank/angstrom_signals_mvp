@@ -161,6 +161,20 @@ FIELDS: dict[str, dict[str, dict]] = {
     "flows.btc_etf@1": {"latest_net_flow_usd": num("US$"), "sum_5_sessions_usd": num("US$"),
                         "sum_20_sessions_usd": num("US$"), "change_in_5_session_sum_usd": num("US$"),
                         "sessions_in_window": num("sessions", 0)},
+    # ---- 🌊 Tides (signals_tides.py): market-wide, the same for every asset of a market on a day
+    "tides.tide@1": {"tide": label("in", "slack", "out"), "tide_score": num("Tide score", -100, 100),
+                     "days_since_turn": num("days since the Tide turned", 0), "sea": label("calm", "moderate", "rough", "storm"),
+                     "sea_score": num("sea-state score", 0, 100), "wind": label("tailwind", "neither", "headwind"),
+                     "wind_score": num("wind score", -100, 100), "tide_unconfirmed": _other("label"),
+                     "turned_on": _other("date"), "market": _other("label"), "as_of": _other("date")},
+    "tides.current@1": {"direction": label("rising", "flat", "falling"),
+                        "level": label("very_low", "low", "normal", "high", "very_high"),
+                        "level_score": num("level against its own 5 years", 0, 100),
+                        "effect": label("helping", "neutral", "hurting"), "push": num("push on risk", -100, 100),
+                        "value": num("the current's own units"), "current": _other("label"), "as_of": _other("date")},
+    "tides.storm@1": {"warning": YES_NO, "days_to_next": num("days to the next major release", 0),
+                      "next": label("fed", "cpi", "jobs"), "days_to_fed": num("days", 0), "days_to_cpi": num("days", 0),
+                      "days_to_jobs": num("days", 0), "released_today": YES_NO, "today": _other("label")},
 }
 
 

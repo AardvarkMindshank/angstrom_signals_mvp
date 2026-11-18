@@ -48,5 +48,13 @@ def test_every_reading_is_a_real_signal_field():
 
     cat = {s["id"]: {o["field"] for o in s["operands"]} for s in le.catalogue()}
     for sig, field, _, _ in so.READINGS:
+        sig = sig.partition(":")[0]          # tides.current:dollar is tides.current with a setting
         assert sig in cat, sig
         assert field in cat[sig] or field.replace(".0.", ".*.") in cat[sig] or field == "", (sig, field)
+
+
+def test_tides_columns_read_the_saved_history():
+    got = so.tides_columns(pd.DatetimeIndex(["2020-03-16", "2022-06-15"], tz="UTC"))
+    assert got.loc["2020-03-16", "tides.tide|tide"] == "out"
+    assert got.loc["2020-03-16", "tides.tide|sea"] == "storm"
+    assert got.loc["2022-06-15", "tides.current:dollar|direction"] in ("rising", "flat", "falling")

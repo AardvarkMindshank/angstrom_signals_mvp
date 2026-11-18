@@ -46,12 +46,13 @@ def table_step(args) -> int:
 
 
 def _load(prices: str, out: str) -> dict:
-    per = {}
+    per, tide_cache = {}, {}
     for f in sorted((Path(out) / "readings").glob("*.csv.gz")):
         sym = f.name[:-7]
         table = pd.read_csv(f, index_col="date", parse_dates=["date"])
         if table.index.tz is None:
             table.index = table.index.tz_localize("UTC")
+        table = so.with_tides(table, "crypto", tide_cache)
         per[sym] = (table, so.moves(wr.raw(prices, sym)))
     return per
 
@@ -71,6 +72,7 @@ def mine_step(args) -> int:
               "targets": {}}
     lines = []
     confirm_panels = {k: so.panel(per, k, start=so.SEARCH_END + pd.Timedelta(days=1)) for k in ("rise", "fall")}
+    whole_panels = {k: so.panel(per, k) for k in ("rise", "fall")}
     for target in ("rise", "fall"):
         t0 = time.time()
         search_p = so.panel(per, target, end=so.SEARCH_END)
@@ -80,13 +82,20 @@ def mine_step(args) -> int:
         leads = so.themes(survivors)
         checked = so.confirm(confirm_p, leads, target)
         so.opposite(confirm_panels["fall" if target == "rise" else "rise"], checked, "fall" if target == "rise" else "rise")
+        so.tide_split(whole_panels[target], checked, target)
         tested = len([r for r in found if not r.get("screened_out")])
+        tides_base = {st: {"days": int((whole_panels[target].get(f"Tide: {st}", pd.Series(dtype=float)) == 1).sum()),
+                           "rate": float(whole_panels[target].loc[whole_panels[target][f"Tide: {st}"] == 1, target].mean())
+                           if f"Tide: {st}" in whole_panels[target] else None}
+                      for st in so.TIDE_STATES}
         report["targets"][target] = {
+            "tide_base": tides_base,
             "base_rate_search": float(search_p[target].mean()), "base_rate_confirm": float(confirm_p[target].mean()),
             "days_search": int(len(search_p)), "days_confirm": int(len(confirm_p)),
             "looked_at": len(found), "tested": tested, "search_survivors": len(survivors), "themes": len(leads),
             "results": [{**_short(r), "confirm": r["confirm"], "opposite": r.get("opposite"), "confirmed": r["confirmed"],
-                         "verdict": r["verdict"], "theme": r.get("theme", [])[:12], "theme_size": len(r.get("theme", []))}
+                         "verdict": r["verdict"], "theme": r.get("theme", [])[:12], "theme_size": len(r.get("theme", [])),
+                         "tide_split": r.get("tide_split")}
                         for r in checked],
             "top_search": [_short(r) for r in sorted(found, key=lambda r: -(r.get("lift") or 0))
                            if not r.get("screened_out") and r.get("days", 0) >= so.MIN_DAYS][:40],

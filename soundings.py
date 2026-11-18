@@ -112,21 +112,74 @@ READINGS = [
     ("shape.classic", "death_cross_ago", ("recent", 5), "Death cross"),
     ("shape.classic", "double_bottom_stage", ("label",), "Double bottom"),
     ("shape.classic", "double_top_stage", ("label",), "Double top"),
+    # 🌊 Tides (18 Nov 2026): market-wide, the same for every coin on a day (signals_tides.py)
+    ("tides.tide", "tide", ("label",), "Tide"),
+    ("tides.tide", "sea", ("label",), "Sea state"),
+    ("tides.tide", "wind", ("label",), "Wind for crypto"),
+    ("tides.storm", "warning", ("yes",), "Major release within 2 days"),
+    ("tides.current:dollar", "direction", ("label",), "US dollar"),
+    ("tides.current:long_rates", "direction", ("label",), "Long rates"),
+    ("tides.current:credit", "direction", ("label",), "Credit"),
+    ("tides.current:fear", "direction", ("label",), "Fear (VIX)"),
 ]
+TIDES = [r for r in READINGS if r[0].startswith("tides.")]
+TIDE_STATES = ("in", "slack", "out")
 
 
 def column(sig: str, field: str) -> str:
     return f"{sig}|{field}"
 
 
-def signal_refs():
+def signal_refs(readings=None):
+    """One reference per reading's signal; "tides.current:dollar" is tides.current with current=dollar."""
     import signal_library as sl
 
     refs = {}
-    for sig in dict.fromkeys(r[0] for r in READINGS):
-        d = [x for x in sl.REGISTRY.latest() if x.id == sig][0]
-        refs[sig] = sl.SignalRef.make(d, "1D")
+    for sig in dict.fromkeys(r[0] for r in (readings or READINGS)):
+        sid, _, choice = sig.partition(":")
+        d = [x for x in sl.REGISTRY.latest() if x.id == sid][0]
+        refs[sig] = sl.SignalRef.make(d, "1D", **({"current": choice} if choice else {}))
     return refs
+
+
+def tides_columns(days, kind: str = "crypto") -> pd.DataFrame:
+    """The Tides readings at each daily close (market-wide: worked out once per day, not per coin). Same context
+    time as set_history.context_at (the day's close plus 10 minutes), reading the saved Tides history."""
+    import signal_library as sl
+    from signal_groups.rules import resolve
+
+    refs = signal_refs(TIDES)
+    rows, index = [], []
+    for day in pd.DatetimeIndex(days).unique().sort_values():
+        stamp = day.tz_localize("UTC") if day.tzinfo is None else day
+        ctx = sl.DataContext(kind, "market", now=stamp + pd.Timedelta(days=1, minutes=10))
+        results = sl.evaluate(list(refs.values()), ctx)
+        row = {}
+        for sig, field, _, _ in TIDES:
+            res = results.get(refs[sig].instance_key)
+            value = None
+            if res is not None and res.status in ("ok", "stale"):
+                found, x = resolve(res.value, field or None)
+                value = x if found else None
+            row[column(sig, field)] = value
+        rows.append(row)
+        index.append(day)
+    return pd.DataFrame(rows, index=pd.DatetimeIndex(index))
+
+
+def with_tides(table: pd.DataFrame, kind: str = "crypto", cache: dict | None = None) -> pd.DataFrame:
+    """A readings table with the Tides columns added where it lacks them (tables saved before 18 Nov 2026)."""
+    need = [column(sig, field) for sig, field, _, _ in TIDES if column(sig, field) not in table]
+    if not need:
+        return table
+    cache = {} if cache is None else cache
+    missing = [d for d in table.index if d not in cache]
+    if missing:
+        got = tides_columns(missing, kind)
+        for d, row in got.iterrows():
+            cache[d] = row.to_dict()
+    extra = pd.DataFrame([cache[d] for d in table.index], index=table.index)
+    return pd.concat([table, extra[need]], axis=1)
 
 
 def readings_table(frame: pd.DataFrame, kind: str, symbol: str, start=None, warmup: int = 220) -> pd.DataFrame:
@@ -412,6 +465,30 @@ def opposite(p_other: pd.DataFrame, results: list[dict], other: str, runs: int =
 
 
 EITHER_WAY = 1.25              # the opposite move raised this much too: a bigger move either way
+
+
+def tide_split(p: pd.DataFrame, results: list[dict], target: str) -> None:
+    """How each result did when the Tide was coming in, slack or going out (plain rates, no test: few Tide spells,
+    so this describes, it does not prove). p: the panel over every year to the cut."""
+    hit, usual = p[target].to_numpy(float), p["usual"].to_numpy(float)
+    for o in results:
+        mask = np.ones(len(p), bool)
+        for name in o["condition"]:
+            mask &= (p[name].to_numpy(float) == 1.0) if name in p else np.zeros(len(p), bool)
+        split = {}
+        for state in TIDE_STATES:
+            col = f"Tide: {state}"
+            if col not in p:
+                continue
+            m = mask & (p[col].to_numpy(float) == 1.0)
+            n = int(m.sum())
+            u = usual[m].mean() if n else 0
+            split[state] = {"days": n, "lift": float(hit[m].mean() / u) if n and u > 0 else None,
+                            "rate": float(hit[m].mean()) if n else None,
+                            "coins": int(p.loc[m, "coin"].nunique()) if n else 0,
+                            "spells": int(pd.Series(p.loc[m, "date"]).drop_duplicates().sort_values().diff()
+                                          .gt(pd.Timedelta(days=5)).sum() + 1) if n else 0}
+        o["tide_split"] = split
 
 
 def verdict(o: dict) -> str:

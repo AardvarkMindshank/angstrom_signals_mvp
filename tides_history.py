@@ -219,7 +219,7 @@ def build(raw: dict, end: str) -> tuple[pd.DataFrame, pd.DataFrame]:
         v = pd.concat([contrib[k] for k in keys], axis=1).mean(axis=1, skipna=True)
         out[f"wind_{market}_score"] = v.round(3)
         out[f"wind_{market}"] = v.apply(lambda x: None if pd.isna(x) else
-                                        "tailwind" if x > 0.2 else "headwind" if x < -0.2 else "calm")
+                                        "tailwind" if x > 0.2 else "headwind" if x < -0.2 else "neither")
 
     out = out[out.index >= FIRST]
     out.index.name = "date"
@@ -233,6 +233,66 @@ def storm_events(raw: dict, end: str) -> pd.DataFrame:
     ev = pd.DataFrame(rows, columns=["kind", "date"]).drop_duplicates()
     ev = ev[(ev["date"] >= "2012-01-01") & (ev["date"] <= (pd.Timestamp(end) + pd.Timedelta(days=60)).strftime("%Y-%m-%d"))]
     return ev.sort_values(["date", "kind"]).reset_index(drop=True)
+
+
+# ------------------------------------------------------------------------------------------------ the live table
+
+LIVE_START = "2017-01-01"            # enough warm-up for the days after the saved history (from 30 Oct 2024)
+LIVE_FROM = pd.Timestamp("2024-10-30")
+FINAL_AFTER = pd.Timedelta(hours=22)  # a business day's row is final once its US close is well past (22:00 UTC)
+
+
+def to_rows(table: pd.DataFrame) -> list[dict]:
+    """JSON-ready rows: {"day": "YYYY-MM-DD", field: value, ...}, missing values left out."""
+    out = []
+    for day, row in table.iterrows():
+        body = {"day": day.strftime("%Y-%m-%d")}
+        for k, v in row.items():
+            if v is None or (isinstance(v, float) and math.isnan(v)):
+                continue
+            body[k] = v.item() if hasattr(v, "item") else v
+        out.append(body)
+    return out
+
+
+def final_days(table: pd.DataFrame, now: pd.Timestamp | None = None) -> pd.DataFrame:
+    now = pd.Timestamp.now(tz="UTC") if now is None else pd.Timestamp(now)
+    cutoff = (now.tz_convert("UTC").tz_localize(None) - FINAL_AFTER).normalize()
+    return table[table.index <= cutoff]
+
+
+def refresh_daily(supabase, log=print, now=None) -> int:
+    """Background worker: add the finished days after the saved history to tides_daily (sql/2026-12-05_tides_daily.sql).
+    Rows are only ever added, never changed, so each keeps the time the database first saw it."""
+    try:
+        got = supabase.table("tides_daily").select("day").order("day", desc=True).limit(1).execute().data or []
+    except Exception as exc:
+        log(f"Tides daily skipped (run sql/2026-12-05_tides_daily.sql): {str(exc)[:120]}")
+        return 0
+    last = pd.Timestamp(got[0]["day"]) if got else LIVE_FROM - pd.Timedelta(days=1)
+    now = pd.Timestamp.now(tz="UTC") if now is None else pd.Timestamp(now)
+    due = (now.tz_convert("UTC").tz_localize(None) - FINAL_AFTER).normalize()
+    if pd.bdate_range(last + pd.Timedelta(days=1), due).empty:
+        return 0
+    yahoo, fred = td.symbols_needed()
+    raw = {sym: fetch_yahoo(sym, LIVE_START, (now + pd.Timedelta(days=1)).strftime("%Y-%m-%d")) for sym in sorted(yahoo)}
+    for sid in sorted(fred - {"CPIAUCSL"}):
+        raw[f"fred:{sid}"] = td.fetch_fred(sid)
+    key = os.environ.get("FRED_API_KEY", "")
+    if not key:
+        log("Tides daily skipped: FRED_API_KEY is not set (needed for inflation's release dates)")
+        return 0
+    raw["cpi"] = fetch_first_releases("CPIAUCNS", key)
+    raw["jobs"] = fetch_first_releases("PAYEMS", key)
+    table, _ = build(raw, due.strftime("%Y-%m-%d"))
+    table = final_days(table, now)
+    table = table[table.index > last]
+    if table.empty:
+        return 0
+    rows = [{"day": r["day"], "body": r} for r in to_rows(table)]
+    supabase.table("tides_daily").upsert(rows, on_conflict="day", ignore_duplicates=True).execute()
+    log(f"Tides daily: {len(rows)} day(s) added, to {rows[-1]['day']}")
+    return len(rows)
 
 
 def main() -> int:

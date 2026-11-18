@@ -61,6 +61,8 @@ class Dataset:
     flow_spec: tuple | None = None   # (source, series) the flow rows belong to
     sentiment: list | None = None    # stored sentiment rows (any subject key reads them)
     options: list | None = None      # stored options max-pain snapshot rows (any subject key reads them)
+    tides: list | None = None        # stored daily Tides rows (recorded_at, first_seen_at and the readings)
+    tide_events: list | None = None  # scheduled release days [(kind, YYYY-MM-DD)]
     description: str = ""
 
     def candles(self, kind, asset_id, timeframe):
@@ -79,6 +81,14 @@ class Dataset:
 
         def load(subject_key, as_of):
             return {"rows": [dict(r) for r in rows]} if rows else {"error": "none"}
+        return load if rows is not None else None
+
+    def tides_loader(self, rows=None):
+        rows = self.tides if rows is None else rows
+        events = [list(e) for e in self.tide_events or []]
+
+        def load(as_of):
+            return {"rows": [dict(r) for r in rows], "events": events} if rows else {"error": "none"}
         return load if rows is not None else None
 
     def flow_loader(self, rows=None):
@@ -282,6 +292,11 @@ def _reference_worker(job: dict) -> list[dict]:
         rows = step.get("flows")
         feelings = step.get("sentiment")
         snaps = step.get("options")
+        tide_rows = step.get("tides")
+
+        def tides_loader(rows=tide_rows, events=step.get("tide_events")):
+            return {"rows": [dict(r) for r in rows], "events": [list(e) for e in events or []]} if rows \
+                else {"error": f"No Tides reading first seen by {step['as_of'].isoformat()}."}
 
         def sentiment_loader(subject_key, rows=feelings):
             return {"rows": [dict(r) for r in rows]} if rows else {"error": "none"}
@@ -297,7 +312,8 @@ def _reference_worker(job: dict) -> list[dict]:
         ctx = WorkerContext(job["kind"], job["asset_id"], candle_loader=candle_loader,
                             flows_loader=flows_loader if rows is not None else None, now=step["as_of"],
                             sentiment_loader=sentiment_loader if feelings is not None else None,
-                            options_loader=options_loader if snaps is not None else None)
+                            options_loader=options_loader if snaps is not None else None,
+                            tides_loader=tides_loader if tide_rows is not None else None)
         results = worker_engine.evaluate(refs, ctx)
         out.append({k: canonical(v) for k, v in results.items()})
     worker_engine.clear_cache()
@@ -530,6 +546,12 @@ def _refs_for(dataset: Dataset, timeframe: str, include=None, only=None) -> list
             continue
         if only and d.id not in only:
             continue
+        if dataset.tides is not None:
+            if "tides" in d.requires and timeframe in d.timeframes and d.scope == "asset" and dataset.kind != "market":
+                refs.append(SignalRef.make(d, timeframe))
+            continue
+        if "tides" in d.requires:
+            continue
         if dataset.options is not None:
             if "options" in d.requires and timeframe in d.timeframes and d.scope == "asset" and dataset.kind != "market":
                 refs.append(SignalRef.make(d, timeframe))
@@ -562,7 +584,8 @@ def certify_dataset(dataset: Dataset, timeframe: str, *, cutoffs: int, pool, tal
     stored = not dataset.histories
     if stored:
         rows = dataset.flows if dataset.flows is not None else (
-            dataset.sentiment if dataset.sentiment is not None else dataset.options)
+            dataset.sentiment if dataset.sentiment is not None else
+            dataset.options if dataset.options is not None else dataset.tides)
         day_key, seen_key = ("observed_date", "fetched_at") if dataset.flows is not None else ("recorded_at", "first_seen_at")
         days = sorted({str(r[day_key])[:10] for r in rows})
         lo = pd.Timestamp(days[len(days) // 3], tz="UTC")
@@ -590,6 +613,9 @@ def certify_dataset(dataset: Dataset, timeframe: str, *, cutoffs: int, pool, tal
             step["sentiment"] = cut_sentiment_rows_reference(dataset.sentiment, t)
         if dataset.options is not None:
             step["options"] = cut_sentiment_rows_reference(dataset.options, t)
+        if dataset.tides is not None:
+            step["tides"] = cut_sentiment_rows_reference(dataset.tides, t)
+            step["tide_events"] = [list(e) for e in dataset.tide_events or []]
         steps.append(step)
     job = {"indicators": _INDICATORS["path"], "imports": list(imports), "kind": dataset.kind, "asset_id": dataset.asset_id,
            "refs": [r.as_dict() for r in refs], "steps": steps,
@@ -602,9 +628,10 @@ def certify_dataset(dataset: Dataset, timeframe: str, *, cutoffs: int, pool, tal
     flows = dataset.flow_loader() if dataset.flows is not None else None
     feeling = dataset.sentiment_loader()
     snaps = dataset.options_loader()
-    clean_run = ReplayRun(CERTIFICATION, dataset.candles, flows=flows, sentiment=feeling, options=snaps,
+    tide = dataset.tides_loader()
+    clean_run = ReplayRun(CERTIFICATION, dataset.candles, flows=flows, sentiment=feeling, options=snaps, tides=tide,
                           indicators=_INDICATORS["fn"])
-    slice_run = ReplayRun(CERTIFICATION, dataset.candles, flows=flows, sentiment=feeling, options=snaps,
+    slice_run = ReplayRun(CERTIFICATION, dataset.candles, flows=flows, sentiment=feeling, options=snaps, tides=tide,
                           indicators=_INDICATORS["fn"], shortcut=True)
     # The clean replay visits the cutoffs in a shuffled order, so state carried between evaluations (a later
     # cutoff seen first) shows up as a difference from the independent reference.
@@ -620,6 +647,8 @@ def certify_dataset(dataset: Dataset, timeframe: str, *, cutoffs: int, pool, tal
             variants = [FLOW_POISONS[i % 3]]
         elif dataset.options is not None:
             variants = [OPTIONS_POISONS[(2 * i) % 3], OPTIONS_POISONS[(2 * i + 1) % 3]]
+        elif dataset.tides is not None:
+            variants = [TIDES_POISONS[(2 * i) % 3], TIDES_POISONS[(2 * i + 1) % 3]]
         else:
             variants = [SENTIMENT_POISONS[i % 3]]
         poisoned_results = []
@@ -627,6 +656,10 @@ def certify_dataset(dataset: Dataset, timeframe: str, *, cutoffs: int, pool, tal
             if stored and dataset.flows is not None:
                 rows = poisoned_flows(dataset.flows, t, v, seed + i)
                 prun = ReplayRun(CERTIFICATION, dataset.candles, flows=dataset.flow_loader(rows),
+                                 indicators=_INDICATORS["fn"])
+            elif stored and dataset.tides is not None:
+                rows = poisoned_tides(dataset.tides, t, v, seed + i)
+                prun = ReplayRun(CERTIFICATION, dataset.candles, tides=dataset.tides_loader(rows),
                                  indicators=_INDICATORS["fn"])
             elif stored and dataset.options is not None:
                 rows = poisoned_options(dataset.options, t, v, seed + i)
@@ -644,7 +677,7 @@ def certify_dataset(dataset: Dataset, timeframe: str, *, cutoffs: int, pool, tal
         cache_results = []
         if i % 5 == 0:
             later = [x for x in times if x > t][:2]
-            warm = ReplayRun(CERTIFICATION, dataset.candles, flows=flows, sentiment=feeling, options=snaps,
+            warm = ReplayRun(CERTIFICATION, dataset.candles, flows=flows, sentiment=feeling, options=snaps, tides=tide,
                              indicators=_INDICATORS["fn"])
             for x in later:
                 engine.evaluate(refs, warm.context(dataset.kind, dataset.asset_id, x))
@@ -824,6 +857,80 @@ def synthetic_options(seed: int = 11, days: int = 150, end="2024-06-28") -> list
         text = f"synthetic options snapshots ({'every 4 hours' if every == '4h' else 'weekdays'}; seed {seed})"
         out.append(Dataset(f"synthetic-options-{kind}-{asset}", kind, asset, options=rows, description=text))
     return out
+
+
+TIDES_POISONS = ("late_import", "later_days", "future_first_seen")
+_TIDE_LABELS = (("tide", ("in", "slack", "out")), ("tide_raw", ("in", "slack", "out")),
+                ("sea", ("calm", "moderate", "rough", "storm")), ("wind_crypto", ("tailwind", "neither", "headwind")),
+                ("wind_equity", ("tailwind", "neither", "headwind")))
+_TIDE_CURRENTS = ("dollar", "long_rates", "inflation", "fear")
+
+
+def _tide_row(day: pd.Timestamp, rng, recorded=None, seen=None, since=None) -> dict:
+    recorded = recorded or day + pd.Timedelta(hours=21, minutes=15)
+    row = {"day": day.date().isoformat(), "recorded_at": recorded.isoformat(),
+           "first_seen_at": (seen or recorded + pd.Timedelta(minutes=int(rng.integers(5, 40)))).isoformat(),
+           "tide_score": round(float(rng.uniform(-0.8, 0.8)), 3), "sea_score": round(float(rng.uniform(0, 100)), 1),
+           "wind_crypto_score": round(float(rng.uniform(-1, 1)), 3),
+           "wind_equity_score": round(float(rng.uniform(-1, 1)), 3), "source": "synthetic",
+           "tide_since": since or (day - pd.Timedelta(days=int(rng.integers(0, 40)))).date().isoformat()}
+    for key, labels in _TIDE_LABELS:
+        row[key] = labels[int(rng.integers(0, len(labels)))]
+    for key in _TIDE_CURRENTS:
+        row.update({f"{key}_value": round(float(rng.normal(3, 1)), 4), f"{key}_score": round(float(rng.uniform(0, 100)), 1),
+                    f"{key}_band": ("very low", "low", "normal", "high", "very high")[int(rng.integers(0, 5))],
+                    f"{key}_dir": ("rising", "flat", "falling")[int(rng.integers(0, 3))],
+                    f"{key}_contrib": round(float(rng.uniform(-1, 1)), 3),
+                    f"{key}_effect": ("helping", "neutral", "hurting")[int(rng.integers(0, 3))]})
+    return row
+
+
+def poisoned_tides(rows: list[dict], as_of, variant: str, seed: int) -> list[dict]:
+    """Rows that must not count at T: a day before T saved only after T (a backfill), days after T, and changed
+    copies of earlier days that the database only received after T."""
+    t = utc(as_of)
+    rng = np.random.default_rng(seed)
+    out = [dict(r) for r in rows]
+    later = t + pd.Timedelta(minutes=30)
+    if variant == "late_import":
+        for k in range(0, 4):
+            day = (t - pd.Timedelta(days=k)).normalize()
+            if day + pd.Timedelta(hours=21, minutes=15) <= t:
+                out.append(_tide_row(day, rng, seen=later))
+    elif variant == "later_days":
+        for k in range(1, 5):
+            day = (t + pd.Timedelta(days=k)).normalize()
+            out.append(_tide_row(day, rng))
+    elif variant == "future_first_seen":
+        for r in out[-6:]:
+            if utc(r["recorded_at"]) <= t:
+                out.append({**_tide_row(pd.Timestamp(r["day"], tz="UTC"), rng, recorded=utc(r["recorded_at"]),
+                                        seen=later), "day": r["day"]})
+    return out
+
+
+def synthetic_tides(seed: int = 13, days: int = 150, end="2024-06-28") -> list[Dataset]:
+    """Daily Tides rows like the saved history and the daily record: business days only, a missed day now and then,
+    a few rows saved late (backfilled), and the scheduled release days around them."""
+    rng = np.random.default_rng(seed)
+    rows = []
+    stamps = pd.bdate_range(end=pd.Timestamp(end), periods=days, tz="UTC")
+    for day in stamps:
+        if rng.random() < 0.05:
+            continue                                                 # a missed day: the reading before stays
+        row = _tide_row(day, rng)
+        if rng.random() < 0.05:
+            row["first_seen_at"] = (utc(row["recorded_at"]) + pd.Timedelta(days=3)).isoformat()   # saved late
+        if rng.random() < 0.04:
+            row.pop("tide", None)                                     # too little history that day
+        rows.append(row)
+    events = []
+    for day in pd.date_range(stamps[0] - pd.Timedelta(days=30), stamps[-1] + pd.Timedelta(days=60), freq="D"):
+        if day.weekday() < 5 and rng.random() < 0.08:
+            events.append([("fomc", "cpi", "jobs")[int(rng.integers(0, 3))], day.date().isoformat()])
+    text = f"synthetic daily Tides rows (business days, gaps, late saves; seed {seed})"
+    return [Dataset(f"synthetic-tides-{kind}-{asset}", kind, asset, tides=rows, tide_events=events, description=text)
+            for kind, asset in (("crypto", "synthetic-coin"), ("equity", "SYNTH"))]
 
 
 def cut_flow_rows_reference(rows: list[dict], as_of) -> list[dict]:

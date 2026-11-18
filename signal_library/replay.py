@@ -144,7 +144,7 @@ class ReplayRun:
     flows(source, series, subject, as_of) -> {"rows": [...]} or {"error": text}; rows must carry fetched_at
     """
 
-    def __init__(self, mode: str, candles, *, flows=None, sentiment=None, options=None, indicators=None,
+    def __init__(self, mode: str, candles, *, flows=None, sentiment=None, options=None, tides=None, indicators=None,
                  dataset: dict | None = None,
                  max_steps: int | None = None, shortcut: bool = False, check_certification: bool | None = None,
                  reuse_frames: bool = False, slice_allow: set | None = None,
@@ -160,6 +160,11 @@ class ReplayRun:
         self.flows_source = flows
         self.sentiment_source = sentiment
         self.options_source = options
+        if tides is None and mode != CERTIFICATION:      # display and research replays read the saved Tides rows
+            import tides_store
+
+            tides = tides_store.replay_source
+        self.tides_source = tides
         self.indicators = indicators or default_indicators
         self.dataset = dataset if dataset is not None else {}
         self.max_steps = max_steps
@@ -398,6 +403,31 @@ class ReplayContext(DataContext):
                 digest = hashlib.sha256(json.dumps(rows, sort_keys=True, default=str).encode()).hexdigest()
                 self.replay.inputs[(self.subject, f"options/{subject_key}", self.as_of.value)] = {
                     "subject": self.subject, "source": "options_pain", "series": subject_key,
+                    "cutoff": self.as_of.isoformat(), "rows": len(rows), "sha256": digest,
+                    "quality": POINT_IN_TIME}
+        self._memo[key] = got
+        return got
+
+    def tides(self) -> dict:
+        key = ("tides",)
+        if key in self._memo:
+            return self._memo[key]
+        if self.replay.tides_source is None:
+            got = {"error": "No Tides source in this replay."}
+        else:
+            try:
+                got = self.replay.tides_source(self.as_of)
+            except Exception as exc:
+                got = {"error": f"Could not load Tides readings ({exc})"}
+        if not got.get("error"):
+            rows = cut_sentiment_rows(got.get("rows") or [], self.as_of)    # same rule: seen by T, about a close by T
+            if not rows:
+                got = {"error": f"No Tides reading first seen by {self.as_of.isoformat()}."}
+            else:
+                got = {"rows": rows, "events": [list(e) for e in got.get("events") or []]}
+                digest = hashlib.sha256(json.dumps(got, sort_keys=True, default=str).encode()).hexdigest()
+                self.replay.inputs[(self.subject, "tides", self.as_of.value)] = {
+                    "subject": self.subject, "source": "tides", "series": "daily",
                     "cutoff": self.as_of.isoformat(), "rows": len(rows), "sha256": digest,
                     "quality": POINT_IN_TIME}
         self._memo[key] = got
