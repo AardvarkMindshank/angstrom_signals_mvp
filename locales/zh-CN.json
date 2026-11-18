@@ -2227,5 +2227,11 @@
   "**{coin}, this period:** {move} followed {usual} of all closes.": "**{coin}，此时期：**所有收盘中有 {usual} 之后{move}。",
   "- {icon} {cond}: held on {n} closes; {move} after {rate} of them, against {usual} usually (**{lift}**)": "- {icon} {cond}：在 {n} 次收盘时成立；其中 {rate} 之后{move}，通常为 {usual}（**{lift}**）",
   "Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click to see it all.": "缩放：在图表上滚动滚轮（或双指捏合），拖动以平移，双击查看全部。",
-  "Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click the time axis to see it all. Hover a day for its details.": "缩放：在图表上滚动滚轮（或双指捏合），拖动以平移，双击时间轴查看全部。将鼠标悬停在某天可查看详情。"
+  "Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click the time axis to see it all. Hover a day for its details.": "缩放：在图表上滚动滚轮（或双指捏合），拖动以平移，双击时间轴查看全部。将鼠标悬停在某天可查看详情。",
+  "Soundings: {cond} ({move})": "Soundings：{cond}（{move}）",
+  "Came before {move} {lift:.1f}× as often as usual in the search years and {later:.1f}× on the later years (Soundings, daily candles).": "在搜索年份中先于{move}出现的频率是通常的 {lift:.1f} 倍，在后续年份中为 {later:.1f} 倍（Soundings，日线）。",
+  "This condition can't be opened as a Set yet.": "此条件暂时无法作为 Set 打开。",
+  "Opened from Soundings as a new Set. Check it, then save it.": "已从 Soundings 作为新 Set 打开。检查后请保存。",
+  "🧩 Open as Set": "🧩 作为 Set 打开",
+  "Opens this condition in Signal Sets as a new Set (daily candles), to save, scan in Prism, put in a funnel or get alerts from.": "在 Signal Sets 中将此条件作为新 Set（日线）打开，可保存、在 Prism 中扫描、放入漏斗或接收提醒。"
 }

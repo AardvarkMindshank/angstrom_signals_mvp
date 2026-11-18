@@ -2227,5 +2227,11 @@
   "**{coin}, this period:** {move} followed {usual} of all closes.": "**{coin}, dieser Zeitraum:** {move} folgte auf {usual} aller Schlüsse.",
   "- {icon} {cond}: held on {n} closes; {move} after {rate} of them, against {usual} usually (**{lift}**)": "- {icon} {cond}: galt an {n} Schlüssen; {move} nach {rate} davon, gegenüber {usual} üblich (**{lift}**)",
   "Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click to see it all.": "Zoomen: Mausrad über dem Diagramm drehen (oder mit zwei Fingern), ziehen zum Verschieben, Doppelklick zeigt alles.",
-  "Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click the time axis to see it all. Hover a day for its details.": "Zoomen: Mausrad über dem Diagramm drehen (oder mit zwei Fingern), ziehen zum Verschieben, Doppelklick auf die Zeitachse zeigt alles. Für Details mit der Maus über einen Tag fahren."
+  "Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click the time axis to see it all. Hover a day for its details.": "Zoomen: Mausrad über dem Diagramm drehen (oder mit zwei Fingern), ziehen zum Verschieben, Doppelklick auf die Zeitachse zeigt alles. Für Details mit der Maus über einen Tag fahren.",
+  "Soundings: {cond} ({move})": "Soundings: {cond} ({move})",
+  "Came before {move} {lift:.1f}× as often as usual in the search years and {later:.1f}× on the later years (Soundings, daily candles).": "Ging {move} in den Suchjahren {lift:.1f}× so oft wie üblich voraus und in den späteren Jahren {later:.1f}× (Soundings, Tageskerzen).",
+  "This condition can't be opened as a Set yet.": "Diese Bedingung kann noch nicht als Set geöffnet werden.",
+  "Opened from Soundings as a new Set. Check it, then save it.": "Aus Soundings als neues Set geöffnet. Prüfen und dann speichern.",
+  "🧩 Open as Set": "🧩 Als Set öffnen",
+  "Opens this condition in Signal Sets as a new Set (daily candles), to save, scan in Prism, put in a funnel or get alerts from.": "Öffnet diese Bedingung in Signal Sets als neues Set (Tageskerzen), zum Speichern, Scannen in Prism, für einen Funnel oder Alarme."
 }

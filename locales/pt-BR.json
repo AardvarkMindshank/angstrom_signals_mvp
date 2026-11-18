@@ -2227,5 +2227,11 @@
   "**{coin}, this period:** {move} followed {usual} of all closes.": "**{coin}, este período:** {move} veio após {usual} de todos os fechamentos.",
   "- {icon} {cond}: held on {n} closes; {move} after {rate} of them, against {usual} usually (**{lift}**)": "- {icon} {cond}: valeu em {n} fechamentos; {move} após {rate} deles, contra {usual} normalmente (**{lift}**)",
   "Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click to see it all.": "Zoom: role a roda sobre o gráfico (ou faça pinça), arraste para mover e clique duas vezes para ver tudo.",
-  "Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click the time axis to see it all. Hover a day for its details.": "Zoom: role a roda sobre o gráfico (ou faça pinça), arraste para mover e clique duas vezes no eixo do tempo para ver tudo. Passe o mouse sobre um dia para ver os detalhes."
+  "Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click the time axis to see it all. Hover a day for its details.": "Zoom: role a roda sobre o gráfico (ou faça pinça), arraste para mover e clique duas vezes no eixo do tempo para ver tudo. Passe o mouse sobre um dia para ver os detalhes.",
+  "Soundings: {cond} ({move})": "Soundings: {cond} ({move})",
+  "Came before {move} {lift:.1f}× as often as usual in the search years and {later:.1f}× on the later years (Soundings, daily candles).": "Antecedeu {move} {lift:.1f}× mais vezes que o normal nos anos de busca e {later:.1f}× nos anos seguintes (Soundings, velas diárias).",
+  "This condition can't be opened as a Set yet.": "Esta condição ainda não pode ser aberta como Set.",
+  "Opened from Soundings as a new Set. Check it, then save it.": "Aberto a partir do Soundings como um novo Set. Confira e salve.",
+  "🧩 Open as Set": "🧩 Abrir como Set",
+  "Opens this condition in Signal Sets as a new Set (daily candles), to save, scan in Prism, put in a funnel or get alerts from.": "Abre esta condição em Signal Sets como um novo Set (velas diárias), para salvar, escanear no Prism, usar em um funil ou receber alertas."
 }

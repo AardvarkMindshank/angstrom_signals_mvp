@@ -2227,5 +2227,11 @@
   "**{coin}, this period:** {move} followed {usual} of all closes.": "**{coin}, cette période :** {move} a suivi {usual} de toutes les clôtures.",
   "- {icon} {cond}: held on {n} closes; {move} after {rate} of them, against {usual} usually (**{lift}**)": "- {icon} {cond} : remplie à {n} clôtures ; {move} après {rate} d'entre elles, contre {usual} d'habitude (**{lift}**)",
   "Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click to see it all.": "Zoom : molette sur le graphique (ou pincement), glisser pour se déplacer, double-clic pour tout voir.",
-  "Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click the time axis to see it all. Hover a day for its details.": "Zoom : molette sur le graphique (ou pincement), glisser pour se déplacer, double-clic sur l'axe du temps pour tout voir. Survolez un jour pour ses détails."
+  "Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click the time axis to see it all. Hover a day for its details.": "Zoom : molette sur le graphique (ou pincement), glisser pour se déplacer, double-clic sur l'axe du temps pour tout voir. Survolez un jour pour ses détails.",
+  "Soundings: {cond} ({move})": "Soundings : {cond} ({move})",
+  "Came before {move} {lift:.1f}× as often as usual in the search years and {later:.1f}× on the later years (Soundings, daily candles).": "A précédé {move} {lift:.1f}× plus souvent que d'habitude pendant les années de recherche et {later:.1f}× les années suivantes (Soundings, bougies journalières).",
+  "This condition can't be opened as a Set yet.": "Cette condition ne peut pas encore être ouverte comme Set.",
+  "Opened from Soundings as a new Set. Check it, then save it.": "Ouvert depuis Soundings comme nouveau Set. Vérifiez-le, puis enregistrez-le.",
+  "🧩 Open as Set": "🧩 Ouvrir comme Set",
+  "Opens this condition in Signal Sets as a new Set (daily candles), to save, scan in Prism, put in a funnel or get alerts from.": "Ouvre cette condition dans Signal Sets comme nouveau Set (bougies journalières), pour l'enregistrer, la scanner dans Prism, la mettre dans un funnel ou recevoir des alertes."
 }

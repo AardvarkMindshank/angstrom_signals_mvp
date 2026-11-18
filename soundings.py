@@ -467,6 +467,61 @@ def opposite(p_other: pd.DataFrame, results: list[dict], other: str, runs: int =
 EITHER_WAY = 1.25              # the opposite move raised this much too: a bigger move either way
 
 
+def condition_lines(name: str) -> tuple[str, str, list[tuple[str, str]]] | None:
+    """A condition's name (as conditions() writes it) back to (signal, field, [(op, value), ...]) in the Set editor's
+    terms (lattice_sets lines), so a result can be opened as a Set. None when the name is not recognised."""
+    from signal_library import fields
+
+    for sig, field, how, plain in READINGS:
+        sid = sig.partition(":")[0]
+        kind = how[0]
+        if kind == "label":
+            spec = (fields.FIELDS.get(f"{sid}@1") or {}).get(field) or {}
+            for label in spec.get("labels") or []:
+                if name == f"{plain}: {label.replace('_', ' ')}":
+                    return sig, field, [("is", label)]
+        elif kind == "yes" and name == plain:
+            return sig, field, [("yes", "")]
+        elif kind == "recent" and name == f"{plain} in the last {how[1]} candles":
+            return sig, field, [("within", str(how[1]))]
+        elif kind == "cut":
+            cuts = how[1]
+            if name == f"{plain} under {_fmt(cuts[0])}":
+                return sig, field, [("lte", _fmt(cuts[0]))]
+            for a, b in zip(cuts, cuts[1:]):
+                if name == f"{plain} {_fmt(a)} to {_fmt(b)}":
+                    return sig, field, [("gte", _fmt(a)), ("lte", _fmt(b))]
+            if name == f"{plain} {_fmt(cuts[-1])} or more":
+                return sig, field, [("gte", _fmt(cuts[-1]))]
+    return None
+
+
+def set_model(condition: list[str], name: str, purpose: str) -> dict | None:
+    """A Set editor model (lattice_sets) that answers Yes when every part of the condition holds, on daily candles."""
+    import re
+
+    model = {"name": name[:80], "purpose": purpose[:200], "groups": [], "standalone": [], "lines": []}
+    keys = {}
+    for part in condition:
+        found = condition_lines(part)
+        if found is None:
+            return None
+        sig, field, ops = found
+        if sig not in keys:
+            sid, _, choice = sig.partition(":")
+            key = re.sub(r"[^a-z0-9]+", "_", (sid.split(".")[-1] + ("_" + choice if choice else "")).lower())[:30]
+            while key in keys.values():
+                key += "_2"
+            keys[sig] = key
+            entry = {"key": key, "id": sid, "version": 1, "timeframe": "1D", "role": "condition"}
+            if choice:
+                entry["params"] = {"current": choice}
+            model["standalone"].append(entry)
+        for op, value in ops:
+            model["lines"].append({"target": "member", "member": keys[sig], "field": field, "op": op, "value": value})
+    return model
+
+
 def tide_split(p: pd.DataFrame, results: list[dict], target: str) -> None:
     """How each result did when the Tide was coming in, slack or going out (plain rates, no test: few Tide spells,
     so this describes, it does not prove). p: the panel over every year to the cut."""

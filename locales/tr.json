@@ -2227,5 +2227,11 @@
   "**{coin}, this period:** {move} followed {usual} of all closes.": "**{coin}, bu dönem:** tüm kapanışların {usual} kadarını {move} izledi.",
   "- {icon} {cond}: held on {n} closes; {move} after {rate} of them, against {usual} usually (**{lift}**)": "- {icon} {cond}: {n} kapanışta sağlandı; bunların {rate} kadarından sonra {move}, olağanda {usual} (**{lift}**)",
   "Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click to see it all.": "Yakınlaştırma: grafiğin üzerinde tekerleği çevirin (veya iki parmakla), kaydırmak için sürükleyin, tümünü görmek için çift tıklayın.",
-  "Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click the time axis to see it all. Hover a day for its details.": "Yakınlaştırma: grafiğin üzerinde tekerleği çevirin (veya iki parmakla), kaydırmak için sürükleyin, tümünü görmek için zaman eksenine çift tıklayın. Ayrıntılar için bir günün üzerine gelin."
+  "Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click the time axis to see it all. Hover a day for its details.": "Yakınlaştırma: grafiğin üzerinde tekerleği çevirin (veya iki parmakla), kaydırmak için sürükleyin, tümünü görmek için zaman eksenine çift tıklayın. Ayrıntılar için bir günün üzerine gelin.",
+  "Soundings: {cond} ({move})": "Soundings: {cond} ({move})",
+  "Came before {move} {lift:.1f}× as often as usual in the search years and {later:.1f}× on the later years (Soundings, daily candles).": "Arama yıllarında olağanın {lift:.1f} katı, sonraki yıllarda {later:.1f} katı sıklıkla {move} öncesinde görüldü (Soundings, günlük mumlar).",
+  "This condition can't be opened as a Set yet.": "Bu koşul henüz Set olarak açılamıyor.",
+  "Opened from Soundings as a new Set. Check it, then save it.": "Soundings'ten yeni bir Set olarak açıldı. Kontrol edip kaydedin.",
+  "🧩 Open as Set": "🧩 Set olarak aç",
+  "Opens this condition in Signal Sets as a new Set (daily candles), to save, scan in Prism, put in a funnel or get alerts from.": "Bu koşulu Signal Sets'te yeni bir Set (günlük mumlar) olarak açar; kaydetmek, Prism'de taramak, bir hunide kullanmak veya uyarı almak için."
 }

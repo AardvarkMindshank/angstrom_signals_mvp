@@ -2227,5 +2227,11 @@
   "**{coin}, this period:** {move} followed {usual} of all closes.": "**{coin} ช่วงนี้:** {move} ตามหลัง {usual} ของการปิดทั้งหมด",
   "- {icon} {cond}: held on {n} closes; {move} after {rate} of them, against {usual} usually (**{lift}**)": "- {icon} {cond}: เป็นจริงใน {n} การปิด; {move} หลัง {rate} ของครั้งเหล่านั้น เทียบกับปกติ {usual} (**{lift}**)",
   "Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click to see it all.": "ซูม: หมุนล้อเมาส์บนกราฟ (หรือใช้สองนิ้ว) ลากเพื่อเลื่อน ดับเบิลคลิกเพื่อดูทั้งหมด",
-  "Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click the time axis to see it all. Hover a day for its details.": "ซูม: หมุนล้อเมาส์บนกราฟ (หรือใช้สองนิ้ว) ลากเพื่อเลื่อน ดับเบิลคลิกแกนเวลาเพื่อดูทั้งหมด วางเมาส์บนวันใดเพื่อดูรายละเอียด"
+  "Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click the time axis to see it all. Hover a day for its details.": "ซูม: หมุนล้อเมาส์บนกราฟ (หรือใช้สองนิ้ว) ลากเพื่อเลื่อน ดับเบิลคลิกแกนเวลาเพื่อดูทั้งหมด วางเมาส์บนวันใดเพื่อดูรายละเอียด",
+  "Soundings: {cond} ({move})": "Soundings: {cond} ({move})",
+  "Came before {move} {lift:.1f}× as often as usual in the search years and {later:.1f}× on the later years (Soundings, daily candles).": "เกิดก่อน{move} บ่อยกว่าปกติ {lift:.1f} เท่าในปีที่ค้นหา และ {later:.1f} เท่าในปีหลังๆ (Soundings, แท่งเทียนรายวัน)",
+  "This condition can't be opened as a Set yet.": "ยังเปิดเงื่อนไขนี้เป็น Set ไม่ได้",
+  "Opened from Soundings as a new Set. Check it, then save it.": "เปิดจาก Soundings เป็น Set ใหม่แล้ว ตรวจดูแล้วบันทึก",
+  "🧩 Open as Set": "🧩 เปิดเป็น Set",
+  "Opens this condition in Signal Sets as a new Set (daily candles), to save, scan in Prism, put in a funnel or get alerts from.": "เปิดเงื่อนไขนี้ใน Signal Sets เป็น Set ใหม่ (แท่งเทียนรายวัน) เพื่อบันทึก สแกนใน Prism ใส่ใน funnel หรือรับการแจ้งเตือน"
 }

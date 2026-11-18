@@ -91,3 +91,28 @@ def test_tradingview_payload_lines_up_with_the_days():
     for row in payload["rows"]:
         assert all(0 <= p[0] < n for p in row["points"])
     assert all(payload["move_flags"][k] == "1" for k in payload["moves"])
+
+
+def test_open_as_set_hands_a_valid_set_to_the_editor():
+    import lattice_sets as ls
+    import soundings_view as v
+
+    class S:
+        session_state = {}
+
+    report = v.load()
+    r = [x for x in report["targets"]["rise"]["results"] if x["verdict"] == "survivor"][0]
+    v.open_as_set(S, r, "rise")
+    model = S.session_state["lattice_set_model"]
+    assert S.session_state["_lattice_section_next"] == "sets"
+    assert len(model["standalone"]) == len(r["condition"]) and model["lines"]
+    assert not ls.checks(model, {})["blocks"]
+
+
+def test_every_result_maps_to_set_lines():
+    import soundings as so
+    import soundings_view as v
+
+    for part in v.load()["targets"].values():
+        for r in part["results"]:
+            assert so.set_model(r["condition"], "n", "p") is not None, r["condition"]

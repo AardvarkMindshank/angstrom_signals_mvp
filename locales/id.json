@@ -2227,5 +2227,11 @@
   "**{coin}, this period:** {move} followed {usual} of all closes.": "**{coin}, periode ini:** {move} menyusul {usual} dari semua penutupan.",
   "- {icon} {cond}: held on {n} closes; {move} after {rate} of them, against {usual} usually (**{lift}**)": "- {icon} {cond}: terpenuhi pada {n} penutupan; {move} setelah {rate} di antaranya, dibanding {usual} biasanya (**{lift}**)",
   "Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click to see it all.": "Zoom: putar roda mouse di atas grafik (atau cubit), seret untuk bergeser, klik dua kali untuk melihat semuanya.",
-  "Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click the time axis to see it all. Hover a day for its details.": "Zoom: putar roda mouse di atas grafik (atau cubit), seret untuk bergeser, klik dua kali sumbu waktu untuk melihat semuanya. Arahkan ke suatu hari untuk detailnya."
+  "Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click the time axis to see it all. Hover a day for its details.": "Zoom: putar roda mouse di atas grafik (atau cubit), seret untuk bergeser, klik dua kali sumbu waktu untuk melihat semuanya. Arahkan ke suatu hari untuk detailnya.",
+  "Soundings: {cond} ({move})": "Soundings: {cond} ({move})",
+  "Came before {move} {lift:.1f}× as often as usual in the search years and {later:.1f}× on the later years (Soundings, daily candles).": "Mendahului {move} {lift:.1f}× lebih sering dari biasanya pada tahun pencarian dan {later:.1f}× pada tahun berikutnya (Soundings, candle harian).",
+  "This condition can't be opened as a Set yet.": "Kondisi ini belum bisa dibuka sebagai Set.",
+  "Opened from Soundings as a new Set. Check it, then save it.": "Dibuka dari Soundings sebagai Set baru. Periksa, lalu simpan.",
+  "🧩 Open as Set": "🧩 Buka sebagai Set",
+  "Opens this condition in Signal Sets as a new Set (daily candles), to save, scan in Prism, put in a funnel or get alerts from.": "Membuka kondisi ini di Signal Sets sebagai Set baru (candle harian), untuk disimpan, dipindai di Prism, dimasukkan ke funnel, atau mendapat peringatan."
 }

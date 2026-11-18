@@ -150,8 +150,35 @@ def render(st, report: dict | None = None) -> None:
                 icon, word, why = VERDICT[v]
                 st.markdown(f"**{icon} {t(word)}** ({len(group)}) · <span style='opacity:.7'>{t(why)}</span>",
                             unsafe_allow_html=True)
-                for r in sorted(group, key=lambda r: -((r.get("confirm") or {}).get("lift") or 0))[:12]:
+                for n, r in enumerate(sorted(group, key=lambda r: -((r.get("confirm") or {}).get("lift") or 0))[:12]):
                     st.markdown(card_html(r, target), unsafe_allow_html=True)
+                    if v != "faded":
+                        st.button(t("🧩 Open as Set"), key=f"snd_set_{target}_{v}_{n}", on_click=open_as_set,
+                                  args=(st, r, target),
+                                  help=t("Opens this condition in Signal Sets as a new Set (daily candles), to save, "
+                                         "scan in Prism, put in a funnel or get alerts from."))
+
+
+def open_as_set(st, r: dict, target: str) -> None:
+    """Button callback: put the result's condition in the Set editor as a new, unsaved Set, and switch to it."""
+    import lattice_sets as ls
+    import soundings as so
+
+    c = r.get("confirm") or {}
+    move = t("rises") if target == "rise" else t("falls")
+    name = t("Soundings: {cond} ({move})", cond=" + ".join(r["condition"]), move=move)
+    purpose = t("Came before {move} {lift:.1f}× as often as usual in the search years and {later:.1f}× on the later "
+                "years (Soundings, daily candles).", move=move, lift=r.get("lift") or 0, later=c.get("lift") or 0)
+    model = so.set_model(r["condition"], name, purpose)
+    if model is None:
+        st.session_state["lattice_flash_set"] = ("warn", t("This condition can't be opened as a Set yet."))
+    else:
+        st.session_state["lattice_set_model"] = ls.clean_model(model, {})
+        st.session_state["lattice_set_source"] = None
+        st.session_state["lattice_set_loaded"] = "new"
+        st.session_state["_lattice_set_start_next"] = "new"
+        st.session_state["lattice_flash_set"] = ("ok", t("Opened from Soundings as a new Set. Check it, then save it."))
+    st.session_state["_lattice_section_next"] = "sets"
 
 
 # ------------------------------------------------------------------------------------------------ the chart

@@ -2227,5 +2227,11 @@
   "**{coin}, this period:** {move} followed {usual} of all closes.": "**{coin}, 이 기간:** 전체 종가의 {usual}에서 {move}이(가) 뒤따랐습니다.",
   "- {icon} {cond}: held on {n} closes; {move} after {rate} of them, against {usual} usually (**{lift}**)": "- {icon} {cond}: {n}번의 종가에서 성립; 그중 {rate}에서 {move} (평소 {usual}, **{lift}**)",
   "Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click to see it all.": "확대: 차트 위에서 휠을 돌리거나(또는 핀치), 끌어서 이동, 두 번 클릭하면 전체 보기.",
-  "Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click the time axis to see it all. Hover a day for its details.": "확대: 차트 위에서 휠을 돌리거나(또는 핀치), 끌어서 이동, 시간 축을 두 번 클릭하면 전체 보기. 날짜에 마우스를 올리면 자세히 보입니다."
+  "Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click the time axis to see it all. Hover a day for its details.": "확대: 차트 위에서 휠을 돌리거나(또는 핀치), 끌어서 이동, 시간 축을 두 번 클릭하면 전체 보기. 날짜에 마우스를 올리면 자세히 보입니다.",
+  "Soundings: {cond} ({move})": "Soundings: {cond} ({move})",
+  "Came before {move} {lift:.1f}× as often as usual in the search years and {later:.1f}× on the later years (Soundings, daily candles).": "탐색 기간에는 평소의 {lift:.1f}배, 이후 기간에는 {later:.1f}배 자주 {move}에 앞섰습니다 (Soundings, 일봉).",
+  "This condition can't be opened as a Set yet.": "이 조건은 아직 Set으로 열 수 없습니다.",
+  "Opened from Soundings as a new Set. Check it, then save it.": "Soundings에서 새 Set으로 열었습니다. 확인한 뒤 저장하세요.",
+  "🧩 Open as Set": "🧩 Set으로 열기",
+  "Opens this condition in Signal Sets as a new Set (daily candles), to save, scan in Prism, put in a funnel or get alerts from.": "이 조건을 Signal Sets에서 새 Set(일봉)으로 열어 저장하거나 Prism에서 스캔하고, 퍼널에 넣거나 알림을 받을 수 있습니다."
 }

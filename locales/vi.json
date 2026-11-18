@@ -2227,5 +2227,11 @@
   "**{coin}, this period:** {move} followed {usual} of all closes.": "**{coin}, giai đoạn này:** {move} sau {usual} trong tất cả các lần đóng cửa.",
   "- {icon} {cond}: held on {n} closes; {move} after {rate} of them, against {usual} usually (**{lift}**)": "- {icon} {cond}: đúng ở {n} lần đóng cửa; {move} sau {rate} trong số đó, so với {usual} thông thường (**{lift}**)",
   "Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click to see it all.": "Phóng to: lăn chuột trên biểu đồ (hoặc chụm ngón tay), kéo để di chuyển, nhấp đúp để xem toàn bộ.",
-  "Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click the time axis to see it all. Hover a day for its details.": "Phóng to: lăn chuột trên biểu đồ (hoặc chụm ngón tay), kéo để di chuyển, nhấp đúp trục thời gian để xem toàn bộ. Rê chuột lên một ngày để xem chi tiết."
+  "Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click the time axis to see it all. Hover a day for its details.": "Phóng to: lăn chuột trên biểu đồ (hoặc chụm ngón tay), kéo để di chuyển, nhấp đúp trục thời gian để xem toàn bộ. Rê chuột lên một ngày để xem chi tiết.",
+  "Soundings: {cond} ({move})": "Soundings: {cond} ({move})",
+  "Came before {move} {lift:.1f}× as often as usual in the search years and {later:.1f}× on the later years (Soundings, daily candles).": "Xuất hiện trước {move} thường gấp {lift:.1f} lần bình thường trong những năm tìm kiếm và {later:.1f} lần trong những năm sau (Soundings, nến ngày).",
+  "This condition can't be opened as a Set yet.": "Chưa thể mở điều kiện này thành Set.",
+  "Opened from Soundings as a new Set. Check it, then save it.": "Đã mở từ Soundings thành một Set mới. Hãy kiểm tra rồi lưu.",
+  "🧩 Open as Set": "🧩 Mở thành Set",
+  "Opens this condition in Signal Sets as a new Set (daily candles), to save, scan in Prism, put in a funnel or get alerts from.": "Mở điều kiện này trong Signal Sets thành một Set mới (nến ngày), để lưu, quét trong Prism, đưa vào phễu hoặc nhận cảnh báo."
 }
