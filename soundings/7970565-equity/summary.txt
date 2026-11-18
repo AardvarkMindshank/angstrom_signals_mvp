@@ -1,0 +1,13 @@
+rise: 127 single conditions tested
+rise: 7863 pairs looked at
+fall: 127 single conditions tested
+fall: 7863 pairs looked at
+
+RISES: usual rate 20.8% (search), 22.4% (confirm); looked at 7564, tested 177, 0 passed the search, in 0 themes (19s)
+
+FALLS: usual rate 18.7% (search), 18.2% (confirm); looked at 7564, tested 233, 22 passed the search, in 5 themes (20s)
+  survivor      MACD histogram under -0.3 + WaveTrend: overbought: lift 1.47 on 1543 days -> 1.38 on 398 days (p 0.029, 8/9 coins)
+  survivor      Band width percentile under 20 + Heavy candle 0.5 or more: lift 1.47 on 6332 days -> 1.26 on 1582 days (p 0.014, 55/89 coins)
+  not_confirmed ADX 40 or more + Bollinger position 1 or more: lift 1.50 on 1180 days -> 1.26 on 353 days (p 0.099, 3/4 coins)
+  not_confirmed Bollinger position 0.8 to 1 + Stoch RSI: both low: lift 1.58 on 642 days -> 1.19 on 128 days (p 0.275, 0/0 coins)
+  not_confirmed Momentum: mixed + Volume vs usual 1.5 to 2.5: lift 1.33 on 6055 days -> 1.18 on 1074 days (p 0.119, 20/32 coins)
