@@ -6,18 +6,23 @@ on:
   push:
     branches: [soundings]
   workflow_dispatch:
+    inputs:
+      prices:
+        description: "Which saved prices: data/prices (25 research coins) or data/prices_wide (top 100, delisted included)"
+        default: "data/prices_wide"
 permissions:
   contents: write
 env:
-  SHARDS: "10"
+  SHARDS: "20"
+  PRICES: ${{ github.event.inputs.prices || 'data/prices_wide' }}
 jobs:
   table:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 340
     strategy:
       fail-fast: false
       matrix:
-        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -30,9 +35,9 @@ jobs:
       - name: Saved prices
         run: |
           git fetch -q --depth=1 origin reports
-          mkdir -p prices && git archive FETCH_HEAD data/prices | tar -x -C prices
+          mkdir -p prices && git archive FETCH_HEAD "$PRICES" | tar -x -C prices
       - name: Readings table
-        run: python soundings_run.py table prices/data/prices out --shard ${{ matrix.shard }}/${SHARDS}
+        run: python soundings_run.py table "prices/$PRICES" out --shard ${{ matrix.shard }}/${SHARDS}
       - uses: actions/upload-artifact@v5
         with:
           name: readings-${{ matrix.shard }}
@@ -40,7 +45,7 @@ jobs:
   mine:
     needs: table
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 340
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -53,7 +58,7 @@ jobs:
       - name: Saved prices
         run: |
           git fetch -q --depth=1 origin reports
-          mkdir -p prices && git archive FETCH_HEAD data/prices | tar -x -C prices
+          mkdir -p prices && git archive FETCH_HEAD "$PRICES" | tar -x -C prices
       - uses: actions/download-artifact@v5
         with:
           pattern: readings-*
@@ -61,8 +66,8 @@ jobs:
           merge-multiple: true
       - name: Search and confirm
         run: |
-          python soundings_run.py mine prices/data/prices out | tee out/summary.txt
-          python soundings_run.py grid prices/data/prices out
+          python soundings_run.py mine "prices/$PRICES" out | tee out/summary.txt
+          python soundings_run.py grid "prices/$PRICES" out
           { echo '### Soundings (before the hold-out)'; echo '```'; cat out/summary.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
       - name: Save
         if: always()

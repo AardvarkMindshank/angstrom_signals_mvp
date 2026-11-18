@@ -1,0 +1,28 @@
+# The wider coin set for Soundings (soundings_prices.py): the 100 most traded coins on Binance over 2018-2023,
+# delisted ones included, daily candles to 29 Oct 2024. Saved on the reports branch: data/prices_wide/.
+name: soundings-prices
+on:
+  push:
+    branches: [soundings-prices]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install --no-deps -r requirements-research.lock
+      - name: Fetch
+        run: |
+          set -o pipefail
+          python soundings_prices.py out/prices_wide --top 100 | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Save
+        run: bash .github/scripts/save_to_reports.sh data out/prices_wide
