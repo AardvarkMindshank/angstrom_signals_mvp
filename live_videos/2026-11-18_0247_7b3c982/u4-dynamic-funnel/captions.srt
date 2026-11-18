@@ -1,0 +1,39 @@
+1
+00:00:00,000 --> 00:00:02,732
+Once you have a funnel, it works for you every hour.
+
+2
+00:00:02,782 --> 00:00:04,938
+Here's where to see what it found.
+
+3
+00:00:05,407 --> 00:00:09,184
+Above the crypto table, switch My Watchlist to Dynamic funnel.
+
+4
+00:00:09,234 --> 00:00:11,518
+Each of your funnels is one row.
+
+5
+00:00:18,987 --> 00:00:23,490
+The chips count the assets holding each stage, then Flagged and Candidates.
+
+6
+00:00:23,540 --> 00:00:25,738
+Click a chip to show those assets.
+
+7
+00:00:26,185 --> 00:00:30,410
+The table lists them, largest first, with the stage each one has reached.
+
+8
+00:00:30,853 --> 00:00:35,334
+On the row: pause or resume the funnel, start it again, or open it to edit.
+
+9
+00:00:35,790 --> 00:00:40,079
+It also shows in Quick Snapshot, with what changed since you last looked.
+
+10
+00:00:44,953 --> 00:00:48,666
+Switch back to My Watchlist any time. Your choice is saved.
