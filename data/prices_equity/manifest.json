@@ -25,6 +25,12 @@
    "last": "2024-10-29",
    "stopped_early": false
   },
+  "COR": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
   "ACN": {
    "bars": 2977,
    "first": "2013-01-02",
@@ -34,6 +40,12 @@
   "ADM": {
    "bars": 2977,
    "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "ADT": {
+   "bars": 1706,
+   "first": "2018-01-19",
    "last": "2024-10-29",
    "stopped_early": false
   },
@@ -91,6 +103,12 @@
    "last": "2024-10-29",
    "stopped_early": false
   },
+  "HWM": {
+   "bars": 2011,
+   "first": "2016-11-01",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
   "AVGO": {
    "bars": 2977,
    "first": "2013-01-02",
@@ -116,6 +134,12 @@
    "stopped_early": false
   },
   "BBY": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "BKR": {
    "bars": 2977,
    "first": "2013-01-02",
    "last": "2024-10-29",
@@ -151,9 +175,21 @@
    "last": "2024-10-29",
    "stopped_early": false
   },
+  "CB": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
   "CBRE": {
    "bars": 2977,
    "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "PARA": {
+   "bars": 934,
+   "first": "2021-02-12",
    "last": "2024-10-29",
    "stopped_early": false
   },
@@ -307,6 +343,12 @@
    "last": "2024-10-29",
    "stopped_early": false
   },
+  "META": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
   "FCX": {
    "bars": 2977,
    "first": "2013-01-02",
@@ -386,6 +428,12 @@
    "stopped_early": false
   },
   "HRL": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "LHX": {
    "bars": 2977,
    "first": "2013-01-02",
    "last": "2024-10-29",
@@ -655,6 +703,12 @@
    "last": "2024-10-29",
    "stopped_early": false
   },
+  "RVTY": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
   "PLD": {
    "bars": 2977,
    "first": "2013-01-02",
@@ -709,6 +763,12 @@
    "last": "2024-10-29",
    "stopped_early": false
   },
+  "SE": {
+   "bars": 1767,
+   "first": "2017-10-20",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
   "SO": {
    "bars": 2977,
    "first": "2013-01-02",
@@ -752,6 +812,12 @@
    "stopped_early": false
   },
   "THC": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "GL": {
    "bars": 2977,
    "first": "2013-01-02",
    "last": "2024-10-29",
@@ -805,6 +871,12 @@
    "last": "2024-10-29",
    "stopped_early": false
   },
+  "RTX": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
   "V": {
    "bars": 2977,
    "first": "2013-01-02",
@@ -836,6 +908,12 @@
    "stopped_early": false
   },
   "WFC": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "SW": {
    "bars": 2977,
    "first": "2013-01-02",
    "last": "2024-10-29",
@@ -897,18 +975,12 @@
   }
  },
  "missing": [
-  "ABC",
-  "ADT-201604",
   "AET-201811",
   "ARG-201605",
-  "ARNC",
   "ATVI",
-  "BHGE",
   "BRCM-201601",
   "CA",
   "CAM-201604",
-  "CB-201601",
-  "CBS",
   "CELG",
   "COG",
   "COL",
@@ -919,10 +991,8 @@
   "DNB",
   "EA",
   "EQR",
-  "FB",
   "FTR",
   "HOT-201609",
-  "HRS",
   "IPG",
   "JNPR",
   "LLTC-201703",
@@ -932,21 +1002,16 @@
   "NLSN",
   "PCP-201601",
   "PDCO",
-  "PKI",
   "POM-201603",
   "RAI-201707",
-  "SE-201702",
   "SEE",
   "SNDK-201605",
   "STJ-201701",
-  "TMK",
   "TSS",
   "TWC-201605",
   "TWX-201806",
-  "UTX",
   "VAR",
   "WBA",
-  "WRK",
   "XL"
  ],
  "too_short": [
