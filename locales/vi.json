@@ -2188,7 +2188,6 @@
   "**🧭 Soundings** · *preview*: start from past rises and falls, and look back at what came before them.": "**🧭 Soundings** · *xem trước*: bắt đầu từ các lần tăng và giảm trong quá khứ, nhìn lại điều gì đến trước chúng.",
   "Readings at the close before each move, compared with the same coin's usual chance of a move that year. Anything found in the search years must also hold on later years the search never saw. This describes the past: it is not a forecast or advice.": "Các chỉ số tại giá đóng cửa trước mỗi biến động, so với khả năng biến động thông thường của cùng coin trong năm đó. Điều tìm thấy ở các năm tìm kiếm cũng phải đứng vững ở các năm sau mà việc tìm kiếm chưa từng thấy. Đây là mô tả quá khứ: không phải dự báo hay lời khuyên.",
   "Search years": "Năm tìm kiếm",
-  "The first Soundings run is still being checked. It will show here soon.": "Lần chạy Soundings đầu tiên vẫn đang được kiểm tra. Sẽ sớm hiển thị ở đây.",
   "How this run was done": "Cách thực hiện lần chạy này",
   "📈 Before rises": "📈 Trước các lần tăng",
   "📉 Before falls": "📉 Trước các lần giảm",
@@ -2210,7 +2209,6 @@
   "a rise followed": "sau đó tăng",
   "a fall followed": "sau đó giảm",
   "Price on top; below, one row per result: a square on each close where its condition held, coloured when the move followed and grey when it didn't. The top row shows the Tide. Research coins, to {cut}: the protected test period is never shown here.": "Giá ở trên; bên dưới mỗi kết quả một hàng: một ô vuông tại mỗi lần đóng cửa khi điều kiện đúng, có màu nếu biến động xảy ra sau đó và màu xám nếu không. Hàng trên cùng là con nước. Coin nghiên cứu, đến {cut}: giai đoạn kiểm định được bảo vệ không bao giờ hiển thị ở đây.",
-  "Coin": "Coin",
   "Period": "Giai đoạn",
   "Move": "Biến động",
   "Show faded too": "Hiện cả những cái đã phai",
@@ -2234,5 +2232,8 @@
   "Opened from Soundings as a new Set. Check it, then save it.": "Đã mở từ Soundings thành một Set mới. Hãy kiểm tra rồi lưu.",
   "🧩 Open as Set": "🧩 Mở thành Set",
   "Opens this condition in Signal Sets as a new Set (daily candles), to save, scan in Prism, put in a funnel or get alerts from.": "Mở điều kiện này trong Signal Sets thành một Set mới (nến ngày), để lưu, quét trong Prism, đưa vào phễu hoặc nhận cảnh báo.",
-  "- **Coins**: the {n} most traded coins on Binance from 2018 to 2023, including coins that later collapsed or stopped trading, so the results are not flattered by looking only at survivors.": "- **Coin**: {n} coin được giao dịch nhiều nhất trên Binance từ 2018 đến 2023, gồm cả những coin sau đó sụp đổ hoặc ngừng giao dịch, để kết quả không đẹp lên do chỉ nhìn các coin còn sống sót."
+  "- **Coins**: the {n} most traded coins on Binance from 2018 to 2023, including coins that later collapsed or stopped trading, so the results are not flattered by looking only at survivors.": "- **Coin**: {n} coin được giao dịch nhiều nhất trên Binance từ 2018 đến 2023, gồm cả những coin sau đó sụp đổ hoặc ngừng giao dịch, để kết quả không đẹp lên do chỉ nhìn các coin còn sống sót.",
+  "This Soundings run is still being checked. It will show here soon.": "Lần chạy Soundings này vẫn đang được kiểm tra. Sẽ sớm hiển thị ở đây.",
+  "- **Equities**: a fixed random sample of {n} companies from the S&P 500 as it stood at the start of 2016, including companies that later left the index, so the results are not flattered by looking only at today's winners.": "- **Cổ phiếu**: mẫu ngẫu nhiên cố định gồm {n} công ty từ S&P 500 như đầu năm 2016, gồm cả những công ty sau đó rời chỉ số, để kết quả không đẹp lên do chỉ nhìn những người thắng hôm nay.",
+  "🏛️ Equities": "🏛️ Cổ phiếu"
 }

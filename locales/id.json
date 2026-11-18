@@ -2188,7 +2188,6 @@
   "**🧭 Soundings** · *preview*: start from past rises and falls, and look back at what came before them.": "**🧭 Soundings** · *pratinjau*: mulai dari kenaikan dan penurunan masa lalu, lalu lihat apa yang terjadi sebelumnya.",
   "Readings at the close before each move, compared with the same coin's usual chance of a move that year. Anything found in the search years must also hold on later years the search never saw. This describes the past: it is not a forecast or advice.": "Pembacaan pada penutupan sebelum setiap pergerakan, dibandingkan dengan peluang biasa pergerakan koin yang sama di tahun itu. Temuan dari tahun pencarian juga harus bertahan di tahun berikutnya yang tidak pernah dilihat pencarian. Ini menggambarkan masa lalu: bukan prakiraan atau saran.",
   "Search years": "Tahun pencarian",
-  "The first Soundings run is still being checked. It will show here soon.": "Jalankan Soundings pertama masih diperiksa. Akan muncul di sini segera.",
   "How this run was done": "Cara jalankan ini dilakukan",
   "📈 Before rises": "📈 Sebelum kenaikan",
   "📉 Before falls": "📉 Sebelum penurunan",
@@ -2210,7 +2209,6 @@
   "a rise followed": "kenaikan menyusul",
   "a fall followed": "penurunan menyusul",
   "Price on top; below, one row per result: a square on each close where its condition held, coloured when the move followed and grey when it didn't. The top row shows the Tide. Research coins, to {cut}: the protected test period is never shown here.": "Harga di atas; di bawahnya satu baris per hasil: kotak di setiap penutupan saat kondisinya terpenuhi, berwarna jika pergerakan menyusul dan abu-abu jika tidak. Baris teratas menunjukkan Tide. Koin riset, sampai {cut}: periode uji yang dilindungi tidak pernah ditampilkan di sini.",
-  "Coin": "Koin",
   "Period": "Periode",
   "Move": "Pergerakan",
   "Show faded too": "Tampilkan juga yang memudar",
@@ -2234,5 +2232,8 @@
   "Opened from Soundings as a new Set. Check it, then save it.": "Dibuka dari Soundings sebagai Set baru. Periksa, lalu simpan.",
   "🧩 Open as Set": "🧩 Buka sebagai Set",
   "Opens this condition in Signal Sets as a new Set (daily candles), to save, scan in Prism, put in a funnel or get alerts from.": "Membuka kondisi ini di Signal Sets sebagai Set baru (candle harian), untuk disimpan, dipindai di Prism, dimasukkan ke funnel, atau mendapat peringatan.",
-  "- **Coins**: the {n} most traded coins on Binance from 2018 to 2023, including coins that later collapsed or stopped trading, so the results are not flattered by looking only at survivors.": "- **Koin**: {n} koin yang paling banyak diperdagangkan di Binance dari 2018 hingga 2023, termasuk koin yang kemudian runtuh atau berhenti diperdagangkan, agar hasilnya tidak terlihat lebih baik karena hanya melihat yang bertahan."
+  "- **Coins**: the {n} most traded coins on Binance from 2018 to 2023, including coins that later collapsed or stopped trading, so the results are not flattered by looking only at survivors.": "- **Koin**: {n} koin yang paling banyak diperdagangkan di Binance dari 2018 hingga 2023, termasuk koin yang kemudian runtuh atau berhenti diperdagangkan, agar hasilnya tidak terlihat lebih baik karena hanya melihat yang bertahan.",
+  "This Soundings run is still being checked. It will show here soon.": "Jalankan Soundings ini masih diperiksa. Akan segera tampil di sini.",
+  "- **Equities**: a fixed random sample of {n} companies from the S&P 500 as it stood at the start of 2016, including companies that later left the index, so the results are not flattered by looking only at today's winners.": "- **Saham**: sampel acak tetap berisi {n} perusahaan dari S&P 500 seperti pada awal 2016, termasuk perusahaan yang kemudian keluar dari indeks, agar hasilnya tidak terlihat lebih baik karena hanya melihat pemenang hari ini.",
+  "🏛️ Equities": "🏛️ Saham"
 }

@@ -41,9 +41,17 @@ def members_on(day: pd.Timestamp) -> tuple[list[str], dict]:
     html = requests.get(URL, headers=HEADERS, timeout=30).text
     tables = pd.read_html(io.StringIO(html))
     now = {yahoo(s) for s in tables[0]["Symbol"]}
-    changes = tables[1]
-    changes.columns = [" ".join(str(x) for x in c).strip() if isinstance(c, tuple) else str(c) for c in changes.columns]
-    date_col = next(c for c in changes.columns if c.lower().startswith("date") or "effective" in c.lower())
+    def flat(t):
+        t = t.copy()
+        t.columns = [" ".join(str(x) for x in c).strip() if isinstance(c, tuple) else str(c) for c in t.columns]
+        return t
+
+    # the changes table: the one with Added and Removed columns (its position on the page has moved before)
+    changes = next(flat(t) for t in tables[1:]
+                   if any("added" in str(c).lower() for c in flat(t).columns)
+                   and any("removed" in str(c).lower() for c in flat(t).columns))
+    print("changes table columns:", list(changes.columns), flush=True)
+    date_col = next(c for c in changes.columns if "date" in c.lower() or "effective" in c.lower())
     added_col = next(c for c in changes.columns if "added" in c.lower() and "ticker" in c.lower())
     removed_col = next(c for c in changes.columns if "removed" in c.lower() and "ticker" in c.lower())
     changes["when"] = pd.to_datetime(changes[date_col], errors="coerce")

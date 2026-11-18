@@ -2188,7 +2188,6 @@
   "**🧭 Soundings** · *preview*: start from past rises and falls, and look back at what came before them.": "**🧭 Soundings** · *미리보기*: 과거의 상승과 하락에서 출발해 그 전에 무엇이 있었는지 돌아봅니다.",
   "Readings at the close before each move, compared with the same coin's usual chance of a move that year. Anything found in the search years must also hold on later years the search never saw. This describes the past: it is not a forecast or advice.": "각 움직임 직전 종가 시점의 지표를 같은 코인의 그해 평소 움직임 확률과 비교합니다. 탐색 기간에서 찾은 것은 탐색이 보지 않은 이후 기간에도 유지되어야 합니다. 과거를 설명할 뿐, 예측이나 조언이 아닙니다.",
   "Search years": "탐색 기간",
-  "The first Soundings run is still being checked. It will show here soon.": "첫 Soundings 실행을 아직 확인 중입니다. 곧 여기에 표시됩니다.",
   "How this run was done": "이번 실행 방법",
   "📈 Before rises": "📈 상승 전",
   "📉 Before falls": "📉 하락 전",
@@ -2210,7 +2209,6 @@
   "a rise followed": "상승이 뒤따름",
   "a fall followed": "하락이 뒤따름",
   "Price on top; below, one row per result: a square on each close where its condition held, coloured when the move followed and grey when it didn't. The top row shows the Tide. Research coins, to {cut}: the protected test period is never shown here.": "위에는 가격, 아래에는 결과별 행: 조건이 성립한 각 종가에 사각형을 표시하며, 움직임이 뒤따르면 색으로, 아니면 회색으로 표시합니다. 맨 위 행은 조류입니다. 연구용 코인, {cut}까지: 보호된 테스트 기간은 여기에 표시되지 않습니다.",
-  "Coin": "코인",
   "Period": "기간",
   "Move": "움직임",
   "Show faded too": "희미해진 것도 보기",
@@ -2234,5 +2232,8 @@
   "Opened from Soundings as a new Set. Check it, then save it.": "Soundings에서 새 Set으로 열었습니다. 확인한 뒤 저장하세요.",
   "🧩 Open as Set": "🧩 Set으로 열기",
   "Opens this condition in Signal Sets as a new Set (daily candles), to save, scan in Prism, put in a funnel or get alerts from.": "이 조건을 Signal Sets에서 새 Set(일봉)으로 열어 저장하거나 Prism에서 스캔하고, 퍼널에 넣거나 알림을 받을 수 있습니다.",
-  "- **Coins**: the {n} most traded coins on Binance from 2018 to 2023, including coins that later collapsed or stopped trading, so the results are not flattered by looking only at survivors.": "- **코인**: 2018~2023년 Binance에서 가장 많이 거래된 {n}개 코인. 이후 폭락하거나 거래가 중단된 코인도 포함해, 살아남은 코인만 보고 결과가 좋아 보이지 않도록 했습니다."
+  "- **Coins**: the {n} most traded coins on Binance from 2018 to 2023, including coins that later collapsed or stopped trading, so the results are not flattered by looking only at survivors.": "- **코인**: 2018~2023년 Binance에서 가장 많이 거래된 {n}개 코인. 이후 폭락하거나 거래가 중단된 코인도 포함해, 살아남은 코인만 보고 결과가 좋아 보이지 않도록 했습니다.",
+  "This Soundings run is still being checked. It will show here soon.": "이 Soundings 실행은 아직 확인 중입니다. 곧 여기에 표시됩니다.",
+  "- **Equities**: a fixed random sample of {n} companies from the S&P 500 as it stood at the start of 2016, including companies that later left the index, so the results are not flattered by looking only at today's winners.": "- **주식**: 2016년 초 S&P 500에서 고정 무작위로 뽑은 {n}개 기업. 이후 지수에서 빠진 기업도 포함해, 오늘의 승자만 보고 결과가 좋아 보이지 않도록 했습니다.",
+  "🏛️ Equities": "🏛️ 주식"
 }

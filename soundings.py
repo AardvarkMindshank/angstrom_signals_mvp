@@ -262,6 +262,14 @@ def moves(frame: pd.DataFrame, up: float = UP_ATR, stop: float = STOP_ATR, windo
 
 
 # ------------------------------------------------------------------------------------------------------ conditions
+MARKET = "crypto"     # set by soundings_run for an equities run: the Tide's wind is then the wind for equities
+
+
+def market_name(name: str) -> str:
+    """The condition's name for the market being studied (only the wind differs)."""
+    return name.replace("Wind for crypto", "Wind for equities") if MARKET == "equity" else name
+
+
 def conditions(table: pd.DataFrame) -> dict[str, pd.Series]:
     """name -> boolean Series (NaN where the reading is missing), from the readings table."""
     out = {}
@@ -290,7 +298,7 @@ def conditions(table: pd.DataFrame) -> dict[str, pd.Series]:
             for a, b in zip(cuts, cuts[1:]):
                 out[f"{plain} {_fmt(a)} to {_fmt(b)}"] = _bool((num >= a) & (num < b), known)
             out[f"{plain} {_fmt(cuts[-1])} or more"] = _bool(num >= cuts[-1], known)
-    return out
+    return {market_name(k): v for k, v in out.items()}
 
 
 def _fmt(x) -> str:
@@ -472,6 +480,7 @@ def condition_lines(name: str) -> tuple[str, str, list[tuple[str, str]]] | None:
     terms (lattice_sets lines), so a result can be opened as a Set. None when the name is not recognised."""
     from signal_library import fields
 
+    name = name.replace("Wind for equities", "Wind for crypto")      # the same reading, named for its market
     for sig, field, how, plain in READINGS:
         sid = sig.partition(":")[0]
         kind = how[0]

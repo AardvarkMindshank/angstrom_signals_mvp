@@ -2188,7 +2188,6 @@
   "**🧭 Soundings** · *preview*: start from past rises and falls, and look back at what came before them.": "**🧭 Soundings** · *aperçu* : partir des hausses et baisses passées et regarder ce qui les a précédées.",
   "Readings at the close before each move, compared with the same coin's usual chance of a move that year. Anything found in the search years must also hold on later years the search never saw. This describes the past: it is not a forecast or advice.": "Lectures à la clôture précédant chaque mouvement, comparées à la chance habituelle de mouvement de la même crypto cette année-là. Ce qui est trouvé dans les années de recherche doit aussi tenir sur des années ultérieures jamais vues par la recherche. Cela décrit le passé : ce n'est ni une prévision ni un conseil.",
   "Search years": "Années de recherche",
-  "The first Soundings run is still being checked. It will show here soon.": "La première exécution de Soundings est encore en vérification. Elle apparaîtra bientôt ici.",
   "How this run was done": "Comment cette exécution a été faite",
   "📈 Before rises": "📈 Avant les hausses",
   "📉 Before falls": "📉 Avant les baisses",
@@ -2210,7 +2209,6 @@
   "a rise followed": "une hausse a suivi",
   "a fall followed": "une baisse a suivi",
   "Price on top; below, one row per result: a square on each close where its condition held, coloured when the move followed and grey when it didn't. The top row shows the Tide. Research coins, to {cut}: the protected test period is never shown here.": "Le cours en haut ; en dessous, une ligne par résultat : un carré à chaque clôture où la condition était remplie, en couleur si le mouvement a suivi, en gris sinon. La ligne du haut montre la marée. Cryptos de recherche, jusqu'au {cut} : la période de test protégée n'est jamais affichée ici.",
-  "Coin": "Crypto",
   "Period": "Période",
   "Move": "Mouvement",
   "Show faded too": "Afficher aussi les estompés",
@@ -2234,5 +2232,8 @@
   "Opened from Soundings as a new Set. Check it, then save it.": "Ouvert depuis Soundings comme nouveau Set. Vérifiez-le, puis enregistrez-le.",
   "🧩 Open as Set": "🧩 Ouvrir comme Set",
   "Opens this condition in Signal Sets as a new Set (daily candles), to save, scan in Prism, put in a funnel or get alerts from.": "Ouvre cette condition dans Signal Sets comme nouveau Set (bougies journalières), pour l'enregistrer, la scanner dans Prism, la mettre dans un funnel ou recevoir des alertes.",
-  "- **Coins**: the {n} most traded coins on Binance from 2018 to 2023, including coins that later collapsed or stopped trading, so the results are not flattered by looking only at survivors.": "- **Cryptos** : les {n} cryptos les plus échangées sur Binance de 2018 à 2023, y compris celles qui se sont effondrées ou ont cessé d'être cotées, pour que les résultats ne soient pas embellis en ne regardant que les survivantes."
+  "- **Coins**: the {n} most traded coins on Binance from 2018 to 2023, including coins that later collapsed or stopped trading, so the results are not flattered by looking only at survivors.": "- **Cryptos** : les {n} cryptos les plus échangées sur Binance de 2018 à 2023, y compris celles qui se sont effondrées ou ont cessé d'être cotées, pour que les résultats ne soient pas embellis en ne regardant que les survivantes.",
+  "This Soundings run is still being checked. It will show here soon.": "Cette exécution de Soundings est encore en cours de vérification. Elle apparaîtra bientôt ici.",
+  "- **Equities**: a fixed random sample of {n} companies from the S&P 500 as it stood at the start of 2016, including companies that later left the index, so the results are not flattered by looking only at today's winners.": "- **Actions** : un échantillon aléatoire fixe de {n} sociétés du S&P 500 tel qu'il était début 2016, y compris celles qui ont quitté l'indice depuis, pour que les résultats ne soient pas embellis en ne regardant que les gagnantes d'aujourd'hui.",
+  "🏛️ Equities": "🏛️ Actions"
 }

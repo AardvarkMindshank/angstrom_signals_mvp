@@ -26,8 +26,8 @@ import soundings as so  # noqa: E402
 import what_followed_run as wr  # noqa: E402
 
 
-def coins(prices: str, only: str = "") -> list[str]:
-    found = [s for s in wr.symbols(prices) if s.endswith("-USD")]
+def coins(prices: str, only: str = "", market: str = "crypto") -> list[str]:
+    found = [s for s in wr.symbols(prices) if s.endswith("-USD") == (market == "crypto")]
     return [s for s in found if not only or s in only.split(",")]
 
 
@@ -35,26 +35,26 @@ def table_step(args) -> int:
     from scoring import calculate_indicators
 
     i, n = (int(x) for x in args.shard.split("/"))
-    mine = [s for j, s in enumerate(coins(args.prices, args.coins)) if j % n == i]
+    mine = [s for j, s in enumerate(coins(args.prices, args.coins, args.market)) if j % n == i]
     folder = Path(args.out) / "readings"
     folder.mkdir(parents=True, exist_ok=True)
     for sym in mine:
         t0 = time.time()
         frame = calculate_indicators(wr.raw(args.prices, sym))
-        table = so.readings_table(frame, "crypto", sym)
+        table = so.readings_table(frame, args.market, sym)
         table.to_csv(folder / f"{sym}.csv.gz", index_label="date")
         print(f"{sym}: {len(table)} days in {time.time() - t0:.0f}s", flush=True)
     return 0
 
 
-def _load(prices: str, out: str) -> dict:
+def _load(prices: str, out: str, market: str = "crypto") -> dict:
     per, tide_cache = {}, {}
     for f in sorted((Path(out) / "readings").glob("*.csv.gz")):
         sym = f.name[:-7]
         table = pd.read_csv(f, index_col="date", parse_dates=["date"])
         if table.index.tz is None:
             table.index = table.index.tz_localize("UTC")
-        table = so.with_tides(table, "crypto", tide_cache)
+        table = so.with_tides(table, market, tide_cache)
         per[sym] = (table, so.moves(wr.raw(prices, sym)))
     return per
 
@@ -66,12 +66,13 @@ def _short(r: dict) -> dict:
 
 
 def mine_step(args) -> int:
-    per = _load(args.prices, args.out)
+    per = _load(args.prices, args.out, args.market)
     report = {"settings": {"rise": f"+{so.UP_ATR} typical moves within {so.WINDOW} daily candles, before -{so.STOP_ATR}",
                            "search": f"to {so.SEARCH_END.date()}", "confirm": f"{(so.SEARCH_END + pd.Timedelta(days=1)).date()} to {so.CUT.date()}",
                            "coins": sorted(per), "fdr": so.FDR, "min_lift": so.MIN_LIFT, "min_days": so.MIN_DAYS,
                            "min_coins": so.MIN_COINS,
-                           "universe": "wide" if Path(args.prices, "manifest.json").exists() and json.loads(
+                           "market": args.market,
+                           "universe": "equity_sample" if args.market == "equity" else "wide" if Path(args.prices, "manifest.json").exists() and json.loads(
                                Path(args.prices, "manifest.json").read_text()).get("source", "").startswith(
                                "data.binance.vision") else "research"},
               "targets": {}}
@@ -138,7 +139,7 @@ def grid_step(args) -> int:
         table = pd.read_csv(f, index_col="date", parse_dates=["date"])
         if table.index.tz is None:
             table.index = table.index.tz_localize("UTC")
-        table = so.with_tides(table, "crypto", tide_cache)
+        table = so.with_tides(table, args.market, tide_cache)
         raw = wr.raw(args.prices, sym)
         mv = so.moves(raw)
         conds = so.conditions(table)
@@ -160,7 +161,7 @@ def grid_step(args) -> int:
         }
         print(f"{sym}: {len(days)} days, {len(coins[sym]['rows'])} rows", flush=True)
     with gzip.open(Path(args.out, "soundings_grid.json.gz"), "wt") as fh:
-        json.dump({"cut": str(so.CUT.date()), "coins": coins}, fh, separators=(",", ":"))
+        json.dump({"cut": str(so.CUT.date()), "market": args.market, "coins": coins}, fh, separators=(",", ":"))
     return 0
 
 
@@ -173,7 +174,9 @@ def main() -> int:
     ap.add_argument("--coins", default="")
     ap.add_argument("--runs", type=int, default=so.RUNS_SEARCH)
     ap.add_argument("--singles", action="store_true", help="single conditions only (no pairs)")
+    ap.add_argument("--market", choices=["crypto", "equity"], default="crypto")
     args = ap.parse_args()
+    so.MARKET = args.market
     return {"table": table_step, "mine": mine_step, "grid": grid_step}[args.step](args)
 
 

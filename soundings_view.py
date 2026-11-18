@@ -40,16 +40,20 @@ def load(path: Path = DATA) -> dict | None:
 _GRID: dict = {}
 
 
+FILES = {"crypto": (DATA, GRID),
+         "equity": (DATA.with_name("soundings_equity.json"), GRID.with_name("soundings_equity_grid.json.gz"))}
+
+
 def load_grid(path: Path = GRID) -> dict | None:
-    if "data" not in _GRID:
+    if str(path) not in _GRID:
         try:
             import gzip
 
             with gzip.open(path, "rt") as fh:
-                _GRID["data"] = json.load(fh)
+                _GRID[str(path)] = json.load(fh)
         except Exception:
-            _GRID["data"] = None
-    return _GRID["data"]
+            _GRID[str(path)] = None
+    return _GRID[str(path)]
 
 
 def _pct(x) -> str:
@@ -103,17 +107,27 @@ CSS = """
 
 
 def render(st, report: dict | None = None) -> None:
-    report = report if report is not None else load()
     st.markdown(t("**🧭 Soundings** · *preview*: start from past rises and falls, and look back at what came "
                   "before them."))
+    market = "crypto"
+    if report is None:
+        market = st.segmented_control(t("Market"), ["crypto", "equity"], default="crypto", key="snd_market",
+                                      label_visibility="collapsed",
+                                      format_func=lambda m: t("🪙 Crypto") if m == "crypto" else t("🏛️ Equities"),
+                                      ) or "crypto"
+        report = load(FILES[market][0])
     st.caption(t("Readings at the close before each move, compared with the same coin's usual chance of a move "
                  "that year. Anything found in the search years must also hold on later years the search never saw. "
                  "This describes the past: it is not a forecast or advice."))
     if not report:
-        st.info(t("The first Soundings run is still being checked. It will show here soon."))
+        st.info(t("This Soundings run is still being checked. It will show here soon."))
         return
     s = report.get("settings") or {}
     with st.expander(t("How this run was done"), expanded=False):
+        if s.get("universe") == "equity_sample":
+            st.markdown(t("- **Equities**: a fixed random sample of {n} companies from the S&P 500 as it stood at the "
+                          "start of 2016, including companies that later left the index, so the results are not "
+                          "flattered by looking only at today's winners.", n=len(s.get("coins") or [])))
         if s.get("universe") == "wide":
             st.markdown(t("- **Coins**: the {n} most traded coins on Binance from 2018 to 2023, including coins that "
                           "later collapsed or stopped trading, so the results are not flattered by looking only at "
@@ -133,7 +147,7 @@ def render(st, report: dict | None = None) -> None:
     st.markdown(CSS, unsafe_allow_html=True)
     chart, rises, falls = st.tabs([t("🗺️ Chart"), t("📈 Before rises"), t("📉 Before falls")])   # the picture first
     with chart:
-        chart_tab(st, report)
+        chart_tab(st, report, FILES[market][1] if market in FILES else GRID)
     for tab, target in ((rises, "rise"), (falls, "fall")):
         with tab:
             part = (report.get("targets") or {}).get(target) or {}
@@ -360,8 +374,8 @@ def _tv_component(st):
     return _COMPONENT["c"]
 
 
-def chart_tab(st, report: dict) -> None:
-    grid = load_grid()
+def chart_tab(st, report: dict, grid_path: Path = GRID) -> None:
+    grid = load_grid(grid_path)
     if not grid or not grid.get("coins"):
         st.info(t("The chart's data is not available yet."))
         return
@@ -372,8 +386,9 @@ def chart_tab(st, report: dict) -> None:
     # survivors only) but there is nothing to trade, so they are not offered here.
     coins = sorted(c for c, v in grid["coins"].items() if not v.get("stopped"))
     c1, c2, c3, c4 = st.columns([2, 2, 2, 2])
-    sym = c1.selectbox(t("Coin"), coins, index=coins.index("BTC-USD") if "BTC-USD" in coins else 0,
-                       format_func=lambda s: s.replace("-USD", ""), key="snd_chart_coin")
+    first = "BTC-USD" if "BTC-USD" in coins else ("AAPL" if "AAPL" in coins else None)
+    sym = c1.selectbox(t("Asset"), coins, index=coins.index(first) if first else 0,
+                       format_func=lambda s: s.replace("-USD", ""), key=f"snd_chart_coin_{grid.get('market', 'c')}")
     coin = grid["coins"][sym]
     first_year = int(coin["start"][:4])
     years = [str(y) for y in range(int(grid["cut"][:4]), first_year - 1, -1)]

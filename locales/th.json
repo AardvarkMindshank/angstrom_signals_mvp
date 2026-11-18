@@ -2188,7 +2188,6 @@
   "**🧭 Soundings** · *preview*: start from past rises and falls, and look back at what came before them.": "**🧭 Soundings** · *ตัวอย่าง*: เริ่มจากขาขึ้นและขาลงในอดีต แล้วมองย้อนว่ามีอะไรมาก่อน",
   "Readings at the close before each move, compared with the same coin's usual chance of a move that year. Anything found in the search years must also hold on later years the search never saw. This describes the past: it is not a forecast or advice.": "ค่าที่อ่านได้ ณ ราคาปิดก่อนการเคลื่อนไหวแต่ละครั้ง เทียบกับโอกาสเคลื่อนไหวตามปกติของเหรียญเดียวกันในปีนั้น สิ่งที่พบในช่วงค้นหาต้องใช้ได้ในช่วงหลังที่การค้นหาไม่เคยเห็นด้วย นี่คือการอธิบายอดีต ไม่ใช่การพยากรณ์หรือคำแนะนำ",
   "Search years": "ช่วงค้นหา",
-  "The first Soundings run is still being checked. It will show here soon.": "การรัน Soundings ครั้งแรกยังอยู่ระหว่างตรวจ จะแสดงที่นี่เร็ว ๆ นี้",
   "How this run was done": "วิธีทำการรันนี้",
   "📈 Before rises": "📈 ก่อนขาขึ้น",
   "📉 Before falls": "📉 ก่อนขาลง",
@@ -2210,7 +2209,6 @@
   "a rise followed": "ตามมาด้วยการขึ้น",
   "a fall followed": "ตามมาด้วยการลง",
   "Price on top; below, one row per result: a square on each close where its condition held, coloured when the move followed and grey when it didn't. The top row shows the Tide. Research coins, to {cut}: the protected test period is never shown here.": "ราคาอยู่ด้านบน ด้านล่างเป็นหนึ่งแถวต่อผลลัพธ์: สี่เหลี่ยมที่แต่ละการปิดที่เงื่อนไขเป็นจริง มีสีถ้าการเคลื่อนไหวตามมา และสีเทาถ้าไม่ แถวบนสุดแสดงกระแสน้ำ เหรียญวิจัย ถึง {cut}: ช่วงทดสอบที่ปกป้องไว้จะไม่แสดงที่นี่",
-  "Coin": "เหรียญ",
   "Period": "ช่วงเวลา",
   "Move": "การเคลื่อนไหว",
   "Show faded too": "แสดงที่จางหายด้วย",
@@ -2234,5 +2232,8 @@
   "Opened from Soundings as a new Set. Check it, then save it.": "เปิดจาก Soundings เป็น Set ใหม่แล้ว ตรวจดูแล้วบันทึก",
   "🧩 Open as Set": "🧩 เปิดเป็น Set",
   "Opens this condition in Signal Sets as a new Set (daily candles), to save, scan in Prism, put in a funnel or get alerts from.": "เปิดเงื่อนไขนี้ใน Signal Sets เป็น Set ใหม่ (แท่งเทียนรายวัน) เพื่อบันทึก สแกนใน Prism ใส่ใน funnel หรือรับการแจ้งเตือน",
-  "- **Coins**: the {n} most traded coins on Binance from 2018 to 2023, including coins that later collapsed or stopped trading, so the results are not flattered by looking only at survivors.": "- **เหรียญ**: {n} เหรียญที่มีการซื้อขายมากที่สุดบน Binance ตั้งแต่ปี 2018 ถึง 2023 รวมถึงเหรียญที่ภายหลังร่วงหนักหรือหยุดซื้อขาย เพื่อไม่ให้ผลลัพธ์ดูดีเกินจริงจากการดูเฉพาะเหรียญที่อยู่รอด"
+  "- **Coins**: the {n} most traded coins on Binance from 2018 to 2023, including coins that later collapsed or stopped trading, so the results are not flattered by looking only at survivors.": "- **เหรียญ**: {n} เหรียญที่มีการซื้อขายมากที่สุดบน Binance ตั้งแต่ปี 2018 ถึง 2023 รวมถึงเหรียญที่ภายหลังร่วงหนักหรือหยุดซื้อขาย เพื่อไม่ให้ผลลัพธ์ดูดีเกินจริงจากการดูเฉพาะเหรียญที่อยู่รอด",
+  "This Soundings run is still being checked. It will show here soon.": "การรัน Soundings นี้ยังอยู่ระหว่างตรวจสอบ จะแสดงที่นี่เร็วๆ นี้",
+  "- **Equities**: a fixed random sample of {n} companies from the S&P 500 as it stood at the start of 2016, including companies that later left the index, so the results are not flattered by looking only at today's winners.": "- **หุ้น**: ตัวอย่างสุ่มแบบคงที่ {n} บริษัทจาก S&P 500 ณ ต้นปี 2016 รวมถึงบริษัทที่ภายหลังออกจากดัชนี เพื่อไม่ให้ผลลัพธ์ดูดีเกินจริงจากการดูเฉพาะผู้ชนะในวันนี้",
+  "🏛️ Equities": "🏛️ หุ้น"
 }

@@ -2188,7 +2188,6 @@
   "**🧭 Soundings** · *preview*: start from past rises and falls, and look back at what came before them.": "**🧭 Soundings** · *önizleme*: geçmiş yükseliş ve düşüşlerden başla, öncesinde ne olduğuna bak.",
   "Readings at the close before each move, compared with the same coin's usual chance of a move that year. Anything found in the search years must also hold on later years the search never saw. This describes the past: it is not a forecast or advice.": "Her hareketten önceki kapanıştaki okumalar, aynı coinin o yılki olağan hareket şansıyla karşılaştırılır. Arama yıllarında bulunanlar, aramanın hiç görmediği sonraki yıllarda da geçerli olmalı. Geçmişi anlatır: tahmin ya da tavsiye değildir.",
   "Search years": "Arama yılları",
-  "The first Soundings run is still being checked. It will show here soon.": "İlk Soundings çalışması hâlâ kontrol ediliyor. Yakında burada görünecek.",
   "How this run was done": "Bu çalışma nasıl yapıldı",
   "📈 Before rises": "📈 Yükselişlerden önce",
   "📉 Before falls": "📉 Düşüşlerden önce",
@@ -2210,7 +2209,6 @@
   "a rise followed": "ardından yükseliş geldi",
   "a fall followed": "ardından düşüş geldi",
   "Price on top; below, one row per result: a square on each close where its condition held, coloured when the move followed and grey when it didn't. The top row shows the Tide. Research coins, to {cut}: the protected test period is never shown here.": "Üstte fiyat; altta her sonuç için bir satır: koşulun sağlandığı her kapanışta bir kare, hareket geldiyse renkli, gelmediyse gri. En üst satır gelgiti gösterir. Araştırma coinleri, {cut} tarihine kadar: korunan test dönemi burada asla gösterilmez.",
-  "Coin": "Coin",
   "Period": "Dönem",
   "Move": "Hareket",
   "Show faded too": "Sönenleri de göster",
@@ -2234,5 +2232,8 @@
   "Opened from Soundings as a new Set. Check it, then save it.": "Soundings'ten yeni bir Set olarak açıldı. Kontrol edip kaydedin.",
   "🧩 Open as Set": "🧩 Set olarak aç",
   "Opens this condition in Signal Sets as a new Set (daily candles), to save, scan in Prism, put in a funnel or get alerts from.": "Bu koşulu Signal Sets'te yeni bir Set (günlük mumlar) olarak açar; kaydetmek, Prism'de taramak, bir hunide kullanmak veya uyarı almak için.",
-  "- **Coins**: the {n} most traded coins on Binance from 2018 to 2023, including coins that later collapsed or stopped trading, so the results are not flattered by looking only at survivors.": "- **Coinler**: 2018-2023 arasında Binance'te en çok işlem gören {n} coin; sonradan çöken veya işlemden kalkan coinler de dahil, böylece sonuçlar yalnızca hayatta kalanlara bakılarak güzelleştirilmez."
+  "- **Coins**: the {n} most traded coins on Binance from 2018 to 2023, including coins that later collapsed or stopped trading, so the results are not flattered by looking only at survivors.": "- **Coinler**: 2018-2023 arasında Binance'te en çok işlem gören {n} coin; sonradan çöken veya işlemden kalkan coinler de dahil, böylece sonuçlar yalnızca hayatta kalanlara bakılarak güzelleştirilmez.",
+  "This Soundings run is still being checked. It will show here soon.": "Bu Soundings çalışması hâlâ kontrol ediliyor. Yakında burada görünecek.",
+  "- **Equities**: a fixed random sample of {n} companies from the S&P 500 as it stood at the start of 2016, including companies that later left the index, so the results are not flattered by looking only at today's winners.": "- **Hisseler**: 2016 başındaki haliyle S&P 500'den sabit rastgele seçilmiş {n} şirket; sonradan endeksten çıkanlar da dahil, böylece sonuçlar yalnızca bugünün kazananlarına bakılarak güzelleştirilmez.",
+  "🏛️ Equities": "🏛️ Hisseler"
 }

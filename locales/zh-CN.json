@@ -2188,7 +2188,6 @@
   "**🧭 Soundings** · *preview*: start from past rises and falls, and look back at what came before them.": "**🧭 Soundings** · *预览*：从过去的上涨和下跌出发，回看它们之前出现了什么。",
   "Readings at the close before each move, compared with the same coin's usual chance of a move that year. Anything found in the search years must also hold on later years the search never saw. This describes the past: it is not a forecast or advice.": "每次波动前收盘时的读数，与同一币种当年通常的波动概率比较。搜索年份中发现的结果，也必须在搜索从未见过的后续年份中成立。这是对过去的描述：不是预测或建议。",
   "Search years": "搜索年份",
-  "The first Soundings run is still being checked. It will show here soon.": "第一次 Soundings 运行仍在检查中，很快会显示在这里。",
   "How this run was done": "这次运行的方法",
   "📈 Before rises": "📈 上涨之前",
   "📉 Before falls": "📉 下跌之前",
@@ -2210,7 +2209,6 @@
   "a rise followed": "随后上涨",
   "a fall followed": "随后下跌",
   "Price on top; below, one row per result: a square on each close where its condition held, coloured when the move followed and grey when it didn't. The top row shows the Tide. Research coins, to {cut}: the protected test period is never shown here.": "上方是价格；下方每个结果一行：条件成立的每次收盘标一个方块，随后出现行情则着色，否则为灰色。最上面一行显示潮汐。研究用币种，截至 {cut}：受保护的测试期从不在此显示。",
-  "Coin": "币种",
   "Period": "时期",
   "Move": "行情",
   "Show faded too": "也显示已失效的",
@@ -2234,5 +2232,8 @@
   "Opened from Soundings as a new Set. Check it, then save it.": "已从 Soundings 作为新 Set 打开。检查后请保存。",
   "🧩 Open as Set": "🧩 作为 Set 打开",
   "Opens this condition in Signal Sets as a new Set (daily candles), to save, scan in Prism, put in a funnel or get alerts from.": "在 Signal Sets 中将此条件作为新 Set（日线）打开，可保存、在 Prism 中扫描、放入漏斗或接收提醒。",
-  "- **Coins**: the {n} most traded coins on Binance from 2018 to 2023, including coins that later collapsed or stopped trading, so the results are not flattered by looking only at survivors.": "- **币种**：2018 至 2023 年 Binance 上交易最活跃的 {n} 个币种，包括后来崩盘或停止交易的币种，以免只看幸存者而美化结果。"
+  "- **Coins**: the {n} most traded coins on Binance from 2018 to 2023, including coins that later collapsed or stopped trading, so the results are not flattered by looking only at survivors.": "- **币种**：2018 至 2023 年 Binance 上交易最活跃的 {n} 个币种，包括后来崩盘或停止交易的币种，以免只看幸存者而美化结果。",
+  "This Soundings run is still being checked. It will show here soon.": "此次 Soundings 运行仍在检查中，很快会显示在这里。",
+  "- **Equities**: a fixed random sample of {n} companies from the S&P 500 as it stood at the start of 2016, including companies that later left the index, so the results are not flattered by looking only at today's winners.": "- **股票**：从 2016 年初的标普 500 中固定随机抽取的 {n} 家公司，包括后来退出指数的公司，以免只看今天的赢家而美化结果。",
+  "🏛️ Equities": "🏛️ 股票"
 }
