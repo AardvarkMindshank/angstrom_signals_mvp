@@ -114,6 +114,10 @@ def render(st, report: dict | None = None) -> None:
         return
     s = report.get("settings") or {}
     with st.expander(t("How this run was done"), expanded=False):
+        if s.get("universe") == "wide":
+            st.markdown(t("- **Coins**: the {n} most traded coins on Binance from 2018 to 2023, including coins that "
+                          "later collapsed or stopped trading, so the results are not flattered by looking only at "
+                          "survivors.", n=len(s.get("coins") or [])))
         st.markdown(t(
             "- **A rise**: {rise}. A fall is the mirror image.\n"
             "- **Coins**: {n} saved research coins, daily candles.\n"

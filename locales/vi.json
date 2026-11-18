@@ -2233,5 +2233,6 @@
   "This condition can't be opened as a Set yet.": "Chưa thể mở điều kiện này thành Set.",
   "Opened from Soundings as a new Set. Check it, then save it.": "Đã mở từ Soundings thành một Set mới. Hãy kiểm tra rồi lưu.",
   "🧩 Open as Set": "🧩 Mở thành Set",
-  "Opens this condition in Signal Sets as a new Set (daily candles), to save, scan in Prism, put in a funnel or get alerts from.": "Mở điều kiện này trong Signal Sets thành một Set mới (nến ngày), để lưu, quét trong Prism, đưa vào phễu hoặc nhận cảnh báo."
+  "Opens this condition in Signal Sets as a new Set (daily candles), to save, scan in Prism, put in a funnel or get alerts from.": "Mở điều kiện này trong Signal Sets thành một Set mới (nến ngày), để lưu, quét trong Prism, đưa vào phễu hoặc nhận cảnh báo.",
+  "- **Coins**: the {n} most traded coins on Binance from 2018 to 2023, including coins that later collapsed or stopped trading, so the results are not flattered by looking only at survivors.": "- **Coin**: {n} coin được giao dịch nhiều nhất trên Binance từ 2018 đến 2023, gồm cả những coin sau đó sụp đổ hoặc ngừng giao dịch, để kết quả không đẹp lên do chỉ nhìn các coin còn sống sót."
 }

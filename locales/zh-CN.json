@@ -2233,5 +2233,6 @@
   "This condition can't be opened as a Set yet.": "此条件暂时无法作为 Set 打开。",
   "Opened from Soundings as a new Set. Check it, then save it.": "已从 Soundings 作为新 Set 打开。检查后请保存。",
   "🧩 Open as Set": "🧩 作为 Set 打开",
-  "Opens this condition in Signal Sets as a new Set (daily candles), to save, scan in Prism, put in a funnel or get alerts from.": "在 Signal Sets 中将此条件作为新 Set（日线）打开，可保存、在 Prism 中扫描、放入漏斗或接收提醒。"
+  "Opens this condition in Signal Sets as a new Set (daily candles), to save, scan in Prism, put in a funnel or get alerts from.": "在 Signal Sets 中将此条件作为新 Set（日线）打开，可保存、在 Prism 中扫描、放入漏斗或接收提醒。",
+  "- **Coins**: the {n} most traded coins on Binance from 2018 to 2023, including coins that later collapsed or stopped trading, so the results are not flattered by looking only at survivors.": "- **币种**：2018 至 2023 年 Binance 上交易最活跃的 {n} 个币种，包括后来崩盘或停止交易的币种，以免只看幸存者而美化结果。"
 }

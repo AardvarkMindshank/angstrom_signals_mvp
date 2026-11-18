@@ -2233,5 +2233,6 @@
   "This condition can't be opened as a Set yet.": "Bu koşul henüz Set olarak açılamıyor.",
   "Opened from Soundings as a new Set. Check it, then save it.": "Soundings'ten yeni bir Set olarak açıldı. Kontrol edip kaydedin.",
   "🧩 Open as Set": "🧩 Set olarak aç",
-  "Opens this condition in Signal Sets as a new Set (daily candles), to save, scan in Prism, put in a funnel or get alerts from.": "Bu koşulu Signal Sets'te yeni bir Set (günlük mumlar) olarak açar; kaydetmek, Prism'de taramak, bir hunide kullanmak veya uyarı almak için."
+  "Opens this condition in Signal Sets as a new Set (daily candles), to save, scan in Prism, put in a funnel or get alerts from.": "Bu koşulu Signal Sets'te yeni bir Set (günlük mumlar) olarak açar; kaydetmek, Prism'de taramak, bir hunide kullanmak veya uyarı almak için.",
+  "- **Coins**: the {n} most traded coins on Binance from 2018 to 2023, including coins that later collapsed or stopped trading, so the results are not flattered by looking only at survivors.": "- **Coinler**: 2018-2023 arasında Binance'te en çok işlem gören {n} coin; sonradan çöken veya işlemden kalkan coinler de dahil, böylece sonuçlar yalnızca hayatta kalanlara bakılarak güzelleştirilmez."
 }

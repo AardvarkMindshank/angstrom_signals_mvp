@@ -70,7 +70,10 @@ def mine_step(args) -> int:
     report = {"settings": {"rise": f"+{so.UP_ATR} typical moves within {so.WINDOW} daily candles, before -{so.STOP_ATR}",
                            "search": f"to {so.SEARCH_END.date()}", "confirm": f"{(so.SEARCH_END + pd.Timedelta(days=1)).date()} to {so.CUT.date()}",
                            "coins": sorted(per), "fdr": so.FDR, "min_lift": so.MIN_LIFT, "min_days": so.MIN_DAYS,
-                           "min_coins": so.MIN_COINS},
+                           "min_coins": so.MIN_COINS,
+                           "universe": "wide" if Path(args.prices, "manifest.json").exists() and json.loads(
+                               Path(args.prices, "manifest.json").read_text()).get("source", "").startswith(
+                               "data.binance.vision") else "research"},
               "targets": {}}
     lines = []
     confirm_panels = {k: so.panel(per, k, start=so.SEARCH_END + pd.Timedelta(days=1)) for k in ("rise", "fall")}

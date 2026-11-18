@@ -2233,5 +2233,6 @@
   "This condition can't be opened as a Set yet.": "Cette condition ne peut pas encore être ouverte comme Set.",
   "Opened from Soundings as a new Set. Check it, then save it.": "Ouvert depuis Soundings comme nouveau Set. Vérifiez-le, puis enregistrez-le.",
   "🧩 Open as Set": "🧩 Ouvrir comme Set",
-  "Opens this condition in Signal Sets as a new Set (daily candles), to save, scan in Prism, put in a funnel or get alerts from.": "Ouvre cette condition dans Signal Sets comme nouveau Set (bougies journalières), pour l'enregistrer, la scanner dans Prism, la mettre dans un funnel ou recevoir des alertes."
+  "Opens this condition in Signal Sets as a new Set (daily candles), to save, scan in Prism, put in a funnel or get alerts from.": "Ouvre cette condition dans Signal Sets comme nouveau Set (bougies journalières), pour l'enregistrer, la scanner dans Prism, la mettre dans un funnel ou recevoir des alertes.",
+  "- **Coins**: the {n} most traded coins on Binance from 2018 to 2023, including coins that later collapsed or stopped trading, so the results are not flattered by looking only at survivors.": "- **Cryptos** : les {n} cryptos les plus échangées sur Binance de 2018 à 2023, y compris celles qui se sont effondrées ou ont cessé d'être cotées, pour que les résultats ne soient pas embellis en ne regardant que les survivantes."
 }

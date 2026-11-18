@@ -2233,5 +2233,6 @@
   "This condition can't be opened as a Set yet.": "ยังเปิดเงื่อนไขนี้เป็น Set ไม่ได้",
   "Opened from Soundings as a new Set. Check it, then save it.": "เปิดจาก Soundings เป็น Set ใหม่แล้ว ตรวจดูแล้วบันทึก",
   "🧩 Open as Set": "🧩 เปิดเป็น Set",
-  "Opens this condition in Signal Sets as a new Set (daily candles), to save, scan in Prism, put in a funnel or get alerts from.": "เปิดเงื่อนไขนี้ใน Signal Sets เป็น Set ใหม่ (แท่งเทียนรายวัน) เพื่อบันทึก สแกนใน Prism ใส่ใน funnel หรือรับการแจ้งเตือน"
+  "Opens this condition in Signal Sets as a new Set (daily candles), to save, scan in Prism, put in a funnel or get alerts from.": "เปิดเงื่อนไขนี้ใน Signal Sets เป็น Set ใหม่ (แท่งเทียนรายวัน) เพื่อบันทึก สแกนใน Prism ใส่ใน funnel หรือรับการแจ้งเตือน",
+  "- **Coins**: the {n} most traded coins on Binance from 2018 to 2023, including coins that later collapsed or stopped trading, so the results are not flattered by looking only at survivors.": "- **เหรียญ**: {n} เหรียญที่มีการซื้อขายมากที่สุดบน Binance ตั้งแต่ปี 2018 ถึง 2023 รวมถึงเหรียญที่ภายหลังร่วงหนักหรือหยุดซื้อขาย เพื่อไม่ให้ผลลัพธ์ดูดีเกินจริงจากการดูเฉพาะเหรียญที่อยู่รอด"
 }

@@ -2233,5 +2233,6 @@
   "This condition can't be opened as a Set yet.": "이 조건은 아직 Set으로 열 수 없습니다.",
   "Opened from Soundings as a new Set. Check it, then save it.": "Soundings에서 새 Set으로 열었습니다. 확인한 뒤 저장하세요.",
   "🧩 Open as Set": "🧩 Set으로 열기",
-  "Opens this condition in Signal Sets as a new Set (daily candles), to save, scan in Prism, put in a funnel or get alerts from.": "이 조건을 Signal Sets에서 새 Set(일봉)으로 열어 저장하거나 Prism에서 스캔하고, 퍼널에 넣거나 알림을 받을 수 있습니다."
+  "Opens this condition in Signal Sets as a new Set (daily candles), to save, scan in Prism, put in a funnel or get alerts from.": "이 조건을 Signal Sets에서 새 Set(일봉)으로 열어 저장하거나 Prism에서 스캔하고, 퍼널에 넣거나 알림을 받을 수 있습니다.",
+  "- **Coins**: the {n} most traded coins on Binance from 2018 to 2023, including coins that later collapsed or stopped trading, so the results are not flattered by looking only at survivors.": "- **코인**: 2018~2023년 Binance에서 가장 많이 거래된 {n}개 코인. 이후 폭락하거나 거래가 중단된 코인도 포함해, 살아남은 코인만 보고 결과가 좋아 보이지 않도록 했습니다."
 }

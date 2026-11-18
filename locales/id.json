@@ -2233,5 +2233,6 @@
   "This condition can't be opened as a Set yet.": "Kondisi ini belum bisa dibuka sebagai Set.",
   "Opened from Soundings as a new Set. Check it, then save it.": "Dibuka dari Soundings sebagai Set baru. Periksa, lalu simpan.",
   "🧩 Open as Set": "🧩 Buka sebagai Set",
-  "Opens this condition in Signal Sets as a new Set (daily candles), to save, scan in Prism, put in a funnel or get alerts from.": "Membuka kondisi ini di Signal Sets sebagai Set baru (candle harian), untuk disimpan, dipindai di Prism, dimasukkan ke funnel, atau mendapat peringatan."
+  "Opens this condition in Signal Sets as a new Set (daily candles), to save, scan in Prism, put in a funnel or get alerts from.": "Membuka kondisi ini di Signal Sets sebagai Set baru (candle harian), untuk disimpan, dipindai di Prism, dimasukkan ke funnel, atau mendapat peringatan.",
+  "- **Coins**: the {n} most traded coins on Binance from 2018 to 2023, including coins that later collapsed or stopped trading, so the results are not flattered by looking only at survivors.": "- **Koin**: {n} koin yang paling banyak diperdagangkan di Binance dari 2018 hingga 2023, termasuk koin yang kemudian runtuh atau berhenti diperdagangkan, agar hasilnya tidak terlihat lebih baik karena hanya melihat yang bertahan."
 }
