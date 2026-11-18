@@ -166,6 +166,11 @@ def main() -> int:
         if d.empty:
             manifest["missing"].append(sym)
             continue
+        if pd.Timestamp(d["date"].iloc[0]) > pd.Timestamp(args.start) + pd.Timedelta(days=30):
+            # prices that begin after the member date belong to another company now using the ticker (Sea under SE,
+            # the new ADT) or lost their early years (a spin-off renamed): not this member's history, so left out
+            manifest.setdefault("other_company", []).append(f"{sym}→{found}")
+            continue
         if len(d) < MIN_DAYS:
             manifest["too_short"].append(sym)
             continue
@@ -178,7 +183,8 @@ def main() -> int:
               flush=True)
     (folder / "manifest.json").write_text(json.dumps(manifest, indent=1))
     print(f"\n{len(manifest['files'])} saved of {len(chosen)} sampled; Yahoo has no prices for {len(manifest['missing'])}: "
-          f"{', '.join(manifest['missing'])}; too short: {', '.join(manifest['too_short']) or 'none'}")
+          f"{', '.join(manifest['missing'])}; too short: {', '.join(manifest['too_short']) or 'none'}; prices start "
+          f"after the member date (another company or a lost history): {', '.join(manifest.get('other_company', [])) or 'none'}")
     return 0
 
 
