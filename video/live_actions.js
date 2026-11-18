@@ -112,6 +112,12 @@ async function save(h, label, done) {
   }
 }
 
+async function signInWide(h) {
+  await signIn(h);
+  const tab = h.page.locator("#angstrom-sidebar-tab:not(.is-closed)");
+  if (await tab.count()) { await tab.click(); await h.wait(800); await h.settle(); }
+}
+
 module.exports = {
   // ------------------------------------------------------------------------------------------ 0 · at a glance
   "d0-overview": {
@@ -286,7 +292,7 @@ module.exports = {
   },
   // ------------------------------------------------------------------------------------------ 2 · first Group
   "d2-first-group": {
-    login: signIn,
+    login: signInWide,
     idea: async (h) => {
       await h.card({ kicker: "Signal Groups", title: "Several signals, one reading",
         lines: ["✓ A score from −100 to +100", "✓ Labels you choose: Bullish, Bearish, Neutral", "✓ The reasons behind every reading"] });
@@ -313,12 +319,17 @@ module.exports = {
       await h.wait(600);
       await h.press(ADD("MACD line"));
       await h.wait(600);
+      const members = h.page.locator(".lat .mid").first();
+      await members.evaluate((n) => n.scrollIntoView({ block: "start", behavior: "smooth" })).catch(() => {});
+      await h.wait(500);
     },
-    score: async (h) => {
-      const first = h.page.locator(".lat .card").first();
-      await h.tip(first.locator("button", { hasText: /^Score$/ }), "Score: adds to the Group's score");
-      await h.wait(2200);
-      await h.tip(first.locator("button", { hasText: /^Condition$/ }), "Condition: must hold, without changing the score");
+    score: async (h, dur) => {
+      const roles = h.page.locator(".lat .mid .card").first();
+      await h.show(roles);
+      await h.ring(roles);
+      await h.wait(Math.max(1500, dur * 450));
+      await h.clear("demo-ring");
+      await h.ring(h.page.locator(".lat .mid .card"));
     },
     rules: async (h) => {
       await h.clear();
@@ -344,7 +355,7 @@ module.exports = {
 
   // ------------------------------------------------------------------------------------------ 3 · first Set
   "d3-first-set": {
-    login: signIn,
+    login: signInWide,
     idea: async (h) => {
       await h.card({ kicker: "Signal Sets", title: "Dip in my uptrend",
         lines: ["✓ My Trend is Bullish", "✓ RSI is 40 or less: price has dipped"],
@@ -395,7 +406,7 @@ module.exports = {
 
   // ------------------------------------------------------------------------------------------ 4 · first scan
   "d4-first-scan": {
-    login: signIn,
+    login: signInWide,
     idea: async (h) => {
       await h.card({ kicker: "Prism Scan", title: "Ask your Set about every asset",
         lines: ["✓ Run it now, on the latest finished candles", "✓ Or on a schedule, by itself", "✓ Alerts when an answer turns Yes"] });
@@ -444,7 +455,7 @@ module.exports = {
 
   // ------------------------------------------------------------------------------------------ 5 · own funnel
   "d5-first-funnel": {
-    login: signIn,
+    login: signInWide,
     idea: async (h) => {
       await h.card({ kicker: "🔻 Funnels", title: "From a whole market to a short list",
         lines: ["Pool: the top coins, or the S&P 500", "Each stage narrows it down, on its own chart",
@@ -468,6 +479,9 @@ module.exports = {
       await h.press(copy);
       await h.page.waitForSelector('input[aria-label="Name"]', { timeout: 60000 }).catch(() => {});
       await h.settle();
+      const name = h.page.locator('input[aria-label="Name"]').first();
+      await name.evaluate((n) => n.scrollIntoView({ block: "center", behavior: "smooth" })).catch(() => {});
+      await h.wait(600);
     },
     name: async (h) => {
       const name = h.page.locator('input[aria-label="Name"]').first();

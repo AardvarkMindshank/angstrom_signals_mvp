@@ -26,12 +26,12 @@
   {
    "id": "crypto",
    "screen": "Watchlists: adding Chainlink",
-   "say": "Now open Watchlists, then Edit Crypto. | Type a name or a ticker, press Enter, and pick the match. | Here, Chainlink."
+   "say": "Now open Watchlists, then Edit Crypto. | Type a name or a ticker, press Enter, and pick the match. | Here, Chainlink. | The first time anyone adds a coin, its readings are worked out and saved for everyone, so it takes a few seconds. | After that, it's instant."
   },
   {
    "id": "stock",
    "screen": "Watchlists: adding AMD",
-   "say": "Shares work the same way, in Edit Stocks. | Type a company or a ticker. Here, AMD."
+   "say": "Shares work the same way, in Edit Stocks. | Type a company or a ticker. Here, AMD. | Again, a new one takes a few seconds the first time."
   },
   {
    "id": "table",
