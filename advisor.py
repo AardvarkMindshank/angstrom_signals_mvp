@@ -347,6 +347,7 @@ def _ask(history: list[dict], question: str, system, post=requests.post, images:
                 detail = response.text[:200]
             raise RuntimeError(f"The AI service answered {response.status_code}: {detail[:200]}")
         data = response.json()
+        ai_providers.meter("claude", MODEL, data)
         if with_tools and data.get("stop_reason") == "tool_use":
             return data, "tool_use"
         text = "".join(part.get("text", "") for part in data.get("content") or [] if part.get("type") == "text")

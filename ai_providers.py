@@ -27,8 +27,52 @@ from i18n import mark
 
 import json
 import os
+import threading
 
 import requests
+
+# ------------------------------------------------------------------------------- the AI use meter (admin list)
+# The app sets a meter for the account whose page is running (set_meter); every answer then reports its tokens to it.
+# Streamlit runs each page in its own thread, so the meter is kept per thread. Nothing is reported without one
+# (the background worker's news scores are the app's own use, not a member's).
+_METER = threading.local()
+
+
+def set_meter(fn) -> None:
+    _METER.fn = fn
+
+
+def usage(provider: str, data) -> dict:
+    """Tokens one answer used: input, output, cache_read, cache_write (0 when the AI doesn't say)."""
+    u = (data or {}).get("usage") or (data or {}).get("usageMetadata") or {} if isinstance(data, dict) else {}
+    if provider == "claude":
+        return {"input": int(u.get("input_tokens") or 0), "output": int(u.get("output_tokens") or 0),
+                "cache_read": int(u.get("cache_read_input_tokens") or 0),
+                "cache_write": int(u.get("cache_creation_input_tokens") or 0)}
+    if provider == "grok":
+        cached = int(((u.get("prompt_tokens_details") or {}).get("cached_tokens")) or 0)
+        return {"input": int(u.get("prompt_tokens") or 0) - cached, "output": int(u.get("completion_tokens") or 0),
+                "cache_read": cached, "cache_write": 0}
+    if provider == "chatgpt":
+        cached = int(((u.get("input_tokens_details") or {}).get("cached_tokens")) or 0)
+        return {"input": int(u.get("input_tokens") or 0) - cached, "output": int(u.get("output_tokens") or 0),
+                "cache_read": cached, "cache_write": 0}
+    if provider == "gemini":
+        cached = int(u.get("cachedContentTokenCount") or 0)
+        return {"input": int(u.get("promptTokenCount") or 0) - cached,
+                "output": int(u.get("candidatesTokenCount") or 0) + int(u.get("thoughtsTokenCount") or 0),
+                "cache_read": cached, "cache_write": 0}
+    return {"input": 0, "output": 0, "cache_read": 0, "cache_write": 0}
+
+
+def meter(provider: str, model_name: str, data) -> None:
+    fn = getattr(_METER, "fn", None)
+    if fn is None:
+        return
+    try:
+        fn(provider, model_name, usage(provider, data))
+    except Exception:
+        pass                                    # the meter never gets in the way of an answer
 
 PROVIDERS = {
     "claude": {"name": "Claude", "maker": "Anthropic", "env": "ANTHROPIC_API_KEY", "model_env": "ANTHROPIC_MODEL",
@@ -127,7 +171,9 @@ def _check(response, provider: str) -> dict:
         except ValueError:
             detail = response.text[:200]
         raise RuntimeError(f"{PROVIDERS[provider]['name']} answered {response.status_code}: {str(detail)[:200]}")
-    return response.json()
+    data = response.json()
+    meter(provider, model(provider), data)
+    return data
 
 
 def chat(provider: str, system, messages: list[dict], max_tokens: int = 2500, post=requests.post,

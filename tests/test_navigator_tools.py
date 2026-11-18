@@ -119,3 +119,19 @@ def test_the_navigator_loop_runs_tools_then_answers():
     second = calls[1]["messages"]
     assert second[-1]["content"][0]["type"] == "tool_result" and second[-1]["content"][0]["tool_use_id"] == "t1"
     assert second[-2]["role"] == "assistant"
+
+
+def test_ai_usage_meter_reads_tokens():
+    import ai_providers
+
+    got = []
+    ai_providers.set_meter(lambda p, m, u: got.append((p, m, u)))
+    try:
+        ai_providers.meter("claude", "claude-sonnet-5-5", {"usage": {"input_tokens": 10, "output_tokens": 5,
+                                                                      "cache_read_input_tokens": 100}})
+        ai_providers.meter("gemini", "g", {"usageMetadata": {"promptTokenCount": 7, "candidatesTokenCount": 3}})
+    finally:
+        ai_providers.set_meter(None)
+    assert got[0][2] == {"input": 10, "output": 5, "cache_read": 100, "cache_write": 0}
+    assert got[1][2]["input"] == 7 and got[1][2]["output"] == 3
+    ai_providers.meter("claude", "x", {"usage": {}})         # no meter: nothing happens
