@@ -29,7 +29,7 @@ SERIES = {
         ("d5-first-funnel", "Make your own funnel", "1:11"),
     ]),
     "around": ("Around the app", [
-        ("u1-tides", "Tides: the big picture", "1:19"),
+        ("u1-tides", "Tides: the big picture", "1:08"),
         ("u2-ai-navigator", "The AI Navigator", "1:13"),
         ("u3-social", "Social signals and chat", "0:59"),
         ("u5-alerts", "Alerts and notifications", "0:54"),

@@ -22,7 +22,7 @@ live_videos/2026-11-18_0111_2919310/d2-first-group
 live_videos/2026-11-18_0111_2919310/d3-first-set
 live_videos/2026-11-18_0111_2919310/d4-first-scan
 live_videos/2026-11-18_0111_2919310/d5-first-funnel
-live_videos/2026-11-18_0228_6b4d5a3/u1-tides
+live_videos/2026-11-18_0330_e83063c/u1-tides
 live_videos/2026-11-18_0228_6b4d5a3/u3-social
 live_videos/2026-11-18_0228_6b4d5a3/u5-alerts
 live_videos/2026-11-18_0247_7b3c982/u2-ai-navigator
