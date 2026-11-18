@@ -1,0 +1,68 @@
+# Soundings: the readings table for every saved coin (sharded), then the search and confirmation of what came before
+# rises and falls (soundings.py). Saved prices stop on 29 Oct 2024, so the protected hold-out is never read.
+# Results go to the reports branch (soundings/<commit>/), to be checked before data/soundings.json is updated.
+name: soundings
+on:
+  push:
+    branches: [soundings]
+  workflow_dispatch:
+permissions:
+  contents: write
+env:
+  SHARDS: "10"
+jobs:
+  table:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install --no-deps -r requirements-research.lock
+      - name: Saved prices
+        run: |
+          git fetch -q --depth=1 origin reports
+          mkdir -p prices && git archive FETCH_HEAD data/prices | tar -x -C prices
+      - name: Readings table
+        run: python soundings_run.py table prices/data/prices out --shard ${{ matrix.shard }}/${SHARDS}
+      - uses: actions/upload-artifact@v5
+        with:
+          name: readings-${{ matrix.shard }}
+          path: out/readings
+  mine:
+    needs: table
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install --no-deps -r requirements-research.lock
+      - name: Saved prices
+        run: |
+          git fetch -q --depth=1 origin reports
+          mkdir -p prices && git archive FETCH_HEAD data/prices | tar -x -C prices
+      - uses: actions/download-artifact@v5
+        with:
+          pattern: readings-*
+          path: out/readings
+          merge-multiple: true
+      - name: Search and confirm
+        run: |
+          python soundings_run.py mine prices/data/prices out | tee out/summary.txt
+          { echo '### Soundings (before the hold-out)'; echo '```'; cat out/summary.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      - name: Save
+        if: always()
+        run: bash .github/scripts/save_to_reports.sh "soundings/${GITHUB_SHA::7}" out/soundings.json out/summary.txt out/readings
