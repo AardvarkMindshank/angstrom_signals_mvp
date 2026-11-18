@@ -58,3 +58,21 @@ def test_tides_columns_read_the_saved_history():
     assert got.loc["2020-03-16", "tides.tide|tide"] == "out"
     assert got.loc["2020-03-16", "tides.tide|sea"] == "storm"
     assert got.loc["2022-06-15", "tides.current:dollar|direction"] in ("rising", "flat", "falling")
+
+
+def test_chart_builds_from_the_saved_grid():
+    import soundings_view as v
+
+    class S:
+        class context:
+            class theme:
+                type = "light"
+
+    report, grid = v.load(), v.load_grid()
+    coin = grid["coins"]["BTC-USD"]
+    for target in ("rise", "fall"):
+        rows = v.chart_rows(report, target, True)
+        fig, summary, base = v.build_figure(S, coin, rows, target, "2023-01-01", "2023-12-31")
+        assert 0 < base < 1
+        assert len(summary) == len([r for r in rows if v.fired(coin, r["condition"]) is not None])
+    assert v.fired(coin, ["Tide: in"]).count("1") > 100

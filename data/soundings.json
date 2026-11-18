@@ -2,7 +2,7 @@
  "settings": {
   "rise": "+2.0 typical moves within 6 daily candles, before -1.0",
   "search": "to 2022-12-31",
-  "confirm": "2022-12-31 to 2024-10-29",
+  "confirm": "2023-01-01 to 2024-10-29",
   "coins": [
    "ADA-USD",
    "ALGO-USD",

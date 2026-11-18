@@ -387,6 +387,8 @@ export default function(component) {
       // Angstrom Lattice open: a tab switch redraws it and for a moment it is nearly empty. It sits mid-page now
       // (under the chart), so a modest floor is enough to keep the page from jumping; a full screen left a gap.
       ".st-key-sec_lattice_panel [data-testid='stExpanderDetails']{min-height:60vh;}",
+      // ...but only the panel itself: expanders inside it (Soundings' "How this run was done") keep their own height.
+      ".st-key-sec_lattice_panel [data-testid='stExpanderDetails'] [data-testid='stExpanderDetails']{min-height:0;}",
       ".ang-table.fold-g [data-sec='g'],.ang-table.fold-s [data-sec='s']{display:none;}",
       ".ang-table.fold-g [data-sec-folded='g'],.ang-table.fold-s [data-sec-folded='s']{display:table-cell;}",
       "[data-testid='stAppViewContainer'],[data-testid='stHeader'],[data-testid='stBottom']{background:var(--ang-page) !important;}",
@@ -402,6 +404,8 @@ export default function(component) {
       "[data-testid='stExpander'] details > summary{background:var(--ang-heading) !important;}",
       "[data-testid='stExpander'] details > summary:has(.ang-header-score){display:flex !important;align-items:center;}",
       ".ang-header-score{margin-left:auto;margin-right:0.55rem;flex:none;display:inline-block;min-width:52px;text-align:center;border-radius:4px;padding:2px 8px;font-weight:600;line-height:1;}",
+      // Several boxes (Trend, Stretch, Flow): they wrap onto a second line in a narrow column, so the title keeps its width.
+      ".ang-header-score.ang-boxes{display:inline-flex;flex:0 1 auto;flex-wrap:wrap;justify-content:flex-end;gap:4px;max-width:60%;}",
       "[data-testid='stExpander'] details > summary:hover,[data-testid='stExpander'] details > summary:focus-visible,[data-testid='stExpander'] details > summary:active{background:var(--ang-hover) !important;}",
       "html.angstrom-night [data-testid='stSidebar']{background:var(--ang-side) !important;border-right:1px solid var(--ang-border);}",
       "html.angstrom-night [data-testid='stMain'] [data-testid='stVerticalBlockBorderWrapper'],html.angstrom-night [data-testid='stMetric']{background:var(--ang-surface) !important;border-color:var(--ang-border) !important;}",
@@ -3728,6 +3732,7 @@ export default function(component) {
   }
   if (payload && Array.isArray(payload.items)) {     // several small boxes side by side (e.g. Trend, Stretch, Flow)
     badge.textContent = "";
+    badge.classList.add("ang-boxes");
     badge.style.background = "transparent";
     badge.style.padding = "0";
     badge.style.minWidth = "0";
@@ -3736,12 +3741,13 @@ export default function(component) {
       const box = document.createElement("span");
       box.textContent = item.text || "";
       if (item.title) box.title = item.title;
-      box.style.cssText = `display:inline-block;border-radius:4px;padding:2px 7px;margin-left:${i ? 4 : 0}px;` +
+      box.style.cssText = `display:inline-block;border-radius:4px;padding:2px 7px;white-space:nowrap;` +
         `color:${item.color || "#475569"};background:${item.background || "#e2e8f0"};`;
       badge.appendChild(box);
     });
     return () => badge.remove();
   }
+  badge.classList.remove("ang-boxes");
   badge.style.padding = "";
   badge.style.minWidth = "";
   const raw = payload ? payload.score : null;

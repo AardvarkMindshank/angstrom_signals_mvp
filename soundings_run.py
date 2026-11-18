@@ -3,6 +3,8 @@ Run Soundings on the saved daily prices (reports branch, data/prices), before th
 
   python soundings_run.py table <prices> <out> [--shard i/n] [--coins BTC-USD,ETH-USD]
       the readings table for each coin: out/readings/<coin>.csv.gz (every reading at every daily close)
+  python soundings_run.py grid <prices> <out>
+      the chart's data from the readings and the results: out/soundings_grid.json.gz
   python soundings_run.py mine <prices> <out>
       moves, the search (to the end of 2022) and the confirmation (2023 to 29 Oct 2024): out/soundings.json and a
       plain summary on stdout
@@ -66,7 +68,7 @@ def _short(r: dict) -> dict:
 def mine_step(args) -> int:
     per = _load(args.prices, args.out)
     report = {"settings": {"rise": f"+{so.UP_ATR} typical moves within {so.WINDOW} daily candles, before -{so.STOP_ATR}",
-                           "search": f"to {so.SEARCH_END.date()}", "confirm": f"{so.SEARCH_END.date()} to {so.CUT.date()}",
+                           "search": f"to {so.SEARCH_END.date()}", "confirm": f"{(so.SEARCH_END + pd.Timedelta(days=1)).date()} to {so.CUT.date()}",
                            "coins": sorted(per), "fdr": so.FDR, "min_lift": so.MIN_LIFT, "min_days": so.MIN_DAYS,
                            "min_coins": so.MIN_COINS},
               "targets": {}}
@@ -113,9 +115,53 @@ def mine_step(args) -> int:
     return 0
 
 
+def grid_step(args) -> int:
+    """The chart's data (soundings_view: price on top, a row per result below): for each coin, every daily close to
+    the cut with its price, whether a rise or fall followed, and each condition named in the results (1, 0, or . when
+    the reading was missing). Written to out/soundings_grid.json.gz."""
+    import gzip
+
+    report = json.loads(Path(args.out, "soundings.json").read_text())
+    names = set()
+    for part in (report.get("targets") or {}).values():
+        for r in part.get("results") or []:
+            names.update(r["condition"])
+    names.update(f"Tide: {st}" for st in so.TIDE_STATES)
+    names = sorted(names)
+    coins = {}
+    tide_cache = {}
+    for f in sorted((Path(args.out) / "readings").glob("*.csv.gz")):
+        sym = f.name[:-7]
+        table = pd.read_csv(f, index_col="date", parse_dates=["date"])
+        if table.index.tz is None:
+            table.index = table.index.tz_localize("UTC")
+        table = so.with_tides(table, "crypto", tide_cache)
+        raw = wr.raw(args.prices, sym)
+        mv = so.moves(raw)
+        conds = so.conditions(table)
+        days = table.index[table.index <= so.CUT.tz_localize("UTC") if so.CUT.tzinfo is None else so.CUT]
+        close = raw["close"].reindex(days)
+        mv = mv.reindex(days)
+
+        def code(series):
+            v = series.reindex(days)
+            return "".join("." if pd.isna(x) else ("1" if x == 1 else "0") for x in v)
+
+        coins[sym] = {
+            "start": days[0].strftime("%Y-%m-%d"), "days": len(days),
+            "close": [None if pd.isna(x) else float(f"{x:.6g}") for x in close],
+            "rise": code(mv["rise"]), "fall": code(mv["fall"]),
+            "rows": {n: code(conds[n]) for n in names if n in conds},
+        }
+        print(f"{sym}: {len(days)} days, {len(coins[sym]['rows'])} rows", flush=True)
+    with gzip.open(Path(args.out, "soundings_grid.json.gz"), "wt") as fh:
+        json.dump({"cut": str(so.CUT.date()), "coins": coins}, fh, separators=(",", ":"))
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("step", choices=["table", "mine"])
+    ap.add_argument("step", choices=["table", "mine", "grid"])
     ap.add_argument("prices")
     ap.add_argument("out")
     ap.add_argument("--shard", default="0/1")
@@ -123,7 +169,7 @@ def main() -> int:
     ap.add_argument("--runs", type=int, default=so.RUNS_SEARCH)
     ap.add_argument("--singles", action="store_true", help="single conditions only (no pairs)")
     args = ap.parse_args()
-    return table_step(args) if args.step == "table" else mine_step(args)
+    return {"table": table_step, "mine": mine_step, "grid": grid_step}[args.step](args)
 
 
 if __name__ == "__main__":

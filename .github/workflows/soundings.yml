@@ -62,7 +62,8 @@ jobs:
       - name: Search and confirm
         run: |
           python soundings_run.py mine prices/data/prices out | tee out/summary.txt
+          python soundings_run.py grid prices/data/prices out
           { echo '### Soundings (before the hold-out)'; echo '```'; cat out/summary.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
       - name: Save
         if: always()
-        run: bash .github/scripts/save_to_reports.sh "soundings/${GITHUB_SHA::7}" out/soundings.json out/summary.txt out/readings
+        run: bash .github/scripts/save_to_reports.sh "soundings/${GITHUB_SHA::7}" out/soundings.json out/soundings_grid.json.gz out/summary.txt out/readings
