@@ -1,0 +1,37 @@
+{
+ "end": "2024-10-29",
+ "rows": 3086,
+ "first": "2013-01-01",
+ "tide_days": {
+  "slack": 1617,
+  "in": 743,
+  "out": 726
+ },
+ "tide_spells": 117,
+ "sea_days": {
+  "calm": 1439,
+  "moderate": 972,
+  "rough": 541,
+  "storm": 134
+ },
+ "events": {
+  "jobs": 154,
+  "cpi": 154,
+  "fomc": 79
+ },
+ "first_full_tide": "2013-01-01",
+ "missing_by_current": {
+  "short_rates": 0,
+  "long_rates": 0,
+  "curve": 0,
+  "dollar": 0,
+  "inflation": 0,
+  "gold": 0,
+  "fear": 0,
+  "copper_gold": 0,
+  "oil": 2,
+  "credit": 0,
+  "equity_rotation": 0,
+  "crypto_rotation": 1548
+ }
+}
