@@ -87,7 +87,7 @@ function draw(L, root, data) {
       panes: { separatorColor: th.grid, separatorHoverColor: th.muted, enableResize: false },
     },
     grid: { vertLines: { color: th.grid }, horzLines: { color: th.grid } },
-    rightPriceScale: { borderColor: th.grid, scaleMargins: { top: 0.12, bottom: 0.08 }, mode: data.log_scale ? 1 : 0 },
+    rightPriceScale: { borderColor: th.grid, scaleMargins: { top: 0.12, bottom: 0.08 }, mode: 0 },
     timeScale: { borderColor: th.grid, rightOffset: 2, minBarSpacing: 0.3 },
     crosshair: { mode: 0 },
     handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: false },
@@ -105,6 +105,8 @@ function draw(L, root, data) {
     priceRows.push(data.close[i] === null ? { time: data.times[i] } : { time: data.times[i], value: data.close[i] });
   }
   price.setData(priceRows);
+  // Log scale for the price only (several years): the rows pane has its own scale and must stay linear.
+  price.priceScale().applyOptions({ mode: data.log_scale ? 1 : 0 });
   const up = data.target === "rise";
   const marks = data.moves.map((i) => ({
     time: data.times[i], position: up ? "belowBar" : "aboveBar", shape: up ? "arrowUp" : "arrowDown",
@@ -116,7 +118,7 @@ function draw(L, root, data) {
   const top = rows.length - 1;
   const rowSeries = rows.map((row, k) => {
     const s = chart.addSeries(L.LineSeries, {
-      lineVisible: false, pointMarkersVisible: true, pointMarkersRadius: 3.2, color: th.muted,
+      lineVisible: false, pointMarkersVisible: true, pointMarkersRadius: n > 500 ? 2.2 : 3.2, color: th.muted,
       priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false,
       priceFormat: { type: "custom", formatter: () => "", minMove: 1 },
       autoscaleInfoProvider: () => ({ priceRange: { minValue: -0.6, maxValue: top + 0.6 } }),
@@ -132,6 +134,7 @@ function draw(L, root, data) {
       }
     }
     s.setData(points);
+    s.priceScale().applyOptions({ mode: 0, scaleMargins: { top: 0.1, bottom: 0.1 } });
     return s;
   });
   const panes = chart.panes();
