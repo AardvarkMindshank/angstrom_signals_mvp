@@ -2235,5 +2235,6 @@
   "- **Coins**: the {n} most traded coins on Binance from 2018 to 2023, including coins that later collapsed or stopped trading, so the results are not flattered by looking only at survivors.": "- **เหรียญ**: {n} เหรียญที่มีการซื้อขายมากที่สุดบน Binance ตั้งแต่ปี 2018 ถึง 2023 รวมถึงเหรียญที่ภายหลังร่วงหนักหรือหยุดซื้อขาย เพื่อไม่ให้ผลลัพธ์ดูดีเกินจริงจากการดูเฉพาะเหรียญที่อยู่รอด",
   "This Soundings run is still being checked. It will show here soon.": "การรัน Soundings นี้ยังอยู่ระหว่างตรวจสอบ จะแสดงที่นี่เร็วๆ นี้",
   "- **Equities**: a fixed random sample of {n} companies from the S&P 500 as it stood at the start of 2016, including companies that later left the index, so the results are not flattered by looking only at today's winners.": "- **หุ้น**: ตัวอย่างสุ่มแบบคงที่ {n} บริษัทจาก S&P 500 ณ ต้นปี 2016 รวมถึงบริษัทที่ภายหลังออกจากดัชนี เพื่อไม่ให้ผลลัพธ์ดูดีเกินจริงจากการดูเฉพาะผู้ชนะในวันนี้",
-  "🏛️ Equities": "🏛️ หุ้น"
+  "🏛️ Equities": "🏛️ หุ้น",
+  "✨ Starting the AI Navigator…": "✨ กำลังเริ่ม AI Navigator…"
 }

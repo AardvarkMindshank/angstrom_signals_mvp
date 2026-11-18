@@ -5898,7 +5898,11 @@ def _take_handoff() -> None:
     if getattr(reported, "none", None):
         st.session_state.popout_handoff_failed = True
         st.rerun()
-    st.caption(t("Connecting this tab to your signed-in dashboard tab..."))
+    if str(st.query_params.get("inpanel") or "") == "1":
+        # Inside the ✨ AI panel (not a separate tab): a quiet start-up line, not the pop-out wording.
+        st.caption(t("✨ Starting the AI Navigator…"))
+    else:
+        st.caption(t("Connecting this tab to your signed-in dashboard tab..."))
     st.stop()
 
 

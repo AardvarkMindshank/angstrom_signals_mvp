@@ -2235,5 +2235,6 @@
   "- **Coins**: the {n} most traded coins on Binance from 2018 to 2023, including coins that later collapsed or stopped trading, so the results are not flattered by looking only at survivors.": "- **Monedas**: las {n} monedas más negociadas en Binance de 2018 a 2023, incluidas las que luego se hundieron o dejaron de cotizar, para que los resultados no se embellezcan mirando solo a las supervivientes.",
   "This Soundings run is still being checked. It will show here soon.": "Esta ejecución de Soundings aún se está revisando. Aparecerá aquí pronto.",
   "- **Equities**: a fixed random sample of {n} companies from the S&P 500 as it stood at the start of 2016, including companies that later left the index, so the results are not flattered by looking only at today's winners.": "- **Acciones**: una muestra aleatoria fija de {n} empresas del S&P 500 tal como estaba a principios de 2016, incluidas las que luego salieron del índice, para que los resultados no se embellezcan mirando solo a las ganadoras de hoy.",
-  "🏛️ Equities": "🏛️ Acciones"
+  "🏛️ Equities": "🏛️ Acciones",
+  "✨ Starting the AI Navigator…": "✨ Iniciando el AI Navigator…"
 }

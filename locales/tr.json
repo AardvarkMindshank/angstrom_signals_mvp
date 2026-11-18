@@ -2235,5 +2235,6 @@
   "- **Coins**: the {n} most traded coins on Binance from 2018 to 2023, including coins that later collapsed or stopped trading, so the results are not flattered by looking only at survivors.": "- **Coinler**: 2018-2023 arasında Binance'te en çok işlem gören {n} coin; sonradan çöken veya işlemden kalkan coinler de dahil, böylece sonuçlar yalnızca hayatta kalanlara bakılarak güzelleştirilmez.",
   "This Soundings run is still being checked. It will show here soon.": "Bu Soundings çalışması hâlâ kontrol ediliyor. Yakında burada görünecek.",
   "- **Equities**: a fixed random sample of {n} companies from the S&P 500 as it stood at the start of 2016, including companies that later left the index, so the results are not flattered by looking only at today's winners.": "- **Hisseler**: 2016 başındaki haliyle S&P 500'den sabit rastgele seçilmiş {n} şirket; sonradan endeksten çıkanlar da dahil, böylece sonuçlar yalnızca bugünün kazananlarına bakılarak güzelleştirilmez.",
-  "🏛️ Equities": "🏛️ Hisseler"
+  "🏛️ Equities": "🏛️ Hisseler",
+  "✨ Starting the AI Navigator…": "✨ AI Navigator başlatılıyor…"
 }
