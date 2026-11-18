@@ -227,6 +227,21 @@ def chart_rows(report: dict, target: str, faded: bool) -> list[dict]:
     return keep[:MAX_ROWS]
 
 
+_NAMES: dict = {}
+
+
+def asset_label(symbol: str) -> str:
+    """'BTC · Bitcoin', 'AAPL · Apple' (data/asset_names.json); the ticker alone when the name isn't known."""
+    if not _NAMES:
+        try:
+            _NAMES.update(json.loads((DATA.parent / "asset_names.json").read_text()))
+        except Exception:
+            _NAMES["_"] = ""
+    short = symbol.replace("-USD", "")
+    name = _NAMES.get(symbol)
+    return f"{short} · {name}" if name else short
+
+
 def coin_days(coin: dict):
     """The day of each close: every calendar day for crypto, the listed trading days for equities."""
     import pandas as pd
@@ -397,7 +412,7 @@ def chart_tab(st, report: dict, grid_path: Path = GRID) -> None:
     c1, c2, c3, c4 = st.columns([2, 2, 2, 2])
     first = "BTC-USD" if "BTC-USD" in coins else ("AAPL" if "AAPL" in coins else None)
     sym = c1.selectbox(t("Asset"), coins, index=coins.index(first) if first else 0,
-                       format_func=lambda s: s.replace("-USD", ""), key=f"snd_chart_coin_{grid.get('market', 'c')}")
+                       format_func=asset_label, key=f"snd_chart_coin_{grid.get('market', 'c')}")
     coin = grid["coins"][sym]
     first_year = int(coin["start"][:4])
     years = [str(y) for y in range(int(grid["cut"][:4]), first_year - 1, -1)]
