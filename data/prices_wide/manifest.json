@@ -10,7 +10,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 1361714735,
    "months_sampled": 6,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "ETH-USD": {
    "pair": "ETHUSDT",
@@ -19,7 +21,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 803724914,
    "months_sampled": 6,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "BNB-USD": {
    "pair": "BNBUSDT",
@@ -28,7 +32,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 245667801,
    "months_sampled": 6,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "DOGE-USD": {
    "pair": "DOGEUSDT",
@@ -37,7 +43,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 160769183,
    "months_sampled": 4,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "XRP-USD": {
    "pair": "XRPUSDT",
@@ -46,7 +54,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 155968925,
    "months_sampled": 6,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "ADA-USD": {
    "pair": "ADAUSDT",
@@ -55,7 +65,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 133290824,
    "months_sampled": 6,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "MATIC-USD": {
    "pair": "MATICUSDT",
@@ -64,7 +76,9 @@
    "last": "2024-09-10",
    "avg_volume_sampled": 111787304,
    "months_sampled": 5,
-   "stopped_early": true
+   "stopped_early": true,
+   "part": 1,
+   "parts": 1
   },
   "SOL-USD": {
    "pair": "SOLUSDT",
@@ -73,7 +87,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 89716583,
    "months_sampled": 3,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "DOT-USD": {
    "pair": "DOTUSDT",
@@ -82,7 +98,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 70090993,
    "months_sampled": 3,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "LTC-USD": {
    "pair": "LTCUSDT",
@@ -91,7 +109,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 58362984,
    "months_sampled": 6,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "LINK-USD": {
    "pair": "LINKUSDT",
@@ -100,7 +120,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 55431407,
    "months_sampled": 5,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "SHIB-USD": {
    "pair": "SHIBUSDT",
@@ -109,7 +131,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 52118999,
    "months_sampled": 3,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "EOS-USD": {
    "pair": "EOSUSDT",
@@ -118,7 +142,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 50074008,
    "months_sampled": 6,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "TRX-USD": {
    "pair": "TRXUSDT",
@@ -127,7 +153,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 48898709,
    "months_sampled": 6,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "VET-USD": {
    "pair": "VETUSDT",
@@ -136,7 +164,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 43053737,
    "months_sampled": 5,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "FIL-USD": {
    "pair": "FILUSDT",
@@ -145,7 +175,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 36912910,
    "months_sampled": 3,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "ETC-USD": {
    "pair": "ETCUSDT",
@@ -154,7 +186,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 32577922,
    "months_sampled": 6,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "THETA-USD": {
    "pair": "THETAUSDT",
@@ -163,7 +197,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 30778055,
    "months_sampled": 5,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "BCH-USD": {
    "pair": "BCHUSDT",
@@ -172,7 +208,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 29192084,
    "months_sampled": 4,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "CHZ-USD": {
    "pair": "CHZUSDT",
@@ -181,7 +219,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 27695092,
    "months_sampled": 4,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "ICP-USD": {
    "pair": "ICPUSDT",
@@ -190,7 +230,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 25061872,
    "months_sampled": 3,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "AVAX-USD": {
    "pair": "AVAXUSDT",
@@ -199,7 +241,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 25054487,
    "months_sampled": 3,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "TFUEL-USD": {
    "pair": "TFUELUSDT",
@@ -208,16 +252,31 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 24587545,
    "months_sampled": 5,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "LUNA-USD": {
    "pair": "LUNAUSDT",
-   "bars": 1514,
+   "bars": 631,
    "first": "2020-08-21",
+   "last": "2022-05-13",
+   "avg_volume_sampled": 22690101,
+   "months_sampled": 3,
+   "stopped_early": true,
+   "part": 1,
+   "parts": 2
+  },
+  "LUNA2-USD": {
+   "pair": "LUNAUSDT",
+   "bars": 883,
+   "first": "2022-05-31",
    "last": "2024-10-29",
    "avg_volume_sampled": 22690101,
    "months_sampled": 3,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 2,
+   "parts": 2
   },
   "WAVES-USD": {
    "pair": "WAVESUSDT",
@@ -226,7 +285,9 @@
    "last": "2024-06-17",
    "avg_volume_sampled": 21943966,
    "months_sampled": 5,
-   "stopped_early": true
+   "stopped_early": true,
+   "part": 1,
+   "parts": 1
   },
   "FTM-USD": {
    "pair": "FTMUSDT",
@@ -235,7 +296,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 21723326,
    "months_sampled": 5,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "GMT-USD": {
    "pair": "GMTUSDT",
@@ -244,7 +307,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 19746812,
    "months_sampled": 2,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "KSM-USD": {
    "pair": "KSMUSDT",
@@ -253,7 +318,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 18798746,
    "months_sampled": 3,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "RUNE-USD": {
    "pair": "RUNEUSDT",
@@ -262,7 +329,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 17316492,
    "months_sampled": 3,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "CAKE-USD": {
    "pair": "CAKEUSDT",
@@ -271,7 +340,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 17092838,
    "months_sampled": 3,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "APE-USD": {
    "pair": "APEUSDT",
@@ -280,7 +351,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 15522073,
    "months_sampled": 2,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "SXP-USD": {
    "pair": "SXPUSDT",
@@ -289,7 +362,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 15498513,
    "months_sampled": 3,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "OP-USD": {
    "pair": "OPUSDT",
@@ -298,7 +373,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 15358397,
    "months_sampled": 2,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "XLM-USD": {
    "pair": "XLMUSDT",
@@ -307,7 +384,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 15311416,
    "months_sampled": 6,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "UNI-USD": {
    "pair": "UNIUSDT",
@@ -316,7 +395,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 14931983,
    "months_sampled": 3,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "NEAR-USD": {
    "pair": "NEARUSDT",
@@ -325,7 +406,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 14464442,
    "months_sampled": 3,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "AAVE-USD": {
    "pair": "AAVEUSDT",
@@ -334,7 +417,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 14345988,
    "months_sampled": 3,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "ATOM-USD": {
    "pair": "ATOMUSDT",
@@ -343,7 +428,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 14266312,
    "months_sampled": 5,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "UNFI-USD": {
    "pair": "UNFIUSDT",
@@ -352,7 +439,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 14243412,
    "months_sampled": 3,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "NEO-USD": {
    "pair": "NEOUSDT",
@@ -361,7 +450,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 13740779,
    "months_sampled": 6,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "ATA-USD": {
    "pair": "ATAUSDT",
@@ -370,7 +461,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 13450766,
    "months_sampled": 3,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "ZIL-USD": {
    "pair": "ZILUSDT",
@@ -379,7 +472,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 13197485,
    "months_sampled": 5,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "BAKE-USD": {
    "pair": "BAKEUSDT",
@@ -388,7 +483,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 12234704,
    "months_sampled": 3,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "ARB-USD": {
    "pair": "ARBUSDT",
@@ -397,7 +494,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 12126174,
    "months_sampled": 1,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "MAV-USD": {
    "pair": "MAVUSDT",
@@ -406,7 +505,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 12058744,
    "months_sampled": 1,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "SAND-USD": {
    "pair": "SANDUSDT",
@@ -415,7 +516,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 11983990,
    "months_sampled": 3,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "GALA-USD": {
    "pair": "GALAUSDT",
@@ -424,7 +527,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 11783068,
    "months_sampled": 2,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "ALGO-USD": {
    "pair": "ALGOUSDT",
@@ -433,7 +538,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 11648366,
    "months_sampled": 5,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "DATA-USD": {
    "pair": "DATAUSDT",
@@ -442,7 +549,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 11232380,
    "months_sampled": 4,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "CRV-USD": {
    "pair": "CRVUSDT",
@@ -451,7 +560,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 11141296,
    "months_sampled": 3,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "XMR-USD": {
    "pair": "XMRUSDT",
@@ -460,7 +571,9 @@
    "last": "2024-02-20",
    "avg_volume_sampled": 10974813,
    "months_sampled": 5,
-   "stopped_early": true
+   "stopped_early": true,
+   "part": 1,
+   "parts": 1
   },
   "ONT-USD": {
    "pair": "ONTUSDT",
@@ -469,7 +582,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 10887354,
    "months_sampled": 6,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "BTT-USD": {
    "pair": "BTTUSDT",
@@ -478,7 +593,9 @@
    "last": "2022-01-17",
    "avg_volume_sampled": 10788804,
    "months_sampled": 3,
-   "stopped_early": true
+   "stopped_early": true,
+   "part": 1,
+   "parts": 1
   },
   "KAVA-USD": {
    "pair": "KAVAUSDT",
@@ -487,7 +604,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 10448541,
    "months_sampled": 4,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "LINA-USD": {
    "pair": "LINAUSDT",
@@ -496,7 +615,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 10423153,
    "months_sampled": 3,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "PEPE-USD": {
    "pair": "PEPEUSDT",
@@ -505,7 +626,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 10095849,
    "months_sampled": 1,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "ONE-USD": {
    "pair": "ONEUSDT",
@@ -514,7 +637,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 9866765,
    "months_sampled": 5,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "SUSHI-USD": {
    "pair": "SUSHIUSDT",
@@ -523,7 +648,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 9621781,
    "months_sampled": 3,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "ZEC-USD": {
    "pair": "ZECUSDT",
@@ -532,7 +659,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 9485037,
    "months_sampled": 5,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "BEL-USD": {
    "pair": "BELUSDT",
@@ -541,7 +670,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 8757871,
    "months_sampled": 3,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "MANA-USD": {
    "pair": "MANAUSDT",
@@ -550,7 +681,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 8419231,
    "months_sampled": 3,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "FET-USD": {
    "pair": "FETUSDT",
@@ -559,7 +692,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 8031384,
    "months_sampled": 5,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "GRT-USD": {
    "pair": "GRTUSDT",
@@ -568,7 +703,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 7853025,
    "months_sampled": 3,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "SUI-USD": {
    "pair": "SUIUSDT",
@@ -577,7 +714,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 7746437,
    "months_sampled": 1,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "FLM-USD": {
    "pair": "FLMUSDT",
@@ -586,7 +725,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 7674152,
    "months_sampled": 3,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "EGLD-USD": {
    "pair": "EGLDUSDT",
@@ -595,7 +736,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 7673524,
    "months_sampled": 3,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "ENJ-USD": {
    "pair": "ENJUSDT",
@@ -604,7 +747,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 7666635,
    "months_sampled": 5,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "IOTA-USD": {
    "pair": "IOTAUSDT",
@@ -613,7 +758,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 7405840,
    "months_sampled": 6,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "XTZ-USD": {
    "pair": "XTZUSDT",
@@ -622,7 +769,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 7266090,
    "months_sampled": 4,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "1INCH-USD": {
    "pair": "1INCHUSDT",
@@ -631,7 +780,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 7255686,
    "months_sampled": 3,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "MTL-USD": {
    "pair": "MTLUSDT",
@@ -640,7 +791,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 7023931,
    "months_sampled": 4,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "AXS-USD": {
    "pair": "AXSUSDT",
@@ -649,7 +802,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 6930546,
    "months_sampled": 3,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "OGN-USD": {
    "pair": "OGNUSDT",
@@ -658,7 +813,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 6891449,
    "months_sampled": 4,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "OMG-USD": {
    "pair": "OMGUSDT",
@@ -667,7 +824,9 @@
    "last": "2024-06-17",
    "avg_volume_sampled": 6473401,
    "months_sampled": 5,
-   "stopped_early": true
+   "stopped_early": true,
+   "part": 1,
+   "parts": 1
   },
   "WIN-USD": {
    "pair": "WINUSDT",
@@ -676,7 +835,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 6410741,
    "months_sampled": 4,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "LIT-USD": {
    "pair": "LITUSDT",
@@ -685,7 +846,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 6294345,
    "months_sampled": 3,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "ALICE-USD": {
    "pair": "ALICEUSDT",
@@ -694,7 +857,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 6286760,
    "months_sampled": 3,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "PEOPLE-USD": {
    "pair": "PEOPLEUSDT",
@@ -703,7 +868,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 6191231,
    "months_sampled": 2,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "COMP-USD": {
    "pair": "COMPUSDT",
@@ -712,7 +879,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 6190489,
    "months_sampled": 4,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "WRX-USD": {
    "pair": "WRXUSDT",
@@ -721,7 +890,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 6178573,
    "months_sampled": 4,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "HOT-USD": {
    "pair": "HOTUSDT",
@@ -730,7 +901,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 6108533,
    "months_sampled": 5,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "DASH-USD": {
    "pair": "DASHUSDT",
@@ -739,7 +912,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 6020653,
    "months_sampled": 5,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "SNX-USD": {
    "pair": "SNXUSDT",
@@ -748,7 +923,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 5959695,
    "months_sampled": 3,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "QTUM-USD": {
    "pair": "QTUMUSDT",
@@ -757,7 +934,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 5656348,
    "months_sampled": 6,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "GTO-USD": {
    "pair": "GTOUSDT",
@@ -766,7 +945,9 @@
    "last": "2022-11-28",
    "avg_volume_sampled": 5625758,
    "months_sampled": 3,
-   "stopped_early": true
+   "stopped_early": true,
+   "part": 1,
+   "parts": 1
   },
   "HARD-USD": {
    "pair": "HARDUSDT",
@@ -775,7 +956,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 5619353,
    "months_sampled": 3,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "HBAR-USD": {
    "pair": "HBARUSDT",
@@ -784,7 +967,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 5582375,
    "months_sampled": 4,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "RSR-USD": {
    "pair": "RSRUSDT",
@@ -793,7 +978,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 5430154,
    "months_sampled": 3,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "CFX-USD": {
    "pair": "CFXUSDT",
@@ -802,7 +989,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 5429225,
    "months_sampled": 3,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "RNDR-USD": {
    "pair": "RNDRUSDT",
@@ -811,7 +1000,9 @@
    "last": "2024-07-22",
    "avg_volume_sampled": 5401434,
    "months_sampled": 2,
-   "stopped_early": true
+   "stopped_early": true,
+   "part": 1,
+   "parts": 1
   },
   "YFI-USD": {
    "pair": "YFIUSDT",
@@ -820,7 +1011,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 5175069,
    "months_sampled": 3,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "DENT-USD": {
    "pair": "DENTUSDT",
@@ -829,7 +1022,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 5003319,
    "months_sampled": 4,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "IOST-USD": {
    "pair": "IOSTUSDT",
@@ -838,7 +1033,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 4945854,
    "months_sampled": 5,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "GTC-USD": {
    "pair": "GTCUSDT",
@@ -847,7 +1044,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 4904189,
    "months_sampled": 3,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "ICX-USD": {
    "pair": "ICXUSDT",
@@ -856,7 +1055,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 4882465,
    "months_sampled": 6,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "JASMY-USD": {
    "pair": "JASMYUSDT",
@@ -865,7 +1066,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 4758220,
    "months_sampled": 2,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "XVS-USD": {
    "pair": "XVSUSDT",
@@ -874,7 +1077,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 4617979,
    "months_sampled": 3,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "APT-USD": {
    "pair": "APTUSDT",
@@ -883,7 +1088,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 4612726,
    "months_sampled": 1,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   },
   "INJ-USD": {
    "pair": "INJUSDT",
@@ -892,16 +1099,9 @@
    "last": "2024-10-29",
    "avg_volume_sampled": 4561444,
    "months_sampled": 3,
-   "stopped_early": false
-  },
-  "CELR-USD": {
-   "pair": "CELRUSDT",
-   "bars": 2046,
-   "first": "2019-03-25",
-   "last": "2024-10-29",
-   "avg_volume_sampled": 4429044,
-   "months_sampled": 5,
-   "stopped_early": false
+   "stopped_early": false,
+   "part": 1,
+   "parts": 1
   }
  }
 }
