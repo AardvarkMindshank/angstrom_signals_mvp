@@ -1,0 +1,29 @@
+# Point-in-time Tides history (tides_history.py): every day's Tide, sea state, winds and currents as they could have
+# been read that day, 2013 to 29 Oct 2024 (nothing from the protected hold-out). Needs the internet (Yahoo, FRED)
+# and the FRED_API_KEY secret (first-release dates). Saved to the reports branch: data/tides/.
+name: tides-history
+on:
+  push:
+    branches: [tides-history]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install --no-deps -r requirements-research.lock
+      - name: Build
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+        run: python tides_history.py out/tides --end 2024-10-29 | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Save
+        run: bash .github/scripts/save_to_reports.sh data/tides out/tides/history.csv.gz out/tides/events.csv out/tides/summary.json
