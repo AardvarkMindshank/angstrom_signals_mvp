@@ -116,3 +116,12 @@ def test_every_result_maps_to_set_lines():
     for part in v.load()["targets"].values():
         for r in part["results"]:
             assert so.set_model(r["condition"], "n", "p") is not None, r["condition"]
+
+
+def test_card_keeps_its_verdict_label():
+    import soundings_view as v
+
+    r = [x for x in v.load()["targets"]["rise"]["results"] if x["verdict"] == "survivor"][0]
+    html = v.card_html(r, "rise")
+    top = html.split("snd-cond")[0]
+    assert "Held up" in top and "Tide" not in top

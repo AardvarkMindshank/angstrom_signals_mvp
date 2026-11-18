@@ -75,12 +75,12 @@ def card_html(r: dict, target: str) -> str:
     tides = ""
     if any((split.get(k) or {}).get("days") for k in TIDE_WORDS):
         parts = []
-        for k, (icon, word) in TIDE_WORDS.items():
+        for k, (t_icon, t_word) in TIDE_WORDS.items():
             x = split.get(k) or {}
             if not x.get("days"):
                 continue
             lift = "–" if x.get("lift") is None else f"<b>{x['lift']:.1f}×</b>"
-            parts.append(f"{icon} {t(word)} {lift} <span style='opacity:.7'>({t('{n} days', n=x['days'])})</span>")
+            parts.append(f"{t_icon} {t(t_word)} {lift} <span style='opacity:.7'>({t('{n} days', n=x['days'])})</span>")
         tides = (f"<div class='snd-line' title='{html.escape(t(TIDE_HINT))}'>{t('By the Tide, all years')}: "
                  + " · ".join(parts) + "</div>")
     theme = ""
