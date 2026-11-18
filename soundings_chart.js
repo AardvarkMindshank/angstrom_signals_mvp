@@ -53,10 +53,13 @@ function shell(parent) {
   tip.className = "ang-snd-tip";
   tip.style.cssText = "position:absolute;display:none;z-index:4;pointer-events:none;font-size:12px;line-height:1.35;" +
     "padding:6px 8px;border-radius:6px;max-width:340px;box-shadow:0 2px 8px rgba(0,0,0,.25);";
+  const tools = document.createElement("div");
+  tools.className = "ang-snd-tools";
+  tools.style.cssText = "position:absolute;right:82px;top:6px;z-index:5;display:flex;gap:4px;";
   const note = document.createElement("div");
   note.className = "ang-snd-note";
   note.style.cssText = "font-size:12px;opacity:.7;";
-  root.append(host, labels, tip, note);
+  root.append(host, labels, tip, tools, note);
   parent.appendChild(root);
   return root;
 }
@@ -186,6 +189,23 @@ function draw(L, root, data) {
     tip.style.top = "8px";
   });
   chart.timeScale().fitContent();
+
+  // The same two buttons as the main price chart: back to the whole chosen period, and to the newest candle.
+  const tools = root.querySelector(".ang-snd-tools");
+  tools.innerHTML = "";
+  const button = (label, title, act) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = label;
+    b.title = title;
+    b.setAttribute("aria-label", title);
+    b.style.cssText = `min-width:34px;height:30px;border-radius:6px;border:1px solid ${th.grid};background:${th.bg};` +
+      `color:${th.ink};font-size:15px;cursor:pointer;opacity:.85;touch-action:manipulation;`;
+    b.onclick = act;
+    tools.appendChild(b);
+  };
+  button("⟲", data.words.reset, () => chart.timeScale().fitContent());
+  button("⇥", data.words.latest, () => chart.timeScale().scrollToRealTime());
 }
 
 export default function (component) {

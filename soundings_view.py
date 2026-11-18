@@ -382,7 +382,8 @@ def chart_payload(coin: dict, rows: list[dict], target: str, start: str, end: st
         "times": times, "close": [coin["close"][i] for i in idx], "move_flags": flags,
         "moves": [k for k, f in enumerate(flags) if f == "1"], "move_colour": MOVE_COLOUR[target],
         "rows": out_rows, "price_px": 300, "log_scale": (pd.Timestamp(end) - pd.Timestamp(start)).days > 400,
-        "words": {"followed": word, "not_followed": nothing,
+        "words": {"followed": word, "not_followed": nothing, "reset": t("Back to the chosen range"),
+                  "latest": t("Scroll to the newest candle"),
                   "failed": t("The TradingView chart could not load. You can switch to the Plotly chart in Settings.")},
     }
     return payload, summary, base
