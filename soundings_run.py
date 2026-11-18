@@ -28,6 +28,13 @@ import what_followed_run as wr  # noqa: E402
 
 def coins(prices: str, only: str = "", market: str = "crypto") -> list[str]:
     found = [s for s in wr.symbols(prices) if s.endswith("-USD") == (market == "crypto")]
+    listed = Path(prices, "manifest.json")
+    if market == "equity" and listed.exists():
+        # Only the files the latest download kept: the saved-prices folder can still hold files an earlier download
+        # wrote and a later one left out (a ticker now used by another company), since saving only ever adds.
+        keep = set((json.loads(listed.read_text()).get("files") or {}).keys())
+        if keep:
+            found = [s for s in found if s in keep]
     return [s for s in found if not only or s in only.split(",")]
 
 
