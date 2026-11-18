@@ -5,7 +5,7 @@ box it uses its own test mail server, which sends only a few emails an hour and 
 and the steps below send them through Resend, from the angstromsignals.com domain the alert emails already use.
 
 ## 1 and 2. Resend and Supabase SMTP: already done
-Custom SMTP is on: sender login@angstromsignals.com ("Angstrom Signals"), host smtp.resend.com, port 465, user
+Custom SMTP is on: sender noreply@angstromsignals.com ("Angstrom Signals"), host smtp.resend.com, port 465, user
 resend. If emails stop arriving, Resend's Emails page shows each one sent and whether it was delivered.
 
 ## 3. Supabase: Authentication → Rate Limits
@@ -24,4 +24,4 @@ For each template, set the Subject and paste the matching file's whole contents 
 
 ## 5. Test
 Sign up with a fresh address (an @angstromsignals.com mailbox works) after approving it in Admin › Beta requests,
-and check the confirmation email arrives within a minute, from login@angstromsignals.com, not in junk.
+and check the confirmation email arrives within a minute, from noreply@angstromsignals.com, not in junk.
