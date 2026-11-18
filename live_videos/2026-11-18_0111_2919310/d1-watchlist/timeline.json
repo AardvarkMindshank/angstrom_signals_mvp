@@ -1,0 +1,46 @@
+{
+ "steps": [
+  {
+   "id": "idea",
+   "start": 23.717,
+   "say": "Your watchlists decide what the dashboard shows: the signal tables, the chart, and your scans. | Let's set them up."
+  },
+  {
+   "id": "markets",
+   "start": 31.082,
+   "say": "First, open Settings in the sidebar and choose the markets you trade: cryptos, equities, or both. | The other market's sections hide."
+  },
+  {
+   "id": "tick",
+   "start": 39.709,
+   "say": "Then tick that step on the getting-started checklist."
+  },
+  {
+   "id": "crypto",
+   "start": 43.959,
+   "say": "Now open Watchlists, then Edit Crypto. | Type a name or a ticker, press Enter, and pick the match. | Here, Chainlink. | The first time anyone adds a coin, its readings are worked out and saved for everyone, so it takes a few seconds. | After that, it's instant."
+  },
+  {
+   "id": "stock",
+   "start": 64.256,
+   "say": "Shares work the same way, in Edit Stocks. | Type a company or a ticker. Here, AMD. | Again, a new one takes a few seconds the first time."
+  },
+  {
+   "id": "table",
+   "start": 81.549,
+   "say": "Both now appear in the signal tables, with their Trend, Stretch and Flow readings."
+  },
+  {
+   "id": "remove",
+   "start": 90.885,
+   "say": "To take one off, choose it under Remove, in the same place."
+  },
+  {
+   "id": "summary",
+   "start": 94.765,
+   "say": "Three or more assets ticks the watchlist step by itself. | Your watchlists are saved on your account, on every device."
+  }
+ ],
+ "end": 103.365,
+ "trim": 23.717
+}

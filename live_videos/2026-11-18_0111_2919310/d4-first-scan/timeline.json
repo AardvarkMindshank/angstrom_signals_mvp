@@ -1,0 +1,46 @@
+{
+ "steps": [
+  {
+   "id": "idea",
+   "start": 27.149,
+   "say": "Prism Scan runs a Set across your assets, and can keep watching for you."
+  },
+  {
+   "id": "open",
+   "start": 31.723,
+   "say": "Open Prism Scan. | Your Sets are on the left, with Angstrom's examples, grouped by trading idea."
+  },
+  {
+   "id": "create",
+   "start": 41.041,
+   "say": "Tap plus on Dip in my uptrend. | A new scan starts, on your whole watchlist."
+  },
+  {
+   "id": "play",
+   "start": 46.695,
+   "say": "Press play to run it now, on the latest finished candles."
+  },
+  {
+   "id": "results",
+   "start": 57.731,
+   "say": "Each asset gets Yes, No, or Unknown, with the reason beside it."
+  },
+  {
+   "id": "schedule",
+   "start": 62.023,
+   "say": "To keep watching, give the scan a schedule. | Here, at every daily close."
+  },
+  {
+   "id": "alerts",
+   "start": 67.147,
+   "say": "And choose where its alerts go: in the app, by email, or both."
+  },
+  {
+   "id": "summary",
+   "start": 71.499,
+   "say": "Your scan now checks every day by itself, and tells you when an answer turns to Yes."
+  }
+ ],
+ "end": 78.5,
+ "trim": 27.149
+}

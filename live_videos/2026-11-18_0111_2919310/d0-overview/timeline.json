@@ -1,0 +1,76 @@
+{
+ "steps": [
+  {
+   "id": "welcome",
+   "start": 27.2,
+   "say": "Angstrom Signals helps you navigate the crypto and stock markets. | Clear readings, AI guidance and alerts, with a community alongside. | Here's a quick tour of the dashboard."
+  },
+  {
+   "id": "sidebar",
+   "start": 37.998,
+   "say": "On the left is the sidebar. | Your account, your communities, notifications, your watchlists, and settings."
+  },
+  {
+   "id": "start",
+   "start": 44.925,
+   "say": "A new account gets a short getting-started checklist: five first steps. | The day-one videos walk through each of them."
+  },
+  {
+   "id": "snapshot",
+   "start": 52.623,
+   "say": "Quick Snapshot is the market at a glance. | Anything unusual today shows up here first."
+  },
+  {
+   "id": "tides",
+   "start": 58.594,
+   "say": "Tides is the big picture: rates, the dollar, fear, and where money is flowing. | It sets the conditions every asset trades in."
+  },
+  {
+   "id": "sentiment",
+   "start": 66.336,
+   "say": "Market sentiment scores the news headlines, for crypto and for stocks, from minus one hundred to plus one hundred."
+  },
+  {
+   "id": "table",
+   "start": 73.278,
+   "say": "The signal tables list your watchlist. | Each asset gets three readings: Trend, Stretch, and Flow. | They describe the market. They don't forecast it."
+  },
+  {
+   "id": "asset",
+   "start": 82.562,
+   "say": "Click a name to bring that asset into focus. | The sections below the tables follow it."
+  },
+  {
+   "id": "chart",
+   "start": 88.375,
+   "say": "The interactive chart shows its candles, with the readings drawn over time, and your own drawings."
+  },
+  {
+   "id": "why",
+   "start": 95.945,
+   "say": "Why these readings explains each score in plain words: what's pushing it, and what's holding it back."
+  },
+  {
+   "id": "lattice",
+   "start": 102.289,
+   "say": "Angstrom Lattice is your research workspace. | Signal Groups and Signal Sets turn signals into your own questions. | Prism Scan checks them across your assets, and Funnels narrow the whole market down, stage by stage."
+  },
+  {
+   "id": "ai",
+   "start": 118.894,
+   "say": "The AI Navigator slides out from the right edge. | Ask it anything about what's on your screen."
+  },
+  {
+   "id": "social",
+   "start": 125.159,
+   "say": "The arrow above it opens the community: social signals and chat about each asset."
+  },
+  {
+   "id": "next",
+   "start": 130.843,
+   "say": "That's the dashboard. | Next, the day-one guides: add your assets, then build your first Group, Set, scan and funnel."
+  }
+ ],
+ "end": 139.68,
+ "trim": 27.2
+}
