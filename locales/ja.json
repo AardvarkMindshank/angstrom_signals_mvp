@@ -2190,10 +2190,21 @@
   "Search years": "探索期間",
   "The first Soundings run is still being checked. It will show here soon.": "最初の Soundings の実行はまだ確認中です。まもなくここに表示されます。",
   "How this run was done": "この実行の方法",
-  "- **A rise**: {rise}. A fall is the mirror image.\n- **Coins**: {n} saved research coins, daily candles.\n- **Search years**: to {search}. **Later years** (confirmation): {confirm}. The protected test period from 30 Oct 2024 is never read.\n- **Kept from the search**: at least {lift}× the usual rate, on {days}+ days and {coins}+ coins, after allowing for how many conditions and pairs were tried (false finds kept to {fdr}).": "- **上昇**：{rise}。下落はその逆です。\n- **コイン**：保存済みの研究用コイン {n} 種、日足。\n- **探索期間**：{search} まで。**後の期間**（確認）：{confirm}。2024年10月30日以降の保護されたテスト期間は一切読みません。\n- **探索で残す条件**：通常の {lift} 倍以上、{days} 日以上・{coins} コイン以上。試した条件とペアの数を考慮済み（誤検出は {fdr} まで）。",
   "📈 Before rises": "📈 上昇の前",
   "📉 Before falls": "📉 下落の前",
   "+ {n} similar pairs found in the search (hover to see them)": "+ 探索で見つかった類似のペア {n} 件（ポイントで表示）",
   "Usually {usual} of closes were followed by {move}. Looked at {looked} conditions and pairs; {kept} passed the search, in {themes} themes; the strongest of each theme was checked on the later years.": "通常、終値の {usual} の後に{move}がありました。{looked} の条件とペアを確認し、{kept} が探索を通過（{themes} テーマ）。各テーマの最も強いものを後の期間で確認しました。",
-  "Nothing passed the search: no condition came before {moves} clearly more often than usual.": "探索を通過したものはありません：通常より明らかに多く{moves}の前に現れた条件はありません。"
+  "Nothing passed the search: no condition came before {moves} clearly more often than usual.": "探索を通過したものはありません：通常より明らかに多く{moves}の前に現れた条件はありません。",
+  "Market-wide": "市場全体",
+  "Tides": "Tides",
+  "The macro backdrop: the Tide, one current, or a big release coming": "マクロ環境：潮、ひとつの流れ、または重要な発表の接近",
+  "How often a move followed this condition, against the usual, split by the Tide on the day. Few Tide spells, so this describes the past; it is not a tested result.": "この条件の後に値動きが続いた頻度を、通常と比べ、その日の潮の状態別に示します。潮の局面が少ないため過去の記述であり、検証済みの結果ではありません。",
+  "By the Tide, all years": "潮別、全期間",
+  "Tides: one current": "Tides：ひとつの流れ",
+  "Which way one macro input is moving and how unusual its level is. Descriptive.": "ひとつのマクロ指標の方向と、その水準がどれほど異例か。記述的です。",
+  "Tides: storm warning": "Tides：嵐の警報",
+  "That a scheduled market-moving release is close. It says nothing about what it will show.": "市場を動かす予定の発表が近いこと。その内容については何も示しません。",
+  "Tides: tide and sea state": "Tides：潮と海の状態",
+  "Whether broad conditions support risk-taking, how turbulent they are, and whether they push for or against this market. Descriptive; it does not forecast.": "全体の状況がリスクテイクを支えているか、どれほど荒れているか、この市場に追い風か向かい風か。記述的で、予測ではありません。",
+  "- **A rise**: {rise}. A fall is the mirror image.\n- **Coins**: {n} saved research coins, daily candles.\n- **Search years**: to {search}. **Later years** (confirmation): {confirm}. The protected test period from 30 Oct 2024 is never read.\n- **Kept from the search**: at least {lift}× the usual rate, on {days}+ days and {coins}+ coins, after allowing for how many conditions and pairs were tried (false finds kept to {fdr}).\n- **Tides** are read too (the Tide, the sea state, the wind for crypto, a major release coming, and the dollar, long rates, credit and fear), as they stood at each close; every result is also split by the Tide.": "- **上昇**：{rise}。下落はその逆です。\n- **コイン**：保存済みの研究用コイン {n} 種、日足。\n- **探索期間**：{search} まで。**後の期間**（確認）：{confirm}。2024年10月30日以降の保護されたテスト期間は一切読みません。\n- **探索で残す条件**：通常の {lift} 倍以上、{days} 日以上・{coins} コイン以上。試した条件とペアの数を考慮済み（誤検出は {fdr} まで）。\n- **Tides** も読み取ります（潮、海の状態、暗号資産への風、重要な発表の接近、ドル・長期金利・信用・恐怖）。各終値時点の状態です。各結果は潮の状態別にも示します。"
 }

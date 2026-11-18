@@ -2190,10 +2190,21 @@
   "Search years": "ช่วงค้นหา",
   "The first Soundings run is still being checked. It will show here soon.": "การรัน Soundings ครั้งแรกยังอยู่ระหว่างตรวจ จะแสดงที่นี่เร็ว ๆ นี้",
   "How this run was done": "วิธีทำการรันนี้",
-  "- **A rise**: {rise}. A fall is the mirror image.\n- **Coins**: {n} saved research coins, daily candles.\n- **Search years**: to {search}. **Later years** (confirmation): {confirm}. The protected test period from 30 Oct 2024 is never read.\n- **Kept from the search**: at least {lift}× the usual rate, on {days}+ days and {coins}+ coins, after allowing for how many conditions and pairs were tried (false finds kept to {fdr}).": "- **ขาขึ้น**: {rise} ขาลงคือภาพกลับด้าน\n- **เหรียญ**: เหรียญวิจัยที่บันทึกไว้ {n} เหรียญ แท่งเทียนรายวัน\n- **ช่วงค้นหา**: ถึง {search} **ช่วงหลัง** (ยืนยัน): {confirm} ไม่อ่านช่วงทดสอบที่ปกป้องไว้ตั้งแต่ 30 ต.ค. 2024 เลย\n- **ที่เก็บไว้จากการค้นหา**: อย่างน้อย {lift} เท่าของอัตราปกติ ใน {days}+ วัน และ {coins}+ เหรียญ หลังคำนึงถึงจำนวนเงื่อนไขและคู่ที่ลอง (การพบที่ผิดจำกัดไว้ที่ {fdr})",
   "📈 Before rises": "📈 ก่อนขาขึ้น",
   "📉 Before falls": "📉 ก่อนขาลง",
   "+ {n} similar pairs found in the search (hover to see them)": "+ คู่ที่คล้ายกัน {n} คู่จากการค้นหา (ชี้เพื่อดู)",
   "Usually {usual} of closes were followed by {move}. Looked at {looked} conditions and pairs; {kept} passed the search, in {themes} themes; the strongest of each theme was checked on the later years.": "ปกติราคาปิด {usual} ตามด้วย{move} ดูเงื่อนไขและคู่ {looked} รายการ ผ่านการค้นหา {kept} ใน {themes} หัวข้อ ตัวที่แรงที่สุดของแต่ละหัวข้อถูกตรวจในช่วงหลัง",
-  "Nothing passed the search: no condition came before {moves} clearly more often than usual.": "ไม่มีอะไรผ่านการค้นหา: ไม่มีเงื่อนไขใดมาก่อน{moves}บ่อยกว่าปกติอย่างชัดเจน"
+  "Nothing passed the search: no condition came before {moves} clearly more often than usual.": "ไม่มีอะไรผ่านการค้นหา: ไม่มีเงื่อนไขใดมาก่อน{moves}บ่อยกว่าปกติอย่างชัดเจน",
+  "Market-wide": "ทั้งตลาด",
+  "Tides": "Tides",
+  "The macro backdrop: the Tide, one current, or a big release coming": "ภาพรวมเศรษฐกิจมหภาค: กระแสน้ำ กระแสเดียว หรือการประกาศสำคัญที่ใกล้เข้ามา",
+  "How often a move followed this condition, against the usual, split by the Tide on the day. Few Tide spells, so this describes the past; it is not a tested result.": "ความถี่ที่มีการเคลื่อนไหวตามหลังเงื่อนไขนี้ เทียบกับปกติ แยกตามกระแสน้ำในวันนั้น ช่วงกระแสน้ำมีไม่มาก จึงเป็นการอธิบายอดีต ไม่ใช่ผลที่ผ่านการทดสอบ",
+  "By the Tide, all years": "แยกตามกระแสน้ำ ทุกปี",
+  "Tides: one current": "Tides: กระแสเดียว",
+  "Which way one macro input is moving and how unusual its level is. Descriptive.": "ปัจจัยมหภาคหนึ่งกำลังไปทางไหน และระดับของมันผิดปกติแค่ไหน เป็นการอธิบาย",
+  "Tides: storm warning": "Tides: คำเตือนพายุ",
+  "That a scheduled market-moving release is close. It says nothing about what it will show.": "ว่าการประกาศตามกำหนดที่มีผลต่อตลาดใกล้เข้ามา ไม่ได้บอกว่าจะออกมาอย่างไร",
+  "Tides: tide and sea state": "Tides: กระแสน้ำและสภาพทะเล",
+  "Whether broad conditions support risk-taking, how turbulent they are, and whether they push for or against this market. Descriptive; it does not forecast.": "สภาพโดยรวมเอื้อต่อการรับความเสี่ยงหรือไม่ ผันผวนแค่ไหน และหนุนหรือต้านตลาดนี้ เป็นการอธิบาย ไม่ใช่การพยากรณ์",
+  "- **A rise**: {rise}. A fall is the mirror image.\n- **Coins**: {n} saved research coins, daily candles.\n- **Search years**: to {search}. **Later years** (confirmation): {confirm}. The protected test period from 30 Oct 2024 is never read.\n- **Kept from the search**: at least {lift}× the usual rate, on {days}+ days and {coins}+ coins, after allowing for how many conditions and pairs were tried (false finds kept to {fdr}).\n- **Tides** are read too (the Tide, the sea state, the wind for crypto, a major release coming, and the dollar, long rates, credit and fear), as they stood at each close; every result is also split by the Tide.": "- **ขาขึ้น**: {rise} ขาลงคือภาพกลับด้าน\n- **เหรียญ**: เหรียญวิจัยที่บันทึกไว้ {n} เหรียญ แท่งเทียนรายวัน\n- **ช่วงค้นหา**: ถึง {search} **ช่วงหลัง** (ยืนยัน): {confirm} ไม่อ่านช่วงทดสอบที่ปกป้องไว้ตั้งแต่ 30 ต.ค. 2024 เลย\n- **ที่เก็บไว้จากการค้นหา**: อย่างน้อย {lift} เท่าของอัตราปกติ ใน {days}+ วัน และ {coins}+ เหรียญ หลังคำนึงถึงจำนวนเงื่อนไขและคู่ที่ลอง (การพบที่ผิดจำกัดไว้ที่ {fdr})\n- อ่าน **Tides** ด้วย (กระแสน้ำ สภาพทะเล ลมสำหรับคริปโต การประกาศสำคัญที่ใกล้เข้ามา และดอลลาร์ ดอกเบี้ยระยะยาว สินเชื่อ และความกลัว) ตามที่เป็นในแต่ละการปิด และทุกผลลัพธ์ยังแยกตามกระแสน้ำด้วย"
 }

@@ -58,15 +58,13 @@ def _row(ctx):
         return None, None, SignalResult(ref={}, subject=ctx.subject, status=MISSING, notes=[loaded["error"]])
     day, inclusive = target_day(ctx)
     now = ctx.now
+    last = day.strftime("%Y-%m-%d")
     best = None
-    for r in loaded.get("rows") or []:
-        d = _utc(r["day"])
-        if (d > day) or (d == day and not inclusive):
-            continue
-        if _utc(r["first_seen_at"]) > now or _utc(r["recorded_at"]) > now:
-            continue
-        if best is None or d > _utc(best["day"]):
+    candidates = [r for r in loaded.get("rows") or [] if (r["day"] <= last if inclusive else r["day"] < last)]
+    for r in sorted(candidates, key=lambda r: r["day"], reverse=True):     # newest day first; the first seen by now
+        if _utc(r["first_seen_at"]) <= now and _utc(r["recorded_at"]) <= now:
             best = r
+            break
     if best is None:
         return None, day, SignalResult(ref={}, subject=ctx.subject, status=MISSING,
                                        notes=[f"No Tides reading known by {iso(now)}."])

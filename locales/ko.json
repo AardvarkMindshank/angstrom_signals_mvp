@@ -2190,10 +2190,21 @@
   "Search years": "탐색 기간",
   "The first Soundings run is still being checked. It will show here soon.": "첫 Soundings 실행을 아직 확인 중입니다. 곧 여기에 표시됩니다.",
   "How this run was done": "이번 실행 방법",
-  "- **A rise**: {rise}. A fall is the mirror image.\n- **Coins**: {n} saved research coins, daily candles.\n- **Search years**: to {search}. **Later years** (confirmation): {confirm}. The protected test period from 30 Oct 2024 is never read.\n- **Kept from the search**: at least {lift}× the usual rate, on {days}+ days and {coins}+ coins, after allowing for how many conditions and pairs were tried (false finds kept to {fdr}).": "- **상승**: {rise}. 하락은 그 반대입니다.\n- **코인**: 저장된 연구용 코인 {n}개, 일봉.\n- **탐색 기간**: {search}까지. **이후 기간**(확인): {confirm}. 2024년 10월 30일부터의 보호된 시험 기간은 절대 읽지 않습니다.\n- **탐색에서 남긴 것**: 평소의 {lift}배 이상, {days}일 이상, 코인 {coins}개 이상. 시도한 조건과 쌍의 수를 감안함(거짓 발견은 {fdr}까지).",
   "📈 Before rises": "📈 상승 전",
   "📉 Before falls": "📉 하락 전",
   "+ {n} similar pairs found in the search (hover to see them)": "+ 탐색에서 찾은 비슷한 쌍 {n}개 (마우스를 올려 보기)",
   "Usually {usual} of closes were followed by {move}. Looked at {looked} conditions and pairs; {kept} passed the search, in {themes} themes; the strongest of each theme was checked on the later years.": "보통 종가의 {usual} 뒤에 {move}이(가) 있었습니다. 조건과 쌍 {looked}개를 살펴보았고 {kept}개가 탐색을 통과({themes}개 주제), 각 주제에서 가장 강한 것을 이후 기간에 확인했습니다.",
-  "Nothing passed the search: no condition came before {moves} clearly more often than usual.": "탐색을 통과한 것이 없습니다: 평소보다 뚜렷하게 자주 {moves} 앞에 나타난 조건이 없습니다."
+  "Nothing passed the search: no condition came before {moves} clearly more often than usual.": "탐색을 통과한 것이 없습니다: 평소보다 뚜렷하게 자주 {moves} 앞에 나타난 조건이 없습니다.",
+  "Market-wide": "시장 전체",
+  "Tides": "Tides",
+  "The macro backdrop: the Tide, one current, or a big release coming": "거시 환경: 조류, 하나의 흐름, 또는 다가오는 주요 발표",
+  "How often a move followed this condition, against the usual, split by the Tide on the day. Few Tide spells, so this describes the past; it is not a tested result.": "이 조건 뒤에 움직임이 이어진 빈도를 평소와 비교해 그날의 조류별로 나눈 것입니다. 조류 국면이 적어 과거를 설명할 뿐이며 검증된 결과가 아닙니다.",
+  "By the Tide, all years": "조류별, 전체 기간",
+  "Tides: one current": "Tides: 하나의 흐름",
+  "Which way one macro input is moving and how unusual its level is. Descriptive.": "하나의 거시 지표가 어느 방향으로 움직이고 그 수준이 얼마나 이례적인지. 서술적입니다.",
+  "Tides: storm warning": "Tides: 폭풍 경보",
+  "That a scheduled market-moving release is close. It says nothing about what it will show.": "시장을 움직이는 예정된 발표가 가까웠다는 것. 무엇을 보여줄지는 말하지 않습니다.",
+  "Tides: tide and sea state": "Tides: 조류와 해상 상태",
+  "Whether broad conditions support risk-taking, how turbulent they are, and whether they push for or against this market. Descriptive; it does not forecast.": "전반적 여건이 위험 감수를 뒷받침하는지, 얼마나 거친지, 이 시장에 순풍인지 역풍인지. 서술적이며 예측이 아닙니다.",
+  "- **A rise**: {rise}. A fall is the mirror image.\n- **Coins**: {n} saved research coins, daily candles.\n- **Search years**: to {search}. **Later years** (confirmation): {confirm}. The protected test period from 30 Oct 2024 is never read.\n- **Kept from the search**: at least {lift}× the usual rate, on {days}+ days and {coins}+ coins, after allowing for how many conditions and pairs were tried (false finds kept to {fdr}).\n- **Tides** are read too (the Tide, the sea state, the wind for crypto, a major release coming, and the dollar, long rates, credit and fear), as they stood at each close; every result is also split by the Tide.": "- **상승**: {rise}. 하락은 그 반대입니다.\n- **코인**: 저장된 연구용 코인 {n}개, 일봉.\n- **탐색 기간**: {search}까지. **이후 기간**(확인): {confirm}. 2024년 10월 30일부터의 보호된 시험 기간은 절대 읽지 않습니다.\n- **탐색에서 남긴 것**: 평소의 {lift}배 이상, {days}일 이상, 코인 {coins}개 이상. 시도한 조건과 쌍의 수를 감안함(거짓 발견은 {fdr}까지).\n- **Tides**도 읽습니다(조류, 해상 상태, 암호화폐에 대한 바람, 다가오는 주요 발표, 그리고 달러·장기 금리·신용·공포). 각 종가 시점 그대로이며, 모든 결과는 조류별로도 나눕니다."
 }

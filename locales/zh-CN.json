@@ -2190,10 +2190,21 @@
   "Search years": "搜索年份",
   "The first Soundings run is still being checked. It will show here soon.": "第一次 Soundings 运行仍在检查中，很快会显示在这里。",
   "How this run was done": "这次运行的方法",
-  "- **A rise**: {rise}. A fall is the mirror image.\n- **Coins**: {n} saved research coins, daily candles.\n- **Search years**: to {search}. **Later years** (confirmation): {confirm}. The protected test period from 30 Oct 2024 is never read.\n- **Kept from the search**: at least {lift}× the usual rate, on {days}+ days and {coins}+ coins, after allowing for how many conditions and pairs were tried (false finds kept to {fdr}).": "- **上涨**：{rise}。下跌为其镜像。\n- **币种**：已保存的 {n} 个研究币种，日线。\n- **搜索年份**：至 {search}。**后续年份**（确认）：{confirm}。2024 年 10 月 30 日起的受保护测试期从不读取。\n- **搜索中保留的**：至少为通常比率的 {lift} 倍，{days}+ 天且 {coins}+ 个币种，并已考虑尝试的条件和组合数量（错误发现控制在 {fdr}）。",
   "📈 Before rises": "📈 上涨之前",
   "📉 Before falls": "📉 下跌之前",
   "+ {n} similar pairs found in the search (hover to see them)": "+ 搜索中发现 {n} 个相似组合（悬停查看）",
   "Usually {usual} of closes were followed by {move}. Looked at {looked} conditions and pairs; {kept} passed the search, in {themes} themes; the strongest of each theme was checked on the later years.": "通常 {usual} 的收盘之后出现{move}。共查看 {looked} 个条件和组合；{kept} 个通过搜索，分为 {themes} 个主题；每个主题中最强的在后续年份中检查。",
-  "Nothing passed the search: no condition came before {moves} clearly more often than usual.": "没有通过搜索的结果：没有任何条件明显比平常更常出现在{moves}之前。"
+  "Nothing passed the search: no condition came before {moves} clearly more often than usual.": "没有通过搜索的结果：没有任何条件明显比平常更常出现在{moves}之前。",
+  "Market-wide": "全市场",
+  "Tides": "Tides",
+  "The macro backdrop: the Tide, one current, or a big release coming": "宏观背景：潮汐、某一股潮流，或即将到来的重大发布",
+  "How often a move followed this condition, against the usual, split by the Tide on the day. Few Tide spells, so this describes the past; it is not a tested result.": "在此条件之后出现行情的频率，与通常相比，并按当天的潮汐划分。潮汐阶段不多，因此这只是描述过去，并非经过检验的结果。",
+  "By the Tide, all years": "按潮汐划分，全部年份",
+  "Tides: one current": "Tides：单一潮流",
+  "Which way one macro input is moving and how unusual its level is. Descriptive.": "某个宏观指标的走向，以及其水平有多不寻常。描述性。",
+  "Tides: storm warning": "Tides：风暴预警",
+  "That a scheduled market-moving release is close. It says nothing about what it will show.": "一项会影响市场的预定发布即将到来。不说明其内容。",
+  "Tides: tide and sea state": "Tides：潮汐与海况",
+  "Whether broad conditions support risk-taking, how turbulent they are, and whether they push for or against this market. Descriptive; it does not forecast.": "整体环境是否支持承担风险、波动有多大，以及对这个市场是顺风还是逆风。描述性，不是预测。",
+  "- **A rise**: {rise}. A fall is the mirror image.\n- **Coins**: {n} saved research coins, daily candles.\n- **Search years**: to {search}. **Later years** (confirmation): {confirm}. The protected test period from 30 Oct 2024 is never read.\n- **Kept from the search**: at least {lift}× the usual rate, on {days}+ days and {coins}+ coins, after allowing for how many conditions and pairs were tried (false finds kept to {fdr}).\n- **Tides** are read too (the Tide, the sea state, the wind for crypto, a major release coming, and the dollar, long rates, credit and fear), as they stood at each close; every result is also split by the Tide.": "- **上涨**：{rise}。下跌为其镜像。\n- **币种**：已保存的 {n} 个研究币种，日线。\n- **搜索年份**：至 {search}。**后续年份**（确认）：{confirm}。2024 年 10 月 30 日起的受保护测试期从不读取。\n- **搜索中保留的**：至少为通常比率的 {lift} 倍，{days}+ 天且 {coins}+ 个币种，并已考虑尝试的条件和组合数量（错误发现控制在 {fdr}）。\n- 也读取 **Tides**（潮汐、海况、对加密货币的风向、即将到来的重大发布，以及美元、长期利率、信用和恐慌），按每次收盘时的状态；每个结果也按潮汐划分。"
 }

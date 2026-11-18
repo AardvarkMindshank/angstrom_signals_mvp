@@ -23,6 +23,10 @@ VERDICT = {
     "faded": ("✖️", mark("Faded"), mark("On the later years it came before no more moves than usual.")),
 }
 ORDER = ["survivor", "either_way", "fragile", "not_confirmed", "faded"]
+TIDE_WORDS = {"in": ("🌊⬆", mark("Tide coming in")), "slack": ("🌊↔", mark("Slack tide")),
+              "out": ("🌊⬇", mark("Tide going out"))}
+TIDE_HINT = mark("How often a move followed this condition, against the usual, split by the Tide on the day. Few Tide "
+                 "spells, so this describes the past; it is not a tested result.")
 
 
 def load(path: Path = DATA) -> dict | None:
@@ -51,13 +55,25 @@ def card_html(r: dict, target: str) -> str:
     o = r.get("opposite") or {}
     other = t("falls") if target == "rise" else t("rises")
     later += " · " + t("{other}: {lift:.1f}×", other=other, lift=o.get("lift") or 0)
+    split = r.get("tide_split") or {}
+    tides = ""
+    if any((split.get(k) or {}).get("days") for k in TIDE_WORDS):
+        parts = []
+        for k, (icon, word) in TIDE_WORDS.items():
+            x = split.get(k) or {}
+            if not x.get("days"):
+                continue
+            lift = "–" if x.get("lift") is None else f"<b>{x['lift']:.1f}×</b>"
+            parts.append(f"{icon} {t(word)} {lift} <span style='opacity:.7'>({t('{n} days', n=x['days'])})</span>")
+        tides = (f"<div class='snd-line' title='{html.escape(t(TIDE_HINT))}'>{t('By the Tide, all years')}: "
+                 + " · ".join(parts) + "</div>")
     theme = ""
     if r.get("theme_size"):
         theme = ("<div class='snd-line' title='" + html.escape("\n".join(r.get("theme") or [])) + "'>"
                  + t("+ {n} similar pairs found in the search (hover to see them)", n=r["theme_size"]) + "</div>")
     return (f"<div class='snd-card'><div class='snd-top'><span class='snd-v' title='{html.escape(t(why))}'>{icon} "
             f"{html.escape(t(word))}</span></div><div class='snd-cond'>{cond}</div>"
-            f"<div class='snd-line'>{t('Search years')}: {first}</div><div class='snd-line'>{later}</div>{theme}</div>")
+            f"<div class='snd-line'>{t('Search years')}: {first}</div><div class='snd-line'>{later}</div>{tides}{theme}</div>")
 
 
 CSS = """
@@ -88,7 +104,9 @@ def render(st, report: dict | None = None) -> None:
             "- **Search years**: to {search}. **Later years** (confirmation): {confirm}. The protected test period "
             "from 30 Oct 2024 is never read.\n"
             "- **Kept from the search**: at least {lift}× the usual rate, on {days}+ days and {coins}+ coins, after "
-            "allowing for how many conditions and pairs were tried (false finds kept to {fdr}).",
+            "allowing for how many conditions and pairs were tried (false finds kept to {fdr}).\n"
+            "- **Tides** are read too (the Tide, the sea state, the wind for crypto, a major release coming, and the "
+            "dollar, long rates, credit and fear), as they stood at each close; every result is also split by the Tide.",
             rise=s.get("rise", ""), n=len(s.get("coins") or []), search=s.get("search", ""),
             confirm=s.get("confirm", ""), lift=s.get("min_lift", ""), days=s.get("min_days", ""),
             coins=s.get("min_coins", ""), fdr=f"{100 * float(s.get('fdr', 0.1)):.0f}%"))
