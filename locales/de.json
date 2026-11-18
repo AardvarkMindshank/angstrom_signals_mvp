@@ -2225,5 +2225,6 @@
   "📈 Rises": "📈 Anstiege",
   "📉 Falls": "📉 Rückgänge",
   "**{coin}, this period:** {move} followed {usual} of all closes.": "**{coin}, dieser Zeitraum:** {move} folgte auf {usual} aller Schlüsse.",
-  "- {icon} {cond}: held on {n} closes; {move} after {rate} of them, against {usual} usually (**{lift}**)": "- {icon} {cond}: galt an {n} Schlüssen; {move} nach {rate} davon, gegenüber {usual} üblich (**{lift}**)"
+  "- {icon} {cond}: held on {n} closes; {move} after {rate} of them, against {usual} usually (**{lift}**)": "- {icon} {cond}: galt an {n} Schlüssen; {move} nach {rate} davon, gegenüber {usual} üblich (**{lift}**)",
+  "Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click to see it all.": "Zoomen: Mausrad über dem Diagramm drehen (oder mit zwei Fingern), ziehen zum Verschieben, Doppelklick zeigt alles."
 }

@@ -2225,5 +2225,6 @@
   "📈 Rises": "📈 Kenaikan",
   "📉 Falls": "📉 Penurunan",
   "**{coin}, this period:** {move} followed {usual} of all closes.": "**{coin}, periode ini:** {move} menyusul {usual} dari semua penutupan.",
-  "- {icon} {cond}: held on {n} closes; {move} after {rate} of them, against {usual} usually (**{lift}**)": "- {icon} {cond}: terpenuhi pada {n} penutupan; {move} setelah {rate} di antaranya, dibanding {usual} biasanya (**{lift}**)"
+  "- {icon} {cond}: held on {n} closes; {move} after {rate} of them, against {usual} usually (**{lift}**)": "- {icon} {cond}: terpenuhi pada {n} penutupan; {move} setelah {rate} di antaranya, dibanding {usual} biasanya (**{lift}**)",
+  "Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click to see it all.": "Zoom: putar roda mouse di atas grafik (atau cubit), seret untuk bergeser, klik dua kali untuk melihat semuanya."
 }

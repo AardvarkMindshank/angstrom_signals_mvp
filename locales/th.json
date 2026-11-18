@@ -2225,5 +2225,6 @@
   "📈 Rises": "📈 ขึ้น",
   "📉 Falls": "📉 ลง",
   "**{coin}, this period:** {move} followed {usual} of all closes.": "**{coin} ช่วงนี้:** {move} ตามหลัง {usual} ของการปิดทั้งหมด",
-  "- {icon} {cond}: held on {n} closes; {move} after {rate} of them, against {usual} usually (**{lift}**)": "- {icon} {cond}: เป็นจริงใน {n} การปิด; {move} หลัง {rate} ของครั้งเหล่านั้น เทียบกับปกติ {usual} (**{lift}**)"
+  "- {icon} {cond}: held on {n} closes; {move} after {rate} of them, against {usual} usually (**{lift}**)": "- {icon} {cond}: เป็นจริงใน {n} การปิด; {move} หลัง {rate} ของครั้งเหล่านั้น เทียบกับปกติ {usual} (**{lift}**)",
+  "Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click to see it all.": "ซูม: หมุนล้อเมาส์บนกราฟ (หรือใช้สองนิ้ว) ลากเพื่อเลื่อน ดับเบิลคลิกเพื่อดูทั้งหมด"
 }

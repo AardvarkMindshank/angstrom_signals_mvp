@@ -2225,5 +2225,6 @@
   "📈 Rises": "📈 상승",
   "📉 Falls": "📉 하락",
   "**{coin}, this period:** {move} followed {usual} of all closes.": "**{coin}, 이 기간:** 전체 종가의 {usual}에서 {move}이(가) 뒤따랐습니다.",
-  "- {icon} {cond}: held on {n} closes; {move} after {rate} of them, against {usual} usually (**{lift}**)": "- {icon} {cond}: {n}번의 종가에서 성립; 그중 {rate}에서 {move} (평소 {usual}, **{lift}**)"
+  "- {icon} {cond}: held on {n} closes; {move} after {rate} of them, against {usual} usually (**{lift}**)": "- {icon} {cond}: {n}번의 종가에서 성립; 그중 {rate}에서 {move} (평소 {usual}, **{lift}**)",
+  "Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click to see it all.": "확대: 차트 위에서 휠을 돌리거나(또는 핀치), 끌어서 이동, 두 번 클릭하면 전체 보기."
 }

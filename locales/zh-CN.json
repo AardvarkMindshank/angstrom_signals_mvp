@@ -2225,5 +2225,6 @@
   "📈 Rises": "📈 上涨",
   "📉 Falls": "📉 下跌",
   "**{coin}, this period:** {move} followed {usual} of all closes.": "**{coin}，此时期：**所有收盘中有 {usual} 之后{move}。",
-  "- {icon} {cond}: held on {n} closes; {move} after {rate} of them, against {usual} usually (**{lift}**)": "- {icon} {cond}：在 {n} 次收盘时成立；其中 {rate} 之后{move}，通常为 {usual}（**{lift}**）"
+  "- {icon} {cond}: held on {n} closes; {move} after {rate} of them, against {usual} usually (**{lift}**)": "- {icon} {cond}：在 {n} 次收盘时成立；其中 {rate} 之后{move}，通常为 {usual}（**{lift}**）",
+  "Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click to see it all.": "缩放：在图表上滚动滚轮（或双指捏合），拖动以平移，双击查看全部。"
 }

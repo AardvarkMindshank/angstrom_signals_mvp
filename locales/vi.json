@@ -2225,5 +2225,6 @@
   "📈 Rises": "📈 Tăng",
   "📉 Falls": "📉 Giảm",
   "**{coin}, this period:** {move} followed {usual} of all closes.": "**{coin}, giai đoạn này:** {move} sau {usual} trong tất cả các lần đóng cửa.",
-  "- {icon} {cond}: held on {n} closes; {move} after {rate} of them, against {usual} usually (**{lift}**)": "- {icon} {cond}: đúng ở {n} lần đóng cửa; {move} sau {rate} trong số đó, so với {usual} thông thường (**{lift}**)"
+  "- {icon} {cond}: held on {n} closes; {move} after {rate} of them, against {usual} usually (**{lift}**)": "- {icon} {cond}: đúng ở {n} lần đóng cửa; {move} sau {rate} trong số đó, so với {usual} thông thường (**{lift}**)",
+  "Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click to see it all.": "Phóng to: lăn chuột trên biểu đồ (hoặc chụm ngón tay), kéo để di chuyển, nhấp đúp để xem toàn bộ."
 }

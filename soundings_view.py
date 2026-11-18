@@ -246,11 +246,13 @@ def build_figure(st, coin: dict, rows: list[dict], target: str, start: str, end:
     paper, ink, grid = _theme(st)
     fig.update_layout(height=320 + 24 * n, margin=dict(l=10, r=10, t=30, b=10), paper_bgcolor=paper,
                       plot_bgcolor=paper, font=dict(color=ink, size=11), hovermode="closest",
-                      legend=dict(orientation="h", yanchor="bottom", y=1.0, x=0))
+                      legend=dict(orientation="h", yanchor="bottom", y=1.0, x=0), dragmode="pan")
     fig.update_yaxes(automargin=True)
     long_view = (pd.Timestamp(end) - pd.Timestamp(start)).days > 400      # log scale only over several years
-    fig.update_yaxes(type="log" if long_view else "linear", row=1, col=1, gridcolor=grid, tickformat="~s")
+    fig.update_yaxes(type="log" if long_view else "linear", row=1, col=1, gridcolor=grid, tickformat="~s",
+                     fixedrange=True)          # the wheel zooms time only
     fig.update_yaxes(categoryorder="array", categoryarray=list(reversed(names)), row=2, col=1, gridcolor=grid,
+                     fixedrange=True,
                      tickfont=dict(size=10))
     fig.update_xaxes(gridcolor=grid)
     usual = [m for m in move if m in "01"]
@@ -291,7 +293,10 @@ def chart_tab(st, report: dict) -> None:
         st.markdown(t("No results to show for this move."))
         return
     fig, summary, base = build_figure(st, coin, rows, target, start, end)
-    st.plotly_chart(fig, width="stretch", config={"displayModeBar": False})
+    st.plotly_chart(fig, width="stretch", config={"scrollZoom": True, "displaylogo": False, "displayModeBar": True,
+                                                  "modeBarButtonsToRemove": ["select2d", "lasso2d", "autoScale2d",
+                                                                             "toImage"]})
+    st.caption(t("Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click to see it all."))
     if base is not None:
         lines = []
         for r, hit, total in summary:
