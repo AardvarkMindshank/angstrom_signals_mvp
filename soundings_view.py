@@ -127,7 +127,7 @@ def render(st, report: dict | None = None) -> None:
             confirm=s.get("confirm", ""), lift=s.get("min_lift", ""), days=s.get("min_days", ""),
             coins=s.get("min_coins", ""), fdr=f"{100 * float(s.get('fdr', 0.1)):.0f}%"))
     st.markdown(CSS, unsafe_allow_html=True)
-    rises, falls, chart = st.tabs([t("📈 Before rises"), t("📉 Before falls"), t("🗺️ Chart")])
+    chart, rises, falls = st.tabs([t("🗺️ Chart"), t("📈 Before rises"), t("📉 Before falls")])   # the picture first
     with chart:
         chart_tab(st, report)
     for tab, target in ((rises, "rise"), (falls, "fall")):
