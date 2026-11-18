@@ -387,6 +387,9 @@ export default function(component) {
       // Angstrom Lattice open: a tab switch redraws it and for a moment it is nearly empty. It sits mid-page now
       // (under the chart), so a modest floor is enough to keep the page from jumping; a full screen left a gap.
       ".st-key-sec_lattice_panel [data-testid='stExpanderDetails']{min-height:60vh;}",
+      // Plotly's toolbar hints (Zoom, Pan, Reset...) show above the buttons, not under the mouse pointer.
+      ".js-plotly-plot .plotly .modebar [data-title]:before,.js-plotly-plot .plotly .modebar [data-title]:after{top:auto !important;bottom:110% !important;}",
+      ".js-plotly-plot .plotly .modebar [data-title]:before{border-bottom-color:transparent !important;border-top-color:#69738a !important;margin-bottom:-12px;}",
       // ...but only the panel itself: expanders inside it (Soundings' "How this run was done") keep their own height.
       ".st-key-sec_lattice_panel [data-testid='stExpanderDetails'] [data-testid='stExpanderDetails']{min-height:0;}",
       ".ang-table.fold-g [data-sec='g'],.ang-table.fold-s [data-sec='s']{display:none;}",
