@@ -2226,5 +2226,6 @@
   "📉 Falls": "📉 下落",
   "**{coin}, this period:** {move} followed {usual} of all closes.": "**{coin}、この期間：**全終値の{usual}で{move}が続いた。",
   "- {icon} {cond}: held on {n} closes; {move} after {rate} of them, against {usual} usually (**{lift}**)": "- {icon} {cond}：{n}回の終値で成立；そのうち{rate}で{move}（通常は{usual}、**{lift}**）",
-  "Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click to see it all.": "ズーム：チャート上でホイールを回す（またはピンチ）、ドラッグで移動、ダブルクリックで全体表示。"
+  "Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click to see it all.": "ズーム：チャート上でホイールを回す（またはピンチ）、ドラッグで移動、ダブルクリックで全体表示。",
+  "Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click the time axis to see it all. Hover a day for its details.": "ズーム：チャート上でホイールを回す（またはピンチ）、ドラッグで移動、時間軸をダブルクリックで全体表示。日にカーソルを合わせると詳細が出ます。"
 }

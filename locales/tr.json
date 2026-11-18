@@ -2226,5 +2226,6 @@
   "📉 Falls": "📉 Düşüşler",
   "**{coin}, this period:** {move} followed {usual} of all closes.": "**{coin}, bu dönem:** tüm kapanışların {usual} kadarını {move} izledi.",
   "- {icon} {cond}: held on {n} closes; {move} after {rate} of them, against {usual} usually (**{lift}**)": "- {icon} {cond}: {n} kapanışta sağlandı; bunların {rate} kadarından sonra {move}, olağanda {usual} (**{lift}**)",
-  "Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click to see it all.": "Yakınlaştırma: grafiğin üzerinde tekerleği çevirin (veya iki parmakla), kaydırmak için sürükleyin, tümünü görmek için çift tıklayın."
+  "Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click to see it all.": "Yakınlaştırma: grafiğin üzerinde tekerleği çevirin (veya iki parmakla), kaydırmak için sürükleyin, tümünü görmek için çift tıklayın.",
+  "Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click the time axis to see it all. Hover a day for its details.": "Yakınlaştırma: grafiğin üzerinde tekerleği çevirin (veya iki parmakla), kaydırmak için sürükleyin, tümünü görmek için zaman eksenine çift tıklayın. Ayrıntılar için bir günün üzerine gelin."
 }

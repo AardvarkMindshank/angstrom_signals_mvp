@@ -76,3 +76,18 @@ def test_chart_builds_from_the_saved_grid():
         assert 0 < base < 1
         assert len(summary) == len([r for r in rows if v.fired(coin, r["condition"]) is not None])
     assert v.fired(coin, ["Tide: in"]).count("1") > 100
+
+
+def test_tradingview_payload_lines_up_with_the_days():
+    import soundings_view as v
+
+    report, grid = v.load(), v.load_grid()
+    coin = grid["coins"]["ETH-USD"]
+    rows = v.chart_rows(report, "fall", True)
+    payload, summary, base = v.chart_payload(coin, rows, "fall", "2022-01-01", "2022-12-31", False)
+    n = len(payload["times"])
+    assert n == 365 and len(payload["close"]) == n and len(payload["move_flags"]) == n
+    assert payload["rows"][0]["points"]                       # the Tide row
+    for row in payload["rows"]:
+        assert all(0 <= p[0] < n for p in row["points"])
+    assert all(payload["move_flags"][k] == "1" for k in payload["moves"])

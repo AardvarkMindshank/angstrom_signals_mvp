@@ -2226,5 +2226,6 @@
   "📉 Falls": "📉 Rückgänge",
   "**{coin}, this period:** {move} followed {usual} of all closes.": "**{coin}, dieser Zeitraum:** {move} folgte auf {usual} aller Schlüsse.",
   "- {icon} {cond}: held on {n} closes; {move} after {rate} of them, against {usual} usually (**{lift}**)": "- {icon} {cond}: galt an {n} Schlüssen; {move} nach {rate} davon, gegenüber {usual} üblich (**{lift}**)",
-  "Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click to see it all.": "Zoomen: Mausrad über dem Diagramm drehen (oder mit zwei Fingern), ziehen zum Verschieben, Doppelklick zeigt alles."
+  "Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click to see it all.": "Zoomen: Mausrad über dem Diagramm drehen (oder mit zwei Fingern), ziehen zum Verschieben, Doppelklick zeigt alles.",
+  "Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click the time axis to see it all. Hover a day for its details.": "Zoomen: Mausrad über dem Diagramm drehen (oder mit zwei Fingern), ziehen zum Verschieben, Doppelklick auf die Zeitachse zeigt alles. Für Details mit der Maus über einen Tag fahren."
 }

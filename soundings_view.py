@@ -260,6 +260,75 @@ def build_figure(st, coin: dict, rows: list[dict], target: str, start: str, end:
     return fig, summary, base
 
 
+def chart_payload(coin: dict, rows: list[dict], target: str, start: str, end: str, dark: bool,
+                  key: str = "") -> tuple[dict, list, float | None]:
+    """The TradingView chart's data (soundings_chart.js): times, closes, the move's days, and one row per result
+    (the Tide first), each a list of [day index, colour, hover text]."""
+    import pandas as pd
+
+    import lw_chart
+
+    days = pd.date_range(coin["start"], periods=coin["days"], freq="D")
+    idx = [i for i, d in enumerate(days) if pd.Timestamp(start) <= d <= pd.Timestamp(end)]
+    times = [int(days[i].timestamp()) for i in idx]
+    flags = "".join(coin[target][i] for i in idx)
+    word = t("a rise followed") if target == "rise" else t("a fall followed")
+    nothing = t("no rise followed") if target == "rise" else t("no fall followed")
+    tide_words = {"in": t("Tide coming in"), "slack": t("Slack tide"), "out": t("Tide going out")}
+    tide_points = []
+    for k, i in enumerate(idx):
+        for state, colour in TIDE_COLOUR.items():
+            code = coin["rows"].get(f"Tide: {state}") or ""
+            if i < len(code) and code[i] == "1":
+                tide_points.append([k, colour, "🌊 " + tide_words[state]])
+                break
+    out_rows = [{"name": t("🌊 Tide"), "full": t("🌊 Tide"), "points": tide_points}]
+    summary = []
+    for r in rows:
+        code = fired(coin, r["condition"])
+        if code is None:
+            continue
+        full = " + ".join(r["condition"])
+        points, hit, total = [], 0, 0
+        for k, i in enumerate(idx):
+            if code[i] != "1":
+                continue
+            followed = coin[target][i]
+            if followed == ".":
+                continue
+            total += 1
+            hit += followed == "1"
+            points.append([k, MOVE_COLOUR[target] if followed == "1" else MISS,
+                           f"{full}: {word if followed == '1' else nothing}"])
+        icon = VERDICT.get(r.get("verdict"), ("",))[0]
+        out_rows.append({"name": f"{icon} {_short(full, 46)}", "full": f"{icon} {full}", "points": points})
+        summary.append((r, hit, total))
+    known = [f for f in flags if f in "01"]
+    base = (known.count("1") / len(known)) if known else None
+    ink = "#e5e7eb" if dark else "#374151"
+    theme = {**lw_chart.theme(dark), "ink": ink,
+             "label_bg": "rgba(38,39,48,0.78)" if dark else "rgba(255,255,255,0.82)"}
+    payload = {
+        "lib": lw_chart.LIBRARY_PATH, "key": key, "theme": theme, "target": target,
+        "times": times, "close": [coin["close"][i] for i in idx], "move_flags": flags,
+        "moves": [k for k, f in enumerate(flags) if f == "1"], "move_colour": MOVE_COLOUR[target],
+        "rows": out_rows, "price_px": 300, "log_scale": (pd.Timestamp(end) - pd.Timestamp(start)).days > 400,
+        "words": {"followed": word, "not_followed": nothing,
+                  "failed": t("The TradingView chart could not load. You can switch to the Plotly chart in Settings.")},
+    }
+    return payload, summary, base
+
+
+_COMPONENT: dict = {}
+
+
+def _tv_component(st):
+    if "c" not in _COMPONENT:
+        js = (Path(__file__).resolve().parent / "soundings_chart.js").read_text(encoding="utf-8")
+        _COMPONENT["c"] = st.components.v2.component("soundings_chart", js=js, isolate_styles=False)
+    return _COMPONENT["c"]
+
+
 def chart_tab(st, report: dict) -> None:
     grid = load_grid()
     if not grid or not grid.get("coins"):
@@ -292,11 +361,22 @@ def chart_tab(st, report: dict) -> None:
     if not rows:
         st.markdown(t("No results to show for this move."))
         return
-    fig, summary, base = build_figure(st, coin, rows, target, start, end)
-    st.plotly_chart(fig, width="stretch", config={"scrollZoom": True, "displaylogo": False, "displayModeBar": True,
-                                                  "modeBarButtonsToRemove": ["select2d", "lasso2d", "autoScale2d",
-                                                                             "toImage"]})
-    st.caption(t("Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click to see it all."))
+    if st.session_state.get("price_chart", "TradingView") == "TradingView":     # follows Settings › price chart
+        try:
+            dark = st.context.theme.type == "dark"
+        except Exception:
+            dark = False
+        payload, summary, base = chart_payload(coin, rows, target, start, end, dark,
+                                               key=f"{sym}|{target}|{start}|{end}|{faded}")
+        _tv_component(st)(key="snd_tv_chart", data=payload)
+        st.caption(t("Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click the time "
+                     "axis to see it all. Hover a day for its details."))
+    else:
+        fig, summary, base = build_figure(st, coin, rows, target, start, end)
+        st.plotly_chart(fig, width="stretch", config={"scrollZoom": True, "displaylogo": False, "displayModeBar": True,
+                                                      "modeBarButtonsToRemove": ["select2d", "lasso2d", "autoScale2d",
+                                                                                 "toImage"]})
+        st.caption(t("Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click to see it all."))
     if base is not None:
         lines = []
         for r, hit, total in summary:

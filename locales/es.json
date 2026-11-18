@@ -2226,5 +2226,6 @@
   "📉 Falls": "📉 Bajadas",
   "**{coin}, this period:** {move} followed {usual} of all closes.": "**{coin}, este periodo:** {move} siguió al {usual} de todos los cierres.",
   "- {icon} {cond}: held on {n} closes; {move} after {rate} of them, against {usual} usually (**{lift}**)": "- {icon} {cond}: se cumplió en {n} cierres; {move} tras el {rate} de ellos, frente al {usual} habitual (**{lift}**)",
-  "Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click to see it all.": "Zoom: gira la rueda sobre el gráfico (o pellizca), arrastra para desplazarte y haz doble clic para verlo todo."
+  "Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click to see it all.": "Zoom: gira la rueda sobre el gráfico (o pellizca), arrastra para desplazarte y haz doble clic para verlo todo.",
+  "Zoom: scroll the wheel over the chart (or pinch), drag to move along, double-click the time axis to see it all. Hover a day for its details.": "Zoom: gira la rueda sobre el gráfico (o pellizca), arrastra para desplazarte y haz doble clic en el eje de tiempo para verlo todo. Pasa el ratón por un día para ver sus detalles."
 }

@@ -1,0 +1,203 @@
+// Soundings chart on TradingView Lightweight Charts (Streamlit component v2), 18 Nov 2026.
+// Python sends finished numbers (soundings_view.chart_payload); this file only draws them.
+// Pane 0: the price, with a small arrow on each close that the move followed. Pane 1: one row per result (and the
+// Tide on top): a dot on each close where the row's condition held, coloured when the move followed, grey when not.
+// The library (Apache 2.0) is served from /app/static/lwc/ and shows TradingView's attribution logo.
+
+const STORE = window.__angLwc || (window.__angLwc = { loading: null, views: new Map() });
+
+function loadLibrary(url) {
+  if (window.LightweightCharts) return Promise.resolve(window.LightweightCharts);
+  if (!STORE.loading) {
+    STORE.loading = new Promise((resolve, reject) => {
+      const tag = document.createElement("script");
+      tag.src = url;
+      tag.async = true;
+      tag.onload = () => (window.LightweightCharts ? resolve(window.LightweightCharts) : reject(new Error("empty")));
+      tag.onerror = () => { STORE.loading = null; tag.remove(); reject(new Error("load")); };
+      document.head.appendChild(tag);
+    });
+  }
+  return STORE.loading;
+}
+
+function esc(s) {
+  return String(s === null || s === undefined ? "" : s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function dayText(seconds) {
+  const d = new Date(seconds * 1000);
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  return `${String(d.getUTCDate()).padStart(2, "0")} ${months[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+}
+
+function priceText(v) {
+  if (v === null || v === undefined || !isFinite(v)) return "–";
+  const a = Math.abs(v);
+  const digits = a >= 1 ? 2 : a >= 0.01 ? 4 : 6;
+  return Number(v).toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits });
+}
+
+function shell(parent) {
+  const root = document.createElement("div");
+  root.className = "ang-snd";
+  root.style.cssText = "position:relative;width:100%;font-family:inherit;";
+  const host = document.createElement("div");
+  host.className = "ang-snd-host";
+  host.style.cssText = "position:relative;width:100%;";
+  const labels = document.createElement("div");
+  labels.className = "ang-snd-labels";
+  labels.style.cssText = "position:absolute;left:0;top:0;pointer-events:none;z-index:3;";
+  const tip = document.createElement("div");
+  tip.className = "ang-snd-tip";
+  tip.style.cssText = "position:absolute;display:none;z-index:4;pointer-events:none;font-size:12px;line-height:1.35;" +
+    "padding:6px 8px;border-radius:6px;max-width:340px;box-shadow:0 2px 8px rgba(0,0,0,.25);";
+  const note = document.createElement("div");
+  note.className = "ang-snd-note";
+  note.style.cssText = "font-size:12px;opacity:.7;";
+  root.append(host, labels, tip, note);
+  parent.appendChild(root);
+  return root;
+}
+
+function draw(L, root, data) {
+  const host = root.querySelector(".ang-snd-host");
+  const labels = root.querySelector(".ang-snd-labels");
+  const tip = root.querySelector(".ang-snd-tip");
+  const th = data.theme;
+  if (root.__chart) { try { root.__chart.remove(); } catch (e) { /* gone already */ } root.__chart = null; }
+  if (root.__timer) { clearInterval(root.__timer); root.__timer = null; }
+  host.innerHTML = "";
+  labels.innerHTML = "";
+  const n = data.times.length;
+  const rows = data.rows;
+  const rowPx = 32;                       // room for each row's name above its dots
+  const pricePx = data.price_px;
+  const rowsPx = Math.max(80, rowPx * rows.length + 18);
+  host.style.height = (pricePx + rowsPx + 32) + "px";
+  tip.style.background = th.bg;
+  tip.style.color = th.ink;
+  tip.style.border = "1px solid " + th.grid;
+
+  const chart = L.createChart(host, {
+    autoSize: true,
+    layout: {
+      background: { type: "solid", color: th.bg }, textColor: th.ink, fontSize: 11, attributionLogo: true,
+      panes: { separatorColor: th.grid, separatorHoverColor: th.muted, enableResize: false },
+    },
+    grid: { vertLines: { color: th.grid }, horzLines: { color: th.grid } },
+    rightPriceScale: { borderColor: th.grid, scaleMargins: { top: 0.12, bottom: 0.08 }, mode: data.log_scale ? 1 : 0 },
+    timeScale: { borderColor: th.grid, rightOffset: 2, minBarSpacing: 0.3 },
+    crosshair: { mode: 0 },
+    handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: false },
+    handleScale: { mouseWheel: true, pinch: true, axisPressedMouseMove: true, axisDoubleClickReset: true },
+    localization: { dateFormat: "dd MMM 'yy" },
+  });
+  root.__chart = chart;
+
+  // Pane 0: the price line, and an arrow on each close the move followed.
+  const price = chart.addSeries(L.LineSeries, {
+    color: th.muted, lineWidth: 2, priceLineVisible: false, lastValueVisible: true, crosshairMarkerRadius: 3,
+  }, 0);
+  const priceRows = [];
+  for (let i = 0; i < n; i++) {
+    priceRows.push(data.close[i] === null ? { time: data.times[i] } : { time: data.times[i], value: data.close[i] });
+  }
+  price.setData(priceRows);
+  const up = data.target === "rise";
+  const marks = data.moves.map((i) => ({
+    time: data.times[i], position: up ? "belowBar" : "aboveBar", shape: up ? "arrowUp" : "arrowDown",
+    color: data.move_colour, size: 0.4,
+  }));
+  if (L.createSeriesMarkers) L.createSeriesMarkers(price, marks);
+
+  // Pane 1: one line series per row, drawn as dots only, at a fixed height (row 0 at the top).
+  const top = rows.length - 1;
+  const rowSeries = rows.map((row, k) => {
+    const s = chart.addSeries(L.LineSeries, {
+      lineVisible: false, pointMarkersVisible: true, pointMarkersRadius: 3.2, color: th.muted,
+      priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false,
+      priceFormat: { type: "custom", formatter: () => "", minMove: 1 },
+      autoscaleInfoProvider: () => ({ priceRange: { minValue: -0.6, maxValue: top + 0.6 } }),
+    }, 1);
+    const points = [];
+    let p = 0;
+    for (let i = 0; i < n; i++) {          // every day present (whitespace when it did not fire), so time lines up
+      if (p < row.points.length && row.points[p][0] === i) {
+        points.push({ time: data.times[i], value: top - k, color: row.points[p][1] });
+        p += 1;
+      } else {
+        points.push({ time: data.times[i] });
+      }
+    }
+    s.setData(points);
+    return s;
+  });
+  const panes = chart.panes();
+  if (panes[1]) panes[1].setHeight(rowsPx);
+  if (panes[0]) panes[0].setHeight(pricePx);
+
+  // Row names, on the left of the rows pane (HTML over the chart, kept in place as panes settle).
+  const place = () => {
+    const ps = chart.panes();
+    if (!ps[0] || !ps[1]) return;
+    const offset = ps[0].getHeight() + 1;
+    labels.innerHTML = "";
+    rows.forEach((row, k) => {
+      const y = rowSeries[k].priceToCoordinate(top - k);
+      if (y === null) return;
+      const tag = document.createElement("div");
+      tag.textContent = row.name;
+      tag.style.cssText = `position:absolute;left:6px;top:${offset + y - 21}px;white-space:nowrap;font-size:10.5px;` +
+        `padding:0 5px;border-radius:4px;background:${th.label_bg};color:${th.ink};max-width:46vw;overflow:hidden;` +
+        "text-overflow:ellipsis;";
+      tag.title = row.full;
+      labels.appendChild(tag);
+    });
+  };
+  setTimeout(place, 60);
+  root.__timer = setInterval(place, 1200);
+
+  // The hover card: the day, the price, whether the move followed, the Tide, and which rows held that day.
+  const byTime = new Map();
+  data.times.forEach((t, i) => byTime.set(t, i));
+  const fired = rows.map((row) => new Map(row.points.map((pt) => [pt[0], pt])));
+  chart.subscribeCrosshairMove((param) => {
+    if (!param || !param.time || !param.point || param.point.x < 0 || param.point.y < 0) { tip.style.display = "none"; return; }
+    const i = byTime.get(param.time);
+    if (i === undefined) { tip.style.display = "none"; return; }
+    const lines = [`<b>${esc(dayText(data.times[i]))}</b> · ${esc(priceText(data.close[i]))}`];
+    const followed = data.move_flags[i];
+    if (followed === "1") lines.push(`<span style="color:${data.move_colour}">● ${esc(data.words.followed)}</span>`);
+    else if (followed === "0") lines.push(`<span style="opacity:.75">○ ${esc(data.words.not_followed)}</span>`);
+    rows.forEach((row, k) => {
+      const pt = fired[k].get(i);
+      if (pt) lines.push(`<span style="color:${pt[1]}">■</span> ${esc(pt[2] || row.full)}`);
+    });
+    tip.innerHTML = lines.join("<br>");
+    tip.style.display = "block";
+    const w = host.clientWidth;
+    const x = param.point.x + 16 + 340 > w ? param.point.x - 16 - Math.min(340, tip.offsetWidth) : param.point.x + 16;
+    tip.style.left = Math.max(0, x) + "px";
+    tip.style.top = "8px";
+  });
+  chart.timeScale().fitContent();
+}
+
+export default function (component) {
+  const { data, parentElement } = component;
+  if (!data || !data.times) return;
+  let root = parentElement.querySelector(".ang-snd");
+  if (!root) root = shell(parentElement);
+  const sig = JSON.stringify([data.key, data.times.length, data.rows.map((r) => r.name + r.points.length), data.theme.dark,
+                              data.price_px, data.log_scale]);
+  if (root.__chart && root.__sig === sig) return;
+  root.__sig = sig;
+  loadLibrary(data.lib)
+    .then((L) => draw(L, root, data))
+    .catch(() => {
+      const note = root.querySelector(".ang-snd-note");
+      if (note) note.textContent = data.words.failed;
+    });
+}
