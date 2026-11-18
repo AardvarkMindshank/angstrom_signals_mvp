@@ -1,0 +1,41 @@
+{
+ "steps": [
+  {
+   "id": "idea",
+   "start": 24.081,
+   "say": "Once you have a funnel, it works for you every hour. | Here's where to see what it found."
+  },
+  {
+   "id": "open",
+   "start": 29.478,
+   "say": "Above the crypto table, switch My Watchlist to Dynamic funnel. | Each of your funnels is one row."
+  },
+  {
+   "id": "chips",
+   "start": 43.345,
+   "say": "The chips count the assets holding each stage, then Flagged and Candidates. | Click a chip to show those assets."
+  },
+  {
+   "id": "table",
+   "start": 50.548,
+   "say": "The table lists them, largest first, with the stage each one has reached."
+  },
+  {
+   "id": "actions",
+   "start": 61.708,
+   "say": "On the row: pause or resume the funnel, start it again, or open it to edit."
+  },
+  {
+   "id": "snapshot",
+   "start": 66.649,
+   "say": "It also shows in Quick Snapshot, with what changed since you last looked."
+  },
+  {
+   "id": "back",
+   "start": 75.844,
+   "say": "Switch back to My Watchlist any time. Your choice is saved."
+  }
+ ],
+ "end": 84.56,
+ "trim": 24.081
+}

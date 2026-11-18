@@ -1,0 +1,51 @@
+1
+00:00:00,000 --> 00:00:02,962
+Alerts tell you when something you care about changes:
+
+2
+00:00:02,982 --> 00:00:04,993
+a reading, a scan, or a funnel.
+
+3
+00:00:05,455 --> 00:00:08,038
+Open Notifications in the sidebar.
+
+4
+00:00:08,088 --> 00:00:11,161
+The Alert Feed lists every alert, newest first.
+
+5
+00:00:12,263 --> 00:00:15,080
+Configure Alert Rules sets what alerts you.
+
+6
+00:00:15,130 --> 00:00:16,647
+Trend alerts are on to start:
+
+7
+00:00:16,667 --> 00:00:20,572
+when a reading crosses a colour border, and holds at the next close.
+
+8
+00:00:21,032 --> 00:00:22,656
+Choose how alerts reach you:
+
+9
+00:00:22,676 --> 00:00:26,559
+instant emails, a daily summary at your chosen hour, or both.
+
+10
+00:00:27,026 --> 00:00:31,998
+Phone and desktop notifications can pop up too. Turn them on for each device.
+
+11
+00:00:32,444 --> 00:00:35,475
+Then tick that step on the getting-started checklist.
+
+12
+00:00:36,643 --> 00:00:39,849
+Your Prism scans and funnels have their own alert settings,
+
+13
+00:00:39,869 --> 00:00:41,700
+right on the scan or funnel.

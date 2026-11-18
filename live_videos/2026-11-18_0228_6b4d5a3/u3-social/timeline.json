@@ -1,0 +1,41 @@
+{
+ "steps": [
+  {
+   "id": "idea",
+   "start": 23.479,
+   "say": "Angstrom Signals has a community alongside: a live stream of social signals, and chat."
+  },
+  {
+   "id": "open",
+   "start": 29.444,
+   "say": "The arrow on the right edge opens it. | Other members' posts are blurred in this video."
+  },
+  {
+   "id": "stream",
+   "start": 35.112,
+   "say": "The stream collects everyone's takes on assets and markets: agreeing or disagreeing with the AI's sentiment, with a short comment."
+  },
+  {
+   "id": "filters",
+   "start": 43.131,
+   "say": "Filter it by positive, negative or mixed, by asset, or by person."
+  },
+  {
+   "id": "chat",
+   "start": 49.337,
+   "say": "Below it is the chat. | Talk to everyone, to one of your communities, or privately to one person."
+  },
+  {
+   "id": "write",
+   "start": 55.935,
+   "say": "Write up to a hundred and sixty characters, add a face, and post. | Keep it friendly: no promoting, and no financial advice."
+  },
+  {
+   "id": "pin",
+   "start": 64.211,
+   "say": "Pin the panel to keep it open beside the dashboard, or pop it out into its own window."
+  }
+ ],
+ "end": 71.703,
+ "trim": 23.479
+}

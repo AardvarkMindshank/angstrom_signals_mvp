@@ -1,0 +1,51 @@
+{
+ "steps": [
+  {
+   "id": "idea",
+   "start": 23.429,
+   "say": "Tides is the big picture: the money flows behind every chart. | Rates, the dollar, fear, credit, and where money is rotating."
+  },
+  {
+   "id": "open",
+   "start": 31.592,
+   "say": "Open Tides on the dashboard. | At the top, the Tide: coming in, slack, or going out. | And the sea state: how rough the markets are."
+  },
+  {
+   "id": "winds",
+   "start": 40.479,
+   "say": "The winds apply it to each market. | A tailwind helps longs there. A headwind works against them."
+  },
+  {
+   "id": "note",
+   "start": 47.102,
+   "say": "Under it, the Navigator's daily note: today's readings in plain words, facts only."
+  },
+  {
+   "id": "storm",
+   "start": 52.543,
+   "say": "Storm warnings flag the big scheduled releases: the Fed, inflation, and jobs."
+  },
+  {
+   "id": "waves",
+   "start": 68.871,
+   "say": "The waves draw each current over time, with past event days marked."
+  },
+  {
+   "id": "currents",
+   "start": 73.582,
+   "say": "And each current, scored against its own last five years, with which way it's pulling."
+  },
+  {
+   "id": "plan",
+   "start": 78.626,
+   "say": "Today's AI Passage Plan applies all of this to your own assets and funnels. | One plan a day, kept in your logbook."
+  },
+  {
+   "id": "take",
+   "start": 86.313,
+   "say": "And you can add your own take: agree, disagree, and a short comment."
+  }
+ ],
+ "end": 92.254,
+ "trim": 23.429
+}

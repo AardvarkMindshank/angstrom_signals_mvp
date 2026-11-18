@@ -1,0 +1,51 @@
+1
+00:00:00,000 --> 00:00:02,613
+Angstrom Signals has a community alongside:
+
+2
+00:00:02,633 --> 00:00:05,505
+a live stream of social signals, and chat.
+
+3
+00:00:05,965 --> 00:00:08,441
+The arrow on the right edge opens it.
+
+4
+00:00:08,491 --> 00:00:11,180
+Other members' posts are blurred in this video.
+
+5
+00:00:11,633 --> 00:00:14,921
+The stream collects everyone's takes on assets and markets:
+
+6
+00:00:14,941 --> 00:00:19,165
+agreeing or disagreeing with the AI's sentiment, with a short comment.
+
+7
+00:00:19,652 --> 00:00:23,899
+Filter it by positive, negative or mixed, by asset, or by person.
+
+8
+00:00:25,858 --> 00:00:27,651
+Below it is the chat.
+
+9
+00:00:27,701 --> 00:00:31,991
+Talk to everyone, to one of your communities, or privately to one person.
+
+10
+00:00:32,456 --> 00:00:36,383
+Write up to a hundred and sixty characters, add a face, and post.
+
+11
+00:00:36,433 --> 00:00:40,274
+Keep it friendly: no promoting, and no financial advice.
+
+12
+00:00:40,732 --> 00:00:43,528
+Pin the panel to keep it open beside the dashboard,
+
+13
+00:00:43,548 --> 00:00:45,725
+or pop it out into its own window.
