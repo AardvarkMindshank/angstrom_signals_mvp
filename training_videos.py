@@ -19,6 +19,22 @@ ICON = ":material/smart_display:"
 
 # series key -> (series name, [(video name, title, length)]), in viewing order
 SERIES = {
+    # Recorded on the live site, signed in as the demo account (video/live_actions.js, 18 Nov 2026).
+    "dayone": ("Day one: your first steps", [
+        ("d0-overview", "Angstrom Signals at a glance", "2:03"),
+        ("d1-watchlist", "Add the assets you follow", "1:30"),
+        ("d2-first-group", "Your first Signal Group", "1:18"),
+        ("d3-first-set", "Your first Signal Set", "1:11"),
+        ("d4-first-scan", "Scan your assets with Prism", "1:01"),
+        ("d5-first-funnel", "Make your own funnel", "1:11"),
+    ]),
+    "around": ("Around the app", [
+        ("u1-tides", "Tides: the big picture", "1:19"),
+        ("u2-ai-navigator", "The AI Navigator", "1:30"),
+        ("u3-social", "Social signals and chat", "0:59"),
+        ("u5-alerts", "Alerts and notifications", "0:54"),
+        ("u4-dynamic-funnel", "Your Dynamic funnel", "1:12"),
+    ]),
     "lattice": ("Angstrom Lattice: the series", [
         ("01-angstrom-lattice-at-a-glance", "Angstrom Lattice at a glance", "1:29"),
         ("02-signals", "Signals", "1:44"),
@@ -43,9 +59,6 @@ SERIES = {
     "tides": ("Tides", [
         ("t1-tides", "Tides", "1:47"),
     ]),
-    "help": ("Getting help", [
-        ("a1-angstrom-assistant", "The AI Navigator (recorded as the Angstrom Assistant)", "1:03"),
-    ]),
 }
 STATE = "training_video"
 
@@ -65,7 +78,7 @@ def info(name: str) -> dict:
     slug, title, length = videos[n]
     return {"name": slug, "title": title, "length": length, "url": BASE_URL + slug + ".mp4", "series": key,
             "series_name": series, "position": n + 1, "count": len(videos),
-            "label": (f"{n + 1} · {title}" if key == "lattice" else title)}
+            "label": (f"{n + 1} · {title}" if key in ("lattice", "dayone") else title)}
 
 
 def neighbours(name: str) -> dict:
@@ -279,10 +292,12 @@ def link(st, name: str, key: str | None = None) -> None:
 
 
 def all_links(st, key: str) -> None:
-    """Every series, one 🎬 link per video; the series side by side on a wide screen."""
-    cols = st.columns(len(SERIES))
-    for col, (series_key, (series, videos)) in zip(cols, SERIES.items()):
-        with col:
-            st.markdown(f"**{series}**")
-            for slug, _, _ in videos:
-                link(st, slug, key=f"tv_{key}_{slug}")
+    """Every series, one 🎬 link per video; three series to a row on a wide screen (one under another on a phone)."""
+    items = list(SERIES.items())
+    for start in range(0, len(items), 3):
+        cols = st.columns(3)
+        for col, (series_key, (series, videos)) in zip(cols, items[start:start + 3]):
+            with col:
+                st.markdown(f"**{series}**")
+                for slug, _, _ in videos:
+                    link(st, slug, key=f"tv_{key}_{slug}")
