@@ -607,10 +607,11 @@ module.exports = {
       await box.click();
       await box.pressSequentially("How do I find coins that are dipping inside an uptrend?", { delay: 35 });
       await h.wait(400);
-      const ask = f.locator("button").filter({ hasText: /^Ask$/ }).first();
+      // The Ask button (its label also holds the icon's name), pressed like a person would; Ctrl+Enter if that misses.
+      const ask = f.locator('[data-testid="stFormSubmitButton"] button').first();
       const a = await ask.boundingBox().catch(() => null);
       if (a) await h.page.mouse.move(a.x + a.width / 2, a.y + a.height / 2, { steps: 15 });
-      await ask.click();
+      try { await ask.click({ timeout: 5000 }); } catch (e) { await box.press("Control+Enter"); }
     },
     wait: async (h) => {
       const f = h.page.frameLocator("#ang-ai-root iframe");
@@ -763,7 +764,7 @@ module.exports = {
     chips: async (h) => {
       await h.clear();
       await h.ring(".angfr .frow .chips >> nth=0");
-      const chip = h.page.locator(".angfr .frow .chip:not(.empty)").last();
+      const chip = h.page.locator(".angfr .frow .chip:not(.empty)").first();     // the first stage: it always holds some
       if (await chip.count()) await h.press(chip);
     },
     table: async (h) => {
