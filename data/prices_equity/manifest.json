@@ -1,0 +1,955 @@
+{
+ "source": "S&P 500 Historical Components & Changes.csv",
+ "start_members": "2016-01-04",
+ "end": "2024-10-29",
+ "seed": 2016,
+ "sample": 200,
+ "as_of": "2016-01-04",
+ "left_since": 90,
+ "files": {
+  "AAL": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "AAP": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "AAPL": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "ACN": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "ADM": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "AEE": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "AEP": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "AMAT": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "AME": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "AMGN": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "AMT": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "AMZN": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "AN": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "AON": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "AVGO": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "AVY": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "BA": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "BAX": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "BBY": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "BKNG": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "BLK": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "BSX": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "BWA": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "CAH": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "CBRE": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "CINF": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "CL": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "CLX": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "CMG": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "CMI": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "CMS": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "COST": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "CSX": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "CTAS": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "CVS": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "CVX": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "DAL": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "DG": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "DOV": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "DVN": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "EBAY": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "EIX": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "EMN": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "EMR": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "EOG": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "ETR": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "EXC": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "EXPE": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "F": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "FAST": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "FCX": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "FE": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "FLR": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "FLS": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "FOSL": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "FOXA": {
+   "bars": 1420,
+   "first": "2019-03-12",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "GIS": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "GME": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "GPC": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "GWW": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "HBAN": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "HCA": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "HON": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "HRL": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "HUM": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "IBM": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "ICE": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "IP": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "IR": {
+   "bars": 1879,
+   "first": "2017-05-12",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "IRM": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "ISRG": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "ITW": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "JBHT": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "JCI": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "JPM": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "KEY": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "KHC": {
+   "bars": 2347,
+   "first": "2015-07-06",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "KLAC": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "KMI": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "KR": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "LLY": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "LMT": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "LRCX": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "LYB": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "MAS": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "MCD": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "MCO": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "MDLZ": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "MO": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "MOS": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "MRK": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "MS": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "MSI": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "MU": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "MUR": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "NEM": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "NOC": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "NTAP": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "NTRS": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "O": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "OKE": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "OMC": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "ORCL": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "OXY": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "PBI": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "PCAR": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "PFG": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "PGR": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "PLD": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "PRGO": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "PWR": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "QCOM": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "RCL": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "RF": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "RIG": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "ROK": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "ROST": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "SO": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "SPG": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "STX": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "SYY": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "T": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "TAP": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "TDC": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "THC": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "TMO": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "TXN": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "TXT": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "UAA": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "UNP": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "UPS": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "URI": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "USB": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "V": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "VFC": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "VMC": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "VZ": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "WDC": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "WFC": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "WU": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "WY": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "WYNN": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "XEL": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "XOM": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "XYL": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "YUM": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "ZBH": {
+   "bars": 2977,
+   "first": "2013-01-02",
+   "last": "2024-10-29",
+   "stopped_early": false
+  },
+  "ZTS": {
+   "bars": 2956,
+   "first": "2013-02-01",
+   "last": "2024-10-29",
+   "stopped_early": false
+  }
+ },
+ "missing": [
+  "ABC",
+  "ADT-201604",
+  "AET-201811",
+  "ARG-201605",
+  "ARNC",
+  "ATVI",
+  "BHGE",
+  "BRCM-201601",
+  "CA",
+  "CAM-201604",
+  "CB-201601",
+  "CBS",
+  "CELG",
+  "COG",
+  "COL",
+  "CPGX-201606",
+  "CSRA-201804",
+  "CVC-201606",
+  "DISCK",
+  "DNB",
+  "EA",
+  "EQR",
+  "FB",
+  "FTR",
+  "HOT-201609",
+  "HRS",
+  "IPG",
+  "JNPR",
+  "LLTC-201703",
+  "MMC",
+  "MON-201806",
+  "MRO",
+  "NLSN",
+  "PCP-201601",
+  "PDCO",
+  "PKI",
+  "POM-201603",
+  "RAI-201707",
+  "SE-201702",
+  "SEE",
+  "SNDK-201605",
+  "STJ-201701",
+  "TMK",
+  "TSS",
+  "TWC-201605",
+  "TWX-201806",
+  "UTX",
+  "VAR",
+  "WBA",
+  "WRK",
+  "XL"
+ ],
+ "too_short": [
+  "LB"
+ ]
+}
