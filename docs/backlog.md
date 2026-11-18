@@ -2,6 +2,12 @@
 
 Agreed work that is not built yet, so nothing gets forgotten between sessions. Newest first.
 
+## Checks to repair (18 Nov 2026)
+
+- Three browser checks in the v2 CI fail since the "Lattice simplified" families: the Lattice editor check (looks for
+  the old "Add Stochastic %K" button), Lattice inside Streamlit, and the training-video / Advisor windows. Not caused by
+  Tides (same failures on the run before). Update the scripts to the family → signal → variant lists.
+
 ## Soundings: next steps (first run 18 Nov 2026)
 
 - **Soundings chart** (Angus's idea, 18 Nov 2026): a coin's price across the top with the timeline under it, and
