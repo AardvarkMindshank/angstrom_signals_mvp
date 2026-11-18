@@ -1,0 +1,186 @@
+{
+ "interval": "1h",
+ "end": "2024-10-29",
+ "files": {
+  "BTC-USD": {
+   "pair": "BTCUSDT",
+   "bars": 33538,
+   "first": "2021-01-01 00:00",
+   "last": "2024-10-29 23:00"
+  },
+  "ETH-USD": {
+   "pair": "ETHUSDT",
+   "bars": 33538,
+   "first": "2021-01-01 00:00",
+   "last": "2024-10-29 23:00"
+  },
+  "BNB-USD": {
+   "pair": "BNBUSDT",
+   "bars": 33538,
+   "first": "2021-01-01 00:00",
+   "last": "2024-10-29 23:00"
+  },
+  "DOGE-USD": {
+   "pair": "DOGEUSDT",
+   "bars": 33538,
+   "first": "2021-01-01 00:00",
+   "last": "2024-10-29 23:00"
+  },
+  "XRP-USD": {
+   "pair": "XRPUSDT",
+   "bars": 33538,
+   "first": "2021-01-01 00:00",
+   "last": "2024-10-29 23:00"
+  },
+  "ADA-USD": {
+   "pair": "ADAUSDT",
+   "bars": 33538,
+   "first": "2021-01-01 00:00",
+   "last": "2024-10-29 23:00"
+  },
+  "SOL-USD": {
+   "pair": "SOLUSDT",
+   "bars": 33538,
+   "first": "2021-01-01 00:00",
+   "last": "2024-10-29 23:00"
+  },
+  "DOT-USD": {
+   "pair": "DOTUSDT",
+   "bars": 33538,
+   "first": "2021-01-01 00:00",
+   "last": "2024-10-29 23:00"
+  },
+  "LTC-USD": {
+   "pair": "LTCUSDT",
+   "bars": 33538,
+   "first": "2021-01-01 00:00",
+   "last": "2024-10-29 23:00"
+  },
+  "LINK-USD": {
+   "pair": "LINKUSDT",
+   "bars": 33538,
+   "first": "2021-01-01 00:00",
+   "last": "2024-10-29 23:00"
+  },
+  "SHIB-USD": {
+   "pair": "SHIBUSDT",
+   "bars": 30438,
+   "first": "2021-05-10 11:00",
+   "last": "2024-10-29 23:00"
+  },
+  "EOS-USD": {
+   "pair": "EOSUSDT",
+   "bars": 33538,
+   "first": "2021-01-01 00:00",
+   "last": "2024-10-29 23:00"
+  },
+  "TRX-USD": {
+   "pair": "TRXUSDT",
+   "bars": 33538,
+   "first": "2021-01-01 00:00",
+   "last": "2024-10-29 23:00"
+  },
+  "VET-USD": {
+   "pair": "VETUSDT",
+   "bars": 33538,
+   "first": "2021-01-01 00:00",
+   "last": "2024-10-29 23:00"
+  },
+  "FIL-USD": {
+   "pair": "FILUSDT",
+   "bars": 33538,
+   "first": "2021-01-01 00:00",
+   "last": "2024-10-29 23:00"
+  },
+  "ETC-USD": {
+   "pair": "ETCUSDT",
+   "bars": 33538,
+   "first": "2021-01-01 00:00",
+   "last": "2024-10-29 23:00"
+  },
+  "THETA-USD": {
+   "pair": "THETAUSDT",
+   "bars": 33538,
+   "first": "2021-01-01 00:00",
+   "last": "2024-10-29 23:00"
+  },
+  "BCH-USD": {
+   "pair": "BCHUSDT",
+   "bars": 33538,
+   "first": "2021-01-01 00:00",
+   "last": "2024-10-29 23:00"
+  },
+  "CHZ-USD": {
+   "pair": "CHZUSDT",
+   "bars": 33538,
+   "first": "2021-01-01 00:00",
+   "last": "2024-10-29 23:00"
+  },
+  "ICP-USD": {
+   "pair": "ICPUSDT",
+   "bars": 30424,
+   "first": "2021-05-11 01:00",
+   "last": "2024-10-29 23:00"
+  },
+  "AVAX-USD": {
+   "pair": "AVAXUSDT",
+   "bars": 33538,
+   "first": "2021-01-01 00:00",
+   "last": "2024-10-29 23:00"
+  },
+  "TFUEL-USD": {
+   "pair": "TFUELUSDT",
+   "bars": 33538,
+   "first": "2021-01-01 00:00",
+   "last": "2024-10-29 23:00"
+  },
+  "FTM-USD": {
+   "pair": "FTMUSDT",
+   "bars": 33538,
+   "first": "2021-01-01 00:00",
+   "last": "2024-10-29 23:00"
+  },
+  "GMT-USD": {
+   "pair": "GMTUSDT",
+   "bars": 23171,
+   "first": "2022-03-09 12:00",
+   "last": "2024-10-29 23:00"
+  },
+  "KSM-USD": {
+   "pair": "KSMUSDT",
+   "bars": 33538,
+   "first": "2021-01-01 00:00",
+   "last": "2024-10-29 23:00"
+  },
+  "RUNE-USD": {
+   "pair": "RUNEUSDT",
+   "bars": 33538,
+   "first": "2021-01-01 00:00",
+   "last": "2024-10-29 23:00"
+  },
+  "CAKE-USD": {
+   "pair": "CAKEUSDT",
+   "bars": 32357,
+   "first": "2021-02-19 06:00",
+   "last": "2024-10-29 23:00"
+  },
+  "APE-USD": {
+   "pair": "APEUSDT",
+   "bars": 22977,
+   "first": "2022-03-17 14:00",
+   "last": "2024-10-29 23:00"
+  },
+  "SXP-USD": {
+   "pair": "SXPUSDT",
+   "bars": 33538,
+   "first": "2021-01-01 00:00",
+   "last": "2024-10-29 23:00"
+  },
+  "OP-USD": {
+   "pair": "OPUSDT",
+   "bars": 21159,
+   "first": "2022-06-01 08:00",
+   "last": "2024-10-29 23:00"
+  }
+ }
+}
