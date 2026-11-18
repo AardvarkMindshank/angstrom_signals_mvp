@@ -2,6 +2,15 @@
 
 Agreed work that is not built yet, so nothing gets forgotten between sessions. Newest first.
 
+## Soundings: next steps (first run 18 Nov 2026)
+
+- **Soundings chart** (Angus's idea, 18 Nov 2026): a coin's price across the top with the timeline under it, and
+  below it one row per signal reading or Set, each showing when it fired, lined up with the price; rises and falls
+  marked on the price. Built from the saved readings tables (about 5 MB for 25 coins), so it draws instantly.
+- Open a pattern as a Set (and so as a scan or funnel stage); ask the AI Navigator about a pattern.
+- More coins (survivorship: today's coins only), equities, 4-hour candles, the move definition as a choice.
+- Calibrate the lift test's variance factor on synthetic markets (KAPPA 1.2 is borrowed from the research tests).
+
 ## "When it turned No" study (asked 18 Nov 2026, for later)
 
 What followed only studies fresh Yes moments against ordinary No days. Add a second study beside it: fresh No moments
