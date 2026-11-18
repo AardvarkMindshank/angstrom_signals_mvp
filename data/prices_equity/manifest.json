@@ -43,12 +43,6 @@
    "last": "2024-10-29",
    "stopped_early": false
   },
-  "ADT": {
-   "bars": 1706,
-   "first": "2018-01-19",
-   "last": "2024-10-29",
-   "stopped_early": false
-  },
   "AEE": {
    "bars": 2977,
    "first": "2013-01-02",
@@ -100,12 +94,6 @@
   "AON": {
    "bars": 2977,
    "first": "2013-01-02",
-   "last": "2024-10-29",
-   "stopped_early": false
-  },
-  "HWM": {
-   "bars": 2011,
-   "first": "2016-11-01",
    "last": "2024-10-29",
    "stopped_early": false
   },
@@ -184,12 +172,6 @@
   "CBRE": {
    "bars": 2977,
    "first": "2013-01-02",
-   "last": "2024-10-29",
-   "stopped_early": false
-  },
-  "PARA": {
-   "bars": 934,
-   "first": "2021-02-12",
    "last": "2024-10-29",
    "stopped_early": false
   },
@@ -379,12 +361,6 @@
    "last": "2024-10-29",
    "stopped_early": false
   },
-  "FOXA": {
-   "bars": 1420,
-   "first": "2019-03-12",
-   "last": "2024-10-29",
-   "stopped_early": false
-  },
   "GIS": {
    "bars": 2977,
    "first": "2013-01-02",
@@ -460,12 +436,6 @@
   "IP": {
    "bars": 2977,
    "first": "2013-01-02",
-   "last": "2024-10-29",
-   "stopped_early": false
-  },
-  "IR": {
-   "bars": 1879,
-   "first": "2017-05-12",
    "last": "2024-10-29",
    "stopped_early": false
   },
@@ -763,12 +733,6 @@
    "last": "2024-10-29",
    "stopped_early": false
   },
-  "SE": {
-   "bars": 1767,
-   "first": "2017-10-20",
-   "last": "2024-10-29",
-   "stopped_early": false
-  },
   "SO": {
    "bars": 2977,
    "first": "2013-01-02",
@@ -1014,7 +978,14 @@
   "WBA",
   "XL"
  ],
- "too_short": [
-  "LB"
+ "too_short": [],
+ "other_company": [
+  "ADT-201604\u2192ADT",
+  "ARNC\u2192HWM",
+  "CBS\u2192PARA",
+  "FOXA\u2192FOXA",
+  "IR\u2192IR",
+  "LB\u2192LB",
+  "SE-201702\u2192SE"
  ]
 }
