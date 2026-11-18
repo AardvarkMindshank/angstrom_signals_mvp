@@ -31,6 +31,14 @@ HEADERS = {"User-Agent": "AngstromSignals/1.0 (market research dashboard)"}
 SEED = 2016
 MIN_DAYS = 750
 WARMUP_FROM = "2013-01-01"
+# Same company, new ticker (Yahoo keeps the history under the new one).
+RENAMED = {"FB": "META", "ABC": "COR", "COG": "CTRA", "PKI": "RVTY", "TMK": "GL", "UTX": "RTX", "CBS": "PARA",
+           "HRS": "LHX", "BHGE": "BKR", "ARNC": "HWM", "ANTM": "ELV", "HCP": "PEAK", "KORS": "CPRI", "LUK": "JEF",
+           "WLTW": "WTW", "DISCA": "WBD", "PCLN": "BKNG", "RHT": "RHT", "HRB": "HRB", "SYMC": "GEN", "NLOK": "GEN",
+           "FISV": "FI", "GPS": "GAP", "CTL": "LUMN", "XEC": "CTRA", "MYL": "VTRS", "TSO": "ANDV", "BBT": "TFC",
+           "STI": "TFC", "ADS": "BFH", "HFC": "DINO", "WRK": "SW", "ESRX": "ESRX", "PX": "LIN", "DPS": "KDP",
+           "COV": "COV", "GGP": "GGP", "DTV": "DTV", "BXLT": "BXLT", "TE": "TE", "CMCSK": "CMCSA", "FOXA": "FOXA",
+           "PCL": "PCL", "AGN": "AGN"}
 
 
 def yahoo(symbol) -> str:
@@ -93,18 +101,35 @@ def members_on(day: pd.Timestamp) -> tuple[list[str], dict]:
     return sorted(members), {"today": len(now), "changes_undone": int(len(later)), "left_since": len(left)}
 
 
+def candidates(symbol: str) -> list[str]:
+    """The dataset marks a former member with the month it left (AET-201811): try the plain ticker, and a known
+    new ticker for the same company."""
+    base = symbol.split("-20")[0] if "-20" in symbol else symbol
+    out = [RENAMED.get(base, base), base]
+    return list(dict.fromkeys(out))
+
+
 def fetch(symbol: str, end: pd.Timestamp) -> pd.DataFrame:
+    for name in candidates(symbol):
+        d = _fetch(name, end)
+        if not d.empty:
+            return d
+    return pd.DataFrame()
+
+
+def _fetch(symbol: str, end: pd.Timestamp) -> pd.DataFrame:
     import yfinance as yf
 
-    for attempt in range(3):
+    frame = None
+    for attempt in range(4):
         try:
             frame = yf.Ticker(symbol).history(start=WARMUP_FROM, end=(end + pd.Timedelta(days=1)).strftime("%Y-%m-%d"),
                                               interval="1d", auto_adjust=True)
-            break
+            if frame is not None and not frame.empty:
+                break
         except Exception:
-            time.sleep(2 + 3 * attempt)
-    else:
-        return pd.DataFrame()
+            pass
+        time.sleep(3 + 5 * attempt)                      # Yahoo refuses bursts: wait and try again
     if frame is None or frame.empty:
         return pd.DataFrame()
     idx = pd.to_datetime(frame.index)
@@ -135,6 +160,7 @@ def main() -> int:
                 "start_members": args.start, "end": args.end, "seed": SEED, "sample": len(chosen), **info,
                 "files": {}, "missing": [], "too_short": []}
     for sym in chosen:
+        time.sleep(0.6)
         d = fetch(sym, end)
         if d.empty:
             manifest["missing"].append(sym)
@@ -142,6 +168,7 @@ def main() -> int:
         if len(d) < MIN_DAYS:
             manifest["too_short"].append(sym)
             continue
+        sym = sym.split("-20")[0] if "-20" in sym else sym           # the file is named by its plain ticker
         d.to_csv(folder / f"{sym}.csv.gz", index=False)
         stopped = pd.Timestamp(d["date"].iloc[-1]) < end - pd.Timedelta(days=7)
         manifest["files"][sym] = {"bars": len(d), "first": d["date"].iloc[0], "last": d["date"].iloc[-1],
