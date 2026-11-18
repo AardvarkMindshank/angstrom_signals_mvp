@@ -1,0 +1,907 @@
+{
+ "end": "2024-10-29",
+ "source": "data.binance.vision spot daily klines (USDT pairs)",
+ "rule": "top by average USDT volume in June 2018-2023 (0 when not listed)",
+ "files": {
+  "BTC-USD": {
+   "pair": "BTCUSDT",
+   "bars": 2631,
+   "first": "2017-08-17",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 1361714735,
+   "months_sampled": 6,
+   "stopped_early": false
+  },
+  "ETH-USD": {
+   "pair": "ETHUSDT",
+   "bars": 2631,
+   "first": "2017-08-17",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 803724914,
+   "months_sampled": 6,
+   "stopped_early": false
+  },
+  "BNB-USD": {
+   "pair": "BNBUSDT",
+   "bars": 2550,
+   "first": "2017-11-06",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 245667801,
+   "months_sampled": 6,
+   "stopped_early": false
+  },
+  "DOGE-USD": {
+   "pair": "DOGEUSDT",
+   "bars": 1944,
+   "first": "2019-07-05",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 160769183,
+   "months_sampled": 4,
+   "stopped_early": false
+  },
+  "XRP-USD": {
+   "pair": "XRPUSDT",
+   "bars": 2371,
+   "first": "2018-05-04",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 155968925,
+   "months_sampled": 6,
+   "stopped_early": false
+  },
+  "ADA-USD": {
+   "pair": "ADAUSDT",
+   "bars": 2388,
+   "first": "2018-04-17",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 133290824,
+   "months_sampled": 6,
+   "stopped_early": false
+  },
+  "MATIC-USD": {
+   "pair": "MATICUSDT",
+   "bars": 1965,
+   "first": "2019-04-26",
+   "last": "2024-09-10",
+   "avg_volume_sampled": 111787304,
+   "months_sampled": 5,
+   "stopped_early": true
+  },
+  "SOL-USD": {
+   "pair": "SOLUSDT",
+   "bars": 1541,
+   "first": "2020-08-11",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 89716583,
+   "months_sampled": 3,
+   "stopped_early": false
+  },
+  "DOT-USD": {
+   "pair": "DOTUSDT",
+   "bars": 1534,
+   "first": "2020-08-18",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 70090993,
+   "months_sampled": 3,
+   "stopped_early": false
+  },
+  "LTC-USD": {
+   "pair": "LTCUSDT",
+   "bars": 2513,
+   "first": "2017-12-13",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 58362984,
+   "months_sampled": 6,
+   "stopped_early": false
+  },
+  "LINK-USD": {
+   "pair": "LINKUSDT",
+   "bars": 2114,
+   "first": "2019-01-16",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 55431407,
+   "months_sampled": 5,
+   "stopped_early": false
+  },
+  "SHIB-USD": {
+   "pair": "SHIBUSDT",
+   "bars": 1269,
+   "first": "2021-05-10",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 52118999,
+   "months_sampled": 3,
+   "stopped_early": false
+  },
+  "EOS-USD": {
+   "pair": "EOSUSDT",
+   "bars": 2347,
+   "first": "2018-05-28",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 50074008,
+   "months_sampled": 6,
+   "stopped_early": false
+  },
+  "TRX-USD": {
+   "pair": "TRXUSDT",
+   "bars": 2333,
+   "first": "2018-06-11",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 48898709,
+   "months_sampled": 6,
+   "stopped_early": false
+  },
+  "VET-USD": {
+   "pair": "VETUSDT",
+   "bars": 2289,
+   "first": "2018-07-25",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 43053737,
+   "months_sampled": 5,
+   "stopped_early": false
+  },
+  "FIL-USD": {
+   "pair": "FILUSDT",
+   "bars": 1476,
+   "first": "2020-10-15",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 36912910,
+   "months_sampled": 3,
+   "stopped_early": false
+  },
+  "ETC-USD": {
+   "pair": "ETCUSDT",
+   "bars": 2332,
+   "first": "2018-06-12",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 32577922,
+   "months_sampled": 6,
+   "stopped_early": false
+  },
+  "THETA-USD": {
+   "pair": "THETAUSDT",
+   "bars": 2030,
+   "first": "2019-04-10",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 30778055,
+   "months_sampled": 5,
+   "stopped_early": false
+  },
+  "BCH-USD": {
+   "pair": "BCHUSDT",
+   "bars": 1798,
+   "first": "2019-11-28",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 29192084,
+   "months_sampled": 4,
+   "stopped_early": false
+  },
+  "CHZ-USD": {
+   "pair": "CHZUSDT",
+   "bars": 1881,
+   "first": "2019-09-06",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 27695092,
+   "months_sampled": 4,
+   "stopped_early": false
+  },
+  "ICP-USD": {
+   "pair": "ICPUSDT",
+   "bars": 1268,
+   "first": "2021-05-11",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 25061872,
+   "months_sampled": 3,
+   "stopped_early": false
+  },
+  "AVAX-USD": {
+   "pair": "AVAXUSDT",
+   "bars": 1499,
+   "first": "2020-09-22",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 25054487,
+   "months_sampled": 3,
+   "stopped_early": false
+  },
+  "TFUEL-USD": {
+   "pair": "TFUELUSDT",
+   "bars": 1986,
+   "first": "2019-05-24",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 24587545,
+   "months_sampled": 5,
+   "stopped_early": false
+  },
+  "LUNA-USD": {
+   "pair": "LUNAUSDT",
+   "bars": 1514,
+   "first": "2020-08-21",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 22690101,
+   "months_sampled": 3,
+   "stopped_early": false
+  },
+  "WAVES-USD": {
+   "pair": "WAVESUSDT",
+   "bars": 1978,
+   "first": "2019-01-18",
+   "last": "2024-06-17",
+   "avg_volume_sampled": 21943966,
+   "months_sampled": 5,
+   "stopped_early": true
+  },
+  "FTM-USD": {
+   "pair": "FTMUSDT",
+   "bars": 1968,
+   "first": "2019-06-11",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 21723326,
+   "months_sampled": 5,
+   "stopped_early": false
+  },
+  "GMT-USD": {
+   "pair": "GMTUSDT",
+   "bars": 966,
+   "first": "2022-03-09",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 19746812,
+   "months_sampled": 2,
+   "stopped_early": false
+  },
+  "KSM-USD": {
+   "pair": "KSMUSDT",
+   "bars": 1517,
+   "first": "2020-09-04",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 18798746,
+   "months_sampled": 3,
+   "stopped_early": false
+  },
+  "RUNE-USD": {
+   "pair": "RUNEUSDT",
+   "bars": 1517,
+   "first": "2020-09-04",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 17316492,
+   "months_sampled": 3,
+   "stopped_early": false
+  },
+  "CAKE-USD": {
+   "pair": "CAKEUSDT",
+   "bars": 1349,
+   "first": "2021-02-19",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 17092838,
+   "months_sampled": 3,
+   "stopped_early": false
+  },
+  "APE-USD": {
+   "pair": "APEUSDT",
+   "bars": 958,
+   "first": "2022-03-17",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 15522073,
+   "months_sampled": 2,
+   "stopped_early": false
+  },
+  "SXP-USD": {
+   "pair": "SXPUSDT",
+   "bars": 1563,
+   "first": "2020-07-20",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 15498513,
+   "months_sampled": 3,
+   "stopped_early": false
+  },
+  "OP-USD": {
+   "pair": "OPUSDT",
+   "bars": 882,
+   "first": "2022-06-01",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 15358397,
+   "months_sampled": 2,
+   "stopped_early": false
+  },
+  "XLM-USD": {
+   "pair": "XLMUSDT",
+   "bars": 2344,
+   "first": "2018-05-31",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 15311416,
+   "months_sampled": 6,
+   "stopped_early": false
+  },
+  "UNI-USD": {
+   "pair": "UNIUSDT",
+   "bars": 1504,
+   "first": "2020-09-17",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 14931983,
+   "months_sampled": 3,
+   "stopped_early": false
+  },
+  "NEAR-USD": {
+   "pair": "NEARUSDT",
+   "bars": 1477,
+   "first": "2020-10-14",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 14464442,
+   "months_sampled": 3,
+   "stopped_early": false
+  },
+  "AAVE-USD": {
+   "pair": "AAVEUSDT",
+   "bars": 1476,
+   "first": "2020-10-15",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 14345988,
+   "months_sampled": 3,
+   "stopped_early": false
+  },
+  "ATOM-USD": {
+   "pair": "ATOMUSDT",
+   "bars": 2011,
+   "first": "2019-04-29",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 14266312,
+   "months_sampled": 5,
+   "stopped_early": false
+  },
+  "UNFI-USD": {
+   "pair": "UNFIUSDT",
+   "bars": 1441,
+   "first": "2020-11-19",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 14243412,
+   "months_sampled": 3,
+   "stopped_early": false
+  },
+  "NEO-USD": {
+   "pair": "NEOUSDT",
+   "bars": 2536,
+   "first": "2017-11-20",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 13740779,
+   "months_sampled": 6,
+   "stopped_early": false
+  },
+  "ATA-USD": {
+   "pair": "ATAUSDT",
+   "bars": 1241,
+   "first": "2021-06-07",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 13450766,
+   "months_sampled": 3,
+   "stopped_early": false
+  },
+  "ZIL-USD": {
+   "pair": "ZILUSDT",
+   "bars": 2080,
+   "first": "2019-02-19",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 13197485,
+   "months_sampled": 5,
+   "stopped_early": false
+  },
+  "BAKE-USD": {
+   "pair": "BAKEUSDT",
+   "bars": 1279,
+   "first": "2021-04-30",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 12234704,
+   "months_sampled": 3,
+   "stopped_early": false
+  },
+  "ARB-USD": {
+   "pair": "ARBUSDT",
+   "bars": 587,
+   "first": "2023-03-23",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 12126174,
+   "months_sampled": 1,
+   "stopped_early": false
+  },
+  "MAV-USD": {
+   "pair": "MAVUSDT",
+   "bars": 490,
+   "first": "2023-06-28",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 12058744,
+   "months_sampled": 1,
+   "stopped_early": false
+  },
+  "SAND-USD": {
+   "pair": "SANDUSDT",
+   "bars": 1538,
+   "first": "2020-08-14",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 11983990,
+   "months_sampled": 3,
+   "stopped_early": false
+  },
+  "GALA-USD": {
+   "pair": "GALAUSDT",
+   "bars": 1143,
+   "first": "2021-09-13",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 11783068,
+   "months_sampled": 2,
+   "stopped_early": false
+  },
+  "ALGO-USD": {
+   "pair": "ALGOUSDT",
+   "bars": 1957,
+   "first": "2019-06-22",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 11648366,
+   "months_sampled": 5,
+   "stopped_early": false
+  },
+  "DATA-USD": {
+   "pair": "DATAUSDT",
+   "bars": 1667,
+   "first": "2020-04-07",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 11232380,
+   "months_sampled": 4,
+   "stopped_early": false
+  },
+  "CRV-USD": {
+   "pair": "CRVUSDT",
+   "bars": 1537,
+   "first": "2020-08-15",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 11141296,
+   "months_sampled": 3,
+   "stopped_early": false
+  },
+  "XMR-USD": {
+   "pair": "XMRUSDT",
+   "bars": 1804,
+   "first": "2019-03-15",
+   "last": "2024-02-20",
+   "avg_volume_sampled": 10974813,
+   "months_sampled": 5,
+   "stopped_early": true
+  },
+  "ONT-USD": {
+   "pair": "ONTUSDT",
+   "bars": 2336,
+   "first": "2018-06-08",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 10887354,
+   "months_sampled": 6,
+   "stopped_early": false
+  },
+  "BTT-USD": {
+   "pair": "BTTUSDT",
+   "bars": 1083,
+   "first": "2019-01-31",
+   "last": "2022-01-17",
+   "avg_volume_sampled": 10788804,
+   "months_sampled": 3,
+   "stopped_early": true
+  },
+  "KAVA-USD": {
+   "pair": "KAVAUSDT",
+   "bars": 1832,
+   "first": "2019-10-25",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 10448541,
+   "months_sampled": 4,
+   "stopped_early": false
+  },
+  "LINA-USD": {
+   "pair": "LINAUSDT",
+   "bars": 1322,
+   "first": "2021-03-18",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 10423153,
+   "months_sampled": 3,
+   "stopped_early": false
+  },
+  "PEPE-USD": {
+   "pair": "PEPEUSDT",
+   "bars": 544,
+   "first": "2023-05-05",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 10095849,
+   "months_sampled": 1,
+   "stopped_early": false
+  },
+  "ONE-USD": {
+   "pair": "ONEUSDT",
+   "bars": 1978,
+   "first": "2019-06-01",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 9866765,
+   "months_sampled": 5,
+   "stopped_early": false
+  },
+  "SUSHI-USD": {
+   "pair": "SUSHIUSDT",
+   "bars": 1520,
+   "first": "2020-09-01",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 9621781,
+   "months_sampled": 3,
+   "stopped_early": false
+  },
+  "ZEC-USD": {
+   "pair": "ZECUSDT",
+   "bars": 2050,
+   "first": "2019-03-21",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 9485037,
+   "months_sampled": 5,
+   "stopped_early": false
+  },
+  "BEL-USD": {
+   "pair": "BELUSDT",
+   "bars": 1506,
+   "first": "2020-09-15",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 8757871,
+   "months_sampled": 3,
+   "stopped_early": false
+  },
+  "MANA-USD": {
+   "pair": "MANAUSDT",
+   "bars": 1546,
+   "first": "2020-08-06",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 8419231,
+   "months_sampled": 3,
+   "stopped_early": false
+  },
+  "FET-USD": {
+   "pair": "FETUSDT",
+   "bars": 2071,
+   "first": "2019-02-28",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 8031384,
+   "months_sampled": 5,
+   "stopped_early": false
+  },
+  "GRT-USD": {
+   "pair": "GRTUSDT",
+   "bars": 1413,
+   "first": "2020-12-17",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 7853025,
+   "months_sampled": 3,
+   "stopped_early": false
+  },
+  "SUI-USD": {
+   "pair": "SUIUSDT",
+   "bars": 546,
+   "first": "2023-05-03",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 7746437,
+   "months_sampled": 1,
+   "stopped_early": false
+  },
+  "FLM-USD": {
+   "pair": "FLMUSDT",
+   "bars": 1493,
+   "first": "2020-09-28",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 7674152,
+   "months_sampled": 3,
+   "stopped_early": false
+  },
+  "EGLD-USD": {
+   "pair": "EGLDUSDT",
+   "bars": 1518,
+   "first": "2020-09-03",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 7673524,
+   "months_sampled": 3,
+   "stopped_early": false
+  },
+  "ENJ-USD": {
+   "pair": "ENJUSDT",
+   "bars": 2022,
+   "first": "2019-04-18",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 7666635,
+   "months_sampled": 5,
+   "stopped_early": false
+  },
+  "IOTA-USD": {
+   "pair": "IOTAUSDT",
+   "bars": 2344,
+   "first": "2018-05-31",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 7405840,
+   "months_sampled": 6,
+   "stopped_early": false
+  },
+  "XTZ-USD": {
+   "pair": "XTZUSDT",
+   "bars": 1863,
+   "first": "2019-09-24",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 7266090,
+   "months_sampled": 4,
+   "stopped_early": false
+  },
+  "1INCH-USD": {
+   "pair": "1INCHUSDT",
+   "bars": 1405,
+   "first": "2020-12-25",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 7255686,
+   "months_sampled": 3,
+   "stopped_early": false
+  },
+  "MTL-USD": {
+   "pair": "MTLUSDT",
+   "bars": 1895,
+   "first": "2019-08-23",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 7023931,
+   "months_sampled": 4,
+   "stopped_early": false
+  },
+  "AXS-USD": {
+   "pair": "AXSUSDT",
+   "bars": 1456,
+   "first": "2020-11-04",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 6930546,
+   "months_sampled": 3,
+   "stopped_early": false
+  },
+  "OGN-USD": {
+   "pair": "OGNUSDT",
+   "bars": 1756,
+   "first": "2020-01-09",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 6891449,
+   "months_sampled": 4,
+   "stopped_early": false
+  },
+  "OMG-USD": {
+   "pair": "OMGUSDT",
+   "bars": 1903,
+   "first": "2019-04-03",
+   "last": "2024-06-17",
+   "avg_volume_sampled": 6473401,
+   "months_sampled": 5,
+   "stopped_early": true
+  },
+  "WIN-USD": {
+   "pair": "WINUSDT",
+   "bars": 1917,
+   "first": "2019-08-01",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 6410741,
+   "months_sampled": 4,
+   "stopped_early": false
+  },
+  "LIT-USD": {
+   "pair": "LITUSDT",
+   "bars": 1364,
+   "first": "2021-02-04",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 6294345,
+   "months_sampled": 3,
+   "stopped_early": false
+  },
+  "ALICE-USD": {
+   "pair": "ALICEUSDT",
+   "bars": 1325,
+   "first": "2021-03-15",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 6286760,
+   "months_sampled": 3,
+   "stopped_early": false
+  },
+  "PEOPLE-USD": {
+   "pair": "PEOPLEUSDT",
+   "bars": 1042,
+   "first": "2021-12-23",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 6191231,
+   "months_sampled": 2,
+   "stopped_early": false
+  },
+  "COMP-USD": {
+   "pair": "COMPUSDT",
+   "bars": 1588,
+   "first": "2020-06-25",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 6190489,
+   "months_sampled": 4,
+   "stopped_early": false
+  },
+  "WRX-USD": {
+   "pair": "WRXUSDT",
+   "bars": 1729,
+   "first": "2020-02-05",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 6178573,
+   "months_sampled": 4,
+   "stopped_early": false
+  },
+  "HOT-USD": {
+   "pair": "HOTUSDT",
+   "bars": 2081,
+   "first": "2019-02-18",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 6108533,
+   "months_sampled": 5,
+   "stopped_early": false
+  },
+  "DASH-USD": {
+   "pair": "DASHUSDT",
+   "bars": 2043,
+   "first": "2019-03-28",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 6020653,
+   "months_sampled": 5,
+   "stopped_early": false
+  },
+  "SNX-USD": {
+   "pair": "SNXUSDT",
+   "bars": 1574,
+   "first": "2020-07-09",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 5959695,
+   "months_sampled": 3,
+   "stopped_early": false
+  },
+  "QTUM-USD": {
+   "pair": "QTUMUSDT",
+   "bars": 2417,
+   "first": "2018-03-19",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 5656348,
+   "months_sampled": 6,
+   "stopped_early": false
+  },
+  "GTO-USD": {
+   "pair": "GTOUSDT",
+   "bars": 1247,
+   "first": "2019-07-01",
+   "last": "2022-11-28",
+   "avg_volume_sampled": 5625758,
+   "months_sampled": 3,
+   "stopped_early": true
+  },
+  "HARD-USD": {
+   "pair": "HARDUSDT",
+   "bars": 1454,
+   "first": "2020-11-06",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 5619353,
+   "months_sampled": 3,
+   "stopped_early": false
+  },
+  "HBAR-USD": {
+   "pair": "HBARUSDT",
+   "bars": 1858,
+   "first": "2019-09-29",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 5582375,
+   "months_sampled": 4,
+   "stopped_early": false
+  },
+  "RSR-USD": {
+   "pair": "RSRUSDT",
+   "bars": 1525,
+   "first": "2020-08-27",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 5430154,
+   "months_sampled": 3,
+   "stopped_early": false
+  },
+  "CFX-USD": {
+   "pair": "CFXUSDT",
+   "bars": 1311,
+   "first": "2021-03-29",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 5429225,
+   "months_sampled": 3,
+   "stopped_early": false
+  },
+  "RNDR-USD": {
+   "pair": "RNDRUSDT",
+   "bars": 969,
+   "first": "2021-11-27",
+   "last": "2024-07-22",
+   "avg_volume_sampled": 5401434,
+   "months_sampled": 2,
+   "stopped_early": true
+  },
+  "YFI-USD": {
+   "pair": "YFIUSDT",
+   "bars": 1542,
+   "first": "2020-08-10",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 5175069,
+   "months_sampled": 3,
+   "stopped_early": false
+  },
+  "DENT-USD": {
+   "pair": "DENTUSDT",
+   "bars": 1891,
+   "first": "2019-08-27",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 5003319,
+   "months_sampled": 4,
+   "stopped_early": false
+  },
+  "IOST-USD": {
+   "pair": "IOSTUSDT",
+   "bars": 2049,
+   "first": "2019-03-22",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 4945854,
+   "months_sampled": 5,
+   "stopped_early": false
+  },
+  "GTC-USD": {
+   "pair": "GTCUSDT",
+   "bars": 1238,
+   "first": "2021-06-10",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 4904189,
+   "months_sampled": 3,
+   "stopped_early": false
+  },
+  "ICX-USD": {
+   "pair": "ICXUSDT",
+   "bars": 2331,
+   "first": "2018-06-13",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 4882465,
+   "months_sampled": 6,
+   "stopped_early": false
+  },
+  "JASMY-USD": {
+   "pair": "JASMYUSDT",
+   "bars": 1073,
+   "first": "2021-11-22",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 4758220,
+   "months_sampled": 2,
+   "stopped_early": false
+  },
+  "XVS-USD": {
+   "pair": "XVSUSDT",
+   "bars": 1485,
+   "first": "2020-10-06",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 4617979,
+   "months_sampled": 3,
+   "stopped_early": false
+  },
+  "APT-USD": {
+   "pair": "APTUSDT",
+   "bars": 742,
+   "first": "2022-10-19",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 4612726,
+   "months_sampled": 1,
+   "stopped_early": false
+  },
+  "INJ-USD": {
+   "pair": "INJUSDT",
+   "bars": 1470,
+   "first": "2020-10-21",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 4561444,
+   "months_sampled": 3,
+   "stopped_early": false
+  },
+  "CELR-USD": {
+   "pair": "CELRUSDT",
+   "bars": 2046,
+   "first": "2019-03-25",
+   "last": "2024-10-29",
+   "avg_volume_sampled": 4429044,
+   "months_sampled": 5,
+   "stopped_early": false
+  }
+ }
+}
