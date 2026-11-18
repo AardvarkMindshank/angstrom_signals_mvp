@@ -1,0 +1,9 @@
+chart browser check (made-up candles)
+lattice editor browser check
+prism board browser check
+funnel stages browser check
+NDA signature pad browser check
+tap to explain browser check
+chart inside Streamlit
+lattice editor inside Streamlit
+training video and Advisor windows
