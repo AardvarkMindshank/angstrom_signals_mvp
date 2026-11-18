@@ -37,9 +37,35 @@ def yahoo(symbol) -> str:
     return str(symbol).strip().upper().replace(".", "-")
 
 
+HISTORY_REPO = "https://api.github.com/repos/fja05680/sp500/contents"
+
+
+def members_from_history(day: pd.Timestamp) -> tuple[list[str], dict] | None:
+    """The S&P 500 on a date from the open dataset github.com/fja05680/sp500 (dated lists of every member since
+    1996). None when it can't be read."""
+    try:
+        files = requests.get(HISTORY_REPO, headers=HEADERS, timeout=30).json()
+        f = sorted((x for x in files if str(x.get("name", "")).startswith("S&P 500 Historical Components")
+                    and str(x["name"]).endswith(".csv")), key=lambda x: x["name"])[-1]
+        table = pd.read_csv(io.StringIO(requests.get(f["download_url"], headers=HEADERS, timeout=60).text))
+        table["date"] = pd.to_datetime(table["date"])
+        row = table[table["date"] <= day].iloc[-1]
+        members = sorted({yahoo(x) for x in str(row["tickers"]).split(",") if x.strip()})
+        latest = table.iloc[-1]
+        now = {yahoo(x) for x in str(latest["tickers"]).split(",") if x.strip()}
+        return members, {"source": f["name"], "as_of": str(row["date"].date()), "left_since": len(set(members) - now)}
+    except Exception as exc:
+        print(f"membership history not available ({type(exc).__name__}: {exc}); trying Wikipedia", flush=True)
+        return None
+
+
 def members_on(day: pd.Timestamp) -> tuple[list[str], dict]:
+    got = members_from_history(day)
+    if got:
+        return got
     html = requests.get(URL, headers=HEADERS, timeout=30).text
     tables = pd.read_html(io.StringIO(html))
+    print("Wikipedia tables:", [list(t.columns)[:6] for t in tables], flush=True)
     now = {yahoo(s) for s in tables[0]["Symbol"]}
     def flat(t):
         t = t.copy()
@@ -102,7 +128,8 @@ def main() -> int:
     folder = Path(args.out)
     folder.mkdir(parents=True, exist_ok=True)
     members, info = members_on(pd.Timestamp(args.start))
-    print(f"S&P 500 on {args.start}: {len(members)} companies ({info['left_since']} have left the index since)")
+    print(f"S&P 500 on {args.start}: {len(members)} companies ({info['left_since']} have left the index since); "
+          f"from {info.get('source', 'Wikipedia')}")
     chosen = sorted(random.Random(SEED).sample(members, min(args.sample, len(members))))
     manifest = {"source": "Yahoo Finance daily (adjusted); S&P 500 membership rebuilt from Wikipedia",
                 "start_members": args.start, "end": args.end, "seed": SEED, "sample": len(chosen), **info,
