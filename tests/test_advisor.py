@@ -10,7 +10,7 @@ def test_the_prompt_knows_the_building_blocks_and_the_rules():
               "versions": [{"version": 2, "body": __import__("prism").demo_sets()["demo:breakout"]}]}]
     text = advisor.system_prompt(saved, "me")
     for must in ("Relative volume", "Recent structure break", "Breakout with volume", "+ ⏭ THEN box",
-                 "Study this Set", "never claim to have built", "Never tell the person to buy",
+                 "Study this Set", "Never claim to have done more than", "Never tell the person to buy",
                  "30 Oct 2024", "Set “Breakout fading” (v2)"):
         assert must in text, must
     assert "None ()" not in text

@@ -30,6 +30,7 @@ API_URL = "https://api.anthropic.com/v1/messages"
 MODEL = "claude-sonnet-5-5"            # Claude, the default; other AIs via ai_providers.py (Settings)
 MAX_TOKENS = 2500                      # an answer that reaches this is continued once (never cut off silently)
 MAX_TURNS = 12                         # earlier turns are dropped from what is sent, oldest first
+MAX_TOOL_ROUNDS = 6                    # look-ups per question before it must answer
 DAILY_LIMIT = 60                       # questions per person per day (this browser session's count)
 
 RULES = """You are the ✨ AI Navigator inside Angstrom Signals, a market research app for crypto and stocks. You
@@ -40,8 +41,12 @@ have two jobs, and the person can ask about either at any time:
    link such as [🎬 3 · Signal Groups](?view=video&v=03-signal-groups)); the person clicks it to watch. If the help does not cover something, say you are not sure rather than guess where it is.
 2. Research coach in the research workspace, Angstrom Lattice: help the person turn a trading idea into the app's
    building blocks and understand the results.
-You only explain: you never claim to have built, saved, run or changed anything, because you cannot. The person
-does every click, following your steps.
+You have tools (when the tool list is offered): look up an asset's current readings, a Set's answer now for a few
+assets, and the Soundings results, and prepare a draft Set. Use them whenever real readings or a real answer would
+make your reply better than a general explanation: look first, then explain what you found. A draft Set is never
+saved by you: it waits, unsaved, in Signal Sets → "Start from" ➕ New Set, and the person checks it and saves it. You
+never save, run scans, change settings or anything else; say so if asked. Never claim to have done more than the
+tools did.
 The person may attach screenshots of the app. Read them to see what they are looking at, and answer about what is
 actually on the screen; say so if a screenshot is unclear or is not of this app.
 
@@ -282,11 +287,11 @@ def image_blocks(images: list[str] | None) -> list[dict]:
 
 
 def ask(history: list[dict], question: str, system, post=requests.post, images: list[str] | None = None,
-        max_tokens: int = MAX_TOKENS, provider: str = "claude") -> str:
+        max_tokens: int = MAX_TOKENS, provider: str = "claude", tools=None) -> str:
     """The answer from the chosen AI; when another AI than Claude can't answer (no credit left, a key problem, busy),
     Claude answers instead, with a note saying so."""
     if provider == "claude":
-        return _ask(history, question, system, post, images, max_tokens, "claude")
+        return _ask(history, question, system, post, images, max_tokens, "claude", tools)
     try:
         return _ask(history, question, system, post, images, max_tokens, provider)
     except Exception as exc:
@@ -295,13 +300,13 @@ def ask(history: list[dict], question: str, system, post=requests.post, images: 
         if not ai_providers.available("claude"):
             raise
         print(f"AI Navigator: {provider} failed, Claude answered instead: {str(exc)[:200]}", flush=True)
-        text = _ask(history, question, system, post, images, max_tokens, "claude")
+        text = _ask(history, question, system, post, images, max_tokens, "claude", tools)
         return text + (f"\n\n*({ai_providers.label(provider)} couldn't answer just now, so Claude answered "
                        "instead.)*")
 
 
 def _ask(history: list[dict], question: str, system, post=requests.post, images: list[str] | None = None,
-         max_tokens: int = MAX_TOKENS, provider: str = "claude") -> str:
+         max_tokens: int = MAX_TOKENS, provider: str = "claude", tools=None) -> str:
     """The Advisor's answer to `question` (with any pasted screenshots), given the conversation so far
     ([{role, content}]; earlier screenshots are not sent again). provider: which AI (ai_providers.py; the
     person's choice in Settings), Claude by default."""
@@ -319,13 +324,22 @@ def _ask(history: list[dict], question: str, system, post=requests.post, images:
     if isinstance(system, (tuple, list)):         # the shared part is cached by the API, so each question costs less
         system = [{"type": "text", "text": system[0], "cache_control": {"type": "ephemeral"}},
                   {"type": "text", "text": system[1]}]
-    def call(msgs):
+    used_tools = [False]
+
+    def call(msgs, with_tools=False, last=False):
         if provider != "claude":
             text, done = ai_providers.chat(provider, system, msgs, max_tokens, post=post)
             return text, None if done else "max_tokens"
+        body = {"model": MODEL, "max_tokens": max_tokens, "system": system, "messages": msgs}
+        if with_tools or used_tools[0]:
+            import navigator_tools
+
+            body["tools"] = navigator_tools.TOOLS          # needed whenever earlier turns hold tool calls
+            if last or not with_tools:
+                body["tool_choice"] = {"type": "none"}    # answer now, no more look-ups
         response = post(API_URL, timeout=120, headers={
             "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json"},
-            data=json.dumps({"model": MODEL, "max_tokens": max_tokens, "system": system, "messages": msgs}))
+            data=json.dumps(body))
         if response.status_code != 200:
             try:
                 detail = response.json().get("error", {}).get("message", "")
@@ -333,10 +347,29 @@ def _ask(history: list[dict], question: str, system, post=requests.post, images:
                 detail = response.text[:200]
             raise RuntimeError(f"The AI service answered {response.status_code}: {detail[:200]}")
         data = response.json()
+        if with_tools and data.get("stop_reason") == "tool_use":
+            return data, "tool_use"
         text = "".join(part.get("text", "") for part in data.get("content") or [] if part.get("type") == "text")
         return text, data.get("stop_reason")
 
-    text, stop = call(messages)
+    if tools is not None and provider == "claude":
+        # The look-up loop: the model asks for tools, the app runs them and hands back the results, until it answers.
+        for _ in range(MAX_TOOL_ROUNDS):
+            got, stop = call(messages, with_tools=True)
+            if stop != "tool_use":
+                text = got
+                break
+            used_tools[0] = True
+            blocks = got.get("content") or []
+            results = [{"type": "tool_result", "tool_use_id": b["id"], "content": tools.run(b["name"], b.get("input"))}
+                       for b in blocks if b.get("type") == "tool_use"]
+            messages = messages + [{"role": "assistant", "content": blocks}, {"role": "user", "content": results}]
+        else:
+            final = messages[:-1] + [{"role": "user", "content": messages[-1]["content"] + [
+                {"type": "text", "text": "Please answer now with what you have found."}]}]
+            text, stop = call(final, last=True)
+    else:
+        text, stop = call(messages)
     if stop == "max_tokens" and text.strip():
         # It ran out of room mid-answer: ask it to carry on from exactly where it stopped, once.
         more, stop = call(messages + [{"role": "assistant", "content": text.rstrip()}])
@@ -544,9 +577,12 @@ def render(st, supabase, user_id: str = "", start: str = "lattice", watchlist: d
                 extra = (extra + "\n\n" + on_screen).strip()
         with st.spinner(t("Thinking…")):
             try:
+                import navigator_tools
+
+                toolbox = navigator_tools.ToolBox(st, supabase, user_id, cached[1] or [], watchlist)
                 answer = ask(chat, question.strip()[:4000],
                              system_parts(cached[1] or [], user_id, start, extra, market=market),
-                             images=images, provider=provider)
+                             images=images, provider=provider, tools=toolbox)
             except Exception as exc:
                 st.error(t("The Navigator couldn't answer just now ({str_exc_200}).", str_exc_200=str(exc)[:200]))
                 return

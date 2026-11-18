@@ -66,6 +66,24 @@ def fixed_asset_matches(raw: str, search_crypto=None, search_stock=None) -> dict
     return {"slot": ask.get("slot"), "kind": kind, "q": q, "nonce": ask.get("nonce"), "results": results[:8]}
 
 
+def _pick_up_new_draft(st, supabase, user_id, choices) -> None:
+    """A draft prepared elsewhere (the ✨ AI Navigator's draft_set, in its own window) while ➕ New Set is open and
+    still empty: look for it at most every 15 seconds, and open it with the usual "unsaved changes" notice."""
+    import time
+
+    current = ls.clean_model(st.session_state.get("lattice_set_model") or ls.empty_model(), choices)
+    if current["standalone"] or current["groups"] or current["lines"]:
+        return
+    if time.time() - st.session_state.get("_lattice_new_draft_check", 0.0) < 15:
+        return
+    st.session_state["_lattice_new_draft_check"] = time.time()
+    kept = dr.restore(st.session_state, supabase, user_id, "set", START_NEW)
+    if kept:
+        st.session_state["lattice_set_model"] = ls.clean_model(kept[0], choices)
+        st.session_state["_draft_base_set"] = (START_NEW, ls.clean_model(ls.empty_model(), choices))
+        st.session_state["_draft_restored_set"] = (START_NEW, kept[1])
+
+
 def render(st, supabase, user_id: str = "") -> None:
     st.caption(t("Combine saved Groups and single signals, then say when the Set answers Yes. A Group goes in exactly "
                "as saved; save a Group with labels in Signal Groups "
@@ -112,6 +130,8 @@ def render(st, supabase, user_id: str = "") -> None:
                 st.session_state["lattice_set_model"], st.session_state["lattice_set_source"] = model, cfg
         dr.after_load(st.session_state, supabase, user_id, "set", start, "lattice_set_model",
                       lambda m: ls.clean_model(m or ls.empty_model(), choices))
+    if start == START_NEW:
+        _pick_up_new_draft(st, supabase, user_id, choices)
     model = ls.clean_model(st.session_state.get("lattice_set_model") or ls.empty_model(), choices)
     lattice_view.show_flash(st, "lattice_flash_set")            # "Saved …", "Opened a copy of …"
 
