@@ -36,7 +36,7 @@ import pandas as pd
 import requests
 
 LIST_URL = "https://s3-ap-northeast-1.amazonaws.com/data.binance.vision"
-FILE_URL = "https://data.binance.vision/data/spot/monthly/klines/{s}/1d/{s}-1d-{m}.zip"
+FILE_URL = "https://data.binance.vision/data/spot/monthly/klines/{s}/{i}/{s}-{i}-{m}.zip"
 SAMPLE_MONTHS = ("2018-06", "2019-06", "2020-06", "2021-06", "2022-06", "2023-06")
 STABLE = {"USDC", "BUSD", "TUSD", "PAX", "USDP", "DAI", "FDUSD", "USDS", "USDSB", "SUSD", "UST", "USTC", "EUR", "GBP",
           "AUD", "TRY", "BRL", "RUB", "NGN", "UAH", "BIDR", "IDRT", "BVND", "BKRW", "PAXG", "AEUR", "EURI", "XUSD",
@@ -84,10 +84,10 @@ def list_pairs(session: requests.Session) -> list[str]:
     return keep
 
 
-def month_file(session: requests.Session, pair: str, month: str) -> pd.DataFrame | None:
+def month_file(session: requests.Session, pair: str, month: str, interval: str = "1d") -> pd.DataFrame | None:
     for attempt in range(3):
         try:
-            r = session.get(FILE_URL.format(s=pair, m=month), timeout=60)
+            r = session.get(FILE_URL.format(s=pair, m=month, i=interval), timeout=60)
             if r.status_code == 404:
                 return None
             r.raise_for_status()
@@ -98,7 +98,8 @@ def month_file(session: requests.Session, pair: str, month: str) -> pd.DataFrame
                 frame = frame.iloc[1:]
             frame = frame.apply(pd.to_numeric, errors="coerce").dropna(subset=["open_time", "close"])
             unit = "us" if frame["open_time"].iloc[0] > 1e14 else "ms"   # the archive moved to microseconds in 2025
-            frame["date"] = pd.to_datetime(frame["open_time"], unit=unit).dt.normalize()
+            frame["time"] = pd.to_datetime(frame["open_time"], unit=unit)
+            frame["date"] = frame["time"].dt.normalize()
             return frame
         except Exception:
             time.sleep(2 + 3 * attempt)
@@ -141,12 +142,48 @@ def history(session, pair: str, end: pd.Timestamp) -> pd.DataFrame:
                          "low": d["low"], "close": d["close"], "volume": d["quote_volume"]})
 
 
+def hourly(out: str, wide: str, top: int, first: str, end: pd.Timestamp) -> int:
+    """Hourly candles (open time, UTC) for the first `top` coins of the saved wide set that still traded at the end,
+    from `first` to the end date: for testing intraday entry timing (a funnel's last stage)."""
+    manifest = json.loads(Path(wide, "manifest.json").read_text())
+    picks = [s for s, m in manifest["files"].items() if not m["stopped_early"] and m.get("part", 1) == 1][:top]
+    folder = Path(out)
+    folder.mkdir(parents=True, exist_ok=True)
+    session = requests.Session()
+    saved = {}
+    for sym in picks:
+        pair = manifest["files"][sym]["pair"]
+        parts = []
+        with ThreadPoolExecutor(6) as pool:
+            for f in pool.map(lambda m: month_file(session, pair, m, "1h"), months_between(first, end.strftime("%Y-%m"))):
+                if f is not None and len(f):
+                    parts.append(f)
+        if not parts:
+            continue
+        d = pd.concat(parts)
+        d = d[d["time"] < end + pd.Timedelta(days=1)]          # nothing from the hold-out is kept past this line
+        d = d.drop_duplicates("time", keep="last").sort_values("time")
+        d = pd.DataFrame({"time": d["time"].dt.strftime("%Y-%m-%d %H:%M"), "open": d["open"], "high": d["high"],
+                          "low": d["low"], "close": d["close"], "volume": d["quote_volume"]})
+        d.to_csv(folder / f"{sym}.csv.gz", index=False)
+        saved[sym] = {"pair": pair, "bars": len(d), "first": d["time"].iloc[0], "last": d["time"].iloc[-1]}
+        print(f"{sym:<12} {len(d)} hourly candles, {d['time'].iloc[0]} to {d['time'].iloc[-1]}", flush=True)
+    (folder / "manifest.json").write_text(json.dumps({"interval": "1h", "end": str(end.date()), "files": saved},
+                                                     indent=1))
+    print(f"{len(saved)} coins saved")
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("out")
     ap.add_argument("--top", type=int, default=100)
     ap.add_argument("--end", default="2024-10-29")
+    ap.add_argument("--hourly-from", default="", help="hourly candles for the saved wide set's top coins, from YYYY-MM")
+    ap.add_argument("--wide", default="", help="the saved wide set's folder (for --hourly-from)")
     args = ap.parse_args()
+    if args.hourly_from:
+        return hourly(args.out, args.wide, args.top, args.hourly_from, pd.Timestamp(args.end))
     end = pd.Timestamp(args.end)
     folder = Path(args.out)
     folder.mkdir(parents=True, exist_ok=True)

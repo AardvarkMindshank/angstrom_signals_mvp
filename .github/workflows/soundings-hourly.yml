@@ -1,0 +1,32 @@
+# Hourly candles for the 30 most traded coins that still trade (from the saved wide set), Jan 2021 to 29 Oct 2024,
+# for testing intraday entry timing. Saved on the reports branch: data/prices_1h/.
+name: soundings-hourly
+on:
+  push:
+    branches: [soundings-hourly]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install --no-deps -r requirements-research.lock
+      - name: Saved wide set
+        run: |
+          git fetch -q --depth=1 origin reports
+          mkdir -p prices && git archive FETCH_HEAD data/prices_wide | tar -x -C prices
+      - name: Fetch
+        run: |
+          set -o pipefail
+          python soundings_prices.py out/prices_1h --top 30 --hourly-from 2021-01 --wide prices/data/prices_wide | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Save
+        run: bash .github/scripts/save_to_reports.sh data out/prices_1h
