@@ -8,6 +8,26 @@ Agreed work that is not built yet, so nothing gets forgotten between sessions. N
   the old "Add Stochastic %K" button), Lattice inside Streamlit, and the training-video / Advisor windows. Not caused by
   Tides (same failures on the run before). Update the scripts to the family → signal → variant lists.
 
+## AI Navigator with tools, and an Elite "research desk" (19 Nov 2026)
+
+Why the Navigator feels weaker than the development assistant: it answers in one go (one question, one reply) from
+the help text and the screen, on a mid-size model (claude-sonnet-5-5). It cannot look at real readings, test what it
+suggests, or check its own work. The difference is mostly the loop (look, try, check, adjust), not the model.
+
+Plan: give it tools that the app runs, so it works only through the app's own building blocks and rules.
+1. Read tools (all tiers, now): list signals, Groups and Sets; an asset's current readings; a Set's answer now and its
+   past answers; Tides; Soundings results. Cheap: a few extra calls per question, with the long system prompt cached.
+2. Build tools (all tiers, now): draft a Group or Set and open it in the editor (like Soundings' Open as Set). Nothing
+   is saved without the user's click.
+3. Test tools (Elite, later): run What followed or a Soundings-style study on chosen assets and years as a background
+   job, results back in the chat; bigger model and a longer thinking budget; a monthly allowance per user.
+4. Optional, later: a hosted sandbox where it can run its own analysis code on the app's data.
+Guardrails in the tools themselves: the protected hold-out (from 30 Oct 2024) can't be read, no trading or posting,
+each user sees only their own data, a usage budget per user.
+Cost estimate (to check against Anthropic's price list before setting limits): a question today is about 21k tokens of
+system prompt (cached) plus the answer, a few US cents; with tools, 2 to 4 calls per question, roughly 1.5 to 2 times
+today. The Elite desk (bigger model, many steps) could be tens to hundreds of times a Navigator question.
+
 ## Soundings: combining the ✅ rise results (on hold, 19 Nov 2026)
 
 - The three ✅ rise results on 100 coins mostly fire on different days (15-28% overlap). A rise followed: none held
