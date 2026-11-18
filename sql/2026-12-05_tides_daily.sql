@@ -25,10 +25,11 @@ create trigger tides_daily_first_seen before insert on public.tides_daily
 
 alter table public.tides_daily enable row level security;
 
-drop policy if exists "signed-in users read tides daily" on public.tides_daily;
-create policy "signed-in users read tides daily" on public.tides_daily
+-- Market-wide readings, no personal data: readable before sign-in too.
+drop policy if exists "anyone reads tides daily" on public.tides_daily;
+create policy "anyone reads tides daily" on public.tides_daily
     for select
-    to authenticated
+    to anon, authenticated
     using (true);
 
-grant select on public.tides_daily to authenticated;
+grant select on public.tides_daily to anon, authenticated;

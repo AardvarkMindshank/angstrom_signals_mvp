@@ -5790,6 +5790,12 @@ if "data_nonce" not in st.session_state:
     st.session_state.data_nonce = 0
 
 supabase = get_supabase()
+try:     # Tides signals read the daily record through this run's client (tides_store.py)
+    import tides_store as _tides_store
+
+    _tides_store.configure(supabase)
+except Exception:
+    pass
 
 
 @st.cache_data(ttl=300, show_spinner=False)

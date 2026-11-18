@@ -337,6 +337,12 @@ def run_background_checks() -> None:
     print("Starting background alert check...")
     url, key = load_credentials()
     supabase = create_client(url, key)
+    try:
+        import tides_store
+
+        tides_store.configure(supabase)
+    except Exception:
+        pass
 
     try:
         send_beta_decision_emails(supabase)

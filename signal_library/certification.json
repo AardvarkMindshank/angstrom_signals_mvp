@@ -1,5 +1,5 @@
 {
- "code_sha256": "5d66f1b88062def656fcd2796cf126d43f90619c8688325a09840ef92e8762e9",
+ "code_sha256": "9c1dbefec4b91fd95a4cc0b7312390e4f295dd135914418a6d3a0367f16d186b",
  "cutoffs_per_dataset_minimum": 50,
  "datasets": [
   {
@@ -43,6 +43,14 @@
    "name": "synthetic-options-equity-SYNTH"
   },
   {
+   "description": "synthetic daily Tides rows (business days, gaps, late saves; seed 13)",
+   "name": "synthetic-tides-crypto-synthetic-coin"
+  },
+  {
+   "description": "synthetic daily Tides rows (business days, gaps, late saves; seed 13)",
+   "name": "synthetic-tides-equity-SYNTH"
+  },
+  {
    "description": "frozen development daily data for BTC-USD, before 2024-10-30",
    "name": "dev-BTC-USD"
   },
@@ -60,9 +68,9 @@
   }
  ],
  "generated_by": {
-  "git_commit": "3c27e80b83ff4f9f80ad60815bd05997d476796a",
+  "git_commit": "6eeea3f3f9b23ec338a427a2f6a6f68bf85fcc0c",
   "note": "administrative; not compared",
-  "run_id": "44147607084"
+  "run_id": "44278740118"
  },
  "signals": {
   "bollinger.position@1": {
@@ -4603,6 +4611,79 @@
     },
     "slice_equivalent": true,
     "slice_reason": null
+   }
+  },
+  "tides.current@1": {
+   "1D": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 28,
+     "poison": 280,
+     "reference": 140,
+     "slice": 0,
+     "timestamps": 140
+    },
+    "cutoffs": 140,
+    "cutoffs_per_dataset": {
+     "synthetic-tides-crypto-synthetic-coin": 70,
+     "synthetic-tides-equity-SYNTH": 70
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 140
+    },
+    "slice_equivalent": false,
+    "slice_reason": "not tested"
+   }
+  },
+  "tides.storm@1": {
+   "1D": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 28,
+     "poison": 280,
+     "reference": 140,
+     "slice": 0,
+     "timestamps": 140
+    },
+    "cutoffs": 140,
+    "cutoffs_per_dataset": {
+     "synthetic-tides-crypto-synthetic-coin": 70,
+     "synthetic-tides-equity-SYNTH": 70
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "ok": 140
+    },
+    "slice_equivalent": false,
+    "slice_reason": "not tested"
+   }
+  },
+  "tides.tide@1": {
+   "1D": {
+    "algorithm": "certified",
+    "checks": {
+     "cache": 28,
+     "poison": 280,
+     "reference": 140,
+     "slice": 0,
+     "timestamps": 140
+    },
+    "cutoffs": 140,
+    "cutoffs_per_dataset": {
+     "synthetic-tides-crypto-synthetic-coin": 70,
+     "synthetic-tides-equity-SYNTH": 70
+    },
+    "failures": 0,
+    "reason": null,
+    "result_statuses": {
+     "insufficient_data": 7,
+     "ok": 133
+    },
+    "slice_equivalent": false,
+    "slice_reason": "not tested"
    }
   },
   "trend.direction@1": {
