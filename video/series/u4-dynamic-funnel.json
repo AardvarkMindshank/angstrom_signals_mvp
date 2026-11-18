@@ -1,0 +1,47 @@
+{
+ "title": "Your Dynamic funnel",
+ "series": "Around the app",
+ "next": "",
+ "slug": "u4-dynamic-funnel",
+ "section": "training",
+ "zoom": "1.1",
+ "intro_say": "Angstrom Signals. | Your Dynamic funnel.",
+ "outro_say": "That's the Dynamic funnel. | A Candidate matches your conditions. It is not a recommendation to trade.",
+ "steps": [
+  {
+   "id": "idea",
+   "screen": "A card: your funnel on the dashboard",
+   "say": "Once you have a funnel, it works for you every hour. | Here's where to see what it found."
+  },
+  {
+   "id": "open",
+   "screen": "Switching the table to Dynamic funnel",
+   "say": "Above the crypto table, switch My Watchlist to Dynamic funnel. | Each of your funnels is one row."
+  },
+  {
+   "id": "chips",
+   "screen": "The stage chips",
+   "say": "The chips count the assets holding each stage, then Flagged and Candidates. | Click a chip to show those assets."
+  },
+  {
+   "id": "table",
+   "screen": "The table",
+   "say": "The table lists them, largest first, with the stage each one has reached."
+  },
+  {
+   "id": "actions",
+   "screen": "Pause, restart, edit",
+   "say": "On the row: pause or resume the funnel, start it again, or open it to edit."
+  },
+  {
+   "id": "snapshot",
+   "screen": "Your funnel in Quick Snapshot",
+   "say": "It also shows in Quick Snapshot, with what changed since you last looked."
+  },
+  {
+   "id": "back",
+   "screen": "Back to your watchlist",
+   "say": "Switch back to My Watchlist any time. Your choice is saved."
+  }
+ ]
+}

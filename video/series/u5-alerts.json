@@ -1,0 +1,47 @@
+{
+ "title": "Alerts and notifications",
+ "series": "Around the app",
+ "next": "Next: your Dynamic funnel",
+ "slug": "u5-alerts",
+ "section": "training",
+ "zoom": "1.1",
+ "intro_say": "Angstrom Signals. | Alerts and notifications.",
+ "outro_say": "That's alerts. | They describe changes. They never tell you to trade.",
+ "steps": [
+  {
+   "id": "idea",
+   "screen": "A card: what can alert you",
+   "say": "Alerts tell you when something you care about changes: a reading, a scan, or a funnel."
+  },
+  {
+   "id": "open",
+   "screen": "Notifications in the sidebar",
+   "say": "Open Notifications in the sidebar. | The Alert Feed lists every alert, newest first."
+  },
+  {
+   "id": "rules",
+   "screen": "Configure Alert Rules",
+   "say": "Configure Alert Rules sets what alerts you. | Trend alerts are on to start: when a reading crosses a colour border, and holds at the next close."
+  },
+  {
+   "id": "emails",
+   "screen": "Email choices",
+   "say": "Choose how alerts reach you: instant emails, a daily summary at your chosen hour, or both."
+  },
+  {
+   "id": "push",
+   "screen": "Phone and desktop notifications",
+   "say": "Phone and desktop notifications can pop up too. Turn them on for each device."
+  },
+  {
+   "id": "tick",
+   "screen": "Ticking the checklist step",
+   "say": "Then tick that step on the getting-started checklist."
+  },
+  {
+   "id": "others",
+   "screen": "Scans and funnels alert too",
+   "say": "Your Prism scans and funnels have their own alert settings, right on the scan or funnel."
+  }
+ ]
+}

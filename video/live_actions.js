@@ -517,4 +517,287 @@ module.exports = {
         foot: "A Candidate matches your conditions. It is not a recommendation to trade." });
     },
   },
+  // ------------------------------------------------------------------------------------------ around the app
+  "u1-tides": {
+    login: signIn,
+    idea: async (h) => {
+      await h.card({ kicker: "🌊 Tides", title: "The money behind every chart",
+        lines: ["Rates, the dollar, inflation and fear", "Credit, and where money is rotating",
+                "✓ The conditions every asset trades in"] });
+    },
+    open: async (h) => {
+      await h.clear();
+      await h.expand("Tides");
+      await h.wait(2500);
+      const hero = h.page.locator(".tides .hero").first();
+      await hero.evaluate((n) => n.scrollIntoView({ block: "center", behavior: "smooth" })).catch(() => {});
+      await h.wait(600);
+      await h.ring(hero);
+    },
+    winds: async (h) => {
+      await h.clear();
+      const pills = h.page.locator(".tides .hero").first().getByText(/headwind|tailwind/i);
+      if (await pills.count()) await h.ring(pills); else await h.ring(".tides .hero >> nth=0");
+    },
+    note: async (h) => {
+      await h.clear();
+      const note = h.page.locator('[class*="st-key-tides_note_row"]').first();
+      await note.evaluate((n) => n.scrollIntoView({ block: "start", behavior: "smooth" })).catch(() => {});
+      await h.wait(600);
+      await h.ring(note);
+    },
+    storm: async (h) => {
+      await h.clear();
+      const storm = h.page.locator(".tides .card.storm").first();
+      await storm.evaluate((n) => n.scrollIntoView({ block: "center", behavior: "smooth" })).catch(() => {});
+      await h.wait(600);
+      await h.ring(storm);
+    },
+    waves: async (h) => {
+      await h.clear();
+      const head = h.page.locator(".tides h4").filter({ hasText: "The waves" }).first();
+      await head.evaluate((n) => n.scrollIntoView({ block: "start", behavior: "smooth" })).catch(() => {});
+      await h.wait(1500);
+      await h.ring(head);
+    },
+    currents: async (h) => {
+      await h.clear();
+      const head = h.page.locator(".tides h4").filter({ hasText: "The currents" }).first();
+      await head.evaluate((n) => n.scrollIntoView({ block: "start", behavior: "smooth" })).catch(() => {});
+      await h.wait(800);
+      await h.ring(head.locator("xpath=.."));
+    },
+    plan: async (h) => {
+      await h.clear();
+      const b = h.page.locator("button").filter({ hasText: "Passage Plan", visible: true }).first();
+      await b.evaluate((n) => n.scrollIntoView({ block: "center", behavior: "smooth" })).catch(() => {});
+      await h.wait(600);
+      await h.ring(b);
+    },
+    take: async (h) => {
+      await h.clear();
+      const take = h.page.locator('[class*="st-key-tides_take_col"]').first();
+      await take.evaluate((n) => n.scrollIntoView({ block: "center", behavior: "smooth" })).catch(() => {});
+      await h.wait(600);
+      await h.ring(take);
+    },
+  },
+
+  "u2-ai-navigator": {
+    login: signIn,
+    idea: async (h) => {
+      await h.card({ kicker: "✨ AI Navigator", title: "Ask anything about the app",
+        lines: ["✓ Where things are, and what a reading means", "✓ How to turn an idea into a Group, Set or scan",
+                "✓ Today's Tides, and your own assets and funnels"],
+        foot: "It explains; you do the clicks. No buy or sell calls." });
+    },
+    open: async (h) => {
+      await h.clear();
+      await h.press("button.ai-edge");
+      await h.page.waitForSelector("#ang-ai-root iframe", { timeout: 30000 }).catch(() => {});
+      const f = h.page.frameLocator("#ang-ai-root iframe");
+      await f.locator('textarea[aria-label="Your question"]').waitFor({ timeout: 90000 }).catch(() => {});
+      await h.wait(800);
+    },
+    ask: async (h) => {
+      const f = h.page.frameLocator("#ang-ai-root iframe");
+      const box = f.locator('textarea[aria-label="Your question"]').first();
+      const b = await box.boundingBox().catch(() => null);
+      if (b) await h.page.mouse.move(b.x + b.width / 2, b.y + b.height / 2, { steps: 20 });
+      await box.click();
+      await box.pressSequentially("How do I find coins that are dipping inside an uptrend?", { delay: 35 });
+      await h.wait(400);
+      const ask = f.locator("button").filter({ hasText: /^Ask$/ }).first();
+      const a = await ask.boundingBox().catch(() => null);
+      if (a) await h.page.mouse.move(a.x + a.width / 2, a.y + a.height / 2, { steps: 15 });
+      await ask.click();
+    },
+    wait: async (h) => {
+      const f = h.page.frameLocator("#ang-ai-root iframe");
+      await f.locator('[data-testid="stChatMessage"]').nth(1).waitFor({ timeout: 120000 }).catch(() => {});
+      await h.wait(1000);
+    },
+    answer: async (h, dur) => {
+      const f = h.page.frameLocator("#ang-ai-root iframe");
+      const msg = f.locator('[data-testid="stChatMessage"]').nth(1);
+      await msg.evaluate((n) => n.scrollIntoView({ block: "start", behavior: "smooth" })).catch(() => {});
+      const steps = Math.max(3, Math.round(dur / 1.6));
+      for (let i = 0; i < steps; i += 1) {          // read down the answer, slowly
+        await h.wait(1300);
+        await msg.evaluate((n) => { const s = n.closest('[data-testid="stMain"]') || document.scrollingElement; s.scrollBy({ top: 70, behavior: "smooth" }); }).catch(() => {});
+      }
+    },
+    paste: async (h) => {
+      const f = h.page.frameLocator("#ang-ai-root iframe");
+      const box = f.locator('textarea[aria-label="Your question"]').first();
+      await box.evaluate((n) => n.scrollIntoView({ block: "center", behavior: "smooth" })).catch(() => {});
+      await h.wait(600);
+      const b = await box.boundingBox().catch(() => null);
+      if (b) await h.page.mouse.move(b.x + b.width / 2, b.y - 40, { steps: 15 });
+    },
+    close: async (h) => {
+      await h.press("button.ai-edge");
+      await h.wait(800);
+    },
+  },
+
+  "u3-social": {
+    login: async (h) => {
+      await signIn(h);
+      // Other members' posts, names and pictures are blurred: this video shows how the panel works, not who said what.
+      await h.page.addStyleTag({ content: "#social-stream-root .list > *, #social-stream-root .chat-list > *, " +
+        "#social-stream-root #stream-person, #social-stream-root #chat-person, #social-stream-root .found " +
+        "{ filter: blur(7px) !important; }" });
+    },
+    idea: async (h) => {
+      await h.card({ kicker: "💬 Community", title: "Traders alongside you",
+        lines: ["✓ A live stream of social signals", "✓ Chat: everyone, your communities, or one person",
+                "✓ Votes beside every AI sentiment score"] });
+    },
+    open: async (h) => {
+      await h.clear();
+      await h.press("button.edge");
+      await h.page.waitForSelector("#social-stream-root .panel", { timeout: 30000 }).catch(() => {});
+      await h.wait(1500);
+    },
+    stream: async (h) => { await h.ring("#social-stream-root .stream-pane"); },
+    filters: async (h) => {
+      await h.clear();
+      await h.ring("#social-stream-root .filters");
+      await h.press(h.page.locator("#social-stream-root .chips button").filter({ hasText: "Positive" }).first());
+      await h.wait(1200);
+      await h.press(h.page.locator("#social-stream-root .chips button").filter({ hasText: "All" }).first());
+    },
+    chat: async (h) => { await h.clear(); await h.ring("#social-stream-root .chat-pane"); },
+    write: async (h) => {
+      await h.clear();
+      const box = h.page.locator("#social-stream-root .chat-box").first();
+      await h.glide(box);
+      await box.click();
+      await box.pressSequentially("Hello from the demo account!", { delay: 60 });   // typed, never posted
+      await h.ring("#social-stream-root .composer");
+      await h.wait(1500);
+      await box.fill("");
+    },
+    pin: async (h) => {
+      await h.clear();
+      const pin = h.page.locator("#social-stream-root .pin").first();
+      if (await pin.count()) await h.tip(pin, "Pin the panel open", "below");
+      await h.wait(1800);
+      await h.clear();
+      await h.press("#social-stream-root .close");
+    },
+  },
+
+  "u5-alerts": {
+    login: signIn,
+    idea: async (h) => {
+      await h.card({ kicker: "🔔 Alerts", title: "Know when something changes",
+        lines: ["✓ A reading crosses a line you chose", "✓ A scan's answer turns Yes", "✓ A funnel finds a new Candidate"] });
+    },
+    open: async (h) => {
+      await h.clear();
+      await sidebarOpen(h);
+      await h.expand("Notifications", SIDEBAR);
+      await h.expand("Alert Feed", SIDEBAR);
+      await h.ring(h.section_("Alert Feed", SIDEBAR));
+    },
+    rules: async (h) => {
+      await h.clear();
+      await h.fold("Alert Feed", SIDEBAR);
+      await h.expand("Configure Alert Rules", SIDEBAR);
+      await h.wait(800);
+      await h.ring(h.section_("Configure Alert Rules", SIDEBAR));
+    },
+    emails: async (h) => {
+      await h.clear();
+      const mail = h.page.locator(SIDEBAR).getByText(/Instant|Daily alerts summary/).first();
+      await mail.evaluate((n) => n.scrollIntoView({ block: "center", behavior: "smooth" })).catch(() => {});
+      await h.wait(600);
+      await h.ring(mail.locator("xpath=ancestor::div[@data-testid='stVerticalBlock'][1]"));
+    },
+    push: async (h) => {
+      await h.clear();
+      await h.fold("Configure Alert Rules", SIDEBAR);
+      const s = await h.head("Phone and desktop notifications", SIDEBAR);
+      await h.ring(s);
+    },
+    tick: async (h) => {
+      await h.clear();
+      await h.fold("Notifications", SIDEBAR);
+      const box = h.page.locator('[class*="st-key-onboarding_card"] label').filter({ hasText: "Choose how alerts reach you" }).first();
+      if (await box.count()) {
+        await h.show(box);
+        await h.ring(h.page.locator('[class*="st-key-onboarding_card"]').first());
+        await h.press(box);
+      }
+    },
+    others: async (h) => {
+      await h.clear();
+      await h.card({ kicker: "Also", title: "Scans and funnels alert too",
+        lines: ["✓ Prism Scan: Where alerts go, on each scan", "✓ Funnels: Alert me on new Candidates",
+                "✓ Everything lands in your Alert Feed"] });
+    },
+  },
+
+  "u4-dynamic-funnel": {
+    login: signIn,
+    idea: async (h) => {
+      await h.card({ kicker: "🔻 Dynamic funnel", title: "What your funnel found",
+        lines: ["✓ Checked every hour, by itself", "✓ Stages, Flagged and Candidates at a glance",
+                "✓ Alerts on new Candidates"] });
+    },
+    open: async (h) => {
+      await h.clear();
+      await h.expand("Crypto Signals");
+      await h.wait(1500);
+      const radio = h.section_("Crypto Signals").locator("label").filter({ hasText: "Dynamic funnel" }).first();
+      await h.press(radio);
+      await h.page.waitForSelector(".angfr .frow", { timeout: 60000 }).catch(() => {});
+      await h.settle();
+      const rows = h.page.locator(".angfr").first();
+      await rows.evaluate((n) => n.scrollIntoView({ block: "start", behavior: "smooth" })).catch(() => {});
+      await h.wait(600);
+      await h.ring(rows);
+    },
+    chips: async (h) => {
+      await h.clear();
+      await h.ring(".angfr .frow .chips >> nth=0");
+      const chip = h.page.locator(".angfr .frow .chip:not(.empty)").last();
+      if (await chip.count()) await h.press(chip);
+    },
+    table: async (h) => {
+      await h.clear();
+      const table = h.section_("Crypto Signals").locator("table").first();
+      await table.evaluate((n) => n.scrollIntoView({ block: "start", behavior: "smooth" })).catch(() => {});
+      await h.wait(700);
+      await h.ring(table);
+    },
+    actions: async (h) => {
+      await h.clear();
+      const acts = h.page.locator(".angfr .frow .acts").first();
+      await acts.evaluate((n) => n.scrollIntoView({ block: "center", behavior: "smooth" })).catch(() => {});
+      await h.wait(600);
+      await h.ring(acts);
+    },
+    snapshot: async (h) => {
+      await h.clear();
+      await h.fold("Crypto Signals");
+      await h.expand("Quick Snapshot");
+      await h.wait(1500);
+      const tile = h.page.getByText("My trend funnel").first();
+      if (await tile.count()) {
+        await tile.evaluate((n) => n.scrollIntoView({ block: "center", behavior: "smooth" })).catch(() => {});
+        await h.wait(600);
+        await h.ring(tile.locator("xpath=ancestor::div[2]"));
+      } else await h.ring(h.section_("Quick Snapshot"));
+    },
+    back: async (h) => {
+      await h.clear();
+      await h.fold("Quick Snapshot");
+      await h.expand("Crypto Signals");
+      const radio = h.section_("Crypto Signals").locator("label").filter({ hasText: "My Watchlist" }).first();
+      await h.press(radio);
+    },
+  },
 };

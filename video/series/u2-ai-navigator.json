@@ -1,0 +1,47 @@
+{
+ "title": "The AI Navigator",
+ "series": "Around the app",
+ "next": "Next: social signals and chat",
+ "slug": "u2-ai-navigator",
+ "section": "training",
+ "zoom": "1.1",
+ "intro_say": "Angstrom Signals. | The AI Navigator.",
+ "outro_say": "That's the AI Navigator. | It explains. You make the decisions.",
+ "steps": [
+  {
+   "id": "idea",
+   "screen": "A card: what the Navigator does",
+   "say": "The AI Navigator knows the whole app, your watchlist, your Groups, Sets and funnels, and today's Tides."
+  },
+  {
+   "id": "open",
+   "screen": "Opening the Navigator",
+   "say": "It slides out from the right edge, on every page, so the page you're working on stays in view."
+  },
+  {
+   "id": "ask",
+   "screen": "Asking a question",
+   "say": "Ask anything in your own words. | Here: how do I find coins that are dipping inside an uptrend?"
+  },
+  {
+   "id": "wait",
+   "screen": "While it thinks",
+   "say": "It answers from the app's own readings and help, never from guesses about prices."
+  },
+  {
+   "id": "answer",
+   "screen": "The answer",
+   "say": "The answer walks you through it, step by step. | It points to the right place, and the right training video."
+  },
+  {
+   "id": "paste",
+   "screen": "Pasting a screenshot",
+   "say": "You can also paste a screenshot, and ask what you're looking at."
+  },
+  {
+   "id": "close",
+   "screen": "Closing the panel",
+   "say": "Close it with the same handle. | The conversation is kept for when you come back."
+  }
+ ]
+}

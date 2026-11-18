@@ -1,0 +1,47 @@
+{
+ "title": "Social signals and chat",
+ "series": "Around the app",
+ "next": "Next: alerts and notifications",
+ "slug": "u3-social",
+ "section": "training",
+ "zoom": "1.1",
+ "intro_say": "Angstrom Signals. | Social signals and chat.",
+ "outro_say": "That's the social side. | In this video, other members' posts are blurred.",
+ "steps": [
+  {
+   "id": "idea",
+   "screen": "A card: the community",
+   "say": "Angstrom Signals has a community alongside: a live stream of social signals, and chat."
+  },
+  {
+   "id": "open",
+   "screen": "Opening the social panel",
+   "say": "The arrow on the right edge opens it. | Other members' posts are blurred in this video."
+  },
+  {
+   "id": "stream",
+   "screen": "The social signals stream",
+   "say": "The stream collects everyone's takes on assets and markets: agreeing or disagreeing with the AI's sentiment, with a short comment."
+  },
+  {
+   "id": "filters",
+   "screen": "Filtering the stream",
+   "say": "Filter it by positive, negative or mixed, by asset, or by person."
+  },
+  {
+   "id": "chat",
+   "screen": "The chat",
+   "say": "Below it is the chat. | Talk to everyone, to one of your communities, or privately to one person."
+  },
+  {
+   "id": "write",
+   "screen": "Writing a comment",
+   "say": "Write up to a hundred and sixty characters, add a face, and post. | Keep it friendly: no promoting, and no financial advice."
+  },
+  {
+   "id": "pin",
+   "screen": "Pinning the panel",
+   "say": "Pin the panel to keep it open beside the dashboard, or pop it out into its own window."
+  }
+ ]
+}
