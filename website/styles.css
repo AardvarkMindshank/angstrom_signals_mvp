@@ -242,3 +242,11 @@ b.bt { font-weight: 700; color: var(--navy); }
   b.bt { background: linear-gradient(90deg, var(--blue), var(--green)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 }
 h1 b.bt, h2 b.bt, h3 b.bt { font-weight: inherit; }
+
+/* App screenshots (18 Nov 2026) */
+.shots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 18px; }
+figure.shot { margin: 22px 0; }
+.shots figure.shot { margin: 0; }
+figure.shot img { display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--rule); box-shadow: 0 6px 22px rgba(11,45,107,.14); background: #0e1117; }
+figure.shot figcaption { font-size: .9rem; color: var(--muted, #5f6673); margin-top: 8px; }
+@media (max-width: 860px) { .shots { grid-template-columns: 1fr; } }
