@@ -368,7 +368,9 @@ def chart_tab(st, report: dict) -> None:
     st.caption(t("Price on top; below, one row per result: a square on each close where its condition held, coloured "
                  "when the move followed and grey when it didn't. The top row shows the Tide. Research coins, to "
                  "{cut}: the protected test period is never shown here.", cut=grid.get("cut", "")))
-    coins = sorted(grid["coins"])
+    # Only coins still trading: those that stopped are kept in the testing (so the results are not flattered by
+    # survivors only) but there is nothing to trade, so they are not offered here.
+    coins = sorted(c for c, v in grid["coins"].items() if not v.get("stopped"))
     c1, c2, c3, c4 = st.columns([2, 2, 2, 2])
     sym = c1.selectbox(t("Coin"), coins, index=coins.index("BTC-USD") if "BTC-USD" in coins else 0,
                        format_func=lambda s: s.replace("-USD", ""), key="snd_chart_coin")

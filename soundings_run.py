@@ -152,6 +152,8 @@ def grid_step(args) -> int:
 
         coins[sym] = {
             "start": days[0].strftime("%Y-%m-%d"), "days": len(days),
+            # stopped trading before the cut: kept in the testing (no survivorship bias), left out of the chart
+            "stopped": bool(raw.index[-1].tz_localize(None) < so.CUT - pd.Timedelta(days=5)),
             "close": [None if pd.isna(x) else float(f"{x:.6g}") for x in close],
             "rise": code(mv["rise"]), "fall": code(mv["fall"]),
             "rows": {n: code(conds[n]) for n in names if n in conds},
