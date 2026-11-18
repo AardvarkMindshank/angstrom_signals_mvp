@@ -9941,139 +9941,130 @@ def _en(text: str, **values) -> str:
 _PLAN_ICON = {"free": "⚪", "plus": "🔵", "pro": "🟣", "elite": "🟡"}
 
 
-def _member_card(m: dict) -> str:
-    esc = lambda v: html.escape(str(v or ""), quote=True)
-    name, email = str(m.get("name") or ""), str(m.get("email") or "")
-    avatar = str(m.get("avatar") or "")
-    if avatar.startswith("https://") and not any(c in avatar for c in " \"'<>\\"):
-        face = f"<img src='{esc(avatar)}' alt='' referrerpolicy='no-referrer' class='mb-face'>"
-    else:
-        face = f"<div class='mb-face mb-initial'>{esc((name or email or '?')[:1].upper())}</div>"
-    seen = _since(m.get("last_seen_at"))
+def _member_status(seen) -> str:
     if seen is not None and seen < 300:
-        state, word = "mb-on", _en("Active now")
-    elif seen is not None and seen < 86400:
-        state, word = "mb-day", _en("Seen {ago}", ago=_ago(seen))
-    else:
-        state, word = "mb-off", (_en("Seen {ago}", ago=_ago(seen)) if seen is not None else _en("Not seen since the list began"))
-    plan = str(m.get("plan") or "pro")
-    role = " · 🛡️ " + _en("admin") if m.get("role") == "admin" else ""
-    joined = _since(m.get("created_at"))
-    signed = _since(m.get("last_sign_in_at"))
-    ai = m.get("ai") or []
-    calls = sum(int(r.get("calls") or 0) for r in ai)
-    calls_30 = sum(int(r.get("calls_30d") or 0) for r in ai)
-    cost = sum(_ai_cost(r) for r in ai)
-    cost_30 = sum(_ai_cost(r, "_30d") for r in ai)
-    tokens = sum(int(r.get(k) or 0) for r in ai for k in ("input", "output", "cache_read", "cache_write"))
-    models = ", ".join(sorted({str(r.get("model")) for r in ai})) or "–"
-    via = {"google": "Google", "email": _en("email")}.get(str(m.get("sign_in") or ""), str(m.get("sign_in") or ""))
-    stats = [
-        ("📅", _en("Joined"), f"{str(m.get('created_at') or '')[:10]} · {_span(joined)}",
-         _en("When the account was made, and how long ago")),
-        ("🔑", _en("Last sign-in"), _ago(signed) if signed is not None else _en("never"),
-         _en("The last time this account signed in ({via})", via=via)),
-        ("⏱️", _en("Time in app"), _span(m.get("seconds") or 0),
-         _en("Time with the app open (counted from {n} visits on {d} days)", n=m.get("visits") or 0,
-           d=m.get("active_days") or 0)),
-        ("🔁", _en("Visits"), f"{m.get('visits') or 0} · {m.get('active_days') or 0} {_en('days')}",
-         _en("Visits (a new one after 30 minutes away) and days with any use")),
-        ("🧩", _en("Made"), f"{m.get('sets') or 0} · {m.get('scans') or 0} · {m.get('funnels') or 0}",
-         _en("Sets · Prism scans · funnels this account has saved")),
-        ("🏅", _en("Social points"), f"{int(m.get('social_points') or 0):,}",
-         _en("Their social points now (posts, replies and invites)")),
-        ("💬", _en("Social"), f"{m.get('chat_messages') or 0} · {m.get('comments') or 0} · {m.get('feedback') or 0}",
-         _en("Chat messages · asset comments · feedback notes")),
-        ("✨", _en("AI"), f"{calls} · ${cost:,.2f}" if calls else "–",
-         _en("AI answers asked for: {calls} in all ({c30} in the last 30 days); about ${cost:.2f} in all, ${cost30:.2f} "
-           "in 30 days, at list prices; {tok:,} tokens; models: {models}", calls=calls, c30=calls_30, cost=cost,
-           cost30=cost_30, tok=tokens, models=models)),
-    ]
-    cells = "".join(
-        f"<div class='mb-stat' title='{esc(tip)}'><span class='mb-k'>{icon} {esc(label)}</span>"
-        f"<span class='mb-v'>{esc(value)}</span></div>" for icon, label, value, tip in stats)
-    return (f"<div class='mb-row'><div class='mb-who'>{face}<div class='mb-id'><div class='mb-name'>"
-            f"<span class='mb-dot {state}' title='{esc(word)}'></span>{esc(name)}</div>"
-            f"<div class='mb-mail'>{esc(email)}</div><div class='mb-plan'>{_PLAN_ICON.get(plan, '')} "
-            f"{esc(plan.capitalize())}{esc(role)} · <span class='mb-state'>{esc(word)}</span></div></div></div>"
-            f"<div class='mb-stats'>{cells}</div></div>")
+        return "🟢 " + _en("Active now")
+    if seen is not None and seen < 86400:
+        return "🟠 " + _en("Today")
+    if seen is not None and seen < 7 * 86400:
+        return "⚪ " + _en("This week")
+    return "⚫ " + _en("Earlier") if seen is not None else "⚫ " + _en("Not seen yet")
 
 
-_MEMBERS_CSS = """<style>
-.mb-list{display:flex;flex-direction:column;border:1px solid var(--ang-border);border-radius:10px;max-height:40rem;
-  overflow:auto;}
-.mb-row{display:flex;gap:1rem;align-items:center;padding:.7rem .8rem;border-bottom:1px solid var(--ang-border);
-  flex-wrap:wrap;}
-.mb-row:last-child{border-bottom:0;}
-.mb-who{display:flex;gap:.7rem;align-items:center;flex:0 0 17rem;min-width:0;}
-.mb-face{width:44px;height:44px;border-radius:50%;object-fit:cover;flex:0 0 44px;}
-.mb-initial{display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;
-  background:var(--ang-hover);}
-.mb-id{min-width:0;}
-.mb-name{font-weight:700;display:flex;align-items:center;gap:.4rem;overflow-wrap:anywhere;}
-.mb-mail{font-size:.8rem;opacity:.75;overflow-wrap:anywhere;}
-.mb-plan{font-size:.78rem;opacity:.9;}
-.mb-dot{width:9px;height:9px;border-radius:50%;flex:0 0 9px;}
-.mb-on{background:#16a34a;box-shadow:0 0 0 3px rgba(22,163,74,.25);}
-.mb-day{background:#f59e0b;}
-.mb-off{background:#9ca3af;}
-.mb-stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(8.2rem,1fr));gap:.35rem .9rem;flex:1 1 30rem;}
-.mb-stat{display:flex;flex-direction:column;cursor:help;}
-.mb-k{font-size:.7rem;opacity:.7;white-space:nowrap;}
-.mb-v{font-size:.85rem;font-weight:600;white-space:nowrap;}
-</style>"""
+def _member_table(rows: list[dict]) -> pd.DataFrame:
+    """One line per account, for a table you sort by clicking a column title."""
+    def when(value):
+        stamp = pd.to_datetime(value, utc=True, errors="coerce") if value else pd.NaT
+        return stamp.tz_convert(None) if pd.notna(stamp) else pd.NaT
+
+    lines = []
+    for m in rows:
+        avatar = str(m.get("avatar") or "")
+        ai = m.get("ai") or []
+        seen = _since(m.get("last_seen_at"))
+        plan = str(m.get("plan") or "pro")
+        lines.append({
+            "photo": avatar if avatar.startswith("https://") else None,
+            "status": _member_status(seen),
+            "name": str(m.get("name") or "") + (" 🛡️" if m.get("role") == "admin" else ""),
+            "email": str(m.get("email") or ""),
+            "plan": f"{_PLAN_ICON.get(plan, '')} {plan.capitalize()}",
+            "joined": when(m.get("created_at")),
+            "member_days": round((_since(m.get("created_at")) or 0) / 86400),
+            "last_sign_in": when(m.get("last_sign_in_at")),
+            "last_seen": when(m.get("last_seen_at")),
+            "hours": round(float(m.get("seconds") or 0) / 3600, 1),
+            "visits": int(m.get("visits") or 0),
+            "days": int(m.get("active_days") or 0),
+            "sets": int(m.get("sets") or 0),
+            "scans": int(m.get("scans") or 0),
+            "funnels": int(m.get("funnels") or 0),
+            "points": int(m.get("social_points") or 0),
+            "chat": int(m.get("chat_messages") or 0),
+            "comments": int(m.get("comments") or 0),
+            "feedback": int(m.get("feedback") or 0),
+            "ai_calls": sum(int(r.get("calls") or 0) for r in ai),
+            "ai_30": sum(int(r.get("calls_30d") or 0) for r in ai),
+            "ai_cost": round(sum(_ai_cost(r) for r in ai), 2),
+            "ai_cost_30": round(sum(_ai_cost(r, "_30d") for r in ai), 2),
+            "sign_in": {"google": "Google", "email": "Email"}.get(str(m.get("sign_in") or ""), str(m.get("sign_in") or "")),
+        })
+    frame = pd.DataFrame(lines)
+    if not frame.empty:
+        frame = frame.sort_values("last_seen", ascending=False, na_position="last")
+    return frame
 
 
 def _show_members() -> None:
     """👥 Every account: photo, name, email, plan, when it joined, last sign-in, whether it's active now, how much it
-    uses the app and its AI use. Read through admin_members() (sql/2026-12-06_member_activity.sql)."""
+    uses the app, its social points and its AI use. Read through admin_members() (sql/2026-12-06_member_activity.sql)."""
     with tracked_expander("👥 " + _en("Members"), "admin_members"):
         rows = _admin_rows("admin_members")
         if rows is None:
             st.caption(_en("The Members list isn't switched on yet: run sql/2026-12-06_member_activity.sql in the "
-                         "Supabase SQL editor."))
+                           "Supabase SQL editor."))
             return
         rows = [r for r in rows if isinstance(r, dict)]
         seen = [_since(r.get("last_seen_at")) for r in rows]
-        now_on = sum(1 for s in seen if s is not None and s < 300)
-        day = sum(1 for s in seen if s is not None and s < 86400)
-        week = sum(1 for s in seen if s is not None and s < 7 * 86400)
         cost_30 = sum(_ai_cost(a, "_30d") for r in rows for a in (r.get("ai") or []))
         c = st.columns(5)
         c[0].metric(_en("Accounts"), len(rows))
-        c[1].metric(_en("Active now"), now_on, help=_en("The app open in the last 5 minutes"))
-        c[2].metric(_en("Last 24 hours"), day)
-        c[3].metric(_en("Last 7 days"), week)
-        c[4].metric(_en("AI, 30 days"), f"${cost_30:,.2f}", help=_en("A rough cost at list prices; the bill is on each "
-                                                                 "AI maker's console"))
-        f1, f2, f3 = st.columns([2, 1, 1])
+        c[1].metric(_en("Active now"), sum(1 for x in seen if x is not None and x < 300),
+                    help=_en("The app open in the last 5 minutes"))
+        c[2].metric(_en("Last 24 hours"), sum(1 for x in seen if x is not None and x < 86400))
+        c[3].metric(_en("Last 7 days"), sum(1 for x in seen if x is not None and x < 7 * 86400))
+        c[4].metric(_en("AI, 30 days"), f"${cost_30:,.2f}",
+                    help=_en("A rough cost at list prices; the bill is on each AI maker's console"))
+        f1, f2 = st.columns([3, 1])
         find = f1.text_input(_en("Search"), key="admin_members_find", placeholder=_en("Name or email"),
                              label_visibility="collapsed")
-        order = f2.selectbox(_en("Sort"), [_en("Last seen"), _en("Newest"), _en("Oldest"), _en("Most time in app"),
-                                         _en("Most AI use"), _en("Most social points"), _en("Name")], key="admin_members_sort",
-                             label_visibility="collapsed")
-        plan_pick = f3.selectbox(_en("Plan"), [_en("All plans"), "Free", "Plus", "Pro", "Elite"],
+        plan_pick = f2.selectbox(_en("Plan"), [_en("All plans"), "Free", "Plus", "Pro", "Elite"],
                                  key="admin_members_plan", label_visibility="collapsed")
         q = find.strip().lower()
         if q:
             rows = [r for r in rows if q in str(r.get("name") or "").lower() or q in str(r.get("email") or "").lower()]
         if plan_pick in ("Free", "Plus", "Pro", "Elite"):
             rows = [r for r in rows if str(r.get("plan") or "pro") == plan_pick.lower()]
-        never = float("inf")
-        keys = {
-            _en("Last seen"): lambda r: _since(r.get("last_seen_at")) if r.get("last_seen_at") else never,
-            _en("Newest"): lambda r: _since(r.get("created_at")) or 0,
-            _en("Oldest"): lambda r: -(_since(r.get("created_at")) or 0),
-            _en("Most time in app"): lambda r: -float(r.get("seconds") or 0),
-            _en("Most AI use"): lambda r: -sum(_ai_cost(a) for a in (r.get("ai") or [])),
-            _en("Most social points"): lambda r: -int(r.get("social_points") or 0),
-            _en("Name"): lambda r: str(r.get("name") or "").lower(),
-        }
-        rows = sorted(rows, key=keys.get(order, keys[_en("Last seen")]))
-        st.markdown(_MEMBERS_CSS + "<div class='mb-list'>" + "".join(_member_card(r) for r in rows) + "</div>",
-                    unsafe_allow_html=True)
-        st.caption(_en("🟢 active now · 🟠 seen in the last day · ⚪ longer ago. Hover any figure for what it means. "
-                     "Time in app, visits and AI use are counted from when this list was switched on."))
+        cc = st.column_config
+        when = "D MMM YYYY, HH:mm"
+        st.dataframe(
+            _member_table(rows), hide_index=True, width="stretch", key="admin_members_table",
+            height=min(42 + 46 * max(len(rows), 1), 640), row_height=44,
+            column_config={
+                "photo": cc.ImageColumn("", width=48),
+                "status": cc.TextColumn(_en("Status"), help=_en("🟢 the app open in the last 5 minutes · 🟠 seen today · "
+                                                               "⚪ this week · ⚫ earlier")),
+                "name": cc.TextColumn(_en("Name"), help=_en("🛡️ marks an admin")),
+                "email": cc.TextColumn(_en("Email")),
+                "plan": cc.TextColumn(_en("Plan")),
+                "joined": cc.DatetimeColumn(_en("📅 Joined"), format="D MMM YYYY", help=_en("When the account was made")),
+                "member_days": cc.NumberColumn(_en("Days a member"), format="%d"),
+                "last_sign_in": cc.DatetimeColumn(_en("🔑 Last sign-in"), format=when,
+                                                  help=_en("The last time this account signed in (UTC)")),
+                "last_seen": cc.DatetimeColumn(_en("👀 Last seen"), format=when,
+                                               help=_en("The last time the app was open on this account (UTC)")),
+                "hours": cc.NumberColumn(_en("⏱️ Hours in app"), format="%.1f",
+                                         help=_en("Time with the app open (gaps over 10 minutes not counted)")),
+                "visits": cc.NumberColumn(_en("🔁 Visits"), help=_en("A new visit after 30 minutes away")),
+                "days": cc.NumberColumn(_en("Days used"), help=_en("Days with any use")),
+                "sets": cc.NumberColumn(_en("Sets")),
+                "scans": cc.NumberColumn(_en("Scans"), help=_en("Prism scans saved")),
+                "funnels": cc.NumberColumn(_en("Funnels")),
+                "points": cc.NumberColumn(_en("🏅 Social points"), help=_en("Posts, replies and invites")),
+                "chat": cc.NumberColumn(_en("💬 Chat"), help=_en("Chat messages")),
+                "comments": cc.NumberColumn(_en("Comments"), help=_en("Asset comments")),
+                "feedback": cc.NumberColumn(_en("Feedback"), help=_en("Feedback notes sent")),
+                "ai_calls": cc.NumberColumn(_en("✨ AI answers"), help=_en("AI Navigator answers asked for, in all")),
+                "ai_30": cc.NumberColumn(_en("AI, 30 d"), help=_en("AI answers in the last 30 days")),
+                "ai_cost": cc.NumberColumn(_en("AI cost"), format="$%.2f",
+                                           help=_en("A rough cost at list prices, in all")),
+                "ai_cost_30": cc.NumberColumn(_en("AI cost, 30 d"), format="$%.2f",
+                                              help=_en("A rough cost at list prices, last 30 days")),
+                "sign_in": cc.TextColumn(_en("Signs in with")),
+            },
+        )
+        st.caption(_en("Click a column title to sort. Hover a title for what it means. Times are UTC. Hours in app, "
+                       "visits and AI use are counted from when this list was switched on (19 Nov 2026)."))
 
 
 @st.fragment
