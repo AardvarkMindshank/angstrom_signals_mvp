@@ -227,6 +227,15 @@ def chart_rows(report: dict, target: str, faded: bool) -> list[dict]:
     return keep[:MAX_ROWS]
 
 
+def coin_days(coin: dict):
+    """The day of each close: every calendar day for crypto, the listed trading days for equities."""
+    import pandas as pd
+
+    if coin.get("offsets"):
+        return pd.Timestamp(coin["start"]) + pd.to_timedelta(coin["offsets"], unit="D")
+    return pd.date_range(coin["start"], periods=coin["days"], freq="D")
+
+
 def fired(coin: dict, condition: list[str]) -> list[str] | None:
     """One character per day: 1 when every part of the condition held, 0 when not, . when a reading was missing."""
     parts = [coin["rows"].get(c) for c in condition]
@@ -243,7 +252,7 @@ def build_figure(st, coin: dict, rows: list[dict], target: str, start: str, end:
     import plotly.graph_objects as go
     from plotly.subplots import make_subplots
 
-    days = pd.date_range(coin["start"], periods=coin["days"], freq="D")
+    days = coin_days(coin)
     keep = (days >= pd.Timestamp(start)) & (days <= pd.Timestamp(end))
     idx = [i for i, k in enumerate(keep) if k]
     x = [days[i] for i in idx]
@@ -313,7 +322,7 @@ def chart_payload(coin: dict, rows: list[dict], target: str, start: str, end: st
 
     import lw_chart
 
-    days = pd.date_range(coin["start"], periods=coin["days"], freq="D")
+    days = coin_days(coin)
     idx = [i for i, d in enumerate(days) if pd.Timestamp(start) <= d <= pd.Timestamp(end)]
     times = [int(days[i].timestamp()) for i in idx]
     flags = "".join(coin[target][i] for i in idx)

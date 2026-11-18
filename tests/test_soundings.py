@@ -125,3 +125,14 @@ def test_card_keeps_its_verdict_label():
     html = v.card_html(r, "rise")
     top = html.split("snd-cond")[0]
     assert "Held up" in top and "Tide" not in top
+
+
+def test_equity_chart_uses_trading_days():
+    import pandas as pd
+    import soundings_view as v
+
+    g = v.load_grid(v.FILES["equity"][1])
+    coin = g["coins"][sorted(g["coins"])[0]]
+    days = v.coin_days(coin)
+    assert len(days) == coin["days"] and all(d.weekday() < 5 for d in days)
+    assert days[-1] <= pd.Timestamp("2024-10-29")

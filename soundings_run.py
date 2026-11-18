@@ -154,6 +154,8 @@ def grid_step(args) -> int:
         coins[sym] = {
             "start": days[0].strftime("%Y-%m-%d"), "days": len(days),
             # stopped trading before the cut: kept in the testing (no survivorship bias), left out of the chart
+            # trading days are not every calendar day (equities): each close's day, as days after the first
+            "offsets": None if args.market == "crypto" else [int((d - days[0]).days) for d in days],
             "stopped": bool(raw.index[-1].tz_localize(None) < so.CUT - pd.Timedelta(days=5)),
             "close": [None if pd.isna(x) else float(f"{x:.6g}") for x in close],
             "rise": code(mv["rise"]), "fall": code(mv["fall"]),
