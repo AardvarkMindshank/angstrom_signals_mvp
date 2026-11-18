@@ -109,12 +109,13 @@ def candidates(symbol: str) -> list[str]:
     return list(dict.fromkeys(out))
 
 
-def fetch(symbol: str, end: pd.Timestamp) -> pd.DataFrame:
+def fetch(symbol: str, end: pd.Timestamp) -> tuple[str, pd.DataFrame]:
+    """(the ticker the prices were found under, the prices)."""
     for name in candidates(symbol):
         d = _fetch(name, end)
         if not d.empty:
-            return d
-    return pd.DataFrame()
+            return name, d
+    return symbol, pd.DataFrame()
 
 
 def _fetch(symbol: str, end: pd.Timestamp) -> pd.DataFrame:
@@ -161,14 +162,14 @@ def main() -> int:
                 "files": {}, "missing": [], "too_short": []}
     for sym in chosen:
         time.sleep(0.6)
-        d = fetch(sym, end)
+        found, d = fetch(sym, end)
         if d.empty:
             manifest["missing"].append(sym)
             continue
         if len(d) < MIN_DAYS:
             manifest["too_short"].append(sym)
             continue
-        sym = sym.split("-20")[0] if "-20" in sym else sym           # the file is named by its plain ticker
+        sym = found                                     # named by the ticker it trades (or last traded) under
         d.to_csv(folder / f"{sym}.csv.gz", index=False)
         stopped = pd.Timestamp(d["date"].iloc[-1]) < end - pd.Timedelta(days=7)
         manifest["files"][sym] = {"bars": len(d), "first": d["date"].iloc[0], "last": d["date"].iloc[-1],
