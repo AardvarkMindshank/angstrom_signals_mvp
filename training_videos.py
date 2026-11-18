@@ -30,10 +30,10 @@ SERIES = {
     ]),
     "around": ("Around the app", [
         ("u1-tides", "Tides: the big picture", "1:19"),
-        ("u2-ai-navigator", "The AI Navigator", "1:30"),
+        ("u2-ai-navigator", "The AI Navigator", "1:13"),
         ("u3-social", "Social signals and chat", "0:59"),
         ("u5-alerts", "Alerts and notifications", "0:54"),
-        ("u4-dynamic-funnel", "Your Dynamic funnel", "1:12"),
+        ("u4-dynamic-funnel", "Your Dynamic funnel", "1:06"),
     ]),
     "lattice": ("Angstrom Lattice: the series", [
         ("01-angstrom-lattice-at-a-glance", "Angstrom Lattice at a glance", "1:29"),
