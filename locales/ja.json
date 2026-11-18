@@ -2222,8 +2222,8 @@
   "The chart's data is not available yet.": "チャートのデータはまだありません。",
   "Last 12 months": "直近12か月",
   "No results to show for this move.": "この値動きの結果はありません。",
-  "- {icon} {cond}: held on {n} closes; {move} after {rate} of them": "- {icon} {cond}：{n}回の終値で成立；そのうち{rate}で{move}",
   "📈 Rises": "📈 上昇",
   "📉 Falls": "📉 下落",
-  "**{coin}, this period:** {move} followed {usual} of all closes.": "**{coin}、この期間：**全終値の{usual}で{move}が続いた。"
+  "**{coin}, this period:** {move} followed {usual} of all closes.": "**{coin}、この期間：**全終値の{usual}で{move}が続いた。",
+  "- {icon} {cond}: held on {n} closes; {move} after {rate} of them, against {usual} usually (**{lift}**)": "- {icon} {cond}：{n}回の終値で成立；そのうち{rate}で{move}（通常は{usual}、**{lift}**）"
 }

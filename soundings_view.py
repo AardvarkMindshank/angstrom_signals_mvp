@@ -296,9 +296,12 @@ def chart_tab(st, report: dict) -> None:
         lines = []
         for r, hit, total in summary:
             rate = f"{100 * hit / total:.0f}%" if total else "–"
-            lines.append(t("- {icon} {cond}: held on {n} closes; {move} after {rate} of them",
+            lift = f"{(hit / total) / base:.1f}×" if total and base else "–"
+            lines.append(t("- {icon} {cond}: held on {n} closes; {move} after {rate} of them, against {usual} usually "
+                           "(**{lift}**)",
                            icon=VERDICT.get(r.get("verdict"), ("",))[0], cond=" + ".join(r["condition"]), n=total,
-                           move=t("a rise") if target == "rise" else t("a fall"), rate=rate))
+                           move=t("a rise") if target == "rise" else t("a fall"), rate=rate,
+                           usual=f"{100 * base:.0f}%", lift=lift))
         st.markdown(t("**{coin}, this period:** {move} followed {usual} of all closes.",
                       coin=sym.replace("-USD", ""), move=t("a rise") if target == "rise" else t("a fall"),
                       usual=f"{100 * base:.0f}%") + "\n" + "\n".join(lines))

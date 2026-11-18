@@ -2222,8 +2222,8 @@
   "The chart's data is not available yet.": "Data grafik belum tersedia.",
   "Last 12 months": "12 bulan terakhir",
   "No results to show for this move.": "Tidak ada hasil untuk pergerakan ini.",
-  "- {icon} {cond}: held on {n} closes; {move} after {rate} of them": "- {icon} {cond}: terpenuhi pada {n} penutupan; {move} setelah {rate} di antaranya",
   "📈 Rises": "📈 Kenaikan",
   "📉 Falls": "📉 Penurunan",
-  "**{coin}, this period:** {move} followed {usual} of all closes.": "**{coin}, periode ini:** {move} menyusul {usual} dari semua penutupan."
+  "**{coin}, this period:** {move} followed {usual} of all closes.": "**{coin}, periode ini:** {move} menyusul {usual} dari semua penutupan.",
+  "- {icon} {cond}: held on {n} closes; {move} after {rate} of them, against {usual} usually (**{lift}**)": "- {icon} {cond}: terpenuhi pada {n} penutupan; {move} setelah {rate} di antaranya, dibanding {usual} biasanya (**{lift}**)"
 }

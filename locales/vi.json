@@ -2222,8 +2222,8 @@
   "The chart's data is not available yet.": "Dữ liệu biểu đồ chưa có.",
   "Last 12 months": "12 tháng gần nhất",
   "No results to show for this move.": "Không có kết quả cho biến động này.",
-  "- {icon} {cond}: held on {n} closes; {move} after {rate} of them": "- {icon} {cond}: đúng ở {n} lần đóng cửa; {move} sau {rate} trong số đó",
   "📈 Rises": "📈 Tăng",
   "📉 Falls": "📉 Giảm",
-  "**{coin}, this period:** {move} followed {usual} of all closes.": "**{coin}, giai đoạn này:** {move} sau {usual} trong tất cả các lần đóng cửa."
+  "**{coin}, this period:** {move} followed {usual} of all closes.": "**{coin}, giai đoạn này:** {move} sau {usual} trong tất cả các lần đóng cửa.",
+  "- {icon} {cond}: held on {n} closes; {move} after {rate} of them, against {usual} usually (**{lift}**)": "- {icon} {cond}: đúng ở {n} lần đóng cửa; {move} sau {rate} trong số đó, so với {usual} thông thường (**{lift}**)"
 }

@@ -2222,8 +2222,8 @@
   "The chart's data is not available yet.": "ข้อมูลกราฟยังไม่พร้อม",
   "Last 12 months": "12 เดือนล่าสุด",
   "No results to show for this move.": "ไม่มีผลลัพธ์สำหรับการเคลื่อนไหวนี้",
-  "- {icon} {cond}: held on {n} closes; {move} after {rate} of them": "- {icon} {cond}: เป็นจริงใน {n} การปิด; {move} หลัง {rate} ของครั้งเหล่านั้น",
   "📈 Rises": "📈 ขึ้น",
   "📉 Falls": "📉 ลง",
-  "**{coin}, this period:** {move} followed {usual} of all closes.": "**{coin} ช่วงนี้:** {move} ตามหลัง {usual} ของการปิดทั้งหมด"
+  "**{coin}, this period:** {move} followed {usual} of all closes.": "**{coin} ช่วงนี้:** {move} ตามหลัง {usual} ของการปิดทั้งหมด",
+  "- {icon} {cond}: held on {n} closes; {move} after {rate} of them, against {usual} usually (**{lift}**)": "- {icon} {cond}: เป็นจริงใน {n} การปิด; {move} หลัง {rate} ของครั้งเหล่านั้น เทียบกับปกติ {usual} (**{lift}**)"
 }

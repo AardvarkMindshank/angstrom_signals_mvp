@@ -2222,8 +2222,8 @@
   "The chart's data is not available yet.": "Los datos del gráfico aún no están disponibles.",
   "Last 12 months": "Últimos 12 meses",
   "No results to show for this move.": "No hay resultados para este movimiento.",
-  "- {icon} {cond}: held on {n} closes; {move} after {rate} of them": "- {icon} {cond}: se cumplió en {n} cierres; {move} tras el {rate} de ellos",
   "📈 Rises": "📈 Subidas",
   "📉 Falls": "📉 Bajadas",
-  "**{coin}, this period:** {move} followed {usual} of all closes.": "**{coin}, este periodo:** {move} siguió al {usual} de todos los cierres."
+  "**{coin}, this period:** {move} followed {usual} of all closes.": "**{coin}, este periodo:** {move} siguió al {usual} de todos los cierres.",
+  "- {icon} {cond}: held on {n} closes; {move} after {rate} of them, against {usual} usually (**{lift}**)": "- {icon} {cond}: se cumplió en {n} cierres; {move} tras el {rate} de ellos, frente al {usual} habitual (**{lift}**)"
 }

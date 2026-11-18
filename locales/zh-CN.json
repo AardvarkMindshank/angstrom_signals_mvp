@@ -2222,8 +2222,8 @@
   "The chart's data is not available yet.": "图表数据暂不可用。",
   "Last 12 months": "最近 12 个月",
   "No results to show for this move.": "此行情没有结果。",
-  "- {icon} {cond}: held on {n} closes; {move} after {rate} of them": "- {icon} {cond}：在 {n} 次收盘时成立；其中 {rate} 之后{move}",
   "📈 Rises": "📈 上涨",
   "📉 Falls": "📉 下跌",
-  "**{coin}, this period:** {move} followed {usual} of all closes.": "**{coin}，此时期：**所有收盘中有 {usual} 之后{move}。"
+  "**{coin}, this period:** {move} followed {usual} of all closes.": "**{coin}，此时期：**所有收盘中有 {usual} 之后{move}。",
+  "- {icon} {cond}: held on {n} closes; {move} after {rate} of them, against {usual} usually (**{lift}**)": "- {icon} {cond}：在 {n} 次收盘时成立；其中 {rate} 之后{move}，通常为 {usual}（**{lift}**）"
 }

@@ -2222,8 +2222,8 @@
   "The chart's data is not available yet.": "차트 데이터가 아직 없습니다.",
   "Last 12 months": "최근 12개월",
   "No results to show for this move.": "이 움직임에 대한 결과가 없습니다.",
-  "- {icon} {cond}: held on {n} closes; {move} after {rate} of them": "- {icon} {cond}: {n}번의 종가에서 성립; 그중 {rate}에서 {move}",
   "📈 Rises": "📈 상승",
   "📉 Falls": "📉 하락",
-  "**{coin}, this period:** {move} followed {usual} of all closes.": "**{coin}, 이 기간:** 전체 종가의 {usual}에서 {move}이(가) 뒤따랐습니다."
+  "**{coin}, this period:** {move} followed {usual} of all closes.": "**{coin}, 이 기간:** 전체 종가의 {usual}에서 {move}이(가) 뒤따랐습니다.",
+  "- {icon} {cond}: held on {n} closes; {move} after {rate} of them, against {usual} usually (**{lift}**)": "- {icon} {cond}: {n}번의 종가에서 성립; 그중 {rate}에서 {move} (평소 {usual}, **{lift}**)"
 }

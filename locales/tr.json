@@ -2222,8 +2222,8 @@
   "The chart's data is not available yet.": "Grafik verileri henüz hazır değil.",
   "Last 12 months": "Son 12 ay",
   "No results to show for this move.": "Bu hareket için sonuç yok.",
-  "- {icon} {cond}: held on {n} closes; {move} after {rate} of them": "- {icon} {cond}: {n} kapanışta sağlandı; bunların {rate} kadarından sonra {move}",
   "📈 Rises": "📈 Yükselişler",
   "📉 Falls": "📉 Düşüşler",
-  "**{coin}, this period:** {move} followed {usual} of all closes.": "**{coin}, bu dönem:** tüm kapanışların {usual} kadarını {move} izledi."
+  "**{coin}, this period:** {move} followed {usual} of all closes.": "**{coin}, bu dönem:** tüm kapanışların {usual} kadarını {move} izledi.",
+  "- {icon} {cond}: held on {n} closes; {move} after {rate} of them, against {usual} usually (**{lift}**)": "- {icon} {cond}: {n} kapanışta sağlandı; bunların {rate} kadarından sonra {move}, olağanda {usual} (**{lift}**)"
 }
