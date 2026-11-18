@@ -120,6 +120,7 @@ begin
                 coalesce(nullif(btrim(p.avatar_url), ''), u.raw_user_meta_data ->> 'avatar_url',
                          u.raw_user_meta_data ->> 'picture') as avatar,
                 coalesce(p.role, '') as role,
+                coalesce(p.social_score, 0) as social_points,
                 coalesce(up.plan, 'pro') as plan,
                 coalesce(up.source, case when up.plan is null then 'beta' end) as plan_source,
                 coalesce(u.raw_app_meta_data ->> 'provider', 'email') as sign_in,

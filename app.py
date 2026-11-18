@@ -9980,6 +9980,8 @@ def _member_card(m: dict) -> str:
          _en("Visits (a new one after 30 minutes away) and days with any use")),
         ("🧩", _en("Made"), f"{m.get('sets') or 0} · {m.get('scans') or 0} · {m.get('funnels') or 0}",
          _en("Sets · Prism scans · funnels this account has saved")),
+        ("🏅", _en("Social points"), f"{int(m.get('social_points') or 0):,}",
+         _en("Their social points now (posts, replies and invites)")),
         ("💬", _en("Social"), f"{m.get('chat_messages') or 0} · {m.get('comments') or 0} · {m.get('feedback') or 0}",
          _en("Chat messages · asset comments · feedback notes")),
         ("✨", _en("AI"), f"{calls} · ${cost:,.2f}" if calls else "–",
@@ -10048,7 +10050,7 @@ def _show_members() -> None:
         find = f1.text_input(_en("Search"), key="admin_members_find", placeholder=_en("Name or email"),
                              label_visibility="collapsed")
         order = f2.selectbox(_en("Sort"), [_en("Last seen"), _en("Newest"), _en("Oldest"), _en("Most time in app"),
-                                         _en("Most AI use"), _en("Name")], key="admin_members_sort",
+                                         _en("Most AI use"), _en("Most social points"), _en("Name")], key="admin_members_sort",
                              label_visibility="collapsed")
         plan_pick = f3.selectbox(_en("Plan"), [_en("All plans"), "Free", "Plus", "Pro", "Elite"],
                                  key="admin_members_plan", label_visibility="collapsed")
@@ -10064,6 +10066,7 @@ def _show_members() -> None:
             _en("Oldest"): lambda r: -(_since(r.get("created_at")) or 0),
             _en("Most time in app"): lambda r: -float(r.get("seconds") or 0),
             _en("Most AI use"): lambda r: -sum(_ai_cost(a) for a in (r.get("ai") or [])),
+            _en("Most social points"): lambda r: -int(r.get("social_points") or 0),
             _en("Name"): lambda r: str(r.get("name") or "").lower(),
         }
         rows = sorted(rows, key=keys.get(order, keys[_en("Last seen")]))
