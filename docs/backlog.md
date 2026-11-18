@@ -8,6 +8,14 @@ Agreed work that is not built yet, so nothing gets forgotten between sessions. N
   the old "Add Stochastic %K" button), Lattice inside Streamlit, and the training-video / Advisor windows. Not caused by
   Tides (same failures on the run before). Update the scripts to the family → signal → variant lists.
 
+## Soundings: combining the ✅ rise results (on hold, 19 Nov 2026)
+
+- The three ✅ rise results on 100 coins mostly fire on different days (15-28% overlap). A rise followed: none held
+  0.86-0.90× usual; any 1: 1.52× (search) / 1.32× (later); any 2: 1.58× / 1.57×; all 3: 2.02× on 141 closes / 1.58×
+  on 95 closes (too few to tell 2 from 3 yet). Idea: provided Sets "Rise setups: all 3 agree" and "2 of 3 agree".
+  Parked while thinking about how traders would use it to prepare trades. The protected period from Oct 2024 is the
+  fair test of the combination (the three were chosen on 2023-24).
+
 ## Soundings: next steps (first run 18 Nov 2026)
 
 - **Soundings chart** (Angus's idea, 18 Nov 2026): a coin's price across the top with the timeline under it, and
