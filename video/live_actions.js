@@ -548,7 +548,8 @@ module.exports = {
     },
     storm: async (h) => {
       await h.clear();
-      const storm = h.page.locator(".tides .card.storm").first();
+      // The page holds two storm cards (one hidden, depending on the screen width): use the one on show.
+      const storm = h.page.locator(".tides .card.storm").filter({ visible: true }).first();
       await storm.evaluate((n) => n.scrollIntoView({ block: "center", behavior: "smooth" })).catch(() => {});
       await h.wait(600);
       await h.ring(storm);
