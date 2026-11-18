@@ -22,8 +22,15 @@ How a condition is judged
   (research_stats.studentised_test), because coins move together and consecutive days overlap.
 - Lift = how often a move followed the condition / how often it usually followed on comparable days. 1 is noise.
 - Search: Benjamini-Hochberg over every condition and pair tried (false discoveries kept to 10%), plus a minimum
-  lift, enough days and enough coins. Confirmation: the survivors only, once, on the later years: same direction,
-  lift still above 1, and Holm-corrected over the survivors.
+  lift, enough days and enough coins.
+- Themes: the survivors are mostly one idea in many forms ("heavy candle + overbought" in a dozen pairs), so they
+  are grouped, using the search years only: the strongest survivor leads a theme, and any later one sharing a
+  condition with it joins that theme. Only the lead of each theme (at most MAX_THEMES) is confirmed.
+- Confirmation: the theme leads only, once, on the later years: lift still above 1, and Benjamini-Hochberg again
+  over the leads (false discoveries kept to 10%).
+- Either way: a condition can come before more rises AND more falls (a big move coming, direction unknown, such as
+  price above the upper Bollinger band). Each result also shows the opposite move's lift on the later years, and one
+  where both are raised is called "a bigger move either way", not a direction.
 
 The readings are the certified signal library's own, replayed at each close with nothing later visible
 (set_history.context_at), so no reading can see the move it is said to precede.
@@ -52,6 +59,7 @@ MIN_COINS = 8                # coins it must hold on
 MIN_LIFT = 1.25              # search: at least 25% more moves than usual
 FDR = 0.10                   # search: share of false discoveries allowed among the finds
 PAIR_SCREEN_LIFT = 1.3       # pairs are tested only when their plain lift is at least this
+MAX_THEMES = 40              # theme leads taken to the confirmation
 RUNS_SEARCH = 1000           # resamples per test in the search (screening)
 RUNS_CONFIRM = 10_000
 KAPPA = 1.2                  # variance inflation, as the research tests use (not yet calibrated for lift)
@@ -361,6 +369,20 @@ def search(p: pd.DataFrame, target: str, runs: int = RUNS_SEARCH, pairs: bool = 
     return found
 
 
+def themes(survivors: list[dict], limit: int = MAX_THEMES) -> list[dict]:
+    """Theme leads from the search survivors (search data only): strongest first by search p, then lift; a survivor
+    sharing any condition with a lead joins that lead's theme. Each lead carries its theme's other members."""
+    order = sorted(survivors, key=lambda r: ((r.get("p") if r.get("p") is not None else 1), -(r.get("lift") or 0)))
+    leads: list[dict] = []
+    for r in order:
+        home = next((l for l in leads if set(l["condition"]) & set(r["condition"])), None)
+        if home is not None:
+            home["theme"].append(" + ".join(r["condition"]))
+        elif len(leads) < limit:
+            leads.append({**r, "theme": []})
+    return leads
+
+
 def confirm(p: pd.DataFrame, candidates: list[dict], target: str, runs: int = RUNS_CONFIRM) -> list[dict]:
     """The search survivors on the later years, once: same direction, Holm over the survivors."""
     out = []
@@ -370,17 +392,32 @@ def confirm(p: pd.DataFrame, candidates: list[dict], target: str, runs: int = RU
             mask &= (p[name].to_numpy(float) == 1.0) if name in p else np.zeros(len(p), bool)
         c = judge(p, mask, target, runs) if mask.sum() else {"days": 0}
         out.append({**r, "confirm": c})
-    ps = {i: (o["confirm"].get("p") if o["confirm"].get("days", 0) >= 30 else None) for i, o in enumerate(out)}
-    holm = rs.holm(ps) if ps else {}
-    for i, o in enumerate(out):
+    ps = [(o["confirm"].get("p") if o["confirm"].get("days", 0) >= 30 else None) for o in out]
+    passed = bh(ps) if ps else []
+    for o, ok in zip(out, passed):
         c = o["confirm"]
-        o["confirmed"] = bool(holm.get(i) and (c.get("lift") or 0) > 1.0)
-        o["verdict"] = verdict(o)
+        o["confirmed"] = bool(ok and (c.get("lift") or 0) > 1.0)
     return out
+
+
+def opposite(p_other: pd.DataFrame, results: list[dict], other: str, runs: int = 300) -> None:
+    """The opposite move's lift on the later years for each result (a rise condition's falls, and the reverse)."""
+    for o in results:
+        mask = np.ones(len(p_other), bool)
+        for name in o["condition"]:
+            mask &= (p_other[name].to_numpy(float) == 1.0) if name in p_other else np.zeros(len(p_other), bool)
+        r = judge(p_other, mask, other, runs) if mask.sum() else {"days": 0}
+        o["opposite"] = {"lift": r.get("lift"), "days": r.get("days", 0)}
+        o["verdict"] = verdict(o)
+
+
+EITHER_WAY = 1.25              # the opposite move raised this much too: a bigger move either way
 
 
 def verdict(o: dict) -> str:
     c = o.get("confirm") or {}
+    if o.get("confirmed") and ((o.get("opposite") or {}).get("lift") or 0) >= EITHER_WAY:
+        return "either_way"
     if o.get("confirmed"):
         spread = (c.get("coins_up", 0) / c["coins_read"]) if c.get("coins_read") else 0
         return "survivor" if spread >= 0.6 else "fragile"

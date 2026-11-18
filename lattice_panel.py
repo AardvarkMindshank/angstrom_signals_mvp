@@ -21,6 +21,8 @@ SECTIONS = {
     "funnels": (":material/filter_alt:", "Funnels", "Narrow the top coins or shares down in stages, from the longest "
                                                    "timeframe to the hour: Start from a ready-made funnel, change "
                                                    "it, save it."),
+    "soundings": (":material/explore:", "Soundings", "What came before past rises and falls: the readings that "
+                                                     "turned up beforehand more than usual, checked on later years."),
     "strategies": (":material/route:", "Strategies", "Entries, exits and risk plans. Coming later."),
 }
 PENDING = {"strategies"}
@@ -211,6 +213,10 @@ def _render(st, supabase, assets: list[tuple[str, str, str]], user_id: str) -> N
         import prism_view
 
         prism_view.render(st, supabase, assets, user_id)
+    elif chosen == "soundings":
+        import soundings_view
+
+        soundings_view.render(st)
     else:
         st.info(t("🛣️ **Strategies are coming later.** A strategy will turn a Set's Yes into a plan: when to enter, "
                 "when to exit, and how much risk to take, including sequences such as \"A, then B within N days\". "

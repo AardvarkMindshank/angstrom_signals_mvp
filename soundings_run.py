@@ -70,27 +70,31 @@ def mine_step(args) -> int:
                            "min_coins": so.MIN_COINS},
               "targets": {}}
     lines = []
+    confirm_panels = {k: so.panel(per, k, start=so.SEARCH_END + pd.Timedelta(days=1)) for k in ("rise", "fall")}
     for target in ("rise", "fall"):
         t0 = time.time()
         search_p = so.panel(per, target, end=so.SEARCH_END)
-        confirm_p = so.panel(per, target, start=so.SEARCH_END + pd.Timedelta(days=1))
+        confirm_p = confirm_panels[target]
         found = so.search(search_p, target, runs=args.runs, pairs=not args.singles)
         survivors = sorted([r for r in found if r["search_pass"]], key=lambda r: -(r.get("lift") or 0))
-        checked = so.confirm(confirm_p, survivors, target)
+        leads = so.themes(survivors)
+        checked = so.confirm(confirm_p, leads, target)
+        so.opposite(confirm_panels["fall" if target == "rise" else "rise"], checked, "fall" if target == "rise" else "rise")
         tested = len([r for r in found if not r.get("screened_out")])
         report["targets"][target] = {
             "base_rate_search": float(search_p[target].mean()), "base_rate_confirm": float(confirm_p[target].mean()),
             "days_search": int(len(search_p)), "days_confirm": int(len(confirm_p)),
-            "looked_at": len(found), "tested": tested, "search_survivors": len(survivors),
-            "results": [{**_short(r), "confirm": r["confirm"], "confirmed": r["confirmed"], "verdict": r["verdict"]}
+            "looked_at": len(found), "tested": tested, "search_survivors": len(survivors), "themes": len(leads),
+            "results": [{**_short(r), "confirm": r["confirm"], "opposite": r.get("opposite"), "confirmed": r["confirmed"],
+                         "verdict": r["verdict"], "theme": r.get("theme", [])[:12], "theme_size": len(r.get("theme", []))}
                         for r in checked],
             "top_search": [_short(r) for r in sorted(found, key=lambda r: -(r.get("lift") or 0))
                            if not r.get("screened_out") and r.get("days", 0) >= so.MIN_DAYS][:40],
         }
         lines.append(f"\n{target.upper()}S: usual rate {search_p[target].mean():.1%} (search), "
                      f"{confirm_p[target].mean():.1%} (confirm); looked at {len(found)}, tested {tested}, "
-                     f"{len(survivors)} passed the search ({time.time() - t0:.0f}s)")
-        for r in checked:
+                     f"{len(survivors)} passed the search, in {len(leads)} themes ({time.time() - t0:.0f}s)")
+        for r in sorted(checked, key=lambda r: (r["verdict"] != "survivor", -((r["confirm"].get("lift")) or 0))):
             c = r["confirm"]
             lines.append(f"  {r['verdict']:<13} {' + '.join(r['condition'])}: lift {r['lift']:.2f} on {r['days']} days "
                          f"-> {c.get('lift') or 0:.2f} on {c.get('days', 0)} days (p {c.get('p') or 1:.3f}, "
