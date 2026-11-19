@@ -1,0 +1,83 @@
+1
+00:00:00,000 --> 00:00:02,583
+Draw your own analysis straight on the chart.
+
+2
+00:00:02,633 --> 00:00:07,285
+Drawings are saved to your account, on that asset, and show on every candle size.
+
+3
+00:00:29,849 --> 00:00:33,605
+Press the pencil at the top right of the chart to open the drawing tools.
+
+4
+00:00:34,082 --> 00:00:36,921
+A trend line: drag from one point to another.
+
+5
+00:00:36,971 --> 00:00:39,212
+Here, under two rising lows.
+
+6
+00:00:39,680 --> 00:00:42,979
+A horizontal line marks a price level right across the chart,
+
+7
+00:00:42,999 --> 00:00:44,823
+with its price on the right.
+
+8
+00:00:45,293 --> 00:00:49,305
+Fibonacci retracement: drag from a swing low to a swing high.
+
+9
+00:00:49,355 --> 00:00:54,284
+The golden pocket, between sixty-one point eight and sixty-five percent, is shaded.
+
+10
+00:00:54,764 --> 00:00:55,156
+Measure:
+
+11
+00:00:55,176 --> 00:00:59,395
+drag between two points to see the percent change and the number of candles.
+
+12
+00:01:01,137 --> 00:01:05,917
+The long or short position: drag from your entry to your stop, then tap your target.
+
+13
+00:01:05,967 --> 00:01:08,272
+It shows the reward against the risk.
+
+14
+00:01:08,759 --> 00:01:11,406
+Add a text note anywhere, then press Enter.
+
+15
+00:01:12,846 --> 00:01:15,557
+Pick a colour and a line width before you draw.
+
+16
+00:01:15,607 --> 00:01:17,333
+Undo takes back the last change,
+
+17
+00:01:17,353 --> 00:01:20,600
+and the eye hides your drawings without deleting them.
+
+18
+00:01:21,293 --> 00:01:25,134
+The share button sends the chart, with your drawings, to your communities.
+
+19
+00:01:25,184 --> 00:01:28,492
+They open it on the same asset, with your drawings on it.
+
+20
+00:01:28,962 --> 00:01:31,779
+And the bin removes every drawing on this asset.
+
+21
+00:01:31,829 --> 00:01:34,583
+Press it twice, so you can't do it by accident.
