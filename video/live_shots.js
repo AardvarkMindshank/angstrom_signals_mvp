@@ -58,7 +58,10 @@ const OUT = process.argv[2] || "out/shots";
     const table = page.locator("summary").filter({ hasText: "Crypto Signals" }).first().locator("xpath=..");
     const wl = table.locator("label").filter({ hasText: "My Watchlist" }).first();
     if (await wl.count()) { await wl.click().catch(() => {}); await settle(2500); }
-    await table.locator("table").getByText("Bitcoin", { exact: true }).first().click().catch(() => {});
+    let coin = table.locator("table").getByText("Bitcoin", { exact: true }).first();
+    if (!(await coin.count())) coin = table.getByText("Bitcoin", { exact: false }).first();
+    await coin.click().catch(() => {});
+    await settle(2500);
     await settle(1500);
     await fold("Crypto Signals");
     const s = await expand("Interactive Chart"); await settle(4000);
