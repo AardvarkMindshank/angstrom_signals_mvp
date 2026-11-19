@@ -21,7 +21,7 @@
   {
    "id": "trend",
    "screen": "A trend line under two lows",
-   "say": "A trend line: drag from one point to another. | Here, under two rising lows."
+   "say": "A trend line: drag from one point to another. | Here, joining two swing points."
   },
   {
    "id": "hline",

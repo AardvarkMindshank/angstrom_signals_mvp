@@ -269,15 +269,43 @@ async function chartPoints(h) {
     const swingLo = argmin(Math.floor(a + (b - a) * 0.35), Math.floor(a + (b - a) * 0.7));
     const recentHi = argmax(Math.floor(a + (b - a) * 0.6), b);
     const fibLo = lo < hi ? lo : argmin(a, hi), fibHi = hi;
+    const hi1 = argmax(a, mid), hi2 = argmax(mid + 1, b);
+    // A trend line along two swing points: under two rising lows, or else over two falling highs.
+    const rising = L[lo2] > L[lo1];
+    const t1 = rising ? pt(lo1, L[lo1]) : pt(hi1, H[hi1]), t2 = rising ? pt(lo2, L[lo2]) : pt(hi2, H[hi2]);
     return {
       pane: { x: ox, y: oy, w: size ? size.width : host.width - 70, h: size ? size.height : host.height * 0.6 },
-      low: pt(lo, L[lo]), high: pt(hi, H[hi]), low1: pt(lo1, L[lo1]), low2: pt(lo2, L[lo2]),
+      low: pt(lo, L[lo]), high: pt(hi, H[hi]), low1: pt(lo1, L[lo1]), low2: pt(lo2, L[lo2]), trendA: t1, trendB: t2,
+      priceY: null,
       swingLow: pt(swingLo, L[swingLo]), recentHigh: pt(recentHi, H[recentHi]),
       fibLow: pt(fibLo, L[fibLo]), fibHigh: pt(fibHi, H[fibHi]),
       last: pt(b, C[b]), at: (f, p) => null, from: a, to: b,
       xs: [pt(a + Math.floor((b - a) * 0.2), C[a]).x, pt(a + Math.floor((b - a) * 0.55), C[a]).x],
     };
   }, LWC);
+}
+
+// Screen point of a price at a fraction across the price pane.
+async function pricePoint(h, price, f) {
+  return h.page.evaluate(([sel, price, f]) => {
+    const root = document.querySelector(sel);
+    const s = root && root.__draw, chart = root && root.__chart;
+    if (!s || !chart) return null;
+    const overlay = [...root.querySelectorAll("div")].find((d) => d.style.zIndex === "3");
+    const host = overlay ? overlay.parentElement.getBoundingClientRect() : root.getBoundingClientRect();
+    let left = 0, size = null;
+    try { left = chart.priceScale("left").width() || 0; } catch (e) { left = 0; }
+    try { size = chart.paneSize(0); } catch (e) { size = null; }
+    const y = s.Y(price);
+    return y === null ? null : { x: host.left + left + (size ? size.width : host.width - 70) * f, y: host.top + y };
+  }, [LWC, price, f]);
+}
+
+// Sonar off for a cleaner price chart (videos 2, 3 and 5), keeping what each video turns on itself.
+async function quietChart(h) {
+  await pill(h, /Sonar\s*$/, false);
+  await pill(h, "Sonar markers", false);
+  await pill(h, "Liquidation levels", false);
 }
 
 // Open the drawing toolbar (the pencil) and pick a tool by the start of its hover text.
@@ -331,6 +359,21 @@ async function clearDrawings(h, show = true) {
   await h.wait(500);
   await bin().click().catch(() => {});
   await h.wait(700);
+}
+
+// A Streamlit drop-down inside `box`: open it and choose the option at `n` (0 = the first).
+async function pickNth(h, box, n, show = true) {
+  let opener = box.locator('[role="combobox"], [data-baseweb="select"], input').first();
+  if (!(await opener.count())) opener = box;
+  if (show) await h.glide(opener, 300);
+  await opener.click({ force: true }).catch(() => {});
+  if (!(await h.page.locator('[role="option"]').count())) await h.page.keyboard.press("ArrowDown");
+  await h.page.waitForSelector('[role="option"]', { timeout: 5000 }).catch(() => {});
+  await h.wait(800);
+  const option = h.page.locator('[role="option"]').nth(n);
+  if (show) await h.glide(option, 300);
+  await option.click().catch(() => {});
+  await h.settle();
 }
 
 // Point the mouse across the price pane, candle by candle, so the legend changes.
@@ -1160,6 +1203,8 @@ module.exports = {
   // ------------------------------------------------------------------------------------------ Charts series
   "c1-charts-overview": {
     login: signInWide,
+    setup: async (h) => { await openChart(h, "Bitcoin", "1D", "1Y"); await h.page.evaluate(() => window.scrollTo(0, 0));
+      await h.page.locator('[data-testid="stMain"]').evaluate((n) => n.scrollTo(0, 0)).catch(() => {}); },
     idea: async (h) => {
       await h.card({ kicker: "📊 Charts", title: "Two charts, one set of readings",
         lines: ["✓ The fast chart: zoom, scroll, draw, 5-minute to monthly candles",
@@ -1180,7 +1225,7 @@ module.exports = {
       await h.fold("Settings", SIDEBAR);
       const tab = h.page.locator("#angstrom-sidebar-tab:not(.is-closed)");
       if (await tab.count()) { await tab.click().catch(() => {}); await h.wait(700); }
-      await openChart(h, "Bitcoin", "1D", "1Y");
+      await chartTop(h);
       await h.ring(h.page.locator(LWC).first(), 4);
     },
     candles: async (h) => {
@@ -1243,13 +1288,19 @@ module.exports = {
 
   "c2-drawing-tools": {
     login: signInWide,
+    setup: async (h) => {
+      await openChart(h, "Bitcoin", "4h", "3M");
+      await quietChart(h);
+      await chartTop(h);
+      await clearDrawings(h, false);
+      await stopDrawing(h);
+      await h.page.locator(LWC + ' .ang-lwc-tools button[aria-label^="Drawing tools"]').first().click().catch(() => {});
+      await h.wait(500);
+    },
     idea: async (h) => {
       await h.card({ kicker: "📊 Charts", title: "Draw your own analysis",
         lines: ["✓ Lines, levels, Fibonacci, measurements, notes", "✓ Saved to your account, on that asset",
                 "✓ Shown on every candle size"] });
-      await openChart(h, "Bitcoin", "4h", "3M");
-      await clearDrawings(h, false);
-      await stopDrawing(h);
     },
     open: async (h) => {
       await h.clear();
@@ -1261,7 +1312,7 @@ module.exports = {
       await h.clear();
       await drawTool(h, "Trend line");
       const p = await chartPoints(h);
-      if (p) await drag(h, { x: p.low1.x, y: p.low1.y + 4 }, { x: p.low2.x, y: p.low2.y + 4 });
+      if (p) await drag(h, p.trendA, p.trendB);
     },
     hline: async (h) => {
       await drawTool(h, "Horizontal line");
@@ -1326,13 +1377,17 @@ module.exports = {
 
   "c3-levels": {
     login: signInWide,
+    setup: async (h) => {
+      await openChart(h, "Bitcoin", "4h", "1M");
+      await quietChart(h);
+      for (const name of ["Fair value gaps", "Single prints"]) await pill(h, name, false);
+      await chartTop(h);
+      await clearDrawings(h, false);
+      await stopDrawing(h);
+    },
     idea: async (h) => {
       await h.card({ kicker: "📊 Charts", title: "Where the money sits",
         lines: ["✓ Liquidation levels", "✓ Fair value gaps and single prints", "✓ Anchored VWAP and the volume profile"] });
-      await openChart(h, "Bitcoin", "4h", "1M");
-      await clearDrawings(h, false);
-      await stopDrawing(h);
-      for (const name of ["Liquidation levels", "Fair value gaps", "Single prints"]) await pill(h, name, false);
     },
     open: async (h) => {
       await h.clear();
@@ -1386,12 +1441,15 @@ module.exports = {
 
   "c4-signals-on-chart": {
     login: signInWide,
+    setup: async (h) => {
+      await openChart(h, "Bitcoin", "1D", "1Y");
+      for (const name of [/Sonar\s*$/, "Sonar markers", "Chart shapes", "Liquidation levels"]) await pill(h, name, false);
+      await chartTop(h);
+    },
     idea: async (h) => {
       await h.card({ kicker: "📊 Charts", title: "See the readings where they happened",
         lines: ["✓ Sonar strip and markers", "✓ Chart shapes and crosses", "✓ A Signal Set as colour bands",
                 "✓ Fed, CPI and jobs days"] });
-      await openChart(h, "Bitcoin", "1D", "1Y");
-      for (const name of ["Sonar markers", "Chart shapes"]) await pill(h, name, false);
     },
     open: async (h) => {
       await h.clear();
@@ -1400,7 +1458,7 @@ module.exports = {
     },
     sonar: async (h) => {
       await h.clear();
-      await pill(h, /^📡 Sonar$/, true);
+      await pill(h, /Sonar\s*$/, true);
       await chartTop(h, -140);
       await hoverAcross(h, 0.5, 0.9, 3);
     },
@@ -1419,7 +1477,7 @@ module.exports = {
     },
     shapes: async (h) => {
       await pill(h, "Sonar markers", false);
-      await pill(h, /^📡 Sonar$/, false);
+      await pill(h, /Sonar\s*$/, false);
       await pill(h, "Chart shapes", true);
       await chartTop(h);
       await h.wait(2500);
@@ -1430,12 +1488,7 @@ module.exports = {
       await box.evaluate((n) => n.scrollIntoView({ block: "center", behavior: "smooth" })).catch(() => {});
       await h.wait(600);
       await h.ring(box);
-      await h.press(box.locator('[data-baseweb="select"], [role="combobox"], input').first(), false);
-      await h.wait(900);
-      const option = h.page.locator('[role="option"]').nth(1);
-      await h.glide(option, 300);
-      await option.click().catch(() => {});
-      await h.settle();
+      await pickNth(h, box, 1);
       await h.clear();
       await chartTop(h);
       await h.wait(2000);
@@ -1443,14 +1496,13 @@ module.exports = {
     events: async (h) => {
       const box = h.page.locator(".st-key-chart_band_set").first();
       await box.evaluate((n) => n.scrollIntoView({ block: "center", behavior: "smooth" })).catch(() => {});
-      await h.press(box.locator('[data-baseweb="select"], [role="combobox"], input').first(), false);
-      await h.wait(600);
-      await h.page.locator('[role="option"]').first().click().catch(() => {});
-      await h.settle();
+      await pickNth(h, box, 0, false);
       const ev = h.page.locator(".st-key-chart_events").first();
       await ev.evaluate((n) => n.scrollIntoView({ block: "center", behavior: "smooth" })).catch(() => {});
       await h.wait(500);
       await h.ring(ev);
+      const ticked = await ev.locator('input[type="checkbox"]').first().isChecked().catch(() => true);
+      if (!ticked) await h.press(ev.locator("label").first());
       await h.wait(1500);
       await h.clear();
       await chartTop(h);
@@ -1465,10 +1517,19 @@ module.exports = {
 
   "c5-plan-entry": {
     login: signInWide,
+    setup: async (h) => {
+      await openChart(h, "Bitcoin", "1h", "7D");
+      await quietChart(h);
+      await clearDrawings(h, false);
+      await stopDrawing(h);
+      const head = h.sum("Ladder helper");
+      const open = await head.evaluate((n) => !!(n.parentElement && n.parentElement.open)).catch(() => false);
+      if (open) { await head.click().catch(() => {}); await h.settle(); }
+      await chartTop(h);
+    },
     idea: async (h) => {
       await h.card({ kicker: "📊 Charts", title: "Don't buy all at once",
         lines: ["✓ A ladder of orders below the price", "✓ Spaced by the coin's own daily move", "✓ Drawn on the chart"] });
-      await openChart(h, "Bitcoin", "4h", "1M");
     },
     open: async (h) => {
       await h.clear();
@@ -1505,23 +1566,33 @@ module.exports = {
       await h.wait(2500);
     },
     fib: async (h) => {
-      await chartTop(h);
-      await drawTool(h, "Fibonacci");
-      const pts = await chartPoints(h);
-      if (pts) await drag(h, pts.fibLow, pts.fibHigh, 36);
-      await stopDrawing(h);
-      await h.wait(1500);                       // the drawing saves itself
+      await h.clear();
       const place = h.page.locator('[class*="st-key-ladder_place_"]').first();
       await place.evaluate((n) => n.scrollIntoView({ block: "center", behavior: "smooth" })).catch(() => {});
       await h.wait(500);
       await h.press(place.locator("button").filter({ hasText: "On Fibonacci levels" }).first());
-      await h.wait(1200);
-      const table = h.section_("Ladder helper").locator("table.lad").first();
-      await h.ring(table);
-      await h.wait(1800);
+      await h.wait(1000);
+      // No level left below the price (a falling market): the mirror, a short, measured from the last swing high.
+      const table = () => h.section_("Ladder helper").locator("table.lad").first();
+      let side = "long";
+      if (!(await table().count())) {
+        side = "short";
+        await h.press(h.page.locator('[class*="st-key-ladder_side_"] button').filter({ hasText: "Short" }).first());
+        await h.wait(1000);
+      }
+      const words = await h.section_("Ladder helper").getByText(/low [\d.,]+, high [\d.,]+/).first().textContent().catch(() => "");
+      const m = (words || "").match(/low ([\d.,]+), high ([\d.,]+)/);
+      if (await table().count()) await h.ring(table());
+      await h.wait(1500);
       await h.clear();
       await chartTop(h);
-      await h.wait(2500);
+      if (m) {                                   // the same move drawn with the Fibonacci tool: its lines meet the orders
+        const lo = parseFloat(m[1].replace(/,/g, "")), hi = parseFloat(m[2].replace(/,/g, ""));
+        const a = await pricePoint(h, side === "long" ? lo : hi, 0.35), b = await pricePoint(h, side === "long" ? hi : lo, 0.6);
+        if (a && b) { await drawTool(h, "Fibonacci"); await drag(h, a, b, 36); await stopDrawing(h); }
+      }
+      await h.page.mouse.move(1150, 560);
+      await h.wait(2000);
     },
     five: async (h) => {
       await chartControls(h);
@@ -1533,6 +1604,7 @@ module.exports = {
       await chartControls(h);
       await timeframe(h, "4h", "1M");
       await clearDrawings(h, false);
+      await h.page.locator('[class*="st-key-ladder_side_"] button').filter({ hasText: "Long" }).first().click().catch(() => {});
       const place = h.page.locator('[class*="st-key-ladder_place_"]').first();
       await place.locator("button").filter({ hasText: "By daily move" }).first().click().catch(() => {});
       await h.settle();

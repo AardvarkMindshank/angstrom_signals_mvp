@@ -16,7 +16,7 @@
   {
    "id": "open",
    "screen": "The ladder helper under the chart",
-   "say": "The ladder helper sits right under the chart."
+   "say": "The ladder helper sits right under the chart. | Here, Bitcoin on one-hour candles."
   },
   {
    "id": "style",
@@ -36,7 +36,7 @@
   {
    "id": "fib",
    "screen": "Orders on Fibonacci levels",
-   "say": "Or put the orders on Fibonacci levels. | Draw a Fibonacci from the swing low to the high, then choose On Fibonacci levels. | The orders move onto the retracement levels, and the stop goes just past the swing low. | With no drawing, it measures the last swing for you."
+   "say": "Or put the orders on Fibonacci levels. | It measures the last swing, or uses your own Fibonacci drawing, and the stop goes just past the swing. | Drawn on the same move, the Fibonacci lines meet the orders."
   },
   {
    "id": "five",
