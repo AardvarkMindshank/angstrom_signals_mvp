@@ -58,7 +58,34 @@ const OUT = process.argv[2] || "out/shots";
     await page.locator("summary").filter({ hasText: "Crypto Signals" }).first().locator("xpath=..").getByText("Bitcoin", { exact: false }).first().click().catch(() => {});
     await settle(1500);
     await fold("Crypto Signals");
-    const s = await expand("Interactive Chart"); await settle(4000); await toTop(s); await shot("chart"); await fold("Interactive Chart");
+    const s = await expand("Interactive Chart"); await settle(4000);
+    await page.waitForSelector(".ang-lwc canvas", { timeout: 90000 }).catch(() => {});
+    // Daily candles over a year, with the Sonar strip and markers and chart shapes, so the picture shows the chart
+    // at work; the whole chart is photographed (not the top of the section), then the pills are put back.
+    const press = async (key, words) => {
+      const b = page.locator(`.st-key-${key} button`).filter({ hasText: words }).first();
+      if (await b.count()) { await b.click().catch(() => {}); await settle(1500); }
+    };
+    const pillOn = async (words) => {
+      const b = page.locator(".st-key-chart_indicators button").filter({ hasText: words }).first();
+      if (!(await b.count())) return false;
+      const on = await b.evaluate((n) => n.dataset.testid === "stBaseButton-pillsActive" || n.getAttribute("aria-pressed") === "true").catch(() => false);
+      if (!on) { await b.click().catch(() => {}); await settle(1500); return true; }
+      return false;
+    };
+    await press("chart_interval", /^1D$/);
+    await press("chart_range", /^1Y$/);
+    const turned = [];
+    for (const words of [/^📡 Sonar$/, "Sonar markers", "Chart shapes"]) if (await pillOn(words)) turned.push(words);
+    await settle(3000);
+    const chart = page.locator(".ang-lwc").first();
+    await toTop(s); await shot("chart");
+    await chart.evaluate((n) => n.scrollIntoView({ block: "start" })).catch(() => {});
+    await page.waitForTimeout(1200);
+    await page.mouse.move(1430, 890);
+    await chart.screenshot({ path: path.join(OUT, "chart_full.png") }).then(() => console.log("saved chart_full")).catch((e) => console.log("chart_full: " + e));
+    for (const words of turned) await press("chart_indicators", words);
+    await fold("Interactive Chart");
   });
   await step("why", async () => { const s = await expand("Why these readings"); await settle(2000); await toTop(s); await shot("why_these_readings"); await fold("Why these readings"); });
   await step("lattice", async () => {
