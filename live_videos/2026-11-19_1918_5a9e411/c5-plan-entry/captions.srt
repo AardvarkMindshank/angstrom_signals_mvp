@@ -1,0 +1,79 @@
+1
+00:00:00,000 --> 00:00:02,476
+Many traders don't buy all at once.
+
+2
+00:00:02,526 --> 00:00:07,221
+They place a ladder of orders below the price, so a dip fills them at better prices.
+
+3
+00:00:07,665 --> 00:00:10,269
+The ladder helper sits right under the chart.
+
+4
+00:00:10,319 --> 00:00:12,752
+Here, Bitcoin on one-hour candles.
+
+5
+00:00:13,192 --> 00:00:15,988
+Choose long or short, and the kind of market.
+
+6
+00:00:16,038 --> 00:00:19,346
+Consolidating gives equal orders close to the price.
+
+7
+00:00:19,396 --> 00:00:23,344
+Trending makes the nearest order smallest and the furthest largest.
+
+8
+00:00:25,376 --> 00:00:28,496
+The orders are spaced by this coin's typical daily move,
+
+9
+00:00:28,516 --> 00:00:32,460
+so a quiet coin gets a tight ladder and a wild one a wide ladder.
+
+10
+00:00:32,510 --> 00:00:34,858
+The stop sits beyond the last order.
+
+11
+00:00:35,293 --> 00:00:37,214
+Switch on Show on chart.
+
+12
+00:00:37,264 --> 00:00:40,955
+Blue lines for the orders, thicker for a bigger share, red for the stop,
+
+13
+00:00:40,975 --> 00:00:44,007
+and grey for your average price if every order fills.
+
+14
+00:00:44,445 --> 00:00:47,049
+Or put the orders on Fibonacci levels.
+
+15
+00:00:47,099 --> 00:00:50,712
+It measures the last swing, or uses your own Fibonacci drawing,
+
+16
+00:00:50,732 --> 00:00:53,223
+and the stop goes just past the swing.
+
+17
+00:00:53,273 --> 00:00:56,922
+Drawn on the same move, the Fibonacci lines meet the orders.
+
+18
+00:00:58,427 --> 00:01:01,543
+For the final entry, switch to five-minute candles.
+
+19
+00:01:01,593 --> 00:01:04,240
+They cover the last seven days, for crypto.
+
+20
+00:01:15,577 --> 00:01:17,776
+Switch the lines off when you're done.

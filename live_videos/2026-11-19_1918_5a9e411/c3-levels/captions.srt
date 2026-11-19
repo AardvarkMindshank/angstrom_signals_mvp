@@ -1,0 +1,71 @@
+1
+00:00:00,000 --> 00:00:03,884
+Some prices matter more than others, because of what traders did there.
+
+2
+00:00:03,934 --> 00:00:06,303
+The chart can show five kinds of them.
+
+3
+00:00:06,773 --> 00:00:09,249
+We're on Bitcoin, with four-hour candles.
+
+4
+00:00:09,695 --> 00:00:14,134
+Liquidation levels estimate where leveraged traders would be forced to close.
+
+5
+00:00:14,184 --> 00:00:19,049
+Red for longs below the price, green for shorts above. Brighter means more money.
+
+6
+00:00:19,496 --> 00:00:23,337
+Fair value gaps are price ranges a fast move jumped across.
+
+7
+00:00:23,387 --> 00:00:26,887
+Green ones were left by rises, red ones by falls.
+
+8
+00:00:26,937 --> 00:00:30,032
+Each stays shaded until price trades back through it.
+
+9
+00:00:36,065 --> 00:00:40,930
+Single prints, in violet, are prices only one half hour of a day traded through.
+
+10
+00:00:40,980 --> 00:00:44,096
+Thin areas, which price often comes back to fill.
+
+11
+00:00:46,714 --> 00:00:49,254
+The anchor tool draws an anchored VWAP.
+
+12
+00:00:49,304 --> 00:00:53,551
+Tap a candle, such as a swing low, to see the average price paid since then,
+
+13
+00:00:53,571 --> 00:00:54,937
+weighted by volume.
+
+14
+00:00:55,645 --> 00:00:59,422
+The volume profile tool: drag across a stretch of the chart.
+
+15
+00:00:59,472 --> 00:01:03,063
+It shows at which prices most trading happened, the busiest price,
+
+16
+00:01:03,083 --> 00:01:06,172
+and the band holding seventy percent of the volume.
+
+17
+00:01:06,619 --> 00:01:08,647
+None of these is a forecast.
+
+18
+00:01:08,697 --> 00:01:13,093
+They show where price has reason to pause or turn, so you can plan around them.

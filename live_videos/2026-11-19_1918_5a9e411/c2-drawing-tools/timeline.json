@@ -1,0 +1,61 @@
+{
+ "steps": [
+  {
+   "id": "idea",
+   "start": 60.501,
+   "say": "Draw your own analysis straight on the chart. | Drawings are saved to your account, on that asset, and show on every candle size."
+  },
+  {
+   "id": "open",
+   "start": 68.232,
+   "say": "Press the pencil at the top right of the chart to open the drawing tools."
+  },
+  {
+   "id": "trend",
+   "start": 72.425,
+   "say": "A trend line: drag from one point to another. | Here, joining two swing points."
+  },
+  {
+   "id": "hline",
+   "start": 77.942,
+   "say": "A horizontal line marks a price level right across the chart, with its price on the right."
+  },
+  {
+   "id": "fib",
+   "start": 83.524,
+   "say": "Fibonacci retracement: drag from a swing low to a swing high. | The golden pocket, between sixty-one point eight and sixty-five percent, is shaded."
+  },
+  {
+   "id": "measure",
+   "start": 92.959,
+   "say": "Measure: drag between two points to see the percent change and the number of candles."
+  },
+  {
+   "id": "position",
+   "start": 98.694,
+   "say": "The long or short position: drag from your entry to your stop, then tap your target. | It shows the reward against the risk."
+  },
+  {
+   "id": "note",
+   "start": 106.274,
+   "say": "Add a text note anywhere, then press Enter."
+  },
+  {
+   "id": "style",
+   "start": 110.307,
+   "say": "Pick a colour and a line width before you draw. | Undo takes back the last change, and the eye hides your drawings without deleting them."
+  },
+  {
+   "id": "share",
+   "start": 118.633,
+   "say": "The share button sends the chart, with your drawings, to your communities. | They open it on the same asset, with your drawings on it."
+  },
+  {
+   "id": "clear",
+   "start": 126.275,
+   "say": "And the bin removes every drawing on this asset. | Press it twice, so you can't do it by accident."
+  }
+ ],
+ "end": 133.837,
+ "trim": 60.501
+}
