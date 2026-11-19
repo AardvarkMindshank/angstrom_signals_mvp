@@ -27,3 +27,5 @@ live_videos/2026-11-18_0228_6b4d5a3/u3-social
 live_videos/2026-11-18_0228_6b4d5a3/u5-alerts
 live_videos/2026-11-18_0247_7b3c982/u2-ai-navigator
 live_videos/2026-11-18_0247_7b3c982/u4-dynamic-funnel
+live_videos/2026-11-19_0528_de208c0/s1-soundings
+live_videos/2026-11-19_0516_10450be/s2-soundings-in-depth

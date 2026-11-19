@@ -59,6 +59,11 @@ SERIES = {
     "tides": ("Tides", [
         ("t1-tides", "Tides", "1:47"),
     ]),
+    # Recorded on the live site (demo account), 19 Nov 2026: a short overview and a longer explainer with pictures.
+    "soundings": ("Soundings", [
+        ("s1-soundings", "Soundings at a glance", "1:31"),
+        ("s2-soundings-in-depth", "Soundings in depth", "4:48"),
+    ]),
 }
 STATE = "training_video"
 
