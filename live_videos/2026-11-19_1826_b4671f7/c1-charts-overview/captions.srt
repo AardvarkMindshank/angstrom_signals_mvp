@@ -1,0 +1,95 @@
+1
+00:00:00,000 --> 00:00:02,668
+Angstrom Signals has two price charts.
+
+2
+00:00:02,718 --> 00:00:06,602
+The fast chart, built for trading, and the classic chart, the original.
+
+3
+00:00:06,652 --> 00:00:09,363
+Both use the same readings and indicators.
+
+4
+00:00:09,818 --> 00:00:12,337
+Pick one in Settings, under Price chart.
+
+5
+00:00:12,387 --> 00:00:16,548
+TradingView is the fast chart, and it's the one we'll use in this series.
+
+6
+00:00:18,297 --> 00:00:23,056
+Click any asset in the signal tables, and it opens in the Interactive Chart.
+
+7
+00:00:50,649 --> 00:00:53,620
+Choose the candle size, from five minutes to monthly,
+
+8
+00:00:53,640 --> 00:00:56,197
+and how much history the chart opens on.
+
+9
+00:00:56,247 --> 00:00:59,512
+A crossed-out range doesn't work with that candle size.
+
+10
+00:02:18,887 --> 00:02:22,366
+Scroll to zoom in and out, and drag to move back in time.
+
+11
+00:02:22,416 --> 00:02:25,273
+The two buttons at the top right go back to your range,
+
+12
+00:02:25,293 --> 00:02:27,110
+or jump to the newest candle.
+
+13
+00:02:36,054 --> 00:02:37,698
+Point at any candle.
+
+14
+00:02:37,748 --> 00:02:40,965
+The legend at the top shows its open, high, low and close,
+
+15
+00:02:40,985 --> 00:02:43,573
+and the value of every line on the chart.
+
+16
+00:02:44,017 --> 00:02:46,813
+Turn indicators on and off with these pills.
+
+17
+00:02:46,863 --> 00:02:50,406
+Panels such as Stoch RSI open underneath the price.
+
+18
+00:02:50,456 --> 00:02:53,593
+All and Clear, at the end of the row, switch them all at once.
+
+19
+00:03:01,697 --> 00:03:04,877
+Drag the bar under the chart to make it taller or shorter.
+
+20
+00:03:04,927 --> 00:03:07,275
+Your choices are saved to your account.
+
+21
+00:03:07,715 --> 00:03:09,295
+That's the basics.
+
+22
+00:03:09,345 --> 00:03:09,596
+Next:
+
+23
+00:03:09,616 --> 00:03:14,042
+the drawing tools, the price levels traders watch, the signals drawn on the chart,
+
+24
+00:03:14,062 --> 00:03:15,554
+and planning an entry.

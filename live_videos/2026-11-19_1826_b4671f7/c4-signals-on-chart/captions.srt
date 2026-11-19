@@ -1,0 +1,63 @@
+1
+00:00:00,000 --> 00:00:04,353
+The readings in your tables, drawn on the chart, on the candles where they happened.
+
+2
+00:00:31,004 --> 00:00:34,184
+We're on Bitcoin, with daily candles over the last year.
+
+3
+00:00:34,627 --> 00:00:36,679
+Sonar adds a strip under the price:
+
+4
+00:00:36,699 --> 00:00:41,498
+momentum waves, money flow, and big dots where momentum turns at an extreme.
+
+5
+00:00:41,943 --> 00:00:45,294
+Sonar markers put the signals on the candles themselves.
+
+6
+00:00:45,344 --> 00:00:49,270
+Pick which ones to show in this row, and point at one to see what it means.
+
+7
+00:00:51,591 --> 00:00:55,379
+Chart shapes outlines head and shoulders, double tops and double bottoms,
+
+8
+00:00:55,399 --> 00:00:57,630
+with the neckline and a rough target.
+
+9
+00:00:57,680 --> 00:01:00,881
+Gold and grey stars mark golden and death crosses.
+
+10
+00:01:03,041 --> 00:01:05,176
+Show a Signal Set on the chart.
+
+11
+00:01:05,226 --> 00:01:08,418
+Every day is coloured by the Set's answer at that day's close:
+
+12
+00:01:08,438 --> 00:01:10,603
+green where its conditions were met.
+
+13
+00:01:14,461 --> 00:01:20,244
+Dashed lines mark the big US releases: Fed decisions, inflation and jobs reports.
+
+14
+00:01:20,294 --> 00:01:22,855
+The next ones are drawn ahead of the last candle.
+
+15
+00:01:30,527 --> 00:01:32,896
+Turn any of them off with the same pills.
+
+16
+00:01:32,946 --> 00:01:35,060
+Your choices stay with your account.

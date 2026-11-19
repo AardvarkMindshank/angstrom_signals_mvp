@@ -1,0 +1,51 @@
+{
+ "steps": [
+  {
+   "id": "idea",
+   "start": 29.296,
+   "say": "Angstrom Signals has two price charts. | The fast chart, built for trading, and the classic chart, the original. | Both use the same readings and indicators."
+  },
+  {
+   "id": "engine",
+   "start": 39.114,
+   "say": "Pick one in Settings, under Price chart. | TradingView is the fast chart, and it's the one we'll use in this series."
+  },
+  {
+   "id": "open",
+   "start": 47.593,
+   "say": "Click any asset in the signal tables, and it opens in the Interactive Chart."
+  },
+  {
+   "id": "candles",
+   "start": 79.945,
+   "say": "Choose the candle size, from five minutes to monthly, and how much history the chart opens on. | A crossed-out range doesn't work with that candle size."
+  },
+  {
+   "id": "zoom",
+   "start": 168.183,
+   "say": "Scroll to zoom in and out, and drag to move back in time. | The two buttons at the top right go back to your range, or jump to the newest candle."
+  },
+  {
+   "id": "legend",
+   "start": 185.35,
+   "say": "Point at any candle. | The legend at the top shows its open, high, low and close, and the value of every line on the chart."
+  },
+  {
+   "id": "indicators",
+   "start": 193.313,
+   "say": "Turn indicators on and off with these pills. | Panels such as Stoch RSI open underneath the price. | All and Clear, at the end of the row, switch them all at once."
+  },
+  {
+   "id": "resize",
+   "start": 210.993,
+   "say": "Drag the bar under the chart to make it taller or shorter. | Your choices are saved to your account."
+  },
+  {
+   "id": "series",
+   "start": 217.011,
+   "say": "That's the basics. | Next: the drawing tools, the price levels traders watch, the signals drawn on the chart, and planning an entry."
+  }
+ ],
+ "end": 226.804,
+ "trim": 29.296
+}

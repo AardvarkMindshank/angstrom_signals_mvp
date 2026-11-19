@@ -1,0 +1,46 @@
+{
+ "steps": [
+  {
+   "id": "idea",
+   "start": 25.681,
+   "say": "Many traders don't buy all at once. | They place a ladder of orders below the price, so a dip fills them at better prices."
+  },
+  {
+   "id": "open",
+   "start": 56.635,
+   "say": "The ladder helper sits right under the chart."
+  },
+  {
+   "id": "style",
+   "start": 73.706,
+   "say": "Choose long or short, and the kind of market. | Consolidating gives equal orders close to the price. | Trending makes the nearest order smallest and the furthest largest."
+  },
+  {
+   "id": "spacing",
+   "start": 90.938,
+   "say": "The orders are spaced by this coin's typical daily move, so a quiet coin gets a tight ladder and a wild one a wide ladder. | The stop sits beyond the last order."
+  },
+  {
+   "id": "lines",
+   "start": 100.872,
+   "say": "Switch on Show on chart. | Blue lines for the orders, thicker for a bigger share, red for the stop, and grey for your average price if every order fills."
+  },
+  {
+   "id": "fib",
+   "start": 117.837,
+   "say": "Or put the orders on Fibonacci levels. | Draw a Fibonacci from the swing low to the high, then choose On Fibonacci levels. | The orders move onto the retracement levels, and the stop goes just past the swing low. | With no drawing, it measures the last swing for you."
+  },
+  {
+   "id": "five",
+   "start": 134.801,
+   "say": "For the final entry, switch to five-minute candles. | They cover the last seven days, for crypto."
+  },
+  {
+   "id": "tidy",
+   "start": 223.715,
+   "say": "Switch the lines off when you're done."
+  }
+ ],
+ "end": 327.581,
+ "trim": 25.681
+}
