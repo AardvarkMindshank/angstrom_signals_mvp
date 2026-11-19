@@ -2285,5 +2285,6 @@
   "Anchored VWAP: tap a candle to draw the volume-weighted average price from there on": "Anchored VWAP: แตะแท่งเทียนเพื่อวาดราคาเฉลี่ยถ่วงน้ำหนักด้วยวอลุ่มตั้งแต่จุดนั้น",
   "Volume profile: drag across a stretch of the chart to see at which prices most trading happened": "Volume profile: ลากผ่านช่วงหนึ่งของกราฟเพื่อดูว่าราคาใดมีการซื้อขายมากที่สุด",
   "Busiest price": "ราคาที่ซื้อขายมากที่สุด",
-  "70% of volume": "70% ของวอลุ่ม"
+  "70% of volume": "70% ของวอลุ่ม",
+  "📍 Single prints": "📍 Single print"
 }

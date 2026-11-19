@@ -2285,5 +2285,6 @@
   "Anchored VWAP: tap a candle to draw the volume-weighted average price from there on": "锚定VWAP:点击一根K线,从该处开始绘制成交量加权平均价",
   "Volume profile: drag across a stretch of the chart to see at which prices most trading happened": "成交量分布:在图表上拖过一段区间,查看哪些价位成交最多",
   "Busiest price": "成交最多的价位",
-  "70% of volume": "70%的成交量"
+  "70% of volume": "70%的成交量",
+  "📍 Single prints": "📍 单一印记"
 }

@@ -2285,5 +2285,6 @@
   "Anchored VWAP: tap a candle to draw the volume-weighted average price from there on": "VWAP anclado: toca una vela para dibujar el precio medio ponderado por volumen desde ahí",
   "Volume profile: drag across a stretch of the chart to see at which prices most trading happened": "Perfil de volumen: arrastra sobre un tramo del gráfico para ver en qué precios hubo más operaciones",
   "Busiest price": "Precio con más volumen",
-  "70% of volume": "70% del volumen"
+  "70% of volume": "70% del volumen",
+  "📍 Single prints": "📍 Single prints"
 }

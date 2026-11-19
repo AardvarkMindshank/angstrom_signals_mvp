@@ -2285,5 +2285,6 @@
   "Anchored VWAP: tap a candle to draw the volume-weighted average price from there on": "VWAP neo: chạm vào một nến để vẽ giá trung bình theo khối lượng từ đó trở đi",
   "Volume profile: drag across a stretch of the chart to see at which prices most trading happened": "Hồ sơ khối lượng: kéo qua một đoạn biểu đồ để xem giao dịch nhiều nhất ở mức giá nào",
   "Busiest price": "Giá giao dịch nhiều nhất",
-  "70% of volume": "70% khối lượng"
+  "70% of volume": "70% khối lượng",
+  "📍 Single prints": "📍 Single print"
 }

@@ -2285,5 +2285,6 @@
   "Anchored VWAP: tap a candle to draw the volume-weighted average price from there on": "Sabitlenmiş VWAP: bir muma dokunun, oradan itibaren hacim ağırlıklı ortalama fiyat çizilsin",
   "Volume profile: drag across a stretch of the chart to see at which prices most trading happened": "Hacim profili: grafiğin bir bölümünde sürükleyerek en çok işlemin hangi fiyatlarda olduğunu görün",
   "Busiest price": "En yoğun fiyat",
-  "70% of volume": "Hacmin %70’i"
+  "70% of volume": "Hacmin %70’i",
+  "📍 Single prints": "📍 Single print’lar"
 }

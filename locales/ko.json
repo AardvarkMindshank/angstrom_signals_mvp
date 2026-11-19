@@ -2285,5 +2285,6 @@
   "Anchored VWAP: tap a candle to draw the volume-weighted average price from there on": "앵커드 VWAP: 캔들을 탭하면 그 지점부터 거래량 가중 평균가를 그립니다",
   "Volume profile: drag across a stretch of the chart to see at which prices most trading happened": "거래량 프로파일: 차트 구간을 드래그하면 어느 가격대에서 가장 많이 거래됐는지 보여줍니다",
   "Busiest price": "최다 거래 가격",
-  "70% of volume": "거래량의 70%"
+  "70% of volume": "거래량의 70%",
+  "📍 Single prints": "📍 싱글 프린트"
 }

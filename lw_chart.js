@@ -69,7 +69,7 @@ function signature(data) {
     data.volume[n - 1], data.forming, data.series.map((s) => s.id + ":" + s.pane + ":" + (s.scale || "")),
     data.panes.map((p) => p.height), data.vlines.length, data.price_lines.map((p) => p.price + (p.label || "")).join(","), data.theme.dark, data.theme.bg, data.right_offset,
     (data.zones || []).map((z) => z || "").join("|").length, data.series.map((s) => (s.zones || []).filter((z) => z).length),
-    data.zones_name || "", !!data.fvg, (data.symbols || []).length, (data.shapes || []).length,
+    data.zones_name || "", !!data.fvg, (data.single_prints || []).map((z) => z.from + ":" + z.top + ":" + z.bottom).join(","), (data.symbols || []).length, (data.shapes || []).length,
   ]);
 }
 
@@ -301,7 +301,7 @@ function fairValueGaps(data) {
 }
 
 class FairValueGaps {
-  constructor(gaps) { this.gaps = gaps; this.chart = null; this.series = null; }
+  constructor(gaps, fill, edge) { this.gaps = gaps; this.fill = fill; this.edge = edge; this.chart = null; this.series = null; }
   attached(params) { this.chart = params.chart; this.series = params.series; }
   detached() { this.chart = null; this.series = null; }
   updateAllViews() {}
@@ -319,8 +319,13 @@ class FairValueGaps {
             for (const g of self.gaps) {
               const x = scale.logicalToCoordinate(g.from), y1 = self.series.priceToCoordinate(g.top), y2 = self.series.priceToCoordinate(g.bottom);
               if (x === null || y1 === null || y2 === null) continue;
-              ctx.fillStyle = g.up ? "rgba(8,153,129,0.16)" : "rgba(242,54,69,0.16)";
-              ctx.fillRect(x * hr, Math.min(y1, y2) * vr, right - x * hr, Math.max(1, Math.abs(y2 - y1) * vr));
+              const yTop = Math.min(y1, y2) * vr, h = Math.max(1, Math.abs(y2 - y1) * vr);
+              ctx.fillStyle = self.fill ? self.fill(g) : g.up ? "rgba(8,153,129,0.16)" : "rgba(242,54,69,0.16)";
+              ctx.fillRect(x * hr, yTop, right - x * hr, h);
+              if (self.edge) {                       // single prints: a dotted outline so they read apart from gaps
+                ctx.strokeStyle = self.edge; ctx.lineWidth = hr; ctx.setLineDash([3 * hr, 3 * hr]);
+                ctx.strokeRect(x * hr, yTop, right - x * hr, h); ctx.setLineDash([]);
+              }
             }
           });
         },
@@ -604,6 +609,10 @@ function draw(L, root, data) {
   if (data.symbols && data.symbols.length) candles.attachPrimitive(new SonarSymbols(data.symbols, H, Lo));
   if (data.shapes && data.shapes.length) candles.attachPrimitive(new ShapeLines(data.shapes, theme.dark));
   if (data.fvg) candles.attachPrimitive(new FairValueGaps(fairValueGaps(data)));
+  // 📍 single prints (single_prints.py): violet, dotted edge
+  if (data.single_prints && data.single_prints.length) {
+    candles.attachPrimitive(new FairValueGaps(data.single_prints, () => "rgba(124,58,237,0.13)", "rgba(124,58,237,0.6)"));
+  }
   const symbolWords = {};
   (data.symbols || []).forEach(([i, shape, colour, above, size, words]) => { (symbolWords[i] = symbolWords[i] || []).push([colour, words]); });
 

@@ -2285,5 +2285,6 @@
   "Anchored VWAP: tap a candle to draw the volume-weighted average price from there on": "アンカードVWAP:ローソク足をタップすると、そこからの出来高加重平均価格を表示します",
   "Volume profile: drag across a stretch of the chart to see at which prices most trading happened": "出来高プロファイル:チャートの範囲をドラッグすると、どの価格で最も取引されたかを表示します",
   "Busiest price": "最多取引価格",
-  "70% of volume": "出来高の70%"
+  "70% of volume": "出来高の70%",
+  "📍 Single prints": "📍 シングルプリント"
 }

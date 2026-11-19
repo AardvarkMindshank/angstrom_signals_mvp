@@ -4429,7 +4429,7 @@ def _chart_events() -> list[dict]:
 
 def _tv_chart(asset_type, asset_key, title, layout, tv, interval, range_key, price_px,
               liq_record, show_earnings, stock_watchlist, band_set=None, show_events=False,
-              ladder_lines=(), fvg=False) -> None:
+              ladder_lines=(), fvg=False, single_prints=False) -> None:
     """Draw the TradingView chart from candles already loaded by _tv_candles."""
     frame = tv["frame"]
     if "mc_wt1" not in frame.columns:
@@ -4457,6 +4457,7 @@ def _tv_chart(asset_type, asset_key, title, layout, tv, interval, range_key, pri
         events=_chart_events() if show_events else (),
     )
     payload["fvg"] = bool(fvg)                       # 🕳️ shade open fair value gaps (lw_chart.js works them out)
+    payload["single_prints"] = _single_print_zones(asset_type, asset_key, frame) if single_prints else []
     if ladder_lines:                                 # 🪜 the ladder helper's orders, stop and average
         payload["price_lines"] = list(payload.get("price_lines") or []) + list(ladder_lines)
     if bands:
@@ -4478,6 +4479,21 @@ def _tv_chart(asset_type, asset_key, title, layout, tv, interval, range_key, pri
     result = _lw_chart(key="lw_chart", data=payload, on_drawings_change=lambda: None, on_share_change=lambda: None)
     if draw_key:
         _chart_drawing_events(result, draw_key, title, interval)
+
+
+def _single_print_zones(asset_type: str, asset_key: str, frame) -> list[dict]:
+    """📍 Open single prints of the last month, from 30-minute candles (shared, cached fetch; nothing stored)."""
+    try:
+        import single_prints
+
+        kind = "crypto" if asset_type == "Crypto" else "equity"
+        loaded = chart_candles.load_candles(kind, asset_key, "30m", "1M")
+        if loaded.get("error"):
+            return []
+        found = single_prints.zones(loaded["candles"], loaded.get("session"))
+        return single_prints.payload(found, frame.index)
+    except Exception:
+        return []
 
 
 def _shared_chart_banner(asset_type: str, asset_key: str) -> None:
@@ -7282,6 +7298,8 @@ def crowd_average_badge(average, count, spread, active: bool = True) -> str:
 
 LIQ_KEY = "liq"
 FVG_KEY = "fvg"                                    # 🕳️ fair value gaps, drawn by the fast chart (lw_chart.js)
+SP_KEY = "single_prints"                           # 📍 single prints from 30-minute candles (single_prints.py)
+SP_INTERVALS = ("5m", "15m", "30m", "1h", "4h")    # where a day's profile means something
 
 
 def _liquidation_record(asset_id) -> dict | None:
@@ -14102,12 +14120,16 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                 indicator_keys = list(indicator_keys) + [LIQ_KEY]
             if use_tv:                                  # the fast chart also shades open fair value gaps
                 indicator_keys = list(indicator_keys) + [FVG_KEY]
+                if tv_interval in SP_INTERVALS:         # and single prints, on candles of 4 hours or shorter
+                    indicator_keys = list(indicator_keys) + [SP_KEY]
 
             def _indicator_label(key):
                 if key == LIQ_KEY:
                     return t("🔥 Liquidation levels")
                 if key == FVG_KEY:
                     return t("🕳️ Fair value gaps")
+                if key == SP_KEY:
+                    return t("📍 Single prints")
                 return f"{indicator_icons.get(key, '')} {t(chart_plan.INDICATORS[key]['label'])}".strip()
 
             # The chart choices belong to the account. Start from what was saved, and keep a saved
@@ -14116,6 +14138,8 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             saved_picks = [k for k in (saved_chart.get("chart_indicators") or []) if k in chart_plan.INDICATORS]
             if saved_chart.get("chart_fvg"):
                 saved_picks.append(FVG_KEY)
+            if saved_chart.get("chart_single_prints"):
+                saved_picks.append(SP_KEY)
             # The liquidation choice is kept apart, so a stock chart (which has no levels)
             # does not switch it off for the next coin.
             if "_chart_liq_on" not in st.session_state:
@@ -14176,7 +14200,8 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                 st.session_state["_chart_liq_on"] = LIQ_KEY in chosen_indicators
             liq_on = LIQ_KEY in chosen_indicators
             fvg_on = FVG_KEY in chosen_indicators
-            chosen_indicators = [k for k in chosen_indicators if k not in (LIQ_KEY, FVG_KEY)]
+            sp_on = SP_KEY in chosen_indicators
+            chosen_indicators = [k for k in chosen_indicators if k not in (LIQ_KEY, FVG_KEY, SP_KEY)]
             overlay_curves = st.checkbox(
                 t("Overlay RSI, Stochastic, Stoch RSI and ADX on the price chart"),
                 key="chart_overlay",
@@ -14233,6 +14258,8 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             }
             if FVG_KEY in indicator_keys:
                 chart_choices["chart_fvg"] = bool(fvg_on)
+            if SP_KEY in indicator_keys:
+                chart_choices["chart_single_prints"] = bool(sp_on)
             if asset_type != "Crypto":
                 chart_choices["chart_earnings"] = bool(show_earnings)
             if sonar_shown is not None:
@@ -14254,7 +14281,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                     _tv_chart(
                         asset_type, asset_key, title, layout, tv, tv_interval, tv_range, price_px,
                         liq_record, show_earnings, stock_watchlist, band_set=band_set, show_events=show_events,
-                        ladder_lines=ladder_lines, fvg=fvg_on,
+                        ladder_lines=ladder_lines, fvg=fvg_on, single_prints=sp_on,
                     )
                     _chart_resize_handle(price_px)
             else:
