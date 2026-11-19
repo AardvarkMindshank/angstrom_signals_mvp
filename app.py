@@ -14470,6 +14470,13 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                     t("<div style='font-size: 0.85rem; color: #6b7280; margin-bottom: 2px;'>7-Day Change</div><div style='font-size: 2.2rem; font-weight: 600; line-height: 1.1; color: {change_color};'>{change:+.1f}%</div>", change_color=change_color, change=change),
                     unsafe_allow_html=True,
                 )
+            # 🪜 A ladder of limit orders spaced by this asset's daily range (ladder_helper.py): a planning calculator.
+            with st.expander("🪜 " + t("Ladder helper") + f" — {title}", expanded=False):
+                import ladder_helper
+
+                atr_now = signals_v2._num(daily_chart["atr"].iloc[-1]) if "atr" in daily_chart.columns else None
+                ladder_helper.render(st, t, signals_v2._num(daily_chart["close"].iloc[-1]), atr_now, title,
+                                     f"{asset_type}_{asset_key}")
 
     if not _POPOUT_VIEW:
         _lattice_section()
