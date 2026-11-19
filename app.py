@@ -450,6 +450,8 @@ export default function(component) {
       ".headline-row{align-items:flex-start;padding:8px 0;border-top:1px solid var(--ang-line);}",
       ".headline-title{flex:1.1;min-width:0;}",
       ".headline-date{width:112px;flex:none;white-space:nowrap;color:var(--ang-soft);}",
+      // Phones and narrow screens: the year goes under the day ("Sep 1," / "2026"), so the column is half as wide.
+      "@media (max-width:640px){.headline-head,.headline-row{gap:10px;}.headline-date{width:4rem;white-space:normal;line-height:1.3;}}",
       ".headline-note{flex:1.3;min-width:0;color:var(--ang-soft);font-size:.9rem;line-height:1.35;}",
       ".headline-score{width:76px;flex:none;text-align:right;}",
       ".headline-ai .headline-score{width:6.25rem;white-space:nowrap;}",
@@ -14886,7 +14888,12 @@ def headline_table(headlines: list, score_label: str = "Score") -> str:
             if item.get("source") else ""
         )
         published = _published_label(item.get("published"))
-        published_html = html.escape(published) if published else "<span class='headline-empty'>—</span>"
+        if published and ", " in published:
+            # "Sep 1, 2026": day and month stay together; the year may drop to a second line on narrow screens
+            day_part, year_part = published.rsplit(", ", 1)
+            published_html = f"{html.escape(day_part).replace(' ', '&nbsp;')}, {html.escape(year_part)}"
+        else:
+            published_html = html.escape(published) if published else "<span class='headline-empty'>—</span>"
         note = " ".join(str(item.get("note") or "").split())
         note_html = html.escape(note) if note else "<span class='headline-empty'>—</span>"
         rows.append(
