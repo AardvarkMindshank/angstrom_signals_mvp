@@ -196,6 +196,9 @@ async function openChart(h, name = "Bitcoin", interval = "4h", range = "3M") {
   }
   await h.settle();
   await timeframe(h, interval, range, false);
+  // The chart remembers where it was zoomed: back to the chosen range.
+  await h.page.locator(LWC + " .ang-lwc-tools button").filter({ hasText: "⟲" }).first().click().catch(() => {});
+  await h.wait(500);
   await chartTop(h);
 }
 
@@ -1455,6 +1458,9 @@ module.exports = {
       await openChart(h, "Bitcoin", "1D", "1Y");
       for (const name of [/Sonar\s*$/, "Sonar markers", "Chart shapes", "Liquidation levels"]) await pill(h, name, false);
       await eventsOff(h);
+      await clearDrawings(h, false);
+      await stopDrawing(h);
+      await h.page.locator(LWC + ' .ang-lwc-tools button[aria-label^="Drawing tools"]').first().click().catch(() => {});
       await chartTop(h);
     },
     idea: async (h) => {
