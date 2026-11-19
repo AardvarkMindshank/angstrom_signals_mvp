@@ -250,10 +250,21 @@ def test_the_sql_keeps_signatures_unchangeable_and_owner_or_admin_only():
     assert "'nda_signed_at', s.signed_at" in sql and "'status', r.status" in sql
 
 
-def test_the_real_draft_is_set_up_switched_off_and_readable():
+def test_the_real_nda_is_on_for_new_accounts_and_readable():
     doc = nda.current()
-    assert doc is not None and doc["enforce"] is False and doc["version"] == "2026-11-draft-v2"
-    assert "NON-DISCLOSURE AGREEMENT" in doc["text"] and "Country of Residence" in doc["text"]
+    assert doc is not None and doc["enforce"] is True and doc["version"] == "2026-11-v3"
+    assert "NON-DISCLOSURE AGREEMENT" in doc["text"] and "country of residence" in doc["text"]
+    assert "[" not in doc["text"], "a placeholder is left in the NDA"
+    assert "Thailand" in doc["text"] and "180/6 Hin Wong Nivet" in doc["text"]
+
+
+def test_who_is_asked_to_sign():
+    doc = {"applies_from": "2026-11-19", "exempt": ["demo@angstromsignals.com"]}
+    assert nda.applies_to(doc, "new@example.com", "2026-11-20T03:00:00+00:00")
+    assert nda.applies_to(doc, "new@example.com", "2026-11-19T10:00:00Z")
+    assert not nda.applies_to(doc, "old@example.com", "2026-10-22T01:00:00Z")      # from before: not asked
+    assert not nda.applies_to(doc, "Demo@AngstromSignals.com", "2026-11-25T01:00:00Z")   # exempt
+    assert nda.applies_to({"applies_from": "", "exempt": []}, "old@example.com", "2026-01-01")
 
 
 def test_the_dashboard_asks_for_the_nda_right_after_sign_in():

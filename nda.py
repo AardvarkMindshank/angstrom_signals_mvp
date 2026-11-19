@@ -38,7 +38,22 @@ def current(directory: Path | None = None) -> dict | None:
     except (OSError, ValueError, KeyError):
         return None
     return {"version": str(meta["version"]), "title": str(meta.get("title") or "Beta Non-Disclosure Agreement"),
-            "enforce": meta.get("enforce", True) is True, "file": meta["file"], "pdf": pdf, "sha256": hashlib.sha256(pdf).hexdigest(), "text": pdf_text(pdf)}
+            "enforce": meta.get("enforce", True) is True, "file": meta["file"], "pdf": pdf, "sha256": hashlib.sha256(pdf).hexdigest(), "text": pdf_text(pdf),
+            "applies_from": str(meta.get("applies_from") or ""),
+            "exempt": [str(e).strip().lower() for e in meta.get("exempt") or []]}
+
+
+def applies_to(nda: dict, email: str | None, created_at) -> bool:
+    """Whether this account is asked to sign: not an exempt address (the demo account used for the videos), and made
+    on or after "applies_from" when current.json sets one (accounts from before keep working unasked)."""
+    if str(email or "").strip().lower() in nda.get("exempt", []):
+        return False
+    start = nda.get("applies_from") or ""
+    if start and created_at:
+        made = str(created_at.isoformat() if hasattr(created_at, "isoformat") else created_at)
+        if made[:10] and made[:10] < start[:10]:
+            return False
+    return True
 
 
 def pdf_text(pdf: bytes) -> str:
@@ -180,6 +195,9 @@ def gate(st, supabase, user) -> None:
                            mime="application/pdf", key="nda_copy_now")
     if st.session_state.get(key):
         return
+    if not applies_to(nda, getattr(user, "email", None), getattr(user, "created_at", None)):
+        st.session_state[key] = True
+        return
     state = status(supabase, nda)
     if state is None or state.get("is_admin") or state.get("signed"):
         st.session_state[key] = True          # signed (or nothing to enforce yet): not asked again this session
@@ -262,6 +280,9 @@ def admin_cell(row: dict, nda: dict | None) -> tuple[str, str, str]:
         return "Admin", "Admins don't sign the NDA.", ""
     if str(row.get("status") or "") != "approved":
         return "—", "Asked to sign after approval.", ""
+    if not applies_to(nda, row.get("email"), row.get("created_at")):
+        return "— Not asked", (f"Not asked: on the exempt list, or joined before {nda['applies_from'][:10]} when "
+                               f"version {nda['version']} began to apply."), ""
     signed_at = str(row.get("nda_signed_at") or "")
     if row.get("nda_version") == nda["version"] and signed_at:
         when = signed_at[:10]
