@@ -223,9 +223,9 @@ def _active_theme() -> str:
 
 
 def _paint_chart(fig) -> None:
-    """Chart paper follows the same surface as the cards (Settings › UI colours › Cards and panels)."""
+    """Every chart's background is the account's chart colour (Settings › UI colours › Charts)."""
     dark = _active_theme() == "dark"
-    paper = lw_chart.card_colour(dark)
+    paper = lw_chart.chart_colour(dark)
     ink = "#e5e7eb" if dark else "#374151"
     grid = "#3f4654" if dark else "#e5e7eb"
     fig.update_layout(paper_bgcolor=paper, plot_bgcolor=paper, font=dict(color=ink))
@@ -366,6 +366,8 @@ export default function(component) {
   paintColour("--ang-field-night", chosen.fieldNight);
   paintColour("--ang-button-day", chosen.buttonDay);
   paintColour("--ang-button-night", chosen.buttonNight);
+  paintColour("--ang-chart-day", chosen.chartDay);
+  paintColour("--ang-chart-night", chosen.chartNight);
   let style = document.getElementById("angstrom-brand-style");
   if (style && style.dataset.layout !== "ruled") {
     style.remove();
@@ -376,8 +378,8 @@ export default function(component) {
     style.id = "angstrom-brand-style";
     style.dataset.layout = "ruled";
     style.textContent = [
-      "html{--ang-surface:var(--ang-card-day,#ffffff);--ang-field:var(--ang-field-day,#f1f0ee);--ang-button:var(--ang-button-day,#ffffff);--ang-border:var(--ang-border-day,#e5e7eb);--ang-text:#111827;--ang-muted:#6b7280;--ang-soft:#374151;--ang-track:#e5e7eb;--ang-line:var(--ang-border);--ang-select:#e5e7eb;--ang-select-text:#111827;--ang-page:var(--ang-page-day,#d6e8f8);--ang-heading:var(--ang-heading-day,#ffffff);--ang-section:var(--ang-section-day,#ffffff);--ang-hover:var(--ang-hover-day,#f3f4f6);--ang-side:var(--ang-side-day,#ffffff);--ang-social:var(--ang-social-day,#ffffff);}",
-      "html.angstrom-night{--ang-surface:var(--ang-card-night,#262730);--ang-field:var(--ang-field-night,#31333f);--ang-button:var(--ang-button-night,#31333f);--ang-border:var(--ang-border-night,#000000);--ang-text:#f3f4f6;--ang-muted:#9ca3af;--ang-soft:#d1d5db;--ang-track:#3f4654;--ang-line:var(--ang-border);--ang-select:#3a4050;--ang-select-text:#f9fafb;--ang-page:var(--ang-page-night,#0e1117);--ang-heading:var(--ang-heading-night,#262730);--ang-section:var(--ang-section-night,#262730);--ang-hover:var(--ang-hover-night,#31333f);--ang-side:var(--ang-side-night,#16181f);--ang-social:var(--ang-social-night,#1c1f27);}",
+      "html{--ang-surface:var(--ang-card-day,#ffffff);--ang-field:var(--ang-field-day,#f1f0ee);--ang-button:var(--ang-button-day,#ffffff);--ang-chart:var(--ang-chart-day,#ffffff);--ang-border:var(--ang-border-day,#e5e7eb);--ang-text:#111827;--ang-muted:#6b7280;--ang-soft:#374151;--ang-track:#e5e7eb;--ang-line:var(--ang-border);--ang-select:#e5e7eb;--ang-select-text:#111827;--ang-page:var(--ang-page-day,#d6e8f8);--ang-heading:var(--ang-heading-day,#ffffff);--ang-section:var(--ang-section-day,#ffffff);--ang-hover:var(--ang-hover-day,#f3f4f6);--ang-side:var(--ang-side-day,#ffffff);--ang-social:var(--ang-social-day,#ffffff);}",
+      "html.angstrom-night{--ang-surface:var(--ang-card-night,#262730);--ang-field:var(--ang-field-night,#31333f);--ang-button:var(--ang-button-night,#31333f);--ang-chart:var(--ang-chart-night,#262730);--ang-border:var(--ang-border-night,#000000);--ang-text:#f3f4f6;--ang-muted:#9ca3af;--ang-soft:#d1d5db;--ang-track:#3f4654;--ang-line:var(--ang-border);--ang-select:#3a4050;--ang-select-text:#f9fafb;--ang-page:var(--ang-page-night,#0e1117);--ang-heading:var(--ang-heading-night,#262730);--ang-section:var(--ang-section-night,#262730);--ang-hover:var(--ang-hover-night,#31333f);--ang-side:var(--ang-side-night,#16181f);--ang-social:var(--ang-social-night,#1c1f27);}",
       ".ang-card{background:var(--ang-surface);color:var(--ang-text);border:1px solid var(--ang-border);border-radius:10px;padding:12px 16px;}",
       ".ang-kicker{font-size:.8rem;color:var(--ang-muted);margin-bottom:4px;}",
       // The social panel floats at the side; its empty holder in Quick Snapshot must not add a row gap.
@@ -6692,6 +6694,8 @@ _THEME_COLOURS = (
     ("field_night", "#31333f"),
     ("button_day", "#ffffff"),
     ("button_night", "#31333f"),
+    ("chart_day", "#ffffff"),
+    ("chart_night", "#262730"),
 )
 
 
@@ -6789,6 +6793,8 @@ def _colour_payload(chosen: dict) -> dict:
         "fieldNight": chosen["field_night"],
         "buttonDay": chosen["button_day"],
         "buttonNight": chosen["button_night"],
+        "chartDay": chosen["chart_day"],
+        "chartNight": chosen["chart_night"],
     }
 
 
@@ -6801,7 +6807,7 @@ if isinstance(_pending_colours, dict):
         st.session_state[f"colour_{key}"] = _hex_colour(_pending_colours.get(key), default)
 _take_colour_copy()
 account_colours = _active_colours()
-lw_chart.set_card_colours(account_colours["card_day"], account_colours["card_night"])   # charts sit on the card colour
+lw_chart.set_colour_source(lambda dark: _active_colours()["chart_night" if dark else "chart_day"])  # Settings › Charts
 _brand_watch(key="brand_watch", data=_colour_payload(account_colours))
 _version_watch(key="version_watch", data=app_version.BOOT_ID)
 st.sidebar.markdown(
@@ -9433,6 +9439,7 @@ with tracked_expander("⚙️ " + t("Settings"), "settings_panel", sidebar=True)
                 ("Cards and panels", "card_day", "card_night"),
                 ("Text and drop-down fields", "field_day", "field_night"),
                 ("Buttons", "button_day", "button_night"),
+                ("Charts", "chart_day", "chart_night"),
             ):
                 cells = st.columns(widths, gap="xsmall", vertical_alignment="center")
                 cells[0].html(f"<div class='pal-name'>{html.escape(label)}</div>")

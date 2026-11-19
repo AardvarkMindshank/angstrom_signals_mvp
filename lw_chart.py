@@ -13,7 +13,6 @@ as the licence's notice asks.
 
 from __future__ import annotations
 
-import threading
 
 from i18n import t
 
@@ -60,17 +59,21 @@ def _values(series: pd.Series, digits: int = 8) -> list:
     return out
 
 
-_CARDS = threading.local()
+_COLOUR_SOURCE = None
 
 
-def set_card_colours(day: str, night: str) -> None:
-    """This page's card colour for day and night (Settings › UI colours), so charts sit on the same colour. Kept per
-    thread: Streamlit runs each page in its own."""
-    _CARDS.day, _CARDS.night = day, night
+def set_colour_source(fn) -> None:
+    """fn(dark) -> the viewer's chart background (Settings › UI colours › Charts). The app passes a function that reads
+    the page's own session, so it is right in every page, fragment and thread."""
+    global _COLOUR_SOURCE
+    _COLOUR_SOURCE = fn
 
 
-def card_colour(dark: bool) -> str:
-    value = getattr(_CARDS, "night" if dark else "day", None)
+def chart_colour(dark: bool) -> str:
+    try:
+        value = _COLOUR_SOURCE(dark) if _COLOUR_SOURCE else None
+    except Exception:
+        value = None
     ok = isinstance(value, str) and len(value) == 7 and value.startswith("#")
     return value if ok else ("#262730" if dark else "#ffffff")
 
@@ -79,7 +82,7 @@ def theme(dark: bool) -> dict:
     """The same surfaces as the Plotly chart, so switching engines does not change the page."""
     return {
         "dark": bool(dark),
-        "bg": card_colour(dark),
+        "bg": chart_colour(dark),
         "ink": "#e5e7eb" if dark else "#374151",
         "grid": "#3f4654" if dark else "#eef0f3",
         "muted": "#9ca3af" if dark else "#6b7280",

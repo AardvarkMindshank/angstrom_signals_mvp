@@ -220,7 +220,7 @@ def _theme(st) -> tuple[str, str, str]:
         dark = False
     import lw_chart
 
-    paper = lw_chart.card_colour(dark)                  # the account's card colour (Settings › UI colours)
+    paper = lw_chart.chart_colour(dark)                 # the account's chart colour (Settings › UI colours)
     return (paper, "#e5e7eb", "#3f4654") if dark else (paper, "#374151", "#e5e7eb")
 
 
@@ -385,7 +385,7 @@ def chart_payload(coin: dict, rows: list[dict], target: str, start: str, end: st
     base = (known.count("1") / len(known)) if known else None
     ink = "#e5e7eb" if dark else "#374151"
     theme = {**lw_chart.theme(dark), "ink": ink,
-             "label_bg": "rgba(38,39,48,0.78)" if dark else "rgba(255,255,255,0.82)"}
+             "label_bg": lw_chart.theme(dark)["bg"] + "d0"}      # the chart colour, slightly see-through
     payload = {
         "lib": lw_chart.LIBRARY_PATH, "key": key, "theme": theme, "target": target,
         "times": times, "close": [coin["close"][i] for i in idx], "move_flags": flags,

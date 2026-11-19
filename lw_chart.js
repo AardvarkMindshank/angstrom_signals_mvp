@@ -700,7 +700,7 @@ function draw(L, root, data) {
       html += `<div><span style="color:${theme.muted}">${data.zones_name}</span> <b style="color:${tint}">${word}</b></div>`;
     }
     legend.innerHTML = html;
-    legend.style.background = theme.dark ? "rgba(38,39,48,0.75)" : "rgba(255,255,255,0.75)";
+    legend.style.background = theme.bg + "c0";      // the chart colour, slightly see-through
     legend.style.borderRadius = "6px";
     legend.style.padding = "2px 6px";
     paneLabels.querySelectorAll("[data-pane]").forEach((label) => {
@@ -735,7 +735,7 @@ function draw(L, root, data) {
       label.dataset.pane = String(index);
       label.style.cssText =
         `position:absolute;left:8px;top:${top + 3}px;z-index:3;pointer-events:none;font:11px/1.3 system-ui,sans-serif;` +
-        `color:${theme.ink};background:${theme.dark ? "rgba(38,39,48,0.7)" : "rgba(255,255,255,0.7)"};padding:1px 5px;border-radius:4px;`;
+        `color:${theme.ink};background:${theme.bg}b3;padding:1px 5px;border-radius:4px;`;
       paneLabels.appendChild(label);
     });
   };

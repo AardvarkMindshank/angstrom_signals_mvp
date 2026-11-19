@@ -45,6 +45,7 @@ CSS = """
 .tides .chip.head{box-shadow:inset 0 0 0 1.5px #dc2626}.tides .chip.tail{box-shadow:inset 0 0 0 1.5px #16a34a}
 .tides .chip.warn{background:#fee2e2;color:#7f1d1d}
 .tides .card{border:1px solid var(--t-line);border-radius:12px;padding:10px 12px;background:var(--t-soft)}
+.tides .card.waves{background:var(--ang-chart,var(--t-soft))}
 .tides .note{margin-top:12px}.tides .note li{margin:2px 0}
 .tides .note .who{font-weight:700}
 .tides .strip{display:flex;flex-wrap:wrap;gap:8px;padding:2px 0 0;margin-top:4px}

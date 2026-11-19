@@ -1,13 +1,13 @@
 """Ready-made colour themes for the UI Colours settings, and the little picture that shows each one.
 
-Every theme sets a day and a night value for each part of the page. The last three parts (cards, fields, buttons)
-were added on 19 Nov 2026; themes made before take them from their own section, hover and heading colours.
+Every theme sets a day and a night value for each part of the page. The last four parts (cards, fields, buttons, charts)
+were added on 19 Nov 2026; themes made before take them from their own section, hover, heading and card colours.
 """
 from __future__ import annotations
 
 import html
 
-PARTS = ("page", "heading", "section", "hover", "sidebar", "social", "border", "card", "field", "button")
+PARTS = ("page", "heading", "section", "hover", "sidebar", "social", "border", "card", "field", "button", "chart")
 KEYS = tuple(f"{part}_{mode}" for part in PARTS for mode in ("day", "night"))
 
 
@@ -18,17 +18,19 @@ def _theme(day: tuple, night: tuple) -> dict:
     for part, d, n in zip(PARTS, day, night):
         out[f"{part}_day"] = d
         out[f"{part}_night"] = n
-    for part, like in (("card", "section"), ("field", "hover"), ("button", "heading")):
+    for part, like in (("card", "section"), ("field", "hover"), ("button", "heading"), ("chart", "card")):
         for mode in ("day", "night"):
             out.setdefault(f"{part}_{mode}", out[f"{like}_{mode}"])
     return out
 
 
-#            page       heading    section    hover      sidebar    social     border     card       field      button
+#     page       heading    section    hover      sidebar    social     border     card       field      button     chart
 THEMES = {
     "Default": _theme(
-        ("#d6e8f8", "#ffffff", "#ffffff", "#f3f4f6", "#ffffff", "#ffffff", "#e5e7eb", "#ffffff", "#f1f0ee", "#ffffff"),
-        ("#0e1117", "#262730", "#262730", "#31333f", "#16181f", "#1c1f27", "#000000", "#262730", "#31333f", "#31333f"),
+        ("#d6e8f8", "#ffffff", "#ffffff", "#f3f4f6", "#ffffff", "#ffffff", "#e5e7eb", "#ffffff", "#f1f0ee", "#ffffff",
+         "#ffffff"),
+        ("#0e1117", "#262730", "#262730", "#31333f", "#16181f", "#1c1f27", "#000000", "#262730", "#31333f", "#31333f",
+         "#262730"),
     ),
     "Slate": _theme(
         ("#e2e8f0", "#f8fafc", "#ffffff", "#e2e8f0", "#f1f5f9", "#f8fafc", "#cbd5e1"),
