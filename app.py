@@ -222,6 +222,18 @@ def _active_theme() -> str:
     return kind if kind in ("light", "dark") else "light"
 
 
+def _pick_all_none(key: str, options: list) -> None:
+    """All and None under a list of chart toggles (pills): every option on, or every one off."""
+    def _set(value):
+        st.session_state[key] = value
+
+    row = st.container(horizontal=True, gap="small")
+    row.button(t("All"), key=f"{key}__all", type="tertiary", icon=":material/done_all:",
+               on_click=_set, args=(list(options),))
+    row.button(t("Clear"), key=f"{key}__none", type="tertiary", icon=":material/remove_done:",
+               on_click=_set, args=([],))
+
+
 def _paint_chart(fig) -> None:
     """Every chart's background is the account's chart colour (Settings › UI colours › Charts)."""
     dark = _active_theme() == "dark"
@@ -14102,6 +14114,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                         key="chart_indicators",
                         label_visibility="collapsed",
                     ) or []
+                    _pick_all_none("chart_indicators", indicator_keys)
                 else:
                     chosen_indicators = st.multiselect(
                         t("Chart indicators"),
@@ -14166,6 +14179,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                            "Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.") + " "
                          + " ".join(f"{_SONAR_MARK_LABELS[k]}: {v[4]}." for k, v in lw_chart.SONAR_MARKS.items()),
                 ) or []
+                _pick_all_none("chart_sonar_marks", list(lw_chart.SONAR_MARKS))
             band_set = _chart_set_picker() if use_tv else None
             wanted_picks = [k for k in saved_picks if k not in indicator_keys] + [
                 k for k in chosen_indicators if k in chart_plan.INDICATORS
