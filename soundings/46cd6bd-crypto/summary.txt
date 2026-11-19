@@ -1,0 +1,38 @@
+rise: 143 single conditions tested
+rise: 10000 pairs looked at
+fall: 143 single conditions tested
+fall: 10000 pairs looked at
+
+RISES: usual rate 18.9% (search), 19.3% (confirm); looked at 9224, tested 2008, 1213 passed the search, in 24 themes (45s)
+  survivor      Momentum: up + Pullback to that VWAP held: lift 1.43 on 6080 days -> 1.46 on 4954 days (p 0.034, 84/96 coins)
+  survivor      Double bottom: confirmed + Price vs its average: above: lift 1.39 on 7387 days -> 1.37 on 6197 days (p 0.048, 75/95 coins)
+  survivor      Bollinger position 0.8 to 1 + Stoch RSI: apart: lift 1.48 on 4215 days -> 1.36 on 3632 days (p 0.023, 71/97 coins)
+  survivor      Close vs VWAP from the last swing low: above + Regime: ranging: lift 1.50 on 11220 days -> 1.31 on 8715 days (p 0.058, 84/98 coins)
+  either_way    Bollinger position 1 or more + Open gap below (ATRs away) 1.5 or more: lift 1.49 on 2637 days -> 1.56 on 2149 days (p 0.004, 83/96 coins)
+  either_way    Heavy candle 0.5 or more + Sonar band: above: lift 1.48 on 7957 days -> 1.50 on 6417 days (p 0.002, 88/98 coins)
+  either_way    Close vs the 30-candle value area: above value + Volume vs usual 2.5 or more: lift 1.52 on 2017 days -> 1.47 on 1510 days (p 0.001, 62/85 coins)
+  either_way    Distance to support 1 or more + Volume vs usual 1.5 to 2.5: lift 1.46 on 5159 days -> 1.42 on 4131 days (p 0.012, 79/98 coins)
+  either_way    Chaikin money flow 0.1 or more + On-balance volume 0.3 or more: lift 1.37 on 10637 days -> 1.39 on 11009 days (p 0.025, 88/97 coins)
+  not_confirmed EMA 20/50 cross: up + Wind for crypto: neither: lift 1.97 on 337 days -> 1.35 on 252 days (p 0.136, 0/0 coins)
+  either_way    7-day move vs expected 1 or more + WaveTrend: overbought: lift 1.47 on 4467 days -> 1.34 on 3165 days (p 0.018, 66/97 coins)
+  either_way    EMA 20 vs 50: fast above + Stoch RSI: both high: lift 1.45 on 6747 days -> 1.33 on 5781 days (p 0.037, 76/98 coins)
+  either_way    MACD line 0.3 or more + Stochastic %K 80 or more: lift 1.55 on 6262 days -> 1.30 on 5513 days (p 0.028, 72/98 coins)
+  not_confirmed Candle: green + Sonar big red dot in the last 3 candles: lift 1.38 on 2725 days -> 1.29 on 2130 days (p 0.088, 66/95 coins)
+  either_way    Ichimoku cloud: above + Stochastic (OHLC4): overbought: lift 1.50 on 3893 days -> 1.28 on 3697 days (p 0.051, 69/92 coins)
+  either_way    RSI (14) 70 or more + WaveTrend direction: rising: lift 1.50 on 3103 days -> 1.27 on 2734 days (p 0.040, 64/97 coins)
+  not_confirmed Ichimoku cloud: inside + Open gap above (ATRs away) 1.5 or more: lift 1.55 on 3407 days -> 1.25 on 2795 days (p 0.197, 65/94 coins)
+  not_confirmed Band width percentile under 20 + Sonar long cross in the last 3 candles: lift 1.77 on 892 days -> 1.25 on 595 days (p 0.214, 8/12 coins)
+  not_confirmed Average's slope: up + Double top: forming: lift 1.82 on 1800 days -> 1.23 on 1567 days (p 0.094, 31/61 coins)
+  not_confirmed Double top: failed + MACD histogram 0.3 or more: lift 1.49 on 2953 days -> 1.23 on 2111 days (p 0.081, 44/67 coins)
+  not_confirmed Double bottom: forming + Up gap tested in the last 3 candles: lift 1.63 on 897 days -> 1.23 on 905 days (p 0.195, 20/42 coins)
+  faded         Credit: rising + Stoch RSI crossed down from high in the last 3 candles: lift 1.58 on 3870 days -> 0.99 on 1533 days (p 0.514, 43/91 coins)
+  faded         ATR vs its average 0.8 to 1.2 + WaveTrend turned down from overbought: lift 1.57 on 1119 days -> 0.96 on 882 days (p 0.593, 14/36 coins)
+  faded         Fear (VIX): falling + Tide: out: lift 2.50 on 1829 days -> 0.10 on 94 days (p 1.000, 0/0 coins)
+
+FALLS: usual rate 15.0% (search), 15.2% (confirm); looked at 9224, tested 1149, 106 passed the search, in 6 themes (25s)
+  either_way    ATR vs its average 1.2 or more + Bollinger position 1 or more: lift 1.66 on 2027 days -> 1.60 on 1585 days (p 0.000, 71/90 coins)
+  either_way    Double bottom: confirmed + Volume vs usual 2.5 or more: lift 1.57 on 769 days -> 1.45 on 701 days (p 0.023, 21/33 coins)
+  either_way    Chaikin money flow 0.1 or more + Heavy candle 0.5 or more: lift 1.38 on 4736 days -> 1.37 on 4545 days (p 0.017, 76/96 coins)
+  either_way    7-day move vs expected 1 or more + Open gap below (ATRs away) 1.5 or more: lift 1.58 on 2778 days -> 1.36 on 2099 days (p 0.025, 68/94 coins)
+  not_confirmed Long rates: flat + RSI (14) 70 or more: lift 1.82 on 1574 days -> 1.29 on 2276 days (p 0.102, 63/95 coins)
+  not_confirmed ADX 40 or more + Stochastic %K 80 or more: lift 1.63 on 1698 days -> 1.29 on 1607 days (p 0.120, 43/66 coins)
