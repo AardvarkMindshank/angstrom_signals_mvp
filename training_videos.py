@@ -293,11 +293,18 @@ def link(st, name: str, key: str | None = None) -> None:
 
 def all_links(st, key: str) -> None:
     """Every series, one 🎬 link per video; three series to a row on a wide screen (one under another on a phone)."""
+    import html
+
     items = list(SERIES.items())
+    # A clear gap above each series heading, so a heading sits with its own videos rather than the ones above it:
+    # on a wide screen above every row but the first; on a phone (one series under another) above every series.
+    st.markdown("<style>.tv-head{font-weight:700;margin-top:1.6rem}@media (min-width:641px){.tv-head.tv-row1{margin-top:0}}"
+                ".tv-head.tv-first{margin-top:0}</style>", unsafe_allow_html=True)
     for start in range(0, len(items), 3):
         cols = st.columns(3)
-        for col, (series_key, (series, videos)) in zip(cols, items[start:start + 3]):
+        for n, (col, (series_key, (series, videos))) in enumerate(zip(cols, items[start:start + 3])):
             with col:
-                st.markdown(f"**{series}**")
+                kind = " tv-first" if start + n == 0 else (" tv-row1" if start == 0 else "")
+                st.markdown(f"<div class='tv-head{kind}'>{html.escape(series)}</div>", unsafe_allow_html=True)
                 for slug, _, _ in videos:
                     link(st, slug, key=f"tv_{key}_{slug}")
