@@ -341,6 +341,8 @@ def run_background_checks() -> None:
         import tides_store
 
         tides_store.configure(supabase)
+        import market_gauges
+        market_gauges.configure(supabase)
     except Exception:
         pass
 

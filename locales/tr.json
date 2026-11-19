@@ -1323,7 +1323,6 @@
   "A current four-bank global M2 composite (Fed, ECB, Bank of Japan, and PBOC) is not a free series, so this group uses the Fed's own published figures.": "Güncel dört bankalı küresel M2 bileşiği (Fed, ECB, Japonya Merkez Bankası ve PBOC) ücretsiz bir seri değil, bu yüzden bu grup Fed'in kendi yayımladığı rakamları kullanır.",
   "Currency & yield indicators": "Döviz ve getiri göstergeleri",
   "Crypto-specific sentiment & flows": "Kriptoya özgü duyarlılık ve akışlar",
-  "Funding rates, open interest, liquidations, and ETF flows need Coinglass or Arkham, which are not connected.": "Fonlama oranları, açık pozisyon, tasfiyeler ve ETF akışları bağlı olmayan Coinglass ya da Arkham gerektirir.",
   "Macroeconomic policy & inflation trackers": "Makroekonomik politika ve enflasyon takipçileri",
   "CME FedWatch probabilities and the Conference Board survey are not on a free feed here. The Michigan survey is the consumer reading that is.": "CME FedWatch olasılıkları ve Conference Board anketi burada ücretsiz bir kaynakta yok. Michigan anketi ise mevcut olan tüketici ölçümüdür.",
   "Market-wide sentiment & breadth indicators": "Piyasa geneli duyarlılık ve genişlik göstergeleri",
@@ -2238,5 +2237,10 @@
   "🏛️ Equities": "🏛️ Hisseler",
   "✨ Starting the AI Navigator…": "✨ AI Navigator başlatılıyor…",
   "Pin the panel beside the page: the page makes room for it and it stays open": "Paneli sayfanın yanına sabitle: sayfa yer açar ve panel açık kalır",
-  "Drag to resize the panel": "Paneli yeniden boyutlandırmak için sürükleyin"
+  "Drag to resize the panel": "Paneli yeniden boyutlandırmak için sürükleyin",
+  "Bitcoin funding rate": "Bitcoin fonlama oranı",
+  "Bitcoin futures open interest": "Bitcoin vadeli işlemlerde açık pozisyon",
+  "Bitcoin liquidations, 24h": "Bitcoin tasfiyeleri, 24 sa",
+  "Bitcoin spot ETF net flow": "Bitcoin spot ETF net akışı",
+  "Stablecoin supply": "Stablecoin arzı"
 }

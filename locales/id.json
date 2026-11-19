@@ -1323,7 +1323,6 @@
   "A current four-bank global M2 composite (Fed, ECB, Bank of Japan, and PBOC) is not a free series, so this group uses the Fed's own published figures.": "Komposit M2 global empat bank terkini (Fed, ECB, Bank of Japan, dan PBOC) bukan seri gratis, jadi grup ini memakai angka yang dipublikasikan Fed sendiri.",
   "Currency & yield indicators": "Indikator mata uang & imbal hasil",
   "Crypto-specific sentiment & flows": "Sentimen & arus khusus kripto",
-  "Funding rates, open interest, liquidations, and ETF flows need Coinglass or Arkham, which are not connected.": "Funding rate, open interest, likuidasi, dan arus ETF memerlukan Coinglass atau Arkham, yang tidak terhubung.",
   "Macroeconomic policy & inflation trackers": "Pelacak kebijakan makroekonomi & inflasi",
   "CME FedWatch probabilities and the Conference Board survey are not on a free feed here. The Michigan survey is the consumer reading that is.": "Probabilitas CME FedWatch dan survei Conference Board tidak tersedia gratis di sini. Survei Michigan adalah pembacaan konsumen yang tersedia.",
   "Market-wide sentiment & breadth indicators": "Indikator sentimen & breadth seluruh pasar",
@@ -2238,5 +2237,10 @@
   "🏛️ Equities": "🏛️ Saham",
   "✨ Starting the AI Navigator…": "✨ Memulai AI Navigator…",
   "Pin the panel beside the page: the page makes room for it and it stays open": "Sematkan panel di samping halaman: halaman memberi ruang dan panel tetap terbuka",
-  "Drag to resize the panel": "Seret untuk mengubah ukuran panel"
+  "Drag to resize the panel": "Seret untuk mengubah ukuran panel",
+  "Bitcoin funding rate": "Funding rate Bitcoin",
+  "Bitcoin futures open interest": "Open interest futures Bitcoin",
+  "Bitcoin liquidations, 24h": "Likuidasi Bitcoin, 24 jam",
+  "Bitcoin spot ETF net flow": "Arus bersih ETF spot Bitcoin",
+  "Stablecoin supply": "Pasokan stablecoin"
 }

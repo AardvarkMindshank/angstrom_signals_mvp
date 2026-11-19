@@ -1323,7 +1323,6 @@
   "A current four-bank global M2 composite (Fed, ECB, Bank of Japan, and PBOC) is not a free series, so this group uses the Fed's own published figures.": "Un composite M2 mondial actuel de quatre banques (Fed, BCE, Banque du Japon et PBOC) n'est pas une série gratuite, ce groupe utilise donc les chiffres publiés par la Fed elle-même.",
   "Currency & yield indicators": "Indicateurs de devises et de rendements",
   "Crypto-specific sentiment & flows": "Sentiment et flux propres à la crypto",
-  "Funding rates, open interest, liquidations, and ETF flows need Coinglass or Arkham, which are not connected.": "Les taux de financement, l'intérêt ouvert, les liquidations et les flux d'ETF nécessitent Coinglass ou Arkham, qui ne sont pas connectés.",
   "Macroeconomic policy & inflation trackers": "Suivi de la politique macroéconomique et de l'inflation",
   "CME FedWatch probabilities and the Conference Board survey are not on a free feed here. The Michigan survey is the consumer reading that is.": "Les probabilités CME FedWatch et l'enquête du Conference Board ne sont pas disponibles gratuitement ici. L'enquête de Michigan est la mesure consommateurs qui l'est.",
   "Market-wide sentiment & breadth indicators": "Indicateurs de sentiment et d'étendue du marché",
@@ -2238,5 +2237,10 @@
   "🏛️ Equities": "🏛️ Actions",
   "✨ Starting the AI Navigator…": "✨ Démarrage de l'AI Navigator…",
   "Pin the panel beside the page: the page makes room for it and it stays open": "Épingler le panneau à côté de la page : la page lui laisse de la place et il reste ouvert",
-  "Drag to resize the panel": "Faites glisser pour redimensionner le panneau"
+  "Drag to resize the panel": "Faites glisser pour redimensionner le panneau",
+  "Bitcoin funding rate": "Taux de financement du Bitcoin",
+  "Bitcoin futures open interest": "Intérêt ouvert des contrats à terme Bitcoin",
+  "Bitcoin liquidations, 24h": "Liquidations Bitcoin, 24 h",
+  "Bitcoin spot ETF net flow": "Flux net des ETF Bitcoin au comptant",
+  "Stablecoin supply": "Offre de stablecoins"
 }

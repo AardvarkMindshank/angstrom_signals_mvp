@@ -5817,6 +5817,8 @@ try:     # Tides signals read the daily record through this run's client (tides_
     import tides_store as _tides_store
 
     _tides_store.configure(supabase)
+    import market_gauges as _gauges_store
+    _gauges_store.configure(supabase)
 except Exception:
     pass
 

@@ -1323,7 +1323,6 @@
   "A current four-bank global M2 composite (Fed, ECB, Bank of Japan, and PBOC) is not a free series, so this group uses the Fed's own published figures.": "Un compuesto actual de M2 global de cuatro bancos (Fed, BCE, Banco de Japón y PBOC) no es una serie gratuita, así que este grupo usa las cifras publicadas por la propia Fed.",
   "Currency & yield indicators": "Indicadores de divisas y rendimientos",
   "Crypto-specific sentiment & flows": "Sentimiento y flujos propios de cripto",
-  "Funding rates, open interest, liquidations, and ETF flows need Coinglass or Arkham, which are not connected.": "Las tasas de financiación, el interés abierto, las liquidaciones y los flujos de ETF necesitan Coinglass o Arkham, que no están conectados.",
   "Macroeconomic policy & inflation trackers": "Seguimiento de política macroeconómica e inflación",
   "CME FedWatch probabilities and the Conference Board survey are not on a free feed here. The Michigan survey is the consumer reading that is.": "Las probabilidades de CME FedWatch y la encuesta de The Conference Board no están en una fuente gratuita aquí. La encuesta de Michigan es la lectura de consumidores que sí lo está.",
   "Market-wide sentiment & breadth indicators": "Indicadores de sentimiento y amplitud de todo el mercado",
@@ -2238,5 +2237,10 @@
   "🏛️ Equities": "🏛️ Acciones",
   "✨ Starting the AI Navigator…": "✨ Iniciando el AI Navigator…",
   "Pin the panel beside the page: the page makes room for it and it stays open": "Fijar el panel junto a la página: la página le deja sitio y se queda abierto",
-  "Drag to resize the panel": "Arrastra para cambiar el tamaño del panel"
+  "Drag to resize the panel": "Arrastra para cambiar el tamaño del panel",
+  "Bitcoin funding rate": "Tasa de financiación de Bitcoin",
+  "Bitcoin futures open interest": "Interés abierto en futuros de Bitcoin",
+  "Bitcoin liquidations, 24h": "Liquidaciones de Bitcoin, 24 h",
+  "Bitcoin spot ETF net flow": "Flujo neto de los ETF al contado de Bitcoin",
+  "Stablecoin supply": "Oferta de stablecoins"
 }

@@ -1323,7 +1323,6 @@
   "A current four-bank global M2 composite (Fed, ECB, Bank of Japan, and PBOC) is not a free series, so this group uses the Fed's own published figures.": "当前由四家央行（美联储、欧洲央行、日本央行和中国人民银行）构成的全球 M2 综合指标不是免费数据，因此此组使用美联储自己公布的数据。",
   "Currency & yield indicators": "货币与收益率指标",
   "Crypto-specific sentiment & flows": "加密货币特有的情绪与资金流",
-  "Funding rates, open interest, liquidations, and ETF flows need Coinglass or Arkham, which are not connected.": "资金费率、未平仓合约、清算和 ETF 资金流需要 Coinglass 或 Arkham，但它们尚未连接。",
   "Macroeconomic policy & inflation trackers": "宏观经济政策与通胀追踪",
   "CME FedWatch probabilities and the Conference Board survey are not on a free feed here. The Michigan survey is the consumer reading that is.": "CME FedWatch 概率和 Conference Board 调查在这里没有免费数据源。密歇根调查是可用的消费者读数。",
   "Market-wide sentiment & breadth indicators": "全市场情绪与广度指标",
@@ -2238,5 +2237,10 @@
   "🏛️ Equities": "🏛️ 股票",
   "✨ Starting the AI Navigator…": "✨ 正在启动 AI Navigator…",
   "Pin the panel beside the page: the page makes room for it and it stays open": "将面板固定在页面旁：页面会为它让出空间，面板保持打开",
-  "Drag to resize the panel": "拖动以调整面板大小"
+  "Drag to resize the panel": "拖动以调整面板大小",
+  "Bitcoin funding rate": "比特币资金费率",
+  "Bitcoin futures open interest": "比特币期货未平仓合约",
+  "Bitcoin liquidations, 24h": "比特币爆仓额（24小时）",
+  "Bitcoin spot ETF net flow": "比特币现货ETF净流入",
+  "Stablecoin supply": "稳定币供应量"
 }

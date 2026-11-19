@@ -1323,7 +1323,6 @@
   "A current four-bank global M2 composite (Fed, ECB, Bank of Japan, and PBOC) is not a free series, so this group uses the Fed's own published figures.": "Chỉ số M2 toàn cầu hiện hành của bốn ngân hàng (Fed, ECB, Ngân hàng Nhật Bản và PBOC) không phải chuỗi dữ liệu miễn phí, nên nhóm này dùng số liệu do chính Fed công bố.",
   "Currency & yield indicators": "Chỉ báo tiền tệ & lợi suất",
   "Crypto-specific sentiment & flows": "Tâm lý & dòng tiền riêng của tiền mã hóa",
-  "Funding rates, open interest, liquidations, and ETF flows need Coinglass or Arkham, which are not connected.": "Tỷ lệ funding, khối lượng mở, thanh lý và dòng tiền ETF cần Coinglass hoặc Arkham, vốn chưa được kết nối.",
   "Macroeconomic policy & inflation trackers": "Theo dõi chính sách kinh tế vĩ mô & lạm phát",
   "CME FedWatch probabilities and the Conference Board survey are not on a free feed here. The Michigan survey is the consumer reading that is.": "Xác suất CME FedWatch và khảo sát của Conference Board không có nguồn miễn phí ở đây. Khảo sát Michigan là chỉ số người tiêu dùng có sẵn.",
   "Market-wide sentiment & breadth indicators": "Chỉ báo tâm lý & độ rộng toàn thị trường",
@@ -2238,5 +2237,10 @@
   "🏛️ Equities": "🏛️ Cổ phiếu",
   "✨ Starting the AI Navigator…": "✨ Đang khởi động AI Navigator…",
   "Pin the panel beside the page: the page makes room for it and it stays open": "Ghim bảng bên cạnh trang: trang sẽ chừa chỗ và bảng luôn mở",
-  "Drag to resize the panel": "Kéo để đổi kích thước bảng"
+  "Drag to resize the panel": "Kéo để đổi kích thước bảng",
+  "Bitcoin funding rate": "Tỷ lệ funding Bitcoin",
+  "Bitcoin futures open interest": "Hợp đồng mở tương lai Bitcoin",
+  "Bitcoin liquidations, 24h": "Thanh lý Bitcoin, 24 giờ",
+  "Bitcoin spot ETF net flow": "Dòng tiền ròng ETF Bitcoin giao ngay",
+  "Stablecoin supply": "Nguồn cung stablecoin"
 }

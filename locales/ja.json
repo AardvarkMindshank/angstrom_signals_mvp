@@ -1323,7 +1323,6 @@
   "A current four-bank global M2 composite (Fed, ECB, Bank of Japan, and PBOC) is not a free series, so this group uses the Fed's own published figures.": "4つの中央銀行（Fed、ECB、日本銀行、中国人民銀行）による現在の世界M2合成値は無料のデータではないため、このグループではFed自身が公表した数値を使います。",
   "Currency & yield indicators": "通貨と利回りの指標",
   "Crypto-specific sentiment & flows": "暗号資産固有のセンチメントと資金フロー",
-  "Funding rates, open interest, liquidations, and ETF flows need Coinglass or Arkham, which are not connected.": "資金調達率、建玉、清算、ETFの資金フローにはCoinglassやArkhamが必要ですが、接続されていません。",
   "Macroeconomic policy & inflation trackers": "マクロ経済政策とインフレの動向",
   "CME FedWatch probabilities and the Conference Board survey are not on a free feed here. The Michigan survey is the consumer reading that is.": "CME FedWatchの確率とConference Boardの調査は、ここでは無料で取得できません。ミシガン大学の調査が利用できる消費者指標です。",
   "Market-wide sentiment & breadth indicators": "市場全体のセンチメントと騰落の指標",
@@ -2238,5 +2237,10 @@
   "🏛️ Equities": "🏛️ 株式",
   "✨ Starting the AI Navigator…": "✨ AI Navigatorを起動しています…",
   "Pin the panel beside the page: the page makes room for it and it stays open": "パネルをページの横に固定：ページが場所を空け、パネルは開いたままになります",
-  "Drag to resize the panel": "ドラッグしてパネルの幅を変更"
+  "Drag to resize the panel": "ドラッグしてパネルの幅を変更",
+  "Bitcoin funding rate": "ビットコインの資金調達率",
+  "Bitcoin futures open interest": "ビットコイン先物の建玉",
+  "Bitcoin liquidations, 24h": "ビットコインの清算額（24時間）",
+  "Bitcoin spot ETF net flow": "ビットコイン現物ETFの純流入",
+  "Stablecoin supply": "ステーブルコイン供給量"
 }

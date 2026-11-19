@@ -22,6 +22,16 @@ _RETRY_SECONDS = 120
 _HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; SignalsDashboard/1.0)"}
 _CACHE: dict[str, tuple[float, float, list[dict]]] = {}
 
+# The app's own database, for readings it already stores (Coinalyze derivatives, ETF and stablecoin flows). Set by
+# app.py and the worker; without it those readings are simply left out.
+_DB = None
+
+
+def configure(supabase) -> None:
+    global _DB
+    _DB = supabase
+
+
 _MONTHS = (
     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
@@ -39,6 +49,8 @@ def market_gauge_groups(market_key: str) -> list[dict]:
     raw = _load_raw(market_key)
     groups = _crypto_groups(raw) if market_key == "crypto" else _stock_groups(raw)
     ttl = _TTL_SECONDS if any(group.get("items") for group in groups) else _RETRY_SECONDS
+    if market_key == "crypto" and not raw.get("FLOWS"):
+        ttl = min(ttl, 600)                     # the stored readings weren't readable this time: look again soon
     _CACHE[market_key] = (now, ttl, groups)
     return groups
 
@@ -61,7 +73,7 @@ def gauge_brief(groups: list[dict]) -> str:
 
 def _load_raw(market_key: str) -> dict:
     jobs = {
-        "crypto": ("M2SL", "WALCL", "DFF", "DGS10", "DXY", "FNG", "CG"),
+        "crypto": ("M2SL", "WALCL", "DFF", "DGS10", "DXY", "FNG", "CG", "FLOWS"),
         "stock": ("DFF", "T10YIE", "UMCSENT", "MICH", "VIXCLS", "CNN", "AV", "POLY"),
     }[market_key]
     raw: dict = {}
@@ -82,6 +94,8 @@ def _fetch_one(name: str):
         return _fear_greed()
     if name == "CG":
         return _coingecko()
+    if name == "FLOWS":
+        return _stored_flows()
     if name == "CNN":
         return _cnn()
     if name == "AV":
@@ -596,11 +610,9 @@ def _crypto_groups(raw: dict) -> list[dict]:
         },
         {
             "title": mark("Crypto-specific sentiment & flows"),
-            "items": _present(_fear_item(raw.get("FNG")), *_coin_items(raw.get("CG"))),
-            "note": (
-                mark("Funding rates, open interest, liquidations, and ETF flows need Coinglass or Arkham, "
-                "which are not connected.")
-            ),
+            "items": _present(_fear_item(raw.get("FNG")), *_coin_items(raw.get("CG")),
+                              *_flow_items(raw.get("FLOWS"))),
+            "note": "",
         },
     ]
 
@@ -771,6 +783,110 @@ def _coin_items(payload):
                 "https://www.coingecko.com/en/global-charts",
                 "",
             ))
+    return items
+
+
+def _stored_flows():
+    """Bitcoin's derivatives record (Coinalyze, about hourly) and the last days of US spot Bitcoin ETF flows (TFTC)
+    and total stablecoin supply (DefiLlama), from the app's own tables."""
+    if _DB is None:
+        return None
+    out = {}
+    try:
+        rows = (_DB.table("asset_market").select("liq_levels, liq_updated_at")
+                .eq("asset_key", "Crypto|bitcoin").limit(1).execute().data or [])
+        if rows and isinstance(rows[0].get("liq_levels"), dict) and rows[0]["liq_levels"].get("status") == "ok":
+            out["btc"] = {**rows[0]["liq_levels"], "updated_at": rows[0].get("liq_updated_at")}
+    except Exception:
+        pass
+    since = (datetime.now(timezone.utc) - timedelta(days=21)).date().isoformat()
+    for key, source, series, subject in (("etf", "tftc_btc_etf", "etf_net_flow", "BTC"),
+                                         ("stable", "defillama_stablecoins", "stablecoin_supply", "ALL")):
+        try:
+            got = (_DB.table("capital_flow_observations").select("observed_date, value")
+                   .eq("source", source).eq("series", series).eq("subject", subject)
+                   .gte("observed_date", since).order("observed_date").execute().data or [])
+            by_day = {}
+            for row in got:
+                by_day[str(row["observed_date"])[:10]] = float(row["value"])
+            if by_day:
+                out[key] = sorted(by_day.items())
+        except Exception:
+            pass
+    return out or None
+
+
+def _usd(value: float, signed: bool = False) -> str:
+    sign = ("+" if value >= 0 else "−") if signed else ("−" if value < 0 else "")
+    a = abs(value)
+    for size, unit in ((1e12, "T"), (1e9, "B"), (1e6, "M"), (1e3, "K")):
+        if a >= size:
+            return f"{sign}${a / size:.1f}{unit}"
+    return f"{sign}${a:,.0f}"
+
+
+def _flow_items(payload):
+    if not payload:
+        return []
+    items = []
+    btc = payload.get("btc") or {}
+    series = btc.get("series") or {}
+    day = str(btc.get("updated_at") or "")[:10]
+
+    def values(name):
+        return [v for v in series.get(name) or [] if v is not None]
+
+    funding = values("funding")
+    if funding:
+        now = float(funding[-1])
+        week = funding[-24 * 7:]
+        lean = ("longs pay shorts, so traders lean long" if now > 0 else
+                "shorts pay longs, so traders lean short" if now < 0 else "neither side pays")
+        crowd = " (high: a crowded long)" if now >= 0.03 else ""
+        items.append(_reading(
+            mark("Bitcoin funding rate"), f"{now:+.4f}%",
+            f"Per funding period on Binance, Bybit and OKX: {lean}{crowd}. 7-day average {sum(week) / len(week):+.4f}%.",
+            "Coinalyze", "https://coinalyze.net/bitcoin/funding-rate/",
+            "greed" if now >= 0.03 else "fear" if now < 0 else "neutral", day))
+    oi = series.get("oi") or []
+    if oi and oi[-1]:
+        then = oi[-25] if len(oi) >= 25 and oi[-25] else None
+        moved = f"{(oi[-1] / then - 1) * 100:+.1f}% in 24h" if then else ""
+        items.append(_reading(
+            mark("Bitcoin futures open interest"), _usd(float(oi[-1])),
+            "All open Bitcoin futures positions on Binance, Bybit and OKX" + (f", {moved}" if moved else "")
+            + ". Rising means new money is betting.",
+            "Coinalyze", "https://coinalyze.net/bitcoin/open-interest/", "", day))
+    longs = sum(v or 0 for v in (series.get("liq_long") or [])[-24:])
+    shorts = sum(v or 0 for v in (series.get("liq_short") or [])[-24:])
+    if series.get("liq_long") or series.get("liq_short"):
+        side = "mostly longs" if longs > 2 * shorts else "mostly shorts" if shorts > 2 * longs else "both sides"
+        items.append(_reading(
+            mark("Bitcoin liquidations, 24h"), _usd(longs + shorts),
+            f"Positions force-closed in the last 24 hours: longs {_usd(longs)}, shorts {_usd(shorts)} ({side}).",
+            "Coinalyze", "https://coinalyze.net/bitcoin/liquidations/",
+            "fear" if longs > 2 * shorts else "greed" if shorts > 2 * longs else "", day))
+    etf = payload.get("etf") or []
+    if etf:
+        last_day, last = etf[-1]
+        five = sum(v for _, v in etf[-5:])
+        items.append(_reading(
+            mark("Bitcoin spot ETF net flow"), _usd(last, signed=True),
+            f"Money into (+) or out of (−) the US spot Bitcoin funds on {_stamp(last_day)}; "
+            f"last {min(5, len(etf))} trading days {_usd(five, signed=True)}. "
+            "Source: The Commoner Bitcoin ETF Tracker by TFTC.",
+            "TFTC", "https://www.tftc.io/bitcoin-etf-flows/",
+            "greed" if five > 0 else "fear" if five < 0 else "", last_day))
+    stable = payload.get("stable") or []
+    if stable:
+        last_day, last = stable[-1]
+        week_ago = next((v for d, v in reversed(stable) if d <= (datetime.strptime(last_day, "%Y-%m-%d")
+                                                                   - timedelta(days=7)).strftime("%Y-%m-%d")), None)
+        moved = f", {(last / week_ago - 1) * 100:+.2f}% in 7 days" if week_ago else ""
+        items.append(_reading(
+            mark("Stablecoin supply"), _usd(last),
+            f"All stablecoins in circulation{moved}. Growing supply is cash waiting at the edge of crypto.",
+            "DefiLlama", "https://defillama.com/stablecoins", "", last_day))
     return items
 
 

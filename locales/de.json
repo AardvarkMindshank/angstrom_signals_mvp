@@ -1323,7 +1323,6 @@
   "A current four-bank global M2 composite (Fed, ECB, Bank of Japan, and PBOC) is not a free series, so this group uses the Fed's own published figures.": "Ein aktueller globaler M2-Index aus vier Notenbanken (Fed, EZB, Bank of Japan und PBOC) ist keine kostenlose Datenreihe, daher nutzt diese Gruppe die eigenen veröffentlichten Zahlen der Fed.",
   "Currency & yield indicators": "Währungs- & Rendite-Indikatoren",
   "Crypto-specific sentiment & flows": "Krypto-spezifische Stimmung & Flüsse",
-  "Funding rates, open interest, liquidations, and ETF flows need Coinglass or Arkham, which are not connected.": "Funding Rates, Open Interest, Liquidationen und ETF-Flüsse erfordern Coinglass oder Arkham, die nicht verbunden sind.",
   "Macroeconomic policy & inflation trackers": "Makropolitik- & Inflations-Tracker",
   "CME FedWatch probabilities and the Conference Board survey are not on a free feed here. The Michigan survey is the consumer reading that is.": "CME-FedWatch-Wahrscheinlichkeiten und die Umfrage des Conference Board gibt es hier nicht kostenlos. Die Michigan-Umfrage ist der verfügbare Verbraucherwert.",
   "Market-wide sentiment & breadth indicators": "Marktweite Stimmungs- & Breiten-Indikatoren",
@@ -2238,5 +2237,10 @@
   "🏛️ Equities": "🏛️ Aktien",
   "✨ Starting the AI Navigator…": "✨ AI Navigator wird gestartet…",
   "Pin the panel beside the page: the page makes room for it and it stays open": "Bereich neben der Seite anheften: Die Seite macht Platz und er bleibt offen",
-  "Drag to resize the panel": "Ziehen, um die Breite zu ändern"
+  "Drag to resize the panel": "Ziehen, um die Breite zu ändern",
+  "Bitcoin funding rate": "Bitcoin-Finanzierungsrate",
+  "Bitcoin futures open interest": "Offenes Interesse bei Bitcoin-Futures",
+  "Bitcoin liquidations, 24h": "Bitcoin-Liquidationen, 24 Std.",
+  "Bitcoin spot ETF net flow": "Nettozufluss in Bitcoin-Spot-ETFs",
+  "Stablecoin supply": "Stablecoin-Umlauf"
 }

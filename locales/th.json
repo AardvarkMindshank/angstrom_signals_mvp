@@ -1844,7 +1844,6 @@
   "A current four-bank global M2 composite (Fed, ECB, Bank of Japan, and PBOC) is not a free series, so this group uses the Fed's own published figures.": "ตัวเลข M2 รวมของธนาคารกลางสี่แห่ง (Fed, ECB, ธนาคารกลางญี่ปุ่น และ PBOC) ไม่มีให้ใช้ฟรี กลุ่มนี้จึงใช้ตัวเลขที่ Fed เผยแพร่เอง",
   "Currency & yield indicators": "ตัวชี้วัดค่าเงินและอัตราผลตอบแทน",
   "Crypto-specific sentiment & flows": "Sentiment และกระแสเงินเฉพาะคริปโต",
-  "Funding rates, open interest, liquidations, and ETF flows need Coinglass or Arkham, which are not connected.": "Funding rate, open interest, การบังคับปิดสถานะ และกระแสเงิน ETF ต้องใช้ Coinglass หรือ Arkham ซึ่งยังไม่ได้เชื่อมต่อ",
   "Macroeconomic policy & inflation trackers": "ตัวติดตามนโยบายเศรษฐกิจมหภาคและเงินเฟ้อ",
   "CME FedWatch probabilities and the Conference Board survey are not on a free feed here. The Michigan survey is the consumer reading that is.": "ความน่าจะเป็นของ CME FedWatch และผลสำรวจ Conference Board ไม่มีในฟีดฟรีที่นี่ ผลสำรวจ Michigan เป็นค่าผู้บริโภคที่มีให้",
   "Market-wide sentiment & breadth indicators": "ตัวชี้วัด sentiment และความกว้างของทั้งตลาด",
@@ -2238,5 +2237,10 @@
   "🏛️ Equities": "🏛️ หุ้น",
   "✨ Starting the AI Navigator…": "✨ กำลังเริ่ม AI Navigator…",
   "Pin the panel beside the page: the page makes room for it and it stays open": "ปักหมุดแผงไว้ข้างหน้า: หน้าจะเว้นที่ให้และแผงจะเปิดค้างไว้",
-  "Drag to resize the panel": "ลากเพื่อปรับขนาดแผง"
+  "Drag to resize the panel": "ลากเพื่อปรับขนาดแผง",
+  "Bitcoin funding rate": "อัตราฟันดิงของบิตคอยน์",
+  "Bitcoin futures open interest": "สัญญาฟิวเจอร์สบิตคอยน์ที่ยังเปิดอยู่",
+  "Bitcoin liquidations, 24h": "การล้างพอร์ตบิตคอยน์ 24 ชม.",
+  "Bitcoin spot ETF net flow": "เงินไหลสุทธิของ ETF บิตคอยน์แบบสปอต",
+  "Stablecoin supply": "ปริมาณสเตเบิลคอยน์"
 }

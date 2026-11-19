@@ -1323,7 +1323,6 @@
   "A current four-bank global M2 composite (Fed, ECB, Bank of Japan, and PBOC) is not a free series, so this group uses the Fed's own published figures.": "4개 중앙은행(연준, ECB, 일본은행, 중국인민은행)의 현재 글로벌 M2 합산 지표는 무료 데이터가 아니어서, 이 그룹은 연준이 직접 발표한 수치를 씁니다.",
   "Currency & yield indicators": "통화와 금리 지표",
   "Crypto-specific sentiment & flows": "암호화폐 고유의 심리와 자금 흐름",
-  "Funding rates, open interest, liquidations, and ETF flows need Coinglass or Arkham, which are not connected.": "펀딩비, 미결제약정, 청산, ETF 자금 흐름에는 Coinglass나 Arkham이 필요하지만 연결되어 있지 않습니다.",
   "Macroeconomic policy & inflation trackers": "거시경제 정책과 물가 추적",
   "CME FedWatch probabilities and the Conference Board survey are not on a free feed here. The Michigan survey is the consumer reading that is.": "CME FedWatch 확률과 Conference Board 조사는 여기서 무료로 받을 수 없습니다. 미시간 조사가 쓸 수 있는 소비자 지표입니다.",
   "Market-wide sentiment & breadth indicators": "시장 전반의 심리와 시장 폭 지표",
@@ -2238,5 +2237,10 @@
   "🏛️ Equities": "🏛️ 주식",
   "✨ Starting the AI Navigator…": "✨ AI Navigator를 시작하는 중…",
   "Pin the panel beside the page: the page makes room for it and it stays open": "패널을 페이지 옆에 고정: 페이지가 공간을 내주고 패널은 열린 채로 유지됩니다",
-  "Drag to resize the panel": "끌어서 패널 크기 조절"
+  "Drag to resize the panel": "끌어서 패널 크기 조절",
+  "Bitcoin funding rate": "비트코인 펀딩비",
+  "Bitcoin futures open interest": "비트코인 선물 미결제약정",
+  "Bitcoin liquidations, 24h": "비트코인 청산액, 24시간",
+  "Bitcoin spot ETF net flow": "비트코인 현물 ETF 순유입",
+  "Stablecoin supply": "스테이블코인 공급량"
 }
