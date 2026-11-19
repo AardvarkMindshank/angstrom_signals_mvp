@@ -10293,6 +10293,18 @@ def _beta_set_open() -> None:
         _beta_note("ok", t("Sign-up is open to everyone.") if wanted else t("Sign-up is closed. Only approved emails can create accounts."))
 
 
+def _nda_admin_tools(current_nda, signed: list) -> None:
+    """👀 Preview the NDA page, and the NDA's state: under the Beta requests list, also when nothing is pending."""
+    if current_nda is not None and st.button(t("👀 Preview the NDA page"), key="admin_nda_preview",
+                                             help=t("See and try the signing page testers get. Nothing is recorded.")):
+        st.session_state["nda_preview"] = True
+        st.rerun()
+    if current_nda is not None and not current_nda["enforce"]:
+        st.caption(t('✍️ NDA version {current_nda_version} is set up but switched off: testers are not asked to sign yet.', current_nda_version=current_nda['version']))
+    elif current_nda is not None:
+        st.caption(t('✍️ NDA version {current_nda_version}: {sum_1_for_r_in_signed_if} signed. Testers sign at their first sign-in after approval; a signed copy is emailed to them and to admins.', current_nda_version=current_nda['version'], sum_1_for_r_in_signed_if=sum(1 for r in signed if r.get('nda_version') == current_nda['version'])))
+
+
 @st.fragment
 def _show_beta() -> None:
     """Beta access requests from the website. Approve to let someone create an account."""
@@ -10355,6 +10367,7 @@ def _show_beta() -> None:
             visible.append(row)
         if not visible:
             st.caption("Nothing pending." if not show_decided else t("No request matches that search."))
+            _nda_admin_tools(_nda.current(), [r for r in clean_rows if r.get("nda_id")])
             return
         titles = ["Applied", "Name", "Email", "Phone", "Markets", "Years", "Active", "Tools", "Why", "Status", "NDA"]
         current_nda = _nda.current()
@@ -10412,14 +10425,7 @@ def _show_beta() -> None:
                         on_click=_beta_review, args=(request_id, "declined", email, name), use_container_width=True,
                     )
         signed = [r for r in clean_rows if r.get("nda_id")]
-        if current_nda is not None and st.button(t("👀 Preview the NDA page"), key="admin_nda_preview",
-                                                 help=t("See and try the signing page testers get. Nothing is recorded.")):
-            st.session_state["nda_preview"] = True
-            st.rerun()
-        if current_nda is not None and not current_nda["enforce"]:
-            st.caption(t('✍️ NDA version {current_nda_version} is set up but switched off: testers are not asked to sign yet.', current_nda_version=current_nda['version']))
-        elif current_nda is not None:
-            st.caption(t('✍️ NDA version {current_nda_version}: {sum_1_for_r_in_signed_if} signed. Testers sign at their first sign-in after approval; a signed copy is emailed to them and to admins.', current_nda_version=current_nda['version'], sum_1_for_r_in_signed_if=sum(1 for r in signed if r.get('nda_version') == current_nda['version'])))
+        _nda_admin_tools(current_nda, signed)
         if signed:
             pick = st.selectbox(
                 t("Signed NDA copy"),
