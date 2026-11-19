@@ -208,7 +208,7 @@ function draw({ scene }) {
            ["🔎", "Prism Scan", "which assets show it today"], ["🪜", "Funnel", "narrow it with your own steps"],
            ["🧠", "Your judgement", "chart, risk, size, exit"]]
           .map(([i, a, b], k) => (k ? `<div ${step(`font:bold 34px ${FONT};color:${GREY}`)}>→</div>` : "") +
-            box(`<div style="font:34px ${FONT}">${i}</div><div style="font:bold 19px ${FONT};color:${NAVY};margin-top:6px">${a}</div>${small(b)}`, "width:136px;text-align:center;padding:14px 12px")).join("")}
+            box(`<div style="font:34px ${FONT}">${i}</div><div style="font:bold 19px ${FONT};color:${NAVY};margin-top:6px">${a}</div>${small(b)}`, "width:150px;text-align:center;padding:14px 10px")).join("")}
       </div>
       <div ${step(`margin-top:34px;text-align:center;font:19px ${FONT};color:#334155`)}>
         Soundings describes the past. It is research, not a forecast, and never a buy or sell signal.</div>`,

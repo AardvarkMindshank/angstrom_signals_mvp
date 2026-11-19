@@ -123,6 +123,7 @@ const SOUNDINGS_DIAGRAM = require("./soundings_diagram.js");
 
 // One of the in-depth video's explainer pictures (soundings_diagram.js), over the page; h.clear() removes it.
 async function scene(h, name) {
+  await h.page.mouse.move(1276, 606, { steps: 6 });        // the pointer out of the way of the picture
   await h.page.evaluate(SOUNDINGS_DIAGRAM.draw, { scene: name });
   await h.wait(300);
 }
@@ -142,7 +143,9 @@ async function soundings(h) {
 
 // A Soundings tab (Chart, Before rises, Before falls) by its name.
 async function sndTab(h, name) {
-  const tab = h.page.locator('[role="tab"]').filter({ hasText: name }).first();
+  // Only the Soundings tabs on show: other tab rows on the page (hidden ones too) can also say "Chart".
+  const label = { "Chart": "🗺️ Chart", "Before rises": "📈 Before rises", "Before falls": "📉 Before falls" }[name] || name;
+  const tab = h.page.locator('[role="tab"]').filter({ hasText: label, visible: true }).first();
   await tab.evaluate((n) => n.scrollIntoView({ block: "start", behavior: "smooth" })).catch(() => {});
   await h.wait(500);
   await h.press(tab);
