@@ -40,6 +40,8 @@ def current(directory: Path | None = None) -> dict | None:
     return {"version": str(meta["version"]), "title": str(meta.get("title") or "Beta Non-Disclosure Agreement"),
             "enforce": meta.get("enforce", True) is True, "file": meta["file"], "pdf": pdf, "sha256": hashlib.sha256(pdf).hexdigest(), "text": pdf_text(pdf),
             "applies_from": str(meta.get("applies_from") or ""),
+            # the readable version: the Markdown the PDF was built from (legal/nda/build_pdf.py), when there is one
+            "markdown": _read(directory / meta["source"]) if meta.get("source") else "",
             "exempt": [str(e).strip().lower() for e in meta.get("exempt") or []]}
 
 
@@ -54,6 +56,24 @@ def applies_to(nda: dict, email: str | None, created_at) -> bool:
         if made[:10] and made[:10] < start[:10]:
             return False
     return True
+
+
+def smaller_headings(markdown: str, by: int = 2) -> str:
+    """Every heading two levels smaller (# → ###), so the NDA's title doesn't outshout the page around it."""
+    out = []
+    for line in markdown.splitlines():
+        hashes = len(line) - len(line.lstrip("#"))
+        if 0 < hashes and line[hashes:hashes + 1] == " ":
+            line = "#" * min(6, hashes + by) + line[hashes:]
+        out.append(line)
+    return "\n".join(out)
+
+
+def _read(path: Path) -> str:
+    try:
+        return path.read_text(encoding="utf-8")
+    except OSError:
+        return ""
 
 
 def pdf_text(pdf: bytes) -> str:
@@ -226,9 +246,13 @@ def _page(st, supabase, user, nda: dict, preview: bool = False) -> None:
                 "non-disclosure agreement. It takes a minute, and you only do it once.")
     st.download_button("📄 Download the NDA (PDF)", nda["pdf"], file_name=nda["file"], mime="application/pdf",
                        key="nda_download")
-    with st.container(height=420, border=True):
-        st.markdown(nda["text"].replace("\n", "  \n") if nda["text"] else
-                    "_The NDA could not be shown here: please download the PDF above and read it._")
+    with st.container(height=520, border=True):
+        if nda.get("markdown"):
+            # the same words as the PDF, set as a page: headings, bullets, bold (the # title is smaller here)
+            st.markdown(smaller_headings(nda["markdown"]))
+        else:
+            st.markdown(nda["text"].replace("\n", "  \n") if nda["text"] else
+                        "_The NDA could not be shown here: please download the PDF above and read it._")
     st.caption(f"Version {nda['version']} · document fingerprint {nda['sha256'][:16]}…")
     agreed = st.checkbox("I have read the NDA and agree to its terms.", key="nda_agree")
     full_name = st.text_input("Your full legal name", key="nda_name", max_chars=120)

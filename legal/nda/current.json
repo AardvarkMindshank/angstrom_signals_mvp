@@ -1,1 +1,1 @@
-{"version": "2026-11-v3", "file": "Angstrom_Signals_Private_Beta_NDA_v3.pdf", "title": "Angstrom Signals Private Beta NDA", "enforce": true, "applies_from": "2026-11-19", "exempt": ["demo@angstromsignals.com"]}
+{"version": "2026-11-v3", "file": "Angstrom_Signals_Private_Beta_NDA_v3.pdf", "title": "Angstrom Signals Private Beta NDA", "enforce": true, "applies_from": "2026-11-19", "exempt": ["demo@angstromsignals.com"], "source": "nda_v3.md"}

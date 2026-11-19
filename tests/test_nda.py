@@ -256,6 +256,8 @@ def test_the_real_nda_is_on_for_new_accounts_and_readable():
     assert "NON-DISCLOSURE AGREEMENT" in doc["text"] and "country of residence" in doc["text"]
     assert "[" not in doc["text"], "a placeholder is left in the NDA"
     assert "Thailand" in doc["text"] and "180/6 Hin Wong Nivet" in doc["text"]
+    assert doc["markdown"].startswith("# ANGSTROM SIGNALS") and "## 9. Governing Law" in doc["markdown"]
+    assert nda.smaller_headings("# A\n## B\ntext #1") == "### A\n#### B\ntext #1"
 
 
 def test_who_is_asked_to_sign():
