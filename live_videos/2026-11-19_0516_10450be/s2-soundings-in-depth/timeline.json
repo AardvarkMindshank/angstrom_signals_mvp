@@ -1,0 +1,91 @@
+{
+ "steps": [
+  {
+   "id": "plan",
+   "start": 28.745,
+   "say": "This is the longer look at Soundings. | What it's for, how it works, the statistics behind it, and why you can trust what it shows, and where you shouldn't."
+  },
+  {
+   "id": "question",
+   "start": 37.501,
+   "say": "The usual way is to pick a signal, then check what price did after it. | But you only ever test the ideas you already had. | Soundings turns it round. It marks every past move first, then looks back at what came before. | The data suggests the ideas."
+  },
+  {
+   "id": "move",
+   "start": 53.079,
+   "say": "First, what counts as a move. | A rise means price reaches two typical moves above the close within six daily candles, without first falling one typical move below it. | A fall is the mirror image. A candle that touches both counts as neither."
+  },
+  {
+   "id": "typical",
+   "start": 68.245,
+   "say": "A typical move is that coin's own average daily range, over the last twenty candles. | So a rise means the same thing for a calm coin and a wild one."
+  },
+  {
+   "id": "readings",
+   "start": 77.738,
+   "say": "Then, at the close before every day, it reads the app's own signals. | Trend, stretch, flow, chart patterns, Sonar, market structure, and the Tides. | That's a hundred and twenty seven conditions, and pairs of them: over seven thousand in all. | Each is replayed exactly as it stood at that close, so nothing can see the move that came after."
+  },
+  {
+   "id": "usual",
+   "start": 97.358,
+   "say": "Each condition is compared with the usual rate. | If rises usually follow twenty one percent of closes, and thirty one percent after the condition, that's a lift of about one and a half times. | And usual means comparable days: the same coin, the same year, the same side of its two hundred day average. | So a bull year, or a coin that only went up, can't make a condition look good."
+  },
+  {
+   "id": "split",
+   "start": 119.92,
+   "say": "The history is split in three. | The search years, to the end of twenty twenty two, where ideas are found. | The later years, to October twenty twenty four: a fresh exam the search never saw. | And a sealed hold-out from then on, never read at all. It's kept for the final test of a finished strategy."
+  },
+  {
+   "id": "many",
+   "start": 138.006,
+   "say": "Here's the trap. | Test three hundred useless ideas at the usual one in twenty standard, and about fifteen pass by luck. | Soundings tries thousands. | So it uses the Benjamini Hochberg correction: at most ten percent of what it keeps may be luck. | And a result needs at least one and a quarter times the usual rate, on a hundred and fifty days, and eight coins."
+  },
+  {
+   "id": "together",
+   "start": 160.237,
+   "say": "There's a second trap. | Coins move together, and neighbouring days overlap. | A hundred coins rising on the same day isn't a hundred separate pieces of evidence. | So the test reshuffles whole blocks of calendar days, across all coins at once, thousands of times. | The crowding stays in, and nothing is counted twice."
+  },
+  {
+   "id": "themes",
+   "start": 179.952,
+   "say": "For crypto rises, a thousand and four results passed the search. | But most are one idea in many forms. | So they're grouped into themes, and only the strongest of each theme sits the exam on the later years. | Once."
+  },
+  {
+   "id": "verdicts",
+   "start": 193.921,
+   "say": "Of the twenty theme leaders for crypto rises, three held up. | Ten came before more rises and more falls: a bigger move coming, direction unknown. | Five were weaker later. | And two faded completely."
+  },
+  {
+   "id": "live",
+   "start": 207.202,
+   "say": "In the app, those verdicts group the cards on the Before rises tab, strongest first."
+  },
+  {
+   "id": "example",
+   "start": 213.039,
+   "say": "Take one that held up. | Price near the top of its Bollinger band, with the two Stoch RSI lines far apart. | In the search years, a rise followed thirty one percent of the time, against twenty one usual. | On the later years, twenty seven against twenty, and it was higher on seventy one coins out of ninety seven. | Smaller on the exam than in the search: that's normal. A real edge shrinks. A lucky one vanishes."
+  },
+  {
+   "id": "integrity",
+   "start": 238.215,
+   "say": "So, the integrity checks. | The coins include ones that collapsed or stopped trading, so it isn't only today's survivors. | Every reading is as it stood at the time, and macro data as first published. | Cut points are fixed in advance, never tuned. | It's corrected for every try, it must hold across many coins, the hold-out stays sealed, | and the failures stay on the page."
+  },
+  {
+   "id": "limits",
+   "start": 261.099,
+   "say": "Now the limits. | Even that result means no rise most of the time. A rise followed twenty seven times in a hundred. Seventy three times, it didn't. | Costs and slippage aren't included. It's daily candles only, so far. | And markets change. Soundings describes the past."
+  },
+  {
+   "id": "chart",
+   "start": 278.932,
+   "say": "You can check any result by eye. | The chart puts each row under the price, with the Tide on top, for any coin and any year."
+  },
+  {
+   "id": "use",
+   "start": 291.838,
+   "say": "So use a result as a starting point. | Open it as a Signal Set. Scan for it with Prism. Narrow it in a funnel. | Then bring your own judgement: the chart, your risk, your size, and your exit."
+  }
+ ],
+ "end": 305.313,
+ "trim": 28.745
+}
