@@ -55,7 +55,10 @@ const OUT = process.argv[2] || "out/shots";
   await step("tides", async () => { const s = await expand("Tides"); await settle(2500); await toTop(s); await shot("tides"); await fold("Tides"); });
   await step("table", async () => { const s = await expand("Crypto Signals"); await settle(3000); await toTop(s); await shot("signal_table"); });
   await step("chart", async () => {
-    await page.locator("summary").filter({ hasText: "Crypto Signals" }).first().locator("xpath=..").getByText("Bitcoin", { exact: false }).first().click().catch(() => {});
+    const table = page.locator("summary").filter({ hasText: "Crypto Signals" }).first().locator("xpath=..");
+    const wl = table.locator("label").filter({ hasText: "My Watchlist" }).first();
+    if (await wl.count()) { await wl.click().catch(() => {}); await settle(2500); }
+    await table.locator("table").getByText("Bitcoin", { exact: true }).first().click().catch(() => {});
     await settle(1500);
     await fold("Crypto Signals");
     const s = await expand("Interactive Chart"); await settle(4000);

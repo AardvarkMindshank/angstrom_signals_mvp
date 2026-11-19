@@ -179,13 +179,21 @@ const LWC = ".ang-lwc";
 async function openChart(h, name = "Bitcoin", interval = "4h", range = "3M") {
   await h.expand("Crypto Signals");
   await h.wait(2000);
-  const link = h.section_("Crypto Signals").getByText(name, { exact: false }).first();
+  // The table may be showing a dynamic funnel: switch it to the watchlist, where the asset is.
+  const wl = h.section_("Crypto Signals").locator("label").filter({ hasText: "My Watchlist" }).first();
+  if (await wl.count()) { await wl.click().catch(() => {}); await h.settle(); await h.wait(2000); }
+  let link = h.section_("Crypto Signals").locator("table").getByText(name, { exact: true }).first();
+  if (!(await link.count())) link = h.section_("Crypto Signals").getByText(name, { exact: false }).first();
   await h.glide(link, 300);
   await link.click();
   await h.settle();
   await h.fold("Crypto Signals");
-  await h.expand("Interactive Chart");
-  await h.page.waitForSelector(LWC + " canvas", { timeout: 90000 }).catch(() => {});
+  for (let i = 0; i < 3; i++) {             // the section can fold again in the redraw after picking the asset
+    await h.expand("Interactive Chart");
+    const drawn = await h.page.waitForSelector(LWC + " canvas", { timeout: 30000 }).then(() => true).catch(() => false);
+    if (drawn) break;
+    await h.settle();
+  }
   await h.settle();
   await timeframe(h, interval, range, false);
   await chartTop(h);
@@ -1532,6 +1540,64 @@ module.exports = {
       await toggle.evaluate((n) => n.scrollIntoView({ block: "center", behavior: "smooth" })).catch(() => {});
       await h.wait(400);
       await h.press(toggle.locator("label").first());
+    },
+  },
+  "c6-chart-to-signals": {
+    login: signInWide,
+    idea: async (h) => {
+      await h.card({ kicker: "📊 Charts", title: "From the chart to your signals",
+        lines: ["✓ Chart shapes and Sonar markers", "✓ Fair value gaps, anchored VWAP, volume profile",
+                "✓ In Sets, Prism scans, funnels and Soundings"] });
+    },
+    open: async (h) => {
+      await h.clear();
+      await lattice(h, "Signal Sets");
+      const card = h.page.locator(".lat .lib .chip.card").filter({ hasText: "Levels made by trading" }).first();
+      await h.show(card);
+      await card.evaluate((n) => n.scrollIntoView({ block: "center", behavior: "smooth" })).catch(() => {});
+      await h.wait(600);
+      await h.ring(card);
+    },
+    variants: async (h) => {
+      const card = h.page.locator(".lat .lib .chip.card").filter({ hasText: "Levels made by trading" }).first();
+      for (const v of ["Anchored VWAP", "Volume profile", "Fair value gaps"]) {
+        await h.press(card.locator(".vars button").filter({ hasText: v }).first());
+        await h.wait(700);
+      }
+      await h.press(card.locator(".seg button").filter({ hasText: /^4h$/ }).first());
+    },
+    add: async (h) => {
+      await h.clear();
+      const card = () => h.page.locator(".lat .lib .chip.card").filter({ hasText: "Levels made by trading" }).first();
+      await h.press(ADD("Fair value gaps"));
+      await h.wait(600);
+      await h.press(card().locator(".vars button").filter({ hasText: "Anchored VWAP" }).first());
+      await h.press(card().locator("button.sq").first());
+      await h.wait(600);
+    },
+    lines: async (h) => {
+      await h.press('.lat button[aria-label="Add a line that must hold"] >> visible=true');
+      await setLine(h, 0, "Fair value gaps (4h) · test up", "within", "3");
+      await h.wait(600);
+      await h.press('.lat button[aria-label="Add a line that must hold"] >> visible=true');
+      await setLine(h, 1, "(swing low) (4h) · position", "is", "above");
+    },
+    shapes: async (h) => {
+      const card = h.page.locator(".lat .lib .chip.card").filter({ hasText: "Chart shapes" }).first();
+      await card.evaluate((n) => n.scrollIntoView({ block: "center", behavior: "smooth" })).catch(() => {});
+      await h.wait(600);
+      await h.ring(card);
+    },
+    save: async (h) => {
+      await h.clear();
+      await h.type('.lat input[aria-label="Set name"]', "Gap held above VWAP");
+      await h.wait(1000);
+      await save(h, "Save as a new Set", "It now appears in");
+    },
+    use: async (h) => {
+      await h.card({ kicker: "Saved", title: "Gap held above VWAP",
+        lines: ["✓ Scan your assets with it in Prism", "✓ A stage in a funnel", "✓ Colour bands on the chart",
+                "✓ Readings Soundings checks too"] });
     },
   },
 };
