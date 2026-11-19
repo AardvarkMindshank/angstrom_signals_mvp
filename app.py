@@ -411,7 +411,7 @@ export default function(component) {
       "[data-testid='stExpander'] details > summary:has(.ang-header-score){display:flex !important;align-items:center;}",
       ".ang-header-score{margin-left:auto;margin-right:0.55rem;flex:none;display:inline-block;min-width:52px;text-align:center;border-radius:4px;padding:2px 8px;font-weight:600;line-height:1;}",
       // Several boxes (Trend, Stretch, Flow): they wrap onto a second line in a narrow column, so the title keeps its width.
-      ".ang-header-score.ang-boxes{display:inline-flex;flex:0 1 auto;flex-wrap:wrap;justify-content:flex-end;gap:4px;max-width:60%;}",
+      ".ang-header-score.ang-boxes{display:inline-flex;flex:0 0 auto;flex-wrap:wrap;justify-content:flex-end;gap:4px;max-width:60%;}",
       "[data-testid='stExpander'] details > summary:hover,[data-testid='stExpander'] details > summary:focus-visible,[data-testid='stExpander'] details > summary:active{background:var(--ang-hover) !important;}",
       "html.angstrom-night [data-testid='stSidebar']{background:var(--ang-side) !important;border-right:1px solid var(--ang-border);}",
       "html.angstrom-night [data-testid='stMain'] [data-testid='stVerticalBlockBorderWrapper'],html.angstrom-night [data-testid='stMetric']{background:var(--ang-surface) !important;border-color:var(--ang-border) !important;}",
