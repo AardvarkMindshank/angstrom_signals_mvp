@@ -1,0 +1,57 @@
+{
+ "title": "Soundings at a glance",
+ "series": "Soundings",
+ "next": "Next: Soundings in depth",
+ "slug": "s1-soundings",
+ "section": "training",
+ "zoom": "1.1",
+ "intro_say": "Angstrom Signals. | Soundings.",
+ "outro_say": "That's Soundings. | It describes the past. It never says buy or sell.",
+ "steps": [
+  {
+   "id": "idea",
+   "screen": "A card: start from the moves",
+   "say": "Most tools start with a signal and ask what followed. | Soundings works backwards. | It marks every past rise and fall, then looks at what the readings were just before each one."
+  },
+  {
+   "id": "open",
+   "screen": "Opening Soundings in Angstrom Lattice",
+   "say": "Open Soundings in Angstrom Lattice. | It shows the last checked research run, for crypto or for equities."
+  },
+  {
+   "id": "chart",
+   "screen": "The chart tab",
+   "say": "The chart comes first. | Price on top, with a small arrow on each close a rise followed. | Below, one row per result: a dot wherever its condition held, coloured when the move followed, grey when it didn't."
+  },
+  {
+   "id": "hover",
+   "screen": "Hovering a day on the chart",
+   "say": "Point at any day to see its price, whether the move followed, and which rows were on. | Scroll to zoom in."
+  },
+  {
+   "id": "rises",
+   "screen": "Before rises",
+   "say": "Before rises lists what came before rises more often than usual. | Each result was found in the search years, then checked on later years the search never saw."
+  },
+  {
+   "id": "card",
+   "screen": "One result card",
+   "say": "Each card shows how often a rise followed, against that coin's usual rate. | First in the search years, then in the later years."
+  },
+  {
+   "id": "verdicts",
+   "screen": "The verdicts",
+   "say": "The verdict says what happened on the later years. | Held up. A bigger move either way. Weaker later. Or faded. | The failures stay on the page: they're evidence too."
+  },
+  {
+   "id": "set",
+   "screen": "Open as Set",
+   "say": "Like one? Open it as a Signal Set, then scan your assets with it in Prism, or use it in a funnel."
+  },
+  {
+   "id": "how",
+   "screen": "How this run was done",
+   "say": "And How this run was done lists the settings: what counts as a rise, the coins, the years, and the rules a result had to pass."
+  }
+ ]
+}

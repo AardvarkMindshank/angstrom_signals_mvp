@@ -118,6 +118,53 @@ async function signInWide(h) {
   if (await tab.count()) { await tab.click(); await h.wait(800); await h.settle(); }
 }
 
+// ------------------------------------------------------------------------------------------------ Soundings
+const SOUNDINGS_DIAGRAM = require("./soundings_diagram.js");
+
+// One of the in-depth video's explainer pictures (soundings_diagram.js), over the page; h.clear() removes it.
+async function scene(h, name) {
+  await h.page.evaluate(SOUNDINGS_DIAGRAM.draw, { scene: name });
+  await h.wait(300);
+}
+
+// Open Angstrom Lattice on Soundings, with the Soundings heading near the top of the screen.
+async function soundings(h) {
+  await h.expand("Angstrom Lattice");
+  const button = h.page.locator(".st-key-lattice_section button").filter({ hasText: "Soundings" }).first();
+  await h.glide(button, 250);
+  await button.click();
+  await h.settle();
+  await h.page.waitForSelector(".st-key-snd_market", { timeout: 90000 }).catch(() => {});
+  await h.settle();
+  await button.evaluate((n) => n.scrollIntoView({ block: "start", behavior: "smooth" })).catch(() => {});
+  await h.wait(700);
+}
+
+// A Soundings tab (Chart, Before rises, Before falls) by its name.
+async function sndTab(h, name) {
+  const tab = h.page.locator('[role="tab"]').filter({ hasText: name }).first();
+  await tab.evaluate((n) => n.scrollIntoView({ block: "start", behavior: "smooth" })).catch(() => {});
+  await h.wait(500);
+  await h.press(tab);
+  await h.wait(900);
+  return tab;
+}
+
+// The Soundings chart, waited for until it has drawn, brought into view.
+async function sndChart(h) {
+  const chart = h.page.locator(".st-key-snd_tv_chart").first();
+  await h.page.waitForSelector(".st-key-snd_tv_chart canvas", { timeout: 60000 }).catch(() => {});
+  await h.wait(1200);
+  await chart.evaluate((n) => n.scrollIntoView({ block: "center", behavior: "smooth" })).catch(() => {});
+  await h.wait(800);
+  return chart;
+}
+
+// The first result card in the tab on show.
+function firstCard(h) {
+  return h.page.locator(".snd-card").filter({ visible: true }).first();
+}
+
 module.exports = {
   // ------------------------------------------------------------------------------------------ 0 · at a glance
   "d0-overview": {
@@ -800,6 +847,132 @@ module.exports = {
       await h.expand("Crypto Signals");
       const radio = h.section_("Crypto Signals").locator("label").filter({ hasText: "My Watchlist" }).first();
       await h.press(radio);
+    },
+  },
+  // ------------------------------------------------------------------------------------------ Soundings
+  "s1-soundings": {
+    login: signInWide,
+    idea: async (h) => {
+      await h.card({ kicker: "🧭 Soundings", title: "Start from the moves, and look back",
+        lines: ["Every past rise and fall, marked first", "Then: what were the readings just before?",
+                "✓ Checked on later years the search never saw"] });
+    },
+    open: async (h) => {
+      await h.clear();
+      await soundings(h);
+      await h.ring(h.page.locator(".st-key-snd_market").first());
+    },
+    chart: async (h) => {
+      await h.clear();
+      await sndTab(h, "Chart");
+      const chart = await sndChart(h);
+      await h.ring(chart);
+    },
+    hover: async (h) => {
+      await h.clear();
+      const chart = h.page.locator(".st-key-snd_tv_chart").first();
+      const b = await chart.boundingBox().catch(() => null);
+      if (b) {
+        for (const f of [0.45, 0.55, 0.62, 0.7]) {
+          await h.page.mouse.move(b.x + b.width * f, b.y + b.height * 0.3, { steps: 18 });
+          await h.wait(900);
+        }
+      }
+    },
+    rises: async (h) => {
+      await h.page.mouse.move(1150, 560);
+      await h.clear();
+      const tab = await sndTab(h, "Before rises");
+      await h.ring(tab);
+    },
+    card: async (h) => {
+      await h.clear();
+      const card = firstCard(h);
+      await card.evaluate((n) => n.scrollIntoView({ block: "center", behavior: "smooth" })).catch(() => {});
+      await h.wait(700);
+      await h.ring(card);
+    },
+    verdicts: async (h) => {
+      await h.clear();
+      const heads = h.page.locator("p").filter({ visible: true }).filter({ hasText: /^(✅|↕️|⚠️|➖|✖️)/ });
+      const first = heads.first();
+      await first.evaluate((n) => n.scrollIntoView({ block: "start", behavior: "smooth" })).catch(() => {});
+      await h.wait(700);
+      await h.ring(first);
+      await h.wait(1800);
+      const second = heads.nth(1);
+      if (await second.count()) {
+        await second.evaluate((n) => n.scrollIntoView({ block: "center", behavior: "smooth" })).catch(() => {});
+        await h.wait(700);
+        await h.ring(second);
+      }
+    },
+    set: async (h) => {
+      await h.clear();
+      const button = h.page.locator('[class*="st-key-snd_set_rise_"] button').filter({ visible: true }).first();
+      await button.evaluate((n) => n.scrollIntoView({ block: "center", behavior: "smooth" })).catch(() => {});
+      await h.wait(700);
+      await h.glide(button, 300);
+      await h.ring(button);
+    },
+    how: async (h) => {
+      await h.clear();
+      const s = h.page.locator("summary").filter({ hasText: "How this run was done" }).first();
+      await s.evaluate((n) => n.scrollIntoView({ block: "start", behavior: "smooth" })).catch(() => {});
+      await h.wait(600);
+      await h.press(s);
+      await h.wait(900);
+      await h.ring(s.locator("xpath=.."));
+    },
+  },
+  "s2-soundings-in-depth": {
+    login: signInWide,
+    plan: async (h) => {
+      await soundings(h);                      // the page behind the pictures
+      await h.card({ kicker: "🧭 Soundings, in depth", title: "How it works, and why to trust it",
+        lines: ["The objective, and what counts as a move", "The process, and the statistics behind it",
+                "✓ The integrity checks", "✓ The limits"] });
+    },
+    question: async (h) => { await h.clear(); await scene(h, "question"); },
+    move: async (h) => { await scene(h, "move"); },
+    typical: async (h) => { await scene(h, "typical"); },
+    readings: async (h) => { await scene(h, "readings"); },
+    usual: async (h) => { await scene(h, "usual"); },
+    split: async (h) => { await scene(h, "split"); },
+    many: async (h) => { await scene(h, "many"); },
+    together: async (h) => { await scene(h, "together"); },
+    themes: async (h) => { await scene(h, "themes"); },
+    verdicts: async (h) => { await scene(h, "verdicts"); },
+    live: async (h) => {
+      await h.clear();
+      await sndTab(h, "Before rises");
+      const head = h.page.locator("p").filter({ visible: true }).filter({ hasText: /^✅/ }).first();
+      await head.evaluate((n) => n.scrollIntoView({ block: "start", behavior: "smooth" })).catch(() => {});
+      await h.wait(800);
+      await h.ring([head, firstCard(h)]);
+    },
+    example: async (h) => { await h.clear(); await scene(h, "example"); },
+    integrity: async (h) => { await scene(h, "integrity"); },
+    limits: async (h) => { await scene(h, "limits"); },
+    chart: async (h) => {
+      await h.clear();
+      await sndTab(h, "Chart");
+      const chart = await sndChart(h);
+      await h.ring(chart);
+      const b = await chart.boundingBox().catch(() => null);
+      if (b) {
+        await h.wait(1500);
+        await h.clear("demo-ring");
+        for (const f of [0.5, 0.6, 0.68]) {
+          await h.page.mouse.move(b.x + b.width * f, b.y + b.height * 0.3, { steps: 18 });
+          await h.wait(1000);
+        }
+      }
+    },
+    use: async (h) => {
+      await h.page.mouse.move(1150, 560);
+      await h.clear();
+      await scene(h, "use");
     },
   },
 };
