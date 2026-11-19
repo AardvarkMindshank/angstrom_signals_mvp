@@ -424,6 +424,9 @@ export default function(component) {
       // Text, number and drop-down fields, and buttons, in both modes: Settings › UI colours › Fields and Buttons.
       "[data-baseweb='input'],[data-baseweb='base-input'],[data-baseweb='textarea'],[data-baseweb='select'] > div,[data-testid='stFileUploaderDropzone']{background-color:var(--ang-field) !important;}",
       "[data-baseweb='input'] input,[data-baseweb='textarea'] textarea{background:transparent !important;}",
+      // This Streamlit draws its drop-downs and text fields with React Aria (no baseweb marks): the field, and the
+      // list a drop-down opens.
+      "[data-testid='stSelectbox'] .react-aria-ComboBox > [role='group'],[data-testid='stMultiSelect'] [role='group'],.react-aria-TextField > div,[data-testid='stTextArea'] div:has(> textarea),[data-testid='stNumberInput'] div:has(> input),[data-testid='stDateInput'] div:has(> input),[data-testid='stTimeInput'] div:has(> input),[data-testid='stSelectboxVirtualDropdown'],[data-testid='stMultiSelectVirtualDropdown']{background-color:var(--ang-field) !important;}",
       "[data-testid='stBaseButton-secondary'],[data-testid='stBaseButton-secondaryFormSubmit'],[data-testid='stButtonGroup'] button[data-variant]:not([data-selected]){background-color:var(--ang-button) !important;}",
       "html.angstrom-night [data-baseweb='input'],html.angstrom-night [data-baseweb='textarea'],html.angstrom-night [data-baseweb='select'] > div,html.angstrom-night [data-testid='stFileUploaderDropzone']{background-color:var(--ang-field) !important;border-color:var(--ang-border) !important;color:var(--ang-text) !important;}",
       "html.angstrom-night [data-baseweb='input'] input,html.angstrom-night [data-baseweb='textarea'] textarea{background:transparent !important;color:var(--ang-text) !important;-webkit-text-fill-color:var(--ang-text);}",
