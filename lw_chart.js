@@ -67,7 +67,7 @@ function signature(data) {
   return JSON.stringify([
     data.key, n, data.times[0], data.times[n - 1], c[n - 1], data.ohlc[1][n - 1], data.ohlc[2][n - 1],
     data.volume[n - 1], data.forming, data.series.map((s) => s.id + ":" + s.pane + ":" + (s.scale || "")),
-    data.panes.map((p) => p.height), data.vlines.length, data.price_lines.length, data.theme.dark, data.theme.bg, data.right_offset,
+    data.panes.map((p) => p.height), data.vlines.length, data.price_lines.map((p) => p.price + (p.label || "")).join(","), data.theme.dark, data.theme.bg, data.right_offset,
     (data.zones || []).map((z) => z || "").join("|").length, data.series.map((s) => (s.zones || []).filter((z) => z).length),
     data.zones_name || "", (data.symbols || []).length, (data.shapes || []).length,
   ]);
@@ -613,7 +613,8 @@ function draw(L, root, data) {
     if (api) api.createPriceLine({ price: g.value, color: g.color, lineWidth: 1, lineStyle: STYLE[g.style] ?? 2, axisLabelVisible: false, title: "" });
   }
   for (const p of data.price_lines) {
-    candles.createPriceLine({ price: p.price, color: p.color, lineWidth: p.width, lineStyle: 0, axisLabelVisible: false, title: "" });
+    candles.createPriceLine({ price: p.price, color: p.color, lineWidth: p.width, lineStyle: STYLE[p.style] ?? 0,
+                              axisLabelVisible: !!p.label, title: p.label || "" });
   }
   if (data.vlines.length) {
     Object.keys(paneFirst).forEach((pane) => {

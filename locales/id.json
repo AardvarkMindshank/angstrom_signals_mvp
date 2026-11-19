@@ -2271,5 +2271,9 @@
   "Divergence on any timeframe, or a W or M shape on the 4-hour chart.": "Divergensi di timeframe mana pun, atau bentuk W atau M di grafik 4 jam.",
   "Joined on {date}": "Bergabung pada {date}",
   "Invited on {date}, not joined yet": "Diundang pada {date}, belum bergabung",
-  "Invited {n} · joined {j}": "Diundang {n} · bergabung {j}"
+  "Invited {n} · joined {j}": "Diundang {n} · bergabung {j}",
+  "Show on chart": "Tampilkan di grafik",
+  "Order": "Order",
+  "Average if all fill": "Rata-rata jika semua terisi",
+  "Draws the orders (blue, thicker for a bigger share), the stop (red) and the average price if every order fills (grey) as lines across the chart above. A plan from the price here, not live orders.": "Menggambar order (biru, lebih tebal untuk porsi lebih besar), stop (merah) dan harga rata-rata jika semua order terisi (abu-abu) sebagai garis di grafik di atas. Rencana dari harga di sini, bukan order sungguhan."
 }

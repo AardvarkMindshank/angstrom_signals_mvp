@@ -4427,7 +4427,8 @@ def _chart_events() -> list[dict]:
 
 
 def _tv_chart(asset_type, asset_key, title, layout, tv, interval, range_key, price_px,
-              liq_record, show_earnings, stock_watchlist, band_set=None, show_events=False) -> None:
+              liq_record, show_earnings, stock_watchlist, band_set=None, show_events=False,
+              ladder_lines=()) -> None:
     """Draw the TradingView chart from candles already loaded by _tv_candles."""
     frame = tv["frame"]
     if "mc_wt1" not in frame.columns:
@@ -4454,6 +4455,8 @@ def _tv_chart(asset_type, asset_key, title, layout, tv, interval, range_key, pri
         liquidation=liq_record, source=tv.get("source") or "", title=title,
         events=_chart_events() if show_events else (),
     )
+    if ladder_lines:                                 # 🪜 the ladder helper's orders, stop and average
+        payload["price_lines"] = list(payload.get("price_lines") or []) + list(ladder_lines)
     if bands:
         payload["zones"] = bands["colors"]
         payload["zones_legend"] = bands["legend"]
@@ -14227,12 +14230,19 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             layout["sonar_marks"] = sonar_shown
             price_px = _chart_price_height()
             liq_record = _liquidation_record(asset_key) if liq_on else None
+            import ladder_helper                       # 🪜 its lines go on the chart when "Show on chart" is on
+
+            ladder_key = f"{asset_type}_{asset_key}"
+            ladder_atr = signals_v2._num(daily_chart["atr"].iloc[-1]) if "atr" in daily_chart.columns else None
+            ladder_price = signals_v2._num(daily_chart["close"].iloc[-1])
+            ladder_lines = ladder_helper.chart_lines(st, ladder_key, ladder_price, ladder_atr, t)
             if use_tv:
                 if tv and not tv.get("error"):
                     _shared_chart_banner(asset_type, asset_key)
                     _tv_chart(
                         asset_type, asset_key, title, layout, tv, tv_interval, tv_range, price_px,
                         liq_record, show_earnings, stock_watchlist, band_set=band_set, show_events=show_events,
+                        ladder_lines=ladder_lines,
                     )
                     _chart_resize_handle(price_px)
             else:
@@ -14485,11 +14495,20 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                         tickmode="array", tickvals=[0, 25, 50, 75, 100],
                         row=1, col=1, secondary_y=True,
                     )
+                for line in ladder_lines:
+                    fig.add_hline(y=line["price"], line_color=line["color"], line_width=line["width"],
+                                  line_dash={"dashed": "dash", "dotted": "dot"}.get(line["style"], "solid"),
+                                  annotation_text=line["label"], annotation_position="right",
+                                  annotation_font_color=line["color"], row=1, col=1)
                 _paint_chart(fig)
                 st.plotly_chart(fig, width="stretch")
                 _chart_resize_handle(price_px)
             if liq_on:
                 st.caption(_liquidation_caption(liq_record))
+            # 🪜 A ladder of limit orders spaced by this asset's daily range (ladder_helper.py): a planning calculator,
+            # first thing under the chart so its lines can be checked against the candles.
+            with st.expander("🪜 " + t("Ladder helper") + f" — {title}", expanded=bool(ladder_lines)):
+                ladder_helper.render(st, t, ladder_price, ladder_atr, title, ladder_key)
 
             # The readings come from the full stored history (the table row already holds them); the
             # chart window does not change them.
@@ -14512,13 +14531,6 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                     t("<div style='font-size: 0.85rem; color: #6b7280; margin-bottom: 2px;'>7-Day Change</div><div style='font-size: 2.2rem; font-weight: 600; line-height: 1.1; color: {change_color};'>{change:+.1f}%</div>", change_color=change_color, change=change),
                     unsafe_allow_html=True,
                 )
-            # 🪜 A ladder of limit orders spaced by this asset's daily range (ladder_helper.py): a planning calculator.
-            with st.expander("🪜 " + t("Ladder helper") + f" — {title}", expanded=False):
-                import ladder_helper
-
-                atr_now = signals_v2._num(daily_chart["atr"].iloc[-1]) if "atr" in daily_chart.columns else None
-                ladder_helper.render(st, t, signals_v2._num(daily_chart["close"].iloc[-1]), atr_now, title,
-                                     f"{asset_type}_{asset_key}")
 
     if not _POPOUT_VIEW:
         _lattice_section()

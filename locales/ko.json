@@ -2271,5 +2271,9 @@
   "Divergence on any timeframe, or a W or M shape on the 4-hour chart.": "어느 시간대든 다이버전스, 또는 4시간 차트의 W 또는 M 모양.",
   "Joined on {date}": "{date}에 가입",
   "Invited on {date}, not joined yet": "{date}에 초대, 아직 가입 안 함",
-  "Invited {n} · joined {j}": "초대 {n} · 가입 {j}"
+  "Invited {n} · joined {j}": "초대 {n} · 가입 {j}",
+  "Show on chart": "차트에 표시",
+  "Order": "주문",
+  "Average if all fill": "전부 체결 시 평균",
+  "Draws the orders (blue, thicker for a bigger share), the stop (red) and the average price if every order fills (grey) as lines across the chart above. A plan from the price here, not live orders.": "주문(파란색, 비중이 클수록 굵게), 손절(빨간색), 모든 주문이 체결될 때의 평균가(회색)를 위 차트에 선으로 표시합니다. 여기 가격 기준의 계획이며 실제 주문이 아닙니다."
 }

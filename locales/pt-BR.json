@@ -2271,5 +2271,9 @@
   "Divergence on any timeframe, or a W or M shape on the 4-hour chart.": "Divergência em qualquer tempo gráfico, ou um formato W ou M no gráfico de 4 horas.",
   "Joined on {date}": "Entrou em {date}",
   "Invited on {date}, not joined yet": "Convidado em {date}, ainda não entrou",
-  "Invited {n} · joined {j}": "Convidados {n} · entraram {j}"
+  "Invited {n} · joined {j}": "Convidados {n} · entraram {j}",
+  "Show on chart": "Mostrar no gráfico",
+  "Order": "Ordem",
+  "Average if all fill": "Média se tudo executar",
+  "Draws the orders (blue, thicker for a bigger share), the stop (red) and the average price if every order fills (grey) as lines across the chart above. A plan from the price here, not live orders.": "Desenha as ordens (azul, mais grossa para uma parte maior), o stop (vermelho) e o preço médio se todas forem executadas (cinza) como linhas no gráfico acima. Um plano a partir do preço aqui, não ordens reais."
 }

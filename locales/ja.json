@@ -2271,5 +2271,9 @@
   "Divergence on any timeframe, or a W or M shape on the 4-hour chart.": "いずれかの時間足のダイバージェンス、または4時間足のW型・M型。",
   "Joined on {date}": "{date} に参加",
   "Invited on {date}, not joined yet": "{date} に招待、未参加",
-  "Invited {n} · joined {j}": "招待 {n} · 参加 {j}"
+  "Invited {n} · joined {j}": "招待 {n} · 参加 {j}",
+  "Show on chart": "チャートに表示",
+  "Order": "注文",
+  "Average if all fill": "全約定時の平均",
+  "Draws the orders (blue, thicker for a bigger share), the stop (red) and the average price if every order fills (grey) as lines across the chart above. A plan from the price here, not live orders.": "注文(青、比率が大きいほど太い)、ストップ(赤)、全注文が約定した場合の平均価格(灰)を上のチャートに線で表示します。ここでの価格からの計画で、実際の注文ではありません。"
 }

@@ -49,6 +49,38 @@ def plan(price: float, atr: float, side: str = "long", style: str = "consolidati
             "loss_amount": amount * loss_pct / 100 if amount else None, "atr_pct": atr / price * 100}
 
 
+def settings(st, key: str, price: float, atr: float) -> dict:
+    """The helper's current choices for this asset, read before its controls are drawn (the chart above them needs
+    them first). The same keys and defaults as render()."""
+    ss = st.session_state
+    side = ss.get(f"ladder_side_{key}") or "long"
+    style = ss.get(f"ladder_style_{key}") or "consolidating"
+    return {"show": bool(ss.get(f"ladder_show_{key}")), "side": side, "style": style,
+            "orders": int(ss.get(f"ladder_n_{key}") or 3),
+            "start": float(ss.get(f"ladder_px_{key}") or price or 0),
+            "deepest": float(ss.get(f"ladder_deep_{key}_{style}") or STYLES[style]["deepest"]),
+            "amount": float(ss.get(f"ladder_amt_{key}") or 0) or None}
+
+
+def chart_lines(st, key: str, price: float | None, atr: float | None, t=lambda x: x) -> list[dict]:
+    """Horizontal lines for the chart when "Show on chart" is on: one per order (blue, dashed, thicker for a bigger
+    share), the stop (red) and the average price if every order fills (grey, dotted). [] when off."""
+    if not price or not atr:
+        return []
+    c = settings(st, key, price, atr)
+    if not c["show"]:
+        return []
+    p = plan(c["start"], atr, c["side"], c["style"], c["orders"], c["deepest"], c["amount"])
+    if not p["ok"]:
+        return []
+    lines = [{"price": round(r["price"], 10), "color": "#2563eb", "width": max(1, min(4, round(r["share"] * len(p["rows"]) * 2))),
+              "style": "dashed", "label": f"{t('Order')} {r['n']} · {r['share'] * 100:.0f}%"} for r in p["rows"]]
+    lines.append({"price": round(p["stop"], 10), "color": "#dc2626", "width": 2, "style": "solid", "label": t("Stop")})
+    lines.append({"price": round(p["avg"], 10), "color": "#64748b", "width": 1, "style": "dotted",
+                  "label": t("Average if all fill")})
+    return lines
+
+
 def _price(v: float) -> str:
     a = abs(v)
     digits = 2 if a >= 100 else 3 if a >= 1 else 5 if a >= 0.01 else 8
@@ -81,6 +113,10 @@ def render(st, t, price: float | None, atr: float | None, name: str, key: str) -
                                pct=atr / price * 100))
     amount = c6.number_input(t("Amount (optional)"), min_value=0.0, value=0.0, step=100.0, key=f"ladder_amt_{key}",
                              help=t("The total to split across the orders, in your account's currency."))
+    st.toggle("📏 " + t("Show on chart"), key=f"ladder_show_{key}",
+              help=t("Draws the orders (blue, thicker for a bigger share), the stop (red) and the average price if "
+                     "every order fills (grey) as lines across the chart above. A plan from the price here, not live "
+                     "orders."))
     p = plan(start, atr, side, style, orders, deepest, amount or None)
     if not p["ok"]:
         return

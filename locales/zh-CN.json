@@ -2271,5 +2271,9 @@
   "Divergence on any timeframe, or a W or M shape on the 4-hour chart.": "任一时间框架上的背离，或 4 小时图上的 W 或 M 形态。",
   "Joined on {date}": "{date} 已加入",
   "Invited on {date}, not joined yet": "{date} 已邀请，尚未加入",
-  "Invited {n} · joined {j}": "已邀请 {n} · 已加入 {j}"
+  "Invited {n} · joined {j}": "已邀请 {n} · 已加入 {j}",
+  "Show on chart": "在图表上显示",
+  "Order": "订单",
+  "Average if all fill": "全部成交时的均价",
+  "Draws the orders (blue, thicker for a bigger share), the stop (red) and the average price if every order fills (grey) as lines across the chart above. A plan from the price here, not live orders.": "在上方图表中以线条显示各订单(蓝色,份额越大越粗)、止损(红色)以及全部成交时的平均价格(灰色)。这是从此处价格出发的计划,并非真实订单。"
 }

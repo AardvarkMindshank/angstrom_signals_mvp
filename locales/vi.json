@@ -2271,5 +2271,9 @@
   "Divergence on any timeframe, or a W or M shape on the 4-hour chart.": "Phân kỳ trên bất kỳ khung thời gian nào, hoặc hình W hay M trên biểu đồ 4 giờ.",
   "Joined on {date}": "Đã tham gia ngày {date}",
   "Invited on {date}, not joined yet": "Đã mời ngày {date}, chưa tham gia",
-  "Invited {n} · joined {j}": "Đã mời {n} · đã tham gia {j}"
+  "Invited {n} · joined {j}": "Đã mời {n} · đã tham gia {j}",
+  "Show on chart": "Hiện trên biểu đồ",
+  "Order": "Lệnh",
+  "Average if all fill": "Giá trung bình nếu khớp hết",
+  "Draws the orders (blue, thicker for a bigger share), the stop (red) and the average price if every order fills (grey) as lines across the chart above. A plan from the price here, not live orders.": "Vẽ các lệnh (xanh dương, dày hơn khi tỷ trọng lớn hơn), điểm cắt lỗ (đỏ) và giá trung bình nếu khớp hết các lệnh (xám) thành đường trên biểu đồ phía trên. Một kế hoạch từ giá ở đây, không phải lệnh thật."
 }

@@ -2271,5 +2271,9 @@
   "Divergence on any timeframe, or a W or M shape on the 4-hour chart.": "Herhangi bir zaman diliminde uyumsuzluk veya 4 saatlik grafikte W ya da M şekli.",
   "Joined on {date}": "{date} tarihinde katıldı",
   "Invited on {date}, not joined yet": "{date} tarihinde davet edildi, henüz katılmadı",
-  "Invited {n} · joined {j}": "Davet {n} · katılan {j}"
+  "Invited {n} · joined {j}": "Davet {n} · katılan {j}",
+  "Show on chart": "Grafikte göster",
+  "Order": "Emir",
+  "Average if all fill": "Hepsi gerçekleşirse ortalama",
+  "Draws the orders (blue, thicker for a bigger share), the stop (red) and the average price if every order fills (grey) as lines across the chart above. A plan from the price here, not live orders.": "Emirleri (mavi, payı büyük olan daha kalın), stopu (kırmızı) ve tüm emirler gerçekleşirse ortalama fiyatı (gri) yukarıdaki grafikte çizgi olarak gösterir. Buradaki fiyattan bir plan, gerçek emir değil."
 }
