@@ -81,6 +81,10 @@ const OUT = process.argv[2] || "out/shots";
     };
     await press("chart_interval", /^1D$/);
     await press("chart_range", /^1Y$/);
+    const ev = page.locator(".st-key-chart_events").first();           // no Fed, CPI and jobs lines in the picture
+    if (await ev.locator('input[type="checkbox"]').first().isChecked().catch(() => false)) {
+      await ev.locator("label").first().click().catch(() => {}); await settle(1500);
+    }
     const turned = [];
     for (const words of [/^📡 Sonar$/, "Sonar markers", "Chart shapes"]) if (await pillOn(words)) turned.push(words);
     await settle(3000);

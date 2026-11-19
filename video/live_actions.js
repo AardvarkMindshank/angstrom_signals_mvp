@@ -306,6 +306,16 @@ async function quietChart(h) {
   await pill(h, /Sonar\s*$/, false);
   await pill(h, "Sonar markers", false);
   await pill(h, "Liquidation levels", false);
+  await eventsOff(h);
+}
+
+// The Fed, CPI and jobs lines off (a video turns them on itself).
+async function eventsOff(h) {
+  const ev = h.page.locator(".st-key-chart_events").first();
+  if (await ev.locator('input[type="checkbox"]').first().isChecked().catch(() => false)) {
+    await ev.locator("label").first().click().catch(() => {});
+    await h.settle();
+  }
 }
 
 // Open the drawing toolbar (the pencil) and pick a tool by the start of its hover text.
@@ -1444,6 +1454,7 @@ module.exports = {
     setup: async (h) => {
       await openChart(h, "Bitcoin", "1D", "1Y");
       for (const name of [/Sonar\s*$/, "Sonar markers", "Chart shapes", "Liquidation levels"]) await pill(h, name, false);
+      await eventsOff(h);
       await chartTop(h);
     },
     idea: async (h) => {
