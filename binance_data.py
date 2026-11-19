@@ -22,8 +22,8 @@ import pandas as pd
 import requests
 
 BASE = "https://data-api.binance.vision"
-INTERVAL = {"15m": "15m", "30m": "30m", "1h": "1h", "4h": "4h", "12h": "12h", "1D": "1d", "1W": "1w"}
-STEP_MS = {"15m": 15 * 60_000, "30m": 30 * 60_000, "1h": 3_600_000, "4h": 4 * 3_600_000, "12h": 12 * 3_600_000,
+INTERVAL = {"5m": "5m", "15m": "15m", "30m": "30m", "1h": "1h", "4h": "4h", "12h": "12h", "1D": "1d", "1W": "1w"}
+STEP_MS = {"5m": 5 * 60_000, "15m": 15 * 60_000, "30m": 30 * 60_000, "1h": 3_600_000, "4h": 4 * 3_600_000, "12h": 12 * 3_600_000,
            "1D": 86_400_000, "1W": 7 * 86_400_000}
 LIMIT = 1000                        # candles per request (Binance's maximum)
 MAX_REQUESTS = 12                   # per load: 12,000 candles is far more than any chart range needs

@@ -1,5 +1,6 @@
 // ✏️ Drawing on the price chart (13 Nov 2026): pen, highlighter, eraser, lines, shapes, markers, notes, Fibonacci,
-// measure and long/short position, in a toolbar above the chart. Loaded in front of lw_chart.js (one module).
+// measure and long/short position, anchored VWAP and a volume profile over a range (19 Nov 2026), in a toolbar above
+// the chart. Loaded in front of lw_chart.js (one module).
 //
 // Points are (time in seconds, price), so drawings stay put when the chart zooms or scrolls, and show on every
 // candle size of the same asset. They save to the account (chart_drawings, sql/2026-11-27_chart_drawings.sql)
@@ -23,6 +24,8 @@ const DRAW_TOOLS = [
   ["marker", "✖", TM("Marker: tap to stamp the mark chosen beside it"), "one"],
   ["text", "🔤", TM("Text note: tap where the note goes, then type"), "text"],
   ["fib", "📐", TM("Fibonacci retracement: drag from the swing low to the swing high (or high to low)"), "two"],
+  ["avwap", "⚓", TM("Anchored VWAP: tap a candle to draw the volume-weighted average price from there on"), "one"],
+  ["vprofile", "📊", TM("Volume profile: drag across a stretch of the chart to see at which prices most trading happened"), "two"],
   ["measure", "📏", TM("Measure: drag between two points to see the % change and the number of candles"), "two"],
   ["position", "🎯", TM("Long / short position: drag from the entry to the stop, then tap the target"), "three"],
 ];
@@ -31,6 +34,58 @@ const DRAW_WIDTHS = [[1, TM("Thin lines")], [2, TM("Medium lines")], [4, TM("Thi
 const DRAW_MARKS = ["✖", "✔", "★", "▲", "▼", "●", "?", "!"];
 const FIB_LEVELS = [0, 0.236, 0.382, 0.5, 0.618, 0.65, 0.786, 1];
 const DRAW_MAX_ITEMS = 400;
+const PROFILE_ROWS = 24;            // price rows in a volume profile
+const VALUE_AREA = 0.7;             // the rows around the busiest price that hold 70% of the volume
+
+// Candles of the chart's own candle size from `from` (seconds) on: [index, high, low, close, volume].
+function candleIndex(data, t) {
+  const T = data.times;
+  let lo = 0, hi = T.length - 1;
+  if (!T.length || t > T[hi]) return T.length;
+  while (lo < hi) { const mid = (lo + hi) >> 1; if (T[mid] < t) lo = mid + 1; else hi = mid; }
+  return lo;
+}
+
+// Anchored VWAP: from the anchor candle on, the running sum of typical price x volume over the running volume.
+function vwapLine(data, anchor) {
+  const [, H, Lo, C] = data.ohlc, V = data.volume, T = data.times;
+  const out = [];
+  let pv = 0, vol = 0;
+  for (let i = Math.max(0, candleIndex(data, anchor)); i < T.length; i++) {
+    const v = Number(V[i]) || 0, typical = (H[i] + Lo[i] + C[i]) / 3;
+    if (!isFinite(typical)) continue;
+    pv += typical * v; vol += v;
+    out.push([T[i], vol > 0 ? pv / vol : typical]);
+  }
+  return out;
+}
+
+// Volume profile between two times: the range's volume shared out over PROFILE_ROWS price rows (each candle's
+// volume spread evenly over the rows its high-low covers), the busiest row and the 70% value area around it.
+function volumeProfile(data, t0, t1) {
+  const [, H, Lo] = data.ohlc, V = data.volume, T = data.times;
+  const a = candleIndex(data, Math.min(t0, t1)), b = Math.min(T.length, candleIndex(data, Math.max(t0, t1) + 1));
+  let top = -Infinity, bottom = Infinity;
+  for (let i = a; i < b; i++) { if (isFinite(H[i])) top = Math.max(top, H[i]); if (isFinite(Lo[i])) bottom = Math.min(bottom, Lo[i]); }
+  if (!(top > bottom)) return null;
+  const step = (top - bottom) / PROFILE_ROWS, rows = new Array(PROFILE_ROWS).fill(0);
+  for (let i = a; i < b; i++) {
+    const v = Number(V[i]) || 0;
+    if (!v || !isFinite(H[i]) || !isFinite(Lo[i])) continue;
+    const r0 = Math.max(0, Math.min(PROFILE_ROWS - 1, Math.floor((Lo[i] - bottom) / step)));
+    const r1 = Math.max(0, Math.min(PROFILE_ROWS - 1, Math.floor((H[i] - bottom) / step)));
+    for (let r = r0; r <= r1; r++) rows[r] += v / (r1 - r0 + 1);
+  }
+  const total = rows.reduce((x, y) => x + y, 0);
+  if (!total) return null;
+  const poc = rows.indexOf(Math.max(...rows));
+  let lo = poc, hi = poc, held = rows[poc];
+  while (held < total * VALUE_AREA && (lo > 0 || hi < PROFILE_ROWS - 1)) {
+    const below = lo > 0 ? rows[lo - 1] : -1, above = hi < PROFILE_ROWS - 1 ? rows[hi + 1] : -1;
+    if (above >= below) { hi += 1; held += above; } else { lo -= 1; held += below; }
+  }
+  return { bottom, step, rows, poc, lo, hi, candles: b - a };
+}
 const DRAW_STORE = window.__angDraw || (window.__angDraw = { assets: new Map() });
 
 function drawPref(name, fallback) {
@@ -214,6 +269,40 @@ function paintItem(ctx, s, it, size) {
       ctx.setLineDash([4, 4]); ctx.lineWidth = 1; line(P); ctx.setLineDash([]);
       break;
     }
+    case "avwap": {
+      if (!s.data) break;
+      const pts = vwapLine(s.data, it.pts[0].t).map(([t, p]) => [s.X(t), s.Y(p)]).filter(([x, y]) => x !== null && y !== null);
+      if (pts.length < 1) break;
+      ctx.beginPath(); ctx.arc(pts[0][0], pts[0][1], 3 + width, 0, Math.PI * 2); ctx.fill();
+      line(pts);
+      const last = vwapLine(s.data, it.pts[0].t).pop();
+      if (last) label(ctx, `AVWAP ${niceNumber(last[1])}`, W - 2, pts[pts.length - 1][1], colour, "right");
+      break;
+    }
+    case "vprofile": {
+      if (P.length < 2 || !s.data) break;
+      const vp = volumeProfile(s.data, it.pts[0].t, it.pts[1].t);
+      const x0 = Math.min(P[0][0], P[1][0]), x1 = Math.max(P[0][0], P[1][0]);
+      ctx.globalAlpha = 0.06; ctx.fillRect(x0, 0, x1 - x0, H); ctx.globalAlpha = 1;
+      if (!vp) break;
+      const most = vp.rows[vp.poc], room = Math.max(40, (x1 - x0) * 0.6);
+      vp.rows.forEach((v, r) => {
+        const yTop = s.Y(vp.bottom + vp.step * (r + 1)), yBottom = s.Y(vp.bottom + vp.step * r);
+        if (yTop === null || yBottom === null) return;
+        ctx.globalAlpha = r === vp.poc ? 0.75 : r >= vp.lo && r <= vp.hi ? 0.4 : 0.18;
+        ctx.fillRect(x0, Math.min(yTop, yBottom) + 0.5, room * v / most, Math.max(1, Math.abs(yBottom - yTop) - 1));
+      });
+      ctx.globalAlpha = 1;
+      const pocPrice = vp.bottom + vp.step * (vp.poc + 0.5), yp = s.Y(pocPrice);
+      if (yp !== null) {
+        ctx.lineWidth = 1; ctx.setLineDash([4, 3]); line([[x0, yp], [x1, yp]]); ctx.setLineDash([]);
+        label(ctx, `${T("Busiest price")} ${niceNumber(pocPrice)}`, x1 - 2, yp - 10, colour, "right");
+      }
+      const vah = s.Y(vp.bottom + vp.step * (vp.hi + 1)), val = s.Y(vp.bottom + vp.step * vp.lo);
+      if (vah !== null) label(ctx, `${T("70% of volume")} ↑ ${niceNumber(vp.bottom + vp.step * (vp.hi + 1))}`, x1 - 2, vah - 10, colour, "right");
+      if (val !== null) label(ctx, `↓ ${niceNumber(vp.bottom + vp.step * vp.lo)}`, x1 - 2, val + 10, colour, "right");
+      break;
+    }
     case "measure": {
       if (P.length < 2) break;
       const [[ax, ay], [bx, by]] = P;
@@ -269,6 +358,12 @@ function hitItem(s, it, x, y, size) {
     case "hline": return Math.abs(y - P[0][1]) <= near;
     case "vline": return Math.abs(x - P[0][0]) <= near;
     case "box": case "circle": case "measure": case "fib": return inBox(P[0], P[1]);
+    case "avwap": {
+      if (!s.data) return false;
+      const pts = vwapLine(s.data, it.pts[0].t).map(([t, p]) => [s.X(t), s.Y(p)]).filter(([a, b]) => a !== null && b !== null);
+      return pts.length === 1 ? Math.hypot(x - pts[0][0], y - pts[0][1]) <= near : onLine(pts);
+    }
+    case "vprofile": return x >= Math.min(P[0][0], P[1][0]) - near && x <= Math.max(P[0][0], P[1][0]) + near;
     case "position": return inBox(P[0], [Math.max(P[1][0], P[0][0] + 60), P[1][1]]) || (P[2] && inBox(P[0], [P[0][0] + 60, P[2][1]]));
     case "marker": return Math.hypot(x - P[0][0], y - P[0][1]) <= 14;
     case "text": return x >= P[0][0] - 4 && x <= P[0][0] + 8 * String(it.text || "").length + 8 && y >= P[0][1] - 4 && y <= P[0][1] + 22;
@@ -316,6 +411,7 @@ function refreshDrawing(root, data) {
   const conf = data.draw;
   if (!s || !conf || conf.asset !== s.asset) return;
   s.rest = conf.rest;
+  s.data = data;
   s.trigger = root.__trigger;
   s.shared = Array.isArray(conf.shared) ? conf.shared : [];
   const record = DRAW_STORE.assets.get(s.asset);
@@ -368,7 +464,7 @@ function setupDrawing(L, root, host, chart, candles, data, theme, hasOsc) {
     items: record.items, draft: null, stage: null, shared: Array.isArray(conf.shared) ? conf.shared : [],
     tool: null, colour: drawPref("colour", DRAW_COLOURS[0]), width: drawPref("width", 2),
     mark: drawPref("mark", "✖"), hidden: drawPref("hidden", false), history: [],
-    tToL,
+    tToL, data,
     X: (t) => { const x = ts.logicalToCoordinate(tToL(t)); return x === null ? null : x; },
     Y: (p) => { const y = candles.priceToCoordinate(p); return y === null ? null : y; },
     status: () => {},

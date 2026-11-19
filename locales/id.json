@@ -2275,5 +2275,15 @@
   "Show on chart": "Tampilkan di grafik",
   "Order": "Order",
   "Average if all fill": "Rata-rata jika semua terisi",
-  "Draws the orders (blue, thicker for a bigger share), the stop (red) and the average price if every order fills (grey) as lines across the chart above. A plan from the price here, not live orders.": "Menggambar order (biru, lebih tebal untuk porsi lebih besar), stop (merah) dan harga rata-rata jika semua order terisi (abu-abu) sebagai garis di grafik di atas. Rencana dari harga di sini, bukan order sungguhan."
+  "Draws the orders (blue, thicker for a bigger share), the stop (red) and the average price if every order fills (grey) as lines across the chart above. A plan from the price here, not live orders.": "Menggambar order (biru, lebih tebal untuk porsi lebih besar), stop (merah) dan harga rata-rata jika semua order terisi (abu-abu) sebagai garis di grafik di atas. Rencana dari harga di sini, bukan order sungguhan.",
+  "5-minute candles, crypto only (the last 7 days)": "Candle 5 menit, hanya kripto (7 hari terakhir)",
+  "🕳️ Fair value gaps": "🕳️ Fair value gap",
+  "5-minute candles are for crypto only. Pick 15m or longer for equities.": "Candle 5 menit hanya untuk kripto. Pilih 15m atau lebih untuk saham.",
+  "Binance spot does not list this coin, so there are no 5-minute candles for it.": "Binance spot tidak mencantumkan koin ini, jadi tidak ada candle 5 menit.",
+  "Binance did not send 5-minute candles just now. Try again in a minute.": "Binance belum mengirim candle 5 menit. Coba lagi dalam satu menit.",
+  "Too few 5-minute candles in the last 7 days for this coin.": "Terlalu sedikit candle 5 menit dalam 7 hari terakhir untuk koin ini.",
+  "Anchored VWAP: tap a candle to draw the volume-weighted average price from there on": "VWAP berjangkar: ketuk candle untuk menggambar harga rata-rata tertimbang volume dari situ",
+  "Volume profile: drag across a stretch of the chart to see at which prices most trading happened": "Profil volume: seret di bagian grafik untuk melihat di harga mana perdagangan paling banyak",
+  "Busiest price": "Harga tersibuk",
+  "70% of volume": "70% volume"
 }

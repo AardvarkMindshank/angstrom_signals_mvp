@@ -2275,5 +2275,15 @@
   "Show on chart": "Afficher sur le graphique",
   "Order": "Ordre",
   "Average if all fill": "Moyenne si tout est exécuté",
-  "Draws the orders (blue, thicker for a bigger share), the stop (red) and the average price if every order fills (grey) as lines across the chart above. A plan from the price here, not live orders.": "Trace les ordres (bleu, plus épais pour une part plus grande), le stop (rouge) et le prix moyen si tous les ordres sont exécutés (gris) en lignes sur le graphique ci-dessus. Un plan à partir du prix indiqué ici, pas des ordres réels."
+  "Draws the orders (blue, thicker for a bigger share), the stop (red) and the average price if every order fills (grey) as lines across the chart above. A plan from the price here, not live orders.": "Trace les ordres (bleu, plus épais pour une part plus grande), le stop (rouge) et le prix moyen si tous les ordres sont exécutés (gris) en lignes sur le graphique ci-dessus. Un plan à partir du prix indiqué ici, pas des ordres réels.",
+  "5-minute candles, crypto only (the last 7 days)": "Bougies de 5 minutes, crypto uniquement (7 derniers jours)",
+  "🕳️ Fair value gaps": "🕳️ Fair value gaps",
+  "5-minute candles are for crypto only. Pick 15m or longer for equities.": "Les bougies de 5 minutes sont réservées aux cryptos. Choisissez 15m ou plus pour les actions.",
+  "Binance spot does not list this coin, so there are no 5-minute candles for it.": "Binance spot ne liste pas cette crypto, il n’y a donc pas de bougies de 5 minutes.",
+  "Binance did not send 5-minute candles just now. Try again in a minute.": "Binance n’a pas envoyé de bougies de 5 minutes pour le moment. Réessayez dans une minute.",
+  "Too few 5-minute candles in the last 7 days for this coin.": "Trop peu de bougies de 5 minutes sur les 7 derniers jours pour cette crypto.",
+  "Anchored VWAP: tap a candle to draw the volume-weighted average price from there on": "VWAP ancré : touchez une bougie pour tracer le prix moyen pondéré par le volume à partir de là",
+  "Volume profile: drag across a stretch of the chart to see at which prices most trading happened": "Profil de volume : faites glisser sur une portion du graphique pour voir à quels prix le plus d’échanges ont eu lieu",
+  "Busiest price": "Prix le plus échangé",
+  "70% of volume": "70 % du volume"
 }

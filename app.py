@@ -4215,6 +4215,7 @@ _LW_CHART_JS = ((Path(__file__).resolve().parent / "lw_draw.js").read_text(encod
                 + (Path(__file__).resolve().parent / "lw_chart.js").read_text(encoding="utf-8"))
 _lw_chart = i18n.with_words(st.components.v2.component("lw_chart", js=_LW_CHART_JS, isolate_styles=False), _LW_CHART_JS)
 _INTERVAL_TIPS = {
+    "5m": i18n.mark("5-minute candles, crypto only (the last 7 days)"),
     "15m": i18n.mark("15-minute candles (about the last 60 days)"),
     "30m": i18n.mark("30-minute candles, built from 15-minute ones (about the last 60 days)"),
     "1h": i18n.mark("1-hour candles (about the last 2 years)"),
@@ -4428,7 +4429,7 @@ def _chart_events() -> list[dict]:
 
 def _tv_chart(asset_type, asset_key, title, layout, tv, interval, range_key, price_px,
               liq_record, show_earnings, stock_watchlist, band_set=None, show_events=False,
-              ladder_lines=()) -> None:
+              ladder_lines=(), fvg=False) -> None:
     """Draw the TradingView chart from candles already loaded by _tv_candles."""
     frame = tv["frame"]
     if "mc_wt1" not in frame.columns:
@@ -4455,6 +4456,7 @@ def _tv_chart(asset_type, asset_key, title, layout, tv, interval, range_key, pri
         liquidation=liq_record, source=tv.get("source") or "", title=title,
         events=_chart_events() if show_events else (),
     )
+    payload["fvg"] = bool(fvg)                       # 🕳️ shade open fair value gaps (lw_chart.js works them out)
     if ladder_lines:                                 # 🪜 the ladder helper's orders, stop and average
         payload["price_lines"] = list(payload.get("price_lines") or []) + list(ladder_lines)
     if bands:
@@ -7279,6 +7281,7 @@ def crowd_average_badge(average, count, spread, active: bool = True) -> str:
 
 
 LIQ_KEY = "liq"
+FVG_KEY = "fvg"                                    # 🕳️ fair value gaps, drawn by the fast chart (lw_chart.js)
 
 
 def _liquidation_record(asset_id) -> dict | None:
@@ -14097,16 +14100,22 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             # Crypto charts also offer estimated liquidation levels, drawn by this page, not chart_plan.
             if asset_type == "Crypto":
                 indicator_keys = list(indicator_keys) + [LIQ_KEY]
+            if use_tv:                                  # the fast chart also shades open fair value gaps
+                indicator_keys = list(indicator_keys) + [FVG_KEY]
 
             def _indicator_label(key):
                 if key == LIQ_KEY:
                     return t("🔥 Liquidation levels")
+                if key == FVG_KEY:
+                    return t("🕳️ Fair value gaps")
                 return f"{indicator_icons.get(key, '')} {t(chart_plan.INDICATORS[key]['label'])}".strip()
 
             # The chart choices belong to the account. Start from what was saved, and keep a saved
             # choice this asset cannot draw (too little history) so it comes back on the next asset.
             saved_chart = (st.session_state.get("cloud_prefs") or {}).get("settings") or {}
             saved_picks = [k for k in (saved_chart.get("chart_indicators") or []) if k in chart_plan.INDICATORS]
+            if saved_chart.get("chart_fvg"):
+                saved_picks.append(FVG_KEY)
             # The liquidation choice is kept apart, so a stock chart (which has no levels)
             # does not switch it off for the next coin.
             if "_chart_liq_on" not in st.session_state:
@@ -14166,7 +14175,8 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             if LIQ_KEY in indicator_keys:
                 st.session_state["_chart_liq_on"] = LIQ_KEY in chosen_indicators
             liq_on = LIQ_KEY in chosen_indicators
-            chosen_indicators = [k for k in chosen_indicators if k != LIQ_KEY]
+            fvg_on = FVG_KEY in chosen_indicators
+            chosen_indicators = [k for k in chosen_indicators if k not in (LIQ_KEY, FVG_KEY)]
             overlay_curves = st.checkbox(
                 t("Overlay RSI, Stochastic, Stoch RSI and ADX on the price chart"),
                 key="chart_overlay",
@@ -14221,6 +14231,8 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                 "chart_liq": bool(st.session_state.get("_chart_liq_on")),
                 "chart_events": bool(show_events),
             }
+            if FVG_KEY in indicator_keys:
+                chart_choices["chart_fvg"] = bool(fvg_on)
             if asset_type != "Crypto":
                 chart_choices["chart_earnings"] = bool(show_earnings)
             if sonar_shown is not None:
@@ -14242,7 +14254,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                     _tv_chart(
                         asset_type, asset_key, title, layout, tv, tv_interval, tv_range, price_px,
                         liq_record, show_earnings, stock_watchlist, band_set=band_set, show_events=show_events,
-                        ladder_lines=ladder_lines,
+                        ladder_lines=ladder_lines, fvg=fvg_on,
                     )
                     _chart_resize_handle(price_px)
             else:

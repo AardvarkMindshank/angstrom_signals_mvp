@@ -2275,5 +2275,15 @@
   "Show on chart": "チャートに表示",
   "Order": "注文",
   "Average if all fill": "全約定時の平均",
-  "Draws the orders (blue, thicker for a bigger share), the stop (red) and the average price if every order fills (grey) as lines across the chart above. A plan from the price here, not live orders.": "注文(青、比率が大きいほど太い)、ストップ(赤)、全注文が約定した場合の平均価格(灰)を上のチャートに線で表示します。ここでの価格からの計画で、実際の注文ではありません。"
+  "Draws the orders (blue, thicker for a bigger share), the stop (red) and the average price if every order fills (grey) as lines across the chart above. A plan from the price here, not live orders.": "注文(青、比率が大きいほど太い)、ストップ(赤)、全注文が約定した場合の平均価格(灰)を上のチャートに線で表示します。ここでの価格からの計画で、実際の注文ではありません。",
+  "5-minute candles, crypto only (the last 7 days)": "5分足、暗号資産のみ(直近7日間)",
+  "🕳️ Fair value gaps": "🕳️ フェアバリューギャップ",
+  "5-minute candles are for crypto only. Pick 15m or longer for equities.": "5分足は暗号資産のみです。株式は15m以上を選んでください。",
+  "Binance spot does not list this coin, so there are no 5-minute candles for it.": "Binance現物にこのコインがないため、5分足はありません。",
+  "Binance did not send 5-minute candles just now. Try again in a minute.": "Binanceから5分足が届きませんでした。1分後にもう一度お試しください。",
+  "Too few 5-minute candles in the last 7 days for this coin.": "このコインの直近7日間の5分足が少なすぎます。",
+  "Anchored VWAP: tap a candle to draw the volume-weighted average price from there on": "アンカードVWAP:ローソク足をタップすると、そこからの出来高加重平均価格を表示します",
+  "Volume profile: drag across a stretch of the chart to see at which prices most trading happened": "出来高プロファイル:チャートの範囲をドラッグすると、どの価格で最も取引されたかを表示します",
+  "Busiest price": "最多取引価格",
+  "70% of volume": "出来高の70%"
 }

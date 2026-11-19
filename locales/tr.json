@@ -2275,5 +2275,15 @@
   "Show on chart": "Grafikte göster",
   "Order": "Emir",
   "Average if all fill": "Hepsi gerçekleşirse ortalama",
-  "Draws the orders (blue, thicker for a bigger share), the stop (red) and the average price if every order fills (grey) as lines across the chart above. A plan from the price here, not live orders.": "Emirleri (mavi, payı büyük olan daha kalın), stopu (kırmızı) ve tüm emirler gerçekleşirse ortalama fiyatı (gri) yukarıdaki grafikte çizgi olarak gösterir. Buradaki fiyattan bir plan, gerçek emir değil."
+  "Draws the orders (blue, thicker for a bigger share), the stop (red) and the average price if every order fills (grey) as lines across the chart above. A plan from the price here, not live orders.": "Emirleri (mavi, payı büyük olan daha kalın), stopu (kırmızı) ve tüm emirler gerçekleşirse ortalama fiyatı (gri) yukarıdaki grafikte çizgi olarak gösterir. Buradaki fiyattan bir plan, gerçek emir değil.",
+  "5-minute candles, crypto only (the last 7 days)": "5 dakikalık mumlar, yalnızca kripto (son 7 gün)",
+  "🕳️ Fair value gaps": "🕳️ Fair value gap’ler",
+  "5-minute candles are for crypto only. Pick 15m or longer for equities.": "5 dakikalık mumlar yalnızca kripto içindir. Hisseler için 15m veya üstünü seçin.",
+  "Binance spot does not list this coin, so there are no 5-minute candles for it.": "Binance spot bu coini listelemiyor, bu yüzden 5 dakikalık mum yok.",
+  "Binance did not send 5-minute candles just now. Try again in a minute.": "Binance şu an 5 dakikalık mum göndermedi. Bir dakika sonra tekrar deneyin.",
+  "Too few 5-minute candles in the last 7 days for this coin.": "Bu coin için son 7 günde çok az 5 dakikalık mum var.",
+  "Anchored VWAP: tap a candle to draw the volume-weighted average price from there on": "Sabitlenmiş VWAP: bir muma dokunun, oradan itibaren hacim ağırlıklı ortalama fiyat çizilsin",
+  "Volume profile: drag across a stretch of the chart to see at which prices most trading happened": "Hacim profili: grafiğin bir bölümünde sürükleyerek en çok işlemin hangi fiyatlarda olduğunu görün",
+  "Busiest price": "En yoğun fiyat",
+  "70% of volume": "Hacmin %70’i"
 }

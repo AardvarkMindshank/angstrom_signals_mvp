@@ -2275,5 +2275,15 @@
   "Show on chart": "แสดงบนกราฟ",
   "Order": "คำสั่ง",
   "Average if all fill": "ราคาเฉลี่ยถ้าได้ครบทุกคำสั่ง",
-  "Draws the orders (blue, thicker for a bigger share), the stop (red) and the average price if every order fills (grey) as lines across the chart above. A plan from the price here, not live orders.": "วาดคำสั่ง (สีน้ำเงิน ยิ่งสัดส่วนมากยิ่งหนา) จุดตัดขาดทุน (สีแดง) และราคาเฉลี่ยถ้าได้ครบทุกคำสั่ง (สีเทา) เป็นเส้นบนกราฟด้านบน เป็นแผนจากราคาที่นี่ ไม่ใช่คำสั่งจริง"
+  "Draws the orders (blue, thicker for a bigger share), the stop (red) and the average price if every order fills (grey) as lines across the chart above. A plan from the price here, not live orders.": "วาดคำสั่ง (สีน้ำเงิน ยิ่งสัดส่วนมากยิ่งหนา) จุดตัดขาดทุน (สีแดง) และราคาเฉลี่ยถ้าได้ครบทุกคำสั่ง (สีเทา) เป็นเส้นบนกราฟด้านบน เป็นแผนจากราคาที่นี่ ไม่ใช่คำสั่งจริง",
+  "5-minute candles, crypto only (the last 7 days)": "แท่งเทียน 5 นาที เฉพาะคริปโต (7 วันล่าสุด)",
+  "🕳️ Fair value gaps": "🕳️ Fair value gap",
+  "5-minute candles are for crypto only. Pick 15m or longer for equities.": "แท่งเทียน 5 นาทีมีเฉพาะคริปโต สำหรับหุ้นให้เลือก 15m ขึ้นไป",
+  "Binance spot does not list this coin, so there are no 5-minute candles for it.": "Binance spot ไม่มีเหรียญนี้ จึงไม่มีแท่งเทียน 5 นาที",
+  "Binance did not send 5-minute candles just now. Try again in a minute.": "Binance ยังไม่ส่งแท่งเทียน 5 นาทีในตอนนี้ ลองใหม่ในอีกหนึ่งนาที",
+  "Too few 5-minute candles in the last 7 days for this coin.": "แท่งเทียน 5 นาทีใน 7 วันล่าสุดของเหรียญนี้น้อยเกินไป",
+  "Anchored VWAP: tap a candle to draw the volume-weighted average price from there on": "Anchored VWAP: แตะแท่งเทียนเพื่อวาดราคาเฉลี่ยถ่วงน้ำหนักด้วยวอลุ่มตั้งแต่จุดนั้น",
+  "Volume profile: drag across a stretch of the chart to see at which prices most trading happened": "Volume profile: ลากผ่านช่วงหนึ่งของกราฟเพื่อดูว่าราคาใดมีการซื้อขายมากที่สุด",
+  "Busiest price": "ราคาที่ซื้อขายมากที่สุด",
+  "70% of volume": "70% ของวอลุ่ม"
 }

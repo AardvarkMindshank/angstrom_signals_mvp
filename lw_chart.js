@@ -69,7 +69,7 @@ function signature(data) {
     data.volume[n - 1], data.forming, data.series.map((s) => s.id + ":" + s.pane + ":" + (s.scale || "")),
     data.panes.map((p) => p.height), data.vlines.length, data.price_lines.map((p) => p.price + (p.label || "")).join(","), data.theme.dark, data.theme.bg, data.right_offset,
     (data.zones || []).map((z) => z || "").join("|").length, data.series.map((s) => (s.zones || []).filter((z) => z).length),
-    data.zones_name || "", (data.symbols || []).length, (data.shapes || []).length,
+    data.zones_name || "", !!data.fvg, (data.symbols || []).length, (data.shapes || []).length,
   ]);
 }
 
@@ -276,6 +276,58 @@ class SonarSymbols {
 }
 
 // ------------------------------------------------------------------ 📐 chart shapes (outline, neckline, target)
+
+// 🕳️ Fair value gaps (19 Nov 2026): a three-candle gap a fast move leaves behind. Up: the third candle's low is above
+// the first candle's high; down: the third candle's high is below the first's low. Shaded from the middle candle to
+// the right until price trades back through it (a part filled shrinks it). Only gaps still open, at least 0.15% of
+// the price, the newest 40.
+const FVG_MIN = 0.0015, FVG_MAX = 40;
+function fairValueGaps(data) {
+  const [, H, Lo] = data.ohlc, n = data.times.length, gaps = [];
+  for (let i = 2; i < n; i++) {
+    if (Lo[i] > H[i - 2] && (Lo[i] - H[i - 2]) / H[i - 2] >= FVG_MIN) gaps.push({ up: true, from: i - 1, top: Lo[i], bottom: H[i - 2] });
+    else if (H[i] < Lo[i - 2] && (Lo[i - 2] - H[i]) / Lo[i - 2] >= FVG_MIN) gaps.push({ up: false, from: i - 1, top: Lo[i - 2], bottom: H[i] });
+  }
+  const open = [];
+  for (const g of gaps) {
+    let filled = false;
+    for (let k = g.from + 2; k < n && !filled; k++) {
+      if (g.up) { if (Lo[k] <= g.bottom) filled = true; else if (Lo[k] < g.top) g.top = Lo[k]; }
+      else { if (H[k] >= g.top) filled = true; else if (H[k] > g.bottom) g.bottom = H[k]; }
+    }
+    if (!filled && g.top > g.bottom) open.push(g);
+  }
+  return open.slice(-FVG_MAX);
+}
+
+class FairValueGaps {
+  constructor(gaps) { this.gaps = gaps; this.chart = null; this.series = null; }
+  attached(params) { this.chart = params.chart; this.series = params.series; }
+  detached() { this.chart = null; this.series = null; }
+  updateAllViews() {}
+  paneViews() {
+    const self = this;
+    return [{
+      zOrder: () => "bottom",
+      renderer: () => ({
+        draw: (target) => {
+          if (!self.chart || !self.series) return;
+          const scale = self.chart.timeScale();
+          target.useBitmapCoordinateSpace((scope) => {
+            const ctx = scope.context, hr = scope.horizontalPixelRatio, vr = scope.verticalPixelRatio;
+            const right = scope.bitmapSize.width;
+            for (const g of self.gaps) {
+              const x = scale.logicalToCoordinate(g.from), y1 = self.series.priceToCoordinate(g.top), y2 = self.series.priceToCoordinate(g.bottom);
+              if (x === null || y1 === null || y2 === null) continue;
+              ctx.fillStyle = g.up ? "rgba(8,153,129,0.16)" : "rgba(242,54,69,0.16)";
+              ctx.fillRect(x * hr, Math.min(y1, y2) * vr, right - x * hr, Math.max(1, Math.abs(y2 - y1) * vr));
+            }
+          });
+        },
+      }),
+    }];
+  }
+}
 
 class ShapeLines {
   constructor(shapes, dark) { this.shapes = shapes; this.dark = dark; this.chart = null; this.series = null; }
@@ -551,6 +603,7 @@ function draw(L, root, data) {
   if (data.zones && data.zones.some((c) => c)) candles.attachPrimitive(new ZoneBlocks(data.zones));
   if (data.symbols && data.symbols.length) candles.attachPrimitive(new SonarSymbols(data.symbols, H, Lo));
   if (data.shapes && data.shapes.length) candles.attachPrimitive(new ShapeLines(data.shapes, theme.dark));
+  if (data.fvg) candles.attachPrimitive(new FairValueGaps(fairValueGaps(data)));
   const symbolWords = {};
   (data.symbols || []).forEach(([i, shape, colour, above, size, words]) => { (symbolWords[i] = symbolWords[i] || []).push([colour, words]); });
 

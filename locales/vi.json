@@ -2275,5 +2275,15 @@
   "Show on chart": "Hiện trên biểu đồ",
   "Order": "Lệnh",
   "Average if all fill": "Giá trung bình nếu khớp hết",
-  "Draws the orders (blue, thicker for a bigger share), the stop (red) and the average price if every order fills (grey) as lines across the chart above. A plan from the price here, not live orders.": "Vẽ các lệnh (xanh dương, dày hơn khi tỷ trọng lớn hơn), điểm cắt lỗ (đỏ) và giá trung bình nếu khớp hết các lệnh (xám) thành đường trên biểu đồ phía trên. Một kế hoạch từ giá ở đây, không phải lệnh thật."
+  "Draws the orders (blue, thicker for a bigger share), the stop (red) and the average price if every order fills (grey) as lines across the chart above. A plan from the price here, not live orders.": "Vẽ các lệnh (xanh dương, dày hơn khi tỷ trọng lớn hơn), điểm cắt lỗ (đỏ) và giá trung bình nếu khớp hết các lệnh (xám) thành đường trên biểu đồ phía trên. Một kế hoạch từ giá ở đây, không phải lệnh thật.",
+  "5-minute candles, crypto only (the last 7 days)": "Nến 5 phút, chỉ crypto (7 ngày gần nhất)",
+  "🕳️ Fair value gaps": "🕳️ Fair value gap",
+  "5-minute candles are for crypto only. Pick 15m or longer for equities.": "Nến 5 phút chỉ dành cho crypto. Với cổ phiếu hãy chọn 15m trở lên.",
+  "Binance spot does not list this coin, so there are no 5-minute candles for it.": "Binance spot không niêm yết coin này nên không có nến 5 phút.",
+  "Binance did not send 5-minute candles just now. Try again in a minute.": "Binance chưa gửi nến 5 phút lúc này. Hãy thử lại sau một phút.",
+  "Too few 5-minute candles in the last 7 days for this coin.": "Coin này có quá ít nến 5 phút trong 7 ngày gần nhất.",
+  "Anchored VWAP: tap a candle to draw the volume-weighted average price from there on": "VWAP neo: chạm vào một nến để vẽ giá trung bình theo khối lượng từ đó trở đi",
+  "Volume profile: drag across a stretch of the chart to see at which prices most trading happened": "Hồ sơ khối lượng: kéo qua một đoạn biểu đồ để xem giao dịch nhiều nhất ở mức giá nào",
+  "Busiest price": "Giá giao dịch nhiều nhất",
+  "70% of volume": "70% khối lượng"
 }

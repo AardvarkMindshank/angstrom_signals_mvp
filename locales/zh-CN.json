@@ -2275,5 +2275,15 @@
   "Show on chart": "在图表上显示",
   "Order": "订单",
   "Average if all fill": "全部成交时的均价",
-  "Draws the orders (blue, thicker for a bigger share), the stop (red) and the average price if every order fills (grey) as lines across the chart above. A plan from the price here, not live orders.": "在上方图表中以线条显示各订单(蓝色,份额越大越粗)、止损(红色)以及全部成交时的平均价格(灰色)。这是从此处价格出发的计划,并非真实订单。"
+  "Draws the orders (blue, thicker for a bigger share), the stop (red) and the average price if every order fills (grey) as lines across the chart above. A plan from the price here, not live orders.": "在上方图表中以线条显示各订单(蓝色,份额越大越粗)、止损(红色)以及全部成交时的平均价格(灰色)。这是从此处价格出发的计划,并非真实订单。",
+  "5-minute candles, crypto only (the last 7 days)": "5分钟K线,仅限加密货币(最近7天)",
+  "🕳️ Fair value gaps": "🕳️ 公允价值缺口",
+  "5-minute candles are for crypto only. Pick 15m or longer for equities.": "5分钟K线仅适用于加密货币。股票请选择15m或更长。",
+  "Binance spot does not list this coin, so there are no 5-minute candles for it.": "币安现货未上架此币,因此没有5分钟K线。",
+  "Binance did not send 5-minute candles just now. Try again in a minute.": "币安暂未返回5分钟K线,请一分钟后再试。",
+  "Too few 5-minute candles in the last 7 days for this coin.": "此币最近7天的5分钟K线太少。",
+  "Anchored VWAP: tap a candle to draw the volume-weighted average price from there on": "锚定VWAP:点击一根K线,从该处开始绘制成交量加权平均价",
+  "Volume profile: drag across a stretch of the chart to see at which prices most trading happened": "成交量分布:在图表上拖过一段区间,查看哪些价位成交最多",
+  "Busiest price": "成交最多的价位",
+  "70% of volume": "70%的成交量"
 }

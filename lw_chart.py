@@ -356,6 +356,8 @@ def candle_closes_at(start, interval: str, kind: str, session=None) -> int | Non
         stock_day = kind != "crypto" and interval in ("1D", "1W", "1Mo")
         if stock_day and not session:
             session = ("America/New_York", 570, 960)
+        if interval == "5m":                    # chart_candles' 5-minute crypto candles (chart_data has no 5m)
+            return int((start + pd.Timedelta(minutes=5)).timestamp() * 1000)
         if interval == "1Mo":
             if not stock_day:
                 end = start + pd.offsets.MonthBegin(1)

@@ -2275,5 +2275,15 @@
   "Show on chart": "Mostrar no gráfico",
   "Order": "Ordem",
   "Average if all fill": "Média se tudo executar",
-  "Draws the orders (blue, thicker for a bigger share), the stop (red) and the average price if every order fills (grey) as lines across the chart above. A plan from the price here, not live orders.": "Desenha as ordens (azul, mais grossa para uma parte maior), o stop (vermelho) e o preço médio se todas forem executadas (cinza) como linhas no gráfico acima. Um plano a partir do preço aqui, não ordens reais."
+  "Draws the orders (blue, thicker for a bigger share), the stop (red) and the average price if every order fills (grey) as lines across the chart above. A plan from the price here, not live orders.": "Desenha as ordens (azul, mais grossa para uma parte maior), o stop (vermelho) e o preço médio se todas forem executadas (cinza) como linhas no gráfico acima. Um plano a partir do preço aqui, não ordens reais.",
+  "5-minute candles, crypto only (the last 7 days)": "Candles de 5 minutos, só cripto (últimos 7 dias)",
+  "🕳️ Fair value gaps": "🕳️ Fair value gaps",
+  "5-minute candles are for crypto only. Pick 15m or longer for equities.": "Candles de 5 minutos são só para cripto. Escolha 15m ou mais para ações.",
+  "Binance spot does not list this coin, so there are no 5-minute candles for it.": "A Binance spot não lista esta moeda, então não há candles de 5 minutos.",
+  "Binance did not send 5-minute candles just now. Try again in a minute.": "A Binance não enviou candles de 5 minutos agora. Tente de novo em um minuto.",
+  "Too few 5-minute candles in the last 7 days for this coin.": "Poucos candles de 5 minutos nos últimos 7 dias para esta moeda.",
+  "Anchored VWAP: tap a candle to draw the volume-weighted average price from there on": "VWAP ancorado: toque em um candle para desenhar o preço médio ponderado por volume a partir dali",
+  "Volume profile: drag across a stretch of the chart to see at which prices most trading happened": "Perfil de volume: arraste sobre um trecho do gráfico para ver em quais preços houve mais negociação",
+  "Busiest price": "Preço mais negociado",
+  "70% of volume": "70% do volume"
 }

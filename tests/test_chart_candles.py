@@ -15,7 +15,7 @@ def _daily(start="2023-01-01", end="2025-04-15"):
 
 
 def test_intervals_and_ranges():
-    assert cc.INTERVALS[:-1] == chart_data.INTERVALS and cc.INTERVALS[-1] == "1Mo"
+    assert cc.INTERVALS[1:-1] == chart_data.INTERVALS and cc.INTERVALS[0] == "5m" and cc.INTERVALS[-1] == "1Mo"
     assert cc.availability("1Mo", "1Y")[0] and cc.availability("1Mo", "All")[0]
     for short in ("7D", "1M", "3M"):
         assert not cc.availability("1Mo", short)[0]

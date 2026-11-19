@@ -2275,5 +2275,15 @@
   "Show on chart": "차트에 표시",
   "Order": "주문",
   "Average if all fill": "전부 체결 시 평균",
-  "Draws the orders (blue, thicker for a bigger share), the stop (red) and the average price if every order fills (grey) as lines across the chart above. A plan from the price here, not live orders.": "주문(파란색, 비중이 클수록 굵게), 손절(빨간색), 모든 주문이 체결될 때의 평균가(회색)를 위 차트에 선으로 표시합니다. 여기 가격 기준의 계획이며 실제 주문이 아닙니다."
+  "Draws the orders (blue, thicker for a bigger share), the stop (red) and the average price if every order fills (grey) as lines across the chart above. A plan from the price here, not live orders.": "주문(파란색, 비중이 클수록 굵게), 손절(빨간색), 모든 주문이 체결될 때의 평균가(회색)를 위 차트에 선으로 표시합니다. 여기 가격 기준의 계획이며 실제 주문이 아닙니다.",
+  "5-minute candles, crypto only (the last 7 days)": "5분봉, 암호화폐 전용(최근 7일)",
+  "🕳️ Fair value gaps": "🕳️ 페어 밸류 갭",
+  "5-minute candles are for crypto only. Pick 15m or longer for equities.": "5분봉은 암호화폐 전용입니다. 주식은 15m 이상을 선택하세요.",
+  "Binance spot does not list this coin, so there are no 5-minute candles for it.": "바이낸스 현물에 이 코인이 없어 5분봉이 없습니다.",
+  "Binance did not send 5-minute candles just now. Try again in a minute.": "바이낸스에서 지금 5분봉을 보내지 않았습니다. 1분 후 다시 시도하세요.",
+  "Too few 5-minute candles in the last 7 days for this coin.": "이 코인의 최근 7일 5분봉이 너무 적습니다.",
+  "Anchored VWAP: tap a candle to draw the volume-weighted average price from there on": "앵커드 VWAP: 캔들을 탭하면 그 지점부터 거래량 가중 평균가를 그립니다",
+  "Volume profile: drag across a stretch of the chart to see at which prices most trading happened": "거래량 프로파일: 차트 구간을 드래그하면 어느 가격대에서 가장 많이 거래됐는지 보여줍니다",
+  "Busiest price": "최다 거래 가격",
+  "70% of volume": "거래량의 70%"
 }

@@ -2275,5 +2275,15 @@
   "Show on chart": "Mostrar en el gráfico",
   "Order": "Orden",
   "Average if all fill": "Promedio si todo se ejecuta",
-  "Draws the orders (blue, thicker for a bigger share), the stop (red) and the average price if every order fills (grey) as lines across the chart above. A plan from the price here, not live orders.": "Dibuja las órdenes (azul, más gruesa cuanto mayor la parte), el stop (rojo) y el precio medio si se ejecutan todas (gris) como líneas en el gráfico de arriba. Un plan desde el precio indicado aquí, no órdenes reales."
+  "Draws the orders (blue, thicker for a bigger share), the stop (red) and the average price if every order fills (grey) as lines across the chart above. A plan from the price here, not live orders.": "Dibuja las órdenes (azul, más gruesa cuanto mayor la parte), el stop (rojo) y el precio medio si se ejecutan todas (gris) como líneas en el gráfico de arriba. Un plan desde el precio indicado aquí, no órdenes reales.",
+  "5-minute candles, crypto only (the last 7 days)": "Velas de 5 minutos, solo cripto (últimos 7 días)",
+  "🕳️ Fair value gaps": "🕳️ Fair value gaps",
+  "5-minute candles are for crypto only. Pick 15m or longer for equities.": "Las velas de 5 minutos son solo para cripto. Elige 15m o más para acciones.",
+  "Binance spot does not list this coin, so there are no 5-minute candles for it.": "Binance spot no lista esta moneda, así que no hay velas de 5 minutos.",
+  "Binance did not send 5-minute candles just now. Try again in a minute.": "Binance no envió velas de 5 minutos ahora. Inténtalo en un minuto.",
+  "Too few 5-minute candles in the last 7 days for this coin.": "Muy pocas velas de 5 minutos en los últimos 7 días para esta moneda.",
+  "Anchored VWAP: tap a candle to draw the volume-weighted average price from there on": "VWAP anclado: toca una vela para dibujar el precio medio ponderado por volumen desde ahí",
+  "Volume profile: drag across a stretch of the chart to see at which prices most trading happened": "Perfil de volumen: arrastra sobre un tramo del gráfico para ver en qué precios hubo más operaciones",
+  "Busiest price": "Precio con más volumen",
+  "70% of volume": "70% del volumen"
 }

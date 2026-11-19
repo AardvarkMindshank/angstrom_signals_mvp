@@ -2275,5 +2275,15 @@
   "Show on chart": "Im Chart zeigen",
   "Order": "Order",
   "Average if all fill": "Durchschnitt bei voller Ausführung",
-  "Draws the orders (blue, thicker for a bigger share), the stop (red) and the average price if every order fills (grey) as lines across the chart above. A plan from the price here, not live orders.": "Zeichnet die Orders (blau, dicker bei größerem Anteil), den Stopp (rot) und den Durchschnittspreis, wenn alle Orders ausgeführt werden (grau), als Linien im Chart oben. Ein Plan ab dem Preis hier, keine echten Orders."
+  "Draws the orders (blue, thicker for a bigger share), the stop (red) and the average price if every order fills (grey) as lines across the chart above. A plan from the price here, not live orders.": "Zeichnet die Orders (blau, dicker bei größerem Anteil), den Stopp (rot) und den Durchschnittspreis, wenn alle Orders ausgeführt werden (grau), als Linien im Chart oben. Ein Plan ab dem Preis hier, keine echten Orders.",
+  "5-minute candles, crypto only (the last 7 days)": "5-Minuten-Kerzen, nur Krypto (letzte 7 Tage)",
+  "🕳️ Fair value gaps": "🕳️ Fair Value Gaps",
+  "5-minute candles are for crypto only. Pick 15m or longer for equities.": "5-Minuten-Kerzen gibt es nur für Krypto. Wähle für Aktien 15m oder länger.",
+  "Binance spot does not list this coin, so there are no 5-minute candles for it.": "Binance Spot führt diesen Coin nicht, daher gibt es keine 5-Minuten-Kerzen.",
+  "Binance did not send 5-minute candles just now. Try again in a minute.": "Binance hat gerade keine 5-Minuten-Kerzen geliefert. Versuche es in einer Minute erneut.",
+  "Too few 5-minute candles in the last 7 days for this coin.": "Zu wenige 5-Minuten-Kerzen in den letzten 7 Tagen für diesen Coin.",
+  "Anchored VWAP: tap a candle to draw the volume-weighted average price from there on": "Verankerter VWAP: Tippe auf eine Kerze, um ab dort den volumengewichteten Durchschnittspreis zu zeichnen",
+  "Volume profile: drag across a stretch of the chart to see at which prices most trading happened": "Volumenprofil: Ziehe über einen Abschnitt des Charts, um zu sehen, bei welchen Preisen am meisten gehandelt wurde",
+  "Busiest price": "Meistgehandelter Preis",
+  "70% of volume": "70 % des Volumens"
 }
