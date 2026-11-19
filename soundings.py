@@ -112,6 +112,15 @@ READINGS = [
     ("shape.classic", "death_cross_ago", ("recent", 5), "Death cross"),
     ("shape.classic", "double_bottom_stage", ("label",), "Double bottom"),
     ("shape.classic", "double_top_stage", ("label",), "Double top"),
+    # Levels made by trading (20 Nov 2026, signals_levels.py)
+    ("level.fvg", "nearest_below_distance_atr", ("cut", [0.5, 1.5]), "Open gap below (ATRs away)"),
+    ("level.fvg", "nearest_above_distance_atr", ("cut", [0.5, 1.5]), "Open gap above (ATRs away)"),
+    ("level.fvg", "test_up_ago", ("recent", 3), "Up gap tested"),
+    ("level.fvg", "test_down_ago", ("recent", 3), "Down gap tested"),
+    ("level.avwap", "position", ("label",), "Close vs VWAP from the last swing low"),
+    ("level.avwap", "retest_from_above", ("yes",), "Pullback to that VWAP held"),
+    ("level.volume_profile", "position", ("label",), "Close vs the 30-candle value area"),
+    ("level.volume_profile", "at_poc", ("yes",), "At the busiest price"),
     # 🌊 Tides (18 Nov 2026): market-wide, the same for every coin on a day (signals_tides.py)
     ("tides.tide", "tide", ("label",), "Tide"),
     ("tides.tide", "sea", ("label",), "Sea state"),

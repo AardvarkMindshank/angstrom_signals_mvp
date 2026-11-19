@@ -441,22 +441,22 @@ function setupDrawing(L, root, host, chart, candles, data, theme, hasOsc) {
     DRAW_STORE.assets.set(conf.asset, record);
   }
 
-  const T = data.times, n = T.length;
+  const TS = data.times, n = TS.length;   // not T: that is the translation helper
   const ts = chart.timeScale();
   const tToL = (t) => {
     if (n < 2) return 0;
-    if (t <= T[0]) return (t - T[0]) / (T[1] - T[0]);
-    if (t >= T[n - 1]) return n - 1 + (t - T[n - 1]) / (T[n - 1] - T[n - 2]);
-    const i = indexOfTime(T, t);
-    if (T[i] === t) return i;
-    return i - 1 + (t - T[i - 1]) / (T[i] - T[i - 1]);
+    if (t <= TS[0]) return (t - TS[0]) / (TS[1] - TS[0]);
+    if (t >= TS[n - 1]) return n - 1 + (t - TS[n - 1]) / (TS[n - 1] - TS[n - 2]);
+    const i = indexOfTime(TS, t);
+    if (TS[i] === t) return i;
+    return i - 1 + (t - TS[i - 1]) / (TS[i] - TS[i - 1]);
   };
   const lToT = (l) => {
-    if (n < 2) return T[0] || 0;
-    if (l <= 0) return T[0] + l * (T[1] - T[0]);
-    if (l >= n - 1) return T[n - 1] + (l - (n - 1)) * (T[n - 1] - T[n - 2]);
+    if (n < 2) return TS[0] || 0;
+    if (l <= 0) return TS[0] + l * (TS[1] - TS[0]);
+    if (l >= n - 1) return TS[n - 1] + (l - (n - 1)) * (TS[n - 1] - TS[n - 2]);
     const i = Math.floor(l);
-    return T[i] + (l - i) * (T[i + 1] - T[i]);
+    return TS[i] + (l - i) * (TS[i + 1] - TS[i]);
   };
 
   const s = {

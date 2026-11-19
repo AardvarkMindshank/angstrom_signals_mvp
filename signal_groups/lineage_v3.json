@@ -146,6 +146,17 @@
     ],
     "tides.storm": [
       "macro_calendar"
+    ],
+    "level.fvg": [
+      "price"
+    ],
+    "level.avwap": [
+      "price",
+      "volume"
+    ],
+    "level.volume_profile": [
+      "price",
+      "volume"
     ]
   }
 }

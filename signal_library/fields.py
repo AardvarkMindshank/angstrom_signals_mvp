@@ -66,6 +66,27 @@ FIELDS: dict[str, dict[str, dict]] = {
         "yellow_cross", "strength_candle", "big_green_dot", "big_red_dot", "snake_eyes_green", "snake_eyes_red")},
         "band": label("above", "inside", "below"), "band_order": label("rising", "falling", "mixed"),
         "close": num("price", 0)},
+    # ---- price levels made by trading (signals_levels.py, 20 Nov 2026)
+    "level.fvg@1": {
+        "close": num("price", 0), "below_count": num("open gaps", 0), "above_count": num("open gaps", 0),
+        "nearest_below_top": num("price", 0), "nearest_below_bottom": num("price", 0),
+        "nearest_below_distance_pct": num("% below the close", 0), "nearest_below_distance_atr": num("ATRs below the close", 0),
+        "nearest_above_bottom": num("price", 0), "nearest_above_top": num("price", 0),
+        "nearest_above_distance_pct": num("% above the close", 0), "nearest_above_distance_atr": num("ATRs above the close", 0),
+        **{f"{what}_{kind}_ago": num(CANDLES_AGO, 0) for what in ("new", "test", "filled") for kind in ("up", "down")},
+    },
+    "level.avwap@1": {
+        "vwap": num("price", 0), "close": num("price", 0), "position": label("above", "below", "on"),
+        "distance_pct": num("% from the VWAP", -100), "distance_atr": num("ATRs from the VWAP"),
+        "crossed_up": YES_NO, "crossed_down": YES_NO, "retest_from_above": YES_NO, "retest_from_below": YES_NO,
+        "anchor_ago": num("candles", 0), "anchor_price": num("price", 0),
+    },
+    "level.volume_profile@1": {
+        "poc": num("price", 0), "value_high": num("price", 0), "value_low": num("price", 0), "close": num("price", 0),
+        "position": label("above_value", "in_value", "below_value"), "poc_side": label("above", "below", "on"),
+        "poc_distance_pct": num("% from the busiest price", -100), "poc_distance_atr": num("ATRs from the busiest price"),
+        "at_poc": YES_NO,
+    },
     "shape.classic@1": {**{f"{kind}_{part}": desc for kind in (
         "head_shoulders", "inverse_head_shoulders", "double_top", "double_bottom") for part, desc in (
         ("stage", label("forming", "confirmed", "failed", "none")), ("ago", num(CANDLES_AGO, 0)),

@@ -4481,6 +4481,26 @@ def _tv_chart(asset_type, asset_key, title, layout, tv, interval, range_key, pri
         _chart_drawing_events(result, draw_key, title, interval)
 
 
+def _ladder_swing(asset_type: str, asset_key: str, ladder_key: str, frame) -> dict | None:
+    """📐 The move the ladder's Fibonacci orders are measured on (only when the ladder places orders on Fibonacci
+    levels): the account's newest Fibonacci drawing on this asset, else the last swing on the chart's candles."""
+    import ladder_helper
+
+    if not ladder_helper.wants_fib(st, ladder_key):
+        return None
+    side = st.session_state.get(f"ladder_side_{ladder_key}") or "long"
+    if st.session_state.get("user") is not None:
+        try:
+            items, _updated = load_drawings(supabase, user_id, drawing_key(asset_type, asset_key))
+            drawn = ladder_helper.drawn_fib(items)
+            if drawn:
+                return {**drawn, "origin": "drawing"}
+        except Exception:
+            pass
+    found = ladder_helper.last_swing(frame, side)
+    return {**found, "origin": "swing"} if found else None
+
+
 def _single_print_zones(asset_type: str, asset_key: str, frame) -> list[dict]:
     """📍 Open single prints of the last month, from 30-minute candles (shared, cached fetch; nothing stored)."""
     try:
@@ -14274,7 +14294,9 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             ladder_key = f"{asset_type}_{asset_key}"
             ladder_atr = signals_v2._num(daily_chart["atr"].iloc[-1]) if "atr" in daily_chart.columns else None
             ladder_price = signals_v2._num(daily_chart["close"].iloc[-1])
-            ladder_lines = ladder_helper.chart_lines(st, ladder_key, ladder_price, ladder_atr, t)
+            ladder_swing = _ladder_swing(asset_type, asset_key, ladder_key,
+                                         tv["frame"] if use_tv and tv and not tv.get("error") else daily_chart)
+            ladder_lines = ladder_helper.chart_lines(st, ladder_key, ladder_price, ladder_atr, t, swing=ladder_swing)
             if use_tv:
                 if tv and not tv.get("error"):
                     _shared_chart_banner(asset_type, asset_key)
@@ -14547,7 +14569,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             # 🪜 A ladder of limit orders spaced by this asset's daily range (ladder_helper.py): a planning calculator,
             # first thing under the chart so its lines can be checked against the candles.
             with st.expander("🪜 " + t("Ladder helper") + f" — {title}", expanded=bool(ladder_lines)):
-                ladder_helper.render(st, t, ladder_price, ladder_atr, title, ladder_key)
+                ladder_helper.render(st, t, ladder_price, ladder_atr, title, ladder_key, swing=ladder_swing)
 
             # The readings come from the full stored history (the table row already holds them); the
             # chart window does not change them.

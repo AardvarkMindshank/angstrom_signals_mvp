@@ -49,7 +49,7 @@ SIGNAL_PLAN = {
     # Plus
     "mtf.alignment": "plus", "ichimoku.position": "plus", "stochastic.level": "plus", "bollinger.position": "plus",
     "volume.heavy_candle": "plus", "macd.level": "plus", "macd.acceleration": "plus", "obv.balance": "plus",
-    "volume.cmf": "plus", "structure.swings": "plus", "shape.classic": "plus", "regime.state": "plus",
+    "volume.cmf": "plus", "structure.swings": "plus", "shape.classic": "plus", "level.fvg": "plus", "level.avwap": "plus", "level.volume_profile": "plus", "regime.state": "plus",
     "volatility.atr_trend": "plus", "regime.observation": "plus", "candle.shape": "plus", "move.seven_day": "plus", "momentum.direction": "plus",
     "tides.tide": "plus", "tides.current": "plus", "tides.storm": "plus",
     # Pro

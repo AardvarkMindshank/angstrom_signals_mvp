@@ -1,0 +1,52 @@
+{
+ "title": "Planning an entry",
+ "series": "Charts",
+ "next": "Next: from the chart to your signals",
+ "slug": "c5-plan-entry",
+ "section": "training",
+ "zoom": "none",
+ "intro_say": "Angstrom Signals. | Planning an entry.",
+ "outro_say": "That's planning an entry. | It's a calculator: nothing is placed, and it's not advice.",
+ "steps": [
+  {
+   "id": "idea",
+   "screen": "A card: don't buy all at once",
+   "say": "Many traders don't buy all at once. | They place a ladder of orders below the price, so a dip fills them at better prices."
+  },
+  {
+   "id": "open",
+   "screen": "The ladder helper under the chart",
+   "say": "The ladder helper sits right under the chart."
+  },
+  {
+   "id": "style",
+   "screen": "Long or short, consolidating or trending",
+   "say": "Choose long or short, and the kind of market. | Consolidating gives equal orders close to the price. | Trending makes the nearest order smallest and the furthest largest."
+  },
+  {
+   "id": "spacing",
+   "screen": "Orders spaced by the daily move",
+   "say": "The orders are spaced by this coin's typical daily move, so a quiet coin gets a tight ladder and a wild one a wide ladder. | The stop sits beyond the last order."
+  },
+  {
+   "id": "lines",
+   "screen": "Show on chart",
+   "say": "Switch on Show on chart. | Blue lines for the orders, thicker for a bigger share, red for the stop, and grey for your average price if every order fills."
+  },
+  {
+   "id": "fib",
+   "screen": "Orders on Fibonacci levels",
+   "say": "Or put the orders on Fibonacci levels. | Draw a Fibonacci from the swing low to the high, then choose On Fibonacci levels. | The orders move onto the retracement levels, and the stop goes just past the swing low. | With no drawing, it measures the last swing for you."
+  },
+  {
+   "id": "five",
+   "screen": "Five-minute candles",
+   "say": "For the final entry, switch to five-minute candles. | They cover the last seven days, for crypto."
+  },
+  {
+   "id": "tidy",
+   "screen": "Back to four-hour candles",
+   "say": "Switch the lines off when you're done."
+  }
+ ]
+}

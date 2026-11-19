@@ -1,0 +1,52 @@
+{
+ "title": "Signals on the chart",
+ "series": "Charts",
+ "next": "Next: planning an entry",
+ "slug": "c4-signals-on-chart",
+ "section": "training",
+ "zoom": "none",
+ "intro_say": "Angstrom Signals. | Signals on the chart.",
+ "outro_say": "That's the signals on the chart. | Next: planning an entry.",
+ "steps": [
+  {
+   "id": "idea",
+   "screen": "A card: see the readings where they happened",
+   "say": "The readings in your tables, drawn on the chart, on the candles where they happened."
+  },
+  {
+   "id": "open",
+   "screen": "Bitcoin on daily candles",
+   "say": "We're on Bitcoin, with daily candles over the last year."
+  },
+  {
+   "id": "sonar",
+   "screen": "The Sonar strip",
+   "say": "Sonar adds a strip under the price: momentum waves, money flow, and big dots where momentum turns at an extreme."
+  },
+  {
+   "id": "marks",
+   "screen": "Sonar markers on the candles",
+   "say": "Sonar markers put the signals on the candles themselves. | Pick which ones to show in this row, and point at one to see what it means."
+  },
+  {
+   "id": "shapes",
+   "screen": "Chart shapes and crosses",
+   "say": "Chart shapes outlines head and shoulders, double tops and double bottoms, with the neckline and a rough target. | Gold and grey stars mark golden and death crosses."
+  },
+  {
+   "id": "bands",
+   "screen": "A Signal Set as colour bands",
+   "say": "Show a Signal Set on the chart. | Every day is coloured by the Set's answer at that day's close: green where its conditions were met."
+  },
+  {
+   "id": "events",
+   "screen": "Fed, CPI and jobs days",
+   "say": "Dashed lines mark the big US releases: Fed decisions, inflation and jobs reports. | The next ones are drawn ahead of the last candle."
+  },
+  {
+   "id": "tidy",
+   "screen": "Turning it back to the basics",
+   "say": "Turn any of them off with the same pills. | Your choices stay with your account."
+  }
+ ]
+}

@@ -1,0 +1,52 @@
+{
+ "title": "Where the money sits",
+ "series": "Charts",
+ "next": "Next: signals on the chart",
+ "slug": "c3-levels",
+ "section": "training",
+ "zoom": "none",
+ "intro_say": "Angstrom Signals. | Where the money sits.",
+ "outro_say": "Those are the levels traders watch. | Next: the signals drawn on the chart.",
+ "steps": [
+  {
+   "id": "idea",
+   "screen": "A card: levels made by trading",
+   "say": "Some prices matter more than others, because of what traders did there. | The chart can show five kinds of them."
+  },
+  {
+   "id": "open",
+   "screen": "Bitcoin on four-hour candles",
+   "say": "We're on Bitcoin, with four-hour candles."
+  },
+  {
+   "id": "liq",
+   "screen": "Estimated liquidation levels",
+   "say": "Liquidation levels estimate where leveraged traders would be forced to close. | Red for longs below the price, green for shorts above. Brighter means more money."
+  },
+  {
+   "id": "fvg",
+   "screen": "Fair value gaps",
+   "say": "Fair value gaps are price ranges a fast move jumped across. | Green ones were left by rises, red ones by falls. | Each stays shaded until price trades back through it."
+  },
+  {
+   "id": "sp",
+   "screen": "Single prints",
+   "say": "Single prints, in violet, are prices only one half hour of a day traded through. | Thin areas, which price often comes back to fill."
+  },
+  {
+   "id": "avwap",
+   "screen": "Anchored VWAP from a swing low",
+   "say": "The anchor tool draws an anchored VWAP. | Tap a candle, such as a swing low, to see the average price paid since then, weighted by volume."
+  },
+  {
+   "id": "vprofile",
+   "screen": "Volume profile over a range",
+   "say": "The volume profile tool: drag across a stretch of the chart. | It shows at which prices most trading happened, the busiest price, and the band holding seventy percent of the volume."
+  },
+  {
+   "id": "tidy",
+   "screen": "A card: what each one tells you",
+   "say": "None of these is a forecast. | They show where price has reason to pause or turn, so you can plan around them."
+  }
+ ]
+}

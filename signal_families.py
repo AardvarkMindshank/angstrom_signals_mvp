@@ -40,6 +40,8 @@ FAMILIES = (
         (mark("Support and resistance"), mark("Near a level where price turned before"), ["levels.zones"]),
         (mark("Market structure"), mark("Higher highs and lows, or the reverse"), ["structure.swings", "structure.breaks"]),
         (mark("Chart shapes"), mark("Head and shoulders, double tops and more"), ["shape.classic"]),
+        (mark("Levels made by trading"), mark("Fair value gaps, anchored VWAP and the volume profile"),
+         ["level.fvg", "level.avwap", "level.volume_profile"]),
     ]),
     ("regime", mark("Regime and sentiment"), mark("What kind of market is it, and what is the news saying?"), [
         (mark("Headline sentiment"), mark("What the news is saying"), ["sentiment.asset", "sentiment.market"]),

@@ -256,6 +256,9 @@ SHORT = {
     "osc.stoch_rsi": lambda p: "Stoch RSI",
     "sonar.markers": lambda p: "Sonar markers",
     "shape.classic": lambda p: "Chart shapes",
+    "level.fvg": lambda p: "Fair value gaps",
+    "level.avwap": lambda p: f"Anchored VWAP ({p['anchor'].replace('_', ' ')})",
+    "level.volume_profile": lambda p: f"Volume profile ({p['lookback']} candles)",
     "divergence.mtf": lambda p: f"Divergence ({p['set']}, {p['oscillator']})",
     "candle.shape": lambda p: "Candle",
     "options.max_pain": lambda p: "Max pain" + (" (monthly)" if p.get("monthly") else "")

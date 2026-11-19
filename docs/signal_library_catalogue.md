@@ -262,6 +262,33 @@ Generated from the registry (`signal_library.REGISTRY.catalogue()`) by `signal_c
 - **Interpretation:** Whether recent market headlines read positive or negative. Descriptive.
 - **Limitations:** AI-scored headlines, not validated as predictive. Days with thin news can swing the score. History starts on 3 Nov 2026 and is replayable only from when each score first reached the database.
 
+### Anchored VWAP — `level.avwap@1`
+
+- **Category:** structure · **Output:** observation · **Unit:** mixed (labelled fields) · **Scope:** asset
+- **Timeframes:** 15m, 30m, 1h, 4h, 12h, 1D, 1W · **Data:** candles
+- **Parameters:** `anchor` = swing_low (where the average starts: the last swing low or high, or the start of the week, month or year); `swing` = 5 (candles each side that make a swing low or high)
+- **Calculation:** From the anchor candle to the last closed candle: VWAP = sum of typical price ((high + low + close) / 3) x volume over the sum of volume. Anchors: swing_low / swing_high = the last swing low / high confirmed by `swing` candles each side (as the structure signals); week, month, year = the first candle of the current calendar week (Monday), month or year, UTC. On the last closed candle: position = the close above or below the VWAP; distance in % and in ATR(14); crossed_up = the previous close was below its VWAP and this one is above, crossed_down the reverse; retest_from_above = the low reached the VWAP and the close finished above it, retest_from_below the reverse; anchor_ago = candles since the anchor; anchor_price = the swing's price (swing anchors) or the anchor candle's open. The chart's ⚓ drawing tool uses the same formula from a candle you tap.
+- **Interpretation:** The average price paid, weighted by volume, by everyone who traded since a moment that mattered. Above it, buyers since then are on average in profit; traders watch a pullback that holds the VWAP as a sign buyers are defending it. Descriptive; not a forecast.
+- **Limitations:** Depends on the anchor: a different swing gives a different line. Swing anchors are known `swing` candles late. Volume differs between exchanges and data sources; a period with little volume moves the line little.
+
+### Fair value gaps — `level.fvg@1`
+
+- **Category:** structure · **Output:** observation · **Unit:** mixed (labelled fields) · **Scope:** asset
+- **Timeframes:** 15m, 30m, 1h, 4h, 12h, 1D, 1W · **Data:** candles
+- **Parameters:** `min_size_pct` = 0.15 (smallest gap counted, as % of the price); `lookback` = 100 (candles searched for gaps)
+- **Calculation:** Over the last `lookback` closed candles: an up gap forms when a candle's low is above the high of the candle two before it, a down gap when its high is below that candle's low, each at least `min_size_pct` % of the price. A later candle trading into a gap shrinks it to the part not yet traded; one trading right through fills it. A test = a candle entering an open gap and closing back on its near side (an up gap: the close stays above the gap's bottom). On the last closed candle: below_count / above_count = open gaps under / over the close; nearest_below_* and nearest_above_* = the closest one's edges and its distance from the close (to its near edge) in % and in ATR(14); new_up_ago, test_up_ago, filled_up_ago (and _down_) = candles since a gap of that kind formed, was tested or was filled (0 = the last closed candle, `lookback` = not in the window). The same rule as the chart's fair value gaps.
+- **Interpretation:** Gaps left by fast moves that price has not gone back to. Traders watch an open gap under the price as a place price may come back to and find buyers, and one over it as a place sellers may wait. Descriptive; not a forecast.
+- **Limitations:** Many small gaps form in fast markets; min_size_pct keeps the noise down. Gaps between sessions in shares count too. A gap is a price area, not a promise that price returns to it.
+
+### Volume profile — `level.volume_profile@1`
+
+- **Category:** structure · **Output:** observation · **Unit:** mixed (labelled fields) · **Scope:** asset
+- **Timeframes:** 15m, 30m, 1h, 4h, 12h, 1D, 1W · **Data:** candles
+- **Parameters:** `lookback` = 30 (candles in the profile (the last closed one included)); `rows` = 24 (price rows the range is cut into); `value_area` = 70 (% of the volume the value area holds)
+- **Calculation:** Over the last `lookback` closed candles, the range from the lowest low to the highest high is cut into `rows` price rows; each candle's volume is spread evenly over the rows its high-low covers. poc (point of control) = the middle of the busiest row; the value area = the busiest row plus neighbouring rows, adding the busier side first, until it holds `value_area` % of the volume; value_low / value_high = its edges. On the last close: position = above_value, in_value or below_value; poc_side = the close above or below the poc; poc_distance_pct and poc_distance_atr = from the poc to the close (ATR 14); at_poc = the close within one row of the poc. The chart's 📊 drawing tool uses the same rule over a range you drag.
+- **Interpretation:** Where most trading happened lately. Traders read the busiest price as fair value that price is drawn back to, and a close outside the value area as price leaving that range. Descriptive; not a forecast.
+- **Limitations:** Built from candles, not trades: volume inside a candle is assumed spread evenly across its range, so it is an estimate. Daily candles give a rough profile; shorter candles a finer one. Volume differs between data sources.
+
 ### Support and resistance zones — `levels.zones@1`
 
 - **Category:** structure · **Output:** levels · **Unit:** price · **Scope:** asset

@@ -7,6 +7,10 @@ Two styles, after a beta tester's practice:
 * consolidating (a narrow range): equal orders, close to the price;
 * trending (you don't want to miss the move): the order nearest the price smallest, the furthest largest (1 : 2 : 3 …).
 
+📐 Orders can also go on Fibonacci levels (20 Nov 2026, as a beta tester ladders into the golden pocket): measured
+from the member's own Fibonacci drawing on that asset, or else from the last swing low to the high since (a long; the
+mirror for a short) on the chart's candles, with the stop a little past the swing (the 100% level).
+
 Defaults come from the hourly research (30 coins, 2021 to Oct 2024): within a day of a bottom signal price dipped a
 typical 0.4 daily moves further, 1 time in 4 about 0.75, 1 time in 10 about 1.3. So the deepest order sits at 0.6 daily
 moves (consolidating) or 0.9 (trending), and the stop 0.4 beyond it.
@@ -19,6 +23,11 @@ import html
 STYLES = {"consolidating": {"first": 0.15, "deepest": 0.6, "weights": "equal"},
           "trending": {"first": 0.3, "deepest": 0.9, "weights": "rising"}}
 STOP_BEYOND = 0.4                          # daily moves past the deepest order
+PLACES = ("moves", "fib")                  # orders spaced by daily moves, or on Fibonacci levels
+FIB_SETS = {2: (0.618, 0.786), 3: (0.5, 0.618, 0.786), 4: (0.5, 0.618, 0.65, 0.786),
+            5: (0.382, 0.5, 0.618, 0.65, 0.786), 6: (0.236, 0.382, 0.5, 0.618, 0.65, 0.786)}
+FIB_STOP_BEYOND = 0.2                      # daily moves past the swing (the 100% level) for the stop
+SWING = 5                                  # candles each side that make a swing low or high
 
 
 def plan(price: float, atr: float, side: str = "long", style: str = "consolidating", orders: int = 3,
@@ -38,7 +47,7 @@ def plan(price: float, atr: float, side: str = "long", style: str = "consolidati
     rows = []
     for i, (d, s) in enumerate(zip(steps, shares), start=1):
         p = price + sign * d * atr
-        rows.append({"n": i, "price": p, "pct": (p / price - 1) * 100, "moves": d, "share": s,
+        rows.append({"n": i, "price": p, "pct": (p / price - 1) * 100, "moves": d, "share": s, "fib": None,
                      "amount": amount * s if amount else None})
     stop_moves = deep + STOP_BEYOND
     stop = price + sign * stop_moves * atr
@@ -49,6 +58,76 @@ def plan(price: float, atr: float, side: str = "long", style: str = "consolidati
             "loss_amount": amount * loss_pct / 100 if amount else None, "atr_pct": atr / price * 100}
 
 
+def _rows(price, prices, levels, moves, style, amount, sign):
+    cfg = STYLES.get(style, STYLES["consolidating"])
+    raw = [1.0] * len(prices) if cfg["weights"] == "equal" else [float(i + 1) for i in range(len(prices))]
+    shares = [w / sum(raw) for w in raw]
+    return [{"n": i, "price": p, "pct": (p / price - 1) * 100, "moves": m, "share": s, "fib": f,
+             "amount": amount * s if amount else None}
+            for i, (p, m, s, f) in enumerate(zip(prices, moves, shares, levels), start=1)]
+
+
+def _finish(price, atr, side, rows, stop, amount):
+    avg = 1 / sum(r["share"] / r["price"] for r in rows)
+    loss_pct = (stop / avg - 1) * 100 * (1 if side == "long" else -1)
+    return {"ok": True, "rows": rows, "stop": stop, "stop_pct": (stop / price - 1) * 100,
+            "stop_moves": abs(stop - price) / atr, "avg": avg, "avg_pct": (avg / price - 1) * 100, "loss_pct": loss_pct,
+            "loss_amount": amount * loss_pct / 100 if amount else None, "atr_pct": atr / price * 100}
+
+
+def fib_plan(price: float, atr: float, low: float, high: float, side: str = "long", style: str = "consolidating",
+             orders: int = 3, amount: float | None = None) -> dict:
+    """Orders on Fibonacci retracement levels of the move from `low` to `high` (a long buys the pullback from the high:
+    level r = high - (high - low) x r; a short sells the bounce from the low: low + (high - low) x r). Only levels on
+    the right side of the price are used (below it for a long). The stop sits FIB_STOP_BEYOND daily moves past the
+    100% level. ok False, with a reason, when the swing is unusable or no level is left."""
+    if not price or not atr or not low or not high or high <= low or atr <= 0:
+        return {"ok": False, "reason": "no_swing"}
+    levels = FIB_SETS[max(2, min(6, int(orders)))]
+    sign = -1 if side == "long" else 1
+    at = (lambda r: high - (high - low) * r) if side == "long" else (lambda r: low + (high - low) * r)
+    picked = [(r, at(r)) for r in levels if (at(r) < price if side == "long" else at(r) > price)]
+    if not picked:
+        return {"ok": False, "reason": "past_levels"}
+    prices = [p for _r, p in picked]
+    rows = _rows(price, prices, [r for r, _p in picked], [abs(p - price) / atr for p in prices], style, amount, sign)
+    stop = (low - FIB_STOP_BEYOND * atr) if side == "long" else (high + FIB_STOP_BEYOND * atr)
+    return {**_finish(price, atr, side, rows, stop, amount), "low": low, "high": high}
+
+
+def last_swing(frame, side: str = "long", swing: int = SWING) -> dict | None:
+    """The move a Fibonacci is drawn on: for a long, the last swing low (swing candles each side) and the highest high
+    since; for a short, the last swing high and the lowest low since. {low, high} or None."""
+    if frame is None or len(frame) < swing * 2 + 3:
+        return None
+    from signal_library.swings import pivots
+
+    high, low = frame["high"].astype(float).to_numpy(), frame["low"].astype(float).to_numpy()
+    kind = "low" if side == "long" else "high"
+    found = [p for p in pivots(high, low, swing, swing) if p["kind"] == kind]
+    if not found:
+        return None
+    i = found[-1]["index"]
+    if side == "long":
+        lo, hi = float(low[i]), float(high[i:].max())
+    else:
+        hi, lo = float(high[i]), float(low[i:].min())
+    return {"low": lo, "high": hi} if hi > lo else None
+
+
+def drawn_fib(items) -> dict | None:
+    """The newest Fibonacci on the chart drawings of this asset: {low, high}, or None."""
+    for it in reversed(list(items or [])):
+        if isinstance(it, dict) and it.get("tool") == "fib" and len(it.get("pts") or []) >= 2:
+            try:
+                a, b = float(it["pts"][0]["p"]), float(it["pts"][1]["p"])
+            except (TypeError, ValueError, KeyError):
+                continue
+            if a != b:
+                return {"low": min(a, b), "high": max(a, b)}
+    return None
+
+
 def settings(st, key: str, price: float, atr: float) -> dict:
     """The helper's current choices for this asset, read before its controls are drawn (the chart above them needs
     them first). The same keys and defaults as render()."""
@@ -56,25 +135,43 @@ def settings(st, key: str, price: float, atr: float) -> dict:
     side = ss.get(f"ladder_side_{key}") or "long"
     style = ss.get(f"ladder_style_{key}") or "consolidating"
     return {"show": bool(ss.get(f"ladder_show_{key}")), "side": side, "style": style,
+            "place": ss.get(f"ladder_place_{key}") or "moves",
             "orders": int(ss.get(f"ladder_n_{key}") or 3),
             "start": float(ss.get(f"ladder_px_{key}") or price or 0),
             "deepest": float(ss.get(f"ladder_deep_{key}_{style}") or STYLES[style]["deepest"]),
             "amount": float(ss.get(f"ladder_amt_{key}") or 0) or None}
 
 
-def chart_lines(st, key: str, price: float | None, atr: float | None, t=lambda x: x) -> list[dict]:
+def wants_fib(st, key: str) -> bool:
+    return (st.session_state.get(f"ladder_place_{key}") or "moves") == "fib"
+
+
+def current_plan(st, key: str, price, atr, swing: dict | None = None) -> tuple[dict, dict]:
+    """(settings, plan) for this asset: by daily moves, or on the Fibonacci levels of `swing` ({low, high, origin})."""
+    c = settings(st, key, price, atr)
+    if c["place"] == "fib":
+        if not swing:
+            return c, {"ok": False, "reason": "no_swing"}
+        return c, fib_plan(c["start"], atr, swing["low"], swing["high"], c["side"], c["style"], c["orders"], c["amount"])
+    return c, plan(c["start"], atr, c["side"], c["style"], c["orders"], c["deepest"], c["amount"])
+
+
+def _fib_words(r) -> str:
+    return f"{r * 100:.1f}".rstrip("0").rstrip(".") + "%"
+
+
+def chart_lines(st, key: str, price: float | None, atr: float | None, t=lambda x: x, swing: dict | None = None) -> list[dict]:
     """Horizontal lines for the chart when "Show on chart" is on: one per order (blue, dashed, thicker for a bigger
-    share), the stop (red) and the average price if every order fills (grey, dotted). [] when off."""
+    share; on Fibonacci levels, labelled with the level), the stop (red) and the average price if every order fills
+    (grey, dotted). [] when off."""
     if not price or not atr:
         return []
-    c = settings(st, key, price, atr)
-    if not c["show"]:
-        return []
-    p = plan(c["start"], atr, c["side"], c["style"], c["orders"], c["deepest"], c["amount"])
-    if not p["ok"]:
+    c, p = current_plan(st, key, price, atr, swing)
+    if not c["show"] or not p["ok"]:
         return []
     lines = [{"price": round(r["price"], 10), "color": "#2563eb", "width": max(1, min(4, round(r["share"] * len(p["rows"]) * 2))),
-              "style": "dashed", "label": f"{t('Order')} {r['n']} · {r['share'] * 100:.0f}%"} for r in p["rows"]]
+              "style": "dashed", "label": f"{t('Order')} {r['n']} · {r['share'] * 100:.0f}%"
+              + (f" · {_fib_words(r['fib'])}" if r.get("fib") is not None else "")} for r in p["rows"]]
     lines.append({"price": round(p["stop"], 10), "color": "#dc2626", "width": 2, "style": "solid", "label": t("Stop")})
     lines.append({"price": round(p["avg"], 10), "color": "#64748b", "width": 1, "style": "dotted",
                   "label": t("Average if all fill")})
@@ -87,8 +184,9 @@ def _price(v: float) -> str:
     return f"{v:,.{digits}f}"
 
 
-def render(st, t, price: float | None, atr: float | None, name: str, key: str) -> None:
-    """The helper's controls and its table, for the asset on the chart."""
+def render(st, t, price: float | None, atr: float | None, name: str, key: str, swing: dict | None = None) -> None:
+    """The helper's controls and its table, for the asset on the chart. swing = the move the Fibonacci orders are
+    measured on ({low, high, origin: "drawing" or "swing"}), when orders go on Fibonacci levels."""
     if not price or not atr:
         st.caption(t("The ladder helper needs at least 15 days of prices for this asset."))
         return
@@ -104,29 +202,63 @@ def render(st, t, price: float | None, atr: float | None, name: str, key: str) -
                                         "nearest the price smallest, the furthest largest."))
     orders = c3.number_input(t("Orders"), 2, 6, 3, key=f"ladder_n_{key}")
     side, style = side or "long", style or "consolidating"
+    place = st.segmented_control(
+        t("Place the orders"), list(PLACES), default="moves", key=f"ladder_place_{key}",
+        format_func=lambda v: {"moves": "📏 " + t("By daily move"), "fib": "📐 " + t("On Fibonacci levels")}[v],
+        help=t("By daily move: spaced by this asset's typical daily range. On Fibonacci levels: at the retracement "
+               "levels of the last move, from your own 📐 Fibonacci drawing on this asset, or else from the last swing "
+               "low to the high since (a short: the last swing high to the low since), with the stop just past the "
+               "swing.")) or "moves"
+    if place == "fib":
+        if swing:
+            where = (t("your Fibonacci drawing") if swing.get("origin") == "drawing"
+                     else t("the last swing on these candles"))
+            st.caption("📐 " + t("Measured on {where}: low {low}, high {high}.", where=where, low=_price(swing["low"]),
+                                 high=_price(swing["high"])))
+        else:
+            st.caption("📐 " + t("No swing found on these candles. Draw a Fibonacci on the chart, or pick a longer range."))
     c4, c5, c6 = st.columns([1.2, 1.4, 1])
     start = c4.number_input(t("From price"), min_value=0.0, value=float(price), format="%.6g", key=f"ladder_px_{key}",
                             help=t("The latest close; change it to plan from another price."))
-    deepest = c5.slider(t("Deepest order, in daily moves"), 0.2, 2.0, STYLES[style]["deepest"], 0.05,
-                        key=f"ladder_deep_{key}_{style}",
-                        help=t("One daily move = this asset's typical daily range (ATR 14), {pct:.1f}% now.",
-                               pct=atr / price * 100))
+    if place == "fib":
+        deepest = None
+        c5.caption(t("Levels used: {levels}", levels=", ".join(_fib_words(r) for r in FIB_SETS[max(2, min(6, int(orders)))])))
+    else:
+        deepest = c5.slider(t("Deepest order, in daily moves"), 0.2, 2.0, STYLES[style]["deepest"], 0.05,
+                            key=f"ladder_deep_{key}_{style}",
+                            help=t("One daily move = this asset's typical daily range (ATR 14), {pct:.1f}% now.",
+                                   pct=atr / price * 100))
     amount = c6.number_input(t("Amount (optional)"), min_value=0.0, value=0.0, step=100.0, key=f"ladder_amt_{key}",
                              help=t("The total to split across the orders, in your account's currency."))
     st.toggle("📏 " + t("Show on chart"), key=f"ladder_show_{key}",
               help=t("Draws the orders (blue, thicker for a bigger share), the stop (red) and the average price if "
                      "every order fills (grey) as lines across the chart above. A plan from the price here, not live "
                      "orders."))
-    p = plan(start, atr, side, style, orders, deepest, amount or None)
-    if not p["ok"]:
-        return
-    head = (f"<tr><th>#</th><th>{t('Price')}</th><th>{t('From price')}</th><th>{t('Daily moves')}</th>"
+    if place == "fib":
+        p = fib_plan(start, atr, swing["low"], swing["high"], side, style, orders, amount or None) if swing else \
+            {"ok": False, "reason": "no_swing"}
+        if not p["ok"]:
+            if p.get("reason") == "past_levels":
+                st.caption(t("Price is already past every Fibonacci level of this move on that side. Pick fewer "
+                             "orders, the other side, or draw a new Fibonacci."))
+            return
+    else:
+        p = plan(start, atr, side, style, orders, deepest, amount or None)
+        if not p["ok"]:
+            return
+    fib = place == "fib"
+    head = (f"<tr><th>#</th><th>{t('Price')}</th>" + (f"<th>{t('Fibonacci')}</th>" if fib else "")
+            + f"<th>{t('From price')}</th><th>{t('Daily moves')}</th>"
             f"<th>{t('Share')}</th>" + (f"<th>{t('Amount')}</th>" if amount else "") + "</tr>")
     body = "".join(
-        f"<tr><td>{r['n']}</td><td><b>{_price(r['price'])}</b></td><td>{r['pct']:+.2f}%</td><td>{r['moves']:.2f}</td>"
+        f"<tr><td>{r['n']}</td><td><b>{_price(r['price'])}</b></td>"
+        + (f"<td>{_fib_words(r['fib'])}</td>" if fib else "")
+        + f"<td>{r['pct']:+.2f}%</td><td>{r['moves']:.2f}</td>"
         f"<td>{r['share'] * 100:.0f}%</td>" + (f"<td>{r['amount']:,.2f}</td>" if amount else "") + "</tr>"
         for r in p["rows"])
-    stop_row = (f"<tr class='lad-stop'><td>🛑</td><td><b>{_price(p['stop'])}</b></td><td>{p['stop_pct']:+.2f}%</td>"
+    stop_row = (f"<tr class='lad-stop'><td>🛑</td><td><b>{_price(p['stop'])}</b></td>"
+                + (f"<td>{html.escape(t('past 100%'))}</td>" if fib else "")
+                + f"<td>{p['stop_pct']:+.2f}%</td>"
                 f"<td>{p['stop_moves']:.2f}</td><td colspan='{2 if amount else 1}'>{html.escape(t('Stop'))}</td></tr>")
     st.html(
         "<style>.lad{border-collapse:collapse;font-size:.88rem;margin:4px 0 6px;}"
