@@ -1,0 +1,83 @@
+1
+00:00:00,000 --> 00:00:02,839
+Many of the chart's tools are also signals.
+
+2
+00:00:02,889 --> 00:00:07,967
+Chart shapes, Sonar markers, fair value gaps, anchored VWAP and the volume profile.
+
+3
+00:00:08,017 --> 00:00:11,261
+So you can scan for them, build funnels from them, and test them.
+
+4
+00:00:11,716 --> 00:00:13,531
+Open Signal Sets.
+
+5
+00:00:13,581 --> 00:00:17,302
+The new family, Levels made by trading, holds fair value gaps,
+
+6
+00:00:17,322 --> 00:00:19,854
+anchored VWAP and the volume profile.
+
+7
+00:00:19,904 --> 00:00:23,233
+Chart shapes and Sonar markers have their own families.
+
+8
+00:00:23,685 --> 00:00:27,057
+Pick the signal on the card, and the candle size it reads.
+
+9
+00:00:27,107 --> 00:00:30,122
+Each one has settings too, such as where the VWAP starts:
+
+10
+00:00:30,142 --> 00:00:34,063
+the last swing low or high, or the start of the week, month or year.
+
+11
+00:00:34,517 --> 00:00:38,422
+We'll add fair value gaps and anchored VWAP, on four-hour candles.
+
+12
+00:00:41,975 --> 00:00:43,491
+Now the lines.
+
+13
+00:00:43,541 --> 00:00:48,470
+An up gap was tested in the last three candles: price dipped into a gap and held.
+
+14
+00:00:48,520 --> 00:00:51,594
+And the close is above the VWAP from the last swing low.
+
+15
+00:00:56,936 --> 00:00:59,049
+Chart shapes work the same way.
+
+16
+00:00:59,099 --> 00:01:03,103
+A double bottom confirmed, or a golden cross in the last five candles,
+
+17
+00:01:03,123 --> 00:01:04,861
+can be a line in any Set.
+
+18
+00:01:05,319 --> 00:01:07,048
+Name it, and save it.
+
+19
+00:01:13,056 --> 00:01:16,738
+Now scan your assets with it in Prism, use it as a funnel stage,
+
+20
+00:01:16,758 --> 00:01:19,372
+or show it as colour bands on the chart.
+
+21
+00:01:19,422 --> 00:01:23,669
+And Soundings checks these readings too, on years the search never saw.

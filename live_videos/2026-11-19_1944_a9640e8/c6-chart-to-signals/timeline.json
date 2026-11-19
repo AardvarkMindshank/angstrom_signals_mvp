@@ -1,0 +1,46 @@
+{
+ "steps": [
+  {
+   "id": "idea",
+   "start": 29.251,
+   "say": "Many of the chart's tools are also signals. | Chart shapes, Sonar markers, fair value gaps, anchored VWAP and the volume profile. | So you can scan for them, build funnels from them, and test them."
+  },
+  {
+   "id": "open",
+   "start": 40.967,
+   "say": "Open Signal Sets. | The new family, Levels made by trading, holds fair value gaps, anchored VWAP and the volume profile. | Chart shapes and Sonar markers have their own families."
+  },
+  {
+   "id": "variants",
+   "start": 52.936,
+   "say": "Pick the signal on the card, and the candle size it reads. | Each one has settings too, such as where the VWAP starts: the last swing low or high, or the start of the week, month or year."
+  },
+  {
+   "id": "add",
+   "start": 63.768,
+   "say": "We'll add fair value gaps and anchored VWAP, on four-hour candles."
+  },
+  {
+   "id": "lines",
+   "start": 71.226,
+   "say": "Now the lines. | An up gap was tested in the last three candles: price dipped into a gap and held. | And the close is above the VWAP from the last swing low."
+  },
+  {
+   "id": "shapes",
+   "start": 86.187,
+   "say": "Chart shapes work the same way. | A double bottom confirmed, or a golden cross in the last five candles, can be a line in any Set."
+  },
+  {
+   "id": "save",
+   "start": 94.57,
+   "say": "Name it, and save it."
+  },
+  {
+   "id": "use",
+   "start": 102.307,
+   "say": "Now scan your assets with it in Prism, use it as a funnel stage, or show it as colour bands on the chart. | And Soundings checks these readings too, on years the search never saw."
+  }
+ ],
+ "end": 114.868,
+ "trim": 29.251
+}

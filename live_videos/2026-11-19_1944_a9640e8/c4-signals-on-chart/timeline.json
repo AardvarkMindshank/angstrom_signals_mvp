@@ -1,0 +1,46 @@
+{
+ "steps": [
+  {
+   "id": "idea",
+   "start": 55.399,
+   "say": "The readings in your tables, drawn on the chart, on the candles where they happened."
+  },
+  {
+   "id": "open",
+   "start": 60.221,
+   "say": "We're on Bitcoin, with daily candles over the last year."
+  },
+  {
+   "id": "sonar",
+   "start": 63.866,
+   "say": "Sonar adds a strip under the price: momentum waves, money flow, and big dots where momentum turns at an extreme."
+  },
+  {
+   "id": "marks",
+   "start": 73.057,
+   "say": "Sonar markers put the signals on the candles themselves. | Pick which ones to show in this row, and point at one to see what it means."
+  },
+  {
+   "id": "shapes",
+   "start": 83.029,
+   "say": "Chart shapes outlines head and shoulders, double tops and double bottoms, with the neckline and a rough target. | Gold and grey stars mark golden and death crosses."
+  },
+  {
+   "id": "bands",
+   "start": 101.381,
+   "say": "Show a Signal Set on the chart. | Every day is coloured by the Set's answer at that day's close: green where its conditions were met."
+  },
+  {
+   "id": "events",
+   "start": 113.881,
+   "say": "Dashed lines mark the big US releases: Fed decisions, inflation and jobs reports. | The next ones are drawn ahead of the last candle."
+  },
+  {
+   "id": "tidy",
+   "start": 124.097,
+   "say": "Turn any of them off with the same pills. | Your choices stay with your account."
+  }
+ ],
+ "end": 130.582,
+ "trim": 55.399
+}
