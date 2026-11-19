@@ -744,8 +744,6 @@
   "Both are off, so alerts only appear in the dashboard.": "两者都已关闭，因此提醒只会显示在仪表板上。",
   "Search is not available right now, so this ticker has not been checked.": "搜索目前不可用，因此尚未检查此代码。",
   "Try the {name} colours": "试用 {name} 配色",
-  "Approve and send the welcome email": "批准并发送欢迎邮件",
-  "Decline, or take approval back": "拒绝或撤回批准",
   "The copy could not be read: {str_exc_120}": "无法读取副本：{str_exc_120}",
   "No coins hold this stage right now.": "目前没有币种满足此阶段。",
   "No equities hold this stage right now.": "目前没有股票满足此阶段。",
@@ -2270,5 +2268,8 @@
   "The trend points the same way on at least 2 of the 4-hour, daily and weekly charts.": "在 4 小时、日线和周线图中至少 2 个的趋势方向一致。",
   "Stoch RSI or the Sonar wave at the bottom of its range for longs, the top for shorts.": "做多时 Stoch RSI 或 Sonar 波浪处于区间底部，做空时处于顶部。",
   "A big Sonar dot, the Stoch RSI crossing back from an extreme and a candle closing the same way.": "大 Sonar 点、Stoch RSI 从极端回穿，以及同方向收盘的 K 线。",
-  "Divergence on any timeframe, or a W or M shape on the 4-hour chart.": "任一时间框架上的背离，或 4 小时图上的 W 或 M 形态。"
+  "Divergence on any timeframe, or a W or M shape on the 4-hour chart.": "任一时间框架上的背离，或 4 小时图上的 W 或 M 形态。",
+  "Joined on {date}": "{date} 已加入",
+  "Invited on {date}, not joined yet": "{date} 已邀请，尚未加入",
+  "Invited {n} · joined {j}": "已邀请 {n} · 已加入 {j}"
 }

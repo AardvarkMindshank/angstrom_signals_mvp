@@ -479,8 +479,6 @@
   "Both are off, so alerts only appear in the dashboard.": "ทั้งสองปิดอยู่ การแจ้งเตือนจึงแสดงในแดชบอร์ดเท่านั้น",
   "Search is not available right now, so this ticker has not been checked.": "การค้นหาไม่พร้อมใช้งานในตอนนี้ ตัวย่อนี้จึงยังไม่ได้ตรวจ",
   "Try the {name} colours": "ลองชุดสี {name}",
-  "Approve and send the welcome email": "อนุมัติและส่งอีเมลต้อนรับ",
-  "Decline, or take approval back": "ปฏิเสธ หรือยกเลิกการอนุมัติ",
   "The copy could not be read: {str_exc_120}": "อ่านสำเนาไม่ได้: {str_exc_120}",
   "Show {chart_data_range_labels_} instead": "แสดง {chart_data_range_labels_} แทน",
   "The xAI API key was rejected. Check the key in the Streamlit secrets.": "คีย์ API ของ xAI ถูกปฏิเสธ ตรวจคีย์ใน Streamlit secrets",
@@ -2270,5 +2268,8 @@
   "The trend points the same way on at least 2 of the 4-hour, daily and weekly charts.": "เทรนด์ชี้ทิศเดียวกันในอย่างน้อย 2 จากกราฟ 4 ชั่วโมง รายวัน และรายสัปดาห์",
   "Stoch RSI or the Sonar wave at the bottom of its range for longs, the top for shorts.": "Stoch RSI หรือคลื่น Sonar อยู่ด้านล่างของช่วงสำหรับ Long ด้านบนสำหรับ Short",
   "A big Sonar dot, the Stoch RSI crossing back from an extreme and a candle closing the same way.": "จุด Sonar ใหญ่ Stoch RSI ตัดกลับจากจุดสุดทาง และแท่งเทียนปิดในทิศเดียวกัน",
-  "Divergence on any timeframe, or a W or M shape on the 4-hour chart.": "ไดเวอร์เจนซ์ในกรอบเวลาใดก็ได้ หรือรูปตัว W หรือ M ในกราฟ 4 ชั่วโมง"
+  "Divergence on any timeframe, or a W or M shape on the 4-hour chart.": "ไดเวอร์เจนซ์ในกรอบเวลาใดก็ได้ หรือรูปตัว W หรือ M ในกราฟ 4 ชั่วโมง",
+  "Joined on {date}": "เข้าร่วมเมื่อ {date}",
+  "Invited on {date}, not joined yet": "เชิญเมื่อ {date} ยังไม่เข้าร่วม",
+  "Invited {n} · joined {j}": "เชิญ {n} · เข้าร่วม {j}"
 }

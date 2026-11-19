@@ -222,16 +222,21 @@ def _active_theme() -> str:
     return kind if kind in ("light", "dark") else "light"
 
 
-def _pick_all_none(key: str, options: list) -> None:
-    """All and None under a list of chart toggles (pills): every option on, or every one off."""
-    def _set(value):
-        st.session_state[key] = value
+PILL_ALL, PILL_NONE = "__all__", "__none__"          # the last two pills of a chart toggle row: All and Clear
 
-    row = st.container(horizontal=True, gap="small")
-    row.button(t("All"), key=f"{key}__all", type="tertiary", icon=":material/done_all:",
-               on_click=_set, args=(list(options),))
-    row.button(t("Clear"), key=f"{key}__none", type="tertiary", icon=":material/remove_done:",
-               on_click=_set, args=([],))
+
+def _pills_all_none(key: str, options: list) -> None:
+    """on_change of a pill row ending in All and Clear: either one sets the whole row, and never stays selected."""
+    picked = list(st.session_state.get(key) or [])
+    if PILL_ALL in picked:
+        st.session_state[key] = list(options)
+    elif PILL_NONE in picked:
+        st.session_state[key] = []
+
+
+def _pill_words(fmt):
+    """format_func for a pill row with All and Clear at its end."""
+    return lambda k: ("✅ " + t("All")) if k == PILL_ALL else ("⬜ " + t("Clear")) if k == PILL_NONE else fmt(k)
 
 
 def _paint_chart(fig) -> None:
@@ -550,8 +555,6 @@ export default function(component) {
       ".st-key-admin_feedback_table [data-testid='stMarkdownContainer'] p,.st-key-admin_reports_table [data-testid='stMarkdownContainer'] p,.st-key-admin_blacklist_table [data-testid='stMarkdownContainer'] p,.st-key-admin_beta_table [data-testid='stMarkdownContainer'] p,.st-key-admin_feedback_table [data-testid='stText'] p,.st-key-admin_reports_table [data-testid='stText'] p,.st-key-admin_blacklist_table [data-testid='stText'] p,.st-key-admin_beta_table [data-testid='stText'] p{margin:0 !important;padding:0 !important;line-height:1.25 !important;}",
       ".st-key-admin_feedback_table [data-testid='stSelectbox'],.st-key-admin_reports_table [data-testid='stSelectbox']{margin-top:0 !important;margin-bottom:0 !important;padding-top:0 !important;padding-bottom:0 !important;}",
       ".st-key-admin_feedback_table [data-baseweb='select'] > div,.st-key-admin_reports_table [data-baseweb='select'] > div{min-height:1.35rem !important;padding-top:0 !important;padding-bottom:0 !important;}",
-      ".st-key-admin_beta_table{max-height:none !important;overflow:visible !important;}",
-      ".st-key-admin_beta_table .bt-scroll{overflow-x:auto;}",
       ".st-key-admin_beta_table .bt-row{display:grid;grid-template-columns:6.6rem 6rem minmax(9.5rem,1.4fr) 7.6rem 3.8rem 5rem 5.6rem minmax(5rem,1fr) minmax(10rem,2.2fr) 4.6rem 6.2rem;column-gap:.5rem;align-items:start;min-width:70rem;padding:.45rem .5rem;font-size:.78rem;line-height:1.35;}",
       ".st-key-admin_beta_table .bt-headrow{font-weight:700;font-size:.74rem;text-transform:uppercase;letter-spacing:.03em;opacity:.8;}",
       ".st-key-admin_beta_table .bt-cell{min-width:0;overflow-wrap:anywhere;word-break:break-word;}",
@@ -6574,7 +6577,7 @@ def _my_invites() -> list:
             .select("email,created_at,credited_at")
             .eq("inviter_id", user_id)
             .order("created_at", desc=True)
-            .limit(12)
+            .limit(500)
             .execute()
         )
     except Exception:
@@ -6866,9 +6869,26 @@ def invite_someone() -> None:
                     st.warning(t('That invite is already saved. The email was not sent: {reason}.', reason=reason))
                 else:
                     st.warning(t('Invite saved. The email was not sent: {reason}.', reason=reason))
-    for row in _my_invites():
-        state = "Joined" if row.get("credited_at") else "Waiting"
-        st.caption(f"{row.get('email') or ''} · {state}")
+    invites = _my_invites()
+    if invites:
+        # One tight line each, newest first, in a box that scrolls once there are more than about eight.
+        joined = sum(1 for r in invites if r.get("credited_at"))
+        lines = []
+        for row in invites:
+            done = bool(row.get("credited_at"))
+            when = str(row.get("credited_at") if done else row.get("created_at") or "")[:10]
+            tip = html.escape(t("Joined on {date}", date=when) if done else t("Invited on {date}, not joined yet", date=when),
+                              quote=True)
+            lines.append(f"<div class='inv-row' title='{tip}'><span class='inv-mark'>{'✅' if done else '⏳'}</span>"
+                         f"<span class='inv-mail'>{html.escape(str(row.get('email') or ''))}</span></div>")
+        st.markdown(
+            "<style>.inv-head{font-size:.78rem;opacity:.75;margin:.2rem 0 .25rem;}"
+            ".inv-list{max-height:13rem;overflow-y:auto;border:1px solid var(--ang-border);border-radius:8px;"
+            "padding:.25rem .45rem;}.inv-row{display:flex;gap:.4rem;align-items:center;font-size:.8rem;"
+            "line-height:1.55;cursor:default;}.inv-mark{flex:none;font-size:.75rem;}"
+            ".inv-mail{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}</style>"
+            f"<div class='inv-head'>{html.escape(t('Invited {n} · joined {j}', n=len(invites), j=joined))}</div>"
+            f"<div class='inv-list'>{''.join(lines)}</div>", unsafe_allow_html=True)
 
 
 def _group_member_count(row) -> int:
@@ -10369,61 +10389,62 @@ def _show_beta() -> None:
             st.caption("Nothing pending." if not show_decided else t("No request matches that search."))
             _nda_admin_tools(_nda.current(), [r for r in clean_rows if r.get("nda_id")])
             return
-        titles = ["Applied", "Name", "Email", "Phone", "Markets", "Years", "Active", "Tools", "Why", "Status", "NDA"]
         current_nda = _nda.current()
-        status_label = {"pending": "Pending", "approved": "Approved", "declined": "Declined"}
-        status_tone = {"pending": "#b45309", "approved": "#15803d", "declined": "#b91c1c"}
-
-        def beta_cell(text, full="", tone=""):
-            clean = html.escape(str(text or ""))
-            tip = f" title='{html.escape(str(full), quote=True)}'" if full else ""
-            style = f" style='color:{tone};font-weight:700;'" if tone else ""
-            return f"<div class='bt-cell'{tip}><span{style}>{clean or '&mdash;'}</span></div>"
-
-        with st.container(key="admin_beta_table", gap=0):
-            with st.container(key="admin_beta_head", gap=0):
-                head = st.columns([20, 0.7, 0.7], vertical_alignment="center")
-                head[0].markdown(
-                    "<div class='bt-scroll'><div class='bt-row bt-headrow'>"
-                    + "".join(f"<div class='bt-cell'>{title}</div>" for title in titles)
-                    + "</div></div>",
-                    unsafe_allow_html=True,
-                )
-            for row in visible:
-                request_id = int(row.get("id") or 0)
-                email = str(row.get("email") or "")
-                name = str(row.get("name") or "")
-                status = str(row.get("status") or "pending")
-                why = " ".join(str(row.get("why") or "").split())
-                tools = " ".join(str(row.get("tools") or "").split())
-                when = _admin_when(row.get("created_at"))
-                cells = st.columns([20, 0.7, 0.7], vertical_alignment="center")
-                cells[0].markdown(
-                    "<div class='bt-scroll'><div class='bt-row'>"
-                    + beta_cell(when.replace(" ", " \u00b7 "))
-                    + beta_cell(name)
-                    + beta_cell(email)
-                    + beta_cell(row.get("phone"))
-                    + beta_cell(row.get("markets"))
-                    + beta_cell(row.get("years_trading"))
-                    + beta_cell(row.get("activity"))
-                    + beta_cell(tools, tools)
-                    + beta_cell(why, why)
-                    + beta_cell(status_label.get(status, status), tone=status_tone.get(status, ""))
-                    + beta_cell(*_nda.admin_cell(row, current_nda))
-                    + "</div></div>",
-                    unsafe_allow_html=True,
-                )
-                if status != "approved":
-                    cells[1].button(
-                        "✓", key=f"admin_beta_yes_{request_id}", help=t("Approve and send the welcome email"),
-                        on_click=_beta_review, args=(request_id, "approved", email, name), use_container_width=True,
-                    )
-                if status != "declined":
-                    cells[2].button(
-                        "✗", key=f"admin_beta_no_{request_id}", help=t("Decline, or take approval back"),
-                        on_click=_beta_review, args=(request_id, "declined", email, name), use_container_width=True,
-                    )
+        status_label = {"pending": "⏳ Pending", "approved": "✅ Approved", "declined": "✗ Declined"}
+        # One table that scrolls as a whole (19 Nov 2026), with a Decide column on the right: choose ✓ or ✗ on
+        # any rows, then Apply. Nothing changes until Apply, so a slip in the list sends no email.
+        lines = []
+        for row in visible:
+            status = str(row.get("status") or "pending")
+            nda_text, nda_tip, _tone = _nda.admin_cell(row, current_nda)
+            lines.append({
+                "id": int(row.get("id") or 0),
+                "Applied": _admin_when(row.get("created_at")),
+                "Name": str(row.get("name") or ""), "Email": str(row.get("email") or ""),
+                "Phone": str(row.get("phone") or ""), "Markets": str(row.get("markets") or ""),
+                "Years": str(row.get("years_trading") or ""), "Active": str(row.get("activity") or ""),
+                "Tools": " ".join(str(row.get("tools") or "").split()),
+                "Why": " ".join(str(row.get("why") or "").split()),
+                "Status": status_label.get(status, status), "NDA": nda_text, "Decide": None,
+            })
+        frame = pd.DataFrame(lines)
+        cc = st.column_config
+        edited = st.data_editor(
+            frame, key=f"admin_beta_editor_{st.session_state.get('_admin_beta_round', 0)}", hide_index=True,
+            width="stretch", height=min(42 + 36 * len(lines), 520), num_rows="fixed",
+            disabled=[c for c in frame.columns if c != "Decide"],
+            column_order=["Applied", "Name", "Email", "Phone", "Markets", "Years", "Active", "Tools", "Why",
+                          "Status", "NDA", "Decide"],
+            column_config={
+                "Applied": cc.TextColumn("Applied", width="small"),
+                "Name": cc.TextColumn("Name"), "Email": cc.TextColumn("Email"),
+                "Phone": cc.TextColumn("Phone", width="small"),
+                "Markets": cc.TextColumn("Markets", width="small"),
+                "Years": cc.TextColumn("Years", width="small"), "Active": cc.TextColumn("Active", width="small"),
+                "Tools": cc.TextColumn("Tools"), "Why": cc.TextColumn("Why", width="large"),
+                "Status": cc.TextColumn("Status", width="small"),
+                "NDA": cc.TextColumn("NDA", width="small",
+                                     help="✍️ signed (date) · ⏳ waiting · — not asked yet or not needed"),
+                "Decide": cc.SelectboxColumn("Decide", options=["✓ Approve", "✗ Decline"], width="small",
+                                             help=("Choose for any rows, then press Apply. Approving sends the "
+                                                   "welcome email; declining (or taking approval back) sends none.")),
+            },
+        )
+        picks = [(int(r["id"]), "approved" if str(r["Decide"]).startswith("✓") else "declined", r["Email"], r["Name"])
+                 for _, r in edited.iterrows() if r.get("Decide")]
+        by_id = {int(r.get("id") or 0): str(r.get("status") or "pending") for r in visible}
+        picks = [p for p in picks if by_id.get(p[0]) != p[1]]           # approving the approved changes nothing
+        if picks:
+            if st.button(f"Apply {len(picks)} decision(s)", type="primary", key="admin_beta_apply"):
+                notes = []
+                for request_id, decision, email, name in picks:
+                    _beta_review(request_id, decision, email, name)
+                    notes.append(st.session_state.pop("admin_beta_notice", ""))
+                kinds = {n.split("\n", 1)[0] for n in notes if n}
+                st.session_state["admin_beta_notice"] = ("warn" if "warn" in kinds else "ok") + "\n" + " ".join(
+                    n.split("\n", 1)[-1] for n in notes if n)
+                st.session_state["_admin_beta_round"] = st.session_state.get("_admin_beta_round", 0) + 1
+                st.rerun(scope="fragment")
         signed = [r for r in clean_rows if r.get("nda_id")]
         _nda_admin_tools(current_nda, signed)
         if signed:
@@ -14112,15 +14133,15 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             heatmap_url = coinglass_heatmap_url(asset_key) if asset_type == "Crypto" else ""
             if indicator_keys:
                 if hasattr(st, "pills"):
-                    chosen_indicators = st.pills(
+                    chosen_indicators = [k for k in (st.pills(
                         t("Chart indicators"),
-                        indicator_keys,
+                        list(indicator_keys) + [PILL_ALL, PILL_NONE],
                         selection_mode="multi",
-                        format_func=_indicator_label,
+                        format_func=_pill_words(_indicator_label),
                         key="chart_indicators",
                         label_visibility="collapsed",
-                    ) or []
-                    _pick_all_none("chart_indicators", indicator_keys)
+                        on_change=_pills_all_none, args=("chart_indicators", list(indicator_keys)),
+                    ) or []) if k not in (PILL_ALL, PILL_NONE)]
                 else:
                     chosen_indicators = st.multiselect(
                         t("Chart indicators"),
@@ -14179,13 +14200,14 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                     st.session_state["chart_sonar_marks"] = ([k for k in kept if k in lw_chart.SONAR_MARKS]
                                                              if isinstance(kept, list) else list(lw_chart.SONAR_DEFAULT))
                 sonar_shown = st.pills(
-                    t("🛰️ Markers shown"), list(lw_chart.SONAR_MARKS), selection_mode="multi", key="chart_sonar_marks",
-                    format_func=lambda k: _SONAR_MARK_LABELS.get(k, k),
+                    t("🛰️ Markers shown"), list(lw_chart.SONAR_MARKS) + [PILL_ALL, PILL_NONE], selection_mode="multi",
+                    key="chart_sonar_marks", format_func=_pill_words(lambda k: _SONAR_MARK_LABELS.get(k, k)),
+                    on_change=_pills_all_none, args=("chart_sonar_marks", list(lw_chart.SONAR_MARKS)),
                     help=t("The symbols drawn over the candles (open-source formulas of a popular charting indicator). "
                            "Point at a candle to see what each one means; the big dots are on the 📡 Sonar strip.") + " "
                          + " ".join(f"{_SONAR_MARK_LABELS[k]}: {v[4]}." for k, v in lw_chart.SONAR_MARKS.items()),
                 ) or []
-                _pick_all_none("chart_sonar_marks", list(lw_chart.SONAR_MARKS))
+                sonar_shown = [k for k in sonar_shown if k not in (PILL_ALL, PILL_NONE)]
             band_set = _chart_set_picker() if use_tv else None
             wanted_picks = [k for k in saved_picks if k not in indicator_keys] + [
                 k for k in chosen_indicators if k in chart_plan.INDICATORS

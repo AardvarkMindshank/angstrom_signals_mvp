@@ -744,8 +744,6 @@
   "Both are off, so alerts only appear in the dashboard.": "どちらもオフなので、アラートはダッシュボードにだけ表示されます。",
   "Search is not available right now, so this ticker has not been checked.": "現在検索が使えないため、このティッカーは確認されていません。",
   "Try the {name} colours": "{name}の配色を試す",
-  "Approve and send the welcome email": "承認して歓迎メールを送る",
-  "Decline, or take approval back": "却下、または承認を取り消す",
   "The copy could not be read: {str_exc_120}": "写しを読み込めませんでした：{str_exc_120}",
   "No coins hold this stage right now.": "現在このステージを満たすコインはありません。",
   "No equities hold this stage right now.": "現在このステージを満たす株式はありません。",
@@ -2270,5 +2268,8 @@
   "The trend points the same way on at least 2 of the 4-hour, daily and weekly charts.": "4時間足・日足・週足のうち少なくとも2つでトレンドが同じ方向を向いている。",
   "Stoch RSI or the Sonar wave at the bottom of its range for longs, the top for shorts.": "Stoch RSIまたはSonarウェーブがロングではレンジの下端、ショートでは上端にある。",
   "A big Sonar dot, the Stoch RSI crossing back from an extreme and a candle closing the same way.": "大きなSonarドット、極値から戻るStoch RSIのクロス、同じ方向で確定したローソク足。",
-  "Divergence on any timeframe, or a W or M shape on the 4-hour chart.": "いずれかの時間足のダイバージェンス、または4時間足のW型・M型。"
+  "Divergence on any timeframe, or a W or M shape on the 4-hour chart.": "いずれかの時間足のダイバージェンス、または4時間足のW型・M型。",
+  "Joined on {date}": "{date} に参加",
+  "Invited on {date}, not joined yet": "{date} に招待、未参加",
+  "Invited {n} · joined {j}": "招待 {n} · 参加 {j}"
 }

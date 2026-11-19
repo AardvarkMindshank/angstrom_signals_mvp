@@ -744,8 +744,6 @@
   "Both are off, so alerts only appear in the dashboard.": "İkisi de kapalı, bu yüzden uyarılar yalnızca panoda görünür.",
   "Search is not available right now, so this ticker has not been checked.": "Arama şu anda kullanılamıyor, bu yüzden bu sembol kontrol edilmedi.",
   "Try the {name} colours": "{name} renklerini dene",
-  "Approve and send the welcome email": "Onayla ve hoş geldiniz e-postasını gönder",
-  "Decline, or take approval back": "Reddet ya da onayı geri al",
   "The copy could not be read: {str_exc_120}": "Kopya okunamadı: {str_exc_120}",
   "No coins hold this stage right now.": "Şu anda hiçbir coin bu aşamayı karşılamıyor.",
   "No equities hold this stage right now.": "Şu anda hiçbir hisse bu aşamayı karşılamıyor.",
@@ -2270,5 +2268,8 @@
   "The trend points the same way on at least 2 of the 4-hour, daily and weekly charts.": "Trend; 4 saatlik, günlük ve haftalık grafiklerden en az 2'sinde aynı yönü gösteriyor.",
   "Stoch RSI or the Sonar wave at the bottom of its range for longs, the top for shorts.": "Stoch RSI veya Sonar dalgası long için aralığının altında, short için üstünde.",
   "A big Sonar dot, the Stoch RSI crossing back from an extreme and a candle closing the same way.": "Büyük bir Sonar noktası, uçtan geri kesişen Stoch RSI ve aynı yönde kapanan bir mum.",
-  "Divergence on any timeframe, or a W or M shape on the 4-hour chart.": "Herhangi bir zaman diliminde uyumsuzluk veya 4 saatlik grafikte W ya da M şekli."
+  "Divergence on any timeframe, or a W or M shape on the 4-hour chart.": "Herhangi bir zaman diliminde uyumsuzluk veya 4 saatlik grafikte W ya da M şekli.",
+  "Joined on {date}": "{date} tarihinde katıldı",
+  "Invited on {date}, not joined yet": "{date} tarihinde davet edildi, henüz katılmadı",
+  "Invited {n} · joined {j}": "Davet {n} · katılan {j}"
 }

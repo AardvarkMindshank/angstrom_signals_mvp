@@ -744,8 +744,6 @@
   "Both are off, so alerts only appear in the dashboard.": "Cả hai đều tắt, nên cảnh báo chỉ hiển thị trên bảng điều khiển.",
   "Search is not available right now, so this ticker has not been checked.": "Tìm kiếm hiện không khả dụng, nên mã này chưa được kiểm tra.",
   "Try the {name} colours": "Thử màu {name}",
-  "Approve and send the welcome email": "Chấp thuận và gửi email chào mừng",
-  "Decline, or take approval back": "Từ chối, hoặc rút lại chấp thuận",
   "The copy could not be read: {str_exc_120}": "Không đọc được bản sao: {str_exc_120}",
   "No coins hold this stage right now.": "Hiện không có đồng nào thỏa giai đoạn này.",
   "No equities hold this stage right now.": "Hiện không có cổ phiếu nào thỏa giai đoạn này.",
@@ -2270,5 +2268,8 @@
   "The trend points the same way on at least 2 of the 4-hour, daily and weekly charts.": "Xu hướng cùng chiều trên ít nhất 2 trong các biểu đồ 4 giờ, ngày và tuần.",
   "Stoch RSI or the Sonar wave at the bottom of its range for longs, the top for shorts.": "Stoch RSI hoặc sóng Sonar ở đáy biên độ cho lệnh mua, ở đỉnh cho lệnh bán.",
   "A big Sonar dot, the Stoch RSI crossing back from an extreme and a candle closing the same way.": "Chấm Sonar lớn, Stoch RSI cắt ngược lại từ mức cực trị và một cây nến đóng cùng chiều.",
-  "Divergence on any timeframe, or a W or M shape on the 4-hour chart.": "Phân kỳ trên bất kỳ khung thời gian nào, hoặc hình W hay M trên biểu đồ 4 giờ."
+  "Divergence on any timeframe, or a W or M shape on the 4-hour chart.": "Phân kỳ trên bất kỳ khung thời gian nào, hoặc hình W hay M trên biểu đồ 4 giờ.",
+  "Joined on {date}": "Đã tham gia ngày {date}",
+  "Invited on {date}, not joined yet": "Đã mời ngày {date}, chưa tham gia",
+  "Invited {n} · joined {j}": "Đã mời {n} · đã tham gia {j}"
 }

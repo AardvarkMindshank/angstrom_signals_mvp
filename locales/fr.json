@@ -744,8 +744,6 @@
   "Both are off, so alerts only appear in the dashboard.": "Les deux sont désactivés, les alertes n'apparaissent donc que dans le tableau de bord.",
   "Search is not available right now, so this ticker has not been checked.": "La recherche n'est pas disponible pour le moment, ce ticker n'a donc pas été vérifié.",
   "Try the {name} colours": "Essayer les couleurs {name}",
-  "Approve and send the welcome email": "Approuver et envoyer l'e-mail de bienvenue",
-  "Decline, or take approval back": "Refuser, ou retirer l'approbation",
   "The copy could not be read: {str_exc_120}": "La copie n'a pas pu être lue : {str_exc_120}",
   "No coins hold this stage right now.": "Aucune crypto ne remplit cette étape pour le moment.",
   "No equities hold this stage right now.": "Aucune action ne remplit cette étape pour le moment.",
@@ -2270,5 +2268,8 @@
   "The trend points the same way on at least 2 of the 4-hour, daily and weekly charts.": "La tendance va dans le même sens sur au moins 2 des graphiques 4 heures, journalier et hebdomadaire.",
   "Stoch RSI or the Sonar wave at the bottom of its range for longs, the top for shorts.": "Le Stoch RSI ou la vague Sonar en bas de sa fourchette pour les longs, en haut pour les shorts.",
   "A big Sonar dot, the Stoch RSI crossing back from an extreme and a candle closing the same way.": "Un gros point Sonar, le Stoch RSI qui se recroise depuis un extrême et une bougie qui clôture dans le même sens.",
-  "Divergence on any timeframe, or a W or M shape on the 4-hour chart.": "Une divergence sur n'importe quelle unité de temps, ou une forme en W ou en M sur le graphique 4 heures."
+  "Divergence on any timeframe, or a W or M shape on the 4-hour chart.": "Une divergence sur n'importe quelle unité de temps, ou une forme en W ou en M sur le graphique 4 heures.",
+  "Joined on {date}": "Inscrit le {date}",
+  "Invited on {date}, not joined yet": "Invité le {date}, pas encore inscrit",
+  "Invited {n} · joined {j}": "Invités {n} · inscrits {j}"
 }

@@ -744,8 +744,6 @@
   "Both are off, so alerts only appear in the dashboard.": "둘 다 꺼져 있어 알림은 대시보드에만 나타납니다.",
   "Search is not available right now, so this ticker has not been checked.": "지금은 검색을 쓸 수 없어 이 티커를 확인하지 못했습니다.",
   "Try the {name} colours": "{name} 색 써 보기",
-  "Approve and send the welcome email": "승인하고 환영 이메일 보내기",
-  "Decline, or take approval back": "거절하거나 승인 취소",
   "The copy could not be read: {str_exc_120}": "사본을 읽지 못했습니다: {str_exc_120}",
   "No coins hold this stage right now.": "지금 이 단계를 충족하는 코인이 없습니다.",
   "No equities hold this stage right now.": "지금 이 단계를 충족하는 주식이 없습니다.",
@@ -2270,5 +2268,8 @@
   "The trend points the same way on at least 2 of the 4-hour, daily and weekly charts.": "4시간·일봉·주봉 차트 중 최소 2개에서 추세가 같은 방향.",
   "Stoch RSI or the Sonar wave at the bottom of its range for longs, the top for shorts.": "Stoch RSI 또는 Sonar 파동이 롱은 범위 하단, 숏은 상단에 있음.",
   "A big Sonar dot, the Stoch RSI crossing back from an extreme and a candle closing the same way.": "큰 Sonar 점, 극단에서 되돌아 교차하는 Stoch RSI, 같은 방향으로 마감한 캔들.",
-  "Divergence on any timeframe, or a W or M shape on the 4-hour chart.": "어느 시간대든 다이버전스, 또는 4시간 차트의 W 또는 M 모양."
+  "Divergence on any timeframe, or a W or M shape on the 4-hour chart.": "어느 시간대든 다이버전스, 또는 4시간 차트의 W 또는 M 모양.",
+  "Joined on {date}": "{date}에 가입",
+  "Invited on {date}, not joined yet": "{date}에 초대, 아직 가입 안 함",
+  "Invited {n} · joined {j}": "초대 {n} · 가입 {j}"
 }

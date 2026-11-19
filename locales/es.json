@@ -744,8 +744,6 @@
   "Both are off, so alerts only appear in the dashboard.": "Ambos están desactivados, así que las alertas solo aparecen en el panel.",
   "Search is not available right now, so this ticker has not been checked.": "La búsqueda no está disponible ahora mismo, así que este ticker no se ha comprobado.",
   "Try the {name} colours": "Probar los colores {name}",
-  "Approve and send the welcome email": "Aprobar y enviar el correo de bienvenida",
-  "Decline, or take approval back": "Rechazar, o retirar la aprobación",
   "The copy could not be read: {str_exc_120}": "No se pudo leer la copia: {str_exc_120}",
   "No coins hold this stage right now.": "Ninguna cripto cumple esta etapa ahora mismo.",
   "No equities hold this stage right now.": "Ninguna acción cumple esta etapa ahora mismo.",
@@ -2270,5 +2268,8 @@
   "The trend points the same way on at least 2 of the 4-hour, daily and weekly charts.": "La tendencia apunta en la misma dirección en al menos 2 de los gráficos de 4 horas, diario y semanal.",
   "Stoch RSI or the Sonar wave at the bottom of its range for longs, the top for shorts.": "El Stoch RSI o la onda Sonar en la parte baja de su rango para largos y en la alta para cortos.",
   "A big Sonar dot, the Stoch RSI crossing back from an extreme and a candle closing the same way.": "Un punto Sonar grande, el Stoch RSI cruzando de vuelta desde un extremo y una vela que cierra en el mismo sentido.",
-  "Divergence on any timeframe, or a W or M shape on the 4-hour chart.": "Divergencia en cualquier marco temporal o una forma W o M en el gráfico de 4 horas."
+  "Divergence on any timeframe, or a W or M shape on the 4-hour chart.": "Divergencia en cualquier marco temporal o una forma W o M en el gráfico de 4 horas.",
+  "Joined on {date}": "Se unió el {date}",
+  "Invited on {date}, not joined yet": "Invitado el {date}, aún no se ha unido",
+  "Invited {n} · joined {j}": "Invitados {n} · se unieron {j}"
 }

@@ -744,8 +744,6 @@
   "Both are off, so alerts only appear in the dashboard.": "Keduanya mati, jadi peringatan hanya muncul di dasbor.",
   "Search is not available right now, so this ticker has not been checked.": "Pencarian sedang tidak tersedia, jadi ticker ini belum diperiksa.",
   "Try the {name} colours": "Coba warna {name}",
-  "Approve and send the welcome email": "Setujui dan kirim email sambutan",
-  "Decline, or take approval back": "Tolak, atau tarik persetujuan",
   "The copy could not be read: {str_exc_120}": "Salinan tidak dapat dibaca: {str_exc_120}",
   "No coins hold this stage right now.": "Saat ini tidak ada koin yang memenuhi tahap ini.",
   "No equities hold this stage right now.": "Saat ini tidak ada saham yang memenuhi tahap ini.",
@@ -2270,5 +2268,8 @@
   "The trend points the same way on at least 2 of the 4-hour, daily and weekly charts.": "Tren mengarah sama pada setidaknya 2 dari grafik 4 jam, harian, dan mingguan.",
   "Stoch RSI or the Sonar wave at the bottom of its range for longs, the top for shorts.": "Stoch RSI atau gelombang Sonar di bagian bawah rentangnya untuk long, di bagian atas untuk short.",
   "A big Sonar dot, the Stoch RSI crossing back from an extreme and a candle closing the same way.": "Titik Sonar besar, Stoch RSI menyilang kembali dari titik ekstrem, dan candle yang ditutup ke arah yang sama.",
-  "Divergence on any timeframe, or a W or M shape on the 4-hour chart.": "Divergensi di timeframe mana pun, atau bentuk W atau M di grafik 4 jam."
+  "Divergence on any timeframe, or a W or M shape on the 4-hour chart.": "Divergensi di timeframe mana pun, atau bentuk W atau M di grafik 4 jam.",
+  "Joined on {date}": "Bergabung pada {date}",
+  "Invited on {date}, not joined yet": "Diundang pada {date}, belum bergabung",
+  "Invited {n} · joined {j}": "Diundang {n} · bergabung {j}"
 }
