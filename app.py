@@ -15001,6 +15001,22 @@ def _mood_reading_board(market_key: str, label: str, report: dict | None) -> str
             groups = market_gauge_groups(market_key)
         except Exception:
             groups = []
+    else:
+        # A report made before a reading was added (it is scored every 12 hours) still shows the new reading, without
+        # its AI score until the next report, and the group's current note.
+        try:
+            fresh = {str(g.get("title")): g for g in market_gauge_groups(market_key) if isinstance(g, dict)}
+        except Exception:
+            fresh = {}
+        merged = []
+        for group in groups:
+            now = fresh.get(str((group or {}).get("title"))) if isinstance(group, dict) else None
+            if now:
+                have = {str(i.get("name")) for i in group.get("items") or []}
+                extra = [i for i in now.get("items") or [] if str(i.get("name")) not in have]
+                group = {**group, "items": list(group.get("items") or []) + extra, "note": now.get("note", "")}
+            merged.append(group)
+        groups = merged
     blocks = []
     for group in groups or []:
         articles = _reading_articles(group)
