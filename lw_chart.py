@@ -13,6 +13,8 @@ as the licence's notice asks.
 
 from __future__ import annotations
 
+import threading
+
 from i18n import t
 
 import math
@@ -58,11 +60,26 @@ def _values(series: pd.Series, digits: int = 8) -> list:
     return out
 
 
+_CARDS = threading.local()
+
+
+def set_card_colours(day: str, night: str) -> None:
+    """This page's card colour for day and night (Settings › UI colours), so charts sit on the same colour. Kept per
+    thread: Streamlit runs each page in its own."""
+    _CARDS.day, _CARDS.night = day, night
+
+
+def card_colour(dark: bool) -> str:
+    value = getattr(_CARDS, "night" if dark else "day", None)
+    ok = isinstance(value, str) and len(value) == 7 and value.startswith("#")
+    return value if ok else ("#262730" if dark else "#ffffff")
+
+
 def theme(dark: bool) -> dict:
     """The same surfaces as the Plotly chart, so switching engines does not change the page."""
     return {
         "dark": bool(dark),
-        "bg": "#262730" if dark else "#ffffff",
+        "bg": card_colour(dark),
         "ink": "#e5e7eb" if dark else "#374151",
         "grid": "#3f4654" if dark else "#eef0f3",
         "muted": "#9ca3af" if dark else "#6b7280",

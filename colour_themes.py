@@ -1,29 +1,34 @@
 """Ready-made colour themes for the UI Colours settings, and the little picture that shows each one.
 
-Every theme sets all 14 colours: a day and a night value for each of seven parts of the page.
+Every theme sets a day and a night value for each part of the page. The last three parts (cards, fields, buttons)
+were added on 19 Nov 2026; themes made before take them from their own section, hover and heading colours.
 """
 from __future__ import annotations
 
 import html
 
-PARTS = ("page", "heading", "section", "hover", "sidebar", "social", "border")
+PARTS = ("page", "heading", "section", "hover", "sidebar", "social", "border", "card", "field", "button")
 KEYS = tuple(f"{part}_{mode}" for part in PARTS for mode in ("day", "night"))
 
 
 def _theme(day: tuple, night: tuple) -> dict:
-    """Seven colours for day and seven for night, in the order of PARTS."""
+    """Colours for day and for night, in the order of PARTS. When cards, fields and buttons are not given they follow
+    the theme's section, hover and heading colours."""
     out = {}
     for part, d, n in zip(PARTS, day, night):
         out[f"{part}_day"] = d
         out[f"{part}_night"] = n
+    for part, like in (("card", "section"), ("field", "hover"), ("button", "heading")):
+        for mode in ("day", "night"):
+            out.setdefault(f"{part}_{mode}", out[f"{like}_{mode}"])
     return out
 
 
-#            page       heading    section    hover      sidebar    social     border
+#            page       heading    section    hover      sidebar    social     border     card       field      button
 THEMES = {
     "Default": _theme(
-        ("#d6e8f8", "#ffffff", "#ffffff", "#f3f4f6", "#ffffff", "#ffffff", "#e5e7eb"),
-        ("#0e1117", "#262730", "#262730", "#31333f", "#16181f", "#1c1f27", "#000000"),
+        ("#d6e8f8", "#ffffff", "#ffffff", "#f3f4f6", "#ffffff", "#ffffff", "#e5e7eb", "#ffffff", "#f1f0ee", "#ffffff"),
+        ("#0e1117", "#262730", "#262730", "#31333f", "#16181f", "#1c1f27", "#000000", "#262730", "#31333f", "#31333f"),
     ),
     "Slate": _theme(
         ("#e2e8f0", "#f8fafc", "#ffffff", "#e2e8f0", "#f1f5f9", "#f8fafc", "#cbd5e1"),
@@ -53,7 +58,7 @@ THEMES = {
 
 
 def clean_set(value, defaults: dict) -> dict:
-    """value as a full set of 14 valid #rrggbb colours. Anything missing or odd falls back to defaults."""
+    """value as a full set of valid #rrggbb colours (every key in KEYS). Anything missing or odd falls back to defaults."""
     source = value if isinstance(value, dict) else {}
     out = {}
     for key in KEYS:

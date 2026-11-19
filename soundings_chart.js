@@ -213,7 +213,7 @@ export default function (component) {
   if (!data || !data.times) return;
   let root = parentElement.querySelector(".ang-snd");
   if (!root) root = shell(parentElement);
-  const sig = JSON.stringify([data.key, data.times.length, data.rows.map((r) => r.name + r.points.length), data.theme.dark,
+  const sig = JSON.stringify([data.key, data.times.length, data.rows.map((r) => r.name + r.points.length), data.theme.dark, data.theme.bg,
                               data.price_px, data.log_scale]);
   if (root.__chart && root.__sig === sig) return;
   root.__sig = sig;

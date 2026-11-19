@@ -223,9 +223,9 @@ def _active_theme() -> str:
 
 
 def _paint_chart(fig) -> None:
-    """Chart paper follows the same surface as the cards. Dark mode is grey, not black."""
+    """Chart paper follows the same surface as the cards (Settings › UI colours › Cards and panels)."""
     dark = _active_theme() == "dark"
-    paper = "#262730" if dark else "#ffffff"
+    paper = lw_chart.card_colour(dark)
     ink = "#e5e7eb" if dark else "#374151"
     grid = "#3f4654" if dark else "#e5e7eb"
     fig.update_layout(paper_bgcolor=paper, plot_bgcolor=paper, font=dict(color=ink))
@@ -360,6 +360,12 @@ export default function(component) {
   paintColour("--ang-social-night", chosen.socialNight);
   paintColour("--ang-border-day", chosen.borderDay);
   paintColour("--ang-border-night", chosen.borderNight);
+  paintColour("--ang-card-day", chosen.cardDay);
+  paintColour("--ang-card-night", chosen.cardNight);
+  paintColour("--ang-field-day", chosen.fieldDay);
+  paintColour("--ang-field-night", chosen.fieldNight);
+  paintColour("--ang-button-day", chosen.buttonDay);
+  paintColour("--ang-button-night", chosen.buttonNight);
   let style = document.getElementById("angstrom-brand-style");
   if (style && style.dataset.layout !== "ruled") {
     style.remove();
@@ -370,8 +376,8 @@ export default function(component) {
     style.id = "angstrom-brand-style";
     style.dataset.layout = "ruled";
     style.textContent = [
-      "html{--ang-surface:#ffffff;--ang-border:var(--ang-border-day,#e5e7eb);--ang-text:#111827;--ang-muted:#6b7280;--ang-soft:#374151;--ang-track:#e5e7eb;--ang-line:var(--ang-border);--ang-select:#e5e7eb;--ang-select-text:#111827;--ang-page:var(--ang-page-day,#d6e8f8);--ang-heading:var(--ang-heading-day,#ffffff);--ang-section:var(--ang-section-day,#ffffff);--ang-hover:var(--ang-hover-day,#f3f4f6);--ang-side:var(--ang-side-day,#ffffff);--ang-social:var(--ang-social-day,#ffffff);}",
-      "html.angstrom-night{--ang-surface:#262730;--ang-border:var(--ang-border-night,#000000);--ang-text:#f3f4f6;--ang-muted:#9ca3af;--ang-soft:#d1d5db;--ang-track:#3f4654;--ang-line:var(--ang-border);--ang-select:#3a4050;--ang-select-text:#f9fafb;--ang-page:var(--ang-page-night,#0e1117);--ang-heading:var(--ang-heading-night,#262730);--ang-section:var(--ang-section-night,#262730);--ang-hover:var(--ang-hover-night,#31333f);--ang-side:var(--ang-side-night,#16181f);--ang-social:var(--ang-social-night,#1c1f27);}",
+      "html{--ang-surface:var(--ang-card-day,#ffffff);--ang-field:var(--ang-field-day,#f1f0ee);--ang-button:var(--ang-button-day,#ffffff);--ang-border:var(--ang-border-day,#e5e7eb);--ang-text:#111827;--ang-muted:#6b7280;--ang-soft:#374151;--ang-track:#e5e7eb;--ang-line:var(--ang-border);--ang-select:#e5e7eb;--ang-select-text:#111827;--ang-page:var(--ang-page-day,#d6e8f8);--ang-heading:var(--ang-heading-day,#ffffff);--ang-section:var(--ang-section-day,#ffffff);--ang-hover:var(--ang-hover-day,#f3f4f6);--ang-side:var(--ang-side-day,#ffffff);--ang-social:var(--ang-social-day,#ffffff);}",
+      "html.angstrom-night{--ang-surface:var(--ang-card-night,#262730);--ang-field:var(--ang-field-night,#31333f);--ang-button:var(--ang-button-night,#31333f);--ang-border:var(--ang-border-night,#000000);--ang-text:#f3f4f6;--ang-muted:#9ca3af;--ang-soft:#d1d5db;--ang-track:#3f4654;--ang-line:var(--ang-border);--ang-select:#3a4050;--ang-select-text:#f9fafb;--ang-page:var(--ang-page-night,#0e1117);--ang-heading:var(--ang-heading-night,#262730);--ang-section:var(--ang-section-night,#262730);--ang-hover:var(--ang-hover-night,#31333f);--ang-side:var(--ang-side-night,#16181f);--ang-social:var(--ang-social-night,#1c1f27);}",
       ".ang-card{background:var(--ang-surface);color:var(--ang-text);border:1px solid var(--ang-border);border-radius:10px;padding:12px 16px;}",
       ".ang-kicker{font-size:.8rem;color:var(--ang-muted);margin-bottom:4px;}",
       // The social panel floats at the side; its empty holder in Quick Snapshot must not add a row gap.
@@ -399,7 +405,7 @@ export default function(component) {
       ".ang-table.fold-g [data-sec-folded='g'],.ang-table.fold-s [data-sec-folded='s']{display:table-cell;}",
       "[data-testid='stAppViewContainer'],[data-testid='stHeader'],[data-testid='stBottom']{background:var(--ang-page) !important;}",
       "html:not(.angstrom-night) [data-testid='stSidebar']{background:var(--ang-side) !important;border-right:1px solid var(--ang-border);}",
-      "html:not(.angstrom-night) [data-testid='stMain'] [data-testid='stVerticalBlockBorderWrapper']{background:#ffffff !important;border-color:var(--ang-border) !important;}",
+      "html:not(.angstrom-night) [data-testid='stMain'] [data-testid='stVerticalBlockBorderWrapper']{background:var(--ang-surface) !important;border-color:var(--ang-border) !important;}",
       "[data-testid='stForm']{background:transparent !important;border-color:transparent !important;}",
       "[data-testid='stExpander'] details{background:var(--ang-section) !important;border-color:var(--ang-border) !important;}",
       // A closed block is only its heading (15 Nov 2026). Streamlit locks a block's height while it animates open or
@@ -415,9 +421,13 @@ export default function(component) {
       "[data-testid='stExpander'] details > summary:hover,[data-testid='stExpander'] details > summary:focus-visible,[data-testid='stExpander'] details > summary:active{background:var(--ang-hover) !important;}",
       "html.angstrom-night [data-testid='stSidebar']{background:var(--ang-side) !important;border-right:1px solid var(--ang-border);}",
       "html.angstrom-night [data-testid='stMain'] [data-testid='stVerticalBlockBorderWrapper'],html.angstrom-night [data-testid='stMetric']{background:var(--ang-surface) !important;border-color:var(--ang-border) !important;}",
-      "html.angstrom-night [data-baseweb='input'],html.angstrom-night [data-baseweb='textarea'],html.angstrom-night [data-baseweb='select'] > div,html.angstrom-night [data-testid='stFileUploaderDropzone']{background-color:#31333f !important;border-color:var(--ang-border) !important;color:var(--ang-text) !important;}",
+      // Text, number and drop-down fields, and buttons, in both modes: Settings › UI colours › Fields and Buttons.
+      "[data-baseweb='input'],[data-baseweb='base-input'],[data-baseweb='textarea'],[data-baseweb='select'] > div,[data-testid='stFileUploaderDropzone']{background-color:var(--ang-field) !important;}",
+      "[data-baseweb='input'] input,[data-baseweb='textarea'] textarea{background:transparent !important;}",
+      "[data-testid='stBaseButton-secondary'],[data-testid='stBaseButton-secondaryFormSubmit'],[data-testid='stButtonGroup'] button[data-variant]:not([data-selected]){background-color:var(--ang-button) !important;}",
+      "html.angstrom-night [data-baseweb='input'],html.angstrom-night [data-baseweb='textarea'],html.angstrom-night [data-baseweb='select'] > div,html.angstrom-night [data-testid='stFileUploaderDropzone']{background-color:var(--ang-field) !important;border-color:var(--ang-border) !important;color:var(--ang-text) !important;}",
       "html.angstrom-night [data-baseweb='input'] input,html.angstrom-night [data-baseweb='textarea'] textarea{background:transparent !important;color:var(--ang-text) !important;-webkit-text-fill-color:var(--ang-text);}",
-      "html.angstrom-night [data-testid='stBaseButton-secondary']{background:#31333f !important;border-color:#4b5563 !important;color:var(--ang-text) !important;}",
+      "html.angstrom-night [data-testid='stBaseButton-secondary']{background:var(--ang-button) !important;border-color:#4b5563 !important;color:var(--ang-text) !important;}",
       "html.angstrom-night [data-testid='stBaseButton-secondary']:hover{border-color:#e5e7eb !important;color:#ffffff !important;}",
       "button.angstrom-jump{display:flex;align-items:center;gap:0.75rem;width:100%;box-sizing:border-box;min-height:3.25rem;height:auto;padding:0.55rem 0.85rem;border-radius:0.5rem;border:1px solid rgba(49,51,63,0.2);background:#ffffff;color:#31333f;font:inherit;line-height:1.35;text-align:left;cursor:pointer;white-space:normal;}",
       "button.angstrom-jump .angstrom-jump-icon{flex:none;font-size:2.25rem;line-height:1;}",
@@ -6673,6 +6683,12 @@ _THEME_COLOURS = (
     ("social_night", "#1c1f27"),
     ("border_day", "#e5e7eb"),
     ("border_night", "#000000"),
+    ("card_day", "#ffffff"),
+    ("card_night", "#262730"),
+    ("field_day", "#f1f0ee"),
+    ("field_night", "#31333f"),
+    ("button_day", "#ffffff"),
+    ("button_night", "#31333f"),
 )
 
 
@@ -6764,6 +6780,12 @@ def _colour_payload(chosen: dict) -> dict:
         "socialNight": chosen["social_night"],
         "borderDay": chosen["border_day"],
         "borderNight": chosen["border_night"],
+        "cardDay": chosen["card_day"],
+        "cardNight": chosen["card_night"],
+        "fieldDay": chosen["field_day"],
+        "fieldNight": chosen["field_night"],
+        "buttonDay": chosen["button_day"],
+        "buttonNight": chosen["button_night"],
     }
 
 
@@ -6776,6 +6798,7 @@ if isinstance(_pending_colours, dict):
         st.session_state[f"colour_{key}"] = _hex_colour(_pending_colours.get(key), default)
 _take_colour_copy()
 account_colours = _active_colours()
+lw_chart.set_card_colours(account_colours["card_day"], account_colours["card_night"])   # charts sit on the card colour
 _brand_watch(key="brand_watch", data=_colour_payload(account_colours))
 _version_watch(key="version_watch", data=app_version.BOOT_ID)
 st.sidebar.markdown(
@@ -9404,6 +9427,9 @@ with tracked_expander("⚙️ " + t("Settings"), "settings_panel", sidebar=True)
                 ("Sidebar", "sidebar_day", "sidebar_night"),
                 ("Social and chat", "social_day", "social_night"),
                 ("Borders", "border_day", "border_night"),
+                ("Cards and panels", "card_day", "card_night"),
+                ("Text and drop-down fields", "field_day", "field_night"),
+                ("Buttons", "button_day", "button_night"),
             ):
                 cells = st.columns(widths, gap="xsmall", vertical_alignment="center")
                 cells[0].html(f"<div class='pal-name'>{html.escape(label)}</div>")

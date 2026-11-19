@@ -124,15 +124,16 @@ def render(st, report: dict | None = None) -> None:
         return
     s = report.get("settings") or {}
     with st.expander(t("How this run was done"), expanded=False):
+        first = ""
         if s.get("universe") == "equity_sample":
-            st.markdown(t("- **Equities**: a fixed random sample of {n} companies from the S&P 500 as it stood at the "
+            first = (t("- **Equities**: a fixed random sample of {n} companies from the S&P 500 as it stood at the "
                           "start of 2016, including companies that later left the index, so the results are not "
                           "flattered by looking only at today's winners.", n=len(s.get("coins") or [])))
         if s.get("universe") == "wide":
-            st.markdown(t("- **Coins**: the {n} most traded coins on Binance from 2018 to 2023, including coins that "
+            first = (t("- **Coins**: the {n} most traded coins on Binance from 2018 to 2023, including coins that "
                           "later collapsed or stopped trading, so the results are not flattered by looking only at "
                           "survivors.", n=len(s.get("coins") or [])))
-        st.markdown(t(
+        rest = (t(
             "- **A rise**: {rise}. A fall is the mirror image.\n"
             "- **Coins**: {n} saved research coins, daily candles.\n"
             "- **Search years**: to {search}. **Later years** (confirmation): {confirm}. The protected test period "
@@ -144,6 +145,11 @@ def render(st, report: dict | None = None) -> None:
             rise=s.get("rise", ""), n=len(s.get("coins") or []), search=str(s.get("search", "")).removeprefix("to "),
             confirm=s.get("confirm", ""), lift=s.get("min_lift", ""), days=s.get("min_days", ""),
             coins=s.get("min_coins", ""), fdr=f"{100 * float(s.get('fdr', 0.1)):.0f}%"))
+        lines = rest.split("\n")
+        if first and len(lines) > 1:
+            del lines[1]                  # "saved research coins": the first line already says what was used
+        # one list, so the bullets are evenly spaced (two lists left a gap between them)
+        st.markdown("\n".join([first, *lines]) if first else "\n".join(lines))
     st.markdown(CSS, unsafe_allow_html=True)
     chart, rises, falls = st.tabs([t("🗺️ Chart"), t("📈 Before rises"), t("📉 Before falls")])   # the picture first
     with chart:
@@ -212,7 +218,10 @@ def _theme(st) -> tuple[str, str, str]:
         dark = st.context.theme.type == "dark"
     except Exception:
         dark = False
-    return ("#262730", "#e5e7eb", "#3f4654") if dark else ("#ffffff", "#374151", "#e5e7eb")
+    import lw_chart
+
+    paper = lw_chart.card_colour(dark)                  # the account's card colour (Settings › UI colours)
+    return (paper, "#e5e7eb", "#3f4654") if dark else (paper, "#374151", "#e5e7eb")
 
 
 def _short(text: str, n: int = 40) -> str:

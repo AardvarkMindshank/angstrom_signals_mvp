@@ -67,7 +67,7 @@ function signature(data) {
   return JSON.stringify([
     data.key, n, data.times[0], data.times[n - 1], c[n - 1], data.ohlc[1][n - 1], data.ohlc[2][n - 1],
     data.volume[n - 1], data.forming, data.series.map((s) => s.id + ":" + s.pane + ":" + (s.scale || "")),
-    data.panes.map((p) => p.height), data.vlines.length, data.price_lines.length, data.theme.dark, data.right_offset,
+    data.panes.map((p) => p.height), data.vlines.length, data.price_lines.length, data.theme.dark, data.theme.bg, data.right_offset,
     (data.zones || []).map((z) => z || "").join("|").length, data.series.map((s) => (s.zones || []).filter((z) => z).length),
     data.zones_name || "", (data.symbols || []).length, (data.shapes || []).length,
   ]);
