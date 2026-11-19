@@ -874,6 +874,9 @@ module.exports = {
     hover: async (h) => {
       await h.clear();
       const chart = h.page.locator(".st-key-snd_tv_chart").first();
+      // The day's note shows at the top of the chart: bring the top of the chart into view first.
+      await chart.evaluate((n) => n.scrollIntoView({ block: "start", behavior: "smooth" })).catch(() => {});
+      await h.wait(700);
       const b = await chart.boundingBox().catch(() => null);
       if (b) {
         for (const f of [0.45, 0.55, 0.62, 0.7]) {
