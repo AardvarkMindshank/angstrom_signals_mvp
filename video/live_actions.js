@@ -1469,6 +1469,8 @@ module.exports = {
         await row.evaluate((n) => n.scrollIntoView({ block: "start", behavior: "smooth" })).catch(() => {});
         await h.wait(600);
         await h.ring(row);
+        const all = row.locator("button").filter({ hasText: /^All$/ }).first();      // every marker on
+        if (await all.count()) { await h.glide(all, 250); await all.click().catch(() => {}); await h.settle(); }
         await h.wait(1500);
         await h.clear();
       }
@@ -1520,6 +1522,10 @@ module.exports = {
     setup: async (h) => {
       await openChart(h, "Bitcoin", "1h", "7D");
       await quietChart(h);
+      for (const [key, word] of [["ladder_place_", "By daily move"], ["ladder_side_", "Long"]]) {
+        await h.page.locator(`[class*="st-key-${key}"] button`).filter({ hasText: word }).first().click().catch(() => {});
+        await h.settle();
+      }
       await clearDrawings(h, false);
       await stopDrawing(h);
       const head = h.sum("Ladder helper");
@@ -1600,14 +1606,7 @@ module.exports = {
       await chartTop(h);
       await h.wait(2500);
     },
-    tidy: async (h) => {
-      await chartControls(h);
-      await timeframe(h, "4h", "1M");
-      await clearDrawings(h, false);
-      await h.page.locator('[class*="st-key-ladder_side_"] button').filter({ hasText: "Long" }).first().click().catch(() => {});
-      const place = h.page.locator('[class*="st-key-ladder_place_"]').first();
-      await place.locator("button").filter({ hasText: "By daily move" }).first().click().catch(() => {});
-      await h.settle();
+    tidy: async (h) => {                      // the lines off; the next video sets its own chart up
       const toggle = h.page.locator('[class*="st-key-ladder_show_"]').first();
       await toggle.evaluate((n) => n.scrollIntoView({ block: "center", behavior: "smooth" })).catch(() => {});
       await h.wait(400);
