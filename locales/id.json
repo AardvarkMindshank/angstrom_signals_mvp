@@ -2095,7 +2095,6 @@
   "WaveTrend, money flow and markers agree across timeframes.": "WaveTrend, aliran uang, dan penanda sepakat di beberapa kerangka waktu.",
   "Account level: {plan}": "Tingkat akun: {plan}",
   "Free during the beta.": "Gratis selama beta.",
-  "Trend funnel (provided)": "Corong tren (disediakan)",
   "Is the big picture right?": "Apakah gambaran besarnya benar?",
   "Candidate": "Kandidat",
   "Market": "Pasar",
@@ -2263,5 +2262,13 @@
   "Amount": "Jumlah",
   "Long": "Long",
   "Short": "Short",
-  "Consolidating": "Konsolidasi"
+  "Consolidating": "Konsolidasi",
+  "A trader's dip entry (▲) or rally entry (▼): daily money flow, most higher timeframes agreeing, 4-hour momentum at an extreme against the trend, then the 1-hour confluence of a big Sonar dot, the Stoch RSI crossing back and a candle closing the right way. Tested on hourly candles of 30 coins (2021 to Oct 2024): as fixed rules it found the setup but was not followed by better moves than usual, so use it to find charts to look at, then judge them yourself.": "Entri saat turun (▲) atau saat naik (▼) seorang trader: arus uang harian, sebagian besar timeframe lebih tinggi sepakat, momentum 4 jam di titik ekstrem melawan tren, lalu konfluensi 1 jam: titik Sonar besar, Stoch RSI menyilang kembali, dan candle yang ditutup ke arah yang benar. Diuji pada candle per jam 30 koin (2021 sampai Okt 2024): sebagai aturan tetap ia menemukan setup-nya, tetapi tidak diikuti gerakan yang lebih baik dari biasanya, jadi gunakan untuk menemukan grafik yang layak dilihat, lalu nilai sendiri.",
+  "A trader's top warning (▼) or bottom warning (▲): daily momentum at an extreme, divergence or an M (W) shape, then the 1-hour confluence. For a holder it is a nudge to tighten a stop or take some profit; for the other side, a possible entry. Tested as fixed rules: not followed by better moves than usual on its own.": "Peringatan puncak (▼) atau dasar (▲) seorang trader: momentum harian di titik ekstrem, divergensi atau bentuk M (W), lalu konfluensi 1 jam. Bagi pemegang posisi, pengingat untuk mengetatkan stop atau mengambil sebagian untung; bagi sisi lain, kemungkinan entri. Diuji sebagai aturan tetap: sendirian tidak diikuti gerakan yang lebih baik dari biasanya.",
+  "provided": "disediakan",
+  "The daily Sonar money flow above zero for longs, below it for shorts.": "Arus uang Sonar harian di atas nol untuk long, di bawahnya untuk short.",
+  "The trend points the same way on at least 2 of the 4-hour, daily and weekly charts.": "Tren mengarah sama pada setidaknya 2 dari grafik 4 jam, harian, dan mingguan.",
+  "Stoch RSI or the Sonar wave at the bottom of its range for longs, the top for shorts.": "Stoch RSI atau gelombang Sonar di bagian bawah rentangnya untuk long, di bagian atas untuk short.",
+  "A big Sonar dot, the Stoch RSI crossing back from an extreme and a candle closing the same way.": "Titik Sonar besar, Stoch RSI menyilang kembali dari titik ekstrem, dan candle yang ditutup ke arah yang sama.",
+  "Divergence on any timeframe, or a W or M shape on the 4-hour chart.": "Divergensi di timeframe mana pun, atau bentuk W atau M di grafik 4 jam."
 }

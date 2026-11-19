@@ -2095,7 +2095,6 @@
   "WaveTrend, money flow and markers agree across timeframes.": "WaveTrend, Geldfluss und Marker stimmen über die Zeitrahmen überein.",
   "Account level: {plan}": "Kontostufe: {plan}",
   "Free during the beta.": "Während der Beta kostenlos.",
-  "Trend funnel (provided)": "Trend-Funnel (bereitgestellt)",
   "Is the big picture right?": "Stimmt das große Bild?",
   "Candidate": "Kandidat",
   "Market": "Markt",
@@ -2263,5 +2262,13 @@
   "Amount": "Betrag",
   "Long": "Long",
   "Short": "Short",
-  "Consolidating": "Seitwärts"
+  "Consolidating": "Seitwärts",
+  "A trader's dip entry (▲) or rally entry (▼): daily money flow, most higher timeframes agreeing, 4-hour momentum at an extreme against the trend, then the 1-hour confluence of a big Sonar dot, the Stoch RSI crossing back and a candle closing the right way. Tested on hourly candles of 30 coins (2021 to Oct 2024): as fixed rules it found the setup but was not followed by better moves than usual, so use it to find charts to look at, then judge them yourself.": "Der Dip-Einstieg (▲) oder Rally-Einstieg (▼) eines Traders: täglicher Geldfluss, die meisten höheren Zeitrahmen stimmen überein, 4-Stunden-Momentum im Extrem gegen den Trend, dann die 1-Stunden-Konfluenz aus großem Sonar-Punkt, zurückkreuzendem Stoch RSI und einer Kerze, die richtig schließt. Getestet auf Stundenkerzen von 30 Coins (2021 bis Okt. 2024): als feste Regel fand es das Setup, doch es folgten keine besseren Bewegungen als üblich. Nutzen Sie es, um Charts zum Anschauen zu finden, und urteilen Sie dann selbst.",
+  "A trader's top warning (▼) or bottom warning (▲): daily momentum at an extreme, divergence or an M (W) shape, then the 1-hour confluence. For a holder it is a nudge to tighten a stop or take some profit; for the other side, a possible entry. Tested as fixed rules: not followed by better moves than usual on its own.": "Die Top-Warnung (▼) oder Boden-Warnung (▲) eines Traders: tägliches Momentum im Extrem, Divergenz oder eine M- (W-)Form, dann die 1-Stunden-Konfluenz. Für Halter ein Anstoß, einen Stop nachzuziehen oder Gewinne mitzunehmen; für die Gegenseite ein möglicher Einstieg. Als feste Regel getestet: allein nicht von besseren Bewegungen als üblich gefolgt.",
+  "provided": "bereitgestellt",
+  "The daily Sonar money flow above zero for longs, below it for shorts.": "Der tägliche Sonar-Geldfluss über null für Long, darunter für Short.",
+  "The trend points the same way on at least 2 of the 4-hour, daily and weekly charts.": "Der Trend zeigt auf mindestens 2 der 4-Stunden-, Tages- und Wochencharts in dieselbe Richtung.",
+  "Stoch RSI or the Sonar wave at the bottom of its range for longs, the top for shorts.": "Stoch RSI oder die Sonar-Welle am unteren Ende ihrer Spanne für Long, am oberen für Short.",
+  "A big Sonar dot, the Stoch RSI crossing back from an extreme and a candle closing the same way.": "Ein großer Sonar-Punkt, der Stoch RSI kreuzt aus einem Extrem zurück und eine Kerze schließt in dieselbe Richtung.",
+  "Divergence on any timeframe, or a W or M shape on the 4-hour chart.": "Divergenz auf irgendeinem Zeitrahmen oder eine W- oder M-Form im 4-Stunden-Chart."
 }

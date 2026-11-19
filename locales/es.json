@@ -2095,7 +2095,6 @@
   "WaveTrend, money flow and markers agree across timeframes.": "WaveTrend, flujo de dinero y marcadores coinciden en varios marcos temporales.",
   "Account level: {plan}": "Nivel de cuenta: {plan}",
   "Free during the beta.": "Gratis durante la beta.",
-  "Trend funnel (provided)": "Embudo de tendencia (incluido)",
   "Is the big picture right?": "¿Es correcto el panorama general?",
   "Candidate": "Candidato",
   "Market": "Mercado",
@@ -2263,5 +2262,13 @@
   "Amount": "Importe",
   "Long": "Largo",
   "Short": "Corto",
-  "Consolidating": "Lateral"
+  "Consolidating": "Lateral",
+  "A trader's dip entry (▲) or rally entry (▼): daily money flow, most higher timeframes agreeing, 4-hour momentum at an extreme against the trend, then the 1-hour confluence of a big Sonar dot, the Stoch RSI crossing back and a candle closing the right way. Tested on hourly candles of 30 coins (2021 to Oct 2024): as fixed rules it found the setup but was not followed by better moves than usual, so use it to find charts to look at, then judge them yourself.": "La entrada en caída (▲) o en repunte (▼) de un trader: flujo de dinero diario, la mayoría de los marcos temporales mayores de acuerdo, el impulso de 4 horas en un extremo contra la tendencia y luego la confluencia de 1 hora: un punto Sonar grande, el Stoch RSI cruzando de vuelta y una vela que cierra en el sentido correcto. Probado con velas horarias de 30 monedas (2021 a oct. 2024): como regla fija encontraba la configuración, pero no le siguieron movimientos mejores de lo habitual; úsalo para encontrar gráficos que mirar y luego juzga tú.",
+  "A trader's top warning (▼) or bottom warning (▲): daily momentum at an extreme, divergence or an M (W) shape, then the 1-hour confluence. For a holder it is a nudge to tighten a stop or take some profit; for the other side, a possible entry. Tested as fixed rules: not followed by better moves than usual on its own.": "El aviso de techo (▼) o de suelo (▲) de un trader: impulso diario en un extremo, divergencia o una forma M (W) y luego la confluencia de 1 hora. Para quien mantiene la posición, una señal para ajustar el stop o recoger algo de beneficio; para el otro lado, una posible entrada. Probado como regla fija: por sí solo no le siguieron movimientos mejores de lo habitual.",
+  "provided": "incluido",
+  "The daily Sonar money flow above zero for longs, below it for shorts.": "El flujo de dinero Sonar diario por encima de cero para largos y por debajo para cortos.",
+  "The trend points the same way on at least 2 of the 4-hour, daily and weekly charts.": "La tendencia apunta en la misma dirección en al menos 2 de los gráficos de 4 horas, diario y semanal.",
+  "Stoch RSI or the Sonar wave at the bottom of its range for longs, the top for shorts.": "El Stoch RSI o la onda Sonar en la parte baja de su rango para largos y en la alta para cortos.",
+  "A big Sonar dot, the Stoch RSI crossing back from an extreme and a candle closing the same way.": "Un punto Sonar grande, el Stoch RSI cruzando de vuelta desde un extremo y una vela que cierra en el mismo sentido.",
+  "Divergence on any timeframe, or a W or M shape on the 4-hour chart.": "Divergencia en cualquier marco temporal o una forma W o M en el gráfico de 4 horas."
 }

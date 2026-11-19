@@ -2095,7 +2095,6 @@
   "WaveTrend, money flow and markers agree across timeframes.": "WaveTrend กระแสเงิน และเครื่องหมายต่าง ๆ สอดคล้องกันในหลายกรอบเวลา",
   "Account level: {plan}": "ระดับบัญชี: {plan}",
   "Free during the beta.": "ใช้ฟรีระหว่างช่วงเบต้า",
-  "Trend funnel (provided)": "ฟันเนลเทรนด์ (ที่ให้มา)",
   "Is the big picture right?": "ภาพใหญ่ถูกทางไหม?",
   "Candidate": "ผู้เข้ารอบ",
   "Market": "ตลาด",
@@ -2263,5 +2262,13 @@
   "Amount": "จำนวนเงิน",
   "Long": "Long",
   "Short": "Short",
-  "Consolidating": "ไซด์เวย์"
+  "Consolidating": "ไซด์เวย์",
+  "A trader's dip entry (▲) or rally entry (▼): daily money flow, most higher timeframes agreeing, 4-hour momentum at an extreme against the trend, then the 1-hour confluence of a big Sonar dot, the Stoch RSI crossing back and a candle closing the right way. Tested on hourly candles of 30 coins (2021 to Oct 2024): as fixed rules it found the setup but was not followed by better moves than usual, so use it to find charts to look at, then judge them yourself.": "จุดเข้าซื้อตอนย่อ (▲) หรือขายตอนเด้ง (▼) ของเทรดเดอร์คนหนึ่ง: กระแสเงินรายวัน กรอบเวลาที่ใหญ่กว่าส่วนใหญ่เห็นตรงกัน โมเมนตัม 4 ชั่วโมงอยู่สุดทางสวนเทรนด์ แล้วจึงดูความสอดคล้องใน 1 ชั่วโมง: จุด Sonar ใหญ่ Stoch RSI ตัดกลับ และแท่งเทียนปิดในทิศที่ถูก ทดสอบกับแท่งเทียนรายชั่วโมงของ 30 เหรียญ (2021 ถึง ต.ค. 2024): ในฐานะกฎตายตัว มันหาเซ็ตอัปเจอ แต่หลังจากนั้นราคาไม่ได้เคลื่อนไหวดีกว่าปกติ ใช้เพื่อหากราฟที่น่าดู แล้วตัดสินใจเอง",
+  "A trader's top warning (▼) or bottom warning (▲): daily momentum at an extreme, divergence or an M (W) shape, then the 1-hour confluence. For a holder it is a nudge to tighten a stop or take some profit; for the other side, a possible entry. Tested as fixed rules: not followed by better moves than usual on its own.": "สัญญาณเตือนจุดสูงสุด (▼) หรือจุดต่ำสุด (▲) ของเทรดเดอร์คนหนึ่ง: โมเมนตัมรายวันอยู่สุดทาง ไดเวอร์เจนซ์หรือรูปตัว M (W) แล้วจึงความสอดคล้องใน 1 ชั่วโมง สำหรับผู้ถือ เป็นสัญญาณให้เลื่อนจุดตัดขาดทุนหรือขายทำกำไรบางส่วน สำหรับอีกฝั่งเป็นจุดเข้าที่เป็นไปได้ ทดสอบเป็นกฎตายตัวแล้ว: ลำพังตัวมันเองไม่ได้ตามมาด้วยการเคลื่อนไหวที่ดีกว่าปกติ",
+  "provided": "ที่ให้มา",
+  "The daily Sonar money flow above zero for longs, below it for shorts.": "กระแสเงิน Sonar รายวันอยู่เหนือศูนย์สำหรับ Long ต่ำกว่าศูนย์สำหรับ Short",
+  "The trend points the same way on at least 2 of the 4-hour, daily and weekly charts.": "เทรนด์ชี้ทิศเดียวกันในอย่างน้อย 2 จากกราฟ 4 ชั่วโมง รายวัน และรายสัปดาห์",
+  "Stoch RSI or the Sonar wave at the bottom of its range for longs, the top for shorts.": "Stoch RSI หรือคลื่น Sonar อยู่ด้านล่างของช่วงสำหรับ Long ด้านบนสำหรับ Short",
+  "A big Sonar dot, the Stoch RSI crossing back from an extreme and a candle closing the same way.": "จุด Sonar ใหญ่ Stoch RSI ตัดกลับจากจุดสุดทาง และแท่งเทียนปิดในทิศเดียวกัน",
+  "Divergence on any timeframe, or a W or M shape on the 4-hour chart.": "ไดเวอร์เจนซ์ในกรอบเวลาใดก็ได้ หรือรูปตัว W หรือ M ในกราฟ 4 ชั่วโมง"
 }

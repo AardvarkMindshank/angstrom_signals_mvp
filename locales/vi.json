@@ -2095,7 +2095,6 @@
   "WaveTrend, money flow and markers agree across timeframes.": "WaveTrend, dòng tiền và các dấu hiệu đồng thuận trên nhiều khung thời gian.",
   "Account level: {plan}": "Cấp tài khoản: {plan}",
   "Free during the beta.": "Miễn phí trong giai đoạn beta.",
-  "Trend funnel (provided)": "Phễu xu hướng (có sẵn)",
   "Is the big picture right?": "Bức tranh lớn có đúng không?",
   "Candidate": "Ứng viên",
   "Market": "Thị trường",
@@ -2263,5 +2262,13 @@
   "Amount": "Số tiền",
   "Long": "Mua",
   "Short": "Bán khống",
-  "Consolidating": "Đi ngang"
+  "Consolidating": "Đi ngang",
+  "A trader's dip entry (▲) or rally entry (▼): daily money flow, most higher timeframes agreeing, 4-hour momentum at an extreme against the trend, then the 1-hour confluence of a big Sonar dot, the Stoch RSI crossing back and a candle closing the right way. Tested on hourly candles of 30 coins (2021 to Oct 2024): as fixed rules it found the setup but was not followed by better moves than usual, so use it to find charts to look at, then judge them yourself.": "Cách vào lệnh khi giá giảm (▲) hoặc khi giá hồi (▼) của một trader: dòng tiền ngày, phần lớn khung thời gian lớn hơn đồng thuận, động lượng 4 giờ ở mức cực trị ngược xu hướng, rồi đến sự hội tụ 1 giờ: chấm Sonar lớn, Stoch RSI cắt ngược lại và một cây nến đóng đúng chiều. Đã thử trên nến 1 giờ của 30 đồng coin (2021 đến tháng 10/2024): như một quy tắc cố định, nó tìm ra thiết lập nhưng sau đó giá không chạy tốt hơn bình thường; hãy dùng nó để tìm biểu đồ đáng xem rồi tự đánh giá.",
+  "A trader's top warning (▼) or bottom warning (▲): daily momentum at an extreme, divergence or an M (W) shape, then the 1-hour confluence. For a holder it is a nudge to tighten a stop or take some profit; for the other side, a possible entry. Tested as fixed rules: not followed by better moves than usual on its own.": "Cảnh báo đỉnh (▼) hoặc cảnh báo đáy (▲) của một trader: động lượng ngày ở mức cực trị, phân kỳ hoặc hình M (W), rồi đến sự hội tụ 1 giờ. Với người đang nắm giữ, đó là gợi ý siết cắt lỗ hoặc chốt một phần lời; với phía ngược lại, đó là điểm vào có thể. Đã thử như quy tắc cố định: tự nó không được theo sau bởi diễn biến tốt hơn bình thường.",
+  "provided": "có sẵn",
+  "The daily Sonar money flow above zero for longs, below it for shorts.": "Dòng tiền Sonar ngày trên mức 0 cho lệnh mua, dưới 0 cho lệnh bán.",
+  "The trend points the same way on at least 2 of the 4-hour, daily and weekly charts.": "Xu hướng cùng chiều trên ít nhất 2 trong các biểu đồ 4 giờ, ngày và tuần.",
+  "Stoch RSI or the Sonar wave at the bottom of its range for longs, the top for shorts.": "Stoch RSI hoặc sóng Sonar ở đáy biên độ cho lệnh mua, ở đỉnh cho lệnh bán.",
+  "A big Sonar dot, the Stoch RSI crossing back from an extreme and a candle closing the same way.": "Chấm Sonar lớn, Stoch RSI cắt ngược lại từ mức cực trị và một cây nến đóng cùng chiều.",
+  "Divergence on any timeframe, or a W or M shape on the 4-hour chart.": "Phân kỳ trên bất kỳ khung thời gian nào, hoặc hình W hay M trên biểu đồ 4 giờ."
 }

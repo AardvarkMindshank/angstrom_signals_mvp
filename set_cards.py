@@ -47,6 +47,22 @@ MERGED = (
     {"id": "divergence", "idea": "turn", "name": "Divergence on 2+ timeframes",
      "line": mark("Price makes a new extreme but momentum doesn't, on two or more timeframes."),
      "members": [("long", "", "demo:divergence_bullish_mtf"), ("short", "", "demo:divergence_bearish_mtf")]},
+    {"id": "flow", "idea": "trend", "name": "Money flowing in / out (daily)",
+     "line": mark("The daily Sonar money flow above zero for longs, below it for shorts."),
+     "members": [("long", "", "demo:flow_in_1d"), ("short", "", "demo:flow_out_1d")]},
+    {"id": "htf", "idea": "trend", "name": "Higher timeframes agree",
+     "line": mark("The trend points the same way on at least 2 of the 4-hour, daily and weekly charts."),
+     "members": [("long", "", "demo:htf_up"), ("short", "", "demo:htf_down")]},
+    {"id": "extreme", "idea": "dip", "name": "Momentum at an extreme",
+     "line": mark("Stoch RSI or the Sonar wave at the bottom of its range for longs, the top for shorts."),
+     "members": [("long", "4h", "demo:mom_low_4h"), ("long", "1d", "demo:mom_low_1d"),
+                 ("short", "4h", "demo:mom_high_4h"), ("short", "1d", "demo:mom_high_1d")]},
+    {"id": "confluence", "idea": "dip", "name": "Bottom / top confluence (1-hour)",
+     "line": mark("A big Sonar dot, the Stoch RSI crossing back from an extreme and a candle closing the same way."),
+     "members": [("long", "", "demo:bottom_1h"), ("short", "", "demo:top_1h")]},
+    {"id": "shape", "idea": "turn", "name": "Divergence or double bottom / top",
+     "line": mark("Divergence on any timeframe, or a W or M shape on the 4-hour chart."),
+     "members": [("long", "", "demo:div_or_w_4h"), ("short", "", "demo:div_or_m_4h")]},
     {"id": "sonar", "idea": "turn", "name": "Sonar confluence",
      "line": mark("WaveTrend, money flow and markers agree across timeframes."),
      "members": [("long", "", "demo:sonar_long"), ("short", "", "demo:sonar_short")]},
@@ -61,10 +77,10 @@ SINGLE = (
     ("demo:range_low", "range"), ("demo:near_support", "range"),
 )
 
-_ORDER = {"trend": ["demo:alignment", "ema", "demo:btc_filter", "demo:agree"],
-          "dip": ["pullback", "entry1h", "demo:entry"],
+_ORDER = {"trend": ["demo:alignment", "ema", "demo:btc_filter", "demo:agree", "flow", "htf"],
+          "dip": ["pullback", "entry1h", "demo:entry", "extreme", "confluence"],
           "breakout": ["demo:breakout", "demo:squeeze"],
-          "turn": ["turn", "wave", "divergence", "sonar", "demo:overextended"],
+          "turn": ["turn", "wave", "divergence", "shape", "sonar", "demo:overextended"],
           "range": ["demo:range_low", "demo:near_support"]}
 
 

@@ -2095,7 +2095,6 @@
   "WaveTrend, money flow and markers agree across timeframes.": "複数の時間軸でWaveTrend、資金フロー、マーカーがそろう。",
   "Account level: {plan}": "アカウントレベル：{plan}",
   "Free during the beta.": "ベータ期間中は無料です。",
-  "Trend funnel (provided)": "トレンドファネル（提供）",
   "Is the big picture right?": "大きな流れは正しいか？",
   "Candidate": "候補",
   "Market": "市場",
@@ -2263,5 +2262,13 @@
   "Amount": "金額",
   "Long": "ロング",
   "Short": "ショート",
-  "Consolidating": "レンジ"
+  "Consolidating": "レンジ",
+  "A trader's dip entry (▲) or rally entry (▼): daily money flow, most higher timeframes agreeing, 4-hour momentum at an extreme against the trend, then the 1-hour confluence of a big Sonar dot, the Stoch RSI crossing back and a candle closing the right way. Tested on hourly candles of 30 coins (2021 to Oct 2024): as fixed rules it found the setup but was not followed by better moves than usual, so use it to find charts to look at, then judge them yourself.": "あるトレーダーの押し目エントリー（▲）または戻り売りエントリー（▼）：日足の資金フロー、上位時間足の多くが一致、4時間足のモメンタムがトレンドと逆の極値、そして1時間足のコンフルエンス（大きなSonarドット、Stoch RSIの戻りクロス、正しい方向で確定したローソク足）。30銘柄の1時間足（2021年〜2024年10月）で検証：固定ルールとしてセットアップは見つけたものの、その後の値動きは通常より良くありませんでした。見るべきチャートを探すために使い、判断はご自身で。",
+  "A trader's top warning (▼) or bottom warning (▲): daily momentum at an extreme, divergence or an M (W) shape, then the 1-hour confluence. For a holder it is a nudge to tighten a stop or take some profit; for the other side, a possible entry. Tested as fixed rules: not followed by better moves than usual on its own.": "あるトレーダーの天井警告（▼）または底警告（▲）：日足モメンタムが極値、ダイバージェンスまたはM（W）型、そして1時間足のコンフルエンス。保有者にはストップを引き上げるか一部利益確定の合図、反対側には候補となるエントリー。固定ルールとして検証：単独では通常より良い値動きは続きませんでした。",
+  "provided": "提供",
+  "The daily Sonar money flow above zero for longs, below it for shorts.": "日足のSonar資金フローがロングではゼロより上、ショートではゼロより下。",
+  "The trend points the same way on at least 2 of the 4-hour, daily and weekly charts.": "4時間足・日足・週足のうち少なくとも2つでトレンドが同じ方向を向いている。",
+  "Stoch RSI or the Sonar wave at the bottom of its range for longs, the top for shorts.": "Stoch RSIまたはSonarウェーブがロングではレンジの下端、ショートでは上端にある。",
+  "A big Sonar dot, the Stoch RSI crossing back from an extreme and a candle closing the same way.": "大きなSonarドット、極値から戻るStoch RSIのクロス、同じ方向で確定したローソク足。",
+  "Divergence on any timeframe, or a W or M shape on the 4-hour chart.": "いずれかの時間足のダイバージェンス、または4時間足のW型・M型。"
 }

@@ -25,6 +25,17 @@ TEMPLATES = [("crypto", "long"), ("crypto", "short"), ("equity", "long"), ("equi
 MARKET_WORDS = {"crypto": mark("Crypto"), "equity": mark("Equities")}
 TF_LABELS = {"15m": "15 minutes", "30m": "30 minutes", "1h": "1 hour", "4h": "4 hours", "12h": "12 hours",
              "1D": "1 day", "1W": "1 week"}
+ABOUT = {
+    "dip": mark("A trader's dip entry (▲) or rally entry (▼): daily money flow, most higher timeframes agreeing, "
+                "4-hour momentum at an extreme against the trend, then the 1-hour confluence of a big Sonar dot, the "
+                "Stoch RSI crossing back and a candle closing the right way. Tested on hourly candles of 30 coins "
+                "(2021 to Oct 2024): as fixed rules it found the setup but was not followed by better moves than "
+                "usual, so use it to find charts to look at, then judge them yourself."),
+    "top": mark("A trader's top warning (▼) or bottom warning (▲): daily momentum at an extreme, divergence or an M "
+                "(W) shape, then the 1-hour confluence. For a holder it is a nudge to tighten a stop or take some "
+                "profit; for the other side, a possible entry. Tested as fixed rules: not followed by better moves "
+                "than usual on its own."),
+}
 NOTE = mark("Candidate means an asset matches your selected conditions. It is not a recommendation to trade.")
 
 # The stages themselves are drawn by funnel_stages_component.py (the Set list as in Prism, the funnel beside it).
@@ -32,8 +43,12 @@ NOTE = mark("Candidate means an asset matches your selected conditions. It is no
 
 # ----------------------------------------------------------------------------------------------- pure helpers
 
-def template(market: str, direction: str) -> dict:
-    t_ = ft.trend_funnel(direction, market)
+KINDS = ("trend", "dip", "top")              # the provided funnels (funnel_templates.PROVIDED_FUNNELS)
+KIND_ICONS = {"trend": "🔻", "dip": "🪜", "top": "⚠️"}
+
+
+def template(market: str, direction: str, kind: str = "trend") -> dict:
+    t_ = ft.provided_funnel(kind, direction, market)
     return {"id": None, "name": t_["name"], "direction": direction, "market": market, "stages": t_["stages"],
             "flicker": True, "alerts": {"in_app": True, "email": False}, "pool": {}, "paused": False}
 
@@ -41,12 +56,14 @@ def template(market: str, direction: str) -> dict:
 def provenance(f: dict, library: dict) -> str:
     """For your own funnels: 'Your copy of a provided funnel' (unchanged), 'Customised' (started from one, changed) or
     'My funnel'. (A provided original itself is shown read-only, as provided Groups and Sets are.)"""
-    made = ft.trend_funnel(f["direction"], f.get("market") or "crypto")
+    kind = ft.kind_of(f["stages"])
+    made = ft.provided_funnel(kind, f["direction"], f.get("market") or "crypto")
     if [s["set_body"] for s in f["stages"]] == [s["set_body"] for s in made["stages"]] and \
             [s["timeframe"] for s in f["stages"]] == [s["timeframe"] for s in made["stages"]]:
         return t("Your copy of a provided funnel")
     keys = [provided_key(s.get("set_source")) for s in f["stages"]]
-    shapes = [tuple(s["timeframe"] for s in made["stages"])] + ft.EARLIER_SHAPES.get(f.get("market") or "crypto", [])
+    shapes = [tuple(s["timeframe"] for s in made["stages"])] + (
+        ft.EARLIER_SHAPES.get(f.get("market") or "crypto", []) if kind == "trend" else [])
     if all(k and k in library and library[k] == s.get("set_body") for k, s in zip(keys, f["stages"])) and \
             tuple(s["timeframe"] for s in f["stages"]) in shapes:
         return t("Your copy of an earlier version of a provided funnel")
@@ -171,22 +188,24 @@ def render(st, supabase, user_id: str) -> None:
     saved_sets = {c["id"]: c for c in configs if c.get("kind") == "set" and str(c.get("owner_id")) == str(user_id)}
 
     nxt = st.session_state.pop("_funnel_edit_next", None)
+    provided = [f"new:{k}" for k in KINDS]
     for k in ("funnel_edit",):                   # the four provided funnels are one choice now (18 Nov 2026)
         old = st.session_state.get(k)
-        if isinstance(old, str) and old.startswith("new:") and old != "new:trend":
+        if isinstance(old, str) and old.startswith("new:") and old not in provided:
             st.session_state[k] = "new:trend"
-    if isinstance(nxt, str) and nxt.startswith("new:") and nxt != "new:trend":
+    if isinstance(nxt, str) and nxt.startswith("new:") and nxt not in provided:
         _m, _d = (nxt.split(":") + ["crypto", "long"])[1:3]
         st.session_state["fe_prov_market"], st.session_state["fe_prov_dir"] = _m, _d
         nxt = "new:trend"
-    keys = [f["id"] for f in funnels] + ["new:trend"]
+    keys = [f["id"] for f in funnels] + provided
     if nxt in keys:
         st.session_state["funnel_edit"] = nxt
     if st.session_state.get("funnel_edit") not in keys:
         st.session_state["funnel_edit"] = keys[0]
     names = {f["id"]: f"{'🪙' if (f.get('market') or 'crypto') == 'crypto' else '🏛️'} {f['name']}"
              + (" (paused)" if f.get("paused") else "") for f in funnels}
-    names["new:trend"] = "🔻 " + t("Trend funnel (provided)")
+    for k in KINDS:
+        names[f"new:{k}"] = f"{KIND_ICONS[k]} {ft.FUNNEL_NAMES[k]} ({t('provided')})"
     pick = st.selectbox(t("Funnel"), keys, format_func=names.get, key="funnel_edit",
                         help=t("Your own funnels first, then the provided ones (marked provided). As with provided "
                              "Groups and Sets, a provided funnel can't be changed or deleted: make your own copy to "
@@ -223,7 +242,7 @@ def render(st, supabase, user_id: str) -> None:
                 f"{'Long' if f['direction'] == 'long' else 'Short'} · *{badge}*"
                 + ("" if badge.startswith("Your copy") else t(" · not reviewed or tested by Angstrom")))
     if badge.startswith("Your copy of an earlier version"):
-        latest = template(market, f["direction"])
+        latest = template(market, f["direction"], ft.kind_of(f["stages"]))
         if st.button(t("⬆ Update to the latest provided version"), key=f"fe_latest_{pick}",
                      help=t("Angstrom's provided funnel has changed since you made your copy (its daily stage reads "
                           "WaveTrend turning back from an extreme; crypto funnels now start with a wider daily-trend "
@@ -561,19 +580,22 @@ def _provided_view(st, supabase, pick: str, funnels: list[dict], library: dict) 
     it does, and Make my own copy."""
     import plans
 
+    kind = pick.split(":")[1] if pick.count(":") == 1 else "trend"
     c1, c2 = st.columns(2)
     market = c1.radio(t("Market"), ["crypto", "equity"], horizontal=True, key="fe_prov_market",
                       format_func=lambda m: t(MARKET_WORDS[m]))
     direction = c2.radio(t("Direction"), ["long", "short"], horizontal=True, key="fe_prov_dir",
                          format_func=lambda d: t("▲ Long") if d == "long" else t("▼ Short"))
-    t_ = template(market, direction)
+    t_ = template(market, direction, kind)
+    if kind in ABOUT:
+        st.caption(t(ABOUT[kind]))
     st.markdown(t("**{market_words_market}** · {fn_direction_icons_direc} {long_if_direction_long_e} · *Provided by Angstrom* · can't be changed or deleted", market_words_market=t(MARKET_WORDS[market]), fn_direction_icons_direc=fn.DIRECTION_ICONS[direction], long_if_direction_long_e='Long' if direction == 'long' else 'Short'))
     st.caption(t('{a_coin_if_market_crypto_} leaves a stage after two No closes in a row. Alerts on new Candidates.',
                  a_coin_if_market_crypto_='A coin' if market == 'crypto' else 'An equity'))
     _readonly_board(st, t_, f"{pick}:{market}:{direction}")
     st.caption(t(NOTE))
     mine = [f for f in funnels if f.get("market") == market and f.get("direction") == direction
-            and provenance(f, library) == "Your copy of a provided funnel"]
+            and ft.kind_of(f["stages"]) == kind and provenance(f, library) == t("Your copy of a provided funnel")]
     if mine:
         st.caption(t('You already have an unchanged copy: **{mine_0_name}**.', mine_0_name=mine[0]['name']))
     limit = own_limit(st)

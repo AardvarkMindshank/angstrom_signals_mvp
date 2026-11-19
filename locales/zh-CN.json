@@ -2095,7 +2095,6 @@
   "WaveTrend, money flow and markers agree across timeframes.": "多个时间周期上WaveTrend、资金流和标记一致。",
   "Account level: {plan}": "账户等级：{plan}",
   "Free during the beta.": "公测期间免费。",
-  "Trend funnel (provided)": "趋势漏斗（提供）",
   "Is the big picture right?": "大方向对吗？",
   "Candidate": "候选",
   "Market": "市场",
@@ -2263,5 +2262,13 @@
   "Amount": "金额",
   "Long": "做多",
   "Short": "做空",
-  "Consolidating": "盘整"
+  "Consolidating": "盘整",
+  "A trader's dip entry (▲) or rally entry (▼): daily money flow, most higher timeframes agreeing, 4-hour momentum at an extreme against the trend, then the 1-hour confluence of a big Sonar dot, the Stoch RSI crossing back and a candle closing the right way. Tested on hourly candles of 30 coins (2021 to Oct 2024): as fixed rules it found the setup but was not followed by better moves than usual, so use it to find charts to look at, then judge them yourself.": "一位交易者的回调买入（▲）或反弹卖出（▼）：日线资金流、多数更高时间框架一致、4 小时动能处于与趋势相反的极端，然后是 1 小时共振：大 Sonar 点、Stoch RSI 回穿、K 线朝正确方向收盘。用 30 个币种的小时 K 线（2021 年至 2024 年 10 月）测试：作为固定规则，它能找到这种形态，但之后的走势并不比平常更好；用它来寻找值得看的图表，再自己判断。",
+  "A trader's top warning (▼) or bottom warning (▲): daily momentum at an extreme, divergence or an M (W) shape, then the 1-hour confluence. For a holder it is a nudge to tighten a stop or take some profit; for the other side, a possible entry. Tested as fixed rules: not followed by better moves than usual on its own.": "一位交易者的顶部预警（▼）或底部预警（▲）：日线动能处于极端、背离或 M（W）形态，然后是 1 小时共振。对持仓者，它提示收紧止损或部分止盈；对另一方，是可能的入场点。作为固定规则测试：单独使用时，之后的走势并不比平常更好。",
+  "provided": "内置",
+  "The daily Sonar money flow above zero for longs, below it for shorts.": "日线 Sonar 资金流做多时高于零，做空时低于零。",
+  "The trend points the same way on at least 2 of the 4-hour, daily and weekly charts.": "在 4 小时、日线和周线图中至少 2 个的趋势方向一致。",
+  "Stoch RSI or the Sonar wave at the bottom of its range for longs, the top for shorts.": "做多时 Stoch RSI 或 Sonar 波浪处于区间底部，做空时处于顶部。",
+  "A big Sonar dot, the Stoch RSI crossing back from an extreme and a candle closing the same way.": "大 Sonar 点、Stoch RSI 从极端回穿，以及同方向收盘的 K 线。",
+  "Divergence on any timeframe, or a W or M shape on the 4-hour chart.": "任一时间框架上的背离，或 4 小时图上的 W 或 M 形态。"
 }

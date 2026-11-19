@@ -12817,7 +12817,7 @@ def _funnel_controls(dyn, market: str = "crypto") -> None:
     with row:
         st.markdown(t("<span style='opacity:.8'>Showing:</span> **{fv_fn_direction_icons_f_} {html_escape_f_name}** · {chip_icon_chip_label_if_} ({dyn_get_count_len_dyn_wa})", fv_fn_direction_icons_f_=fv.fn.DIRECTION_ICONS[f['direction']], html_escape_f_name=html.escape(f['name']), chip_icon_chip_label_if_=chip['icon'] + ' ' + chip['label'] if chip else stage, dyn_get_count_len_dyn_wa=dyn.get('count', len(dyn['watchlist']))), unsafe_allow_html=True)
         _funnel_chart(dyn, market, labels, part="button")
-        latest = ft.trend_funnel(f["direction"], market)
+        latest = ft.provided_funnel(ft.kind_of(f["stages"]), f["direction"], market)
         made_from = [(x.get("set_source") or {}).get("provided") for x in f["stages"]]
         if all(str(k or "").startswith("demo:") for k in made_from) and made_from != [
                 x["set_source"]["provided"] for x in latest["stages"]]:

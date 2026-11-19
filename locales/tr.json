@@ -2095,7 +2095,6 @@
   "WaveTrend, money flow and markers agree across timeframes.": "WaveTrend, para akışı ve işaretler zaman dilimleri arasında uyumlu.",
   "Account level: {plan}": "Hesap düzeyi: {plan}",
   "Free during the beta.": "Beta boyunca ücretsiz.",
-  "Trend funnel (provided)": "Trend hunisi (hazır)",
   "Is the big picture right?": "Büyük resim doğru mu?",
   "Candidate": "Aday",
   "Market": "Piyasa",
@@ -2263,5 +2262,13 @@
   "Amount": "Tutar",
   "Long": "Long",
   "Short": "Short",
-  "Consolidating": "Yatay"
+  "Consolidating": "Yatay",
+  "A trader's dip entry (▲) or rally entry (▼): daily money flow, most higher timeframes agreeing, 4-hour momentum at an extreme against the trend, then the 1-hour confluence of a big Sonar dot, the Stoch RSI crossing back and a candle closing the right way. Tested on hourly candles of 30 coins (2021 to Oct 2024): as fixed rules it found the setup but was not followed by better moves than usual, so use it to find charts to look at, then judge them yourself.": "Bir trader'ın düşüşte giriş (▲) veya yükselişte giriş (▼) yöntemi: günlük para akışı, daha büyük zaman dilimlerinin çoğunun uyumu, trende karşı uçta olan 4 saatlik momentum, ardından 1 saatlik uyum: büyük bir Sonar noktası, geri kesişen Stoch RSI ve doğru yönde kapanan bir mum. 30 coin'in saatlik mumlarıyla test edildi (2021 – Ekim 2024): sabit kural olarak kurulumu buldu ama ardından normalden daha iyi hareketler gelmedi; bakmaya değer grafikleri bulmak için kullanın, kararı kendiniz verin.",
+  "A trader's top warning (▼) or bottom warning (▲): daily momentum at an extreme, divergence or an M (W) shape, then the 1-hour confluence. For a holder it is a nudge to tighten a stop or take some profit; for the other side, a possible entry. Tested as fixed rules: not followed by better moves than usual on its own.": "Bir trader'ın tepe uyarısı (▼) veya dip uyarısı (▲): günlük momentum uçta, uyumsuzluk veya M (W) şekli, ardından 1 saatlik uyum. Pozisyon sahibi için stopu sıkılaştırma veya kârın bir kısmını alma işareti; karşı taraf için olası bir giriş. Sabit kural olarak test edildi: tek başına normalden daha iyi hareketler gelmedi.",
+  "provided": "hazır",
+  "The daily Sonar money flow above zero for longs, below it for shorts.": "Günlük Sonar para akışı long için sıfırın üstünde, short için altında.",
+  "The trend points the same way on at least 2 of the 4-hour, daily and weekly charts.": "Trend; 4 saatlik, günlük ve haftalık grafiklerden en az 2'sinde aynı yönü gösteriyor.",
+  "Stoch RSI or the Sonar wave at the bottom of its range for longs, the top for shorts.": "Stoch RSI veya Sonar dalgası long için aralığının altında, short için üstünde.",
+  "A big Sonar dot, the Stoch RSI crossing back from an extreme and a candle closing the same way.": "Büyük bir Sonar noktası, uçtan geri kesişen Stoch RSI ve aynı yönde kapanan bir mum.",
+  "Divergence on any timeframe, or a W or M shape on the 4-hour chart.": "Herhangi bir zaman diliminde uyumsuzluk veya 4 saatlik grafikte W ya da M şekli."
 }
