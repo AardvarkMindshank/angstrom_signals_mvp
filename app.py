@@ -451,7 +451,7 @@ export default function(component) {
       ".headline-title{flex:1.1;min-width:0;}",
       ".headline-date{width:112px;flex:none;white-space:nowrap;color:var(--ang-soft);}",
       // Phones and narrow screens: the year goes under the day ("Sep 1," / "2026"), so the column is half as wide.
-      "@media (max-width:640px){.headline-head,.headline-row{gap:10px;}.headline-date{width:4rem;white-space:normal;line-height:1.3;}.headline-ai .headline-score,.headline-score{width:3.4rem;}.headline-title{overflow-wrap:anywhere;}}",
+      "@media (max-width:640px){.headline-head,.headline-row{gap:10px;}.headline-date{width:4rem;white-space:normal;line-height:1.3;}.headline-score{width:3.4rem !important;}.headline-title{overflow-wrap:anywhere;}}",
       ".headline-note{flex:1.3;min-width:0;color:var(--ang-soft);font-size:.9rem;line-height:1.35;}",
       ".headline-score{width:76px;flex:none;text-align:right;}",
       ".headline-ai .headline-score{width:6.25rem;white-space:nowrap;}",
