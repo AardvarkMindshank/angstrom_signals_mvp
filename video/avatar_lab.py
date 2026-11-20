@@ -40,7 +40,7 @@ def run_job(job: dict, inputs: Path, out: Path, key: str) -> list[Path]:
     r.raise_for_status()
     q = r.json()
     status_url, response_url = q["status_url"], q["response_url"]
-    for _ in range(240):                                   # up to 20 minutes (video models are slow)
+    for _ in range(480):                                   # up to 40 minutes (video models queue when busy)
         s = requests.get(status_url, headers=head, timeout=60).json()
         if s.get("status") == "COMPLETED":
             break
@@ -109,7 +109,7 @@ def main(spec: str, inputs: str = "lab_in", out: str = "out/avatar_lab") -> int:
     rest = [j for j in jobs if "speak" not in j]
     for stage in sorted({int(j.get("stage", 0)) for j in rest}):
         batch = [j for j in rest if int(j.get("stage", 0)) == stage]
-        with ThreadPoolExecutor(max_workers=8) as pool:
+        with ThreadPoolExecutor(max_workers=12) as pool:
             failed += sum(pool.map(one, batch))
     return 1 if failed == len(jobs) else 0
 
