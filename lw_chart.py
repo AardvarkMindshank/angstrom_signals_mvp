@@ -358,9 +358,18 @@ def sonar_band(df: pd.DataFrame, dark: bool = False) -> list[dict]:
     return out
 
 
+FORMING_ALPHA = 0.4          # a marker on the candle still forming: faded until it closes
+
+
+def _faded(colour: str, alpha: float = FORMING_ALPHA) -> str:
+    c = colour.lstrip("#")
+    return f"rgba({int(c[0:2], 16)},{int(c[2:4], 16)},{int(c[4:6], 16)},{alpha})" if len(c) == 6 else colour
+
+
 def sonar_symbols(df: pd.DataFrame, chosen=None) -> list[list]:
-    """[candle index, shape, colour, above, size, words] for each marker printed, closed candles only. A blood
-    diamond stands for its own red diamond and red cross."""
+    """[candle index, shape, colour, above, size, words] for each marker printed. A blood diamond stands for its own
+    red diamond and red cross. A marker on the candle still forming shows faded, with a note that it may change
+    until the candle closes (as live charting tools show them; 20 Nov 2026), and firms up at the close."""
     keys = [k for k in (chosen if chosen is not None else SONAR_DEFAULT) if k in SONAR_MARKS]
     forming = df["forming"].fillna(False).astype(bool).tolist() if "forming" in df.columns else [False] * len(df)
     blood = df["sm_blood_diamond"].fillna(False).astype(bool).tolist() if "sm_blood_diamond" in df.columns else []
@@ -371,11 +380,16 @@ def sonar_symbols(df: pd.DataFrame, chosen=None) -> list[list]:
             continue
         shape, colour, above, size, words = SONAR_MARKS[key]
         for i, hit in enumerate(df[col].fillna(False).astype(bool).tolist()):
-            if not hit or forming[i]:
+            if not hit:
                 continue
             if key in ("red_diamond", "red_cross") and blood and blood[i] and "blood_diamond" in keys:
                 continue
-            out.append([i, shape, colour, above, size, words])
+            if forming[i]:
+                out.append([i, shape, _faded(colour), above, size,
+                            words + " " + t("(The candle is still forming: this marker may change or disappear "
+                                            "until it closes.)")])
+            else:
+                out.append([i, shape, colour, above, size, words])
     return out
 
 

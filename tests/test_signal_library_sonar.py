@@ -168,3 +168,13 @@ def test_strip_draws_build_up_only_when_asked():
     assert "mc_build_r" not in ids
     ids = [s["id"] for s in lw_chart.cipher_series(df, 1, buildup=True)]
     assert ids.index("mc_build_r") < ids.index("mc_sell")        # under the big dots
+
+
+def test_markers_on_the_forming_candle_show_faded_with_a_note():
+    import lw_chart
+
+    df = pd.DataFrame({"sm_trend_turn_up": [False, True, True], "forming": [False, False, True]})
+    out = lw_chart.sonar_symbols(df, ["trend_turn_up"])
+    assert [o[0] for o in out] == [1, 2]
+    assert out[0][2].startswith("#") and out[1][2].startswith("rgba(") and out[1][2].endswith(",0.4)")
+    assert "still forming" in out[1][5] and "still forming" not in out[0][5]
