@@ -15,6 +15,9 @@ on:
         description: "Set up the free Kokoro voice (for specs with speak jobs)"
         type: boolean
         default: false
+      recover:
+        description: "Fetch clips fal already made instead of making new ones: '<start>,<end>' in UTC (blank: make)"
+        default: ""
 permissions:
   contents: write
 jobs:
@@ -53,17 +56,23 @@ jobs:
       - name: Make
         env:
           FAL_KEY: ${{ secrets.FAL_KEY }}
+          RECOVER: ${{ inputs.recover }}
         run: python video/avatar_lab.py "video/avatar_lab/${{ inputs.spec }}" lab_in out/avatar_lab
       - name: Keep (encrypted when the lab key is set)
         if: always()
         env:
           LAB_KEY: ${{ secrets.AVATAR_LAB_KEY }}
         run: |
-          stamp="$(date -u +%Y-%m-%d_%H%M)"
+          stamp="$(date -u +%Y-%m-%d_%H%M)_r${GITHUB_RUN_ID}"
           if [ -n "$LAB_KEY" ]; then
             mkdir -p out/avatar_lab_enc
             tar -C out -czf lab.tgz avatar_lab
             openssl enc -aes-256-cbc -pbkdf2 -salt -in lab.tgz -out out/avatar_lab_enc/lab.tgz.enc -pass env:LAB_KEY
+            # GitHub refuses files over 100 MB: big batches are kept in 90 MB parts (join them with cat to decrypt).
+            if [ "$(stat -c %s out/avatar_lab_enc/lab.tgz.enc)" -gt 94371840 ]; then
+              split -b 90m -d out/avatar_lab_enc/lab.tgz.enc out/avatar_lab_enc/lab.tgz.enc.part-
+              rm out/avatar_lab_enc/lab.tgz.enc
+            fi
             bash .github/scripts/save_to_reports.sh "avatar_lab/$stamp" out/avatar_lab_enc
           else
             bash .github/scripts/save_to_reports.sh "avatar_lab/$stamp" out/avatar_lab

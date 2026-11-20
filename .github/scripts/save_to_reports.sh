@@ -27,7 +27,18 @@ if git diff --cached --quiet; then echo "Nothing new to save."; exit 0; fi
 git commit -qm "Results: $dest"
 for attempt in 1 2 3; do
   if git push -q origin HEAD:reports; then echo "Saved to reports/$dest"; exit 0; fi
-  git fetch -q origin reports && git rebase -q FETCH_HEAD || true
+  # Start again on top of the newest reports branch (a failed rebase must never leave a half-done copy that
+  # "pushes" nothing and still reports success).
+  git rebase --abort >/dev/null 2>&1 || true
+  git fetch -q origin reports
+  git reset -q --hard FETCH_HEAD
+  mkdir -p "$dest"
+  for item in "$@"; do
+    if [ -e "$OLDPWD/$item" ]; then cp -r "$OLDPWD/$item" "$dest/"; elif [ -e "$item" ]; then cp -r "$item" "$dest/"; fi
+  done
+  git add -A
+  git diff --cached --quiet && { echo "Nothing new to save."; exit 0; }
+  git commit -qm "Results: $dest"
 done
 echo "Could not push the results." >&2
 exit 1

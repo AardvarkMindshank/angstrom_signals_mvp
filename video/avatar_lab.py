@@ -89,6 +89,72 @@ def speak_job(job: dict, out: Path) -> list[Path]:
     return [path]
 
 
+def _bytes_of(value: str) -> bytes:
+    if value.startswith("data:"):
+        return base64.b64decode(value.split(",", 1)[1])
+    return requests.get(value, timeout=120).content
+
+
+def _seconds(wav: bytes) -> float:
+    import io
+    import wave
+    with wave.open(io.BytesIO(wav)) as wf:
+        return wf.getnframes() / wf.getframerate()
+
+
+def recover(jobs: list, inputs: Path, outdir: Path, key: str, window: str) -> int:
+    """Fetch clips fal already made (and were paid for) but that were lost on the way back: lists that model's
+    successful requests in the window "<start>,<end>" (UTC) and matches each to a job by its voice line's length and
+    its picture. Needs the voice lines made first (free). Nothing new is made on fal."""
+    import hashlib
+    start, end = window.split(",")
+    head = {"Authorization": f"Key {key}"}
+    want = {}
+    for j in jobs:
+        if "speak" in j or "audio_url" not in j.get("input", {}):
+            continue
+        a, im = j["input"]["audio_url"], j["input"]["image_url"]
+        wav = (outdir / a[4:]).read_bytes() if a.startswith("out:") else (inputs / a[5:]).read_bytes()
+        pic = (outdir / im[4:]) if im.startswith("out:") else (inputs / im[5:])
+        want[j["id"]] = (j["model"], round(_seconds(wav), 2), hashlib.sha256(pic.read_bytes()).hexdigest())
+    found = 0
+    for model in sorted({m for m, _, _ in want.values()}):
+        cursor, items = None, []
+        while True:
+            q = {"endpoint_id": model, "start": start, "end": end, "status": "success", "expand": "payloads", "limit": 100}
+            if cursor:
+                q["cursor"] = cursor
+            r = requests.get("https://api.fal.ai/v1/models/requests/by-endpoint", headers=head, params=q, timeout=300)
+            _check(r)
+            body = r.json()
+            items += body.get("items") or []
+            cursor = body.get("next_cursor")
+            if not cursor:
+                break
+        print(f"{model}: {len(items)} finished request(s) in the window", flush=True)
+        for it in items:
+            inp, res = it.get("json_input") or {}, it.get("json_output") or {}
+            if not (res.get("video") and inp.get("audio_url") and inp.get("image_url")):
+                continue
+            try:
+                secs = round(_seconds(_bytes_of(inp["audio_url"])), 2)
+                pic = hashlib.sha256(_bytes_of(inp["image_url"])).hexdigest()
+            except Exception:
+                continue
+            hits = [i for i, (m, s_, h) in want.items() if m == model and abs(s_ - secs) <= 0.01 and h == pic]
+            if not hits:
+                hits = [i for i, (m, s_, _h) in want.items() if m == model and abs(s_ - secs) <= 0.01]
+            if len(hits) != 1:
+                continue
+            path = outdir / f"{hits[0]}_1.mp4"
+            if not path.exists():
+                path.write_bytes(requests.get(res["video"]["url"], timeout=300).content)
+                found += 1
+                print(f"{hits[0]}: recovered", flush=True)
+    print(f"Recovered {found} of {len(want)} clip(s).", flush=True)
+    return 0 if found else 1
+
+
 def main(spec: str, inputs: str = "lab_in", out: str = "out/avatar_lab") -> int:
     key = os.environ["FAL_KEY"]
     jobs = json.loads(Path(spec).read_text())["jobs"]
@@ -112,6 +178,8 @@ def main(spec: str, inputs: str = "lab_in", out: str = "out/avatar_lab") -> int:
     speak = [j for j in jobs if "speak" in j]
     for job in speak:
         failed += one(job)
+    if os.environ.get("RECOVER"):
+        return recover(jobs, Path(inputs), outdir, key, os.environ["RECOVER"])
     rest = [j for j in jobs if "speak" not in j]
     for stage in sorted({int(j.get("stage", 0)) for j in rest}):
         batch = [j for j in rest if int(j.get("stage", 0)) == stage]
