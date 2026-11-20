@@ -1129,8 +1129,8 @@ THEME_MODES = {"day": "Light", "night": "Dark", "auto": "System"}
 _THEME_MODE_JS = """
 export default function(component) {
   const { data, parentElement } = component;
-  const shell = parentElement.closest(".stBidiComponent") || parentElement;
-  shell.style.display = "none";
+  const shell = parentElement && parentElement.closest ? (parentElement.closest(".stBidiComponent") || parentElement) : null;
+  if (shell && shell.style) shell.style.display = "none";
   const wanted = (data || {}).theme;
   if (!["Light", "Dark", "System"].includes(wanted)) return;
   try {
@@ -1145,7 +1145,7 @@ export default function(component) {
   } catch (e) {}
 }
 """
-_theme_mode = st.components.v2.component("theme_mode", js=_THEME_MODE_JS)
+_theme_mode = st.components.v2.component("theme_mode", js=_THEME_MODE_JS, isolate_styles=False)
 _SCORE_TABLE_JS = """
 export default function(component) {
   const { data, setTriggerValue, parentElement } = component;
