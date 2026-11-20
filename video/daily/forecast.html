@@ -97,60 +97,81 @@ function capCaption(seg) {
     signoff: ["Fair winds", "and following seas"] };
   const [k, s] = titles[seg.kind] || ["", ""];
   const icon = seg.kind === "weather" ? `<div class="it" style="font-size:${P ? 120 : 130}px;line-height:1.1">${d.weather_icon}</div>` : "";
-  return icon + `<div class="it kicker" style="font-size:${P ? 104 : 120}px">${k}</div><div class="it sub" style="font-size:${P ? 40 : 42}px;margin-top:22px">${s}</div>`;
+  return icon + `<div class="it kicker" style="font-size:${P ? 112 : 120}px">${k}</div><div class="it sub" style="font-size:${P ? 54 : 46}px;margin-top:22px">${s}</div>`;
 }
+
+// Sizes: z(wide, tall). The tall (phone) layout stacks everything full width with big type (feedback 20 Nov 2026):
+// nothing under about 40px on a 1080-wide frame.
+const z = (land, port) => (P ? port : land);
+function chgText(c) { return c.pts ? (c.change >= 0 ? "+" : "−") + Math.abs(c.change ?? 0).toFixed(1) + " pts" : pct(c.change); }
+function num(v) { return v == null ? "" : v >= 100 ? Math.round(v).toLocaleString("en-US") : v.toFixed(2); }
 
 function narrContent(seg) {
   const d = S.data;
+  const up = (v) => ((v ?? 0) >= 0 ? "#34d399" : "#f87171");
   if (seg.kind === "date") {
-    return `<div class="it" style="font-size:${P ? 110 : 120}px">${d.weather_icon}</div>
-      <div class="it kicker" style="font-size:${P ? 92 : 104}px;margin-top:10px">${esc(d.date)}</div>
-      <div class="it sub" style="font-size:${P ? 54 : 58}px;margin-top:28px;font-weight:700;color:#fff">${esc(d.headline)}</div>`;
+    return `<div class="it" style="font-size:${z(120, 150)}px">${d.weather_icon}</div>
+      <div class="it kicker" style="font-size:${z(104, 112)}px;margin-top:10px">${esc(d.date)}</div>
+      <div class="it sub" style="font-size:${z(58, 70)}px;margin-top:34px;font-weight:700;color:#fff">${esc(d.headline)}</div>`;
   }
   if (seg.kind === "tides") {
     const arrow = d.tide.state === "out" ? "↘" : d.tide.state === "in" ? "↗" : "↔";
     const word = d.tide.state === "out" ? "Going out" : d.tide.state === "in" ? "Coming in" : "Turning";
-    const tiles = d.currents.map((c) => `<div class="it card tile"><div class="n">${esc(c.name)}</div>
-      <div class="v">${c.value == null ? "" : (c.value >= 100 ? Math.round(c.value).toLocaleString("en-US") : c.value.toFixed(2))}</div>
-      <div class="chg ${cls(c.change, c.inverse)}" style="font-size:30px;margin-top:4px">${c.pts ? (c.change >= 0 ? "+" : "−") + Math.abs(c.change ?? 0).toFixed(1) + " pts" : pct(c.change)} · 7 days</div></div>`).join("");
-    return `<div class="it card" style="padding:34px 40px;display:flex;align-items:center;gap:34px">
-        <div style="font-size:120px;line-height:1;color:${d.tide.state === "out" ? "var(--down)" : "var(--up)"}">${arrow}</div>
-        <div><div class="kicker" style="font-size:78px">Tide ${word}</div>
-        <div class="sub" style="font-size:36px;margin-top:10px">${d.tide.days ? `For ${d.tide.days} trading days · ` : ""}Sea ${esc(d.tide.sea)}</div></div></div>
-      <div class="grid" style="grid-template-columns:repeat(${P ? 2 : 4},1fr);margin-top:28px">${tiles}</div>`;
+    const head = `<div class="it card" style="padding:${z("34px 40px", "40px 44px")};display:flex;align-items:center;gap:34px">
+        <div style="font-size:${z(120, 150)}px;line-height:1;color:${d.tide.state === "out" ? "var(--down)" : "var(--up)"}">${arrow}</div>
+        <div><div class="kicker" style="font-size:${z(78, 92)}px">Tide ${word}</div>
+        <div class="sub" style="font-size:${z(36, 46)}px;margin-top:12px">${d.tide.days ? `For ${d.tide.days} trading days · ` : ""}Sea ${esc(d.tide.sea)}</div></div></div>`;
+    if (P) {
+      const rows = d.currents.map((c) => `<div class="it card" style="padding:28px 40px;display:flex;align-items:center;justify-content:space-between">
+          <div style="font-size:48px;font-weight:700;color:#dbe4f3">${esc(c.name)}</div>
+          <div style="text-align:right"><div style="font-size:72px;font-weight:800;line-height:1">${num(c.value)}</div>
+          <div class="chg ${cls(c.change, c.inverse)}" style="font-size:44px;margin-top:6px">${chgText(c)} <span style="color:var(--soft);font-weight:600">· 7d</span></div></div></div>`).join("");
+      return head + `<div class="grid" style="margin-top:34px;gap:22px">${rows}</div>`;
+    }
+    const tiles = d.currents.map((c) => `<div class="it card tile"><div class="n" style="font-size:30px">${esc(c.name)}</div>
+      <div class="v" style="font-size:56px">${num(c.value)}</div>
+      <div class="chg ${cls(c.change, c.inverse)}" style="font-size:34px;margin-top:4px">${chgText(c)} · 7 days</div></div>`).join("");
+    return head + `<div class="grid" style="grid-template-columns:repeat(4,1fr);margin-top:28px">${tiles}</div>`;
   }
   if (seg.kind === "equities") {
-    const tiles = d.stocks.map((s) => `<div class="it card tile" style="display:flex;justify-content:space-between;align-items:center;gap:20px">
-      <div><div class="n" style="font-size:34px;color:#fff;font-weight:800">${esc(s.name)}</div>
-      <div class="chg ${cls(s.change_1d)}" style="font-size:56px;margin-top:8px">${pct(s.change_1d)}</div>
-      <div class="sub" style="font-size:28px">${pct(s.change_7d)} over 7 days</div></div>
-      ${spark(s.spark, P ? 360 : 420, 150, (s.change_7d ?? 0) >= 0 ? "#34d399" : "#f87171")}</div>`).join("");
-    return `<div style="display:flex;flex-direction:${P ? "column" : "row"};gap:30px;align-items:${P ? "stretch" : "center"}">
-      <div class="it card" style="padding:26px 34px;text-align:center"><div class="n" style="font-size:30px;color:var(--soft);font-weight:700">Stock-market mood</div>${gauge(d.stock_mood, P ? 520 : 460)}</div>
-      <div class="grid" style="flex:1">${tiles}</div></div>`;
+    const tiles = d.stocks.map((s) => `<div class="it card tile" style="display:flex;justify-content:space-between;align-items:center;gap:20px;padding:${z("26px 30px", "32px 40px")}">
+      <div><div style="font-size:${z(38, 54)}px;font-weight:800">${esc(s.name)}</div>
+      <div class="chg ${cls(s.change_1d)}" style="font-size:${z(64, 96)}px;margin-top:6px;line-height:1.05">${pct(s.change_1d)}</div>
+      <div class="sub" style="font-size:${z(32, 42)}px;margin-top:6px">${pct(s.change_7d)} · 7 days</div></div>
+      ${spark(s.spark, z(420, 380), z(150, 190), up(s.change_7d))}</div>`).join("");
+    return `<div style="display:flex;flex-direction:${z("row", "column")};gap:${z(30, 34)}px;align-items:${z("center", "stretch")}">
+      <div class="it card" style="padding:${z("26px 34px", "30px 34px 20px")};text-align:center"><div style="font-size:${z(34, 46)}px;color:var(--soft);font-weight:700">Stock-market mood</div>${gauge(d.stock_mood, z(460, 760))}</div>
+      <div class="grid" style="flex:1;gap:${z(24, 30)}px">${tiles}</div></div>`;
   }
   if (seg.kind === "crypto") {
-    const rows = d.coins.map((c) => `<div class="it card row"><div class="name">${esc(c.name)}</div>
-      <div class="price">${money(c.price)}</div><div class="chg ${cls(c.change_1d)}">${pct(c.change_1d)}</div>
-      ${spark(c.spark, P ? 180 : 300, 60, (c.change_7d ?? 0) >= 0 ? "#34d399" : "#f87171")}</div>`).join("");
-    return `<div style="display:flex;flex-direction:${P ? "column" : "row"};gap:30px;align-items:${P ? "stretch" : "center"}">
-      <div class="it card" style="padding:26px 34px;text-align:center"><div class="n" style="font-size:30px;color:var(--soft);font-weight:700">Crypto mood</div>${gauge(d.crypto_mood, P ? 520 : 440)}</div>
-      <div class="grid" style="gap:14px;flex:1">${rows}</div></div>`;
+    const rows = d.coins.map((c) => P
+      ? `<div class="it card" style="display:flex;align-items:center;gap:22px;padding:22px 34px">
+          <div style="flex:1"><div style="font-size:50px;font-weight:800;line-height:1.1">${esc(c.name)}</div>
+          <div style="font-size:42px;color:#e2e8f0;margin-top:2px">${money(c.price)}</div></div>
+          <div class="chg ${cls(c.change_1d)}" style="font-size:52px;width:220px;text-align:right">${pct(c.change_1d)}</div>
+          ${spark(c.spark, 200, 80, up(c.change_7d))}</div>`
+      : `<div class="it card row"><div class="name" style="font-size:38px;width:200px">${esc(c.name)}</div>
+          <div class="price" style="font-size:36px;width:220px;text-align:left">${money(c.price)}</div>
+          <div class="chg ${cls(c.change_1d)}" style="font-size:36px;width:160px">${pct(c.change_1d)}</div>
+          ${spark(c.spark, 300, 60, up(c.change_7d))}</div>`).join("");
+    return `<div style="display:flex;flex-direction:${z("row", "column")};gap:${z(30, 28)}px;align-items:${z("center", "stretch")}">
+      <div class="it card" style="padding:${z("26px 34px", "26px 34px 14px")};text-align:center"><div style="font-size:${z(34, 46)}px;color:var(--soft);font-weight:700">Crypto mood</div>${gauge(d.crypto_mood, z(440, 640))}</div>
+      <div class="grid" style="gap:${z(14, 18)}px;flex:1">${rows}</div></div>`;
   }
   if (seg.kind === "horizon") {
     const cards = (d.events.length ? d.events : [{ what: "A quiet week", when: "", why: "No big scheduled releases." }]).map((e) =>
-      `<div class="it card" style="padding:30px 36px"><div style="font-size:30px;color:var(--amber);font-weight:800">📅 ${esc(e.when)}${e.when ? " UTC" : ""}</div>
-       <div style="font-size:52px;font-weight:800;margin-top:8px">${esc(e.what)}</div>
-       <div class="sub" style="font-size:30px;margin-top:8px">${esc(e.why || "")}</div></div>`).join("");
-    return `<div class="it kicker" style="font-size:${P ? 90 : 96}px;margin-bottom:30px">On the horizon</div><div class="grid">${cards}</div>`;
+      `<div class="it card" style="padding:${z("30px 36px", "40px 44px")}"><div style="font-size:${z(36, 46)}px;color:var(--amber);font-weight:800">📅 ${esc(e.when)}${e.when ? " UTC" : ""}</div>
+       <div style="font-size:${z(60, 84)}px;font-weight:800;margin-top:12px;line-height:1.05">${esc(e.what)}</div>
+       <div class="sub" style="font-size:${z(36, 46)}px;margin-top:16px">${esc(e.why || "")}</div></div>`).join("");
+    return `<div class="it kicker" style="font-size:${z(96, 120)}px;margin-bottom:36px">On the horizon</div><div class="grid" style="gap:28px">${cards}</div>`;
   }
   if (seg.kind === "close") {
-    const b = d.brand.show ? `<div class="it" style="font-size:72px;font-weight:900;margin-top:40px">${esc(d.brand.name)}</div>
-      <div class="it sub" style="font-size:34px;margin-top:6px">${esc(d.brand.domain)}</div>` : "";
-    return `<div style="text-align:center"><div class="it" style="font-size:110px">⚓</div>
-      <div class="it kicker" style="font-size:${P ? 86 : 96}px;margin-top:16px">Your daily<br>market briefing</div>
-      <div class="it sub" style="font-size:44px;margin-top:22px">${esc(d.date)}</div>${b}
-      <div class="it sub" style="font-size:28px;margin-top:40px;color:var(--soft)">Readings describe markets. Not financial advice.</div></div>`;
+    const b = d.brand.show ? `<div class="it" style="font-size:${z(72, 84)}px;font-weight:900;margin-top:40px">${esc(d.brand.name)}</div>
+      <div class="it sub" style="font-size:${z(36, 46)}px;margin-top:6px">${esc(d.brand.domain)}</div>` : "";
+    return `<div style="text-align:center"><div class="it" style="font-size:${z(110, 150)}px">⚓</div>
+      <div class="it kicker" style="font-size:${z(96, 116)}px;margin-top:16px">Your daily<br>market briefing</div>
+      <div class="it sub" style="font-size:${z(48, 60)}px;margin-top:26px">${esc(d.date)}</div>${b}
+      <div class="it sub" style="font-size:${z(32, 42)}px;margin-top:50px;color:#cbd5e1">Readings describe markets.<br>Not financial advice.</div></div>`;
   }
   return "";
 }
@@ -163,6 +184,8 @@ window.setup = function (spec) {
   const m = MOODS[spec.data.weather] || MOODS.changeable;
   $("bg").style.background = `radial-gradient(1100px 800px at 30% 15%, ${m[2]}, transparent 60%), radial-gradient(1000px 900px at 85% 90%, rgba(37,99,235,.3), transparent 60%), linear-gradient(160deg, ${m[0]} 0%, ${m[1]} 100%)`;
   $("topdate").textContent = spec.data.date;
+  if (P) { $("top").style.fontSize = "36px"; $("top").style.left = "44px"; $("foot").style.fontSize = "30px"; $("foot").style.right = "44px"; $("foot").style.bottom = "34px"; }
+  else { $("foot").style.fontSize = "24px"; }
   $("topw").textContent = spec.data.weather_icon + " " + spec.data.weather_word;
   const [bx, by, bw, bh] = spec.box;
   const holder = $("segs");
