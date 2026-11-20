@@ -1,0 +1,82 @@
+# 🎬 The daily forecast video (daily_video.py): about 90 seconds, 16:9 and 9:16, from the Morning forecast's facts,
+# with the 3D captain's clip library (encrypted on the reports branch) and the weather music. Run by hand for now;
+# the result is saved encrypted (AVATAR_LAB_KEY) until publishing is agreed.
+name: daily-video
+on:
+  workflow_dispatch:
+    inputs:
+      edition:
+        description: "east (after the US close) or west"
+        default: east
+permissions:
+  contents: write
+concurrency:
+  group: daily-video
+jobs:
+  video:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      LAB_KEY: ${{ secrets.AVATAR_LAB_KEY }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        timeout-minutes: 25
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install kokoro-onnx
+          need=""
+          command -v ffmpeg >/dev/null || need="$need ffmpeg"
+          fc-list | grep -qi "Inter" || need="$need fonts-inter"
+          fc-list | grep -qi "Noto Color Emoji" || need="$need fonts-noto-color-emoji"
+          if [ -n "$need" ]; then
+            sudo apt-get -o Acquire::Retries=3 update -q
+            sudo apt-get -o Acquire::Retries=3 install -y -q --no-install-recommends $need
+          fi
+          npm install --no-save --silent playwright@1.63.0 && npx playwright install --with-deps chromium > /dev/null
+      - name: Voice model (cached)
+        id: voice
+        uses: actions/cache@v4
+        with:
+          path: out/video/voice_model
+          key: kokoro-model-files-v1.0
+      - name: Voice model (download when not cached)
+        if: steps.voice.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p out/video/voice_model
+          kokoro=https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0
+          for f in kokoro-v1.0.onnx voices-v1.0.bin; do
+            curl -sSfL --retry 12 --retry-delay 30 --retry-all-errors -o out/video/voice_model/$f $kokoro/$f
+          done
+      - name: Captain clips and music
+        run: |
+          [ -n "$LAB_KEY" ] || { echo "AVATAR_LAB_KEY is not set"; exit 1; }
+          git fetch -q origin reports
+          git show origin/reports:avatar_lab/library_captain/lab.tgz.enc > lib.enc
+          openssl enc -d -aes-256-cbc -pbkdf2 -in lib.enc -out lib.tgz -pass env:LAB_KEY
+          mkdir -p lib && tar -xzf lib.tgz -C lib && rm -f lib.enc lib.tgz
+          mkdir -p music
+          for f in 1-Sunshine 2-Springtime 3-Cloudy 4-Rainy 5-Stormy; do
+            git show "origin/reports:drive/1EKuY0a0mL0hsCwO98ok-K0t_Yh-L_hsm/drive/$f.mp3" > "music/$f.mp3"
+          done
+      - name: Make the video
+        run: NODE_PATH="$PWD/node_modules" python daily_video.py --library lib/avatar_lab --music music --out out/daily_video --edition "${{ inputs.edition }}"
+      - name: Keep (encrypted)
+        if: always()
+        run: |
+          rm -rf lib
+          [ -d out/daily_video ] || exit 0
+          mkdir -p out/daily_video_enc
+          tar -C out/daily_video -czf dv.tgz --exclude=work .
+          openssl enc -aes-256-cbc -pbkdf2 -salt -in dv.tgz -out out/daily_video_enc/video.tgz.enc -pass env:LAB_KEY
+          bash .github/scripts/save_to_reports.sh "daily_video/$(date -u +%Y-%m-%d_%H%M)" out/daily_video_enc

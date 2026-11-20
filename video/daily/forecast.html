@@ -1,0 +1,220 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<!-- 🎬 The daily forecast video's graphics (daily_video.py): setup(spec) once, then render(t) for any moment, so
+     every frame is exact. The captain clips are laid over the framed box afterwards by ffmpeg. -->
+<style>
+  :root { --teal:#2dd4bf; --amber:#f5a524; --up:#34d399; --down:#f87171; --ink:#f8fafc; --soft:#a5b4cc; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body { overflow:hidden; background:#04102a; font-family:"Inter Display","Inter",sans-serif; color:var(--ink); }
+  #stage { position:absolute; left:0; top:0; overflow:hidden; }
+  #bg { position:absolute; inset:-200px; }
+  #grid { position:absolute; inset:0; opacity:.08; background-image:linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),
+          linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px); background-size:80px 80px; }
+  svg#waves { position:absolute; left:0; bottom:0; width:100%; height:380px; }
+  .seg { position:absolute; inset:0; will-change:transform,opacity; }
+  .it { will-change:transform,opacity; }
+  #top { position:absolute; left:56px; top:40px; display:flex; gap:14px; align-items:center; font-weight:700; font-size:26px; color:#dbe4f3; }
+  #top .pill { padding:8px 18px; border-radius:999px; background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.2); }
+  #foot { position:absolute; right:40px; bottom:24px; font-size:20px; color:rgba(255,255,255,.55); }
+  .frame { position:absolute; border-radius:38px; box-shadow:0 0 0 3px rgba(45,212,191,.55), 0 30px 80px rgba(0,0,0,.55), 0 0 60px rgba(45,212,191,.25); background:#0b1f45; }
+  .cap { position:absolute; display:flex; flex-direction:column; justify-content:center; }
+  .kicker { font-weight:900; text-transform:uppercase; letter-spacing:-2px; line-height:.95;
+            background:linear-gradient(90deg,#fff 0%,#c7f9f1 55%,#2dd4bf 100%); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .sub { font-weight:500; color:#dbe4f3; line-height:1.25; }
+  .card { background:rgba(8,20,48,.78); border:1px solid rgba(255,255,255,.16); border-radius:28px; box-shadow:0 24px 60px rgba(0,0,0,.4); }
+  .tile { padding:26px 30px; }
+  .tile .n { font-size:26px; color:var(--soft); font-weight:600; }
+  .tile .v { font-size:48px; font-weight:800; margin-top:6px; }
+  .chg { font-weight:800; }
+  .chg.up { color:var(--up); } .chg.down { color:var(--down); }
+  .row { display:flex; align-items:center; gap:24px; padding:18px 28px; }
+  .row .name { font-weight:700; font-size:34px; width:220px; }
+  .row .price { font-size:32px; color:#e2e8f0; width:240px; text-align:right; }
+  .row .chg { font-size:32px; width:150px; text-align:right; }
+  .grid { display:grid; gap:24px; }
+</style></head>
+<body><div id="stage"><div id="bg"></div><div id="grid"></div>
+<svg id="waves" viewBox="0 0 1920 380" preserveAspectRatio="none">
+  <defs>
+    <linearGradient id="w1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2dd4bf" stop-opacity=".45"/><stop offset="1" stop-color="#0b2d72" stop-opacity="0"/></linearGradient>
+    <linearGradient id="w2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#60a5fa" stop-opacity=".38"/><stop offset="1" stop-color="#0b2d72" stop-opacity="0"/></linearGradient>
+  </defs>
+  <path id="p2" fill="url(#w2)"/><path id="p1" fill="url(#w1)"/>
+</svg>
+<div id="segs"></div>
+<div id="top"><span class="pill" id="topdate"></span><span id="topw"></span></div>
+<div id="foot">Readings describe markets. Not financial advice.</div>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const clamp = (x) => Math.max(0, Math.min(1, x));
+const outC = (x) => 1 - Math.pow(1 - x, 3);
+const inC = (x) => x * x * x;
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+let S = null, W = 1920, H = 1080, P = false;     // spec, size, portrait?
+
+const MOODS = { sunny: ["#0b3a7a", "#1d6fb8", "rgba(250,204,21,.25)"], fair: ["#0a2a63", "#155e9f", "rgba(45,212,191,.22)"],
+  changeable: ["#08214f", "#0f3f80", "rgba(148,163,184,.22)"], rough: ["#061a40", "#0b2d5c", "rgba(100,116,139,.25)"],
+  stormy: ["#040d24", "#0a1c3d", "rgba(239,68,68,.18)"] };
+
+function pct(v, d = 1) { return v == null ? "–" : (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(d) + "%"; }
+function cls(v) { return v == null ? "" : v >= 0 ? "up" : "down"; }
+function money(v) {
+  if (v == null) return "";
+  if (v >= 1000) return "$" + Math.round(v).toLocaleString("en-US");
+  if (v >= 1) return "$" + v.toFixed(2);
+  return "$" + v.toFixed(4);
+}
+function spark(vals, w, h, colour) {
+  if (!vals || vals.length < 2) return "";
+  const lo = Math.min(...vals), hi = Math.max(...vals), span = hi - lo || 1;
+  const pts = vals.map((v, i) => `${(i / (vals.length - 1) * w).toFixed(1)},${(h - (v - lo) / span * h).toFixed(1)}`).join(" ");
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><polyline points="${pts}" fill="none" stroke="${colour}" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+}
+let GID = 0;
+function gauge(score, size) {
+  const gid = "g" + (++GID);
+  if (score == null) return "";
+  const a = Math.PI * (1 - clamp(score / 100)), r = size * 0.42, cx = size / 2, cy = size * 0.55;
+  const x = cx + r * Math.cos(a), y = cy - r * Math.sin(a);
+  const word = score < 35 ? "Fearful" : score < 45 ? "Cautious" : score < 55 ? "Neutral" : score < 65 ? "Confident" : "Greedy";
+  return `<svg width="${size}" height="${size * 0.68}" viewBox="0 0 ${size} ${size * 0.68}">
+    <defs><linearGradient id="${gid}" x1="0" x2="1"><stop offset="0" stop-color="#f87171"/><stop offset=".5" stop-color="#facc15"/><stop offset="1" stop-color="#34d399"/></linearGradient></defs>
+    <path d="M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}" fill="none" stroke="url(#${gid})" stroke-width="${size * 0.07}" stroke-linecap="round"/>
+    <line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#fff" stroke-width="${size * 0.025}" stroke-linecap="round"/>
+    <circle cx="${cx}" cy="${cy}" r="${size * 0.035}" fill="#fff"/>
+    <text x="${cx}" y="${cy + size * 0.13}" text-anchor="middle" font-size="${size * 0.11}" font-weight="800" fill="#fff">${Math.round(score)} · ${word}</text></svg>`;
+}
+
+// ---- each segment's content (absolute positions differ by shape)
+function capCaption(seg) {
+  const d = S.data;
+  const tideWord = d.tide.state === "out" ? "Tide going out" : d.tide.state === "in" ? "Tide coming in" : "Tide turning";
+  const titles = { welcome: ["Morning<br>forecast", d.date], weather: [esc(d.weather_word), `${tideWord} · Sea ${esc(d.tide.sea)}`],
+    sign_tides: ["The tide &amp;<br>currents", "The big picture"], sign_equities: ["Equity<br>markets", "S&amp;P 500 · Nasdaq"],
+    sign_crypto: ["The crypto<br>seas", "Bitcoin and the top coins"], sign_horizon: ["On the<br>horizon", "What's coming up"],
+    signoff: ["Fair winds", "and following seas"] };
+  const [k, s] = titles[seg.kind] || ["", ""];
+  const icon = seg.kind === "weather" ? `<div class="it" style="font-size:${P ? 120 : 130}px;line-height:1.1">${d.weather_icon}</div>` : "";
+  return icon + `<div class="it kicker" style="font-size:${P ? 104 : 120}px">${k}</div><div class="it sub" style="font-size:${P ? 40 : 42}px;margin-top:22px">${s}</div>`;
+}
+
+function narrContent(seg) {
+  const d = S.data;
+  if (seg.kind === "date") {
+    return `<div class="it" style="font-size:${P ? 110 : 120}px">${d.weather_icon}</div>
+      <div class="it kicker" style="font-size:${P ? 92 : 104}px;margin-top:10px">${esc(d.date)}</div>
+      <div class="it sub" style="font-size:${P ? 54 : 58}px;margin-top:28px;font-weight:700;color:#fff">${esc(d.headline)}</div>`;
+  }
+  if (seg.kind === "tides") {
+    const arrow = d.tide.state === "out" ? "↘" : d.tide.state === "in" ? "↗" : "↔";
+    const word = d.tide.state === "out" ? "Going out" : d.tide.state === "in" ? "Coming in" : "Turning";
+    const tiles = d.currents.map((c) => `<div class="it card tile"><div class="n">${esc(c.name)}</div>
+      <div class="v">${c.value == null ? "" : (c.value >= 100 ? Math.round(c.value).toLocaleString("en-US") : c.value.toFixed(2))}</div>
+      <div class="chg ${cls(c.change)}" style="font-size:30px;margin-top:4px">${c.pts ? (c.change >= 0 ? "+" : "−") + Math.abs(c.change ?? 0).toFixed(1) + " pts" : pct(c.change)} · 7 days</div></div>`).join("");
+    return `<div class="it card" style="padding:34px 40px;display:flex;align-items:center;gap:34px">
+        <div style="font-size:120px;line-height:1;color:${d.tide.state === "out" ? "var(--down)" : "var(--up)"}">${arrow}</div>
+        <div><div class="kicker" style="font-size:78px">Tide ${word}</div>
+        <div class="sub" style="font-size:36px;margin-top:10px">${d.tide.days ? `For ${d.tide.days} trading days · ` : ""}Sea ${esc(d.tide.sea)}</div></div></div>
+      <div class="grid" style="grid-template-columns:repeat(${P ? 2 : 4},1fr);margin-top:28px">${tiles}</div>`;
+  }
+  if (seg.kind === "equities") {
+    const tiles = d.stocks.map((s) => `<div class="it card tile" style="display:flex;justify-content:space-between;align-items:center;gap:20px">
+      <div><div class="n" style="font-size:34px;color:#fff;font-weight:800">${esc(s.name)}</div>
+      <div class="chg ${cls(s.change_1d)}" style="font-size:56px;margin-top:8px">${pct(s.change_1d)}</div>
+      <div class="sub" style="font-size:28px">${pct(s.change_7d)} over 7 days</div></div>
+      ${spark(s.spark, P ? 360 : 420, 150, (s.change_7d ?? 0) >= 0 ? "#34d399" : "#f87171")}</div>`).join("");
+    return `<div style="display:flex;flex-direction:${P ? "column" : "row"};gap:30px;align-items:${P ? "stretch" : "center"}">
+      <div class="it card" style="padding:26px 34px;text-align:center"><div class="n" style="font-size:30px;color:var(--soft);font-weight:700">Stock-market mood</div>${gauge(d.stock_mood, P ? 520 : 460)}</div>
+      <div class="grid" style="flex:1">${tiles}</div></div>`;
+  }
+  if (seg.kind === "crypto") {
+    const rows = d.coins.map((c) => `<div class="it card row"><div class="name">${esc(c.name)}</div>
+      <div class="price">${money(c.price)}</div><div class="chg ${cls(c.change_1d)}">${pct(c.change_1d)}</div>
+      ${spark(c.spark, P ? 180 : 300, 60, (c.change_7d ?? 0) >= 0 ? "#34d399" : "#f87171")}</div>`).join("");
+    return `<div style="display:flex;flex-direction:${P ? "column" : "row"};gap:30px;align-items:${P ? "stretch" : "center"}">
+      <div class="it card" style="padding:26px 34px;text-align:center"><div class="n" style="font-size:30px;color:var(--soft);font-weight:700">Crypto mood</div>${gauge(d.crypto_mood, P ? 520 : 440)}</div>
+      <div class="grid" style="gap:14px;flex:1">${rows}</div></div>`;
+  }
+  if (seg.kind === "horizon") {
+    const cards = (d.events.length ? d.events : [{ what: "A quiet week", when: "", why: "No big scheduled releases." }]).map((e) =>
+      `<div class="it card" style="padding:30px 36px"><div style="font-size:30px;color:var(--amber);font-weight:800">📅 ${esc(e.when)}${e.when ? " UTC" : ""}</div>
+       <div style="font-size:52px;font-weight:800;margin-top:8px">${esc(e.what)}</div>
+       <div class="sub" style="font-size:30px;margin-top:8px">${esc(e.why || "")}</div></div>`).join("");
+    return `<div class="it kicker" style="font-size:${P ? 90 : 96}px;margin-bottom:30px">On the horizon</div><div class="grid">${cards}</div>`;
+  }
+  if (seg.kind === "close") {
+    const b = d.brand.show ? `<div class="it" style="font-size:72px;font-weight:900;margin-top:40px">${esc(d.brand.name)}</div>
+      <div class="it sub" style="font-size:34px;margin-top:6px">${esc(d.brand.domain)}</div>` : "";
+    return `<div style="text-align:center"><div class="it" style="font-size:110px">⚓</div>
+      <div class="it kicker" style="font-size:${P ? 86 : 96}px;margin-top:16px">Your daily<br>market briefing</div>
+      <div class="it sub" style="font-size:44px;margin-top:22px">${esc(d.date)}</div>${b}
+      <div class="it sub" style="font-size:28px;margin-top:40px;color:var(--soft)">Readings describe markets. Not financial advice.</div></div>`;
+  }
+  return "";
+}
+
+window.setup = function (spec) {
+  S = spec; P = spec.layout === "port";
+  [W, H] = P ? [1080, 1920] : [1920, 1080];
+  document.body.style.width = W + "px"; document.body.style.height = H + "px";
+  const st = $("stage"); st.style.width = W + "px"; st.style.height = H + "px";
+  const m = MOODS[spec.data.weather] || MOODS.changeable;
+  $("bg").style.background = `radial-gradient(1100px 800px at 30% 15%, ${m[2]}, transparent 60%), radial-gradient(1000px 900px at 85% 90%, rgba(37,99,235,.3), transparent 60%), linear-gradient(160deg, ${m[0]} 0%, ${m[1]} 100%)`;
+  $("topdate").textContent = spec.data.date;
+  $("topw").textContent = spec.data.weather_icon + " " + spec.data.weather_word;
+  const [bx, by, bw, bh] = spec.box;
+  const holder = $("segs");
+  for (const seg of spec.segments) {
+    const el = document.createElement("div");
+    el.className = "seg"; el.dataset.kind = seg.kind;
+    if (seg.who === "cap") {
+      const cap = P ? `left:90px;right:90px;top:${by + bh + 70}px;height:${H - by - bh - 160}px;text-align:center;align-items:center`
+                    : `left:${bx + bw + 110}px;right:90px;top:${by}px;height:${bh}px`;
+      el.innerHTML = `<div class="frame it" style="left:${bx}px;top:${by}px;width:${bw}px;height:${bh}px"></div><div class="cap" style="${cap}">${capCaption(seg)}</div>`;
+    } else {
+      const box = P ? "left:70px;right:70px;top:190px;bottom:170px" : "left:110px;right:110px;top:150px;bottom:120px";
+      el.innerHTML = `<div style="position:absolute;${box};display:flex;flex-direction:column;justify-content:center">${narrContent(seg)}</div>`;
+    }
+    seg.el = el; seg.items = Array.from(el.querySelectorAll(".it"));
+    holder.appendChild(el);
+  }
+  window.render(0);
+};
+
+function wave(id, t, amp, len, speed, base, phase) {
+  let d = `M0 380 L0 ${base}`;
+  for (let x = 0; x <= 1920; x += 24) {
+    const y = base + amp * Math.sin((x / len) * Math.PI * 2 + t * speed + phase) + amp * 0.35 * Math.sin((x / (len * 0.45)) * Math.PI * 2 - t * speed * 1.3);
+    d += ` L${x} ${y.toFixed(1)}`;
+  }
+  $(id).setAttribute("d", d + " L1920 380 Z");
+}
+
+window.render = function (t) {
+  if (!S) return;
+  const rough = { sunny: 0.5, fair: 0.7, changeable: 1, rough: 1.4, stormy: 1.9 }[S.data.weather] || 1;
+  wave("p2", t, 30 * rough, 700, 1.1 * rough, 220, 0.4);
+  wave("p1", t, 40 * rough, 560, 1.5 * rough, 270, 2.1);
+  $("grid").style.transform = `translate(${-(t * 12) % 80}px, ${-(t * 5) % 80}px)`;
+  let anyNarr = false;
+  for (const seg of S.segments) {
+    const on = t >= seg.start - 0.4 && t <= seg.end + 0.4;
+    seg.el.style.display = on ? "block" : "none";
+    if (!on) continue;
+    const inP = outC(clamp((t - seg.start + 0.15) / 0.55));
+    const outQ = seg.kind === "close" ? 0 : inC(clamp((t - (seg.end - 0.3)) / 0.45));
+    seg.el.style.opacity = String(1 - outQ);
+    seg.el.style.transform = `translateX(${-120 * outQ}px)`;
+    seg.items.forEach((it, i) => {
+      const p = outC(clamp((t - seg.start - 0.07 * i + 0.1) / 0.5));
+      it.style.opacity = String(p);
+      it.style.transform = it.classList.contains("frame") ? `scale(${0.9 + 0.1 * p})` : `translateY(${50 * (1 - p)}px)`;
+    });
+    if (seg.who === "narr" && seg.kind !== "close" && t >= seg.start && t <= seg.end) anyNarr = true;
+  }
+  $("foot").style.opacity = anyNarr ? "1" : "0";
+  const last = S.segments[S.segments.length - 1];
+  $("top").style.opacity = t < last.start ? "1" : "0";
+};
+</script></body></html>
