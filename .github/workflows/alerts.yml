@@ -84,3 +84,21 @@ jobs:
           VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
           VAPID_SUBJECT: ${{ secrets.VAPID_SUBJECT }}
         run: python push_notify.py
+
+      - name: Start the spoken briefings when due
+        # 🎧 GitHub's own schedule for briefing.yml doesn't fire reliably either, so this worker (started every 5
+        # minutes by Supabase) checks whether a Morning forecast edition or a member's spoken Passage Plan is due, and
+        # starts the briefing job if so and it hasn't started in the last 12 minutes.
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          due=$(python run_briefings.py --check 2>/dev/null | tail -1 || echo 0)
+          if [ "${due:-0}" != "0" ]; then
+            since=$(date -u -d "12 minutes ago" +%Y-%m-%dT%H:%M:%SZ)
+            recent=$(gh run list -R "$GITHUB_REPOSITORY" --workflow briefing.yml -L 5 --json createdAt \
+                     -q "[.[] | select(.createdAt > \"$since\")] | length" || echo 1)
+            if [ "${recent:-1}" = "0" ]; then gh workflow run briefing.yml -R "$GITHUB_REPOSITORY" --ref main || true; fi
+          fi
