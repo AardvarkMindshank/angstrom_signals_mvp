@@ -1,0 +1,13 @@
+{
+ "about": "Invented presenters (no real person): head-and-shoulders, mouth closed, for lip-sync tests.",
+ "jobs": [
+  {"id": "presenter_a", "model": "fal-ai/flux-pro/kontext/text-to-image", "input": {"aspect_ratio": "3:4", "num_images": 2, "output_format": "png",
+   "prompt": "Photorealistic head-and-shoulders portrait of a friendly, confident financial news presenter, a woman in her thirties with shoulder-length dark brown hair, navy blazer over a white top, soft studio lighting, softly blurred deep-blue newsroom background with faint glowing market charts, looking straight at the camera, lips closed with a gentle smile, sharp focus, 85mm photograph"}},
+  {"id": "presenter_b", "model": "fal-ai/flux-pro/kontext/text-to-image", "input": {"aspect_ratio": "3:4", "num_images": 2, "output_format": "png",
+   "prompt": "Photorealistic head-and-shoulders portrait of a warm, trustworthy financial news presenter, a man in his forties with short dark hair greying at the temples and neat stubble, navy suit jacket with an open-collar light blue shirt, soft studio lighting, softly blurred deep-blue newsroom background with faint glowing market charts, looking straight at the camera, lips closed with a slight smile, sharp focus, 85mm photograph"}},
+  {"id": "presenter_c", "model": "fal-ai/flux-pro/kontext/text-to-image", "input": {"aspect_ratio": "3:4", "num_images": 2, "output_format": "png",
+   "prompt": "Photorealistic head-and-shoulders portrait of an upbeat market presenter, a Southeast Asian woman in her late twenties with a sleek dark bob, teal blouse under a charcoal blazer, bright soft studio lighting, softly blurred background of a modern trading floor at dawn with screens glowing teal and blue, looking straight at the camera, lips closed with a friendly smile, sharp focus, 85mm photograph"}},
+  {"id": "captain_invented", "model": "fal-ai/flux-pro/kontext/text-to-image", "input": {"aspect_ratio": "3:4", "num_images": 2, "output_format": "png",
+   "prompt": "Head-and-shoulders portrait of a friendly modern yacht captain in a 3D animated film style, a man in his fifties with a short grey beard and kind eyes, white captain's peaked cap with a small gold compass badge, navy pea coat with brass buttons, standing on a ship's bridge with a brass compass and a window onto a calm sea at sunrise, warm cinematic lighting, looking at the camera, lips closed with a smile, original character"}}
+ ]
+}
