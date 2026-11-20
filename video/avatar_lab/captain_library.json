@@ -1,0 +1,335 @@
+{
+ "about": "The 3D captain's clip library for the daily forecast video (no brand name spoken): welcome, five weathers, four signposts and the sign-off, two versions each. Voice bm_george at 1.1.",
+ "jobs": [
+  {
+   "id": "say_welcome_1",
+   "speak": "Good morning, and welcome to the morning forecast.",
+   "voice": "bm_george",
+   "speed": 1.1
+  },
+  {
+   "id": "say_welcome_2",
+   "speak": "Good morning, all hands. Here's your morning forecast.",
+   "voice": "bm_george",
+   "speed": 1.1
+  },
+  {
+   "id": "say_weather_sunny_1",
+   "speak": "Clear skies and calm seas this morning. Fair sailing across the markets.",
+   "voice": "bm_george",
+   "speed": 1.1
+  },
+  {
+   "id": "say_weather_sunny_2",
+   "speak": "The sun's out over the markets today, with a gentle following wind.",
+   "voice": "bm_george",
+   "speed": 1.1
+  },
+  {
+   "id": "say_weather_fair_1",
+   "speak": "Fair weather this morning, with a light breeze and only a little chop.",
+   "voice": "bm_george",
+   "speed": 1.1
+  },
+  {
+   "id": "say_weather_fair_2",
+   "speak": "A fair morning out there. Steady seas, with the odd passing cloud.",
+   "voice": "bm_george",
+   "speed": 1.1
+  },
+  {
+   "id": "say_weather_changeable_1",
+   "speak": "Changeable weather this morning. Keep an eye on the horizon.",
+   "voice": "bm_george",
+   "speed": 1.1
+  },
+  {
+   "id": "say_weather_changeable_2",
+   "speak": "Mixed skies today, with the wind shifting between quarters.",
+   "voice": "bm_george",
+   "speed": 1.1
+  },
+  {
+   "id": "say_weather_rough_1",
+   "speak": "Rough seas this morning, with a heavy swell running.",
+   "voice": "bm_george",
+   "speed": 1.1
+  },
+  {
+   "id": "say_weather_rough_2",
+   "speak": "A choppy morning out there, with a stiff wind against the tide.",
+   "voice": "bm_george",
+   "speed": 1.1
+  },
+  {
+   "id": "say_weather_stormy_1",
+   "speak": "Storm warning this morning. Heavy weather across the markets.",
+   "voice": "bm_george",
+   "speed": 1.1
+  },
+  {
+   "id": "say_weather_stormy_2",
+   "speak": "Gales on the horizon today, and the barometer falling fast.",
+   "voice": "bm_george",
+   "speed": 1.1
+  },
+  {
+   "id": "say_sign_tides_1",
+   "speak": "First, the tides and currents of the wider world.",
+   "voice": "bm_george",
+   "speed": 1.1
+  },
+  {
+   "id": "say_sign_tides_2",
+   "speak": "Let's start with the big picture: the tides and the currents.",
+   "voice": "bm_george",
+   "speed": 1.1
+  },
+  {
+   "id": "say_sign_equities_1",
+   "speak": "And now, to the equity markets.",
+   "voice": "bm_george",
+   "speed": 1.1
+  },
+  {
+   "id": "say_sign_equities_2",
+   "speak": "Over to the stock markets.",
+   "voice": "bm_george",
+   "speed": 1.1
+  },
+  {
+   "id": "say_sign_crypto_1",
+   "speak": "Next, the crypto seas.",
+   "voice": "bm_george",
+   "speed": 1.1
+  },
+  {
+   "id": "say_sign_crypto_2",
+   "speak": "Now, over to crypto.",
+   "voice": "bm_george",
+   "speed": 1.1
+  },
+  {
+   "id": "say_sign_horizon_1",
+   "speak": "And finally, what's on the horizon.",
+   "voice": "bm_george",
+   "speed": 1.1
+  },
+  {
+   "id": "say_sign_horizon_2",
+   "speak": "Last of all, a look at the horizon.",
+   "voice": "bm_george",
+   "speed": 1.1
+  },
+  {
+   "id": "say_signoff_1",
+   "speak": "That's the forecast. Fair winds and following seas.",
+   "voice": "bm_george",
+   "speed": 1.1
+  },
+  {
+   "id": "say_signoff_2",
+   "speak": "That's all from the bridge. Fair winds and following seas.",
+   "voice": "bm_george",
+   "speed": 1.1
+  },
+  {
+   "id": "cap_welcome_1",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:face_3d_1.png",
+    "audio_url": "out:say_welcome_1.wav",
+    "prompt": "A friendly animated ship's captain speaking to camera on the bridge, warm, welcoming expression, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "cap_welcome_2",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:face_3d_1.png",
+    "audio_url": "out:say_welcome_2.wav",
+    "prompt": "A friendly animated ship's captain speaking to camera on the bridge, cheerful, welcoming expression, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "cap_weather_sunny_1",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:face_3d_1.png",
+    "audio_url": "out:say_weather_sunny_1.wav",
+    "prompt": "A friendly animated ship's captain speaking to camera on the bridge, bright, happy expression, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "cap_weather_sunny_2",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:face_3d_1.png",
+    "audio_url": "out:say_weather_sunny_2.wav",
+    "prompt": "A friendly animated ship's captain speaking to camera on the bridge, bright, happy expression, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "cap_weather_fair_1",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:face_3d_1.png",
+    "audio_url": "out:say_weather_fair_1.wav",
+    "prompt": "A friendly animated ship's captain speaking to camera on the bridge, relaxed, content expression, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "cap_weather_fair_2",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:face_3d_1.png",
+    "audio_url": "out:say_weather_fair_2.wav",
+    "prompt": "A friendly animated ship's captain speaking to camera on the bridge, relaxed, content expression, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "cap_weather_changeable_1",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:face_3d_1.png",
+    "audio_url": "out:say_weather_changeable_1.wav",
+    "prompt": "A friendly animated ship's captain speaking to camera on the bridge, thoughtful, attentive expression, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "cap_weather_changeable_2",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:face_3d_1.png",
+    "audio_url": "out:say_weather_changeable_2.wav",
+    "prompt": "A friendly animated ship's captain speaking to camera on the bridge, thoughtful, attentive expression, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "cap_weather_rough_1",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:face_3d_1.png",
+    "audio_url": "out:say_weather_rough_1.wav",
+    "prompt": "A friendly animated ship's captain speaking to camera on the bridge, serious, steady expression, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "cap_weather_rough_2",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:face_3d_1.png",
+    "audio_url": "out:say_weather_rough_2.wav",
+    "prompt": "A friendly animated ship's captain speaking to camera on the bridge, serious, steady expression, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "cap_weather_stormy_1",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:face_3d_1.png",
+    "audio_url": "out:say_weather_stormy_1.wav",
+    "prompt": "A friendly animated ship's captain speaking to camera on the bridge, grave, serious expression, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "cap_weather_stormy_2",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:face_3d_1.png",
+    "audio_url": "out:say_weather_stormy_2.wav",
+    "prompt": "A friendly animated ship's captain speaking to camera on the bridge, grave, serious expression, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "cap_sign_tides_1",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:face_3d_1.png",
+    "audio_url": "out:say_sign_tides_1.wav",
+    "prompt": "A friendly animated ship's captain speaking to camera on the bridge, engaged expression, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "cap_sign_tides_2",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:face_3d_1.png",
+    "audio_url": "out:say_sign_tides_2.wav",
+    "prompt": "A friendly animated ship's captain speaking to camera on the bridge, engaged expression, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "cap_sign_equities_1",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:face_3d_1.png",
+    "audio_url": "out:say_sign_equities_1.wav",
+    "prompt": "A friendly animated ship's captain speaking to camera on the bridge, engaged expression, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "cap_sign_equities_2",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:face_3d_1.png",
+    "audio_url": "out:say_sign_equities_2.wav",
+    "prompt": "A friendly animated ship's captain speaking to camera on the bridge, engaged expression, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "cap_sign_crypto_1",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:face_3d_1.png",
+    "audio_url": "out:say_sign_crypto_1.wav",
+    "prompt": "A friendly animated ship's captain speaking to camera on the bridge, engaged, lively expression, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "cap_sign_crypto_2",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:face_3d_1.png",
+    "audio_url": "out:say_sign_crypto_2.wav",
+    "prompt": "A friendly animated ship's captain speaking to camera on the bridge, engaged, lively expression, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "cap_sign_horizon_1",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:face_3d_1.png",
+    "audio_url": "out:say_sign_horizon_1.wav",
+    "prompt": "A friendly animated ship's captain speaking to camera on the bridge, engaged expression, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "cap_sign_horizon_2",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:face_3d_1.png",
+    "audio_url": "out:say_sign_horizon_2.wav",
+    "prompt": "A friendly animated ship's captain speaking to camera on the bridge, engaged expression, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "cap_signoff_1",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:face_3d_1.png",
+    "audio_url": "out:say_signoff_1.wav",
+    "prompt": "A friendly animated ship's captain speaking to camera on the bridge, warm, smiling expression, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "cap_signoff_2",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:face_3d_1.png",
+    "audio_url": "out:say_signoff_2.wav",
+    "prompt": "A friendly animated ship's captain speaking to camera on the bridge, warm, smiling expression, natural head movement and blinking."
+   }
+  }
+ ]
+}

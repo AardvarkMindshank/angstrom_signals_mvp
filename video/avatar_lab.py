@@ -73,7 +73,7 @@ def speak_job(job: dict, out: Path) -> list[Path]:
     samples, rate = kokoro.create(job["speak"], voice=voice, speed=float(job.get("speed", 1.0)),
                                   lang="en-gb" if voice.startswith("b") else "en-us")
     pcm = (np.clip(np.asarray(samples, dtype=np.float32), -1, 1) * 32767).astype(np.int16)
-    pad = np.zeros(int(rate * 0.3), dtype=np.int16)              # a breath before and after
+    pad = np.zeros(int(rate * 0.12), dtype=np.int16)             # a short breath before and after
     path = out / f"{job['id']}.wav"
     with wave.open(str(path), "wb") as wf:
         wf.setnchannels(1)
@@ -89,13 +89,28 @@ def main(spec: str, inputs: str = "lab_in", out: str = "out/avatar_lab") -> int:
     outdir = Path(out)
     outdir.mkdir(parents=True, exist_ok=True)
     failed = 0
-    for job in jobs:
+
+    def one(job):
         try:
             files = speak_job(job, outdir) if "speak" in job else run_job(job, Path(inputs), outdir, key)
-            print(f"{job['id']}: {len(files)} file(s)")
+            print(f"{job['id']}: {len(files)} file(s)", flush=True)
+            return 0
         except Exception as exc:
-            failed += 1
-            print(f"{job['id']}: failed ({type(exc).__name__}: {str(exc)[:160]})")
+            print(f"{job['id']}: failed ({type(exc).__name__}: {str(exc)[:160]})", flush=True)
+            return 1
+
+    # In stages: the voice lines first, then every fal job of a stage at once (up to 8 together); a job that uses an
+    # earlier job's output ("out:…") waits for the next stage (job key "stage", default 0 for voice and images).
+    from concurrent.futures import ThreadPoolExecutor
+
+    speak = [j for j in jobs if "speak" in j]
+    for job in speak:
+        failed += one(job)
+    rest = [j for j in jobs if "speak" not in j]
+    for stage in sorted({int(j.get("stage", 0)) for j in rest}):
+        batch = [j for j in rest if int(j.get("stage", 0)) == stage]
+        with ThreadPoolExecutor(max_workers=8) as pool:
+            failed += sum(pool.map(one, batch))
     return 1 if failed == len(jobs) else 0
 
 
