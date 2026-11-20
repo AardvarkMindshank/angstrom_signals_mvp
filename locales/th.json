@@ -2338,5 +2338,10 @@
   "Add these feeds to Apple Podcasts (Library, then Follow a Show by URL), Pocket Casts or Overcast, and each one downloads by itself. Your own feed is private: anyone with the link can listen, so keep it to yourself. Spotify can't take private feeds.": "เพิ่มฟีดเหล่านี้ใน Apple Podcasts (คลัง แล้วติดตามรายการด้วย URL), Pocket Casts หรือ Overcast แล้วแต่ละตอนจะดาวน์โหลดเอง ฟีดของคุณเป็นแบบส่วนตัว: ใครมีลิงก์ก็ฟังได้ จึงควรเก็บไว้คนเดียว Spotify ไม่รองรับฟีดส่วนตัว",
   "Not made yet today.": "วันนี้ยังไม่ได้ทำ",
   "The old link stops getting new plans.": "ลิงก์เก่าจะไม่ได้รับแผนใหม่อีก",
-  "🎧 Listen": "🎧 ฟัง"
+  "🎧 Listen": "🎧 ฟัง",
+  "Day or night": "กลางวันหรือกลางคืน",
+  "Day": "กลางวัน",
+  "Night": "กลางคืน",
+  "Auto": "อัตโนมัติ",
+  "Day and Night keep the page light or dark. Auto follows your device's setting, so it changes with your phone or computer. Saved on your account, so every device you log in on follows it. The page reloads once to switch.": "กลางวันและกลางคืนจะให้หน้าเว็บสว่างหรือมืดตลอด อัตโนมัติจะตามการตั้งค่าของอุปกรณ์ จึงเปลี่ยนตามโทรศัพท์หรือคอมพิวเตอร์ของคุณ บันทึกไว้ในบัญชี ทุกอุปกรณ์ที่คุณเข้าสู่ระบบจะทำตาม หน้าเว็บจะโหลดใหม่หนึ่งครั้งเพื่อสลับ"
 }

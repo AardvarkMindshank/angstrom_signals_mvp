@@ -2338,5 +2338,10 @@
   "Add these feeds to Apple Podcasts (Library, then Follow a Show by URL), Pocket Casts or Overcast, and each one downloads by itself. Your own feed is private: anyone with the link can listen, so keep it to yourself. Spotify can't take private feeds.": "これらのフィードを Apple Podcasts（ライブラリ →「URLで番組をフォロー」）、Pocket Casts、Overcast に追加すると、各回が自動でダウンロードされます。あなた専用のフィードは非公開です。リンクを知っている人は誰でも聴けるので、他の人に教えないでください。Spotify は非公開フィードに対応していません。",
   "Not made yet today.": "今日はまだ作成されていません。",
   "The old link stops getting new plans.": "古いリンクには新しいプランが届かなくなります。",
-  "🎧 Listen": "🎧 聴く"
+  "🎧 Listen": "🎧 聴く",
+  "Day or night": "昼か夜か",
+  "Day": "昼",
+  "Night": "夜",
+  "Auto": "自動",
+  "Day and Night keep the page light or dark. Auto follows your device's setting, so it changes with your phone or computer. Saved on your account, so every device you log in on follows it. The page reloads once to switch.": "「昼」と「夜」はページを明るく、または暗く保ちます。「自動」は端末の設定に従うので、スマホやパソコンに合わせて切り替わります。アカウントに保存されるので、ログインしているすべての端末が従います。切り替えのためにページが一度再読み込みされます。"
 }

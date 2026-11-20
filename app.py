@@ -1120,6 +1120,32 @@ export default function(component) {
 }
 """
 _version_watch = i18n.with_words(st.components.v2.component("version_watch", js=i18n.js_ready(_VERSION_WATCH_JS)), _VERSION_WATCH_JS)
+
+# ☀️ Day, 🌙 Night or 🌓 Auto (Settings › UI Colours): Streamlit keeps its Light/Dark/System choice in this browser's
+# storage (stActiveTheme-<path>-v2, Streamlit 1.67), read when the page loads. The account's choice is written there,
+# and the page reloads once (you stay logged in, as after an update) when this browser had another choice. With no
+# choice saved on the account, Streamlit's own menu decides, as before.
+THEME_MODES = {"day": "Light", "night": "Dark", "auto": "System"}
+_THEME_MODE_JS = """
+export default function(component) {
+  const { data, parentElement } = component;
+  const shell = parentElement.closest(".stBidiComponent") || parentElement;
+  shell.style.display = "none";
+  const wanted = (data || {}).theme;
+  if (!["Light", "Dark", "System"].includes(wanted)) return;
+  try {
+    const key = `stActiveTheme-${window.location.pathname}-v2`;
+    let now = "System";
+    try { now = JSON.parse(window.localStorage.getItem(key) || '"System"'); } catch (e) {}
+    if (now === wanted) { window.sessionStorage.removeItem("ang-theme-reload"); return; }
+    if (window.sessionStorage.getItem("ang-theme-reload") === wanted) return;   // never loop
+    window.localStorage.setItem(key, JSON.stringify(wanted));
+    window.sessionStorage.setItem("ang-theme-reload", wanted);
+    window.setTimeout(() => window.location.reload(), 150);
+  } catch (e) {}
+}
+"""
+_theme_mode = st.components.v2.component("theme_mode", js=_THEME_MODE_JS)
 _SCORE_TABLE_JS = """
 export default function(component) {
   const { data, setTriggerValue, parentElement } = component;
@@ -6867,6 +6893,9 @@ account_colours = _active_colours()
 lw_chart.set_colour_source(lambda dark: _active_colours()["chart_night" if dark else "chart_day"])  # Settings › Charts
 _brand_watch(key="brand_watch", data=_colour_payload(account_colours))
 _version_watch(key="version_watch", data=app_version.BOOT_ID)
+_ui_mode = str(((prefs or {}).get("settings") or {}).get("ui_mode") or "")
+if _ui_mode in THEME_MODES:
+    _theme_mode(key="theme_mode", data={"theme": THEME_MODES[_ui_mode]})
 st.sidebar.markdown(
     t("<div style='margin:0.4rem 0 0.75rem;'><div style='display:flex;align-items:center;gap:0.85rem;'>{brand_mark_58_align_left}<h1 style='margin:0;padding:0;line-height:1.15;font-size:2.25rem;font-weight:700;'>angstrom<br>signals</h1></div><div style='margin-top:0.55rem;font-size:0.82rem;font-weight:500;line-height:1.35;opacity:0.72;'>{html_escape_t_market_sen}</div></div>", brand_mark_58_align_left=_brand_mark(58, align='left'), html_escape_t_market_sen=html.escape(t('Navigate the markets with AI-guided analysis and alerts, with a community alongside.'))),
     unsafe_allow_html=True,
@@ -9627,6 +9656,17 @@ with tracked_expander("⚙️ " + t("Settings"), "settings_panel", sidebar=True)
 
     st.divider()
     with tracked_expander(t("UI Colours"), "colours"):
+        _mode_now = str(settings.get("ui_mode") or "")
+        _mode = st.segmented_control(
+            t("Day or night"), list(THEME_MODES), default=_mode_now if _mode_now in THEME_MODES else None,
+            key="ui_mode_pick",
+            format_func=lambda m: {"day": "☀️ " + t("Day"), "night": "🌙 " + t("Night"), "auto": "🌓 " + t("Auto")}[m],
+            help=t("Day and Night keep the page light or dark. Auto follows your device's setting, so it changes with "
+                   "your phone or computer. Saved on your account, so every device you log in on follows it. The page "
+                   "reloads once to switch."))
+        if _mode and _mode != _mode_now:
+            save_account_settings({"ui_mode": _mode})
+            st.rerun()
         st.caption(t("Your colours save on this account as you change them. Press a theme's button to try a different colour scheme."))
         slot = _saved_colour_slot()
         st.markdown(t("**My saved colours**"))

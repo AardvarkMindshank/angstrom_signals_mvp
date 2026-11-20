@@ -2338,5 +2338,10 @@
   "Add these feeds to Apple Podcasts (Library, then Follow a Show by URL), Pocket Casts or Overcast, and each one downloads by itself. Your own feed is private: anyone with the link can listen, so keep it to yourself. Spotify can't take private feeds.": "将这些订阅源添加到 Apple Podcasts（资料库，然后“通过 URL 关注节目”）、Pocket Casts 或 Overcast，每一期都会自动下载。你自己的订阅源是私密的：任何拿到链接的人都能收听，请勿外传。Spotify 不支持私密订阅源。",
   "Not made yet today.": "今天还没有制作。",
   "The old link stops getting new plans.": "旧链接将不再收到新计划。",
-  "🎧 Listen": "🎧 收听"
+  "🎧 Listen": "🎧 收听",
+  "Day or night": "白天或夜晚",
+  "Day": "白天",
+  "Night": "夜晚",
+  "Auto": "自动",
+  "Day and Night keep the page light or dark. Auto follows your device's setting, so it changes with your phone or computer. Saved on your account, so every device you log in on follows it. The page reloads once to switch.": "白天和夜晚会让页面保持浅色或深色。自动跟随设备设置，会随你的手机或电脑切换。保存在你的账户中，你登录的每台设备都会跟随。切换时页面会重新加载一次。"
 }

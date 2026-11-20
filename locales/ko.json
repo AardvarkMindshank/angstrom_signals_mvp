@@ -2338,5 +2338,10 @@
   "Add these feeds to Apple Podcasts (Library, then Follow a Show by URL), Pocket Casts or Overcast, and each one downloads by itself. Your own feed is private: anyone with the link can listen, so keep it to yourself. Spotify can't take private feeds.": "이 피드를 Apple Podcasts(보관함 → URL로 프로그램 팔로우), Pocket Casts 또는 Overcast에 추가하면 매번 자동으로 다운로드됩니다. 내 피드는 비공개입니다. 링크가 있으면 누구나 들을 수 있으니 혼자만 간직하세요. Spotify는 비공개 피드를 지원하지 않습니다.",
   "Not made yet today.": "오늘은 아직 만들지 않았습니다.",
   "The old link stops getting new plans.": "이전 링크에는 더 이상 새 플랜이 오지 않습니다.",
-  "🎧 Listen": "🎧 듣기"
+  "🎧 Listen": "🎧 듣기",
+  "Day or night": "낮 또는 밤",
+  "Day": "낮",
+  "Night": "밤",
+  "Auto": "자동",
+  "Day and Night keep the page light or dark. Auto follows your device's setting, so it changes with your phone or computer. Saved on your account, so every device you log in on follows it. The page reloads once to switch.": "낮과 밤은 페이지를 밝게 또는 어둡게 유지합니다. 자동은 기기 설정을 따르므로 휴대폰이나 컴퓨터에 맞춰 바뀝니다. 계정에 저장되어 로그인한 모든 기기가 따릅니다. 전환하려면 페이지가 한 번 새로 고쳐집니다."
 }

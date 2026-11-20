@@ -2338,5 +2338,10 @@
   "Add these feeds to Apple Podcasts (Library, then Follow a Show by URL), Pocket Casts or Overcast, and each one downloads by itself. Your own feed is private: anyone with the link can listen, so keep it to yourself. Spotify can't take private feeds.": "Bu beslemeleri Apple Podcasts'e (Arşiv, ardından URL ile Programı Takip Et), Pocket Casts'e veya Overcast'e ekle; her bölüm kendiliğinden iner. Kendi beslemen özeldir: bağlantıya sahip herkes dinleyebilir, bu yüzden kendine sakla. Spotify özel beslemeleri kabul etmez.",
   "Not made yet today.": "Bugün henüz yapılmadı.",
   "The old link stops getting new plans.": "Eski bağlantı artık yeni plan almaz.",
-  "🎧 Listen": "🎧 Dinle"
+  "🎧 Listen": "🎧 Dinle",
+  "Day or night": "Gündüz mü gece mi",
+  "Day": "Gündüz",
+  "Night": "Gece",
+  "Auto": "Otomatik",
+  "Day and Night keep the page light or dark. Auto follows your device's setting, so it changes with your phone or computer. Saved on your account, so every device you log in on follows it. The page reloads once to switch.": "Gündüz ve Gece sayfayı açık ya da koyu tutar. Otomatik, cihazının ayarını izler; yani telefonun ya da bilgisayarınla birlikte değişir. Hesabına kaydedilir, bu yüzden giriş yaptığın her cihaz bunu izler. Geçiş için sayfa bir kez yeniden yüklenir."
 }

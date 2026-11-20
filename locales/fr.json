@@ -2338,5 +2338,10 @@
   "Add these feeds to Apple Podcasts (Library, then Follow a Show by URL), Pocket Casts or Overcast, and each one downloads by itself. Your own feed is private: anyone with the link can listen, so keep it to yourself. Spotify can't take private feeds.": "Ajoutez ces flux à Apple Podcasts (Bibliothèque, puis Suivre une émission par URL), Pocket Casts ou Overcast, et chacun se télécharge tout seul. Votre propre flux est privé : toute personne ayant le lien peut l'écouter, gardez-le pour vous. Spotify n'accepte pas les flux privés.",
   "Not made yet today.": "Pas encore fait aujourd'hui.",
   "The old link stops getting new plans.": "L'ancien lien ne reçoit plus de nouveaux plans.",
-  "🎧 Listen": "🎧 Écouter"
+  "🎧 Listen": "🎧 Écouter",
+  "Day or night": "Jour ou nuit",
+  "Day": "Jour",
+  "Night": "Nuit",
+  "Auto": "Auto",
+  "Day and Night keep the page light or dark. Auto follows your device's setting, so it changes with your phone or computer. Saved on your account, so every device you log in on follows it. The page reloads once to switch.": "Jour et Nuit gardent la page claire ou sombre. Auto suit le réglage de votre appareil et change donc avec votre téléphone ou ordinateur. Enregistré sur votre compte : chaque appareil où vous êtes connecté le suit. La page se recharge une fois pour changer."
 }
