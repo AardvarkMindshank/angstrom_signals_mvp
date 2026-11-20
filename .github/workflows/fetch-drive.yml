@@ -1,0 +1,38 @@
+# Copy the files of a public Google Drive folder (shared "anyone with the link") to the reports branch, so they
+# can be checked and added to the repository (e.g. music from Pixabay for the morning briefing).
+name: Fetch a public Drive folder
+on:
+  workflow_dispatch:
+    inputs:
+      folder:
+        description: "Drive folder id (the part after /folders/)"
+        required: true
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - name: Download
+        env:
+          FOLDER: ${{ inputs.folder }}
+        run: |
+          mkdir -p out/drive
+          python3 - <<'PY'
+          import html, os, re, urllib.request
+          folder = os.environ["FOLDER"]
+          page = urllib.request.urlopen(f"https://drive.google.com/embeddedfolderview?id={folder}").read().decode()
+          entries = re.findall(r'href="https://drive\.google\.com/file/d/([\w-]+)/view[^"]*".*?flip-entry-title">([^<]+)<', page, re.S)
+          print(len(entries), "files")
+          for fid, name in entries:
+              name = html.unescape(name).strip().replace("/", "_")
+              url = f"https://drive.usercontent.google.com/download?id={fid}&export=download&confirm=t"
+              data = urllib.request.urlopen(url).read()
+              open(f"out/drive/{name}", "wb").write(data)
+              print(name, len(data))
+          PY
+          ls -la out/drive
+      - name: Save
+        run: bash .github/scripts/save_to_reports.sh "drive/${{ inputs.folder }}" out/drive
