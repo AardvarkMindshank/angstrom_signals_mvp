@@ -1,0 +1,13 @@
+{
+ "about": "A real person's own photo (with his permission), redrawn; inputs and outputs stay encrypted. Original designs, not any existing character.",
+ "jobs": [
+  {"id": "angus_captain_photo", "model": "fal-ai/flux-pro/kontext", "input": {"image_url": "file:angus.jpg", "aspect_ratio": "3:4", "num_images": 2, "output_format": "png",
+   "prompt": "Keep this man's face, beard, hair and smile exactly. Make him a modern yacht captain: navy captain's peaked cap with a small gold compass badge, navy pea coat with brass buttons over a white shirt. Place him on the deck of a sailing yacht at sunrise with a calm golden sea behind him. Photorealistic, head and shoulders, looking at the camera, lips closed with a friendly smile."}},
+  {"id": "angus_captain_3d", "model": "fal-ai/flux-pro/kontext", "input": {"image_url": "file:angus.jpg", "aspect_ratio": "3:4", "num_images": 2, "output_format": "png",
+   "prompt": "Turn this man into a 3D animated film character while keeping him recognisable: same face shape, dark hair and beard, friendly smile. He is a modern ship's captain in a white peaked cap with a small gold compass badge and a navy pea coat with brass buttons, on a ship's bridge with a brass compass and a window onto a calm sea at sunrise. Warm cinematic lighting, head and shoulders, looking at the camera, lips closed with a smile."}},
+  {"id": "angus_captain_painted", "model": "fal-ai/flux-pro/kontext", "input": {"image_url": "file:angus.jpg", "aspect_ratio": "3:4", "num_images": 2, "output_format": "png",
+   "prompt": "Repaint this man as a classic maritime oil-painting portrait while keeping his face, beard and smile: a ship's captain in a navy peaked cap with a gold compass badge and a navy coat with brass buttons, a stormy-to-clearing sea and sky behind him, rich brush strokes, head and shoulders, looking at the viewer, lips closed with a warm smile."}},
+  {"id": "angus_presenter", "model": "fal-ai/flux-pro/kontext", "input": {"image_url": "file:angus.jpg", "aspect_ratio": "3:4", "num_images": 2, "output_format": "png",
+   "prompt": "Keep this man's face, beard, hair and smile exactly. Make him a financial market presenter: a well-fitted navy blazer over a dark open-collar shirt, neat hair. Soft studio lighting, softly blurred deep-blue newsroom background with faint glowing market charts. Photorealistic, head and shoulders, looking straight at the camera, lips closed with a friendly smile, sharp focus."}}
+ ]
+}
