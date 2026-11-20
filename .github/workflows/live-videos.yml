@@ -21,6 +21,10 @@ on:
         description: "Take website screenshots afterwards"
         type: boolean
         default: false
+      only:
+        description: "Only these screenshots (comma-separated step names, e.g. snapshot,logbook,ui_mode): no videos, no reset"
+        type: string
+        default: ""
 permissions:
   contents: write
 concurrency:
@@ -67,23 +71,25 @@ jobs:
             curl -sSfL --retry 12 --retry-delay 30 --retry-all-errors -o out/video/voice_model/$f $kokoro/$f
           done
       - name: Reset the demo account
-        if: github.event_name != 'workflow_dispatch' || inputs.reset
+        if: github.event_name != 'workflow_dispatch' || (inputs.reset && inputs.only == '')
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           DEMO_EMAIL: ${{ secrets.DEMO_EMAIL }}
         run: python video/live_reset.py
       - name: Record
+        if: github.event_name != 'workflow_dispatch' || inputs.only == ''
         env:
           DEMO_EMAIL: ${{ secrets.DEMO_EMAIL }}
           DEMO_PASSWORD: ${{ secrets.DEMO_PASSWORD }}
           QUEUE: ${{ inputs.queue }}
         run: bash video/live_make.sh
       - name: Website screenshots
-        if: always() && inputs.shots
+        if: always() && (inputs.shots || inputs.only != '')
         env:
           DEMO_EMAIL: ${{ secrets.DEMO_EMAIL }}
           DEMO_PASSWORD: ${{ secrets.DEMO_PASSWORD }}
+          ONLY: ${{ inputs.only }}
         run: node video/live_shots.js out/video/shots
       - name: Save to reports branch
         if: always()

@@ -36,7 +36,12 @@ const OUT = process.argv[2] || "out/shots";
     await settle(1200);
     await toTop(b);
   };
-  const step = async (name, fn) => { try { await fn(); } catch (e) { console.log(`${name}: ${String(e).split("\n")[0]}`); } };
+  const ONLY = (process.env.ONLY || "").split(",").map((x) => x.trim()).filter(Boolean);
+  const step = async (name, fn) => {
+    if (ONLY.length && !ONLY.includes(name)) return;
+    try { await fn(); } catch (e) { console.log(`${name}: ${String(e).split("\n")[0]}`); }
+  };
+  const side = (text) => page.locator("[data-testid='stSidebar'] summary").filter({ hasText: text }).first();
 
   await page.goto(URL, { waitUntil: "domcontentloaded" });
   await page.waitForSelector('input[autocomplete="username"]', { timeout: 180000 });
@@ -111,6 +116,18 @@ const OUT = process.argv[2] || "out/shots";
     const board = page.locator(".lat.fun").first();
     await toTop(board); await shot("funnel");
     await fold("Angstrom Lattice");
+  });
+  // 📓 Logbook and ☀️/🌙 Day or night (sidebar), checked after the 20 Nov changes; not website pictures.
+  await step("logbook", async () => {
+    const s = side("Logbook"); await s.click(); await settle(4000);
+    await s.evaluate((n) => n.scrollIntoView({ block: "start" })).catch(() => {});
+    await page.waitForTimeout(800); await shot("logbook"); await s.click(); await settle();
+  });
+  await step("ui_mode", async () => {
+    const s = side("Settings"); await s.click(); await settle(2500);
+    const c = side("UI Colours"); await c.click(); await settle(2500);
+    await c.evaluate((n) => n.scrollIntoView({ block: "start" })).catch(() => {});
+    await page.waitForTimeout(800); await shot("ui_mode");
   });
   await step("navigator", async () => {
     await page.evaluate(() => window.scrollTo(0, 0));
