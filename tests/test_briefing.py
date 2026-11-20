@@ -80,3 +80,14 @@ def test_weather_from_market_mood():
     assert briefing.weather({"markets": [{"score_0_to_100": 30}]}) == "stormy"
     assert briefing.weather({"markets": [{"score_0_to_100": 60}], "tide": ["Storm warning: CPI"]}) == "rough"
     assert briefing.weather({}) == "changeable"
+
+
+def test_script_from_the_ai_reply(monkeypatch):
+    import ai_providers
+
+    monkeypatch.setattr(ai_providers, "available", lambda p: True)
+    monkeypatch.setattr(ai_providers, "app_choice", lambda db, use: "grok")
+    words = "This is the Angstrom Signals morning forecast. " + "Calm seas. " * 40
+    text, who = briefing.write_script(None, {}, briefing.settings_of({}), datetime(2026, 11, 20),
+                                      chat=lambda *a, **k: (words + "\n\nFair winds.", True))
+    assert who == "grok" and text.startswith("This is") and not text.startswith("(") and "True" not in text

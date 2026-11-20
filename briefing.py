@@ -307,7 +307,7 @@ def plain_script(facts: dict, b: dict, day: datetime) -> str:
 def clean(text: str) -> str:
     """Strip what a voice would read out badly: markdown marks, emoji, URLs, stray symbols."""
     text = re.sub(r"https?://\S+", "", text or "")
-    text = re.sub(r"[*_#`>|~\[\]]", "", text)
+    text = re.sub(r"[*_#`>|~\[\]]", "", text).replace("\\n", " ")
     text = re.sub(r"[\U0001F000-\U0001FAFF☀-➿️]", "", text)
     return re.sub(r"[ \t]+", " ", text).strip()
 
@@ -321,6 +321,8 @@ def write_script(supabase, facts: dict, b: dict, day: datetime, name: str = "", 
         system, messages = prompt(facts, b, day, name)
         try:
             reply = (chat or ai_providers.chat)(provider, system, messages, max_tokens=1500)
+            if isinstance(reply, (tuple, list)):          # ai_providers.chat gives (text, finished)
+                reply = reply[0]
             text = clean(reply.get("text") if isinstance(reply, dict) else str(reply))
             if len(text.split()) >= 60:
                 return text, provider
