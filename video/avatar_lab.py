@@ -34,10 +34,16 @@ def _resolve(value, inputs: Path, out: Path | None = None):
     return value
 
 
+def _check(r) -> None:
+    """Raise with fal's own short reason (for example an empty balance), never the request itself."""
+    if r.status_code >= 400:
+        raise RuntimeError(f"fal {r.status_code}: {r.text[:200]}")
+
+
 def run_job(job: dict, inputs: Path, out: Path, key: str) -> list[Path]:
     head = {"Authorization": f"Key {key}", "Content-Type": "application/json"}
     r = requests.post(f"{API}/{job['model']}", headers=head, json=_resolve(job["input"], inputs, out), timeout=300)
-    r.raise_for_status()
+    _check(r)
     q = r.json()
     status_url, response_url = q["status_url"], q["response_url"]
     for _ in range(480):                                   # up to 40 minutes (video models queue when busy)
@@ -48,7 +54,7 @@ def run_job(job: dict, inputs: Path, out: Path, key: str) -> list[Path]:
     else:
         raise TimeoutError("fal job did not finish")
     res = requests.get(response_url, headers=head, timeout=120)
-    res.raise_for_status()
+    _check(res)
     body = res.json()
     media = [m["url"] for m in (body.get("images") or [])] + ([body["video"]["url"]] if body.get("video") else [])
     saved = []
