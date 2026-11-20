@@ -29,3 +29,9 @@ live_videos/2026-11-18_0247_7b3c982/u2-ai-navigator
 live_videos/2026-11-18_0247_7b3c982/u4-dynamic-funnel
 live_videos/2026-11-19_0528_de208c0/s1-soundings
 live_videos/2026-11-19_0516_10450be/s2-soundings-in-depth
+live_videos/2026-11-19_1918_5a9e411/c1-charts-overview
+live_videos/2026-11-19_1918_5a9e411/c2-drawing-tools
+live_videos/2026-11-19_1918_5a9e411/c3-levels
+live_videos/2026-11-19_2021_a77b66c/c4-signals-on-chart
+live_videos/2026-11-19_1944_a9640e8/c5-plan-entry
+live_videos/2026-11-19_1944_a9640e8/c6-chart-to-signals

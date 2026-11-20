@@ -64,6 +64,15 @@ SERIES = {
         ("s1-soundings", "Soundings at a glance", "1:31"),
         ("s2-soundings-in-depth", "Soundings in depth", "4:48"),
     ]),
+    # Recorded on the live site (demo account), 19-20 Nov 2026: the chart, one feature group per video.
+    "charts": ("Charts", [
+        ("c1-charts-overview", "Charts at a glance", "1:36"),
+        ("c2-drawing-tools", "Drawing tools", "1:23"),
+        ("c3-levels", "Where the money sits", "1:25"),
+        ("c4-signals-on-chart", "Signals on the chart", "1:25"),
+        ("c5-plan-entry", "Planning an entry", "1:30"),
+        ("c6-chart-to-signals", "From the chart to your signals", "1:36"),
+    ]),
 }
 STATE = "training_video"
 
