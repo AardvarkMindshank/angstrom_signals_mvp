@@ -13,6 +13,7 @@ const fs = require("fs");
   const p = await b.newPage({ viewport: { width: W, height: H } });
   await p.goto("file://" + require("path").resolve(page));
   await p.evaluate((s) => window.setup(s), spec);
+  await p.evaluate(() => Promise.all(Array.from(document.images).map((i) => i.decode().catch(() => null))));
   await p.waitForTimeout(400);
   for (let i = 0; i < n; i++) {
     await p.evaluate((t) => window.render(t), i / F);

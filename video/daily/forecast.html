@@ -7,6 +7,9 @@
   * { box-sizing:border-box; margin:0; padding:0; }
   html,body { overflow:hidden; background:#04102a; font-family:"Inter Display","Inter",sans-serif; color:var(--ink); }
   #stage { position:absolute; left:0; top:0; overflow:hidden; }
+  #screens { position:absolute; inset:0; overflow:hidden; perspective:1800px; }
+  #screens img { position:absolute; left:50%; top:50%; border-radius:26px; will-change:transform,opacity;
+                 box-shadow:0 40px 120px rgba(0,0,0,.6); filter:saturate(.8) blur(1.5px); }
   #bg { position:absolute; inset:-200px; }
   #grid { position:absolute; inset:0; opacity:.08; background-image:linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),
           linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px); background-size:80px 80px; }
@@ -41,6 +44,7 @@
   </defs>
   <path id="p2" fill="url(#w2)"/><path id="p1" fill="url(#w1)"/>
 </svg>
+<div id="screens"></div>
 <div id="segs"></div>
 <div id="top"><span class="pill" id="topdate"></span><span id="topw"></span></div>
 <div id="foot">Readings describe markets. Not financial advice.</div>
@@ -92,6 +96,7 @@ function capCaption(seg) {
   const d = S.data;
   const tideWord = d.tide.state === "out" ? "Tide going out" : d.tide.state === "in" ? "Tide coming in" : "Tide turning";
   const titles = { welcome: ["Morning<br>forecast", d.date], weather: [esc(d.weather_word), `${tideWord} · Sea ${esc(d.tide.sea)}`],
+    sign_story: ["The story<br>of the day", esc(d.story?.title || "")],
     sign_tides: ["The tide &amp;<br>currents", "The big picture"], sign_equities: ["Equity<br>markets", "S&amp;P 500 · Nasdaq"],
     sign_crypto: ["The crypto<br>seas", "Bitcoin and the top coins"], sign_horizon: ["On the<br>horizon", "What's coming up"],
     signoff: ["Fair winds", "and following seas"] };
@@ -113,6 +118,26 @@ function narrContent(seg) {
     return `<div class="it" style="font-size:${z(120, 150)}px">${d.weather_icon}</div>
       <div class="it kicker" style="font-size:${z(104, 112)}px;margin-top:10px">${esc(d.date)}</div>
       <div class="it sub" style="font-size:${z(58, 70)}px;margin-top:34px;font-weight:700;color:#fff">${esc(d.headline)}</div>`;
+  }
+  if (seg.kind === "story") {
+    const a = d.story?.asset;
+    let card = "";
+    if (a && a.spark && a.spark.length > 1) {
+      card = `<div class="it card" style="padding:${z("30px 40px", "36px 40px")};margin-top:34px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:20px">
+          <div><div style="font-size:${z(48, 60)}px;font-weight:800">${esc(a.name)}</div>
+          ${a.price ? `<div style="font-size:${z(40, 48)}px;color:#e2e8f0">${money(a.price)}</div>` : ""}</div>
+          <div style="text-align:right"><div class="chg ${cls(a.change_1d)}" style="font-size:${z(72, 92)}px;line-height:1">${pct(a.change_1d)}</div>
+          <div class="sub" style="font-size:${z(32, 42)}px">${pct(a.change_7d)} · 7 days</div></div></div>
+        <div style="margin-top:20px">${spark(a.spark, z(1500, 900), z(300, 420), up(a.change_7d))}</div></div>`;
+    } else if (a) {
+      card = `<div class="it card" style="padding:40px;margin-top:34px;text-align:center">
+        <div style="font-size:${z(52, 64)}px;font-weight:800">${esc(a.name)}</div>
+        <div style="font-size:${z(110, 140)}px;font-weight:900;margin-top:10px">${num(a.value)}</div>
+        <div class="chg ${cls(a.change_7d, a.inverse)}" style="font-size:${z(52, 64)}px">${chgText({ change: a.change_7d, pts: a.pts })} · 7 days</div></div>`;
+    }
+    return `<div class="it" style="font-size:${z(40, 50)}px;color:var(--amber);font-weight:800;letter-spacing:2px">⭐ THE STORY OF THE DAY</div>
+      <div class="it kicker" style="font-size:${z(96, 104)}px;margin-top:14px">${esc(d.story?.title || "")}</div>${card}`;
   }
   if (seg.kind === "tides") {
     const arrow = d.tide.state === "out" ? "↘" : d.tide.state === "in" ? "↗" : "↔";
@@ -176,6 +201,40 @@ function narrContent(seg) {
   return "";
 }
 
+// 🖥️ The matching app screen behind each section: dim, angled and drifting slowly (fixed pictures from the app).
+const SCREEN_OF = { welcome: "snapshot", date: "snapshot", weather: "tides", sign_story: "chart", story: "chart",
+  sign_tides: "tides", tides: "tides", sign_equities: "table", equities: "table", sign_crypto: "chart", crypto: "chart",
+  sign_horizon: "tides", horizon: "tides", signoff: "funnel", close: "funnel" };
+const SCREEN_DIM = 0.13;
+let SPANS = [];
+function buildScreens(segments) {
+  SPANS = [];
+  for (const seg of segments) {
+    const key = SCREEN_OF[seg.kind];
+    const last = SPANS[SPANS.length - 1];
+    if (last && last.key === key) last.end = seg.end; else SPANS.push({ key, start: seg.start, end: seg.end });
+  }
+  SPANS.forEach((sp, i) => {
+    const img = document.createElement("img");
+    img.src = "screens/" + sp.key + ".jpg";
+    img.style.width = (P ? 1500 : 2100) + "px";
+    sp.el = img; sp.dir = i % 2 ? -1 : 1;
+    $("screens").appendChild(img);
+  });
+}
+function renderScreens(t) {
+  for (const sp of SPANS) {
+    const fin = clamp((t - sp.start + 0.5) / 0.9), fout = clamp((sp.end + 0.5 - t) / 0.9);
+    const o = SCREEN_DIM * Math.min(fin, fout);
+    sp.el.style.opacity = String(o);
+    if (o <= 0) { sp.el.style.display = "none"; continue; }
+    sp.el.style.display = "block";
+    const k = clamp((t - sp.start) / Math.max(sp.end - sp.start, 1));
+    const dx = sp.dir * (-80 + 160 * k), dy = -20 + 40 * k;
+    sp.el.style.transform = `translate(-50%,-50%) translate(${dx}px,${dy}px) rotateY(${sp.dir * -16}deg) rotateX(9deg) rotateZ(${sp.dir * -4}deg) scale(${1.05 + 0.06 * k})`;
+  }
+}
+
 window.setup = function (spec) {
   S = spec; P = spec.layout === "port";
   [W, H] = P ? [1080, 1920] : [1920, 1080];
@@ -203,6 +262,7 @@ window.setup = function (spec) {
     seg.el = el; seg.items = Array.from(el.querySelectorAll(".it"));
     holder.appendChild(el);
   }
+  buildScreens(spec.segments);
   window.render(0);
 };
 
@@ -221,6 +281,7 @@ window.render = function (t) {
   wave("p2", t, 30 * rough, 700, 1.1 * rough, 220, 0.4);
   wave("p1", t, 40 * rough, 560, 1.5 * rough, 270, 2.1);
   $("grid").style.transform = `translate(${-(t * 12) % 80}px, ${-(t * 5) % 80}px)`;
+  renderScreens(t);
   let anyNarr = false;
   for (const seg of S.segments) {
     const on = t >= seg.start - 0.4 && t <= seg.end + 0.4;

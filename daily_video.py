@@ -45,7 +45,14 @@ INVERSE_WORDS = ("fear", "vix", "volatility")    # metrics where up is bad: thei
 SPARK = {"SPY": ("equity", "SPY"), "QQQ": ("equity", "QQQ"), "Bitcoin": ("crypto", "bitcoin"),
          "Ether": ("crypto", "ethereum"), "Solana": ("crypto", "solana"), "XRP": ("crypto", "ripple"),
          "BNB": ("crypto", "binancecoin")}
-SECTIONS = {"tides": 38, "equities": 32, "crypto": 38, "horizon": 24}     # words each, for about 90 seconds in all
+# Words for each section, for about 90 seconds in all. Weekends (stock markets shut) drop equities and give crypto
+# the time instead.
+SECTIONS = {"story": 30, "tides": 30, "equities": 26, "crypto": 32, "horizon": 18}
+WEEKEND_SECTIONS = {"story": 30, "tides": 30, "crypto": 46, "horizon": 18}
+
+
+def sections_for(day: datetime) -> dict:
+    return WEEKEND_SECTIONS if day.weekday() >= 5 else SECTIONS
 
 
 def _ordinal(n: int) -> str:
@@ -60,21 +67,33 @@ def _ordinal(n: int) -> str:
 
 # ------------------------------------------------------------------------------------------------ the script
 
-SYSTEM = (
-    "You write the narration for a 90-second daily market video in the style of the shipping forecast: calm, "
-    "clear, a light nautical flavour that never hides a fact. A ship's captain introduces each section; you write "
-    "only what the narrator says inside each section. Write for the ear: short sentences, plain words, numbers "
-    "rounded and said naturally (\"about 2 percent\", \"sixty-two thousand dollars\"), no symbols, no lists, no "
-    "brand or app names. Use only the facts given; never invent prices, news or events. Describe; never tell anyone "
-    "to buy, sell or hold. Reply with JSON only: {\"headline\": a punchy headline of at most 7 words for the day, "
-    "\"tides\": about %(tides)d words on the Tide (the macro backdrop: risk-on or defensive, for how long), the sea "
-    "state and the strongest currents (dollar, gold, oil, fear index), \"equities\": about %(equities)d words on the "
-    "S&P 500 and Nasdaq moves and the stock-market mood, \"crypto\": about %(crypto)d words on Bitcoin, Ether and "
-    "the other top coins and the crypto mood, \"horizon\": about %(horizon)d words on the next scheduled events}."
-) % SECTIONS
+ASK = {
+    "story": "\"story\": {\"title\": at most 6 words, \"text\": about %d words, \"asset\": the name of the one market "
+             "or coin it is about exactly as given in the facts, or \"\"} for the story of the day: the single "
+             "standout (the biggest mover, a turn in the Tide, a jump in the fear index, a big event)",
+    "tides": "\"tides\": about %d words on the Tide (the macro backdrop: risk-on or defensive, for how long), the "
+             "sea state and the strongest currents (dollar, gold, oil, fear index)",
+    "equities": "\"equities\": about %d words on the S&P 500 and Nasdaq moves and the stock-market mood",
+    "crypto": "\"crypto\": about %d words on Bitcoin, Ether and the other top coins and the crypto mood",
+    "horizon": "\"horizon\": about %d words on the next scheduled events",
+}
 
 
-def _template(facts: dict) -> dict:
+def system_prompt(sections: dict, weekend: bool) -> str:
+    parts = ", ".join(ASK[k] % n for k, n in sections.items())
+    return (
+        "You write the narration for a 90-second daily market video in the style of the shipping forecast: calm, "
+        "clear, a light nautical flavour that never hides a fact. A ship's captain introduces each section; you write "
+        "only what the narrator says inside each section. Write for the ear: short sentences, plain words, numbers "
+        "rounded and said naturally (\"about 2 percent\", \"sixty-two thousand dollars\"), no symbols, no lists, no "
+        "brand or app names. Use only the facts given; never invent prices, news or events. Describe; never tell "
+        "anyone to buy, sell or hold. "
+        + ("It is the weekend: stock markets are shut, so do not talk about today's stock moves. " if weekend else "")
+        + "Reply with JSON only: {\"headline\": a punchy headline of at most 7 words for the day, " + parts + "}."
+    )
+
+
+def _template(facts: dict, sections: dict = SECTIONS) -> dict:
     """The sections without AI, from the facts alone."""
     km = {a["name"]: a for a in facts.get("key_markets") or []}
     coins = facts.get("cryptos") or []
@@ -85,11 +104,18 @@ def _template(facts: dict) -> dict:
     cr = f"Bitcoin moved {btc.get('change_1d', 0):+.1f} percent on the day." if btc else "Crypto was mixed."
     ev = facts.get("events") or []
     hz = f"Next up: {ev[0]['what']}, {ev[0]['when_utc']} UTC." if ev else "A quiet week on the calendar."
-    return {"headline": "Your morning market forecast", "tides": tide, "equities": eq, "crypto": cr, "horizon": hz}
+    movers = [a for a in (facts.get("key_markets") or []) + coins if a.get("change_1d") is not None]
+    big = max(movers, key=lambda a: abs(a["change_1d"]), default=None)
+    story = ({"title": f"{big['name']} on the move", "asset": big["name"],
+              "text": f"{big['name']} moved {big['change_1d']:+.1f} percent over the last day."} if big else
+             {"title": "A steady day", "asset": "", "text": "No single market stood out over the last day."})
+    out = {"headline": "Your morning market forecast", "story": story, "tides": tide, "equities": eq, "crypto": cr,
+           "horizon": hz}
+    return {k: out[k] for k in ("headline", *sections)}
 
 
-def write_sections(supabase, facts: dict, chat=None) -> tuple[dict, str]:
-    """({headline, tides, equities, crypto, horizon}, who wrote it)."""
+def write_sections(supabase, facts: dict, chat=None, sections: dict = SECTIONS, weekend: bool = False) -> tuple[dict, str]:
+    """({headline, story {title, text, asset}, tides, equities?, crypto, horizon}, who wrote it)."""
     import ai_providers
 
     provider = ai_providers.pick("briefing", ai_providers.app_choice(supabase, "briefing"))
@@ -97,17 +123,23 @@ def write_sections(supabase, facts: dict, chat=None) -> tuple[dict, str]:
         try:
             data = {k: facts.get(k) for k in ("conditions", "markets", "tide", "key_markets", "cryptos", "events")}
             data["overall_weather"] = briefing.weather(facts)
-            reply = (chat or ai_providers.chat)(provider, SYSTEM, [{"role": "user", "content": json.dumps(
+            reply = (chat or ai_providers.chat)(provider, system_prompt(sections, weekend), [{"role": "user", "content": json.dumps(
                 data, ensure_ascii=False, default=str)}], max_tokens=1200)
             if isinstance(reply, (tuple, list)):
                 reply = reply[0]
             text = reply.get("text") if isinstance(reply, dict) else str(reply)
             got = json.loads(re.search(r"\{.*\}", text, re.S).group(0))
-            if all(isinstance(got.get(k), str) and got[k].strip() for k in ("headline", *SECTIONS)):
-                return {k: briefing.clean(got[k]) for k in ("headline", *SECTIONS)}, provider
+            story = got.get("story") if isinstance(got.get("story"), dict) else None
+            plain = [k for k in ("headline", *sections) if k != "story"]
+            if story and str(story.get("text") or "").strip() and all(
+                    isinstance(got.get(k), str) and got[k].strip() for k in plain):
+                out = {k: briefing.clean(got[k]) for k in plain}
+                out["story"] = {"title": briefing.clean(str(story.get("title") or "")) or "The story of the day",
+                                "text": briefing.clean(str(story["text"])), "asset": str(story.get("asset") or "")}
+                return out, provider
         except Exception as exc:
             print(f"Video script by AI failed: {str(exc)[:160]}")
-    return _template(facts), "template"
+    return _template(facts, sections), "template"
 
 
 # ------------------------------------------------------------------------------------------------ the graphics' data
@@ -145,6 +177,14 @@ def graphics_data(facts: dict, sections: dict, day: datetime, load=None) -> dict
               "change_7d": c.get("change_7d"), "spark": _spark(load, *SPARK[c["name"]]) if c["name"] in SPARK else []}
              for c in facts.get("cryptos") or []]
     moods = {m["market"]: m.get("score_0_to_100") for m in facts.get("markets") or []}
+    story = sections.get("story") or {}
+    pool = {s_["name"]: s_ for s_ in stocks} | {c["name"]: c for c in coins}
+    alias = {"S&P 500 (the SPY fund)": "S&P 500", "Nasdaq 100 (the QQQ fund)": "Nasdaq 100"}
+    hit = pool.get(alias.get(story.get("asset", ""), story.get("asset", "")))
+    if hit is None:                                    # a current (gold, oil, the fear index): no chart, its number
+        cur = next((c for c in currents if c["name"] == story.get("asset")), None)
+        hit = {"name": cur["name"], "value": cur["value"], "change_7d": cur["change"], "inverse": cur["inverse"],
+               "pts": cur["pts"]} if cur else None
     events = []
     for e in (facts.get("events") or [])[:3]:
         events.append({"what": e.get("what"), "when": e.get("when_utc"), "why": e.get("why")})
@@ -154,6 +194,7 @@ def graphics_data(facts: dict, sections: dict, day: datetime, load=None) -> dict
         "tide": {"state": cond.get("tide") or "", "sea": cond.get("sea") or "", "days": int(days.group(1)) if days else None},
         "currents": currents, "stocks": stocks, "stock_mood": moods.get("stock market"),
         "coins": coins, "crypto_mood": moods.get("crypto"), "events": events,
+        "story": {"title": story.get("title", ""), "asset": hit},
         "brand": {"show": bool(brand.SHOW_IN_VIDEO), "name": brand.NAME, "domain": brand.DOMAIN},
     }
 
@@ -180,19 +221,24 @@ def duration(path: Path) -> float:
     return float(out.strip())
 
 
-def captain_clips(weather: str, rng: random.Random) -> list[tuple[str, str]]:
+def captain_clips(weather: str, rng: random.Random, weekend: bool = False) -> list[tuple[str, str]]:
     """[(segment kind, clip name)] in running order."""
     pick = lambda base: f"cap_{base}_{rng.choice((1, 2))}_1.mp4"     # noqa: E731  (avatar lab names: <id>_1.mp4)
-    return [("welcome", pick("welcome")), ("weather", pick(f"weather_{weather}")), ("sign_tides", pick("sign_tides")),
-            ("sign_equities", pick("sign_equities")), ("sign_crypto", pick("sign_crypto")),
-            ("sign_horizon", pick("sign_horizon")), ("signoff", pick("signoff"))]
+    out = [("welcome", pick("welcome_weekend" if weekend else "welcome")), ("weather", pick(f"weather_{weather}")),
+           ("sign_story", pick("sign_story")), ("sign_tides", pick("sign_tides"))]
+    if not weekend:
+        out.append(("sign_equities", pick("sign_equities")))
+    return out + [("sign_crypto", pick("sign_crypto")), ("sign_horizon", pick("sign_horizon")),
+                  ("signoff", pick("signoff"))]
 
 
 def timeline(caps: dict, narr: dict) -> list[dict]:
     """Segments [{kind, start, end, clip?, audio?}] from the clip and voice lengths (seconds)."""
-    order = [("cap", "welcome"), ("narr", "date"), ("cap", "weather"), ("cap", "sign_tides"), ("narr", "tides"),
-             ("cap", "sign_equities"), ("narr", "equities"), ("cap", "sign_crypto"), ("narr", "crypto"),
-             ("cap", "sign_horizon"), ("narr", "horizon"), ("cap", "signoff"), ("narr", "close")]
+    order = [("cap", "welcome"), ("narr", "date"), ("cap", "weather"), ("cap", "sign_story"), ("narr", "story"),
+             ("cap", "sign_tides"), ("narr", "tides"), ("cap", "sign_equities"), ("narr", "equities"),
+             ("cap", "sign_crypto"), ("narr", "crypto"), ("cap", "sign_horizon"), ("narr", "horizon"),
+             ("cap", "signoff"), ("narr", "close")]
+    order = [(who, kind) for who, kind in order if kind in (caps if who == "cap" else narr)]   # weekends: no equities
     t, out = 0.6, []                                  # a breath of music first
     for who, kind in order:
         src = caps[kind] if who == "cap" else narr[kind]
@@ -283,18 +329,21 @@ def build(supabase, library: Path, music_dir: Path, out_dir: Path, models: Path,
     work.mkdir(exist_ok=True)
     day = briefing.local_now(briefing.EDITIONS[edition]["zone"], now + timedelta(hours=6))
     facts = briefing.general_facts(supabase, now)
-    sections, writer = write_sections(supabase, facts)
+    weekend = day.weekday() >= 5
+    plan = sections_for(day)
+    sections, writer = write_sections(supabase, facts, sections=plan, weekend=weekend)
     spec = graphics_data(facts, sections, day)
     date_line = f"{day.strftime('%A')}, the {_ordinal(day.day)} of {day.strftime('%B')}. {sections['headline']}."
-    close_line = f"That was your daily market briefing for {day.strftime('%A')} the {_ordinal(day.day)} of {day.strftime('%B')}."
-    texts = {"date": date_line, **{k: sections[k] for k in SECTIONS}, "close": close_line}
+    close_line = f"That was your {'weekend' if weekend else 'daily'} market briefing for {day.strftime('%A')} the {_ordinal(day.day)} of {day.strftime('%B')}."
+    texts = {"date": date_line, **{k: (sections[k]["text"] if k == "story" else sections[k]) for k in plan},
+             "close": close_line}
     narr = {}
     for kind, text in texts.items():
         path = work / f"narr_{kind}.wav"
         narr[kind] = {"file": str(path), "seconds": speak(text, path, models), "text": text}
     rng = random.Random(day.date().isoformat())
     caps = {kind: {"file": clip, "seconds": duration(library / clip)}
-            for kind, clip in captain_clips(spec["weather"], rng)}
+            for kind, clip in captain_clips(spec["weather"], rng, weekend)}
     segs = timeline(caps, narr)
     music = music_dir / MUSIC.get(spec["weather"], "3-Cloudy.mp3")
     made = {}

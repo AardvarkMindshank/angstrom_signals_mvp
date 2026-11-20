@@ -62,9 +62,13 @@ jobs:
         run: |
           [ -n "$LAB_KEY" ] || { echo "AVATAR_LAB_KEY is not set"; exit 1; }
           git fetch -q origin reports
-          git show origin/reports:avatar_lab/library_captain/lab.tgz.enc > lib.enc
-          openssl enc -d -aes-256-cbc -pbkdf2 -in lib.enc -out lib.tgz -pass env:LAB_KEY
-          mkdir -p lib && tar -xzf lib.tgz -C lib && rm -f lib.enc lib.tgz
+          mkdir -p lib
+          # Every clip pack in the library (the first set, then additions such as the story and weekend lines).
+          for f in $(git ls-tree --name-only origin/reports avatar_lab/library_captain/); do
+            git show "origin/reports:$f" > lib.enc
+            openssl enc -d -aes-256-cbc -pbkdf2 -in lib.enc -out lib.tgz -pass env:LAB_KEY
+            tar -xzf lib.tgz -C lib && rm -f lib.enc lib.tgz
+          done
           mkdir -p music
           for f in 1-Sunshine 2-Springtime 3-Cloudy 4-Rainy 5-Stormy; do
             git show "origin/reports:drive/1EKuY0a0mL0hsCwO98ok-K0t_Yh-L_hsm/drive/$f.mp3" > "music/$f.mp3"
