@@ -295,7 +295,7 @@ def build(supabase, library: Path, music_dir: Path, out_dir: Path, models: Path,
     music = music_dir / MUSIC.get(spec["weather"], "3-Cloudy.mp3")
     made = {}
     for layout in LAYOUTS:
-        made[layout] = str(render_layout(layout, spec, segs, library, music, work,
+        made[layout] = str(render_layout(layout, {"data": spec}, segs, library, music, work,
                                          out_dir / f"forecast_{day.date().isoformat()}_{layout}.mp4"))
     (out_dir / "script.json").write_text(json.dumps({"writer": writer, "texts": texts, "segments": segs, "spec": spec},
                                                     ensure_ascii=False, indent=1, default=str))
