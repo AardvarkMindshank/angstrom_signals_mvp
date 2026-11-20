@@ -132,15 +132,20 @@ def recover(jobs: list, inputs: Path, outdir: Path, key: str, window: str) -> in
             if not cursor:
                 break
         print(f"{model}: {len(items)} finished request(s) in the window", flush=True)
-        for it in items:
+        print("wanted lengths: " + ", ".join(sorted(f"{s_:.2f}" for m, s_, _ in want.values() if m == model)), flush=True)
+        for n, it in enumerate(items):
             inp, res = it.get("json_input") or {}, it.get("json_output") or {}
             if not (res.get("video") and inp.get("audio_url") and inp.get("image_url")):
+                print(f"item {n}: no payload ({sorted(inp)[:6]}, {sorted(res)[:6]})", flush=True)
                 continue
             try:
                 secs = round(_seconds(_bytes_of(inp["audio_url"])), 2)
                 pic = hashlib.sha256(_bytes_of(inp["image_url"])).hexdigest()
-            except Exception:
+            except Exception as exc:
+                kind = "data" if str(inp["audio_url"]).startswith("data:") else "link"
+                print(f"item {n}: unreadable {kind} audio ({type(exc).__name__}: {str(exc)[:80]})", flush=True)
                 continue
+            print(f"item {n}: {secs:.2f}s, picture {'known' if any(h == pic for _, _, h in want.values()) else 'new'}", flush=True)
             hits = [i for i, (m, s_, h) in want.items() if m == model and abs(s_ - secs) <= 0.01 and h == pic]
             if not hits:
                 hits = [i for i, (m, s_, _h) in want.items() if m == model and abs(s_ - secs) <= 0.01]
