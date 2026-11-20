@@ -45,6 +45,50 @@ PRESENTERS = {
     "deck": {"title": "The Deckhand", "voice": "bm_lewis", "speed": 1.08},
 }
 ROSTER = {0: "cap", 1: "mate", 2: "cap", 3: "nav", 4: "cap", 5: "deck", 6: "mate"}     # Monday = 0
+PRESENTERS["cat"] = {"title": "The Ship's Cat", "voice": "af_nicole", "speed": 1.25}
+CAT_CHANCE = 1 / 14                 # the ship's cat takes a whole day now and then (once its full clip set exists)
+# 🎁 Guests on special days: a cameo (their own welcome and sign-off; the day's presenter does the rest).
+GUESTS = {"santa": "Father Christmas", "ghost": "The Ghost Captain", "bunny": "The Easter Bunny",
+          "neptune": "King Neptune"}
+FIXED_DAYS = {(12, 24): "santa", (12, 25): "santa", (10, 31): "ghost"}
+SET_LINES = ("welcome", "welcome_weekend", "weather_sunny", "weather_fair", "weather_changeable", "weather_rough",
+             "weather_stormy", "sign_story", "sign_tides", "sign_equities", "sign_crypto", "sign_horizon", "signoff")
+
+
+def easter(year: int) -> tuple[int, int]:
+    """(month, day) of Easter Sunday (the Gregorian computus)."""
+    a, b, c = year % 19, year // 100, year % 100
+    d, e = b // 4, b % 4
+    g = (8 * b + 13) // 25
+    h = (19 * a + b - d - g + 15) % 30
+    i, k = c // 4, c % 4
+    l_ = (32 + 2 * e + 2 * i - h - k) % 7
+    m = (a + 11 * h + 22 * l_) // 451
+    month = (h + l_ - 7 * m + 114) // 31
+    return month, (h + l_ - 7 * m + 114) % 31 + 1
+
+
+def has_set(library: Path, who: str) -> bool:
+    """Whether the library holds a presenter's whole clip set (first versions at least)."""
+    return all((library / f"{who}_{line}_1_1.mp4").exists() for line in SET_LINES)
+
+
+def guest_for(day: datetime, facts: dict | None, library: Path | None) -> str | None:
+    """The day's guest, if any and if their cameo clips are in the library: Father Christmas on the 24th and 25th of
+    December, the ghost captain at Halloween, the Easter Bunny on Easter Sunday, King Neptune on Fed decision days."""
+    guest = FIXED_DAYS.get((day.month, day.day))
+    if guest is None and (day.month, day.day) == easter(day.year):
+        guest = "bunny"
+    if guest is None:
+        when = day.strftime("%d %B")
+        for e in (facts or {}).get("events") or []:
+            text = f"{e.get('what', '')} {e.get('when_utc', '')}"
+            if ("Fed" in text or "FOMC" in text) and when.lstrip("0") in text.replace(" 0", " "):
+                guest = "neptune"
+    if guest and library is not None and not all((library / f"{guest}_{k}_1_1.mp4").exists()
+                                                 for k in ("welcome", "signoff")):
+        return None
+    return guest
 GAP = 0.25                       # seconds between segments
 FPS = 30
 MUSIC = {"sunny": "1-Sunshine.mp3", "fair": "2-Springtime.mp3", "changeable": "3-Cloudy.mp3",
@@ -236,7 +280,10 @@ def duration(path: Path) -> float:
 def presenter_for(day: datetime, library: Path | None = None, override: str | None = None) -> str:
     """Who presents: the override, else the roster; the captain when that presenter's clips aren't in the library."""
     who = override if override in PRESENTERS else ROSTER.get(day.weekday(), "cap")
-    if library is not None and who != "cap" and not (library / f"{who}_signoff_1_1.mp4").exists():
+    if override is None and library is not None and has_set(library, "cat") and \
+            random.Random(f"cat-{day.date().isoformat()}").random() < CAT_CHANCE:
+        who = "cat"
+    if library is not None and who != "cap" and not has_set(library, who):
         return "cap"
     return who
 
@@ -266,6 +313,8 @@ def timeline(caps: dict, narr: dict) -> list[dict]:
         if kind == "close":
             length += 3.0                               # the end card holds while the music fades
         seg = {"kind": kind, "who": who, "start": round(t, 3), "end": round(t + length, 3)}
+        if who == "cap" and src.get("title"):
+            seg["title"] = src["title"]                 # a guest's cameo: their own name on the badge
         seg["clip" if who == "cap" else "audio"] = src["file"]
         out.append(seg)
         t += length + GAP
@@ -368,6 +417,12 @@ def build(supabase, library: Path, music_dir: Path, out_dir: Path, models: Path,
     rng = random.Random(day.date().isoformat())
     caps = {kind: {"file": clip, "seconds": duration(library / clip)}
             for kind, clip in captain_clips(spec["weather"], rng, weekend, who)}
+    guest = guest_for(day, facts, library)
+    if guest:
+        for kind, line in (("welcome", "welcome"), ("signoff", "signoff")):
+            clip = f"{guest}_{line}_1_1.mp4"
+            caps[kind] = {"file": clip, "seconds": duration(library / clip), "title": GUESTS[guest]}
+        spec["guest"] = {"key": guest, "title": GUESTS[guest]}
     segs = timeline(caps, narr)
     music = music_dir / MUSIC.get(spec["weather"], "3-Cloudy.mp3")
     made = {}

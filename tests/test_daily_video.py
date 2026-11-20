@@ -78,7 +78,38 @@ def test_roster_and_fallback_to_the_captain(tmp_path):
     assert dv.ROSTER[tue.weekday()] == "mate"
     assert dv.presenter_for(tue, tmp_path) == "cap"                     # no First Mate clips yet: the captain
     (tmp_path / "mate_signoff_1_1.mp4").write_bytes(b"")
+    assert dv.presenter_for(tue, tmp_path) == "cap"                     # one clip is not a set
+    for line in dv.SET_LINES:
+        (tmp_path / f"mate_{line}_1_1.mp4").write_bytes(b"")
     assert dv.presenter_for(tue, tmp_path) == "mate"
     assert dv.presenter_for(tue, tmp_path, override="cap") == "cap"
     clips = dict(dv.captain_clips("fair", random.Random(2), who="deck"))
     assert all(c.startswith("deck_") for c in clips.values())
+
+
+def test_easter_and_special_guests(tmp_path):
+    assert dv.easter(2027) == (3, 28) and dv.easter(2026) == (4, 5)
+    xmas = datetime(2026, 12, 25)
+    assert dv.guest_for(xmas, {}, tmp_path) is None                     # no Father Christmas clips yet
+    for k in ("welcome", "signoff"):
+        (tmp_path / f"santa_{k}_1_1.mp4").write_bytes(b"")
+    assert dv.guest_for(xmas, {}, tmp_path) == "santa"
+    fed = {"events": [{"what": "Fed · December meeting", "when_utc": "Wednesday 09 December, 19:00"}]}
+    assert dv.guest_for(datetime(2026, 12, 9), fed, None) == "neptune"
+    assert dv.guest_for(datetime(2026, 12, 8), fed, None) is None
+    assert dv.guest_for(datetime(2027, 3, 28), {}, None) == "bunny"
+
+
+def test_cameo_titles_reach_the_badge():
+    caps = _caps(CAPS)
+    caps["welcome"]["title"] = "Father Christmas"
+    segs = dv.timeline(caps, _narr(("date", "story", "tides", "equities", "crypto", "horizon", "close")))
+    assert segs[0]["title"] == "Father Christmas" and "title" not in segs[2]
+
+
+def test_the_cat_only_with_a_whole_set(tmp_path):
+    for line in dv.SET_LINES:
+        (tmp_path / f"cat_{line}_1_1.mp4").write_bytes(b"")
+    days = [datetime(2027, 1, d) for d in range(1, 32)] + [datetime(2027, 2, d) for d in range(1, 29)]
+    cats = sum(dv.presenter_for(d, tmp_path) == "cat" for d in days)
+    assert 0 < cats < 15                                                  # now and then, not every day
