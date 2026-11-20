@@ -127,6 +127,18 @@ def gather(supabase, user_id: str, prefs: dict, b: dict, now: datetime | None = 
     facts: dict = {}
     want = set(b["sections"])
 
+    # The conditions behind the morning's weather (the music and the opening's tone), whatever sections are chosen:
+    # the Tide's direction and the sea state.
+    try:
+        import tides
+
+        snap = tides.latest(supabase) or {}
+        tide, sea = snap.get("tide") or {}, snap.get("sea") or {}
+        facts["conditions"] = {"tide": tide.get("label") if tide.get("status") == "ok" else None,
+                               "sea": sea.get("state") if sea.get("status") == "ok" else None}
+    except Exception:
+        facts["conditions"] = {}
+
     if "markets" in want:
         try:
             rows = supabase.table("market_mood").select("market_key, sentiment_score, sentiment_report, "
@@ -233,15 +245,21 @@ WEATHERS = ("sunny", "fair", "changeable", "rough", "stormy")
 
 
 def weather(facts: dict) -> str:
-    """The morning's weather, from the markets' mood (0 to 100, averaged over the markets covered): 65 and over sunny,
-    55 fair, 45 changeable, 35 rough, under 35 stormy; a storm warning (a big release within a day) makes it at least
-    rough. Picks the music bed (video/music/briefing_bed_<weather>.mp3) and colours the forecast's words."""
+    """The morning's weather, sunny to stormy. Starts from the markets' mood (0 to 100, averaged over the markets
+    covered): 65 and over sunny, 55 fair, 45 changeable, 35 rough, under 35 stormy. Then the Tide moves it a step:
+    going out one worse, coming in one better; and the sea state: calm one better, rough one worse, storm two worse.
+    A storm warning (a big release within a day) makes it at least rough. Picks the music
+    (video/music/briefing_bed_<weather>.mp3) and sets the opening's tone."""
     scores = [m.get("score_0_to_100") for m in facts.get("markets") or [] if m.get("score_0_to_100") is not None]
     if not scores:
         scores = [a.get("news_sentiment_0_to_100") for a in facts.get("watchlist") or []
                   if a.get("news_sentiment_0_to_100") is not None]
     mood = sum(scores) / len(scores) if scores else 50.0
     level = 0 if mood >= 65 else 1 if mood >= 55 else 2 if mood >= 45 else 3 if mood >= 35 else 4
+    cond = facts.get("conditions") or {}
+    level += {"in": -1, "out": 1}.get(cond.get("tide"), 0)
+    level += {"calm": -1, "rough": 1, "storm": 2}.get(cond.get("sea"), 0)
+    level = max(0, min(4, level))
     if any(str(x).startswith("Storm warning") for x in facts.get("tide") or []):
         level = max(level, 3)
     return WEATHERS[level]

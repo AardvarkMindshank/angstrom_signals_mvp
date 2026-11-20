@@ -72,7 +72,7 @@ def speak(text: str, path: Path, voice: str = "bf_emma", models: Path = MODELS) 
     return len(audio) / rate
 
 
-LOUD, UNDER = 0.55, 0.10      # the weather music on its own, and under the voice
+LOUD, UNDER = 0.55, 0.16      # the weather music on its own, and under the voice (raised 20 Nov)
 RAMP = 1.5                    # seconds to dip under the voice, and to swell back
 
 

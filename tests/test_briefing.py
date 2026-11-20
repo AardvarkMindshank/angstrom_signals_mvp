@@ -91,3 +91,11 @@ def test_script_from_the_ai_reply(monkeypatch):
     text, who = briefing.write_script(None, {}, briefing.settings_of({}), datetime(2026, 11, 20),
                                       chat=lambda *a, **k: (words + "\n\nFair winds.", True))
     assert who == "grok" and text.startswith("This is") and not text.startswith("(") and "True" not in text
+
+
+def test_weather_counts_the_tide_and_the_sea():
+    today = {"markets": [{"score_0_to_100": 46}, {"score_0_to_100": 44}], "conditions": {"tide": "out", "sea": "rough"}}
+    assert briefing.weather(today) == "stormy"
+    assert briefing.weather({"markets": [{"score_0_to_100": 60}], "conditions": {"tide": "in", "sea": "calm"}}) == "sunny"
+    assert briefing.weather({"markets": [{"score_0_to_100": 50}], "conditions": {"tide": "slack", "sea": "moderate"}}) \
+        == "changeable"
