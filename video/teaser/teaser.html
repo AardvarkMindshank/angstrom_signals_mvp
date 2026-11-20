@@ -1,0 +1,214 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+  :root { --navy:#061633; --navy2:#0b2d72; --teal:#2dd4bf; --amber:#f5a524; --ink:#f8fafc; --soft:#a5b4cc; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body { width:1920px; height:1080px; overflow:hidden; background:var(--navy); font-family:"Inter Display","Inter",sans-serif; color:var(--ink); }
+  #stage { position:absolute; inset:0; overflow:hidden; }
+  #bg { position:absolute; inset:-200px; background:
+        radial-gradient(1200px 800px at var(--gx,30%) var(--gy,20%), rgba(45,212,191,.18), transparent 60%),
+        radial-gradient(1000px 900px at 85% 90%, rgba(37,99,235,.35), transparent 60%),
+        linear-gradient(160deg, #04102a 0%, #0a2257 55%, #0b2d72 100%); }
+  #grid { position:absolute; inset:0; opacity:.10;
+          background-image:linear-gradient(rgba(255,255,255,.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.5) 1px, transparent 1px);
+          background-size:80px 80px; }
+  svg#waves { position:absolute; left:0; bottom:0; width:1920px; height:420px; }
+  .el { position:absolute; will-change:transform,opacity; }
+  .kicker { font-weight:900; font-size:118px; letter-spacing:-3px; line-height:.95; text-transform:uppercase;
+            background:linear-gradient(90deg,#ffffff 0%,#c7f9f1 55%,#2dd4bf 100%); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .kmask { overflow:hidden; padding-bottom:12px; }
+  .sub { font-weight:500; font-size:40px; color:#dbe4f3; line-height:1.25; max-width:760px; }
+  .card { border-radius:22px; overflow:hidden; box-shadow:0 40px 90px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.10); background:#111827; }
+  .card img { display:block; width:100%; height:auto; }
+  .chip { font-weight:700; font-size:34px; padding:16px 28px; border-radius:999px; background:rgba(255,255,255,.10);
+          border:1px solid rgba(255,255,255,.28); backdrop-filter:blur(8px); color:#fff; white-space:nowrap; box-shadow:0 14px 30px rgba(0,0,0,.35); }
+  .chip.teal { background:rgba(45,212,191,.20); border-color:rgba(45,212,191,.6); }
+  .chip.amber { background:rgba(245,165,36,.20); border-color:rgba(245,165,36,.6); }
+  #s1 { left:0; right:0; top:330px; text-align:center; font-weight:900; font-size:132px; letter-spacing:-4px; }
+  #s1 span { display:inline-block; margin:0 18px; }
+  #player { width:620px; padding:26px 30px; border-radius:26px; background:rgba(8,20,48,.86); border:1px solid rgba(255,255,255,.18);
+            box-shadow:0 30px 70px rgba(0,0,0,.5); display:flex; align-items:center; gap:24px; }
+  #player .play { width:84px; height:84px; border-radius:50%; background:var(--teal); display:flex; align-items:center; justify-content:center; flex:none; }
+  #player .play::after { content:''; border-left:30px solid #04102a; border-top:19px solid transparent; border-bottom:19px solid transparent; margin-left:8px; }
+  #player .t1 { font-weight:800; font-size:32px; }
+  #player .t2 { font-size:24px; color:var(--soft); margin-top:4px; }
+  #bars { display:flex; align-items:center; gap:5px; height:56px; margin-top:12px; }
+  #bars i { display:block; width:7px; border-radius:4px; background:linear-gradient(#2dd4bf,#60a5fa); }
+  #ask { width:640px; padding:24px 30px; border-radius:26px 26px 26px 8px; background:rgba(255,255,255,.95); color:#0f172a; font-size:32px; font-weight:600;
+         box-shadow:0 30px 70px rgba(0,0,0,.45); }
+  #ask b { color:#b45309; }
+  #end { left:0; right:0; top:0; bottom:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
+  #end img { height:190px; }
+  #end .name { font-weight:900; font-size:112px; letter-spacing:-3px; margin-top:18px; }
+  #end .tag { font-weight:500; font-size:46px; color:#c7f9f1; margin-top:8px; }
+  #end .btn { margin-top:52px; font-weight:800; font-size:38px; padding:22px 46px; border-radius:999px; background:var(--teal); color:#04102a; }
+  #end .url { margin-top:22px; font-size:30px; color:var(--soft); letter-spacing:1px; }
+  #sweep { position:absolute; top:-200px; bottom:-200px; width:420px; background:linear-gradient(90deg,transparent,rgba(255,255,255,.16),transparent); transform:skewX(-18deg); }
+  #foot { position:absolute; right:40px; bottom:26px; font-size:20px; color:rgba(255,255,255,.55); }
+</style></head>
+<body><div id="stage">
+  <div id="bg"></div><div id="grid"></div>
+  <svg id="waves" viewBox="0 0 1920 420" preserveAspectRatio="none">
+    <defs>
+      <linearGradient id="w1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2dd4bf" stop-opacity=".55"/><stop offset="1" stop-color="#0b2d72" stop-opacity=".0"/></linearGradient>
+      <linearGradient id="w2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#60a5fa" stop-opacity=".45"/><stop offset="1" stop-color="#0b2d72" stop-opacity=".0"/></linearGradient>
+      <linearGradient id="w3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#93c5fd" stop-opacity=".30"/><stop offset="1" stop-color="#0b2d72" stop-opacity=".0"/></linearGradient>
+    </defs>
+    <path id="p3" fill="url(#w3)"/><path id="p2" fill="url(#w2)"/><path id="p1" fill="url(#w1)"/>
+  </svg>
+
+  <div id="s1" class="el"><span>Markets</span><span>move</span><span>like</span><span>the</span><span>sea.</span></div>
+
+  <!-- scene 2: the tide -->
+  <div id="k2" class="el kmask" style="left:110px;top:250px"><div class="kicker">Read<br>the tide</div></div>
+  <div id="u2" class="el sub" style="left:116px;top:540px;max-width:640px">The tide, the sea state and the winds behind every market.</div>
+  <div id="c2" class="el card" style="left:820px;top:200px;width:1000px"><img src="c_tides.jpg"></div>
+
+  <!-- scene 3: the chart -->
+  <div id="k3" class="el kmask" style="left:110px;top:90px"><div class="kicker">Chart it<br>your way</div></div>
+  <div id="c3" class="el card" style="left:800px;top:120px;width:1040px"><img src="c_chart.jpg"></div>
+  <div id="h31" class="el chip" style="left:116px;top:470px">✏️ Drawing tools</div>
+  <div id="h32" class="el chip teal" style="left:116px;top:570px">🛰️ Sonar markers</div>
+  <div id="h33" class="el chip amber" style="left:116px;top:670px">🪜 Fibonacci ladders</div>
+
+  <!-- scene 4: scans and funnels -->
+  <div id="k4" class="el kmask" style="left:110px;top:120px"><div class="kicker">Hunt while<br>you sleep</div></div>
+  <div id="c4b" class="el card" style="left:110px;top:520px;width:800px"><img src="c_table.jpg"></div>
+  <div id="c4" class="el card" style="left:1190px;top:120px;width:640px"><img src="c_funnel.jpg"></div>
+  <div id="h41" class="el chip teal" style="left:960px;top:300px">🔎 Scans</div>
+  <div id="h42" class="el chip" style="left:960px;top:420px">🔻 Funnels</div>
+  <div id="h43" class="el chip amber" style="left:960px;top:540px">✅ Candidates</div>
+
+  <!-- scene 5: ask and listen -->
+  <div id="k5" class="el kmask" style="left:110px;top:110px"><div class="kicker">Ask.<br>Listen.</div></div>
+  <div id="c5" class="el card" style="left:760px;top:150px;width:1060px"><img src="c_snapshot.jpg"></div>
+  <div id="ask" class="el" style="left:110px;top:470px">✨ <b>AI Navigator</b>: what is the tide doing for my coins today?</div>
+  <div id="player" class="el" style="left:110px;top:700px"><div class="play"></div><div><div class="t1">🌍 Morning forecast</div><div class="t2">Before the open · 3 min</div><div id="bars"></div></div></div>
+
+  <!-- scene 6: the end card -->
+  <div id="end" class="el"><img src="logo-dark.png"><div class="name">angstrom signals</div><div class="tag">Navigate the markets.</div>
+    <div class="btn">Request beta access</div><div class="url">angstromsignals.com</div></div>
+
+  <div id="sweep" class="el"></div>
+  <div id="foot" class="el">Readings describe markets. Not financial advice.</div>
+</div>
+<script>
+// Scene windows (seconds); replaced by the render script with the narration's timing.
+window.T = window.T || { s1:[0,3.4], s2:[3.4,9.6], s3:[9.6,15.8], s4:[15.8,22.4], s5:[22.4,28.8], s6:[28.8,36] };
+const $ = (id) => document.getElementById(id);
+const clamp = (x) => Math.max(0, Math.min(1, x));
+const outCubic = (x) => 1 - Math.pow(1 - x, 3);
+const inCubic = (x) => x * x * x;
+const backOut = (x) => { const c = 1.6; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+// p: entry progress (0..1) after `delay` into the scene; q: exit progress over the scene's last `out` seconds.
+function life(t, win, delay = 0, dur = 0.7, out = 0.45) {
+  const [s, e] = win;
+  return { p: outCubic(clamp((t - s - delay) / dur)), raw: clamp((t - s - delay) / dur), q: inCubic(clamp((t - (e - out)) / out)), on: t >= s - 0.01 && t <= e + 0.01 };
+}
+function put(el, { x = 0, y = 0, s = 1, r = 0, ry = 0, o = 1, show = true }) {
+  el.style.opacity = show ? o : 0;
+  el.style.transform = `perspective(1600px) translate(${x}px,${y}px) rotateY(${ry}deg) rotate(${r}deg) scale(${s})`;
+}
+function wave(id, t, amp, len, speed, base, phase) {
+  let d = `M0 420 L0 ${base}`;
+  for (let x = 0; x <= 1920; x += 24) {
+    const y = base + amp * Math.sin((x / len) * Math.PI * 2 + t * speed + phase) + amp * 0.35 * Math.sin((x / (len * 0.45)) * Math.PI * 2 - t * speed * 1.3);
+    d += ` L${x} ${y.toFixed(1)}`;
+  }
+  $(id).setAttribute("d", d + " L1920 420 Z");
+}
+const bars = $("bars");
+for (let i = 0; i < 40; i++) bars.appendChild(document.createElement("i"));
+
+window.render = function (t) {
+  const T = window.T;
+  // Background: drifting light, waves that calm a little after the opening.
+  $("bg").style.setProperty("--gx", (30 + 18 * Math.sin(t * 0.25)) + "%");
+  $("bg").style.setProperty("--gy", (20 + 10 * Math.cos(t * 0.2)) + "%");
+  $("grid").style.transform = `translate(${-(t * 14) % 80}px, ${-(t * 6) % 80}px)`;
+  const calm = t < T.s1[1] ? 1 : 0.55;
+  wave("p3", t, 34 * calm, 900, 0.9, 170, 1.3);
+  wave("p2", t, 44 * calm, 700, 1.25, 230, 0.4);
+  wave("p1", t, 54 * calm, 560, 1.7, 290, 2.1);
+  $("waves").style.transform = `translateY(${t < T.s1[1] ? 0 : 90}px)`;
+  $("waves").style.transition = "none";
+
+  // 1. Markets move like the sea.
+  const words = $("s1").children;
+  for (let i = 0; i < words.length; i++) {
+    const L = life(t, T.s1, 0.25 + i * 0.16, 0.55, 0.35);
+    put(words[i], { y: 90 * (1 - L.p) - 60 * L.q, o: L.p * (1 - L.q), s: 0.9 + 0.1 * L.p, show: L.on });
+  }
+
+  // 2. The tide.
+  let L = life(t, T.s2, 0.0, 0.7);
+  put($("k2").firstElementChild, { y: 260 * (1 - L.p), show: L.on });
+  put($("k2"), { x: -160 * L.q, o: 1 - L.q, show: L.on });
+  L = life(t, T.s2, 0.35, 0.7);
+  put($("u2"), { y: 40 * (1 - L.p), o: L.p * (1 - L.q), show: L.on });
+  L = life(t, T.s2, 0.15, 0.9);
+  const k2 = clamp((t - T.s2[0]) / (T.s2[1] - T.s2[0]));
+  put($("c2"), { x: 900 * (1 - L.p) - 300 * L.q, ry: -16 * (1 - L.p) - 8 + 6 * k2, s: 0.96 + 0.06 * k2, o: 1 - L.q, show: L.on });
+
+  // 3. The chart.
+  L = life(t, T.s3, 0.0, 0.7);
+  put($("k3").firstElementChild, { y: 260 * (1 - L.p), show: L.on });
+  put($("k3"), { x: -160 * L.q, o: 1 - L.q, show: L.on });
+  L = life(t, T.s3, 0.1, 0.9);
+  const k3 = clamp((t - T.s3[0]) / (T.s3[1] - T.s3[0]));
+  put($("c3"), { y: 900 * (1 - L.p) + 0, x: -300 * L.q, ry: -10 + 7 * k3, s: 0.95 + 0.07 * k3, o: 1 - L.q, show: L.on });
+  [["h31", 1.1], ["h32", 1.9], ["h33", 2.7]].forEach(([id, d]) => {
+    const C = life(t, T.s3, d, 0.5);
+    put($(id), { x: -60 * (1 - C.raw) - 200 * C.q, s: 0.6 + 0.4 * backOut(C.raw), o: clamp(C.raw * 2) * (1 - C.q), show: C.on });
+  });
+
+  // 4. Scans and funnels.
+  L = life(t, T.s4, 0.0, 0.7);
+  put($("k4").firstElementChild, { y: 260 * (1 - L.p), show: L.on });
+  put($("k4"), { x: -160 * L.q, o: 1 - L.q, show: L.on });
+  L = life(t, T.s4, 0.15, 0.9);
+  const k4 = clamp((t - T.s4[0]) / (T.s4[1] - T.s4[0]));
+  put($("c4"), { y: -1100 * (1 - L.p) - 30 * k4, x: 300 * L.q, ry: 10 - 6 * k4, s: 0.97 + 0.04 * k4, o: 1 - L.q, show: L.on });
+  L = life(t, T.s4, 0.55, 0.9);
+  put($("c4b"), { x: -1100 * (1 - L.p) - 300 * L.q, ry: 8, s: 0.98 + 0.03 * k4, o: 1 - L.q, show: L.on });
+  [["h41", 1.3], ["h42", 2.0], ["h43", 2.7]].forEach(([id, d]) => {
+    const C = life(t, T.s4, d, 0.5);
+    put($(id), { y: 30 * (1 - C.raw), s: 0.6 + 0.4 * backOut(C.raw), o: clamp(C.raw * 2) * (1 - C.q), show: C.on });
+  });
+
+  // 5. Ask and listen.
+  L = life(t, T.s5, 0.0, 0.7);
+  put($("k5").firstElementChild, { y: 260 * (1 - L.p), show: L.on });
+  put($("k5"), { x: -160 * L.q, o: 1 - L.q, show: L.on });
+  L = life(t, T.s5, 0.1, 0.9);
+  const k5 = clamp((t - T.s5[0]) / (T.s5[1] - T.s5[0]));
+  put($("c5"), { x: 900 * (1 - L.p) + 300 * L.q, ry: -14 * (1 - L.p) - 7 + 5 * k5, s: 0.96 + 0.06 * k5, o: 1 - L.q, show: L.on });
+  L = life(t, T.s5, 0.8, 0.6);
+  put($("ask"), { y: 50 * (1 - L.raw), s: 0.7 + 0.3 * backOut(L.raw), o: clamp(L.raw * 2) * (1 - L.q), show: L.on });
+  L = life(t, T.s5, 1.9, 0.6);
+  put($("player"), { y: 50 * (1 - L.raw), s: 0.7 + 0.3 * backOut(L.raw), o: clamp(L.raw * 2) * (1 - L.q), show: L.on });
+  const bs = bars.children;
+  for (let i = 0; i < bs.length; i++) {
+    const h = 10 + 44 * Math.abs(Math.sin(t * 5.3 + i * 0.7) * Math.sin(t * 2.1 + i * 0.31));
+    bs[i].style.height = h.toFixed(1) + "px";
+  }
+
+  // 6. The end card.
+  L = life(t, T.s6, 0.0, 0.9, 0.001);
+  const kids = $("end").children;
+  for (let i = 0; i < kids.length; i++) {
+    const C = life(t, T.s6, 0.12 * i + (i >= 3 ? 0.9 : 0), 0.7, 0.001);
+    put(kids[i], { y: 50 * (1 - C.p), s: i === 0 ? 0.8 + 0.2 * backOut(C.raw) : 1, o: C.p, show: C.on });
+  }
+  put($("end"), { show: t >= T.s6[0] - 0.01 });
+
+  // A light sweep across each scene change.
+  const cuts = [T.s2[0], T.s3[0], T.s4[0], T.s5[0], T.s6[0]];
+  let sw = null;
+  for (const c of cuts) if (t >= c - 0.35 && t <= c + 0.45) sw = (t - (c - 0.35)) / 0.8;
+  put($("sweep"), { x: sw === null ? -800 : -600 + 3200 * sw, show: sw !== null });
+  put($("foot"), { o: t > T.s1[1] && t < T.s6[0] ? 1 : 0 });
+};
+window.render(0);
+</script>
+</body></html>
