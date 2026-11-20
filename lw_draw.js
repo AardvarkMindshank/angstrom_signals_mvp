@@ -695,8 +695,19 @@ function setupDrawing(L, root, host, chart, candles, data, theme, hasOsc) {
   };
 
   // ---- ✏️ and 👁 beside ⟲ and ⇥
-  const pen = toolButton("✏️", T("Drawing tools: lines, shapes, pen, notes, Fibonacci and more"), theme);
-  pen.onclick = () => { const open = !drawPref("open", false); setDrawPref("open", open); if (!open) setTool("pan"); paintBar(); };
+  // A line pencil like its neighbours (not the coloured emoji): grey while the drawing tools are closed, orange when open.
+  const pen = toolButton("", T("Drawing tools: lines, shapes, pen, notes, Fibonacci and more"), theme);
+  pen.innerHTML = "<svg viewBox='0 0 24 24' width='16' height='16' aria-hidden='true' fill='none' stroke='currentColor' "
+    + "stroke-width='2' stroke-linecap='round' stroke-linejoin='round' style='vertical-align:middle'>"
+    + "<path d='M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4z'/><path d='M14.5 5.5l3 3'/></svg>";
+  const paintPen = () => {
+    const open = drawPref("open", false);
+    pen.style.color = open ? "#f59e0b" : theme.ink;
+    pen.style.borderColor = open ? "#f59e0b" : theme.grid;
+    pen.setAttribute("aria-pressed", open ? "true" : "false");
+  };
+  pen.onclick = () => { const open = !drawPref("open", false); setDrawPref("open", open); if (!open) setTool("pan"); paintPen(); paintBar(); };
+  paintPen();
   const eye = toolButton("👁", "", theme);
   const paintEye = () => {
     eye.textContent = s.hidden ? "🙈" : "👁";
