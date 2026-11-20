@@ -1,0 +1,57 @@
+{
+ "about": "King Neptune again: a closer picture with his mouth visible and no trident or splashing water (the first talking test glitched), two clips plus one on the better Kling model to compare.",
+ "jobs": [
+  {
+   "id": "portrait_neptune_fix",
+   "model": "fal-ai/flux-pro/kontext",
+   "input": {
+    "image_url": "file:guest_neptune_1.png",
+    "prompt": "Keep the same character, crown, style and lighting. Make it a closer head-and-shoulders view with the trident out of the frame and no hand visible. Trim the moustache short and neat so his lips and mouth are clearly visible above the beard, mouth closed. Calmer sea behind him, no splashing water in front of his face.",
+    "num_images": 2,
+    "output_format": "png"
+   }
+  },
+  {
+   "id": "say_neptune_welcome_1",
+   "speak": "I am Neptune, lord of the seas. The central bank speaks today, and the waters will listen.",
+   "voice": "am_onyx",
+   "speed": 1.0
+  },
+  {
+   "id": "neptune_welcome_1",
+   "stage": 1,
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "out:portrait_neptune_fix_1.png",
+    "audio_url": "out:say_neptune_welcome_1.wav",
+    "prompt": "The animated king from the picture speaking to camera, clear lip movement in time with the voice, natural head movement and blinking, the background stays still."
+   }
+  },
+  {
+   "id": "say_neptune_signoff_1",
+   "speak": "Fair winds and following seas, mortals. Until the tide brings us together again.",
+   "voice": "am_onyx",
+   "speed": 1.0
+  },
+  {
+   "id": "neptune_signoff_1",
+   "stage": 1,
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "out:portrait_neptune_fix_1.png",
+    "audio_url": "out:say_neptune_signoff_1.wav",
+    "prompt": "The animated king from the picture speaking to camera, clear lip movement in time with the voice, natural head movement and blinking, the background stays still."
+   }
+  },
+  {
+   "id": "pro_neptune_welcome_1",
+   "stage": 1,
+   "model": "fal-ai/kling-video/ai-avatar/v2/pro",
+   "input": {
+    "image_url": "out:portrait_neptune_fix_1.png",
+    "audio_url": "out:say_neptune_welcome_1.wav",
+    "prompt": "The animated king from the picture speaking to camera, clear lip movement in time with the voice, natural head movement and blinking, the background stays still."
+   }
+  }
+ ]
+}
