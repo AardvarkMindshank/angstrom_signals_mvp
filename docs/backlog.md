@@ -199,3 +199,12 @@ London, Paris, Amsterdam, Tokyo, Hong Kong, …), New York's only for US zones. 
 certification hash, so the change needs replay_certify.py re-run and certification.json committed with it.
 Also: SIE.DE has no stored logo. Share logos come from Finnhub's company profile (stock_logo_url), whose free tier
 mostly covers US listings; a fallback source for European shares would fill these.
+
+## Sonar trend triangles: earlier (for the next session with Drew, raised 20 Nov 2026)
+
+Drew finds the trend-turn triangles (EMA 11 crossing EMA 15, the open-source Cipher A formula) late: on Bitcoin daily
+they print a median of 7 candles after the swing low or high (4 to 9). Idea: print them about 2 candles earlier,
+e.g. a faster pair (EMA 5 / 11) or a turn of the fast average's slope, as an option beside the current rule. Bring
+a side-by-side with his TradingView Cipher A (same coin, timeframe and date) to see whether the paid version uses a
+faster rule. Markers already show (faded) on the forming candle since 20 Nov. sonar.markers is certified: a new rule
+is a new parameter (default unchanged) or a new version, with a certification run.
