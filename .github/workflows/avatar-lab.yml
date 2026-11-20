@@ -53,6 +53,9 @@ jobs:
             openssl enc -d -aes-256-cbc -pbkdf2 -in enc.bin -out "lab_in/$(basename "${f%.enc}")" -pass env:LAB_KEY
           done
           rm -f enc.bin
+      - name: ffmpeg (to match recovered clips by their sound)
+        if: inputs.recover != ''
+        run: sudo apt-get install -y -qq ffmpeg >/dev/null
       - name: Make
         env:
           FAL_KEY: ${{ secrets.FAL_KEY }}

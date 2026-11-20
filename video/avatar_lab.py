@@ -155,11 +155,13 @@ def recover(jobs: list, inputs: Path, outdir: Path, key: str, window: str) -> in
                 tmp.write_bytes(requests.get(res["video"]["url"], timeout=300).content)
             except Exception:
                 continue
-            scores = []
+            scores, heard = [], {}
             for jid, (m, env, rate) in want.items():
                 if m != model:
                     continue
-                got = _envelope(_clip_pcm(tmp, rate), rate)
+                if rate not in heard:
+                    heard[rate] = _envelope(_clip_pcm(tmp, rate), rate)
+                got = heard[rate]
                 k = min(len(env), len(got))
                 if k < 25 or abs(len(env) - len(got)) > max(15, 0.4 * len(env)):
                     continue
