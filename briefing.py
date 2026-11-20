@@ -401,7 +401,7 @@ GENERAL_SYSTEM = (
     "with 50 neutral. The overall weather given (sunny, fair, changeable, rough or stormy) sets the tone of the "
     "opening line. Open with \"This is the Angstrom Signals morning forecast, {edition}, for\" the day and date, follow "
     "the sections in the order given with a short spoken link between them, and close with one line saying this is a "
-    "summary of the app's readings, not advice, then a brief sign-off such as \"Fair winds.\" Write about {words} "
+    "summary of the app's readings, not advice, then end with exactly \"Fair winds and following seas.\" Write about {words} "
     "words. Reply with the script text only."
 )
 GENERAL_MINUTES = 3
@@ -431,7 +431,7 @@ def plain_general(facts: dict, edition: str, day: datetime) -> str:
     out += [str(x) for x in (facts.get("tide") or [])[:3]]
     for e in (facts.get("events") or [])[:4]:
         out.append(f"{e['what']}, {e['when_utc']} UTC.")
-    out.append("That's the forecast. It summarises the app's readings and is not advice. Fair winds.")
+    out.append("That's the forecast. It summarises the app's readings and is not advice. Fair winds and following seas.")
     return " ".join(out)
 
 
@@ -488,8 +488,16 @@ def spoken_plan(body: str, day: datetime) -> str:
         line = clean(_say_numbers(line))
         if line:
             out.append(line if line[-1] in ".!?:" else line + ".")
-    out.append("That's your Passage Plan. It describes the app's readings and is not advice. Fair winds.")
+    out.append("That's your Passage Plan. It describes the app's readings and is not advice. Fair winds and following "
+               "seas.")
     return " ".join(out)
+
+
+def tag_line(kind: str, day: datetime) -> str:
+    """The closing line, said after a pause with the music still playing: "That was your daily market briefing for
+    20 November 2026, brought to you by Angstrom Signals." kind: "general" or "passage"."""
+    what = "Passage Plan briefing" if kind == "passage" else "daily market briefing"
+    return f"That was your {what} for {day.day} {day.strftime('%B %Y')}, brought to you by Angstrom Signals."
 
 
 # ---------------------------------------------------------------------------------------------- the weather
@@ -534,7 +542,7 @@ SYSTEM = (
     "neutral. The overall weather given (sunny, fair, changeable, rough or stormy) sets the tone of the "
     "opening line. Open with \"This is the Angstrom Signals morning forecast for\" the day and date, follow the sections "
     "in the order given with a short spoken link between them, and close with one line saying this is a summary of "
-    "the app's readings, not advice, then a brief sign-off such as \"Fair winds.\" Write about {words} words. Reply "
+    "the app's readings, not advice, then end with exactly \"Fair winds and following seas.\" Write about {words} words. Reply "
     "with the script text only."
 )
 
@@ -571,7 +579,7 @@ def plain_script(facts: dict, b: dict, day: datetime) -> str:
         out.append(f"Your funnel {f['funnel']} has {n} candidate{'s' if n != 1 else ''}.")
     for e in facts.get("events") or []:
         out.append(f"{e['what']}, {e['when_utc']} UTC.")
-    out.append("That's the forecast. It summarises the app's readings and is not advice. Fair winds.")
+    out.append("That's the forecast. It summarises the app's readings and is not advice. Fair winds and following seas.")
     return " ".join(x for x in out if x)
 
 

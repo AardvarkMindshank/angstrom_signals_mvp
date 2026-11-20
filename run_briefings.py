@@ -178,7 +178,8 @@ def make_one(db, url: str, row: dict, now: datetime) -> bool:
     facts = briefing.gather(db, user_id, row, {"sections": ["markets", "tides"], "assets": []}, now)
     with tempfile.TemporaryDirectory() as tmp:
         mp3 = Path(tmp) / f"{day}.mp3"
-        seconds = briefing_audio.make(script, mp3, b["voice"], Path(tmp), weather=briefing.weather(facts))
+        seconds = briefing_audio.make(script, mp3, b["voice"], Path(tmp), weather=briefing.weather(facts),
+                                      tag=briefing.tag_line("passage", here))
         data = mp3.read_bytes()
     _upload(db, f"{token}/{day}.mp3", data, "audio/mpeg")
     _upload(db, f"{token}/{day}.txt", script.encode(), "text/plain")
@@ -220,7 +221,8 @@ def make_general(db, url: str, edition: str, eid: str, now: datetime) -> bool:
     weather = briefing.weather(facts)
     with tempfile.TemporaryDirectory() as tmp:
         mp3 = Path(tmp) / f"{eid}.mp3"
-        seconds = briefing_audio.make(script, mp3, "bf_emma", Path(tmp), weather=weather)
+        seconds = briefing_audio.make(script, mp3, "bf_emma", Path(tmp), weather=weather,
+                                      tag=briefing.tag_line("general", day))
         data = mp3.read_bytes()
     _upload(db, f"{folder}/{eid}.mp3", data, "audio/mpeg")
     _upload(db, f"{folder}/{eid}.txt", script.encode(), "text/plain")
@@ -274,7 +276,8 @@ def sample(out: str, kind: str = "general") -> int:
             briefing.EDITIONS[edition]["zone"], now + timedelta(hours=6)))
         Path(out).with_suffix(".facts.json").write_text(json.dumps(facts, default=str, indent=1))
     Path(out).with_suffix(".txt").write_text(script)
-    seconds = briefing_audio.make(script, Path(out), voice, weather=briefing.weather(facts))
+    seconds = briefing_audio.make(script, Path(out), voice, weather=briefing.weather(facts),
+                                  tag=briefing.tag_line(kind, now))
     print(f"Sample made ({kind}): {round(seconds)} s, script by {writer}, weather {briefing.weather(facts)}")
     return 0
 

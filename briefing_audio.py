@@ -52,8 +52,12 @@ def chunks(text: str, limit: int = 380) -> list[str]:
     return out
 
 
-def speak(text: str, path: Path, voice: str = "bf_emma", models: Path = MODELS) -> float:
-    """The script as a WAV file (mono); returns its length in seconds."""
+TAG_GAP = 2.5                   # seconds of music alone between the sign-off and the closing tag line
+
+
+def speak(text: str, path: Path, voice: str = "bf_emma", models: Path = MODELS, tag: str = "") -> float:
+    """The script as a WAV file (mono), then, after a pause of TAG_GAP seconds, the closing tag line ("That was
+    your daily market briefing for …"); returns its length in seconds."""
     from kokoro_onnx import Kokoro
 
     kokoro = Kokoro(str(models / "kokoro-v1.0.onnx"), str(models / "voices-v1.0.bin"))
@@ -62,6 +66,11 @@ def speak(text: str, path: Path, voice: str = "bf_emma", models: Path = MODELS) 
     for part in chunks(text):
         samples, rate = kokoro.create(part, voice=voice, speed=1.0, lang=lang)
         pieces += [np.asarray(samples, dtype=np.float32), np.zeros(int(rate * PAUSE), dtype=np.float32)]
+    if tag:
+        pieces.append(np.zeros(int(rate * TAG_GAP), dtype=np.float32))
+        for part in chunks(tag):
+            samples, rate = kokoro.create(part, voice=voice, speed=1.0, lang=lang)
+            pieces.append(np.asarray(samples, dtype=np.float32))
     audio = np.concatenate(pieces) if pieces else np.zeros(rate, dtype=np.float32)
     pcm = (np.clip(audio, -1, 1) * 32767).astype(np.int16)
     with wave.open(str(path), "wb") as wf:
@@ -111,11 +120,12 @@ def length(voice_seconds: float, bed: Path) -> float:
     return INTRO + voice_seconds + OUTRO - (0 if bed.exists() else OVERLAP)
 
 
-def make(script: str, out_mp3: Path, voice: str = "bf_emma", work: Path | None = None, weather: str | None = None) -> float:
-    """Speak and mix one briefing; returns its length in seconds."""
+def make(script: str, out_mp3: Path, voice: str = "bf_emma", work: Path | None = None, weather: str | None = None,
+         tag: str = "") -> float:
+    """Speak and mix one briefing (with its closing tag line, when given); returns its length in seconds."""
     work = work or out_mp3.parent
     wav = work / (out_mp3.stem + "_voice.wav")
-    seconds = speak(script, wav, voice)
+    seconds = speak(script, wav, voice, tag=tag)
     bed = bed_for(weather)
     subprocess.run(mix_command(wav, out_mp3, seconds, bed=bed), check=True)
     wav.unlink(missing_ok=True)

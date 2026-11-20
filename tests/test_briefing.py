@@ -137,7 +137,7 @@ def test_spoken_plan_keeps_the_words_and_says_the_headings():
     assert "First, the conditions. Tide going out (risk-defensive), held 6 trading days." in out
     assert "The weather on the route. CPI on Wed: dollar plus 2.1 percent, score 62 out of 100." in out
     assert "Things to watch. Expectation: the tide holds 5 closes." in out
-    assert "*" not in out and "⚓" not in out and out.endswith("Fair winds.")
+    assert "*" not in out and "⚓" not in out and out.endswith("Fair winds and following seas.")
 
 
 def test_general_facts_use_candles_when_no_stored_readings():
@@ -182,3 +182,10 @@ def test_digest_lists_the_listen_links():
     _, page, plain = digest.render_digest([], [], {"digest_tz": "UTC"}, "https://app",
                                           listen=[("🌍 The Morning forecast", "https://x/general/a.mp3")])
     assert "https://x/general/a.mp3" in page and "🌍 The Morning forecast: https://x/general/a.mp3" in plain
+
+
+def test_tag_line_after_the_sign_off():
+    assert briefing.tag_line("general", _dt(2026, 11, 20)) == (
+        "That was your daily market briefing for 20 November 2026, brought to you by Angstrom Signals.")
+    assert "Passage Plan briefing for 3 December 2026" in briefing.tag_line("passage", _dt(2026, 12, 3))
+    assert briefing.spoken_plan("**⚓ Conditions** - Calm.", _dt(2026, 11, 21)).endswith("Fair winds and following seas.")
