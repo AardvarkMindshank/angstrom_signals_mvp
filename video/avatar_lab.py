@@ -24,17 +24,19 @@ def _data_uri(path: Path) -> str:
     return f"data:{kind};base64,{base64.b64encode(path.read_bytes()).decode()}"
 
 
-def _resolve(value, inputs: Path):
+def _resolve(value, inputs: Path, out: Path | None = None):
     if isinstance(value, str) and value.startswith("file:"):
         return _data_uri(inputs / value[5:])
+    if isinstance(value, str) and value.startswith("out:") and out is not None:
+        return _data_uri(out / value[4:])          # a file made by an earlier job in the same spec
     if isinstance(value, dict):
-        return {k: _resolve(v, inputs) for k, v in value.items()}
+        return {k: _resolve(v, inputs, out) for k, v in value.items()}
     return value
 
 
 def run_job(job: dict, inputs: Path, out: Path, key: str) -> list[Path]:
     head = {"Authorization": f"Key {key}", "Content-Type": "application/json"}
-    r = requests.post(f"{API}/{job['model']}", headers=head, json=_resolve(job["input"], inputs), timeout=120)
+    r = requests.post(f"{API}/{job['model']}", headers=head, json=_resolve(job["input"], inputs, out), timeout=300)
     r.raise_for_status()
     q = r.json()
     status_url, response_url = q["status_url"], q["response_url"]
@@ -58,6 +60,29 @@ def run_job(job: dict, inputs: Path, out: Path, key: str) -> list[Path]:
     return saved
 
 
+def speak_job(job: dict, out: Path) -> list[Path]:
+    """{"id", "speak": text, "voice", "speed"}: the free Kokoro voice, saved as <id>.wav (needs the voice model)."""
+    import wave
+
+    import numpy as np
+    from kokoro_onnx import Kokoro
+
+    models = Path("out/video/voice_model")
+    kokoro = Kokoro(str(models / "kokoro-v1.0.onnx"), str(models / "voices-v1.0.bin"))
+    voice = job.get("voice", "bm_george")
+    samples, rate = kokoro.create(job["speak"], voice=voice, speed=float(job.get("speed", 1.0)),
+                                  lang="en-gb" if voice.startswith("b") else "en-us")
+    pcm = (np.clip(np.asarray(samples, dtype=np.float32), -1, 1) * 32767).astype(np.int16)
+    pad = np.zeros(int(rate * 0.3), dtype=np.int16)              # a breath before and after
+    path = out / f"{job['id']}.wav"
+    with wave.open(str(path), "wb") as wf:
+        wf.setnchannels(1)
+        wf.setsampwidth(2)
+        wf.setframerate(rate)
+        wf.writeframes(np.concatenate([pad, pcm, pad]).tobytes())
+    return [path]
+
+
 def main(spec: str, inputs: str = "lab_in", out: str = "out/avatar_lab") -> int:
     key = os.environ["FAL_KEY"]
     jobs = json.loads(Path(spec).read_text())["jobs"]
@@ -66,7 +91,7 @@ def main(spec: str, inputs: str = "lab_in", out: str = "out/avatar_lab") -> int:
     failed = 0
     for job in jobs:
         try:
-            files = run_job(job, Path(inputs), outdir, key)
+            files = speak_job(job, outdir) if "speak" in job else run_job(job, Path(inputs), outdir, key)
             print(f"{job['id']}: {len(files)} file(s)")
         except Exception as exc:
             failed += 1

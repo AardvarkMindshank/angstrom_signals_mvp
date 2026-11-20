@@ -1,0 +1,18 @@
+{
+ "about": "Talking test: three picked faces (closed-mouth versions first), one short line with no brand name, on Kling Avatar v2 Standard and VEED Fabric 1.0 at 480p.",
+ "jobs": [
+  {"id": "line", "speak": "Good morning, and welcome aboard. The tide is going out, and there's a storm warning on the horizon.", "voice": "bm_george", "speed": 1.0},
+  {"id": "face_3d", "model": "fal-ai/flux-pro/kontext", "input": {"image_url": "file:angus_captain_3d_1.png", "aspect_ratio": "3:4", "output_format": "png",
+   "prompt": "Keep everything in this image exactly the same, but close his lips into a relaxed, gentle closed-mouth smile with no teeth showing."}},
+  {"id": "face_deck", "model": "fal-ai/flux-pro/kontext", "input": {"image_url": "file:angus_captain_photo_1.png", "aspect_ratio": "3:4", "output_format": "png",
+   "prompt": "Keep everything in this image exactly the same, but close his lips into a relaxed, gentle closed-mouth smile with no teeth showing."}},
+  {"id": "face_studio", "model": "fal-ai/flux-pro/kontext", "input": {"image_url": "file:angus_presenter_1.png", "aspect_ratio": "3:4", "output_format": "png",
+   "prompt": "Keep everything in this image exactly the same, but close his lips into a relaxed, gentle closed-mouth smile with no teeth showing."}},
+  {"id": "kling_3d", "model": "fal-ai/kling-video/ai-avatar/v2/standard", "input": {"image_url": "out:face_3d_1.png", "audio_url": "out:line.wav", "prompt": "A friendly ship's captain speaking warmly to camera, natural head movement."}},
+  {"id": "kling_deck", "model": "fal-ai/kling-video/ai-avatar/v2/standard", "input": {"image_url": "out:face_deck_1.png", "audio_url": "out:line.wav", "prompt": "A friendly ship's captain speaking warmly to camera on deck, gentle sea breeze, natural head movement."}},
+  {"id": "kling_studio", "model": "fal-ai/kling-video/ai-avatar/v2/standard", "input": {"image_url": "out:face_studio_1.png", "audio_url": "out:line.wav", "prompt": "A market presenter speaking warmly to camera in a studio, natural head movement."}},
+  {"id": "fabric_3d", "model": "veed/fabric-1.0", "input": {"image_url": "out:face_3d_1.png", "audio_url": "out:line.wav", "resolution": "480p"}},
+  {"id": "fabric_deck", "model": "veed/fabric-1.0", "input": {"image_url": "out:face_deck_1.png", "audio_url": "out:line.wav", "resolution": "480p"}},
+  {"id": "fabric_studio", "model": "veed/fabric-1.0", "input": {"image_url": "out:face_studio_1.png", "audio_url": "out:line.wav", "resolution": "480p"}}
+ ]
+}

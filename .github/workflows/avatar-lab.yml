@@ -11,6 +11,10 @@ on:
       private_inputs:
         description: "Encrypted inputs folder on the reports branch (blank: none)"
         default: ""
+      voice:
+        description: "Set up the free Kokoro voice (for specs with speak jobs)"
+        type: boolean
+        default: false
 permissions:
   contents: write
 jobs:
@@ -23,6 +27,15 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install requests
+      - name: Voice (Kokoro)
+        if: inputs.voice
+        run: |
+          pip install kokoro-onnx numpy
+          mkdir -p out/video/voice_model
+          kokoro=https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0
+          for f in kokoro-v1.0.onnx voices-v1.0.bin; do
+            curl -sSfL --retry 12 --retry-delay 30 --retry-all-errors -o out/video/voice_model/$f $kokoro/$f
+          done
       - name: Private inputs
         if: inputs.private_inputs != ''
         env:
