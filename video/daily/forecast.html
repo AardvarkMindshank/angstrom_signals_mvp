@@ -252,9 +252,12 @@ window.setup = function (spec) {
     const el = document.createElement("div");
     el.className = "seg"; el.dataset.kind = seg.kind;
     if (seg.who === "cap") {
-      const cap = P ? `left:90px;right:90px;top:${by + bh + 70}px;height:${H - by - bh - 160}px;text-align:center;align-items:center`
+      const cap = P ? `left:90px;right:90px;top:${by + bh + 120}px;height:${H - by - bh - 220}px;text-align:center;align-items:center`
                     : `left:${bx + bw + 110}px;right:90px;top:${by}px;height:${bh}px`;
-      el.innerHTML = `<div class="frame it" style="left:${bx}px;top:${by}px;width:${bw}px;height:${bh}px"></div><div class="cap" style="${cap}">${capCaption(seg)}</div>`;
+      const who = spec.data.presenter?.title || "";
+      const badge = who ? `<div class="it" style="position:absolute;left:${bx}px;width:${bw}px;top:${by + bh + 18}px;text-align:center;z-index:2">
+          <span style="display:inline-block;padding:${P ? "12px 30px" : "10px 26px"};border-radius:999px;background:rgba(245,165,36,.92);color:#1a1205;font-weight:800;font-size:${P ? 40 : 32}px">⚓ ${esc(who)}</span></div>` : "";
+      el.innerHTML = `<div class="frame it" style="left:${bx}px;top:${by}px;width:${bw}px;height:${bh}px"></div>${badge}<div class="cap" style="${cap}">${capCaption(seg)}</div>`;
     } else {
       const box = P ? "left:70px;right:70px;top:190px;bottom:170px" : "left:110px;right:110px;top:150px;bottom:120px";
       el.innerHTML = `<div style="position:absolute;${box};display:flex;flex-direction:column;justify-content:center">${narrContent(seg)}</div>`;

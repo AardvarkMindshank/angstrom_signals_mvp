@@ -71,3 +71,14 @@ def test_fear_index_rises_are_bad_news():
     inv = {c["name"]: c["inverse"] for c in spec["currents"]}
     assert inv == {"Fear (VIX)": True, "Gold": False}
     assert spec["story"]["asset"]["name"] == "Gold" and spec["story"]["asset"]["value"] == 3500.0
+
+
+def test_roster_and_fallback_to_the_captain(tmp_path):
+    tue = datetime(2026, 11, 24)
+    assert dv.ROSTER[tue.weekday()] == "mate"
+    assert dv.presenter_for(tue, tmp_path) == "cap"                     # no First Mate clips yet: the captain
+    (tmp_path / "mate_signoff_1_1.mp4").write_bytes(b"")
+    assert dv.presenter_for(tue, tmp_path) == "mate"
+    assert dv.presenter_for(tue, tmp_path, override="cap") == "cap"
+    clips = dict(dv.captain_clips("fair", random.Random(2), who="deck"))
+    assert all(c.startswith("deck_") for c in clips.values())

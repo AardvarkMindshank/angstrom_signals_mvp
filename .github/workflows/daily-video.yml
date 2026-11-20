@@ -8,6 +8,9 @@ on:
       edition:
         description: "east (after the US close) or west"
         default: east
+      presenter:
+        description: "Who presents (blank: the roster): cap, mate, nav or deck"
+        default: ""
 permissions:
   contents: write
 concurrency:
@@ -74,7 +77,7 @@ jobs:
             git show "origin/reports:drive/1EKuY0a0mL0hsCwO98ok-K0t_Yh-L_hsm/drive/$f.mp3" > "music/$f.mp3"
           done
       - name: Make the video
-        run: NODE_PATH="$PWD/node_modules" python daily_video.py --library lib/avatar_lab --music music --out out/daily_video --edition "${{ inputs.edition }}"
+        run: NODE_PATH="$PWD/node_modules" python daily_video.py --library lib/avatar_lab --music music --out out/daily_video --edition "${{ inputs.edition }}" --presenter "${{ inputs.presenter }}"
       - name: Keep (encrypted)
         if: always()
         run: |

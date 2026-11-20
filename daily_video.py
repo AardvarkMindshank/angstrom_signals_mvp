@@ -35,6 +35,16 @@ HERE = Path(__file__).resolve().parent
 PAGE = HERE / "video" / "daily" / "forecast.html"
 RENDER = HERE / "video" / "daily" / "render.js"
 VOICE, SPEED = "bm_george", 1.1
+# ⚓ The crew (21 Nov 2026): who presents comes from the roster; the presenter also narrates, so the voice matches.
+# Clip names in the library: <prefix>_<line>_<1|2>_1.mp4 (avatar lab). A presenter whose clips are missing falls
+# back to the captain.
+PRESENTERS = {
+    "cap": {"title": "The Captain", "voice": "bm_george", "speed": 1.1},
+    "mate": {"title": "The First Mate", "voice": "af_bella", "speed": 1.08},
+    "nav": {"title": "The Navigator", "voice": "af_sarah", "speed": 1.08},
+    "deck": {"title": "The Deckhand", "voice": "bm_lewis", "speed": 1.08},
+}
+ROSTER = {0: "cap", 1: "mate", 2: "cap", 3: "nav", 4: "cap", 5: "deck", 6: "mate"}     # Monday = 0
 GAP = 0.25                       # seconds between segments
 FPS = 30
 MUSIC = {"sunny": "1-Sunshine.mp3", "fair": "2-Springtime.mp3", "changeable": "3-Cloudy.mp3",
@@ -202,11 +212,12 @@ def graphics_data(facts: dict, sections: dict, day: datetime, load=None) -> dict
 
 # ------------------------------------------------------------------------------------------------ voice and timeline
 
-def speak(text: str, path: Path, models: Path) -> float:
+def speak(text: str, path: Path, models: Path, voice: str = VOICE, speed: float = SPEED) -> float:
     from kokoro_onnx import Kokoro
 
     kokoro = Kokoro(str(models / "kokoro-v1.0.onnx"), str(models / "voices-v1.0.bin"))
-    samples, rate = kokoro.create(briefing._say_numbers(text), voice=VOICE, speed=SPEED, lang="en-gb")
+    samples, rate = kokoro.create(briefing._say_numbers(text), voice=voice, speed=speed,
+                                  lang="en-gb" if voice.startswith("b") else "en-us")
     pcm = (np.clip(np.asarray(samples, dtype=np.float32), -1, 1) * 32767).astype(np.int16)
     with wave.open(str(path), "wb") as wf:
         wf.setnchannels(1)
@@ -222,9 +233,17 @@ def duration(path: Path) -> float:
     return float(out.strip())
 
 
-def captain_clips(weather: str, rng: random.Random, weekend: bool = False) -> list[tuple[str, str]]:
-    """[(segment kind, clip name)] in running order."""
-    pick = lambda base: f"cap_{base}_{rng.choice((1, 2))}_1.mp4"     # noqa: E731  (avatar lab names: <id>_1.mp4)
+def presenter_for(day: datetime, library: Path | None = None, override: str | None = None) -> str:
+    """Who presents: the override, else the roster; the captain when that presenter's clips aren't in the library."""
+    who = override if override in PRESENTERS else ROSTER.get(day.weekday(), "cap")
+    if library is not None and who != "cap" and not (library / f"{who}_signoff_1_1.mp4").exists():
+        return "cap"
+    return who
+
+
+def captain_clips(weather: str, rng: random.Random, weekend: bool = False, who: str = "cap") -> list[tuple[str, str]]:
+    """[(segment kind, clip name)] in running order, for the day's presenter (the captain by default)."""
+    pick = lambda base: f"{who}_{base}_{rng.choice((1, 2))}_1.mp4"     # noqa: E731  (avatar lab names: <id>_1.mp4)
     out = [("welcome", pick("welcome_weekend" if weekend else "welcome")), ("weather", pick(f"weather_{weather}")),
            ("sign_story", pick("sign_story")), ("sign_tides", pick("sign_tides"))]
     if not weekend:
@@ -323,7 +342,7 @@ def render_layout(layout: str, spec: dict, segs: list[dict], library: Path, musi
 
 
 def build(supabase, library: Path, music_dir: Path, out_dir: Path, models: Path, now: datetime | None = None,
-          edition: str = "east") -> dict:
+          edition: str = "east", presenter: str | None = None) -> dict:
     now = now or datetime.now(timezone.utc)
     out_dir.mkdir(parents=True, exist_ok=True)
     work = out_dir / "work"
@@ -334,6 +353,9 @@ def build(supabase, library: Path, music_dir: Path, out_dir: Path, models: Path,
     plan = sections_for(day)
     sections, writer = write_sections(supabase, facts, sections=plan, weekend=weekend)
     spec = graphics_data(facts, sections, day)
+    who = presenter_for(day, library, presenter)
+    crew = PRESENTERS[who]
+    spec["presenter"] = {"key": who, "title": crew["title"]}
     date_line = f"{day.strftime('%A')}, the {_ordinal(day.day)} of {day.strftime('%B')}. {sections['headline']}."
     close_line = f"That was your {'weekend' if weekend else 'daily'} market briefing for {day.strftime('%A')} the {_ordinal(day.day)} of {day.strftime('%B')}."
     texts = {"date": date_line, **{k: (sections[k]["text"] if k == "story" else sections[k]) for k in plan},
@@ -341,10 +363,11 @@ def build(supabase, library: Path, music_dir: Path, out_dir: Path, models: Path,
     narr = {}
     for kind, text in texts.items():
         path = work / f"narr_{kind}.wav"
-        narr[kind] = {"file": str(path), "seconds": speak(text, path, models), "text": text}
+        narr[kind] = {"file": str(path), "seconds": speak(text, path, models, crew["voice"], crew["speed"]),
+                      "text": text}
     rng = random.Random(day.date().isoformat())
     caps = {kind: {"file": clip, "seconds": duration(library / clip)}
-            for kind, clip in captain_clips(spec["weather"], rng, weekend)}
+            for kind, clip in captain_clips(spec["weather"], rng, weekend, who)}
     segs = timeline(caps, narr)
     music = music_dir / MUSIC.get(spec["weather"], "3-Cloudy.mp3")
     made = {}
@@ -353,7 +376,8 @@ def build(supabase, library: Path, music_dir: Path, out_dir: Path, models: Path,
                                          out_dir / f"forecast_{day.date().isoformat()}_{layout}.mp4"))
     (out_dir / "script.json").write_text(json.dumps({"writer": writer, "texts": texts, "segments": segs, "spec": spec},
                                                     ensure_ascii=False, indent=1, default=str))
-    print(f"Daily video made: {segs[-1]['end']:.0f} s, script by {writer}, weather {spec['weather']}")
+    print(f"Daily video made: {segs[-1]['end']:.0f} s, presented by {crew['title']}, script by {writer}, "
+          f"weather {spec['weather']}")
     return made
 
 
@@ -364,7 +388,8 @@ def main() -> int:
     get = lambda flag, default=None: a[a.index(flag) + 1] if flag in a else default     # noqa: E731
     db, _url = run_briefings._client()
     build(db, Path(get("--library")), Path(get("--music")), Path(get("--out", "out/daily_video")),
-          Path(get("--models", "out/video/voice_model")), edition=get("--edition", "east"))
+          Path(get("--models", "out/video/voice_model")), edition=get("--edition", "east"),
+          presenter=get("--presenter") or None)
     return 0
 
 
