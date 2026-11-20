@@ -1,0 +1,13 @@
+{
+ "speed": 1.08,
+ "voices": ["af_heart", "am_michael", "bm_george"],
+ "lines": {
+  "l1": "Markets move like the sea.",
+  "l2": "Angstrom Signals reads the tide, the sea state, and the winds behind every market.",
+  "l3": "Chart it your way, with drawing tools, Sonar markers and Fibonacci ladders.",
+  "l4": "Turn your own rules into scans and funnels that hunt for candidates while you sleep.",
+  "l5": "Ask the AI Navigator anything. And hear your morning forecast before the open.",
+  "l6": "Angstrom Signals. Navigate the markets.",
+  "l7": "Request beta access at angstromsignals dot com."
+ }
+}

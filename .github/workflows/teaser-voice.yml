@@ -1,0 +1,34 @@
+# 🎬 The marketing teaser's narration (video/teaser_voice.py): every line in every listed voice, saved to the
+# reports branch (teaser_voice/<time>/). Run by hand.
+name: teaser-voice
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  voice:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: pip install kokoro-onnx numpy
+      - name: Voice model (cached)
+        uses: actions/cache@v4
+        with:
+          path: out/video/voice_model
+          key: kokoro-model-files-v1.0
+      - name: Voice model (download when not cached)
+        run: |
+          mkdir -p out/video/voice_model
+          kokoro=https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0
+          for f in kokoro-v1.0.onnx voices-v1.0.bin; do
+            [ -s out/video/voice_model/$f ] || curl -sSfL --retry 12 --retry-delay 30 --retry-all-errors -o out/video/voice_model/$f $kokoro/$f
+          done
+      - name: Speak the lines
+        run: python video/teaser_voice.py out/teaser_voice
+      - name: Keep them
+        run: bash .github/scripts/save_to_reports.sh "teaser_voice/$(date -u +%Y-%m-%d_%H%M)" out/teaser_voice
