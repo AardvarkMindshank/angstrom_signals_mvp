@@ -20,7 +20,7 @@ import json
 import os
 import sys
 import tempfile
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import briefing
@@ -269,9 +269,9 @@ def sample(out: str, kind: str = "general") -> int:
         facts = briefing.gather(db, "", {"settings": {}}, {"sections": ["markets", "tides"], "assets": []}, now)
     else:
         edition = "west" if 3 <= now.hour < 15 else "east"
-        eid = briefing.edition_slot(edition, now)[1]
         facts = briefing.general_facts(db, now)
-        script, writer = briefing.write_general(db, facts, edition, datetime.fromisoformat(eid[:10]))
+        script, writer = briefing.write_general(db, facts, edition, briefing.local_now(
+            briefing.EDITIONS[edition]["zone"], now + timedelta(hours=6)))
         Path(out).with_suffix(".facts.json").write_text(json.dumps(facts, default=str, indent=1))
     Path(out).with_suffix(".txt").write_text(script)
     seconds = briefing_audio.make(script, Path(out), voice, weather=briefing.weather(facts))

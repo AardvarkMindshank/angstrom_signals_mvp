@@ -353,6 +353,8 @@ def general_facts(supabase, now: datetime | None = None, load=None) -> dict:
             item.pop("kind", None)
             if item.get("change_1d") is None or item.get("latest_price") is None:
                 item.update({k: v for k, v in _candle_moves(kind, asset_id, load).items() if v is not None})
+            if kind == "equity":
+                item.pop("latest_price", None)            # a fund's price means little to a listener; its moves do
             out.append(item)
     tides_markets = []
     try:
@@ -370,6 +372,15 @@ def general_facts(supabase, now: datetime | None = None, load=None) -> dict:
         print(f"Tides markets skipped in the forecast: {str(exc)[:120]}")
     facts["key_markets"] = stocks + tides_markets
     facts["cryptos"] = coins
+    if not facts.get("events"):                           # a quiet week: name the next big release instead
+        try:
+            import macro_calendar
+
+            nxt = macro_calendar.upcoming(now, days=35)[:1]
+            facts["events"] = [{"what": e["name"], "when_utc": e["at"].strftime("%A %d %B, %H:%M"), "why": e["why"],
+                                "note": "nothing scheduled this week; this is the next one"} for e in nxt]
+        except Exception:
+            pass
     return facts
 
 
@@ -381,7 +392,9 @@ GENERAL_SYSTEM = (
     "light nautical flavour that stays perfectly clear to a newcomer. Never let the metaphor hide a fact: say plainly "
     "what moved and by how much. It will be read aloud by a text-to-speech voice, so write for the ear: short "
     "sentences, plain words, numbers rounded and said naturally (\"about 3 percent\", \"sixty-two thousand "
-    "dollars\"), no lists, no headings, no symbols, no emoji, no markdown, no URLs. Use only the facts given; never "
+    "dollars\"), no lists, no headings, no symbols, no emoji, no markdown, no URLs. Round every price to a natural "
+    "spoken figure (\"about sixty-two thousand dollars\", \"just under one dollar\") and changes to one decimal at "
+    "most. Use only the facts given; never "
     "invent prices, news or events, and say nothing about a section that has no facts. Changes are percent unless "
     "marked as points. Describe; never tell the listener to buy, sell or hold, and give no price targets. Trend, "
     "stretch and flow readings run from minus 100 to plus 100 (above zero leans up); sentiment runs from 0 to 100, "

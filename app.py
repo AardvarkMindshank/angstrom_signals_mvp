@@ -14161,9 +14161,13 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
         style_and_show_table(stock_results, "📈 " + t("Equity Signals"), "Stock", "equity_scores", column_specs)
 
     pick = st.session_state.get("chart_pick")
+    # On a new visit the asset saved on the account (restored above) must reach the chart's Asset picker. The market
+    # (asset_type) may already have been set just above, so a missing picker value counts too; before 20 Nov 2026
+    # it did not, and every login opened the first asset in the list and saved it over the remembered one.
     if pick and pick[0] in allowed_kinds and (
         st.session_state.pop("chart_pick_from_row", False)
         or "asset_type" not in st.session_state
+        or ("asset_crypto" if pick[0] == "Crypto" else "asset_stock") not in st.session_state
     ):
         pick_kind, pick_key = pick
         pick_list = crypto_watchlist if pick_kind == "Crypto" else stock_watchlist

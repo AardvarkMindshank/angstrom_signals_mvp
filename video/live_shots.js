@@ -132,6 +132,28 @@ const OUT = process.argv[2] || "out/shots";
     await c.evaluate((n) => n.scrollIntoView({ block: "start" })).catch(() => {});
     await page.waitForTimeout(800); await shot("ui_mode");
   });
+  // The chart keeps its asset across visits (fixed 20 Nov 2026): pick another asset with the chart's pulldown, reload
+  // (a new visit, still signed in) and read the pulldown again. Demo-account asset names only.
+  await step("chart_keep", async () => {
+    const box = () => page.locator("[data-testid='stSelectbox']").filter({ hasText: "Asset" }).first();
+    const read = async () => (await box().innerText().catch(() => "")).replace(/^Asset\s*/, "").split("\n")[0].trim();
+    const s = await expand("Interactive Chart"); await settle(4000);
+    console.log("chart_keep: at login " + await read());
+    await box().locator("[data-baseweb='select']").click(); await page.waitForTimeout(800);
+    const opts = page.locator("[role='option']");
+    const n = await opts.count();
+    const before = await read();
+    let chose = "";
+    for (let i = 0; i < n; i++) { const txt = (await opts.nth(i).innerText()).trim(); if (txt && txt !== before) { chose = txt; await opts.nth(i).click(); break; } }
+    await settle(5000);
+    console.log("chart_keep: chose " + chose + ", now " + await read());
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await page.waitForTimeout(8000); await settle(6000);
+    await expand("Interactive Chart"); await settle(4000);
+    const after = await read();
+    console.log("chart_keep: after reload " + after + (after === chose ? " (kept)" : " (NOT KEPT)"));
+    await toTop(s); await shot("chart_keep");
+  });
   await step("navigator", async () => {
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.locator("button.ai-edge").first().click();
