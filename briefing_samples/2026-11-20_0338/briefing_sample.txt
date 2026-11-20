@@ -1,0 +1,15 @@
+This is the Angstrom Signals morning forecast for Friday 20 November 2026. Rough conditions hold across the markets this morning.
+
+In the crypto markets the overall reading sits at forty-six. Headlines point to mixed exchange-traded fund developments and institutional moves, while readings show extreme fear, negative fund flows, and a shrinking stablecoin supply. Liquidity stays steady yet risk appetite remains low.
+
+For the stock market the reading stands at forty-four. Headlines mix company gains with worries over volatility and rising costs. Readings show extreme fear, a funds rate near three point nine percent, breakeven inflation at two point two percent, and the VIX at twenty-four point six. More stocks fell than rose, and consumer sentiment sits at forty-eight point one.
+
+The tide now turns to the broader readings. The tide has been going out, risk defensive, for twenty-two trading days. The sea state is rough with high volatility. Strongest currents show fear, measured by the VIX, rising and therefore risk defensive. Equities against bonds are falling, with money moving into bonds and risk defensive. Credit is falling, with stress building and risk defensive. These form a headwind for crypto positions led by fear and credit, while long rates push the other way. They also form a headwind for equity positions led by fear and the equities-to-bonds move, while long rates push the other way.
+
+Turning to the watchlist, Bitcoin trades near sixty-two thousand dollars, down one point six percent over the day and thirteen point one percent over seven days. Its RSI reads twenty point seven, flow minus twenty-seven, trend minus seventy-seven, and stretch minus eighty-four. News sentiment holds near fifty point six. Headlines show mixed views, with record institutional holdings and a price rebound offset by a death cross, large fund outflows, regulatory checks, and index removals.
+
+Ethereum trades near one thousand seven hundred forty dollars, down one point eight percent over the day and thirteen point six percent over seven days. Its RSI reads twenty-three point four, flow minus nineteen, trend minus seventy-seven, and stretch minus seventy-five. News sentiment sits at forty-one point three. Headlines show mixed views, with large realized losses and treasury sales offset by institutional adoption news, though short-term weakness and whale moves add uncertainty.
+
+Solana trades near seventy-three dollars, down one point three percent over the day and eleven point one percent over seven days. Its RSI reads twenty-seven point one, flow minus twenty, trend minus eighty-one, and stretch minus sixty-three. News sentiment holds near forty-eight point one. Headlines show a split between exchange-traded fund optimism and plan cancellations, with mixed long-term views and custody shifts adding uncertainty.
+
+This is a summary of the app's readings, not advice. Fair winds.
