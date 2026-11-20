@@ -86,7 +86,10 @@ const OUT = process.argv[2] || "out/shots";
       await ev.locator("label").first().click().catch(() => {}); await settle(1500);
     }
     const turned = [];
-    for (const words of [/^📡 Sonar$/, "Sonar markers", "Chart shapes"]) if (await pillOn(words)) turned.push(words);
+    for (const words of [/Sonar\s*$/, "Sonar markers", "Chart shapes", "Stoch RSI"]) if (await pillOn(words)) turned.push(words);
+    const marks = page.locator(".st-key-chart_sonar_marks button").filter({ hasText: /^All$/ }).first();
+    if (await marks.count()) { await marks.click().catch(() => {}); await settle(1500); }
+    await page.locator(".ang-lwc .ang-lwc-tools button").filter({ hasText: "⟲" }).first().click().catch(() => {});
     await settle(3000);
     const chart = page.locator(".ang-lwc").first();
     await toTop(s); await shot("chart");
