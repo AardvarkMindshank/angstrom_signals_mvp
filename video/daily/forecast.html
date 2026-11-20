@@ -58,7 +58,8 @@ const MOODS = { sunny: ["#0b3a7a", "#1d6fb8", "rgba(250,204,21,.25)"], fair: ["#
   stormy: ["#040d24", "#0a1c3d", "rgba(239,68,68,.18)"] };
 
 function pct(v, d = 1) { return v == null ? "–" : (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(d) + "%"; }
-function cls(v) { return v == null ? "" : v >= 0 ? "up" : "down"; }
+// Green for good news, red for bad: for a metric where up is bad (the fear index), a rise is red.
+function cls(v, inverse) { return v == null ? "" : (v >= 0) !== !!inverse ? "up" : "down"; }
 function money(v) {
   if (v == null) return "";
   if (v >= 1000) return "$" + Math.round(v).toLocaleString("en-US");
@@ -111,7 +112,7 @@ function narrContent(seg) {
     const word = d.tide.state === "out" ? "Going out" : d.tide.state === "in" ? "Coming in" : "Turning";
     const tiles = d.currents.map((c) => `<div class="it card tile"><div class="n">${esc(c.name)}</div>
       <div class="v">${c.value == null ? "" : (c.value >= 100 ? Math.round(c.value).toLocaleString("en-US") : c.value.toFixed(2))}</div>
-      <div class="chg ${cls(c.change)}" style="font-size:30px;margin-top:4px">${c.pts ? (c.change >= 0 ? "+" : "−") + Math.abs(c.change ?? 0).toFixed(1) + " pts" : pct(c.change)} · 7 days</div></div>`).join("");
+      <div class="chg ${cls(c.change, c.inverse)}" style="font-size:30px;margin-top:4px">${c.pts ? (c.change >= 0 ? "+" : "−") + Math.abs(c.change ?? 0).toFixed(1) + " pts" : pct(c.change)} · 7 days</div></div>`).join("");
     return `<div class="it card" style="padding:34px 40px;display:flex;align-items:center;gap:34px">
         <div style="font-size:120px;line-height:1;color:${d.tide.state === "out" ? "var(--down)" : "var(--up)"}">${arrow}</div>
         <div><div class="kicker" style="font-size:78px">Tide ${word}</div>

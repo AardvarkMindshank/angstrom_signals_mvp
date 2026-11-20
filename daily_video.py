@@ -41,6 +41,7 @@ MUSIC = {"sunny": "1-Sunshine.mp3", "fair": "2-Springtime.mp3", "changeable": "3
          "rough": "4-Rainy.mp3", "stormy": "5-Stormy.mp3"}
 WEATHER_WORDS = {"sunny": ("☀️", "Fair and sunny"), "fair": ("🌤️", "Fair"), "changeable": ("⛅", "Changeable"),
                  "rough": ("🌧️", "Rough seas"), "stormy": ("⛈️", "Storm warning")}
+INVERSE_WORDS = ("fear", "vix", "volatility")    # metrics where up is bad: their rises show red, falls green
 SPARK = {"SPY": ("equity", "SPY"), "QQQ": ("equity", "QQQ"), "Bitcoin": ("crypto", "bitcoin"),
          "Ether": ("crypto", "ethereum"), "Solana": ("crypto", "solana"), "XRP": ("crypto", "ripple"),
          "BNB": ("crypto", "binancecoin")}
@@ -133,7 +134,10 @@ def graphics_data(facts: dict, sections: dict, day: datetime, load=None) -> dict
     days = re.search(r"for (\d+) trading days", tide_line)
     km = facts.get("key_markets") or []
     currents = [{"name": a["name"], "value": a.get("value"), "change": a.get("change_7d"),
-                 "pts": a.get("unit_of_changes") == "points"} for a in km if a.get("value") is not None]
+                 "pts": a.get("unit_of_changes") == "points",
+                 # Colour by what the move means, not its sign: a rising fear index is bad news, so it shows red.
+                 "inverse": any(w in a["name"].lower() for w in INVERSE_WORDS)}
+                for a in km if a.get("value") is not None]
     stocks = [{"name": "S&P 500" if "S&P" in a["name"] else "Nasdaq 100", "change_1d": a.get("change_1d"),
                "change_7d": a.get("change_7d"), "spark": _spark(load, *SPARK["SPY" if "S&P" in a["name"] else "QQQ"])}
               for a in km if a.get("value") is None]

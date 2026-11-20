@@ -208,3 +208,10 @@ e.g. a faster pair (EMA 5 / 11) or a turn of the fast average's slope, as an opt
 a side-by-side with his TradingView Cipher A (same coin, timeframe and date) to see whether the paid version uses a
 faster rule. Markers already show (faded) on the forming candle since 20 Nov. sonar.markers is certified: a new rule
 is a new parameter (default unchanged) or a new version, with a certification run.
+
+## Daily forecast video: colours must follow meaning (20 Nov 2026)
+
+Every up/down colour in the video must say good (green) or bad (red) for that metric, not just the sign of the move:
+a rising fear index (VIX) is red. Done for the currents tiles (daily_video.INVERSE_WORDS, forecast.html cls()); check
+any new tile against this. Still to do before publishing: the opening and closing sequence with the new brand once
+the domain is registered, trimming to 90 seconds, and the daily schedule with an emailed copy to post.
