@@ -1,0 +1,105 @@
+{
+ "about": "Captain clips for the story of the day and the weekend welcome (pack 2), and portrait options for the First Mate and the deckhand (original characters, same 3D style).",
+ "jobs": [
+  {
+   "id": "say_sign_story_1",
+   "speak": "And now, the story of the day.",
+   "voice": "bm_george",
+   "speed": 1.1
+  },
+  {
+   "id": "say_sign_story_2",
+   "speak": "Here's the one to watch today.",
+   "voice": "bm_george",
+   "speed": 1.1
+  },
+  {
+   "id": "say_welcome_weekend_1",
+   "speak": "Good morning, and welcome to the weekend forecast.",
+   "voice": "bm_george",
+   "speed": 1.1
+  },
+  {
+   "id": "say_welcome_weekend_2",
+   "speak": "Morning, all hands. Here's your weekend forecast.",
+   "voice": "bm_george",
+   "speed": 1.1
+  },
+  {
+   "id": "cap_sign_story_1",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:face_3d_1.png",
+    "audio_url": "out:say_sign_story_1.wav",
+    "prompt": "A friendly animated ship's captain speaking to camera on the bridge, engaged, intrigued expression, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "cap_sign_story_2",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:face_3d_1.png",
+    "audio_url": "out:say_sign_story_2.wav",
+    "prompt": "A friendly animated ship's captain speaking to camera on the bridge, engaged, intrigued expression, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "cap_welcome_weekend_1",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:face_3d_1.png",
+    "audio_url": "out:say_welcome_weekend_1.wav",
+    "prompt": "A friendly animated ship's captain speaking to camera on the bridge, relaxed, cheerful expression, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "cap_welcome_weekend_2",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:face_3d_1.png",
+    "audio_url": "out:say_welcome_weekend_2.wav",
+    "prompt": "A friendly animated ship's captain speaking to camera on the bridge, relaxed, cheerful expression, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "crew_mate_a",
+   "model": "fal-ai/flux-pro/kontext/text-to-image",
+   "input": {
+    "aspect_ratio": "3:4",
+    "num_images": 2,
+    "output_format": "png",
+    "prompt": "Head-and-shoulders portrait in a polished 3D animated film style, original character, warm cinematic lighting, looking at the camera, lips closed with a confident smile, a glamorous, confident ship's First Mate, a woman in her early thirties with long wavy chestnut hair, a smart fitted navy officer's jacket with gold epaulettes and brass buttons over a white shirt, a small gold compass pin, on a sailing yacht's bridge with brass instruments and a window onto a sunlit sea"
+   }
+  },
+  {
+   "id": "crew_mate_b",
+   "model": "fal-ai/flux-pro/kontext/text-to-image",
+   "input": {
+    "aspect_ratio": "3:4",
+    "num_images": 2,
+    "output_format": "png",
+    "prompt": "Head-and-shoulders portrait in a polished 3D animated film style, original character, warm cinematic lighting, looking at the camera, lips closed with a confident smile, a striking, charismatic ship's First Mate, a woman in her thirties with a sleek dark bob and bold red lipstick, a tailored white officer's jacket with navy and gold trim, standing at the helm of a sailing yacht with a turquoise sea and blue sky behind her"
+   }
+  },
+  {
+   "id": "crew_deck_a",
+   "model": "fal-ai/flux-pro/kontext/text-to-image",
+   "input": {
+    "aspect_ratio": "3:4",
+    "num_images": 2,
+    "output_format": "png",
+    "prompt": "Head-and-shoulders portrait in a polished 3D animated film style, original character, warm cinematic lighting, looking at the camera, lips closed with a confident smile, a dashing young deckhand in his twenties with tousled sun-bleached hair and a cheeky grin, athletic build, a fitted navy crew T-shirt with a small rope-knot emblem, on the sunny deck of a sailing yacht with coiled ropes and sparkling sea behind him"
+   }
+  },
+  {
+   "id": "crew_deck_b",
+   "model": "fal-ai/flux-pro/kontext/text-to-image",
+   "input": {
+    "aspect_ratio": "3:4",
+    "num_images": 2,
+    "output_format": "png",
+    "prompt": "Head-and-shoulders portrait in a polished 3D animated film style, original character, warm cinematic lighting, looking at the camera, lips closed with a confident smile, a handsome, athletic young deckhand in his twenties with short dark curly hair and a warm grin, a fitted white crew T-shirt with navy trim, a coil of rope over one shoulder, on a sailing yacht's deck at golden hour with the sea behind him"
+   }
+  }
+ ]
+}
