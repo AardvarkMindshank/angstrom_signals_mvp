@@ -46,7 +46,7 @@ html.angstrom-night #ang-log-root .log-grip::before{background:#6b7280;}
 html.angstrom-night #ang-log-root .log-grip:hover::before{background:#e5e7eb;}
 #ang-log-root.is-width-dragging .log-body iframe{pointer-events:none;}
 #ang-log-root.is-width-dragging,#ang-log-root.is-width-dragging *{cursor:col-resize !important;user-select:none !important;}
-#ang-log-root .log-head{flex:none;display:flex;align-items:center;gap:8px;padding:10px 16px 8px 16px;
+#ang-log-root .log-head{flex:none;display:flex;align-items:center;gap:8px;padding:10px 16px 8px 2.75rem;
   border-bottom:1px solid rgba(127,127,127,.25);}
 #ang-log-root .log-title{font-weight:650;font-size:1.05rem;}
 #ang-log-root .log-actions{margin-left:auto;display:flex;gap:6px;}
