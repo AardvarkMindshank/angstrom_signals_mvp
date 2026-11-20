@@ -195,6 +195,7 @@ def graphics_data(facts: dict, sections: dict, day: datetime, load=None) -> dict
         "currents": currents, "stocks": stocks, "stock_mood": moods.get("stock market"),
         "coins": coins, "crypto_mood": moods.get("crypto"), "events": events,
         "story": {"title": story.get("title", ""), "asset": hit},
+        "weekend": day.weekday() >= 5,
         "brand": {"show": bool(brand.SHOW_IN_VIDEO), "name": brand.NAME, "domain": brand.DOMAIN},
     }
 

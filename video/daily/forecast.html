@@ -95,7 +95,7 @@ function gauge(score, size) {
 function capCaption(seg) {
   const d = S.data;
   const tideWord = d.tide.state === "out" ? "Tide going out" : d.tide.state === "in" ? "Tide coming in" : "Tide turning";
-  const titles = { welcome: ["Morning<br>forecast", d.date], weather: [esc(d.weather_word), `${tideWord} · Sea ${esc(d.tide.sea)}`],
+  const titles = { welcome: [d.weekend ? "Weekend<br>forecast" : "Morning<br>forecast", d.date], weather: [esc(d.weather_word), `${tideWord} · Sea ${esc(d.tide.sea)}`],
     sign_story: ["The story<br>of the day", esc(d.story?.title || "")],
     sign_tides: ["The tide &amp;<br>currents", "The big picture"], sign_equities: ["Equity<br>markets", "S&amp;P 500 · Nasdaq"],
     sign_crypto: ["The crypto<br>seas", "Bitcoin and the top coins"], sign_horizon: ["On the<br>horizon", "What's coming up"],
