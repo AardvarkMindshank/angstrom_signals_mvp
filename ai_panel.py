@@ -7,6 +7,7 @@ The panel holds the Navigator page itself (?view=advisor&from=panel&inpanel=1; n
 itself) in a frame, made the first time it is opened and kept afterwards, so the conversation carries on when the
 panel is closed and opened again, and the page under it stays free to use. The frame signs in the way the pop-out
 windows do (it asks this signed-in page).
+The ⧉ button opens the Navigator in its own window instead (20 Nov 2026).
 One right-edge panel at a time: opening the AI closes social and chat, and opening social and chat closes the AI.
 On a phone the panel covers the whole screen.
 
@@ -52,7 +53,7 @@ html.angstrom-night #ang-ai-root .ai-grip:hover::before,html.angstrom-night #ang
 #ang-ai-root.is-width-dragging .ai-body iframe{pointer-events:none;}
 #ang-ai-root.is-width-dragging,#ang-ai-root.is-width-dragging *{cursor:col-resize !important;user-select:none !important;}
 #ang-ai-root .ai-head .ai-actions{margin-left:auto;display:flex;gap:6px;}
-#ang-ai-root .ai-head .ai-pin,#ang-ai-root .ai-head .ai-close{width:28px;height:28px;padding:0;display:inline-flex;
+#ang-ai-root .ai-head .ai-pin,#ang-ai-root .ai-head .ai-close,#ang-ai-root .ai-head .ai-pop{width:28px;height:28px;padding:0;display:inline-flex;
   align-items:center;justify-content:center;background:rgba(127,127,127,.15);border:0;border-radius:999px;cursor:pointer;
   color:inherit;}
 #ang-ai-root .ai-head .ai-pin.is-on{background:#111827;color:#fff;}
@@ -79,7 +80,8 @@ export default function(component) {
   const d = data || {};
   const words = { tip: d.tip || "AI Navigator", title: T("✨ AI Navigator").replace(/^✨\\s*/, ""), close: T("Close"),
                   pin: T("Pin the panel beside the page: the page makes room for it and it stays open"),
-                  resize: T("Drag to resize the panel") };
+                  resize: T("Drag to resize the panel"), pop: T("Open this panel in its own window") };
+  const POP_SVG = "<svg viewBox='0 0 24 24' width='15' height='15' aria-hidden='true' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M14 4h6v6'/><path d='M20 4 10 14'/><path d='M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5'/></svg>";
   const PIN_SVG = "<svg viewBox='0 0 24 24' width='15' height='15' aria-hidden='true' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M9 4h6l-1 6 3 3H7l3-3z'/><path d='M12 13v7'/></svg>";
   const CLOSE_SVG = "<svg viewBox='0 0 24 24' width='15' height='15' aria-hidden='true' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M6 6l12 12'/><path d='M18 6 6 18'/></svg>";
   let root = document.getElementById("ang-ai-root");
@@ -107,7 +109,18 @@ export default function(component) {
     close.type = "button";
     close.className = "ai-close";
     close.innerHTML = CLOSE_SVG;
-    actions.append(pin, close);
+    // ⧉ The Navigator in its own window (the ?view=advisor pop-out), and the panel put away.
+    const pop = document.createElement("button");
+    pop.type = "button";
+    pop.className = "ai-pop";
+    pop.innerHTML = POP_SVG;
+    pop.addEventListener("click", () => {
+      const address = window.location.origin + window.location.pathname + "?view=advisor&from=panel";
+      const opened = window.open(address, "ang_popout_advisor", "popup=yes,width=620,height=880");
+      if (!opened) window.open(address, "_blank");
+      window.angstromCloseAI();
+    });
+    actions.append(pop, pin, close);
     head.append(title, actions);
     const grip = document.createElement("div");
     grip.className = "ai-grip";
@@ -187,6 +200,8 @@ export default function(component) {
   root.querySelector(".ai-pin").title = words.pin;
   root.querySelector(".ai-pin").setAttribute("aria-label", words.pin);
   root.querySelector(".ai-grip").title = words.resize;
+  root.querySelector(".ai-pop").title = words.pop;
+  root.querySelector(".ai-pop").setAttribute("aria-label", words.pop);
   root.querySelector(".ai-panel").setAttribute("aria-label", words.title);
 
   const address = (from, ask) => window.location.origin + window.location.pathname + "?view=advisor&inpanel=1&from="

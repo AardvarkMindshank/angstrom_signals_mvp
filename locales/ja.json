@@ -2343,5 +2343,8 @@
   "Day": "昼",
   "Night": "夜",
   "Auto": "自動",
-  "Day and Night keep the page light or dark. Auto follows your device's setting, so it changes with your phone or computer. Saved on your account, so every device you log in on follows it. The page reloads once to switch.": "「昼」と「夜」はページを明るく、または暗く保ちます。「自動」は端末の設定に従うので、スマホやパソコンに合わせて切り替わります。アカウントに保存されるので、ログインしているすべての端末が従います。切り替えのためにページが一度再読み込みされます。"
+  "Day and Night keep the page light or dark. Auto follows your device's setting, so it changes with your phone or computer. Saved on your account, so every device you log in on follows it. The page reloads once to switch.": "「昼」と「夜」はページを明るく、または暗く保ちます。「自動」は端末の設定に従うので、スマホやパソコンに合わせて切り替わります。アカウントに保存されるので、ログインしているすべての端末が従います。切り替えのためにページが一度再読み込みされます。",
+  "Open this panel in its own window": "このパネルを別ウィンドウで開く",
+  "📓 Opening your Logbook…": "📓 ログブックを開いています…",
+  "📓 Logbook: today's Passage Plan to read or hear, the plans before it, and the Morning forecast.": "📓 ログブック：今日の Passage Plan（読む・聴く）、これまでのプラン、朝の予報。"
 }

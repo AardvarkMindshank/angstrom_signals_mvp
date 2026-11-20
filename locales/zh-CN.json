@@ -2343,5 +2343,8 @@
   "Day": "白天",
   "Night": "夜晚",
   "Auto": "自动",
-  "Day and Night keep the page light or dark. Auto follows your device's setting, so it changes with your phone or computer. Saved on your account, so every device you log in on follows it. The page reloads once to switch.": "白天和夜晚会让页面保持浅色或深色。自动跟随设备设置，会随你的手机或电脑切换。保存在你的账户中，你登录的每台设备都会跟随。切换时页面会重新加载一次。"
+  "Day and Night keep the page light or dark. Auto follows your device's setting, so it changes with your phone or computer. Saved on your account, so every device you log in on follows it. The page reloads once to switch.": "白天和夜晚会让页面保持浅色或深色。自动跟随设备设置，会随你的手机或电脑切换。保存在你的账户中，你登录的每台设备都会跟随。切换时页面会重新加载一次。",
+  "Open this panel in its own window": "在单独的窗口中打开此面板",
+  "📓 Opening your Logbook…": "📓 正在打开你的航海日志…",
+  "📓 Logbook: today's Passage Plan to read or hear, the plans before it, and the Morning forecast.": "📓 航海日志：今日 Passage Plan（可读可听）、之前的计划以及晨间预报。"
 }

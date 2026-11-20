@@ -2343,5 +2343,8 @@
   "Day": "낮",
   "Night": "밤",
   "Auto": "자동",
-  "Day and Night keep the page light or dark. Auto follows your device's setting, so it changes with your phone or computer. Saved on your account, so every device you log in on follows it. The page reloads once to switch.": "낮과 밤은 페이지를 밝게 또는 어둡게 유지합니다. 자동은 기기 설정을 따르므로 휴대폰이나 컴퓨터에 맞춰 바뀝니다. 계정에 저장되어 로그인한 모든 기기가 따릅니다. 전환하려면 페이지가 한 번 새로 고쳐집니다."
+  "Day and Night keep the page light or dark. Auto follows your device's setting, so it changes with your phone or computer. Saved on your account, so every device you log in on follows it. The page reloads once to switch.": "낮과 밤은 페이지를 밝게 또는 어둡게 유지합니다. 자동은 기기 설정을 따르므로 휴대폰이나 컴퓨터에 맞춰 바뀝니다. 계정에 저장되어 로그인한 모든 기기가 따릅니다. 전환하려면 페이지가 한 번 새로 고쳐집니다.",
+  "Open this panel in its own window": "이 패널을 새 창에서 열기",
+  "📓 Opening your Logbook…": "📓 로그북을 여는 중…",
+  "📓 Logbook: today's Passage Plan to read or hear, the plans before it, and the Morning forecast.": "📓 로그북: 읽거나 들을 수 있는 오늘의 Passage Plan, 지난 플랜, 아침 예보."
 }

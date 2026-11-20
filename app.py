@@ -48,7 +48,7 @@ _POPOUT_SECTION_IDS = (
     "market_sentiment_panel",
     "signal_matrix",
 )
-_POPOUT_VIEWS = ("social",) + _POPOUT_SECTION_IDS + ("lattice_panel", "advisor", "video", "help_guides")   # Lattice, the AI Navigator, videos and Help too
+_POPOUT_VIEWS = ("social",) + _POPOUT_SECTION_IDS + ("lattice_panel", "advisor", "video", "help_guides", "logbook")   # Lattice, the AI Navigator, videos, Help and the Logbook too
 _POPOUT_VIEW = str(st.query_params.get("view") or "")
 if _POPOUT_VIEW not in _POPOUT_VIEWS:
     _POPOUT_VIEW = ""
@@ -186,7 +186,7 @@ st.markdown(
     # Phones and home-screen web apps: no "open in its own window" buttons. A phone shows one page at a time, and a
     # web app on the home screen can't hand its sign-in to a new window, so sections open in place (16 Nov 2026).
     "@media (max-width: 640px), (display-mode: standalone) and (pointer: coarse)"
-    "{.ang-popout,#social-stream-root .popout-btn{display:none !important;}}</style>",
+    "{.ang-popout,#social-stream-root .popout-btn,#ang-ai-root .ai-pop,#ang-log-root .log-pop{display:none !important;}}</style>",
     unsafe_allow_html=True,
 )
 
@@ -414,7 +414,7 @@ export default function(component) {
       ".st-key-sec_lattice_panel [data-testid='stExpanderDetails']{min-height:60vh;}",
       // A pinned right-hand panel (✨ AI Navigator, or social and chat) docks: the page makes room for it and follows
       // its width, instead of sitting under it (ai_panel.py and the social panel set these widths).
-      "[data-testid='stMain']{padding-right:max(var(--ang-dock-ai,0px),var(--ang-dock-social,0px));transition:padding-right .22s ease;}",
+      "[data-testid='stMain']{padding-right:max(var(--ang-dock-ai,0px),var(--ang-dock-social,0px));padding-left:var(--ang-dock-log,0px);transition:padding-right .22s ease,padding-left .22s ease;}",
       // Plotly's toolbar hints (Zoom, Pan, Reset...) show above the buttons, not under the mouse pointer.
       ".js-plotly-plot .plotly .modebar [data-title]:before,.js-plotly-plot .plotly .modebar [data-title]:after{top:auto !important;bottom:110% !important;}",
       ".js-plotly-plot .plotly .modebar [data-title]:before{border-bottom-color:transparent !important;border-top-color:#69738a !important;margin-bottom:-12px;}",
@@ -6013,8 +6013,8 @@ def _take_handoff() -> None:
         st.session_state.popout_handoff_failed = True
         st.rerun()
     if str(st.query_params.get("inpanel") or "") == "1":
-        # Inside the ✨ AI panel (not a separate tab): a quiet start-up line, not the pop-out wording.
-        st.caption(t("✨ Starting the AI Navigator…"))
+        # Inside the ✨ AI or 📓 Logbook panel (not a separate tab): a quiet start-up line, not the pop-out wording.
+        st.caption(t("📓 Opening your Logbook…") if _POPOUT_VIEW == "logbook" else t("✨ Starting the AI Navigator…"))
     else:
         st.caption(t("Connecting this tab to your signed-in dashboard tab..."))
     st.stop()
@@ -8306,6 +8306,9 @@ with st.container(horizontal=True, vertical_alignment="center", horizontal_align
             import ai_panel as _ai_panel
 
             _ai_panel.mount(st)        # ✨ AI Navigator: the pull-out on the right edge, under the social arrow
+            import logbook_dock as _logbook_dock
+
+            _logbook_dock.mount(st)    # 📓 Logbook: the pull-out on the left edge, under the sidebar's handle
         single_layout = st.button(
             t("Single column"),
             key="layout_single",
@@ -9531,8 +9534,6 @@ def _logbook_panel() -> None:
                 st.rerun(scope="fragment")
 
 
-with tracked_expander("📓 " + t("Logbook"), "briefing_panel", sidebar=True):
-    _logbook_panel()
 
 
 with tracked_expander("⚙️ " + t("Settings"), "settings_panel", sidebar=True):
@@ -16848,6 +16849,15 @@ if _POPOUT_VIEW == "advisor":
                                 provider=str((prefs.get("settings") or {}).get("ai_navigator") or "claude"),
                                 embed=str(st.query_params.get("inpanel") or "") == "1",
                                 focus=lambda: _on_screen_focus(str(user_id)))
+    st.stop()
+
+if _POPOUT_VIEW == "logbook":
+    # 📓 The Logbook, in the left pull-out (inpanel=1) or its own window: the Passage Plan, the Morning forecast.
+    if str(st.query_params.get("inpanel") or "") != "1":
+        st.markdown("### 📓 " + t("Logbook"))
+    _forecast_player("logbook_view")
+    st.divider()
+    _logbook_panel()
     st.stop()
 
 if _POPOUT_VIEW == "help_guides":

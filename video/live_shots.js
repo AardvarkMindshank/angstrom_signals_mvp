@@ -119,9 +119,12 @@ const OUT = process.argv[2] || "out/shots";
   });
   // 📓 Logbook and ☀️/🌙 Day or night (sidebar), checked after the 20 Nov changes; not website pictures.
   await step("logbook", async () => {
-    const s = side("Logbook"); await s.click(); await settle(4000);
-    await s.evaluate((n) => n.scrollIntoView({ block: "start" })).catch(() => {});
-    await page.waitForTimeout(800); await shot("logbook"); await s.click(); await settle();
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.locator("button.log-edge").first().click();
+    await page.waitForTimeout(15000);                       // the panel's page signs in and draws
+    await shot("logbook");
+    await page.locator("#ang-log-root .log-close").first().click().catch(() => {});
+    await settle();
   });
   await step("ui_mode", async () => {
     const s = side("Settings"); await s.click(); await settle(2500);

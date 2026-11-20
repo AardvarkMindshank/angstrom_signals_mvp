@@ -2343,5 +2343,8 @@
   "Day": "Dia",
   "Night": "Noite",
   "Auto": "Auto",
-  "Day and Night keep the page light or dark. Auto follows your device's setting, so it changes with your phone or computer. Saved on your account, so every device you log in on follows it. The page reloads once to switch.": "Dia e Noite mantêm a página clara ou escura. Auto segue a configuração do seu dispositivo, então muda junto com seu celular ou computador. Fica salvo na sua conta, então todo dispositivo em que você entrar segue a escolha. A página recarrega uma vez para mudar."
+  "Day and Night keep the page light or dark. Auto follows your device's setting, so it changes with your phone or computer. Saved on your account, so every device you log in on follows it. The page reloads once to switch.": "Dia e Noite mantêm a página clara ou escura. Auto segue a configuração do seu dispositivo, então muda junto com seu celular ou computador. Fica salvo na sua conta, então todo dispositivo em que você entrar segue a escolha. A página recarrega uma vez para mudar.",
+  "Open this panel in its own window": "Abrir este painel em uma janela própria",
+  "📓 Opening your Logbook…": "📓 Abrindo seu diário de bordo…",
+  "📓 Logbook: today's Passage Plan to read or hear, the plans before it, and the Morning forecast.": "📓 Diário de bordo: o Passage Plan de hoje para ler ou ouvir, os planos anteriores e a Previsão da manhã."
 }

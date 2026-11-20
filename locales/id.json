@@ -2343,5 +2343,8 @@
   "Day": "Siang",
   "Night": "Malam",
   "Auto": "Otomatis",
-  "Day and Night keep the page light or dark. Auto follows your device's setting, so it changes with your phone or computer. Saved on your account, so every device you log in on follows it. The page reloads once to switch.": "Siang dan Malam membuat halaman tetap terang atau gelap. Otomatis mengikuti pengaturan perangkat Anda, jadi berubah bersama ponsel atau komputer Anda. Tersimpan di akun Anda, jadi setiap perangkat tempat Anda masuk ikut mengikutinya. Halaman dimuat ulang sekali untuk beralih."
+  "Day and Night keep the page light or dark. Auto follows your device's setting, so it changes with your phone or computer. Saved on your account, so every device you log in on follows it. The page reloads once to switch.": "Siang dan Malam membuat halaman tetap terang atau gelap. Otomatis mengikuti pengaturan perangkat Anda, jadi berubah bersama ponsel atau komputer Anda. Tersimpan di akun Anda, jadi setiap perangkat tempat Anda masuk ikut mengikutinya. Halaman dimuat ulang sekali untuk beralih.",
+  "Open this panel in its own window": "Buka panel ini di jendelanya sendiri",
+  "📓 Opening your Logbook…": "📓 Membuka Logbook Anda…",
+  "📓 Logbook: today's Passage Plan to read or hear, the plans before it, and the Morning forecast.": "📓 Logbook: Passage Plan hari ini untuk dibaca atau didengar, rencana sebelumnya, dan Prakiraan pagi."
 }

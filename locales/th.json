@@ -2343,5 +2343,8 @@
   "Day": "กลางวัน",
   "Night": "กลางคืน",
   "Auto": "อัตโนมัติ",
-  "Day and Night keep the page light or dark. Auto follows your device's setting, so it changes with your phone or computer. Saved on your account, so every device you log in on follows it. The page reloads once to switch.": "กลางวันและกลางคืนจะให้หน้าเว็บสว่างหรือมืดตลอด อัตโนมัติจะตามการตั้งค่าของอุปกรณ์ จึงเปลี่ยนตามโทรศัพท์หรือคอมพิวเตอร์ของคุณ บันทึกไว้ในบัญชี ทุกอุปกรณ์ที่คุณเข้าสู่ระบบจะทำตาม หน้าเว็บจะโหลดใหม่หนึ่งครั้งเพื่อสลับ"
+  "Day and Night keep the page light or dark. Auto follows your device's setting, so it changes with your phone or computer. Saved on your account, so every device you log in on follows it. The page reloads once to switch.": "กลางวันและกลางคืนจะให้หน้าเว็บสว่างหรือมืดตลอด อัตโนมัติจะตามการตั้งค่าของอุปกรณ์ จึงเปลี่ยนตามโทรศัพท์หรือคอมพิวเตอร์ของคุณ บันทึกไว้ในบัญชี ทุกอุปกรณ์ที่คุณเข้าสู่ระบบจะทำตาม หน้าเว็บจะโหลดใหม่หนึ่งครั้งเพื่อสลับ",
+  "Open this panel in its own window": "เปิดแผงนี้ในหน้าต่างแยก",
+  "📓 Opening your Logbook…": "📓 กำลังเปิดสมุดบันทึกเดินเรือ…",
+  "📓 Logbook: today's Passage Plan to read or hear, the plans before it, and the Morning forecast.": "📓 สมุดบันทึกเดินเรือ: Passage Plan ของวันนี้ให้อ่านหรือฟัง แผนก่อนหน้า และพยากรณ์ยามเช้า"
 }
