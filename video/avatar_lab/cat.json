@@ -1,0 +1,47 @@
+{
+ "about": "The ship's cat, redesigned as a slim black-and-white tuxedo cat (an original character): portraits and two talking tests.",
+ "jobs": [
+  {
+   "id": "portrait_cat",
+   "model": "fal-ai/flux-pro/kontext/text-to-image",
+   "input": {
+    "aspect_ratio": "3:4",
+    "num_images": 2,
+    "output_format": "png",
+    "prompt": "Head-and-shoulders portrait in a polished 3D animated film style, original character, warm cinematic lighting, looking at the camera, mouth closed, a slim, elegant black-and-white tuxedo ship's cat with bright green eyes, long white whiskers and one sceptically raised eyebrow, wearing a small knitted navy sailor's jumper with a tiny anchor, sitting upright on a ship's chart table beside a brass compass, sea through the porthole behind"
+   }
+  },
+  {
+   "id": "say_cat_welcome_1",
+   "speak": "The humans are asleep, so I'm doing the forecast. Markets are down. I knocked a chart off the table.",
+   "voice": "af_nicole",
+   "speed": 1.25
+  },
+  {
+   "id": "cat_welcome_1",
+   "stage": 1,
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "out:portrait_cat_1.png",
+    "audio_url": "out:say_cat_welcome_1.wav",
+    "prompt": "The animated tuxedo cat from the picture speaking to camera, dry and deadpan, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "say_cat_signoff_1",
+   "speak": "That's the forecast. Fair winds and following seas. Now, where's my breakfast?",
+   "voice": "af_nicole",
+   "speed": 1.25
+  },
+  {
+   "id": "cat_signoff_1",
+   "stage": 1,
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "out:portrait_cat_1.png",
+    "audio_url": "out:say_cat_signoff_1.wav",
+    "prompt": "The animated tuxedo cat from the picture speaking to camera, dry and deadpan, natural head movement and blinking."
+   }
+  }
+ ]
+}
