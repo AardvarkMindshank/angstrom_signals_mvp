@@ -4887,6 +4887,7 @@ import signals_view
 import stored_readings
 import table_columns
 from digest import COMMON_ZONES
+import briefing
 import session_guard
 import colour_themes
 
@@ -9327,6 +9328,18 @@ def _admin_ai() -> None:
         else:
             st.toast(f"News sentiment will be scored by {ap.label(picked)} from its next refresh.")
             _sentiment_ai_choice.clear()
+    # 🎧 Morning briefing scripts are written by the background worker (GitHub), which has these keys, not Claude's.
+    b_label, b_default, _who, b_tip = ap.USES["briefing"]
+    b_current = ap.app_choice(supabase, "briefing") or b_default
+    b_options = list(dict.fromkeys([b_current, "grok", "chatgpt", "gemini"]))
+    b_picked = st.selectbox(f"{b_label}, for everyone", b_options, index=0, key="admin_ai_briefing",
+                            format_func=ap.label, help=b_tip, placeholder="Choose an option")
+    if b_picked != b_current:
+        problem = ap.save_app_choice(supabase, "briefing", b_picked)
+        if problem:
+            st.warning(problem)
+        else:
+            st.toast(f"Morning briefings will be written by {ap.label(b_picked)} from the next one.")
     off = [p for p in ap.PROVIDERS if p not in on]
     if off:
         st.caption("Not switched on yet: " + ", ".join(ap.label(p) for p in off) + ".")
@@ -9337,6 +9350,114 @@ def _admin_ai() -> None:
                           for p, spec in ap.PROVIDERS.items()]),
             hide_index=True, use_container_width=True,
             column_config={"Get a key": st.column_config.LinkColumn("Get a key")})
+
+
+# 🎧 Morning briefing (briefing.py, run_briefings.py): today's episode to play, "make it now", and the choices.
+_BRIEFING_WORDS = [i18n.mark("🌍 Market mood"), i18n.mark("🌊 The Tide"), i18n.mark("⭐ Your watchlist"),
+                   i18n.mark("🔔 What changed overnight"), i18n.mark("🔻 Your funnels"), i18n.mark("📅 The week's events")]
+
+
+@st.cache_data(ttl=60, show_spinner=False)
+def _briefing_meta(base: str, token: str) -> dict:
+    import requests
+
+    try:
+        r = requests.get(briefing.public_url(base, f"{token}/episodes.json"), timeout=6)
+        return r.json() if r.status_code == 200 else {}
+    except Exception:
+        return {}
+
+
+@st.cache_data(ttl=600, show_spinner=False)
+def _briefing_text(url: str) -> str:
+    import requests
+
+    try:
+        r = requests.get(url, timeout=6)
+        return r.text if r.status_code == 200 else ""
+    except Exception:
+        return ""
+
+
+def _briefing_save(b: dict, **state) -> None:
+    stored = (st.session_state.get("cloud_prefs") or {}).get("settings") or {}
+    updates = {"briefing": b}
+    if state:
+        updates["briefing_state"] = {**(stored.get("briefing_state") or {}), **state}
+    save_account_settings(updates)
+
+
+@st.fragment
+def _briefing_panel() -> None:
+    stored = (st.session_state.get("cloud_prefs") or {}).get("settings") or {}
+    b = briefing.settings_of(stored)
+    state = stored.get("briefing_state") if isinstance(stored.get("briefing_state"), dict) else {}
+    base = _secret("url")
+    st.caption(t("A short spoken forecast each morning, like the shipping forecast at dawn: the markets' mood, the "
+                 "Tide and the events on the horizon, your watchlist, what changed overnight and your funnels. 2 to 5 "
+                 "minutes. A summary of the app's readings, not advice."))
+    meta = _briefing_meta(base, b["token"]) if b.get("token") and base else {}
+    days = sorted([d for d in meta if isinstance(meta.get(d), dict)], reverse=True)
+    if days:
+        day = days[0]
+        st.audio(briefing.public_url(base, f"{b['token']}/{day}.mp3"), format="audio/mpeg")
+        secs = int(meta[day].get("seconds") or 0)
+        st.caption(t("{day} · {m}:{s:02d}", day=pd.Timestamp(day).strftime("%a %d %b"), m=secs // 60, s=secs % 60))
+        with st.expander("📜 " + t("Read the script")):
+            st.write(_briefing_text(briefing.public_url(base, f"{b['token']}/{day}.txt")) or t("Not available."))
+    asked = str(state.get("requested") or "")
+    made_at = max((str((meta.get(d) or {}).get("made_at") or "") for d in days), default="")
+    if asked and asked > made_at:
+        st.info("⏳ " + t("Being made: it's ready within about 15 minutes. Come back to this section to play it."))
+    elif state.get("error") and str(state.get("error_at") or "") > made_at:
+        st.warning(t("The last briefing could not be made: {why}", why=state["error"]))
+    if st.button("🎙️ " + t("Make today's now"), key="briefing_make", use_container_width=True,
+                 help=t("Makes today's briefing with your choices below, in the next 15 minutes.")):
+        b["token"] = b.get("token") or briefing.new_token()
+        _briefing_save(b, requested=datetime.now(timezone.utc).isoformat())
+        st.rerun(scope="fragment")
+
+    with st.expander("⚙️ " + t("Briefing settings"), expanded=not b.get("token")):
+        on = st.toggle(t("Make it every morning"), value=bool(b["on"]), key="briefing_on")
+        c1, c2 = st.columns(2)
+        hour = c1.selectbox(t("Ready by"), list(range(24)), index=b["hour"], key="briefing_hour",
+                            format_func=lambda h: f"{h:02d}:00")
+        zones = list(dict.fromkeys([b["zone"]] + list(COMMON_ZONES)))
+        zone = c2.selectbox(t("Time zone"), zones, index=0, key="briefing_zone")
+        minutes = st.segmented_control(t("Length"), list(briefing.LENGTHS), default=b["minutes"], key="briefing_minutes",
+                                       format_func=lambda m: t("{m} min", m=m)) or b["minutes"]
+        sections = st.pills(t("Sections"), list(briefing.SECTIONS), selection_mode="multi", default=b["sections"],
+                            key="briefing_sections", format_func=lambda k: t(briefing.SECTION_NAMES[k])) or []
+        assets = {f"Crypto|{k}": v for k, v in (CRYPTO_WATCHLIST or {}).items()}
+        assets.update({f"Stock|{k}": f"{v} ({k})" for k, v in (STOCK_WATCHLIST or {}).items()})
+        picked = st.multiselect(t("Watchlist assets (none picked: the first {n})", n=briefing.MAX_ASSETS), list(assets),
+                                default=[a for a in b["assets"] if a in assets], key="briefing_assets",
+                                format_func=lambda k: assets.get(k, k), placeholder=t("Choose an option"))
+        voice = st.selectbox(t("Voice"), list(briefing.VOICES), index=list(briefing.VOICES).index(b["voice"]),
+                             key="briefing_voice", format_func=lambda v: briefing.VOICES[v])
+        email = st.checkbox(t("Email me the link when it's ready"), value=bool(b["email"]), key="briefing_email")
+        if st.button(t("Save"), key="briefing_save", type="primary"):
+            new = {**b, "on": on, "hour": hour, "zone": zone, "minutes": minutes,
+                   "sections": [x for x in briefing.SECTIONS if x in sections] or list(briefing.SECTIONS),
+                   "assets": picked, "voice": voice, "email": email, "token": b.get("token") or briefing.new_token()}
+            _briefing_save(new)
+            st.toast(t("Briefing settings saved."))
+            st.rerun(scope="fragment")
+
+    if b.get("token") and base:
+        with st.expander("🎙️ " + t("Listen in a podcast app")):
+            st.caption(t("Add this private feed to Apple Podcasts (Library, then Follow a Show by URL), Pocket Casts or "
+                         "Overcast, and each morning's briefing downloads by itself. Anyone with the link can listen, "
+                         "so keep it to yourself. Spotify can't take private feeds."))
+            st.code(briefing.public_url(base, f"{b['token']}/feed.xml"), language=None)
+            if st.button("🔄 " + t("Make a new private link"), key="briefing_new_link",
+                         help=t("The old link stops getting new briefings.")):
+                _briefing_save({**b, "token": briefing.new_token()})
+                st.rerun(scope="fragment")
+
+
+with tracked_expander("🎧 " + t("Morning briefing"), "briefing_panel", sidebar=True):
+    _briefing_panel()
 
 
 with tracked_expander("⚙️ " + t("Settings"), "settings_panel", sidebar=True):
