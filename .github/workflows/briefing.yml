@@ -17,7 +17,7 @@ concurrency:
   group: briefings
   cancel-in-progress: false
 permissions:
-  contents: read
+  contents: write            # a sample goes to the reports branch
 jobs:
   briefings:
     runs-on: ubuntu-24.04
@@ -73,7 +73,4 @@ jobs:
         run: mkdir -p out && python run_briefings.py --sample out/briefing_sample.mp3
       - name: Keep the sample
         if: steps.check.outputs.due == 'sample'
-        uses: actions/upload-artifact@v4
-        with:
-          name: briefing-sample
-          path: out/briefing_sample.*
+        run: bash .github/scripts/save_to_reports.sh "briefing_samples/$(date -u +%Y-%m-%d_%H%M)" out/briefing_sample.mp3 out/briefing_sample.txt

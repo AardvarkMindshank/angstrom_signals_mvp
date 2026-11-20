@@ -19,6 +19,15 @@ import numpy as np
 HERE = Path(__file__).resolve().parent
 THEME = HERE / "video" / "music" / "theme.mp3"
 BED = HERE / "video" / "music" / "briefing_bed.mp3"          # optional; licence noted in video/music/README.md
+
+
+def bed_for(weather: str | None) -> Path:
+    """The music bed for the morning's weather (briefing_bed_<weather>.mp3), else the general one."""
+    if weather:
+        own = HERE / "video" / "music" / f"briefing_bed_{weather}.mp3"
+        if own.exists():
+            return own
+    return BED
 MODELS = HERE / "out" / "video" / "voice_model"
 THEME_VOLUME = 0.5
 BED_VOLUME = 0.08               # well under the voice
@@ -91,12 +100,12 @@ def mix_command(voice_wav: Path, out_mp3: Path, voice_seconds: float, theme: Pat
                    str(out_mp3)]
 
 
-def make(script: str, out_mp3: Path, voice: str = "bf_emma", work: Path | None = None) -> float:
+def make(script: str, out_mp3: Path, voice: str = "bf_emma", work: Path | None = None, weather: str | None = None) -> float:
     """Speak and mix one briefing; returns its length in seconds."""
     work = work or out_mp3.parent
     wav = work / (out_mp3.stem + "_voice.wav")
     seconds = speak(script, wav, voice)
-    subprocess.run(mix_command(wav, out_mp3, seconds), check=True)
+    subprocess.run(mix_command(wav, out_mp3, seconds, bed=bed_for(weather)), check=True)
     wav.unlink(missing_ok=True)
     return INTRO + seconds + OUTRO - OVERLAP
 

@@ -73,3 +73,10 @@ def test_chunks_and_mix_command(tmp_path):
     cmd = briefing_audio.mix_command(Path("v.wav"), Path("o.mp3"), 120.0, theme=tmp_path / "none.mp3",
                                      bed=tmp_path / "none.mp3")
     assert "amix=inputs=1" in " ".join(cmd) and cmd[-1] == "o.mp3"
+
+
+def test_weather_from_market_mood():
+    assert briefing.weather({"markets": [{"score_0_to_100": 70}, {"score_0_to_100": 66}]}) == "sunny"
+    assert briefing.weather({"markets": [{"score_0_to_100": 30}]}) == "stormy"
+    assert briefing.weather({"markets": [{"score_0_to_100": 60}], "tide": ["Storm warning: CPI"]}) == "rough"
+    assert briefing.weather({}) == "changeable"

@@ -133,7 +133,7 @@ def make_one(db, url: str, row: dict, now: datetime) -> bool:
     script, writer = briefing.write_script(db, facts, b, here, name)
     with tempfile.TemporaryDirectory() as tmp:
         mp3 = Path(tmp) / f"{day}.mp3"
-        seconds = briefing_audio.make(script, mp3, b["voice"], Path(tmp))
+        seconds = briefing_audio.make(script, mp3, b["voice"], Path(tmp), weather=briefing.weather(facts))
         data = mp3.read_bytes()
     _upload(db, f"{token}/{day}.mp3", data, "audio/mpeg")
     _upload(db, f"{token}/{day}.txt", script.encode(), "text/plain")
@@ -178,8 +178,8 @@ def sample(out: str) -> int:
     facts = briefing.gather(db, "00000000-0000-0000-0000-000000000000", prefs, b, now)
     script, writer = briefing.write_script(db, facts, b, now)
     Path(out).with_suffix(".txt").write_text(script)
-    seconds = briefing_audio.make(script, Path(out), b["voice"])
-    print(f"Sample made: {round(seconds)} s, script by {writer}")
+    seconds = briefing_audio.make(script, Path(out), b["voice"], weather=briefing.weather(facts))
+    print(f"Sample made: {round(seconds)} s, script by {writer}, weather {briefing.weather(facts)}")
     return 0
 
 

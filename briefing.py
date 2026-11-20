@@ -227,6 +227,26 @@ def gather(supabase, user_id: str, prefs: dict, b: dict, now: datetime | None = 
     return facts
 
 
+# ---------------------------------------------------------------------------------------------- the weather
+
+WEATHERS = ("sunny", "fair", "changeable", "rough", "stormy")
+
+
+def weather(facts: dict) -> str:
+    """The morning's weather, from the markets' mood (0 to 100, averaged over the markets covered): 65 and over sunny,
+    55 fair, 45 changeable, 35 rough, under 35 stormy; a storm warning (a big release within a day) makes it at least
+    rough. Picks the music bed (video/music/briefing_bed_<weather>.mp3) and colours the forecast's words."""
+    scores = [m.get("score_0_to_100") for m in facts.get("markets") or [] if m.get("score_0_to_100") is not None]
+    if not scores:
+        scores = [a.get("news_sentiment_0_to_100") for a in facts.get("watchlist") or []
+                  if a.get("news_sentiment_0_to_100") is not None]
+    mood = sum(scores) / len(scores) if scores else 50.0
+    level = 0 if mood >= 65 else 1 if mood >= 55 else 2 if mood >= 45 else 3 if mood >= 35 else 4
+    if any(str(x).startswith("Storm warning") for x in facts.get("tide") or []):
+        level = max(level, 3)
+    return WEATHERS[level]
+
+
 # ---------------------------------------------------------------------------------------------- the script
 
 SYSTEM = (
@@ -240,7 +260,8 @@ SYSTEM = (
     "no URLs. Use only the facts given; never invent prices, news or events, and say nothing about a section that has "
     "no facts. Describe; never tell the listener to buy, sell or hold, and give no price targets. Trend, stretch and "
     "flow readings run from minus 100 to plus 100 (above zero leans up); sentiment runs from 0 to 100, with 50 "
-    "neutral. Open with \"This is the Angstrom Signals morning forecast for\" the day and date, follow the sections "
+    "neutral. The overall weather given (sunny, fair, changeable, rough or stormy) sets the tone of the "
+    "opening line. Open with \"This is the Angstrom Signals morning forecast for\" the day and date, follow the sections "
     "in the order given with a short spoken link between them, and close with one line saying this is a summary of "
     "the app's readings, not advice, then a brief sign-off such as \"Fair winds.\" Write about {words} words. Reply "
     "with the script text only."
@@ -251,6 +272,7 @@ def prompt(facts: dict, b: dict, day: datetime, name: str = "") -> tuple[str, li
     order = [s for s in b["sections"] if facts.get({"tides": "tide"}.get(s, s))]
     words = b["minutes"] * WORDS_PER_MINUTE
     user = {"listener_first_name": name or None, "date": day.strftime("%A %d %B %Y"),
+            "overall_weather_from_market_mood": weather(facts),
             "sections_in_order": order, "facts": {s: facts.get({"tides": "tide"}.get(s, s)) for s in order}}
     return SYSTEM.format(words=words), [{"role": "user", "content": json.dumps(user, ensure_ascii=False, default=str)}]
 
