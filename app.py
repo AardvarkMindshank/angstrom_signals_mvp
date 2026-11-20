@@ -9352,10 +9352,8 @@ def _admin_ai() -> None:
             column_config={"Get a key": st.column_config.LinkColumn("Get a key")})
 
 
-# 🎧 Morning briefing (briefing.py, run_briefings.py): today's episode to play, "make it now", and the choices.
-_BRIEFING_WORDS = [i18n.mark("🌍 Market mood"), i18n.mark("🌊 The Tide"), i18n.mark("⭐ Your watchlist"),
-                   i18n.mark("🔔 What changed overnight"), i18n.mark("🔻 Your funnels"), i18n.mark("📅 The week's events")]
-
+# 📓 Logbook (navigator.py, briefing.py, run_briefings.py): today's Passage Plan, written and spoken, the plans kept
+# before it, and the spoken plan's choices. The trades will join it (the Trader's Logbook brief).
 
 @st.cache_data(ttl=60, show_spinner=False)
 def _briefing_meta(base: str, token: str) -> dict:
@@ -9387,77 +9385,125 @@ def _briefing_save(b: dict, **state) -> None:
     save_account_settings(updates)
 
 
-@st.fragment
-def _briefing_panel() -> None:
+def _clock(seconds) -> str:
+    secs = int(seconds or 0)
+    return f"{secs // 60}:{secs % 60:02d}"
+
+
+def _forecast_player(key: str) -> None:
+    """🌍 The newest Morning forecast (the same for everyone): the edition made for this morning, wherever you are."""
+    base = _secret("url")
+    meta = _briefing_meta(base, briefing.GENERAL) if base else {}
+    eid = briefing.newest(meta)
+    if not eid:
+        st.caption(t("🌍 The Morning forecast: the first edition is on its way."))
+        return
+    m = meta.get(eid) or {}
+    name = briefing.EDITIONS.get(eid[11:], {}).get("name", "")
+    st.markdown("**🌍 " + t("Morning forecast") + "**", help=t(
+        "The same for everyone, twice a day: the Asia & Europe edition just after the US close, and the Americas "
+        "edition before the New York morning. You always get the newest, which is the one made for your morning. "
+        "The main markets, the top five coins, the Tide and the week's events. A summary of the app's readings, "
+        "not advice."))
+    st.audio(briefing.public_url(base, f"{briefing.GENERAL}/{eid}.mp3"), format="audio/mpeg")
+    st.caption(t("{day} · {edition} · {length}", day=pd.Timestamp(eid[:10]).strftime("%a %d %b"),
+                 edition=t(name), length=_clock(m.get("seconds"))))
+    with st.expander("📜 " + t("Read it"), expanded=False):
+        st.write(_briefing_text(briefing.public_url(base, f"{briefing.GENERAL}/{eid}.txt")) or t("Not available."))
+
+
+def _passage_player(key: str, show_button: bool = True) -> None:
+    """🧭 Today's spoken Passage Plan (Pro and Elite), or a line saying it comes with Pro."""
+    if not plans.includes(current_plan(), "pro"):
+        st.caption("🧭 " + t("Your Passage Plan, written and spoken for your own watchlist and funnels each morning, "
+                             "comes with Pro."))
+        return
     stored = (st.session_state.get("cloud_prefs") or {}).get("settings") or {}
     b = briefing.settings_of(stored)
     state = stored.get("briefing_state") if isinstance(stored.get("briefing_state"), dict) else {}
     base = _secret("url")
-    st.caption(t("A short spoken forecast each morning, like the shipping forecast at dawn: the markets' mood, the "
-                 "Tide and the events on the horizon, your watchlist, what changed overnight and your funnels. 2 to 5 "
-                 "minutes. A summary of the app's readings, not advice."))
     meta = _briefing_meta(base, b["token"]) if b.get("token") and base else {}
-    days = sorted([d for d in meta if isinstance(meta.get(d), dict)], reverse=True)
-    if days:
-        day = days[0]
+    day = briefing.newest(meta)
+    st.markdown("**🧭 " + t("Your Passage Plan") + "**", help=t(
+        "Today's AI Passage Plan for your own watchlist and funnels, read aloud: the same plan you can read in the "
+        "📓 Logbook. Set the time and voice there."))
+    if day:
         st.audio(briefing.public_url(base, f"{b['token']}/{day}.mp3"), format="audio/mpeg")
-        secs = int(meta[day].get("seconds") or 0)
-        st.caption(t("{day} · {m}:{s:02d}", day=pd.Timestamp(day).strftime("%a %d %b"), m=secs // 60, s=secs % 60))
-        with st.expander("📜 " + t("Read the script")):
-            st.write(_briefing_text(briefing.public_url(base, f"{b['token']}/{day}.txt")) or t("Not available."))
+        st.caption(t("{day} · {length}", day=pd.Timestamp(day).strftime("%a %d %b"),
+                     length=_clock((meta.get(day) or {}).get("seconds"))))
     asked = str(state.get("requested") or "")
-    made_at = max((str((meta.get(d) or {}).get("made_at") or "") for d in days), default="")
+    made_at = max((str((v or {}).get("made_at") or "") for v in meta.values() if isinstance(v, dict)), default="")
     if asked and asked > made_at:
-        st.info("⏳ " + t("Being made: it's ready within about 15 minutes. Come back to this section to play it."))
+        st.info("⏳ " + t("Being made: ready within about 15 minutes."))
     elif state.get("error") and str(state.get("error_at") or "") > made_at:
-        st.warning(t("The last briefing could not be made: {why}", why=state["error"]))
-    if st.button("🎙️ " + t("Make today's now"), key="briefing_make", use_container_width=True,
-                 help=t("Makes today's briefing with your choices below, in the next 15 minutes.")):
+        st.warning(t("The last one could not be made: {why}", why=state["error"]))
+    elif show_button and not day:
+        st.caption(t("Not made yet today."))
+    if show_button and st.button("🎙️ " + t("Speak today's plan now"), key=f"briefing_make_{key}",
+                                 use_container_width=True,
+                                 help=t("Reads today's Passage Plan aloud (writing it first if it isn't written "
+                                        "yet), within about 15 minutes.")):
         b["token"] = b.get("token") or briefing.new_token()
         _briefing_save(b, requested=datetime.now(timezone.utc).isoformat())
         st.rerun(scope="fragment")
 
-    with st.expander("⚙️ " + t("Briefing settings"), expanded=not b.get("token")):
-        on = st.toggle(t("Make it every morning"), value=bool(b["on"]), key="briefing_on")
+
+@st.fragment
+def _logbook_panel() -> None:
+    import navigator
+
+    st.caption(t("Your daily Passage Plans, to read or to hear. Your trades will join them here."))
+    _passage_player("logbook")
+    if not plans.includes(current_plan(), "pro"):
+        return
+    stored = (st.session_state.get("cloud_prefs") or {}).get("settings") or {}
+    b = briefing.settings_of(stored)
+    kept = navigator.recent_plans(supabase, user_id, 14)
+    if kept:
+        labels = [pd.Timestamp(r["created_at"]).tz_convert(briefing.local_now(b["zone"]).tzinfo)
+                  .strftime("%a %d %b, %H:%M") for r in kept]
+        pick = st.selectbox(t("📜 Read a plan"), range(len(kept)), format_func=lambda i: labels[i],
+                            key="logbook_pick")
+        with st.container(height=320):
+            st.markdown(kept[pick].get("body") or "")
+    else:
+        st.caption(t("No plans yet. Make one with 📜 Today's AI Passage Plan in 🌊 Tides, or with the button above."))
+
+    with st.expander("⚙️ " + t("Spoken plan settings"), expanded=False):
+        on = st.toggle(t("Speak my plan every morning"), value=bool(b["on"]), key="briefing_on")
         c1, c2 = st.columns(2)
         hour = c1.selectbox(t("Ready by"), list(range(24)), index=b["hour"], key="briefing_hour",
                             format_func=lambda h: f"{h:02d}:00")
         zones = list(dict.fromkeys([b["zone"]] + list(COMMON_ZONES)))
         zone = c2.selectbox(t("Time zone"), zones, index=0, key="briefing_zone")
-        minutes = st.segmented_control(t("Length"), list(briefing.LENGTHS), default=b["minutes"], key="briefing_minutes",
-                                       format_func=lambda m: t("{m} min", m=m)) or b["minutes"]
-        sections = st.pills(t("Sections"), list(briefing.SECTIONS), selection_mode="multi", default=b["sections"],
-                            key="briefing_sections", format_func=lambda k: t(briefing.SECTION_NAMES[k])) or []
-        assets = {f"Crypto|{k}": v for k, v in (CRYPTO_WATCHLIST or {}).items()}
-        assets.update({f"Stock|{k}": f"{v} ({k})" for k, v in (STOCK_WATCHLIST or {}).items()})
-        picked = st.multiselect(t("Watchlist assets (none picked: the first {n})", n=briefing.MAX_ASSETS), list(assets),
-                                default=[a for a in b["assets"] if a in assets], key="briefing_assets",
-                                format_func=lambda k: assets.get(k, k), placeholder=t("Choose an option"))
         voice = st.selectbox(t("Voice"), list(briefing.VOICES), index=list(briefing.VOICES).index(b["voice"]),
                              key="briefing_voice", format_func=lambda v: briefing.VOICES[v])
-        email = st.checkbox(t("Email me the link when it's ready"), value=bool(b["email"]), key="briefing_email")
+        email = st.checkbox(t("Also email me when it's ready (the daily summary email links it anyway)"),
+                            value=bool(b["email"]), key="briefing_email")
         if st.button(t("Save"), key="briefing_save", type="primary"):
-            new = {**b, "on": on, "hour": hour, "zone": zone, "minutes": minutes,
-                   "sections": [x for x in briefing.SECTIONS if x in sections] or list(briefing.SECTIONS),
-                   "assets": picked, "voice": voice, "email": email, "token": b.get("token") or briefing.new_token()}
-            _briefing_save(new)
-            st.toast(t("Briefing settings saved."))
+            _briefing_save({**b, "on": on, "hour": hour, "zone": zone, "voice": voice, "email": email,
+                            "token": b.get("token") or briefing.new_token()})
+            st.toast(t("Saved."))
             st.rerun(scope="fragment")
 
+    base = _secret("url")
     if b.get("token") and base:
         with st.expander("🎙️ " + t("Listen in a podcast app")):
-            st.caption(t("Add this private feed to Apple Podcasts (Library, then Follow a Show by URL), Pocket Casts or "
-                         "Overcast, and each morning's briefing downloads by itself. Anyone with the link can listen, "
-                         "so keep it to yourself. Spotify can't take private feeds."))
+            st.caption(t("Add these feeds to Apple Podcasts (Library, then Follow a Show by URL), Pocket Casts or "
+                         "Overcast, and each one downloads by itself. Your own feed is private: anyone with the link "
+                         "can listen, so keep it to yourself. Spotify can't take private feeds."))
+            st.caption("🧭 " + t("Your Passage Plan"))
             st.code(briefing.public_url(base, f"{b['token']}/feed.xml"), language=None)
+            st.caption("🌍 " + t("Morning forecast"))
+            st.code(briefing.public_url(base, f"{briefing.GENERAL}/feed.xml"), language=None)
             if st.button("🔄 " + t("Make a new private link"), key="briefing_new_link",
-                         help=t("The old link stops getting new briefings.")):
+                         help=t("The old link stops getting new plans.")):
                 _briefing_save({**b, "token": briefing.new_token()})
                 st.rerun(scope="fragment")
 
 
-with tracked_expander("🎧 " + t("Morning briefing"), "briefing_panel", sidebar=True):
-    _briefing_panel()
+with tracked_expander("📓 " + t("Logbook"), "briefing_panel", sidebar=True):
+    _logbook_panel()
 
 
 with tracked_expander("⚙️ " + t("Settings"), "settings_panel", sidebar=True):
@@ -13584,6 +13630,21 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             line = ""
         if line:
             _snapshot_click(_score_table(key="snapshot_tides", data=line, on_picked_change=lambda: None).picked)
+
+        @st.fragment
+        def _snapshot_listen():
+            # 🎧 The two spoken briefings: the Morning forecast (everyone) and your Passage Plan (Pro and Elite).
+            with st.container(border=True, key="snapshot_listen"):
+                left, right = st.columns(2)
+                with left:
+                    _forecast_player("snapshot")
+                with right:
+                    _passage_player("snapshot")
+
+        try:
+            _snapshot_listen()
+        except Exception as exc:
+            print(f"Quick Snapshot players failed: {exc}")
         try:
             tiles_html = _sv.funnel_tiles(_snapshot_funnels()) or _sv.no_funnels_tile(
                 "crypto" if trade_crypto else "equity")

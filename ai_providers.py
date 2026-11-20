@@ -93,9 +93,10 @@ USES = {   # key: (label, default provider, who chooses, help)
     "sentiment": (mark("📰 News sentiment scores"), "grok", "admin",
                   mark("Scores the headlines for every asset and both markets. Shared by everyone, so an admin picks "
                        "it for the whole app; new scores use it from their next refresh (every 12 hours).")),
-    "briefing": (mark("🎧 Morning briefing scripts"), "grok", "admin",
-                 mark("Writes each member's spoken morning briefing from the app's readings. Runs on the background "
-                      "worker, which has the Grok, ChatGPT and Gemini keys.")),
+    "briefing": (mark("🎧 Spoken briefing scripts"), "grok", "admin",
+                 mark("Writes the shared Morning forecast, and the Passage Plans the background worker writes for "
+                      "the spoken plan when the member hasn't written one yet. Runs on the background worker, which "
+                      "has the Grok, ChatGPT and Gemini keys.")),
 }
 
 URLS = {"claude": "https://api.anthropic.com/v1/messages",

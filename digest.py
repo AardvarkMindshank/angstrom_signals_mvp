@@ -335,7 +335,7 @@ def _funnel_section(funnels: list[dict]) -> tuple[list[str], list[str]]:
 
 
 def render_digest(notes, results, config, app_url: str, markets=None, prism=None,
-                  funnels=None) -> tuple[str, str, str]:
+                  funnels=None, listen=None) -> tuple[str, str, str]:
     """(subject, html, plain text). The alerts that crossed come first; then, if switched on,
     a colour-coded summary of the watchlist. markets: current market sentiment rows."""
     zone = safe_zone(config.get("digest_tz"))
@@ -438,6 +438,15 @@ def render_digest(notes, results, config, app_url: str, markets=None, prism=None
             n = sum(f["count"] for f in funnels)
             subject = t('Angstrom daily summary: {n} funnel Candidate{if_n_1_else_s}', n=n, if_n_1_else_s='' if n == 1 else 's')
 
+    if listen:
+        # 🎧 The spoken briefings (briefing.listen_links): the newest Morning forecast, and your Passage Plan.
+        links = "".join(
+            f'<a href="{html.escape(url, quote=True)}" style="display:inline-block;margin:4px 8px 4px 0;'
+            f'padding:8px 14px;border-radius:999px;background:#eef2ff;color:#3730a3;font-weight:600;'
+            f'text-decoration:none;">▶️ {html.escape(words)}</a>' for words, url in listen)
+        html_parts.append(section_title(t("🎧 Listen")) + f"<div>{links}</div>")
+        plain += [t("🎧 Listen")] + [f"{words}: {url}" for words, url in listen] + [""]
+
     if with_watchlist:
         section_html, section_plain = _watchlist_section(results, config)
         if section_html:
@@ -470,6 +479,15 @@ def render_digest(notes, results, config, app_url: str, markets=None, prism=None
         extra_plain="\n".join(plain),
     )
     return subject, page, text
+
+
+def _settings_of(supabase, user_id: str) -> dict:
+    try:
+        rows = supabase.table("user_preferences").select("settings").eq("user_id", user_id).execute().data or []
+    except Exception:
+        return {}
+    got = rows[0].get("settings") if rows else None
+    return got if isinstance(got, dict) else {}
 
 
 def _stamp(supabase, user_id: str, moment: datetime) -> None:
@@ -548,6 +566,18 @@ def send_due_digest(
     if not any(f["count"] for f in funnels):
         funnels = funnels if funnel_notes else []
 
+    listen = []
+    try:
+        import os
+
+        import briefing
+
+        stored = _settings_of(supabase, user_id)
+        base = os.getenv("SUPABASE_URL") or getattr(supabase, "supabase_url", "") or ""
+        listen = briefing.listen_links(supabase, str(base), stored, briefing.plan_of(supabase, user_id), now)
+    except Exception as exc:
+        print(f"Listen links skipped in the digest: {str(exc)[:120]}")
+
     if not notes and not prism and not funnels and not (watchlist_on(config) and results):
         # A quiet day. Record it so a crossing at 3pm waits for tomorrow's digest.
         try:
@@ -557,7 +587,7 @@ def send_due_digest(
         return "quiet"
 
     subject, page, plain = render_digest(notes, results, config, app_url, markets=markets, prism=prism,
-                                         funnels=funnels)
+                                         funnels=funnels, listen=listen)
     try:
         sent = bool(send_email(notify_email, subject, page, plain))
     except Exception as exc:

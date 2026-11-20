@@ -1,13 +1,17 @@
 """
-🎧 Makes the morning briefings that are due (briefing.py): every 15 minutes from .github/workflows/briefing.yml.
+🎧 Makes the spoken briefings that are due (briefing.py): every 15 minutes from .github/workflows/briefing.yml.
 
-    python run_briefings.py --check     # prints how many are due (the workflow skips the voice set-up when none)
-    python run_briefings.py             # makes them
+    python run_briefings.py --check                 # prints how many are due (the voice is set up only when some are)
+    python run_briefings.py                         # makes them
+    python run_briefings.py --sample out.mp3 general|passage   # a sample from today's readings, saved nowhere
 
-For each member due: gather the facts, write the script (AI, else a plain one), speak and mix it
-(briefing_audio.py), upload <token>/<day>.mp3 and .txt to the "briefings" bucket, rewrite <token>/feed.xml with the
-last 14 episodes, delete older ones, email the link if asked, and note the day as made. The repository is public, so
-the log names no member and prints no briefing text.
+🌍 The Morning forecast (the same for everyone): each edition once a day (briefing.EDITIONS), under general/ in the
+"briefings" bucket, with episodes.json and one shared feed.xml (the last 28 episodes).
+
+🧭 The spoken Passage Plan (Pro and Elite, when switched on or asked for): the member's newest written Passage Plan
+from the last 14 hours (navigator.latest_plan), else one written now and saved in their logbook, read aloud, under
+<token>/<day>.mp3 and .txt with their private feed. The repository is public, so the log names no member and prints
+no briefing text.
 """
 
 from __future__ import annotations
@@ -43,6 +47,10 @@ def _meta(db, token: str) -> dict:
         return {}
 
 
+def general_due(db, now=None) -> list[tuple[str, str]]:
+    return briefing.editions_due(_meta(db, briefing.GENERAL), now or datetime.now(timezone.utc))
+
+
 def due_rows(db, now=None) -> list[dict]:
     """The members whose briefing should be made now. The settings say so (briefing.due); the bucket's own record
     (episodes.json: the days made and when) is the final word, as the app may save an older copy of the settings
@@ -63,7 +71,11 @@ def due_rows(db, now=None) -> list[dict]:
         today = briefing.local_now(b["zone"], now).date().isoformat()
         if (asked and asked > made) or (b["on"] and today not in meta
                                         and briefing.local_now(b["zone"], now).hour >= b["hour"]):
-            out.append(p)
+            if briefing.personal_allowed(briefing.plan_of(db, p["user_id"])):
+                out.append(p)
+            elif asked:
+                _save_state(db, p["user_id"], settings, briefing_state={"requested": None,
+                            "error": "The spoken Passage Plan comes with Pro and Elite.", "error_at": now.isoformat()})
     return out
 
 
@@ -79,21 +91,30 @@ def _save_state(db, user_id: str, settings: dict, **changes) -> None:
 
 
 def _episodes(db, url: str, token: str) -> list[dict]:
-    """The episodes in the member's folder, newest first: [{day, label, pub, url, bytes, seconds, summary}]."""
+    """The episodes in a folder (a member's token, or general/), newest first:
+    [{day, label, title, pub, url, bytes, seconds, summary}]. General ids are "<day>-<edition>"."""
     try:
-        files = db.storage.from_(briefing.BUCKET).list(token, {"limit": 100}) or []
+        files = db.storage.from_(briefing.BUCKET).list(token, {"limit": 200}) or []
     except Exception:
         files = []
-    days = sorted({f["name"][:-4] for f in files if str(f.get("name", "")).endswith(".mp3")}, reverse=True)
     meta = _meta(db, token)
+    ids = {f["name"][:-4] for f in files if str(f.get("name", "")).endswith(".mp3")}
     out = []
-    for day in days:
-        m = meta.get(day) or {}
-        at = datetime.fromisoformat(day).replace(hour=6, tzinfo=timezone.utc)
-        out.append({"day": day, "label": at.strftime("%A %d %B %Y"), "pub": at.strftime("%a, %d %b %Y %H:%M:%S +0000"),
-                    "url": briefing.public_url(url, f"{token}/{day}.mp3"), "bytes": m.get("bytes", 0),
+    for eid in ids:
+        m = meta.get(eid) or {}
+        day, edition = eid[:10], eid[11:]
+        try:
+            made = datetime.fromisoformat(str(m.get("made_at")).replace("Z", "+00:00"))
+        except (TypeError, ValueError):
+            made = datetime.fromisoformat(day).replace(hour=6, tzinfo=timezone.utc)
+        label = datetime.fromisoformat(day).strftime("%A %d %B %Y")
+        title = (f"Morning forecast, {briefing.EDITIONS[edition]['name']}, {label}"
+                 if edition in briefing.EDITIONS else None)
+        out.append({"day": eid, "label": label, "title": title, "made": made,
+                    "pub": made.strftime("%a, %d %b %Y %H:%M:%S +0000"),
+                    "url": briefing.public_url(url, f"{token}/{eid}.mp3"), "bytes": m.get("bytes", 0),
                     "seconds": m.get("seconds", 0), "summary": m.get("summary", "")})
-    return out
+    return sorted(out, key=lambda e: e["made"], reverse=True)
 
 
 def _upload(db, path: str, data: bytes, kind: str) -> None:
@@ -109,14 +130,38 @@ def _email(db, user_id: str, day_label: str, listen: str, feed: str) -> None:
     if not to:
         return
     page, plain = render_email(
-        "🎧 Your morning briefing is ready",
-        [f"Today's briefing, {day_label}, is ready to play.",
-         "It summarises the app's readings for the sections and assets you chose. It is not advice."],
+        "🧭 Your Passage Plan is ready to play",
+        [f"Today's Passage Plan, {day_label}, is ready to play. It is the same plan you can read in your 📓 Logbook, "
+         "read aloud.", "It describes the app's readings for your watchlist and funnels. It is not advice."],
         button=("▶️ Listen now", listen),
         footnote=("To get it in a podcast app, add your private feed (Apple Podcasts: Library, then Follow a Show by "
-                  f"URL): {feed}. Change the sections, time and voice in the app under 🎧 Morning briefing."),
-        preheader="Your morning briefing is ready to play.")
-    run_alerts.send_digest_email(to, f"🎧 Your morning briefing, {day_label}", page, plain)
+                  f"URL): {feed}. Change the time and voice in the app under 📓 Logbook."),
+        preheader="Your Passage Plan is ready to play.")
+    run_alerts.send_digest_email(to, f"🧭 Your Passage Plan, {day_label}", page, plain)
+
+
+def _watchlist(row: dict) -> dict:
+    def as_dict(v):
+        return v if isinstance(v, dict) else {str(x): str(x) for x in (v or [])}
+
+    return {"crypto": as_dict(row.get("crypto_watchlist")), "stock": as_dict(row.get("stock_watchlist"))}
+
+
+def _plan_for(db, user_id: str, row: dict, now: datetime) -> tuple[dict, str]:
+    """(the written plan to read, who wrote it): the newest from the last 14 hours, else one written now with the AI
+    chosen for briefings and saved in the member's logbook."""
+    import ai_providers
+    import navigator
+    import tides
+
+    kept = navigator.latest_plan(db, user_id, now=now)
+    if kept:
+        return kept, str(kept.get("model") or "logbook")
+    provider = ai_providers.pick("briefing", ai_providers.app_choice(db, "briefing"))
+    body, used = navigator.write_plan(db, user_id, _watchlist(row), tides.latest(db), provider)
+    if not navigator.complete(body):
+        raise RuntimeError("the Passage Plan came back cut short")
+    return {"body": body, "created_at": datetime.now(timezone.utc).isoformat()}, used
 
 
 def make_one(db, url: str, row: dict, now: datetime) -> bool:
@@ -128,9 +173,9 @@ def make_one(db, url: str, row: dict, now: datetime) -> bool:
     token = b["token"]
     here = briefing.local_now(b["zone"], now)
     day = here.date().isoformat()
-    facts = briefing.gather(db, user_id, row, b, now)
-    name = ""
-    script, writer = briefing.write_script(db, facts, b, here, name)
+    plan, writer = _plan_for(db, user_id, row, now)
+    script = briefing.spoken_plan(plan["body"], here)
+    facts = briefing.gather(db, user_id, row, {"sections": ["markets", "tides"], "assets": []}, now)
     with tempfile.TemporaryDirectory() as tmp:
         mp3 = Path(tmp) / f"{day}.mp3"
         seconds = briefing_audio.make(script, mp3, b["voice"], Path(tmp), weather=briefing.weather(facts))
@@ -139,7 +184,7 @@ def make_one(db, url: str, row: dict, now: datetime) -> bool:
     _upload(db, f"{token}/{day}.txt", script.encode(), "text/plain")
     meta = _meta(db, token)
     meta[day] = {"bytes": len(data), "seconds": round(seconds), "summary": " ".join(script.split()[:40]) + " …",
-                 "writer": writer, "made_at": datetime.now(timezone.utc).isoformat()}
+                 "writer": writer, "plan_at": plan.get("created_at"), "made_at": datetime.now(timezone.utc).isoformat()}
     episodes = _episodes(db, url, token)
     old = [e["day"] for e in episodes[briefing.KEEP_EPISODES:]]
     if old:
@@ -160,42 +205,100 @@ def make_one(db, url: str, row: dict, now: datetime) -> bool:
             _email(db, user_id, here.strftime("%A %d %B"), briefing.public_url(url, f"{token}/{day}.mp3"), feed)
         except Exception as exc:
             print(f"Briefing email failed: {str(exc)[:120]}")
-    print(f"Briefing made: {round(seconds)} s, script by {writer}, {len(data) // 1024} KB")
+    print(f"Passage Plan spoken: {round(seconds)} s, plan by {writer}, {len(data) // 1024} KB")
     return True
 
 
-def sample(out: str) -> int:
-    """A sample episode from today's real readings (markets, the Tide, the week's events, three coins), for trying
-    the voice and the style; nothing is saved to any account."""
+def make_general(db, url: str, edition: str, eid: str, now: datetime) -> bool:
+    """One edition of the Morning forecast, shared by everyone."""
     import briefing_audio
+
+    folder = briefing.GENERAL
+    day = datetime.fromisoformat(eid[:10])
+    facts = briefing.general_facts(db, now)
+    script, writer = briefing.write_general(db, facts, edition, day)
+    weather = briefing.weather(facts)
+    with tempfile.TemporaryDirectory() as tmp:
+        mp3 = Path(tmp) / f"{eid}.mp3"
+        seconds = briefing_audio.make(script, mp3, "bf_emma", Path(tmp), weather=weather)
+        data = mp3.read_bytes()
+    _upload(db, f"{folder}/{eid}.mp3", data, "audio/mpeg")
+    _upload(db, f"{folder}/{eid}.txt", script.encode(), "text/plain")
+    meta = _meta(db, folder)
+    meta[eid] = {"bytes": len(data), "seconds": round(seconds), "summary": " ".join(script.split()[:40]) + " …",
+                 "writer": writer, "edition": edition, "weather": weather,
+                 "made_at": datetime.now(timezone.utc).isoformat()}
+    episodes = _episodes(db, url, folder)
+    old = [e["day"] for e in episodes[briefing.KEEP_GENERAL:]]
+    if old:
+        try:
+            db.storage.from_(briefing.BUCKET).remove([f"{folder}/{d}.{x}" for d in old for x in ("mp3", "txt")])
+        except Exception:
+            pass
+        for d in old:
+            meta.pop(d, None)
+    _upload(db, f"{folder}/episodes.json", json.dumps(meta).encode(), "application/json")
+    episodes = [e for e in _episodes(db, url, folder) if e["day"] not in old]
+    _upload(db, f"{folder}/feed.xml", briefing.feed_xml(
+        url, "general", episodes, title="Angstrom Signals Morning forecast",
+        about="The Angstrom Signals Morning forecast: the main markets, the top coins, the Tide and the week's events, "
+              "twice a day. A summary of the app's readings, not advice.", item="Morning forecast").encode(),
+        "application/rss+xml")
+    print(f"Morning forecast made: {edition}, {round(seconds)} s, script by {writer}, weather {weather}")
+    return True
+
+
+def sample(out: str, kind: str = "general") -> int:
+    """A sample from today's real readings, saved to no account: "general" (the Morning forecast, the edition due
+    next) or "passage" (a Passage Plan for a made-up member watching three coins, not saved)."""
+    import ai_providers
+    import briefing_audio
+    import navigator
+    import tides
 
     db, _url = _client()
     now = datetime.now(timezone.utc)
-    prefs = {"crypto_watchlist": {"bitcoin": "Bitcoin", "ethereum": "Ethereum", "solana": "Solana"},
-             "stock_watchlist": {}, "settings": {}}
-    b = briefing.settings_of({"briefing": {"minutes": 3, "sections": ["markets", "tides", "watchlist", "events"],
-                                           "voice": os.getenv("VOICE") or "bf_emma"}})
-    facts = briefing.gather(db, "00000000-0000-0000-0000-000000000000", prefs, b, now)
-    script, writer = briefing.write_script(db, facts, b, now)
+    voice = os.getenv("VOICE") or "bf_emma"
+    if kind == "passage":
+        watch = {"crypto": {"bitcoin": "Bitcoin", "ethereum": "Ethereum", "solana": "Solana"}, "stock": {"NVDA": "NVIDIA"}}
+        provider = ai_providers.pick("briefing", ai_providers.app_choice(db, "briefing"))
+        body, writer = navigator.write_plan(db, "00000000-0000-0000-0000-000000000000", watch, tides.latest(db),
+                                            provider, save=False)
+        Path(out).with_suffix(".plan.md").write_text(body)
+        script = briefing.spoken_plan(body, now)
+        facts = briefing.gather(db, "", {"settings": {}}, {"sections": ["markets", "tides"], "assets": []}, now)
+    else:
+        edition = "west" if 3 <= now.hour < 15 else "east"
+        eid = briefing.edition_slot(edition, now)[1]
+        facts = briefing.general_facts(db, now)
+        script, writer = briefing.write_general(db, facts, edition, datetime.fromisoformat(eid[:10]))
+        Path(out).with_suffix(".facts.json").write_text(json.dumps(facts, default=str, indent=1))
     Path(out).with_suffix(".txt").write_text(script)
-    seconds = briefing_audio.make(script, Path(out), b["voice"], weather=briefing.weather(facts))
-    print(f"Sample made: {round(seconds)} s, script by {writer}, weather {briefing.weather(facts)}")
+    seconds = briefing_audio.make(script, Path(out), voice, weather=briefing.weather(facts))
+    print(f"Sample made ({kind}): {round(seconds)} s, script by {writer}, weather {briefing.weather(facts)}")
     return 0
 
 
 def main() -> int:
     if "--sample" in sys.argv:
-        return sample(sys.argv[sys.argv.index("--sample") + 1])
+        i = sys.argv.index("--sample")
+        return sample(sys.argv[i + 1], sys.argv[i + 2] if len(sys.argv) > i + 2 else "general")
     db, url = _client()
     now = datetime.now(timezone.utc)
     rows = due_rows(db, now)
+    editions = general_due(db, now)
     if "--check" in sys.argv:
-        print(len(rows))
+        print(len(rows) + len(editions))
         out = os.getenv("GITHUB_OUTPUT")
         if out:
             with open(out, "a") as fh:
-                fh.write(f"due={len(rows)}\n")
+                fh.write(f"due={len(rows) + len(editions)}\n")
         return 0
+    for edition, eid in editions:
+        try:
+            make_general(db, url, edition, eid, now)
+        except Exception as exc:
+            print(f"The Morning forecast failed ({edition}): {type(exc).__name__}: {str(exc)[:200]}")
     made = 0
     for row in rows:
         try:
@@ -207,7 +310,7 @@ def main() -> int:
                             "error": f"{type(exc).__name__}: {str(exc)[:160]}", "error_at": now.isoformat()})
             except Exception:
                 pass
-    print(f"Briefings made: {made} of {len(rows)} due")
+    print(f"Passage Plans spoken: {made} of {len(rows)} due")
     return 0
 
 

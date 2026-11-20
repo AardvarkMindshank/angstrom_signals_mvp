@@ -190,6 +190,48 @@ def saved_plan(supabase, user_id: str, day: str | None = None) -> dict | None:
     return rows[0] if rows else None
 
 
+def latest_plan(supabase, user_id: str, hours: float = 14, now: datetime | None = None) -> dict | None:
+    """The newest finished plan written in the last `hours` (whatever its UTC day), or None. The spoken plan and the
+    written one use this, so a plan made for someone's morning is the one they read and hear that day."""
+    from datetime import timedelta
+
+    since = ((now or datetime.now(timezone.utc)) - timedelta(hours=hours)).isoformat()
+    try:
+        rows = (supabase.table("navigator_logbook").select("body, created_at, readings, model, day")
+                .eq("owner_id", user_id).eq("kind", PASSAGE_KIND).gte("created_at", since)
+                .order("created_at", desc=True).limit(3).execute().data or [])
+    except Exception:
+        return None
+    return next((r for r in rows if complete(r.get("body") or "")), None)
+
+
+def recent_plans(supabase, user_id: str, limit: int = 14) -> list[dict]:
+    """The logbook's Passage Plans, newest first."""
+    try:
+        return (supabase.table("navigator_logbook").select("body, created_at, day, model").eq("owner_id", user_id)
+                .eq("kind", PASSAGE_KIND).order("created_at", desc=True).limit(limit).execute().data or [])
+    except Exception:
+        return []
+
+
+def write_plan(supabase, user_id: str, watchlist: dict | None, snap: dict | None, provider: str = "claude",
+               save: bool = True) -> tuple[str, str]:
+    """(plan, model): today's plan written now (no Streamlit needed: the app and the briefing worker both use it),
+    and saved in the logbook unless save is False."""
+    import advisor
+    import ai_providers
+    import signal_groups_inspector as gi
+
+    saved = gi.saved_configs(supabase)[0] or []
+    system = advisor.system_parts(saved, user_id, "tides", extra=portfolio_context(supabase, user_id, watchlist),
+                                  market=market_context(snap))
+    body = advisor.ask([], PASSAGE_REQUEST, system, max_tokens=4000, provider=provider)
+    used = advisor.MODEL if provider == "claude" else f"{provider}:{ai_providers.model(provider)}"
+    if save:
+        save_plan(supabase, user_id, body, snap, used)
+    return body, used
+
+
 def save_plan(supabase, user_id: str, body: str, snap: dict | None, model: str) -> bool:
     t = (snap or {}).get("tide") or {}
     readings = {"computed_at": (snap or {}).get("computed_at"), "tide": t.get("label"), "score": t.get("score"),
@@ -211,23 +253,15 @@ def complete(body: str) -> bool:
 
 def passage_plan(st, supabase, user_id: str, watchlist: dict | None, snap: dict | None, fresh: bool = False,
                  provider: str = "claude") -> str:
-    """Today's plan: from the logbook when already written today, else written now (and saved)."""
-    import advisor
-
+    """Today's plan: from the logbook when one was written in the last 14 hours (by you, or by the morning's spoken
+    plan), else written now (and saved)."""
     if not fresh:
-        kept = saved_plan(supabase, user_id) or st.session_state.get("_passage_plan", {}).get(today())
+        kept = (latest_plan(supabase, user_id) or saved_plan(supabase, user_id)
+                or st.session_state.get("_passage_plan", {}).get(today()))
         body = (kept["body"] if isinstance(kept, dict) else kept) if kept else ""
         if body and complete(body):
             return body                     # a plan that stopped mid-sentence (before 12 Nov's fix) is written again
-    import signal_groups_inspector as gi
-
-    saved = gi.saved_configs(supabase)[0] or []
-    system = advisor.system_parts(saved, user_id, "tides", extra=portfolio_context(supabase, user_id, watchlist),
-                                  market=market_context(snap))
-    import ai_providers
-
-    body = advisor.ask([], PASSAGE_REQUEST, system, max_tokens=4000, provider=provider)
-    used = advisor.MODEL if provider == "claude" else f"{provider}:{ai_providers.model(provider)}"
+    body, used = write_plan(supabase, user_id, watchlist, snap, provider, save=False)
     if not save_plan(supabase, user_id, body, snap, used):
         st.session_state.setdefault("_passage_plan", {})[today()] = body
     return body

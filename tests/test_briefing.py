@@ -99,3 +99,86 @@ def test_weather_counts_the_tide_and_the_sea():
     assert briefing.weather({"markets": [{"score_0_to_100": 60}], "conditions": {"tide": "in", "sea": "calm"}}) == "sunny"
     assert briefing.weather({"markets": [{"score_0_to_100": 50}], "conditions": {"tide": "slack", "sea": "moderate"}}) \
         == "changeable"
+
+
+# ---- the Morning forecast's editions, and the spoken Passage Plan (20 Nov 2026)
+from datetime import datetime as _dt, timezone as _tz
+
+
+def test_edition_slots_date_the_morning_they_serve():
+    now = _dt(2026, 11, 20, 22, 0, tzinfo=_tz.utc)               # just after the east edition's time
+    at, eid = briefing.edition_slot("east", now)
+    assert at == _dt(2026, 11, 20, 21, 30, tzinfo=_tz.utc) and eid == "2026-11-21-east"
+    at, eid = briefing.edition_slot("west", now)
+    assert at == _dt(2026, 11, 20, 10, 30, tzinfo=_tz.utc) and eid == "2026-11-20-west"
+
+
+def test_editions_due_once_and_only_within_the_window():
+    now = _dt(2026, 11, 20, 22, 0, tzinfo=_tz.utc)
+    assert briefing.editions_due({}, now) == [("east", "2026-11-21-east")]      # west's window (8 h) has passed
+    assert briefing.editions_due({"2026-11-21-east": {}}, now) == []
+    morning = _dt(2026, 11, 20, 10, 45, tzinfo=_tz.utc)
+    assert ("west", "2026-11-20-west") in briefing.editions_due({}, morning)
+
+
+def test_newest_is_by_when_made():
+    meta = {"2026-11-21-east": {"made_at": "2026-11-20T21:40:00+00:00"},
+            "2026-11-20-west": {"made_at": "2026-11-20T10:40:00+00:00"}}
+    assert briefing.newest(meta) == "2026-11-21-east"
+    assert briefing.newest({}) == ""
+
+
+def test_spoken_plan_keeps_the_words_and_says_the_headings():
+    body = ("**⚓ Conditions** - Tide going out (risk-defensive), held 6 trading days.\n\n"
+            "**🌦️ Weather on the route**\n- CPI on Wed: dollar +2.1%, score 62/100.\n\n"
+            "**🔭 Things to watch** - Expectation: the tide holds 5 closes.")
+    out = briefing.spoken_plan(body, _dt(2026, 11, 21))
+    assert out.startswith("This is your Angstrom Signals Passage Plan for Saturday 21 November.")
+    assert "First, the conditions. Tide going out (risk-defensive), held 6 trading days." in out
+    assert "The weather on the route. CPI on Wed: dollar plus 2.1 percent, score 62 out of 100." in out
+    assert "Things to watch. Expectation: the tide holds 5 closes." in out
+    assert "*" not in out and "⚓" not in out and out.endswith("Fair winds.")
+
+
+def test_general_facts_use_candles_when_no_stored_readings():
+    import pandas as pd
+
+    class Empty:
+        def __getattr__(self, name):
+            return self
+
+        def __call__(self, *a, **k):
+            return self
+
+        @property
+        def data(self):
+            return []
+
+        def execute(self):
+            return self
+
+    def load(kind, asset_id, interval, rng):
+        closes = [100.0] * 7 + [110.0, 121.0]
+        return {"candles": pd.DataFrame({"close": closes, "forming": [False] * 9})}
+
+    facts = briefing.general_facts(Empty(), _dt(2026, 11, 20, 22, tzinfo=_tz.utc), load=load)
+    names = [a["name"] for a in facts["key_markets"]]
+    assert names[:2] == ["S&P 500 (the SPY fund)", "Nasdaq 100 (the QQQ fund)"]
+    btc = facts["cryptos"][0]
+    assert btc["name"] == "Bitcoin" and btc["change_1d"] == 10.0 and btc["change_7d"] == 21.0
+
+
+def test_general_prompt_names_the_edition_and_sections():
+    facts = {"markets": [{"market": "crypto", "score_0_to_100": 40}], "cryptos": [{"name": "Bitcoin"}],
+             "conditions": {}}
+    system, msgs = briefing.general_prompt(facts, "west", _dt(2026, 11, 20))
+    assert "Americas edition" in system and "Asia" not in system
+    assert "the top five coins" in msgs[0]["content"]
+
+
+def test_digest_lists_the_listen_links():
+    import digest
+
+    _, page, plain = digest.render_digest([], [], {"digest_tz": "UTC"}, "https://app",
+                                          listen=[("🌍 The Morning forecast", "https://x/general/a.mp3")])
+    assert "https://x/general/a.mp3" in page and "🌍 The Morning forecast: https://x/general/a.mp3" in plain
