@@ -1,0 +1,77 @@
+{
+ "about": "Free voice samples for the crew: First Mate A, First Mate B and the deckhand, four voices each.",
+ "jobs": [
+  {
+   "id": "voice_mate_a_bf_emma",
+   "speak": "Good morning. The Captain's tied up with the harbour master today, so you've got me at the helm. Let's see what the seas are doing.",
+   "voice": "bf_emma",
+   "speed": 1.08
+  },
+  {
+   "id": "voice_mate_a_bf_isabella",
+   "speak": "Good morning. The Captain's tied up with the harbour master today, so you've got me at the helm. Let's see what the seas are doing.",
+   "voice": "bf_isabella",
+   "speed": 1.08
+  },
+  {
+   "id": "voice_mate_a_af_bella",
+   "speak": "Good morning. The Captain's tied up with the harbour master today, so you've got me at the helm. Let's see what the seas are doing.",
+   "voice": "af_bella",
+   "speed": 1.08
+  },
+  {
+   "id": "voice_mate_a_af_nicole",
+   "speak": "Good morning. The Captain's tied up with the harbour master today, so you've got me at the helm. Let's see what the seas are doing.",
+   "voice": "af_nicole",
+   "speed": 1.08
+  },
+  {
+   "id": "voice_mate_b_bf_alice",
+   "speak": "Morning, everyone. Captain's below decks with a cup of tea, so I'm running the forecast today. Hold on to your hats.",
+   "voice": "bf_alice",
+   "speed": 1.08
+  },
+  {
+   "id": "voice_mate_b_bf_lily",
+   "speak": "Morning, everyone. Captain's below decks with a cup of tea, so I'm running the forecast today. Hold on to your hats.",
+   "voice": "bf_lily",
+   "speed": 1.08
+  },
+  {
+   "id": "voice_mate_b_af_heart",
+   "speak": "Morning, everyone. Captain's below decks with a cup of tea, so I'm running the forecast today. Hold on to your hats.",
+   "voice": "af_heart",
+   "speed": 1.08
+  },
+  {
+   "id": "voice_mate_b_af_sarah",
+   "speak": "Morning, everyone. Captain's below decks with a cup of tea, so I'm running the forecast today. Hold on to your hats.",
+   "voice": "af_sarah",
+   "speed": 1.08
+  },
+  {
+   "id": "voice_deck_am_puck",
+   "speak": "Hey, morning! Captain and the First Mate are both busy, so I've been handed the forecast. Don't worry, I've read the charts.",
+   "voice": "am_puck",
+   "speed": 1.08
+  },
+  {
+   "id": "voice_deck_am_liam",
+   "speak": "Hey, morning! Captain and the First Mate are both busy, so I've been handed the forecast. Don't worry, I've read the charts.",
+   "voice": "am_liam",
+   "speed": 1.08
+  },
+  {
+   "id": "voice_deck_am_eric",
+   "speak": "Hey, morning! Captain and the First Mate are both busy, so I've been handed the forecast. Don't worry, I've read the charts.",
+   "voice": "am_eric",
+   "speed": 1.08
+  },
+  {
+   "id": "voice_deck_bm_lewis",
+   "speak": "Hey, morning! Captain and the First Mate are both busy, so I've been handed the forecast. Don't worry, I've read the charts.",
+   "voice": "bm_lewis",
+   "speed": 1.08
+  }
+ ]
+}
