@@ -1,0 +1,151 @@
+{
+ "about": "Guests and the ship's cat: portraits for five characters (original designs and traditional figures), and two talking test clips each for the cat, Father Christmas and Neptune (take 1 of each portrait).",
+ "jobs": [
+  {
+   "id": "portrait_cat",
+   "model": "fal-ai/flux-pro/kontext/text-to-image",
+   "input": {
+    "aspect_ratio": "3:4",
+    "num_images": 2,
+    "output_format": "png",
+    "prompt": "Head-and-shoulders portrait in a polished 3D animated film style, original character, warm cinematic lighting, looking at the camera, mouth closed, a grumpy but lovable ginger ship's cat with a tiny navy captain's hat with a gold anchor badge, sitting on a ship's chart table on the bridge, sea through the window behind"
+   }
+  },
+  {
+   "id": "portrait_santa",
+   "model": "fal-ai/flux-pro/kontext/text-to-image",
+   "input": {
+    "aspect_ratio": "3:4",
+    "num_images": 2,
+    "output_format": "png",
+    "prompt": "Head-and-shoulders portrait in a polished 3D animated film style, original character, warm cinematic lighting, looking at the camera, mouth closed, a jolly Father Christmas with a white beard, red coat with white fur trim and a red captain's peaked cap with a gold anchor badge, at the wheel of a sailing ship with snow falling and fairy lights on the rigging"
+   }
+  },
+  {
+   "id": "portrait_neptune",
+   "model": "fal-ai/flux-pro/kontext/text-to-image",
+   "input": {
+    "aspect_ratio": "3:4",
+    "num_images": 2,
+    "output_format": "png",
+    "prompt": "Head-and-shoulders portrait in a polished 3D animated film style, original character, warm cinematic lighting, looking at the camera, mouth closed, a majestic King Neptune with flowing white hair and beard, a golden crown and trident, rising from sparkling blue waves with sea spray, regal and slightly amused"
+   }
+  },
+  {
+   "id": "portrait_ghost",
+   "model": "fal-ai/flux-pro/kontext/text-to-image",
+   "input": {
+    "aspect_ratio": "3:4",
+    "num_images": 2,
+    "output_format": "png",
+    "prompt": "Head-and-shoulders portrait in a polished 3D animated film style, original character, warm cinematic lighting, looking at the camera, mouth closed, a friendly translucent ghostly sea captain with a long grey beard, tattered old naval coat and tricorn hat, glowing softly green on the foggy deck of an old ship at night under a full moon, more charming than scary"
+   }
+  },
+  {
+   "id": "portrait_bunny",
+   "model": "fal-ai/flux-pro/kontext/text-to-image",
+   "input": {
+    "aspect_ratio": "3:4",
+    "num_images": 2,
+    "output_format": "png",
+    "prompt": "Head-and-shoulders portrait in a polished 3D animated film style, original character, warm cinematic lighting, looking at the camera, mouth closed, a cheerful Easter Bunny in a yellow sailor's sou'wester hat and raincoat, holding a painted egg, on a sunny yacht deck with spring flowers and blue sea"
+   }
+  },
+  {
+   "id": "say_cat_welcome_1",
+   "speak": "The humans are asleep, so I'm doing the forecast. Markets are down. I knocked a chart off the table.",
+   "voice": "af_nicole",
+   "speed": 1.25
+  },
+  {
+   "id": "cat_welcome_1",
+   "stage": 1,
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "out:portrait_cat_1.png",
+    "audio_url": "out:say_cat_welcome_1.wav",
+    "prompt": "The animated cat from the picture speaking to camera, expressive, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "say_cat_signoff_1",
+   "speak": "That's the forecast. Fair winds and following seas. Now, where's my breakfast?",
+   "voice": "af_nicole",
+   "speed": 1.25
+  },
+  {
+   "id": "cat_signoff_1",
+   "stage": 1,
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "out:portrait_cat_1.png",
+    "audio_url": "out:say_cat_signoff_1.wav",
+    "prompt": "The animated cat from the picture speaking to camera, expressive, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "say_santa_welcome_1",
+   "speak": "Ho ho ho! Merry Christmas, everyone. The Captain's given me the wheel today, so let's see what the markets left under the tree.",
+   "voice": "am_fenrir",
+   "speed": 1.0
+  },
+  {
+   "id": "santa_welcome_1",
+   "stage": 1,
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "out:portrait_santa_1.png",
+    "audio_url": "out:say_santa_welcome_1.wav",
+    "prompt": "The animated character from the picture speaking to camera, expressive, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "say_santa_signoff_1",
+   "speak": "That's the forecast. Fair winds, following seas, and a very merry Christmas to all.",
+   "voice": "am_fenrir",
+   "speed": 1.0
+  },
+  {
+   "id": "santa_signoff_1",
+   "stage": 1,
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "out:portrait_santa_1.png",
+    "audio_url": "out:say_santa_signoff_1.wav",
+    "prompt": "The animated character from the picture speaking to camera, expressive, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "say_neptune_welcome_1",
+   "speak": "I am Neptune, lord of the seas. The central bank speaks today, and the waters will listen.",
+   "voice": "am_onyx",
+   "speed": 1.0
+  },
+  {
+   "id": "neptune_welcome_1",
+   "stage": 1,
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "out:portrait_neptune_1.png",
+    "audio_url": "out:say_neptune_welcome_1.wav",
+    "prompt": "The animated character from the picture speaking to camera, expressive, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "say_neptune_signoff_1",
+   "speak": "Fair winds and following seas, mortals. Until the tide brings us together again.",
+   "voice": "am_onyx",
+   "speed": 1.0
+  },
+  {
+   "id": "neptune_signoff_1",
+   "stage": 1,
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "out:portrait_neptune_1.png",
+    "audio_url": "out:say_neptune_signoff_1.wav",
+    "prompt": "The animated character from the picture speaking to camera, expressive, natural head movement and blinking."
+   }
+  }
+ ]
+}
