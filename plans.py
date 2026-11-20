@@ -55,7 +55,7 @@ SIGNAL_PLAN = {
     # Pro
     "osc.stoch_rsi": "pro", "osc.stoch_ohlc4": "pro", "structure.breaks": "pro",
     "divergence.mtf": "pro", "ta.divergence.rsi": "pro", "ta.divergence.macd": "pro", "osc.wavetrend": "pro",
-    "flow.money": "pro", "sonar.markers": "pro", "options.max_pain": "pro", "positioning.funding": "pro",
+    "flow.money": "pro", "sonar.markers": "pro", "osc.dot_pressure": "pro", "options.max_pain": "pro", "positioning.funding": "pro",
     "positioning.liquidation_levels": "pro", "positioning.liquidations": "pro", "positioning.long_short": "pro",
     "positioning.oi_price": "pro", "flows.btc_etf": "pro", "flows.stablecoin_supply": "pro",
 }

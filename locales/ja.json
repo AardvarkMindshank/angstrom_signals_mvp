@@ -2346,5 +2346,9 @@
   "Day and Night keep the page light or dark. Auto follows your device's setting, so it changes with your phone or computer. Saved on your account, so every device you log in on follows it. The page reloads once to switch.": "「昼」と「夜」はページを明るく、または暗く保ちます。「自動」は端末の設定に従うので、スマホやパソコンに合わせて切り替わります。アカウントに保存されるので、ログインしているすべての端末が従います。切り替えのためにページが一度再読み込みされます。",
   "Open this panel in its own window": "このパネルを別ウィンドウで開く",
   "📓 Opening your Logbook…": "📓 ログブックを開いています…",
-  "📓 Logbook: today's Passage Plan to read or hear, the plans before it, and the Morning forecast.": "📓 ログブック：今日の Passage Plan（読む・聴く）、これまでのプラン、朝の予報。"
+  "📓 Logbook: today's Passage Plan to read or hear, the plans before it, and the Morning forecast.": "📓 ログブック：今日の Passage Plan（読む・聴く）、これまでのプラン、朝の予報。",
+  "Dot build-up": "ドットの予兆",
+  "Faint dots on the 📡 Sonar strip that grow stronger as a big red or green dot nears, and fade out over the 3 candles after one. Each is worked out from its own candle and the ones before, so it reads the same on the live candle as on history: deep in the overbought (or oversold) zone with the two waves closing in. A build-up can fade without a dot. The same reading is the Sonar dot build-up signal for Sets and funnels.": "📡 Sonar ストリップ上の薄いドット。大きな赤・緑のドットが近づくほど濃くなり、出現後の3本で薄れていきます。各ドットはそのローソク足と過去の足だけから計算するため、進行中の足でも過去と同じように読めます：買われすぎ（売られすぎ）ゾーンの深い位置で2本の波が近づいている状態です。予兆がドットなしで消えることもあります。同じ値は Set やファネル用の「Sonar ドットの予兆」シグナルです。",
+  "Sonar dot build-up": "Sonar ドットの予兆",
+  "How close the wave is to printing a big Sonar dot right now: deep in the overbought (or oversold) zone with the two waves converging. A strong build-up often comes before a big dot, but the wave can turn away without one. Descriptive; not a forecast.": "今まさに波が大きな Sonar ドットを付ける直前にどれだけ近いか：買われすぎ（売られすぎ）ゾーンの深い位置で2本の波が収束している状態。強い予兆は大きなドットに先行することが多いですが、ドットなしで反転することもあります。記述的な指標であり、予測ではありません。"
 }

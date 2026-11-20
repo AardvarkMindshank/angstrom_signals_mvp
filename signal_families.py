@@ -30,7 +30,7 @@ FAMILIES = (
         (mark("Divergence"), mark("A new price extreme that momentum doesn't confirm"),
          ["ta.divergence.rsi", "ta.divergence.macd", "divergence.mtf"]),
         (mark("Sonar"), mark("WaveTrend, money flow and markers"),
-         ["osc.wavetrend", "flow.money", "sonar.markers"]),
+         ["osc.wavetrend", "flow.money", "sonar.markers", "osc.dot_pressure"]),
     ]),
     ("volume", mark("Volume and money flow"), mark("Is real money behind the move?"), [
         (mark("Volume"), mark("Is trading heavier than usual?"), ["volume.relative", "volume.heavy_candle"]),

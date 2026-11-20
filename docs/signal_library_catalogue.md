@@ -70,6 +70,15 @@ Generated from the registry (`signal_library.REGISTRY.catalogue()`) by `signal_c
 - **Interpretation:** How large the recent move is for this asset. Standard score (dashboard Stretch part): tanh(change / expected). Descriptive; not a forecast.
 - **Limitations:** On daily candles this is the 7-day move; on other timeframes it is 7 of those candles. On timeframes other than 1D the standard score is daily-derived scaling.
 
+### Sonar dot build-up — `osc.dot_pressure@1`
+
+- **Category:** momentum · **Output:** observation · **Unit:** mixed (labelled fields) · **Scope:** asset
+- **Timeframes:** 15m, 30m, 1h, 4h, 12h, 1D, 1W · **Data:** candles
+- **Parameters:** `start` = 30 (how far from zero the blue wave must be before any build-up shows); `gap_scale` = 15 (the gap between the two waves that counts as far apart (0 closeness)); `level` = 60 (pressure at or above this counts as building)
+- **Calculation:** Closed candles. WaveTrend (9, 12, 3) as the Sonar strip: WT1 (light-blue) and WT2 (blue). Red pressure = 100 × depth × closeness × narrowing, where depth = (WT2 − start) / (53 − start) clipped to 0..1, closeness = 1 − (WT1 − WT2) / gap_scale clipped to 0..1 (0 when WT1 is not above WT2), narrowing = 1 when WT1 − WT2 is smaller than on the candle before, else 0.6. Green mirrors it: depth = (−WT2 − start) / (53 − start), closeness from WT2 − WT1. Each candle uses only its own and earlier candles. building = red or green when that pressure is at or above `level` (the stronger one), else none; building_candles = how many candles in a row it has been so; red_change and green_change = the change since the candle before.
+- **Interpretation:** How close the wave is to printing a big Sonar dot right now: deep in the overbought (or oversold) zone with the two waves converging. A strong build-up often comes before a big dot, but the wave can turn away without one. Descriptive; not a forecast.
+- **Limitations:** A recreation of a paid, closed indicator's dot rule. The weights are a simple, untuned design, not fitted to outcomes. Needs about 40 closed candles.
+
 ### Stochastic on OHLC4 — `osc.stoch_ohlc4@1`
 
 - **Category:** momentum · **Output:** observation · **Unit:** mixed (labelled fields) · **Scope:** asset

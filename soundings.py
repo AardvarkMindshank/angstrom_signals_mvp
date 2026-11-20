@@ -93,6 +93,7 @@ READINGS = [
     ("sonar.markers", "long_cross_ago", ("recent", 3), "Sonar long cross"),
     ("sonar.markers", "short_cross_ago", ("recent", 3), "Sonar short cross"),
     ("sonar.markers", "band", ("label",), "Sonar band"),
+    ("osc.dot_pressure", "building", ("label",), "Sonar dot build-up"),
     ("rsi.level", "rsi", ("cut", [30, 70]), "RSI (14)"),
     ("stochastic.level", "stoch_k", ("cut", [20, 80]), "Stochastic %K"),
     ("bollinger.position", "position", ("cut", [0.0, 0.2, 0.8, 1.0]), "Bollinger position"),

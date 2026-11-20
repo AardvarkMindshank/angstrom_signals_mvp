@@ -132,6 +132,9 @@
     "sonar.markers": [
       "price"
     ],
+    "osc.dot_pressure": [
+      "price"
+    ],
     "osc.stoch_rsi": [
       "price"
     ],

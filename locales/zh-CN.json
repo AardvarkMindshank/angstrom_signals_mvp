@@ -2346,5 +2346,9 @@
   "Day and Night keep the page light or dark. Auto follows your device's setting, so it changes with your phone or computer. Saved on your account, so every device you log in on follows it. The page reloads once to switch.": "白天和夜晚会让页面保持浅色或深色。自动跟随设备设置，会随你的手机或电脑切换。保存在你的账户中，你登录的每台设备都会跟随。切换时页面会重新加载一次。",
   "Open this panel in its own window": "在单独的窗口中打开此面板",
   "📓 Opening your Logbook…": "📓 正在打开你的航海日志…",
-  "📓 Logbook: today's Passage Plan to read or hear, the plans before it, and the Morning forecast.": "📓 航海日志：今日 Passage Plan（可读可听）、之前的计划以及晨间预报。"
+  "📓 Logbook: today's Passage Plan to read or hear, the plans before it, and the Morning forecast.": "📓 航海日志：今日 Passage Plan（可读可听）、之前的计划以及晨间预报。",
+  "Dot build-up": "圆点酝酿",
+  "Faint dots on the 📡 Sonar strip that grow stronger as a big red or green dot nears, and fade out over the 3 candles after one. Each is worked out from its own candle and the ones before, so it reads the same on the live candle as on history: deep in the overbought (or oversold) zone with the two waves closing in. A build-up can fade without a dot. The same reading is the Sonar dot build-up signal for Sets and funnels.": "📡 Sonar 条带上的浅色圆点：大红点或大绿点越接近，颜色越深，出现后的 3 根 K 线内逐渐淡去。每个点只用它自己的 K 线和之前的 K 线计算，因此在当前 K 线上和历史上读起来一样：深入超买（或超卖）区，两条波线正在靠拢。酝酿也可能没有出点就消退。同一读数就是供 Set 和漏斗使用的“Sonar 圆点酝酿”信号。",
+  "Sonar dot build-up": "Sonar 圆点酝酿",
+  "How close the wave is to printing a big Sonar dot right now: deep in the overbought (or oversold) zone with the two waves converging. A strong build-up often comes before a big dot, but the wave can turn away without one. Descriptive; not a forecast.": "波线此刻距离打出大 Sonar 圆点有多近：深入超买（或超卖）区，两条波线正在收敛。强烈的酝酿常常出现在大圆点之前，但波线也可能不出点就掉头。仅作描述，不是预测。"
 }

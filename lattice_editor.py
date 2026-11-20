@@ -255,6 +255,7 @@ SHORT = {
     "osc.stoch_ohlc4": lambda p: f"Stochastic OHLC4 {p['length']}",
     "osc.stoch_rsi": lambda p: "Stoch RSI",
     "sonar.markers": lambda p: "Sonar markers",
+    "osc.dot_pressure": lambda p: "Sonar dot build-up",
     "shape.classic": lambda p: "Chart shapes",
     "level.fvg": lambda p: "Fair value gaps",
     "level.avwap": lambda p: f"Anchored VWAP ({p['anchor'].replace('_', ' ')})",

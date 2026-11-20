@@ -54,8 +54,11 @@ def cipher_b(df: pd.DataFrame, cfg: dict | None = None) -> pd.DataFrame:
     mc_cross         +1 where the light-blue wave crosses above the blue one (small green dot), -1 below (small red)
     mc_buy, mc_sell  a cross up while the blue wave is at or below -53 (big green dot: a strong possible entry), a
                      cross down at or above +53 (big red dot)
+    mc_press_r, _g   🔆 dot build-up: how close each candle is to a big red / green dot, 0 to 100, from that candle
+                     and earlier ones only (osc.dot_pressure's formula)
     """
     from signal_library.signals_oscillators import money_flow, wavetrend
+    from signal_library.signals_sonar import dot_pressure
 
     c = {**CIPHER, **(cfg or {})}
     wt = wavetrend(df, c["wt_channel"], c["wt_average"], c["wt_signal"])
@@ -70,6 +73,8 @@ def cipher_b(df: pd.DataFrame, cfg: dict | None = None) -> pd.DataFrame:
         "mc_wt1": w1, "mc_wt2": w2, "mc_vwap": w1 - w2, "mc_mf": mf, "mc_mf_in": mf > 0,
         "mc_rsi": rsi(df["close"], c["rsi_length"]), "mc_sk": st["k"], "mc_sd": st["d"],
         "mc_cross": cross, "mc_buy": up & (w2 <= c["os1"]), "mc_sell": down & (w2 >= c["ob1"]),
+        **dict(zip(("mc_press_r", "mc_press_g"), (lambda p: (p["red"], p["green"]))(
+            dot_pressure(w1, w2, c["ob1"], c["os1"])))),
     }, index=df.index)
 
 

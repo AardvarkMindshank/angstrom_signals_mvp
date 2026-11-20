@@ -2346,5 +2346,9 @@
   "Day and Night keep the page light or dark. Auto follows your device's setting, so it changes with your phone or computer. Saved on your account, so every device you log in on follows it. The page reloads once to switch.": "낮과 밤은 페이지를 밝게 또는 어둡게 유지합니다. 자동은 기기 설정을 따르므로 휴대폰이나 컴퓨터에 맞춰 바뀝니다. 계정에 저장되어 로그인한 모든 기기가 따릅니다. 전환하려면 페이지가 한 번 새로 고쳐집니다.",
   "Open this panel in its own window": "이 패널을 새 창에서 열기",
   "📓 Opening your Logbook…": "📓 로그북을 여는 중…",
-  "📓 Logbook: today's Passage Plan to read or hear, the plans before it, and the Morning forecast.": "📓 로그북: 읽거나 들을 수 있는 오늘의 Passage Plan, 지난 플랜, 아침 예보."
+  "📓 Logbook: today's Passage Plan to read or hear, the plans before it, and the Morning forecast.": "📓 로그북: 읽거나 들을 수 있는 오늘의 Passage Plan, 지난 플랜, 아침 예보.",
+  "Dot build-up": "점 형성 예고",
+  "Faint dots on the 📡 Sonar strip that grow stronger as a big red or green dot nears, and fade out over the 3 candles after one. Each is worked out from its own candle and the ones before, so it reads the same on the live candle as on history: deep in the overbought (or oversold) zone with the two waves closing in. A build-up can fade without a dot. The same reading is the Sonar dot build-up signal for Sets and funnels.": "📡 Sonar 띠의 희미한 점으로, 큰 빨간 점이나 초록 점이 가까워질수록 진해지고 그 뒤 3개 캔들 동안 옅어집니다. 각 점은 해당 캔들과 이전 캔들만으로 계산하므로 진행 중인 캔들에서도 과거와 똑같이 읽힙니다: 과매수(또는 과매도) 구간 깊숙이에서 두 파동이 가까워지는 상태입니다. 예고가 점 없이 사라질 수도 있습니다. 같은 값이 Set과 퍼널용 'Sonar 점 형성 예고' 신호입니다.",
+  "Sonar dot build-up": "Sonar 점 형성 예고",
+  "How close the wave is to printing a big Sonar dot right now: deep in the overbought (or oversold) zone with the two waves converging. A strong build-up often comes before a big dot, but the wave can turn away without one. Descriptive; not a forecast.": "파동이 지금 큰 Sonar 점을 찍기에 얼마나 가까운지: 과매수(또는 과매도) 구간 깊숙이에서 두 파동이 수렴하는 상태. 강한 예고는 큰 점보다 먼저 나타나는 경우가 많지만, 점 없이 돌아설 수도 있습니다. 서술적이며 예측이 아닙니다."
 }

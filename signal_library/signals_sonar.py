@@ -214,3 +214,76 @@ def osc_stoch_rsi(ctx, timeframe, params):
         "cross_down_from_high_ago": candles_ago(down & near_high, lookback),
     }
     return _ok(ctx, loaded, timeframe, frame, value, {**params})
+
+
+# ----------------------------------------------------------------------------------------------- dot build-up
+
+def dot_pressure(w1: pd.Series, w2: pd.Series, overbought: float = 53.0, oversold: float = -53.0,
+                 start: float = 30.0, gap_scale: float = 15.0) -> pd.DataFrame:
+    """How close each candle is to printing a big Sonar dot, from what is known on that candle only (no look
+    ahead), 0 to 100 for each colour (an idea of a beta tester's, 20 Nov 2026).
+
+    Red (towards a big red dot: the wave turning down at or above the overbought line):
+      depth     = how far the blue wave (WT2) has climbed from `start` to the overbought line, 0 to 1;
+      closeness = 1 − (WT1 − WT2) / gap_scale, 0 to 1: the light-blue wave nearing the blue one from above
+                  (0 once it has crossed below: the turn has happened);
+      pressure  = 100 × depth × closeness, × 0.6 when the gap is not narrowing on this candle.
+    Green mirrors it below the oversold line. The chart shades the strip with it, and fades each big dot out over
+    the candles after it."""
+    def side(depth_raw, span, gap):
+        depth = (depth_raw / max(span, 1e-9)).clip(0, 1)
+        close = (1 - gap / gap_scale).clip(0, 1).where(gap > 0, 0.0)
+        narrowing = pd.Series(np.where(gap < gap.shift(1), 1.0, 0.6), index=gap.index)
+        return (100 * depth * close * narrowing).fillna(0.0).round(1)
+
+    red = side(w2 - start, overbought - start, w1 - w2)
+    green = side(-w2 - start, -oversold - start, w2 - w1)
+    return pd.DataFrame({"red": red, "green": green}, index=w1.index)
+
+
+@signal(
+    id="osc.dot_pressure", version=1, name="Sonar dot build-up", category="momentum",
+    output=OBSERVATION, unit="mixed (labelled fields)", scope=SCOPE_ASSET, timeframes=TIMEFRAMES, requires=("candles",),
+    params={"start": Param(30, "int", 0, 52, doc="how far from zero the blue wave must be before any build-up shows"),
+            "gap_scale": Param(15, "int", 3, 60, doc="the gap between the two waves that counts as far apart (0 "
+                                                    "closeness)"),
+            "level": Param(60, "int", 10, 100, doc="pressure at or above this counts as building")},
+    calculation=("Closed candles. WaveTrend (9, 12, 3) as the Sonar strip: WT1 (light-blue) and WT2 (blue). Red "
+                 "pressure = 100 × depth × closeness × narrowing, where depth = (WT2 − start) / (53 − start) clipped "
+                 "to 0..1, closeness = 1 − (WT1 − WT2) / gap_scale clipped to 0..1 (0 when WT1 is not above WT2), "
+                 "narrowing = 1 when WT1 − WT2 is smaller than on the candle before, else 0.6. Green mirrors it: "
+                 "depth = (−WT2 − start) / (53 − start), closeness from WT2 − WT1. Each candle uses only its own "
+                 "and earlier candles. building = red or green when that pressure is at or above `level` (the "
+                 "stronger one), else none; building_candles = how many candles in a row it has been so; "
+                 "red_change and green_change = the change since the candle before."),
+    interpretation=("How close the wave is to printing a big Sonar dot right now: deep in the overbought (or "
+                    "oversold) zone with the two waves converging. A strong build-up often comes before a big dot, "
+                    "but the wave can turn away without one. Descriptive; not a forecast."),
+    limitations=("A recreation of a paid, closed indicator's dot rule. The weights are a simple, untuned design, "
+                 "not fitted to outcomes. Needs about 40 closed candles."),
+    polarity="red build-up points to a turn down; green build-up to a turn up",
+)
+def osc_dot_pressure(ctx, timeframe, params):
+    frame, loaded, failed = closed_candles(ctx, timeframe, 40)
+    if failed:
+        return failed
+    wb = wavetrend(frame, 9, 12, 3)
+    p = dot_pressure(wb["wt1"], wb["wt2"], start=float(params["start"]), gap_scale=float(params["gap_scale"]))
+    if _r(wb["wt2"].iloc[-1]) is None or len(p) < 2:
+        return SignalResult(ref={}, subject=ctx.subject, status=INSUFFICIENT, notes=["The wave is not ready yet."])
+    level = params["level"]
+    red, green = p["red"], p["green"]
+    side = pd.Series(np.where((red >= level) & (red >= green), "red",
+                              np.where(green >= level, "green", "none")), index=p.index)
+    last = side.iloc[-1]
+    streak = 0
+    if last != "none":
+        for s in reversed(side.tolist()):
+            if s != last:
+                break
+            streak += 1
+    value = {"red_pressure": float(red.iloc[-1]), "green_pressure": float(green.iloc[-1]),
+             "red_change": round(float(red.iloc[-1] - red.iloc[-2]), 1),
+             "green_change": round(float(green.iloc[-1] - green.iloc[-2]), 1),
+             "building": last, "building_candles": streak}
+    return _ok(ctx, loaded, timeframe, frame, value, {**params})

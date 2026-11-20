@@ -192,7 +192,30 @@ def event_lines(index: pd.DatetimeIndex, interval: str, kind: str, events, ahead
     return out, (ahead_max + max(2, ahead_max // 10)) if ahead_max else 0
 
 
-def cipher_series(df: pd.DataFrame, pane: int, dark: bool = False) -> list[dict]:
+BUILDUP_TRAIL = 3            # candles a big dot fades out over, after it prints
+BUILDUP_MIN = 8.0            # pressure below this draws nothing
+
+
+def buildup_alphas(pressure, dots, trail: int = BUILDUP_TRAIL) -> list[float]:
+    """🔆 Dot build-up: one opacity per candle (0 = no dot drawn) for the faint dots leading up to a big Sonar dot
+    and fading after it. Leading: the candle's own pressure (0 to 100, osc.dot_pressure), so it is the same on the
+    live candle as on history (no look ahead). Trailing: after a big dot, 0.68, 0.45, 0.23 over `trail` candles.
+    The big dot's own candle is left to the big dot."""
+    n = len(dots)
+    out = [0.0] * n
+    for i in range(n):
+        p = pressure[i]
+        if p == p and p >= BUILDUP_MIN:
+            out[i] = round(0.12 + 0.78 * min(p, 100.0) / 100.0, 2)
+    for i, d in enumerate(dots):
+        if d:
+            for k in range(1, trail + 1):
+                if i + k < n:
+                    out[i + k] = max(out[i + k], round(0.9 * (1 - k / (trail + 1)), 2))
+    return [0.0 if dots[i] else a for i, a in enumerate(out)]
+
+
+def cipher_series(df: pd.DataFrame, pane: int, dark: bool = False, buildup: bool = False) -> list[dict]:
     """The 📡 Sonar strip (our version of a popular oscillator strip), drawn as that chart draws it (colours from its Style settings): the light-blue
     and blue waves, the yellow VWAP area, the green / red money flow, the bar along the bottom, the magenta RSI, the
     green / red Stoch RSI, the small cross dots and the big buy and sell dots. Columns from chart_indicators."""
@@ -239,6 +262,15 @@ def cipher_series(df: pd.DataFrame, pane: int, dark: bool = False) -> list[dict]
                 "values": [round(w, 2) if c and w == w else None for c, w in zip(cross, w2)],
                 "colors": ["#1fbf75" if c > 0 else "#e0474c" for c in cross]})
     buy, sell = flag("mc_buy"), flag("mc_sell")     # big green Buy dots on the bottom bar, big red Sell at the top
+    if buildup and "mc_press_r" in df.columns:
+        # 🔆 Faint dots building up to a big dot (stronger as it nears) and fading after one; drawn under the big dots.
+        for sid, colname, dots, rgb, level in (("mc_build_r", "mc_press_r", sell, "255,42,26", 100.0),
+                                               ("mc_build_g", "mc_press_g", buy, "63,255,0", -96.5)):
+            alphas = buildup_alphas(pd.to_numeric(df[colname], errors="coerce").tolist(), dots)
+            out.append({"id": sid, "type": "dots", "name": "Dot build-up", "pane": pane, "legend": False,
+                        "radius": 4, "color": f"rgba({rgb},0.5)",
+                        "values": [level if a > 0 else None for a in alphas],
+                        "colors": [f"rgba({rgb},{a})" for a in alphas]})
     out.append({"id": "mc_buy", "type": "dots", "name": "Buy", "pane": pane, "legend": False, "radius": 5, "color": "#3fff00",
                 "values": [-96.5 if b else None for b in buy], "colors": ["#3fff00"] * n})
     out.append({"id": "mc_sell", "type": "dots", "name": "Sell", "pane": pane, "legend": False, "radius": 5,
@@ -450,7 +482,7 @@ def build_payload(
 
     guides: list[dict] = []
     if "cipher" in pane_of and "mc_wt1" in columns:
-        series += cipher_series(df, pane_of["cipher"], dark)
+        series += cipher_series(df, pane_of["cipher"], dark, buildup=bool(layout.get("dot_buildup")))
         ink = "#e5e7eb" if dark else "#6b7280"
         guides += [{"series": "mc_rsi", "value": 0, "color": ink, "style": "solid"},
                    {"series": "mc_rsi", "value": 60, "color": "#bdbdbd", "style": "solid"},

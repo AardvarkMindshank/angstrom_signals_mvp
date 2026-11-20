@@ -98,3 +98,73 @@ def test_snake_eyes_are_two_dots_close_together():
     assert not _pair(dots, level, 4, lambda x: x <= -53).any()                     # none beyond −53
     r = _run("sonar.markers", _frame(_walk(400, seed=7)), snake_gap=10)
     assert "snake_eyes_green_ago" in r.value and "snake_eyes_red_ago" in r.value
+
+
+# ---- 🔆 Sonar dot build-up (osc.dot_pressure), 20 Nov 2026
+
+def test_dot_pressure_never_looks_ahead():
+    from signal_library.signals_oscillators import wavetrend
+    from signal_library.signals_sonar import dot_pressure
+
+    f = _frame(_walk(500, seed=11))
+    w = wavetrend(f, 9, 12, 3)
+    full = dot_pressure(w["wt1"], w["wt2"])
+    for cut in (120, 260, 499):
+        wc = wavetrend(f.iloc[:cut], 9, 12, 3)
+        part = dot_pressure(wc["wt1"], wc["wt2"])
+        pd.testing.assert_frame_equal(part, full.iloc[:cut])
+
+
+def test_dot_pressure_by_hand():
+    from signal_library.signals_sonar import dot_pressure
+
+    w2 = pd.Series([40.0, 53.0, 60.0, 60.0, -60.0])
+    w1 = pd.Series([60.0, 63.0, 63.0, 58.0, -63.0])
+    p = dot_pressure(w1, w2)
+    # candle 0: depth (40-30)/23, gap 20 > 15: closeness 0
+    assert p["red"][0] == 0.0
+    # candle 1: depth 1, gap 10 (narrowing from 20): 100 x 1/3
+    assert p["red"][1] == round(100 * (1 - 10 / 15), 1)
+    # candle 2: gap 3, narrowing: 100 x 0.8
+    assert p["red"][2] == 80.0
+    # candle 3: crossed (WT1 below WT2): the turn has happened, no pressure left
+    assert p["red"][3] == 0.0
+    # candle 4: deep oversold, gap 3 (WT2 - WT1) but not narrowing from -2: x 0.6
+    assert p["green"][4] == round(100 * 0.8 * 0.6, 1)
+    assert (p["green"][:4] == 0).all()
+
+
+def test_signal_reads_the_build_up():
+    f = _frame(_walk(400, seed=7))
+    r = _run("osc.dot_pressure", f)
+    assert r.status == OK
+    v = r.value
+    assert 0 <= v["red_pressure"] <= 100 and 0 <= v["green_pressure"] <= 100
+    assert v["building"] in ("red", "green", "none")
+    assert (v["building"] == "none") == (v["building_candles"] == 0)
+    assert _run("osc.dot_pressure", _frame(_walk(20, seed=1))).status == INSUFFICIENT
+
+
+def test_buildup_alphas_lead_and_trail():
+    import lw_chart
+
+    pressure = [0, 5, 20, 60, 95, 0, 0, 0, 0, 0]
+    dots = [False] * 5 + [True] + [False] * 4
+    a = lw_chart.buildup_alphas(pressure, dots)
+    assert a[0] == 0 and a[1] == 0                      # below the floor: nothing
+    assert 0 < a[2] < a[3] < a[4] <= 0.9                # stronger as it nears
+    assert a[5] == 0                                    # the big dot itself draws it
+    assert a[6] > a[7] > a[8] > 0 and a[9] == 0         # fades over three candles
+
+
+def test_strip_draws_build_up_only_when_asked():
+    import chart_indicators
+    import lw_chart
+
+    f = _frame(_walk(300, seed=5))
+    df = f.join(chart_indicators.cipher_b(f))
+    assert {"mc_press_r", "mc_press_g"} <= set(df.columns)
+    ids = [s["id"] for s in lw_chart.cipher_series(df, 1)]
+    assert "mc_build_r" not in ids
+    ids = [s["id"] for s in lw_chart.cipher_series(df, 1, buildup=True)]
+    assert ids.index("mc_build_r") < ids.index("mc_sell")        # under the big dots

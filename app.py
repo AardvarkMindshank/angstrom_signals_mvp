@@ -14493,6 +14493,17 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                          + " ".join(f"{_SONAR_MARK_LABELS[k]}: {v[4]}." for k, v in lw_chart.SONAR_MARKS.items()),
                 ) or []
                 sonar_shown = [k for k in sonar_shown if k not in (PILL_ALL, PILL_NONE)]
+            dot_buildup = False
+            if "cipher" in chosen_indicators and use_tv:
+                if "chart_dot_buildup" not in st.session_state:
+                    st.session_state["chart_dot_buildup"] = bool(saved_chart.get("chart_dot_buildup", False))
+                dot_buildup = st.checkbox(
+                    "🔆 " + t("Dot build-up"), key="chart_dot_buildup",
+                    help=t("Faint dots on the 📡 Sonar strip that grow stronger as a big red or green dot nears, and fade "
+                           "out over the 3 candles after one. Each is worked out from its own candle and the ones "
+                           "before, so it reads the same on the live candle as on history: deep in the overbought (or "
+                           "oversold) zone with the two waves closing in. A build-up can fade without a dot. The same "
+                           "reading is the Sonar dot build-up signal for Sets and funnels."))
             band_set = _chart_set_picker() if use_tv else None
             wanted_picks = [k for k in saved_picks if k not in indicator_keys] + [
                 k for k in chosen_indicators if k in chart_plan.INDICATORS
@@ -14511,9 +14522,12 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                 chart_choices["chart_earnings"] = bool(show_earnings)
             if sonar_shown is not None:
                 chart_choices["chart_sonar_marks"] = list(sonar_shown)
+            if "cipher" in chosen_indicators and use_tv:
+                chart_choices["chart_dot_buildup"] = bool(dot_buildup)
             save_account_settings(chart_choices)
             layout = chart_plan.plan(chosen_indicators, df_chart.columns, overlay_curves=overlay_curves)
             layout["sonar_marks"] = sonar_shown
+            layout["dot_buildup"] = bool(dot_buildup)
             price_px = _chart_price_height()
             liq_record = _liquidation_record(asset_key) if liq_on else None
             import ladder_helper                       # 🪜 its lines go on the chart when "Show on chart" is on
