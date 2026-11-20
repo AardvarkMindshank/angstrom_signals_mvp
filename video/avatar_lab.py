@@ -89,41 +89,55 @@ def speak_job(job: dict, out: Path) -> list[Path]:
     return [path]
 
 
-def _bytes_of(value: str) -> bytes:
-    if value.startswith("data:"):
-        return base64.b64decode(value.split(",", 1)[1])
-    return requests.get(value, timeout=120).content
+def _envelope(pcm, rate: int):
+    import numpy as np
+    hop = rate // 50                                              # 20 ms steps
+    n = len(pcm) // hop
+    e = np.sqrt((pcm[: n * hop].reshape(n, hop).astype(np.float64) ** 2).mean(axis=1))
+    return (e - e.mean()) / (e.std() + 1e-9)
 
 
-def _seconds(wav: bytes) -> float:
+def _wav_pcm(wav: bytes):
     import io
     import wave
+
+    import numpy as np
     with wave.open(io.BytesIO(wav)) as wf:
-        return wf.getnframes() / wf.getframerate()
+        return np.frombuffer(wf.readframes(wf.getnframes()), dtype=np.int16), wf.getframerate()
+
+
+def _clip_pcm(video: Path, rate: int):
+    import subprocess
+
+    import numpy as np
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(video), "-vn", "-ac", "1", "-ar", str(rate), "-f", "s16le", "-"],
+                         capture_output=True, check=True).stdout
+    return np.frombuffer(raw, dtype=np.int16)
 
 
 def recover(jobs: list, inputs: Path, outdir: Path, key: str, window: str) -> int:
     """Fetch clips fal already made (and were paid for) but that were lost on the way back: lists that model's
-    successful requests in the window "<start>,<end>" (UTC) and matches each to a job by its voice line's length and
-    its picture. Needs the voice lines made first (free). Nothing new is made on fal."""
-    import hashlib
+    successful requests in the window "<start>,<end>" (UTC), downloads each clip and matches it to a job by its sound
+    (the voice line's loudness pattern). Needs the voice lines made first (free). Nothing new is made on fal."""
+    import numpy as np
     start, end = window.split(",")
     head = {"Authorization": f"Key {key}"}
     want = {}
     for j in jobs:
         if "speak" in j or "audio_url" not in j.get("input", {}):
             continue
-        a, im = j["input"]["audio_url"], j["input"]["image_url"]
+        a = j["input"]["audio_url"]
         wav = (outdir / a[4:]).read_bytes() if a.startswith("out:") else (inputs / a[5:]).read_bytes()
-        pic = (outdir / im[4:]) if im.startswith("out:") else (inputs / im[5:])
-        want[j["id"]] = (j["model"], round(_seconds(wav), 2), hashlib.sha256(pic.read_bytes()).hexdigest())
-    found = 0
+        pcm, rate = _wav_pcm(wav)
+        want[j["id"]] = (j["model"], _envelope(pcm, rate), rate)
+    found, tmp = 0, outdir / "_clip.mp4"
     for model in sorted({m for m, _, _ in want.values()}):
         cursor, items = None, []
         while True:
-            q = {"endpoint_id": model, "start": start, "end": end, "status": "success", "expand": "payloads", "limit": 100}
+            q = {"endpoint_id": model, "start": start, "end": end, "status": "success", "limit": 100}
             if cursor:
                 q["cursor"] = cursor
+            q["expand"] = "payloads"
             r = requests.get("https://api.fal.ai/v1/models/requests/by-endpoint", headers=head, params=q, timeout=300)
             _check(r)
             body = r.json()
@@ -132,30 +146,41 @@ def recover(jobs: list, inputs: Path, outdir: Path, key: str, window: str) -> in
             if not cursor:
                 break
         print(f"{model}: {len(items)} finished request(s) in the window", flush=True)
-        print("wanted lengths: " + ", ".join(sorted(f"{s_:.2f}" for m, s_, _ in want.values() if m == model)), flush=True)
+        best = {}                                                  # job id -> (score, video link)
         for n, it in enumerate(items):
-            inp, res = it.get("json_input") or {}, it.get("json_output") or {}
-            if not (res.get("video") and inp.get("audio_url") and inp.get("image_url")):
-                print(f"item {n}: no payload ({sorted(inp)[:6]}, {sorted(res)[:6]})", flush=True)
+            res = it.get("json_output") or {}
+            if not res.get("video"):
                 continue
             try:
-                secs = round(_seconds(_bytes_of(inp["audio_url"])), 2)
-                pic = hashlib.sha256(_bytes_of(inp["image_url"])).hexdigest()
-            except Exception as exc:
-                kind = "data" if str(inp["audio_url"]).startswith("data:") else "link"
-                print(f"item {n}: unreadable {kind} audio ({type(exc).__name__}: {str(exc)[:80]})", flush=True)
+                tmp.write_bytes(requests.get(res["video"]["url"], timeout=300).content)
+            except Exception:
                 continue
-            print(f"item {n}: {secs:.2f}s, picture {'known' if any(h == pic for _, _, h in want.values()) else 'new'}", flush=True)
-            hits = [i for i, (m, s_, h) in want.items() if m == model and abs(s_ - secs) <= 0.01 and h == pic]
-            if not hits:
-                hits = [i for i, (m, s_, _h) in want.items() if m == model and abs(s_ - secs) <= 0.01]
-            if len(hits) != 1:
+            scores = []
+            for jid, (m, env, rate) in want.items():
+                if m != model:
+                    continue
+                got = _envelope(_clip_pcm(tmp, rate), rate)
+                k = min(len(env), len(got))
+                if k < 25 or abs(len(env) - len(got)) > max(15, 0.4 * len(env)):
+                    continue
+                lag = max(range(0, len(got) - k + 1) if len(got) > k else [0],
+                          key=lambda L: float(np.dot(env[:k], got[L:L + k])))
+                scores.append((float(np.corrcoef(env[:k], got[lag:lag + k])[0, 1]), jid))
+            if not scores:
                 continue
-            path = outdir / f"{hits[0]}_1.mp4"
+            scores.sort(reverse=True)
+            score, jid = scores[0]
+            margin = score - (scores[1][0] if len(scores) > 1 else 0)
+            print(f"item {n}: best match {score:.2f} (next {margin:.2f} lower)", flush=True)
+            if score >= 0.8 and margin >= 0.1 and score > best.get(jid, (0, ""))[0]:
+                best[jid] = (score, res["video"]["url"])
+        for jid, (_score, url) in best.items():
+            path = outdir / f"{jid}_1.mp4"
             if not path.exists():
-                path.write_bytes(requests.get(res["video"]["url"], timeout=300).content)
+                path.write_bytes(requests.get(url, timeout=300).content)
                 found += 1
-                print(f"{hits[0]}: recovered", flush=True)
+                print(f"{jid}: recovered", flush=True)
+    tmp.unlink(missing_ok=True)
     print(f"Recovered {found} of {len(want)} clip(s).", flush=True)
     return 0 if found else 1
 
