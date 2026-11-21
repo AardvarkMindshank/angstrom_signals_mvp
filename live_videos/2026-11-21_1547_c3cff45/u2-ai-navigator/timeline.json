@@ -1,0 +1,41 @@
+{
+ "steps": [
+  {
+   "id": "idea",
+   "start": 22.203,
+   "say": "The AI Navigator knows the whole app, your watchlist, your Groups, Sets and funnels, and today's Tides."
+  },
+  {
+   "id": "open",
+   "start": 28.392,
+   "say": "It slides out from the right edge, on every page, so the page you're working on stays in view."
+  },
+  {
+   "id": "ask",
+   "start": 37.865,
+   "say": "Ask anything in your own words. | Here: how do I find coins that are dipping inside an uptrend?"
+  },
+  {
+   "id": "wait",
+   "start": 46.194,
+   "say": "It answers from the app's own readings and help, never from guesses about prices."
+  },
+  {
+   "id": "answer",
+   "start": 68.659,
+   "say": "The answer walks you through it, step by step. | It points to the right place, and the right training video."
+  },
+  {
+   "id": "paste",
+   "start": 75.041,
+   "say": "You can also paste a screenshot, and ask what you're looking at."
+  },
+  {
+   "id": "close",
+   "start": 79.038,
+   "say": "Close it with the same handle. | The conversation is kept for when you come back."
+  }
+ ],
+ "end": 85.819,
+ "trim": 22.203
+}

@@ -1,0 +1,47 @@
+1
+00:00:00,000 --> 00:00:04,460
+The AI Navigator knows the whole app, your watchlist, your Groups, Sets and funnels,
+
+2
+00:00:04,480 --> 00:00:05,740
+and today's Tides.
+
+3
+00:00:06,189 --> 00:00:08,721
+It slides out from the right edge, on every page,
+
+4
+00:00:08,741 --> 00:00:11,332
+so the page you're working on stays in view.
+
+5
+00:00:15,662 --> 00:00:17,861
+Ask anything in your own words.
+
+6
+00:00:17,911 --> 00:00:21,453
+Here: how do I find coins that are dipping inside an uptrend?
+
+7
+00:00:23,991 --> 00:00:28,686
+It answers from the app's own readings and help, never from guesses about prices.
+
+8
+00:00:46,456 --> 00:00:49,231
+The answer walks you through it, step by step.
+
+9
+00:00:49,281 --> 00:00:52,397
+It points to the right place, and the right training video.
+
+10
+00:00:52,838 --> 00:00:56,381
+You can also paste a screenshot, and ask what you're looking at.
+
+11
+00:00:56,835 --> 00:00:58,884
+Close it with the same handle.
+
+12
+00:00:58,934 --> 00:01:01,666
+The conversation is kept for when you come back.

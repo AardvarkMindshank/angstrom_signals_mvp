@@ -1,0 +1,59 @@
+1
+00:00:00,000 --> 00:00:04,097
+Tides is the big picture: the money flows behind every chart.
+
+2
+00:00:04,147 --> 00:00:07,711
+Rates, the dollar, fear, credit, and where money is rotating.
+
+3
+00:00:08,167 --> 00:00:10,366
+Open Tides on the dashboard.
+
+4
+00:00:10,416 --> 00:00:13,830
+At the top, the Tide: coming in, slack, or going out.
+
+5
+00:00:13,880 --> 00:00:16,591
+And the sea state: how rough the markets are.
+
+6
+00:00:17,034 --> 00:00:19,425
+The winds apply it to each market.
+
+7
+00:00:19,475 --> 00:00:23,188
+A tailwind helps longs there. A headwind works against them.
+
+8
+00:00:23,634 --> 00:00:28,627
+Under it, the Navigator's daily note: today's readings in plain words, facts only.
+
+9
+00:00:29,066 --> 00:00:33,867
+Storm warnings flag the big scheduled releases: the Fed, inflation, and jobs.
+
+10
+00:00:34,314 --> 00:00:38,561
+The waves draw each current over time, with past event days marked.
+
+11
+00:00:39,009 --> 00:00:41,864
+And each current, scored against its own last five years,
+
+12
+00:00:41,884 --> 00:00:43,597
+with which way it's pulling.
+
+13
+00:00:44,053 --> 00:00:48,876
+Today's AI Passage Plan applies all of this to your own assets and funnels.
+
+14
+00:00:48,926 --> 00:00:51,274
+One plan a day, kept in your logbook.
+
+15
+00:00:51,718 --> 00:00:55,709
+And you can add your own take: agree, disagree, and a short comment.

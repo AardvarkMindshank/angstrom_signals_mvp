@@ -1,0 +1,47 @@
+1
+00:00:00,000 --> 00:00:05,313
+MarketNavi has a community alongside: a live stream of social signals, and chat.
+
+2
+00:00:05,768 --> 00:00:08,244
+The arrow on the right edge opens it.
+
+3
+00:00:08,294 --> 00:00:10,983
+Other members' posts are blurred in this video.
+
+4
+00:00:11,455 --> 00:00:14,743
+The stream collects everyone's takes on assets and markets:
+
+5
+00:00:14,763 --> 00:00:18,987
+agreeing or disagreeing with the AI's sentiment, with a short comment.
+
+6
+00:00:19,446 --> 00:00:23,693
+Filter it by positive, negative or mixed, by asset, or by person.
+
+7
+00:00:25,543 --> 00:00:27,336
+Below it is the chat.
+
+8
+00:00:27,386 --> 00:00:31,676
+Talk to everyone, to one of your communities, or privately to one person.
+
+9
+00:00:32,124 --> 00:00:36,051
+Write up to a hundred and sixty characters, add a face, and post.
+
+10
+00:00:36,101 --> 00:00:39,942
+Keep it friendly: no promoting, and no financial advice.
+
+11
+00:00:40,390 --> 00:00:43,186
+Pin the panel to keep it open beside the dashboard,
+
+12
+00:00:43,206 --> 00:00:45,383
+or pop it out into its own window.

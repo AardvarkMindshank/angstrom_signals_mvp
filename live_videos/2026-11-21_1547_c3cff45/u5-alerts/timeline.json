@@ -1,0 +1,41 @@
+{
+ "steps": [
+  {
+   "id": "idea",
+   "start": 23.481,
+   "say": "Alerts tell you when something you care about changes: a reading, a scan, or a funnel."
+  },
+  {
+   "id": "open",
+   "start": 28.94,
+   "say": "Open Notifications in the sidebar. | The Alert Feed lists every alert, newest first."
+  },
+  {
+   "id": "rules",
+   "start": 35.702,
+   "say": "Configure Alert Rules sets what alerts you. | Trend alerts are on to start: when a reading crosses a colour border, and holds at the next close."
+  },
+  {
+   "id": "emails",
+   "start": 44.451,
+   "say": "Choose how alerts reach you: instant emails, a daily summary at your chosen hour, or both."
+  },
+  {
+   "id": "push",
+   "start": 50.419,
+   "say": "Phone and desktop notifications can pop up too. Turn them on for each device."
+  },
+  {
+   "id": "tick",
+   "start": 55.832,
+   "say": "Then tick that step on the getting-started checklist."
+  },
+  {
+   "id": "others",
+   "start": 60.001,
+   "say": "Your Prism scans and funnels have their own alert settings, right on the scan or funnel."
+  }
+ ],
+ "end": 67.074,
+ "trim": 23.481
+}

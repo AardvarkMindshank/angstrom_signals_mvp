@@ -1,0 +1,127 @@
+1
+00:00:00,000 --> 00:00:03,649
+MarketNavi helps you navigate the crypto and stock markets.
+
+2
+00:00:03,699 --> 00:00:07,797
+Clear readings, AI guidance and alerts, with a community alongside.
+
+3
+00:00:07,847 --> 00:00:10,045
+Here's a quick tour of the dashboard.
+
+4
+00:00:10,486 --> 00:00:12,557
+On the left is the sidebar.
+
+5
+00:00:12,607 --> 00:00:16,960
+Your account, your communities, notifications, your watchlists, and settings.
+
+6
+00:00:17,411 --> 00:00:21,978
+A new account gets a short getting-started checklist: five first steps.
+
+7
+00:00:22,028 --> 00:00:24,653
+The day-one videos walk through each of them.
+
+8
+00:00:25,095 --> 00:00:27,656
+Quick Snapshot is the market at a glance.
+
+9
+00:00:27,706 --> 00:00:30,609
+Anything unusual today shows up here first.
+
+10
+00:00:31,051 --> 00:00:35,511
+Tides is the big picture: rates, the dollar, fear, and where money is flowing.
+
+11
+00:00:35,561 --> 00:00:38,336
+It sets the conditions every asset trades in.
+
+12
+00:00:38,783 --> 00:00:42,595
+Market sentiment scores the news headlines, for crypto and for stocks,
+
+13
+00:00:42,615 --> 00:00:45,270
+from minus one hundred to plus one hundred.
+
+14
+00:00:45,714 --> 00:00:48,083
+The signal tables list your watchlist.
+
+15
+00:00:48,133 --> 00:00:51,676
+Each asset gets three readings: Trend, Stretch, and Flow.
+
+16
+00:00:51,726 --> 00:00:54,543
+They describe the market. They don't forecast it.
+
+17
+00:00:54,980 --> 00:00:57,776
+Click a name to bring that asset into focus.
+
+18
+00:00:57,826 --> 00:01:00,345
+The sections below the tables follow it.
+
+19
+00:01:00,780 --> 00:01:04,851
+The interactive chart shows its candles, with the readings drawn over time,
+
+20
+00:01:04,871 --> 00:01:06,371
+and your own drawings.
+
+21
+00:01:08,310 --> 00:01:11,147
+Why these readings explains each score in plain words:
+
+22
+00:01:11,167 --> 00:01:13,901
+what's pushing it, and what's holding it back.
+
+23
+00:01:14,592 --> 00:01:16,983
+Lattice is your research workspace.
+
+24
+00:01:17,033 --> 00:01:20,938
+Signal Groups and Signal Sets turn signals into your own questions.
+
+25
+00:01:20,988 --> 00:01:25,819
+Prism Scan checks them across your assets, and Funnels narrow the whole market down,
+
+26
+00:01:25,839 --> 00:01:27,005
+stage by stage.
+
+27
+00:01:30,530 --> 00:01:33,753
+The AI Navigator slides out from the right edge.
+
+28
+00:01:33,803 --> 00:01:36,364
+Ask it anything about what's on your screen.
+
+29
+00:01:36,816 --> 00:01:42,044
+The arrow above it opens the community: social signals and chat about each asset.
+
+30
+00:01:42,478 --> 00:01:44,101
+That's the dashboard.
+
+31
+00:01:44,151 --> 00:01:45,464
+Next, the day-one guides:
+
+32
+00:01:45,484 --> 00:01:49,357
+add your assets, then build your first Group, Set, scan and funnel.

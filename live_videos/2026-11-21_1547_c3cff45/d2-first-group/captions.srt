@@ -1,0 +1,71 @@
+1
+00:00:00,000 --> 00:00:04,384
+A Signal Group combines a few signals into one reading, with labels you choose,
+
+2
+00:00:04,404 --> 00:00:06,209
+such as Bullish or Bearish.
+
+3
+00:00:06,682 --> 00:00:09,073
+Open Lattice, then Signal Groups.
+
+4
+00:00:09,123 --> 00:00:11,812
+On the left is every signal you can use.
+
+5
+00:00:15,413 --> 00:00:19,169
+Signals come in six families, each answering one question.
+
+6
+00:00:19,219 --> 00:00:21,503
+Trend asks: which way is it going?
+
+7
+00:00:21,553 --> 00:00:23,538
+The icons filter the list.
+
+8
+00:00:23,983 --> 00:00:25,926
+Tap plus to add a signal.
+
+9
+00:00:25,976 --> 00:00:27,534
+Trend direction.
+
+10
+00:00:27,584 --> 00:00:31,639
+Then moving averages, choosing the fifty and two-hundred day version.
+
+11
+00:00:31,689 --> 00:00:33,312
+And the MACD line.
+
+12
+00:00:34,433 --> 00:00:38,893
+Each signal can add to the score, act as a condition, or just give context.
+
+13
+00:00:38,943 --> 00:00:43,574
+Here all three add to one score, from minus one hundred to plus one hundred.
+
+14
+00:00:44,018 --> 00:00:46,302
+Rules turn the score into labels.
+
+15
+00:00:46,352 --> 00:00:50,812
+Bullish when the score is thirty or more. Bearish when it's minus thirty or less.
+
+16
+00:00:50,862 --> 00:00:52,506
+Otherwise, Neutral.
+
+17
+00:00:53,829 --> 00:00:56,198
+Give it a name, My Trend, and save it.
+
+18
+00:01:01,233 --> 00:01:06,248
+My Trend now works anywhere a Group can be used: in Signal Sets, scans and funnels.

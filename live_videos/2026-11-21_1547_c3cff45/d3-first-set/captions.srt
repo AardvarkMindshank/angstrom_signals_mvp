@@ -1,0 +1,51 @@
+1
+00:00:00,000 --> 00:00:03,564
+A Signal Set asks a yes-or-no question about an asset.
+
+2
+00:00:03,614 --> 00:00:06,175
+Ours: is it dipping inside an uptrend?
+
+3
+00:00:06,617 --> 00:00:08,432
+Open Signal Sets.
+
+4
+00:00:08,482 --> 00:00:11,064
+Your Groups and the signals are on the left.
+
+5
+00:00:22,286 --> 00:00:24,677
+Add the Group you just made: My Trend.
+
+6
+00:00:25,328 --> 00:00:30,855
+Then a signal from the Momentum family: R S I, which measures how far price has run.
+
+7
+00:00:31,300 --> 00:00:33,328
+Now the lines that must hold.
+
+8
+00:00:33,378 --> 00:00:35,171
+My Trend is Bullish.
+
+9
+00:00:35,221 --> 00:00:37,740
+And R S I is forty or less: a dip.
+
+10
+00:00:44,188 --> 00:00:46,451
+Every line must hold for a Yes.
+
+11
+00:00:46,501 --> 00:00:50,107
+If a reading is missing, the answer is Unknown, never a guess.
+
+12
+00:00:50,553 --> 00:00:53,114
+Name it, Dip in my uptrend, and save it.
+
+13
+00:00:58,353 --> 00:01:03,197
+Your Set gives Yes, No or Unknown for any asset, with the line that decided it.
