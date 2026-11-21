@@ -3,6 +3,11 @@ name: Beta request check
 # names, emails or keys. Also reads the website's form handler over FTP and reports how it saves (never its secrets).
 on:
   workflow_dispatch:
+    inputs:
+      fix_url:
+        description: "Point the website's beta form at the app database (rewrites only the database address in beta-config.php)"
+        type: boolean
+        default: false
 permissions:
   contents: write
 jobs:
@@ -44,6 +49,28 @@ jobs:
           tar czf php.tgz php && mkdir -p out && openssl enc -aes-256-cbc -pbkdf2 -salt -in php.tgz -out out/php.tgz.enc -pass env:LAB_KEY
           bash .github/scripts/save_to_reports.sh "beta_check/$(date -u +%Y-%m-%d_%H%M)_r${GITHUB_RUN_ID}" out/php.tgz.enc
           rm -rf php php.tgz
+      - name: Fix the database address the website form uses
+        if: inputs.fix_url
+        run: |
+          name=$(echo | openssl s_client -starttls ftp -connect "$FTP_SERVER:21" -servername "$FTP_SERVER" 2>/dev/null \
+                 | openssl x509 -noout -ext subjectAltName 2>/dev/null | tr ',' '\n' | grep -o 'DNS:[^ ]*' | sed 's/DNS://' | grep -v '\*' | head -1)
+          cfg=$(mktemp --suffix=.php)
+          where=""
+          for dir in "" "public_html/"; do
+            curl -sS --ssl-reqd --connect-to "$name:21:$FTP_SERVER:21" --user "$FTP_USERNAME:$FTP_PASSWORD" "ftp://$name/${dir}beta-config.php" -o "$cfg" 2>/dev/null \
+              && [ -s "$cfg" ] && { where="$dir"; break; }
+          done
+          [ -s "$cfg" ] || { echo "Could not read beta-config.php"; exit 1; }
+          CFG="$cfg" php -r '
+            $f = getenv("CFG"); $src = file_get_contents($f);
+            $real = rtrim(getenv("SUPABASE_URL"), "/");
+            $new = preg_replace("#https://[a-z0-9]+\.supabase\.co/?#", $real, $src, -1, $n);
+            if ($n !== 1) { fwrite(STDERR, "Expected one database address, found $n: nothing changed\n"); exit(1); }
+            file_put_contents($f, $new); echo "address replaced\n";'
+          php -l "$cfg" >/dev/null && echo "file still valid PHP"
+          curl -sS --ssl-reqd --connect-to "$name:21:$FTP_SERVER:21" --user "$FTP_USERNAME:$FTP_PASSWORD" -T "$cfg" "ftp://$name/${where}beta-config.php" \
+            && echo "uploaded"
+          rm -f "$cfg"
       - name: Can the website's key still add a request? (a test row the table must refuse, so nothing is saved)
         run: |
           name=$(echo | openssl s_client -starttls ftp -connect "$FTP_SERVER:21" -servername "$FTP_SERVER" 2>/dev/null \
