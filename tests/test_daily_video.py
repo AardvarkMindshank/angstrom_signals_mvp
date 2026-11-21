@@ -113,3 +113,14 @@ def test_the_cat_only_with_a_whole_set(tmp_path):
     days = [datetime(2027, 1, d) for d in range(1, 32)] + [datetime(2027, 2, d) for d in range(1, 29)]
     cats = sum(dv.presenter_for(d, tmp_path) == "cat" for d in days)
     assert 0 < cats < 15                                                  # now and then, not every day
+
+
+def test_pick_look_uses_a_second_look_only_when_it_exists(tmp_path):
+    import random
+    import daily_video as dv
+    (tmp_path / "neptune_welcome_1_1.mp4").write_bytes(b"x")
+    assert dv.pick_look(tmp_path, "neptune_welcome_1_1.mp4", random.Random(1)) == "neptune_welcome_1_1.mp4"
+    (tmp_path / "neptune_welcome_1_2.mp4").write_bytes(b"x")
+    seen = {dv.pick_look(tmp_path, "neptune_welcome_1_1.mp4", random.Random(i)) for i in range(20)}
+    assert seen == {"neptune_welcome_1_1.mp4", "neptune_welcome_1_2.mp4"}
+    assert dv.pick_look(None, "cap_welcome_1_1.mp4", random.Random(1)) == "cap_welcome_1_1.mp4"

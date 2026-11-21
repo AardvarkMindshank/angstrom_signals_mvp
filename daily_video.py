@@ -299,6 +299,15 @@ def captain_clips(weather: str, rng: random.Random, weekend: bool = False, who: 
                   ("signoff", pick("signoff"))]
 
 
+def pick_look(library: Path | None, clip: str, rng: random.Random) -> str:
+    """A second look of the same line, when the library has one: <id>_2.mp4 beside <id>_1.mp4 (for example King
+    Neptune with his trident, kept where it did not glitch). Picks one at random to keep the days fresh."""
+    if library is None or not clip.endswith("_1.mp4"):
+        return clip
+    other = clip[: -len("_1.mp4")] + "_2.mp4"
+    return rng.choice((clip, other)) if (library / other).exists() else clip
+
+
 def timeline(caps: dict, narr: dict) -> list[dict]:
     """Segments [{kind, start, end, clip?, audio?}] from the clip and voice lengths (seconds)."""
     order = [("cap", "welcome"), ("narr", "date"), ("cap", "weather"), ("cap", "sign_story"), ("narr", "story"),
@@ -415,12 +424,14 @@ def build(supabase, library: Path, music_dir: Path, out_dir: Path, models: Path,
         narr[kind] = {"file": str(path), "seconds": speak(text, path, models, crew["voice"], crew["speed"]),
                       "text": text}
     rng = random.Random(day.date().isoformat())
-    caps = {kind: {"file": clip, "seconds": duration(library / clip)}
-            for kind, clip in captain_clips(spec["weather"], rng, weekend, who)}
+    caps = {}
+    for kind, clip in captain_clips(spec["weather"], rng, weekend, who):
+        clip = pick_look(library, clip, rng)
+        caps[kind] = {"file": clip, "seconds": duration(library / clip)}
     guest = guest_for(day, facts, library)
     if guest:
         for kind, line in (("welcome", "welcome"), ("signoff", "signoff")):
-            clip = f"{guest}_{line}_1_1.mp4"
+            clip = pick_look(library, f"{guest}_{line}_1_1.mp4", rng)
             caps[kind] = {"file": clip, "seconds": duration(library / clip), "title": GUESTS[guest]}
         spec["guest"] = {"key": guest, "title": GUESTS[guest]}
     segs = timeline(caps, narr)
