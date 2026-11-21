@@ -32,7 +32,24 @@ def _client():
     import run_alerts
 
     url, key = run_alerts.load_credentials()
-    return create_client(url, key), url
+    db = create_client(url, key)
+    ensure_bucket(db)
+    return db, url
+
+
+def ensure_bucket(db) -> None:
+    """The public "briefings" storage bucket (sql/2026-11-20_briefings.sql), made here if it is missing so the
+    episodes always have somewhere to go. Needs the service key; quietly does nothing without it."""
+    opts = {"public": True, "file_size_limit": 10485760,
+            "allowed_mime_types": ["audio/mpeg", "text/plain", "application/json", "application/rss+xml"]}
+    try:
+        db.storage.get_bucket(briefing.BUCKET)
+    except Exception:
+        try:
+            db.storage.create_bucket(briefing.BUCKET, options=opts)
+            print("Made the briefings storage bucket.")
+        except Exception as exc:
+            print(f"Could not make the briefings bucket: {type(exc).__name__}")
 
 
 def _prefs(db) -> list[dict]:
