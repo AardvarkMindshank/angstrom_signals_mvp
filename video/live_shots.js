@@ -154,6 +154,23 @@ const OUT = process.argv[2] || "out/shots";
     console.log("chart_keep: after reload " + after + (after === chose ? " (kept)" : " (NOT KEPT)"));
     await toTop(s); await shot("chart_keep");
   });
+  // Layout check: how the box beside the Tides note sits in its column (testids and heights only, no content).
+  await step("dom", async () => {
+    const s = await expand("Tides"); await settle(2500);
+    const out = await page.evaluate(() => {
+      const box = document.querySelector("[class*='_take_box']");
+      if (!box) return "no take box";
+      const col = box.closest("[data-testid='stColumn']");
+      const row = col && col.parentElement;
+      const desc = (n) => `${n.getAttribute("data-testid") || n.tagName}${[...n.classList].filter((c) => c.startsWith("st-key")).map((c) => "." + c).join("")} h=${Math.round(n.getBoundingClientRect().height)}`;
+      const lines = [];
+      let n = box; while (n && n !== row) { lines.push("up: " + desc(n) + " flex=" + getComputedStyle(n).flex + " align=" + getComputedStyle(n).alignSelf); n = n.parentElement; }
+      if (row) { lines.push("row: " + desc(row) + " align-items=" + getComputedStyle(row).alignItems);
+        [...row.children].forEach((c) => { lines.push(" col: " + desc(c)); [...(c.firstElementChild || c).children].forEach((k) => lines.push("   child: " + desc(k))); }); }
+      return lines.join("\n");
+    });
+    console.log(out);
+  });
   await step("navigator", async () => {
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.locator("button.ai-edge").first().click();
