@@ -1,0 +1,71 @@
+1
+00:00:00,000 --> 00:00:02,903
+A Signal Set turns readings into a decision:
+
+2
+00:00:02,953 --> 00:00:05,386
+Yes, No, or Unknown, with the reason.
+
+3
+00:00:05,816 --> 00:00:09,679
+Here's a setup many traders look for: a pullback in an uptrend.
+
+4
+00:00:09,729 --> 00:00:12,973
+The main trend is up, but price has dipped in the short term.
+
+5
+00:00:13,416 --> 00:00:16,404
+Add the My Trend Group we built in the last video.
+
+6
+00:00:16,861 --> 00:00:19,465
+Add a single signal too: Stochastic,
+
+7
+00:00:19,515 --> 00:00:22,707
+which shows where the latest close sits in its recent range,
+
+8
+00:00:22,727 --> 00:00:25,490
+from zero at the low to a hundred at the high.
+
+9
+00:00:46,566 --> 00:00:49,917
+Now the decision. Line one: My Trend is Bullish.
+
+10
+00:00:49,967 --> 00:00:53,531
+Line two: Stochastic is at most thirty, a short-term dip.
+
+11
+00:01:05,239 --> 00:01:07,544
+Both lines must hold for a Yes.
+
+12
+00:01:07,594 --> 00:01:10,668
+For more flexible rules, you can add "any of" boxes.
+
+13
+00:01:11,097 --> 00:01:14,896
+Yes means every line holds. No means at least one fails.
+
+14
+00:01:14,946 --> 00:01:19,128
+Unknown means something needed is missing, and Lattice never fills it in.
+
+15
+00:01:19,564 --> 00:01:23,299
+The description reads your rule back in plain words. Save it,
+
+16
+00:01:23,349 --> 00:01:25,483
+and it's ready to scan in Prism.
+
+17
+00:01:28,525 --> 00:01:32,985
+Why it helps: instead of flicking through charts looking for dips in strong trends,
+
+18
+00:01:33,035 --> 00:01:36,578
+you get a clear Yes or No for every asset, with its reason.

@@ -1,0 +1,99 @@
+1
+00:00:00,000 --> 00:00:03,002
+MarketNavi comes with a library of Groups and Sets,
+
+2
+00:00:03,022 --> 00:00:05,633
+built around common trading situations.
+
+3
+00:00:05,683 --> 00:00:08,671
+In Prism, open Provided by MarketNavi.
+
+4
+00:00:50,547 --> 00:00:53,450
+Each one shows small icons for what it looks at.
+
+5
+00:00:53,500 --> 00:00:57,277
+Here: volume, and structure, the support and resistance levels.
+
+6
+00:00:57,714 --> 00:01:01,321
+Underneath, one line says what it describes, in plain words.
+
+7
+00:01:01,762 --> 00:01:03,641
+Tap more for three parts:
+
+8
+00:01:03,691 --> 00:01:05,143
+what it measures,
+
+9
+00:01:05,193 --> 00:01:06,986
+why traders watch it,
+
+10
+00:01:07,036 --> 00:01:08,808
+and what it doesn't prove.
+
+11
+00:01:09,244 --> 00:01:11,827
+The last icon is the evidence mark.
+
+12
+00:01:11,877 --> 00:01:14,310
+A microscope means not yet studied.
+
+13
+00:01:14,360 --> 00:01:17,945
+A balance means it was studied, and showed no clear difference.
+
+14
+00:01:17,995 --> 00:01:20,343
+The next two videos explain both.
+
+15
+00:01:20,775 --> 00:01:24,083
+To find one quickly, tap an icon in the filter row.
+
+16
+00:01:24,133 --> 00:01:26,886
+Here, only the Sets that look at volatility.
+
+17
+00:01:27,331 --> 00:01:32,004
+Tap plus, and a provided Set becomes one of your Prism scans, ready to run.
+
+18
+00:01:32,449 --> 00:01:35,864
+Every provided Set is built from the same blocks you use.
+
+19
+00:01:35,914 --> 00:01:38,582
+Look inside shows them, in plain words.
+
+20
+00:01:38,632 --> 00:01:41,189
+Make my own copy opens it in Signal Sets,
+
+21
+00:01:41,209 --> 00:01:44,841
+to change and save as yours; its study comes with it.
+
+22
+00:02:03,097 --> 00:02:06,832
+Signal Groups and Signal Sets have the same library at the top.
+
+23
+00:02:06,882 --> 00:02:11,000
+And the Start from list offers them too, after New, and before your own.
+
+24
+00:02:11,894 --> 00:02:15,373
+Once you know them, one setting hides everything provided.
+
+25
+00:02:15,423 --> 00:02:17,792
+Descriptive readings, not advice.
