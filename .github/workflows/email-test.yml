@@ -1,0 +1,33 @@
+name: Email test
+# Sends one test email in the app's own style through Resend, from RESEND_FROM, to check the sender and the look.
+on:
+  workflow_dispatch:
+    inputs:
+      to:
+        description: "Who gets the test"
+        default: "angus@marketnavi.ai"
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    env:
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      RESEND_FROM: ${{ secrets.RESEND_FROM }}
+      TO: ${{ inputs.to }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -q -r requirements.txt
+      - name: Send
+        run: |
+          python - <<'PY'
+          import os, beta_worker
+          from email_brand import render_email
+          page, plain = render_email("Test: MarketNavi email", [
+              "This is a test from MarketNavi, checking the new sender address and how emails look after the move.",
+              "Alerts, the daily summary and beta emails all come from this address now."],
+              button=("Open MarketNavi", "https://app.marketnavi.ai"), tone="up", preheader="A test of the new sender.")
+          sender = os.environ.get("RESEND_FROM", "")
+          print("sender domain:", sender.split("@")[-1].rstrip(">") if "@" in sender else "(not set)")
+          print("sent:", beta_worker._send_resend(os.environ["TO"], "Test: MarketNavi email", page, plain))
+          PY
