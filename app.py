@@ -398,6 +398,8 @@ export default function(component) {
       "html{--ang-surface:var(--ang-card-day,#ffffff);--ang-field:var(--ang-field-day,#f1f0ee);--ang-button:var(--ang-button-day,#ffffff);--ang-chart:var(--ang-chart-day,#ffffff);--ang-border:var(--ang-border-day,#e5e7eb);--ang-text:#111827;--ang-muted:#6b7280;--ang-soft:#374151;--ang-track:#e5e7eb;--ang-line:var(--ang-border);--ang-select:#e5e7eb;--ang-select-text:#111827;--ang-page:var(--ang-page-day,#d6e8f8);--ang-heading:var(--ang-heading-day,#ffffff);--ang-section:var(--ang-section-day,#ffffff);--ang-hover:var(--ang-hover-day,#f3f4f6);--ang-side:var(--ang-side-day,#ffffff);--ang-social:var(--ang-social-day,#ffffff);}",
       "html.angstrom-night{--ang-surface:var(--ang-card-night,#262730);--ang-field:var(--ang-field-night,#31333f);--ang-button:var(--ang-button-night,#31333f);--ang-chart:var(--ang-chart-night,#262730);--ang-border:var(--ang-border-night,#000000);--ang-text:#f3f4f6;--ang-muted:#9ca3af;--ang-soft:#d1d5db;--ang-track:#3f4654;--ang-line:var(--ang-border);--ang-select:#3a4050;--ang-select-text:#f9fafb;--ang-page:var(--ang-page-night,#0e1117);--ang-heading:var(--ang-heading-night,#262730);--ang-section:var(--ang-section-night,#262730);--ang-hover:var(--ang-hover-night,#31333f);--ang-side:var(--ang-side-night,#16181f);--ang-social:var(--ang-social-night,#1c1f27);}",
       ".ang-card{background:var(--ang-surface);color:var(--ang-text);border:1px solid var(--ang-border);border-radius:10px;padding:12px 16px;}",
+      // The two briefing boxes at the top of Quick Snapshot look like the market cards under them.
+      ".st-key-snapshot_forecast,.st-key-snapshot_passage{background:var(--ang-surface);color:var(--ang-text);border:1px solid var(--ang-border);border-radius:10px;padding:12px 16px;gap:10px;}",
       ".ang-kicker{font-size:.8rem;color:var(--ang-muted);margin-bottom:4px;}",
       // The social panel floats at the side; its empty holder in Quick Snapshot must not add a row gap.
       "[data-testid='stLayoutWrapper']:has(> .st-key-social_host){margin-top:-1rem;}",
@@ -13350,10 +13352,10 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             # the same layout: the Morning forecast (everyone) and your Passage Plan (Pro and Elite). Side by side on
             # a wide screen, one above the other on a phone.
             left, right = st.columns(2)
-            with left, st.container(border=True, key="snapshot_forecast"):
+            with left, st.container(key="snapshot_forecast"):
                 _forecast_player("snapshot")
-            with right, st.container(border=True, key="snapshot_passage"):
-                _passage_player("snapshot")
+            with right, st.container(key="snapshot_passage"):
+                _passage_player("snapshot", show_button=False)    # it is made each morning; the Logbook keeps the button
 
         try:
             _snapshot_listen()
