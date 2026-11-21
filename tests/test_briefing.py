@@ -9,7 +9,7 @@ def test_settings_defaults_and_cleaning():
     b = briefing.settings_of({"digest_tz": "Asia/Bangkok", "briefing": {"minutes": 7, "sections": ["bogus", "events"],
                                                                          "voice": "nope", "hour": 30}})
     assert b["zone"] == "Asia/Bangkok" and b["minutes"] == 5 and b["sections"] == ["events"]
-    assert b["voice"] == "bf_emma" and b["hour"] == 23 and b["on"] is False
+    assert b["voice"] == "bf_emma" and b["hour"] == 23 and b["on"] is True
 
 
 def test_due_by_hour_in_the_members_zone_and_on_request():
@@ -189,3 +189,26 @@ def test_tag_line_after_the_sign_off():
         "That was your daily market briefing for 20 November 2026, brought to you by Angstrom Signals.")
     assert "Passage Plan briefing for 3 December 2026" in briefing.tag_line("passage", _dt(2026, 12, 3))
     assert briefing.spoken_plan("**⚓ Conditions** - Calm.", _dt(2026, 11, 21)).endswith("Fair winds and following seas.")
+
+
+def test_morning_plans_made_ahead_only_for_active_pro_and_elite(monkeypatch):
+    from datetime import datetime, timezone
+
+    import run_briefings as rb
+    now = datetime(2026, 11, 21, 3, 0, tzinfo=timezone.utc)          # 10:00 in Bangkok, after the 6 am default
+    zone = {"digest_tz": "Asia/Bangkok"}
+    rows = [{"user_id": "pro_active", "settings": dict(zone)}, {"user_id": "pro_away", "settings": dict(zone)},
+            {"user_id": "free_active", "settings": dict(zone)},
+            {"user_id": "free_asked", "settings": {**zone, "briefing": {"token": "t1"}, "briefing_state": {"requested": "2026-11-21T02:00:00+00:00"}}},
+            {"user_id": "pro_off", "settings": {**zone, "briefing": {"on": False}}}]
+    plans = {"pro_active": "pro", "pro_away": "elite", "free_active": "free", "free_asked": "free", "pro_off": "pro"}
+    saved = []
+    monkeypatch.setattr(rb, "_prefs", lambda db: rows)
+    monkeypatch.setattr(rb, "_meta", lambda db, token: {})
+    monkeypatch.setattr(rb, "recently_active", lambda db, now=None: {"pro_active", "free_active", "free_asked", "pro_off"})
+    monkeypatch.setattr(rb, "_save_state", lambda db, uid, s, **ch: saved.append((uid, ch)))
+    monkeypatch.setattr(briefing, "plan_of", lambda db, uid: plans[uid])
+    got = [p["user_id"] for p in rb.due_rows(None, now)]
+    assert got == ["pro_active"]
+    assert any(uid == "pro_active" and ch.get("briefing", {}).get("token") for uid, ch in saved)   # its feed folder
+    assert any(uid == "free_asked" and "Pro and Elite" in ch["briefing_state"]["error"] for uid, ch in saved)

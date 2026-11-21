@@ -68,23 +68,65 @@ def general_due(db, now=None) -> list[tuple[str, str]]:
     return briefing.editions_due(_meta(db, briefing.GENERAL), now or datetime.now(timezone.utc))
 
 
+ACTIVE_DAYS = 7                     # a morning plan is made only for members who used the app this past week
+
+
+def recently_active(db, now=None, days: int = ACTIVE_DAYS) -> set | None:
+    """User ids seen in the app in the last <days> (user_activity, else the last sign-in). None when neither can be
+    read, so nobody is left out by mistake."""
+    now = now or datetime.now(timezone.utc)
+    since = (now - timedelta(days=days)).isoformat()
+    try:
+        rows = db.table("user_activity").select("user_id").gte("last_seen_at", since).execute().data or []
+        return {r["user_id"] for r in rows}
+    except Exception:
+        pass
+    try:
+        out, page = set(), 1
+        while True:
+            users = db.auth.admin.list_users(page=page, per_page=1000) or []
+            for u in users:
+                seen = getattr(u, "last_sign_in_at", None)
+                seen = seen.isoformat() if hasattr(seen, "isoformat") else str(seen or "")
+                if seen and seen >= since[:19]:
+                    out.add(str(u.id))
+            if len(users) < 1000:
+                return out
+            page += 1
+    except Exception:
+        return None
+
+
 def due_rows(db, now=None) -> list[dict]:
     """The members whose briefing should be made now. The settings say so (briefing.due); the bucket's own record
     (episodes.json: the days made and when) is the final word, as the app may save an older copy of the settings
     over the worker's note."""
     now = now or datetime.now(timezone.utc)
     out = []
+    active = None
     for p in _prefs(db):
         settings = p.get("settings") if isinstance(p.get("settings"), dict) else {}
         if not briefing.due(settings, now):
             continue
         b = briefing.settings_of(settings)
-        if not b.get("token"):
-            continue                                   # the app makes the token when the briefing is set up
-        meta = _meta(db, b["token"])
-        made = max((m.get("made_at") or "" for m in meta.values() if isinstance(m, dict)), default="")
         state = settings.get("briefing_state") if isinstance(settings.get("briefing_state"), dict) else {}
         asked = str(state.get("requested") or "")
+        if not asked:
+            # The morning plan made ahead: only for Pro and Elite members who used the app this past week.
+            if active is None:
+                active = recently_active(db, now)
+                active = active if active is not None else {q["user_id"] for q in _prefs(db)}
+            if p["user_id"] not in active or not briefing.personal_allowed(briefing.plan_of(db, p["user_id"])):
+                continue
+        if not b.get("token") and not asked:
+            b["token"] = briefing.new_token()          # first morning plan: the member's private folder and feed
+            _save_state(db, p["user_id"], settings, briefing={"token": b["token"]})
+            settings = {**settings, "briefing": {**(settings.get("briefing") or {}), "token": b["token"]}}
+            p = {**p, "settings": settings}
+        if not b.get("token"):
+            continue                                   # a button press: the app makes the token first
+        meta = _meta(db, b["token"])
+        made = max((m.get("made_at") or "" for m in meta.values() if isinstance(m, dict)), default="")
         today = briefing.local_now(b["zone"], now).date().isoformat()
         if (asked and asked > made) or (b["on"] and today not in meta
                                         and briefing.local_now(b["zone"], now).hour >= b["hour"]):

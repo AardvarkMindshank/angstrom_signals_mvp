@@ -37,12 +37,14 @@ LENGTHS = (2, 3, 4, 5)                       # minutes
 WORDS_PER_MINUTE = 150
 VOICES = {"bf_emma": "Emma (UK)", "bm_george": "George (UK)", "af_heart": "Heart (US)", "am_michael": "Michael (US)"}
 MAX_ASSETS = 12
-KEEP_EPISODES = 14                           # in the feed and the bucket
+KEEP_EPISODES = 7                            # a week, in the feed and the bucket (21 Nov 2026)
 DEFAULT_HOUR = 6
 
 
 def defaults(zone: str = "UTC") -> dict:
-    return {"on": False, "hour": DEFAULT_HOUR, "zone": zone or "UTC", "minutes": 3, "sections": list(SECTIONS),
+    # On unless the member turns it off (21 Nov 2026): made ready each morning for Pro and Elite (the worker checks
+    # the plan and that the member has used the app in the last week).
+    return {"on": True, "hour": DEFAULT_HOUR, "zone": zone or "UTC", "minutes": 3, "sections": list(SECTIONS),
             "assets": [], "voice": "bf_emma", "email": False, "token": ""}
 
 
@@ -271,7 +273,7 @@ EDITIONS = {
     "west": {"name": "Americas edition", "at": (10, 30), "zone": "America/New_York"},
 }
 EDITION_WINDOW_HOURS = 8                    # a missed edition is still made this long after its time, then skipped
-KEEP_GENERAL = 28                           # two weeks of both editions
+KEEP_GENERAL = 14                           # a week of both editions (21 Nov 2026)
 GENERAL_SECTIONS = ("markets", "key_markets", "cryptos", "tides", "events")
 GENERAL_SECTION_NAMES = {"markets": "the markets' mood", "key_markets": "the main markets",
                          "cryptos": "the top five coins", "tides": "the Tide", "events": "the week's events"}
