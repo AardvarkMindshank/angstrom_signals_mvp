@@ -5,6 +5,9 @@ name: Deploy MarketNavi website
 # their links and addresses at marketnavi.ai.
 # Secrets: FTP_SERVER, MARKETNAVI_FTP_USERNAME, MARKETNAVI_FTP_PASSWORD (and FTP_USERNAME, FTP_PASSWORD for the copy).
 on:
+  push:
+    branches: [main]
+    paths: ["website/**"]
   workflow_dispatch:
     inputs:
       copy_forms:

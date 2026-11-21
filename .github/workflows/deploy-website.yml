@@ -1,10 +1,9 @@
 name: Deploy website
 # Copies the website/ folder to angstromsignals.com on HostGator by FTP. The FTP account only reaches the website folder.
 # Secrets (set in GitHub, never in code): FTP_SERVER, FTP_USERNAME, FTP_PASSWORD.
+# Since the move to MarketNavi (21 Nov 2026) website/ is the marketnavi.ai site (deploy-marketnavi.yml, which runs on
+# each push). This job is by hand only, until angstromsignals.com gets its own company page.
 on:
-  push:
-    branches: [main]
-    paths: ["website/**"]
   workflow_dispatch:
     inputs:
       dry_run:
