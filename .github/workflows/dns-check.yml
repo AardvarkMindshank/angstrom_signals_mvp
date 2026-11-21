@@ -19,6 +19,8 @@ jobs:
               r=$(dig +short "$d" $t @1.1.1.1 | tr '\n' ' ')
               [ -n "$r" ] && echo "  $t: $r"
             done
+            auth=$(dig +short "$d" CNAME @hgns1.hostgator.com | tr '\n' ' ')$(dig +short "$d" A @hgns1.hostgator.com | tr '\n' ' ')
+            echo "  at HostGator itself: ${auth:-nothing}"
             code=$(curl -s -o /dev/null -w "%{http_code} -> %{redirect_url}" --max-time 15 "https://$d/" || echo "no https")
             echo "  https: $code"
           done
