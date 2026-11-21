@@ -215,3 +215,8 @@ Every up/down colour in the video must say good (green) or bad (red) for that me
 a rising fear index (VIX) is red. Done for the currents tiles (daily_video.INVERSE_WORDS, forecast.html cls()); check
 any new tile against this. Still to do before publishing: the opening and closing sequence with the new brand once
 the domain is registered, trimming to 90 seconds, and the daily schedule with an emailed copy to post.
+
+### Navigator clips: hands clip through the wheel (21 Nov 2026)
+- In the Navigator's clips (white uniform, mate_b_1) her hands go through the ship's wheel as she turns it. Kept for
+  now (decided 21 Nov 2026). When redone: start from a picture with her hands off the wheel (or the wheel out of frame),
+  the way King Neptune's trident was taken out, then run her 26 lines again (about $5 on the standard model).
