@@ -220,3 +220,8 @@ the domain is registered, trimming to 90 seconds, and the daily schedule with an
 - In the Navigator's clips (white uniform, mate_b_1) her hands go through the ship's wheel as she turns it. Kept for
   now (decided 21 Nov 2026). When redone: start from a picture with her hands off the wheel (or the wheel out of frame),
   the way King Neptune's trident was taken out, then run her 26 lines again (about $5 on the standard model).
+
+### Daily video: intro and outro after the rebrand (21 Nov 2026)
+- After the MarketNavi migration: a short opening and closing sequence with the new name, logo and copyright line
+  (brand.py holds the name and logos; brand.SHOW_IN_VIDEO switches the branding on). Then the YouTube upload (wide
+  as a video, tall as a Short) and the app playing from YouTube, keeping only the newest copy in our storage.
