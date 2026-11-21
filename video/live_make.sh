@@ -2,7 +2,7 @@
 # Records every video named in video/live_queue.txt from the live site, signed in as the demo account, into
 # out/video/<name>/ (voice, recording, cards, final video.mp4). One video failing does not stop the others.
 set -uo pipefail
-URL="${APP_URL:-https://app.angstromsignals.com/}"
+URL="${APP_URL:-https://app.marketnavi.ai/}"
 failed=""
 list="${QUEUE:-$(grep -v '^#' video/live_queue.txt | grep -v '^\s*$')}"
 for slug in $list; do

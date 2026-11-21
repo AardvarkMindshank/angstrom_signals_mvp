@@ -1,4 +1,4 @@
-"""The training videos page: angstromsignals.com/videos/training/ (index.html in that folder).
+"""The MarketNavi training videos page: angstromsignals.com/videos/training/ (index.html in that folder).
 
 Not linked from the website's menus, and asks search engines not to list it: it is for beta testers, who get the
 address directly. Built from training_videos.SERIES (order, titles, lengths) and video/publish.txt (the recording
@@ -39,7 +39,7 @@ DESCRIPTIONS = {
     "07-visualize-history": "What a Set said on every past day, as coloured bands behind the price.",
     "08-what-followed": "When a Set turns Yes, does anything different tend to happen next? How the study works, "
                         "what its verdicts mean, and the coins, equities, periods and asset-by-asset breakdowns.",
-    "a1-angstrom-assistant": "Ask the ✨ Assistant where things are and how to use them, get step-by-step help "
+    "a1-angstrom-assistant": "Ask the ✨ AI Navigator where things are and how to use them, get step-by-step help "
                              "testing an idea, and paste a screenshot to ask what you're looking at.",
 }
 
@@ -110,7 +110,7 @@ footer{{margin-top:40px;color:var(--muted);font-size:.85rem}}
 </style></head>
 <body><main>
 <header><picture><source srcset="logo-dark.png" media="(prefers-color-scheme: dark)"><img src="logo.png" alt="">
-</picture><span class="brand">angstrom signals</span></header>
+</picture><span class="brand">MarketNavi</span></header>
 <p class="lead">Training videos for the Lattice research workspace. Each opens in your browser; captions are
 part of the picture.</p>
 {''.join(sections)}

@@ -1,5 +1,5 @@
-"""Opening and closing cards for training videos, in the style of the sign-in page: the logo, "angstrom signals"
-and the tagline on white. Writes out/video/intro.png and outro.png (1280 x 720)."""
+"""Opening and closing cards for training videos, in the style of the sign-in page: the whole MarketNavi logo (name and
+"AI-powered market navigation") on white. Writes out/video/intro.png and outro.png (1280 x 720)."""
 
 import json
 import os
@@ -13,11 +13,15 @@ ROOT = Path(__file__).resolve().parent.parent
 FONTS = Path("/usr/share/fonts/truetype/dejavu")
 NAVY, GREEN, GREY = (11, 45, 107), (22, 163, 74), (95, 102, 115)
 W, H = 1280, 720
-WEBSITE, EMAIL = "angstromsignals.com", "info@marketnavi.ai"
-COPYRIGHT_HOLDER = "MarketNavi"      # change to the legal entity's name once it exists
+WEBSITE, EMAIL = "marketnavi.ai", "info@marketnavi.ai"
+COPYRIGHT_LINE = "© {year} Angstrom Signals. MarketNavi is a product of Angstrom Signals."
+LOGO = ROOT / "assets" / "brand" / "full-light-tight.png"        # the whole logo, with its name and tagline
+BOLD = ROOT / "assets" / "brand" / "Montserrat-Bold.ttf"
 
 
 def font(size, bold=False):
+    if bold and BOLD.exists():
+        return ImageFont.truetype(str(BOLD), size)
     return ImageFont.truetype(str(FONTS / ("DejaVuSans-Bold.ttf" if bold else "DejaVuSans.ttf")), size)
 
 
@@ -28,7 +32,7 @@ def centred(draw, y, text, f, fill):
 
 def card(lines, logo_h) -> Image.Image:
     im = Image.new("RGB", (W, H), "white")
-    logo = Image.open(ROOT / "assets" / "logo-light.png").convert("RGBA")
+    logo = Image.open(LOGO).convert("RGBA")
     logo = logo.resize((round(logo.width * logo_h / logo.height), logo_h), Image.LANCZOS)
     block = logo_h + 28 + sum(gap + size for _, size, _, _, gap in lines)
     y = (H - block) // 2
@@ -44,19 +48,15 @@ def card(lines, logo_h) -> Image.Image:
 
 def main(out: Path) -> None:
     script = json.loads(Path(os.environ.get("SCRIPT", ROOT / "video" / "series" / "05-prism-scan.json")).read_text())
-    series = [(script["series"], 22, True, GREY, 34)] if script.get("series") else []
-    card([("angstrom signals", 58, True, NAVY, 0),
-          ("Navigate the markets with AI-guided analysis and alerts, with a community alongside.", 22, False, GREY, 14),
-          *series,
-          (script["title"], 34, True, GREEN, 10 if series else 40)], 210).save(out / "intro.png")
+    series = [(script["series"], 22, True, GREY, 30)] if script.get("series") else []
+    card([*series, (script["title"], 36, True, GREEN, 10 if series else 34)], 400).save(out / "intro.png")
     following = [(script["next"], 24, True, GREEN, 30)] if script.get("next") else []
-    outro = card([("angstrom signals", 44, True, NAVY, 0),
-          (WEBSITE, 36, True, NAVY, 34),
+    outro = card([(WEBSITE, 34, True, NAVY, 6),
           (EMAIL, 28, False, GREY, 16),
           ("Descriptive readings, not financial advice.", 18, False, GREY, 36),
-          *following], 160 if not following else 140)
+          *following], 300 if not following else 260)
     d = ImageDraw.Draw(outro)
-    centred(d, H - 34, f"© {date.today().year} {COPYRIGHT_HOLDER}. All rights reserved.", font(14), (140, 146, 156))
+    centred(d, H - 34, COPYRIGHT_LINE.format(year=date.today().year), font(14), (140, 146, 156))
     outro.save(out / "outro.png")
 
 
