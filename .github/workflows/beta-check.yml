@@ -19,5 +19,28 @@ jobs:
       - run: pip install -q requests
       - name: The queue in the database
         run: python .github/scripts/beta_check.py db
+      - name: The website's form code (secrets removed, kept encrypted)
+        env:
+          LAB_KEY: ${{ secrets.AVATAR_LAB_KEY }}
+        run: |
+          # The host's certificate names its own server, not our domain: connect to our address but check the
+          # certificate against the name it carries (verification stays on).
+          name=$(echo | openssl s_client -starttls ftp -connect "$FTP_SERVER:21" -servername "$FTP_SERVER" 2>/dev/null \
+                 | openssl x509 -noout -ext subjectAltName 2>/dev/null | tr ',' '\n' | grep -o 'DNS:[^ ]*' | sed 's/DNS://' | grep -v '\*' | head -1)
+          [ -n "$name" ] || { echo "No certificate name found"; exit 0; }
+          mkdir -p php
+          for f in send-beta-request.php beta-lib.php beta-decision.php; do
+            for dir in "" "public_html/"; do
+              curl -sS --ssl-reqd --connect-to "$name:21:$FTP_SERVER:21" --user "$FTP_USERNAME:$FTP_PASSWORD" \
+                "ftp://$name/$dir$f" -o "php/$f" 2>/dev/null && [ -s "php/$f" ] && { echo "read $dir$f"; break; }
+              rm -f "php/$f"
+            done
+          done
+          ls php | grep -q . || { echo "Could not read the form code"; exit 0; }
+          python .github/scripts/beta_check.py redact php
+          for f in php/*.php; do python .github/scripts/beta_check.py handler "$f"; done
+          tar czf php.tgz php && mkdir -p out && openssl enc -aes-256-cbc -pbkdf2 -salt -in php.tgz -out out/php.tgz.enc -pass env:LAB_KEY
+          bash .github/scripts/save_to_reports.sh "beta_check/$(date -u +%Y-%m-%d_%H%M)_r${GITHUB_RUN_ID}" out/php.tgz.enc
+          rm -rf php php.tgz
       - name: The live form page
         run: python .github/scripts/beta_check.py page

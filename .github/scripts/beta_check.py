@@ -65,5 +65,18 @@ def page() -> None:
         print("  field:", name)
 
 
+def redact(folder: str) -> None:
+    """Blank out anything that looks like a key, token or secret before the code is kept."""
+    from pathlib import Path
+    token = re.compile(r"sb_(?:publishable|secret)_[A-Za-z0-9_\-]+|eyJ[A-Za-z0-9_\-.]{20,}|re_[A-Za-z0-9_]{16,}|[A-Fa-f0-9]{32,}")
+    named = re.compile(r"""((?i:secret|password|passwd|key|token)['"]?\s*(?:=>|=|:)\s*)(['"])[^'"]{8,}\2""")
+    for f in Path(folder).glob("*.php"):
+        src = f.read_text(encoding="utf-8", errors="replace")
+        src, n1 = token.subn("[REMOVED]", src)
+        src, n2 = named.subn(lambda m: m.group(1) + m.group(2) + "[REMOVED]" + m.group(2), src)
+        f.write_text(src)
+        print(f"{f.name}: {n1 + n2} value(s) removed")
+
+
 if __name__ == "__main__":
-    {"db": lambda: db(), "handler": lambda: handler(sys.argv[2]), "page": lambda: page()}[sys.argv[1]]()
+    {"redact": lambda: redact(sys.argv[2]), "db": lambda: db(), "handler": lambda: handler(sys.argv[2]), "page": lambda: page()}[sys.argv[1]]()
