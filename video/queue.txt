@@ -1,2 +1,2 @@
-# Videos recorded when the "video" branch is pushed, one per line (names of files in video/series/, without .json).
-t1-tides
+# MarketNavi re-record, retry
+07-visualize-history
