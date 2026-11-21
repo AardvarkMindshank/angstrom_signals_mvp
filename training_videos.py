@@ -4,7 +4,7 @@ Training videos in Help and guides: a small 🎬 link beside each topic opens th
 go on, or start the series again, and a list of every video in the series. Without the window script (or with
 pop-ups blocked) the link opens the player in a new tab.
 
-The videos live on the website (angstromsignals.com/videos/training/<name>.mp4), made by the pipeline in video/.
+The videos live on the website (marketnavi.ai/videos/training/<name>.mp4), made by the pipeline in video/.
 Captions are part of the picture, so nothing else needs loading. Adding a video: record it, publish it, and add a
 line to SERIES below.
 """
@@ -14,7 +14,7 @@ from __future__ import annotations
 import i18n
 from i18n import t
 
-BASE_URL = "https://angstromsignals.com/videos/training/"   # the videos stay on the company site
+BASE_URL = "https://marketnavi.ai/videos/training/"
 ICON = ":material/smart_display:"
 
 # series key -> (series name, [(video name, title, length)]), in viewing order

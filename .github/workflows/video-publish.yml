@@ -1,12 +1,17 @@
 # Put checked training videos on the website, with nothing to install. Runs when the "video-publish" branch is pushed.
 # video/publish.txt says which, one per line: <folder under videos/ on the reports branch>/<video name>, where the
-# folder may be "latest" for the newest recording run. Each goes to angstromsignals.com/videos/training/<name>.mp4,
+# folder may be "latest" for the newest recording run. Each goes to marketnavi.ai/videos/training/<name>.mp4 (moved 22 Nov 2026),
 # with its captions (.srt) beside it.
 name: video-publish
 on:
   push:
     branches: [video-publish]
   workflow_dispatch:
+    inputs:
+      remove_old:
+        description: "Also remove the old copies from angstromsignals.com/videos/"
+        type: boolean
+        default: false
 permissions:
   contents: read
 jobs:
@@ -17,9 +22,10 @@ jobs:
       - uses: actions/checkout@v7
       - name: Upload to the website
         env:
-          HOSTGATOR_FTP_HOST: ${{ secrets.HOSTGATOR_FTP_HOST }}
-          HOSTGATOR_FTP_USER: ${{ secrets.HOSTGATOR_FTP_USER }}
-          HOSTGATOR_FTP_PASSWORD: ${{ secrets.HOSTGATOR_FTP_PASSWORD }}
+          HOSTGATOR_FTP_HOST: ${{ secrets.FTP_SERVER }}
+          HOSTGATOR_FTP_USER: ${{ secrets.MARKETNAVI_FTP_USERNAME }}
+          HOSTGATOR_FTP_PASSWORD: ${{ secrets.MARKETNAVI_FTP_PASSWORD }}
+          VIDEO_DIR: videos
         run: |
           git fetch -q --depth=1 origin reports
           newest=$(git ls-tree -d --name-only origin/reports videos/ | grep '^videos/20' | tail -1 | sed 's|^videos/||')
@@ -34,17 +40,25 @@ jobs:
             git show "origin/reports:$src/captions.srt" > "out/$slug/captions.srt"
             section=$(python3 -c "import json;print(json.load(open('video/series/$slug.json')).get('section','training'))")
             python3 video/upload.py "out/$slug" "$section" "$slug"
-            url="https://www.angstromsignals.com/videos/$section/$slug.mp4"
+            url="https://marketnavi.ai/videos/$section/$slug.mp4"
             code=$(curl -s -o /dev/null -w "%{http_code}" -I "$url" || true)
             echo "$slug: $url (HTTP $code)" | tee -a "$GITHUB_STEP_SUMMARY"
           done
       - name: The training videos page (not linked from the menus)
         env:
-          HOSTGATOR_FTP_HOST: ${{ secrets.HOSTGATOR_FTP_HOST }}
-          HOSTGATOR_FTP_USER: ${{ secrets.HOSTGATOR_FTP_USER }}
-          HOSTGATOR_FTP_PASSWORD: ${{ secrets.HOSTGATOR_FTP_PASSWORD }}
+          HOSTGATOR_FTP_HOST: ${{ secrets.FTP_SERVER }}
+          HOSTGATOR_FTP_USER: ${{ secrets.MARKETNAVI_FTP_USERNAME }}
+          HOSTGATOR_FTP_PASSWORD: ${{ secrets.MARKETNAVI_FTP_PASSWORD }}
+          VIDEO_DIR: videos
         run: |
           python3 video/series_page.py out/page
           python3 video/upload.py out/page training --page
-          code=$(curl -s -o /dev/null -w "%{http_code}" -I "https://www.angstromsignals.com/videos/training/" || true)
-          echo "Page: https://www.angstromsignals.com/videos/training/ (HTTP $code)" | tee -a "$GITHUB_STEP_SUMMARY"
+          code=$(curl -s -o /dev/null -w "%{http_code}" -I "https://marketnavi.ai/videos/training/" || true)
+          echo "Page: https://marketnavi.ai/videos/training/ (HTTP $code)" | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Remove the old copies from angstromsignals.com
+        if: inputs.remove_old
+        env:
+          HOSTGATOR_FTP_HOST: ${{ secrets.HOSTGATOR_FTP_HOST }}
+          HOSTGATOR_FTP_USER: ${{ secrets.HOSTGATOR_FTP_USER }}
+          HOSTGATOR_FTP_PASSWORD: ${{ secrets.HOSTGATOR_FTP_PASSWORD }}
+        run: python3 video/remove_old_videos.py

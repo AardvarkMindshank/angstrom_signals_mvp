@@ -1,4 +1,4 @@
-"""The MarketNavi training videos page: angstromsignals.com/videos/training/ (index.html in that folder).
+"""The MarketNavi training videos page: marketnavi.ai/videos/training/ (index.html in that folder).
 
 Not linked from the website's menus, and asks search engines not to list it: it is for beta testers, who get the
 address directly. Built from training_videos.SERIES (order, titles, lengths) and video/publish.txt (the recording

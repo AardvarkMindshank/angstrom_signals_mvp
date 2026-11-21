@@ -13,7 +13,7 @@ def test_every_video_has_a_script_and_a_web_address():
         for slug, title, length in videos:
             script = json.loads((Path("video/series") / f"{slug}.json").read_text())
             assert script["slug"] == slug
-            assert tv.info(slug)["url"] == f"https://angstromsignals.com/videos/training/{slug}.mp4"
+            assert tv.info(slug)["url"] == f"https://marketnavi.ai/videos/training/{slug}.mp4"
             assert length.count(":") == 1
 
 

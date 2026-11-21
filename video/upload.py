@@ -46,6 +46,13 @@ def main(out: Path, section: str, slug: str) -> int:
         print(f"(The username has {len(user)} characters and {'contains' if '@' in user else 'does not contain'} '@'.)")
         return 1
     ftp.prot_p()                                   # encrypt the file transfers too
+    base = os.environ.get("VIDEO_DIR", "").strip()  # marketnavi.ai: the site's own login, whose home is the site
+    if base:
+        try:
+            ftp.mkd(base)
+        except ftplib.error_perm:
+            pass
+        ftp.cwd(base)
     try:
         ftp.mkd(section)
     except ftplib.error_perm:
