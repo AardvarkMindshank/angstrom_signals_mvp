@@ -13528,12 +13528,13 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             # 🎧 The two spoken briefings first (21 Nov 2026: where a member starts the day), each in its own box with
             # the same layout: the Morning forecast (everyone) and your Passage Plan (Pro and Elite). Side by side on
             # a wide screen, one above the other on a phone.
-            left, right = st.columns(2)
+            # Three boxes the same width side by side (21 Nov 2026), one above the other on a phone.
+            left, middle, right = st.columns(3)
             with left, st.container(key="snapshot_forecast"):
                 _forecast_player("snapshot")
-            with right, st.container(key="snapshot_passage"):
+            with middle, st.container(key="snapshot_passage"):
                 _passage_player("snapshot", show_button=False)    # it is made each morning
-            with st.container(key="snapshot_video"):
+            with right, st.container(key="snapshot_video"):
                 _video_player("snapshot")
 
         try:
