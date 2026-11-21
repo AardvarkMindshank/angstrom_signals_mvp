@@ -1,0 +1,24 @@
+name: DNS check
+# Public DNS records of our domains (nameservers, web, mail, the app), for moving to marketnavi.ai. Public data only.
+on:
+  workflow_dispatch:
+    inputs:
+      domains:
+        description: "Domains to look up (space-separated)"
+        default: "marketnavi.ai www.marketnavi.ai app.marketnavi.ai angstromsignals.com www.angstromsignals.com app.angstromsignals.com"
+jobs:
+  dns:
+    runs-on: ubuntu-latest
+    steps:
+      - run: sudo apt-get install -y -qq dnsutils >/dev/null 2>&1 || true
+      - name: Look up
+        run: |
+          for d in ${{ inputs.domains }}; do
+            echo "== $d"
+            for t in NS A AAAA CNAME MX TXT; do
+              r=$(dig +short "$d" $t @1.1.1.1 | tr '\n' ' ')
+              [ -n "$r" ] && echo "  $t: $r"
+            done
+            code=$(curl -s -o /dev/null -w "%{http_code} -> %{redirect_url}" --max-time 15 "https://$d/" || echo "no https")
+            echo "  https: $code"
+          done
