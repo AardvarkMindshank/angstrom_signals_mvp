@@ -32,17 +32,17 @@ _SPARKLE = ("<svg viewBox='0 0 24 24' width='18' height='18' fill='currentColor'
 CSS = """
 .st-key-ang_ai_panel{display:none !important;}
 #ang-ai-root{position:fixed;inset:0;z-index:10000001;pointer-events:none;}
-#ang-ai-root .ai-edge{position:fixed;top:calc(3rem + env(safe-area-inset-top, 0px));right:0;pointer-events:auto;
+#ang-ai-root .ai-edge{position:fixed;top:calc(3rem + env(safe-area-inset-top, 0px));right:var(--ai-right,0px);pointer-events:auto;
   display:flex;align-items:center;justify-content:center;width:2rem;height:2rem;padding:0;
   border:1px solid rgba(49,51,63,.2);border-right:0;border-radius:.5rem 0 0 .5rem;background:#fff;color:#f5a524;
   cursor:pointer;box-shadow:-1px 1px 4px rgba(0,0,0,.08);transition:right .22s ease,background .15s ease;}
 #ang-ai-root .ai-edge svg{filter:drop-shadow(0 0 2px rgba(245,165,36,.35));}
 #ang-ai-root .ai-edge:hover{background:#f0f2f6;}
-#ang-ai-root .ai-panel{position:absolute;top:0;right:0;height:100%;width:min(var(--ai-width,460px),100vw);display:flex;
+#ang-ai-root .ai-panel{position:absolute;top:0;right:var(--ai-right,0px);height:100%;width:min(var(--ai-width,460px),100vw);display:flex;
   flex-direction:column;background:var(--ang-section,#fff);color:inherit;box-shadow:-12px 0 40px rgba(17,24,39,.18);
-  transform:translateX(100%);transition:transform .22s ease;pointer-events:auto;visibility:hidden;}
+  transform:translateX(calc(100% + var(--ai-right,0px)));transition:transform .22s ease,right .22s ease;pointer-events:auto;visibility:hidden;}
 #ang-ai-root.is-open .ai-panel{transform:none;visibility:visible;}
-#ang-ai-root.is-open .ai-edge{right:min(var(--ai-width,460px),calc(100vw - 2.25rem));}
+#ang-ai-root.is-open .ai-edge{right:calc(var(--ai-right,0px) + min(var(--ai-width,460px),calc(100vw - 2.25rem)));}
 #ang-ai-root .ai-grip{position:absolute;top:0;bottom:0;left:0;width:12px;z-index:3;cursor:col-resize;touch-action:none;
   user-select:none;}
 #ang-ai-root .ai-grip::before{content:'';position:absolute;top:50%;left:3px;width:4px;height:48px;margin-top:-24px;
@@ -64,7 +64,6 @@ html.angstrom-night #ang-ai-root .ai-head .ai-pin.is-on{background:#f3f4f6;color
 #ang-ai-root .ai-head .ai-title svg{color:#f5a524;}
 #ang-ai-root .ai-body{flex:1;min-height:0;position:relative;}
 #ang-ai-root .ai-body iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent;}
-#ang-ai-root.social-open:not(.is-open) .ai-edge{display:none;}
 html.angstrom-night #ang-ai-root .ai-edge{background:#262730;border-color:rgba(250,250,250,.2);}
 html.angstrom-night #ang-ai-root .ai-edge:hover{background:#31333f;}
 @media (max-width: 640px){
@@ -220,8 +219,8 @@ export default function(component) {
     } else if (o.ask) {
       frame.src = address(o.from, o.ask);           // a set request (the Passage Plan) always loads
     }
-    const social = window.socialStreamState;        // one right-edge panel at a time
-    if (social && social.open) {
+    const social = window.socialStreamState;        // a phone or narrow screen: one right-edge panel at a time
+    if (social && social.open && window.innerWidth < 900) {
       social.open = false;
       if (window.renderSocialStream) window.renderSocialStream();
     }
@@ -230,14 +229,25 @@ export default function(component) {
   };
   window.angstromCloseAI = () => { root.classList.remove("is-open"); if (root.__dock) root.__dock(); };
 
-  // Opening social and chat closes the AI panel. The social panel can be rebuilt, so watch whichever is there now.
+  // Stacked like the left side (21 Nov 2026): on a wide screen, with social and chat open, the ✨ handle and panel sit
+  // at the social panel's left edge, so both can be open side by side. On a narrow screen opening one closes the other.
+  const stackRight = () => {
+    const s = document.getElementById("social-stream-root");
+    const panelEl = s && s.querySelector(".panel");
+    const open = s && s.classList.contains("is-open") && window.innerWidth >= 900;
+    root.style.setProperty("--ai-right", (open && panelEl ? Math.round(panelEl.getBoundingClientRect().width) : 0) + "px");
+  };
+  if (!root.__stackTimer) { root.__stackTimer = window.setInterval(stackRight, 400); window.addEventListener("resize", stackRight); }
+  stackRight();
+  // The social panel can be rebuilt, so watch whichever is there now.
   const stream = document.getElementById("social-stream-root");
   if (stream && !stream.__angAiWatch) {
     stream.__angAiWatch = true;
     new MutationObserver(() => {
       const socialOpen = stream.classList.contains("is-open");
-      root.classList.toggle("social-open", socialOpen);          // its handle would sit on the social panel
-      if (socialOpen && root.classList.contains("is-open")) window.angstromCloseAI();
+      root.classList.toggle("social-open", socialOpen);
+      stackRight();
+      if (socialOpen && root.classList.contains("is-open") && window.innerWidth < 900) window.angstromCloseAI();
     }).observe(stream, { attributes: true, attributeFilter: ["class"] });
   }
   root.classList.toggle("social-open", !!(stream && stream.classList.contains("is-open")));

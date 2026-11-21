@@ -436,7 +436,7 @@ export default function(component) {
       ".st-key-sec_lattice_panel [data-testid='stExpanderDetails']{min-height:60vh;}",
       // A pinned right-hand panel (✨ AI Navigator, or social and chat) docks: the page makes room for it and follows
       // its width, instead of sitting under it (ai_panel.py and the social panel set these widths).
-      "[data-testid='stMain']{padding-right:max(var(--ang-dock-ai,0px),var(--ang-dock-social,0px));padding-left:var(--ang-dock-log,0px);transition:padding-right .22s ease,padding-left .22s ease;}",
+      "[data-testid='stMain']{padding-right:calc(var(--ang-dock-ai,0px) + var(--ang-dock-social,0px));padding-left:var(--ang-dock-log,0px);transition:padding-right .22s ease,padding-left .22s ease;}",
       // Plotly's toolbar hints (Zoom, Pan, Reset...) show above the buttons, not under the mouse pointer.
       ".js-plotly-plot .plotly .modebar [data-title]:before,.js-plotly-plot .plotly .modebar [data-title]:after{top:auto !important;bottom:110% !important;}",
       ".js-plotly-plot .plotly .modebar [data-title]:before{border-bottom-color:transparent !important;border-top-color:#69738a !important;margin-bottom:-12px;}",
