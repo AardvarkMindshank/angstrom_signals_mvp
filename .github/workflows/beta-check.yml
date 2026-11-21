@@ -44,5 +44,31 @@ jobs:
           tar czf php.tgz php && mkdir -p out && openssl enc -aes-256-cbc -pbkdf2 -salt -in php.tgz -out out/php.tgz.enc -pass env:LAB_KEY
           bash .github/scripts/save_to_reports.sh "beta_check/$(date -u +%Y-%m-%d_%H%M)_r${GITHUB_RUN_ID}" out/php.tgz.enc
           rm -rf php php.tgz
+      - name: Can the website's key still add a request? (a test row the table must refuse, so nothing is saved)
+        run: |
+          name=$(echo | openssl s_client -starttls ftp -connect "$FTP_SERVER:21" -servername "$FTP_SERVER" 2>/dev/null \
+                 | openssl x509 -noout -ext subjectAltName 2>/dev/null | tr ',' '\n' | grep -o 'DNS:[^ ]*' | sed 's/DNS://' | grep -v '\*' | head -1)
+          cfg=$(mktemp --suffix=.php)
+          curl -sS --ssl-reqd --connect-to "$name:21:$FTP_SERVER:21" --user "$FTP_USERNAME:$FTP_PASSWORD" "ftp://$name/beta-config.php" -o "$cfg" \
+            || curl -sS --ssl-reqd --connect-to "$name:21:$FTP_SERVER:21" --user "$FTP_USERNAME:$FTP_PASSWORD" "ftp://$name/public_html/beta-config.php" -o "$cfg"
+          CFG="$cfg" php -r '
+            require getenv("CFG");
+            $k = SUPABASE_ANON_KEY;
+            echo "key kind: ", (strpos($k, "eyJ") === 0 ? "old anon token" : (strpos($k, "sb_publishable_") === 0 ? "publishable" : "other")), "\n";
+            $h = ["apikey: $k", "Content-Type: application/json", "Prefer: return=minimal"];
+            if (strpos($k, "eyJ") === 0) { $h[] = "Authorization: Bearer $k"; }
+            $row = ["name" => str_repeat("x", 101), "email" => "probe@example.com", "phone" => "+10000000000", "country" => "Test",
+                    "markets" => "Both", "years_trading" => "Under 1 year", "activity" => "Most days", "tools" => "",
+                    "why" => "probe only, refused by the name length check", "request_ref" => bin2hex(random_bytes(16))];
+            $ch = curl_init(rtrim(SUPABASE_URL, "/") . "/rest/v1/beta_requests");
+            curl_setopt_array($ch, [CURLOPT_POST => true, CURLOPT_POSTFIELDS => json_encode($row), CURLOPT_HTTPHEADER => $h,
+                                    CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 20]);
+            $out = curl_exec($ch);
+            echo "HTTP ", curl_getinfo($ch, CURLINFO_HTTP_CODE), "\n";
+            $j = json_decode((string) $out, true);
+            echo "code: ", $j["code"] ?? "-", "\nmessage: ", substr($j["message"] ?? (string) $out, 0, 200), "\nhint: ", substr((string) ($j["hint"] ?? ""), 0, 200), "\n";
+            echo "(23514 = the table refused the long name: everything else is fine)\n";
+          '
+          rm -f "$cfg"
       - name: The live form page
         run: python .github/scripts/beta_check.py page
