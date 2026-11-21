@@ -8,6 +8,9 @@ on:
         description: "Point the website's beta form at the app database (rewrites only the database address in beta-config.php)"
         type: boolean
         default: false
+      add_request:
+        description: "Encrypted request file on the reports branch to save and approve (blank: none)"
+        default: ""
 permissions:
   contents: write
 jobs:
