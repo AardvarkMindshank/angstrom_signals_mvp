@@ -1,0 +1,31 @@
+name: Beta request check
+# Why a website beta request might not reach the admin queue. Prints counts and dates only (this repo is public): no
+# names, emails or keys. Also reads the website's form handler over FTP and reports how it saves (never its secrets).
+on:
+  workflow_dispatch:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      FTP_SERVER: ${{ secrets.FTP_SERVER }}
+      FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -q requests
+      - name: The queue in the database
+        run: python .github/scripts/beta_check.py db
+      - name: The website's form handler
+        run: |
+          curl -sS --ssl-reqd --user "$FTP_USERNAME:$FTP_PASSWORD" "ftp://$FTP_SERVER/send-beta-request.php" -o handler.php \
+            || curl -sS --ftp-ssl --user "$FTP_USERNAME:$FTP_PASSWORD" "ftp://$FTP_SERVER/public_html/send-beta-request.php" -o handler.php \
+            || echo "Could not read the handler over FTP"
+          [ -s handler.php ] && python .github/scripts/beta_check.py handler handler.php
+          rm -f handler.php
+          curl -sS --ssl-reqd --user "$FTP_USERNAME:$FTP_PASSWORD" "ftp://$FTP_SERVER/" --list-only | grep -iE "beta|log|\.php" || true
+      - name: The live form page
+        run: python .github/scripts/beta_check.py page
