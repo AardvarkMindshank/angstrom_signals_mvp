@@ -1,0 +1,107 @@
+1
+00:00:00,000 --> 00:00:03,159
+Most tools start with a signal and ask what followed.
+
+2
+00:00:03,209 --> 00:00:05,215
+Soundings works backwards.
+
+3
+00:00:05,265 --> 00:00:07,067
+It marks every past rise and fall,
+
+4
+00:00:07,087 --> 00:00:10,493
+then looks at what the readings were just before each one.
+
+5
+00:00:10,970 --> 00:00:13,083
+Open Soundings in Lattice.
+
+6
+00:00:13,133 --> 00:00:17,209
+It shows the last checked research run, for crypto or for equities.
+
+7
+00:00:20,186 --> 00:00:21,979
+The chart comes first.
+
+8
+00:00:22,029 --> 00:00:25,743
+Price on top, with a small arrow on each close a rise followed.
+
+9
+00:00:25,793 --> 00:00:27,191
+Below, one row per result:
+
+10
+00:00:27,211 --> 00:00:30,847
+a dot wherever its condition held, coloured when the move followed,
+
+11
+00:00:30,867 --> 00:00:32,258
+grey when it didn't.
+
+12
+00:00:32,705 --> 00:00:35,783
+Point at any day to see its price, whether the move followed,
+
+13
+00:00:35,803 --> 00:00:37,272
+and which rows were on.
+
+14
+00:00:37,322 --> 00:00:38,966
+Scroll to zoom in.
+
+15
+00:00:39,417 --> 00:00:43,237
+Before rises lists what came before rises more often than usual.
+
+16
+00:00:43,287 --> 00:00:45,561
+Each result was found in the search years,
+
+17
+00:00:45,581 --> 00:00:48,558
+then checked on later years the search never saw.
+
+18
+00:00:49,010 --> 00:00:53,619
+Each card shows how often a rise followed, against that coin's usual rate.
+
+19
+00:00:53,669 --> 00:00:56,679
+First in the search years, then in the later years.
+
+20
+00:00:57,133 --> 00:00:59,950
+The verdict says what happened on the later years.
+
+21
+00:01:00,000 --> 00:01:03,863
+Held up. A bigger move either way. Weaker later. Or faded.
+
+22
+00:01:03,913 --> 00:01:07,029
+The failures stay on the page: they're evidence too.
+
+23
+00:01:07,484 --> 00:01:07,998
+Like one?
+
+24
+00:01:08,018 --> 00:01:11,792
+Open it as a Signal Set, then scan your assets with it in Prism,
+
+25
+00:01:11,812 --> 00:01:13,416
+or use it in a funnel.
+
+26
+00:01:13,869 --> 00:01:16,307
+And How this run was done lists the settings:
+
+27
+00:01:16,327 --> 00:01:20,996
+what counts as a rise, the coins, the years, and the rules a result had to pass.

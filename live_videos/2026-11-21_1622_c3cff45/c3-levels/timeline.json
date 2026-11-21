@@ -1,0 +1,46 @@
+{
+ "steps": [
+  {
+   "id": "idea",
+   "start": 99.168,
+   "say": "Some prices matter more than others, because of what traders did there. | The chart can show five kinds of them."
+  },
+  {
+   "id": "open",
+   "start": 105.952,
+   "say": "We're on Bitcoin, with four-hour candles."
+  },
+  {
+   "id": "liq",
+   "start": 108.894,
+   "say": "Liquidation levels estimate where leveraged traders would be forced to close. | Red for longs below the price, green for shorts above. Brighter means more money."
+  },
+  {
+   "id": "fvg",
+   "start": 118.707,
+   "say": "Fair value gaps are price ranges a fast move jumped across. | Green ones were left by rises, red ones by falls. | Each stays shaded until price trades back through it."
+  },
+  {
+   "id": "sp",
+   "start": 134.67,
+   "say": "Single prints, in violet, are prices only one half hour of a day traded through. | Thin areas, which price often comes back to fill."
+  },
+  {
+   "id": "avwap",
+   "start": 150.52,
+   "say": "The anchor tool draws an anchored VWAP. | Tap a candle, such as a swing low, to see the average price paid since then, weighted by volume."
+  },
+  {
+   "id": "vprofile",
+   "start": 159.721,
+   "say": "The volume profile tool: drag across a stretch of the chart. | It shows at which prices most trading happened, the busiest price, and the band holding seventy percent of the volume."
+  },
+  {
+   "id": "tidy",
+   "start": 170.704,
+   "say": "None of these is a forecast. | They show where price has reason to pause or turn, so you can plan around them."
+  }
+ ],
+ "end": 179.15,
+ "trim": 99.168
+}

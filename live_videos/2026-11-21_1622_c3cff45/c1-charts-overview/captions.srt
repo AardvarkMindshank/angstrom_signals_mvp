@@ -1,0 +1,95 @@
+1
+00:00:00,000 --> 00:00:02,412
+MarketNavi has two price charts.
+
+2
+00:00:02,462 --> 00:00:06,346
+The fast chart, built for trading, and the classic chart, the original.
+
+3
+00:00:06,396 --> 00:00:09,107
+Both use the same readings and indicators.
+
+4
+00:00:09,573 --> 00:00:12,092
+Pick one in Settings, under Price chart.
+
+5
+00:00:12,142 --> 00:00:16,303
+TradingView is the fast chart, and it's the one we'll use in this series.
+
+6
+00:00:17,226 --> 00:00:21,985
+Click any asset in the signal tables, and it opens in the Interactive Chart.
+
+7
+00:00:22,438 --> 00:00:25,409
+Choose the candle size, from five minutes to monthly,
+
+8
+00:00:25,429 --> 00:00:27,986
+and how much history the chart opens on.
+
+9
+00:00:28,036 --> 00:00:31,301
+A crossed-out range doesn't work with that candle size.
+
+10
+00:00:38,965 --> 00:00:42,444
+Scroll to zoom in and out, and drag to move back in time.
+
+11
+00:00:42,494 --> 00:00:45,351
+The two buttons at the top right go back to your range,
+
+12
+00:00:45,371 --> 00:00:47,188
+or jump to the newest candle.
+
+13
+00:00:47,637 --> 00:00:49,281
+Point at any candle.
+
+14
+00:00:49,331 --> 00:00:52,548
+The legend at the top shows its open, high, low and close,
+
+15
+00:00:52,568 --> 00:00:55,156
+and the value of every line on the chart.
+
+16
+00:00:55,602 --> 00:00:58,398
+Turn indicators on and off with these pills.
+
+17
+00:00:58,448 --> 00:01:01,991
+Panels such as Stoch RSI open underneath the price.
+
+18
+00:01:02,041 --> 00:01:05,178
+All and Clear, at the end of the row, switch them all at once.
+
+19
+00:01:09,814 --> 00:01:12,994
+Drag the bar under the chart to make it taller or shorter.
+
+20
+00:01:13,044 --> 00:01:15,392
+Your choices are saved to your account.
+
+21
+00:01:15,849 --> 00:01:17,429
+That's the basics.
+
+22
+00:01:17,479 --> 00:01:17,730
+Next:
+
+23
+00:01:17,750 --> 00:01:22,176
+the drawing tools, the price levels traders watch, the signals drawn on the chart,
+
+24
+00:01:22,196 --> 00:01:23,688
+and planning an entry.

@@ -1,0 +1,335 @@
+1
+00:00:00,000 --> 00:00:02,241
+This is the longer look at Soundings.
+
+2
+00:00:02,291 --> 00:00:04,956
+What it's for, how it works, the statistics behind it,
+
+3
+00:00:04,976 --> 00:00:08,309
+and why you can trust what it shows, and where you shouldn't.
+
+4
+00:00:08,906 --> 00:00:13,153
+The usual way is to pick a signal, then check what price did after it.
+
+5
+00:00:13,203 --> 00:00:16,191
+But you only ever test the ideas you already had.
+
+6
+00:00:16,241 --> 00:00:17,614
+Soundings turns it round.
+
+7
+00:00:17,634 --> 00:00:21,725
+It marks every past move first, then looks back at what came before.
+
+8
+00:00:21,775 --> 00:00:24,037
+The data suggests the ideas.
+
+9
+00:00:24,483 --> 00:00:26,511
+First, what counts as a move.
+
+10
+00:00:26,561 --> 00:00:28,723
+A rise means price reaches two typical
+
+11
+00:00:28,743 --> 00:00:31,422
+moves above the close within six daily candles,
+
+12
+00:00:31,442 --> 00:00:34,498
+without first falling one typical move below it.
+
+13
+00:00:34,548 --> 00:00:39,200
+A fall is the mirror image. A candle that touches both counts as neither.
+
+14
+00:00:39,650 --> 00:00:44,835
+A typical move is that coin's own average daily range, over the last twenty candles.
+
+15
+00:00:44,885 --> 00:00:48,705
+So a rise means the same thing for a calm coin and a wild one.
+
+16
+00:00:49,147 --> 00:00:53,031
+Then, at the close before every day, it reads the app's own signals.
+
+17
+00:00:53,081 --> 00:00:57,562
+Trend, stretch, flow, chart patterns, Sonar, market structure, and the Tides.
+
+18
+00:00:57,612 --> 00:01:01,073
+That's a hundred and twenty seven conditions, and pairs of them:
+
+19
+00:01:01,093 --> 00:01:02,862
+over seven thousand in all.
+
+20
+00:01:02,912 --> 00:01:05,640
+Each is replayed exactly as it stood at that close,
+
+21
+00:01:05,660 --> 00:01:08,332
+so nothing can see the move that came after.
+
+22
+00:01:08,803 --> 00:01:11,706
+Each condition is compared with the usual rate.
+
+23
+00:01:11,756 --> 00:01:14,756
+If rises usually follow twenty one percent of closes,
+
+24
+00:01:14,776 --> 00:01:17,207
+and thirty one percent after the condition,
+
+25
+00:01:17,227 --> 00:01:20,034
+that's a lift of about one and a half times.
+
+26
+00:01:20,084 --> 00:01:21,870
+And usual means comparable days:
+
+27
+00:01:21,890 --> 00:01:26,422
+the same coin, the same year, the same side of its two hundred day average.
+
+28
+00:01:26,472 --> 00:01:30,932
+So a bull year, or a coin that only went up, can't make a condition look good.
+
+29
+00:01:31,380 --> 00:01:33,493
+The history is split in three.
+
+30
+00:01:33,543 --> 00:01:37,726
+The search years, to the end of twenty twenty two, where ideas are found.
+
+31
+00:01:37,776 --> 00:01:42,961
+The later years, to October twenty twenty four: a fresh exam the search never saw.
+
+32
+00:01:43,011 --> 00:01:45,904
+And a sealed hold-out from then on, never read at all.
+
+33
+00:01:45,924 --> 00:01:49,029
+It's kept for the final test of a finished strategy.
+
+34
+00:01:49,480 --> 00:01:50,953
+Here's the trap.
+
+35
+00:01:51,003 --> 00:01:54,855
+Test three hundred useless ideas at the usual one in twenty standard,
+
+36
+00:01:54,875 --> 00:01:56,914
+and about fifteen pass by luck.
+
+37
+00:01:56,964 --> 00:01:59,013
+Soundings tries thousands.
+
+38
+00:01:59,063 --> 00:02:01,607
+So it uses the Benjamini Hochberg correction:
+
+39
+00:02:01,627 --> 00:02:04,718
+at most ten percent of what it keeps may be luck.
+
+40
+00:02:04,768 --> 00:02:08,462
+And a result needs at least one and a quarter times the usual rate,
+
+41
+00:02:08,482 --> 00:02:11,276
+on a hundred and fifty days, and eight coins.
+
+42
+00:02:11,738 --> 00:02:13,425
+There's a second trap.
+
+43
+00:02:13,475 --> 00:02:16,527
+Coins move together, and neighbouring days overlap.
+
+44
+00:02:16,577 --> 00:02:21,805
+A hundred coins rising on the same day isn't a hundred separate pieces of evidence.
+
+45
+00:02:21,855 --> 00:02:26,409
+So the test reshuffles whole blocks of calendar days, across all coins at once,
+
+46
+00:02:26,429 --> 00:02:27,829
+thousands of times.
+
+47
+00:02:27,879 --> 00:02:31,017
+The crowding stays in, and nothing is counted twice.
+
+48
+00:02:31,463 --> 00:02:35,283
+For crypto rises, a thousand and four results passed the search.
+
+49
+00:02:35,333 --> 00:02:37,916
+But most are one idea in many forms.
+
+50
+00:02:37,966 --> 00:02:39,622
+So they're grouped into themes,
+
+51
+00:02:39,642 --> 00:02:43,727
+and only the strongest of each theme sits the exam on the later years.
+
+52
+00:02:43,777 --> 00:02:44,952
+Once.
+
+53
+00:02:45,393 --> 00:02:49,042
+Of the twenty theme leaders for crypto rises, three held up.
+
+54
+00:02:49,092 --> 00:02:54,299
+Ten came before more rises and more falls: a bigger move coming, direction unknown.
+
+55
+00:02:54,349 --> 00:02:56,185
+Five were weaker later.
+
+56
+00:02:56,235 --> 00:02:58,242
+And two faded completely.
+
+57
+00:02:58,694 --> 00:03:03,474
+In the app, those verdicts group the cards on the Before rises tab, strongest first.
+
+58
+00:03:04,667 --> 00:03:06,418
+Take one that held up.
+
+59
+00:03:06,468 --> 00:03:11,632
+Price near the top of its Bollinger band, with the two Stoch RSI lines far apart.
+
+60
+00:03:11,682 --> 00:03:15,421
+In the search years, a rise followed thirty one percent of the time,
+
+61
+00:03:15,441 --> 00:03:17,123
+against twenty one usual.
+
+62
+00:03:17,173 --> 00:03:19,890
+On the later years, twenty seven against twenty,
+
+63
+00:03:19,910 --> 00:03:23,574
+and it was higher on seventy one coins out of ninety seven.
+
+64
+00:03:23,624 --> 00:03:27,888
+Smaller on the exam than in the search: that's normal. A real edge shrinks.
+
+65
+00:03:27,908 --> 00:03:29,407
+A lucky one vanishes.
+
+66
+00:03:29,857 --> 00:03:31,864
+So, the integrity checks.
+
+67
+00:03:31,914 --> 00:03:35,053
+The coins include ones that collapsed or stopped trading,
+
+68
+00:03:35,073 --> 00:03:37,312
+so it isn't only today's survivors.
+
+69
+00:03:37,362 --> 00:03:41,929
+Every reading is as it stood at the time, and macro data as first published.
+
+70
+00:03:41,979 --> 00:03:44,711
+Cut points are fixed in advance, never tuned.
+
+71
+00:03:44,761 --> 00:03:48,316
+It's corrected for every try, it must hold across many coins,
+
+72
+00:03:48,336 --> 00:03:50,160
+the hold-out stays sealed,
+
+73
+00:03:50,210 --> 00:03:52,302
+and the failures stay on the page.
+
+74
+00:03:52,745 --> 00:03:54,197
+Now the limits.
+
+75
+00:03:54,247 --> 00:03:57,107
+Even that result means no rise most of the time.
+
+76
+00:03:57,127 --> 00:04:02,227
+A rise followed twenty seven times in a hundred. Seventy three times, it didn't.
+
+77
+00:04:02,277 --> 00:04:06,652
+Costs and slippage aren't included. It's daily candles only, so far.
+
+78
+00:04:06,702 --> 00:04:10,138
+And markets change. Soundings describes the past.
+
+79
+00:04:10,604 --> 00:04:12,867
+You can check any result by eye.
+
+80
+00:04:12,917 --> 00:04:16,128
+The chart puts each row under the price, with the Tide on top,
+
+81
+00:04:16,148 --> 00:04:17,803
+for any coin and any year.
+
+82
+00:04:23,800 --> 00:04:26,319
+So use a result as a starting point.
+
+83
+00:04:26,369 --> 00:04:30,999
+Open it as a Signal Set. Scan for it with Prism. Narrow it in a funnel.
+
+84
+00:04:31,049 --> 00:04:35,339
+Then bring your own judgement: the chart, your risk, your size, and your exit.

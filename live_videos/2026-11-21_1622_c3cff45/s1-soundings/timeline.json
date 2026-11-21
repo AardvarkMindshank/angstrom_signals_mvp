@@ -1,0 +1,51 @@
+{
+ "steps": [
+  {
+   "id": "idea",
+   "start": 27.179,
+   "say": "Most tools start with a signal and ask what followed. | Soundings works backwards. | It marks every past rise and fall, then looks at what the readings were just before each one."
+  },
+  {
+   "id": "open",
+   "start": 38.149,
+   "say": "Open Soundings in Lattice. | It shows the last checked research run, for crypto or for equities."
+  },
+  {
+   "id": "chart",
+   "start": 47.365,
+   "say": "The chart comes first. | Price on top, with a small arrow on each close a rise followed. | Below, one row per result: a dot wherever its condition held, coloured when the move followed, grey when it didn't."
+  },
+  {
+   "id": "hover",
+   "start": 59.884,
+   "say": "Point at any day to see its price, whether the move followed, and which rows were on. | Scroll to zoom in."
+  },
+  {
+   "id": "rises",
+   "start": 66.596,
+   "say": "Before rises lists what came before rises more often than usual. | Each result was found in the search years, then checked on later years the search never saw."
+  },
+  {
+   "id": "card",
+   "start": 76.189,
+   "say": "Each card shows how often a rise followed, against that coin's usual rate. | First in the search years, then in the later years."
+  },
+  {
+   "id": "verdicts",
+   "start": 84.312,
+   "say": "The verdict says what happened on the later years. | Held up. A bigger move either way. Weaker later. Or faded. | The failures stay on the page: they're evidence too."
+  },
+  {
+   "id": "set",
+   "start": 94.663,
+   "say": "Like one? Open it as a Signal Set, then scan your assets with it in Prism, or use it in a funnel."
+  },
+  {
+   "id": "how",
+   "start": 101.048,
+   "say": "And How this run was done lists the settings: what counts as a rise, the coins, the years, and the rules a result had to pass."
+  }
+ ],
+ "end": 110.14,
+ "trim": 27.179
+}
