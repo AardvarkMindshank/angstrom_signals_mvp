@@ -1,5 +1,5 @@
 // Things the training-video actions do on the demo page: move the pointer and press, type, choose, switch section,
-// and draw notes, rings, idea cards and the Angstrom Lattice diagram on top of the page. Notes, cards and the diagram
+// and draw notes, rings, idea cards and the Lattice diagram on top of the page. Notes, cards and the diagram
 // are drawn outside the page's zoom, at real pixels (1280 x 610).
 const DIAGRAM = require("./diagram.js");
 
@@ -69,7 +69,7 @@ module.exports = function makeHelpers(page, url) {
     if (option === null) { await page.keyboard.press("Escape"); await page.waitForTimeout(300); return; }
     await h.press(page.locator('[role="option"]').filter({ hasText: option }).first());
   };
-  // One of the four parts of Angstrom Lattice.
+  // One of the four parts of Lattice.
   h.section = async (name) => {
     await page.evaluate(() => window.scrollTo({ top: 0, behavior: "smooth" }));
     await page.waitForTimeout(500);
@@ -178,7 +178,7 @@ module.exports = function makeHelpers(page, url) {
     }, [kicker, title, lines, foot]);
     await page.waitForTimeout(600);
   };
-  // The Angstrom Lattice diagram (diagram.js): stage = how much is shown, lit = the part to highlight.
+  // The Lattice diagram (diagram.js): stage = how much is shown, lit = the part to highlight.
   h.diagram = async (stage, lit) => {
     await page.evaluate(DIAGRAM.draw, { stage, lit: lit || null });
     await page.waitForTimeout(300);

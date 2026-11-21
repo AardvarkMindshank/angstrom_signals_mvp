@@ -1,4 +1,4 @@
-// The Angstrom Lattice diagram for the training videos, drawn over the page at 1280 x 610 real pixels.
+// The Lattice diagram for the training videos, drawn over the page at 1280 x 610 real pixels.
 // draw({stage, lit}): every part shows in outline from the start; stage 0 = outlines only; 1..5 fill in Signals, Signal Groups, Signal Sets, Prism Scan and Alerts in
 // turn; 6 adds Strategies (coming next); 7 adds the closing line. lit = "signals" | "groups" | "sets" | "prism" |
 // "alerts" highlights one part and dims the rest. Calling it again animates from the current picture.

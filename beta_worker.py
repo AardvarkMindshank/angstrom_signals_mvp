@@ -12,7 +12,7 @@ def _send_resend(to_email: str, subject: str, page: str, plain: str, attachments
     api_key = (os.getenv("RESEND_API_KEY") or "").strip()
     if not api_key or not to_email:
         return False
-    sender = (os.getenv("RESEND_FROM") or "").strip() or "Angstrom Signals <onboarding@resend.dev>"
+    sender = (os.getenv("RESEND_FROM") or "").strip() or "MarketNavi <onboarding@resend.dev>"
     try:
         response = requests.post(
             "https://api.resend.com/emails",
@@ -40,7 +40,7 @@ def send_beta_decision_emails(supabase, send=None, now=None) -> int:
     if send is _send_resend and not (os.getenv("RESEND_API_KEY") or "").strip():
         return 0
     stamp = (now or datetime.now(timezone.utc)).isoformat()
-    app_url = (os.getenv("APP_URL") or "https://app.angstromsignals.com").strip()
+    app_url = (os.getenv("APP_URL") or "https://app.marketnavi.ai").strip()
     try:
         rows = (
             supabase.table("beta_requests")
@@ -104,11 +104,11 @@ def nda_copy_email(full_name: str, version: str, signed_at: str, reference: str,
                  f"The signed copy is attached. Signing reference: {_html.escape(reference)}."]
         subject = f"NDA signed: {' '.join(str(full_name).split())}"
     else:
-        lines = [f"Hi {who.split(' ')[0]}, thank you for signing the Angstrom Signals beta non-disclosure agreement "
+        lines = [f"Hi {who.split(' ')[0]}, thank you for signing the MarketNavi beta non-disclosure agreement "
                  f"(version {_html.escape(version)}) on {when} UTC.",
                  "Your signed copy is attached. Please keep it for your records.",
                  f"Signing reference: {_html.escape(reference)}."]
-        subject = "Your signed Angstrom Signals beta NDA"
+        subject = "Your signed MarketNavi beta NDA"
     page, plain = render_email("NDA signed", lines, tone="info", preheader=subject)
     return subject, page, plain
 

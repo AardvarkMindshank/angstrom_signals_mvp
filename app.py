@@ -92,7 +92,7 @@ def _copyright() -> None:
     st.markdown(
         t("<div style='margin-top:2.5rem;padding-top:1rem;border-top:1px solid #e5e7eb;"
           "text-align:center;color:#6b7280;font-size:0.8rem;'>"
-          "© 2026 Angstrom Signals. All rights reserved."
+          "© 2026 Angstrom Signals. MarketNavi is a product of Angstrom Signals. All rights reserved."
           "</div>"),
         unsafe_allow_html=True,
     )
@@ -284,7 +284,7 @@ def _brand_mark(width: int, *, align: str = "center") -> str:
         "<style>.brand-mark img{display:none}.brand-mark.is-light .logo-light,"
         ".brand-mark.is-dark .logo-dark{display:inline}</style>"
         f"<div class='brand-mark is-{mode}' style='text-align:{align};margin:{margin};line-height:0;'>"
-        f"<img class='logo-light' src='{source(light)}' alt='Angstrom Signals'{light_hidden} "
+        f"<img class='logo-light' src='{source(light)}' alt='MarketNavi'{light_hidden} "
         f"width='{width}' style='width:{width}px;max-width:100%;height:auto;'>"
         f"<img class='logo-dark' src='{source(dark)}' alt=''{dark_hidden} "
         f"width='{width}' style='width:{width}px;max-width:100%;height:auto;'>"
@@ -416,7 +416,7 @@ export default function(component) {
       ".ang-table tbody tr{border-bottom:1px solid var(--ang-line);}",
       ".ang-table tr.ang-row-on{background:var(--ang-select);color:var(--ang-select-text);}",
       ".ang-table [data-sec-folded]{display:none;}",
-      // Angstrom Lattice open: a tab switch redraws it and for a moment it is nearly empty. It sits mid-page now
+      // Lattice open: a tab switch redraws it and for a moment it is nearly empty. It sits mid-page now
       // (under the chart), so a modest floor is enough to keep the page from jumping; a full screen left a gap.
       ".st-key-sec_lattice_panel [data-testid='stExpanderDetails']{min-height:60vh;}",
       // A pinned right-hand panel (✨ AI Navigator, or social and chat) docks: the page makes room for it and follows
@@ -1114,7 +1114,7 @@ export default function(component) {
   window.addEventListener("pageshow", wake);
   window.addEventListener("online", wake);
   window.addEventListener("focus", check);
-  // After an update, a click inside a part that redraws on its own (Angstrom Lattice tabs, for example) is ignored
+  // After an update, a click inside a part that redraws on its own (Lattice tabs, for example) is ignored
   // by the new server until the page reloads. So any click also checks (at most every 3 seconds): an update found
   // then reloads the page at once, instead of leaving the click to do nothing.
   let lastCheck = 0;
@@ -4924,7 +4924,7 @@ import briefing
 import session_guard
 import colour_themes
 
-BETA_REQUEST_URL = "https://angstromsignals.com/beta.html"
+BETA_REQUEST_URL = "https://marketnavi.ai/beta.html"
 
 try:
     from alerts import HELD_TYPES, READING_ALERTS, dismiss_read_alerts, reading_alert_level, reading_alert_on
@@ -5067,11 +5067,11 @@ def _optional_secret(*names: str) -> str:
 
 
 _BARRED_NOTICE = i18n.mark(
-    "This account is barred at this time. You can email report@angstromsignals.com."
+    "This account is barred at this time. You can email support@marketnavi.ai."
 )
 _CLOSED_BETA_NOTICE = i18n.mark(
-    "Angstrom Signals is in closed beta, and that email has not been approved yet. "
-    "Use the email you applied with, or request access at angstromsignals.com."
+    "MarketNavi is in closed beta, and that email has not been approved yet. "
+    "Use the email you applied with, or request access at marketnavi.ai."
 )
 
 
@@ -5761,7 +5761,7 @@ def _app_url() -> str:
         url = ""
     if url.startswith("http"):
         return url.split("#", 1)[0].split("?", 1)[0]
-    return "https://app.angstromsignals.com"
+    return "https://app.marketnavi.ai"
 
 
 def _reset_link_error(raw: str) -> str:
@@ -6188,9 +6188,9 @@ if st.session_state.user is None:
                 else:
                     st.markdown("### " + t("Invited to the beta?"))
                     st.caption(t(
-                        "Angstrom Signals is invite-only while we build with experienced traders. "
+                        "MarketNavi is invite-only while we build with experienced traders. "
                         "If you have been accepted, create your account here with the email you applied with. "
-                        "Not invited yet? Request access at angstromsignals.com."
+                        "Not invited yet? Request access at marketnavi.ai."
                     ))
                 with st.form("signup", border=False):
                     signup_email = st.text_input(
@@ -6904,7 +6904,7 @@ _ui_mode = str(((prefs or {}).get("settings") or {}).get("ui_mode") or "")
 if _ui_mode in THEME_MODES:
     _theme_mode(key="theme_mode", data={"theme": THEME_MODES[_ui_mode]})
 st.sidebar.markdown(
-    t("<div style='margin:0.4rem 0 0.75rem;'><div style='display:flex;align-items:center;gap:0.85rem;'>{brand_mark_58_align_left}<h1 style='margin:0;padding:0;line-height:1.15;font-size:2.25rem;font-weight:700;'>angstrom<br>signals</h1></div><div style='margin-top:0.55rem;font-size:0.82rem;font-weight:500;line-height:1.35;opacity:0.72;'>{html_escape_t_market_sen}</div></div>", brand_mark_58_align_left=_brand_mark(58, align='left'), html_escape_t_market_sen=html.escape(t('Navigate the markets with AI-guided analysis and alerts, with a community alongside.'))),
+    t("<div style='margin:0.4rem 0 0.75rem;'><div style='display:flex;align-items:center;gap:0.85rem;'>{brand_mark_58_align_left}<h1 style='margin:0;padding:0;line-height:1.15;font-size:2.25rem;font-weight:700;'>MarketNavi</h1></div><div style='margin-top:0.55rem;font-size:0.82rem;font-weight:500;line-height:1.35;opacity:0.72;'>{html_escape_t_market_sen}</div></div>", brand_mark_58_align_left=_brand_mark(58, align='left'), html_escape_t_market_sen=html.escape(t('Navigate the markets with AI-guided analysis and alerts, with a community alongside.'))),
     unsafe_allow_html=True,
 )
 with st.sidebar:
@@ -7192,7 +7192,7 @@ with tracked_expander("👤 " + t("Account"), "account", sidebar=True):
     with tracked_expander("🏷️ " + t("Account level: {plan}", plan=t(plans.LABEL[_plan_now])), "account_level"):
         if st.session_state.get("plan_stored") == plans.BETA_PLAN and not st.session_state.get("plan_preview"):
             st.caption(t("Free during the beta."))
-        st.link_button(t("Upgrade"), "https://www.angstromsignals.com/pricing.html", use_container_width=True,
+        st.link_button(t("Upgrade"), "https://marketnavi.ai/pricing.html", use_container_width=True,
                        help=t("See what each plan includes."))
         _display_choices = {"hide": t("Hide"), "grey": t("Grey out")}
         _display_now = plan_display()
@@ -7613,7 +7613,7 @@ def _paint_readings_header(result: dict) -> None:
 
 
 def _paint_lattice_header() -> None:
-    """🧩 Angstrom Lattice: how many assets your Prism scans answer Yes for at their latest run."""
+    """🧩 Lattice: how many assets your Prism scans answer Yes for at their latest run."""
     user = st.session_state.get("user")
     if user is None:
         return
@@ -8389,7 +8389,7 @@ def _render_help_guides() -> None:
 
     with tab_start:
         st.markdown(t("""
-**Angstrom Signals reads current market conditions for the crypto and stocks on your watchlists.**
+**MarketNavi reads current market conditions for the crypto and stocks on your watchlists.**
 Each asset gets three technical readings (📈 Trend, 🎯 Stretch, 🔊 Flow), a 📰 news sentiment score, and
 tools to look closer. It is a research tool, not financial advice. The readings and sentiment describe
 conditions now; none has been shown to predict which way price goes next.
@@ -8416,7 +8416,7 @@ because they measure different things and are never added together.
    Max pain, Leverage & liquidations and Signal matrix, all for that asset.
 4. **Notifications**, in the sidebar, holds your alerts and their settings.
 5. The arrow on the right edge opens **Social signals and chat**.
-6. **🧩 Angstrom Lattice** (preview), right under the chart, is your research workspace: build your own readings
+6. **🧩 Lattice** (preview), right under the chart, is your research workspace: build your own readings
    and rules from the same signals, scan your watchlist with them in **Prism**, now or on a schedule with alerts,
    and study what followed a Set's Yes in the past. See the 🧩 Lattice & Prism tab.
 7. **✨ AI**, the handle on the right edge just under the social arrow, slides out the AI Navigator on every page:
@@ -8486,7 +8486,7 @@ because they measure different things and are never added together.
 - Click a column title to sort. Hover any reading to read it; click it to open **🔍 Why these readings** for
   that asset at that column, part by part.
 - The **column icon**, in the row above the column titles, chooses which Groups and Sets the tables show (yours,
-  and the ones provided by Angstrom Signals) and their order (↑ ↓).
+  and the ones provided by MarketNavi) and their order (↑ ↓).
   The icons beside each name say what it looks at (📈 trend, 🎯 momentum or stretch, 🔊 volume, 🧱 support,
   resistance or structure, 🌊 volatility or regime, 🔭 another asset, 💬 news, 🏦 positioning or flows).
   Fold the Groups or the Sets sideways with ◂ in their first column title: folded Groups show a row of coloured
@@ -8703,13 +8703,13 @@ It describes conditions; it does not time trades and it never says buy or sell.
 
     with tab_lattice:
         st.markdown(t("""
-**Angstrom Lattice** (preview) is the research workspace right under the chart. Open it and pick a part from
+**Lattice** (preview) is the research workspace right under the chart. Open it and pick a part from
 the bar at the top; hover the bar for what each part does. ↗ opens it in its own window, and anything it opens on
 a chart (such as Visualize History) shows on the main window's chart. The ✨ AI handle on the right edge opens the Navigator.
 Drag the dividers between the library, the editor and the checks to give each more room. Like the rest of the app, it describes
 conditions; nothing in it is a forecast or advice.
 
-**Provided by Angstrom Signals:** the starter Groups, the provided Sets and the built-in alerts sit in a folded
+**Provided by MarketNavi:** the starter Groups, the provided Sets and the built-in alerts sit in a folded
 section of that name at the top of each part. To keep only your own, switch off ⚙️ Settings → Show provided
 starters and examples (one setting for all three). Hiding changes nothing else: your Groups and Sets built from a
 starter keep working, and built-in alerts that are on keep running.
@@ -8811,7 +8811,7 @@ hold, for example *Trend is Bullish* and *RSI is below 70*.
         st.markdown(t("**🎬 Worked examples**: one recognisable setup each, built and scanned from start to finish."))
         for _slug in ("w1-trend-with-volume", "w2-overextended-rally", "w3-breakout-with-volume", "w4-breakout-fading"):
             _training.link(st, _slug, key=f"tv_lat_{_slug}")
-        st.markdown(t("**🎬 Reading the evidence**: the Sets Angstrom Signals provides, a Set's answer on every past "
+        st.markdown(t("**🎬 Reading the evidence**: the Sets MarketNavi provides, a Set's answer on every past "
                     "day, and what usually followed its Yes."))
         for _slug in ("06-provided-library", "07-visualize-history", "08-what-followed"):
             _training.link(st, _slug, key=f"tv_lat_{_slug}")
@@ -8877,7 +8877,7 @@ tested what usually followed these answers.
   green bands. Tap a row to put it on top, then **Open on the main price chart**. 3Y, 10Y and All open one after
   another as the older years are worked out.
 
-**Changing a funnel: Angstrom Lattice → 🔻 Funnels**
+**Changing a funnel: Lattice → 🔻 Funnels**
 - The picker lists your funnels, then the provided ones (marked *provided*, read-only).
 - For yours: the **name**, **direction**, the **leave rule** (two No closes in a row, or the first No) and
   **alerts**. Pause and resume a funnel from its row on the Dynamic funnel page.
@@ -8952,7 +8952,7 @@ that checks the same Set, so funnels stay quick as more people use them.
   Candidates now (largest first), how many are Flagged, and the stage counts. It's sent on days a funnel has
   Candidates.
 
-- 🔎 **Prism scan alerts** are set on each scan in **Angstrom Lattice → Prism Scan**: instant, in the daily
+- 🔎 **Prism scan alerts** are set on each scan in **Lattice → Prism Scan**: instant, in the daily
   summary (its own *Prism scans* section), in the app only, or off. See the 🧩 Lattice & Prism tab.
 
 - 🔻 **Funnel alerts**: a note when assets newly become Candidates in one of your funnels (one per hourly run;
@@ -8972,7 +8972,7 @@ back (for example back to +30 after a +50 alert) and then crosses again. This ap
   that market's sentiment, a funnel note shows its Candidates in the table, a study note opens its Set. Clicking marks it read.
 - ✅ marks all as read · 🧹 clears read alerts · 🗑️ clears all. Group invites stay until you answer them.
 
-**Built-in Prism scans.** The Trend, Stretch and Flow alerts are six built-in scans in 🧩 Angstrom Lattice →
+**Built-in Prism scans.** The Trend, Stretch and Flow alerts are six built-in scans in 🧩 Lattice →
 Prism Scan (*Trend turns up*, *Trend turns down*, and so on), listed under 🔔 Built-in alerts there. They work like
 your own scans, on the same readings as the dashboard, and don't count towards your 5 scheduled scans.
 
@@ -9009,7 +9009,7 @@ by the page title. Each section's ↗ opens it in its own window, which follows 
 guides** has one too: open it beside the app and read while you work.
 
 **Layout.** ▢ stacks everything in one column; the wide layout puts the tables on top, then the chart and
-🧩 Angstrom Lattice across the full width, then market sentiment on the left and the chart's tools on the right.
+🧩 Lattice across the full width, then market sentiment on the left and the chart's tools on the right.
 Drag the line between the columns to resize.
 
 **Windows of their own.** 🎬 Training videos open in a small window beside the app, so they never cover what you're
@@ -9029,7 +9029,7 @@ phone they open as tabs. The ✨ AI Navigator slides out from the right edge ins
 it instead of doing it. Without it, on a phone or tablet, a tap on an icon or reading shows what it means, and a
 long press explains a button without pressing it.
 
-**Angstrom Lattice** works on a phone too: tap **+** where a computer would drag. Changes inside it redraw
+**Lattice** works on a phone too: tap **+** where a computer would drag. Changes inside it redraw
 only that section.
 
 **Saved on your account**: layout, open sections, chart choices, alert settings, the social
@@ -9343,7 +9343,7 @@ def _admin_push_keys() -> None:
         st.text("VAPID_PRIVATE_KEY")
         st.code(private, language=None)
         st.text("VAPID_SUBJECT")
-        st.code("mailto:info@angstromsignals.com", language=None)
+        st.code("mailto:info@marketnavi.ai", language=None)
         if st.button("I've copied them", key="admin_push_done"):
             st.session_state.pop("_push_keys_made", None)
             _rerun_fragment()
@@ -9803,7 +9803,7 @@ with tracked_expander("⚙️ " + t("Settings"), "settings_panel", sidebar=True)
         ),
     )
     st.divider()
-    st.markdown(t("**Angstrom Lattice**"))
+    st.markdown(t("**Lattice**"))
     if "show_provided" not in st.session_state:
         st.session_state.show_provided = settings.get("show_provided", True) is not False
     show_provided = st.toggle(
@@ -9811,8 +9811,8 @@ with tracked_expander("⚙️ " + t("Settings"), "settings_panel", sidebar=True)
         key="show_provided",
         persist_state="session",
         help=(
-            t("What Angstrom Signals provides (the starter Groups, the example Sets and the built-in alerts) sits in a "
-            "folded \"Provided by Angstrom Signals\" section at the top of Signal Groups, Signal Sets and Prism "
+            t("What MarketNavi provides (the starter Groups, the example Sets and the built-in alerts) sits in a "
+            "folded \"Provided by MarketNavi\" section at the top of Signal Groups, Signal Sets and Prism "
             "Scan. Switch off to hide those sections and keep only your own. Hiding never "
             "changes anything: your Groups and Sets built from a starter keep working, and built-in alerts that are "
             "on keep running.")
@@ -9987,7 +9987,7 @@ def _feedback_mail_settings() -> tuple[str, str, str]:
     api_key = _feedback_setting("RESEND_API_KEY", ("resend", "api_key"))
     sender = _feedback_setting("RESEND_FROM", ("resend", "from_email"), ("resend", "from"))
     inbox = _feedback_setting("FEEDBACK_TO", ("resend", "feedback_to"), ("resend", "to"))
-    return api_key, sender or "Angstrom Signals <onboarding@resend.dev>", _mailbox(inbox)
+    return api_key, sender or "MarketNavi <onboarding@resend.dev>", _mailbox(inbox)
 
 
 def _resend_reason(response) -> str:
@@ -10011,18 +10011,18 @@ def _email_invite(address: str, inviter_name: str) -> tuple[bool, str]:
     safe_name = html.escape(inviter_name or "Someone")
     link = html.escape(_app_url(), quote=True)
     page, plain = render_email(
-        f"{safe_name} invited you to Angstrom Signals",
+        f"{safe_name} invited you to MarketNavi",
         [
-            t("Angstrom Signals helps you navigate the markets with AI-guided analysis and alerts, with a community alongside."),
+            t("MarketNavi helps you navigate the markets with AI-guided analysis and alerts, with a community alongside."),
             t('It is invite-only while we build with experienced traders. If you are not in yet, you can <a href="{BETA_REQUEST_URL}" style="color:#1d5fd1;">ask for a seat</a>.', BETA_REQUEST_URL=BETA_REQUEST_URL),
         ],
-        button=(t("Open Angstrom Signals"), _app_url()),
-        preheader=f"{inviter_name or 'Someone'} invited you to Angstrom Signals.",
+        button=(t("Open MarketNavi"), _app_url()),
+        preheader=f"{inviter_name or 'Someone'} invited you to MarketNavi.",
     )
     payload = {
         "from": sender,
         "to": [address],
-        "subject": t("You are invited to Angstrom Signals"),
+        "subject": t("You are invited to MarketNavi"),
         "html": page,
         "text": plain,
     }
@@ -10094,7 +10094,7 @@ _REPORT_REASONS = {
 def _report_inbox() -> str:
     """Where a comment report is mailed. The public address unless a secret overrides it."""
     found = _feedback_setting("REPORT_TO", ("resend", "report_to"))
-    return _mailbox(found) or "report@angstromsignals.com"
+    return _mailbox(found) or "support@marketnavi.ai"
 
 
 def _email_report(reason: str, note: str, place: str, kind: str, row: dict, asset: str) -> tuple[bool, str]:
@@ -10151,7 +10151,7 @@ def _email_barred(address: str) -> tuple[bool, str]:
     page, plain = render_email(
         t("Your account is barred"),
         [
-            t("Your Angstrom Signals account is barred at this time."),
+            t("Your MarketNavi account is barred at this time."),
             t('You can email <a href="mailto:{html_escape_inbox_quote_}" style="color:#1d5fd1;">{html_escape_inbox}</a>.', html_escape_inbox_quote_=html.escape(inbox, quote=True), html_escape_inbox=html.escape(inbox)),
         ],
         tone="down",
@@ -10159,7 +10159,7 @@ def _email_barred(address: str) -> tuple[bool, str]:
     payload = {
         "from": sender,
         "to": [address],
-        "subject": t("Your Angstrom Signals account is barred"),
+        "subject": t("Your MarketNavi account is barred"),
         "html": page,
         "text": plain,
     }
@@ -11586,14 +11586,14 @@ with tracked_expander("ℹ️ " + t("About"), "about", sidebar=True):
     st.markdown(t("**angstrom signals**"))
     st.caption(t("Navigate the markets with AI-guided analysis and alerts, with a community alongside."))
     st.markdown(
-        t("Angstrom Signals is a platform for traders who want aggregated signals "
+        t("MarketNavi is a platform for traders who want aggregated signals "
         "for whole markets and for individual assets. Technical scores and market "
         "sentiment sit together and update as conditions change. A real-time social "
         "stream lets the crowd react alongside those signals.")
     )
     st.markdown(
-        t("General: [info@angstromsignals.com](mailto:info@angstromsignals.com)  \n"
-        "Support: [support@angstromsignals.com](mailto:support@angstromsignals.com)  \n"
+        t("General: [info@marketnavi.ai](mailto:info@marketnavi.ai)  \n"
+        "Support: [support@marketnavi.ai](mailto:support@marketnavi.ai)  \n"
         "Investors: [investors@angstromsignals.com](mailto:investors@angstromsignals.com)")
     )
     with tracked_expander(t("Socials policy"), "socials_policy"):
@@ -11613,13 +11613,13 @@ with tracked_expander("ℹ️ " + t("About"), "about", sidebar=True):
         )
         st.markdown(
             t("Use the flag on a comment that breaks these rules. The form opens at the top of the social panel. "
-            "It is emailed to [report@angstromsignals.com](mailto:report@angstromsignals.com) "
+            "It is emailed to [support@marketnavi.ai](mailto:support@marketnavi.ai) "
             "and is not shown to the crowd. A comment that breaks these rules can be removed.")
         )
     with tracked_expander(t("Terms"), "terms"):
         st.markdown(t("Last updated 26 October 2026."))
         st.markdown(
-            t("Using Angstrom Signals means you accept these terms and the socials policy above. "
+            t("Using MarketNavi means you accept these terms and the socials policy above. "
             "If you do not accept them, do not use the site.")
         )
         st.markdown(
@@ -11638,7 +11638,7 @@ with tracked_expander("ℹ️ " + t("About"), "about", sidebar=True):
         )
         st.markdown(
             t("The site can change, pause, or stop. These terms can change too. The date above is the version "
-            "on the site. Questions go to [info@angstromsignals.com](mailto:info@angstromsignals.com).")
+            "on the site. Questions go to [info@marketnavi.ai](mailto:info@marketnavi.ai).")
         )
     with tracked_expander(t("Privacy"), "privacy"):
         st.markdown(t("Last updated 26 October 2026."))
@@ -11658,9 +11658,9 @@ with tracked_expander("ℹ️ " + t("About"), "about", sidebar=True):
             "personal details. A short-lived cookie is used to finish a Google sign-in. If you tick Keep me signed in, one more cookie holds your sign-in on that device for up to 30 days, and logging out removes it. A small cookie also remembers whether you ticked the box, for up to a year, and holds no sign-in details. We do not sell personal information.")
         )
         st.markdown(
-            t("Email [support@angstromsignals.com](mailto:support@angstromsignals.com) to ask what we hold, "
+            t("Email [support@marketnavi.ai](mailto:support@marketnavi.ai) to ask what we hold, "
             "to correct it, or to close the account. Reports of comments go to "
-            "[report@angstromsignals.com](mailto:report@angstromsignals.com).")
+            "[support@marketnavi.ai](mailto:support@marketnavi.ai).")
         )
 
 
@@ -12011,13 +12011,13 @@ def _render_why_panel(asset_type: str, asset_key: str, result: dict, column_spec
         with st.expander(item["title"], expanded=item["key"] == focus, key=f"why_{item['key']}_{token}"):
             st.html(why_panel.block_html(item))
             if st.button(t("Open in Lattice"), icon=":material/hub:", type="tertiary", key=f"why_open_{item['key']}",
-                         help=t('See or change how {item_name} is built, in Angstrom Lattice', item_name=item['name'])):
+                         help=t('See or change how {item_name} is built, in Lattice', item_name=item['name'])):
                 _open_in_lattice(item["lattice"])
                 st.rerun()
 
 
 def _open_in_lattice(raw: str) -> None:
-    """A Group or Set cell in a table: open Angstrom Lattice on that Group (Signal Groups) or Set (Signal Sets)."""
+    """A Group or Set cell in a table: open Lattice on that Group (Signal Groups) or Set (Signal Sets)."""
     # Widget keys (lattice_section, lattice_start, lattice_set_start) are only written through their "_next" keys:
     # Streamlit forgets a widget's value in any run where the widget isn't drawn (a folded Lattice, or a click
     # handled after Lattice was drawn), so writing them directly could be lost before the Set opened.
@@ -12106,7 +12106,7 @@ _COLUMNS_DIALOG = st.dialog("Table columns", width="medium")(_choose_columns_dia
 
 def _table_column_specs() -> list[dict]:
     """The account's chosen reading columns, resolved to definitions. Saved Groups and Sets are read only when
-    one is chosen, at most once a minute (shared with Angstrom Lattice)."""
+    one is chosen, at most once a minute (shared with Lattice)."""
     drop = st.session_state.pop("_drop_column", None)
     if drop:                     # a deleted Group or Set: its table column goes too (lattice_delete.py)
         import lattice_delete
@@ -14439,7 +14439,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
     else:
         # Single column: the asset's sentiment sits under the score tables, above the chart.
         sentiment_slot = st.container()
-    # The chart is full width in both layouts, with Angstrom Lattice straight under it; in the wide layout the
+    # The chart is full width in both layouts, with Lattice straight under it; in the wide layout the
     # two columns (sentiment on the left, the asset's other sections on the right) follow.
     with nullcontext():
         st.html(
@@ -17014,7 +17014,7 @@ else:
 
 
 def _render_lattice() -> None:
-    """Angstrom Lattice: on the main page under the dashboard, or alone in its own pop-out window."""
+    """Lattice: on the main page under the dashboard, or alone in its own pop-out window."""
     import lattice_panel
 
     lattice_panel.render(
@@ -17026,9 +17026,9 @@ def _render_lattice() -> None:
 
 
 def _lattice_section() -> None:
-    """Angstrom Lattice (preview), for every signed-in account, full width under the Interactive Chart."""
+    """Lattice (preview), for every signed-in account, full width under the Interactive Chart."""
     st.markdown("<div id='angstrom-lattice' style='scroll-margin-top:4.5rem;'></div>", unsafe_allow_html=True)
-    with tracked_expander(":material/hub: Angstrom Lattice", "lattice_panel"):
+    with tracked_expander(":material/hub: Lattice", "lattice_panel"):
         _paint_lattice_header()
         _render_lattice()
 
@@ -17095,7 +17095,7 @@ if _POPOUT_VIEW == "lattice_panel":
             "pick": _jump["pick"], "band": list(_jump["band"]),
             "view": list(_jump["view"]) if _jump.get("view") else None}})
         st.toast(t("Opened on the main window's price chart."), icon=":material/candlestick_chart:")
-    with st.expander(":material/hub: Angstrom Lattice", expanded=True, key="pop_lattice_panel"):
+    with st.expander(":material/hub: Lattice", expanded=True, key="pop_lattice_panel"):
         _render_lattice()
     st.stop()
 
@@ -17113,7 +17113,7 @@ if _POPOUT_VIEW:
     st.stop()
 _record_run("whole page", _RUN_STARTED)
 st.session_state["_db_last_load"] = db_meter.since(_DB_BEFORE)
-# Angstrom Lattice is drawn inside the dashboard, straight under the Interactive Chart (_lattice_section).
+# Lattice is drawn inside the dashboard, straight under the Interactive Chart (_lattice_section).
 if str((load_profile() or {}).get("role") or "") == "admin":
     admin_panel()
 _page_top(key="page_back_to_top", data={})

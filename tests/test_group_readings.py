@@ -112,13 +112,13 @@ def test_the_app_alerts_matrix_and_evidence_read_the_groups():
 def test_angstrom_lattice_has_six_parts_and_draws_only_the_chosen_one():
     import lattice_panel as lp
 
-    assert lp.TITLE == "Angstrom Lattice"
+    assert lp.TITLE == "Lattice"
     assert [lp.SECTIONS[k][1] for k in lp.SECTIONS] == ["Signal Groups", "Signal Sets", "Prism Scan", "Funnels",
                                                                  "Soundings", "Strategies"]
     assert all(lp.SECTIONS[k][0].startswith(":material/") for k in lp.SECTIONS)
     assert lp.label("strategies").endswith("(soon)")
     app = (ROOT / "app.py").read_text()
-    assert 'tracked_expander(":material/hub: Angstrom Lattice", "lattice_panel")' in app
+    assert 'tracked_expander(":material/hub: Lattice", "lattice_panel")' in app
     drawn = []
 
     class St:

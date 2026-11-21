@@ -1,5 +1,5 @@
 """
-🔻 Funnels in Angstrom Lattice (the approved decision in docs/research/funnel_editor_brief_2026-11-10.md; contracts in
+🔻 Funnels in Lattice (the approved decision in docs/research/funnel_editor_brief_2026-11-10.md; contracts in
 docs/design/funnels_v2_spec.md).
 
 Start from a ready-made funnel or one of your own → change it → save and activate. Beginners change the direction,

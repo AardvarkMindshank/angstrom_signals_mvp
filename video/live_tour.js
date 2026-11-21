@@ -1,5 +1,5 @@
 // A first test of recording the live site as the demo account (18 Nov 2026): sign in, tour the main page and the
-// four parts of Angstrom Lattice, and save a raw video (no voice yet) and a screenshot at each stop.
+// four parts of Lattice, and save a raw video (no voice yet) and a screenshot at each stop.
 //
 //   DEMO_EMAIL=... DEMO_PASSWORD=... node video/live_tour.js out/live_tour
 //
@@ -9,7 +9,7 @@ const { chromium } = require("playwright");
 const fs = require("fs");
 const path = require("path");
 
-const URL = process.env.APP_URL || "https://app.angstromsignals.com/";
+const URL = process.env.APP_URL || "https://app.marketnavi.ai/";
 const OUT = process.argv[2] || "out/live_tour";
 const W = 1280, H = 720;
 
@@ -80,8 +80,8 @@ const W = 1280, H = 720;
     await page.evaluate(() => window.scrollTo({ top: 0, behavior: "smooth" }));
     await settle(800);
 
-    // ---------------------------------------------------------------- Angstrom Lattice and its four parts
-    const lattice = page.locator("summary").filter({ hasText: "Angstrom Lattice" }).first();
+    // ---------------------------------------------------------------- Lattice and its four parts
+    const lattice = page.locator("summary").filter({ hasText: "Lattice" }).first();
     if (await lattice.count()) {
       await glideTo(lattice);
       const open = await lattice.evaluate((s) => s.parentElement && s.parentElement.open).catch(() => false);
@@ -103,7 +103,7 @@ const W = 1280, H = 720;
         await settle(500);
       }
     } else {
-      note("no Angstrom Lattice section found on the page");
+      note("no Lattice section found on the page");
     }
     note("tour finished");
   } catch (err) {

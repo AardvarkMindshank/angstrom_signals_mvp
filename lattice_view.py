@@ -26,7 +26,7 @@ START_NEW = "new"
 
 
 def provided_groups() -> list[tuple[str, str, dict]]:
-    """[(alias, name, document)] for every Group Angstrom Signals provides, as the database holds them (the starters,
+    """[(alias, name, document)] for every Group MarketNavi provides, as the database holds them (the starters,
     then the others such as Recent structure break): the same list the Signal Sets library shows."""
     import prism
 

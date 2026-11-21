@@ -305,8 +305,8 @@ def make_general(db, url: str, edition: str, eid: str, now: datetime) -> bool:
     _upload(db, f"{folder}/episodes.json", json.dumps(meta).encode(), "application/json")
     episodes = [e for e in _episodes(db, url, folder) if e["day"] not in old]
     _upload(db, f"{folder}/feed.xml", briefing.feed_xml(
-        url, "general", episodes, title="Angstrom Signals Morning forecast",
-        about="The Angstrom Signals Morning forecast: the main markets, the top coins, the Tide and the week's events, "
+        url, "general", episodes, title="MarketNavi Morning forecast",
+        about="The MarketNavi Morning forecast: the main markets, the top coins, the Tide and the week's events, "
               "twice a day. A summary of the app's readings, not advice.", item="Morning forecast").encode(),
         "application/rss+xml")
     print(f"Morning forecast made: {edition}, {round(seconds)} s, script by {writer}, weather {weather}")

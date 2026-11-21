@@ -1,5 +1,5 @@
 """
-Angstrom Lattice, for every signed-in account (docs/design/lattice_prism.md §8; build stages 5 and 6).
+Lattice, for every signed-in account (docs/design/lattice_prism.md §8; build stages 5 and 6).
 
 One section on the dashboard with four parts across the top: Signal Groups, Signal Sets, Prism Scan and
 Strategies (coming later). Only the chosen part is drawn; saved Groups and Sets are read at most once a minute,
@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from i18n import mark, t
 
-TITLE = "Angstrom Lattice"
+TITLE = "Lattice"
 ICON = ":material/hub:"
 # (icon, name, one line on what it is for); the lines make the bar's hover note.
 SECTIONS = {
@@ -27,7 +27,7 @@ SECTIONS = {
 }
 PENDING = {"strategies"}
 
-HEADER = "### :material/hub: Angstrom Lattice"
+HEADER = "### :material/hub: Lattice"
 SUBTITLE = mark("Your market research workspace · preview: descriptive readings, not forecasts or advice")
 
 
@@ -37,7 +37,7 @@ def label(key: str) -> str:
 
 
 def rerun(st) -> None:
-    """Redraw only the Angstrom Lattice section when it runs as a fragment, else the page."""
+    """Redraw only the Lattice section when it runs as a fragment, else the page."""
     try:
         st.rerun(scope="fragment")
     except Exception:                  # not inside a fragment (tests, older Streamlit): the whole page
@@ -63,7 +63,7 @@ def pending(st, key: str, field: str):
     return getattr(value, field, None)
 
 
-PROVIDED_TITLE = mark("Provided by Angstrom Signals")     # the folded section that holds starters, examples and alerts
+PROVIDED_TITLE = mark("Provided by MarketNavi")     # the folded section that holds starters, examples and alerts
 
 
 def provided_shown(st) -> bool:

@@ -8,7 +8,7 @@ self.addEventListener("activate", (event) => event.waitUntil(self.clients.claim(
 self.addEventListener("push", (event) => {
   let note = {};
   try { note = event.data ? event.data.json() : {}; } catch (e) { note = { body: event.data ? event.data.text() : "" }; }
-  const title = note.title || "Angstrom Signals";
+  const title = note.title || "MarketNavi";
   event.waitUntil(self.registration.showNotification(title, {
     body: note.body || "",
     icon: "/app/static/icons/icon-192.png",

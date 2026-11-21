@@ -40,7 +40,7 @@ def test_plain_script_and_cleaning():
              "watchlist": [{"name": "Bitcoin", "change_1d": -2.34, "news_sentiment_0_to_100": 38}],
              "events": [{"what": "Fed rate decision", "when_utc": "Wednesday 10 December, 19:00"}]}
     text = briefing.plain_script(facts, briefing.settings_of({}), datetime(2026, 11, 20))
-    assert text.startswith("This is the Angstrom Signals morning forecast for Friday 20 November")
+    assert text.startswith("This is the MarketNavi morning forecast for Friday 20 November")
     assert "-2.3 percent" in text and "not advice" in text
     assert briefing.clean("**Hi** 🚀 see https://x.y #now") == "Hi see now"
 
@@ -87,7 +87,7 @@ def test_script_from_the_ai_reply(monkeypatch):
 
     monkeypatch.setattr(ai_providers, "available", lambda p: True)
     monkeypatch.setattr(ai_providers, "app_choice", lambda db, use: "grok")
-    words = "This is the Angstrom Signals morning forecast. " + "Calm seas. " * 40
+    words = "This is the MarketNavi morning forecast. " + "Calm seas. " * 40
     text, who = briefing.write_script(None, {}, briefing.settings_of({}), datetime(2026, 11, 20),
                                       chat=lambda *a, **k: (words + "\n\nFair winds.", True))
     assert who == "grok" and text.startswith("This is") and not text.startswith("(") and "True" not in text
@@ -133,7 +133,7 @@ def test_spoken_plan_keeps_the_words_and_says_the_headings():
             "**🌦️ Weather on the route**\n- CPI on Wed: dollar +2.1%, score 62/100.\n\n"
             "**🔭 Things to watch** - Expectation: the tide holds 5 closes.")
     out = briefing.spoken_plan(body, _dt(2026, 11, 21))
-    assert out.startswith("This is your Angstrom Signals Passage Plan for Saturday 21 November.")
+    assert out.startswith("This is your MarketNavi Passage Plan for Saturday 21 November.")
     assert "First, the conditions. Tide going out (risk-defensive), held 6 trading days." in out
     assert "The weather on the route. CPI on Wed: dollar plus 2.1 percent, score 62 out of 100." in out
     assert "Things to watch. Expectation: the tide holds 5 closes." in out
@@ -186,7 +186,7 @@ def test_digest_lists_the_listen_links():
 
 def test_tag_line_after_the_sign_off():
     assert briefing.tag_line("general", _dt(2026, 11, 20)) == (
-        "That was your daily market briefing for 20 November 2026, brought to you by Angstrom Signals.")
+        "That was your daily market briefing for 20 November 2026, brought to you by MarketNavi.")
     assert "Passage Plan briefing for 3 December 2026" in briefing.tag_line("passage", _dt(2026, 12, 3))
     assert briefing.spoken_plan("**⚓ Conditions** - Calm.", _dt(2026, 11, 21)).endswith("Fair winds and following seas.")
 

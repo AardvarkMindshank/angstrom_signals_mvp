@@ -26,7 +26,7 @@ STEPS = (
     ("alerts", "🔔", "Choose how alerts reach you",
      "Notifications → Configure Alert Rules: instant emails, a daily summary, or both."),
     ("prism", "🔎", "Try a Prism scan",
-     "Angstrom Lattice → Prism Scan: tap + on an example Set, then ▶. This ticks itself once you have a scan."),
+     "Lattice → Prism Scan: tap + on an example Set, then ▶. This ticks itself once you have a scan."),
 )
 AUTO = ("watchlist", "prism")
 

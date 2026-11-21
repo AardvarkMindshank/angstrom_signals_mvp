@@ -1,4 +1,4 @@
-# Angstrom Signals
+# MarketNavi
 
 A research dashboard for crypto and equities. It signs each person in with Supabase, scores a watchlist with ten technical factors, and can email an alert when a score crosses that person's thresholds.
 
@@ -99,7 +99,7 @@ The same note is emailed through Resend when this block is in the Streamlit secr
 ```toml
 [resend]
 api_key = "..."
-from_email = "Angstrom Signals <alerts@angstromsignals.com>"
+from_email = "MarketNavi <alerts@marketnavi.ai>"
 feedback_to = "you@example.com"
 ```
 

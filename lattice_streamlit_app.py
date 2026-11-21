@@ -1,5 +1,5 @@
 """
-A tiny Streamlit page for CI: the real Angstrom Lattice section (lattice_panel.render) with no database, so
+A tiny Streamlit page for CI: the real Lattice section (lattice_panel.render) with no database, so
 lattice_streamlit_check.js can tap, click and check that every edit goes to Python and comes back checked.
 Not part of the dashboard.
 

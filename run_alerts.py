@@ -1,5 +1,5 @@
 """
-Background alert worker for Angstrom Signals.
+Background alert worker for MarketNavi.
 
 Run on a schedule with the Supabase service-role key. Do not use that key
 in the Streamlit app.
@@ -114,7 +114,7 @@ def send_alert_email(to_email: str, asset_name: str, message: str, logo_url: str
         print(f"Email skipped for {asset_name}: this account has no email address.")
         return False
 
-    sender = (os.getenv("RESEND_FROM") or "").strip() or "Angstrom Signals <onboarding@resend.dev>"
+    sender = (os.getenv("RESEND_FROM") or "").strip() or "MarketNavi <onboarding@resend.dev>"
     if "onboarding@resend.dev" in sender and not getattr(send_alert_email, "_warned_test_sender", False):
         print(
             "Sending from onboarding@resend.dev. Resend only delivers that test "
@@ -124,7 +124,7 @@ def send_alert_email(to_email: str, asset_name: str, message: str, logo_url: str
     safe_name = html.escape(str(asset_name))
     safe_message = html.escape(str(message))
     subject = "Angstrom alert: " + " ".join(str(asset_name).split())
-    app_url = (os.getenv("APP_URL") or "https://app.angstromsignals.com").strip()
+    app_url = (os.getenv("APP_URL") or "https://app.marketnavi.ai").strip()
     page, plain = render_email(
         f"{asset_logo(logo_url, size=26)}{safe_name} crossed an alert boundary",
         [
@@ -171,7 +171,7 @@ def send_digest_email(to_email: str, subject: str, page: str, plain: str) -> boo
     if not api_key or not to_email:
         print("Digest skipped: RESEND_API_KEY or the account email is missing.")
         return False
-    sender = (os.getenv("RESEND_FROM") or "").strip() or "Angstrom Signals <onboarding@resend.dev>"
+    sender = (os.getenv("RESEND_FROM") or "").strip() or "MarketNavi <onboarding@resend.dev>"
     try:
         response = requests.post(
             "https://api.resend.com/emails",
@@ -582,7 +582,7 @@ def run_background_checks() -> None:
             results,
             user_email(supabase, user_id) if alert_config.get("digest_enabled") else None,
             send_digest_email,
-            (os.getenv("APP_URL") or "https://app.angstromsignals.com").strip(),
+            (os.getenv("APP_URL") or "https://app.marketnavi.ai").strip(),
             markets=markets,
         )
         if digest_state in ("sent", "error", "start"):

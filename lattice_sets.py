@@ -434,7 +434,7 @@ def describe(model: dict, choices: dict) -> str:
 
 def _newest_starters(choices: dict) -> set:
     """The newest version of each provided starter Group. Older versions stay readable (a saved Set may embed one)
-    but are not offered: a starter updated by Angstrom Signals showed up twice, as v1 and v2."""
+    but are not offered: a starter updated by MarketNavi showed up twice, as v1 and v2."""
     newest: dict = {}
     for k in choices:
         if choices[k]["owner"] != "starter":

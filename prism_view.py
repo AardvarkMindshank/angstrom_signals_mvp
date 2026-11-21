@@ -99,7 +99,7 @@ def render(st, supabase, assets: list[tuple[str, str, str]], user_id: str = "") 
     if flash:
         (st.success if flash[0] == "ok" else st.error)(flash[1])
     shown = lattice_panel.provided_shown(st)
-    if shown:                                         # provided by Angstrom Signals: at the top, folded
+    if shown:                                         # provided by MarketNavi: at the top, folded
         _builtin_section(st, supabase, builtins)
     data = {
         "library": pb.library(choices, assets, st.session_state.get("plan_effective") or "pro",
@@ -153,7 +153,7 @@ def _builtin_section(st, supabase, builtins: list) -> None:
     builtins = sorted(builtins, key=lambda r: order.get(r.get("builtin"), 99))
     _, latches = _history(supabase, [b["id"] for b in builtins])
     on = sum((b.get("notify") or {}).get("channel") != "off" for b in builtins)
-    with st.expander(t('Provided by Angstrom Signals · built-in alerts, {on} of {len_builtins} on', on=on, len_builtins=len(builtins)),
+    with st.expander(t('Provided by MarketNavi · built-in alerts, {on} of {len_builtins} on', on=on, len_builtins=len(builtins)),
                      icon=":material/notifications_active:"):
         st.caption(t("Trend, Stretch and Flow alerts, checked at each daily close (crypto 00:10 UTC, shares 10 minutes after the New York close) on the same readings as the dashboard. Change the lines and switch them on or off in Notifications → Configure Alert Rules. They don't count towards your {MAX_SCANS_TEXT} scheduled scans.", MAX_SCANS_TEXT=MAX_SCANS_TEXT))
         rows = []

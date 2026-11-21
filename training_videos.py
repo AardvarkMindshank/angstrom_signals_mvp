@@ -14,14 +14,14 @@ from __future__ import annotations
 import i18n
 from i18n import t
 
-BASE_URL = "https://www.angstromsignals.com/videos/training/"
+BASE_URL = "https://angstromsignals.com/videos/training/"   # the videos stay on the company site
 ICON = ":material/smart_display:"
 
 # series key -> (series name, [(video name, title, length)]), in viewing order
 SERIES = {
     # Recorded on the live site, signed in as the demo account (video/live_actions.js, 18 Nov 2026).
     "dayone": ("Day one: your first steps", [
-        ("d0-overview", "Angstrom Signals at a glance", "2:03"),
+        ("d0-overview", "MarketNavi at a glance", "2:03"),
         ("d1-watchlist", "Add the assets you follow", "1:30"),
         ("d2-first-group", "Your first Signal Group", "1:18"),
         ("d3-first-set", "Your first Signal Set", "1:11"),
@@ -35,8 +35,8 @@ SERIES = {
         ("u5-alerts", "Alerts and notifications", "0:54"),
         ("u4-dynamic-funnel", "Your Dynamic funnel", "1:06"),
     ]),
-    "lattice": ("Angstrom Lattice: the series", [
-        ("01-angstrom-lattice-at-a-glance", "Angstrom Lattice at a glance", "1:29"),
+    "lattice": ("Lattice: the series", [
+        ("01-angstrom-lattice-at-a-glance", "Lattice at a glance", "1:29"),
         ("02-signals", "Signals", "1:44"),
         ("03-signal-groups", "Signal Groups", "1:39"),
         ("04-signal-sets", "Signal Sets", "1:21"),
@@ -151,7 +151,7 @@ export default function(component) {
   };
   // Every 🎬 link opens the player in one small window of its own beside the app (reused for the next video).
   document.addEventListener("click", (event) => {
-    // 🎬 links, and links to a video written by the Angstrom Assistant (…?view=video&v=…)
+    // 🎬 links, and links to a video written by the AI Navigator (…?view=video&v=…)
     const a = event.target.closest ? event.target.closest("a.ang-tv-link, a[href*='view=video&v=']") : null;
     if (!a) return;
     event.preventDefault();

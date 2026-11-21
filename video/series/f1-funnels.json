@@ -4,7 +4,7 @@
  "next": "",
  "slug": "f1-funnels",
  "section": "training",
- "intro_say": "Angstrom Signals. | Funnels.",
+ "intro_say": "MarketNavi. | Funnels.",
  "outro_say": "That's funnels. | A Candidate matches your conditions. It is not a recommendation to trade.",
  "steps": [
   {
@@ -14,8 +14,8 @@
   },
   {
    "id": "open",
-   "screen": "Angstrom Lattice, Funnels",
-   "say": "Funnels live in Angstrom Lattice. | Angstrom provides four to start from: crypto and equities, longs and shorts."
+   "screen": "Lattice, Funnels",
+   "say": "Funnels live in Lattice. | Angstrom provides four to start from: crypto and equities, longs and shorts."
   },
   {
    "id": "stages",

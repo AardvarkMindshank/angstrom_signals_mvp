@@ -1,5 +1,5 @@
 """
-Helpers for Signal Groups and Sets used by Angstrom Lattice and the checks: reading saved Groups and Sets, the
+Helpers for Signal Groups and Sets used by Lattice and the checks: reading saved Groups and Sets, the
 example Set, database error words, and point-in-time reconstruction. The admin panel that used to live here was
 removed; Lattice and Prism replace it.
 """

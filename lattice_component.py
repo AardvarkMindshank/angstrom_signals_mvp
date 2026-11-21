@@ -901,7 +901,7 @@ export default function(component) {
       const sub = (g.owner === "starter" ? "starter" : g.owner) + " · " + (g.labels.length ? "labels: " + g.labels.join(", ") : (g.has_score ? "score only" : "no score"));
       return chip(g.name, sub, "Members: " + g.members.join(", "), "group|" + g.source, () => addGroup(g.source), "Add " + g.name + " to the Set", g.icons);
     };
-    // What Angstrom Signals provides (the starter Groups) sits in its own folded section at the top; the setting
+    // What MarketNavi provides (the starter Groups) sits in its own folded section at the top; the setting
     // in ⚙️ Settings hides it. A starter already in this Set stays usable either way.
     const given = state.show_provided === false ? [] : gs.filter((g) => g.owner === "starter");
     const mine = gs.filter((g) => g.owner !== "starter");
@@ -909,7 +909,7 @@ export default function(component) {
       const box = el("details", "prov");
       box.open = !!window.__latProvOpen || !!q;
       box.addEventListener("toggle", () => { if (!q) window.__latProvOpen = box.open; });
-      const sum = el("summary", "", T("Provided by Angstrom Signals · {n}", {n: given.length}));
+      const sum = el("summary", "", T("Provided by MarketNavi · {n}", {n: given.length}));
       sum.title = T("The starter Groups: the dashboard's own readings. Hide them in ⚙️ Settings → Show provided starters and examples.");
       box.appendChild(sum);
       given.forEach((g) => box.appendChild(groupChip(g)));

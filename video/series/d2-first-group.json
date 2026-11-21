@@ -5,7 +5,7 @@
  "slug": "d2-first-group",
  "section": "training",
  "zoom": "1.1",
- "intro_say": "Angstrom Signals. | Day one: your first Signal Group.",
+ "intro_say": "MarketNavi. | Day one: your first Signal Group.",
  "outro_say": "That's your first Group. | Next, use it in a Signal Set.",
  "steps": [
   {
@@ -15,8 +15,8 @@
   },
   {
    "id": "open",
-   "screen": "Angstrom Lattice, Signal Groups",
-   "say": "Open Angstrom Lattice, then Signal Groups. | On the left is every signal you can use."
+   "screen": "Lattice, Signal Groups",
+   "say": "Open Lattice, then Signal Groups. | On the left is every signal you can use."
   },
   {
    "id": "families",

@@ -5,13 +5,13 @@
  "slug": "u3-social",
  "section": "training",
  "zoom": "1.1",
- "intro_say": "Angstrom Signals. | Social signals and chat.",
+ "intro_say": "MarketNavi. | Social signals and chat.",
  "outro_say": "That's the social side. | In this video, other members' posts are blurred.",
  "steps": [
   {
    "id": "idea",
    "screen": "A card: the community",
-   "say": "Angstrom Signals has a community alongside: a live stream of social signals, and chat."
+   "say": "MarketNavi has a community alongside: a live stream of social signals, and chat."
   },
   {
    "id": "open",

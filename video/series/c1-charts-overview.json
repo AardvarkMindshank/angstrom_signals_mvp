@@ -5,13 +5,13 @@
  "slug": "c1-charts-overview",
  "section": "training",
  "zoom": "none",
- "intro_say": "Angstrom Signals. | Charts at a glance.",
+ "intro_say": "MarketNavi. | Charts at a glance.",
  "outro_say": "That's the chart. | The next videos take each part in turn.",
  "steps": [
   {
    "id": "idea",
    "screen": "A card: two charts",
-   "say": "Angstrom Signals has two price charts. | The fast chart, built for trading, and the classic chart, the original. | Both use the same readings and indicators."
+   "say": "MarketNavi has two price charts. | The fast chart, built for trading, and the classic chart, the original. | Both use the same readings and indicators."
   },
   {
    "id": "engine",

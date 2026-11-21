@@ -5,7 +5,7 @@ box it uses its own test mail server, which sends only a few emails an hour and 
 and the steps below send them through Resend, from the angstromsignals.com domain the alert emails already use.
 
 ## 1 and 2. Resend and Supabase SMTP: already done
-Custom SMTP is on: sender noreply@angstromsignals.com ("Angstrom Signals"), host smtp.resend.com, port 465, user
+Custom SMTP is on: sender noreply@marketnavi.ai ("MarketNavi"), host smtp.resend.com, port 465, user
 resend. If emails stop arriving, Resend's Emails page shows each one sent and whether it was delivered.
 
 ## 3. Supabase: Authentication → Rate Limits
@@ -16,12 +16,12 @@ For each template, set the Subject and paste the matching file's whole contents 
 
 | Template | Subject | File |
 |---|---|---|
-| Confirm signup | Confirm your email for Angstrom Signals | confirm_signup.html |
-| Reset Password | Reset your Angstrom Signals password | reset_password.html |
-| Magic Link | Your Angstrom Signals sign-in link | magic_link.html |
-| Change Email Address | Confirm your new email for Angstrom Signals | change_email.html |
-| Invite user | You're invited to Angstrom Signals | invite.html |
+| Confirm signup | Confirm your email for MarketNavi | confirm_signup.html |
+| Reset Password | Reset your MarketNavi password | reset_password.html |
+| Magic Link | Your MarketNavi sign-in link | magic_link.html |
+| Change Email Address | Confirm your new email for MarketNavi | change_email.html |
+| Invite user | You're invited to MarketNavi | invite.html |
 
 ## 5. Test
 Sign up with a fresh address (an @angstromsignals.com mailbox works) after approving it in Admin › Beta requests,
-and check the confirmation email arrives within a minute, from noreply@angstromsignals.com, not in junk.
+and check the confirmation email arrives within a minute, from noreply@marketnavi.ai, not in junk.

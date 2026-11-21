@@ -13,8 +13,8 @@ ROOT = Path(__file__).resolve().parent.parent
 FONTS = Path("/usr/share/fonts/truetype/dejavu")
 NAVY, GREEN, GREY = (11, 45, 107), (22, 163, 74), (95, 102, 115)
 W, H = 1280, 720
-WEBSITE, EMAIL = "angstromsignals.com", "info@angstromsignals.com"
-COPYRIGHT_HOLDER = "Angstrom Signals"      # change to the legal entity's name once it exists
+WEBSITE, EMAIL = "angstromsignals.com", "info@marketnavi.ai"
+COPYRIGHT_HOLDER = "MarketNavi"      # change to the legal entity's name once it exists
 
 
 def font(size, bold=False):

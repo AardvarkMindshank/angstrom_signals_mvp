@@ -1,4 +1,4 @@
-// What happens on screen in the live-site videos (app.angstromsignals.com, signed in as the demo account), step by
+// What happens on screen in the live-site videos (app.marketnavi.ai, signed in as the demo account), step by
 // step. Same shape as actions.js: the step ids match video/series/<slug>.json. Recorded by record.js with
 // ACTIONS=live_actions.js; video/live_reset.py puts the demo account back to a new account first.
 //
@@ -55,7 +55,7 @@ async function signIn(h) {
   await page.waitForTimeout(4000);           // first readings and prices
   await h.settle();
   // Start every video from the same place: the top, with the big sections folded.
-  for (const name of ["Angstrom Lattice", "Crypto Signals", "Equity Signals", "Interactive Chart", "Why these readings"]) {
+  for (const name of ["Lattice", "Crypto Signals", "Equity Signals", "Interactive Chart", "Why these readings"]) {
     await h.fold(name).catch(() => {});
   }
   await page.evaluate(() => window.scrollTo(0, 0));
@@ -65,9 +65,9 @@ async function signIn(h) {
 }
 
 
-// Open Angstrom Lattice on one of its tabs, with the tab row at the top of the screen.
+// Open Lattice on one of its tabs, with the tab row at the top of the screen.
 async function lattice(h, tab) {
-  await h.expand("Angstrom Lattice");
+  await h.expand("Lattice");
   const button = h.page.locator("button").filter({ hasText: tab, visible: true }).first();
   await h.glide(button, 250);
   await button.click();
@@ -128,9 +128,9 @@ async function scene(h, name) {
   await h.wait(300);
 }
 
-// Open Angstrom Lattice on Soundings, with the Soundings heading near the top of the screen.
+// Open Lattice on Soundings, with the Soundings heading near the top of the screen.
 async function soundings(h) {
-  await h.expand("Angstrom Lattice");
+  await h.expand("Lattice");
   const button = h.page.locator(".st-key-lattice_section button").filter({ hasText: "Soundings" }).first();
   await h.glide(button, 250);
   await button.click();
@@ -405,7 +405,7 @@ module.exports = {
   "d0-overview": {
     login: signIn,
     welcome: async (h) => {
-      await h.card({ kicker: "Welcome", title: "Angstrom Signals",
+      await h.card({ kicker: "Welcome", title: "MarketNavi",
         lines: ["✓ Readings for crypto and stocks, in plain words", "✓ AI guidance and alerts",
                 "✓ A community alongside"],
         foot: "Descriptive readings, not forecasts or advice." });
@@ -470,7 +470,7 @@ module.exports = {
     lattice: async (h, dur) => {
       await h.clear();
       await h.fold("Why these readings");
-      await h.expand("Angstrom Lattice");
+      await h.expand("Lattice");
       await h.page.waitForSelector(".lat", { timeout: 90000 }).catch(() => {});
       await h.settle();
       const each = Math.max(2200, (dur * 1000 - 3000) / 4);

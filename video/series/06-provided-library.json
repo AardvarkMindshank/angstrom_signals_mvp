@@ -4,13 +4,13 @@
  "next": "Next: Visualize History",
  "slug": "06-provided-library",
  "section": "training",
- "intro_say": "Angstrom Signals. | The provided library.",
+ "intro_say": "MarketNavi. | The provided library.",
  "outro_say": "That's the library. | Next: Visualize History.",
  "steps": [
   {
    "id": "open",
-   "screen": "Prism: opening 'Provided by Angstrom Signals'",
-   "say": "Angstrom Signals comes with a library of Groups and Sets, built around common trading situations. | In Prism, open Provided by Angstrom Signals."
+   "screen": "Prism: opening 'Provided by MarketNavi'",
+   "say": "MarketNavi comes with a library of Groups and Sets, built around common trading situations. | In Prism, open Provided by MarketNavi."
   },
   {
    "id": "icons",

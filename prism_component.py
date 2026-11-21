@@ -326,8 +326,8 @@ SET_LIBRARY_JS = r"""
       if (n) {
         M.ideaShut = M.ideaShut || {};
         const head = el("div", "provhead");
-        const lab = el("span", "", T("Provided by Angstrom Signals · {n}", {n: n}));
-        lab.title = T("Example Sets made by Angstrom Signals. Hide them in ⚙️ Settings → Show provided starters and examples.");
+        const lab = el("span", "", T("Provided by MarketNavi · {n}", {n: n}));
+        lab.title = T("Example Sets made by MarketNavi. Hide them in ⚙️ Settings → Show provided starters and examples.");
         head.appendChild(lab);
         head.appendChild(ecButtons((open) => { ideas.forEach((i) => { M.ideaShut[i.key] = !open; }); drawSets(); }));
         setList.appendChild(head);
@@ -352,12 +352,12 @@ SET_LIBRARY_JS = r"""
       return;
     }
     if (given.length) {
-      // What Angstrom Signals provides sits in its own folded section at the top (hidden with the setting).
+      // What MarketNavi provides sits in its own folded section at the top (hidden with the setting).
       const box = el("details", "prov");
       box.open = !!M.provOpen || !!q || !!pick || given.some((s) => s.key === focus);
       box.addEventListener("toggle", () => { if (!q) M.provOpen = box.open; });
-      const sum = el("summary", "", T("Provided by Angstrom Signals · {n}", {n: given.length}));
-      sum.title = T("Example Sets made by Angstrom Signals. Hide them in ⚙️ Settings → Show provided starters and examples.");
+      const sum = el("summary", "", T("Provided by MarketNavi · {n}", {n: given.length}));
+      sum.title = T("Example Sets made by MarketNavi. Hide them in ⚙️ Settings → Show provided starters and examples.");
       box.appendChild(sum);
       given.forEach((s) => box.appendChild(setChip(s)));
       setList.appendChild(box);
