@@ -2316,9 +2316,7 @@
   "Writes the shared Morning forecast, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Grok, ChatGPT and Gemini keys.": "Herkesin ortak Sabah tahminini ve üye henüz yazmadığında arka plan işleyicisinin sesli plan için yazdığı Passage Plan'leri yazar. Grok, ChatGPT ve Gemini anahtarlarına sahip arka plan işleyicisinde çalışır.",
   "{day} · {edition} · {length}": "{day} · {edition} · {length}",
   "Your daily Passage Plans, to read or to hear. Your trades will join them here.": "Günlük Passage Plan'lerin, okumak ya da dinlemek için. İşlemlerin de buraya eklenecek.",
-  "🌍 The Morning forecast: the first edition is on its way.": "🌍 Sabah tahmini: ilk baskı yolda.",
   "The same for everyone, twice a day: the Asia & Europe edition just after the US close, and the Americas edition before the New York morning. You always get the newest, which is the one made for your morning. The main markets, the top five coins, the Tide and the week's events. A summary of the app's readings, not advice.": "Herkes için aynı, günde iki kez: ABD kapanışından hemen sonra Asya ve Avrupa baskısı, New York sabahından önce Amerika baskısı. Her zaman en yenisini, yani senin sabahın için hazırlananı alırsın. Ana piyasalar, ilk beş coin, Tide ve haftanın olayları. Uygulamanın okumalarının bir özeti, tavsiye değildir.",
-  "Today's AI Passage Plan for your own watchlist and funnels, read aloud: the same plan you can read in the 📓 Logbook. Set the time and voice there.": "Kendi izleme listen ve hunilerin için bugünün AI Passage Plan'i, sesli okunmuş hâli: 📓 Seyir defterinde okuyabildiğin planın aynısı. Saati ve sesi orada ayarla.",
   "{day} · {length}": "{day} · {length}",
   "📜 Read a plan": "📜 Bir plan oku",
   "No plans yet. Make one with 📜 Today's AI Passage Plan in 🌊 Tides, or with the button above.": "Henüz plan yok. 🌊 Tides'taki 📜 Bugünün AI Passage Plan'i ile ya da yukarıdaki düğmeyle oluştur.",
@@ -2327,7 +2325,6 @@
   "Logbook": "Seyir defteri",
   "Morning forecast": "Sabah tahmini",
   "Read it": "Oku",
-  "Your Passage Plan, written and spoken for your own watchlist and funnels each morning, comes with Pro.": "Kendi izleme listen ve hunilerin için her sabah yazılıp okunan Passage Plan'in Pro ile gelir.",
   "Your Passage Plan": "Passage Plan'in",
   "Being made: ready within about 15 minutes.": "Hazırlanıyor: yaklaşık 15 dakika içinde hazır.",
   "The last one could not be made: {why}": "Sonuncusu yapılamadı: {why}",
@@ -2351,5 +2348,8 @@
   "Faint dots on the 📡 Sonar strip that grow stronger as a big red or green dot nears, and fade out over the 3 candles after one. Each is worked out from its own candle and the ones before, so it reads the same on the live candle as on history: deep in the overbought (or oversold) zone with the two waves closing in. A build-up can fade without a dot. The same reading is the Sonar dot build-up signal for Sets and funnels.": "📡 Sonar şeridinde büyük bir kırmızı ya da yeşil nokta yaklaştıkça koyulaşan, sonraki 3 mumda da solan soluk noktalar. Her biri yalnızca kendi mumundan ve öncekilerden hesaplanır; bu yüzden canlı mumda da geçmişte olduğu gibi okunur: aşırı alım (ya da aşırı satım) bölgesinin derinlerinde iki dalga birbirine yaklaşıyor. Bir oluşum nokta çıkmadan sönebilir. Aynı okuma, Set'ler ve huniler için Sonar nokta oluşumu sinyalidir.",
   "Sonar dot build-up": "Sonar nokta oluşumu",
   "How close the wave is to printing a big Sonar dot right now: deep in the overbought (or oversold) zone with the two waves converging. A strong build-up often comes before a big dot, but the wave can turn away without one. Descriptive; not a forecast.": "Dalganın şu anda büyük bir Sonar noktası basmaya ne kadar yakın olduğu: aşırı alım (ya da aşırı satım) bölgesinin derinlerinde iki dalga birbirine yaklaşıyor. Güçlü bir oluşum çoğu zaman büyük bir noktadan önce gelir, ama dalga nokta olmadan da dönebilir. Betimleyicidir; tahmin değildir.",
-  "(The candle is still forming: this marker may change or disappear until it closes.)": "(Mum hâlâ oluşuyor: bu işaret mum kapanana kadar değişebilir ya da kaybolabilir.)"
+  "(The candle is still forming: this marker may change or disappear until it closes.)": "(Mum hâlâ oluşuyor: bu işaret mum kapanana kadar değişebilir ya da kaybolabilir.)",
+  "Today's AI Passage Plan for your own watchlist and funnels, read aloud: the same plan you can read in the 📓 Logbook. It is made ready each morning; set the time and voice there.": "Kendi izleme listeniz ve hunileriniz için bugünün AI Passage Plan'ı, sesli okunur: 📓 Seyir defterinde okuyabileceğiniz planın aynısı. Her sabah hazır olur; saati ve sesi orada ayarlayın.",
+  "The first edition is on its way.": "İlk sayı yolda.",
+  "Written and spoken for your own watchlist and funnels each morning. Comes with Pro.": "Her sabah kendi izleme listeniz ve hunileriniz için yazılır ve okunur. Pro ile gelir."
 }

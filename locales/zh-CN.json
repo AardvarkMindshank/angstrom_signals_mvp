@@ -2316,9 +2316,7 @@
   "Writes the shared Morning forecast, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Grok, ChatGPT and Gemini keys.": "撰写大家共享的晨间预报，以及会员尚未撰写时由后台程序为语音计划撰写的 Passage Plan。在拥有 Grok、ChatGPT 和 Gemini 密钥的后台程序上运行。",
   "{day} · {edition} · {length}": "{day} · {edition} · {length}",
   "Your daily Passage Plans, to read or to hear. Your trades will join them here.": "你每天的 Passage Plan，可读可听。你的交易也将加入这里。",
-  "🌍 The Morning forecast: the first edition is on its way.": "🌍 晨间预报：第一期即将推出。",
   "The same for everyone, twice a day: the Asia & Europe edition just after the US close, and the Americas edition before the New York morning. You always get the newest, which is the one made for your morning. The main markets, the top five coins, the Tide and the week's events. A summary of the app's readings, not advice.": "人人相同，每天两次：美股收盘后不久的亚洲与欧洲版，以及纽约早晨之前的美洲版。你总会收到最新一期，也就是为你的早晨准备的那期。主要市场、前五大币种、Tide 和本周事件。这是应用读数的摘要，不是建议。",
-  "Today's AI Passage Plan for your own watchlist and funnels, read aloud: the same plan you can read in the 📓 Logbook. Set the time and voice there.": "为你自己的自选列表和漏斗准备的今日 AI Passage Plan 朗读版：与你在 📓 航海日志中读到的计划相同。时间和声音在那里设置。",
   "{day} · {length}": "{day} · {length}",
   "📜 Read a plan": "📜 阅读计划",
   "No plans yet. Make one with 📜 Today's AI Passage Plan in 🌊 Tides, or with the button above.": "还没有计划。用 🌊 Tides 中的 📜 今日 AI Passage Plan 或上方按钮创建一个。",
@@ -2327,7 +2325,6 @@
   "Logbook": "航海日志",
   "Morning forecast": "晨间预报",
   "Read it": "阅读",
-  "Your Passage Plan, written and spoken for your own watchlist and funnels each morning, comes with Pro.": "每天早上为你自己的自选列表和漏斗撰写并朗读的 Passage Plan，包含在 Pro 中。",
   "Your Passage Plan": "你的 Passage Plan",
   "Being made: ready within about 15 minutes.": "正在制作：约 15 分钟内完成。",
   "The last one could not be made: {why}": "上一次未能制作：{why}",
@@ -2351,5 +2348,8 @@
   "Faint dots on the 📡 Sonar strip that grow stronger as a big red or green dot nears, and fade out over the 3 candles after one. Each is worked out from its own candle and the ones before, so it reads the same on the live candle as on history: deep in the overbought (or oversold) zone with the two waves closing in. A build-up can fade without a dot. The same reading is the Sonar dot build-up signal for Sets and funnels.": "📡 Sonar 条带上的浅色圆点：大红点或大绿点越接近，颜色越深，出现后的 3 根 K 线内逐渐淡去。每个点只用它自己的 K 线和之前的 K 线计算，因此在当前 K 线上和历史上读起来一样：深入超买（或超卖）区，两条波线正在靠拢。酝酿也可能没有出点就消退。同一读数就是供 Set 和漏斗使用的“Sonar 圆点酝酿”信号。",
   "Sonar dot build-up": "Sonar 圆点酝酿",
   "How close the wave is to printing a big Sonar dot right now: deep in the overbought (or oversold) zone with the two waves converging. A strong build-up often comes before a big dot, but the wave can turn away without one. Descriptive; not a forecast.": "波线此刻距离打出大 Sonar 圆点有多近：深入超买（或超卖）区，两条波线正在收敛。强烈的酝酿常常出现在大圆点之前，但波线也可能不出点就掉头。仅作描述，不是预测。",
-  "(The candle is still forming: this marker may change or disappear until it closes.)": "（K 线仍在形成中：收盘前此标记可能变化或消失。）"
+  "(The candle is still forming: this marker may change or disappear until it closes.)": "（K 线仍在形成中：收盘前此标记可能变化或消失。）",
+  "Today's AI Passage Plan for your own watchlist and funnels, read aloud: the same plan you can read in the 📓 Logbook. It is made ready each morning; set the time and voice there.": "为您自己的自选列表和漏斗朗读的今日 AI Passage Plan：与您在 📓 航海日志中可阅读的计划相同。每天早上准备好；可在那里设置时间和声音。",
+  "The first edition is on its way.": "第一期正在制作中。",
+  "Written and spoken for your own watchlist and funnels each morning. Comes with Pro.": "每天早上为您自己的自选列表和漏斗撰写并朗读。Pro 套餐提供。"
 }

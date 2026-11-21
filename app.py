@@ -9422,33 +9422,45 @@ def _clock(seconds) -> str:
     return f"{secs // 60}:{secs % 60:02d}"
 
 
+def _briefing_title(icon_name: str, when: str, help_text: str) -> None:
+    """The heading both briefings share: the name in bold, then the day (and edition and length) beside it, wrapping
+    tight underneath on a narrow screen; the ? beside the name explains it."""
+    st.markdown(f"**{icon_name}** <span style='opacity:.65;font-size:.88em;white-space:nowrap;margin-left:6px'>"
+                f"{html.escape(when)}</span>" if when else f"**{icon_name}**", help=help_text, unsafe_allow_html=True)
+
+
 def _forecast_player(key: str) -> None:
-    """🌍 The newest Morning forecast (the same for everyone): the edition made for this morning, wherever you are."""
+    """🌍 The newest Morning forecast (the same for everyone): the edition made for this morning, wherever you are.
+    Laid out like the Passage Plan: name and day, the player, then Read it."""
     base = _secret("url")
     meta = _briefing_meta(base, briefing.GENERAL) if base else {}
     eid = briefing.newest(meta)
+    tip = t("The same for everyone, twice a day: the Asia & Europe edition just after the US close, and the Americas "
+            "edition before the New York morning. You always get the newest, which is the one made for your morning. "
+            "The main markets, the top five coins, the Tide and the week's events. A summary of the app's readings, "
+            "not advice.")
     if not eid:
-        st.caption(t("🌍 The Morning forecast: the first edition is on its way."))
+        _briefing_title("🌍 " + t("Morning forecast"), "", tip)
+        st.caption(t("The first edition is on its way."))
         return
     m = meta.get(eid) or {}
     name = briefing.EDITIONS.get(eid[11:], {}).get("name", "")
-    st.markdown("**🌍 " + t("Morning forecast") + "**", help=t(
-        "The same for everyone, twice a day: the Asia & Europe edition just after the US close, and the Americas "
-        "edition before the New York morning. You always get the newest, which is the one made for your morning. "
-        "The main markets, the top five coins, the Tide and the week's events. A summary of the app's readings, "
-        "not advice."))
+    _briefing_title("🌍 " + t("Morning forecast"),
+                    t("{day} · {edition} · {length}", day=pd.Timestamp(eid[:10]).strftime("%a %d %b"),
+                      edition=t(name), length=_clock(m.get("seconds"))), tip)
     st.audio(briefing.public_url(base, f"{briefing.GENERAL}/{eid}.mp3"), format="audio/mpeg")
-    st.caption(t("{day} · {edition} · {length}", day=pd.Timestamp(eid[:10]).strftime("%a %d %b"),
-                 edition=t(name), length=_clock(m.get("seconds"))))
     with st.expander("📜 " + t("Read it"), expanded=False):
         st.write(_briefing_text(briefing.public_url(base, f"{briefing.GENERAL}/{eid}.txt")) or t("Not available."))
 
 
-def _passage_player(key: str, show_button: bool = True) -> None:
-    """🧭 Today's spoken Passage Plan (Pro and Elite), or a line saying it comes with Pro."""
+def _passage_player(key: str, show_button: bool = True, show_text: bool = True) -> None:
+    """🧭 Today's spoken Passage Plan (Pro and Elite), or a line saying it comes with Pro. Laid out like the Morning
+    forecast: name and day, the player, then Read it (and the button to make one now)."""
+    tip = t("Today's AI Passage Plan for your own watchlist and funnels, read aloud: the same plan you can read in the "
+            "📓 Logbook. It is made ready each morning; set the time and voice there.")
     if not plans.includes(current_plan(), "pro"):
-        st.caption("🧭 " + t("Your Passage Plan, written and spoken for your own watchlist and funnels each morning, "
-                             "comes with Pro."))
+        _briefing_title("🧭 " + t("Your Passage Plan"), "", tip)
+        st.caption(t("Written and spoken for your own watchlist and funnels each morning. Comes with Pro."))
         return
     stored = (st.session_state.get("cloud_prefs") or {}).get("settings") or {}
     b = briefing.settings_of(stored)
@@ -9456,13 +9468,11 @@ def _passage_player(key: str, show_button: bool = True) -> None:
     base = _secret("url")
     meta = _briefing_meta(base, b["token"]) if b.get("token") and base else {}
     day = briefing.newest(meta)
-    st.markdown("**🧭 " + t("Your Passage Plan") + "**", help=t(
-        "Today's AI Passage Plan for your own watchlist and funnels, read aloud: the same plan you can read in the "
-        "📓 Logbook. Set the time and voice there."))
+    _briefing_title("🧭 " + t("Your Passage Plan"),
+                    t("{day} · {length}", day=pd.Timestamp(day[:10]).strftime("%a %d %b"),
+                      length=_clock((meta.get(day) or {}).get("seconds"))) if day else "", tip)
     if day:
         st.audio(briefing.public_url(base, f"{b['token']}/{day}.mp3"), format="audio/mpeg")
-        st.caption(t("{day} · {length}", day=pd.Timestamp(day).strftime("%a %d %b"),
-                     length=_clock((meta.get(day) or {}).get("seconds"))))
     asked = str(state.get("requested") or "")
     made_at = max((str((v or {}).get("made_at") or "") for v in meta.values() if isinstance(v, dict)), default="")
     if asked and asked > made_at:
@@ -9471,6 +9481,9 @@ def _passage_player(key: str, show_button: bool = True) -> None:
         st.warning(t("The last one could not be made: {why}", why=state["error"]))
     elif show_button and not day:
         st.caption(t("Not made yet today."))
+    if day and show_text:
+        with st.expander("📜 " + t("Read it"), expanded=False):
+            st.write(_briefing_text(briefing.public_url(base, f"{b['token']}/{day}.txt")) or t("Not available."))
     if show_button and st.button("🎙️ " + t("Speak today's plan now"), key=f"briefing_make_{key}",
                                  use_container_width=True,
                                  help=t("Reads today's Passage Plan aloud (writing it first if it isn't written "
@@ -9485,7 +9498,7 @@ def _logbook_panel() -> None:
     import navigator
 
     st.caption(t("Your daily Passage Plans, to read or to hear. Your trades will join them here."))
-    _passage_player("logbook")
+    _passage_player("logbook", show_text=False)     # the plans themselves are read just below
     if not plans.includes(current_plan(), "pro"):
         return
     stored = (st.session_state.get("cloud_prefs") or {}).get("settings") or {}
@@ -13331,6 +13344,21 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
     if trade_equities:
         allowed_kinds.append("Stock")
     with section_expander("📸 " + t("Quick Snapshot"), "quick_snapshot"):
+        @st.fragment
+        def _snapshot_listen():
+            # 🎧 The two spoken briefings first (21 Nov 2026: where a member starts the day), each in its own box with
+            # the same layout: the Morning forecast (everyone) and your Passage Plan (Pro and Elite). Side by side on
+            # a wide screen, one above the other on a phone.
+            left, right = st.columns(2)
+            with left, st.container(border=True, key="snapshot_forecast"):
+                _forecast_player("snapshot")
+            with right, st.container(border=True, key="snapshot_passage"):
+                _passage_player("snapshot")
+
+        try:
+            _snapshot_listen()
+        except Exception as exc:
+            print(f"Quick Snapshot players failed: {exc}")
         with _timed("market overview"):
             try:
                 import market_overview
@@ -13672,20 +13700,6 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
         if line:
             _snapshot_click(_score_table(key="snapshot_tides", data=line, on_picked_change=lambda: None).picked)
 
-        @st.fragment
-        def _snapshot_listen():
-            # 🎧 The two spoken briefings: the Morning forecast (everyone) and your Passage Plan (Pro and Elite).
-            with st.container(border=True, key="snapshot_listen"):
-                left, right = st.columns(2)
-                with left:
-                    _forecast_player("snapshot")
-                with right:
-                    _passage_player("snapshot")
-
-        try:
-            _snapshot_listen()
-        except Exception as exc:
-            print(f"Quick Snapshot players failed: {exc}")
         try:
             tiles_html = _sv.funnel_tiles(_snapshot_funnels()) or _sv.no_funnels_tile(
                 "crypto" if trade_crypto else "equity")

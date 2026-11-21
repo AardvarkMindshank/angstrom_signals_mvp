@@ -2316,9 +2316,7 @@
   "Writes the shared Morning forecast, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Grok, ChatGPT and Gemini keys.": "Menulis Prakiraan pagi bersama, dan Passage Plan yang ditulis worker latar belakang untuk rencana lisan saat anggota belum menulisnya. Berjalan di worker latar belakang, yang punya kunci Grok, ChatGPT, dan Gemini.",
   "{day} · {edition} · {length}": "{day} · {edition} · {length}",
   "Your daily Passage Plans, to read or to hear. Your trades will join them here.": "Passage Plan harian Anda, untuk dibaca atau didengar. Trade Anda akan bergabung di sini.",
-  "🌍 The Morning forecast: the first edition is on its way.": "🌍 Prakiraan pagi: edisi pertama sedang disiapkan.",
   "The same for everyone, twice a day: the Asia & Europe edition just after the US close, and the Americas edition before the New York morning. You always get the newest, which is the one made for your morning. The main markets, the top five coins, the Tide and the week's events. A summary of the app's readings, not advice.": "Sama untuk semua orang, dua kali sehari: edisi Asia & Eropa tepat setelah pasar AS tutup, dan edisi Amerika sebelum pagi New York. Anda selalu mendapat yang terbaru, yaitu yang dibuat untuk pagi Anda. Pasar utama, lima koin teratas, Tide, dan acara pekan ini. Ringkasan bacaan aplikasi, bukan saran.",
-  "Today's AI Passage Plan for your own watchlist and funnels, read aloud: the same plan you can read in the 📓 Logbook. Set the time and voice there.": "AI Passage Plan hari ini untuk watchlist dan funnel Anda sendiri, dibacakan: rencana yang sama yang bisa Anda baca di 📓 Logbook. Atur waktu dan suaranya di sana.",
   "{day} · {length}": "{day} · {length}",
   "📜 Read a plan": "📜 Baca rencana",
   "No plans yet. Make one with 📜 Today's AI Passage Plan in 🌊 Tides, or with the button above.": "Belum ada rencana. Buat dengan 📜 AI Passage Plan hari ini di 🌊 Tides, atau dengan tombol di atas.",
@@ -2327,7 +2325,6 @@
   "Logbook": "Logbook",
   "Morning forecast": "Prakiraan pagi",
   "Read it": "Baca",
-  "Your Passage Plan, written and spoken for your own watchlist and funnels each morning, comes with Pro.": "Passage Plan Anda, ditulis dan dibacakan setiap pagi untuk watchlist dan funnel Anda sendiri, tersedia di Pro.",
   "Your Passage Plan": "Passage Plan Anda",
   "Being made: ready within about 15 minutes.": "Sedang dibuat: siap dalam sekitar 15 menit.",
   "The last one could not be made: {why}": "Yang terakhir tidak bisa dibuat: {why}",
@@ -2351,5 +2348,8 @@
   "Faint dots on the 📡 Sonar strip that grow stronger as a big red or green dot nears, and fade out over the 3 candles after one. Each is worked out from its own candle and the ones before, so it reads the same on the live candle as on history: deep in the overbought (or oversold) zone with the two waves closing in. A build-up can fade without a dot. The same reading is the Sonar dot build-up signal for Sets and funnels.": "Titik samar di strip 📡 Sonar yang makin tegas saat titik besar merah atau hijau mendekat, lalu memudar selama 3 candle setelahnya. Masing-masing dihitung hanya dari candle-nya sendiri dan yang sebelumnya, jadi terbaca sama di candle berjalan maupun di riwayat: jauh di zona overbought (atau oversold) dengan dua gelombang saling mendekat. Penumpukan bisa memudar tanpa titik. Bacaan yang sama adalah sinyal Penumpukan titik Sonar untuk Set dan funnel.",
   "Sonar dot build-up": "Penumpukan titik Sonar",
   "How close the wave is to printing a big Sonar dot right now: deep in the overbought (or oversold) zone with the two waves converging. A strong build-up often comes before a big dot, but the wave can turn away without one. Descriptive; not a forecast.": "Seberapa dekat gelombang untuk mencetak titik besar Sonar saat ini: jauh di zona overbought (atau oversold) dengan dua gelombang mendekat. Penumpukan kuat sering datang sebelum titik besar, tapi gelombang bisa berbalik tanpa titik. Deskriptif; bukan prakiraan.",
-  "(The candle is still forming: this marker may change or disappear until it closes.)": "(Candle masih terbentuk: penanda ini bisa berubah atau hilang sampai candle ditutup.)"
+  "(The candle is still forming: this marker may change or disappear until it closes.)": "(Candle masih terbentuk: penanda ini bisa berubah atau hilang sampai candle ditutup.)",
+  "Today's AI Passage Plan for your own watchlist and funnels, read aloud: the same plan you can read in the 📓 Logbook. It is made ready each morning; set the time and voice there.": "Passage Plan AI hari ini untuk daftar pantauan dan corong Anda sendiri, dibacakan: rencana yang sama dengan yang dapat Anda baca di 📓 Logbook. Disiapkan setiap pagi; atur waktu dan suaranya di sana.",
+  "The first edition is on its way.": "Edisi pertama sedang dalam perjalanan.",
+  "Written and spoken for your own watchlist and funnels each morning. Comes with Pro.": "Ditulis dan dibacakan setiap pagi untuk daftar pantauan dan corong Anda sendiri. Tersedia dengan Pro."
 }

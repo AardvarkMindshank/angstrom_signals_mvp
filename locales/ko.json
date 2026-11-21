@@ -2316,9 +2316,7 @@
   "Writes the shared Morning forecast, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Grok, ChatGPT and Gemini keys.": "모두가 함께 듣는 아침 예보와, 회원이 아직 작성하지 않았을 때 음성 플랜용으로 백그라운드 작업이 작성하는 Passage Plan을 씁니다. Grok, ChatGPT, Gemini 키가 있는 백그라운드 작업에서 실행됩니다.",
   "{day} · {edition} · {length}": "{day} · {edition} · {length}",
   "Your daily Passage Plans, to read or to hear. Your trades will join them here.": "매일의 Passage Plan을 읽거나 들을 수 있습니다. 거래 기록도 곧 여기에 추가됩니다.",
-  "🌍 The Morning forecast: the first edition is on its way.": "🌍 아침 예보: 첫 번째 판을 준비하고 있습니다.",
   "The same for everyone, twice a day: the Asia & Europe edition just after the US close, and the Americas edition before the New York morning. You always get the newest, which is the one made for your morning. The main markets, the top five coins, the Tide and the week's events. A summary of the app's readings, not advice.": "모두에게 같고, 하루 두 번: 미국 장 마감 직후의 아시아·유럽판과 뉴욕 아침 전의 아메리카판. 항상 가장 최신판, 즉 당신의 아침을 위해 만든 판을 받습니다. 주요 시장, 상위 5개 코인, Tide, 이번 주 일정. 앱 측정값의 요약이며 투자 조언이 아닙니다.",
-  "Today's AI Passage Plan for your own watchlist and funnels, read aloud: the same plan you can read in the 📓 Logbook. Set the time and voice there.": "내 관심 목록과 퍼널을 위한 오늘의 AI Passage Plan을 소리 내어 읽은 것: 📓 로그북에서 읽을 수 있는 것과 같은 플랜입니다. 시간과 목소리는 그곳에서 설정합니다.",
   "{day} · {length}": "{day} · {length}",
   "📜 Read a plan": "📜 플랜 읽기",
   "No plans yet. Make one with 📜 Today's AI Passage Plan in 🌊 Tides, or with the button above.": "아직 플랜이 없습니다. 🌊 Tides의 📜 오늘의 AI Passage Plan이나 위의 버튼으로 만드세요.",
@@ -2327,7 +2325,6 @@
   "Logbook": "로그북",
   "Morning forecast": "아침 예보",
   "Read it": "읽기",
-  "Your Passage Plan, written and spoken for your own watchlist and funnels each morning, comes with Pro.": "내 관심 목록과 퍼널에 맞춰 매일 아침 작성하고 읽어 주는 Passage Plan은 Pro에 포함됩니다.",
   "Your Passage Plan": "내 Passage Plan",
   "Being made: ready within about 15 minutes.": "만드는 중: 약 15분 안에 준비됩니다.",
   "The last one could not be made: {why}": "지난번에는 만들 수 없었습니다: {why}",
@@ -2351,5 +2348,8 @@
   "Faint dots on the 📡 Sonar strip that grow stronger as a big red or green dot nears, and fade out over the 3 candles after one. Each is worked out from its own candle and the ones before, so it reads the same on the live candle as on history: deep in the overbought (or oversold) zone with the two waves closing in. A build-up can fade without a dot. The same reading is the Sonar dot build-up signal for Sets and funnels.": "📡 Sonar 띠의 희미한 점으로, 큰 빨간 점이나 초록 점이 가까워질수록 진해지고 그 뒤 3개 캔들 동안 옅어집니다. 각 점은 해당 캔들과 이전 캔들만으로 계산하므로 진행 중인 캔들에서도 과거와 똑같이 읽힙니다: 과매수(또는 과매도) 구간 깊숙이에서 두 파동이 가까워지는 상태입니다. 예고가 점 없이 사라질 수도 있습니다. 같은 값이 Set과 퍼널용 'Sonar 점 형성 예고' 신호입니다.",
   "Sonar dot build-up": "Sonar 점 형성 예고",
   "How close the wave is to printing a big Sonar dot right now: deep in the overbought (or oversold) zone with the two waves converging. A strong build-up often comes before a big dot, but the wave can turn away without one. Descriptive; not a forecast.": "파동이 지금 큰 Sonar 점을 찍기에 얼마나 가까운지: 과매수(또는 과매도) 구간 깊숙이에서 두 파동이 수렴하는 상태. 강한 예고는 큰 점보다 먼저 나타나는 경우가 많지만, 점 없이 돌아설 수도 있습니다. 서술적이며 예측이 아닙니다.",
-  "(The candle is still forming: this marker may change or disappear until it closes.)": "(캔들이 아직 형성 중입니다: 마감될 때까지 이 표시는 바뀌거나 사라질 수 있습니다.)"
+  "(The candle is still forming: this marker may change or disappear until it closes.)": "(캔들이 아직 형성 중입니다: 마감될 때까지 이 표시는 바뀌거나 사라질 수 있습니다.)",
+  "Today's AI Passage Plan for your own watchlist and funnels, read aloud: the same plan you can read in the 📓 Logbook. It is made ready each morning; set the time and voice there.": "내 관심 목록과 퍼널을 위한 오늘의 AI Passage Plan을 읽어 드립니다. 📓 로그북에서 읽을 수 있는 것과 같은 계획입니다. 매일 아침 준비되며, 시간과 목소리는 그곳에서 설정하세요.",
+  "The first edition is on its way.": "첫 번째 회차가 준비 중입니다.",
+  "Written and spoken for your own watchlist and funnels each morning. Comes with Pro.": "매일 아침 내 관심 목록과 퍼널을 위해 작성하고 읽어 드립니다. Pro에 포함됩니다."
 }
