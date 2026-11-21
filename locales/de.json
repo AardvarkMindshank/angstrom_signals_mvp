@@ -2350,5 +2350,14 @@
   "Written and spoken for your own watchlist and funnels each morning. Comes with Pro.": "Jeden Morgen für Ihre eigene Beobachtungsliste und Ihre Trichter geschrieben und gesprochen. Gehört zu Pro.",
   "Date": "Datum",
   "written only": "nur geschrieben",
-  "Not made yet today. It is made ready each morning.": "Heute noch nicht erstellt. Er liegt jeden Morgen bereit."
+  "Not made yet today. It is made ready each morning.": "Heute noch nicht erstellt. Er liegt jeden Morgen bereit.",
+  "Today's markets in about 90 seconds, presented by the crew. It plays when you first open the app each day; switch that off in ⚙️ Settings. A summary of the app's readings, not advice.": "Die Märkte von heute in etwa 90 Sekunden, präsentiert von der Crew. Das Video startet, wenn du die App am Tag zum ersten Mal öffnest; abschalten kannst du das unter ⚙️ Einstellungen. Eine Zusammenfassung der App-Werte, keine Beratung.",
+  "{day} · {who} · {length}": "{day} · {who} · {length}",
+  "**Daily video**": "**Tagesvideo**",
+  "🎬 Play the daily video when I open the app": "🎬 Tagesvideo beim Öffnen der App abspielen",
+  "The first video is on its way.": "Das erste Video ist unterwegs.",
+  "Once a day, the first time you open the app after the new video is out. You can always watch it in 📸 Quick Snapshot or the 📓 Logbook.": "Einmal am Tag, wenn du die App nach Erscheinen des neuen Videos zum ersten Mal öffnest. Ansehen kannst du es jederzeit in 📸 Kurzübersicht oder im 📓 Logbuch.",
+  "Daily video": "Tagesvideo",
+  "Tap for sound": "Tippen für Ton",
+  "Close and stop daily autoplay": "Schließen und tägliches Abspielen beenden"
 }

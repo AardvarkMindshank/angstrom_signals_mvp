@@ -2350,5 +2350,14 @@
   "Written and spoken for your own watchlist and funnels each morning. Comes with Pro.": "Her sabah kendi izleme listeniz ve hunileriniz için yazılır ve okunur. Pro ile gelir.",
   "Date": "Tarih",
   "written only": "yalnızca yazılı",
-  "Not made yet today. It is made ready each morning.": "Bugün henüz hazırlanmadı. Her sabah hazır olur."
+  "Not made yet today. It is made ready each morning.": "Bugün henüz hazırlanmadı. Her sabah hazır olur.",
+  "Today's markets in about 90 seconds, presented by the crew. It plays when you first open the app each day; switch that off in ⚙️ Settings. A summary of the app's readings, not advice.": "Bugünün piyasaları yaklaşık 90 saniyede, mürettebat sunuyor. Her gün uygulamayı ilk açtığınızda oynar; ⚙️ Ayarlar'dan kapatabilirsiniz. Uygulama okumalarının özeti, tavsiye değildir.",
+  "{day} · {who} · {length}": "{day} · {who} · {length}",
+  "**Daily video**": "**Günlük video**",
+  "🎬 Play the daily video when I open the app": "🎬 Uygulamayı açtığımda günlük videoyu oynat",
+  "The first video is on its way.": "İlk video yolda.",
+  "Once a day, the first time you open the app after the new video is out. You can always watch it in 📸 Quick Snapshot or the 📓 Logbook.": "Günde bir kez, yeni video çıktıktan sonra uygulamayı ilk açtığınızda. 📸 Hızlı Özet'te veya 📓 Seyir defterinde her zaman izleyebilirsiniz.",
+  "Daily video": "Günlük video",
+  "Tap for sound": "Ses için dokunun",
+  "Close and stop daily autoplay": "Kapat ve günlük otomatik oynatmayı durdur"
 }

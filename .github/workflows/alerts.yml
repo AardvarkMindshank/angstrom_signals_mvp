@@ -102,3 +102,22 @@ jobs:
                      -q "[.[] | select(.createdAt > \"$since\")] | length" || echo 1)
             if [ "${recent:-1}" = "0" ]; then gh workflow run briefing.yml -R "$GITHUB_REPOSITORY" --ref main || true; fi
           fi
+
+      - name: Start the daily video when due
+        # 🎬 Once the Asia & Europe Morning forecast is made, today's ~90-second video (daily-video.yml), published to
+        # the app. Not started again within 90 minutes of the last start (it takes about 15).
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          due=$(python daily_video.py --check 2>/dev/null | tail -1 || echo 0)
+          if [ "${due:-0}" != "0" ]; then
+            since=$(date -u -d "90 minutes ago" +%Y-%m-%dT%H:%M:%SZ)
+            recent=$(gh run list -R "$GITHUB_REPOSITORY" --workflow daily-video.yml -L 5 --json createdAt \
+                     -q "[.[] | select(.createdAt > \"$since\")] | length" || echo 1)
+            if [ "${recent:-1}" = "0" ]; then
+              gh workflow run daily-video.yml -R "$GITHUB_REPOSITORY" --ref main -f publish=true || true
+            fi
+          fi

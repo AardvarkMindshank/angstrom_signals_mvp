@@ -2350,5 +2350,14 @@
   "Written and spoken for your own watchlist and funnels each morning. Comes with Pro.": "เขียนและอ่านออกเสียงทุกเช้าสำหรับรายการเฝ้าดูและฟันเนลของคุณเอง มีในแพ็กเกจ Pro",
   "Date": "วันที่",
   "written only": "ฉบับเขียนเท่านั้น",
-  "Not made yet today. It is made ready each morning.": "วันนี้ยังไม่ได้ทำ จัดเตรียมไว้ให้ทุกเช้า"
+  "Not made yet today. It is made ready each morning.": "วันนี้ยังไม่ได้ทำ จัดเตรียมไว้ให้ทุกเช้า",
+  "Today's markets in about 90 seconds, presented by the crew. It plays when you first open the app each day; switch that off in ⚙️ Settings. A summary of the app's readings, not advice.": "ตลาดวันนี้ในราว 90 วินาที นำเสนอโดยลูกเรือ เล่นเมื่อคุณเปิดแอปครั้งแรกของแต่ละวัน ปิดได้ใน ⚙️ การตั้งค่า เป็นสรุปค่าที่อ่านได้จากแอป ไม่ใช่คำแนะนำ",
+  "{day} · {who} · {length}": "{day} · {who} · {length}",
+  "**Daily video**": "**วิดีโอประจำวัน**",
+  "🎬 Play the daily video when I open the app": "🎬 เล่นวิดีโอประจำวันเมื่อฉันเปิดแอป",
+  "The first video is on its way.": "วิดีโอแรกกำลังจะมา",
+  "Once a day, the first time you open the app after the new video is out. You can always watch it in 📸 Quick Snapshot or the 📓 Logbook.": "วันละครั้ง เมื่อคุณเปิดแอปครั้งแรกหลังวิดีโอใหม่ออก ดูได้ทุกเมื่อใน 📸 ภาพรวมด่วน หรือ 📓 สมุดบันทึกเดินเรือ",
+  "Daily video": "วิดีโอประจำวัน",
+  "Tap for sound": "แตะเพื่อเปิดเสียง",
+  "Close and stop daily autoplay": "ปิดและหยุดเล่นอัตโนมัติทุกวัน"
 }

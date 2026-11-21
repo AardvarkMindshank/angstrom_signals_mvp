@@ -124,3 +124,20 @@ def test_pick_look_uses_a_second_look_only_when_it_exists(tmp_path):
     seen = {dv.pick_look(tmp_path, "neptune_welcome_1_1.mp4", random.Random(i)) for i in range(20)}
     assert seen == {"neptune_welcome_1_1.mp4", "neptune_welcome_1_2.mp4"}
     assert dv.pick_look(None, "cap_welcome_1_1.mp4", random.Random(1)) == "cap_welcome_1_1.mp4"
+
+
+def test_video_due_after_the_asia_edition_and_only_once(monkeypatch):
+    from datetime import datetime, timezone
+
+    import briefing
+    import daily_video as dv
+    import run_briefings as rb
+    now = datetime(2026, 11, 21, 22, 0, tzinfo=timezone.utc)          # after the 21:30 UTC Asia & Europe edition
+    _at, eid = briefing.edition_slot("east", now)
+    monkeypatch.setattr(rb, "_meta", lambda db, token: {})
+    assert dv.video_due(None, now) == ""                                 # the forecast isn't made yet
+    monkeypatch.setattr(rb, "_meta", lambda db, token: {eid: {"made_at": now.isoformat()}})
+    monkeypatch.setattr(dv, "videos_meta", lambda db: {})
+    assert dv.video_due(None, now) == eid[:10]
+    monkeypatch.setattr(dv, "videos_meta", lambda db: {eid[:10]: {}})
+    assert dv.video_due(None, now) == ""

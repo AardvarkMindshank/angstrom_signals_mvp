@@ -2350,5 +2350,14 @@
   "Written and spoken for your own watchlist and funnels each morning. Comes with Pro.": "Được viết và đọc mỗi sáng cho danh sách theo dõi và các phễu của riêng bạn. Có trong gói Pro.",
   "Date": "Ngày",
   "written only": "chỉ bản viết",
-  "Not made yet today. It is made ready each morning.": "Hôm nay chưa được tạo. Kế hoạch được chuẩn bị sẵn mỗi sáng."
+  "Not made yet today. It is made ready each morning.": "Hôm nay chưa được tạo. Kế hoạch được chuẩn bị sẵn mỗi sáng.",
+  "Today's markets in about 90 seconds, presented by the crew. It plays when you first open the app each day; switch that off in ⚙️ Settings. A summary of the app's readings, not advice.": "Thị trường hôm nay trong khoảng 90 giây, do thủy thủ đoàn dẫn. Video phát khi bạn mở ứng dụng lần đầu mỗi ngày; tắt trong ⚙️ Cài đặt. Đây là bản tóm tắt các chỉ số của ứng dụng, không phải lời khuyên.",
+  "{day} · {who} · {length}": "{day} · {who} · {length}",
+  "**Daily video**": "**Video hằng ngày**",
+  "🎬 Play the daily video when I open the app": "🎬 Phát video hằng ngày khi tôi mở ứng dụng",
+  "The first video is on its way.": "Video đầu tiên đang được chuẩn bị.",
+  "Once a day, the first time you open the app after the new video is out. You can always watch it in 📸 Quick Snapshot or the 📓 Logbook.": "Mỗi ngày một lần, khi bạn mở ứng dụng lần đầu sau khi video mới ra. Bạn luôn có thể xem trong 📸 Tóm tắt nhanh hoặc 📓 Nhật ký hải trình.",
+  "Daily video": "Video hằng ngày",
+  "Tap for sound": "Chạm để bật tiếng",
+  "Close and stop daily autoplay": "Đóng và tắt tự động phát hằng ngày"
 }

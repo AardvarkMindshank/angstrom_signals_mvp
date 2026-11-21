@@ -2350,5 +2350,14 @@
   "Written and spoken for your own watchlist and funnels each morning. Comes with Pro.": "每天早上为您自己的自选列表和漏斗撰写并朗读。Pro 套餐提供。",
   "Date": "日期",
   "written only": "仅文字",
-  "Not made yet today. It is made ready each morning.": "今天尚未制作。每天早上会准备好。"
+  "Not made yet today. It is made ready each morning.": "今天尚未制作。每天早上会准备好。",
+  "Today's markets in about 90 seconds, presented by the crew. It plays when you first open the app each day; switch that off in ⚙️ Settings. A summary of the app's readings, not advice.": "约 90 秒看懂今日市场，由船员为您播报。每天首次打开应用时播放；可在 ⚙️ 设置中关闭。这是应用读数的摘要，不是投资建议。",
+  "{day} · {who} · {length}": "{day} · {who} · {length}",
+  "**Daily video**": "**每日视频**",
+  "🎬 Play the daily video when I open the app": "🎬 打开应用时播放每日视频",
+  "The first video is on its way.": "第一期视频正在制作中。",
+  "Once a day, the first time you open the app after the new video is out. You can always watch it in 📸 Quick Snapshot or the 📓 Logbook.": "每天一次，在新视频发布后您首次打开应用时播放。您随时可以在 📸 快速摘要或 📓 航海日志中观看。",
+  "Daily video": "每日视频",
+  "Tap for sound": "点按开启声音",
+  "Close and stop daily autoplay": "关闭并停止每日自动播放"
 }

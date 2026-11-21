@@ -399,8 +399,8 @@ export default function(component) {
       "html.angstrom-night{--ang-surface:var(--ang-card-night,#262730);--ang-field:var(--ang-field-night,#31333f);--ang-button:var(--ang-button-night,#31333f);--ang-chart:var(--ang-chart-night,#262730);--ang-border:var(--ang-border-night,#000000);--ang-text:#f3f4f6;--ang-muted:#9ca3af;--ang-soft:#d1d5db;--ang-track:#3f4654;--ang-line:var(--ang-border);--ang-select:#3a4050;--ang-select-text:#f9fafb;--ang-page:var(--ang-page-night,#0e1117);--ang-heading:var(--ang-heading-night,#262730);--ang-section:var(--ang-section-night,#262730);--ang-hover:var(--ang-hover-night,#31333f);--ang-side:var(--ang-side-night,#16181f);--ang-social:var(--ang-social-night,#1c1f27);}",
       ".ang-card{background:var(--ang-surface);color:var(--ang-text);border:1px solid var(--ang-border);border-radius:10px;padding:12px 16px;}",
       // The two briefing boxes at the top of Quick Snapshot look like the market cards under them.
-      ".st-key-snapshot_forecast,.st-key-snapshot_passage,.st-key-logbook_forecast,.st-key-logbook_passage{background:var(--ang-surface);color:var(--ang-text);border:1px solid var(--ang-border);border-radius:10px;padding:12px 16px;gap:10px;}",
-      ".st-key-logbook_forecast{margin-bottom:12px;}",
+      ".st-key-snapshot_forecast,.st-key-snapshot_passage,.st-key-snapshot_video,.st-key-logbook_video,.st-key-logbook_forecast,.st-key-logbook_passage{background:var(--ang-surface);color:var(--ang-text);border:1px solid var(--ang-border);border-radius:10px;padding:12px 16px;gap:10px;}",
+      ".st-key-logbook_forecast,.st-key-logbook_video{margin-bottom:12px;}",
       ".ang-kicker{font-size:.8rem;color:var(--ang-muted);margin-bottom:4px;}",
       // The social panel floats at the side; its empty holder in Quick Snapshot must not add a row gap.
       "[data-testid='stLayoutWrapper']:has(> .st-key-social_host){margin-top:-1rem;}",
@@ -9438,6 +9438,147 @@ def _briefing_pick(key: str, options: list, labels: dict) -> str:
                         label_visibility="collapsed")
 
 
+@st.cache_data(ttl=300, show_spinner=False)
+def _videos_meta(base: str) -> dict:
+    import requests
+
+    try:
+        r = requests.get(briefing.public_url(base, "video/videos.json"), timeout=6)
+        return r.json() if r.status_code == 200 else {}
+    except Exception:
+        return {}
+
+
+def _video_urls(base: str, day: str) -> dict:
+    u = lambda name: briefing.public_url(base, f"video/{day}_{name}")      # noqa: E731
+    return {"land": u("land.mp4"), "port": u("port.mp4"), "land_poster": u("land.jpg"), "port_poster": u("port.jpg")}
+
+
+def _video_player(key: str, pick: bool = False) -> None:
+    """🎬 The daily video, laid out like the two briefings: name (and day) , the player, then Read it. The wide video on
+    a computer, the tall one on a phone. Logbook (pick): a date selector over the week kept."""
+    base = _secret("url")
+    meta = _videos_meta(base) if base else {}
+    days = sorted((d for d, v in meta.items() if isinstance(v, dict)), reverse=True)
+    tip = t("Today's markets in about 90 seconds, presented by the crew. It plays when you first open the app each "
+            "day; switch that off in ⚙️ Settings. A summary of the app's readings, not advice.")
+
+    def label(d: str) -> str:
+        m = meta.get(d) or {}
+        return t("{day} · {who} · {length}", day=pd.Timestamp(d).strftime("%a %d %b"),
+                 who=t(str(m.get("presenter") or "")), length=_clock(m.get("seconds")))
+
+    if not days:
+        _briefing_title("🎬 " + t("Daily video"), "", tip)
+        st.caption(t("The first video is on its way."))
+        return
+    if pick:
+        _briefing_title("🎬 " + t("Daily video"), "", tip)
+        day = _briefing_pick(key, days, {d: label(d) for d in days})
+    else:
+        day = days[0]
+        _briefing_title("🎬 " + t("Daily video"), label(day), tip)
+    v = _video_urls(base, day)
+    st.html(
+        "<style>.ang-dv video{display:block;width:100%;border-radius:8px;background:#000}"
+        ".ang-dv .port{display:none;max-height:70vh;width:auto;max-width:100%;margin:0 auto}"
+        "@media (max-width:640px){.ang-dv .land{display:none}.ang-dv .port{display:block}}</style>"
+        f"<div class='ang-dv'><video class='land' controls playsinline preload='none' poster='{v['land_poster']}'>"
+        f"<source src='{v['land']}' type='video/mp4'></video>"
+        f"<video class='port' controls playsinline preload='none' poster='{v['port_poster']}'>"
+        f"<source src='{v['port']}' type='video/mp4'></video></div>")
+    with st.expander("📜 " + t("Read it"), expanded=False):
+        st.write(_briefing_text(briefing.public_url(base, f"video/{day}.txt")) or t("Not available."))
+
+
+_DAILY_VIDEO_JS = """
+export default function(component) {
+  const { data, setTriggerValue, parentElement } = component;
+  const shell = parentElement && parentElement.closest ? (parentElement.closest(".stBidiComponent") || parentElement) : null;
+  if (shell && shell.style) shell.style.display = "none";
+  const d = data || {};
+  if (!d.day || !d.show || navigator.webdriver) return;          // never during the recorded tours and screenshots
+  const seenKey = "ang-daily-video-" + d.day;
+  try { if (window.sessionStorage.getItem(seenKey)) return; window.sessionStorage.setItem(seenKey, "1"); } catch (e) {}
+  if (document.getElementById("ang-dv-pop")) return;
+  const w = d.words || {};
+  const tall = window.matchMedia("(max-width: 640px), (orientation: portrait)").matches;
+  const pop = document.createElement("div");
+  pop.id = "ang-dv-pop";
+  pop.innerHTML = `
+    <style>
+      #ang-dv-pop{position:fixed;inset:0;z-index:100000000;background:rgba(10,14,22,.82);display:flex;align-items:center;
+        justify-content:center;padding:16px;}
+      #ang-dv-pop .box{position:relative;display:flex;flex-direction:column;gap:10px;max-width:min(960px,100%);
+        max-height:100%;}
+      #ang-dv-pop video{display:block;width:100%;max-height:calc(100vh - 110px);border-radius:12px;background:#000;
+        object-fit:contain;}
+      #ang-dv-pop .snd{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);padding:12px 20px;
+        border:0;border-radius:999px;background:rgba(255,255,255,.92);color:#111827;font:600 1rem/1.2 system-ui;
+        cursor:pointer;box-shadow:0 6px 24px rgba(0,0,0,.35);}
+      #ang-dv-pop .row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+      #ang-dv-pop .row button{padding:9px 16px;border-radius:999px;border:1px solid rgba(255,255,255,.35);
+        background:rgba(255,255,255,.12);color:#fff;font:500 .92rem/1.2 system-ui;cursor:pointer;}
+      #ang-dv-pop .row button:hover{background:rgba(255,255,255,.22);}
+    </style>
+    <div class="box">
+      <video playsinline autoplay muted poster="${tall ? d.port_poster : d.land_poster}">
+        <source src="${tall ? d.port : d.land}" type="video/mp4"></video>
+      <button type="button" class="snd">🔊 ${w.sound || "Tap for sound"}</button>
+      <div class="row">
+        <button type="button" class="close">${w.close || "Close"}</button>
+        <button type="button" class="stop">${w.stop || "Close and stop daily autoplay"}</button>
+      </div>
+    </div>`;
+  document.body.appendChild(pop);
+  const video = pop.querySelector("video");
+  const snd = pop.querySelector(".snd");
+  const shut = () => { try { video.pause(); } catch (e) {} pop.remove(); };
+  snd.addEventListener("click", () => { video.muted = false; video.currentTime = 0; video.play().catch(() => {}); snd.remove(); });
+  video.addEventListener("click", () => { if (video.muted) snd.click(); });
+  pop.querySelector(".close").addEventListener("click", shut);
+  pop.querySelector(".stop").addEventListener("click", () => { setTriggerValue("stop", Date.now()); shut(); });
+  video.play().catch(() => {});
+}
+"""
+_daily_video_pop = st.components.v2.component("daily_video_pop", js=_DAILY_VIDEO_JS, isolate_styles=False)
+
+
+def _daily_video_popup() -> None:
+    """🎬 The newest daily video, once a day when the member first opens the app (unless switched off in Settings):
+    muted until tapped (browsers allow no sound before a tap), with Close and Close and stop daily autoplay."""
+    stored = (st.session_state.get("cloud_prefs") or {}).get("settings") or {}
+    base = _secret("url")
+    if not base:
+        return
+    meta = _videos_meta(base)
+    days = sorted((d for d, v in meta.items() if isinstance(v, dict)), reverse=True)
+    if not days:
+        return
+    day = days[0]
+    auto = bool(stored.get("daily_video_auto", True))
+    fresh = str(stored.get("daily_video_seen") or "") != day or st.session_state.get("_dv_showing") == day
+    if auto and fresh and st.session_state.get("_dv_showing") != day:
+        st.session_state["_dv_showing"] = day          # this visit shows it; the account remembers for other visits
+        save_account_settings({"daily_video_seen": day})
+
+    def _stop():
+        save_account_settings({"daily_video_auto": False})
+        st.session_state["daily_video_auto"] = False
+
+    _daily_video_pop(key="daily_video_pop", on_stop_change=_stop,
+                     data={"day": day, "show": bool(auto and fresh), **_video_urls(base, day),
+                           "words": {"sound": t("Tap for sound"), "close": t("Close"),
+                                     "stop": t("Close and stop daily autoplay")}})
+
+
+if not _POPOUT_VIEW:
+    try:
+        _daily_video_popup()           # 🎬 once a day, when switched on (Settings)
+    except Exception as exc:
+        print(f"Daily video pop-up failed: {type(exc).__name__}")
+
+
 def _forecast_player(key: str, pick: bool = False) -> None:
     """🌍 The Morning forecast (the same for everyone). Quick Snapshot: the newest edition, the day beside the name.
     Logbook (pick): the name, a date selector over the week kept, then the player and Read it, like the Passage Plan."""
@@ -9596,6 +9737,15 @@ with tracked_expander("⚙️ " + t("Settings"), "settings_panel", sidebar=True)
         persist_state="session",
         label_visibility="collapsed",
     )
+    st.divider()
+    st.markdown(t("**Daily video**"))
+    if "daily_video_auto" not in st.session_state:
+        st.session_state.daily_video_auto = bool(settings.get("daily_video_auto", True))
+    _dv_on = st.checkbox(t("🎬 Play the daily video when I open the app"), key="daily_video_auto",
+                         help=t("Once a day, the first time you open the app after the new video is out. You can "
+                                "always watch it in 📸 Quick Snapshot or the 📓 Logbook."))
+    if _dv_on != bool(((st.session_state.get("cloud_prefs") or {}).get("settings") or {}).get("daily_video_auto", True)):
+        save_account_settings({"daily_video_auto": bool(_dv_on)})
     # "Days of history" used to set how far back the Plotly chart reaches (90 to 365 days). Readings, studies and
     # the TradingView chart never used it, so it was removed (10 Nov 2026): the Plotly chart shows the last year and
     # its drag bar zooms in.
@@ -13382,7 +13532,9 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             with left, st.container(key="snapshot_forecast"):
                 _forecast_player("snapshot")
             with right, st.container(key="snapshot_passage"):
-                _passage_player("snapshot", show_button=False)    # it is made each morning; the Logbook keeps the button
+                _passage_player("snapshot", show_button=False)    # it is made each morning
+            with st.container(key="snapshot_video"):
+                _video_player("snapshot")
 
         try:
             _snapshot_listen()
@@ -16916,6 +17068,8 @@ if _POPOUT_VIEW == "logbook":
     # 📓 The Logbook, in the left pull-out (inpanel=1) or its own window: the Passage Plan, the Morning forecast.
     if str(st.query_params.get("inpanel") or "") != "1":
         st.markdown("### 📓 " + t("Logbook"))
+    with st.container(key="logbook_video"):
+        _video_player("logbook_video", pick=True)
     with st.container(key="logbook_forecast"):
         _forecast_player("logbook_view", pick=True)
     _logbook_panel()

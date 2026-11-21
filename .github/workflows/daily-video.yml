@@ -1,6 +1,7 @@
 # 🎬 The daily forecast video (daily_video.py): about 90 seconds, 16:9 and 9:16, from the Morning forecast's facts,
-# with the 3D captain's clip library (encrypted on the reports branch) and the weather music. Run by hand for now;
-# the result is saved encrypted (AVATAR_LAB_KEY) until publishing is agreed.
+# with the crew's clip library (encrypted on the reports branch) and the weather music. Started each day by alerts.yml
+# once the Asia & Europe Morning forecast is made, and published to the app (briefings bucket, video/). Run by hand
+# without "publish" for a test: then the result is saved encrypted (AVATAR_LAB_KEY) on the reports branch instead.
 name: daily-video
 on:
   workflow_dispatch:
@@ -11,6 +12,10 @@ on:
       presenter:
         description: "Who presents (blank: the roster): cap, mate, nav or deck"
         default: ""
+      publish:
+        description: "Publish to the app (the daily run does)"
+        type: boolean
+        default: false
 permissions:
   contents: write
 concurrency:
@@ -77,9 +82,9 @@ jobs:
             git show "origin/reports:drive/1EKuY0a0mL0hsCwO98ok-K0t_Yh-L_hsm/drive/$f.mp3" > "music/$f.mp3"
           done
       - name: Make the video
-        run: NODE_PATH="$PWD/node_modules" python daily_video.py --library lib/avatar_lab --music music --out out/daily_video --edition "${{ inputs.edition }}" --presenter "${{ inputs.presenter }}"
+        run: NODE_PATH="$PWD/node_modules" python daily_video.py --library lib/avatar_lab --music music --out out/daily_video --edition "${{ inputs.edition }}" --presenter "${{ inputs.presenter }}" ${{ inputs.publish && '--publish' || '' }}
       - name: Keep (encrypted)
-        if: always()
+        if: always() && !inputs.publish
         run: |
           rm -rf lib
           [ -d out/daily_video ] || exit 0

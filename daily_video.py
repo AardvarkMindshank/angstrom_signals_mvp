@@ -444,7 +444,77 @@ def build(supabase, library: Path, music_dir: Path, out_dir: Path, models: Path,
                                                     ensure_ascii=False, indent=1, default=str))
     print(f"Daily video made: {segs[-1]['end']:.0f} s, presented by {crew['title']}, script by {writer}, "
           f"weather {spec['weather']}")
-    return made
+    return {"files": made, "day": day.date().isoformat(), "seconds": round(segs[-1]["end"], 1),
+            "presenter": (spec.get("guest") or {}).get("title") or crew["title"], "weather": spec["weather"]}
+
+
+# ---------------------------------------------------------------------------------------------- in the app
+# 🎬 Published to the public "briefings" bucket (21 Nov 2026): video/<day>_<land|port>.mp4, a poster picture each, and
+# video/videos.json {day: {made_at, seconds, presenter, weather}}. A week is kept, like the briefings. The app plays
+# the newest once a day when a member opens it (Settings can switch that off), and keeps a box to watch it again.
+VIDEO_FOLDER = "video"
+KEEP_VIDEOS = 7
+
+
+def videos_meta(db) -> dict:
+    try:
+        return json.loads(db.storage.from_(briefing.BUCKET).download(f"{VIDEO_FOLDER}/videos.json"))
+    except Exception:
+        return {}
+
+
+def video_due(db, now: datetime | None = None) -> str:
+    """The day of today's video when it should be made now ("" when not): the Asia & Europe edition of the Morning
+    forecast is made for that day and its video isn't yet."""
+    import run_briefings
+    now = now or datetime.now(timezone.utc)
+    _at, eid = briefing.edition_slot("east", now)
+    if eid not in run_briefings._meta(db, briefing.GENERAL):
+        return ""
+    return "" if eid[:10] in videos_meta(db) else eid[:10]
+
+
+def compress(src: Path, dst: Path, layout: str) -> Path:
+    """A phone-friendly copy (720p, about 5 to 8 MB for 90 seconds) and its poster picture."""
+    size = "1280:720" if layout == "land" else "720:1280"
+    tmp = dst.with_name(dst.stem + ".part.mp4")
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(src), "-vf", f"scale={size}", "-c:v", "libx264",
+                    "-preset", "veryfast", "-crf", "27", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "96k",
+                    "-movflags", "+faststart", str(tmp)], check=True)
+    tmp.rename(dst)
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", "4", "-i", str(dst), "-frames:v", "1", "-q:v", "4",
+                    str(dst.with_suffix(".jpg"))], check=True)
+    return dst
+
+
+def publish(db, made: dict, work: Path) -> None:
+    import run_briefings
+    day = made["day"]
+    for layout, path in made["files"].items():
+        small = compress(Path(path), work / f"{day}_{layout}.mp4", layout)
+        run_briefings._upload(db, f"{VIDEO_FOLDER}/{day}_{layout}.mp4", small.read_bytes(), "video/mp4")
+        run_briefings._upload(db, f"{VIDEO_FOLDER}/{day}_{layout}.jpg", small.with_suffix(".jpg").read_bytes(),
+                              "image/jpeg")
+        print(f"Published {layout}: {small.stat().st_size / 1e6:.1f} MB")
+    script = work / "script.json"
+    if script.exists():                                  # "Read it" in the app: what the presenter and narrator say
+        texts = json.loads(script.read_text()).get("texts") or {}
+        run_briefings._upload(db, f"{VIDEO_FOLDER}/{day}.txt",
+                              "\n\n".join(str(v) for v in texts.values() if v).encode(), "text/plain")
+    meta = videos_meta(db)
+    meta[day] = {"made_at": datetime.now(timezone.utc).isoformat(), "seconds": made["seconds"],
+                 "presenter": made["presenter"], "weather": made["weather"]}
+    keep = sorted(meta, reverse=True)[:KEEP_VIDEOS]
+    old = [d for d in meta if d not in keep]
+    meta = {d: meta[d] for d in keep}
+    run_briefings._upload(db, f"{VIDEO_FOLDER}/videos.json", json.dumps(meta).encode(), "application/json")
+    if old:
+        try:
+            db.storage.from_(briefing.BUCKET).remove([f"{VIDEO_FOLDER}/{d}_{lay}.{x}" for d in old
+                                                     for lay in LAYOUTS for x in ("mp4", "jpg")]
+                                                    + [f"{VIDEO_FOLDER}/{d}.txt" for d in old])
+        except Exception as exc:
+            print(f"Old videos not removed: {type(exc).__name__}")
 
 
 def main() -> int:
@@ -453,9 +523,15 @@ def main() -> int:
     a = sys.argv
     get = lambda flag, default=None: a[a.index(flag) + 1] if flag in a else default     # noqa: E731
     db, _url = run_briefings._client()
-    build(db, Path(get("--library")), Path(get("--music")), Path(get("--out", "out/daily_video")),
-          Path(get("--models", "out/video/voice_model")), edition=get("--edition", "east"),
-          presenter=get("--presenter") or None)
+    if "--check" in a:                              # alerts.yml: start the video job when today's is due
+        print(video_due(db) or "0")
+        return 0
+    out = Path(get("--out", "out/daily_video"))
+    made = build(db, Path(get("--library")), Path(get("--music")), out,
+                 Path(get("--models", "out/video/voice_model")), edition=get("--edition", "east"),
+                 presenter=get("--presenter") or None)
+    if "--publish" in a:
+        publish(db, made, out)
     return 0
 
 

@@ -2350,5 +2350,14 @@
   "Written and spoken for your own watchlist and funnels each morning. Comes with Pro.": "Ditulis dan dibacakan setiap pagi untuk daftar pantauan dan corong Anda sendiri. Tersedia dengan Pro.",
   "Date": "Tanggal",
   "written only": "hanya tertulis",
-  "Not made yet today. It is made ready each morning.": "Belum dibuat hari ini. Disiapkan setiap pagi."
+  "Not made yet today. It is made ready each morning.": "Belum dibuat hari ini. Disiapkan setiap pagi.",
+  "Today's markets in about 90 seconds, presented by the crew. It plays when you first open the app each day; switch that off in ⚙️ Settings. A summary of the app's readings, not advice.": "Pasar hari ini dalam sekitar 90 detik, dibawakan oleh kru. Diputar saat Anda pertama kali membuka aplikasi setiap hari; matikan di ⚙️ Pengaturan. Ringkasan bacaan aplikasi, bukan saran.",
+  "{day} · {who} · {length}": "{day} · {who} · {length}",
+  "**Daily video**": "**Video harian**",
+  "🎬 Play the daily video when I open the app": "🎬 Putar video harian saat saya membuka aplikasi",
+  "The first video is on its way.": "Video pertama sedang dalam perjalanan.",
+  "Once a day, the first time you open the app after the new video is out. You can always watch it in 📸 Quick Snapshot or the 📓 Logbook.": "Sekali sehari, saat pertama kali Anda membuka aplikasi setelah video baru keluar. Anda selalu dapat menontonnya di 📸 Ringkasan Cepat atau 📓 Logbook.",
+  "Daily video": "Video harian",
+  "Tap for sound": "Ketuk untuk suara",
+  "Close and stop daily autoplay": "Tutup dan hentikan putar otomatis harian"
 }

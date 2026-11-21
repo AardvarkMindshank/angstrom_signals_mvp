@@ -40,10 +40,14 @@ def _client():
 def ensure_bucket(db) -> None:
     """The public "briefings" storage bucket (sql/2026-11-20_briefings.sql), made here if it is missing so the
     episodes always have somewhere to go. Needs the service key; quietly does nothing without it."""
-    opts = {"public": True, "file_size_limit": 10485760,
-            "allowed_mime_types": ["audio/mpeg", "text/plain", "application/json", "application/rss+xml"]}
+    opts = {"public": True, "file_size_limit": 26214400,             # 25 MB: the daily videos live here too
+            "allowed_mime_types": ["audio/mpeg", "text/plain", "application/json", "application/rss+xml",
+                                   "video/mp4", "image/jpeg"]}
     try:
-        db.storage.get_bucket(briefing.BUCKET)
+        got = db.storage.get_bucket(briefing.BUCKET)
+        if "video/mp4" not in (getattr(got, "allowed_mime_types", None) or []):
+            db.storage.update_bucket(briefing.BUCKET, opts)
+            print("Briefings bucket now takes the daily videos too.")
     except Exception:
         try:
             db.storage.create_bucket(briefing.BUCKET, options=opts)
