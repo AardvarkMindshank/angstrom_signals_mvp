@@ -400,6 +400,7 @@ export default function(component) {
       ".ang-card{background:var(--ang-surface);color:var(--ang-text);border:1px solid var(--ang-border);border-radius:10px;padding:12px 16px;}",
       // The two briefing boxes at the top of Quick Snapshot look like the market cards under them.
       ".st-key-snapshot_forecast,.st-key-snapshot_passage,.st-key-logbook_forecast,.st-key-logbook_passage{background:var(--ang-surface);color:var(--ang-text);border:1px solid var(--ang-border);border-radius:10px;padding:12px 16px;gap:10px;}",
+      ".st-key-logbook_forecast{margin-bottom:12px;}",
       ".ang-kicker{font-size:.8rem;color:var(--ang-muted);margin-bottom:4px;}",
       // The social panel floats at the side; its empty holder in Quick Snapshot must not add a row gap.
       "[data-testid='stLayoutWrapper']:has(> .st-key-social_host){margin-top:-1rem;}",
@@ -9536,7 +9537,7 @@ def _logbook_panel() -> None:
     """📓 The Logbook's Passage Plan box (title, date selector, player, Read it: the same as the Morning forecast box
     above it), then its settings and podcast feeds."""
     with st.container(key="logbook_passage"):
-        _passage_player("logbook", show_button=True, pick=True)
+        _passage_player("logbook", show_button=False, pick=True)    # made each morning: no button needed
     if not plans.includes(current_plan(), "pro"):
         return
     stored = (st.session_state.get("cloud_prefs") or {}).get("settings") or {}

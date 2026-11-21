@@ -63,6 +63,8 @@ html.angstrom-night #ang-log-root .log-edge:hover{background:#31333f;}
   #ang-log-root .log-panel{width:100vw;left:0;}
   #ang-log-root .log-grip,#ang-log-root .log-pin{display:none !important;}
   #ang-log-root.is-open .log-edge{display:none;}
+  /* the right-hand handles (AI, social) sit over the panel's right edge on a phone: keep the buttons clear of them */
+  #ang-log-root .log-head{padding-right:calc(2.75rem + env(safe-area-inset-right, 0px));}
 }
 """
 
