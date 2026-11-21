@@ -138,5 +138,14 @@ jobs:
             curl -sS --ssl-reqd --connect-to "$name:21:$FTP_SERVER:21" --user "$FTP_USERNAME:$FTP_PASSWORD" "ftp://$name/$dir" --list-only 2>&1 \
               | grep -vE "\.(php|html|css|txt|xml|json|png|jpg|svg|ico|js)$" | head -40 || true
           done
+      - name: What the marketnavi.ai FTP login sees (names only)
+        env:
+          NEW_USER: ${{ secrets.MARKETNAVI_FTP_USERNAME }}
+          NEW_PASS: ${{ secrets.MARKETNAVI_FTP_PASSWORD }}
+        run: |
+          name=$(echo | openssl s_client -starttls ftp -connect "$FTP_SERVER:21" -servername "$FTP_SERVER" 2>/dev/null \
+                 | openssl x509 -noout -ext subjectAltName 2>/dev/null | tr ',' '\n' | grep -o 'DNS:[^ ]*' | sed 's/DNS://' | grep -v '\*' | head -1)
+          curl -sS --ssl-reqd --connect-to "$name:21:$FTP_SERVER:21" --user "$NEW_USER:$NEW_PASS" "ftp://$name/" -Q "PWD" --list-only 2>&1 | head -40 || true
+          echo "-- with details:"; curl -sS --ssl-reqd --connect-to "$name:21:$FTP_SERVER:21" --user "$NEW_USER:$NEW_PASS" "ftp://$name/" 2>&1 | awk '{print $1, $NF}' | head -40 || true
       - name: The live form page
         run: python .github/scripts/beta_check.py page
