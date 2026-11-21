@@ -515,7 +515,7 @@ def render_panel(st, snap: dict, saved_range: str | None, save_range, buttons, t
         # The calendar sits under the note, beside Your take, so the space under the note isn't left empty.
         row = st.container(key="tides_note_row")
         with row:
-            note_col, take_col = st.columns([3, 2], vertical_alignment="top")
+            note_col, take_col = st.columns([3, 2])           # stretched: Your take lines up with the note (21 Nov 2026)
             with note_col:
                 st.html(note_part(snap))
                 with st.container(key="tides_strip_in_note"):
