@@ -3,6 +3,8 @@ name: Beta request check
 # names, emails or keys. Also reads the website's form handler over FTP and reports how it saves (never its secrets).
 on:
   workflow_dispatch:
+permissions:
+  contents: write
 jobs:
   check:
     runs-on: ubuntu-latest
