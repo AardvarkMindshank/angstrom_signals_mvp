@@ -19,13 +19,5 @@ jobs:
       - run: pip install -q requests
       - name: The queue in the database
         run: python .github/scripts/beta_check.py db
-      - name: The website's form handler
-        run: |
-          curl -sS --ssl-reqd --user "$FTP_USERNAME:$FTP_PASSWORD" "ftp://$FTP_SERVER/send-beta-request.php" -o handler.php \
-            || curl -sS --ftp-ssl --user "$FTP_USERNAME:$FTP_PASSWORD" "ftp://$FTP_SERVER/public_html/send-beta-request.php" -o handler.php \
-            || echo "Could not read the handler over FTP"
-          [ -s handler.php ] && python .github/scripts/beta_check.py handler handler.php
-          rm -f handler.php
-          curl -sS --ssl-reqd --user "$FTP_USERNAME:$FTP_PASSWORD" "ftp://$FTP_SERVER/" --list-only | grep -iE "beta|log|\.php" || true
       - name: The live form page
         run: python .github/scripts/beta_check.py page

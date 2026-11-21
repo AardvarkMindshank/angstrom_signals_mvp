@@ -46,8 +46,15 @@ def handler(path: str) -> None:
 
 
 def page() -> None:
-    html = requests.get("https://angstromsignals.com/beta.html", timeout=60).text
-    print("form action:", re.findall(r'action="([^"]+)"', html))
+    r = requests.get("https://angstromsignals.com/beta.html", timeout=60)
+    html = r.text
+    print("beta.html:", r.status_code, r.url, len(html), "characters")
+    i = html.lower().find("<form")
+    print("form tag:", html[i:i + 200].replace("\n", " ") if i >= 0 else "none")
+    print("form action:", re.findall(r'action=["\']?([^"\' >]+)', html))
+    for path in ("send-beta-request.php", "send-contact.php", "contact.php"):
+        h = requests.get(f"https://angstromsignals.com/{path}", timeout=60, allow_redirects=False)
+        print(f"GET {path}: {h.status_code} {h.headers.get('location', '')} ({len(h.text)} chars) {h.text[:120]!r}")
     for name, opts in re.findall(r'<select[^>]*name="([^"]+)"[^>]*>(.*?)</select>', html, re.S):
         vals = re.findall(r'value="([^"]*)"', opts)
         print(f"  select {name}: longest value {max((len(v) for v in vals), default=0)} chars")
