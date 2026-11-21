@@ -129,5 +129,14 @@ jobs:
             echo "link secret set in the database: ", ($dbsecret !== "" ? "yes" : "no"), "; website secret matches: ", ($dbsecret !== "" && hash_equals($dbsecret, LINK_SECRET) ? "yes" : "NO"), "\n";
           '
           rm -f "$cfg"
+      - name: What the FTP account can see (folder names only)
+        run: |
+          name=$(echo | openssl s_client -starttls ftp -connect "$FTP_SERVER:21" -servername "$FTP_SERVER" 2>/dev/null \
+                 | openssl x509 -noout -ext subjectAltName 2>/dev/null | tr ',' '\n' | grep -o 'DNS:[^ ]*' | sed 's/DNS://' | grep -v '\*' | head -1)
+          for dir in "" "marketnavi.ai/" "public_html/"; do
+            echo "== /$dir"
+            curl -sS --ssl-reqd --connect-to "$name:21:$FTP_SERVER:21" --user "$FTP_USERNAME:$FTP_PASSWORD" "ftp://$name/$dir" --list-only 2>&1 \
+              | grep -vE "\.(php|html|css|txt|xml|json|png|jpg|svg|ico|js)$" | head -40 || true
+          done
       - name: The live form page
         run: python .github/scripts/beta_check.py page
