@@ -279,11 +279,12 @@ def month_ticks(first, last) -> str:
     return "M1"
 
 
-def _brand_mark(width: int, *, align: str = "center") -> str:
-    """Both logos, with the current theme shown first. The page swaps them when the theme changes."""
+def _brand_mark(width: int, *, align: str = "center", full: bool = False) -> str:
+    """Both logos, with the current theme shown first. The page swaps them when the theme changes. full: the whole
+    MarketNavi logo (compass, name and "AI-powered market navigation"), for the sign-in page."""
     folder = Path(__file__).resolve().parent / "assets"
-    light = folder / "logo-light.png"
-    dark = folder / "logo-dark.png"
+    light = folder / ("brand/full-light-tight.png" if full else "logo-light.png")
+    dark = folder / ("brand/full-dark-tight.png" if full else "logo-dark.png")
     if not light.is_file() or not dark.is_file():
         return ""
 
@@ -6071,8 +6072,7 @@ if st.session_state.user is None:
         _, col_center, _ = st.columns([1, 1.2, 1])
 
     with col_center:
-        st.markdown(_brand_mark(200), unsafe_allow_html=True)
-        st.title("MarketNavi")
+        st.markdown(_brand_mark(340, full=True), unsafe_allow_html=True)    # the whole logo, with its tagline
         st.caption(t("Navigate the markets with AI-guided analysis and alerts, with a community alongside."))
 
         if st.session_state.get("recovery_access"):
