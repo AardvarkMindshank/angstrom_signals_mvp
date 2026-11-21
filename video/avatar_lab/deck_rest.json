@@ -1,0 +1,275 @@
+{
+ "about": "The 18 Deckhand clips not made on 20 Nov (the fal credit ran out).",
+ "jobs": [
+  {
+   "id": "say_deck_sign_equities_1",
+   "speak": "Over to the stock markets.",
+   "voice": "bm_lewis",
+   "speed": 1.08
+  },
+  {
+   "id": "say_deck_sign_equities_2",
+   "speak": "Now, the equity markets.",
+   "voice": "bm_lewis",
+   "speed": 1.08
+  },
+  {
+   "id": "say_deck_sign_crypto_1",
+   "speak": "And now, my favourite, crypto.",
+   "voice": "bm_lewis",
+   "speed": 1.08
+  },
+  {
+   "id": "say_deck_sign_crypto_2",
+   "speak": "Over to the crypto seas.",
+   "voice": "bm_lewis",
+   "speed": 1.08
+  },
+  {
+   "id": "say_deck_sign_horizon_1",
+   "speak": "Finally, what's coming up.",
+   "voice": "bm_lewis",
+   "speed": 1.08
+  },
+  {
+   "id": "say_deck_sign_horizon_2",
+   "speak": "And last, a look over the horizon.",
+   "voice": "bm_lewis",
+   "speed": 1.08
+  },
+  {
+   "id": "say_deck_signoff_1",
+   "speak": "That's the forecast. Fair winds and following seas. Right, back to scrubbing the deck.",
+   "voice": "bm_lewis",
+   "speed": 1.08
+  },
+  {
+   "id": "say_deck_signoff_2",
+   "speak": "That's all from me. Fair winds and following seas. Please don't tell the Captain I touched the wheel.",
+   "voice": "bm_lewis",
+   "speed": 1.08
+  },
+  {
+   "id": "say_deck_weather_sunny_1",
+   "speak": "Clear skies and calm seas this morning. Fair sailing across the markets.",
+   "voice": "bm_lewis",
+   "speed": 1.08
+  },
+  {
+   "id": "say_deck_weather_sunny_2",
+   "speak": "The sun's out over the markets today, with a gentle following wind.",
+   "voice": "bm_lewis",
+   "speed": 1.08
+  },
+  {
+   "id": "say_deck_weather_fair_1",
+   "speak": "Fair weather this morning, with a light breeze and only a little chop.",
+   "voice": "bm_lewis",
+   "speed": 1.08
+  },
+  {
+   "id": "say_deck_weather_fair_2",
+   "speak": "A fair morning out there. Steady seas, with the odd passing cloud.",
+   "voice": "bm_lewis",
+   "speed": 1.08
+  },
+  {
+   "id": "say_deck_weather_changeable_1",
+   "speak": "Changeable weather this morning. Keep an eye on the horizon.",
+   "voice": "bm_lewis",
+   "speed": 1.08
+  },
+  {
+   "id": "say_deck_weather_changeable_2",
+   "speak": "Mixed skies today, with the wind shifting between quarters.",
+   "voice": "bm_lewis",
+   "speed": 1.08
+  },
+  {
+   "id": "say_deck_weather_rough_1",
+   "speak": "Rough seas this morning, with a heavy swell running.",
+   "voice": "bm_lewis",
+   "speed": 1.08
+  },
+  {
+   "id": "say_deck_weather_rough_2",
+   "speak": "A choppy morning out there, with a stiff wind against the tide.",
+   "voice": "bm_lewis",
+   "speed": 1.08
+  },
+  {
+   "id": "say_deck_weather_stormy_1",
+   "speak": "Storm warning this morning. Heavy weather across the markets.",
+   "voice": "bm_lewis",
+   "speed": 1.08
+  },
+  {
+   "id": "say_deck_weather_stormy_2",
+   "speak": "Gales on the horizon today, and the barometer falling fast.",
+   "voice": "bm_lewis",
+   "speed": 1.08
+  },
+  {
+   "id": "deck_sign_equities_1",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:crew_deck_a_2.png",
+    "audio_url": "out:say_deck_sign_equities_1.wav",
+    "prompt": "A cheerful, cheeky animated young deckhand speaking to camera on the sunny deck of a sailing yacht, engaged expression, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "deck_sign_equities_2",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:crew_deck_a_2.png",
+    "audio_url": "out:say_deck_sign_equities_2.wav",
+    "prompt": "A cheerful, cheeky animated young deckhand speaking to camera on the sunny deck of a sailing yacht, engaged expression, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "deck_sign_crypto_1",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:crew_deck_a_2.png",
+    "audio_url": "out:say_deck_sign_crypto_1.wav",
+    "prompt": "A cheerful, cheeky animated young deckhand speaking to camera on the sunny deck of a sailing yacht, engaged expression, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "deck_sign_crypto_2",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:crew_deck_a_2.png",
+    "audio_url": "out:say_deck_sign_crypto_2.wav",
+    "prompt": "A cheerful, cheeky animated young deckhand speaking to camera on the sunny deck of a sailing yacht, engaged expression, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "deck_sign_horizon_1",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:crew_deck_a_2.png",
+    "audio_url": "out:say_deck_sign_horizon_1.wav",
+    "prompt": "A cheerful, cheeky animated young deckhand speaking to camera on the sunny deck of a sailing yacht, engaged expression, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "deck_sign_horizon_2",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:crew_deck_a_2.png",
+    "audio_url": "out:say_deck_sign_horizon_2.wav",
+    "prompt": "A cheerful, cheeky animated young deckhand speaking to camera on the sunny deck of a sailing yacht, engaged expression, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "deck_signoff_1",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:crew_deck_a_2.png",
+    "audio_url": "out:say_deck_signoff_1.wav",
+    "prompt": "A cheerful, cheeky animated young deckhand speaking to camera on the sunny deck of a sailing yacht, warm, smiling expression, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "deck_signoff_2",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:crew_deck_a_2.png",
+    "audio_url": "out:say_deck_signoff_2.wav",
+    "prompt": "A cheerful, cheeky animated young deckhand speaking to camera on the sunny deck of a sailing yacht, warm, smiling expression, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "deck_weather_sunny_1",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:crew_deck_a_2.png",
+    "audio_url": "out:say_deck_weather_sunny_1.wav",
+    "prompt": "A cheerful, cheeky animated young deckhand speaking to camera on the sunny deck of a sailing yacht, bright, happy expression, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "deck_weather_sunny_2",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:crew_deck_a_2.png",
+    "audio_url": "out:say_deck_weather_sunny_2.wav",
+    "prompt": "A cheerful, cheeky animated young deckhand speaking to camera on the sunny deck of a sailing yacht, bright, happy expression, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "deck_weather_fair_1",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:crew_deck_a_2.png",
+    "audio_url": "out:say_deck_weather_fair_1.wav",
+    "prompt": "A cheerful, cheeky animated young deckhand speaking to camera on the sunny deck of a sailing yacht, relaxed, content expression, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "deck_weather_fair_2",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:crew_deck_a_2.png",
+    "audio_url": "out:say_deck_weather_fair_2.wav",
+    "prompt": "A cheerful, cheeky animated young deckhand speaking to camera on the sunny deck of a sailing yacht, relaxed, content expression, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "deck_weather_changeable_1",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:crew_deck_a_2.png",
+    "audio_url": "out:say_deck_weather_changeable_1.wav",
+    "prompt": "A cheerful, cheeky animated young deckhand speaking to camera on the sunny deck of a sailing yacht, thoughtful, attentive expression, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "deck_weather_changeable_2",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:crew_deck_a_2.png",
+    "audio_url": "out:say_deck_weather_changeable_2.wav",
+    "prompt": "A cheerful, cheeky animated young deckhand speaking to camera on the sunny deck of a sailing yacht, thoughtful, attentive expression, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "deck_weather_rough_1",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:crew_deck_a_2.png",
+    "audio_url": "out:say_deck_weather_rough_1.wav",
+    "prompt": "A cheerful, cheeky animated young deckhand speaking to camera on the sunny deck of a sailing yacht, serious, steady expression, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "deck_weather_rough_2",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:crew_deck_a_2.png",
+    "audio_url": "out:say_deck_weather_rough_2.wav",
+    "prompt": "A cheerful, cheeky animated young deckhand speaking to camera on the sunny deck of a sailing yacht, serious, steady expression, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "deck_weather_stormy_1",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:crew_deck_a_2.png",
+    "audio_url": "out:say_deck_weather_stormy_1.wav",
+    "prompt": "A cheerful, cheeky animated young deckhand speaking to camera on the sunny deck of a sailing yacht, grave, serious expression, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "deck_weather_stormy_2",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:crew_deck_a_2.png",
+    "audio_url": "out:say_deck_weather_stormy_2.wav",
+    "prompt": "A cheerful, cheeky animated young deckhand speaking to camera on the sunny deck of a sailing yacht, grave, serious expression, natural head movement and blinking."
+   }
+  }
+ ]
+}
