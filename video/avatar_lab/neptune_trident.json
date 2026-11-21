@@ -1,0 +1,31 @@
+{
+ "about": "King Neptune's sign-off again with his trident (two tries, to keep the one that does not glitch).",
+ "jobs": [
+  {
+   "id": "say_neptune_signoff_1",
+   "speak": "Fair winds and following seas, mortals. Until the tide brings us together again.",
+   "voice": "am_onyx",
+   "speed": 1.0
+  },
+  {
+   "id": "tri1_neptune_signoff_1",
+   "stage": 1,
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:guest_neptune_1.png",
+    "audio_url": "out:say_neptune_signoff_1.wav",
+    "prompt": "The animated king from the picture speaking to camera, clear lip movement in time with the voice, natural head movement and blinking. He holds the trident still and upright; the trident, his hand and the sea stay steady."
+   }
+  },
+  {
+   "id": "tri2_neptune_signoff_1",
+   "stage": 1,
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:guest_neptune_1.png",
+    "audio_url": "out:say_neptune_signoff_1.wav",
+    "prompt": "The animated king from the picture speaking to camera, clear lip movement in time with the voice, natural head movement and blinking. He holds the trident still and upright; the trident, his hand and the sea stay steady."
+   }
+  }
+ ]
+}
