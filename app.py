@@ -73,13 +73,27 @@ _logging.getLogger("streamlit.runtime.scriptrunner.script_run_context").setLevel
 
 st.set_page_config(
     page_title=(
-        "angstrom signals - " + _POPOUT_VIEW.replace("_", " ")
-        if _POPOUT_VIEW else "angstrom signals"
+        "MarketNavi - " + _POPOUT_VIEW.replace("_", " ")
+        if _POPOUT_VIEW else "MarketNavi"
     ),
-    page_icon="📈",
+    page_icon=str(Path(__file__).resolve().parent / "assets" / "brand" / "favicon-48.png"),
     layout="wide",
     initial_sidebar_state="expanded",
 )
+# The old address (app.angstromsignals.com) moves to app.marketnavi.ai (21 Nov 2026): the same page there, with its
+# path and any link parameters, so old bookmarks and email links still land in the right place.
+try:
+    _host = str((st.context.headers or {}).get("host") or "").lower()
+except Exception:
+    _host = ""
+if _host.endswith("angstromsignals.com"):
+    st.components.v2.component("move_to_marketnavi", js="""
+export default function() {
+  const u = new URL(window.top.location.href); u.hostname = "app.marketnavi.ai";
+  window.top.location.replace(u.toString());
+}""")(key="move_to_marketnavi")
+    st.markdown("MarketNavi has moved to [app.marketnavi.ai](https://app.marketnavi.ai). Taking you there…")
+    st.stop()
 import i18n
 from i18n import t
 import plans
@@ -6058,7 +6072,7 @@ if st.session_state.user is None:
 
     with col_center:
         st.markdown(_brand_mark(200), unsafe_allow_html=True)
-        st.title(t("angstrom signals"))
+        st.title("MarketNavi")
         st.caption(t("Navigate the markets with AI-guided analysis and alerts, with a community alongside."))
 
         if st.session_state.get("recovery_access"):
@@ -8304,7 +8318,7 @@ for _seen_name, _state_name in _layout_watched:
 st.markdown("<div class='ang-page-top'></div>", unsafe_allow_html=True)   # marks the top of the page (CSS above)
 with st.container(horizontal=True, vertical_alignment="center", horizontal_alignment="distribute", key="page_header"):
     st.markdown(
-        t("<div style='display:flex;align-items:center;gap:0.85rem;margin:0.4rem 0;'>{brand_mark_58_align_left}<div style='display:flex;align-items:baseline;flex-wrap:wrap;gap:0.35rem 0.85rem;'><h1 style='margin:0;padding:0;line-height:1.15;font-size:2.25rem;font-weight:700;white-space:nowrap;'>angstrom signals</h1><span style='font-size:0.82rem;font-weight:500;line-height:1;opacity:0.72;'>Navigate the markets with AI-guided analysis and alerts, with a community alongside.</span></div></div>", brand_mark_58_align_left=_brand_mark(58, align='left')),
+        t("<div style='display:flex;align-items:center;gap:0.85rem;margin:0.4rem 0;'>{brand_mark_58_align_left}<div style='display:flex;align-items:baseline;flex-wrap:wrap;gap:0.35rem 0.85rem;'><h1 style='margin:0;padding:0;line-height:1.15;font-size:2.25rem;font-weight:700;white-space:nowrap;'>MarketNavi</h1><span style='font-size:0.82rem;font-weight:500;line-height:1;opacity:0.72;'>Navigate the markets with AI-guided analysis and alerts, with a community alongside.</span></div></div>", brand_mark_58_align_left=_brand_mark(58, align='left')),
         unsafe_allow_html=True,
     )
     with st.container(horizontal=True, vertical_alignment="center", gap="xsmall", width="content",
@@ -11583,7 +11597,7 @@ with tracked_expander("📝 " + t("Feedback"), "feedback", sidebar=True):
 
 with tracked_expander("ℹ️ " + t("About"), "about", sidebar=True):
     st.markdown(_brand_mark(72), unsafe_allow_html=True)
-    st.markdown(t("**angstrom signals**"))
+    st.markdown(t("**MarketNavi**"))
     st.caption(t("Navigate the markets with AI-guided analysis and alerts, with a community alongside."))
     st.markdown(
         t("MarketNavi is a platform for traders who want aggregated signals "
