@@ -401,10 +401,10 @@ export default function(component) {
       // The two briefing boxes at the top of Quick Snapshot look like the market cards under them.
       ".st-key-snapshot_forecast,.st-key-snapshot_passage,.st-key-snapshot_video,.st-key-logbook_video,.st-key-logbook_forecast,.st-key-logbook_passage{background:var(--ang-surface);color:var(--ang-text);border:1px solid var(--ang-border);border-radius:10px;padding:12px 16px;gap:10px;}",
       ".st-key-logbook_forecast,.st-key-logbook_video{margin-bottom:12px;}",
-      // Boxes side by side line up at the bottom (21 Nov 2026): a column holding just one box stretches that box to the
+      // Boxes side by side line up at the bottom (21 Nov 2026): the last box in a column stretches to the
       // row's height. Stacked on a phone, each column is only as tall as its box, so nothing changes there.
-      "[data-testid='stColumn'] > [data-testid='stVerticalBlock'] > [data-testid='stLayoutWrapper']:only-child{flex:1 1 auto;display:flex;flex-direction:column;}",
-      "[data-testid='stColumn'] > [data-testid='stVerticalBlock'] > [data-testid='stLayoutWrapper']:only-child > [data-testid='stVerticalBlock']{flex:1 1 auto;}",
+      "[data-testid='stColumn'] > [data-testid='stVerticalBlock'] > [data-testid='stLayoutWrapper']:last-child{flex:1 1 auto;display:flex;flex-direction:column;}",
+      "[data-testid='stColumn'] > [data-testid='stVerticalBlock'] > [data-testid='stLayoutWrapper']:last-child > [data-testid='stVerticalBlock']{flex:1 1 auto;}",
       ".ang-kicker{font-size:.8rem;color:var(--ang-muted);margin-bottom:4px;}",
       // The social panel floats at the side; its empty holder in Quick Snapshot must not add a row gap.
       "[data-testid='stLayoutWrapper']:has(> .st-key-social_host){margin-top:-1rem;}",
