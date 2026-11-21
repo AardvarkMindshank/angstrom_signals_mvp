@@ -11,7 +11,7 @@ import os
 import re
 
 TERMS = [
-    "Angstrom Lattice", "AI Navigator", "AI Passage Plan", "Passage Plan", "Visualize History", "What followed",
+    "Lattice", "AI Navigator", "AI Passage Plan", "Passage Plan", "Visualize History", "What followed",
     "Quick Snapshot", "Signal Groups", "Signal Group", "Signal Sets", "Signal Set", "Sonar oscillators", "Sea state",
     "Lattice", "Prism", "Tides", "Tide", "Funnels", "Funnel", "Navigator", "Sonar", "Groups", "Group", "Sets", "Set",
     "Trend", "Stretch", "Flow", "Candidates", "Candidate", "Flagged",

@@ -1,6 +1,6 @@
 """
 🔻 Funnel stages board (Lattice → Funnels): the saved-Set list on the left, exactly as in Prism
-(filter, perspective icons, "Provided by Angstrom Signals" folded, Your Sets), the funnel's stages on the right, with
+(filter, perspective icons, "Provided by MarketNavi" folded, Your Sets), the funnel's stages on the right, with
 the same vertical divider between them. The pool sits at the wide top of the funnel. A provided funnel is drawn the
 same way with "readonly": no Set list, nothing to change.
 

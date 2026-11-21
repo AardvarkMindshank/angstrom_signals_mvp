@@ -1,10 +1,10 @@
 {
  "title": "Signals",
- "series": "Angstrom Lattice · 2 of 5",
+ "series": "Lattice · 2 of 5",
  "next": "Next: 3 · Signal Groups",
  "slug": "02-signals",
  "section": "training",
- "intro_say": "Angstrom Signals. | Signals.",
+ "intro_say": "MarketNavi. | Signals.",
  "outro_say": "Next: building your own Signal Group.",
  "steps": [
   {
@@ -45,7 +45,7 @@
   {
    "id": "sentiment",
    "screen": "Sentiment: Asset headline sentiment, with its \"History from Nov 2026\" badge",
-   "say": "Sentiment reads recent headlines about the asset, positive or negative. | Its history starts in November 2026 with the birth of Angstrom Signals."
+   "say": "Sentiment reads recent headlines about the asset, positive or negative. | Its history starts in November 2026 with the birth of MarketNavi."
   },
   {
    "id": "together",

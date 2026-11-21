@@ -1,5 +1,5 @@
 """
-✨ AI Navigator (it started as the Lattice AI Advisor, then the Angstrom Assistant), phase 0: one assistant for the whole app. It answers
+✨ AI Navigator (it started as the Lattice AI Advisor, then the AI Navigator), phase 0: one assistant for the whole app. It answers
 questions about where things are and how to use them, and explains in plain words how to build and test an idea in
 Lattice. Opened from the top bar it starts as the app guide; opened from Lattice, as the research coach; it answers
 either kind of question in the same conversation. Both buttons open the same window (?view=advisor&from=...).
@@ -33,13 +33,13 @@ MAX_TURNS = 12                         # earlier turns are dropped from what is 
 MAX_TOOL_ROUNDS = 6                    # look-ups per question before it must answer
 DAILY_LIMIT = 60                       # questions per person per day (this browser session's count)
 
-RULES = """You are the ✨ AI Navigator inside Angstrom Signals, a market research app for crypto and stocks. You
+RULES = """You are the ✨ AI Navigator inside MarketNavi, a market research app for crypto and stocks. You
 have two jobs, and the person can ask about either at any time:
 1. App guide: where things are and how to use them (sections, buttons, settings, alerts, watchlists, the chart,
    what a reading or score means). Answer from the Help and guides text below, which is the app's own help; when
    a 🎬 training video covers the question, give its link exactly as listed under 🎬 Training videos (a markdown
    link such as [🎬 3 · Signal Groups](?view=video&v=03-signal-groups)); the person clicks it to watch. If the help does not cover something, say you are not sure rather than guess where it is.
-2. Research coach in the research workspace, Angstrom Lattice: help the person turn a trading idea into the app's
+2. Research coach in the research workspace, Lattice: help the person turn a trading idea into the app's
    building blocks and understand the results.
 You have tools (when the tool list is offered): look up an asset's current readings, a Set's answer now for a few
 assets, and the Soundings results, and prepare a draft Set. Use them whenever real readings or a real answer would
@@ -93,7 +93,7 @@ How Lattice works (the screens):
   2014 to Oct 2024. Verdicts: 🔬 Too few to judge, ⚖️ No clear difference, 〰️ Some difference, not established,
   🧭 Consistent difference. Measures: rose a typical move before falling one (and the reverse), average move after
   10 candles in typical moves, finished higher.
-- Prism Scan tab: left panel lists Saved Sets (provided ones under "Provided by Angstrom Signals", each with
+- Prism Scan tab: left panel lists Saved Sets (provided ones under "Provided by MarketNavi", each with
   "more…" and "🔍 Look inside" → "Open in Signal Sets", which opens a provided one as their own copy) and the Watchlist (groups Whole Watchlist, All crypto, All
   equities; single assets). Drop a Set or tap + to start a scan. A scan has Assets (adding something replaces Whole
   Watchlist; All crypto takes in single coins), Runs (Only when I press Play, each 4-hour/daily/weekly close, at
@@ -134,14 +134,14 @@ def _provided() -> list[str]:
     import prism
     import set_inside
 
-    out = ["Provided Groups (Signal Sets → Groups and signals → Provided by Angstrom Signals):"]
+    out = ["Provided Groups (Signal Sets → Groups and signals → Provided by MarketNavi):"]
     for _, (name, body) in prism.provided_groups().items():
         members = ", ".join(m.get("label") or m["ref"]["id"] for m in body.get("members") or [])
         labels = [r["label"] for r in ((body.get("outcomes") or {}).get("rules") or [])]
         conds = [c.get("label") or c["key"] for c in body.get("conditions") or []]
         out.append(f"- {name}: signals {members}" + (f"; labels {', '.join(labels)}" if labels else "")
                    + (f"; conditions: {'; '.join(conds)}" if conds else ""))
-    out.append("Provided Sets (Prism → Provided by Angstrom Signals; open with 🔍 Look inside → Open in Signal Sets, as their own copy):")
+    out.append("Provided Sets (Prism → Provided by MarketNavi; open with 🔍 Look inside → Open in Signal Sets, as their own copy):")
     for key, doc in prism.demo_sets().items():
         inside = set_inside.parts(doc)
         card = perspectives.followed_card(doc, key)
@@ -229,7 +229,7 @@ START = {
              "every page: expect questions about whatever they are looking at (the asset they have selected, their "
              "tables and funnels, Lattice, Tides) or about the app itself.",
     "app": "The person opened you from the top bar of the app: expect questions about the app itself first.",
-    "lattice": "The person opened you from Angstrom Lattice: expect questions about building and testing ideas first.",
+    "lattice": "The person opened you from Lattice: expect questions about building and testing ideas first.",
     "tides": "The person opened you from 🌊 Tides, the macro layer: expect questions about the currents, the tide, the "
              "sea state and the macro calendar first, and how they bear on their own assets, Sets and funnels.",
 }
@@ -508,7 +508,7 @@ def render(st, supabase, user_id: str = "", start: str = "lattice", watchlist: d
     import signal_groups_inspector as gi
 
     st.caption(t("Ask anything about the app: where things are, how to use them, what a reading means. Or describe a "
-               "trading idea in plain words and get step-by-step help building and testing it in Angstrom Lattice. "
+               "trading idea in plain words and get step-by-step help building and testing it in Lattice. "
                "It explains; you do the clicks. No buy or sell calls."))
     provider = ai_providers.pick("navigator", provider)
     if not ai_providers.available(provider):

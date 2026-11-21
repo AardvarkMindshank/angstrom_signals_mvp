@@ -1,12 +1,12 @@
 """
-Demo page for training videos: the real Angstrom Lattice section with made-up account data (no sign-in, no
+Demo page for training videos: the real Lattice section with made-up account data (no sign-in, no
 database; everything saved lives in this browser session) and live prices. Not part of the dashboard.
 
 Address options (all optional):
   ?section=groups | sets | prism | funnels    the part shown first (default prism)
   &seed=trend | pullback            already saved: My Trend (video 3); with pullback, also the Set from video 4
   &preset=1                         open the saved Group and Set in their editors (for quick looks)
-  ?view=advisor&from=lattice|app    the ✨ Angstrom Assistant window, with example answers (DEMO_ANSWERS below)
+  ?view=advisor&from=lattice|app    the ✨ AI Navigator window, with example answers (DEMO_ANSWERS below)
                                     instead of a call to the AI, so a recording is the same every time
   ?view=tides                       the 🌊 Tides panel, from today's readings (worked out once per process)
   ?view=advisor&from=tides&ask=passage   Today's AI Passage Plan: an example written from the same readings by
@@ -174,7 +174,7 @@ DEMO_ANSWERS = [
 4. Save it, then tap **🔬 Study this Set**. It compares what happened after each fading breakout with comparable ordinary days, and says plainly if there was no clear difference.
 
 The worked example shows every step: [🎬 Breakout fading: a THEN box](?view=video&v=w4-breakout-fading)"""),
-    ("", """That's **Prism Scan**. On the left are your Sets and the ones **Provided by Angstrom Signals**: the small icons say what each looks at, and the last mark is its study (⚖️ means it was studied and showed no clear difference from comparable days).
+    ("", """That's **Prism Scan**. On the left are your Sets and the ones **Provided by MarketNavi**: the small icons say what each looks at, and the last mark is its study (⚖️ means it was studied and showed no clear difference from comparable days).
 
 - Tap **+** on a Set, or drag it onto the board, to start a scan.
 - **▶** runs it now on your watchlist; **⏪** rebuilds a past moment.
@@ -229,7 +229,7 @@ def _demo_ask(history, question, system, post=None, images=None, **kwargs):
     return next(a for key, a in DEMO_ANSWERS if key in q)
 
 
-st.set_page_config(page_title="Angstrom Signals", layout="wide")
+st.set_page_config(page_title="MarketNavi", layout="wide")
 st.markdown("<style>header[data-testid='stHeader'],[data-testid='stToolbar'],[data-testid='stDecoration']"
             "{display:none!important} .block-container{padding-top:1.2rem!important}"
             "</style>", unsafe_allow_html=True)

@@ -242,7 +242,7 @@ def _page(st, supabase, user, nda: dict, preview: bool = False) -> None:
             st.download_button("📄 Download the sample signed copy", sample, file_name=f"SAMPLE-signed-{nda['file']}",
                                mime="application/pdf", key="nda_sample_dl")
     st.markdown(f"## ✍️ {nda['title']}")
-    st.markdown("Welcome to the Angstrom Signals closed beta. Before you start, please read and sign the beta "
+    st.markdown("Welcome to the MarketNavi closed beta. Before you start, please read and sign the beta "
                 "non-disclosure agreement. It takes a minute, and you only do it once.")
     st.download_button("📄 Download the NDA (PDF)", nda["pdf"], file_name=nda["file"], mime="application/pdf",
                        key="nda_download")

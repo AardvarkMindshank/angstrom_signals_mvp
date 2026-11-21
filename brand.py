@@ -1,10 +1,13 @@
-"""🏷️ The brand in one place (20 Nov 2026): the name, web address and logo that new public pieces use, starting with
-the daily forecast video, so a rename (MarketNavi is under discussion) is one edit here. Older parts of the app
-still name Angstrom Signals directly; they move here when the name is settled."""
+"""🏷️ The brand in one place: MarketNavi, a product of Angstrom Signals (renamed 21 Nov 2026). New public pieces (the
+daily video first) read the name, web address and logo here. Angstrom Signals stays the company that runs it: the
+operator in the terms and privacy pages, the copyright line and the beta agreement."""
 
-NAME = "Angstrom Signals"
-DOMAIN = "angstromsignals.com"
+NAME = "MarketNavi"
+COMPANY = "Angstrom Signals"
+DOMAIN = "marketnavi.ai"
+APP_URL = "https://app.marketnavi.ai"
+COMPANY_DOMAIN = "angstromsignals.com"
 TAGLINE = "Navigate the markets."
-LOGO_DARK = "assets/logo-dark.png"      # for dark backgrounds
+LOGO_DARK = "assets/logo-dark.png"      # for dark backgrounds (the MarketNavi logo replaces these when it arrives)
 LOGO_LIGHT = "assets/logo-light.png"
-SHOW_IN_VIDEO = False                    # False: the daily video shows no name or logo until the name is settled
+SHOW_IN_VIDEO = False                    # True once the video intro and outro are made with the new logo

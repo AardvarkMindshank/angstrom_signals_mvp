@@ -66,7 +66,7 @@ def keys(monkeypatch):
 def test_payload_titles_and_length():
     p = pn.note_payload({"id": 7, "alert_type": "funnel", "asset_name": "Trend crypto longs", "message": "x " * 200})
     assert p["title"] == "🔻 Funnel" and p["tag"] == "note-7" and len(p["body"]) <= 220 and p["body"].endswith("…")
-    assert pn.note_payload({"alert_type": "trend_up", "asset_name": "Bitcoin", "message": "Up"})["title"] == "Angstrom · Bitcoin"
+    assert pn.note_payload({"alert_type": "trend_up", "asset_name": "Bitcoin", "message": "Up"})["title"] == "MarketNavi · Bitcoin"
 
 
 def test_sends_each_new_note_once_and_drops_gone_devices(keys):

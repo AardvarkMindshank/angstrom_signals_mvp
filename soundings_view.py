@@ -1,5 +1,5 @@
 """
-🧭 Soundings in Angstrom Lattice (preview, 18 Nov 2026): what came before past rises and falls (soundings.py).
+🧭 Soundings in Lattice (preview, 18 Nov 2026): what came before past rises and falls (soundings.py).
 
 Shows the last checked run (data/soundings.json, copied from the reports branch after checking): the conditions that
 came before moves more often than usual in the search years, and what happened to each on the later years it never

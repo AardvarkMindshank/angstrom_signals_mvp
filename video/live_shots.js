@@ -9,7 +9,7 @@ const { chromium } = require("playwright");
 const fs = require("fs");
 const path = require("path");
 
-const URL = process.env.APP_URL || "https://app.angstromsignals.com/";
+const URL = process.env.APP_URL || "https://app.marketnavi.ai/";
 const OUT = process.argv[2] || "out/shots";
 
 (async () => {
@@ -51,7 +51,7 @@ const OUT = process.argv[2] || "out/shots";
   await page.locator("button").filter({ hasText: "Log In" }).first().click();
   await page.waitForFunction(() => !document.querySelector('input[autocomplete="current-password"]'), null, { timeout: 120000 });
   await settle(6000);
-  for (const name of ["Angstrom Lattice", "Crypto Signals", "Equity Signals", "Interactive Chart", "Why these readings", "Quick Snapshot", "Tides"]) await fold(name);
+  for (const name of ["Lattice", "Crypto Signals", "Equity Signals", "Interactive Chart", "Why these readings", "Quick Snapshot", "Tides"]) await fold(name);
   await page.evaluate(() => window.scrollTo(0, 0));
   await settle();
 
@@ -107,7 +107,7 @@ const OUT = process.argv[2] || "out/shots";
   });
   await step("why", async () => { const s = await expand("Why these readings"); await settle(2000); await toTop(s); await shot("why_these_readings"); await fold("Why these readings"); });
   await step("lattice", async () => {
-    await expand("Angstrom Lattice");
+    await expand("Lattice");
     await tab("Signal Groups"); await shot("signal_groups");
     await tab("Signal Sets"); await shot("signal_sets");
     await tab("Prism Scan"); await shot("prism_scan");
@@ -115,7 +115,7 @@ const OUT = process.argv[2] || "out/shots";
     await settle(1500);
     const board = page.locator(".lat.fun").first();
     await toTop(board); await shot("funnel");
-    await fold("Angstrom Lattice");
+    await fold("Lattice");
   });
   // 📓 Logbook and ☀️/🌙 Day or night (sidebar), checked after the 20 Nov changes; not website pictures.
   await step("logbook", async () => {

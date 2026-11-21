@@ -8,7 +8,7 @@ Signals Breakdown, which only covered Trend, Stretch and Flow).
   only the short answer, so their block shows that answer and when it was worked out.
 
 Trend, Stretch and Flow are worked out by the same Groups and the same stored daily bars as the table, so the block
-and the table cell always agree. Each block links to Angstrom Lattice, where the Group or Set is built.
+and the table cell always agree. Each block links to Lattice, where the Group or Set is built.
 """
 
 from __future__ import annotations

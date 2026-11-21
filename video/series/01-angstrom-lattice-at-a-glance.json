@@ -1,16 +1,16 @@
 {
- "title": "Angstrom Lattice at a glance",
- "series": "Angstrom Lattice · 1 of 5",
+ "title": "Lattice at a glance",
+ "series": "Lattice · 1 of 5",
  "next": "Next: 2 · Signals",
  "slug": "01-angstrom-lattice-at-a-glance",
  "section": "training",
- "intro_say": "Angstrom Signals. | Angstrom Lattice, at a glance.",
+ "intro_say": "MarketNavi. | Lattice, at a glance.",
  "outro_say": "Next: the signals themselves.",
  "steps": [
   {
    "id": "intro",
    "screen": "Empty diagram; the title \"From signals to a scan\" appears",
-   "say": "Every trader has their own way of reading a chart. Angstrom Lattice lets you write yours down once, | and have it checked on every asset you follow."
+   "say": "Every trader has their own way of reading a chart. Lattice lets you write yours down once, | and have it checked on every asset you follow."
   },
   {
    "id": "signals",

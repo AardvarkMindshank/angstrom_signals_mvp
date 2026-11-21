@@ -5,7 +5,7 @@
  "slug": "s1-soundings",
  "section": "training",
  "zoom": "1.1",
- "intro_say": "Angstrom Signals. | Soundings.",
+ "intro_say": "MarketNavi. | Soundings.",
  "outro_say": "That's Soundings. | It describes the past. It never says buy or sell.",
  "steps": [
   {
@@ -15,8 +15,8 @@
   },
   {
    "id": "open",
-   "screen": "Opening Soundings in Angstrom Lattice",
-   "say": "Open Soundings in Angstrom Lattice. | It shows the last checked research run, for crypto or for equities."
+   "screen": "Opening Soundings in Lattice",
+   "say": "Open Soundings in Lattice. | It shows the last checked research run, for crypto or for equities."
   },
   {
    "id": "chart",

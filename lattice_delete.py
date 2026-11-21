@@ -1,5 +1,5 @@
 """
-Deleting your own Group or Set in Angstrom Lattice, with no loose ends (owner's rule, 8 Nov 2026):
+Deleting your own Group or Set in Lattice, with no loose ends (owner's rule, 8 Nov 2026):
 
 - A Group can't be deleted while one of your Sets uses it; a Set can't be deleted while one of your scans uses it.
   The screen names them so they can be removed first.

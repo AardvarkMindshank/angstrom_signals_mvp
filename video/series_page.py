@@ -34,7 +34,7 @@ DESCRIPTIONS = {
     "w3-breakout-with-volume": "A breakout from rising structure, with a crowd turning up for it.",
     "w4-breakout-fading": "Two steps in order: a breakout on heavy volume, then the volume drops away within 5 "
                           "days. Built with a THEN box and scanned.",
-    "06-provided-library": "The Groups and Sets that come with Angstrom Signals, built around common trading "
+    "06-provided-library": "The Groups and Sets that come with MarketNavi, built around common trading "
                            "situations, and how to look inside one and make your own copy.",
     "07-visualize-history": "What a Set said on every past day, as coloured bands behind the price.",
     "08-what-followed": "When a Set turns Yes, does anything different tend to happen next? How the study works, "
@@ -82,7 +82,7 @@ def page() -> str:
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>Training videos · Angstrom Signals</title>
+<title>Training videos · MarketNavi</title>
 <style>
 :root{{--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--accent:#1e3a8a;--bg:#ffffff;--soft:#f8fafc}}
 @media (prefers-color-scheme:dark){{:root{{--ink:#e2e8f0;--muted:#94a3b8;--line:#1e293b;--accent:#93c5fd;--bg:#0b1220;--soft:#111a2e}}}}
@@ -111,7 +111,7 @@ footer{{margin-top:40px;color:var(--muted);font-size:.85rem}}
 <body><main>
 <header><picture><source srcset="logo-dark.png" media="(prefers-color-scheme: dark)"><img src="logo.png" alt="">
 </picture><span class="brand">angstrom signals</span></header>
-<p class="lead">Training videos for the Angstrom Lattice research workspace. Each opens in your browser; captions are
+<p class="lead">Training videos for the Lattice research workspace. Each opens in your browser; captions are
 part of the picture.</p>
 {''.join(sections)}
 <footer>Descriptive readings, not forecasts or advice. For beta testers: please don't share this page.</footer>

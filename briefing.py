@@ -387,8 +387,8 @@ def general_facts(supabase, now: datetime | None = None, load=None) -> dict:
 
 
 GENERAL_SYSTEM = (
-    "You write the script for the Angstrom Signals Morning forecast, a short spoken market briefing that every member "
-    "of the app hears, the same for everyone. Angstrom Signals is a market-signals app whose market-conditions feature "
+    "You write the script for the MarketNavi Morning forecast, a short spoken market briefing that every member "
+    "of the app hears, the same for everyone. MarketNavi is a market-signals app whose market-conditions feature "
     "is called Tides. Style it like the shipping forecast sailors listen to at dawn: calm, measured, a steady rhythm, "
     "each area of the market given in turn (the tide, the sea state, the winds, storm warnings on the horizon), with a "
     "light nautical flavour that stays perfectly clear to a newcomer. Never let the metaphor hide a fact: say plainly "
@@ -401,7 +401,7 @@ GENERAL_SYSTEM = (
     "marked as points. Describe; never tell the listener to buy, sell or hold, and give no price targets. Trend, "
     "stretch and flow readings run from minus 100 to plus 100 (above zero leans up); sentiment runs from 0 to 100, "
     "with 50 neutral. The overall weather given (sunny, fair, changeable, rough or stormy) sets the tone of the "
-    "opening line. Open with \"This is the Angstrom Signals morning forecast, {edition}, for\" the day and date, follow "
+    "opening line. Open with \"This is the MarketNavi morning forecast, {edition}, for\" the day and date, follow "
     "the sections in the order given with a short spoken link between them, and close with one line saying this is a "
     "summary of the app's readings, not advice, then end with exactly \"Fair winds and following seas.\" Write about {words} "
     "words. Reply with the script text only."
@@ -421,7 +421,7 @@ def general_prompt(facts: dict, edition: str, day: datetime) -> tuple[str, list[
 
 def plain_general(facts: dict, edition: str, day: datetime) -> str:
     """The forecast without AI, from the facts alone."""
-    out = [f"This is the Angstrom Signals morning forecast, {EDITIONS[edition]['name']}, for {day.strftime('%A %d %B')}."]
+    out = [f"This is the MarketNavi morning forecast, {EDITIONS[edition]['name']}, for {day.strftime('%A %d %B')}."]
     for m in facts.get("markets") or []:
         if m.get("score_0_to_100") is not None:
             out.append(f"The {m['market']} mood scores {round(m['score_0_to_100'])} out of 100.")
@@ -476,7 +476,7 @@ def _say_numbers(text: str) -> str:
 def spoken_plan(body: str, day: datetime) -> str:
     """The written Passage Plan as a script to read aloud: the same words, with a spoken opening and close, each
     heading said as a short line, and signs said as words."""
-    out = [f"This is your Angstrom Signals Passage Plan for {day.strftime('%A %d %B')}."]
+    out = [f"This is your MarketNavi Passage Plan for {day.strftime('%A %d %B')}."]
     for raw in (body or "").splitlines():
         line = raw.strip()
         if not line:
@@ -497,9 +497,9 @@ def spoken_plan(body: str, day: datetime) -> str:
 
 def tag_line(kind: str, day: datetime) -> str:
     """The closing line, said after a pause with the music still playing: "That was your daily market briefing for
-    20 November 2026, brought to you by Angstrom Signals." kind: "general" or "passage"."""
+    20 November 2026, brought to you by MarketNavi." kind: "general" or "passage"."""
     what = "Passage Plan briefing" if kind == "passage" else "daily market briefing"
-    return f"That was your {what} for {day.day} {day.strftime('%B %Y')}, brought to you by Angstrom Signals."
+    return f"That was your {what} for {day.day} {day.strftime('%B %Y')}, brought to you by MarketNavi."
 
 
 # ---------------------------------------------------------------------------------------------- the weather
@@ -531,7 +531,7 @@ def weather(facts: dict) -> str:
 # ---------------------------------------------------------------------------------------------- the script
 
 SYSTEM = (
-    "You write the script for a short spoken morning briefing for one member of Angstrom Signals, a market-signals "
+    "You write the script for a short spoken morning briefing for one member of MarketNavi, a market-signals "
     "app whose market-conditions feature is called Tides. Style it like the shipping forecast sailors listen to at "
     "dawn: calm, measured, a steady rhythm, each area of the market given in turn (the tide, the sea state, the "
     "winds, storm warnings on the horizon), with a light nautical flavour that stays perfectly clear to a newcomer. "
@@ -542,7 +542,7 @@ SYSTEM = (
     "no facts. Describe; never tell the listener to buy, sell or hold, and give no price targets. Trend, stretch and "
     "flow readings run from minus 100 to plus 100 (above zero leans up); sentiment runs from 0 to 100, with 50 "
     "neutral. The overall weather given (sunny, fair, changeable, rough or stormy) sets the tone of the "
-    "opening line. Open with \"This is the Angstrom Signals morning forecast for\" the day and date, follow the sections "
+    "opening line. Open with \"This is the MarketNavi morning forecast for\" the day and date, follow the sections "
     "in the order given with a short spoken link between them, and close with one line saying this is a summary of "
     "the app's readings, not advice, then end with exactly \"Fair winds and following seas.\" Write about {words} words. Reply "
     "with the script text only."
@@ -560,7 +560,7 @@ def prompt(facts: dict, b: dict, day: datetime, name: str = "") -> tuple[str, li
 
 def plain_script(facts: dict, b: dict, day: datetime) -> str:
     """A script without AI, from the facts alone (used when the AI is unavailable)."""
-    out = [f"This is the Angstrom Signals morning forecast for {day.strftime('%A %d %B')}."]
+    out = [f"This is the MarketNavi morning forecast for {day.strftime('%A %d %B')}."]
     for m in facts.get("markets") or []:
         score = m.get("score_0_to_100")
         out.append(f"The {m['market']} mood scores {round(score)} out of 100." if score is not None else "")
@@ -618,8 +618,8 @@ def public_url(supabase_url: str, path: str) -> str:
     return f"{supabase_url.rstrip('/')}/storage/v1/object/public/{BUCKET}/{path}"
 
 
-def feed_xml(base: str, token: str, episodes: list[dict], title: str = "Your Angstrom Signals Passage Plan",
-             about: str = "Your private daily Passage Plan from Angstrom Signals, read aloud: a summary of the app's "
+def feed_xml(base: str, token: str, episodes: list[dict], title: str = "Your MarketNavi Passage Plan",
+             about: str = "Your private daily Passage Plan from MarketNavi, read aloud: a summary of the app's "
                           "readings, not advice.", item: str = "Passage Plan") -> str:
     """A podcast feed (RSS 2.0 + iTunes tags): episodes [{day, label, url, bytes, seconds, summary}] newest first."""
     esc = html.escape
@@ -631,8 +631,8 @@ def feed_xml(base: str, token: str, episodes: list[dict], title: str = "Your Ang
         for e in episodes)
     return ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
             "<rss version=\"2.0\" xmlns:itunes=\"http://www.itunes.com/dtds/podcast-1.0.dtd\"><channel>"
-            f"<title>{esc(title)}</title><link>https://angstromsignals.com</link>"
-            f"<description>{esc(about)}</description><language>en</language><itunes:author>Angstrom Signals</itunes:author>"
+            f"<title>{esc(title)}</title><link>https://marketnavi.ai</link>"
+            f"<description>{esc(about)}</description><language>en</language><itunes:author>MarketNavi</itunes:author>"
             "<itunes:image href=\"https://angstromsignals.com/logo.png\"/><itunes:block>Yes</itunes:block>"
             f"<itunes:explicit>false</itunes:explicit>{items}</channel></rss>")
 

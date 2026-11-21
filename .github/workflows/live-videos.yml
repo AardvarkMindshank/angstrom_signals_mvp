@@ -1,4 +1,4 @@
-# Live-site videos: signs in to app.angstromsignals.com as the demo account (DEMO_EMAIL / DEMO_PASSWORD) and records
+# Live-site videos: signs in to app.marketnavi.ai as the demo account (DEMO_EMAIL / DEMO_PASSWORD) and records
 # every video in video/live_queue.txt with the same voice, captions, opening and closing cards and music as the
 # training videos. The demo account is reset to a new account first (video/live_reset.py), so the day-one videos
 # build on each other. Results go to the reports branch (live_videos/<date>_<commit>/<name>/) for checking.

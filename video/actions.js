@@ -480,8 +480,8 @@ module.exports = {
       h.shot = (await h.page.screenshot()).toString("base64");      // the Prism screen, to paste later
     },
     where: async (h) => {
-      await h.card({ kicker: "✨ Angstrom Assistant", title: "Two ways in, one window",
-        lines: ["✓ ✨ AI at the top right of the app", "✓ ✨ AI beside the Angstrom Lattice tabs"],
+      await h.card({ kicker: "✨ AI Navigator", title: "Two ways in, one window",
+        lines: ["✓ ✨ AI at the top right of the app", "✓ ✨ AI beside the Lattice tabs"],
         foot: "Both open the same window beside the app." });
     },
     button: async (h) => {

@@ -27,7 +27,7 @@ def welcome_email(name: str, app_url: str, nda: bool | None = None) -> tuple[str
     page, plain = render_email(
         "You are in",
         [
-            f"Hi {_first_name(name)}, thank you for applying. You have a seat in the Angstrom Signals closed beta.",
+            f"Hi {_first_name(name)}, thank you for applying. You have a seat in the MarketNavi closed beta.",
             "Open the dashboard, then either choose <strong>Continue with Google</strong> with this email "
             "address, or open the <strong>Beta Access Accepted?</strong> tab and create a password for this "
             "email address.",
@@ -41,9 +41,9 @@ def welcome_email(name: str, app_url: str, nda: bool | None = None) -> tuple[str
         ],
         button=("Open the dashboard", app_url),
         tone="up",
-        preheader="Your seat in the Angstrom Signals closed beta is ready.",
+        preheader="Your seat in the MarketNavi closed beta is ready.",
     )
-    return "You are in: Angstrom Signals closed beta", page, plain
+    return "You are in: MarketNavi closed beta", page, plain
 
 
 def declined_email(name: str) -> tuple[str, str, str]:
@@ -51,14 +51,14 @@ def declined_email(name: str) -> tuple[str, str, str]:
     page, plain = render_email(
         "Thank you for applying",
         [
-            f"Hi {_first_name(name)}, thank you for applying to the Angstrom Signals closed beta, and for "
+            f"Hi {_first_name(name)}, thank you for applying to the MarketNavi closed beta, and for "
             "taking the time to tell us about your trading.",
             "We have a small number of seats while we build with a handful of experienced traders, and we are "
             "not able to offer you one in this round. That is not a judgement on you or your trading.",
-            "You are welcome to apply again later, and we will announce it on angstromsignals.com when more "
+            "You are welcome to apply again later, and we will announce it on marketnavi.ai when more "
             "places open.",
         ],
         tone="info",
-        preheader="An update on your Angstrom Signals beta request.",
+        preheader="An update on your MarketNavi beta request.",
     )
-    return "Your Angstrom Signals beta request", page, plain
+    return "Your MarketNavi beta request", page, plain

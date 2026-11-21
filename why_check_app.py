@@ -30,4 +30,4 @@ with st.expander("🔍 Why these readings — Bitcoin", expanded=True):
         with st.expander(item["title"], expanded=item["key"] == focus, key=f"why_{item['key']}"):
             st.html(wp.block_html(item))
             st.button("Open in Lattice", icon=":material/hub:", type="tertiary", key=f"why_open_{item['key']}",
-                      help=f"See or change how {item['name']} is built, in Angstrom Lattice")
+                      help=f"See or change how {item['name']} is built, in Lattice")

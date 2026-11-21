@@ -10,7 +10,7 @@ Keys: web push signs each message with a key pair ("VAPID"). The public key goes
 up; the private key stays on the server.
     VAPID_PUBLIC_KEY    Render and GitHub (not secret, but kept beside the private one)
     VAPID_PRIVATE_KEY   Render and GitHub secrets
-    VAPID_SUBJECT       a contact address, e.g. mailto:info@angstromsignals.com
+    VAPID_SUBJECT       a contact address, e.g. mailto:info@marketnavi.ai
 An admin makes a pair in the app (Admin → 📱 Push keys); the keys are shown only to them, never stored by the app.
 """
 
@@ -22,9 +22,9 @@ import os
 from datetime import datetime, timedelta, timezone
 
 MAX_AGE_MINUTES = 60          # older notifications are never pushed (e.g. the first run after switching this on)
-DEFAULT_SUBJECT = "mailto:info@angstromsignals.com"
+DEFAULT_SUBJECT = "mailto:info@marketnavi.ai"
 
-TITLES = {                    # the notification's title by kind; anything else: "Angstrom · <asset>"
+TITLES = {                    # the notification's title by kind; anything else: "MarketNavi · <asset>"
     "funnel": "🔻 Funnel",
     "chart_share": "📤 Shared chart",
     "study": "📊 Study finished",
@@ -75,7 +75,7 @@ def note_payload(note: dict) -> dict:
     """What one notification shows on a phone: a title, the message, and the app to open."""
     kind = str(note.get("alert_type") or "")
     name = " ".join(str(note.get("asset_name") or "").split())
-    title = TITLES.get(kind) or (f"Angstrom · {name}" if name else "Angstrom Signals")
+    title = TITLES.get(kind) or (f"MarketNavi · {name}" if name else "MarketNavi")
     body = " ".join(str(note.get("message") or "").split())
     if len(body) > 220:
         body = body[:217].rstrip() + "…"

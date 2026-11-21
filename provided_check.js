@@ -1,4 +1,4 @@
-// Browser check: what Angstrom Signals provides sits in folded "Provided by Angstrom Signals" sections at the top of
+// Browser check: what MarketNavi provides sits in folded "Provided by MarketNavi" sections at the top of
 // Signal Groups, Signal Sets and Prism Scan, and the setting hides them. Usage: node provided_check.js <url> <out>
 const fs = require("fs");
 const { chromium } = require("playwright");
@@ -19,10 +19,10 @@ const { chromium } = require("playwright");
     const opts = (await page.locator('[role="option"]').allInnerTexts()).join(" | ");
     await page.keyboard.press("Escape");
     check(`${label}: Start from lists only new and your own`, opts.includes("My Trend") && !opts.includes("starter"), opts);
-    const starterSection = await page.locator('[data-testid="stExpander"]').filter({ hasText: "Provided by Angstrom Signals" }).count();
+    const starterSection = await page.locator('[data-testid="stExpander"]').filter({ hasText: "Provided by MarketNavi" }).count();
     check(`${label}: Groups' provided section ${q === "1" ? "is there" : "is gone"}`, (starterSection > 0) === (q === "1"));
     if (q === "1") {
-      await page.locator('[data-testid="stExpander"] summary').filter({ hasText: "Provided by Angstrom Signals" }).first().click();
+      await page.locator('[data-testid="stExpander"] summary').filter({ hasText: "Provided by MarketNavi" }).first().click();
       await page.waitForTimeout(600);
       await page.getByRole("button", { name: /Copy/ }).first().click(); await settle();
       const name = await page.locator('.lat input[aria-label="Group name"]').first().inputValue();

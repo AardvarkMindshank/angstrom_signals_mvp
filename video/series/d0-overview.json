@@ -1,17 +1,17 @@
 {
- "title": "Angstrom Signals at a glance",
+ "title": "MarketNavi at a glance",
  "series": "Day one",
  "next": "Next: add the assets you follow",
  "slug": "d0-overview",
  "section": "training",
  "zoom": "1.1",
- "intro_say": "Angstrom Signals. | A quick tour.",
+ "intro_say": "MarketNavi. | A quick tour.",
  "outro_say": "That's the tour. | Every reading describes the market. None of it is financial advice.",
  "steps": [
   {
    "id": "welcome",
-   "screen": "A card: what Angstrom Signals is",
-   "say": "Angstrom Signals helps you navigate the crypto and stock markets. | Clear readings, AI guidance and alerts, with a community alongside. | Here's a quick tour of the dashboard."
+   "screen": "A card: what MarketNavi is",
+   "say": "MarketNavi helps you navigate the crypto and stock markets. | Clear readings, AI guidance and alerts, with a community alongside. | Here's a quick tour of the dashboard."
   },
   {
    "id": "sidebar",
@@ -60,8 +60,8 @@
   },
   {
    "id": "lattice",
-   "screen": "Angstrom Lattice and its tabs",
-   "say": "Angstrom Lattice is your research workspace. | Signal Groups and Signal Sets turn signals into your own questions. | Prism Scan checks them across your assets, and Funnels narrow the whole market down, stage by stage."
+   "screen": "Lattice and its tabs",
+   "say": "Lattice is your research workspace. | Signal Groups and Signal Sets turn signals into your own questions. | Prism Scan checks them across your assets, and Funnels narrow the whole market down, stage by stage."
   },
   {
    "id": "ai",

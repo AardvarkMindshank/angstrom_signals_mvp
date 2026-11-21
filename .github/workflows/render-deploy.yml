@@ -25,7 +25,7 @@ jobs:
           if [ -z "$HOOK" ]; then echo "No RENDER_DEPLOY_HOOK secret; nothing to do."; exit 0; fi
           want=${SHA::8}
           for i in $(seq 1 20); do          # up to about 10 minutes
-            live=$(curl -fsS -m 10 "https://app.angstromsignals.com/app/static/boot.txt?t=$(date +%s)" || true)
+            live=$(curl -fsS -m 10 "https://app.marketnavi.ai/app/static/boot.txt?t=$(date +%s)" || true)
             if [ "${live::8}" = "$want" ]; then echo "Render is already running $want."; exit 0; fi
             sleep 30
           done

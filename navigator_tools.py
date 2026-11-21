@@ -295,7 +295,7 @@ class ToolBox:
         self.notes.append("draft_set")
         return {"built": True, "name": clean["name"], "warnings": problems["warnings"],
                 "description": ls.describe(clean, {}),
-                "next": "Tell the person: open Angstrom Lattice → Signal Sets → Start from ➕ New Set; the draft opens "
+                "next": "Tell the person: open Lattice → Signal Sets → Start from ➕ New Set; the draft opens "
                         "there with a notice. They check it, change it if they like, and save it themselves."}
 
 

@@ -11,8 +11,8 @@ from i18n import t
 import html
 import re
 
-SITE_URL = "https://angstromsignals.com"
-LOGO_URL = "https://angstromsignals.com/logo.png"
+SITE_URL = "https://marketnavi.ai"
+LOGO_URL = "https://angstromsignals.com/logo.png"      # until the MarketNavi logo is uploaded
 
 _INK = "#0c1b3a"
 _NAVY = "#0d2d6e"
@@ -125,7 +125,7 @@ def render_email(
 <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="width:100%;max-width:600px;background:#ffffff;border:1px solid {_RULE};border-radius:10px;overflow:hidden;">
 <tr><td style="background:{_NAVY};padding:18px 28px;">
 <a href="{SITE_URL}" style="text-decoration:none;color:#ffffff;font:800 20px/1 {_FONT};">
-<img src="{LOGO_URL}" width="28" height="30" alt="" style="vertical-align:middle;border:0;margin-right:10px;background:#ffffff;border-radius:5px;padding:3px;">Angstrom Signals</a>
+<img src="{LOGO_URL}" width="28" height="30" alt="" style="vertical-align:middle;border:0;margin-right:10px;background:#ffffff;border-radius:5px;padding:3px;">MarketNavi</a>
 </td></tr>
 <tr><td style="padding:30px 28px 10px;">
 <h1 style="margin:0 0 18px;font:800 24px/1.25 {_FONT};color:{_INK};">{heading}</h1>
@@ -133,7 +133,7 @@ def render_email(
 </td></tr>
 <tr><td style="padding:6px 28px 26px;border-top:1px solid {_RULE};">
 <p style="margin:16px 0 6px;">{note}</p>
-<p style="margin:0;font:400 12px/1.5 {_FONT};color:{_MUTED};">{t("Angstrom Signals is a research tool, not financial advice. Past data is not a forecast, and you can lose money trading.")}
+<p style="margin:0;font:400 12px/1.5 {_FONT};color:{_MUTED};">{t("MarketNavi is a research tool, not financial advice. Past data is not a forecast, and you can lose money trading.")}
 <a href="{SITE_URL}" style="color:{_MUTED};">angstromsignals.com</a></p>
 </td></tr>
 </table>
@@ -153,7 +153,7 @@ def _plain(heading, paragraphs, callout, button, footnote, extra_plain="") -> st
         lines += ["", f"{button[0]}: {button[1]}"]
     if footnote:
         lines += ["", _strip(footnote)]
-    lines += ["", t("Angstrom Signals is a research tool, not financial advice."), SITE_URL]
+    lines += ["", t("MarketNavi is a research tool, not financial advice."), SITE_URL]
     return "\n".join(lines)
 
 
