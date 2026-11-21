@@ -71,6 +71,22 @@ jobs:
             $j = json_decode((string) $out, true);
             echo "code: ", $j["code"] ?? "-", "\nmessage: ", substr($j["message"] ?? (string) $out, 0, 200), "\nhint: ", substr((string) ($j["hint"] ?? ""), 0, 200), "\n";
             echo "(23514 = the table refused the long name: everything else is fine)\n";
+            $real = rtrim(getenv("SUPABASE_URL"), "/");
+            $a = parse_url($u, PHP_URL_HOST); $b = parse_url($real, PHP_URL_HOST);
+            echo "letters different between the two project names: ", levenshtein((string) $a, (string) $b), "\n";
+            // The same test against the app database, with the website key
+            $ch = curl_init($real . "/rest/v1/beta_requests");
+            curl_setopt_array($ch, [CURLOPT_POST => true, CURLOPT_POSTFIELDS => json_encode($row), CURLOPT_HTTPHEADER => $h,
+                                    CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 20]);
+            $out = curl_exec($ch); $j = json_decode((string) $out, true);
+            echo "website key on the app database: HTTP ", curl_getinfo($ch, CURLINFO_HTTP_CODE), " code ", $j["code"] ?? "-", " ", substr($j["message"] ?? "", 0, 120), "\n";
+            // Does the website link secret match the one in the app database? (compared here, never printed)
+            $svc = getenv("SUPABASE_SERVICE_ROLE_KEY");
+            $ch = curl_init($real . "/rest/v1/beta_settings?select=link_secret");
+            curl_setopt_array($ch, [CURLOPT_HTTPHEADER => ["apikey: $svc", "Authorization: Bearer $svc"], CURLOPT_RETURNTRANSFER => true]);
+            $s = json_decode((string) curl_exec($ch), true);
+            $dbsecret = is_array($s) && isset($s[0]["link_secret"]) ? (string) $s[0]["link_secret"] : "";
+            echo "link secret set in the database: ", ($dbsecret !== "" ? "yes" : "no"), "; website secret matches: ", ($dbsecret !== "" && hash_equals($dbsecret, LINK_SECRET) ? "yes" : "NO"), "\n";
           '
           rm -f "$cfg"
       - name: The live form page
