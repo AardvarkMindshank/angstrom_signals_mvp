@@ -250,7 +250,8 @@ def graphics_data(facts: dict, sections: dict, day: datetime, load=None) -> dict
         "coins": coins, "crypto_mood": moods.get("crypto"), "events": events,
         "story": {"title": story.get("title", ""), "asset": hit},
         "weekend": day.weekday() >= 5,
-        "brand": {"show": bool(brand.SHOW_IN_VIDEO), "name": brand.NAME, "domain": brand.DOMAIN},
+        "brand": {"show": bool(brand.SHOW_IN_VIDEO), "name": brand.NAME, "domain": brand.DOMAIN,
+                  "company": brand.COMPANY, "year": datetime.now(timezone.utc).year, "logo": _logo_uri()},
     }
 
 
@@ -299,6 +300,20 @@ def captain_clips(weather: str, rng: random.Random, weekend: bool = False, who: 
                   ("signoff", pick("signoff"))]
 
 
+def _logo_uri() -> str:
+    """The whole MarketNavi logo for dark backgrounds, for the opening and closing cards."""
+    import base64
+    path = Path(__file__).resolve().parent / "assets" / "brand" / "full-dark-tight.png"
+    return "data:image/png;base64," + base64.b64encode(path.read_bytes()).decode() if path.exists() else ""
+
+
+# Opening and closing (21 Nov 2026): the whole logo, large, with the name spoken over the music at the start; at the
+# end, after the presenter's "Fair winds and following seas", a pause, then the logo again with the closing line.
+SPOKEN_NAME = "Market Navi"                 # how the voice says MarketNavi
+INTRO_HOLD = 1.6                            # the logo stays this long after the opening words
+OUTRO_PAUSE = 1.0                           # music only, between the sign-off and the closing line
+
+
 def pick_look(library: Path | None, clip: str, rng: random.Random) -> str:
     """A second look of the same line, when the library has one: <id>_2.mp4 beside <id>_1.mp4 (for example King
     Neptune with his trident, kept where it did not glitch). Picks one at random to keep the days fresh."""
@@ -315,12 +330,18 @@ def timeline(caps: dict, narr: dict) -> list[dict]:
              ("cap", "sign_crypto"), ("narr", "crypto"), ("cap", "sign_horizon"), ("narr", "horizon"),
              ("cap", "signoff"), ("narr", "close")]
     order = [(who, kind) for who, kind in order if kind in (caps if who == "cap" else narr)]   # weekends: no equities
-    t, out = 0.6, []                                  # a breath of music first
+    if "intro" in narr:
+        order = [("narr", "intro")] + order
+    t, out = (0.3 if "intro" in narr else 0.6), []     # a breath of music first
     for who, kind in order:
         src = caps[kind] if who == "cap" else narr[kind]
         length = src["seconds"] + (0.35 if who == "narr" else 0.0)
+        if kind == "intro":
+            length += INTRO_HOLD
         if kind == "close":
             length += 3.0                               # the end card holds while the music fades
+            if "intro" in narr:
+                t += OUTRO_PAUSE
         seg = {"kind": kind, "who": who, "start": round(t, 3), "end": round(t + length, 3)}
         if who == "cap" and src.get("title"):
             seg["title"] = src["title"]                 # a guest's cameo: their own name on the badge
@@ -416,8 +437,11 @@ def build(supabase, library: Path, music_dir: Path, out_dir: Path, models: Path,
     spec["presenter"] = {"key": who, "title": crew["title"]}
     date_line = f"{day.strftime('%A')}, the {_ordinal(day.day)} of {day.strftime('%B')}. {sections['headline']}."
     close_line = f"That was your {'weekend' if weekend else 'daily'} market briefing for {day.strftime('%A')} the {_ordinal(day.day)} of {day.strftime('%B')}."
+    if brand.SHOW_IN_VIDEO:
+        close_line = close_line[:-1] + f", brought to you by {SPOKEN_NAME}."
     texts = {"date": date_line, **{k: (sections[k]["text"] if k == "story" else sections[k]) for k in plan},
-             "close": close_line}
+             "close": close_line,
+             **({"intro": f"{SPOKEN_NAME}. AI-powered market navigation."} if brand.SHOW_IN_VIDEO else {})}
     narr = {}
     for kind, text in texts.items():
         path = work / f"narr_{kind}.wav"

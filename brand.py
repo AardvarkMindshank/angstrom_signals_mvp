@@ -10,4 +10,4 @@ COMPANY_DOMAIN = "angstromsignals.com"
 TAGLINE = "Navigate the markets."
 LOGO_DARK = "assets/logo-dark.png"      # for dark backgrounds (the MarketNavi logo replaces these when it arrives)
 LOGO_LIGHT = "assets/logo-light.png"
-SHOW_IN_VIDEO = False                    # True once the video intro and outro are made with the new logo
+SHOW_IN_VIDEO = True                     # the daily video opens and closes with the whole logo (21 Nov 2026)
