@@ -78,5 +78,29 @@ def redact(folder: str) -> None:
         print(f"{f.name}: {n1 + n2} value(s) removed")
 
 
+def add(path: str) -> None:
+    """Save a request that the website emailed but could not store, then approve it the way the email link does
+    (decided by email, so the background worker sends the welcome email). Prints only the outcome."""
+    import json
+    url, key = os.environ["SUPABASE_URL"].rstrip("/"), os.environ["SUPABASE_SERVICE_ROLE_KEY"]
+    head = {"apikey": key, "Authorization": f"Bearer {key}", "Content-Type": "application/json"}
+    row = json.load(open(path))
+    email = row["email"].strip().lower()
+    have = requests.get(f"{url}/rest/v1/beta_requests", headers=head, params={"select": "id,status", "email": f"ilike.{email}"}, timeout=60).json()
+    if have:
+        print("already in the database:", [h["status"] for h in have]); return
+    r = requests.post(f"{url}/rest/v1/beta_requests", headers={**head, "Prefer": "return=representation"},
+                      json={**row, "email": email, "status": "pending"}, timeout=60)
+    print("saved:", r.status_code, r.text[:200] if not r.ok else "")
+    r.raise_for_status()
+    rid = r.json()[0]["id"]
+    u = requests.patch(f"{url}/rest/v1/beta_requests", headers=head, params={"id": f"eq.{rid}"},
+                       json={"status": "approved", "reviewed_at": datetime.now(timezone.utc).isoformat(), "decided_via": "email"}, timeout=60)
+    print("approved:", u.status_code)
+    a = requests.post(f"{url}/rest/v1/beta_access", headers={**head, "Prefer": "resolution=ignore-duplicates"},
+                      json={"email": email, "request_id": rid}, timeout=60)
+    print("access granted:", a.status_code, f"(request #{rid})")
+
+
 if __name__ == "__main__":
-    {"redact": lambda: redact(sys.argv[2]), "db": lambda: db(), "handler": lambda: handler(sys.argv[2]), "page": lambda: page()}[sys.argv[1]]()
+    {"add": lambda: add(sys.argv[2]), "redact": lambda: redact(sys.argv[2]), "db": lambda: db(), "handler": lambda: handler(sys.argv[2]), "page": lambda: page()}[sys.argv[1]]()

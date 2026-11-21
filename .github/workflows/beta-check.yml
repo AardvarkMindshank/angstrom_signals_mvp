@@ -24,6 +24,16 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
       - run: pip install -q requests
+      - name: Save and approve a request the website could not store
+        if: inputs.add_request != ''
+        env:
+          LAB_KEY: ${{ secrets.AVATAR_LAB_KEY }}
+          FILE: ${{ inputs.add_request }}
+        run: |
+          git fetch -q origin reports
+          git show "origin/reports:$FILE" | openssl enc -d -aes-256-cbc -pbkdf2 -pass env:LAB_KEY -out req.json
+          python .github/scripts/beta_check.py add req.json
+          rm -f req.json
       - name: The queue in the database
         run: python .github/scripts/beta_check.py db
       - name: The website's form code (secrets removed, kept encrypted)
