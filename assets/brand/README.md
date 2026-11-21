@@ -6,7 +6,7 @@ These are clean vector redraws of the approved generated concept. Geometry and t
 
 ## Font
 
-Segoe UI Bold (wordmark and tagline). This is the matching font chosen for the redraw, not a verified identification of the font in the generated concept. Font files are not included; outlined logos require no font installation.
+Montserrat Bold, weight 700 (wordmark and tagline). All lettering is outlined. The original Montserrat Bold font and its SIL Open Font License 1.1 are included for future edits. Source: https://github.com/JulietaUla/Montserrat .
 
 ## Exact production colours
 
@@ -14,7 +14,7 @@ Segoe UI Bold (wordmark and tagline). This is the matching font chosen for the r
 | --- | --- |
 | Navy | #061A32 |
 | Gold on dark | #E8BD54 |
-| Gold on light | #A8750B |
+| Gold on light | #C69420 |
 | Teal on dark | #00CDBB |
 | Deep teal on light | #007F73 |
 | Red candles | #E34B55 |

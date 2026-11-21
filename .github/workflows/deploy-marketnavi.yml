@@ -1,0 +1,65 @@
+name: Deploy MarketNavi website
+# Copies the website/ folder to marketnavi.ai on HostGator by FTP (its own FTP login, which only reaches that site's
+# folder). With "copy_forms", also copies the beta and contact form handlers across from the angstromsignals.com site,
+# server to server (their settings file holds keys, so it never passes through the repository or the logs), pointing
+# their links and addresses at marketnavi.ai.
+# Secrets: FTP_SERVER, MARKETNAVI_FTP_USERNAME, MARKETNAVI_FTP_PASSWORD (and FTP_USERNAME, FTP_PASSWORD for the copy).
+on:
+  workflow_dispatch:
+    inputs:
+      copy_forms:
+        description: "Also copy the beta and contact form handlers from the old site"
+        type: boolean
+        default: false
+      dry_run:
+        description: "Only connect and list the changes, upload nothing"
+        type: boolean
+        default: false
+concurrency: deploy-marketnavi
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.MARKETNAVI_FTP_USERNAME }}
+          password: ${{ secrets.MARKETNAVI_FTP_PASSWORD }}
+          protocol: ftps
+          local-dir: ./website/
+          server-dir: ./
+          exclude: |
+            README.md
+            brand_terms.py
+          dry-run: ${{ github.event.inputs.dry_run == 'true' }}
+          log-level: standard
+      - name: Copy the form handlers across (server to server)
+        if: inputs.copy_forms && !inputs.dry_run
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          OLD_USER: ${{ secrets.FTP_USERNAME }}
+          OLD_PASS: ${{ secrets.FTP_PASSWORD }}
+          NEW_USER: ${{ secrets.MARKETNAVI_FTP_USERNAME }}
+          NEW_PASS: ${{ secrets.MARKETNAVI_FTP_PASSWORD }}
+        run: |
+          name=$(echo | openssl s_client -starttls ftp -connect "$FTP_SERVER:21" -servername "$FTP_SERVER" 2>/dev/null \
+                 | openssl x509 -noout -ext subjectAltName 2>/dev/null | tr ',' '\n' | grep -o 'DNS:[^ ]*' | sed 's/DNS://' | grep -v '\*' | head -1)
+          ftp() { curl -sS --ssl-reqd --connect-to "$name:21:$FTP_SERVER:21" "$@"; }
+          mkdir -p forms
+          for f in send-beta-request.php beta-lib.php beta-decision.php beta-config.php beta-thanks.html send-message.php message-thanks.html contact-thanks.html; do
+            ftp --user "$OLD_USER:$OLD_PASS" "ftp://$name/$f" -o "forms/$f" 2>/dev/null && [ -s "forms/$f" ] && echo "read $f" || rm -f "forms/$f"
+          done
+          # The new site's own address and mailboxes; the name in the pages.
+          sed -i "s#const SITE_URL = 'https://angstromsignals.com';#const SITE_URL = 'https://marketnavi.ai';#" forms/beta-lib.php 2>/dev/null || true
+          for f in forms/*; do
+            sed -i -e "s#info@angstromsignals.com#info@marketnavi.ai#g" -e "s#support@angstromsignals.com#support@marketnavi.ai#g" \
+                   -e "s#Angstrom Signals website#MarketNavi website#g" -e "s#Angstrom Signals#MarketNavi#g" \
+                   -e "s#app.angstromsignals.com#app.marketnavi.ai#g" "$f"
+          done
+          # The applicant email still goes to the same person; only the sender and copy move to marketnavi.ai.
+          grep -h "const \(TO\|CC\|FROM\)_ADDRESS" forms/send-beta-request.php | sed 's/=.*@/= ...@/' || true
+          for f in forms/*; do
+            ftp --user "$NEW_USER:$NEW_PASS" -T "$f" "ftp://$name/$(basename "$f")" && echo "copied $(basename "$f")"
+          done
+          rm -rf forms
