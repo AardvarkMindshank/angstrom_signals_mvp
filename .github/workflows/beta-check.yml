@@ -64,7 +64,10 @@ jobs:
             curl_setopt_array($ch, [CURLOPT_POST => true, CURLOPT_POSTFIELDS => json_encode($row), CURLOPT_HTTPHEADER => $h,
                                     CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 20]);
             $out = curl_exec($ch);
-            echo "HTTP ", curl_getinfo($ch, CURLINFO_HTTP_CODE), "\n";
+            echo "HTTP ", curl_getinfo($ch, CURLINFO_HTTP_CODE), "  curl: ", curl_error($ch), "\n";
+            $u = rtrim(SUPABASE_URL, "/");
+            echo "website URL same as the app database: ", ($u === rtrim(getenv("SUPABASE_URL"), "/") ? "yes" : "NO"), "\n";
+            echo "website URL shape: ", preg_replace("/[a-z0-9]{20}/", "<project>", $u), " (", strlen($u), " chars)\n";
             $j = json_decode((string) $out, true);
             echo "code: ", $j["code"] ?? "-", "\nmessage: ", substr($j["message"] ?? (string) $out, 0, 200), "\nhint: ", substr((string) ($j["hint"] ?? ""), 0, 200), "\n";
             echo "(23514 = the table refused the long name: everything else is fine)\n";
