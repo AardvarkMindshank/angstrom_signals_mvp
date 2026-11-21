@@ -2315,11 +2315,8 @@
   "🎧 Spoken briefing scripts": "🎧 Kịch bản bản tin nói",
   "Writes the shared Morning forecast, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Grok, ChatGPT and Gemini keys.": "Viết Dự báo buổi sáng dùng chung, và các Passage Plan mà tiến trình nền viết cho bản kế hoạch nói khi thành viên chưa tự viết. Chạy trên tiến trình nền, nơi có khóa Grok, ChatGPT và Gemini.",
   "{day} · {edition} · {length}": "{day} · {edition} · {length}",
-  "Your daily Passage Plans, to read or to hear. Your trades will join them here.": "Các Passage Plan hằng ngày của bạn, để đọc hoặc nghe. Các giao dịch của bạn sẽ có mặt ở đây.",
   "The same for everyone, twice a day: the Asia & Europe edition just after the US close, and the Americas edition before the New York morning. You always get the newest, which is the one made for your morning. The main markets, the top five coins, the Tide and the week's events. A summary of the app's readings, not advice.": "Giống nhau cho mọi người, hai lần mỗi ngày: số châu Á & châu Âu ngay sau khi thị trường Mỹ đóng cửa, và số châu Mỹ trước buổi sáng New York. Bạn luôn nhận số mới nhất, tức số làm cho buổi sáng của bạn. Các thị trường chính, năm đồng coin hàng đầu, Tide và các sự kiện trong tuần. Bản tóm tắt các chỉ số của ứng dụng, không phải lời khuyên.",
   "{day} · {length}": "{day} · {length}",
-  "📜 Read a plan": "📜 Đọc một kế hoạch",
-  "No plans yet. Make one with 📜 Today's AI Passage Plan in 🌊 Tides, or with the button above.": "Chưa có kế hoạch nào. Tạo bằng 📜 AI Passage Plan hôm nay trong 🌊 Tides, hoặc bằng nút ở trên.",
   "Speak my plan every morning": "Đọc kế hoạch của tôi mỗi sáng",
   "Also email me when it's ready (the daily summary email links it anyway)": "Gửi cả email cho tôi khi xong (email tóm tắt hằng ngày vẫn có liên kết)",
   "Logbook": "Nhật ký hải trình",
@@ -2333,7 +2330,6 @@
   "Spoken plan settings": "Cài đặt kế hoạch nói",
   "Saved.": "Đã lưu.",
   "Add these feeds to Apple Podcasts (Library, then Follow a Show by URL), Pocket Casts or Overcast, and each one downloads by itself. Your own feed is private: anyone with the link can listen, so keep it to yourself. Spotify can't take private feeds.": "Thêm các nguồn này vào Apple Podcasts (Thư viện, rồi Theo dõi chương trình bằng URL), Pocket Casts hoặc Overcast, mỗi tập sẽ tự tải về. Nguồn riêng của bạn là riêng tư: ai có liên kết đều nghe được, nên hãy giữ cho riêng mình. Spotify không nhận nguồn riêng tư.",
-  "Not made yet today.": "Hôm nay chưa làm.",
   "The old link stops getting new plans.": "Liên kết cũ sẽ không nhận kế hoạch mới nữa.",
   "🎧 Listen": "🎧 Nghe",
   "Day or night": "Ngày hay đêm",
@@ -2351,5 +2347,8 @@
   "(The candle is still forming: this marker may change or disappear until it closes.)": "(Nến vẫn đang hình thành: dấu này có thể thay đổi hoặc biến mất cho đến khi nến đóng.)",
   "Today's AI Passage Plan for your own watchlist and funnels, read aloud: the same plan you can read in the 📓 Logbook. It is made ready each morning; set the time and voice there.": "Passage Plan AI hôm nay cho danh sách theo dõi và các phễu của riêng bạn, được đọc to: cùng kế hoạch bạn có thể đọc trong 📓 Nhật ký hải trình. Kế hoạch được chuẩn bị sẵn mỗi sáng; hãy đặt giờ và giọng đọc ở đó.",
   "The first edition is on its way.": "Số đầu tiên đang được chuẩn bị.",
-  "Written and spoken for your own watchlist and funnels each morning. Comes with Pro.": "Được viết và đọc mỗi sáng cho danh sách theo dõi và các phễu của riêng bạn. Có trong gói Pro."
+  "Written and spoken for your own watchlist and funnels each morning. Comes with Pro.": "Được viết và đọc mỗi sáng cho danh sách theo dõi và các phễu của riêng bạn. Có trong gói Pro.",
+  "Date": "Ngày",
+  "written only": "chỉ bản viết",
+  "Not made yet today. It is made ready each morning.": "Hôm nay chưa được tạo. Kế hoạch được chuẩn bị sẵn mỗi sáng."
 }

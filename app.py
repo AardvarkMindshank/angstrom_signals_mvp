@@ -399,7 +399,7 @@ export default function(component) {
       "html.angstrom-night{--ang-surface:var(--ang-card-night,#262730);--ang-field:var(--ang-field-night,#31333f);--ang-button:var(--ang-button-night,#31333f);--ang-chart:var(--ang-chart-night,#262730);--ang-border:var(--ang-border-night,#000000);--ang-text:#f3f4f6;--ang-muted:#9ca3af;--ang-soft:#d1d5db;--ang-track:#3f4654;--ang-line:var(--ang-border);--ang-select:#3a4050;--ang-select-text:#f9fafb;--ang-page:var(--ang-page-night,#0e1117);--ang-heading:var(--ang-heading-night,#262730);--ang-section:var(--ang-section-night,#262730);--ang-hover:var(--ang-hover-night,#31333f);--ang-side:var(--ang-side-night,#16181f);--ang-social:var(--ang-social-night,#1c1f27);}",
       ".ang-card{background:var(--ang-surface);color:var(--ang-text);border:1px solid var(--ang-border);border-radius:10px;padding:12px 16px;}",
       // The two briefing boxes at the top of Quick Snapshot look like the market cards under them.
-      ".st-key-snapshot_forecast,.st-key-snapshot_passage{background:var(--ang-surface);color:var(--ang-text);border:1px solid var(--ang-border);border-radius:10px;padding:12px 16px;gap:10px;}",
+      ".st-key-snapshot_forecast,.st-key-snapshot_passage,.st-key-logbook_forecast,.st-key-logbook_passage{background:var(--ang-surface);color:var(--ang-text);border:1px solid var(--ang-border);border-radius:10px;padding:12px 16px;gap:10px;}",
       ".ang-kicker{font-size:.8rem;color:var(--ang-muted);margin-bottom:4px;}",
       // The social panel floats at the side; its empty holder in Quick Snapshot must not add a row gap.
       "[data-testid='stLayoutWrapper']:has(> .st-key-social_host){margin-top:-1rem;}",
@@ -9431,9 +9431,15 @@ def _briefing_title(icon_name: str, when: str, help_text: str) -> None:
                 f"{html.escape(when)}</span>" if when else f"**{icon_name}**", help=help_text, unsafe_allow_html=True)
 
 
-def _forecast_player(key: str) -> None:
-    """🌍 The newest Morning forecast (the same for everyone): the edition made for this morning, wherever you are.
-    Laid out like the Passage Plan: name and day, the player, then Read it."""
+def _briefing_pick(key: str, options: list, labels: dict) -> str:
+    """The date selector both briefings share in the Logbook (newest first)."""
+    return st.selectbox(t("Date"), options, format_func=lambda o: labels.get(o, o), key=f"briefing_pick_{key}",
+                        label_visibility="collapsed")
+
+
+def _forecast_player(key: str, pick: bool = False) -> None:
+    """🌍 The Morning forecast (the same for everyone). Quick Snapshot: the newest edition, the day beside the name.
+    Logbook (pick): the name, a date selector over the week kept, then the player and Read it, like the Passage Plan."""
     base = _secret("url")
     meta = _briefing_meta(base, briefing.GENERAL) if base else {}
     eid = briefing.newest(meta)
@@ -9441,23 +9447,34 @@ def _forecast_player(key: str) -> None:
             "edition before the New York morning. You always get the newest, which is the one made for your morning. "
             "The main markets, the top five coins, the Tide and the week's events. A summary of the app's readings, "
             "not advice.")
+
+    def label(e: str) -> str:
+        m = meta.get(e) or {}
+        return t("{day} · {edition} · {length}", day=pd.Timestamp(e[:10]).strftime("%a %d %b"),
+                 edition=t(briefing.EDITIONS.get(e[11:], {}).get("name", "")), length=_clock(m.get("seconds")))
+
     if not eid:
         _briefing_title("🌍 " + t("Morning forecast"), "", tip)
         st.caption(t("The first edition is on its way."))
         return
-    m = meta.get(eid) or {}
-    name = briefing.EDITIONS.get(eid[11:], {}).get("name", "")
-    _briefing_title("🌍 " + t("Morning forecast"),
-                    t("{day} · {edition} · {length}", day=pd.Timestamp(eid[:10]).strftime("%a %d %b"),
-                      edition=t(name), length=_clock(m.get("seconds"))), tip)
+    if pick:
+        _briefing_title("🌍 " + t("Morning forecast"), "", tip)
+        ids = sorted((k for k, v in meta.items() if isinstance(v, dict)),
+                     key=lambda k: str((meta.get(k) or {}).get("made_at") or ""), reverse=True)
+        eid = _briefing_pick(key, ids, {k: label(k) for k in ids})
+    else:
+        _briefing_title("🌍 " + t("Morning forecast"), label(eid), tip)
     st.audio(briefing.public_url(base, f"{briefing.GENERAL}/{eid}.mp3"), format="audio/mpeg")
     with st.expander("📜 " + t("Read it"), expanded=False):
         st.write(_briefing_text(briefing.public_url(base, f"{briefing.GENERAL}/{eid}.txt")) or t("Not available."))
 
 
-def _passage_player(key: str, show_button: bool = True, show_text: bool = True) -> None:
-    """🧭 Today's spoken Passage Plan (Pro and Elite), or a line saying it comes with Pro. Laid out like the Morning
-    forecast: name and day, the player, then Read it (and the button to make one now)."""
+def _passage_player(key: str, show_button: bool = True, pick: bool = False) -> None:
+    """🧭 The spoken Passage Plan (Pro and Elite), or a line saying it comes with Pro. Quick Snapshot: today's, the day
+    beside the name. Logbook (pick): the name, a date selector over the week kept (spoken or written), then the player
+    and Read it, like the Morning forecast."""
+    import navigator
+
     tip = t("Today's AI Passage Plan for your own watchlist and funnels, read aloud: the same plan you can read in the "
             "📓 Logbook. It is made ready each morning; set the time and voice there.")
     if not plans.includes(current_plan(), "pro"):
@@ -9469,23 +9486,42 @@ def _passage_player(key: str, show_button: bool = True, show_text: bool = True) 
     state = stored.get("briefing_state") if isinstance(stored.get("briefing_state"), dict) else {}
     base = _secret("url")
     meta = _briefing_meta(base, b["token"]) if b.get("token") and base else {}
-    day = briefing.newest(meta)
-    _briefing_title("🧭 " + t("Your Passage Plan"),
-                    t("{day} · {length}", day=pd.Timestamp(day[:10]).strftime("%a %d %b"),
-                      length=_clock((meta.get(day) or {}).get("seconds"))) if day else "", tip)
-    if day:
-        st.audio(briefing.public_url(base, f"{b['token']}/{day}.mp3"), format="audio/mpeg")
+    spoken = {k[:10]: k for k in sorted(meta, key=lambda k: str((meta.get(k) or {}).get("made_at") or ""))
+              if isinstance(meta.get(k), dict)}                       # day -> episode id (the newest that day)
+    zone = briefing.local_now(b["zone"]).tzinfo
+    written = {}
+    if pick:
+        for r in navigator.recent_plans(supabase, user_id, 14):     # newest first: keep the newest plan of each day
+            day_key = pd.Timestamp(r["created_at"]).tz_convert(zone).strftime("%Y-%m-%d")
+            written.setdefault(day_key, r.get("body") or "")
+    days = sorted(set(spoken) | set(written), reverse=True)[: briefing.KEEP_EPISODES]
+
+    def label(d: str) -> str:
+        e = spoken.get(d)
+        length = _clock((meta.get(e) or {}).get("seconds")) if e else t("written only")
+        return t("{day} · {length}", day=pd.Timestamp(d).strftime("%a %d %b"), length=length)
+
+    day = briefing.newest(meta)[:10]
+    if pick:
+        _briefing_title("🧭 " + t("Your Passage Plan"), "", tip)
+        day = _briefing_pick(key, days, {d: label(d) for d in days}) if days else ""
+    else:
+        _briefing_title("🧭 " + t("Your Passage Plan"), label(day) if day else "", tip)
+    if day and spoken.get(day):
+        st.audio(briefing.public_url(base, f"{b['token']}/{spoken[day]}.mp3"), format="audio/mpeg")
     asked = str(state.get("requested") or "")
     made_at = max((str((v or {}).get("made_at") or "") for v in meta.values() if isinstance(v, dict)), default="")
     if asked and asked > made_at:
         st.info("⏳ " + t("Being made: ready within about 15 minutes."))
     elif state.get("error") and str(state.get("error_at") or "") > made_at:
         st.warning(t("The last one could not be made: {why}", why=state["error"]))
-    elif show_button and not day:
-        st.caption(t("Not made yet today."))
-    if day and show_text:
+    elif not day:
+        st.caption(t("Not made yet today. It is made ready each morning."))
+    if day:
         with st.expander("📜 " + t("Read it"), expanded=False):
-            st.write(_briefing_text(briefing.public_url(base, f"{b['token']}/{day}.txt")) or t("Not available."))
+            text = written.get(day) or (_briefing_text(briefing.public_url(base, f"{b['token']}/{spoken[day]}.txt"))
+                                        if spoken.get(day) else "")
+            st.markdown(text or t("Not available."))
     if show_button and st.button("🎙️ " + t("Speak today's plan now"), key=f"briefing_make_{key}",
                                  use_container_width=True,
                                  help=t("Reads today's Passage Plan aloud (writing it first if it isn't written "
@@ -9497,24 +9533,14 @@ def _passage_player(key: str, show_button: bool = True, show_text: bool = True) 
 
 @st.fragment
 def _logbook_panel() -> None:
-    import navigator
-
-    st.caption(t("Your daily Passage Plans, to read or to hear. Your trades will join them here."))
-    _passage_player("logbook", show_text=False)     # the plans themselves are read just below
+    """📓 The Logbook's Passage Plan box (title, date selector, player, Read it: the same as the Morning forecast box
+    above it), then its settings and podcast feeds."""
+    with st.container(key="logbook_passage"):
+        _passage_player("logbook", show_button=True, pick=True)
     if not plans.includes(current_plan(), "pro"):
         return
     stored = (st.session_state.get("cloud_prefs") or {}).get("settings") or {}
     b = briefing.settings_of(stored)
-    kept = navigator.recent_plans(supabase, user_id, 14)
-    if kept:
-        labels = [pd.Timestamp(r["created_at"]).tz_convert(briefing.local_now(b["zone"]).tzinfo)
-                  .strftime("%a %d %b, %H:%M") for r in kept]
-        pick = st.selectbox(t("📜 Read a plan"), range(len(kept)), format_func=lambda i: labels[i],
-                            key="logbook_pick")
-        with st.container(height=320):
-            st.markdown(kept[pick].get("body") or "")
-    else:
-        st.caption(t("No plans yet. Make one with 📜 Today's AI Passage Plan in 🌊 Tides, or with the button above."))
 
     with st.expander("⚙️ " + t("Spoken plan settings"), expanded=False):
         on = st.toggle(t("Speak my plan every morning"), value=bool(b["on"]), key="briefing_on")
@@ -16889,8 +16915,8 @@ if _POPOUT_VIEW == "logbook":
     # 📓 The Logbook, in the left pull-out (inpanel=1) or its own window: the Passage Plan, the Morning forecast.
     if str(st.query_params.get("inpanel") or "") != "1":
         st.markdown("### 📓 " + t("Logbook"))
-    _forecast_player("logbook_view")
-    st.divider()
+    with st.container(key="logbook_forecast"):
+        _forecast_player("logbook_view", pick=True)
     _logbook_panel()
     st.stop()
 
