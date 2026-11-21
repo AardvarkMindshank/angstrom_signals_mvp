@@ -743,7 +743,8 @@ module.exports = {
     query: "?section=prism",
     setup: async (h) => {
       // Make the scan and work out its whole history once, off camera (the demo keeps it), so the recording opens with
-      // every year ready.
+      // every year ready. The Prism board can take a while to draw on a cold start.
+      await h.page.waitForSelector(".lat.prism details.prov > summary", { timeout: 120000 });
       await h.page.locator(".lat.prism details.prov > summary").first().click();
       await h.wait(400);
       await provided(h, "Volatility squeeze").locator("button.sq").first().click();
