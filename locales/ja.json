@@ -2397,7 +2397,6 @@
   "Your plan includes {n} connection(s). Disconnect one, or upgrade, to add another.": "ご利用のプランは {n} 件の接続を含みます。追加するには1件を解除するか、プランを上げてください。",
   "eToro public key": "eToro 公開キー",
   "Your eToro API key (Read)": "あなたの eToro API キー（読み取り）",
-  "Name (optional)": "名前（任意）",
   "I created this key with Read permission only": "このキーは読み取り権限のみで作成しました",
   "Connect": "接続",
   "Delete every connection, trade, snapshot and note": "すべての接続、取引、スナップショット、メモを削除",
@@ -2430,8 +2429,6 @@
   "days": "日",
   "Closed": "決済",
   "Class": "クラス",
-  "Held": "保有",
-  "Result": "結果",
   "Regime at entry": "エントリー時のレジーム",
   "Copied": "コピー",
   "Not recorded then": "当時は未記録",
@@ -2461,5 +2458,10 @@
   "Edition": "版",
   "Today": "今日",
   "Yesterday": "昨日",
-  "Pick a date": "日付を選ぶ"
+  "Pick a date": "日付を選ぶ",
+  "Name for this platform's tab": "このプラットフォームのタブ名",
+  "Shown on the platform's tab in the Trade Log. Handy if you connect more than one account on the same platform, such as eToro main and eToro long-term.": "Trade Log のプラットフォームのタブに表示されます。同じプラットフォームで複数の口座を接続する場合（例: eToro メインと eToro 長期）に便利です。",
+  "Save name": "名前を保存",
+  "Held (days)": "保有（日）",
+  "Result (USD)": "結果（USD）"
 }

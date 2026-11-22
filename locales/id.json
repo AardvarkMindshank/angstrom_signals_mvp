@@ -2397,7 +2397,6 @@
   "Your plan includes {n} connection(s). Disconnect one, or upgrade, to add another.": "Paket Anda mencakup {n} koneksi. Putuskan satu, atau tingkatkan paket, untuk menambah yang lain.",
   "eToro public key": "Kunci publik eToro",
   "Your eToro API key (Read)": "Kunci API eToro Anda (Baca)",
-  "Name (optional)": "Nama (opsional)",
   "I created this key with Read permission only": "Saya membuat kunci ini hanya dengan izin Baca",
   "Connect": "Hubungkan",
   "Delete every connection, trade, snapshot and note": "Hapus setiap koneksi, trading, cuplikan, dan catatan",
@@ -2430,8 +2429,6 @@
   "days": "hari",
   "Closed": "Ditutup",
   "Class": "Kelas",
-  "Held": "Durasi",
-  "Result": "Hasil",
   "Regime at entry": "Rezim saat masuk",
   "Copied": "Disalin",
   "Not recorded then": "Tidak tercatat saat itu",
@@ -2461,5 +2458,10 @@
   "Edition": "Edisi",
   "Today": "Hari ini",
   "Yesterday": "Kemarin",
-  "Pick a date": "Pilih tanggal"
+  "Pick a date": "Pilih tanggal",
+  "Name for this platform's tab": "Nama untuk tab platform ini",
+  "Shown on the platform's tab in the Trade Log. Handy if you connect more than one account on the same platform, such as eToro main and eToro long-term.": "Ditampilkan pada tab platform di Trade Log. Berguna jika Anda menghubungkan lebih dari satu akun di platform yang sama, misalnya eToro utama dan eToro jangka panjang.",
+  "Save name": "Simpan nama",
+  "Held (days)": "Durasi (hari)",
+  "Result (USD)": "Hasil (USD)"
 }

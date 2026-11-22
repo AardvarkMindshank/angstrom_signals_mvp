@@ -2397,7 +2397,6 @@
   "Your plan includes {n} connection(s). Disconnect one, or upgrade, to add another.": "요금제에 연결 {n}개가 포함됩니다. 하나를 해제하거나 업그레이드해야 추가할 수 있습니다.",
   "eToro public key": "eToro 공개 키",
   "Your eToro API key (Read)": "내 eToro API 키(읽기)",
-  "Name (optional)": "이름(선택)",
   "I created this key with Read permission only": "이 키는 읽기 권한만으로 만들었습니다",
   "Connect": "연결",
   "Delete every connection, trade, snapshot and note": "모든 연결, 거래, 스냅샷, 메모 삭제",
@@ -2430,8 +2429,6 @@
   "days": "일",
   "Closed": "청산",
   "Class": "자산군",
-  "Held": "보유",
-  "Result": "결과",
   "Regime at entry": "진입 시 레짐",
   "Copied": "복사",
   "Not recorded then": "당시 기록 없음",
@@ -2461,5 +2458,10 @@
   "Edition": "판",
   "Today": "오늘",
   "Yesterday": "어제",
-  "Pick a date": "날짜 선택"
+  "Pick a date": "날짜 선택",
+  "Name for this platform's tab": "이 플랫폼 탭의 이름",
+  "Shown on the platform's tab in the Trade Log. Handy if you connect more than one account on the same platform, such as eToro main and eToro long-term.": "Trade Log의 플랫폼 탭에 표시됩니다. 같은 플랫폼에서 계좌를 여러 개 연결할 때(예: eToro 메인, eToro 장기) 유용합니다.",
+  "Save name": "이름 저장",
+  "Held (days)": "보유(일)",
+  "Result (USD)": "결과(USD)"
 }

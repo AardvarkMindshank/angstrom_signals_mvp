@@ -2397,7 +2397,6 @@
   "Your plan includes {n} connection(s). Disconnect one, or upgrade, to add another.": "Gói của bạn có {n} kết nối. Ngắt một kết nối, hoặc nâng cấp, để thêm kết nối khác.",
   "eToro public key": "Khóa công khai eToro",
   "Your eToro API key (Read)": "Khóa API eToro của bạn (Đọc)",
-  "Name (optional)": "Tên (không bắt buộc)",
   "I created this key with Read permission only": "Tôi đã tạo khóa này chỉ với quyền Đọc",
   "Connect": "Kết nối",
   "Delete every connection, trade, snapshot and note": "Xóa mọi kết nối, giao dịch, ảnh chụp chỉ số và ghi chú",
@@ -2430,8 +2429,6 @@
   "days": "ngày",
   "Closed": "Đóng",
   "Class": "Loại",
-  "Held": "Giữ",
-  "Result": "Kết quả",
   "Regime at entry": "Chế độ lúc vào lệnh",
   "Copied": "Sao chép",
   "Not recorded then": "Chưa ghi nhận khi đó",
@@ -2461,5 +2458,10 @@
   "Edition": "Ấn bản",
   "Today": "Hôm nay",
   "Yesterday": "Hôm qua",
-  "Pick a date": "Chọn ngày"
+  "Pick a date": "Chọn ngày",
+  "Name for this platform's tab": "Tên thẻ của nền tảng này",
+  "Shown on the platform's tab in the Trade Log. Handy if you connect more than one account on the same platform, such as eToro main and eToro long-term.": "Hiện trên thẻ của nền tảng trong Trade Log. Tiện khi bạn kết nối nhiều tài khoản trên cùng một nền tảng, ví dụ eToro chính và eToro dài hạn.",
+  "Save name": "Lưu tên",
+  "Held (days)": "Giữ (ngày)",
+  "Result (USD)": "Kết quả (USD)"
 }

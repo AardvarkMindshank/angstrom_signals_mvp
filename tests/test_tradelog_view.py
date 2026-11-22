@@ -79,7 +79,8 @@ def test_free_has_no_trade_log_and_empty_shows_the_connect_guide():
 
 def test_setup_lists_connections_and_stops_at_the_plan_limit():
     at = AppTest.from_function(_app, args=("plus", False, True)).run(timeout=30)
-    assert not at.exception and not at.text_input                 # Plus: one connection, already used
+    assert not at.exception                                       # Plus: one connection, already used
+    assert [w.key for w in at.text_input] == ["tl_name_c1"]       # only the tab name to edit, no new key form
     assert any("Disconnect" in b.label for b in at.button)
 
 
@@ -106,3 +107,12 @@ def test_trade_detail_draws_the_snapshot_table():
     assert not at.exception
     assert any("Average entry" in m.label for m in at.metric)
     assert len(at.dataframe) == 1 and len(at.text_area) == 1
+
+
+def test_tab_names_use_the_given_name_else_the_platform_numbered():
+    import tradelog_view
+
+    names = tradelog_view.tab_names([{"id": "a", "platform": "etoro", "label": "", "created_at": "1"},
+                                     {"id": "b", "platform": "etoro", "label": None, "created_at": "2"},
+                                     {"id": "c", "platform": "etoro", "label": "eToro long-term", "created_at": "3"}])
+    assert names == {"a": "eToro", "b": "eToro 2", "c": "eToro long-term"}

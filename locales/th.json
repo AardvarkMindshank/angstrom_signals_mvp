@@ -2397,7 +2397,6 @@
   "Your plan includes {n} connection(s). Disconnect one, or upgrade, to add another.": "แพ็กเกจของคุณรวม {n} การเชื่อมต่อ ยกเลิกหนึ่งรายการ หรืออัปเกรด เพื่อเพิ่มอีก",
   "eToro public key": "คีย์สาธารณะของ eToro",
   "Your eToro API key (Read)": "คีย์ API ของ eToro ของคุณ (อ่าน)",
-  "Name (optional)": "ชื่อ (ไม่บังคับ)",
   "I created this key with Read permission only": "ฉันสร้างคีย์นี้ด้วยสิทธิ์อ่านอย่างเดียว",
   "Connect": "เชื่อมต่อ",
   "Delete every connection, trade, snapshot and note": "ลบทุกการเชื่อมต่อ เทรด ภาพรวมค่า และบันทึก",
@@ -2430,8 +2429,6 @@
   "days": "วัน",
   "Closed": "ปิด",
   "Class": "ประเภท",
-  "Held": "ถือ",
-  "Result": "ผลลัพธ์",
   "Regime at entry": "Regime ตอนเข้า",
   "Copied": "คัดลอก",
   "Not recorded then": "ไม่ได้บันทึกในตอนนั้น",
@@ -2461,5 +2458,10 @@
   "Edition": "ฉบับ",
   "Today": "วันนี้",
   "Yesterday": "เมื่อวาน",
-  "Pick a date": "เลือกวันที่"
+  "Pick a date": "เลือกวันที่",
+  "Name for this platform's tab": "ชื่อแท็บของแพลตฟอร์มนี้",
+  "Shown on the platform's tab in the Trade Log. Handy if you connect more than one account on the same platform, such as eToro main and eToro long-term.": "แสดงบนแท็บของแพลตฟอร์มใน Trade Log มีประโยชน์ถ้าคุณเชื่อมต่อมากกว่าหนึ่งบัญชีบนแพลตฟอร์มเดียวกัน เช่น eToro หลัก และ eToro ระยะยาว",
+  "Save name": "บันทึกชื่อ",
+  "Held (days)": "ถือ (วัน)",
+  "Result (USD)": "ผลลัพธ์ (USD)"
 }

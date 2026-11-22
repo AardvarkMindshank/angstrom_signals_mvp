@@ -79,6 +79,15 @@ def _money(v) -> str:
     return f"{'+' if v > 0 else '−' if v < 0 else ''}${abs(v):,.2f}"
 
 
+def _usd_cols(st, *names) -> dict:
+    """Money columns kept as numbers (so they sort and line up on the right), shown with a sign and two decimals."""
+    return {n: st.column_config.NumberColumn(n, format="%+,.2f") for n in names}
+
+
+def _pct_cols(st, *names, digits=0) -> dict:
+    return {n: st.column_config.NumberColumn(n, format=f"%.{digits}f%%") for n in names}
+
+
 def _signed(v, digits=0) -> str:
     return "—" if v is None else f"{v:+.{digits}f}"
 
@@ -100,7 +109,9 @@ def _connect_form(st, supabase, plan: str, count: int) -> None:
     with st.form("tradelog_connect", clear_on_submit=True):
         public = st.text_input(t("eToro public key"), type="password", key="tl_public")
         user = st.text_input(t("Your eToro API key (Read)"), type="password", key="tl_user")
-        label = st.text_input(t("Name (optional)"), max_chars=60, key="tl_label")
+        label = st.text_input(t("Name for this platform's tab"), value="eToro", max_chars=30, key="tl_label",
+                              help=t("Shown on the platform's tab in the Trade Log. Handy if you connect more than "
+                                     "one account on the same platform, such as eToro main and eToro long-term."))
         sure = st.checkbox(t("I created this key with Read permission only"), key="tl_sure")
         if st.form_submit_button(t("Connect"), type="primary"):
             if not public.strip() or not user.strip() or not sure:
@@ -108,7 +119,7 @@ def _connect_form(st, supabase, plan: str, count: int) -> None:
                 return
             try:
                 supabase.rpc("tradelog_save_connection", {
-                    "p_platform": "etoro", "p_label": label.strip(),
+                    "p_platform": "etoro", "p_label": label.strip() or "eToro",
                     "p_keys": {"api_key": public.strip(), "user_key": user.strip()}}).execute()
             except Exception:
                 st.error(t("Could not save the connection. Please try again."))
@@ -116,14 +127,31 @@ def _connect_form(st, supabase, plan: str, count: int) -> None:
             st.success(t("Connected. Your closed trades will appear within about 5 minutes."))
 
 
+def tab_names(conns: list[dict]) -> dict:
+    """Each connection's tab name: the name the member gave it, else its platform, numbered when there are several
+    on one platform (eToro, eToro 2)."""
+    seen, out = {}, {}
+    for c in sorted(conns, key=lambda c: str(c.get("created_at") or "")):
+        base = PLATFORMS.get(c["platform"], c["platform"])
+        seen[base] = seen.get(base, 0) + 1
+        out[c["id"]] = (str(c.get("label") or "").strip()
+                        or (base if seen[base] == 1 else f"{base} {seen[base]}"))
+    return out
+
+
 def _manage(st, supabase, conns: list[dict]) -> None:
     if not conns:
         return
+    names = tab_names(conns)
     st.markdown(t("**Manage connections**"))
     for c in conns:
-        name = c.get("label") or PLATFORMS.get(c["platform"], c["platform"])
+        name = names.get(c["id"])
         st.markdown(f"**{name}** · {t(STATUS_WORDS.get(c.get('status') or 'new', 'Importing'))}"
                     + (f"  \n:orange[{t(c['last_error'])}]" if c.get("last_error") else ""))
+        new = st.text_input(t("Name for this platform's tab"), value=name, max_chars=30, key=f"tl_name_{c['id']}")
+        if new.strip() and new.strip() != name and st.button(t("Save name"), key=f"tl_rename_{c['id']}"):
+            supabase.rpc("tradelog_rename_connection", {"p_id": c["id"], "p_label": new.strip()}).execute()
+            st.rerun()
         if st.button(t("Disconnect"), key=f"tl_drop_{c['id']}", icon=":material/link_off:"):
             supabase.rpc("tradelog_delete_connection", {"p_id": c["id"]}).execute()
             st.rerun()
@@ -174,26 +202,27 @@ def _overview(st, trips: list[dict], snaps: dict, copied: bool) -> None:
         st.markdown(t("**By asset class**"))
         by = tradelog.stats_by(trips, "asset_class", copied)
         st.dataframe(pd.DataFrame([{t("Asset class"): t(CLASS_WORDS.get(k, k)), t("Trades"): v["trades"],
-                                    t("Net result"): _money(v["net"]),
-                                    t("Win rate"): "—" if v["win_rate"] is None else f"{v['win_rate']:.0f}%"}
-                                   for k, v in by.items() if v["trades"]]), hide_index=True, width="stretch")
+                                    t("Net result (USD)"): v["net"], t("Win rate"): v["win_rate"]}
+                                   for k, v in by.items() if v["trades"]]), hide_index=True, width="stretch",
+                     column_config={**_usd_cols(st, t("Net result (USD)")), **_pct_cols(st, t("Win rate"))})
     with right:
         st.markdown(t("**Results by regime at entry**"))
         tagged = [{**trip, "regime": (snaps.get((trip["id"], "entry")) or {}).get("regime") or "unknown"}
                   for trip in trips]
         by = tradelog.stats_by(tagged, "regime", copied)
         st.dataframe(pd.DataFrame([{t("Regime"): _regime({"regime": k}) if k != "unknown" else t("Not known"),
-                                    t("Trades"): v["trades"], t("Net result"): _money(v["net"]),
+                                    t("Trades"): v["trades"], t("Net result (USD)"): v["net"],
                                     t("Note"): "" if v["enough"] else t("too few to say")}
-                                   for k, v in by.items() if v["trades"]]), hide_index=True, width="stretch")
+                                   for k, v in by.items() if v["trades"]]), hide_index=True, width="stretch",
+                     column_config=_usd_cols(st, t("Net result (USD)")))
         st.caption(t("Shows what happened together, not a cause."))
     platforms = tradelog.stats_by(trips, "platform", copied)
     if len(platforms) > 1:
         st.markdown(t("**By platform**"))
         st.dataframe(pd.DataFrame([{t("Platform"): PLATFORMS.get(k, k), t("Trades"): v["trades"],
-                                    t("Net result"): _money(v["net"]),
-                                    t("Win rate"): "—" if v["win_rate"] is None else f"{v['win_rate']:.0f}%"}
-                                   for k, v in platforms.items()]), hide_index=True, width="stretch")
+                                    t("Net result (USD)"): v["net"], t("Win rate"): v["win_rate"]}
+                                   for k, v in platforms.items()]), hide_index=True, width="stretch",
+                     column_config={**_usd_cols(st, t("Net result (USD)")), **_pct_cols(st, t("Win rate"))})
 
 
 def _trade_list(st, trips: list[dict], snaps: dict, zone, key: str):
@@ -203,21 +232,24 @@ def _trade_list(st, trips: list[dict], snaps: dict, zone, key: str):
         return None
     def held(trip):
         a, b = _when(trip["opened_at"]), _when(trip["closed_at"])
-        days = (b - a).total_seconds() / 86400
-        return f"{days:.1f} {t('days')}" if days < 10 else f"{days:.0f} {t('days')}"
+        return round((b - a).total_seconds() / 86400, 1)
     table = pd.DataFrame([{
-        t("Closed"): _when(trip["closed_at"]).astimezone(zone).strftime("%d %b %Y"),
+        t("Closed"): _when(trip["closed_at"]).astimezone(zone).replace(tzinfo=None),
         t("Asset"): trip.get("name") or trip.get("symbol") or "—",
         t("Class"): t(CLASS_WORDS.get(trip.get("asset_class"), "Other")),
         t("Direction"): t("Buy") if trip.get("direction") == "long" else t("Sell"),
-        t("Held"): held(trip),
-        t("Result"): _money(trip.get("net_result_usd")),
-        "%": _signed(trip.get("result_pct"), 1),
+        t("Held (days)"): held(trip),
+        t("Result (USD)"): trip.get("net_result_usd"),
+        "%": trip.get("result_pct"),
         t("Regime at entry"): _regime(snaps.get((trip["id"], "entry"))),
         t("Copied"): "✓" if trip.get("copied") else "",
     } for trip in trips])
-    picked = st.dataframe(table, hide_index=True, width="stretch", on_select="rerun", selection_mode="single-row",
-                          key=f"tl_table_{key}")
+    picked = st.dataframe(
+        table, hide_index=True, width="stretch", on_select="rerun", selection_mode="single-row", key=f"tl_table_{key}",
+        column_config={t("Closed"): st.column_config.DatetimeColumn(t("Closed"), format="D MMM YYYY"),
+                       t("Held (days)"): st.column_config.NumberColumn(t("Held (days)"), format="%.1f"),
+                       **_usd_cols(st, t("Result (USD)")),
+                       "%": st.column_config.NumberColumn("%", format="%+.1f%%")})
     st.caption(t("Times in your time zone ({zone}). Pick a row to see the trade.", zone=str(zone)))
     rows = list(getattr(getattr(picked, "selection", None), "rows", []) or [])
     return trips[rows[0]] if rows else None
@@ -276,6 +308,11 @@ def _detail(st, supabase, trip: dict, snaps: dict, notes: dict, zone) -> None:
 # ---- the page ------------------------------------------------------------------------------------------------
 
 def render(st, supabase, plan: str) -> None:
+    """The main-page Trade Log, as a fragment: a filter, tab or row picked redraws only this section."""
+    _render_fragment(st, supabase, plan)
+
+
+def _render(st, supabase, plan: str) -> None:
     if CONNECTIONS.get(plan, 0) == 0:
         st.info(t("The Trade Log comes with Plus: connect eToro read-only and see your own trades against the "
                   "market conditions at the time."))
@@ -311,7 +348,8 @@ def render(st, supabase, plan: str) -> None:
         asked = [supabase.rpc("tradelog_request_refresh", {"p_id": c["id"]}).execute().data for c in conns]
         st.toast(t("Refresh requested.") if any(asked) else t("Synced recently. Try again in a few minutes."))
 
-    names = [c.get("label") or PLATFORMS.get(c["platform"], c["platform"]) for c in conns]
+    by_id = tab_names(conns)
+    names = [by_id[c["id"]] for c in conns]
     tabs = st.tabs([t("Overview")] + names)
     with tabs[0]:
         pick, copied = _filters(st, "all")
@@ -327,6 +365,11 @@ def render(st, supabase, plan: str) -> None:
             if chosen:
                 _detail(st, supabase, chosen, snaps, notes, zone)
     st.caption(t(DISCLAIMER))
+
+
+import streamlit as _streamlit                                           # noqa: E402  (the fragment wrapper)
+
+_render_fragment = _streamlit.fragment(_render)
 
 
 def has_connections(supabase) -> bool:

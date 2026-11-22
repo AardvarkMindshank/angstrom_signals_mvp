@@ -2397,7 +2397,6 @@
   "Your plan includes {n} connection(s). Disconnect one, or upgrade, to add another.": "Tu plan incluye {n} conexión(es). Desconecta una, o mejora tu plan, para añadir otra.",
   "eToro public key": "Clave pública de eToro",
   "Your eToro API key (Read)": "Tu clave API de eToro (Lectura)",
-  "Name (optional)": "Nombre (opcional)",
   "I created this key with Read permission only": "Creé esta clave solo con permiso de lectura",
   "Connect": "Conectar",
   "Delete every connection, trade, snapshot and note": "Eliminar todas las conexiones, operaciones, instantáneas y notas",
@@ -2430,8 +2429,6 @@
   "days": "días",
   "Closed": "Cerrada",
   "Class": "Clase",
-  "Held": "Duración",
-  "Result": "Resultado",
   "Regime at entry": "Régimen a la entrada",
   "Copied": "Copiada",
   "Not recorded then": "No registrado entonces",
@@ -2461,5 +2458,10 @@
   "Edition": "Edición",
   "Today": "Hoy",
   "Yesterday": "Ayer",
-  "Pick a date": "Elegir fecha"
+  "Pick a date": "Elegir fecha",
+  "Name for this platform's tab": "Nombre de la pestaña de esta plataforma",
+  "Shown on the platform's tab in the Trade Log. Handy if you connect more than one account on the same platform, such as eToro main and eToro long-term.": "Aparece en la pestaña de la plataforma en el Trade Log. Útil si conectas más de una cuenta en la misma plataforma, como eToro principal y eToro largo plazo.",
+  "Save name": "Guardar nombre",
+  "Held (days)": "Duración (días)",
+  "Result (USD)": "Resultado (USD)"
 }

@@ -2397,7 +2397,6 @@
   "Your plan includes {n} connection(s). Disconnect one, or upgrade, to add another.": "Planınız {n} bağlantı içerir. Başka bir tane eklemek için birini kaldırın veya planınızı yükseltin.",
   "eToro public key": "eToro genel anahtarı",
   "Your eToro API key (Read)": "eToro API anahtarınız (Okuma)",
-  "Name (optional)": "Ad (isteğe bağlı)",
   "I created this key with Read permission only": "Bu anahtarı yalnızca Okuma izniyle oluşturdum",
   "Connect": "Bağla",
   "Delete every connection, trade, snapshot and note": "Her bağlantıyı, işlemi, anlık görüntüyü ve notu sil",
@@ -2430,8 +2429,6 @@
   "days": "gün",
   "Closed": "Kapanış",
   "Class": "Sınıf",
-  "Held": "Süre",
-  "Result": "Sonuç",
   "Regime at entry": "Girişteki rejim",
   "Copied": "Kopyalandı",
   "Not recorded then": "O zaman kaydedilmedi",
@@ -2461,5 +2458,10 @@
   "Edition": "Baskı",
   "Today": "Bugün",
   "Yesterday": "Dün",
-  "Pick a date": "Tarih seç"
+  "Pick a date": "Tarih seç",
+  "Name for this platform's tab": "Bu platformun sekme adı",
+  "Shown on the platform's tab in the Trade Log. Handy if you connect more than one account on the same platform, such as eToro main and eToro long-term.": "Trade Log'da platformun sekmesinde gösterilir. Aynı platformda birden fazla hesap bağlarsanız işe yarar, örneğin eToro ana ve eToro uzun vade.",
+  "Save name": "Adı kaydet",
+  "Held (days)": "Süre (gün)",
+  "Result (USD)": "Sonuç (USD)"
 }

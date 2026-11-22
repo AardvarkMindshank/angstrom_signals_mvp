@@ -2397,7 +2397,6 @@
   "Your plan includes {n} connection(s). Disconnect one, or upgrade, to add another.": "你的套餐包含 {n} 个连接。要添加新的，请断开一个或升级。",
   "eToro public key": "eToro 公钥",
   "Your eToro API key (Read)": "你的 eToro API 密钥（读取）",
-  "Name (optional)": "名称（可选）",
   "I created this key with Read permission only": "我创建此密钥时只选了读取权限",
   "Connect": "连接",
   "Delete every connection, trade, snapshot and note": "删除所有连接、交易、快照和备注",
@@ -2430,8 +2429,6 @@
   "days": "天",
   "Closed": "平仓",
   "Class": "类别",
-  "Held": "持有",
-  "Result": "结果",
   "Regime at entry": "入场时行情状态",
   "Copied": "跟单",
   "Not recorded then": "当时未记录",
@@ -2461,5 +2458,10 @@
   "Edition": "版本",
   "Today": "今天",
   "Yesterday": "昨天",
-  "Pick a date": "选择日期"
+  "Pick a date": "选择日期",
+  "Name for this platform's tab": "此平台标签页的名称",
+  "Shown on the platform's tab in the Trade Log. Handy if you connect more than one account on the same platform, such as eToro main and eToro long-term.": "显示在 Trade Log 中该平台的标签页上。如果你在同一平台连接了多个账户，例如 eToro 主账户和 eToro 长线账户，会很方便。",
+  "Save name": "保存名称",
+  "Held (days)": "持有（天）",
+  "Result (USD)": "结果（USD）"
 }
