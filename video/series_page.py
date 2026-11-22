@@ -83,6 +83,7 @@ def page() -> str:
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>Training videos · MarketNavi</title>
+<link rel="icon" type="image/png" href="/favicon.png"><link rel="icon" href="/favicon.ico" sizes="any"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <style>
 :root{{--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--accent:#1e3a8a;--bg:#ffffff;--soft:#f8fafc}}
 @media (prefers-color-scheme:dark){{:root{{--ink:#e2e8f0;--muted:#94a3b8;--line:#1e293b;--accent:#93c5fd;--bg:#0b1220;--soft:#111a2e}}}}

@@ -8,6 +8,10 @@ on:
     branches: [video-publish]
   workflow_dispatch:
     inputs:
+      page_only:
+        description: "Only rebuild the videos page (no video uploads)"
+        type: boolean
+        default: false
       remove_old:
         description: "Also remove the old copies from angstromsignals.com/videos/"
         type: boolean
@@ -21,6 +25,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Upload to the website
+        if: ${{ !inputs.page_only }}
         env:
           HOSTGATOR_FTP_HOST: ${{ secrets.FTP_SERVER }}
           HOSTGATOR_FTP_USER: ${{ secrets.MARKETNAVI_FTP_USERNAME }}
