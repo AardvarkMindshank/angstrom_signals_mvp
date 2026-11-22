@@ -2400,7 +2400,6 @@
   "Name (optional)": "Tên (không bắt buộc)",
   "I created this key with Read permission only": "Tôi đã tạo khóa này chỉ với quyền Đọc",
   "Connect": "Kết nối",
-  "Manage connections": "Quản lý kết nối",
   "Delete every connection, trade, snapshot and note": "Xóa mọi kết nối, giao dịch, ảnh chụp chỉ số và ghi chú",
   "Delete all my Trade Log data": "Xóa toàn bộ dữ liệu Trade Log của tôi",
   "Trades copied from other eToro traders are left out unless you include them.": "Giao dịch sao chép từ trader eToro khác bị loại ra trừ khi bạn chọn bao gồm.",
@@ -2456,5 +2455,6 @@
   "At entry": "Lúc vào",
   "At exit": "Lúc ra",
   "Not known": "Không rõ",
-  "too few to say": "quá ít để kết luận"
+  "too few to say": "quá ít để kết luận",
+  "**Manage connections**": "**Quản lý kết nối**"
 }

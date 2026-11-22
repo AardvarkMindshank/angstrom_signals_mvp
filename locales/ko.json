@@ -2400,7 +2400,6 @@
   "Name (optional)": "이름(선택)",
   "I created this key with Read permission only": "이 키는 읽기 권한만으로 만들었습니다",
   "Connect": "연결",
-  "Manage connections": "연결 관리",
   "Delete every connection, trade, snapshot and note": "모든 연결, 거래, 스냅샷, 메모 삭제",
   "Delete all my Trade Log data": "내 Trade Log 데이터 모두 삭제",
   "Trades copied from other eToro traders are left out unless you include them.": "다른 eToro 트레이더에게서 복사한 거래는 포함하지 않는 한 제외됩니다.",
@@ -2456,5 +2455,6 @@
   "At entry": "진입 시",
   "At exit": "청산 시",
   "Not known": "알 수 없음",
-  "too few to say": "판단하기엔 너무 적음"
+  "too few to say": "판단하기엔 너무 적음",
+  "**Manage connections**": "**연결 관리**"
 }

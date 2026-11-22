@@ -2400,7 +2400,6 @@
   "Name (optional)": "ชื่อ (ไม่บังคับ)",
   "I created this key with Read permission only": "ฉันสร้างคีย์นี้ด้วยสิทธิ์อ่านอย่างเดียว",
   "Connect": "เชื่อมต่อ",
-  "Manage connections": "จัดการการเชื่อมต่อ",
   "Delete every connection, trade, snapshot and note": "ลบทุกการเชื่อมต่อ เทรด ภาพรวมค่า และบันทึก",
   "Delete all my Trade Log data": "ลบข้อมูล Trade Log ทั้งหมดของฉัน",
   "Trades copied from other eToro traders are left out unless you include them.": "เทรดที่คัดลอกจากเทรดเดอร์ eToro คนอื่นจะไม่ถูกนับ เว้นแต่คุณเลือกรวม",
@@ -2456,5 +2455,6 @@
   "At entry": "ตอนเข้า",
   "At exit": "ตอนออก",
   "Not known": "ไม่ทราบ",
-  "too few to say": "น้อยเกินจะสรุป"
+  "too few to say": "น้อยเกินจะสรุป",
+  "**Manage connections**": "**จัดการการเชื่อมต่อ**"
 }

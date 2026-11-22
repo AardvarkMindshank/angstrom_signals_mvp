@@ -2400,7 +2400,6 @@
   "Name (optional)": "Ad (isteğe bağlı)",
   "I created this key with Read permission only": "Bu anahtarı yalnızca Okuma izniyle oluşturdum",
   "Connect": "Bağla",
-  "Manage connections": "Bağlantıları yönet",
   "Delete every connection, trade, snapshot and note": "Her bağlantıyı, işlemi, anlık görüntüyü ve notu sil",
   "Delete all my Trade Log data": "Tüm Trade Log verilerimi sil",
   "Trades copied from other eToro traders are left out unless you include them.": "Diğer eToro yatırımcılarından kopyalanan işlemler, siz dahil etmedikçe hesaba katılmaz.",
@@ -2456,5 +2455,6 @@
   "At entry": "Girişte",
   "At exit": "Çıkışta",
   "Not known": "Bilinmiyor",
-  "too few to say": "sonuç için çok az"
+  "too few to say": "sonuç için çok az",
+  "**Manage connections**": "**Bağlantıları yönet**"
 }

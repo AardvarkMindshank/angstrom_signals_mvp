@@ -2400,7 +2400,6 @@
   "Name (optional)": "名称（可选）",
   "I created this key with Read permission only": "我创建此密钥时只选了读取权限",
   "Connect": "连接",
-  "Manage connections": "管理连接",
   "Delete every connection, trade, snapshot and note": "删除所有连接、交易、快照和备注",
   "Delete all my Trade Log data": "删除我的全部 Trade Log 数据",
   "Trades copied from other eToro traders are left out unless you include them.": "跟单其他 eToro 交易者的交易默认不计入，除非你选择包含。",
@@ -2456,5 +2455,6 @@
   "At entry": "入场时",
   "At exit": "出场时",
   "Not known": "未知",
-  "too few to say": "太少，无法判断"
+  "too few to say": "太少，无法判断",
+  "**Manage connections**": "**管理连接**"
 }

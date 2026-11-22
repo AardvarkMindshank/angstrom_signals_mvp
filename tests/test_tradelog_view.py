@@ -3,7 +3,7 @@
 from streamlit.testing.v1 import AppTest
 
 
-def _app(plan, empty=False):
+def _app(plan, empty=False, setup=False):
     import tradelog_view
 
     class Result:
@@ -56,22 +56,31 @@ def _app(plan, empty=False):
 
     import streamlit as st
 
-    tradelog_view.render(st, Db(), plan)
+    (tradelog_view.render_setup if setup else tradelog_view.render)(st, Db(), plan)
 
 
 def test_page_draws_for_pro_with_trades():
     at = AppTest.from_function(_app, args=("pro",)).run(timeout=30)
     assert not at.exception
     assert any("Net result" in m.label for m in at.metric)
-    assert len(at.tabs) >= 3                                       # Overview, eToro, add
+    assert len(at.tabs) == 2                                       # Overview, eToro
+    assert not at.text_input                                       # keys are set up in the sidebar, not here
 
 
 def test_free_has_no_trade_log_and_empty_shows_the_connect_guide():
     at = AppTest.from_function(_app, args=("free",)).run(timeout=30)
     assert not at.exception and "comes with Plus" in at.info[0].value
     at = AppTest.from_function(_app, args=("plus", True)).run(timeout=30)
+    assert not at.exception and not at.markdown and not at.tabs       # nothing in the main page until connected
+    at = AppTest.from_function(_app, args=("plus", True, True)).run(timeout=30)
     assert not at.exception and any("Read" in m.value for m in at.markdown)
     assert len(at.text_input) == 3
+
+
+def test_setup_lists_connections_and_stops_at_the_plan_limit():
+    at = AppTest.from_function(_app, args=("plus", False, True)).run(timeout=30)
+    assert not at.exception and not at.text_input                 # Plus: one connection, already used
+    assert any("Disconnect" in b.label for b in at.button)
 
 
 def _detail_app():

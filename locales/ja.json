@@ -2400,7 +2400,6 @@
   "Name (optional)": "名前（任意）",
   "I created this key with Read permission only": "このキーは読み取り権限のみで作成しました",
   "Connect": "接続",
-  "Manage connections": "接続を管理",
   "Delete every connection, trade, snapshot and note": "すべての接続、取引、スナップショット、メモを削除",
   "Delete all my Trade Log data": "Trade Log のデータをすべて削除",
   "Trades copied from other eToro traders are left out unless you include them.": "他の eToro トレーダーからコピーした取引は、含めない限り除外されます。",
@@ -2456,5 +2455,6 @@
   "At entry": "エントリー時",
   "At exit": "エグジット時",
   "Not known": "不明",
-  "too few to say": "判断するには少なすぎます"
+  "too few to say": "判断するには少なすぎます",
+  "**Manage connections**": "**接続を管理**"
 }

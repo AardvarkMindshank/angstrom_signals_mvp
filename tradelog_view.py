@@ -117,20 +117,22 @@ def _connect_form(st, supabase, plan: str, count: int) -> None:
 
 
 def _manage(st, supabase, conns: list[dict]) -> None:
-    with st.expander(t("Manage connections")):
-        for c in conns:
-            name = c.get("label") or PLATFORMS.get(c["platform"], c["platform"])
-            cols = st.columns([3, 1])
-            cols[0].markdown(f"**{name}** · {t(STATUS_WORDS.get(c.get('status') or 'new', 'Importing'))}"
-                             + (f"  \n:orange[{t(c['last_error'])}]" if c.get("last_error") else ""))
-            if cols[1].button(t("Disconnect"), key=f"tl_drop_{c['id']}"):
-                supabase.rpc("tradelog_delete_connection", {"p_id": c["id"]}).execute()
-                st.rerun()
-        st.divider()
+    if not conns:
+        return
+    st.markdown(t("**Manage connections**"))
+    for c in conns:
+        name = c.get("label") or PLATFORMS.get(c["platform"], c["platform"])
+        st.markdown(f"**{name}** · {t(STATUS_WORDS.get(c.get('status') or 'new', 'Importing'))}"
+                    + (f"  \n:orange[{t(c['last_error'])}]" if c.get("last_error") else ""))
+        if st.button(t("Disconnect"), key=f"tl_drop_{c['id']}", icon=":material/link_off:"):
+            supabase.rpc("tradelog_delete_connection", {"p_id": c["id"]}).execute()
+            st.rerun()
+    with st.popover(t("Delete all my Trade Log data"), icon=":material/delete:"):
         sure = st.checkbox(t("Delete every connection, trade, snapshot and note"), key="tl_wipe_sure")
-        if st.button(t("Delete all my Trade Log data"), disabled=not sure, key="tl_wipe"):
+        if st.button(t("Delete all my Trade Log data"), disabled=not sure, key="tl_wipe", type="primary"):
             supabase.rpc("tradelog_delete_everything", {}).execute()
             st.rerun()
+    st.divider()
 
 
 # ---- views ---------------------------------------------------------------------------------------------------
@@ -284,8 +286,6 @@ def render(st, supabase, plan: str) -> None:
         return
     conns = data["connections"]
     if not conns:
-        _connect_form(st, supabase, plan, 0)
-        st.caption(t(DISCLAIMER))
         return
     zone = _zone(st)
     snaps = {}
@@ -312,12 +312,12 @@ def render(st, supabase, plan: str) -> None:
         st.toast(t("Refresh requested.") if any(asked) else t("Synced recently. Try again in a few minutes."))
 
     names = [c.get("label") or PLATFORMS.get(c["platform"], c["platform"]) for c in conns]
-    tabs = st.tabs([t("Overview")] + names + ["➕"])
+    tabs = st.tabs([t("Overview")] + names)
     with tabs[0]:
         pick, copied = _filters(st, "all")
         shown = [x for x in trips if pick is None or x.get("asset_class") == pick]
         _overview(st, shown, snaps, copied)
-    for tab, conn in zip(tabs[1:-1], conns):
+    for tab, conn in zip(tabs[1:], conns):
         with tab:
             pick, copied = _filters(st, conn["id"])
             mine = [x for x in trips if x["connection_id"] == conn["id"]
@@ -326,7 +326,28 @@ def render(st, supabase, plan: str) -> None:
             chosen = _trade_list(st, mine, snaps, zone, conn["id"])
             if chosen:
                 _detail(st, supabase, chosen, snaps, notes, zone)
-    with tabs[-1]:
-        _connect_form(st, supabase, plan, len(conns))
-        _manage(st, supabase, conns)
+    st.caption(t(DISCLAIMER))
+
+
+def has_connections(supabase) -> bool:
+    """Whether the main-page Trade Log should show: only once a platform is connected (set up in the sidebar)."""
+    try:
+        return bool(supabase.table("trade_connections").select("id").limit(1).execute().data)
+    except Exception:
+        return False
+
+
+def render_setup(st, supabase, plan: str) -> None:
+    """The sidebar's Trade Log section: connect a platform with a read-only key, manage or delete connections."""
+    if CONNECTIONS.get(plan, 0) == 0:
+        st.caption(t("The Trade Log comes with Plus: connect eToro read-only and see your own trades against the "
+                     "market conditions at the time."))
+        return
+    data = load(supabase)
+    if not data["ready"]:
+        st.caption(t("The Trade Log is being set up. Please check back soon."))
+        return
+    conns = data["connections"]
+    _manage(st, supabase, conns)
+    _connect_form(st, supabase, plan, len(conns))
     st.caption(t(DISCLAIMER))

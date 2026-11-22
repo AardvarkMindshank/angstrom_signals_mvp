@@ -2400,7 +2400,6 @@
   "Name (optional)": "Nom (facultatif)",
   "I created this key with Read permission only": "J'ai créé cette clé avec l'autorisation Lecture uniquement",
   "Connect": "Connecter",
-  "Manage connections": "Gérer les connexions",
   "Delete every connection, trade, snapshot and note": "Supprimer chaque connexion, trade, instantané et note",
   "Delete all my Trade Log data": "Supprimer toutes mes données du Trade Log",
   "Trades copied from other eToro traders are left out unless you include them.": "Les trades copiés d'autres traders eToro sont exclus, sauf si vous les incluez.",
@@ -2456,5 +2455,6 @@
   "At entry": "À l'entrée",
   "At exit": "À la sortie",
   "Not known": "Inconnu",
-  "too few to say": "trop peu pour conclure"
+  "too few to say": "trop peu pour conclure",
+  "**Manage connections**": "**Gérer les connexions**"
 }

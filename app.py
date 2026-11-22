@@ -4756,6 +4756,7 @@ _SECTION_IDS = _MAIN_SECTION_IDS + (
     "alert_feed",
     "alert_rules",
     "watchlists",
+    "tradelog_setup",
     "edit_crypto",
     "edit_stocks",
     "weights",
@@ -9736,6 +9737,15 @@ def _logbook_panel() -> None:
 
 
 
+
+with tracked_expander("📒 " + t("Trade Log"), "tradelog_setup", sidebar=True):
+    try:
+        import tradelog_view
+
+        tradelog_view.render_setup(st, supabase, current_plan())
+    except Exception as exc:
+        st.caption(t("The Trade Log could not load just now."))
+        print(f"Trade Log setup failed: {type(exc).__name__}")
 
 with tracked_expander("⚙️ " + t("Settings"), "settings_panel", sidebar=True):
     if "show_reasons" not in st.session_state:
@@ -17040,7 +17050,12 @@ def _render_lattice() -> None:
 
 
 def _tradelog_section() -> None:
-    """📒 Trade Log: the member's own closed trades (eToro, read-only) against the conditions at the time."""
+    """📒 Trade Log: the member's own closed trades (eToro, read-only) against the conditions at the time. Shown only
+    once a platform is connected in the sidebar's Trade Log section."""
+    import tradelog_view
+
+    if tradelog_view.CONNECTIONS.get(current_plan(), 0) == 0 or not tradelog_view.has_connections(supabase):
+        return
     st.markdown("<div id='angstrom-tradelog' style='scroll-margin-top:4.5rem;'></div>", unsafe_allow_html=True)
     with tracked_expander("📒 " + t("Trade Log"), "tradelog_panel"):
         try:
