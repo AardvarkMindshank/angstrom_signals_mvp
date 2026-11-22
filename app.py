@@ -560,7 +560,7 @@ export default function(component) {
       "html.angstrom-night .st-key-layout_single button[data-testid='stBaseButton-primary'],html.angstrom-night .st-key-layout_wide button[data-testid='stBaseButton-primary']{background:#f3f4f6 !important;color:#111827 !important;border-color:#f3f4f6 !important;}",
       ".st-key-open_all_sections button{--mark:" + openMark + ";}",
       ".st-key-collapse_all_sections button{--mark:" + closeMark + ";}",
-      "[data-testid='stElementContainer']:not(:has([data-testid='stElementContainer'])):is(:has(#interactive-chart),:has(#market-mood-crypto),:has(#market-mood-stock),:has(#market-sentiment),:has(#score-breakdown),:has(#angstrom-lattice),:has(#table-crypto),:has(#table-equity),:has(#tides)),[class*='st-key-scroll_to_chart'],[class*='st-key-wide_column_split']{position:absolute !important;width:0 !important;height:0 !important;min-height:0 !important;margin:0 !important;padding:0 !important;overflow:visible !important;}",
+      "[data-testid='stElementContainer']:not(:has([data-testid='stElementContainer'])):is(:has(#interactive-chart),:has(#market-mood-crypto),:has(#market-mood-stock),:has(#market-sentiment),:has(#score-breakdown),:has(#angstrom-lattice),:has(#angstrom-tradelog),:has(#table-crypto),:has(#table-equity),:has(#tides)),[class*='st-key-scroll_to_chart'],[class*='st-key-wide_column_split']{position:absolute !important;width:0 !important;height:0 !important;min-height:0 !important;margin:0 !important;padding:0 !important;overflow:visible !important;}",
       "[class*='st-key-daily_video_pop'],[class*='st-key-favourite_watch'],[class*='st-key-alert_asset_pick'],[class*='st-key-section_toggle_watch'],[class*='st-key-colour_copy'],[data-testid='stLayoutWrapper']:has(> [data-testid='stVerticalBlock'] > [class*='st-key-favourite_watch']),[data-testid='stLayoutWrapper']:has(> [data-testid='stVerticalBlock'] > [class*='st-key-section_toggle_watch']),[data-testid='stLayoutWrapper']:has(> [data-testid='stVerticalBlock'] > [class*='st-key-colour_copy']){position:absolute !important;width:0 !important;height:0 !important;min-height:0 !important;margin:0 !important;padding:0 !important;overflow:hidden !important;border:0 !important;}",
       "[class*='st-key-colour_'].ang-colour-drop{outline:2px solid #2563eb;outline-offset:2px;border-radius:8px;}",
       "[class*='st-key-colour_'] button[draggable='true']{cursor:grab;}",
@@ -569,7 +569,7 @@ export default function(component) {
       "#angstrom-wide-split:hover .grip,#angstrom-wide-split.is-dragging .grip{background:#111827;}",
       "html.angstrom-night #angstrom-wide-split .grip{background:#6b7280;}",
       "html.angstrom-night #angstrom-wide-split:hover .grip,html.angstrom-night #angstrom-wide-split.is-dragging .grip{background:#e5e7eb;}",
-      "#interactive-chart,#market-mood-crypto,#market-mood-stock,#market-sentiment,#score-breakdown,#angstrom-lattice{height:0;margin:0;padding:0;scroll-margin-top:4.5rem;}",
+      "#interactive-chart,#market-mood-crypto,#market-mood-stock,#market-sentiment,#score-breakdown,#angstrom-lattice,#angstrom-tradelog{height:0;margin:0;padding:0;scroll-margin-top:4.5rem;}",
       ".st-key-admin_feedback_table,.st-key-admin_reports_table,.st-key-admin_blacklist_table,.st-key-admin_beta_table{max-height:32rem !important;overflow:auto !important;border:1px solid var(--ang-border);}",
       ".st-key-admin_feedback_table [data-testid='stHorizontalBlock'],.st-key-admin_reports_table [data-testid='stHorizontalBlock'],.st-key-admin_blacklist_table [data-testid='stHorizontalBlock'],.st-key-admin_beta_table [data-testid='stHorizontalBlock']{border-bottom:1px solid var(--ang-border);}",
       ".st-key-admin_feedback_table [data-testid='stVerticalBlock'],.st-key-admin_reports_table [data-testid='stVerticalBlock'],.st-key-admin_blacklist_table [data-testid='stVerticalBlock'],.st-key-admin_beta_table [data-testid='stVerticalBlock']{gap:0 !important;}",
@@ -4743,7 +4743,7 @@ def _rerun_fragment() -> None:
 
 # Main sections start open. The guide and the sidebar start closed.
 # Open all and Collapse all move only the main sections. Collapse all also closes the guide.
-_MAIN_SECTION_IDS = _POPOUT_SECTION_IDS + ("lattice_panel",)   # Open all and Collapse all move Lattice too
+_MAIN_SECTION_IDS = _POPOUT_SECTION_IDS + ("lattice_panel", "tradelog_panel")   # Open all and Collapse all move Lattice too
 _SECTION_IDS = _MAIN_SECTION_IDS + (
     "help_guides",
     "account",
@@ -15050,6 +15050,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
 
     if not _POPOUT_VIEW:
         _lattice_section()
+        _tradelog_section()
     if wide_layout:
         mood_col, asset_col = st.columns([split, 1 - split], gap="medium", vertical_alignment="top")
         with mood_col:
@@ -17036,6 +17037,19 @@ def _render_lattice() -> None:
         + [("equity", k, f"{v} ({k})") for k, v in dict(STOCK_WATCHLIST or {}).items()],
         str(user_id),
     )
+
+
+def _tradelog_section() -> None:
+    """📒 Trade Log: the member's own closed trades (eToro, read-only) against the conditions at the time."""
+    st.markdown("<div id='angstrom-tradelog' style='scroll-margin-top:4.5rem;'></div>", unsafe_allow_html=True)
+    with tracked_expander("📒 " + t("Trade Log"), "tradelog_panel"):
+        try:
+            import tradelog_view
+
+            tradelog_view.render(st, supabase, current_plan())
+        except Exception as exc:
+            st.caption(t("The Trade Log could not load just now."))
+            print(f"Trade Log view failed: {type(exc).__name__}")
 
 
 def _lattice_section() -> None:
