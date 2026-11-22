@@ -225,3 +225,8 @@ the domain is registered, trimming to 90 seconds, and the daily schedule with an
 - After the MarketNavi migration: a short opening and closing sequence with the new name, logo and copyright line
   (brand.py holds the name and logos; brand.SHOW_IN_VIDEO switches the branding on). Then the YouTube upload (wide
   as a video, tall as a Short) and the app playing from YouTube, keeping only the newest copy in our storage.
+
+### Blooper reels (idea, 22 Nov 2026)
+- Occasional "blooper" videos where everything goes wrong for the crew (fluffed lines, the wheel spinning, charts
+  falling over), each ending with the reveal that the ship's cat caused it all, and the cat winking at the camera.
+  For social media, after all the channels are connected. Kept clean and classy, like the rest of the crew.
