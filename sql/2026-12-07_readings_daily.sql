@@ -5,7 +5,7 @@
 -- database, so a trade's snapshot can say what MarketNavi had really shown by then ("observed").
 
 create table if not exists public.readings_daily (
-    asset_key text not null check (char_length(asset_key) between 3 and 80),   -- "crypto:bitcoin", "equity:AAPL"
+    asset_key text not null check (char_length(asset_key) between 3 and 80),   -- "Crypto|bitcoin", "Stock|AAPL"
     day date not null,                                                       -- the finished daily bar read
     trend numeric,
     stretch numeric,

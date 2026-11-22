@@ -608,6 +608,14 @@ def run_background_checks() -> None:
     except Exception as exc:
         print(f"Table columns skipped: {str(exc)[:200]}")
 
+    # Trade Log (tradelog_sync.py): new connections, Refresh requests and the daily sync, then missing snapshots.
+    try:
+        import tradelog_sync
+
+        print(f"Trade Log: {tradelog_sync.run_from_worker(supabase)}")
+    except Exception as exc:
+        print(f"Trade Log skipped: {str(exc)[:200]}")
+
     print("Background alert check finished.")
 
 
