@@ -95,7 +95,47 @@ def post_email(day: str, caps: dict, links: dict) -> str:
     return "sent" if beta_worker._send_resend(to, f"Daily video {when}: TikTok pack", page, plain) else "failed"
 
 
-PLATFORMS = {"telegram": post_telegram, "email": post_email}
+def _youtube_token() -> str:
+    cid, sec, ref = (os.getenv(k, "").strip() for k in ("YOUTUBE_CLIENT_ID", "YOUTUBE_CLIENT_SECRET", "YOUTUBE_REFRESH_TOKEN"))
+    if not (cid and sec and ref):
+        return ""
+    r = requests.post("https://oauth2.googleapis.com/token", timeout=30, data={
+        "client_id": cid, "client_secret": sec, "refresh_token": ref, "grant_type": "refresh_token"})
+    if not r.ok:
+        raise RuntimeError(f"Google sign-in refused (HTTP {r.status_code}: {r.json().get('error', '')})")
+    return r.json()["access_token"]
+
+
+def _youtube_upload(token: str, video_url: str, title: str, description: str, tags: list[str]) -> str:
+    data = requests.get(video_url, timeout=120).content
+    meta = {"snippet": {"title": title, "description": description, "tags": tags, "categoryId": "27"},   # Education
+            "status": {"privacyStatus": "public", "selfDeclaredMadeForKids": False, "embeddable": True}}
+    start = requests.post("https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status",
+                          json=meta, timeout=60, headers={"Authorization": f"Bearer {token}",
+                                                          "X-Upload-Content-Type": "video/mp4",
+                                                          "X-Upload-Content-Length": str(len(data))})
+    if not start.ok:
+        raise RuntimeError(f"YouTube refused the upload (HTTP {start.status_code}: {start.text[:160]})")
+    done = requests.put(start.headers["Location"], data=data, timeout=600, headers={"Content-Type": "video/mp4"})
+    if not done.ok:
+        raise RuntimeError(f"YouTube upload failed (HTTP {done.status_code}: {done.text[:160]})")
+    body = done.json()
+    return f"{body['id']} ({body.get('status', {}).get('privacyStatus', '?')})"
+
+
+def post_youtube(day: str, caps: dict, links: dict) -> str:
+    """The wide video as a normal upload and the tall one as a Short. Until YouTube approves the project (its API
+    audit), YouTube keeps uploads from it private."""
+    token = _youtube_token()
+    if not token:
+        return "skipped (not connected)"
+    tags = ["market forecast", "crypto", "stocks", "bitcoin", "trading", "MarketNavi"]
+    wide = _youtube_upload(token, links["wide"], caps["youtube_title"], caps["youtube"], tags)
+    tall = _youtube_upload(token, links["tall"], (caps["youtube_title"][:88] + " #Shorts"), caps["youtube"], tags)
+    return f"posted: video {wide}, Short {tall}"
+
+
+PLATFORMS = {"telegram": post_telegram, "youtube": post_youtube, "email": post_email}
 
 
 def main() -> int:
