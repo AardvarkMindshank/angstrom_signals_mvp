@@ -1167,11 +1167,28 @@ export default function(component) {
     if (window.sessionStorage.getItem("ang-theme-reload") === wanted) return;   // never loop
     window.localStorage.setItem(key, JSON.stringify(wanted));
     window.sessionStorage.setItem("ang-theme-reload", wanted);
+    // Carry the sign-in across this one reload (a single-use pass that lasts a minute), so changing Day/Night never
+    // logs anyone out, whether or not they ticked Keep me signed in.
+    const pass = String((data || {}).pass || "");
+    if (pass) {
+      const secure = location.protocol === "https:" ? "; Secure" : "";
+      document.cookie = "angstrom_reload=" + encodeURIComponent(pass) + "; Path=/; Max-Age=60; SameSite=Strict" + secure;
+    }
     window.setTimeout(() => window.location.reload(), 150);
   } catch (e) {}
 }
 """
 _theme_mode = st.components.v2.component("theme_mode", js=_THEME_MODE_JS, isolate_styles=False)
+_RELOAD_PASS_CLEAR_JS = """
+export default function(component) {
+  const { parentElement } = component;
+  const shell = parentElement && parentElement.closest ? (parentElement.closest(".stBidiComponent") || parentElement) : null;
+  if (shell && shell.style) shell.style.display = "none";
+  const secure = location.protocol === "https:" ? "; Secure" : "";
+  document.cookie = "angstrom_reload=; Path=/; Max-Age=0; SameSite=Strict" + secure;
+}
+"""
+_reload_pass_clear = st.components.v2.component("reload_pass_clear", js=_RELOAD_PASS_CLEAR_JS, isolate_styles=False)
 _SCORE_TABLE_JS = """
 export default function(component) {
   const { data, setTriggerValue, parentElement } = component;
@@ -5972,6 +5989,32 @@ if st.session_state.user is not None and st.session_state.pop("_keep_write_pendi
         else:
             _keep_cookie_write("", pref="0")  # logged in without the tick: remember that choice too
 
+if st.session_state.user is None and not _POPOUT_VIEW and not st.session_state.get("_reload_pass_tried"):
+    # The page just reloaded for a Day/Night change: take the one-minute pass it left, then delete it.
+    st.session_state["_reload_pass_tried"] = True
+    try:
+        _reload_pass = str(st.context.cookies.get("angstrom_reload") or "")
+    except Exception:
+        _reload_pass = ""
+    if _reload_pass:
+        st.session_state["_clear_reload_pass"] = True          # deleted on the next drawn page (after the rerun)
+        try:
+            _restored = supabase.auth.refresh_session(_reload_pass)
+            _session = getattr(_restored, "session", None)
+            _member = getattr(_restored, "user", None) or getattr(_session, "user", None)
+            if _session is None or _member is None or not _session.access_token or not _session.refresh_token:
+                raise RuntimeError("no session")
+            st.session_state.user = _member
+            st.session_state.access_token = _session.access_token
+            st.session_state.refresh_token = _session.refresh_token
+            st.session_state["_keep_tried"] = True
+            # The pass used the same sign-in as Keep me signed in, so that saved copy must follow the new token.
+            st.session_state["_keep_signed_in"] = _keep_pref_read() and bool(_keep_cookie_read())
+            st.session_state["_keep_write_pending"] = True
+            st.rerun()
+        except Exception:
+            pass
+
 if st.session_state.user is None and not _POPOUT_VIEW and not st.session_state.get("_keep_tried"):
     # A fresh page load with no login: use the saved sign-in, if the person asked for one.
     st.session_state["_keep_tried"] = True
@@ -6919,9 +6962,18 @@ account_colours = _active_colours()
 lw_chart.set_colour_source(lambda dark: _active_colours()["chart_night" if dark else "chart_day"])  # Settings › Charts
 _brand_watch(key="brand_watch", data=_colour_payload(account_colours))
 _version_watch(key="version_watch", data=app_version.BOOT_ID)
+if st.session_state.pop("_clear_reload_pass", False):
+    _reload_pass_clear(key="reload_pass_clear")
 _ui_mode = str(((prefs or {}).get("settings") or {}).get("ui_mode") or "")
 if _ui_mode in THEME_MODES:
-    _theme_mode(key="theme_mode", data={"theme": THEME_MODES[_ui_mode]})
+    # The sign-in pass goes to the page only on the run where a reload can happen: the first run with this choice
+    # (a new browser, or the choice just changed). Later runs send no token.
+    _pass = ""
+    if (st.session_state.get("_theme_sent") != _ui_mode and st.session_state.user is not None
+            and st.session_state.get("refresh_token") not in (None, "", _POPOUT_MARK)):
+        _pass = str(st.session_state.get("refresh_token"))
+    st.session_state["_theme_sent"] = _ui_mode
+    _theme_mode(key="theme_mode", data={"theme": THEME_MODES[_ui_mode], "pass": _pass})
 st.sidebar.markdown(
     t("<div style='margin:0.4rem 0 0.75rem;'><div style='display:flex;align-items:center;gap:0.85rem;'>{brand_mark_58_align_left}<h1 style='margin:0;padding:0;line-height:1.15;font-size:2.25rem;font-weight:700;'>MarketNavi</h1></div><div style='margin-top:0.55rem;font-size:0.82rem;font-weight:500;line-height:1.35;opacity:0.72;'>{html_escape_t_market_sen}</div></div>", brand_mark_58_align_left=_brand_mark(58, align='left'), html_escape_t_market_sen=html.escape(t('Navigate the markets with AI-guided analysis and alerts, with a community alongside.'))),
     unsafe_allow_html=True,

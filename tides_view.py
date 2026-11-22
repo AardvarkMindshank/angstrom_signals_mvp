@@ -47,6 +47,7 @@ CSS = """
 .tides .card{border:1px solid var(--t-line);border-radius:12px;padding:10px 12px;background:var(--t-soft)}
 .tides .card.waves{background:var(--ang-chart,var(--t-soft))}
 .tides .note{margin-top:12px}.tides .note li{margin:2px 0}
+.st-key-tides_take_col{margin-top:12px}
 .tides .note .who{font-weight:700}
 .tides .strip{display:flex;flex-wrap:wrap;gap:8px;padding:2px 0 0;margin-top:4px}
 .tides .storm{margin-top:12px}.tides .storm h4{margin:0 0 6px}
