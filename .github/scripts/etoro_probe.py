@@ -62,6 +62,25 @@ def summarise(trades: list) -> list[str]:
     return lines
 
 
+COUNTS_URL = "https://public-api.etoro.com/api/v1/data/positions/closed-events/history"
+
+
+def history_counts(api_key: str, user_key: str) -> None:
+    """eToro's own count of closed positions by year and asset type: shows how far back its records go."""
+    headers = {"x-request-id": str(uuid.uuid4()), "x-api-key": api_key, "x-user-key": user_key,
+               "Accept": "application/json"}
+    r = requests.get(COUNTS_URL, headers=headers, params={"pageSize": 500}, timeout=30)
+    if r.status_code != 200:
+        print(f"History counts: eToro answered HTTP {r.status_code}")
+        return
+    rows = (r.json() or {}).get("results") or []
+    print("eToro's own count of closed positions, by year and asset type:")
+    for row in rows:
+        print(f"  {row.get('closeYear')} {row.get('assetType')}: {row.get('closedPositionEvents')}")
+    if not rows:
+        print("  none")
+
+
 def main() -> int:
     api_key, user_key = os.environ.get("ETORO_API_KEY", ""), os.environ.get("ETORO_USER_KEY", "")
     if not api_key or not user_key:
@@ -88,6 +107,7 @@ def main() -> int:
             break
     print(f"Pages read: {page} (page size {PAGE_SIZE})")
     print("\n".join(summarise(trades)))
+    history_counts(api_key, user_key)
     return 0
 
 
