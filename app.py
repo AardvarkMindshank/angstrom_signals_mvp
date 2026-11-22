@@ -11607,8 +11607,7 @@ with tracked_expander("ℹ️ " + t("About"), "about", sidebar=True):
     )
     st.markdown(
         t("General: [info@marketnavi.ai](mailto:info@marketnavi.ai)  \n"
-        "Support: [support@marketnavi.ai](mailto:support@marketnavi.ai)  \n"
-        "Investors: [investors@angstromsignals.com](mailto:investors@angstromsignals.com)")
+        "Support: [support@marketnavi.ai](mailto:support@marketnavi.ai)")
     )
     with tracked_expander(t("Socials policy"), "socials_policy"):
         st.markdown(
