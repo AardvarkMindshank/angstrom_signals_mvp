@@ -230,3 +230,5 @@ the domain is registered, trimming to 90 seconds, and the daily schedule with an
 - Occasional "blooper" videos where everything goes wrong for the crew (fluffed lines, the wheel spinning, charts
   falling over), each ending with the reveal that the ship's cat caused it all, and the cat winking at the camera.
   For social media, after all the channels are connected. Kept clean and classy, like the rest of the crew.
+- Also occasional surprise moments inside a normal forecast: a cat screech as it shoots past the presenter's legs, the
+  presenter looks startled, then carries on as if nothing happened (a short reaction clip plus a sound effect).
