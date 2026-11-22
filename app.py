@@ -7544,7 +7544,7 @@ The {8} newest headlines left are scored.
 
 **6. What is kept.** Each update is stored permanently with its time, score, the model, the coverage and the
 headlines it used (each headline is stored once and recognised again by its title and publisher). This lets
-sentiment be followed over time. Crowd takes (👍 👎 and your own score) are kept apart and never change the score.
+sentiment be followed over time. Community takes (👍 👎 and your own score) are kept apart and never change the score.
 """
 
 
@@ -8670,7 +8670,7 @@ reading. The full method is under *How a sentiment score is built* below.
 for the details.
 
 **Your take.** 👍 if you agree, 👎 if you don't, then pick your own score from -100 to +100 and add a short
-comment. The **Crowd** box shows everyone's average; hover the 👎 for how spread out they are.
+comment. The **Community** box shows everyone's average; hover the 👎 for how spread out they are.
 A new sentiment update clears the takes, because they belonged to the old score.
 
 Sentiment updates about every 12 hours for everyone. The 🕒 line under each sentiment section's title shows
@@ -11613,7 +11613,7 @@ with tracked_expander("ℹ️ " + t("About"), "about", sidebar=True):
         t("MarketNavi is a platform for traders who want aggregated signals "
         "for whole markets and for individual assets. Technical scores and market "
         "sentiment sit together and update as conditions change. A real-time social "
-        "stream lets the crowd react alongside those signals.")
+        "stream lets the community react alongside those signals.")
     )
     st.markdown(
         t("General: [info@marketnavi.ai](mailto:info@marketnavi.ai)  \n"
@@ -11624,7 +11624,7 @@ with tracked_expander("ℹ️ " + t("About"), "about", sidebar=True):
             t("The social signals stream and the general chat are for reacting to the signals on this page.")
         )
         st.markdown(
-            t("Nothing on this site is financial advice. A comment, a reply, a thumb, or a crowd score "
+            t("Nothing on this site is financial advice. A comment, a reply, a thumb, or a community score "
             "is one person's reaction. It is not a recommendation to buy, sell, or hold any asset.")
         )
         st.markdown(
@@ -11637,7 +11637,7 @@ with tracked_expander("ℹ️ " + t("About"), "about", sidebar=True):
         st.markdown(
             t("Use the flag on a comment that breaks these rules. The form opens at the top of the social panel. "
             "It is emailed to [support@marketnavi.ai](mailto:support@marketnavi.ai) "
-            "and is not shown to the crowd. A comment that breaks these rules can be removed.")
+            "and is not shown to the community. A comment that breaks these rules can be removed.")
         )
     with tracked_expander(t("Terms"), "terms"):
         st.markdown(t("Last updated 26 October 2026."))
@@ -14075,7 +14075,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                            else t("This watchlist is empty."))
                 return
             frame = pd.DataFrame(results).sort_values("trend", ascending=False, na_position="last")
-            st.caption(t("Click a column title to sort. The table starts with the strongest Trend at the top. Click a name to show that asset on the chart. 📈 Trend, 🎯 Stretch and 🔊 Flow each run from -100 to +100 (positive means up); they describe the market and are not forecasts. Hover one to read it, and click it to open the breakdown. Click the sentiment score, the thumbs, or the crowd average to open its headlines. Watching is how many accounts hold that asset. The Crowd box is the average of personal scores. Hover the down thumb for the spread. A comment balloon, or the arrow on the right edge, opens the social signals and chat. The 30-day trend uses the same colors as 30d %."))
+            st.caption(t("Click a column title to sort. The table starts with the strongest Trend at the top. Click a name to show that asset on the chart. 📈 Trend, 🎯 Stretch and 🔊 Flow each run from -100 to +100 (positive means up); they describe the market and are not forecasts. Hover one to read it, and click it to open the breakdown. Click the sentiment score, the thumbs, or the community average to open its headlines. Watching is how many accounts hold that asset. The Community box is the average of personal scores. Hover the down thumb for the spread. A comment balloon, or the arrow on the right edge, opens the social signals and chat. The 30-day trend uses the same colors as 30d %."))
 
             # Columns in order, as (title, cells it takes, extra header attributes). The reading columns come from
             # the account's choice (table_columns.py): a Groups section, then a Sets section, each folding sideways.
@@ -14086,7 +14086,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             # Kept in a variable: a bare tuple on its own line is printed onto the page by Streamlit's "magic".
             _column_words = (i18n.mark("Asset"), i18n.mark("Stage"), i18n.mark("Watching"), i18n.mark("Rank"),
                              i18n.mark("Price"), i18n.mark("Earnings"), i18n.mark("Market Cap"), i18n.mark("Vol"),
-                             i18n.mark("Sentiment"), i18n.mark("Crowd"), i18n.mark("Comments"),
+                             i18n.mark("Sentiment"), i18n.mark("Community"), i18n.mark("Comments"),
                              i18n.mark("30-day trend"))
             layout = [("Asset", 1, "")] + ([("Stage", 1, "")] if staged else []) + [("Watching", 1, "")] + (
                 [("Rank", 1, "")] if kind == "Crypto" else [])
@@ -14104,7 +14104,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             if show_extra_metrics_flag:
                 layout += [("Market Cap", 1, ""), ("ATR %", 1, ""), ("Vol", 1, "")]
             show_comments = any(row.get("comments") for row in results)
-            layout += [("Sentiment", 1, ""), ("Crowd", 2, "")]
+            layout += [("Sentiment", 1, ""), ("Community", 2, "")]
             if show_comments:
                 layout.append(("Comments", 1, ""))
             layout.append(("30-day trend", 1, ""))
@@ -14182,7 +14182,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
 
             header_html = ""
             for name, width, section in layout:
-                if name == "Crowd":
+                if name == "Community":
                     header_html += header_button(name, "center", 2)
                     continue
                 align = ("right" if name in ("Sentiment", "30-day trend") else "center" if name == "Comments"
