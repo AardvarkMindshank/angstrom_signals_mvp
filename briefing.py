@@ -633,7 +633,7 @@ def feed_xml(base: str, token: str, episodes: list[dict], title: str = "Your Mar
             "<rss version=\"2.0\" xmlns:itunes=\"http://www.itunes.com/dtds/podcast-1.0.dtd\"><channel>"
             f"<title>{esc(title)}</title><link>https://marketnavi.ai</link>"
             f"<description>{esc(about)}</description><language>en</language><itunes:author>MarketNavi</itunes:author>"
-            "<itunes:image href=\"https://angstromsignals.com/logo.png\"/><itunes:block>Yes</itunes:block>"
+            "<itunes:image href=\"https://marketnavi.ai/podcast-cover.jpg\"/><itunes:block>Yes</itunes:block>"
             f"<itunes:explicit>false</itunes:explicit>{items}</channel></rss>")
 
 

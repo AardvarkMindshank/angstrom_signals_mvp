@@ -12,7 +12,7 @@ import html
 import re
 
 SITE_URL = "https://marketnavi.ai"
-LOGO_URL = "https://angstromsignals.com/logo.png"      # until the MarketNavi logo is uploaded
+LOGO_URL = "https://marketnavi.ai/email-logo.png"       # the MarketNavi sail (a new address, so mail apps fetch it fresh)
 
 _INK = "#0c1b3a"
 _NAVY = "#0d2d6e"
@@ -125,7 +125,7 @@ def render_email(
 <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="width:100%;max-width:600px;background:#ffffff;border:1px solid {_RULE};border-radius:10px;overflow:hidden;">
 <tr><td style="background:{_NAVY};padding:18px 28px;">
 <a href="{SITE_URL}" style="text-decoration:none;color:#ffffff;font:800 20px/1 {_FONT};">
-<img src="{LOGO_URL}" width="28" height="30" alt="" style="vertical-align:middle;border:0;margin-right:10px;background:#ffffff;border-radius:5px;padding:3px;">MarketNavi</a>
+<img src="{LOGO_URL}" width="30" height="30" alt="" style="vertical-align:middle;border:0;margin-right:10px;background:#ffffff;border-radius:5px;padding:3px;">MarketNavi</a>
 </td></tr>
 <tr><td style="padding:30px 28px 10px;">
 <h1 style="margin:0 0 18px;font:800 24px/1.25 {_FONT};color:{_INK};">{heading}</h1>
