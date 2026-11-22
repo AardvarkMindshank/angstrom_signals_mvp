@@ -196,10 +196,10 @@ CSS = """<style>
 .tl-snap{display:grid;grid-template-columns:minmax(120px,1fr) minmax(0,1.3fr) minmax(0,1.3fr);
   border:1px solid var(--ang-border);border-radius:10px;overflow:hidden;font-size:.9rem}
 .tl-snap div{padding:9px 12px;border-top:1px solid var(--ang-line,rgba(127,127,127,.18))}
-.tl-snap .h{font-weight:600;border-top:0;background:var(--ang-soft,rgba(127,127,127,.08))}
+.tl-snap .h{font-weight:600;border-top:0;background:rgba(127,127,127,.10)}
 .tl-snap .lbl{opacity:.8}
 .tl-chip{display:inline-block;font-size:.78rem;padding:2px 10px;border-radius:999px;margin-right:6px;
-  background:var(--ang-soft,rgba(127,127,127,.12))}
+  background:rgba(127,127,127,.14)}
 .tl-big{font-size:1.7rem;font-weight:700;line-height:1.1}
 [class*='st-key-tl_class'] [data-testid='stButtonGroup'],[class*='st-key-tl_class'] [data-testid='stButtonGroup'] > div{
   flex-wrap:wrap !important;overflow:visible !important}
@@ -566,17 +566,21 @@ def _render(st, supabase, plan: str, ai: str | None = None) -> None:
         trips = [x for x in trips if (_when(x["closed_at"]) or since) >= since]
         st.caption(t("Plus shows the last {n} days. Pro keeps your full history.", n=days))
 
-    top = st.columns([5, 1])
-    synced = [c["last_sync_at"] for c in conns if c.get("last_sync_at")]
-    if synced:
-        last = max(_when(x) for x in synced).astimezone(zone)
-        top[0].caption(t("Synced {when}", when=last.strftime("%d %b %H:%M")))
-    elif any(c.get("status") == "new" for c in conns):
-        top[0].caption(t("Importing your history: your trades appear within about 5 minutes."))
-    if top[1].button(t("Refresh"), key="tl_refresh", icon=":material/refresh:",
+    # Synced time and Refresh together on the right, on one line, with the tabs straight under them.
+    with st.container(horizontal=True, horizontal_alignment="right", vertical_alignment="center", gap="small",
+                      key="tl_topbar"):
+        synced = [c["last_sync_at"] for c in conns if c.get("last_sync_at")]
+        if synced:
+            last = max(_when(x) for x in synced).astimezone(zone)
+            st.caption(t("Synced {when}", when=last.strftime("%d %b %H:%M")))
+        elif any(c.get("status") == "new" for c in conns):
+            st.caption(t("Importing your history: your trades appear within about 5 minutes."))
+        if st.button(t("Refresh"), key="tl_refresh", icon=":material/refresh:",
                      help=t("Fetch new closed trades on the next background pass (about 5 minutes).")):
-        asked = [supabase.rpc("tradelog_request_refresh", {"p_id": c["id"]}).execute().data for c in conns]
-        st.toast(t("Refresh requested.") if any(asked) else t("Synced recently. Try again in a few minutes."))
+            asked = [supabase.rpc("tradelog_request_refresh", {"p_id": c["id"]}).execute().data for c in conns]
+            st.toast(t("Refresh requested.") if any(asked) else t("Synced recently. Try again in a few minutes."))
+    st.html("<style>.st-key-tl_topbar{margin-bottom:-14px}.st-key-tl_topbar [data-testid='stCaptionContainer']"
+            "{margin:0}</style>")
 
     by_id = tab_names(conns)
     names = [by_id[c["id"]] for c in conns]

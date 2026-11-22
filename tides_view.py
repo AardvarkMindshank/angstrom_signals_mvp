@@ -480,7 +480,7 @@ def render_panel(st, snap: dict, saved_range: str | None, save_range, buttons, t
     # The AI buttons sit over the hero's waves, bottom right (their wrapper is pulled up over it, with a solid
     # backing so they read on the waves); on a phone they drop just under it. Below, the note and Your take share
     # a row; on a narrow screen Your take moves under the note. The style comes first so it adds no gap.
-    st.markdown(
+    st.html(
         "<style>[data-testid='stLayoutWrapper']:has(> .st-key-tides_ai_buttons){margin-top:-68px;position:relative;"
         "z-index:2;pointer-events:none}"
         ".st-key-tides_ai_buttons{justify-content:flex-end;flex-wrap:wrap;padding:0 14px}"
@@ -505,10 +505,11 @@ def render_panel(st, snap: dict, saved_range: str | None, save_range, buttons, t
         + ROW + " > [data-testid='stColumn']{width:100% !important;flex:1 1 auto !important}"
         ".st-key-tides_strip_in_note{display:none}"
         ".st-key-tides_strip_below{display:block}}"
-        "</style>", unsafe_allow_html=True)
+        "</style>")
     st.html(hero_part(snap))
-    with st.container(horizontal=True, key="tides_ai_buttons", gap="small"):
-        buttons()
+    if buttons is not None:             # the Passage Plan button left Tides (22 Nov 2026): it is in Quick Snapshot
+        with st.container(horizontal=True, key="tides_ai_buttons", gap="small"):
+            buttons()
     if take is None:
         st.html(note_part(snap))
         st.html(strip_part(snap, title=False))

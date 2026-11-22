@@ -83,7 +83,17 @@ st.set_page_config(
 # iPhone Safari zooms in on any text box with type under 16px when it is tapped (the sign-in email and password) and
 # stays zoomed in afterwards, so the page opens too big and cut off. 16px boxes on phones stop that zoom.
 st.html("<style>@media (max-width: 760px){input,textarea,select,[data-baseweb='input'] input"
-        "{font-size:16px !important;}}</style>")
+        "{font-size:16px !important;}}"
+        # Blocks that only carry style rules, and helper pieces that hide themselves, still took a slot (and the gap
+        # after it) at the top of some sections (Lattice, the chart, the tables, Tides), so those sections started
+        # lower than others. Take those empty slots out everywhere; the style rules inside still apply.
+        "[data-testid='stElementContainer']:has(> [data-testid='stHtml']):not(:has(> [data-testid='stHtml'] > :not(style)))"
+        "{display:none !important;}"
+        "[data-testid='stElementContainer']:has(> [data-testid='stMarkdown'] [data-testid='stMarkdownContainer'] > style:only-child)"
+        "{display:none !important;}"
+        "[data-testid='stElementContainer']:has(> .stBidiComponent[style*='display: none']),"
+        "[data-testid='stElementContainer']:has(> div > .stBidiComponent[style*='display: none'])"
+        "{display:none !important;}</style>")
 # The old address (app.angstromsignals.com) moves to app.marketnavi.ai (21 Nov 2026): the same page there, with its
 # path and any link parameters, so old bookmarks and email links still land in the right place.
 try:
@@ -3828,6 +3838,8 @@ export default function(component) {
   const { data, parentElement } = component;
   const shell = parentElement.closest(".stBidiComponent") || parentElement;
   shell.style.display = "none";
+  const holder = shell.closest('[data-testid="stElementContainer"]');
+  if (holder) holder.style.display = "none";          // no empty gap at the top of the section
   let payload = data;
   if (typeof data === "string") {
     try { payload = JSON.parse(data); } catch (error) { payload = null; }
@@ -8503,7 +8515,7 @@ because they measure different things and are never added together.
    Headwind or tailwind is shown per market. Storm warnings flag scheduled events (Fed, CPI, jobs, producer prices)
    from 24 hours before to 24 hours after: an event is near, not a forecast. The waves show each current over time
    (3M to 2Y), with past Fed, CPI and jobs dates as dashed lines. The **✨ AI** panel answers questions about the
-   currents from the readings; **Today's AI Passage Plan**, beside the daily note, opens in that panel and charts
+   currents from the readings; **Today's AI Passage Plan** (in Quick Snapshot and the Logbook) charts
    today's conditions, the week's events and the winds for your own watchlist and funnels, with things to watch:
    one plan a day, kept in your logbook. Descriptions, never buy or sell calls.
 """))
@@ -8770,7 +8782,7 @@ It describes conditions; it does not time trades and it never says buy or sell.
                         f"| {t(c['measures']).replace('|', '/')} | {t('✅ yes') if c['weight'] else t('shown only')} |"
                         for c in _td.SPEC.values()))
         fam = ", ".join(f"{icon} {t(name)} {weight:.0%}" for name, weight, icon in _td.FAMILIES.values())
-        st.markdown(t("\n**How each current is read** (fixed rules, the same for everyone)\n- **Band**: where today's level sits against its own last 5 years, from 0 to 100: very low (under 20), low,\n  normal, high, very high (80 and over). Glassnode and similar tools use the same idea.\n- **Pull**: its 30-day move against the usual size of such a move. A move bigger than half the usual size is\n  **rising** or **falling**; anything smaller is **flat**, and a flat current is always *neutral*. Whether rising is\n  risk-supportive or risk-defensive depends on the current (rising rates or a rising dollar pull risk down;\n  rising credit appetite pulls it up). The line under each current's name says this in words.\n- **The Tide's score**: each family averages its voting currents, then the families are weighted: {fam}. Above\n  +0.20 is coming in, below -0.20 going out, in between slack. Gold, oil and the yield curve are shown for context\n  but don't vote. Crypto Fear & Greed is shown on its own and never votes.\n\n**The waves** draw each current over time (3 months to 2 years; your choice is saved on your account), with past\nFed decisions, CPI and jobs days as dashed lines, so you can see how a current behaved around an event.\n\n**✨ AI Navigator** (the pull-out on the right edge) and **📜 Today's AI Passage Plan** (the button beside the daily\nnote, which opens in that panel). The Navigator answers questions about the currents, the tide and the calendar from these readings only, quoting\nthe reading behind each statement. The Passage Plan charts today's conditions, the week's events, the winds for\nyour own watchlist and funnels, hazards and things to watch, each expectation labelled with what would show it\nright or wrong. One plan a day, kept in your logbook. Facts stay apart from expectations; never buy or sell calls.\n\n**👍 Your take**, beside the daily note: agree or disagree with the Tide's current reading; on 👎 give your own Tide\nscore (−100 going out to +100 coming in), and add a short comment. Tides moves slowly, so takes and comments stay\nuntil the Tide changes to another reading, then start afresh. Comments show in the social panel under 🌊 Tides.\n\n**How often it updates**: a fresh reading every 6 hours (most currents use daily closes, so it changes once a day\nin practice). Event dates come from the official Fed and US Bureau of Labor Statistics schedules.\n\n**Limits**: macro conditions frame risk over weeks; they don't say what any one asset does tomorrow. Nobody has yet\ntested what usually followed each Tide, so treat it as context, not a signal. The 🌊 Tides line in Quick Snapshot\nis the one-glance version.\n", fam=fam))
+        st.markdown(t("\n**How each current is read** (fixed rules, the same for everyone)\n- **Band**: where today's level sits against its own last 5 years, from 0 to 100: very low (under 20), low,\n  normal, high, very high (80 and over). Glassnode and similar tools use the same idea.\n- **Pull**: its 30-day move against the usual size of such a move. A move bigger than half the usual size is\n  **rising** or **falling**; anything smaller is **flat**, and a flat current is always *neutral*. Whether rising is\n  risk-supportive or risk-defensive depends on the current (rising rates or a rising dollar pull risk down;\n  rising credit appetite pulls it up). The line under each current's name says this in words.\n- **The Tide's score**: each family averages its voting currents, then the families are weighted: {fam}. Above\n  +0.20 is coming in, below -0.20 going out, in between slack. Gold, oil and the yield curve are shown for context\n  but don't vote. Crypto Fear & Greed is shown on its own and never votes.\n\n**The waves** draw each current over time (3 months to 2 years; your choice is saved on your account), with past\nFed decisions, CPI and jobs days as dashed lines, so you can see how a current behaved around an event.\n\n**✨ AI Navigator** (the pull-out on the right edge) and **📜 Today's AI Passage Plan** (in Quick Snapshot and the Logbook). The Navigator answers questions about the currents, the tide and the calendar from these readings only, quoting\nthe reading behind each statement. The Passage Plan charts today's conditions, the week's events, the winds for\nyour own watchlist and funnels, hazards and things to watch, each expectation labelled with what would show it\nright or wrong. One plan a day, kept in your logbook. Facts stay apart from expectations; never buy or sell calls.\n\n**👍 Your take**, beside the daily note: agree or disagree with the Tide's current reading; on 👎 give your own Tide\nscore (−100 going out to +100 coming in), and add a short comment. Tides moves slowly, so takes and comments stay\nuntil the Tide changes to another reading, then start afresh. Comments show in the social panel under 🌊 Tides.\n\n**How often it updates**: a fresh reading every 6 hours (most currents use daily closes, so it changes once a day\nin practice). Event dates come from the official Fed and US Bureau of Labor Statistics schedules.\n\n**Limits**: macro conditions frame risk over weeks; they don't say what any one asset does tomorrow. Nobody has yet\ntested what usually followed each Tide, so treat it as context, not a signal. The 🌊 Tides line in Quick Snapshot\nis the one-glance version.\n", fam=fam))
 
     with tab_lattice:
         st.markdown(t("""
@@ -9796,17 +9808,33 @@ def _logbook_date() -> str:
     days = _logbook_days()
     oldest = min([pd.Timestamp(days[-1]).date()] if days else [today - timedelta(days=1)])
     oldest = min(oldest, today - timedelta(days=1))
-    choice = st.segmented_control(
-        t("Date"), ["today", "yesterday", "pick"], default="today", key="logbook_when", label_visibility="collapsed",
-        format_func=lambda c: {"today": t("Today"), "yesterday": t("Yesterday"), "pick": "📅 " + t("Pick a date")}[c])
-    if choice == "pick":
-        when = st.date_input(t("Date"), value=st.session_state.get("logbook_picked", today - timedelta(days=2)),
-                             min_value=oldest, max_value=today, key="logbook_picked", label_visibility="collapsed",
-                             format="DD/MM/YYYY")
-    elif choice == "yesterday":
-        when = today - timedelta(days=1)
-    else:
-        when = today
+    # ◀ · Today · ▶ · the date · 📅 (Angus, 22 Nov 2026). Opens on today each visit; the arrows step a day, Today
+    # jumps back, and the calendar picks any day kept. The date always stays between the oldest day kept and today.
+    current = st.session_state.get("logbook_date")
+    if not st.session_state.get("_logbook_opened") or not (oldest <= current <= today if current else False):
+        st.session_state["logbook_date"] = today
+        st.session_state["_logbook_opened"] = True
+    when = st.session_state["logbook_date"]
+
+    def _set(day) -> None:
+        st.session_state["logbook_date"] = min(max(day, oldest), today)
+
+    def _picked(key: str) -> None:
+        if st.session_state.get(key):
+            _set(st.session_state[key])
+
+    with st.container(horizontal=True, vertical_alignment="center", gap="small", key="logbook_datebar"):
+        st.button("", icon=":material/chevron_left:", key="logbook_back", on_click=_set,
+                  args=(when - timedelta(days=1),), help=t("The day before"), disabled=when <= oldest)
+        st.button(t("Today"), key="logbook_today", on_click=_set, args=(today,), disabled=when == today,
+                  help=t("Back to today"))
+        st.button("", icon=":material/chevron_right:", key="logbook_forward", on_click=_set,
+                  args=(when + timedelta(days=1),), help=t("The day after"), disabled=when >= today)
+        st.markdown(f"**{when.strftime('%a')} {when.day} {when.strftime('%b')}**")
+        with st.popover("", icon=":material/calendar_month:", help=t("Pick a date")):
+            pick_key = f"logbook_pick_{when.isoformat()}"
+            st.date_input(t("Date"), value=when, min_value=oldest, max_value=today, key=pick_key,
+                          label_visibility="collapsed", format="DD/MM/YYYY", on_change=_picked, args=(pick_key,))
     day = pd.Timestamp(when).strftime("%Y-%m-%d")
     st.session_state["logbook_day"] = day
     return day
@@ -15923,12 +15951,6 @@ def show_tides() -> None:
             st.info(t("Tides has not got enough data yet."))
             return
         _paint_tides_header(snap)
-        import lattice_panel as _lp
-
-        def _buttons():          # the ✨ AI Navigator itself is the pull-out on the right edge (ai_panel.py)
-            _lp.advisor_button(st, "tides", key="tides_passage", label=t("Today's AI Passage Plan"), ask="passage",
-                               tip=t(tides_view.PASSAGE_TIP))
-
         tide = snap.get("tide") or {}
         tide_score = None if tide.get("score") is None else round(float(tide["score"]) * 100)
         tide_words = " ".join(tides.TIDE_WORDS.get(tide.get("label"), ("", "", ""))[:2])
@@ -15950,7 +15972,7 @@ def show_tides() -> None:
             )
 
         tides_view.render_panel(st, snap, (prefs.get("settings") or {}).get("tides_range"),
-                                lambda picked: save_account_settings({"tides_range": picked}), _buttons, _take)
+                                lambda picked: save_account_settings({"tides_range": picked}), None, _take)
 
 
 def show_market_moods(trade_crypto: bool = True, trade_equities: bool = True) -> None:
