@@ -2462,5 +2462,13 @@
   "Shown on the platform's tab in the Trade Log. Handy if you connect more than one account on the same platform, such as eToro main and eToro long-term.": "Trade Log のプラットフォームのタブに表示されます。同じプラットフォームで複数の口座を接続する場合（例: eToro メインと eToro 長期）に便利です。",
   "Save name": "名前を保存",
   "Held (days)": "保有（日）",
-  "Result (USD)": "結果（USD）"
+  "Result (USD)": "結果（USD）",
+  "You held losing trades about {x} times as long as winning ones ({n} trades).": "負けた取引を勝った取引の約 {x} 倍の期間保有していました（{n} 件）。",
+  "You held winning trades about {x} times as long as losing ones ({n} trades).": "勝った取引を負けた取引の約 {x} 倍の期間保有していました（{n} 件）。",
+  "After a loss, your next trade was on average {x} times the size of one after a win ({n} trades).": "損失の後の次の取引は、利益の後と比べて平均 {x} 倍の規模でした（{n} 件）。",
+  "Your {better} trades did better on average than your {worse} trades ({n} trades).": "{better}の取引は平均で{worse}の取引より成績が良好でした（{n} 件）。",
+  "**Price around the trade**": "**取引前後の価格**",
+  "No clear patterns yet. They show once there are enough trades behind them.": "まだはっきりしたパターンはありません。十分な取引がたまると表示されます。",
+  "Describes your past trades. Not advice.": "過去の取引の記述です。助言ではありません。",
+  "**Patterns in your own trades**": "**あなた自身の取引のパターン**"
 }

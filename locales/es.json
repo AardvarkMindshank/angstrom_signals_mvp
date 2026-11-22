@@ -2462,5 +2462,13 @@
   "Shown on the platform's tab in the Trade Log. Handy if you connect more than one account on the same platform, such as eToro main and eToro long-term.": "Aparece en la pestaña de la plataforma en el Trade Log. Útil si conectas más de una cuenta en la misma plataforma, como eToro principal y eToro largo plazo.",
   "Save name": "Guardar nombre",
   "Held (days)": "Duración (días)",
-  "Result (USD)": "Resultado (USD)"
+  "Result (USD)": "Resultado (USD)",
+  "You held losing trades about {x} times as long as winning ones ({n} trades).": "Mantuviste las operaciones perdedoras unas {x} veces más tiempo que las ganadoras ({n} operaciones).",
+  "You held winning trades about {x} times as long as losing ones ({n} trades).": "Mantuviste las operaciones ganadoras unas {x} veces más tiempo que las perdedoras ({n} operaciones).",
+  "After a loss, your next trade was on average {x} times the size of one after a win ({n} trades).": "Tras una pérdida, tu siguiente operación fue de media {x} veces el tamaño de la que sigue a una ganancia ({n} operaciones).",
+  "Your {better} trades did better on average than your {worse} trades ({n} trades).": "Tus operaciones en {better} fueron mejor de media que tus operaciones en {worse} ({n} operaciones).",
+  "**Price around the trade**": "**El precio alrededor de la operación**",
+  "No clear patterns yet. They show once there are enough trades behind them.": "Aún no hay patrones claros. Aparecen cuando hay suficientes operaciones detrás.",
+  "Describes your past trades. Not advice.": "Describe tus operaciones pasadas. No es un consejo.",
+  "**Patterns in your own trades**": "**Patrones en tus propias operaciones**"
 }

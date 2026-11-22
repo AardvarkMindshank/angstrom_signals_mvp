@@ -80,6 +80,10 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+# iPhone Safari zooms in on any text box with type under 16px when it is tapped (the sign-in email and password) and
+# stays zoomed in afterwards, so the page opens too big and cut off. 16px boxes on phones stop that zoom.
+st.html("<style>@media (max-width: 760px){input,textarea,select,[data-baseweb='input'] input"
+        "{font-size:16px !important;}}</style>")
 # The old address (app.angstromsignals.com) moves to app.marketnavi.ai (21 Nov 2026): the same page there, with its
 # path and any link parameters, so old bookmarks and email links still land in the right place.
 try:

@@ -118,3 +118,45 @@ def test_tab_names_use_the_given_name_else_the_platform_numbered():
                                      {"id": "b", "platform": "etoro", "label": None, "created_at": "2"},
                                      {"id": "c", "platform": "etoro", "label": "eToro long-term", "created_at": "3"}])
     assert names == {"a": "eToro", "b": "eToro 2", "c": "eToro long-term"}
+
+
+def _chart_app():
+    import numpy as np
+    import pandas as pd
+    import streamlit as st
+
+    import market_store
+    import tradelog_view
+
+    idx = pd.date_range("2026-10-01", periods=60, freq="D")
+    close = 100 + np.cumsum(np.ones(60))
+    frame = pd.DataFrame({"open": close, "high": close, "low": close, "close": close, "volume": 1.0}, index=idx)
+    records = market_store.records_from_frame(frame)
+
+    class Q:
+        def select(self, *_a):
+            return self
+
+        def eq(self, *_a):
+            return self
+
+        def limit(self, *_a):
+            return self
+
+        def execute(self):
+            return type("R", (), {"data": [{"prices": records}]})()
+
+    class Db:
+        def table(self, _name):
+            return Q()
+
+    tradelog_view._price_chart(st, Db(), {"asset_key": "Stock|NVDA", "opened_at": "2026-11-05T10:00:00Z",
+                                          "closed_at": "2026-11-12T10:00:00Z", "entry_price": 136.0,
+                                          "exit_price": 143.0})
+
+
+def test_price_chart_marks_entry_and_exit():
+    at = AppTest.from_function(_chart_app).run(timeout=30)
+    assert not at.exception
+    assert any("Price around the trade" in m.value for m in at.markdown)
+    assert sum(type(e).__name__ == "UnknownElement" for e in at.main) == 1      # the chart

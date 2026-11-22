@@ -2462,5 +2462,13 @@
   "Shown on the platform's tab in the Trade Log. Handy if you connect more than one account on the same platform, such as eToro main and eToro long-term.": "显示在 Trade Log 中该平台的标签页上。如果你在同一平台连接了多个账户，例如 eToro 主账户和 eToro 长线账户，会很方便。",
   "Save name": "保存名称",
   "Held (days)": "持有（天）",
-  "Result (USD)": "结果（USD）"
+  "Result (USD)": "结果（USD）",
+  "You held losing trades about {x} times as long as winning ones ({n} trades).": "你持有亏损交易的时间约为盈利交易的 {x} 倍（{n} 笔交易）。",
+  "You held winning trades about {x} times as long as losing ones ({n} trades).": "你持有盈利交易的时间约为亏损交易的 {x} 倍（{n} 笔交易）。",
+  "After a loss, your next trade was on average {x} times the size of one after a win ({n} trades).": "亏损之后，你下一笔交易的规模平均是盈利之后的 {x} 倍（{n} 笔交易）。",
+  "Your {better} trades did better on average than your {worse} trades ({n} trades).": "你的{better}交易平均表现好于{worse}交易（{n} 笔交易）。",
+  "**Price around the trade**": "**交易前后的价格**",
+  "No clear patterns yet. They show once there are enough trades behind them.": "还没有明显的规律。交易足够多时才会显示。",
+  "Describes your past trades. Not advice.": "描述你过去的交易，不构成建议。",
+  "**Patterns in your own trades**": "**你自己交易中的规律**"
 }

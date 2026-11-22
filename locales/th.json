@@ -2462,5 +2462,13 @@
   "Shown on the platform's tab in the Trade Log. Handy if you connect more than one account on the same platform, such as eToro main and eToro long-term.": "แสดงบนแท็บของแพลตฟอร์มใน Trade Log มีประโยชน์ถ้าคุณเชื่อมต่อมากกว่าหนึ่งบัญชีบนแพลตฟอร์มเดียวกัน เช่น eToro หลัก และ eToro ระยะยาว",
   "Save name": "บันทึกชื่อ",
   "Held (days)": "ถือ (วัน)",
-  "Result (USD)": "ผลลัพธ์ (USD)"
+  "Result (USD)": "ผลลัพธ์ (USD)",
+  "You held losing trades about {x} times as long as winning ones ({n} trades).": "คุณถือเทรดที่ขาดทุนนานกว่าเทรดที่กำไรประมาณ {x} เท่า ({n} เทรด)",
+  "You held winning trades about {x} times as long as losing ones ({n} trades).": "คุณถือเทรดที่กำไรนานกว่าเทรดที่ขาดทุนประมาณ {x} เท่า ({n} เทรด)",
+  "After a loss, your next trade was on average {x} times the size of one after a win ({n} trades).": "หลังขาดทุน เทรดถัดไปของคุณมีขนาดเฉลี่ย {x} เท่าของเทรดหลังกำไร ({n} เทรด)",
+  "Your {better} trades did better on average than your {worse} trades ({n} trades).": "เทรด{better}ของคุณโดยเฉลี่ยดีกว่าเทรด{worse} ({n} เทรด)",
+  "**Price around the trade**": "**ราคาช่วงที่เทรด**",
+  "No clear patterns yet. They show once there are enough trades behind them.": "ยังไม่เห็นรูปแบบชัดเจน จะแสดงเมื่อมีจำนวนเทรดมากพอ",
+  "Describes your past trades. Not advice.": "บรรยายเทรดที่ผ่านมาของคุณ ไม่ใช่คำแนะนำ",
+  "**Patterns in your own trades**": "**รูปแบบในเทรดของคุณเอง**"
 }

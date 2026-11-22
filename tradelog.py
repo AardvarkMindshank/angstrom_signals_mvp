@@ -236,3 +236,42 @@ def equity_curve(trips: list[dict], include_copied: bool = False) -> list[tuple[
         total += _num(t.get("net_result_usd")) or 0.0
         out.append((t["closed_at"], round(total, 2)))
     return out
+
+
+# ---- patterns (plain rules on the member's own numbers; no AI) ------------------------------------------------
+
+def patterns(trips: list[dict], include_copied: bool = False) -> list[dict]:
+    """Habits worth noticing, each with the number of trades it rests on. Only shown when there are enough trades
+    (MIN_TRADES overall, and at least 5 on each side of a comparison); a description, never advice."""
+    rows = [t for t in trips if include_copied or not t.get("copied")]
+    found: list[dict] = []
+    if len(rows) < MIN_TRADES:
+        return found
+    s = stats(rows, True)
+    win, loss = s["avg_hold_win_days"], s["avg_hold_loss_days"]
+    if win and loss and s["wins"] >= 5 and s["losses"] >= 5:
+        if loss >= 1.5 * win:
+            found.append({"kind": "hold_losers", "times": round(loss / win, 1), "trades": s["trades"]})
+        elif win >= 1.5 * loss:
+            found.append({"kind": "hold_winners", "times": round(win / loss, 1), "trades": s["trades"]})
+    ordered = sorted(rows, key=lambda t: str(t.get("opened_at") or ""))
+    after_loss, after_win = [], []
+    for prev, nxt in zip(ordered, ordered[1:]):
+        size = _num(nxt.get("invested_usd"))
+        if not size or (_when(nxt.get("opened_at")) or datetime.min.replace(tzinfo=timezone.utc)) < (
+                _when(prev.get("closed_at")) or datetime.max.replace(tzinfo=timezone.utc)):
+            continue                                              # only trades opened after the previous one closed
+        (after_loss if (_num(prev.get("net_result_usd")) or 0) < 0 else after_win).append(size)
+    if len(after_loss) >= 5 and len(after_win) >= 5:
+        ratio = (sum(after_loss) / len(after_loss)) / (sum(after_win) / len(after_win))
+        if ratio >= 1.3 or ratio <= 0.77:
+            found.append({"kind": "size_after_loss", "times": round(ratio, 1),
+                          "trades": len(after_loss) + len(after_win)})
+    by = {k: v for k, v in stats_by(rows, "asset_class", True).items() if v["trades"] >= MIN_TRADES}
+    if len(by) >= 2:
+        best = max(by, key=lambda k: by[k]["expectancy"] or 0)
+        worst = min(by, key=lambda k: by[k]["expectancy"] or 0)
+        if best != worst and (by[best]["expectancy"] or 0) > (by[worst]["expectancy"] or 0):
+            found.append({"kind": "class_gap", "better": best, "worse": worst,
+                          "trades": by[best]["trades"] + by[worst]["trades"]})
+    return found

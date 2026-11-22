@@ -169,7 +169,7 @@ def _manage(st, supabase, conns: list[dict]) -> None:
 def _filters(st, key: str) -> tuple[str | None, bool]:
     cols = st.columns([4, 2])
     classes = ["all", "crypto", "stocks", "etfs", "commodities", "currencies", "indices"]
-    pick = cols[0].segmented_control(
+    pick = cols[0].pills(
         t("Asset class"), classes, default="all", key=f"tl_class_{key}",
         format_func=lambda c: t("All") if c == "all" else t(CLASS_WORDS[c]), label_visibility="collapsed")
     copied = cols[1].checkbox(t("Include copied trades"), key=f"tl_copied_{key}",
@@ -180,7 +180,7 @@ def _filters(st, key: str) -> tuple[str | None, bool]:
 CSS = """<style>
 [class*='st-key-tl_card']{background:var(--ang-surface);color:var(--ang-text);border:1px solid var(--ang-border);
   border-radius:14px;padding:14px 18px;gap:10px}
-.tl-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:2px 0 8px}
+.tl-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:2px 0 8px}
 .tl-tile{background:var(--ang-surface);color:var(--ang-text);border:1px solid var(--ang-border);border-radius:14px;
   padding:14px 16px;display:flex;flex-direction:column;gap:4px}
 .tl-tile .k{font-size:.8rem;opacity:.72}.tl-tile .v{font-size:1.55rem;font-weight:700;line-height:1.15}
@@ -201,6 +201,8 @@ CSS = """<style>
 .tl-chip{display:inline-block;font-size:.78rem;padding:2px 10px;border-radius:999px;margin-right:6px;
   background:var(--ang-soft,rgba(127,127,127,.12))}
 .tl-big{font-size:1.7rem;font-weight:700;line-height:1.1}
+[class*='st-key-tl_class'] [data-testid='stButtonGroup'],[class*='st-key-tl_class'] [data-testid='stButtonGroup'] > div{
+  flex-wrap:wrap !important;overflow:visible !important}
 </style>"""
 
 
@@ -258,6 +260,29 @@ def _regime_rows_html(by: dict) -> str:
     return "<div class='tl-rows'>" + "".join(out) + "</div>"
 
 
+PATTERN_WORDS = {
+    "hold_losers": mark("You held losing trades about {x} times as long as winning ones ({n} trades)."),
+    "hold_winners": mark("You held winning trades about {x} times as long as losing ones ({n} trades)."),
+    "size_after_loss": mark("After a loss, your next trade was on average {x} times the size of one after a win "
+                            "({n} trades)."),
+    "class_gap": mark("Your {better} trades did better on average than your {worse} trades ({n} trades)."),
+}
+
+
+def _patterns_html(trips: list[dict], copied: bool) -> str:
+    items = []
+    for p in tradelog.patterns(trips, copied):
+        words = t(PATTERN_WORDS[p["kind"]], x=p.get("times"), n=p["trades"],
+                  better=t(CLASS_WORDS.get(p.get("better"), "Other")).lower(),
+                  worse=t(CLASS_WORDS.get(p.get("worse"), "Other")).lower())
+        items.append(f"<li>{html.escape(words)}</li>")
+    body = ("<ul style='margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px;font-size:.92rem'>"
+            + "".join(items) + "</ul>") if items else (
+        f"<div style='font-size:.9rem;opacity:.75'>{html.escape(t('No clear patterns yet. They show once there are enough trades behind them.'))}</div>")
+    return (f"<div class='tl-h'>{html.escape(t('**Patterns in your own trades**').strip('*'))}</div>" + body
+            + f"<div class='tl-note'>{html.escape(t('Describes your past trades. Not advice.'))}</div>")
+
+
 def _overview(st, trips: list[dict], snaps: dict, copied: bool) -> None:
     _headline(st, tradelog.stats(trips, copied))
     curve = tradelog.equity_curve(trips, copied)
@@ -278,6 +303,8 @@ def _overview(st, trips: list[dict], snaps: dict, copied: bool) -> None:
         st.html(CSS + f"<div class='tl-h'>{html.escape(t('**Results by regime at entry**').strip('*'))}</div>"
                 + _regime_rows_html(tradelog.stats_by(tagged, "regime", copied))
                 + f"<div class='tl-note'>{html.escape(t('Shows what happened together, not a cause.'))}</div>")
+    with st.container(key="tl_card_patterns"):
+        st.html(CSS + _patterns_html(trips, copied))
     if len(platforms) > 1:
         with st.container(key="tl_card_platforms"):
             st.html(CSS + f"<div class='tl-h'>{html.escape(t('**By platform**').strip('*'))}</div>")
@@ -323,6 +350,55 @@ def _trade_list(st, trips: list[dict], snaps: dict, zone, key: str):
     return trips[rows[0]] if rows else None
 
 
+def _closes(supabase, asset_key: str) -> list[tuple[str, float]]:
+    """Daily closes for one asset from the shared price store (date, close), cached for an hour."""
+    return _closes_cached(supabase, asset_key)
+
+
+def _closes_uncached(_supabase, asset_key: str) -> list[tuple[str, float]]:
+    try:
+        rows = (_supabase.table("asset_market").select("prices").eq("asset_key", asset_key).limit(1)
+                .execute().data or [])
+    except Exception:
+        return []
+    from market_store import frame_from_records
+
+    prices = (rows[0] or {}).get("prices") if rows else None
+    if not prices:
+        return []
+    frame = frame_from_records(prices)
+    return [(pd.Timestamp(i).strftime("%Y-%m-%d"), float(c)) for i, c in frame["close"].items()]
+
+
+def _price_chart(st, supabase, trip: dict) -> None:
+    """Daily closes around the trade, with the entry and exit marked. Only for assets MarketNavi follows."""
+    key = trip.get("asset_key")
+    if not key or supabase is None:
+        return
+    closes = _closes(supabase, key)
+    if not closes:
+        return
+    import altair as alt
+
+    o, c = _when(trip["opened_at"]), _when(trip["closed_at"])
+    lo, hi = (o - timedelta(days=30)).strftime("%Y-%m-%d"), (c + timedelta(days=10)).strftime("%Y-%m-%d")
+    data = pd.DataFrame([{"day": pd.Timestamp(d), "close": v} for d, v in closes if lo <= d <= hi])
+    if len(data) < 3:
+        return
+    marks = pd.DataFrame([
+        {"day": pd.Timestamp(o.date()), "price": trip.get("entry_price"), "what": t("At entry")},
+        {"day": pd.Timestamp(c.date()), "price": trip.get("exit_price"), "what": t("At exit")}]).dropna()
+    line = alt.Chart(data).mark_line(color="#64748b", strokeWidth=2).encode(
+        x=alt.X("day:T", title=None), y=alt.Y("close:Q", title=None, scale=alt.Scale(zero=False)))
+    band = alt.Chart(pd.DataFrame([{"a": pd.Timestamp(o.date()), "b": pd.Timestamp(c.date())}])).mark_rect(
+        opacity=0.12, color="#007F73").encode(x="a:T", x2="b:T")
+    dots = alt.Chart(marks).mark_point(filled=True, size=110).encode(
+        x="day:T", y="price:Q", tooltip=["what:N", alt.Tooltip("price:Q", format=",.4g")],
+        color=alt.Color("what:N", legend=None, scale=alt.Scale(range=["#007F73", "#C69420"])))
+    st.markdown(t("**Price around the trade**"))
+    st.altair_chart((band + line + dots).properties(height=220), width="stretch")
+
+
 def _detail(st, supabase, trip: dict, snaps: dict, notes: dict, zone) -> None:
     o, c = _when(trip["opened_at"]).astimezone(zone), _when(trip["closed_at"]).astimezone(zone)
     net, pct = trip.get("net_result_usd"), trip.get("result_pct")
@@ -346,6 +422,7 @@ def _detail(st, supabase, trip: dict, snaps: dict, notes: dict, zone) -> None:
             + _tile(t("Invested"), _money(trip.get("invested_usd")).lstrip("+"))
             + _tile(t("Leverage"), t("None") if (trip.get("leverage") or 1) <= 1 else f"x{trip['leverage']:g}")
             + "</div>")
+    _price_chart(st, supabase, trip)
     entry, exit_ = snaps.get((trip["id"], "entry")), snaps.get((trip["id"], "exit"))
     st.markdown(t("**What MarketNavi read at the time**"))
     if not entry and not exit_:
@@ -456,6 +533,7 @@ def _render(st, supabase, plan: str) -> None:
 import streamlit as _streamlit                                           # noqa: E402  (the fragment wrapper)
 
 _render_fragment = _streamlit.fragment(_render)
+_closes_cached = _streamlit.cache_data(ttl=3600, show_spinner=False)(_closes_uncached)
 
 
 def has_connections(supabase) -> bool:

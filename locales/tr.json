@@ -2462,5 +2462,13 @@
   "Shown on the platform's tab in the Trade Log. Handy if you connect more than one account on the same platform, such as eToro main and eToro long-term.": "Trade Log'da platformun sekmesinde gösterilir. Aynı platformda birden fazla hesap bağlarsanız işe yarar, örneğin eToro ana ve eToro uzun vade.",
   "Save name": "Adı kaydet",
   "Held (days)": "Süre (gün)",
-  "Result (USD)": "Sonuç (USD)"
+  "Result (USD)": "Sonuç (USD)",
+  "You held losing trades about {x} times as long as winning ones ({n} trades).": "Kaybeden işlemleri kazananlardan yaklaşık {x} kat daha uzun tuttunuz ({n} işlem).",
+  "You held winning trades about {x} times as long as losing ones ({n} trades).": "Kazanan işlemleri kaybedenlerden yaklaşık {x} kat daha uzun tuttunuz ({n} işlem).",
+  "After a loss, your next trade was on average {x} times the size of one after a win ({n} trades).": "Bir kayıptan sonraki işleminiz, kazançtan sonrakine göre ortalama {x} kat büyüklükteydi ({n} işlem).",
+  "Your {better} trades did better on average than your {worse} trades ({n} trades).": "{better} işlemleriniz ortalamada {worse} işlemlerinizden daha iyi gitti ({n} işlem).",
+  "**Price around the trade**": "**İşlem çevresindeki fiyat**",
+  "No clear patterns yet. They show once there are enough trades behind them.": "Henüz net bir örüntü yok. Arkasında yeterli işlem olunca görünür.",
+  "Describes your past trades. Not advice.": "Geçmiş işlemlerinizi anlatır. Tavsiye değildir.",
+  "**Patterns in your own trades**": "**Kendi işlemlerinizdeki örüntüler**"
 }

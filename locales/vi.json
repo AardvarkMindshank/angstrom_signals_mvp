@@ -2462,5 +2462,13 @@
   "Shown on the platform's tab in the Trade Log. Handy if you connect more than one account on the same platform, such as eToro main and eToro long-term.": "Hiện trên thẻ của nền tảng trong Trade Log. Tiện khi bạn kết nối nhiều tài khoản trên cùng một nền tảng, ví dụ eToro chính và eToro dài hạn.",
   "Save name": "Lưu tên",
   "Held (days)": "Giữ (ngày)",
-  "Result (USD)": "Kết quả (USD)"
+  "Result (USD)": "Kết quả (USD)",
+  "You held losing trades about {x} times as long as winning ones ({n} trades).": "Bạn giữ các giao dịch thua lâu hơn khoảng {x} lần so với giao dịch thắng ({n} giao dịch).",
+  "You held winning trades about {x} times as long as losing ones ({n} trades).": "Bạn giữ các giao dịch thắng lâu hơn khoảng {x} lần so với giao dịch thua ({n} giao dịch).",
+  "After a loss, your next trade was on average {x} times the size of one after a win ({n} trades).": "Sau một lần thua, giao dịch kế tiếp trung bình lớn gấp {x} lần giao dịch sau một lần thắng ({n} giao dịch).",
+  "Your {better} trades did better on average than your {worse} trades ({n} trades).": "Các giao dịch {better} của bạn trung bình tốt hơn các giao dịch {worse} ({n} giao dịch).",
+  "**Price around the trade**": "**Giá quanh giao dịch**",
+  "No clear patterns yet. They show once there are enough trades behind them.": "Chưa có mô thức rõ ràng. Chúng sẽ hiện khi có đủ giao dịch.",
+  "Describes your past trades. Not advice.": "Mô tả các giao dịch đã qua của bạn. Không phải lời khuyên.",
+  "**Patterns in your own trades**": "**Mô thức trong giao dịch của chính bạn**"
 }

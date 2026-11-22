@@ -2462,5 +2462,13 @@
   "Shown on the platform's tab in the Trade Log. Handy if you connect more than one account on the same platform, such as eToro main and eToro long-term.": "Trade Log의 플랫폼 탭에 표시됩니다. 같은 플랫폼에서 계좌를 여러 개 연결할 때(예: eToro 메인, eToro 장기) 유용합니다.",
   "Save name": "이름 저장",
   "Held (days)": "보유(일)",
-  "Result (USD)": "결과(USD)"
+  "Result (USD)": "결과(USD)",
+  "You held losing trades about {x} times as long as winning ones ({n} trades).": "손실 거래를 이익 거래보다 약 {x}배 오래 보유했습니다({n}건).",
+  "You held winning trades about {x} times as long as losing ones ({n} trades).": "이익 거래를 손실 거래보다 약 {x}배 오래 보유했습니다({n}건).",
+  "After a loss, your next trade was on average {x} times the size of one after a win ({n} trades).": "손실 후 다음 거래는 이익 후 거래보다 평균 {x}배 크기였습니다({n}건).",
+  "Your {better} trades did better on average than your {worse} trades ({n} trades).": "{better} 거래가 {worse} 거래보다 평균적으로 결과가 좋았습니다({n}건).",
+  "**Price around the trade**": "**거래 전후 가격**",
+  "No clear patterns yet. They show once there are enough trades behind them.": "아직 뚜렷한 패턴이 없습니다. 거래가 충분히 쌓이면 표시됩니다.",
+  "Describes your past trades. Not advice.": "지난 거래에 대한 설명입니다. 조언이 아닙니다.",
+  "**Patterns in your own trades**": "**내 거래의 패턴**"
 }

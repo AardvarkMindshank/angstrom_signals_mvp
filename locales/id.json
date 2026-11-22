@@ -2462,5 +2462,13 @@
   "Shown on the platform's tab in the Trade Log. Handy if you connect more than one account on the same platform, such as eToro main and eToro long-term.": "Ditampilkan pada tab platform di Trade Log. Berguna jika Anda menghubungkan lebih dari satu akun di platform yang sama, misalnya eToro utama dan eToro jangka panjang.",
   "Save name": "Simpan nama",
   "Held (days)": "Durasi (hari)",
-  "Result (USD)": "Hasil (USD)"
+  "Result (USD)": "Hasil (USD)",
+  "You held losing trades about {x} times as long as winning ones ({n} trades).": "Anda menahan trading yang rugi sekitar {x} kali lebih lama dari yang untung ({n} trading).",
+  "You held winning trades about {x} times as long as losing ones ({n} trades).": "Anda menahan trading yang untung sekitar {x} kali lebih lama dari yang rugi ({n} trading).",
+  "After a loss, your next trade was on average {x} times the size of one after a win ({n} trades).": "Setelah rugi, trading berikutnya rata-rata {x} kali ukuran trading setelah untung ({n} trading).",
+  "Your {better} trades did better on average than your {worse} trades ({n} trades).": "Trading {better} Anda rata-rata lebih baik daripada trading {worse} Anda ({n} trading).",
+  "**Price around the trade**": "**Harga di sekitar trading**",
+  "No clear patterns yet. They show once there are enough trades behind them.": "Belum ada pola yang jelas. Pola muncul setelah ada cukup trading di baliknya.",
+  "Describes your past trades. Not advice.": "Menggambarkan trading Anda yang lalu. Bukan nasihat.",
+  "**Patterns in your own trades**": "**Pola dalam trading Anda sendiri**"
 }

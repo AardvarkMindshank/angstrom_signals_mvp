@@ -119,3 +119,31 @@ def test_fetch_instruments_and_types():
     assert s.calls[0][1]["instrumentIds"] == "1001"
     s = _Session([_Resp(200, {"instrumentTypes": [{"instrumentTypeID": 5, "instrumentTypeDescription": "Stocks"}]})])
     assert tl.fetch_instrument_types(s, KEYS) == {5: "Stocks"}
+
+
+def _trip(day, net, hold_days, size=100.0, cls="stocks"):
+    from datetime import datetime, timedelta, timezone
+    o = datetime(2026, 1, 1, tzinfo=timezone.utc) + timedelta(days=day * 10)
+    return {"opened_at": o.isoformat(), "closed_at": (o + timedelta(days=hold_days)).isoformat(),
+            "net_result_usd": net, "invested_usd": size, "asset_class": cls}
+
+
+def test_patterns_need_enough_trades():
+    assert tl.patterns([_trip(i, 5, 1) for i in range(9)]) == []
+
+
+def test_holding_losers_longer_and_sizing_up_after_losses():
+    trips = []
+    for i in range(14):
+        lose = i % 2 == 1
+        trips.append(_trip(i, -5 if lose else 8, 6 if lose else 2, size=200 if i % 2 == 0 and i else 100))
+    kinds = {p["kind"]: p for p in tl.patterns(trips)}
+    assert kinds["hold_losers"]["times"] == 3.0 and kinds["hold_losers"]["trades"] == 14
+    assert kinds["size_after_loss"]["times"] == 2.0
+
+
+def test_asset_class_gap_only_with_ten_trades_each():
+    trips = [_trip(i, 10, 1, cls="crypto") for i in range(10)] + [_trip(20 + i, -4, 1) for i in range(10)]
+    gap = [p for p in tl.patterns(trips) if p["kind"] == "class_gap"]
+    assert gap and gap[0]["better"] == "crypto" and gap[0]["worse"] == "stocks" and gap[0]["trades"] == 20
+    assert not [p for p in tl.patterns(trips[:15]) if p["kind"] == "class_gap"]
