@@ -20,6 +20,8 @@ from datetime import date, datetime, timedelta, timezone
 import tradelog
 
 MAX_TRADES_SHOWN = 40
+REGIME_WORDS = {"trending_up": "trending up", "trending_down": "trending down", "trending_mixed": "trending, mixed",
+                "ranging": "ranging", "transitional": "transitional", "unknown": "not known"}
 FORBIDDEN = [
     r"\byou should\b", r"\byou must\b", r"\bi recommend\b", r"\brecommend(ed|ation)?\b", r"\bconsider (buying|selling)\b",
     r"\b(buy|sell|short|long) (now|more|it|this)\b", r"\bgo (long|short)\b", r"\bprice target\b", r"\btarget price\b",
@@ -82,9 +84,9 @@ def facts(trips: list[dict], snaps: dict, week: tuple[date, date], zone, scope: 
                        "direction": t.get("direction"), "result_usd": t.get("net_result_usd"),
                        "result_pct": t.get("result_pct"), "held_days": round((b - a).total_seconds() / 86400, 1),
                        "invested_usd": t.get("invested_usd"), "leverage": t.get("leverage"),
-                       "regime_at_entry": reading(t, "entry", "regime"), "trend_at_entry": reading(t, "entry", "trend"),
+                       "regime_at_entry": REGIME_WORDS.get(reading(t, "entry", "regime") or "unknown"), "trend_at_entry": reading(t, "entry", "trend"),
                        "stretch_at_exit": reading(t, "exit", "stretch"), "fear_at_entry": fear(t)})
-    tagged = [{**t, "regime": reading(t, "entry", "regime") or "unknown"} for t in before + in_week]
+    tagged = [{**t, "regime": REGIME_WORDS.get(reading(t, "entry", "regime") or "unknown")} for t in before + in_week]
     return {"week": f"{start.isoformat()} to {end.isoformat()}", "scope": scope, "trades": trades,
             "week_stats": tradelog.stats(in_week, True), "last_90_days_stats": tradelog.stats(before, True),
             "by_regime_at_entry_incl_this_week": tradelog.stats_by(tagged, "regime", True),
@@ -120,8 +122,9 @@ def plain_review(fact: dict) -> dict:
     if not w["trades"]:
         happened = "No trades closed this week."
     else:
-        happened = (f"{w['trades']} trades closed this week: {w['wins']} wins and {w['losses']} losses, "
-                    f"net {w['net']:+,.2f} USD.")
+        plural = lambda n, one, many: f"{n} {one if n == 1 else many}"                 # noqa: E731
+        happened = (f"{plural(w['trades'], 'trade', 'trades')} closed this week: {plural(w['wins'], 'win', 'wins')} "
+                    f"and {plural(w['losses'], 'loss', 'losses')}, net {w['net']:+,.2f} USD.")
     pattern = "Not enough trades this week to call anything a pattern."
     return {"happened": happened, "pattern": pattern,
             "question": "Looking back at this week's trades, which one would you take again the same way?",
