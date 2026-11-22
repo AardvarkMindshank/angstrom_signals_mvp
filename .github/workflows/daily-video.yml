@@ -83,6 +83,15 @@ jobs:
           done
       - name: Make the video
         run: NODE_PATH="$PWD/node_modules" python daily_video.py --library lib/avatar_lab --music music --out out/daily_video --edition "${{ inputs.edition }}" --presenter "${{ inputs.presenter }}" ${{ inputs.publish && '--publish' || '' }}
+      - name: Post to the social channels
+        if: inputs.publish
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHANNEL: ${{ secrets.TELEGRAM_CHANNEL }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_FROM: ${{ secrets.RESEND_FROM }}
+          SOCIAL_PACK_TO: angus@marketnavi.ai
+        run: python social_post.py
       - name: Keep (encrypted)
         if: always() && !inputs.publish
         run: |
