@@ -2485,5 +2485,7 @@
   "The day before": "前日",
   "The day after": "翌日",
   "Back to today": "今日に戻る",
-  "Pick a date": "日付を選ぶ"
+  "Pick a date": "日付を選ぶ",
+  "Preset from this asset's regime ({regime}). Change it if you see it differently.": "この銘柄のレジーム（{regime}）から初期設定しました。違うと思えば変更してください。",
+  "The regime reads {regime}; you chose otherwise.": "レジームは {regime} ですが、別の選択をしています。"
 }

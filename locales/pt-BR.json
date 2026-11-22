@@ -2485,5 +2485,7 @@
   "The day before": "O dia anterior",
   "The day after": "O dia seguinte",
   "Back to today": "Voltar para hoje",
-  "Pick a date": "Escolher data"
+  "Pick a date": "Escolher data",
+  "Preset from this asset's regime ({regime}). Change it if you see it differently.": "Pré-definido pelo regime deste ativo ({regime}). Mude se você enxerga diferente.",
+  "The regime reads {regime}; you chose otherwise.": "O regime indica {regime}; você escolheu outra opção."
 }

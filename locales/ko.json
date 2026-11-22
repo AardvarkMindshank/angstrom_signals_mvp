@@ -2485,5 +2485,7 @@
   "The day before": "전날",
   "The day after": "다음 날",
   "Back to today": "오늘로 돌아가기",
-  "Pick a date": "날짜 선택"
+  "Pick a date": "날짜 선택",
+  "Preset from this asset's regime ({regime}). Change it if you see it differently.": "이 자산의 레짐({regime})에 맞춰 미리 설정했습니다. 다르게 보신다면 바꾸세요.",
+  "The regime reads {regime}; you chose otherwise.": "레짐은 {regime}이지만 다른 선택을 하셨습니다."
 }

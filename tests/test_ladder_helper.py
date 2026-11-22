@@ -57,3 +57,20 @@ def test_fib_lines_carry_the_level():
     st = _St({"ladder_show_k": True, "ladder_place_k": "fib", "ladder_n_k": 3})
     lines = L.chart_lines(st, "k", 125, 2, swing={"low": 100, "high": 130, "origin": "swing"})
     assert lines[0]["label"].endswith("50%") and lines[2]["label"].endswith("78.6%")
+
+
+def test_market_choice_starts_from_the_regime():
+    import ladder_helper as lh
+
+    assert lh.auto_style("trending_up") == "trending" and lh.auto_style("trending_down") == "trending"
+    assert lh.auto_style("ranging") == "consolidating" and lh.auto_style("transitional") == "consolidating"
+    assert lh.auto_style(None) == "consolidating"
+
+    class St:
+        session_state = {}
+
+    st = St()
+    lh.note_regime(st, "Crypto_bitcoin", {"label": "trending_up"})
+    assert lh.settings(st, "Crypto_bitcoin", 100.0, 5.0)["style"] == "trending"
+    st.session_state["ladder_style_Crypto_bitcoin"] = "consolidating"          # the member's own choice wins
+    assert lh.settings(st, "Crypto_bitcoin", 100.0, 5.0)["style"] == "consolidating"

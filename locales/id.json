@@ -2485,5 +2485,7 @@
   "The day before": "Hari sebelumnya",
   "The day after": "Hari berikutnya",
   "Back to today": "Kembali ke hari ini",
-  "Pick a date": "Pilih tanggal"
+  "Pick a date": "Pilih tanggal",
+  "Preset from this asset's regime ({regime}). Change it if you see it differently.": "Diatur awal dari rezim aset ini ({regime}). Ubah jika Anda melihatnya berbeda.",
+  "The regime reads {regime}; you chose otherwise.": "Rezim terbaca {regime}; Anda memilih yang lain."
 }

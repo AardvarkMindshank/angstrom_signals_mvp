@@ -2485,5 +2485,7 @@
   "The day before": "前一天",
   "The day after": "后一天",
   "Back to today": "回到今天",
-  "Pick a date": "选择日期"
+  "Pick a date": "选择日期",
+  "Preset from this asset's regime ({regime}). Change it if you see it differently.": "已按该资产的行情状态（{regime}）预设。如果你有不同看法，可以更改。",
+  "The regime reads {regime}; you chose otherwise.": "行情状态为 {regime}；你选择了另一项。"
 }

@@ -128,12 +128,27 @@ def drawn_fib(items) -> dict | None:
     return None
 
 
+REGIME_WORDS = {"trending_up": "Trending up", "trending_down": "Trending down", "trending_mixed": "Trending, mixed",
+                "ranging": "Ranging", "transitional": "Transitional"}
+
+
+def auto_style(label: str | None) -> str:
+    """The Market choice that fits the asset's regime: Trending for any trending regime, else Consolidating (a
+    ranging or transitional market, or no reading yet)."""
+    return "trending" if str(label or "").startswith("trending") else "consolidating"
+
+
+def note_regime(st, key: str, regime: dict | None) -> None:
+    """Remember this asset's regime label, so the Market choice starts from it (the member can still change it)."""
+    st.session_state[f"ladder_auto_{key}"] = (regime or {}).get("label")
+
+
 def settings(st, key: str, price: float, atr: float) -> dict:
     """The helper's current choices for this asset, read before its controls are drawn (the chart above them needs
     them first). The same keys and defaults as render()."""
     ss = st.session_state
     side = ss.get(f"ladder_side_{key}") or "long"
-    style = ss.get(f"ladder_style_{key}") or "consolidating"
+    style = ss.get(f"ladder_style_{key}") or auto_style(ss.get(f"ladder_auto_{key}"))
     return {"show": bool(ss.get(f"ladder_show_{key}")), "side": side, "style": style,
             "place": ss.get(f"ladder_place_{key}") or "moves",
             "orders": int(ss.get(f"ladder_n_{key}") or 3),
@@ -194,14 +209,20 @@ def render(st, t, price: float | None, atr: float | None, name: str, key: str, s
     side = c1.segmented_control(t("Side"), ["long", "short"], default="long", key=f"ladder_side_{key}",
                                 format_func=lambda v: {"long": "📈 " + t("Long"), "short": "📉 " + t("Short")}[v],
                                 help=t("Long: orders below the price. Short: orders above it."))
-    style = c2.segmented_control(t("Market"), ["consolidating", "trending"], default="consolidating",
+    regime_label = st.session_state.get(f"ladder_auto_{key}")
+    preset = auto_style(regime_label)
+    style = c2.segmented_control(t("Market"), ["consolidating", "trending"], default=preset,
                                  key=f"ladder_style_{key}",
                                  format_func=lambda v: {"consolidating": "🧱 " + t("Consolidating"),
                                                         "trending": "🚀 " + t("Trending")}[v],
                                  help=t("Consolidating: equal orders, close to the price. Trending: the order "
                                         "nearest the price smallest, the furthest largest."))
     orders = c3.number_input(t("Orders"), 2, 6, 3, key=f"ladder_n_{key}")
-    side, style = side or "long", style or "consolidating"
+    side, style = side or "long", style or preset
+    if regime_label in REGIME_WORDS:
+        c2.caption(t("Preset from this asset's regime ({regime}). Change it if you see it differently.",
+                     regime=t(REGIME_WORDS[regime_label])) if style == preset else
+                   t("The regime reads {regime}; you chose otherwise.", regime=t(REGIME_WORDS[regime_label])))
     place = st.segmented_control(
         t("Place the orders"), list(PLACES), default="moves", key=f"ladder_place_{key}",
         format_func=lambda v: {"moves": "📏 " + t("By daily move"), "fib": "📐 " + t("On Fibonacci levels")}[v],

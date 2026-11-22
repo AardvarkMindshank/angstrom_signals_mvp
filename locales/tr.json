@@ -2485,5 +2485,7 @@
   "The day before": "Önceki gün",
   "The day after": "Sonraki gün",
   "Back to today": "Bugüne dön",
-  "Pick a date": "Tarih seç"
+  "Pick a date": "Tarih seç",
+  "Preset from this asset's regime ({regime}). Change it if you see it differently.": "Bu varlığın rejimine göre önceden ayarlandı ({regime}). Farklı görüyorsanız değiştirin.",
+  "The regime reads {regime}; you chose otherwise.": "Rejim {regime} gösteriyor; siz farklısını seçtiniz."
 }

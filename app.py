@@ -14907,6 +14907,12 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             ladder_key = f"{asset_type}_{asset_key}"
             ladder_atr = signals_v2._num(daily_chart["atr"].iloc[-1]) if "atr" in daily_chart.columns else None
             ladder_price = signals_v2._num(daily_chart["close"].iloc[-1])
+            try:                                       # 🪜 the Market choice starts from this asset's regime
+                import regime as _regime
+
+                ladder_helper.note_regime(st, ladder_key, _regime.latest_regime(daily_chart))
+            except Exception:
+                ladder_helper.note_regime(st, ladder_key, None)
             ladder_swing = _ladder_swing(asset_type, asset_key, ladder_key,
                                          tv["frame"] if use_tv and tv and not tv.get("error") else daily_chart)
             ladder_lines = ladder_helper.chart_lines(st, ladder_key, ladder_price, ladder_atr, t, swing=ladder_swing)
