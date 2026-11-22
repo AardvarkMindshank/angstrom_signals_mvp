@@ -62,7 +62,8 @@ def _app(plan, empty=False, setup=False):
 def test_page_draws_for_pro_with_trades():
     at = AppTest.from_function(_app, args=("pro",)).run(timeout=30)
     assert not at.exception
-    assert any("Net result" in m.label for m in at.metric)
+    page = "".join(h.proto.body for h in at.get("html"))
+    assert "Net result" in page and "tl-tiles" in page and "tl-bars" in page
     assert len(at.tabs) == 2                                       # Overview, eToro
     assert not at.text_input                                       # keys are set up in the sidebar, not here
 
@@ -105,8 +106,9 @@ def _detail_app():
 def test_trade_detail_draws_the_snapshot_table():
     at = AppTest.from_function(_detail_app).run(timeout=30)
     assert not at.exception
-    assert any("Average entry" in m.label for m in at.metric)
-    assert len(at.dataframe) == 1 and len(at.text_area) == 1
+    page = "".join(h.proto.body for h in at.get("html"))
+    assert "Average entry" in page and "tl-snap" in page and "NVIDIA" in page and "tl-up" in page
+    assert len(at.text_area) == 1
 
 
 def test_tab_names_use_the_given_name_else_the_platform_numbered():

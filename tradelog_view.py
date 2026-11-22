@@ -9,6 +9,7 @@ several accounts per platform.
 
 from __future__ import annotations
 
+import html
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
@@ -176,53 +177,114 @@ def _filters(st, key: str) -> tuple[str | None, bool]:
     return (None if pick in (None, "all") else pick), copied
 
 
+CSS = """<style>
+[class*='st-key-tl_card']{background:var(--ang-surface);color:var(--ang-text);border:1px solid var(--ang-border);
+  border-radius:14px;padding:14px 18px;gap:10px}
+.tl-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:2px 0 8px}
+.tl-tile{background:var(--ang-surface);color:var(--ang-text);border:1px solid var(--ang-border);border-radius:14px;
+  padding:14px 16px;display:flex;flex-direction:column;gap:4px}
+.tl-tile .k{font-size:.8rem;opacity:.72}.tl-tile .v{font-size:1.55rem;font-weight:700;line-height:1.15}
+.tl-tile .s{font-size:.75rem;opacity:.65}
+.tl-up{color:#15803d}.tl-down{color:#b91c1c}
+.tl-h{font-weight:700;font-size:1rem;margin:0 0 4px}
+.tl-bars{display:grid;grid-template-columns:105px minmax(0,1fr) 92px;gap:10px 12px;align-items:center;font-size:.9rem}
+.tl-track{height:12px;border-radius:6px;background:var(--ang-track,#e5e7eb);overflow:hidden}
+.tl-fill{height:12px;border-radius:6px}.tl-num{text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+.tl-rows .r{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1.4fr) 92px;gap:10px;padding:7px 0;
+  font-size:.9rem;border-top:1px solid var(--ang-line,rgba(127,127,127,.18))}
+.tl-rows .r:first-child{border-top:0}.tl-dim{opacity:.5}.tl-note{font-size:.75rem;opacity:.65;margin-top:6px}
+.tl-snap{display:grid;grid-template-columns:minmax(120px,1fr) minmax(0,1.3fr) minmax(0,1.3fr);
+  border:1px solid var(--ang-border);border-radius:10px;overflow:hidden;font-size:.9rem}
+.tl-snap div{padding:9px 12px;border-top:1px solid var(--ang-line,rgba(127,127,127,.18))}
+.tl-snap .h{font-weight:600;border-top:0;background:var(--ang-soft,rgba(127,127,127,.08))}
+.tl-snap .lbl{opacity:.8}
+.tl-chip{display:inline-block;font-size:.78rem;padding:2px 10px;border-radius:999px;margin-right:6px;
+  background:var(--ang-soft,rgba(127,127,127,.12))}
+.tl-big{font-size:1.7rem;font-weight:700;line-height:1.1}
+</style>"""
+
+
+def _tone(v) -> str:
+    return "tl-up" if (v or 0) > 0 else "tl-down" if (v or 0) < 0 else ""
+
+
+def _tile(label: str, value: str, sub: str = "", tone: str = "", tip: str = "") -> str:
+    return (f"<div class='tl-tile' title='{html.escape(tip, quote=True)}'><span class='k'>{html.escape(label)}</span>"
+            f"<span class='v {tone}'>{value}</span><span class='s'>{html.escape(sub)}</span></div>")
+
+
 def _headline(st, s: dict) -> None:
-    c = st.columns(4)
-    c[0].metric(t("Net result"), _money(s["net"]), help=t("Costs included in the price (eToro's spread)."))
-    c[1].metric(t("Win rate"), "—" if s["win_rate"] is None else f"{s['win_rate']:.0f}%",
-                help=t("{w} wins, {l} losses", w=s["wins"], l=s["losses"]))
-    c[2].metric(t("Profit factor"), "—" if s["profit_factor"] is None else f"{s['profit_factor']:.2f}",
-                help=t("Gross wins divided by gross losses."))
-    hold = (f"{s['avg_hold_win_days'] or 0:.1f} / {s['avg_hold_loss_days'] or 0:.1f} {t('days')}"
-            if s["avg_hold_win_days"] or s["avg_hold_loss_days"] else "—")
-    c[3].metric(t("Average hold"), hold, help=t("Winners / losers."))
-    st.caption(t("{n} closed trades", n=s["trades"])
-               + ("" if s["enough"] else " · " + t("too few trades to call anything a pattern yet")))
+    hold = (f"{s['avg_hold_win_days'] or 0:.1f} <span style='font-size:.9rem;opacity:.65'>vs</span> "
+            f"{s['avg_hold_loss_days'] or 0:.1f}" if s["avg_hold_win_days"] or s["avg_hold_loss_days"] else "—")
+    tiles = [
+        _tile(t("Net result"), _money(s["net"]), t("{n} closed trades", n=s["trades"]), _tone(s["net"]),
+              t("Costs included in the price (eToro's spread).")),
+        _tile(t("Win rate"), "—" if s["win_rate"] is None else f"{s['win_rate']:.0f}%",
+              t("{w} wins, {l} losses", w=s["wins"], l=s["losses"])),
+        _tile(t("Profit factor"), "—" if s["profit_factor"] is None else f"{s['profit_factor']:.2f}",
+              t("Gross wins divided by gross losses.")),
+        _tile(t("Average hold"), hold, t("days") + " · " + t("Winners / losers.")),
+    ]
+    st.html(CSS + "<div class='tl-tiles'>" + "".join(tiles) + "</div>")
+    if not s["enough"]:
+        st.caption(t("too few trades to call anything a pattern yet"))
+
+
+def _bars_html(by: dict) -> str:
+    rows = [(k, v) for k, v in by.items() if v["trades"]]
+    top = max((abs(v["net"]) for _, v in rows), default=0) or 1
+    out = []
+    for k, v in rows:
+        colour = "#15803d" if v["net"] >= 0 else "#b91c1c"
+        width = max(3, round(abs(v["net"]) / top * 100))
+        out.append(f"<span title='{v['trades']}'>{html.escape(t(CLASS_WORDS.get(k, k)))}</span>"
+                   f"<span class='tl-track'><span class='tl-fill' style='display:block;width:{width}%;"
+                   f"background:{colour}'></span></span><span class='tl-num {_tone(v['net'])}'>{_money(v['net'])}</span>")
+    return "<div class='tl-bars'>" + "".join(out) + "</div>"
+
+
+def _regime_rows_html(by: dict) -> str:
+    out = []
+    for k, v in by.items():
+        if not v["trades"]:
+            continue
+        name = _regime({"regime": k}) if k != "unknown" else t("Not known")
+        detail = (t("{n} closed trades", n=v["trades"]) + " · "
+                  + (f"{v['win_rate']:.0f}%" if v["enough"] and v["win_rate"] is not None else t("too few to say")))
+        dim = "" if v["enough"] else " tl-dim"
+        out.append(f"<div class='r{dim}'><span>{html.escape(name)}</span><span style='opacity:.75'>"
+                   f"{html.escape(detail)}</span><span class='tl-num {_tone(v['net']) if v['enough'] else ''}'>"
+                   f"{_money(v['net'])}</span></div>")
+    return "<div class='tl-rows'>" + "".join(out) + "</div>"
 
 
 def _overview(st, trips: list[dict], snaps: dict, copied: bool) -> None:
     _headline(st, tradelog.stats(trips, copied))
     curve = tradelog.equity_curve(trips, copied)
+    platforms = tradelog.stats_by(trips, "platform", copied)
     if len(curve) >= 2:
-        st.markdown(t("**Equity curve**"))
-        st.line_chart(pd.DataFrame({t("Net result (USD)"): [v for _, v in curve]},
-                                   index=pd.to_datetime([d for d, _ in curve], utc=True, format="ISO8601")))
+        with st.container(key="tl_card_curve"):
+            st.html(CSS + f"<div class='tl-h'>{html.escape(t('**Equity curve**').strip('*'))}</div>")
+            st.line_chart(pd.DataFrame({t("Net result (USD)"): [v for _, v in curve]},
+                                       index=pd.to_datetime([d for d, _ in curve], utc=True, format="ISO8601")),
+                          height=220)
     left, right = st.columns(2)
-    with left:
-        st.markdown(t("**By asset class**"))
-        by = tradelog.stats_by(trips, "asset_class", copied)
-        st.dataframe(pd.DataFrame([{t("Asset class"): t(CLASS_WORDS.get(k, k)), t("Trades"): v["trades"],
-                                    t("Net result (USD)"): v["net"], t("Win rate"): v["win_rate"]}
-                                   for k, v in by.items() if v["trades"]]), hide_index=True, width="stretch",
-                     column_config={**_usd_cols(st, t("Net result (USD)")), **_pct_cols(st, t("Win rate"))})
-    with right:
-        st.markdown(t("**Results by regime at entry**"))
+    with left, st.container(key="tl_card_classes"):
+        st.html(CSS + f"<div class='tl-h'>{html.escape(t('**By asset class**').strip('*'))}</div>"
+                + _bars_html(tradelog.stats_by(trips, "asset_class", copied)))
+    with right, st.container(key="tl_card_regimes"):
         tagged = [{**trip, "regime": (snaps.get((trip["id"], "entry")) or {}).get("regime") or "unknown"}
                   for trip in trips]
-        by = tradelog.stats_by(tagged, "regime", copied)
-        st.dataframe(pd.DataFrame([{t("Regime"): _regime({"regime": k}) if k != "unknown" else t("Not known"),
-                                    t("Trades"): v["trades"], t("Net result (USD)"): v["net"],
-                                    t("Note"): "" if v["enough"] else t("too few to say")}
-                                   for k, v in by.items() if v["trades"]]), hide_index=True, width="stretch",
-                     column_config=_usd_cols(st, t("Net result (USD)")))
-        st.caption(t("Shows what happened together, not a cause."))
-    platforms = tradelog.stats_by(trips, "platform", copied)
+        st.html(CSS + f"<div class='tl-h'>{html.escape(t('**Results by regime at entry**').strip('*'))}</div>"
+                + _regime_rows_html(tradelog.stats_by(tagged, "regime", copied))
+                + f"<div class='tl-note'>{html.escape(t('Shows what happened together, not a cause.'))}</div>")
     if len(platforms) > 1:
-        st.markdown(t("**By platform**"))
-        st.dataframe(pd.DataFrame([{t("Platform"): PLATFORMS.get(k, k), t("Trades"): v["trades"],
-                                    t("Net result (USD)"): v["net"], t("Win rate"): v["win_rate"]}
-                                   for k, v in platforms.items()]), hide_index=True, width="stretch",
-                     column_config={**_usd_cols(st, t("Net result (USD)")), **_pct_cols(st, t("Win rate"))})
+        with st.container(key="tl_card_platforms"):
+            st.html(CSS + f"<div class='tl-h'>{html.escape(t('**By platform**').strip('*'))}</div>")
+            st.dataframe(pd.DataFrame([{t("Platform"): PLATFORMS.get(k, k), t("Trades"): v["trades"],
+                                        t("Net result (USD)"): v["net"], t("Win rate"): v["win_rate"]}
+                                       for k, v in platforms.items()]), hide_index=True, width="stretch",
+                         column_config={**_usd_cols(st, t("Net result (USD)")), **_pct_cols(st, t("Win rate"))})
 
 
 def _trade_list(st, trips: list[dict], snaps: dict, zone, key: str):
@@ -244,8 +306,14 @@ def _trade_list(st, trips: list[dict], snaps: dict, zone, key: str):
         t("Regime at entry"): _regime(snaps.get((trip["id"], "entry"))),
         t("Copied"): "✓" if trip.get("copied") else "",
     } for trip in trips])
+    res, held_col = t("Result (USD)"), t("Held (days)")
+    colour = lambda v: ("color:#15803d;font-weight:600" if (v or 0) > 0 else           # noqa: E731
+                        "color:#b91c1c;font-weight:600" if (v or 0) < 0 else "")
+    styled = (table.style.map(colour, subset=[res, "%"])
+              .format({res: "{:+,.2f}", "%": "{:+.1f}%", held_col: "{:.1f}"}, na_rep="—")
+              .format(lambda d: d.strftime("%d %b %Y"), subset=[t("Closed")]))
     picked = st.dataframe(
-        table, hide_index=True, width="stretch", on_select="rerun", selection_mode="single-row", key=f"tl_table_{key}",
+        styled, hide_index=True, width="stretch", on_select="rerun", selection_mode="single-row", key=f"tl_table_{key}",
         column_config={t("Closed"): st.column_config.DatetimeColumn(t("Closed"), format="D MMM YYYY"),
                        t("Held (days)"): st.column_config.NumberColumn(t("Held (days)"), format="%.1f"),
                        **_usd_cols(st, t("Result (USD)")),
@@ -256,16 +324,28 @@ def _trade_list(st, trips: list[dict], snaps: dict, zone, key: str):
 
 
 def _detail(st, supabase, trip: dict, snaps: dict, notes: dict, zone) -> None:
-    st.markdown(f"#### {trip.get('name') or trip.get('symbol')} · "
-                f"{t('Buy') if trip.get('direction') == 'long' else t('Sell')} · {_money(trip.get('net_result_usd'))}")
     o, c = _when(trip["opened_at"]).astimezone(zone), _when(trip["closed_at"]).astimezone(zone)
-    st.caption(t("Opened {o} · closed {c} · one position until flat, average prices",
-                 o=o.strftime("%d %b %Y %H:%M"), c=c.strftime("%d %b %Y %H:%M")))
-    m = st.columns(4)
-    m[0].metric(t("Average entry"), "—" if trip.get("entry_price") is None else f"{trip['entry_price']:,.4g}")
-    m[1].metric(t("Average exit"), "—" if trip.get("exit_price") is None else f"{trip['exit_price']:,.4g}")
-    m[2].metric(t("Invested"), _money(trip.get("invested_usd")).lstrip("+"))
-    m[3].metric(t("Leverage"), t("None") if (trip.get("leverage") or 1) <= 1 else f"x{trip['leverage']:g}")
+    net, pct = trip.get("net_result_usd"), trip.get("result_pct")
+    held = (c - o).total_seconds() / 86400
+    side = t("Buy") if trip.get("direction") == "long" else t("Sell")
+    chips = (f"<span class='tl-chip'>{html.escape(side)}</span>"
+             f"<span class='tl-chip'>{html.escape(t(CLASS_WORDS.get(trip.get('asset_class'), 'Other')))}</span>"
+             + (f"<span class='tl-chip'>{html.escape(t('Copied'))}</span>" if trip.get("copied") else ""))
+    price = lambda v: "—" if v is None else f"{v:,.4g}"                                # noqa: E731
+    st.html(CSS + "<div style='display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px'>"
+            f"<div><div class='tl-big'>{html.escape(trip.get('name') or trip.get('symbol') or '')}</div>"
+            f"<div style='margin:6px 0 2px'>{chips}</div><div style='font-size:.82rem;opacity:.7'>"
+            + html.escape(t("Opened {o} · closed {c} · one position until flat, average prices",
+                            o=o.strftime("%d %b %Y %H:%M"), c=c.strftime("%d %b %Y %H:%M")))
+            + f"</div></div><div style='text-align:right'><div class='tl-big {_tone(net)}'>{_money(net)}</div>"
+            f"<div class='{_tone(net)}' style='font-size:.9rem'>{_signed(pct, 1) + "%" if pct is not None else "—"} · {held:.1f} "
+            f"{html.escape(t('days'))}</div></div></div>"
+            "<div class='tl-tiles' style='margin-top:12px'>"
+            + _tile(t("Average entry"), price(trip.get("entry_price")))
+            + _tile(t("Average exit"), price(trip.get("exit_price")))
+            + _tile(t("Invested"), _money(trip.get("invested_usd")).lstrip("+"))
+            + _tile(t("Leverage"), t("None") if (trip.get("leverage") or 1) <= 1 else f"x{trip['leverage']:g}")
+            + "</div>")
     entry, exit_ = snaps.get((trip["id"], "entry")), snaps.get((trip["id"], "exit"))
     st.markdown(t("**What MarketNavi read at the time**"))
     if not entry and not exit_:
@@ -285,8 +365,12 @@ def _detail(st, supabase, trip: dict, snaps: dict, notes: dict, zone) -> None:
                  fear(entry), fear(exit_)),
                 (t("Asset sentiment"), sent(entry, "asset_sentiment"), sent(exit_, "asset_sentiment")),
                 (t("Market sentiment"), sent(entry, "market_sentiment"), sent(exit_, "market_sentiment"))]
-        st.dataframe(pd.DataFrame(rows, columns=["", t("At entry"), t("At exit")]), hide_index=True,
-                     width="stretch")
+        grid = (f"<div class='h'></div><div class='h'>{html.escape(t('At entry'))}</div>"
+                f"<div class='h'>{html.escape(t('At exit'))}</div>")
+        for name, a, b in rows:
+            grid += (f"<div class='lbl'>{html.escape(name)}</div><div>{html.escape(str(a))}</div>"
+                     f"<div>{html.escape(str(b))}</div>")
+        st.html(CSS + f"<div class='tl-snap'>{grid}</div>")
         source = (entry or {}).get("_source") or ""
         st.caption(t("Observed: what MarketNavi saved that day. Reconstructed: rebuilt from data known then. "
                      "This trade's entry: {s}.", s=t(SOURCE_WORDS[source]) if source in SOURCE_WORDS else "—"))
@@ -361,9 +445,11 @@ def _render(st, supabase, plan: str) -> None:
             mine = [x for x in trips if x["connection_id"] == conn["id"]
                     and (pick is None or x.get("asset_class") == pick)]
             _headline(st, tradelog.stats(mine, copied))
-            chosen = _trade_list(st, mine, snaps, zone, conn["id"])
+            with st.container(key=f"tl_card_list_{conn['id']}"):
+                chosen = _trade_list(st, mine, snaps, zone, conn["id"])
             if chosen:
-                _detail(st, supabase, chosen, snaps, notes, zone)
+                with st.container(key=f"tl_card_detail_{conn['id']}"):
+                    _detail(st, supabase, chosen, snaps, notes, zone)
     st.caption(t(DISCLAIMER))
 
 
