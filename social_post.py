@@ -163,7 +163,11 @@ def post_x(day: str, caps: dict, links: dict) -> str:
     r = requests.post(f"{api}/initialize", timeout=60, headers={"Authorization": _x_auth("POST", f"{api}/initialize")},
                       json={"media_type": "video/mp4", "total_bytes": len(data), "media_category": "tweet_video"})
     if not r.ok:
-        raise RuntimeError(f"X refused the upload (HTTP {r.status_code}: {r.text[:200]})")
+        me = requests.get("https://api.x.com/2/users/me", timeout=30,
+                          headers={"Authorization": _x_auth("GET", "https://api.x.com/2/users/me")})
+        who = (me.json().get("data") or {}).get("username", "") if me.ok else ""
+        raise RuntimeError(f"X refused the upload (HTTP {r.status_code}); the keys themselves "
+                           + (f"work (signed in as @{who})" if who else f"were refused too (HTTP {me.status_code})"))
     mid = r.json()["data"]["id"]
     step = 4 * 1024 * 1024
     for i in range(0, len(data), step):
