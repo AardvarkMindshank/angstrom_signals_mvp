@@ -135,7 +135,65 @@ def post_youtube(day: str, caps: dict, links: dict) -> str:
     return f"posted: video {wide}, Short {tall}"
 
 
-PLATFORMS = {"telegram": post_telegram, "youtube": post_youtube, "email": post_email}
+def _x_auth(method: str, url: str, query: dict | None = None) -> str:
+    """An OAuth 1.0a header for the MarketNavi account (JSON and file bodies are not part of the signature)."""
+    import base64
+    import hashlib
+    import hmac
+    import secrets as _s
+    import time
+    from urllib.parse import quote
+    key, sec, tok, tsec = (os.getenv(k, "").strip() for k in ("X_API_KEY", "X_API_SECRET", "X_ACCESS_TOKEN", "X_ACCESS_SECRET"))
+    o = {"oauth_consumer_key": key, "oauth_nonce": _s.token_hex(16), "oauth_signature_method": "HMAC-SHA1",
+         "oauth_timestamp": str(int(time.time())), "oauth_token": tok, "oauth_version": "1.0"}
+    q = lambda v: quote(str(v), safe="~")   # noqa: E731
+    params = "&".join(f"{q(k)}={q(v)}" for k, v in sorted({**o, **(query or {})}.items()))
+    base = "&".join([method.upper(), q(url), q(params)])
+    o["oauth_signature"] = base64.b64encode(hmac.new(f"{q(sec)}&{q(tsec)}".encode(), base.encode(), hashlib.sha1).digest()).decode()
+    return "OAuth " + ", ".join(f'{q(k)}="{q(v)}"' for k, v in sorted(o.items()))
+
+
+def post_x(day: str, caps: dict, links: dict) -> str:
+    """The wide video with a short caption, uploaded in chunks (X's media upload), then posted."""
+    import time
+    if not all(os.getenv(k, "").strip() for k in ("X_API_KEY", "X_API_SECRET", "X_ACCESS_TOKEN", "X_ACCESS_SECRET")):
+        return "skipped (not connected)"
+    data = requests.get(links["wide"], timeout=120).content
+    api = "https://api.x.com/2/media/upload"
+    r = requests.post(f"{api}/initialize", timeout=60, headers={"Authorization": _x_auth("POST", f"{api}/initialize")},
+                      json={"media_type": "video/mp4", "total_bytes": len(data), "media_category": "tweet_video"})
+    if not r.ok:
+        raise RuntimeError(f"X refused the upload (HTTP {r.status_code}: {r.text[:200]})")
+    mid = r.json()["data"]["id"]
+    step = 4 * 1024 * 1024
+    for i in range(0, len(data), step):
+        url = f"{api}/{mid}/append"
+        a = requests.post(url, timeout=120, headers={"Authorization": _x_auth("POST", url)},
+                          data={"segment_index": str(i // step)}, files={"media": ("chunk.mp4", data[i:i + step], "video/mp4")})
+        if not a.ok:
+            raise RuntimeError(f"X upload failed (HTTP {a.status_code}: {a.text[:200]})")
+    url = f"{api}/{mid}/finalize"
+    f = requests.post(url, timeout=60, headers={"Authorization": _x_auth("POST", url)})
+    if not f.ok:
+        raise RuntimeError(f"X upload failed at the end (HTTP {f.status_code}: {f.text[:200]})")
+    info = (f.json().get("data") or {}).get("processing_info")
+    for _ in range(40):
+        if not info or info.get("state") in ("succeeded", "failed"):
+            break
+        time.sleep(int(info.get("check_after_secs") or 3))
+        q = {"command": "STATUS", "media_id": mid}
+        st = requests.get(api, params=q, timeout=60, headers={"Authorization": _x_auth("GET", api, q)})
+        info = (st.json().get("data") or {}).get("processing_info") if st.ok else None
+    if info and info.get("state") == "failed":
+        raise RuntimeError("X could not process the video")
+    t = requests.post("https://api.x.com/2/tweets", timeout=60, json={"text": caps["x"], "media": {"media_ids": [mid]}},
+                      headers={"Authorization": _x_auth("POST", "https://api.x.com/2/tweets")})
+    if not t.ok:
+        raise RuntimeError(f"X refused the post (HTTP {t.status_code}: {t.text[:200]})")
+    return f"posted ({t.json()['data']['id']})"
+
+
+PLATFORMS = {"telegram": post_telegram, "youtube": post_youtube, "x": post_x, "email": post_email}
 
 
 def main() -> int:
@@ -150,7 +208,7 @@ def main() -> int:
         try:
             print(f"{name}: {post(day, caps, links)}", flush=True)
         except Exception as exc:
-            print(f"{name}: failed ({type(exc).__name__})", flush=True)
+            print(f"{name}: failed ({type(exc).__name__}: {str(exc)[:240]})", flush=True)
     return 0
 
 
