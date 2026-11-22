@@ -82,3 +82,50 @@ def test_the_worker_saves_readings_with_the_prices_and_still_saves_prices_withou
     plain = _Db(refuse_readings=False)                                # a page saving prices: never readings
     assert ms.save_price_frame(plain, "Crypto", "bitcoin", frame)
     assert "readings" not in plain.saved[0]
+
+
+def test_daily_record_keeps_only_the_headline_readings_once_per_day():
+    page = _as_page_reads(_bars())
+    readings = json.loads(json.dumps(sr.build(page, "Crypto")))
+    row = sr.daily_row("crypto:bitcoin", readings)
+    signals = readings["fields"]["signals"]
+    assert row["day"] == signals["as_of"] and row["asset_key"] == "crypto:bitcoin"
+    assert set(row) == {"asset_key", "day", "trend", "stretch", "flow", "regime", "version"}
+    assert row["trend"] == signals["clusters"]["trend"]["percent"]
+    assert len(json.dumps(row)) < 250                                  # small enough for ~40 MB a year
+    assert sr.daily_row("x:y", None) is None and sr.daily_row("x:y", {"fields": {"signals": {"status": "no"}}}) is None
+
+
+def test_daily_record_is_one_write_per_pass_and_never_overwrites():
+    page = _as_page_reads(_bars())
+    readings = sr.build(page, "Crypto")
+    calls = []
+    sr._daily.clear()                                                  # rows left by earlier tests' saves
+
+    class Db:
+        def table(self, name):
+            calls.append(name)
+            return self
+
+        def upsert(self, rows, **kw):
+            calls.append((len(rows), kw.get("ignore_duplicates"), kw.get("on_conflict")))
+            return self
+
+        def execute(self):
+            return None
+
+    sr.remember_daily("crypto:bitcoin", readings)
+    sr.remember_daily("crypto:bitcoin", readings)                      # the same day twice: kept once
+    sr.remember_daily("crypto:ether", readings)
+    assert sr.flush_daily(Db()) == 2
+    assert calls == ["readings_daily", (2, True, "asset_key,day")]
+    assert sr.flush_daily(Db()) == 0                                   # nothing left after the pass
+
+
+def test_daily_record_missing_table_does_not_break_the_worker():
+    class Broken:
+        def table(self, name):
+            raise RuntimeError("relation readings_daily does not exist")
+
+    sr.remember_daily("crypto:bitcoin", sr.build(_as_page_reads(_bars()), "Crypto"))
+    assert sr.flush_daily(Broken()) == 0

@@ -1,0 +1,95 @@
+"""eToro connection test for the Trade Logbook (22 Nov 2026). Reads the account's closed-trade history with a Read
+key and prints ONLY a shape summary: how many trades, which fields eToro sends, and counts of copied, leveraged and
+partly closed positions. It never prints trades, prices, profits, amounts, instruments or keys, because this
+repository and its workflow logs are public.
+
+Needs the secrets ETORO_API_KEY and ETORO_USER_KEY (entered by the account owner in GitHub, never in chat).
+API: GET https://public-api.etoro.com/api/v1/trading/info/trade/history?minDate=...&page=...&pageSize=...
+"""
+
+from __future__ import annotations
+
+import os
+import sys
+import uuid
+from collections import Counter
+
+import requests
+
+URL = "https://public-api.etoro.com/api/v1/trading/info/trade/history"
+PAGE_SIZE = 100
+MAX_PAGES = 200
+
+
+def fetch_page(api_key: str, user_key: str, min_date: str, page: int) -> tuple[int, object]:
+    headers = {"x-request-id": str(uuid.uuid4()), "x-api-key": api_key, "x-user-key": user_key,
+               "Accept": "application/json"}
+    r = requests.get(URL, headers=headers, params={"minDate": min_date, "page": page, "pageSize": PAGE_SIZE},
+                     timeout=30)
+    try:
+        body = r.json()
+    except ValueError:
+        body = None
+    return r.status_code, body
+
+
+def items_of(body) -> list:
+    """The trades in a response: a bare list as documented, or a list inside a wrapper object."""
+    if isinstance(body, list):
+        return body
+    if isinstance(body, dict):
+        for value in body.values():
+            if isinstance(value, list):
+                return value
+    return []
+
+
+def summarise(trades: list) -> list[str]:
+    """Shape only: counts and field names, nothing about what was traded or for how much."""
+    fields = Counter(k for t in trades if isinstance(t, dict) for k in t)
+    years = sorted({str(t.get("closeTimestamp") or "")[:4] for t in trades if isinstance(t, dict)} - {""})
+    has = lambda name: sum(1 for t in trades if isinstance(t, dict) and t.get(name) not in (None, 0, "", False))
+    leveraged = sum(1 for t in trades if isinstance(t, dict) and (t.get("leverage") or 1) > 1)
+    lines = [f"Closed trades read: {len(trades)}",
+             f"Years covered: {years[0]} to {years[-1]}" if years else "Years covered: none",
+             f"Distinct instruments: {len({t.get('instrumentId') for t in trades if isinstance(t, dict)})}",
+             f"Copied (socialTradeId set): {has('socialTradeId')}",
+             f"Part of a larger position (parentPositionId set): {has('parentPositionId')}",
+             f"Leveraged (leverage above 1): {leveraged}",
+             f"With fees reported: {has('fees')}",
+             "Fields eToro sends (how many trades carry each):"]
+    lines += [f"  {name}: {count}" for name, count in sorted(fields.items())]
+    return lines
+
+
+def main() -> int:
+    api_key, user_key = os.environ.get("ETORO_API_KEY", ""), os.environ.get("ETORO_USER_KEY", "")
+    if not api_key or not user_key:
+        print("Missing secrets: add ETORO_API_KEY and ETORO_USER_KEY in GitHub (Settings, Secrets, Actions).")
+        return 1
+    min_date = os.environ.get("MIN_DATE") or "2010-01-01"
+    trades: list = []
+    for page in range(1, MAX_PAGES + 1):
+        status, body = fetch_page(api_key, user_key, min_date, page)
+        if status != 200:
+            detail = body.get("message") or body.get("error") if isinstance(body, dict) else ""
+            print(f"Page {page}: eToro answered HTTP {status}. {str(detail or '')[:160]}")
+            if status in (401, 403):
+                print("The key was refused: check that both keys are for the real account and have Read permission.")
+            if page == 1:
+                return 1
+            break
+        batch = items_of(body)
+        if page == 1:
+            shape = "list" if isinstance(body, list) else f"object with keys {sorted(body)}" if isinstance(body, dict) else "empty"
+            print(f"Response shape: {shape}")
+        trades += batch
+        if len(batch) < PAGE_SIZE:
+            break
+    print(f"Pages read: {page} (page size {PAGE_SIZE})")
+    print("\n".join(summarise(trades)))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

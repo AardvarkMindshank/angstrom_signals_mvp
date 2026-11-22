@@ -151,7 +151,11 @@ def refresh_price_catalog(supabase, catalog: dict, days: int) -> dict:
             frames[(kind, identity)] = frame
         else:
             frames.later(kind, identity, asset_market_key(kind, asset_id))
-    print(f"Shared prices: {refreshed} refreshed, {len(frames)} fetched, {len(frames.pending)} stored if needed.")
+    import stored_readings
+
+    recorded = stored_readings.flush_daily(supabase)
+    print(f"Shared prices: {refreshed} refreshed, {len(frames)} fetched, {len(frames.pending)} stored if needed; "
+          f"{recorded} daily readings offered to the record.")
     return frames
 
 

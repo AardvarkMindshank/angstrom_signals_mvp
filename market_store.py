@@ -1099,6 +1099,7 @@ def save_price_frame(supabase, kind: str, asset_id: str, frame, with_readings: b
                 try:
                     supabase.table("asset_market").upsert({**payload, "readings": readings}, on_conflict="asset_key",
                                                           returning=MINIMAL).execute()
+                    stored_readings.remember_daily(payload["asset_key"], readings)
                     return True
                 except Exception as exc:      # the readings column not added yet (sql/2026-12-01_stored_readings.sql)
                     print(f"Readings not saved for {identity}: {str(exc)[:160]}")

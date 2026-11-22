@@ -1,0 +1,25 @@
+name: eToro probe
+# Trade Logbook: test the eToro Read key on the owner's account. Prints only counts and field names (public logs).
+on:
+  workflow_dispatch:
+    inputs:
+      min_date:
+        description: "Read closed trades from this date (YYYY-MM-DD)"
+        default: "2010-01-01"
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -q requests
+      - name: Read the trade history shape
+        env:
+          ETORO_API_KEY: ${{ secrets.ETORO_API_KEY }}
+          ETORO_USER_KEY: ${{ secrets.ETORO_USER_KEY }}
+          MIN_DATE: ${{ inputs.min_date }}
+        run: python .github/scripts/etoro_probe.py

@@ -56,3 +56,49 @@ def use(row: dict | None, frame: pd.DataFrame) -> dict | None:
     if any(saved.get(name) != value for name, value in mine.items()):
         return None
     return copy.deepcopy(saved["fields"])
+
+
+# The daily record (22 Nov 2026, Trade Logbook spec): what MarketNavi actually showed for each asset on each finished
+# day, so a trade's snapshot can be marked "observed" rather than only rebuilt by the replay engine. Only the few
+# headline readings are kept (Trend, Stretch, Flow and the regime): about 150 bytes per asset per day. Rows are only
+# ever added; the first reading saved for a day is the one that stands (sql/2026-12-07_readings_daily.sql).
+
+DAILY_TABLE = "readings_daily"
+_daily: dict = {}
+
+
+def daily_row(asset_key: str, readings: dict | None) -> dict | None:
+    """The daily-record row for one asset's freshly built readings, or None when there is nothing finished to keep."""
+    signals = ((readings or {}).get("fields") or {}).get("signals") or {}
+    if signals.get("status") != "ok" or not signals.get("as_of"):
+        return None
+    clusters = signals.get("clusters") or {}
+    regime = (signals.get("context") or {}).get("regime") or {}
+    pick = lambda name: (clusters.get(name) or {}).get("percent")
+    return {"asset_key": asset_key, "day": signals["as_of"], "trend": pick("trend"), "stretch": pick("stretch"),
+            "flow": pick("flow"), "regime": regime.get("label") if isinstance(regime, dict) else None,
+            "version": str(readings.get("version") or "")[:64]}
+
+
+def remember_daily(asset_key: str, readings: dict | None) -> None:
+    """Keep this asset's row until the end of the worker's pass (one write for the whole pass)."""
+    row = daily_row(asset_key, readings)
+    if row:
+        _daily[(row["asset_key"], row["day"])] = row
+
+
+def flush_daily(supabase) -> int:
+    """Add the pass's rows in one request. Days already recorded are left as they are (the first reading stands)."""
+    rows = list(_daily.values())
+    _daily.clear()
+    if not rows:
+        return 0
+    try:
+        from market_store import MINIMAL
+
+        supabase.table(DAILY_TABLE).upsert(rows, on_conflict="asset_key,day", ignore_duplicates=True,
+                                           returning=MINIMAL).execute()
+    except Exception as exc:          # the table not added yet (sql/2026-12-07_readings_daily.sql)
+        print(f"Daily readings record not saved: {str(exc)[:160]}")
+        return 0
+    return len(rows)
